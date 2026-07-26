@@ -4,7 +4,7 @@
 // followers receive events via BroadcastChannel and apply them locally.
 //
 // To remove: delete this file, remove its import line and setLiveTabHooks() /
-// initLiveTabController() calls from main.js.
+// initLiveTabController() calls from boot.js.
 
 import { getToken, isDemoMode } from './state.js?v=11';
 import { refreshCoinsDisplay } from './shop.js?v=17';

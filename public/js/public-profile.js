@@ -1,7 +1,7 @@
 // ── Public profile / run viewer ───────────────────────────────────────────────
-// Self-contained module. Imports only from state.js.
+// Self-contained module. Imports only from state.js and util.js.
 // To remove: delete this file, remove its import line and setPublicProfileHooks()
-// call from main.js, and delete public/css/public-profile.css (also shared by
+// call from boot.js, and delete public/css/public-profile.css (also shared by
 // covers.js's cover activity view) and its <link> in index.html.
 
 import { isValidSecId } from './state.js?v=11';

@@ -1,7 +1,7 @@
 // ── Shop ──────────────────────────────────────────────────────────────────────
-// Self-contained module. Imports only from state.js.
+// Self-contained module. Imports only from state.js and util.js.
 // To remove: delete this file, remove its import line and initShop()/openShopModal()/
-// refreshCoinsDisplay()/updateCoinsDisplay()/setShopHooks() calls from main.js,
+// refreshCoinsDisplay()/updateCoinsDisplay()/setShopHooks() calls from boot.js,
 // and delete public/css/shop.css (and its <link> in index.html).
 
 import { apiFetch, getToken } from './state.js?v=11';

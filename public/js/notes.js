@@ -1,7 +1,7 @@
 // ── Notebook + notes display overlay ──────────────────────────────────────────
-// Self-contained module. Imports only from state.js.
+// Self-contained module. Imports from state.js and play.js.
 // To remove: delete this file, remove its import line and initNotes()/loadNotesForBook()/
-// hideNotesUI() calls from main.js, and remove the notebook/notes-display CSS from style.css.
+// hideNotesUI() calls from boot.js, and remove the notebook/notes-display CSS from style.css.
 
 import { state, saveState, apiFetch, currentBookId } from './state.js?v=11';
 import { showAlert } from './play.js?v=36';

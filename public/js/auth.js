@@ -1,7 +1,7 @@
 // ── Auth (login / register / forgot / reset password) ─────────────────────────
-// Self-contained module. Imports only from state.js and i18n.js.
+// Self-contained module. Imports only from state.js, i18n.js and util.js.
 // To remove: delete this file, remove its import line and setOnAuthSuccess()/initAuth()/
-// showAuthForm()/showResetPanel()/hasPendingResetToken() calls from main.js.
+// showAuthForm()/showResetPanel()/hasPendingResetToken() calls from boot.js.
 
 import { setToken, setUsername } from './state.js?v=11';
 import { t } from './i18n.js?v=10';

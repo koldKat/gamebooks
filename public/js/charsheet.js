@@ -1,7 +1,9 @@
 // ── Character Sheet ───────────────────────────────────────────────────────────
-// Self-contained module. Imports only from state.js and i18n.js.
-// To remove: delete this file, remove its import lines from main.js and ui.js,
-// and delete public/css/charsheet.css (and its <link> in index.html).
+// Self-contained module. Imports only from state.js, i18n.js and util.js.
+// To remove: delete this file, remove its import lines from boot.js and every other
+// importer (grep for './charsheet.js' - play.js, equipment.js, inventory.js, open-world.js,
+// battlesim8.js and battlesim829.js all import from it too), and delete
+// public/css/charsheet.css (and its <link> in index.html).
 
 import { state, saveState, currentPlaythrough, viewingPt } from './state.js?v=11';
 import { t } from './i18n.js?v=10';
