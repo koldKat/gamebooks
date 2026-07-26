@@ -1,7 +1,7 @@
 // ── Battle Simulator (Пътят на пъдпъдъка, book 829) ─────────────────────────
 // Self-contained module. Imports from state.js, ui.js and charsheet.js.
-// Visibility is gated (admin + user "sashii", book 829 only) by the caller in
-// main.js via setBattleSimVisible().
+// Visibility is gated (book 829 only) by the caller in boot.js via
+// setBattleSimVisible().
 // To remove: delete this file, remove its import line and initBattleSim()/
 // setBattleSimVisible() calls from main.js, and remove the .bsim-* CSS.
 //
