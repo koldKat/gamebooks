@@ -1,0 +1,357 @@
+/* ── Demo banner ──────────────────────────────────────────────────────────── */
+
+#demo-banner {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  background: #92400e;
+  color: #fef3c7;
+  font-size: 0.85rem;
+  padding: 0.45rem 1rem;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+#demo-banner.active { display: flex; }
+#demo-exit-btn {
+  background: #78350f;
+  border: 1px solid #b45309;
+  border-radius: 5px;
+  color: #fef3c7;
+  font-size: 0.8rem;
+  padding: 0.22rem 0.7rem;
+  cursor: pointer;
+}
+#demo-exit-btn:hover { background: #92400e; border-color: #d97706; }
+
+/* Push page content down when banner is visible */
+body.demo-active #landing-wrapper,
+body.demo-active #main-screen {
+  margin-top: 34px;
+}
+
+/* Fixed elements that need to clear the demo banner */
+body.demo-active #main-screen        { height: calc(100vh - 34px); }
+body.demo-active #covers-panel,
+body.demo-active #landing-right      { top: 34px; height: calc(100vh - 34px); }
+body.demo-active #run-trail-float,
+body.demo-active #legend             { top: calc(12px + 34px); }
+
+/* Hide profile/logout in demo */
+body.demo-active #profile-btn,
+body.demo-active #logout-btn {
+  display: none;
+}
+
+#feed-panel {
+  width: min(max(896px, 35vw), calc(100vw - 2rem));
+  max-width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  padding: 1.2rem 2rem;
+  transition: opacity 0.2s ease, transform 0.2s ease, max-height 0.25s ease, padding 0.25s ease;
+}
+
+#feed-header {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #6b7280;
+  margin-bottom: 0.4rem;
+}
+.feed-header-sub {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.72rem;
+}
+
+.feed-day-card {
+  position: relative;
+  background-color: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 8px;
+  padding: 0.8rem 1rem;
+  margin-bottom: 0.6rem;
+  overflow: hidden;
+}
+/* No cover available for this day - let the real rotating landing background
+   (always current, no staleness) show through directly instead of drawing a
+   copy of it, like glass. Only a light tint on top - the ambient background
+   image already carries its own ~92%-dark overlay baked in (for page-wide
+   legibility), unlike a cover-tile which is the raw, undimmed cover image
+   before .feed-day-cover-stack::after's 0.9-alpha overlay darkens it. Reusing
+   that same 0.9 overlay here would stack on top of the *already*-dimmed
+   ambient image and compound to far darker than a cover-day ever gets - the
+   two start from different brightness, so matching the end result means
+   applying much less additional tint here, not the same amount. Fully
+   transparent (no tint at all) read as too washed-out/inconsistent card to
+   card, since it's a straight window onto a `position: fixed` background that
+   shows a different slice of the image depending on scroll position - a
+   little tint keeps every glass card reading as "a card" regardless of
+   what's behind it at that moment, without erasing the see-through effect.
+*/
+:root { --feed-glass-bg: rgba(31, 41, 55, 0.55); }
+.feed-day-card--glass {
+  background-color: var(--feed-glass-bg);
+}
+/* Stacked cover tiles (one per distinct book played that day, cycled to fill
+   the card) sit behind the content; a flat overlay on top keeps text legible
+   regardless of how bright/busy the covers are. */
+.feed-day-cover-stack {
+  position: absolute;
+  inset: 0;
+}
+.feed-day-cover-stack::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(31,41,55,0.9);
+}
+.feed-day-cover-tile {
+  /* left/width/top/height are set per-tile inline in feed.js - each tile's
+     box is sized to its own cover's aspect ratio, so 100% 100% here never
+     stretches or crops it. */
+  position: absolute;
+  background-size: 100% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.feed-day-content {
+  position: relative;
+  z-index: 1;
+}
+body.no-feed-day-covers .feed-day-cover-stack { display: none !important; }
+/* Two independent toggles, four combinations:
+   - covers on,  glass on  (default): covers show normally; cover-less days get the glass tint above.
+   - covers on,  glass off: covers show normally; cover-less days fall back to the flat opaque card.
+   - covers off, glass on:  no covers shown at all, but EVERY day card (not just cover-less ones)
+     gets the glass tint, since there's nothing left to distinguish a "would-have-had-a-cover" day
+     from any other once covers are off entirely.
+   - covers off, glass off: everything flat, same as the feature never existed. */
+body.no-feed-glass-cards .feed-day-card--glass { background-color: #1f2937 !important; }
+body.no-feed-day-covers:not(.no-feed-glass-cards) .feed-day-card { background-color: var(--feed-glass-bg) !important; }
+
+.feed-day-header {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #d1d5db;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.85), 0 0 6px rgba(0,0,0,0.65);
+  margin-bottom: 0.5rem;
+}
+
+.feed-entry {
+  font-size: 0.85rem;
+  color: #d1d5db;
+  padding: 0.2rem 0;
+  line-height: 1.4;
+}
+.feed-entry--party {
+  border-left: 2px solid #2dd4bf;
+  padding-left: 0.5rem;
+  margin-left: -0.5rem;
+}
+.feed-entry--join {
+  border-left: 2px solid #f59e0b;
+  padding-left: 0.5rem;
+  margin-left: -0.5rem;
+}
+.feed-entry--levelup {
+  border-left: 2px solid #a78bfa;
+  padding-left: 0.5rem;
+  margin-left: -0.5rem;
+}
+.feed-entry--rated {
+  border-left: 2px solid #33cc33;
+  padding-left: 0.5rem;
+  margin-left: -0.5rem;
+}
+.feed-user-group .feed-entry--party {
+  border-left: none;
+  padding-left: 0;
+  margin-left: 0;
+}
+.feed-party-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #2dd4bf;
+  background: rgba(45,212,191,0.12);
+  border: 1px solid rgba(45,212,191,0.3);
+  border-radius: 4px;
+  padding: 0.05em 0.4em;
+  vertical-align: middle;
+  letter-spacing: 0.03em;
+}
+
+/* Reuses .star-rating's colors/half-star gradient (public-profile.css) but this
+   one is read-only (someone else's rating shown in the feed, not a widget you
+   click), so it drops the pointer cursor and the block-level margin, and scales
+   down to sit inline with the rest of a feed line's text instead of a book/series
+   card's larger rating row. */
+.feed-rating-stars.star-rating {
+  cursor: default;
+  margin-top: 0;
+  vertical-align: middle;
+}
+.feed-rating-stars .star { font-size: 0.8rem; }
+/* Matches .feed-entry--rated's highlight color (console/terminal green) instead of
+   the star widget's usual amber - ties the feed's rating entries to their own
+   highlight rather than the amber used everywhere else a rating is shown (book
+   list, series card, etc). Extra .star-rating in the selector (not just
+   .feed-rating-stars) is needed to out-specify public-profile.css's own
+   .star-rating .star.on/.half rules regardless of which stylesheet loads second. */
+.star-rating.feed-rating-stars .star.on { color: #33cc33; }
+.star-rating.feed-rating-stars .star.half {
+  background: linear-gradient(90deg, #33cc33 50%, #374151 50%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.feed-user  { font-weight: 600; color: #f5a623; }
+.feed-book  { font-weight: 600; color: #e2e8f0; }
+.feed-run   { font-size: 0.75rem; color: #fde047; }
+.feed-verb.died    { color: #e74c3c; }
+.feed-verb.lost    { color: #e74c3c; }
+.feed-verb.won     { color: #27ae60; }
+.feed-verb.neutral { color: #9ca3af; }
+.feed-level { font-weight: 600; color: #67e8f9; }
+.feed-title { color: #0891b2; font-style: italic; font-weight: 600; }
+.feed-ability { color: #a78bfa; font-size: 0.88em; }
+
+.feed-empty {
+  font-size: 0.8rem;
+  color: #4b5563;
+}
+
+.feed-user-group {
+}
+.feed-user-group--party {
+  border-left: 2px solid #2dd4bf;
+  padding-left: calc(0.5rem - 2px);
+  margin: 0.15rem 0 0.15rem -0.5rem;
+}
+.feed-group-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #9ca3af;
+  padding: 0.2rem 0;
+  width: 100%;
+  text-align: left;
+}
+.feed-group-toggle:hover { color: #d1d5db; }
+.feed-group-chevron {
+  font-size: 0.65rem;
+  color: #6b7280;
+  transition: color 0.15s;
+}
+.feed-group-body {
+  border-left: 2px solid #374151;
+  padding-top: 0.1rem;
+  padding-left: 0.5rem;
+  margin-left: -0.5rem;
+}
+.feed-group-count {
+  color: #9ca3af;
+  font-weight: 400;
+}
+.feed-group-name { display: inline; }
+.feed-group-toggle .feed-user       { color: #f5a623; }
+.feed-group-toggle .author-badge    { color: #fbbf24; }
+.feed-group-toggle .contributor-badge { color: #34d399; }
+.feed-group-toggle .admin-badge     { color: #60a5fa; }
+
+.feed-announcement {
+  position: relative;
+  border: 1.5px solid #f59e0b;
+  border-radius: 7px;
+  padding: 0.55rem 0.8rem 0.5rem;
+  margin: 0.15rem 0;
+}
+.feed-ann-title {
+  position: absolute;
+  top: -0.62em;
+  left: 0.7rem;
+  background: #1f2937;
+  padding: 0 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #f59e0b;
+  letter-spacing: 0.04em;
+}
+.feed-ann-body {
+  font-size: 0.85rem;
+  color: #e5e7eb;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.45;
+  text-align: justify;
+}
+
+.feed-pinned-card {
+  border: 1.5px solid #f59e0b;
+  border-radius: 7px;
+  padding: 0.2rem 0.8rem 0.5rem;
+  margin: 0.4rem 0;
+}
+.feed-pinned-legend {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #f3f4f6;
+  padding: 0 0.35rem;
+}
+.feed-pin-icon {
+  width: 13px;
+  height: 13px;
+  color: #f59e0b;
+  flex-shrink: 0;
+}
+.feed-pinned-body {
+  font-size: 0.85rem;
+  color: #e5e7eb;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.45;
+  text-align: justify;
+}
+
+#landing-right {
+  position: fixed;
+  right: 0;
+  top: 0;
+  width: var(--landing-panel-w);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid #1f2937;
+  padding: 1rem 1.1rem 0.4rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: #374151 transparent;
+  scrollbar-gutter: stable;
+  background: rgba(17,24,39,0.45);
+  transition: transform 0.25s ease;
+}
+#landing-right::-webkit-scrollbar { width: 5px; }
+#landing-right::-webkit-scrollbar-track { background: transparent; }
+#landing-right::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+#landing-right::-webkit-scrollbar-thumb:hover { background: #4b5563; }
+body.right-collapsed #landing-right { transform: translateX(var(--landing-panel-w)); border-left: none; }
+

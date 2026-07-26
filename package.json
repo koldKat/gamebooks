@@ -1,0 +1,17 @@
+{
+  "name": "gamebook-tracker",
+  "version": "1.0.0",
+  "description": "Track gamebook playthroughs",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test",
+    "check:versions": "node scripts/check-versions.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^9.6.0",
+    "dotenv": "^17.4.2",
+    "geoip-lite": "^2.0.1",
+    "nodemailer": "^6.9.0"
+  }
+}

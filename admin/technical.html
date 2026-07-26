@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Technical Reference - Gamebook Tracker</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    * { scrollbar-width: thin; scrollbar-color: #374151 transparent; }
+    *::-webkit-scrollbar { width: 5px; height: 5px; }
+    *::-webkit-scrollbar-track { background: transparent; }
+    *::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+    *::-webkit-scrollbar-thumb:hover { background: #4b5563; }
+
+    body {
+      background: #111827;
+      color: #d1d5db;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 0.92rem;
+      line-height: 1.7;
+      padding: 2rem 1rem 4rem;
+    }
+
+    .wrap { max-width: 960px; margin: 0 auto; }
+
+    .page-header {
+      display: flex; align-items: baseline; gap: 0.75rem;
+      margin-bottom: 2rem; padding-bottom: 1rem;
+      border-bottom: 1px solid #374151; flex-wrap: wrap;
+    }
+    .page-title { font-size: 1.35rem; font-weight: 700; color: #f5a623; }
+    .page-sub   { font-size: 0.8rem; color: #6b7280; }
+    .back-link  {
+      margin-left: auto; color: #9ca3af; text-decoration: none;
+      font-size: 0.82rem; border: 1px solid #374151; border-radius: 6px;
+      padding: 0.25rem 0.7rem; transition: color 0.12s, background 0.12s;
+    }
+    .back-link:hover { color: #f5a623; background: #1f2937; }
+
+    /* TOC */
+    .toc {
+      background: #1f2937; border: 1px solid #374151; border-radius: 8px;
+      padding: 1rem 1.2rem; margin-bottom: 1.25rem;
+    }
+    .toc-title { font-size: 0.72rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.65rem; }
+    .toc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0.2rem 1.5rem; }
+    .toc a { color: #9ca3af; text-decoration: none; font-size: 0.82rem; }
+    .toc a:hover { color: #f5a623; }
+
+    /* Sections */
+    .section {
+      background: #1f2937; border: 1px solid #374151;
+      border-radius: 8px; padding: 1.2rem 1.4rem; margin-bottom: 1rem;
+    }
+    .section + .section { }
+
+    h2 {
+      font-size: 1rem; font-weight: 700; color: #f9fafb;
+      margin-bottom: 0.8rem; padding-bottom: 0.45rem;
+      border-bottom: 1px solid #374151;
+      scroll-margin-top: 1rem;
+    }
+    h3 {
+      font-size: 0.88rem; font-weight: 600; color: #e2e8f0;
+      margin: 1rem 0 0.4rem; scroll-margin-top: 1rem;
+    }
+    h4 {
+      font-size: 0.84rem; font-weight: 600; color: #d1d5db;
+      margin: 0.85rem 0 0.35rem;
+    }
+
+    p { margin-bottom: 0.6rem; color: #d1d5db; }
+    p:last-child { margin-bottom: 0; }
+
+    ul, ol { padding-left: 1.4rem; margin-bottom: 0.6rem; }
+    li { margin-bottom: 0.2rem; }
+    li:last-child { margin-bottom: 0; }
+
+    code {
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 0.83em; background: #374151; color: #93c5fd;
+      padding: 0.15em 0.4em; border-radius: 3px;
+    }
+
+    pre {
+      background: #0d1117; border: 1px solid #374151; border-radius: 6px;
+      padding: 0.85rem 1rem; overflow-x: auto;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 0.82rem; line-height: 1.55; color: #93c5fd;
+      margin: 0.65rem 0; white-space: pre;
+    }
+    pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 0.84rem; margin: 0.65rem 0; }
+    th {
+      background: #111827; color: #9ca3af; font-weight: 600;
+      font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em;
+      padding: 0.5rem 0.75rem; text-align: left; border-bottom: 1px solid #374151;
+    }
+    td { padding: 0.45rem 0.75rem; border-bottom: 1px solid #1e2736; vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+
+    strong { color: #f9fafb; font-weight: 600; }
+    em { color: #9ca3af; font-style: italic; }
+    .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 50%; vertical-align: middle; margin-right: 4px; }
+
+    .method { font-family: 'Consolas', monospace; font-size: 0.78rem; font-weight: 700;
+      color: #fcd34d; background: rgba(252,211,77,0.08); padding: 0.1em 0.4em; border-radius: 3px; }
+    .method-del  { color: #f87171; background: rgba(248,113,113,0.08); }
+    .method-post { color: #4ade80; background: rgba(74,222,128,0.08); }
+    .method-patch { color: #a78bfa; background: rgba(167,139,250,0.08); }
+    .method-put  { color: #60a5fa; background: rgba(96,165,250,0.08); }
+
+    hr { border: none; border-top: 1px solid #374151; margin: 0.75rem 0; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+
+    <div class="page-header">
+      <div>
+        <div class="page-title">Gamebook Tracker</div>
+        <div class="page-sub">Technical Reference</div>
+      </div>
+    </div>
+
+    <!-- TOC -->
+    <div class="toc">
+      <div class="toc-title">Contents</div>
+      <div class="toc-grid">
+        <a href="#project-structure">Project structure</a>
+        <a href="#module-graph">Module dependency graph</a>
+        <a href="#css-split">CSS file split</a>
+        <a href="#server-split">Server file split</a>
+        <a href="#server">Server</a>
+        <a href="#rest-api">REST API</a>
+        <a href="#profile-api">Profile API</a>
+        <a href="#admin-panel-ui">Admin panel &amp; API</a>
+        <a href="#database">Database</a>
+        <a href="#schema">Schema</a>
+        <a href="#xp-levelling">XP &amp; levelling</a>
+        <a href="#xp-events">XP events</a>
+        <a href="#demo-book">Demo book</a>
+        <a href="#security">Password &amp; sessions</a>
+        <a href="#state-model">State model</a>
+        <a href="#auth-flow">Auth flow</a>
+        <a href="#screen-routing">Screen routing</a>
+        <a href="#activity-feed">Activity feed</a>
+        <a href="#covers-panel">Covers panel</a>
+        <a href="#crawlable-book-pages">Book pages &amp; SEO</a>
+        <a href="#modal-drag-close">Modal drag-to-close bug</a>
+        <a href="#terminal-outcomes">Terminal outcomes</a>
+        <a href="#node-colours">Node colour logic</a>
+        <a href="#graph-layout">Graph layout &amp; physics</a>
+        <a href="#node-deletion">Node deletion</a>
+        <a href="#playthrough-actions">Playthrough actions</a>
+        <a href="#charsheet">Character sheet</a>
+        <a href="#render-pipeline">Render pipeline</a>
+        <a href="#data-migration">Data migration</a>
+        <a href="#identifiers">Identifier validation</a>
+        <a href="#i18n">Internationalisation</a>
+        <a href="#export-import">Export</a>
+      </div>
+    </div>
+
+    <!-- Project structure -->
+    <div class="section" id="project-structure">
+      <h2>Project structure</h2>
+      <pre><code>gamebooks/
+  server.js          Thin entrypoint: requires + Router (regex dispatch) + httpServer.listen(...)
+  package.json       Single dependency: better-sqlite3
+  database.sqlite    SQLite database (auto-created on first run, git-ignored)
+  server/
+    db.js            Barrel: schema/migrations (kept in original order) + re-exports server/db/*
+    db/
+      connection.js    The single better-sqlite3 instance, hasColumn, string/search helpers
+      content.js       Small getters: tagline/level-up/join templates
+      auth.js          Password hashing, users, sessions, password reset, lockouts
+      xp.js            TITLES, computeLevel/awardXp/awardCoins, processStateXp, xp_config
+      books.js         Books/user_books/stashes/series/series_runs CRUD + ratings
+      feed.js          getFeed(), public-listing/sitemap helpers, public profile/run views
+      admin.js         Admin CRUD (users/books/tips/items/series/settings/announcements/shop)
+      forum.js         Forum thread/post data layer (distinct from server/forum.js SSR renderer)
+      parties.js       Play Together party functions
+      feedback.js      Feedback thread messaging + attachments
+      misc.js          Notifications, impersonation tokens, export-for-backup helpers
+    paths.js         ROOT/AVATARS_DIR/COVERS_DIR/BOOKS_DIR/ATTACHMENTS_DIR constants
+    sse.js           SSE broadcast registries (party/public-catalog/feed/app-xp/user-badge)
+    email.js         Nodemailer transporter, sendAdminEmail, sendReplyEmail
+    request-helpers.js  send/readBody/authenticate, security headers, rate limiting
+    runtime-state.js   Maintenance mode, traffic counters, CPU/mem averages, uptime/process lifecycle
+    static.js        Static file server (etag/cache-control) + XML sitemap
+    forum.js         Forum SSR page rendering (index/category/thread HTML)
+    export.js        Book/app export zip building
+    html-escape.js   escapeHtml/escapeJsonString
+    backup.js        SQLite backup scheduling
+    routes/
+      auth.js          Login/register/forgot/reset handlers
+      books.js         Book/stash/series/run/stream/rating/notebook/party handlers
+      shop.js          Gold Coin shop handler
+      profile.js       Profile/avatar/prefs handlers
+      public.js        Public user/run/series-run JSON handlers + public SSR pages
+      admin.js         Admin route handlers, serveAdminFile/serveAdminPanel, tips/items/series admin
+      notifications.js  Notification handlers
+      feedback.js      Feedback thread handlers
+      announcements.js  Announcement handlers
+      forum.js         Forum route handlers (HTTP glue around server/forum.js + server/db/forum.js)
+  admin/
+    index.html       Admin panel (served only to localhost connections)
+    admin-guide.html Admin panel guide (localhost only)
+    technical.html   Technical reference (localhost only)
+  docs/
+    user-guide.md
+    admin.md
+    technical.md
+  public/
+    index.html
+    guide.html       Styled HTML user guide (served at /guide.html)
+    favicon.svg
+    css/
+      style.css          Shared/base rules only (9,238 → 549 lines after the 2026-07-18 split)
+      charsheet.css, equipment.css, shop.css, dice.css, feedback.css, battlesim.css,
+      demo.css, profile.css, public-profile.css, login.css, add-book.css, play.css,
+      landing.css        One file per like-named JS module
+      reduce-motion.css, mobile.css  Cross-cutting overrides, loaded last
+    js/
+      constants.js       Shared constants (COLORS)
+      i18n.js            Translation tables (en), t(), applyTranslations()
+      state.js           State object, API persistence, auth helpers, pure helpers
+      graph.js           vis-network lifecycle, node rendering, deletion
+      play.js            Render pipeline, all playthrough actions, modals
+      charsheet.js       Character sheet - self-contained module
+      inventory.js       Inventory grid - self-contained module (per-run item slots, drag reorder, template)
+      equipment.js       Equipment panel - self-contained module (per-run equip slots, context menu, template)
+      sort.js            Search/sort helpers (foldForSearch, matchesSearch, naturalCompare)
+      util.js            Shared utility helpers: escapeHtml, compressImage, compressToBlob (client-side JPEG quality iteration)
+      autocomplete.js    Shared name-autocomplete helpers for add/edit modals
+      auth.js            Login, register, forgot-password, reset-password forms
+      notes.js           Notebook modal and pinned notes overlay
+      battlesim829.js    Battle simulator for book 829
+      battlesim8.js      Battle simulator for book 8
+      add-book.js        Create Book, Create Anthology, Create Series modals
+      edit-book.js       Edit Book/Anthology/Series/Stash modals; ISBN/ISSN/ASIN validation
+      books.js           Books list rendering, panel management, stash UI
+      covers.js          Public covers wall, cover rotation, cover/series activity modals
+      feed.js            Activity feed loading and rendering
+      open-world.js      Open World / series-run cross-book state management
+      shop.js            Gold Coin shop modal
+      profile.js         User profile modal, XP display, avatar
+      public-profile.js  Public profile modal, public run viewer, public series journey viewer
+      prefs.js           UI preference persistence (panel collapse state, server sync)
+      livetab.js         Live tab / SSE broadcast helpers, user badge SSE
+      notif.js           Notification dropdown and inbox badge
+      rewards.js         XP/coin reward floater (bottom-right toast)
+      bg.js              Graph background image, background context menu, sidebar book info
+      stats.js           Stats for Nerds modal
+      party.js           Play Together invite flow and SSE live-sync
+      tips.js            Tip bar (rotating tips with progress bar)
+      inbox.js           Inbox / feedback thread modal (replies with optional file attachments)
+      dice.js            Dice roller
+      tooltip.js         Tooltip system
+      export.js          Export this book / Export everything
+      feedback.js        Feedback widget (submission with optional file attachments)
+      demo.js            Demo mode
+      user.js            Admin/author/contributor state and badge helpers
+      boot.js            Application entry point: screen routing, hook wiring, DOMContentLoaded init
+      main.js            Single-line entry point: import './boot.js?v=N'
+    avatars/         Uploaded user avatar images (auto-created, git-ignored)
+    covers/          Uploaded book cover images (auto-created, git-ignored)
+    attachments/     Uploaded message/post attachments (auto-created, git-ignored)</code></pre>
+    </div>
+
+    <!-- Module graph -->
+    <div class="section" id="module-graph">
+      <h2>Module dependency graph</h2>
+      <pre><code>Layer 0 (no project imports):
+  constants.js  i18n.js  state.js  sort.js
+
+Layer 1:
+  graph.js       ← state.js, i18n.js, constants.js
+  charsheet.js   ← state.js, i18n.js
+  autocomplete.js ← state.js
+  user.js        ← state.js
+
+Layer 2:
+  inventory.js   ← state.js, play.js*, charsheet.js
+  equipment.js   ← state.js, inventory.js, charsheet.js
+  play.js          ← state.js, graph.js, charsheet.js, inventory.js*, equipment.js*, i18n.js
+
+  * three-way cycle: equipment → inventory → ui → equipment
+    (safe: none consume each other at module-evaluation time)
+
+Layer 3 (feature modules):
+  notes, battlesim829, battlesim8, auth, add-book, edit-book, books,
+  covers, feed, open-world, shop, profile, public-profile, prefs,
+  livetab, notif, rewards, bg, stats, party, tips, inbox, dice,
+  tooltip, export, feedback, demo
+
+Layer 4 (top):
+  boot.js   ← imports all of the above
+  main.js   ← imports boot.js only (single line)</code></pre>
+      <p><code>index.html</code> loads <code>js/main.js</code> as <code>type="module"</code>. The vis-network library is loaded via CDN as a global (<code>vis</code>) before the module script runs.</p>
+      <p><strong>Version-bump cascade:</strong> when any module changes, bump it, then bump all modules that import it, ending at <code>boot.js → main.js → index.html</code>. Key chains: <code>state.js → graph.js → play.js → boot.js</code>; any leaf module → <code>boot.js → main.js</code>.</p>
+    </div>
+
+    <!-- CSS file split -->
+    <div class="section" id="css-split">
+      <h2>CSS file split (2026-07-18)</h2>
+      <p><code>style.css</code> had grown to 9,238 lines - one file for the whole app. Split into 15 per-module files (one per like-named JS module) plus <code>style.css</code> itself, now 549 lines of shared/base rules only. <code>public-profile.css</code> is shared by both <code>public-profile.js</code> and <code>covers.js</code> (cover activity view lives in the same <code>#public-modal</code> markup both use).</p>
+      <p>Unlike JS, there's no import-cascade to maintain between stylesheets - each is an independent <code>&lt;link&gt;</code>, so a changed CSS file only needs its own <code>?v=N</code> bumped. <code>reduce-motion.css</code> and <code>mobile.css</code> are cross-cutting overrides rather than one module's styling, so they're deliberately the last two <code>&lt;link&gt;</code> tags in <code>index.html</code> - an improvement over the original file, where those two sections sat at arbitrary mid-file positions.</p>
+      <p>Verified via exact line-range extraction plus a line-count reconciliation (sum of all new files + planned remainder must equal the original total) before every trim of the source file - this caught two real extraction mistakes before they reached the live file. See <code>project_refactor_main.md</code> memory for the full account.</p>
+      <p><strong>Follow-up bug, fixed 2026-07-19:</strong> <code>server.js</code>'s <code>computeCodeStats()</code> (feeds "Lines of code"/"Code size" in Stats for Nerds) hardcoded a single filename, <code>'public/css/style.css'</code>, instead of scanning the <code>public/css/</code> directory - missed when the split shipped. Silently dropped ~8,700 CSS lines from both stats. Fixed to <code>fs.readdirSync('public/css')</code>, matching the pattern already used for <code>public/js</code>/<code>admin</code>. Needs a server restart (one-time IIFE at module load, not per-request).</p>
+    </div>
+
+    <!-- Server file split -->
+    <div class="section" id="server-split">
+      <h2>Server file split (2026-07-26)</h2>
+      <p><code>server.js</code> (3,743 lines) and <code>server/db.js</code> (6,373 lines) were the last two monolithic files in the codebase. Same process as the CSS split above: build each new module fully, verify it, wire it in, delete the old code from the monolith last - never a bulk line-range removal.</p>
+      <p><code>server/db.js</code> is now a thin barrel (713 lines): every raw <code>CREATE TABLE</code>/<code>ALTER TABLE</code>/one-time-migration block stays physically in <code>db.js</code>, in its original relative order - some migrations reference tables/functions defined much later in the original file purely because production's live database already has those tables from earlier deployments, so reordering the DDL was judged unsafe. Only the function definitions moved out, into <code>server/db/*.js</code> domain modules (see project structure above). <code>db.js</code>'s final <code>module.exports</code> re-exports the exact same 233 named functions it did before the split.</p>
+      <p><code>server.js</code> is now 597 lines: requires, one-time bootstrap, the Router (regex route-pattern constants + one large dispatch function), and the final <code>httpServer.listen(...)</code>. Everything else moved into <code>server/*.js</code> (cross-cutting: SSE, email, request helpers, runtime/process state, static file serving) and <code>server/routes/*.js</code> (per-domain HTTP handlers). Mutable process state that used to be bare module-level <code>let</code> bindings (maintenance-mode flag, traffic counters, CPU/memory averages, uptime timestamps) was extracted into <code>server/runtime-state.js</code> behind getter/setter accessors, since raw <code>let</code> variables can't be shared by reference across CommonJS modules.</p>
+      <p><strong>Verification:</strong> <code>server.js</code> can never actually be run to test (it ends in a live <code>httpServer.listen(...)</code>, and the "never restart the server" rule forbids running it), so every new/rewritten file passed <code>node --check</code>, then was actually <code>require()</code>-d in isolation to catch load-time errors <code>--check</code> misses. A third pass - a script cross-referencing every bare <code>identifier(</code> call in a file against its locally-defined/required names - caught the class of bug the first two miss entirely: a name that's fine at module-load time but undefined the moment a handler actually runs. This caught several real missing-import bugs (<code>authenticate</code>/<code>addSecurityHeaders</code> in <code>routes/admin.js</code>, <code>tokenFromReq</code>/<code>isLocalhost</code> in <code>routes/books.js</code>, <code>sendAdminEmail</code>/<code>escapeHtml</code> in <code>routes/forum.js</code>, and <code>fs</code>/<code>path</code>/<code>ATTACHMENTS_DIR</code> in <code>routes/forum.js</code>'s <code>handleForumDeleteThread</code>). The <code>server/db.js</code> barrel's export count was diffed before and after every step and stayed at exactly 233 throughout.</p>
+    </div>
+
+    <!-- Server -->
+    <div class="section" id="server">
+      <h2>Server</h2>
+      <p><code>server.js</code> is a plain Node.js HTTP server. It serves static files from <code>public/</code> and exposes a JSON REST API. Routes are matched manually with regex - no express or other framework.</p>
+      <p>Listens on port 443 (HTTPS) when a Let's Encrypt certificate exists at <code>/etc/letsencrypt/live/koldkat.net/</code>, otherwise falls back to port 3000 (HTTP). Port overridable via <code>PORT</code> env var. HTTP port (redirect) defaults to 80, overridable via <code>HTTP_PORT</code>.</p>
+    </div>
+
+    <!-- REST API -->
+    <div class="section" id="rest-api">
+      <h2>REST API</h2>
+      <p>All <code>/api/*</code> routes except <code>/api/register</code>, <code>/api/login</code>, <code>/api/feed</code>, <code>/api/site-stats</code>, <code>/api/config</code>, and <code>/api/public/*</code> require an <code>Authorization: Bearer &lt;token&gt;</code> header. A missing or invalid token returns <code>401</code>.</p>
+      <table>
+        <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/api/register</code></td><td>Create account → <code>{ token, username }</code>. Creates demo book and SVG cover.</td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/api/login</code></td><td>Authenticate → <code>{ token, username }</code></td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/api/logout</code></td><td>Invalidate token</td></tr>
+          <tr><td><span class="method">GET</span></td><td><code>/api/feed</code></td><td>Public activity feed - all event types in the last 30 days, sorted newest-first; includes <code>pinned</code> announcement</td></tr>
+          <tr><td><span class="method">GET</span></td><td><code>/api/config</code></td><td>Public app config → <code>{ version, adminUsername }</code>. No auth required.</td></tr>
+          <tr><td><span class="method">GET</span></td><td><code>/api/tagline</code></td><td>Returns <code>{ tagline: string }</code> - the app subtitle chosen randomly from the <code>taglines</code> DB table at server startup, held for the process lifetime. No auth required. Injected via <code>setTranslationOverride('app.tagline', …)</code> in <code>boot.js</code>.</td></tr>
+          <tr><td><span class="method">GET</span></td><td><code>/api/site-stats</code></td><td>Public aggregate stats (users, unique books, total library copies, total XP, app level, playthroughs, XP events, forum counts, undo/fast-travel totals). No auth required.</td></tr>
+          <tr><td><span class="method">GET</span></td><td><code>/api/app-xp</code></td><td>Auth required, 403 unless <code>db.isUserAdmin(userId)</code>. Powers both the admin-only "App" XP widget and the "Avg User Level" widget on the Books screen → <code>{ users, level, title, xp, levelXp, nextLevelXp, xpFromBoost, xpBoostPct, heartbeatRatePerMin, sumLevels, minLevel, maxLevel, avgLevel, avgLevelTitle, avgLevelFraction, levelsNeededForNextAvg }</code>. See <code>db.getAppXpSummary()</code> and <code>app-xp.js</code>.</td></tr>
+          <tr><td><span class="method">GET</span></td><td><code>/api/app-xp/stream</code></td><td>Admin-only SSE stream (token via <code>?token=</code>, 403 unless <code>db.isUserAdmin</code>) - pushes <code>{ username, xpDelta?, coinDelta? }</code> whenever any other user earns XP or GC, powering the live floaters. See <code>db.setAppXpHook()</code> and <code>app-xp.js</code>.</td></tr>
+          <tr><td><span class="method">GET</span></td><td><code>/api/public/books</code></td><td>All public non-demo books → <code>[{ id, name, coverUrl, createdAt, authors, isContainer, totalSections, description, isbn, issn, asin, pages, seriesName, seriesNumber, childNames[] }]</code>. No auth required. Used for Create Book/Anthology autocomplete and covers-panel search.</td></tr>
+          <tr><td><span class="method">GET</span></td><td><code>/api/public/user/:username</code></td><td>Public profile (only if <code>public_profile</code> is set) → <code>{ username, avatarUrl, books }</code></td></tr>
+          <tr><td><span class="method">GET</span></td><td><code>/api/public/book/:id/run/:index</code></td><td>Public run data (only if <code>isPublic: true</code>) → <code>{ bookName, graph, positions, totalSections, run }</code></td></tr>
+          <tr><td><span class="method">GET</span></td><td><code>/api/public/covers</code></td><td>Public cover-backed books and anthology containers used by the covers wall</td></tr>
+          <tr><td><span class="method">GET</span></td><td><code>/api/public/book/:id/activity</code></td><td>Public activity for a book and all ISBN/ISSN siblings</td></tr>
+          <tr><td><span class="method">GET</span></td><td><code>/api/books</code></td><td>List user's books → <code>[{ id, name, total_sections, discoverable_sections, isbn, issn, asin, cover_path, created_at, visited, series_id, series_number, series_name, is_container, parent_book_id, book_order }]</code></td></tr>
+          <tr><td><span class="method">GET</span></td><td><code>/api/series</code></td><td>Current user's series → <code>[{id, name, description, is_public, is_owner}]</code></td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/api/series</code></td><td>Create series: body <code>{ name, description?, isPublic? }</code> → <code>{ id, name, description, is_public, existed }</code></td></tr>
+          <tr><td><span class="method method-patch">PATCH</span></td><td><code>/api/series/:id</code></td><td>Update series: body <code>{ name?, description?, isPublic? }</code> → <code>{ ok }</code></td></tr>
+          <tr><td><span class="method">GET</span></td><td><code>/api/public/series</code></td><td>All public series for the covers wall → <code>[{ id, name, description, book_count }]</code>. No auth required.</td></tr>
+          <tr><td><span class="method">GET</span></td><td><code>/api/public/series/:id</code></td><td>Public series info → <code>{ id, name, description, isPublic, books: [{id, name, totalSections, coverUrl, isContainer, seriesNumber, childCount, isbn, issn, pages, authors}] }</code>. No auth required.</td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/api/books</code></td><td>Create book → <code>{ id, name, total_sections, isbn, issn, asin }</code></td></tr>
+          <tr><td><span class="method method-patch">PATCH</span></td><td><code>/api/books/:id</code></td><td>Update book metadata including <code>series_name</code> (resolved to <code>series_id</code>), <code>series_number</code>, <code>is_container</code>, <code>parent_book_id</code>, <code>book_order</code>. When <code>discoverable_sections</code> changes, retroactive XP is awarded. When <code>is_container</code> is true, <code>total_sections</code> is stored as 0.</td></tr>
+          <tr><td><span class="method method-del">DELETE</span></td><td><code>/api/books/:id</code></td><td>Delete book and all its data</td></tr>
+          <tr><td><span class="method">GET</span></td><td><code>/api/books/:id/state</code></td><td>Get full state JSON for a book</td></tr>
+          <tr><td><span class="method method-put">PUT</span></td><td><code>/api/books/:id/state</code></td><td>Save full state JSON for a book</td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/api/books/:id/cover</code></td><td>Upload raw JPEG body as book cover → <code>{ coverUrl }</code></td></tr>
+          <tr><td><span class="method">GET</span></td><td><code>/api/books/:id/rating</code></td><td>Current user's rating → <code>{ rating, userBookId, avgRating, voteCount }</code></td></tr>
+          <tr><td><span class="method method-patch">PATCH</span></td><td><code>/api/books/:id/rating</code></td><td>Set rating: body <code>{ rating }</code> (0.5–5.0 or null to clear) → <code>{ rating, xpAwarded, avgRating, voteCount }</code></td></tr>
+          <tr><td><span class="method">GET</span></td><td><code>/api/books/:id/notebook</code></td><td>Get notebook → <code>{ text }</code></td></tr>
+          <tr><td><span class="method method-put">PUT</span></td><td><code>/api/books/:id/notebook</code></td><td>Save notebook: body <code>{ text, ptIdx? }</code> → <code>{ ok, xpAwarded }</code></td></tr>
+          <tr><td><span class="method">GET</span></td><td><code>/api/books/:id/stream</code></td><td>SSE party live-sync stream. Pass token as <code>?token=</code>.</td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/api/books/:id/party</code></td><td>Create party: body <code>{ usernames }</code> → <code>{ ok, partyId, errors }</code></td></tr>
+          <tr><td><span class="method">GET</span></td><td><code>/api/books/:id/party</code></td><td>Get current party info → <code>{ party: { partyId, bookId, members } | null }</code></td></tr>
+          <tr><td><span class="method method-del">DELETE</span></td><td><code>/api/books/:id/party</code></td><td>Leave the party</td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/api/books/:id/party/invite</code></td><td>Add invite to existing party: body <code>{ username }</code></td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/api/books/:id/add</code></td><td>Add a public book to current user's library → <code>{ ok }</code>. 409 if already in library.</td></tr>
+          <tr><td><span class="method">GET</span></td><td><code>/api/stashes</code></td><td>Current user's stashes → <code>[{ id, name, createdAt, bookIds, seriesIds }]</code></td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/api/stashes</code></td><td>Create stash: body <code>{ name, book_ids, series_ids }</code> → <code>{ ok, id }</code></td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/api/stashes/:id</code></td><td>Update stash: body <code>{ name, book_ids, series_ids }</code> → <code>{ ok }</code></td></tr>
+          <tr><td><span class="method method-del">DELETE</span></td><td><code>/api/stashes/:id</code></td><td>Delete stash; items return to the main list</td></tr>
+          <tr><td><span class="method">GET</span></td><td><code>/api/party-invites</code></td><td>Pending party invites → <code>{ invites: [...] }</code></td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/api/party-invites/:id/accept</code></td><td>Accept party invite</td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/api/party-invites/:id/decline</code></td><td>Decline party invite</td></tr>
+          <tr><td><span class="method">GET</span></td><td><code>/api/users/search?q=</code></td><td>Search users by username substring → <code>{ users: [{ id, username, avatar_path }] }</code></td></tr>
+          <tr><td><span class="method">GET</span></td><td><code>/api/notifications</code></td><td>User notifications → <code>{ unseen, items: [{ id, type, payload, seen, createdAt }] }</code>. Last 10, newest first.</td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/api/notifications/seen</code></td><td>Mark all unseen notifications as seen → <code>{ ok }</code></td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/api/attachments</code></td><td>Upload a file attachment (auth required). Raw binary body; <code>Content-Type: application/octet-stream</code>; original filename in <code>X-Filename</code> header (percent-encoded). Max 64 MB. Returns <code>{ id, filename, original_name }</code>. Accepted types: images by magic bytes (JPEG/PNG/GIF/WebP/AVIF), PDF, ZIP/7z/RAR/GZIP by magic bytes; plain text extensions (.txt .md .csv .json .xml) by extension. File written to <code>public/attachments/</code> as <code>att_{userId}_{timestamp}{ext}</code>. JPEG magic bytes override extension to <code>.jpg</code>. Include returned <code>id</code> in a subsequent submit call's <code>attachment_ids</code> to link; unlinked uploads are orphaned.</td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/api/feedback</code></td><td>Submit feedback. No auth required (anonymous supported). Body: <code>{ username, email?, message, attachment_ids?: number[] }</code></td></tr>
+          <tr><td><span class="method">GET</span></td><td><code>/api/feedback</code></td><td>Get feedback threads (auth required). For admin user: returns all threads with <code>admin_unread</code> mapped to <code>user_unread</code> for inbox badge. For regular users: returns only their own threads. Messages include <code>attachments: [{ id, filename, original_name }]</code>.</td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/api/feedback/:id/reply</code></td><td>Reply to a thread. Body: <code>{ message, attachment_ids?: number[] }</code>. For admin: posts as <code>'admin'</code> sender, marks admin_unread=0, sets user_unread=1, sends email if thread has email. For regular user: posts as <code>'user'</code>, notifies admin.</td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/api/feedback/:id/read</code></td><td>Mark thread as read by user → <code>{ ok }</code></td></tr>
+          <tr><td><span class="method method-del">DELETE</span></td><td><code>/api/feedback/:id</code></td><td>Delete thread (auth required)</td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/api/shop/purchase</code></td><td>Purchase shop item: body <code>{ item: 'xp_boost' | 'heartbeat_xp' | 'undo' | 'fast_travel' }</code>. 402 if insufficient coins, 403 if purchase cap reached. Caps: XP boost <code>level</code> purchases (= level × 0.1%), heartbeat <code>level</code> purchases. Undo and fast_travel: <code>undoFastTravelCap(level)</code> - 1 purchase per 10 levels (<code>floor((max(level,1)-1)/10)+1</code>; level 0-10 → 1, 11-20 → 2, etc), mirrored client-side in <code>shop.js</code>. Costs: XP boost/heartbeat escalate (next purchase = purchased count + 1 GC); undo = <code>(bonus_undos + 1) * 3</code> GC; fast_travel = <code>(bonus_fast_travels + 1) * 5</code> GC.</td></tr>
+          <tr><td><span class="method method-patch">PATCH</span></td><td><code>/api/books/:id/bg</code></td><td>Save graph background preference: body <code>{ hidden: bool, pos_y: number }</code>. Stores in <code>user_books.bg_hidden</code> / <code>user_books.bg_pos_y</code> (pos_y clamped 0–100). → <code>{ ok: true }</code>.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Profile API -->
+    <div class="section" id="profile-api">
+      <h2>Profile API</h2>
+      <table>
+        <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><span class="method">GET</span></td><td><code>/api/profile</code></td><td>Current user: <code>{ id, username, avatarUrl, publicProfile, hideFeed, xp, level, title, levelXp, nextLevelXp, coinsBalance, xpBoostPct, xpBoostPurchased, xpFromBoost, bonusHeartbeatXp, bonusUndos, bonusFastTravels, isAuthor, displayName, isAdmin, pdfAccess }</code></td></tr>
+          <tr><td><span class="method method-patch">PATCH</span></td><td><code>/api/profile</code></td><td>Update username, password, avatar, publicProfile, hideFeed, displayName</td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/api/profile/avatar</code></td><td>Upload raw JPEG body → <code>{ avatarUrl }</code></td></tr>
+          <tr><td><span class="method">GET</span></td><td><code>/api/prefs</code></td><td>UI preferences → <code>{ prefs }</code></td></tr>
+          <tr><td><span class="method method-patch">PATCH</span></td><td><code>/api/prefs</code></td><td>Update one or more UI prefs: body <code>{ key: value, … }</code></td></tr>
+        </tbody>
+      </table>
+      <p><code>PATCH /api/profile</code> body: <code>{ username?, currentPassword?, newPassword?, avatarUrl?, publicProfile?, hideFeed?, displayName? }</code>. Password change requires <code>currentPassword</code>. <code>displayName</code> only applies when <code>is_author = 1</code>.</p>
+      <p><code>coinsSpent</code> (raw <code>coins_spent</code> column, lifetime total) is now also returned and shown as a small "N spent" pill in the shop modal header next to the balance pill (<code>shop.js</code>'s <code>updateSpentDisplay()</code>), refreshed on modal open and after every purchase.</p>
+      <p><code>coinsBalance = floor(xp/1000) + bonus_coins - coins_spent</code>. <code>xpBoostPct</code> is the actual boost percent (DB stores tenths; divided by 10 before returning). <code>xpBoostPurchased</code> is the count of purchased boosts only (free level-up boosts excluded). <code>bonusHeartbeatXp</code> counts purchased Heartbeat XP upgrades (<code>+0.1</code> base heartbeat XP each). <code>isAdmin</code> is returned so the regular app can reliably show admin-only controls such as PDF rows. <code>pdfAccess</code> is <code>true</code> when <code>users.pdf_access = 1</code> (or when <code>isAdmin</code> is <code>true</code>); when true the frontend renders a small <strong>PDF</strong> link next to the book title in the play area (if the book has a PDF), opening it in a new tab.</p>
+      <p>Avatar files: <code>public/avatars/&lt;userId&gt;_&lt;timestamp&gt;.jpg</code>. Book covers: <code>public/covers/&lt;userId&gt;_&lt;bookId&gt;_&lt;timestamp&gt;.jpg</code>. Old file deleted on new upload. Both are compressed client-side to ≤256 KB before upload.</p>
+      <p>The client-side XP / coin reward floater uses repeated <code>GET /api/profile</code> snapshots. <code>rewards.js</code> compares the latest <code>{ xp, coinsBalance }</code> values against the previous snapshot and renders a merged floating notice in <code>#reward-float-layer</code> when either value increases. There is no dedicated server push channel for this.</p>
+      <p><code>_positionRewardLayer()</code> sets <code>left</code> as an inline style from real <code>getBoundingClientRect()</code>s (always wins over <code>mobile.css</code>'s plain <code>calc(75vw + var(--sidebar-w) / 4)</code> fallback, which only applies if none of its branches match). Three branches: books screen fully collapsed (dead-center), books screen normally (between <code>#feed-panel</code> and <code>#landing-right</code>), play area (between <code>#play-bottom-stack</code> and <code>#play-btn-row</code> - previously <code>#play-btns-bar</code>/<code>#charsheet-btn</code>, fixed since <code>#charsheet-btn</code> is just one button inside <code>#play-btn-row</code>'s <code>row-reverse</code> layout and isn't a stable stand-in for the row's actual edge). Confirmed working for the general case.</p>
+      <p><strong>Known issue, unresolved (2026-07-19):</strong> floaters reported missing specifically for run completion (loss/win) and marking a run public, on a 1600×900 screen - other XP sources float fine. DB-confirmed the XP is awarded correctly server-side, so it's not an awarding bug. Likely suspect: unlike heartbeat XP, a completed run/public-toggle only reaches the server via <code>PUT /api/books/:id/state</code> (response is just <code>{ok:true}</code>) - the client only learns about it via <code>book-state-saved</code> → <code>scheduleRewardProfileRefresh</code> (850ms debounced) → <code>refreshCoinsDisplay()</code> → <code>GET /api/profile</code> → <code>_processRewardSnapshot</code>. That chain looks structurally correct in the code but hasn't been reproduced/observed directly (no browser tooling available), so the actual break point is unconfirmed.</p>
+      <h3>Book PDFs</h3>
+      <p>PDF files are stored in <code>public/books/&lt;bookId&gt;_&lt;timestamp&gt;.pdf</code> and served via <code>GET /books/&lt;filename&gt;</code>.</p>
+      <ul>
+        <li><code>POST /api/books/:id/pdf</code> - raw PDF body, max 128 MB. Magic bytes <code>%PDF</code> validated. Old file deleted on replacement. Awards 200 XP (<code>pdf_available</code>) to every user who has the book in their library (once per user per book).</li>
+        <li><code>DELETE /api/books/:id/pdf</code> - removes the file and clears <code>pdf_path</code>. Does not revoke previously awarded XP.</li>
+      </ul>
+      <p>The <code>pdf_path</code> column on <code>books</code> stores the filename only.</p>
+      <p>The static file gate (<code>GET /books/:path</code>) requires the request to be authenticated with a user who has <code>is_admin = 1</code> or <code>pdf_access = 1</code>. Unauthenticated requests and users without either flag receive <code>403</code>. <code>pdf_access</code> is toggled by the admin via <code>POST /api/admin/users/:id/pdf-access</code> with body <code>{ pdfAccess: bool }</code>.</p>
+      <p><strong>Gold Coins:</strong> base GC is still derived from XP, but extra one-time milestone GC rewards are stored separately in <code>users.bonus_coins</code> and deduped in <code>coin_events</code>.</p>
+      <ul>
+        <li><code>playtime_24h</code> - 1 GC each time a user crosses another 1,440 <code>idle_heartbeat</code> events (24 tracked hours)</li>
+        <li><code>book_completed</code> - 1 GC the first time a user earns <code>visit_all</code> for a book</li>
+        <li><code>runs_milestone</code> - 1 GC per 100 completed runs (<code>win_run + death_run + battle_run</code> events total); ref is the milestone as a string (<code>"100"</code>, <code>"200"</code>, …). Checked at runtime after every run-completing state save and backfilled once at startup.</li>
+        <li><code>visit_all_series</code> - N GC (N = child book count) the first time a user earns <code>visit_all</code> for every non-container book in a series</li>
+        <li><code>visit_all_anthology</code> - N GC (N = child book count) the first time a user earns <code>visit_all</code> for every child book of an anthology</li>
+      </ul>
+      <p>Startup backfills for <code>book_completed</code>, <code>runs_milestone</code>, <code>visit_all_series</code>, and <code>visit_all_anthology</code> run once, guarded by <code>book_complete_coin_backfilled</code>, <code>runs_milestone_coin_backfilled</code>, and <code>group_complete_coin_backfilled</code> keys in <code>admin_settings</code>.</p>
+    </div>
+
+    <!-- Admin panel UI -->
+    <div class="section" id="admin-panel-ui">
+      <h2>Admin panel UI</h2>
+      <p>All admin UI documentation (stat cards, tabs, user actions, book actions, feedback, announcements, SMTP config, and admin settings keys) is in <code>admin/admin-guide.html</code>, served at <code>/admin/guide</code>.</p>
+      <h3>Stats polling</h3>
+      <p><code>GET /api/admin/stats</code> - full stats payload: <code>users</code>, <code>books</code> (non-demo non-container top-level), <code>anthologies</code> (<code>is_container = 1</code> top-level non-demo), <code>series</code> (all rows in <code>series</code> table), <code>sessions</code>, sections, playthroughs, wins, deaths, DB size, coins totals (earned / available / spent), uptime fields, traffic counters. Polled every <strong>60 s</strong> by the admin panel (<code>loadStats</code>).</p>
+      <p><code>GET /api/admin/live</code> - cheap subset for high-frequency polling: <code>{ heapUsed, heapTotal, rss, cpuPct, sessionUptime, appAge, trafficIn, trafficOut }</code>. CPU% is a one-decimal float derived from <code>process.cpuUsage()</code> delta between calls. <code>sessionUptime</code> and <code>appAge</code> are seconds since the current session start and since first-ever tracking, respectively. Polled every <strong>1 s</strong> by <code>loadLive()</code>. Drives the Heap, RSS/CPU, Session Uptime, App Age, and Traffic cards.</p>
+      <h3>Traffic counters</h3>
+      <p><code>_trafficIn</code> / <code>_trafficOut</code> accumulate raw bytes across all HTTP requests and response bodies. Flushed to <code>admin_settings</code> keys <code>traffic_in</code> / <code>traffic_out</code> every 50 requests and on SIGINT/SIGTERM. Returned by both <code>/api/admin/stats</code> and <code>/api/admin/live</code>.</p>
+      <h3>Uptime tracking</h3>
+      <p>Five keys in <code>admin_settings</code> drive uptime metrics: <code>server_first_tracked_at</code> (set once, never overwritten), <code>server_session_start_at</code> (reset when restart gap &gt; 5 s), <code>server_total_downtime_s</code> (accumulated downtime), <code>server_last_heartbeat</code> (written every 30 s), <code>server_stopped_at</code> (written on clean shutdown, cleared to <code>0</code> on next start). <code>_sessionStartAt</code> is cached in memory at startup for zero-DB-read serving on every live poll. "App Age" is <code>now − getAppBirthTimestamp()</code>, where <code>getAppBirthTimestamp()</code> returns <code>MIN(created_at)</code> across the <code>users</code> and <code>books</code> tables - the date the first user ever registered. "Session Uptime" is <code>now − _sessionStartAt</code>. Both update every second via the live endpoint.</p>
+    </div>
+
+    <!-- Database -->
+    <div class="section" id="database">
+      <h2>Database (<code>server/db.js</code>)</h2>
+      <p>Uses <code>better-sqlite3</code> (synchronous SQLite). WAL mode and foreign keys enabled.</p>
+      <h3 id="schema">Schema</h3>
+      <pre><code>users (id, username UNIQUE, password_hash, salt, avatar_path, public_profile,
+       xp, xp_boost_pct, xp_from_boost, coins_spent, bonus_undos, bonus_fast_travels,
+       last_country, last_city, active_country, active_city, active_loc_at, last_domain, last_active_at,
+       failed_login_attempts, locked_until, is_protected, is_admin, is_author, is_contributor,
+       display_name, hide_from_feed, forum_seen_at,
+       pdf_access INTEGER DEFAULT 0, join_template_id INTEGER, created_at)
+sessions (token PK, user_id → users, created_at, expires_at)
+books (id, name, total_sections, discoverable_sections, isbn, issn, asin,
+       cover_path, pdf_path, is_demo, is_public, pages, authors, description,
+       created_by → users, created_at, updated_at,
+       series_id → series SET NULL, series_number TEXT,
+       is_container INTEGER DEFAULT 0, parent_book_id → books SET NULL, book_order INTEGER)
+series (id PK AUTOINCREMENT, name TEXT UNIQUE, description TEXT,
+        is_public INTEGER NOT NULL DEFAULT 0,
+        created_by → users SET NULL, created_at)
+user_books (id, user_id → users CASCADE, book_id → books CASCADE,
+            state_data TEXT, rating REAL, notebook TEXT,
+            party_id → book_parties SET NULL,
+            bg_hidden INTEGER DEFAULT 0, bg_pos_y REAL DEFAULT 50,
+            created_at, updated_at)
+  UNIQUE INDEX ON user_books(user_id, book_id)
+book_parties (id PK AUTOINCREMENT, book_id → books CASCADE, created_at)
+party_invites (id PK AUTOINCREMENT, party_id → book_parties CASCADE,
+               inviter_id → users CASCADE, invitee_id → users CASCADE,
+               status TEXT DEFAULT 'pending', created_at, responded_at)
+  UNIQUE INDEX ON party_invites(party_id, invitee_id)
+xp_events (id PK, user_id → users, event TEXT, ref TEXT, created_at)
+  UNIQUE INDEX ux_xp_events ON xp_events(user_id, event, ref)
+admin_settings (key TEXT PK, value TEXT)
+announcements (id PK AUTOINCREMENT, title TEXT, body TEXT,
+               is_draft INT DEFAULT 1, pinned INT DEFAULT 0, created_at, published_at)
+feedback (id PK, user_id → users, username, email, message, created_at,
+          admin_unread, user_unread, deleted_by_user, deleted_by_admin)
+feedback_messages (id PK, thread_id → feedback CASCADE, sender, body, created_at)
+forum_categories (id PK AUTOINCREMENT, name TEXT, slug TEXT UNIQUE, description TEXT, sort_order INT DEFAULT 0)
+forum_threads (id PK AUTOINCREMENT, user_id → users SET NULL, category_id → forum_categories,
+               title TEXT, body TEXT, reply_count INT DEFAULT 0,
+               is_locked INT DEFAULT 0, is_pinned INT DEFAULT 0, last_post_at, created_at, edited_at)
+forum_posts (id PK AUTOINCREMENT, thread_id → forum_threads CASCADE,
+             user_id → users SET NULL, body TEXT, is_deleted INT DEFAULT 0, created_at, edited_at)
+user_series (user_id → users CASCADE, series_id → series CASCADE,
+             added_at; PRIMARY KEY (user_id, series_id))
+user_stashes (id PK AUTOINCREMENT, user_id → users CASCADE, name TEXT, created_at)
+stash_books (stash_id → user_stashes CASCADE, user_id → users CASCADE, book_id → books CASCADE;
+             PRIMARY KEY (stash_id, book_id))
+stash_series (stash_id → user_stashes CASCADE, user_id → users CASCADE, series_id → series CASCADE;
+              PRIMARY KEY (stash_id, series_id))
+tips (id PK AUTOINCREMENT, text TEXT UNIQUE, type TEXT CHECK(type IN ('real','silly')),
+      active INTEGER NOT NULL DEFAULT 1, created_at)
+notifications (id PK AUTOINCREMENT, user_id → users CASCADE, type TEXT, payload TEXT,
+               seen INT DEFAULT 0, created_at)
+coin_events (id PK AUTOINCREMENT, user_id → users CASCADE, event TEXT, ref TEXT,
+             amount INT DEFAULT 0, created_at; UNIQUE(user_id, event, ref))
+level_up_templates (id PK AUTOINCREMENT, text TEXT UNIQUE, created_at)
+join_templates (id PK AUTOINCREMENT, text TEXT UNIQUE, created_at)
+taglines (id PK AUTOINCREMENT, text TEXT UNIQUE, active INTEGER DEFAULT 1)
+attachments (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  uploaded_by   INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  filename      TEXT NOT NULL,       -- stored: att_{userId}_{timestamp}{ext}
+  original_name TEXT NOT NULL,       -- original filename from X-Filename header
+  created_at    INTEGER,
+  kind          TEXT,                -- 'feedback_message' | 'forum_post' (NULL until linked)
+  linked_id     INTEGER              -- FK into feedback_messages.id or forum_posts.id
+)
+INDEX idx_attachments_kind_linked ON attachments (kind, linked_id)</code></pre>
+      <p><strong>Attachments</strong> - polymorphic file store. Files are written to <code>public/attachments/</code>. <code>kind</code>/<code>linked_id</code> are <code>NULL</code> until the owning message is submitted; <code>db.linkAttachments</code> sets them in a transaction guarded by <code>uploaded_by = userId AND linked_id IS NULL</code>. Archives served with <code>Content-Disposition: attachment</code>; others inline. <code>serveStatic</code> serves <code>/attachments/</code> without session auth.</p>
+      <p><strong>Books are shared entities.</strong> A single <code>books</code> row holds metadata common to all users. Per-user data (graph, playthroughs, char sheet) lives in <code>user_books.state_data</code>. When the last <code>user_books</code> row for a book is deleted, the <code>books</code> row and its cover file are cleaned up.</p>
+      <p><strong>Series</strong> - the <code>series</code> table groups books into named series. <code>books.series_id</code> / <code>series_number</code> (free text) link a book to a series.</p>
+      <p>Membership is explicit via <code>user_series</code> - a series only appears in a user's list if they have a row there:</p>
+      <ul>
+        <li><code>getOrCreateSeries(name, userId, addToLibrary=false)</code> - inserts into <code>user_series</code> only when <code>addToLibrary=true</code> (create-book flow, not edit-book - prevents silently re-adding a removed series).</li>
+        <li><code>removeSeriesFromLibrary()</code> - removes membership <em>and</em> all the series' books from the user's library.</li>
+        <li><code>removeSeriesEntryOnly()</code> - removes only the membership row; books stay.</li>
+        <li>Creator deletion transfers ownership to the next owner; only ownerless series are fully deleted and orphan their books.</li>
+        <li><code>getPublicSeriesInfo(seriesId)</code> - series metadata + public books sorted by <code>CAST(series_number AS REAL)</code>.</li>
+        <li><code>getAllSeriesAdmin()</code> - all series with creator and book count (admin Series tab).</li>
+        <li>Admin can edit or delete any series via <code>PATCH/DELETE /api/admin/series/:id</code>.</li>
+      </ul>
+      <p><strong>Anthologies</strong> - <code>is_container = 1</code> marks a book as a parent container. Containers have name, ISBN/ISSN, cover, pages, description, but <code>total_sections = 0</code> and no playthroughs. Children (<code>parent_book_id → containers</code>) have full graph/run tracking. Adding an anthology cascades to all its public children; removing does the same. Sorting: recently played → <code>book_order</code> → alphabetical. All container/parent columns were added via <code>ALTER TABLE</code> migrations at startup.</p>
+      <p><strong>Stashes</strong> - <code>user_stashes</code>, <code>stash_books</code>, and <code>stash_series</code> provide private library-organisation buckets. They affect only the right-panel books list; they do not modify shared book or series metadata. A stash can contain a mix of series and explicit books/anthologies, but any given item may belong to only one stash at a time.</p>
+      <p><strong>Tips</strong> - the <code>tips</code> table stores rotating tip bar entries. Each tip has <code>type</code> (<code>'real'</code> or <code>'silly'</code>) and <code>active</code> flag. <code>GET /api/tips</code> returns only active tips split by type. The admin Tips tab provides full CRUD: add, edit text, flip type, toggle active, delete. The client shuffles real and silly tips into alternating decks.</p>
+      <p><strong><code>is_protected</code></strong> - account cannot be locked or deleted. Separate from <code>is_admin</code>, which controls API admin access and is counted in Stats for Nerds. A protected account is not automatically an admin.</p>
+      <p><strong><code>pdf_access</code></strong> (<code>INTEGER DEFAULT 0</code>) - when <code>1</code>, the user can download book PDFs via <code>GET /books/:path</code>. Toggled by the admin via <code>POST /api/admin/users/:id/pdf-access { pdfAccess: bool }</code>. Admins bypass this check automatically. Returned in <code>GET /api/profile</code> as <code>pdfAccess: bool</code>. Added via <code>ALTER TABLE</code> migration at startup.</p>
+      <p><strong><code>join_template_id</code></strong> (<code>INTEGER</code>) - permanently assigned at registration by randomly selecting a row from the <code>join_templates</code> table (50 templates seeded at startup via <code>INSERT OR IGNORE</code>, same pattern as <code>level_up_templates</code>). Existing users are backfilled a random template on startup. The template text is used for the <code>user_joined</code> activity feed entry for that user and never changes, so the join-feed text is stable across refreshes.</p>
+      <p>Column additions are handled via <code>ALTER TABLE</code> migrations on startup (no-ops if already present). One-time migrations are guarded by <code>admin_settings</code> keys (see Admin settings table above).</p>
+    </div>
+
+    <!-- XP & levelling -->
+    <div class="section" id="xp-levelling">
+      <h2>XP &amp; levelling</h2>
+      <p>XP is stored in <code>users.xp</code>. Every awarded event is recorded in <code>xp_events</code> with a UNIQUE constraint on <code>(user_id, event, ref)</code> - XP can never be double-awarded.</p>
+      <h3>Level formula</h3>
+      <pre><code>xpForLevel(n)    = 1000 × n × (n+1) / 2
+computeLevel(xp) = min(floor((-1 + sqrt(1 + 8·xp/1000)) / 2), 100)</code></pre>
+      <p>Level 1 = 1,000 XP · Level 10 = 55,000 · Level 100 = 5,050,000 (cap)</p>
+      <h3>Undo &amp; fast travel limits</h3>
+      <p>Both <code>maxUndos()</code> and <code>maxFastTravels()</code> follow the same formula: 3 at levels 0–30, then +1 per 10 levels from level 31 (thresholds: 31, 41, 51, 61, 71, 81, 91), capped at 10. When a level-up crosses a threshold, the feed announces it as a <span style="color:#a78bfa">· +1 undo &amp; fast travel unlocked (N per run)</span> suffix on the level-up entry.</p>
+      <h3>Titles</h3>
+      <table>
+        <thead><tr><th>Lvl</th><th>Title</th><th>Lvl</th><th>Title</th><th>Lvl</th><th>Title</th><th>Lvl</th><th>Title</th></tr></thead>
+        <tbody>
+          <tr><td>0</td><td>Newborn</td><td>26</td><td>Pathbreaker</td><td>51</td><td>Adventurer</td><td>76</td><td>Paragon</td></tr>
+          <tr><td>1</td><td>Lost Soul</td><td>27</td><td>Realm Walker</td><td>52</td><td>Bold Wanderer</td><td>77</td><td>Exemplar</td></tr>
+          <tr><td>2</td><td>Stray</td><td>28</td><td>Horizon Seeker</td><td>53</td><td>Daring Scout</td><td>78</td><td>Peerless</td></tr>
+          <tr><td>3</td><td>Wandering Eye</td><td>29</td><td>Lore Hunter</td><td>54</td><td>Fortune Seeker</td><td>79</td><td>Master</td></tr>
+          <tr><td>4</td><td>Curious Soul</td><td>30</td><td>Outrider</td><td>55</td><td>Risk Taker</td><td>80</td><td>Grand Master</td></tr>
+          <tr><td>5</td><td>Seeker</td><td>31</td><td>Pathfinder</td><td>56</td><td>Danger Walker</td><td>81</td><td>Hero</td></tr>
+          <tr><td>6</td><td>Fledgling</td><td>32</td><td>Guide</td><td>57</td><td>Iron Will</td><td>82</td><td>Guardian</td></tr>
+          <tr><td>7</td><td>Apprentice</td><td>33</td><td>Navigator</td><td>58</td><td>Brave Heart</td><td>83</td><td>Defender</td></tr>
+          <tr><td>8</td><td>Initiate</td><td>34</td><td>Wayfinder</td><td>59</td><td>Fearless One</td><td>84</td><td>Protector</td></tr>
+          <tr><td>9</td><td>Novice</td><td>35</td><td>Trailmaster</td><td>60</td><td>Undaunted</td><td>85</td><td>Stalwart</td></tr>
+          <tr><td>10</td><td>Student</td><td>36</td><td>Route Keeper</td><td>61</td><td>Veteran</td><td>86</td><td>Bastion</td></tr>
+          <tr><td>11</td><td>Wanderer</td><td>37</td><td>Mapper</td><td>62</td><td>Seasoned Hand</td><td>87</td><td>Paladin</td></tr>
+          <tr><td>12</td><td>Drifter</td><td>38</td><td>Chartist</td><td>63</td><td>Old Guard</td><td>88</td><td>Luminary</td></tr>
+          <tr><td>13</td><td>Rover</td><td>39</td><td>Lorekeeper</td><td>64</td><td>Grizzled Tracker</td><td>89</td><td>Beacon</td></tr>
+          <tr><td>14</td><td>Roamer</td><td>40</td><td>Chronicler</td><td>65</td><td>Battle-Scarred</td><td>90</td><td>Vanguard</td></tr>
+          <tr><td>15</td><td>Traveller</td><td>41</td><td>Cartographer</td><td>66</td><td>Proven Explorer</td><td>91</td><td>Legend</td></tr>
+          <tr><td>16</td><td>Wayfarer</td><td>42</td><td>Mapmaker</td><td>67</td><td>Tested Wayfarer</td><td>92</td><td>Myth</td></tr>
+          <tr><td>17</td><td>Scout</td><td>43</td><td>Geographer</td><td>68</td><td>Hardened Soul</td><td>93</td><td>Immortal</td></tr>
+          <tr><td>18</td><td>Ranger</td><td>44</td><td>Atlas Keeper</td><td>69</td><td>Ironclad</td><td>94</td><td>Demigod</td></tr>
+          <tr><td>19</td><td>Journeyman</td><td>45</td><td>Realm Scribe</td><td>70</td><td>Elder</td><td>95</td><td>Ascendant</td></tr>
+          <tr><td>20</td><td>Trailblazer</td><td>46</td><td>Land Warden</td><td>71</td><td>Champion</td><td>96</td><td>Exalted</td></tr>
+          <tr><td>21</td><td>Explorer</td><td>47</td><td>World Mapper</td><td>72</td><td>Conqueror</td><td>97</td><td>Transcendent</td></tr>
+          <tr><td>22</td><td>Pioneer</td><td>48</td><td>Domain Master</td><td>73</td><td>Victor</td><td>98</td><td>Eternal</td></tr>
+          <tr><td>23</td><td>Surveyor</td><td>49</td><td>Grand Surveyor</td><td>74</td><td>Vanquisher</td><td>99</td><td>Timeless</td></tr>
+          <tr><td>24</td><td>Discoverer</td><td>50</td><td>Master Mapper</td><td>75</td><td>Undefeated</td><td>100</td><td>Godwalker</td></tr>
+          <tr><td>25</td><td>Frontiersman</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- XP events -->
+    <div class="section" id="xp-events">
+      <h2>XP events</h2>
+      <p>Admin reference - not shown to users. All awards are idempotent via <code>INSERT OR IGNORE</code>.</p>
+      <table>
+        <thead><tr><th>Event</th><th>XP</th><th>Ref key</th><th>Condition</th></tr></thead>
+        <tbody>
+          <tr><td><code>discover_node</code></td><td>1</td><td><code>bookId:sectionId</code></td><td>First time a section appears in the graph, per book</td></tr>
+          <tr><td><code>visit_node</code></td><td>2</td><td><code>bookId:sectionId</code></td><td>First time a section appears in any run path, per book</td></tr>
+          <tr><td><code>death_run</code></td><td>10</td><td><code>bookId:runIndex</code></td><td>Per completed death run</td></tr>
+          <tr><td><code>win_run</code></td><td>20</td><td><code>bookId:runIndex</code></td><td>Per completed win run</td></tr>
+          <tr><td><code>battle_run</code></td><td>15</td><td><code>bookId:runIndex</code></td><td>Per completed battle-death run</td></tr>
+          <tr><td><code>discover_all</code></td><td>30</td><td><code>bookId</code></td><td>Once per book when discovered ≥ effective_sections (<code>discoverable_sections ?? total_sections</code>)</td></tr>
+          <tr><td><code>visit_all</code></td><td>40</td><td><code>bookId</code></td><td>Once per book when visited ≥ effective_sections (<code>discoverable_sections ?? total_sections</code>). Also grants 1 one-time Gold Coin milestone for that user/book.</td></tr>
+          <tr><td><code>add_book</code></td><td>50</td><td><code>bookId</code></td><td>Per book created</td></tr>
+          <tr><td><code>add_isbn</code></td><td>25</td><td><code>bookId</code></td><td>Once per book when ISBN first set</td></tr>
+          <tr><td><code>add_issn</code></td><td>25</td><td><code>bookId</code></td><td>Once per book when ISSN first set</td></tr>
+          <tr><td><code>add_asin</code></td><td>25</td><td><code>bookId</code></td><td>Once per book when ASIN first set</td></tr>
+          <tr><td><code>add_pages</code></td><td>5</td><td><code>bookId</code></td><td>Once per book when page count first set</td></tr>
+          <tr><td><code>add_authors</code></td><td>10</td><td><code>bookId</code></td><td>Once per book when author(s) first set</td></tr>
+          <tr><td><code>add_description</code></td><td>50</td><td><code>bookId</code></td><td>Once per book when description first set</td></tr>
+          <tr><td><code>upload_cover</code></td><td>10</td><td><code>bookId</code></td><td>Once per book on first cover upload</td></tr>
+          <tr><td><code>share_run</code></td><td>15</td><td><code>bookId:runIndex</code></td><td>Per run, first time <code>isPublic</code> set to true</td></tr>
+          <tr><td><code>add_note</code></td><td>5</td><td><code>bookId:sectionId</code></td><td>Once per node per book, first time note is set non-empty</td></tr>
+          <tr><td><code>set_priority</code></td><td>3</td><td><code>bookId:sectionId</code></td><td>Once per node per book, first time priority is set</td></tr>
+          <tr><td><code>mark_battle</code></td><td>4</td><td><code>bookId:sectionId</code></td><td>Once per node per book, first time flagged as battle location</td></tr>
+          <tr><td><code>set_color</code></td><td>3</td><td><code>bookId:sectionId</code></td><td>Once per node per book, first time a custom colour is applied to the node</td></tr>
+          <tr><td><code>charsheet_saved</code></td><td>65</td><td><code>bookId:runIndex</code></td><td>Once per run, first time character sheet is saved (charSheet object first set on run)</td></tr>
+          <tr><td><code>charsheet_run</code></td><td>10</td><td><code>bookId:runIndex</code></td><td>Once per run, first time charSheet.fields becomes non-empty</td></tr>
+          <tr><td><code>notebook_saved</code></td><td>65</td><td><code>bookId:runIndex</code></td><td>Once per run, first time notebook saved via PUT /api/books/:id/notebook with ptIdx ≥ 0</td></tr>
+          <tr><td><code>run_depth</code></td><td>25</td><td><code>bookId:runIndex</code></td><td>Per run, first time the run path becomes non-empty (the run is started)</td></tr>
+          <tr><td><code>public_profile</code></td><td>75</td><td><code>userId</code></td><td>Once per user, first time profile made public</td></tr>
+          <tr><td><code>upload_avatar</code></td><td>25</td><td><code>userId</code></td><td>Once per user, first avatar upload</td></tr>
+          <tr><td><code>rate_book</code></td><td>35</td><td><code>bookId</code></td><td>Once per book, first time a star rating is set (changing or clearing does not re-award)</td></tr>
+          <tr><td><code>make_book_public</code></td><td>125</td><td><code>bookId</code></td><td>Once per book, first time <code>is_public</code> toggled to true; creator only</td></tr>
+          <tr><td><code>forum_thread</code></td><td>25</td><td><code>threadId</code></td><td>Per new thread created</td></tr>
+          <tr><td><code>forum_post</code></td><td>5</td><td><code>postId</code></td><td>Per new reply posted (edits do not re-award)</td></tr>
+          <tr><td><code>add_to_library</code></td><td>15</td><td><code>bookId</code></td><td>Once per book, when a user adds someone else's public book to their library</td></tr>
+          <tr><td><code>book_added_by_other</code></td><td>150</td><td><code>bookId:adderId</code></td><td>Once per adder per book, awarded to the creator when another user adds their book</td></tr>
+          <tr><td><code>pdf_available</code></td><td>200</td><td><code>bookId</code></td><td>Once per book per user, when a PDF is uploaded for a book in the user's library</td></tr>
+          <tr><td><code>export_all</code></td><td>200</td><td><code>0</code></td><td>Once per user, first time Export Everything is used</td></tr>
+          <tr><td><code>export_book</code></td><td>50</td><td><code>bookId</code></td><td>Once per book, first time the user exports that book</td></tr>
+          <tr><td><code>create_series</code></td><td>50</td><td><code>seriesId</code></td><td>Once per series, on first creation (not find-existing)</td></tr>
+          <tr><td><code>add_series_description</code></td><td>10</td><td><code>seriesId</code></td><td>Once per series, first time description is set (on create or edit)</td></tr>
+          <tr><td><code>add_book_to_series</code></td><td>10</td><td><code>bookId</code></td><td>Once per book, first time a series is assigned to a book (on create or update)</td></tr>
+          <tr><td><code>add_book_to_anthology</code></td><td>10</td><td><code>bookId</code></td><td>Once per book, first time it is attached to an anthology (on create or update)</td></tr>
+          <tr><td><code>add_series_number</code></td><td>5</td><td><code>bookId</code></td><td>Once per book, first time a series number is set while the book belongs to a series</td></tr>
+          <tr><td><code>add_anthology_order</code></td><td>5</td><td><code>bookId</code></td><td>Once per book, first time an anthology order number is set while the book belongs to an anthology</td></tr>
+          <tr><td><code>create_party</code></td><td>75</td><td><code>partyId</code></td><td>Awarded to the original party creator when the first invitee accepts and the party becomes a real multi-user party</td></tr>
+          <tr><td><code>join_party</code></td><td>50</td><td><code>partyId:userId</code></td><td>Once per user per party, when a pending invite is accepted</td></tr>
+          <tr><td><code>party_formed</code></td><td>0</td><td><code>partyId</code></td><td>0 XP; exists for feed deduplication. Awarded to the party creator when the first invite is accepted. Referenced by the <code>party_formed</code> feed event.</td></tr>
+          <tr><td><code>first_win</code></td><td>100</td><td><code>bookId</code></td><td>Once per book per user, on the first run completed with <code>result === 'success'</code>. Always book-scoped (never series-scoped).</td></tr>
+          <tr><td><code>first_loss</code></td><td>50</td><td><code>bookId</code></td><td>Once per book per user, on the first run completed with <code>result === 'death'</code>.</td></tr>
+          <tr><td><code>first_battle_death</code></td><td>25</td><td><code>bookId</code></td><td>Once per book per user, on the first run completed with <code>result === 'battle'</code>.</td></tr>
+          <tr><td><code>won_all_series</code></td><td>20 × N</td><td><code>seriesId</code></td><td>Once per user per series (N = non-demo non-container book count). Fires after any win when every book in the series has at least one <code>win_run</code>. Skipped for open-world series.</td></tr>
+          <tr><td><code>won_all_anthology</code></td><td>20 × N</td><td><code>parentBookId</code></td><td>Once per user per anthology (N = non-demo child count). Same logic as <code>won_all_series</code> scoped to <code>parent_book_id</code>.</td></tr>
+          <tr><td><code>discover_all_series</code></td><td>30 × N</td><td><code>seriesId</code></td><td>Once per user per series. Fires after a book's <code>discover_all</code> when all non-demo non-container books in the series also have <code>discover_all</code>.</td></tr>
+          <tr><td><code>visit_all_series</code></td><td>40 × N</td><td><code>seriesId</code></td><td>Once per user per series. Same trigger as <code>discover_all_series</code> but for <code>visit_all</code>.</td></tr>
+          <tr><td><code>discover_all_anthology</code></td><td>30 × N</td><td><code>parentBookId</code></td><td>Once per user per anthology. Fires after a child book's <code>discover_all</code> when all non-demo children have <code>discover_all</code>.</td></tr>
+          <tr><td><code>visit_all_anthology</code></td><td>40 × N</td><td><code>parentBookId</code></td><td>Once per user per anthology. Same trigger as <code>discover_all_anthology</code> but for <code>visit_all</code>.</td></tr>
+          <tr><td><code>idle_heartbeat</code></td><td>1</td><td><code>minuteBucket</code></td><td>Once per minute per user while an authenticated feed refresh hits the server (used by the 60-second activity-feed poll)</td></tr>
+          <tr><td><code>favorite_cover</code></td><td>5</td><td><code>book:id</code> / <code>series:id</code></td><td>Once per cover item, first time a logged-in user favorites a book, anthology, or series cover from the public covers wall</td></tr>
+          <tr><td><code>inventory_started</code></td><td>25</td><td><code>bookId</code></td><td>Once per book, first time any playthrough's inventory becomes non-empty</td></tr>
+          <tr><td><code>add_item</code></td><td>5</td><td><code>bookId:itemId</code></td><td>Once per book per distinct item ID, first time that item appears in any playthrough's inventory</td></tr>
+          <tr><td><code>add_charsheet_field</code></td><td>5</td><td><code>bookId:runIndex:fieldId</code></td><td>Once per user-added character sheet field. Only fields absent from the book's <code>charSheetTemplate</code> at save time are counted - template fields copied to a new run do not award XP. Deduped by <code>fieldId</code> so editing or re-saving never double-awards.</td></tr>
+        </tbody>
+      </table>
+      <p>All group milestone events (<code>won_all_*</code>, <code>discover_all_*</code>, <code>visit_all_*</code>) use <code>INSERT OR IGNORE</code> and can only be awarded once per user per entity, even if new books are later added to the series or anthology. N is the book count at the time the milestone fires. Helpers <code>_checkGroupMilestone</code> and <code>_checkGroupWonAll</code> in <code>db.js</code> implement the check with a <code>NOT EXISTS</code> subquery.</p>
+      <h3>Key functions</h3>
+      <ul>
+        <li><code>awardXp(userId, event, ref, amount)</code> - transaction: INSERT OR IGNORE into <code>xp_events</code>, UPDATE <code>users.xp</code> only if row was inserted. Records <code>level_up</code> events for each level gained.</li>
+        <li><code>getUserXpInfo(userId)</code> → <code>{ xp, level, title, levelXp, nextLevelXp, coinsEarned, coinsBalance }</code></li>
+        <li><code>processStateXp(userId, bookId, oldState, newState, totalSections)</code> - diffs state JSON and fires appropriate <code>awardXp</code> calls; also checks milestones (<code>first_win</code>, <code>first_loss</code>, <code>first_battle_death</code>, <code>won_all_*</code>, <code>discover_all_*</code>, <code>visit_all_*</code>). Called in <code>handleSaveState</code>.</li>
+        <li><code>runXpMigration()</code> - on server startup, retroactively awards XP to users with no <code>xp_events</code> rows. Idempotent.</li>
+        <li>Additional one-time startup backfills now also cover existing public series, anthology attachments, accepted party joins, real multi-user party creation, and existing series/anthology numbering metadata.</li>
+      </ul>
+      <p><strong>Per-run reward ref bug, fixed 2026-07-19 (real XP loss, not cosmetic):</strong> <code>death_run</code>/<code>battle_run</code>/<code>win_run</code>/<code>share_run</code>/<code>charsheet_run</code>/<code>charsheet_saved</code>/<code>run_depth</code> used to key their dedup ref off the run's array index in <code>playthroughs</code> (<code>${bookId}:${i}</code>). Array slots aren't stable - deleting a run and having a later, unrelated run land on the same index makes the new run's reward collide with the deleted run's leftover <code>xp_events</code> row and get silently swallowed by <code>INSERT OR IGNORE</code>, with no error or log. <code>run_depth</code> (fires on nearly every run) was the most common victim purely because it's the most frequent of the group. Fixed by keying the ref off the run's own <code>startedAt</code> timestamp instead - assigned once at creation, never reused, so two runs can never collide again.</p>
+      <p><strong>Backfill</strong> (<code>scripts/backfill_run_reward_refs.js</code>, one-time, run 2026-07-19): scanned every <code>user_books</code> row; for each playthrough, checked whether its current state satisfies each of the 7 affected event types, and whether the old (index-based) ref has a stale row predating that run's own <code>startedAt</code> (proof it belongs to a deleted predecessor) or no row at all - awarding fresh via the real <code>awardXp</code> (correct boost/carry/level-up/coin handling, not a reimplementation) when so. Idempotent, safe to re-run. Result: 216 awards, 5,206 total XP, across 14 users. <code>add_charsheet_field</code> (also index-ref-scoped) was not included - a known small remaining gap.</p>
+      <p><strong><code>run_depth</code> stays index-based on purpose - a farming loop found and corrected the same day.</strong> The <code>startedAt</code> fix is right for the other 6 events (each represents real, distinct effort, deserving credit even at a reused slot). <code>run_depth</code> is different - starting a run costs nothing, so a guaranteed-unique ref made it directly farmable via create-run/delete-run/repeat.</p>
+      <p>A first attempt over-corrected this to a one-time-per-book bonus (like <code>first_win</code>/<code>first_loss</code>) - <strong>this was wrong and reverted the same day.</strong> Correct behavior (confirmed by the user): re-creating a run at the <em>same</em> slot after deleting it should not re-earn <code>run_depth</code>; a genuinely new slot should. Plain index-based dedup (the original pre-session scheme) gives exactly that. <code>run_depth</code> deliberately kept/reverted to <code>${bookId}:${i}</code> - the one event of the seven that intentionally does not use the <code>startedAt</code>-based ref. This is by design, don't "fix" it to match the others.</p>
+      <p><strong>Two follow-up scripts, both one-time, run 2026-07-19 in this order:</strong> (1) <code>scripts/revoke_duplicate_run_depth.js</code>, built for the wrong one-time-per-book model - collapsed every user's <code>run_depth</code> rows per book to one, deducting XP for the rest. This wrongly removed legitimately-earned XP for every distinct slot beyond the first. Left in place as a record; don't run it again. (2) <code>scripts/restore_run_depth_correction.js</code>, the actual fix - awards <code>run_depth</code> fresh for every currently-occupied slot lacking its own index-based award, restoring what script 1 wrongly took plus closing some genuinely pre-existing gaps from the original bug. Result: 626 awards restored, 16,430 XP, across 16 users. A small residual drift between the two scripts' totals (boost % can differ between when XP was revoked vs. restored, and <code>xp_events</code> doesn't store per-row amounts) is expected noise, not a correctness problem.</p>
+      <h3>Animated XP gain (client, <code>profile.js</code>)</h3>
+      <p>The books-screen and play-area XP bars/counters (not the profile modal, which always snaps instantly) tween whenever <code>renderBooksXpSummary(data, { fromXp })</code> is called with a known previous XP value. Duration scales with the user's level: <code>level * XP_ANIM_MS_PER_LEVEL</code> (100ms/level, so lvl 37 = 3.7s, lvl 100 = 10s); level 0 renders instantly. <code>_animateXpTo</code> interpolates <strong>linearly</strong> (not eased) from the last value actually painted to the target, recomputing the level bounds every frame from the interpolated value - so a level-up crossed mid-animation naturally shows the bar filling to 100%, resetting, and continuing in the new level with no special-casing. A generation counter invalidates any in-flight animation frame loop when a newer update arrives (rather than queuing), so a new tween always starts from wherever the bar currently sits. Linear interpolation was chosen specifically so a restart never reintroduces a fast-start burst partway through an in-progress deceleration. <code>rewards.js › _processRewardSnapshot</code> supplies <code>fromXp</code> by tracking the last known XP across snapshot pushes; direct instant calls with no <code>fromXp</code> are used only for session-initial loads. The "(Y XP)" figure in the boost line tweens in lockstep with the main counter (same <code>t</code>, same frame, tracked via a parallel <code>_displayedBoostXp</code>) - <code>_renderXpSummary</code> no longer renders that line itself, only <code>_xpApply</code>/<code>_animateXpTo</code> do, so it can't fall out of sync or snap ahead of the main counter. This used to read "(Y XP earned)"; the word "earned" was dropped as useless filler, not the figure itself. The profile modal's own boost line (<code>renderXpBlock</code>) is untouched and always instant.</p>
+      <h3>App-wide XP widget (<code>app-xp.js</code>)</h3>
+      <p><code>#app-xp-summary</code> sits above <code>#books-xp-summary</code> on the Books screen, styled identically (level, title, heartbeat rate, XP bar, XP text, boost line) but in a violet accent instead of the personal gold/cyan, so it reads as "the app" rather than the logged-in player. Hidden by default; unhidden by <code>refreshAppXp()</code> only when <code>getIsAdmin()</code> is true. Backed by <code>GET /api/app-xp</code> → <code>db.getAppXpSummary()</code>: <code>level</code>/<code>title</code>/<code>levelXp</code>/<code>nextLevelXp</code> use the same quadratic formula as a per-user bar but scaled by <code>Math.max(1, users * 1000)</code> - identical to <code>appLevelScale</code> in <code>getSiteStats()</code> (Stats for Nerds' "App level"). <code>xp</code> is <code>SUM(users.xp)</code>, the same number <code>getSiteStats()</code> reports as "Total XP earned" - that panel renders it through <code>fmt()</code> which compacts to K/M/B above 10,000, so the two figures agree even though they look different at a glance. <code>xpBoostPct</code> is <code>SUM(users.xp_boost_pct) / 10</code> - every user's currently-active boost rate added together (same "sum everyone's rate" shape as <code>heartbeatRatePerMin</code>), not a retrospective "% of XP earned via boost" ratio, since that answers a different question from "how much boost is running right now app-wide". <code>heartbeatRatePerMin</code> sums every user's passive rate as if everyone were online at once: <code>users + (SUM(bonus_heartbeat_xp) + SUM(max(0, level-10))) * 0.1</code>, computed in raw SQL (mirroring the existing <code>avgLevelRow</code> quadratic-in-SQL pattern) to avoid a second full-table round trip. Refreshed on login and every 60s via the existing feed-poll leader interval in <code>livetab.js</code> - no dedicated interval was added. Also pushed after the existing <code>feed_changed</code> SSE fires, piggybacking on <code>livetab.js</code>'s feed-SSE debounce, and after the dedicated app-xp SSE stream fires (both the leader tab's own handler and the follower-tab relay).</p>
+      <p><strong>Deliberately staggered, not fired in the same tick as <code>loadFeed()</code>:</strong> a plain state save carries no reward data in its response, so a viewer's own personal XP bar only actually updates via <code>loadFeed()</code>'s own <code>scheduleRewardProfileRefresh(150)</code> call. Both the 60s poll and the SSE debounce call <code>loadFeed()</code> and refresh the App/Avg-Level bars off the same trigger - if <code>refreshAppXp()</code> ran directly alongside <code>loadFeed()</code>, every site-wide activity trigger would fire the viewer's own 150ms-delayed personal-bar tween and the App/Avg-Level bars' tween from the exact same instant, every time. This was a real bug found live: since those bars sit stacked directly next to the viewer's own bar and have very different durations (the App/Avg bars' comes from their own low level; the personal bar's is <code>viewerLevel * 100ms</code>, e.g. 3.7s at level 37), starting them in lockstep read as a single bar doing a fast burst then a slow crawl rather than two independent bars. Fixed with <code>_refreshAppXpStaggered()</code> (<code>APP_XP_STAGGER_MS = 1200</code>) wrapping every call site instead of invoking <code>refreshAppXp()</code> directly. The app-xp stream's own trigger was added later, after the floaters were found to fire live while the bar's numbers sat stale until the next poll - <code>_refreshAppXpStaggered()</code> now debounces internally (a single tracked timer, cleared and rescheduled on each call) since that stream, unlike the other two triggers, can fire several times in quick succession and would otherwise queue one refetch per award instead of settling on one.</p>
+      <h3>Live "someone else earned XP/GC" floaters</h3>
+      <p>Admin-only, and only rendered while the Books/landing screen is visible (<code>_isBooksScreenVisible()</code> in <code>app-xp.js</code>). Backed by <code>GET /api/app-xp/stream</code> (token via <code>?token=</code>, same reason as <code>/api/user/stream</code>; 403 unless <code>db.isUserAdmin</code>). Server: <code>db.setAppXpHook(fn)</code> fires from inside <code>_awardXpTx</code>/<code>_awardCoinsTx</code> on every successful award for any user with <code>{ userId, xpDelta }</code> or <code>{ userId, coinDelta }</code> - distinct from the older <code>_xpFeedHook</code>, which only fires on level-up with no amount. The hook implementation in <code>server.js</code> short-circuits immediately when <code>_appXpClients.size === 0</code> (no DB lookups when nobody's watching), otherwise excludes the admin's own gains (already shown in their personal floaters) and resolves the acting user's display name before pushing.</p>
+      <p>Client: <code>livetab.js</code> owns the connection lifecycle exactly like <code>_connectUserBadgeSSE</code>/<code>_disconnectUserBadgeSSE</code> (leader-tab-only <code>EventSource</code>, wired in <code>boot.js</code> right after <code>_isAdmin</code>/logout resolve). Messages go to <code>_hooks.onAppXpEvent</code> and fan out to follower tabs via <code>_broadcastLiveEvent('app_xp_event', ...)</code>. <code>app-xp.js</code>'s <code>handleAppXpEvent(payload)</code> is the single implementation for both paths - re-checks admin status and screen visibility, then queues a floater (amount first, username last: "+N XP username") into <code>#app-reward-float-layer</code> via the same chip + 5s-drain pattern as the personal floater queue in <code>rewards.js</code>, with its own independent queue. Position is recomputed per floater as the midpoint between <code>#covers-panel</code> and <code>#feed-panel</code> - deliberately not the same gap <code>rewards.js</code>'s booksVisible branch centers in (that one is <code>#feed-panel</code>→<code>#landing-right</code>, feed-to-books, a different pair of panels). Colors: violet for XP, pink for coins, versus the personal floaters' cyan/gold - reuses the existing <code>@keyframes reward-float-rise</code> animation.</p>
+      <h3>Avg User Level widget (<code>app-xp.js</code>)</h3>
+      <p><code>#avg-lvl-summary</code> sits above <code>#app-xp-summary</code> (same admin-only visibility, same fetch/refresh cadence - both painted from the single <code>GET /api/app-xp</code> response). Same bar shape again, teal/lime this time so all three widgets read as distinct.</p>
+      <p>Deliberately <strong>not</strong> "level of the average XP" (that's the App bar's own <code>level</code> - a single pooled-XP figure a few high-XP users skew heavily upward, since the level formula is a concave square-root curve). This is the average of each user's own already-computed level - <code>db.getAppXpSummary()</code>'s <code>avgLevel</code>, computed the same way as <code>getSiteStats()</code>'s existing "Avg player level" Stats-for-Nerds figure. <code>avgLevel</code>/<code>avgLevelTitle</code> are <code>floor(sumLevels / users)</code> and its title. The top-right tag shows user count instead of a heartbeat rate (no meaningful average analog there). The bar fill is the fractional part of the raw average (<code>avgLevelFraction</code>, e.g. 1.977 → 97.7% filled) rather than an XP-based fill. The sub-text shows <code>sumLevels</code> (every user's level added together) and <code>levelsNeededForNextAvg</code> - literally <code>(floor(avgLevel)+1) * users - sumLevels</code>, always ≥ 1 by construction. The bottom line shows <code>minLevel</code>-<code>maxLevel</code> spread, replacing the boost line. No XP-count animation here (unlike the other two bars) - it only moves on an actual level-up, rarely and by a tiny fraction, so an instant snap reads better than a near-invisible tween.</p>
+      <h3>Completion percentage floor rule</h3>
+      <p>Every "N out of total (X%)" display in the app (books-list progress bars, the play-area mapped/discovered counter, and every ratio in the Stats for Nerds modal) shows <code>100%</code> only when <code>n &gt;= total</code> exactly; otherwise the percentage is floored and capped at 99% (<code>Math.min(99, Math.floor(n / total * 100))</code>), never rounded up. This prevents e.g. 318/319 sections from displaying as a misleading "100%". Implemented independently in <code>books.js</code> (<code>_bookItemHtml</code>, series/anthology aggregate, stash aggregate), <code>play.js</code> (<code>updateStats › pct</code>), and <code>stats.js</code> (the shared <code>pct</code> helper) - not centralized, since the three call sites live in different self-contained modules.</p>
+      <h3>Server hardware info (Stats for Nerds)</h3>
+      <p><code>_serverHardwareInfo()</code> in <code>server.js</code> reads <code>os.cpus()</code> once per request and returns <code>cpuModel</code>/<code>cpuArch</code>/<code>cpuGhz</code>/<code>cpuAgeYears</code>/<code>cpuCores</code>/<code>totalRamBytes</code>, spread directly into <code>/api/site-stats</code>'s response with no allowlist to update on either side. <code>cpuCores</code> is <code>cpus.length</code> - added after shipping without it, since the panel already computed CPU load percentages using that same length (<code>os.cpus().length</code>) elsewhere in <code>server.js</code> but never surfaced the count itself as its own row.</p>
+      <h3>Compact number formatting (Stats for Nerds)</h3>
+      <p><code>stats.js</code>'s <code>fmt</code> - the shared formatter used for essentially every plain count in the modal - switches to the compact <code>fmtCompact</code> form (K/M/B/T/Qa/Qi suffixes) once the absolute value reaches 10,000; below that it's the plain comma-separated form. Decimal precision increases one place per tier (K = 1 decimal, M = 2, B = 3, T = 4, …). This is universal rather than an allowlisted set of fields - any stat that grows past 10,000 picks up the compact form automatically, not just the ones that already run high today (Total XP earned, XP events, Total pages/sections, Mapped/Discovered sections). Percentage suffixes from <code>pct()</code> are computed from the raw underlying values and unaffected. Guards a rounding-boundary edge case where e.g. <code>999999</code> would naively format to <code>"1000.0K"</code> at the K tier - if <code>.toFixed(tier)</code> rounds up to 1000 or more, the tier bumps up one level and redivides, correctly showing <code>"1.00M"</code> instead. <strong>Lines of code</strong> used to have its own hand-rolled <code>(n/1000).toFixed(1)+'K'</code> formatting that bypassed <code>fmt</code> entirely - always dividing by 1000 and always showing "K" regardless of scale, ignoring the 10,000 floor and never rolling over to "M". Switched to plain <code>fmt(s.linesOfCode)</code> for consistency.</p>
+    </div>
+
+    <!-- Demo book -->
+    <div class="section" id="demo-book">
+      <h2>Demo book</h2>
+      <p><code>createDemoBook(userId)</code> inserts a pre-built fictional gamebook ("Demo Book", 50 sections) for every new user. Includes a fully mapped 50-node graph, 2 completed runs (one death, one win), and 1 in-progress run. Only section 49 has a death choice and only section 50 has the win choice.</p>
+      <p><code>state_data</code> carries <code>isDemoBook: true</code>. This flag is checked in three places: <code>processStateXp</code> (no XP awarded), <code>getFeed</code> (excluded from feed), and <code>migrateXpForUser</code> (skipped during backfill). Otherwise treated as a normal book.</p>
+    </div>
+
+    <!-- Security -->
+    <div class="section" id="security">
+      <h2>Password hashing &amp; sessions</h2>
+      <h3>Password hashing</h3>
+      <p><code>crypto.scrypt</code> (Node built-in, promisified) with a random 16-byte hex salt. Stored as <code>{ password_hash, salt }</code>. Verification uses <code>crypto.timingSafeEqual</code>.</p>
+      <h3>Sessions</h3>
+      <p>Random 32-byte hex token stored in <code>sessions</code> table. Sent to client on login/register; stored in <code>localStorage</code> under <code>gamebook_auth_token</code>.</p>
+      <p>Sessions expire 7 days after creation (<code>expires_at = created_at + 604800</code>). <code>getSession</code> rejects expired tokens → client receives 401 and is redirected to login. Expired rows are deleted on server startup and on Vacuum.</p>
+      <h3>Rate limiting</h3>
+      <p><strong>IP-level:</strong> Max 10 failed auth attempts per IP per 15 minutes. Tracked in memory (<code>_authFailures</code> Map); stale entries evicted on a 15-minute interval. Returns <code>429</code>.</p>
+      <p><strong>Account-level:</strong> After 5 consecutive failed login attempts, the account is temporarily locked for 15 minutes (<code>locked_until = now + 900</code>). Returns <code>403</code> with a descriptive message. <code>failed_login_attempts</code> resets to 0 on successful login or when the temp lock expires. Admin can hard-lock any non-protected account (<code>locked_until = -1</code>); hard locks never auto-clear. Protected accounts skip all lock logic.</p>
+      <h3>Image upload security</h3>
+      <p>Avatars and book covers are validated for magic bytes (JPEG, PNG, GIF, WebP) and compressed client-side to ≤256 KB before upload. Server enforces a 300 KB raw body limit.</p>
+    </div>
+
+    <!-- State model -->
+    <div class="section" id="state-model">
+      <h2>State model</h2>
+      <h3>Persisted (<code>user_books.state_data</code>)</h3>
+      <pre><code>{
+  bookName:      string,
+  totalSections: number,
+  graph: {
+    [sectionId: number]: {
+      choices:   number[],    // outgoing sections; -1 = death, 0 = victory
+      note?:     string,
+      showNote?: boolean,         // if true, note text is rendered as a pinned label beside the node
+      priority?: 'high' | 'low',
+      battle?:   true,
+      color?:    string,          // hex colour e.g. '#ef4444'; absent when no custom colour set
+    }
+  },
+  playthroughs: [
+    {
+      path:          number[],
+      completed:     boolean,
+      result:        'death' | 'battle' | 'success' | null,
+      isPublic?:     boolean,
+      completedAt?:  number,   // Unix ms
+      lastActionAt?: number,   // Unix ms, updated on every navigate()
+      undosUsed:     number,
+      fastTravelsUsed: number,
+      startedAt?:    number,   // Unix ms
+      charSheet:     { fields: [...] },
+      diceState:     { count: number, die: 4 | 6 | 8 | 10 | 12 | 20 | '%', lastResult: object | null },
+    }
+  ],
+  activePtIndex:     number | null,
+  positions:         { [sectionId]: { x, y } },
+  viewport?:         { x, y, scale },
+  charSheetTemplate:    { fields: [...] } | null,
+  alphanumericSections?: boolean,   // section IDs are strings (e.g. 'A1') rather than numbers; default false
+  notesPinned?:          boolean,   // notebook overlay pinned on play area; persists across refreshes
+  connectorStyle?:       string,    // vis-network edge style; one of 'curvedCW'|'curvedCCW'|'cubic'|'horizontal'|'straight'; default 'curvedCW'
+  isDemoBook?:           true,
+}</code></pre>
+      <h3>Not persisted (module-level in <code>state.js</code>)</h3>
+      <table>
+        <thead><tr><th>Variable</th><th>Type</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td><code>viewingPt</code></td><td><code>playthrough | null</code></td><td>Which completed run's path is displayed in trail and graph</td></tr>
+          <tr><td><code>currentBookId</code></td><td><code>number | null</code></td><td>Which book is open; used by <code>saveState</code></td></tr>
+          <tr><td><code>currentUserLevel</code></td><td><code>number</code></td><td>Used by <code>maxUndos()</code> and <code>maxFastTravels()</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Auth flow -->
+    <div class="section" id="auth-flow">
+      <h2>Auth flow (client-side)</h2>
+      <p>On boot, <code>boot.js</code> checks <code>localStorage</code> for <code>gamebook_auth_token</code>:</p>
+      <ul>
+        <li>Token present → <code>showBooks()</code> (fetches <code>/api/books</code>)</li>
+        <li>No token → <code>showLogin()</code></li>
+      </ul>
+      <p>If any API call returns <code>401</code>, <code>apiFetch</code> fires an <code>auth-expired</code> DOM event, clears the stored token and username, and <code>boot.js</code> redirects to the login screen.</p>
+    </div>
+
+    <!-- Screen routing -->
+    <div class="section" id="screen-routing">
+      <h2>Screen routing</h2>
+      <p>The landing view has three fixed-position panels around a scrollable central feed:</p>
+      <ul>
+        <li><strong><code>#covers-panel</code></strong> - fixed left, 480px wide. Random book covers. Hidden if none available.</li>
+        <li><strong><code>#landing-wrapper</code></strong> - central scrollable area. Contains <code>#feed-panel</code> and <code>#landing-right</code>.</li>
+        <li><strong><code>#landing-right</code></strong> - fixed right, 480px wide. Contains login/books screens.</li>
+      </ul>
+      <table>
+        <thead><tr><th>Screen</th><th>Element</th><th>Shown when</th></tr></thead>
+        <tbody>
+          <tr><td>Login / Register</td><td><code>#login-screen</code></td><td>Not authenticated</td></tr>
+          <tr><td>Book list</td><td><code>#books-screen</code></td><td>Authenticated, no book open</td></tr>
+          <tr><td>Book tracker</td><td><code>#main-screen</code></td><td>A book is open</td></tr>
+        </tbody>
+      </table>
+      <p><strong><code>#app-banner-f1-btn</code></strong> - sits left of "User Guide" in the landing header. Purely a discoverability affordance for the F1 keyboard shortcut - clicking it calls the same <code>_toggleShortcutsModal()</code> as the <code>e.key === 'F1'</code> handler.</p>
+      <p><strong>Demo button auto-hide:</strong> <code>_updateDemoBtnVisibility()</code> (<code>boot.js</code>) runs from <code>showBooks()</code> whenever authenticated. Fetches <code>GET /api/profile</code> (merges <code>getProfileStats(userId)</code>, which now includes a <code>deaths</code> field alongside <code>wins</code>/<code>losses</code>) and hides <code>#demo-btn</code> once <code>wins &gt;= 1 &amp;&amp; deaths &gt;= 1</code>. Uses <code>deaths</code> (<code>result === 'death'</code>, the <code>-1</code> ending) specifically, not the combined <code>losses</code> field or <code>battle</code> alone - a battle death doesn't count toward this, only a plain death does. <code>showLogin()</code> resets <code>#demo-btn</code> back to visible, since the hidden state is per-account and would otherwise leak into a subsequent guest/different-account session after logout.</p>
+      <h3>Panel collapse</h3>
+      <p>Panels collapse via body class toggles (<code>covers-collapsed</code>, <code>right-collapsed</code>, <code>sidebar-collapsed</code>, etc.). State persists to <code>localStorage</code> and <code>users.ui_prefs</code> (JSON column). On login, <code>syncPrefs()</code> fetches <code>GET /api/prefs</code> and applies saved state across devices. <code>handleSetPrefs</code> also calls <code>userBadgePush(userId)</code> after every successful <code>PATCH /api/prefs</code>, piggybacking on the same <code>/api/user/stream</code> channel used for header badges - so a pref change reaches any other open tab/device for that user live (via <code>syncPrefs()</code> re-running on receipt), not just on that session's next fresh load.</p>
+      <table>
+        <thead><tr><th>Key</th><th>Panel</th></tr></thead>
+        <tbody>
+          <tr><td><code>covers-collapsed</code></td><td>Landing - covers (left)</td></tr>
+          <tr><td><code>right-collapsed</code></td><td>Landing - activity/books (right)</td></tr>
+          <tr><td><code>sidebar-collapsed</code></td><td>Tracker - left sidebar</td></tr>
+          <tr><td><code>legendCollapsed</code></td><td>Tracker - graph legend</td></tr>
+          <tr><td><code>diceRollerCollapsed</code></td><td>Tracker - dice roller</td></tr>
+          <tr><td><code>trailCollapsed</code></td><td>Tracker - run trail</td></tr>
+          <tr><td><code>playXpCollapsed</code></td><td>Tracker - bottom Player XP panel</td></tr>
+          <tr><td><code>landingBgHidden</code></td><td>Landing - animated background visibility (<code>'1'</code> = hidden, managed by <code>covers.js</code>)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Activity feed -->
+    <div class="section" id="activity-feed">
+      <h2>Activity feed</h2>
+      <p><code>loadFeed()</code> fetches <code>GET /api/feed</code> and renders into <code>#feed-content</code>. When signed in it uses an authenticated request; on public/login screens it falls back to a plain public fetch. Entries are grouped by local date. If feed is empty, a placeholder is shown. Errors are silently ignored. Authenticated feed refreshes also award the <code>idle_heartbeat</code> XP event at most once per minute per user.</p>
+      <table>
+        <thead><tr><th>Type</th><th>Shown when</th><th>Notable fields</th></tr></thead>
+        <tbody>
+          <tr><td><code>run_completed</code></td><td>Run ends with death or success</td><td><code>result</code>, <code>runIsPublic</code>, <code>userPublicProfile</code></td></tr>
+          <tr><td><code>run_started</code></td><td>Run begins</td><td><code>runIndex</code></td></tr>
+          <tr><td><code>book_created</code></td><td>User starts tracking a book</td><td><code>bookName</code></td></tr>
+          <tr><td><code>level_up</code></td><td>User gains a level</td><td><code>level</code>, <code>levelTitle</code>, <code>gainedAbility</code>, <code>newAbilityCount</code></td></tr>
+          <tr><td><code>all_visited</code></td><td>All sections visited in a book</td><td><code>bookName</code></td></tr>
+          <tr><td><code>all_discovered</code></td><td>All sections discovered in a book</td><td><code>bookName</code></td></tr>
+          <tr><td><code>first_win</code></td><td>First run ever won on a book</td><td><code>bookId</code>, <code>bookName</code>, <code>bookIsPublic</code>, <code>runIndex</code> - rendered as "won in [book] run N for the first time"</td></tr>
+          <tr><td><code>first_loss</code></td><td>First death run on a book</td><td><code>bookId</code>, <code>bookName</code>, <code>userId</code>, <code>runIndex</code>, <code>runIsPublic</code> - rendered as "lost in [book] for the first time"; verb is a clickable <code>feed-verb-pub</code> button when run is public</td></tr>
+          <tr><td><code>first_battle_death</code></td><td>First battle-death run on a book</td><td>same shape as <code>first_loss</code> - rendered as "fell in battle in [book] for the first time"; verb is clickable when run is public</td></tr>
+          <tr><td><code>won_all_series</code></td><td>User has won every book in a series</td><td><code>seriesId</code>, <code>seriesName</code></td></tr>
+          <tr><td><code>won_all_anthology</code></td><td>User has won every child of an anthology</td><td><code>bookId</code>, <code>bookName</code> (anthology)</td></tr>
+          <tr><td><code>visit_all_series</code></td><td>All sections visited in every book of a series</td><td><code>seriesId</code>, <code>seriesName</code></td></tr>
+          <tr><td><code>discover_all_series</code></td><td>All sections discovered in every book of a series</td><td><code>seriesId</code>, <code>seriesName</code></td></tr>
+          <tr><td><code>visit_all_anthology</code></td><td>All sections visited in every child of an anthology</td><td><code>bookId</code>, <code>bookName</code> (anthology)</td></tr>
+          <tr><td><code>discover_all_anthology</code></td><td>All sections discovered in every child of an anthology</td><td><code>bookId</code>, <code>bookName</code> (anthology)</td></tr>
+          <tr><td><code>party_formed</code></td><td>First party invite accepted (party now has 2+ members)</td><td><code>bookId</code>, <code>bookName</code>, <code>usernames[]</code> pre-populated server-side; suppressed if party disbanded</td></tr>
+          <tr><td><code>user_joined</code></td><td>A user registered on the site</td><td>Text from the user's permanently assigned <code>join_template_id</code>; rendered with an amber left border (<code>.feed-entry--join</code>). <code>feedPush</code> fires at registration so live-connected clients see it immediately.</td></tr>
+          <tr><td><code>book_rated</code></td><td>First time a user rates a book or anthology</td><td><code>bookId</code>, <code>bookName</code>, <code>isContainer</code>, <code>rating</code>, plus parent/series fields - rendered "rated book/anthology [name] ★★★★☆" via <code>_starsHtml</code></td></tr>
+          <tr><td><code>series_rated</code></td><td>First time a user rates a series</td><td><code>seriesId</code>, <code>seriesName</code>, <code>rating</code></td></tr>
+        </tbody>
+      </table>
+      <p>Feed verb by result: <code>success</code> → "won", <code>battle</code> → "died", <code>death</code> → "lost".</p>
+      <p><code>level_up</code> entries with <code>gainedAbility: true</code> append <code>· +1 undo &amp; fast travel unlocked (N per run)</code> in purple. All entries respect <code>hide_from_feed</code>.</p>
+      <p><strong>book_rated/series_rated (2026-07-25):</strong> sourced from the <code>rate_book</code>/<code>rate_series</code> XP award in <code>xp_events</code>, not a raw scan of <code>user_books.rating</code>/<code>user_series.rating</code> - <code>xp_events</code>' own <code>UNIQUE(user_id, event, ref)</code> index means only ONE row exists per user+book/series no matter how many times it's re-rated, so re-rating never re-appears in the feed. The joined-in CURRENT rating must still be non-null - if a user later clears their rating, the historical XP event still exists but the entry is suppressed rather than showing zero stars. New <code>rated_at</code> columns on <code>user_books</code>/<code>user_series</code> (backfilled from this same match) track the most recent rating generally, a separate signal from the feed's "first rating only" one. <code>setBookRating</code>/<code>setSeriesRating</code> call <code>feedPush</code> only when <code>xpAwarded</code> is true, so live viewers see a new rating without waiting for the 60s poll, and re-rating never triggers a push it can't produce an entry for anyway. The no-JS <code>GET /feed</code> SEO page's smaller <code>renderEntryText()</code> switch doesn't handle either type yet - not a new gap, that page has always lagged behind the main feed.js renderer for most event types.</p>
+      <p><strong>Author/Contributor/Admin badges:</strong> every event type's SQL in <code>getFeed()</code> selects <code>is_author</code>/<code>is_contributor</code>/<code>display_name</code> (and per-member for multi-user entries in <code>usernames[]</code>) so <code>feed.js</code> can register badge state directly from the payload before rendering. This matters for <strong>private profiles</strong> specifically - the client's badge cache in <code>user.js</code> is otherwise only populated by viewing your own profile or someone else's <em>public</em> profile, so without per-entry fields a private-profile author/contributor never got their star anywhere in the feed. Previously only the series/series-run/book-run queries carried these fields; <code>level_up</code>, the milestone events, <code>party_formed</code>, and <code>user_joined</code> were silently missing them.</p>
+      <p><strong>Day-card cover backgrounds:</strong> each <code>.feed-day-card</code> gets a stack of tiles cycling through every distinct public book played that day, purely client-side in <code>feed.js</code> - no server changes needed. <code>_dayCovers(items)</code> (previously <code>_prominentCoverForDay</code>, which only returned a single "winner") tallies entries with <code>bookId &amp;&amp; bookIsPublic</code> and a resolvable cover per book, then returns <strong>all</strong> distinct qualifying covers sorted by entry count descending - a day with several different books played shows more than just one of them, cycling through the list rather than repeating a single book. Each qualifying day's cover list is pushed onto <code>_lastDayCoverLists</code> (reset every <code>loadFeed()</code> call); the card gets <code>data-day-index</code> plus an empty <code>.feed-day-cover-stack</code> child, with the header/entries wrapped in a sibling <code>.feed-day-content</code>.</p>
+      <p>This is <strong>not</strong> a repeating CSS background - <code>background-repeat</code> can only tile one image, and cycling through different covers needs each tile to have its own image, so <code>_applyDayCoverFlows(root)</code> builds real DOM elements, placed <strong>outward from the vertical center</strong>, not from the top:</p>
+      <ul>
+        <li>The most-prominent book (<code>covers[0]</code>, or <code>centerIdx</code> - see below) is placed whole, at full card width and its own true aspect-ratio height (no stretch, no crop), centered so its own vertical middle lands on the card's vertical middle.</li>
+        <li>A <code>pool</code> of the day's other books (every index except the center one; a day with only one book falls back to that same book so it can repeat outward too) is drawn from independently by each side - <code>downPtr</code>/<code>upPtr</code> are separate counters into the pool, started half a pool-length apart. With exactly one other book the pool has one entry, so both sides land on it every time (a two-book day shows the same "other" book above and below); with two or more other books, the offset counters mean the two sides draw different books at any given ring, only converging once every other book has cycled through at least once.</li>
+        <li>Each side keeps extending its own edge and placing the next pool tile flush against the previous one (no gaps, no overlaps) until that edge passes the card's boundary, with a <code>guard &lt; 400</code> iteration cap as a hard safety net (a tile whose image fails to load nudges its edge by 1px instead of stalling).</li>
+        <li><code>centerIdx</code> is normally <code>0</code> but falls back to whichever book's cover actually loaded if that specific one failed - otherwise a broken image for just the center book would still reserve its full-height band and start the outward tiling from its edges, while never placing anything to fill that band, leaving a blank gap in the middle.</li>
+      </ul>
+      <p>A flat, constant-opacity overlay (<code>.feed-day-cover-stack::after</code>, <code>rgba(31,41,55,0.9)</code>) sits on top of the tiles - a top-to-bottom gradient was tried first and reverted, since past its final stop the color holds flat, so on a tall stack everything below the ramp sat at its darkest stop uniformly. <code>.feed-day-content</code> carries <code>position: relative; z-index: 1</code> so the header/entries paint above the stack despite coming after it in paint order otherwise. This deliberately does not reuse <code>books.js</code>'s anthology-stack flow technique verbatim - that one spans one image across several separately-positioned sibling cards via a cross-card offset; a day-card is a single box filled from within, so no offset math applies either way. Re-applied on every feed render, and skipped entirely (no image loads at all) when <code>body.no-feed-day-covers</code> is set. Days with no qualifying book get a <code>feed-day-card--glass</code> class instead of a cover-stack - rather than drawing a copy of anything, it lets the real rotating landing background (<code>#landing-bg-a</code>/<code>#landing-bg-b</code>, <code>position:fixed; z-index:-1</code>) show through directly, like glass, always in sync since it's the same live element rather than a snapshot. Since that background is fixed (not scrolling with the feed), a glass card is a window onto whatever part of the image sits at its current on-screen position - varies by scroll position, like any photo has brighter/darker patches - so a light tint (<code>rgba(31,41,55,0.25)</code>) keeps every glass card reading as "a card" regardless of what's behind it at that moment, rather than being fully see-through.</p>
+      <p>Getting to that number took three tries: first shipped at <code>rgba(31,41,55,0.45)</code> (read as flat black against a real background - the ambient image already carries its own <code>~92%</code>-dark gradient baked in for page-wide legibility, so stacking more darkening on top compounds fast); "fixed" by reusing the exact same <code>rgba(31,41,55,0.9)</code> value as <code>.feed-day-cover-stack::after</code> for what sounded like a principled byte-identical tint, but a cover-tile is the raw, undimmed image before that <code>0.9</code> overlay applies, while the ambient background is already dimmed before any card-level tint - stacking <code>0.9</code> on an already-<code>0.92</code>-dimmed image compounds to under 1% of original brightness, worse than the first attempt; then dropped to fully transparent (no tint), too little the other way - card boundaries all but vanished and the "different window per scroll position" effect became jarring rather than blending in. <code>0.25</code> is the settled middle ground.</p>
+      <p><strong>Two independent Ctrl+Y toggles:</strong> "Show covers in feed" (<code>_feedDayCovers</code>/<code>body.no-feed-day-covers</code>, pre-existing) and "Transparent background for day cards" (<code>_feedGlassCards</code>/<code>body.no-feed-glass-cards</code>, added alongside the tint fix), persisted the same way (<code>localStorage</code> immediately, synced <code>ui_prefs.feedGlassCards</code>/<code>feedDayCovers</code> when logged in). Four combinations: <strong>covers on, glass on</strong> (default, unchanged) - covers show normally, cover-less days get the glass tint; <strong>covers on, glass off</strong> - covers show normally, cover-less days fall back to flat opaque; <strong>covers off, glass on</strong> - no covers anywhere, but every day card (not just already-cover-less ones) gets the glass tint via <code>body.no-feed-day-covers:not(.no-feed-glass-cards) .feed-day-card { background-color: rgba(31,41,55,0.25) !important; }</code>, since once covers are off there's nothing left to distinguish a would-have-had-a-cover day from any other; <strong>covers off, glass off</strong> - everything flat. <code>.feed-day-header</code>'s text color/shadow were also strengthened (<code>#6b7280</code> → <code>#d1d5db</code> plus a dark text-shadow) so the day label stays legible regardless of what's behind it. Toggling covers back on re-populates the cover tiles via an explicit <code>refreshDayCoverFlows()</code> call - the loader skips image fetches entirely while the toggle is off, so removing the CSS class alone left the stacks empty until a full reload. Logging out calls <code>resetFeedDisplayPrefsForLogout()</code>, forcing both toggles back to their true default (on) - a logged-out visitor has no UI to control either one, so they shouldn't inherit whatever a previously logged-in session on that browser had turned off; local-only, so the account's own saved preference still applies on its next login.</p>
+      <p><strong>Ctrl+Y panel close button (fixed):</strong> <code>#cover-tooltip-settings-overlay</code> had no explicit close button - only Ctrl+Y again or clicking outside the panel closed it. Added a <code>✕</code> button in the heading row using the same reusable <code>.modal-title-row</code>/<code>.modal-close-btn</code> classes every other modal's close button already uses, wired to <code>_toggleCoverTooltipSettings(false)</code>. The heading's border/spacing moved from <code>.cover-tooltip-settings-heading</code> to a new <code>.cover-tooltip-settings-heading-row</code> wrapper so the border-bottom spans the full row now that the button sits beside the text.</p>
+      <p><strong>Landing background double-rotation race (fixed):</strong> two call sites request an immediate <code>#landing-bg-a</code>/<code>#landing-bg-b</code> rotation on every return to the landing page - <code>_showCachedCoversPanel()</code> (synchronous, cached covers) and <code>loadCovers()</code> (fires once the fresh <code>/api/covers</code> fetch resolves, a few hundred ms later). Both exist because without them the background sat blank for up to 60s after navigating Home until the next interval tick. But <code>_rotateLandingCover()</code> flips which layer is "active" before its own 1.5s-then-1.6s fade/cleanup <code>setTimeout</code> chain finishes, so a second call landing mid-crossfade grabbed a layer the first call was still transitioning, and their cleanup timeouts fought over the same two elements - symptom was the background flickering a couple of times then both layers ending up at <code>opacity: 0</code> until the next natural tick. Fixed with an in-flight guard (<code>_rotationInFlight</code>/<code>_rotationQueued</code> module vars in <code>covers.js</code>): a rotation request arriving mid-transition just flags itself and replays once the in-flight one finishes, instead of stomping it.</p>
+      <p><strong>Recompute triggers - <code>ResizeObserver</code> is the authoritative one:</strong> every <code>.feed-day-card[data-day-index]</code> is <code>observe()</code>d by a single module-level <code>ResizeObserver</code> (a no-op to re-observe an already-observed element) that calls <code>_scheduleDayCoverRecompute()</code> whenever that specific card's rendered size actually changes, for any reason - a CSS-animated panel-collapse transition, a window resize, a font finishing its load and reflowing text, unrelated sibling content shifting the card, anything. This replaced an escalating series of specific-event listeners that each covered one cause found live but not the next: first <code>window.resize</code>/<code>fullscreenchange</code> (debounced via <code>requestAnimationFrame</code> plus a <code>setTimeout(..., 400)</code> follow-up, since a single rAF can land mid-transition on an animated fullscreen toggle) - didn't cover panel-collapse toggles, since those resize the feed panel without the window itself resizing; then an explicit <code>refreshDayCoverFlows()</code> hook wired into <code>prefs.js</code>'s <code>_setLandingPanelCollapsed()</code> - didn't cover <code>applyPrefs()</code>'s own direct class toggle on initial load (used to apply a returning user's saved panel state, bypassing <code>_setLandingPanelCollapsed()</code> entirely) - then a second hook call added there too - still didn't cover <code>#landing-wrapper</code>'s padding transitioning over 0.25s, so even a correctly-fired recompute could measure a mid-animation size. Each fix is still in place as a free immediate nudge for the common cases, but <code>ResizeObserver</code> - watching the actual rendered outcome instead of guessing at every possible cause - is what actually closes this class of bug.</p>
+      <p><code>loadFeed()</code> replaces <code>#feed-content</code>'s entire subtree on every call (every 60s poll, every SSE-triggered refresh), which would otherwise leak - <code>ResizeObserver</code> doesn't automatically stop observing an element removed from the DOM, so every previous render's day-cards would stay referenced forever as the session goes on. <code>loadFeed()</code> calls <code>_dayCoverResizeObserver?.disconnect()</code> immediately before replacing <code>innerHTML</code>, so each render starts clean before <code>_applyDayCoverFlows</code> re-observes the current cards. No feedback-loop risk from the observer's own callback either - the tiles it inserts are absolutely positioned inside <code>.feed-day-cover-stack</code>, so they never affect <code>.feed-day-card</code>'s own layout size, which is what <code>ResizeObserver</code> watches for.</p>
+      <p><strong>Two earlier, wrong attempts</strong> at this were live and reverted rather than just discarded in a draft. The first sized every tile to the image's full aspect ratio at the entire card width, which for a portrait cover produces a tile far taller than most day-cards - so the top-anchored tile almost always already exceeded the card's height, meaning cycling never had room to trigger and the tile visibly started from the top. The second "fixed" that by shrinking every tile to a small fixed target height in a narrower centered column - never asked for, and it changed the whole visual character of the feature, so it was reverted in favor of keeping full-width, natural-aspect-ratio tiles and fixing the actual top-vs-center anchor bug directly.</p>
+      <p>When <code>userPublicProfile</code> is true, username renders as a clickable button opening the public profile modal. When <code>runIsPublic</code> is true, the verb opens the public run graph modal.</p>
+      <p><strong>Anthology child entries:</strong> feed entries for child books display the book name as a button followed by two inline tag chips - a purple <strong>anthology tag</strong> (<code>.feed-collection-tag</code>) showing the parent anthology name, and an amber <strong>series tag</strong> (<code>.feed-series-tag</code>) showing series name and number. Series info uses <code>COALESCE</code> - if a book has no direct series but its parent anthology does, the parent's series is used. This applies to <code>getFeed()</code>, <code>getBookActivity()</code>, <code>all_visited</code>, and <code>all_discovered</code> queries via <code>LEFT JOIN series ps ON ps.id = p.series_id</code> with <code>COALESCE(s.id, ps.id)</code> / <code>COALESCE(s.name, ps.name)</code>.</p>
+    </div>
+
+    <!-- Covers panel -->
+    <div class="section" id="covers-panel">
+      <h2>Covers panel</h2>
+      <p><code>loadCovers()</code> fetches <code>GET /api/public/covers</code>, <code>GET /api/public/books</code>, and <code>GET /api/public/series</code> (no auth), then renders a mixed covers wall into <code>#covers-grid</code>. Books and anthology containers use their uploaded covers; series cards are built client-side as live composite covers from up to four book covers in the series. The panel supports sort modes (Latest, Oldest, A–Z, Z–A, Random), type filters (All, Books, Anthologies, Series, Favorites), lazy loading in sorted modes, and search across titles, child names, authors, and series names. Logged-in viewers also get a hover-only <code>.cover-fav-btn</code> in the top-right corner of each cover. Clicking it stores the cover ID in <code>users.ui_prefs.favoriteBookIds</code> or <code>favoriteSeriesIds</code>, re-filters the wall live, and can award the one-time <code>favorite_cover</code> XP event.</p>
+      <p>Clicking a cover opens a <code>.cover-activity-view</code> showing users and their public runs. Books sharing an ISBN/ISSN are aggregated. Edition differences shown as a subtitle under the username.</p>
+      <p>The <strong>"Series:"</strong> row in the book info modal is a clickable amber button (<code>.book-modal-series-btn</code>). Clicking it calls <code>openSeriesActivity(seriesId, seriesName)</code>, which fetches <code>GET /api/public/series/:id</code> and renders a series page via <code>renderSeriesActivity(data)</code> - showing the series description and a clickable list of its public books. From the series page, clicking a book navigates to that book's activity modal. The back button supports all navigation levels.</p>
+    </div>
+
+    <!-- Crawlable book pages -->
+    <div class="section" id="crawlable-book-pages">
+      <h2>Crawlable book pages &amp; SEO</h2>
+      <p>Every non-demo public book is reachable at <code>/book/:id</code>. <code>servePublicBookPage</code> intercepts the path, calls <code>db.getPublicBookMeta(bookId)</code> (queries <code>name</code>, <code>description</code>, <code>authors</code>, <code>cover_path</code>, <code>isbn</code>, <code>issn</code>, <code>asin</code>, <code>pages</code>), and injects into <code>index.html</code>:</p>
+      <ul>
+        <li>Book-specific <code>&lt;title&gt;</code>, <code>&lt;link rel="canonical"&gt;</code></li>
+        <li>Open Graph tags: <code>og:type=book</code>, <code>og:title</code>, <code>og:description</code>, <code>og:image</code>, <code>og:url</code></li>
+        <li>Twitter Card tags</li>
+        <li><code>&lt;script type="application/ld+json"&gt;</code> - Schema.org <code>Book</code> with <code>name</code>, <code>description</code>, <code>author</code> (array, parsed from comma-separated field), <code>isbn</code>, <code>issn</code>, <code>numberOfPages</code>, <code>image</code>, <code>url</code>, <code>publisher</code></li>
+      </ul>
+      <p>If the book is not found or not public, plain <code>index.html</code> is served (200) so the SPA handles it gracefully.</p>
+      <h3>Public profile pages</h3>
+      <p>Every user with <code>public_profile = 1</code> can be reached at <code>/user/:username</code>. <code>servePublicProfilePage</code> calls <code>db.getPublicProfile(username)</code> and injects:</p>
+      <ul>
+        <li>Book-specific <code>&lt;title&gt;</code>, <code>&lt;link rel="canonical"&gt;</code></li>
+        <li>Open Graph: <code>og:type=profile</code>, <code>og:title</code>, <code>og:description</code> (level + book count), <code>og:image</code> (avatar), <code>profile:username</code></li>
+        <li>Twitter Card (summary)</li>
+        <li>JSON-LD: <code>@type: Person</code> with <code>name</code>, <code>url</code>, <code>identifier</code> (username), <code>image</code> (avatar)</li>
+      </ul>
+      <p>If the profile doesn't exist or is private, plain <code>index.html</code> is served. Client-side: <code>DOMContentLoaded</code> matches <code>/^\/user\/([^/]+)$/</code> and calls <code>openPublicProfile(username)</code>. Closing the modal resets the URL to <code>/</code>.</p>
+      <p><strong>Sitemap</strong> (<code>GET /sitemap.xml</code>): generated dynamically on each request. Includes <code>/</code>, <code>/guide.html</code>, <code>/feed</code>, all public profile pages (<code>/user/:username</code>, <code>priority=0.7</code>), all public book pages (<code>/book/:id</code>, <code>priority=0.8</code>), forum index, forum category pages, and forum threads. The static <code>public/sitemap.xml</code> file was deleted - it was always shadowed by this route (checked first) and never actually served, but sat on disk with only 2 stale URLs, misleading anyone inspecting the repo instead of the live endpoint. <code>guide.html</code>'s <code>&lt;lastmod&gt;</code> now reads the file's real <code>mtime</code> instead of a hardcoded date.</p>
+      <p><strong>Social preview image:</strong> <code>og:image</code>/<code>twitter:image</code> now point at a pre-rendered <code>og-image.png</code> (1200x630) instead of <code>og-image.svg</code> - most link-preview crawlers besides Twitter/X don't reliably rasterize SVG for <code>og:image</code>, so the SVG-only version was effectively broken on Facebook/LinkedIn/Slack/iMessage previews. Generated once via <code>rsvg-convert</code>, not at request time. Updated in <code>index.html</code>, <code>guide.html</code>, and the three server-side SSR meta-injection fallbacks in <code>server.js</code>.</p>
+    </div>
+
+    <!-- Modal drag-to-close bug -->
+    <div class="section" id="modal-drag-close">
+      <h2>Modal close-on-outside-click, drag-to-close bug (fixed 2026-07-19)</h2>
+      <p>Every modal closes on backdrop click via a <code>click</code> listener checking <code>e.target === overlay</code>. Bug: a <code>click</code> fires based on mouse-<em>release</em> position, not press - dragging from inside a modal (e.g. panning the graph in the public run viewer) and releasing outside registers as a click on the overlay, closing it mid-drag. Fix: track <code>mousedown</code> separately, only treat a backdrop <code>click</code> as real if the *preceding mousedown* also landed on the overlay. Already applied to most modals; 7 were missed, including the reported bug (public run viewer).</p>
+      <p><strong>Fixed:</strong> <code>#public-modal-overlay</code> (the reported bug - already had the <code>pub-overlay</code> class recognized by <code>boot.js</code>'s global <code>_mousedownOnOverlay</code> tracker, just needed the guard added to its click handler), <code>#guide-modal-overlay</code> (needed <code>class="modal-overlay"</code> added too, since it had none of the three recognized classes - harmless, its own ID-scoped CSS in <code>charsheet.css</code> wins by specificity anyway), <code>#feedback-modal-overlay</code>/<code>#stats-modal-overlay</code>/the notebook overlay (no mousedown tracking existed at all - each got its own local tracker), and the equipment/inventory item-picker overlays (their *main* panel overlays were already guarded, but the separate picker overlay wasn't - needed its own tracker).</p>
+    </div>
+
+    <!-- Terminal outcomes -->
+    <div class="section" id="terminal-outcomes">
+      <h2>Terminal outcomes</h2>
+      <p>Sections <code>-1</code> and <code>0</code> are <strong>never</strong> added as graph nodes and <strong>never</strong> pushed onto a <code>path</code> array. They exist only as values inside <code>choices</code> arrays.</p>
+      <p>When <code>navigate(-1)</code> or <code>navigate(0)</code> is called, <code>endPlaythrough</code> is called directly with <code>'death'</code> or <code>'success'</code>. <code>isTerminal(n)</code> returns <code>true</code> for -1 and 0.</p>
+    </div>
+
+    <!-- Node colour logic -->
+    <div class="section" id="node-colours">
+      <h2>Node colour logic (<code>graph.js › nodeColor</code>)</h2>
+      <p>Priority order (highest first):</p>
+      <table>
+        <thead><tr><th>Node</th><th>Colour</th><th>Condition</th></tr></thead>
+        <tbody>
+          <tr><td><span class="swatch" style="background:#f5a623;border:2px solid #c47d00"></span><span style="color:#f5a623">Orange</span></td><td><code>#f5a623</code> / <code>#c47d00</code></td><td>Current position in active run (<code>current</code>)</td></tr>
+          <tr><td><span class="swatch" style="background:#3d9be9;border:2px solid #2980b9"></span><span style="color:#3d9be9">Blue</span></td><td><code>#3d9be9</code> / <code>#2980b9</code></td><td>Visited in the active or viewed run (<code>visitedRun</code>)</td></tr>
+          <tr><td><span class="swatch" style="background:#e74c3c;border:2px solid #c0392b"></span><span style="color:#e74c3c">Red (solid)</span></td><td><code>#e74c3c</code> / <code>#c0392b</code></td><td>Final node of a death run (<code>death</code>)</td></tr>
+          <tr><td><span class="swatch" style="background:#c2410c;border:2px solid #9a3412"></span><span style="color:#f97316">Burnt orange (solid)</span></td><td><code>#c2410c</code> / <code>#9a3412</code></td><td>Final node of a battle-death run (<code>battleDeath</code>)</td></tr>
+          <tr><td><span class="swatch" style="background:#27ae60;border:2px solid #1e8449"></span><span style="color:#27ae60">Green (solid)</span></td><td><code>#27ae60</code> / <code>#1e8449</code></td><td>Final node of a victory run (<code>victory</code>)</td></tr>
+          <tr><td><span class="swatch" style="background:#0f172a;border:3px solid #e74c3c"></span><span style="color:#e74c3c">Dark, red outline</span></td><td>bg <code>#0f172a</code> / border <code>#e74c3c</code></td><td>Section has <code>-1</code> (death choice) in its choices (<code>deathOutline</code>)</td></tr>
+          <tr><td><span class="swatch" style="background:#0f172a;border:3px solid #27ae60"></span><span style="color:#27ae60">Dark, green outline</span></td><td>bg <code>#0f172a</code> / border <code>#27ae60</code></td><td>Section has <code>0</code> (victory choice) in its choices (<code>victoryOutline</code>)</td></tr>
+          <tr><td><span class="swatch" style="background:#0f172a;border:3px solid #f59e0b"></span><span style="color:#f59e0b">Dark, amber outline</span></td><td>bg <code>#0f172a</code> / border <code>#f59e0b</code></td><td>Section has both <code>-1</code> and <code>0</code> in choices (<code>bothOutline</code>)</td></tr>
+          <tr><td><span class="swatch" style="background:#431407;border:3px solid #f97316"></span><span style="color:#f97316">Dark orange</span></td><td>bg <code>#431407</code> / border <code>#f97316</code></td><td>Node flagged as a battle location (<code>battleOutline</code>)</td></tr>
+          <tr><td><span class="swatch" style="background:#ef4444;border:2px solid #960000"></span><span style="color:#d1d5db">Custom colour</span></td><td>user-chosen hex</td><td>Node has a <code>color</code> field set; overrides base fill, leaves battle-border orange intact. Does not override current/endpoint states (steps 1–3).</td></tr>
+          <tr><td><span class="swatch" style="background:#8e44ad;border:2px solid #6c3483"></span><span style="color:#8e44ad">Purple</span></td><td><code>#8e44ad</code> / <code>#6c3483</code></td><td>Mapped - choices recorded, no terminal choices (<code>mapped</code>)</td></tr>
+          <tr><td><span class="swatch" style="background:#606060;border:2px solid #404040"></span><span style="color:#9ca3af">Grey</span></td><td><code>#606060</code> / <code>#404040</code></td><td>Discovered - referenced but not yet mapped (<code>discovered</code>)</td></tr>
+          <tr><td><span class="swatch" style="background:#fde047;border:2px solid #a16207"></span><span style="color:#fde047">Yellow</span></td><td><code>#fde047</code> / <code>#a16207</code></td><td>Start section of the book</td></tr>
+        </tbody>
+      </table>
+      <p>Canvas overlays: <span class="swatch" style="background:#27ae60;border:1px solid #1e8449"></span>green book badge for notes; priority triangle (<span class="swatch" style="background:#27ae60;border:1px solid #1e8449"></span>green up = high, <span class="swatch" style="background:#e74c3c;border:1px solid #c0392b"></span>red down = low); <span class="swatch" style="background:#f5a623;border:1px solid #c47d00"></span>orange ✕ for battle locations. Nodes with <code>showNote: true</code> additionally render a semi-transparent rounded text box beside the node showing up to 4 lines of the note (28 chars/line). The overlay system uses a pre-built cache (<code>_buildOverlayCache</code> in <code>graph.js</code>, called from <code>syncGraph</code>) to avoid per-frame <code>measureText</code> and full-graph iteration.</p>
+      <p><strong>Run labels:</strong> <code>success</code> → "★ Victory", <code>battle</code> → "⚔ Battle Death", <code>death</code> → "✝ Lost".</p>
+    </div>
+
+    <!-- Graph layout -->
+    <div class="section" id="graph-layout">
+      <h2>Graph layout &amp; physics</h2>
+      <p>On first load (no saved positions): <code>forceAtlas2Based</code> physics runs until stabilisation, then disables and saves all positions to <code>state.positions</code>.</p>
+      <p>On subsequent loads: physics disabled from the start. Each node update passes <code>physics: false</code> to pin positioned nodes; new nodes get <code>physics: true</code>.</p>
+      <p>When new nodes are added, <code>syncGraph</code> re-enables physics with <code>stabilization: { fit: false }</code>, runs <code>network.stabilize(300)</code>, then on <code>stabilizationIterationsDone</code> saves positions and restores the saved viewport.</p>
+      <p>Both this handler and <code>initGraph()</code>'s own equivalent (2026-07-25 fix) used to only clear their own tracked reference when they fired, without calling <code>network.off(...)</code> to actually detach - so old listeners stayed attached forever and could accumulate over a long single-session editing spree, each firing (and redundantly calling <code>saveState()</code>) on every later stabilization. Not data loss (all variants converge on the same final positions, and <code>saveState()</code> queues the extra calls), just wasted saves. Fixed by having both handlers detach themselves before nulling their reference.</p>
+      <p>Drag positions saved to <code>state.positions</code> on <code>dragEnd</code> (1000ms debounce). Pan/zoom saved to <code>state.viewport</code> (500ms debounce on <code>zoom</code> and drag-end when no nodes dragged). Viewport restored once per book open via <code>network.moveTo</code> (guarded by <code>_viewportRestored</code> flag).</p>
+    </div>
+
+    <!-- Node deletion -->
+    <div class="section" id="node-deletion">
+      <h2>Node deletion (<code>graph.js</code>)</h2>
+      <p><code>subtreeToDelete(rootId)</code> - BFS from root, then removes any node still reachable (without passing through <code>rootId</code>) from a known graph root - originally just <code>state.startSection</code>, but a book can have more than one real root once the alternate-start button ("⚑ Start at a specific section" in <code>play.js</code>) has been used, so the reachability BFS now seeds from <code>state.startSection</code> <strong>and</strong> every playthrough's own <code>path[0]</code>. Without this, a node with two parents both living only in an alternate-start component (invisible to a BFS rooted at <code>state.startSection</code> alone, since the two components are disjoint) could be wrongly swept up as an orphan even though it's still reachable via its other parent in that same component. Returns a <code>Set</code> of IDs.</p>
+      <p><code>deleteNodes(ids)</code>:</p>
+      <ol>
+        <li>Removes entries from <code>state.graph</code> and <code>state.positions</code></li>
+        <li>Removes <code>id</code> from all <code>choices</code> arrays</li>
+        <li>Deletes any section left with an empty <code>choices</code> array (now unmapped) - <strong>unless</strong> it's part of a playthrough path, or carries a note/priority/battle/color/portals worth not silently discarding (same safeguard as <code>play.js</code>'s <code>_cleanupOrphanedTargets</code>)</li>
+        <li>Trims <strong>every</strong> playthrough's path at the first deleted node it contains - not just the active run. This retroactively reopens (<code>completed = false</code>, <code>result = null</code>) any run whose path passed through a deleted node, including previously-completed wins/losses entirely unrelated to what's currently active. If the active run is one of the trimmed ones, it stops being active - the caller must resume it explicitly. The confirmation dialog does not warn about this retroactive effect on other runs.</li>
+        <li>Calls <code>saveState()</code> - does not call <code>render()</code> (caller's responsibility)</li>
+      </ol>
+      <p>The caller (<code>boot.js</code>) clears <code>viewingPt</code> only if <strong>its own path</strong> intersects the deleted set (checked before calling <code>deleteNodes</code>, since the mutation may flip <code>completed</code> on the same object <code>viewingPt</code> references) - not merely because it happens to be incomplete for unrelated reasons. <code>viewingPt</code> and the active run are independent state (the delete button only requires an active, incomplete run to be visible; <code>viewingPt</code> can simultaneously point at any other run), so a plain "is it incomplete" check could clear an unrelated viewed run's overlay just because a node was deleted elsewhere in the active run's tree.</p>
+    </div>
+
+    <!-- Playthrough actions -->
+    <div class="section" id="playthrough-actions">
+      <h2>Playthrough actions (<code>play.js</code>)</h2>
+      <table>
+        <thead><tr><th>Function</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>startPlaythrough(entrySection?)</code></td><td>Pushes a new run at <code>entrySection</code> if given (and valid), else <code>state.startSection ?? 1</code>, sets it active</td></tr>
+          <tr><td><code>loadRun(index)</code></td><td>Completed run → sets <code>viewingPt</code>, clears <code>activePtIndex</code>. In-progress → sets <code>activePtIndex</code>, clears <code>viewingPt</code></td></tr>
+          <tr><td><code>deleteRun(index)</code></td><td>Splices run from array, adjusts <code>activePtIndex</code></td></tr>
+          <tr><td><code>handleRecordChoices(sec, raw)</code></td><td>Parses input, writes to <code>state.graph[sec]</code>, places new nodes, re-renders</td></tr>
+          <tr><td><code>navigate(sec)</code></td><td>Pushes section to path (or calls <code>endPlaythrough</code> for terminals)</td></tr>
+          <tr><td><code>endPlaythrough(result)</code></td><td>Marks run completed, sets <code>viewingPt</code> so trail persists</td></tr>
+          <tr><td><code>undoRun()</code></td><td>Pops the path back to the last genuine decision point - see below</td></tr>
+        </tbody>
+      </table>
+      <p><strong>Auto-nav:</strong> <code>render()</code>'s choices panel auto-advances through a forced passthrough - <code>secData.choices.length === 1 &amp;&amp; !pt.path.includes(secData.choices[0]) &amp;&amp; !_suppressAutoNav</code> - scheduling <code>navigate(dest)</code> on a <code>setTimeout(..., 0)</code> (deduped per section via <code>_pendingAutoNavFrom</code> so overlapping <code>render()</code> calls don't each queue a duplicate hop). This is what makes a long chain of single-choice sections "auto-walk" through in one visual beat instead of requiring a click per node.</p>
+      <p><strong><code>undoRun()</code> walking past auto-nav sections:</strong> pops the current node, then keeps popping past forced (single-choice) nodes until landing on a real decision point (<code>choices.length !== 1</code>) or the run's start. A single-choice node isn't necessarily a <em>forced</em> passthrough though - it could be a real decision the user just recorded (has a note, priority, battle, color, portals, or shown note), so it's worth stopping at one that carries metadata rather than silently skipping past it. But that's only meaningful if auto-nav (above) won't immediately fire for it: once popped, that node's one recorded destination is no longer in <code>pt.path</code>, so if the node itself is a forced single-choice with no metadata, landing there right before its own auto-nav fires just replays the undo's own forward step and sends the user right back where they started (a real bug found live: on a long auto-walked chain, "undo" appeared to do nothing at all). Fixed by computing the same <code>wouldAutoNav</code> check - <code>!pt.path.includes(node.choices[0])</code> - during the walk-back and only stopping at a metadata node when it's false. This does mean <code>undoRun()</code>'s stopping logic is coupled to <code>render()</code>'s auto-nav condition - if that condition's shape ever changes, this needs to change with it.</p>
+      <p><strong>Alternate start ("⚑" button):</strong> next to New Run, hidden for open-world/series books (<code>_owIsOpenWorld</code>) since those must go through <code>_onNewSeriesRun</code> instead. Opens <code>#alt-start-modal-overlay</code> (wired in <code>boot.js</code>, mirroring the existing "Edit Start Node" modal exactly - same <code>.dice-count-row</code>/<code>±</code> stepper pattern, own copy of the increment/validation logic rather than sharing code with <code>_applyStartNodeRename</code>, since this doesn't rename anything in the graph, it just picks the entry section for one new run) via <code>setAltStartHandler(fn)</code>/<code>_altStartHandler</code>, defaulting the input to the book's normal <code>state.startSection</code>. On save, calls <code>startPlaythrough(secId)</code> directly - bypassing <code>state.startSection</code> for just this one run, which is the whole point: gamebooks with a genuine second/alternate beginning (e.g. flip/dos-a-dos print editions with two separate stories bound back-to-back) can be started from either entry point without needing two separate book entries or permanently reassigning the start node.</p>
+      <p><strong>New Run picker (2+ known starts):</strong> clicking "New Run" no longer always starts immediately at <code>state.startSection</code> - <code>_knownStartSections()</code> (<code>play.js</code>) builds the set of "known" starts as the book's default plus every distinct <code>pt.path[0]</code> seen across <code>state.playthroughs</code>, filtered to sections that still exist in <code>state.graph</code> (so a start used once by mistake and then deleted from the graph drops out of the list on its own - no separate cleanup step needed). With fewer than 2 known starts (the common case), "New Run" behaves exactly as before. With 2+, <code>showStartPicker()</code> opens a dialog (<code>#start-picker-overlay</code>, built once and cached the same way <code>showFastTravelDialog()</code> already does, reusing its <code>.ft-dialog-*</code> classes) listing each known start, the default tagged "(default)". Picking one calls <code>startPlaythrough(secId)</code> directly. A "⚑ Type a section" button inside the picker still falls through to the existing alt-start modal for a section that hasn't been used yet.</p>
+      <p><strong>Public run viewer and alternate starts:</strong> <code>getPublicRun</code>/<code>getPublicSeriesRun</code> in <code>server/db.js</code> send a <code>startSection</code> field that <code>public-profile.js</code>'s <code>_buildPubSegNetwork</code> uses purely for the cosmetic yellow "start" node marker (<code>isStart</code>, has no effect on layout/traversal - the full path/graph render regardless). This used to be <code>s.startSection ?? null</code> - the <em>book's</em> configured default start - which was wrong for any run that didn't actually begin there (e.g. one started via the "⚑" alternate-start button above). Fixed to use that specific run's own <code>pt.path[0]</code> instead, so the public view always highlights wherever <em>that run</em> actually began, not the book's default.</p>
+      <p><strong>Security note:</strong> both endpoints are fully unauthenticated, and both build a multi-book journey by querying every book in the run's series. Each of the two near-identical <code>seriesBooks</code> queries must independently filter <code>b.is_public = 1</code> - a public open-world series doesn't mean every book in it is public; an author can add a new draft book to an already-public series. Without the per-book filter, a public run that portal-traveled through that book would leak its graph/path to any unauthenticated caller. Fixed in both copies (2026-07-24).</p>
+      <p><strong>Own graph view and alternate starts:</strong> the same "book default vs. this run's actual start" mismatch existed in three more places, all fixed alongside the public-viewer one above: <code>graph.js</code>'s <code>nodeColor()</code>/<code>nodeLabel()</code>/<code>syncGraph()</code> (the private graph's yellow "start" highlight, "START" label, and bold start-node font all now follow <code>_effectiveStartSec(displayPt)</code> - the currently-displayed run's own <code>path[0]</code> when there is one, falling back to <code>state.startSection</code> only when no run is being viewed); <code>graph.js</code>'s <code>subtreeToDelete()</code> and <code>play.js</code>'s <code>_cleanupOrphanedTargets()</code> (see "Node deletion" - both used to treat <code>state.startSection</code> as the <em>only</em> protected root when deciding whether a node is a safe-to-remove orphan, which could wrongly sweep up a node that's actually still in use from an alternate-start run's own component).</p>
+      <p><strong>Battle-node coloring drift (2026-07-25):</strong> <code>_buildPubSegNetwork</code>'s node coloring is one of three independent reimplementations of the same rules (<code>graph.js</code>'s <code>nodeColor()</code>, <code>server/export.js</code>'s <code>_nodeColor()</code>), and had drifted for the battle flag specifically. Canonically (<code>graph.js</code>), battle overrides only the <em>border</em> on top of whatever fill the other rules chose, applied last, unconditionally, except for start/current/final nodes. <code>public-profile.js</code> instead had <code>isBattle</code> as one branch in a mutually-exclusive chain, reachable only if the node wasn't on the run's path/an end-node/a portal - so a battle-flagged section that was also actually visited showed as a plain "visited" blue node with no battle indicator. Fixed to match the canonical precedence.</p>
+      <p>A second color drift found the same way: <code>_buildPubSegNetwork</code>'s <code>hasDeath && hasWin</code> case used <code>#b45309</code>/<code>#f59e0b</code> - the color reserved elsewhere for a different, "ends"-based combined case - instead of the canonical choices-based <code>bothOutline</code> color <code>#0f172a</code>/<code>#f59e0b</code>. Fixed to match.</p>
+      <p><strong>Onboarding pulse on <code>#choices-input</code>:</strong> new players often don't realize the empty choices box needs typing into. <code>play.js</code> tracks <code>_choicesRecordedCount</code> and applies a <code>choices-input--pulse</code> CSS class (amber box-shadow ring, mirrors <code>.new-run-btn.pulse</code>) while the count is below <code>CHOICES_PULSE_THRESHOLD</code> (50). Increments only on a genuine submission through the original recording input (<code>#record-btn</code>), not the separate "edit choices" modal that reuses the same <code>handleRecordChoices</code> function. Persisted via <code>ui_prefs.choicesRecordedCount</code> through <code>savePrefs</code>/<code>syncPrefs</code>, so it survives across sessions. Respects <code>body.reduce-motion</code>. Since pref sync and the play area's first render are independent async flows, <code>applyPrefs()</code> directly toggles the class on the live element the moment the server value arrives, instead of waiting for the next render to notice.</p>
+    </div>
+
+    <!-- Character sheet -->
+    <div class="section" id="charsheet">
+      <h2>Character sheet (<code>charsheet.js</code>)</h2>
+      <p>Self-contained module. Imports only <code>state.js</code> and <code>i18n.js</code>. To remove: delete <code>charsheet.js</code>, remove its import lines from <code>boot.js</code> and <code>play.js</code>, and delete <code>public/css/charsheet.css</code> (and its <code>&lt;link&gt;</code> in <code>index.html</code>).</p>
+      <p>The sheet is <strong>per run</strong>. Each playthrough carries <code>charSheet: { fields: [] }</code>. One template per book (<code>state.charSheetTemplate</code>). New runs deep-copy from the template if one exists.</p>
+      <p><strong>Field types:</strong> <code>number</code>, <code>boolean</code>, <code>text</code>, <code>list</code> (comma-separated, stored as <code>string[]</code>), <code>enum</code> (fixed option set per field).</p>
+      <p>Modal actions: <strong>Save</strong> writes draft to the active run's sheet; <strong>Save as template</strong> writes draft to <code>state.charSheetTemplate</code>; <strong>Cancel</strong> discards draft. Modal is read-only when viewing a completed run - the footer stays visible with Add field/Save/Save as template disabled (not hidden), while Cancel stays enabled so the view can still be dismissed.</p>
+      <p><strong>Number field formatting:</strong> displayed values (compact overlay, read-only modal, editable field when not focused) are comma-formatted via <code>fmtNum()</code> (<code>toLocaleString()</code>). The editable input is <code>type="text" inputmode="numeric"</code> rather than a native number input, since native number inputs can't display thousands separators - focus/blur handlers swap between the raw digit string and the comma-formatted string. Because a text input accepts any keystroke, <code>readVal</code>'s number case live-filters to <code>[0-9.\-]</code> and falls back to <code>0</code> on an unparseable result, so garbage input can't get stored or displayed as a literal "NaN". The <code>±</code> stepper buttons strip commas before parsing and reformat afterward.</p>
+      <p>This convention was violated in <code>battlesim8.js</code> (2026-07-25) - its stat inputs and arrows counter used bare <code>type="number"</code> despite sitting in the same <code>.inv-qty-wrap</code>/<code>±</code>-button markup as the correctly-built steppers elsewhere. Fixed to <code>type="text" inputmode="numeric"</code> with a live <code>[^0-9]</code> filter (no comma-formatting needed - these are always small values). Same violation found and fixed the same way in <code>battlesim829.js</code> (stat inputs, <code>bsim-ranged-attempts</code>, <code>bsim-heal-amount</code> - the latter had no <code>input</code> listener at all before this).</p>
+    </div>
+
+    <!-- Inventory -->
+    <div class="section" id="inventory">
+      <h2>Inventory (<code>inventory.js</code>)</h2>
+      <p>Self-contained module for managing per-run item slots. Imports only <code>state.js</code>. To remove: delete <code>inventory.js</code>, remove its import from <code>boot.js</code> - its CSS lives in <code>public/css/equipment.css</code> alongside equipment's own (adjacent, small sections combined when CSS was split out).</p>
+      <p>The inventory is <strong>per run</strong>. Each playthrough carries <code>inventory: []</code> - an array of <code>{ itemId, label }</code> slot objects. One template per book (<code>state.inventoryTemplate</code>). New runs deep-copy from the template if one exists.</p>
+      <p><strong>Item data loading:</strong> never fetches all items upfront. On picker open, <code>GET /api/items?meta=1</code> fetches a lightweight list (id, name, type - no SVG). SVGs are loaded lazily per tile via <code>IntersectionObserver</code> (<code>GET /api/items/:id</code>) as tiles scroll into view. Per-session cache: <code>_itemCache</code> Map keyed by id.</p>
+      <p><strong>Drag-and-drop:</strong> tiles have <code>draggable="true"</code> when not read-only. <code>dragstart</code> stores source index; <code>drop</code> splices and saves. CSS classes: <code>.inv-slot--dragging</code> (source), <code>.inv-slot--drag-over</code> (target).</p>
+      <p><strong>Read-only mode:</strong> when <code>viewingPt</code> is set and <code>currentPlaythrough()</code> is null - Add button hidden, Save as Template button hidden, drag disabled, context menu suppressed.</p>
+      <p><strong>View refresh:</strong> <code>boot.js</code> registers a <code>setOnViewingPtChange</code> callback that calls <code>preloadItems()</code> and <code>renderCharSheetDisplay()</code> whenever the viewed run changes.</p>
+    </div>
+
+    <!-- Equipment -->
+    <div class="section" id="equipment">
+      <h2>Equipment (<code>equipment.js</code>)</h2>
+      <p>Self-contained module for a per-run equipment panel - a character silhouette with fixed slots (head, chest, weapon, off-hand, back, rings, etc., defined in <code>SLOTS</code>) plus five extra <code>ITEM_SLOTS</code> for consumables. Visual only, no stat effects. Available to all users (not gated).</p>
+      <p>Imports <code>state.js</code>, <code>inventory.js</code> (to move items between inventory and equipment), and <code>charsheet.js</code> (for <code>getPlayBtnRow</code>).</p>
+      <p><strong>Data model:</strong> <code>pt.equipment = { slotKey: { itemId, label, note, qty } | itemId (legacy), ... }</code>; <code>pt.equipmentVisible = { slotKey: true }</code> (which slots are pinned to the on-screen display); <code>state.equipmentTemplate</code> / <code>state.equipmentVisibleTemplate</code> mirror these per book for <code>instantiateLoadout()</code>.</p>
+      <p><strong>Equipping/unequipping:</strong> clicking an empty slot opens a picker sourced from inventory; picking an item moves the whole stack in via <code>_equipItem()</code>. The <strong>✕</strong> on a filled slot unequips back to inventory.</p>
+      <p><strong>Context menu:</strong> right-click a filled slot for Show/Hide on screen, Rename, and Edit (qty/note/visible) - reuses inventory's dialog CSS.</p>
+      <p><strong>Drag-and-drop between slots:</strong> native HTML5 DnD, wired in <code>_wireSlotEvents</code>. Only filled slots are <code>draggable</code>; every slot accepts drops. Works across the body-slot grid and the item row alike - the source key is tracked in a module-level <code>_dragSourceKey</code>, not container-scoped. <code>_swapEq(fromKey, toKey)</code> moves the dragged item in; if the target was already filled, the two entries (and their independent visible flags) trade places instead of overwriting. No slot-type restriction, consistent with the picker. The <strong>✕</strong> button is <code>draggable="false"</code> so clicking it can't be misread as a drag start. CSS: <code>.eq-slot--dragging</code> (dimmed source), <code>.eq-slot--drag-over</code> (amber highlight on target) - same naming convention as inventory's own <code>.inv-slot--dragging</code>/<code>--drag-over</code>. Desktop/mouse only, same as the character sheet's field-reorder handle - no touch fallback.</p>
+      <p><strong>Read-only mode:</strong> when <code>viewingPt</code> is set and <code>currentPlaythrough()</code> is null, slots aren't clickable, remove buttons/context menu/drag are all disabled, and Save as Template is hidden.</p>
+    </div>
+
+    <!-- Play-area layout -->
+    <div class="section" id="play-area-layout">
+      <h2>Play-area floating layout</h2>
+      <p><code>#play-bottom-stack</code> (party/guide/notebook buttons + the play-area XP panel) centers itself between <code>#dice-roller-wrap</code> (left) and <code>#play-btn-row</code> (charsheet/inventory/equipment/battlesim toggle buttons, right) instead of the plain viewport midpoint. It used to be <code>calc((100vw + var(--sidebar-w)) / 2)</code>, which ignored both neighbors' actual widths - on a narrower window, once either grew wide enough (several toggle buttons wrapping, or the dice roller expanded), the stack could render on top of <code>#play-btn-row</code>. Fixed by tracking both via <code>ResizeObserver</code> into CSS custom properties - <code>--dice-roller-w</code> (<code>dice.js</code>) and <code>--play-btn-row-w</code> (<code>charsheet.js</code>'s <code>getPlayBtnRow()</code>, alongside the pre-existing <code>--play-btn-row-h</code> used by <code>#stats-hud</code>) - then computing the midpoint between the dice roller's right edge and the button row's left edge. Both default to <code>0px</code> until their first observer callback fires, which happens within a frame of boot since both are created unconditionally at startup.</p>
+    </div>
+
+    <!-- Render pipeline -->
+    <div class="section" id="render-pipeline">
+      <h2>Render pipeline (<code>play.js › render</code>)</h2>
+      <pre><code>render()
+  ├── syncGraph()               - updates vis-network nodes/edges to match state
+  ├── updateStats()             - updates sidebar stat counters
+  ├── renderPlaythroughPanel()  - rebuilds sidebar HTML and re-attaches events
+  │     └── renderPathTrail()  - updates #run-trail-float element
+  └── renderCharSheetDisplay()  - refreshes the character sheet compact overlay</code></pre>
+      <p><code>renderPlaythroughPanel</code> replaces <code>panel.innerHTML</code> on every call and re-attaches event listeners. Two CSS custom properties coordinate layout:</p>
+      <table>
+        <thead><tr><th>Property</th><th>Default</th><th>Used by</th></tr></thead>
+        <tbody>
+          <tr><td><code>--sidebar-w</code></td><td>270px</td><td><code>#run-trail-float</code> left offset</td></tr>
+          <tr><td><code>--legend-w</code></td><td>195px</td><td><code>#legend</code> width; trail max-width calculation</td></tr>
+        </tbody>
+      </table>
+      <p><strong>Background context menu</strong> (<code>#bg-ctx-menu</code>, right-click on graph background - not on a node): Hide/Show background (toggles <code>_bgHidden</code>), Move background (mouse-drag vertical reposition), and a <strong>Connectors</strong> submenu (<code>.ctx-submenu-wrap</code>) with five edge styles: <code>curvedCW</code>, <code>curvedCCW</code>, <code>cubic</code>, <code>horizontal</code>, <code>straight</code>. Selecting a style writes <code>state.connectorStyle</code>, calls <code>saveState()</code>, and applies immediately via <code>graph.js › applyConnectorStyle(style)</code> (<code>network.setOptions()</code>). Active style shown with a checkmark (<code>.ctx-connector-item.active</code>). Managed by <code>bg.js</code>; submenu flip position handled by <code>_setupCtxSubmenuFlip()</code>.</p>
+    </div>
+
+    <!-- Data migration -->
+    <div class="section" id="data-migration">
+      <h2>Data migration (<code>state.js › loadState</code>)</h2>
+      <p><code>loadState</code> applies these fixes to data loaded from the server:</p>
+      <ul>
+        <li>Adds missing fields (<code>positions</code>, <code>activePtIndex</code>, <code>bookName</code>) for pre-field data</li>
+        <li>Removes self-referential choices (section pointing to itself)</li>
+        <li>Migrates old path endings: pops <code>-1</code> or <code>0</code> from path end and sets <code>completed</code>/<code>result</code></li>
+        <li>Deletes <code>state.graph[-1]</code> and <code>state.graph[0]</code> (old data may have stored them as nodes)</li>
+        <li>Strips legacy <code>tagDefs</code> root key and per-node <code>tags</code> arrays</li>
+      </ul>
+    </div>
+
+    <!-- Identifier validation -->
+    <div class="section" id="identifiers">
+      <h2>Identifier validation (<code>edit-book.js</code>)</h2>
+      <h3><code>validateIsbn(raw)</code></h3>
+      <p>Strips hyphens and spaces, uppercases. Empty string → <code>''</code> (optional). 10 chars → ISBN-10 mod-11 check (allows <code>X</code> as 10th digit). 13 chars → ISBN-13 alternating-weight check. Anything else → <code>null</code> (invalid). Returns digits-only normalised string.</p>
+      <h3><code>validateIssn(raw)</code></h3>
+      <p>Strips hyphens and spaces, uppercases. Empty → <code>''</code>. 8 chars (digits + optional trailing X) → mod-11 check with weights 8–2. Returns formatted <code>XXXX-XXXX</code>. Otherwise → <code>null</code>.</p>
+      <h3><code>validateAsin(raw)</code></h3>
+      <p>Strips spaces, uppercases. Empty → <code>''</code>. Exactly 10 alphanumeric characters (<code>[A-Z0-9]</code>) → valid. No checksum exists for ASINs. Otherwise → <code>null</code>.</p>
+      <p><code>null</code> triggers an inline error; <code>''</code> is stored as <code>NULL</code>.</p>
+    </div>
+
+    <!-- i18n -->
+    <div class="section" id="i18n">
+      <h2>Internationalisation (<code>i18n.js</code>)</h2>
+      <p>Only English is active. Infrastructure supports additional languages; no UI switcher is exposed.</p>
+      <table>
+        <thead><tr><th>Export</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>t(key, params)</code></td><td>Returns translated string; checks <code>_overrides</code> first, then falls back to English then to the key. <code>{param}</code> placeholders replaced from <code>params</code>.</td></tr>
+          <tr><td><code>applyTranslations()</code></td><td>Walks DOM: sets <code>textContent</code> for <code>[data-i18n]</code>, <code>placeholder</code> for <code>[data-i18n-placeholder]</code>.</td></tr>
+          <tr><td><code>setTranslationOverride(key, value)</code></td><td>Sets a runtime override for one key; takes priority over all language tables. Used by <code>boot.js</code> to inject the server-chosen tagline into <code>app.tagline</code>.</td></tr>
+        </tbody>
+      </table>
+      <p>Static HTML uses <code>data-i18n</code> attributes. Dynamic HTML calls <code>t()</code> at render time. A <code>lang-changed</code> listener triggers <code>renderBooksList</code> or <code>render()</code> so dynamic content updates when the language switches.</p>
+    </div>
+
+    <!-- Export -->
+    <div class="section" id="export-import">
+      <h2>Export (<code>server/export.js</code>)</h2>
+      <p>All export logic lives in <code>server/export.js</code>. No npm dependencies - ZIP built with Node's <code>zlib.deflateRawSync</code> and a hand-rolled CRC-32 writer. Awards XP on first use (<code>export_all</code> 200 XP; <code>export_book</code> 50 XP per book).</p>
+      <h3>Endpoints</h3>
+      <table>
+        <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><span class="method">GET</span></td><td><code>/api/export/all</code></td><td>Full account export. Requires Bearer auth.</td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/api/export/book/:id</code></td><td>Single-book export. Requires Bearer auth.</td></tr>
+        </tbody>
+      </table>
+      <p>Graph snapshots are <strong>SVG</strong>, generated entirely server-side (<code>buildGraphSvg</code> in <code>server/export.js</code>) from each book's already-saved <code>state.positions</code>/<code>state.graph</code>/<code>state.playthroughs</code>/<code>state.startSection</code> - no browser, canvas, or headless renderer, and no client round-trip. An earlier version rendered a live <code>vis.Network</code> off-screen in the browser and POSTed a captured PNG back; that was dropped because a <code>&lt;canvas&gt;</code> capture is only ever as sharp as its pixel size (blurry vs. resolution-independent SVG), and positions/colors are just data - a browser was never actually needed to lay anything out. Removing the round-trip also let <code>/api/export/all</code> go back to a single GET request.</p>
+      <p>Node/edge coloring in <code>buildGraphSvg</code> is a parameterized reimplementation of <code>graph.js</code>'s <code>nodeColor()</code>/<code>edgeColor()</code> (the "no specific run being viewed" aggregate-coloring branch, since a static snapshot has no single displayed run) - not imported from <code>graph.js</code>, which is coupled to the single live <code>state</code> singleton on the client and has no server-side equivalent. <code>GRAPH_COLORS</code> (<code>server/export.js</code>) must be kept in sync with <code>public/js/constants.js</code>'s <code>COLORS</code> if either changes. Returns no graph file for a book that's never been laid out.</p>
+      <p>The exported HTML embeds a color legend (<code>_exportLegendHtml()</code>) directly under the graph image - added 2026-07-25, since unlike the live app (which always shows an adjacent legend panel), the standalone exported file previously had no explanation of what any node/edge color meant.</p>
+      <p>Edges honor the book's own <code>connectorStyle</code> (<code>_curveControlPoint</code> mirrors <code>graph.js</code>'s <code>CONNECTOR_STYLES</code> - curvedCW/CCW bow perpendicular via a quadratic Bézier control point; cubic/horizontal are approximated as a CW curve rather than left straight; straight draws a plain line). Node labels render <em>below</em> the node, matching vis-network's actual default for dot-shaped nodes (never inside the dot). The root <code>&lt;svg&gt;</code> sets explicit <code>width</code> and <code>height</code>, scaled so whichever dimension is larger is capped at 1600 - a tall narrow graph gets its height capped instead of stretching width and leaving height to the viewer's guess, which is what caused huge blank margins/scrollbars when opening the file directly.</p>
+      <h3>ZIP structure</h3>
+      <p><strong>Export Everything</strong> (<code>buildFullExportZip(username, books, items)</code>):</p>
+      <pre><code>&lt;username&gt;/
+  backup.json
+  books/
+    &lt;Book Title&gt;.html              ← never laid out, no graph.svg
+    &lt;Another Book&gt;/
+      &lt;Another Book&gt;.html          ← has a graph.svg
+      graph.svg
+    …</code></pre>
+      <p>A book with a renderable graph gets its own folder so its HTML's <code>&lt;img src="graph.svg"&gt;</code> resolves, otherwise it stays a flat <code>.html</code> file.</p>
+      <p><strong>Export This Book</strong> (<code>buildBookExportZip</code>):</p>
+      <pre><code>&lt;Book Title&gt;/
+  &lt;Book Title&gt;.html
+  &lt;Book Title&gt;.json
+  graph.svg          ← only if the book has been laid out</code></pre>
+      <h3><code>backup.json</code> format</h3>
+      <pre><code>{ "app": "Gamebook Tracker", "version": 1, "exportedAt": "&lt;ISO&gt;",
+  "user": { "username": "…" },
+  "books": [ &lt;book objects&gt; ] }</code></pre>
+      <p>Each book object: <code>id</code>, <code>name</code>, <code>total_sections</code>, <code>discoverable_sections</code>, identifiers, <code>pages</code>, <code>authors</code>, <code>description</code>, <code>cover_path</code>, <code>is_public</code>, <code>rating</code>, <code>notebook</code>, and the full <code>state</code> object (graph, playthroughs, positions, charSheetTemplate, etc.).</p>
+      <h3>HTML generator (<code>buildBookHtml(book, username, itemsById)</code>)</h3>
+      <p>Self-contained, print-friendly HTML. Inline CSS only. <code>itemsById</code> is a <code>Map&lt;id, {name, type}&gt;</code> for resolving item names (defaults to empty map, shows "Item #N" fallback). Contains:</p>
+      <ul>
+        <li>Book metadata table (authors, identifiers, pages, description, discoverable sections if set)</li>
+        <li>Summary stats: mapped, discovered-only, runs, wins, losses, battle deaths, in-progress</li>
+        <li>Playthroughs table: run number, result, date, full section path (<code>→</code>-separated; <code>✝</code> death, <code>★</code> victory)</li>
+        <li>Per-run <code>&lt;details&gt;</code> blocks (collapsed by default): charsheet fields, inventory with qty/note, equipment with slot label/item name/qty/label/note</li>
+        <li>Section map: every known section with choices, priority flag, battle flag, and note</li>
+      </ul>
+      <p>A section counts as <strong>mapped</strong> if it has real recorded choices, not merely a <code>discovered: true</code> stub (a section can be flagged <code>discovered</code> and still pick up real choices later, so checking the flag alone would undercount). Shared between the "Mapped: N" stat and the section map table split, and mirrors the client's own <code>mappedCount()</code> (<code>state.js</code>) so exported numbers match what the app showed. Works correctly for both numeric and alphanumeric section IDs. Discovered-only sections are listed as "not yet visited" spanning all columns. Full export deduplicates filenames if two books share the same safe name (appends <code>(2)</code>, <code>(3)</code>, etc.). All strings HTML-escaped.</p>
+      <p><code>safeFilename</code> rejects Windows-reserved device names (<code>CON</code>, <code>PRN</code>, <code>AUX</code>, <code>NUL</code>, <code>COM1</code>-<code>9</code>, <code>LPT1</code>-<code>9</code>, case-insensitive, with or without an extension) and caps the result at 150 characters, so an oddly-titled or very long book name can't produce a zip entry that fails to extract or a path near filesystem limits.</p>
+      <h3>ZIP builder (<code>buildZip</code>)</h3>
+      <p>Accepts <code>[{ name, data }]</code>. Deflates each file; falls back to STORE if deflated ≥ raw. Includes Unicode Path Extra Field (<code>0x7075</code>) for correct UTF-8 filenames on all platforms.</p>
+    </div>
+
+  </div>
+</body>
+</html>

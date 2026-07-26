@@ -1,0 +1,208 @@
+/* ── Battle Simulator (Пътят на пъдпъдъка) ───────────────────────────────── */
+
+#battlesim-btn, #sim8-btn {
+  background: rgba(31, 41, 55, 0.88);
+  border: 1px solid #374151;
+  border-radius: 7px;
+  color: #9ca3af;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+}
+#battlesim-btn:hover, #sim8-btn:hover { background: #374151; color: #d1d5db; }
+
+/* Modal reuses .inv-overlay/.inv-modal/.inv-modal-hdr/.inv-modal-ftr and the
+   .inv-edit-row/.inv-qty-* stepper pattern from inventory.js's item-edit
+   popover - only sizing/layout that's genuinely new lives here. */
+.bsim-modal { width: min(720px, 95vw); }
+
+#bsim-close, #s8-close { margin-left: auto; }
+
+.bsim-body {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  flex: 1;
+  min-height: 0;
+}
+.bsim-col {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.bsim-col-left {
+  flex: 1;
+  gap: 0.7rem;
+  padding: 0.6rem 0.65rem;
+  overflow-y: auto;
+  /* Puts the scrollbar on the left edge of the pane instead of the usual
+     right: flip the container to RTL (browsers put the scrollbar on the
+     side the content starts from) then flip every direct child straight
+     back to LTR so the actual field labels/inputs still read normally -
+     only the scrollbar's side is affected, nothing else. */
+  direction: rtl;
+}
+.bsim-col-left > * { direction: ltr; }
+.bsim-col-right {
+  flex: 1;
+  border-left: 1px solid #1f2937;
+}
+@media (max-width: 640px) {
+  .bsim-body { flex-direction: column; }
+  .bsim-col-right { border-left: none; border-top: 1px solid #1f2937; }
+}
+.bsim-side {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.bsim-side-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.1rem;
+}
+.bsim-sync-btn {
+  font-size: 0.62rem;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: normal;
+  color: #93c5fd;
+  background: transparent;
+  border: 1px solid #374151;
+  border-radius: 4px;
+  padding: 1px 6px;
+  cursor: pointer;
+}
+.bsim-sync-btn:hover { background: #1f2937; }
+.bsim-stat-label { width: 9rem; }
+
+/* .inv-qty-input is a bare <input type="number"> - without this, native
+   spin-button arrows eat into the box and clip 2-digit values. */
+.bsim-modal input[type="number"] { -moz-appearance: textfield; }
+.bsim-modal input[type="number"]::-webkit-inner-spin-button,
+.bsim-modal input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* .inv-qty-btn's padding: 3px 0 makes the stepper row taller than the
+   .inv-qty-input (which has 0 vertical padding), leaving visible empty
+   space above/below the digit. Give both a matching fixed height instead
+   of stripping the button's padding (which made the +/- glyphs look
+   squished against the edges) - center them with flex instead. */
+.bsim-modal .inv-qty-input { line-height: 1; height: 22px; }
+.bsim-modal .inv-qty-btn {
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+/* .autocomplete-wrap has no flex sizing of its own (book/author dialogs use
+   it inside .input-group, not a flex .inv-edit-row) - match .inv-edit-input's
+   flex:1 so the enemy-name field fills the row like the other stat inputs. */
+.bsim-enemy-ac { flex: 1; min-width: 0; }
+
+.bsim-select { height: 22px; cursor: pointer; }
+
+.bsim-ranged-magic-row { display: flex; gap: 0.5rem; }
+.bsim-ranged-magic-row .inv-edit-row { flex: 1; }
+
+.bsim-ranged-info { font-size: 0.68rem; color: #6b7280; }
+
+.bsim-ranged-attack-btn { margin-top: 0; flex-shrink: 0; padding: 3px 8px; }
+
+.bsim-status:empty { display: none; }
+.bsim-status {
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #fbbf24;
+}
+
+.bsim-heal-row { padding: 0; }
+.bsim-heal-row .inv-edit-label { width: auto; white-space: nowrap; }
+.bsim-heal-btn { margin-top: 0; flex-shrink: 0; padding: 3px 8px; }
+
+.bsim-col-left .inv-modal-ftr { padding: 0.6rem 0 0; border-top: 1px solid #1f2937; }
+
+.bsim-action-primary { background: #2563eb; border-color: #3b82f6; color: #fff; }
+.bsim-action-primary:hover:not(:disabled) { background: #3b82f6; }
+
+.bsim-col-right { padding: 0.6rem 0.65rem; }
+
+.bsim-log {
+  overflow-y: auto;
+  border-top: 1px solid #1f2937;
+  padding: 0.5rem 0;
+  font-size: 0.7rem;
+  line-height: 1.5;
+  color: #9ca3af;
+  min-height: 80px;
+  flex: 1;
+  scrollbar-color: #6b7280 transparent;
+}
+.bsim-log::-webkit-scrollbar-thumb { background: #6b7280; }
+
+/* Per-run battle history (win/loss outcomes). */
+.bsim-history {
+  padding: 0 0 0.4rem;
+}
+.bsim-history summary {
+  cursor: pointer;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  list-style: none;
+}
+.bsim-history summary::-webkit-details-marker { display: none; }
+.bsim-history summary::before { content: '▸ '; }
+.bsim-history[open] summary::before { content: '▾ '; }
+.bsim-history-list {
+  margin-top: 0.35rem;
+  max-height: 140px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.bsim-history-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.7rem;
+  color: #d1d5db;
+}
+.bsim-history-meta { color: #6b7280; flex-shrink: 0; white-space: nowrap; }
+.bsim-history-empty { font-size: 0.7rem; color: #6b7280; font-style: italic; }
+
+/* ── Book-8 simulator (battlesim8.js) ─────────────────────────────────────── */
+.s8-die       { font-family: monospace; font-weight: bold; padding: 0 1px; }
+.s8-die-6     { color: #f0c040; }
+.s8-die-hit   { color: #4caf50; }
+.s8-die-miss  { color: #555; }
+.s8-dmg-player { color: #4caf50; font-weight: bold; }
+.s8-dmg-enemy  { color: #e05050; font-weight: bold; }
+.s8-miss       { color: #555; }
+.s8-hpbar      { color: #6b7280; font-size: 0.82em; }
+.s8-win        { color: #4caf50; font-weight: bold; }
+.s8-dead       { color: #e05050; font-weight: bold; }
+.sim-icon { display: inline-block; width: 1em; height: 1em; vertical-align: -0.15em; fill: currentColor; }
+.sim-icon-win    { color: #f59e0b; }
+.sim-icon-dead   { color: #e05050; }
+.sim-icon-target { color: #4caf50; }
+.s8-rules-note { font-size: 0.68rem; color: #6b7280; line-height: 1.4; padding: 6px 0 2px; }
+

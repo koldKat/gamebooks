@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gamebook Tracker - User Guide</title>
+  <meta name="description" content="Complete guide to Gamebook Tracker - learn how to map branching sections, track playthroughs, record choices, use fast travel, manage character sheets, and visualise decision trees for Fighting Fantasy, Choose Your Own Adventure, Lone Wolf, and other gamebooks.">
+  <meta name="keywords" content="gamebook tracker guide, fighting fantasy section tracker, choose your own adventure tracker, lone wolf tracker, gamebook section map, playthrough tracker tutorial, interactive fiction tools, gamebook decision tree, how to track gamebook, gamebook mapper tutorial">
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+  <meta name="theme-color" content="#111827">
+  <link rel="canonical" href="https://koldkat.net/guide.html">
+  <link rel="manifest" href="/manifest.json">
+
+  <!-- Open Graph -->
+  <meta property="og:type"        content="article">
+  <meta property="og:url"         content="https://koldkat.net/guide.html">
+  <meta property="og:title"       content="Gamebook Tracker - User Guide">
+  <meta property="og:description" content="Complete guide to Gamebook Tracker - map branching sections, track playthroughs, record choices, and visualise decision trees for Fighting Fantasy and other gamebooks.">
+  <meta property="og:image"       content="https://koldkat.net/og-image.png">
+  <meta property="og:image:type"  content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:alt"   content="Gamebook Tracker - Map every choice. Track every run.">
+  <meta property="og:site_name"   content="Gamebook Tracker">
+  <meta property="og:locale"      content="en_US">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card"        content="summary_large_image">
+  <meta name="twitter:url"         content="https://koldkat.net/guide.html">
+  <meta name="twitter:title"       content="Gamebook Tracker - User Guide">
+  <meta name="twitter:description" content="Complete guide to Gamebook Tracker - map branching sections, track playthroughs, record choices, and visualise decision trees for Fighting Fantasy and other gamebooks.">
+  <meta name="twitter:image"       content="https://koldkat.net/og-image.png">
+
+  <!-- Structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "Gamebook Tracker - User Guide",
+    "name": "Gamebook Tracker - User Guide",
+    "url": "https://koldkat.net/guide.html",
+    "inLanguage": "en",
+    "description": "Complete guide to Gamebook Tracker - map branching sections, track playthroughs, record choices, and visualise decision trees for Fighting Fantasy, Choose Your Own Adventure, Lone Wolf, and other gamebooks.",
+    "dateModified": "2026-07-11",
+    "author": { "@type": "Organization", "name": "Gamebook Tracker", "url": "https://koldkat.net/" },
+    "publisher": { "@type": "Organization", "name": "Gamebook Tracker", "url": "https://koldkat.net/", "logo": { "@type": "ImageObject", "url": "https://koldkat.net/favicon.svg" } },
+    "about": { "@type": "WebApplication", "name": "Gamebook Tracker", "url": "https://koldkat.net/" },
+    "isPartOf": { "@type": "WebSite", "name": "Gamebook Tracker", "url": "https://koldkat.net/" }
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://koldkat.net/" },
+      { "@type": "ListItem", "position": 2, "name": "User Guide", "item": "https://koldkat.net/guide.html" }
+    ]
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is Gamebook Tracker?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Gamebook Tracker is a free browser-based tool for mapping and tracking playthroughs of gamebooks such as Fighting Fantasy, Choose Your Own Adventure, Lone Wolf, and Fabled Lands. It builds a live force-directed graph of every section you visit, showing choices, outcomes, and connections."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I record my choices in a gamebook?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "When you reach a new section, enter the section numbers the book offers as choices, comma-separated (e.g. 34, 67, 112). Use -1 for a death outcome and 0 for a victory outcome. Press Record &amp; Choose, then press the button for the path you actually took."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I track multiple playthroughs of the same gamebook?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. Each book can have unlimited runs - all in-progress and completed. You can load any completed run to highlight its path on the graph, and resume any in-progress run at any time."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What is fast travel?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Fast Travel lets you jump to any already-mapped section during an active run. Right-click a mapped node on the graph and choose Fast Travel, or click the Fast Travel button in the sidebar. Enter the target section number and click a routing mode - High priority, Shortest, Normal, or Low priority - to execute immediately. The intermediate steps are added to your run trail automatically."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Does Gamebook Tracker support Fighting Fantasy books?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. Gamebook Tracker works with any section-numbered gamebook series including Fighting Fantasy, Choose Your Own Adventure, Lone Wolf, Fabled Lands, and Tunnels &amp; Trolls solo adventures. You can set the total section count to match your book and optionally add an ISBN, ASIN, or ISSN for easy identification."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is there a demo I can try without creating an account?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. Click the Demo button on the landing page to launch a fully functional demo session with a pre-built mapped graph, completed runs, and priority markings. No sign-up required. Changes are not saved."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is Gamebook Tracker free to use?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes, Gamebook Tracker is completely free. There are no subscriptions, no ads, and no premium tiers. Create an account and start mapping your gamebooks right away."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I undo steps during a playthrough?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. An Undo button appears during an active run. Each press removes the last step and returns you to the previous branch point. The number of undos per run increases as you level up - starting at 3 and going up to 10 at the highest levels."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I track character stats, inventory, and attributes for a gamebook?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Click the Character Sheet button in the bottom-right corner of the tracker. You can add fields of five types - Number (e.g. SKILL, STAMINA), Boolean (yes/no items), Text, List (inventory), and Enum (character class). Each playthrough has its own independent sheet. You can save a template so new playthroughs start with the same fields pre-filled."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I share a completed gamebook run with other players?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "First, make your profile public in your profile settings. Then, on a completed run in the Runs panel, click the Private button to toggle it to Public. The run will appear in the public activity feed and anyone can click through to view a graph showing your path highlighted."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I export my gamebook data?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. There are two options. In your profile (click your avatar), under the Export section, click Export Everything (.zip) to download a ZIP archive of all your books - it contains a backup.json with all your data and a readable HTML file for each book. From within any open book, the sidebar also has an Export Book button that downloads a ZIP for just that book."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What gamebook series does Gamebook Tracker support?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Gamebook Tracker works with any section-numbered gamebook - there is no fixed list of supported titles. Popular series include Fighting Fantasy, Choose Your Own Adventure, Lone Wolf, Fabled Lands, Tunnels &amp; Trolls, Sorcery!, GrailQuest, and Blood Sword. Section IDs can be numeric (34, 112) or alphanumeric (101-A, 101-B). You create a book entry with the total section count and start mapping."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I record a death or a winning ending?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "When recording choices for a section, enter -1 as a destination to mark a dead end (death outcome), or 0 to mark a winning ending. Choosing either completes the current playthrough and marks it as a death or win in your Runs panel."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Does Gamebook Tracker work on mobile?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. The app includes a lighter mobile interface for smaller screens. The graph can still be panned and zoomed by touch, but larger screens remain more comfortable for mapping complex books."
+        }
+      }
+    ]
+  }
+  </script>
+
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    * { scrollbar-width: thin; scrollbar-color: #374151 transparent; }
+    *::-webkit-scrollbar { width: 5px; height: 5px; }
+    *::-webkit-scrollbar-track { background: transparent; }
+    *::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+    *::-webkit-scrollbar-thumb:hover { background: #4b5563; }
+
+    body {
+      background: #111827;
+      color: #d1d5db;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 0.95rem;
+      line-height: 1.7;
+      padding: 2.5rem 1rem 4rem;
+    }
+
+    .guide-wrap {
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    /* ── Header ── */
+    .guide-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+      padding-bottom: 1.2rem;
+      border-bottom: 1px solid #374151;
+    }
+
+    .guide-header-left { display: flex; flex-direction: column; gap: 0.25rem; }
+
+    .guide-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #f9fafb;
+      letter-spacing: -0.01em;
+    }
+
+    .guide-subtitle {
+      font-size: 0.82rem;
+      color: #6b7280;
+    }
+
+
+    /* ── TOC ── */
+    .toc {
+      background: #1f2937; border: 1px solid #374151; border-radius: 10px;
+      padding: 1rem 1.2rem; margin-bottom: 1rem;
+    }
+    .toc-title { font-size: 0.72rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.65rem; }
+    .toc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.2rem 1.5rem; }
+    .toc a { color: #9ca3af; text-decoration: none; font-size: 0.82rem; }
+    .toc a:hover { color: #f5a623; }
+
+    /* ── Sections ── */
+    .guide-section {
+      background: #1f2937;
+      border: 1px solid #374151;
+      border-radius: 10px;
+      padding: 1.4rem 1.6rem;
+      margin-bottom: 1rem;
+    }
+
+    .guide-section h2 {
+      scroll-margin-top: 1rem;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #f9fafb;
+      margin-bottom: 0.9rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid #374151;
+    }
+
+    .guide-section h3 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #f5a623;
+      margin-top: 1.3rem;
+      margin-bottom: 0.55rem;
+    }
+
+    .guide-section h4 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #7dd3fc;
+      margin-top: 1rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .guide-section p {
+      color: #d1d5db;
+      margin-bottom: 0.7rem;
+    }
+    .guide-section p:last-child { margin-bottom: 0; }
+
+    .guide-section ul, .guide-section ol {
+      padding-left: 1.4rem;
+      margin-bottom: 0.7rem;
+    }
+    .guide-section li { margin-bottom: 0.3rem; color: #d1d5db; }
+
+    /* ── Tables ── */
+    .guide-section table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 0.7rem;
+      font-size: 0.88rem;
+    }
+    .guide-section th {
+      text-align: left;
+      color: #9ca3af;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.4rem 0.6rem;
+      border-bottom: 1px solid #374151;
+    }
+    .guide-section td {
+      padding: 0.45rem 0.6rem;
+      border-bottom: 1px solid #1f2937;
+      color: #d1d5db;
+      vertical-align: top;
+    }
+    .guide-section tr:last-child td { border-bottom: none; }
+    .guide-section td:first-child { color: #f5a623; font-weight: 600; white-space: nowrap; }
+
+    /* ── Code blocks ── */
+    .guide-section pre {
+      background: #111827;
+      border: 1px solid #374151;
+      border-radius: 6px;
+      padding: 0.7rem 1rem;
+      font-size: 0.82rem;
+      font-family: 'Consolas', 'Monaco', monospace;
+      color: #a5b4fc;
+      overflow-x: auto;
+      margin-bottom: 0.7rem;
+    }
+
+    code {
+      background: #111827;
+      border: 1px solid #374151;
+      border-radius: 4px;
+      padding: 0.1em 0.4em;
+      font-size: 0.82rem;
+      font-family: 'Consolas', 'Monaco', monospace;
+      color: #a5b4fc;
+    }
+
+    /* ── Divider ── */
+    hr {
+      display: none;
+    }
+
+    /* ── Inline highlights ── */
+    strong { color: #e2e8f0; font-weight: 600; }
+    em     { color: #9ca3af; font-style: italic; }
+
+    /* ── Node colour swatches ── */
+    .swatch {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      vertical-align: middle;
+      margin-right: 4px;
+    }
+  </style>
+</head>
+<body>
+<div class="guide-wrap">
+
+  <div class="guide-header">
+    <div class="guide-header-left">
+      <div class="guide-title">Gamebook Tracker</div>
+      <div class="guide-subtitle">User Guide</div>
+    </div>
+  </div>
+
+  <div class="toc">
+    <div class="toc-title">Contents</div>
+    <div class="toc-grid">
+      <a href="#overview">Overview</a>
+      <a href="#landing">Landing page panels</a>
+      <a href="#stats-nerds">Stats for Nerds</a>
+      <a href="#demo">Demo mode</a>
+      <a href="#accounts">Accounts</a>
+      <a href="#books">Your books</a>
+      <a href="#interface">The tracker interface</a>
+      <a href="#recording">Recording a playthrough</a>
+      <a href="#runs">Managing runs</a>
+      <a href="#graph">The graph</a>
+      <a href="#dice">Dice roller</a>
+      <a href="#stats">Stats (sidebar)</a>
+      <a href="#charsheet">Character sheet</a>
+      <a href="#inventory">Inventory</a>
+      <a href="#equipment">Equipment</a>
+      <a href="#notebook">Notebook</a>
+      <a href="#in-app-guide">User guide (in-app)</a>
+      <a href="#profile">Your profile</a>
+      <a href="#levels">Levels</a>
+      <a href="#shop">Gold Coins &amp; Shop</a>
+      <a href="#book-details">Editing book details</a>
+      <a href="#rating">Rating</a>
+      <a href="#open-world">Open World series</a>
+      <a href="#reset">Reset</a>
+      <a href="#export">Export</a>
+      <a href="#simulators">Battle Simulators</a>
+      <a href="#play-together">Play Together</a>
+      <a href="#forum">Forum</a>
+      <a href="#feedback">Feedback &amp; Inbox</a>
+    </div>
+  </div>
+
+  <div class="guide-section" id="overview">
+    <h2>Overview</h2>
+    <p>Keep track of every branch, every choice, and every playthrough in your favourite gamebooks. Works with Fighting Fantasy, Choose Your Own Adventure, Lone Wolf, and anything else that uses numbered sections. Supports multiple users and multiple books per account.</p>
+  </div>
+
+  <div class="guide-section" id="landing">
+    <h2>Landing page panels</h2>
+    <p>When you first arrive - whether you're logged in or not - the screen is divided into three panels side by side.</p>
+
+    <h3>Left - Book covers</h3>
+    <p>A public wall showing all the books, anthologies, and series in the tracker. Click any cover to see its details.</p>
+    <ul>
+      <li><strong>Sort</strong> - Latest (default), Oldest, A–Z, Z–A, or Random</li>
+      <li><strong>Filter</strong> - All, Books, Anthologies, Series, or Favorites</li>
+      <li><strong>Search</strong> - searches titles, authors, series names, and child book names; type <code>anthology</code> or <code>series</code> to filter by type</li>
+      <li><strong>Favorites</strong> - while logged in, hover a cover and click the ★ to save it as a favourite; your first favourite earns <strong>5 XP</strong></li>
+      <li>The wall refreshes automatically whenever books are added or changed</li>
+    </ul>
+    <p><em>Hidden feature:</em> Press <strong>Ctrl+Y</strong> to adjust cover-title font size, toggle bold text, hide Cyrillic covers, toggle <strong>Reduce animations</strong> (useful on low-powered devices), and toggle <strong>Show covers in feed</strong> / <strong>Transparent background for day cards</strong>.</p>
+
+    <h3>Centre - Activity feed</h3>
+    <p>Shows what everyone's been up to over the last 30 days. You don't need an account to read it.</p>
+    <ul>
+      <li>A <strong>tip bar</strong> cycles through helpful hints every 15 seconds</li>
+      <li>Activity is grouped by day; players with 5 or more entries on the same day are collapsed into one row - click it to expand</li>
+      <li>Each day's card shows the covers of the public books played that day, faded behind the entries (cycling through more than one if several different books were active) - turn it off via <strong>Show covers in feed</strong> in the Ctrl+Y settings panel. Days with no cover get a faint see-through tint of the rotating background instead - toggle that separately with <strong>Transparent background for day cards</strong></li>
+      <li>Pinned announcements from the admin always appear at the top</li>
+      <li>Click a <strong>username</strong> (if that player has a public profile) to see their books and completed playthroughs</li>
+      <li>Click a <strong>book name</strong> to open that book's activity; if it belongs to a series, a series link appears too</li>
+      <li>Click the result word (<strong>won / lost / fell in battle / died</strong>, shown when the run is public) to see a view of that playthrough's path on the graph, with a legend overlay in the top-right corner explaining the node colours</li>
+    </ul>
+    <table>
+      <thead><tr><th>Event</th><th>What it means</th></tr></thead>
+      <tbody>
+        <tr><td><em>user</em> <strong>created / added book</strong></td><td>A new book was added to the library</td></tr>
+        <tr><td><em>user</em> <strong>created / added series</strong></td><td>A series was created or added</td></tr>
+        <tr><td><em>user</em> <strong>began run N of</strong> <em>book</em></td><td>Someone started a new playthrough</td></tr>
+        <tr><td><em>user</em> <strong>won / lost / died in</strong> <em>book</em></td><td>A playthrough ended</td></tr>
+        <tr><td><em>user</em> <strong>won</strong> <em>book</em> <strong>run N for the first time</strong></td><td>First ever victory in that book, showing which run achieved it</td></tr>
+        <tr><td><em>user</em> <strong>lost in</strong> <em>book</em> <strong>for the first time</strong></td><td>First ever loss (non-battle) in that book</td></tr>
+        <tr><td><em>user</em> <strong>fell in battle in</strong> <em>book</em> <strong>for the first time</strong></td><td>First ever battle-death in that book</td></tr>
+        <tr><td><em>user</em> <strong>won in all books of</strong> <em>series / anthology</em></td><td>Every book in a collection completed</td></tr>
+        <tr><td><em>user</em> <strong>discovered / visited every section of</strong> <em>book</em></td><td>Reached 100% mapping or 100% visiting</td></tr>
+        <tr><td><em>user</em> <strong>reached level N</strong></td><td>Someone levelled up</td></tr>
+        <tr><td><em>user</em> <strong>joined</strong></td><td>A new player registered</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Right - Login / Books</h3>
+    <p>This is either the login form or your books list, depending on whether you're signed in.</p>
+
+    <h3>Panel controls</h3>
+    <p>Each side panel has a <strong>‹ / ›</strong> button on its inner edge to fold it away. The feed has a <strong>▴ / ▾</strong> tab at the top. Your side panel preferences are saved to your account; the feed's collapsed-or-open state only lasts for the current session.</p>
+    <table>
+      <thead><tr><th>Shortcut</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Ctrl+X</strong></td><td>Hide or restore all three panels</td></tr>
+        <tr><td><strong>F1</strong></td><td>Open the Cheat Sheet</td></tr>
+        <tr><td><strong>Ctrl+Y</strong></td><td>Landing page settings (cover-title font size/bold/hide Cyrillic, background source, reduce animations, feed day covers, transparent day cards)</td></tr>
+      </tbody>
+    </table>
+    <p><strong>Landing background:</strong> the animated background image behind the panels rotates through book covers. While logged in, <strong>right-click</strong> anywhere on the background (not on a panel) to get a quick menu with <strong>Hide background</strong> / <strong>Show background</strong>. Your choice is saved to your account.</p>
+    <p><strong>Keyboard shortcuts (play area):</strong></p>
+    <table>
+      <thead><tr><th>Shortcut</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td><strong>I</strong></td><td>Open / close the Inventory panel (not while typing in a text field)</td></tr>
+        <tr><td><strong>C</strong></td><td>Open / close the Character Sheet (not while typing in a text field)</td></tr>
+        <tr><td><strong>E</strong></td><td>Open / close the Equipment panel (not while typing in a text field)</td></tr>
+        <tr><td><strong>Ctrl+X</strong></td><td>Hide or restore all play-area side panels at once</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="guide-section" id="stats-nerds">
+    <h2>Stats for Nerds</h2>
+    <p>A <strong>Stats</strong> button sits in the header, visible to everyone including visitors who haven't registered. Clicking it opens a window with live numbers for the whole platform, grouped into sections:</p>
+    <table>
+      <thead><tr><th>Section</th><th>What's shown</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Players</strong></td><td>Registered players, admins, authors, contributors, public profiles, players with avatars, undos/Fast Travels performed</td></tr>
+        <tr><td><strong>Books</strong></td><td>Unique books/series/anthologies, total copies across all players' libraries, public/private split, unique authors, average sections and pages per book, total/mapped/discovered sections, books fully visited or discovered</td></tr>
+        <tr><td><strong>Parties</strong></td><td>Play Together parties created and active, players currently in a party, invites sent/accepted/declined</td></tr>
+        <tr><td><strong>Gameplay</strong></td><td>Total, active, and finished playthroughs; wins, losses, and battle deaths with percentages; tracked and average play time</td></tr>
+        <tr><td><strong>XP &amp; Progression</strong></td><td>Total XP earned; platform level and title; average player level and title; level-ups; XP event types/count</td></tr>
+        <tr><td><strong>Gold Coins &amp; Shop</strong></td><td>Coins earned, spent, and currently in circulation; total upgrades purchased broken down by type (heartbeat XP, undo slots, fast travel slots, XP boost %)</td></tr>
+        <tr><td><strong>Ratings</strong></td><td>Total ratings given; book, anthology, and series ratings counted separately; average book rating; breakdown by star count</td></tr>
+        <tr><td><strong>Forum</strong></td><td>Categories, threads (locked/pinned), live posts, deleted posts</td></tr>
+        <tr><td><strong>Server</strong></td><td>CPU model, cores, age, advertised clock speed, architecture, total RAM</td></tr>
+        <tr><td><strong>The App</strong></td><td>App age, server uptime and uptime %, total downtime, lines of code, code/database size, JS module count, network traffic, live session averages (CPU, heap, RSS)</td></tr>
+        <tr><td><strong>Open World</strong></td><td>Open world series (public split), books in them, portal nodes, series runs (completed/public), pre-series runs</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="guide-section" id="demo">
+    <h2>Demo mode</h2>
+    <p>Not ready to create an account? Click <strong>Demo</strong> (next to the User Guide button on the landing page) to try everything straight away.</p>
+    <ul>
+      <li>The demo loads a ready-made book with a full map, completed playthroughs, and priority markings so you can explore every feature immediately.</li>
+      <li>You can create additional books, add sections, start playthroughs, use Fast Travel and Undo - everything works exactly as in a real account.</li>
+      <li><strong>Nothing is saved.</strong> All changes live in the browser only and disappear when you close or refresh the page.</li>
+      <li>A yellow banner at the top of the page reminds you that you're in demo mode. Click <strong>Exit Demo</strong> in that banner to go back to the login screen.</li>
+    </ul>
+  </div>
+
+  <div class="guide-section" id="accounts">
+    <h2>Accounts</h2>
+    <p>On first launch you will see the <strong>Login</strong> screen.</p>
+    <ul>
+      <li><strong>Log In</strong> - sign in with an existing account</li>
+      <li><strong>Create Account</strong> - register a new account (username + password)</li>
+    </ul>
+    <p>Your session is remembered in the browser. Click <strong>Log out</strong> on the books screen to sign out.</p>
+  </div>
+
+  <div class="guide-section" id="books">
+    <h2>Your books</h2>
+    <p>After logging in you land on the <strong>Books</strong> screen. Each book card shows a progress bar for sections you've visited. The bar turns green once you've visited every section.</p>
+    <p>New accounts include a <strong>Demo Book</strong> - a fully mapped 50-section example with completed playthroughs, notes, and priorities. Delete it any time.</p>
+    <table>
+      <tr><th>Button</th><th>What it does</th></tr>
+      <tr><td><strong>Open</strong></td><td>Go into the tracker for that book</td></tr>
+      <tr><td><strong>✎</strong></td><td>Edit the book details (name, sections, identifiers, cover). Greyed out for books you didn't create.</td></tr>
+      <tr><td><strong>✕</strong></td><td>Delete the book and your progress (asks for confirmation). Doesn't affect other users.</td></tr>
+    </table>
+
+    <h3>Creating a book</h3>
+    <p>Click <strong>Create Book</strong>. As you type the name, a dropdown suggests books already in the system - selecting one fills in all the details automatically and changes the button to <strong>Add to library</strong>.</p>
+    <ul>
+      <li><strong>Sections</strong> - total number of sections (minimum 5)</li>
+      <li><strong>Type</strong> - Book (ISBN + ASIN) or Magazine (ISSN)</li>
+      <li><strong>Author(s)</strong> - comma-separated</li>
+      <li><strong>Pages</strong> - physical page count</li>
+      <li><strong>Description</strong> - free-text summary</li>
+      <li><strong>Cover</strong> - optional image upload</li>
+    </ul>
+    <p>Leave any optional fields blank and fill them in later using <strong>✎</strong>.</p>
+
+    <h3>Stashes</h3>
+    <p>A <strong>stash</strong> is a personal folder for tidying up your books list. Click <strong>Create Stash</strong>, give it a name, and add any mix of books, anthologies, and series to it.</p>
+    <ul>
+      <li>Items you add move out of the main list into a collapsible stash section</li>
+      <li>Each item can only belong to one stash at a time</li>
+      <li>Stashing a <strong>series</strong> moves its visible books along with it</li>
+      <li>Deleting a stash does <strong>not</strong> delete what's inside - everything moves back to the main list</li>
+    </ul>
+    <p>Use <strong>Edit Stash</strong> on the stash header to rename it or change its contents later.</p>
+  </div>
+
+  <div class="guide-section" id="interface">
+    <h2>The tracker interface</h2>
+    <p>The screen is split into two areas:</p>
+    <ul>
+      <li><strong>Sidebar</strong> (left) - your current section, choices, playthrough history, stats, and controls</li>
+      <li><strong>Graph</strong> (right) - a visual map of every section you've encountered, with lines showing how they connect</li>
+    </ul>
+    <p>The sidebar can be collapsed using the <strong>›</strong> button on its right edge, giving the map the full screen width. Click <strong>‹</strong> to expand it again.</p>
+    <p>If the book has a PDF and you've been given access (or you're an admin), a small <strong>PDF</strong> link appears next to the book title at the top of the sidebar. Clicking it opens the PDF in a new browser tab.</p>
+    <p>A <strong>current run path</strong> strip is pinned above the graph, showing the sequence of sections visited so far. Click the <strong>▾</strong> button on the right of the header to collapse or expand it.</p>
+    <p>A <strong>Legend</strong> panel sits in the top-right corner of the graph area. Click its header (or the <strong>▾</strong> button) to collapse or expand it.</p>
+    <p>Below the <strong>Play Together / User Guide / Notebook</strong> buttons is a compact <strong>Player XP</strong> panel showing your live level, title, XP bar, and boost while you play. On the level row, your <strong>heartbeat XP rate</strong> is shown on the right in aqua - for example <strong>+6.7 heartbeat XP/min</strong> - so you can see at a glance how much passive XP you're earning while the tracker is open. It updates immediately as XP or Gold Coins are earned. Click its header (or the <strong>▾</strong> button) to collapse or expand it.</p>
+    <p>Press <strong>Ctrl+X</strong> while in a book to hide or restore all the main panels at once: the sidebar, current run path, dice roller, legend, and Player XP panel. Pressing it again restores only the panels that were open before.</p>
+    <p>Your panel preferences are remembered across sessions and across devices.</p>
+    <p>At the bottom of the sidebar:</p>
+    <ul>
+      <li><strong>Center on Current Section</strong> - scrolls and zooms the map to show where you are right now. Not available when no playthrough is active or when viewing a completed one.</li>
+      <li><strong>Find Section</strong> - type a section number (e.g. <code>101</code> or <code>101-A</code>) and press Enter or click the button. The map jumps to that section. Flashes red if the section doesn't exist yet.</li>
+      <li><strong>Export Book</strong> / <strong>Reset Book</strong> - side by side. Export downloads a copy of this book; Reset wipes all map data and playthrough history.</li>
+    </ul>
+    <p>Click <strong>← Home</strong> at the bottom of the sidebar to go back to your books list.</p>
+
+    <h3>Graph background image</h3>
+    <p>If the book has a cover image, it appears as a faint watermark behind the map. Right-click on any empty part of the map (not on a section dot) to get these options:</p>
+    <ul>
+      <li><strong>Hide background</strong> - removes the watermark. Click again ("Show background") to bring it back.</li>
+      <li><strong>Move background</strong> - enter reposition mode. Move the mouse up or down to shift the image vertically. Click anywhere or press <strong>Esc</strong> to confirm.</li>
+      <li><strong>Connectors</strong> - a submenu to choose the line style used to draw connections between sections. Options are Curved, Curved (opposite), Cubic bezier, Horizontal, or Straight. The currently active style has a checkmark next to it. This is a per-book setting saved with your progress.</li>
+    </ul>
+    <p>Your preference (hidden/shown and position) is saved per book. On very wide screens (wider than 1920 px), hiding the background shows the book cover in the sidebar above the stats instead.</p>
+  </div>
+
+  <div class="guide-section" id="recording">
+    <h2>Recording a playthrough</h2>
+
+    <h3>Starting a run</h3>
+    <p>Click <strong>+ New</strong> in the Runs panel to begin a new playthrough. It starts at section 1 by default. If your book starts somewhere different, open it before starting any playthroughs, right-click anywhere on the map and choose <strong>✎ Edit start node</strong> to set a different default starting section. This setting is saved with the book and used for all future playthroughs.</p>
+    <p><strong>Starting one run somewhere else:</strong> some gamebooks have more than one real beginning - for example a flip/dos-a-dos print edition with a second story starting deep in the back. Rather than changing the book's default start, click the <strong>⚑</strong> button next to <strong>+ New</strong> and type the section that specific run should begin at.</p>
+    <p><strong>Picking a start you've used before:</strong> once you've started runs from 2 or more different sections, <strong>+ New</strong> shows a quick picker instead of jumping straight to the default - just click the section you want. It only lists starts a real run has actually begun at; the <strong>⚑</strong> option is still there in the picker for typing a brand-new one.</p>
+
+    <h3>Recording choices</h3>
+    <p>When you reach a section that hasn't been mapped yet, a text box appears. Type in the section numbers the book offers as choices, separated by commas. Both numeric and alphanumeric IDs are supported:</p>
+    <pre>34, 67, 112
+101-A, 101-B, 202</pre>
+    <p>Special values:</p>
+    <ul>
+      <li><code>-1</code> - this section can lead to a <strong>dead end</strong> (a loss)</li>
+      <li><code>0</code> - this section can lead to <strong>victory</strong></li>
+    </ul>
+    <p>Press <strong>Record &amp; Choose</strong> (or Enter). The choices are saved, and a button appears for each destination. Press the one you actually took. If there are a lot of choices, the button area scrolls so you can always reach them.</p>
+    <p>If a section has only one choice, the tracker moves forward automatically.</p>
+    <p><strong>Alphanumeric sections:</strong> if you type something like <code>101-A</code> for the first time, you'll be asked to confirm once. After that, the book switches to alphanumeric mode permanently. The total section count acts as a ceiling - you can't add more sections than the book is set to have.</p>
+
+    <h3>Revisiting mapped sections</h3>
+    <p>When you return to a section that was already mapped in a previous playthrough, the choice buttons appear straight away - no need to type them in again.</p>
+
+    <h3>Undoing a step</h3>
+    <p>An <strong>Undo</strong> button appears below your current section during an active playthrough. Each press removes the last step and takes you back to the previous decision point - if several sections in a row had no branch (only one possible destination), they're all skipped in a single undo.</p>
+    <p>Each playthrough gets a limited number of undos based on your level:</p>
+    <table>
+      <tr><th>Level range</th><th>Undos available</th></tr>
+      <tr><td>1 – 30</td><td>3</td></tr>
+      <tr><td>31 – 40</td><td>4</td></tr>
+      <tr><td>41 – 50</td><td>5</td></tr>
+      <tr><td>51 – 60</td><td>6</td></tr>
+      <tr><td>61 – 70</td><td>7</td></tr>
+      <tr><td>71 – 80</td><td>8</td></tr>
+      <tr><td>81 – 90</td><td>9</td></tr>
+      <tr><td>91 – 100</td><td>10</td></tr>
+    </table>
+    <p>Extra Undo purchases from the <strong>Gold Coins Shop</strong> add on top of the base amount.</p>
+    <p>The button shows how many undos you have left and goes grey when none remain.</p>
+
+    <h3>Ending a run</h3>
+    <p>Three buttons let you wrap up a playthrough. Each one asks you to confirm before anything is finalised.</p>
+    <ul>
+      <li><strong>★ Win</strong> - marks the playthrough as a victory. A confirmation window appears; click <strong>★ Victory</strong> to confirm.</li>
+      <li><strong>✝ Loss</strong> - marks the playthrough as a loss. A confirmation window appears; click <strong>✝ Loss</strong> to confirm.</li>
+      <li><strong>Battle Death ⚔</strong> - marks the playthrough as ended by a battle death at your current section, even if that section still has choices. Use this when your hero's health reaches zero during a fight. The current section is also automatically flagged as a battle location. A confirmation window appears; click <strong>⚔ Battle Death</strong> to confirm.</li>
+      <li>The playthrough is archived. Its path stays visible in the sidebar.</li>
+    </ul>
+  </div>
+
+  <div class="guide-section" id="runs">
+    <h2>Managing runs</h2>
+    <p>The <strong>Runs</strong> list in the sidebar shows every playthrough, newest first:</p>
+    <table>
+      <tr><th>Button</th><th>What it does</th></tr>
+      <tr><td><strong>Private / Public</strong> (completed runs only)</td><td>Switches whether this playthrough is visible to others. Shows <strong>Private</strong> when hidden and <strong>Public</strong> when others can see it. Only public playthroughs can be linked from the activity feed - making your profile public doesn't automatically expose private ones.</td></tr>
+      <tr><td>Load (a run in progress)</td><td>Switches to that playthrough so you can continue it</td></tr>
+      <tr><td>Load (a completed run)</td><td>Shows that playthrough's path in the trail and highlights its sections on the map. The run gets a blue highlight to show which one you're viewing - this is remembered when you navigate away and come back.</td></tr>
+      <tr><td>✕</td><td>Permanently deletes the playthrough (asks for confirmation)</td></tr>
+    </table>
+    <p>You can have several playthroughs going at once. Only one is active at a time.</p>
+  </div>
+
+  <div class="guide-section" id="graph">
+    <h2>The graph</h2>
+    <p>Every section you've ever visited appears on the map as a dot. Lines between dots show which sections lead to which.</p>
+
+    <h3>Line colours</h3>
+    <table>
+      <tr><th>Colour</th><th>Thickness</th><th>Meaning</th></tr>
+      <tr><td>Red</td><td>Thick if you travelled it this run, normal otherwise</td><td>This path leads inevitably to a dead end</td></tr>
+      <tr><td>Green</td><td>Thick if you travelled it this run, normal otherwise</td><td>This path leads inevitably to victory</td></tr>
+      <tr><td>Orange (thick)</td><td>Thick</td><td>You travelled this path in the current or viewed playthrough, with no definite outcome</td></tr>
+      <tr><td>Grey</td><td>Normal</td><td>Not travelled this run, no definite outcome</td></tr>
+    </table>
+    <p>"Inevitable" means the destination leads to only one outcome with no branching. Paths you've walked this run are always shown thicker; a dead-end or victory colour always takes priority over orange.</p>
+
+    <h3>Dot colours</h3>
+    <table>
+      <tr><th>Colour</th><th>Meaning</th></tr>
+      <tr><td><span class="swatch" style="background:#f5a623;border:2px solid #c47d00"></span><span style="color:#f5a623">Orange (solid)</span></td><td>Where you are right now</td></tr>
+      <tr><td><span class="swatch" style="background:#3d9be9;border:2px solid #2980b9"></span><span style="color:#3d9be9">Blue (solid)</span></td><td>Visited in the current or viewed playthrough</td></tr>
+      <tr><td><span class="swatch" style="background:#e74c3c;border:2px solid #c0392b"></span><span style="color:#e74c3c">Red (solid)</span></td><td>Where a lost playthrough ended</td></tr>
+      <tr><td><span class="swatch" style="background:#c2410c;border:2px solid #9a3412"></span><span style="color:#f97316">Burnt orange (solid)</span></td><td>Where a battle-death playthrough ended</td></tr>
+      <tr><td><span class="swatch" style="background:#27ae60;border:2px solid #1e8449"></span><span style="color:#27ae60">Green (solid)</span></td><td>Where a victorious playthrough ended</td></tr>
+      <tr><td><span class="swatch" style="background:#0f172a;border:3px solid #e74c3c"></span><span style="color:#e74c3c">Dark with red outline</span></td><td>This section can lead to a dead end</td></tr>
+      <tr><td><span class="swatch" style="background:#0f172a;border:3px solid #27ae60"></span><span style="color:#27ae60">Dark with green outline</span></td><td>This section has a path to victory</td></tr>
+      <tr><td><span class="swatch" style="background:#431407;border:3px solid #f97316"></span><span style="color:#f97316">Dark orange</span></td><td>Flagged as a battle location</td></tr>
+      <tr><td><span class="swatch" style="background:#8e44ad;border:2px solid #6c3483"></span><span style="color:#8e44ad">Purple (solid)</span></td><td>Fully mapped - choices recorded</td></tr>
+      <tr><td><span class="swatch" style="background:#606060;border:2px solid #404040"></span><span style="color:#9ca3af">Grey (solid)</span></td><td>Seen but not yet mapped</td></tr>
+      <tr><td><span class="swatch" style="background:#fde047;border:2px solid #a16207"></span><span style="color:#fde047">Yellow (solid)</span></td><td>The starting section (section 1 by default; change it with <strong>✎ Edit start node</strong>)</td></tr>
+    </table>
+    <p>Dots that can lead to a dead end, a victory, or a battle have a thicker border. Battle-flagged dots also show a small orange ✕ badge.</p>
+
+    <h3>Moving dots</h3>
+    <p>Drag any dot to reposition it. The position saves automatically and is remembered next time you open the book.</p>
+
+    <h3>Zoom and pan</h3>
+    <ul>
+      <li>Scroll wheel - zoom in and out</li>
+      <li>Click and drag on empty space - move around the map</li>
+    </ul>
+    <p>Your zoom level and position are saved automatically and restored the next time you open the same book.</p>
+
+    <h3>Right-click menu</h3>
+    <ul>
+      <li><strong>✎ Edit start node</strong> - only shown when no playthroughs have been started yet. Opens a small window with <strong>−</strong> / <strong>+</strong> buttons to set the section number that new playthroughs will begin at.</li>
+      <li><strong>Edit choices</strong> - opens a window to change the recorded choices for that section</li>
+      <li><strong>Edit note</strong> - opens a window to add or edit a text note for that section</li>
+      <li><strong>Priority</strong> - hover to expand a submenu:
+        <ul>
+          <li><strong>High</strong> - marks the section as a preferred route (green upward triangle at top-left of dot)</li>
+          <li><strong>Normal</strong> - clears any priority marking</li>
+          <li><strong>Low</strong> - marks the section as a poor route (red downward triangle at top-left of dot)</li>
+        </ul>
+      </li>
+      <li><strong>Fast Travel</strong> - only shown on mapped sections during an active playthrough when Fast Travels remain. Hover to expand a submenu:
+        <ul>
+          <li><strong>High priority</strong> - finds a path that passes through as many high-priority sections as possible</li>
+          <li><strong>Shortest</strong> - finds the shortest path regardless of priority</li>
+          <li><strong>Normal</strong> - finds a path that avoids high- and low-priority sections; falls back to shortest if no clean route exists</li>
+          <li><strong>Low priority</strong> - finds a path that passes through as many low-priority sections as possible</li>
+        </ul>
+        <p>The path is applied immediately - all the sections in between are added to your playthrough trail. Fast Travel only follows paths forwards; you can't travel backwards. If no forward path exists, a message tells you.</p>
+        <p>Each playthrough gets a limited number of Fast Travels based on your level:</p>
+        <table>
+          <tr><th>Level range</th><th>Fast Travels available</th></tr>
+          <tr><td>1 – 30</td><td>3</td></tr>
+          <tr><td>31 – 40</td><td>4</td></tr>
+          <tr><td>41 – 50</td><td>5</td></tr>
+          <tr><td>51 – 60</td><td>6</td></tr>
+          <tr><td>61 – 70</td><td>7</td></tr>
+          <tr><td>71 – 80</td><td>8</td></tr>
+          <tr><td>81 – 90</td><td>9</td></tr>
+          <tr><td>91 – 100</td><td>10</td></tr>
+        </table>
+        <p>Extra Fast Travel purchases from the <strong>Gold Coins Shop</strong> add on top of the base amount.</p>
+        <p>The remaining count is shown in the <strong>Fast Travel</strong> button in the sidebar. You can also click that button to open the Fast Travel window directly instead of right-clicking a dot. Type a target section number and click a routing button to go there.</p>
+      </li>
+      <li><strong>Toggle battle ⚔</strong> - marks or unmarks the section as a battle location. Flagged dots get an orange outline and a small orange ✕ badge. This is purely for your reference - it lets you see at a glance which sections have fights.</li>
+      <li><strong>Color</strong> - hover to expand a 4×4 palette of 16 colours. Click a colour to apply it to the dot. Click the same colour again, or choose <strong>✕ Clear color</strong>, to remove it. Custom colours are remembered across sessions.</li>
+      <li><strong>Delete node</strong> - removes this dot and any dead-end descendants that have no other connections (asks for confirmation)</li>
+    </ul>
+    <p>High and Low priority markings are saved with your map data and remembered across sessions. You can set them on any section, even ones not yet mapped.</p>
+
+    <h3>Section notes</h3>
+    <p>Any section can have a text note attached - for example, "need the brass key to reach this". Right-click the dot and choose <strong>Edit note</strong>. Dots with a note show a small green book icon. Hover over the dot to read the note in a tooltip.</p>
+    <p><strong>Show next to node:</strong> at the bottom-left of the note window, a <strong>Show next to node</strong> toggle pins your note as a label directly beside the dot on the map. When turned on, the label follows the dot as you pan or zoom. Up to 4 lines are shown (28 characters per line, with <code>…</code> for overflow). This setting is saved and remembered across sessions.</p>
+  </div>
+
+  <div class="guide-section" id="dice">
+    <h2>Dice roller</h2>
+    <p>A collapsible dice panel sits in the bottom-left corner of the map while you're in the tracker. Click the <strong>Dice</strong> header (or the arrow button) to collapse or expand it - the collapsed/expanded position is remembered across sessions.</p>
+    <ul>
+      <li>Use the <strong>−</strong> / <strong>+</strong> buttons to set how many dice to roll (1–10, default 2).</li>
+      <li>Choose the die type using the shortcut buttons: <strong>d4</strong>, <strong>d6</strong>, <strong>d8</strong>, <strong>d10</strong>, <strong>d12</strong>, <strong>d20</strong>, or <strong>d%</strong>.</li>
+      <li>Click <strong>Throw</strong> to roll. Results appear as themed tiles: d6 keeps the classic pip face, while the other dice use numbered faces.</li>
+      <li>When more than one die is rolled, the <strong>total</strong> is shown after the results.</li>
+    </ul>
+    <p><strong>d%</strong> is a percentile roll shown as a single result, but internally it uses two d10 digits (tens and ones), with <code>00</code> counting as <code>100</code>.</p>
+    <p>The dice count and your last throw are <strong>saved per playthrough</strong>. When you switch between runs or come back to one later, the dice panel restores exactly what you had. Viewing a completed playthrough shows its saved dice results.</p>
+  </div>
+
+  <div class="guide-section" id="stats">
+    <h2>Stats (sidebar)</h2>
+    <table>
+      <tr><th>Stat</th><th>Meaning</th></tr>
+      <tr><td>Mapped</td><td>Sections where you've recorded choices, shown as a percentage of the total</td></tr>
+      <tr><td>Discovered</td><td>All sections you've ever seen (mapped plus ones you've passed through but not mapped), shown as a percentage of the total</td></tr>
+      <tr><td>Missing</td><td>Only shown when Mapped equals Discovered (everything you've found is fully mapped). Shows how many sections in the book's total you've never come across. Hover over the count to see the individual section numbers.</td></tr>
+      <tr><td>Playthroughs</td><td>Total number of playthroughs (active and completed), with completed ones broken down - losses in red, wins in green</td></tr>
+    </table>
+  </div>
+
+  <div class="guide-section" id="charsheet">
+    <h2>Character sheet</h2>
+    <p>Click <strong>Character Sheet</strong> (bottom-right corner of the tracker) to open the character sheet window. Use it to track any stats, items, or attributes for your current playthrough.</p>
+    <p>Each playthrough has its own separate character sheet. While a playthrough is in progress the sheet is fully editable. When you look back at a finished playthrough, you can see the sheet as it was - but you can't change it, and the Save buttons are hidden. When no playthrough is loaded at all, the button and overlay are hidden.</p>
+
+    <h3>Reordering fields</h3>
+    <p>Drag the <strong>⠿</strong> handle on the left of any field to reorder it. The new order takes effect when you press Save or Save as Template.</p>
+
+    <h3>Adding fields</h3>
+    <p>Click <strong>+ Add field</strong> to create a new field. Each field has:</p>
+    <table>
+      <tr><th>Setting</th><th>Description</th></tr>
+      <tr><td>Visibility toggle</td><td>Whether the field appears in the compact display on the map screen. Blue when visible, grey when hidden.</td></tr>
+      <tr><td>Name</td><td>Label shown in the display and in the window</td></tr>
+      <tr><td>Type</td><td>One of: Number, Boolean, Text, List, Enum</td></tr>
+      <tr><td>Value</td><td>Current value - edit it directly in the window</td></tr>
+    </table>
+
+    <h3>Field types</h3>
+    <table>
+      <tr><th>Type</th><th>Use for</th><th>How to enter</th></tr>
+      <tr><td>Number</td><td>SKILL, STAMINA, Gold, etc.</td><td>Integer or decimal - use the − / + buttons or type directly</td></tr>
+      <tr><td>Boolean</td><td>Does your character have this item or ability? (yes/no)</td><td>Checkbox (Yes / No)</td></tr>
+      <tr><td>Text</td><td>Freeform notes</td><td>Any text</td></tr>
+      <tr><td>List</td><td>Inventory</td><td>Comma-separated items</td></tr>
+      <tr><td>Enum</td><td>Character class, faction, stance</td><td>Choose one from a set of options you define</td></tr>
+    </table>
+    <p>For Enum fields, type the available options (comma-separated) in the small grey box above the dropdown - it updates immediately.</p>
+
+    <h3>Saving</h3>
+    <table>
+      <tr><th>Button</th><th>What it does</th></tr>
+      <tr><td>Save</td><td>Saves the current values to this playthrough</td></tr>
+      <tr><td>Save as template</td><td>Saves the current values as the starting point for new playthroughs in this book</td></tr>
+      <tr><td>Cancel</td><td>Discards any changes you haven't saved yet</td></tr>
+    </table>
+    <p>There is one template per book. Pressing <strong>Save as template</strong> replaces the previous one.</p>
+
+    <h3>The compact display</h3>
+    <p>Fields you've set to visible appear as plain text in the bottom-right corner of the map screen, above the Character Sheet button. Only fields with a name and visibility turned on are shown. The display updates when you press Save. It has no background and doesn't block interaction with the map.</p>
+    <p>Character sheet data is saved alongside the rest of your book progress.</p>
+  </div>
+
+  <div class="guide-section" id="inventory">
+    <h2>Inventory</h2>
+    <p>Click <strong>Inventory</strong> (bottom-right of the tracker screen) to see and manage the items your character is carrying in this playthrough.</p>
+    <p>Each playthrough has its own separate inventory. If you look back at a finished run, you can see what you had at the time - but you can't make changes to it.</p>
+    <h3>Adding items</h3>
+    <p>Click <strong>+ Add Item</strong>, then browse or search the list of available items. Click any item to add it. You can also type a short label on it - handy for noting a quantity or a specific version of an item.</p>
+    <h3>Changing the order</h3>
+    <p>Drag items around to arrange them however you like. The order saves automatically.</p>
+    <h3>Removing an item</h3>
+    <p>Right-click an item to remove it.</p>
+    <h3>Showing an item on screen</h3>
+    <p>Right-click an item and choose <strong>Show on screen</strong> to pin it to the on-screen display in the play area, next to your character sheet. It shows up there with a small blue "ITEM" badge - equipped items get the same treatment but in amber with their slot name instead, so at a glance you can tell what's just carried from what's actually equipped.</p>
+    <h3>Save as Template</h3>
+    <p>If you always start this book with the same items, click <strong>Save as Template</strong>. Future playthroughs will automatically begin with that inventory.</p>
+  </div>
+
+  <div class="guide-section" id="equipment">
+    <h2>Equipment</h2>
+    <p>Click <strong>Equipment</strong> (bottom-right of the tracker screen) to equip items from your inventory onto a character silhouette - head, chest, weapon, off-hand, back, rings, and more, plus five extra slots for consumables. It's purely visual (no stat effects) and is a handy way to see what your character is carrying or wearing at a glance.</p>
+    <p>Like the inventory, equipment is <strong>per playthrough</strong>. When viewing a finished run, it's read-only.</p>
+    <h3>Equipping and unequipping</h3>
+    <p>Click an empty slot to open a picker of items currently in your inventory, then pick one to equip it. Click the <strong>✕</strong> on an equipped item to send it back to your inventory.</p>
+    <h3>Right-click menu</h3>
+    <p>Right-click an equipped item for options:</p>
+    <ul>
+      <li><strong>Show / Hide on screen</strong> - pin the item to the on-screen display alongside your visible inventory items (shown with a small slot badge, like <code>WEAPON</code> or <code>HEAD</code>, so it's clear at a glance which items are equipped versus just carried)</li>
+      <li><strong>Rename</strong> - give the item a custom name (carries over if it's moved back to inventory)</li>
+      <li><strong>Edit</strong> - change quantity, note, and the "show on screen" flag</li>
+    </ul>
+    <h3>Save as Template</h3>
+    <p>Click <strong>Save as Template</strong> to save the current loadout (including any custom names, notes, and quantities) as the starting equipment for future playthroughs of this book.</p>
+  </div>
+
+  <div class="guide-section" id="notebook">
+    <h2>Notebook</h2>
+    <p>Click <strong>Notebook</strong> (bottom-centre of the tracker map area, next to User Guide) to open a freeform text notebook for the current book. Notes are <strong>per book</strong> - all playthroughs share the same notebook.</p>
+    <p>Use it for anything that doesn't fit in section notes or the character sheet: strategies, unsolved puzzles, things to try next session, lore observations - whatever you like.</p>
+    <table>
+      <tr><th>Button</th><th>What it does</th></tr>
+      <tr><td><strong>Save</strong></td><td>Saves your notes and closes the window</td></tr>
+      <tr><td><strong>Close</strong></td><td>Closes the window without saving</td></tr>
+    </table>
+    <p>You can also close with the ✕ button, by clicking outside the window, or by pressing Escape. Unsaved changes are discarded if you close any of those ways.</p>
+    <h3>Show in play area</h3>
+    <p>A toggle at the bottom-left of the notebook window (labelled <strong>Show in play area</strong>) pins your notes as a see-through text overlay on the left side of the map. This preference is remembered when you refresh the page.</p>
+    <p>When the overlay is visible:</p>
+    <ul>
+      <li>Move the mouse over it to start editing: a dark background appears, the text becomes editable, a scrollbar shows, and <strong>Save</strong> / <strong>Cancel</strong> buttons appear at the bottom.</li>
+      <li>Click <strong>Save</strong> to save your changes and go back to see-through display mode.</li>
+      <li>Click <strong>Cancel</strong> or move the mouse away to discard unsaved changes and return to transparent mode.</li>
+      <li>Text wraps automatically and the overlay scrolls if the content is taller than 65% of the screen.</li>
+    </ul>
+    <p><strong>Scroll position:</strong> both the notebook window and the play area overlay remember where you scrolled to, including across page refreshes. Scrolling one also scrolls the other. Typing in either view updates the other in real time without needing to save first.</p>
+  </div>
+
+  <div class="guide-section" id="in-app-guide">
+    <h2>User guide (in-app)</h2>
+    <p>Click <strong>User Guide</strong> (bottom-centre of the tracker map area) to open this guide in an overlay without leaving the tracker. Close it with the ✕ button, by clicking outside, or by pressing Escape.</p>
+  </div>
+
+  <div class="guide-section" id="profile">
+    <h2>Your profile</h2>
+    <p>Click the avatar circle next to your username on the Books screen to open your profile.</p>
+    <ul>
+      <li><strong>Username</strong> - change your login name</li>
+      <li><strong>Display name</strong> - if you are an Author, you can set an optional display name here. When set, it's shown instead of your username throughout the site (feed, public profile, books). Leave it blank to use your username.</li>
+      <li><strong>Public profile</strong> - tick this to let anyone view your books and completed playthroughs via the activity feed. When enabled, your username becomes a clickable link in the feed.</li>
+      <li><strong>Hide from activity feed</strong> - tick this to remove your activity from the feed entirely. Only playthroughs you've explicitly made public will still appear. This doesn't affect your public profile - it only controls what shows in the feed.</li>
+      <li><strong>Change Password</strong> - enter your current password, then choose a new one. Leave blank to keep the current one.</li>
+      <li><strong>Avatar</strong> - click <strong>Change Avatar</strong> to pick an image. If it isn't square, a drag-to-reposition tool lets you choose which part to use. The final avatar is saved as a 512×512 square and automatically compressed to stay within 256 KB.</li>
+    </ul>
+    <p>Your profile also shows your current <strong>level</strong>, <strong>title</strong>, and how far you are to the next level. These update automatically as you play.</p>
+    <p>Click <strong>Save</strong> to apply changes. The window closes immediately on success. Password and username changes take effect right away.</p>
+  </div>
+
+  <div class="guide-section" id="levels">
+    <h2>Levels</h2>
+    <p>XP builds up naturally as you use the app - no grinding required. Rewards float up at the bottom-right of the screen (<code>+50 XP</code> pills for XP, a coin icon for Gold Coins, and an orange <strong>LEVEL UP!</strong> pill when you level up). Every level you gain adds a permanent <strong>+0.1% XP boost</strong> to all future rewards.</p>
+    <p>Your XP bar shows your <strong>heartbeat XP rate</strong> in aqua on the right of the level row - for example <strong>+6.7 heartbeat XP/min</strong>. This is the passive XP you earn just for having the tracker open. If you have an XP boost active, the boost percentage is also shown in aqua, with the total bonus XP shown next to it.</p>
+    <p>Things that earn XP (one-time unless noted):</p>
+    <ul>
+      <li>Playing through books - mapping sections, completing playthroughs, recording discoveries</li>
+      <li>Winning a book for the first time; discovering or visiting every section</li>
+      <li>Creating and organising series and anthologies</li>
+      <li>Filling out your profile (avatar, public profile, display name)</li>
+      <li>Rating books, anthologies, and series (after completing a playthrough)</li>
+      <li>Uploading covers, adding descriptions, page counts, authors, and identifiers</li>
+      <li>Having a PDF available for a book in your library</li>
+      <li>Exporting your data</li>
+    </ul>
+  </div>
+
+  <div class="guide-section" id="shop">
+    <h2>Gold Coins &amp; Shop</h2>
+    <p>You earn <strong>1 GC for every 1,000 XP</strong>. You can also earn bonus coins:</p>
+    <table>
+      <tr><th>Milestone</th><th>Reward</th></tr>
+      <tr><td>Visit every section of a book</td><td>1 GC</td></tr>
+      <tr><td>24 tracked play hours</td><td>1 GC</td></tr>
+      <tr><td>Every 100 completed runs (across all books)</td><td>1 GC</td></tr>
+      <tr><td>Visit every section of every book in a <strong>series</strong></td><td>1 GC per book in the series</td></tr>
+      <tr><td>Visit every section of every book in an <strong>anthology</strong></td><td>1 GC per book in the anthology</td></tr>
+    </table>
+    <p>Click <strong>GC</strong> in the header to open the shop. Purchases are permanent - no refunds.</p>
+    <table>
+      <tr><th>Item</th><th>Cost</th><th>Effect</th><th>Cap</th></tr>
+      <tr><td><strong>XP Boost</strong></td><td>next purchase costs 1, 2, 3… GC</td><td>+0.1% to all future XP awards, permanently. Buy it multiple times to keep stacking the bonus.</td><td>lvl × 0.1%</td></tr>
+      <tr><td><strong>Heartbeat XP</strong></td><td>next purchase costs 1, 2, 3… GC</td><td>Permanently adds +0.1 to the base idle XP each time you buy it. The boosted amount is then multiplied by your normal XP boost.</td><td>lvl × 0.1 XP</td></tr>
+      <tr><td><strong>Extra Undo</strong></td><td>3, 6, 9… GC (goes up each time)</td><td>+1 undo per playthrough, permanently. Adds on top of your level-based allowance.</td><td>1 per 10 levels</td></tr>
+      <tr><td><strong>Fast Travel</strong></td><td>5, 10, 15… GC (goes up each time)</td><td>+1 Fast Travel per playthrough, permanently. Adds on top of your level-based allowance.</td><td>1 per 10 levels</td></tr>
+    </table>
+    <p>XP Boost and Heartbeat XP only apply to XP earned after purchase - they don't retroactively increase your existing XP.</p>
+    <p>The shop header shows your current balance next to a <strong>"N spent"</strong> pill, so your lifetime total spent is always visible alongside what you have left.</p>
+  </div>
+
+  <div class="guide-section" id="book-details">
+    <h2>Editing book details</h2>
+    <p>Books can be edited from two places:</p>
+    <ul>
+      <li><strong>Books screen</strong> - click the <strong>✎</strong> button next to a book to rename it, correct the section count, add identifiers, or upload a cover before opening it.</li>
+      <li><strong>Tracker sidebar</strong> - click the <strong>✎</strong> button next to the book title to edit while tracking. The section count can't be lowered below the highest section number already in use; the window shows you the current minimum.</li>
+      <li>Books need a minimum of <strong>5 sections</strong>. Section counts below 5 are not accepted.</li>
+    </ul>
+    <p>The <strong>Identifiers</strong> field switches between <strong>Book</strong> (ISBN + ASIN) and <strong>Magazine</strong> (ISSN) mode. Books that share the same ISBN or ISSN are treated as the same title across all users - helpful for linking different editions.</p>
+    <ul>
+      <li>The <strong>Series</strong> dropdown in Edit Book shows your own series only</li>
+      <li>Clicking ✎ on an anthology row opens Edit Anthology; clicking ✎ on a series header opens Edit Series</li>
+      <li>Fields that don't apply are hidden automatically (for example, cover and identifiers are hidden for stories inside an anthology)</li>
+    </ul>
+
+    <h3>Discoverable sections</h3>
+    <p>When you've explored everything you can find - every section you know about is fully mapped, yet the total is still below the book's printed section count - the Edit Book window reveals an extra field: <strong>Discoverable Sections</strong>.</p>
+    <p>This lets you record the true number of reachable sections. Setting it corrects the progress bar and the XP targets for "discover all" and "visit all" achievements for everyone tracking the book.</p>
+    <p>The value must be between your current discovered count and the book's defined total. Leave it blank to leave the setting unchanged.</p>
+    <p>The value applies to all users tracking the same book. XP is awarded retroactively to anyone whose progress already meets the new threshold.</p>
+
+    <h3>Book cover (optional)</h3>
+    <p>Both the <strong>Create Book</strong> window and the <strong>edit book</strong> window include a cover upload section showing a 2:3 preview or a "No cover" placeholder. Click <strong>Upload Cover</strong> to select an image - the preview updates immediately. Images are automatically scaled and compressed to stay within 256 KB. For new books the cover is uploaded right after creation; for existing books it's uploaded when you press <strong>Save</strong>.</p>
+    <p>Once uploaded, the cover appears in the left panel of the landing page, visible to anyone.</p>
+    <p>Hovering over a book name (in the sidebar or the books list) shows the full name in a tooltip if it's been cut off.</p>
+
+    <h3 id="series-compendiums">Series</h3>
+    <p>Create a new series using the <strong>Create Series</strong> button at the top of the books screen. The series window lets you set a name, description, and optionally make the series <strong>public</strong>. As you type, the name field may suggest existing series already in the system - selecting one adds that shared series to your library instead of creating a duplicate.</p>
+    <p>Add a book to a series using the <strong>Series</strong> dropdown in the Edit Book or Edit Anthology window. Fill in <strong>Number in series</strong> (e.g. <code>12</code> or <code>XII</code>). Books in the same series group together under a collapsible amber <strong>series header row</strong> in the books list. Set the dropdown back to <strong>None</strong> and save to remove the association. The series header row has a ✎ edit button (creator only) and a ✕ button.</p>
+    <p>Only the creator can edit a series. Other users can add a public series via <strong>+ Add to my library</strong> - this adds all public books and anthologies in one step. The creator earns <strong>150 XP</strong> each time someone adds their series.</p>
+    <p>Clicking ✕ on a series row gives two options:</p>
+    <ul>
+      <li><strong>Delete Series</strong> - removes the series from your library; books stay as standalone items</li>
+      <li><strong>Delete Series &amp; Contents</strong> - removes the series and its books from your library</li>
+    </ul>
+    <p>If the creator removes a series while other owners still have it, ownership transfers to the next owner rather than deleting the shared record.</p>
+    <p>If a series in your library has no books yet, the row shows <strong>no books yet</strong> and a <strong>Browse series</strong> link.</p>
+
+    <h3 id="compendiums">Anthologies</h3>
+    <p>An <strong>anthology</strong> is a physical book that contains several shorter adventures or stories inside - each tracked separately with its own map, playthroughs, and graph. A magazine with three gamebook adventures, or an annual anthology, are typical examples.</p>
+    <p>You create one anthology entry for the physical book, then link individual story books to it as children. In the books list the anthology row is collapsible - click it to reveal the stories inside.</p>
+
+    <h4>What anthologies have vs. what stories inside have</h4>
+    <table>
+      <thead><tr><th>Field</th><th>Anthology</th><th>Story (child book)</th></tr></thead>
+      <tbody>
+        <tr><td>Name</td><td>✓</td><td>✓</td></tr>
+        <tr><td>Cover image</td><td>✓</td><td>- (belongs to the anthology)</td></tr>
+        <tr><td>ISBN / ISSN / ASIN</td><td>✓</td><td>- (belongs to the anthology)</td></tr>
+        <tr><td>Page count</td><td>✓</td><td>- (belongs to the anthology)</td></tr>
+        <tr><td>Authors, description</td><td>✓</td><td>✓</td></tr>
+        <tr><td>Section count &amp; runs</td><td>-</td><td>✓</td></tr>
+        <tr><td>Series membership</td><td>✓</td><td>✓</td></tr>
+      </tbody>
+    </table>
+
+    <h4>Creating an anthology from scratch</h4>
+    <ol>
+      <li>Click <strong>Create Anthology</strong> at the top of the books screen. Enter the anthology name - as you type, a dropdown suggests matching public anthologies already in the system. Selecting one fills in all the details and changes the button to <strong>Add to library</strong>. Otherwise fill in the ISBN or ISSN, cover, page count etc., then click <strong>Create</strong>.</li>
+      <li>The anthology appears in the list with a purple left border showing "0 books".</li>
+      <li>For each story inside, click <strong>Create Book</strong>: enter name and section count, select the anthology in <strong>Part of anthology</strong>, set an <strong>Order within anthology</strong> number (1, 2, 3…), then click <strong>Create</strong>. Cover, ISBN, and pages are hidden for stories - they live on the anthology.</li>
+      <li>Repeat for every story. They move inside the anthology row. Click the row to expand or collapse it. Your expanded/collapsed preference follows your account when you're logged in.</li>
+    </ol>
+
+    <h4>Grouping books you already have</h4>
+    <p>If you've already added books like <em>Annual 1984 – Story 1</em>, <em>Annual 1984 – Story 2</em>:</p>
+    <ol>
+      <li>Create the anthology first: click <strong>Create Anthology</strong> → enter name → add ISBN/cover → Create.</li>
+      <li>For each existing story: click <strong>✎</strong> → set <strong>Part of anthology</strong> to the new anthology → Save.</li>
+      <li>Done - they move inside the anthology.</li>
+    </ol>
+
+    <h4>Progress, feed, and search</h4>
+    <ul>
+      <li><strong>Progress bar:</strong> the anthology row shows combined visited and total sections across all the stories inside. If an anthology sits inside a series, the series bar also counts those stories rather than treating the anthology as a single item.</li>
+      <li><strong>Activity feed:</strong> entries for stories show the story name as a button, followed by a purple <strong>anthology tag</strong> (the anthology name) and an amber <strong>series tag</strong> (series name and number, if any).</li>
+      <li><strong>Search:</strong> searching the public covers panel by a story's name finds its parent anthology. Typing <strong>anthology</strong> or <strong>anthologies</strong> shows only anthology containers. You can also search by series name. Anthology thumbnails have a purple border and a small <strong>anthology</strong> badge in the corner.</li>
+    </ul>
+
+    <p><strong>Adding someone else's anthology:</strong> if an anthology is public, clicking <strong>+ Add to my library</strong> in its detail window adds the anthology and all its public stories to your library in one step. The creator earns <strong>100 XP</strong> plus XP per story added.</p>
+    <p>Deleting an anthology you own removes it and its stories from your library. Removing someone else's anthology also removes the stories that came with it - but stories you added independently are unaffected. Stories are never deleted from the system automatically. A book can belong to both a series and an anthology at the same time.</p>
+
+    <h3>Making a book public</h3>
+    <p>The <strong>Edit Book</strong> window includes a <strong>Make public</strong> checkbox (visible to the book's creator only). When checked, the book becomes findable by other logged-in users:</p>
+    <ul>
+      <li>It appears in the left-panel cover wall (if it has a cover) and in the public book list.</li>
+      <li>Other users who open the book's detail window will see a <strong>+ Add to my library</strong> button. Clicking it creates a fresh tracking entry for that book - no duplicate is created.</li>
+      <li>Any changes you make to the book's details (name, sections, description, etc.) are immediately visible to everyone tracking it.</li>
+      <li>If you delete the book while others are tracking it, ownership transfers to the next user (by join date). The book and its cover remain intact.</li>
+      <li>If you're the last user and you delete it, the book and cover are permanently removed.</li>
+      <li>Making a book public lets others find and add it, but it still respects your <strong>Hide from activity feed</strong> setting.</li>
+    </ul>
+  </div>
+
+  <div class="guide-section" id="rating">
+    <h2>Rating</h2>
+    <p>The <strong>Edit Book</strong> window and the book detail window (opened from the left panel or a feed link) each include a star rating widget (1–5 stars in half-star increments) when you own the book. To rate a book you need to have completed at least one playthrough of any outcome (win, death, or battle death). For <strong>anthologies</strong>, you need to have completed at least one playthrough of every story inside. Click a star to set or change your rating; clicking your current rating clears it. The first time you rate a book you earn <strong>25 XP</strong>. Changing or clearing your rating doesn't award additional XP.</p>
+    <p><strong>Series</strong> also have a rating widget in their detail window. To rate a series, every book and anthology inside it must satisfy the same requirement - every story in every anthology must have been played at least once. The first time you rate a series you earn <strong>25 XP</strong>.</p>
+    <p>Once you've submitted a rating, the filled stars turn <strong>aqua</strong> to distinguish your personal vote from the amber preview shown while hovering. Rolling over the stars to preview a new rating temporarily shows them in amber so you can see what you're about to choose.</p>
+  </div>
+
+  <div class="guide-section" id="open-world">
+    <h2>Open World series</h2>
+    <p>An <strong>open world series</strong> is a special type of series where all the books are part of one continuous adventure. Your character and playthrough number carry across every book - starting a new playthrough in Book 1 also starts it in Book 2, Book 3, and every other book in the series. Special <strong>portal</strong> sections on the map let you travel directly from a section in one book to a section in another.</p>
+
+    <h3>What makes open world different</h3>
+    <table>
+      <thead><tr><th>Normal series</th><th>Open World series</th></tr></thead>
+      <tbody>
+        <tr><td>Each book has its own independent playthroughs</td><td>All books share the same playthrough numbers</td></tr>
+        <tr><td>Character sheet stays within each book</td><td>Character sheet travels between books</td></tr>
+        <tr><td>A playthrough ends within its own book</td><td>A playthrough ends once, wherever it ends across the series</td></tr>
+        <tr><td>No connections between books</td><td>Portal sections let you jump between books mid-playthrough</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Setting up an open world series</h3>
+    <p>An admin or the series creator marks a series as open world using the <strong>Open world series</strong> checkbox in the <strong>Edit Series</strong> window. Once ticked and saved, all books in that series automatically gain open world behaviour.</p>
+
+    <h3>The run list in open world books</h3>
+    <p>The runs panel in an open world book looks similar to a normal book, with a few extra entries:</p>
+    <table>
+      <thead><tr><th>Entry type</th><th>What it means</th></tr></thead>
+      <tbody>
+        <tr><td>Active playthrough (numbered)</td><td>A playthrough you're currently playing in this book</td></tr>
+        <tr><td><em>in [Book Name] X ⇒</em> (teal label)</td><td>This playthrough is currently active in a different book in the series, at the section shown. Click <strong>Center on Current Section</strong> to jump there.</td></tr>
+        <tr><td>Portal-paused</td><td>A playthrough paused at a portal in this book - now active in another book. The action button is <strong>View</strong> (not Load), since you need to portal back to resume it.</td></tr>
+        <tr><td>Completed</td><td>Ended with a victory or death in any book. Shows Load and Public/Private buttons as usual.</td></tr>
+        <tr><td>⤢ View button</td><td>Appears next to completed public playthroughs. Opens the full journey viewer.</td></tr>
+      </tbody>
+    </table>
+    <ul>
+      <li><strong>Active-run badge:</strong> on the Books screen, the book currently hosting an open world playthrough shows a teal <strong>▶ Run N</strong> badge - find it at a glance without opening each book.</li>
+      <li><strong>Cross-book reachable sections</strong> (dashed teal border): sections reachable via portal from the current book. Right-click → <strong>Fast Travel</strong> to jump cross-book.</li>
+      <li><strong>Starting a new playthrough:</strong> clicking <strong>New Run</strong> shows a confirmation that the playthrough is shared across every book in the series.</li>
+      <li><strong>Deleting a playthrough:</strong> removes it from every book in the series at once, keeping playthrough numbers consistent.</li>
+    </ul>
+
+    <h3>Portal sections (◇)</h3>
+    <p>In open world books, some sections may have <strong>portal sections</strong> - shown as teal diamonds on the map. A portal links that section to a specific section in another book in the same series.</p>
+    <p>When your active playthrough is at a section that has portals, a <strong>Portal destinations</strong> panel appears in the sidebar listing each available portal with a travel button. Clicking a travel button:</p>
+    <ol>
+      <li>Saves your current character sheet to the series playthrough.</li>
+      <li>Marks your playthrough as paused at that portal.</li>
+      <li>Opens the target book and resumes (or starts) the playthrough there at the destination section you specified.</li>
+    </ol>
+    <p>Your playthrough number stays the same in the target book.</p>
+
+    <h3>Adding portals (for trackers)</h3>
+    <p>In the play area of an open world book, an <strong>Add Portal</strong> button appears below the choices input. Clicking it opens a window where you can:</p>
+    <ul>
+      <li>Choose the <strong>target book</strong> from a dropdown (books in the same series that you have in your library).</li>
+      <li>Enter the <strong>target section number</strong> in that book.</li>
+      <li>Optionally add a <strong>label</strong> to describe the portal.</li>
+    </ul>
+    <p>Portals are saved with the section data and shown on the map as teal diamonds. They don't affect the choices list or the regular playthrough path - they're separate.</p>
+
+    <h3>The character sheet in open world</h3>
+    <p>The character sheet works the same way as in normal books, but your values carry between books. When you travel through a portal, the tracker saves your current character sheet values so they're available when you resume in the target book.</p>
+
+    <h3>Activity feed</h3>
+    <p>Open world series produce series-level feed entries rather than individual book entries:</p>
+    <table>
+      <thead><tr><th>Feed event</th><th>What it means</th></tr></thead>
+      <tbody>
+        <tr><td><em>username</em> <strong>began series run N in</strong> <em>Series Name</em></td><td>A new series playthrough was started</td></tr>
+        <tr><td><em>username</em> <strong>won / lost / died series run N of</strong> <em>Series Name</em></td><td>The playthrough ended somewhere in the series</td></tr>
+      </tbody>
+    </table>
+    <p>Individual book entries (began run N of <em>Book Name</em>) are not shown for open world series books - only the series-level events appear. If the playthrough is public, the result word is a clickable link that opens the full journey viewer.</p>
+
+    <h3>Public journey viewer</h3>
+    <p>For completed public series playthroughs, clicking the <strong>⤢ View</strong> button (next to the Public/Private toggle on a completed run) opens a journey window showing the complete cross-book adventure:</p>
+    <ul>
+      <li>Each book you visited is shown as its own segment, with your path through that book highlighted on a map.</li>
+      <li>Portal transitions between books are shown between segments, with the name of the book you travelled to.</li>
+      <li>The final result (Victory / Loss / Battle Death) is shown at the end of the journey.</li>
+    </ul>
+  </div>
+
+  <div class="guide-section" id="reset">
+    <h2>Reset</h2>
+    <p><strong>Reset Book</strong> wipes all map data, dot positions, and playthrough history for the current book. The book entry itself is kept. This cannot be undone.</p>
+    <p><strong>Open-world series:</strong> if the book belongs to an open-world series, pressing Reset Book resets the <strong>entire series</strong> - all playthroughs and all progress across every book in the series. The confirmation window makes this clear before you proceed.</p>
+    <p>To fully delete a book, use the <strong>✕</strong> button on the Books screen.</p>
+  </div>
+
+  <div class="guide-section" id="export">
+    <h2>Exporting your data</h2>
+    <p>Both export options produce a <strong>.zip</strong> archive that opens in any file manager.</p>
+
+    <h3>Export Everything</h3>
+    <p>Open your <strong>profile</strong> (click your avatar) and click <strong>⬇ Export Everything (.zip)</strong>. The archive is structured as:</p>
+    <pre style="background:#111827;border:1px solid #374151;border-radius:6px;padding:0.6rem 0.9rem;font-size:0.82rem;color:#9ca3af;line-height:1.6">username/
+  backup.json
+  books/
+    Book Title.html
+    Another Book/
+      Another Book.html
+      graph.svg
+    …</pre>
+    <ul>
+      <li><strong>backup.json</strong> - all your books in a single file. Contains the full map (all sections and choices), all playthroughs (paths, results, dates), section notes, priority flags, battle flags, character sheet templates, notebook text, star ratings, and book details. Good for safekeeping.</li>
+      <li><strong>books/Book Title.html</strong> - one self-contained HTML file per book, readable in any browser with no internet connection. Includes book details, summary stats, all playthroughs with full section paths and dates, per-run character sheet / inventory / equipment details (collapsed under expandable sections), and a complete section map with choices, priority, battle flags, and notes. Books with a map snapshot get their own folder alongside a <strong>graph.svg</strong> (sharp at any zoom, unlike a regular image), same as Export Book below; books you haven't started mapping just get the HTML file.</li>
+    </ul>
+
+    <h3>Export This Book</h3>
+    <p>While viewing a book, click <strong>⬇ Export Book</strong> in the sidebar (below Reset Book). The button shows "Exporting..." while the file is being prepared. The ZIP is saved with the book's actual name. The archive contains:</p>
+    <pre style="background:#111827;border:1px solid #374151;border-radius:6px;padding:0.6rem 0.9rem;font-size:0.82rem;color:#9ca3af;line-height:1.6">Book Title/
+  Book Title.html
+  Book Title.json
+  graph.svg</pre>
+    <ul>
+      <li><strong>Book Title.html</strong> - the same readable HTML as above, for this book only, with per-run charsheet/inventory/equipment details.</li>
+      <li><strong>Book Title.json</strong> - the same data as <code>backup.json</code>, but just for this one book.</li>
+      <li><strong>graph.svg</strong> - a snapshot of the section map, for books you've started laying out.</li>
+    </ul>
+  </div>
+
+  <div class="guide-section" id="simulators">
+    <h2>Battle Simulators</h2>
+    <p>Some books come with a built-in <strong>Battle Simulator</strong> that appears automatically when you open them. It handles the book's specific combat rules so you can focus on the adventure, not the maths.</p>
+    <p>When a simulator is available, a panel will appear in the play area alongside your tracker. You don't need to do anything special to turn it on - it shows up on its own for the books that have one.</p>
+    <h3>What it does</h3>
+    <ul>
+      <li>Set up a fight by entering your character's stats and your enemy's stats</li>
+      <li>Click <strong>Roll</strong> to resolve each round - the simulator rolls the dice, applies the book's rules, and updates HP for both sides</li>
+      <li>A running log shows every round so you can see exactly what happened</li>
+      <li>When the fight ends, you'll see whether you won or lost</li>
+      <li>Your combat history is saved per playthrough, so you can look back at earlier fights</li>
+    </ul>
+    <h3>Good to know</h3>
+    <ul>
+      <li>Each simulator follows the exact rules for its specific book - dice counts, damage tables, and special abilities all match the book you're reading</li>
+      <li>Some simulators read your current equipment and character sheet to fill in your stats automatically</li>
+      <li>The simulator doesn't change anything in your tracker - it's a helper, not a replacement for tracking sections</li>
+    </ul>
+  </div>
+
+  <div class="guide-section" id="play-together">
+    <h2>Play Together</h2>
+    <p><strong>Play Together</strong> lets two or more users link their copies of a book so that all progress is shared in real time. While a party is active, any section mapped, playthrough started, or choice recorded by one person instantly updates everyone else's view.</p>
+
+    <h3>Starting a party</h3>
+    <p>Open a book and click the <strong>Play Together</strong> button at the bottom of the screen. Type the username of the person you want to invite and click <strong>Invite</strong>. They'll see an invite card at the top of their books list.</p>
+    <p>As you type a username, a dropdown of matching users appears - click any entry to fill the field. You can invite multiple people one at a time.</p>
+    <p>If an invite is pending (sent but not yet accepted), the window shows <em>Invite pending - waiting for others to accept</em> and a <strong>Cancel Invite</strong> button.</p>
+
+    <h3>Accepting an invite</h3>
+    <p>When you have a pending invite, a green card appears above your books list. Click <strong>Accept</strong> to join. The book is added to your library with the inviter's current progress - all mapped sections, playthroughs, notes, and priorities are copied over. If you were already tracking the book independently, your existing progress is replaced by the shared party version. Click <strong>Decline</strong> if you don't want to join.</p>
+
+    <h3>While playing together</h3>
+    <p>The <strong>Play Together</strong> button turns green and shows your party members' names. The book is fully synced: when anyone navigates a section, starts or completes a playthrough, or maps new sections, everyone's map updates automatically.</p>
+    <p>You can invite additional members at any time: click <strong>Play Together</strong> and use the <strong>Invite more</strong> form.</p>
+
+    <h3>Activity feed</h3>
+    <p>Shared playthroughs appear as a single merged entry: <em>john, jane began run 3 of Midnight Maze.</em> Party entries are highlighted with a teal left border and a small <strong>party</strong> badge.</p>
+
+    <h3>Stopping</h3>
+    <p>Click <strong>Play Together</strong> while in a party and then <strong>Stop Playing Together</strong>. After confirming, everyone keeps the current shared progress and continues independently. If only two members remain and one leaves, the party ends for both.</p>
+  </div>
+
+  <div class="guide-section" id="forum">
+    <h2>Forum</h2>
+    <p>The community forum is at <strong>/forum</strong>. Anyone can read it; you need to be logged in to post.</p>
+    <p>The forum is organised into five areas:</p>
+    <table>
+      <thead><tr><th>Sub-forum</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td>General Discussion</td><td>Anything and everything gamebook-related</td></tr>
+        <tr><td>Book Recommendations</td><td>Looking for something to read? Ask here</td></tr>
+        <tr><td>Playthroughs &amp; Spoilers</td><td>Discuss specific books, routes, and endings</td></tr>
+        <tr><td>Site Feedback</td><td>Bugs, feature requests, and suggestions for the site</td></tr>
+        <tr><td>Off Topic</td><td>Anything else</td></tr>
+      </tbody>
+    </table>
+    <ul>
+      <li>Click <strong>+ New Thread</strong> inside any sub-forum to start a discussion</li>
+      <li>You can attach images, PDFs, text files, and archives when creating a thread or posting a reply - click <strong>+ Attach</strong> in the form</li>
+      <li>You can delete your own threads and replies - deleted replies show as <em>[deleted]</em></li>
+      <li>New activity pulses <strong>green</strong> on the Forum button, sub-forum cards, and individual threads - clears when you open the thread</li>
+    </ul>
+  </div>
+
+  <div class="guide-section" id="feedback">
+    <h2>Feedback &amp; Inbox</h2>
+
+    <h3>Sending feedback</h3>
+    <p>The <strong>Feedback</strong> button appears in the top header when you're logged in. Clicking it opens a window with three fields:</p>
+    <ul>
+      <li><strong>Username</strong> - filled in automatically from your account; you can't change it here.</li>
+      <li><strong>Email</strong> (optional) - if you add this, you'll get an email when the admin replies.</li>
+      <li><strong>Message</strong> - your feedback, question, or bug report.</li>
+    </ul>
+    <p>Press <strong>Send</strong> to submit. The window closes on success.</p>
+    <p>You can optionally attach files before sending - click <strong>+ Attach</strong> to pick one or more files. Supported types: images (JPEG, PNG, GIF, WebP, AVIF), PDF, plain text (<code>.txt .md .csv .json .xml</code>), and archives (<code>.zip .7z .rar .gz</code>) up to 64 MB each. Large images are compressed automatically before upload. Each attached file appears with an <strong>&#x2715;</strong> button to remove it before sending.</p>
+
+    <h3>Notifications</h3>
+    <p>The <strong>🔔 bell</strong> turns solid green when you have unseen notifications. Click it to see them - opening the dropdown marks all as seen.</p>
+    <table>
+      <thead><tr><th>Notification</th><th>When it appears</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Level up</strong></td><td>Each time you gain a level</td></tr>
+        <tr><td><strong>Gold Coin earned</strong></td><td>XP milestone, level-up reward, 24h playtime, book completed, series or anthology fully completed</td></tr>
+        <tr><td><strong>Gold Coin gifted</strong></td><td>When an admin sends you coins directly</td></tr>
+        <tr><td><strong>Role assigned</strong></td><td>When an admin gives you the Author or Contributor role</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Inbox</h3>
+    <p>The <strong>Inbox</strong> button shows a count of unread messages from the admin. Click it to open your conversations.</p>
+    <ul>
+      <li><strong>Conversation list</strong> - all your threads; ones with unread messages have a purple border. Click to open.</li>
+      <li><strong>Conversation view</strong> - your messages on the right (blue), admin messages on the left (grey). Reply box at the bottom.</li>
+      <li>Opening a conversation marks it as read and clears the badge.</li>
+      <li>Use <strong>+ Attach</strong> below the reply box to attach files to your reply (same file types and 64 MB limit as feedback). Images appear inline; other files appear as download links.</li>
+    </ul>
+  </div>
+
+</div>
+</body>
+</html>

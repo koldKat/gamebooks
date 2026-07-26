@@ -1,0 +1,1767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Gamebook Tracker</title>
+  <meta name="description" content="Free browser-based gamebook tracker. Map branching paths section by section, manage character sheets, inventory, and equipment, run battle simulators, and track multiple playthroughs across Fighting Fantasy, Lone Wolf, Sorcery!, Fabled Lands, Grailquest, DestinyQuest, Choose Your Own Adventure, and more.">
+  <meta name="keywords" content="gamebook tracker, fighting fantasy tracker, lone wolf tracker, sorcery tracker, sorcery!, fabled lands tracker, grailquest tracker, destinyquest tracker, ninja gamebook, choose your own adventure tracker, gamebook map, gamebook section mapper, playthrough tracker, branching narrative tracker, decision tree mapper, interactive fiction tracker, solo adventure tracker, free gamebook tracker, gamebook character sheet, gamebook inventory, gamebook equipment, gamebook battle simulator, open world gamebook, gamebook dice roller, tunnels and trolls tracker">
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+  <meta name="theme-color" content="#111827">
+  <link rel="canonical" href="https://koldkat.net/">
+  <link rel="manifest" href="/manifest.json">
+
+  <!-- Open Graph -->
+  <meta property="og:type"        content="website">
+  <meta property="og:url"         content="https://koldkat.net/">
+  <meta property="og:title"       content="Gamebook Tracker - Map Paths, Track Runs, Manage Characters">
+  <meta property="og:description" content="Free gamebook tracker with branching path maps, character sheets, inventory, equipment, battle simulators, and open world series support. Track Fighting Fantasy, Lone Wolf, Sorcery!, Fabled Lands, DestinyQuest, Choose Your Own Adventure, and more.">
+  <meta property="og:image"       content="https://koldkat.net/og-image.png">
+  <meta property="og:image:type"  content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:alt"   content="Gamebook Tracker - Map every choice. Track every run.">
+  <meta property="og:site_name"   content="Gamebook Tracker">
+  <meta property="og:locale"      content="en_US">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card"        content="summary_large_image">
+  <meta name="twitter:url"         content="https://koldkat.net/">
+  <meta name="twitter:title"       content="Gamebook Tracker - Map Paths, Track Runs, Manage Characters">
+  <meta name="twitter:description" content="Free gamebook tracker with branching path maps, character sheets, inventory, equipment, battle simulators, and open world series support. Track Fighting Fantasy, Lone Wolf, Sorcery!, Fabled Lands, DestinyQuest, Choose Your Own Adventure, and more.">
+  <meta name="twitter:image"       content="https://koldkat.net/og-image.png">
+
+  <!-- Structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Gamebook Tracker",
+    "alternateName": "Gamebook Section Mapper",
+    "url": "https://koldkat.net/",
+    "inLanguage": "en",
+    "description": "Free browser-based gamebook tracker with branching path maps, character sheets, inventory, equipment, battle simulators, and open world series support.",
+    "keywords": "gamebook tracker, fighting fantasy, lone wolf, sorcery, fabled lands, choose your own adventure, gamebook character sheet, gamebook inventory, gamebook battle simulator",
+    "publisher": {
+      "@type": "Organization",
+      "name": "Gamebook Tracker",
+      "url": "https://koldkat.net/",
+      "logo": { "@type": "ImageObject", "url": "https://koldkat.net/favicon.svg" }
+    }
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Gamebook Tracker",
+    "alternateName": "Gamebook Section Mapper",
+    "url": "https://koldkat.net/",
+    "inLanguage": "en",
+    "description": "Free browser-based gamebook tracker with branching path maps, character sheets, inventory, equipment, battle simulators, and open world series support for Fighting Fantasy, Lone Wolf, Sorcery!, Fabled Lands, Grailquest, DestinyQuest, Choose Your Own Adventure, and other interactive adventure books.",
+    "applicationCategory": "GameApplication",
+    "operatingSystem": "Web",
+    "datePublished": "2025-01-01",
+    "dateModified": "2026-07-17",
+    "image": "https://koldkat.net/og-image.png",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "genre": ["Gamebooks", "Interactive Fiction", "Adventure Games"],
+    "keywords": "gamebook tracker, fighting fantasy tracker, lone wolf tracker, sorcery tracker, section mapper, playthrough tracker, gamebook character sheet, gamebook inventory, gamebook battle simulator",
+    "publisher": { "@type": "Organization", "name": "Gamebook Tracker", "url": "https://koldkat.net/" },
+    "featureList": [
+      "Section-by-section playthrough tracking",
+      "Interactive force-directed decision tree graph",
+      "Multiple concurrent playthroughs per book",
+      "Fast Travel between mapped sections",
+      "Custom character sheets with editable stat fields per book",
+      "Item inventory with icon library, quantities, stacks, and notes",
+      "Paper-doll equipment panel with weapon, armor, ring, and accessory slots",
+      "Battle simulators with automated dice rolls and round-by-round combat logs",
+      "Open world series linking multiple books into a single continuous adventure",
+      "Dice roller (d4/d6/d8/d10/d12/d20 and percentile) with per-run persistence",
+      "Section notes, notebook clues, and priority markings",
+      "Books, anthologies, series, and personal stash organization",
+      "Cover art management and book metadata",
+      "Public profiles and shared run viewing",
+      "Experience levels, gold coins, and progression rewards",
+      "Public activity feed",
+      "JSON export"
+    ]
+  }
+  </script>
+
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <noscript><style>body{background:#111827;color:#d1d5db;font-family:sans-serif;padding:2rem;}</style>
+  <h1>Gamebook Tracker</h1>
+  <p>A browser-based tool for mapping the branching structure of gamebooks - Fighting Fantasy, Choose Your Own Adventure, Lone Wolf, and more - across multiple playthroughs.</p>
+  <p>Track every section, record your choices, and visualise the full decision tree. Supports multiple users and multiple books per account.</p>
+  <p><a href="/guide.html">Read the User Guide</a></p>
+  <p>JavaScript is required to use this application.</p>
+  </noscript>
+
+  <link rel="stylesheet" href="/css/style.css?v=625">
+  <!-- style.css holds shared/base rules only now; each file below owns the CSS for
+       its like-named JS module (see docs/technical.md). reduce-motion.css and
+       mobile.css load last since they're cross-cutting overrides on top of
+       everything above, not a single module's own styling. -->
+  <link rel="stylesheet" href="/css/charsheet.css?v=3">
+  <link rel="stylesheet" href="/css/equipment.css?v=10">
+  <link rel="stylesheet" href="/css/shop.css?v=1">
+  <link rel="stylesheet" href="/css/dice.css?v=2">
+  <link rel="stylesheet" href="/css/feedback.css?v=1">
+  <link rel="stylesheet" href="/css/battlesim.css?v=3">
+  <link rel="stylesheet" href="/css/demo.css?v=15">
+  <link rel="stylesheet" href="/css/profile.css?v=1">
+  <link rel="stylesheet" href="/css/public-profile.css?v=2">
+  <link rel="stylesheet" href="/css/login.css?v=1">
+  <link rel="stylesheet" href="/css/add-book.css?v=1">
+  <link rel="stylesheet" href="/css/play.css?v=6">
+  <link rel="stylesheet" href="/css/landing.css?v=8">
+  <link rel="stylesheet" href="/css/reduce-motion.css?v=1">
+  <link rel="stylesheet" href="/css/mobile.css?v=4">
+  <script src="/vendor/vis-network/vis-network.min.js?v=1"></script>
+</head>
+<body>
+
+  <!-- ── Demo banner ─────────────────────────────────────────────── -->
+  <div id="demo-banner">
+    <span>Demo mode - nothing is saved</span>
+    <button id="demo-exit-btn">Exit Demo</button>
+  </div>
+
+  <!-- ── Covers panel (fixed left) ────────────────────────────────── -->
+  <div id="covers-panel">
+    <div id="covers-header">
+      <span id="covers-header-label"><span id="covers-count"></span><span id="covers-sort" tabindex="0" role="button" aria-haspopup="listbox"><span id="covers-sort-label">Latest</span><ul id="covers-sort-menu" role="listbox"><li role="option" data-value="alpha">A–Z</li><li role="option" data-value="za">Z–A</li><li role="option" data-value="latest">Latest</li><li role="option" data-value="oldest">Oldest</li><li role="option" data-value="random">Random</li><li role="option" data-value="popular">Popular</li><li role="option" data-value="longest">Longest</li><li role="option" data-value="shortest">Shortest</li></ul></span> <span id="covers-kind" tabindex="0" role="button" aria-haspopup="listbox"><span id="covers-kind-label">All</span><ul id="covers-kind-menu" role="listbox"><li role="option" data-value="all">All</li><li role="option" data-value="books">Books</li><li role="option" data-value="anthologies">Anthologies</li><li role="option" data-value="series">Series</li><li role="option" data-value="favorites">Favorites</li></ul></span><span id="covers-total"></span></span>
+      <div class="covers-search-wrap">
+        <button id="covers-search-icon" aria-label="Search books"><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="6.5" cy="6.5" r="4"/><line x1="9.7" y1="9.7" x2="13.5" y2="13.5"/></svg></button>
+        <input type="text" inputmode="text" id="covers-search" placeholder="Search…" autocomplete="off" spellcheck="false">
+        <button id="covers-search-clear" aria-label="Clear search">✕</button>
+      </div>
+    </div>
+    <div id="covers-grid"></div>
+  </div>
+  <div id="cover-preview-popup"><img id="cover-preview-popup-img" alt=""><div id="cover-preview-popup-series"></div><div id="cover-preview-popup-title"></div></div>
+  <button id="covers-toggle"  class="panel-toggle" aria-label="Toggle covers panel">&#8249;</button>
+  <button id="right-toggle"   class="panel-toggle" aria-label="Toggle right panel">&#8250;</button>
+  <button id="feed-toggle"    class="panel-toggle feed-toggle-btn visible" aria-label="Toggle activity feed">▴</button>
+  <button id="sidebar-toggle" class="panel-toggle" aria-label="Toggle play sidebar">&#8249;</button>
+  <button id="covers-scroll-top" class="scroll-top-btn" aria-label="Scroll to top">↑</button>
+  <button id="center-scroll-top" class="scroll-top-btn" aria-label="Scroll to top">↑</button>
+  <button id="right-scroll-top"  class="scroll-top-btn" aria-label="Scroll to top">↑</button>
+
+  <div id="landing-bg-a" style="visibility:hidden"></div>
+  <div id="landing-bg-b" style="visibility:hidden"></div>
+  <div id="landing-ctx-menu">
+    <button id="landing-ctx-toggle-btn">Hide background</button>
+  </div>
+
+  <!-- ── Landing wrapper (feed + login/books) ─────────────────────── -->
+  <div id="landing-wrapper" style="visibility:hidden">
+
+    <!-- Left: activity feed -->
+    <div id="feed-panel">
+      <div id="app-banner">
+        <div id="app-banner-text">
+          <div id="app-banner-title">Gamebook Tracker<span class="mobile-lite-suffix"> Lite</span> <span id="app-version"></span></div>
+          <div id="app-banner-sub">Map every branch across all your playthroughs</div>
+        </div>
+        <div id="app-banner-right">
+          <div id="app-banner-brand"><span class="brand-flag">bulgarian made</span></div>
+          <div id="app-banner-btns">
+            <button id="app-banner-f1-btn" title="Keyboard shortcuts">F1</button>
+            <a href="/guide.html" target="_blank" id="app-banner-guide-btn">User Guide</a>
+            <button id="demo-btn">Demo</button>
+            <button id="stats-btn">Stats</button>
+            <button id="forum-btn" style="display:none">Forum</button>
+            <button id="feedback-btn" data-i18n="btn.feedback" style="display:none">Feedback</button>
+            <button id="inbox-btn" data-i18n="btn.inbox" style="display:none">Inbox</button>
+            <button id="notif-btn" style="display:none"><span class="bell-icon"></span></button>
+          </div>
+        </div>
+      </div>
+      <div id="books-tip-bar"><span class="tip-label">Tip:</span><span id="books-tip-text"></span><div id="tip-progress-bar"></div></div>
+      <div id="feed-content"></div>
+      <div id="app-footer"><span id="app-footer-brand">koldKat productions</span> <span id="app-footer-copy"></span></div>
+    </div>
+
+    <!-- Right: login / books screens -->
+    <div id="landing-right">
+
+      <!-- ── Login / Register screen ──────────────────────────────── -->
+      <div id="login-screen" style="display:none">
+        <h1 data-i18n="app.title">Gamebook Tracker</h1>
+        <p class="login-sub" data-i18n="app.tagline">Map every branch across all your playthroughs</p>
+        <div class="auth-form">
+          <input type="text"     id="login-username" data-i18n-placeholder="auth.username" placeholder="Username" autocomplete="username">
+          <input type="password" id="login-password" data-i18n-placeholder="auth.password" placeholder="Password" autocomplete="current-password">
+          <input type="password" id="register-password-confirm" placeholder="Confirm password" autocomplete="new-password" style="display:none">
+          <input type="email"    id="register-email" placeholder="Email (optional - for password recovery)" autocomplete="email" style="display:none">
+          <small id="register-email-hint" style="display:none">Only used to recover your account if you forget your password.</small>
+          <div id="login-error" class="auth-error"></div>
+          <button id="login-btn"    class="primary-btn"  data-i18n="auth.login">Log In</button>
+          <button id="register-btn" class="auth-alt-btn" data-i18n="auth.register">Create Account</button>
+          <button id="forgot-pw-btn" class="auth-link-btn">Forgot your password?</button>
+        </div>
+        <div id="forgot-pw-panel" style="display:none">
+          <p class="forgot-pw-intro">Enter your username or email address and we'll send you a reset link.</p>
+          <input type="text" id="forgot-identifier" placeholder="Username or email" autocomplete="username email">
+          <div id="forgot-error" class="auth-error"></div>
+          <div id="forgot-success" class="auth-success" style="display:none"></div>
+          <button id="forgot-submit-btn" class="primary-btn">Send reset link</button>
+          <button id="forgot-back-btn" class="auth-link-btn">Back to login</button>
+        </div>
+        <div id="reset-pw-panel" style="display:none">
+          <p class="forgot-pw-intro">Enter your new password below.</p>
+          <input type="password" id="reset-password" placeholder="New password" autocomplete="new-password">
+          <input type="password" id="reset-password-confirm" placeholder="Confirm new password" autocomplete="new-password">
+          <div id="reset-error" class="auth-error"></div>
+          <div id="reset-success" class="auth-success" style="display:none">Password updated - you can now log in.</div>
+          <button id="reset-submit-btn" class="primary-btn">Set new password</button>
+          <button id="reset-back-btn" class="auth-link-btn">Back to login</button>
+        </div>
+        <section id="login-promo" aria-label="About Gamebook Tracker">
+          <div class="login-promo-graph" aria-hidden="true">
+            <svg class="login-promo-graph-svg" viewBox="0 0 100 480" preserveAspectRatio="xMidYMin meet">
+              <defs>
+                <linearGradient id="loginGraphWarm" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="rgba(250,200,92,0.72)"/>
+                  <stop offset="100%" stop-color="rgba(239,159,28,0.4)"/>
+                </linearGradient>
+                <linearGradient id="loginGraphCool" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="rgba(96,165,250,0.6)"/>
+                  <stop offset="100%" stop-color="rgba(96,165,250,0.18)"/>
+                </linearGradient>
+                <filter id="loginGraphGlow" x="-80%" y="-80%" width="260%" height="260%">
+                  <feGaussianBlur stdDeviation="1.8" result="blur"/>
+                  <feMerge>
+                    <feMergeNode in="blur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                  </feMerge>
+                </filter>
+              </defs>
+              <g class="login-promo-graph-lines">
+                <line class="lgp-p1"  x1="84" y1="14"  x2="63" y2="32"/>
+                <line class="lgp-p2"  x1="63" y1="32"  x2="86" y2="52"/>
+                <line class="lgp-p3"  x1="63" y1="32"  x2="36" y2="88"/>
+                <line class="lgp-p4"  x1="36" y1="88"  x2="18" y2="74"/>
+                <line class="lgp-p5"  x1="36" y1="88"  x2="54" y2="112"/>
+                <line class="lgp-p6"  x1="54" y1="112" x2="26" y2="130"/>
+                <line class="lgp-p7"  x1="26" y1="130" x2="50" y2="152"/>
+                <line class="lgp-p8"  x1="50" y1="152" x2="78" y2="166"/>
+                <line class="lgp-p9"  x1="50" y1="152" x2="22" y2="178"/>
+                <line class="lgp-p10" x1="78" y1="166" x2="88" y2="194"/>
+                <line class="lgp-p11" x1="22" y1="178" x2="42" y2="208"/>
+                <line class="lgp-p12" x1="78" y1="166" x2="60" y2="210"/>
+                <line class="lgp-p13" x1="22" y1="178" x2="12" y2="222"/>
+                <line class="lgp-p14" x1="60" y1="210" x2="80" y2="254"/>
+                <line class="lgp-p15" x1="60" y1="210" x2="38" y2="256"/>
+                <line class="lgp-p16" x1="12" y1="222" x2="28" y2="268"/>
+                <line class="lgp-p17" x1="28" y1="268" x2="46" y2="304"/>
+                <line class="lgp-p18" x1="46" y1="304" x2="66" y2="340"/>
+                <line class="lgp-p19" x1="46" y1="304" x2="26" y2="348"/>
+                <line class="lgp-p20" x1="80" y1="254" x2="64" y2="292"/>
+                <line class="lgp-p21" x1="64" y1="292" x2="84" y2="330"/>
+                <line class="lgp-p22" x1="64" y1="292" x2="44" y2="346"/>
+                <line class="lgp-p23" x1="66" y1="340" x2="48" y2="380"/>
+                <line class="lgp-p24" x1="66" y1="340" x2="82" y2="374"/>
+                <line class="lgp-p25" x1="48" y1="380" x2="30" y2="420"/>
+                <line class="lgp-p26" x1="48" y1="380" x2="64" y2="414"/>
+                <line class="lgp-p27" x1="30" y1="420" x2="14" y2="460"/>
+                <line class="lgp-p28" x1="30" y1="420" x2="46" y2="456"/>
+                <line class="lgp-p29" x1="84" y1="330" x2="72" y2="370"/>
+                <line class="lgp-p30" x1="84" y1="330" x2="94" y2="360"/>
+                <line class="lgp-p31" x1="72" y1="370" x2="56" y2="410"/>
+                <line class="lgp-p32" x1="72" y1="370" x2="88" y2="404"/>
+                <line class="lgp-p33" x1="56" y1="410" x2="74" y2="450"/>
+                <line class="lgp-p34" x1="56" y1="410" x2="38" y2="456"/>
+              </g>
+              <g class="login-promo-graph-nodes" filter="url(#loginGraphGlow)">
+                <circle cx="84" cy="14" r="2.3"/>
+                <circle class="lgp-p1"  cx="63" cy="32"  r="2.1"/>
+                <circle class="lgp-p2"  cx="86" cy="52"  r="2.3"/>
+                <circle class="lgp-p4"  cx="18" cy="74"  r="2.0"/>
+                <circle class="lgp-p3"  cx="36" cy="88"  r="2.0"/>
+                <circle class="lgp-p5"  cx="54" cy="112" r="2.0"/>
+                <circle class="lgp-p6"  cx="26" cy="130" r="2.1"/>
+                <circle class="lgp-p7"  cx="50" cy="152" r="2.0"/>
+                <circle class="lgp-p8"  cx="78" cy="166" r="2.2"/>
+                <circle class="lgp-p9"  cx="22" cy="178" r="2.0"/>
+                <circle class="lgp-p10" cx="88" cy="194" r="2.1"/>
+                <circle class="lgp-p11" cx="42" cy="208" r="2.0"/>
+                <circle class="lgp-p12" cx="60" cy="210" r="2.1"/>
+                <circle class="lgp-p13" cx="12" cy="222" r="2.0"/>
+                <circle class="lgp-p14" cx="80" cy="254" r="2.1"/>
+                <circle class="lgp-p15" cx="38" cy="256" r="2.0"/>
+                <circle class="lgp-p16" cx="28" cy="268" r="2.2"/>
+                <circle class="lgp-p17" cx="46" cy="304" r="2.0"/>
+                <circle class="lgp-p18" cx="66" cy="340" r="2.1"/>
+                <circle class="lgp-p19" cx="26" cy="348" r="2.0"/>
+                <circle class="lgp-p20" cx="64" cy="292" r="2.0"/>
+                <circle class="lgp-p21" cx="84" cy="330" r="2.1"/>
+                <circle class="lgp-p22" cx="44" cy="346" r="2.0"/>
+                <circle class="lgp-p23" cx="48" cy="380" r="2.0"/>
+                <circle class="lgp-p24" cx="82" cy="374" r="2.1"/>
+                <circle class="lgp-p25" cx="30" cy="420" r="2.0"/>
+                <circle class="lgp-p26" cx="64" cy="414" r="2.1"/>
+                <circle class="lgp-p27" cx="14" cy="460" r="2.2"/>
+                <circle class="lgp-p28" cx="46" cy="456" r="2.0"/>
+                <circle class="lgp-p29" cx="72" cy="370" r="2.0"/>
+                <circle class="lgp-p30" cx="94" cy="360" r="2.1"/>
+                <circle class="lgp-p31" cx="56" cy="410" r="2.0"/>
+                <circle class="lgp-p32" cx="88" cy="404" r="2.1"/>
+                <circle class="lgp-p33" cx="74" cy="450" r="2.2"/>
+                <circle class="lgp-p34" cx="38" cy="456" r="2.0"/>
+              </g>
+            </svg>
+          </div>
+          <div class="login-promo-eyebrow">Interactive adventure tracking for classic gamebooks</div>
+          <h2 class="login-promo-title">Map every path. Track every run. Revisit every ending.</h2>
+          <p class="login-promo-body">
+            Gamebook Tracker helps you build a living record of your interactive adventure books. Follow branching
+            routes section by section, keep multiple playthroughs, mark visited and discovered passages, organize books,
+            anthologies, series, and stashes, and return later to see exactly how each choice changed the journey.
+          </p>
+          <div class="login-promo-lead">
+            Whether you are replaying Fighting Fantasy, cataloguing magazine anthologies, or mapping your own growing
+            library of classic gamebooks, the tracker turns every book into a searchable history of routes, wins,
+            deaths, notes, and endings.
+          </div>
+          <div class="login-promo-video">
+            <iframe id="login-promo-video-iframe" class="login-promo-video-iframe"
+              data-src="https://www.youtube.com/embed/RGCu5Gdx5oU?autoplay=1&mute=1&loop=1&playlist=RGCu5Gdx5oU&controls=0&playsinline=1&rel=0&modestbranding=1"
+              allow="autoplay; encrypted-media"
+              allowfullscreen
+              loading="lazy"
+              tabindex="-1"
+              title="Gamebook Tracker tutorial"></iframe>
+            <button class="login-promo-video-btn" id="login-video-trigger" aria-label="Watch tutorial video">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><circle cx="12" cy="12" r="10" fill="rgba(0,0,0,0.6)"/><polygon points="10,8 16,12 10,16" fill="#fff"/></svg>
+              Watch tutorial
+            </button>
+          </div>
+
+          <div class="login-promo-steps">
+            <div class="login-promo-step">
+              <div class="login-promo-step-num">1</div>
+              <div class="login-promo-step-label">Add a book</div>
+              <div class="login-promo-step-desc">Create an entry with the number of sections and start a playthrough.</div>
+            </div>
+            <div class="login-promo-step">
+              <div class="login-promo-step-num">2</div>
+              <div class="login-promo-step-label">Play through</div>
+              <div class="login-promo-step-desc">Log each section, manage your character sheet, and track items as you go.</div>
+            </div>
+            <div class="login-promo-step">
+              <div class="login-promo-step-num">3</div>
+              <div class="login-promo-step-label">Review your map</div>
+              <div class="login-promo-step-desc">See the full branching graph of every run, compare routes, and revisit endings.</div>
+            </div>
+          </div>
+
+          <div class="login-promo-features">
+            <article class="login-promo-card">
+              <div class="login-promo-card-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="6" r="2"/><circle cx="19" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><path d="M7 6h10"/><path d="M6.7 7.3l4 8"/><path d="M17.3 7.3l-4 8"/></svg>
+              </div>
+              <div class="login-promo-card-title">Branch Maps</div>
+              <div class="login-promo-card-text">Visualize section links, branching choices, loops, dead ends, and alternate routes across the whole book.</div>
+            </article>
+            <article class="login-promo-card">
+              <div class="login-promo-card-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h10"/><path d="M8 12h10"/><path d="M8 18h10"/><path d="M4 6h.01"/><path d="M4 12h.01"/><path d="M4 18h.01"/></svg>
+              </div>
+              <div class="login-promo-card-title">Run History</div>
+              <div class="login-promo-card-text">Record multiple playthroughs, track victories and deaths, and compare how different runs moved through the same book.</div>
+            </article>
+            <article class="login-promo-card">
+              <div class="login-promo-card-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></svg>
+              </div>
+              <div class="login-promo-card-title">Library Control</div>
+              <div class="login-promo-card-text">Organize standalone books, anthologies, series, covers, and personal stashes without losing where each title fits.</div>
+            </article>
+            <article class="login-promo-card">
+              <div class="login-promo-card-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20v-6"/><path d="M9 17h6"/><path d="M7 4h10"/><path d="M8 8h8"/><path d="M10 12h4"/></svg>
+              </div>
+              <div class="login-promo-card-title">Notes & Progress</div>
+              <div class="login-promo-card-text">Keep notebook clues, mark key sections, and return to unfinished books with your progress and discoveries intact.</div>
+            </article>
+            <article class="login-promo-card">
+              <div class="login-promo-card-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              </div>
+              <div class="login-promo-card-title">Character Sheets</div>
+              <div class="login-promo-card-text">Define custom stat fields per book and track abilities, health, gold, and attributes across each playthrough.</div>
+            </article>
+            <article class="login-promo-card">
+              <div class="login-promo-card-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+              </div>
+              <div class="login-promo-card-title">Inventory</div>
+              <div class="login-promo-card-text">Collect items from a shared icon library, manage quantities and stacks, and attach notes to everything you carry.</div>
+            </article>
+            <article class="login-promo-card">
+              <div class="login-promo-card-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+              </div>
+              <div class="login-promo-card-title">Equipment</div>
+              <div class="login-promo-card-text">Equip weapons, armor, rings, and gear onto a visual paper-doll layout that tracks what your character is wearing.</div>
+            </article>
+            <article class="login-promo-card">
+              <div class="login-promo-card-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+              </div>
+              <div class="login-promo-card-title">Battle Simulators</div>
+              <div class="login-promo-card-text">Run combat encounters with automated dice rolls, hit resolution, and round-by-round logs that follow each book's specific rules.</div>
+            </article>
+            <article class="login-promo-card login-promo-card--wide login-promo-card--ow">
+              <div class="login-promo-card-icon login-promo-card-icon--ow" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              </div>
+              <div class="login-promo-card-ow-body">
+                <div class="login-promo-card-title">Open World Series</div>
+                <div class="login-promo-card-text">Link books into a living world. One character, one run number, many books - portal nodes carry your adventure across the entire series so each volume is a chapter in a single journey, not an island.</div>
+              </div>
+            </article>
+          </div>
+          <div class="login-promo-footer">
+            <span class="login-promo-tag">Fighting Fantasy</span>
+            <span class="login-promo-tag">Choose Your Own Adventure</span>
+            <span class="login-promo-tag">Lone Wolf</span>
+            <span class="login-promo-tag">Sorcery!</span>
+            <span class="login-promo-tag">Ninja</span>
+            <span class="login-promo-tag">Fabled Lands</span>
+            <span class="login-promo-tag">Grailquest</span>
+            <span class="login-promo-tag">DestinyQuest</span>
+            <span class="login-promo-tag">Tunnels &amp; Trolls</span>
+            <span class="login-promo-tag">and more</span>
+          </div>
+        </section>
+        <button id="mobile-guest-btn">Browse without signing in</button>
+      </div>
+
+      <!-- ── Books screen ─────────────────────────────────────────── -->
+      <div id="books-screen" style="display:none">
+        <div class="books-container">
+          <div id="avg-lvl-summary" hidden aria-live="polite">
+            <div id="avg-lvl-level-row">
+              <span id="avg-lvl-level">Lvl 0</span>
+              <span id="avg-lvl-title"></span>
+              <span id="avg-lvl-users"></span>
+            </div>
+            <div id="avg-lvl-bar">
+              <div id="avg-lvl-bar-fill"></div>
+            </div>
+            <div id="avg-lvl-sub-row">
+              <div id="avg-lvl-text"></div>
+              <div id="avg-lvl-range"></div>
+            </div>
+          </div>
+          <div id="app-xp-summary" hidden aria-live="polite">
+            <div id="app-xp-level-row">
+              <span id="app-xp-level">Lvl 0</span>
+              <span id="app-xp-title"></span>
+              <span id="app-xp-hb-rate"></span>
+            </div>
+            <div id="app-xp-bar">
+              <div id="app-xp-bar-fill"></div>
+            </div>
+            <div id="app-xp-sub-row">
+              <div id="app-xp-text">0 XP</div>
+              <div id="app-xp-boost"></div>
+            </div>
+          </div>
+          <div id="books-xp-summary" aria-live="polite">
+            <div id="books-xp-level-row">
+              <span id="books-xp-level">Lvl 0</span>
+              <span id="books-xp-title"></span>
+              <span id="books-xp-hb-rate"></span>
+            </div>
+            <div id="books-xp-bar">
+              <div id="books-xp-bar-fill"></div>
+            </div>
+            <div id="books-xp-sub-row">
+              <div id="books-xp-text">0 XP</div>
+              <div id="books-xp-boost"></div>
+            </div>
+          </div>
+          <div class="books-header">
+            <div class="books-header-left">
+              <h2 data-i18n="books.title">My Books</h2>
+              <button id="books-search-toggle" class="books-search-toggle" type="button" data-tooltip="Search My Books" aria-label="Search My Books"><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="6.5" cy="6.5" r="4"/><line x1="9.7" y1="9.7" x2="13.5" y2="13.5"/></svg></button>
+            </div>
+            <div id="books-search-inline" class="books-search-inline">
+              <input type="text" id="books-search-input" placeholder="Search…" autocomplete="off" spellcheck="false">
+              <button id="books-search-close" type="button" aria-label="Clear search">✕</button>
+            </div>
+            <div class="books-header-right">
+              <span id="books-username" class="books-username"></span>
+              <button id="shop-btn" class="shop-btn" data-tooltip="Gold Coins Shop"><span id="coins-display">GC 0</span></button>
+              <button id="profile-btn" class="profile-btn" data-tooltip="Edit profile">
+                <span id="profile-avatar" class="avatar-circle"></span>
+              </button>
+              <button id="logout-btn" class="logout-btn" data-i18n="auth.logout">Log out</button>
+            </div>
+          </div>
+          <div id="party-invites-section"></div>
+          <div class="books-add-actions">
+            <button class="books-add-btn" id="open-add-book-btn">Create Book</button>
+            <button class="books-add-btn" id="open-add-comp-btn">Create Anthology</button>
+            <button class="books-add-btn" id="open-add-series-btn">Create Series</button>
+            <button class="books-add-btn" id="open-add-stash-btn">Create Stash</button>
+          </div>
+          <div id="books-list"></div>
+        </div>
+      </div>
+
+    </div><!-- /#landing-right -->
+
+  </div><!-- /#landing-wrapper -->
+
+  <!-- ── Main screen ────────────────────────────────────────────────── -->
+  <div id="main-screen" style="display:none">
+
+    <div id="sidebar">
+
+      <div class="book-title-row">
+        <div id="book-title"></div>
+        <a id="pdf-download-btn" target="_blank" rel="noopener" style="display:none" title="Download PDF">PDF</a>
+        <button id="edit-book-btn" data-tooltip="Edit book name / sections">✎</button>
+      </div>
+
+      <div id="sidebar-book-info">
+        <img id="sidebar-cover-img" alt="">
+      </div>
+
+      <div id="stats">
+        <div class="stats-row">
+          <span data-i18n="stats.mapped">Mapped</span>
+          <span class="stat-value"><span id="mapped-count">0</span><span style="color:#3d9be9"> / </span><span id="total-count">0</span></span>
+        </div>
+        <div class="stat-bar-wrap"><div class="stat-bar stat-bar--mapped" id="mapped-bar"></div></div>
+        <div class="stats-row">
+          <span data-i18n="stats.discovered">Discovered</span>
+          <span class="stat-value"><span id="discovered-count">0</span><span style="color:#606060"> / </span><span id="discovered-total">0</span></span>
+        </div>
+        <div class="stat-bar-wrap"><div class="stat-bar stat-bar--discovered" id="discovered-bar"></div></div>
+        <div class="stats-row stats-row--missing" id="not-found-row" style="display:none">
+          <span id="missing-label" class="missing-label" data-tooltip="" data-tooltip-wrap="1">Missing</span>
+          <span class="stat-value"><span id="not-found-count">0</span> / <span id="not-found-total">0</span></span>
+        </div>
+        <div class="stats-row stats-row--playthroughs">
+          <span data-i18n="stats.playthroughs">Playthroughs</span>
+          <span class="stat-value"><span id="pt-total">0</span><span id="pt-outcomes"></span></span>
+        </div>
+        <div class="stat-bar-wrap stat-bar-wrap--split" id="pt-split-wrap" style="display:none">
+          <div class="stat-bar stat-bar--wins" id="pt-wins-bar"></div>
+          <div class="stat-bar stat-bar--losses" id="pt-losses-bar"></div>
+        </div>
+      </div>
+
+      <div id="playthrough-panel"></div>
+
+      <div id="data-controls">
+        <button id="center-current-btn">⊙ Center on Current Section</button>
+        <div id="find-node-row">
+          <input id="find-node-input" type="text" placeholder="Section…" autocomplete="off" spellcheck="false">
+          <button id="find-node-btn">Find Section</button>
+        </div>
+        <button id="back-to-books-btn"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:-1px;margin-right:0.3em"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>Home</button>
+        <div id="export-reset-row">
+          <button id="export-book-btn">Export Book</button>
+          <button id="reset-btn" data-i18n="ctrl.reset">Reset Book</button>
+        </div>
+      </div>
+
+    </div>
+
+    <div id="graph-container"></div>
+    <div id="run-trail-float"></div>
+    <div id="play-bottom-stack">
+      <div id="play-btns-bar">
+        <button id="party-btn">Play Together</button>
+        <button id="guide-btn">User Guide</button>
+        <button id="notebook-btn">Notebook</button>
+      </div>
+      <div id="play-xp-summary" aria-live="polite">
+        <div id="play-xp-header">
+          <span class="play-xp-kicker">Player</span>
+          <button class="play-xp-collapse-btn" aria-label="Toggle XP panel">▾</button>
+        </div>
+        <div id="play-xp-body">
+          <div id="play-xp-level-row">
+            <span id="play-xp-level"></span>
+            <span id="play-xp-title"></span>
+            <span id="play-xp-hb-rate"></span>
+          </div>
+          <div id="play-xp-bar">
+            <div id="play-xp-bar-fill"></div>
+          </div>
+          <div id="play-xp-sub-row">
+            <span id="play-xp-text"></span>
+            <span id="play-xp-boost"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Party modal ─────────────────────────────────────────────── -->
+    <div id="party-modal-overlay">
+      <div id="party-modal">
+        <div id="party-modal-hdr">
+          <span id="party-modal-title">Play Together</span>
+          <button id="party-modal-close">✕</button>
+        </div>
+        <div id="party-modal-body"></div>
+      </div>
+    </div>
+
+    <!-- ── User guide modal ─────────────────────────────────────────── -->
+    <div id="guide-modal-overlay" class="modal-overlay">
+      <div id="guide-modal">
+        <div id="guide-modal-hdr">
+          <span>User Guide</span>
+          <button id="guide-modal-close">✕</button>
+        </div>
+        <iframe id="guide-modal-frame" src="/guide.html" title="User Guide"></iframe>
+      </div>
+    </div>
+    <!-- ── Notebook modal ───────────────────────────────────────────── -->
+    <div id="notebook-modal-overlay">
+      <div id="notebook-modal">
+        <div id="notebook-modal-hdr">
+          <span id="notebook-modal-title">Notebook</span>
+          <button id="notebook-modal-close">✕</button>
+        </div>
+        <textarea id="notebook-modal-input" placeholder="Notes for this book…" spellcheck="true"></textarea>
+        <div id="notebook-modal-actions">
+          <label id="notebook-pin-toggle" class="cs-vis-toggle">
+            <input type="checkbox" id="notebook-pin-cb">
+            <span class="cs-dot"></span>
+            <span id="notebook-pin-label">Show in play area</span>
+          </label>
+          <div id="notebook-modal-right-actions">
+            <button id="notebook-modal-save" class="primary-btn">Save</button>
+            <button id="notebook-modal-cancel">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- ── Notes display overlay (pinned) ──────────────────────────── -->
+    <div id="notes-display">
+      <div id="notes-display-body">
+        <div id="notes-display-text"></div>
+        <textarea id="notes-display-input" spellcheck="true"></textarea>
+      </div>
+      <div id="notes-display-footer">
+        <button id="notes-display-cancel">Cancel</button>
+        <button id="notes-display-save">Save</button>
+      </div>
+    </div>
+
+    <div id="legend">
+      <div id="legend-header">
+        <span class="legend-title" data-i18n="legend.title">Legend</span>
+        <button class="legend-collapse-btn" aria-label="Toggle legend">▾</button>
+      </div>
+      <div id="legend-body">
+        <div class="legend-item"><div class="legend-dot" style="background:#f5a623;border-color:#c47d00"></div><span data-i18n="legend.current">Current section</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:#3d9be9;border-color:#2980b9"></div><span data-i18n="legend.visited">Visited this run</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:#8e44ad;border-color:#6c3483"></div><span data-i18n="legend.mapped">Mapped</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:#606060;border-color:#404040"></div><span data-i18n="legend.discovered">Discovered</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:#0f172a;border-color:#e74c3c;border-width:3px"></div><span data-i18n="legend.candie">Can die here</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:#0f172a;border-color:#27ae60;border-width:3px"></div><span data-i18n="legend.canwin">Can win here</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:#e74c3c;border-color:#c0392b"></div><span data-i18n="legend.deathrun">Death run ended here</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:#27ae60;border-color:#1e8449"></div><span data-i18n="legend.winrun">Victory run ended here</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:#431407;border-color:#f97316;border-width:3px"></div><span data-i18n="legend.battle">Battle here</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:#c2410c;border-color:#9a3412"></div><span data-i18n="legend.battlerun">Battle death ended here</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Node context menu ──────────────────────────────────────────── -->
+  <!-- ── Dice roller ───────────────────────────────────────────────── -->
+  <div id="dice-roller-wrap">
+  <div id="dice-roller">
+    <div id="dice-roller-header">
+      <span class="dice-roller-title">Dice</span>
+      <button id="dice-collapse-btn" class="dice-collapse-btn" aria-label="Toggle dice roller">▾</button>
+    </div>
+    <div id="dice-roller-body">
+      <div class="dice-count-row">
+        <span class="dice-count-label">Select number of dice</span>
+        <button class="dice-adj-btn" id="dice-dec-btn" aria-label="Fewer dice">−</button>
+        <input type="text" inputmode="numeric" id="dice-count-input" value="2" maxlength="2" aria-label="Number of dice">
+        <button class="dice-adj-btn" id="dice-inc-btn" aria-label="More dice">+</button>
+      </div>
+      <div class="dice-shortcuts-row" id="dice-shortcuts-row">
+        <button class="dice-shortcut-btn" data-die="4">d4</button>
+        <button class="dice-shortcut-btn" data-die="6">d6</button>
+        <button class="dice-shortcut-btn" data-die="8">d8</button>
+        <button class="dice-shortcut-btn" data-die="10">d10</button>
+        <button class="dice-shortcut-btn" data-die="12">d12</button>
+        <button class="dice-shortcut-btn" data-die="20">d20</button>
+        <button class="dice-shortcut-btn" data-die="%">d%</button>
+      </div>
+      <div class="dice-throw-row">
+        <button id="dice-throw-btn">Throw</button>
+      </div>
+      <div id="dice-result"></div>
+      <div id="dice-prev-row" aria-live="polite">
+        <span class="dice-prev-label">Prev:</span>
+        <span id="dice-prev-text"></span>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <div id="bg-ctx-menu">
+    <button id="bg-ctx-toggle-btn">Hide background</button>
+    <button id="bg-ctx-move-btn">Move background</button>
+    <div class="ctx-submenu-wrap">
+      <button class="ctx-submenu-trigger">Connectors &#9656;</button>
+      <div class="ctx-submenu-panel">
+        <button class="ctx-connector-item" data-connector="curvedCW">Curved</button>
+        <button class="ctx-connector-item" data-connector="curvedCCW">Curved (opposite)</button>
+        <button class="ctx-connector-item" data-connector="cubic">Cubic bezier</button>
+        <button class="ctx-connector-item" data-connector="horizontal">Horizontal</button>
+        <button class="ctx-connector-item" data-connector="straight">Straight</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="bg-move-overlay">Move mouse to reposition · Click or Esc to save</div>
+
+  <div id="node-ctx-menu">
+    <button id="ctx-start-node-btn" style="display:none">✎ Edit start node</button>
+    <button id="ctx-edit-btn"   data-i18n="ctx.edit">Edit choices</button>
+    <button id="ctx-note-btn"   data-i18n="ctx.note">Edit note</button>
+    <div class="ctx-submenu-wrap">
+      <button class="ctx-submenu-trigger" data-i18n="ctx.priority">Priority</button>
+      <div class="ctx-submenu-panel">
+        <button id="ctx-priority-high-btn"   data-i18n="ctx.priority.high">High</button>
+        <button id="ctx-priority-normal-btn" data-i18n="ctx.priority.normal">Normal</button>
+        <button id="ctx-priority-low-btn"    data-i18n="ctx.priority.low">Low</button>
+      </div>
+    </div>
+    <div class="ctx-submenu-wrap" id="ctx-color-wrap">
+      <button class="ctx-submenu-trigger">Color</button>
+      <div class="ctx-submenu-panel">
+        <div class="ctx-color-grid" id="ctx-color-grid">
+          <button class="ctx-color-swatch" data-color="#ffffff" style="background:#ffffff"></button>
+          <button class="ctx-color-swatch" data-color="#ef4444" style="background:#ef4444"></button>
+          <button class="ctx-color-swatch" data-color="#f97316" style="background:#f97316"></button>
+          <button class="ctx-color-swatch" data-color="#d97706" style="background:#d97706"></button>
+          <button class="ctx-color-swatch" data-color="#facc15" style="background:#facc15"></button>
+          <button class="ctx-color-swatch" data-color="#84cc16" style="background:#84cc16"></button>
+          <button class="ctx-color-swatch" data-color="#22c55e" style="background:#22c55e"></button>
+          <button class="ctx-color-swatch" data-color="#14b8a6" style="background:#14b8a6"></button>
+          <button class="ctx-color-swatch" data-color="#06b6d4" style="background:#06b6d4"></button>
+          <button class="ctx-color-swatch" data-color="#3b82f6" style="background:#3b82f6"></button>
+          <button class="ctx-color-swatch" data-color="#6366f1" style="background:#6366f1"></button>
+          <button class="ctx-color-swatch" data-color="#a855f7" style="background:#a855f7"></button>
+          <button class="ctx-color-swatch" data-color="#d946ef" style="background:#d946ef"></button>
+          <button class="ctx-color-swatch" data-color="#ec4899" style="background:#ec4899"></button>
+          <button class="ctx-color-swatch" data-color="#78716c" style="background:#78716c"></button>
+          <button class="ctx-color-swatch" data-color="#92400e" style="background:#92400e"></button>
+        </div>
+        <button id="ctx-color-clear-btn">✕ Clear color</button>
+      </div>
+    </div>
+    <div class="ctx-submenu-wrap" id="ctx-jump-wrap">
+      <button class="ctx-submenu-trigger" data-i18n="ctx.fasttravel">Fast Travel</button>
+      <div class="ctx-submenu-panel">
+        <button id="ctx-jump-high-btn"     data-i18n="ctx.fasttravel.high">High priority</button>
+        <button id="ctx-jump-shortest-btn" data-i18n="ctx.fasttravel.shortest">Shortest</button>
+        <button id="ctx-jump-normal-btn"   data-i18n="ctx.fasttravel.normal">Normal</button>
+        <button id="ctx-jump-low-btn"      data-i18n="ctx.fasttravel.low">Low priority</button>
+      </div>
+    </div>
+    <button id="ctx-battle-btn" data-i18n="ctx.battle">Toggle battle</button>
+    <button id="ctx-portal-btn" style="display:none">⇒ Add portal</button>
+    <button id="ctx-delete-btn" data-i18n="ctx.delete">Delete node</button>
+  </div>
+
+  <!-- ── Edit start node modal ────────────────────────────────────── -->
+  <div id="start-node-modal-overlay" class="modal-overlay">
+    <div id="start-node-modal">
+      <div class="modal-title">Edit Start Node</div>
+      <div class="input-group">
+        <label>Starting section:</label>
+        <div class="dice-count-row">
+          <button class="dice-adj-btn" id="start-node-dec">−</button>
+          <input type="text" inputmode="numeric" id="start-node-input" autocomplete="off" spellcheck="false">
+          <button class="dice-adj-btn" id="start-node-inc">+</button>
+        </div>
+      </div>
+      <div id="start-node-error" class="auth-error"></div>
+      <div class="modal-actions">
+        <button id="start-node-save" class="primary-btn">Save</button>
+        <button id="start-node-cancel" class="secondary-btn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Start run at specific section modal ──────────────────────── -->
+  <div id="alt-start-modal-overlay" class="modal-overlay">
+    <div id="alt-start-modal">
+      <div class="modal-title">Start Run At Section</div>
+      <div class="input-group">
+        <label>Starting section:</label>
+        <div class="dice-count-row" id="alt-start-row">
+          <button class="dice-adj-btn" id="alt-start-dec">−</button>
+          <input type="text" id="alt-start-input" autocomplete="off" spellcheck="false">
+          <button class="dice-adj-btn" id="alt-start-inc">+</button>
+        </div>
+      </div>
+      <div id="alt-start-error" class="auth-error"></div>
+      <div class="modal-actions">
+        <button id="alt-start-save" class="primary-btn">Start Run</button>
+        <button id="alt-start-cancel" class="secondary-btn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Feedback modal ───────────────────────────────────────────── -->
+  <div id="feedback-modal-overlay">
+    <div id="feedback-modal">
+      <div class="modal-title-row"><div class="modal-title" data-i18n="modal.feedback.title">Send Feedback</div><button class="modal-close-btn" id="feedback-close">✕</button></div>
+      <div class="input-group">
+        <label data-i18n="modal.feedback.username">Username:</label>
+        <input type="text" id="feedback-username-input" disabled>
+      </div>
+      <div class="input-group">
+        <label data-i18n="modal.feedback.email">Email (optional):</label>
+        <input type="text" id="feedback-email-input" inputmode="email" autocomplete="email">
+      </div>
+      <div class="input-group">
+        <label data-i18n="modal.feedback.message">Message:</label>
+        <textarea id="feedback-message-input" rows="5"></textarea>
+      </div>
+      <div class="input-group">
+        <label>Attachments:</label>
+        <label class="att-pick-label" for="feedback-file-input"><span class="att-pick-btn">+ Add files</span></label>
+        <input type="file" id="feedback-file-input" multiple style="display:none" accept="image/*,.pdf,.txt,.md,.csv,.json,.xml,.zip,.7z,.rar,.gz">
+        <div id="feedback-att-list" class="att-list"></div>
+      </div>
+      <div id="feedback-error" class="auth-error"></div>
+      <div class="modal-actions">
+        <button id="feedback-submit-btn" class="primary-btn" data-i18n="btn.send">Send</button>
+        <button id="feedback-cancel-btn" data-i18n="btn.cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Notifications dropdown ──────────────────────────────────── -->
+  <div id="notif-dropdown" style="display:none">
+    <div id="notif-list"></div>
+    <div id="notif-empty" style="display:none">No notifications yet.</div>
+  </div>
+
+  <!-- ── Stats modal ──────────────────────────────────────────────── -->
+  <div id="stats-modal-overlay">
+    <div id="stats-modal">
+      <div id="stats-modal-header">
+        <span id="stats-modal-title">Stats for Nerds</span>
+        <button id="stats-modal-close">✕</button>
+      </div>
+      <div id="stats-modal-body"></div>
+    </div>
+  </div>
+
+  <!-- ── Inbox modal ───────────────────────────────────────────────── -->
+  <div id="inbox-modal-overlay">
+    <div id="inbox-modal">
+      <!-- Thread list view -->
+      <div id="inbox-threads-view">
+        <div class="modal-title" data-i18n="modal.inbox.title">Inbox</div>
+        <div id="inbox-list"></div>
+        <div class="modal-actions">
+          <button id="inbox-close-btn" data-i18n="btn.close">Close</button>
+        </div>
+      </div>
+      <!-- Conversation view -->
+      <div id="inbox-conv-view" style="display:none">
+        <div class="inbox-conv-header">
+          <button id="inbox-back-btn" data-i18n="btn.back">← Back</button>
+          <span class="inbox-conv-date" id="inbox-conv-date"></span>
+        </div>
+        <div id="inbox-messages"></div>
+        <div id="inbox-reply-area">
+          <textarea id="inbox-reply-input" rows="3"></textarea>
+          <div id="inbox-att-area">
+            <label class="att-pick-label" for="inbox-file-input"><span class="att-pick-btn">+ Attach</span></label>
+            <input type="file" id="inbox-file-input" multiple style="display:none" accept="image/*,.pdf,.txt,.md,.csv,.json,.xml,.zip,.7z,.rar,.gz">
+            <div id="inbox-att-list" class="att-list"></div>
+          </div>
+        </div>
+        <div class="inbox-conv-actions">
+          <button id="inbox-reply-send-btn" class="primary-btn" data-i18n="btn.send">Send</button>
+          <button id="inbox-conv-delete-btn" data-i18n="btn.delete">Delete</button>
+          <button id="inbox-conv-close-btn" data-i18n="btn.close">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Custom confirm dialog ─────────────────────────────────────── -->
+  <div id="confirm-overlay">
+    <div id="confirm-dialog">
+      <p id="confirm-message"></p>
+      <div class="confirm-actions">
+        <button id="confirm-ok">Confirm</button>
+        <button id="confirm-cancel" data-i18n="btn.cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="choice-overlay">
+    <div id="choice-dialog">
+      <p id="choice-message"></p>
+      <div class="confirm-actions">
+        <button id="choice-a"></button>
+        <button id="choice-b"></button>
+        <button id="choice-cancel" data-i18n="btn.cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── App tooltip ────────────────────────────────────────────────── -->
+  <div id="app-tooltip"></div>
+
+  <div id="shortcuts-modal-overlay">
+    <div id="shortcuts-modal">
+      <div id="shortcuts-modal-hdr">
+        <span>Cheat Sheet</span>
+        <button id="shortcuts-modal-close">✕</button>
+      </div>
+      <div id="shortcuts-modal-body">
+        <div class="shortcuts-row"><span class="shortcuts-key">F1</span><span class="shortcuts-desc">Open this popup</span></div>
+        <div class="shortcuts-row"><span class="shortcuts-key">Ctrl+X</span><span class="shortcuts-desc">Hide or restore all landing panels, or all play-area side panels</span></div>
+        <div class="shortcuts-row"><span class="shortcuts-key">Ctrl+Y</span><span class="shortcuts-desc">Open landing page settings (cover tooltip appearance, background source, feed day-covers, transparent day cards, reduce animations)</span></div>
+        <div class="shortcuts-row"><span class="shortcuts-key">I</span><span class="shortcuts-desc">Open / close the Inventory panel (play area only, not while typing)</span></div>
+        <div class="shortcuts-row"><span class="shortcuts-key">C</span><span class="shortcuts-desc">Open / close the Character Sheet (play area only, not while typing)</span></div>
+        <div class="shortcuts-row"><span class="shortcuts-key">E</span><span class="shortcuts-desc">Open / close the Equipment panel (play area only, not while typing)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="cover-tooltip-settings-overlay">
+    <div id="cover-tooltip-settings">
+      <div class="modal-title-row cover-tooltip-settings-heading-row">
+        <div class="cover-tooltip-settings-heading">Display Settings</div>
+        <button class="modal-close-btn" id="cover-tooltip-settings-close">✕</button>
+      </div>
+      <div class="cover-tooltip-settings-title">Cover tooltip</div>
+      <div class="cover-tooltip-settings-row cover-tooltip-settings-row--size">
+        <span>Font size</span>
+        <div class="cover-tooltip-size-controls">
+          <button type="button" id="cover-tooltip-size-dec">−</button>
+          <span id="cover-tooltip-size-value">100%</span>
+          <button type="button" id="cover-tooltip-size-inc">+</button>
+        </div>
+      </div>
+      <label class="cover-tooltip-settings-row">
+        <input type="checkbox" id="cover-tooltip-bold-cb">
+        <span>Bold</span>
+      </label>
+      <label class="cover-tooltip-settings-row">
+        <input type="checkbox" id="cover-tooltip-hide-cyrillic-cb">
+        <span>Hide Cyrillic covers</span>
+      </label>
+      <div id="cover-tooltip-settings-preview-frame">
+        <div id="cover-tooltip-settings-preview">Preview Title</div>
+      </div>
+      <div class="cover-tooltip-settings-title">Feed</div>
+      <label class="cover-tooltip-settings-row">
+        <input type="checkbox" id="feed-day-covers-cb">
+        <span>Show covers in feed</span>
+      </label>
+      <label class="cover-tooltip-settings-row">
+        <input type="checkbox" id="feed-glass-cards-cb">
+        <span>Transparent background for day cards</span>
+      </label>
+      <div class="cover-tooltip-settings-title">Background</div>
+      <label class="cover-tooltip-settings-row">
+        <input type="radio" name="cover-rotation-source" id="cover-rotation-source-public" value="public">
+        <span>Rotate all public covers</span>
+      </label>
+      <label class="cover-tooltip-settings-row">
+        <input type="radio" name="cover-rotation-source" id="cover-rotation-source-mine" value="mine">
+        <span>Rotate only my books covers</span>
+      </label>
+      <div id="cover-rotation-settings-preview-frame">
+        <div class="cover-rotation-settings-preview-label">Current source</div>
+        <div id="cover-rotation-settings-preview">All public covers</div>
+      </div>
+      <div class="cover-tooltip-settings-title">Performance</div>
+      <label class="cover-tooltip-settings-row">
+        <input type="checkbox" id="reduce-motion-cb">
+        <span>Reduce animations</span>
+      </label>
+      <div class="cover-tooltip-settings-hint">Ctrl+Y to toggle this</div>
+    </div>
+  </div>
+
+  <!-- ── Shop modal ───────────────────────────────────────────────── -->
+  <div id="shop-modal-overlay">
+    <div id="shop-modal">
+      <div class="shop-modal-header">
+        <div class="shop-modal-title"><svg class="coin-icon" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7.5" fill="#f59e0b" stroke="#92400e" stroke-width="0.75"/><circle cx="8" cy="8" r="5.5" fill="none" stroke="#fde68a" stroke-width="1"/><text x="8" y="11.5" text-anchor="middle" font-size="7" font-weight="bold" fill="#78350f" font-family="serif">G</text></svg><span>Gold Coins Shop</span></div>
+        <div class="shop-modal-spent" id="shop-spent">0 spent</div>
+        <div class="shop-modal-balance"><span id="shop-balance"><svg class="coin-icon" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7.5" fill="#f59e0b" stroke="#92400e" stroke-width="0.75"/><circle cx="8" cy="8" r="5.5" fill="none" stroke="#fde68a" stroke-width="1"/><text x="8" y="11.5" text-anchor="middle" font-size="7" font-weight="bold" fill="#78350f" font-family="serif">G</text></svg> 0</span></div>
+        <button id="shop-close-btn" class="shop-close-btn">✕</button>
+      </div>
+      <div id="shop-items"></div>
+      <div id="shop-error" class="shop-error"></div>
+    </div>
+  </div>
+
+  <!-- ── Profile modal ─────────────────────────────────────────────── -->
+  <div id="profile-modal-overlay">
+    <div id="profile-modal">
+      <div class="modal-title-row">
+        <div class="modal-title" data-i18n="modal.profile.title">Edit Profile</div>
+        <button class="modal-close-btn" id="profile-modal-close">✕</button>
+      </div>
+
+      <div class="profile-avatar-section">
+        <div id="profile-modal-avatar" class="avatar-circle avatar-large"></div>
+        <button id="profile-change-avatar-btn" class="secondary-btn" data-i18n="modal.profile.avatar">Change Avatar</button>
+        <input type="file" id="profile-avatar-file" style="display:none" accept="image/*">
+      </div>
+
+      <div id="profile-xp-block">
+        <div id="profile-level-row">
+          <span id="profile-level-badge"></span>
+          <span id="profile-title-text"></span>
+          <span id="profile-xp-hb-rate"></span>
+        </div>
+        <div id="profile-xp-bar">
+          <div id="profile-xp-bar-fill"></div>
+        </div>
+        <div id="profile-xp-sub-row">
+          <div id="profile-xp-text"></div>
+          <div id="profile-xp-boost-earned"></div>
+        </div>
+        <div id="profile-own-stats"></div>
+      </div>
+
+      <div class="input-group">
+        <label data-i18n="modal.profile.username">Username:</label>
+        <input type="text" id="profile-username-input" autocomplete="off">
+      </div>
+
+      <div class="input-group" id="profile-display-name-row" style="display:none">
+        <label>Display name: <span style="font-size:0.78rem;color:#6b7280;font-weight:400">(shown instead of username)</span></label>
+        <input type="text" id="profile-display-name-input" autocomplete="off" placeholder="Your real name (optional)">
+      </div>
+
+      <div class="input-group">
+        <label>Recovery email: <span style="font-size:0.78rem;color:#6b7280;font-weight:400">(optional - for password recovery only)</span></label>
+        <input type="email" id="profile-email-input" autocomplete="email" placeholder="your@email.com">
+        <div id="profile-email-error" class="auth-error" style="margin-top:0.25rem"></div>
+      </div>
+
+      <div class="profile-public-row">
+        <label class="profile-public-label">
+          <input type="checkbox" id="profile-public-cb">
+          Public profile
+        </label>
+        <span class="profile-public-hint">Anyone can view your books and completed runs</span>
+      </div>
+      <div class="profile-public-row">
+        <label class="profile-public-label">
+          <input type="checkbox" id="profile-hide-feed-cb">
+          Hide from activity feed
+        </label>
+        <span class="profile-public-hint">Only explicitly shared runs will appear in the feed</span>
+      </div>
+
+      <div class="profile-section-divider" data-i18n="modal.profile.changepass">Change Password</div>
+
+      <div class="input-group">
+        <label data-i18n="modal.profile.current">Current password:</label>
+        <input type="password" id="profile-current-password" autocomplete="current-password">
+      </div>
+      <div class="input-group">
+        <label data-i18n="modal.profile.new">New password:</label>
+        <input type="password" id="profile-new-password" autocomplete="new-password">
+      </div>
+      <div class="input-group">
+        <label data-i18n="modal.profile.confirm">Confirm new password:</label>
+        <input type="password" id="profile-confirm-password" autocomplete="new-password">
+      </div>
+
+      <div id="profile-error" class="auth-error"></div>
+
+      <div class="modal-actions">
+        <button id="profile-save-btn"   class="primary-btn" data-i18n="btn.save">Save</button>
+        <button id="profile-cancel-btn"                     data-i18n="btn.cancel">Cancel</button>
+      </div>
+
+      <div class="profile-section-divider">Export</div>
+      <button id="download-backup-btn" class="secondary-btn" style="width:100%">Export Everything (.zip)</button>
+    </div>
+  </div>
+
+  <!-- ── Add Book modal ───────────────────────────────────────────────── -->
+  <div id="add-book-overlay" class="modal-overlay">
+    <div class="modal-inner" id="add-book-modal">
+      <div class="modal-title-row"><div class="modal-title">Add Book</div><button class="modal-close-btn" id="cb-close">✕</button></div>
+      <div class="cover-upload-group" id="cb-cover-section">
+        <label>Cover <span class="optional-hint">(optional)</span></label>
+        <div class="cover-preview-wrap">
+          <img id="cb-cover-img" class="cover-preview-img" src="" alt="Cover">
+          <div id="cb-cover-placeholder" class="cover-placeholder">No cover</div>
+        </div>
+        <button type="button" id="cb-cover-btn" class="secondary-btn">Upload Cover</button>
+        <input type="file" id="cb-cover-file" style="display:none" accept="image/*">
+      </div>
+      <div class="input-group">
+        <label>Book name:</label>
+        <div class="autocomplete-wrap">
+          <input type="text" id="cb-name" autocomplete="off" placeholder="Book name">
+          <ul id="cb-name-dropdown" class="autocomplete-dropdown"></ul>
+        </div>
+      </div>
+      <div class="input-group" id="cb-sections-row">
+        <div class="sections-pages-row">
+          <div class="sections-pages-col">
+            <label>Total sections:</label>
+            <div class="cs-num-wrap">
+              <button class="cs-num-btn" data-target="cb-sections" data-delta="-1">−</button>
+              <input type="text" inputmode="numeric" id="cb-sections" placeholder="–">
+              <button class="cs-num-btn" data-target="cb-sections" data-delta="1">+</button>
+            </div>
+          </div>
+          <div class="sections-pages-col" id="cb-pages-col">
+            <label>Pages <span class="optional-hint">(optional)</span>:</label>
+            <div class="cs-num-wrap">
+              <button class="cs-num-btn" data-target="cb-pages" data-delta="-1">−</button>
+              <input type="text" inputmode="numeric" id="cb-pages" placeholder="–">
+              <button class="cs-num-btn" data-target="cb-pages" data-delta="1">+</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="input-group" id="cb-identifiers-row">
+        <label>Identifiers <span class="optional-hint">(optional)</span>:</label>
+        <div class="pub-type-row">
+          <select id="cb-pub-type" class="pub-type-select">
+            <option value="book">Book</option>
+            <option value="magazine">Magazine</option>
+          </select>
+          <div class="pub-id-fields">
+            <div id="cb-fields-book">
+              <input type="text" id="cb-isbn" maxlength="17" autocomplete="off" placeholder="ISBN-10 or ISBN-13 (optional)">
+              <input type="text" id="cb-asin" maxlength="10" autocomplete="off" placeholder="ASIN (optional)">
+            </div>
+            <div id="cb-fields-mag" style="display:none">
+              <input type="text" id="cb-issn" maxlength="9" autocomplete="off" placeholder="ISSN (optional, e.g. 1234-5679)">
+            </div>
+          </div>
+        </div>
+        <small id="cb-id-hint"></small>
+      </div>
+      <div class="input-group" id="cb-authors-row">
+        <label>Author(s) <span class="optional-hint">(optional)</span>:</label>
+        <div class="autocomplete-wrap">
+          <input type="text" id="cb-authors" autocomplete="off" placeholder="e.g. Ian Livingstone, Steve Jackson">
+          <ul id="cb-authors-dropdown" class="autocomplete-dropdown"></ul>
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Description <span class="optional-hint">(optional)</span>:</label>
+        <textarea id="cb-description" rows="3" placeholder="Brief description"></textarea>
+      </div>
+      <div class="input-group">
+        <label>Series <span class="optional-hint">(optional)</span>:</label>
+        <div class="series-row">
+          <select id="cb-series" class="app-select"><option value="">- None -</option></select>
+          <input type="text" id="cb-series-num" autocomplete="off" placeholder="Order #" style="width:6rem">
+        </div>
+      </div>
+      <div class="input-group" id="cb-parent-row">
+        <label>Part of anthology <span class="optional-hint">(optional)</span>:</label>
+        <div class="series-row">
+          <select id="cb-parent" class="app-select"><option value="">- None -</option></select>
+          <input type="text" inputmode="numeric" id="cb-order" autocomplete="off" placeholder="Order #" style="width:6rem">
+        </div>
+      </div>
+      <div class="input-group create-public-row">
+        <label class="checkbox-label">
+          <input type="checkbox" id="cb-public">
+          <span>Make public</span>
+        </label>
+        <small class="field-hint">Other users can find and add this book to their library</small>
+      </div>
+      <div class="input-group" id="cb-pdf-row" style="display:none">
+        <label>Book PDF <span class="optional-hint">(optional)</span></label>
+        <button type="button" id="cb-pdf-btn" class="secondary-btn">Upload PDF</button>
+        <input type="file" id="cb-pdf-file" style="display:none" accept="application/pdf">
+        <span id="cb-pdf-name" style="font-size:0.78rem;color:#9ca3af;margin-top:0.25rem;display:block"></span>
+        <div id="cb-pdf-progress" class="modal-upload-progress" style="display:none"><div id="cb-pdf-progress-bar" class="modal-upload-progress-bar"></div></div>
+      </div>
+      <div id="cb-error" class="auth-error"></div>
+      <div class="modal-actions">
+        <button id="cb-save" class="primary-btn">Create</button>
+        <button id="cb-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Add Anthology modal ───────────────────────────────────────────── -->
+  <div id="add-comp-overlay" class="modal-overlay">
+    <div class="modal-inner" id="add-comp-modal">
+      <div class="modal-title-row"><div class="modal-title">Add Anthology</div><button class="modal-close-btn" id="cc-close">✕</button></div>
+      <div class="cover-upload-group" id="cc-cover-section">
+        <label>Cover <span class="optional-hint">(optional)</span></label>
+        <div class="cover-preview-wrap">
+          <img id="cc-cover-img" class="cover-preview-img" src="" alt="Cover">
+          <div id="cc-cover-placeholder" class="cover-placeholder">No cover</div>
+        </div>
+        <button type="button" id="cc-cover-btn" class="secondary-btn">Upload Cover</button>
+        <input type="file" id="cc-cover-file" style="display:none" accept="image/*">
+      </div>
+      <div class="input-group">
+        <label>Name:</label>
+        <div class="autocomplete-wrap">
+          <input type="text" id="cc-name" autocomplete="off" placeholder="e.g. Fighting Fantasy Annual 1984">
+          <ul id="cc-name-dropdown" class="autocomplete-dropdown"></ul>
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Identifiers <span class="optional-hint">(optional)</span>:</label>
+        <div class="pub-type-row">
+          <select id="cc-pub-type" class="pub-type-select">
+            <option value="book">Book</option>
+            <option value="magazine">Magazine</option>
+          </select>
+          <div class="pub-id-fields">
+            <div id="cc-fields-book">
+              <input type="text" id="cc-isbn" maxlength="17" autocomplete="off" placeholder="ISBN-10 or ISBN-13 (optional)">
+              <input type="text" id="cc-asin" maxlength="10" autocomplete="off" placeholder="ASIN (optional)">
+            </div>
+            <div id="cc-fields-mag" style="display:none">
+              <input type="text" id="cc-issn" maxlength="9" autocomplete="off" placeholder="ISSN (optional, e.g. 1234-5679)">
+            </div>
+          </div>
+        </div>
+        <small id="cc-id-hint"></small>
+      </div>
+      <div class="input-group">
+        <label>Pages <span class="optional-hint">(optional)</span>:</label>
+        <div class="cs-num-wrap" style="width:fit-content">
+          <button class="cs-num-btn" data-target="cc-pages" data-delta="-1">−</button>
+          <input type="text" inputmode="numeric" id="cc-pages" placeholder="–" style="width:5rem">
+          <button class="cs-num-btn" data-target="cc-pages" data-delta="1">+</button>
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Author(s) <span class="optional-hint">(optional)</span>:</label>
+        <div class="autocomplete-wrap">
+          <input type="text" id="cc-authors" autocomplete="off" placeholder="e.g. Ian Livingstone, Steve Jackson">
+          <ul id="cc-authors-dropdown" class="autocomplete-dropdown"></ul>
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Description <span class="optional-hint">(optional)</span>:</label>
+        <textarea id="cc-description" rows="3" placeholder="Brief description"></textarea>
+      </div>
+      <div class="input-group">
+        <label>Series <span class="optional-hint">(optional)</span>:</label>
+        <div class="series-row">
+          <select id="cc-series" class="app-select"><option value="">- None -</option></select>
+          <input type="text" id="cc-series-num" autocomplete="off" placeholder="Order #" style="width:6rem">
+        </div>
+      </div>
+      <div class="input-group create-public-row">
+        <label class="checkbox-label">
+          <input type="checkbox" id="cc-public">
+          <span>Make public</span>
+        </label>
+        <small class="field-hint">Other users can find and add this book to their library</small>
+      </div>
+      <div class="input-group" id="cc-pdf-row" style="display:none">
+        <label>Book PDF <span class="optional-hint">(optional)</span></label>
+        <button type="button" id="cc-pdf-btn" class="secondary-btn">Upload PDF</button>
+        <input type="file" id="cc-pdf-file" style="display:none" accept="application/pdf">
+        <span id="cc-pdf-name" style="font-size:0.78rem;color:#9ca3af;margin-top:0.25rem;display:block"></span>
+        <div id="cc-pdf-progress" class="modal-upload-progress" style="display:none"><div id="cc-pdf-progress-bar" class="modal-upload-progress-bar"></div></div>
+      </div>
+      <div id="cc-error" class="auth-error"></div>
+      <div class="modal-actions">
+        <button id="cc-save" class="primary-btn">Create</button>
+        <button id="cc-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Add Series modal ──────────────────────────────────────────────── -->
+  <div id="add-series-overlay" class="modal-overlay">
+    <div class="modal-inner" id="add-series-modal">
+      <div class="modal-title-row"><div class="modal-title">New Series</div><button class="modal-close-btn" id="csr-close">✕</button></div>
+      <div class="input-group">
+        <label>Series name:</label>
+        <div class="autocomplete-wrap">
+          <input type="text" id="csr-name" autocomplete="off" placeholder="e.g. Fighting Fantasy">
+          <ul id="csr-name-dropdown" class="autocomplete-dropdown"></ul>
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Description <span class="optional-hint">(optional)</span>:</label>
+        <textarea id="csr-description" rows="5" placeholder="Brief description"></textarea>
+      </div>
+      <div class="input-group create-public-row">
+        <label class="checkbox-label">
+          <input type="checkbox" id="csr-public">
+          <span>Make public</span>
+        </label>
+        <small class="field-hint">Other users can find and browse this series</small>
+      </div>
+      <div id="csr-error" class="auth-error"></div>
+      <div class="modal-actions">
+        <button id="csr-save" class="primary-btn">Create</button>
+        <button id="csr-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Add Stash modal ──────────────────────────────────────────────── -->
+  <div id="add-stash-overlay" class="modal-overlay">
+    <div class="modal-inner" id="add-stash-modal">
+      <div class="modal-title-row"><div class="modal-title">New Stash</div><button class="modal-close-btn" id="cst-close">✕</button></div>
+      <div class="input-group">
+        <label>Stash name:</label>
+        <input type="text" id="cst-name" autocomplete="off" placeholder="e.g. Testing / Misc / Read Later">
+        <small class="field-hint">Moves selected items out of the main list and into this stash.</small>
+      </div>
+      <div class="input-group">
+        <label>Items</label>
+        <input type="text" id="cst-items-search" class="stash-search-input" autocomplete="off" placeholder="Search series, books, and anthologies">
+        <div id="cst-items-list" class="stash-pick-list"></div>
+      </div>
+      <div id="cst-error" class="auth-error"></div>
+      <div class="modal-actions">
+        <button id="cst-save" class="primary-btn">Create</button>
+        <button id="cst-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="edit-stash-overlay" class="modal-overlay">
+    <div class="modal-inner" id="edit-stash-modal">
+      <div class="modal-title-row"><div class="modal-title">Edit Stash</div><button class="modal-close-btn" id="est-close">✕</button></div>
+      <div class="input-group">
+        <label>Stash name:</label>
+        <input type="text" id="est-name" autocomplete="off">
+        <small class="field-hint">Rename the stash, add items, or remove items already inside it.</small>
+      </div>
+      <div class="input-group">
+        <label>Items</label>
+        <input type="text" id="est-items-search" class="stash-search-input" autocomplete="off" placeholder="Search series, books, and anthologies">
+        <div id="est-items-list" class="stash-pick-list"></div>
+      </div>
+      <div id="est-error" class="auth-error"></div>
+      <div class="modal-actions">
+        <button id="est-save" class="primary-btn">Save</button>
+        <button id="est-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Edit Anthology modal ─────────────────────────────────────── -->
+  <div id="edit-comp-overlay" class="modal-overlay">
+    <div class="modal-inner">
+      <div class="modal-title-row"><div class="modal-title">Edit Anthology</div><button class="modal-close-btn" id="ecc-close">✕</button></div>
+      <div class="cover-upload-group" id="ecc-cover-section">
+        <label>Cover <span class="optional-hint">(optional)</span></label>
+        <div class="cover-preview-wrap">
+          <img id="ecc-cover-img" class="cover-preview-img" src="" alt="Cover">
+          <div id="ecc-cover-placeholder" class="cover-placeholder">No cover</div>
+        </div>
+        <button type="button" id="ecc-cover-btn" class="secondary-btn">Upload Cover</button>
+        <input type="file" id="ecc-cover-file" style="display:none" accept="image/*">
+      </div>
+      <div class="input-group">
+        <label>Name:</label>
+        <div class="autocomplete-wrap">
+          <input type="text" id="ecc-name" autocomplete="off">
+          <ul id="ecc-name-dropdown" class="autocomplete-dropdown"></ul>
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Identifiers <span class="optional-hint">(optional)</span>:</label>
+        <div class="pub-type-row">
+          <select id="ecc-pub-type" class="pub-type-select">
+            <option value="book">Book</option>
+            <option value="magazine">Magazine</option>
+          </select>
+          <div class="pub-id-fields">
+            <div id="ecc-fields-book">
+              <input type="text" id="ecc-isbn" maxlength="17" autocomplete="off" placeholder="ISBN-10 or ISBN-13 (optional)">
+              <input type="text" id="ecc-asin" maxlength="10" autocomplete="off" placeholder="ASIN (optional)">
+            </div>
+            <div id="ecc-fields-mag" style="display:none">
+              <input type="text" id="ecc-issn" maxlength="9" autocomplete="off" placeholder="ISSN (optional, e.g. 1234-5679)">
+            </div>
+          </div>
+        </div>
+        <small id="ecc-id-hint"></small>
+      </div>
+      <div class="input-group">
+        <label>Pages <span class="optional-hint">(optional)</span>:</label>
+        <div class="cs-num-wrap" style="width:fit-content">
+          <button class="cs-num-btn" data-target="ecc-pages" data-delta="-1">−</button>
+          <input type="text" inputmode="numeric" id="ecc-pages" placeholder="–" style="width:5rem">
+          <button class="cs-num-btn" data-target="ecc-pages" data-delta="1">+</button>
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Author(s) <span class="optional-hint">(optional, comma-separated)</span>:</label>
+        <div class="autocomplete-wrap">
+          <input type="text" id="ecc-authors" autocomplete="off" placeholder="e.g. Ian Livingstone, Steve Jackson">
+          <ul id="ecc-authors-dropdown" class="autocomplete-dropdown"></ul>
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Description <span class="optional-hint">(optional)</span>:</label>
+        <textarea id="ecc-description" rows="3"></textarea>
+      </div>
+      <div class="input-group">
+        <label>Series <span class="optional-hint">(optional)</span>:</label>
+        <div class="series-row">
+          <select id="ecc-series" class="app-select"><option value="">- None -</option></select>
+          <input type="text" id="ecc-series-num" autocomplete="off" placeholder="Order #" style="width:6rem">
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Rating:</label>
+        <div class="star-rating" id="ecc-star-widget">
+          <span class="star" data-pos="1">&#9733;</span><span class="star" data-pos="2">&#9733;</span>
+          <span class="star" data-pos="3">&#9733;</span><span class="star" data-pos="4">&#9733;</span>
+          <span class="star" data-pos="5">&#9733;</span><span class="star-label"></span>
+        </div>
+      </div>
+      <div class="input-group create-public-row">
+        <label class="checkbox-label">
+          <input type="checkbox" id="ecc-public"><span>Make public</span>
+        </label>
+        <small class="field-hint">Other users can find and add this book to their library</small>
+      </div>
+      <div class="input-group" id="ecc-pdf-row" style="display:none">
+        <label>Book PDF <span class="optional-hint">(optional)</span></label>
+        <div id="ecc-pdf-current" style="display:none;margin-bottom:0.4rem">
+          <a id="ecc-pdf-link" href="" target="_blank" rel="noopener" class="pdf-link"><span class="inline-svg-icon pdf-svg-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M7 2h7l5 5v15a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z"></path><path d="M14 2v6h6"></path><path d="M8 17h2.1a1.9 1.9 0 0 0 0-3.8H8V17Z"></path><path d="M12 13.2h1.5a1.9 1.9 0 1 1 0 3.8H12v-3.8Z"></path><path d="M16.5 17v-3.8H19"></path><path d="M16.5 15.1H18.6"></path></svg></span><span>Current PDF</span></a>
+          <button type="button" id="ecc-pdf-remove" class="secondary-btn" style="margin-left:0.5rem;font-size:0.75rem">Remove</button>
+        </div>
+        <button type="button" id="ecc-pdf-btn" class="secondary-btn">Upload PDF</button>
+        <input type="file" id="ecc-pdf-file" style="display:none" accept="application/pdf">
+        <span id="ecc-pdf-name" style="font-size:0.78rem;color:#9ca3af;margin-top:0.25rem;display:block"></span>
+        <div id="ecc-pdf-progress" class="modal-upload-progress" style="display:none"><div id="ecc-pdf-progress-bar" class="modal-upload-progress-bar"></div></div>
+      </div>
+      <div id="ecc-error" class="auth-error"></div>
+      <div class="modal-actions">
+        <button id="ecc-save" class="primary-btn">Save</button>
+        <button id="ecc-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Edit Series modal ───────────────────────────────────────────── -->
+  <div id="edit-series-overlay" class="modal-overlay">
+    <div class="modal-inner">
+      <div class="modal-title-row"><div class="modal-title">Edit Series</div><button class="modal-close-btn" id="esr-close">✕</button></div>
+      <div class="input-group">
+        <label>Series name:</label>
+        <div class="autocomplete-wrap">
+          <input type="text" id="esr-name" autocomplete="off">
+          <ul id="esr-name-dropdown" class="autocomplete-dropdown"></ul>
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Description <span class="optional-hint">(optional)</span>:</label>
+        <textarea id="esr-description" rows="5"></textarea>
+      </div>
+      <div class="input-group create-public-row">
+        <label class="checkbox-label">
+          <input type="checkbox" id="esr-public">
+          <span>Make public</span>
+        </label>
+        <small class="field-hint">Other users can find and browse this series</small>
+      </div>
+      <div class="input-group">
+        <label class="checkbox-label">
+          <input type="checkbox" id="esr-open-world">
+          <span class="open-world-label"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Open world series</span>
+        </label>
+        <small class="field-hint">Enables a persistent character and portal travel across all books in this series</small>
+      </div>
+      <div id="esr-error" class="auth-error"></div>
+      <div class="modal-actions">
+        <button id="esr-save" class="primary-btn">Save</button>
+        <button id="esr-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Crop modal ─────────────────────────────────────────────────── -->
+  <div id="crop-modal-overlay">
+    <div id="crop-modal">
+      <div class="modal-title" data-i18n="modal.crop.title">Position Avatar</div>
+      <p class="crop-hint" data-i18n="modal.crop.hint">Drag to reposition. The square area will be used.</p>
+      <div id="crop-viewport">
+        <canvas id="crop-canvas"></canvas>
+        <div id="crop-frame"></div>
+      </div>
+      <div class="modal-actions">
+        <button id="crop-confirm-btn" class="primary-btn" data-i18n="modal.crop.confirm">Use This</button>
+        <button id="crop-cancel-btn"                      data-i18n="btn.cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Edit book modal ────────────────────────────────────────────── -->
+  <div id="edit-book-modal-overlay" class="modal-overlay">
+    <div id="edit-book-modal">
+      <div class="modal-title-row"><div class="modal-title" data-i18n="modal.book.title">Edit Book</div><button class="modal-close-btn" id="edit-book-close">✕</button></div>
+      <div class="cover-upload-group" id="edit-book-cover-section">
+        <label>Book Cover</label>
+        <div class="cover-preview-wrap">
+          <img id="edit-book-cover-img" class="cover-preview-img" src="" alt="Cover">
+          <div id="edit-book-cover-placeholder" class="cover-placeholder">No cover</div>
+        </div>
+        <button type="button" id="edit-book-cover-btn" class="secondary-btn">Upload Cover</button>
+        <input type="file" id="edit-book-cover-file" style="display:none" accept="image/*">
+      </div>
+      <div class="input-group">
+        <label data-i18n="modal.book.name">Book name:</label>
+        <div class="autocomplete-wrap">
+          <input type="text" id="edit-book-name-input" autocomplete="off">
+          <ul id="edit-book-name-dropdown" class="autocomplete-dropdown"></ul>
+        </div>
+      </div>
+      <div class="input-group" id="edit-book-sections-row">
+        <div class="sections-pages-row">
+          <div class="sections-pages-col" id="edit-book-sections-col">
+            <label data-i18n="modal.book.sections">Total sections:</label>
+            <div class="cs-num-wrap">
+              <button class="cs-num-btn" data-target="edit-book-sections-input" data-delta="-1">−</button>
+              <input type="text" inputmode="numeric" id="edit-book-sections-input" autocomplete="off">
+              <button class="cs-num-btn" data-target="edit-book-sections-input" data-delta="1">+</button>
+            </div>
+          </div>
+          <div class="sections-pages-col" id="edit-book-pages-col">
+            <label>Pages <span class="optional-hint">(optional)</span>:</label>
+            <div class="cs-num-wrap">
+              <button class="cs-num-btn" data-target="edit-book-pages-input" data-delta="-1">−</button>
+              <input type="text" inputmode="numeric" id="edit-book-pages-input" placeholder="–">
+              <button class="cs-num-btn" data-target="edit-book-pages-input" data-delta="1">+</button>
+            </div>
+          </div>
+        </div>
+        <div class="sections-pages-row" id="edit-book-discoverable-row" style="display:none">
+          <div class="sections-pages-col">
+            <label>Discoverable sections:</label>
+            <div class="cs-num-wrap">
+              <button class="cs-num-btn" data-target="edit-book-discoverable-input" data-delta="-1">−</button>
+              <input type="text" inputmode="numeric" id="edit-book-discoverable-input" autocomplete="off" maxlength="6" placeholder="">
+              <button class="cs-num-btn" data-target="edit-book-discoverable-input" data-delta="1">+</button>
+            </div>
+          </div>
+          <div class="sections-pages-col"></div>
+        </div>
+      </div>
+      <div class="input-group" id="edit-book-identifiers-row">
+        <label>Identifiers <span class="optional-hint">(optional)</span>:</label>
+        <div class="pub-type-row">
+          <select id="edit-book-pub-type" class="pub-type-select">
+            <option value="book">Book</option>
+            <option value="magazine">Magazine</option>
+          </select>
+          <div class="pub-id-fields">
+            <div id="edit-book-fields-book">
+              <input type="text" id="edit-book-isbn-input" maxlength="17" autocomplete="off" placeholder="ISBN-10 or ISBN-13 (optional)">
+              <input type="text" id="edit-book-asin-input" maxlength="10" autocomplete="off" placeholder="ASIN (optional)">
+            </div>
+            <div id="edit-book-fields-magazine" style="display:none">
+              <input type="text" id="edit-book-issn-input" maxlength="9" autocomplete="off" placeholder="ISSN (optional, e.g. 1234-5679)">
+            </div>
+          </div>
+        </div>
+        <small id="edit-book-isbn-hint"></small>
+      </div>
+      <div class="input-group" id="edit-book-authors-row">
+        <label>Author(s) <span class="optional-hint">(optional, comma-separated)</span>:</label>
+        <div class="autocomplete-wrap">
+          <input type="text" id="edit-book-authors-input" autocomplete="off" placeholder="e.g. Ian Livingstone, Steve Jackson">
+          <ul id="edit-book-authors-dropdown" class="autocomplete-dropdown"></ul>
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Description <span class="optional-hint">(optional)</span>:</label>
+        <textarea id="edit-book-description-input" rows="3" placeholder="Brief description of the book"></textarea>
+      </div>
+      <div class="input-group">
+        <label>Series <span class="optional-hint">(optional)</span>:</label>
+        <div class="series-row">
+          <select id="edit-book-series-select" class="app-select">
+            <option value="">- None -</option>
+          </select>
+          <input type="text" id="edit-book-series-number-input" autocomplete="off" placeholder="Order #" style="width:6rem">
+        </div>
+      </div>
+      <div class="input-group" id="edit-book-parent-row">
+        <label>Part of anthology <span class="optional-hint">(optional)</span>:</label>
+        <div class="series-row">
+          <select id="edit-book-parent-input" class="app-select">
+            <option value="">- None -</option>
+          </select>
+          <input type="text" inputmode="numeric" id="edit-book-order-input" autocomplete="off" placeholder="Order #" style="width:6rem">
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Rating:</label>
+        <div class="star-rating" id="edit-book-star-widget">
+          <span class="star" data-pos="1">&#9733;</span>
+          <span class="star" data-pos="2">&#9733;</span>
+          <span class="star" data-pos="3">&#9733;</span>
+          <span class="star" data-pos="4">&#9733;</span>
+          <span class="star" data-pos="5">&#9733;</span>
+          <span class="star-label"></span>
+        </div>
+      </div>
+      <div class="input-group create-public-row" id="edit-book-public-row">
+        <label class="checkbox-label">
+          <input type="checkbox" id="edit-book-public-toggle">
+          <span>Make public</span>
+        </label>
+        <small class="field-hint">Other users can find and add this book to their library</small>
+      </div>
+      <div class="input-group" id="edit-book-pdf-row" style="display:none">
+        <label>Book PDF <span class="optional-hint">(optional)</span></label>
+        <div id="edit-book-pdf-current" style="display:none;margin-bottom:0.4rem">
+          <a id="edit-book-pdf-link" href="" target="_blank" rel="noopener" class="pdf-link"><span class="inline-svg-icon pdf-svg-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M7 2h7l5 5v15a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z"></path><path d="M14 2v6h6"></path><path d="M8 17h2.1a1.9 1.9 0 0 0 0-3.8H8V17Z"></path><path d="M12 13.2h1.5a1.9 1.9 0 1 1 0 3.8H12v-3.8Z"></path><path d="M16.5 17v-3.8H19"></path><path d="M16.5 15.1H18.6"></path></svg></span><span>Current PDF</span></a>
+          <button type="button" id="edit-book-pdf-remove" class="secondary-btn" style="margin-left:0.5rem;font-size:0.75rem">Remove</button>
+        </div>
+        <button type="button" id="edit-book-pdf-btn" class="secondary-btn">Upload PDF</button>
+        <input type="file" id="edit-book-pdf-file" style="display:none" accept="application/pdf">
+        <span id="edit-book-pdf-name" style="font-size:0.78rem;color:#9ca3af;margin-top:0.25rem;display:block"></span>
+        <div id="edit-book-pdf-progress" class="modal-upload-progress" style="display:none"><div id="edit-book-pdf-progress-bar" class="modal-upload-progress-bar"></div></div>
+      </div>
+      <div id="edit-book-error" class="auth-error"></div>
+      <div class="modal-actions">
+        <button id="edit-book-save"   class="primary-btn" data-i18n="btn.save">Save</button>
+        <button id="edit-book-cancel"                     data-i18n="btn.cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Edit choices modal ─────────────────────────────────────────── -->
+  <div id="edit-modal-overlay">
+    <div id="edit-modal">
+      <div id="edit-modal-title">Edit Section</div>
+      <div class="input-group">
+        <label data-i18n="modal.edit.label">Choices (comma-separated):</label>
+        <input type="text" id="edit-choices-input" autocomplete="off" placeholder="34, 45, 78 or -1 loss or 0 win">
+      </div>
+      <div class="modal-actions">
+        <button id="edit-modal-save"   class="primary-btn" data-i18n="btn.save">Save</button>
+        <button id="edit-modal-cancel"                     data-i18n="btn.cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Portal modal ──────────────────────────────────────────────── -->
+  <div id="portal-modal-overlay">
+    <div id="portal-modal">
+      <div id="portal-modal-title">Add Portal</div>
+      <div class="input-group">
+        <label>Target book</label>
+        <select id="portal-book-select"></select>
+      </div>
+      <div class="input-group">
+        <label>Target section</label>
+        <input type="text" id="portal-section-input" inputmode="numeric" autocomplete="off" placeholder="e.g. 200">
+      </div>
+      <div class="input-group">
+        <label>Label (optional)</label>
+        <input type="text" id="portal-label-input" autocomplete="off" placeholder="e.g. Head to Golnir">
+      </div>
+      <div class="modal-actions">
+        <button id="portal-modal-save"   class="primary-btn">Save Portal</button>
+        <button id="portal-modal-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Note modal ─────────────────────────────────────────────────── -->
+  <div id="note-modal-overlay">
+    <div id="note-modal">
+      <div id="note-modal-title">Note - Section</div>
+      <div class="input-group">
+        <textarea id="note-modal-input" rows="4" data-i18n-placeholder="modal.note.placeholder" placeholder="e.g. need the brass key to reach this"></textarea>
+      </div>
+      <div class="modal-actions" style="justify-content:space-between">
+        <label class="cs-vis-toggle">
+          <input type="checkbox" id="note-pin-cb">
+          <span class="cs-dot"></span>
+          <span>Show next to node</span>
+        </label>
+        <div style="display:flex;gap:0.5rem">
+          <button id="note-modal-save"   class="primary-btn" data-i18n="btn.save">Save</button>
+          <button id="note-modal-cancel"                     data-i18n="btn.cancel">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Public view modal ──────────────────────────────────────────── -->
+  <div id="public-modal-overlay" class="pub-overlay">
+    <div id="public-modal" class="inv-modal pub-modal">
+      <div class="pub-modal-hdr">
+        <button id="pub-back-btn" class="pub-back-btn">← Back</button>
+        <span id="pub-modal-title"></span>
+        <button id="pub-close-btn" class="pub-close-btn">✕</button>
+      </div>
+      <div id="pub-modal-body" class="pub-modal-body">
+        <!-- profile-view or graph-view injected here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Forum modal ──────────────────────────────────────────────── -->
+  <div id="forum-modal-overlay">
+    <div id="forum-modal">
+      <div id="forum-modal-hdr">
+        <span>Forum</span>
+        <button id="forum-modal-close">✕</button>
+      </div>
+      <iframe id="forum-modal-frame" src="/forum" title="Forum"></iframe>
+    </div>
+  </div>
+
+  <div id="feed-img-preview">
+    <div id="feed-img-bar"></div>
+    <img id="feed-img-preview-img" src="" alt="">
+    <div id="feed-img-preview-footer">
+      <div id="feed-img-preview-level"></div>
+    </div>
+  </div>
+  <div id="reward-float-layer" aria-hidden="true"></div>
+  <div id="app-reward-float-layer" aria-hidden="true"></div>
+<script type="module" src="/js/main.js?v=1064"></script>
+
+<!-- ── Tutorial video modal ─────────────────────────────────────────────── -->
+<div id="video-modal">
+  <div id="video-modal-backdrop"></div>
+  <div id="video-modal-inner">
+    <button id="video-modal-close" aria-label="Close video">&times;</button>
+    <div id="video-modal-frame"></div>
+  </div>
+</div>
+</body>
+</html>

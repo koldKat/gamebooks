@@ -1,0 +1,128 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0%" stop-color="#1a2334"/>
+      <stop offset="100%" stop-color="#0f1724"/>
+    </linearGradient>
+    <linearGradient id="fadeL" x1="0" y1="0" x2="1" y2="0" gradientUnits="objectBoundingBox">
+      <stop offset="0%" stop-color="#111827" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#111827" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="fadeR" x1="0" y1="0" x2="1" y2="0" gradientUnits="objectBoundingBox">
+      <stop offset="0%" stop-color="#111827" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#111827" stop-opacity="1"/>
+    </linearGradient>
+    <linearGradient id="fadeT" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0%" stop-color="#111827" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#111827" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="fadeB" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0%" stop-color="#111827" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#111827" stop-opacity="1"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- ── Graph (right side) ── -->
+
+  <!-- Regular edges -->
+  <g stroke="#374151" stroke-width="1.5" stroke-linecap="round" opacity="0.75">
+    <line x1="700" y1="315" x2="800" y2="195"/>
+    <line x1="700" y1="315" x2="800" y2="435"/>
+    <line x1="800" y1="195" x2="895" y2="120"/>
+    <line x1="800" y1="195" x2="895" y2="265"/>
+    <line x1="800" y1="435" x2="895" y2="380"/>
+    <line x1="800" y1="435" x2="895" y2="510"/>
+    <line x1="895" y1="120" x2="985" y2="75"/>
+    <line x1="895" y1="120" x2="985" y2="175"/>
+    <line x1="895" y1="265" x2="985" y2="310"/>
+    <line x1="895" y1="380" x2="985" y2="430"/>
+    <line x1="895" y1="510" x2="985" y2="545"/>
+    <line x1="985" y1="75"  x2="1070" y2="130"/>
+    <line x1="985" y1="175" x2="1070" y2="130"/>
+    <line x1="985" y1="430" x2="1070" y2="370"/>
+    <line x1="1070" y1="130" x2="1145" y2="190"/>
+    <line x1="1070" y1="370" x2="1145" y2="435"/>
+  </g>
+
+  <!-- Highlighted run path edges -->
+  <g stroke="#f5a623" stroke-width="2.5" stroke-linecap="round" opacity="0.55">
+    <line x1="700" y1="315" x2="800" y2="195"/>
+    <line x1="800" y1="195" x2="895" y2="120"/>
+    <line x1="895" y1="120" x2="985" y2="75"/>
+    <line x1="985" y1="75"  x2="1070" y2="130"/>
+    <line x1="1070" y1="130" x2="1145" y2="190"/>
+  </g>
+
+  <!-- Nodes -->
+  <!-- Root: orange (current) -->
+  <circle cx="700" cy="315" r="15" fill="#f5a623" stroke="#c47d00" stroke-width="2.5"/>
+  <!-- L1 -->
+  <circle cx="800" cy="195" r="11" fill="#8e44ad" stroke="#6c3483" stroke-width="1.8"/>
+  <circle cx="800" cy="435" r="11" fill="#7b3699" stroke="#5d2573" stroke-width="1.8"/>
+  <!-- L2 -->
+  <circle cx="895" cy="120" r="10" fill="#8e44ad" stroke="#6c3483" stroke-width="1.5"/>
+  <circle cx="895" cy="265" r="10" fill="#7b3699" stroke="#5d2573" stroke-width="1.5"/>
+  <circle cx="895" cy="380" r="10" fill="#7b3699" stroke="#5d2573" stroke-width="1.5"/>
+  <circle cx="895" cy="510" r="10" fill="#6a2d8a" stroke="#4a1f63" stroke-width="1.5"/>
+  <!-- L3 -->
+  <circle cx="985" cy="75"  r="9" fill="#8e44ad" stroke="#6c3483" stroke-width="1.5"/>
+  <circle cx="985" cy="175" r="9" fill="#7b3699" stroke="#5d2573" stroke-width="1.5"/>
+  <circle cx="985" cy="310" r="8" fill="#e74c3c" stroke="#c0392b" stroke-width="1.5"/>
+  <circle cx="985" cy="430" r="9" fill="#7b3699" stroke="#5d2573" stroke-width="1.5"/>
+  <circle cx="985" cy="545" r="9" fill="#27ae60" stroke="#1e8449" stroke-width="1.5"/>
+  <!-- L4 -->
+  <circle cx="1070" cy="130" r="9" fill="#8e44ad" stroke="#6c3483" stroke-width="1.5"/>
+  <circle cx="1070" cy="370" r="8" fill="#7b3699" stroke="#5d2573" stroke-width="1.5"/>
+  <circle cx="1145" cy="190" r="8" fill="#6a2d8a" stroke="#4a1f63" stroke-width="1.5"/>
+  <circle cx="1145" cy="435" r="8" fill="#e74c3c" stroke="#c0392b" stroke-width="1.5"/>
+
+  <!-- Fade overlays to blend graph into background -->
+  <rect x="630" y="0"   width="130" height="630" fill="url(#fadeL)"/>
+  <rect x="1110" y="0"  width="90"  height="630" fill="url(#fadeR)"/>
+  <rect x="630" y="0"   width="570" height="90"  fill="url(#fadeT)"/>
+  <rect x="630" y="555" width="570" height="75"  fill="url(#fadeB)"/>
+
+  <!-- ── Left side text ── -->
+
+  <!-- Favicon icon ×1.9 (32→~60px) -->
+  <g transform="translate(80,72) scale(1.9)">
+    <line x1="16" y1="16" x2="6"  y2="7"  stroke="#4b5563" stroke-width="1.8" stroke-linecap="round"/>
+    <line x1="16" y1="16" x2="26" y2="7"  stroke="#4b5563" stroke-width="1.8" stroke-linecap="round"/>
+    <line x1="16" y1="16" x2="6"  y2="26" stroke="#4b5563" stroke-width="1.8" stroke-linecap="round"/>
+    <line x1="16" y1="16" x2="26" y2="26" stroke="#4b5563" stroke-width="1.8" stroke-linecap="round"/>
+    <circle cx="6"  cy="7"  r="4" fill="#8e44ad" stroke="#6c3483" stroke-width="1.2"/>
+    <circle cx="26" cy="7"  r="4" fill="#e74c3c" stroke="#c0392b" stroke-width="1.2"/>
+    <circle cx="6"  cy="26" r="4" fill="#8e44ad" stroke="#6c3483" stroke-width="1.2"/>
+    <circle cx="26" cy="26" r="4" fill="#27ae60" stroke="#1e8449" stroke-width="1.2"/>
+    <circle cx="16" cy="16" r="6" fill="#f5a623" stroke="#c47d00" stroke-width="1.5"/>
+  </g>
+
+  <!-- Title -->
+  <text x="80" y="218" font-family="'Segoe UI',system-ui,-apple-system,sans-serif" font-size="70" font-weight="700" fill="#f9fafb" letter-spacing="-1">Gamebook</text>
+  <text x="80" y="300" font-family="'Segoe UI',system-ui,-apple-system,sans-serif" font-size="70" font-weight="700" fill="#f9fafb" letter-spacing="-1">Tracker</text>
+
+  <!-- Tagline -->
+  <text x="80" y="355" font-family="'Segoe UI',system-ui,-apple-system,sans-serif" font-size="26" fill="#9ca3af">Map every choice. Track every run.</text>
+
+  <!-- Divider -->
+  <line x1="80" y1="388" x2="575" y2="388" stroke="#374151" stroke-width="1"/>
+
+  <!-- Series line -->
+  <text x="80" y="422" font-family="'Segoe UI',system-ui,-apple-system,sans-serif" font-size="17" fill="#6b7280">Fighting Fantasy · Lone Wolf · Choose Your Own Adventure</text>
+
+  <!-- Feature pills -->
+  <rect x="80"  y="448" width="62"  height="30" rx="15" fill="#1f2937" stroke="#374151" stroke-width="1"/>
+  <text x="111" y="468" font-family="'Segoe UI',system-ui,sans-serif" font-size="14" fill="#9ca3af" text-anchor="middle">Free</text>
+
+  <rect x="155" y="448" width="138" height="30" rx="15" fill="#1f2937" stroke="#374151" stroke-width="1"/>
+  <text x="224" y="468" font-family="'Segoe UI',system-ui,sans-serif" font-size="14" fill="#9ca3af" text-anchor="middle">Graph mapping</text>
+
+  <rect x="306" y="448" width="164" height="30" rx="15" fill="#1f2937" stroke="#374151" stroke-width="1"/>
+  <text x="388" y="468" font-family="'Segoe UI',system-ui,sans-serif" font-size="14" fill="#9ca3af" text-anchor="middle">Multi-playthrough</text>
+
+  <!-- URL -->
+  <text x="80" y="578" font-family="'Segoe UI',system-ui,sans-serif" font-size="18" fill="#4b5563">koldkat.net</text>
+</svg>
