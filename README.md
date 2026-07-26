@@ -5,6 +5,26 @@ Choose Your Own Adventure, Lone Wolf, and anything else built on numbered sectio
 route as an interactive graph, level up, earn Gold Coins, and share your progress with an
 activity feed, forums, and public profiles.
 
+## Features
+
+- **Interactive graph** - every section you visit is plotted as a node; choices become edges,
+  colour-coded by line/dot, with fast travel, zoom/pan, right-click actions, and section notes
+- **Character sheet & inventory** - custom fields, equipment slots, item templates, and a
+  compact overlay for quick reference mid-playthrough
+- **Runs & progress** - start/undo/end runs, reset a book, and keep a running history of every
+  attempt
+- **Levels & Gold Coins** - earn XP and coins for exploring, discovering sections, and completing
+  runs; spend coins in the shop; a public "Stats for Nerds" panel shows live server/app internals
+- **Open World series** - portal sections link books together into one connected world, with a
+  cross-book journey viewer
+- **Battle Simulators** - dice-driven combat simulators for select books
+- **Social features** - a public activity feed, forums, Play Together (live shared party runs),
+  public profiles, ratings, and a feedback/inbox system
+- **Export** - download your data per-book or for your whole account
+- **Demo mode** - try the tracker without an account
+
+See [`docs/user-guide.md`](docs/user-guide.md) for the full walkthrough of every feature above.
+
 ## Tech stack
 
 - **Server**: plain Node.js (no framework), `server.js` + `server/`
