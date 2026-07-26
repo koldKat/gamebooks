@@ -2,7 +2,7 @@ const { Resvg } = require('/tmp/svgcheck/node_modules/@resvg/resvg-js');
 const Database = require('better-sqlite3');
 const fs = require('fs');
 const path = require('path');
-const db = new Database(path.join(__dirname, 'database.sqlite'));
+const db = new Database(path.join(__dirname, '..', 'database.sqlite'));
 
 function renderGrid(ids, outName, cols=8) {
   const items = ids.map(id => db.prepare('SELECT id, name, svg_data FROM items WHERE id=?').get(id));
