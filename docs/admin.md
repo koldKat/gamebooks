@@ -78,7 +78,7 @@ Clicking a username opens a **user detail** view: meta bar (Joined, Books, Sessi
 
 ## Books tab
 
-Lists every non-demo, non-container book across all users (standalone books and anthology children - anthology containers themselves are listed separately in the **Anthologies tab**, since a container has no playthroughs of its own and the Wins/Losses/Battle columns would be meaningless for it). Columns: Book, Owner, Sections, Wins, Losses, Battle, Last Updated, Actions. Paginated at 50 rows/page.
+Lists every non-demo, non-container book across all users (standalone books and anthology children - anthology containers themselves are listed separately in the **Anthologies tab**, since a container has no playthroughs of its own and the Wins/Losses/Battle columns would be meaningless for it). Columns: Book, Owner, Sections, Wins, Losses, Battle, Last Updated, Actions. Paginated at 50 rows/page. The search box filters by book name or owner username live as you type, layered on top of the existing column-sort/pagination pipeline (`getFiltered()` wraps `getSorted()` in `admin/index.html`) rather than as a separate mechanism.
 
 Clicking a book name opens the **book detail view** with three sections:
 
@@ -116,14 +116,14 @@ The **Edit** form in the book detail view includes all metadata fields:
 
 ## Series tab
 
-Lists all series across all users. Columns: Name, Creator, Books (count), Public, Open World, Created, Description, Actions. Paginated at 50 rows/page.
+Lists all series across all users. Columns: Name, Creator, Books (count), Public, Open World, Created, Description, Actions. Paginated at 50 rows/page. The search box filters by series name or creator username live as you type. Series didn't previously go through the shared `storeData`/`getSorted` pipeline the way Books/Users did (it rendered the raw fetched array directly) - it was brought onto that same pipeline specifically so search could reuse `getFiltered()` rather than inventing a parallel filtering mechanism; there's still no column sorting here, only search.
 
 - **Edit** (inline) - update name, description, public flag, and the **Open world series** checkbox in-place without leaving the tab.
 - **Delete** - removes the series entirely, unlinks all books (`series_id = NULL`), and removes all `user_series` rows. Requires confirmation.
 
 ## Anthologies tab
 
-Lists all anthology container books (`is_container = 1`) across all users. Columns: Name, Creator, Books (child count), Public, Created, Description, Actions. Paginated at 50 rows/page. Uses `GET /api/admin/anthologies` (`db.getAllAnthologiesAdmin()`), a dedicated query separate from the Books tab's `adminGetBooks()`.
+Lists all anthology container books (`is_container = 1`) across all users. Columns: Name, Creator, Books (child count), Public, Created, Description, Actions. Paginated at 50 rows/page. Uses `GET /api/admin/anthologies` (`db.getAllAnthologiesAdmin()`), a dedicated query separate from the Books tab's `adminGetBooks()`. The search box filters by anthology name or creator username live as you type - same `storeData`/`getFiltered` pipeline as Series, added at the same time for the same reason.
 
 - **Delete** - removes the container row. Children are **not** cascade-deleted; the foreign key (`parent_book_id → books ON DELETE SET NULL`) automatically orphans them (`parent_book_id = NULL`) rather than deleting them. Blocked with the same `has_readers` `409` response as a normal book delete if any `user_books` rows exist for the container itself. Reuses the existing `DELETE /api/admin/books/:id` endpoint - no anthology-specific delete route was needed.
 
@@ -369,6 +369,17 @@ PDF upload/delete use `POST /api/books/:id/pdf` and `DELETE /api/books/:id/pdf`.
 | POST | `/api/admin/tips` | Create tip: `{ text, type: 'real'\|'silly' }` |
 | PATCH | `/api/admin/tips/:id` | Update tip: `{ text?, type?, active? }` (partial update) |
 | DELETE | `/api/admin/tips/:id` | Delete tip permanently |
+
+### Inventory
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/admin/items` | All inventory items (the shared icon catalog every user's Inventory/Equipment draws from) |
+| POST | `/api/admin/items` | Create item: `{ name, type, svg_data, description? }` |
+| PATCH | `/api/admin/items/:id` | Update item (partial): `{ name?, description?, type?, svg_data?, active? }` |
+| DELETE | `/api/admin/items/:id` | Delete item permanently |
+
+The API always returns every item - type filter, active filter, search (by name/description), and pagination are all client-side only, in `admin/index.html`'s `_renderInventory()`/`renderInventoryGrid()`. Page size is **10 full rows**, not a fixed item count: `#inv-grid` uses `grid-template-columns: repeat(auto-fill, minmax(130px, 1fr))`, so the number of columns (and therefore items per page) depends on window width - `_inventoryColumnsPerRow()` reads the actual rendered column count back from `getComputedStyle` rather than recalculating it, so it always matches what really rendered even if the grid's CSS changes later. Recalculated on every render and on window resize (debounced, only while the Inventory tab is visible) so a page is never left with a half-filled last row after a resize. Changing any filter or the search query resets back to page 1; a resize does not, since the same items are still meant to be in view, just reflowed.
 
 ### Feedback
 
