@@ -1082,10 +1082,12 @@ function adminGetUsers() {
     try {
       const s = JSON.parse(b.state_data || '{}');
       for (const pt of (s.playthroughs || [])) {
-        byUser[b.user_id].runs++;
-        if (pt.result === 'success') byUser[b.user_id].wins++;
-        else if (pt.result === 'death') byUser[b.user_id].deaths++;
-        else if (pt.result === 'battle') byUser[b.user_id].battles++;
+        // Completed-only, matching getProfileStats() (server/db/feed.js) - an
+        // in-progress run (no result yet) previously inflated this count relative
+        // to what the user's own profile shows for the same thing.
+        if (pt.result === 'success') { byUser[b.user_id].runs++; byUser[b.user_id].wins++; }
+        else if (pt.result === 'death') { byUser[b.user_id].runs++; byUser[b.user_id].deaths++; }
+        else if (pt.result === 'battle') { byUser[b.user_id].runs++; byUser[b.user_id].battles++; }
       }
     } catch {}
   }

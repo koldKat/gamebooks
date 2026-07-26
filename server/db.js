@@ -60,6 +60,8 @@ try { db.exec(`ALTER TABLE forum_threads ADD COLUMN category_id   INTEGER DEFAUL
 try { db.exec(`ALTER TABLE forum_threads ADD COLUMN edited_at     INTEGER DEFAULT NULL`);               } catch (_) {}
 try { db.exec(`ALTER TABLE forum_posts   ADD COLUMN edited_at     INTEGER DEFAULT NULL`);               } catch (_) {}
 try { db.exec(`ALTER TABLE user_books    ADD COLUMN party_id      INTEGER DEFAULT NULL`);               } catch (_) {}
+db.exec(`CREATE INDEX IF NOT EXISTS idx_user_books_party_id ON user_books(party_id)`);
+db.exec(`CREATE INDEX IF NOT EXISTS idx_user_books_book_id ON user_books(book_id)`);
 try { db.exec(`ALTER TABLE user_books    ADD COLUMN bg_hidden     INTEGER NOT NULL DEFAULT 0`);         } catch (_) {}
 try { db.exec(`ALTER TABLE user_books    ADD COLUMN bg_pos_y      REAL    NOT NULL DEFAULT 50`);        } catch (_) {}
 try { db.exec(`ALTER TABLE users        ADD COLUMN is_author      INTEGER NOT NULL DEFAULT 0`);        } catch (_) {}
@@ -197,6 +199,8 @@ try { db.exec(`ALTER TABLE books ADD COLUMN series_number  TEXT    DEFAULT NULL`
 try { db.exec(`ALTER TABLE books ADD COLUMN is_container   INTEGER NOT NULL DEFAULT 0`); } catch (_) {}
 try { db.exec(`ALTER TABLE books ADD COLUMN parent_book_id INTEGER REFERENCES books(id) ON DELETE SET NULL`); } catch (_) {}
 try { db.exec(`ALTER TABLE books ADD COLUMN book_order     INTEGER DEFAULT NULL`); } catch (_) {}
+db.exec(`CREATE INDEX IF NOT EXISTS idx_books_series_id ON books(series_id)`);
+db.exec(`CREATE INDEX IF NOT EXISTS idx_books_parent_book_id ON books(parent_book_id)`);
 try { db.exec(`ALTER TABLE series ADD COLUMN is_public     INTEGER NOT NULL DEFAULT 0`); } catch (_) {}
 try { db.exec(`ALTER TABLE series ADD COLUMN published_at  INTEGER DEFAULT NULL`); } catch (_) {}
 try { db.exec(`ALTER TABLE series ADD COLUMN is_open_world INTEGER NOT NULL DEFAULT 0`); } catch (_) {}
