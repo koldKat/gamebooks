@@ -367,6 +367,9 @@
       <h3>Pinning / Unpinning</h3>
       <p>A published announcement can be <strong>pinned</strong>, which marks it with <code>pinned = 1</code>. Pinned announcements are displayed more prominently in the app (e.g. at the top of the list or as a banner). Only one announcement can be pinned at a time - pinning a second one unpins the previous. <strong>Unpin</strong> clears the pin without unpublishing.</p>
 
+      <h3>Published list declutter (30-day cutoff)</h3>
+      <p>The Published list hides announcements older than 30 days by default, matching the same 30-day window the public feed already uses. Pinned announcements are always exempt regardless of age. A <strong>Show older (N)</strong> toggle appears whenever anything is hidden, revealing the full history without needing the API or database directly - this is purely a client-side display filter, the underlying data and <code>GET /api/admin/announcements</code> response are unaffected.</p>
+
       <h3>Deleting</h3>
       <p>Permanently deletes the announcement regardless of its state. This is irreversible.</p>
 

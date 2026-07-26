@@ -391,3 +391,5 @@ PDF upload/delete use `POST /api/books/:id/pdf` and `DELETE /api/books/:id/pdf`.
 | POST | `/api/admin/announcements/:id/pin` | Pin (auto-unpins previous) |
 | POST | `/api/admin/announcements/:id/unpin` | Unpin (stays published) |
 | DELETE | `/api/admin/announcements/:id` | Delete permanently |
+
+The API always returns every announcement - the 30-day cutoff is admin-UI-only (client-side filter in `admin/index.html`'s `loadAnnouncements()`), matching the same 30-day window the public feed already uses for the `announcement` entry type. Published announcements older than 30 days are hidden from the Published list by default (pinned announcements are always exempt, regardless of age); a "Show older (N)" toggle reveals them without needing to touch the API or database directly.
