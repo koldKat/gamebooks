@@ -133,6 +133,7 @@ db.exec(`
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
   );
   CREATE UNIQUE INDEX IF NOT EXISTS ux_xp_events ON xp_events(user_id, event, ref);
+  CREATE INDEX IF NOT EXISTS idx_xp_events_event_created ON xp_events(event, created_at);
 `);
 
 db.exec(`
