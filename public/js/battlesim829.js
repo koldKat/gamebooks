@@ -1,9 +1,9 @@
 // ── Battle Simulator (Пътят на пъдпъдъка, book 829) ─────────────────────────
-// Self-contained module. Imports from state.js, ui.js and charsheet.js.
+// Self-contained module. Imports from state.js, play.js, charsheet.js and util.js.
 // Visibility is gated (book 829 only) by the caller in boot.js via
 // setBattleSimVisible().
 // To remove: delete this file, remove its import line and initBattleSim()/
-// setBattleSimVisible() calls from main.js, and remove the .bsim-* CSS.
+// setBattleSimVisible() calls from boot.js, and remove the .bsim-* CSS.
 //
 // Equipment/inventory are read-only inputs here (pt.equipment / pt.inventory)
 // - this module never writes back to them. All sim-specific state lives in

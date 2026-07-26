@@ -1,7 +1,7 @@
 // ── Stats for nerds ────────────────────────────────────────────────────────────
-// Self-contained module. No imports - purely fetches /api/site-stats and renders.
+// Self-contained module. Imports only from util.js. Fetches /api/site-stats and renders it.
 // To remove: delete this file, remove its import line and initStats()/closeStatsModal()
-// calls from main.js, and remove the stats-modal CSS from style.css.
+// calls from boot.js, and remove the stats-modal CSS from style.css.
 
 import { escapeHtml, fetchPublic } from './util.js?v=7';
 

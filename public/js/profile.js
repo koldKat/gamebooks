@@ -2,7 +2,7 @@
 // Self-contained module. Imports from state.js, i18n.js, shop.js, util.js.
 // To remove: delete this file, remove its import line and initProfile()/
 // updateAvatarUI()/renderBooksXpSummary()/setProfileHooks() calls
-// from main.js, and delete public/css/profile.css and its <link> in index.html.
+// from boot.js, and delete public/css/profile.css and its <link> in index.html.
 
 import { apiFetch, setUsername, isDemoMode, getToken, setCurrentUserLevel, getUsername } from './state.js?v=11';
 import { t } from './i18n.js?v=10';

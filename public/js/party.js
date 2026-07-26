@@ -1,7 +1,7 @@
 // ── Play Together (party) ──────────────────────────────────────────────────────
-// Self-contained module. Imports only from state.js and ui.js.
+// Self-contained module. Imports only from state.js, play.js and util.js.
 // To remove: delete this file, remove its import line and setPartyHooks()/initParty()/
-// connectPartySSE()/disconnectPartySSE()/loadPartyInvites() calls from main.js, and
+// connectPartySSE()/disconnectPartySSE()/loadPartyInvites() calls from boot.js, and
 // remove the party-* CSS from style.css.
 
 import { currentBookId, apiFetch, getToken, isDemoMode, loadState } from './state.js?v=11';
