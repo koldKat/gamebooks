@@ -29,7 +29,7 @@ function serveAdminFile(req, res, filename) {
       res.writeHead(404, { 'Content-Type': 'text/plain' }); return res.end('Not found');
     }
     addAdminSecurityHeaders(res);
-    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' });
     res.end(data);
   });
 }
