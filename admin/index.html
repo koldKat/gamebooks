@@ -175,6 +175,24 @@
     #ue-status.ok    { color: #4ade80; }
     #ue-status.error { color: #f87171; }
 
+    /* ── Search ── */
+
+    .admin-toolbar { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
+    .admin-search-wrap { position: relative; display: inline-flex; align-items: center; }
+    .admin-search-icon { position: absolute; left: 0.55rem; color: #6b7280; pointer-events: none; }
+    .admin-search-input {
+      background: #111827; border: 1px solid #374151; border-radius: 6px; color: #d1d5db;
+      padding: 0.32rem 1.9rem 0.32rem 1.75rem; font-size: 0.82rem; font-family: inherit;
+      width: 200px; transition: border-color 0.15s;
+    }
+    .admin-search-input:focus { outline: none; border-color: #2563eb; }
+    .admin-search-input::placeholder { color: #6b7280; }
+    .admin-search-clear {
+      position: absolute; right: 0.4rem; background: none; border: none; color: #6b7280;
+      cursor: pointer; font-size: 0.85rem; padding: 0.1rem 0.25rem; line-height: 1; display: none;
+    }
+    .admin-search-clear:hover { color: #d1d5db; }
+
     /* ── Table ── */
 
     .table-wrap { overflow-x: auto; }
@@ -685,7 +703,14 @@
     </div>
 
     <div id="tab-books" class="tab-panel">
-      <div class="section-meta" id="books-meta"></div>
+      <div class="admin-toolbar">
+        <div class="admin-search-wrap">
+          <svg class="admin-search-icon" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="6.5" cy="6.5" r="4"/><line x1="9.7" y1="9.7" x2="13.5" y2="13.5"/></svg>
+          <input type="text" id="books-search" class="admin-search-input" placeholder="Search books…" autocomplete="off" spellcheck="false">
+          <button type="button" id="books-search-clear" class="admin-search-clear" aria-label="Clear search">✕</button>
+        </div>
+        <div class="section-meta" id="books-meta" style="margin:0"></div>
+      </div>
       <div class="table-wrap">
         <table>
           <thead><tr>
@@ -706,8 +731,13 @@
 
     <!-- ── Series tab ───────────────────────────────────────────────────── -->
     <div id="tab-series" class="tab-panel">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem">
+      <div class="admin-toolbar" style="justify-content:space-between">
         <div class="section-title" style="margin:0">All Series</div>
+        <div class="admin-search-wrap">
+          <svg class="admin-search-icon" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="6.5" cy="6.5" r="4"/><line x1="9.7" y1="9.7" x2="13.5" y2="13.5"/></svg>
+          <input type="text" id="series-search" class="admin-search-input" placeholder="Search series…" autocomplete="off" spellcheck="false">
+          <button type="button" id="series-search-clear" class="admin-search-clear" aria-label="Clear search">✕</button>
+        </div>
       </div>
       <div class="table-wrap">
         <table>
@@ -728,8 +758,13 @@
 
     <!-- ── Anthologies tab ──────────────────────────────────────────────── -->
     <div id="tab-anthologies" class="tab-panel">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem">
+      <div class="admin-toolbar" style="justify-content:space-between">
         <div class="section-title" style="margin:0">All Anthologies</div>
+        <div class="admin-search-wrap">
+          <svg class="admin-search-icon" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="6.5" cy="6.5" r="4"/><line x1="9.7" y1="9.7" x2="13.5" y2="13.5"/></svg>
+          <input type="text" id="anthologies-search" class="admin-search-input" placeholder="Search anthologies…" autocomplete="off" spellcheck="false">
+          <button type="button" id="anthologies-search-clear" class="admin-search-clear" aria-label="Clear search">✕</button>
+        </div>
       </div>
       <div class="table-wrap">
         <table>
@@ -794,8 +829,13 @@
     </div>
 
     <div id="tab-inventory" class="tab-panel">
-      <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem;flex-wrap:wrap">
+      <div class="admin-toolbar">
         <div class="section-title" style="margin:0">Inventory Items</div>
+        <div class="admin-search-wrap">
+          <svg class="admin-search-icon" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="6.5" cy="6.5" r="4"/><line x1="9.7" y1="9.7" x2="13.5" y2="13.5"/></svg>
+          <input type="text" id="inv-search" class="admin-search-input" placeholder="Search items…" autocomplete="off" spellcheck="false">
+          <button type="button" id="inv-search-clear" class="admin-search-clear" aria-label="Clear search">✕</button>
+        </div>
         <select id="inv-type-filter" style="background:#1f2937;border:1px solid #374151;border-radius:5px;color:#d1d5db;padding:0.25rem 0.5rem;font-size:0.8rem;font-family:inherit">
           <option value="">All types</option>
           <option value="weapon">Weapon</option>
@@ -813,6 +853,7 @@
         <span id="inv-count" style="color:#6b7280;font-size:0.8rem;margin-left:auto"></span>
       </div>
       <div id="inv-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:0.75rem"></div>
+      <div class="pagination" id="inventory-pagination"></div>
       <div style="margin-top:1.5rem;background:#1a2235;border:1px solid #374151;border-radius:8px;padding:1rem">
         <div class="section-title" style="margin-bottom:0.6rem">Add New Item</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;margin-bottom:0.6rem">
@@ -1466,6 +1507,41 @@
       });
     }
 
+    // ── Search (layers on top of getSorted; same tableId keys as _tableData) ──
+
+    const _searchState = {}; // tableId → { query, fields: [...] }
+
+    function setSearchFields(tableId, fields) {
+      _searchState[tableId] = { query: '', fields };
+    }
+
+    function matchesQuery(text, q) {
+      return foldForSearch(text).includes(foldForSearch(q));
+    }
+
+    function getFiltered(tableId) {
+      const sorted = getSorted(tableId);
+      const search = _searchState[tableId];
+      if (!search || !search.query) return sorted;
+      return sorted.filter(row => search.fields.some(f => matchesQuery(row[f], search.query)));
+    }
+
+    // Wires a .admin-search-input/.admin-search-clear pair to a table's search
+    // state, resetting to page 1 and re-rendering (through the existing sort +
+    // pagination pipeline) on every keystroke and on clear.
+    function wireTableSearch(tableId, inputId, clearId, renderFn) {
+      const input = document.getElementById(inputId);
+      const clearBtn = document.getElementById(clearId);
+      const apply = () => {
+        _searchState[tableId].query = input.value;
+        clearBtn.style.display = input.value ? 'inline-block' : 'none';
+        if (_pageState[tableId]) _pageState[tableId].page = 0;
+        renderPaged(tableId, getFiltered(tableId), renderFn);
+      };
+      input.addEventListener('input', apply);
+      clearBtn.addEventListener('click', () => { input.value = ''; apply(); input.focus(); });
+    }
+
     function applySortIndicator(tableId) {
       const s = _sortState[tableId];
       document.querySelectorAll(`th[data-table="${tableId}"]`).forEach(h => h.classList.remove('sort-asc', 'sort-desc'));
@@ -1485,7 +1561,7 @@
           else { s.col = col; s.dir = 1; }
           applySortIndicator(tableId);
           if (_pageState[tableId]) _pageState[tableId].page = 0;
-          renderPaged(tableId, getSorted(tableId), renderFn);
+          renderPaged(tableId, getFiltered(tableId), renderFn);
         });
       });
       applySortIndicator(tableId);
@@ -1500,15 +1576,15 @@
     // prev/next controls. Call this instead of renderFn(fullData) directly for
     // any paginated table; sort/reload call sites pass the same renderFn each
     // time so Prev/Next re-slice the same already-fetched array with no refetch.
-    function renderPaged(tableId, fullData, renderFn) {
+    function renderPaged(tableId, fullData, renderFn, pageSize = PAGE_SIZE) {
       if (!_pageState[tableId]) _pageState[tableId] = { page: 0 };
       const state = _pageState[tableId];
-      const totalPages = Math.max(1, Math.ceil(fullData.length / PAGE_SIZE));
+      const totalPages = Math.max(1, Math.ceil(fullData.length / pageSize));
       if (state.page >= totalPages) state.page = totalPages - 1;
       if (state.page < 0) state.page = 0;
-      const start = state.page * PAGE_SIZE;
-      renderFn(fullData.slice(start, start + PAGE_SIZE));
-      _renderPaginationControls(tableId, state.page, totalPages, fullData.length, () => renderPaged(tableId, fullData, renderFn));
+      const start = state.page * pageSize;
+      renderFn(fullData.slice(start, start + pageSize));
+      _renderPaginationControls(tableId, state.page, totalPages, fullData.length, () => renderPaged(tableId, fullData, renderFn, pageSize));
     }
 
     function _renderPaginationControls(tableId, page, totalPages, total, onChange) {
@@ -2003,7 +2079,7 @@
         const books = await api('GET', '/api/admin/books');
         meta.textContent = `${books.length} book${books.length !== 1 ? 's' : ''}`;
         storeData('books', books);
-        renderPaged('books', getSorted('books'), renderBooksTable);
+        renderPaged('books', getFiltered('books'), renderBooksTable);
       } catch (e) { meta.textContent = 'Error loading books.'; console.error(e); }
     }
 
@@ -3303,7 +3379,8 @@
       tbody.innerHTML = '<tr><td colspan="7" style="color:#6b7280;padding:1rem">Loading…</td></tr>';
       try {
         const series = await api('GET', '/api/admin/series/all');
-        renderPaged('series', series, renderSeriesTable);
+        storeData('series', series);
+        renderPaged('series', getFiltered('series'), renderSeriesTable);
       } catch (e) { tbody.innerHTML = `<tr><td colspan="7" style="color:#f87171">${_esc(e.message)}</td></tr>`; }
     }
 
@@ -3376,7 +3453,8 @@
       tbody.innerHTML = '<tr><td colspan="7" style="color:#6b7280;padding:1rem">Loading…</td></tr>';
       try {
         const anthologies = await api('GET', '/api/admin/anthologies');
-        renderPaged('anthologies', anthologies, renderAnthologiesTable);
+        storeData('anthologies', anthologies);
+        renderPaged('anthologies', getFiltered('anthologies'), renderAnthologiesTable);
       } catch (e) { tbody.innerHTML = `<tr><td colspan="7" style="color:#f87171">${_esc(e.message)}</td></tr>`; }
     }
 
@@ -3518,21 +3596,41 @@
         try {
           await api('PATCH', `/api/admin/items/${it.id}`, payload);
           Object.assign(it, payload, { description: payload.description || null });
-          _renderInventory();
+          _renderInventory(false);
         } catch (e) {
           errEl.textContent = e.message || 'Failed to save.';
         }
       });
     }
 
-    function _renderInventory() {
+    const INV_ROWS_PER_PAGE = 10;
+
+    // #inv-grid uses `repeat(auto-fill, minmax(130px, 1fr))`, so its actual column
+    // count depends on the viewport/window width - reading it back from the
+    // computed style (rather than recalculating from track/gap sizes ourselves)
+    // guarantees this always matches whatever the grid really rendered, even if
+    // its CSS changes later. Only meaningful while the tab is visible/laid out.
+    function _inventoryColumnsPerRow() {
+      const grid = document.getElementById('inv-grid');
+      const cols = getComputedStyle(grid).gridTemplateColumns.split(' ').filter(Boolean).length;
+      return cols || 1;
+    }
+
+    function _renderInventory(resetPage = true) {
       const typeF   = document.getElementById('inv-type-filter').value;
       const activeF = document.getElementById('inv-active-filter').value;
+      const query   = document.getElementById('inv-search').value;
       const items   = _allItems.filter(it =>
         (!typeF   || it.type   === typeF) &&
-        (activeF === '' || String(it.active) === activeF)
+        (activeF === '' || String(it.active) === activeF) &&
+        (!query   || matchesQuery(it.name, query) || matchesQuery(it.description, query))
       );
       document.getElementById('inv-count').textContent = `${items.length} item${items.length !== 1 ? 's' : ''}`;
+      if (resetPage && _pageState['inventory']) _pageState['inventory'].page = 0;
+      renderPaged('inventory', items, renderInventoryGrid, _inventoryColumnsPerRow() * INV_ROWS_PER_PAGE);
+    }
+
+    function renderInventoryGrid(items) {
       const grid = document.getElementById('inv-grid');
       if (!items.length) { grid.innerHTML = '<div style="color:#6b7280;font-size:0.85rem;grid-column:1/-1">No items match the current filter.</div>'; return; }
       grid.innerHTML = '';
@@ -3584,14 +3682,34 @@
       grid.innerHTML = '<div style="color:#6b7280;font-size:0.85rem;grid-column:1/-1">Loading…</div>';
       try {
         _allItems = await api('GET', '/api/admin/items');
-        _renderInventory();
+        _renderInventory(false);
       } catch (e) {
         grid.innerHTML = `<div style="color:#f87171;grid-column:1/-1">${_esc(e.message)}</div>`;
       }
     }
 
-    document.getElementById('inv-type-filter').addEventListener('change', _renderInventory);
-    document.getElementById('inv-active-filter').addEventListener('change', _renderInventory);
+    document.getElementById('inv-type-filter').addEventListener('change', () => _renderInventory());
+    document.getElementById('inv-active-filter').addEventListener('change', () => _renderInventory());
+    let _invResizeTimer = null;
+    window.addEventListener('resize', () => {
+      if (!document.getElementById('tab-inventory').classList.contains('active')) return;
+      clearTimeout(_invResizeTimer);
+      _invResizeTimer = setTimeout(() => _renderInventory(false), 150);
+    });
+    {
+      const invSearchInput = document.getElementById('inv-search');
+      const invSearchClear = document.getElementById('inv-search-clear');
+      invSearchInput.addEventListener('input', () => {
+        invSearchClear.style.display = invSearchInput.value ? 'inline-block' : 'none';
+        _renderInventory();
+      });
+      invSearchClear.addEventListener('click', () => {
+        invSearchInput.value = '';
+        invSearchClear.style.display = 'none';
+        _renderInventory();
+        invSearchInput.focus();
+      });
+    }
 
     document.getElementById('new-inv-save').addEventListener('click', async () => {
       const errEl = document.getElementById('new-inv-error');
@@ -3617,6 +3735,13 @@
     initSortHeaders('books',  renderBooksTable);
     initSortHeaders('ubooks', data => renderUserBooksTable(data, _currentUserId));
     initSortHeaders('pts',    renderPtsTable);
+
+    setSearchFields('books',       ['name', 'owner']);
+    setSearchFields('series',      ['name', 'created_by_username']);
+    setSearchFields('anthologies', ['name', 'created_by_username']);
+    wireTableSearch('books',       'books-search',       'books-search-clear',       renderBooksTable);
+    wireTableSearch('series',      'series-search',      'series-search-clear',      renderSeriesTable);
+    wireTableSearch('anthologies', 'anthologies-search', 'anthologies-search-clear', renderAnthologiesTable);
 
     loadAll();
     loadLive();

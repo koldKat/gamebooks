@@ -155,6 +155,7 @@
         <a href="#series">Series tab</a>
         <a href="#anthologies">Anthologies tab</a>
         <a href="#tips">Tips tab</a>
+        <a href="#inventory">Inventory tab</a>
         <a href="#feedback">Feedback tab</a>
         <a href="#announcements">Announcements tab</a>
         <a href="#gc-pool">Admin GC pool</a>
@@ -265,7 +266,7 @@
     <!-- Books tab -->
     <div class="section" id="books">
       <h2>Books tab</h2>
-      <p>Lists every non-demo, non-container book across all users (standalone books and anthology children - anthology containers themselves are listed separately in the <strong>Anthologies tab</strong>, since a container has no playthroughs of its own). Columns: Book, Owner, Sections, Wins, Losses, Last Updated, Actions. Paginated at 50 rows/page.</p>
+      <p>Lists every non-demo, non-container book across all users (standalone books and anthology children - anthology containers themselves are listed separately in the <strong>Anthologies tab</strong>, since a container has no playthroughs of its own). Columns: Book, Owner, Sections, Wins, Losses, Last Updated, Actions. Paginated at 50 rows/page. The search box filters by book name or owner username, live as you type; searching resets to page 1 and works together with column sorting.</p>
       <p>Clicking a book name opens the <strong>book detail view</strong>:</p>
       <ul>
         <li><strong>Stats</strong> - section count, run counts, wins/losses; full playthroughs table with username, start date, outcome</li>
@@ -290,7 +291,7 @@
     <!-- Series tab -->
     <div class="section" id="series">
       <h2>Series tab</h2>
-      <p>Lists all series in the database with creator username, book count, public status, created date, and description. Paginated at 50 rows/page.</p>
+      <p>Lists all series in the database with creator username, book count, public status, created date, and description. Paginated at 50 rows/page. The search box filters by series name or creator username, live as you type.</p>
       <p><strong>Edit</strong> - opens an inline edit row (no navigation required) to update the series name, description, and public flag.</p>
       <p><strong>Delete</strong> - removes the series entirely: orphans all linked books (<code>series_id = NULL</code>), removes all <code>user_series</code> rows, and deletes the series row. Requires confirmation. This is irreversible.</p>
       <div class="note">Deleting a series from here affects all users who had it in their library. Use with care.</div>
@@ -299,7 +300,7 @@
     <!-- Anthologies tab -->
     <div class="section" id="anthologies">
       <h2>Anthologies tab</h2>
-      <p>Lists all anthology container books (<code>is_container = 1</code>) across all users, separate from the Books tab. Columns: Name, Creator, Books (child count), Public, Created, Description, Actions. Paginated at 50 rows/page.</p>
+      <p>Lists all anthology container books (<code>is_container = 1</code>) across all users, separate from the Books tab. Columns: Name, Creator, Books (child count), Public, Created, Description, Actions. Paginated at 50 rows/page. The search box filters by anthology name or creator username, live as you type.</p>
       <p><strong>Delete</strong> - removes the container row. Children are <strong>not</strong> deleted - the foreign key automatically orphans them (<code>parent_book_id = NULL</code>) instead. Blocked with the same "still has readers" error as a normal book delete if any user has the container itself in their library. Requires confirmation.</p>
     </div>
 
@@ -314,6 +315,22 @@
         <li><strong>Delete</strong> - permanently removes the tip. Requires confirmation.</li>
       </ul>
       <p>The <strong>Add New Tip</strong> form at the bottom accepts text and a type selector. Duplicate text is rejected.</p>
+    </div>
+
+    <!-- Inventory tab -->
+    <div class="section" id="inventory">
+      <h2>Inventory tab</h2>
+      <p>Manages the shared catalog of inventory item icons (the <code>items</code> table) that every user's Inventory/Equipment feature draws from. Displayed as a grid of cards (SVG icon, name, optional description), paginated at <strong>10 full rows per page</strong> - not a fixed item count. The grid uses <code>repeat(auto-fill, minmax(130px, 1fr))</code>, so how many items fit in a row depends on window width; the page size is recalculated from the actual rendered column count (and on window resize) so a page is never left with a half-filled last row at any resolution.</p>
+      <ul>
+        <li><strong>Type filter</strong> - narrows the grid to one item type (weapon / armor / consumable / tool / jewelry / miscellaneous).</li>
+        <li><strong>Active filter</strong> - active items are servable to users; inactive ones are hidden from new selections but not deleted.</li>
+        <li><strong>Search</strong> - filters by item name or description, live as you type. Combines with the type/active filters.</li>
+        <li><strong>Active checkbox</strong> (on each card) - toggles an item on/off immediately, no page reload.</li>
+        <li><strong>Edit</strong> - inline edit of name, description, type, and raw SVG markup.</li>
+        <li><strong>Delete</strong> - permanently removes the item. Requires confirmation.</li>
+      </ul>
+      <p>Changing the type filter, active filter, or search always resets the grid back to page 1, since the previous page number may no longer make sense against the new result set.</p>
+      <p>The <strong>Add New Item</strong> form at the bottom accepts name, description, type, and raw SVG markup.</p>
     </div>
 
     <!-- Book actions -->
