@@ -606,10 +606,15 @@ body {
 }
 
 .missing-label::after {
-  content: "\24D8"; /* circled Latin small letter i */
+  content: "";
+  display: inline-block;
+  width: 0.85em;
+  height: 0.85em;
   margin-left: 0.3em;
-  font-size: 0.85em;
-  color: #60a5fa;
+  vertical-align: -0.05em;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><circle cx='8' cy='8' r='7' fill='none' stroke='%2360a5fa' stroke-width='1.5'/><circle cx='8' cy='4.6' r='1.1' fill='%2360a5fa'/><rect x='7.1' y='7' width='1.8' height='5.3' rx='0.6' fill='%2360a5fa'/></svg>");
+  background-repeat: no-repeat;
+  background-size: contain;
 }
 
 #mapped-count, #total-count       { color: #3d9be9; }
