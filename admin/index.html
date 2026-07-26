@@ -468,9 +468,8 @@
     .ann-btn-cancel:hover { color: #d1d5db; }
     .ann-error { font-size: 0.8rem; color: #f87171; min-height: 1em; }
     .ann-section-heading { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #6b7280; margin: 0.9rem 0 0.45rem; }
-    .ann-show-older-toggle { float: right; text-transform: none; letter-spacing: normal; font-weight: 500; color: #60a5fa; cursor: pointer; }
-    .ann-show-older-toggle:hover { color: #93c5fd; text-decoration: underline; }
     .ann-empty { font-size: 0.82rem; color: #4b5563; }
+    .ann-show-older-row { text-align: center; padding: 10px; }
     .ann-card { background: #1a1f2e; border: 1px solid #374151; border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 0.6rem; }
     .ann-card-title { font-size: 0.9rem; font-weight: 600; color: #f59e0b; margin-bottom: 0.3rem; }
     .ann-card-body  { font-size: 0.82rem; color: #9ca3af; white-space: pre-wrap; word-break: break-word; margin-bottom: 0.5rem; }
@@ -864,10 +863,7 @@
       </div>
 
       <div id="ann-published-section">
-        <div class="ann-section-heading">
-          Published
-          <span id="ann-show-older-toggle" class="ann-show-older-toggle">Show older</span>
-        </div>
+        <div class="ann-section-heading">Published</div>
         <div id="ann-published-list"><span class="ann-empty">No published announcements.</span></div>
       </div>
     </div>
@@ -3160,28 +3156,8 @@
       </div>`;
     }
 
-    let _annShowOlder = false;
-
-    async function loadAnnouncements() {
-      const rows = await fetch('/api/admin/announcements').then(r => r.json());
-      const drafts = rows.filter(r => r.is_draft === 1);
-      let published = rows.filter(r => r.is_draft === 0);
-
-      const thirtyDaysAgo = Math.floor(Date.now() / 1000) - 30 * 24 * 60 * 60;
-      const hiddenCount = published.filter(r => !r.pinned && r.published_at < thirtyDaysAgo).length;
-      if (!_annShowOlder) published = published.filter(r => r.pinned || r.published_at >= thirtyDaysAgo);
-
-      const draftEl = document.getElementById('ann-drafts-list');
-      const pubEl   = document.getElementById('ann-published-list');
-      const toggleEl = document.getElementById('ann-show-older-toggle');
-      toggleEl.textContent = _annShowOlder ? 'Hide older' : `Show older${hiddenCount ? ` (${hiddenCount})` : ''}`;
-      toggleEl.style.display = (hiddenCount || _annShowOlder) ? '' : 'none';
-      toggleEl.onclick = () => { _annShowOlder = !_annShowOlder; loadAnnouncements(); };
-
-      draftEl.innerHTML = drafts.length    ? drafts.map(renderAnnCard).join('')    : '<span class="ann-empty">No drafts.</span>';
-      pubEl.innerHTML   = published.length ? published.map(renderAnnCard).join('') : '<span class="ann-empty">No published announcements.</span>';
-
-      document.getElementById('tab-announcements').querySelectorAll('[data-action]').forEach(btn => {
+    function wireAnnActionButtons(container, rows) {
+      container.querySelectorAll('[data-action]').forEach(btn => {
         btn.addEventListener('click', async () => {
           const id  = +btn.dataset.id;
           const action = btn.dataset.action;
@@ -3210,6 +3186,42 @@
           }
         });
       });
+    }
+
+    async function loadAnnouncements() {
+      const rows = await fetch('/api/admin/announcements').then(r => r.json());
+      const drafts = rows.filter(r => r.is_draft === 1);
+      const publishedAll = rows.filter(r => r.is_draft === 0);
+
+      // Same "Show N inactive users (31+ days)" philosophy as the Users table:
+      // older entries are collapsed behind a button at the bottom, not hidden
+      // behind a hover/toggle affordance. Pinned announcements are always shown.
+      const thirtyDaysAgo = Math.floor(Date.now() / 1000) - 30 * 24 * 60 * 60;
+      const visible = publishedAll.filter(r => r.pinned || r.published_at >= thirtyDaysAgo);
+      const hidden  = publishedAll.filter(r => !r.pinned && r.published_at < thirtyDaysAgo);
+
+      const draftEl = document.getElementById('ann-drafts-list');
+      const pubEl   = document.getElementById('ann-published-list');
+
+      draftEl.innerHTML = drafts.length ? drafts.map(renderAnnCard).join('') : '<span class="ann-empty">No drafts.</span>';
+      pubEl.innerHTML   = visible.length ? visible.map(renderAnnCard).join('')
+                        : (hidden.length ? '' : '<span class="ann-empty">No published announcements.</span>');
+
+      wireAnnActionButtons(draftEl, rows);
+      wireAnnActionButtons(pubEl, rows);
+
+      if (hidden.length) {
+        const row = document.createElement('div');
+        row.className = 'ann-show-older-row';
+        row.appendChild(mkBtn(`Show ${hidden.length} announcement${hidden.length !== 1 ? 's' : ''} (30+ days)`, 'btn-info', () => {
+          row.remove();
+          const hiddenWrap = document.createElement('div');
+          hiddenWrap.innerHTML = hidden.map(renderAnnCard).join('');
+          wireAnnActionButtons(hiddenWrap, rows); // wire while still isolated, before moving into pubEl
+          while (hiddenWrap.firstChild) pubEl.appendChild(hiddenWrap.firstChild);
+        }));
+        pubEl.appendChild(row);
+      }
     }
 
     function annTrim(s) {
