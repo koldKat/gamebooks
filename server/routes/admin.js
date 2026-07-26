@@ -20,16 +20,20 @@ const PROJECT_ROOT = path.join(__dirname, '..', '..');
 
 // ── Admin handlers ────────────────────────────────────────────────────────────
 
+// filename may include a subdirectory (e.g. 'js/core.js' for the admin panel's
+// own ES modules) - content-type is inferred from the extension so both the
+// HTML pages and the JS modules are served correctly from the same function.
 function serveAdminFile(req, res, filename) {
   if (!requireLocalhost(req, res)) return;
   const filePath = path.join(PROJECT_ROOT, 'admin', filename);
+  const contentType = filename.endsWith('.js') ? 'text/javascript; charset=utf-8' : 'text/html; charset=utf-8';
   fs.readFile(filePath, (err, data) => {
     if (err) {
       addAdminSecurityHeaders(res);
       res.writeHead(404, { 'Content-Type': 'text/plain' }); return res.end('Not found');
     }
     addAdminSecurityHeaders(res);
-    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' });
+    res.writeHead(200, { 'Content-Type': contentType, 'Cache-Control': 'no-cache' });
     res.end(data);
   });
 }

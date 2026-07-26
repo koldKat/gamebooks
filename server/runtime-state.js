@@ -245,10 +245,12 @@ let _codeStats = { linesOfCode: 0, codeBytes: 0, jsModules: 0 };
   try {
     const serverJsFiles = walkJsFiles('server');
     const publicJsFiles = walkJsFiles('public/js');
+    const adminJsFiles  = walkJsFiles('admin/js');
     const files = [
       'server.js',
       ...serverJsFiles,
       ...publicJsFiles,
+      ...adminJsFiles,
       ...fs.readdirSync('public/css').filter(f => f.endsWith('.css')).map(f => `public/css/${f}`),
       'public/index.html',
       'public/guide.html',
@@ -260,7 +262,7 @@ let _codeStats = { linesOfCode: 0, codeBytes: 0, jsModules: 0 };
     }
     _codeStats.linesOfCode = lines;
     _codeStats.codeBytes   = bytes;
-    _codeStats.jsModules   = 1 + serverJsFiles.length + publicJsFiles.length;
+    _codeStats.jsModules   = 1 + serverJsFiles.length + publicJsFiles.length + adminJsFiles.length;
   } catch (_) {}
 })();
 
