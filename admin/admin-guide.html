@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel Guide - Gamebook Tracker</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    * { scrollbar-width: thin; scrollbar-color: #374151 transparent; }
+    .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 50%; vertical-align: middle; margin-right: 3px; }
+    *::-webkit-scrollbar { width: 5px; height: 5px; }
+    *::-webkit-scrollbar-track { background: transparent; }
+    *::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+    *::-webkit-scrollbar-thumb:hover { background: #4b5563; }
+
+    body {
+      background: #111827;
+      color: #d1d5db;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 0.92rem;
+      line-height: 1.7;
+      padding: 2rem 1rem 4rem;
+    }
+
+    .wrap { max-width: 900px; margin: 0 auto; }
+
+    .page-header {
+      display: flex;
+      align-items: baseline;
+      gap: 0.75rem;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid #374151;
+      flex-wrap: wrap;
+    }
+    .page-title { font-size: 1.35rem; font-weight: 700; color: #f5a623; }
+    .page-sub   { font-size: 0.8rem; color: #6b7280; }
+    .back-link  {
+      margin-left: auto; color: #9ca3af; text-decoration: none;
+      font-size: 0.82rem; border: 1px solid #374151; border-radius: 6px;
+      padding: 0.25rem 0.7rem; transition: color 0.12s, background 0.12s;
+    }
+    .back-link:hover { color: #f5a623; background: #1f2937; }
+
+    .section {
+      background: #1f2937;
+      border: 1px solid #374151;
+      border-radius: 8px;
+      padding: 1.2rem 1.4rem;
+      margin-bottom: 1rem;
+    }
+
+    .toc {
+      background: #1f2937; border: 1px solid #374151; border-radius: 8px;
+      padding: 1rem 1.2rem; margin-bottom: 1rem;
+    }
+    .toc-title { font-size: 0.72rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.65rem; }
+    .toc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.2rem 1.5rem; }
+    .toc a { color: #9ca3af; text-decoration: none; font-size: 0.82rem; }
+    .toc a:hover { color: #f5a623; }
+
+    h2 {
+      font-size: 1rem; font-weight: 700; color: #f9fafb;
+      margin-bottom: 0.8rem; padding-bottom: 0.45rem;
+      border-bottom: 1px solid #374151;
+      scroll-margin-top: 1rem;
+    }
+    h3 {
+      font-size: 0.88rem; font-weight: 600; color: #e2e8f0;
+      margin: 1rem 0 0.4rem;
+    }
+
+    p { margin-bottom: 0.6rem; color: #d1d5db; }
+    p:last-child { margin-bottom: 0; }
+
+    ul, ol { padding-left: 1.4rem; margin-bottom: 0.6rem; }
+    li { margin-bottom: 0.25rem; }
+    li:last-child { margin-bottom: 0; }
+
+    code {
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 0.83em;
+      background: #374151;
+      color: #93c5fd;
+      padding: 0.15em 0.4em;
+      border-radius: 3px;
+    }
+
+    pre {
+      background: #0d1117;
+      border: 1px solid #374151;
+      border-radius: 6px;
+      padding: 0.85rem 1rem;
+      overflow-x: auto;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 0.82rem;
+      line-height: 1.55;
+      color: #93c5fd;
+      margin: 0.65rem 0;
+    }
+    pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 0.84rem; margin: 0.65rem 0; }
+    th {
+      background: #111827; color: #9ca3af; font-weight: 600;
+      font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em;
+      padding: 0.5rem 0.75rem; text-align: left; border-bottom: 1px solid #374151;
+    }
+    td { padding: 0.45rem 0.75rem; border-bottom: 1px solid #1e2736; vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+
+    strong { color: #f9fafb; font-weight: 600; }
+    em { color: #9ca3af; font-style: italic; }
+
+    .method { font-family: 'Consolas', monospace; font-size: 0.78rem; font-weight: 700;
+      color: #fcd34d; background: rgba(252,211,77,0.08); padding: 0.1em 0.4em; border-radius: 3px; }
+    .method-del  { color: #f87171; background: rgba(248,113,113,0.08); }
+    .method-post { color: #4ade80; background: rgba(74,222,128,0.08); }
+    .method-patch { color: #c084fc; background: rgba(192,132,252,0.08); }
+
+    .note {
+      background: rgba(96,165,250,0.07); border-left: 3px solid #60a5fa;
+      border-radius: 0 6px 6px 0; padding: 0.65rem 0.9rem; margin: 0.7rem 0;
+      font-size: 0.85rem; color: #93c5fd;
+    }
+    .warn {
+      background: rgba(251,191,36,0.07); border-left: 3px solid #fbbf24;
+      border-radius: 0 6px 6px 0; padding: 0.65rem 0.9rem; margin: 0.7rem 0;
+      font-size: 0.85rem; color: #fcd34d;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+
+    <div class="page-header">
+      <div>
+        <div class="page-title">Gamebook Tracker</div>
+        <div class="page-sub">Admin Panel Guide</div>
+      </div>
+    </div>
+
+    <!-- TOC -->
+    <div class="toc">
+      <div class="toc-title">Contents</div>
+      <div class="toc-grid">
+        <a href="#access">Access</a>
+        <a href="#stats">Stats cards</a>
+        <a href="#users">Users tab</a>
+        <a href="#user-actions">User actions</a>
+        <a href="#books">Books tab</a>
+        <a href="#book-actions">Book actions</a>
+        <a href="#series">Series tab</a>
+        <a href="#anthologies">Anthologies tab</a>
+        <a href="#tips">Tips tab</a>
+        <a href="#feedback">Feedback tab</a>
+        <a href="#announcements">Announcements tab</a>
+        <a href="#gc-pool">Admin GC pool</a>
+        <a href="#app-xp">App-wide XP widget</a>
+        <a href="#avg-lvl">Avg User Level widget</a>
+        <a href="#tools">Tools tab</a>
+        <a href="#smtp">SMTP / email</a>
+        <a href="#settings-table">Admin settings keys</a>
+        <a href="#api">API reference</a>
+        <a href="#feed-events">Feed event types</a>
+      </div>
+    </div>
+
+    <!-- Access -->
+    <div class="section" id="access">
+      <h2>Access</h2>
+      <p>Open <code>http://localhost:3000/admin</code> (or <code>https://localhost/admin</code> if TLS is active) in a browser on the same machine as the server.</p>
+      <p>All <code>/api/admin/*</code> routes and the panel itself reject any connection that is not from localhost (<code>127.0.0.1</code>, <code>::1</code>, or <code>::ffff:127.0.0.1</code>). No login is required - the localhost restriction is the sole access control. <code>X-Forwarded-For</code> and similar proxy headers are <strong>never</strong> trusted for this check.</p>
+    </div>
+
+    <!-- Stats cards -->
+    <div class="section" id="stats">
+      <h2>Stats cards</h2>
+      <p>The top row shows aggregate counts across all users and books. Cards refresh on page load and when the <strong>↺ Refresh</strong> button is pressed.</p>
+      <table>
+        <thead><tr><th>Card</th><th>What it shows</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Users</strong></td><td>Total registered accounts (active only - excludes locked accounts). Shows admin count separately.</td></tr>
+          <tr><td><strong>Books</strong></td><td>Total non-demo books across all accounts</td></tr>
+          <tr><td><strong>Active Sessions</strong></td><td>Current live sessions (logged-in browsers)</td></tr>
+          <tr><td><strong>Mapped Sections</strong></td><td>Sections with recorded choices, summed across all books - shown as <em>n / total (x%)</em></td></tr>
+          <tr><td><strong>Discovered Sections</strong></td><td>All sections ever referenced (mapped + unmapped), summed across all books - shown as <em>n / total (x%)</em></td></tr>
+          <tr><td><strong>Playthroughs</strong></td><td><span class="swatch" style="background:#4ade80"></span>Active runs | <span class="swatch" style="background:#22d3ee"></span>Finished runs; pipe is <span class="swatch" style="background:#f5a623"></span>orange</td></tr>
+          <tr><td><strong>Wins / Losses</strong></td><td><span class="swatch" style="background:#4ade80"></span>Wins (green) / <span class="swatch" style="background:#f87171"></span>Losses (red)</td></tr>
+          <tr><td><strong>Heap Used / Total</strong></td><td>Node.js process heap memory in use and total heap allocated.</td></tr>
+          <tr><td><strong>RSS / CPU</strong></td><td>Resident set size - total process memory including heap, stack, and native code.</td></tr>
+          <tr><td><strong>Traffic In / Out</strong></td><td>Cumulative bytes received (green) and sent (red) by the server since traffic tracking was enabled. Sits in the same column as Heap/RSS. Persisted across restarts; flushed to the database every 50 requests and on clean shutdown.</td></tr>
+          <tr><td><strong>Database Size</strong></td><td>Size of the SQLite main file (excludes WAL). Has a <strong>Vacuum Database</strong> button below.</td></tr>
+          <tr><td><strong>Application Size</strong></td><td>Total on-disk size of the app directory, excluding patterns configured in Tools → Size Ignore Patterns</td></tr>
+          <tr><td><strong>Session Uptime</strong></td><td>How long the current server process has been running since the last start.</td></tr>
+          <tr><td><strong>Uptime %</strong></td><td>Percentage of total app lifetime that the server has been up (session uptime / app age).</td></tr>
+          <tr><td><strong>App Age</strong></td><td>Total time since the app was first started - persisted across restarts.</td></tr>
+        </tbody>
+      </table>
+      <h3>Stats for Nerds</h3>
+      <p>An expandable section below the main cards showing deeper aggregate counts:</p>
+      <ul>
+        <li><strong>Users:</strong> total accounts, admins count, undos performed (sum of <code>undosUsed</code> across all active play state), fast travels performed</li>
+        <li><strong>Books / Series / Anthologies:</strong> separate unique-count and library-count totals</li>
+        <li><strong>Gameplay:</strong> total runs, finished runs, wins, losses, battle deaths</li>
+        <li><strong>XP events:</strong> total XP event records, number of distinct event types</li>
+        <li><strong>Gold Coins &amp; Shop:</strong> earned/spent/in-circulation totals plus purchased upgrades, including Heartbeat XP; in-circulation totals also include extra milestone GC rewards</li>
+        <li><strong>Books:</strong> includes unique authors and average sections per playable book in the detailed breakdown</li>
+        <li><strong>Forum:</strong> total posts (active only - excludes deleted), total threads (active only)</li>
+      </ul>
+      <p><strong>Vacuum Database</strong> purges all expired sessions, then rewrites the database file to reclaim unused space. Stats cards refresh automatically afterwards.</p>
+    </div>
+
+    <!-- Users tab -->
+    <div class="section" id="users">
+      <h2>Users tab</h2>
+      <p>Lists all registered accounts. Columns: Username, Joined, Last Active, Days Inactive, Books, Runs, Wins, Losses, Level, Sessions, Location, Domain, Actions.</p>
+      <p>Badges visible in the Username column:</p>
+      <ul>
+        <li><strong>ADMIN</strong> - account has <code>is_admin = 1</code> (full admin privileges)</li>
+        <li><strong>PROTECTED</strong> - account has <code>is_protected = 1</code> (cannot be deleted or locked; used for safety accounts like the demo user)</li>
+        <li><strong>AUTHOR</strong> - account has <code>is_author = 1</code> (shown a special badge in the public app)</li>
+        <li><strong>CONTRIBUTOR</strong> - account has <code>is_contributor = 1</code></li>
+        <li><strong>LOCKED</strong> - account is currently locked (login denied until an admin unlocks it)</li>
+      </ul>
+      <p>The <strong>Location</strong> column shows the country flag and approximate city recorded at the user's most recent login, resolved via the <code>geoip-lite</code> offline database. Hovering the flag shows the full country name. Blank (<code>-</code>) until first login after geo support was added.</p>
+      <p>The <strong>Domain</strong> column shows which of the app's domains (e.g. koldkat.net / pathmap.net / bookplay.net) the user was last seen on, read straight from the <code>Host</code> header on their most recent authenticated request (<code>last_domain</code> column, blank/<code>-</code> until their first request after this was added). A leading <code>www.</code> is stripped for display. Unlike Location, there's no time-based throttle on this - it's cheap to skip since the write is a no-op whenever the domain hasn't changed since last recorded.</p>
+      <p>Clicking a username opens the <strong>user detail view</strong>, showing a meta bar (Joined, Books, Sessions, Last Location, Domain, Level) and a table of all their books with per-book stats.</p>
+    </div>
+
+    <!-- User actions -->
+    <div class="section" id="user-actions">
+      <h2>User actions</h2>
+      <p>Each row in the Users table has an Actions column. Available actions depend on whether the account is protected or locked.</p>
+
+      <h3>Clear sessions</h3>
+      <p>Invalidates all active sessions for that user - forces logout on every device immediately. Does not lock the account; the user can log back in straight away.</p>
+
+      <h3>Lock / Unlock</h3>
+      <p><strong>Lock</strong> - sets <code>locked_until</code> to a far-future date, preventing login. The user sees an "account locked" message. Protected accounts (<code>is_protected = 1</code>) cannot be locked.</p>
+      <p><strong>Unlock</strong> - clears <code>locked_until</code>, restoring login access immediately.</p>
+
+      <h3>Set Author / Contributor flags</h3>
+      <p>Clicking <strong>Author</strong> opens a small form to toggle <code>is_author</code> and optionally set a <code>display_name</code> (shown in the public app instead of the username). Clicking <strong>Contributor</strong> toggles <code>is_contributor</code>. Both flags control the badge displayed in the public app and are independent of admin privileges.</p>
+
+      <h3>Edit user</h3>
+      <p>Allows the admin to directly update the user's <code>username</code>, <code>display_name</code>, <code>is_admin</code>, <code>is_protected</code>, <code>is_author</code>, and <code>is_contributor</code> fields without going through the user-facing profile flow.</p>
+
+      <h3>Impersonate</h3>
+      <p>Generates a one-time impersonation token and returns a URL (<code>/auth/impersonate?token=…</code>) derived from the request's <code>Host</code> header, so the link always points to the correct server (including shadow or staging instances). Opening that URL logs in as the target user without needing their password. The token is single-use and expires after a short window. Useful for reproducing user-reported bugs.</p>
+      <div class="warn">The impersonation URL must be opened in a browser that can reach the app at the same host. The token is not tied to an IP. Treat it as a temporary credential.</div>
+
+      <h3>Grant / Revoke PDF Access</h3>
+      <p>Toggles the <code>pdf_access</code> flag for the user. When granted, the user can download book PDFs via <code>GET /books/:path</code> and sees a small <strong>PDF</strong> link in the play area when a book has a PDF attached. The button label switches between <strong>Grant PDF Access</strong> and <strong>Revoke PDF Access</strong> depending on the current state. Admins always have implicit PDF access regardless of this flag.</p>
+
+      <h3>Refund shop item</h3>
+      <p>Opens a form to refund a purchased shop item for the user. Specify the item key (e.g. <code>xp_boost</code>, <code>heartbeat_xp</code>, <code>undo</code>, <code>fast_travel</code>) and whether to refund all purchases of that item or only the most recent. Coins are returned; any stat changes from the item are reversed.</p>
+
+      <h3>Delete</h3>
+      <p>Permanently removes the user and all their books, runs, notebook data, and sessions (cascades). Requires confirmation dialog. Protected accounts (<code>is_protected = 1</code>) cannot be deleted.</p>
+    </div>
+
+    <!-- Books tab -->
+    <div class="section" id="books">
+      <h2>Books tab</h2>
+      <p>Lists every non-demo, non-container book across all users (standalone books and anthology children - anthology containers themselves are listed separately in the <strong>Anthologies tab</strong>, since a container has no playthroughs of its own). Columns: Book, Owner, Sections, Wins, Losses, Last Updated, Actions. Paginated at 50 rows/page.</p>
+      <p>Clicking a book name opens the <strong>book detail view</strong>:</p>
+      <ul>
+        <li><strong>Stats</strong> - section count, run counts, wins/losses; full playthroughs table with username, start date, outcome</li>
+        <li><strong>Ratings</strong> - all ratings submitted for this book, with username, score, and a delete button per rating</li>
+        <li><strong>PDF</strong> - upload a PDF (raw body, max 128 MB, must start with <code>%PDF</code> magic bytes). Awards 200 XP to every user who has the book in their library at the time of upload. A delete button removes the PDF (XP not revoked). Existing PDFs open in a new browser tab from the current-PDF link.</li>
+      </ul>
+      <p>The <strong>Edit</strong> button opens an inline form with all metadata fields:</p>
+      <ul>
+        <li><strong>Name</strong>, <strong>Total Sections</strong>, <strong>Pages</strong>, <strong>ISBN / ASIN / ISSN</strong>, <strong>Author(s)</strong>, <strong>Description</strong></li>
+        <li><strong>Make public</strong> - <code>is_public</code> toggle</li>
+        <li><strong>Is anthology (container)</strong> - marks this book as a parent container; <code>total_sections</code> is stored as 0</li>
+        <li><strong>Series</strong> - text input with datalist autocomplete; resolved to <code>series_id</code> on save</li>
+        <li><strong>Note</strong> - unlike the main app, which shows users only their own series in the edit dropdowns, the admin panel intentionally exposes the global series list here.</li>
+        <li><strong># in series</strong> - free text (e.g. <code>12</code> or <code>XII</code>)</li>
+        <li><strong>Part of anthology</strong> - dropdown of all container books; links this book as a child</li>
+        <li><strong>Order</strong> - integer sort position within the parent anthology</li>
+        <li><strong>Cover</strong> - upload or remove cover image</li>
+      </ul>
+      <p><strong>Reset semantics:</strong> the normal in-app <strong>Reset Book</strong> flow does not revoke XP. It clears the saved book state and run history for that user/book while also clearing only the per-book progress XP locks so reruns can earn progress XP again.</p>
+    </div>
+
+    <!-- Series tab -->
+    <div class="section" id="series">
+      <h2>Series tab</h2>
+      <p>Lists all series in the database with creator username, book count, public status, created date, and description. Paginated at 50 rows/page.</p>
+      <p><strong>Edit</strong> - opens an inline edit row (no navigation required) to update the series name, description, and public flag.</p>
+      <p><strong>Delete</strong> - removes the series entirely: orphans all linked books (<code>series_id = NULL</code>), removes all <code>user_series</code> rows, and deletes the series row. Requires confirmation. This is irreversible.</p>
+      <div class="note">Deleting a series from here affects all users who had it in their library. Use with care.</div>
+    </div>
+
+    <!-- Anthologies tab -->
+    <div class="section" id="anthologies">
+      <h2>Anthologies tab</h2>
+      <p>Lists all anthology container books (<code>is_container = 1</code>) across all users, separate from the Books tab. Columns: Name, Creator, Books (child count), Public, Created, Description, Actions. Paginated at 50 rows/page.</p>
+      <p><strong>Delete</strong> - removes the container row. Children are <strong>not</strong> deleted - the foreign key automatically orphans them (<code>parent_book_id = NULL</code>) instead. Blocked with the same "still has readers" error as a normal book delete if any user has the container itself in their library. Requires confirmation.</p>
+    </div>
+
+    <!-- Tips tab -->
+    <div class="section" id="tips">
+      <h2>Tips tab</h2>
+      <p>Lists all tips stored in the <code>tips</code> table. Filterable by type (real / silly) and active status. The app alternates real and silly tips in a shuffled deck - only <strong>active</strong> tips are served.</p>
+      <ul>
+        <li><strong>Active checkbox</strong> - toggle a tip on or off without deleting it. Saves immediately.</li>
+        <li><strong>Click text</strong> - inline edit: replaces the text cell with an input and Save button.</li>
+        <li><strong>→ Silly / → Real</strong> - flips the type in one click.</li>
+        <li><strong>Delete</strong> - permanently removes the tip. Requires confirmation.</li>
+      </ul>
+      <p>The <strong>Add New Tip</strong> form at the bottom accepts text and a type selector. Duplicate text is rejected.</p>
+    </div>
+
+    <!-- Book actions -->
+    <div class="section" id="book-actions">
+      <h2>Book actions</h2>
+
+      <h3>Gift book</h3>
+      <p>Adds a book to another user's library without them having to find or add it themselves. The admin selects a source user (the book's current owner - used to copy state/progress if desired) and a target user. If the target already has the book, the request is rejected with a conflict error. The operation creates a new <code>user_books</code> row for the target user.</p>
+      <div class="note">The gift is administrative - no XP is awarded to either party as a result of the gift itself.</div>
+
+      <h3>Delete ratings</h3>
+      <p>From the book detail → Ratings tab, each individual rating can be deleted. This removes the <code>rating</code> value from the <code>user_books</code> row, not the row itself.</p>
+
+      <h3>Delete book</h3>
+      <p>Permanently removes the book and all associated run data for all users. If any user other than the owner has the book in their library, the deletion is blocked (<code>409 has_readers</code>) - remove all readers first, or use this with care. Requires confirmation.</p>
+    </div>
+
+    <!-- Feedback tab -->
+    <div class="section" id="feedback">
+      <h2>Feedback tab</h2>
+      <p>Shows all user feedback threads, newest first. Each thread is a conversation between one user and the admin.</p>
+      <p>A red count badge on the tab header shows how many threads have unread user messages.</p>
+      <div class="note">Feedback also appears in <strong>koldKat's inbox</strong> in the main app - the inbox loads all threads and maps <code>admin_unread</code> to the badge count. Replying from either place works the same way; threads with a registered email also trigger an email reply.</div>
+
+      <p>Users can attach files to their initial feedback submission and to inbox replies. Attached images appear inline; other files appear as download links - the admin feedback tab renders them the same way now. Admin replies via this tab (<code>POST /api/admin/feedback/:id/reply</code>) still do not support attachments; use koldKat's inbox in the main app for attachment-enabled replies.</p>
+
+      <h3>Reading feedback</h3>
+      <p>Expanding a thread shows the full message history in chronological order. Each message shows the sender (user or Admin), timestamp, and text. Clicking <strong>Mark as read</strong> clears the unread highlight and decrements the badge count - this is recorded in <code>feedback_read_at</code>.</p>
+
+      <h3>Replying</h3>
+      <p>Typing in the reply box and clicking <strong>Send</strong> appends an admin message to the thread. If SMTP is configured and active, the reply is also emailed to the user's registered email address.</p>
+
+      <h3>Deleting threads</h3>
+      <p>The <strong>Delete</strong> button on a thread is a soft delete (<code>deleted_by_admin = 1</code>) - it hides the thread from this tab but does not actually remove the row, its messages, or their attachments from the database.</p>
+    </div>
+
+    <!-- Announcements tab -->
+    <div class="section" id="announcements">
+      <h2>Announcements tab</h2>
+      <p>Announcements are short notices shown to all users in the main app. They live in the <code>announcements</code> table and go through a draft → published → pinned workflow.</p>
+
+      <h3>Creating an announcement</h3>
+      <p>Click <strong>New Announcement</strong>. Fill in the <strong>Title</strong> and <strong>Body</strong> (both required). Save creates the announcement in <em>draft</em> state - it is not yet visible to users.</p>
+
+      <h3>Editing</h3>
+      <p>Draft announcements can be edited freely. Published or pinned announcements can also be edited; the updated content is shown to users immediately.</p>
+
+      <h3>Publishing / Unpublishing</h3>
+      <p><strong>Publish</strong> sets <code>published_at</code> and makes the announcement visible in the app's announcements list. <strong>Unpublish</strong> removes it from public view (returns to draft state) but does not delete it.</p>
+
+      <h3>Pinning / Unpinning</h3>
+      <p>A published announcement can be <strong>pinned</strong>, which marks it with <code>pinned = 1</code>. Pinned announcements are displayed more prominently in the app (e.g. at the top of the list or as a banner). Only one announcement can be pinned at a time - pinning a second one unpins the previous. <strong>Unpin</strong> clears the pin without unpublishing.</p>
+
+      <h3>Deleting</h3>
+      <p>Permanently deletes the announcement regardless of its state. This is irreversible.</p>
+
+      <div class="note">The admin panel is the only place to create or manage announcements. Do not create announcements on behalf of the user - draft the text and copy it for them to review before publishing.</div>
+    </div>
+
+    <!-- GC pool -->
+    <div class="section" id="gc-pool">
+      <h2>Admin GC pool</h2>
+      <p>The admin panel shows two GC figures: <strong>GC Earned</strong> and <strong>GC Available</strong> (<code>GET /api/admin/gc-supply</code>).</p>
+      <p><strong>Earned</strong> grows automatically from site-wide metrics:</p>
+      <table>
+        <thead><tr><th>Contribution</th><th>Rate</th></tr></thead>
+        <tbody>
+          <tr><td>Users</td><td>1 GC each</td></tr>
+          <tr><td>Books (non-demo, non-anthology)</td><td>1 GC each</td></tr>
+          <tr><td>Series</td><td>1 GC each</td></tr>
+          <tr><td>Anthologies</td><td>1 GC each</td></tr>
+          <tr><td><code>visit_all</code> XP events (any user)</td><td>1 GC each</td></tr>
+          <tr><td>Level-ups across all users (capped at level 100 per user)</td><td>1 GC each</td></tr>
+          <tr><td>Distinct author names on books</td><td>1 GC each</td></tr>
+          <tr><td>PDFs attached to books</td><td>1 GC each</td></tr>
+          <tr><td>Days since app birth</td><td>1 GC per day</td></tr>
+          <tr><td>Series fully-visited completions (<code>visit_all_series</code>)</td><td>N GC (N = child book count)</td></tr>
+          <tr><td>Anthology fully-visited completions (<code>visit_all_anthology</code>)</td><td>N GC (N = child book count)</td></tr>
+        </tbody>
+      </table>
+      <p><strong>Available</strong> = Earned − total GC gifted so far (<code>admin_gc_gifted</code> in <code>admin_settings</code>).</p>
+      <p>Gift GC to a user via <code>POST /api/admin/users/:id/gift-gc</code> with body <code>{ amount }</code>. This increments <code>users.bonus_coins</code> and <code>admin_gc_gifted</code>, and sends a <code>gc_gift</code> notification.</p>
+    </div>
+
+    <!-- App-wide XP widget -->
+    <div class="section" id="app-xp">
+      <h2>App-wide XP widget</h2>
+      <p>Shown only when the logged-in account is the admin, a small panel sits above the personal XP summary on the <strong>Books</strong> screen (in a violet accent to distinguish it from the player's own gold/cyan bar). It mirrors the same shape - level, title, heartbeat rate, XP bar, XP text, boost line - but the numbers are aggregated across every account: total XP earned app-wide (same number Stats for Nerds shows as "Total XP earned", just not compact-formatted), an "app level" scaled by user count (same formula as the "App level" figure in Stats for Nerds), every user's active boost rate added together, and a combined heartbeat rate as if every player were online at once. It refreshes on login, shortly after any site activity (deliberately staggered by ~1.2s so it doesn't animate in lockstep with your own XP bar), and every 60 seconds as a fallback while the tab is visible.</p>
+      <p>Backed by <code>GET /api/app-xp</code> - token auth plus an admin check, not a localhost-only <code>/api/admin/*</code> route, since it needs to render inside the normal logged-in app rather than the operator-only admin panel.</p>
+      <p><strong>Live floaters:</strong> whenever any other user earns XP or GC, a small floater pops up showing their username and the amount, in the same violet/pink theme, centered between the activity feed and the covers panel. Only shown on the Books screen, and only for other users - the admin's own gains still show through their normal personal floaters. Backed by <code>GET /api/app-xp/stream</code>, an admin-only SSE stream.</p>
+    </div>
+
+    <!-- Avg User Level widget -->
+    <div class="section" id="avg-lvl">
+      <h2>Avg User Level widget</h2>
+      <p>Sits directly above the App-wide XP widget, same shape again but in teal/lime. Unlike the App widget's level (a single pooled-XP figure that a few high-XP users can skew upward), this is the <strong>average of each user's own level</strong> - the same metric behind Stats for Nerds' "Avg player level" figure. The top-right tag shows total user count instead of a heartbeat rate. The bar fill shows how close the whole app is to ticking the average level up by one (the fractional part of the raw average, e.g. 1.98 → 98% full). The text line shows the sum of every user's level and exactly how many more total levels need to be gained by anyone to cross into the next average level. The bottom line shows the lowest-to-highest level spread across all users. It doesn't animate like the other two bars - it only moves on an actual level-up and by a tiny amount, so it just snaps to the new value.</p>
+    </div>
+
+    <!-- Tools tab -->
+    <div class="section" id="tools">
+      <h2>Tools tab</h2>
+      <table>
+        <thead><tr><th>Section</th><th>Persisted</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>App Version</strong></td>
+            <td>DB (<code>app_version</code>)</td>
+            <td>Version string displayed in the app banner. Served to the public app via <code>GET /api/config</code>. Change and save to update the displayed version without a server restart.</td>
+          </tr>
+          <tr>
+            <td><strong>Notepad</strong></td>
+            <td>DB (<code>notepad</code>)</td>
+            <td>Free-text scratchpad visible only in the admin panel. Persisted to the database on save.</td>
+          </tr>
+          <tr>
+            <td><strong>SMTP / Email</strong></td>
+            <td>DB (<code>smtp_*</code>)</td>
+            <td>Configure outbound email for feedback replies and other notifications. See <a href="#smtp" style="color:#f5a623">SMTP section</a> below.</td>
+          </tr>
+          <tr>
+            <td><strong>Backups</strong></td>
+            <td>Filesystem</td>
+            <td>Lists all files with <code>*backup*</code> in their name, anywhere under the app directory (excluding ignored directories). Shows per-file size and total. Supports select-all toggle and multi-delete with confirmation.</td>
+          </tr>
+          <tr>
+            <td><strong>Size Ignore Patterns</strong></td>
+            <td>DB (<code>size_ignore_patterns</code>)</td>
+            <td>Newline-separated glob patterns excluded from the Application Size calculation. <code>*</code> matches any sequence of characters. Matched against basenames only; matched directories are skipped entirely.</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>Default ignore patterns: <code>package-lock.json</code>, <code>node_modules</code>, <code>.gitignore</code>, <code>*backup*</code>, <code>.claude</code>, <code>memory</code>.</p>
+    </div>
+
+    <!-- SMTP -->
+    <div class="section" id="smtp">
+      <h2>SMTP / email configuration</h2>
+      <p>Email is used for admin replies to feedback threads. All settings are stored in the <code>admin_settings</code> table and override any equivalent <code>.env</code> variables. Changes take effect immediately - no restart required.</p>
+      <table>
+        <thead><tr><th>Setting</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>smtp_host</code></td><td><em>env SMTP_HOST</em></td><td>SMTP server hostname (e.g. <code>smtp.gmail.com</code>)</td></tr>
+          <tr><td><code>smtp_port</code></td><td><code>465</code></td><td>SMTP port. 465 for implicit TLS; 587 for STARTTLS.</td></tr>
+          <tr><td><code>smtp_secure</code></td><td><code>true</code></td><td>Set to <code>true</code> for implicit TLS (port 465). Set to <code>false</code> for STARTTLS (port 587).</td></tr>
+          <tr><td><code>smtp_user</code></td><td><em>env SMTP_USER</em></td><td>Login username for the SMTP server. Also used as the default To address for SMTP test emails.</td></tr>
+          <tr><td><code>smtp_from</code></td><td>falls back to <code>smtp_user</code></td><td>From address used in outbound emails (e.g. <code>noreply@example.com</code>). Defaults to <code>smtp_user</code> if blank.</td></tr>
+          <tr><td><code>smtp_pass</code></td><td><em>env SMTP_PASS</em></td><td>SMTP password or app-specific password. Saving an empty string is a no-op (keeps the existing password). To clear the password, use <code>db.setAdminSetting</code> directly.</td></tr>
+        </tbody>
+      </table>
+      <p>The <strong>Test SMTP</strong> button sends a test email to <code>smtp_user</code> using the current transporter. The status indicator next to the SMTP section header shows whether a transporter is currently active (<span style="color:#4ade80">green</span> = active, <span style="color:#f87171">red</span> = not configured or credentials missing).</p>
+      <p>The transporter is re-initialised automatically whenever any <code>smtp_*</code> setting is saved.</p>
+      <div class="note">SMTP credentials can also be provided via <code>.env</code> variables (<code>SMTP_HOST</code>, <code>SMTP_PORT</code>, <code>SMTP_SECURE</code>, <code>SMTP_USER</code>, <code>SMTP_PASS</code>, <code>SMTP_FROM</code>). DB settings take precedence over env variables when both are set.</div>
+    </div>
+
+    <!-- Admin settings keys -->
+    <div class="section" id="settings-table">
+      <h2>Admin settings keys (<code>admin_settings</code> table)</h2>
+      <p>A simple key/value store for admin-controlled configuration. All values are stored as strings.</p>
+      <table>
+        <thead><tr><th>Key</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>notepad</code></td><td><code>''</code></td><td>Free-text scratchpad visible only in the admin panel</td></tr>
+          <tr><td><code>app_version</code></td><td><code>'0.8.8.1'</code></td><td>Version string shown in the app banner; served via <code>GET /api/config</code></td></tr>
+          <tr><td><code>size_ignore_patterns</code></td><td>(see Tools tab)</td><td>Newline-separated glob patterns excluded from Application Size and Backup finder</td></tr>
+          <tr><td><code>smtp_host</code></td><td><code>''</code></td><td>SMTP server hostname</td></tr>
+          <tr><td><code>smtp_port</code></td><td><code>'465'</code></td><td>SMTP port number (string)</td></tr>
+          <tr><td><code>smtp_secure</code></td><td><code>'true'</code></td><td><code>'true'</code> for implicit TLS, <code>'false'</code> for STARTTLS</td></tr>
+          <tr><td><code>smtp_user</code></td><td><code>''</code></td><td>SMTP login username / default From address</td></tr>
+          <tr><td><code>smtp_from</code></td><td><code>''</code></td><td>Explicit From address (overrides smtp_user if set)</td></tr>
+          <tr><td><code>smtp_pass</code></td><td><code>''</code></td><td>SMTP password (write-only via admin panel; blank save is a no-op)</td></tr>
+          <tr><td><code>is_public_migrated</code></td><td><code>'1'</code></td><td>One-time migration guard: sets all pre-existing non-demo books to public</td></tr>
+          <tr><td><code>level_boost_backfilled</code></td><td><code>'1'</code></td><td>One-time migration guard: XP boost back-fill for existing users</td></tr>
+          <tr><td><code>pdf_xp_backfilled</code></td><td><code>'1'</code></td><td>One-time migration guard: 200 XP awarded to users who had a PDF book in their library</td></tr>
+          <tr><td><code>library_add_xp_backfilled</code></td><td><code>'1'</code></td><td>One-time migration guard: XP for existing library additions (adder + creator)</td></tr>
+          <tr><td><code>level_up_coin_backfilled</code></td><td><code>'1'</code></td><td>One-time migration guard: 1 GC per level already earned by existing users</td></tr>
+          <tr><td><code>playtime_coin_backfilled</code></td><td><code>'1'</code></td><td>One-time migration guard: 1 GC per 24h of tracked playtime already logged</td></tr>
+          <tr><td><code>book_complete_coin_backfilled</code></td><td><code>'1'</code></td><td>One-time migration guard: 1 GC for each book already at 100% visited</td></tr>
+          <tr><td><code>group_complete_coin_backfilled</code></td><td><code>'1'</code></td><td>One-time migration guard: N GC for each series/anthology already fully visited (N = child book count)</td></tr>
+        </tbody>
+      </table>
+      <p>Migration guard keys are set to <code>'1'</code> once the one-time back-fill completes, preventing it from running again on subsequent server starts.</p>
+    </div>
+
+    <!-- API reference -->
+    <div class="section" id="api">
+      <h2>API reference</h2>
+      <p>All endpoints require a localhost connection. No auth token needed. Responses are JSON.</p>
+
+      <h3>Stats &amp; tools</h3>
+      <table>
+        <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><span class="method">GET</span></td><td><code>/admin</code></td><td>Admin panel HTML</td></tr>
+          <tr><td><span class="method">GET</span></td><td><code>/api/admin/stats</code></td><td>Aggregate stats object (users, books, sessions, sections, playthroughs, wins, losses, traffic, db size, xp events, forum counts, undo/fast-travel totals)</td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/api/admin/vacuum</code></td><td>Purge expired sessions and VACUUM the database; returns updated stats</td></tr>
+          <tr><td><span class="method">GET</span></td><td><code>/api/admin/settings</code></td><td>Returns all editable settings: <code>{ notepad, app_version, size_ignore_patterns, smtp_host, smtp_port, smtp_secure, smtp_user, smtp_from, smtp_pass_set, smtp_active }</code></td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/api/admin/settings</code></td><td>Save one setting: body <code>{ key, value }</code>. SMTP keys re-initialise the transporter immediately.</td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/api/admin/smtp/test</code></td><td>Send a test email via the current transporter to <code>smtp_user</code></td></tr>
+          <tr><td><span class="method">GET</span></td><td><code>/api/admin/appsize</code></td><td>Total app directory size in bytes, respecting ignore patterns: <code>{ bytes }</code></td></tr>
+          <tr><td><span class="method">GET</span></td><td><code>/api/admin/backups</code></td><td>List backup files: <code>[{ rel, name, size, mtime }]</code> newest-first</td></tr>
+          <tr><td><span class="method method-del">DELETE</span></td><td><code>/api/admin/backups</code></td><td>Delete backup files: body <code>{ paths: string[] }</code>; returns <code>{ deleted, errors }</code></td></tr>
+          <tr><td><span class="method">GET</span></td><td><code>/api/admin/heap</code></td><td>Node.js process heap statistics</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Users</h3>
+      <table>
+        <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><span class="method">GET</span></td><td><code>/api/admin/users</code></td><td>All users with book, session, run, wins, losses counts</td></tr>
+          <tr><td><span class="method">GET</span></td><td><code>/api/admin/users/:id</code></td><td>Single user detail with per-book breakdown</td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/api/admin/users/:id/edit</code></td><td>Update user fields: body <code>{ username?, display_name?, is_admin?, is_protected?, is_author?, is_contributor? }</code></td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/api/admin/users/:id/clear-sessions</code></td><td>Invalidate all sessions for a user</td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/api/admin/users/:id/lock</code></td><td>Lock user account (prevents login). Fails <code>403</code> on protected accounts.</td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/api/admin/users/:id/unlock</code></td><td>Unlock user account</td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/api/admin/users/:id/author</code></td><td>Set author flag: body <code>{ isAuthor: bool, displayName?: string }</code></td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/api/admin/users/:id/contributor</code></td><td>Set contributor flag: body <code>{ isContributor: bool }</code></td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/api/admin/users/:id/impersonate</code></td><td>Generate one-time impersonation URL; returns <code>{ url }</code></td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/api/admin/users/:id/refund</code></td><td>Refund shop item: body <code>{ item: string, all?: bool }</code></td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/api/admin/users/:id/pdf-access</code></td><td>Toggle PDF access: body <code>{ pdfAccess: bool }</code> → <code>{ ok: true }</code></td></tr>
+          <tr><td><span class="method method-del">DELETE</span></td><td><code>/api/admin/users/:id</code></td><td>Delete user and all their data (cascades). Fails <code>403</code> on protected accounts.</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Books</h3>
+      <table>
+        <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><span class="method">GET</span></td><td><code>/api/admin/books</code></td><td>All non-demo books across all users</td></tr>
+          <tr><td><span class="method">GET</span></td><td><code>/api/admin/books/:id/stats</code></td><td>Per-book stats and full playthroughs list</td></tr>
+          <tr><td><span class="method">GET</span></td><td><code>/api/admin/books/:id/ratings</code></td><td>All ratings for a book: <code>[{ userBookId, username, rating }]</code></td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/api/admin/books/:id/gift</code></td><td>Add book to another user's library: body <code>{ targetUserId: int, sourceUserId?: int }</code></td></tr>
+          <tr><td><span class="method method-del">DELETE</span></td><td><code>/api/admin/books/:id/ratings/:userBookId</code></td><td>Delete a specific rating</td></tr>
+          <tr><td><span class="method method-del">DELETE</span></td><td><code>/api/admin/books/:id</code></td><td>Delete any book (blocked with <code>409</code> if other users have it in their library)</td></tr>
+        </tbody>
+      </table>
+      <p>PDF upload and delete use the standard book API routes (<code>POST /api/books/:id/pdf</code>, <code>DELETE /api/books/:id/pdf</code>). They are not under <code>/api/admin/</code> and are accessible from any network.</p>
+
+      <h3>Feedback</h3>
+      <table>
+        <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><span class="method">GET</span></td><td><code>/api/admin/feedback</code></td><td>All feedback threads with full message history</td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/api/admin/feedback/:id/reply</code></td><td>Append admin reply and optionally email the user: body <code>{ reply: string }</code></td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/api/admin/feedback/:id/read</code></td><td>Mark thread as read (clears unread highlight)</td></tr>
+          <tr><td><span class="method method-del">DELETE</span></td><td><code>/api/admin/feedback/:id</code></td><td>Delete feedback thread and all its messages</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Announcements</h3>
+      <table>
+        <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><span class="method">GET</span></td><td><code>/api/admin/announcements</code></td><td>All announcements (drafts and published), newest first</td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/api/admin/announcements</code></td><td>Create announcement (draft): body <code>{ title, body }</code></td></tr>
+          <tr><td><span class="method method-patch">PATCH</span></td><td><code>/api/admin/announcements/:id</code></td><td>Update title/body: body <code>{ title, body }</code></td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/api/admin/announcements/:id/publish</code></td><td>Publish announcement (makes it visible to users)</td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/api/admin/announcements/:id/unpublish</code></td><td>Unpublish announcement (returns to draft)</td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/api/admin/announcements/:id/pin</code></td><td>Pin announcement (unpins any previously pinned one)</td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/api/admin/announcements/:id/unpin</code></td><td>Unpin announcement (stays published)</td></tr>
+          <tr><td><span class="method method-del">DELETE</span></td><td><code>/api/admin/announcements/:id</code></td><td>Delete announcement permanently</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Series</h3>
+      <table>
+        <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><span class="method">GET</span></td><td><code>/api/admin/series</code></td><td>All series → <code>[{id, name, description, is_public}]</code> - used for datalist autocomplete in book edit form</td></tr>
+          <tr><td><span class="method">GET</span></td><td><code>/api/admin/series/all</code></td><td>All series with creator and book count: <code>[{id, name, description, is_public, is_open_world, created_at, created_by_username, book_count}]</code></td></tr>
+          <tr><td><span class="method method-patch">PATCH</span></td><td><code>/api/admin/series/:id</code></td><td>Update series: body <code>{ name, description?, is_public, is_open_world? }</code></td></tr>
+          <tr><td><span class="method method-del">DELETE</span></td><td><code>/api/admin/series/:id</code></td><td>Delete series - orphans all linked books, removes all <code>user_series</code>, <code>series_runs</code>, and <code>series_characters</code> rows</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Tips</h3>
+      <table>
+        <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><span class="method">GET</span></td><td><code>/api/admin/tips</code></td><td>All tips: <code>[{id, text, type, active, created_at}]</code></td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/api/admin/tips</code></td><td>Create tip: body <code>{ text, type: 'real'|'silly' }</code></td></tr>
+          <tr><td><span class="method method-patch">PATCH</span></td><td><code>/api/admin/tips/:id</code></td><td>Update tip (partial): body <code>{ text?, type?, active? }</code></td></tr>
+          <tr><td><span class="method method-del">DELETE</span></td><td><code>/api/admin/tips/:id</code></td><td>Delete tip permanently</td></tr>
+        </tbody>
+      </table>
+
+      <h3>GC pool</h3>
+      <table>
+        <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><span class="method">GET</span></td><td><code>/api/admin/gc-supply</code></td><td>Returns <code>{ earned, available }</code> - earned is calculated from site metrics; available = earned − total gifted</td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/api/admin/users/:id/gift-gc</code></td><td>Gift Gold Coins to a user: body <code>{ amount: int }</code>. Increments <code>users.bonus_coins</code> and <code>admin_gc_gifted</code>, sends a <code>gc_gift</code> notification.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Feed event types -->
+    <div class="section" id="feed-events">
+      <h2>Feed event types</h2>
+      <p>The activity feed (<code>getFeed()</code>) produces the following event types:</p>
+      <table>
+        <thead><tr><th>Type</th><th>When generated</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><code>run_started</code></td><td>Per-book run begins (non-open-world books)</td><td>Suppressed for books in open world series</td></tr>
+          <tr><td><code>run_completed</code></td><td>Per-book run ends (non-open-world books)</td><td>Suppressed for books in open world series</td></tr>
+          <tr><td><code>series_run_started</code></td><td>First time any book in an open world series starts a given series run index</td><td>One entry per series run</td></tr>
+          <tr><td><code>series_run_completed</code></td><td>A series run ends with success, death, or battle in any book</td><td>One entry per series run end</td></tr>
+          <tr><td><code>book_created</code></td><td>User starts tracking a book</td><td>-</td></tr>
+          <tr><td><code>level_up</code></td><td>User gains a level</td><td>-</td></tr>
+          <tr><td><code>all_visited</code></td><td>All sections visited in a book</td><td>-</td></tr>
+          <tr><td><code>all_discovered</code></td><td>All sections discovered in a book</td><td>-</td></tr>
+          <tr><td><code>first_win</code></td><td>First run won on a specific book</td><td>Rendered as "won in [book] for the first time"</td></tr>
+          <tr><td><code>first_loss</code></td><td>First death run on a specific book</td><td>Rendered as "lost in [book] for the first time"; verb is clickable when run is public</td></tr>
+          <tr><td><code>first_battle_death</code></td><td>First battle-death run on a specific book</td><td>Rendered as "fell in battle in [book] for the first time"</td></tr>
+          <tr><td><code>announcement</code></td><td>Admin-published announcement within 30-day window</td><td>-</td></tr>
+          <tr><td><code>user_joined</code></td><td>A user registered on the site</td><td>Uses the user's permanently assigned <code>join_template_id</code> from the <code>join_templates</code> table; rendered with an amber left border. <code>feedPush</code> fires at registration so live-connected clients see it immediately.</td></tr>
+        </tbody>
+      </table>
+      <p>Every event type's query also selects <code>is_author</code>/<code>is_contributor</code>/<code>display_name</code> so Author/Contributor stars show up correctly next to a user's name even when their profile is private (private profiles never get a page view that would otherwise populate the client's badge cache). See <code>docs/technical.md</code> for the full audit.</p>
+    </div>
+
+  </div>
+</body>
+</html>

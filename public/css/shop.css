@@ -1,0 +1,370 @@
+/* ── Shop button ────────────────────────────────────────────────── */
+.shop-btn {
+  background: #1c2a18;
+  border: 1px solid #2d5a1b;
+  border-radius: 6px;
+  color: #86efac;
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-family: inherit;
+  padding: 0.2rem 0.55rem;
+  cursor: pointer;
+  transition: background 0.12s;
+  letter-spacing: 0.03em;
+}
+.shop-btn:hover { background: #243520; border-color: #4ade80; color: #4ade80; }
+
+@keyframes shop-btn-pulse {
+  0%, 100% { border-color: #2d5a1b; box-shadow: none; }
+  50%       { border-color: #86efac; box-shadow: 0 0 6px 1px rgba(134,239,172,0.35); }
+}
+.shop-btn--spendable { animation: shop-btn-pulse 2.4s ease-in-out infinite; }
+
+.coin-icon { width: 14px; height: 14px; vertical-align: -2px; display: inline-block; }
+
+/* ── Shop modal ─────────────────────────────────────────────────── */
+#shop-modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.6); z-index: 2000;
+  align-items: flex-start; justify-content: center;
+  padding: 1rem;
+  overflow-y: auto;
+}
+#shop-modal-overlay.active { display: flex; }
+#shop-modal {
+  background: #111827; border: 1px solid #374151; border-radius: 12px;
+  width: 548px; max-width: min(92vw, 548px); max-height: calc(100vh - 2rem);
+  margin: auto 0;
+  display: flex; flex-direction: column; overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+}
+.shop-modal-header {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.65rem 1rem;
+  border-bottom: 1px solid #1f2937;
+}
+.shop-modal-title {
+  font-size: 0.95rem; font-weight: 700; color: #f3f4f6; flex: 1;
+  display: flex; align-items: center; gap: 0.45rem;
+}
+.shop-modal-title .coin-icon { flex: 0 0 auto; }
+.shop-modal-balance {
+  font-size: 0.75rem; font-weight: 700; font-family: inherit;
+  letter-spacing: 0.03em; line-height: 1;
+  color: #86efac; background: #1c2a18;
+  border: 1px solid #2d5a1b; border-radius: 6px;
+  padding: 0.2rem 0.55rem;
+}
+.shop-modal-spent {
+  font-size: 0.75rem; font-weight: 700; font-family: inherit;
+  letter-spacing: 0.03em; line-height: 1;
+  color: #9ca3af; background: #1f2937;
+  border: 1px solid #374151; border-radius: 6px;
+  padding: 0.2rem 0.55rem;
+}
+.shop-close-btn {
+  background: none; border: none; color: #6b7280;
+  font-size: 0.9rem; cursor: pointer; padding: 0.1rem 0.2rem;
+  line-height: 1; transition: color 0.12s;
+}
+.shop-close-btn:hover { color: #f3f4f6; }
+#shop-items {
+  padding: 0.6rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  overflow-y: auto;
+  min-height: 0;
+}
+.shop-item {
+  display: flex; align-items: center; gap: 1rem;
+  background: #1f2937; border: 1px solid #374151; border-radius: 8px;
+  padding: 0.4rem 1rem;
+}
+.shop-item-info { flex: 1; }
+.shop-item-label { font-size: 0.88rem; font-weight: 600; color: #f3f4f6; }
+.shop-item-desc  { font-size: 0.78rem; color: #6b7280; margin-top: 0.15rem; }
+.shop-item-owned { font-size: 0.75rem; color: #86efac; margin-top: 0.2rem; }
+.shop-item-buy   { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; }
+.shop-item-cost  { font-size: 0.75rem; font-weight: 700; color: #86efac; }
+.shop-buy-btn {
+  background: #1c2a18; border: 1px solid #2d5a1b; border-radius: 6px;
+  color: #86efac; font-size: 0.78rem; font-weight: 600;
+  font-family: inherit; padding: 0.25rem 0.7rem; cursor: pointer;
+  transition: background 0.12s; white-space: nowrap;
+}
+.shop-buy-btn:hover { background: #243520; border-color: #4ade80; color: #4ade80; }
+.shop-buy-btn--disabled, .shop-buy-btn[disabled] {
+  opacity: 0.35; cursor: default;
+}
+.shop-buy-btn--disabled:hover, .shop-buy-btn[disabled]:hover {
+  background: #1c2a18; border-color: #2d5a1b; color: #86efac;
+}
+.shop-error   { font-size: 0.8rem; color: #f87171; min-height: 1.2em; padding: 0 1.25rem 0.75rem; }
+.shop-loading { font-size: 0.85rem; color: #6b7280; padding: 1rem 0; text-align: center; }
+
+@media (max-width: 640px) {
+  #shop-modal-overlay {
+    padding: 0.5rem;
+  }
+  #shop-modal {
+    max-height: calc(100vh - 1rem);
+  }
+  .shop-item {
+    align-items: flex-start;
+    gap: 0.7rem;
+    padding: 0.55rem 0.8rem;
+  }
+  .shop-item-buy {
+    align-self: stretch;
+  }
+}
+
+.books-empty {
+  font-size: 0.85rem;
+  color: #4b5563;
+  padding: 0.5rem 0;
+}
+
+#party-invites-section:empty { display: none; }
+
+#books-xp-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+  margin-top: 0;
+  margin-bottom: -0.82rem;
+  color: #d1d5db;
+}
+#books-xp-summary:empty {
+  display: none;
+}
+#books-xp-level-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.42rem;
+}
+#books-xp-hb-rate {
+  margin-left: auto;
+  font-size: 0.7rem;
+  color: #22d3ee;
+  white-space: nowrap;
+}
+#books-xp-level {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #f5a623;
+  line-height: 1.15;
+}
+#books-xp-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #e5e7eb;
+  line-height: 1.15;
+}
+#books-xp-bar {
+  position: relative;
+  height: 5px;
+  background: #1f2937;
+  border-radius: 3px;
+  overflow: hidden;
+}
+#books-xp-bar-fill {
+  position: relative;
+  height: 100%;
+  width: 0;
+  background: #f5a623;
+  border-radius: 3px;
+}
+#books-xp-sub-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+#books-xp-text {
+  font-size: 0.76rem;
+  color: #9ca3af;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+.xp-val { color: #f59e0b; }
+#books-xp-boost {
+  font-size: 0.74rem;
+  color: #f59e0b;
+  line-height: 1.15;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Admin-only app-wide XP widget - same shape as #books-xp-summary, distinct
+   violet accent so it reads as "the app", not the logged-in player. */
+#app-xp-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+  margin-top: 0;
+  margin-bottom: -0.6rem;
+  color: #d1d5db;
+}
+#app-xp-summary[hidden] { display: none; }
+#app-xp-level-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.42rem;
+}
+#app-xp-hb-rate {
+  margin-left: auto;
+  font-size: 0.7rem;
+  color: #f472b6;
+  white-space: nowrap;
+}
+#app-xp-level {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #a78bfa;
+  line-height: 1.15;
+}
+#app-xp-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #e5e7eb;
+  line-height: 1.15;
+}
+#app-xp-bar {
+  position: relative;
+  height: 5px;
+  background: #1f2937;
+  border-radius: 3px;
+  overflow: hidden;
+}
+#app-xp-bar-fill {
+  position: relative;
+  height: 100%;
+  width: 0;
+  background: #a78bfa;
+  border-radius: 3px;
+}
+#app-xp-sub-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+#app-xp-text {
+  font-size: 0.76rem;
+  color: #9ca3af;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+#app-xp-text .xp-val { color: #a78bfa; }
+#app-xp-boost {
+  font-size: 0.74rem;
+  color: #a78bfa;
+  line-height: 1.15;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Admin-only "avg user level" widget - same shape again, teal/lime this time so
+   all three bars (yours, app-wide, avg-user) read as visually distinct. */
+#avg-lvl-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+  margin-top: 0;
+  margin-bottom: -0.6rem;
+  color: #d1d5db;
+}
+#avg-lvl-summary[hidden] { display: none; }
+#avg-lvl-level-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.42rem;
+}
+#avg-lvl-users {
+  margin-left: auto;
+  font-size: 0.7rem;
+  color: #a3e635;
+  white-space: nowrap;
+}
+#avg-lvl-level {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #2dd4bf;
+  line-height: 1.15;
+}
+#avg-lvl-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #e5e7eb;
+  line-height: 1.15;
+}
+#avg-lvl-bar {
+  position: relative;
+  height: 5px;
+  background: #1f2937;
+  border-radius: 3px;
+  overflow: hidden;
+}
+#avg-lvl-bar-fill {
+  position: relative;
+  height: 100%;
+  width: 0;
+  background: #2dd4bf;
+  border-radius: 3px;
+}
+#avg-lvl-sub-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+#avg-lvl-text {
+  font-size: 0.76rem;
+  color: #9ca3af;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+#avg-lvl-text .lvl-val { color: #2dd4bf; }
+#avg-lvl-range {
+  font-size: 0.74rem;
+  color: #a3e635;
+  line-height: 1.15;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.books-add-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: -0.6rem;
+  margin-bottom: -0.4rem;
+}
+.books-add-btn {
+  background: #f5a623;
+  border: none;
+  border-radius: 6px;
+  color: #111827;
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: inherit;
+  padding: 0.28rem 0.65rem;
+  cursor: pointer;
+  transition: background 0.12s;
+  white-space: nowrap;
+}
+.books-add-btn:hover {
+  background: #e09518;
+}
+#open-add-stash-btn {
+  background: transparent;
+  color: #9ca3af;
+  border: 1px solid #6b7280;
+}
+#open-add-stash-btn:hover {
+  background: rgba(107, 114, 128, 0.12);
+  color: #d1d5db;
+  border-color: #9ca3af;
+}

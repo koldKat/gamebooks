@@ -1,0 +1,27 @@
+node_modules/
+
+# Runtime database
+database.sqlite
+database.sqlite-shm
+database.sqlite-wal
+
+# Secrets / machine-specific config
+.env
+.npmrc
+
+# Backups
+backups/
+
+# User-uploaded content (avatars, covers, book PDFs, forum/feedback attachments)
+public/avatars/
+public/covers/
+public/books/
+public/attachments/
+
+# Claude Code local settings / memory notes
+.claude/settings.local.json
+memory/
+
+# OS/editor cruft
+.DS_Store
+*.log

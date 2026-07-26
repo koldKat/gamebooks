@@ -1,0 +1,16 @@
+{
+  "name": "Gamebook Tracker",
+  "short_name": "Gamebook Tracker",
+  "description": "Map and track your Fighting Fantasy, Choose Your Own Adventure, and other gamebook playthroughs with a live force-directed graph.",
+  "start_url": "/",
+  "display": "browser",
+  "background_color": "#111827",
+  "theme_color": "#111827",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

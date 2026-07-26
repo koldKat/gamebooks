@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /avatars/
+Disallow: /covers/
+Disallow: /api/
+
+Sitemap: https://koldkat.net/sitemap.xml

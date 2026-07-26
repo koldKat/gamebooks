@@ -1,0 +1,470 @@
+/* ── Inventory ────────────────────────────────────────────────────────────── */
+
+#inventory-btn {
+  background: rgba(31, 41, 55, 0.88);
+  border: 1px solid #374151;
+  border-radius: 7px;
+  color: #9ca3af;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+}
+#inventory-btn:hover { background: #374151; color: #d1d5db; }
+
+/* ── Equipment ────────────────────────────────────────────────────────────── */
+
+#equipment-btn {
+  background: rgba(31, 41, 55, 0.88);
+  border: 1px solid #374151;
+  border-radius: 7px;
+  color: #9ca3af;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+}
+#equipment-btn:hover { background: #374151; color: #d1d5db; }
+
+#eq-close-btn { margin-left: auto; }
+
+.eq-body {
+  position: relative;
+  /* 310px floor on the vh term keeps every slot's percentage-based position clear of
+     the box edges and clear of its same-column neighbors. Two constraints, both driven
+     by box height (width * 8/5 aspect ratio): (1) the tightest same-column gap is 15%
+     (SLOTS in equipment.js), and two 74px-tall slots need centers >=74px apart to not
+     touch, so height must be >= 74/0.15 = ~493px, i.e. width >= ~308px; (2) the deepest
+     slot ("back", y=90%) needs its bottom half (37px) to clear the box's bottom edge,
+     i.e. height >= 37/0.10 = 370px, a looser requirement than (1). 310px width (496px
+     height) clears both with a small margin. Without this floor, 33vh alone can shrink
+     the box well below that on a short/wide viewport (e.g. a laptop with browser chrome
+     eating into effective vh), pushing slots past the edge and into each other,
+     triggering the overflow-y scrollbar below - this box was never meant to actually
+     scroll, everything in it is absolutely positioned over a fixed illustration.
+     The floor applies only to the vh term (not the whole expression) so the 80vw term -
+     there specifically to stop the box exceeding 80% of viewport width on narrow
+     phones - still wins on a narrow screen even if it's below 310px; a rare leftover
+     scrollbar risk on a genuinely tiny viewport beats forcing horizontal overflow. */
+  width: min(320px, 80vw, max(33vh, 310px));
+  aspect-ratio: 5 / 8;
+  margin: 0.45rem auto;
+  overflow-y: auto;
+  container-type: size;
+}
+.eq-dummy {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.eq-dummy-glow {
+  fill: url(#eqGlowGrad);
+}
+.eq-dummy-figure {
+  opacity: 0.44;
+}
+.eq-dummy-torso {
+  fill: rgba(31, 41, 55, 0.2);
+  stroke: #64748b;
+  stroke-width: 4;
+  stroke-linejoin: round;
+}
+.eq-dummy-neck {
+  fill: rgba(100, 116, 139, 0.22);
+  stroke: #64748b;
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+.eq-dummy-head {
+  fill: rgba(31, 41, 55, 0.22);
+  stroke: #64748b;
+  stroke-width: 4;
+  stroke-linejoin: round;
+}
+.eq-dummy-arm,
+.eq-dummy-leg {
+  fill: none;
+  stroke: #64748b;
+  stroke-width: 8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.eq-dummy-shoulder-line,
+.eq-dummy-centerline,
+.eq-dummy-beltline,
+.eq-dummy-base {
+  fill: none;
+  stroke: rgba(203, 213, 225, 0.36);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+/* Equipment slots are sized to match .inv-slot (inventory) so equipped
+   items appear at the same size as items in the inventory grid. */
+.eq-slot {
+  position: absolute;
+  width: 60px;
+  height: 74px;
+  transform: translate(-50%, -50%);
+  border: 1px dashed rgba(75, 85, 99, 0.62);
+  border-radius: 6px;
+  background: rgba(13,17,23,0.68);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: default;
+}
+/* Scales the slot footprint with #eq-body's own rendered height (via the
+   container-type:size on .eq-body above) instead of a fixed px box, so if
+   something ever forces the body smaller than its usual ~320x512 (e.g. a
+   short viewport squeezing it through flexbox), slots shrink together and
+   stay clear of each other instead of overlapping. Width is derived from
+   that same height via aspect-ratio (not its own cqw) specifically because
+   #eq-body's own box can get squashed out of its intended 5:8 ratio (its
+   width holds firm via its own width rule while flexbox eats into its
+   height) - sizing width and height from independent container axes would
+   inherit that same distortion into every slot. 14.453cqh is just 74px
+   (the slot's usual height) as a fraction of the box's usual 512px height,
+   so nothing changes visually at the normal/larger-resolution size. */
+#eq-body .eq-slot {
+  height: 14.453cqh;
+  aspect-ratio: 60 / 74;
+  width: auto;
+}
+.eq-slot--editable { cursor: pointer; }
+.eq-slot--filled { border-color: rgba(107, 114, 128, 0.72); background: rgba(26,34,53,0.78); }
+.eq-slot--editable.eq-slot--filled:hover { border-color: #6b7280; }
+.eq-slot--editable:not(.eq-slot--filled):hover { border-color: #4b5563; background: rgba(19,26,41,0.82); }
+.eq-slot--dragging { opacity: 0.4; }
+.eq-slot--drag-over { border-color: #f5a623; border-style: solid; background: rgba(245,166,35,0.12); }
+.eq-body--readonly .eq-slot-svg--empty { opacity: 0.12; }
+.eq-slot-svg {
+  width: 39px; height: 39px;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden; flex-shrink: 0;
+}
+.eq-slot-svg svg { width: 36px; height: 36px; }
+.eq-slot-svg--empty { opacity: 0.25; }
+.eq-slot-name {
+  font-size: 0.5rem; color: #9ca3af; text-align: center;
+  line-height: 1.2; max-width: 54px; overflow: hidden;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  margin-top: 2px;
+}
+.eq-slot-remove {
+  position: absolute; top: 1px; right: 2px;
+  background: none; border: none; color: #6b7280;
+  font-size: 0.6rem; line-height: 1; cursor: pointer; padding: 2px;
+}
+.eq-slot-remove:hover { color: #f87171; }
+.eq-slot-qty {
+  position: absolute; bottom: 1px; right: 2px;
+  font-size: 0.58rem; color: #60a5fa; font-weight: 600; line-height: 1;
+}
+.eq-slot-note-label {
+  font-size: 0.5rem; color: #6b7280; text-align: center;
+  max-width: 54px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  margin-top: 1px;
+}
+
+/* Consumable item slots, in their own row below the dummy - not absolutely
+   positioned, so override the .eq-slot positioning rules. */
+.eq-items-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: center;
+  padding: 0 0.45rem 0.45rem;
+}
+.eq-items-row .eq-slot { position: relative; transform: none; }
+
+.inv-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 400;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+.inv-overlay.active { display: flex; }
+.inv-picker-overlay { z-index: 401; }
+
+.inv-modal {
+  background: #111827;
+  border: 1px solid #374151;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  overflow: hidden;
+}
+.inv-picker-modal {
+  background: #111827;
+  border: 1px solid #374151;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  width: 460px;
+  max-height: 80vh;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  overflow: hidden;
+}
+.inv-modal-hdr {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 0.9rem;
+  border-bottom: 1px solid #1f2937;
+  flex-shrink: 0;
+}
+.inv-modal-title { font-size: 0.85rem; font-weight: 600; color: #d1d5db; }
+.inv-count { font-size: 0.72rem; color: #6b7280; margin-left: auto; }
+.inv-close-btn {
+  background: none;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 0.15rem 0.35rem;
+  border-radius: 4px;
+  line-height: 1;
+}
+.inv-modal-hdr .inv-close-btn { margin-left: 0; }
+.inv-modal-hdr:has(.inv-count) .inv-close-btn { margin-left: 0; }
+.inv-close-btn:hover { color: #d1d5db; background: #1f2937; }
+
+.inv-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 60px);
+  gap: 6px;
+  padding: 0.9rem;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+.inv-grid::-webkit-scrollbar { width: 6px; }
+.inv-grid::-webkit-scrollbar-track { background: transparent; }
+.inv-grid::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+.inv-grid::-webkit-scrollbar-thumb:hover { background: #4b5563; }
+.inv-slot {
+  width: 60px;
+  height: 74px;
+  border: 1px dashed #2d3748;
+  border-radius: 6px;
+  background: #0d1117;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.inv-slot--filled { border-color: #374151; background: #1a2235; cursor: context-menu; }
+.inv-slot--filled:hover { border-color: #4b5563; }
+.inv-slot--visible { border-color: #3b82f6; }
+.inv-slot--dragging { opacity: 0.4; cursor: grabbing; }
+.inv-slot--drag-over { border-color: #f59e0b; background: #1f2937; transform: scale(1.05); }
+.inv-slot--filled { cursor: grab; }
+.inv-slot-svg {
+  width: 39px; height: 39px;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden; flex-shrink: 0;
+}
+.inv-slot-svg svg { width: 36px; height: 36px; }
+.inv-slot-name {
+  font-size: 0.5rem; color: #9ca3af; text-align: center;
+  line-height: 1.25; max-width: 54px; overflow: hidden;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  margin-top: 3px;
+}
+.inv-slot-qty {
+  position: absolute; top: 3px; right: 4px;
+  font-size: 0.58rem; color: #60a5fa; font-weight: 600; line-height: 1;
+}
+.inv-slot-note-label {
+  font-size: 0.5rem; color: #6b7280; text-align: center;
+  max-width: 54px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  margin-top: 2px;
+}
+.inv-ctx-menu {
+  position: fixed; z-index: 9999;
+  background: #1f2937; border: 1px solid #374151; border-radius: 7px;
+  padding: 4px 0; min-width: 150px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+  font-size: 0.78rem;
+}
+.inv-ctx-item {
+  padding: 6px 14px; color: #d1d5db; cursor: pointer; white-space: nowrap;
+}
+.inv-ctx-item:hover { background: #374151; color: #f9fafb; }
+.inv-ctx-remove { color: #f87171; }
+.inv-ctx-remove:hover { background: rgba(239,68,68,0.12); color: #ef4444; }
+
+/* Rename dialog */
+.inv-rename-dialog {
+  display: none; position: fixed; z-index: 601;
+  background: #1f2937; border: 1px solid #374151; border-radius: 8px;
+  padding: 0.75rem; width: 220px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  top: 50%; left: 50%; transform: translate(-50%, -50%);
+}
+.inv-rename-dialog.active { display: block; }
+.inv-rename-label { font-size: 0.75rem; color: #9ca3af; margin-bottom: 0.4rem; }
+.inv-rename-btns { display: flex; gap: 0.4rem; margin-top: 0.5rem; }
+.inv-rename-btns .inv-edit-done { flex: 1; }
+
+/* Edit dialog */
+.inv-edit-dialog {
+  display: none; position: fixed; z-index: 600;
+  background: #1f2937; border: 1px solid #374151; border-radius: 8px;
+  padding: 0.75rem; width: 192px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  flex-direction: column; gap: 0.5rem;
+}
+.inv-edit-dialog.active { display: flex; }
+.inv-edit-title { font-size: 0.78rem; font-weight: 600; color: #d1d5db; margin-bottom: 0.1rem; }
+.inv-edit-row { display: flex; align-items: center; gap: 0.5rem; }
+.inv-edit-label { font-size: 0.7rem; color: #6b7280; width: 28px; flex-shrink: 0; }
+.inv-edit-input {
+  flex: 1; min-width: 0; box-sizing: border-box;
+  background: #111827; border: 1px solid #374151; border-radius: 4px;
+  color: #e5e7eb; font-size: 0.72rem; padding: 3px 6px; outline: none;
+}
+.inv-edit-input:focus { border-color: #4b5563; }
+.inv-qty-wrap { display: flex; align-items: center; flex: 1; min-width: 0; }
+.inv-qty-btn {
+  flex-shrink: 0; width: 22px; background: #2d3748; border: 1px solid #374151;
+  color: #9ca3af; font-size: 0.9rem; line-height: 1; cursor: pointer; padding: 3px 0;
+  font-family: inherit;
+}
+.inv-qty-btn:first-child { border-radius: 4px 0 0 4px; }
+.inv-qty-btn:last-child  { border-radius: 0 4px 4px 0; }
+.inv-qty-btn:hover { background: #374151; color: #f3f4f6; }
+.inv-qty-input { flex: 1; min-width: 0; text-align: center; border-radius: 0; border-left: none; border-right: none; padding-top: 0; padding-bottom: 0; }
+.inv-edit-check { accent-color: #3b82f6; cursor: pointer; }
+.inv-edit-check-label { font-size: 0.7rem; color: #9ca3af; }
+.inv-edit-done {
+  margin-top: 0.15rem; background: #374151; border: none; border-radius: 5px;
+  color: #d1d5db; font-size: 0.72rem; padding: 4px; cursor: pointer;
+}
+.inv-edit-done:hover { background: #4b5563; color: #f9fafb; }
+
+/* On-screen display line styles */
+.inv-line-qty  { color: #60a5fa; font-size: 0.7rem; }
+.inv-line-note { color: #6b7280; font-size: 0.7rem; }
+
+/* Distinguishes the three kinds of line that can appear stacked in the combined
+   stats-hud display (#charsheet-display directly above #inv-display, both using
+   identical plain-text styling): a charsheet field (no badge, existing grey
+   .cs-label), a plain inventory item ("ITEM" badge, blue), and an equipped item
+   (its slot name as the badge, amber) - previously inventory and equipped items were
+   only told apart from charsheet fields by a small 16px icon, easy to miss at a glance,
+   and from each other not at all. */
+.inv-line-slot {
+  font-size: 0.62rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0 0.3rem;
+  border-radius: 4px;
+}
+.inv-line--equipped .inv-line-slot { color: #f5a623; border: 1px solid rgba(245,166,35,0.4); }
+.inv-line--equipped .inv-line-name { color: #fde68a; }
+.inv-line--item .inv-line-slot { color: #60a5fa; border: 1px solid rgba(96,165,250,0.4); }
+.inv-line--item .inv-line-name { color: #93c5fd; }
+
+.inv-modal-ftr {
+  padding: 0.6rem 0.9rem;
+  border-top: 1px solid #1f2937;
+  flex-shrink: 0;
+}
+.inv-add-btn {
+  width: 100%;
+  background: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 6px;
+  color: #9ca3af;
+  padding: 0.25rem 0.65rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  font-family: inherit;
+}
+.inv-add-btn:hover:not(:disabled) { background: #374151; color: #d1d5db; }
+.inv-add-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.inv-modal-ftr { display: flex; gap: 6px; }
+.inv-add-btn { flex: 1; }
+.inv-save-template-btn {
+  background: #1f2937; border: 1px solid #374151; border-radius: 6px;
+  color: #6b7280; padding: 0.4rem 0.75rem; font-size: 0.72rem;
+  cursor: pointer; font-family: inherit; white-space: nowrap;
+}
+.inv-save-template-btn:hover { background: #374151; color: #d1d5db; }
+/* Equipment modal footer has only the template button - push it to the right */
+#eq-overlay .inv-modal-ftr { justify-content: flex-end; }
+
+.inv-search {
+  flex: 1;
+  background: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 5px;
+  color: #d1d5db;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.8rem;
+  font-family: inherit;
+  outline: none;
+}
+.inv-search:focus { border-color: #6b7280; }
+.inv-search::placeholder { color: #4b5563; }
+
+.inv-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 80px);
+  justify-content: center;
+  gap: 6px;
+  padding: 0.9rem;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+.inv-picker-grid::-webkit-scrollbar { width: 6px; }
+.inv-picker-grid::-webkit-scrollbar-track { background: transparent; }
+.inv-picker-grid::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+.inv-picker-grid::-webkit-scrollbar-thumb:hover { background: #4b5563; }
+.inv-pick-item {
+  width: 80px;
+  height: 98px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  background: #1a2235;
+  border: 1px solid #374151;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: border-color 0.12s;
+}
+.inv-pick-item:hover { border-color: #6b7280; background: #1f2937; }
+.inv-pick-svg { width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
+.inv-pick-svg svg { width: 48px; height: 48px; }
+.inv-pick-name {
+  font-size: 0.58rem;
+  color: #9ca3af;
+  text-align: center;
+  line-height: 1.25;
+  max-width: 72px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  margin-top: 3px;
+}
+.inv-picker-empty { color: #6b7280; font-size: 0.85rem; padding: 2rem; text-align: center; grid-column: 1/-1; }
