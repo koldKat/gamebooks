@@ -134,6 +134,7 @@
         <a href="#module-graph">Module dependency graph</a>
         <a href="#css-split">CSS file split</a>
         <a href="#server-split">Server file split</a>
+        <a href="#admin-js-split">Admin panel JS split</a>
         <a href="#server">Server</a>
         <a href="#rest-api">REST API</a>
         <a href="#profile-api">Profile API</a>
@@ -208,9 +209,21 @@
       announcements.js  Announcement handlers
       forum.js         Forum route handlers (HTTP glue around server/forum.js + server/db/forum.js)
   admin/
-    index.html       Admin panel (served only to localhost connections)
+    index.html       Admin panel HTML/CSS (served only to localhost connections) - script is a
+                     single &lt;script type="module" src="/admin/js/boot.js"&gt; import, no inline JS
     admin-guide.html Admin panel guide (localhost only)
     technical.html   Technical reference (localhost only)
+    js/
+      core.js          Shared format/DOM-building helpers + generic sortable/searchable/
+                       paginated-table system + showAlert/showConfirm
+      users-books.js   Users tab, Books tab, User/Book detail views, Confirm actions, Gift modal,
+                       Navigation - kept as one module since the two detail views constantly
+                       call back into each other
+      dashboard.js     Stats cards, Vacuum button, Tools tab, Live resource poll
+      series.js, anthologies.js, tips.js, feedback.js, announcements.js, inventory.js
+                       One per like-named tab
+      boot.js          Tooltip, tab-switching, initial boot sequence - the only file
+                       admin/index.html imports directly
   docs/
     user-guide.md
     admin.md
@@ -321,6 +334,16 @@ Layer 4 (top):
       <p><code>server/db.js</code> is now a thin barrel (713 lines): every raw <code>CREATE TABLE</code>/<code>ALTER TABLE</code>/one-time-migration block stays physically in <code>db.js</code>, in its original relative order - some migrations reference tables/functions defined much later in the original file purely because production's live database already has those tables from earlier deployments, so reordering the DDL was judged unsafe. Only the function definitions moved out, into <code>server/db/*.js</code> domain modules (see project structure above). <code>db.js</code>'s final <code>module.exports</code> re-exports the exact same 233 named functions it did before the split.</p>
       <p><code>server.js</code> is now 597 lines: requires, one-time bootstrap, the Router (regex route-pattern constants + one large dispatch function), and the final <code>httpServer.listen(...)</code>. Everything else moved into <code>server/*.js</code> (cross-cutting: SSE, email, request helpers, runtime/process state, static file serving) and <code>server/routes/*.js</code> (per-domain HTTP handlers). Mutable process state that used to be bare module-level <code>let</code> bindings (maintenance-mode flag, traffic counters, CPU/memory averages, uptime timestamps) was extracted into <code>server/runtime-state.js</code> behind getter/setter accessors, since raw <code>let</code> variables can't be shared by reference across CommonJS modules.</p>
       <p><strong>Verification:</strong> <code>server.js</code> can never actually be run to test (it ends in a live <code>httpServer.listen(...)</code>, and the "never restart the server" rule forbids running it), so every new/rewritten file passed <code>node --check</code>, then was actually <code>require()</code>-d in isolation to catch load-time errors <code>--check</code> misses. A third pass - a script cross-referencing every bare <code>identifier(</code> call in a file against its locally-defined/required names - caught the class of bug the first two miss entirely: a name that's fine at module-load time but undefined the moment a handler actually runs. This caught several real missing-import bugs (<code>authenticate</code>/<code>addSecurityHeaders</code> in <code>routes/admin.js</code>, <code>tokenFromReq</code>/<code>isLocalhost</code> in <code>routes/books.js</code>, <code>sendAdminEmail</code>/<code>escapeHtml</code> in <code>routes/forum.js</code>, and <code>fs</code>/<code>path</code>/<code>ATTACHMENTS_DIR</code> in <code>routes/forum.js</code>'s <code>handleForumDeleteThread</code>). The <code>server/db.js</code> barrel's export count was diffed before and after every step and stayed at exactly 233 throughout.</p>
+    </div>
+
+    <!-- Admin panel JS split -->
+    <div class="section" id="admin-js-split">
+      <h2>Admin panel JS split (2026-07-27)</h2>
+      <p><code>admin/index.html</code> was the one file that missed the entire main.js/style.css/server.js/server/db.js split effort - a single inline <code>&lt;script&gt;</code> had grown to 2,454 lines (101 top-level functions), same monolith shape those files used to have. Split into 10 modules under <code>admin/js/</code> (see project structure above), same process as always: build each module fully, verify, wire in, remove the old code from the monolith last.</p>
+      <p><strong>Serving mechanism, new for this split:</strong> <code>admin/js/*.js</code> needed a route that didn't exist before. <code>server/routes/admin.js</code>'s <code>serveAdminFile()</code> now infers <code>Content-Type</code> from the filename extension (<code>.js</code> → <code>text/javascript</code>, else <code>text/html</code>) instead of hardcoding HTML - required, since browsers reject <code>&lt;script type="module"&gt;</code> if the response's MIME type isn't a JS type. <code>server.js</code> has <code>GET /admin/js/:file</code> (regex-restricted to <code>[a-zA-Z0-9_-]+\.js</code>, no path-traversal risk), gated by the same <code>requireLocalhost</code> as the rest of the admin panel - and, as a side effect of how the existing maintenance-mode exemption check works (<code>urlPath.startsWith('/admin')</code>), these files stay reachable during maintenance mode too, same as the rest of the admin panel already was.</p>
+      <p><code>admin/index.html</code>'s script tag is now <code>&lt;script type="module" src="/admin/js/boot.js"&gt;</code> - same end state as <code>main.js</code>. <code>users-books.js</code> (Users tab, Books tab, both detail views, Gift modal) is the one deliberately-not-split-further module: the user-detail and book-detail views call back into each other constantly (viewing a user's books opens a book detail, which links back to the owner, which reopens user detail...), so it stayed as one cohesive 1,097-line module rather than being forced into <code>users.js</code>/<code>books.js</code>. It imports <code>loadAll</code>/<code>loadTools</code> from <code>dashboard.js</code>, which itself imports <code>loadUsers</code>/<code>loadBooks</code> back from <code>users-books.js</code> - a genuine circular import, safe in real ES modules (unlike CommonJS) as long as the imported bindings are only read inside function bodies that run later, never at module-evaluation time - verified this holds for both directions before shipping.</p>
+      <p><strong>Verification method:</strong> no browser access, so entirely static - <code>node --check</code> on every file, every module's <code>core.js</code> import cross-referenced against <code>core.js</code>'s actual export list, the circular <code>users-books.js</code>↔<code>dashboard.js</code> import checked both directions, an orphan bare-identifier scan across all 10 files, and a byte-level diff (comment/whitespace normalized) of the two largest files against the original extracted source before considering them done - caught one real transcription slip this way (a non-breaking-space character in the Gift button's spacing silently became a plain space; functionally harmless but would not have been caught by syntax-checking alone). Also worth remembering: typing a <code>\uXXXX</code> escape directly into an Edit/Write tool call's string parameter gets silently decoded to the actual Unicode character by the JSON layer before the tool ever sees it as text - the fix that actually worked was reading the live file's exact bytes with a small script and using that as the basis for the change, rather than retyping the escape sequence by hand.</p>
+      <p><code>feedback.js</code> is the one module with a real gotcha: its feed-card HTML uses inline <code>onclick="toggleFeedbackCard(this)"</code> (built via <code>innerHTML</code> templates), which resolves against <code>window</code>, not module scope - fixed with an explicit <code>window.toggleFeedbackCard = ...</code> at the bottom of the file (and two more for its sibling handlers). Confirmed via a codebase-wide <code>onclick="..."</code> scan that these are the only three call sites needing this treatment; everything else already used <code>addEventListener</code>.</p>
     </div>
 
     <!-- Server -->

@@ -45,7 +45,21 @@ gamebooks/
       announcements.js  Announcement handlers
       forum.js         Forum route handlers (HTTP glue around server/forum.js + server/db/forum.js)
   admin/
-    index.html       Admin panel (served only to localhost connections)
+    index.html       Admin panel HTML/CSS (served only to localhost connections) - script is a
+                     single <script type="module" src="/admin/js/boot.js"> import, no inline JS
+    admin-guide.html Admin panel user guide
+    technical.html   HTML mirror of this file
+    js/
+      core.js          Shared format/DOM-building helpers + generic sortable/searchable/
+                       paginated-table system + showAlert/showConfirm
+      users-books.js   Users tab, Books tab, User/Book detail views, Confirm actions, Gift modal,
+                       Navigation - kept as one module since the two detail views constantly
+                       call back into each other
+      dashboard.js     Stats cards, Vacuum button, Tools tab, Live resource poll
+      series.js, anthologies.js, tips.js, feedback.js, announcements.js, inventory.js
+                       One per like-named tab
+      boot.js          Tooltip, tab-switching, initial boot sequence - the only file
+                       admin/index.html imports directly
   docs/
     user-guide.md
     technical.md
@@ -211,6 +225,57 @@ missing-import bugs (`authenticate`/`addSecurityHeaders` in `routes/admin.js`,
 `require()` destructuring). The `server/db.js` barrel's export surface was diffed
 (`Object.keys(db).length`) before and after every extraction step and stayed at exactly
 233 throughout.
+
+## Admin panel JS split (2026-07-27)
+
+`admin/index.html` was the one file that missed the entire main.js/style.css/server.js/
+server/db.js split effort - a single inline `<script>` had grown to 2,454 lines (101
+top-level functions), same monolith shape those other files used to have. Split into 10
+modules under `admin/js/` (see project structure above), same process as always: build
+each module fully, verify, wire in, remove the old code from the monolith last.
+
+**Serving mechanism, new for this split:** `admin/js/*.js` needed a route that didn't
+exist before. `server/routes/admin.js`'s `serveAdminFile()` now infers `Content-Type` from
+the filename extension (`.js` → `text/javascript`, else `text/html`) instead of hardcoding
+HTML - required, since browsers reject `<script type="module">` if the response's MIME
+type isn't a JS type. `server.js` has `GET /admin/js/:file` (regex-restricted to
+`[a-zA-Z0-9_-]+\.js`, no path-traversal risk), gated by the same `requireLocalhost` as the
+rest of the admin panel - and, as a side effect of how the existing maintenance-mode
+exemption check works (`urlPath.startsWith('/admin')`), these files stay reachable during
+maintenance mode too, same as the rest of the admin panel already was.
+
+`admin/index.html`'s script tag is now `<script type="module" src="/admin/js/boot.js">` -
+same end state as `main.js`. `users-books.js` (Users tab, Books tab, both detail views,
+Gift modal) is the one deliberately-not-split-further module: the user-detail and
+book-detail views call back into each other constantly (viewing a user's books opens a
+book detail, which links back to the owner, which reopens user detail...), so it stayed as
+one cohesive 1,097-line module rather than being forced into `users.js`/`books.js`. It
+imports `loadAll`/`loadTools` from `dashboard.js`, which itself imports `loadUsers`/
+`loadBooks` back from `users-books.js` - a genuine circular import, which is safe in real
+ES modules (unlike CommonJS) as long as the imported bindings are only read inside
+function bodies that run later, never at module-evaluation time - verified this holds for
+both directions before shipping.
+
+**Verification method:** no browser access, so entirely static - `node --check` on every
+file, every module's `core.js` import cross-referenced against `core.js`'s actual export
+list, the circular `users-books.js`↔`dashboard.js` import checked both directions, an
+orphan bare-identifier scan across all 10 files, and a byte-level diff (comment/whitespace
+normalized) of the two largest files against the original extracted source before
+considering them done - caught one real transcription slip this way (a non-breaking-space
+character in the Gift button's spacing silently became a plain space; functionally
+harmless but would not have been caught by syntax-checking alone). Also worth remembering:
+typing a `\uXXXX` escape directly into an Edit/Write tool call's string parameter gets
+silently decoded to the actual Unicode character by the JSON layer before the tool ever
+sees it as text - the fix that actually worked was reading the live file's exact bytes with
+a small script and using that as the basis for the change, rather than retyping the escape
+sequence by hand.
+
+`feedback.js` is the one module with a real gotcha: its feed-card HTML uses inline
+`onclick="toggleFeedbackCard(this)"` (built via `innerHTML` templates), which resolves
+against `window`, not module scope - fixed with an explicit `window.toggleFeedbackCard = ...`
+at the bottom of the file (and two more for its sibling handlers). Confirmed via a
+codebase-wide `onclick="..."` scan that these are the only three call sites needing this
+treatment; everything else already used `addEventListener`.
 
 ---
 

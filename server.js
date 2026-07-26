@@ -441,6 +441,11 @@ const handler = async (req, res) => {
       return serveAdminPanel(req, res);
     if (method === 'GET' && urlPath === '/admin/guide')     return serveAdminFile(req, res, 'admin-guide.html');
     if (method === 'GET' && urlPath === '/admin/technical') return serveAdminFile(req, res, 'technical.html');
+    // Admin panel's own ES modules (admin/js/*.js) - filename restricted to a safe
+    // charset (no '..', no path separators beyond the fixed 'js/' prefix) since it
+    // flows straight into a filesystem read.
+    if ((m = urlPath.match(/^\/admin\/js\/([a-zA-Z0-9_-]+\.js)$/)) && method === 'GET')
+      return serveAdminFile(req, res, `js/${m[1]}`);
     if (method === 'GET'  && urlPath === '/api/admin/stats')  return await handleAdminStats(req, res);
     if (method === 'GET'  && urlPath === '/api/admin/users')  return await handleAdminGetUsers(req, res);
     if (method === 'GET'  && urlPath === '/api/admin/books')  return await handleAdminGetBooks(req, res);
