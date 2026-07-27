@@ -16,8 +16,21 @@ function fmtRelative(ts) {
   if (diff < 604800) return Math.floor(diff / 86400) + 'd ago';
   return fmtDate(ts);
 }
+// Same markup engine as announcements (public/js/feed.js's formatAnnBody,
+// duplicated again in admin/js/announcements.js) - kept in sync by hand
+// since this one runs server-side against a stored post body, not client-side.
+const FORUM_COLORS = {
+  red: '#f87171', orange: '#fb923c', amber: '#fbbf24', green: '#4ade80',
+  teal: '#2dd4bf', blue: '#60a5fa', purple: '#a78bfa', pink: '#f472b6',
+};
 function renderBody(s) {
   return esc(s)
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g,     '<em>$1</em>')
+    .replace(/__(.+?)__/g,     '<u>$1</u>')
+    .replace(/~~(.+?)~~/g,     '<s>$1</s>')
+    .replace(/\{color:(red|orange|amber|green|teal|blue|purple|pink)\}(.+?)\{\/color\}/g,
+      (_, color, text) => `<span style="color:${FORUM_COLORS[color]}">${text}</span>`)
     .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
     .replace(/\n/g, '<br>');
 }
@@ -55,7 +68,7 @@ const CSS = `
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 body {
   background: #111827; color: #e5e7eb;
-  font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
+  font-family: 'Segoe UI', system-ui, sans-serif;
   font-size: 15px; line-height: 1.55; padding: 0.3rem 0.35rem 0.75rem;
 }
 a { color: #60a5fa; text-decoration: none; }
@@ -67,7 +80,7 @@ a:hover { text-decoration: underline; }
 }
 .nav-btn:hover { text-decoration: underline; }
 .site-header {
-  max-width: 640px; margin: 0 auto 0.45rem;
+  max-width: 100%; margin-bottom: 0.45rem;
   border-bottom: 1px solid #374151; padding-bottom: 0.28rem;
   display: flex; align-items: baseline; gap: 0.55rem; flex-wrap: wrap;
 }
@@ -79,7 +92,7 @@ a:hover { text-decoration: underline; }
   color: #60a5fa; font-family: inherit; cursor: pointer;
 }
 .site-header .back:hover { text-decoration: underline; }
-.wrap { max-width: 640px; margin: 0 auto; padding: 0 0.5rem; }
+.wrap { max-width: 100%; padding: 0 0.5rem; }
 .cat-grid {
   display: flex; flex-direction: column; gap: 0.35rem;
 }
@@ -99,6 +112,7 @@ a:hover { text-decoration: underline; }
   padding: 0.56rem 0.65rem; display: grid;
   grid-template-columns: 1fr auto; gap: 0.2rem 1rem;
   transition: border-color 0.15s;
+  position: relative;
 }
 .thread-card:hover { border-color: #4b5563; }
 .thread-title {
@@ -107,6 +121,33 @@ a:hover { text-decoration: underline; }
 }
 .thread-title .nav-btn { color: inherit; font-weight: inherit; }
 .thread-title .nav-btn:hover { color: #60a5fa; text-decoration: none; }
+/* Themed replacement for the native title="" tooltip - shows the full,
+   untruncated title on hover, matching the rest of the forum's dark theme
+   instead of the browser's plain default tooltip box. Positioned relative to
+   .thread-card, NOT .thread-title - .thread-title needs its own
+   overflow:hidden for the ellipsis truncation above, and an element's own
+   overflow:hidden clips any absolutely-positioned descendant (including
+   ::after) that renders outside its box, even one explicitly positioned to
+   escape via bottom: calc(100% + Npx). .thread-card has no overflow rule of
+   its own, so it doesn't clip the tooltip. */
+.thread-card[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0.65rem;
+  background: #1f2937;
+  border: 1px solid #374151;
+  color: #f3f4f6;
+  padding: 0.35rem 0.55rem;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  white-space: nowrap;
+  width: max-content;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+  z-index: 20;
+  pointer-events: none;
+}
 .thread-meta { font-size: 0.75rem; color: #6b7280; grid-column: 1; }
 .thread-meta .author { color: #9ca3af; }
 .thread-stats {
@@ -165,11 +206,9 @@ a:hover { text-decoration: underline; }
 }
 .pu-public { color: #60a5fa; }
 .pu-lvl { font-size: 0.68rem; color: #6b7280; }
-.reply-indent { margin-right: calc(80px + 0.6rem); }
 @media (max-width: 480px) {
   .post-wrap { flex-direction: column; }
   .user-card { flex-direction: row; width: auto; padding: 0.5rem 0.75rem; gap: 0.5rem; align-items: center; text-align: left; }
-  .reply-indent { margin-left: 0; }
 }
 .thread-page-title {
   font-size: 1.05rem; font-weight: 700; color: #f3f4f6;
@@ -180,17 +219,17 @@ a:hover { text-decoration: underline; }
 .status-badges { margin-bottom: 0.75rem; }
 .forum-form {
   background: #1f2937; border: 1px solid #374151; border-radius: 8px;
-  padding: 1rem; margin-top: 1rem;
+  padding: 0.6rem 0.65rem; margin-top: 0.5rem;
 }
-.forum-form h3 { font-size: 0.82rem; color: #9ca3af; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+.forum-form h3 { font-size: 0.82rem; color: #9ca3af; margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.05em; }
 .forum-input {
   width: 100%; background: #111827; color: #d1d5db;
   border: 1px solid #374151; border-radius: 6px;
-  padding: 0.5rem 0.65rem; font-size: 0.85rem; font-family: inherit;
-  outline: none; margin-bottom: 0.5rem; transition: border-color 0.15s;
+  padding: 0.4rem 0.55rem; font-size: 0.85rem; font-family: inherit;
+  outline: none; margin-bottom: 0.35rem; transition: border-color 0.15s;
 }
 .forum-input:focus { border-color: #6b7280; }
-textarea.forum-input { resize: vertical; min-height: 100px; }
+textarea.forum-input { resize: vertical; min-height: var(--ta-min-h, 100px); }
 .forum-btn {
   background: #1d4ed8; color: #eff6ff; border: 1px solid #1e40af;
   border-radius: 6px; padding: 0.38rem 0.9rem; font-size: 0.82rem;
@@ -216,7 +255,7 @@ textarea.forum-input { resize: vertical; min-height: 100px; }
   font-family: inherit; cursor: pointer; transition: background 0.12s;
 }
 .forum-btn-admin:hover { background: #78350f; }
-.forum-err { font-size: 0.8rem; color: #f87171; margin-top: 0.4rem; min-height: 1rem; }
+.forum-err { font-size: 0.8rem; color: #f87171; min-height: 1rem; }
 .forum-btn-edit {
   background: transparent; color: #9ca3af; border: 1px solid #374151;
   border-radius: 6px; padding: 0.25rem 0.65rem; font-size: 0.75rem;
@@ -251,6 +290,15 @@ textarea.forum-input { resize: vertical; min-height: 100px; }
   animation: forum-unread-pulse 2s ease-in-out infinite;
 }
 .post-card.is-new { border-left: 3px solid #16a34a; animation: forum-unread-pulse 2s ease-in-out infinite; }
+/* Same reduce-motion opt-out as the main app (public/css/reduce-motion.css) -
+   this page is a separate document (served in its own iframe), so it can't
+   see the parent's body.reduce-motion class directly and has to re-check the
+   same localStorage flag itself (see the body.reduce-motion.<script> below). */
+body.reduce-motion .thread-card.has-unread,
+body.reduce-motion .cat-card.has-unread,
+body.reduce-motion .post-card.is-new {
+  animation: none !important;
+}
 .unread-dot {
   display: inline-block; width: 7px; height: 7px; border-radius: 50%;
   background: #4ade80; margin-left: 0.45rem; vertical-align: middle; flex-shrink: 0;
@@ -309,7 +357,27 @@ function shell(title, description, canonical, bodyHtml) {
   <meta name="robots" content="index, follow">
   <style>${CSS}</style>
 </head>
+
 <body>
+<script>if (localStorage.getItem('reduce-motion') === '1') document.body.classList.add('reduce-motion');</script>
+<script>
+(function() {
+  // Drives textarea.forum-input's min-height (see --ta-min-h below). Deliberately
+  // NOT a plain vh unit: #forum-modal-frame's own height is set by the parent
+  // based on THIS page's measured content height (see reportHeight() further
+  // down) - if the textarea sized itself off the iframe's own vh, growing the
+  // iframe would grow the textarea, which grows the measured content, which
+  // grows the iframe again, settling only after several visibly jerky resize
+  // steps. Using the outer (parent) window's height instead is a value that
+  // never changes as a side effect of this page's own layout, breaking the loop.
+  // Computed once at load rather than kept live via a window.parent resize
+  // listener - a listener registered on the (persistent) parent window from
+  // this (destroyed-on-every-navigation) iframe document would leak one
+  // stale listener per page the user navigates to inside the forum.
+  var outerH = (window.parent && window.parent !== window) ? window.parent.innerHeight : window.innerHeight;
+  document.documentElement.style.setProperty('--ta-min-h', Math.max(100, outerH * 0.3) + 'px');
+})();
+</script>
 ${bodyHtml}
 <script>
 (function() {
@@ -399,8 +467,8 @@ function renderForumCategory(category, threads) {
         const badges = (t.is_pinned ? '<span class="badge badge-pin">pinned</span>' : '')
                      + (t.is_locked ? '<span class="badge badge-lock">locked</span>' : '');
         const replies = t.reply_count + (t.reply_count === 1 ? ' reply' : ' replies');
-        return '<div class="thread-card" data-thread-id="' + t.id + '" data-last-post-at="' + (t.last_post_at || 0) + '">'
-          + '<div class="thread-title">' + badges + '<button class="nav-btn" onclick="location.href=\'/forum/thread/' + t.id + '\'">' + esc(t.title) + '</button></div>'
+        return '<div class="thread-card" data-thread-id="' + t.id + '" data-last-post-at="' + (t.last_post_at || 0) + '" data-tooltip="' + esc(t.title) + '">'
+          + '<div class="thread-title">' + badges + '<a class="nav-btn" href="/forum/thread/' + t.id + '">' + esc(t.title) + '</a></div>'
           + '<div class="thread-meta">by <span class="author">' + esc(t.username || '[deleted]') + '</span> · ' + fmtDate(t.created_at) + '</div>'
           + '<div class="thread-stats"><span>' + replies + '</span><span>last: ' + fmtRelative(t.last_post_at) + '</span></div>'
           + '</div>';
@@ -428,15 +496,13 @@ function renderForumCategory(category, threads) {
         <h3>New Thread</h3>
         <input class="forum-input" id="thread-title" type="text" inputmode="text" placeholder="Title" autocomplete="off" spellcheck="true" maxlength="200">
         <textarea class="forum-input" id="thread-body" placeholder="Write something\u2026" spellcheck="true" maxlength="20000"></textarea>
-        <div style="display:flex;flex-wrap:wrap;gap:0.35rem;align-items:center;margin-bottom:0.35rem">
+        <div style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center">
           <label style="cursor:pointer" for="thread-file-input"><span class="att-pick-btn">+ Attach</span></label>
           <input type="file" id="thread-file-input" multiple style="display:none" accept="image/*,.pdf,.txt,.md,.csv,.json,.xml,.zip,.7z,.rar,.gz">
           <div id="thread-att-list" class="att-list" style="flex:1"></div>
-        </div>
-        <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">
+          <span class="forum-err" id="thread-err"></span>
           <button class="forum-btn" id="thread-submit">Post</button>
           <button class="forum-btn-cancel" id="thread-cancel">Cancel</button>
-          <span class="forum-err" id="thread-err"></span>
         </div>
       </div>
     </div>
@@ -721,7 +787,7 @@ function renderForumThread(thread, posts) {
         var f = document.createElement('div');
         f.id = 'op-edit-form';
         f.innerHTML = '<input class="forum-input" id="op-edit-title" type="text" maxlength="200" value="">'
-          + '<textarea class="forum-input" id="op-edit-body" maxlength="20000" style="min-height:120px"></textarea>'
+          + '<textarea class="forum-input" id="op-edit-body" maxlength="20000"></textarea>'
           + '<div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">'
           + '<button class="forum-btn" id="op-edit-save">Save</button>'
           + '<button class="forum-btn-cancel" id="op-edit-cancel">Cancel</button>'
@@ -798,7 +864,7 @@ function renderForumThread(thread, posts) {
           elRef.style.display = 'none';
           var f = document.createElement('div');
           f.id = 'post-edit-form-' + pmId;
-          f.innerHTML = '<textarea class="forum-input" id="post-edit-body-' + pmId + '" maxlength="20000" style="min-height:100px"></textarea>'
+          f.innerHTML = '<textarea class="forum-input" id="post-edit-body-' + pmId + '" maxlength="20000"></textarea>'
             + '<div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">'
             + '<button class="forum-btn" id="post-edit-save-' + pmId + '">Save</button>'
             + '<button class="forum-btn-cancel" id="post-edit-cancel-' + pmId + '">Cancel</button>'
@@ -855,18 +921,15 @@ function renderForumThread(thread, posts) {
       return;
     }
     var replyWrap = document.getElementById('reply-wrap');
-    replyWrap.className = 'reply-indent';
     replyWrap.innerHTML = '<div class="forum-form">'
       + '<h3>Reply</h3>'
       + '<textarea class="forum-input" id="reply-body" placeholder="Write a reply\u2026" spellcheck="true" maxlength="20000"></textarea>'
-      + '<div style="display:flex;flex-wrap:wrap;gap:0.35rem;align-items:center;margin-bottom:0.35rem">'
+      + '<div style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center">'
       + '<label style="cursor:pointer" for="reply-file-input"><span class="att-pick-btn">+ Attach</span></label>'
       + '<input type="file" id="reply-file-input" multiple style="display:none" accept="image/*,.pdf,.txt,.md,.csv,.json,.xml,.zip,.7z,.rar,.gz">'
       + '<div id="reply-att-list" class="att-list" style="flex:1"></div>'
-      + '</div>'
-      + '<div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">'
-      + '<button class="forum-btn" id="reply-submit">Post Reply</button>'
       + '<span class="forum-err" id="reply-err"></span>'
+      + '<button class="forum-btn" id="reply-submit">Post Reply</button>'
       + '</div></div>';
 
     var _replyAttIds = [];

@@ -13,6 +13,26 @@ function annEsc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+// Same markup engine as the player-facing renderer (public/js/feed.js's
+// formatAnnBody/ANN_COLORS) - duplicated here rather than imported since
+// admin/js is a separate, self-contained bundle. Without this the admin
+// preview showed literal **/{color:...} tags instead of the formatted
+// result players actually see.
+const ANN_COLORS = {
+  red: '#f87171', orange: '#fb923c', amber: '#fbbf24', green: '#4ade80',
+  teal: '#2dd4bf', blue: '#60a5fa', purple: '#a78bfa', pink: '#f472b6',
+};
+function annFormatBody(s) {
+  return annEsc(s)
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g,     '<em>$1</em>')
+    .replace(/__(.+?)__/g,     '<u>$1</u>')
+    .replace(/~~(.+?)~~/g,     '<s>$1</s>')
+    .replace(/\{color:(red|orange|amber|green|teal|blue|purple|pink)\}(.+?)\{\/color\}/g,
+      (_, color, text) => `<span style="color:${ANN_COLORS[color]}">${text}</span>`)
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+}
+
 function annFmt(ts) {
   return ts ? new Date(ts * 1000).toLocaleString('en-GB', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '-';
 }
@@ -57,7 +77,7 @@ function renderAnnCard(row) {
   const pinnedBadge = row.pinned ? `<span class="ann-pinned-badge">Pinned</span>` : '';
   return `<div class="ann-card${row.pinned ? ' ann-card-pinned' : ''}" data-id="${row.id}">
     <div class="ann-card-title">${annEsc(row.title)}${pinnedBadge}</div>
-    <div class="ann-card-body">${annEsc(row.body)}</div>
+    <div class="ann-card-body">${annFormatBody(row.body)}</div>
     <div class="ann-card-meta">${date}</div>
     <div class="ann-card-actions">
       <button class="ann-card-btn" data-id="${row.id}" data-action="edit">Edit</button>
