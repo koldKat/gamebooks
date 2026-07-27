@@ -39,7 +39,7 @@ import {
 } from './prefs.js?v=74';
 import { initBattleSim, setBattleSimVisible, renderBattleSim } from './battlesim829.js?v=96';
 import { initBattleSim8, setSim8Visible, renderSim8 } from './battlesim8.js?v=68';
-import { initSim286, setSim286Visible, renderSim286 } from './battlesim286.js?v=26';
+import { initSim286, setSim286Visible, renderSim286 } from './battlesim286.js?v=27';
 import { initShop, updateCoinsDisplay, refreshCoinsDisplay, setShopHooks } from './shop.js?v=27';
 import { initProfile, updateAvatarUI, renderBooksXpSummary, setProfileHooks } from './profile.js?v=43';
 import { setPublicProfileHooks, closePublicModal, openPublicProfile, openPublicSeriesRun } from './public-profile.js?v=32';
