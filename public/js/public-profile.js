@@ -5,7 +5,7 @@
 // covers.js's cover activity view) and its <link> in index.html.
 
 import { isValidSecId } from './state.js?v=11';
-import { escapeHtml } from './util.js?v=16';
+import { escapeHtml } from './util.js?v=17';
 import { t } from './i18n.js?v=17';
 
 // Callbacks wired in by main.js at boot

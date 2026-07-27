@@ -1,4 +1,4 @@
-// user.js — admin/author/contributor state and badge helpers
+// user.js - admin/author/contributor state and badge helpers
 
 import { getUsername } from './state.js?v=11';
 

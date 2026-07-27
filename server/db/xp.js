@@ -785,7 +785,7 @@ function processStateXp(userId, bookId, oldState, newState, totalSections) {
     }
   }
 
-  // 1 GC per 100 completed runs milestone — only check when a run just finished
+  // 1 GC per 100 completed runs milestone - only check when a run just finished
   if (_anyRunJustCompleted) {
     const totalCompleted = db.prepare(
       "SELECT COUNT(*) AS n FROM xp_events WHERE user_id = ? AND event IN ('win_run','death_run','battle_run')"

@@ -146,7 +146,7 @@ Layer 2:
   * three-way cycle: equipment.js → inventory.js → play.js → equipment.js
     Works because none consume each other's exports at module-evaluation time.
 
-Layer 3 (feature modules — import from layers 0–2 as needed):
+Layer 3 (feature modules - import from layers 0–2 as needed):
   notes.js, battlesim829.js, battlesim8.js, battlesim286.js, auth.js, add-book.js, edit-book.js,
   books.js, covers.js, feed.js, open-world.js, shop.js, profile.js,
   public-profile.js, prefs.js, livetab.js, notif.js, rewards.js, bg.js,
@@ -428,7 +428,7 @@ Caps are enforced in `purchaseShopItem` - returns `{ error: 'cap_reached', cap, 
 |-------|--------|---------|
 | `playtime_24h` | 1 GC | Each time a user crosses another 1,440 `idle_heartbeat` events (24 tracked hours) |
 | `book_completed` | 1 GC | First time a user earns `visit_all` for a book |
-| `runs_milestone` | 1 GC | Every 100 completed runs (`win_run + death_run + battle_run` events) — ref is the milestone number as a string (`"100"`, `"200"`, …) |
+| `runs_milestone` | 1 GC | Every 100 completed runs (`win_run + death_run + battle_run` events) - ref is the milestone number as a string (`"100"`, `"200"`, …) |
 | `visit_all_series` | N GC (N = child book count) | First time a user earns `visit_all` for every non-container book in a series |
 | `visit_all_anthology` | N GC (N = child book count) | First time a user earns `visit_all` for every child book of an anthology |
 

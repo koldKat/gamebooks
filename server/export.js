@@ -352,7 +352,7 @@ function buildGraphSvg(graph, positions, playthroughs, startSection, connectorSt
 }
 
 // ── HTML generator ────────────────────────────────────────────────────────────
-// itemsById: Map<id, {name, type}> — optional, used for inventory/equipment names
+// itemsById: Map<id, {name, type}> - optional, used for inventory/equipment names
 function buildBookHtml(book, username, itemsById = new Map()) {
   const esc = escapeHtml;
   const itemName = id => esc(itemsById.get(id)?.name ?? `Item #${id}`);
@@ -448,10 +448,10 @@ function buildBookHtml(book, username, itemsById = new Map()) {
       ).join('')}</tbody></table>` : '';
 
     if (!csHtml && !invHtml && !eqHtml) return '';
-    return `<details><summary>Run ${i + 1} — ${result}</summary>${csHtml}${invHtml}${eqHtml}</details>`;
+    return `<details><summary>Run ${i + 1} - ${result}</summary>${csHtml}${invHtml}${eqHtml}</details>`;
   }).filter(Boolean).join('');
 
-  // Build section map — works for both numeric and alphanumeric section IDs
+  // Build section map - works for both numeric and alphanumeric section IDs
   const _secSort = (a, b) => {
     const na = Number(a), nb = Number(b);
     if (!isNaN(na) && !isNaN(nb)) return na - nb;
@@ -537,7 +537,7 @@ ${book.notebook ? `<h2>Notebook</h2><pre>${esc(book.notebook)}</pre>` : ''}
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────
-// items: [{id, name, type}] array from DB — used to resolve item names in HTML
+// items: [{id, name, type}] array from DB - used to resolve item names in HTML
 // Graph snapshots are generated from book.state (graph/positions/playthroughs/
 // startSection) via buildGraphSvg - no client involvement needed, see buildGraphSvg's
 // comment for why. Books that have never been laid out just get a flat HTML file;
@@ -552,7 +552,7 @@ function buildFullExportZip(username, books, items = []) {
   const json = JSON.stringify({ app: 'Gamebook Tracker', version: 1, exportedAt: new Date().toISOString(), user: { username }, books }, null, 2);
   files.push({ name: `${root}/backup.json`, data: json });
 
-  // one HTML per book inside <username>/books/ — deduplicate filenames in case two books share a safe name
+  // one HTML per book inside <username>/books/ - deduplicate filenames in case two books share a safe name
   const usedFilenames = new Map(); // fn → count
   for (const book of books) {
     const base = safeFilename(book.name, `book-${book.id}`);

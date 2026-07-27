@@ -2,7 +2,7 @@
 
 import { getToken, apiFetch, isDemoMode } from './state.js?v=11';
 import { t } from './i18n.js?v=17';
-import { escapeHtml } from './util.js?v=16';
+import { escapeHtml } from './util.js?v=17';
 
 let _hooks = {};
 export function setNotifHooks(h) { _hooks = h || {}; }
