@@ -3,7 +3,8 @@
 // To remove: delete this file, remove its import line and initStats()/closeStatsModal()
 // calls from boot.js, and remove the stats-modal CSS from style.css.
 
-import { escapeHtml, fetchPublic } from './util.js?v=7';
+import { escapeHtml, fetchPublic } from './util.js?v=9';
+import { t } from './i18n.js?v=12';
 
 export function closeStatsModal() {
   document.getElementById('stats-modal-overlay').classList.remove('active');
@@ -12,7 +13,7 @@ export function closeStatsModal() {
 export async function openStatsModal() {
   const overlay = document.getElementById('stats-modal-overlay');
   const body    = document.getElementById('stats-modal-body');
-  body.innerHTML = '<p class="stats-loading">Loading…</p>';
+  body.innerHTML = `<p class="stats-loading">${t('stats.loading')}</p>`;
   overlay.classList.add('active');
   try {
     const res  = await fetchPublic('/api/site-stats');
@@ -74,171 +75,173 @@ export async function openStatsModal() {
       return parts.join(' ');
     };
 
+    const na = t('stats.na');
+
     const sections = [
       {
-        label: 'Players',
+        cls: 'players', label: t('stats.sec.players'),
         rows: [
-          ['Registered', fmt(s.users)],
-          ['Admins', fmt(s.admins)],
-          ['Authors', fmt(s.authors)],
-          ['Contributors', fmt(s.contributors)],
-          ['Public profiles', fmt(s.publicProfiles)],
-          ['With avatars', fmt(s.avatarUsers)],
-          ['Undos performed', fmt(s.undosTotal)],
-          ['Fast Travels performed', fmt(s.fastTravelsTotal)],
+          [t('stats.registered'), fmt(s.users)],
+          [t('stats.admins'), fmt(s.admins)],
+          [t('stats.authors'), fmt(s.authors)],
+          [t('stats.contributors'), fmt(s.contributors)],
+          [t('stats.public_profiles'), fmt(s.publicProfiles)],
+          [t('stats.with_avatars'), fmt(s.avatarUsers)],
+          [t('stats.undos_performed'), fmt(s.undosTotal)],
+          [t('stats.fast_travels_performed'), fmt(s.fastTravelsTotal)],
         ],
       },
       {
-        label: 'Books',
+        cls: 'books', label: t('stats.sec.books'),
         rows: [
-          ['Unique books', fmt(s.uniqueBooks)],
-          ['Unique authors', fmt(s.uniqueAuthors)],
-          ['Total in libraries', fmt(s.totalUserBooks)],
-          ['Public', fmt(s.publicBooks)],
-          ['Private', fmt(s.privateBooks)],
-          ['Unique series', fmt(s.uniqueSeries)],
-          ['Series in libraries', fmt(s.totalUserSeries)],
-          ['Public series', fmt(s.publicSeries)],
-          ['Private series', fmt(s.privateSeries)],
-          ['Unique anthologies', fmt(s.uniqueAnthologies)],
-          ['Anthologies in libraries', fmt(s.totalUserAnthologies)],
-          ['Public anthologies', fmt(s.publicAnthologies)],
-          ['Private anthologies', fmt(s.privateAnthologies)],
-          ['Avg sections / book', fmt(s.avgSections)],
-          ['Total pages', fmt(s.totalPages)],
-          ['Avg pages / book', fmt(s.avgPages)],
-          ['Total sections', fmt(s.totalSections)],
-          ['Mapped sections', fmt(s.mappedSections) + pct(s.mappedSections, s.totalSections)],
-          ['Discovered sections', fmt(s.discoveredSections) + pct(s.discoveredSections, s.totalSections)],
-          ['Books 100% visited', fmt(s.booksFullyVisited) + pct(s.booksFullyVisited, s.uniqueBooks)],
-          ['Books 100% discovered', fmt(s.booksFullyDiscovered) + pct(s.booksFullyDiscovered, s.uniqueBooks)],
+          [t('stats.unique_books'), fmt(s.uniqueBooks)],
+          [t('stats.unique_authors'), fmt(s.uniqueAuthors)],
+          [t('stats.total_in_libraries'), fmt(s.totalUserBooks)],
+          [t('stats.public'), fmt(s.publicBooks)],
+          [t('stats.private'), fmt(s.privateBooks)],
+          [t('stats.unique_series'), fmt(s.uniqueSeries)],
+          [t('stats.series_in_libraries'), fmt(s.totalUserSeries)],
+          [t('stats.public_series'), fmt(s.publicSeries)],
+          [t('stats.private_series'), fmt(s.privateSeries)],
+          [t('stats.unique_anthologies'), fmt(s.uniqueAnthologies)],
+          [t('stats.anthologies_in_libraries'), fmt(s.totalUserAnthologies)],
+          [t('stats.public_anthologies'), fmt(s.publicAnthologies)],
+          [t('stats.private_anthologies'), fmt(s.privateAnthologies)],
+          [t('stats.avg_sections_per_book'), fmt(s.avgSections)],
+          [t('stats.total_pages'), fmt(s.totalPages)],
+          [t('stats.avg_pages_per_book'), fmt(s.avgPages)],
+          [t('stats.total_sections'), fmt(s.totalSections)],
+          [t('stats.mapped_sections'), fmt(s.mappedSections) + pct(s.mappedSections, s.totalSections)],
+          [t('stats.discovered_sections'), fmt(s.discoveredSections) + pct(s.discoveredSections, s.totalSections)],
+          [t('stats.books_fully_visited'), fmt(s.booksFullyVisited) + pct(s.booksFullyVisited, s.uniqueBooks)],
+          [t('stats.books_fully_discovered'), fmt(s.booksFullyDiscovered) + pct(s.booksFullyDiscovered, s.uniqueBooks)],
         ],
       },
       {
-        label: 'Parties',
+        cls: 'parties', label: t('stats.sec.parties'),
         rows: [
-          ['Parties created', fmt(s.partyTotal)],
-          ['Active parties', fmt(s.partyActive)],
-          ['Players in parties', fmt(s.partyUsersTotal)],
-          ['Invites sent', fmt(s.partyInvites)],
-          ['Accepted', fmt(s.partyInvitesAccepted)],
-          ['Declined', fmt(s.partyInvitesDeclined)],
+          [t('stats.parties_created'), fmt(s.partyTotal)],
+          [t('stats.active_parties'), fmt(s.partyActive)],
+          [t('stats.players_in_parties'), fmt(s.partyUsersTotal)],
+          [t('stats.invites_sent'), fmt(s.partyInvites)],
+          [t('stats.accepted'), fmt(s.partyInvitesAccepted)],
+          [t('stats.declined'), fmt(s.partyInvitesDeclined)],
         ],
       },
       {
-        label: 'Gameplay',
+        cls: 'gameplay', label: t('stats.sec.gameplay'),
         rows: [
-          ['Total runs', fmt(s.playthroughs)],
-          ['In progress', fmt(s.activePlaythroughs)],
-          ['Finished', fmt(s.finishedPlaythroughs)],
-          ['Total wins', fmt(s.wins) + pct(s.wins, s.finishedPlaythroughs)],
-          ['Total losses', fmt(s.deaths) + pct(s.deaths, s.finishedPlaythroughs)],
-          ['Total battle deaths', fmt(s.battleCount) + pct(s.battleCount, s.finishedPlaythroughs)],
-          ['Tracked play time', fmtDuration(s.heartbeatMinutes)],
-          ['Avg play time / player', fmtDuration(s.avgPlayMinutesPerPlayer)],
+          [t('stats.total_runs'), fmt(s.playthroughs)],
+          [t('stats.in_progress'), fmt(s.activePlaythroughs)],
+          [t('stats.finished'), fmt(s.finishedPlaythroughs)],
+          [t('stats.total_wins'), fmt(s.wins) + pct(s.wins, s.finishedPlaythroughs)],
+          [t('stats.total_losses'), fmt(s.deaths) + pct(s.deaths, s.finishedPlaythroughs)],
+          [t('stats.total_battle_deaths'), fmt(s.battleCount) + pct(s.battleCount, s.finishedPlaythroughs)],
+          [t('stats.tracked_play_time'), fmtDuration(s.heartbeatMinutes)],
+          [t('stats.avg_play_time_per_player'), fmtDuration(s.avgPlayMinutesPerPlayer)],
         ],
       },
       {
-        label: 'XP & Progression',
+        cls: 'xp-progression', label: t('stats.sec.xp'),
         rows: [
-          ['Total XP earned', fmt(s.totalXp)],
-          ['App level', `${fmt(s.appLevel)} - ${escapeHtml(s.appTitle)}`],
-          ['Avg player level', `${fmt(Math.floor(Number(s.avgLevel || 0)))} - ${escapeHtml(s.avgTitle)}`],
-          ['Level-ups', fmt(s.levelUps)],
-          ['XP event types', fmt(s.xpEventTypes)],
-          ['XP events', fmt(s.xpEvents)],
+          [t('stats.total_xp_earned'), fmt(s.totalXp)],
+          [t('stats.app_level'), `${fmt(s.appLevel)} - ${escapeHtml(s.appTitle)}`],
+          [t('stats.avg_player_level'), `${fmt(Math.floor(Number(s.avgLevel || 0)))} - ${escapeHtml(s.avgTitle)}`],
+          [t('stats.level_ups'), fmt(s.levelUps)],
+          [t('stats.xp_event_types'), fmt(s.xpEventTypes)],
+          [t('stats.xp_events'), fmt(s.xpEvents)],
         ],
       },
       {
-        label: 'Gold Coins & Shop',
+        cls: 'gold-coins-shop', label: t('stats.sec.coins'),
         rows: [
-          ['Earned', fmt(s.totalCoinsEarned)],
-          ['Spent', fmt(s.totalCoinsSpent)],
-          ['In circulation', fmt(s.totalCoinsAvailable)],
-          ['Upgrades purchased', fmt(s.totalUpgrades)],
-          ['- Undo slots', fmt(s.upgradeUndos)],
-          ['- Fast Travel slots', fmt(s.upgradeFastTravels)],
-          ['- Heartbeat XP', fmt(s.upgradeHeartbeatXp)],
-          ['- XP boost %', fmt(s.upgradeXpBoosts)],
+          [t('stats.earned'), fmt(s.totalCoinsEarned)],
+          [t('stats.spent'), fmt(s.totalCoinsSpent)],
+          [t('stats.in_circulation'), fmt(s.totalCoinsAvailable)],
+          [t('stats.upgrades_purchased'), fmt(s.totalUpgrades)],
+          [t('stats.upgrade_undo_slots'), fmt(s.upgradeUndos)],
+          [t('stats.upgrade_fast_travel_slots'), fmt(s.upgradeFastTravels)],
+          [t('stats.upgrade_heartbeat_xp'), fmt(s.upgradeHeartbeatXp)],
+          [t('stats.upgrade_xp_boost_pct'), fmt(s.upgradeXpBoosts)],
         ],
       },
       {
-        label: 'Ratings',
+        cls: 'ratings', label: t('stats.sec.ratings'),
         rows: [
-          ['Total ratings given', fmt(s.ratingsTotal)],
-          ['Book ratings', fmt(s.bookRatingsCount)],
-          ['Anthology ratings', fmt(s.anthologyRatingsCount)],
-          ['Series ratings', fmt(s.seriesRatingsCount)],
-          ['Avg book rating', s.bookRatingsAvg ? Number(s.bookRatingsAvg).toFixed(1) + ' / 5' : 'n/a'],
+          [t('stats.total_ratings_given'), fmt(s.ratingsTotal)],
+          [t('stats.book_ratings'), fmt(s.bookRatingsCount)],
+          [t('stats.anthology_ratings'), fmt(s.anthologyRatingsCount)],
+          [t('stats.series_ratings'), fmt(s.seriesRatingsCount)],
+          [t('stats.avg_book_rating'), s.bookRatingsAvg ? Number(s.bookRatingsAvg).toFixed(1) + ' / 5' : na],
           ...[...(s.ratingDist || [])].reverse().map(r => [`${'★'.repeat(r.star)}${'☆'.repeat(5 - r.star)}`, fmt(r.n)]),
         ],
       },
       {
-        label: 'Forum',
+        cls: 'forum', label: t('stats.sec.forum'),
         rows: [
-          ['Categories', fmt(s.forumCategories)],
-          ['Threads', fmt(s.forumThreads)],
-          ['Pinned threads', fmt(s.forumPinnedThreads)],
-          ['Posts', fmt(s.forumPosts)],
+          [t('stats.categories'), fmt(s.forumCategories)],
+          [t('stats.threads'), fmt(s.forumThreads)],
+          [t('stats.pinned_threads'), fmt(s.forumPinnedThreads)],
+          [t('stats.posts'), fmt(s.forumPosts)],
         ],
       },
       {
-        label: 'Server',
+        cls: 'server', label: t('stats.sec.server'),
         rows: [
-          ['CPU model', escapeHtml(s.cpuModel || 'n/a')],
-          ['CPU cores', s.cpuCores != null ? fmt(s.cpuCores) : 'n/a'],
-          ['CPU age', s.cpuAgeYears != null ? `${s.cpuAgeYears}y` : 'n/a'],
-          ['CPU clock (advertised)', s.cpuGhz != null ? `${s.cpuGhz} GHz` : 'n/a'],
-          ['CPU arch', escapeHtml(s.cpuArch || 'n/a')],
-          ['Total RAM', fmtBytes(s.totalRamBytes || 0)],
+          [t('stats.cpu_model'), escapeHtml(s.cpuModel || na)],
+          [t('stats.cpu_cores'), s.cpuCores != null ? fmt(s.cpuCores) : na],
+          [t('stats.cpu_age'), s.cpuAgeYears != null ? `${s.cpuAgeYears}y` : na],
+          [t('stats.cpu_clock'), s.cpuGhz != null ? `${s.cpuGhz} GHz` : na],
+          [t('stats.cpu_arch'), escapeHtml(s.cpuArch || na)],
+          [t('stats.total_ram'), fmtBytes(s.totalRamBytes || 0)],
         ],
       },
       {
-        label: 'The App',
+        cls: 'the-app', label: t('stats.sec.app'),
         rows: [
-          ['Age', (() => { const d = Math.floor(s.appAgeDays || 0); const y = Math.floor(d / 365); return y > 0 ? `${y}y ${d - y * 365}d` : `${d}d`; })()],
-          ['Server uptime (session)', fmtUptime(s.uptimeSec || 0)],
-          ['Total uptime', s.totalDowntimeS != null ? fmtUptime(Math.max(0, (s.appAgeDays || 0) * 86400 - s.totalDowntimeS)) : 'n/a'],
-          ['Uptime %', s.uptimePct != null ? `${Number(s.uptimePct).toFixed(2)}%` : 'n/a'],
-          ['Total downtime', s.totalDowntimeS != null ? fmtUptime(s.totalDowntimeS) : 'n/a'],
-          ['Lines of code', s.linesOfCode ? fmt(s.linesOfCode) : 'n/a'],
-          ['Code size', kb(s.codeBytes || 0)],
-          ['DB size', kb(s.dbSize || 0)],
-          ['JS modules', fmt(s.jsModules)],
-          ['Traffic in', fmtBytes(s.trafficIn || 0)],
-          ['Traffic out', fmtBytes(s.trafficOut || 0)],
+          [t('stats.age'), (() => { const d = Math.floor(s.appAgeDays || 0); const y = Math.floor(d / 365); return y > 0 ? `${y}y ${d - y * 365}d` : `${d}d`; })()],
+          [t('stats.server_uptime_session'), fmtUptime(s.uptimeSec || 0)],
+          [t('stats.total_uptime'), s.totalDowntimeS != null ? fmtUptime(Math.max(0, (s.appAgeDays || 0) * 86400 - s.totalDowntimeS)) : na],
+          [t('stats.uptime_pct'), s.uptimePct != null ? `${Number(s.uptimePct).toFixed(2)}%` : na],
+          [t('stats.total_downtime'), s.totalDowntimeS != null ? fmtUptime(s.totalDowntimeS) : na],
+          [t('stats.lines_of_code'), s.linesOfCode ? fmt(s.linesOfCode) : na],
+          [t('stats.code_size'), kb(s.codeBytes || 0)],
+          [t('stats.db_size'), kb(s.dbSize || 0)],
+          [t('stats.js_modules'), fmt(s.jsModules)],
+          [t('stats.traffic_in'), fmtBytes(s.trafficIn || 0)],
+          [t('stats.traffic_out'), fmtBytes(s.trafficOut || 0)],
           ...(s.avgSamples > 0 ? [
-            ['Avg CPU (session)', `${s.avgCpu.toFixed(1)}%`],
-            ['Avg heap used (session)', fmtBytes(s.avgHeapUsed)],
-            ['Avg heap total (session)', fmtBytes(s.avgHeapTotal)],
-            ['Avg RSS (session)', fmtBytes(s.avgRss)],
+            [t('stats.avg_cpu_session'), `${s.avgCpu.toFixed(1)}%`],
+            [t('stats.avg_heap_used_session'), fmtBytes(s.avgHeapUsed)],
+            [t('stats.avg_heap_total_session'), fmtBytes(s.avgHeapTotal)],
+            [t('stats.avg_rss_session'), fmtBytes(s.avgRss)],
           ] : []),
         ],
       },
       {
-        label: 'Open World',
+        cls: 'open-world', label: t('stats.sec.ow'),
         rows: [
-          ['Open world series', fmt(s.owSeries)],
-          ['Public', fmt(s.owPublicSeries) + pct(s.owPublicSeries, s.owSeries)],
-          ['Books in OW series', fmt(s.owBooksTotal)],
-          ['Portal nodes', fmt(s.owPortals)],
-          ['Series runs', fmt(s.owRuns)],
-          ['Completed', fmt(s.owRunsCompleted) + pct(s.owRunsCompleted, s.owRuns)],
-          ['Public runs', fmt(s.owRunsPublic) + pct(s.owRunsPublic, s.owRunsCompleted)],
-          ['Pre-series runs', fmt(s.owPreSeriesRuns)],
+          [t('stats.ow_series'), fmt(s.owSeries)],
+          [t('stats.public'), fmt(s.owPublicSeries) + pct(s.owPublicSeries, s.owSeries)],
+          [t('stats.books_in_ow_series'), fmt(s.owBooksTotal)],
+          [t('stats.portal_nodes'), fmt(s.owPortals)],
+          [t('stats.series_runs'), fmt(s.owRuns)],
+          [t('stats.completed'), fmt(s.owRunsCompleted) + pct(s.owRunsCompleted, s.owRuns)],
+          [t('stats.public_runs'), fmt(s.owRunsPublic) + pct(s.owRunsPublic, s.owRunsCompleted)],
+          [t('stats.pre_series_runs'), fmt(s.owPreSeriesRuns)],
         ],
       },
     ];
 
     body.innerHTML = sections.map(sec => `
-      <div class="stats-section stats-section--${sec.label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')}">
-        <div class="stats-section-label">${sec.label}</div>
+      <div class="stats-section stats-section--${sec.cls}">
+        <div class="stats-section-label">${escapeHtml(sec.label)}</div>
         <table class="stats-table">
-          ${sec.rows.map(([k, v]) => `<tr><td class="stats-key">${k}</td><td class="stats-val">${v}</td></tr>`).join('')}
+          ${sec.rows.map(([k, v]) => `<tr><td class="stats-key">${escapeHtml(k)}</td><td class="stats-val">${v}</td></tr>`).join('')}
         </table>
       </div>`).join('');
   } catch {
-    body.innerHTML = '<p class="stats-loading">Failed to load stats.</p>';
+    body.innerHTML = `<p class="stats-loading">${t('stats.load_failed')}</p>`;
   }
 }
 

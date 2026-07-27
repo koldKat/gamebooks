@@ -1,9 +1,10 @@
 // demo.js - Demo mode: load guest session, manage demo books, and exit
 
 import { setDemoMode, setDemoState, getDemoState, clearDemoStore, parseSecId, getToken, setCurrentUserLevel } from './state.js?v=11';
-import { destroyNetwork } from './graph.js?v=52';
-import { showAlert } from './play.js?v=36';
-import { fetchPublic } from './util.js?v=7';
+import { destroyNetwork } from './graph.js?v=54';
+import { showAlert } from './play.js?v=38';
+import { fetchPublic } from './util.js?v=9';
+import { t } from './i18n.js?v=12';
 
 let _hooks = {};
 export function setDemoHooks(h) { _hooks = h || {}; }
@@ -49,7 +50,7 @@ export async function startDemoMode() {
     sessionStorage.setItem(_DEMO_FLAG_KEY, '1');
     await _hooks.showBooks?.();
   } catch (_) {
-    showAlert('Could not load demo. Please try again.');
+    showAlert(t('demo.load_failed'));
   }
 }
 

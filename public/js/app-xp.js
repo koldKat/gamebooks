@@ -9,15 +9,16 @@
 // #app-xp-*/#app-reward-float-layer markup/CSS.
 
 import { apiFetch, getToken, isDemoMode } from './state.js?v=11';
-import { COIN_SVG } from './shop.js?v=17';
-import { escapeHtml } from './util.js?v=7';
+import { COIN_SVG } from './shop.js?v=20';
+import { escapeHtml } from './util.js?v=9';
+import { t } from './i18n.js?v=12';
 
 let _hooks = {};
 export function setAppXpHooks(h) { _hooks = h || {}; }
 
 function _hbRateText(ratePerMin) {
   const rate = Math.round(ratePerMin * 10) / 10;
-  return `+${rate % 1 === 0 ? rate : rate.toFixed(1)} heartbeat XP/min`;
+  return t('appxp.hb_rate', { rate: rate % 1 === 0 ? rate : rate.toFixed(1) });
 }
 
 // Recomputed from the raw (possibly mid-tween) xp value each frame, same as
@@ -90,7 +91,7 @@ function _render(data) {
   if (!wrap) return;
   if (!data) { wrap.hidden = true; _displayedXp = null; _displayedBoostXp = null; return; }
   const { level = 0, title = '', heartbeatRatePerMin = 0 } = data;
-  document.getElementById('app-xp-level').textContent   = `Lvl ${level}`;
+  document.getElementById('app-xp-level').textContent   = t('feed.hover_level', { n: level });
   document.getElementById('app-xp-title').textContent    = title || '';
   document.getElementById('app-xp-hb-rate').textContent  = _hbRateText(heartbeatRatePerMin);
   _animateTo(data);
@@ -105,14 +106,14 @@ function _renderAvgLevel(data) {
   if (!data) { wrap.hidden = true; return; }
   const { users = 0, avgLevel = 0, avgLevelTitle = '', avgLevelFraction = 0,
           sumLevels = 0, levelsNeededForNextAvg = 0, minLevel = 0, maxLevel = 0 } = data;
-  document.getElementById('avg-lvl-level').textContent = `Lvl ${avgLevel}`;
+  document.getElementById('avg-lvl-level').textContent = t('feed.hover_level', { n: avgLevel });
   document.getElementById('avg-lvl-title').textContent  = avgLevelTitle || '';
-  document.getElementById('avg-lvl-users').textContent  = `${users.toLocaleString()} user${users === 1 ? '' : 's'}`;
+  document.getElementById('avg-lvl-users').textContent  = t('appxp.users', { n: users.toLocaleString(), s: users === 1 ? '' : 's' });
   const pct = Math.max(0, Math.min(100, Math.round(avgLevelFraction * 100)));
   document.getElementById('avg-lvl-bar-fill').style.width = `${pct}%`;
   document.getElementById('avg-lvl-text').innerHTML =
-    `<span class="lvl-val">${sumLevels.toLocaleString()} total levels</span> · ${levelsNeededForNextAvg.toLocaleString()} more to Lvl ${avgLevel + 1}`;
-  document.getElementById('avg-lvl-range').textContent = `range: Lvl ${minLevel}-${maxLevel}`;
+    `<span class="lvl-val">${t('appxp.total_levels', { n: sumLevels.toLocaleString() })}</span> · ${t('appxp.more_to_lvl', { n: levelsNeededForNextAvg.toLocaleString(), lvl: avgLevel + 1 })}`;
+  document.getElementById('avg-lvl-range').textContent = t('appxp.range', { min: minLevel, max: maxLevel });
   wrap.hidden = false;
 }
 

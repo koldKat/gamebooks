@@ -5,12 +5,12 @@ import {
   currentPlaythrough, currentSection, allDiscoveredSections, mappedCount,
   currentUserLevel, bonusUndos, bonusFastTravels, apiFetch,
 } from './state.js?v=11';
-import { network, visNodes, syncGraph } from './graph.js?v=52';
-import { t } from './i18n.js?v=10';
-import { renderCharSheetDisplay } from './charsheet.js?v=28';
+import { network, visNodes, syncGraph } from './graph.js?v=54';
+import { t } from './i18n.js?v=12';
+import { renderCharSheetDisplay } from './charsheet.js?v=30';
 import { naturalCompare } from './sort.js?v=1';
-import { instantiateLoadout } from './equipment.js?v=81';
-import { escapeHtml } from './util.js?v=7';
+import { instantiateLoadout } from './equipment.js?v=83';
+import { escapeHtml } from './util.js?v=9';
 
 // ── Discoverable sections cap ────────────────────────────────────���───────────
 let _discoverableLimit = null;

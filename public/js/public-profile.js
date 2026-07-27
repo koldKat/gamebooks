@@ -5,7 +5,8 @@
 // covers.js's cover activity view) and its <link> in index.html.
 
 import { isValidSecId } from './state.js?v=11';
-import { escapeHtml } from './util.js?v=7';
+import { escapeHtml } from './util.js?v=9';
+import { t } from './i18n.js?v=12';
 
 // Callbacks wired in by main.js at boot
 let _hooks = {};
@@ -48,14 +49,14 @@ export async function openPublicProfile(username) {
   openPublicModal();
   document.getElementById('pub-modal-title').innerHTML = escapeHtml(_hooks.displayFor?.(username) ?? username) + (_hooks.adminBadge?.(username) ?? '') + (_hooks.authorBadge?.(username) ?? '') + (_hooks.contributorBadge?.(username) ?? '');
   document.getElementById('pub-back-btn').style.display = 'none';
-  document.getElementById('pub-modal-body').innerHTML = '<p class="pub-loading">Loading…</p>';
+  document.getElementById('pub-modal-body').innerHTML = `<p class="pub-loading">${t('pub.loading')}</p>`;
   try {
     const res = await _hooks.publicFetch(`/api/public/user/${encodeURIComponent(username)}`);
     if (!res.ok) throw new Error();
     const profile = await res.json();
     renderPublicProfile(profile);
   } catch {
-    document.getElementById('pub-modal-body').innerHTML = '<p class="pub-error">Profile not available.</p>';
+    document.getElementById('pub-modal-body').innerHTML = `<p class="pub-error">${t('pub.profile_unavailable')}</p>`;
   }
 }
 
@@ -80,7 +81,7 @@ export function renderPublicProfile(profile) {
     : `<div class="pub-profile-avatar pub-profile-avatar-placeholder">${escapeHtml(profile.username.charAt(0).toUpperCase())}</div>`;
 
   const levelSuffix = profile.level != null
-    ? ` - <span class="pub-level-badge">Lvl ${profile.level}</span>${profile.title ? ` <span class="pub-level-title">${escapeHtml(profile.title)}</span>` : ''}`
+    ? ` - <span class="pub-level-badge">${t('feed.hover_level', { n: profile.level })}</span>${profile.title ? ` <span class="pub-level-title">${escapeHtml(profile.title)}</span>` : ''}`
     : '';
 
   let html = `
@@ -89,17 +90,17 @@ export function renderPublicProfile(profile) {
       <div class="pub-profile-info">
         <div class="pub-profile-username">${escapeHtml(_dn)}${_hooks.adminBadge?.(profile.username) ?? ''}${_hooks.authorBadge?.(profile.username) ?? ''}${_hooks.contributorBadge?.(profile.username) ?? ''}${levelSuffix}</div>
         <div class="pub-profile-stats">
-          <span class="pub-stat"><span class="pub-stat-val">${profile.totalBooks}</span> books${profile.createdBooks > 0 ? ` <span style="color:#6b7280;font-size:0.78em">(<span style="color:#60a5fa;font-weight:700">${profile.createdBooks}</span> created)</span>` : ''}</span>
-          <span class="pub-stat"><span class="pub-stat-val">${profile.books.length}</span> books played</span>
-          <span class="pub-stat"><span class="pub-stat-val">${allRuns.length}</span> runs</span>
-          <span class="pub-stat pub-stat-win"><span class="pub-stat-val">${wins}</span> wins</span>
-          <span class="pub-stat pub-stat-death"><span class="pub-stat-val">${deaths}</span> losses</span>
+          <span class="pub-stat"><span class="pub-stat-val">${profile.totalBooks}</span> ${t('pub.stat.books_suffix')}${profile.createdBooks > 0 ? ` <span style="color:#6b7280;font-size:0.78em">(<span style="color:#60a5fa;font-weight:700">${profile.createdBooks}</span> ${t('pub.stat.created_suffix')})</span>` : ''}</span>
+          <span class="pub-stat"><span class="pub-stat-val">${profile.books.length}</span> ${t('pub.stat.books_played')}</span>
+          <span class="pub-stat"><span class="pub-stat-val">${allRuns.length}</span> ${t('pub.stat.runs')}</span>
+          <span class="pub-stat pub-stat-win"><span class="pub-stat-val">${wins}</span> ${t('pub.stat.wins')}</span>
+          <span class="pub-stat pub-stat-death"><span class="pub-stat-val">${deaths}</span> ${t('pub.stat.losses')}</span>
         </div>
       </div>
     </div>`;
 
   if (!profile.books.length) {
-    html += '<p class="pub-empty">No completed runs yet.</p>';
+    html += `<p class="pub-empty">${t('pub.no_runs')}</p>`;
     body.innerHTML = html;
     return;
   }
@@ -111,20 +112,21 @@ export function renderPublicProfile(profile) {
       <div class="pub-book-name">
         <span class="pub-book-toggle">▸</span>
         <span class="pub-book-title">${escapeHtml(book.name)}</span>
-        <span class="pub-book-count">${book.runs.length} run${book.runs.length === 1 ? '' : 's'}</span>
+        <span class="pub-book-count">${t('pub.run_count', { n: book.runs.length, s: book.runs.length === 1 ? '' : 's' })}</span>
       </div>
       <div class="pub-book-runs">`;
     for (const run of book.runs) {
       const isWin    = run.result === 'success';
       const isBattle = run.result === 'battle';
       const chapterPrefix = run.chapterName ? `${run.chapterName} - ` : '';
-      const label = `${chapterPrefix}Run ${run.index + 1} - ${isWin ? '★ Victory' : isBattle ? '⚔ Battle Death' : '† Lost'}`;
+      const result = isWin ? t('pub.result.victory') : isBattle ? t('pub.result.battle') : t('pub.result.lost');
+      const label = t('pub.run_label', { prefix: chapterPrefix, n: run.index + 1, result });
       const cls   = isWin ? 'pub-run-win' : 'pub-run-death';
       const bookId = run.bookId || book.id;
       if (run.isPublic) {
         html += `<button class="pub-run-btn ${cls}" data-book-id="${bookId}" data-user-id="${profile.userId}" data-run-index="${run.index}">${escapeHtml(label)}</button>`;
       } else {
-        html += `<span class="pub-run-locked ${cls}">${escapeHtml(label)} (Locked)</span>`;
+        html += `<span class="pub-run-locked ${cls}">${escapeHtml(t('pub.locked', { label }))}</span>`;
       }
     }
     html += `</div></div>`;
@@ -159,14 +161,14 @@ export async function openPublicRun(bookId, userId, runIndex, fromProfile) {
   const body = document.getElementById('pub-modal-body');
   body.style.padding  = '';
   body.style.overflow = '';
-  body.innerHTML = '<p class="pub-loading">Loading…</p>';
+  body.innerHTML = `<p class="pub-loading">${t('pub.loading')}</p>`;
   try {
     const res = await _hooks.publicFetch(`/api/public/book/${bookId}/user/${userId}/run/${runIndex}`);
     if (!res.ok) throw new Error();
     const data = await res.json();
     renderPublicRun(data);
   } catch {
-    body.innerHTML = '<p class="pub-error">Run not available.</p>';
+    body.innerHTML = `<p class="pub-error">${t('pub.run_unavailable')}</p>`;
   }
 }
 
@@ -185,14 +187,14 @@ export async function openPublicSeriesRun(seriesId, userId, runIndex, fromProfil
   const body = document.getElementById('pub-modal-body');
   body.style.padding  = '';
   body.style.overflow = '';
-  body.innerHTML = '<p class="pub-loading">Loading…</p>';
+  body.innerHTML = `<p class="pub-loading">${t('pub.loading')}</p>`;
   try {
     const res = await _hooks.publicFetch(`/api/public/series/${seriesId}/user/${userId}/run/${runIndex}`);
     if (!res.ok) throw new Error();
     const data = await res.json();
     renderPublicRun(data);
   } catch {
-    body.innerHTML = '<p class="pub-error">Run not available.</p>';
+    body.innerHTML = `<p class="pub-error">${t('pub.run_unavailable')}</p>`;
   }
 }
 
@@ -203,16 +205,16 @@ function _pubLegendHtml(isOpenWorld) {
     `<div class="pub-legend-dot pub-legend-diamond" style="background:${bg};border-color:${border}"></div>`;
   const row  = (icon, label) => `<div class="pub-legend-item">${icon}<span>${label}</span></div>`;
   const items = [
-    row(dot('#fde047', '#a16207'),           'Start'),
-    row(dot('#3d9be9', '#2980b9'),           'Visited this run'),
-    row(dot('#8e44ad', '#6c3483'),           'Mapped'),
-    row(dot('#0f172a', '#e74c3c', 3),        'Can die here'),
-    row(dot('#0f172a', '#27ae60', 3),        'Can win here'),
-    row(dot('#431407', '#f97316', 3),        'Battle here'),
-    row(dot('#27ae60', '#1e8449'),           'Victory ended here'),
-    row(dot('#e74c3c', '#c0392b'),           'Death ended here'),
-    row(dot('#c2410c', '#9a3412'),           'Battle death ended here'),
-    ...(isOpenWorld ? [row(dia('#0e7490', '#2dd4bf'), 'Portal')] : []),
+    row(dot('#fde047', '#a16207'),           t('pub.legend.start')),
+    row(dot('#3d9be9', '#2980b9'),           t('pub.legend.visited')),
+    row(dot('#8e44ad', '#6c3483'),           t('pub.legend.mapped')),
+    row(dot('#0f172a', '#e74c3c', 3),        t('pub.legend.can_die')),
+    row(dot('#0f172a', '#27ae60', 3),        t('pub.legend.can_win')),
+    row(dot('#431407', '#f97316', 3),        t('pub.legend.battle')),
+    row(dot('#27ae60', '#1e8449'),           t('pub.legend.victory_ended')),
+    row(dot('#e74c3c', '#c0392b'),           t('pub.legend.death_ended')),
+    row(dot('#c2410c', '#9a3412'),           t('pub.legend.battle_ended')),
+    ...(isOpenWorld ? [row(dia('#0e7490', '#2dd4bf'), t('pub.legend.portal'))] : []),
   ];
   return `<div class="pub-run-legend">${items.join('')}</div>`;
 }
@@ -244,7 +246,7 @@ function renderPublicRun(data) {
   // ── Open world: multi-book journey ────────────────────────────────────────
   if (data.isOpenWorld && data.journey?.length > 0) {
     document.getElementById('pub-modal-title').textContent =
-      `${data.seriesName} - Run ${data.run.runNumber}`;
+      t('pub.run_title', { name: data.seriesName, n: data.run.runNumber });
     const body = document.getElementById('pub-modal-body');
     body.style.padding  = '0';
     body.style.overflow = 'auto';
@@ -253,15 +255,15 @@ function renderPublicRun(data) {
     const resultCls   = finalResult === 'success' ? 'trail-win'
                       : finalResult === 'battle'  ? 'trail-battle'
                       : 'trail-death';
-    const resultLabel = finalResult === 'success' ? '★ Victory'
-                      : finalResult === 'battle'  ? 'Battle Death'
-                      : '✝ Loss';
+    const resultLabel = finalResult === 'success' ? t('pub.journey_result.victory')
+                      : finalResult === 'battle'  ? t('pub.journey_result.battle')
+                      : t('pub.journey_result.loss');
 
     const segHtml = data.journey.map((seg, si) => {
       const isLast  = si === data.journey.length - 1;
       const nextSeg = data.journey[si + 1];
       const portalEl = !isLast
-        ? `<div class="pub-journey-portal"><span class="pub-journey-portal-icon">◇</span><span class="pub-journey-portal-label">Portal to</span><span class="pub-journey-portal-dest">${escapeHtml(nextSeg?.bookName ?? '')}</span></div>`
+        ? `<div class="pub-journey-portal"><span class="pub-journey-portal-icon">◇</span><span class="pub-journey-portal-label">${t('pub.portal_to')}</span><span class="pub-journey-portal-dest">${escapeHtml(nextSeg?.bookName ?? '')}</span></div>`
         : `<div class="pub-journey-result ${resultCls}">${resultLabel}</div>`;
       const pathNodes = _pubRunPathNodes(seg.path, isLast ? finalResult : null);
       return `<div class="pub-journey-segment">
@@ -287,7 +289,7 @@ function renderPublicRun(data) {
     return;
   }
 
-  document.getElementById('pub-modal-title').textContent = `${data.bookName} - Run ${data.run.runNumber}`;
+  document.getElementById('pub-modal-title').textContent = t('pub.run_title', { name: data.bookName, n: data.run.runNumber });
   const body = document.getElementById('pub-modal-body');
   body.style.padding  = '0';
   body.style.overflow = 'hidden';

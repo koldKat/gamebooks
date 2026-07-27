@@ -1,9 +1,10 @@
 // covers.js - Covers panel, lazy grid, landing bg rotation, cover/series activity modals
 import { getToken, isDemoMode, apiFetch } from './state.js?v=11';
-import { openPublicModal, closePublicModal, openPublicProfile, renderPublicProfile, openPublicRun, openPublicSeriesRun, _destroyPubNetworks } from './public-profile.js?v=23';
-import { refreshCoinsDisplay } from './shop.js?v=17';
+import { openPublicModal, closePublicModal, openPublicProfile, renderPublicProfile, openPublicRun, openPublicSeriesRun, _destroyPubNetworks } from './public-profile.js?v=25';
+import { refreshCoinsDisplay } from './shop.js?v=20';
 import { foldForSearch, matchesSearch, naturalCompare, naturalCompareByName } from './sort.js?v=1';
-import { escapeHtml, fetchPublic as publicFetch } from './util.js?v=7';
+import { escapeHtml, fetchPublic as publicFetch } from './util.js?v=9';
+import { t } from './i18n.js?v=12';
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────
 let _hooks = {};
@@ -731,7 +732,7 @@ export async function openCoverActivity(bookId, bookName) {
   openPublicModal();
   document.getElementById('pub-modal-title').textContent = bookName;
   document.getElementById('pub-back-btn').style.display  = 'none';
-  document.getElementById('pub-modal-body').innerHTML    = '<p class="pub-loading">Loading…</p>';
+  document.getElementById('pub-modal-body').innerHTML    = `<p class="pub-loading">${t('covers.loading')}</p>`;
   try {
     const res = getToken()
       ? await apiFetch(`/api/public/book/${bookId}/activity`)
@@ -757,7 +758,7 @@ export async function openCoverActivity(bookId, bookName) {
 
     renderCoverActivity(bookId, data.book?.name ?? bookName, data.entries ?? [], userRating, data.book, userLoggedIn, userOwnsBook, userCanRate);
   } catch {
-    document.getElementById('pub-modal-body').innerHTML = '<p class="pub-error">Could not load activity.</p>';
+    document.getElementById('pub-modal-body').innerHTML = `<p class="pub-error">${t('covers.activity_load_failed')}</p>`;
   }
 }
 
@@ -765,21 +766,21 @@ export async function openSeriesActivity(seriesId, seriesName) {
   openPublicModal();
   document.getElementById('pub-modal-title').textContent = seriesName;
   document.getElementById('pub-back-btn').style.display  = 'none';
-  document.getElementById('pub-modal-body').innerHTML    = '<p class="pub-loading">Loading…</p>';
+  document.getElementById('pub-modal-body').innerHTML    = `<p class="pub-loading">${t('covers.loading')}</p>`;
   try {
     const res = await publicFetch(`/api/public/series/${seriesId}`);
     if (!res.ok) throw new Error();
     const data = await res.json();
     renderSeriesActivity(data);
   } catch {
-    document.getElementById('pub-modal-body').innerHTML = '<p class="pub-error">Could not load series info.</p>';
+    document.getElementById('pub-modal-body').innerHTML = `<p class="pub-error">${t('covers.series_load_failed')}</p>`;
   }
 }
 
 function renderSeriesActivity(data) {
   const backBtn = document.getElementById('pub-back-btn');
   document.getElementById('pub-modal-title').innerHTML =
-    escapeHtml(data.name) + ' <span class="pub-modal-type">(Series)</span>';
+    escapeHtml(data.name) + ` <span class="pub-modal-type">${t('covers.series_label')}</span>`;
   const body = document.getElementById('pub-modal-body');
   body.style.padding  = '';
   body.style.overflow = '';
@@ -795,7 +796,7 @@ function renderSeriesActivity(data) {
   html += `<span class="star-label">${_hooks.starLabelHtml?.(data.avgRating ?? null, data.voteCount ?? 0, 'series') ?? ''}</span>`;
   html += `</div>`;
   if (data.isPublic && userLoggedIn && !userHasSeries) {
-    html += `<button class="add-to-library-btn" id="add-series-to-lib-btn" data-series-id="${data.id}">+ Add to my library</button>`;
+    html += `<button class="add-to-library-btn" id="add-series-to-lib-btn" data-series-id="${data.id}">${t('covers.add_to_library')}</button>`;
   }
   html += '</div></div>';
 
@@ -845,18 +846,18 @@ function renderSeriesActivity(data) {
   if (addSeriesBtn) {
     addSeriesBtn.addEventListener('click', async () => {
       addSeriesBtn.disabled = true;
-      addSeriesBtn.textContent = 'Adding…';
+      addSeriesBtn.textContent = t('covers.adding');
       try {
         const res = await apiFetch(`/api/series/${data.id}/add?cascade=1`, { method: 'POST' });
         if (res.ok) {
-          addSeriesBtn.textContent = '✓ Added to library';
+          addSeriesBtn.textContent = t('covers.added_to_library');
           addSeriesBtn.classList.add('add-to-library-done');
           _hooks.showBooks?.();
         } else {
           addSeriesBtn.disabled = false;
-          addSeriesBtn.textContent = '+ Add to my library';
+          addSeriesBtn.textContent = t('covers.add_to_library');
         }
-      } catch { addSeriesBtn.disabled = false; addSeriesBtn.textContent = '+ Add to my library'; }
+      } catch { addSeriesBtn.disabled = false; addSeriesBtn.textContent = t('covers.add_to_library'); }
     });
   }
 
@@ -1012,7 +1013,7 @@ function renderCoverActivity(bookId, bookName, entries, userRating, bookMeta, us
     headerHtml += `<button class="add-to-library-btn open-owned-book-btn" data-book-id="${bookId}">Open Book</button>`;
   }
   if (bookMeta?.isPublic && userLoggedIn && !userOwnsBook) {
-    headerHtml += `<button class="add-to-library-btn" data-book-id="${bookId}">+ Add to my library</button>`;
+    headerHtml += `<button class="add-to-library-btn" data-book-id="${bookId}">${t('covers.add_to_library')}</button>`;
   }
   if (_hooks.getIsAdmin?.()) {
     headerHtml += `<button class="add-to-library-btn catalog-admin-edit-btn" data-book-id="${bookId}" style="color:#f5a623;border-color:#92400e">✎ Admin Edit</button>`;
@@ -1077,7 +1078,7 @@ function renderCoverActivity(bookId, bookName, entries, userRating, bookMeta, us
   if (addBtn) {
     addBtn.addEventListener('click', async () => {
       addBtn.disabled = true;
-      addBtn.textContent = 'Adding…';
+      addBtn.textContent = t('covers.adding');
       try {
         const res = await apiFetch(`/api/books/${bookId}/add`, { method: 'POST' });
         if (res.ok) {
@@ -1089,11 +1090,11 @@ function renderCoverActivity(bookId, bookName, entries, userRating, bookMeta, us
           );
         } else {
           const d = await res.json().catch(() => ({}));
-          addBtn.textContent = d.error || 'Failed';
+          addBtn.textContent = d.error || t('covers.failed');
           addBtn.disabled = false;
         }
       } catch {
-        addBtn.textContent = 'Error - try again';
+        addBtn.textContent = t('covers.error_retry');
         addBtn.disabled = false;
       }
     });
@@ -1140,7 +1141,7 @@ function renderCoverActivity(bookId, bookName, entries, userRating, bookMeta, us
       e.preventDefault();
       e.stopPropagation();
       openOwnedBtn.disabled = true;
-      openOwnedBtn.textContent = 'Opening…';
+      openOwnedBtn.textContent = t('covers.opening');
       const targetBookId = +openOwnedBtn.dataset.bookId;
       _hooks.lockView?.('book', 1500);
       await _hooks.navigateToBook?.(targetBookId);
@@ -1218,7 +1219,7 @@ function renderCoverActivity(bookId, bookName, entries, userRating, bookMeta, us
     btn.addEventListener('click', async () => {
       const username = btn.dataset.username;
       document.getElementById('pub-modal-title').innerHTML = escapeHtml(_hooks.displayFor?.(username) ?? username) + (_hooks.adminBadge?.(username) ?? '') + (_hooks.authorBadge?.(username) ?? '') + (_hooks.contributorBadge?.(username) ?? '');
-      document.getElementById('pub-modal-body').innerHTML  = '<p class="pub-loading">Loading…</p>';
+      document.getElementById('pub-modal-body').innerHTML  = `<p class="pub-loading">${t('covers.loading')}</p>`;
       backBtn.style.display = '';
       backBtn.onclick = () => renderCoverActivity(bookId, bookName, entries, currentMyRating, { ...bookMeta, avgRating: currentAvg, voteCount: currentCount }, userLoggedIn, userOwnsBook, bookCanRate);
       try {
@@ -1229,7 +1230,7 @@ function renderCoverActivity(bookId, bookName, entries, userRating, bookMeta, us
         backBtn.style.display = '';
         backBtn.onclick = () => renderCoverActivity(bookId, bookName, entries, currentMyRating, { ...bookMeta, avgRating: currentAvg, voteCount: currentCount }, userLoggedIn, userOwnsBook, bookCanRate);
       } catch {
-        document.getElementById('pub-modal-body').innerHTML = '<p class="pub-error">Profile not available.</p>';
+        document.getElementById('pub-modal-body').innerHTML = `<p class="pub-error">${t('pub.profile_unavailable')}</p>`;
       }
     });
   });

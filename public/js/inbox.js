@@ -1,10 +1,10 @@
 // inbox.js - Inbox thread list, conversation view, and reply UI
 
 import { apiFetch, getUsername } from './state.js?v=11';
-import { t } from './i18n.js?v=10';
-import { showConfirm } from './play.js?v=36';
-import { refreshInboxBadge } from './notif.js?v=14';
-import { escapeHtml, isImageFilename, uploadAttachment, addAttachmentItem } from './util.js?v=7';
+import { t } from './i18n.js?v=12';
+import { showConfirm } from './play.js?v=38';
+import { refreshInboxBadge } from './notif.js?v=16';
+import { escapeHtml, isImageFilename, uploadAttachment, addAttachmentItem } from './util.js?v=9';
 
 let _inboxThreads    = [];
 let _currentThreadId = null;
@@ -132,7 +132,7 @@ export function initInbox(mousedownOnOverlayRef) {
         });
       } catch {
         item.classList.replace('att-uploading', 'att-error');
-        item.querySelector('.att-item-name').textContent = 'Failed: ' + file.name;
+        item.querySelector('.att-item-name').textContent = t('util.upload_failed', { name: file.name });
       }
     }
     this.value = '';

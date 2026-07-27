@@ -1,9 +1,10 @@
 // feed.js - Activity feed rendering, hover image previews, feed SSE reload
 
 import { getToken, apiFetch } from './state.js?v=11';
-import { openPublicProfile, openPublicSeriesRun, openPublicRun } from './public-profile.js?v=23';
-import { openCoverActivity, openSeriesActivity } from './covers.js?v=41';
-import { escapeHtml } from './util.js?v=7';
+import { openPublicProfile, openPublicSeriesRun, openPublicRun } from './public-profile.js?v=25';
+import { openCoverActivity, openSeriesActivity } from './covers.js?v=43';
+import { escapeHtml } from './util.js?v=9';
+import { t } from './i18n.js?v=12';
 
 let _hooks = {};
 export function setFeedHooks(h) { _hooks = h || {}; }
@@ -173,10 +174,10 @@ export async function loadFeed() {
     const { entries, pinned } = await res.json();
     if (getToken()) _hooks.scheduleRewardProfileRefresh?.(150);
 
-    const feedHeaderHtml = '<div id="feed-header">Activity <span class="feed-header-sub">(last 30 days)</span></div>';
+    const feedHeaderHtml = `<div id="feed-header">${t('feed.header')} <span class="feed-header-sub">${t('feed.header_sub')}</span></div>`;
 
     if (!entries.length && !pinned) {
-      el.innerHTML = feedHeaderHtml + '<p class="feed-empty">No activity in the last 30 days.</p>';
+      el.innerHTML = feedHeaderHtml + `<p class="feed-empty">${t('feed.empty')}</p>`;
       return;
     }
 
@@ -188,8 +189,8 @@ export async function loadFeed() {
     function dayLabel(ts) {
       const d = new Date(ts);
       const s = d.toDateString();
-      if (s === todayStr)  return 'Today';
-      if (s === yestStr)   return 'Yesterday';
+      if (s === todayStr)  return t('feed.day_today');
+      if (s === yestStr)   return t('feed.day_yesterday');
       return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
     }
 
@@ -279,100 +280,100 @@ export async function loadFeed() {
         return `<button class="feed-book feed-book-btn" data-book-id="${id}" data-book-name="${escapeHtml(name)}"${cover}${parentAttrs}>${escapeHtml(name)}</button>${tags}`;
       };
 
+      const verbLabel = cls => cls === 'won' ? t('feed.verb.won') : cls === 'died' ? t('feed.verb.died') : t('feed.verb.lost');
+      const nounLabel = isContainer => isContainer ? t('feed.noun.anthology') : t('feed.noun.book');
+
       let html = '';
       if (e.type === 'run_completed') {
         const isWin  = e.result === 'success';
         const isBattle = e.result === 'battle';
-        const verb   = isWin ? 'won' : isBattle ? 'died' : 'lost';
         const verbCls = isWin ? 'won' : isBattle ? 'died' : 'lost';
+        const verb = verbLabel(verbCls);
         const verbEl = e.runIsPublic
           ? `<button class="feed-verb ${verbCls} feed-verb-pub" data-book-id="${e.bookId}" data-user-id="${e.userId}" data-run-index="${e.runIndex}">${verb}</button>`
           : `<span class="feed-verb ${verbCls}">${verb}</span>`;
-        html = `${userEl} ${verbEl} in ${bookBtn(e.bookId, e.bookName)} <span class="feed-run">run ${e.runIndex + 1}</span>`;
+        html = t('feed.tmpl.run_completed', { user: userEl, verb: verbEl, book: bookBtn(e.bookId, e.bookName), n: e.runIndex + 1 });
       } else if (e.type === 'book_created') {
-        const noun = e.isContainer ? 'anthology' : 'book';
-        html = `${userEl} <span class="feed-verb neutral">created ${noun}</span> ${bookBtn(e.bookId, e.bookName)}`;
+        html = t('feed.tmpl.created', { user: userEl, noun: nounLabel(e.isContainer), book: bookBtn(e.bookId, e.bookName) });
       } else if (e.type === 'book_added') {
-        const noun = e.isContainer ? 'anthology' : 'book';
-        html = `${userEl} <span class="feed-verb neutral">added ${noun}</span> ${bookBtn(e.bookId, e.bookName)}`;
+        html = t('feed.tmpl.added', { user: userEl, noun: nounLabel(e.isContainer), book: bookBtn(e.bookId, e.bookName) });
       } else if (e.type === 'series_created') {
-        html = `${userEl} <span class="feed-verb neutral">created series</span> ${_seriesTag(e)}`;
+        html = t('feed.tmpl.created_series', { user: userEl, series: _seriesTag(e) });
       } else if (e.type === 'series_added') {
-        html = `${userEl} <span class="feed-verb neutral">added series</span> ${_seriesTag(e)}`;
+        html = t('feed.tmpl.added_series', { user: userEl, series: _seriesTag(e) });
       } else if (e.type === 'series_run_started') {
-        html = `${userEl} <span class="feed-verb neutral">began</span> <span class="feed-run">series run ${e.runIndex + 1}</span> in ${_seriesTag(e)}`;
+        html = t('feed.tmpl.series_run_started', { user: userEl, n: e.runIndex + 1, series: _seriesTag(e) });
       } else if (e.type === 'series_run_completed') {
         const isWin    = e.result === 'success';
         const isBattle = e.result === 'battle';
-        const verb     = isWin ? 'won' : isBattle ? 'died' : 'lost';
         const verbCls  = isWin ? 'won' : isBattle ? 'died' : 'lost';
+        const verb = verbLabel(verbCls);
         const verbEl   = e.runIsPublic
           ? `<button class="feed-verb ${verbCls} feed-verb-pub" data-book-id="${e.seriesId}" data-user-id="${e.userId}" data-run-index="${e.runIndex}" data-series-run="1">${verb}</button>`
           : `<span class="feed-verb ${verbCls}">${verb}</span>`;
-        html = `${userEl} ${verbEl} <span class="feed-run">series run ${e.runIndex + 1}</span> of ${_seriesTag(e)}`;
+        html = t('feed.tmpl.series_run_completed', { user: userEl, verb: verbEl, n: e.runIndex + 1, series: _seriesTag(e) });
       } else if (e.type === 'run_started') {
-        html = `${userEl} <span class="feed-verb neutral">began</span> <span class="feed-run">run ${e.runIndex + 1}</span> of ${bookBtn(e.bookId, e.bookName)}`;
+        html = t('feed.tmpl.run_started', { user: userEl, n: e.runIndex + 1, book: bookBtn(e.bookId, e.bookName) });
       } else if (e.type === 'user_joined') {
-        const tmpl = e.joinTemplate || 'A new adventurer enters the fray - welcome, {name}.';
+        const tmpl = e.joinTemplate || t('feed.join_default');
         html = tmpl.replace('{name}', userEl);
         extraClass = 'feed-entry--join';
       } else if (e.type === 'level_up') {
         extraClass = 'feed-entry--levelup';
         const abilitySuffix = e.gainedAbility
-          ? ` · <span class="feed-ability">+1 undo &amp; fast travel unlocked (${e.newAbilityCount} per run)</span>`
+          ? t('feed.ability_unlocked', { n: e.newAbilityCount })
           : '';
-        const lvTmpl = e.levelUpTemplate || '{name} reached {level} - {title}';
+        const lvTmpl = e.levelUpTemplate || t('feed.levelup_default');
         html = lvTmpl
           .replace('{name}',  userEl)
           .replace('{title}', `<span class="feed-title">${escapeHtml(e.levelTitle)}</span>`)
           .replace('{level}', `<span class="feed-level">${e.level}</span>`) + abilitySuffix;
       } else if (e.type === 'all_visited') {
-        html = `${userEl} <span class="feed-verb neutral">visited every section of</span> ${bookBtn(e.bookId, e.bookName)}`;
+        html = t('feed.tmpl.all_visited', { user: userEl, book: bookBtn(e.bookId, e.bookName) });
       } else if (e.type === 'all_discovered') {
-        html = `${userEl} <span class="feed-verb neutral">discovered every section of</span> ${bookBtn(e.bookId, e.bookName)}`;
+        html = t('feed.tmpl.all_discovered', { user: userEl, book: bookBtn(e.bookId, e.bookName) });
       } else if (e.type === 'first_win') {
         const wonEl = (e.runIsPublic && e.runIndex != null)
-          ? `<button class="feed-verb won feed-verb-pub" data-book-id="${e.bookId}" data-user-id="${e.userId}" data-run-index="${e.runIndex}">won</button>`
-          : `<span class="feed-verb won">won</span>`;
+          ? `<button class="feed-verb won feed-verb-pub" data-book-id="${e.bookId}" data-user-id="${e.userId}" data-run-index="${e.runIndex}">${t('feed.verb.won')}</button>`
+          : `<span class="feed-verb won">${t('feed.verb.won')}</span>`;
         const runLabel = e.runIndex != null ? ` <span class="feed-run">run ${e.runIndex + 1}</span>` : '';
-        html = `${userEl} ${wonEl} in ${bookBtn(e.bookId, e.bookName)}${runLabel} <span class="feed-verb neutral">for the first time</span>`;
+        html = t('feed.tmpl.first_result', { user: userEl, verb: wonEl, book: bookBtn(e.bookId, e.bookName), run: runLabel, first_time: t('feed.first_time') });
       } else if (e.type === 'first_loss') {
         const verbEl   = (e.runIsPublic && e.runIndex != null)
-          ? `<button class="feed-verb lost feed-verb-pub" data-book-id="${e.bookId}" data-user-id="${e.userId}" data-run-index="${e.runIndex}">lost</button>`
-          : `<span class="feed-verb lost">lost</span>`;
+          ? `<button class="feed-verb lost feed-verb-pub" data-book-id="${e.bookId}" data-user-id="${e.userId}" data-run-index="${e.runIndex}">${t('feed.verb.lost')}</button>`
+          : `<span class="feed-verb lost">${t('feed.verb.lost')}</span>`;
         const runLabel = e.runIndex != null ? ` <span class="feed-run">run ${e.runIndex + 1}</span>` : '';
-        html = `${userEl} ${verbEl} in ${bookBtn(e.bookId, e.bookName)}${runLabel} <span class="feed-verb neutral">for the first time</span>`;
+        html = t('feed.tmpl.first_result', { user: userEl, verb: verbEl, book: bookBtn(e.bookId, e.bookName), run: runLabel, first_time: t('feed.first_time') });
       } else if (e.type === 'first_battle_death') {
         const verbEl   = (e.runIsPublic && e.runIndex != null)
-          ? `<button class="feed-verb lost feed-verb-pub" data-book-id="${e.bookId}" data-user-id="${e.userId}" data-run-index="${e.runIndex}">fell in battle</button>`
-          : `<span class="feed-verb lost">fell in battle</span>`;
+          ? `<button class="feed-verb lost feed-verb-pub" data-book-id="${e.bookId}" data-user-id="${e.userId}" data-run-index="${e.runIndex}">${t('feed.verb.fell_in_battle')}</button>`
+          : `<span class="feed-verb lost">${t('feed.verb.fell_in_battle')}</span>`;
         const runLabel = e.runIndex != null ? ` <span class="feed-run">run ${e.runIndex + 1}</span>` : '';
-        html = `${userEl} ${verbEl} in ${bookBtn(e.bookId, e.bookName)}${runLabel} <span class="feed-verb neutral">for the first time</span>`;
+        html = t('feed.tmpl.first_result', { user: userEl, verb: verbEl, book: bookBtn(e.bookId, e.bookName), run: runLabel, first_time: t('feed.first_time') });
       } else if (e.type === 'won_all_series') {
-        html = `${userEl} <span class="feed-verb neutral">won in all books of</span> ${_seriesTag(e)}`;
+        html = t('feed.tmpl.won_all', { user: userEl, target: _seriesTag(e) });
       } else if (e.type === 'won_all_anthology') {
-        html = `${userEl} <span class="feed-verb neutral">won in all books of</span> ${bookBtn(e.bookId, e.bookName)}`;
+        html = t('feed.tmpl.won_all', { user: userEl, target: bookBtn(e.bookId, e.bookName) });
       } else if (e.type === 'visit_all_series') {
-        html = `${userEl} <span class="feed-verb neutral">visited every section of all books in</span> ${_seriesTag(e)}`;
+        html = t('feed.tmpl.visit_all', { user: userEl, target: _seriesTag(e) });
       } else if (e.type === 'discover_all_series') {
-        html = `${userEl} <span class="feed-verb neutral">discovered every section of all books in</span> ${_seriesTag(e)}`;
+        html = t('feed.tmpl.discover_all', { user: userEl, target: _seriesTag(e) });
       } else if (e.type === 'visit_all_anthology') {
-        html = `${userEl} <span class="feed-verb neutral">visited every section of all books in</span> ${bookBtn(e.bookId, e.bookName)}`;
+        html = t('feed.tmpl.visit_all', { user: userEl, target: bookBtn(e.bookId, e.bookName) });
       } else if (e.type === 'discover_all_anthology') {
-        html = `${userEl} <span class="feed-verb neutral">discovered every section of all books in</span> ${bookBtn(e.bookId, e.bookName)}`;
+        html = t('feed.tmpl.discover_all', { user: userEl, target: bookBtn(e.bookId, e.bookName) });
       } else if (e.type === 'party_formed') {
-        html = `${userEl} <span class="feed-verb neutral">started playing</span> ${bookBtn(e.bookId, e.bookName)} <span class="feed-verb neutral">together</span> <span class="feed-party-badge">party</span>`;
+        html = t('feed.tmpl.party_formed', { user: userEl, book: bookBtn(e.bookId, e.bookName), together: t('feed.together'), party: t('feed.party_badge') });
       } else if (e.type === 'book_rated') {
-        const noun = e.isContainer ? 'anthology' : 'book';
-        html = `${userEl} <span class="feed-verb neutral">rated ${noun}</span> ${bookBtn(e.bookId, e.bookName)} <span class="star-rating feed-rating-stars">${_hooks.starsHtml?.(e.rating) ?? ''}</span>`;
+        html = t('feed.tmpl.rated', { user: userEl, noun: nounLabel(e.isContainer), book: bookBtn(e.bookId, e.bookName), stars: _hooks.starsHtml?.(e.rating) ?? '' });
         extraClass = 'feed-entry--rated';
       } else if (e.type === 'series_rated') {
-        html = `${userEl} <span class="feed-verb neutral">rated series</span> ${_seriesTag(e)} <span class="star-rating feed-rating-stars">${_hooks.starsHtml?.(e.rating) ?? ''}</span>`;
+        html = t('feed.tmpl.rated_series', { user: userEl, series: _seriesTag(e), stars: _hooks.starsHtml?.(e.rating) ?? '' });
         extraClass = 'feed-entry--rated';
       } else if (e.type === 'announcement') {
         html = `<div class="feed-announcement"><span class="feed-ann-title">${escapeHtml(e.title)}</span><div class="feed-ann-body">${formatAnnBody(e.body)}</div></div>`;
       }
-      if (isParty && html && e.type !== 'party_formed') html += ' <span class="feed-party-badge">party</span>';
+      if (isParty && html && e.type !== 'party_formed') html += ` <span class="feed-party-badge">${t('feed.party_badge')}</span>`;
       return { html, isParty, extraClass };
     }
 
@@ -451,7 +452,7 @@ export async function loadFeed() {
             const rest    = joinItems.slice(2).map(_makeEntryHtml).join('');
             out += `<div class="feed-user-group feed-user-group--joins">`;
             out += `<button class="feed-group-toggle" data-target="${id}" data-group-key="${escapeHtml(thisDayIndex + ':__joins')}" aria-expanded="false">`;
-            out += `<span class="feed-group-chevron">▶</span><span class="feed-group-name">New adventurers</span><span class="feed-group-count"> - ${joinItems.length} joined today</span>`;
+            out += `<span class="feed-group-chevron">▶</span><span class="feed-group-name">${t('feed.new_adventurers')}</span><span class="feed-group-count">${t('feed.joined_today', { n: joinItems.length })}</span>`;
             out += `</button>`;
             out += `<div class="feed-group-body" id="${id}" hidden>${preview}${rest}</div>`;
             out += `</div>`;
@@ -474,7 +475,7 @@ export async function loadFeed() {
           const partyTag = isPartyGroup ? ' <span class="feed-party-badge">party</span>' : '';
           out += `<div class="feed-user-group${isPartyGroup ? ' feed-user-group--party' : ''}">`;
           out += `<button class="feed-group-toggle" data-target="${id}" data-group-key="${escapeHtml(thisDayIndex + ':' + k)}" aria-expanded="false">`;
-          out += `<span class="feed-group-chevron">▶</span>${label}<span class="feed-group-count"> - ${userItems.length} actions today</span>${partyTag}`;
+          out += `<span class="feed-group-chevron">▶</span>${label}<span class="feed-group-count">${t('feed.actions_today', { n: userItems.length })}</span>${partyTag}`;
           out += `</button>`;
           out += `<div class="feed-group-body" id="${id}" hidden>${preview}${rest}</div>`;
           out += `</div>`;
@@ -589,7 +590,7 @@ export async function loadFeed() {
         preview.classList.toggle('feed-img-preview--avatar', !isCover);
         if (!isCover && userLevel) {
           previewFooter.style.display = 'block';
-          previewLevel.innerHTML = `<span class="feed-hover-level-kicker">Lvl ${escapeHtml(userLevel)}</span>${userTitle ? ` <span class="feed-hover-level-title">${escapeHtml(userTitle)}</span>` : ''}`;
+          previewLevel.innerHTML = `<span class="feed-hover-level-kicker">${t('feed.hover_level', { n: escapeHtml(userLevel) })}</span>${userTitle ? ` <span class="feed-hover-level-title">${escapeHtml(userTitle)}</span>` : ''}`;
           previewLevel.style.display = 'block';
         } else {
           previewFooter.style.display = 'none';

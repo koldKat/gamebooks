@@ -4,7 +4,8 @@
 // hideNotesUI() calls from boot.js, and remove the notebook/notes-display CSS from style.css.
 
 import { state, saveState, apiFetch, currentBookId } from './state.js?v=11';
-import { showAlert } from './play.js?v=36';
+import { showAlert } from './play.js?v=38';
+import { t } from './i18n.js?v=12';
 
 let _notesText  = '';
 let _nbFraction = 0;   // 0–1 scroll position, shared by both notebook views
@@ -154,13 +155,13 @@ export function initNotes() {
       });
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
-        showAlert(j.error || 'Could not save notebook.');
+        showAlert(j.error || t('notes.save_failed'));
         return; // leave the modal open with the unsaved text still in it
       }
       const d = await res.json();
       if (d.xpAwarded) _onXpAwarded?.();
       setNotesDisplayText(text);
-    } catch (_) { showAlert('Could not save notebook.'); return; }
+    } catch (_) { showAlert(t('notes.save_failed')); return; }
     _saveNotebookPos();
     notebookOverlay.classList.remove('active');
   }
@@ -177,14 +178,14 @@ export function initNotes() {
       });
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
-        showAlert(j.error || 'Could not save notebook.');
+        showAlert(j.error || t('notes.save_failed'));
         return; // stay in edit mode with the unsaved text still in it
       }
       const d = await res.json();
       if (d.xpAwarded) _onXpAwarded?.();
       setNotesDisplayText(text);
       notebookInput.value = text;
-    } catch (_) { showAlert('Could not save notebook.'); return; }
+    } catch (_) { showAlert(t('notes.save_failed')); return; }
     notesDisplay.classList.remove('hovering');
   }
 
