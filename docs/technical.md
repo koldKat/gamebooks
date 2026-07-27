@@ -84,12 +84,13 @@ gamebooks/
       inventory.js       Inventory grid - self-contained module (per-run item slots, drag reorder, template)
       equipment.js       Equipment panel - self-contained module (per-run equip slots, context menu, template)
       sort.js            Search/sort helpers (foldForSearch, matchesSearch, naturalCompare)
-      util.js            Shared utility helpers: escapeHtml, compressImage, compressToBlob (client-side JPEG quality iteration)
+      util.js            Shared utility helpers: escapeHtml, compressImage, compressToBlob (client-side JPEG quality iteration), registerPanelShortcut (single-key panel toggle shared by charsheet/inventory/equipment/battlesim*), shortcutLabel (first-letter shortcut hint span)
       autocomplete.js    Shared name-autocomplete helpers for add/edit modals
       auth.js            Login, register, forgot-password, reset-password forms
       notes.js           Notebook modal and pinned notes overlay
       battlesim829.js    Battle simulator for book 829
       battlesim8.js      Battle simulator for book 8
+      battlesim286.js    Battle simulator for book 286 (flat weapon min-hit model, tech gadgets, sleep/dream table)
       add-book.js        Create Book, Create Anthology, Create Series modals
       edit-book.js       Edit Book/Anthology/Series/Stash modals; ISBN/ISSN/ASIN validation
       books.js           Books list rendering, panel management, stash UI
@@ -146,7 +147,7 @@ Layer 2:
     Works because none consume each other's exports at module-evaluation time.
 
 Layer 3 (feature modules — import from layers 0–2 as needed):
-  notes.js, battlesim829.js, battlesim8.js, auth.js, add-book.js, edit-book.js,
+  notes.js, battlesim829.js, battlesim8.js, battlesim286.js, auth.js, add-book.js, edit-book.js,
   books.js, covers.js, feed.js, open-world.js, shop.js, profile.js,
   public-profile.js, prefs.js, livetab.js, notif.js, rewards.js, bg.js,
   stats.js, party.js, tips.js, inbox.js, dice.js, tooltip.js, export.js,
@@ -533,6 +534,7 @@ sessions (token PK, user_id → users, created_at, expires_at)
 books (id, name, total_sections, discoverable_sections, isbn, issn, asin, cover_path, pdf_path, is_demo, pages, authors, description, created_by → users, created_at, updated_at, series_id → series SET NULL, series_number TEXT, is_container INTEGER DEFAULT 0, parent_book_id → books SET NULL, book_order INTEGER)
   INDEX idx_books_series_id ON books(series_id)
   INDEX idx_books_parent_book_id ON books(parent_book_id)
+book_enemies (id, book_id → books CASCADE, name, attack INTEGER, defense INTEGER, hp INTEGER, pb INTEGER, created_at)
 series (id PK AUTOINCREMENT, name TEXT UNIQUE, description TEXT, is_public INTEGER NOT NULL DEFAULT 0, created_by → users SET NULL, created_at)
 user_series (user_id → users CASCADE, series_id → series CASCADE, added_at, rating REAL DEFAULT NULL; PRIMARY KEY (user_id, series_id))
 user_stashes (id PK AUTOINCREMENT, user_id → users CASCADE, name TEXT, created_at)
@@ -685,6 +687,8 @@ INDEX idx_attachments_kind_linked ON attachments (kind, linked_id)
 - Covers-panel search recognises keywords `anthology`/`anthologies` (shows only containers) and matches against `seriesName`.
 
 `state_data` (in `user_books`) stores the full per-user client state object as a JSON string. `name`, `total_sections`, `discoverable_sections`, `isbn`, `issn`, `asin`, `pages`, `authors`, and `description` are stored as columns on `books` so the books list can be rendered without parsing state blobs. `cover_path` on `books` stores the filename only (not the full URL path).
+
+**`book_enemies`** - reference enemy stat blocks feeding the enemy-name autocomplete inside a book's battle simulator (`GET /api/books/:id/enemies`). No admin UI exists for this table yet - rows are seeded by hand via direct SQL against `database.sqlite`, extracted from each book's actual combat encounters. `attack`/`defense`/`pb` map to book 829's opposed Attack/Defense/Proектоброня system (`battlesim829.js`); books using a different combat model (e.g. book 286's flat weapon min-hit system) repurpose `attack` to mean whatever that book's own simulator needs it to (for 286, "enemy minimum hit"), leaving `defense`/`pb` at 0. Book 8 doesn't use named per-section enemies at all - its rows are generic Skill/Life variant templates for `battlesim8.js`'s own dice-based enemy generator, not real book encounters.
 
 ### XP and levelling system
 
@@ -1665,14 +1669,14 @@ Only English is active. The infrastructure supports additional languages; no UI 
 | Export | Description |
 |--------|-------------|
 | `t(key, params)` | Returns the translated string for `key` in the current language; falls back to English then to the key itself. `{param}` placeholders are replaced from `params`. Checks `_overrides` first (see below). |
-| `applyTranslations()` | Walks the DOM: sets `textContent` for `[data-i18n]` elements, `placeholder` for `[data-i18n-placeholder]` elements, and updates `document.title` and `document.documentElement.lang`. |
+| `applyTranslations()` | Walks the DOM: sets `textContent` for `[data-i18n]` elements, `placeholder` for `[data-i18n-placeholder]` elements, `title` for `[data-i18n-title]` elements, and updates `document.title` and `document.documentElement.lang`. |
 | `setTranslationOverride(key, value)` | Sets a runtime override for a single translation key. Overrides take priority over both the current language and the English fallback. Used by `boot.js` to inject the server-chosen tagline into `app.tagline` without changing the translation table. |
 
 `_lang` currently only ever resolves to `'en'` (read once from `localStorage`'s `gamebook_lang` key at module load, with no other language actually implemented) - there is no `setLang()`/language-switcher UI. `getLang()` (2026-07-25) was a dead export with zero callers anywhere in the codebase, removed during a dead-code sweep; `setLang(lang)` had already been removed from the code entirely at some earlier point without this doc being updated to match - fixed now.
 
 ### Dynamic content
 
-Static HTML elements use `data-i18n` / `data-i18n-placeholder` attributes. Dynamically-built HTML (books list, playthrough panel, node tooltips) calls `t()` directly at render time. A `lang-changed` listener in `boot.js` triggers `renderBooksList` (if books screen is visible) or `render()` (if main screen is visible) so all dynamic content updates when the language switches.
+Static HTML elements use `data-i18n` / `data-i18n-placeholder` / `data-i18n-title` attributes. Dynamically-built HTML (books list, playthrough panel, node tooltips) calls `t()` directly at render time. A `lang-changed` listener in `boot.js` triggers `renderBooksList` (if books screen is visible) or `render()` (if main screen is visible) so all dynamic content updates when the language switches.
 
 ### Adding a new string
 

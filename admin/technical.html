@@ -248,12 +248,13 @@
       inventory.js       Inventory grid - self-contained module (per-run item slots, drag reorder, template)
       equipment.js       Equipment panel - self-contained module (per-run equip slots, context menu, template)
       sort.js            Search/sort helpers (foldForSearch, matchesSearch, naturalCompare)
-      util.js            Shared utility helpers: escapeHtml, compressImage, compressToBlob (client-side JPEG quality iteration)
+      util.js            Shared utility helpers: escapeHtml, compressImage, compressToBlob (client-side JPEG quality iteration), registerPanelShortcut (single-key panel toggle shared by charsheet/inventory/equipment/battlesim*), shortcutLabel (first-letter shortcut hint span)
       autocomplete.js    Shared name-autocomplete helpers for add/edit modals
       auth.js            Login, register, forgot-password, reset-password forms
       notes.js           Notebook modal and pinned notes overlay
       battlesim829.js    Battle simulator for book 829
       battlesim8.js      Battle simulator for book 8
+      battlesim286.js    Battle simulator for book 286 (flat weapon min-hit model, tech gadgets, sleep/dream table)
       add-book.js        Create Book, Create Anthology, Create Series modals
       edit-book.js       Edit Book/Anthology/Series/Stash modals; ISBN/ISSN/ASIN validation
       books.js           Books list rendering, panel management, stash UI
@@ -306,7 +307,7 @@ Layer 2:
     (safe: none consume each other at module-evaluation time)
 
 Layer 3 (feature modules):
-  notes, battlesim829, battlesim8, auth, add-book, edit-book, books,
+  notes, battlesim829, battlesim8, battlesim286, auth, add-book, edit-book, books,
   covers, feed, open-world, shop, profile, public-profile, prefs,
   livetab, notif, rewards, bg, stats, party, tips, inbox, dice,
   tooltip, export, feedback, demo
@@ -489,6 +490,7 @@ books (id, name, total_sections, discoverable_sections, isbn, issn, asin,
        is_container INTEGER DEFAULT 0, parent_book_id → books SET NULL, book_order INTEGER)
   INDEX idx_books_series_id ON books(series_id)
   INDEX idx_books_parent_book_id ON books(parent_book_id)
+book_enemies (id, book_id → books CASCADE, name, attack INTEGER, defense INTEGER, hp INTEGER, pb INTEGER, created_at)
 series (id PK AUTOINCREMENT, name TEXT UNIQUE, description TEXT,
         is_public INTEGER NOT NULL DEFAULT 0,
         created_by → users SET NULL, created_at)
@@ -566,6 +568,7 @@ INDEX idx_attachments_kind_linked ON attachments (kind, linked_id)</code></pre>
       <p><strong><code>pdf_access</code></strong> (<code>INTEGER DEFAULT 0</code>) - when <code>1</code>, the user can download book PDFs via <code>GET /books/:path</code>. Toggled by the admin via <code>POST /api/admin/users/:id/pdf-access { pdfAccess: bool }</code>. Admins bypass this check automatically. Returned in <code>GET /api/profile</code> as <code>pdfAccess: bool</code>. Added via <code>ALTER TABLE</code> migration at startup.</p>
       <p><strong><code>join_template_id</code></strong> (<code>INTEGER</code>) - permanently assigned at registration by randomly selecting a row from the <code>join_templates</code> table (50 templates seeded at startup via <code>INSERT OR IGNORE</code>, same pattern as <code>level_up_templates</code>). Existing users are backfilled a random template on startup. The template text is used for the <code>user_joined</code> activity feed entry for that user and never changes, so the join-feed text is stable across refreshes.</p>
       <p>Column additions are handled via <code>ALTER TABLE</code> migrations on startup (no-ops if already present). One-time migrations are guarded by <code>admin_settings</code> keys (see Admin settings table above).</p>
+      <p><strong><code>book_enemies</code></strong> - reference enemy stat blocks feeding the enemy-name autocomplete inside a book's battle simulator (<code>GET /api/books/:id/enemies</code>). No admin UI exists for this table yet - rows are seeded by hand via direct SQL against <code>database.sqlite</code>, extracted from each book's actual combat encounters. <code>attack</code>/<code>defense</code>/<code>pb</code> map to book 829's opposed Attack/Defense/Проектоброня system (<code>battlesim829.js</code>); books using a different combat model (e.g. book 286's flat weapon min-hit system) repurpose <code>attack</code> to mean whatever that book's own simulator needs (for 286, "enemy minimum hit"), leaving <code>defense</code>/<code>pb</code> at 0. Book 8 doesn't use named per-section enemies at all - its rows are generic Skill/Life variant templates for <code>battlesim8.js</code>'s own dice-based enemy generator, not real book encounters.</p>
     </div>
 
     <!-- XP & levelling -->
@@ -1111,11 +1114,11 @@ computeLevel(xp) = min(floor((-1 + sqrt(1 + 8·xp/1000)) / 2), 100)</code></pre>
         <thead><tr><th>Export</th><th>Description</th></tr></thead>
         <tbody>
           <tr><td><code>t(key, params)</code></td><td>Returns translated string; checks <code>_overrides</code> first, then falls back to English then to the key. <code>{param}</code> placeholders replaced from <code>params</code>.</td></tr>
-          <tr><td><code>applyTranslations()</code></td><td>Walks DOM: sets <code>textContent</code> for <code>[data-i18n]</code>, <code>placeholder</code> for <code>[data-i18n-placeholder]</code>.</td></tr>
+          <tr><td><code>applyTranslations()</code></td><td>Walks DOM: sets <code>textContent</code> for <code>[data-i18n]</code>, <code>placeholder</code> for <code>[data-i18n-placeholder]</code>, <code>title</code> for <code>[data-i18n-title]</code>.</td></tr>
           <tr><td><code>setTranslationOverride(key, value)</code></td><td>Sets a runtime override for one key; takes priority over all language tables. Used by <code>boot.js</code> to inject the server-chosen tagline into <code>app.tagline</code>.</td></tr>
         </tbody>
       </table>
-      <p>Static HTML uses <code>data-i18n</code> attributes. Dynamic HTML calls <code>t()</code> at render time. A <code>lang-changed</code> listener triggers <code>renderBooksList</code> or <code>render()</code> so dynamic content updates when the language switches.</p>
+      <p>Static HTML uses <code>data-i18n</code> / <code>data-i18n-placeholder</code> / <code>data-i18n-title</code> attributes. Dynamic HTML calls <code>t()</code> at render time. A <code>lang-changed</code> listener triggers <code>renderBooksList</code> or <code>render()</code> so dynamic content updates when the language switches.</p>
     </div>
 
     <!-- Export -->

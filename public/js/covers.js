@@ -1,10 +1,10 @@
 // covers.js - Covers panel, lazy grid, landing bg rotation, cover/series activity modals
 import { getToken, isDemoMode, apiFetch } from './state.js?v=11';
-import { openPublicModal, closePublicModal, openPublicProfile, renderPublicProfile, openPublicRun, openPublicSeriesRun, _destroyPubNetworks } from './public-profile.js?v=25';
-import { refreshCoinsDisplay } from './shop.js?v=20';
+import { openPublicModal, closePublicModal, openPublicProfile, renderPublicProfile, openPublicRun, openPublicSeriesRun, _destroyPubNetworks } from './public-profile.js?v=31';
+import { refreshCoinsDisplay } from './shop.js?v=26';
 import { foldForSearch, matchesSearch, naturalCompare, naturalCompareByName } from './sort.js?v=1';
-import { escapeHtml, fetchPublic as publicFetch } from './util.js?v=9';
-import { t } from './i18n.js?v=12';
+import { escapeHtml, fetchPublic as publicFetch } from './util.js?v=16';
+import { t } from './i18n.js?v=17';
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────
 let _hooks = {};
@@ -262,7 +262,7 @@ function _makeCoverThumbHTML(c) {
   const cls = c.isSeries ? ' cover-thumb--series' : (c.isContainer ? ' cover-thumb--anthology' : '');
   const isFavorite = _isFavoriteCoverItem(c);
   const favBtn = (getToken() && !isDemoMode)
-    ? `<button class="cover-fav-btn${isFavorite ? ' is-favorite' : ''}" type="button" data-fav-type="${c.isSeries ? 'series' : 'book'}" data-fav-id="${c.isSeries ? c.entityId : c.id}" title="${isFavorite ? 'Remove from favorites' : 'Add to favorites'}" aria-label="${isFavorite ? 'Remove from favorites' : 'Add to favorites'}">${isFavorite ? '★' : '☆'}</button>`
+    ? `<button class="cover-fav-btn${isFavorite ? ' is-favorite' : ''}" type="button" data-fav-type="${c.isSeries ? 'series' : 'book'}" data-fav-id="${c.isSeries ? c.entityId : c.id}" title="${isFavorite ? t('covers.remove_from_favorites') : t('covers.add_to_favorites')}" aria-label="${isFavorite ? t('covers.remove_from_favorites') : t('covers.add_to_favorites')}">${isFavorite ? '★' : '☆'}</button>`
     : '';
   const useSingleSeriesCover = c.isSeries && c.coverSources?.length && c.coverSources.length < 4;
   const attrs = c.isSeries
@@ -295,7 +295,7 @@ function _syncCoverFavoriteButton(btn, isFavorite) {
   if (!btn) return;
   btn.classList.toggle('is-favorite', !!isFavorite);
   btn.textContent = isFavorite ? '★' : '☆';
-  const label = isFavorite ? 'Remove from favorites' : 'Add to favorites';
+  const label = isFavorite ? t('covers.remove_from_favorites') : t('covers.add_to_favorites');
   btn.title = label;
   btn.setAttribute('aria-label', label);
 }
@@ -801,7 +801,7 @@ function renderSeriesActivity(data) {
   html += '</div></div>';
 
   if (data.books.length) {
-    html += `<div class="book-modal-children-section"><div class="book-modal-children-header">Books in this series</div><div class="book-modal-children-list">`;
+    html += `<div class="book-modal-children-section"><div class="book-modal-children-header">${t('covers.books_in_series')}</div><div class="book-modal-children-list">`;
     for (const b of data.books) {
       const num = b.seriesNumber ? ` <span class="child-row-num">#${escapeHtml(b.seriesNumber)}</span>` : '';
       if (b.isContainer) {
@@ -812,7 +812,7 @@ function renderSeriesActivity(data) {
             ${sub}
             <span class="child-row-arrow">&#x203a;</span>
           </button>
-          ${b.children.length ? `<button class="anthology-toggle-btn" data-anthology-id="${b.id}" aria-expanded="false" aria-label="Expand anthology">&#x25b8;</button>` : ''}
+          ${b.children.length ? `<button class="anthology-toggle-btn" data-anthology-id="${b.id}" aria-expanded="false" aria-label="${t('covers.expand_anthology')}">&#x25b8;</button>` : ''}
         </div>`;
         if (b.children.length) {
           html += `<div class="anthology-children-list" id="anthology-children-${b.id}" style="display:none">`;
@@ -1010,7 +1010,7 @@ function renderCoverActivity(bookId, bookName, entries, userRating, bookMeta, us
     </div>`;
   }
   if (userOwnsBook && !_isMobile()) {
-    headerHtml += `<button class="add-to-library-btn open-owned-book-btn" data-book-id="${bookId}">Open Book</button>`;
+    headerHtml += `<button class="add-to-library-btn open-owned-book-btn" data-book-id="${bookId}">${t('covers.open_book')}</button>`;
   }
   if (bookMeta?.isPublic && userLoggedIn && !userOwnsBook) {
     headerHtml += `<button class="add-to-library-btn" data-book-id="${bookId}">${t('covers.add_to_library')}</button>`;
@@ -1022,7 +1022,7 @@ function renderCoverActivity(bookId, bookName, entries, userRating, bookMeta, us
 
   if (bookMeta?.isContainer && bookMeta?.children?.length) {
     headerHtml += `<div class="book-modal-children-section">
-      <div class="book-modal-children-header">Books in this anthology</div>
+      <div class="book-modal-children-header">${t('covers.books_in_anthology')}</div>
       <div class="book-modal-children-list">`;
     headerHtml += bookMeta.children.map(c =>
       `<button class="book-modal-child-row" data-book-id="${c.id}" data-book-name="${escapeHtml(c.name)}">
@@ -1347,7 +1347,7 @@ function _applyLandingBgHiddenPref() {
     _startLandingCoverRotation({ reset: false, immediate: true });
   }
   const btn = document.getElementById('landing-ctx-toggle-btn');
-  if (btn) btn.textContent = _landingBgHidden ? 'Show background' : 'Hide background';
+  if (btn) btn.textContent = _landingBgHidden ? t('bg.show_background') : t('bg.hide_background');
 }
 
 function _persistLandingBgHiddenPref() {
@@ -1366,7 +1366,7 @@ function _applyLandingCoverSourcePrefs() {
     mineRadio.checked = _landingCoverSource === 'mine';
     mineRadio.disabled = !getToken() || isDemoMode;
   }
-  if (preview) preview.textContent = effective === 'mine' ? 'My books covers' : 'All public covers';
+  if (preview) preview.textContent = effective === 'mine' ? t('covers.my_books_covers') : t('covers.all_public_covers');
 }
 
 function _persistLandingCoverSourcePref() {
@@ -1506,7 +1506,7 @@ export function initCoversPanel() {
   const _landingCtxMenu = document.getElementById('landing-ctx-menu');
   function _showLandingCtxMenu(x, y) {
     if (!_landingCtxMenu) return;
-    document.getElementById('landing-ctx-toggle-btn').textContent = _landingBgHidden ? 'Show background' : 'Hide background';
+    document.getElementById('landing-ctx-toggle-btn').textContent = _landingBgHidden ? t('bg.show_background') : t('bg.hide_background');
     _landingCtxMenu.style.display = 'block';
     const mw = _landingCtxMenu.offsetWidth, mh = _landingCtxMenu.offsetHeight;
     _landingCtxMenu.style.left = `${Math.min(x, window.innerWidth  - mw - 8)}px`;

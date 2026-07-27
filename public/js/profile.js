@@ -5,9 +5,9 @@
 // from boot.js, and delete public/css/profile.css and its <link> in index.html.
 
 import { apiFetch, setUsername, isDemoMode, getToken, setCurrentUserLevel, getUsername } from './state.js?v=11';
-import { t } from './i18n.js?v=12';
-import { updateCoinsDisplay } from './shop.js?v=20';
-import { escapeHtml, compressToBlob } from './util.js?v=9';
+import { t } from './i18n.js?v=17';
+import { updateCoinsDisplay } from './shop.js?v=26';
+import { escapeHtml, compressToBlob } from './util.js?v=16';
 
 let _hooks = {};
 export function setProfileHooks(h) { _hooks = h || {}; }
@@ -18,7 +18,7 @@ function setAvatarCircle(el, url) {
   if (!el) return;
   if (url) {
     el.style.backgroundImage = 'none';
-    el.innerHTML = `<img src="${url}" alt="avatar">`;
+    el.innerHTML = `<img src="${url}" alt="${t('profile.avatar_alt')}">`;
   } else {
     el.style.backgroundImage = '';
     el.innerHTML = '';
@@ -301,7 +301,7 @@ export async function openProfileModal() {
       if (dnInput) dnInput.value = data.displayName || '';
     }
   } catch (_) {
-    document.getElementById('profile-error').textContent = 'Could not load profile. Please try again.';
+    document.getElementById('profile-error').textContent = t('profile.load_failed');
   }
   document.getElementById('profile-modal-overlay').classList.add('active');
   document.getElementById('profile-username-input').focus();

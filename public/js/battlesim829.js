@@ -10,10 +10,10 @@
 // pt.battleSim, which is already per-user/per-book via currentPlaythrough().
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from './state.js?v=11';
-import { showAlert } from './play.js?v=38';
-import { getPlayBtnRow } from './charsheet.js?v=30';
-import { escapeHtml } from './util.js?v=9';
-import { t } from './i18n.js?v=12';
+import { showAlert } from './play.js?v=44';
+import { getPlayBtnRow } from './charsheet.js?v=36';
+import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from './util.js?v=16';
+import { t } from './i18n.js?v=17';
 
 const SVG_SKULL  = `<svg class="sim-icon sim-icon-dead"  viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8c0 2.8 1.4 5.3 3.6 6.8V20a1 1 0 0 0 1 1h6.8a1 1 0 0 0 1-1v-2.2C18.6 16.3 20 13.8 20 11a8 8 0 0 0-8-8zm-2.5 13v-1.5a.5.5 0 0 0-.5-.5H8l-.5-1 1-1-1-1 1-1H9a2.5 2.5 0 0 1 5 0h.5l1 1-1 1 1 1-.5 1h-1a.5.5 0 0 0-.5.5V16h-4z"/></svg>`;
 const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v7a6 6 0 0 1-12 0V2zm-2 1H2v4a4 4 0 0 0 4 4v-1a3 3 0 0 1-3-3V3zm16 0h2v4a4 4 0 0 1-4 4v-1a3 3 0 0 0 3-3V3zm-7 13v2H9v2h6v-2h-2v-2a6 6 0 0 0 5-5.92V2H6v8.08A6 6 0 0 0 13 16z"/></svg>`;
@@ -65,6 +65,12 @@ function _appendLog(d, line) {
 }
 
 function _enemyName(d) { return d.enemy.name.trim() || 'врагът'; }
+// Escaped variant for log lines, which get dumped into innerHTML in
+// _renderLog() - the enemy name is free-text player input, so an unescaped
+// "<img src=x onerror=...>" would execute. _recordOutcome()'s history.enemy
+// deliberately stays unescaped - _renderHistory() already escapes it once at
+// render time, and escaping here too would double-escape it there.
+function _enemyNameSafe(d) { return escapeHtml(_enemyName(d)); }
 
 // ── Equipment-derived base stats ────────────────────────────────────────────
 // pt.equipment[slot] = { itemId, label, note, qty } where note is free text
@@ -306,9 +312,9 @@ function _enemyAttack(d) {
   if (eTotal > d.player.d) {
     const dmg = eTotal - d.player.d;
     d.player.hp = Math.max(0, d.player.hp - dmg);
-    _appendLog(d, `${_enemyName(d)} хвърля зара: ${eRoll} (+${d.enemy.a} = ${eTotal} атака) срещу твоята З ${d.player.d} → Удар за ${dmg}. Твоето ТЖ: ${d.player.hp}/${d.player.hpMax}.`);
+    _appendLog(d, `${_enemyNameSafe(d)} хвърля зара: ${eRoll} (+${d.enemy.a} = ${eTotal} атака) срещу твоята З ${d.player.d} → Удар за ${dmg}. Твоето ТЖ: ${d.player.hp}/${d.player.hpMax}.`);
   } else {
-    _appendLog(d, `${_enemyName(d)} хвърля зара: ${eRoll} (+${d.enemy.a} = ${eTotal} атака) срещу твоята З ${d.player.d} → Пропуск.`);
+    _appendLog(d, `${_enemyNameSafe(d)} хвърля зара: ${eRoll} (+${d.enemy.a} = ${eTotal} атака) срещу твоята З ${d.player.d} → Пропуск.`);
   }
   if (d.player.hp <= 0) {
     _appendLog(d, `${SVG_SKULL} Ти падна в битката.`);
@@ -325,13 +331,13 @@ function _runRound() {
   if (pTotal > d.enemy.d) {
     const dmg = pTotal - d.enemy.d;
     d.enemy.hp = Math.max(0, d.enemy.hp - dmg);
-    _appendLog(d, `Хвърляш зара: ${pRoll} (+${d.player.a} = ${pTotal} атака) срещу З ${d.enemy.d} на ${_enemyName(d)} → Удар за ${dmg}. ТЖ на ${_enemyName(d)}: ${d.enemy.hp}/${d.enemy.hpMax}.`);
+    _appendLog(d, `Хвърляш зара: ${pRoll} (+${d.player.a} = ${pTotal} атака) срещу З ${d.enemy.d} на ${_enemyNameSafe(d)} → Удар за ${dmg}. ТЖ на ${_enemyNameSafe(d)}: ${d.enemy.hp}/${d.enemy.hpMax}.`);
   } else {
-    _appendLog(d, `Хвърляш зара: ${pRoll} (+${d.player.a} = ${pTotal} атака) срещу З ${d.enemy.d} на ${_enemyName(d)} → Пропуск.`);
+    _appendLog(d, `Хвърляш зара: ${pRoll} (+${d.player.a} = ${pTotal} атака) срещу З ${d.enemy.d} на ${_enemyNameSafe(d)} → Пропуск.`);
   }
 
   if (d.enemy.hp <= 0) {
-    _appendLog(d, `${SVG_TROPHY} ${_enemyName(d)} е победен!`);
+    _appendLog(d, `${SVG_TROPHY} ${_enemyNameSafe(d)} е победен!`);
     _recordOutcome(d, 'win');
   } else {
     _enemyAttack(d);
@@ -382,13 +388,13 @@ function _rangedAttack() {
   if (roll <= t) {
     const dmg = Math.max(0, _rangedDamage(d, weapon, roll));
     d.enemy.hp = Math.max(0, d.enemy.hp - dmg);
-    _appendLog(d, `Далечна атака (${typeLabel}): хвърляне ${roll} (≤ Т:${t}) → Точно попадение за ${dmg}. ТЖ на ${_enemyName(d)}: ${d.enemy.hp}/${d.enemy.hpMax}.`);
+    _appendLog(d, `Далечна атака (${typeLabel}): хвърляне ${roll} (≤ Т:${t}) → Точно попадение за ${dmg}. ТЖ на ${_enemyNameSafe(d)}: ${d.enemy.hp}/${d.enemy.hpMax}.`);
   } else {
     _appendLog(d, `Далечна атака (${typeLabel}): хвърляне ${roll} (> Т:${t}) → Пропуск.`);
   }
 
   if (d.enemy.hp <= 0) {
-    _appendLog(d, `${SVG_TROPHY} ${_enemyName(d)} е победен!`);
+    _appendLog(d, `${SVG_TROPHY} ${_enemyNameSafe(d)} е победен!`);
     _recordOutcome(d, 'win');
   }
 
@@ -413,7 +419,7 @@ function _resetBattle() {
   d.enemy.hp  = d.enemy.hpMax;
   d.player.hp = d.player.hpMax;
   if (d.log.length) _appendLog(d, '──────────');
-  _appendLog(d, `Битката е нулирана. ТЖ на ${_enemyName(d)} и твоето ТЖ са възстановени.`);
+  _appendLog(d, `Битката е нулирана. ТЖ на ${_enemyNameSafe(d)} и твоето ТЖ са възстановени.`);
   saveState();
   _renderInputs();
   _renderLog();
@@ -582,7 +588,7 @@ export function initBattleSim() {
     <div class="inv-modal bsim-modal">
       <div class="inv-modal-hdr">
         <span class="inv-modal-title">Симулатор на битки</span>
-        <button id="bsim-close" class="inv-close-btn" aria-label="Close">✕</button>
+        <button id="bsim-close" class="inv-close-btn" aria-label="${t('btn.close')}">✕</button>
       </div>
       <div class="bsim-body">
         <div class="bsim-col bsim-col-left">
@@ -679,7 +685,7 @@ export function initBattleSim() {
 
   const btn = document.createElement('button');
   btn.id            = 'battlesim-btn';
-  btn.textContent   = t('battlesim.title');
+  btn.innerHTML     = shortcutLabel(t('battlesim.title'));
   btn.style.display = 'none';
   getPlayBtnRow().appendChild(btn);
 
@@ -688,6 +694,13 @@ export function initBattleSim() {
   let _mdOnOverlay = false;
   overlay.addEventListener('mousedown', e => { _mdOnOverlay = e.target === overlay; });
   overlay.addEventListener('click', e => { if (e.target === overlay && _mdOnOverlay) closeBattleSim(); });
+  registerPanelShortcut('KeyS', {
+    getButton:  () => btn,
+    getOverlay: () => overlay,
+    otherOverlayIds: ALL_PANEL_OVERLAY_IDS.filter(id => id !== 'bsim-overlay'),
+    open:  openBattleSim,
+    close: closeBattleSim,
+  });
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && overlay.classList.contains('active')) closeBattleSim();
   });

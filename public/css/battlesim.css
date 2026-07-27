@@ -1,6 +1,6 @@
 /* ── Battle Simulator (Пътят на пъдпъдъка) ───────────────────────────────── */
 
-#battlesim-btn, #sim8-btn {
+#battlesim-btn, #sim8-btn, #sim286-btn {
   background: rgba(31, 41, 55, 0.88);
   border: 1px solid #374151;
   border-radius: 7px;
@@ -13,14 +13,14 @@
   backdrop-filter: blur(6px);
   box-shadow: 0 2px 8px rgba(0,0,0,0.35);
 }
-#battlesim-btn:hover, #sim8-btn:hover { background: #374151; color: #d1d5db; }
+#battlesim-btn:hover, #sim8-btn:hover, #sim286-btn:hover { background: #374151; color: #d1d5db; }
 
 /* Modal reuses .inv-overlay/.inv-modal/.inv-modal-hdr/.inv-modal-ftr and the
    .inv-edit-row/.inv-qty-* stepper pattern from inventory.js's item-edit
    popover - only sizing/layout that's genuinely new lives here. */
 .bsim-modal { width: min(720px, 95vw); }
 
-#bsim-close, #s8-close { margin-left: auto; }
+#bsim-close, #s8-close, #sim286-close { margin-left: auto; }
 
 .bsim-body {
   display: flex;
@@ -188,6 +188,45 @@
 }
 .bsim-history-meta { color: #6b7280; flex-shrink: 0; white-space: nowrap; }
 .bsim-history-empty { font-size: 0.7rem; color: #6b7280; font-style: italic; }
+
+/* ── Book-286 simulator (battlesim286.js) ─────────────────────────────────── */
+.bsim-ae-row { padding: 0; }
+.bsim-ae-row .inv-edit-label { width: auto; white-space: nowrap; }
+.bsim-life-roll-row { padding: 0; justify-content: flex-end; }
+.bsim-ae-display { font-size: 0.72rem; font-weight: 600; color: #93c5fd; flex: 1; }
+.bsim-ae-display.bsim-ae-over { color: #f87171; }
+.bsim-ae-roll-btn { margin-top: 0; flex-shrink: 0; padding: 3px 8px; font-size: 0.68rem; }
+.bsim-ae-roll-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.bsim-effects:empty { display: none; }
+.bsim-effects {
+  font-size: 0.66rem;
+  color: #93c5fd;
+  text-align: center;
+}
+.bsim-tech-list {
+  margin-top: 0.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  /* 8 gadget rows, expanded by default (unlike the collapsed-by-default
+     history <details>) - without this the list can push the log and history
+     panels below it past the modal's max-height: 90vh/overflow: hidden and
+     get silently clipped instead of scrolling, same risk .bsim-history-list
+     already guards against. */
+  max-height: 220px;
+  overflow-y: auto;
+}
+.bsim-tech-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.bsim-tech-row--depleted { opacity: 0.45; }
+.bsim-tech-info { flex: 1; min-width: 0; }
+.bsim-tech-name { font-size: 0.72rem; font-weight: 600; color: #d1d5db; }
+.bsim-tech-desc { font-size: 0.64rem; color: #6b7280; line-height: 1.3; }
+.bsim-tech-btn { margin-top: 0; flex-shrink: 0; padding: 3px 8px; font-size: 0.68rem; }
+.bsim-tech-uses { font-size: 0.66rem; color: #6b7280; flex-shrink: 0; white-space: nowrap; }
 
 /* ── Book-8 simulator (battlesim8.js) ─────────────────────────────────────── */
 .s8-die       { font-family: monospace; font-weight: bold; padding: 0 1px; }

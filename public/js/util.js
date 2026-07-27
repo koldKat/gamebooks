@@ -1,16 +1,59 @@
 // util.js - Shared pure utility functions
 
 import { apiFetch } from './state.js?v=11';
-import { t } from './i18n.js?v=12';
+import { t } from './i18n.js?v=17';
 
 export function escapeHtml(str) {
   return String(str ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// Highlights a label's first character in a different color, hinting that
+// pressing that key opens the panel (I/E/C/S - see registerPanelShortcut()
+// below). Assumes the label's first letter matches its shortcut key, which
+// holds for the current English-only translations - if a future language
+// swaps the leading letter, this stops matching its own shortcut and will
+// need reworking then (e.g. taking the key letter as a second argument and
+// highlighting its first occurrence instead of always index 0).
+export function shortcutLabel(text) {
+  const s = String(text ?? '');
+  if (!s) return '';
+  return `<span class="shortcut-hint-letter">${escapeHtml(s.charAt(0))}</span>${escapeHtml(s.slice(1))}`;
 }
 
 export async function fetchPublic(url, options) {
   const res = await fetch(url, options);
   if (res.status === 503) { window.dispatchEvent(new Event('maintenance-mode')); throw new Error('Maintenance'); }
   return res;
+}
+
+// Every play-area panel overlay ID, shared by registerPanelShortcut() callers
+// below via `otherOverlayIds: ALL_PANEL_OVERLAY_IDS.filter(id => id !== 'own-id')`
+// so opening one panel closes all the others, without each file re-typing
+// the same 6 literal ID strings.
+export const ALL_PANEL_OVERLAY_IDS = ['inv-overlay', 'eq-overlay', 'charsheet-modal-overlay', 'sim286-overlay', 'bsim-overlay', 's8-overlay'];
+
+// Single-key panel toggle shared by charsheet.js (C) / equipment.js (E) /
+// inventory.js (I) / the battlesim*.js trio (S) - each panel opens with its
+// own key, closes any other open panel first, and toggles itself closed if
+// already open. Uses e.code (physical key position) rather than e.key so it
+// fires the same regardless of the active keyboard layout/language.
+// `capture: true` is needed by charsheet.js's KeyC - the vis.js graph canvas
+// calls stopPropagation() on keydown, so that shortcut must fire during the
+// capture phase (before the canvas sees the event) rather than the default
+// bubble phase, or pressing C while the canvas has focus would do nothing.
+export function registerPanelShortcut(keyCode, { getButton, getOverlay, otherOverlayIds, open, close, extraGuard, capture = false }) {
+  document.addEventListener('keydown', e => {
+    const tag = e.target.tagName;
+    const typing = tag === 'INPUT' || tag === 'TEXTAREA' || e.target.isContentEditable;
+    if (e.code !== keyCode || typing || e.ctrlKey || e.metaKey) return;
+    if (extraGuard && !extraGuard()) return;
+    const btn = getButton();
+    if (!btn || btn.style.display === 'none') return;
+    const overlay = getOverlay();
+    if (overlay?.classList.contains('active')) { close(); return; }
+    (otherOverlayIds || []).forEach(id => document.getElementById(id)?.classList.remove('active'));
+    open();
+  });
 }
 
 // Image compression — shrinks to fit within maxDim, then JPEG-quality iterates down until <= maxBytes.

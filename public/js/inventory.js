@@ -4,10 +4,10 @@
 // Visible to all logged-in users.
 
 import { state, currentPlaythrough, saveState, apiFetch, viewingPt } from './state.js?v=11';
-import { showConfirm } from './play.js?v=38';
-import { getPlayBtnRow } from './charsheet.js?v=30';
-import { escapeHtml } from './util.js?v=9';
-import { t } from './i18n.js?v=12';
+import { showConfirm } from './play.js?v=44';
+import { getPlayBtnRow } from './charsheet.js?v=36';
+import { escapeHtml, shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from './util.js?v=16';
+import { t } from './i18n.js?v=17';
 
 const MAX_SLOTS = 40;
 
@@ -527,7 +527,7 @@ export function initInventory() {
   // Button - joins the shared bottom-right action row
   const btnEl = document.createElement('button');
   btnEl.id            = 'inventory-btn';
-  btnEl.textContent   = t('inv.title');
+  btnEl.innerHTML     = shortcutLabel(t('inv.title'));
   btnEl.style.display = 'none';
   getPlayBtnRow().appendChild(btnEl);
 
@@ -583,17 +583,6 @@ export function initInventory() {
   });
 
   document.addEventListener('keydown', e => {
-    const tag = e.target.tagName;
-    const typing = tag === 'INPUT' || tag === 'TEXTAREA' || e.target.isContentEditable;
-    if (e.code === 'KeyI' && !typing) {
-      if (pickerOverlay.classList.contains('active')) return;
-      if (!currentPlaythrough()) return;
-      if (overlay.classList.contains('active')) { _closePanel(); return; }
-      document.getElementById('charsheet-modal-overlay')?.classList.remove('active');
-      document.getElementById('eq-overlay')?.classList.remove('active');
-      _openPanel();
-      return;
-    }
     if (e.key !== 'Escape') return;
     if (_ctxMenu) { _closeCtx(); return; }
     if (document.getElementById('inv-rename-dialog')?.classList.contains('active')) { _closeRename(false); return; }
@@ -601,6 +590,15 @@ export function initInventory() {
     if (pickerOverlay.classList.contains('active')) { _closePicker(); return; }
     if (overlay.classList.contains('active')) _closePanel();
   }, true);
+  registerPanelShortcut('KeyI', {
+    getButton:  () => document.getElementById('inventory-btn'),
+    getOverlay: () => overlay,
+    otherOverlayIds: ALL_PANEL_OVERLAY_IDS.filter(id => id !== 'inv-overlay'),
+    open:  _openPanel,
+    close: _closePanel,
+    extraGuard: () => !pickerOverlay.classList.contains('active') && !!currentPlaythrough(),
+    capture: true,
+  });
 }
 
 export function setInventoryVisible(visible) {

@@ -4,8 +4,8 @@
 // showAuthForm()/showResetPanel()/hasPendingResetToken() calls from boot.js.
 
 import { setToken, setUsername } from './state.js?v=11';
-import { t } from './i18n.js?v=12';
-import { fetchPublic } from './util.js?v=9';
+import { t } from './i18n.js?v=17';
+import { fetchPublic } from './util.js?v=16';
 
 // Called after a successful login/register (main.js wires this to showBooks()).
 let _onAuthSuccess = null;
@@ -63,7 +63,7 @@ async function doRegister() {
   errEl.textContent = '';
 
   if (!username || !password) { errEl.textContent = t('err.username_password'); return; }
-  if (password !== confirm) { errEl.textContent = 'Passwords do not match.'; return; }
+  if (password !== confirm) { errEl.textContent = t('auth.passwords_no_match'); return; }
 
   try {
     const res  = await fetchPublic('/api/register', {
@@ -89,8 +89,8 @@ function _initResetPasswordFlow() {
     const errEl    = document.getElementById('reset-error');
     const succEl   = document.getElementById('reset-success');
     errEl.textContent = ''; succEl.style.display = 'none';
-    if (!password) { errEl.textContent = 'Please enter a new password.'; return; }
-    if (password !== confirm) { errEl.textContent = 'Passwords do not match.'; return; }
+    if (!password) { errEl.textContent = t('auth.enter_new_password'); return; }
+    if (password !== confirm) { errEl.textContent = t('auth.passwords_no_match'); return; }
     try {
       const res  = await fetchPublic('/api/reset-password', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -123,7 +123,7 @@ export function initAuth() {
   const forgotError   = document.getElementById('forgot-error');
 
   function _resetRegisterBtn() {
-    registerBtn.textContent = 'Create Account';
+    registerBtn.textContent = t('auth.register');
     registerBtn.classList.remove('auth-confirm-btn');
     registerBtn.classList.add('auth-alt-btn');
     loginBtn.style.display = '';
@@ -144,7 +144,7 @@ export function initAuth() {
       confirmInput.style.display = '';
       emailInput.style.display = '';
       emailHint.style.display  = '';
-      registerBtn.textContent = 'Confirm';
+      registerBtn.textContent = t('auth.confirm');
       registerBtn.classList.remove('auth-alt-btn');
       registerBtn.classList.add('auth-confirm-btn');
       loginBtn.style.display = 'none';
@@ -166,9 +166,9 @@ export function initAuth() {
   forgotSubmit.addEventListener('click', async () => {
     const identifier = document.getElementById('forgot-identifier').value.trim();
     forgotError.textContent = ''; forgotSuccess.style.display = 'none';
-    if (!identifier) { forgotError.textContent = 'Please enter your username or email.'; return; }
+    if (!identifier) { forgotError.textContent = t('auth.enter_username_or_email'); return; }
     forgotSubmit.disabled = true;
-    forgotSubmit.textContent = 'Sending…';
+    forgotSubmit.textContent = t('auth.sending');
     forgotSubmit.classList.add('btn--sending');
     try {
       const res  = await fetchPublic('/api/forgot-password', {
@@ -179,16 +179,16 @@ export function initAuth() {
       if (!res.ok) { forgotError.textContent = data.error || 'Something went wrong.'; return; }
       if (data.noEmail) {
         forgotSuccess.classList.add('auth-warning');
-        forgotSuccess.textContent = 'This account has no email address on file. Please contact an admin using the feedback form.';
+        forgotSuccess.textContent = t('auth.no_email_on_file');
       } else {
         forgotSuccess.classList.remove('auth-warning');
-        forgotSuccess.textContent = 'If that account has an email address on file, a reset link has been sent.';
+        forgotSuccess.textContent = t('auth.reset_link_sent_maybe');
       }
       forgotSuccess.style.display = '';
     } catch (_) { forgotError.textContent = t('err.connect'); }
     finally {
       forgotSubmit.disabled = false;
-      forgotSubmit.textContent = 'Send reset link';
+      forgotSubmit.textContent = t('auth.send_reset_link');
       forgotSubmit.classList.remove('btn--sending');
     }
   });

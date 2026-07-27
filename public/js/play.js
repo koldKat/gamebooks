@@ -5,12 +5,12 @@ import {
   currentPlaythrough, currentSection, allDiscoveredSections, mappedCount,
   currentUserLevel, bonusUndos, bonusFastTravels, apiFetch,
 } from './state.js?v=11';
-import { network, visNodes, syncGraph } from './graph.js?v=54';
-import { t } from './i18n.js?v=12';
-import { renderCharSheetDisplay } from './charsheet.js?v=30';
+import { network, visNodes, syncGraph } from './graph.js?v=59';
+import { t } from './i18n.js?v=17';
+import { renderCharSheetDisplay } from './charsheet.js?v=36';
 import { naturalCompare } from './sort.js?v=1';
-import { instantiateLoadout } from './equipment.js?v=83';
-import { escapeHtml } from './util.js?v=9';
+import { instantiateLoadout } from './equipment.js?v=89';
+import { escapeHtml } from './util.js?v=16';
 
 // ── Discoverable sections cap ────────────────────────────────────���───────────
 let _discoverableLimit = null;
@@ -52,6 +52,19 @@ export function showConfirm(message, onConfirm, { confirmLabel = null, danger = 
 
 export function showAlert(message) {
   showConfirm(message, () => {}, { confirmLabel: t('btn.ok'), danger: false, showCancel: false });
+}
+
+// Shared by play.js's own choice-parsing and boot.js's start-node/alt-start
+// dialogs - all three hit the same "typed an alphanumeric ID while the book
+// is still in numeric mode" fork and used to carry their own copy of this
+// confirm dialog (message, confirmLabel, and the alphanumericSections/
+// saveState flip itself).
+export function confirmAlphanumericSwitch(id, onConfirm) {
+  showConfirm(
+    t('play.alphanumeric_switch_confirm', { id }),
+    () => { state.alphanumericSections = true; saveState(); onConfirm(); },
+    { confirmLabel: t('play.yes_switch'), danger: false }
+  );
 }
 
 // Two-choice dialog: message + two action buttons + cancel
@@ -154,12 +167,14 @@ export function render() {
     if (hasCrossBook && !localSec) {
       const loc = _owGetRunLocation?.(state.activePtIndex);
       if (loc?.bookName) {
-        centerBtn.textContent = `⊙ Open ${loc.bookName}${loc.section ? ` at ${loc.section}` : ''}`;
+        centerBtn.textContent = loc.section
+          ? t('play.center_open_at', { book: loc.bookName, section: loc.section })
+          : t('play.center_open', { book: loc.bookName });
       } else {
-        centerBtn.textContent = '⊙ Center on Current Section';
+        centerBtn.textContent = t('play.center_default');
       }
     } else {
-      centerBtn.textContent = '⊙ Center on Current Section';
+      centerBtn.textContent = t('play.center_default');
     }
   }
   if (_afterRenderFn) _afterRenderFn();
@@ -265,7 +280,7 @@ function renderPathTrail(pt, header) {
   el.innerHTML =
     `<div class="trail-header">` +
       `<span>${header || t('runs.this')}</span>` +
-      `<button class="trail-toggle-btn" aria-label="Toggle run trail">▾</button>` +
+      `<button class="trail-toggle-btn" aria-label="${t('runs.toggle_trail')}">▾</button>` +
     `</div>` +
     `<div class="trail">${trailHtml}</div>`;
 
@@ -383,7 +398,7 @@ function renderPlaythroughPanel() {
       const portals = state.graph[sec]?.portals || [];
       if (portals.length > 0) {
         html += `<div class="portal-destinations">` +
-          `<div class="portal-dest-label">Portal destinations</div>`;
+          `<div class="portal-dest-label">${t('play.portal_destinations')}</div>`;
         portals.forEach((p, idx) => {
           const bk = _owSeriesBooks.find(b => b.id === p.targetBookId);
           const bkName = bk ? bk.name : `Book #${p.targetBookId}`;
@@ -459,12 +474,12 @@ function renderPlaythroughPanel() {
           `</div>` +
           `<div class="run-actions">` +
             (isDone
-              ? `<button class="run-public-btn${isPublic ? ' is-public' : ''}" data-index="${i}">Public</button>`
+              ? `<button class="run-public-btn${isPublic ? ' is-public' : ''}" data-index="${i}">${t('play.public_run')}</button>`
               : '') +
             (!isActiveHere
               ? `<button class="run-load-btn${isViewing ? ' run-view-active' : ''}" data-index="${i}">${t('runs.load')}</button>`
               : '') +
-            `<button class="run-del-btn" data-index="${i}" title="Delete run">✕</button>` +
+            `<button class="run-del-btn" data-index="${i}" title="${t('runs.delete_run')}">✕</button>` +
           `</div>` +
         `</div>`;
     });
@@ -475,7 +490,7 @@ function renderPlaythroughPanel() {
   const preRuns = _owIsOpenWorld ? (state.preSeriesRuns || []) : [];
   if (preRuns.length > 0) {
     html += `<div class="pre-series-runs-section">`;
-    html += `<div class="pre-series-runs-header">Before joining series</div>`;
+    html += `<div class="pre-series-runs-header">${t('play.before_joining_series')}</div>`;
     html += `<div class="runs-list">`;
     // Display in reverse: most recent = Run -1 (last in array), oldest = Run -N (first)
     preRuns.map((p, i) => i).reverse().forEach(i => {
@@ -500,7 +515,7 @@ function renderPlaythroughPanel() {
           `</div>` +
           `<div class="run-actions">` +
             `<button class="run-load-btn run-load-preseries${isViewing ? ' run-view-active' : ''}" data-pre-index="${i}">${t('runs.load')}</button>` +
-            `<button class="run-del-btn run-del-preseries" data-pre-index="${i}" title="Delete run">✕</button>` +
+            `<button class="run-del-btn run-del-preseries" data-pre-index="${i}" title="${t('runs.delete_run')}">✕</button>` +
           `</div>` +
         `</div>`;
     });
@@ -871,15 +886,7 @@ export function handleRecordChoices(sec, raw) {
 
   if (hasAlpha && !state.alphanumericSections) {
     const example = parsed.find(n => typeof n === 'string');
-    showConfirm(
-      `You entered an alphanumeric section ID ("${example}"). Switch this book to alphanumeric mode? This cannot be undone.`,
-      () => {
-        state.alphanumericSections = true;
-        saveState();
-        _commitChoices(sec, parsed);
-      },
-      { confirmLabel: 'Yes, switch', danger: false }
-    );
+    confirmAlphanumericSwitch(example, () => _commitChoices(sec, parsed));
     return;
   }
 
@@ -892,7 +899,7 @@ export function handleRecordChoices(sec, raw) {
     const discovered = allDiscoveredSections();
     const newSections = choices.filter(n => isValidSecId(n) && !discovered.has(n));
     if (discovered.size + newSections.length > state.totalSections) {
-      showAlert(`Adding these choices would exceed the section limit (${state.totalSections}). Increase the total in the book settings or edit existing nodes first.`);
+      showAlert(t('play.choices_exceed_limit', { limit: state.totalSections }));
       return;
     }
   }
@@ -910,7 +917,7 @@ export function navigate(sec) {
   if (state.alphanumericSections && state.totalSections > 0) {
     const discovered = allDiscoveredSections();
     if (!discovered.has(sec) && discovered.size >= state.totalSections) {
-      showAlert(`You've reached the section limit (${state.totalSections}). To add more sections, increase the total in the book settings, or edit existing nodes to make room.`);
+      showAlert(t('play.reached_section_limit', { limit: state.totalSections }));
       return;
     }
   }
@@ -1222,7 +1229,7 @@ export function openPortalModal(sectionId, editIdx = null) {
   const secInp  = document.getElementById('portal-section-input');
   const lblInp  = document.getElementById('portal-label-input');
 
-  title.textContent = editIdx !== null ? 'Edit Portal' : 'Add Portal';
+  title.textContent = editIdx !== null ? t('play.edit_portal') : t('play.add_portal');
 
   sel.innerHTML = _owSeriesBooks.length === 0
     ? '<option value="">- No other books in series -</option>'

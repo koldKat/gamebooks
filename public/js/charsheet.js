@@ -6,8 +6,8 @@
 // public/css/charsheet.css (and its <link> in index.html).
 
 import { state, saveState, currentPlaythrough, viewingPt } from './state.js?v=11';
-import { t } from './i18n.js?v=12';
-import { escapeHtml } from './util.js?v=9';
+import { t } from './i18n.js?v=17';
+import { escapeHtml, shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from './util.js?v=16';
 
 // Working copy - populated when modal opens, discarded on cancel
 let _draft = null;
@@ -118,7 +118,7 @@ function renderModal() {
   list.innerHTML = '';
   const visibleFields = _readOnly ? _draft.fields.filter(f => f.visible && f.name.trim()) : _draft.fields;
   if (!visibleFields.length) {
-    list.innerHTML = `<p class="cs-empty">${_readOnly ? 'No fields.' : t('cs.empty')}</p>`;
+    list.innerHTML = `<p class="cs-empty">${_readOnly ? t('cs.no_fields') : t('cs.empty')}</p>`;
     return;
   }
   visibleFields.forEach(field => {
@@ -136,7 +136,7 @@ const TYPE_OPTIONS = ['number', 'boolean', 'text', 'list', 'enum'];
 
 function buildRowHtml(f) {
   const typeOpts = TYPE_OPTIONS.map(ty =>
-    `<option value="${ty}"${f.type === ty ? ' selected' : ''}>${ty.charAt(0).toUpperCase() + ty.slice(1)}</option>`
+    `<option value="${ty}"${f.type === ty ? ' selected' : ''}>${t('cs.type.' + ty)}</option>`
   ).join('');
 
   let valHtml;
@@ -151,7 +151,7 @@ function buildRowHtml(f) {
     case 'boolean':
       valHtml = `<label class="cs-bool-wrap">
         <input class="cs-val cs-val-bool" type="checkbox"${f.value ? ' checked' : ''}>
-        <span class="cs-bool-label">${f.value ? 'Yes' : 'No'}</span>
+        <span class="cs-bool-label">${f.value ? t('cs.yes') : t('cs.no')}</span>
       </label>`;
       break;
     case 'text':
@@ -173,7 +173,7 @@ function buildRowHtml(f) {
   }
 
   return `
-    <span class="cs-drag-handle" title="Drag to reorder">⠿</span>
+    <span class="cs-drag-handle" title="${t('cs.drag_reorder')}">⠿</span>
     <label class="cs-vis-toggle" title="${t('cs.toggle_visible')}">
       <input type="checkbox" class="cs-vis-cb"${f.visible ? ' checked' : ''}>
       <span class="cs-dot"></span>
@@ -187,7 +187,7 @@ function buildRowHtml(f) {
 function buildRowHtmlReadOnly(f) {
   let valDisplay;
   switch (f.type) {
-    case 'boolean': valDisplay = f.value ? 'Yes' : 'No'; break;
+    case 'boolean': valDisplay = f.value ? t('cs.yes') : t('cs.no'); break;
     case 'list':    valDisplay = (f.value ?? []).join(', ') || '-'; break;
     case 'enum':    valDisplay = f.value || '-'; break;
     case 'number':  valDisplay = f.value != null && f.value !== '' ? fmtNum(f.value) : '-'; break;
@@ -243,7 +243,7 @@ function wireRow(row, field) {
         case 'boolean': {
           field.value = valEl.checked;
           const lbl = valEl.closest('label')?.querySelector('.cs-bool-label');
-          if (lbl) lbl.textContent = field.value ? 'Yes' : 'No';
+          if (lbl) lbl.textContent = field.value ? t('cs.yes') : t('cs.no');
           break;
         }
         case 'list':    { field.value = valEl.value.split(',').map(s => s.trim()).filter(Boolean); break; }
@@ -377,7 +377,7 @@ export function initCharSheet() {
 
   const btnEl = document.createElement('button');
   btnEl.id            = 'charsheet-btn';
-  btnEl.textContent   = t('cs.btn');
+  btnEl.innerHTML     = shortcutLabel(t('cs.btn'));
   btnEl.style.display = 'none';
   getPlayBtnRow().appendChild(btnEl);
 
@@ -386,19 +386,16 @@ export function initCharSheet() {
   document.getElementById('cs-modal-close').addEventListener('click', closeModal);
   modalOv.addEventListener('click', e => { if (e.target === modalOv) closeModal(); });
   document.addEventListener('keydown', e => {
-    const tag = e.target.tagName;
-    const typing = tag === 'INPUT' || tag === 'TEXTAREA' || e.target.isContentEditable;
-    if (e.code === 'KeyC' && !typing && !e.ctrlKey && !e.metaKey) {
-      const btn = document.getElementById('charsheet-btn');
-      if (!btn || btn.style.display === 'none') return;
-      if (modalOv.classList.contains('active')) { closeModal(); return; }
-      document.getElementById('inv-overlay')?.classList.remove('active');
-      document.getElementById('eq-overlay')?.classList.remove('active');
-      openModal();
-      return;
-    }
     if (e.key === 'Escape' && modalOv.classList.contains('active')) closeModal();
   }, true); // capture phase - fires before vis.js canvas can stopPropagation
+  registerPanelShortcut('KeyC', {
+    getButton:  () => document.getElementById('charsheet-btn'),
+    getOverlay: () => modalOv,
+    otherOverlayIds: ALL_PANEL_OVERLAY_IDS.filter(id => id !== 'charsheet-modal-overlay'),
+    open:  openModal,
+    close: closeModal,
+    capture: true,
+  });
 
   document.getElementById('cs-add-field').addEventListener('click', () => {
     if (!_draft || _readOnly) return;

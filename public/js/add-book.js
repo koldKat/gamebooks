@@ -1,21 +1,21 @@
 // add-book.js - Add Book, Add Anthology, and Add Series modals
 
 import { apiFetch } from './state.js?v=11';
-import { t } from './i18n.js?v=12';
-import { getCachedAllSeries, _refreshLibraryUi, setInvalidateAutocompleteCaches } from './books.js?v=68';
+import { t } from './i18n.js?v=17';
+import { getCachedAllSeries, _refreshLibraryUi, setInvalidateAutocompleteCaches } from './books.js?v=74';
 import { naturalCompare, matchesSearch } from './sort.js?v=1';
-import { showAlert } from './play.js?v=38';
+import { showAlert } from './play.js?v=44';
 import {
   _setModalUploadProgress, _setButtonsDisabled, _uploadPdfWithProgress,
   _acceptPdfSelection, _setPdfInlineLabel, formatFileSize,
   _populateSeriesSelect, _populateParentBookSelect,
   validateIsbn, validateIssn, validateAsin,
-} from './edit-book.js?v=74';
+} from './edit-book.js?v=80';
 import {
   invalidateAutocompleteCaches, _loadAutocompleteBooks, _loadSeriesAutocomplete,
   _setModalCover, _setupNameAutocomplete, _setupPlainAutocomplete, _setupAuthorsAutocomplete,
-} from './autocomplete.js?v=60';
-import { escapeHtml, compressImage } from './util.js?v=9';
+} from './autocomplete.js?v=66';
+import { escapeHtml, compressImage } from './util.js?v=16';
 
 let _hooks = {};
 export function setAddBookHooks(h) { _hooks = h || {}; }
@@ -110,7 +110,7 @@ function _csrSetExisting(series, { preserveDescription = false } = {}) {
   _csrSelectedOwned = !!(series && (getCachedAllSeries() || []).some(s => s.id === series.id));
   if (!preserveDescription) document.getElementById('csr-description').value = series?.description || '';
   document.getElementById('csr-description').disabled = !!series;
-  _csrSaveBtn.textContent = series ? (_csrSelectedOwned ? 'Already owned' : 'Add to library') : 'Create';
+  _csrSaveBtn.textContent = series ? (_csrSelectedOwned ? t('addbook.already_owned') : t('addbook.add_to_library')) : t('addbook.create');
   _csrSaveBtn.disabled    = !!_csrSelectedOwned;
 }
 
@@ -122,8 +122,8 @@ function _csrRenderDropdown(q) {
   _csrDropdown.innerHTML = matches.map((s, i) =>
     `<li data-idx="${i}" data-name="${escapeHtml(s.name)}" data-id="${s.id}">` +
       escapeHtml(s.name) +
-      ((getCachedAllSeries() || []).some(cs => cs.id === s.id) ? `<span class="ac-sub ac-owned">Owned</span>` : '') +
-      (s.created_by_username ? `<span class="ac-sub">by ${escapeHtml(s.created_by_username)}</span>` : '') +
+      ((getCachedAllSeries() || []).some(cs => cs.id === s.id) ? `<span class="ac-sub ac-owned">${t('addbook.owned')}</span>` : '') +
+      (s.created_by_username ? `<span class="ac-sub">${t('addbook.by_creator', { name: escapeHtml(s.created_by_username) })}</span>` : '') +
     `</li>`
   ).join('');
   _csrActiveIdx = -1;
@@ -145,7 +145,7 @@ export function openAddSeries() {
   document.getElementById('csr-error').textContent = '';
   _csrSelectedId = null;
   _csrSelectedOwned = false;
-  _csrSaveBtn.textContent = 'Create';
+  _csrSaveBtn.textContent = t('addbook.create');
   _csrSaveBtn.disabled = false;
   _csrDropdown.classList.remove('open');
   document.getElementById('add-series-overlay').classList.add('active');
@@ -208,7 +208,7 @@ export function initAddBook(mousedownOnOverlayRef) {
   );
   _setupPlainAutocomplete('esr-name', 'esr-name-dropdown', _loadSeriesAutocomplete,
     (s, q) => matchesSearch(s.name, q),
-    s => s.created_by_username ? `<span class="ac-sub">by ${escapeHtml(s.created_by_username)}</span>` : ''
+    s => s.created_by_username ? `<span class="ac-sub">${t('addbook.by_creator', { name: escapeHtml(s.created_by_username) })}</span>` : ''
   );
   _setupAuthorsAutocomplete('cb-authors', 'cb-authors-dropdown');
   _setupAuthorsAutocomplete('cc-authors', 'cc-authors-dropdown');
@@ -248,10 +248,10 @@ export function initAddBook(mousedownOnOverlayRef) {
     const errEl = document.getElementById('cb-error');
     errEl.textContent = '';
     const selectedId = _cbAc.getSelectedId();
-    if (_cbAc.isSelectedOwned()) { errEl.textContent = 'This book is already in your library.'; return; }
+    if (_cbAc.isSelectedOwned()) { errEl.textContent = t('addbook.book_already_in_library'); return; }
     if (selectedId) {
       try { await apiFetch(`/api/books/${selectedId}/add`, { method: 'POST' }); _closeAddBook(); await _refreshLibraryUi({ feed: true, covers: true }); }
-      catch (_) { errEl.textContent = 'Failed to add book.'; }
+      catch (_) { errEl.textContent = t('addbook.add_book_failed'); }
       return;
     }
     const name     = document.getElementById('cb-name').value.trim();
@@ -289,7 +289,7 @@ export function initAddBook(mousedownOnOverlayRef) {
       if (_cbPdf) {
         _setButtonsDisabled(['cb-save', 'cb-cancel'], true);
         try { await _uploadPdfWithProgress(`/api/books/${book.id}/pdf`, _cbPdf, 'cb'); }
-        catch (e) { _closeAddBook(); await _refreshLibraryUi({ feed: true, covers: true }); showAlert(`Book created, but PDF upload failed. You can retry from Edit Book.${e?.message ? `\n\n${e.message}` : ''}`); return; }
+        catch (e) { _closeAddBook(); await _refreshLibraryUi({ feed: true, covers: true }); showAlert(`${t('addbook.book_pdf_upload_failed')}${e?.message ? `\n\n${e.message}` : ''}`); return; }
         finally { _setButtonsDisabled(['cb-save', 'cb-cancel'], false); }
       }
       _closeAddBook(); await _refreshLibraryUi({ feed: true, covers: true });
@@ -329,10 +329,10 @@ export function initAddBook(mousedownOnOverlayRef) {
     const errEl = document.getElementById('cc-error');
     errEl.textContent = '';
     const selectedId = _ccAc.getSelectedId();
-    if (_ccAc.isSelectedOwned()) { errEl.textContent = 'This anthology is already in your library.'; return; }
+    if (_ccAc.isSelectedOwned()) { errEl.textContent = t('addbook.anthology_already_in_library'); return; }
     if (selectedId) {
       try { await apiFetch(`/api/books/${selectedId}/add`, { method: 'POST' }); _closeAddComp(); await _refreshLibraryUi({ feed: true, covers: true }); }
-      catch (_) { errEl.textContent = 'Failed to add anthology.'; }
+      catch (_) { errEl.textContent = t('addbook.add_anthology_failed'); }
       return;
     }
     const name = document.getElementById('cc-name').value.trim();
@@ -366,7 +366,7 @@ export function initAddBook(mousedownOnOverlayRef) {
       if (_ccPdf) {
         _setButtonsDisabled(['cc-save', 'cc-cancel'], true);
         try { await _uploadPdfWithProgress(`/api/books/${book.id}/pdf`, _ccPdf, 'cc'); }
-        catch (e) { _closeAddComp(); await _refreshLibraryUi({ feed: true, covers: true }); showAlert(`Anthology created, but PDF upload failed. You can retry from Edit Anthology.${e?.message ? `\n\n${e.message}` : ''}`); return; }
+        catch (e) { _closeAddComp(); await _refreshLibraryUi({ feed: true, covers: true }); showAlert(`${t('addbook.anthology_pdf_upload_failed')}${e?.message ? `\n\n${e.message}` : ''}`); return; }
         finally { _setButtonsDisabled(['cc-save', 'cc-cancel'], false); }
       }
       _closeAddComp(); await _refreshLibraryUi({ feed: true, covers: true });
@@ -412,7 +412,7 @@ export function initAddBook(mousedownOnOverlayRef) {
     errEl.textContent = '';
     if (!name) { errEl.textContent = t('err.name_empty'); return; }
     try {
-      if (_csrSelectedOwned) { errEl.textContent = 'This series is already in your library.'; return; }
+      if (_csrSelectedOwned) { errEl.textContent = t('addbook.series_already_in_library'); return; }
       if (_csrSelectedId) {
         await apiFetch(`/api/series/${_csrSelectedId}/add?cascade=1`, { method: 'POST' });
         _closeAddSeries(); await _refreshLibraryUi({ feed: true, covers: true });
@@ -423,15 +423,15 @@ export function initAddBook(mousedownOnOverlayRef) {
         const result = await res.json();
         if (result.existed) {
           await apiFetch(`/api/series/${result.id}/add?cascade=1`, { method: 'POST' });
-          const by = result.createdByUsername ? ` (created by ${result.createdByUsername})` : '';
+          const by = result.createdByUsername ? t('addbook.series_already_created_by', { name: result.createdByUsername }) : '';
           errEl.style.color = '#f5a623';
-          errEl.textContent = `A series named "${result.name}" already exists${by}. It has been added to your library.`;
+          errEl.textContent = t('addbook.series_exists_added', { name: result.name, by });
           setTimeout(async () => { _closeAddSeries(); await _refreshLibraryUi({ feed: true, covers: true }); }, 2500);
         } else {
           _closeAddSeries(); await _refreshLibraryUi({ feed: true, covers: true });
         }
       }
-    } catch (_) { errEl.textContent = 'Failed.'; }
+    } catch (_) { errEl.textContent = t('addbook.failed'); }
   });
   document.getElementById('open-add-series-btn').addEventListener('click', openAddSeries);
 }
