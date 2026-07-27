@@ -390,6 +390,21 @@
       <h3>Deleting</h3>
       <p>Permanently deletes the announcement regardless of its state. This is irreversible.</p>
 
+      <h3>Body markup</h3>
+      <p>The body field accepts a small custom markup (parsed by <code>formatAnnBody()</code> in <code>public/js/feed.js</code> for the public feed, and duplicated in <code>admin/js/announcements.js</code> so the admin card preview renders it the same way instead of showing raw tags):</p>
+      <table>
+        <thead><tr><th>Syntax</th><th>Result</th></tr></thead>
+        <tbody>
+          <tr><td><code>**bold**</code></td><td><strong>bold</strong></td></tr>
+          <tr><td><code>*italic*</code></td><td><em>italic</em></td></tr>
+          <tr><td><code>***bold italic***</code></td><td>bold + italic (nests correctly, but renders via slightly overlapping tags - browsers handle this fine)</td></tr>
+          <tr><td><code>__underline__</code></td><td><u>underlined</u></td></tr>
+          <tr><td><code>~~strikethrough~~</code></td><td><s>strikethrough</s></td></tr>
+          <tr><td><code>{color:name}text{/color}</code></td><td>colored text - <code>name</code> is one of <code>red</code>, <code>orange</code>, <code>amber</code>, <code>green</code>, <code>teal</code>, <code>blue</code>, <code>purple</code>, <code>pink</code></td></tr>
+          <tr><td><code>[label](https://url)</code></td><td>clickable link</td></tr>
+        </tbody>
+      </table>
+
       <div class="note">The admin panel is the only place to create or manage announcements. Do not create announcements on behalf of the user - draft the text and copy it for them to review before publishing.</div>
     </div>
 

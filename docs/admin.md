@@ -182,6 +182,18 @@ Announcements are notices shown to all users in the app. Workflow: draft → pub
 | **Unpin** | Remove pin (stays published) |
 | **Delete** | Permanently remove |
 
+The body field accepts a small custom markup (parsed by `formatAnnBody()` in `public/js/feed.js` for the public feed, and duplicated in `admin/js/announcements.js` so the admin card preview renders it the same way instead of showing raw tags):
+
+| Syntax | Result |
+|--------|--------|
+| `**bold**` | **bold** |
+| `*italic*` | *italic* |
+| `***bold italic***` | bold + italic (nests correctly, but renders via slightly overlapping tags - browsers handle this fine) |
+| `__underline__` | underlined |
+| `~~strikethrough~~` | strikethrough |
+| `{color:name}text{/color}` | colored text - `name` is one of `red`, `orange`, `amber`, `green`, `teal`, `blue`, `purple`, `pink` |
+| `[label](https://url)` | clickable link |
+
 ---
 
 ## Admin GC pool

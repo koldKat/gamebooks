@@ -60,7 +60,7 @@ import {
   clearOpenWorldState, doJumpCrossBook,
   getOwSrcBookId, getOwSrcSection, getOwCrossBookRoute,
 } from './open-world.js?v=75';
-import { setFeedHooks, loadFeed, refreshDayCoverFlows } from './feed.js?v=65';
+import { setFeedHooks, loadFeed, refreshDayCoverFlows } from './feed.js?v=66';
 import {
   setNotifHooks, _scheduleLiveUiRefresh,
   _closeNotifDropdown, _openNotifDropdown, isNotifDropdownOpen,
@@ -767,7 +767,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   const forumFrame = document.getElementById('forum-modal-frame');
   const closeForumModal = () => forumOverlay.classList.remove('active');
   const openForumModal = (url = '/forum') => {
-    if (forumFrame.getAttribute('src') !== url) forumFrame.setAttribute('src', url);
+    // Clicking a link inside the iframe navigates its contentWindow but never
+    // touches the <iframe> element's own src attribute - so comparing against
+    // getAttribute('src') always saw the original '/forum' and skipped
+    // re-navigating, leaving the modal reopen wherever a PREVIOUS user last
+    // clicked to (e.g. a category or thread), not the forum home. Reset via
+    // contentWindow.location, which reflects where the iframe actually is.
+    try { forumFrame.contentWindow.location.replace(url); }
+    catch (_) { forumFrame.setAttribute('src', url); }
     forumOverlay.classList.add('active');
   };
   forumClose?.addEventListener('click', closeForumModal);

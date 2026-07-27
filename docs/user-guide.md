@@ -730,6 +730,17 @@ The community forum is at **/forum**. Anyone can read; you need to be logged in 
 - You can delete your own threads and replies (deleted replies show as *[deleted]*)
 - New activity pulses **green** on the Forum button, sub-forum cards, and individual threads
 
+**Formatting your posts:** thread and reply bodies accept a small markup:
+
+| Type this | Get this |
+|-----------|----------|
+| `**bold**` | **bold** |
+| `*italic*` | *italic* |
+| `__underline__` | underlined |
+| `~~strikethrough~~` | strikethrough |
+| `{color:name}text{/color}` | colored text - `name` is one of `red`, `orange`, `amber`, `green`, `teal`, `blue`, `purple`, `pink` |
+| `[label](https://url)` | clickable link |
+
 ---
 
 ## Feedback & Inbox
