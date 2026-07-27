@@ -5,7 +5,8 @@
 // and delete public/css/shop.css (and its <link> in index.html).
 
 import { apiFetch, getToken } from './state.js?v=11';
-import { escapeHtml } from './util.js?v=7';
+import { escapeHtml } from './util.js?v=9';
+import { t } from './i18n.js?v=12';
 
 // Callbacks wired in by main.js at boot
 let _hooks = {};
@@ -22,38 +23,38 @@ function _undoFastTravelCap(level) {
 const SHOP_ITEMS = [
   {
     id:        'xp_boost',
-    label:     'XP Boost',
+    label:     () => t('shop.item.xp_boost.label'),
     costFn:    d => (d.xpBoostPurchased  || 0) + 1,
-    desc:      () => { const cap = _shopData?.level || 0; return `+0.1% XP gain permanently (cap: ${(cap * 0.1).toFixed(1)}% at your lvl)`; },
+    desc:      () => { const cap = _shopData?.level || 0; return t('shop.item.xp_boost.desc', { cap: (cap * 0.1).toFixed(1) }); },
     statKey:   'xpBoostPurchased',
-    statLabel: n => `+${(n * 0.1).toFixed(1)}% XP boost purchased`,
+    statLabel: n => t('shop.item.xp_boost.owned', { pct: (n * 0.1).toFixed(1) }),
     atCap:     d => (d.xpBoostPurchased || 0) >= (d.level || 0),
   },
   {
     id:        'heartbeat_xp',
-    label:     'Heartbeat XP',
+    label:     () => t('shop.item.heartbeat_xp.label'),
     costFn:    d => (d.bonusHeartbeatXp  || 0) + 1,
-    desc:      () => { const cap = _shopData?.level || 0; return `+0.1 base idle heartbeat XP permanently (cap: ${(cap * 0.1).toFixed(1)} XP at your lvl)`; },
+    desc:      () => { const cap = _shopData?.level || 0; return t('shop.item.heartbeat_xp.desc', { cap: (cap * 0.1).toFixed(1) }); },
     statKey:   'bonusHeartbeatXp',
-    statLabel: n => `+${(n * 0.1).toFixed(1)} base heartbeat XP purchased`,
+    statLabel: n => t('shop.item.heartbeat_xp.owned', { pct: (n * 0.1).toFixed(1) }),
     atCap:     d => (d.bonusHeartbeatXp  || 0) >= (d.level || 0),
   },
   {
     id:        'undo',
-    label:     'Extra Undo',
+    label:     () => t('shop.item.undo.label'),
     costFn:    d => ((d.bonusUndos       || 0) + 1) * 3,
-    desc:      () => { const cap = _undoFastTravelCap(_shopData?.level || 0); return `+1 undo per run permanently (cap: ${cap} at your lvl)`; },
+    desc:      () => { const cap = _undoFastTravelCap(_shopData?.level || 0); return t('shop.item.undo.desc', { cap }); },
     statKey:   'bonusUndos',
-    statLabel: n => `+${n} purchased`,
+    statLabel: n => t('shop.item.owned', { n }),
     atCap:     d => (d.bonusUndos || 0) >= _undoFastTravelCap(d.level || 0),
   },
   {
     id:        'fast_travel',
-    label:     'Fast Travel',
+    label:     () => t('shop.item.fast_travel.label'),
     costFn:    d => ((d.bonusFastTravels || 0) + 1) * 5,
-    desc:      () => { const cap = _undoFastTravelCap(_shopData?.level || 0); return `+1 fast travel per run permanently (cap: ${cap} at your lvl)`; },
+    desc:      () => { const cap = _undoFastTravelCap(_shopData?.level || 0); return t('shop.item.fast_travel.desc', { cap }); },
     statKey:   'bonusFastTravels',
-    statLabel: n => `+${n} purchased`,
+    statLabel: n => t('shop.item.owned', { n }),
     atCap:     d => (d.bonusFastTravels || 0) >= _undoFastTravelCap(d.level || 0),
   },
 ];
@@ -82,7 +83,7 @@ export function updateCoinsDisplay(balance) {
 
 function updateSpentDisplay(spent) {
   const el = document.getElementById('shop-spent');
-  if (el) el.textContent = `${spent} spent`;
+  if (el) el.textContent = t('shop.spent', { n: spent });
 }
 
 export async function refreshCoinsDisplay() {
@@ -111,10 +112,10 @@ function renderShopItems() {
     const cost      = item.costFn(_shopData);
     const canBuy    = !cappedOut && balance >= cost;
     const owned     = _shopData[item.statKey] || 0;
-    const btnLabel  = cappedOut ? 'Max' : 'Buy';
+    const btnLabel  = cappedOut ? t('shop.btn.max') : t('shop.btn.buy');
     return `<div class="shop-item">
       <div class="shop-item-info">
-        <div class="shop-item-label">${escapeHtml(item.label)}</div>
+        <div class="shop-item-label">${escapeHtml(item.label())}</div>
         <div class="shop-item-desc">${escapeHtml(typeof item.desc === 'function' ? item.desc() : item.desc)}</div>
         ${owned > 0 ? `<div class="shop-item-owned">${escapeHtml(item.statLabel(owned))}</div>` : ''}
       </div>
@@ -134,7 +135,7 @@ function renderShopItems() {
         const data = await res.json();
         if (!res.ok) {
           if (data.error?.includes('cap') || res.status === 403) { renderShopItems(); return; }
-          btn.disabled = false; btn.textContent = 'Buy'; showShopError(data.error || 'Error'); return;
+          btn.disabled = false; btn.textContent = t('shop.btn.buy'); showShopError(data.error || t('msg.error')); return;
         }
         _shopData = data;
         _hooks.onRewardSnapshot?.(data);
@@ -143,7 +144,7 @@ function renderShopItems() {
         updateCoinsDisplay(data.coinsBalance || 0);
         updateSpentDisplay(data.coinsSpent || 0);
         renderShopItems();
-      } catch (_) { btn.disabled = false; btn.textContent = 'Buy'; showShopError('Request failed'); }
+      } catch (_) { btn.disabled = false; btn.textContent = t('shop.btn.buy'); showShopError(t('shop.request_failed')); }
     });
   });
 }
@@ -158,7 +159,7 @@ function showShopError(msg) {
 export async function openShopModal() {
   document.getElementById('shop-modal-overlay').classList.add('active');
   document.getElementById('shop-error').textContent = '';
-  document.getElementById('shop-items').innerHTML = '<div class="shop-loading">Loading…</div>';
+  document.getElementById('shop-items').innerHTML = `<div class="shop-loading">${t('shop.loading')}</div>`;
   try {
     const res = await apiFetch('/api/profile');
     if (!res.ok) throw new Error();
@@ -168,7 +169,7 @@ export async function openShopModal() {
     document.getElementById('shop-balance').innerHTML = `${COIN_SVG} ${_shopData.coinsBalance || 0}`;
     updateSpentDisplay(_shopData.coinsSpent || 0);
     renderShopItems();
-  } catch (_) { document.getElementById('shop-items').innerHTML = '<div class="shop-loading">Failed to load.</div>'; }
+  } catch (_) { document.getElementById('shop-items').innerHTML = `<div class="shop-loading">${t('shop.load_failed')}</div>`; }
 }
 
 export function initShop() {

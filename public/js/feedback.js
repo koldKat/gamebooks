@@ -1,8 +1,8 @@
 // feedback.js - Feedback submission modal
 
 import { getUsername, getToken, apiFetch } from './state.js?v=11';
-import { t } from './i18n.js?v=10';
-import { uploadAttachment, addAttachmentItem } from './util.js?v=7';
+import { t } from './i18n.js?v=12';
+import { uploadAttachment, addAttachmentItem } from './util.js?v=9';
 
 export function initFeedback() {
   document.getElementById('feedback-btn').addEventListener('click', () => {
@@ -58,7 +58,7 @@ export function initFeedback() {
           });
         } catch {
           item.classList.replace('att-uploading', 'att-error');
-          item.querySelector('.att-item-name').textContent = 'Failed: ' + file.name;
+          item.querySelector('.att-item-name').textContent = t('util.upload_failed', { name: file.name });
         }
       }
       fileInputNew.value = '';

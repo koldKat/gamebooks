@@ -1,9 +1,10 @@
 // autocomplete.js - Book/author/series autocomplete dropdowns and data loading
 
 import { apiFetch } from './state.js?v=11';
-import { getCachedBooks } from './books.js?v=66';
+import { getCachedBooks } from './books.js?v=68';
 import { naturalCompare, naturalCompareByName, matchesSearch } from './sort.js?v=1';
-import { escapeHtml, fetchPublic as _fetchPublic } from './util.js?v=7';
+import { escapeHtml, fetchPublic as _fetchPublic } from './util.js?v=9';
+import { t } from './i18n.js?v=12';
 
 function _sortedByName(items) { return [...items].sort(naturalCompareByName); }
 
@@ -102,7 +103,7 @@ export function _setupNameAutocomplete(inputId, dropdownId, saveBtnId, filterFn,
   function _setSelected(book) {
     _selectedId    = book ? book.id : null;
     _selectedOwned = !!(book && (getCachedBooks() || []).some(cb => cb.id === book.id));
-    saveBtn.textContent = book ? (_selectedOwned ? 'Already owned' : 'Add to library') : 'Create';
+    saveBtn.textContent = book ? (_selectedOwned ? t('autocomplete.already_owned') : t('autocomplete.add_to_library')) : t('autocomplete.create');
     saveBtn.disabled = !!_selectedOwned;
     if (book) onSelect(book);
   }
@@ -117,7 +118,7 @@ export function _setupNameAutocomplete(inputId, dropdownId, saveBtnId, filterFn,
     dropdown.innerHTML = _matches.map((b, i) =>
       `<li data-idx="${i}" data-id="${b.id}">` +
         escapeHtml(b.name) +
-        (_owned.some(cb => cb.id === b.id) ? `<span class="ac-sub ac-owned">Owned</span>` : '') +
+        (_owned.some(cb => cb.id === b.id) ? `<span class="ac-sub ac-owned">${t('autocomplete.owned')}</span>` : '') +
         (b.authors ? `<span class="ac-sub">${escapeHtml(b.authors)}</span>` : '') +
       `</li>`
     ).join('');
@@ -164,7 +165,7 @@ export function _setupNameAutocomplete(inputId, dropdownId, saveBtnId, filterFn,
       _selectedId    = null;
       _selectedOwned = false;
       dropdown.classList.remove('open');
-      saveBtn.textContent = 'Create';
+      saveBtn.textContent = t('autocomplete.create');
       saveBtn.disabled    = false;
     },
     getSelectedId()    { return _selectedId; },

@@ -1,6 +1,7 @@
 // util.js - Shared pure utility functions
 
 import { apiFetch } from './state.js?v=11';
+import { t } from './i18n.js?v=12';
 
 export function escapeHtml(str) {
   return String(str ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -89,7 +90,7 @@ export async function uploadAttachment(file, maxBytes = 512 * 1024) {
 export function addAttachmentItem(container, name) {
   const item = document.createElement('div');
   item.className = 'att-item att-uploading';
-  item.innerHTML = `<span class="att-item-name">${escapeHtml(name)}</span><button class="att-item-rm" title="Remove">✕</button>`;
+  item.innerHTML = `<span class="att-item-name">${escapeHtml(name)}</span><button class="att-item-rm" title="${t('util.remove_title')}">✕</button>`;
   container.appendChild(item);
   return item;
 }

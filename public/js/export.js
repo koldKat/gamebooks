@@ -3,7 +3,8 @@
 // server/export.js) from each book's saved positions/colors - no rendering happens here.
 
 import { state, currentBookId, apiFetch } from './state.js?v=11';
-import { showAlert } from './play.js?v=36';
+import { showAlert } from './play.js?v=38';
+import { t } from './i18n.js?v=12';
 
 function _downloadBlob(blob, cd, fallbackFilename) {
   const matchUtf8  = cd.match(/filename\*=UTF-8''([^;\s]+)/i);
@@ -20,16 +21,16 @@ function _downloadBlob(blob, cd, fallbackFilename) {
 
 export async function exportAll() {
   const btn = document.getElementById('download-backup-btn');
-  const origText = btn?.textContent ?? 'Export Everything (.zip)';
-  if (btn) { btn.disabled = true; btn.textContent = 'Exporting…'; }
+  const origText = btn?.textContent ?? t('export.all_default');
+  if (btn) { btn.disabled = true; btn.textContent = t('export.exporting'); }
   try {
     const date = new Date().toISOString().slice(0, 10);
     const res  = await apiFetch('/api/export/all');
-    if (!res.ok) { showAlert('Export failed.'); return; }
+    if (!res.ok) { showAlert(t('export.failed')); return; }
     const blob = await res.blob();
     _downloadBlob(blob, res.headers.get('Content-Disposition') || '', `gamebooks-export-${date}.zip`);
   } catch (_) {
-    showAlert('Export failed.');
+    showAlert(t('export.failed'));
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = origText; }
   }
@@ -37,18 +38,18 @@ export async function exportAll() {
 
 export async function exportBook() {
   const btn = document.getElementById('export-book-btn');
-  const origText = btn?.textContent ?? 'Export Book';
-  if (btn) { btn.disabled = true; btn.textContent = 'Exporting…'; }
+  const origText = btn?.textContent ?? t('export.book_default');
+  if (btn) { btn.disabled = true; btn.textContent = t('export.exporting'); }
 
   try {
     const res = await apiFetch(`/api/export/book/${currentBookId}`, { method: 'POST' });
-    if (!res.ok) { showAlert('Export failed.'); return; }
+    if (!res.ok) { showAlert(t('export.failed')); return; }
 
     const safeName = (state.bookName || 'book').replace(/[<>:"/\\|?*\x00-\x1f]/g, '').trim() || 'book';
     const blob = await res.blob();
     _downloadBlob(blob, res.headers.get('Content-Disposition') || '', `${safeName}.zip`);
   } catch (_) {
-    showAlert('Export failed.');
+    showAlert(t('export.failed'));
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = origText; }
   }

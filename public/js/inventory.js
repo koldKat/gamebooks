@@ -4,9 +4,10 @@
 // Visible to all logged-in users.
 
 import { state, currentPlaythrough, saveState, apiFetch, viewingPt } from './state.js?v=11';
-import { showConfirm } from './play.js?v=36';
-import { getPlayBtnRow } from './charsheet.js?v=28';
-import { escapeHtml } from './util.js?v=7';
+import { showConfirm } from './play.js?v=38';
+import { getPlayBtnRow } from './charsheet.js?v=30';
+import { escapeHtml } from './util.js?v=9';
+import { t } from './i18n.js?v=12';
 
 const MAX_SLOTS = 40;
 
@@ -121,11 +122,11 @@ export async function renderInventoryDisplay(extraItems = []) {
   const lines = inv.map(({ itemId, note, qty, label }) => {
     const item = _byId(itemId);
     if (!item) return '';
-    return _invLineHtml(item, label?.trim() || item.name, note, qty, 'Item', 'item');
+    return _invLineHtml(item, label?.trim() || item.name, note, qty, t('inv.badge.item'), 'item');
   }).filter(Boolean);
   const extraLines = extraItems.map(({ item, label, note, qty, slotLabel }) => {
     if (!item) return '';
-    return _invLineHtml(item, label?.trim() || item.name, note, qty, slotLabel || 'Equipped', 'equipped');
+    return _invLineHtml(item, label?.trim() || item.name, note, qty, slotLabel || t('inv.badge.equipped'), 'equipped');
   }).filter(Boolean);
   el.innerHTML = [...lines, ...extraLines].join('');
 }
@@ -180,10 +181,10 @@ function _showCtx(idx, x, y) {
   const menu = document.createElement('div');
   menu.className = 'inv-ctx-menu';
   menu.innerHTML = `
-    <div class="inv-ctx-item" data-action="toggle-visible">${slot.visible ? '◉ Hide from screen' : '◉ Show on screen'}</div>
-    <div class="inv-ctx-item" data-action="rename">✎ Rename</div>
-    <div class="inv-ctx-item" data-action="edit">⚙ Edit</div>
-    <div class="inv-ctx-item inv-ctx-remove" data-action="remove">✕ Remove</div>
+    <div class="inv-ctx-item" data-action="toggle-visible">◉ ${slot.visible ? t('inv.ctx.hide') : t('inv.ctx.show')}</div>
+    <div class="inv-ctx-item" data-action="rename">✎ ${t('inv.ctx.rename')}</div>
+    <div class="inv-ctx-item" data-action="edit">⚙ ${t('inv.ctx.edit')}</div>
+    <div class="inv-ctx-item inv-ctx-remove" data-action="remove">✕ ${t('inv.ctx.remove')}</div>
   `;
 
   menu.style.left = x + 'px';
@@ -212,12 +213,12 @@ function _showCtx(idx, x, y) {
       _openEditAt(idx, x, y);
     } else if (action === 'remove') {
       const label = a[idx].label?.trim() || item.name;
-      showConfirm(`Remove "${label}"?`, () => {
+      showConfirm(t('inv.confirm.remove', { name: label }), () => {
         const b = _inv();
         if (_editIdx === idx) { _editIdx = -1; document.getElementById('inv-edit-dialog').classList.remove('active'); }
         b.splice(idx, 1);
         _setInv(b); _renderGrid();
-      }, { confirmLabel: 'Remove', danger: true });
+      }, { confirmLabel: t('inv.ctx.remove'), danger: true });
     }
   });
 }
@@ -401,7 +402,7 @@ async function _openPicker() {
   const search  = document.getElementById('inv-search');
   const grid    = document.getElementById('inv-picker-grid');
   if (search) search.value = '';
-  if (grid) grid.innerHTML = '<div class="inv-picker-empty">Loading…</div>';
+  if (grid) grid.innerHTML = `<div class="inv-picker-empty">${t('inv.picker_loading')}</div>`;
   overlay.classList.add('active');
   search?.focus();
   try {
@@ -426,7 +427,7 @@ function _renderPicker(query) {
   const grid  = document.getElementById('inv-picker-grid');
   if (!grid) return;
   if (!items.length) {
-    grid.innerHTML = '<div class="inv-picker-empty">No items found.</div>';
+    grid.innerHTML = `<div class="inv-picker-empty">${t('inv.picker_empty')}</div>`;
     return;
   }
   grid.innerHTML = items.map(it =>
@@ -457,14 +458,14 @@ export function initInventory() {
   overlay.innerHTML = `
     <div class="inv-modal">
       <div class="inv-modal-hdr">
-        <span class="inv-modal-title">Inventory</span>
+        <span class="inv-modal-title">${t('inv.title')}</span>
         <span id="inv-count-label" class="inv-count">0 / ${MAX_SLOTS}</span>
-        <button id="inv-close-btn" class="inv-close-btn" aria-label="Close">✕</button>
+        <button id="inv-close-btn" class="inv-close-btn" aria-label="${t('btn.close')}">✕</button>
       </div>
       <div id="inv-grid" class="inv-grid"></div>
       <div class="inv-modal-ftr">
-        <button id="inv-add-btn" class="inv-add-btn">+ Add to Inventory</button>
-        <button id="inv-save-template-btn" class="inv-save-template-btn">Save as Template</button>
+        <button id="inv-add-btn" class="inv-add-btn">${t('inv.add_btn')}</button>
+        <button id="inv-save-template-btn" class="inv-save-template-btn">${t('inv.save_template')}</button>
       </div>
     </div>`;
   document.body.appendChild(overlay);
@@ -476,7 +477,7 @@ export function initInventory() {
   editDlg.innerHTML = `
     <div class="inv-edit-title" id="inv-edit-title"></div>
     <div class="inv-edit-row">
-      <label class="inv-edit-label">Qty</label>
+      <label class="inv-edit-label">${t('inv.qty_label')}</label>
       <div class="inv-qty-wrap">
         <button class="inv-qty-btn" id="inv-edit-qty-dec">−</button>
         <input id="inv-edit-qty" class="inv-edit-input inv-qty-input" type="text" inputmode="numeric" maxlength="4">
@@ -484,15 +485,15 @@ export function initInventory() {
       </div>
     </div>
     <div class="inv-edit-row">
-      <label class="inv-edit-label">Note</label>
-      <input id="inv-edit-note" class="inv-edit-input" type="text" placeholder="e.g. 1d6+4, rusted…">
+      <label class="inv-edit-label">${t('inv.note_label')}</label>
+      <input id="inv-edit-note" class="inv-edit-input" type="text" placeholder="${t('inv.note_placeholder')}">
     </div>
     <div class="inv-edit-row">
-      <label class="inv-edit-label">Show</label>
+      <label class="inv-edit-label">${t('inv.show_label')}</label>
       <input id="inv-edit-visible" class="inv-edit-check" type="checkbox">
-      <span class="inv-edit-check-label">on screen</span>
+      <span class="inv-edit-check-label">${t('inv.on_screen')}</span>
     </div>
-    <button id="inv-edit-done" class="inv-edit-done">Done</button>`;
+    <button id="inv-edit-done" class="inv-edit-done">${t('inv.done')}</button>`;
   document.body.appendChild(editDlg);
 
   // Rename dialog
@@ -500,11 +501,11 @@ export function initInventory() {
   renameDlg.id        = 'inv-rename-dialog';
   renameDlg.className = 'inv-rename-dialog';
   renameDlg.innerHTML = `
-    <div class="inv-rename-label">Rename item</div>
+    <div class="inv-rename-label">${t('inv.rename.label')}</div>
     <input id="inv-rename-input" class="inv-edit-input" type="text" autocomplete="off">
     <div class="inv-rename-btns">
-      <button id="inv-rename-cancel" class="inv-edit-done" style="background:#374151">Cancel</button>
-      <button id="inv-rename-ok"     class="inv-edit-done">OK</button>
+      <button id="inv-rename-cancel" class="inv-edit-done" style="background:#374151">${t('btn.cancel')}</button>
+      <button id="inv-rename-ok"     class="inv-edit-done">${t('btn.ok')}</button>
     </div>`;
   document.body.appendChild(renameDlg);
 
@@ -515,9 +516,9 @@ export function initInventory() {
   pickerOverlay.innerHTML = `
     <div class="inv-picker-modal">
       <div class="inv-modal-hdr">
-        <span class="inv-modal-title">Add Item</span>
-        <input id="inv-search" class="inv-search" type="text" placeholder="Search…" autocomplete="off">
-        <button id="inv-picker-close" class="inv-close-btn" aria-label="Close">✕</button>
+        <span class="inv-modal-title">${t('inv.add_title')}</span>
+        <input id="inv-search" class="inv-search" type="text" placeholder="${t('inv.search_placeholder')}" autocomplete="off">
+        <button id="inv-picker-close" class="inv-close-btn" aria-label="${t('btn.close')}">✕</button>
       </div>
       <div id="inv-picker-grid" class="inv-picker-grid"></div>
     </div>`;
@@ -526,7 +527,7 @@ export function initInventory() {
   // Button - joins the shared bottom-right action row
   const btnEl = document.createElement('button');
   btnEl.id            = 'inventory-btn';
-  btnEl.textContent   = 'Inventory';
+  btnEl.textContent   = t('inv.title');
   btnEl.style.display = 'none';
   getPlayBtnRow().appendChild(btnEl);
 

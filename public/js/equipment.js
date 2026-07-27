@@ -4,39 +4,40 @@
 // there's no active playthrough.
 
 import { state, currentPlaythrough, saveState, apiFetch, viewingPt } from './state.js?v=11';
-import { getInventorySlots, addItemToInventory, removeAllFromInventoryAt, refreshInventoryUI, renderInventoryDisplay } from './inventory.js?v=94';
-import { getPlayBtnRow } from './charsheet.js?v=28';
-import { escapeHtml } from './util.js?v=7';
+import { getInventorySlots, addItemToInventory, removeAllFromInventoryAt, refreshInventoryUI, renderInventoryDisplay } from './inventory.js?v=96';
+import { getPlayBtnRow } from './charsheet.js?v=30';
+import { escapeHtml } from './util.js?v=9';
+import { t } from './i18n.js?v=12';
 
 // x/y are percentages, positioned over the dummy silhouette (eq-body box, 380x600px).
 // Center column = body slots (no horizontal overlap with side columns);
 // vertical gaps between same-column slots are kept > slot height (~74px) to avoid stacking.
 const SLOTS = [
-  { key: 'head',      label: 'Head',   x: 50, y: 14 },
-  { key: 'neck',      label: 'Neck',   x: 50, y: 29 },
-  { key: 'chest',     label: 'Chest',  x: 50, y: 44 },
-  { key: 'belt',      label: 'Belt',   x: 50, y: 59 },
-  { key: 'legs',      label: 'Legs',   x: 50, y: 74 },
-  { key: 'feet',      label: 'Feet',   x: 50, y: 89 },
-  { key: 'cloak',     label: 'Cloak',    x: 10, y: 18 },
-  { key: 'ring1',     label: 'Ring',     x: 10, y: 36 },
-  { key: 'ring3',     label: 'Ring',     x: 10, y: 54 },
-  { key: 'primary',   label: 'Weapon',   x: 10, y: 72 },
-  { key: 'hands',     label: 'Hands',    x: 90, y: 18 },
-  { key: 'ring2',     label: 'Ring',     x: 90, y: 36 },
-  { key: 'ring4',     label: 'Ring',     x: 90, y: 54 },
-  { key: 'secondary', label: 'Off-hand', x: 90, y: 72 },
-  { key: 'back',      label: 'Back',     x: 90, y: 90 },
+  { key: 'head',      label: () => t('eq.slot.head'),   x: 50, y: 14 },
+  { key: 'neck',      label: () => t('eq.slot.neck'),   x: 50, y: 29 },
+  { key: 'chest',     label: () => t('eq.slot.chest'),  x: 50, y: 44 },
+  { key: 'belt',      label: () => t('eq.slot.belt'),   x: 50, y: 59 },
+  { key: 'legs',      label: () => t('eq.slot.legs'),   x: 50, y: 74 },
+  { key: 'feet',      label: () => t('eq.slot.feet'),   x: 50, y: 89 },
+  { key: 'cloak',     label: () => t('eq.slot.cloak'),    x: 10, y: 18 },
+  { key: 'ring1',     label: () => t('eq.slot.ring'),     x: 10, y: 36 },
+  { key: 'ring3',     label: () => t('eq.slot.ring'),     x: 10, y: 54 },
+  { key: 'primary',   label: () => t('eq.slot.weapon'),   x: 10, y: 72 },
+  { key: 'hands',     label: () => t('eq.slot.hands'),    x: 90, y: 18 },
+  { key: 'ring2',     label: () => t('eq.slot.ring'),     x: 90, y: 36 },
+  { key: 'ring4',     label: () => t('eq.slot.ring'),     x: 90, y: 54 },
+  { key: 'secondary', label: () => t('eq.slot.offhand'), x: 90, y: 72 },
+  { key: 'back',      label: () => t('eq.slot.back'),     x: 90, y: 90 },
 ];
 
 // Consumable item slots - rendered in their own row below the dummy, at the
 // same size as inventory slots (matches .inv-slot: 80x98px).
 const ITEM_SLOTS = [
-  { key: 'item1', label: 'Item 1' },
-  { key: 'item2', label: 'Item 2' },
-  { key: 'item3', label: 'Item 3' },
-  { key: 'item4', label: 'Item 4' },
-  { key: 'item5', label: 'Item 5' },
+  { key: 'item1', label: () => t('eq.slot.item', { n: 1 }) },
+  { key: 'item2', label: () => t('eq.slot.item', { n: 2 }) },
+  { key: 'item3', label: () => t('eq.slot.item', { n: 3 }) },
+  { key: 'item4', label: () => t('eq.slot.item', { n: 4 }) },
+  { key: 'item5', label: () => t('eq.slot.item', { n: 5 }) },
 ];
 
 const ALL_SLOTS = [...SLOTS, ...ITEM_SLOTS];
@@ -179,10 +180,10 @@ function _slotHtml(slot, eq, ro, positioned) {
   const item = itemId ? _byId(itemId) : null;
   const filledClass = item ? ' eq-slot--filled' : '';
   const svg  = item ? `<div class="eq-slot-svg">${item.svg_data}</div>` : `<div class="eq-slot-svg eq-slot-svg--empty"></div>`;
-  const name = item ? escapeHtml(meta.label.trim() || item.name) : slot.label;
+  const name = item ? escapeHtml(meta.label.trim() || item.name) : slot.label();
   const noteHtml = item && meta.note ? `<div class="eq-slot-note-label" title="${escapeHtml(meta.note)}">${escapeHtml(meta.note)}</div>` : '';
   const qtyHtml = item && qty > 1 ? `<span class="eq-slot-qty">×${qty}</span>` : '';
-  const removeBtn = item && !ro ? `<button class="eq-slot-remove" data-key="${slot.key}" draggable="false" aria-label="Unequip">✕</button>` : '';
+  const removeBtn = item && !ro ? `<button class="eq-slot-remove" data-key="${slot.key}" draggable="false" aria-label="${t('eq.unequip')}">✕</button>` : '';
   const roClass = !ro ? ' eq-slot--editable' : '';
   const style = positioned ? ` style="left:${slot.x}%;top:${slot.y}%"` : '';
   return `<div class="eq-slot${filledClass}${roClass}" data-key="${slot.key}"${style}>
@@ -332,9 +333,9 @@ function _showEqCtx(key, x, y) {
   const menu = document.createElement('div');
   menu.className = 'inv-ctx-menu';
   menu.innerHTML = `
-    <div class="inv-ctx-item" data-action="toggle-visible">${visible ? '◉ Hide from screen' : '◉ Show on screen'}</div>
-    <div class="inv-ctx-item" data-action="rename">✎ Rename</div>
-    <div class="inv-ctx-item" data-action="edit">⚙ Edit</div>
+    <div class="inv-ctx-item" data-action="toggle-visible">◉ ${visible ? t('inv.ctx.hide') : t('inv.ctx.show')}</div>
+    <div class="inv-ctx-item" data-action="rename">✎ ${t('inv.ctx.rename')}</div>
+    <div class="inv-ctx-item" data-action="edit">⚙ ${t('inv.ctx.edit')}</div>
   `;
 
   menu.style.left = x + 'px';
@@ -457,7 +458,7 @@ export async function getVisibleEquippedItems() {
   await _ensureEquippedItems();
   const eq = _eq();
   const eqVis = _eqVisible();
-  const slotLabel = key => ALL_SLOTS.find(s => s.key === key)?.label || key;
+  const slotLabel = key => ALL_SLOTS.find(s => s.key === key)?.label?.() || key;
   return Object.entries(eq)
     .map(([key, entry]) => ({ key, itemId: _eqItemId(entry), meta: _eqMeta(entry), qty: _eqQty(entry) }))
     .filter(({ key, itemId }) => itemId && eqVis[key])
@@ -514,9 +515,9 @@ async function _openPicker(slotKey) {
   const overlay = document.getElementById('eq-picker-overlay');
   const search  = document.getElementById('eq-search');
   const grid    = document.getElementById('eq-picker-grid');
-  document.getElementById('eq-picker-title').textContent = `Equip - ${slot.label}`;
+  document.getElementById('eq-picker-title').textContent = t('eq.picker_title', { slot: slot.label() });
   if (search) search.value = '';
-  if (grid) grid.innerHTML = '<div class="inv-picker-empty">Loading…</div>';
+  if (grid) grid.innerHTML = `<div class="inv-picker-empty">${t('inv.picker_loading')}</div>`;
   overlay.classList.add('active');
   search?.focus();
 
@@ -546,7 +547,7 @@ function _renderPicker(query) {
   const grid  = document.getElementById('eq-picker-grid');
   if (!grid) return;
   if (!items.length) {
-    grid.innerHTML = '<div class="inv-picker-empty">No items in inventory.</div>';
+    grid.innerHTML = `<div class="inv-picker-empty">${t('eq.picker_empty')}</div>`;
     return;
   }
   grid.innerHTML = items.map(it => {
@@ -576,13 +577,13 @@ export function initEquipment() {
   overlay.innerHTML = `
     <div class="inv-modal">
       <div class="inv-modal-hdr">
-        <span class="inv-modal-title">Equipment</span>
-        <button id="eq-close-btn" class="inv-close-btn" aria-label="Close">✕</button>
+        <span class="inv-modal-title">${t('eq.title')}</span>
+        <button id="eq-close-btn" class="inv-close-btn" aria-label="${t('btn.close')}">✕</button>
       </div>
       <div id="eq-body" class="eq-body"></div>
       <div id="eq-items" class="eq-items-row"></div>
       <div class="inv-modal-ftr">
-        <button id="eq-save-template-btn" class="inv-save-template-btn">Save as Template</button>
+        <button id="eq-save-template-btn" class="inv-save-template-btn">${t('inv.save_template')}</button>
       </div>
     </div>`;
   document.body.appendChild(overlay);
@@ -592,11 +593,11 @@ export function initEquipment() {
   renameDlg.id        = 'eq-rename-dialog';
   renameDlg.className = 'inv-rename-dialog';
   renameDlg.innerHTML = `
-    <div class="inv-rename-label">Rename item</div>
+    <div class="inv-rename-label">${t('inv.rename.label')}</div>
     <input id="eq-rename-input" class="inv-edit-input" type="text" maxlength="40" autocomplete="off">
     <div class="inv-rename-btns">
-      <button id="eq-rename-cancel" class="inv-edit-done" style="background:#374151">Cancel</button>
-      <button id="eq-rename-ok"     class="inv-edit-done">OK</button>
+      <button id="eq-rename-cancel" class="inv-edit-done" style="background:#374151">${t('btn.cancel')}</button>
+      <button id="eq-rename-ok"     class="inv-edit-done">${t('btn.ok')}</button>
     </div>`;
   document.body.appendChild(renameDlg);
 
@@ -607,7 +608,7 @@ export function initEquipment() {
   editDlg.innerHTML = `
     <div class="inv-edit-title" id="eq-edit-title"></div>
     <div class="inv-edit-row">
-      <label class="inv-edit-label">Qty</label>
+      <label class="inv-edit-label">${t('inv.qty_label')}</label>
       <div class="inv-qty-wrap">
         <button class="inv-qty-btn" id="eq-edit-qty-dec">−</button>
         <input id="eq-edit-qty" class="inv-edit-input inv-qty-input" type="text" inputmode="numeric" maxlength="4">
@@ -615,15 +616,15 @@ export function initEquipment() {
       </div>
     </div>
     <div class="inv-edit-row">
-      <label class="inv-edit-label">Note</label>
-      <input id="eq-edit-note" class="inv-edit-input" type="text" maxlength="30" placeholder="e.g. 1d6+4, rusted…">
+      <label class="inv-edit-label">${t('inv.note_label')}</label>
+      <input id="eq-edit-note" class="inv-edit-input" type="text" maxlength="30" placeholder="${t('inv.note_placeholder')}">
     </div>
     <div class="inv-edit-row">
-      <label class="inv-edit-label">Show</label>
+      <label class="inv-edit-label">${t('inv.show_label')}</label>
       <input id="eq-edit-visible" class="inv-edit-check" type="checkbox">
-      <span class="inv-edit-check-label">on screen</span>
+      <span class="inv-edit-check-label">${t('inv.on_screen')}</span>
     </div>
-    <button id="eq-edit-done" class="inv-edit-done">Done</button>`;
+    <button id="eq-edit-done" class="inv-edit-done">${t('inv.done')}</button>`;
   document.body.appendChild(editDlg);
 
   // Picker overlay
@@ -633,9 +634,9 @@ export function initEquipment() {
   pickerOverlay.innerHTML = `
     <div class="inv-picker-modal">
       <div class="inv-modal-hdr">
-        <span id="eq-picker-title" class="inv-modal-title">Equip</span>
-        <input id="eq-search" class="inv-search" type="text" placeholder="Search…" autocomplete="off">
-        <button id="eq-picker-close" class="inv-close-btn" aria-label="Close">✕</button>
+        <span id="eq-picker-title" class="inv-modal-title">${t('eq.picker_title_default')}</span>
+        <input id="eq-search" class="inv-search" type="text" placeholder="${t('inv.search_placeholder')}" autocomplete="off">
+        <button id="eq-picker-close" class="inv-close-btn" aria-label="${t('btn.close')}">✕</button>
       </div>
       <div id="eq-picker-grid" class="inv-picker-grid"></div>
     </div>`;
@@ -644,7 +645,7 @@ export function initEquipment() {
   // Button - joins the shared bottom-right action row
   const btnEl = document.createElement('button');
   btnEl.id            = 'equipment-btn';
-  btnEl.textContent   = 'Equipment';
+  btnEl.textContent   = t('eq.title');
   btnEl.style.display = 'none';
   getPlayBtnRow().appendChild(btnEl);
 
