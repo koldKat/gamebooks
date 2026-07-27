@@ -1,12 +1,12 @@
 // edit-book.js - Edit/add book, anthology, series, and stash modals
 
 import { state, getToken, isDemoMode, apiFetch, clearToken, clearUsername, isTerminal, parseSecId } from './state.js?v=11';
-import { t } from './i18n.js?v=12';
+import { t } from './i18n.js?v=17';
 import { naturalCompare, naturalCompareByName, foldForSearch, matchesSearch } from './sort.js?v=1';
-import { getCachedBooks, getCachedAllSeries, getCachedStashes, _starLabelHtml, _refreshBooksListOnly, _refreshLibraryUi } from './books.js?v=68';
-import { refreshCoinsDisplay } from './shop.js?v=20';
-import { showAlert } from './play.js?v=38';
-import { escapeHtml, compressImage } from './util.js?v=9';
+import { getCachedBooks, getCachedAllSeries, getCachedStashes, _starLabelHtml, _refreshBooksListOnly, _refreshLibraryUi } from './books.js?v=74';
+import { refreshCoinsDisplay } from './shop.js?v=26';
+import { showAlert, showConfirm } from './play.js?v=44';
+import { escapeHtml, compressImage } from './util.js?v=16';
 
 let _hooks = {};
 export function setEditBookHooks(h) { _hooks = h || {}; }
@@ -48,7 +48,7 @@ export function _acceptPdfSelection(file, { inputId, labelId, errorId }) {
   const errEl = errorId ? document.getElementById(errorId) : null;
   if (errEl) errEl.textContent = '';
   if (file.size > _PDF_MAX_BYTES) {
-    if (errEl) errEl.textContent = `PDF is too large. Max ${formatFileSize(_PDF_MAX_BYTES)}.`;
+    if (errEl) errEl.textContent = t('editbook.pdf_too_large', { size: formatFileSize(_PDF_MAX_BYTES) });
     const input = inputId ? document.getElementById(inputId) : null;
     if (input) input.value = '';
     const label = labelId ? document.getElementById(labelId) : null;
@@ -66,7 +66,7 @@ export function _setPdfInlineLabel(el, text) {
 export function _setPdfCurrentLink(linkEl, sizeBytes = null) {
   if (!linkEl) return;
   const sizeText = formatFileSize(sizeBytes);
-  _setPdfInlineLabel(linkEl, sizeText ? `Current PDF (${sizeText})` : 'Current PDF');
+  _setPdfInlineLabel(linkEl, sizeText ? t('editbook.current_pdf_size', { size: sizeText }) : t('editbook.current_pdf'));
 }
 
 export function _setModalUploadProgress(prefix, pct = null) {
@@ -101,26 +101,26 @@ export function _uploadPdfWithProgress(urlPath, file, prefix) {
       if (!e.lengthComputable) return;
       _setModalUploadProgress(prefix, (e.loaded / e.total) * 100);
     };
-    xhr.onerror = () => { _setModalUploadProgress(prefix, null); reject(new Error('Network error')); };
+    xhr.onerror = () => { _setModalUploadProgress(prefix, null); reject(new Error(t('editbook.network_error'))); };
     xhr.onload = () => {
       const status = xhr.status || 0;
       if (status === 503) {
         window.dispatchEvent(new Event('maintenance-mode'));
         _setModalUploadProgress(prefix, null);
-        reject(new Error('Maintenance'));
+        reject(new Error(t('editbook.maintenance')));
         return;
       }
       if (status === 401) {
         clearToken(); clearUsername();
         window.dispatchEvent(new Event('auth-expired'));
         _setModalUploadProgress(prefix, null);
-        reject(new Error('Unauthorized'));
+        reject(new Error(t('editbook.unauthorized')));
         return;
       }
       const data = _parseResponseJsonSafe(xhr.responseText);
       if (status < 200 || status >= 300) {
         _setModalUploadProgress(prefix, null);
-        reject(new Error(data?.error || 'PDF upload failed.'));
+        reject(new Error(data?.error || t('editbook.pdf_upload_failed')));
         return;
       }
       _setModalUploadProgress(prefix, 100);
@@ -147,7 +147,7 @@ function _sortedByName(items) {
 export function _populateParentBookSelect(selectId, selectedId = null, excludeBookId = null) {
   const sel = document.getElementById(selectId);
   if (!sel) return;
-  sel.innerHTML = '<option value="">- None -</option>';
+  sel.innerHTML = `<option value="">${t('editbook.none')}</option>`;
   const books = _sortedByName((getCachedBooks() || []).filter(b => b.is_container && b.id !== excludeBookId));
   const counts = new Map();
   books.forEach(book => counts.set(book.name, (counts.get(book.name) || 0) + 1));
@@ -164,7 +164,7 @@ export function _populateParentBookSelect(selectId, selectedId = null, excludeBo
 export function _populateSeriesSelect(selectId, selectedName) {
   const sel = document.getElementById(selectId);
   if (!sel) return;
-  sel.innerHTML = '<option value="">- None -</option>';
+  sel.innerHTML = `<option value="">${t('editbook.none')}</option>`;
   apiFetch('/api/series').then(async r => {
     if (!r.ok) return;
     const list = (await r.json()).sort((a, b) => naturalCompare(a.name, b.name));
@@ -405,7 +405,7 @@ function _renderStashEditPickerLists(stashId) {
   const combinedItems = _sortStashPickerItems(_buildStashPickerItems(seriesItems, bookItems, 'est'), pinnedItems);
   itemsWrap.innerHTML = combinedItems.length
     ? _renderStashRows(combinedItems, selectedItems)
-    : `<div class="stash-pick-row"><span class="stash-pick-label">No items available</span></div>`;
+    : `<div class="stash-pick-row"><span class="stash-pick-label">${t('editbook.no_items_available')}</span></div>`;
 }
 
 function _renderStashPickerLists() {
@@ -429,7 +429,7 @@ function _renderStashPickerLists() {
   const combinedItems = _sortStashPickerItems(_buildStashPickerItems(freeSeries, freeBooks, 'cst'));
   itemsWrap.innerHTML = combinedItems.length
     ? _renderStashRows(combinedItems, selectedItems)
-    : `<div class="stash-pick-row"><span class="stash-pick-label">No unstashed items</span></div>`;
+    : `<div class="stash-pick-row"><span class="stash-pick-label">${t('editbook.no_unstashed_items')}</span></div>`;
 }
 
 export function _openEditStash(stashId) {
@@ -702,7 +702,7 @@ export function openEditBookModal({ bookId, initialName, initialSections, initia
         const coverData = await coverRes.json();
         if (coverData.coverUrl) _hooks.setCurrentBookCover?.(coverData.coverUrl);
       } catch (_) {
-        errEl.textContent = 'Cover upload failed.';
+        errEl.textContent = t('editbook.cover_upload_failed');
         return;
       }
     }
@@ -712,7 +712,7 @@ export function openEditBookModal({ bookId, initialName, initialSections, initia
       try {
         await _uploadPdfWithProgress(`/api/books/${_editBookId}/pdf`, _pendingPdfFile, 'edit-book');
       } catch (e) {
-        errEl.textContent = e?.message || 'PDF upload failed.';
+        errEl.textContent = e?.message || t('editbook.pdf_upload_failed');
         _setButtonsDisabled(['edit-book-save', 'edit-book-cancel'], false);
         return;
       } finally {
@@ -839,14 +839,14 @@ export function openEditCompModal({ bookId, initialName, initialIsbn = '', initi
     if (_eccCover && _eccBookId) {
       try {
         const r = await apiFetch(`/api/books/${_eccBookId}/cover`, { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: _eccCover });
-        if (!r.ok) { errEl.textContent = 'Cover upload failed.'; return; }
-      } catch (_) { errEl.textContent = 'Cover upload failed.'; return; }
+        if (!r.ok) { errEl.textContent = t('editbook.cover_upload_failed'); return; }
+      } catch (_) { errEl.textContent = t('editbook.cover_upload_failed'); return; }
     }
     if (_eccPdf && _eccBookId) {
       _setButtonsDisabled(['ecc-save', 'ecc-cancel'], true);
       try {
         await _uploadPdfWithProgress(`/api/books/${_eccBookId}/pdf`, _eccPdf, 'ecc');
-      } catch (e) { errEl.textContent = e?.message || 'PDF upload failed.'; return; }
+      } catch (e) { errEl.textContent = e?.message || t('editbook.pdf_upload_failed'); return; }
       finally { _setButtonsDisabled(['ecc-save', 'ecc-cancel'], false); }
     }
     const pages       = parseInt(document.getElementById('ecc-pages').value, 10) || null;
@@ -963,18 +963,18 @@ export function initEditBook(mousedownOnOverlayRef) {
     const bookIds = [..._creatingStashBookIds];
     const seriesIds = [..._creatingStashSeriesIds];
     const excludedBookIds = [..._creatingStashExcludedBookIds];
-    if (!name) { errEl.textContent = 'Name required.'; return; }
+    if (!name) { errEl.textContent = t('editbook.name_required'); return; }
     try {
       const res = await apiFetch('/api/stashes', { method: 'POST', body: JSON.stringify({ name, book_ids: bookIds, series_ids: seriesIds, excluded_book_ids: excludedBookIds }) });
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
-        errEl.textContent = j.error || 'Failed.';
+        errEl.textContent = j.error || t('editbook.failed');
         return;
       }
       _closeAddStash();
       await _refreshBooksListOnly();
     } catch (_) {
-      errEl.textContent = 'Failed.';
+      errEl.textContent = t('editbook.failed');
     }
   });
   document.getElementById('open-add-stash-btn').addEventListener('click', _openAddStash);
@@ -1028,18 +1028,18 @@ export function initEditBook(mousedownOnOverlayRef) {
     const bookIds = [..._editingStashBookIds];
     const seriesIds = [..._editingStashSeriesIds];
     const excludedBookIds = [..._editingStashExcludedBookIds];
-    if (!name) { errEl.textContent = 'Name required.'; return; }
+    if (!name) { errEl.textContent = t('editbook.name_required'); return; }
     try {
       const res = await apiFetch(`/api/stashes/${_editingStashId}`, { method: 'POST', body: JSON.stringify({ name, book_ids: bookIds, series_ids: seriesIds, excluded_book_ids: excludedBookIds }) });
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
-        errEl.textContent = j.error || 'Failed.';
+        errEl.textContent = j.error || t('editbook.failed');
         return;
       }
       _closeEditStash();
       await _refreshBooksListOnly();
     } catch (_) {
-      errEl.textContent = 'Failed.';
+      errEl.textContent = t('editbook.failed');
     }
   });
 
@@ -1083,16 +1083,17 @@ export function initEditBook(mousedownOnOverlayRef) {
     _eccPdf = file;
     _setPdfInlineLabel(document.getElementById('ecc-pdf-name'), `${file.name} (${formatFileSize(file.size)})`);
   });
-  document.getElementById('ecc-pdf-remove').addEventListener('click', async () => {
+  document.getElementById('ecc-pdf-remove').addEventListener('click', () => {
     if (!_eccBookId) return;
-    if (!confirm('Remove the PDF?')) return;
-    try {
-      const r = await apiFetch(`/api/books/${_eccBookId}/pdf`, { method: 'DELETE' });
-      if (!r.ok) return;
-      _eccPdf = null;
-      _setPdfCurrentLink(document.getElementById('ecc-pdf-link'), null);
-      document.getElementById('ecc-pdf-current').style.display = 'none';
-    } catch (_) {}
+    showConfirm(t('editbook.remove_pdf_confirm'), async () => {
+      try {
+        const r = await apiFetch(`/api/books/${_eccBookId}/pdf`, { method: 'DELETE' });
+        if (!r.ok) return;
+        _eccPdf = null;
+        _setPdfCurrentLink(document.getElementById('ecc-pdf-link'), null);
+        document.getElementById('ecc-pdf-current').style.display = 'none';
+      } catch (_) {}
+    });
   });
 
   // ── Edit Series modal events ──────────────────────────────────────────────
@@ -1112,10 +1113,10 @@ export function initEditBook(mousedownOnOverlayRef) {
     if (!name) { errEl.textContent = t('err.name_empty'); return; }
     try {
       const r = await apiFetch(`/api/series/${_esrSeriesId}`, { method: 'PATCH', body: JSON.stringify({ name, description, is_public: isPublic, is_open_world: isOpenWorld }) });
-      if (!r.ok) { const j = await r.json().catch(() => ({})); errEl.textContent = j.error || 'Failed.'; return; }
+      if (!r.ok) { const j = await r.json().catch(() => ({})); errEl.textContent = j.error || t('editbook.failed'); return; }
       _closeEsr();
       await _refreshLibraryUi({ feed: true });
-    } catch (_) { errEl.textContent = 'Failed.'; }
+    } catch (_) { errEl.textContent = t('editbook.failed'); }
   });
 }
 

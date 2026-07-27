@@ -3,8 +3,8 @@
 // server/export.js) from each book's saved positions/colors - no rendering happens here.
 
 import { state, currentBookId, apiFetch } from './state.js?v=11';
-import { showAlert } from './play.js?v=38';
-import { t } from './i18n.js?v=12';
+import { showAlert } from './play.js?v=44';
+import { t } from './i18n.js?v=17';
 
 function _downloadBlob(blob, cd, fallbackFilename) {
   const matchUtf8  = cd.match(/filename\*=UTF-8''([^;\s]+)/i);

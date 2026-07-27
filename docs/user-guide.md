@@ -178,6 +178,7 @@ The Player XP panel shows your level, title, XP bar, and active boosts. On the l
 | **I** | Open / close the Inventory panel (not while typing in a text field) |
 | **C** | Open / close the Character Sheet (not while typing in a text field) |
 | **E** | Open / close the Equipment panel (not while typing in a text field) |
+| **S** | Open / close the Battle Simulator, if one is available for the current book (not while typing in a text field) |
 | **Ctrl+X** | Hide or restore all play-area side panels at once |
 
 **PDF access:** if the book has a PDF and you've been given access (or you're an admin), a **PDF** link appears next to the book title at the top of the sidebar.

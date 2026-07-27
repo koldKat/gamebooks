@@ -1,6 +1,7 @@
 // bg.js - Graph background preference, bg/node context menus
 
 import { apiFetch, isDemoMode, currentBookId, state } from './state.js?v=11';
+import { t } from './i18n.js?v=17';
 
 let _hooks = {};
 export function setBgHooks(h) { _hooks = h || {}; }
@@ -121,7 +122,7 @@ function _updateConnectorMenu() {
 export function _showBgCtxMenu(x, y) {
   if (!currentBookCover) return;
   const menu = document.getElementById('bg-ctx-menu');
-  document.getElementById('bg-ctx-toggle-btn').textContent = _bgHidden ? 'Show background' : 'Hide background';
+  document.getElementById('bg-ctx-toggle-btn').textContent = _bgHidden ? t('bg.show_background') : t('bg.hide_background');
   document.getElementById('bg-ctx-move-btn').style.display = _bgHidden ? 'none' : '';
   _updateConnectorMenu();
   _positionMenu(menu, x, y);

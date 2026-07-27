@@ -108,7 +108,7 @@
   <link rel="stylesheet" href="/css/shop.css?v=1">
   <link rel="stylesheet" href="/css/dice.css?v=2">
   <link rel="stylesheet" href="/css/feedback.css?v=1">
-  <link rel="stylesheet" href="/css/battlesim.css?v=3">
+  <link rel="stylesheet" href="/css/battlesim.css?v=7">
   <link rel="stylesheet" href="/css/demo.css?v=15">
   <link rel="stylesheet" href="/css/profile.css?v=1">
   <link rel="stylesheet" href="/css/public-profile.css?v=2">
@@ -134,7 +134,7 @@
       <span id="covers-header-label"><span id="covers-count"></span><span id="covers-sort" tabindex="0" role="button" aria-haspopup="listbox"><span id="covers-sort-label">Latest</span><ul id="covers-sort-menu" role="listbox"><li role="option" data-value="alpha">A–Z</li><li role="option" data-value="za">Z–A</li><li role="option" data-value="latest">Latest</li><li role="option" data-value="oldest">Oldest</li><li role="option" data-value="random">Random</li><li role="option" data-value="popular">Popular</li><li role="option" data-value="longest">Longest</li><li role="option" data-value="shortest">Shortest</li></ul></span> <span id="covers-kind" tabindex="0" role="button" aria-haspopup="listbox"><span id="covers-kind-label">All</span><ul id="covers-kind-menu" role="listbox"><li role="option" data-value="all">All</li><li role="option" data-value="books">Books</li><li role="option" data-value="anthologies">Anthologies</li><li role="option" data-value="series">Series</li><li role="option" data-value="favorites">Favorites</li></ul></span><span id="covers-total"></span></span>
       <div class="covers-search-wrap">
         <button id="covers-search-icon" aria-label="Search books"><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="6.5" cy="6.5" r="4"/><line x1="9.7" y1="9.7" x2="13.5" y2="13.5"/></svg></button>
-        <input type="text" inputmode="text" id="covers-search" placeholder="Search…" autocomplete="off" spellcheck="false">
+        <input type="text" inputmode="text" id="covers-search" placeholder="Search…" autocomplete="off" spellcheck="false" data-i18n-placeholder="ph.search">
         <button id="covers-search-clear" aria-label="Clear search">✕</button>
       </div>
     </div>
@@ -168,7 +168,7 @@
         <div id="app-banner-right">
           <div id="app-banner-brand"><span class="brand-flag">bulgarian made</span></div>
           <div id="app-banner-btns">
-            <button id="app-banner-f1-btn" title="Keyboard shortcuts">F1</button>
+            <button id="app-banner-f1-btn" title="Keyboard shortcuts" data-i18n-title="title.f1_shortcuts">F1</button>
             <a href="/guide.html" target="_blank" id="app-banner-guide-btn">User Guide</a>
             <button id="demo-btn">Demo</button>
             <button id="stats-btn">Stats</button>
@@ -194,8 +194,8 @@
         <div class="auth-form">
           <input type="text"     id="login-username" data-i18n-placeholder="auth.username" placeholder="Username" autocomplete="username">
           <input type="password" id="login-password" data-i18n-placeholder="auth.password" placeholder="Password" autocomplete="current-password">
-          <input type="password" id="register-password-confirm" placeholder="Confirm password" autocomplete="new-password" style="display:none">
-          <input type="email"    id="register-email" placeholder="Email (optional - for password recovery)" autocomplete="email" style="display:none">
+          <input type="password" id="register-password-confirm" placeholder="Confirm password" autocomplete="new-password" style="display:none" data-i18n-placeholder="ph.confirm_password">
+          <input type="email"    id="register-email" placeholder="Email (optional - for password recovery)" autocomplete="email" style="display:none" data-i18n-placeholder="ph.email_optional">
           <small id="register-email-hint" style="display:none">Only used to recover your account if you forget your password.</small>
           <div id="login-error" class="auth-error"></div>
           <button id="login-btn"    class="primary-btn"  data-i18n="auth.login">Log In</button>
@@ -204,7 +204,7 @@
         </div>
         <div id="forgot-pw-panel" style="display:none">
           <p class="forgot-pw-intro">Enter your username or email address and we'll send you a reset link.</p>
-          <input type="text" id="forgot-identifier" placeholder="Username or email" autocomplete="username email">
+          <input type="text" id="forgot-identifier" placeholder="Username or email" autocomplete="username email" data-i18n-placeholder="ph.username_or_email">
           <div id="forgot-error" class="auth-error"></div>
           <div id="forgot-success" class="auth-success" style="display:none"></div>
           <button id="forgot-submit-btn" class="primary-btn">Send reset link</button>
@@ -212,8 +212,8 @@
         </div>
         <div id="reset-pw-panel" style="display:none">
           <p class="forgot-pw-intro">Enter your new password below.</p>
-          <input type="password" id="reset-password" placeholder="New password" autocomplete="new-password">
-          <input type="password" id="reset-password-confirm" placeholder="Confirm new password" autocomplete="new-password">
+          <input type="password" id="reset-password" placeholder="New password" autocomplete="new-password" data-i18n-placeholder="ph.new_password">
+          <input type="password" id="reset-password-confirm" placeholder="Confirm new password" autocomplete="new-password" data-i18n-placeholder="ph.confirm_new_password">
           <div id="reset-error" class="auth-error"></div>
           <div id="reset-success" class="auth-success" style="display:none">Password updated - you can now log in.</div>
           <button id="reset-submit-btn" class="primary-btn">Set new password</button>
@@ -333,7 +333,7 @@
               allowfullscreen
               loading="lazy"
               tabindex="-1"
-              title="Gamebook Tracker tutorial"></iframe>
+              title="Gamebook Tracker tutorial" data-i18n-title="title.tutorial"></iframe>
             <button class="login-promo-video-btn" id="login-video-trigger" aria-label="Watch tutorial video">
               <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><circle cx="12" cy="12" r="10" fill="rgba(0,0,0,0.6)"/><polygon points="10,8 16,12 10,16" fill="#fff"/></svg>
               Watch tutorial
@@ -492,7 +492,7 @@
               <button id="books-search-toggle" class="books-search-toggle" type="button" data-tooltip="Search My Books" aria-label="Search My Books"><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="6.5" cy="6.5" r="4"/><line x1="9.7" y1="9.7" x2="13.5" y2="13.5"/></svg></button>
             </div>
             <div id="books-search-inline" class="books-search-inline">
-              <input type="text" id="books-search-input" placeholder="Search…" autocomplete="off" spellcheck="false">
+              <input type="text" id="books-search-input" placeholder="Search…" autocomplete="off" spellcheck="false" data-i18n-placeholder="ph.search">
               <button id="books-search-close" type="button" aria-label="Clear search">✕</button>
             </div>
             <div class="books-header-right">
@@ -526,7 +526,7 @@
 
       <div class="book-title-row">
         <div id="book-title"></div>
-        <a id="pdf-download-btn" target="_blank" rel="noopener" style="display:none" title="Download PDF">PDF</a>
+        <a id="pdf-download-btn" target="_blank" rel="noopener" style="display:none" title="Download PDF" data-i18n-title="title.download_pdf">PDF</a>
         <button id="edit-book-btn" data-tooltip="Edit book name / sections">✎</button>
       </div>
 
@@ -564,7 +564,7 @@
       <div id="data-controls">
         <button id="center-current-btn">⊙ Center on Current Section</button>
         <div id="find-node-row">
-          <input id="find-node-input" type="text" placeholder="Section…" autocomplete="off" spellcheck="false">
+          <input id="find-node-input" type="text" placeholder="Section…" autocomplete="off" spellcheck="false" data-i18n-placeholder="ph.find_section">
           <button id="find-node-btn">Find Section</button>
         </div>
         <button id="back-to-books-btn"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:-1px;margin-right:0.3em"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>Home</button>
@@ -624,7 +624,7 @@
           <span>User Guide</span>
           <button id="guide-modal-close">✕</button>
         </div>
-        <iframe id="guide-modal-frame" src="/guide.html" title="User Guide"></iframe>
+        <iframe id="guide-modal-frame" src="/guide.html" title="User Guide" data-i18n-title="title.user_guide"></iframe>
       </div>
     </div>
     <!-- ── Notebook modal ───────────────────────────────────────────── -->
@@ -634,7 +634,7 @@
           <span id="notebook-modal-title">Notebook</span>
           <button id="notebook-modal-close">✕</button>
         </div>
-        <textarea id="notebook-modal-input" placeholder="Notes for this book…" spellcheck="true"></textarea>
+        <textarea id="notebook-modal-input" placeholder="Notes for this book…" spellcheck="true" data-i18n-placeholder="ph.notebook"></textarea>
         <div id="notebook-modal-actions">
           <label id="notebook-pin-toggle" class="cs-vis-toggle">
             <input type="checkbox" id="notebook-pin-cb">
@@ -934,16 +934,17 @@
   <div id="shortcuts-modal-overlay">
     <div id="shortcuts-modal">
       <div id="shortcuts-modal-hdr">
-        <span>Cheat Sheet</span>
+        <span data-i18n="shortcuts.title">Cheat Sheet</span>
         <button id="shortcuts-modal-close">✕</button>
       </div>
       <div id="shortcuts-modal-body">
-        <div class="shortcuts-row"><span class="shortcuts-key">F1</span><span class="shortcuts-desc">Open this popup</span></div>
-        <div class="shortcuts-row"><span class="shortcuts-key">Ctrl+X</span><span class="shortcuts-desc">Hide or restore all landing panels, or all play-area side panels</span></div>
-        <div class="shortcuts-row"><span class="shortcuts-key">Ctrl+Y</span><span class="shortcuts-desc">Open landing page settings (cover tooltip appearance, background source, feed day-covers, transparent day cards, reduce animations)</span></div>
-        <div class="shortcuts-row"><span class="shortcuts-key">I</span><span class="shortcuts-desc">Open / close the Inventory panel (play area only, not while typing)</span></div>
-        <div class="shortcuts-row"><span class="shortcuts-key">C</span><span class="shortcuts-desc">Open / close the Character Sheet (play area only, not while typing)</span></div>
-        <div class="shortcuts-row"><span class="shortcuts-key">E</span><span class="shortcuts-desc">Open / close the Equipment panel (play area only, not while typing)</span></div>
+        <div class="shortcuts-row"><span class="shortcuts-key">F1</span><span class="shortcuts-desc" data-i18n="shortcuts.f1">Open this popup</span></div>
+        <div class="shortcuts-row"><span class="shortcuts-key">Ctrl+X</span><span class="shortcuts-desc" data-i18n="shortcuts.ctrlx">Hide or restore all landing panels, or all play-area side panels</span></div>
+        <div class="shortcuts-row"><span class="shortcuts-key">Ctrl+Y</span><span class="shortcuts-desc" data-i18n="shortcuts.ctrly">Open landing page settings (cover tooltip appearance, background source, feed day-covers, transparent day cards, reduce animations)</span></div>
+        <div class="shortcuts-row"><span class="shortcuts-key">I</span><span class="shortcuts-desc" data-i18n="shortcuts.inventory">Open / close the Inventory panel (play area only, not while typing)</span></div>
+        <div class="shortcuts-row"><span class="shortcuts-key">C</span><span class="shortcuts-desc" data-i18n="shortcuts.charsheet">Open / close the Character Sheet (play area only, not while typing)</span></div>
+        <div class="shortcuts-row"><span class="shortcuts-key">E</span><span class="shortcuts-desc" data-i18n="shortcuts.equipment">Open / close the Equipment panel (play area only, not while typing)</span></div>
+        <div class="shortcuts-row"><span class="shortcuts-key">S</span><span class="shortcuts-desc" data-i18n="shortcuts.battlesim">Open / close the Battle Simulator, if one is available for the current book (play area only, not while typing)</span></div>
       </div>
     </div>
   </div>
@@ -1056,12 +1057,12 @@
 
       <div class="input-group" id="profile-display-name-row" style="display:none">
         <label>Display name: <span style="font-size:0.78rem;color:#6b7280;font-weight:400">(shown instead of username)</span></label>
-        <input type="text" id="profile-display-name-input" autocomplete="off" placeholder="Your real name (optional)">
+        <input type="text" id="profile-display-name-input" autocomplete="off" placeholder="Your real name (optional)" data-i18n-placeholder="ph.display_name">
       </div>
 
       <div class="input-group">
         <label>Recovery email: <span style="font-size:0.78rem;color:#6b7280;font-weight:400">(optional - for password recovery only)</span></label>
-        <input type="email" id="profile-email-input" autocomplete="email" placeholder="your@email.com">
+        <input type="email" id="profile-email-input" autocomplete="email" placeholder="your@email.com" data-i18n-placeholder="ph.profile_email">
         <div id="profile-email-error" class="auth-error" style="margin-top:0.25rem"></div>
       </div>
 
@@ -1123,7 +1124,7 @@
       <div class="input-group">
         <label>Book name:</label>
         <div class="autocomplete-wrap">
-          <input type="text" id="cb-name" autocomplete="off" placeholder="Book name">
+          <input type="text" id="cb-name" autocomplete="off" placeholder="Book name" data-i18n-placeholder="ph.book_name">
           <ul id="cb-name-dropdown" class="autocomplete-dropdown"></ul>
         </div>
       </div>
@@ -1133,7 +1134,7 @@
             <label>Total sections:</label>
             <div class="cs-num-wrap">
               <button class="cs-num-btn" data-target="cb-sections" data-delta="-1">−</button>
-              <input type="text" inputmode="numeric" id="cb-sections" placeholder="–">
+              <input type="text" inputmode="numeric" id="cb-sections" placeholder="–" data-i18n-placeholder="ph.dash">
               <button class="cs-num-btn" data-target="cb-sections" data-delta="1">+</button>
             </div>
           </div>
@@ -1141,7 +1142,7 @@
             <label>Pages <span class="optional-hint">(optional)</span>:</label>
             <div class="cs-num-wrap">
               <button class="cs-num-btn" data-target="cb-pages" data-delta="-1">−</button>
-              <input type="text" inputmode="numeric" id="cb-pages" placeholder="–">
+              <input type="text" inputmode="numeric" id="cb-pages" placeholder="–" data-i18n-placeholder="ph.dash">
               <button class="cs-num-btn" data-target="cb-pages" data-delta="1">+</button>
             </div>
           </div>
@@ -1156,11 +1157,11 @@
           </select>
           <div class="pub-id-fields">
             <div id="cb-fields-book">
-              <input type="text" id="cb-isbn" maxlength="17" autocomplete="off" placeholder="ISBN-10 or ISBN-13 (optional)">
-              <input type="text" id="cb-asin" maxlength="10" autocomplete="off" placeholder="ASIN (optional)">
+              <input type="text" id="cb-isbn" maxlength="17" autocomplete="off" placeholder="ISBN-10 or ISBN-13 (optional)" data-i18n-placeholder="ph.isbn">
+              <input type="text" id="cb-asin" maxlength="10" autocomplete="off" placeholder="ASIN (optional)" data-i18n-placeholder="ph.asin">
             </div>
             <div id="cb-fields-mag" style="display:none">
-              <input type="text" id="cb-issn" maxlength="9" autocomplete="off" placeholder="ISSN (optional, e.g. 1234-5679)">
+              <input type="text" id="cb-issn" maxlength="9" autocomplete="off" placeholder="ISSN (optional, e.g. 1234-5679)" data-i18n-placeholder="ph.issn">
             </div>
           </div>
         </div>
@@ -1169,26 +1170,26 @@
       <div class="input-group" id="cb-authors-row">
         <label>Author(s) <span class="optional-hint">(optional)</span>:</label>
         <div class="autocomplete-wrap">
-          <input type="text" id="cb-authors" autocomplete="off" placeholder="e.g. Ian Livingstone, Steve Jackson">
+          <input type="text" id="cb-authors" autocomplete="off" placeholder="e.g. Ian Livingstone, Steve Jackson" data-i18n-placeholder="ph.authors">
           <ul id="cb-authors-dropdown" class="autocomplete-dropdown"></ul>
         </div>
       </div>
       <div class="input-group">
         <label>Description <span class="optional-hint">(optional)</span>:</label>
-        <textarea id="cb-description" rows="3" placeholder="Brief description"></textarea>
+        <textarea id="cb-description" rows="3" placeholder="Brief description" data-i18n-placeholder="ph.description_short"></textarea>
       </div>
       <div class="input-group">
         <label>Series <span class="optional-hint">(optional)</span>:</label>
         <div class="series-row">
           <select id="cb-series" class="app-select"><option value="">- None -</option></select>
-          <input type="text" id="cb-series-num" autocomplete="off" placeholder="Order #" style="width:6rem">
+          <input type="text" id="cb-series-num" autocomplete="off" placeholder="Order #" style="width:6rem" data-i18n-placeholder="ph.order_num">
         </div>
       </div>
       <div class="input-group" id="cb-parent-row">
         <label>Part of anthology <span class="optional-hint">(optional)</span>:</label>
         <div class="series-row">
           <select id="cb-parent" class="app-select"><option value="">- None -</option></select>
-          <input type="text" inputmode="numeric" id="cb-order" autocomplete="off" placeholder="Order #" style="width:6rem">
+          <input type="text" inputmode="numeric" id="cb-order" autocomplete="off" placeholder="Order #" style="width:6rem" data-i18n-placeholder="ph.order_num">
         </div>
       </div>
       <div class="input-group create-public-row">
@@ -1229,7 +1230,7 @@
       <div class="input-group">
         <label>Name:</label>
         <div class="autocomplete-wrap">
-          <input type="text" id="cc-name" autocomplete="off" placeholder="e.g. Fighting Fantasy Annual 1984">
+          <input type="text" id="cc-name" autocomplete="off" placeholder="e.g. Fighting Fantasy Annual 1984" data-i18n-placeholder="ph.anthology_name">
           <ul id="cc-name-dropdown" class="autocomplete-dropdown"></ul>
         </div>
       </div>
@@ -1242,11 +1243,11 @@
           </select>
           <div class="pub-id-fields">
             <div id="cc-fields-book">
-              <input type="text" id="cc-isbn" maxlength="17" autocomplete="off" placeholder="ISBN-10 or ISBN-13 (optional)">
-              <input type="text" id="cc-asin" maxlength="10" autocomplete="off" placeholder="ASIN (optional)">
+              <input type="text" id="cc-isbn" maxlength="17" autocomplete="off" placeholder="ISBN-10 or ISBN-13 (optional)" data-i18n-placeholder="ph.isbn">
+              <input type="text" id="cc-asin" maxlength="10" autocomplete="off" placeholder="ASIN (optional)" data-i18n-placeholder="ph.asin">
             </div>
             <div id="cc-fields-mag" style="display:none">
-              <input type="text" id="cc-issn" maxlength="9" autocomplete="off" placeholder="ISSN (optional, e.g. 1234-5679)">
+              <input type="text" id="cc-issn" maxlength="9" autocomplete="off" placeholder="ISSN (optional, e.g. 1234-5679)" data-i18n-placeholder="ph.issn">
             </div>
           </div>
         </div>
@@ -1256,26 +1257,26 @@
         <label>Pages <span class="optional-hint">(optional)</span>:</label>
         <div class="cs-num-wrap" style="width:fit-content">
           <button class="cs-num-btn" data-target="cc-pages" data-delta="-1">−</button>
-          <input type="text" inputmode="numeric" id="cc-pages" placeholder="–" style="width:5rem">
+          <input type="text" inputmode="numeric" id="cc-pages" placeholder="–" style="width:5rem" data-i18n-placeholder="ph.dash">
           <button class="cs-num-btn" data-target="cc-pages" data-delta="1">+</button>
         </div>
       </div>
       <div class="input-group">
         <label>Author(s) <span class="optional-hint">(optional)</span>:</label>
         <div class="autocomplete-wrap">
-          <input type="text" id="cc-authors" autocomplete="off" placeholder="e.g. Ian Livingstone, Steve Jackson">
+          <input type="text" id="cc-authors" autocomplete="off" placeholder="e.g. Ian Livingstone, Steve Jackson" data-i18n-placeholder="ph.authors">
           <ul id="cc-authors-dropdown" class="autocomplete-dropdown"></ul>
         </div>
       </div>
       <div class="input-group">
         <label>Description <span class="optional-hint">(optional)</span>:</label>
-        <textarea id="cc-description" rows="3" placeholder="Brief description"></textarea>
+        <textarea id="cc-description" rows="3" placeholder="Brief description" data-i18n-placeholder="ph.description_short"></textarea>
       </div>
       <div class="input-group">
         <label>Series <span class="optional-hint">(optional)</span>:</label>
         <div class="series-row">
           <select id="cc-series" class="app-select"><option value="">- None -</option></select>
-          <input type="text" id="cc-series-num" autocomplete="off" placeholder="Order #" style="width:6rem">
+          <input type="text" id="cc-series-num" autocomplete="off" placeholder="Order #" style="width:6rem" data-i18n-placeholder="ph.order_num">
         </div>
       </div>
       <div class="input-group create-public-row">
@@ -1307,13 +1308,13 @@
       <div class="input-group">
         <label>Series name:</label>
         <div class="autocomplete-wrap">
-          <input type="text" id="csr-name" autocomplete="off" placeholder="e.g. Fighting Fantasy">
+          <input type="text" id="csr-name" autocomplete="off" placeholder="e.g. Fighting Fantasy" data-i18n-placeholder="ph.series_name">
           <ul id="csr-name-dropdown" class="autocomplete-dropdown"></ul>
         </div>
       </div>
       <div class="input-group">
         <label>Description <span class="optional-hint">(optional)</span>:</label>
-        <textarea id="csr-description" rows="5" placeholder="Brief description"></textarea>
+        <textarea id="csr-description" rows="5" placeholder="Brief description" data-i18n-placeholder="ph.description_short"></textarea>
       </div>
       <div class="input-group create-public-row">
         <label class="checkbox-label">
@@ -1336,12 +1337,12 @@
       <div class="modal-title-row"><div class="modal-title">New Stash</div><button class="modal-close-btn" id="cst-close">✕</button></div>
       <div class="input-group">
         <label>Stash name:</label>
-        <input type="text" id="cst-name" autocomplete="off" placeholder="e.g. Testing / Misc / Read Later">
+        <input type="text" id="cst-name" autocomplete="off" placeholder="e.g. Testing / Misc / Read Later" data-i18n-placeholder="ph.stash_name">
         <small class="field-hint">Moves selected items out of the main list and into this stash.</small>
       </div>
       <div class="input-group">
         <label>Items</label>
-        <input type="text" id="cst-items-search" class="stash-search-input" autocomplete="off" placeholder="Search series, books, and anthologies">
+        <input type="text" id="cst-items-search" class="stash-search-input" autocomplete="off" placeholder="Search series, books, and anthologies" data-i18n-placeholder="ph.stash_items_search">
         <div id="cst-items-list" class="stash-pick-list"></div>
       </div>
       <div id="cst-error" class="auth-error"></div>
@@ -1362,7 +1363,7 @@
       </div>
       <div class="input-group">
         <label>Items</label>
-        <input type="text" id="est-items-search" class="stash-search-input" autocomplete="off" placeholder="Search series, books, and anthologies">
+        <input type="text" id="est-items-search" class="stash-search-input" autocomplete="off" placeholder="Search series, books, and anthologies" data-i18n-placeholder="ph.stash_items_search">
         <div id="est-items-list" class="stash-pick-list"></div>
       </div>
       <div id="est-error" class="auth-error"></div>
@@ -1402,11 +1403,11 @@
           </select>
           <div class="pub-id-fields">
             <div id="ecc-fields-book">
-              <input type="text" id="ecc-isbn" maxlength="17" autocomplete="off" placeholder="ISBN-10 or ISBN-13 (optional)">
-              <input type="text" id="ecc-asin" maxlength="10" autocomplete="off" placeholder="ASIN (optional)">
+              <input type="text" id="ecc-isbn" maxlength="17" autocomplete="off" placeholder="ISBN-10 or ISBN-13 (optional)" data-i18n-placeholder="ph.isbn">
+              <input type="text" id="ecc-asin" maxlength="10" autocomplete="off" placeholder="ASIN (optional)" data-i18n-placeholder="ph.asin">
             </div>
             <div id="ecc-fields-mag" style="display:none">
-              <input type="text" id="ecc-issn" maxlength="9" autocomplete="off" placeholder="ISSN (optional, e.g. 1234-5679)">
+              <input type="text" id="ecc-issn" maxlength="9" autocomplete="off" placeholder="ISSN (optional, e.g. 1234-5679)" data-i18n-placeholder="ph.issn">
             </div>
           </div>
         </div>
@@ -1416,14 +1417,14 @@
         <label>Pages <span class="optional-hint">(optional)</span>:</label>
         <div class="cs-num-wrap" style="width:fit-content">
           <button class="cs-num-btn" data-target="ecc-pages" data-delta="-1">−</button>
-          <input type="text" inputmode="numeric" id="ecc-pages" placeholder="–" style="width:5rem">
+          <input type="text" inputmode="numeric" id="ecc-pages" placeholder="–" style="width:5rem" data-i18n-placeholder="ph.dash">
           <button class="cs-num-btn" data-target="ecc-pages" data-delta="1">+</button>
         </div>
       </div>
       <div class="input-group">
         <label>Author(s) <span class="optional-hint">(optional, comma-separated)</span>:</label>
         <div class="autocomplete-wrap">
-          <input type="text" id="ecc-authors" autocomplete="off" placeholder="e.g. Ian Livingstone, Steve Jackson">
+          <input type="text" id="ecc-authors" autocomplete="off" placeholder="e.g. Ian Livingstone, Steve Jackson" data-i18n-placeholder="ph.authors">
           <ul id="ecc-authors-dropdown" class="autocomplete-dropdown"></ul>
         </div>
       </div>
@@ -1435,7 +1436,7 @@
         <label>Series <span class="optional-hint">(optional)</span>:</label>
         <div class="series-row">
           <select id="ecc-series" class="app-select"><option value="">- None -</option></select>
-          <input type="text" id="ecc-series-num" autocomplete="off" placeholder="Order #" style="width:6rem">
+          <input type="text" id="ecc-series-num" autocomplete="off" placeholder="Order #" style="width:6rem" data-i18n-placeholder="ph.order_num">
         </div>
       </div>
       <div class="input-group">
@@ -1558,7 +1559,7 @@
             <label>Pages <span class="optional-hint">(optional)</span>:</label>
             <div class="cs-num-wrap">
               <button class="cs-num-btn" data-target="edit-book-pages-input" data-delta="-1">−</button>
-              <input type="text" inputmode="numeric" id="edit-book-pages-input" placeholder="–">
+              <input type="text" inputmode="numeric" id="edit-book-pages-input" placeholder="–" data-i18n-placeholder="ph.dash">
               <button class="cs-num-btn" data-target="edit-book-pages-input" data-delta="1">+</button>
             </div>
           </div>
@@ -1584,11 +1585,11 @@
           </select>
           <div class="pub-id-fields">
             <div id="edit-book-fields-book">
-              <input type="text" id="edit-book-isbn-input" maxlength="17" autocomplete="off" placeholder="ISBN-10 or ISBN-13 (optional)">
-              <input type="text" id="edit-book-asin-input" maxlength="10" autocomplete="off" placeholder="ASIN (optional)">
+              <input type="text" id="edit-book-isbn-input" maxlength="17" autocomplete="off" placeholder="ISBN-10 or ISBN-13 (optional)" data-i18n-placeholder="ph.isbn">
+              <input type="text" id="edit-book-asin-input" maxlength="10" autocomplete="off" placeholder="ASIN (optional)" data-i18n-placeholder="ph.asin">
             </div>
             <div id="edit-book-fields-magazine" style="display:none">
-              <input type="text" id="edit-book-issn-input" maxlength="9" autocomplete="off" placeholder="ISSN (optional, e.g. 1234-5679)">
+              <input type="text" id="edit-book-issn-input" maxlength="9" autocomplete="off" placeholder="ISSN (optional, e.g. 1234-5679)" data-i18n-placeholder="ph.issn">
             </div>
           </div>
         </div>
@@ -1597,13 +1598,13 @@
       <div class="input-group" id="edit-book-authors-row">
         <label>Author(s) <span class="optional-hint">(optional, comma-separated)</span>:</label>
         <div class="autocomplete-wrap">
-          <input type="text" id="edit-book-authors-input" autocomplete="off" placeholder="e.g. Ian Livingstone, Steve Jackson">
+          <input type="text" id="edit-book-authors-input" autocomplete="off" placeholder="e.g. Ian Livingstone, Steve Jackson" data-i18n-placeholder="ph.authors">
           <ul id="edit-book-authors-dropdown" class="autocomplete-dropdown"></ul>
         </div>
       </div>
       <div class="input-group">
         <label>Description <span class="optional-hint">(optional)</span>:</label>
-        <textarea id="edit-book-description-input" rows="3" placeholder="Brief description of the book"></textarea>
+        <textarea id="edit-book-description-input" rows="3" placeholder="Brief description of the book" data-i18n-placeholder="ph.editbook_description"></textarea>
       </div>
       <div class="input-group">
         <label>Series <span class="optional-hint">(optional)</span>:</label>
@@ -1611,7 +1612,7 @@
           <select id="edit-book-series-select" class="app-select">
             <option value="">- None -</option>
           </select>
-          <input type="text" id="edit-book-series-number-input" autocomplete="off" placeholder="Order #" style="width:6rem">
+          <input type="text" id="edit-book-series-number-input" autocomplete="off" placeholder="Order #" style="width:6rem" data-i18n-placeholder="ph.order_num">
         </div>
       </div>
       <div class="input-group" id="edit-book-parent-row">
@@ -1620,7 +1621,7 @@
           <select id="edit-book-parent-input" class="app-select">
             <option value="">- None -</option>
           </select>
-          <input type="text" inputmode="numeric" id="edit-book-order-input" autocomplete="off" placeholder="Order #" style="width:6rem">
+          <input type="text" inputmode="numeric" id="edit-book-order-input" autocomplete="off" placeholder="Order #" style="width:6rem" data-i18n-placeholder="ph.order_num">
         </div>
       </div>
       <div class="input-group">
@@ -1666,7 +1667,7 @@
       <div id="edit-modal-title">Edit Section</div>
       <div class="input-group">
         <label data-i18n="modal.edit.label">Choices (comma-separated):</label>
-        <input type="text" id="edit-choices-input" autocomplete="off" placeholder="34, 45, 78 or -1 loss or 0 win">
+        <input type="text" id="edit-choices-input" autocomplete="off" placeholder="34, 45, 78 or -1 loss or 0 win" data-i18n-placeholder="ph.choices">
       </div>
       <div class="modal-actions">
         <button id="edit-modal-save"   class="primary-btn" data-i18n="btn.save">Save</button>
@@ -1685,11 +1686,11 @@
       </div>
       <div class="input-group">
         <label>Target section</label>
-        <input type="text" id="portal-section-input" inputmode="numeric" autocomplete="off" placeholder="e.g. 200">
+        <input type="text" id="portal-section-input" inputmode="numeric" autocomplete="off" placeholder="e.g. 200" data-i18n-placeholder="ph.portal_section">
       </div>
       <div class="input-group">
         <label>Label (optional)</label>
-        <input type="text" id="portal-label-input" autocomplete="off" placeholder="e.g. Head to Golnir">
+        <input type="text" id="portal-label-input" autocomplete="off" placeholder="e.g. Head to Golnir" data-i18n-placeholder="ph.portal_label">
       </div>
       <div class="modal-actions">
         <button id="portal-modal-save"   class="primary-btn">Save Portal</button>
@@ -1740,7 +1741,7 @@
         <span>Forum</span>
         <button id="forum-modal-close">✕</button>
       </div>
-      <iframe id="forum-modal-frame" src="/forum" title="Forum"></iframe>
+      <iframe id="forum-modal-frame" src="/forum" title="Forum" data-i18n-title="title.forum"></iframe>
     </div>
   </div>
 
@@ -1753,7 +1754,7 @@
   </div>
   <div id="reward-float-layer" aria-hidden="true"></div>
   <div id="app-reward-float-layer" aria-hidden="true"></div>
-<script type="module" src="/js/main.js?v=1066"></script>
+<script type="module" src="/js/main.js?v=1090"></script>
 
 <!-- ── Tutorial video modal ─────────────────────────────────────────────── -->
 <div id="video-modal">

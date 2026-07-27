@@ -4,10 +4,10 @@
 // there's no active playthrough.
 
 import { state, currentPlaythrough, saveState, apiFetch, viewingPt } from './state.js?v=11';
-import { getInventorySlots, addItemToInventory, removeAllFromInventoryAt, refreshInventoryUI, renderInventoryDisplay } from './inventory.js?v=96';
-import { getPlayBtnRow } from './charsheet.js?v=30';
-import { escapeHtml } from './util.js?v=9';
-import { t } from './i18n.js?v=12';
+import { getInventorySlots, addItemToInventory, removeAllFromInventoryAt, refreshInventoryUI, renderInventoryDisplay } from './inventory.js?v=102';
+import { getPlayBtnRow } from './charsheet.js?v=36';
+import { escapeHtml, shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from './util.js?v=16';
+import { t } from './i18n.js?v=17';
 
 // x/y are percentages, positioned over the dummy silhouette (eq-body box, 380x600px).
 // Center column = body slots (no horizontal overlap with side columns);
@@ -645,7 +645,7 @@ export function initEquipment() {
   // Button - joins the shared bottom-right action row
   const btnEl = document.createElement('button');
   btnEl.id            = 'equipment-btn';
-  btnEl.textContent   = t('eq.title');
+  btnEl.innerHTML     = shortcutLabel(t('eq.title'));
   btnEl.style.display = 'none';
   getPlayBtnRow().appendChild(btnEl);
 
@@ -704,18 +704,6 @@ export function initEquipment() {
   });
 
   document.addEventListener('keydown', e => {
-    const tag = e.target.tagName;
-    const typing = tag === 'INPUT' || tag === 'TEXTAREA' || e.target.isContentEditable;
-    if (e.code === 'KeyE' && !typing && !e.ctrlKey && !e.metaKey) {
-      const btn = document.getElementById('equipment-btn');
-      if (!btn || btn.style.display === 'none') return;
-      if (pickerOverlay.classList.contains('active')) return;
-      if (overlay.classList.contains('active')) { _closePanel(); return; }
-      document.getElementById('inv-overlay')?.classList.remove('active');
-      document.getElementById('charsheet-modal-overlay')?.classList.remove('active');
-      _openPanel();
-      return;
-    }
     if (e.key !== 'Escape') return;
     if (_eqCtxMenu) { _closeEqCtx(); return; }
     if (document.getElementById('eq-rename-dialog')?.classList.contains('active')) { _closeEqRename(false); return; }
@@ -723,6 +711,15 @@ export function initEquipment() {
     if (pickerOverlay.classList.contains('active')) { _closePicker(); return; }
     if (overlay.classList.contains('active')) _closePanel();
   }, true);
+  registerPanelShortcut('KeyE', {
+    getButton:  () => document.getElementById('equipment-btn'),
+    getOverlay: () => overlay,
+    otherOverlayIds: ALL_PANEL_OVERLAY_IDS.filter(id => id !== 'eq-overlay'),
+    open:  _openPanel,
+    close: _closePanel,
+    extraGuard: () => !pickerOverlay.classList.contains('active'),
+    capture: true,
+  });
 }
 
 export function setEquipmentVisible(visible) {

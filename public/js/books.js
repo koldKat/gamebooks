@@ -1,11 +1,11 @@
 // books.js - Books list rendering, caching, search/filter, expand prefs, cover queue
 import { getToken, isDemoMode, apiFetch, getDemoState, setDemoState } from './state.js?v=11';
 import { foldForSearch, naturalCompare, naturalCompareByName } from './sort.js?v=1';
-import { refreshCoinsDisplay } from './shop.js?v=20';
-import { openCoverActivity, openSeriesActivity, _startLandingCoverRotation, _effectiveLandingCoverSource, loadCovers } from './covers.js?v=43';
-import { t } from './i18n.js?v=12';
-import { showConfirm, showTwoChoice } from './play.js?v=38';
-import { escapeHtml } from './util.js?v=9';
+import { refreshCoinsDisplay } from './shop.js?v=26';
+import { openCoverActivity, openSeriesActivity, _startLandingCoverRotation, _effectiveLandingCoverSource, loadCovers } from './covers.js?v=49';
+import { t } from './i18n.js?v=17';
+import { showConfirm, showTwoChoice } from './play.js?v=44';
+import { escapeHtml } from './util.js?v=16';
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────
 let _hooks = {};
@@ -460,7 +460,7 @@ export function _applyBooksSearchFilter() {
   if (!anyVisible) {
     const empty = document.createElement('div');
     empty.className = 'books-search-empty';
-    empty.textContent = 'No matches.';
+    empty.textContent = t('books.no_matches');
     list.appendChild(empty);
   }
   _scheduleAnthologyCardCoverFlows(list);
@@ -847,9 +847,9 @@ export function renderBooksList(books, allSeries = [], stashes = []) {
           ? `<button class="series-edit-btn" data-series-id="${s.id}" data-series-name="${escapeHtml(s.name)}" data-series-desc="${escapeHtml(s.description || '')}" data-series-public="${s.is_public ? '1' : '0'}" data-series-open-world="${s.is_open_world ? '1' : '0'}">✎</button>`
           : isAdmin
             ? `<button class="series-edit-btn series-edit-btn--admin" data-tooltip="Admin edit" data-series-id="${s.id}" data-series-name="${escapeHtml(s.name)}" data-series-desc="${escapeHtml(s.description || '')}" data-series-public="${s.is_public ? '1' : '0'}" data-series-open-world="${s.is_open_world ? '1' : '0'}">✎</button>`
-            : `<span data-tooltip="Only the series creator can edit" style="display:inline-flex"><button class="series-edit-btn" disabled>✎</button></span>`
+            : `<span data-tooltip="${t('books.only_creator_can_edit')}" style="display:inline-flex"><button class="series-edit-btn" disabled>✎</button></span>`
         ) +
-        `<button class="series-del-btn" data-series-id="${s.id}" data-series-name="${escapeHtml(s.name)}" data-series-owner="${s.is_owner ? '1' : '0'}" data-tooltip="${s.is_owner ? 'Delete series' : 'Remove from library'}">✕</button>` +
+        `<button class="series-del-btn" data-series-id="${s.id}" data-series-name="${escapeHtml(s.name)}" data-series-owner="${s.is_owner ? '1' : '0'}" data-tooltip="${s.is_owner ? t('books.delete_series') : t('books.remove_from_library')}">✕</button>` +
         `<div class="series-header-bar" style="width:${pct}%;background:${barColor}"></div>` +
       `</div>`
     );
@@ -857,7 +857,7 @@ export function renderBooksList(books, allSeries = [], stashes = []) {
     if (booksInSeries.length) {
       for (const b of topInSeries) parts.push(b.is_container ? _renderContainerItem(b, activeChildrenMap) : _bookItemHtml(b, false, false, 0, null, isAdmin));
     } else {
-      parts.push(`<div class="series-empty-hint">No books from this series in your library yet. <button class="series-browse-btn" data-series-id="${s.id}" data-series-name="${escapeHtml(s.name)}">Browse series</button></div>`);
+      parts.push(`<div class="series-empty-hint">${t('books.series_empty_hint')} <button class="series-browse-btn" data-series-id="${s.id}" data-series-name="${escapeHtml(s.name)}">${t('books.browse_series')}</button></div>`);
     }
     parts.push('</div>');
   }
@@ -956,9 +956,9 @@ export function renderBooksList(books, allSeries = [], stashes = []) {
       const id   = +btn.dataset.seriesId;
       const name = btn.dataset.seriesName;
       showTwoChoice(
-        `Remove "${name}" from your library?`,
-        'Delete Series',          async () => { await apiFetch(`/api/series/${id}?cascade=0`, { method: 'DELETE' }); _refreshBooksListOnly(); },
-        'Delete Series & Contents', async () => { await apiFetch(`/api/series/${id}?cascade=1`, { method: 'DELETE' }); _refreshBooksListOnly(); }
+        t('books.remove_series_confirm', { name }),
+        t('books.delete_series'),          async () => { await apiFetch(`/api/series/${id}?cascade=0`, { method: 'DELETE' }); _refreshBooksListOnly(); },
+        t('books.delete_series_contents'), async () => { await apiFetch(`/api/series/${id}?cascade=1`, { method: 'DELETE' }); _refreshBooksListOnly(); }
       );
     });
   });
@@ -970,7 +970,7 @@ export function renderBooksList(books, allSeries = [], stashes = []) {
   list.querySelectorAll('.stash-del-btn').forEach(btn => {
     btn.addEventListener('click', e => {
       e.stopPropagation();
-      showConfirm(`Delete stash "${btn.dataset.stashName}"? Items will return to the main list.`, async () => {
+      showConfirm(t('books.delete_stash_confirm', { name: btn.dataset.stashName }), async () => {
         await apiFetch(`/api/stashes/${+btn.dataset.stashId}`, { method: 'DELETE' });
         await _refreshBooksListOnly();
       });
@@ -1195,11 +1195,11 @@ export function renderBooksList(books, allSeries = [], stashes = []) {
         } catch (_) {}
       };
 
-      if (inSeries && cachedBook?.series_id) { showConfirm(`Remove "${name}" from this series?`, doRemoveFromSeries); return; }
+      if (inSeries && cachedBook?.series_id) { showConfirm(t('books.remove_from_series_confirm', { name }), doRemoveFromSeries); return; }
       if (isContainer) {
-        showTwoChoice(`Remove anthology "${name}" from your library?`,
-          'Delete Anthology',              () => doDelete(false),
-          'Delete Anthology & Contents',   () => doDelete(true)
+        showTwoChoice(t('books.remove_anthology_confirm', { name }),
+          t('books.delete_anthology'),          () => doDelete(false),
+          t('books.delete_anthology_contents'), () => doDelete(true)
         );
       } else {
         showConfirm(t('confirm.delete_book', { name }), () => doDelete(true));

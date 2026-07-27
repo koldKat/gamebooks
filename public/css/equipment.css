@@ -1,3 +1,10 @@
+/* Shared by every play-area shortcut button (charsheet/inventory/equipment/
+   battlesim*) - highlights the letter matching that panel's keyboard shortcut
+   (see util.js's shortcutLabel()/registerPanelShortcut()). Defined once here
+   since all these CSS files load together globally on every page - same
+   reuse pattern as .inv-modal etc., no per-file redefinition needed. */
+.shortcut-hint-letter { color: #93c5fd; font-weight: 700; }
+
 /* ── Inventory ────────────────────────────────────────────────────────────── */
 
 #inventory-btn {

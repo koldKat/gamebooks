@@ -9,14 +9,14 @@ import {
 import {
   network, visNodes, setGraphCrossBookRoute,
   canReachInGraph, allReachableInGraph, clampViewportScale, findPathTo,
-} from './graph.js?v=54';
+} from './graph.js?v=59';
 import {
   render, showAlert, startPortalRun, startPlaythrough, setOpenWorldContext, setOnViewPublicRun,
-} from './play.js?v=38';
-import { t } from './i18n.js?v=12';
-import { setOnCharSheetSaved } from './charsheet.js?v=30';
-import { instantiateLoadout } from './equipment.js?v=83';
-import { getCachedBooks } from './books.js?v=68';
+} from './play.js?v=44';
+import { t } from './i18n.js?v=17';
+import { setOnCharSheetSaved } from './charsheet.js?v=36';
+import { instantiateLoadout } from './equipment.js?v=89';
+import { getCachedBooks } from './books.js?v=74';
 
 let _hooks = {};
 export function setOpenWorldHooks(h) { _hooks = h || {}; }
@@ -234,7 +234,7 @@ export async function _handlePortalTravel(portal) {
   }
 
   const targetBook = (getCachedBooks() || []).find(b => b.id === targetBookId);
-  if (!targetBook) { showAlert(`Target book (id ${targetBookId}) not in your library.`); return; }
+  if (!targetBook) { showAlert(t('openworld.target_not_in_library', { id: targetBookId })); return; }
 
   await _hooks.showMain?.(
     targetBook.id,

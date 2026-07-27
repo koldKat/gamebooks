@@ -5,8 +5,8 @@
 // and delete public/css/shop.css (and its <link> in index.html).
 
 import { apiFetch, getToken } from './state.js?v=11';
-import { escapeHtml } from './util.js?v=9';
-import { t } from './i18n.js?v=12';
+import { escapeHtml } from './util.js?v=16';
+import { t } from './i18n.js?v=17';
 
 // Callbacks wired in by main.js at boot
 let _hooks = {};
