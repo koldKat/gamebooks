@@ -553,12 +553,12 @@ function _techButtonsHtml(d) {
       ? `${item.name} (${item.cost} ТЖ)`
       : (item.charged && s.activated ? `${item.name} - изстрел` : `${item.name} - активирай`);
     return `<div class="bsim-tech-row${depleted ? ' bsim-tech-row--depleted' : ''}">
-      <div class="bsim-tech-info">
-        <div class="bsim-tech-name">${escapeHtml(item.name)}</div>
-        <div class="bsim-tech-desc">${escapeHtml(item.desc)}</div>
+      <div class="bsim-tech-name">${escapeHtml(item.name)}</div>
+      <div class="bsim-tech-desc">${escapeHtml(item.desc)}</div>
+      <div class="bsim-tech-footer">
+        <button class="inv-edit-done bsim-tech-btn" data-tech="${item.key}" ${depleted ? 'disabled' : ''}>${escapeHtml(label)}</button>
+        <span class="bsim-tech-uses">${s.usesLeft}/${item.maxUses}</span>
       </div>
-      <button class="inv-edit-done bsim-tech-btn" data-tech="${item.key}" ${depleted ? 'disabled' : ''}>${escapeHtml(label)}</button>
-      <span class="bsim-tech-uses">${s.usesLeft}/${item.maxUses}</span>
     </div>`;
   }).join('');
 }

@@ -218,13 +218,13 @@
 }
 .bsim-tech-row {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  flex-direction: column;
+  gap: 0.2rem;
 }
 .bsim-tech-row--depleted { opacity: 0.45; }
-.bsim-tech-info { flex: 1; min-width: 0; }
 .bsim-tech-name { font-size: 0.72rem; font-weight: 600; color: #d1d5db; }
 .bsim-tech-desc { font-size: 0.64rem; color: #6b7280; line-height: 1.3; }
+.bsim-tech-footer { display: flex; align-items: center; gap: 0.5rem; }
 .bsim-tech-btn { margin-top: 0; flex-shrink: 0; padding: 3px 8px; font-size: 0.68rem; }
 .bsim-tech-uses { font-size: 0.66rem; color: #6b7280; flex-shrink: 0; white-space: nowrap; }
 
