@@ -94,12 +94,12 @@ function _data() {
   if (!pt) return null;
   if (!pt.sim286) {
     pt.sim286 = {
-      // aeMax defaults to a fair placeholder (2d6's average of 7 × 10) rather
-      // than 0, so a fresh sim doesn't look "over budget" before the player
-      // ever rolls their own starting charge.
-      player: { life: 20, lifeMax: 20, weaponKey: 'sword', customMinHit: 6, customAeCost: 0, shieldKey: 'none', aeMax: 70, enemyFirst: false, gloveBonus: 5, extraDef: 0 },
+      // life/lifeMax/aeMax all start at 0, not some generous placeholder -
+      // the book requires throwing dice for both before you have any stats
+      // at all, so the sim shouldn't hand out free points before that roll.
+      player: { life: 0, lifeMax: 0, weaponKey: 'sword', customMinHit: 6, customAeCost: 0, shieldKey: 'none', aeMax: 0, enemyFirst: false, gloveBonus: 5, extraDef: 0 },
       enemy:  { name: '', hp: 20, hpMax: 20, minHit: 6 },
-      battleStart: { playerLife: 20, enemyHp: 20 },
+      battleStart: { playerLife: 0, enemyHp: 20 },
       effects: { tempShield: false, doubleAttack: false, pendingBonus: 0, enemyStun: 0 },
       roundsThisBattle: 0,
       healUsedThisBattle: false,
@@ -117,7 +117,7 @@ function _data() {
   if (!d.battleStart) d.battleStart = { playerLife: d.player.life, enemyHp: d.enemy.hp };
   if (d.dehronatorUsed === undefined) d.dehronatorUsed = false;
   if (!d.history) d.history = [];
-  if (d.player.aeMax === undefined) d.player.aeMax = 70;
+  if (d.player.aeMax === undefined) d.player.aeMax = 0;
   if (d.player.customAeCost === undefined) d.player.customAeCost = 0;
   if (d.player.enemyFirst === undefined) d.player.enemyFirst = false;
   if (d.player.gloveBonus === undefined) d.player.gloveBonus = 5;
@@ -126,10 +126,26 @@ function _data() {
   if (d.aeRolled === undefined) d.aeRolled = false;
   if (d.roundsThisBattle === undefined) d.roundsThisBattle = 0;
   if (d.healUsedThisBattle === undefined) d.healUsedThisBattle = false;
+  // Migration: saves from before life/AE required an explicit roll can carry
+  // a nonzero lifeMax/aeMax from the old always-free starting defaults with
+  // lifeRollCount/aeRolled still at their untouched zero/false - retroactively
+  // gating those behind _notReady() would freeze an in-progress playthrough
+  // that never needed to touch the roll buttons. Grandfather each stat in
+  // independently the first time it's seen already-set this way; a no-op for
+  // saves that legitimately rolled, since the roll handlers set both fields together.
+  if (d.lifeRollCount === 0 && d.player.lifeMax > 0) d.lifeRollCount = 1;
+  if (!d.aeRolled && d.player.aeMax > 0) d.aeRolled = true;
   for (const item of TECH_ITEMS) {
     if (!d.tech[item.key]) d.tech[item.key] = { usesLeft: item.maxUses, activated: false };
   }
   return d;
+}
+
+// True until the player has thrown both starting-life and starting-AE dice -
+// combat, healing, sleep, and tech gadgets all stay locked out until then,
+// same as the book requires those rolls before you have any stats to act with.
+function _notReady(d) {
+  return d.lifeRollCount === 0 || !d.aeRolled;
 }
 
 // Current loadout's total energy cost (weapon + shield). Tech gadgets and the
@@ -235,7 +251,7 @@ function _recordOutcome(d, outcome, enemyNameOverride = null) {
 // each round instead, same alternation from then on.
 function _runRound() {
   const d = _data();
-  if (!d || d.player.life <= 0 || d.enemy.hp <= 0) return;
+  if (!d || _notReady(d) || d.player.life <= 0 || d.enemy.hp <= 0) return;
   d.roundsThisBattle = (d.roundsThisBattle || 0) + 1;
 
   if (d.player.enemyFirst) {
@@ -274,6 +290,10 @@ function _runRound() {
 function _heal(amount) {
   const d = _data();
   if (!d || amount <= 0) return;
+  if (_notReady(d)) {
+    showAlert('Хвърли начални ТЖ и АЕ, преди да продължиш.');
+    return;
+  }
   if (d.roundsThisBattle > 0 && d.player.life > 0 && d.enemy.hp > 0) {
     showAlert('Не можеш да възстановяваш жизнени точки по време на сражение.');
     return;
@@ -312,7 +332,7 @@ function _activateTech(key) {
   if (!d) return;
   const item  = TECH_ITEMS.find(i => i.key === key);
   const state = d.tech[key];
-  if (!item || !state) return;
+  if (!item || !state || _notReady(d)) return;
 
   if (item.kind === 'revive') {
     if (d.dehronatorUsed || d.player.life <= 0) return;
@@ -397,6 +417,10 @@ function _activateTech(key) {
 function _sleepAttempt() {
   const d = _data();
   if (!d) return;
+  if (_notReady(d)) {
+    showAlert('Хвърли начални ТЖ и АЕ, преди да продължиш.');
+    return;
+  }
   // "Можеш да спиш във всеки епизод, освен когато си нападнат" - sleep is
   // blocked mid-fight for the same reason manual healing is.
   if (d.roundsThisBattle > 0 && d.player.life > 0 && d.enemy.hp > 0) {
@@ -543,11 +567,13 @@ function _techButtonsHtml(d) {
   // decided - see the matching guard in _activateTech(). Dehronator has its
   // own independent guard there (blocked only once already used, or once the
   // player is already dead - it doesn't care whether the enemy is already down).
-  const battleOver = d.player.life <= 0 || d.enemy.hp <= 0;
+  // Both also stay locked until the starting ТЖ/АЕ rolls are done (_notReady).
+  const notReady = _notReady(d);
+  const battleOver = notReady || d.player.life <= 0 || d.enemy.hp <= 0;
   return TECH_ITEMS.map(item => {
     const s = d.tech[item.key];
     const depleted = item.kind === 'revive'
-      ? (s.usesLeft <= 0 || d.player.life <= 0)
+      ? (s.usesLeft <= 0 || notReady || d.player.life <= 0)
       : (s.usesLeft <= 0 || battleOver);
     const label = item.kind === 'revive'
       ? `${item.name} (${item.cost} ТЖ)`
@@ -596,16 +622,18 @@ function _renderStatus() {
   const d  = _data();
   const el = document.getElementById('sim286-status');
   if (!d || !el) return;
-  if (d.player.life <= 0)     el.innerHTML = `${SVG_SKULL} Ти падна в битката.`;
-  else if (d.enemy.hp <= 0)   el.innerHTML = `${SVG_TROPHY} Победа!`;
-  else                        el.innerHTML = '';
-  const over = d.player.life <= 0 || d.enemy.hp <= 0;
+  const notReady = _notReady(d);
+  if (notReady)                el.innerHTML = 'Хвърли начални ТЖ и АЕ, за да започнеш.';
+  else if (d.player.life <= 0) el.innerHTML = `${SVG_SKULL} Ти падна в битката.`;
+  else if (d.enemy.hp <= 0)    el.innerHTML = `${SVG_TROPHY} Победа!`;
+  else                         el.innerHTML = '';
+  const over = notReady || d.player.life <= 0 || d.enemy.hp <= 0;
   document.getElementById('sim286-round').disabled = over;
   // Recovery rules 1+3: no healing mid-fight, and only once per battle-cycle.
   const midFight = d.roundsThisBattle > 0 && !over;
   document.getElementById('sim286-heal').disabled = over || midFight || d.healUsedThisBattle;
   // "Не можеш да спиш, докато си нападнат" - same mid-fight block as healing.
-  document.getElementById('sim286-sleep').disabled = d.player.life <= 0 || midFight;
+  document.getElementById('sim286-sleep').disabled = notReady || d.player.life <= 0 || midFight;
   _renderEffectsBadges(d);
 }
 
