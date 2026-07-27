@@ -56,7 +56,7 @@ export function registerPanelShortcut(keyCode, { getButton, getOverlay, otherOve
   });
 }
 
-// Image compression — shrinks to fit within maxDim, then JPEG-quality iterates down until <= maxBytes.
+// Image compression - shrinks to fit within maxDim, then JPEG-quality iterates down until <= maxBytes.
 // Best-effort: at the quality floor it returns whatever blob it has rather
 // than giving up, since a slightly-over-budget blob is more useful to a
 // caller than nothing at all - `confirmCrop()` (profile.js) is the one

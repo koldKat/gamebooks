@@ -7,10 +7,10 @@ import {
 } from './state.js?v=11';
 import { network, visNodes, syncGraph } from './graph.js?v=59';
 import { t } from './i18n.js?v=17';
-import { renderCharSheetDisplay } from './charsheet.js?v=36';
+import { renderCharSheetDisplay } from './charsheet.js?v=37';
 import { naturalCompare } from './sort.js?v=1';
-import { instantiateLoadout } from './equipment.js?v=89';
-import { escapeHtml } from './util.js?v=16';
+import { instantiateLoadout } from './equipment.js?v=90';
+import { escapeHtml } from './util.js?v=17';
 
 // ── Discoverable sections cap ────────────────────────────────────���───────────
 let _discoverableLimit = null;

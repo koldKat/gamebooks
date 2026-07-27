@@ -3,7 +3,7 @@
 // server/export.js) from each book's saved positions/colors - no rendering happens here.
 
 import { state, currentBookId, apiFetch } from './state.js?v=11';
-import { showAlert } from './play.js?v=44';
+import { showAlert } from './play.js?v=45';
 import { t } from './i18n.js?v=17';
 
 function _downloadBlob(blob, cd, fallbackFilename) {
@@ -15,7 +15,7 @@ function _downloadBlob(blob, cd, fallbackFilename) {
   a.href     = url;
   a.download = filename;
   a.click();
-  // Delay revoke — revoking immediately can cancel the download before it starts
+  // Delay revoke - revoking immediately can cancel the download before it starts
   setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
 
