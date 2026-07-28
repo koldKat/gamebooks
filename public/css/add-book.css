@@ -536,41 +536,6 @@
 }
 .book-del-btn:hover { background: #7f1d1d; border-color: #991b1b; color: #fca5a5; }
 
-.new-book-form {
-  background: #1f2937;
-  border: 1px solid #374151;
-  border-radius: 8px;
-  padding: 1rem 1.1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-  margin-top: 0.3rem;
-}
-
-.new-book-title {
-  font-size: 0.8rem;
-  color: #6b7280;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-.new-book-form textarea {
-  background: #111827;
-  border: 1px solid #374151;
-  border-radius: 6px;
-  color: #d1d5db;
-  padding: 0.45rem 0.6rem;
-  font-size: 0.82rem;
-  font-family: inherit;
-  resize: vertical;
-  line-height: 1.5;
-  width: 100%;
-  box-sizing: border-box;
-}
-.new-book-form textarea:focus { outline: none; border-color: #f5a623; }
-.new-book-form textarea::placeholder { color: #4b5563; }
-
-
 /* ── Book title ───────────────────────────────────────────────── */
 
 .book-title-row {

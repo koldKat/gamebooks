@@ -306,16 +306,6 @@
   border-radius: 5px;
   padding: 0.3rem 0.5rem;
 }
-#portal-modal-cancel {
-  background: transparent;
-  border: 1px solid #374151;
-  border-radius: 5px;
-  color: #9ca3af;
-  padding: 0.3rem 0.8rem;
-  cursor: pointer;
-}
-#portal-modal-cancel:hover { background: #374151; color: #f3f4f6; }
-
 #note-modal-overlay {
   display: none;
   position: fixed;
@@ -494,7 +484,6 @@
   font-size: 0.78rem !important;
 }
 #edit-book-modal .modal-actions,
-.new-book-form .modal-actions,
 #edit-modal .modal-actions,
 #note-modal .modal-actions,
 #add-book-overlay .modal-actions,
@@ -503,13 +492,13 @@
 #add-stash-overlay .modal-actions,
 #edit-stash-overlay .modal-actions,
 #edit-comp-overlay .modal-actions,
-#edit-series-overlay .modal-actions {
+#edit-series-overlay .modal-actions,
+#crop-modal .modal-actions,
+#portal-modal .modal-actions {
   justify-content: flex-end;
 }
 #edit-book-modal .modal-actions .primary-btn,
 #edit-book-modal .modal-actions #edit-book-cancel,
-.new-book-form .modal-actions .primary-btn,
-.new-book-form .modal-actions #new-book-cancel-btn,
 #edit-modal .modal-actions .primary-btn,
 #edit-modal .modal-actions #edit-modal-cancel,
 #note-modal .modal-actions .primary-btn,
@@ -527,7 +516,11 @@
 #edit-comp-overlay .modal-actions .primary-btn,
 #edit-comp-overlay .modal-actions #ecc-cancel,
 #edit-series-overlay .modal-actions .primary-btn,
-#edit-series-overlay .modal-actions #esr-cancel {
+#edit-series-overlay .modal-actions #esr-cancel,
+#crop-modal .modal-actions .primary-btn,
+#crop-modal .modal-actions #crop-cancel-btn,
+#portal-modal .modal-actions .primary-btn,
+#portal-modal .modal-actions #portal-modal-cancel {
   flex: none !important;
   width: auto !important;
   padding: 0.25rem 0.65rem !important;
@@ -546,8 +539,9 @@
 }
 
 #edit-modal-cancel, #edit-book-cancel, #profile-cancel-btn, #crop-cancel-btn, #note-modal-cancel,
-#feedback-cancel-btn, #inbox-close-btn, #inbox-conv-close-btn, #new-book-cancel-btn,
-#cb-cancel, #cc-cancel, #csr-cancel, #cst-cancel, #est-cancel, #ecc-cancel, #esr-cancel {
+#feedback-cancel-btn, #inbox-close-btn, #inbox-conv-close-btn,
+#cb-cancel, #cc-cancel, #csr-cancel, #cst-cancel, #est-cancel, #ecc-cancel, #esr-cancel,
+#portal-modal-cancel {
   flex: 1;
   background: #374151;
   color: #9ca3af;
@@ -560,7 +554,8 @@
 }
 #edit-modal-cancel:hover, #edit-book-cancel:hover, #profile-cancel-btn:hover, #crop-cancel-btn:hover,
 #note-modal-cancel:hover, #inbox-close-btn:hover, #inbox-conv-close-btn:hover,
-#cb-cancel:hover, #cc-cancel:hover, #csr-cancel:hover, #cst-cancel:hover, #est-cancel:hover, #ecc-cancel:hover, #esr-cancel:hover { background: #4b5563; }
+#cb-cancel:hover, #cc-cancel:hover, #csr-cancel:hover, #cst-cancel:hover, #est-cancel:hover, #ecc-cancel:hover, #esr-cancel:hover,
+#portal-modal-cancel:hover { background: #4b5563; }
 
 body {
   font-family: 'Segoe UI', system-ui, sans-serif;

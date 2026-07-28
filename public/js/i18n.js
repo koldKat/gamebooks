@@ -116,6 +116,9 @@ const translations = {
     'modal.feedback.username': 'Username:',
     'modal.feedback.email':    'Email (optional):',
     'modal.feedback.message':  'Message:',
+    'modal.feedback.attachments': 'Attachments:',
+    'att.add_files': '+ Add files',
+    'att.attach':     '+ Attach',
     'modal.inbox.title':       'Inbox',
 
     'feedback.message_required': 'Please enter a message.',
