@@ -255,6 +255,7 @@
       battlesim829.js    Battle simulator for book 829
       battlesim8.js      Battle simulator for book 8
       battlesim286.js    Battle simulator for book 286 (flat weapon min-hit model, tech gadgets, sleep/dream table)
+      battlesim198.js    Battle simulator for book 198, The Warlock of Firetop Mountain (standard Fighting Fantasy SKILL/STAMINA/LUCK system)
       add-book.js        Create Book, Create Anthology, Create Series modals
       edit-book.js       Edit Book/Anthology/Series/Stash modals; ISBN/ISSN/ASIN validation
       books.js           Books list rendering, panel management, stash UI
@@ -307,7 +308,7 @@ Layer 2:
     (safe: none consume each other at module-evaluation time)
 
 Layer 3 (feature modules):
-  notes, battlesim829, battlesim8, battlesim286, auth, add-book, edit-book, books,
+  notes, battlesim829, battlesim8, battlesim286, battlesim198, auth, add-book, edit-book, books,
   covers, feed, open-world, shop, profile, public-profile, prefs,
   livetab, notif, rewards, bg, stats, party, tips, inbox, dice,
   tooltip, export, feedback, demo
@@ -568,7 +569,7 @@ INDEX idx_attachments_kind_linked ON attachments (kind, linked_id)</code></pre>
       <p><strong><code>pdf_access</code></strong> (<code>INTEGER DEFAULT 0</code>) - when <code>1</code>, the user can download book PDFs via <code>GET /books/:path</code>. Toggled by the admin via <code>POST /api/admin/users/:id/pdf-access { pdfAccess: bool }</code>. Admins bypass this check automatically. Returned in <code>GET /api/profile</code> as <code>pdfAccess: bool</code>. Added via <code>ALTER TABLE</code> migration at startup.</p>
       <p><strong><code>join_template_id</code></strong> (<code>INTEGER</code>) - permanently assigned at registration by randomly selecting a row from the <code>join_templates</code> table (50 templates seeded at startup via <code>INSERT OR IGNORE</code>, same pattern as <code>level_up_templates</code>). Existing users are backfilled a random template on startup. The template text is used for the <code>user_joined</code> activity feed entry for that user and never changes, so the join-feed text is stable across refreshes.</p>
       <p>Column additions are handled via <code>ALTER TABLE</code> migrations on startup (no-ops if already present). One-time migrations are guarded by <code>admin_settings</code> keys (see Admin settings table above).</p>
-      <p><strong><code>book_enemies</code></strong> - reference enemy stat blocks feeding the enemy-name autocomplete inside a book's battle simulator (<code>GET /api/books/:id/enemies</code>). No admin UI exists for this table yet - rows are seeded by hand via direct SQL against <code>database.sqlite</code>, extracted from each book's actual combat encounters. <code>attack</code>/<code>defense</code>/<code>pb</code> map to book 829's opposed Attack/Defense/Проектоброня system (<code>battlesim829.js</code>); books using a different combat model (e.g. book 286's flat weapon min-hit system) repurpose <code>attack</code> to mean whatever that book's own simulator needs (for 286, "enemy minimum hit"), leaving <code>defense</code>/<code>pb</code> at 0. Book 8 doesn't use named per-section enemies at all - its rows are generic Skill/Life variant templates for <code>battlesim8.js</code>'s own dice-based enemy generator, not real book encounters.</p>
+      <p><strong><code>book_enemies</code></strong> - reference enemy stat blocks feeding the enemy-name autocomplete inside a book's battle simulator (<code>GET /api/books/:id/enemies</code>). No admin UI exists for this table yet - rows are seeded by hand via direct SQL against <code>database.sqlite</code>, extracted from each book's actual combat encounters. <code>attack</code>/<code>defense</code>/<code>pb</code> map to book 829's opposed Attack/Defense/Проектоброня system (<code>battlesim829.js</code>); books using a different combat model (e.g. book 286's flat weapon min-hit system) repurpose <code>attack</code> to mean whatever that book's own simulator needs (for 286, "enemy minimum hit"; for book 198's standard Fighting Fantasy SKILL/STAMINA/LUCK system, <code>attack</code>=SKILL and <code>hp</code>=STAMINA), leaving <code>defense</code>/<code>pb</code> at 0. Book 8 doesn't use named per-section enemies at all - its rows are generic Skill/Life variant templates for <code>battlesim8.js</code>'s own dice-based enemy generator, not real book encounters.</p>
     </div>
 
     <!-- XP & levelling -->

@@ -1,6 +1,6 @@
 // tips.js - Books-screen tip bar: fetches, shuffles, and cycles tips
 
-import { fetchPublic } from './util.js?v=18';
+import { fetchPublic } from './util.js?v=20';
 
 export function initTips() {
   const el  = document.getElementById('books-tip-text');

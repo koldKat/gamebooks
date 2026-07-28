@@ -91,6 +91,7 @@ gamebooks/
       battlesim829.js    Battle simulator for book 829
       battlesim8.js      Battle simulator for book 8
       battlesim286.js    Battle simulator for book 286 (flat weapon min-hit model, tech gadgets, sleep/dream table)
+      battlesim198.js    Battle simulator for book 198, The Warlock of Firetop Mountain (standard Fighting Fantasy SKILL/STAMINA/LUCK system)
       add-book.js        Create Book, Create Anthology, Create Series modals
       edit-book.js       Edit Book/Anthology/Series/Stash modals; ISBN/ISSN/ASIN validation
       books.js           Books list rendering, panel management, stash UI
@@ -147,7 +148,7 @@ Layer 2:
     Works because none consume each other's exports at module-evaluation time.
 
 Layer 3 (feature modules - import from layers 0–2 as needed):
-  notes.js, battlesim829.js, battlesim8.js, battlesim286.js, auth.js, add-book.js, edit-book.js,
+  notes.js, battlesim829.js, battlesim8.js, battlesim286.js, battlesim198.js, auth.js, add-book.js, edit-book.js,
   books.js, covers.js, feed.js, open-world.js, shop.js, profile.js,
   public-profile.js, prefs.js, livetab.js, notif.js, rewards.js, bg.js,
   stats.js, party.js, tips.js, inbox.js, dice.js, tooltip.js, export.js,
@@ -704,7 +705,7 @@ INDEX idx_attachments_kind_linked ON attachments (kind, linked_id)
 
 `state_data` (in `user_books`) stores the full per-user client state object as a JSON string. `name`, `total_sections`, `discoverable_sections`, `isbn`, `issn`, `asin`, `pages`, `authors`, and `description` are stored as columns on `books` so the books list can be rendered without parsing state blobs. `cover_path` on `books` stores the filename only (not the full URL path).
 
-**`book_enemies`** - reference enemy stat blocks feeding the enemy-name autocomplete inside a book's battle simulator (`GET /api/books/:id/enemies`). No admin UI exists for this table yet - rows are seeded by hand via direct SQL against `database.sqlite`, extracted from each book's actual combat encounters. `attack`/`defense`/`pb` map to book 829's opposed Attack/Defense/Proектоброня system (`battlesim829.js`); books using a different combat model (e.g. book 286's flat weapon min-hit system) repurpose `attack` to mean whatever that book's own simulator needs it to (for 286, "enemy minimum hit"), leaving `defense`/`pb` at 0. Book 8 doesn't use named per-section enemies at all - its rows are generic Skill/Life variant templates for `battlesim8.js`'s own dice-based enemy generator, not real book encounters.
+**`book_enemies`** - reference enemy stat blocks feeding the enemy-name autocomplete inside a book's battle simulator (`GET /api/books/:id/enemies`). No admin UI exists for this table yet - rows are seeded by hand via direct SQL against `database.sqlite`, extracted from each book's actual combat encounters. `attack`/`defense`/`pb` map to book 829's opposed Attack/Defense/Proектоброня system (`battlesim829.js`); books using a different combat model (e.g. book 286's flat weapon min-hit system) repurpose `attack` to mean whatever that book's own simulator needs it to (for 286, "enemy minimum hit"; for book 198's standard Fighting Fantasy SKILL/STAMINA/LUCK system, `attack`=SKILL and `hp`=STAMINA), leaving `defense`/`pb` at 0. Book 8 doesn't use named per-section enemies at all - its rows are generic Skill/Life variant templates for `battlesim8.js`'s own dice-based enemy generator, not real book encounters.
 
 ### XP and levelling system
 
