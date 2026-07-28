@@ -687,8 +687,8 @@ function renderForumThread(thread, posts) {
 
   const t = thread;
   const catBack = t.category_slug
-    ? '<button class="nav-btn" onclick="location.href=\'/forum\'">Forum</button> › <button class="nav-btn" onclick="location.href=\'/forum/c/' + esc(t.category_slug) + '\'">' + esc(t.category_name) + '</button> › ' + esc(t.title)
-    : '<button class="nav-btn" onclick="location.href=\'/forum\'">Forum</button> › ' + esc(t.title);
+    ? '<button class="nav-btn" onclick="location.href=\'/forum\'">Forum</button> › <button class="nav-btn" onclick="location.href=\'/forum/c/' + esc(t.category_slug) + '\'">' + esc(t.category_name) + '</button> › <span id="breadcrumb-title">' + esc(t.title) + '</span>'
+    : '<button class="nav-btn" onclick="location.href=\'/forum\'">Forum</button> › <span id="breadcrumb-title">' + esc(t.title) + '</span>';
 
   const badges = (t.is_pinned ? '<span class="badge badge-pin">pinned</span>' : '')
                + (t.is_locked ? '<span class="badge badge-lock">locked</span>' : '');
@@ -760,6 +760,22 @@ function renderForumThread(thread, posts) {
     return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\\n/g,'<br>');
   }
 
+  // Client-side mirror of renderBody()'s markup engine above (kept in sync by
+  // hand) - used after an in-place edit save so the re-rendered post gets the
+  // same bold/italic/underline/strikethrough/color/link formatting as a fresh
+  // page load, instead of falling back to _escBr's plain escape+linebreak.
+  var FORUM_COLORS_CLIENT = { red:'#f87171', orange:'#fb923c', amber:'#fbbf24', green:'#4ade80', teal:'#2dd4bf', blue:'#60a5fa', purple:'#a78bfa', pink:'#f472b6' };
+  function _renderBody(s) {
+    return _escBr(s)
+      .replace(/\\*\\*(.+?)\\*\\*/g, '<strong>$1</strong>')
+      .replace(/\\*(.+?)\\*/g,     '<em>$1</em>')
+      .replace(/__(.+?)__/g,     '<u>$1</u>')
+      .replace(/~~(.+?)~~/g,     '<s>$1</s>')
+      .replace(/\\{color:(red|orange|amber|green|teal|blue|purple|pink)\\}(.+?)\\{\\/color\\}/g,
+        function(_, color, text) { return '<span style="color:' + FORUM_COLORS_CLIENT[color] + '">' + text + '</span>'; })
+      .replace(/\\[([^\\]]+)\\]\\((https?:\\/\\/[^)]+)\\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+  }
+
   (async function() {
     var token = localStorage.getItem('gamebook_auth_token');
     var noticeWrap = document.getElementById('auth-notice-wrap');
@@ -816,7 +832,10 @@ function renderForumThread(thread, posts) {
             var d = await res.json();
             if (!res.ok) { err.textContent = d.error || 'Error'; btn.disabled = false; btn.textContent = 'Save'; return; }
             titleEl.textContent = newTitle; titleEl.dataset.raw = newTitle;
-            bodyEl.innerHTML = _escBr(newBody);
+            var breadcrumbTitleEl = document.getElementById('breadcrumb-title');
+            if (breadcrumbTitleEl) breadcrumbTitleEl.textContent = newTitle;
+            document.title = newTitle + ' - Forum - Gamebook Tracker';
+            bodyEl.innerHTML = _renderBody(newBody);
             bodyEl.dataset.raw = newBody;
             var existing = metaEl.querySelector('.post-edited');
             var note = existing || document.createElement('span');
@@ -889,7 +908,7 @@ function renderForumThread(thread, posts) {
               });
               var d = await res.json();
               if (!res.ok) { err.textContent = d.error || 'Error'; btn.disabled = false; btn.textContent = 'Save'; return; }
-              bodyEl.innerHTML = _escBr(newBody);
+              bodyEl.innerHTML = _renderBody(newBody);
               bodyEl.dataset.raw = newBody;
               var existing = metaEl.querySelector('.post-edited');
               var note = existing || document.createElement('span');
