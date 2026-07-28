@@ -30,7 +30,9 @@ export function openPublicModal() {
 }
 
 export function closePublicModal() {
-  document.getElementById('public-modal-overlay').classList.remove('active');
+  const overlay = document.getElementById('public-modal-overlay');
+  overlay.classList.remove('active');
+  overlay.style.zIndex = ''; // undo the one-off bump from opening a book link inside the forum (see boot.js)
   document.getElementById('public-modal').classList.remove('pub-modal--run');
   document.getElementById('pub-modal-body').innerHTML = '';
   document.getElementById('pub-modal-title').textContent = '';

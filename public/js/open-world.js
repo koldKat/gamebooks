@@ -16,7 +16,7 @@ import {
 import { t } from './i18n.js?v=18';
 import { setOnCharSheetSaved } from './charsheet.js?v=39';
 import { instantiateLoadout } from './equipment.js?v=92';
-import { getCachedBooks } from './books.js?v=77';
+import { getCachedBooks } from './books.js?v=78';
 
 let _hooks = {};
 export function setOpenWorldHooks(h) { _hooks = h || {}; }
