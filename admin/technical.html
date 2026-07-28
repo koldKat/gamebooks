@@ -162,6 +162,7 @@
         <a href="#data-migration">Data migration</a>
         <a href="#identifiers">Identifier validation</a>
         <a href="#i18n">Internationalisation</a>
+        <a href="#forum">Forum</a>
         <a href="#export-import">Export</a>
       </div>
     </div>
@@ -1120,6 +1121,12 @@ computeLevel(xp) = min(floor((-1 + sqrt(1 + 8·xp/1000)) / 2), 100)</code></pre>
         </tbody>
       </table>
       <p>Static HTML uses <code>data-i18n</code> / <code>data-i18n-placeholder</code> / <code>data-i18n-title</code> attributes. Dynamic HTML calls <code>t()</code> at render time. A <code>lang-changed</code> listener triggers <code>renderBooksList</code> or <code>render()</code> so dynamic content updates when the language switches.</p>
+    </div>
+
+    <!-- Forum -->
+    <div class="section" id="forum">
+      <h2>Forum (<code>server/forum.js</code>)</h2>
+      <p><strong>Forum edit save losing markup formatting (2026-07-29):</strong> <code>renderBody()</code>'s bold/italic/underline/strikethrough/color/link markup engine only runs server-side. Editing a thread/post re-renders the body in-place client-side (no page reload, for a snappier save), but that path called <code>_escBr()</code> - a plain HTML-escape + <code>\n</code>&rarr;<code>&lt;br&gt;</code> helper with no markup parsing - so a saved edit displayed the raw <code>**</code>/<code>{color:...}</code> tags literally instead of the formatted result, even though the stored body and any fresh page load rendered it correctly. Added <code>_renderBody()</code>, a client-side mirror of <code>renderBody()</code>'s regex chain (kept in sync by hand, same as <code>_escBr</code> already was), and pointed both the OP-edit and post-edit save handlers at it instead. The client script is itself embedded in a server-side template literal, so every backslash in the mirrored regex needs doubling to survive that round-trip intact - verified by extracting and syntax-checking the actual rendered <code>&lt;script&gt;</code> output, not just the source. While fixing this, also found the thread-title edit only ever updated the big <code>#thread-title-display</code> heading - the breadcrumb (<code>Forum &rsaquo; Category &rsaquo; Title</code>) and the browser tab's <code>&lt;title&gt;</code> were both baked in once at page render and never touched by the edit handler, so they stayed stale until a reload. Gave the breadcrumb's title segment an <code>id="breadcrumb-title"</code> and updated both it and <code>document.title</code> alongside the heading.</p>
     </div>
 
     <!-- Export -->
