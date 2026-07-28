@@ -96,7 +96,7 @@
     justify-content: flex-end;
   }
   #app-banner-btns  { flex-wrap: wrap; gap: 0.35rem; justify-content: flex-end; }
-  #books-tip-bar    { padding: 0.4rem 0.75rem 0.5rem; }
+  #books-tip-bar    { padding: 0.45rem 0.75rem; }
 
   /* Feed cards full width */
   .feed-card        { border-radius: 6px; }
