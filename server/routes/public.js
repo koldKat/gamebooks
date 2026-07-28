@@ -325,7 +325,10 @@ function servePublicFeedPage(req, res) {
     .replace(/~~(.+?)~~/g,     '<s>$1</s>')
     .replace(/\{color:(red|orange|amber|green|teal|blue|purple|pink)\}(.+?)\{\/color\}/g,
       (_, color, text) => `<span style="color:${ANN_COLORS[color]}">${text}</span>`)
-    .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+|\/book\/\d+)\)/g, (_, label, target) =>
+      target.startsWith('/')
+        ? `<a href="${target}">${label}</a>`
+        : `<a href="${target}" target="_blank" rel="noopener noreferrer">${label}</a>`);
   const pinned  = db.getPinnedAnnouncement();
   const entries = db.getFeed();
 
@@ -406,6 +409,7 @@ function servePublicFeedPage(req, res) {
     body { background: #111827; color: #e5e7eb; font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace; font-size: 15px; line-height: 1.5; padding: 1.5rem 1rem 3rem; }
     a { color: #60a5fa; text-decoration: none; }
     a:hover { text-decoration: underline; }
+    a:visited { color: #60a5fa; }
     .site-header { max-width: 680px; margin: 0 auto 1.5rem; border-bottom: 1px solid #374151; padding-bottom: 0.9rem; display: flex; align-items: baseline; gap: 1rem; flex-wrap: wrap; }
     .site-header h1 { font-size: 1.1rem; color: #f3f4f6; }
     .site-header .sub { font-size: 0.8rem; color: #9ca3af; }

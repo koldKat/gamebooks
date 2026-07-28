@@ -302,17 +302,25 @@ function _setupEnemyAutocomplete() {
   let matches   = [];
   let activeIdx = -1;
 
+  function closeDropdown() {
+    dropdown.classList.remove('open');
+    input.setAttribute('aria-expanded', 'false');
+    input.removeAttribute('aria-activedescendant');
+  }
+
   function render(q) {
     const list = _enemyList || [];
     const ql   = q.trim().toLowerCase();
     matches    = ql ? list.filter(e => e.name.toLowerCase().includes(ql)) : list;
-    if (!matches.length) { dropdown.classList.remove('open'); return; }
+    if (!matches.length) { closeDropdown(); return; }
     dropdown.innerHTML = matches.map((e, i) => {
       const u = x => x == null ? '?' : x;
-      return `<li data-idx="${i}">${escapeHtml(e.name)}<span class="ac-sub">У:${u(e.attack)} Ж:${u(e.hp)}</span></li>`;
+      return `<li role="option" id="s8-enemy-name-opt-${i}" data-idx="${i}">${escapeHtml(e.name)}<span class="ac-sub">У:${u(e.attack)} Ж:${u(e.hp)}</span></li>`;
     }).join('');
     activeIdx = -1;
     dropdown.classList.add('open');
+    input.setAttribute('aria-expanded', 'true');
+    input.removeAttribute('aria-activedescendant');
   }
 
   function select(enemy) {
@@ -322,7 +330,7 @@ function _setupEnemyAutocomplete() {
     d.enemy.name = enemy.name;
     if (enemy.attack != null) d.enemy.skill   = enemy.attack;
     if (enemy.hp     != null) { d.enemy.life = enemy.hp; d.enemy.lifeMax = enemy.hp; }
-    dropdown.classList.remove('open');
+    closeDropdown();
     saveState();
     _renderInputs();
   }
@@ -336,16 +344,18 @@ function _setupEnemyAutocomplete() {
 
   input.addEventListener('focus', async () => { await _loadEnemyList(); render(input.value); });
   input.addEventListener('input', async () => { await _loadEnemyList(); render(input.value); });
-  input.addEventListener('blur',  () => setTimeout(() => dropdown.classList.remove('open'), 150));
+  input.addEventListener('blur',  () => setTimeout(closeDropdown, 150));
   input.addEventListener('keydown', e => {
     const items = dropdown.querySelectorAll('li');
     if (!items.length) return;
     if      (e.key === 'ArrowDown')               { e.preventDefault(); activeIdx = Math.min(activeIdx + 1, items.length - 1); }
     else if (e.key === 'ArrowUp')                 { e.preventDefault(); activeIdx = Math.max(activeIdx - 1, 0); }
     else if (e.key === 'Enter' && activeIdx >= 0) { e.preventDefault(); select(matches[activeIdx]); return; }
-    else if (e.key === 'Escape')                  { dropdown.classList.remove('open'); return; }
+    else if (e.key === 'Escape')                  { closeDropdown(); return; }
     else return;
-    items.forEach((li, i) => li.classList.toggle('ac-active', i === activeIdx));
+    items.forEach((li, i) => { li.classList.toggle('ac-active', i === activeIdx); li.setAttribute('aria-selected', String(i === activeIdx)); });
+    if (activeIdx >= 0) input.setAttribute('aria-activedescendant', items[activeIdx].id);
+    else input.removeAttribute('aria-activedescendant');
     items[activeIdx]?.scrollIntoView({ block: 'nearest' });
   });
 }
@@ -415,8 +425,8 @@ export function initBattleSim8() {
             <div class="inv-edit-row">
               <span class="inv-edit-label bsim-stat-label">Име</span>
               <div class="autocomplete-wrap bsim-enemy-ac">
-                <input id="s8-enemy-name" class="inv-edit-input" type="text" autocomplete="off" placeholder="Въведи или избери…">
-                <ul id="s8-enemy-name-dropdown" class="autocomplete-dropdown"></ul>
+                <input id="s8-enemy-name" class="inv-edit-input" type="text" autocomplete="off" placeholder="Въведи или избери…" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" aria-controls="s8-enemy-name-dropdown">
+                <ul id="s8-enemy-name-dropdown" class="autocomplete-dropdown" role="listbox"></ul>
               </div>
             </div>
             ${_statField('Умение', 's8-enemy-skill', 'enemy', 'skill')}

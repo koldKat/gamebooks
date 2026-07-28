@@ -20,6 +20,12 @@ const ANN_COLORS = {
   teal: '#2dd4bf', blue: '#60a5fa', purple: '#a78bfa', pink: '#f472b6',
 };
 
+// [Label](/book/123) is a relative in-app link, not a hardcoded absolute
+// domain (this app is served from several domains - koldkat.net, pathmap.net,
+// bookplay.net, etc. - a baked-in domain would resolve on the wrong one).
+// Rendered without target=_blank; the click-interceptor below already
+// resolves it to the current origin correctly since it's relative. Genuine
+// external https:// links are untouched and still open in a new tab.
 function formatAnnBody(str) {
   return escapeHtml(str)
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
@@ -28,7 +34,10 @@ function formatAnnBody(str) {
     .replace(/~~(.+?)~~/g,     '<s>$1</s>')
     .replace(/\{color:(red|orange|amber|green|teal|blue|purple|pink)\}(.+?)\{\/color\}/g,
       (_, color, text) => `<span style="color:${ANN_COLORS[color]}">${text}</span>`)
-    .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+|\/book\/\d+)\)/g, (_, label, target) =>
+      target.startsWith('/')
+        ? `<a href="${target}">${label}</a>`
+        : `<a href="${target}" target="_blank" rel="noopener noreferrer">${label}</a>`);
 }
 
 function _positionFeedPreview(ev) {
@@ -564,6 +573,19 @@ export async function loadFeed() {
     el.querySelectorAll('.feed-series-tag').forEach(a => {
       if (!a.dataset.seriesId) return;
       a.addEventListener('click', e => { e.preventDefault(); openSeriesActivity(+a.dataset.seriesId, a.dataset.seriesName); });
+    });
+    // An announcement can link a book via formatAnnBody()'s [Label](/book/123)
+    // syntax - same real, crawlable /book/:id page used elsewhere (e.g. the
+    // no-JS feed SEO page), but intercepted here so clicking it from inside
+    // the app opens the in-app detail dialog instead of navigating away,
+    // same as .feed-series-tag above.
+    el.querySelectorAll('.feed-ann-body a, .feed-pinned-body a').forEach(a => {
+      let u;
+      try { u = new URL(a.href); } catch { return; }
+      if (u.origin !== location.origin) return;
+      const m = u.pathname.match(/^\/book\/(\d+)$/);
+      if (!m) return;
+      a.addEventListener('click', e => { e.preventDefault(); openCoverActivity(+m[1], a.textContent); });
     });
 
     // Hover image previews (desktop only - touch devices have no reliable mouseleave)
