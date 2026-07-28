@@ -10,7 +10,7 @@ import {
   _acceptPdfSelection, _setPdfInlineLabel, formatFileSize,
   _populateSeriesSelect, _populateParentBookSelect,
   validateIsbn, validateIssn, validateAsin,
-} from './edit-book.js?v=82';
+} from './edit-book.js?v=83';
 import {
   invalidateAutocompleteCaches, _loadAutocompleteBooks, _loadSeriesAutocomplete,
   _setModalCover, _setupNameAutocomplete, _setupPlainAutocomplete, _setupAuthorsAutocomplete,
@@ -284,11 +284,12 @@ export function initAddBook(mousedownOnOverlayRef) {
         try {
           const r = await apiFetch(`/api/books/${book.id}/cover`, { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: _cbCover });
           if (!r.ok) { _closeAddBook(); await _refreshLibraryUi({ feed: true, covers: true }); showAlert('Book created, but cover upload failed. You can retry from Edit Book.'); return; }
+          _hooks.scheduleRewardProfileRefresh?.();
         } catch (_) { _closeAddBook(); await _refreshLibraryUi({ feed: true, covers: true }); showAlert('Book created, but cover upload failed. You can retry from Edit Book.'); return; }
       }
       if (_cbPdf) {
         _setButtonsDisabled(['cb-save', 'cb-cancel'], true);
-        try { await _uploadPdfWithProgress(`/api/books/${book.id}/pdf`, _cbPdf, 'cb'); }
+        try { await _uploadPdfWithProgress(`/api/books/${book.id}/pdf`, _cbPdf, 'cb'); _hooks.scheduleRewardProfileRefresh?.(); }
         catch (e) { _closeAddBook(); await _refreshLibraryUi({ feed: true, covers: true }); showAlert(`${t('addbook.book_pdf_upload_failed')}${e?.message ? `\n\n${e.message}` : ''}`); return; }
         finally { _setButtonsDisabled(['cb-save', 'cb-cancel'], false); }
       }
@@ -361,11 +362,12 @@ export function initAddBook(mousedownOnOverlayRef) {
         try {
           const r = await apiFetch(`/api/books/${book.id}/cover`, { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: _ccCover });
           if (!r.ok) { _closeAddComp(); await _refreshLibraryUi({ feed: true, covers: true }); showAlert('Anthology created, but cover upload failed. You can retry from Edit Anthology.'); return; }
+          _hooks.scheduleRewardProfileRefresh?.();
         } catch (_) { _closeAddComp(); await _refreshLibraryUi({ feed: true, covers: true }); showAlert('Anthology created, but cover upload failed. You can retry from Edit Anthology.'); return; }
       }
       if (_ccPdf) {
         _setButtonsDisabled(['cc-save', 'cc-cancel'], true);
-        try { await _uploadPdfWithProgress(`/api/books/${book.id}/pdf`, _ccPdf, 'cc'); }
+        try { await _uploadPdfWithProgress(`/api/books/${book.id}/pdf`, _ccPdf, 'cc'); _hooks.scheduleRewardProfileRefresh?.(); }
         catch (e) { _closeAddComp(); await _refreshLibraryUi({ feed: true, covers: true }); showAlert(`${t('addbook.anthology_pdf_upload_failed')}${e?.message ? `\n\n${e.message}` : ''}`); return; }
         finally { _setButtonsDisabled(['cc-save', 'cc-cancel'], false); }
       }

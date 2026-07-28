@@ -24,14 +24,14 @@ import { initNotes, hideNotesUI, loadNotesForBook, setOnXpAwarded as setNotesOnX
 import { initParty, connectPartySSE, disconnectPartySSE, loadPartyInvites, setPartyHooks } from './party.js?v=80';
 import { initAuth, setOnAuthSuccess, showAuthForm, showResetPanel, hasPendingResetToken } from './auth.js?v=22';
 import { initStats, closeStatsModal } from './stats.js?v=41';
-import { setAddBookHooks, initAddBook, _closeAddBook, _closeAddComp, _closeAddSeries } from './add-book.js?v=83';
+import { setAddBookHooks, initAddBook, _closeAddBook, _closeAddComp, _closeAddSeries } from './add-book.js?v=84';
 import {
   setEditBookHooks, initEditBook,
   openEditBookModal, closeEditBookModal, openEditCompModal, openEditSeriesModal,
   _openEditStash, _closeEditStash, _closeAddStash,
   _adminPdfHref,
   maxSectionInUse,
-} from './edit-book.js?v=82';
+} from './edit-book.js?v=83';
 import {
   setPrefsHooks, savePrefs, syncPrefs,
   _setLandingPanelCollapsed, _toggleAllLandingPanelsCollapsed,
@@ -942,9 +942,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   setEditBookHooks({
     resolveIsAdmin:      () => resolveIsAdmin(),
     setCurrentBookCover,
+    scheduleRewardProfileRefresh: _scheduleRewardProfileRefresh,
   });
   initEditBook(() => _mousedownOnOverlay);
-  setAddBookHooks({ resolveIsAdmin: () => resolveIsAdmin() });
+  setAddBookHooks({ resolveIsAdmin: () => resolveIsAdmin(), scheduleRewardProfileRefresh: _scheduleRewardProfileRefresh });
   initAddBook(() => _mousedownOnOverlay);
   initBooksPanel();
   initInbox(() => _mousedownOnOverlay);
