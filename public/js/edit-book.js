@@ -1,12 +1,12 @@
 // edit-book.js - Edit/add book, anthology, series, and stash modals
 
 import { state, getToken, isDemoMode, apiFetch, clearToken, clearUsername, isTerminal, parseSecId } from './state.js?v=11';
-import { t } from './i18n.js?v=17';
+import { t } from './i18n.js?v=18';
 import { naturalCompare, naturalCompareByName, foldForSearch, matchesSearch } from './sort.js?v=1';
-import { getCachedBooks, getCachedAllSeries, getCachedStashes, _starLabelHtml, _refreshBooksListOnly, _refreshLibraryUi } from './books.js?v=75';
-import { refreshCoinsDisplay } from './shop.js?v=27';
-import { showAlert, showConfirm } from './play.js?v=45';
-import { escapeHtml, compressImage } from './util.js?v=17';
+import { getCachedBooks, getCachedAllSeries, getCachedStashes, _starLabelHtml, _refreshBooksListOnly, _refreshLibraryUi } from './books.js?v=76';
+import { refreshCoinsDisplay } from './shop.js?v=28';
+import { showAlert, showConfirm } from './play.js?v=46';
+import { escapeHtml, compressImage } from './util.js?v=18';
 
 let _hooks = {};
 export function setEditBookHooks(h) { _hooks = h || {}; }

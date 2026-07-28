@@ -163,7 +163,8 @@
 }
 #feedback-modal .input-group { gap: 0.2rem; }
 #feedback-error:empty { display: none; }
-#feedback-modal .att-list { margin-top: 0.15rem; }
+.fb-actions-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+.fb-actions-row .att-list { flex: 1; margin-top: 0; min-width: 0; }
 
 #feedback-message-input {
   width: 100%;
@@ -193,10 +194,7 @@
   padding: 0.25rem 0.65rem !important;
   font-size: 0.78rem !important;
 }
-#feedback-modal .modal-actions {
-  justify-content: flex-end;
-}
-#feedback-modal .modal-actions .primary-btn,
+#feedback-submit-btn,
 #feedback-cancel-btn {
   flex: none !important;
   width: auto !important;
@@ -318,32 +316,39 @@
 }
 #inbox-reply-input:focus { outline: none; border-color: #6b7280; }
 #inbox-reply-input::placeholder { color: #4b5563; }
-.inbox-conv-actions {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-  justify-content: flex-end;
-}
-/* Use class+ID specificity to beat both .primary-btn (class) and #id (ID) rules */
-.inbox-conv-actions #inbox-reply-send-btn,
-.inbox-conv-actions #inbox-conv-delete-btn,
-.inbox-conv-actions #inbox-conv-close-btn {
+/* Self-contained, fully-scoped rule for all three buttons in this row -
+   deliberately not relying on play.css's shared button blocks (which style
+   #inbox-conv-close-btn elsewhere, including a flex:1 meant for its OLD row
+   with no flex:1 spacer - here that stretched it to fill the row and made it
+   huge). Scoping every property under #inbox-att-area gives this higher
+   specificity than any single-ID rule elsewhere, so there's no cross-file
+   load-order cascade to reason about: this is the one place that decides
+   how these three buttons look, full stop. Matches the app-wide compact
+   modal-button standard (padding/font-size) and the standard primary/
+   secondary/destructive color language used throughout the rest of the app. */
+#inbox-att-area #inbox-reply-send-btn,
+#inbox-att-area #inbox-conv-delete-btn,
+#inbox-att-area #inbox-conv-close-btn {
   flex: none;
   width: auto;
-  padding: 0.35rem 1rem;
-  font-size: 0.88rem;
-  font-weight: 700;
+  padding: 0.25rem 0.65rem;
+  font-size: 0.78rem;
   font-family: inherit;
   border-radius: 7px;
   cursor: pointer;
 }
-.inbox-conv-actions #inbox-conv-delete-btn {
+#inbox-att-area #inbox-conv-delete-btn {
   background: #dc2626;
   color: #fff;
   border: none;
 }
-.inbox-conv-actions #inbox-conv-delete-btn:hover { background: #b91c1c; }
-.inbox-conv-actions #inbox-conv-close-btn { margin-left: 0; }
+#inbox-att-area #inbox-conv-delete-btn:hover { background: #b91c1c; }
+#inbox-att-area #inbox-conv-close-btn {
+  background: #374151;
+  color: #9ca3af;
+  border: 1px solid #4b5563;
+}
+#inbox-att-area #inbox-conv-close-btn:hover { background: #4b5563; }
 
 /* ── Attachments ───────────────────────────────────────────────────────────── */
 .att-pick-label { cursor: pointer; }
@@ -361,4 +366,5 @@
 .att-thumb { max-width: 180px; max-height: 130px; border-radius: 4px; object-fit: cover; border: 1px solid #374151; }
 .att-file-link { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.75rem; color: #60a5fa; text-decoration: none; padding: 0.18rem 0.45rem; background: #1f2937; border: 1px solid #374151; border-radius: 4px; }
 .att-file-link:hover { text-decoration: underline; border-color: #4b5563; }
-#inbox-att-area { display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: flex-start; padding: 0.3rem 0 0.2rem; }
+#inbox-att-area { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; padding: 0.3rem 0 0.2rem; }
+#inbox-att-area .att-list { margin-top: 0; min-width: 0; }

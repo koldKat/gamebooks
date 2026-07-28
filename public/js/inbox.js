@@ -1,10 +1,10 @@
 // inbox.js - Inbox thread list, conversation view, and reply UI
 
 import { apiFetch, getUsername } from './state.js?v=11';
-import { t } from './i18n.js?v=17';
-import { showConfirm } from './play.js?v=45';
-import { refreshInboxBadge } from './notif.js?v=23';
-import { escapeHtml, isImageFilename, uploadAttachment, addAttachmentItem } from './util.js?v=17';
+import { t } from './i18n.js?v=18';
+import { showConfirm } from './play.js?v=46';
+import { refreshInboxBadge } from './notif.js?v=24';
+import { escapeHtml, isImageFilename, uploadAttachment, addAttachmentItem } from './util.js?v=18';
 
 let _inboxThreads    = [];
 let _currentThreadId = null;
@@ -176,6 +176,7 @@ export function initInbox(mousedownOnOverlayRef) {
   const _closeInbox = () => document.getElementById('inbox-modal-overlay').classList.remove('active');
   document.getElementById('inbox-close-btn').addEventListener('click', _closeInbox);
   document.getElementById('inbox-conv-close-btn').addEventListener('click', _closeInbox);
+  document.getElementById('inbox-modal-close-x').addEventListener('click', _closeInbox);
   document.getElementById('inbox-modal-overlay').addEventListener('click', e => {
     if (e.target === document.getElementById('inbox-modal-overlay') && mousedownOnOverlayRef() === e.currentTarget) _closeInbox();
   });
