@@ -1,6 +1,6 @@
 /* ── Battle Simulator (Пътят на пъдпъдъка) ───────────────────────────────── */
 
-#battlesim-btn, #sim8-btn, #sim286-btn {
+#battlesim-btn, #sim8-btn, #sim286-btn, #sim198-btn {
   background: rgba(31, 41, 55, 0.88);
   border: 1px solid #374151;
   border-radius: 7px;
@@ -13,14 +13,14 @@
   backdrop-filter: blur(6px);
   box-shadow: 0 2px 8px rgba(0,0,0,0.35);
 }
-#battlesim-btn:hover, #sim8-btn:hover, #sim286-btn:hover { background: #374151; color: #d1d5db; }
+#battlesim-btn:hover, #sim8-btn:hover, #sim286-btn:hover, #sim198-btn:hover { background: #374151; color: #d1d5db; }
 
 /* Modal reuses .inv-overlay/.inv-modal/.inv-modal-hdr/.inv-modal-ftr and the
    .inv-edit-row/.inv-qty-* stepper pattern from inventory.js's item-edit
    popover - only sizing/layout that's genuinely new lives here. */
 .bsim-modal { width: min(720px, 95vw); }
 
-#bsim-close, #s8-close, #sim286-close { margin-left: auto; }
+#bsim-close, #s8-close, #sim286-close, #sim198-close { margin-left: auto; }
 
 .bsim-body {
   display: flex;
@@ -115,6 +115,7 @@
 .bsim-enemy-ac { flex: 1; min-width: 0; }
 
 .bsim-select { height: 22px; cursor: pointer; }
+.bsim-select:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .bsim-ranged-magic-row { display: flex; gap: 0.5rem; }
 .bsim-ranged-magic-row .inv-edit-row { flex: 1; }

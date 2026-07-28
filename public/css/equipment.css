@@ -363,7 +363,8 @@
   margin-top: 0.15rem; background: #374151; border: none; border-radius: 5px;
   color: #d1d5db; font-size: 0.72rem; padding: 4px; cursor: pointer;
 }
-.inv-edit-done:hover { background: #4b5563; color: #f9fafb; }
+.inv-edit-done:hover:not(:disabled) { background: #4b5563; color: #f9fafb; }
+.inv-edit-done:disabled { opacity: 0.4; cursor: not-allowed; }
 
 /* On-screen display line styles */
 .inv-line-qty  { color: #60a5fa; font-size: 0.7rem; }
