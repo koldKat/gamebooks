@@ -3,7 +3,7 @@
 import { state, getToken, isDemoMode, apiFetch, clearToken, clearUsername, isTerminal, parseSecId } from './state.js?v=11';
 import { t } from './i18n.js?v=18';
 import { naturalCompare, naturalCompareByName, foldForSearch, matchesSearch } from './sort.js?v=1';
-import { getCachedBooks, getCachedAllSeries, getCachedStashes, _starLabelHtml, _refreshBooksListOnly, _refreshLibraryUi } from './books.js?v=77';
+import { getCachedBooks, getCachedAllSeries, getCachedStashes, _starLabelHtml, _refreshBooksListOnly, _refreshLibraryUi } from './books.js?v=78';
 import { refreshCoinsDisplay } from './shop.js?v=29';
 import { showAlert, showConfirm } from './play.js?v=47';
 import { escapeHtml, compressImage } from './util.js?v=20';
@@ -488,6 +488,20 @@ let _editStarInitialized   = false;
 let _editStarUpdateFn      = null;
 
 export function openEditBookModal({ bookId, initialName, initialSections, initialIsbn = '', initialIssn = '', initialAsin = '', initialCoverUrl = null, initialPdfPath = null, initialPdfSize = null, initialPages = '', initialAuthors = '', initialDescription = '', initialDiscoverableSections = null, showDiscoverableSections = false, discoverableHint = 0, minSections = 1, initialIsPublic = false, initialSeriesName = '', initialSeriesNumber = '', initialIsContainer = false, initialParentBookId = null, initialBookOrder = null, onSave }) {
+  // Reachable from a book's public detail dialog (covers.js), which can now
+  // stay open on top of the forum instead of closing it - but #edit-book-
+  // modal-overlay's own z-index (2000) sits below the forum's (3000), so it
+  // would render invisibly behind an open forum. Editing a book is a real
+  // "leaving the quick-look" action, same reasoning as navigateToBook.
+  document.getElementById('forum-modal-overlay')?.classList.remove('active');
+  // The public modal itself stays open underneath (Cancel/Save should land
+  // back on it) rather than being closed here, but if it was opened from the
+  // forum its own z-index is temporarily bumped to 3001 to clear the forum -
+  // now that the forum's closed, that override would otherwise still sit
+  // above this modal's 2000. Reset it directly rather than through
+  // closePublicModal(), which would also wipe the dialog's content/state.
+  const pubOverlay = document.getElementById('public-modal-overlay');
+  if (pubOverlay) pubOverlay.style.zIndex = '';
   _editBookId       = bookId;
   _pendingCoverBlob = null;
   _pendingPdfFile   = null;

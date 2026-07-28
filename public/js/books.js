@@ -2,7 +2,7 @@
 import { getToken, isDemoMode, apiFetch, getDemoState, setDemoState } from './state.js?v=11';
 import { foldForSearch, naturalCompare, naturalCompareByName } from './sort.js?v=1';
 import { refreshCoinsDisplay } from './shop.js?v=29';
-import { openCoverActivity, openSeriesActivity, _startLandingCoverRotation, _effectiveLandingCoverSource, loadCovers } from './covers.js?v=52';
+import { openCoverActivity, openSeriesActivity, _startLandingCoverRotation, _effectiveLandingCoverSource, loadCovers } from './covers.js?v=53';
 import { t } from './i18n.js?v=18';
 import { showConfirm, showTwoChoice } from './play.js?v=47';
 import { escapeHtml } from './util.js?v=20';

@@ -24,29 +24,29 @@ import { initNotes, hideNotesUI, loadNotesForBook, setOnXpAwarded as setNotesOnX
 import { initParty, connectPartySSE, disconnectPartySSE, loadPartyInvites, setPartyHooks } from './party.js?v=81';
 import { initAuth, setOnAuthSuccess, showAuthForm, showResetPanel, hasPendingResetToken } from './auth.js?v=23';
 import { initStats, closeStatsModal } from './stats.js?v=42';
-import { setAddBookHooks, initAddBook, _closeAddBook, _closeAddComp, _closeAddSeries } from './add-book.js?v=85';
+import { setAddBookHooks, initAddBook, _closeAddBook, _closeAddComp, _closeAddSeries } from './add-book.js?v=88';
 import {
   setEditBookHooks, initEditBook,
   openEditBookModal, closeEditBookModal, openEditCompModal, openEditSeriesModal,
   _openEditStash, _closeEditStash, _closeAddStash,
   _adminPdfHref,
   maxSectionInUse,
-} from './edit-book.js?v=84';
+} from './edit-book.js?v=87';
 import {
   setPrefsHooks, savePrefs, syncPrefs,
   _setLandingPanelCollapsed, _toggleAllLandingPanelsCollapsed,
   _setPlayPanelCollapsed, _toggleAllPlayPanelsCollapsed,
-} from './prefs.js?v=76';
+} from './prefs.js?v=77';
 import { initBattleSim, setBattleSimVisible, renderBattleSim } from './battlesim829.js?v=101';
 import { initBattleSim8, setSim8Visible, renderSim8 } from './battlesim8.js?v=73';
 import { initSim286, setSim286Visible, renderSim286 } from './battlesim286.js?v=32';
 import { initSim198, setSim198Visible, renderSim198 } from './battlesim198.js?v=13';
 import { initShop, updateCoinsDisplay, refreshCoinsDisplay, setShopHooks } from './shop.js?v=29';
 import { initProfile, updateAvatarUI, renderBooksXpSummary, setProfileHooks } from './profile.js?v=45';
-import { setPublicProfileHooks, closePublicModal, openPublicProfile, openPublicSeriesRun } from './public-profile.js?v=34';
+import { setPublicProfileHooks, closePublicModal, openPublicProfile, openPublicSeriesRun } from './public-profile.js?v=35';
 import { setLiveTabHooks, _ensureLiveTabControllerStarted, _connectUserBadgeSSE, _disconnectUserBadgeSSE, _connectAppXpSSE, _disconnectAppXpSSE } from './livetab.js?v=34';
 import { setAppXpHooks, refreshAppXp, handleAppXpEvent } from './app-xp.js?v=31';
-import { setCoversHooks, loadCovers, openCoverActivity, openSeriesActivity, _showCachedCoversPanel, _refreshPublicCatalogIfVisible, _isLandingBooksViewVisible, _updateLandingBgDragUi, setCoversPrefsState, _toggleCoverTooltipSettings, initCoversPanel, resetFeedDisplayPrefsForLogout } from './covers.js?v=52';
+import { setCoversHooks, loadCovers, openCoverActivity, openSeriesActivity, _showCachedCoversPanel, _refreshPublicCatalogIfVisible, _isLandingBooksViewVisible, _updateLandingBgDragUi, setCoversPrefsState, _toggleCoverTooltipSettings, initCoversPanel, resetFeedDisplayPrefsForLogout } from './covers.js?v=53';
 import {
   setBooksHooks, initBooksPanel, renderBooksList,
   getCachedBooks, getCachedAllSeries, getCachedStashes,
@@ -54,14 +54,14 @@ import {
   setBooksDataFresh, setBooksRevealedAt,
   setCurrentUserId,
   _refreshBooksListOnly, _refreshLibraryUi, _starsHtml, _starLabelHtml, _flashRatingGate,
-} from './books.js?v=77';
+} from './books.js?v=78';
 import {
   setOpenWorldHooks, setupOpenWorldForBook,
   _syncSeriesRuns, _computeCrossBookReachability, _focusNodeAfterLoad,
   clearOpenWorldState, doJumpCrossBook,
   getOwSrcBookId, getOwSrcSection, getOwCrossBookRoute,
-} from './open-world.js?v=77';
-import { setFeedHooks, loadFeed, refreshDayCoverFlows } from './feed.js?v=70';
+} from './open-world.js?v=78';
+import { setFeedHooks, loadFeed, refreshDayCoverFlows } from './feed.js?v=71';
 import {
   setNotifHooks, _scheduleLiveUiRefresh,
   _closeNotifDropdown, _openNotifDropdown, isNotifDropdownOpen,
@@ -80,7 +80,7 @@ import {
 } from './bg.js?v=9';
 import { initTips } from './tips.js?v=14';
 import { initInbox } from './inbox.js?v=55';
-import { initDice } from './dice.js?v=71';
+import { initDice } from './dice.js?v=72';
 import { initTooltip } from './tooltip.js?v=1';
 import { exportAll, exportBook } from './export.js?v=52';
 import { initFeedback } from './feedback.js?v=22';
@@ -138,6 +138,13 @@ async function _updateDemoBtnVisibility() {
 
 // Navigate to a book by ID, fetching metadata from cache or server.
 async function navigateToBook(bookId) {
+  // A book's detail dialog can now stay open on top of the forum (see the
+  // gamebooks-open-book handler below) instead of closing it - but actually
+  // navigating into the book's play view is a real navigation away from the
+  // dialog/forum entirely, not just "show a modal on top." If the forum is
+  // still open (z-index 3000) it would otherwise sit over the newly-shown
+  // play screen (no special z-index of its own), leaving it looking stuck.
+  document.getElementById('forum-modal-overlay')?.classList.remove('active');
   _ensureLiveTabControllerStarted();
   const numId = /^\d+$/.test(String(bookId)) ? +bookId : bookId;
   let book = getCachedBooks()?.find(b => b.id === numId || b.id === bookId);
@@ -335,6 +342,13 @@ function _updateUsernameTooltip() {
 
 async function showBooks() {
   if (_isViewLocked('book')) return;
+  // Reachable from deep inside the public book/series detail dialog (e.g.
+  // "Add series to library"), which can now stay open on top of the forum
+  // instead of closing it - a freshly-shown books screen should never have
+  // an unrelated forum modal still sitting over it regardless of how this
+  // got called, so close it unconditionally here rather than patching every
+  // individual call site that might reach this with the forum still open.
+  document.getElementById('forum-modal-overlay')?.classList.remove('active');
   _revealLanding();
   _ensureLiveTabControllerStarted();
   const _prefsReady = syncPrefs();
@@ -792,13 +806,21 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
   window.addEventListener('message', async e => {
     if (e.origin !== location.origin) return;
-    if (e.data?.type !== 'gamebooks-open-app' && e.data?.type !== 'gamebooks-open-book') return;
+    if (e.data?.type === 'gamebooks-open-book' && e.data.bookId) {
+      // Keep the forum open underneath instead of closing it - closing would
+      // mean reopening resets the iframe to /forum home (openForumModal's
+      // default), losing whatever thread the link was clicked from. #pub-
+      // overlay normally sits at z-index 300, well below the forum's 3000,
+      // so it'd render invisibly behind it - bump it above the forum just
+      // for this case; closePublicModal() resets it back to the CSS default.
+      document.getElementById('public-modal-overlay').style.zIndex = '3001';
+      await openCoverActivity(+e.data.bookId, '');
+      return;
+    }
+    if (e.data?.type !== 'gamebooks-open-app') return;
     closeForumModal();
     if (getToken() && document.getElementById('books-screen').style.display === 'none') {
       await showBooks();
-    }
-    if (e.data.type === 'gamebooks-open-book' && e.data.bookId) {
-      await openCoverActivity(+e.data.bookId, '');
     }
   });
 
