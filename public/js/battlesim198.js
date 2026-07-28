@@ -475,16 +475,24 @@ function _setupEnemyAutocomplete() {
   let matches   = [];
   let activeIdx = -1;
 
+  function closeDropdown() {
+    dropdown.classList.remove('open');
+    input.setAttribute('aria-expanded', 'false');
+    input.removeAttribute('aria-activedescendant');
+  }
+
   function render(q) {
     const list = _enemyList || [];
     const ql = q.trim().toLowerCase();
     matches = ql ? list.filter(e => e.name.toLowerCase().includes(ql)) : list;
-    if (!matches.length) { dropdown.classList.remove('open'); return; }
+    if (!matches.length) { closeDropdown(); return; }
     dropdown.innerHTML = matches.map((e, i) =>
-      `<li data-idx="${i}">${escapeHtml(e.name)}<span class="ac-sub">SKILL:${e.attack ?? '?'} STAMINA:${e.hp ?? '?'}</span></li>`
+      `<li role="option" id="sim198-enemy-name-opt-${i}" data-idx="${i}">${escapeHtml(e.name)}<span class="ac-sub">SKILL:${e.attack ?? '?'} STAMINA:${e.hp ?? '?'}</span></li>`
     ).join('');
     activeIdx = -1;
     dropdown.classList.add('open');
+    input.setAttribute('aria-expanded', 'true');
+    input.removeAttribute('aria-activedescendant');
   }
 
   function select(enemy) {
@@ -496,7 +504,7 @@ function _setupEnemyAutocomplete() {
     if (enemy.hp != null)     { d.enemy.stamina = enemy.hp; d.enemy.staminaMax = enemy.hp; }
     d.roundsThisBattle = 0;
     d.pendingLuck = null;
-    dropdown.classList.remove('open');
+    closeDropdown();
     saveState();
     _renderAll();
   }
@@ -510,16 +518,18 @@ function _setupEnemyAutocomplete() {
 
   input.addEventListener('focus', async () => { await _loadEnemyList(); render(input.value); });
   input.addEventListener('input', async () => { await _loadEnemyList(); render(input.value); });
-  input.addEventListener('blur', () => setTimeout(() => dropdown.classList.remove('open'), 150));
+  input.addEventListener('blur', () => setTimeout(closeDropdown, 150));
   input.addEventListener('keydown', e => {
     const items = dropdown.querySelectorAll('li');
     if (!items.length) return;
     if (e.key === 'ArrowDown') { e.preventDefault(); activeIdx = Math.min(activeIdx + 1, items.length - 1); }
     else if (e.key === 'ArrowUp') { e.preventDefault(); activeIdx = Math.max(activeIdx - 1, 0); }
     else if (e.key === 'Enter' && activeIdx >= 0) { e.preventDefault(); select(matches[activeIdx]); return; }
-    else if (e.key === 'Escape') { dropdown.classList.remove('open'); return; }
+    else if (e.key === 'Escape') { closeDropdown(); return; }
     else return;
-    items.forEach((li, i) => li.classList.toggle('ac-active', i === activeIdx));
+    items.forEach((li, i) => { li.classList.toggle('ac-active', i === activeIdx); li.setAttribute('aria-selected', String(i === activeIdx)); });
+    if (activeIdx >= 0) input.setAttribute('aria-activedescendant', items[activeIdx].id);
+    else input.removeAttribute('aria-activedescendant');
     items[activeIdx]?.scrollIntoView({ block: 'nearest' });
   });
 }
@@ -582,8 +592,8 @@ export function initSim198() {
             <div class="inv-edit-row">
               <span class="inv-edit-label bsim-stat-label">Name</span>
               <div class="autocomplete-wrap bsim-enemy-ac">
-                <input id="sim198-enemy-name" class="inv-edit-input" type="text" autocomplete="off">
-                <ul id="sim198-enemy-name-dropdown" class="autocomplete-dropdown"></ul>
+                <input id="sim198-enemy-name" class="inv-edit-input" type="text" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" aria-controls="sim198-enemy-name-dropdown">
+                <ul id="sim198-enemy-name-dropdown" class="autocomplete-dropdown" role="listbox"></ul>
               </div>
             </div>
             ${_numField('SKILL', 'sim198-enemy-skill')}

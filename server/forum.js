@@ -23,6 +23,13 @@ const FORUM_COLORS = {
   red: '#f87171', orange: '#fb923c', amber: '#fbbf24', green: '#4ade80',
   teal: '#2dd4bf', blue: '#60a5fa', purple: '#a78bfa', pink: '#f472b6',
 };
+// [Label](/book/123) is a relative in-app link, not a hardcoded absolute
+// domain (this app is served from several domains - koldkat.net, pathmap.net,
+// bookplay.net, etc. - a baked-in domain would be wrong on the others).
+// Rendered without target=_blank and intercepted client-side (see the
+// data-book-id handling further down) to postMessage the parent into opening
+// the real in-app book dialog instead of navigating the forum iframe away.
+// Genuine external https:// links still open in a new tab, same as before.
 function renderBody(s) {
   return esc(s)
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
@@ -31,7 +38,10 @@ function renderBody(s) {
     .replace(/~~(.+?)~~/g,     '<s>$1</s>')
     .replace(/\{color:(red|orange|amber|green|teal|blue|purple|pink)\}(.+?)\{\/color\}/g,
       (_, color, text) => `<span style="color:${FORUM_COLORS[color]}">${text}</span>`)
-    .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+|\/book\/\d+)\)/g, (_, label, target) =>
+      target.startsWith('/')
+        ? `<a href="${target}" data-book-id="${target.slice(6)}">${label}</a>`
+        : `<a href="${target}" target="_blank" rel="noopener noreferrer">${label}</a>`)
     .replace(/\n/g, '<br>');
 }
 
@@ -73,6 +83,7 @@ body {
 }
 a { color: #60a5fa; text-decoration: none; }
 a:hover { text-decoration: underline; }
+a:visited { color: #60a5fa; }
 .nav-btn {
   background: none; border: none; padding: 0; margin: 0;
   color: #60a5fa; font-family: inherit; font-size: inherit;
@@ -394,6 +405,18 @@ ${bodyHtml}
     var link = ev.target.closest('[data-open-app], a[href="/"]');
     if (!link) return;
     openAppInParent(ev);
+  });
+  document.addEventListener('click', function(ev) {
+    var link = ev.target.closest('a[data-book-id]');
+    if (!link) return;
+    var bookId = Number(link.dataset.bookId);
+    if (!bookId) return;
+    if (window.parent && window.parent !== window) {
+      ev.preventDefault();
+      window.parent.postMessage({ type: 'gamebooks-open-book', bookId: bookId }, window.location.origin);
+    }
+    // Not embedded in the app (forum opened directly) - let the real href
+    // navigate normally, same graceful fallback as any other in-app link.
   });
   window.__gamebooksOpenApp = openAppInParent;
 })();
@@ -773,7 +796,11 @@ function renderForumThread(thread, posts) {
       .replace(/~~(.+?)~~/g,     '<s>$1</s>')
       .replace(/\\{color:(red|orange|amber|green|teal|blue|purple|pink)\\}(.+?)\\{\\/color\\}/g,
         function(_, color, text) { return '<span style="color:' + FORUM_COLORS_CLIENT[color] + '">' + text + '</span>'; })
-      .replace(/\\[([^\\]]+)\\]\\((https?:\\/\\/[^)]+)\\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+      .replace(/\\[([^\\]]+)\\]\\((https?:\\/\\/[^)]+|\\/book\\/\\d+)\\)/g, function(_, label, target) {
+        return target.charAt(0) === '/'
+          ? '<a href="' + target + '" data-book-id="' + target.slice(6) + '">' + label + '</a>'
+          : '<a href="' + target + '" target="_blank" rel="noopener noreferrer">' + label + '</a>';
+      });
   }
 
   (async function() {

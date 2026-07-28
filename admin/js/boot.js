@@ -9,7 +9,7 @@ import { loadTips } from './tips.js?v=1';
 import { loadAdminAnthologies } from './anthologies.js?v=1';
 import { loadAdminSeries } from './series.js?v=1';
 import { loadFeedback } from './feedback.js?v=1';
-import { loadAnnouncements } from './announcements.js?v=2';
+import { loadAnnouncements } from './announcements.js?v=4';
 import { loadInventory } from './inventory.js?v=1';
 import { loadTools, loadAll, loadLive, loadStats, loadAdminGc, loadAppSize } from './dashboard.js?v=1';
 // users-books.js has no exports this file calls directly, but its top-level

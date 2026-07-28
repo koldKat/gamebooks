@@ -300,6 +300,9 @@ body.no-feed-day-covers:not(.no-feed-glass-cards) .feed-day-card { background-co
   line-height: 1.45;
   text-align: justify;
 }
+.feed-ann-body a, .feed-pinned-body a { color: #60a5fa; text-decoration: none; }
+.feed-ann-body a:hover, .feed-pinned-body a:hover { text-decoration: underline; }
+.feed-ann-body a:visited, .feed-pinned-body a:visited { color: #60a5fa; }
 
 .feed-pinned-card {
   border: 1.5px solid #f59e0b;

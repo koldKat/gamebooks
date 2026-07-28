@@ -30,7 +30,11 @@ function annFormatBody(s) {
     .replace(/~~(.+?)~~/g,     '<s>$1</s>')
     .replace(/\{color:(red|orange|amber|green|teal|blue|purple|pink)\}(.+?)\{\/color\}/g,
       (_, color, text) => `<span style="color:${ANN_COLORS[color]}">${text}</span>`)
-    .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+    // Unlike the player-facing feed.js/forum.js renderers, this preview has
+    // nowhere "in-app" to open a /book/123 link into (it's the admin panel,
+    // a different app) - always open in a new tab so clicking a preview
+    // link never navigates the admin away from what they're doing.
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+|\/book\/\d+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
 }
 
 function annFmt(ts) {

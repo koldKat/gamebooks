@@ -494,8 +494,8 @@ function _enemyNameField() {
     <div class="inv-edit-row">
       <span class="inv-edit-label bsim-stat-label">Име на врага</span>
       <div class="autocomplete-wrap bsim-enemy-ac">
-        <input id="bsim-enemy-name" class="inv-edit-input" type="text" autocomplete="off">
-        <ul id="bsim-enemy-name-dropdown" class="autocomplete-dropdown"></ul>
+        <input id="bsim-enemy-name" class="inv-edit-input" type="text" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" aria-controls="bsim-enemy-name-dropdown">
+        <ul id="bsim-enemy-name-dropdown" class="autocomplete-dropdown" role="listbox"></ul>
       </div>
     </div>`;
 }
@@ -525,16 +525,24 @@ function _setupEnemyAutocomplete() {
   let matches   = [];
   let activeIdx = -1;
 
+  function closeDropdown() {
+    dropdown.classList.remove('open');
+    input.setAttribute('aria-expanded', 'false');
+    input.removeAttribute('aria-activedescendant');
+  }
+
   function render(q) {
     const list = _enemyList || [];
     const ql = q.trim().toLowerCase();
     matches = ql ? list.filter(e => e.name.toLowerCase().includes(ql)) : list;
-    if (!matches.length) { dropdown.classList.remove('open'); return; }
+    if (!matches.length) { closeDropdown(); return; }
     dropdown.innerHTML = matches.map((e, i) =>
-      `<li data-idx="${i}">${escapeHtml(e.name)}<span class="ac-sub">${escapeHtml(_enemyStatLabel(e))}</span></li>`
+      `<li role="option" id="bsim-enemy-name-opt-${i}" data-idx="${i}">${escapeHtml(e.name)}<span class="ac-sub">${escapeHtml(_enemyStatLabel(e))}</span></li>`
     ).join('');
     activeIdx = -1;
     dropdown.classList.add('open');
+    input.setAttribute('aria-expanded', 'true');
+    input.removeAttribute('aria-activedescendant');
   }
 
   function select(enemy) {
@@ -546,7 +554,7 @@ function _setupEnemyAutocomplete() {
     if (enemy.defense != null) d.enemy.d = enemy.defense;
     if (enemy.hp != null) { d.enemy.hp = enemy.hp; d.enemy.hpMax = enemy.hp; }
     if (enemy.pb != null) d.enemy.pb = enemy.pb;
-    dropdown.classList.remove('open');
+    closeDropdown();
     saveState();
     _renderInputs();
   }
@@ -566,16 +574,18 @@ function _setupEnemyAutocomplete() {
     await _loadEnemyList();
     render(input.value);
   });
-  input.addEventListener('blur', () => setTimeout(() => dropdown.classList.remove('open'), 150));
+  input.addEventListener('blur', () => setTimeout(closeDropdown, 150));
   input.addEventListener('keydown', e => {
     const items = dropdown.querySelectorAll('li');
     if (!items.length) return;
     if (e.key === 'ArrowDown') { e.preventDefault(); activeIdx = Math.min(activeIdx + 1, items.length - 1); }
     else if (e.key === 'ArrowUp') { e.preventDefault(); activeIdx = Math.max(activeIdx - 1, 0); }
     else if (e.key === 'Enter' && activeIdx >= 0) { e.preventDefault(); select(matches[activeIdx]); return; }
-    else if (e.key === 'Escape') { dropdown.classList.remove('open'); return; }
+    else if (e.key === 'Escape') { closeDropdown(); return; }
     else return;
-    items.forEach((li, i) => li.classList.toggle('ac-active', i === activeIdx));
+    items.forEach((li, i) => { li.classList.toggle('ac-active', i === activeIdx); li.setAttribute('aria-selected', String(i === activeIdx)); });
+    if (activeIdx >= 0) input.setAttribute('aria-activedescendant', items[activeIdx].id);
+    else input.removeAttribute('aria-activedescendant');
     items[activeIdx]?.scrollIntoView({ block: 'nearest' });
   });
 }

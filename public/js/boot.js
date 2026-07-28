@@ -37,10 +37,10 @@ import {
   _setLandingPanelCollapsed, _toggleAllLandingPanelsCollapsed,
   _setPlayPanelCollapsed, _toggleAllPlayPanelsCollapsed,
 } from './prefs.js?v=76';
-import { initBattleSim, setBattleSimVisible, renderBattleSim } from './battlesim829.js?v=98';
-import { initBattleSim8, setSim8Visible, renderSim8 } from './battlesim8.js?v=70';
-import { initSim286, setSim286Visible, renderSim286 } from './battlesim286.js?v=29';
-import { initSim198, setSim198Visible, renderSim198 } from './battlesim198.js?v=10';
+import { initBattleSim, setBattleSimVisible, renderBattleSim } from './battlesim829.js?v=101';
+import { initBattleSim8, setSim8Visible, renderSim8 } from './battlesim8.js?v=73';
+import { initSim286, setSim286Visible, renderSim286 } from './battlesim286.js?v=32';
+import { initSim198, setSim198Visible, renderSim198 } from './battlesim198.js?v=13';
 import { initShop, updateCoinsDisplay, refreshCoinsDisplay, setShopHooks } from './shop.js?v=29';
 import { initProfile, updateAvatarUI, renderBooksXpSummary, setProfileHooks } from './profile.js?v=45';
 import { setPublicProfileHooks, closePublicModal, openPublicProfile, openPublicSeriesRun } from './public-profile.js?v=34';
@@ -61,7 +61,7 @@ import {
   clearOpenWorldState, doJumpCrossBook,
   getOwSrcBookId, getOwSrcSection, getOwCrossBookRoute,
 } from './open-world.js?v=77';
-import { setFeedHooks, loadFeed, refreshDayCoverFlows } from './feed.js?v=68';
+import { setFeedHooks, loadFeed, refreshDayCoverFlows } from './feed.js?v=70';
 import {
   setNotifHooks, _scheduleLiveUiRefresh,
   _closeNotifDropdown, _openNotifDropdown, isNotifDropdownOpen,
@@ -792,10 +792,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
   window.addEventListener('message', async e => {
     if (e.origin !== location.origin) return;
-    if (e.data?.type !== 'gamebooks-open-app') return;
+    if (e.data?.type !== 'gamebooks-open-app' && e.data?.type !== 'gamebooks-open-book') return;
     closeForumModal();
     if (getToken() && document.getElementById('books-screen').style.display === 'none') {
       await showBooks();
+    }
+    if (e.data.type === 'gamebooks-open-book' && e.data.bookId) {
+      await openCoverActivity(+e.data.bookId, '');
     }
   });
 
