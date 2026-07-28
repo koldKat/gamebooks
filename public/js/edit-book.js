@@ -701,6 +701,7 @@ export function openEditBookModal({ bookId, initialName, initialSections, initia
         });
         const coverData = await coverRes.json();
         if (coverData.coverUrl) _hooks.setCurrentBookCover?.(coverData.coverUrl);
+        _hooks.scheduleRewardProfileRefresh?.();
       } catch (_) {
         errEl.textContent = t('editbook.cover_upload_failed');
         return;
@@ -711,6 +712,11 @@ export function openEditBookModal({ bookId, initialName, initialSections, initia
       _setButtonsDisabled(['edit-book-save', 'edit-book-cancel'], true);
       try {
         await _uploadPdfWithProgress(`/api/books/${_editBookId}/pdf`, _pendingPdfFile, 'edit-book');
+        // A book's first-ever PDF awards XP server-side, but nothing else in
+        // this flow would ever prompt the client to notice - the XP bar was
+        // only catching up whenever some unrelated refresh (SSE badge event,
+        // periodic poll) happened to fire next, which felt inconsistent/silent.
+        _hooks.scheduleRewardProfileRefresh?.();
       } catch (e) {
         errEl.textContent = e?.message || t('editbook.pdf_upload_failed');
         _setButtonsDisabled(['edit-book-save', 'edit-book-cancel'], false);
@@ -840,12 +846,14 @@ export function openEditCompModal({ bookId, initialName, initialIsbn = '', initi
       try {
         const r = await apiFetch(`/api/books/${_eccBookId}/cover`, { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: _eccCover });
         if (!r.ok) { errEl.textContent = t('editbook.cover_upload_failed'); return; }
+        _hooks.scheduleRewardProfileRefresh?.();
       } catch (_) { errEl.textContent = t('editbook.cover_upload_failed'); return; }
     }
     if (_eccPdf && _eccBookId) {
       _setButtonsDisabled(['ecc-save', 'ecc-cancel'], true);
       try {
         await _uploadPdfWithProgress(`/api/books/${_eccBookId}/pdf`, _eccPdf, 'ecc');
+        _hooks.scheduleRewardProfileRefresh?.();
       } catch (e) { errEl.textContent = e?.message || t('editbook.pdf_upload_failed'); return; }
       finally { _setButtonsDisabled(['ecc-save', 'ecc-cancel'], false); }
     }
