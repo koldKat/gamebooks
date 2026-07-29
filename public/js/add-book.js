@@ -1,21 +1,21 @@
 // add-book.js - Add Book, Add Anthology, and Add Series modals
 
-import { apiFetch } from './state.js?v=11';
-import { t } from './i18n.js?v=18';
-import { getCachedAllSeries, _refreshLibraryUi, setInvalidateAutocompleteCaches } from './books.js?v=78';
+import { apiFetch, isDemoMode } from './state.js?v=11';
+import { t } from './i18n.js?v=19';
+import { getCachedAllSeries, _refreshLibraryUi, setInvalidateAutocompleteCaches } from './books.js?v=79';
 import { naturalCompare, matchesSearch } from './sort.js?v=1';
-import { showAlert } from './play.js?v=47';
+import { showAlert } from './play.js?v=48';
 import {
   _setModalUploadProgress, _setButtonsDisabled, _uploadPdfWithProgress,
   _acceptPdfSelection, _setPdfInlineLabel, formatFileSize,
   _populateSeriesSelect, _populateParentBookSelect,
   validateIsbn, validateIssn, validateAsin,
-} from './edit-book.js?v=87';
+} from './edit-book.js?v=90';
 import {
   invalidateAutocompleteCaches, _loadAutocompleteBooks, _loadSeriesAutocomplete,
   _setModalCover, _setupNameAutocomplete, _setupPlainAutocomplete, _setupAuthorsAutocomplete,
-} from './autocomplete.js?v=70';
-import { escapeHtml, compressImage } from './util.js?v=20';
+} from './autocomplete.js?v=71';
+import { escapeHtml, compressImage } from './util.js?v=21';
 
 let _hooks = {};
 export function setAddBookHooks(h) { _hooks = h || {}; }
@@ -150,6 +150,11 @@ export function openAddSeries() {
   _csrDropdown.classList.remove('open');
   document.getElementById('add-series-overlay').classList.add('active');
   _csrInput.focus();
+  // Demo mode has no real account/token - this authenticated call would
+  // 401, and apiFetch's 401 handler clears the (already-absent) token and
+  // shows the login screen behind this modal (see the matching guard in
+  // _populateSeriesSelect, edit-book.js, for the full explanation).
+  if (isDemoMode) return;
   apiFetch('/api/series/autocomplete').then(r => r.json()).then(list => {
     _csrAllSeries = [...list].sort((a, b) => naturalCompare(a.name, b.name));
     if (_csrInput.value.trim()) _csrRenderDropdown(_csrInput.value.trim());
@@ -247,6 +252,10 @@ export function initAddBook(mousedownOnOverlayRef) {
   document.getElementById('cb-save').addEventListener('click', async () => {
     const errEl = document.getElementById('cb-error');
     errEl.textContent = '';
+    // Demo mode has no real account - any of the calls below would 401 and
+    // silently log the demo out (see the matching guards on dialog-open,
+    // above), so block it here too rather than let Save do the same thing.
+    if (isDemoMode) { errEl.textContent = t('addbook.demo_not_supported'); return; }
     const selectedId = _cbAc.getSelectedId();
     if (_cbAc.isSelectedOwned()) { errEl.textContent = t('addbook.book_already_in_library'); return; }
     if (selectedId) {
@@ -329,6 +338,7 @@ export function initAddBook(mousedownOnOverlayRef) {
   document.getElementById('cc-save').addEventListener('click', async () => {
     const errEl = document.getElementById('cc-error');
     errEl.textContent = '';
+    if (isDemoMode) { errEl.textContent = t('addbook.demo_not_supported'); return; }
     const selectedId = _ccAc.getSelectedId();
     if (_ccAc.isSelectedOwned()) { errEl.textContent = t('addbook.anthology_already_in_library'); return; }
     if (selectedId) {
@@ -412,6 +422,7 @@ export function initAddBook(mousedownOnOverlayRef) {
     const name  = _csrInput.value.trim();
     const errEl = document.getElementById('csr-error');
     errEl.textContent = '';
+    if (isDemoMode) { errEl.textContent = t('addbook.demo_not_supported'); return; }
     if (!name) { errEl.textContent = t('err.name_empty'); return; }
     try {
       if (_csrSelectedOwned) { errEl.textContent = t('addbook.series_already_in_library'); return; }

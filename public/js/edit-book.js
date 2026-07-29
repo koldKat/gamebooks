@@ -1,12 +1,12 @@
 // edit-book.js - Edit/add book, anthology, series, and stash modals
 
 import { state, getToken, isDemoMode, apiFetch, clearToken, clearUsername, isTerminal, parseSecId } from './state.js?v=11';
-import { t } from './i18n.js?v=18';
+import { t } from './i18n.js?v=19';
 import { naturalCompare, naturalCompareByName, foldForSearch, matchesSearch } from './sort.js?v=1';
-import { getCachedBooks, getCachedAllSeries, getCachedStashes, _starLabelHtml, _refreshBooksListOnly, _refreshLibraryUi } from './books.js?v=78';
-import { refreshCoinsDisplay } from './shop.js?v=29';
-import { showAlert, showConfirm } from './play.js?v=47';
-import { escapeHtml, compressImage } from './util.js?v=20';
+import { getCachedBooks, getCachedAllSeries, getCachedStashes, _starLabelHtml, _refreshBooksListOnly, _refreshLibraryUi } from './books.js?v=79';
+import { refreshCoinsDisplay } from './shop.js?v=30';
+import { showAlert, showConfirm } from './play.js?v=48';
+import { escapeHtml, compressImage } from './util.js?v=21';
 
 let _hooks = {};
 export function setEditBookHooks(h) { _hooks = h || {}; }
@@ -165,6 +165,14 @@ export function _populateSeriesSelect(selectId, selectedName) {
   const sel = document.getElementById(selectId);
   if (!sel) return;
   sel.innerHTML = `<option value="">${t('editbook.none')}</option>`;
+  // Demo mode has no real account/token, so this authenticated call always
+  // 401s - apiFetch's 401 handler clears the (already-absent) token and
+  // fires 'auth-expired', which shows the login screen behind whichever
+  // modal called this (Create Book/Anthology/Series all populate this
+  // select on open). The demo user never sees it happen since it's hidden
+  // behind the modal, only noticing once they close it. Nothing useful to
+  // fetch here anyway - the demo book isn't part of any real series.
+  if (isDemoMode) return;
   apiFetch('/api/series').then(async r => {
     if (!r.ok) return;
     const list = (await r.json()).sort((a, b) => naturalCompare(a.name, b.name));
@@ -618,6 +626,12 @@ export function openEditBookModal({ bookId, initialName, initialSections, initia
         _editStarUpdateFn(+star.dataset.pos - (left ? 0.5 : 0));
       });
       star.addEventListener('click', async e => {
+        // Demo mode has no real account to attach a rating to - this
+        // widget's whole point is rating books you don't own, which
+        // doesn't apply to the fake demo book, and the PATCH below would
+        // 401 and silently log the demo out like everywhere else on this
+        // page (see the fetch below, and the Create-dialog guards).
+        if (isDemoMode) return;
         const left      = e.offsetX < star.offsetWidth / 2;
         const newRating = +star.dataset.pos - (left ? 0.5 : 0);
         const toSave    = newRating === _editStarCurrentRating ? null : newRating;
@@ -650,17 +664,24 @@ export function openEditBookModal({ bookId, initialName, initialSections, initia
     _esw.addEventListener('mouseleave', () => _editStarUpdateFn(null));
   }
 
-  apiFetch(`/api/books/${bookId}/rating`).then(async r => {
-    if (_editStarBookId !== bookId) return;
-    if (r.ok) {
-      const d = await r.json();
-      _editStarCurrentRating = d.rating ?? null;
-      _editStarAvgRating     = d.avgRating ?? null;
-      _editStarVoteCount     = d.voteCount ?? 0;
-      _esw.dataset.userRating = _editStarCurrentRating ?? '';
-    }
+  // Same isDemoMode reasoning as the star click handler above - this fetch
+  // fires unconditionally every time the modal opens, so a demo book (fake
+  // string id like "demo_1") would 401 the moment Edit is clicked on it.
+  if (isDemoMode) {
     _editStarUpdateFn(null);
-  }).catch(() => { if (_editStarBookId === bookId) _editStarUpdateFn(null); });
+  } else {
+    apiFetch(`/api/books/${bookId}/rating`).then(async r => {
+      if (_editStarBookId !== bookId) return;
+      if (r.ok) {
+        const d = await r.json();
+        _editStarCurrentRating = d.rating ?? null;
+        _editStarAvgRating     = d.avgRating ?? null;
+        _editStarVoteCount     = d.voteCount ?? 0;
+        _esw.dataset.userRating = _editStarCurrentRating ?? '';
+      }
+      _editStarUpdateFn(null);
+    }).catch(() => { if (_editStarBookId === bookId) _editStarUpdateFn(null); });
+  }
 
   // Clone buttons to drop previous listeners
   ['edit-book-save', 'edit-book-cancel', 'edit-book-cover-btn'].forEach(id => {
@@ -691,6 +712,10 @@ export function openEditBookModal({ bookId, initialName, initialSections, initia
     const idHint   = document.getElementById('edit-book-isbn-hint');
     errEl.textContent = ''; idHint.textContent = '';
 
+    // Same reasoning as the Create-dialog guards - the demo's own fake book
+    // (id like "demo_1") can reach this Edit modal too, and saving would
+    // 401 against a real PATCH /api/books/:id call.
+    if (isDemoMode) { errEl.textContent = t('addbook.demo_not_supported'); return; }
     if (!name) { errEl.textContent = t('err.name_empty'); return; }
     if (!(sections >= 1)) { errEl.textContent = t('err.sections_invalid'); return; }
     if (sections < minSections) { errEl.textContent = t('err.sections_min', { min: minSections }); return; }
