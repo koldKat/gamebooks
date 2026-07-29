@@ -528,6 +528,7 @@ const translations = {
     'addbook.add_to_library': 'Add to library',
     'addbook.create': 'Create',
     'addbook.book_already_in_library': 'This book is already in your library.',
+    'addbook.demo_not_supported': "Creating books isn't available in demo mode.",
     'addbook.add_book_failed': 'Failed to add book.',
     'addbook.anthology_already_in_library': 'This anthology is already in your library.',
     'addbook.add_anthology_failed': 'Failed to add anthology.',
