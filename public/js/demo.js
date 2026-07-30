@@ -2,8 +2,8 @@
 
 import { setDemoMode, setDemoState, getDemoState, clearDemoStore, parseSecId, getToken, setCurrentUserLevel } from './state.js?v=11';
 import { destroyNetwork } from './graph.js?v=61';
-import { showAlert } from './play.js?v=48';
-import { fetchPublic } from './util.js?v=21';
+import { showAlert } from './play.js?v=49';
+import { fetchPublic } from './util.js?v=22';
 import { t } from './i18n.js?v=19';
 
 let _hooks = {};

@@ -1,11 +1,11 @@
 // books.js - Books list rendering, caching, search/filter, expand prefs, cover queue
 import { getToken, isDemoMode, apiFetch, getDemoState, setDemoState } from './state.js?v=11';
 import { foldForSearch, naturalCompare, naturalCompareByName } from './sort.js?v=1';
-import { refreshCoinsDisplay } from './shop.js?v=30';
-import { openCoverActivity, openSeriesActivity, _startLandingCoverRotation, _effectiveLandingCoverSource, loadCovers } from './covers.js?v=54';
+import { refreshCoinsDisplay } from './shop.js?v=31';
+import { openCoverActivity, openSeriesActivity, _startLandingCoverRotation, _resetLandingCoverQueue, _effectiveLandingCoverSource, loadCovers } from './covers.js?v=64';
 import { t } from './i18n.js?v=19';
-import { showConfirm, showTwoChoice } from './play.js?v=48';
-import { escapeHtml } from './util.js?v=21';
+import { showConfirm, showTwoChoice } from './play.js?v=49';
+import { escapeHtml } from './util.js?v=22';
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────
 let _hooks = {};
@@ -656,7 +656,7 @@ export function renderBooksList(books, allSeries = [], stashes = []) {
   try { localStorage.setItem(_BOOKS_LS_KEY,   JSON.stringify(books));           } catch (_) {}
   try { localStorage.setItem(_SERIES_LS_KEY,  JSON.stringify(allSeries));       } catch (_) {}
   try { localStorage.setItem(_STASHES_LS_KEY, JSON.stringify(_cachedStashes));  } catch (_) {}
-  if (_effectiveLandingCoverSource() === 'mine') _startLandingCoverRotation({ reset: true });
+  if (_effectiveLandingCoverSource() === 'mine') { _resetLandingCoverQueue(); _startLandingCoverRotation(); }
 
   const isAdmin = _hooks.getIsAdmin?.() ?? false;
   const list = document.getElementById('books-list');

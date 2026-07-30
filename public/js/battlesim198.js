@@ -14,9 +14,9 @@
 // currentPlaythrough().
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from './state.js?v=11';
-import { showAlert } from './play.js?v=48';
-import { getPlayBtnRow } from './charsheet.js?v=40';
-import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from './util.js?v=21';
+import { showAlert } from './play.js?v=49';
+import { getPlayBtnRow } from './charsheet.js?v=41';
+import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from './util.js?v=22';
 import { t } from './i18n.js?v=19';
 
 const SVG_SKULL  = `<svg class="sim-icon sim-icon-dead"  viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8c0 2.8 1.4 5.3 3.6 6.8V20a1 1 0 0 0 1 1h6.8a1 1 0 0 0 1-1v-2.2C18.6 16.3 20 13.8 20 11a8 8 0 0 0-8-8zm-2.5 13v-1.5a.5.5 0 0 0-.5-.5H8l-.5-1 1-1-1-1 1-1H9a2.5 2.5 0 0 1 5 0h.5l1 1-1 1 1 1-.5 1h-1a.5.5 0 0 0-.5.5V16h-4z"/></svg>`;
@@ -302,11 +302,12 @@ function _renderStatus() {
   const el = document.getElementById('sim198-status');
   if (!d || !el) return;
   const notReady = _notReady(d);
-  if (notReady)                  el.innerHTML = 'Roll your starting SKILL, STAMINA and LUCK to begin.';
-  else if (d.player.stamina <= 0) el.innerHTML = `${SVG_SKULL} You have fallen in battle.`;
-  else if (d.enemy.stamina <= 0)  el.innerHTML = `${SVG_TROPHY} Victory!`;
-  else                            el.innerHTML = '';
-  const over = notReady || d.player.stamina <= 0 || d.enemy.stamina <= 0;
+  const hasEnemy = d.enemy.staminaMax > 0;
+  if (notReady)                                    el.innerHTML = 'Roll your starting SKILL, STAMINA and LUCK to begin.';
+  else if (d.player.stamina <= 0)                   el.innerHTML = `${SVG_SKULL} You have fallen in battle.`;
+  else if (hasEnemy && d.enemy.stamina <= 0)         el.innerHTML = `${SVG_TROPHY} Victory!`;
+  else                                               el.innerHTML = '';
+  const over = notReady || d.player.stamina <= 0 || (hasEnemy && d.enemy.stamina <= 0);
   document.getElementById('sim198-round').disabled = over || !!d.pendingLuck;
   document.getElementById('sim198-luck-yes').disabled = notReady || !d.pendingLuck || d.player.luck <= 0;
   document.getElementById('sim198-luck-no').disabled  = notReady || !d.pendingLuck;
@@ -333,28 +334,28 @@ function _renderItemsHtml(d) {
       <div class="bsim-tech-desc">+1 to all your Attack Strength rolls while worn.</div>
       <div class="bsim-tech-footer"><label class="inv-edit-check-label"><input type="checkbox" id="sim198-item-helmet" class="inv-edit-check" ${d.player.hasMagicHelmet ? 'checked' : ''}> Have it</label></div>
     </div>
-    <div class="bsim-tech-row${(notReady || !d.player.invisibilityHave || d.player.invisibilityUsed) ? ' bsim-tech-row--depleted' : ''}">
+    <div class="bsim-tech-row">
       <div class="bsim-tech-name">Potion of Invisibility <span class="bsim-tech-uses">(sec. 39/105)</span></div>
       <div class="bsim-tech-desc">Good for one dose. While active: +2 Attack Strength, your hits do 3 damage. Enemy hits are reduced (1d6: odd=2, 2/4=1, 6=parried).</div>
       <div class="bsim-tech-footer">
         <label class="inv-edit-check-label"><input type="checkbox" id="sim198-item-invisibility-have" class="inv-edit-check" ${d.player.invisibilityHave ? 'checked' : ''}> Have it</label>
-        <button class="inv-edit-done bsim-tech-btn" id="sim198-item-invisibility-use" ${(notReady || !d.player.invisibilityHave || d.player.invisibilityUsed) ? 'disabled' : ''}>${d.player.invisibilityUsed ? 'Used' : 'Drink'}</button>
+        <button class="inv-edit-done bsim-tech-btn${(notReady || !d.player.invisibilityHave || d.player.invisibilityUsed) ? ' bsim-tech-row--depleted' : ''}" id="sim198-item-invisibility-use" ${(notReady || !d.player.invisibilityHave || d.player.invisibilityUsed) ? 'disabled' : ''}>${d.player.invisibilityUsed ? 'Used' : 'Drink'}</button>
       </div>
     </div>
-    <div class="bsim-tech-row${(notReady || !d.player.holyWaterHave || d.player.holyWaterUsed) ? ' bsim-tech-row--depleted' : ''}">
+    <div class="bsim-tech-row">
       <div class="bsim-tech-name">Holy Water <span class="bsim-tech-uses">(sec. 109)</span></div>
       <div class="bsim-tech-desc">One-time: STAMINA to Initial−2, SKILL to Initial−1, +4 LUCK.</div>
       <div class="bsim-tech-footer">
         <label class="inv-edit-check-label"><input type="checkbox" id="sim198-item-holywater-have" class="inv-edit-check" ${d.player.holyWaterHave ? 'checked' : ''}> Have it</label>
-        <button class="inv-edit-done bsim-tech-btn" id="sim198-item-holywater-use" ${(notReady || !d.player.holyWaterHave || d.player.holyWaterUsed) ? 'disabled' : ''}>${d.player.holyWaterUsed ? 'Used' : 'Drink'}</button>
+        <button class="inv-edit-done bsim-tech-btn${(notReady || !d.player.holyWaterHave || d.player.holyWaterUsed) ? ' bsim-tech-row--depleted' : ''}" id="sim198-item-holywater-use" ${(notReady || !d.player.holyWaterHave || d.player.holyWaterUsed) ? 'disabled' : ''}>${d.player.holyWaterUsed ? 'Used' : 'Drink'}</button>
       </div>
     </div>
-    <div class="bsim-tech-row${(notReady || !d.player.rumHave || d.player.rumUsed) ? ' bsim-tech-row--depleted' : ''}">
+    <div class="bsim-tech-row">
       <div class="bsim-tech-name">Rum <span class="bsim-tech-uses">(sec. 330)</span></div>
       <div class="bsim-tech-desc">One-time: +6 STAMINA, +1 LUCK.</div>
       <div class="bsim-tech-footer">
         <label class="inv-edit-check-label"><input type="checkbox" id="sim198-item-rum-have" class="inv-edit-check" ${d.player.rumHave ? 'checked' : ''}> Have it</label>
-        <button class="inv-edit-done bsim-tech-btn" id="sim198-item-rum-use" ${(notReady || !d.player.rumHave || d.player.rumUsed) ? 'disabled' : ''}>${d.player.rumUsed ? 'Used' : 'Drink'}</button>
+        <button class="inv-edit-done bsim-tech-btn${(notReady || !d.player.rumHave || d.player.rumUsed) ? ' bsim-tech-row--depleted' : ''}" id="sim198-item-rum-use" ${(notReady || !d.player.rumHave || d.player.rumUsed) ? 'disabled' : ''}>${d.player.rumUsed ? 'Used' : 'Drink'}</button>
       </div>
     </div>`;
 }
@@ -410,7 +411,7 @@ function _renderInputs() {
 
   document.getElementById('sim198-provisions-left').textContent = `${d.player.provisionsLeft}/${MAX_PROVISIONS}`;
 
-  document.getElementById('sim198-enemy-name').value    = d.enemy.name;
+  document.getElementById('sim198-enemy-pick').value    = d.enemy.name;
   document.getElementById('sim198-enemy-skill').value   = d.enemy.skill;
   document.getElementById('sim198-enemy-stamina').value    = Math.min(d.enemy.stamina, d.enemy.staminaMax);
   document.getElementById('sim198-enemy-staminamax').value = d.enemy.staminaMax;
@@ -470,8 +471,8 @@ async function _loadEnemyList() {
 }
 
 function _setupEnemyAutocomplete() {
-  const input    = document.getElementById('sim198-enemy-name');
-  const dropdown = document.getElementById('sim198-enemy-name-dropdown');
+  const input    = document.getElementById('sim198-enemy-pick');
+  const dropdown = document.getElementById('sim198-enemy-pick-dropdown');
   let matches   = [];
   let activeIdx = -1;
 
@@ -487,7 +488,7 @@ function _setupEnemyAutocomplete() {
     matches = ql ? list.filter(e => e.name.toLowerCase().includes(ql)) : list;
     if (!matches.length) { closeDropdown(); return; }
     dropdown.innerHTML = matches.map((e, i) =>
-      `<li role="option" id="sim198-enemy-name-opt-${i}" data-idx="${i}">${escapeHtml(e.name)}<span class="ac-sub">SKILL:${e.attack ?? '?'} STAMINA:${e.hp ?? '?'}</span></li>`
+      `<li role="option" id="sim198-enemy-pick-opt-${i}" data-idx="${i}">${escapeHtml(e.name)}<span class="ac-sub">SKILL:${e.attack ?? '?'} STAMINA:${e.hp ?? '?'}</span></li>`
     ).join('');
     activeIdx = -1;
     dropdown.classList.add('open');
@@ -516,7 +517,7 @@ function _setupEnemyAutocomplete() {
     e.preventDefault();
   });
 
-  input.addEventListener('focus', async () => { await _loadEnemyList(); render(input.value); });
+  input.addEventListener('focus', async () => { input.removeAttribute('readonly'); await _loadEnemyList(); render(input.value); });
   input.addEventListener('input', async () => { await _loadEnemyList(); render(input.value); });
   input.addEventListener('blur', () => setTimeout(closeDropdown, 150));
   input.addEventListener('keydown', e => {
@@ -590,10 +591,10 @@ export function initSim198() {
           <div class="bsim-side">
             <div class="bsim-side-title">Enemy</div>
             <div class="inv-edit-row">
-              <span class="inv-edit-label bsim-stat-label">Name</span>
+              <span class="inv-edit-label bsim-stat-label">Pick</span>
               <div class="autocomplete-wrap bsim-enemy-ac">
-                <input id="sim198-enemy-name" class="inv-edit-input" type="text" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" aria-controls="sim198-enemy-name-dropdown">
-                <ul id="sim198-enemy-name-dropdown" class="autocomplete-dropdown" role="listbox"></ul>
+                <input id="sim198-enemy-pick" class="inv-edit-input" type="text" autocomplete="off" readonly role="combobox" aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" aria-controls="sim198-enemy-pick-dropdown">
+                <ul id="sim198-enemy-pick-dropdown" class="autocomplete-dropdown" role="listbox"></ul>
               </div>
             </div>
             ${_numField('SKILL', 'sim198-enemy-skill')}
@@ -677,7 +678,7 @@ export function initSim198() {
     saveState();
   });
 
-  document.getElementById('sim198-enemy-name').addEventListener('input', e => {
+  document.getElementById('sim198-enemy-pick').addEventListener('input', e => {
     const d = _data();
     if (!d) return;
     d.enemy.name = e.target.value;

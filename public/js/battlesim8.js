@@ -3,9 +3,9 @@
 // Адрин напада пръв; при foeFirst - врагът напада преди него.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from './state.js?v=11';
-import { showAlert } from './play.js?v=48';
-import { getPlayBtnRow } from './charsheet.js?v=40';
-import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from './util.js?v=21';
+import { showAlert } from './play.js?v=49';
+import { getPlayBtnRow } from './charsheet.js?v=41';
+import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from './util.js?v=22';
 import { t } from './i18n.js?v=19';
 
 const SVG_SKULL  = `<svg class="sim-icon sim-icon-dead"  viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8c0 2.8 1.4 5.3 3.6 6.8V20a1 1 0 0 0 1 1h6.8a1 1 0 0 0 1-1v-2.2C18.6 16.3 20 13.8 20 11a8 8 0 0 0-8-8zm-2.5 13v-1.5a.5.5 0 0 0-.5-.5H8l-.5-1 1-1-1-1 1-1H9a2.5 2.5 0 0 1 5 0h.5l1 1-1 1 1 1-.5 1h-1a.5.5 0 0 0-.5.5V16h-4z"/></svg>`;
@@ -138,7 +138,7 @@ function _renderInputs() {
   document.getElementById('s8-player-skill').value      = d.player.skill;
   document.getElementById('s8-player-life').value       = Math.min(d.player.life, d.player.lifeMax);
   document.getElementById('s8-player-lifemax').value    = d.player.lifeMax;
-  document.getElementById('s8-enemy-name').value        = d.enemy.name;
+  document.getElementById('s8-enemy-pick').value        = d.enemy.name;
   document.getElementById('s8-enemy-skill').value       = d.enemy.skill;
   document.getElementById('s8-enemy-life').value        = Math.min(d.enemy.life, d.enemy.lifeMax);
   document.getElementById('s8-enemy-lifemax').value     = d.enemy.lifeMax;
@@ -297,8 +297,8 @@ async function _loadEnemyList() {
 }
 
 function _setupEnemyAutocomplete() {
-  const input    = document.getElementById('s8-enemy-name');
-  const dropdown = document.getElementById('s8-enemy-name-dropdown');
+  const input    = document.getElementById('s8-enemy-pick');
+  const dropdown = document.getElementById('s8-enemy-pick-dropdown');
   let matches   = [];
   let activeIdx = -1;
 
@@ -315,7 +315,7 @@ function _setupEnemyAutocomplete() {
     if (!matches.length) { closeDropdown(); return; }
     dropdown.innerHTML = matches.map((e, i) => {
       const u = x => x == null ? '?' : x;
-      return `<li role="option" id="s8-enemy-name-opt-${i}" data-idx="${i}">${escapeHtml(e.name)}<span class="ac-sub">У:${u(e.attack)} Ж:${u(e.hp)}</span></li>`;
+      return `<li role="option" id="s8-enemy-pick-opt-${i}" data-idx="${i}">${escapeHtml(e.name)}<span class="ac-sub">У:${u(e.attack)} Ж:${u(e.hp)}</span></li>`;
     }).join('');
     activeIdx = -1;
     dropdown.classList.add('open');
@@ -342,7 +342,7 @@ function _setupEnemyAutocomplete() {
     e.preventDefault();
   });
 
-  input.addEventListener('focus', async () => { await _loadEnemyList(); render(input.value); });
+  input.addEventListener('focus', async () => { input.removeAttribute('readonly'); await _loadEnemyList(); render(input.value); });
   input.addEventListener('input', async () => { await _loadEnemyList(); render(input.value); });
   input.addEventListener('blur',  () => setTimeout(closeDropdown, 150));
   input.addEventListener('keydown', e => {
@@ -423,10 +423,10 @@ export function initBattleSim8() {
           <div class="bsim-side">
             <div class="bsim-side-title">Враг</div>
             <div class="inv-edit-row">
-              <span class="inv-edit-label bsim-stat-label">Име</span>
+              <span class="inv-edit-label bsim-stat-label">Избор</span>
               <div class="autocomplete-wrap bsim-enemy-ac">
-                <input id="s8-enemy-name" class="inv-edit-input" type="text" autocomplete="off" placeholder="Въведи или избери…" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" aria-controls="s8-enemy-name-dropdown">
-                <ul id="s8-enemy-name-dropdown" class="autocomplete-dropdown" role="listbox"></ul>
+                <input id="s8-enemy-pick" class="inv-edit-input" type="text" autocomplete="off" readonly placeholder="Въведи или избери…" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" aria-controls="s8-enemy-pick-dropdown">
+                <ul id="s8-enemy-pick-dropdown" class="autocomplete-dropdown" role="listbox"></ul>
               </div>
             </div>
             ${_statField('Умение', 's8-enemy-skill', 'enemy', 'skill')}
@@ -631,7 +631,7 @@ export function initBattleSim8() {
     saveState();
   });
 
-  document.getElementById('s8-enemy-name').addEventListener('input', e => {
+  document.getElementById('s8-enemy-pick').addEventListener('input', e => {
     const d = _data();
     if (!d) return;
     d.enemy.name = e.target.value;

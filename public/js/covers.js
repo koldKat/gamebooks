@@ -1,9 +1,9 @@
 // covers.js - Covers panel, lazy grid, landing bg rotation, cover/series activity modals
 import { getToken, isDemoMode, apiFetch } from './state.js?v=11';
-import { openPublicModal, closePublicModal, openPublicProfile, renderPublicProfile, openPublicRun, openPublicSeriesRun, _destroyPubNetworks } from './public-profile.js?v=36';
-import { refreshCoinsDisplay } from './shop.js?v=30';
+import { openPublicModal, closePublicModal, openPublicProfile, renderPublicProfile, openPublicRun, openPublicSeriesRun, _destroyPubNetworks } from './public-profile.js?v=37';
+import { refreshCoinsDisplay } from './shop.js?v=31';
 import { foldForSearch, matchesSearch, naturalCompare, naturalCompareByName } from './sort.js?v=1';
-import { escapeHtml, fetchPublic as publicFetch } from './util.js?v=21';
+import { escapeHtml, fetchPublic as publicFetch } from './util.js?v=22';
 import { t } from './i18n.js?v=19';
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────
@@ -472,8 +472,14 @@ export function _showCachedCoversPanel() {
   panel.classList.add('active');
   toggle?.classList.add('visible');
   _refreshCoversDisplay();
-  if (_allCovers.some(c => c.coverUrl)) {
-    _startLandingCoverRotation({ reset: false, immediate: true });
+  if (_landingCoverPool().length) {
+    // Runs on every return to the books/landing screen - no-op if the
+    // rotation interval is already going. Checks the *effective* pool
+    // (public covers or, with landingCoverSource 'mine', the user's own
+    // library) rather than hardcoding _allCovers, which is empty whenever
+    // 'mine' is selected and would otherwise skip starting the rotation
+    // even when the owned-covers pool has plenty to show.
+    _startLandingCoverRotation();
   }
 }
 
@@ -568,15 +574,22 @@ export function _updateLandingBgDragUi() {
   wrapper.classList.toggle('landing-bg-draggable', _canDragLandingBg());
 }
 
-export function _stopLandingCoverRotation() {
-  clearInterval(window._landingCoverInterval);
-  window._landingCoverInterval = null;
+// ── Landing background rotation ─────────────────────────────────────────────
+// Once the interval exists, ONLY two things are allowed to touch it or the
+// visible cover: the explicit Ctrl+X hide/show toggle, and an explicit
+// cover-source setting change. Routine calls (returning to the landing
+// screen, a background data refresh, a transient empty-pool/fetch-failure
+// blip) must never start, stop, or restart the interval, and must never
+// touch layer opacity - they just call _startLandingCoverRotation(), which
+// is a no-op once the interval is already running. This is deliberately
+// simple: no per-call flags, no "pause vs stop" distinction, no fingerprint
+// gating - every one of those was tried in turn and each still found some
+// path that blanked the background or re-triggered a rotation on an
+// unrelated action.
+
+export function _resetLandingCoverQueue() {
   _landingBgQueue = [];
   _landingBgQueueIdx = 0;
-  ['a','b'].forEach(l => {
-    const el = document.getElementById(`landing-bg-${l}`);
-    if (el) el.style.opacity = '0';
-  });
 }
 
 function _nextLandingCover() {
@@ -589,22 +602,14 @@ function _nextLandingCover() {
   return _landingBgQueue[_landingBgQueueIdx++] || null;
 }
 
-// Two independent call sites (_showCachedCoversPanel, using stale cached data
-// for perceived speed, and loadCovers, once the fresh fetch resolves) can both
-// request an "immediate" rotation within a few hundred ms of each other on
-// every return-to-Home. Without this guard, a second call landing mid-crossfade
-// grabs whichever layer the first call is still mid-transition on and stomps
-// its opacity/backgroundImage directly (no transition, since only `opacity` is
-// animated - a background-image swap on an already-opacity:1 layer is instant),
-// then schedules its own cleanup timeout against a layer the OTHER call also
-// scheduled a timeout against - the two callbacks fight over the same two
-// elements and can leave both layers at opacity:0, i.e. the background just
-// disappears until the next natural 60s tick. Queueing instead of stacking
-// fixes it: only one crossfade is ever in flight; a request that arrives
-// mid-transition waits for it to finish, then runs cleanly on its own.
+// In-flight guard: a rotation request arriving mid-crossfade queues instead
+// of stomping the transition already in progress (which could otherwise
+// leave both layers at opacity 0).
 let _rotationInFlight = false;
 let _rotationQueued   = false;
 
+// Always safe to call: silently does nothing (leaves whatever is currently
+// showing untouched) if there's no cover available right now.
 function _rotateLandingCover() {
   if (_rotationInFlight) { _rotationQueued = true; return; }
   const pick = _nextLandingCover();
@@ -633,24 +638,36 @@ function _rotateLandingCover() {
   _landingBgActive = next;
 }
 
-export function _startLandingCoverRotation({ reset = false, immediate = false } = {}) {
+// No-op if the interval already exists - the only case that starts it (and
+// paints one cover immediately, since otherwise nothing would show until
+// the first tick) is the very first call this session.
+export function _startLandingCoverRotation() {
   if (_isMobile()) return;
   if (document.getElementById('landing-wrapper')?.style.display === 'none') return;
-  const coversPool = _landingCoverPool();
-  if (!coversPool.length) { _stopLandingCoverRotation(); return; }
-  if (reset) {
-    _landingBgQueue = [];
-    _landingBgQueueIdx = 0;
-  }
   _applyLandingBgPosition();
-  if (!window._landingCoverInterval) {
-    immediate = true;
-    window._landingCoverInterval = setInterval(_rotateLandingCover, 60_000);
-  }
-  if (immediate) _rotateLandingCover();
+  if (window._landingCoverInterval) return;
+  window._landingCoverInterval = setInterval(_rotateLandingCover, 60_000);
+  _rotateLandingCover();
+}
+
+// Explicit user action only (the Ctrl+X hide toggle) - actually blanks the
+// background and stops the timer, since that's the point.
+export function _stopLandingCoverRotation() {
+  clearInterval(window._landingCoverInterval);
+  window._landingCoverInterval = null;
+  _resetLandingCoverQueue();
+  ['a','b'].forEach(l => {
+    const el = document.getElementById(`landing-bg-${l}`);
+    if (el) el.style.opacity = '0';
+  });
 }
 
 // ── Load covers API ────────────────────────────────────────────────────────────
+// Only fields that affect which covers are actually shown/rotated - counts
+// like libraryCount/book_count/library_count change constantly from other
+// users' unrelated activity (e.g. anyone adding a book to their library
+// anywhere on the site), which made dataChanged true on almost every
+// refresh and defeated the "only rotate on a real change" check below.
 function _coversFingerprint(covers, books, series) {
   const sortRows = rows => [...rows].sort((a, b) => {
     const aId = a[0] ?? 0;
@@ -660,8 +677,8 @@ function _coversFingerprint(covers, books, series) {
   });
   return JSON.stringify({
     covers: sortRows((Array.isArray(covers) ? covers : []).map(c => [c.id, c.name, c.coverUrl || c.cover_path || '', c.createdAt || c.created_at || 0, c.isContainer ? 1 : 0])),
-    books: sortRows((Array.isArray(books) ? books : []).map(b => [b.id, b.name, b.coverUrl || b.cover_path || '', b.createdAt || b.created_at || 0, b.seriesId || b.series_id || 0, b.isContainer ? 1 : (b.is_container ? 1 : 0), b.libraryCount || 0])),
-    series: sortRows((Array.isArray(series) ? series : []).map(s => [s.id, s.name, s.description || '', s.book_count || 0, s.library_count || 0])),
+    books: sortRows((Array.isArray(books) ? books : []).map(b => [b.id, b.name, b.coverUrl || b.cover_path || '', b.createdAt || b.created_at || 0, b.seriesId || b.series_id || 0, b.isContainer ? 1 : (b.is_container ? 1 : 0)])),
+    series: sortRows((Array.isArray(series) ? series : []).map(s => [s.id, s.name])),
   });
 }
 
@@ -710,10 +727,10 @@ export async function loadCovers({ force = true } = {}) {
     panel.classList.add('active');
     document.getElementById('covers-toggle').classList.add('visible');
     _refreshCoversDisplay();
-    _startLandingCoverRotation({ reset: dataChanged, immediate: true });
+    if (dataChanged) _resetLandingCoverQueue();
+    _startLandingCoverRotation();
   } catch (_) {
     panel.classList.remove('active');
-    _stopLandingCoverRotation();
   } finally {
     _loadCoversInFlight = false;
     _drainPendingLoadCovers();
@@ -1336,15 +1353,23 @@ function _persistFeedGlassCardsPref() {
   }
 }
 
+// Called far more often than just the Ctrl+X toggle itself - also runs
+// every time prefs are (re)applied (setCoversPrefsState(), e.g. from
+// syncPrefs() on every showBooks()/showLogin()), regardless of whether
+// _landingBgHidden actually changed. Only touch layer opacity when actually
+// hiding; showing/un-hiding must never blindly clear it back to '' (which
+// falls through to landing.css's default opacity: 0 and wipes out whichever
+// layer _rotateLandingCover() currently has visible at opacity: 1) - it
+// just ensures the rotation is running, which is a no-op if it already is.
 function _applyLandingBgHiddenPref() {
-  ['a', 'b'].forEach(l => {
-    const el = document.getElementById(`landing-bg-${l}`);
-    if (el) el.style.opacity = _landingBgHidden ? '0' : '';
-  });
   if (_landingBgHidden) {
+    ['a', 'b'].forEach(l => {
+      const el = document.getElementById(`landing-bg-${l}`);
+      if (el) el.style.opacity = '0';
+    });
     _stopLandingCoverRotation();
-  } else if (_allCovers.length || _allBooks.length || _allSeriesCovers.length) {
-    _startLandingCoverRotation({ reset: false, immediate: true });
+  } else if (_landingCoverPool().length) {
+    _startLandingCoverRotation();
   }
   const btn = document.getElementById('landing-ctx-toggle-btn');
   if (btn) btn.textContent = _landingBgHidden ? t('bg.show_background') : t('bg.hide_background');
@@ -1372,7 +1397,12 @@ function _applyLandingCoverSourcePrefs() {
 function _persistLandingCoverSourcePref() {
   _applyLandingCoverSourcePrefs();
   if (getToken() && !isDemoMode) _hooks.savePrefs?.({ landingCoverSource: _landingCoverSource });
-  _startLandingCoverRotation({ reset: true, immediate: true });
+  // Explicit settings change (switching public vs. own-library covers), not
+  // routine navigation - show the new pool right away rather than leaving
+  // the old source's cover up until the next 60s tick.
+  _resetLandingCoverQueue();
+  _startLandingCoverRotation();
+  _rotateLandingCover();
 }
 
 export function _toggleCoverTooltipSettings(open) {

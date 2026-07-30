@@ -2,9 +2,9 @@
 
 import { apiFetch, getUsername } from './state.js?v=11';
 import { t } from './i18n.js?v=19';
-import { showConfirm } from './play.js?v=48';
-import { refreshInboxBadge } from './notif.js?v=26';
-import { escapeHtml, isImageFilename, uploadAttachment, addAttachmentItem } from './util.js?v=21';
+import { showConfirm } from './play.js?v=49';
+import { refreshInboxBadge } from './notif.js?v=27';
+import { escapeHtml, isImageFilename, uploadAttachment, addAttachmentItem } from './util.js?v=22';
 
 let _inboxThreads    = [];
 let _currentThreadId = null;
