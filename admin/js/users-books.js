@@ -17,7 +17,7 @@ import {
   storeData, getSorted, getFiltered, foldForSearch, naturalCompare, naturalCompareByName, _tableData,
   setSearchFields, wireTableSearch, initSortHeaders, renderPaged,
 } from './core.js?v=1';
-import { loadAll, loadTools } from './dashboard.js?v=1';
+import { loadAll, loadTools } from './dashboard.js?v=2';
 
 // ── Gift modal ────────────────────────────────────────────────────────────────
 
@@ -194,7 +194,7 @@ document.getElementById('refresh-btn').addEventListener('click', () => {
 export function renderUsersTable(data) {
   const tbody = document.getElementById('users-body');
   tbody.innerHTML = '';
-  if (!data.length) { emptyRow(tbody, 13, 'No users yet.'); return; }
+  if (!data.length) { emptyRow(tbody, 16, 'No users yet.'); return; }
 
   const visible = data.filter(u => daysInactiveClass(u.days_inactive) !== 'act-stale');
   const hidden  = data.filter(u => daysInactiveClass(u.days_inactive) === 'act-stale');
@@ -204,7 +204,7 @@ export function renderUsersTable(data) {
   if (hidden.length) {
     const moreTr = tbody.insertRow();
     const moreTd = moreTr.insertCell();
-    moreTd.colSpan = 15;
+    moreTd.colSpan = 16;
     moreTd.style.textAlign = 'center';
     moreTd.style.padding = '10px';
     const moreBtn = mkBtn(`Show ${hidden.length} inactive user${hidden.length !== 1 ? 's' : ''} (31+ days)`, 'btn-info', () => {
@@ -365,7 +365,7 @@ export async function loadUsers() {
 export function renderBooksTable(data) {
   const tbody = document.getElementById('books-body');
   tbody.innerHTML = '';
-  if (!data.length) { emptyRow(tbody, 7, 'No books yet.'); return; }
+  if (!data.length) { emptyRow(tbody, 8, 'No books yet.'); return; }
 
   for (const b of data) {
     const tr = tbody.insertRow();
@@ -403,7 +403,7 @@ export async function loadBooks() {
 export function renderUserBooksTable(data, userId) {
   const tbody = document.getElementById('user-books-body');
   tbody.innerHTML = '';
-  if (!data.length) { emptyRow(tbody, 9, 'No books yet.'); return; }
+  if (!data.length) { emptyRow(tbody, 10, 'No books yet.'); return; }
 
   for (const b of data) {
     const tr = tbody.insertRow();

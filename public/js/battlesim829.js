@@ -10,9 +10,9 @@
 // pt.battleSim, which is already per-user/per-book via currentPlaythrough().
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from './state.js?v=11';
-import { showAlert } from './play.js?v=48';
-import { getPlayBtnRow } from './charsheet.js?v=40';
-import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from './util.js?v=21';
+import { showAlert } from './play.js?v=49';
+import { getPlayBtnRow } from './charsheet.js?v=41';
+import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from './util.js?v=22';
 import { t } from './i18n.js?v=19';
 
 const SVG_SKULL  = `<svg class="sim-icon sim-icon-dead"  viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8c0 2.8 1.4 5.3 3.6 6.8V20a1 1 0 0 0 1 1h6.8a1 1 0 0 0 1-1v-2.2C18.6 16.3 20 13.8 20 11a8 8 0 0 0-8-8zm-2.5 13v-1.5a.5.5 0 0 0-.5-.5H8l-.5-1 1-1-1-1 1-1H9a2.5 2.5 0 0 1 5 0h.5l1 1-1 1 1 1-.5 1h-1a.5.5 0 0 0-.5.5V16h-4z"/></svg>`;
@@ -285,7 +285,7 @@ function _renderInputs() {
   document.getElementById('bsim-player-d').value      = d.player.d;
   document.getElementById('bsim-player-hp').value     = Math.min(d.player.hp, d.player.hpMax);
   document.getElementById('bsim-player-hpmax').value  = d.player.hpMax;
-  document.getElementById('bsim-enemy-name').value  = d.enemy.name;
+  document.getElementById('bsim-enemy-pick').value  = d.enemy.name;
   document.getElementById('bsim-enemy-a').value     = d.enemy.a;
   document.getElementById('bsim-enemy-d').value     = d.enemy.d;
   document.getElementById('bsim-enemy-hp').value    = d.enemy.hp;
@@ -492,10 +492,10 @@ function _checkField(label, id, note) {
 function _enemyNameField() {
   return `
     <div class="inv-edit-row">
-      <span class="inv-edit-label bsim-stat-label">Име на врага</span>
+      <span class="inv-edit-label bsim-stat-label">Избери враг</span>
       <div class="autocomplete-wrap bsim-enemy-ac">
-        <input id="bsim-enemy-name" class="inv-edit-input" type="text" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" aria-controls="bsim-enemy-name-dropdown">
-        <ul id="bsim-enemy-name-dropdown" class="autocomplete-dropdown" role="listbox"></ul>
+        <input id="bsim-enemy-pick" class="inv-edit-input" type="text" autocomplete="off" readonly role="combobox" aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" aria-controls="bsim-enemy-pick-dropdown">
+        <ul id="bsim-enemy-pick-dropdown" class="autocomplete-dropdown" role="listbox"></ul>
       </div>
     </div>`;
 }
@@ -520,8 +520,8 @@ function _enemyStatLabel(e) {
 }
 
 function _setupEnemyAutocomplete() {
-  const input    = document.getElementById('bsim-enemy-name');
-  const dropdown = document.getElementById('bsim-enemy-name-dropdown');
+  const input    = document.getElementById('bsim-enemy-pick');
+  const dropdown = document.getElementById('bsim-enemy-pick-dropdown');
   let matches   = [];
   let activeIdx = -1;
 
@@ -537,7 +537,7 @@ function _setupEnemyAutocomplete() {
     matches = ql ? list.filter(e => e.name.toLowerCase().includes(ql)) : list;
     if (!matches.length) { closeDropdown(); return; }
     dropdown.innerHTML = matches.map((e, i) =>
-      `<li role="option" id="bsim-enemy-name-opt-${i}" data-idx="${i}">${escapeHtml(e.name)}<span class="ac-sub">${escapeHtml(_enemyStatLabel(e))}</span></li>`
+      `<li role="option" id="bsim-enemy-pick-opt-${i}" data-idx="${i}">${escapeHtml(e.name)}<span class="ac-sub">${escapeHtml(_enemyStatLabel(e))}</span></li>`
     ).join('');
     activeIdx = -1;
     dropdown.classList.add('open');
@@ -567,6 +567,7 @@ function _setupEnemyAutocomplete() {
   });
 
   input.addEventListener('focus', async () => {
+    input.removeAttribute('readonly');
     await _loadEnemyList();
     render(input.value);
   });
@@ -776,7 +777,7 @@ export function initBattleSim() {
     if (raw !== e.target.value) e.target.value = raw;
   });
 
-  document.getElementById('bsim-enemy-name').addEventListener('input', e => {
+  document.getElementById('bsim-enemy-pick').addEventListener('input', e => {
     const d = _data();
     if (!d) return;
     d.enemy.name = e.target.value;

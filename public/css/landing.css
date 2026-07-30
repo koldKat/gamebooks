@@ -632,6 +632,11 @@ body.cover-tooltip-title-bold #cover-tooltip-settings-preview {
 }
 body.covers-collapsed #landing-wrapper { padding-left: 0; }
 body.right-collapsed  #landing-wrapper { padding-right: 0; }
+/* covers.js toggles this once all three landing panels are collapsed (see
+   _canDragLandingBg), but no rule ever gave it a visual affordance - nothing
+   hinted the background had become draggable. */
+#landing-wrapper.landing-bg-draggable { cursor: grab; }
+#landing-wrapper.landing-bg-draggable:active { cursor: grabbing; }
 body.feed-collapsed #feed-panel {
   opacity: 0;
   pointer-events: none;

@@ -12,9 +12,9 @@
 // state lives in pt.sim286, per-user/per-book via currentPlaythrough().
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from './state.js?v=11';
-import { showAlert } from './play.js?v=48';
-import { getPlayBtnRow } from './charsheet.js?v=40';
-import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from './util.js?v=21';
+import { showAlert } from './play.js?v=49';
+import { getPlayBtnRow } from './charsheet.js?v=41';
+import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from './util.js?v=22';
 import { t } from './i18n.js?v=19';
 
 // Book rule: initial life roll (2d6×4) plus up to 2 rerolls, 3 throws total per run.
@@ -680,7 +680,7 @@ function _renderInputs() {
     aeEl.classList.toggle('bsim-ae-over', aeSpent > d.player.aeMax);
   }
 
-  document.getElementById('sim286-enemy-name').value    = d.enemy.name;
+  document.getElementById('sim286-enemy-pick').value    = d.enemy.name;
   document.getElementById('sim286-enemy-hp').value      = d.enemy.hp;
   document.getElementById('sim286-enemy-hpmax').value   = d.enemy.hpMax;
   document.getElementById('sim286-enemy-minhit').value  = d.enemy.minHit;
@@ -738,8 +738,8 @@ async function _loadEnemyList() {
 }
 
 function _setupEnemyAutocomplete() {
-  const input    = document.getElementById('sim286-enemy-name');
-  const dropdown = document.getElementById('sim286-enemy-name-dropdown');
+  const input    = document.getElementById('sim286-enemy-pick');
+  const dropdown = document.getElementById('sim286-enemy-pick-dropdown');
   let matches   = [];
   let activeIdx = -1;
 
@@ -755,7 +755,7 @@ function _setupEnemyAutocomplete() {
     matches = ql ? list.filter(e => e.name.toLowerCase().includes(ql)) : list;
     if (!matches.length) { closeDropdown(); return; }
     dropdown.innerHTML = matches.map((e, i) =>
-      `<li role="option" id="sim286-enemy-name-opt-${i}" data-idx="${i}">${escapeHtml(e.name)}<span class="ac-sub">ТЖ:${e.hp ?? '?'} мин.:${e.attack ?? '?'}</span></li>`
+      `<li role="option" id="sim286-enemy-pick-opt-${i}" data-idx="${i}">${escapeHtml(e.name)}<span class="ac-sub">ТЖ:${e.hp ?? '?'} мин.:${e.attack ?? '?'}</span></li>`
     ).join('');
     activeIdx = -1;
     dropdown.classList.add('open');
@@ -785,7 +785,7 @@ function _setupEnemyAutocomplete() {
     e.preventDefault();
   });
 
-  input.addEventListener('focus', async () => { await _loadEnemyList(); render(input.value); });
+  input.addEventListener('focus', async () => { input.removeAttribute('readonly'); await _loadEnemyList(); render(input.value); });
   input.addEventListener('input', async () => { await _loadEnemyList(); render(input.value); });
   input.addEventListener('blur', () => setTimeout(closeDropdown, 150));
   input.addEventListener('keydown', e => {
@@ -899,10 +899,10 @@ export function initSim286() {
           <div class="bsim-side">
             <div class="bsim-side-title">Враг</div>
             <div class="inv-edit-row">
-              <span class="inv-edit-label bsim-stat-label">Име</span>
+              <span class="inv-edit-label bsim-stat-label">Избор</span>
               <div class="autocomplete-wrap bsim-enemy-ac">
-                <input id="sim286-enemy-name" class="inv-edit-input" type="text" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" aria-controls="sim286-enemy-name-dropdown">
-                <ul id="sim286-enemy-name-dropdown" class="autocomplete-dropdown" role="listbox"></ul>
+                <input id="sim286-enemy-pick" class="inv-edit-input" type="text" autocomplete="off" readonly role="combobox" aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" aria-controls="sim286-enemy-pick-dropdown">
+                <ul id="sim286-enemy-pick-dropdown" class="autocomplete-dropdown" role="listbox"></ul>
               </div>
             </div>
             ${_numField('Точки живот (ТЖ)', 'sim286-enemy-hp')}
@@ -1098,7 +1098,7 @@ export function initSim286() {
     d.player.enemyFirst = e.target.checked;
     saveState();
   });
-  document.getElementById('sim286-enemy-name').addEventListener('input', e => {
+  document.getElementById('sim286-enemy-pick').addEventListener('input', e => {
     const d = _data();
     if (!d) return;
     d.enemy.name = e.target.value;
