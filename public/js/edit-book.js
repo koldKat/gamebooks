@@ -6,7 +6,7 @@ import { naturalCompare, naturalCompareByName, foldForSearch, matchesSearch } fr
 import { getCachedBooks, getCachedAllSeries, getCachedStashes, _starLabelHtml, _refreshBooksListOnly, _refreshLibraryUi } from './books.js?v=89';
 import { refreshCoinsDisplay } from './shop.js?v=31';
 import { showAlert, showConfirm } from './play.js?v=49';
-import { escapeHtml, compressImage } from './util.js?v=22';
+import { escapeHtml, compressImage } from './util.js?v=23';
 
 let _hooks = {};
 export function setEditBookHooks(h) { _hooks = h || {}; }

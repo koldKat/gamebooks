@@ -5,7 +5,7 @@ import { refreshCoinsDisplay } from './shop.js?v=31';
 import { openCoverActivity, openSeriesActivity, _startLandingCoverRotation, _resetLandingCoverQueue, _effectiveLandingCoverSource, loadCovers } from './covers.js?v=64';
 import { t } from './i18n.js?v=19';
 import { showConfirm, showTwoChoice } from './play.js?v=49';
-import { escapeHtml } from './util.js?v=22';
+import { escapeHtml } from './util.js?v=23';
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────
 let _hooks = {};

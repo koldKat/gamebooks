@@ -6,7 +6,7 @@
 
 import { currentBookId, apiFetch, getToken, isDemoMode, loadState } from './state.js?v=11';
 import { render, suppressAutoNav, showAlert, showConfirm } from './play.js?v=49';
-import { escapeHtml } from './util.js?v=22';
+import { escapeHtml } from './util.js?v=23';
 import { t } from './i18n.js?v=19';
 
 // Hooks into main.js for things that aren't part of this module's scope.
