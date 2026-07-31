@@ -3,7 +3,7 @@ import { getToken, isDemoMode, apiFetch } from './state.js?v=11';
 import { openPublicModal, closePublicModal, openPublicProfile, renderPublicProfile, openPublicRun, openPublicSeriesRun, _destroyPubNetworks } from './public-profile.js?v=37';
 import { refreshCoinsDisplay } from './shop.js?v=31';
 import { foldForSearch, matchesSearch, naturalCompare, naturalCompareByName } from './sort.js?v=1';
-import { escapeHtml, fetchPublic as publicFetch } from './util.js?v=22';
+import { escapeHtml, fetchPublic as publicFetch } from './util.js?v=23';
 import { t } from './i18n.js?v=19';
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────

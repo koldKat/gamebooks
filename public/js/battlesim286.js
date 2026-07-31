@@ -14,7 +14,7 @@
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from './state.js?v=11';
 import { showAlert } from './play.js?v=49';
 import { getPlayBtnRow } from './charsheet.js?v=41';
-import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from './util.js?v=22';
+import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from './util.js?v=23';
 import { t } from './i18n.js?v=19';
 
 // Book rule: initial life roll (2d6×4) plus up to 2 rerolls, 3 throws total per run.

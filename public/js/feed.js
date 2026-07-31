@@ -3,7 +3,7 @@
 import { getToken, apiFetch } from './state.js?v=11';
 import { openPublicProfile, openPublicSeriesRun, openPublicRun } from './public-profile.js?v=37';
 import { openCoverActivity, openSeriesActivity } from './covers.js?v=64';
-import { escapeHtml } from './util.js?v=22';
+import { escapeHtml } from './util.js?v=23';
 import { t } from './i18n.js?v=19';
 
 let _hooks = {};

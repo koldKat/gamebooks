@@ -15,7 +15,7 @@ import {
   invalidateAutocompleteCaches, _loadAutocompleteBooks, _loadSeriesAutocomplete,
   _setModalCover, _setupNameAutocomplete, _setupPlainAutocomplete, _setupAuthorsAutocomplete,
 } from './autocomplete.js?v=81';
-import { escapeHtml, compressImage } from './util.js?v=22';
+import { escapeHtml, compressImage } from './util.js?v=23';
 
 let _hooks = {};
 export function setAddBookHooks(h) { _hooks = h || {}; }
