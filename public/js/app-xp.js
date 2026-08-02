@@ -10,7 +10,7 @@
 
 import { apiFetch, getToken, isDemoMode } from './state.js?v=11';
 import { COIN_SVG } from './shop.js?v=31';
-import { escapeHtml } from './util.js?v=23';
+import { escapeHtml } from './util.js?v=24';
 import { t } from './i18n.js?v=19';
 
 let _hooks = {};

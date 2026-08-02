@@ -5,7 +5,7 @@
 // To remove: delete this file, remove its import line and initSim200()/
 // setSim200Visible() calls from boot.js, and remove the .bsim-* CSS (shared
 // with battlesim8.js/battlesim829.js/battlesim286.js/battlesim198.js/
-// battlesim199.js, so only remove it if all six are gone).
+// battlesim199.js/battlesim186.js, so only remove it if all seven are gone).
 //
 // Fighting Fantasy SKILL/STAMINA/LUCK system, but this book's SKILL formula
 // is 1d6+5 (not the usual 1d6+6 used by books 198/199) - STAMINA (2d6+12)
@@ -39,7 +39,7 @@
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from './state.js?v=11';
 import { showAlert } from './play.js?v=49';
 import { getPlayBtnRow } from './charsheet.js?v=41';
-import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from './util.js?v=23';
+import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from './util.js?v=24';
 import { t } from './i18n.js?v=19';
 
 const SVG_SKULL  = `<svg class="sim-icon sim-icon-dead"  viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8c0 2.8 1.4 5.3 3.6 6.8V20a1 1 0 0 0 1 1h6.8a1 1 0 0 0 1-1v-2.2C18.6 16.3 20 13.8 20 11a8 8 0 0 0-8-8zm-2.5 13v-1.5a.5.5 0 0 0-.5-.5H8l-.5-1 1-1-1-1 1-1H9a2.5 2.5 0 0 1 5 0h.5l1 1-1 1 1 1-.5 1h-1a.5.5 0 0 0-.5.5V16h-4z"/></svg>`;

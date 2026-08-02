@@ -447,10 +447,12 @@ async function handleSetBookRating(req, res, bookId) {
   if (!result) return send(res, 404, { error: 'Not in your library' });
   if (result.blocked) return send(res, 403, { error: 'Complete a run first' });
   send(res, 200, { rating: rating ?? null, xpAwarded: result.xpAwarded, avgRating: result.avgRating, voteCount: result.voteCount });
-  // Only the first-ever rating of a book creates a feed entry (see getFeed's
-  // book_rated block) - result.xpAwarded is only true on that first rating, so
-  // this only pushes a live refresh when there's actually something new to show.
-  if (result.xpAwarded) feedPush({ type: 'feed_changed', entity: 'book', action: 'rated', id: bookId });
+  // getFeed's book_rated block always reads the CURRENT rating live from user_books,
+  // not a snapshot from when the feed entry's xp_event fired - so re-rating or
+  // clearing a rating changes what an existing feed entry shows even though it
+  // doesn't create a new one. Push on every change, not just the first (xpAwarded),
+  // so connected clients actually see that update instead of a stale rating.
+  feedPush({ type: 'feed_changed', entity: 'book', action: 'rated', id: bookId });
 }
 
 async function handleGetSeriesRating(req, res, seriesId) {
@@ -471,7 +473,9 @@ async function handleSetSeriesRating(req, res, seriesId) {
   if (!result) return send(res, 404, { error: 'Not in your library' });
   if (result.blocked) return send(res, 403, { error: 'Complete all books first' });
   send(res, 200, { rating: rating ?? null, xpAwarded: result.xpAwarded, avgRating: result.avgRating, voteCount: result.voteCount });
-  if (result.xpAwarded) feedPush({ type: 'feed_changed', entity: 'series', action: 'rated', id: seriesId });
+  // Same reasoning as handleSetBookRating above - the feed reads the live rating,
+  // so push on every change, not just the first.
+  feedPush({ type: 'feed_changed', entity: 'series', action: 'rated', id: seriesId });
 }
 
 async function handleSetBookBgPref(req, res, bookId) {

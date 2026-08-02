@@ -42,6 +42,7 @@ const _xpDefaults = {
   forum_thread: 25, forum_post: 5, party_formed: 0,
   inventory_started: 25, add_item: 5, add_charsheet_field: 5, rate_series: 25,
   equipment_started: 25, equip_item: 5,
+  battlesim_win: 10, battlesim_loss: 5,
   // per-book rates for group milestones (actual award = rate × book count)
   discover_all_series: 30, discover_all_anthology: 30,
   visit_all_series: 40,    visit_all_anthology: 40,
@@ -623,6 +624,11 @@ function _checkGroupWonAll(userId, seriesId, parentBookId) {
   }
 }
 
+// Per-playthrough state keys used by the 7 battle simulator modules (see
+// processStateXp below) - kept as one list so a future sim just needs
+// adding here, not duplicated at each call site.
+const SIM_HISTORY_KEYS = ['battleSim', 'sim8', 'sim286', 'sim198', 'sim199', 'sim200', 'sim186'];
+
 function processStateXp(userId, bookId, oldState, newState, totalSections) {
   if (newState?.isDemoBook) return;
   // Use discoverable_sections as the effective ceiling if set, else fall back to totalSections
@@ -744,6 +750,31 @@ function processStateXp(userId, bookId, oldState, newState, totalSections) {
     const newLen = newPt?.path?.length ?? 0;
     if (oldLen < 1 && newLen >= 1)
       awardXp(userId, 'run_depth', owSeriesId ? `series:${owSeriesId}:${i}` : `${bookId}:${i}`);
+
+    // Battle simulators (all 7: battlesim829, sim8, sim286, sim198, sim199,
+    // sim200, sim186) each log finished battles into their own history array
+    // with an identical { outcome: 'win'|'loss', ts } shape - award a small,
+    // repeatable amount per outcome using the entry's own ts as the ref
+    // (same trick idle_heartbeat uses for a naturally-unique, non-colliding
+    // ref per real event, rather than the "once ever" dedup most other
+    // events use). Deliberately no per-book/per-sim distinction - simulator
+    // practice isn't real playthrough progress, so it's not worth a bigger
+    // reward or an anti-farm mechanism, just a small nod for using it.
+    // Compares by max ts, not array length - every sim caps history at 100
+    // entries via .shift(), so once that cap is hit the array length stops
+    // growing even as new entries keep appending; a length-only comparison
+    // would silently stop awarding XP forever past that point.
+    for (const simKey of SIM_HISTORY_KEYS) {
+      const oldHist = oldPt?.[simKey]?.history ?? [];
+      const newHist = newPt?.[simKey]?.history ?? [];
+      if (!newHist.length) continue;
+      const oldMaxTs = oldHist.reduce((max, e) => Math.max(max, e?.ts ?? 0), 0);
+      for (const entry of newHist) {
+        if (!entry || (entry.ts ?? 0) <= oldMaxTs) continue;
+        if (entry.outcome === 'win')  awardXp(userId, 'battlesim_win',  `${simKey}:${entry.ts}`);
+        if (entry.outcome === 'loss') awardXp(userId, 'battlesim_loss', `${simKey}:${entry.ts}`);
+      }
+    }
   }
 
   // Reconciliation safety net: the transition check above (`!oldPt?.completed && newPt?.completed`)

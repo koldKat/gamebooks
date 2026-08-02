@@ -2,7 +2,7 @@
 
 import { getUsername, getToken, apiFetch } from './state.js?v=11';
 import { t } from './i18n.js?v=19';
-import { uploadAttachment, addAttachmentItem } from './util.js?v=23';
+import { uploadAttachment, addAttachmentItem } from './util.js?v=24';
 
 export function initFeedback() {
   document.getElementById('feedback-btn').addEventListener('click', () => {

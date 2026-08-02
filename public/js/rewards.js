@@ -5,7 +5,7 @@ import { updateCoinsDisplay, refreshCoinsDisplay, COIN_SVG } from './shop.js?v=3
 import { renderBooksXpSummary } from './profile.js?v=47';
 import { _broadcastLiveEvent } from './livetab.js?v=36';
 import { _scheduleLiveUiRefresh } from './notif.js?v=27';
-import { escapeHtml } from './util.js?v=23';
+import { escapeHtml } from './util.js?v=24';
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let _lastRewardXp        = null;

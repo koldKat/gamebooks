@@ -1,6 +1,6 @@
 /* ── Battle Simulator (Пътят на пъдпъдъка) ───────────────────────────────── */
 
-#battlesim-btn, #sim8-btn, #sim286-btn, #sim198-btn, #sim199-btn, #sim200-btn {
+#battlesim-btn, #sim8-btn, #sim286-btn, #sim198-btn, #sim199-btn, #sim200-btn, #sim186-btn {
   background: rgba(31, 41, 55, 0.88);
   border: 1px solid #374151;
   border-radius: 7px;
@@ -13,7 +13,7 @@
   backdrop-filter: blur(6px);
   box-shadow: 0 2px 8px rgba(0,0,0,0.35);
 }
-#battlesim-btn:hover, #sim8-btn:hover, #sim286-btn:hover, #sim198-btn:hover, #sim199-btn:hover, #sim200-btn:hover { background: #374151; color: #d1d5db; }
+#battlesim-btn:hover, #sim8-btn:hover, #sim286-btn:hover, #sim198-btn:hover, #sim199-btn:hover, #sim200-btn:hover, #sim186-btn:hover { background: #374151; color: #d1d5db; }
 
 /* Modal reuses .inv-overlay/.inv-modal/.inv-modal-hdr/.inv-modal-ftr and the
    .inv-edit-row/.inv-qty-* stepper pattern from inventory.js's item-edit
@@ -25,10 +25,11 @@
    a small, compact utility dialog regardless of monitor size. 640px was too
    tight on large screens - the Test Your Luck prompt row pushes the
    Round/Reset footer buttons half off-screen the moment it appears, forcing
-   an immediate scrollbar. */
-.bsim-modal { width: min(720px, 95vw); height: min(760px, 90vh); }
+   an immediate scrollbar. 760px was still too tight for book 186's longer
+   crew list, cutting the footer buttons off - bumped to 860px. */
+.bsim-modal { width: min(720px, 95vw); height: min(860px, 90vh); }
 
-#bsim-close, #s8-close, #sim286-close, #sim198-close, #sim199-close, #sim200-close { margin-left: auto; }
+#bsim-close, #s8-close, #sim286-close, #sim198-close, #sim199-close, #sim200-close, #sim186-close { margin-left: auto; }
 
 .bsim-body {
   display: flex;

@@ -10,7 +10,7 @@ import { t } from './i18n.js?v=19';
 import { renderCharSheetDisplay } from './charsheet.js?v=41';
 import { naturalCompare } from './sort.js?v=1';
 import { instantiateLoadout } from './equipment.js?v=94';
-import { escapeHtml } from './util.js?v=23';
+import { escapeHtml } from './util.js?v=24';
 
 // ── Discoverable sections cap ────────────────────────────────────���───────────
 let _discoverableLimit = null;
