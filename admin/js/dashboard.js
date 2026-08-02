@@ -127,9 +127,9 @@ async function loadXpConfig() {
       input.inputMode = 'numeric';
       input.value = row.amount;
       input.dataset.event = row.event;
-      input.style.cssText = 'width:5rem;text-align:right;background:#111827;border:1px solid #374151;border-radius:4px;color:#d1d5db;padding:0.15rem 0.4rem;font-size:0.78rem';
-      table.appendChild(label);
+      input.style.cssText = 'width:5rem;text-align:left;background:#111827;border:1px solid #374151;border-radius:4px;color:#d1d5db;padding:0.15rem 0.4rem;font-size:0.78rem';
       table.appendChild(input);
+      table.appendChild(label);
     }
   } catch (e) { console.error('XP config:', e); }
 }

@@ -24,25 +24,26 @@ import { initNotes, hideNotesUI, loadNotesForBook, setOnXpAwarded as setNotesOnX
 import { initParty, connectPartySSE, disconnectPartySSE, loadPartyInvites, setPartyHooks } from './party.js?v=83';
 import { initAuth, setOnAuthSuccess, showAuthForm, showResetPanel, hasPendingResetToken } from './auth.js?v=25';
 import { initStats, closeStatsModal } from './stats.js?v=44';
-import { setAddBookHooks, initAddBook, _closeAddBook, _closeAddComp, _closeAddSeries } from './add-book.js?v=101';
+import { setAddBookHooks, initAddBook, _closeAddBook, _closeAddComp, _closeAddSeries } from './add-book.js?v=102';
 import {
   setEditBookHooks, initEditBook,
   openEditBookModal, closeEditBookModal, openEditCompModal, openEditSeriesModal,
   _openEditStash, _closeEditStash, _closeAddStash,
   _adminPdfHref,
   maxSectionInUse,
-} from './edit-book.js?v=100';
+} from './edit-book.js?v=101';
 import {
   setPrefsHooks, savePrefs, syncPrefs,
   _setLandingPanelCollapsed, _toggleAllLandingPanelsCollapsed,
   _setPlayPanelCollapsed, _toggleAllPlayPanelsCollapsed,
-} from './prefs.js?v=88';
+} from './prefs.js?v=89';
 import { initBattleSim, setBattleSimVisible, renderBattleSim } from './battlesim829.js?v=106';
 import { initBattleSim8, setSim8Visible, renderSim8 } from './battlesim8.js?v=78';
 import { initSim286, setSim286Visible, renderSim286 } from './battlesim286.js?v=37';
 import { initSim198, setSim198Visible, renderSim198 } from './battlesim198.js?v=20';
 import { initSim199, setSim199Visible, renderSim199 } from './battlesim199.js?v=13';
 import { initSim200, setSim200Visible, renderSim200 } from './battlesim200.js?v=3';
+import { initSim186, setSim186Visible, renderSim186 } from './battlesim186.js?v=4';
 import { initShop, updateCoinsDisplay, refreshCoinsDisplay, setShopHooks } from './shop.js?v=31';
 import { initProfile, updateAvatarUI, renderBooksXpSummary, setProfileHooks } from './profile.js?v=47';
 import { setPublicProfileHooks, closePublicModal, openPublicProfile, openPublicSeriesRun } from './public-profile.js?v=37';
@@ -56,13 +57,13 @@ import {
   setBooksDataFresh, setBooksRevealedAt,
   setCurrentUserId,
   _refreshBooksListOnly, _refreshLibraryUi, _starsHtml, _starLabelHtml, _flashRatingGate,
-} from './books.js?v=89';
+} from './books.js?v=90';
 import {
   setOpenWorldHooks, setupOpenWorldForBook,
   _syncSeriesRuns, _computeCrossBookReachability, _focusNodeAfterLoad,
   clearOpenWorldState, doJumpCrossBook,
   getOwSrcBookId, getOwSrcSection, getOwCrossBookRoute,
-} from './open-world.js?v=89';
+} from './open-world.js?v=90';
 import { setFeedHooks, loadFeed, refreshDayCoverFlows } from './feed.js?v=82';
 import {
   setNotifHooks, _scheduleLiveUiRefresh,
@@ -82,7 +83,7 @@ import {
 } from './bg.js?v=10';
 import { initTips } from './tips.js?v=16';
 import { initInbox } from './inbox.js?v=57';
-import { initDice } from './dice.js?v=83';
+import { initDice } from './dice.js?v=84';
 import { initTooltip } from './tooltip.js?v=1';
 import { exportAll, exportBook } from './export.js?v=54';
 import { initFeedback } from './feedback.js?v=24';
@@ -92,7 +93,7 @@ import {
   adminBadge, authorBadge, contributorBadge, displayFor,
   registerAuthor, registerContributor,
 } from './user.js?v=6';
-import { escapeHtml, fetchPublic as publicFetch } from './util.js?v=23';
+import { escapeHtml, fetchPublic as publicFetch } from './util.js?v=24';
 
 window._isMobile = /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
   || (navigator.maxTouchPoints > 1 && window.innerWidth < 1024);
@@ -286,6 +287,7 @@ function showLogin() {
   setSim198Visible(false);
   setSim199Visible(false);
   setSim200Visible(false);
+  setSim186Visible(false);
   setDiceRollerVisible(false);
   setGuideVisible(false);
   if (_isMobile()) document.body.classList.add('mobile-auth');
@@ -368,6 +370,7 @@ async function showBooks() {
   setSim198Visible(false);
   setSim199Visible(false);
   setSim200Visible(false);
+  setSim186Visible(false);
   setDiceRollerVisible(false);
   setGuideVisible(false);
   document.body.classList.remove('mobile-auth');
@@ -601,6 +604,7 @@ async function showMain(bookId, isbn = null, issn = null, asin = null, cover = n
   setSim198Visible(bookId === 198);
   setSim199Visible(bookId === 199);
   setSim200Visible(bookId === 200);
+  setSim186Visible(bookId === 186);
   setDiceRollerVisible(true);
   setGuideVisible(true);
   if (state.notesPinned) {
@@ -745,6 +749,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initSim198();
   initSim199();
   initSim200();
+  initSim186();
   setExtraDisplayItemsProvider(async () => await getVisibleEquippedItems());
   setOnViewingPtChange(() => {
     _refreshInvDisplay();
@@ -755,6 +760,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderSim198();
     renderSim199();
     renderSim200();
+    renderSim186();
   });
   initTooltip();
 

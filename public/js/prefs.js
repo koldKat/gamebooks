@@ -3,7 +3,7 @@
 import { getToken, isDemoMode, apiFetch } from './state.js?v=11';
 import { setTrailCollapsed, setChoicesRecordedCount, CHOICES_PULSE_THRESHOLD } from './play.js?v=49';
 import { setCoversPrefsState, _updateLandingBgDragUi } from './covers.js?v=64';
-import { setExpandedPrefs, renderBooksList, getCachedBooks, getCachedAllSeries, getCachedStashes } from './books.js?v=89';
+import { setExpandedPrefs, renderBooksList, getCachedBooks, getCachedAllSeries, getCachedStashes } from './books.js?v=90';
 
 let _hooks = {};
 export function setPrefsHooks(h) { _hooks = h || {}; }
