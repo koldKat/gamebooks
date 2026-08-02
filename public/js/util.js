@@ -30,7 +30,7 @@ export async function fetchPublic(url, options) {
 // below via `otherOverlayIds: ALL_PANEL_OVERLAY_IDS.filter(id => id !== 'own-id')`
 // so opening one panel closes all the others, without each file re-typing
 // the same 6 literal ID strings.
-export const ALL_PANEL_OVERLAY_IDS = ['inv-overlay', 'eq-overlay', 'charsheet-modal-overlay', 'sim286-overlay', 'bsim-overlay', 's8-overlay', 'sim198-overlay', 'sim199-overlay', 'sim200-overlay', 'sim186-overlay'];
+export const ALL_PANEL_OVERLAY_IDS = ['inv-overlay', 'eq-overlay', 'charsheet-modal-overlay', 'sim286-overlay', 'bsim-overlay', 's8-overlay', 'sim198-overlay', 'sim199-overlay', 'sim200-overlay', 'sim186-overlay', 'sim201-overlay'];
 
 // Single-key panel toggle shared by charsheet.js (C) / equipment.js (E) /
 // inventory.js (I) / the battlesim*.js trio (S) - each panel opens with its
