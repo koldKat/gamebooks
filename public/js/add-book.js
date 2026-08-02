@@ -2,20 +2,20 @@
 
 import { apiFetch, isDemoMode } from './state.js?v=11';
 import { t } from './i18n.js?v=19';
-import { getCachedAllSeries, _refreshLibraryUi, setInvalidateAutocompleteCaches } from './books.js?v=90';
+import { getCachedAllSeries, _refreshLibraryUi, setInvalidateAutocompleteCaches } from './books.js?v=91';
 import { naturalCompare, matchesSearch } from './sort.js?v=1';
-import { showAlert } from './play.js?v=49';
+import { showAlert } from './play.js?v=50';
 import {
   _setModalUploadProgress, _setButtonsDisabled, _uploadPdfWithProgress,
   _acceptPdfSelection, _setPdfInlineLabel, formatFileSize,
   _populateSeriesSelect, _populateParentBookSelect,
   validateIsbn, validateIssn, validateAsin,
-} from './edit-book.js?v=101';
+} from './edit-book.js?v=102';
 import {
   invalidateAutocompleteCaches, _loadAutocompleteBooks, _loadSeriesAutocomplete,
   _setModalCover, _setupNameAutocomplete, _setupPlainAutocomplete, _setupAuthorsAutocomplete,
-} from './autocomplete.js?v=82';
-import { escapeHtml, compressImage } from './util.js?v=24';
+} from './autocomplete.js?v=83';
+import { escapeHtml, compressImage } from './util.js?v=25';
 
 let _hooks = {};
 export function setAddBookHooks(h) { _hooks = h || {}; }
