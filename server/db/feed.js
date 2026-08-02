@@ -842,17 +842,17 @@ function getProfileStats(userId) {
   `).all(userId);
   const totalBooks   = bookRows.length;
   const createdBooks = bookRows.filter(b => b.created_by === userId).length;
-  let booksPlayed = 0, totalRuns = 0, wins = 0, losses = 0, deaths = 0;
+  let booksPlayed = 0, totalRuns = 0, wins = 0, deaths = 0, battles = 0;
   for (const row of bookRows) {
     let s; try { s = JSON.parse(row.state_data); } catch { continue; }
     const completed = (s.playthroughs || []).filter(pt => pt.result === 'death' || pt.result === 'success' || pt.result === 'battle');
     if (completed.length) booksPlayed++;
     totalRuns += completed.length;
-    wins   += completed.filter(pt => pt.result === 'success').length;
-    losses += completed.filter(pt => pt.result === 'death' || pt.result === 'battle').length;
-    deaths += completed.filter(pt => pt.result === 'death').length;
+    wins    += completed.filter(pt => pt.result === 'success').length;
+    deaths  += completed.filter(pt => pt.result === 'death').length;
+    battles += completed.filter(pt => pt.result === 'battle').length;
   }
-  return { totalBooks, createdBooks, booksPlayed, totalRuns, wins, losses, deaths };
+  return { totalBooks, createdBooks, booksPlayed, totalRuns, wins, deaths, battles };
 }
 
 function getPublicCovers() {

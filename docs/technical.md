@@ -1014,7 +1014,7 @@ The landing view has three fixed-position panels around a scrollable central fee
 
 **`#app-banner-f1-btn`:** sits to the left of "User Guide" in the landing header. Purely a discoverability affordance for the F1 keyboard shortcut - clicking it calls the exact same `_toggleShortcutsModal()` that the `e.key === 'F1'` handler calls, opening `#shortcuts-modal-overlay`. No separate logic; it exists because most users never think to press F1.
 
-**Demo button auto-hide:** `_updateDemoBtnVisibility()` (`boot.js`) is called from `showBooks()` whenever the user is authenticated. It fetches `GET /api/profile` (`getProfileStats(userId)`, including `deaths`) and hides `#demo-btn` once `wins >= 1 && deaths >= 1`. Deliberately `deaths` (`result === 'death'`), not the combined `losses` field (`death` + `battle`) or `battle` alone. `showLogin()` resets `#demo-btn`'s inline style back to visible, since the hidden state is per-account.
+**Demo button auto-hide:** `_updateDemoBtnVisibility()` (`boot.js`) is called from `showBooks()` whenever the user is authenticated. It fetches `GET /api/profile` (`getProfileStats(userId)`, returning `wins`/`deaths`/`battles` as three separate counts) and hides `#demo-btn` once `wins >= 1 && deaths >= 1`. Deliberately `deaths` (`result === 'death'`) alone, not `battles` - a battle death doesn't count toward this. `showLogin()` resets `#demo-btn`'s inline style back to visible, since the hidden state is per-account.
 
 ### Panel collapse toggles
 

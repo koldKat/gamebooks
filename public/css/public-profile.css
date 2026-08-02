@@ -233,6 +233,7 @@
 
 .pub-stat-win  .pub-stat-val { color: #4ade80; }
 .pub-stat-death .pub-stat-val { color: #f87171; }
+.pub-stat-battle .pub-stat-val { color: #fb923c; }
 
 .pub-book {
   margin-bottom: 0.25rem;

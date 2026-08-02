@@ -5,8 +5,8 @@
 // covers.js's cover activity view) and its <link> in index.html.
 
 import { isValidSecId } from './state.js?v=11';
-import { escapeHtml } from './util.js?v=28';
-import { t } from './i18n.js?v=22';
+import { escapeHtml } from './util.js?v=29';
+import { t } from './i18n.js?v=23';
 
 // Callbacks wired in by main.js at boot
 let _hooks = {};
@@ -76,7 +76,11 @@ export function renderPublicProfile(profile) {
 
   const allRuns = profile.books.flatMap(b => b.runs);
   const wins    = allRuns.filter(r => r.result === 'success').length;
-  const deaths  = allRuns.filter(r => r.result === 'death').length;
+  const losses  = allRuns.filter(r => r.result === 'death').length;
+  // Shown as its own stat, matching the admin panel's separate Wins/Losses/
+  // Battle Deaths columns - runs includes 'battle' results in its total, so
+  // this has to be broken out for wins+losses+battles to add up to it.
+  const battles = allRuns.filter(r => r.result === 'battle').length;
 
   const avatarHtml = profile.avatarUrl
     ? `<img class="pub-profile-avatar" src="${escapeHtml(profile.avatarUrl)}" alt="">`
@@ -96,7 +100,8 @@ export function renderPublicProfile(profile) {
           <span class="pub-stat"><span class="pub-stat-val">${profile.books.length}</span> ${t('pub.stat.books_played')}</span>
           <span class="pub-stat"><span class="pub-stat-val">${allRuns.length}</span> ${t('pub.stat.runs')}</span>
           <span class="pub-stat pub-stat-win"><span class="pub-stat-val">${wins}</span> ${t('pub.stat.wins')}</span>
-          <span class="pub-stat pub-stat-death"><span class="pub-stat-val">${deaths}</span> ${t('pub.stat.losses')}</span>
+          <span class="pub-stat pub-stat-death"><span class="pub-stat-val">${losses}</span> ${t('pub.stat.losses')}</span>
+          ${battles > 0 ? `<span class="pub-stat pub-stat-battle"><span class="pub-stat-val">${battles}</span> ${t('pub.stat.battle_deaths')}</span>` : ''}
         </div>
       </div>
     </div>`;

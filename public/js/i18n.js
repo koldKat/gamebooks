@@ -435,6 +435,7 @@ const translations = {
     'pub.stat.runs':           'runs',
     'pub.stat.wins':           'wins',
     'pub.stat.losses':         'losses',
+    'pub.stat.battle_deaths':  'battle deaths',
     'pub.run_count':           '{n} run{s}',
     'pub.run_label':           '{prefix}Run {n} - {result}',
     'pub.locked':              '{label} (Locked)',

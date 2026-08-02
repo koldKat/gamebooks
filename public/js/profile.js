@@ -5,9 +5,9 @@
 // from boot.js, and delete public/css/profile.css and its <link> in index.html.
 
 import { apiFetch, setUsername, isDemoMode, getToken, setCurrentUserLevel, getUsername } from './state.js?v=11';
-import { t } from './i18n.js?v=22';
-import { updateCoinsDisplay } from './shop.js?v=35';
-import { escapeHtml, compressToBlob } from './util.js?v=28';
+import { t } from './i18n.js?v=23';
+import { updateCoinsDisplay } from './shop.js?v=36';
+import { escapeHtml, compressToBlob } from './util.js?v=29';
 
 let _hooks = {};
 export function setProfileHooks(h) { _hooks = h || {}; }
@@ -158,7 +158,7 @@ export function renderBooksXpSummary(data, opts = {}) {
 
 function renderXpBlock(data) {
   const { level = 0, title = null, coinsBalance = 0, xpFromBoost = 0, xpBoostPct = 0,
-          totalBooks = 0, createdBooks = 0, booksPlayed = 0, totalRuns = 0, wins = 0, losses = 0,
+          totalBooks = 0, createdBooks = 0, booksPlayed = 0, totalRuns = 0, wins = 0, deaths = 0, battles = 0,
           bonusHeartbeatXp = 0, bonusHeartbeatXpFree = 0 } = data;
   const xpFromBoostWhole = Math.floor(Number(xpFromBoost) || 0);
   setCurrentUserLevel(level);
@@ -179,7 +179,8 @@ function renderXpBlock(data) {
       `<span class="pub-stat"><span class="pub-stat-val">${booksPlayed}</span> played</span>` +
       `<span class="pub-stat"><span class="pub-stat-val">${totalRuns}</span> runs</span>` +
       `<span class="pub-stat pub-stat-win"><span class="pub-stat-val">${wins}</span> wins</span>` +
-      `<span class="pub-stat pub-stat-death"><span class="pub-stat-val">${losses}</span> losses</span>`;
+      `<span class="pub-stat pub-stat-death"><span class="pub-stat-val">${deaths}</span> losses</span>` +
+      (battles > 0 ? `<span class="pub-stat pub-stat-battle"><span class="pub-stat-val">${battles}</span> ${t('pub.stat.battle_deaths')}</span>` : '');
   } else if (statsEl) {
     statsEl.innerHTML = '';
   }
