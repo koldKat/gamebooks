@@ -585,6 +585,7 @@ const translations = {
     'covers.battle_sim_only': 'Battle sim only',
     'covers.has_battle_sim': 'Has a battle simulator',
     'covers.open_world_only': 'Open world only',
+    'covers.not_in_my_books': 'Not in my books',
     'covers.open_world_series': 'Open world series',
     'covers.rate_gate_series': 'Complete all books in this series first to rate it',
     'covers.rate_gate_book': 'Complete a run first to rate this book',

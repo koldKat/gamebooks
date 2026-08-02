@@ -4,10 +4,10 @@
 // Visible to all logged-in users.
 
 import { state, currentPlaythrough, saveState, apiFetch, viewingPt } from './state.js?v=11';
-import { showConfirm } from './play.js?v=54';
-import { getPlayBtnRow } from './charsheet.js?v=46';
-import { escapeHtml, shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from './util.js?v=29';
-import { t } from './i18n.js?v=23';
+import { showConfirm } from './play.js?v=55';
+import { getPlayBtnRow } from './charsheet.js?v=47';
+import { escapeHtml, shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from './util.js?v=30';
+import { t } from './i18n.js?v=24';
 
 const MAX_SLOTS = 40;
 
