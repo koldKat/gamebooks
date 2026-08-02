@@ -7,7 +7,7 @@
 const { db, _naturalCompareByName } = require('./connection');
 const { computeLevel, getTitleForLevel, getUserXpInfo, _insertNotif } = require('./xp');
 const { getRandomLevelUpTemplate, getRandomJoinTemplate } = require('./content');
-const { _getAggregateRating } = require('./books');
+const { _getAggregateRating, _getAuthorRatings } = require('./books');
 
 // ── Activity feed ─────────────────────────────────────────────────────────────
 
@@ -158,6 +158,10 @@ function getFeed() {
     if (sr.completed && sr.result && sr.completed_at) {
       const endMs = sr.completed_at * 1000;
       if (endMs >= cutoffMs) {
+        // No lastSection here - completeSeriesRun() (books.js) explicitly nulls
+        // last_book_id/last_section on completion (that pair only tracks an
+        // in-progress run's current position), so by the time this entry is
+        // read it's always null. The feed tooltip falls back to just the date.
         entries.push({ ...base, type: 'series_run_completed', result: sr.result,
           runIsPublic: !!sr.is_public, completedAt: endMs });
       }
@@ -270,6 +274,7 @@ function getFeed() {
           entries.push({ type: 'run_completed', username: row.username, bookName: row.bookName,
             result: pt.result, completedAt: ts, bookId: row.bookId, userId: row.userId, runIndex: i,
             runIsPublic: !!pt.isPublic, bookIsPublic: false, userPublicProfile: pub, isAuthor, isContributor, displayName, userLevel: computeLevel(row.xp || 0), userTitle: getTitleForLevel(computeLevel(row.xp || 0)),
+            pathLength: (pt.path || []).length, lastSection: pt.path && pt.path.length ? pt.path[pt.path.length - 1] : null,
             parentBookId, parentBookName, parentCoverUrl, seriesId, seriesName, seriesNumber, seriesIsPublic, parentBookIsPublic,
             avatarUrl: row.avatar_path ? `/avatars/${row.avatar_path}` : null,
             coverUrl:  row.cover_path  ? `/covers/${row.cover_path}`  : null,
@@ -305,6 +310,7 @@ function getFeed() {
       if (!row.hide_from_feed || pt.isPublic) entries.push({ type: 'run_completed', username: row.username, bookName: row.bookName,
         result: pt.result, completedAt: ts, bookId: row.bookId, userId: row.userId, runIndex: i,
         runIsPublic: pt.isPublic || false, bookIsPublic, userPublicProfile: pub, isAuthor, isContributor, displayName, userLevel: computeLevel(row.xp || 0), userTitle: getTitleForLevel(computeLevel(row.xp || 0)),
+        pathLength: (pt.path || []).length, lastSection: pt.path && pt.path.length ? pt.path[pt.path.length - 1] : null,
         parentBookId, parentBookName, parentCoverUrl, seriesId, seriesName, seriesNumber, seriesIsPublic, parentBookIsPublic,
         avatarUrl: row.avatar_path ? `/avatars/${row.avatar_path}` : null,
         coverUrl:  row.cover_path  ? `/covers/${row.cover_path}`  : null,
@@ -422,6 +428,18 @@ function getFeed() {
     return (!Number.isNaN(asIndex) && pts[asIndex]) ? asIndex : null;
   }
 
+  // Feeds the feed entry's own hover tooltip (a cheap plain-text preview,
+  // same idea as the one on the public-profile run list) without spinning up
+  // the full run graph just for a hover.
+  function _runPathInfo(stateDataJson, runIndex) {
+    if (runIndex == null || !stateDataJson) return { pathLength: null, lastSection: null };
+    try {
+      const pt = JSON.parse(stateDataJson)?.playthroughs?.[runIndex];
+      const path = pt?.path || [];
+      return { pathLength: path.length, lastSection: path.length ? path[path.length - 1] : null };
+    } catch { return { pathLength: null, lastSection: null }; }
+  }
+
   // ── First win ─────────────────────────────────────────────────────────────
   const firstWinRows = db.prepare(`
     SELECT e.ref AS bookId, e.created_at, u.id AS userId, u.username, u.public_profile, u.avatar_path, u.xp,
@@ -456,9 +474,12 @@ function getFeed() {
     WHERE e.event = 'first_win' AND e.created_at > ? AND u.hide_from_feed = 0
   `).all(cutoffSec);
   for (const row of firstWinRows) {
+    const winRunIndex = _resolveRunIndex(row.state_data, row.firstWinRunKey);
+    const winPathInfo  = _runPathInfo(row.state_data, winRunIndex);
     entries.push({ type: 'first_win', username: row.username, bookName: row.bookName,
       bookId: parseInt(row.bookId, 10), userId: row.userId, completedAt: row.created_at * 1000,
-      runIndex: _resolveRunIndex(row.state_data, row.firstWinRunKey), runIsPublic: !!row.runIsPublic,
+      runIndex: winRunIndex, runIsPublic: !!row.runIsPublic,
+      pathLength: winPathInfo.pathLength, lastSection: winPathInfo.lastSection,
       bookIsPublic: row.is_public === 1, userPublicProfile: row.public_profile === 1,
       isAuthor: row.is_author === 1, isContributor: row.is_contributor === 1, displayName: row.display_name || null,
       userLevel: computeLevel(row.xp || 0), userTitle: getTitleForLevel(computeLevel(row.xp || 0)),
@@ -501,10 +522,12 @@ function getFeed() {
           runIsPublic = !!(st.playthroughs?.[runIndex]?.isPublic);
         } catch {}
       }
+      const deathPathInfo = _runPathInfo(row.state_data, runIndex);
       entries.push({ type, username: row.username, userId: row.userId,
         bookId: parseInt(row.bookId, 10), bookName: row.bookName,
         bookIsPublic: row.is_public === 1,
         runIndex, runIsPublic,
+        pathLength: deathPathInfo.pathLength, lastSection: deathPathInfo.lastSection,
         completedAt: row.created_at * 1000,
         userPublicProfile: row.public_profile === 1,
         isAuthor: row.is_author === 1, isContributor: row.is_contributor === 1, displayName: row.display_name || null,
@@ -805,6 +828,8 @@ function getPublicProfile(username) {
         result:      pt.result,
         completedAt: pt.completedAt || null,
         isPublic:    pt.isPublic || false,
+        pathLength:  (pt.path || []).length,
+        lastSection: pt.path && pt.path.length ? pt.path[pt.path.length - 1] : null,
       }))
       .filter(r => r.result === 'death' || r.result === 'success' || r.result === 'battle');
     if (!runs.length) continue;
@@ -1124,6 +1149,7 @@ function getBookActivity(bookId) {
       seriesNumber:  book.series_number || null,
       children,
       ..._getAggregateRating(book.id),
+      authorRatings: _getAuthorRatings(book.authors),
     },
     entries,
   };

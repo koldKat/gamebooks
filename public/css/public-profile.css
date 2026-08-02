@@ -484,6 +484,11 @@
   color: #d1d5db;
   font-style: italic;
 }
+.book-modal-author-rating {
+  font-style: normal;
+  color: #f5a623;
+  font-size: 0.75rem;
+}
 
 .book-modal-description {
   font-size: 0.85rem;

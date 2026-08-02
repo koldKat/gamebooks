@@ -4,8 +4,8 @@
 // hideNotesUI() calls from boot.js, and remove the notebook/notes-display CSS from style.css.
 
 import { state, saveState, apiFetch, currentBookId } from './state.js?v=11';
-import { showAlert } from './play.js?v=55';
-import { t } from './i18n.js?v=24';
+import { showAlert } from './play.js?v=57';
+import { t } from './i18n.js?v=26';
 
 let _notesText  = '';
 let _nbFraction = 0;   // 0–1 scroll position, shared by both notebook views

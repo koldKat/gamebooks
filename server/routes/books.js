@@ -6,7 +6,7 @@
 
 const db = require('../db');
 const {
-  authenticate, send, readBody, getClientIp, tokenFromReq, isLocalhost,
+  authenticate, send, readBody, getClientIp, tokenFromReq, isLocalhost, isRequestImpersonating,
 } = require('../request-helpers');
 const {
   sseRegister, sseUnregister, ssePush,
@@ -563,10 +563,11 @@ async function handleGetBookEnemies(req, res, bookId) {
 async function handleSaveState(req, res, bookId) {
   const userId = await authenticate(req, res);
   if (userId === null) return;
+  const impersonating = isRequestImpersonating(req);
   const stateObj = await readBody(req);
   if (!stateObj || typeof stateObj !== 'object' || Array.isArray(stateObj)) return send(res, 400, { error: 'Invalid state' });
   const oldState = db.getBookState(userId, bookId);
-  if (!db.saveBookState(userId, bookId, stateObj)) return send(res, 404, { error: 'Not found' });
+  if (!db.saveBookState(userId, bookId, stateObj, { skipTimestamp: impersonating })) return send(res, 404, { error: 'Not found' });
   send(res, 200, { ok: true });
   // Track current position / completion for open world series.
   // Must scan ALL playthroughs because endPlaythrough clears activePtIndex before saveState runs.
@@ -593,7 +594,10 @@ async function handleSaveState(req, res, bookId) {
       });
     }
   }
-  if (oldState) db.processStateXp(userId, bookId, oldState, stateObj, stateObj.totalSections || 0);
+  // Same invisibility contract as the skipTimestamp save above - an admin's
+  // own actions while impersonating must not earn the impersonated user real
+  // XP for something the admin did, not them.
+  if (oldState && !impersonating) db.processStateXp(userId, bookId, oldState, stateObj, stateObj.totalSections || 0);
   // Fan out to party members and award them the same XP milestones
   const party = db.getPartyForBook(userId, bookId);
   if (party) {
