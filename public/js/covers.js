@@ -1,10 +1,10 @@
 // covers.js - Covers panel, lazy grid, landing bg rotation, cover/series activity modals
 import { getToken, isDemoMode, apiFetch } from './state.js?v=11';
-import { openPublicModal, closePublicModal, openPublicProfile, renderPublicProfile, openPublicRun, openPublicSeriesRun, _destroyPubNetworks } from './public-profile.js?v=41';
-import { refreshCoinsDisplay } from './shop.js?v=35';
+import { openPublicModal, closePublicModal, openPublicProfile, renderPublicProfile, openPublicRun, openPublicSeriesRun, _destroyPubNetworks } from './public-profile.js?v=43';
+import { refreshCoinsDisplay } from './shop.js?v=36';
 import { foldForSearch, matchesSearch, naturalCompare, naturalCompareByName } from './sort.js?v=1';
-import { escapeHtml, fetchPublic as publicFetch, BATTLE_SIM_BOOK_IDS } from './util.js?v=28';
-import { t } from './i18n.js?v=22';
+import { escapeHtml, fetchPublic as publicFetch, BATTLE_SIM_BOOK_IDS } from './util.js?v=29';
+import { t } from './i18n.js?v=23';
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────
 let _hooks = {};
@@ -728,6 +728,12 @@ export async function loadCovers({ force = true } = {}) {
     _coversDataFingerprint = nextFingerprint;
     if (!_isLandingBooksViewVisible()) return;
     _allBooks    = publicBooks;
+    // getAllPublicBooks() doesn't know about series flags - a book's own
+    // isOpenWorld has to be derived here from its seriesId, or every book
+    // belonging to an open-world series would never show the badge/match
+    // the filter even though the series itself does.
+    const openWorldSeriesIds = new Set((Array.isArray(publicSeries) ? publicSeries : []).filter(s => s.is_open_world).map(s => s.id));
+    for (const b of _allBooks) b.isOpenWorld = b.seriesId != null && openWorldSeriesIds.has(b.seriesId);
     _allSeriesCovers = _buildSeriesCoverEntries(Array.isArray(publicSeries) ? publicSeries : [], Array.isArray(_allBooks) ? _allBooks : []);
     if (!covers.length && !_allBooks.length && !_allSeriesCovers.length) {
       panel.classList.remove('active');

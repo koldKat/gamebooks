@@ -494,8 +494,9 @@ export async function loadUserDetail(userId) {
 
     const metaBar = document.getElementById('user-meta-bar');
     const totalRuns    = books.reduce((s, b) => s + (b.playthroughs || 0), 0);
-    const totalWins    = books.reduce((s, b) => s + (b.wins   || 0), 0);
-    const totalDeaths  = books.reduce((s, b) => s + (b.deaths || 0), 0);
+    const totalWins    = books.reduce((s, b) => s + (b.wins    || 0), 0);
+    const totalDeaths  = books.reduce((s, b) => s + (b.deaths  || 0), 0);
+    const totalBattles = books.reduce((s, b) => s + (b.battles || 0), 0);
     const createdCount = books.filter(b => b.created_by === user.id).length;
 
     addMetaItem(metaBar, 'Joined', fmtDate(user.created_at));
@@ -526,8 +527,10 @@ export async function loadUserDetail(userId) {
     winsN.style.cssText = 'font-size:0.75rem;color:#4ade80';
     const deathsN = el('span', '', `${totalDeaths.toLocaleString()}L`);
     deathsN.style.cssText = 'font-size:0.75rem;color:#f87171';
+    const battlesN = el('span', '', `${totalBattles.toLocaleString()}B`);
+    battlesN.style.cssText = 'font-size:0.75rem;color:#fb923c';
     runsVal.appendChild(runsN);
-    if (totalRuns > 0) { runsVal.appendChild(winsN); runsVal.appendChild(deathsN); }
+    if (totalRuns > 0) { runsVal.appendChild(winsN); runsVal.appendChild(deathsN); if (totalBattles > 0) runsVal.appendChild(battlesN); }
     runsMeta.appendChild(runsVal);
     metaBar.appendChild(runsMeta);
     const locMeta = el('div', 'meta-item');
