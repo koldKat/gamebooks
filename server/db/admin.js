@@ -1078,7 +1078,7 @@ function adminGetUsers() {
   `).all();
   const byUser = {};
   for (const b of allUb) {
-    if (!byUser[b.user_id]) byUser[b.user_id] = { runs: 0, wins: 0, deaths: 0, battles: 0 };
+    if (!byUser[b.user_id]) byUser[b.user_id] = { runs: 0, wins: 0, deaths: 0, battles: 0, active: 0 };
     try {
       const s = JSON.parse(b.state_data || '{}');
       for (const pt of (s.playthroughs || [])) {
@@ -1088,10 +1088,11 @@ function adminGetUsers() {
         if (pt.result === 'success') { byUser[b.user_id].runs++; byUser[b.user_id].wins++; }
         else if (pt.result === 'death') { byUser[b.user_id].runs++; byUser[b.user_id].deaths++; }
         else if (pt.result === 'battle') { byUser[b.user_id].runs++; byUser[b.user_id].battles++; }
+        else byUser[b.user_id].active++; // no result yet - matches adminGetBookStats' activePlaythroughs
       }
     } catch {}
   }
-  return users.map(u => ({ ...u, ...(byUser[u.id] || { runs: 0, wins: 0, deaths: 0, battles: 0 }), ...getUserXpInfo(u.id) }));
+  return users.map(u => ({ ...u, ...(byUser[u.id] || { runs: 0, wins: 0, deaths: 0, battles: 0, active: 0 }), ...getUserXpInfo(u.id) }));
 }
 
 function updateUserGeo(userId, country, city) {

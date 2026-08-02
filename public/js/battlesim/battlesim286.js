@@ -12,10 +12,10 @@
 // state lives in pt.sim286, per-user/per-book via currentPlaythrough().
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../state.js?v=11';
-import { showAlert } from '../play.js?v=57';
-import { getPlayBtnRow } from '../charsheet.js?v=49';
-import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../util.js?v=32';
-import { t } from '../i18n.js?v=26';
+import { showAlert } from '../play.js?v=58';
+import { getPlayBtnRow } from '../charsheet.js?v=50';
+import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../util.js?v=33';
+import { t } from '../i18n.js?v=27';
 
 // Book rule: initial life roll (2d6×4) plus up to 2 rerolls, 3 throws total per run.
 const MAX_LIFE_ROLLS = 3;

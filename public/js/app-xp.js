@@ -9,9 +9,9 @@
 // #app-xp-*/#app-reward-float-layer markup/CSS.
 
 import { apiFetch, getToken, isDemoMode } from './state.js?v=11';
-import { COIN_SVG } from './shop.js?v=39';
-import { escapeHtml } from './util.js?v=32';
-import { t } from './i18n.js?v=26';
+import { COIN_SVG } from './shop.js?v=40';
+import { escapeHtml } from './util.js?v=33';
+import { t } from './i18n.js?v=27';
 
 let _hooks = {};
 export function setAppXpHooks(h) { _hooks = h || {}; }
@@ -142,10 +142,37 @@ function _isBooksScreenVisible() {
     && document.getElementById('landing-wrapper')?.style.display !== 'none';
 }
 
+function _isMainScreenVisible() {
+  return document.getElementById('main-screen')?.style.display !== 'none';
+}
+
 // Horizontally centered in the gap between the covers panel and the activity
 // feed panel - NOT the same gap rewards.js's _positionRewardLayer uses (that
 // one centers between the feed and #landing-right, i.e. feed-to-books).
+// While in the play area (a book open), reuses rewards.js's own play-area
+// anchor (the gap between #play-bottom-stack and #play-btn-row) so this
+// layer shows up there too, not just on the books/landing screen - but at a
+// higher `bottom` offset than the personal reward-float-layer (which sits at
+// the CSS default of 1rem), since both would otherwise center in the exact
+// same gap and stack floaters directly on top of each other.
 function _positionAppRewardLayer(layer) {
+  if (_isMainScreenVisible() && !_isBooksScreenVisible()) {
+    layer.style.bottom = '4.4rem';
+    const playStack = document.getElementById('play-bottom-stack');
+    const btnRow    = document.getElementById('play-btn-row');
+    const stackRect = playStack?.getBoundingClientRect();
+    const rowRect   = btnRow?.getBoundingClientRect();
+    if (stackRect?.width > 0 && rowRect?.width > 0 && rowRect.left > stackRect.right) {
+      const centerX = stackRect.right + ((rowRect.left - stackRect.right) / 2);
+      layer.style.left = `${Math.round(centerX)}px`;
+      layer.style.transform = 'translateX(-50%)';
+      return;
+    }
+    layer.style.left = '50%';
+    layer.style.transform = 'translateX(-50%)';
+    return;
+  }
+  layer.style.bottom = '1rem';
   const covers = document.getElementById('covers-panel');
   const feed   = document.getElementById('feed-panel');
   const coversRect = covers?.getBoundingClientRect();
@@ -196,7 +223,7 @@ function _spawnAppRewardFloater(type, html) {
 }
 
 export function handleAppXpEvent(payload) {
-  if (!payload || !_hooks.getIsAdmin?.() || !_isBooksScreenVisible()) return;
+  if (!payload || !_hooks.getIsAdmin?.() || !(_isBooksScreenVisible() || _isMainScreenVisible())) return;
   const username = escapeHtml(String(payload.username || '?'));
   const xpDelta    = Math.max(0, Math.round(Number(payload.xpDelta) || 0));
   const coinDelta  = Math.max(0, Math.round(Number(payload.coinDelta) || 0));

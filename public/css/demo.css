@@ -173,6 +173,11 @@ body.no-feed-day-covers:not(.no-feed-glass-cards) .feed-day-card { background-co
   padding-left: 0.5rem;
   margin-left: -0.5rem;
 }
+.feed-entry--created {
+  border-left: 2px solid #38bdf8;
+  padding-left: 0.5rem;
+  margin-left: -0.5rem;
+}
 .feed-user-group .feed-entry--party {
   border-left: none;
   padding-left: 0;
