@@ -10,7 +10,7 @@ import {
   _acceptPdfSelection, _setPdfInlineLabel, formatFileSize,
   _populateSeriesSelect, _populateParentBookSelect,
   validateIsbn, validateIssn, validateAsin,
-} from './edit-book.js?v=115';
+} from './edit-book.js?v=116';
 import {
   invalidateAutocompleteCaches, _loadAutocompleteBooks, _loadSeriesAutocomplete,
   _setModalCover, _setupNameAutocomplete, _setupPlainAutocomplete, _setupAuthorsAutocomplete,

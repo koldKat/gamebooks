@@ -556,7 +556,14 @@ export async function loadFeed() {
         const target = document.getElementById(btn.dataset.target);
         if (target) { target.hidden = false; btn.setAttribute('aria-expanded', 'true'); btn.querySelector('.feed-group-chevron').textContent = '▼'; }
       }
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', e => {
+        // The group label (rendered via renderGroupLabel) embeds each
+        // member's clickable .feed-user-pub username directly inside this
+        // button - a click there should open their profile only, not also
+        // toggle the group. Bail here rather than stopPropagation()ing in the
+        // username's own handler, so document-level click cleanup (context
+        // menus etc.) still runs normally for that click.
+        if (e.target.closest('.feed-user-pub')) return;
         const target = document.getElementById(btn.dataset.target);
         if (!target) return;
         const expanded = btn.getAttribute('aria-expanded') === 'true';

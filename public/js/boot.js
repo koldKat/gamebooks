@@ -31,7 +31,7 @@ import {
   _openEditStash, _closeEditStash, _closeAddStash,
   _adminPdfHref,
   maxSectionInUse,
-} from './edit-book.js?v=115';
+} from './edit-book.js?v=116';
 import {
   setPrefsHooks, savePrefs, syncPrefs,
   _setLandingPanelCollapsed, _toggleAllLandingPanelsCollapsed,
@@ -65,7 +65,7 @@ import {
   clearOpenWorldState, doJumpCrossBook,
   getOwSrcBookId, getOwSrcSection, getOwCrossBookRoute,
 } from './open-world.js?v=104';
-import { setFeedHooks, loadFeed, refreshDayCoverFlows } from './feed.js?v=97';
+import { setFeedHooks, loadFeed, refreshDayCoverFlows } from './feed.js?v=98';
 import {
   setNotifHooks, _scheduleLiveUiRefresh,
   _closeNotifDropdown, _openNotifDropdown, isNotifDropdownOpen,
