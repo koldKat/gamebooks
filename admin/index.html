@@ -207,17 +207,18 @@
     #users-table th:nth-child(4)  { width: 58px;  }  /* Inactive */
     #users-table th:nth-child(5)  { width: 46px;  }  /* Books */
     #users-table th:nth-child(6)  { width: 44px;  }  /* Runs */
-    #users-table th:nth-child(7)  { width: 44px;  }  /* Wins */
-    #users-table th:nth-child(8)  { width: 44px;  }  /* Loss */
-    #users-table th:nth-child(9)  { width: 44px;  }  /* Battle */
-    #users-table th:nth-child(10) { width: 38px;  }  /* Lvl */
-    #users-table th:nth-child(11) { width: 50px;  }  /* Coins */
-    #users-table th:nth-child(12) { width: 44px;  }  /* Gifted */
-    #users-table th:nth-child(13) { width: 42px;  }  /* Sess */
-    #users-table th:nth-child(14) { width: 90px;  }  /* Location */
-    #users-table th:nth-child(15) { width: 110px; }  /* Domain */
-    #users-table th:nth-child(16),
-    #users-table td:nth-child(16) { min-width: 360px; width: 360px; }  /* Actions - up to 4 buttons (Clear sessions, Impersonate, Lock/Unlock, Delete) need room to fit on one row without wrapping */
+    #users-table th:nth-child(7)  { width: 44px;  }  /* Active */
+    #users-table th:nth-child(8)  { width: 44px;  }  /* Wins */
+    #users-table th:nth-child(9)  { width: 44px;  }  /* Loss */
+    #users-table th:nth-child(10) { width: 44px;  }  /* Battle */
+    #users-table th:nth-child(11) { width: 38px;  }  /* Lvl */
+    #users-table th:nth-child(12) { width: 50px;  }  /* Coins */
+    #users-table th:nth-child(13) { width: 44px;  }  /* Gifted */
+    #users-table th:nth-child(14) { width: 42px;  }  /* Sess */
+    #users-table th:nth-child(15) { width: 90px;  }  /* Location */
+    #users-table th:nth-child(16) { width: 110px; }  /* Domain */
+    #users-table th:nth-child(17),
+    #users-table td:nth-child(17) { min-width: 360px; width: 360px; }  /* Actions - up to 4 buttons (Clear sessions, Impersonate, Lock/Unlock, Delete) need room to fit on one row without wrapping */
     table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
 
     th {
@@ -689,6 +690,7 @@
             <th data-table="users" data-col="days_inactive">Inactive</th>
             <th data-table="users" data-col="book_count">Books</th>
             <th data-table="users" data-col="runs">Runs</th>
+            <th data-table="users" data-col="active">Active</th>
             <th data-table="users" data-col="wins">Wins</th>
             <th data-table="users" data-col="deaths">Loss</th>
             <th data-table="users" data-col="battles">Battle</th>
@@ -1300,6 +1302,6 @@
     </div>
   </div>
 
-  <script type="module" src="/admin/js/boot.js?v=7"></script>
+  <script type="module" src="/admin/js/boot.js?v=8"></script>
 </body>
 </html>

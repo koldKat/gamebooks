@@ -1,11 +1,11 @@
 // books.js - Books list rendering, caching, search/filter, expand prefs, cover queue
 import { getToken, isDemoMode, apiFetch, getDemoState, setDemoState } from './state.js?v=11';
 import { foldForSearch, naturalCompare, naturalCompareByName } from './sort.js?v=1';
-import { refreshCoinsDisplay } from './shop.js?v=39';
-import { openCoverActivity, openSeriesActivity, _startLandingCoverRotation, _resetLandingCoverQueue, _effectiveLandingCoverSource, loadCovers } from './covers.js?v=76';
-import { t } from './i18n.js?v=26';
-import { showConfirm, showTwoChoice } from './play.js?v=57';
-import { escapeHtml } from './util.js?v=32';
+import { refreshCoinsDisplay } from './shop.js?v=40';
+import { openCoverActivity, openSeriesActivity, _startLandingCoverRotation, _resetLandingCoverQueue, _effectiveLandingCoverSource, loadCovers } from './covers.js?v=78';
+import { t } from './i18n.js?v=27';
+import { showConfirm, showTwoChoice } from './play.js?v=58';
+import { escapeHtml, BATTLE_SIM_BOOK_IDS } from './util.js?v=33';
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────
 let _hooks = {};
@@ -36,6 +36,7 @@ let _seriesExpandedPrefs      = {};
 let _stashExpandedPrefs       = {};
 let _currentUserId            = null;
 let _invalidateAutocompleteCaches = () => {};
+let _booksListFingerprint     = null;
 
 const _BOOKS_LS_KEY   = 'books_list_v1';
 const _SERIES_LS_KEY  = 'series_list_v1';
@@ -47,7 +48,7 @@ export function getCachedAllSeries() { return _cachedAllSeries; }
 export function getCachedStashes()  { return _cachedStashes; }
 export function setCachedBooks(b)   { _cachedBooks = b; }
 export function setCachedAllSeries(s) { _cachedAllSeries = s; }
-export function clearBooksCache()   { _cachedBooks = null; _cachedAllSeries = null; _cachedStashes = null; _booksDataFresh = false; }
+export function clearBooksCache()   { _cachedBooks = null; _cachedAllSeries = null; _cachedStashes = null; _booksDataFresh = false; _booksListFingerprint = null; }
 export function setBooksDataFresh(v) { _booksDataFresh = !!v; }
 export function getBooksDataFresh()  { return _booksDataFresh; }
 export function setBooksRevealedAt(ts) { _booksRevealedAt = ts; }
@@ -508,6 +509,11 @@ export function _patchCachedBook(bookId, fields) {
 }
 
 // ── Book item HTML ────────────────────────────────────────────────────────────
+function _hasBattleSim(b) {
+  if (BATTLE_SIM_BOOK_IDS.includes(Number(b.id))) return true;
+  return !!(b.is_container && (_cachedBooks || []).some(c => c.parent_book_id === b.id && BATTLE_SIM_BOOK_IDS.includes(Number(c.id))));
+}
+
 function _bookItemHtml(b, isChild, containerExpanded, childCount, aggrStats, isAdmin) {
   const effectiveSections = b.is_container ? (aggrStats?.totalSections || 0) : (b.discoverable_sections ?? b.total_sections);
   const effectiveVisited  = b.is_container ? (aggrStats?.visited || 0)        : b.visited;
@@ -547,6 +553,12 @@ function _bookItemHtml(b, isChild, containerExpanded, childCount, aggrStats, isA
   const activeBadge = activeHere
     ? `<span class="book-active-run-badge" data-tooltip="${escapeHtml(`Series run ${activeHere.run_index + 1} active here${activeHere.last_section ? ` at ${activeHere.last_section}` : ''}`)}">▶ Run ${activeHere.run_index + 1}</span>`
     : '';
+  const openWorldBadge = b.isOpenWorld
+    ? `<span class="book-open-world-badge" data-tooltip="${escapeHtml(t('covers.open_world_book'))}"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span>`
+    : '';
+  const battleSimBadge = _hasBattleSim(b)
+    ? `<span class="book-battlesim-badge" data-tooltip="${escapeHtml(t('covers.has_battle_sim'))}"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="4" x2="20" y2="20"/><line x1="20" y1="4" x2="4" y2="20"/><line x1="4" y1="4" x2="8" y2="4"/><line x1="4" y1="4" x2="4" y2="8"/><line x1="20" y1="4" x2="16" y2="4"/><line x1="20" y1="4" x2="20" y2="8"/></svg></span>`
+    : '';
   let cardStyle      = bg;
   let pendingCoverAttr = '';
   if (experimentalCoverCards && coverUrl) {
@@ -564,6 +576,7 @@ function _bookItemHtml(b, isChild, containerExpanded, childCount, aggrStats, isA
     `<div class="book-info">` +
       `<div class="book-name-row">` +
         `<span class="book-name-text" data-id="${b.id}" data-name="${escapeHtml(b.name)}" data-tooltip="${escapeHtml(b.name)}">${escapeHtml(b.name)}</span>` +
+        openWorldBadge + battleSimBadge +
         activeBadge +
       `</div>` +
       subtitle +
@@ -621,11 +634,22 @@ export async function _refreshBooksListOnly() {
         const ar = await activeRunsRes.json().catch(() => null);
         _activeSeriesRuns = Array.isArray(ar) ? ar : [];
       }
-      renderBooksList(
-        books,
-        Array.isArray(safeSeries)  ? safeSeries  : (_cachedAllSeries || []),
-        Array.isArray(safeStashes) ? safeStashes : []
-      );
+      const safeSeriesArr  = Array.isArray(safeSeries)  ? safeSeries  : (_cachedAllSeries || []);
+      const safeStashesArr = Array.isArray(safeStashes) ? safeStashes : [];
+      // The periodic 5-minute poll (livetab.js) calls this on a large library
+      // even when nothing changed - renderBooksList does a full rebuild of
+      // #books-list, which is a visible flash/scroll-jump on a long list.
+      // Skipping the rebuild entirely when the fetched data is byte-identical
+      // to what's already on screen fixes that for the common case (nothing
+      // changed) without touching the render path itself, so every other
+      // caller (add/edit/delete a book, etc.) still gets its normal
+      // immediate, always-correct rebuild the moment the data actually
+      // differs.
+      const fingerprint = JSON.stringify({ books, series: safeSeriesArr, stashes: safeStashesArr, activeRuns: _activeSeriesRuns });
+      if (fingerprint !== _booksListFingerprint) {
+        _booksListFingerprint = fingerprint;
+        renderBooksList(books, safeSeriesArr, safeStashesArr);
+      }
       _booksDataFresh = true;
       _invalidateAutocompleteCaches();
     } catch (err) {
@@ -650,6 +674,8 @@ function _scheduleBooksListRefresh(delay = 350) {
 // ── Main render ───────────────────────────────────────────────────────────────
 export function renderBooksList(books, allSeries = [], stashes = []) {
   if (!Array.isArray(books)) return;
+  const openWorldSeriesIds = new Set((allSeries || []).filter(s => s.is_open_world).map(s => s.id));
+  for (const b of books) b.isOpenWorld = b.series_id != null && openWorldSeriesIds.has(b.series_id);
   _cachedBooks     = books;
   _cachedAllSeries = allSeries;
   _cachedStashes   = Array.isArray(stashes) ? stashes : [];

@@ -5,9 +5,9 @@
 // remove the party-* CSS from style.css.
 
 import { currentBookId, apiFetch, getToken, isDemoMode, loadState } from './state.js?v=11';
-import { render, suppressAutoNav, showAlert, showConfirm } from './play.js?v=57';
-import { escapeHtml } from './util.js?v=32';
-import { t } from './i18n.js?v=26';
+import { render, suppressAutoNav, showAlert, showConfirm } from './play.js?v=58';
+import { escapeHtml } from './util.js?v=33';
+import { t } from './i18n.js?v=27';
 
 // Hooks into main.js for things that aren't part of this module's scope.
 let _hooks = {};

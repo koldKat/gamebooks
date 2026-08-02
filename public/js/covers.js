@@ -1,10 +1,10 @@
 // covers.js - Covers panel, lazy grid, landing bg rotation, cover/series activity modals
 import { getToken, isDemoMode, apiFetch } from './state.js?v=11';
-import { openPublicModal, closePublicModal, openPublicProfile, renderPublicProfile, openPublicRun, openPublicSeriesRun, _destroyPubNetworks } from './public-profile.js?v=46';
-import { refreshCoinsDisplay } from './shop.js?v=39';
+import { openPublicModal, closePublicModal, openPublicProfile, renderPublicProfile, openPublicRun, openPublicSeriesRun, _destroyPubNetworks } from './public-profile.js?v=47';
+import { refreshCoinsDisplay } from './shop.js?v=40';
 import { foldForSearch, matchesSearch, naturalCompare, naturalCompareByName } from './sort.js?v=1';
-import { escapeHtml, fetchPublic as publicFetch, BATTLE_SIM_BOOK_IDS } from './util.js?v=32';
-import { t } from './i18n.js?v=26';
+import { escapeHtml, fetchPublic as publicFetch, BATTLE_SIM_BOOK_IDS } from './util.js?v=33';
+import { t } from './i18n.js?v=27';
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────
 let _hooks = {};
@@ -916,6 +916,8 @@ function renderSeriesActivity(data) {
         if (res.ok) {
           addSeriesBtn.textContent = t('covers.added_to_library');
           addSeriesBtn.classList.add('add-to-library-done');
+          await _hooks.refreshBooksListOnly?.();
+          _refreshCoversDisplay();
           _hooks.showBooks?.();
         } else {
           addSeriesBtn.disabled = false;
@@ -1159,6 +1161,7 @@ function renderCoverActivity(bookId, bookName, entries, userRating, bookMeta, us
         const res = await apiFetch(`/api/books/${bookId}/add`, { method: 'POST' });
         if (res.ok) {
           await _hooks.refreshBooksListOnly?.();
+          _refreshCoversDisplay();
           renderCoverActivity(
             bookId, bookName, entries, currentMyRating,
             { ...bookMeta, avgRating: currentAvg, voteCount: currentCount },

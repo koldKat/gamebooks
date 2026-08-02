@@ -17,7 +17,7 @@ import {
   storeData, getSorted, getFiltered, foldForSearch, naturalCompare, naturalCompareByName, _tableData,
   setSearchFields, wireTableSearch, initSortHeaders, renderPaged,
 } from './core.js?v=1';
-import { loadAll, loadTools } from './dashboard.js?v=2';
+import { loadAll, loadTools } from './dashboard.js?v=5';
 
 // ── Gift modal ────────────────────────────────────────────────────────────────
 
@@ -237,10 +237,12 @@ function renderUserRow(tbody, u) {
     appendCell(tr, badge(u.book_count, 'badge-blue'));
 
     const runsCell    = appendCell(tr, u.runs    || 0, 'muted');
+    const activeCell  = appendCell(tr, u.active  || 0, 'muted');
     const winsCell    = appendCell(tr, u.wins    || 0, 'muted');
     const deathsCell  = appendCell(tr, u.deaths  || 0, 'muted');
     const battlesCell = appendCell(tr, u.battles || 0, 'muted');
     if (u.runs    > 0) runsCell.style.color    = '#f5a623';
+    if (u.active  > 0) activeCell.style.color  = '#60a5fa';
     if (u.wins    > 0) winsCell.style.color    = '#4ade80';
     if (u.deaths  > 0) deathsCell.style.color  = '#f87171';
     if (u.battles > 0) battlesCell.style.color = '#fb923c';

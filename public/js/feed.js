@@ -1,10 +1,10 @@
 // feed.js - Activity feed rendering, hover image previews, feed SSE reload
 
 import { getToken, apiFetch } from './state.js?v=11';
-import { openPublicProfile, openPublicSeriesRun, openPublicRun } from './public-profile.js?v=46';
-import { openCoverActivity, openSeriesActivity } from './covers.js?v=76';
-import { escapeHtml } from './util.js?v=32';
-import { t } from './i18n.js?v=26';
+import { openPublicProfile, openPublicSeriesRun, openPublicRun } from './public-profile.js?v=47';
+import { openCoverActivity, openSeriesActivity } from './covers.js?v=78';
+import { escapeHtml } from './util.js?v=33';
+import { t } from './i18n.js?v=27';
 
 let _hooks = {};
 export function setFeedHooks(h) { _hooks = h || {}; }
@@ -315,6 +315,7 @@ export async function loadFeed() {
         html = t('feed.tmpl.run_completed', { user: userEl, verb: verbEl, book: bookBtn(e.bookId, e.bookName), n: e.runIndex + 1 });
       } else if (e.type === 'book_created') {
         html = t('feed.tmpl.created', { user: userEl, noun: nounLabel(e.isContainer), book: bookBtn(e.bookId, e.bookName) });
+        extraClass = 'feed-entry--created';
       } else if (e.type === 'book_added') {
         html = t('feed.tmpl.added', { user: userEl, noun: nounLabel(e.isContainer), book: bookBtn(e.bookId, e.bookName) });
       } else if (e.type === 'series_created') {
@@ -437,7 +438,7 @@ export async function loadFeed() {
 
     function renderDayItems(items) {
       const thisDayIndex = dayIndex++;
-      const skipTypes = new Set(['level_up', 'user_joined', 'book_rated', 'series_rated']);
+      const skipTypes = new Set(['level_up', 'user_joined', 'book_rated', 'series_rated', 'book_created']);
       const userCounts = new Map();
       for (const e of items) {
         if (skipTypes.has(e.type)) continue;
@@ -452,7 +453,7 @@ export async function loadFeed() {
       const rendered = new Set();
       let out = '';
       for (const e of items) {
-        if (e.type === 'level_up' || e.type === 'book_rated' || e.type === 'series_rated') {
+        if (e.type === 'level_up' || e.type === 'book_rated' || e.type === 'series_rated' || e.type === 'book_created') {
           // Always its own standalone entry - never merged into a same-user
           // collapse group, even if that user has enough other actions today
           // to trigger one (grouping keys purely on username, so without this

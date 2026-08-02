@@ -590,6 +590,7 @@ const translations = {
     'covers.not_in_my_books': 'Not in my books',
     'covers.author_rating_votes': '{n} vote{s}',
     'covers.open_world_series': 'Open world series',
+    'covers.open_world_book': 'Part of an open world series',
     'covers.rate_gate_series': 'Complete all books in this series first to rate it',
     'covers.rate_gate_book': 'Complete a run first to rate this book',
     'auth.confirm': 'Confirm',

@@ -460,6 +460,22 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.book-open-world-badge {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  color: #38bdf8;
+  margin-left: 0.3rem;
+  flex-shrink: 0;
+}
+.book-battlesim-badge {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  color: #f87171;
+  margin-left: 0.3rem;
+  flex-shrink: 0;
+}
 .book-active-run-badge {
   display: inline-flex;
   align-items: center;
