@@ -327,7 +327,7 @@ const translations = {
     'stats.total_xp_earned':  'Total XP earned',
     'stats.app_level':        'App level',
     'stats.avg_player_level': 'Avg player level',
-    'stats.level_ups':        'Level-ups',
+    'stats.level_ups':        'Total levels',
     'stats.xp_event_types':   'XP event types',
     'stats.xp_events':        'XP events',
 
