@@ -1,10 +1,10 @@
 // covers.js - Covers panel, lazy grid, landing bg rotation, cover/series activity modals
 import { getToken, isDemoMode, apiFetch } from './state.js?v=11';
-import { openPublicModal, closePublicModal, openPublicProfile, renderPublicProfile, openPublicRun, openPublicSeriesRun, _destroyPubNetworks } from './public-profile.js?v=43';
-import { refreshCoinsDisplay } from './shop.js?v=36';
+import { openPublicModal, closePublicModal, openPublicProfile, renderPublicProfile, openPublicRun, openPublicSeriesRun, _destroyPubNetworks } from './public-profile.js?v=44';
+import { refreshCoinsDisplay } from './shop.js?v=37';
 import { foldForSearch, matchesSearch, naturalCompare, naturalCompareByName } from './sort.js?v=1';
-import { escapeHtml, fetchPublic as publicFetch, BATTLE_SIM_BOOK_IDS } from './util.js?v=29';
-import { t } from './i18n.js?v=23';
+import { escapeHtml, fetchPublic as publicFetch, BATTLE_SIM_BOOK_IDS } from './util.js?v=30';
+import { t } from './i18n.js?v=24';
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────
 let _hooks = {};
@@ -40,6 +40,7 @@ let _coversSortMode   = localStorage.getItem('covers-sort') || 'latest';
 let _coversKindMode   = localStorage.getItem('covers-kind') || 'all';
 let _coversBattleSimOnly = localStorage.getItem('covers-battlesim-only') === '1';
 let _coversOpenWorldOnly = localStorage.getItem('covers-openworld-only') === '1';
+let _coversNotMineOnly   = localStorage.getItem('covers-notmine-only') === '1';
 let _favoriteBookIds   = new Set();
 let _favoriteSeriesIds = new Set();
 let _coverTooltipTitlePct  = Math.max(100, Math.min(148, parseInt(localStorage.getItem('cover-tooltip-title-pct') || '100', 10) || 100));
@@ -192,6 +193,7 @@ function _buildSeriesCoverEntries(seriesList = [], booksList = []) {
         authors: null,
         seriesName: series.name,
         childNames: seriesBooks.map(b => b.name),
+        bookIds: seriesBooks.map(b => b.id),
         coverSources: coverBooks.map(b => b.coverUrl).filter(Boolean),
         bookCount: series.book_count ?? seriesBooks.length,
         totalSections: series.total_sections ?? seriesBooks.reduce((s, b) => s + (b.totalSections || 0), 0),
@@ -243,6 +245,21 @@ function _hasBattleSim(item) {
   return !!(item.isContainer && (item.childIds || []).some(id => BATTLE_SIM_BOOK_IDS.includes(Number(id))));
 }
 
+// Cross-referenced against the logged-in user's own library (getCachedBooks,
+// wired in via setCoversHooks - covers.js can't import books.js directly,
+// since books.js already imports from covers.js) rather than anything the
+// server returns, since /api/public/books is a plain public listing with no
+// per-requester ownership info at all.
+function _isNotInMyBooks(item) {
+  const owned = Array.isArray(_hooks.getCachedBooks?.()) ? _hooks.getCachedBooks() : [];
+  const ownedIds = new Set(owned.map(b => b.id));
+  // A series counts as "not mine" only if NONE of its books are owned -
+  // unlike the battle-sim/open-world filters, this one has a clean meaning
+  // for a whole series (not just individual books), so it isn't excluded.
+  if (item.isSeries) return !(item.bookIds || []).some(id => ownedIds.has(id));
+  return !ownedIds.has(item.id);
+}
+
 function _visibleCoverItems() {
   const base = [..._allBooks, ..._allSeriesCovers].filter(item => !_hideCyrillicCovers || !_hasCyrillic(item.name));
   const mode = _effectiveCoversKindMode();
@@ -258,6 +275,7 @@ function _visibleCoverItems() {
   if (_coversBattleSimOnly) items = items.filter(_hasBattleSim);
   // Open world is a series-only concept - non-series items never match.
   if (_coversOpenWorldOnly) items = items.filter(i => !!i.isOpenWorld);
+  if (_coversNotMineOnly && getToken() && !isDemoMode) items = items.filter(_isNotInMyBooks);
   return items;
 }
 
@@ -751,6 +769,8 @@ export async function loadCovers({ force = true } = {}) {
       const favLi = kindMenu.querySelector('li[data-value="favorites"]');
       if (favLi) favLi.style.display = (getToken() && !isDemoMode) ? '' : 'none';
     }
+    const notMineEl2 = document.getElementById('covers-filter-notmine');
+    if (notMineEl2) notMineEl2.style.display = (getToken() && !isDemoMode) ? '' : 'none';
     panel.classList.add('active');
     document.getElementById('covers-toggle').classList.add('visible');
     _refreshCoversDisplay();
@@ -1878,4 +1898,10 @@ export function initCoversPanel() {
     () => _coversBattleSimOnly, v => { _coversBattleSimOnly = v; });
   _wireCoversFilterChip('covers-filter-openworld', 'covers-openworld-only',
     () => _coversOpenWorldOnly, v => { _coversOpenWorldOnly = v; });
+  _wireCoversFilterChip('covers-filter-notmine', 'covers-notmine-only',
+    () => _coversNotMineOnly, v => { _coversNotMineOnly = v; });
+  // Only makes sense with a logged-in library to compare against - same
+  // gating as the Favorites kind-mode option elsewhere in this function.
+  const notMineEl = document.getElementById('covers-filter-notmine');
+  if (notMineEl) notMineEl.style.display = (getToken() && !isDemoMode) ? '' : 'none';
 }
