@@ -894,7 +894,16 @@ function getSiteStats() {
   const appTitle   = getTitleForLevel(appLevel);
   const avgLevel   = Number(avgLevelRow?.avg || 0);
   const avgTitle   = getTitleForLevel(Math.floor(avgLevel));
-  const levelUps   = db.prepare("SELECT COUNT(*) AS n FROM xp_events WHERE event = 'level_up'").get().n;
+  // A live sum of everyone's current level, NOT a count of 'level_up' xp_events -
+  // that log is deduped per (user, level number) to stop the level-up coin bonus
+  // being farmed by dropping and re-crossing the same level, so its count can fall
+  // behind a user's current level after any XP correction/revoke. This should
+  // always agree with getAppXpSummary()'s sumLevels, which the App-wide XP widget
+  // shows as "N total levels" - computing it the same way here keeps them in sync.
+  const levelUps   = db.prepare(`
+    SELECT COALESCE(SUM(CASE WHEN xp <= 0 THEN 0 ELSE CAST(floor((-1 + sqrt(1 + 8.0 * xp / 1000.0)) / 2) AS INTEGER) END), 0) AS n
+    FROM users
+  `).get().n;
   const xpEvents      = db.prepare("SELECT COUNT(*) AS n FROM xp_events WHERE event != 'level_up' AND event != 'idle_heartbeat'").get().n;
   const xpEventTypes  = db.prepare("SELECT COUNT(DISTINCT event) AS n FROM xp_events WHERE event != 'level_up' AND event != 'idle_heartbeat'").get().n;
   const booksFullyVisited    = db.prepare("SELECT COUNT(DISTINCT CAST(ref AS INTEGER)) AS n FROM xp_events WHERE event = 'visit_all'").get().n;
