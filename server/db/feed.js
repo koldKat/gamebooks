@@ -861,12 +861,16 @@ function getPublicProfile(username) {
 
 function getProfileStats(userId) {
   const bookRows = db.prepare(`
-    SELECT b.id, b.created_by, ub.state_data
+    SELECT b.id, b.created_by, b.parent_book_id, ub.state_data
     FROM user_books ub JOIN books b ON b.id = ub.book_id
     WHERE ub.user_id = ? AND b.is_demo = 0
   `).all(userId);
-  const totalBooks   = bookRows.length;
-  const createdBooks = bookRows.filter(b => b.created_by === userId).length;
+  // Root-level only (anthology children excluded) - matches getPublicProfile's
+  // counting convention, where an anthology counts as one book regardless of
+  // how many of its children the user has added.
+  const rootRows      = bookRows.filter(b => !b.parent_book_id);
+  const totalBooks    = rootRows.length;
+  const createdBooks  = rootRows.filter(b => b.created_by === userId).length;
   let booksPlayed = 0, totalRuns = 0, wins = 0, deaths = 0, battles = 0;
   for (const row of bookRows) {
     let s; try { s = JSON.parse(row.state_data); } catch { continue; }

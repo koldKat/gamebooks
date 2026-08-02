@@ -254,9 +254,16 @@ let _editingStashBookIds         = new Set();
 let _editingStashSeriesIds       = new Set();
 let _editingStashExcludedBookIds = new Set();
 
+// A book counts as "assigned" not just when it's directly in a stash's own
+// bookIds, but also when it's only covered implicitly because its series (or
+// parent anthology) is in that stash - otherwise it'd still show up as a
+// separately pickable, apparently-free row in every other stash's picker.
 function _stashAssignedBooksSet() {
   const set = new Set();
-  for (const stash of (getCachedStashes() || [])) for (const id of (stash.bookIds || [])) set.add(id);
+  for (const stash of (getCachedStashes() || [])) {
+    for (const id of (stash.bookIds || [])) set.add(id);
+    for (const id of _collectImplicitStashBookIds(stash.bookIds, stash.seriesIds, stash.excludedBookIds)) set.add(id);
+  }
   return set;
 }
 
