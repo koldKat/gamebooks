@@ -581,6 +581,12 @@ const translations = {
     'covers.add_to_favorites': 'Add to favorites',
     'covers.my_books_covers': 'My books covers',
     'covers.all_public_covers': 'All public covers',
+    'covers.battle_sim_only': 'Battle sim only',
+    'covers.has_battle_sim': 'Has a battle simulator',
+    'covers.open_world_only': 'Open world only',
+    'covers.open_world_series': 'Open world series',
+    'covers.rate_gate_series': 'Complete all books in this series first to rate it',
+    'covers.rate_gate_book': 'Complete a run first to rate this book',
     'auth.confirm': 'Confirm',
     'auth.send_reset_link': 'Send reset link',
     'auth.demo_username': 'Demo',
@@ -662,5 +668,12 @@ export function applyTranslations() {
   });
   document.querySelectorAll('[data-i18n-title]').forEach(el => {
     el.title = t(el.dataset.i18nTitle);
+  });
+  // Same idea as data-i18n-title, but for the app's own themed data-tooltip
+  // system (tooltip.js) instead of the native browser title tooltip -
+  // static HTML can't call t() at parse time, so this attribute defers the
+  // translation to this runtime pass, same as data-i18n-title already does.
+  document.querySelectorAll('[data-i18n-tooltip]').forEach(el => {
+    el.dataset.tooltip = t(el.dataset.i18nTooltip);
   });
 }

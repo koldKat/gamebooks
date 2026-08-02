@@ -1,10 +1,10 @@
 // covers.js - Covers panel, lazy grid, landing bg rotation, cover/series activity modals
 import { getToken, isDemoMode, apiFetch } from './state.js?v=11';
-import { openPublicModal, closePublicModal, openPublicProfile, renderPublicProfile, openPublicRun, openPublicSeriesRun, _destroyPubNetworks } from './public-profile.js?v=38';
-import { refreshCoinsDisplay } from './shop.js?v=32';
+import { openPublicModal, closePublicModal, openPublicProfile, renderPublicProfile, openPublicRun, openPublicSeriesRun, _destroyPubNetworks } from './public-profile.js?v=41';
+import { refreshCoinsDisplay } from './shop.js?v=35';
 import { foldForSearch, matchesSearch, naturalCompare, naturalCompareByName } from './sort.js?v=1';
-import { escapeHtml, fetchPublic as publicFetch } from './util.js?v=25';
-import { t } from './i18n.js?v=19';
+import { escapeHtml, fetchPublic as publicFetch, BATTLE_SIM_BOOK_IDS } from './util.js?v=28';
+import { t } from './i18n.js?v=22';
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────
 let _hooks = {};
@@ -38,6 +38,8 @@ let _coversPanelRunning  = false;
 let _coversPanelGen      = 0;
 let _coversSortMode   = localStorage.getItem('covers-sort') || 'latest';
 let _coversKindMode   = localStorage.getItem('covers-kind') || 'all';
+let _coversBattleSimOnly = localStorage.getItem('covers-battlesim-only') === '1';
+let _coversOpenWorldOnly = localStorage.getItem('covers-openworld-only') === '1';
 let _favoriteBookIds   = new Set();
 let _favoriteSeriesIds = new Set();
 let _coverTooltipTitlePct  = Math.max(100, Math.min(148, parseInt(localStorage.getItem('cover-tooltip-title-pct') || '100', 10) || 100));
@@ -231,14 +233,32 @@ function _coverTooltipTitlePercent() {
   return _coverTooltipTitlePct;
 }
 
+// A sim book can be a standalone tile OR live inside an anthology container
+// as a child (e.g. book 8 - its own tile never appears on the covers wall,
+// only its parent anthology's does), so containers count too if ANY of
+// their children has a sim, not just the container's own ID.
+function _hasBattleSim(item) {
+  if (item.isSeries) return false;
+  if (BATTLE_SIM_BOOK_IDS.includes(Number(item.id))) return true;
+  return !!(item.isContainer && (item.childIds || []).some(id => BATTLE_SIM_BOOK_IDS.includes(Number(id))));
+}
+
 function _visibleCoverItems() {
   const base = [..._allBooks, ..._allSeriesCovers].filter(item => !_hideCyrillicCovers || !_hasCyrillic(item.name));
   const mode = _effectiveCoversKindMode();
-  if (mode === 'books') return base.filter(b => !b.isSeries && !b.isContainer);
-  if (mode === 'anthologies') return base.filter(b => !!b.isContainer);
-  if (mode === 'series') return base.filter(b => !!b.isSeries);
-  if (mode === 'favorites') return base.filter(_isFavoriteCoverItem);
-  return base;
+  let items;
+  if (mode === 'books') items = base.filter(b => !b.isSeries && !b.isContainer);
+  else if (mode === 'anthologies') items = base.filter(b => !!b.isContainer);
+  else if (mode === 'series') items = base.filter(b => !!b.isSeries);
+  else if (mode === 'favorites') items = base.filter(_isFavoriteCoverItem);
+  else items = base;
+  // Series covers span multiple books and don't map to one battle sim, so
+  // they're excluded outright rather than shown/hidden by any single book's
+  // sim status.
+  if (_coversBattleSimOnly) items = items.filter(_hasBattleSim);
+  // Open world is a series-only concept - non-series items never match.
+  if (_coversOpenWorldOnly) items = items.filter(i => !!i.isOpenWorld);
+  return items;
 }
 
 function _sortedAllBooks() {
@@ -262,7 +282,7 @@ function _makeCoverThumbHTML(c) {
   const cls = c.isSeries ? ' cover-thumb--series' : (c.isContainer ? ' cover-thumb--anthology' : '');
   const isFavorite = _isFavoriteCoverItem(c);
   const favBtn = (getToken() && !isDemoMode)
-    ? `<button class="cover-fav-btn${isFavorite ? ' is-favorite' : ''}" type="button" data-fav-type="${c.isSeries ? 'series' : 'book'}" data-fav-id="${c.isSeries ? c.entityId : c.id}" title="${isFavorite ? t('covers.remove_from_favorites') : t('covers.add_to_favorites')}" aria-label="${isFavorite ? t('covers.remove_from_favorites') : t('covers.add_to_favorites')}">${isFavorite ? '★' : '☆'}</button>`
+    ? `<button class="cover-fav-btn${isFavorite ? ' is-favorite' : ''}" type="button" data-fav-type="${c.isSeries ? 'series' : 'book'}" data-fav-id="${c.isSeries ? c.entityId : c.id}" data-tooltip="${escapeHtml(isFavorite ? t('covers.remove_from_favorites') : t('covers.add_to_favorites'))}" aria-label="${isFavorite ? t('covers.remove_from_favorites') : t('covers.add_to_favorites')}">${isFavorite ? '★' : '☆'}</button>`
     : '';
   const useSingleSeriesCover = c.isSeries && c.coverSources?.length && c.coverSources.length < 4;
   const attrs = c.isSeries
@@ -272,7 +292,8 @@ function _makeCoverThumbHTML(c) {
     favBtn +
     (c.isSeries ? `<span class="cover-series-badge">series</span>` : '') +
     (c.isContainer ? `<span class="cover-anthology-badge">anthology</span>` : '') +
-    (c.isOpenWorld ? `<span class="cover-open-world-badge" data-tooltip="Open world series"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span>` : '') +
+    (c.isOpenWorld ? `<span class="cover-open-world-badge" data-tooltip="${escapeHtml(t('covers.open_world_series'))}"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span>` : '') +
+    (_hasBattleSim(c) ? `<span class="cover-battlesim-badge" data-tooltip="${escapeHtml(t('covers.has_battle_sim'))}"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="4" x2="20" y2="20"/><line x1="20" y1="4" x2="4" y2="20"/><line x1="4" y1="4" x2="8" y2="4"/><line x1="4" y1="4" x2="4" y2="8"/><line x1="20" y1="4" x2="16" y2="4"/><line x1="20" y1="4" x2="20" y2="8"/></svg></span>` : '') +
     (c.isSeries
       ? (
         c.coverSources?.length
@@ -296,7 +317,7 @@ function _syncCoverFavoriteButton(btn, isFavorite) {
   btn.classList.toggle('is-favorite', !!isFavorite);
   btn.textContent = isFavorite ? '★' : '☆';
   const label = isFavorite ? t('covers.remove_from_favorites') : t('covers.add_to_favorites');
-  btn.title = label;
+  btn.dataset.tooltip = label;
   btn.setAttribute('aria-label', label);
 }
 
@@ -932,7 +953,7 @@ function renderSeriesActivity(data) {
         voteCount     = d.voteCount ?? 0;
         canRate       = d.canRate ?? false;
         ssw.dataset.userRating = currentRating ?? '';
-        if (!canRate) ssw.title = 'Complete all books in this series first to rate it';
+        if (!canRate) ssw.dataset.tooltip = t('covers.rate_gate_series');
         updateStars(null);
       }).catch(() => {});
 
@@ -1174,7 +1195,7 @@ function renderCoverActivity(bookId, bookName, entries, userRating, bookMeta, us
   const starWidget = body.querySelector('.star-rating');
   if (starWidget && userOwnsBook) {
     starWidget.dataset.userRating = currentMyRating ?? '';
-    if (!bookCanRate) starWidget.title = 'Complete a run first to rate this book';
+    if (!bookCanRate) starWidget.dataset.tooltip = t('covers.rate_gate_book');
 
     const updateDisplay = (hoverVal) => {
       const displayVal = hoverVal !== null ? hoverVal : currentAvg;
@@ -1830,4 +1851,25 @@ export function initCoversPanel() {
     _applyCoversKindMode(li.dataset.value);
   });
   document.addEventListener('click', _closeCoversMenus);
+
+  function _wireCoversFilterChip(elId, storageKey, get, set) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    el.setAttribute('aria-pressed', get() ? 'true' : 'false');
+    el.addEventListener('click', () => {
+      const next = el.getAttribute('aria-pressed') !== 'true';
+      el.setAttribute('aria-pressed', next ? 'true' : 'false');
+      set(next);
+      localStorage.setItem(storageKey, next ? '1' : '0');
+      if (!coversPanel2.classList.contains('covers-searching')) {
+        _refreshCoversDisplay();
+      } else if (coversSearchEl.value.trim()) {
+        coversSearchEl.dispatchEvent(new Event('input'));
+      }
+    });
+  }
+  _wireCoversFilterChip('covers-filter-battlesim', 'covers-battlesim-only',
+    () => _coversBattleSimOnly, v => { _coversBattleSimOnly = v; });
+  _wireCoversFilterChip('covers-filter-openworld', 'covers-openworld-only',
+    () => _coversOpenWorldOnly, v => { _coversOpenWorldOnly = v; });
 }

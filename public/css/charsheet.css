@@ -813,6 +813,7 @@ body.sidebar-collapsed #notes-display { left: 1rem; }
 select.cs-val { color: #d1d5db; }
 
 .cs-bool-wrap { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; }
+.cs-val-bool { accent-color: #3b82f6; cursor: pointer; }
 .cs-bool-label { font-size: 0.8rem; color: #d1d5db; }
 
 /* Enum options config (smaller, de-emphasised) */

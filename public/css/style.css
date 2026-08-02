@@ -23,7 +23,11 @@
   white-space: nowrap;
   box-shadow: 0 8px 24px rgba(0,0,0,0.5);
   pointer-events: none;
-  z-index: 4000;
+  /* Above every other overlay in the app, including the covers wall's
+     enlarged hover-preview popup (z-index 9999, public/css/landing.css) and
+     login.css's 10000 - the tooltip is transient hover feedback and should
+     never render underneath something else that's also hovering. */
+  z-index: 10001;
 }
 #app-tooltip.tip-wrap {
   white-space: normal;

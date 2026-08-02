@@ -11,11 +11,11 @@
 // shields subtracting a flat amount from incoming enemy damage instead. All
 // state lives in pt.sim286, per-user/per-book via currentPlaythrough().
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from './state.js?v=11';
-import { showAlert } from './play.js?v=50';
-import { getPlayBtnRow } from './charsheet.js?v=42';
-import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from './util.js?v=25';
-import { t } from './i18n.js?v=19';
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../state.js?v=11';
+import { showAlert } from '../play.js?v=53';
+import { getPlayBtnRow } from '../charsheet.js?v=45';
+import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../util.js?v=28';
+import { t } from '../i18n.js?v=22';
 
 // Book rule: initial life roll (2d6×4) plus up to 2 rerolls, 3 throws total per run.
 const MAX_LIFE_ROLLS = 3;
@@ -868,7 +868,7 @@ export function initSim286() {
               </div>
             </div>
             <div id="sim286-glove-bonus-row" class="inv-edit-row" style="display:none">
-              <span class="inv-edit-label bsim-stat-label" title="Обичайно +5, но някои срещи го намаляват (+1 до +3) или го увеличават (+10 срещу Огнената сянка, ако си приел ъпгрейда на 181)">Бонус на ръкавицата</span>
+              <span class="inv-edit-label bsim-stat-label" data-tooltip="Обичайно +5, но някои срещи го намаляват (+1 до +3) или го увеличават (+10 срещу Огнената сянка, ако си приел ъпгрейда на 181)">Бонус на ръкавицата</span>
               <div class="inv-qty-wrap">
                 <button class="inv-qty-btn" data-id="sim286-glove-bonus" data-delta="-1">−</button>
                 <input id="sim286-glove-bonus" class="inv-edit-input inv-qty-input" type="text" inputmode="numeric">
@@ -876,7 +876,7 @@ export function initSim286() {
               </div>
             </div>
             <div class="inv-edit-row">
-              <span class="inv-edit-label bsim-stat-label" title="Намери ли скафандър с повишена защита или подобен предмет, добави точките му тук - те се сумират с щита">Доп. защита</span>
+              <span class="inv-edit-label bsim-stat-label" data-tooltip="Намери ли скафандър с повишена защита или подобен предмет, добави точките му тук - те се сумират с щита">Доп. защита</span>
               <div class="inv-qty-wrap">
                 <button class="inv-qty-btn" data-id="sim286-extra-def" data-delta="-1">−</button>
                 <input id="sim286-extra-def" class="inv-edit-input inv-qty-input" type="text" inputmode="numeric">
@@ -918,7 +918,7 @@ export function initSim286() {
               <input id="sim286-heal-amount" class="inv-edit-input inv-qty-input" type="text" inputmode="numeric" value="10">
               <button class="inv-qty-btn" data-id="sim286-heal-amount" data-delta="1" data-min="1">+</button>
             </div>
-            <button id="sim286-heal-roll" class="inv-edit-done bsim-heal-btn" type="button" title="Много лечебни средства в книгата възстановяват колкото покажат зарчетата">Хвърли (2d6)</button>
+            <button id="sim286-heal-roll" class="inv-edit-done bsim-heal-btn" type="button" data-tooltip="Много лечебни средства в книгата възстановяват колкото покажат зарчетата">Хвърли (2d6)</button>
             <button id="sim286-heal" class="inv-edit-done bsim-heal-btn">Лекувай</button>
           </div>
           <div class="inv-modal-ftr">

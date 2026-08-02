@@ -60,8 +60,56 @@ body.covers-collapsed #covers-panel {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: #6b7280;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
   flex-shrink: 0;
+}
+
+/* Same grid mechanics as #covers-grid below it (equal-width columns, same
+   gap) so the two pills line up with the thumbnail columns underneath
+   instead of just sitting there as loose, content-sized buttons. */
+/* Same 4 columns as #covers-grid, not just "2 equal columns" - each pill
+   sits exactly one thumbnail-column wide, directly above that column,
+   rather than stretching to share whatever width the row happens to have.
+   Unused columns just stay empty; a future 3rd/4th filter would slot in
+   without needing this rule to change, and a 5th wraps to its own row
+   still aligned to the same 4 columns. */
+#covers-filter-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 0.85rem;
+  flex-shrink: 0;
+}
+/* Small toggle pills matching #covers-sort/#covers-kind's look (uppercase,
+   tight tracking, small size, colored when active) instead of a native
+   checkbox row - a plain checkbox+label looked visually bolted onto the
+   header above it, which uses colored text chips rather than form controls
+   for its own sort/kind toggles. */
+.covers-filter-chip {
+  font: inherit;
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.02rem 0.15rem;
+  border-radius: 6px;
+  border: 1px solid #374151;
+  background: transparent;
+  color: #6b7280;
+  cursor: pointer;
+  text-align: center;
+  transition: color 0.15s, border-color 0.15s, background-color 0.15s;
+}
+.covers-filter-chip:hover { color: #9ca3af; border-color: #4b5563; }
+.covers-filter-chip--battlesim[aria-pressed="true"] {
+  background: rgba(248,113,113,0.12);
+  border-color: rgba(248,113,113,0.5);
+  color: #f87171;
+}
+.covers-filter-chip--openworld[aria-pressed="true"] {
+  background: rgba(96,165,250,0.12);
+  border-color: rgba(96,165,250,0.5);
+  color: #60a5fa;
 }
 
 .covers-search-wrap {
@@ -538,7 +586,28 @@ body.cover-tooltip-title-bold #cover-tooltip-settings-preview {
   background: rgba(17,24,39,0.82);
   border: 1px solid rgba(96,165,250,0.45);
   border-radius: 3px;
-  pointer-events: none;
+  /* Deliberately NOT pointer-events:none (unlike the plain-text badges
+     above) - it carries a data-tooltip, and tooltip.js finds its target via
+     e.target.closest('[data-tooltip]'), which never sees this element at
+     all if pointer-events removes it from hit-testing - the hover just
+     falls through to whatever's underneath and the tooltip never fires. */
+}
+.cover-battlesim-badge {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  color: #f87171;
+  background: rgba(17,24,39,0.82);
+  border: 1px solid rgba(248,113,113,0.45);
+  border-radius: 3px;
+  /* Same reasoning as .cover-open-world-badge above - keep hoverable so its
+     data-tooltip actually fires. */
 }
 .cover-series-grid {
   position: absolute;

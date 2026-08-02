@@ -4,10 +4,10 @@
 // there's no active playthrough.
 
 import { state, currentPlaythrough, saveState, apiFetch, viewingPt } from './state.js?v=11';
-import { getInventorySlots, addItemToInventory, removeAllFromInventoryAt, refreshInventoryUI, renderInventoryDisplay } from './inventory.js?v=108';
-import { getPlayBtnRow } from './charsheet.js?v=42';
-import { escapeHtml, shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from './util.js?v=25';
-import { t } from './i18n.js?v=19';
+import { getInventorySlots, addItemToInventory, removeAllFromInventoryAt, refreshInventoryUI, renderInventoryDisplay } from './inventory.js?v=111';
+import { getPlayBtnRow } from './charsheet.js?v=45';
+import { escapeHtml, shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from './util.js?v=28';
+import { t } from './i18n.js?v=22';
 
 // x/y are percentages, positioned over the dummy silhouette (eq-body box, 380x600px).
 // Center column = body slots (no horizontal overlap with side columns);
@@ -181,7 +181,7 @@ function _slotHtml(slot, eq, ro, positioned) {
   const filledClass = item ? ' eq-slot--filled' : '';
   const svg  = item ? `<div class="eq-slot-svg">${item.svg_data}</div>` : `<div class="eq-slot-svg eq-slot-svg--empty"></div>`;
   const name = item ? escapeHtml(meta.label.trim() || item.name) : slot.label();
-  const noteHtml = item && meta.note ? `<div class="eq-slot-note-label" title="${escapeHtml(meta.note)}">${escapeHtml(meta.note)}</div>` : '';
+  const noteHtml = item && meta.note ? `<div class="eq-slot-note-label" data-tooltip="${escapeHtml(meta.note)}">${escapeHtml(meta.note)}</div>` : '';
   const qtyHtml = item && qty > 1 ? `<span class="eq-slot-qty">×${qty}</span>` : '';
   const removeBtn = item && !ro ? `<button class="eq-slot-remove" data-key="${slot.key}" draggable="false" aria-label="${t('eq.unequip')}">✕</button>` : '';
   const roClass = !ro ? ' eq-slot--editable' : '';

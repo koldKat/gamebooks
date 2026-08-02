@@ -1,7 +1,7 @@
 // util.js - Shared pure utility functions
 
 import { apiFetch } from './state.js?v=11';
-import { t } from './i18n.js?v=19';
+import { t } from './i18n.js?v=22';
 
 export function escapeHtml(str) {
   return String(str ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -31,6 +31,13 @@ export async function fetchPublic(url, options) {
 // so opening one panel closes all the others, without each file re-typing
 // the same 6 literal ID strings.
 export const ALL_PANEL_OVERLAY_IDS = ['inv-overlay', 'eq-overlay', 'charsheet-modal-overlay', 'sim286-overlay', 'bsim-overlay', 's8-overlay', 'sim198-overlay', 'sim199-overlay', 'sim200-overlay', 'sim186-overlay', 'sim201-overlay'];
+
+// Numeric book IDs that have a dedicated battle simulator - mirrors the
+// per-book gating calls in boot.js (setBattleSimVisible/setSim8Visible/etc.)
+// one line per sim there, but kept here too since covers.js needs the list
+// as plain data (a badge/filter on the public covers wall, not a panel to
+// open) rather than a set of visibility toggles.
+export const BATTLE_SIM_BOOK_IDS = [829, 8, 286, 198, 199, 200, 186, 201];
 
 // Single-key panel toggle shared by charsheet.js (C) / equipment.js (E) /
 // inventory.js (I) / the battlesim*.js trio (S) - each panel opens with its
@@ -133,7 +140,7 @@ export async function uploadAttachment(file, maxBytes = 512 * 1024) {
 export function addAttachmentItem(container, name) {
   const item = document.createElement('div');
   item.className = 'att-item att-uploading';
-  item.innerHTML = `<span class="att-item-name">${escapeHtml(name)}</span><button class="att-item-rm" title="${t('util.remove_title')}">✕</button>`;
+  item.innerHTML = `<span class="att-item-name">${escapeHtml(name)}</span><button class="att-item-rm" data-tooltip="${escapeHtml(t('util.remove_title'))}">✕</button>`;
   container.appendChild(item);
   return item;
 }
