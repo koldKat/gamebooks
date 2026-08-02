@@ -1,8 +1,8 @@
 // notif.js - Notification badge, inbox badge, forum badge, notification dropdown
 
 import { getToken, apiFetch, isDemoMode } from './state.js?v=11';
-import { t } from './i18n.js?v=24';
-import { escapeHtml } from './util.js?v=30';
+import { t } from './i18n.js?v=26';
+import { escapeHtml } from './util.js?v=32';
 
 let _hooks = {};
 export function setNotifHooks(h) { _hooks = h || {}; }
@@ -34,6 +34,10 @@ async function refreshNotifBadge() {
     const res  = await apiFetch('/api/notifications');
     if (!res.ok) return;
     const data = await res.json();
+    // Re-check after the await, not just before it - a logout that happens
+    // while this fetch is in flight must not have this stale response set
+    // the badge active again once it lands.
+    if (!getToken()) return;
     const btn  = document.getElementById('notif-btn');
     btn.classList.toggle('notif-btn--active', data.unseen > 0);
     btn._notifData = data;
@@ -45,6 +49,7 @@ async function refreshForumBadge() {
     const res = await apiFetch('/api/forum/latest');
     if (!res.ok) return;
     const { lastPostAt, userSeen } = await res.json();
+    if (!getToken()) return;
     const btn = document.getElementById('forum-btn');
     if (btn) btn.classList.toggle('forum-btn--active', lastPostAt > userSeen);
   } catch {}
@@ -56,11 +61,25 @@ export async function refreshInboxBadge() {
     const res = await apiFetch('/api/feedback');
     if (!res.ok) return;
     const threads = await res.json();
+    if (!getToken()) return;
     const unread  = threads.reduce((sum, t) => sum + (t.user_unread || 0), 0);
     const btn = document.getElementById('inbox-btn');
     btn.textContent = unread > 0 ? `${t('btn.inbox')} (${unread})` : t('btn.inbox');
     btn.classList.toggle('inbox-btn--active', unread > 0);
   } catch {}
+}
+
+// Belt-and-suspenders cleanup for showLogin() (boot.js) - the in-flight-fetch
+// re-checks above should already stop a stale response from re-lighting a
+// badge after logout, but this clears any state that was already set before
+// logout happened, and covers any refresh path not yet updated to re-check.
+export function resetNotifBadgesForLogout() {
+  const notifBtn = document.getElementById('notif-btn');
+  if (notifBtn) { notifBtn.classList.remove('notif-btn--active'); notifBtn._notifData = null; }
+  const forumBtn = document.getElementById('forum-btn');
+  if (forumBtn) forumBtn.classList.remove('forum-btn--active');
+  const inboxBtn = document.getElementById('inbox-btn');
+  if (inboxBtn) { inboxBtn.classList.remove('inbox-btn--active'); inboxBtn.textContent = t('btn.inbox'); }
 }
 
 // ── Scheduled batch refresh ───────────────────────────────────────────────────

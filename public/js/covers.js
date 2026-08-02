@@ -1,10 +1,10 @@
 // covers.js - Covers panel, lazy grid, landing bg rotation, cover/series activity modals
 import { getToken, isDemoMode, apiFetch } from './state.js?v=11';
-import { openPublicModal, closePublicModal, openPublicProfile, renderPublicProfile, openPublicRun, openPublicSeriesRun, _destroyPubNetworks } from './public-profile.js?v=44';
-import { refreshCoinsDisplay } from './shop.js?v=37';
+import { openPublicModal, closePublicModal, openPublicProfile, renderPublicProfile, openPublicRun, openPublicSeriesRun, _destroyPubNetworks } from './public-profile.js?v=46';
+import { refreshCoinsDisplay } from './shop.js?v=39';
 import { foldForSearch, matchesSearch, naturalCompare, naturalCompareByName } from './sort.js?v=1';
-import { escapeHtml, fetchPublic as publicFetch, BATTLE_SIM_BOOK_IDS } from './util.js?v=30';
-import { t } from './i18n.js?v=24';
+import { escapeHtml, fetchPublic as publicFetch, BATTLE_SIM_BOOK_IDS } from './util.js?v=32';
+import { t } from './i18n.js?v=26';
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────
 let _hooks = {};
@@ -1050,7 +1050,19 @@ function renderCoverActivity(bookId, bookName, entries, userRating, bookMeta, us
     headerHtml += `<div class="book-modal-in-collection"><span class="in-collection-label">Series:</span><button class="book-modal-series-btn" data-series-id="${bookMeta.seriesId || ''}" data-series-name="${escapeHtml(bookMeta.seriesName)}">${seriesLabel}</button></div>`;
   }
   if (bookMeta?.authors) {
-    headerHtml += `<div class="book-modal-authors">${escapeHtml(bookMeta.authors)}</div>`;
+    // Each author name gets its own derived rating (pooled across every
+    // public book crediting that exact name), not one combined rating for
+    // the whole comma-separated line - see _getAuthorRatings (books.js).
+    const ratingsByName = new Map((bookMeta.authorRatings || []).map(r => [r.name, r]));
+    const authorNames = bookMeta.authors.split(/\s*,\s*/).map(a => a.trim()).filter(Boolean);
+    const namesHtml = authorNames.map(name => {
+      const r = ratingsByName.get(name);
+      const ratingHtml = (r?.voteCount > 0)
+        ? ` <span class="book-modal-author-rating" data-tooltip="${escapeHtml(t('covers.author_rating_votes', { n: r.voteCount, s: r.voteCount === 1 ? '' : 's' }))}">★${(Number.isInteger(r.avgRating) ? r.avgRating + '.0' : r.avgRating.toFixed(1))}</span>`
+        : '';
+      return `<span class="book-modal-author-name">${escapeHtml(name)}</span>${ratingHtml}`;
+    }).join(', ');
+    headerHtml += `<div class="book-modal-authors">${namesHtml}</div>`;
   }
   const metaBits = [];
   if (bookMeta?.totalSections) metaBits.push(`${bookMeta.totalSections} sections`);

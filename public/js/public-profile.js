@@ -5,8 +5,8 @@
 // covers.js's cover activity view) and its <link> in index.html.
 
 import { isValidSecId } from './state.js?v=11';
-import { escapeHtml } from './util.js?v=30';
-import { t } from './i18n.js?v=24';
+import { escapeHtml } from './util.js?v=32';
+import { t } from './i18n.js?v=26';
 
 // Callbacks wired in by main.js at boot
 let _hooks = {};
@@ -130,10 +130,18 @@ export function renderPublicProfile(profile) {
       const label = t('pub.run_label', { prefix: chapterPrefix, n: run.index + 1, result });
       const cls   = isWin ? 'pub-run-win' : 'pub-run-death';
       const bookId = run.bookId || book.id;
+      // A cheap plain-text preview instead of spinning up the full vis-network
+      // run graph just for a hover - that's only built on click (openPublicRun).
+      const tooltipParts = [];
+      if (run.pathLength) tooltipParts.push(t('pub.run_tooltip_sections', { n: run.pathLength, s: run.pathLength === 1 ? '' : 's' }));
+      if (run.lastSection != null) tooltipParts.push(t('pub.run_tooltip_last', { n: run.lastSection }));
+      if (run.completedAt) tooltipParts.push(new Date(run.completedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }));
+      const tooltip = tooltipParts.join(' · ');
+      const tooltipAttr = tooltip ? ` data-tooltip="${escapeHtml(tooltip)}"` : '';
       if (run.isPublic) {
-        html += `<button class="pub-run-btn ${cls}" data-book-id="${bookId}" data-user-id="${profile.userId}" data-run-index="${run.index}">${escapeHtml(label)}</button>`;
+        html += `<button class="pub-run-btn ${cls}" data-book-id="${bookId}" data-user-id="${profile.userId}" data-run-index="${run.index}"${tooltipAttr}>${escapeHtml(label)}</button>`;
       } else {
-        html += `<span class="pub-run-locked ${cls}">${escapeHtml(t('pub.locked', { label }))}</span>`;
+        html += `<span class="pub-run-locked ${cls}"${tooltipAttr}>${escapeHtml(t('pub.locked', { label }))}</span>`;
       }
     }
     html += `</div></div>`;

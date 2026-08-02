@@ -651,7 +651,8 @@ INDEX idx_attachments_kind_linked ON attachments (kind, linked_id)
 - `book_created`/`book_added` events display "created anthology" / "added anthology" vs "created book" / "added book" based on `isContainer`.
 - Child book feed entries show the book name + a purple **anthology tag** (`.feed-collection-tag`) + an amber **series tag** (`.feed-series-tag`) when applicable.
 - Series info uses `COALESCE`: if a child has no direct series but its parent anthology does, the parent's series is used. This applies to `getFeed()`, `getBookActivity()`, `all_visited`, and `all_discovered`.
-- `getBookActivity()` returns `parentId`, `parentName`, `isContainer`, and `children[]` in the `book` object.
+- `getBookActivity()` returns `parentId`, `parentName`, `isContainer`, `children[]`, and `authorRatings[]` in the `book` object.
+- `_getAuthorRatings()` (`server/db/books.js`) derives a per-author rating from the free-text `authors` field (not a normalized author table) by pooling every individual rating across every public book crediting that exact name. It does a full scan of all public non-demo books on every call to `getBookActivity()` - same synchronous-full-scan cost class as `getFeed()`'s queries, worth revisiting if the catalog grows large enough for it to matter.
 - The activity modal shows an `Anthology: AnthologyName` chip for children (navigates to the anthology modal) and a "Books in this anthology" list for containers.
 
 **Public books search** (`getAllPublicBooks()`):
@@ -891,6 +892,8 @@ The client also uses `GET /api/profile` deltas to drive the bottom-right XP / co
 Random 32-byte hex token stored in the `sessions` table. Sent to the client on login/register; client stores it in `localStorage` under `gamebook_auth_token`.
 
 Sessions expire 7 days after creation (`expires_at = created_at + 604800`). `getSession` rejects any token whose `expires_at` is in the past - the client receives a 401 and is redirected to the login screen. `expires_at` is added via an `ALTER TABLE` migration on startup; existing rows receive a default of `created_at + 7 days`. Expired rows are deleted on server startup and whenever the admin runs a Vacuum.
+
+**Impersonation sessions must stay invisible to activity tracking and rewards.** Sessions carry an `is_impersonation` flag (`createSession(userId, { impersonation: true })`, set from the admin panel's impersonate link). `authenticate()`/`authenticateOptional()` (`request-helpers.js`) skip `updateUserLastActive()` for these sessions, but that alone isn't enough - `adminGetUsers()`'s `last_active` column falls back to `MAX(user_books.updated_at)` for users with no `last_active_at` yet, and ordinary state saves while impersonating bump that timestamp too. `handleSaveState` checks `isRequestImpersonating(req)` and passes `{ skipTimestamp: true }` to `saveBookState()` to close that gap, and skips `processStateXp()` entirely so an admin's own actions while impersonating can't earn the impersonated user real XP. Any new route that writes a timestamp an admin view could read as "last active," or that awards XP/rewards, needs the same check.
 
 ---
 
@@ -1150,14 +1153,14 @@ Each `.book-item` card has a progress bar background: `rgba(107,114,128,0.18)` f
 
 | `type` | Shown when | Notable fields |
 |--------|------------|----------------|
-| `run_completed` | Run ends with `death`, `battle`, or `success` | `result`, `runIsPublic`, `userPublicProfile` |
+| `run_completed` | Run ends with `death`, `battle`, or `success` | `result`, `runIsPublic`, `userPublicProfile`, `pathLength`, `lastSection` |
 | `run_started` | Run begins | `runIndex` |
 | `book_created` | User starts tracking a book | `bookName` |
 | `level_up` | User gains a level | `level`, `levelTitle`, `gainedAbility`, `newAbilityCount` |
 | `all_visited` | All sections visited in a book | `bookName` |
 | `all_discovered` | All sections discovered in a book | `bookName` |
-| `first_win` | First run ever won on a book | `bookId`, `bookName`, `bookIsPublic`, `runIndex` - rendered as "won in [book] run N for the first time" |
-| `first_loss` | First death run on a book | `bookId`, `bookName`, `userId`, `runIndex`, `runIsPublic` - rendered as "lost in [book] for the first time"; verb is a clickable `feed-verb-pub` button when `runIsPublic && runIndex != null` |
+| `first_win` | First run ever won on a book | `bookId`, `bookName`, `bookIsPublic`, `runIndex`, `pathLength`, `lastSection` - rendered as "won in [book] run N for the first time" |
+| `first_loss` | First death run on a book | `bookId`, `bookName`, `userId`, `runIndex`, `runIsPublic`, `pathLength`, `lastSection` - rendered as "lost in [book] for the first time"; verb is a clickable `feed-verb-pub` button when `runIsPublic && runIndex != null` |
 | `first_battle_death` | First battle-death run on a book | same shape as `first_loss` - rendered as "fell in battle in [book] for the first time"; verb is clickable when run is public |
 | `won_all_series` | User has won every book in a series | `seriesId`, `seriesName` |
 | `won_all_anthology` | User has won every child book in an anthology | `bookId`, `bookName` (anthology) |
@@ -1170,6 +1173,8 @@ Each `.book-item` card has a progress bar background: `rgba(107,114,128,0.18)` f
 | `user_joined` | A user registered on the site | `username`, `joinTemplateText` - rendered with a subtle amber left border (`.feed-entry--join`, `#f59e0b`); uses the user's permanently assigned `join_template_id` so the text is stable across feed refreshes |
 | `book_rated` | First time a user rates a book or anthology | `bookId`, `bookName`, `isContainer`, `rating`, plus the usual parent/series fields - rendered "rated book/anthology [name] ★★★★☆" via `_starsHtml` |
 | `series_rated` | First time a user rates a series | `seriesId`, `seriesName`, `rating` - rendered "rated series [name] ★★★★☆" |
+
+`pathLength`/`lastSection` feed the client's plain-text hover tooltip on a run's won/lost/battle-death link - not sent for `series_run_completed`, since `completeSeriesRun()` nulls `series_runs.last_book_id`/`last_section` on completion (that pair only tracks an in-progress run's position), so no last-section value survives to be read.
 
 `party_formed` is the only feed event that pre-populates `usernames` from the server (all current party members) rather than relying on the client-side party-merge step. If the party is disbanded before the feed is queried, the entry is suppressed (member lookup returns < 2 rows). Group series/anthology milestone events are deduplicated by the `xp_events` UNIQUE constraint; they never appear more than once per user per entity.
 

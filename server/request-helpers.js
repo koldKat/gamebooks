@@ -240,6 +240,21 @@ function authenticateOptional(req) {
   return session.user_id;
 }
 
+// Separate from authenticate()/authenticateOptional() - those already skip
+// updateUserLastActive for impersonation sessions, but their return value
+// (a bare userId) has no room to also tell a specific route handler "this
+// request is impersonated" when it needs that for its own side effects
+// (e.g. handleSaveState skipping the user_books.updated_at bump so browsing
+// while impersonating can't leak into admin's "last active" column via its
+// COALESCE fallback to that timestamp). Changing authenticate()'s signature
+// would ripple through every route handler in the app for one call site.
+function isRequestImpersonating(req) {
+  const token = tokenFromReq(req);
+  if (!token) return false;
+  const session = db.getSession(token);
+  return !!session?.is_impersonation;
+}
+
 module.exports = {
   getClientIp,
   addSecurityHeaders, addForumSecurityHeaders, addAdminSecurityHeaders,
@@ -247,6 +262,6 @@ module.exports = {
   isRateLimited, recordAuthFailure,
   isLocalhost, isLocalhostReal, requireLocalhost,
   send, readBody, readRawBody, tokenFromReq,
-  authenticate, authenticateOptional,
+  authenticate, authenticateOptional, isRequestImpersonating,
   MAX_JSON_BODY, MAX_PNG_BODY, AVATAR_UPLOAD_MAX, SSE_PING_MS,
 };

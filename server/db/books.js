@@ -694,7 +694,14 @@ function getBookById(bookId) {
   return { ...book, pdf_size: _getPdfSize(book.pdf_path) };
 }
 
-function saveBookState(userId, bookId, stateObj) {
+// skipTimestamp is set by handleSaveState when the request came from an
+// impersonation session - the data itself still saves (an admin fixing a
+// stuck state while impersonating should work), but updated_at doesn't
+// bump, since admin's own adminGetUsers() query falls back to
+// MAX(user_books.updated_at) as a "last active" proxy for users whose
+// last_active_at is still null, and that fallback has no way to tell
+// genuine user activity apart from an admin just browsing as them.
+function saveBookState(userId, bookId, stateObj, { skipTimestamp = false } = {}) {
   // Deduplicate each playthrough's path (preserve first visit order) to guard
   // against unbounded growth if the user cycles through sections repeatedly.
   for (const pt of (stateObj.playthroughs || [])) {
@@ -705,7 +712,7 @@ function saveBookState(userId, bookId, stateObj) {
   }
   const json = JSON.stringify(stateObj);
   const ubResult = db.prepare(`
-    UPDATE user_books SET state_data = ?, updated_at = strftime('%s','now')
+    UPDATE user_books SET state_data = ?${skipTimestamp ? '' : ", updated_at = strftime('%s','now')"}
     WHERE book_id = ? AND user_id = ?
   `).run(json, bookId, userId);
   return ubResult.changes > 0;
@@ -936,6 +943,34 @@ function _getAggregateRating(bookId) {
   return { avgRating: row?.avg_rating ?? null, voteCount: row?.vote_count || 0 };
 }
 
+// Per-author derived rating for a book's authors field (a free-text,
+// comma-separated field - see normalizeAuthors - not a normalized author
+// table), shown next to each author's name in the cover-activity dialog.
+// One name can appear on several books, so this pools every individual
+// rating across every public book crediting that exact name and averages
+// them directly (not an average of each book's own average), which weights
+// naturally toward books with more ratings rather than treating a
+// one-vote book the same as a hundred-vote one.
+function _getAuthorRatings(authorsField) {
+  const names = (authorsField || '').split(/\s*,\s*/).map(a => a.trim()).filter(Boolean);
+  if (!names.length) return [];
+  const allBooks = db.prepare(
+    `SELECT id, authors FROM books WHERE is_public = 1 AND is_demo = 0 AND authors IS NOT NULL`
+  ).all();
+  return names.map(name => {
+    const matchingIds = allBooks
+      .filter(b => b.authors.split(/\s*,\s*/).map(a => a.trim()).includes(name))
+      .map(b => b.id);
+    if (!matchingIds.length) return { name, avgRating: null, voteCount: 0 };
+    const placeholders = matchingIds.map(() => '?').join(',');
+    const row = db.prepare(
+      `SELECT AVG(rating) AS avg_rating, COUNT(rating) AS vote_count
+       FROM user_books WHERE book_id IN (${placeholders}) AND rating IS NOT NULL`
+    ).get(...matchingIds);
+    return { name, avgRating: row?.avg_rating ?? null, voteCount: row?.vote_count || 0 };
+  });
+}
+
 const _RUN_EVENTS = `('win_run','death_run','battle_run')`;
 
 // Returns true if user has completed at least one run of any kind for a standalone book.
@@ -1047,6 +1082,6 @@ module.exports = {
   removeSeriesEntryOnly, removeSeriesFromLibrary, createSeries, getPublicSeriesInfo,
   normalizeAuthors, createBook, getBookState, getBookById, saveBookState, resetBookProgress,
   updateBook, getNotebook, setNotebook, deleteBook, addBookToLibrary,
-  _getUserBookId, _getAggregateRating, canUserRateBook, canUserRateSeries,
+  _getUserBookId, _getAggregateRating, _getAuthorRatings, canUserRateBook, canUserRateSeries,
   getBookRating, setBookRating, _getAggregateSeriesRating, getSeriesRating, setSeriesRating,
 };
