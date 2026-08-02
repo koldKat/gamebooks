@@ -17,7 +17,7 @@ import {
   storeData, getSorted, getFiltered, foldForSearch, naturalCompare, naturalCompareByName, _tableData,
   setSearchFields, wireTableSearch, initSortHeaders, renderPaged,
 } from './core.js?v=1';
-import { loadAll, loadTools } from './dashboard.js?v=5';
+import { loadAll, loadTools } from './dashboard.js?v=6';
 
 // ── Gift modal ────────────────────────────────────────────────────────────────
 
@@ -193,8 +193,13 @@ document.getElementById('refresh-btn').addEventListener('click', () => {
 
 export function renderUsersTable(data) {
   const tbody = document.getElementById('users-body');
+  // Derived from the live header rather than hardcoded - a hardcoded number
+  // here has gone stale before (most recently when the Active column was
+  // added), leaving these full-width rows spanning fewer columns than the
+  // table actually has and reading as off-center.
+  const colCount = document.querySelectorAll('#users-table thead th').length;
   tbody.innerHTML = '';
-  if (!data.length) { emptyRow(tbody, 16, 'No users yet.'); return; }
+  if (!data.length) { emptyRow(tbody, colCount, 'No users yet.'); return; }
 
   const visible = data.filter(u => daysInactiveClass(u.days_inactive) !== 'act-stale');
   const hidden  = data.filter(u => daysInactiveClass(u.days_inactive) === 'act-stale');
@@ -204,7 +209,7 @@ export function renderUsersTable(data) {
   if (hidden.length) {
     const moreTr = tbody.insertRow();
     const moreTd = moreTr.insertCell();
-    moreTd.colSpan = 16;
+    moreTd.colSpan = colCount;
     moreTd.style.textAlign = 'center';
     moreTd.style.padding = '10px';
     const moreBtn = mkBtn(`Show ${hidden.length} inactive user${hidden.length !== 1 ? 's' : ''} (31+ days)`, 'btn-info', () => {
