@@ -6,8 +6,8 @@
 // public/css/charsheet.css (and its <link> in index.html).
 
 import { state, saveState, currentPlaythrough, viewingPt } from './state.js?v=11';
-import { t } from './i18n.js?v=19';
-import { escapeHtml, shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from './util.js?v=25';
+import { t } from './i18n.js?v=22';
+import { escapeHtml, shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from './util.js?v=28';
 
 // Working copy - populated when modal opens, discarded on cancel
 let _draft = null;
@@ -173,15 +173,15 @@ function buildRowHtml(f) {
   }
 
   return `
-    <span class="cs-drag-handle" title="${t('cs.drag_reorder')}">⠿</span>
-    <label class="cs-vis-toggle" title="${t('cs.toggle_visible')}">
+    <span class="cs-drag-handle" data-tooltip="${escapeHtml(t('cs.drag_reorder'))}">⠿</span>
+    <label class="cs-vis-toggle" data-tooltip="${escapeHtml(t('cs.toggle_visible'))}">
       <input type="checkbox" class="cs-vis-cb"${f.visible ? ' checked' : ''}>
       <span class="cs-dot"></span>
     </label>
     <input class="cs-name-inp" type="text" value="${escapeHtml(f.name)}" placeholder="${t('cs.field_name')}">
     <select class="cs-type-sel">${typeOpts}</select>
     <div class="cs-val-wrap">${valHtml}</div>
-    <button class="cs-del-btn" title="${t('cs.delete_field')}">✕</button>`;
+    <button class="cs-del-btn" data-tooltip="${escapeHtml(t('cs.delete_field'))}">✕</button>`;
 }
 
 function buildRowHtmlReadOnly(f) {

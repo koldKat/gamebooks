@@ -88,14 +88,16 @@ gamebooks/
       autocomplete.js    Shared name-autocomplete helpers for add/edit modals
       auth.js            Login, register, forgot-password, reset-password forms
       notes.js           Notebook modal and pinned notes overlay
-      battlesim829.js    Battle simulator for book 829
-      battlesim8.js      Battle simulator for book 8
-      battlesim286.js    Battle simulator for book 286 (flat weapon min-hit model, tech gadgets, sleep/dream table)
-      battlesim198.js    Battle simulator for book 198, The Warlock of Firetop Mountain (standard Fighting Fantasy SKILL/STAMINA/LUCK system)
-      battlesim199.js    Battle simulator for book 199, The Citadel of Chaos (same SKILL/STAMINA/LUCK combat as book 198, plus a MAGIC/spell system unique to this book, no Provisions, Items panel for its two fixed-bonus weapons)
-      battlesim200.js    Battle simulator for book 200, The Forest of Doom (SKILL is 1d6+5 here, not the usual 1d6+6; no MAGIC, no Provisions mechanic; adds paired-attacker fights and a Luck-event queue - see below)
-      battlesim186.js    Battle simulator for book 186, Starship Traveller (no unified combat system - hand-to-hand/phaser/ship-to-ship selected via a mode toggle; 7-person crew each individually rolled, one shared LUCK box, no LUCK-based combat swing at all - see below)
-      battlesim201.js    Battle simulator for book 201, City of Thieves (standard SKILL/STAMINA/LUCK system, reuses book 200's attackModifier and pairedFight/sideEnemy mechanics; adds an enemyWoundDamage knob for non-standard wound amounts)
+      battlesim/         All 8 battle simulator modules, one file per book, grouped in their own
+                         subfolder (imported only by boot.js, never by each other)
+        battlesim829.js    Battle simulator for book 829
+        battlesim8.js      Battle simulator for book 8
+        battlesim286.js    Battle simulator for book 286 (flat weapon min-hit model, tech gadgets, sleep/dream table)
+        battlesim198.js    Battle simulator for book 198, The Warlock of Firetop Mountain (standard Fighting Fantasy SKILL/STAMINA/LUCK system)
+        battlesim199.js    Battle simulator for book 199, The Citadel of Chaos (same SKILL/STAMINA/LUCK combat as book 198, plus a MAGIC/spell system unique to this book, no Provisions, Items panel for its two fixed-bonus weapons)
+        battlesim200.js    Battle simulator for book 200, The Forest of Doom (SKILL is 1d6+5 here, not the usual 1d6+6; no MAGIC, no Provisions mechanic; adds paired-attacker fights and a Luck-event queue - see below)
+        battlesim186.js    Battle simulator for book 186, Starship Traveller (no unified combat system - hand-to-hand/phaser/ship-to-ship selected via a mode toggle; 7-person crew each individually rolled, one shared LUCK box, no LUCK-based combat swing at all - see below)
+        battlesim201.js    Battle simulator for book 201, City of Thieves (standard SKILL/STAMINA/LUCK system, reuses book 200's attackModifier and pairedFight/sideEnemy mechanics; adds an enemyWoundDamage knob for non-standard wound amounts)
       add-book.js        Create Book, Create Anthology, Create Series modals
       edit-book.js       Edit Book/Anthology/Series/Stash modals; ISBN/ISSN/ASIN validation
       books.js           Books list rendering, panel management, stash UI
@@ -462,6 +464,8 @@ Link colors: `.feed-ann-body a`/`.feed-pinned-body a` (`demo.css`) and `.ann-car
 **Reduce Animations in the forum iframe:** the forum is a separate document in its own `<iframe>`, so it can't see the parent app's `body.reduce-motion` class - `shell()`'s `<body>` reads the same `localStorage.getItem('reduce-motion')` flag directly (same-origin) and applies `body.reduce-motion` itself.
 
 **Battle-sim enemy-name fields** (`battlesim198.js`/`199.js`/`200.js`/`286.js`/`829.js`/`8.js`) use `role="combobox"` + a custom `<ul role="listbox">` (not a native `<datalist>`) to keep the app's own dropdown instead of the browser's. Two Chromium behaviors leak through regardless of `autocomplete="off"`: its form-value-history popup (suppressed with `readonly`-until-`focus`) and its contact/address-autofill heuristic, which classifies a field as a person's name from the substring "name" in its `id` *or* its visible label text - so these fields use id `*-enemy-pick` and label "Pick"/"Избор", never "Name"/"Име".
+
+**`BATTLE_SIM_BOOK_IDS`** (`util.js`) is a plain array of the numeric book IDs with a battle sim, duplicating the per-book gating calls in `boot.js` (`setBattleSimVisible`/`setSim8Visible`/etc.). Used by `covers.js` for the covers-wall battle-sim badge/filter, which needs the list as data rather than a set of panel-visibility toggles. Adding a new battle sim requires updating both places.
 
 **Thread-title tooltip:** `.thread-title` truncates via `text-overflow: ellipsis`; the full title shows on hover via a CSS-only tooltip (`[data-tooltip]:hover::after`) themed to match the forum, rather than a native `title=""` attribute. **Gotcha:** `attr()` can only read a `data-*` value from the element the `::after` is generated on, and that element can't have `overflow: hidden` itself (which clips any escaping absolutely-positioned descendant) - so `position: relative` and `data-tooltip` live on `.thread-card` (the outer container), not on the truncated `.thread-title`.
 

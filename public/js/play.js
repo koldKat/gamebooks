@@ -5,12 +5,12 @@ import {
   currentPlaythrough, currentSection, allDiscoveredSections, mappedCount,
   currentUserLevel, bonusUndos, bonusFastTravels, apiFetch,
 } from './state.js?v=11';
-import { network, visNodes, syncGraph } from './graph.js?v=61';
-import { t } from './i18n.js?v=19';
-import { renderCharSheetDisplay } from './charsheet.js?v=42';
+import { network, visNodes, syncGraph } from './graph.js?v=64';
+import { t } from './i18n.js?v=22';
+import { renderCharSheetDisplay } from './charsheet.js?v=45';
 import { naturalCompare } from './sort.js?v=1';
-import { instantiateLoadout } from './equipment.js?v=95';
-import { escapeHtml } from './util.js?v=25';
+import { instantiateLoadout } from './equipment.js?v=98';
+import { escapeHtml } from './util.js?v=28';
 
 // ── Discoverable sections cap ────────────────────────────────────���───────────
 let _discoverableLimit = null;
@@ -479,7 +479,7 @@ function renderPlaythroughPanel() {
             (!isActiveHere
               ? `<button class="run-load-btn${isViewing ? ' run-view-active' : ''}" data-index="${i}">${t('runs.load')}</button>`
               : '') +
-            `<button class="run-del-btn" data-index="${i}" title="${t('runs.delete_run')}">✕</button>` +
+            `<button class="run-del-btn" data-index="${i}" data-tooltip="${escapeHtml(t('runs.delete_run'))}">✕</button>` +
           `</div>` +
         `</div>`;
     });
@@ -515,7 +515,7 @@ function renderPlaythroughPanel() {
           `</div>` +
           `<div class="run-actions">` +
             `<button class="run-load-btn run-load-preseries${isViewing ? ' run-view-active' : ''}" data-pre-index="${i}">${t('runs.load')}</button>` +
-            `<button class="run-del-btn run-del-preseries" data-pre-index="${i}" title="${t('runs.delete_run')}">✕</button>` +
+            `<button class="run-del-btn run-del-preseries" data-pre-index="${i}" data-tooltip="${escapeHtml(t('runs.delete_run'))}">✕</button>` +
           `</div>` +
         `</div>`;
     });

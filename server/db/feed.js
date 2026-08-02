@@ -939,6 +939,7 @@ function getAllPublicBooks() {
             b.isbn, b.issn, b.asin, b.pages,
             b.series_id, b.series_number, s.name AS series_name,
             GROUP_CONCAT(c.name, '|||') AS child_names,
+            GROUP_CONCAT(c.id) AS child_ids,
             COALESCE(SUM(c.total_sections), 0) AS children_total_sections,
             COUNT(DISTINCT ub.user_id) AS library_count
      FROM books b
@@ -970,6 +971,7 @@ function getAllPublicBooks() {
     seriesName: r.series_name || null,
     seriesNumber: r.series_number || null,
     childNames: r.child_names ? r.child_names.split('|||') : [],
+    childIds: r.child_ids ? r.child_ids.split(',').map(Number) : [],
   }));
 }
 
