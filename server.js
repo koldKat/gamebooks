@@ -74,7 +74,8 @@ const {
   isRateLimited, recordAuthFailure,
   isLocalhost, isLocalhostReal, requireLocalhost,
   send, readBody, readRawBody, tokenFromReq,
-  authenticate, authenticateOptional,
+  authenticate, authenticateOptional, isRequestImpersonating,
+  runWithImpersonationContext,
   MAX_JSON_BODY, MAX_PNG_BODY, AVATAR_UPLOAD_MAX, SSE_PING_MS,
 } = require('./server/request-helpers');
 
@@ -298,7 +299,14 @@ const bookPartyInviteRe       = /^\/api\/books\/(\d+)\/party\/invite$/;
 const partyInviteAcceptRe     = /^\/api\/party-invites\/(\d+)\/accept$/;
 const partyInviteDeclineRe    = /^\/api\/party-invites\/(\d+)\/decline$/;
 
-const handler = async (req, res) => {
+// Wraps every single request in the impersonation-context AsyncLocalStorage
+// (see server/impersonation-context.js) so any XP/coin award anywhere in the
+// resulting call chain - not just the routes that explicitly check
+// isRequestImpersonating() - can see whether the account behind this request
+// is currently impersonated.
+const handler = (req, res) => runWithImpersonationContext(req, () => _routeRequest(req, res));
+
+const _routeRequest = async (req, res) => {
   const { method } = req;
 
   const urlPath    = req.url.split('?')[0];
@@ -338,7 +346,9 @@ const handler = async (req, res) => {
     if (method === 'PATCH'  && urlPath === '/api/prefs')   return await handleSetPrefs(req, res);
     if (method === 'GET'    && urlPath === '/api/feed') {
       const userId = authenticateOptional(req);
-      if (userId !== null) db.awardIdleHeartbeatXp(userId);
+      // Same invisibility contract as handleSaveState: an admin's own polling
+      // while impersonating must not earn the impersonated user real XP.
+      if (userId !== null && !isRequestImpersonating(req)) db.awardIdleHeartbeatXp(userId);
       return send(res, 200, { entries: db.getFeed(), pinned: db.getPinnedAnnouncement() });
     }
     if (method === 'GET'    && urlPath === '/api/feed/stream')   return await handleGetFeedStream(req, res);

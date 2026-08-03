@@ -28,7 +28,7 @@ function inviteToParty(partyId, inviterId, inviteeId) {
   return { ok: true, inviteId };
 }
 
-function acceptPartyInvite(inviteId, userId) {
+function acceptPartyInvite(inviteId, userId, { skipXp = false } = {}) {
   const invite = db.prepare('SELECT * FROM party_invites WHERE id = ? AND invitee_id = ? AND status = ?').get(inviteId, userId, 'pending');
   if (!invite) return { error: 'invite_not_found' };
   const party = db.prepare('SELECT book_id FROM book_parties WHERE id = ?').get(invite.party_id);
@@ -71,20 +71,26 @@ function acceptPartyInvite(inviteId, userId) {
     db.prepare('UPDATE party_invites SET status = ?, responded_at = strftime(\'%s\',\'now\') WHERE id = ?').run('accepted', inviteId);
   })();
 
-  awardXp(userId, 'join_party', `${invite.party_id}:${userId}`);
-  if (existingMembers.length === 1) {
-    awardXp(existingMembers[0].user_id, 'create_party', invite.party_id);
-    // party_formed fires once (on creator) when the first invite is accepted
-    awardXp(existingMembers[0].user_id, 'party_formed', String(invite.party_id));
-  }
-  if (!existing_ub) {
-    awardXp(userId, 'add_book', party.book_id);
-    awardXp(userId, 'add_to_library', String(party.book_id));
-    if (book.created_by && book.created_by !== userId)
-      awardXp(book.created_by, 'book_added_by_other', `${party.book_id}:${userId}`);
-  }
-  if (Object.keys(sourceState).length > 0) {
-    processStateXp(userId, party.book_id, {}, sourceState, book.total_sections || 0);
+  // Same invisibility contract as handleSaveState - none of these represent
+  // real progress if an admin impersonating userId is the one clicking
+  // accept, so skip every reward here (to userId AND to the other real
+  // members it would otherwise also credit) rather than just userId's own.
+  if (!skipXp) {
+    awardXp(userId, 'join_party', `${invite.party_id}:${userId}`);
+    if (existingMembers.length === 1) {
+      awardXp(existingMembers[0].user_id, 'create_party', invite.party_id);
+      // party_formed fires once (on creator) when the first invite is accepted
+      awardXp(existingMembers[0].user_id, 'party_formed', String(invite.party_id));
+    }
+    if (!existing_ub) {
+      awardXp(userId, 'add_book', party.book_id);
+      awardXp(userId, 'add_to_library', String(party.book_id));
+      if (book.created_by && book.created_by !== userId)
+        awardXp(book.created_by, 'book_added_by_other', `${party.book_id}:${userId}`);
+    }
+    if (Object.keys(sourceState).length > 0) {
+      processStateXp(userId, party.book_id, {}, sourceState, book.total_sections || 0);
+    }
   }
   return {
     ok: true,
