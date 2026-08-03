@@ -99,6 +99,7 @@ gamebooks/
         battlesim200.js    Battle simulator for book 200, The Forest of Doom (SKILL is 1d6+5 here, not the usual 1d6+6; no MAGIC, no Provisions mechanic; adds paired-attacker fights and a Luck-event queue - see below)
         battlesim186.js    Battle simulator for book 186, Starship Traveller (no unified combat system - hand-to-hand/phaser/ship-to-ship selected via a mode toggle; 7-person crew each individually rolled, one shared LUCK box, no LUCK-based combat swing at all - see below)
         battlesim201.js    Battle simulator for book 201, City of Thieves (standard SKILL/STAMINA/LUCK system, reuses book 200's attackModifier and pairedFight/sideEnemy mechanics; adds an enemyWoundDamage knob for non-standard wound amounts)
+        battlesim202.js    Battle simulator for book 202, Deathtrap Dungeon (standard SKILL/STAMINA/LUCK system, reuses book 201's core; adds instaKillEnemyAS, instaKillOnEnemyWin, winAfterHits and luckyKillOnWin knobs for its instant-death/weak-point encounters)
       add-book.js        Create Book, Create Anthology, Create Series modals
       edit-book.js       Edit Book/Anthology/Series/Stash modals; ISBN/ISSN/ASIN validation
       books.js           Books list rendering, panel management, stash UI
@@ -155,7 +156,7 @@ Layer 2:
     Works because none consume each other's exports at module-evaluation time.
 
 Layer 3 (feature modules - import from layers 0–2 as needed):
-  notes.js, battlesim829.js, battlesim8.js, battlesim286.js, battlesim198.js, battlesim199.js, battlesim200.js, battlesim186.js, battlesim201.js, auth.js, add-book.js, edit-book.js,
+  notes.js, battlesim829.js, battlesim8.js, battlesim286.js, battlesim198.js, battlesim199.js, battlesim200.js, battlesim186.js, battlesim201.js, battlesim202.js, auth.js, add-book.js, edit-book.js,
   books.js, covers.js, feed.js, open-world.js, shop.js, profile.js,
   public-profile.js, prefs.js, livetab.js, notif.js, rewards.js, bg.js,
   stats.js, party.js, tips.js, inbox.js, dice.js, tooltip.js, export.js,

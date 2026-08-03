@@ -30,14 +30,14 @@ export async function fetchPublic(url, options) {
 // below via `otherOverlayIds: ALL_PANEL_OVERLAY_IDS.filter(id => id !== 'own-id')`
 // so opening one panel closes all the others, without each file re-typing
 // the same 6 literal ID strings.
-export const ALL_PANEL_OVERLAY_IDS = ['inv-overlay', 'eq-overlay', 'charsheet-modal-overlay', 'sim286-overlay', 'bsim-overlay', 's8-overlay', 'sim198-overlay', 'sim199-overlay', 'sim200-overlay', 'sim186-overlay', 'sim201-overlay'];
+export const ALL_PANEL_OVERLAY_IDS = ['inv-overlay', 'eq-overlay', 'charsheet-modal-overlay', 'sim286-overlay', 'bsim-overlay', 's8-overlay', 'sim198-overlay', 'sim199-overlay', 'sim200-overlay', 'sim186-overlay', 'sim201-overlay', 'sim202-overlay'];
 
 // Numeric book IDs that have a dedicated battle simulator - mirrors the
 // per-book gating calls in boot.js (setBattleSimVisible/setSim8Visible/etc.)
 // one line per sim there, but kept here too since covers.js needs the list
 // as plain data (a badge/filter on the public covers wall, not a panel to
 // open) rather than a set of visibility toggles.
-export const BATTLE_SIM_BOOK_IDS = [829, 8, 286, 198, 199, 200, 186, 201];
+export const BATTLE_SIM_BOOK_IDS = [829, 8, 286, 198, 199, 200, 186, 201, 202];
 
 // Single-key panel toggle shared by charsheet.js (C) / equipment.js (E) /
 // inventory.js (I) / the battlesim*.js trio (S) - each panel opens with its
