@@ -140,9 +140,10 @@ function _sideEnemyNameSafe(d) { return escapeHtml(d.sideEnemy.name.trim() || 't
 // - Chainmail Coat (sec 46): +2 SKILL while worn
 // - Magic Shield (sec 340): +1 Attack Strength while using it
 // - Unicorn-Crest Shield (sec 374): +1 SKILL
-// - Magic Helmet (sec 376): +1 to Attack Strength while worn (its one-time
-//   +1 LUCK on pickup is a narrative reward, not modeled - same as every
-//   other one-time LUCK/STAMINA pickup in this book, apply by hand)
+// - Magic Helmet (smoke ball smashed at sec 45, worn/effect at sec 376):
+//   +1 to Attack Strength while worn (its one-time +1 LUCK on pickup is a
+//   narrative reward, not modeled - same as every other one-time LUCK/
+//   STAMINA pickup in this book, apply by hand)
 // - Cursed Shield (sec 125): -1 SKILL, forced and not removable on that route
 // - Cursed/copper scorpion Brooch (sec 387): -1 SKILL while carried
 // - Magic Elven Boots (sec 362): +1 SKILL while worn - missed in the original
@@ -412,7 +413,7 @@ function _renderItemsHtml(d) {
       <div class="bsim-tech-footer"><label class="inv-edit-check-label"><input type="checkbox" id="sim201-item-unicornshield" class="inv-edit-check" ${d.player.hasUnicornShield ? 'checked' : ''}> Have it</label></div>
     </div>
     <div class="bsim-tech-row">
-      <div class="bsim-tech-name">Magic Helmet <span class="bsim-tech-uses">(sec. 376)</span></div>
+      <div class="bsim-tech-name">Magic Helmet <span class="bsim-tech-uses">(sec. 45/376)</span></div>
       <div class="bsim-tech-desc">+1 to your Attack Strength every round while worn. Also grants +1 LUCK once when obtained - add that to your LUCK fields by hand, checking this box only applies the ongoing Attack Strength bonus.</div>
       <div class="bsim-tech-footer"><label class="inv-edit-check-label"><input type="checkbox" id="sim201-item-magichelmet" class="inv-edit-check" ${d.player.hasMagicHelmet ? 'checked' : ''}> Have it</label></div>
     </div>
