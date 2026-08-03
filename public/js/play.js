@@ -5,12 +5,12 @@ import {
   currentPlaythrough, currentSection, allDiscoveredSections, mappedCount,
   currentUserLevel, bonusUndos, bonusFastTravels, apiFetch,
 } from './state.js?v=11';
-import { network, visNodes, syncGraph } from './graph.js?v=70';
-import { t } from './i18n.js?v=28';
-import { renderCharSheetDisplay } from './charsheet.js?v=52';
+import { network, visNodes, syncGraph } from './graph.js?v=73';
+import { t } from './i18n.js?v=29';
+import { renderCharSheetDisplay } from './charsheet.js?v=53';
 import { naturalCompare } from './sort.js?v=1';
-import { instantiateLoadout } from './equipment.js?v=107';
-import { escapeHtml } from './util.js?v=35';
+import { instantiateLoadout } from './equipment.js?v=110';
+import { escapeHtml } from './util.js?v=36';
 
 // ── Discoverable sections cap ────────────────────────────────────���───────────
 let _discoverableLimit = null;
@@ -735,7 +735,14 @@ export function startPortalRun(entrySection, runIndex, charSheet = null) {
     if (!pt.startedAt) pt.startedAt = Date.now(); // stamp first activation in this book
     state.activePtIndex = runIndex;
     if (!state.graph[entrySec]) state.graph[entrySec] = { choices: [], discovered: true };
-    if (pt.path.length === 0 || pt.path[pt.path.length - 1] !== entrySec) pt.path.push(entrySec);
+    const wasEmpty = pt.path.length === 0;
+    if (wasEmpty || pt.path[pt.path.length - 1] !== entrySec) pt.path.push(entrySec);
+    if (wasEmpty) pt.portalEntry = true;
+    if (!pt.inventory || !pt.equipment) {
+      const { inventory: invTmpl, equipment: eqTmpl, equipmentVisible: eqVisTmpl } = instantiateLoadout();
+      if (!pt.inventory) pt.inventory = invTmpl;
+      if (!pt.equipment) { pt.equipment = eqTmpl; pt.equipmentVisible = eqVisTmpl; }
+    }
     if (charSheet) pt.charSheet = JSON.parse(JSON.stringify(charSheet));
     // Fire AFTER the run is active, so the viewing-pt-change callback refreshes
     // #inv-display/charsheet from the now-current playthrough, not the stale one.
@@ -748,12 +755,14 @@ export function startPortalRun(entrySection, runIndex, charSheet = null) {
 
   // Fallback: pad playthroughs to the required index and create a new run
   while (state.playthroughs.length <= runIndex) {
-    state.playthroughs.push({ path: [], completed: false, result: null, undosUsed: 0, fastTravelsUsed: 0, startedAt: Date.now(), charSheet: { fields: [] }, diceState: { count: state.dicePrefs?.count ?? 2, die: state.dicePrefs?.die ?? 6, lastResult: null } });
+    const { inventory: invTmpl, equipment: eqTmpl, equipmentVisible: eqVisTmpl } = instantiateLoadout();
+    state.playthroughs.push({ path: [], completed: false, result: null, undosUsed: 0, fastTravelsUsed: 0, startedAt: Date.now(), charSheet: { fields: [] }, inventory: invTmpl, equipment: eqTmpl, equipmentVisible: eqVisTmpl, diceState: { count: state.dicePrefs?.count ?? 2, die: state.dicePrefs?.die ?? 6, lastResult: null } });
   }
   pt = state.playthroughs[runIndex];
   pt.charSheet = JSON.parse(JSON.stringify(charSheet || state.charSheetTemplate || { fields: [] }));
   state.activePtIndex = runIndex;
   if (!state.graph[entrySec]) state.graph[entrySec] = { choices: [], discovered: true };
+  pt.portalEntry = true;
   pt.path.push(entrySec);
   setViewingPt(null, true);
   saveState();

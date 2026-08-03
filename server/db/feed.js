@@ -124,6 +124,50 @@ function getFeed() {
   }
 
   // ── Open world series run events ─────────────────────────────────────────────
+  // series_runs itself doesn't track which book a run started/ended in
+  // (last_book_id/last_section are explicitly nulled on completion - see the
+  // comment below), so it's derived from each book's own playthroughs[runIndex],
+  // the same way the public journey viewer (getPublicSeriesRun) builds its
+  // segment list. Cached per (seriesId, userId) since a user's series-run rows
+  // for the same series all read the same book set.
+  const _seriesRunBooksCache = new Map();
+  function _getSeriesRunBooks(seriesId, userId) {
+    const key = `${seriesId}:${userId}`;
+    if (_seriesRunBooksCache.has(key)) return _seriesRunBooksCache.get(key);
+    const rows = db.prepare(`
+      SELECT b.id, b.name, b.is_public, b.cover_path, ub.state_data
+      FROM books b JOIN user_books ub ON ub.book_id = b.id AND ub.user_id = ?
+      WHERE b.series_id = ?
+    `).all(userId, seriesId);
+    const parsed = rows.map(r => {
+      let st; try { st = JSON.parse(r.state_data); } catch { st = {}; }
+      return { id: r.id, name: r.name, isPublic: r.is_public === 1,
+               coverUrl: r.cover_path ? `/covers/${r.cover_path}` : null,
+               playthroughs: st.playthroughs || [] };
+    });
+    _seriesRunBooksCache.set(key, parsed);
+    return parsed;
+  }
+  // wantEnd=false: the book with the earliest pt.startedAt for this run index
+  // (where the run actually began). wantEnd=true: the book whose pt.completed
+  // is true with a non-portal result (where the run actually ended) - there's
+  // only ever one, since a portal-paused book always leaves result === 'portal'.
+  function _seriesRunBook(seriesId, userId, runIndex, wantEnd) {
+    const books = _getSeriesRunBooks(seriesId, userId);
+    if (wantEnd) {
+      return books.find(b => {
+        const pt = b.playthroughs[runIndex];
+        return pt && pt.completed && pt.result && pt.result !== 'portal';
+      }) || null;
+    }
+    let best = null, bestTs = Infinity;
+    for (const b of books) {
+      const pt = b.playthroughs[runIndex];
+      if (pt?.startedAt && pt.startedAt < bestTs) { best = b; bestTs = pt.startedAt; }
+    }
+    return best;
+  }
+
   const seriesRunRows = db.prepare(
     `SELECT sr.run_index, sr.started_at, sr.completed, sr.result, sr.completed_at, sr.is_public,
             s.id AS seriesId, s.name AS seriesName, s.is_public AS seriesIsPublic,
@@ -153,7 +197,10 @@ function getFeed() {
     };
     const startMs = (sr.started_at || 0) * 1000;
     if (startMs >= cutoffMs) {
-      entries.push({ ...base, type: 'series_run_started', completedAt: startMs });
+      const startBook = _seriesRunBook(sr.seriesId, sr.userId, sr.run_index, false);
+      entries.push({ ...base, type: 'series_run_started', completedAt: startMs,
+        bookId: startBook?.id ?? null, bookName: startBook?.name ?? null,
+        bookIsPublic: !!startBook?.isPublic, coverUrl: startBook?.coverUrl ?? null });
     }
     if (sr.completed && sr.result && sr.completed_at) {
       const endMs = sr.completed_at * 1000;
@@ -162,8 +209,11 @@ function getFeed() {
         // last_book_id/last_section on completion (that pair only tracks an
         // in-progress run's current position), so by the time this entry is
         // read it's always null. The feed tooltip falls back to just the date.
+        const endBook = _seriesRunBook(sr.seriesId, sr.userId, sr.run_index, true);
         entries.push({ ...base, type: 'series_run_completed', result: sr.result,
-          runIsPublic: !!sr.is_public, completedAt: endMs });
+          runIsPublic: !!sr.is_public, completedAt: endMs,
+          bookId: endBook?.id ?? null, bookName: endBook?.name ?? null,
+          bookIsPublic: !!endBook?.isPublic, coverUrl: endBook?.coverUrl ?? null });
       }
     }
   }
@@ -1249,6 +1299,37 @@ function getBookActivity(bookId) {
   };
 }
 
+// Shared by getPublicRun/getPublicSeriesRun: the plain single-graph run
+// viewer (no journey segmentation, no per-segment result badge) - used both
+// for non-open-world books and for an open-world run that never actually
+// crossed a portal (journey.length === 1), since forcing that case through
+// the journey UI showed a lone, disconnected-looking result pill with no
+// portal transitions around it to give it context.
+function _standardRunView(bookName, st, runIndex, pt) {
+  const allVisited = new Set();
+  (st.playthroughs || []).forEach(p => {
+    (p.path || []).forEach(n => { if (n >= 1) allVisited.add(n); });
+  });
+  const endNodes = [];
+  (st.playthroughs || []).forEach((p, i) => {
+    if (i === runIndex) return;
+    if (!p.completed || !p.path || !p.path.length) return;
+    endNodes.push({ id: p.path[p.path.length - 1], result: p.result });
+  });
+  return {
+    bookName,
+    graph:         st.graph     || {},
+    positions:     st.positions || {},
+    totalSections: st.totalSections || 0,
+    allVisited:    [...allVisited],
+    endNodes,
+    startSection:  pt.path?.[0] ?? null,
+    // Positive runs display as "Run N" (1-based); pre-series runs display as
+    // "Run -N" (already negative, see getPublicProfile) - no +1 offset for those.
+    run: { path: pt.path, result: pt.result, completedAt: pt.completedAt || null, runNumber: runIndex < 0 ? runIndex : runIndex + 1 }
+  };
+}
+
 function getPublicRun(bookId, userId, runIndex) {
   const row = db.prepare(
     `SELECT ub.state_data, b.name, b.series_id, u.public_profile
@@ -1323,29 +1404,7 @@ function getPublicRun(bookId, userId, runIndex) {
 
   if (!owPublicVerified && !pt.isPublic) return null;
 
-  // Standard single-book run
-  const allVisited = new Set();
-  (s.playthroughs || []).forEach(p => {
-    (p.path || []).forEach(n => { if (n >= 1) allVisited.add(n); });
-  });
-  const endNodes = [];
-  (s.playthroughs || []).forEach((p, i) => {
-    if (i === runIndex) return;
-    if (!p.completed || !p.path || !p.path.length) return;
-    endNodes.push({ id: p.path[p.path.length - 1], result: p.result });
-  });
-  return {
-    bookName:      row.name,
-    graph:         s.graph     || {},
-    positions:     s.positions || {},
-    totalSections: s.totalSections || 0,
-    allVisited:    [...allVisited],
-    endNodes,
-    startSection:  pt.path?.[0] ?? null,
-    // Positive runs display as "Run N" (1-based); pre-series runs display as
-    // "Run -N" (already negative, see getPublicProfile) - no +1 offset for those.
-    run: { path: pt.path, result: pt.result, completedAt: pt.completedAt || null, runNumber: isPreSeries ? runIndex : runIndex + 1 }
-  };
+  return _standardRunView(row.name, s, runIndex, pt);
 }
 
 function getPublicSeriesRun(seriesId, userId, runIndex) {
@@ -1365,10 +1424,12 @@ function getPublicSeriesRun(seriesId, userId, runIndex) {
   `).all(userId, seriesId);
 
   const journey = [];
+  const statesByBookId = new Map();
   for (const sb of seriesBooks) {
     let st; try { st = JSON.parse(sb.state_data); } catch { continue; }
     const spt = (st.playthroughs || [])[runIndex];
     if (!spt?.path?.length) continue;
+    statesByBookId.set(sb.id, { st, spt, bookName: sb.name });
     journey.push({
       bookId:       sb.id,
       bookName:     sb.name,
@@ -1383,6 +1444,14 @@ function getPublicSeriesRun(seriesId, userId, runIndex) {
   }
   journey.sort((a, b) => a.startedAt - b.startedAt);
   if (!journey.length) return null;
+
+  // A run that never actually crossed a portal (journey.length === 1) falls
+  // through to the same plain single-graph view non-open-world runs use -
+  // see _standardRunView's comment for why the journey UI looks wrong here.
+  if (journey.length === 1) {
+    const { st, spt, bookName } = statesByBookId.get(journey[0].bookId);
+    return _standardRunView(bookName, st, runIndex, spt);
+  }
 
   const finalSeg = journey[journey.length - 1];
   return {

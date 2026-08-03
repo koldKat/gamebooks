@@ -21,4 +21,9 @@ export function initTooltip() {
     }
   });
   document.addEventListener('mouseleave', () => { tip.style.display = 'none'; });
+  // Touch devices fire a synthetic mouseover on tap (showing the tooltip) but
+  // never a matching mouseleave/mouseout, since there's no pointer to actually
+  // leave - without this the tooltip gets stuck on screen after tapping
+  // whatever triggered it, floating over the new modal/panel it just opened.
+  document.addEventListener('click', () => { tip.style.display = 'none'; });
 }

@@ -1,10 +1,10 @@
 // feed.js - Activity feed rendering, hover image previews, feed SSE reload
 
 import { getToken, apiFetch } from './state.js?v=11';
-import { openPublicProfile, openPublicSeriesRun, openPublicRun } from './public-profile.js?v=50';
-import { openCoverActivity, openSeriesActivity } from './covers.js?v=82';
-import { escapeHtml } from './util.js?v=35';
-import { t } from './i18n.js?v=28';
+import { openPublicProfile, openPublicSeriesRun, openPublicRun } from './public-profile.js?v=51';
+import { openCoverActivity, openSeriesActivity } from './covers.js?v=83';
+import { escapeHtml } from './util.js?v=36';
+import { t } from './i18n.js?v=29';
 
 let _hooks = {};
 export function setFeedHooks(h) { _hooks = h || {}; }
@@ -25,6 +25,16 @@ function _runTooltip(e) {
 // those, only genuine playthroughs indices (always >= 0) get the +1.
 function _runN(runIndex) {
   return runIndex < 0 ? runIndex : runIndex + 1;
+}
+
+// Plain book-name link for series-run entries - unlike bookBtn() further down
+// this deliberately skips the anthology/series tag suffix, since the series
+// is already shown separately via _seriesTag() in the same template.
+function _seriesRunBookTag(e) {
+  if (!e.bookName) return '';
+  if (!e.bookIsPublic) return `<span class="feed-book">${escapeHtml(e.bookName)}</span>`;
+  const cover = e.coverUrl ? ` data-cover="${escapeHtml(e.coverUrl)}"` : '';
+  return `<button class="feed-book feed-book-btn" data-book-id="${e.bookId}" data-book-name="${escapeHtml(e.bookName)}"${cover}>${escapeHtml(e.bookName)}</button>`;
 }
 
 function _seriesTag(e) {
@@ -330,7 +340,9 @@ export async function loadFeed() {
       } else if (e.type === 'series_added') {
         html = t('feed.tmpl.added_series', { user: userEl, series: _seriesTag(e) });
       } else if (e.type === 'series_run_started') {
-        html = t('feed.tmpl.series_run_started', { user: userEl, n: e.runIndex + 1, series: _seriesTag(e) });
+        html = e.bookName
+          ? t('feed.tmpl.series_run_started_in', { user: userEl, n: e.runIndex + 1, series: _seriesTag(e), book: _seriesRunBookTag(e) })
+          : t('feed.tmpl.series_run_started', { user: userEl, n: e.runIndex + 1, series: _seriesTag(e) });
       } else if (e.type === 'series_run_completed') {
         const isWin    = e.result === 'success';
         const isBattle = e.result === 'battle';
@@ -339,7 +351,9 @@ export async function loadFeed() {
         const verbEl   = e.runIsPublic
           ? `<button class="feed-verb ${verbCls} feed-verb-pub" data-book-id="${e.seriesId}" data-user-id="${e.userId}" data-run-index="${e.runIndex}" data-series-run="1" data-tooltip="${escapeHtml(_runTooltip(e))}">${verb}</button>`
           : `<span class="feed-verb ${verbCls}">${verb}</span>`;
-        html = t('feed.tmpl.series_run_completed', { user: userEl, verb: verbEl, n: e.runIndex + 1, series: _seriesTag(e) });
+        html = e.bookName
+          ? t('feed.tmpl.series_run_completed_in', { user: userEl, verb: verbEl, n: e.runIndex + 1, series: _seriesTag(e), book: _seriesRunBookTag(e) })
+          : t('feed.tmpl.series_run_completed', { user: userEl, verb: verbEl, n: e.runIndex + 1, series: _seriesTag(e) });
       } else if (e.type === 'run_started') {
         html = t('feed.tmpl.run_started', { user: userEl, n: _runN(e.runIndex), book: bookBtn(e.bookId, e.bookName) });
       } else if (e.type === 'user_joined') {
