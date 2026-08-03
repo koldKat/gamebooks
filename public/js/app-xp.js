@@ -149,21 +149,21 @@ function _isMainScreenVisible() {
 // Horizontally centered in the gap between the covers panel and the activity
 // feed panel - NOT the same gap rewards.js's _positionRewardLayer uses (that
 // one centers between the feed and #landing-right, i.e. feed-to-books).
-// While in the play area (a book open), reuses rewards.js's own play-area
-// anchor (the gap between #play-bottom-stack and #play-btn-row) so this
-// layer shows up there too, not just on the books/landing screen - but at a
-// higher `bottom` offset than the personal reward-float-layer (which sits at
-// the CSS default of 1rem), since both would otherwise center in the exact
-// same gap and stack floaters directly on top of each other.
+// While in the play area (a book open), centers between #dice-roller-wrap
+// (left) and #play-bottom-stack (right, which holds the player's own XP bar)
+// - deliberately the opposite side from rewards.js's own play-area anchor
+// (which centers stack-to-#play-btn-row, i.e. to the RIGHT of the XP bar),
+// so the two floater layers sit in different gaps and never overlap even
+// though both use the same `bottom: 1rem` baseline as the dice roller/XP bar.
 function _positionAppRewardLayer(layer) {
+  layer.style.bottom = '1rem';
   if (_isMainScreenVisible() && !_isBooksScreenVisible()) {
-    layer.style.bottom = '4.4rem';
+    const dice     = document.getElementById('dice-roller-wrap');
     const playStack = document.getElementById('play-bottom-stack');
-    const btnRow    = document.getElementById('play-btn-row');
+    const diceRect  = dice?.getBoundingClientRect();
     const stackRect = playStack?.getBoundingClientRect();
-    const rowRect   = btnRow?.getBoundingClientRect();
-    if (stackRect?.width > 0 && rowRect?.width > 0 && rowRect.left > stackRect.right) {
-      const centerX = stackRect.right + ((rowRect.left - stackRect.right) / 2);
+    if (diceRect?.width > 0 && stackRect?.width > 0 && stackRect.left > diceRect.right) {
+      const centerX = diceRect.right + ((stackRect.left - diceRect.right) / 2);
       layer.style.left = `${Math.round(centerX)}px`;
       layer.style.transform = 'translateX(-50%)';
       return;
@@ -172,7 +172,6 @@ function _positionAppRewardLayer(layer) {
     layer.style.transform = 'translateX(-50%)';
     return;
   }
-  layer.style.bottom = '1rem';
   const covers = document.getElementById('covers-panel');
   const feed   = document.getElementById('feed-panel');
   const coversRect = covers?.getBoundingClientRect();

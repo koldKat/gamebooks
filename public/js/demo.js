@@ -2,7 +2,7 @@
 
 import { setDemoMode, setDemoState, getDemoState, clearDemoStore, parseSecId, getToken, setCurrentUserLevel } from './state.js?v=11';
 import { destroyNetwork } from './graph.js?v=70';
-import { showAlert } from './play.js?v=59';
+import { showAlert } from './play.js?v=60';
 import { fetchPublic } from './util.js?v=34';
 import { t } from './i18n.js?v=28';
 
