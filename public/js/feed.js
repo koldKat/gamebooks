@@ -1,8 +1,8 @@
 // feed.js - Activity feed rendering, hover image previews, feed SSE reload
 
 import { getToken, apiFetch } from './state.js?v=11';
-import { openPublicProfile, openPublicSeriesRun, openPublicRun } from './public-profile.js?v=49';
-import { openCoverActivity, openSeriesActivity } from './covers.js?v=80';
+import { openPublicProfile, openPublicSeriesRun, openPublicRun } from './public-profile.js?v=50';
+import { openCoverActivity, openSeriesActivity } from './covers.js?v=82';
 import { escapeHtml } from './util.js?v=35';
 import { t } from './i18n.js?v=28';
 
@@ -18,6 +18,13 @@ function _runTooltip(e) {
   if (e.lastSection != null) parts.push(t('pub.run_tooltip_last', { n: e.lastSection }));
   if (e.completedAt) parts.push(new Date(e.completedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }));
   return parts.join(' · ');
+}
+
+// Negative runIndex = a preSeriesRuns entry (see getFeed() in server/db/feed.js),
+// displayed as "run -N" matching play.js's own convention - no +1 offset for
+// those, only genuine playthroughs indices (always >= 0) get the +1.
+function _runN(runIndex) {
+  return runIndex < 0 ? runIndex : runIndex + 1;
 }
 
 function _seriesTag(e) {
@@ -312,7 +319,7 @@ export async function loadFeed() {
         const verbEl = e.runIsPublic
           ? `<button class="feed-verb ${verbCls} feed-verb-pub" data-book-id="${e.bookId}" data-user-id="${e.userId}" data-run-index="${e.runIndex}" data-tooltip="${escapeHtml(_runTooltip(e))}">${verb}</button>`
           : `<span class="feed-verb ${verbCls}">${verb}</span>`;
-        html = t('feed.tmpl.run_completed', { user: userEl, verb: verbEl, book: bookBtn(e.bookId, e.bookName), n: e.runIndex + 1 });
+        html = t('feed.tmpl.run_completed', { user: userEl, verb: verbEl, book: bookBtn(e.bookId, e.bookName), n: _runN(e.runIndex) });
       } else if (e.type === 'book_created') {
         html = t('feed.tmpl.created', { user: userEl, noun: nounLabel(e.isContainer), book: bookBtn(e.bookId, e.bookName) });
         extraClass = 'feed-entry--created';
@@ -334,7 +341,7 @@ export async function loadFeed() {
           : `<span class="feed-verb ${verbCls}">${verb}</span>`;
         html = t('feed.tmpl.series_run_completed', { user: userEl, verb: verbEl, n: e.runIndex + 1, series: _seriesTag(e) });
       } else if (e.type === 'run_started') {
-        html = t('feed.tmpl.run_started', { user: userEl, n: e.runIndex + 1, book: bookBtn(e.bookId, e.bookName) });
+        html = t('feed.tmpl.run_started', { user: userEl, n: _runN(e.runIndex), book: bookBtn(e.bookId, e.bookName) });
       } else if (e.type === 'user_joined') {
         const tmpl = e.joinTemplate || t('feed.join_default');
         html = tmpl.replace('{name}', userEl);
@@ -357,19 +364,19 @@ export async function loadFeed() {
         const wonEl = (e.runIsPublic && e.runIndex != null)
           ? `<button class="feed-verb won feed-verb-pub" data-book-id="${e.bookId}" data-user-id="${e.userId}" data-run-index="${e.runIndex}" data-tooltip="${escapeHtml(_runTooltip(e))}">${t('feed.verb.won')}</button>`
           : `<span class="feed-verb won">${t('feed.verb.won')}</span>`;
-        const runLabel = e.runIndex != null ? ` <span class="feed-run">run ${e.runIndex + 1}</span>` : '';
+        const runLabel = e.runIndex != null ? ` <span class="feed-run">run ${_runN(e.runIndex)}</span>` : '';
         html = t('feed.tmpl.first_result', { user: userEl, verb: wonEl, book: bookBtn(e.bookId, e.bookName), run: runLabel, first_time: t('feed.first_time') });
       } else if (e.type === 'first_loss') {
         const verbEl   = (e.runIsPublic && e.runIndex != null)
           ? `<button class="feed-verb lost feed-verb-pub" data-book-id="${e.bookId}" data-user-id="${e.userId}" data-run-index="${e.runIndex}" data-tooltip="${escapeHtml(_runTooltip(e))}">${t('feed.verb.lost')}</button>`
           : `<span class="feed-verb lost">${t('feed.verb.lost')}</span>`;
-        const runLabel = e.runIndex != null ? ` <span class="feed-run">run ${e.runIndex + 1}</span>` : '';
+        const runLabel = e.runIndex != null ? ` <span class="feed-run">run ${_runN(e.runIndex)}</span>` : '';
         html = t('feed.tmpl.first_result', { user: userEl, verb: verbEl, book: bookBtn(e.bookId, e.bookName), run: runLabel, first_time: t('feed.first_time') });
       } else if (e.type === 'first_battle_death') {
         const verbEl   = (e.runIsPublic && e.runIndex != null)
           ? `<button class="feed-verb lost feed-verb-pub" data-book-id="${e.bookId}" data-user-id="${e.userId}" data-run-index="${e.runIndex}" data-tooltip="${escapeHtml(_runTooltip(e))}">${t('feed.verb.fell_in_battle')}</button>`
           : `<span class="feed-verb lost">${t('feed.verb.fell_in_battle')}</span>`;
-        const runLabel = e.runIndex != null ? ` <span class="feed-run">run ${e.runIndex + 1}</span>` : '';
+        const runLabel = e.runIndex != null ? ` <span class="feed-run">run ${_runN(e.runIndex)}</span>` : '';
         html = t('feed.tmpl.first_result', { user: userEl, verb: verbEl, book: bookBtn(e.bookId, e.bookName), run: runLabel, first_time: t('feed.first_time') });
       } else if (e.type === 'won_all_series') {
         html = t('feed.tmpl.won_all', { user: userEl, target: _seriesTag(e) });

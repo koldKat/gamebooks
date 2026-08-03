@@ -127,7 +127,9 @@ export function renderPublicProfile(profile) {
       const isBattle = run.result === 'battle';
       const chapterPrefix = run.chapterName ? `${run.chapterName} - ` : '';
       const result = isWin ? t('pub.result.victory') : isBattle ? t('pub.result.battle') : t('pub.result.lost');
-      const label = t('pub.run_label', { prefix: chapterPrefix, n: run.index + 1, result });
+      // Negative index = a pre-series run (see getPublicProfile), displayed
+      // as "Run -N" matching play.js's own convention - no +1 offset for those.
+      const label = t('pub.run_label', { prefix: chapterPrefix, n: run.index < 0 ? run.index : run.index + 1, result });
       const cls   = isWin ? 'pub-run-win' : 'pub-run-death';
       const bookId = run.bookId || book.id;
       // A cheap plain-text preview instead of spinning up the full vis-network

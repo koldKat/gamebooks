@@ -281,6 +281,32 @@ function getFeed() {
             partyId: row.party_id || null });
         }
       }
+      // preSeriesRuns (migratePreSeriesRuns) predate the book's series turning
+      // open-world, so unlike the playthroughs loop above this one is NOT
+      // gated on seriesIsOpenWorld - these runs never get a series_run_completed
+      // entry either (they were never tracked in series_runs), so skipping them
+      // here would mean they never appear in the feed again after migration.
+      {
+        const preRuns = state.preSeriesRuns || [];
+        const fallbackTs2b = (row.updated_at || 0) * 1000;
+        for (let i = 0; i < preRuns.length; i++) {
+          const pt = preRuns[i];
+          if (!pt.completed) continue;
+          if (pt.result !== 'death' && pt.result !== 'success' && pt.result !== 'battle') continue;
+          if (row.hide_from_feed && !pt.isPublic) continue;
+          const ts = pt.completedAt || fallbackTs2b;
+          if (ts < cutoffMs) continue;
+          entries.push({ type: 'run_completed', username: row.username, bookName: row.bookName,
+            result: pt.result, completedAt: ts, bookId: row.bookId, userId: row.userId,
+            runIndex: -(preRuns.length - i),
+            runIsPublic: !!pt.isPublic, bookIsPublic: false, userPublicProfile: pub, isAuthor, isContributor, displayName, userLevel: computeLevel(row.xp || 0), userTitle: getTitleForLevel(computeLevel(row.xp || 0)),
+            pathLength: (pt.path || []).length, lastSection: pt.path && pt.path.length ? pt.path[pt.path.length - 1] : null,
+            parentBookId, parentBookName, parentCoverUrl, seriesId, seriesName, seriesNumber, seriesIsPublic, parentBookIsPublic,
+            avatarUrl: row.avatar_path ? `/avatars/${row.avatar_path}` : null,
+            coverUrl:  row.cover_path  ? `/covers/${row.cover_path}`  : null,
+            partyId: row.party_id || null });
+        }
+      }
       continue;
     }
 
@@ -315,6 +341,29 @@ function getFeed() {
         avatarUrl: row.avatar_path ? `/avatars/${row.avatar_path}` : null,
         coverUrl:  row.cover_path  ? `/covers/${row.cover_path}`  : null,
         partyId: row.party_id || null });
+    }
+
+    // preSeriesRuns - same reasoning as the private-book branch above: not
+    // gated on seriesIsOpenWorld, since these runs predate joining the series
+    // and never get a series_run_completed entry either.
+    {
+      const preRuns = state.preSeriesRuns || [];
+      for (let i = 0; i < preRuns.length; i++) {
+        const pt = preRuns[i];
+        if (!pt.completed) continue;
+        if (pt.result !== 'death' && pt.result !== 'success' && pt.result !== 'battle') continue;
+        const ts = pt.completedAt || fallbackTs;
+        if (ts < cutoffMs) continue;
+        if (!row.hide_from_feed || pt.isPublic) entries.push({ type: 'run_completed', username: row.username, bookName: row.bookName,
+          result: pt.result, completedAt: ts, bookId: row.bookId, userId: row.userId,
+          runIndex: -(preRuns.length - i),
+          runIsPublic: pt.isPublic || false, bookIsPublic, userPublicProfile: pub, isAuthor, isContributor, displayName, userLevel: computeLevel(row.xp || 0), userTitle: getTitleForLevel(computeLevel(row.xp || 0)),
+          pathLength: (pt.path || []).length, lastSection: pt.path && pt.path.length ? pt.path[pt.path.length - 1] : null,
+          parentBookId, parentBookName, parentCoverUrl, seriesId, seriesName, seriesNumber, seriesIsPublic, parentBookIsPublic,
+          avatarUrl: row.avatar_path ? `/avatars/${row.avatar_path}` : null,
+          coverUrl:  row.cover_path  ? `/covers/${row.cover_path}`  : null,
+          partyId: row.party_id || null });
+      }
     }
   }
 
@@ -419,13 +468,28 @@ function getFeed() {
   // change) are plain indices, so fall back to treating the key as an index too.
   function _resolveRunIndex(stateDataJson, runKey) {
     if (runKey == null || !stateDataJson) return null;
-    let pts;
-    try { pts = JSON.parse(stateDataJson)?.playthroughs; } catch { return null; }
-    if (!Array.isArray(pts)) return null;
-    const idx = pts.findIndex(p => p && String(p.startedAt) === String(runKey));
-    if (idx !== -1) return idx;
-    const asIndex = parseInt(runKey, 10);
-    return (!Number.isNaN(asIndex) && pts[asIndex]) ? asIndex : null;
+    let parsed;
+    try { parsed = JSON.parse(stateDataJson); } catch { return null; }
+    const pts = parsed?.playthroughs;
+    if (Array.isArray(pts)) {
+      const idx = pts.findIndex(p => p && String(p.startedAt) === String(runKey));
+      if (idx !== -1) return idx;
+    }
+    // Also check preSeriesRuns (migratePreSeriesRuns) - a run's startedAt-based
+    // key stays stable even after migration moves it out of playthroughs, so a
+    // first_win/first_loss/first_battle_death event recorded before migration
+    // still needs to resolve to the run's new location - both its tooltip data
+    // and the run_completed-suppression key below are keyed on this runIndex.
+    const preRuns = parsed?.preSeriesRuns;
+    if (Array.isArray(preRuns)) {
+      const preIdx = preRuns.findIndex(p => p && String(p.startedAt) === String(runKey));
+      if (preIdx !== -1) return -(preRuns.length - preIdx);
+    }
+    if (Array.isArray(pts)) {
+      const asIndex = parseInt(runKey, 10);
+      return (!Number.isNaN(asIndex) && pts[asIndex]) ? asIndex : null;
+    }
+    return null;
   }
 
   // Feeds the feed entry's own hover tooltip (a cheap plain-text preview,
@@ -434,7 +498,9 @@ function getFeed() {
   function _runPathInfo(stateDataJson, runIndex) {
     if (runIndex == null || !stateDataJson) return { pathLength: null, lastSection: null };
     try {
-      const pt = JSON.parse(stateDataJson)?.playthroughs?.[runIndex];
+      const parsed = JSON.parse(stateDataJson);
+      const preRuns = parsed?.preSeriesRuns || [];
+      const pt = runIndex < 0 ? preRuns[preRuns.length + runIndex] : parsed?.playthroughs?.[runIndex];
       const path = pt?.path || [];
       return { pathLength: path.length, lastSection: path.length ? path[path.length - 1] : null };
     } catch { return { pathLength: null, lastSection: null }; }
@@ -519,7 +585,9 @@ function getFeed() {
       if (runIndex != null && row.state_data) {
         try {
           const st = JSON.parse(row.state_data);
-          runIsPublic = !!(st.playthroughs?.[runIndex]?.isPublic);
+          const stPreRuns = st.preSeriesRuns || [];
+          const stPt = runIndex < 0 ? stPreRuns[stPreRuns.length + runIndex] : st.playthroughs?.[runIndex];
+          runIsPublic = !!stPt?.isPublic;
         } catch {}
       }
       const deathPathInfo = _runPathInfo(row.state_data, runIndex);
@@ -820,18 +888,27 @@ function getPublicProfile(username) {
   for (const row of bookRows) {
     if (row.is_container) continue;
     let s; try { s = JSON.parse(row.state_data); } catch { continue; }
-    const runs = (s.playthroughs || [])
-      .map((pt, i) => ({
-        index:       i,
-        bookId:      row.id,
-        chapterName: row.parent_book_id ? row.name : null,
-        result:      pt.result,
-        completedAt: pt.completedAt || null,
-        isPublic:    pt.isPublic || false,
-        pathLength:  (pt.path || []).length,
-        lastSection: pt.path && pt.path.length ? pt.path[pt.path.length - 1] : null,
-      }))
-      .filter(r => r.result === 'death' || r.result === 'success' || r.result === 'battle');
+    const mapRun = (pt, i) => ({
+      index:       i,
+      bookId:      row.id,
+      chapterName: row.parent_book_id ? row.name : null,
+      result:      pt.result,
+      completedAt: pt.completedAt || null,
+      isPublic:    pt.isPublic || false,
+      pathLength:  (pt.path || []).length,
+      lastSection: pt.path && pt.path.length ? pt.path[pt.path.length - 1] : null,
+    });
+    // preSeriesRuns (migratePreSeriesRuns) holds runs that pre-date a book's
+    // series turning open-world - still real, playable-back runs, just moved
+    // out of playthroughs so open-world's own run-slot indexing isn't
+    // disturbed. Indexed negative here (matching play.js's own "Run -N"
+    // display convention for these) so getPublicRun can tell which array a
+    // given index came from without an extra flag.
+    const preRuns = s.preSeriesRuns || [];
+    const runs = [
+      ...(s.playthroughs || []).map(mapRun),
+      ...preRuns.map((pt, i) => mapRun(pt, -(preRuns.length - i))),
+    ].filter(r => r.result === 'death' || r.result === 'success' || r.result === 'battle');
     if (!runs.length) continue;
     const groupId   = row.parent_book_id || row.id;
     const groupName = row.parent_book_id ? (parentNames.get(row.parent_book_id) || row.name) : row.name;
@@ -874,7 +951,12 @@ function getProfileStats(userId) {
   let booksPlayed = 0, totalRuns = 0, wins = 0, deaths = 0, battles = 0;
   for (const row of bookRows) {
     let s; try { s = JSON.parse(row.state_data); } catch { continue; }
-    const completed = (s.playthroughs || []).filter(pt => pt.result === 'death' || pt.result === 'success' || pt.result === 'battle');
+    // preSeriesRuns holds runs that pre-date a book's series turning open-world
+    // (migratePreSeriesRuns) - still real, played-out runs, just moved out of
+    // playthroughs so open-world's own run-slot indexing isn't disturbed. They
+    // should still count here.
+    const allRuns = [...(s.playthroughs || []), ...(s.preSeriesRuns || [])];
+    const completed = allRuns.filter(pt => pt.result === 'death' || pt.result === 'success' || pt.result === 'battle');
     if (completed.length) booksPlayed++;
     totalRuns += completed.length;
     wins    += completed.filter(pt => pt.result === 'success').length;
@@ -1115,6 +1197,14 @@ function getBookActivity(bookId) {
       if (!pt.completed || !pt.isPublic) continue;
       runs.push({ runIndex: i, result: pt.result, completedAt: pt.completedAt || null });
     }
+    // preSeriesRuns (migratePreSeriesRuns) - same negative-index convention
+    // as getPublicProfile/getPublicRun, so these are still reachable here too.
+    const preRuns = s.preSeriesRuns || [];
+    for (let i = 0; i < preRuns.length; i++) {
+      const pt = preRuns[i];
+      if (!pt.completed || !pt.isPublic) continue;
+      runs.push({ runIndex: -(preRuns.length - i), result: pt.result, completedAt: pt.completedAt || null });
+    }
     runs.sort((a, b) => (b.completedAt || 0) - (a.completedAt || 0));
     if (!runs.length) continue;
     entries.push({
@@ -1169,12 +1259,17 @@ function getPublicRun(bookId, userId, runIndex) {
   ).get(bookId, userId);
   if (!row) return null;
   let s; try { s = JSON.parse(row.state_data); } catch { return null; }
-  const pt = (s.playthroughs || [])[runIndex];
+  // Negative runIndex means a preSeriesRuns entry (see getPublicProfile) -
+  // these never went through open-world series-run tracking at all, so they
+  // skip straight to the plain pt.isPublic check below.
+  const isPreSeries = runIndex < 0;
+  const preRuns = s.preSeriesRuns || [];
+  const pt = isPreSeries ? preRuns[preRuns.length + runIndex] : (s.playthroughs || [])[runIndex];
   if (!pt || !pt.completed) return null;
 
   // For open world series: series_runs.is_public is the source of truth
   let owPublicVerified = false;
-  if (row.series_id) {
+  if (!isPreSeries && row.series_id) {
     const series = db.prepare('SELECT is_open_world, name FROM series WHERE id = ?').get(row.series_id);
     if (series?.is_open_world) {
       const sr = db.prepare(
@@ -1247,7 +1342,9 @@ function getPublicRun(bookId, userId, runIndex) {
     allVisited:    [...allVisited],
     endNodes,
     startSection:  pt.path?.[0] ?? null,
-    run: { path: pt.path, result: pt.result, completedAt: pt.completedAt || null, runNumber: runIndex + 1 }
+    // Positive runs display as "Run N" (1-based); pre-series runs display as
+    // "Run -N" (already negative, see getPublicProfile) - no +1 offset for those.
+    run: { path: pt.path, result: pt.result, completedAt: pt.completedAt || null, runNumber: isPreSeries ? runIndex : runIndex + 1 }
   };
 }
 

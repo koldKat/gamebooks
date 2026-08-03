@@ -1090,6 +1090,13 @@ function adminGetUsers() {
     if (!byUser[b.user_id]) byUser[b.user_id] = { runs: 0, wins: 0, deaths: 0, battles: 0, active: 0 };
     try {
       const s = JSON.parse(b.state_data || '{}');
+      // preSeriesRuns holds runs that pre-date a book's series turning open-world
+      // (migratePreSeriesRuns) - still real, played-out runs, counted alongside
+      // playthroughs here too (matching getProfileStats() in server/db/feed.js).
+      // Only playthroughs feeds "active" - an incomplete preSeriesRuns entry
+      // isn't reachable via the normal continue flow (activePtIndex never
+      // points into that array), so it isn't a "currently active" run in the
+      // sense adminGetBookStats' activePlaythroughs means.
       for (const pt of (s.playthroughs || [])) {
         // Completed-only, matching getProfileStats() (server/db/feed.js) - an
         // in-progress run (no result yet) previously inflated this count relative
@@ -1098,6 +1105,11 @@ function adminGetUsers() {
         else if (pt.result === 'death') { byUser[b.user_id].runs++; byUser[b.user_id].deaths++; }
         else if (pt.result === 'battle') { byUser[b.user_id].runs++; byUser[b.user_id].battles++; }
         else byUser[b.user_id].active++; // no result yet - matches adminGetBookStats' activePlaythroughs
+      }
+      for (const pt of (s.preSeriesRuns || [])) {
+        if (pt.result === 'success') { byUser[b.user_id].runs++; byUser[b.user_id].wins++; }
+        else if (pt.result === 'death') { byUser[b.user_id].runs++; byUser[b.user_id].deaths++; }
+        else if (pt.result === 'battle') { byUser[b.user_id].runs++; byUser[b.user_id].battles++; }
       }
     } catch {}
   }

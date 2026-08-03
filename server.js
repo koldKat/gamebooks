@@ -272,7 +272,11 @@ const adminAnnouncementUnpubRe = /^\/api\/admin\/announcements\/(\d+)\/unpublish
 const adminAnnouncementPinRe   = /^\/api\/admin\/announcements\/(\d+)\/pin$/;
 const adminAnnouncementUnpinRe = /^\/api\/admin\/announcements\/(\d+)\/unpin$/;
 const publicUserRe        = /^\/api\/public\/user\/([^/]+)$/;
-const publicRunRe         = /^\/api\/public\/book\/(\d+)\/user\/(\d+)\/run\/(\d+)$/;
+// Run index allows a leading '-' - preSeriesRuns entries (see getPublicRun
+// in server/db/feed.js) are addressed with negative indices, matching
+// play.js's own "Run -N" display convention for runs that pre-date a book's
+// series turning open-world.
+const publicRunRe         = /^\/api\/public\/book\/(\d+)\/user\/(\d+)\/run\/(-?\d+)$/;
 const publicSeriesRunRe   = /^\/api\/public\/series\/(\d+)\/user\/(\d+)\/run\/(\d+)$/;
 const bookAddRe           = /^\/api\/books\/(\d+)\/add$/;
 const bookRatingRe        = /^\/api\/books\/(\d+)\/rating$/;

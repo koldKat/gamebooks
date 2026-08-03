@@ -361,7 +361,19 @@ function migratePreSeriesRuns(seriesId) {
       );
       s.preSeriesRuns = toMigrate;
       if (toMigrate.length > 0) {
-        s.playthroughs = pts.filter(p => !toMigrate.includes(p));
+        // activePtIndex points into playthroughs by position, not identity -
+        // migrating entries out from under it without adjusting would either
+        // point past the end of the shrunk array, or (worse) silently land
+        // on a *different* surviving playthrough that shifted into that same
+        // index, letting the player unknowingly resume the wrong run.
+        const toMigrateSet = new Set(toMigrate);
+        const activePt = typeof s.activePtIndex === 'number' ? pts[s.activePtIndex] : null;
+        s.playthroughs = pts.filter(p => !toMigrateSet.has(p));
+        if (activePt && toMigrateSet.has(activePt)) {
+          s.activePtIndex = null;
+        } else if (activePt) {
+          s.activePtIndex = s.playthroughs.indexOf(activePt);
+        }
       }
       upd.run(JSON.stringify(s), row.user_id, row.book_id);
     }

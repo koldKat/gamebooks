@@ -1,6 +1,6 @@
 // covers.js - Covers panel, lazy grid, landing bg rotation, cover/series activity modals
 import { getToken, isDemoMode, apiFetch } from './state.js?v=11';
-import { openPublicModal, closePublicModal, openPublicProfile, renderPublicProfile, openPublicRun, openPublicSeriesRun, _destroyPubNetworks } from './public-profile.js?v=49';
+import { openPublicModal, closePublicModal, openPublicProfile, renderPublicProfile, openPublicRun, openPublicSeriesRun, _destroyPubNetworks } from './public-profile.js?v=50';
 import { refreshCoinsDisplay } from './shop.js?v=42';
 import { foldForSearch, matchesSearch, naturalCompare, naturalCompareByName } from './sort.js?v=1';
 import { escapeHtml, fetchPublic as publicFetch, BATTLE_SIM_BOOK_IDS } from './util.js?v=35';
@@ -1135,7 +1135,10 @@ function renderCoverActivity(bookId, bookName, entries, userRating, bookMeta, us
       for (const run of e.runs) {
         const isWin    = run.result === 'success';
         const isBattle = run.result === 'battle';
-        const label = `Run ${run.runIndex + 1} - ${isWin ? '★ Victory' : isBattle ? '⚔ Battle Death' : '† Lost'}`;
+        // Negative runIndex = a pre-series run (see getBookActivity), shown
+        // as "Run -N" matching play.js's own convention - no +1 for those.
+        const runN  = run.runIndex < 0 ? run.runIndex : run.runIndex + 1;
+        const label = `Run ${runN} - ${isWin ? '★ Victory' : isBattle ? '⚔ Battle Death' : '† Lost'}`;
         const cls   = isWin ? 'pub-run-win' : 'pub-run-death';
         activityHtml += `<button class="pub-run-btn ${cls}" data-book-id="${e.bookId}" data-user-id="${e.userId}" data-run-index="${run.runIndex}">${escapeHtml(label)}</button>`;
       }
