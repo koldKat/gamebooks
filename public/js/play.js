@@ -5,12 +5,12 @@ import {
   currentPlaythrough, currentSection, allDiscoveredSections, mappedCount,
   currentUserLevel, bonusUndos, bonusFastTravels, apiFetch,
 } from './state.js?v=11';
-import { network, visNodes, syncGraph } from './graph.js?v=73';
-import { t } from './i18n.js?v=29';
-import { renderCharSheetDisplay } from './charsheet.js?v=53';
+import { network, visNodes, syncGraph } from './graph.js?v=76';
+import { t } from './i18n.js?v=32';
+import { renderCharSheetDisplay } from './charsheet.js?v=56';
 import { naturalCompare } from './sort.js?v=1';
-import { instantiateLoadout } from './equipment.js?v=110';
-import { escapeHtml } from './util.js?v=36';
+import { instantiateLoadout } from './equipment.js?v=114';
+import { escapeHtml } from './util.js?v=39';
 
 // ── Discoverable sections cap ────────────────────────────────────���───────────
 let _discoverableLimit = null;
@@ -1215,7 +1215,10 @@ export function openNoteModal(nodeId) {
       delete state.graph[nodeId].note;
       delete state.graph[nodeId].showNote;
       const n = state.graph[nodeId];
-      if (n.discovered && !n.priority && !n.battle && !n.color) delete state.graph[nodeId];
+      // Same "worth keeping" check as _cleanupOrphanedTargets/_pruneDiscovered
+      // (boot.js) - was missing `portals` here too, so clearing the note off
+      // a node whose only other content was a portal silently deleted it.
+      if (n.discovered && !n.priority && !n.battle && !n.color && !n.portals) delete state.graph[nodeId];
     }
     saveState();
     render();

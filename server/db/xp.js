@@ -30,7 +30,14 @@ const _xpDefaults = {
   discover_node: 1, visit_node: 2, discover_all: 30, visit_all: 40,
   add_note: 5, set_priority: 2, mark_battle: 3, set_color: 2,
   run_depth: 25, death_run: 15, battle_run: 15, win_run: 20,
-  first_win: 100, first_loss: 50, first_battle_death: 25, share_run: 20, charsheet_run: 10, charsheet_saved: 40,
+  first_win: 100, first_loss: 50, first_battle_death: 25,
+  // Same achievements as above, still once-per-book (not per-series) - just
+  // worth more when that book's first win/loss/battle-death happens to occur
+  // as part of an open-world series run, since that represents more
+  // investment (persistent character sheet, potentially several books) than
+  // a plain single-book run.
+  first_win_ow: 150, first_loss_ow: 75, first_battle_death_ow: 40,
+  share_run: 20, charsheet_run: 10, charsheet_saved: 40,
   notebook_saved: 40, rate_book: 25, add_to_library: 15, add_book: 50,
   add_isbn: 20, add_issn: 20, add_asin: 20, add_pages: 5,
   add_authors: 10, add_description: 40, make_book_public: 100,
@@ -716,14 +723,17 @@ function processStateXp(userId, bookId, oldState, newState, totalSections) {
       _anyRunJustCompleted = true;
       if (newPt.result === 'death') {
         awardXp(userId, 'death_run', ref);
-        awardXp(userId, 'first_loss', String(bookId));
+        // first_win/first_loss/first_battle_death use bookId as ref (not
+        // series-scoped) so they fire once per book per user regardless of
+        // open-world status - but pay out more when this particular
+        // completion happens as part of an open-world series run.
+        awardXp(userId, 'first_loss', String(bookId), owSeriesId ? getXpAmount('first_loss_ow') : null);
       } else if (newPt.result === 'battle') {
         awardXp(userId, 'battle_run', ref);
-        awardXp(userId, 'first_battle_death', String(bookId));
+        awardXp(userId, 'first_battle_death', String(bookId), owSeriesId ? getXpAmount('first_battle_death_ow') : null);
       } else if (newPt.result === 'success') {
         awardXp(userId, 'win_run', ref);
-        // first_win uses bookId as ref (not series-scoped) so it fires once per book per user
-        awardXp(userId, 'first_win', String(bookId));
+        awardXp(userId, 'first_win', String(bookId), owSeriesId ? getXpAmount('first_win_ow') : null);
         // won_all checks only make sense for non-open-world books (open world has series_run_completed)
         if (!owSeriesId) _checkGroupWonAll(userId, bookRow?.series_id, bookRow?.parent_book_id);
       }
@@ -807,14 +817,14 @@ function processStateXp(userId, bookId, oldState, newState, totalSections) {
           let awarded = false;
           if (newPt.result === 'death') {
             awarded = awardXp(userId, 'death_run', ref);
-            if (awarded) awardXp(userId, 'first_loss', String(bookId));
+            if (awarded) awardXp(userId, 'first_loss', String(bookId), owSeriesId ? getXpAmount('first_loss_ow') : null);
           } else if (newPt.result === 'battle') {
             awarded = awardXp(userId, 'battle_run', ref);
-            if (awarded) awardXp(userId, 'first_battle_death', String(bookId));
+            if (awarded) awardXp(userId, 'first_battle_death', String(bookId), owSeriesId ? getXpAmount('first_battle_death_ow') : null);
           } else if (newPt.result === 'success') {
             awarded = awardXp(userId, 'win_run', ref);
             if (awarded) {
-              awardXp(userId, 'first_win', String(bookId));
+              awardXp(userId, 'first_win', String(bookId), owSeriesId ? getXpAmount('first_win_ow') : null);
               if (!owSeriesId) _checkGroupWonAll(userId, bookRow?.series_id, bookRow?.parent_book_id);
             }
           }
