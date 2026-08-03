@@ -246,7 +246,7 @@ body.sidebar-collapsed #play-bottom-stack {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.8rem 1rem;
+  padding: 0.45rem 1rem;
   border-bottom: 1px solid #374151;
   color: #f3f4f6;
   font-size: 0.88rem;
@@ -615,7 +615,7 @@ body.sidebar-collapsed #notes-display { left: 1rem; }
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.8rem 1rem;
+  padding: 0.45rem 1rem;
   border-bottom: 1px solid #374151;
   color: #f3f4f6;
   font-size: 0.88rem;

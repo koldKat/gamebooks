@@ -246,7 +246,7 @@
   align-items: center;
   gap: 0.75rem;
 }
-.inbox-conv-date { font-size: 0.8rem; color: #9ca3af; }
+.inbox-conv-date { font-size: 0.8rem; line-height: 1; color: #9ca3af; }
 #inbox-messages {
   flex: 1;
   overflow-y: auto;
@@ -292,7 +292,8 @@
   color: #9ca3af;
   cursor: pointer;
   font-family: inherit;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
+  line-height: 1;
   padding: 0.3rem 0.75rem;
   white-space: nowrap;
   transition: border-color 0.15s, color 0.15s;

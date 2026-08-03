@@ -264,6 +264,7 @@
         battlesim200.js    Battle simulator for book 200, The Forest of Doom (SKILL is 1d6+5 here, not the usual 1d6+6; no MAGIC, no Provisions mechanic; adds paired-attacker fights and a Luck-event queue - see below)
         battlesim186.js    Battle simulator for book 186, Starship Traveller (no unified combat system - hand-to-hand/phaser/ship-to-ship selected via a mode toggle; 7-person crew each individually rolled, one shared LUCK box, no LUCK-based combat swing at all - see below)
         battlesim201.js    Battle simulator for book 201, City of Thieves (standard SKILL/STAMINA/LUCK system, reuses book 200's attackModifier and pairedFight/sideEnemy mechanics; adds an enemyWoundDamage knob for non-standard wound amounts)
+        battlesim202.js    Battle simulator for book 202, Deathtrap Dungeon (standard SKILL/STAMINA/LUCK system, reuses book 201's core; adds instaKillEnemyAS, instaKillOnEnemyWin, winAfterHits and luckyKillOnWin knobs for its instant-death/weak-point encounters)
       add-book.js        Create Book, Create Anthology, Create Series modals
       edit-book.js       Edit Book/Anthology/Series/Stash modals; ISBN/ISSN/ASIN validation
       books.js           Books list rendering, panel management, stash UI
@@ -316,7 +317,7 @@ Layer 2:
     (safe: none consume each other at module-evaluation time)
 
 Layer 3 (feature modules):
-  notes, battlesim829, battlesim8, battlesim286, battlesim198, battlesim199, battlesim200, battlesim186, battlesim201, auth, add-book, edit-book, books,
+  notes, battlesim829, battlesim8, battlesim286, battlesim198, battlesim199, battlesim200, battlesim186, battlesim201, battlesim202, auth, add-book, edit-book, books,
   covers, feed, open-world, shop, profile, public-profile, prefs,
   livetab, notif, rewards, bg, stats, party, tips, inbox, dice,
   tooltip, export, feedback, demo

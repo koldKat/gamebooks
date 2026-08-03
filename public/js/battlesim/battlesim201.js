@@ -44,9 +44,9 @@
 // All state lives in pt.sim201, per-user/per-book via currentPlaythrough().
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../state.js?v=11';
-import { showAlert } from '../play.js?v=60';
-import { getPlayBtnRow } from '../charsheet.js?v=51';
-import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../util.js?v=34';
+import { showAlert } from '../play.js?v=61';
+import { getPlayBtnRow } from '../charsheet.js?v=52';
+import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../util.js?v=35';
 import { t } from '../i18n.js?v=28';
 
 const SVG_SKULL  = `<svg class="sim-icon sim-icon-dead"  viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8c0 2.8 1.4 5.3 3.6 6.8V20a1 1 0 0 0 1 1h6.8a1 1 0 0 0 1-1v-2.2C18.6 16.3 20 13.8 20 11a8 8 0 0 0-8-8zm-2.5 13v-1.5a.5.5 0 0 0-.5-.5H8l-.5-1 1-1-1-1 1-1H9a2.5 2.5 0 0 1 5 0h.5l1 1-1 1 1 1-.5 1h-1a.5.5 0 0 0-.5.5V16h-4z"/></svg>`;
@@ -83,6 +83,7 @@ function _data() {
         hasMagicHelmet: false,
         hasCursedShield: false,
         hasCursedBrooch: false,
+        hasElvenBoots: false,
       },
       enemy: { name: '', skill: 0, stamina: 0, staminaMax: 0 },
       pairedFight: false,
@@ -112,6 +113,7 @@ function _data() {
   if (d.player.hasMagicHelmet === undefined) d.player.hasMagicHelmet = false;
   if (d.player.hasCursedShield === undefined) d.player.hasCursedShield = false;
   if (d.player.hasCursedBrooch === undefined) d.player.hasCursedBrooch = false;
+  if (d.player.hasElvenBoots === undefined) d.player.hasElvenBoots = false;
   if (d.pairedFight === undefined) d.pairedFight = false;
   if (!d.sideEnemy) d.sideEnemy = { name: '', skill: 0, staminaMax: 0 };
   return d;
@@ -143,12 +145,17 @@ function _sideEnemyNameSafe(d) { return escapeHtml(d.sideEnemy.name.trim() || 't
 //   other one-time LUCK/STAMINA pickup in this book, apply by hand)
 // - Cursed Shield (sec 125): -1 SKILL, forced and not removable on that route
 // - Cursed/copper scorpion Brooch (sec 387): -1 SKILL while carried
+// - Magic Elven Boots (sec 362): +1 SKILL while worn - missed in the original
+//   audit pass, corrected in a later re-verification (that pass had first
+//   mislabeled it as a one-time +1 LUCK reward, which is why it was never
+//   added as a toggle in the first place).
 function _effectiveSkill(d) {
   let skill = d.player.skill;
   if (d.player.hasChainmail) skill += 2;
   if (d.player.hasMagicShield) skill += 1;
   if (d.player.hasUnicornShield) skill += 1;
   if (d.player.hasMagicHelmet) skill += 1;
+  if (d.player.hasElvenBoots) skill += 1;
   if (d.player.hasCursedShield) skill -= 1;
   if (d.player.hasCursedBrooch) skill -= 1;
   return skill;
@@ -396,7 +403,7 @@ function _renderItemsHtml(d) {
     </div>
     <div class="bsim-tech-row">
       <div class="bsim-tech-name">Magic Shield <span class="bsim-tech-uses">(sec. 340)</span></div>
-      <div class="bsim-tech-desc">+1 to your Attack Strength every round while using it.</div>
+      <div class="bsim-tech-desc">+1 to your Attack Strength every round while using it. Also grants +1 LUCK once when the chest is opened - add that to your LUCK fields by hand, checking this box only applies the ongoing Attack Strength bonus.</div>
       <div class="bsim-tech-footer"><label class="inv-edit-check-label"><input type="checkbox" id="sim201-item-magicshield" class="inv-edit-check" ${d.player.hasMagicShield ? 'checked' : ''}> Have it</label></div>
     </div>
     <div class="bsim-tech-row">
@@ -418,6 +425,11 @@ function _renderItemsHtml(d) {
       <div class="bsim-tech-name">Cursed Brooch <span class="bsim-tech-uses">(sec. 387)</span></div>
       <div class="bsim-tech-desc">-1 SKILL while carried (the copper scorpion brooch).</div>
       <div class="bsim-tech-footer"><label class="inv-edit-check-label"><input type="checkbox" id="sim201-item-cursedbrooch" class="inv-edit-check" ${d.player.hasCursedBrooch ? 'checked' : ''}> Have it</label></div>
+    </div>
+    <div class="bsim-tech-row">
+      <div class="bsim-tech-name">Magic Elven Boots <span class="bsim-tech-uses">(sec. 362)</span></div>
+      <div class="bsim-tech-desc">+1 SKILL while worn.</div>
+      <div class="bsim-tech-footer"><label class="inv-edit-check-label"><input type="checkbox" id="sim201-item-elvenboots" class="inv-edit-check" ${d.player.hasElvenBoots ? 'checked' : ''}> Have it</label></div>
     </div>
     <div class="bsim-tech-row">
       <div class="bsim-tech-name">Lizardine's Fiery Breath <span class="bsim-tech-uses">(sec. 392)</span></div>
@@ -794,6 +806,7 @@ export function initSim201() {
     'sim201-item-magichelmet':   'hasMagicHelmet',
     'sim201-item-cursedshield':  'hasCursedShield',
     'sim201-item-cursedbrooch':  'hasCursedBrooch',
+    'sim201-item-elvenboots':    'hasElvenBoots',
   };
   document.getElementById('sim201-item-list').addEventListener('change', e => {
     const d = _data();
