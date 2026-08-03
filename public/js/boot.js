@@ -44,7 +44,7 @@ import { initSim198, setSim198Visible, renderSim198 } from './battlesim/battlesi
 import { initSim199, setSim199Visible, renderSim199 } from './battlesim/battlesim199.js?v=26';
 import { initSim200, setSim200Visible, renderSim200 } from './battlesim/battlesim200.js?v=16';
 import { initSim186, setSim186Visible, renderSim186 } from './battlesim/battlesim186.js?v=17';
-import { initSim201, setSim201Visible, renderSim201 } from './battlesim/battlesim201.js?v=18';
+import { initSim201, setSim201Visible, renderSim201 } from './battlesim/battlesim201.js?v=19';
 import { initSim202, setSim202Visible, renderSim202 } from './battlesim/battlesim202.js?v=2';
 import { initShop, updateCoinsDisplay, refreshCoinsDisplay, setShopHooks } from './shop.js?v=42';
 import { initProfile, updateAvatarUI, renderBooksXpSummary, setProfileHooks } from './profile.js?v=58';
