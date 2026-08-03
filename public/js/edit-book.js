@@ -3,7 +3,7 @@
 import { state, getToken, isDemoMode, apiFetch, clearToken, clearUsername, isTerminal, parseSecId } from './state.js?v=11';
 import { t } from './i18n.js?v=28';
 import { naturalCompare, naturalCompareByName, foldForSearch, matchesSearch } from './sort.js?v=1';
-import { getCachedBooks, getCachedAllSeries, getCachedStashes, _starLabelHtml, _refreshBooksListOnly, _refreshLibraryUi } from './books.js?v=108';
+import { getCachedBooks, getCachedAllSeries, getCachedStashes, _starLabelHtml, _refreshBooksListOnly, _refreshLibraryUi } from './books.js?v=110';
 import { refreshCoinsDisplay } from './shop.js?v=42';
 import { showAlert, showConfirm } from './play.js?v=61';
 import { escapeHtml, compressImage } from './util.js?v=35';

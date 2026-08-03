@@ -16,7 +16,7 @@ import {
 import { t } from './i18n.js?v=28';
 import { setOnCharSheetSaved } from './charsheet.js?v=52';
 import { instantiateLoadout } from './equipment.js?v=107';
-import { getCachedBooks } from './books.js?v=108';
+import { getCachedBooks } from './books.js?v=110';
 
 let _hooks = {};
 export function setOpenWorldHooks(h) { _hooks = h || {}; }
@@ -65,7 +65,19 @@ export async function _syncSeriesRuns(seriesId) {
     );
     state.preSeriesRuns = toMigrate;
     if (toMigrate.length > 0) {
-      state.playthroughs = state.playthroughs.filter(p => !toMigrate.includes(p));
+      // Same activePtIndex-adjustment care as the prune loop below - without
+      // this, an in-progress run migrated out from under activePtIndex would
+      // either point past the end of the shrunk array, or (worse) silently
+      // land on a *different* surviving playthrough that shifted into that
+      // same index, letting the player unknowingly resume the wrong run.
+      const toMigrateSet = new Set(toMigrate);
+      const activePt = typeof state.activePtIndex === 'number' ? state.playthroughs[state.activePtIndex] : null;
+      state.playthroughs = state.playthroughs.filter(p => !toMigrateSet.has(p));
+      if (activePt && toMigrateSet.has(activePt)) {
+        state.activePtIndex = null;
+      } else if (activePt) {
+        state.activePtIndex = state.playthroughs.indexOf(activePt);
+      }
     }
     needsSave = true;
   }
