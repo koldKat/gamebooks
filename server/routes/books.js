@@ -604,8 +604,13 @@ async function handleSaveState(req, res, bookId) {
     const memberIds = db.getPartyMemberIds(party.partyId, userId);
     const memberOldStates = memberIds.map(id => ({ id, old: db.getBookState(id, bookId) }));
     const updatedIds = db.fanOutState(party.partyId, userId, stateObj);
-    for (const { id, old } of memberOldStates) {
-      if (old) db.processStateXp(id, bookId, old, stateObj, stateObj.totalSections || 0);
+    // Same invisibility contract as the actor's own award above - a state
+    // change driven by an admin impersonating the actor must not earn OTHER
+    // real party members XP either, since the "progress" behind it isn't real.
+    if (!impersonating) {
+      for (const { id, old } of memberOldStates) {
+        if (old) db.processStateXp(id, bookId, old, stateObj, stateObj.totalSections || 0);
+      }
     }
     if (updatedIds.length) ssePush(party.partyId, userId, { type: 'state_updated', by: userId, bookId });
   }
@@ -706,7 +711,9 @@ async function handleInviteToParty(req, res, bookId) {
 async function handleAcceptPartyInvite(req, res, inviteId) {
   const userId = await authenticate(req, res);
   if (userId === null) return;
-  const result = db.acceptPartyInvite(inviteId, userId);
+  // Same invisibility contract as handleSaveState - accepting on an
+  // impersonated account must not credit them with the source's real XP.
+  const result = db.acceptPartyInvite(inviteId, userId, { skipXp: isRequestImpersonating(req) });
   if (result.error === 'invite_not_found') return send(res, 404, { error: 'Invite not found' });
   if (result.error === 'already_tracking') return send(res, 409, { error: 'You already track this book' });
   if (result.error) return send(res, 400, { error: result.error });

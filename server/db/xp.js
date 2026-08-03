@@ -8,6 +8,7 @@
 
 const { db } = require('./connection');
 const { generateToken } = require('./auth');
+const { isImpersonatingContext } = require('../impersonation-context');
 
 // ── Impersonation tokens ──────────────────────────────────────────────────────
 
@@ -232,7 +233,12 @@ const _awardCoinsTx = db.transaction((userId, event, ref, amount) => {
   return r.changes > 0;
 });
 
+// Central safety net: no coins are ever awarded while the current request's
+// account is impersonated, regardless of which route/db function triggered
+// this call - see impersonation-context.js for why this lives here instead
+// of at each individual call site.
 function awardCoins(userId, event, ref, amount) {
+  if (isImpersonatingContext()) return false;
   return _awardCoinsTx(userId, event, String(ref), amount);
 }
 
@@ -282,7 +288,9 @@ const _awardXpTx = db.transaction((userId, event, ref, amount) => {
   return r.changes > 0;
 });
 
+// Same central safety net as awardCoins above.
 function awardXp(userId, event, ref, amountOverride = null) {
+  if (isImpersonatingContext()) return false;
   const amount = amountOverride ?? getXpAmount(event);
   return _awardXpTx(userId, event, String(ref), amount);
 }

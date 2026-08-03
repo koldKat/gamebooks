@@ -7,6 +7,7 @@
 const path  = require('path');
 const geoip = require('geoip-lite');
 const db    = require('./db');
+const { runInImpersonationContext } = require('./impersonation-context');
 
 function getClientIp(req) {
   const xff = req.headers['x-forwarded-for'];
@@ -255,6 +256,18 @@ function isRequestImpersonating(req) {
   return !!session?.is_impersonation;
 }
 
+// The actual AsyncLocalStorage lives in its own module (not here) since
+// server/db/xp.js needs to read it too, and xp.js is required BY db.js,
+// which this file itself requires - putting the store here would make xp.js
+// require this file back, a circular require. See impersonation-context.js.
+// This wrapper is the one call site (server.js's request handler) needs:
+// it resolves "is this request impersonated" once and runs the rest of that
+// request's handling inside the context, so every XP/coin award anywhere in
+// the resulting call chain can see it without being passed `req` at all.
+function runWithImpersonationContext(req, fn) {
+  return runInImpersonationContext(isRequestImpersonating(req), fn);
+}
+
 module.exports = {
   getClientIp,
   addSecurityHeaders, addForumSecurityHeaders, addAdminSecurityHeaders,
@@ -263,5 +276,6 @@ module.exports = {
   isLocalhost, isLocalhostReal, requireLocalhost,
   send, readBody, readRawBody, tokenFromReq,
   authenticate, authenticateOptional, isRequestImpersonating,
+  runWithImpersonationContext,
   MAX_JSON_BODY, MAX_PNG_BODY, AVATAR_UPLOAD_MAX, SSE_PING_MS,
 };
