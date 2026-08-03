@@ -1,10 +1,10 @@
 // autocomplete.js - Book/author/series autocomplete dropdowns and data loading
 
 import { apiFetch } from './state.js?v=11';
-import { getCachedBooks } from './books.js?v=113';
+import { getCachedBooks } from './books.js?v=117';
 import { naturalCompare, naturalCompareByName, matchesSearch } from './sort.js?v=1';
-import { escapeHtml, fetchPublic as _fetchPublic } from './util.js?v=36';
-import { t } from './i18n.js?v=29';
+import { escapeHtml, fetchPublic as _fetchPublic } from './util.js?v=39';
+import { t } from './i18n.js?v=32';
 
 function _sortedByName(items) { return [...items].sort(naturalCompareByName); }
 

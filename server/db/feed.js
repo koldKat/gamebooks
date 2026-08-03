@@ -556,6 +556,28 @@ function getFeed() {
     } catch { return { pathLength: null, lastSection: null }; }
   }
 
+  // win_run/death_run/battle_run refs are book-scoped (`bookId:startedAt`) for a
+  // book that wasn't in an open-world series at completion time, but
+  // series-scoped (`series:seriesId:startedAt`, see processStateXp) once it is -
+  // a book's history can contain both, e.g. pre-conversion losses plus later
+  // portal-hopped ones. Finds the earliest of either format so first_win/
+  // first_loss/first_battle_death (which always fire on the very first ever
+  // completion, in whichever format that completion happened to use) can
+  // still resolve their run - matching only the book-scoped format silently
+  // failed to link an open-world-native first win/loss to any run at all.
+  const _getFirstRunRef = db.prepare(`
+    SELECT ref FROM xp_events
+    WHERE user_id = ? AND event = ?
+      AND (ref LIKE ? || ':%' OR (? IS NOT NULL AND ref LIKE 'series:' || ? || ':%'))
+    ORDER BY created_at ASC LIMIT 1
+  `);
+  function _runKeyFromRef(ref) {
+    if (!ref) return null;
+    const parts = ref.split(':');
+    return parts[0] === 'series' ? parts[2] : parts[1];
+  }
+  const _hasShareRun = db.prepare('SELECT 1 FROM xp_events WHERE user_id=? AND event=? AND ref=?');
+
   // ── First win ─────────────────────────────────────────────────────────────
   const firstWinRows = db.prepare(`
     SELECT e.ref AS bookId, e.created_at, u.id AS userId, u.username, u.public_profile, u.avatar_path, u.xp,
@@ -564,22 +586,7 @@ function getFeed() {
            COALESCE(b.series_number, p.series_number) AS series_number,
            p.id AS parentBookId, p.name AS parentBookName, p.cover_path AS parentCoverPath, p.is_public AS parentIsPublic,
            COALESCE(s.id, ps.id) AS seriesId, COALESCE(s.name, ps.name) AS seriesName,
-           COALESCE(s.is_public, ps.is_public, 0) AS seriesIsPublic,
-           (SELECT SUBSTR(wr.ref, INSTR(wr.ref, ':') + 1)
-            FROM xp_events wr
-            WHERE wr.user_id = e.user_id AND wr.event = 'win_run'
-              AND wr.ref LIKE (CAST(b.id AS TEXT) || ':%')
-              AND wr.ref NOT LIKE 'series:%'
-            ORDER BY wr.created_at ASC LIMIT 1) AS firstWinRunKey,
-           EXISTS (
-             SELECT 1 FROM xp_events sr
-             WHERE sr.user_id = e.user_id AND sr.event = 'share_run'
-               AND sr.ref = (SELECT wr2.ref FROM xp_events wr2
-                             WHERE wr2.user_id = e.user_id AND wr2.event = 'win_run'
-                               AND wr2.ref LIKE (CAST(b.id AS TEXT) || ':%')
-                               AND wr2.ref NOT LIKE 'series:%'
-                             ORDER BY wr2.created_at ASC LIMIT 1)
-           ) AS runIsPublic
+           COALESCE(s.is_public, ps.is_public, 0) AS seriesIsPublic
     FROM xp_events e
     JOIN users u ON e.user_id = u.id
     JOIN books b ON CAST(e.ref AS INTEGER) = b.id
@@ -590,11 +597,13 @@ function getFeed() {
     WHERE e.event = 'first_win' AND e.created_at > ? AND u.hide_from_feed = 0
   `).all(cutoffSec);
   for (const row of firstWinRows) {
-    const winRunIndex = _resolveRunIndex(row.state_data, row.firstWinRunKey);
+    const winRunRef   = _getFirstRunRef.get(row.userId, 'win_run', row.bookId, row.seriesId, row.seriesId)?.ref;
+    const winRunIndex = _resolveRunIndex(row.state_data, _runKeyFromRef(winRunRef));
     const winPathInfo  = _runPathInfo(row.state_data, winRunIndex);
+    const runIsPublic  = winRunRef ? !!_hasShareRun.get(row.userId, 'share_run', winRunRef) : false;
     entries.push({ type: 'first_win', username: row.username, bookName: row.bookName,
       bookId: parseInt(row.bookId, 10), userId: row.userId, completedAt: row.created_at * 1000,
-      runIndex: winRunIndex, runIsPublic: !!row.runIsPublic,
+      runIndex: winRunIndex, runIsPublic,
       pathLength: winPathInfo.pathLength, lastSection: winPathInfo.lastSection,
       bookIsPublic: row.is_public === 1, userPublicProfile: row.public_profile === 1,
       isAuthor: row.is_author === 1, isContributor: row.is_contributor === 1, displayName: row.display_name || null,
@@ -609,7 +618,6 @@ function getFeed() {
   }
 
   // ── First loss / first battle death (per book) ───────────────────────────
-  const _getFirstRunRef = db.prepare(`SELECT ref FROM xp_events WHERE user_id = ? AND event = ? AND ref LIKE ? || ':%' ORDER BY created_at ASC LIMIT 1`);
   for (const type of ['first_loss', 'first_battle_death']) {
     const deathEvent = type === 'first_loss' ? 'death_run' : 'battle_run';
     const rows = db.prepare(`
@@ -628,9 +636,8 @@ function getFeed() {
       WHERE e.event = ? AND e.created_at > ? AND u.hide_from_feed = 0
     `).all(type, cutoffSec);
     for (const row of rows) {
-      const runRef   = _getFirstRunRef.get(row.user_id, deathEvent, row.bookId)?.ref;
-      const runKey   = runRef ? runRef.split(':')[1] : null;
-      const runIndex = _resolveRunIndex(row.state_data, runKey);
+      const runRef   = _getFirstRunRef.get(row.user_id, deathEvent, row.bookId, row.seriesId, row.seriesId)?.ref;
+      const runIndex = _resolveRunIndex(row.state_data, _runKeyFromRef(runRef));
       let runIsPublic = false;
       if (runIndex != null && row.state_data) {
         try {
@@ -872,7 +879,12 @@ function getFeed() {
     else if (e.type === 'first_battle_death') firstBatKeys.add(k);
   }
   for (const e of entries) {
-    if (toRemove.has(e) || e.type !== 'run_completed') continue;
+    // series_run_completed carries the end book's own bookId/runIndex (see
+    // _seriesRunBook above) in exactly the same shape run_completed does, so
+    // it needs the identical suppression - was missing entirely, so an
+    // open-world run's first win/loss showed up twice: once as "won series
+    // run N" and again as "won for the first time".
+    if (toRemove.has(e) || (e.type !== 'run_completed' && e.type !== 'series_run_completed')) continue;
     const k = `${e.username}:${e.bookId}:${e.runIndex ?? ''}`;
     if      (e.result === 'success' && firstWinKeys.has(k))  toRemove.add(e);
     else if (e.result === 'death'   && firstLossKeys.has(k)) toRemove.add(e);
