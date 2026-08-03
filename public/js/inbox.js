@@ -2,7 +2,7 @@
 
 import { apiFetch, getUsername } from './state.js?v=11';
 import { t } from './i18n.js?v=32';
-import { showConfirm } from './play.js?v=68';
+import { showConfirm } from './play.js?v=69';
 import { refreshInboxBadge } from './notif.js?v=44';
 import { escapeHtml, isImageFilename, uploadAttachment, addAttachmentItem } from './util.js?v=39';
 
