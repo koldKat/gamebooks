@@ -103,7 +103,7 @@
        its like-named JS module (see docs/technical.md). reduce-motion.css and
        mobile.css load last since they're cross-cutting overrides on top of
        everything above, not a single module's own styling. -->
-  <link rel="stylesheet" href="/css/charsheet.css?v=5">
+  <link rel="stylesheet" href="/css/charsheet.css?v=6">
   <link rel="stylesheet" href="/css/equipment.css?v=11">
   <link rel="stylesheet" href="/css/shop.css?v=1">
   <link rel="stylesheet" href="/css/dice.css?v=2">
@@ -114,10 +114,10 @@
   <link rel="stylesheet" href="/css/public-profile.css?v=7">
   <link rel="stylesheet" href="/css/login.css?v=1">
   <link rel="stylesheet" href="/css/add-book.css?v=3">
-  <link rel="stylesheet" href="/css/play.css?v=10">
+  <link rel="stylesheet" href="/css/play.css?v=11">
   <link rel="stylesheet" href="/css/landing.css?v=20">
   <link rel="stylesheet" href="/css/reduce-motion.css?v=1">
-  <link rel="stylesheet" href="/css/mobile.css?v=5">
+  <link rel="stylesheet" href="/css/mobile.css?v=6">
   <script src="/vendor/vis-network/vis-network.min.js?v=1"></script>
 </head>
 <body>
@@ -786,7 +786,10 @@
           <button class="ctx-color-swatch" data-color="#78716c" style="background:#78716c"></button>
           <button class="ctx-color-swatch" data-color="#92400e" style="background:#92400e"></button>
         </div>
-        <button id="ctx-color-clear-btn">✕ Clear color</button>
+        <div class="ctx-color-custom-row">
+          <input type="color" id="ctx-color-custom" data-tooltip="Custom color">
+          <button id="ctx-color-clear-btn">✕ Clear color</button>
+        </div>
       </div>
     </div>
     <div class="ctx-submenu-wrap" id="ctx-jump-wrap">
@@ -1771,7 +1774,7 @@
   </div>
   <div id="reward-float-layer" aria-hidden="true"></div>
   <div id="app-reward-float-layer" aria-hidden="true"></div>
-<script type="module" src="/js/main.js?v=1189"></script>
+<script type="module" src="/js/main.js?v=1193"></script>
 
 <!-- ── Tutorial video modal ─────────────────────────────────────────────── -->
 <div id="video-modal">

@@ -181,6 +181,8 @@ Layer 4 (top):
 
 **Load order matters for two files:** `reduce-motion.css` and `mobile.css` are cross-cutting overrides (`body.reduce-motion .foo`, `@media` blocks, several with `!important`) rather than one module's own styling, so they're the last two `<link>` tags in `index.html`, after every per-module file.
 
+**Full-viewport mobile modals must use `100dvh`, not `100vh`, for `height`/`max-height`.** `100vh` is sized against the browser's *largest* possible viewport (address bar hidden); when the address bar reappears (e.g. after scrolling inside an iframe or a tall modal), the actual visible area shrinks below that stale `100vh` figure and a fixed-height/fixed-position modal overflows past the top of the screen, hiding its header/close button behind the address bar with no way to scroll back up to it. Always declare `height: 100vh` (or `max-height`) first as a fallback, then repeat the property with `100dvh` immediately after - unsupported browsers simply ignore the invalid second declaration. Applies to `#forum-modal` (`charsheet.css`) and `.pub-modal`/`.pub-modal--run`/`.modal-inner`/`#stats-modal` (`mobile.css`).
+
 Each JS module's own "how to remove this module" header comment points at its own CSS file.
 
 `server.js`'s `computeCodeStats()` (feeds "Lines of code"/"Code size" in Stats for Nerds) scans the `public/css/`/`public/js`/`admin` directories dynamically, not a hardcoded file list - a new file needs a server restart to be picked up.
@@ -1692,6 +1694,8 @@ When the active section has one or more portals, **Portal destinations** buttons
 3. The app navigates to the target book (`showMain(targetBookId, …)`).
 4. In the target book, `_resumeOrStartSeriesRun(seriesRunIndex, targetSection)` either resumes an existing in-progress playthrough at the portal entry section or starts a new one.
 
+Every place that creates a target-book playthrough placeholder for a portal (`_syncSeriesRuns`'s pad-to-`needed` loop, and `startPortalRun`'s own fallback in `play.js`) must call `instantiateLoadout()` for `inventory`/`equipment`/`equipmentVisible` - a placeholder missing these silently loses the player's starting gear the moment they portal into a book for the first time. Playthroughs whose `path[0]` gets set by portal entry (rather than a genuine choice made by the player) are marked `portalEntry: true`, so `graph.js`'s `_effectiveStartSec` knows to keep showing the book's real `state.startSection` as the "START" node instead of mistaking the portal's entry section for a deliberate alt-start.
+
 ### Cross-book behaviours
 
 - **Fast travel / Center on current section:** both work cross-book. If the active run's last position is in a different book, the relevant button navigates to that book first, then performs the action.
@@ -1730,16 +1734,20 @@ For public open world series runs, the ⤢ button fetches `GET /api/public/serie
 
 The dialog reuses the same `vis-network` graph rendering code as the regular public run viewer, applied per-segment.
 
+**`getPublicSeriesRun()` and `getPublicRun()` both only take the journey layout when `journey.length > 1`** (i.e. the run actually crossed a portal). A single-book open-world run falls back to `_standardRunView()` - the same plain single-graph shape non-open-world runs use - since the segmented/bordered journey styling plus its separate result badge has nothing to visually connect to with only one segment and no portal transitions in the dialog.
+
 ### Activity feed (open world)
 
 Open world series runs emit different feed events from per-book runs:
 
 | Event | When | Display |
 |-------|------|---------|
-| `series_run_started` | Any book in the series starts run N for the first time | `username began series run N in [Series Name]` |
-| `series_run_completed` | A run ends (victory/loss/battle) in any book | `username won/lost/died series run N of [Series Name]` |
+| `series_run_started` | Any book in the series starts run N for the first time | `username began series run N of [Series Name] in [Book Name]` |
+| `series_run_completed` | A run ends (victory/loss/battle) in any book | `username won/lost/died series run N of [Series Name] in [Book Name]` |
 
 Standard `run_started` and `run_completed` events are **suppressed** for books that belong to an open world series, so only the series-level events appear. The verb follows the same mapping as regular runs (`success` → "won", `death` → "lost", `battle` → "died"). When `is_public` is true on the series run, the verb is a clickable button that opens the journey viewer.
+
+`series_runs` doesn't track which book a run started/ended in (`last_book_id`/`last_section` are nulled on completion - see above), so `getFeed()`'s `_seriesRunBook(seriesId, userId, runIndex, wantEnd)` derives it from each of the series' books' own `state_data.playthroughs[runIndex]`: the started book is whichever has the earliest `pt.startedAt`; the ended book is whichever has `pt.completed && pt.result !== 'portal'` (only ever one, since a portal-paused book's `result` stays `'portal'`). Falls back to the plain series-only wording if no book resolves (e.g. state data missing).
 
 ### Key functions and files
 

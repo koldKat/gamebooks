@@ -3,7 +3,7 @@ import {
   state, viewingPt, isTerminal, parseSecId, isValidSecId,
   currentPlaythrough, allDiscoveredSections, saveState,
 } from './state.js?v=11';
-import { t } from './i18n.js?v=28';
+import { t } from './i18n.js?v=29';
 
 export let network  = null;
 export let visNodes = null;
@@ -129,9 +129,12 @@ function _darkenHex(hex) {
 // The "start" node to highlight follows whichever run is actually being
 // displayed, not always the book's default `state.startSection` - a run
 // begun via the alternate-start button (see play.js) has its own path[0],
-// which may be a completely different node.
+// which may be a completely different node. Portal-entered runs (path[0]
+// is just wherever the portal dropped the player, see play.js/open-world.js
+// `portalEntry`) are NOT an alt-start and should still defer to the book's
+// real start section.
 function _effectiveStartSec(displayPt) {
-  if (displayPt?.path?.length && isValidSecId(displayPt.path[0])) return displayPt.path[0];
+  if (displayPt?.path?.length && isValidSecId(displayPt.path[0]) && !displayPt.portalEntry) return displayPt.path[0];
   return isValidSecId(state.startSection) ? state.startSection : 1;
 }
 
@@ -290,22 +293,32 @@ function drawOverlays(ctx) {
   }
 }
 
-function nodeTitle(secId) {
+function nodeTitle(secId, portals) {
   const data = state.graph[secId];
-  if (!data) return t('node.unmapped', { n: secId });
-
-  const real     = data.choices.filter(c => !isTerminal(c));
-  const hasDeath = data.choices.includes(-1);
-  const hasWin   = data.choices.includes(0);
-  const parts    = [];
-  if (real.length)  parts.push(t('node.goes_to', { list: real.join(', ') }));
-  if (hasDeath)     parts.push(t('node.can_die'));
-  if (hasWin)       parts.push(t('node.can_win'));
-  const lines = [t('node.section', { n: secId, parts: parts.join(' | ') })];
-  if (data.battle)              lines.push(`Battle: ${t('node.battle')}`);
-  if (data.priority === 'high') lines.push(`▲ ${t('ctx.priority.high')}`);
-  if (data.priority === 'low')  lines.push(`▼ ${t('ctx.priority.low')}`);
-  if (data.note) { lines.push('Note:'); data.note.split('\n').forEach(part => lines.push(part)); }
+  const lines = [];
+  if (!data) {
+    lines.push(t('node.unmapped', { n: secId }));
+  } else {
+    const real     = data.choices.filter(c => !isTerminal(c));
+    const hasDeath = data.choices.includes(-1);
+    const hasWin   = data.choices.includes(0);
+    const parts    = [];
+    if (real.length)  parts.push(t('node.goes_to', { list: real.join(', ') }));
+    if (hasDeath)     parts.push(t('node.can_die'));
+    if (hasWin)       parts.push(t('node.can_win'));
+    lines.push(t('node.section', { n: secId, parts: parts.join(' | ') }));
+    if (data.battle)              lines.push(`Battle: ${t('node.battle')}`);
+    if (data.priority === 'high') lines.push(`▲ ${t('ctx.priority.high')}`);
+    if (data.priority === 'low')  lines.push(`▼ ${t('ctx.priority.low')}`);
+    if (data.note) { lines.push('Note:'); data.note.split('\n').forEach(part => lines.push(part)); }
+  }
+  if (portals && portals.length) {
+    lines.push('Portal destinations:');
+    portals.forEach(p => {
+      const bookName = _graphSeriesBooks.find(b => b.id === p.targetBookId)?.name ?? `Book #${p.targetBookId}`;
+      lines.push(p.label || `⇒ ${bookName} ${p.targetSection}`);
+    });
+  }
   const el = document.createElement('div');
   lines.forEach((line, i) => {
     if (i > 0) el.appendChild(document.createElement('br'));
@@ -630,19 +643,6 @@ export function initGraph() {
   });
 }
 
-function _portalNodeTitle(secId, portals) {
-  if (!portals || !portals.length) return null;
-  const el = document.createElement('div');
-  el.appendChild(document.createTextNode('Portal destinations:'));
-  portals.forEach(p => {
-    el.appendChild(document.createElement('br'));
-    const bookName = _graphSeriesBooks.find(b => b.id === p.targetBookId)?.name ?? `Book #${p.targetBookId}`;
-    const lbl = p.label || `⇒ ${bookName} ${p.targetSection}`;
-    el.appendChild(document.createTextNode(lbl));
-  });
-  return el;
-}
-
 export function syncGraph() {
   if (!visNodes || !visEdges) return;
 
@@ -671,7 +671,7 @@ export function syncGraph() {
         : (isXBookReachable
           ? { ...nodeColor(sec), border: '#22d3ee', highlight: { ...(nodeColor(sec).highlight || {}), border: '#67e8f9' } }
           : nodeColor(sec)),
-      title:       _portalNodeTitle(sec, portals) || nodeTitle(sec),
+      title:       nodeTitle(sec, portals),
       shape:       isPortal ? 'diamond' : 'dot',
       size:        isPortal ? 16 : 14,
       borderWidth: (hasTerminal || hasBattle) ? 4 : (isXBookReachable ? 3 : 2),

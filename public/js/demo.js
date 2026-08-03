@@ -1,10 +1,10 @@
 // demo.js - Demo mode: load guest session, manage demo books, and exit
 
 import { setDemoMode, setDemoState, getDemoState, clearDemoStore, parseSecId, getToken, setCurrentUserLevel } from './state.js?v=11';
-import { destroyNetwork } from './graph.js?v=70';
-import { showAlert } from './play.js?v=61';
-import { fetchPublic } from './util.js?v=35';
-import { t } from './i18n.js?v=28';
+import { destroyNetwork } from './graph.js?v=73';
+import { showAlert } from './play.js?v=64';
+import { fetchPublic } from './util.js?v=36';
+import { t } from './i18n.js?v=29';
 
 let _hooks = {};
 export function setDemoHooks(h) { _hooks = h || {}; }

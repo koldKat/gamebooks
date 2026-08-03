@@ -1,7 +1,7 @@
 // bg.js - Graph background preference, bg/node context menus
 
 import { apiFetch, isDemoMode, currentBookId, state } from './state.js?v=11';
-import { t } from './i18n.js?v=28';
+import { t } from './i18n.js?v=29';
 
 let _hooks = {};
 export function setBgHooks(h) { _hooks = h || {}; }
@@ -143,7 +143,13 @@ export function _exitBgMoveMode() {
 
 export function _updateColorSwatches(nodeId) {
   const cur = state.graph[nodeId]?.color ?? null;
+  const isPreset = Array.from(document.querySelectorAll('.ctx-color-swatch')).some(s => s.dataset.color === cur);
   document.querySelectorAll('.ctx-color-swatch').forEach(s => {
     s.classList.toggle('active', s.dataset.color === cur);
   });
+  const customInput = document.getElementById('ctx-color-custom');
+  if (customInput) {
+    customInput.value = cur && !isPreset ? cur : '#ffffff';
+    customInput.classList.toggle('active', !!cur && !isPreset);
+  }
 }

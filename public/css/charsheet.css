@@ -322,6 +322,12 @@ body.sidebar-collapsed #play-bottom-stack {
   #forum-modal {
     width: 100vw;
     height: 100vh;
+    /* dvh tracks the *current* visible viewport - when the address bar
+       reappears (e.g. after scrolling inside the forum iframe), a plain
+       100vh modal (sized against the largest possible viewport) overflows
+       past the top of the visible area, hiding the header/close button
+       behind the address bar with no way to scroll back up to it. */
+    height: 100dvh;
     border-radius: 0;
     border-left: none;
     border-right: none;

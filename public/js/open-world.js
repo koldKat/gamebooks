@@ -9,14 +9,14 @@ import {
 import {
   network, visNodes, setGraphCrossBookRoute,
   canReachInGraph, allReachableInGraph, clampViewportScale, findPathTo,
-} from './graph.js?v=70';
+} from './graph.js?v=73';
 import {
   render, showAlert, startPortalRun, startPlaythrough, setOpenWorldContext, setOnViewPublicRun,
-} from './play.js?v=61';
-import { t } from './i18n.js?v=28';
-import { setOnCharSheetSaved } from './charsheet.js?v=52';
-import { instantiateLoadout } from './equipment.js?v=107';
-import { getCachedBooks } from './books.js?v=110';
+} from './play.js?v=64';
+import { t } from './i18n.js?v=29';
+import { setOnCharSheetSaved } from './charsheet.js?v=53';
+import { instantiateLoadout } from './equipment.js?v=110';
+import { getCachedBooks } from './books.js?v=113';
 
 let _hooks = {};
 export function setOpenWorldHooks(h) { _hooks = h || {}; }
@@ -88,11 +88,15 @@ export async function _syncSeriesRuns(seriesId) {
   if (needed > current) {
     for (let i = current; i < needed; i++) {
       const sr = seriesRuns[i];
+      const { inventory: invTmpl, equipment: eqTmpl, equipmentVisible: eqVisTmpl } = instantiateLoadout();
       state.playthroughs.push({
         path: [], completed: false, result: null,
         undosUsed: 0, fastTravelsUsed: 0,
         startedAt: null,
         charSheet: sr.char_data || { fields: [] },
+        inventory: invTmpl,
+        equipment: eqTmpl,
+        equipmentVisible: eqVisTmpl,
         diceState: { count: state.dicePrefs?.count ?? 2, die: state.dicePrefs?.die ?? 6, lastResult: null },
       });
     }
@@ -150,6 +154,7 @@ export async function _syncSeriesRuns(seriesId) {
     const secId = isValidSecId(+sr.last_section) ? +sr.last_section : sr.last_section;
     if (!secId) return;
     if (!pt.path.some(s => String(s) === String(secId))) {
+      if (pt.path.length === 0) pt.portalEntry = true;
       pt.path.push(secId);
       if (!state.graph[secId]) state.graph[secId] = { choices: [], discovered: true };
       needsSave = true;
