@@ -12,11 +12,11 @@ import {
 } from './graph.js?v=76';
 import {
   render, showAlert, startPortalRun, startPlaythrough, setOpenWorldContext, setOnViewPublicRun,
-} from './play.js?v=68';
+} from './play.js?v=69';
 import { t } from './i18n.js?v=32';
 import { setOnCharSheetSaved } from './charsheet.js?v=56';
-import { instantiateLoadout } from './equipment.js?v=114';
-import { getCachedBooks } from './books.js?v=117';
+import { instantiateLoadout } from './equipment.js?v=115';
+import { getCachedBooks } from './books.js?v=118';
 
 let _hooks = {};
 export function setOpenWorldHooks(h) { _hooks = h || {}; }

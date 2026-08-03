@@ -576,6 +576,15 @@ function getFeed() {
     const parts = ref.split(':');
     return parts[0] === 'series' ? parts[2] : parts[1];
   }
+  // The seriesId arg to _getFirstRunRef MUST be a JS string, not a number -
+  // better-sqlite3 binds a plain JS number as SQLite REAL when it's not
+  // provably a safe integer in this driver's default mode, and concatenating
+  // a REAL in SQL stringifies it with a trailing ".0" ('series:123.0:%'
+  // instead of 'series:123:%'), so the LIKE silently never matches. CAST(?
+  // AS TEXT) does NOT fix this - casting an already-REAL bound value still
+  // produces "123.0". Stringifying in JS before binding is the only fix that
+  // actually works; confirmed by hand against a real row before landing this.
+  function _seriesIdParam(seriesId) { return seriesId == null ? null : String(seriesId); }
   const _hasShareRun = db.prepare('SELECT 1 FROM xp_events WHERE user_id=? AND event=? AND ref=?');
 
   // ── First win ─────────────────────────────────────────────────────────────
@@ -597,7 +606,8 @@ function getFeed() {
     WHERE e.event = 'first_win' AND e.created_at > ? AND u.hide_from_feed = 0
   `).all(cutoffSec);
   for (const row of firstWinRows) {
-    const winRunRef   = _getFirstRunRef.get(row.userId, 'win_run', row.bookId, row.seriesId, row.seriesId)?.ref;
+    const winSeriesIdParam = _seriesIdParam(row.seriesId);
+    const winRunRef   = _getFirstRunRef.get(row.userId, 'win_run', row.bookId, winSeriesIdParam, winSeriesIdParam)?.ref;
     const winRunIndex = _resolveRunIndex(row.state_data, _runKeyFromRef(winRunRef));
     const winPathInfo  = _runPathInfo(row.state_data, winRunIndex);
     const runIsPublic  = winRunRef ? !!_hasShareRun.get(row.userId, 'share_run', winRunRef) : false;
@@ -636,7 +646,8 @@ function getFeed() {
       WHERE e.event = ? AND e.created_at > ? AND u.hide_from_feed = 0
     `).all(type, cutoffSec);
     for (const row of rows) {
-      const runRef   = _getFirstRunRef.get(row.user_id, deathEvent, row.bookId, row.seriesId, row.seriesId)?.ref;
+      const deathSeriesIdParam = _seriesIdParam(row.seriesId);
+      const runRef   = _getFirstRunRef.get(row.user_id, deathEvent, row.bookId, deathSeriesIdParam, deathSeriesIdParam)?.ref;
       const runIndex = _resolveRunIndex(row.state_data, _runKeyFromRef(runRef));
       let runIsPublic = false;
       if (runIndex != null && row.state_data) {
