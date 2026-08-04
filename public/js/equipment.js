@@ -4,7 +4,7 @@
 // there's no active playthrough.
 
 import { state, currentPlaythrough, saveState, apiFetch, viewingPt } from './state.js?v=11';
-import { getInventorySlots, addItemToInventory, removeAllFromInventoryAt, refreshInventoryUI, renderInventoryDisplay } from './inventory.js?v=134';
+import { getInventorySlots, addItemToInventory, removeAllFromInventoryAt, refreshInventoryUI, renderInventoryDisplay } from './inventory.js?v=135';
 import { getPlayBtnRow } from './charsheet.js?v=59';
 import { escapeHtml, shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from './util.js?v=42';
 import { t } from './i18n.js?v=35';

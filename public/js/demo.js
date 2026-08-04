@@ -1,8 +1,8 @@
 // demo.js - Demo mode: load guest session, manage demo books, and exit
 
 import { setDemoMode, setDemoState, getDemoState, clearDemoStore, parseSecId, getToken, setCurrentUserLevel } from './state.js?v=11';
-import { destroyNetwork } from './graph.js?v=79';
-import { showAlert } from './play.js?v=75';
+import { destroyNetwork } from './graph.js?v=80';
+import { showAlert } from './play.js?v=76';
 import { fetchPublic } from './util.js?v=42';
 import { t } from './i18n.js?v=35';
 

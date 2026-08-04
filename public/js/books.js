@@ -4,7 +4,7 @@ import { foldForSearch, naturalCompare, naturalCompareByName } from './sort.js?v
 import { refreshCoinsDisplay } from './shop.js?v=49';
 import { openCoverActivity, openSeriesActivity, _startLandingCoverRotation, _resetLandingCoverQueue, _effectiveLandingCoverSource, loadCovers } from './covers.js?v=89';
 import { t } from './i18n.js?v=35';
-import { showConfirm, showTwoChoice } from './play.js?v=75';
+import { showConfirm, showTwoChoice } from './play.js?v=76';
 import { escapeHtml, BATTLE_SIM_BOOK_IDS } from './util.js?v=42';
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────

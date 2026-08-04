@@ -5,11 +5,11 @@ import {
   currentPlaythrough, currentSection, allDiscoveredSections, mappedCount,
   currentUserLevel, bonusUndos, bonusFastTravels, apiFetch,
 } from './state.js?v=11';
-import { network, visNodes, syncGraph } from './graph.js?v=79';
+import { network, visNodes, syncGraph, inevitableOutcome } from './graph.js?v=80';
 import { t } from './i18n.js?v=35';
 import { renderCharSheetDisplay } from './charsheet.js?v=59';
 import { naturalCompare } from './sort.js?v=1';
-import { instantiateLoadout } from './equipment.js?v=121';
+import { instantiateLoadout } from './equipment.js?v=122';
 import { escapeHtml } from './util.js?v=42';
 
 // ── Discoverable sections cap ────────────────────────────────────���───────────
@@ -386,8 +386,18 @@ function renderPlaythroughPanel() {
         if (b >= 1) return 1;
         return a - b;
       });
+      // A real destination (not literal -1/0) still gets colored red/green
+      // when it inevitably leads to death/win through an unbranching chain -
+      // same inevitableOutcome() check the graph's own edge coloring already
+      // uses, so a choice pill agrees with the connector leading to it.
+      const choiceOutcomeClass = c => {
+        if (c === -1) return 'death-btn';
+        if (c === 0) return 'win-btn';
+        const outcome = inevitableOutcome(c);
+        return outcome === 'death' ? 'death-btn' : outcome === 'win' ? 'win-btn' : '';
+      };
       html += sortedChoices.map(c => {
-        const extra = c === -1 ? 'death-btn' : c === 0 ? 'win-btn' : '';
+        const extra = choiceOutcomeClass(c);
         const lbl   = c === -1 ? t('runs.death') : c === 0 ? t('runs.victory') : c;
         return `<button class="choice-btn ${extra}" data-choice="${c}">${lbl}</button>`;
       }).join('');
