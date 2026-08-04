@@ -1,10 +1,10 @@
 // feed.js - Activity feed rendering, hover image previews, feed SSE reload
 
 import { getToken, apiFetch } from './state.js?v=11';
-import { openPublicProfile, openPublicSeriesRun, openPublicRun } from './public-profile.js?v=54';
-import { openCoverActivity, openSeriesActivity } from './covers.js?v=86';
-import { escapeHtml } from './util.js?v=39';
-import { t } from './i18n.js?v=32';
+import { openPublicProfile, openPublicSeriesRun, openPublicRun } from './public-profile.js?v=63';
+import { openCoverActivity, openSeriesActivity } from './covers.js?v=87';
+import { escapeHtml } from './util.js?v=40';
+import { t } from './i18n.js?v=33';
 
 let _hooks = {};
 export function setFeedHooks(h) { _hooks = h || {}; }
@@ -35,6 +35,17 @@ function _seriesRunBookTag(e) {
   if (!e.bookIsPublic) return `<span class="feed-book">${escapeHtml(e.bookName)}</span>`;
   const cover = e.coverUrl ? ` data-cover="${escapeHtml(e.coverUrl)}"` : '';
   return `<button class="feed-book feed-book-btn" data-book-id="${e.bookId}" data-book-name="${escapeHtml(e.bookName)}"${cover}>${escapeHtml(e.bookName)}</button>`;
+}
+
+// first_win/first_loss/first_battle_death share this - "series run N" when the
+// completion happened as part of an open-world series run (isSeriesRun, set
+// server-side from whether the underlying win_run/death_run/battle_run ref
+// was series-scoped), plain "run N" otherwise - matches the wording already
+// used for series_run_started/series_run_completed elsewhere in the feed.
+function _firstResultRunLabel(e) {
+  if (e.runIndex == null) return '';
+  const word = e.isSeriesRun ? t('feed.series_run_word') : t('feed.run_word');
+  return ` <span class="feed-run">${word} ${_runN(e.runIndex)}</span>`;
 }
 
 function _seriesTag(e) {
@@ -378,19 +389,19 @@ export async function loadFeed() {
         const wonEl = (e.runIsPublic && e.runIndex != null)
           ? `<button class="feed-verb won feed-verb-pub" data-book-id="${e.bookId}" data-user-id="${e.userId}" data-run-index="${e.runIndex}" data-tooltip="${escapeHtml(_runTooltip(e))}">${t('feed.verb.won')}</button>`
           : `<span class="feed-verb won">${t('feed.verb.won')}</span>`;
-        const runLabel = e.runIndex != null ? ` <span class="feed-run">run ${_runN(e.runIndex)}</span>` : '';
+        const runLabel = _firstResultRunLabel(e);
         html = t('feed.tmpl.first_result', { user: userEl, verb: wonEl, book: bookBtn(e.bookId, e.bookName), run: runLabel, first_time: t('feed.first_time') });
       } else if (e.type === 'first_loss') {
         const verbEl   = (e.runIsPublic && e.runIndex != null)
           ? `<button class="feed-verb lost feed-verb-pub" data-book-id="${e.bookId}" data-user-id="${e.userId}" data-run-index="${e.runIndex}" data-tooltip="${escapeHtml(_runTooltip(e))}">${t('feed.verb.lost')}</button>`
           : `<span class="feed-verb lost">${t('feed.verb.lost')}</span>`;
-        const runLabel = e.runIndex != null ? ` <span class="feed-run">run ${_runN(e.runIndex)}</span>` : '';
+        const runLabel = _firstResultRunLabel(e);
         html = t('feed.tmpl.first_result', { user: userEl, verb: verbEl, book: bookBtn(e.bookId, e.bookName), run: runLabel, first_time: t('feed.first_time') });
       } else if (e.type === 'first_battle_death') {
         const verbEl   = (e.runIsPublic && e.runIndex != null)
           ? `<button class="feed-verb lost feed-verb-pub" data-book-id="${e.bookId}" data-user-id="${e.userId}" data-run-index="${e.runIndex}" data-tooltip="${escapeHtml(_runTooltip(e))}">${t('feed.verb.fell_in_battle')}</button>`
           : `<span class="feed-verb lost">${t('feed.verb.fell_in_battle')}</span>`;
-        const runLabel = e.runIndex != null ? ` <span class="feed-run">run ${_runN(e.runIndex)}</span>` : '';
+        const runLabel = _firstResultRunLabel(e);
         html = t('feed.tmpl.first_result', { user: userEl, verb: verbEl, book: bookBtn(e.bookId, e.bookName), run: runLabel, first_time: t('feed.first_time') });
       } else if (e.type === 'won_all_series') {
         html = t('feed.tmpl.won_all', { user: userEl, target: _seriesTag(e) });

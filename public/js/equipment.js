@@ -4,10 +4,10 @@
 // there's no active playthrough.
 
 import { state, currentPlaythrough, saveState, apiFetch, viewingPt } from './state.js?v=11';
-import { getInventorySlots, addItemToInventory, removeAllFromInventoryAt, refreshInventoryUI, renderInventoryDisplay } from './inventory.js?v=129';
-import { getPlayBtnRow } from './charsheet.js?v=56';
-import { escapeHtml, shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from './util.js?v=39';
-import { t } from './i18n.js?v=32';
+import { getInventorySlots, addItemToInventory, removeAllFromInventoryAt, refreshInventoryUI, renderInventoryDisplay } from './inventory.js?v=130';
+import { getPlayBtnRow } from './charsheet.js?v=57';
+import { escapeHtml, shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from './util.js?v=40';
+import { t } from './i18n.js?v=33';
 
 // x/y are percentages, positioned over the dummy silhouette (eq-body box, 380x600px).
 // Center column = body slots (no horizontal overlap with side columns);
