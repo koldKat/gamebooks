@@ -4,8 +4,8 @@
 // showAuthForm()/showResetPanel()/hasPendingResetToken() calls from boot.js.
 
 import { setToken, setUsername } from './state.js?v=11';
-import { t } from './i18n.js?v=33';
-import { fetchPublic } from './util.js?v=40';
+import { t } from './i18n.js?v=34';
+import { fetchPublic } from './util.js?v=41';
 
 // Called after a successful login/register (main.js wires this to showBooks()).
 let _onAuthSuccess = null;
