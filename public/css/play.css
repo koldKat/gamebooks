@@ -1030,7 +1030,7 @@ body {
 .runs-section {
   flex: 1;
   min-height: 0;
-  margin-top: 0.5rem;
+  margin-top: 0.15rem;
   border-top: 1px solid #374151;
   padding-top: 0.6rem;
   display: flex;
@@ -1168,7 +1168,26 @@ body {
   letter-spacing: 0.07em;
   color: #4b5563;
   padding: 0.3rem 0.5rem 0.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
 }
+.pre-series-toggle-btn {
+  background: none;
+  border: none;
+  color: #4b5563;
+  font-size: 0.7rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  user-select: none;
+  transition: transform 0.15s;
+}
+.pre-series-toggle-btn:hover { color: #9ca3af; }
+.pre-series-runs-section.pre-series-collapsed .runs-list { display: none; }
+.pre-series-runs-section.pre-series-collapsed .pre-series-runs-header { padding-bottom: 0.3rem; }
+.pre-series-runs-section.pre-series-collapsed .pre-series-toggle-btn { transform: rotate(-90deg); }
 .run-item-preseries {
   opacity: 0.75;
 }
@@ -1455,7 +1474,16 @@ body {
 /* ── Data controls ────────────────────────────────────────────── */
 
 #data-controls {
-  margin-top: auto;
+  /* Was margin-top: auto (pins this to the very bottom of the sidebar when
+     #playthrough-panel's content is short, consuming any leftover flex
+     space) - replaced with a small negative offset that instead tightens
+     the gap against #sidebar's own 0.9rem inter-child gap specifically for
+     this pair, without touching that gap for any other sidebar section.
+     Trade-off: no longer pins to the absolute bottom on a near-empty panel,
+     but that was never the actual complaint - the complaint was the gap
+     being too big when content (like a full pre-series runs list) already
+     reaches close to here. */
+  margin-top: -0.5rem;
   display: flex;
   flex-direction: column;
   gap: 0.4rem;

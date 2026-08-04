@@ -5,12 +5,12 @@ import {
   currentPlaythrough, currentSection, allDiscoveredSections, mappedCount,
   currentUserLevel, bonusUndos, bonusFastTravels, apiFetch,
 } from './state.js?v=11';
-import { network, visNodes, syncGraph } from './graph.js?v=78';
-import { t } from './i18n.js?v=34';
-import { renderCharSheetDisplay } from './charsheet.js?v=58';
+import { network, visNodes, syncGraph } from './graph.js?v=79';
+import { t } from './i18n.js?v=35';
+import { renderCharSheetDisplay } from './charsheet.js?v=59';
 import { naturalCompare } from './sort.js?v=1';
-import { instantiateLoadout } from './equipment.js?v=118';
-import { escapeHtml } from './util.js?v=41';
+import { instantiateLoadout } from './equipment.js?v=121';
+import { escapeHtml } from './util.js?v=42';
 
 // ── Discoverable sections cap ────────────────────────────────────���───────────
 let _discoverableLimit = null;
@@ -21,6 +21,9 @@ let _trailCollapsed = localStorage.getItem('trailCollapsed') === '1'; // default
 let _onTrailToggle  = null;
 export function setTrailCollapsed(v) { _trailCollapsed = !!v; }
 export function setOnTrailToggle(fn) { _onTrailToggle = fn; }
+
+// ── Pre-series runs collapsed state ───────────────────────────────────────────
+let _preSeriesCollapsed = localStorage.getItem('preSeriesCollapsed') !== '0'; // default collapsed
 
 // ── Custom confirm dialog ────────────────────────────────────────────────────
 
@@ -485,12 +488,16 @@ function renderPlaythroughPanel() {
     });
     html += `</div>`;
   }
+  html += `</div>`; // close .runs-section - pre-series runs below are its sibling, not its child
 
   // ── Pre-series runs (existed before book joined open world series) ───────────
   const preRuns = _owIsOpenWorld ? (state.preSeriesRuns || []) : [];
   if (preRuns.length > 0) {
-    html += `<div class="pre-series-runs-section">`;
-    html += `<div class="pre-series-runs-header">${t('play.before_joining_series')}</div>`;
+    html += `<div class="pre-series-runs-section${_preSeriesCollapsed ? ' pre-series-collapsed' : ''}">`;
+    html += `<div class="pre-series-runs-header">` +
+      `<span>${t('play.before_joining_series')}</span>` +
+      `<button class="pre-series-toggle-btn" aria-label="${t('play.toggle_pre_series')}">▾</button>` +
+    `</div>`;
     html += `<div class="runs-list">`;
     // Display in reverse: most recent = Run -1 (last in array), oldest = Run -N (first)
     preRuns.map((p, i) => i).reverse().forEach(i => {
@@ -525,14 +532,16 @@ function renderPlaythroughPanel() {
   html += `</div>`;
   panel.innerHTML = html;
 
+  panel.querySelector('.pre-series-runs-header')?.addEventListener('click', () => {
+    _preSeriesCollapsed = !_preSeriesCollapsed;
+    localStorage.setItem('preSeriesCollapsed', _preSeriesCollapsed ? '1' : '0');
+    panel.querySelector('.pre-series-runs-section')?.classList.toggle('pre-series-collapsed', _preSeriesCollapsed);
+  });
+
   // ── Attach events ────────────────────────────────────────────
   document.getElementById('new-pt-btn').addEventListener('click', () => {
     if (_owIsOpenWorld && _onNewSeriesRun) {
-      showConfirm(
-        `Start a new series run? This creates a new run shared across every book in this open world series.`,
-        () => _onNewSeriesRun(),
-        { confirmLabel: 'Start Run', danger: false }
-      );
+      _onNewSeriesRun();
     } else {
       const known = _knownStartSections();
       if (known.length >= 2) {
