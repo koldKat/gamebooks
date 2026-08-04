@@ -528,6 +528,7 @@ const translations = {
     'play.portal_destinations': 'Portal destinations',
     'play.public_run': 'Public',
     'play.before_joining_series': 'Before joining series',
+    'play.toggle_pre_series': 'Toggle pre-series runs',
     'play.edit_portal': 'Edit Portal',
     'play.add_portal': 'Add Portal',
 

@@ -6,8 +6,8 @@
 // public/css/charsheet.css (and its <link> in index.html).
 
 import { state, saveState, currentPlaythrough, viewingPt } from './state.js?v=11';
-import { t } from './i18n.js?v=34';
-import { escapeHtml, shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from './util.js?v=41';
+import { t } from './i18n.js?v=35';
+import { escapeHtml, shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from './util.js?v=42';
 
 // Working copy - populated when modal opens, discarded on cancel
 let _draft = null;
