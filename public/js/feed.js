@@ -1,10 +1,10 @@
 // feed.js - Activity feed rendering, hover image previews, feed SSE reload
 
 import { getToken, apiFetch } from './state.js?v=11';
-import { openPublicProfile, openPublicSeriesRun, openPublicRun } from './public-profile.js?v=63';
-import { openCoverActivity, openSeriesActivity } from './covers.js?v=87';
-import { escapeHtml } from './util.js?v=40';
-import { t } from './i18n.js?v=33';
+import { openPublicProfile, openPublicSeriesRun, openPublicRun } from './public-profile.js?v=64';
+import { openCoverActivity, openSeriesActivity } from './covers.js?v=88';
+import { escapeHtml } from './util.js?v=41';
+import { t } from './i18n.js?v=34';
 
 let _hooks = {};
 export function setFeedHooks(h) { _hooks = h || {}; }
@@ -25,16 +25,6 @@ function _runTooltip(e) {
 // those, only genuine playthroughs indices (always >= 0) get the +1.
 function _runN(runIndex) {
   return runIndex < 0 ? runIndex : runIndex + 1;
-}
-
-// Plain book-name link for series-run entries - unlike bookBtn() further down
-// this deliberately skips the anthology/series tag suffix, since the series
-// is already shown separately via _seriesTag() in the same template.
-function _seriesRunBookTag(e) {
-  if (!e.bookName) return '';
-  if (!e.bookIsPublic) return `<span class="feed-book">${escapeHtml(e.bookName)}</span>`;
-  const cover = e.coverUrl ? ` data-cover="${escapeHtml(e.coverUrl)}"` : '';
-  return `<button class="feed-book feed-book-btn" data-book-id="${e.bookId}" data-book-name="${escapeHtml(e.bookName)}"${cover}>${escapeHtml(e.bookName)}</button>`;
 }
 
 // first_win/first_loss/first_battle_death share this - "series run N" when the
@@ -327,7 +317,6 @@ export async function loadFeed() {
           : '';
         return `<button class="feed-book feed-book-btn" data-book-id="${id}" data-book-name="${escapeHtml(name)}"${cover}${parentAttrs}>${escapeHtml(name)}</button>${tags}`;
       };
-
       const verbLabel = cls => cls === 'won' ? t('feed.verb.won') : cls === 'died' ? t('feed.verb.died') : t('feed.verb.lost');
       const nounLabel = isContainer => isContainer ? t('feed.noun.anthology') : t('feed.noun.book');
 
@@ -351,8 +340,12 @@ export async function loadFeed() {
       } else if (e.type === 'series_added') {
         html = t('feed.tmpl.added_series', { user: userEl, series: _seriesTag(e) });
       } else if (e.type === 'series_run_started') {
+        // Book first, series shown as its usual attached tag (bookBtn already
+        // does this for every other entry type) - never "series" mentioned
+        // ahead of the book, which would break the pattern used everywhere
+        // else in the feed.
         html = e.bookName
-          ? t('feed.tmpl.series_run_started_in', { user: userEl, n: e.runIndex + 1, series: _seriesTag(e), book: _seriesRunBookTag(e) })
+          ? t('feed.tmpl.series_run_started_in', { user: userEl, n: e.runIndex + 1, book: bookBtn(e.bookId, e.bookName) })
           : t('feed.tmpl.series_run_started', { user: userEl, n: e.runIndex + 1, series: _seriesTag(e) });
       } else if (e.type === 'series_run_completed') {
         const isWin    = e.result === 'success';
@@ -363,7 +356,7 @@ export async function loadFeed() {
           ? `<button class="feed-verb ${verbCls} feed-verb-pub" data-book-id="${e.seriesId}" data-user-id="${e.userId}" data-run-index="${e.runIndex}" data-series-run="1" data-tooltip="${escapeHtml(_runTooltip(e))}">${verb}</button>`
           : `<span class="feed-verb ${verbCls}">${verb}</span>`;
         html = e.bookName
-          ? t('feed.tmpl.series_run_completed_in', { user: userEl, verb: verbEl, n: e.runIndex + 1, series: _seriesTag(e), book: _seriesRunBookTag(e) })
+          ? t('feed.tmpl.series_run_completed_in', { user: userEl, verb: verbEl, n: e.runIndex + 1, book: bookBtn(e.bookId, e.bookName) })
           : t('feed.tmpl.series_run_completed', { user: userEl, verb: verbEl, n: e.runIndex + 1, series: _seriesTag(e) });
       } else if (e.type === 'run_started') {
         html = t('feed.tmpl.run_started', { user: userEl, n: _runN(e.runIndex), book: bookBtn(e.bookId, e.bookName) });
