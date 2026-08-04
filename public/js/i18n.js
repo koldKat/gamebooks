@@ -395,6 +395,8 @@ const translations = {
     'feed.noun.anthology': 'anthology',
     'feed.noun.book':      'book',
     'feed.first_time': 'for the first time',
+    'feed.run_word': 'run',
+    'feed.series_run_word': 'series run',
     'feed.together':   'together',
     'feed.party_badge': 'party',
 

@@ -621,7 +621,7 @@ function getFeed() {
     const runIsPublic  = winRunRef ? !!_hasShareRun.get(row.userId, 'share_run', winRunRef) : false;
     entries.push({ type: 'first_win', username: row.username, bookName: row.bookName,
       bookId: parseInt(row.bookId, 10), userId: row.userId, completedAt: row.created_at * 1000,
-      runIndex: winRunIndex, runIsPublic,
+      runIndex: winRunIndex, runIsPublic, isSeriesRun: !!winRunRef?.startsWith('series:'),
       pathLength: winPathInfo.pathLength, lastSection: winPathInfo.lastSection,
       bookIsPublic: row.is_public === 1, userPublicProfile: row.public_profile === 1,
       isAuthor: row.is_author === 1, isContributor: row.is_contributor === 1, displayName: row.display_name || null,
@@ -673,7 +673,7 @@ function getFeed() {
       entries.push({ type, username: row.username, userId: row.userId,
         bookId: parseInt(row.bookId, 10), bookName: row.bookName,
         bookIsPublic: row.is_public === 1,
-        runIndex, runIsPublic,
+        runIndex, runIsPublic, isSeriesRun: !!runRef?.startsWith('series:'),
         pathLength: deathPathInfo.pathLength, lastSection: deathPathInfo.lastSection,
         completedAt: row.created_at * 1000,
         userPublicProfile: row.public_profile === 1,

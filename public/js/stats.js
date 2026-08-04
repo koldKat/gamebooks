@@ -3,8 +3,8 @@
 // To remove: delete this file, remove its import line and initStats()/closeStatsModal()
 // calls from boot.js, and remove the stats-modal CSS from style.css.
 
-import { escapeHtml, fetchPublic } from './util.js?v=39';
-import { t } from './i18n.js?v=32';
+import { escapeHtml, fetchPublic } from './util.js?v=40';
+import { t } from './i18n.js?v=33';
 
 export function closeStatsModal() {
   document.getElementById('stats-modal-overlay').classList.remove('active');
