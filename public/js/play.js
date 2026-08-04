@@ -9,7 +9,7 @@ import { network, visNodes, syncGraph } from './graph.js?v=76';
 import { t } from './i18n.js?v=32';
 import { renderCharSheetDisplay } from './charsheet.js?v=56';
 import { naturalCompare } from './sort.js?v=1';
-import { instantiateLoadout } from './equipment.js?v=115';
+import { instantiateLoadout } from './equipment.js?v=116';
 import { escapeHtml } from './util.js?v=39';
 
 // ── Discoverable sections cap ────────────────────────────────────���───────────
@@ -364,7 +364,7 @@ function renderPlaythroughPanel() {
             `<button id="record-btn" class="primary-btn">${t('record.btn')}</button>` +
           `</div>` +
         `</div>`;
-    } else if (secData.choices.length === 1 && !pt.path.includes(secData.choices[0]) && !_suppressAutoNav && !(_owIsOpenWorld && secData.portals?.length)) {
+    } else if (secData.choices.length === 1 && !isTerminal(secData.choices[0]) && !pt.path.includes(secData.choices[0]) && !_suppressAutoNav && !(_owIsOpenWorld && secData.portals?.length)) {
       const dest = secData.choices[0];
       if (_pendingAutoNavFrom !== sec) {
         _pendingAutoNavFrom = sec;
@@ -937,7 +937,7 @@ export function navigate(sec) {
   // Skip animation if this section will be immediately auto-navigated away from -
   // stacking multiple 1s vis.js animations corrupts its internal camera state.
   const secData = state.graph[sec];
-  const willAutoNav = !_suppressAutoNav && secData?.choices.length === 1 && !pt.path.includes(secData.choices[0]) && !(_owIsOpenWorld && secData.portals?.length);
+  const willAutoNav = !_suppressAutoNav && secData?.choices.length === 1 && !isTerminal(secData.choices[0]) && !pt.path.includes(secData.choices[0]) && !(_owIsOpenWorld && secData.portals?.length);
   if (network && !willAutoNav) network.focus(sec, { animation: true, scale: 1.2 });
 }
 
@@ -1112,7 +1112,7 @@ export function undoRun() {
     const node = state.graph[pt.path[pt.path.length - 1]];
     if (!node || node.choices.length !== 1) break; // real decision point, dead end, or missing node
     const hasMetadata = node.note || node.priority || node.battle || node.color || node.portals || node.showNote;
-    const wouldAutoNav = !pt.path.includes(node.choices[0]) && !(_owIsOpenWorld && node.portals?.length);
+    const wouldAutoNav = !isTerminal(node.choices[0]) && !pt.path.includes(node.choices[0]) && !(_owIsOpenWorld && node.portals?.length);
     if (hasMetadata && !wouldAutoNav) break;
     pt.path.pop();
   }

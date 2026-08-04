@@ -609,6 +609,14 @@ function getFeed() {
     const winSeriesIdParam = _seriesIdParam(row.seriesId);
     const winRunRef   = _getFirstRunRef.get(row.userId, 'win_run', row.bookId, winSeriesIdParam, winSeriesIdParam)?.ref;
     const winRunIndex = _resolveRunIndex(row.state_data, _runKeyFromRef(winRunRef));
+    // The XP/achievement itself is permanent (deleting a run never revokes
+    // XP already earned - same policy as everywhere else in this file), but
+    // the feed entry announcing it shouldn't outlive the run it's about: if
+    // the run no longer resolves in current state (winRunIndex null - the
+    // player deleted it), there's nothing left to link to or show a path
+    // for, so skip the entry entirely rather than showing a dangling,
+    // unclickable "won for the first time" with no run behind it.
+    if (winRunIndex == null) continue;
     const winPathInfo  = _runPathInfo(row.state_data, winRunIndex);
     const runIsPublic  = winRunRef ? !!_hasShareRun.get(row.userId, 'share_run', winRunRef) : false;
     entries.push({ type: 'first_win', username: row.username, bookName: row.bookName,
@@ -649,6 +657,9 @@ function getFeed() {
       const deathSeriesIdParam = _seriesIdParam(row.seriesId);
       const runRef   = _getFirstRunRef.get(row.user_id, deathEvent, row.bookId, deathSeriesIdParam, deathSeriesIdParam)?.ref;
       const runIndex = _resolveRunIndex(row.state_data, _runKeyFromRef(runRef));
+      // Same reasoning as first_win above - don't show a dangling entry for
+      // a run that's since been deleted from the player's own state.
+      if (runIndex == null) continue;
       let runIsPublic = false;
       if (runIndex != null && row.state_data) {
         try {
