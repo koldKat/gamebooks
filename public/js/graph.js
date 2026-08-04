@@ -100,7 +100,7 @@ export function destroyNetwork() {
 
 // Walk forward through non-branching chains to find an inevitable outcome.
 // Returns 'death', 'win', or null (branching / unmapped / cycle).
-function inevitableOutcome(destId, visited = new Set()) {
+export function inevitableOutcome(destId, visited = new Set()) {
   if (destId === -1) return 'death';
   if (destId === 0)  return 'win';
   if (visited.has(destId)) return null;
