@@ -580,7 +580,11 @@ async function handleSaveState(req, res, bookId) {
         const oldPt = oldPts[i];
         const isNowTerminal = newPt.completed && newPt.result !== 'portal';
         const wasTerminal = oldPt?.completed && oldPt?.result !== 'portal';
-        if (isNowTerminal && !wasTerminal) {
+        // path.length check guards against a run's completion getting synced
+        // (open-world.js) onto a book the run never actually visited - without
+        // it, that book's own save looks like a genuine new completion here
+        // too and re-awards XP / re-stamps series_runs.completed_at.
+        if (isNowTerminal && !wasTerminal && newPt.path?.length > 0) {
           // Newly completed - record completion and sync public status
           db.completeSeriesRun(userId, bookMeta.series_id, i, newPt.result);
           db.updateSeriesRunPublic(userId, bookMeta.series_id, i, !!newPt.isPublic);

@@ -129,7 +129,15 @@ export async function _syncSeriesRuns(seriesId) {
     if (sr.char_data) pt.charSheet = sr.char_data;
     const localTerminal  = pt.completed && pt.result !== 'portal';
     const seriesTerminal = sr.completed && sr.result !== 'portal';
-    if (seriesTerminal) {
+    // A run's completion must only ever be stamped onto the book it actually
+    // happened in. Every book in the series carries a placeholder for this
+    // run index, but a book the run never visited has no path/startedAt -
+    // copying the completion onto it too made the server treat it as a
+    // brand-new completion on that book's own save (duplicate XP) and
+    // re-stamped series_runs.completed_at to that later moment (scrambled
+    // feed ordering).
+    const touchedHere = pt.path?.length > 0 || !!pt.startedAt;
+    if (seriesTerminal && touchedHere) {
       if (!pt.completed || pt.result === 'portal' || pt.result !== sr.result) {
         pt.completed = true;
         pt.result    = sr.result;
@@ -140,7 +148,7 @@ export async function _syncSeriesRuns(seriesId) {
       pushUps.push({ i, result: pt.result, isPublic: !!pt.isPublic });
       if (state.activePtIndex === i) { state.activePtIndex = null; needsSave = true; }
     }
-    if (seriesTerminal && sr.is_public !== undefined && !!pt.isPublic !== sr.is_public) {
+    if (seriesTerminal && touchedHere && sr.is_public !== undefined && !!pt.isPublic !== sr.is_public) {
       pt.isPublic = sr.is_public;
       needsSave = true;
     }
