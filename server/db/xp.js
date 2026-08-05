@@ -716,6 +716,14 @@ function processStateXp(userId, bookId, oldState, newState, totalSections) {
   for (let i = 0; i < newPts.length; i++) {
     const oldPt = oldPts[i];
     const newPt = newPts[i];
+    // A synced series-run placeholder that was never actually played in this book
+    // (open-world.js's _syncSeriesRuns pads every book in a series with one slot per
+    // series run so numbers stay aligned) still gets its charSheet/result mirrored
+    // onto it for display, but must never earn this book's per-run XP - skip it
+    // entirely. Matches _syncSeriesRuns' own touchedHere check; "startedAt" alone
+    // (not path.length) covers a brand-new real run that hasn't made its first
+    // choice yet, which must still get its day-one charsheet-edit XP.
+    if (newPt && !(newPt.path?.length > 0 || newPt.startedAt)) continue;
     const runKey = newPt?.startedAt ?? i;
     const ref    = owSeriesId ? `series:${owSeriesId}:${runKey}` : `${bookId}:${runKey}`;
 
@@ -803,7 +811,12 @@ function processStateXp(userId, bookId, oldState, newState, totalSections) {
   // found nothing) to re-scan every completed run and let the ledger itself be the source of
   // truth, self-healing any gap on the very next save of this book.
   if (!_anyRunJustCompleted) {
-    const completedCount = newPts.filter(pt => pt?.completed).length;
+    // Excludes untouched series-run placeholders (see the same guard on the fast path
+    // above) - a leaked completed:true on one would otherwise re-earn XP on every
+    // single save of this book forever, since this net has no "just transitioned"
+    // requirement at all.
+    const _touched = pt => pt?.path?.length > 0 || pt?.startedAt;
+    const completedCount = newPts.filter(pt => pt?.completed && _touched(pt)).length;
     if (completedCount > 0) {
       const refPrefix = owSeriesId ? `series:${owSeriesId}:` : `${bookId}:`;
       const loggedCount = db.prepare(
@@ -812,7 +825,7 @@ function processStateXp(userId, bookId, oldState, newState, totalSections) {
       if (loggedCount < completedCount) {
         for (let i = 0; i < newPts.length; i++) {
           const newPt = newPts[i];
-          if (!newPt?.completed) continue;
+          if (!newPt?.completed || !_touched(newPt)) continue;
           const ref = `${refPrefix}${newPt?.startedAt ?? i}`;
           let awarded = false;
           if (newPt.result === 'death') {

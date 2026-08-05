@@ -2,8 +2,8 @@ import { COLORS } from './constants.js?v=1';
 import {
   state, viewingPt, isTerminal, parseSecId, isValidSecId,
   currentPlaythrough, allDiscoveredSections, saveState,
-} from './state.js?v=11';
-import { t } from './i18n.js?v=35';
+} from './state.js?v=12';
+import { t } from './i18n.js?v=36';
 
 export let network  = null;
 export let visNodes = null;
@@ -81,6 +81,8 @@ export function setGraphCrossBookRoute(routeMap) {
 export function setGraphOpenWorld(v, seriesBooks = []) {
   _graphIsOpenWorld = !!v;
   _graphSeriesBooks = seriesBooks || [];
+  const portalLegendItem = document.querySelector('.legend-item-portal');
+  if (portalLegendItem) portalLegendItem.style.display = _graphIsOpenWorld ? '' : 'none';
 }
 
 export function destroyNetwork() {
@@ -179,7 +181,10 @@ function nodeColor(secId) {
     if (hasDeath && hasVictory) base = COLORS.bothOutline;
     else if (hasDeath)          base = COLORS.deathOutline;
     else if (hasVictory)        base = COLORS.victoryOutline;
-    else if (state.graph[secId] && !state.graph[secId].discovered) base = COLORS.mapped;
+    // A node whose only way forward is a portal has nothing to record as a choice
+    // (portals live in node.portals[], separate from node.choices[]) - without this
+    // it stays colored as merely "discovered" forever, even once fully visited.
+    else if (state.graph[secId] && (!state.graph[secId].discovered || state.graph[secId].portals?.length > 0)) base = COLORS.mapped;
     else                                                            base = COLORS.discovered;
   }
 
@@ -666,15 +671,23 @@ export function syncGraph() {
     const nodeUpdate = {
       id:          sec,
       label:       isPortal ? `${nodeLabel(sec)}\n⇒` : nodeLabel(sec),
+      // Portal nodes used to get a hardcoded teal fill regardless of visited/mapped
+      // state, bypassing nodeColor() entirely - a portal you'd never even visited
+      // looked identical to one you'd fully explored and traveled through, and
+      // nothing about the color would ever change either way. Fill now follows the
+      // same mapped/discovered/outcome rules as every other node, but a portal is
+      // easy to lose among a sea of same-colored mapped nodes with only the diamond
+      // shape to go on - a gold border (independent of fill/mapped state) keeps it
+      // easy to spot regardless of how much of the book you've explored.
       color:       isPortal
-        ? { background: '#0e7490', border: '#0891b2', highlight: { background: '#0891b2', border: '#38bdf8' } }
+        ? { ...nodeColor(sec), border: '#facc15', highlight: { ...(nodeColor(sec).highlight || {}), border: '#fde047' } }
         : (isXBookReachable
           ? { ...nodeColor(sec), border: '#22d3ee', highlight: { ...(nodeColor(sec).highlight || {}), border: '#67e8f9' } }
           : nodeColor(sec)),
       title:       nodeTitle(sec, portals),
       shape:       isPortal ? 'diamond' : 'dot',
       size:        isPortal ? 16 : 14,
-      borderWidth: (hasTerminal || hasBattle) ? 4 : (isXBookReachable ? 3 : 2),
+      borderWidth: (hasTerminal || hasBattle) ? 4 : (isPortal || isXBookReachable) ? 3 : 2,
       shapeProperties: isXBookReachable ? { borderDashes: [4, 3] } : { borderDashes: false },
       font:        sec === startSec ? { size: 11, color: '#fde047', face: 'Segoe UI, system-ui, sans-serif', bold: true } : undefined,
       physics:     !pos,

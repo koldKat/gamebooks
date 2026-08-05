@@ -148,7 +148,11 @@ export function mappedCount() {
 export function mappedCountFor(graph) {
   return Object.keys(graph || {})
     .map(parseSecId)
-    .filter(s => isValidSecId(s) && (!graph[s]?.discovered || graph[s].choices.length > 0))
+    // A section whose only way forward is a portal has nothing to record as a
+    // choice (portals live in node.portals[], separate from node.choices[]) -
+    // without the portals check it would sit as "discovered only" forever,
+    // even though it's been fully visited and explored.
+    .filter(s => isValidSecId(s) && (!graph[s]?.discovered || graph[s].choices.length > 0 || graph[s].portals?.length > 0))
     .length;
 }
 

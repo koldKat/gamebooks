@@ -78,6 +78,7 @@ const translations = {
     'legend.winrun':     'Victory run ended here',
     'legend.battle':     'Battle here',
     'legend.battlerun':  'Battle death ended here',
+    'legend.portal':     'Portal',
 
     'modal.edit.title': 'Edit Section {n}',
     'modal.edit.label': 'Choices (comma-separated):',

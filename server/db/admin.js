@@ -633,7 +633,11 @@ function adminGetUserBooks(userId) {
         for (const c of (d.choices || []))
           if (c !== -1 && c !== 0) seen.add(c);
       discovered   = seen.size;
-      const pts    = s.playthroughs || [];
+      // Excludes untouched open-world series-run placeholders (startedAt: null) - a
+      // book in a series carries one padding slot per series run so numbers line up
+      // across books, but a slot the run never actually visited here isn't a real
+      // playthrough of this book.
+      const pts    = (s.playthroughs || []).filter(p => p.startedAt != null);
       playthroughs = pts.length;
       wins         = pts.filter(p => p.result === 'success').length;
       deaths       = pts.filter(p => p.result === 'death').length;
@@ -680,7 +684,9 @@ function adminGetBookStats(bookId) {
             if (c !== -1 && c !== 0) seen.add(c);
         discovered = seen.size;
       }
-      const pts = s.playthroughs || [];
+      // Excludes untouched open-world series-run placeholders (startedAt: null) - see
+      // adminGetUserBooks above for why.
+      const pts = (s.playthroughs || []).filter(p => p.startedAt != null);
       totalPts   += pts.length;
       inProgress += pts.filter(p => !p.completed).length;
       deaths     += pts.filter(p => p.result === 'death').length;
@@ -749,7 +755,11 @@ function adminGetStats() {
                   if (c !== -1 && c !== 0) seen.add(c);
               bestDiscovered = seen.size;
             }
-            const pts = s.playthroughs || [];
+            // Excludes untouched open-world series-run placeholders (startedAt: null) -
+            // every book in a series carries one padding slot per series run so numbers
+            // line up across books, but a slot the run never actually visited isn't a
+            // real playthrough of this book and shouldn't inflate its counts.
+            const pts = (s.playthroughs || []).filter(p => p.startedAt != null);
             playthroughs         += pts.length;
             activePlaythroughs   += pts.filter(p => !p.result).length;
             finishedPlaythroughs += pts.filter(p => !!p.result).length;
@@ -778,7 +788,9 @@ function adminGetStats() {
               if (c !== -1 && c !== 0) seen.add(c);
           bestDiscovered = seen.size;
         }
-        const pts = s.playthroughs || [];
+        // Excludes untouched open-world series-run placeholders (startedAt: null) - see
+        // the anthology branch above for why.
+        const pts = (s.playthroughs || []).filter(p => p.startedAt != null);
         playthroughs         += pts.length;
         activePlaythroughs   += pts.filter(p => !p.result).length;
         finishedPlaythroughs += pts.filter(p => !!p.result).length;
@@ -1098,6 +1110,12 @@ function adminGetUsers() {
       // points into that array), so it isn't a "currently active" run in the
       // sense adminGetBookStats' activePlaythroughs means.
       for (const pt of (s.playthroughs || [])) {
+        // Excludes untouched open-world series-run placeholders (startedAt: null) -
+        // a book in a series carries one padding slot per series run so numbers line
+        // up across books, but a slot the run never actually visited here isn't a
+        // real active run of this book - it was inflating this admin count (and the
+        // per-book/per-user ones above) by exactly the number of padding slots.
+        if (pt.startedAt == null) continue;
         // Completed-only, matching getProfileStats() (server/db/feed.js) - an
         // in-progress run (no result yet) previously inflated this count relative
         // to what the user's own profile shows for the same thing.

@@ -360,6 +360,7 @@ function buildBookHtml(book, username, itemsById = new Map()) {
   const state = book.state || {};
   const graph = state.graph || {};
   const pts   = state.playthroughs || [];
+  const preSeriesRuns = state.preSeriesRuns || [];
 
   // Terminal sentinels: numeric -1 (death) and 0 (win). All other IDs are real sections,
   // including alphanumeric ones like "A1". We avoid Number(k) > 0 which breaks on strings.
@@ -369,8 +370,11 @@ function buildBookHtml(book, username, itemsById = new Map()) {
   // Mapped = sections with real recorded choices, not merely a discovered-as-choice stub.
   // Mirrors the client's mappedCount() (state.js): a node can be flagged discovered:true
   // and still end up with real choices recorded later, so checking the flag alone
-  // undercounts - must also count any node with a non-empty choices list.
-  const _isMappedNode = k => !graph[k]?.discovered || (graph[k]?.choices?.length > 0);
+  // undercounts - must also count any node with a non-empty choices list. A node whose
+  // only way forward is a portal has nothing to record as a choice (portals live in
+  // node.portals[], separate from node.choices[]), so it also counts as mapped once it
+  // has one - otherwise it would sit as "discovered only" forever despite being visited.
+  const _isMappedNode = k => !graph[k]?.discovered || (graph[k]?.choices?.length > 0) || (graph[k]?.portals?.length > 0);
   const mapped = Object.keys(graph).filter(k => _isRealSec(k) && _isMappedNode(k)).length;
 
   // Known = all sections referenced anywhere (visited + seen as choices + in paths)
@@ -382,11 +386,22 @@ function buildBookHtml(book, username, itemsById = new Map()) {
   pts.forEach(pt => (pt.path || []).forEach(s => { if (_isRealSec(s)) knownSet.add(String(s)); }));
   const discoveredOnly = Math.max(0, knownSet.size - mapped);
 
-  const completed  = pts.filter(p => p.completed);
-  const inProgress = pts.length - completed.length;
-  const wins       = completed.filter(p => p.result === 'success').length;
-  const losses     = completed.filter(p => p.result === 'death').length;
-  const battles    = completed.filter(p => p.result === 'battle').length;
+  // In an open-world series, every book carries one playthrough slot per series run so
+  // numbers line up across books (_syncSeriesRuns, open-world.js) - but only the book(s)
+  // a run actually visited get a real startedAt; a book that a given run never touched
+  // still gets a padding slot with startedAt: null. Counting those slots as real runs of
+  // THIS book would inflate "Runs"/"in progress" with runs that happened elsewhere.
+  const isPhantom = p => p.startedAt == null;
+  const realPts    = pts.filter(p => !isPhantom(p));
+  const allRuns    = [...realPts, ...preSeriesRuns];
+  // A 'portal' result means the run left this book for another one mid-series and hasn't
+  // actually ended yet - it's still in progress, just not here (open-world.js's own
+  // localTerminal/seriesTerminal split treats 'portal' the same way).
+  const finished   = allRuns.filter(p => p.completed && p.result !== 'portal');
+  const inProgress = allRuns.length - finished.length;
+  const wins       = finished.filter(p => p.result === 'success').length;
+  const losses     = finished.filter(p => p.result === 'death').length;
+  const battles    = finished.filter(p => p.result === 'battle').length;
 
   const metaRows = [
     book.authors        && `<tr><td>Authors</td><td>${esc(book.authors)}</td></tr>`,
@@ -396,25 +411,45 @@ function buildBookHtml(book, username, itemsById = new Map()) {
     book.pages          && `<tr><td>Pages</td><td>${esc(book.pages)}</td></tr>`,
     book.total_sections && `<tr><td>Total Sections</td><td>${esc(book.total_sections)}</td></tr>`,
     book.discoverable_sections != null && `<tr><td>Discoverable Sections</td><td>${esc(book.discoverable_sections)}</td></tr>`,
+    book.seriesName      && `<tr><td>Series</td><td>${esc(book.seriesName)}${book.isOpenWorld ? ' (open world)' : ''}</td></tr>`,
     book.description    && `<tr><td>Description</td><td>${esc(book.description)}</td></tr>`,
   ].filter(Boolean).join('');
 
-  const runsRows = pts.map((pt, i) => {
-    const result = pt.completed
-      ? (pt.result === 'success' ? '★ Win' : pt.result === 'battle' ? '⚔ Battle Death' : '✝ Loss')
-      : 'In progress';
-    const path = (pt.path || []).map(s => (s === -1 || s === '-1') ? '✝' : (s === 0 || s === '0') ? '★' : s).join(' → ');
-    const date = pt.completedAt
-      ? new Date(pt.completedAt).toLocaleDateString()
-      : (pt.startedAt ? new Date(pt.startedAt).toLocaleDateString() : '-');
-    return `<tr><td>Run ${i + 1}</td><td>${esc(result)}</td><td>${esc(date)}</td><td class="path-cell">${esc(path)}</td></tr>`;
-  }).join('');
+  // Shared row rendering for both the main Runs table and Before Joining Series -
+  // pre-series runs use the same shape (result/path/date), just without the phantom
+  // concept, since they predate the book joining any series.
+  const _runResult = p => {
+    if (!p.completed) return 'In progress';
+    if (p.result === 'portal') return 'In progress';
+    const base = p.result === 'success' ? '★ Win' : p.result === 'battle' ? '⚔ Battle Death' : '✝ Loss';
+    const notes = [];
+    if (p.portalTarget) notes.push('continues in another book');
+    return notes.length ? `${base} (${notes.join(', ')})` : base;
+  };
+  const _runRow = (p, label) => {
+    const path = (p.path || []).map(s => (s === -1 || s === '-1') ? '✝' : (s === 0 || s === '0') ? '★' : s).join(' → ');
+    const date = p.completedAt
+      ? new Date(p.completedAt).toLocaleDateString()
+      : (p.startedAt ? new Date(p.startedAt).toLocaleDateString() : '-');
+    const labelSuffix = p.portalEntry ? ' <em>(started via portal)</em>' : '';
+    return `<tr><td>${esc(label)}${labelSuffix}</td><td>${esc(_runResult(p))}</td><td>${esc(date)}</td><td class="path-cell">${esc(path)}</td></tr>`;
+  };
 
-  // Per-run details: charsheet, inventory, equipment
-  const runDetails = pts.map((pt, i) => {
-    const result = pt.completed
-      ? (pt.result === 'success' ? '★ Win' : pt.result === 'battle' ? '⚔ Battle Death' : '✝ Loss')
-      : 'In progress';
+  const runsRows = pts.map((pt, i) => isPhantom(pt)
+    ? `<tr><td>Run ${i + 1}</td><td style="color:#888;font-style:italic">played in another book</td><td>-</td><td>-</td></tr>`
+    : _runRow(pt, `Run ${i + 1}`)
+  ).join('');
+  const hasPhantoms = pts.some(isPhantom);
+
+  const preSeriesRows = preSeriesRuns.map((pt, i) =>
+    _runRow(pt, `Run ${-(preSeriesRuns.length - i)}`)
+  ).join('');
+
+  // Per-run details: charsheet, inventory, equipment. Phantom slots are skipped -
+  // their charSheet/inventory just mirror whatever the series' current character looks
+  // like for display continuity (open-world.js), not anything that happened in this run.
+  const _runDetailBlock = (pt, label) => {
+    const result = _runResult(pt);
 
     // Character sheet
     const csFields = (pt.charSheet?.fields || []).filter(f => f.visible && f.name?.trim());
@@ -448,8 +483,12 @@ function buildBookHtml(book, username, itemsById = new Map()) {
       ).join('')}</tbody></table>` : '';
 
     if (!csHtml && !invHtml && !eqHtml) return '';
-    return `<details><summary>Run ${i + 1} - ${result}</summary>${csHtml}${invHtml}${eqHtml}</details>`;
-  }).filter(Boolean).join('');
+    return `<details><summary>${esc(label)} - ${esc(result)}</summary>${csHtml}${invHtml}${eqHtml}</details>`;
+  };
+  const runDetails = [
+    ...pts.map((pt, i) => isPhantom(pt) ? '' : _runDetailBlock(pt, `Run ${i + 1}`)),
+    ...preSeriesRuns.map((pt, i) => _runDetailBlock(pt, `Run ${-(preSeriesRuns.length - i)}`)),
+  ].filter(Boolean).join('');
 
   // Build section map - works for both numeric and alphanumeric section IDs
   const _secSort = (a, b) => {
@@ -518,14 +557,16 @@ ${metaRows ? `<h2>Book Details</h2><table><tbody>${metaRows}</tbody></table>` : 
   <span>Mapped: ${mapped}</span>
   <span>Discovered only: ${discoveredOnly}</span>
   <span>Total sections: ${esc(book.total_sections || '?')}</span>
-  <span>Runs: ${pts.length}${inProgress ? ` (${inProgress} in progress)` : ''}</span>
+  <span>Runs: ${allRuns.length}${inProgress ? ` (${inProgress} in progress)` : ''}</span>
   <span>Wins: ${wins}</span>
   <span>Losses: ${losses}</span>
   <span>Battle deaths: ${battles}</span>
   ${book.userRating ? `<span>Rating: ${'★'.repeat(book.userRating)}${'☆'.repeat(5 - book.userRating)}</span>` : ''}
 </div>
 
-${runsRows ? `<h2>Runs (${pts.length})</h2><table><thead><tr><th>#</th><th>Result</th><th>Date</th><th>Path</th></tr></thead><tbody>${runsRows}</tbody></table>` : '<h2>Runs</h2><p>No runs yet.</p>'}
+${runsRows ? `<h2>Runs (${pts.length})</h2>${hasPhantoms ? `<p style="color:#888;font-size:.8rem">This book is part of an open-world series - some run numbers belong to the series as a whole and were played entirely in another book.</p>` : ''}<table><thead><tr><th>#</th><th>Result</th><th>Date</th><th>Path</th></tr></thead><tbody>${runsRows}</tbody></table>` : '<h2>Runs</h2><p>No runs yet.</p>'}
+
+${preSeriesRows ? `<h2>Before Joining Series (${preSeriesRuns.length})</h2><table><thead><tr><th>#</th><th>Result</th><th>Date</th><th>Path</th></tr></thead><tbody>${preSeriesRows}</tbody></table>` : ''}
 
 ${runDetails ? `<h2>Run Details</h2>${runDetails}` : ''}
 
