@@ -4,9 +4,9 @@
 // call from boot.js, and delete public/css/public-profile.css (also shared by
 // covers.js's cover activity view) and its <link> in index.html.
 
-import { isValidSecId } from './state.js?v=11';
-import { escapeHtml } from './util.js?v=42';
-import { t } from './i18n.js?v=35';
+import { isValidSecId } from './state.js?v=12';
+import { escapeHtml } from './util.js?v=44';
+import { t } from './i18n.js?v=36';
 
 // Callbacks wired in by main.js at boot
 let _hooks = {};

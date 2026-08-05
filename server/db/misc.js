@@ -36,10 +36,12 @@ function markNotificationsSeen(userId) {
   db.prepare('UPDATE notifications SET seen = 1 WHERE user_id = ? AND seen = 0').run(userId);
 }
 
-const _exportRow = ({ state_data, notebook, user_rating, ...b }) => ({
+const _exportRow = ({ state_data, notebook, user_rating, series_name, series_open_world, ...b }) => ({
   ...b,
-  userRating: user_rating ?? null,
-  notebook:   notebook ?? '',
+  userRating:   user_rating ?? null,
+  notebook:     notebook ?? '',
+  seriesName:   series_name ?? null,
+  isOpenWorld:  !!series_open_world,
   state: (() => { try { return JSON.parse(state_data); } catch { return {}; } })(),
 });
 
@@ -51,9 +53,11 @@ const _exportRow = ({ state_data, notebook, user_rating, ...b }) => ({
 const _exportQuery = `
   SELECT b.id, b.name, b.total_sections, b.discoverable_sections, b.isbn, b.issn, b.asin,
          b.pages, b.authors, b.description, b.created_at, b.cover_path, b.is_public,
-         ub.state_data, ub.notebook, ub.rating AS user_rating
+         ub.state_data, ub.notebook, ub.rating AS user_rating,
+         s.name AS series_name, s.is_open_world AS series_open_world
   FROM user_books ub
-  JOIN books b ON b.id = ub.book_id`;
+  JOIN books b ON b.id = ub.book_id
+  LEFT JOIN series s ON s.id = b.series_id`;
 
 function getAllBooksForExport(userId) {
   const rows = db.prepare(`${_exportQuery} WHERE ub.user_id = ? AND b.is_demo = 0`).all(userId);

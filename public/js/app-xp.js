@@ -8,10 +8,10 @@
 // refreshAppXp()/handleAppXpEvent() calls from boot.js/livetab.js, and remove
 // #app-xp-*/#app-reward-float-layer markup/CSS.
 
-import { apiFetch, getToken, isDemoMode } from './state.js?v=11';
-import { COIN_SVG } from './shop.js?v=49';
-import { escapeHtml } from './util.js?v=42';
-import { t } from './i18n.js?v=35';
+import { apiFetch, getToken, isDemoMode } from './state.js?v=12';
+import { COIN_SVG } from './shop.js?v=51';
+import { escapeHtml } from './util.js?v=44';
+import { t } from './i18n.js?v=36';
 
 let _hooks = {};
 export function setAppXpHooks(h) { _hooks = h || {}; }

@@ -88,12 +88,71 @@
     ]
   }
   </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://koldkat.net/" }
+    ]
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is Gamebook Tracker?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Gamebook Tracker is a free browser-based tool for mapping and tracking playthroughs of gamebooks. It builds a live, force-directed graph of every section you visit, showing branching choices, dead ends, and how different runs compare."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is Gamebook Tracker free?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes, completely free. There are no subscriptions, no ads, and no premium tiers - create an account and start mapping right away."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What gamebooks does Gamebook Tracker support?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Any section-numbered gamebook, including Fighting Fantasy, Choose Your Own Adventure, Lone Wolf, Sorcery!, Fabled Lands, Grailquest, DestinyQuest, and Tunnels & Trolls solo adventures. There's no fixed list of supported titles - you set the total section count to match your book."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I try Gamebook Tracker without creating an account?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. Click the Demo button on the landing page to launch a fully functional demo session with a pre-built mapped graph and completed runs. No sign-up required, and changes aren't saved."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Does Gamebook Tracker track character stats and inventory?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. Each book supports a custom character sheet with editable stat fields, an item inventory with a shared icon library, and a paper-doll equipment panel for weapons, armor, and accessories - all tracked per playthrough."
+        }
+      }
+    ]
+  }
+  </script>
 
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  <noscript><style>body{background:#111827;color:#d1d5db;font-family:sans-serif;padding:2rem;}</style>
+  <noscript><style>body{background:#111827;color:#d1d5db;font-family:sans-serif;padding:2rem;max-width:760px;margin:0 auto;}</style>
   <h1>Gamebook Tracker</h1>
-  <p>A browser-based tool for mapping the branching structure of gamebooks - Fighting Fantasy, Choose Your Own Adventure, Lone Wolf, and more - across multiple playthroughs.</p>
-  <p>Track every section, record your choices, and visualise the full decision tree. Supports multiple users and multiple books per account.</p>
+  <p>Gamebook Tracker is a free, browser-based tool for mapping and tracking playthroughs of section-numbered gamebooks - Fighting Fantasy, Choose Your Own Adventure, Lone Wolf, Sorcery!, Fabled Lands, Grailquest, DestinyQuest, Tunnels &amp; Trolls, and any other series that uses numbered sections. It builds a live, force-directed graph of every section you visit, showing choices, outcomes, dead ends, and alternate routes across the whole book.</p>
+  <p>Record every choice as you play, and revisit any completed or in-progress run to see its path highlighted on the map. Each book supports unlimited playthroughs, so you can compare how different runs branched from the same sections.</p>
+  <p>Beyond mapping, it includes custom character sheets with editable stat fields per book, an item inventory with a shared icon library, a paper-doll equipment panel, battle simulators with automated dice rolls and round-by-round combat logs, notebook clues and priority markings, and open world series support for linking multiple books into one continuous adventure with a character that carries over between them.</p>
+  <p>It's completely free - no subscriptions, no ads, no premium tiers. Supports multiple users and multiple books per account, with public profiles and a shared activity feed for anyone who wants to show off a run.</p>
   <p><a href="/guide.html">Read the User Guide</a></p>
   <p>JavaScript is required to use this application.</p>
   </noscript>
@@ -114,7 +173,7 @@
   <link rel="stylesheet" href="/css/public-profile.css?v=7">
   <link rel="stylesheet" href="/css/login.css?v=1">
   <link rel="stylesheet" href="/css/add-book.css?v=3">
-  <link rel="stylesheet" href="/css/play.css?v=18">
+  <link rel="stylesheet" href="/css/play.css?v=19">
   <link rel="stylesheet" href="/css/landing.css?v=20">
   <link rel="stylesheet" href="/css/reduce-motion.css?v=1">
   <link rel="stylesheet" href="/css/mobile.css?v=6">
@@ -695,6 +754,7 @@
         <div class="legend-item"><div class="legend-dot" style="background:#27ae60;border-color:#1e8449"></div><span data-i18n="legend.winrun">Victory run ended here</span></div>
         <div class="legend-item"><div class="legend-dot" style="background:#431407;border-color:#f97316;border-width:3px"></div><span data-i18n="legend.battle">Battle here</span></div>
         <div class="legend-item"><div class="legend-dot" style="background:#c2410c;border-color:#9a3412"></div><span data-i18n="legend.battlerun">Battle death ended here</span></div>
+        <div class="legend-item legend-item-portal" style="display:none"><div class="legend-dot legend-dot-diamond" style="border-color:#facc15;border-width:3px"></div><span data-i18n="legend.portal">Portal</span></div>
       </div>
     </div>
 
@@ -1774,7 +1834,7 @@
   </div>
   <div id="reward-float-layer" aria-hidden="true"></div>
   <div id="app-reward-float-layer" aria-hidden="true"></div>
-<script type="module" src="/js/main.js?v=1208"></script>
+<script type="module" src="/js/main.js?v=1211"></script>
 
 <!-- ── Tutorial video modal ─────────────────────────────────────────────── -->
 <div id="video-modal">

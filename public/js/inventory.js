@@ -3,11 +3,11 @@
 // Legacy format [itemId, ...] is auto-migrated on read.
 // Visible to all logged-in users.
 
-import { state, currentPlaythrough, saveState, apiFetch, viewingPt } from './state.js?v=11';
-import { showConfirm } from './play.js?v=76';
-import { getPlayBtnRow } from './charsheet.js?v=59';
-import { escapeHtml, shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from './util.js?v=42';
-import { t } from './i18n.js?v=35';
+import { state, currentPlaythrough, saveState, apiFetch, viewingPt } from './state.js?v=12';
+import { showConfirm } from './play.js?v=79';
+import { getPlayBtnRow } from './charsheet.js?v=61';
+import { escapeHtml, shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from './util.js?v=44';
+import { t } from './i18n.js?v=36';
 
 const MAX_SLOTS = 40;
 

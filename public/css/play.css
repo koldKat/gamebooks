@@ -1471,6 +1471,12 @@ body {
   flex-shrink: 0;
 }
 
+.legend-dot-diamond {
+  border-radius: 2px;
+  transform: rotate(45deg);
+  background: #8e44ad;
+}
+
 /* ── Data controls ────────────────────────────────────────────── */
 
 #data-controls {
