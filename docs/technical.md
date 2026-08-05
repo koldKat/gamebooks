@@ -1098,7 +1098,7 @@ Each `.book-item` card has a progress bar background: `rgba(107,114,128,0.18)` f
 `loadFeed()` fetches `GET /api/feed` → `{ entries, pinned }`.
 
 - Authenticated viewers use `apiFetch()`; unauthenticated use `publicFetch()`.
-- `pinned` non-null → `<fieldset class="feed-pinned-card">` with amber border rendered above all day groups.
+- `pinned` non-null → `<div class="feed-pinned-card">` with amber border rendered above all day groups, its title cut into the top border the same way `.feed-announcement`/`.feed-ann-title` render a regular announcement (`position: relative` card, `position: absolute` title masked by the panel background color).
 - `entries` grouped by local date: "Today", "Yesterday", or full date string. Each entry is `<div class="feed-entry">`.
 - Empty result → `<p class="feed-empty">` placeholder.
 - Errors silently ignored - feed failure never breaks login.
