@@ -65,7 +65,7 @@ import {
   _syncSeriesRuns, _computeCrossBookReachability, _focusNodeAfterLoad,
   clearOpenWorldState, doJumpCrossBook,
   getOwSrcBookId, getOwSrcSection, getOwCrossBookRoute,
-} from './open-world.js?v=125';
+} from './open-world.js?v=126';
 import { setFeedHooks, loadFeed, refreshDayCoverFlows } from './feed.js?v=111';
 import {
   setNotifHooks, _scheduleLiveUiRefresh,
