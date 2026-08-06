@@ -80,17 +80,19 @@ body.demo-active #logout-btn {
   margin-bottom: 0.6rem;
   overflow: hidden;
 }
-/* No cover available for this day - on desktop, show the real currently-live
-   rotating cover as the card's own background (background-attachment: fixed
-   makes it act as a window onto the same fixed page background, always
-   in sync, never a stale copy) with the SAME 0.9-alpha overlay a real
-   cover-tile gets (see .feed-day-cover-stack::after below), so the two
-   card kinds read identically instead of one looking washed-out next to
-   the other. --landing-cover-url/-pos are kept live by covers.js's
-   _rotateLandingCover()/_applyLandingBgPosition(). Desktop-only: fixed
-   background-attachment has a long history of being janky on mobile
-   Safari, and mobile already forced this feature off until recently, so
-   mobile keeps the older flat, cheap tint instead.
+/* No cover available for this day - show the real currently-live rotating
+   cover as the card's own background (background-attachment: fixed makes
+   it act as a window onto the same fixed page background, always in sync,
+   never a stale copy) with the SAME 0.9-alpha overlay a real cover-tile
+   gets (see .feed-day-cover-stack::after below), so the two card kinds
+   read identically instead of one looking washed-out next to the other.
+   --landing-cover-url/-pos are kept live by covers.js's
+   _rotateLandingCover()/_applyLandingBgPosition(). Tried on mobile too
+   (2026-08-06) despite background-attachment: fixed's known history of
+   being janky on mobile Safari - if it turns out to actually misbehave
+   there, reintroduce a `@media (min-width: 769px)` wrapper around the two
+   rules below and let .feed-day-card--glass's plain background-color
+   fallback (right above) keep covering mobile on its own, like before.
    Two selectors share this treatment: with covers showing, only the
    originally cover-less cards (.feed-day-card--glass) need it, to match
    their real-cover neighbors. With "Show covers in feed" off, NONE of the
@@ -105,21 +107,19 @@ body.demo-active #logout-btn {
 .feed-day-card--glass {
   background-color: var(--feed-glass-bg);
 }
-@media (min-width: 769px) {
-  body:not(.no-feed-day-covers) .feed-day-card--glass,
-  body.no-feed-day-covers:not(.no-feed-glass-cards) .feed-day-card {
-    background-image: var(--landing-cover-url, none);
-    background-attachment: fixed;
-    background-size: cover;
-    background-position: var(--landing-cover-pos, center);
-  }
-  body:not(.no-feed-day-covers) .feed-day-card--glass::after,
-  body.no-feed-day-covers:not(.no-feed-glass-cards) .feed-day-card::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: rgba(31, 41, 55, 0.9);
-  }
+body:not(.no-feed-day-covers) .feed-day-card--glass,
+body.no-feed-day-covers:not(.no-feed-glass-cards) .feed-day-card {
+  background-image: var(--landing-cover-url, none);
+  background-attachment: fixed;
+  background-size: cover;
+  background-position: var(--landing-cover-pos, center);
+}
+body:not(.no-feed-day-covers) .feed-day-card--glass::after,
+body.no-feed-day-covers:not(.no-feed-glass-cards) .feed-day-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(31, 41, 55, 0.9);
 }
 /* Stacked cover tiles (one per distinct book played that day, cycled to fill
    the card) sit behind the content; a flat overlay on top keeps text legible

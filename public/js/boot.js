@@ -142,6 +142,19 @@ async function _updateDemoBtnVisibility() {
   } catch (_) {}
 }
 
+// Pending reveal listener from an in-flight forum-modal reset navigation
+// (see openForumModal in the DOMContentLoaded handler below). Closing the
+// forum via ANY path - Escape, the close button, or navigating away
+// entirely (navigateToBook/showBooks, further down) - must cancel it, or a
+// 'load' event that fires after the close still reopens the modal on its
+// own moments later, well after the user already dismissed/left it.
+let _forumRevealPending = null;
+function _cancelForumReveal() {
+  if (!_forumRevealPending) return;
+  document.getElementById('forum-modal-frame')?.removeEventListener('load', _forumRevealPending);
+  _forumRevealPending = null;
+}
+
 // Navigate to a book by ID, fetching metadata from cache or server.
 async function navigateToBook(bookId) {
   // A book's detail dialog can now stay open on top of the forum (see the
@@ -151,6 +164,7 @@ async function navigateToBook(bookId) {
   // still open (z-index 3000) it would otherwise sit over the newly-shown
   // play screen (no special z-index of its own), leaving it looking stuck.
   document.getElementById('forum-modal-overlay')?.classList.remove('active');
+  _cancelForumReveal();
   _ensureLiveTabControllerStarted();
   const numId = /^\d+$/.test(String(bookId)) ? +bookId : bookId;
   let book = getCachedBooks()?.find(b => b.id === numId || b.id === bookId);
@@ -361,6 +375,7 @@ async function showBooks() {
   // got called, so close it unconditionally here rather than patching every
   // individual call site that might reach this with the forum still open.
   document.getElementById('forum-modal-overlay')?.classList.remove('active');
+  _cancelForumReveal();
   _revealLanding();
   _ensureLiveTabControllerStarted();
   const _prefsReady = syncPrefs();
@@ -817,7 +832,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   const forumOverlay = document.getElementById('forum-modal-overlay');
   const forumClose = document.getElementById('forum-modal-close');
   const forumFrame = document.getElementById('forum-modal-frame');
-  const closeForumModal = () => forumOverlay.classList.remove('active');
+  const closeForumModal = () => {
+    forumOverlay.classList.remove('active');
+    _cancelForumReveal();
+  };
   const openForumModal = (url = '/forum') => {
     // Clicking a link inside the iframe navigates its contentWindow but never
     // touches the <iframe> element's own src attribute - so comparing against
@@ -825,9 +843,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     // re-navigating, leaving the modal reopen wherever a PREVIOUS user last
     // clicked to (e.g. a category or thread), not the forum home. Reset via
     // contentWindow.location, which reflects where the iframe actually is.
+    //
+    // Reveal only once that reset navigation has actually finished loading -
+    // adding 'active' immediately left whatever the iframe was still
+    // rendering (the previous thread/category) visible for a brief moment
+    // until the new page replaced it, flickering before snapping to the
+    // forum home. See _cancelForumReveal (module scope, top of file) for
+    // why this must be cancelable from every close path, not just this one.
+    _cancelForumReveal();
+    const reveal = () => { forumOverlay.classList.add('active'); _forumRevealPending = null; forumFrame.removeEventListener('load', reveal); };
+    _forumRevealPending = reveal;
+    forumFrame.addEventListener('load', reveal);
     try { forumFrame.contentWindow.location.replace(url); }
     catch (_) { forumFrame.setAttribute('src', url); }
-    forumOverlay.classList.add('active');
   };
   forumClose?.addEventListener('click', closeForumModal);
   forumOverlay?.addEventListener('click', e => {
