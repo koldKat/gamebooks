@@ -5,18 +5,18 @@
 
 import {
   state, saveState, apiFetch, isValidSecId, setViewingPt, currentPlaythrough, currentBookId,
-} from './state.js?v=12';
+} from './state.js?v=13';
 import {
   network, visNodes, setGraphCrossBookRoute,
   canReachInGraph, allReachableInGraph, clampViewportScale, findPathTo,
-} from './graph.js?v=83';
+} from './graph.js?v=84';
 import {
   render, showAlert, startPortalRun, startPlaythrough, setOpenWorldContext, setOnViewPublicRun,
-} from './play.js?v=79';
+} from './play.js?v=80';
 import { t } from './i18n.js?v=36';
-import { setOnCharSheetSaved } from './charsheet.js?v=61';
-import { instantiateLoadout } from './equipment.js?v=125';
-import { getCachedBooks } from './books.js?v=128';
+import { setOnCharSheetSaved } from './charsheet.js?v=62';
+import { instantiateLoadout } from './equipment.js?v=126';
+import { getCachedBooks } from './books.js?v=129';
 
 let _hooks = {};
 export function setOpenWorldHooks(h) { _hooks = h || {}; }
@@ -131,12 +131,16 @@ export async function _syncSeriesRuns(seriesId) {
     const seriesTerminal = sr.completed && sr.result !== 'portal';
     // A run's completion must only ever be stamped onto the book it actually
     // happened in. Every book in the series carries a placeholder for this
-    // run index, but a book the run never visited has no path/startedAt -
-    // copying the completion onto it too made the server treat it as a
-    // brand-new completion on that book's own save (duplicate XP) and
-    // re-stamped series_runs.completed_at to that later moment (scrambled
-    // feed ordering).
-    const touchedHere = pt.path?.length > 0 || !!pt.startedAt;
+    // run index, but a book the run never visited has no startedAt - copying
+    // the completion onto it too made the server treat it as a brand-new
+    // completion on that book's own save (duplicate XP) and re-stamped
+    // series_runs.completed_at to that later moment (scrambled feed
+    // ordering). startedAt alone (not path.length) is the signal - every
+    // genuine path mutation sets startedAt first, so path.length can't be
+    // spoofed into looking touched the way it once was (see the isolated
+    // portal-entry restore below, which used to inject a path entry here
+    // without ever setting startedAt).
+    const touchedHere = !!pt.startedAt;
     if (seriesTerminal && touchedHere) {
       if (!pt.completed || pt.result === 'portal' || pt.result !== sr.result) {
         pt.completed = true;
@@ -158,7 +162,12 @@ export async function _syncSeriesRuns(seriesId) {
   seriesRuns.forEach((sr, i) => {
     if (sr.completed || !sr.last_section || sr.last_book_id !== currentBookId) return;
     const pt = state.playthroughs[i];
-    if (!pt || pt.completed) return;
+    // A run's last_book_id can point at this book by default before the run has
+    // ever genuinely been played anywhere (e.g. freshly created) - without the
+    // startedAt check this pushed a stray path entry into an untouched placeholder,
+    // which then satisfied the touchedHere check above on every later sync and let
+    // this book's own save award XP for a run that never actually happened here.
+    if (!pt || pt.completed || !pt.startedAt) return;
     const secId = isValidSecId(+sr.last_section) ? +sr.last_section : sr.last_section;
     if (!secId) return;
     if (!pt.path.some(s => String(s) === String(secId))) {
@@ -314,6 +323,14 @@ export async function _handleNewSeriesRun() {
   }
   const startSec = isValidSecId(state.startSection) ? state.startSection : 1;
   const pt = state.playthroughs[run_index];
+  // pt can already exist as an untouched _syncSeriesRuns padding placeholder
+  // (startedAt: null) if the local array was already long enough - the while
+  // loop above only sets startedAt for slots it freshly creates. Without this,
+  // pushing the start section here left a genuinely-started run's placeholder
+  // looking exactly like an unplayed one (path content, but startedAt: null),
+  // which broke every "is this book actually hosting this run" check that
+  // relies on startedAt.
+  if (!pt.startedAt) pt.startedAt = Date.now();
   if (!state.graph[startSec]) state.graph[startSec] = { choices: [], discovered: true };
   if (pt.path.length === 0) pt.path.push(startSec);
   state.activePtIndex = run_index;

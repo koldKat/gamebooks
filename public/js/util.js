@@ -1,6 +1,6 @@
 // util.js - Shared pure utility functions
 
-import { apiFetch } from './state.js?v=12';
+import { apiFetch } from './state.js?v=13';
 import { t } from './i18n.js?v=36';
 
 export function escapeHtml(str) {

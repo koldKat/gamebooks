@@ -4,13 +4,13 @@ import {
   state, viewingPt, viewingPtIndex, setViewingPt, saveState, isTerminal, parseSecId, isValidSecId,
   currentPlaythrough, currentSection, allDiscoveredSections, mappedCount,
   currentUserLevel, bonusUndos, bonusFastTravels, apiFetch,
-} from './state.js?v=12';
-import { network, visNodes, syncGraph, inevitableOutcome } from './graph.js?v=83';
+} from './state.js?v=13';
+import { network, visNodes, syncGraph, inevitableOutcome } from './graph.js?v=84';
 import { t } from './i18n.js?v=36';
-import { renderCharSheetDisplay } from './charsheet.js?v=61';
+import { renderCharSheetDisplay } from './charsheet.js?v=62';
 import { naturalCompare } from './sort.js?v=1';
-import { instantiateLoadout } from './equipment.js?v=125';
-import { escapeHtml } from './util.js?v=44';
+import { instantiateLoadout } from './equipment.js?v=126';
+import { escapeHtml } from './util.js?v=45';
 
 // ── Discoverable sections cap ────────────────────────────────────���───────────
 let _discoverableLimit = null;

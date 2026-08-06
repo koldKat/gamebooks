@@ -2,7 +2,7 @@ import { COLORS } from './constants.js?v=1';
 import {
   state, viewingPt, isTerminal, parseSecId, isValidSecId,
   currentPlaythrough, allDiscoveredSections, saveState,
-} from './state.js?v=12';
+} from './state.js?v=13';
 import { t } from './i18n.js?v=36';
 
 export let network  = null;
