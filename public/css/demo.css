@@ -96,7 +96,7 @@ body.demo-active #logout-btn {
    little tint keeps every glass card reading as "a card" regardless of
    what's behind it at that moment, without erasing the see-through effect.
 */
-:root { --feed-glass-bg: rgba(31, 41, 55, 0.55); }
+:root { --feed-glass-bg: rgba(31, 41, 55, 0.45); }
 .feed-day-card--glass {
   background-color: var(--feed-glass-bg);
 }
