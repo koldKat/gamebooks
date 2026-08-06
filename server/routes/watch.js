@@ -34,7 +34,14 @@ async function handleWatchState(req, res, userId, requestedBookId) {
 
   const state = db.getBookState(userId, bookId);
   if (!state) return send(res, 404, { error: 'Not found' });
-  send(res, 200, { username: user.username, bookId, isOpenWorld, state });
+  // Includes svg_data (unlike getActiveItemsMeta) so the HUD can show the
+  // same item icons the real inventory/equipment displays do, not just names.
+  const items = db.getActiveItems();
+  // The notebook lives in its own user_books.notebook column, not state_data -
+  // it's book-level (like graph notes), not tied to any one playthrough, so
+  // it's real content worth showing even on a run with an empty charsheet.
+  const notebook = db.getNotebook(userId, bookId);
+  send(res, 200, { username: user.username, bookId, isOpenWorld, state, items, notebook });
 }
 
 module.exports = { handleWatchState };

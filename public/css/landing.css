@@ -706,6 +706,21 @@ body.cover-tooltip-title-bold #cover-tooltip-settings-preview {
   transition: opacity 1.5s ease;
   will-change: auto;
 }
+
+/* Sits on top of landing-bg-a/b (same stacking level, painted after them in
+   DOM order) to darken the rotating cover for legibility behind the three
+   landing panels. Faded out when all three panels are collapsed, so the
+   cover shows at full brightness instead of being baked into the image
+   itself - see _updateLandingBgDragUi() in covers.js. */
+#landing-bg-dim {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: rgba(15, 23, 42, 0.92);
+  opacity: 1;
+  transition: opacity 0.4s ease;
+}
 body.covers-collapsed #landing-wrapper { padding-left: 0; }
 body.right-collapsed  #landing-wrapper { padding-right: 0; }
 /* covers.js toggles this once all three landing panels are collapsed (see

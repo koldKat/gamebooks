@@ -3,7 +3,7 @@ import {
   state, viewingPt, isTerminal, parseSecId, isValidSecId,
   currentPlaythrough, allDiscoveredSections, saveState,
 } from './state.js?v=13';
-import { t } from './i18n.js?v=36';
+import { t } from './i18n.js?v=38';
 
 export let network  = null;
 export let visNodes = null;
@@ -19,6 +19,11 @@ export function clampViewportScale(scale) {
 }
 
 let _stabilizeHandler  = null;
+
+// World-space spacing (graph units, not screen pixels) - fixed rather than
+// user-configurable, and shared by both the grid overlay and snap-to-grid so
+// snapped nodes always land on a line the player can actually see.
+export const GRID_SIZE = 40;
 
 // ── Overlay draw cache ────────────────────────────────────────────────────────
 // Rebuilt in syncGraph() (state-change time), consumed in drawOverlays() (per frame).
@@ -41,10 +46,18 @@ let _overlayPositions      = {};
 let _overlayPosDirty       = true;
 let _overlayDraggingActive = false; // true while an overlay node is being dragged
 
+// Same caching strategy as the overlay cache above, for the fog-of-grid halo
+// positions - all nodes are candidates here (not just ones with an overlay),
+// so it's kept separate rather than reusing _overlayPositions.
+let _fogPositions      = {};
+let _fogPosDirty       = true;
+let _fogDraggingActive = false; // true while any node is being dragged
+
 function _buildOverlayCache() {
   _overlayNodeIds  = [];
   _overlayNodes    = [];
   _overlayPosDirty = true;
+  _fogPosDirty     = true;
   _noteLabelCache.clear();
   _measureCtx.font = _NOTE_FONT;
 
@@ -96,6 +109,9 @@ export function destroyNetwork() {
   _overlayPositions      = {};
   _overlayPosDirty       = true;
   _overlayDraggingActive = false;
+  _fogPositions      = {};
+  _fogPosDirty       = true;
+  _fogDraggingActive = false;
 }
 
 // ── Edge appearance ──────────────────────────────────────────────────────────
@@ -204,6 +220,64 @@ function nodeLabel(secId) {
   const displayPt = currentPlaythrough() || viewingPt;
   const startSec  = _effectiveStartSec(displayPt);
   return secId === startSec ? `${secId}\nSTART` : String(secId);
+}
+
+// Fixed radius (graph units) a "fog of grid" halo extends around each node -
+// fixed rather than scaled to node spacing, same reasoning as GRID_SIZE
+// itself: one predictable constant instead of another speculative setting.
+const FOG_RADIUS = 125;
+
+// Drawn on 'beforeDrawing' (under nodes/edges), in world coordinates so it
+// pans/zooms with the graph instead of sitting fixed on screen.
+function drawGrid(ctx) {
+  if (!network || (!state.showGrid && !state.fogOfGrid)) return;
+  const container = document.getElementById('graph-container');
+  if (!container) return;
+  const topLeft     = network.DOMtoCanvas({ x: 0, y: 0 });
+  const bottomRight = network.DOMtoCanvas({ x: container.clientWidth, y: container.clientHeight });
+
+  ctx.save();
+  ctx.strokeStyle = 'rgba(148, 163, 184, 0.15)';
+  ctx.lineWidth   = 1 / network.getScale();
+
+  // Fog of grid: clip to a circular halo around each node first, so the
+  // grid lines drawn afterward only ever show up near a node - mutually
+  // exclusive with the always-visible "Show grid" (state.showGrid).
+  if (state.fogOfGrid) {
+    if (!visNodes) { ctx.restore(); return; }
+    const ids = visNodes.getIds();
+    if (!ids.length) { ctx.restore(); return; }
+    // Same idea as the overlay position cache below - avoid recomputing
+    // every node's position and rebuilding a multi-circle clip path on
+    // every single beforeDrawing frame (fired continuously during pan/zoom)
+    // when nothing has actually moved.
+    if (_fogDraggingActive || _fogPosDirty) {
+      _fogPositions = network.getPositions(ids);
+      _fogPosDirty  = false;
+    }
+    ctx.beginPath();
+    for (const id of ids) {
+      const p = _fogPositions[id];
+      if (!p) continue;
+      ctx.moveTo(p.x + FOG_RADIUS, p.y);
+      ctx.arc(p.x, p.y, FOG_RADIUS, 0, Math.PI * 2);
+    }
+    ctx.clip();
+  }
+
+  const startX = Math.floor(topLeft.x / GRID_SIZE) * GRID_SIZE;
+  const startY = Math.floor(topLeft.y / GRID_SIZE) * GRID_SIZE;
+  ctx.beginPath();
+  for (let x = startX; x <= bottomRight.x; x += GRID_SIZE) {
+    ctx.moveTo(x, topLeft.y);
+    ctx.lineTo(x, bottomRight.y);
+  }
+  for (let y = startY; y <= bottomRight.y; y += GRID_SIZE) {
+    ctx.moveTo(topLeft.x, y);
+    ctx.lineTo(bottomRight.x, y);
+  }
+  ctx.stroke();
+  ctx.restore();
 }
 
 function drawOverlays(ctx) {
@@ -600,6 +674,7 @@ export function initGraph() {
     network.on('stabilizationIterationsDone', _stabilizeHandler);
   }
 
+  network.on('beforeDrawing', ctx => drawGrid(ctx));
   network.on('afterDrawing', ctx => drawOverlays(ctx));
 
   let dragSaveTimer    = null;
@@ -634,16 +709,32 @@ export function initGraph() {
     if (params.nodes.some(id => _overlayNodeIds.includes(id))) {
       _overlayDraggingActive = true;
     }
+    // Fog-of-grid halos can follow any node, not just overlay ones.
+    if (state.fogOfGrid) _fogDraggingActive = true;
   });
 
   network.on('dragEnd', params => {
     if (params.nodes.length) {
-      Object.assign(state.positions, network.getPositions(params.nodes));
-      visNodes.update(params.nodes.map(id => ({ id, physics: false })));
+      const positions = network.getPositions(params.nodes);
+      // Snap only ever applies to this drag's end position - never touches
+      // any node that wasn't just moved, so turning the toggle on can't
+      // retroactively reshape an already-placed graph.
+      if (state.snapToGrid) {
+        for (const id of params.nodes) {
+          positions[id].x = Math.round(positions[id].x / GRID_SIZE) * GRID_SIZE;
+          positions[id].y = Math.round(positions[id].y / GRID_SIZE) * GRID_SIZE;
+        }
+        visNodes.update(params.nodes.map(id => ({ id, x: positions[id].x, y: positions[id].y, physics: false })));
+      } else {
+        visNodes.update(params.nodes.map(id => ({ id, physics: false })));
+      }
+      Object.assign(state.positions, positions);
       clearTimeout(dragSaveTimer);
       dragSaveTimer = setTimeout(saveState, 1000);
       _overlayDraggingActive = false;
       _overlayPosDirty = true;
+      _fogDraggingActive = false;
+      _fogPosDirty = true;
     }
   });
 }

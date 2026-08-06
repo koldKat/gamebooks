@@ -181,6 +181,9 @@
 .ctx-connector-item { padding-left: 1.7rem !important; position: relative; }
 .ctx-connector-item::before { content: ''; position: absolute; left: 0.6rem; }
 .ctx-connector-item.active::before { content: '✓'; color: #60a5fa; }
+.ctx-toggle-item { padding-left: 1.7rem !important; position: relative; }
+.ctx-toggle-item::before { content: ''; position: absolute; left: 0.6rem; }
+.ctx-toggle-item.active::before { content: '✓'; color: #60a5fa; }
 
 #bg-move-overlay {
   display: none;

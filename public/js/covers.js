@@ -1,10 +1,10 @@
 // covers.js - Covers panel, lazy grid, landing bg rotation, cover/series activity modals
 import { getToken, isDemoMode, apiFetch } from './state.js?v=13';
-import { openPublicModal, closePublicModal, openPublicProfile, renderPublicProfile, openPublicRun, openPublicSeriesRun, _destroyPubNetworks } from './public-profile.js?v=68';
-import { refreshCoinsDisplay } from './shop.js?v=52';
+import { openPublicModal, closePublicModal, openPublicProfile, renderPublicProfile, openPublicRun, openPublicSeriesRun, _destroyPubNetworks } from './public-profile.js?v=70';
+import { refreshCoinsDisplay } from './shop.js?v=54';
 import { foldForSearch, matchesSearch, naturalCompare, naturalCompareByName } from './sort.js?v=1';
-import { escapeHtml, fetchPublic as publicFetch, BATTLE_SIM_BOOK_IDS } from './util.js?v=45';
-import { t } from './i18n.js?v=36';
+import { escapeHtml, fetchPublic as publicFetch, BATTLE_SIM_BOOK_IDS } from './util.js?v=47';
+import { t } from './i18n.js?v=38';
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────
 let _hooks = {};
@@ -610,7 +610,13 @@ export function _canDragLandingBg() {
 export function _updateLandingBgDragUi() {
   const wrapper = document.getElementById('landing-wrapper');
   if (!wrapper) return;
-  wrapper.classList.toggle('landing-bg-draggable', _canDragLandingBg());
+  const allCollapsed = _canDragLandingBg();
+  wrapper.classList.toggle('landing-bg-draggable', allCollapsed);
+  // Show the "real" cover, undimmed, once all three landing panels (covers,
+  // my books, feed) are collapsed - reapply the dim the moment any comes
+  // back, since it exists purely for legibility behind those panels.
+  const dim = document.getElementById('landing-bg-dim');
+  if (dim) dim.style.opacity = allCollapsed ? '0' : '1';
 }
 
 // ── Landing background rotation ─────────────────────────────────────────────
@@ -656,7 +662,10 @@ function _rotateLandingCover() {
   const key = _landingCoverKey(pick);
   _landingBgCurrentKey = key || null;
   _landingBgPosY = _landingCoverPosForKey(key);
-  const url = `linear-gradient(rgba(15,23,42,0.92), rgba(15,23,42,0.92)), url(${pick.coverUrl})`;
+  // Darkening is a separate #landing-bg-dim layer (see landing.css), not
+  // baked into this image, so it can be faded independently of rotation -
+  // see _updateLandingBgDragUi() below.
+  const url = `url(${pick.coverUrl})`;
   const next = _landingBgActive === 'a' ? 'b' : 'a';
   const cur = document.getElementById(`landing-bg-${_landingBgActive}`);
   const nxt = document.getElementById(`landing-bg-${next}`);

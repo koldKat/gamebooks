@@ -66,7 +66,7 @@ This is either the login form or your books list, depending on whether you're si
 | **F1** | Open the Cheat Sheet |
 | **Ctrl+Y** | Landing page settings (cover-title font size/bold/hide Cyrillic, background source, reduce animations, feed day covers, transparent day cards) |
 
-**Landing background:** the animated background image behind the panels rotates through book covers. While logged in, right-click anywhere on the background (not on a panel) to get a quick menu with **Hide background** / **Show background**. Your choice is saved to your account.
+**Landing background:** the animated background image behind the panels rotates through book covers. While logged in, right-click anywhere on the background (not on a panel) to get a quick menu with **Hide background** / **Show background**. Your choice is saved to your account. Normally the cover is dimmed so it stays legible behind the panels - collapse all three (**Ctrl+X**) and the dimming lifts, showing the cover at full brightness; bring any panel back and it dims again.
 
 ---
 
@@ -202,6 +202,14 @@ If the book has a cover image, it appears as a faint watermark behind the graph.
 - **Right-click on empty space** → **Connectors** - choose the line style used to draw connections between sections: Curved, Curved (opposite), Cubic bezier, Horizontal, or Straight. The active style has a checkmark. This is a per-book setting and is saved with your progress.
 
 Your preference is saved per book.
+
+### Grid and snap-to-grid
+
+- **Right-click on empty space** → **Grid** → **Show grid** - overlay a fixed-spacing grid across the whole graph. It pans and zooms with the map.
+- **Right-click on empty space** → **Grid** → **Fog of grid** - only shows the grid in a circle around each dot, instead of across the whole map. Mutually exclusive with Show grid - turning one on turns the other off.
+- **Right-click on empty space** → **Grid** → **Snap to grid** - while on, dropping a dot after dragging it snaps to the nearest grid line. It only affects dots you move after turning it on - nothing already on the map gets nudged. Works independently of the other two.
+
+All three work even for books without a cover image, and all are saved per book.
 
 ---
 

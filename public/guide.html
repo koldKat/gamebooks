@@ -460,7 +460,7 @@
         <tr><td><strong>Ctrl+Y</strong></td><td>Landing page settings (cover-title font size/bold/hide Cyrillic, background source, reduce animations, feed day covers, transparent day cards)</td></tr>
       </tbody>
     </table>
-    <p><strong>Landing background:</strong> the animated background image behind the panels rotates through book covers. While logged in, <strong>right-click</strong> anywhere on the background (not on a panel) to get a quick menu with <strong>Hide background</strong> / <strong>Show background</strong>. Your choice is saved to your account.</p>
+    <p><strong>Landing background:</strong> the animated background image behind the panels rotates through book covers. While logged in, <strong>right-click</strong> anywhere on the background (not on a panel) to get a quick menu with <strong>Hide background</strong> / <strong>Show background</strong>. Your choice is saved to your account. Normally the cover is dimmed so it stays legible behind the panels - collapse all three (<strong>Ctrl+X</strong>) and the dimming lifts, showing the cover at full brightness; bring any panel back and it dims again.</p>
     <p><strong>Keyboard shortcuts (play area):</strong></p>
     <table>
       <thead><tr><th>Shortcut</th><th>Action</th></tr></thead>
@@ -580,6 +580,15 @@
       <li><strong>Connectors</strong> - a submenu to choose the line style used to draw connections between sections. Options are Curved, Curved (opposite), Cubic bezier, Horizontal, or Straight. The currently active style has a checkmark next to it. This is a per-book setting saved with your progress.</li>
     </ul>
     <p>Your preference (hidden/shown and position) is saved per book. On very wide screens (wider than 1920 px), hiding the background shows the book cover in the sidebar above the stats instead.</p>
+
+    <h3>Grid and snap-to-grid</h3>
+    <p>Right-click on any empty part of the map → <strong>Grid</strong> for three toggles (checkmark shows which are on):</p>
+    <ul>
+      <li><strong>Show grid</strong> - overlay a fixed-spacing grid across the whole map. It pans and zooms with the map.</li>
+      <li><strong>Fog of grid</strong> - only shows the grid in a circle around each dot, instead of across the whole map. Mutually exclusive with Show grid - turning one on turns the other off.</li>
+      <li><strong>Snap to grid</strong> - while on, dropping a dot after dragging it snaps to the nearest grid line. It only affects dots you move after turning it on - nothing already on the map gets nudged. Works independently of the other two.</li>
+    </ul>
+    <p>All three work even for books without a cover image, and all are saved per book.</p>
   </div>
 
   <div class="guide-section" id="recording">

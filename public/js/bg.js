@@ -1,7 +1,7 @@
 // bg.js - Graph background preference, bg/node context menus
 
 import { apiFetch, isDemoMode, currentBookId, state } from './state.js?v=13';
-import { t } from './i18n.js?v=36';
+import { t } from './i18n.js?v=38';
 
 let _hooks = {};
 export function setBgHooks(h) { _hooks = h || {}; }
@@ -119,12 +119,23 @@ function _updateConnectorMenu() {
   });
 }
 
+function _updateGridMenu() {
+  document.getElementById('bg-ctx-grid-btn').classList.toggle('active', !!state.showGrid);
+  document.getElementById('bg-ctx-snap-btn').classList.toggle('active', !!state.snapToGrid);
+  document.getElementById('bg-ctx-fog-btn').classList.toggle('active', !!state.fogOfGrid);
+}
+
+// Background-cover items (toggle/move) only make sense when the book has a
+// cover; the grid/connector items don't depend on a cover, so the menu still
+// opens (with those items hidden) for books without one.
 export function _showBgCtxMenu(x, y) {
-  if (!currentBookCover) return;
   const menu = document.getElementById('bg-ctx-menu');
+  const hasCover = !!currentBookCover;
+  document.getElementById('bg-ctx-toggle-btn').style.display = hasCover ? '' : 'none';
   document.getElementById('bg-ctx-toggle-btn').textContent = _bgHidden ? t('bg.show_background') : t('bg.hide_background');
-  document.getElementById('bg-ctx-move-btn').style.display = _bgHidden ? 'none' : '';
+  document.getElementById('bg-ctx-move-btn').style.display = (hasCover && !_bgHidden) ? '' : 'none';
   _updateConnectorMenu();
+  _updateGridMenu();
   _positionMenu(menu, x, y);
 }
 

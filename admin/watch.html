@@ -16,6 +16,43 @@
   #watch-status { margin-left: auto; color: #6b7280; font-size: 0.78rem; }
   #watch-status.stale { color: #f87171; }
   #graph-container { position: fixed; top: 40px; left: 0; right: 0; bottom: 0; }
+
+  /* Same positioning/styling as the real play area's #stats-hud (charsheet.css) -
+     no box, just text floating over the graph, bottom-right, only what the
+     player themselves marked "show on screen". */
+  #watch-hud {
+    position: fixed; bottom: 1rem; right: 1rem; z-index: 5;
+    display: flex; flex-direction: column; align-items: flex-end; gap: 0.2rem;
+    pointer-events: none;
+  }
+  #watch-cs-display, #watch-inv-display {
+    font-size: 0.75rem; color: #e5e7eb; line-height: 1.65; text-align: right;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.6);
+  }
+  .cs-line  { display: block; }
+  .cs-label { color: #9ca3af; }
+  .inv-line { display: flex; align-items: center; justify-content: flex-end; gap: 0.3rem; }
+  .inv-line-icon { width: 16px; height: 16px; flex-shrink: 0; display: flex; align-items: center; }
+  .inv-line-icon svg { width: 16px; height: 16px; }
+  .inv-line-qty  { color: #60a5fa; font-size: 0.7rem; }
+  .inv-line-note { color: #6b7280; font-size: 0.7rem; }
+  .inv-line-slot { font-size: 0.65rem; padding: 0 0.3rem; border-radius: 3px; margin-left: 0.2rem; }
+  .inv-line--equipped .inv-line-slot { color: #f5a623; border: 1px solid rgba(245,166,35,0.4); }
+  .inv-line--item .inv-line-slot { color: #60a5fa; border: 1px solid rgba(96,165,250,0.4); }
+
+  /* Same positioning/styling as the real play area's #notes-display
+     (charsheet.css) in its default (non-hovering) state - no box, just text
+     over the graph, left side, vertically centered. The notebook is
+     book-level (state.notesPinned), not tied to any one playthrough - shown
+     whenever the player has it pinned, same as they'd see it themselves. */
+  #watch-notes {
+    display: none; position: fixed; left: 1rem; top: 50%; transform: translateY(-50%);
+    width: 20vw; max-height: 65vh; overflow-y: auto; z-index: 5;
+    font-size: 0.75rem; color: #e5e7eb; line-height: 1.65; white-space: pre-wrap; word-break: break-word;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.6);
+    pointer-events: none;
+  }
+  #watch-notes.visible { display: block; }
 </style>
 </head>
 <body>
@@ -25,7 +62,12 @@
     <span id="watch-status">connecting…</span>
   </div>
   <div id="graph-container"></div>
+  <div id="watch-notes"></div>
+  <div id="watch-hud">
+    <div id="watch-cs-display"></div>
+    <div id="watch-inv-display"></div>
+  </div>
   <script src="/vendor/vis-network/vis-network.min.js?v=1"></script>
-  <script type="module" src="/admin/js/watch.js?v=7"></script>
+  <script type="module" src="/admin/js/watch.js?v=15"></script>
 </body>
 </html>

@@ -1,8 +1,8 @@
 // notif.js - Notification badge, inbox badge, forum badge, notification dropdown
 
 import { getToken, apiFetch, isDemoMode } from './state.js?v=13';
-import { t } from './i18n.js?v=36';
-import { escapeHtml } from './util.js?v=45';
+import { t } from './i18n.js?v=38';
+import { escapeHtml } from './util.js?v=47';
 
 let _hooks = {};
 export function setNotifHooks(h) { _hooks = h || {}; }

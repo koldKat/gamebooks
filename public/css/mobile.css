@@ -12,7 +12,7 @@
      those settings simply aren't reachable on mobile anymore. */
   #app-banner-f1-btn { display: none !important; }
   #main-screen                                 { display: none !important; }
-  #landing-bg-a, #landing-bg-b                { display: none !important; }
+  #landing-bg-a, #landing-bg-b, #landing-bg-dim { display: none !important; }
 
   /* Single-column layout */
   #landing-wrapper {
