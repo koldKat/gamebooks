@@ -93,7 +93,7 @@ function _queueRewardFloater(xpDelta = 0, coinDelta = 0) {
     _rewardAccumXp = 0; _rewardAccumCoins = 0; _rewardFlushTimer = null;
     if (xp > 0)    _spawnRewardFloater('xp',    `<span>+${xp.toLocaleString()} XP</span>`);
     if (coins > 0) _spawnRewardFloater('coins', `${COIN_SVG}<span>+${coins.toLocaleString()}</span>`);
-  }, 550);
+  }, 750);
 }
 
 // ── Snapshot processing ───────────────────────────────────────────────────────
@@ -138,7 +138,7 @@ export function _processRewardSnapshot(data, opts = {}) {
   }
 }
 
-export function _scheduleRewardProfileRefresh(delay = 850) {
+export function _scheduleRewardProfileRefresh(delay = 750) {
   if (!getToken()) return;
   if (_rewardProfileTimer) clearTimeout(_rewardProfileTimer);
   _rewardProfileTimer = setTimeout(() => { _rewardProfileTimer = null; refreshCoinsDisplay(); }, delay);
