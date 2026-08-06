@@ -80,25 +80,46 @@ body.demo-active #logout-btn {
   margin-bottom: 0.6rem;
   overflow: hidden;
 }
-/* No cover available for this day - let the real rotating landing background
-   (always current, no staleness) show through directly instead of drawing a
-   copy of it, like glass. Only a light tint on top - the ambient background
-   image already carries its own ~92%-dark overlay baked in (for page-wide
-   legibility), unlike a cover-tile which is the raw, undimmed cover image
-   before .feed-day-cover-stack::after's 0.9-alpha overlay darkens it. Reusing
-   that same 0.9 overlay here would stack on top of the *already*-dimmed
-   ambient image and compound to far darker than a cover-day ever gets - the
-   two start from different brightness, so matching the end result means
-   applying much less additional tint here, not the same amount. Fully
-   transparent (no tint at all) read as too washed-out/inconsistent card to
-   card, since it's a straight window onto a `position: fixed` background that
-   shows a different slice of the image depending on scroll position - a
-   little tint keeps every glass card reading as "a card" regardless of
-   what's behind it at that moment, without erasing the see-through effect.
-*/
+/* No cover available for this day - on desktop, show the real currently-live
+   rotating cover as the card's own background (background-attachment: fixed
+   makes it act as a window onto the same fixed page background, always
+   in sync, never a stale copy) with the SAME 0.9-alpha overlay a real
+   cover-tile gets (see .feed-day-cover-stack::after below), so the two
+   card kinds read identically instead of one looking washed-out next to
+   the other. --landing-cover-url/-pos are kept live by covers.js's
+   _rotateLandingCover()/_applyLandingBgPosition(). Desktop-only: fixed
+   background-attachment has a long history of being janky on mobile
+   Safari, and mobile already forced this feature off until recently, so
+   mobile keeps the older flat, cheap tint instead.
+   Two selectors share this treatment: with covers showing, only the
+   originally cover-less cards (.feed-day-card--glass) need it, to match
+   their real-cover neighbors. With "Show covers in feed" off, NONE of the
+   cards show a real per-day cover any more, so per the combo table below,
+   every card (not just originally-glass ones) gets it instead - that's
+   body.no-feed-day-covers:not(.no-feed-glass-cards) .feed-day-card. Do not
+   collapse these into "just always apply it to .feed-day-card--glass" -
+   with covers off, cards that would have shown a real cover only carry the
+   plain .feed-day-card class, not --glass, so they'd be skipped entirely
+   and mismatch against the ones that do. */
 :root { --feed-glass-bg: rgba(31, 41, 55, 0.45); }
 .feed-day-card--glass {
   background-color: var(--feed-glass-bg);
+}
+@media (min-width: 769px) {
+  body:not(.no-feed-day-covers) .feed-day-card--glass,
+  body.no-feed-day-covers:not(.no-feed-glass-cards) .feed-day-card {
+    background-image: var(--landing-cover-url, none);
+    background-attachment: fixed;
+    background-size: cover;
+    background-position: var(--landing-cover-pos, center);
+  }
+  body:not(.no-feed-day-covers) .feed-day-card--glass::after,
+  body.no-feed-day-covers:not(.no-feed-glass-cards) .feed-day-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(31, 41, 55, 0.9);
+  }
 }
 /* Stacked cover tiles (one per distinct book played that day, cycled to fill
    the card) sit behind the content; a flat overlay on top keeps text legible
@@ -134,7 +155,8 @@ body.no-feed-day-covers .feed-day-cover-stack { display: none !important; }
      gets the glass tint, since there's nothing left to distinguish a "would-have-had-a-cover" day
      from any other once covers are off entirely.
    - covers off, glass off: everything flat, same as the feature never existed. */
-body.no-feed-glass-cards .feed-day-card--glass { background-color: #1f2937 !important; }
+body.no-feed-glass-cards .feed-day-card--glass { background-color: #1f2937 !important; background-image: none !important; }
+body.no-feed-glass-cards .feed-day-card--glass::after { display: none !important; }
 body.no-feed-day-covers:not(.no-feed-glass-cards) .feed-day-card { background-color: var(--feed-glass-bg) !important; }
 
 .feed-day-header {

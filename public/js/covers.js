@@ -597,6 +597,7 @@ export function _applyLandingBgPosition() {
     const el = document.getElementById(`landing-bg-${l}`);
     if (el) el.style.backgroundPosition = `center ${_landingBgPosY}%`;
   });
+  document.documentElement.style.setProperty('--landing-cover-pos', `center ${_landingBgPosY}%`);
 }
 
 export function _canDragLandingBg() {
@@ -675,6 +676,12 @@ function _rotateLandingCover() {
   nxt.style.backgroundImage = url;
   nxt.style.backgroundPosition = `center ${_landingBgPosY}%`;
   nxt.style.opacity = '1';
+  // Lets coverless feed day cards (.feed-day-card--glass, demo.css) show the
+  // same currently-live cover as their own background instead of only seeing
+  // it through the page-wide dim layer - see the CSS for why that mismatched
+  // a real cover-tile card's look.
+  document.documentElement.style.setProperty('--landing-cover-url', url);
+  document.documentElement.style.setProperty('--landing-cover-pos', `center ${_landingBgPosY}%`);
   setTimeout(() => {
     cur.style.opacity = '0';
     setTimeout(() => {
@@ -690,7 +697,6 @@ function _rotateLandingCover() {
 // paints one cover immediately, since otherwise nothing would show until
 // the first tick) is the very first call this session.
 export function _startLandingCoverRotation() {
-  if (_isMobile()) return;
   if (document.getElementById('landing-wrapper')?.style.display === 'none') return;
   _applyLandingBgPosition();
   if (window._landingCoverInterval) return;
