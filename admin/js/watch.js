@@ -426,16 +426,22 @@ function renderHud(items, activePt) {
   const invEl = document.getElementById('watch-inv-display');
   // Only inventory slots explicitly marked "show on screen" - not merely
   // "carried". Matches inventory.js's own _inv().filter(s => s.visible).
+  // A slot whose itemId no longer resolves to a real item (deleted from the
+  // catalog) is dropped entirely, not shown as a placeholder "Item #N" - the
+  // real player's own HUD (inventory.js's renderInventoryDisplay: `if
+  // (!item) return ''`) never shows those either, so falling back to a
+  // placeholder here made the watch view show dozens of phantom lines the
+  // player themselves never sees on screen.
   const invLines = (activePt?.inventory || [])
-    .filter(s => s.itemId && s.visible)
-    .map(s => invLineHtml(s.label?.trim() || itemsById.get(s.itemId)?.name || `Item #${s.itemId}`, s.qty ?? 1, s.note, 'Item', 'item', itemsById.get(s.itemId)?.svg_data));
+    .filter(s => s.itemId && s.visible && itemsById.has(s.itemId))
+    .map(s => invLineHtml(s.label?.trim() || itemsById.get(s.itemId).name, s.qty ?? 1, s.note, 'Item', 'item', itemsById.get(s.itemId).svg_data));
   // Same for equipped slots - only ones equipmentVisible[slot] marks visible.
-  // Matches equipment.js's getVisibleEquippedItems().
+  // Matches equipment.js's getVisibleEquippedItems() (`.filter(e => e.item)`).
   const eqVis = activePt?.equipmentVisible || {};
   const eqLines = Object.entries(activePt?.equipment || {})
     .map(([key, entry]) => ({ key, itemId: eqItemId(entry), meta: eqMeta(entry), qty: eqQty(entry) }))
-    .filter(e => e.itemId && eqVis[e.key])
-    .map(e => invLineHtml(e.meta.label?.trim() || itemsById.get(e.itemId)?.name || `Item #${e.itemId}`, e.qty, e.meta.note, SLOT_LABELS[e.key] ?? e.key, 'equipped', itemsById.get(e.itemId)?.svg_data));
+    .filter(e => e.itemId && eqVis[e.key] && itemsById.has(e.itemId))
+    .map(e => invLineHtml(e.meta.label?.trim() || itemsById.get(e.itemId).name, e.qty, e.meta.note, SLOT_LABELS[e.key] ?? e.key, 'equipped', itemsById.get(e.itemId).svg_data));
   invEl.innerHTML = [...invLines, ...eqLines].join('');
 }
 

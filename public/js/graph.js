@@ -156,6 +156,20 @@ function _effectiveStartSec(displayPt) {
   return isValidSecId(state.startSection) ? state.startSection : 1;
 }
 
+// vis-network falls back to its own hardcoded default hover/select palette
+// (#D2E5FF background, #2B7CE9 border) for any node color that doesn't
+// specify its own `highlight`/`hover` sub-colors - none of the COLORS.*
+// constants did, so simply hovering (interaction.hover: true, below) or
+// selecting any node (regardless of its real state) briefly repainted it
+// with that unrelated generic blue instead of its actual semantic color,
+// which read as a rendering bug. `highlight` applies on selection, `hover`
+// on mere mouse-over - both need to be set, or only one of the two
+// interactions would actually be fixed.
+function _withHighlight(c) {
+  const swatch = { background: c.background, border: c.border };
+  return { ...c, highlight: swatch, hover: swatch };
+}
+
 function nodeColor(secId) {
   const pt        = currentPlaythrough();
   const displayPt = pt || viewingPt;
@@ -166,12 +180,12 @@ function nodeColor(secId) {
 
   // These states are always shown as-is, no battle border override
   const startSec = _effectiveStartSec(displayPt);
-  if (secId === startSec) return COLORS.start;
-  if (secId === cur) return COLORS.current;
+  if (secId === startSec) return _withHighlight(COLORS.start);
+  if (secId === cur) return _withHighlight(COLORS.current);
   if (secId === finalNode) {
-    if (displayPt.result === 'success') return COLORS.victory;
-    if (displayPt.result === 'battle')  return COLORS.battleDeath;
-    return COLORS.death;
+    if (displayPt.result === 'success') return _withHighlight(COLORS.victory);
+    if (displayPt.result === 'battle')  return _withHighlight(COLORS.battleDeath);
+    return _withHighlight(COLORS.death);
   }
 
   // Determine base fill+border from normal rules
@@ -210,10 +224,10 @@ function nodeColor(secId) {
 
   // Battle flag: keep fill from base rules, override only the border
   if (state.graph[secId]?.battle) {
-    return { background: base.background, border: COLORS.battleOutline.border };
+    return _withHighlight({ background: base.background, border: COLORS.battleOutline.border });
   }
 
-  return base;
+  return _withHighlight(base);
 }
 
 function nodeLabel(secId) {
