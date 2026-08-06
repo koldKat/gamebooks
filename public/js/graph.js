@@ -576,6 +576,18 @@ function _assignLocalPositions(allSections) {
     for (const sec of pending) {
       const pos = _chooseLocalPosition(sec, state.positions);
       if (!pos) continue;
+      // A newly-added node was never hand-placed by the user, so snapping it
+      // doesn't touch anything the "snap never retroactive" rule protects -
+      // unlike a drag, there's no existing deliberate placement to disturb.
+      // Snapped after scoring (not during candidate search) so the overlap-
+      // avoidance scoring above still works against real, unrounded
+      // neighbor positions; the rounding can occasionally land a new node a
+      // little closer to a neighbor than the scoring intended, same
+      // trade-off the drag-end snap already accepts.
+      if (state.snapToGrid) {
+        pos.x = Math.round(pos.x / GRID_SIZE) * GRID_SIZE;
+        pos.y = Math.round(pos.y / GRID_SIZE) * GRID_SIZE;
+      }
       state.positions[sec] = pos;
       changed = true;
       progressed = true;
