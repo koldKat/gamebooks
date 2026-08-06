@@ -1441,6 +1441,8 @@ A self-contained module for managing per-run item slots. Imports `state.js`, `pl
 - `preloadItems()` - fetches the active/viewed run's items on demand; called by `boot.js` after `setOnViewingPtChange` fires.
 - `setExtraDisplayItemsProvider(fn)` - registers an async callback (set by `boot.js`) that supplies extra items to merge into `#inv-display` on every grid refresh. Used to inject equipped "show on screen" items from `equipment.js` without creating a direct import (avoiding a deeper cycle).
 
+**Adding an item (`inv-add-btn` → `_openPicker()`/`_renderPicker()`):** picking a tile from the catalog picker calls `addItemToInventory(itemId)`, which merges into an existing stack (same itemId/note/label/visible) if one exists rather than always creating a new slot - picking the same item repeatedly stacks its quantity instead of producing a separate `qty: 1` line per click, matching every other place items get added (e.g. unequipping back into inventory).
+
 **Item data loading:** inventory never fetches all items upfront. Instead:
 - On picker open, `GET /api/items?meta=1` fetches a lightweight list (id, name, type) - no SVG data.
 - SVGs are loaded lazily per tile via `IntersectionObserver` (`GET /api/items/:id`) only when the tile scrolls into view.

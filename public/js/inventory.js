@@ -4,7 +4,7 @@
 // Visible to all logged-in users.
 
 import { state, currentPlaythrough, saveState, apiFetch, viewingPt } from './state.js?v=13';
-import { showConfirm } from './play.js?v=89';
+import { showConfirm } from './play.js?v=90';
 import { getPlayBtnRow } from './charsheet.js?v=64';
 import { escapeHtml, shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from './util.js?v=47';
 import { t } from './i18n.js?v=38';
@@ -438,9 +438,13 @@ function _renderPicker(query) {
   ).join('');
   grid.querySelectorAll('.inv-pick-item').forEach(el => {
     el.addEventListener('click', () => {
-      const inv = _inv();
-      if (inv.length >= MAX_SLOTS) return;
-      _setInv([...inv, { itemId: +el.dataset.id, note: '', qty: 1, visible: false }]);
+      // Route through addItemToInventory() instead of pushing a slot
+      // directly - it merges into an existing stack (same itemId/note/
+      // label/visible) if one exists, incrementing qty. The direct-push
+      // version always created a brand-new qty:1 slot, so picking the same
+      // item repeatedly here never stacked, unlike every other place items
+      // get added.
+      if (!addItemToInventory(+el.dataset.id)) return;
       _closePicker();
       _renderGrid();
     });
