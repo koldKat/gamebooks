@@ -930,6 +930,9 @@ charSheetTemplate: {          // null if no template set; one per book
 alphanumericSections?: boolean,  // if true, section IDs are treated as strings (e.g. 'A1'); default false
 notesPinned?: boolean,           // if true, the notebook overlay is shown pinned on the play area; persists across refreshes
 connectorStyle?: string,         // vis-network edge smooth style; one of 'curvedCW'|'curvedCCW'|'cubic'|'horizontal'|'straight'; default 'curvedCW'
+showGrid?: boolean,              // if true, a fixed-spacing grid overlay is drawn across the whole graph; default false; mutually exclusive with fogOfGrid
+fogOfGrid?: boolean,             // if true, the grid overlay is only drawn in a fixed-radius halo around each node; default false; mutually exclusive with showGrid
+snapToGrid?: boolean,            // if true, dragging a node snaps its dropped position to the grid; only affects future drags, never retroactive; default false
 
 // Per-run charSheet (inside each playthrough object):
 // playthroughs[i].charSheet = {
@@ -1290,6 +1293,14 @@ Nodes with a `priority` field also get a small triangle badge painted by `drawOv
 
 `priority` is absent when normal. It is stored on the graph node entry. If set on an as-yet-unmapped section (no choices recorded), `state.graph[id]` is auto-created with `{ choices: [] }` so the priority can be stored. The same stub-creation applies when saving a note on an unmapped section.
 
+**Grid overlay and snap-to-grid** (`state.showGrid`/`state.fogOfGrid`/`state.snapToGrid`, toggled from the background right-click menu's **Grid** submenu, see `#bg-ctx-menu` in `index.html` and `bg.js`): the grid is drawn by `drawGrid` in `graph.js`, registered on vis-network's `beforeDrawing` event (not `afterDrawing`, unlike the note/priority/battle overlays) so the lines sit *under* nodes and edges instead of on top. `beforeDrawing` fires in the same already-transformed canvas context as `afterDrawing` (pan/zoom translate+scale applied before either fires), so grid lines are drawn in graph/world coordinates via `network.DOMtoCanvas()` on the container's screen corners, and pan/zoom with the map like everything else. Spacing is a fixed constant (`GRID_SIZE` in `graph.js`), not user-configurable.
+
+`showGrid` and `fogOfGrid` are mutually exclusive (enforced in `boot.js`'s click handlers - setting one clears the other before `saveState()`), never both true at once. When `fogOfGrid` is on, `drawGrid` first builds a clip region out of a circle (radius `FOG_RADIUS`, also fixed) around every node's current position, via `ctx.clip()`, before drawing the same full-canvas grid line set - so the lines only render where they fall inside a node's halo. `showGrid` skips the clip step and draws across the whole visible canvas.
+
+Fog positions are cached the same way as the note/priority/battle overlay positions just above (`_fogPositions`/`_fogPosDirty`/`_fogDraggingActive` in `graph.js`) - `beforeDrawing` fires on every animation frame during any pan/zoom/drag, so recomputing every node's position and rebuilding the multi-circle clip path from scratch each frame would be wasted work once the map has more than a handful of nodes. Positions only get refetched when something actually moved: right after a drag ends, or continuously while a drag is in progress.
+
+Snapping happens once, in the `dragEnd` handler in `initGraph()`, rounding only the just-dropped node's `x`/`y` to the nearest grid multiple before it's written to `state.positions` - turning `snapToGrid` on never touches any node that isn't actively being dragged. `snapToGrid` is independent of the other two - it can be combined with either, or neither.
+
 Nodes with `battle: true` get a small orange **✕** badge painted by `drawOverlays` at the bottom-right of the node. The badge is always visible regardless of what colour the node border is (structural death/victory outlines take precedence over the `battleOutline` colour, but the canvas overlay still renders). `battle` is toggled via "Toggle battle ⚔" in the node context menu; the flag is preserved across choice-edit operations in `handleRecordChoices`. It is also set automatically when the user ends a run via the **Battle Death ⚔** button - the button handler checks `state.graph[sec]?.battle` and sets it to `true` before calling `endPlaythrough('battle')` if it was absent.
 
 **Pinned note labels:** if a node has both `note` and `showNote: true` in `state.graph`, `drawOverlays` renders a semi-transparent rounded text box adjacent to the node showing up to 4 lines of the note text (28 characters per line, truncated with `…`). The box is positioned to the right of the node, tracks pan and zoom, and moves with the node. `showNote` is toggled from the **Show next to node** toggle inside the note modal (`#note-modal`); the state is saved to `state.graph[id].showNote` and persisted server-side.
@@ -1508,6 +1519,8 @@ Two CSS custom properties in `:root` coordinate the layout:
 **Sidebar book cover** (`#sidebar-book-info`): shown only at `min-width: 1921px` and only when `_bgHidden === true`. 2:3 aspect ratio, full-width. Updated by `_updateSidebarBookInfo()` - called from `_applyBgPref()` and from the book-open flow after `render()`. `img.src = ''` triggers the `[src=""]` CSS rule to hide it.
 
 **Main page background:** `#landing-bg-a` and `#landing-bg-b` are two `position: fixed; z-index: -1` divs outside `#landing-wrapper`. `_rotateLandingCover()` picks from a shuffled queue of the user's books with covers and crossfades between layers (fade next layer in over 1.5s, then fade old layer out). See "Landing background rotation" under Covers panel below for the full timer/trigger design.
+
+A third div, `#landing-bg-dim` (same `position: fixed; z-index: -1`, painted after `landing-bg-a`/`-b` in DOM order so it sits on top of whichever is currently visible), is a flat `rgba(15,23,42,0.92)` layer that darkens the cover for legibility behind the three landing panels. It's a separate layer rather than baked into `_rotateLandingCover()`'s `backgroundImage` (which was the old approach) specifically so it can fade independently of cover rotation: `_updateLandingBgDragUi()` in `covers.js` fades it to `opacity: 0` once `_canDragLandingBg()` is true (all three panels collapsed - the same check that already drives the background-drag affordance), and back to `1` the moment any panel is restored. Every code path that changes a landing panel's collapse state already calls `_updateLandingBgDragUi()` (via `_setLandingPanelCollapsed()` in `prefs.js`), so this needed no new call sites - including the Ctrl+X "collapse/restore all three" shortcut, since it just calls `_setLandingPanelCollapsed()` three times.
 
 ---
 

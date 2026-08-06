@@ -10,7 +10,20 @@
 // server.js that wire them up, and the "Watch" button in
 // admin/js/users-books.js's renderUserBooksTable().
 
-const POLL_MS = 3000;
+const POLL_MS = 1000;
+
+// Pinned-note text box measurements - mirrors graph.js's _NOTE_* constants exactly.
+const NOTE_FONT    = '10px Segoe UI, system-ui, sans-serif';
+const NOTE_PAD_X   = 5;
+const NOTE_PAD_Y   = 3;
+const NOTE_LINE_H  = 12;
+const NOTE_FONT_PX = 10;
+const measureCtx   = document.createElement('canvas').getContext('2d');
+
+// Mirrors graph.js's GRID_SIZE/FOG_RADIUS exactly - fixed constants, not
+// user-configurable there either, so no per-book value to read from state.
+const GRID_SIZE  = 40;
+const FOG_RADIUS = 125;
 
 // Mirrors graph.js's CONNECTOR_STYLES/_smoothOption - the watched user's own
 // state.connectorStyle, not a fixed style, so the canvas actually looks like
@@ -57,6 +70,13 @@ let lastConnectorStyle = null;
 let lastPositions = new Map(); // secId -> "x,y" of the position last actually applied
 let currentBookId = null; // which book's graph is actually on screen right now
 let overlayNodes = []; // rebuilt each render(), drawn each frame - see drawOverlays()
+let lastFocusedSec = null; // last section the camera was actually moved to
+
+// The watched player's own grid settings, not an admin-side control - the
+// point of this viewer is to show the canvas exactly as they see it, same
+// as connectorStyle above. Set at the top of render(), read by drawGrid()
+// on every 'beforeDrawing' frame.
+let gridState = { showGrid: false, fogOfGrid: false };
 
 function isTerm(v) { return v === -1 || v === 0 || v === '-1' || v === '0'; }
 
@@ -134,7 +154,55 @@ function ensureNetwork() {
       interaction: { hover: true, zoomView: true, dragView: true, dragNodes: false, selectable: false },
     }
   );
+  network.on('beforeDrawing', ctx => drawGrid(ctx));
   network.on('afterDrawing', ctx => drawOverlays(ctx));
+}
+
+// Mirrors graph.js's drawGrid() - same beforeDrawing hook (under nodes/edges),
+// same world-coordinate math via DOMtoCanvas(). No position-drag caching here
+// like graph.js has, since dragNodes is disabled in this read-only viewer -
+// there's never a mid-drag frame to worry about, only the player's own drags,
+// which land in state.positions and get picked up on the next poll like any
+// other position change.
+function drawGrid(ctx) {
+  if (!network || (!gridState.showGrid && !gridState.fogOfGrid)) return;
+  const container = document.getElementById('graph-container');
+  if (!container) return;
+  const topLeft     = network.DOMtoCanvas({ x: 0, y: 0 });
+  const bottomRight = network.DOMtoCanvas({ x: container.clientWidth, y: container.clientHeight });
+
+  ctx.save();
+  ctx.strokeStyle = 'rgba(148, 163, 184, 0.15)';
+  ctx.lineWidth   = 1 / network.getScale();
+
+  if (gridState.fogOfGrid) {
+    if (!visNodes) { ctx.restore(); return; }
+    const ids = visNodes.getIds();
+    if (!ids.length) { ctx.restore(); return; }
+    const positions = network.getPositions(ids);
+    ctx.beginPath();
+    for (const id of ids) {
+      const p = positions[id];
+      if (!p) continue;
+      ctx.moveTo(p.x + FOG_RADIUS, p.y);
+      ctx.arc(p.x, p.y, FOG_RADIUS, 0, Math.PI * 2);
+    }
+    ctx.clip();
+  }
+
+  const startX = Math.floor(topLeft.x / GRID_SIZE) * GRID_SIZE;
+  const startY = Math.floor(topLeft.y / GRID_SIZE) * GRID_SIZE;
+  ctx.beginPath();
+  for (let x = startX; x <= bottomRight.x; x += GRID_SIZE) {
+    ctx.moveTo(x, topLeft.y);
+    ctx.lineTo(x, bottomRight.y);
+  }
+  for (let y = startY; y <= bottomRight.y; y += GRID_SIZE) {
+    ctx.moveTo(topLeft.x, y);
+    ctx.lineTo(bottomRight.x, y);
+  }
+  ctx.stroke();
+  ctx.restore();
 }
 
 // Small icon overlays (priority triangle / battle cross / note book-icon) -
@@ -181,12 +249,38 @@ function drawOverlays(ctx) {
       ctx.rect(bx, by, bw, bh);
       ctx.fill();
       ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,255,255,0.75)';
+      ctx.lineWidth = 0.8;
+      ctx.beginPath();
+      ctx.moveTo(bx + 2, by + 1);
+      ctx.lineTo(bx + 2, by + bh - 1);
+      ctx.stroke();
+    }
+    // Pinned note (showNote:true) - a readable text box, not just the icon
+    // above. This is what section 45-style test notes actually look like on
+    // the real play area; the tiny icon alone is easy to miss entirely.
+    if (node.noteLayout) {
+      const { lines, boxW, boxH } = node.noteLayout;
+      const bx = p.x + 18, by = p.y - boxH / 2;
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.82)';
+      ctx.beginPath();
+      ctx.roundRect(bx, by, boxW, boxH, 3);
+      ctx.fill();
+      ctx.strokeStyle = '#374151';
+      ctx.lineWidth = 0.6;
+      ctx.stroke();
+      ctx.font = NOTE_FONT;
+      ctx.textBaseline = 'top';
+      ctx.fillStyle = '#d1d5db';
+      for (let i = 0; i < lines.length; i++) ctx.fillText(lines[i], bx + NOTE_PAD_X, by + NOTE_PAD_Y + i * NOTE_LINE_H);
     }
   }
 }
 
 function render(state, isOpenWorld) {
   ensureNetwork();
+  gridState.showGrid  = !!state.showGrid;
+  gridState.fogOfGrid = !!state.fogOfGrid;
   if (state.connectorStyle !== lastConnectorStyle) {
     lastConnectorStyle = state.connectorStyle;
     network.setOptions({ edges: { smooth: smoothOption(state.connectorStyle) } });
@@ -240,7 +334,17 @@ function render(state, isOpenWorld) {
       }
     }
     nodeUpdates.push(update);
-    if (data.priority || data.battle || data.note) overlayNodes.push({ sec: secId, priority: data.priority, battle: data.battle, note: data.note });
+    if (data.priority || data.battle || data.note) {
+      let noteLayout = null;
+      if (data.showNote && data.note) {
+        measureCtx.font = NOTE_FONT;
+        const lines = data.note.split('\n');
+        const boxW  = Math.max(...lines.map(l => measureCtx.measureText(l).width)) + NOTE_PAD_X * 2;
+        const boxH  = NOTE_PAD_Y * 2 + (lines.length - 1) * NOTE_LINE_H + NOTE_FONT_PX;
+        noteLayout  = { lines, boxW, boxH };
+      }
+      overlayNodes.push({ sec: secId, priority: data.priority, battle: data.battle, note: data.note, noteLayout });
+    }
     for (const dest of (data.choices || [])) {
       if (isTerm(dest)) continue;
       const edgeId = `${secId}->${dest}`;
@@ -253,10 +357,99 @@ function render(state, isOpenWorld) {
   visNodes.getIds().forEach(id => { if (!seenNodeIds.has(id)) { visNodes.remove(id); lastPositions.delete(id); } });
   visEdges.getIds().forEach(id => { if (!seenEdgeIds.has(id)) visEdges.remove(id); });
 
+  // Only actually move the camera when the player's position genuinely
+  // changed - render() runs on every poll where anything at all in state
+  // changed (charsheet edits, inventory, etc, not just movement), so
+  // re-focusing unconditionally here fought any attempt to pan away and
+  // look at another part of the graph, snapping straight back within a
+  // second or two even though nothing about the player's position moved.
   const currentSec = activePt?.path?.length ? activePt.path[activePt.path.length - 1] : null;
-  if (currentSec != null && visNodes.get(currentSec)) {
+  if (currentSec != null && currentSec !== lastFocusedSec && visNodes.get(currentSec)) {
+    lastFocusedSec = currentSec;
     network.focus(currentSec, { animation: { duration: 400, easingFunction: 'easeInOutQuad' }, scale: Math.max(network.getScale(), 1.2) });
   }
+}
+
+// ── On-field HUD: character sheet + inventory, exactly like #stats-hud ──────
+// The real play area never shows a full dump of everything the player is
+// carrying - only whatever they've explicitly marked "show on screen" via
+// charsheet.js's per-field `visible` flag, inventory.js's per-slot `visible`
+// flag, and equipment.js's equipmentVisible[slot] flag. This mirrors that
+// exactly (same filters, same #charsheet-display/#inv-display text format
+// and positioning as charsheet.css/inventory.js), rendered directly over the
+// canvas instead of in a separate panel with everything unconditionally shown.
+
+function escapeHtml(str) {
+  return String(str ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+const SLOT_LABELS = {
+  head: 'Head', neck: 'Neck', chest: 'Chest', belt: 'Belt', legs: 'Legs', feet: 'Feet',
+  cloak: 'Cloak', ring1: 'Ring 1', ring2: 'Ring 2', ring3: 'Ring 3', ring4: 'Ring 4',
+  primary: 'Weapon', secondary: 'Off-hand', hands: 'Hands', back: 'Back',
+  item1: 'Item 1', item2: 'Item 2', item3: 'Item 3', item4: 'Item 4', item5: 'Item 5',
+};
+function eqItemId(entry) { return (entry && typeof entry === 'object') ? entry.itemId : entry; }
+function eqMeta(entry) { return (entry && typeof entry === 'object') ? { label: entry.label || '', note: entry.note || '' } : { label: '', note: '' }; }
+function eqQty(entry) { return (entry && typeof entry === 'object') ? (entry.qty || 1) : 1; }
+
+function fmtCsValue(f) {
+  if (f.type === 'boolean') return f.value ? '✓' : '✗';
+  if (f.type === 'list')    return Array.isArray(f.value) && f.value.length ? f.value.join(', ') : '-';
+  if (f.type === 'number')  return Number.isFinite(Number(f.value)) ? Number(f.value).toLocaleString() : String(f.value ?? 0);
+  return (f.value !== undefined && f.value !== '' && f.value !== null) ? String(f.value) : '-';
+}
+
+function invLineHtml(name, qty, note, slotLabel, kind, iconSvg) {
+  const noteHtml  = note?.trim() ? ` <span class="inv-line-note">${escapeHtml(note.trim())}</span>` : '';
+  const qtyHtml   = qty > 1 ? ` <span class="inv-line-qty">×${qty}</span>` : '';
+  const slotHtml  = slotLabel ? ` <span class="inv-line-slot">${escapeHtml(slotLabel)}</span>` : '';
+  // item.svg_data is trusted admin-managed content (same items table the real
+  // inventory.js injects unescaped via innerHTML), not user input - safe to
+  // inject directly, same as the real app does.
+  const iconHtml = iconSvg ? `<span class="inv-line-icon">${iconSvg}</span>` : '';
+  // Badge always last (rightmost, since .inv-line is justify-content:flex-end) -
+  // a note would otherwise become the last DOM child whenever one exists,
+  // bumping the badge out of its usual rightmost spot.
+  return `<span class="inv-line inv-line--${kind}">${iconHtml}<span class="inv-line-name">${escapeHtml(name)}</span>${qtyHtml}${noteHtml}${slotHtml}</span>`;
+}
+
+function renderHud(items, activePt) {
+  const itemsById = new Map((items || []).map(it => [it.id, it]));
+
+  const csEl = document.getElementById('watch-cs-display');
+  const csFields = (activePt?.charSheet?.fields || []).filter(f => f.visible && f.name?.trim());
+  csEl.innerHTML = csFields.map(f =>
+    `<span class="cs-line"><span class="cs-label">${escapeHtml(f.name)}:</span> ${escapeHtml(fmtCsValue(f))}</span>`
+  ).join('');
+
+  const invEl = document.getElementById('watch-inv-display');
+  // Only inventory slots explicitly marked "show on screen" - not merely
+  // "carried". Matches inventory.js's own _inv().filter(s => s.visible).
+  const invLines = (activePt?.inventory || [])
+    .filter(s => s.itemId && s.visible)
+    .map(s => invLineHtml(s.label?.trim() || itemsById.get(s.itemId)?.name || `Item #${s.itemId}`, s.qty ?? 1, s.note, 'Item', 'item', itemsById.get(s.itemId)?.svg_data));
+  // Same for equipped slots - only ones equipmentVisible[slot] marks visible.
+  // Matches equipment.js's getVisibleEquippedItems().
+  const eqVis = activePt?.equipmentVisible || {};
+  const eqLines = Object.entries(activePt?.equipment || {})
+    .map(([key, entry]) => ({ key, itemId: eqItemId(entry), meta: eqMeta(entry), qty: eqQty(entry) }))
+    .filter(e => e.itemId && eqVis[e.key])
+    .map(e => invLineHtml(e.meta.label?.trim() || itemsById.get(e.itemId)?.name || `Item #${e.itemId}`, e.qty, e.meta.note, SLOT_LABELS[e.key] ?? e.key, 'equipped', itemsById.get(e.itemId)?.svg_data));
+  invEl.innerHTML = [...invLines, ...eqLines].join('');
+}
+
+// Notebook is book-level (state.notesPinned + a separate user_books.notebook
+// column), not tied to any one playthrough - shown whenever the player has
+// it pinned, same as notes.js's own #notes-display would, regardless of
+// whether the currently active run has anything else going on.
+function renderNotes(state, notebook) {
+  const el = document.getElementById('watch-notes');
+  // Matches notes.js's setNotesPinned() exactly - visible purely on the
+  // pinned flag, not on whether there's text yet (an empty pinned box is
+  // what the player themselves would see too).
+  el.classList.toggle('visible', !!state.notesPinned);
+  el.textContent = notebook || '';
 }
 
 // The player can portal to a different book mid-run in an open-world series -
@@ -271,6 +464,7 @@ function resetForNewBook() {
   lastConnectorStyle = null;
   lastPositions = new Map();
   overlayNodes = [];
+  lastFocusedSec = null;
 }
 
 async function poll() {
@@ -286,7 +480,17 @@ async function poll() {
       resetForNewBook();
     }
     const json = JSON.stringify(data.state);
-    if (json !== lastStateJson) { lastStateJson = json; render(data.state, !!data.isOpenWorld); }
+    if (json !== lastStateJson) {
+      lastStateJson = json;
+      render(data.state, !!data.isOpenWorld);
+      const activePt = data.state.activePtIndex != null ? data.state.playthroughs?.[data.state.activePtIndex] : null;
+      renderHud(data.items, activePt);
+    }
+    // Not gated on the state-changed check above - notebook text lives in its
+    // own DB column, not state_data, so editing it wouldn't be caught by that
+    // comparison at all. Cheap enough (one textContent/class toggle) to just
+    // apply every poll regardless.
+    renderNotes(data.state, data.notebook);
     statusEl.textContent = `updated ${new Date().toLocaleTimeString()}`;
     statusEl.classList.remove('stale');
   } catch (e) {

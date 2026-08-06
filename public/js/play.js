@@ -5,12 +5,12 @@ import {
   currentPlaythrough, currentSection, allDiscoveredSections, mappedCount,
   currentUserLevel, bonusUndos, bonusFastTravels, apiFetch,
 } from './state.js?v=13';
-import { network, visNodes, syncGraph, inevitableOutcome } from './graph.js?v=84';
-import { t } from './i18n.js?v=36';
-import { renderCharSheetDisplay } from './charsheet.js?v=62';
+import { network, visNodes, syncGraph, inevitableOutcome } from './graph.js?v=89';
+import { t } from './i18n.js?v=38';
+import { renderCharSheetDisplay } from './charsheet.js?v=64';
 import { naturalCompare } from './sort.js?v=1';
-import { instantiateLoadout } from './equipment.js?v=126';
-import { escapeHtml } from './util.js?v=45';
+import { instantiateLoadout } from './equipment.js?v=132';
+import { escapeHtml } from './util.js?v=47';
 
 // ── Discoverable sections cap ────────────────────────────────────���───────────
 let _discoverableLimit = null;
@@ -902,7 +902,19 @@ function _cleanupOrphanedTargets(sec, oldChoices, newChoices) {
   }
 }
 
-export function handleRecordChoices(sec, raw) {
+// allowEmpty: an explicitly empty box commits choices:[] ("no more choices
+// here", a genuine dead end) instead of silently doing nothing - that no-op
+// meant openEditModal's "clear everything and save" had no way to ever
+// actually remove the last choice(s) from an already-mapped node. Only
+// openEditModal opts into this; the first-time "Record & Choose" flow keeps
+// the old no-op behavior, since an empty submit there is far more likely to
+// be an accidental click/Enter before typing anything than a deliberate
+// "this section has no choices" - see call sites.
+export function handleRecordChoices(sec, raw, allowEmpty = false) {
+  if (raw === '') {
+    if (allowEmpty) _commitChoices(sec, []);
+    return;
+  }
   if (!raw) return;
   const parsed = raw
     .split(/[.,;\s]+/)
@@ -1189,7 +1201,7 @@ export function openEditModal(nodeId) {
   newInp.select();
 
   newSave.addEventListener('click', () => {
-    handleRecordChoices(nodeId, document.getElementById('edit-choices-input').value.trim());
+    handleRecordChoices(nodeId, document.getElementById('edit-choices-input').value.trim(), true);
     closeEditModal();
   });
   newCancel.addEventListener('click', closeEditModal);

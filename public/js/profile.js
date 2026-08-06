@@ -5,9 +5,9 @@
 // from boot.js, and delete public/css/profile.css and its <link> in index.html.
 
 import { apiFetch, setUsername, isDemoMode, getToken, setCurrentUserLevel, getUsername } from './state.js?v=13';
-import { t } from './i18n.js?v=36';
-import { updateCoinsDisplay } from './shop.js?v=52';
-import { escapeHtml, compressToBlob } from './util.js?v=45';
+import { t } from './i18n.js?v=38';
+import { updateCoinsDisplay } from './shop.js?v=54';
+import { escapeHtml, compressToBlob } from './util.js?v=47';
 
 let _hooks = {};
 export function setProfileHooks(h) { _hooks = h || {}; }

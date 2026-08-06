@@ -581,6 +581,10 @@ const translations = {
 
     'bg.show_background': 'Show background',
     'bg.hide_background': 'Hide background',
+    'bg.grid': 'Grid ▸',
+    'bg.show_grid': 'Show grid',
+    'bg.snap_to_grid': 'Snap to grid',
+    'bg.fog_of_grid': 'Fog of grid',
 
     'books.delete_series': 'Delete series',
     'books.remove_from_library': 'Remove from library',
