@@ -3,10 +3,10 @@
 // Visual only - no stat effects. Admin-only feature for now. Read-only when
 // there's no active playthrough.
 
-import { state, currentPlaythrough, saveState, apiFetch, viewingPt } from './state.js?v=12';
-import { getInventorySlots, addItemToInventory, removeAllFromInventoryAt, refreshInventoryUI, renderInventoryDisplay } from './inventory.js?v=138';
-import { getPlayBtnRow } from './charsheet.js?v=61';
-import { escapeHtml, shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from './util.js?v=44';
+import { state, currentPlaythrough, saveState, apiFetch, viewingPt } from './state.js?v=13';
+import { getInventorySlots, addItemToInventory, removeAllFromInventoryAt, refreshInventoryUI, renderInventoryDisplay } from './inventory.js?v=139';
+import { getPlayBtnRow } from './charsheet.js?v=62';
+import { escapeHtml, shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from './util.js?v=45';
 import { t } from './i18n.js?v=36';
 
 // x/y are percentages, positioned over the dummy silhouette (eq-body box, 380x600px).

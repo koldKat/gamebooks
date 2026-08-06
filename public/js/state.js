@@ -277,8 +277,16 @@ export async function loadState(bookId) {
         pt.completed = true;
         pt.result    = last === 0 ? 'success' : 'death';
       }
+      // Only for a run actually going through this migration (had a terminal
+      // sentinel as its only path entry) - was unconditional on ANY empty path,
+      // which ran on every single load of every book and stamped path: [1] onto
+      // every never-played open-world series-run placeholder (startedAt: null)
+      // the instant that book was merely opened, regardless of whether anyone
+      // touched it. That single line was the real root cause behind every
+      // "phantom placeholder looks touched" bug found this session - not the
+      // other, narrower ones already patched.
+      if (!pt.path.length) pt.path = [1];
     }
-    if (!pt.path.length) pt.path = [1];
   });
 
   // Remove terminal sections from graph keys (old data may have stored them)

@@ -1,9 +1,9 @@
 // covers.js - Covers panel, lazy grid, landing bg rotation, cover/series activity modals
-import { getToken, isDemoMode, apiFetch } from './state.js?v=12';
-import { openPublicModal, closePublicModal, openPublicProfile, renderPublicProfile, openPublicRun, openPublicSeriesRun, _destroyPubNetworks } from './public-profile.js?v=67';
-import { refreshCoinsDisplay } from './shop.js?v=51';
+import { getToken, isDemoMode, apiFetch } from './state.js?v=13';
+import { openPublicModal, closePublicModal, openPublicProfile, renderPublicProfile, openPublicRun, openPublicSeriesRun, _destroyPubNetworks } from './public-profile.js?v=68';
+import { refreshCoinsDisplay } from './shop.js?v=52';
 import { foldForSearch, matchesSearch, naturalCompare, naturalCompareByName } from './sort.js?v=1';
-import { escapeHtml, fetchPublic as publicFetch, BATTLE_SIM_BOOK_IDS } from './util.js?v=44';
+import { escapeHtml, fetchPublic as publicFetch, BATTLE_SIM_BOOK_IDS } from './util.js?v=45';
 import { t } from './i18n.js?v=36';
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────

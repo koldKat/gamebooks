@@ -157,14 +157,16 @@ function getFeed() {
     if (wantEnd) {
       return books.find(b => {
         const pt = b.playthroughs[runIndex];
-        // path.length > 0 is required, not just completed+result: _syncSeriesRuns
-        // (client) copies the series-level completed/result onto EVERY book's own
-        // placeholder for this run index once it ends anywhere, even a book the
-        // run never actually visited (startedAt null, path empty) - without this
-        // check, whichever book happens to sort first (by id) wins regardless of
-        // where the run actually took place, silently misattributing "began/won/
-        // lost series run N" to the wrong book.
-        return pt && pt.completed && pt.result && pt.result !== 'portal' && pt.path?.length > 0;
+        // startedAt is required, not just completed+result: _syncSeriesRuns (client)
+        // copies the series-level completed/result onto EVERY book's own placeholder
+        // for this run index once it ends anywhere, even a book the run never
+        // actually visited (startedAt null) - without this check, whichever book
+        // happens to sort first (by id) wins regardless of where the run actually
+        // took place, silently misattributing "began/won/lost series run N" to the
+        // wrong book. Not path.length - a since-fixed open-world.js bug could inject
+        // a single path entry into an untouched placeholder without ever setting
+        // startedAt, which defeated a path.length-only guard.
+        return pt && pt.completed && pt.result && pt.result !== 'portal' && pt.startedAt;
       }) || null;
     }
     let best = null, bestTs = Infinity;

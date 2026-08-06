@@ -720,10 +720,11 @@ function processStateXp(userId, bookId, oldState, newState, totalSections) {
     // (open-world.js's _syncSeriesRuns pads every book in a series with one slot per
     // series run so numbers stay aligned) still gets its charSheet/result mirrored
     // onto it for display, but must never earn this book's per-run XP - skip it
-    // entirely. Matches _syncSeriesRuns' own touchedHere check; "startedAt" alone
-    // (not path.length) covers a brand-new real run that hasn't made its first
-    // choice yet, which must still get its day-one charsheet-edit XP.
-    if (newPt && !(newPt.path?.length > 0 || newPt.startedAt)) continue;
+    // entirely. Matches _syncSeriesRuns' own touchedHere check - startedAt alone,
+    // not path.length: a since-fixed open-world.js bug could inject a single path
+    // entry into an untouched placeholder without ever setting startedAt, which
+    // defeated a path.length-based guard.
+    if (newPt && !newPt.startedAt) continue;
     const runKey = newPt?.startedAt ?? i;
     const ref    = owSeriesId ? `series:${owSeriesId}:${runKey}` : `${bookId}:${runKey}`;
 
@@ -815,7 +816,7 @@ function processStateXp(userId, bookId, oldState, newState, totalSections) {
     // above) - a leaked completed:true on one would otherwise re-earn XP on every
     // single save of this book forever, since this net has no "just transitioned"
     // requirement at all.
-    const _touched = pt => pt?.path?.length > 0 || pt?.startedAt;
+    const _touched = pt => !!pt?.startedAt;
     const completedCount = newPts.filter(pt => pt?.completed && _touched(pt)).length;
     if (completedCount > 0) {
       const refPrefix = owSeriesId ? `series:${owSeriesId}:` : `${bookId}:`;
