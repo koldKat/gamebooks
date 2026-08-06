@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Watch (admin prototype)</title>
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; background: #111827; color: #d1d5db; font-family: 'Segoe UI', system-ui, sans-serif; overflow: hidden; }
+  #watch-header {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 10;
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 0.5rem 0.9rem; background: rgba(17,24,39,0.9); border-bottom: 1px solid #374151;
+    font-size: 0.85rem;
+  }
+  #watch-title { font-weight: 700; color: #f5a623; }
+  #watch-sub { color: #9ca3af; }
+  #watch-status { margin-left: auto; color: #6b7280; font-size: 0.78rem; }
+  #watch-status.stale { color: #f87171; }
+  #graph-container { position: fixed; top: 40px; left: 0; right: 0; bottom: 0; }
+</style>
+</head>
+<body>
+  <div id="watch-header">
+    <span id="watch-title">Watching…</span>
+    <span id="watch-sub"></span>
+    <span id="watch-status">connecting…</span>
+  </div>
+  <div id="graph-container"></div>
+  <script src="/vendor/vis-network/vis-network.min.js?v=1"></script>
+  <script type="module" src="/admin/js/watch.js?v=7"></script>
+</body>
+</html>

@@ -204,6 +204,7 @@ const {
 } = require('./server/routes/admin');
 
 const { handleGetSiteStats, handleGetNotifications, handleMarkNotificationsSeen } = require('./server/routes/notifications');
+const { handleWatchState } = require('./server/routes/watch');
 const {
   handleSubmitFeedback, handleGetAppXpSummary, handleGetMyFeedback, handleUserReply, handleMarkThreadRead,
   handleAdminGetFeedback, handleAdminReply, handleAdminMarkRead, handleDeleteFeedback, handleAdminDeleteFeedback,
@@ -248,6 +249,7 @@ const bookEnemiesRe   = /^\/api\/books\/(\d+)\/enemies$/;
 const bookCoverRe       = /^\/api\/books\/(\d+)\/cover$/;
 const bookCoverDeleteRe = /^\/api\/books\/(\d+)\/cover\/delete$/;
 const bookPdfRe         = /^\/api\/books\/(\d+)\/pdf$/;
+const adminWatchStateRe   = /^\/api\/admin\/watch\/(\d+)\/(\d+)$/;
 const adminUserIdRe       = /^\/api\/admin\/users\/(\d+)$/;
 const adminUserSessRe        = /^\/api\/admin\/users\/(\d+)\/clear-sessions$/;
 const adminUserImpersonateRe = /^\/api\/admin\/users\/(\d+)\/impersonate$/;
@@ -455,6 +457,7 @@ const _routeRequest = async (req, res) => {
       return serveAdminPanel(req, res);
     if (method === 'GET' && urlPath === '/admin/guide')     return serveAdminFile(req, res, 'admin-guide.html');
     if (method === 'GET' && urlPath === '/admin/technical') return serveAdminFile(req, res, 'technical.html');
+    if (method === 'GET' && urlPath === '/admin/watch')     return serveAdminFile(req, res, 'watch.html');
     // Admin panel's own ES modules (admin/js/*.js) - filename restricted to a safe
     // charset (no '..', no path separators beyond the fixed 'js/' prefix) since it
     // flows straight into a filesystem read.
@@ -464,6 +467,7 @@ const _routeRequest = async (req, res) => {
     if (method === 'GET'  && urlPath === '/api/admin/users')  return await handleAdminGetUsers(req, res);
     if (method === 'GET'  && urlPath === '/api/admin/books')  return await handleAdminGetBooks(req, res);
     if (method === 'GET'  && urlPath === '/api/admin/series') return await handleGetSeries(req, res);
+    if ((m = urlPath.match(adminWatchStateRe)) && method === 'GET') return await handleWatchState(req, res, +m[1], +m[2]);
     if ((m = urlPath.match(adminUserSessRe))        && method === 'POST') return await handleAdminClearSessions(req, res, +m[1]);
     if ((m = urlPath.match(adminUserLockRe))        && method === 'POST') return await handleAdminLockUser(req, res, +m[1]);
     if ((m = urlPath.match(adminUserUnlockRe))      && method === 'POST') return await handleAdminUnlockUser(req, res, +m[1]);

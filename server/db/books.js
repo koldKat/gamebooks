@@ -696,6 +696,25 @@ function getBookState(userId, bookId) {
   return s;
 }
 
+// Which book in an open-world series a user is currently actually playing in
+// right now - only one book's own state_data.activePtIndex is ever non-null
+// at a time (the app enforces a single active location per series), so that's
+// the source of truth for "which book do they need to be watched in", not
+// whichever book someone happened to open the watch view from.
+function getActiveBookInSeries(userId, seriesId) {
+  const rows = db.prepare(
+    `SELECT ub.book_id, ub.state_data FROM user_books ub
+     JOIN books b ON b.id = ub.book_id
+     WHERE ub.user_id = ? AND b.series_id = ?`
+  ).all(userId, seriesId);
+  for (const row of rows) {
+    let s;
+    try { s = JSON.parse(row.state_data); } catch { continue; }
+    if (s.activePtIndex != null) return row.book_id;
+  }
+  return null;
+}
+
 function getBookById(bookId) {
   const book = db.prepare(`
     SELECT id, name, is_public, is_container, parent_book_id, cover_path, pdf_path
@@ -1092,7 +1111,7 @@ module.exports = {
   patchSeriesRunDeletion, resetSeriesForUser, updateSeriesRun, deleteSeries, deleteSeriesRow,
   countSeriesOtherUsers, countBooksInSeries, getNextSeriesUser, transferSeriesOwnership,
   removeSeriesEntryOnly, removeSeriesFromLibrary, createSeries, getPublicSeriesInfo,
-  normalizeAuthors, createBook, getBookState, getBookById, saveBookState, resetBookProgress,
+  normalizeAuthors, createBook, getBookState, getActiveBookInSeries, getBookById, saveBookState, resetBookProgress,
   updateBook, getNotebook, setNotebook, deleteBook, addBookToLibrary,
   _getUserBookId, _getAggregateRating, _getAuthorRatings, canUserRateBook, canUserRateSeries,
   getBookRating, setBookRating, _getAggregateSeriesRating, getSeriesRating, setSeriesRating,

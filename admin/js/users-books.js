@@ -434,6 +434,8 @@ export function renderUserBooksTable(data, userId) {
     appendCell(tr, fmtDate(b.updated_at), 'muted');
     const actCell = tr.insertCell();
     actCell.style.cssText = 'white-space:nowrap';
+    actCell.appendChild(mkBtn('Watch', 'btn-info', () => window.open(`/admin/watch?userId=${userId}&bookId=${b.id}`, '_blank')));
+    actCell.appendChild(document.createTextNode('\u00a0'));
     actCell.appendChild(mkBtn('Gift', 'btn-info', () => showGiftModal(b.id, b.name, userId)));
     actCell.appendChild(document.createTextNode('\u00a0'));
     actCell.appendChild(mkBtn('Delete', 'btn-danger', () => confirmDeleteBook(b.id, b.name, userId)));
