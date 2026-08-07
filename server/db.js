@@ -199,11 +199,30 @@ try { db.exec(`ALTER TABLE books ADD COLUMN series_number  TEXT    DEFAULT NULL`
 try { db.exec(`ALTER TABLE books ADD COLUMN is_container   INTEGER NOT NULL DEFAULT 0`); } catch (_) {}
 try { db.exec(`ALTER TABLE books ADD COLUMN parent_book_id INTEGER REFERENCES books(id) ON DELETE SET NULL`); } catch (_) {}
 try { db.exec(`ALTER TABLE books ADD COLUMN book_order     INTEGER DEFAULT NULL`); } catch (_) {}
+try { db.exec(`ALTER TABLE books ADD COLUMN has_battle_sim INTEGER NOT NULL DEFAULT 0`); } catch (_) {}
 db.exec(`CREATE INDEX IF NOT EXISTS idx_books_series_id ON books(series_id)`);
 db.exec(`CREATE INDEX IF NOT EXISTS idx_books_parent_book_id ON books(parent_book_id)`);
 try { db.exec(`ALTER TABLE series ADD COLUMN is_public     INTEGER NOT NULL DEFAULT 0`); } catch (_) {}
 try { db.exec(`ALTER TABLE series ADD COLUMN published_at  INTEGER DEFAULT NULL`); } catch (_) {}
 try { db.exec(`ALTER TABLE series ADD COLUMN is_open_world INTEGER NOT NULL DEFAULT 0`); } catch (_) {}
+
+// One-time migration: backfill has_battle_sim for the books whose sim module
+// existed before this column did (was previously just a hardcoded ID list
+// duplicated in public/js/util.js's BATTLE_SIM_BOOK_IDS and boot.js's
+// per-book setSimNVisible() calls - both still needed for now since each
+// sim is its own bespoke module boot.js dispatches to by ID, but this
+// column is now the single source of truth for "does this book have one"
+// used by the covers-wall badge/filter, instead of a second list that had
+// to be kept in sync by hand).
+{
+  const done = db.prepare(`SELECT value FROM admin_settings WHERE key = 'has_battle_sim_migrated'`).get();
+  if (!done) {
+    const ids = [829, 8, 286, 198, 199, 200, 186, 201, 202];
+    const setFlag = db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = ?');
+    db.transaction(() => { for (const id of ids) setFlag.run(id); })();
+    db.prepare(`INSERT OR REPLACE INTO admin_settings (key, value) VALUES ('has_battle_sim_migrated', '1')`).run();
+  }
+}
 
 db.exec(`CREATE TABLE IF NOT EXISTS series_characters (
   id         INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -595,6 +614,7 @@ const {
   createAnnouncement, updateAnnouncement, publishAnnouncement, unpublishAnnouncement,
   deleteAnnouncement, getAnnouncements, getPinnedAnnouncement, pinAnnouncement, unpinAnnouncement,
   purchaseShopItem, adminRefundShopItem, giftBook,
+  getShopItems, setShopItemCost,
 } = require('./db/admin');
 
 const {
@@ -679,6 +699,7 @@ module.exports = {
   updateUserGeo, updateUserActiveGeo, updateUserLastDomain, updateUserLastActive,
   adminGetStats, getSiteStats, adminGetUsers, adminDeleteUser, adminClearUserSessions, adminLockUser, adminUnlockUser,
   adminGetBooks, adminDeleteBook, adminGetBookRatings, adminDeleteRating, adminRefundShopItem, adminVacuum, giftBook, purchaseShopItem,
+  getShopItems, setShopItemCost,
   getFeed,
   createDemoBook, refreshDemoBooks, getDemoBookState,
   setPublicProfile, setHideFromFeed, setAuthor, setContributor, setPdfAccess, setDisplayName, adminUpdateUser, getPublicProfile, getProfileStats, getPublicRun, getPublicSeriesRun, getPublicCovers, getAllPublicBooks, getAllPublicSeries, getAllPublicAnthologies, getPublicBooksInSeries, getBookActivity, getPublicBookMeta, getPublicSeriesInfo, getBooksForSitemap, getAnthologiesForSitemap, getSeriesForSitemap, getPublicProfilesForSitemap,

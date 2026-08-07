@@ -16,7 +16,7 @@ function getBooks(userId) {
     SELECT b.id, b.name, b.total_sections, b.discoverable_sections,
            b.isbn, b.issn, b.asin, b.cover_path, b.pdf_path, b.created_at, b.created_by, b.is_public,
            b.pages, b.authors, b.description, b.is_demo,
-           b.series_id, b.series_number, b.is_container, b.parent_book_id, b.book_order,
+           b.series_id, b.series_number, b.is_container, b.parent_book_id, b.book_order, b.has_battle_sim,
            s.name AS series_name,
            ub.state_data, ub.created_at AS ub_created_at, ub.updated_at AS ub_updated_at, ub.rating AS user_rating,
            ub.party_id, ub.bg_hidden, ub.bg_pos_y
