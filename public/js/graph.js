@@ -3,7 +3,7 @@ import {
   state, viewingPt, isTerminal, parseSecId, isValidSecId,
   currentPlaythrough, allDiscoveredSections, saveState,
 } from './state.js?v=13';
-import { t } from './i18n.js?v=41';
+import { t } from './i18n.js?v=42';
 
 export let network  = null;
 export let visNodes = null;
