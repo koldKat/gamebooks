@@ -1,5 +1,8 @@
 node_modules/
 
+# Dev-only tooling scripts, not part of the live app
+scripts/
+
 # Runtime database
 database.sqlite
 database.sqlite-shm
