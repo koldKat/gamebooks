@@ -186,6 +186,7 @@ const translations = {
     'shop.item.gc_chance.desc':       '+0.01% bonus coin chance (cap: {cap}% at your lvl)',
     'shop.item.gc_chance.owned':      '+{pct}% bonus GC chance purchased',
     'bonus_gc.tooltip_empty': 'No bonus coin waiting',
+    'bonus_gc.tooltip_empty_pct': 'No bonus coin waiting (current chance: {pct}% per XP event)',
     'bonus_gc.tooltip_ready': 'A bonus gold coin is waiting - click to claim!',
     'shop.btn.max':      'Max',
     'shop.btn.buy':      'Buy',

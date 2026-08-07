@@ -5,8 +5,8 @@
 // and delete public/css/shop.css (and its <link> in index.html).
 
 import { apiFetch, getToken } from './state.js?v=13';
-import { escapeHtml } from './util.js?v=51';
-import { t } from './i18n.js?v=41';
+import { escapeHtml } from './util.js?v=52';
+import { t } from './i18n.js?v=42';
 
 // Callbacks wired in by main.js at boot
 let _hooks = {};
@@ -95,13 +95,25 @@ function updateSpentDisplay(spent) {
   if (el) el.textContent = t('shop.spent', { n: spent });
 }
 
+// Mirrors the server's _rollBonusGc formula exactly (xp.js) - level x 0.01%
+// base, plus up to another level x 0.01% from purchases (capped at level
+// purchases there too) - just for display, the server is always the real
+// authority on what actually gets rolled.
+function _bonusGcChancePct() {
+  const level = _shopData?.level || 0;
+  const purchased = Math.min(_shopData?.bonusGcChancePurchased || 0, level);
+  return (level + purchased) * 0.01;
+}
+
 let _claimingBonusGc = false;
 export function updateBonusGcIndicator(pending) {
   const btn = document.getElementById('bonus-gc-btn');
   if (!btn) return;
   btn.classList.toggle('bonus-gc-btn--ready', !!pending);
   btn.disabled = !pending || _claimingBonusGc;
-  btn.dataset.tooltip = pending ? t('bonus_gc.tooltip_ready') : t('bonus_gc.tooltip_empty');
+  btn.dataset.tooltip = pending
+    ? t('bonus_gc.tooltip_ready')
+    : t('bonus_gc.tooltip_empty_pct', { pct: _bonusGcChancePct().toFixed(2) });
 }
 
 async function _claimBonusGc() {
