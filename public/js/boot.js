@@ -66,7 +66,7 @@ import {
   clearOpenWorldState, doJumpCrossBook,
   getOwSrcBookId, getOwSrcSection, getOwCrossBookRoute,
 } from './open-world.js?v=145';
-import { setFeedHooks, loadFeed, refreshDayCoverFlows } from './feed.js?v=120';
+import { setFeedHooks, loadFeed, refreshDayCoverFlows } from './feed.js?v=121';
 import {
   setNotifHooks, _scheduleLiveUiRefresh,
   _closeNotifDropdown, _openNotifDropdown, isNotifDropdownOpen,
