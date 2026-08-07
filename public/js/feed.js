@@ -9,6 +9,36 @@ import { t } from './i18n.js?v=38';
 let _hooks = {};
 export function setFeedHooks(h) { _hooks = h || {}; }
 
+// Hides the hover image preview (avatar/cover, wired up per-render further
+// down) - shared by the normal mouseleave path and the click guard below.
+function _hideFeedPreview() {
+  const preview = document.getElementById('feed-img-preview');
+  if (!preview) return;
+  preview.style.display = 'none';
+  preview.classList.remove('feed-img-preview--avatar');
+  const previewImg = document.getElementById('feed-img-preview-img');
+  const previewFooter = document.getElementById('feed-img-preview-footer');
+  const previewLevel = document.getElementById('feed-img-preview-level');
+  if (previewImg) previewImg.style.display = 'block';
+  if (previewFooter) previewFooter.style.display = 'none';
+  if (previewLevel) { previewLevel.textContent = ''; previewLevel.style.display = 'none'; }
+  const bar = document.getElementById('feed-img-bar');
+  if (bar) {
+    bar._loadTimer = clearTimeout(bar._loadTimer);
+    bar.style.transition = 'none';
+    bar.style.width = '0';
+    bar.style.opacity = '0';
+  }
+}
+// Same fix as tooltip.js's own click guard: a hover preview shown right
+// before a click opens a new dialog (e.g. clicking a feed avatar/cover to
+// open its public profile/activity view) never gets a mouseleave, since the
+// pointer doesn't actually leave the element - it stays floating on top of
+// whatever just opened until the mouse happens to move again. Module-level
+// (registered once, not per feed render) since loadFeed() re-renders the
+// feed's own DOM on every SSE update.
+document.addEventListener('click', _hideFeedPreview);
+
 // A cheap plain-text run preview for the feed's own won/lost/battle-death
 // links, same idea (and same i18n keys) as the one on the public-profile run
 // list - not the full vis-network run graph, which is only built on click.
@@ -696,18 +726,7 @@ export async function loadFeed() {
         }
       });
       item.addEventListener('mousemove', _positionFeedPreview);
-      item.addEventListener('mouseleave', () => {
-        preview.style.display = 'none';
-        preview.classList.remove('feed-img-preview--avatar');
-        previewImg.style.display = 'block';
-        previewFooter.style.display = 'none';
-        previewLevel.textContent = '';
-        previewLevel.style.display = 'none';
-        const bar = document.getElementById('feed-img-bar');
-        bar.style.transition = 'none';
-        bar.style.width = '0';
-        bar.style.opacity = '0';
-      });
+      item.addEventListener('mouseleave', _hideFeedPreview);
     });
   } catch (_) {
     // Feed is best-effort; silently ignore errors
