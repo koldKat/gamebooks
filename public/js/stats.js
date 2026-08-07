@@ -3,8 +3,8 @@
 // To remove: delete this file, remove its import line and initStats()/closeStatsModal()
 // calls from boot.js, and remove the stats-modal CSS from style.css.
 
-import { escapeHtml, fetchPublic } from './util.js?v=48';
-import { t } from './i18n.js?v=38';
+import { escapeHtml, fetchPublic } from './util.js?v=51';
+import { t } from './i18n.js?v=41';
 
 export function closeStatsModal() {
   document.getElementById('stats-modal-overlay').classList.remove('active');
@@ -163,6 +163,7 @@ export async function openStatsModal() {
           [t('stats.upgrade_fast_travel_slots'), fmt(s.upgradeFastTravels)],
           [t('stats.upgrade_heartbeat_xp'), fmt(s.upgradeHeartbeatXp)],
           [t('stats.upgrade_xp_boost_pct'), fmt(s.upgradeXpBoosts)],
+          [t('stats.upgrade_gc_chance'), fmt(s.upgradeGcChance)],
         ],
       },
       {

@@ -17,7 +17,7 @@ import {
   storeData, getSorted, getFiltered, foldForSearch, naturalCompare, naturalCompareByName, _tableData,
   setSearchFields, wireTableSearch, initSortHeaders, renderPaged,
 } from './core.js?v=1';
-import { loadAll, loadTools } from './dashboard.js?v=6';
+import { loadAll, loadTools } from './dashboard.js?v=7';
 
 // ── Gift modal ────────────────────────────────────────────────────────────────
 
@@ -576,7 +576,7 @@ export async function loadUserDetail(userId) {
     metaBar.appendChild(lvlMeta);
 
     const shopXpBoost = user.xpBoostPurchased || 0;
-    if (shopXpBoost || user.bonusUndos || user.bonusFastTravels || user.bonusHeartbeatXp) {
+    if (shopXpBoost || user.bonusUndos || user.bonusFastTravels || user.bonusHeartbeatXp || user.bonusGcChancePurchased) {
       const boostMeta = el('div', 'meta-item');
       boostMeta.appendChild(el('div', 'label', 'Shop Boosts'));
       const boostVal = el('div', 'value');
@@ -626,6 +626,33 @@ export async function loadUserDetail(userId) {
           }));
         }
         boostVal.appendChild(hbRow);
+      }
+      if (user.bonusGcChancePurchased) {
+        // Same escalating-cost shape as heartbeat XP above (1st purchase = 1
+        // GC, 2nd = 2 GC, ...) - addBoostRow's flat count*costEach math would
+        // understate "Refund all"'s restored amount for this item, same as
+        // it would for xp_boost above (a pre-existing, separate issue).
+        const gcCount = user.bonusGcChancePurchased;
+        const gcLastCost = gcCount;
+        const gcTotalCost = (gcCount * (gcCount + 1)) / 2;
+        const gcRow = el('div', '', '');
+        gcRow.style.cssText = 'display:flex;align-items:center;gap:0.4rem';
+        gcRow.appendChild(el('span', '', `+${(gcCount * 0.01).toFixed(2)}% bonus GC chance (${gcCount} purchases)`));
+        gcRow.appendChild(mkBtn('Refund 1', 'btn-warn', () => {
+          showConfirm(`Refund one bonus GC chance upgrade for ${user.username}? Restores ${gcLastCost} GC.`, async () => {
+            await api('POST', `/api/admin/users/${user.id}/refund`, { item: 'gc_chance' });
+            loadUserDetail(user.id);
+          }, { label: 'Refund', variant: 'warn' });
+        }));
+        if (gcCount > 1) {
+          gcRow.appendChild(mkBtn('Refund all', 'btn-danger', () => {
+            showConfirm(`Refund all ${gcCount} bonus GC chance upgrades for ${user.username}? Restores ${gcTotalCost} GC.`, async () => {
+              await api('POST', `/api/admin/users/${user.id}/refund`, { item: 'gc_chance', all: true });
+              loadUserDetail(user.id);
+            }, { label: 'Refund all', variant: 'danger' });
+          }));
+        }
+        boostVal.appendChild(gcRow);
       }
       boostMeta.appendChild(boostVal);
       metaBar.appendChild(boostMeta);

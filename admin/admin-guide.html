@@ -207,7 +207,7 @@
         <li><strong>Books / Series / Anthologies:</strong> separate unique-count and library-count totals</li>
         <li><strong>Gameplay:</strong> total runs, finished runs, wins, losses, battle deaths</li>
         <li><strong>XP events:</strong> total XP event records, number of distinct event types</li>
-        <li><strong>Gold Coins &amp; Shop:</strong> earned/spent/in-circulation totals plus purchased upgrades, including Heartbeat XP; in-circulation totals also include extra milestone GC rewards</li>
+        <li><strong>Gold Coins &amp; Shop:</strong> earned/spent/in-circulation totals plus purchased upgrades, including Heartbeat XP and Lucky Coin Chance; in-circulation totals also include extra milestone GC rewards</li>
         <li><strong>Books:</strong> includes unique authors and average sections per playable book in the detailed breakdown</li>
         <li><strong>Forum:</strong> total posts (active only - excludes deleted), total threads (active only)</li>
       </ul>
@@ -257,7 +257,7 @@
       <p>Toggles the <code>pdf_access</code> flag for the user. When granted, the user can download book PDFs via <code>GET /books/:path</code> and sees a small <strong>PDF</strong> link in the play area when a book has a PDF attached. The button label switches between <strong>Grant PDF Access</strong> and <strong>Revoke PDF Access</strong> depending on the current state. Admins always have implicit PDF access regardless of this flag.</p>
 
       <h3>Refund shop item</h3>
-      <p>Opens a form to refund a purchased shop item for the user. Specify the item key (e.g. <code>xp_boost</code>, <code>heartbeat_xp</code>, <code>undo</code>, <code>fast_travel</code>) and whether to refund all purchases of that item or only the most recent. Coins are returned; any stat changes from the item are reversed.</p>
+      <p>Opens a form to refund a purchased shop item for the user. Specify the item key (e.g. <code>xp_boost</code>, <code>heartbeat_xp</code>, <code>undo</code>, <code>fast_travel</code>, <code>gc_chance</code>) and whether to refund all purchases of that item or only the most recent. Coins are returned; any stat changes from the item are reversed. The user detail view's "Shop Boosts" panel also shows one-click Refund buttons for any item a user currently has purchases of, without needing to know the item key.</p>
 
       <h3>Delete</h3>
       <p>Permanently removes the user and all their books, runs, notebook data, and sessions (cascades). Requires confirmation dialog. Protected accounts (<code>is_protected = 1</code>) cannot be deleted.</p>

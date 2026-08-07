@@ -54,6 +54,8 @@ try { db.exec(`ALTER TABLE users ADD COLUMN xp_from_boost         INTEGER NOT NU
 try { db.exec(`ALTER TABLE users ADD COLUMN xp_boost_carry        REAL    NOT NULL DEFAULT 0`);        } catch (_) {}
 try { db.exec(`ALTER TABLE users ADD COLUMN heartbeat_carry              REAL    NOT NULL DEFAULT 0`);        } catch (_) {}
 try { db.exec(`ALTER TABLE users ADD COLUMN heartbeat_minutes_banked   INTEGER NOT NULL DEFAULT 0`);        } catch (_) {}
+try { db.exec(`ALTER TABLE users ADD COLUMN bonus_gc_chance_purchased INTEGER NOT NULL DEFAULT 0`);        } catch (_) {}
+try { db.exec(`ALTER TABLE users ADD COLUMN pending_bonus_gc          INTEGER NOT NULL DEFAULT 0`);        } catch (_) {}
 try { db.exec(`UPDATE users SET xp = CAST(xp AS INTEGER), xp_from_boost = CAST(xp_from_boost AS INTEGER) WHERE xp != CAST(xp AS INTEGER) OR xp_from_boost != CAST(xp_from_boost AS INTEGER)`); } catch (_) {}
 try { db.exec(`ALTER TABLE books ADD COLUMN is_public             INTEGER NOT NULL DEFAULT 0`);        } catch (_) {}
 try { db.exec(`ALTER TABLE forum_threads ADD COLUMN category_id   INTEGER DEFAULT NULL`);               } catch (_) {}
@@ -622,7 +624,7 @@ const {
   getXpAmount, getXpConfig, setXpAmount,
   TITLES, computeLevel, xpForLevel, getTitleForLevel,
   setXpFeedHook, setAppXpHook,
-  awardCoins, awardXp, awardIdleHeartbeatXp, getUserXpInfo,
+  awardCoins, awardXp, awardIdleHeartbeatXp, getUserXpInfo, claimBonusGc,
   getBookCreator, getBookIdentifiers,
   _discoveredSet, _visitedSet, _permanentVisitedCount,
   _buildDemoState, createDemoBook, refreshDemoBooks, getDemoBookState,
@@ -704,7 +706,7 @@ module.exports = {
   createDemoBook, refreshDemoBooks, getDemoBookState,
   setPublicProfile, setHideFromFeed, setAuthor, setContributor, setPdfAccess, setDisplayName, adminUpdateUser, getPublicProfile, getProfileStats, getPublicRun, getPublicSeriesRun, getPublicCovers, getAllPublicBooks, getAllPublicSeries, getAllPublicAnthologies, getPublicBooksInSeries, getBookActivity, getPublicBookMeta, getPublicSeriesInfo, getBooksForSitemap, getAnthologiesForSitemap, getSeriesForSitemap, getPublicProfilesForSitemap,
   getBookRating, setBookRating, getSeriesRating, setSeriesRating, canUserRateBook, canUserRateSeries, setBookBgPref,
-  awardXp, awardCoins, awardIdleHeartbeatXp, getUserXpInfo, processStateXp, runXpMigration, migratePublicBookXp, migrateEquipmentXp, setXpFeedHook, setAppXpHook,
+  awardXp, awardCoins, awardIdleHeartbeatXp, getUserXpInfo, claimBonusGc, processStateXp, runXpMigration, migratePublicBookXp, migrateEquipmentXp, setXpFeedHook, setAppXpHook,
   getXpAmount, getXpConfig, setXpAmount,
   createFeedbackThread, addFeedbackMessage, getThreadsForUser, getAllThreads,
   getFeedbackThreadById, markThreadReadByUser, markThreadReadByAdmin, markThreadUnreadByUser,

@@ -935,17 +935,18 @@ function getSiteStats() {
   // xp_boost_pct stored in tenths-of-a-percent. Free boosts = 1 per level gained (=0.1%).
   // Purchased boosts (in tenths) = xp_boost_pct - level.
   const upgradeRow = db.prepare(
-    'SELECT SUM(bonus_undos) AS undos, SUM(bonus_fast_travels) AS fts, SUM(bonus_heartbeat_xp) AS heartbeats, SUM(coins_spent) AS spent FROM users'
+    'SELECT SUM(bonus_undos) AS undos, SUM(bonus_fast_travels) AS fts, SUM(bonus_heartbeat_xp) AS heartbeats, SUM(bonus_gc_chance_purchased) AS gcChances, SUM(coins_spent) AS spent FROM users'
   ).get();
   const upgradeUndos       = upgradeRow?.undos  || 0;
   const upgradeFastTravels = upgradeRow?.fts    || 0;
   const upgradeHeartbeatXp = upgradeRow?.heartbeats || 0;
+  const upgradeGcChance    = upgradeRow?.gcChances || 0;
   const upgradeXpBoosts = db.prepare('SELECT xp, xp_boost_pct FROM users').all().reduce((sum, row) => {
     const level = computeLevel(row?.xp || 0);
     const bought = Math.max(0, (row?.xp_boost_pct || 0) - level);
     return sum + bought;
   }, 0);
-  const totalUpgrades      = upgradeUndos + upgradeFastTravels + upgradeHeartbeatXp + upgradeXpBoosts;
+  const totalUpgrades      = upgradeUndos + upgradeFastTravels + upgradeHeartbeatXp + upgradeGcChance + upgradeXpBoosts;
 
   // Ratings
   const bookRatingRow       = db.prepare('SELECT COUNT(*) AS n, AVG(rating) AS avg FROM user_books ub JOIN books b ON b.id = ub.book_id WHERE ub.rating IS NOT NULL AND b.is_container = 0').get();
@@ -1013,7 +1014,7 @@ function getSiteStats() {
     totalXp, appLevel, appTitle, avgLevel, avgTitle, levelUps, xpEvents, xpEventTypes, booksFullyVisited, booksFullyDiscovered,
     // Coins & shop
     totalCoinsEarned: base.totalCoinsEarned, totalCoinsSpent: base.totalCoinsSpent, totalCoinsAvailable: base.totalCoinsAvailable,
-    totalUpgrades, upgradeUndos, upgradeFastTravels, upgradeHeartbeatXp, upgradeXpBoosts,
+    totalUpgrades, upgradeUndos, upgradeFastTravels, upgradeHeartbeatXp, upgradeGcChance, upgradeXpBoosts,
     // Parties
     partyTotal, partyActive, partyInvites, partyInvitesAccepted, partyInvitesDeclined, partyUsersTotal,
     // Forum
@@ -1383,10 +1384,11 @@ db.prepare(`CREATE TABLE IF NOT EXISTS shop_items (
 )`).run();
 
 const _shopItemDefaults = {
-  xp_boost:     { cost: 0, col: 'xp_boost_pct',       delta: 1, stepCost: null },
-  undo:         { cost: 3, col: 'bonus_undos',        delta: 1, stepCost: 3 },
-  fast_travel:  { cost: 5, col: 'bonus_fast_travels', delta: 1, stepCost: 5 },
-  heartbeat_xp: { cost: 0, col: 'bonus_heartbeat_xp', delta: 1, stepCost: null },
+  xp_boost:     { cost: 0, col: 'xp_boost_pct',               delta: 1, stepCost: null },
+  undo:         { cost: 3, col: 'bonus_undos',                delta: 1, stepCost: 3 },
+  fast_travel:  { cost: 5, col: 'bonus_fast_travels',         delta: 1, stepCost: 5 },
+  heartbeat_xp: { cost: 0, col: 'bonus_heartbeat_xp',         delta: 1, stepCost: null },
+  gc_chance:    { cost: 0, col: 'bonus_gc_chance_purchased',  delta: 1, stepCost: null },
 };
 db.transaction(() => {
   const ins = db.prepare('INSERT OR IGNORE INTO shop_items (id, cost, step_cost, col, delta) VALUES (?, ?, ?, ?, ?)');
@@ -1411,7 +1413,7 @@ function setShopItemCost(id, cost, stepCost) {
 function purchaseShopItem(userId, item) {
   const def = _shopItemsCache.get(item);
   if (!def) return { error: 'invalid_item' };
-  const row = db.prepare('SELECT xp, coins_spent, xp_boost_pct, bonus_undos, bonus_fast_travels, bonus_heartbeat_xp, bonus_coins FROM users WHERE id = ?').get(userId);
+  const row = db.prepare('SELECT xp, coins_spent, xp_boost_pct, bonus_undos, bonus_fast_travels, bonus_heartbeat_xp, bonus_gc_chance_purchased, bonus_coins FROM users WHERE id = ?').get(userId);
   if (!row) return { error: 'not_found' };
   const level = computeLevel(row.xp);
   let cost = def.cost;
@@ -1439,6 +1441,14 @@ function purchaseShopItem(userId, item) {
     if (purchased >= cap) return { error: 'cap_reached', cap, level, item };
     cost = purchased + 1;
   }
+  if (item === 'gc_chance') {
+    // Capped at `level` purchases so purchased bonus GC chance never exceeds
+    // the level-based base chance (0.01% per level each) - see _rollBonusGc.
+    const cap = level;
+    const purchased = row.bonus_gc_chance_purchased || 0;
+    if (purchased >= cap) return { error: 'cap_reached', cap, level, item };
+    cost = purchased + 1;
+  }
   const balance = Math.floor(row.xp / 1000) + (row.bonus_coins || 0) - (row.coins_spent || 0);
   if (balance < cost) return { error: 'insufficient_coins' };
   db.prepare(`UPDATE users SET coins_spent = coins_spent + ?, ${def.col} = ${def.col} + ? WHERE id = ?`)
@@ -1452,10 +1462,12 @@ function adminRefundShopItem(userId, item, all = false) {
   const row = db.prepare(`SELECT coins_spent, ${def.col} FROM users WHERE id = ?`).get(userId);
   if (!row) return { error: 'not_found' };
   const current = row[def.col] || 0;
-  if (item !== 'xp_boost' && item !== 'heartbeat_xp' && current < def.delta) return { error: 'nothing_to_refund' };
+  if (item !== 'xp_boost' && item !== 'heartbeat_xp' && item !== 'gc_chance' && current < def.delta) return { error: 'nothing_to_refund' };
   let refund;
-  if (item === 'heartbeat_xp' || item === 'xp_boost') {
-    // both use escalating cost; for xp_boost, only purchased portion (above free level boosts) counts
+  if (item === 'heartbeat_xp' || item === 'xp_boost' || item === 'gc_chance') {
+    // All three use escalating cost (1st purchase = 1 GC, 2nd = 2 GC, etc.);
+    // for xp_boost only, the column also carries free per-level boosts that
+    // were never purchased, so only the portion above that counts.
     const freeBoosts = item === 'xp_boost' ? computeLevel(db.prepare('SELECT xp FROM users WHERE id = ?').get(userId)?.xp || 0) : 0;
     const purchased = Math.max(0, current - freeBoosts);
     if (purchased < def.delta) return { error: 'nothing_to_refund' };

@@ -40,7 +40,7 @@ The top of the panel shows aggregate stats across all users and books:
 - Books / Series / Anthologies: separate unique-count and library-count totals, plus unique authors and average sections per playable book
 - Gameplay: total runs, finished runs, wins, losses, battle deaths
 - XP events: total event records, distinct event types
-- Gold Coins & Shop: earned/spent/in-circulation plus purchased upgrades, including Heartbeat XP, with in-circulation totals also reflecting extra milestone GC rewards
+- Gold Coins & Shop: earned/spent/in-circulation plus purchased upgrades, including Heartbeat XP and Lucky Coin Chance, with in-circulation totals also reflecting extra milestone GC rewards
 - Forum: active posts, active threads
 
 **Live header badges:** the main app now uses `/api/user/stream` (authenticated SSE) to nudge the Inbox, Forum, and notification-bell badges immediately when their state changes. The stream sends only a lightweight refresh event; the client refetches the relevant badge endpoints when it receives one. The old 60-second polling remains as a fallback. The same event also triggers a UI-prefs re-sync (`GET /api/prefs`), so a pref changed on one device/tab (e.g. the feed's cover toggles) reaches any other open session for that user live, instead of only on its next fresh page load.
@@ -71,7 +71,7 @@ Clicking a username opens a **user detail** view: meta bar (Joined, Books, Sessi
 | **Contributor** | Toggle `is_contributor` flag |
 | **Grant/Revoke PDF Access** | Toggle `pdf_access` flag - allows the user to download book PDFs via `GET /books/:path`. Button shows "Grant PDF Access" when the user does not have access, "Revoke PDF Access" when they do. |
 | **Impersonate** | Generate a one-time login URL to log in as the user without their password |
-| **Refund** | Refund a shop item: specify item key such as `xp_boost`, `heartbeat_xp`, `undo`, or `fast_travel`, and whether to refund all purchases or just the latest |
+| **Refund** | Refund a shop item: specify item key such as `xp_boost`, `heartbeat_xp`, `undo`, `fast_travel`, or `gc_chance`, and whether to refund all purchases or just the latest |
 | **Delete** | Permanently remove user and all their data (cascades). Not available for protected accounts. |
 
 ---
