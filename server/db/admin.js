@@ -1365,15 +1365,51 @@ function undoFastTravelCap(level) {
   return Math.floor((Math.max(level, 1) - 1) / 10) + 1;
 }
 
-const SHOP_ITEMS = {
-  xp_boost:    { cost: 0,  col: 'xp_boost_pct',       delta: 1 },
-  undo:        { cost: 3,  col: 'bonus_undos',          delta: 1, stepCost: 3 },
-  fast_travel: { cost: 5,  col: 'bonus_fast_travels',   delta: 1, stepCost: 5 },
-  heartbeat_xp:{ cost: 0,  col: 'bonus_heartbeat_xp',   delta: 1 },
+// ── Shop item config ─────────────────────────────────────────────────────────
+// Same pattern as xp_config (xp.js): was a hardcoded object here, duplicated
+// (different shape - id/cost/col/delta vs id/label/costFn/desc) in
+// public/js/shop.js purely for client-side cost *display*. The server copy
+// here is the one that actually enforces cost/effect on purchase, so it's
+// the one worth making DB-editable; the client copy stays as-is since it's
+// UI/i18n-bound presentation logic (translated labels, formatted descriptions)
+// that can't cleanly become DB rows, and the server always re-validates the
+// real cost on purchase regardless of what the client displayed.
+db.prepare(`CREATE TABLE IF NOT EXISTS shop_items (
+  id        TEXT PRIMARY KEY,
+  cost      INTEGER NOT NULL,
+  step_cost INTEGER DEFAULT NULL,
+  col       TEXT NOT NULL,
+  delta     INTEGER NOT NULL
+)`).run();
+
+const _shopItemDefaults = {
+  xp_boost:     { cost: 0, col: 'xp_boost_pct',       delta: 1, stepCost: null },
+  undo:         { cost: 3, col: 'bonus_undos',        delta: 1, stepCost: 3 },
+  fast_travel:  { cost: 5, col: 'bonus_fast_travels', delta: 1, stepCost: 5 },
+  heartbeat_xp: { cost: 0, col: 'bonus_heartbeat_xp', delta: 1, stepCost: null },
 };
+db.transaction(() => {
+  const ins = db.prepare('INSERT OR IGNORE INTO shop_items (id, cost, step_cost, col, delta) VALUES (?, ?, ?, ?, ?)');
+  for (const [id, d] of Object.entries(_shopItemDefaults)) ins.run(id, d.cost, d.stepCost, d.col, d.delta);
+})();
+
+function _loadShopItemsCache() {
+  return new Map(db.prepare('SELECT id, cost, step_cost, col, delta FROM shop_items').all()
+    .map(r => [r.id, { cost: r.cost, stepCost: r.step_cost ?? undefined, col: r.col, delta: r.delta }]));
+}
+let _shopItemsCache = _loadShopItemsCache();
+
+function getShopItems() { return db.prepare('SELECT id, cost, step_cost, col, delta FROM shop_items ORDER BY id').all(); }
+function setShopItemCost(id, cost, stepCost) {
+  if (!_shopItemsCache.has(id)) return { error: 'invalid_item' };
+  const def = _shopItemsCache.get(id);
+  db.prepare('UPDATE shop_items SET cost = ?, step_cost = ? WHERE id = ?').run(cost, stepCost ?? null, id);
+  _shopItemsCache.set(id, { ...def, cost, stepCost: stepCost ?? undefined });
+  return { ok: true };
+}
 
 function purchaseShopItem(userId, item) {
-  const def = SHOP_ITEMS[item];
+  const def = _shopItemsCache.get(item);
   if (!def) return { error: 'invalid_item' };
   const row = db.prepare('SELECT xp, coins_spent, xp_boost_pct, bonus_undos, bonus_fast_travels, bonus_heartbeat_xp, bonus_coins FROM users WHERE id = ?').get(userId);
   if (!row) return { error: 'not_found' };
@@ -1411,7 +1447,7 @@ function purchaseShopItem(userId, item) {
 }
 
 function adminRefundShopItem(userId, item, all = false) {
-  const def = SHOP_ITEMS[item];
+  const def = _shopItemsCache.get(item);
   if (!def) return { error: 'invalid_item' };
   const row = db.prepare(`SELECT coins_spent, ${def.col} FROM users WHERE id = ?`).get(userId);
   if (!row) return { error: 'not_found' };
@@ -1765,4 +1801,5 @@ module.exports = {
   createAnnouncement, updateAnnouncement, publishAnnouncement, unpublishAnnouncement,
   deleteAnnouncement, getAnnouncements, getPinnedAnnouncement, pinAnnouncement, unpinAnnouncement,
   purchaseShopItem, adminRefundShopItem, giftBook,
+  getShopItems, setShopItemCost,
 };

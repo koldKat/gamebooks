@@ -3,7 +3,7 @@
 // server/export.js) from each book's saved positions/colors - no rendering happens here.
 
 import { state, currentBookId, apiFetch } from './state.js?v=13';
-import { showAlert } from './play.js?v=90';
+import { showAlert } from './play.js?v=91';
 import { t } from './i18n.js?v=38';
 
 function _downloadBlob(blob, cd, fallbackFilename) {

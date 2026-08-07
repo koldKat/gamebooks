@@ -6,8 +6,8 @@
 
 import { apiFetch, setUsername, isDemoMode, getToken, setCurrentUserLevel, getUsername } from './state.js?v=13';
 import { t } from './i18n.js?v=38';
-import { updateCoinsDisplay } from './shop.js?v=54';
-import { escapeHtml, compressToBlob } from './util.js?v=47';
+import { updateCoinsDisplay } from './shop.js?v=55';
+import { escapeHtml, compressToBlob } from './util.js?v=48';
 
 let _hooks = {};
 export function setProfileHooks(h) { _hooks = h || {}; }

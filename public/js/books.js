@@ -1,11 +1,11 @@
 // books.js - Books list rendering, caching, search/filter, expand prefs, cover queue
 import { getToken, isDemoMode, apiFetch, getDemoState, setDemoState } from './state.js?v=13';
 import { foldForSearch, naturalCompare, naturalCompareByName } from './sort.js?v=1';
-import { refreshCoinsDisplay } from './shop.js?v=54';
-import { openCoverActivity, openSeriesActivity, _startLandingCoverRotation, _resetLandingCoverQueue, _effectiveLandingCoverSource, loadCovers } from './covers.js?v=97';
+import { refreshCoinsDisplay } from './shop.js?v=55';
+import { openCoverActivity, openSeriesActivity, _startLandingCoverRotation, _resetLandingCoverQueue, _effectiveLandingCoverSource, loadCovers } from './covers.js?v=98';
 import { t } from './i18n.js?v=38';
-import { showConfirm, showTwoChoice } from './play.js?v=90';
-import { escapeHtml, BATTLE_SIM_BOOK_IDS } from './util.js?v=47';
+import { showConfirm, showTwoChoice } from './play.js?v=91';
+import { escapeHtml } from './util.js?v=48';
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────
 let _hooks = {};
@@ -510,8 +510,8 @@ export function _patchCachedBook(bookId, fields) {
 
 // ── Book item HTML ────────────────────────────────────────────────────────────
 function _hasBattleSim(b) {
-  if (BATTLE_SIM_BOOK_IDS.includes(Number(b.id))) return true;
-  return !!(b.is_container && (_cachedBooks || []).some(c => c.parent_book_id === b.id && BATTLE_SIM_BOOK_IDS.includes(Number(c.id))));
+  if (b.has_battle_sim) return true;
+  return !!(b.is_container && (_cachedBooks || []).some(c => c.parent_book_id === b.id && c.has_battle_sim));
 }
 
 function _bookItemHtml(b, isChild, containerExpanded, childCount, aggrStats, isAdmin) {

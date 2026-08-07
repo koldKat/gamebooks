@@ -1,9 +1,9 @@
 // covers.js - Covers panel, lazy grid, landing bg rotation, cover/series activity modals
 import { getToken, isDemoMode, apiFetch } from './state.js?v=13';
-import { openPublicModal, closePublicModal, openPublicProfile, renderPublicProfile, openPublicRun, openPublicSeriesRun, _destroyPubNetworks } from './public-profile.js?v=70';
-import { refreshCoinsDisplay } from './shop.js?v=54';
+import { openPublicModal, closePublicModal, openPublicProfile, renderPublicProfile, openPublicRun, openPublicSeriesRun, _destroyPubNetworks } from './public-profile.js?v=71';
+import { refreshCoinsDisplay } from './shop.js?v=55';
 import { foldForSearch, matchesSearch, naturalCompare, naturalCompareByName } from './sort.js?v=1';
-import { escapeHtml, fetchPublic as publicFetch, BATTLE_SIM_BOOK_IDS } from './util.js?v=47';
+import { escapeHtml, fetchPublic as publicFetch } from './util.js?v=48';
 import { t } from './i18n.js?v=38';
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────
@@ -241,8 +241,7 @@ function _coverTooltipTitlePercent() {
 // their children has a sim, not just the container's own ID.
 function _hasBattleSim(item) {
   if (item.isSeries) return false;
-  if (BATTLE_SIM_BOOK_IDS.includes(Number(item.id))) return true;
-  return !!(item.isContainer && (item.childIds || []).some(id => BATTLE_SIM_BOOK_IDS.includes(Number(id))));
+  return !!item.hasBattleSim;
 }
 
 // Cross-referenced against the logged-in user's own library (getCachedBooks,
