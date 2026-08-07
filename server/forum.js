@@ -240,7 +240,7 @@ a:visited { color: #60a5fa; }
   outline: none; margin-bottom: 0.35rem; transition: border-color 0.15s;
 }
 .forum-input:focus { border-color: #6b7280; }
-textarea.forum-input { resize: vertical; min-height: var(--ta-min-h, 100px); }
+textarea.forum-input { resize: vertical; min-height: 100px; }
 .forum-btn {
   background: #1d4ed8; color: #eff6ff; border: 1px solid #1e40af;
   border-radius: 6px; padding: 0.38rem 0.9rem; font-size: 0.82rem;
@@ -371,24 +371,6 @@ function shell(title, description, canonical, bodyHtml) {
 
 <body>
 <script>if (localStorage.getItem('reduce-motion') === '1') document.body.classList.add('reduce-motion');</script>
-<script>
-(function() {
-  // Drives textarea.forum-input's min-height (see --ta-min-h below). Deliberately
-  // NOT a plain vh unit: #forum-modal-frame's own height is set by the parent
-  // based on THIS page's measured content height (see reportHeight() further
-  // down) - if the textarea sized itself off the iframe's own vh, growing the
-  // iframe would grow the textarea, which grows the measured content, which
-  // grows the iframe again, settling only after several visibly jerky resize
-  // steps. Using the outer (parent) window's height instead is a value that
-  // never changes as a side effect of this page's own layout, breaking the loop.
-  // Computed once at load rather than kept live via a window.parent resize
-  // listener - a listener registered on the (persistent) parent window from
-  // this (destroyed-on-every-navigation) iframe document would leak one
-  // stale listener per page the user navigates to inside the forum.
-  var outerH = (window.parent && window.parent !== window) ? window.parent.innerHeight : window.innerHeight;
-  document.documentElement.style.setProperty('--ta-min-h', Math.max(100, outerH * 0.3) + 'px');
-})();
-</script>
 ${bodyHtml}
 <script>
 (function() {
@@ -518,7 +500,7 @@ function renderForumCategory(category, threads) {
       <div class="forum-form" id="new-thread-form" style="display:none">
         <h3>New Thread</h3>
         <input class="forum-input" id="thread-title" type="text" inputmode="text" placeholder="Title" autocomplete="off" spellcheck="true" maxlength="200">
-        <textarea class="forum-input" id="thread-body" placeholder="Write something\u2026" spellcheck="true" maxlength="20000"></textarea>
+        <textarea class="forum-input" id="thread-body" rows="10" placeholder="Write something\u2026" spellcheck="true" maxlength="20000"></textarea>
         <div style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center">
           <label style="cursor:pointer" for="thread-file-input"><span class="att-pick-btn">+ Attach</span></label>
           <input type="file" id="thread-file-input" multiple style="display:none" accept="image/*,.pdf,.txt,.md,.csv,.json,.xml,.zip,.7z,.rar,.gz">
@@ -830,7 +812,7 @@ function renderForumThread(thread, posts) {
         var f = document.createElement('div');
         f.id = 'op-edit-form';
         f.innerHTML = '<input class="forum-input" id="op-edit-title" type="text" maxlength="200" value="">'
-          + '<textarea class="forum-input" id="op-edit-body" maxlength="20000"></textarea>'
+          + '<textarea class="forum-input" id="op-edit-body" rows="10" maxlength="20000"></textarea>'
           + '<div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">'
           + '<button class="forum-btn" id="op-edit-save">Save</button>'
           + '<button class="forum-btn-cancel" id="op-edit-cancel">Cancel</button>'
@@ -910,7 +892,7 @@ function renderForumThread(thread, posts) {
           elRef.style.display = 'none';
           var f = document.createElement('div');
           f.id = 'post-edit-form-' + pmId;
-          f.innerHTML = '<textarea class="forum-input" id="post-edit-body-' + pmId + '" maxlength="20000"></textarea>'
+          f.innerHTML = '<textarea class="forum-input" id="post-edit-body-' + pmId + '" rows="10" maxlength="20000"></textarea>'
             + '<div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">'
             + '<button class="forum-btn" id="post-edit-save-' + pmId + '">Save</button>'
             + '<button class="forum-btn-cancel" id="post-edit-cancel-' + pmId + '">Cancel</button>'
@@ -969,7 +951,7 @@ function renderForumThread(thread, posts) {
     var replyWrap = document.getElementById('reply-wrap');
     replyWrap.innerHTML = '<div class="forum-form">'
       + '<h3>Reply</h3>'
-      + '<textarea class="forum-input" id="reply-body" placeholder="Write a reply\u2026" spellcheck="true" maxlength="20000"></textarea>'
+      + '<textarea class="forum-input" id="reply-body" rows="10" placeholder="Write a reply\u2026" spellcheck="true" maxlength="20000"></textarea>'
       + '<div style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center">'
       + '<label style="cursor:pointer" for="reply-file-input"><span class="att-pick-btn">+ Attach</span></label>'
       + '<input type="file" id="reply-file-input" multiple style="display:none" accept="image/*,.pdf,.txt,.md,.csv,.json,.xml,.zip,.7z,.rar,.gz">'
