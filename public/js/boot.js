@@ -14,29 +14,29 @@ import {
 import {
   network, visNodes, initGraph, destroyNetwork,
   subtreeToDelete, deleteNodes, findPathTo, canReach, setGraphOpenWorld, applyConnectorStyle,
-} from './graph.js?v=92';
-import { render, openEditModal, closeEditModal, openNoteModal, closeNoteModal, showConfirm, showAlert, confirmAlphanumericSwitch, maxFastTravels, setFastTravelHandler, showFastTravelDialog, setOnTrailToggle, openPortalModal, setDiscoverableLimit, setOnChoicesRecorded, startPlaythrough, setAltStartHandler } from './play.js?v=91';
-import { t, applyTranslations, setTranslationOverride } from './i18n.js?v=38';
-import { initCharSheet, setCharSheetVisible, renderCharSheetDisplay } from './charsheet.js?v=65';
-import { initInventory, setInventoryVisible, renderInventoryDisplay, preloadItems, setExtraDisplayItemsProvider } from './inventory.js?v=150';
-import { initEquipment, setEquipmentVisible, getVisibleEquippedItems } from './equipment.js?v=137';
-import { initNotes, hideNotesUI, loadNotesForBook, setOnXpAwarded as setNotesOnXpAwarded } from './notes.js?v=71';
-import { initParty, connectPartySSE, disconnectPartySSE, loadPartyInvites, setPartyHooks } from './party.js?v=125';
-import { initAuth, setOnAuthSuccess, showAuthForm, showResetPanel, hasPendingResetToken } from './auth.js?v=49';
-import { initStats, closeStatsModal } from './stats.js?v=68';
-import { setAddBookHooks, initAddBook, _closeAddBook, _closeAddComp, _closeAddSeries } from './add-book.js?v=154';
+} from './graph.js?v=95';
+import { render, openEditModal, closeEditModal, openNoteModal, closeNoteModal, showConfirm, showAlert, confirmAlphanumericSwitch, maxFastTravels, setFastTravelHandler, showFastTravelDialog, setOnTrailToggle, openPortalModal, setDiscoverableLimit, setOnChoicesRecorded, startPlaythrough, setAltStartHandler } from './play.js?v=94';
+import { t, applyTranslations, setTranslationOverride } from './i18n.js?v=41';
+import { initCharSheet, setCharSheetVisible, renderCharSheetDisplay } from './charsheet.js?v=68';
+import { initInventory, setInventoryVisible, renderInventoryDisplay, preloadItems, setExtraDisplayItemsProvider } from './inventory.js?v=153';
+import { initEquipment, setEquipmentVisible, getVisibleEquippedItems } from './equipment.js?v=140';
+import { initNotes, hideNotesUI, loadNotesForBook, setOnXpAwarded as setNotesOnXpAwarded } from './notes.js?v=74';
+import { initParty, connectPartySSE, disconnectPartySSE, loadPartyInvites, setPartyHooks } from './party.js?v=128';
+import { initAuth, setOnAuthSuccess, showAuthForm, showResetPanel, hasPendingResetToken } from './auth.js?v=52';
+import { initStats, closeStatsModal } from './stats.js?v=71';
+import { setAddBookHooks, initAddBook, _closeAddBook, _closeAddComp, _closeAddSeries } from './add-book.js?v=157';
 import {
   setEditBookHooks, initEditBook,
   openEditBookModal, closeEditBookModal, openEditCompModal, openEditSeriesModal,
   _openEditStash, _closeEditStash, _closeAddStash,
   _adminPdfHref,
   maxSectionInUse,
-} from './edit-book.js?v=154';
+} from './edit-book.js?v=157';
 import {
   setPrefsHooks, savePrefs, syncPrefs,
   _setLandingPanelCollapsed, _toggleAllLandingPanelsCollapsed,
   _setPlayPanelCollapsed, _toggleAllPlayPanelsCollapsed,
-} from './prefs.js?v=142';
+} from './prefs.js?v=145';
 import { initBattleSim, setBattleSimVisible, renderBattleSim } from './battlesim/battlesim829.js?v=119';
 import { initBattleSim8, setSim8Visible, renderSim8 } from './battlesim/battlesim8.js?v=91';
 import { initSim286, setSim286Visible, renderSim286 } from './battlesim/battlesim286.js?v=50';
@@ -46,12 +46,12 @@ import { initSim200, setSim200Visible, renderSim200 } from './battlesim/battlesi
 import { initSim186, setSim186Visible, renderSim186 } from './battlesim/battlesim186.js?v=17';
 import { initSim201, setSim201Visible, renderSim201 } from './battlesim/battlesim201.js?v=19';
 import { initSim202, setSim202Visible, renderSim202 } from './battlesim/battlesim202.js?v=2';
-import { initShop, updateCoinsDisplay, refreshCoinsDisplay, setShopHooks } from './shop.js?v=55';
-import { initProfile, updateAvatarUI, renderBooksXpSummary, setProfileHooks } from './profile.js?v=71';
-import { setPublicProfileHooks, closePublicModal, openPublicProfile, openPublicSeriesRun } from './public-profile.js?v=71';
-import { setLiveTabHooks, _ensureLiveTabControllerStarted, _connectUserBadgeSSE, _disconnectUserBadgeSSE, _connectAppXpSSE, _disconnectAppXpSSE } from './livetab.js?v=60';
-import { setAppXpHooks, refreshAppXp, handleAppXpEvent } from './app-xp.js?v=59';
-import { setCoversHooks, loadCovers, openCoverActivity, openSeriesActivity, _showCachedCoversPanel, _refreshPublicCatalogIfVisible, _isLandingBooksViewVisible, _updateLandingBgDragUi, setCoversPrefsState, _toggleCoverTooltipSettings, initCoversPanel, resetFeedDisplayPrefsForLogout } from './covers.js?v=98';
+import { initShop, updateCoinsDisplay, refreshCoinsDisplay, setShopHooks } from './shop.js?v=58';
+import { initProfile, updateAvatarUI, renderBooksXpSummary, setProfileHooks } from './profile.js?v=74';
+import { setPublicProfileHooks, closePublicModal, openPublicProfile, openPublicSeriesRun } from './public-profile.js?v=74';
+import { setLiveTabHooks, _ensureLiveTabControllerStarted, _connectUserBadgeSSE, _disconnectUserBadgeSSE, _connectAppXpSSE, _disconnectAppXpSSE } from './livetab.js?v=63';
+import { setAppXpHooks, refreshAppXp, handleAppXpEvent } from './app-xp.js?v=62';
+import { setCoversHooks, loadCovers, openCoverActivity, openSeriesActivity, _showCachedCoversPanel, _refreshPublicCatalogIfVisible, _isLandingBooksViewVisible, _updateLandingBgDragUi, setCoversPrefsState, _toggleCoverTooltipSettings, initCoversPanel, resetFeedDisplayPrefsForLogout } from './covers.js?v=101';
 import {
   setBooksHooks, initBooksPanel, renderBooksList,
   getCachedBooks, getCachedAllSeries, getCachedStashes,
@@ -59,23 +59,23 @@ import {
   setBooksDataFresh, setBooksRevealedAt,
   setCurrentUserId,
   _refreshBooksListOnly, _refreshLibraryUi, _starsHtml, _starLabelHtml, _flashRatingGate,
-} from './books.js?v=143';
+} from './books.js?v=146';
 import {
   setOpenWorldHooks, setupOpenWorldForBook,
   _syncSeriesRuns, _computeCrossBookReachability, _focusNodeAfterLoad,
   clearOpenWorldState, doJumpCrossBook,
   getOwSrcBookId, getOwSrcSection, getOwCrossBookRoute,
-} from './open-world.js?v=145';
-import { setFeedHooks, loadFeed, refreshDayCoverFlows } from './feed.js?v=121';
+} from './open-world.js?v=148';
+import { setFeedHooks, loadFeed, refreshDayCoverFlows } from './feed.js?v=124';
 import {
   setNotifHooks, _scheduleLiveUiRefresh,
   _closeNotifDropdown, _openNotifDropdown, isNotifDropdownOpen,
   resetNotifBadgesForLogout,
-} from './notif.js?v=53';
+} from './notif.js?v=56';
 import {
   _resetRewardSnapshotState, _positionRewardLayer,
   _processRewardSnapshot, _scheduleRewardProfileRefresh,
-} from './rewards.js?v=73';
+} from './rewards.js?v=76';
 import {
   setBgHooks, setCurrentBookCover, getCurrentBookCover,
   resetBgState, cancelBgMove, isBgInMove,
@@ -83,20 +83,20 @@ import {
   hideCtxMenu, _updateSidebarBookInfo, _hideBgCtxMenu,
   _positionMenu, _setupCtxSubmenuFlip, _showBgCtxMenu,
   _enterBgMoveMode, _exitBgMoveMode, _updateColorSwatches,
-} from './bg.js?v=32';
-import { initTips } from './tips.js?v=40';
-import { initInbox } from './inbox.js?v=100';
-import { initDice } from './dice.js?v=136';
+} from './bg.js?v=35';
+import { initTips } from './tips.js?v=43';
+import { initInbox } from './inbox.js?v=103';
+import { initDice } from './dice.js?v=139';
 import { initTooltip } from './tooltip.js?v=2';
-import { exportAll, exportBook } from './export.js?v=96';
-import { initFeedback } from './feedback.js?v=48';
-import { setDemoHooks, getDemoBooks, setDemoBooks, getDemoVisited, startDemoMode, exitDemoMode, wasInDemoMode } from './demo.js?v=93';
+import { exportAll, exportBook } from './export.js?v=99';
+import { initFeedback } from './feedback.js?v=51';
+import { setDemoHooks, getDemoBooks, setDemoBooks, getDemoVisited, startDemoMode, exitDemoMode, wasInDemoMode } from './demo.js?v=96';
 import {
   setAdminUsername, resolveIsAdmin,
   adminBadge, authorBadge, contributorBadge, displayFor,
   registerAuthor, registerContributor,
 } from './user.js?v=8';
-import { escapeHtml, fetchPublic as publicFetch } from './util.js?v=48';
+import { escapeHtml, fetchPublic as publicFetch } from './util.js?v=51';
 
 window._isMobile = /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
   || (navigator.maxTouchPoints > 1 && window.innerWidth < 1024);

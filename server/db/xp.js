@@ -249,8 +249,51 @@ function awardCoins(userId, event, ref, amount) {
   return _awardCoinsTx(userId, event, String(ref), amount);
 }
 
+// ── Bonus GC lottery ─────────────────────────────────────────────────────────
+// A small chance, rolled on every genuine XP event (not deduped repeats - see
+// the r.changes > 0 gate around the call site below), of a bonus gold coin
+// appearing for the player to claim on the landing screen. Base chance is
+// level × 0.01%, uncapped. Players can also buy extra chance in the shop
+// (shop_items 'gc_chance', same escalating-cost pattern as xp_boost/undo/
+// etc.), capped at `level` purchases so purchased chance never exceeds the
+// level-based amount. Only one pending coin can exist at a time - rolling
+// while one is already waiting is a silent no-op, not a wasted/replaced roll.
+// `pending`/`gcChancePurchased` are passed in from _awardXpTx's own `before`
+// row - this fires on every XP event (very hot path: idle_heartbeat alone
+// ticks once a minute per active user, on top of every discover/visit/etc.),
+// so it deliberately doesn't run its own extra SELECT for data the caller
+// already has in hand.
+function _rollBonusGc(userId, xp, pending, gcChancePurchased) {
+  if (pending) return;
+  const level = computeLevel(xp);
+  const purchased = Math.min(gcChancePurchased || 0, level);
+  const chance = (level + purchased) * 0.0001; // 0.01% per level + 0.01% per purchase
+  if (chance > 0 && Math.random() < chance) {
+    db.prepare('UPDATE users SET pending_bonus_gc = 1 WHERE id = ?').run(userId);
+  }
+}
+
+// Clearing the flag and awarding the coin happen in one transaction so a
+// claim can never clear the flag without actually paying out (or vice
+// versa). awardCoins() is called from inside here - better-sqlite3 nests
+// transactions as savepoints, same pattern _awardXpTx already uses below
+// for level-up coins.
+const _claimBonusGcTx = db.transaction((userId) => {
+  const row = db.prepare('SELECT pending_bonus_gc FROM users WHERE id = ?').get(userId);
+  if (!row?.pending_bonus_gc) return { error: 'nothing_to_claim' };
+  db.prepare('UPDATE users SET pending_bonus_gc = 0 WHERE id = ?').run(userId);
+  awardCoins(userId, 'bonus_gc_claim', Date.now(), 1);
+  return { ok: true };
+});
+
+// Same central safety net as awardCoins/awardXp above.
+function claimBonusGc(userId) {
+  if (isImpersonatingContext()) return { error: 'impersonating' };
+  return _claimBonusGcTx(userId);
+}
+
 const _awardXpTx = db.transaction((userId, event, ref, amount) => {
-  const before      = db.prepare('SELECT xp, xp_boost_pct, xp_boost_carry, coins_spent, bonus_coins FROM users WHERE id = ?').get(userId);
+  const before      = db.prepare('SELECT xp, xp_boost_pct, xp_boost_carry, coins_spent, bonus_coins, pending_bonus_gc, bonus_gc_chance_purchased FROM users WHERE id = ?').get(userId);
   const beforeXp    = before?.xp ?? 0;
   const boost       = before?.xp_boost_pct ?? 0;
   const carry       = before?.xp_boost_carry ?? 0;
@@ -266,6 +309,7 @@ const _awardXpTx = db.transaction((userId, event, ref, amount) => {
   const r = db.prepare(
     'INSERT OR IGNORE INTO xp_events (user_id, event, ref) VALUES (?, ?, ?)'
   ).run(userId, event, ref);
+  if (r.changes > 0) _rollBonusGc(userId, beforeXp, before?.pending_bonus_gc, before?.bonus_gc_chance_purchased);
   if (r.changes > 0 && boosted > 0) {
     db.prepare('UPDATE users SET xp = xp + ?, xp_from_boost = xp_from_boost + ?, xp_boost_carry = ? WHERE id = ?').run(boosted, extraWhole, newCarry, userId);
     try { _appXpHook?.({ userId, xpDelta: boosted }); } catch (_) {}
@@ -325,7 +369,7 @@ function awardIdleHeartbeatXp(userId) {
 }
 
 function getUserXpInfo(userId) {
-  const row  = db.prepare('SELECT xp, coins_spent, xp_boost_pct, bonus_undos, bonus_fast_travels, bonus_heartbeat_xp, bonus_coins, admin_gifted_coins, xp_from_boost FROM users WHERE id = ?').get(userId);
+  const row  = db.prepare('SELECT xp, coins_spent, xp_boost_pct, bonus_undos, bonus_fast_travels, bonus_heartbeat_xp, bonus_coins, admin_gifted_coins, xp_from_boost, bonus_gc_chance_purchased, pending_bonus_gc FROM users WHERE id = ?').get(userId);
   const xp   = row?.xp || 0;
   const level = computeLevel(xp);
   const coinsEarned  = Math.floor(xp / 1000) + (row?.bonus_coins || 0);
@@ -348,6 +392,8 @@ function getUserXpInfo(userId) {
     bonusHeartbeatXp:     row?.bonus_heartbeat_xp || 0,
     bonusHeartbeatXpFree: Math.max(0, level - 10),
     xpFromBoost:       row?.xp_from_boost     || 0,
+    bonusGcChancePurchased: row?.bonus_gc_chance_purchased || 0,
+    pendingBonusGc:         !!row?.pending_bonus_gc,
   };
 }
 
@@ -1006,7 +1052,7 @@ module.exports = {
   getXpAmount, getXpConfig, setXpAmount,
   TITLES, computeLevel, xpForLevel, getTitleForLevel,
   setXpFeedHook, setAppXpHook,
-  awardCoins, awardXp, awardIdleHeartbeatXp, getUserXpInfo,
+  awardCoins, awardXp, awardIdleHeartbeatXp, getUserXpInfo, claimBonusGc,
   getBookCreator, getBookIdentifiers,
   _discoveredSet, _visitedSet, _permanentVisitedCount,
   _buildDemoState, createDemoBook, refreshDemoBooks, getDemoBookState,

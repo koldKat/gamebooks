@@ -17,7 +17,8 @@ async function handleShopPurchase(req, res) {
       xp_boost: `XP boost cap reached (${result.cap}% at level ${result.level})`,
       undo: `Undo cap reached (${result.cap} at level ${result.level})`,
       fast_travel: `Fast travel cap reached (${result.cap} at level ${result.level})`,
-      heartbeat_xp: `Heartbeat XP cap reached (${result.cap} at level ${result.level})`
+      heartbeat_xp: `Heartbeat XP cap reached (${result.cap} at level ${result.level})`,
+      gc_chance: `Bonus GC chance cap reached (${result.cap} at level ${result.level})`,
     };
     return send(res, 403, { error: (labels[result.item] || 'Cap reached') + '. Level up to increase the cap.' });
   }
@@ -25,4 +26,13 @@ async function handleShopPurchase(req, res) {
   send(res, 200, { ok: true, newBalance: result.newBalance, ...db.getUserXpInfo(userId) });
 }
 
-module.exports = { handleShopPurchase };
+async function handleClaimBonusGc(req, res) {
+  const userId = await authenticate(req, res);
+  if (userId === null) return;
+  const result = db.claimBonusGc(userId);
+  if (result.error === 'nothing_to_claim') return send(res, 404, { error: 'Nothing to claim' });
+  if (result.error === 'impersonating')    return send(res, 403, { error: 'Not available' });
+  send(res, 200, { ok: true, ...db.getUserXpInfo(userId) });
+}
+
+module.exports = { handleShopPurchase, handleClaimBonusGc };

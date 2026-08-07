@@ -5,8 +5,8 @@
 // and delete public/css/shop.css (and its <link> in index.html).
 
 import { apiFetch, getToken } from './state.js?v=13';
-import { escapeHtml } from './util.js?v=48';
-import { t } from './i18n.js?v=38';
+import { escapeHtml } from './util.js?v=51';
+import { t } from './i18n.js?v=41';
 
 // Callbacks wired in by main.js at boot
 let _hooks = {};
@@ -57,6 +57,15 @@ const SHOP_ITEMS = [
     statLabel: n => t('shop.item.owned', { n }),
     atCap:     d => (d.bonusFastTravels || 0) >= _undoFastTravelCap(d.level || 0),
   },
+  {
+    id:        'gc_chance',
+    label:     () => t('shop.item.gc_chance.label'),
+    costFn:    d => (d.bonusGcChancePurchased || 0) + 1,
+    desc:      () => { const cap = _shopData?.level || 0; return t('shop.item.gc_chance.desc', { cap: (cap * 0.01).toFixed(2) }); },
+    statKey:   'bonusGcChancePurchased',
+    statLabel: n => t('shop.item.gc_chance.owned', { pct: (n * 0.01).toFixed(2) }),
+    atCap:     d => (d.bonusGcChancePurchased || 0) >= (d.level || 0),
+  },
 ];
 
 let _shopData = null;
@@ -86,6 +95,34 @@ function updateSpentDisplay(spent) {
   if (el) el.textContent = t('shop.spent', { n: spent });
 }
 
+let _claimingBonusGc = false;
+export function updateBonusGcIndicator(pending) {
+  const btn = document.getElementById('bonus-gc-btn');
+  if (!btn) return;
+  btn.classList.toggle('bonus-gc-btn--ready', !!pending);
+  btn.disabled = !pending || _claimingBonusGc;
+  btn.dataset.tooltip = pending ? t('bonus_gc.tooltip_ready') : t('bonus_gc.tooltip_empty');
+}
+
+async function _claimBonusGc() {
+  if (_claimingBonusGc) return;
+  _claimingBonusGc = true;
+  const btn = document.getElementById('bonus-gc-btn');
+  if (btn) btn.disabled = true;
+  try {
+    const res  = await apiFetch('/api/shop/claim-gc', { method: 'POST' });
+    if (!res.ok) return;
+    const data = await res.json();
+    _shopData = data;
+    _hooks.onRewardSnapshot?.(data);
+    updateCoinsDisplay(data.coinsBalance || 0);
+  } catch (_) {}
+  finally {
+    _claimingBonusGc = false;
+    updateBonusGcIndicator(_shopData?.pendingBonusGc);
+  }
+}
+
 export async function refreshCoinsDisplay() {
   if (!getToken()) return;
   if (_rewardProfileFetchPromise) return _rewardProfileFetchPromise;
@@ -96,7 +133,9 @@ export async function refreshCoinsDisplay() {
       const data = await res.json();
       _hooks.onRewardSnapshot?.(data);
       if (!_shopData) _shopData = data;
+      else _shopData.pendingBonusGc = data.pendingBonusGc;
       updateCoinsDisplay(data.coinsBalance || 0);
+      updateBonusGcIndicator(data.pendingBonusGc);
     } catch {}
     finally { _rewardProfileFetchPromise = null; }
   })();
@@ -168,6 +207,7 @@ export async function openShopModal() {
     updateCoinsDisplay(_shopData.coinsBalance || 0);
     document.getElementById('shop-balance').innerHTML = `${COIN_SVG} ${_shopData.coinsBalance || 0}`;
     updateSpentDisplay(_shopData.coinsSpent || 0);
+    updateBonusGcIndicator(_shopData.pendingBonusGc);
     renderShopItems();
   } catch (_) { document.getElementById('shop-items').innerHTML = `<div class="shop-loading">${t('shop.load_failed')}</div>`; }
 }
@@ -180,4 +220,5 @@ export function initShop() {
     if (e.target === e.currentTarget && _hooks.getMousedownOverlay?.() === e.currentTarget)
       e.currentTarget.classList.remove('active');
   });
+  document.getElementById('bonus-gc-btn')?.addEventListener('click', _claimBonusGc);
 }

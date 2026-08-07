@@ -528,10 +528,17 @@ Click **GC** in the books screen header to open the shop.
 | **Heartbeat XP** | 1, 2, 3… GC (goes up each time) | +0.1 to idle XP per purchase | Level × 0.1 XP |
 | **Extra Undo** | 3, 6, 9… GC (escalates per purchase) | +1 undo per playthrough, permanently | 1 per 10 levels |
 | **Fast Travel** | 5, 10, 15… GC (escalates per purchase) | +1 Fast Travel per playthrough, permanently | 1 per 10 levels |
+| **Lucky Coin Chance** | 1, 2, 3… GC (goes up each time) | +0.01% chance per XP event of a bonus gold coin appearing | Level × 0.01% |
 
 The shop header shows your current balance next to a **"N spent"** pill, so you can see your lifetime total spent at a glance alongside what you have left.
 
 Coins are spent permanently - no refunds. Boosts only apply to XP earned after you buy them.
+
+### Bonus gold coin
+
+Every level gives you a small passive chance (0.01% per level) of a bonus gold coin appearing, checked each time you earn XP. Buying **Lucky Coin Chance** in the shop adds more, up to a cap that matches your level's own free chance.
+
+When you get lucky, a small coin icon in the books screen header (just left of the **F1** button) lights up with a golden glow - click it to claim the coin. It stays dim and unclickable the rest of the time, and only one can ever be waiting at once, so there's no rush once it appears.
 
 ---
 

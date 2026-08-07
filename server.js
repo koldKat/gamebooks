@@ -138,7 +138,7 @@ const {
 } = require('./server/routes/books');
 
 
-const { handleShopPurchase } = require('./server/routes/shop');
+const { handleShopPurchase, handleClaimBonusGc } = require('./server/routes/shop');
 
 
 const {
@@ -408,6 +408,7 @@ const _routeRequest = async (req, res) => {
     if (method === 'GET'    && urlPath === '/api/profile')        return await handleGetProfile(req, res);
     if (method === 'PATCH'  && urlPath === '/api/profile')        return await handleUpdateProfile(req, res);
     if (method === 'POST'   && urlPath === '/api/shop/purchase')  return await handleShopPurchase(req, res);
+    if (method === 'POST'   && urlPath === '/api/shop/claim-gc')  return await handleClaimBonusGc(req, res);
     if (method === 'POST'   && urlPath === '/api/profile/avatar')  return await handleUploadAvatar(req, res);
     if (method === 'POST'   && urlPath === '/api/attachments')     return await handleUploadAttachment(req, res);
     if ((m = urlPath.match(bookAddRe))   && method === 'POST')   return await handleAddBookToLibrary(req, res, +m[1]);

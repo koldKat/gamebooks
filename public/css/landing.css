@@ -870,6 +870,34 @@ body.feed-collapsed #feed-panel {
 #app-banner-f1-btn:hover { border-color: #6b7280; color: #e2e8f0; }
 #stats-btn:hover { border-color: #6b7280; color: #e2e8f0; }
 #demo-btn:hover      { border-color: #f5a623; color: #f5a623; }
+
+/* Random-chance bonus coin, rolled server-side on every XP event - fixed
+   spot in the banner rather than appearing somewhere on the page, since
+   there's no natural "where you were" location for a passive server-side
+   roll to land near. Greyed out (default) until one is actually waiting;
+   a static glow (not an animation - no continuous repaint cost) marks it
+   ready, and it's disabled/unclickable until then too. */
+#bonus-gc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 1.7rem;
+  width: 1.7rem;
+  background: #111827;
+  border: 1px solid #374151;
+  border-radius: 7px;
+  padding: 0;
+  cursor: not-allowed;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+#bonus-gc-btn svg { width: 16px; height: 16px; filter: grayscale(1) brightness(0.7); transition: filter 0.15s; }
+#bonus-gc-btn.bonus-gc-btn--ready {
+  cursor: pointer;
+  border-color: #f59e0b;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.7), 0 0 2px rgba(245, 158, 11, 0.9);
+}
+#bonus-gc-btn.bonus-gc-btn--ready svg { filter: none; }
+#bonus-gc-btn.bonus-gc-btn--ready:hover { border-color: #fbbf24; box-shadow: 0 0 10px rgba(245, 158, 11, 0.9), 0 0 3px rgba(251, 191, 36, 1); }
 #forum-btn:hover                      { border-color: #6b7280; color: #e2e8f0; }
 #forum-btn.forum-btn--active          { border-color: #16a34a; color: #4ade80; animation: notif-pulse 1.8s ease-in-out infinite; }
 #forum-btn.forum-btn--active:hover    { border-color: #22c55e; color: #86efac; animation: none; }
