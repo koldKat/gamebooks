@@ -114,6 +114,30 @@ body.no-feed-day-covers:not(.no-feed-glass-cards) .feed-day-card {
   background-size: cover;
   background-position: var(--landing-cover-pos, center);
 }
+/* The card's own background-image above swaps to the new cover instantly the
+   moment --landing-cover-url updates (background-image can't be transitioned
+   by the browser), while the real page background behind it crossfades over
+   1.5s (#landing-bg-a/b in landing.css) - so without this, the card visibly
+   "snapped" to the new cover well before the real background caught up.
+   This ::before layer holds the OLD cover at opacity 1 and fades it out over
+   the same 1.5s (covers.js sets --landing-cover-url-prev/-pos-prev and flips
+   --landing-cover-fade 1 -> 0 right after swapping the base image), so the
+   card reveals its new cover at the same rate the real background does
+   instead of popping in ahead of it. Sits behind .feed-day-content (that has
+   its own z-index:1) and behind the ::after dim overlay below (both z-index:
+   auto, so normal source order already puts ::before under ::after here) -
+   no explicit z-index needed. */
+body:not(.no-feed-day-covers) .feed-day-card--glass::before,
+body.no-feed-day-covers:not(.no-feed-glass-cards) .feed-day-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--landing-cover-url-prev, none);
+  background-size: cover;
+  background-position: var(--landing-cover-pos-prev, center);
+  opacity: var(--landing-cover-fade, 0);
+  transition: opacity 1.5s ease;
+}
 body:not(.no-feed-day-covers) .feed-day-card--glass::after,
 body.no-feed-day-covers:not(.no-feed-glass-cards) .feed-day-card::after {
   content: '';
@@ -157,6 +181,7 @@ body.no-feed-day-covers .feed-day-cover-stack { display: none !important; }
    - covers off, glass off: everything flat, same as the feature never existed. */
 body.no-feed-glass-cards .feed-day-card--glass { background-color: #1f2937 !important; background-image: none !important; }
 body.no-feed-glass-cards .feed-day-card--glass::after { display: none !important; }
+body.no-feed-glass-cards .feed-day-card--glass::before { display: none !important; }
 body.no-feed-day-covers:not(.no-feed-glass-cards) .feed-day-card { background-color: var(--feed-glass-bg) !important; }
 
 .feed-day-header {
