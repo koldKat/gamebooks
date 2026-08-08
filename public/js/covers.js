@@ -596,7 +596,6 @@ export function _applyLandingBgPosition() {
     const el = document.getElementById(`landing-bg-${l}`);
     if (el) el.style.backgroundPosition = `center ${_landingBgPosY}%`;
   });
-  document.documentElement.style.setProperty('--landing-cover-pos', `center ${_landingBgPosY}%`);
 }
 
 export function _canDragLandingBg() {
@@ -675,37 +674,13 @@ function _rotateLandingCover() {
   nxt.style.backgroundImage = url;
   nxt.style.backgroundPosition = `center ${_landingBgPosY}%`;
   nxt.style.opacity = '1';
-  // Lets coverless feed day cards (.feed-day-card--glass, demo.css) show the
-  // same currently-live cover as their own background instead of only seeing
-  // it through the page-wide dim layer - see the CSS for why that mismatched
-  // a real cover-tile card's look.
-  //
-  // The card's background-image swaps instantly (no browser support for
-  // transitioning that property), so without the block below it would pop to
-  // the new cover well ahead of the real #landing-bg-a/b crossfade above,
-  // which takes 1.5s. --landing-cover-url-prev/-fade drive a ::before layer
-  // (demo.css) that holds the OLD cover at full opacity and fades it out
-  // over the same 1.5s, so the card's reveal is paced to match. Order
-  // matters: capture the outgoing url/pos and pin --landing-cover-fade at 1
-  // (still showing old, no transition yet) BEFORE swapping the base image,
-  // then flush layout so the browser commits that frame before setting fade
-  // to 0 - otherwise the browser could coalesce the 1->0 change with the
-  // initial 1 and skip the transition entirely.
-  const prevUrl = document.documentElement.style.getPropertyValue('--landing-cover-url');
-  const prevPos = document.documentElement.style.getPropertyValue('--landing-cover-pos');
-  if (prevUrl) {
-    document.documentElement.style.setProperty('--landing-cover-url-prev', prevUrl);
-    document.documentElement.style.setProperty('--landing-cover-pos-prev', prevPos);
-    document.documentElement.style.setProperty('--landing-cover-fade', '1');
-  }
-  document.documentElement.style.setProperty('--landing-cover-url', url);
-  document.documentElement.style.setProperty('--landing-cover-pos', `center ${_landingBgPosY}%`);
-  if (prevUrl) {
-    void document.documentElement.offsetHeight; // flush layout before starting the fade-out
-    requestAnimationFrame(() => {
-      document.documentElement.style.setProperty('--landing-cover-fade', '0');
-    });
-  }
+  // Coverless feed day cards (.feed-day-card--glass, demo.css) are
+  // genuinely transparent - they show these same #landing-bg-a/-b layers
+  // straight through, not a copy, so their crossfade is automatically in
+  // sync with this one for free. No CSS custom property bookkeeping needed
+  // here any more (there used to be some, kept in sync by hand - removed
+  // since it could only ever be "as fresh as the last update," which showed
+  // up as real staleness bugs; see the CSS comment for the story).
   setTimeout(() => {
     cur.style.opacity = '0';
     setTimeout(() => {
