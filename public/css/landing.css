@@ -850,7 +850,9 @@ body.feed-collapsed #feed-panel {
 #forum-btn,
 #feedback-btn,
 #notif-btn,
-#inbox-btn {
+#inbox-btn,
+#display-settings-btn,
+#bonus-gc-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -878,29 +880,18 @@ body.feed-collapsed #feed-panel {
    a pulsing glow (matching #notif-btn/#forum-btn's own "something's
    waiting" convention - see bonus-gc-pulse below) marks it ready, and
    it's disabled/unclickable until then too. */
+/* Sizing (height/padding/border/border-radius) comes entirely from the
+   shared button rule above now - #bonus-gc-btn used to re-declare its own
+   fixed 1.7rem square box here, which was meant to match its siblings but
+   in practice made it look inconsistent next to them (different box model:
+   fixed square vs. their padding-driven auto-width). Only genuine
+   differences stay here: default cursor (disabled until a coin is ready),
+   the box-shadow transition the pulse animation needs, and the icon size. */
 #bonus-gc-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 1.7rem;
-  width: 1.7rem;
-  background: #111827;
-  border: 1px solid #374151;
-  border-radius: 7px;
-  padding: 0;
   cursor: not-allowed;
   transition: border-color 0.15s, box-shadow 0.15s;
-  /* The flex `gap` on #app-banner-btns already puts an equal box-to-box
-     space between every button pair, but the coin icon fills almost all
-     of its own box (16px icon in a ~27px box, ~4-5px inset) while F1 and
-     its other text-button neighbors have generous 0.65rem horizontal
-     padding around their label - so the *visible content* here reads as
-     noticeably closer to F1 than any other pair, even though the boxes
-     themselves are spaced identically. A little extra margin compensates
-     for that visual density difference specifically at this one pair. */
-  margin-right: 0.2rem;
 }
-#bonus-gc-btn svg { width: 16px; height: 16px; filter: grayscale(1) brightness(0.7); transition: filter 0.15s; }
+#bonus-gc-btn svg { width: 12px; height: 12px; filter: grayscale(1) brightness(0.7); transition: filter 0.15s; }
 /* Breathes between a baseline glow (never fully off) and a bigger one, same
    4s ease-in-out infinite rate as #notif-btn/#forum-btn's own pulse (and
    the covers-panel sort/kind filter labels' flash) - matches the app's
@@ -925,6 +916,7 @@ body.feed-collapsed #feed-panel {
 #feedback-btn:hover  { border-color: #6b7280; color: #e2e8f0; }
 #notif-btn:hover     { border-color: #6b7280; color: #e2e8f0; }
 #inbox-btn:hover     { border-color: #6b7280; color: #e2e8f0; }
+#display-settings-btn:hover { border-color: #6b7280; color: #e2e8f0; }
 #inbox-btn.inbox-btn--active       { border-color: #16a34a; color: #4ade80; animation: notif-pulse 4s ease-in-out infinite; }
 #inbox-btn.inbox-btn--active:hover { border-color: #22c55e; color: #86efac; animation: none; }
 
@@ -939,6 +931,22 @@ body.feed-collapsed #feed-panel {
   mask-repeat: no-repeat;
   mask-position: center;
   -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6V11c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z'/%3E%3C/svg%3E");
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+}
+
+.cog-icon {
+  display: inline-block;
+  width: 0.85em;
+  height: 0.85em;
+  vertical-align: -0.1em;
+  background: currentColor;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94L14.4 2.81c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41L9.25 5.35c-.59.24-1.13.56-1.62.94L5.24 5.33c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58C4.84 11.36 4.8 11.69 4.8 12s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.02-1.6zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z'/%3E%3C/svg%3E");
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94L14.4 2.81c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41L9.25 5.35c-.59.24-1.13.56-1.62.94L5.24 5.33c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58C4.84 11.36 4.8 11.69 4.8 12s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.02-1.6zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z'/%3E%3C/svg%3E");
   -webkit-mask-size: contain;
   -webkit-mask-repeat: no-repeat;
   -webkit-mask-position: center;

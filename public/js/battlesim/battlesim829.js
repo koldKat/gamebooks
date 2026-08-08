@@ -7,13 +7,13 @@
 //
 // Equipment/inventory are read-only inputs here (pt.equipment / pt.inventory)
 // - this module never writes back to them. All sim-specific state lives in
-// pt.battleSim, which is already per-user/per-book via currentPlaythrough().
+// pt.sim829, which is already per-user/per-book via currentPlaythrough().
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../state.js?v=11';
-import { showAlert } from '../play.js?v=61';
-import { getPlayBtnRow } from '../charsheet.js?v=52';
-import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../util.js?v=35';
-import { t } from '../i18n.js?v=28';
+import { showAlert } from '../play.js?v=104';
+import { getPlayBtnRow } from '../charsheet.js?v=77';
+import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../util.js?v=60';
+import { t } from '../i18n.js?v=49';
 
 const SVG_SKULL  = `<svg class="sim-icon sim-icon-dead"  viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8c0 2.8 1.4 5.3 3.6 6.8V20a1 1 0 0 0 1 1h6.8a1 1 0 0 0 1-1v-2.2C18.6 16.3 20 13.8 20 11a8 8 0 0 0-8-8zm-2.5 13v-1.5a.5.5 0 0 0-.5-.5H8l-.5-1 1-1-1-1 1-1H9a2.5 2.5 0 0 1 5 0h.5l1 1-1 1 1 1-.5 1h-1a.5.5 0 0 0-.5.5V16h-4z"/></svg>`;
 const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v7a6 6 0 0 1-12 0V2zm-2 1H2v4a4 4 0 0 0 4 4v-1a3 3 0 0 1-3-3V3zm16 0h2v4a4 4 0 0 1-4 4v-1a3 3 0 0 0 3-3V3zm-7 13v2H9v2h6v-2h-2v-2a6 6 0 0 0 5-5.92V2H6v8.08A6 6 0 0 0 13 16z"/></svg>`;
@@ -30,11 +30,11 @@ const RANGED_TYPE_LABELS = {
 function _data() {
   const pt = currentPlaythrough();
   if (!pt) return null;
-  if (!pt.battleSim) {
+  if (!pt.sim829) {
     // Seed А/З from equipped weapon/armor as a starting point - like an
     // enemy autocomplete fill, the fields stay fully editable afterward.
     const { baseA, baseD } = _equipmentBaseStats(pt);
-    pt.battleSim = {
+    pt.sim829 = {
       player: {
         a: baseA, d: baseD, hp: 12, hpMax: 12,
         skills: { weapon: 0, parry: 0, endurance: false, archery: 0, throwing: false },
@@ -45,16 +45,16 @@ function _data() {
       history: [],
     };
   }
-  if (!pt.battleSim.history) pt.battleSim.history = [];
-  if (pt.battleSim.enemy.pb === undefined) pt.battleSim.enemy.pb = 0;
-  if (pt.battleSim.player.hp === undefined) pt.battleSim.player.hp = 12;
-  if (!pt.battleSim.player.skills) {
-    pt.battleSim.player.skills = { weapon: 0, parry: 0, endurance: false, archery: 0, throwing: false };
+  if (!pt.sim829.history) pt.sim829.history = [];
+  if (pt.sim829.enemy.pb === undefined) pt.sim829.enemy.pb = 0;
+  if (pt.sim829.player.hp === undefined) pt.sim829.player.hp = 12;
+  if (!pt.sim829.player.skills) {
+    pt.sim829.player.skills = { weapon: 0, parry: 0, endurance: false, archery: 0, throwing: false };
   }
-  if (!pt.battleSim.player.ranged) {
-    pt.battleSim.player.ranged = { weaponKey: '', type: 'bow', attempts: 0, magicT: 0, magicDmg: 0 };
+  if (!pt.sim829.player.ranged) {
+    pt.sim829.player.ranged = { weaponKey: '', type: 'bow', attempts: 0, magicT: 0, magicDmg: 0 };
   }
-  return pt.battleSim;
+  return pt.sim829;
 }
 
 function _roll() { return 1 + Math.floor(Math.random() * 6); }
@@ -180,13 +180,16 @@ function _rangedDamageDisplay(d, weapon) {
 }
 
 // Map a stepper's data-group to its target object - 'ranged' lives nested
-// under player.ranged, everything else is a top-level battleSim group.
+// under player.ranged, everything else is a top-level sim829 group.
 function _getGroupObj(d, group) {
   return group === 'ranged' ? d.player.ranged : d[group];
 }
 
 // Per-run record of a finished battle's outcome - kept separate from the
 // rolling round-by-round log, which only covers the current battle.
+// Uncapped (was previously trimmed to the last 100) - the admin dashboard
+// aggregates battle counts app-wide from this array, so per-user history needs
+// to be a true lifetime total, not a rolling window.
 function _recordOutcome(d, outcome) {
   d.history.push({
     enemy: _enemyName(d),
@@ -195,7 +198,6 @@ function _recordOutcome(d, outcome) {
     playerHp: d.player.hp, playerHpMax: d.player.hpMax,
     ts: Date.now(),
   });
-  if (d.history.length > 100) d.history.shift();
 }
 
 function _renderHistory() {
@@ -457,8 +459,8 @@ export function setBattleSimVisible(visible) {
 }
 
 // Build one stat row using the same .inv-edit-row / .inv-qty-* pattern as
-// the inventory item-edit popover, bound to pt.battleSim[group][key]
-// (group 'ranged' resolves to pt.battleSim.player.ranged - see _getGroupObj).
+// the inventory item-edit popover, bound to pt.sim829[group][key]
+// (group 'ranged' resolves to pt.sim829.player.ranged - see _getGroupObj).
 function _statField(label, id, group, key) {
   return `
     <div class="inv-edit-row">
@@ -762,7 +764,7 @@ export function initBattleSim() {
     });
   });
 
-  // Heal-amount stepper (min 1, not tied to battleSim data)
+  // Heal-amount stepper (min 1, not tied to sim829 data)
   overlay.querySelectorAll('.inv-qty-btn:not([data-group])').forEach(btnEl => {
     btnEl.addEventListener('click', () => {
       const input = document.getElementById(btnEl.dataset.id);

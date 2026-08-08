@@ -18,7 +18,7 @@ A public wall showing all the books, anthologies, and series in the tracker. Cli
 - **Favorites** - while logged in, hover a cover and click the ★ to save it as a favourite; your first favourite earns **5 XP**
 - The wall refreshes automatically whenever books are added or changed
 
-> **Hidden feature:** Press **Ctrl+Y** to adjust the cover-title font size, toggle bold text, hide Cyrillic covers, toggle **Reduce animations** (useful on low-powered devices), and toggle **Show covers in feed** / **Transparent background for day cards**.
+> Click the ⚙ (cog) button in the header, or press **Ctrl+Y**, to adjust the cover-title font size, toggle bold text, hide Cyrillic covers, toggle **Reduce animations** (useful on low-powered devices), and toggle **Show covers in feed** / **Transparent background for day cards**.
 
 ### Centre - Activity feed
 

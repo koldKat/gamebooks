@@ -9,14 +9,15 @@ import {
 import {
   network, visNodes, setGraphCrossBookRoute,
   canReachInGraph, allReachableInGraph, clampViewportScale, findPathTo,
-} from './graph.js?v=98';
+  RESTORE_MIN_VIEWPORT_SCALE,
+} from './graph.js?v=104';
 import {
   render, showAlert, startPortalRun, startPlaythrough, setOpenWorldContext, setOnViewPublicRun,
-} from './play.js?v=97';
-import { t } from './i18n.js?v=44';
-import { setOnCharSheetSaved } from './charsheet.js?v=71';
-import { instantiateLoadout } from './equipment.js?v=143';
-import { getCachedBooks } from './books.js?v=151';
+} from './play.js?v=104';
+import { t } from './i18n.js?v=49';
+import { setOnCharSheetSaved } from './charsheet.js?v=77';
+import { instantiateLoadout } from './equipment.js?v=149';
+import { getCachedBooks } from './books.js?v=157';
 
 let _hooks = {};
 export function setOpenWorldHooks(h) { _hooks = h || {}; }
@@ -355,7 +356,7 @@ export function _focusNodeAfterLoad(sec) {
   const doFocus = () => {
     if (visNodes?.get(sec)) {
       network.selectNodes([sec]);
-      network.focus(sec, { scale: clampViewportScale(state.viewport?.scale ?? 1.0), animation: { duration: 400, easingFunction: 'easeInOutQuad' } });
+      network.focus(sec, { scale: Math.max(clampViewportScale(state.viewport?.scale ?? 1.0), RESTORE_MIN_VIEWPORT_SCALE), animation: { duration: 400, easingFunction: 'easeInOutQuad' } });
     }
   };
   if (Object.keys(state.positions).length === 0) {

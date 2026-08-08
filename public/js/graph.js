@@ -3,7 +3,7 @@ import {
   state, viewingPt, isTerminal, parseSecId, isValidSecId,
   currentPlaythrough, allDiscoveredSections, saveState,
 } from './state.js?v=13';
-import { t } from './i18n.js?v=44';
+import { t } from './i18n.js?v=49';
 
 export let network  = null;
 export let visNodes = null;
@@ -17,6 +17,16 @@ export const MAX_VIEWPORT_SCALE = 3;
 export function clampViewportScale(scale) {
   return Math.min(MAX_VIEWPORT_SCALE, Math.max(MIN_VIEWPORT_SCALE, scale));
 }
+// A tighter floor used only when *restoring* a saved zoom on entry
+// (_focusNodeAfterLoad in open-world.js), not for manual zooming during an
+// active session. MIN_VIEWPORT_SCALE alone (0.3) was too permissive here -
+// any accidental zoom-out during a session, even briefly, gets debounce-
+// saved via the 'zoom' listener below and then force-reapplied via
+// network.focus() on every future entry into that book, "sticking" the view
+// at a tiny, hard-to-read scale indefinitely. Manual in-session zooming can
+// still go below this floor (down to MIN_VIEWPORT_SCALE) - this only affects
+// what gets restored automatically on load.
+export const RESTORE_MIN_VIEWPORT_SCALE = 0.6;
 
 let _stabilizeHandler  = null;
 

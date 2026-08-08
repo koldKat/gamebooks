@@ -3,8 +3,8 @@
 // To remove: delete this file, remove its import line and initStats()/closeStatsModal()
 // calls from boot.js, and remove the stats-modal CSS from style.css.
 
-import { escapeHtml, fetchPublic } from './util.js?v=54';
-import { t } from './i18n.js?v=44';
+import { escapeHtml, fetchPublic } from './util.js?v=60';
+import { t } from './i18n.js?v=49';
 
 export function closeStatsModal() {
   document.getElementById('stats-modal-overlay').classList.remove('active');
@@ -140,6 +140,15 @@ export async function openStatsModal() {
           [t('stats.public_runs'), fmt(s.publicRuns) + pct(s.publicRuns, s.finishedPlaythroughs)],
           [t('stats.tracked_play_time'), fmtDuration(s.heartbeatMinutes)],
           [t('stats.avg_play_time_per_player'), fmtDuration(s.avgPlayMinutesPerPlayer)],
+        ],
+      },
+      {
+        cls: 'battle-sims', label: t('stats.sec.battle_sims'),
+        rows: [
+          [t('stats.battle_sims_available'), fmt(s.battleSims)],
+          [t('stats.sim_battles_fought'), fmt(s.battlesFought)],
+          [t('stats.sim_battles_won'), fmt(s.battlesWon) + pct(s.battlesWon, s.battlesFought)],
+          [t('stats.sim_battles_lost'), fmt(s.battlesLost) + pct(s.battlesLost, s.battlesFought)],
         ],
       },
       {

@@ -278,6 +278,7 @@ const translations = {
     'stats.sec.books':    'Books',
     'stats.sec.parties':  'Parties',
     'stats.sec.gameplay': 'Gameplay',
+    'stats.sec.battle_sims': 'Battle Simulators',
     'stats.sec.xp':       'XP & Progression',
     'stats.sec.coins':    'Gold Coins & Shop',
     'stats.sec.ratings':  'Ratings',
@@ -328,6 +329,10 @@ const translations = {
     'stats.total_wins':               'Total wins',
     'stats.total_losses':             'Total losses',
     'stats.total_battle_deaths':      'Total battle deaths',
+    'stats.battle_sims_available':    'Battle sims available',
+    'stats.sim_battles_fought':       'Sim battles fought',
+    'stats.sim_battles_won':          'Sim battles won',
+    'stats.sim_battles_lost':         'Sim battles lost',
     'stats.tracked_play_time':        'Tracked play time',
     'stats.avg_play_time_per_player': 'Avg play time / player',
 
@@ -660,6 +665,7 @@ const translations = {
     'ph.portal_label':         'e.g. Head to Golnir',
 
     'title.f1_shortcuts': 'Keyboard shortcuts',
+    'title.display_settings': 'Display settings',
     'title.tutorial':     'Gamebook Tracker tutorial',
     'title.download_pdf': 'Download PDF',
     'title.user_guide':   'User Guide',

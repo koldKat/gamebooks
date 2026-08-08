@@ -66,7 +66,7 @@
     "players gameplay books"
     "xp-progression gold-coins-shop books"
     "open-world ratings parties"
-    "forum the-app ."
+    "forum the-app battle-sims"
     "server the-app .";
   gap: 1rem;
 }
@@ -79,6 +79,7 @@
 .stats-section--players { grid-area: players; }
 .stats-section--books { grid-area: books; }
 .stats-section--gameplay { grid-area: gameplay; }
+.stats-section--battle-sims { grid-area: battle-sims; }
 .stats-section--xp-progression { grid-area: xp-progression; }
 .stats-section--gold-coins-shop { grid-area: gold-coins-shop; }
 .stats-section--forum { grid-area: forum; }

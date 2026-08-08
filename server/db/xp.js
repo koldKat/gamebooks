@@ -687,10 +687,15 @@ function _checkGroupWonAll(userId, seriesId, parentBookId) {
   }
 }
 
-// Per-playthrough state keys used by the 7 battle simulator modules (see
+// Per-playthrough state keys used by all 10 battle simulator modules (see
 // processStateXp below) - kept as one list so a future sim just needs
-// adding here, not duplicated at each call site.
-const SIM_HISTORY_KEYS = ['battleSim', 'sim8', 'sim286', 'sim198', 'sim199', 'sim200', 'sim186'];
+// adding here, not duplicated at each call site. sim201/sim202/sim203 were
+// missing from this list for a while after each shipped (silently no
+// battlesim_win/battlesim_loss XP for those three books) until caught and
+// backfilled. 'sim829' (not 'battleSim') matches server/db.js's one-time
+// pt.battleSim -> pt.sim829 rename, which brought book 829 in line with
+// every other sim's pt.simNNN naming (it predates that convention).
+const SIM_HISTORY_KEYS = ['sim829', 'sim8', 'sim286', 'sim198', 'sim199', 'sim200', 'sim186', 'sim201', 'sim202', 'sim203'];
 
 function processStateXp(userId, bookId, oldState, newState, totalSections) {
   if (newState?.isDemoBook) return;
@@ -826,19 +831,21 @@ function processStateXp(userId, bookId, oldState, newState, totalSections) {
     if (oldLen < 1 && newLen >= 1)
       awardXp(userId, 'run_depth', owSeriesId ? `series:${owSeriesId}:${i}` : `${bookId}:${i}`);
 
-    // Battle simulators (all 7: battlesim829, sim8, sim286, sim198, sim199,
-    // sim200, sim186) each log finished battles into their own history array
-    // with an identical { outcome: 'win'|'loss', ts } shape - award a small,
-    // repeatable amount per outcome using the entry's own ts as the ref
-    // (same trick idle_heartbeat uses for a naturally-unique, non-colliding
-    // ref per real event, rather than the "once ever" dedup most other
-    // events use). Deliberately no per-book/per-sim distinction - simulator
-    // practice isn't real playthrough progress, so it's not worth a bigger
-    // reward or an anti-farm mechanism, just a small nod for using it.
-    // Compares by max ts, not array length - every sim caps history at 100
-    // entries via .shift(), so once that cap is hit the array length stops
-    // growing even as new entries keep appending; a length-only comparison
-    // would silently stop awarding XP forever past that point.
+    // Battle simulators (all 10, listed in SIM_HISTORY_KEYS) each log
+    // finished battles into their own history array with an identical
+    // { outcome: 'win'|'loss', ts } shape - award a small, repeatable amount
+    // per outcome using the entry's own ts as the ref (same trick
+    // idle_heartbeat uses for a naturally-unique, non-colliding ref per real
+    // event, rather than the "once ever" dedup most other events use).
+    // Deliberately no per-book/per-sim distinction - simulator practice
+    // isn't real playthrough progress, so it's not worth a bigger reward or
+    // an anti-farm mechanism, just a small nod for using it.
+    // Compares by max ts, not array length - history used to be capped at
+    // 100 entries via .shift() (removed 2026-08-09, now a true lifetime
+    // log), and a length-only comparison would have silently stopped
+    // awarding XP forever once that cap was hit. Kept the ts comparison
+    // even after removing the cap since it's still correct and there's no
+    // reason to change working logic for it.
     for (const simKey of SIM_HISTORY_KEYS) {
       const oldHist = oldPt?.[simKey]?.history ?? [];
       const newHist = newPt?.[simKey]?.history ?? [];
@@ -1060,5 +1067,5 @@ module.exports = {
   _buildDemoState, createDemoBook, refreshDemoBooks, getDemoBookState,
   _checkGroupMilestone, _checkGroupWonAll, processStateXp,
   migrateXpForUser, runXpMigration, migratePublicBookXp, migrateEquipmentXp,
-  _insertNotif,
+  _insertNotif, SIM_HISTORY_KEYS,
 };

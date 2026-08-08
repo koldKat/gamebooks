@@ -12,10 +12,10 @@
 // state lives in pt.sim286, per-user/per-book via currentPlaythrough().
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../state.js?v=11';
-import { showAlert } from '../play.js?v=61';
-import { getPlayBtnRow } from '../charsheet.js?v=52';
-import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../util.js?v=35';
-import { t } from '../i18n.js?v=28';
+import { showAlert } from '../play.js?v=104';
+import { getPlayBtnRow } from '../charsheet.js?v=77';
+import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../util.js?v=60';
+import { t } from '../i18n.js?v=49';
 
 // Book rule: initial life roll (2d6×4) plus up to 2 rerolls, 3 throws total per run.
 const MAX_LIFE_ROLLS = 3;
@@ -236,6 +236,9 @@ function _enemyAttackOnce(d) {
   }
 }
 
+// Uncapped (was previously trimmed to the last 100) - the admin dashboard
+// aggregates battle counts app-wide from this array, so per-user history needs
+// to be a true lifetime total, not a rolling window.
 function _recordOutcome(d, outcome, enemyNameOverride = null) {
   d.history.push({
     enemy: enemyNameOverride ?? _enemyName(d), outcome,
@@ -243,7 +246,6 @@ function _recordOutcome(d, outcome, enemyNameOverride = null) {
     playerLife: d.player.life, playerLifeMax: d.player.lifeMax,
     ts: Date.now(),
   });
-  if (d.history.length > 100) d.history.shift();
 }
 
 // Rule "Първи удар": the player strikes first by default - some episodes flip
