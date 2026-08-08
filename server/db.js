@@ -223,13 +223,11 @@ try { db.exec(`ALTER TABLE series ADD COLUMN published_at  INTEGER DEFAULT NULL`
 try { db.exec(`ALTER TABLE series ADD COLUMN is_open_world INTEGER NOT NULL DEFAULT 0`); } catch (_) {}
 
 // One-time migration: backfill has_battle_sim for the books whose sim module
-// existed before this column did (was previously just a hardcoded ID list
-// duplicated in public/js/util.js's BATTLE_SIM_BOOK_IDS and boot.js's
-// per-book setSimNVisible() calls - both still needed for now since each
-// sim is its own bespoke module boot.js dispatches to by ID, but this
-// column is now the single source of truth for "does this book have one"
-// used by the covers-wall badge/filter, instead of a second list that had
-// to be kept in sync by hand).
+// existed before this column did (was previously a hardcoded ID list that's
+// since been removed - boot.js's per-book setSimNVisible() calls are still
+// needed since each sim is its own bespoke module boot.js dispatches to by
+// ID, but this column is now the single source of truth for "does this book
+// have one" used by the covers-wall badge/filter).
 {
   const done = db.prepare(`SELECT value FROM admin_settings WHERE key = 'has_battle_sim_migrated'`).get();
   if (!done) {
@@ -237,6 +235,36 @@ try { db.exec(`ALTER TABLE series ADD COLUMN is_open_world INTEGER NOT NULL DEFA
     const setFlag = db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = ?');
     db.transaction(() => { for (const id of ids) setFlag.run(id); })();
     db.prepare(`INSERT OR REPLACE INTO admin_settings (key, value) VALUES ('has_battle_sim_migrated', '1')`).run();
+  }
+}
+// Same one-off flag for book 203 (Island of the Lizard King) - the migration
+// above only ever runs once, so each new sim added after it needs its own
+// small idempotent UPDATE rather than re-running the whole backfill.
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 203').run(); } catch (_) {}
+
+// One-time migration: book 829's sim was the first one built, before the
+// pt.simNNN naming convention existed, so its state lived under pt.battleSim
+// instead. Renamed to pt.sim829 for consistency with every other sim (and so
+// server/db/xp.js's SIM_HISTORY_KEYS can drop the one-off 'battleSim' entry) -
+// this moves any already-saved battleSim data over so existing players don't
+// lose their in-progress fight or battle history.
+{
+  const done = db.prepare(`SELECT value FROM admin_settings WHERE key = 'sim829_key_renamed'`).get();
+  if (!done) {
+    const rows = db.prepare('SELECT id, state_data FROM user_books WHERE book_id = 829').all();
+    const upd  = db.prepare('UPDATE user_books SET state_data = ? WHERE id = ?');
+    db.transaction(() => {
+      for (const row of rows) {
+        let s;
+        try { s = JSON.parse(row.state_data); } catch { continue; }
+        let changed = false;
+        for (const pt of [...(s.playthroughs || []), ...(s.preSeriesRuns || [])]) {
+          if (pt && pt.battleSim && !pt.sim829) { pt.sim829 = pt.battleSim; delete pt.battleSim; changed = true; }
+        }
+        if (changed) upd.run(JSON.stringify(s), row.id);
+      }
+    })();
+    db.prepare(`INSERT OR REPLACE INTO admin_settings (key, value) VALUES ('sim829_key_renamed', '1')`).run();
   }
 }
 

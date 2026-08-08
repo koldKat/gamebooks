@@ -8,7 +8,7 @@
 // original (often misleading) section comment.
 
 const { db, _naturalCompareByName, _getPdfSize } = require('./connection');
-const { computeLevel, getTitleForLevel, getUserXpInfo, awardXp, awardCoins, processStateXp, _insertNotif } = require('./xp');
+const { computeLevel, getTitleForLevel, getUserXpInfo, awardXp, awardCoins, processStateXp, _insertNotif, SIM_HISTORY_KEYS } = require('./xp');
 const { purgeExpiredSessions } = require('./auth');
 
 db.exec(`
@@ -735,6 +735,25 @@ function adminGetStats() {
   let wins               = 0;
   let deaths             = 0;
   let publicRuns         = 0;
+  let battlesFought      = 0;
+  let battlesWon         = 0;
+  let battlesLost        = 0;
+  // Tallies every finished battle logged across all 10 sim state keys, on
+  // any playthrough - same "pts" (startedAt-touched, non-padding) scope
+  // already used for wins/deaths below, not preSeriesRuns.
+  const _tallyBattles = pts => {
+    for (const pt of pts) {
+      for (const simKey of SIM_HISTORY_KEYS) {
+        const hist = pt[simKey]?.history;
+        if (!hist?.length) continue;
+        battlesFought += hist.length;
+        for (const entry of hist) {
+          if (entry?.outcome === 'win') battlesWon++;
+          else if (entry?.outcome === 'loss') battlesLost++;
+        }
+      }
+    }
+  };
   const bookRows = db.prepare('SELECT id, total_sections, is_container FROM books WHERE is_demo = 0 AND parent_book_id IS NULL').all();
   for (const book of bookRows) {
     if (book.is_container) {
@@ -767,6 +786,7 @@ function adminGetStats() {
             wins   += pts.filter(p => p.result === 'success').length;
             deaths += pts.filter(p => p.result === 'death').length;
             publicRuns += pts.filter(p => p.isPublic).length;
+            _tallyBattles(pts);
           } catch {}
         }
         mappedSections     += bestMapped;
@@ -799,6 +819,7 @@ function adminGetStats() {
         wins   += pts.filter(p => p.result === 'success').length;
         deaths += pts.filter(p => p.result === 'death').length;
         publicRuns += pts.filter(p => p.isPublic).length;
+        _tallyBattles(pts);
       } catch {}
     }
     mappedSections     += bestMapped;
@@ -817,7 +838,9 @@ function adminGetStats() {
   const pdfCount = db.prepare("SELECT COUNT(*) AS n FROM books WHERE pdf_path IS NOT NULL AND is_demo = 0").get().n;
   const luckyGcGenerated = db.prepare('SELECT COALESCE(SUM(bonus_gc_generated), 0) AS n FROM users').get().n;
   const luckyGcClaimed   = db.prepare("SELECT COALESCE(SUM(amount), 0) AS n FROM coin_events WHERE event = 'bonus_gc_claim'").get().n;
-  return { users, books, anthologies, series: seriesCount, sessions, totalSections, mappedSections, discoveredSections, playthroughs, activePlaythroughs, finishedPlaythroughs, wins, deaths, publicRuns, dbSize, feedbackUnread, totalCoinsEarned, totalCoinsSpent, totalCoinsAvailable, pdfCount, luckyGcGenerated, luckyGcClaimed };
+  const battleSims       = db.prepare('SELECT COUNT(*) AS n FROM books WHERE has_battle_sim = 1').get().n;
+  const battleWinRate    = battlesFought > 0 ? Math.round((battlesWon / battlesFought) * 100) : 0;
+  return { users, books, anthologies, series: seriesCount, sessions, totalSections, mappedSections, discoveredSections, playthroughs, activePlaythroughs, finishedPlaythroughs, wins, deaths, publicRuns, dbSize, feedbackUnread, totalCoinsEarned, totalCoinsSpent, totalCoinsAvailable, pdfCount, luckyGcGenerated, luckyGcClaimed, battleSims, battlesFought, battlesWon, battlesLost, battleWinRate };
 }
 
 function getSiteStats() {
@@ -1022,6 +1045,11 @@ function getSiteStats() {
     // computed straight from series_runs - added on top rather than relied on alone,
     // since it's disjoint from base.publicRuns (a series-run pt.isPublic is never set).
     publicRuns: base.publicRuns + owRunsPublic, battleCount, winRate,
+    // Distinct from battleCount/winRate above (those are about playthroughs whose
+    // *result* is a scripted in-book battle loss) - these are about actual use of
+    // the battle simulator feature itself, tallied across all 10 sim state keys.
+    battleSims: base.battleSims, battlesFought: base.battlesFought,
+    battlesWon: base.battlesWon, battlesLost: base.battlesLost, battleWinRate: base.battleWinRate,
     heartbeatMinutes, avgPlayMinutesPerPlayer,
     // XP & progression
     totalXp, appLevel, appTitle, avgLevel, avgTitle, levelUps, xpEvents, xpEventTypes, booksFullyVisited, booksFullyDiscovered,

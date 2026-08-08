@@ -38,7 +38,7 @@ The top of the panel shows aggregate stats across all users and books:
 **Stats for Nerds** (expandable section):
 - Users: total accounts, admin count, undos performed, fast travels performed
 - Books / Series / Anthologies: separate unique-count and library-count totals, plus unique authors and average sections per playable book
-- Gameplay: total runs, finished runs, wins, losses, battle deaths
+- Gameplay: total runs, finished runs, wins, losses, battle deaths, battle simulators available, sim battles fought/won/lost
 - XP events: total event records, distinct event types
 - Gold Coins & Shop: earned/spent/in-circulation plus purchased upgrades, including Heartbeat XP and Lucky Coin Chance, with in-circulation totals also reflecting extra milestone GC rewards
 - Forum: active posts, active threads
