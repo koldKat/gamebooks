@@ -18,7 +18,7 @@ async function handleShopPurchase(req, res) {
       undo: `Undo cap reached (${result.cap} at level ${result.level})`,
       fast_travel: `Fast travel cap reached (${result.cap} at level ${result.level})`,
       heartbeat_xp: `Heartbeat XP cap reached (${result.cap} at level ${result.level})`,
-      gc_chance: `Bonus GC chance cap reached (${result.cap} at level ${result.level})`,
+      gc_chance: `Lucky coin chance cap reached (${result.cap} at level ${result.level})`,
     };
     return send(res, 403, { error: (labels[result.item] || 'Cap reached') + '. Level up to increase the cap.' });
   }
