@@ -12,7 +12,7 @@ import { t } from './i18n.js?v=42';
 let _hooks = {};
 export function setShopHooks(h) { _hooks = h || {}; }
 
-export const COIN_SVG = `<svg class="coin-icon" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7.5" fill="#f59e0b" stroke="#92400e" stroke-width="0.75"/><circle cx="8" cy="8" r="5.5" fill="none" stroke="#fde68a" stroke-width="1"/><text x="8" y="11.5" text-anchor="middle" font-size="7" font-weight="bold" fill="#78350f" font-family="serif">G</text></svg>`;
+export const COIN_SVG = `<svg class="coin-icon" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7.5" fill="#f59e0b" stroke="#92400e" stroke-width="0.75"/><circle cx="8" cy="8" r="5.5" fill="none" stroke="#fde68a" stroke-width="1"/><text x="8" y="8" text-anchor="middle" dominant-baseline="central" font-size="7" font-weight="bold" fill="#78350f" font-family="serif">G</text></svg>`;
 
 // 1 purchase per 10 levels: level 0-10 -> 1, 11-20 -> 2, 21-30 -> 3, etc. Mirrors
 // undoFastTravelCap() in server/db.js (the real enforcement) - keep both in sync.

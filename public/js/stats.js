@@ -137,6 +137,7 @@ export async function openStatsModal() {
           [t('stats.total_wins'), fmt(s.wins) + pct(s.wins, s.finishedPlaythroughs)],
           [t('stats.total_losses'), fmt(s.deaths) + pct(s.deaths, s.finishedPlaythroughs)],
           [t('stats.total_battle_deaths'), fmt(s.battleCount) + pct(s.battleCount, s.finishedPlaythroughs)],
+          [t('stats.public_runs'), fmt(s.publicRuns) + pct(s.publicRuns, s.finishedPlaythroughs)],
           [t('stats.tracked_play_time'), fmtDuration(s.heartbeatMinutes)],
           [t('stats.avg_play_time_per_player'), fmtDuration(s.avgPlayMinutesPerPlayer)],
         ],
