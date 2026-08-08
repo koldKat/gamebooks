@@ -875,8 +875,9 @@ body.feed-collapsed #feed-panel {
    spot in the banner rather than appearing somewhere on the page, since
    there's no natural "where you were" location for a passive server-side
    roll to land near. Greyed out (default) until one is actually waiting;
-   a static glow (not an animation - no continuous repaint cost) marks it
-   ready, and it's disabled/unclickable until then too. */
+   a pulsing glow (matching #notif-btn/#forum-btn's own "something's
+   waiting" convention - see bonus-gc-pulse below) marks it ready, and
+   it's disabled/unclickable until then too. */
 #bonus-gc-btn {
   display: inline-flex;
   align-items: center;
@@ -900,21 +901,32 @@ body.feed-collapsed #feed-panel {
   margin-right: 0.2rem;
 }
 #bonus-gc-btn svg { width: 16px; height: 16px; filter: grayscale(1) brightness(0.7); transition: filter 0.15s; }
+/* Breathes between a baseline glow (never fully off) and a bigger one, same
+   4s ease-in-out infinite rate as #notif-btn/#forum-btn's own pulse (and
+   the covers-panel sort/kind filter labels' flash) - matches the app's
+   existing "something's waiting for you" convention
+   instead of a plain static glow. Gated behind body.reduce-motion in
+   reduce-motion.css same as those, since it's a decorative infinite
+   animation. */
+@keyframes bonus-gc-pulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(245, 158, 11, 0.5), 0 0 2px rgba(245, 158, 11, 0.7); }
+  50%      { box-shadow: 0 0 14px rgba(245, 158, 11, 0.9), 0 0 4px rgba(251, 191, 36, 1); }
+}
 #bonus-gc-btn.bonus-gc-btn--ready {
   cursor: pointer;
   border-color: #f59e0b;
-  box-shadow: 0 0 8px rgba(245, 158, 11, 0.7), 0 0 2px rgba(245, 158, 11, 0.9);
+  animation: bonus-gc-pulse 4s ease-in-out infinite;
 }
 #bonus-gc-btn.bonus-gc-btn--ready svg { filter: none; }
-#bonus-gc-btn.bonus-gc-btn--ready:hover { border-color: #fbbf24; box-shadow: 0 0 10px rgba(245, 158, 11, 0.9), 0 0 3px rgba(251, 191, 36, 1); }
+#bonus-gc-btn.bonus-gc-btn--ready:hover { border-color: #fbbf24; animation: none; box-shadow: 0 0 10px rgba(245, 158, 11, 0.9), 0 0 3px rgba(251, 191, 36, 1); }
 #forum-btn:hover                      { border-color: #6b7280; color: #e2e8f0; }
-#forum-btn.forum-btn--active          { border-color: #16a34a; color: #4ade80; animation: notif-pulse 1.8s ease-in-out infinite; }
+#forum-btn.forum-btn--active          { border-color: #16a34a; color: #4ade80; animation: notif-pulse 4s ease-in-out infinite; }
 #forum-btn.forum-btn--active:hover    { border-color: #22c55e; color: #86efac; animation: none; }
 #feedback-btn:hover  { border-color: #6b7280; color: #e2e8f0; }
 #notif-btn:hover     { border-color: #6b7280; color: #e2e8f0; }
 #inbox-btn:hover     { border-color: #6b7280; color: #e2e8f0; }
-#inbox-btn.inbox-btn--active       { border-color: #16a34a; color: #4ade80; }
-#inbox-btn.inbox-btn--active:hover { border-color: #22c55e; color: #86efac; }
+#inbox-btn.inbox-btn--active       { border-color: #16a34a; color: #4ade80; animation: notif-pulse 4s ease-in-out infinite; }
+#inbox-btn.inbox-btn--active:hover { border-color: #22c55e; color: #86efac; animation: none; }
 
 .bell-icon {
   display: inline-block;
@@ -939,7 +951,7 @@ body.feed-collapsed #feed-panel {
 #notif-btn.notif-btn--active {
   border-color: #16a34a;
   color: #4ade80;
-  animation: notif-pulse 1.8s ease-in-out infinite;
+  animation: notif-pulse 4s ease-in-out infinite;
 }
 #notif-btn.notif-btn--active:hover { border-color: #22c55e; color: #86efac; animation: none; }
 

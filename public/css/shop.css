@@ -18,7 +18,7 @@
   0%, 100% { border-color: #2d5a1b; box-shadow: none; }
   50%       { border-color: #86efac; box-shadow: 0 0 6px 1px rgba(134,239,172,0.35); }
 }
-.shop-btn--spendable { animation: shop-btn-pulse 2.4s ease-in-out infinite; }
+.shop-btn--spendable { animation: shop-btn-pulse 4s ease-in-out infinite; }
 
 .coin-icon { width: 14px; height: 14px; vertical-align: -2px; display: inline-block; }
 
