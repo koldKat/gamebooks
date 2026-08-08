@@ -2,7 +2,7 @@
 
 import { getToken, isDemoMode, apiFetch } from './state.js?v=13';
 import { setTrailCollapsed, setChoicesRecordedCount, CHOICES_PULSE_THRESHOLD } from './play.js?v=104';
-import { setCoversPrefsState, _updateLandingBgDragUi } from './covers.js?v=112';
+import { setCoversPrefsState, _updateLandingBgDragUi } from './covers.js?v=113';
 import { setExpandedPrefs, renderBooksList, getCachedBooks, getCachedAllSeries, getCachedStashes } from './books.js?v=157';
 
 let _hooks = {};
@@ -80,13 +80,19 @@ export function applyPrefs(p) {
 export async function syncPrefs() {
   if (!getToken() || isDemoMode) return;
   try {
-    const snapshot = { ..._localPrefOverrides };
+    const snapshotBefore = { ..._localPrefOverrides };
     const r = await apiFetch('/api/prefs');
     if (!r.ok) return;
     const serverPrefs = await r.json();
-    applyPrefs({ ...serverPrefs, ...snapshot });
-    for (const k of Object.keys(snapshot)) {
-      if (_localPrefOverrides[k] === snapshot[k]) delete _localPrefOverrides[k];
+    // Merge with the CURRENT overrides, not the pre-request snapshot - if a
+    // pref (e.g. Ctrl+X's panel-collapse toggle) got saved again while this
+    // GET was in flight, applying the stale snapshot would briefly stomp the
+    // just-made change back to its old value until the next sync corrected
+    // it - visible as a flash of the old state (panels re-collapsing for a
+    // moment right after being restored, then expanding again).
+    applyPrefs({ ...serverPrefs, ..._localPrefOverrides });
+    for (const k of Object.keys(snapshotBefore)) {
+      if (_localPrefOverrides[k] === snapshotBefore[k]) delete _localPrefOverrides[k];
     }
   } catch {}
 }

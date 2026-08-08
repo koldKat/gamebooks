@@ -80,63 +80,39 @@ body.demo-active #logout-btn {
   margin-bottom: 0.6rem;
   overflow: hidden;
 }
-/* No cover available for this day - show the real currently-live rotating
-   cover as the card's own background (background-attachment: fixed makes
-   it act as a window onto the same fixed page background, always in sync,
-   never a stale copy) with the SAME 0.9-alpha overlay a real cover-tile
-   gets (see .feed-day-cover-stack::after below), so the two card kinds
-   read identically instead of one looking washed-out next to the other.
-   --landing-cover-url/-pos are kept live by covers.js's
-   _rotateLandingCover()/_applyLandingBgPosition(). Tried on mobile too
-   (2026-08-06) despite background-attachment: fixed's known history of
-   being janky on mobile Safari - if it turns out to actually misbehave
-   there, reintroduce a `@media (min-width: 769px)` wrapper around the two
-   rules below and let .feed-day-card--glass's plain background-color
-   fallback (right above) keep covering mobile on its own, like before.
-   Two selectors share this treatment: with covers showing, only the
-   originally cover-less cards (.feed-day-card--glass) need it, to match
-   their real-cover neighbors. With "Show covers in feed" off, NONE of the
-   cards show a real per-day cover any more, so per the combo table below,
-   every card (not just originally-glass ones) gets it instead - that's
-   body.no-feed-day-covers:not(.no-feed-glass-cards) .feed-day-card. Do not
-   collapse these into "just always apply it to .feed-day-card--glass" -
-   with covers off, cards that would have shown a real cover only carry the
-   plain .feed-day-card class, not --glass, so they'd be skipped entirely
-   and mismatch against the ones that do. */
-:root { --feed-glass-bg: rgba(31, 41, 55, 0.45); }
-.feed-day-card--glass {
-  background-color: var(--feed-glass-bg);
-}
-body:not(.no-feed-day-covers) .feed-day-card--glass,
+/* No cover available for this day - let the real currently-live rotating
+   page background show straight through instead, with the SAME 0.9-alpha
+   overlay a real cover-tile gets (see .feed-day-cover-stack::after below),
+   so the two card kinds read identically instead of one looking washed-out
+   next to the other. Two selectors share this treatment: with covers
+   showing, only the originally cover-less cards (.feed-day-card--glass)
+   need it, to match their real-cover neighbors. With "Show covers in feed"
+   off, NONE of the cards show a real per-day cover any more, so per the
+   combo table below, every card (not just originally-glass ones) gets it
+   instead - that's body.no-feed-day-covers:not(.no-feed-glass-cards)
+   .feed-day-card. Do not collapse these into "just always apply it to
+   .feed-day-card--glass" - with covers off, cards that would have shown a
+   real cover only carry the plain .feed-day-card class, not --glass, so
+   they'd be skipped entirely and mismatch against the ones that do.
+   Genuinely transparent (not a copied/synced background-image) - neither
+   #feed-panel nor #landing-wrapper nor body set an opaque background, so a
+   plain `background-color: transparent` here lets the real, fixed
+   #landing-bg-a/-b layers (landing.css, z-index behind everything) show
+   straight through, exactly like looking through a tinted window. This
+   used to fake the effect with a copied background-image kept in sync via
+   --landing-cover-url (plus a whole second ::before layer to crossfade
+   between old/new copies) - fragile by construction: it could only ever be
+   "at most as fresh as the last time JS updated it," which showed up as
+   the copy visibly lagging the real background's crossfade, and once as a
+   stale copy briefly reappearing after the feed panel was hidden and shown
+   again (collapsing to max-height:0 apparently let the browser skip the
+   pending opacity transition, so it "caught up" from a stale frame instead
+   of a current one). True transparency can't go stale - there's nothing to
+   keep in sync, it shows whatever's actually there every frame, crossfades
+   included. */
+.feed-day-card--glass,
 body.no-feed-day-covers:not(.no-feed-glass-cards) .feed-day-card {
-  background-image: var(--landing-cover-url, none);
-  background-attachment: fixed;
-  background-size: cover;
-  background-position: var(--landing-cover-pos, center);
-}
-/* The card's own background-image above swaps to the new cover instantly the
-   moment --landing-cover-url updates (background-image can't be transitioned
-   by the browser), while the real page background behind it crossfades over
-   1.5s (#landing-bg-a/b in landing.css) - so without this, the card visibly
-   "snapped" to the new cover well before the real background caught up.
-   This ::before layer holds the OLD cover at opacity 1 and fades it out over
-   the same 1.5s (covers.js sets --landing-cover-url-prev/-pos-prev and flips
-   --landing-cover-fade 1 -> 0 right after swapping the base image), so the
-   card reveals its new cover at the same rate the real background does
-   instead of popping in ahead of it. Sits behind .feed-day-content (that has
-   its own z-index:1) and behind the ::after dim overlay below (both z-index:
-   auto, so normal source order already puts ::before under ::after here) -
-   no explicit z-index needed. */
-body:not(.no-feed-day-covers) .feed-day-card--glass::before,
-body.no-feed-day-covers:not(.no-feed-glass-cards) .feed-day-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image: var(--landing-cover-url-prev, none);
-  background-size: cover;
-  background-position: var(--landing-cover-pos-prev, center);
-  opacity: var(--landing-cover-fade, 0);
-  transition: opacity 1.5s ease;
+  background-color: transparent;
 }
 body:not(.no-feed-day-covers) .feed-day-card--glass::after,
 body.no-feed-day-covers:not(.no-feed-glass-cards) .feed-day-card::after {
@@ -179,10 +155,8 @@ body.no-feed-day-covers .feed-day-cover-stack { display: none !important; }
      gets the glass tint, since there's nothing left to distinguish a "would-have-had-a-cover" day
      from any other once covers are off entirely.
    - covers off, glass off: everything flat, same as the feature never existed. */
-body.no-feed-glass-cards .feed-day-card--glass { background-color: #1f2937 !important; background-image: none !important; }
+body.no-feed-glass-cards .feed-day-card--glass { background-color: #1f2937 !important; }
 body.no-feed-glass-cards .feed-day-card--glass::after { display: none !important; }
-body.no-feed-glass-cards .feed-day-card--glass::before { display: none !important; }
-body.no-feed-day-covers:not(.no-feed-glass-cards) .feed-day-card { background-color: var(--feed-glass-bg) !important; }
 
 .feed-day-header {
   font-size: 0.65rem;
