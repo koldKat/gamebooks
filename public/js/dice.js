@@ -1,7 +1,7 @@
 // dice.js - Dice roller widget: roll, display, and persist dice state per playthrough
 
 import { state, viewingPt, currentPlaythrough, saveState } from './state.js?v=13';
-import { _setPlayPanelCollapsed } from './prefs.js?v=157';
+import { _setPlayPanelCollapsed } from './prefs.js?v=158';
 import { setAfterRenderFn } from './play.js?v=104';
 
 const SUPPORTED_DICE = [4, 6, 8, 10, 12, 20, '%'];
