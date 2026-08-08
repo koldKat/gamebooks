@@ -815,7 +815,9 @@ function adminGetStats() {
   const totalCoinsSpent     = coinRow?.spent  || 0;
   const totalCoinsAvailable = totalCoinsEarned - totalCoinsSpent;
   const pdfCount = db.prepare("SELECT COUNT(*) AS n FROM books WHERE pdf_path IS NOT NULL AND is_demo = 0").get().n;
-  return { users, books, anthologies, series: seriesCount, sessions, totalSections, mappedSections, discoveredSections, playthroughs, activePlaythroughs, finishedPlaythroughs, wins, deaths, publicRuns, dbSize, feedbackUnread, totalCoinsEarned, totalCoinsSpent, totalCoinsAvailable, pdfCount };
+  const luckyGcGenerated = db.prepare('SELECT COALESCE(SUM(bonus_gc_generated), 0) AS n FROM users').get().n;
+  const luckyGcClaimed   = db.prepare("SELECT COALESCE(SUM(amount), 0) AS n FROM coin_events WHERE event = 'bonus_gc_claim'").get().n;
+  return { users, books, anthologies, series: seriesCount, sessions, totalSections, mappedSections, discoveredSections, playthroughs, activePlaythroughs, finishedPlaythroughs, wins, deaths, publicRuns, dbSize, feedbackUnread, totalCoinsEarned, totalCoinsSpent, totalCoinsAvailable, pdfCount, luckyGcGenerated, luckyGcClaimed };
 }
 
 function getSiteStats() {
@@ -1143,7 +1145,10 @@ function adminGetUsers() {
       }
     } catch {}
   }
-  return users.map(u => ({ ...u, ...(byUser[u.id] || { runs: 0, wins: 0, deaths: 0, battles: 0, active: 0 }), ...getUserXpInfo(u.id) }));
+  return users.map(u => {
+    const xpInfo = getUserXpInfo(u.id);
+    return { ...u, ...(byUser[u.id] || { runs: 0, wins: 0, deaths: 0, battles: 0, active: 0 }), ...xpInfo, luckyClaimed: xpInfo.bonusGcClaimed };
+  });
 }
 
 function updateUserGeo(userId, country, city) {

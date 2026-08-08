@@ -11,7 +11,7 @@ import { loadAdminSeries } from './series.js?v=1';
 import { loadFeedback } from './feedback.js?v=1';
 import { loadAnnouncements } from './announcements.js?v=4';
 import { loadInventory } from './inventory.js?v=1';
-import { loadTools, loadAll, loadLive, loadStats, loadAdminGc, loadAppSize } from './dashboard.js?v=7';
+import { loadTools, loadAll, loadLive, loadStats, loadAdminGc, loadAppSize } from './dashboard.js?v=9';
 // users-books.js has no exports this file calls directly, but its top-level
 // code (gift modal DOM wiring, Users/Books sort-header + search self-wiring)
 // must still run - imported transitively via dashboard.js's own import of it.

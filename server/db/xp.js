@@ -269,7 +269,7 @@ function _rollBonusGc(userId, xp, pending, gcChancePurchased) {
   const purchased = Math.min(gcChancePurchased || 0, level);
   const chance = (level + purchased) * 0.0001; // 0.01% per level + 0.01% per purchase
   if (chance > 0 && Math.random() < chance) {
-    db.prepare('UPDATE users SET pending_bonus_gc = 1 WHERE id = ?').run(userId);
+    db.prepare('UPDATE users SET pending_bonus_gc = 1, bonus_gc_generated = bonus_gc_generated + 1 WHERE id = ?').run(userId);
   }
 }
 
@@ -370,6 +370,7 @@ function awardIdleHeartbeatXp(userId) {
 
 function getUserXpInfo(userId) {
   const row  = db.prepare('SELECT xp, coins_spent, xp_boost_pct, bonus_undos, bonus_fast_travels, bonus_heartbeat_xp, bonus_coins, admin_gifted_coins, xp_from_boost, bonus_gc_chance_purchased, pending_bonus_gc FROM users WHERE id = ?').get(userId);
+  const bonusGcClaimed = db.prepare("SELECT COALESCE(SUM(amount), 0) AS n FROM coin_events WHERE user_id = ? AND event = 'bonus_gc_claim'").get(userId).n;
   const xp   = row?.xp || 0;
   const level = computeLevel(xp);
   const coinsEarned  = Math.floor(xp / 1000) + (row?.bonus_coins || 0);
@@ -394,6 +395,7 @@ function getUserXpInfo(userId) {
     xpFromBoost:       row?.xp_from_boost     || 0,
     bonusGcChancePurchased: row?.bonus_gc_chance_purchased || 0,
     pendingBonusGc:         !!row?.pending_bonus_gc,
+    bonusGcClaimed:         bonusGcClaimed,
   };
 }
 

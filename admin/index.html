@@ -214,11 +214,13 @@
     #users-table th:nth-child(11) { width: 38px;  }  /* Lvl */
     #users-table th:nth-child(12) { width: 50px;  }  /* Coins */
     #users-table th:nth-child(13) { width: 44px;  }  /* Gifted */
-    #users-table th:nth-child(14) { width: 42px;  }  /* Sess */
-    #users-table th:nth-child(15) { width: 90px;  }  /* Location */
-    #users-table th:nth-child(16) { width: 110px; }  /* Domain */
+    #users-table th:nth-child(14) { width: 44px;  }  /* Lucky */
+    #users-table th:nth-child(15) { width: 42px;  }  /* Sess */
+    #users-table th:nth-child(16) { width: 90px;  }  /* Location */
     #users-table th:nth-child(17),
-    #users-table td:nth-child(17) { min-width: 360px; width: 360px; }  /* Actions - up to 4 buttons (Clear sessions, Impersonate, Lock/Unlock, Delete) need room to fit on one row without wrapping */
+    #users-table td:nth-child(17) { width: 1%; white-space: nowrap; }  /* Domain - shrink to content width (currently "pathmap.net") instead of a fixed guess */
+    #users-table th:nth-child(18),
+    #users-table td:nth-child(18) { min-width: 360px; width: 360px; }  /* Actions - up to 4 buttons (Clear sessions, Impersonate, Lock/Unlock, Delete) need room to fit on one row without wrapping */
     table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
 
     th {
@@ -606,6 +608,14 @@
             <span class="val-green" id="s-admin-gc-avail">-</span><svg class="coin-icon" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7.5" fill="#f59e0b" stroke="#92400e" stroke-width="0.75"/><circle cx="8" cy="8" r="5.5" fill="none" stroke="#fde68a" stroke-width="1"/><text x="8" y="8" text-anchor="middle" dominant-baseline="central" font-size="7" font-weight="bold" fill="#78350f" font-family="serif">G</text></svg>
           </div>
         </div>
+        <div class="stat-card stat-card-split">
+          <div class="label">Lucky coins generated / claimed</div>
+          <div class="split-vals">
+            <span class="val-amber" id="s-lucky-gc-generated">-</span><svg class="coin-icon" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7.5" fill="#f59e0b" stroke="#92400e" stroke-width="0.75"/><circle cx="8" cy="8" r="5.5" fill="none" stroke="#fde68a" stroke-width="1"/><text x="8" y="8" text-anchor="middle" dominant-baseline="central" font-size="7" font-weight="bold" fill="#78350f" font-family="serif">G</text></svg>
+            <span class="val-sep">|</span>
+            <span class="val-green" id="s-lucky-gc-claimed">-</span><svg class="coin-icon" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7.5" fill="#f59e0b" stroke="#92400e" stroke-width="0.75"/><circle cx="8" cy="8" r="5.5" fill="none" stroke="#fde68a" stroke-width="1"/><text x="8" y="8" text-anchor="middle" dominant-baseline="central" font-size="7" font-weight="bold" fill="#78350f" font-family="serif">G</text></svg>
+          </div>
+        </div>
       </div>
       <div class="stat-card-stack">
         <div class="stat-card"><div class="label">Application Size</div><div class="value" id="s-appsize">-</div></div>
@@ -697,6 +707,7 @@
             <th data-table="users" data-col="level">Lvl</th>
             <th data-table="users" data-col="coinsEarned">Coins</th>
             <th data-table="users" data-col="adminGiftedCoins">Gifted</th>
+            <th data-table="users" data-col="luckyClaimed">Lucky</th>
             <th data-table="users" data-col="session_count">Sess</th>
             <th>Location</th>
             <th>Domain</th>
@@ -1302,6 +1313,6 @@
     </div>
   </div>
 
-  <script type="module" src="/admin/js/boot.js?v=10"></script>
+  <script type="module" src="/admin/js/boot.js?v=11"></script>
 </body>
 </html>

@@ -7,7 +7,7 @@
 // admin/index.html; remove the Stats cards and Tools tab HTML/CSS.
 
 import { api, fmtBytes, fmtDuration, esc, showAlert, showConfirm, flashSaved } from './core.js?v=1';
-import { loadUsers, loadBooks } from './users-books.js?v=6';
+import { loadUsers, loadBooks } from './users-books.js?v=8';
 
 export function loadAll() { loadStats(); loadAdminGc(); loadUsers(); loadBooks(); loadAppSize(); }
 
@@ -36,6 +36,8 @@ function applyStats(d) {
   document.getElementById('s-coins-earned').textContent = fmtN(d.totalCoinsEarned);
   document.getElementById('s-coins-avail').textContent  = fmtN(d.totalCoinsAvailable);
   document.getElementById('s-coins-spent').textContent   = fmtN(d.totalCoinsSpent);
+  document.getElementById('s-lucky-gc-generated').textContent = fmtN(d.luckyGcGenerated);
+  document.getElementById('s-lucky-gc-claimed').textContent   = fmtN(d.luckyGcClaimed);
   document.getElementById('s-uptime-pct').textContent    = d.uptimePct != null ? d.uptimePct.toFixed(2) + '%' : '-';
   document.getElementById('s-downtime').textContent      = fmtDuration(d.totalDowntimeS);
   const badge = document.getElementById('feedback-unread-badge');

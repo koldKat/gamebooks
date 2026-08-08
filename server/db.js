@@ -56,6 +56,20 @@ try { db.exec(`ALTER TABLE users ADD COLUMN heartbeat_carry              REAL   
 try { db.exec(`ALTER TABLE users ADD COLUMN heartbeat_minutes_banked   INTEGER NOT NULL DEFAULT 0`);        } catch (_) {}
 try { db.exec(`ALTER TABLE users ADD COLUMN bonus_gc_chance_purchased INTEGER NOT NULL DEFAULT 0`);        } catch (_) {}
 try { db.exec(`ALTER TABLE users ADD COLUMN pending_bonus_gc          INTEGER NOT NULL DEFAULT 0`);        } catch (_) {}
+try { db.exec(`ALTER TABLE users ADD COLUMN bonus_gc_generated        INTEGER NOT NULL DEFAULT 0`);        } catch (_) {}
+// Backfill: bonus_gc_generated only started counting the moment the column was added,
+// but coin_events' bonus_gc_claim rows (and any still-pending flag) predate it. A claim
+// always implies a prior generation, and a currently-pending coin implies one more that
+// hasn't been claimed yet, so claimed + pending is a safe floor for the true historical
+// total. MAX() keeps this idempotent across restarts - it only ever raises the floor,
+// never overwrites real counts accumulated since the column existed.
+try {
+  db.exec(`
+    UPDATE users SET bonus_gc_generated = MAX(bonus_gc_generated, COALESCE((
+      SELECT SUM(amount) FROM coin_events WHERE coin_events.user_id = users.id AND event = 'bonus_gc_claim'
+    ), 0) + pending_bonus_gc)
+  `);
+} catch (_) {}
 try { db.exec(`UPDATE users SET xp = CAST(xp AS INTEGER), xp_from_boost = CAST(xp_from_boost AS INTEGER) WHERE xp != CAST(xp AS INTEGER) OR xp_from_boost != CAST(xp_from_boost AS INTEGER)`); } catch (_) {}
 try { db.exec(`ALTER TABLE books ADD COLUMN is_public             INTEGER NOT NULL DEFAULT 0`);        } catch (_) {}
 try { db.exec(`ALTER TABLE forum_threads ADD COLUMN category_id   INTEGER DEFAULT NULL`);               } catch (_) {}
