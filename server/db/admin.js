@@ -734,6 +734,7 @@ function adminGetStats() {
   let finishedPlaythroughs = 0;
   let wins               = 0;
   let deaths             = 0;
+  let publicRuns         = 0;
   const bookRows = db.prepare('SELECT id, total_sections, is_container FROM books WHERE is_demo = 0 AND parent_book_id IS NULL').all();
   for (const book of bookRows) {
     if (book.is_container) {
@@ -765,6 +766,7 @@ function adminGetStats() {
             finishedPlaythroughs += pts.filter(p => !!p.result).length;
             wins   += pts.filter(p => p.result === 'success').length;
             deaths += pts.filter(p => p.result === 'death').length;
+            publicRuns += pts.filter(p => p.isPublic).length;
           } catch {}
         }
         mappedSections     += bestMapped;
@@ -796,6 +798,7 @@ function adminGetStats() {
         finishedPlaythroughs += pts.filter(p => !!p.result).length;
         wins   += pts.filter(p => p.result === 'success').length;
         deaths += pts.filter(p => p.result === 'death').length;
+        publicRuns += pts.filter(p => p.isPublic).length;
       } catch {}
     }
     mappedSections     += bestMapped;
@@ -812,7 +815,7 @@ function adminGetStats() {
   const totalCoinsSpent     = coinRow?.spent  || 0;
   const totalCoinsAvailable = totalCoinsEarned - totalCoinsSpent;
   const pdfCount = db.prepare("SELECT COUNT(*) AS n FROM books WHERE pdf_path IS NOT NULL AND is_demo = 0").get().n;
-  return { users, books, anthologies, series: seriesCount, sessions, totalSections, mappedSections, discoveredSections, playthroughs, activePlaythroughs, finishedPlaythroughs, wins, deaths, dbSize, feedbackUnread, totalCoinsEarned, totalCoinsSpent, totalCoinsAvailable, pdfCount };
+  return { users, books, anthologies, series: seriesCount, sessions, totalSections, mappedSections, discoveredSections, playthroughs, activePlaythroughs, finishedPlaythroughs, wins, deaths, publicRuns, dbSize, feedbackUnread, totalCoinsEarned, totalCoinsSpent, totalCoinsAvailable, pdfCount };
 }
 
 function getSiteStats() {
@@ -1008,7 +1011,15 @@ function getSiteStats() {
     totalSections: base.totalSections, mappedSections: base.mappedSections, discoveredSections: base.discoveredSections,
     // Gameplay
     playthroughs: base.playthroughs, activePlaythroughs: base.activePlaythroughs,
-    finishedPlaythroughs: base.finishedPlaythroughs, wins: base.wins, deaths: base.deaths, battleCount, winRate,
+    finishedPlaythroughs: base.finishedPlaythroughs, wins: base.wins, deaths: base.deaths,
+    // base.publicRuns comes from a plain pt.isPublic scan (adminGetStats), which is the
+    // real source of truth for standalone runs - but NOT for open-world series runs,
+    // where updateSeriesRunPublic() only ever writes series_runs.is_public and never
+    // touches pt.isPublic in the JSON, so those playthroughs would silently undercount
+    // here. owRunsPublic (below) is the authoritative count for series runs specifically,
+    // computed straight from series_runs - added on top rather than relied on alone,
+    // since it's disjoint from base.publicRuns (a series-run pt.isPublic is never set).
+    publicRuns: base.publicRuns + owRunsPublic, battleCount, winRate,
     heartbeatMinutes, avgPlayMinutesPerPlayer,
     // XP & progression
     totalXp, appLevel, appTitle, avgLevel, avgTitle, levelUps, xpEvents, xpEventTypes, booksFullyVisited, booksFullyDiscovered,

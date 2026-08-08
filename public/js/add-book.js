@@ -2,7 +2,7 @@
 
 import { apiFetch, isDemoMode } from './state.js?v=13';
 import { t } from './i18n.js?v=42';
-import { getCachedAllSeries, _refreshLibraryUi, setInvalidateAutocompleteCaches } from './books.js?v=147';
+import { getCachedAllSeries, _refreshLibraryUi, setInvalidateAutocompleteCaches } from './books.js?v=148';
 import { naturalCompare, matchesSearch } from './sort.js?v=1';
 import { showAlert } from './play.js?v=95';
 import {
@@ -10,11 +10,11 @@ import {
   _acceptPdfSelection, _setPdfInlineLabel, formatFileSize,
   _populateSeriesSelect, _populateParentBookSelect,
   validateIsbn, validateIssn, validateAsin,
-} from './edit-book.js?v=158';
+} from './edit-book.js?v=159';
 import {
   invalidateAutocompleteCaches, _loadAutocompleteBooks, _loadSeriesAutocomplete,
   _setModalCover, _setupNameAutocomplete, _setupPlainAutocomplete, _setupAuthorsAutocomplete,
-} from './autocomplete.js?v=138';
+} from './autocomplete.js?v=139';
 import { escapeHtml, compressImage } from './util.js?v=52';
 
 let _hooks = {};
