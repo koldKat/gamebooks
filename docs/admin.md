@@ -49,7 +49,7 @@ The top of the panel shows aggregate stats across all users and books:
 
 ## Users tab
 
-Lists all registered accounts. Columns: Username, Joined, Last Active, Inactive (days), Books, Runs, Wins, Loss, Battle, Lvl, Coins, Gifted, Sess, Location, Domain, Actions.
+Lists all registered accounts. Columns: Username, Joined, Last Active, Inactive (days), Books, Runs, Active, Wins, Loss, Battle, Lvl, Coins, Gifted, Lucky (bonus GC lottery claims), Sess, Location, Domain, Actions.
 
 Username badges: **ADMIN**, **PROTECTED**, **AUTHOR**, **CONTRIBUTOR**, **LOCKED**.
 

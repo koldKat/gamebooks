@@ -5,8 +5,8 @@
 // and delete public/css/shop.css (and its <link> in index.html).
 
 import { apiFetch, getToken } from './state.js?v=13';
-import { escapeHtml } from './util.js?v=52';
-import { t } from './i18n.js?v=42';
+import { escapeHtml } from './util.js?v=53';
+import { t } from './i18n.js?v=43';
 
 // Callbacks wired in by main.js at boot
 let _hooks = {};
@@ -113,7 +113,7 @@ export function updateBonusGcIndicator(pending) {
   btn.disabled = !pending || _claimingBonusGc;
   btn.dataset.tooltip = pending
     ? t('bonus_gc.tooltip_ready')
-    : t('bonus_gc.tooltip_empty_pct', { pct: _bonusGcChancePct().toFixed(2) });
+    : t('bonus_gc.tooltip_empty_pct', { pct: _bonusGcChancePct().toFixed(2), claimed: _shopData?.bonusGcClaimed || 0 });
 }
 
 async function _claimBonusGc() {

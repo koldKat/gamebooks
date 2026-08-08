@@ -1,11 +1,11 @@
 // books.js - Books list rendering, caching, search/filter, expand prefs, cover queue
 import { getToken, isDemoMode, apiFetch, getDemoState, setDemoState } from './state.js?v=13';
 import { foldForSearch, naturalCompare, naturalCompareByName } from './sort.js?v=1';
-import { refreshCoinsDisplay } from './shop.js?v=60';
-import { openCoverActivity, openSeriesActivity, _startLandingCoverRotation, _resetLandingCoverQueue, _effectiveLandingCoverSource, loadCovers } from './covers.js?v=103';
-import { t } from './i18n.js?v=42';
-import { showConfirm, showTwoChoice } from './play.js?v=95';
-import { escapeHtml } from './util.js?v=52';
+import { refreshCoinsDisplay } from './shop.js?v=61';
+import { openCoverActivity, openSeriesActivity, _startLandingCoverRotation, _resetLandingCoverQueue, _effectiveLandingCoverSource, loadCovers } from './covers.js?v=104';
+import { t } from './i18n.js?v=43';
+import { showConfirm, showTwoChoice } from './play.js?v=96';
+import { escapeHtml } from './util.js?v=53';
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────
 let _hooks = {};

@@ -17,7 +17,7 @@ import {
   storeData, getSorted, getFiltered, foldForSearch, naturalCompare, naturalCompareByName, _tableData,
   setSearchFields, wireTableSearch, initSortHeaders, renderPaged,
 } from './core.js?v=1';
-import { loadAll, loadTools } from './dashboard.js?v=7';
+import { loadAll, loadTools } from './dashboard.js?v=9';
 
 // ── Gift modal ────────────────────────────────────────────────────────────────
 
@@ -270,6 +270,14 @@ function renderUserRow(tbody, u) {
     } else {
       giftedCell.textContent = '-';
       giftedCell.className = 'muted';
+    }
+
+    const luckyCell = tr.insertCell();
+    if (u.luckyClaimed > 0) {
+      luckyCell.innerHTML = `<span style="color:#f59e0b;font-variant-numeric:tabular-nums">${u.luckyClaimed.toLocaleString()}</span>`;
+    } else {
+      luckyCell.textContent = '-';
+      luckyCell.className = 'muted';
     }
 
     appendCell(tr, badge(u.session_count, u.session_count > 0 ? 'badge-green' : 'badge-grey'));
