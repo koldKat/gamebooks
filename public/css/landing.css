@@ -889,6 +889,15 @@ body.feed-collapsed #feed-panel {
   padding: 0;
   cursor: not-allowed;
   transition: border-color 0.15s, box-shadow 0.15s;
+  /* The flex `gap` on #app-banner-btns already puts an equal box-to-box
+     space between every button pair, but the coin icon fills almost all
+     of its own box (16px icon in a ~27px box, ~4-5px inset) while F1 and
+     its other text-button neighbors have generous 0.65rem horizontal
+     padding around their label - so the *visible content* here reads as
+     noticeably closer to F1 than any other pair, even though the boxes
+     themselves are spaced identically. A little extra margin compensates
+     for that visual density difference specifically at this one pair. */
+  margin-right: 0.2rem;
 }
 #bonus-gc-btn svg { width: 16px; height: 16px; filter: grayscale(1) brightness(0.7); transition: filter 0.15s; }
 #bonus-gc-btn.bonus-gc-btn--ready {
