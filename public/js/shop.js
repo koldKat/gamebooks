@@ -194,6 +194,7 @@ function renderShopItems() {
         _hooks.onSetBonusFastTravels?.(data.bonusFastTravels || 0);
         updateCoinsDisplay(data.coinsBalance || 0);
         updateSpentDisplay(data.coinsSpent || 0);
+        updateBonusGcIndicator(data.pendingBonusGc);
         renderShopItems();
       } catch (_) { btn.disabled = false; btn.textContent = t('shop.btn.buy'); showShopError(t('shop.request_failed')); }
     });
