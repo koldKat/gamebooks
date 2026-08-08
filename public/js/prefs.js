@@ -2,8 +2,8 @@
 
 import { getToken, isDemoMode, apiFetch } from './state.js?v=13';
 import { setTrailCollapsed, setChoicesRecordedCount, CHOICES_PULSE_THRESHOLD } from './play.js?v=97';
-import { setCoversPrefsState, _updateLandingBgDragUi } from './covers.js?v=105';
-import { setExpandedPrefs, renderBooksList, getCachedBooks, getCachedAllSeries, getCachedStashes } from './books.js?v=150';
+import { setCoversPrefsState, _updateLandingBgDragUi } from './covers.js?v=106';
+import { setExpandedPrefs, renderBooksList, getCachedBooks, getCachedAllSeries, getCachedStashes } from './books.js?v=151';
 
 let _hooks = {};
 export function setPrefsHooks(h) { _hooks = h || {}; }
@@ -11,6 +11,7 @@ export function setPrefsHooks(h) { _hooks = h || {}; }
 let _localPrefOverrides   = {};
 let _landingPanelRestoreState = null;
 let _playPanelRestoreState    = null;
+let _feedScrollBeforeCollapse  = null;
 
 export function savePrefs(patch) {
   if (!getToken()) return;
@@ -97,6 +98,24 @@ export function _setLandingPanelCollapsed(prefKey, collapsed) {
     'feed-collapsed':   { cls: 'feed-collapsed',   btn: 'feed-toggle',   collapsedText: '▾', expandedText: '▴' },
   }[prefKey];
   if (!cfg) return;
+  // #feed-panel collapses to max-height:0 (landing.css) rather than being
+  // unmounted, which shrinks #landing-wrapper's scrollable content and lets
+  // the browser clamp its scrollTop - on a long feed that clamp can land
+  // well above where you'd actually scrolled to. Since max-height can't be
+  // transitioned to/from its default `none` (not an animatable length), the
+  // panel is already back to full height the instant the class comes off,
+  // so restoring scrollTop next frame is enough - no need to wait out the
+  // opacity/transform entrance transition.
+  if (prefKey === 'feed-collapsed') {
+    const wrapper = document.getElementById('landing-wrapper');
+    const wasCollapsed = document.body.classList.contains(cfg.cls);
+    if (collapsed && !wasCollapsed && wrapper) _feedScrollBeforeCollapse = wrapper.scrollTop;
+    else if (!collapsed && wasCollapsed && wrapper && _feedScrollBeforeCollapse != null) {
+      const restore = _feedScrollBeforeCollapse;
+      _feedScrollBeforeCollapse = null;
+      requestAnimationFrame(() => requestAnimationFrame(() => { wrapper.scrollTop = restore; }));
+    }
+  }
   document.body.classList.toggle(cfg.cls, collapsed);
   document.getElementById(cfg.btn).textContent = collapsed ? cfg.collapsedText : cfg.expandedText;
   if (prefKey === 'feed-collapsed') {
