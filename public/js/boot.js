@@ -71,11 +71,11 @@ import {
   setNotifHooks, _scheduleLiveUiRefresh,
   _closeNotifDropdown, _openNotifDropdown, isNotifDropdownOpen,
   resetNotifBadgesForLogout,
-} from './notif.js?v=58';
+} from './notif.js?v=59';
 import {
   _resetRewardSnapshotState, _positionRewardLayer,
   _processRewardSnapshot, _scheduleRewardProfileRefresh,
-} from './rewards.js?v=79';
+} from './rewards.js?v=80';
 import {
   setBgHooks, setCurrentBookCover, getCurrentBookCover,
   resetBgState, cancelBgMove, isBgInMove,
@@ -85,7 +85,7 @@ import {
   _enterBgMoveMode, _exitBgMoveMode, _updateColorSwatches,
 } from './bg.js?v=37';
 import { initTips } from './tips.js?v=45';
-import { initInbox } from './inbox.js?v=105';
+import { initInbox } from './inbox.js?v=106';
 import { initDice } from './dice.js?v=142';
 import { initTooltip } from './tooltip.js?v=2';
 import { exportAll, exportBook } from './export.js?v=101';

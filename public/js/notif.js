@@ -162,8 +162,12 @@ export function _openNotifDropdown(btn, data) {
           shop_refund:         'Shop purchase refunded',
           runs_milestone:      'Completed runs milestone',
         };
-        const reasonLabel = coinReasonMap[n.payload.reason] || '';
-        text = `Earned <strong>${amt} Gold Coin${amt !== 1 ? 's' : ''}</strong>${reasonLabel ? ` <span style="color:#9ca3af;font-weight:normal">· ${reasonLabel}</span>` : ''}`;
+        if (n.payload.reason === 'bonus_gc_claim') {
+          text = `<strong>${amt} Gold Coin${amt !== 1 ? 's' : ''}</strong> claimed <span style="color:#9ca3af;font-weight:normal">· Lucky coin</span>`;
+        } else {
+          const reasonLabel = coinReasonMap[n.payload.reason] || '';
+          text = `Earned <strong>${amt} Gold Coin${amt !== 1 ? 's' : ''}</strong>${reasonLabel ? ` <span style="color:#9ca3af;font-weight:normal">· ${reasonLabel}</span>` : ''}`;
+        }
       } else if (n.type === 'gc_gift') {
         iconClass = 'icon-coin'; iconChar = '◉';
         const amt = n.payload.amount;
