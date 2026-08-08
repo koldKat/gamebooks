@@ -322,7 +322,7 @@ All `/api/*` routes except `/api/register`, `/api/login`, `/api/feed`, `/api/sit
 | POST | `/api/party-invites/:id/decline` | Decline a party invite. |
 | GET | `/api/users/search?q=` | Search users by username substring (auth required). Excludes the caller. Returns `{ users: [{ id, username, avatar_path }] }`. Used for invite autocomplete; returns empty array if `q` is blank. |
 | GET | `/api/notifications` | Get current user's notifications → `{ unseen: number, items: [{ id, type, payload, seen, createdAt }] }`. Returns last 25, newest first. |
-| POST | `/api/notifications/seen` | Mark all unseen notifications as seen → `{ ok: true }`. |
+| POST | `/api/notifications/seen` | Mark the most recent 25 unseen notifications as seen (same window `GET /api/notifications` returns) → `{ ok: true }`. |
 | POST | `/api/attachments` | Upload a file attachment (auth required). Body: raw binary; `Content-Type: application/octet-stream`; original filename in `X-Filename` header (percent-encoded). Max 64 MB. Returns `{ id, filename, original_name }`. The file is written to `public/attachments/` as `att_{userId}_{timestamp}{ext}`. Accepted types: images (JPEG/PNG/GIF/WebP/AVIF), PDF, ZIP/7z/RAR/GZIP by magic bytes; plain text extensions (.txt .md .csv .json .xml) by extension. Client images larger than 512 KB are JPEG-compressed before upload. JPEG magic bytes override extension to `.jpg`. The returned `id` must be included in a subsequent submit call's `attachment_ids` to link the file; unlinked uploads are orphaned. |
 
 ### Profile API

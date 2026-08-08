@@ -4,7 +4,7 @@ import { getToken, getUsername } from './state.js?v=13';
 import { updateCoinsDisplay, refreshCoinsDisplay, COIN_SVG } from './shop.js?v=61';
 import { renderBooksXpSummary } from './profile.js?v=77';
 import { _broadcastLiveEvent } from './livetab.js?v=66';
-import { _scheduleLiveUiRefresh } from './notif.js?v=58';
+import { _scheduleLiveUiRefresh } from './notif.js?v=59';
 import { escapeHtml } from './util.js?v=53';
 
 // ── State ─────────────────────────────────────────────────────────────────────

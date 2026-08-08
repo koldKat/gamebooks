@@ -255,13 +255,20 @@ function renderUserRow(tbody, u) {
     const lvlCell = tr.insertCell();
     lvlCell.appendChild(mkLevelCell(u));
 
-    const coinCell = tr.insertCell();
-    coinCell.style.whiteSpace = 'nowrap';
+    const earnedCell = tr.insertCell();
     if (u.coinsEarned > 0) {
-      coinCell.innerHTML = `<span style="color:#f59e0b;font-variant-numeric:tabular-nums">${u.coinsEarned.toLocaleString()}</span><span style="color:#4b5563"> / </span><span style="color:#f87171;font-variant-numeric:tabular-nums">${u.coinsSpent.toLocaleString()}</span>`;
+      earnedCell.innerHTML = `<span style="color:#f59e0b;font-variant-numeric:tabular-nums">${u.coinsEarned.toLocaleString()}</span>`;
     } else {
-      coinCell.textContent = '-';
-      coinCell.className = 'muted';
+      earnedCell.textContent = '-';
+      earnedCell.className = 'muted';
+    }
+
+    const spentCell = tr.insertCell();
+    if (u.coinsSpent > 0) {
+      spentCell.innerHTML = `<span style="color:#f87171;font-variant-numeric:tabular-nums">${u.coinsSpent.toLocaleString()}</span>`;
+    } else {
+      spentCell.textContent = '-';
+      spentCell.className = 'muted';
     }
 
     const giftedCell = tr.insertCell();

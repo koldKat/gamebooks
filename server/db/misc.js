@@ -32,8 +32,17 @@ function getNotifications(userId) {
   return { unseen: items.filter(i => !i.seen).length, items };
 }
 
+// Scoped to the same most-recent-25 window getNotifications() returns - an
+// unscoped "mark everything seen" would silently mark overflow notifications
+// (beyond the visible 25) as seen without the user ever having seen them,
+// after which they'd just sit until purgeOldNotifications() deletes them
+// unread 30 days later.
 function markNotificationsSeen(userId) {
-  db.prepare('UPDATE notifications SET seen = 1 WHERE user_id = ? AND seen = 0').run(userId);
+  db.prepare(`
+    UPDATE notifications SET seen = 1 WHERE seen = 0 AND id IN (
+      SELECT id FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 25
+    )
+  `).run(userId);
 }
 
 const _exportRow = ({ state_data, notebook, user_rating, series_name, series_open_world, ...b }) => ({
