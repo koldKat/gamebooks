@@ -9,14 +9,14 @@ import {
 import {
   network, visNodes, setGraphCrossBookRoute,
   canReachInGraph, allReachableInGraph, clampViewportScale, findPathTo,
-} from './graph.js?v=97';
+} from './graph.js?v=98';
 import {
   render, showAlert, startPortalRun, startPlaythrough, setOpenWorldContext, setOnViewPublicRun,
-} from './play.js?v=96';
-import { t } from './i18n.js?v=43';
-import { setOnCharSheetSaved } from './charsheet.js?v=70';
-import { instantiateLoadout } from './equipment.js?v=142';
-import { getCachedBooks } from './books.js?v=149';
+} from './play.js?v=97';
+import { t } from './i18n.js?v=44';
+import { setOnCharSheetSaved } from './charsheet.js?v=71';
+import { instantiateLoadout } from './equipment.js?v=143';
+import { getCachedBooks } from './books.js?v=150';
 
 let _hooks = {};
 export function setOpenWorldHooks(h) { _hooks = h || {}; }
