@@ -3,7 +3,7 @@
 // To remove: delete this file, remove its import line and initStats()/closeStatsModal()
 // calls from boot.js, and remove the stats-modal CSS from style.css.
 
-import { escapeHtml, fetchPublic } from './util.js?v=60';
+import { escapeHtml, fetchPublic } from './util.js?v=61';
 import { t } from './i18n.js?v=49';
 
 export function closeStatsModal() {

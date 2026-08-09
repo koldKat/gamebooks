@@ -241,6 +241,8 @@ try { db.exec(`ALTER TABLE series ADD COLUMN is_open_world INTEGER NOT NULL DEFA
 // above only ever runs once, so each new sim added after it needs its own
 // small idempotent UPDATE rather than re-running the whole backfill.
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 203').run(); } catch (_) {}
+// Same one-off flag for book 204 (Scorpion Swamp).
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 204').run(); } catch (_) {}
 
 // One-time migration: book 829's sim was the first one built, before the
 // pt.simNNN naming convention existed, so its state lived under pt.battleSim

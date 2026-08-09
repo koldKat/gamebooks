@@ -254,7 +254,7 @@
       autocomplete.js    Shared name-autocomplete helpers for add/edit modals
       auth.js            Login, register, forgot-password, reset-password forms
       notes.js           Notebook modal and pinned notes overlay
-      battlesim/         All 10 battle simulator modules, one file per book, grouped in their own
+      battlesim/         All battle simulator modules, one file per book, grouped in their own
                          subfolder (imported only by boot.js, never by each other)
         battlesim829.js    Battle simulator for book 829
         battlesim8.js      Battle simulator for book 8
@@ -266,6 +266,7 @@
         battlesim201.js    Battle simulator for book 201, City of Thieves (standard SKILL/STAMINA/LUCK system, reuses book 200's attackModifier and pairedFight/sideEnemy mechanics; adds an enemyWoundDamage knob for non-standard wound amounts)
         battlesim202.js    Battle simulator for book 202, Deathtrap Dungeon (standard SKILL/STAMINA/LUCK system, reuses book 201's core; adds instaKillEnemyAS, instaKillOnEnemyWin, winAfterHits and luckyKillOnWin knobs for its instant-death/weak-point encounters)
         battlesim203.js    Battle simulator for book 203, Island of the Lizard King (standard SKILL/STAMINA/LUCK system, reuses attackModifier/enemyWoundDamage/pairedFight/sideEnemy/winAfterHits verbatim; adds a first-round-of-battle override chain - Sog's Helmet auto-win &gt; Potion of Clumsiness 1d6 curse-roll &gt; plain enemyAutoWinFirstRound knob &gt; normal roll - plus a LUCK floor for Sama's Bone Charm and two mutually-exclusive weapon toggles)
+        battlesim204.js    Battle simulator for book 204, Scorpion Swamp (standard SKILL/STAMINA/LUCK system, reuses attackModifier/enemyWoundDamage/pairedFight/sideEnemy/winAfterHits verbatim, no Provisions mechanic since the source gives no starting quantity; adds an enemyStaminaFloor knob for the Giant's 6-STAMINA fight cap, a third simultaneous attacker for the Swamp Orc trio, three weapon/helmet SKILL toggles and two single-use consumables)
       add-book.js        Create Book, Create Anthology, Create Series modals
       edit-book.js       Edit Book/Anthology/Series/Stash modals; ISBN/ISSN/ASIN validation
       books.js           Books list rendering, panel management, stash UI
@@ -318,7 +319,7 @@ Layer 2:
     (safe: none consume each other at module-evaluation time)
 
 Layer 3 (feature modules):
-  notes, battlesim829, battlesim8, battlesim286, battlesim198, battlesim199, battlesim200, battlesim186, battlesim201, battlesim202, battlesim203, auth, add-book, edit-book, books,
+  notes, battlesim829, battlesim8, battlesim286, battlesim198, battlesim199, battlesim200, battlesim186, battlesim201, battlesim202, battlesim203, battlesim204, auth, add-book, edit-book, books,
   covers, feed, open-world, shop, profile, public-profile, prefs,
   livetab, notif, rewards, bg, stats, party, tips, inbox, dice,
   tooltip, export, feedback, demo
@@ -699,8 +700,8 @@ computeLevel(xp) = min(floor((-1 + sqrt(1 + 8·xp/1000)) / 2), 100)</code></pre>
           <tr><td><code>add_charsheet_field</code></td><td>5</td><td><code>bookId:runIndex:fieldId</code></td><td>Once per user-added character sheet field. Only fields absent from the book's <code>charSheetTemplate</code> at save time are counted - template fields copied to a new run do not award XP. Deduped by <code>fieldId</code> so editing or re-saving never double-awards.</td></tr>
           <tr><td><code>equipment_started</code></td><td>25</td><td><code>bookId</code></td><td>Once per book, first time any playthrough's equipment becomes non-empty</td></tr>
           <tr><td><code>equip_item</code></td><td>5</td><td><code>bookId:itemId</code></td><td>Once per book per distinct item ID, first time that item appears equipped in any playthrough</td></tr>
-          <tr><td><code>battlesim_win</code></td><td>10</td><td><code>simKey:ts</code></td><td>Per battle simulator win, any of the 7 sims</td></tr>
-          <tr><td><code>battlesim_loss</code></td><td>5</td><td><code>simKey:ts</code></td><td>Per battle simulator loss, any of the 7 sims</td></tr>
+          <tr><td><code>battlesim_win</code></td><td>10</td><td><code>simKey:ts</code></td><td>Per battle simulator win, any sim in <code>SIM_HISTORY_KEYS</code></td></tr>
+          <tr><td><code>battlesim_loss</code></td><td>5</td><td><code>simKey:ts</code></td><td>Per battle simulator loss, any sim in <code>SIM_HISTORY_KEYS</code></td></tr>
         </tbody>
       </table>
       <p>All group milestone events (<code>won_all_*</code>, <code>discover_all_*</code>, <code>visit_all_*</code>) use <code>INSERT OR IGNORE</code> and can only be awarded once per user per entity, even if new books are later added to the series or anthology. N is the book count at the time the milestone fires. Helpers <code>_checkGroupMilestone</code> and <code>_checkGroupWonAll</code> in <code>db.js</code> implement the check with a <code>NOT EXISTS</code> subquery.</p>
