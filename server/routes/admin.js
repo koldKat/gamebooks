@@ -18,6 +18,19 @@ const {
 // This module lives at server/routes/admin.js - the project root is two levels up.
 const PROJECT_ROOT = path.join(__dirname, '..', '..');
 
+// Mirrors the admin-set app_version into a plain-text file at the repo root,
+// purely so it shows up in git history/diffs as a human-curated version log -
+// this file is never read except as a first-boot seed for admin_settings.
+// app_version (see handleAdminGetSettings/handlePublicConfig below) when that
+// DB row doesn't exist yet (fresh clone/fresh database). Deliberately never
+// written to automatically - only ever updated by this same admin-panel save,
+// same as the DB row it mirrors.
+const VERSION_FILE = path.join(PROJECT_ROOT, 'VERSION');
+function _readVersionFileFallback() {
+  try { return fs.readFileSync(VERSION_FILE, 'utf8').trim() || '0.8.8.1'; }
+  catch (_) { return '0.8.8.1'; }
+}
+
 // ── Admin handlers ────────────────────────────────────────────────────────────
 
 // filename may include a subdirectory (e.g. 'js/core.js' for the admin panel's
@@ -259,7 +272,7 @@ async function handleAdminGetSettings(req, res) {
   const settings = db.getAllAdminSettings();
   send(res, 200, {
     notepad:              settings.notepad              ?? '',
-    app_version:          settings.app_version          ?? '0.8.8.1',
+    app_version:          settings.app_version          ?? _readVersionFileFallback(),
     size_ignore_patterns: settings.size_ignore_patterns ?? SIZE_IGNORE_DEFAULTS,
     smtp_host:            settings.smtp_host            ?? '',
     smtp_port:            settings.smtp_port            ?? '465',
@@ -335,7 +348,10 @@ async function handleAdminSetSetting(req, res) {
   db.setAdminSetting(key, value);
   if (key.startsWith('smtp_')) reinitTransporter();
   if (key === 'maintenance_mode') setMaintenanceMode(value === '1');
-  if (key === 'app_version') feedPush({ type: 'config_changed', version: value });
+  if (key === 'app_version') {
+    feedPush({ type: 'config_changed', version: value });
+    try { fs.writeFileSync(VERSION_FILE, value + '\n'); } catch (_) {}
+  }
   send(res, 200, { ok: true });
 }
 
@@ -368,7 +384,7 @@ async function handleAdminSmtpTest(req, res) {
 }
 
 async function handlePublicConfig(req, res) {
-  const version = db.getAdminSetting('app_version') ?? '0.8.8.1';
+  const version = db.getAdminSetting('app_version') ?? _readVersionFileFallback();
   send(res, 200, { version, adminUsername: db.getAdminUsername() });
 }
 
