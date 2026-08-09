@@ -596,6 +596,7 @@ export function _applyLandingBgPosition() {
     const el = document.getElementById(`landing-bg-${l}`);
     if (el) el.style.backgroundPosition = `center ${_landingBgPosY}%`;
   });
+  document.documentElement.style.setProperty('--landing-cover-pos', `center ${_landingBgPosY}%`);
 }
 
 export function _canDragLandingBg() {
@@ -674,13 +675,45 @@ function _rotateLandingCover() {
   nxt.style.backgroundImage = url;
   nxt.style.backgroundPosition = `center ${_landingBgPosY}%`;
   nxt.style.opacity = '1';
-  // Coverless feed day cards (.feed-day-card--glass, demo.css) are
-  // genuinely transparent - they show these same #landing-bg-a/-b layers
-  // straight through, not a copy, so their crossfade is automatically in
-  // sync with this one for free. No CSS custom property bookkeeping needed
-  // here any more (there used to be some, kept in sync by hand - removed
-  // since it could only ever be "as fresh as the last update," which showed
-  // up as real staleness bugs; see the CSS comment for the story).
+  // Coverless feed day cards (.feed-day-card--glass, demo.css) get their own
+  // copy of the raw cover art via --landing-cover-url, rather than showing
+  // #landing-bg-a/-b through genuine transparency - #landing-bg-dim (92%
+  // opaque, for legibility behind the landing panels) sits physically
+  // between those fixed layers and anything painted on top, so a
+  // transparent card can only ever show the pre-dimmed composite, never the
+  // raw image a real cover-tile card gets. A card-local copy paints fresh,
+  // undimmed pixels that never touch #landing-bg-dim at all.
+  //
+  // The card's background-image swaps instantly (no browser support for
+  // transitioning that property), so without the block below it would pop
+  // to the new cover well ahead of the real #landing-bg-a/-b crossfade
+  // above, which takes 1.5s. --landing-cover-url-prev/-fade drive a
+  // ::before layer (demo.css) that holds the OLD cover at full opacity and
+  // fades it out over the same 1.5s, so the card's reveal is paced to
+  // match. Order matters: capture the outgoing url/pos and pin
+  // --landing-cover-fade at 1 (still showing old, no transition yet)
+  // BEFORE swapping the base image, then flush layout so the browser
+  // commits that frame before setting fade to 0 - otherwise the browser
+  // could coalesce the 1->0 change with the initial 1 and skip the
+  // transition entirely. Skipped entirely when there's no prior url (first
+  // paint of the session, or right after _stopLandingCoverRotation() blanked
+  // it) - crossfading FROM a blank/stale frame is exactly the flash bug this
+  // whole thing exists to avoid, so a fresh start just paints directly.
+  const root = document.documentElement;
+  const prevUrl = root.style.getPropertyValue('--landing-cover-url');
+  if (prevUrl) {
+    root.style.setProperty('--landing-cover-url-prev', prevUrl);
+    root.style.setProperty('--landing-cover-pos-prev', root.style.getPropertyValue('--landing-cover-pos'));
+    root.style.setProperty('--landing-cover-fade', '1');
+  }
+  root.style.setProperty('--landing-cover-url', url);
+  root.style.setProperty('--landing-cover-pos', `center ${_landingBgPosY}%`);
+  if (prevUrl) {
+    void root.offsetHeight; // flush layout before starting the fade-out
+    requestAnimationFrame(() => { root.style.setProperty('--landing-cover-fade', '0'); });
+  } else {
+    root.style.setProperty('--landing-cover-fade', '0');
+  }
   setTimeout(() => {
     cur.style.opacity = '0';
     setTimeout(() => {
@@ -704,7 +737,12 @@ export function _startLandingCoverRotation() {
 }
 
 // Explicit user action only (the Ctrl+X hide toggle) - actually blanks the
-// background and stops the timer, since that's the point.
+// background and stops the timer, since that's the point. Also clears the
+// glass-card's copied cover vars (not just the fixed layers) - leaving
+// --landing-cover-url pointing at the last-shown cover meant the next
+// _rotateLandingCover() treated it as a real "previous" frame to crossfade
+// FROM, so restoring the panels flashed that stale cover for the first
+// 1.5s. A blank prev makes the next rotation paint directly instead.
 export function _stopLandingCoverRotation() {
   clearInterval(window._landingCoverInterval);
   window._landingCoverInterval = null;
@@ -713,6 +751,10 @@ export function _stopLandingCoverRotation() {
     const el = document.getElementById(`landing-bg-${l}`);
     if (el) el.style.opacity = '0';
   });
+  const root = document.documentElement;
+  root.style.setProperty('--landing-cover-url', '');
+  root.style.setProperty('--landing-cover-url-prev', '');
+  root.style.setProperty('--landing-cover-fade', '0');
 }
 
 // ── Load covers API ────────────────────────────────────────────────────────────
