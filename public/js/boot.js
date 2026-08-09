@@ -24,19 +24,19 @@ import { initNotes, hideNotesUI, loadNotesForBook, setOnXpAwarded as setNotesOnX
 import { initParty, connectPartySSE, disconnectPartySSE, loadPartyInvites, setPartyHooks } from './party.js?v=137';
 import { initAuth, setOnAuthSuccess, showAuthForm, showResetPanel, hasPendingResetToken } from './auth.js?v=61';
 import { initStats, closeStatsModal } from './stats.js?v=81';
-import { setAddBookHooks, initAddBook, _closeAddBook, _closeAddComp, _closeAddSeries } from './add-book.js?v=169';
+import { setAddBookHooks, initAddBook, _closeAddBook, _closeAddComp, _closeAddSeries } from './add-book.js?v=170';
 import {
   setEditBookHooks, initEditBook,
   openEditBookModal, closeEditBookModal, openEditCompModal, openEditSeriesModal,
   _openEditStash, _closeEditStash, _closeAddStash,
   _adminPdfHref,
   maxSectionInUse,
-} from './edit-book.js?v=170';
+} from './edit-book.js?v=171';
 import {
   setPrefsHooks, savePrefs, syncPrefs,
   _setLandingPanelCollapsed, _toggleAllLandingPanelsCollapsed,
   _setPlayPanelCollapsed, _toggleAllPlayPanelsCollapsed,
-} from './prefs.js?v=159';
+} from './prefs.js?v=160';
 import { initBattleSim, setBattleSimVisible, renderBattleSim } from './battlesim/battlesim829.js?v=125';
 import { initBattleSim8, setSim8Visible, renderSim8 } from './battlesim/battlesim8.js?v=97';
 import { initSim286, setSim286Visible, renderSim286 } from './battlesim/battlesim286.js?v=56';
@@ -53,7 +53,7 @@ import { initProfile, updateAvatarUI, renderBooksXpSummary, setProfileHooks } fr
 import { setPublicProfileHooks, closePublicModal, openPublicProfile, openPublicSeriesRun } from './public-profile.js?v=85';
 import { setLiveTabHooks, _ensureLiveTabControllerStarted, _connectUserBadgeSSE, _disconnectUserBadgeSSE, _connectAppXpSSE, _disconnectAppXpSSE } from './livetab.js?v=75';
 import { setAppXpHooks, refreshAppXp, handleAppXpEvent } from './app-xp.js?v=73';
-import { setCoversHooks, loadCovers, openCoverActivity, openSeriesActivity, _showCachedCoversPanel, _refreshPublicCatalogIfVisible, _isLandingBooksViewVisible, _updateLandingBgDragUi, setCoversPrefsState, _toggleCoverTooltipSettings, initCoversPanel, resetFeedDisplayPrefsForLogout } from './covers.js?v=115';
+import { setCoversHooks, loadCovers, openCoverActivity, openSeriesActivity, _showCachedCoversPanel, _refreshPublicCatalogIfVisible, _isLandingBooksViewVisible, _updateLandingBgDragUi, setCoversPrefsState, _toggleCoverTooltipSettings, initCoversPanel, resetFeedDisplayPrefsForLogout } from './covers.js?v=116';
 import {
   setBooksHooks, initBooksPanel, renderBooksList,
   getCachedBooks, getCachedAllSeries, getCachedStashes,
@@ -61,14 +61,14 @@ import {
   setBooksDataFresh, setBooksRevealedAt,
   setCurrentUserId,
   _refreshBooksListOnly, _refreshLibraryUi, _starsHtml, _starLabelHtml, _flashRatingGate,
-} from './books.js?v=159';
+} from './books.js?v=160';
 import {
   setOpenWorldHooks, setupOpenWorldForBook,
   _syncSeriesRuns, _computeCrossBookReachability, _focusNodeAfterLoad,
   clearOpenWorldState, doJumpCrossBook,
   getOwSrcBookId, getOwSrcSection, getOwCrossBookRoute,
-} from './open-world.js?v=161';
-import { setFeedHooks, loadFeed, refreshDayCoverFlows } from './feed.js?v=136';
+} from './open-world.js?v=162';
+import { setFeedHooks, loadFeed, refreshDayCoverFlows } from './feed.js?v=137';
 import {
   setNotifHooks, _scheduleLiveUiRefresh,
   _closeNotifDropdown, _openNotifDropdown, isNotifDropdownOpen,
@@ -88,7 +88,7 @@ import {
 } from './bg.js?v=43';
 import { initTips } from './tips.js?v=52';
 import { initInbox } from './inbox.js?v=113';
-import { initDice } from './dice.js?v=152';
+import { initDice } from './dice.js?v=153';
 import { initTooltip } from './tooltip.js?v=2';
 import { exportAll, exportBook } from './export.js?v=108';
 import { initFeedback } from './feedback.js?v=60';
