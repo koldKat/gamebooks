@@ -798,6 +798,14 @@ function renderForumThread(thread, posts) {
     me = await r.json();
     var isAdmin = me.isAdmin;
 
+    // Hides the Reply box while any inline edit form (OP or a reply) is open -
+    // editing and replying are two different text-entry actions, and showing
+    // both at once made it unclear which one a Save/Post Reply click applied to.
+    function setReplyVisible(v) {
+      var rw = document.getElementById('reply-wrap');
+      if (rw) rw.style.display = v ? '' : 'none';
+    }
+
     // ── OP actions ────────────────────────────────────────────────────────────
     var opActions = document.getElementById('op-actions');
     if (me.id === OP_USER_ID || isAdmin) {
@@ -809,6 +817,7 @@ function renderForumThread(thread, posts) {
         titleEl.style.display = 'none';
         bodyEl.style.display  = 'none';
         opActions.style.display = 'none';
+        setReplyVisible(false);
         var f = document.createElement('div');
         f.id = 'op-edit-form';
         f.innerHTML = '<input class="forum-input" id="op-edit-title" type="text" maxlength="200" value="">'
@@ -822,6 +831,7 @@ function renderForumThread(thread, posts) {
         document.getElementById('op-edit-body').value  = bodyEl.dataset.raw;
         document.getElementById('op-edit-cancel').onclick = function() {
           f.remove(); titleEl.style.display = ''; bodyEl.style.display = ''; opActions.style.display = '';
+          setReplyVisible(true);
         };
         document.getElementById('op-edit-save').onclick = async function() {
           var newTitle = document.getElementById('op-edit-title').value.trim();
@@ -851,6 +861,7 @@ function renderForumThread(thread, posts) {
             note.className = 'post-edited'; note.textContent = 'edited just now';
             if (!existing) metaEl.appendChild(note);
             f.remove(); titleEl.style.display = ''; bodyEl.style.display = ''; opActions.style.display = '';
+            setReplyVisible(true);
           } catch(e) { err.textContent = 'Request failed'; btn.disabled = false; btn.textContent = 'Save'; }
         };
       }));
@@ -890,6 +901,7 @@ function renderForumThread(thread, posts) {
           if (document.getElementById('post-edit-form-' + pmId)) return;
           bodyEl.style.display = 'none';
           elRef.style.display = 'none';
+          setReplyVisible(false);
           var f = document.createElement('div');
           f.id = 'post-edit-form-' + pmId;
           f.innerHTML = '<textarea class="forum-input" id="post-edit-body-' + pmId + '" rows="10" maxlength="20000"></textarea>'
@@ -901,6 +913,7 @@ function renderForumThread(thread, posts) {
           document.getElementById('post-edit-body-' + pmId).value = bodyEl.dataset.raw;
           document.getElementById('post-edit-cancel-' + pmId).onclick = function() {
             f.remove(); bodyEl.style.display = ''; elRef.style.display = '';
+            setReplyVisible(true);
           };
           document.getElementById('post-edit-save-' + pmId).onclick = async function() {
             var newBody = document.getElementById('post-edit-body-' + pmId).value.trim();
@@ -924,6 +937,7 @@ function renderForumThread(thread, posts) {
               note.className = 'post-edited'; note.textContent = 'edited just now';
               if (!existing) metaEl.appendChild(note);
               f.remove(); bodyEl.style.display = ''; elRef.style.display = '';
+              setReplyVisible(true);
             } catch(e) { err.textContent = 'Request failed'; btn.disabled = false; btn.textContent = 'Save'; }
           };
         }));

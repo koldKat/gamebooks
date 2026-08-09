@@ -695,7 +695,7 @@ function _checkGroupWonAll(userId, seriesId, parentBookId) {
 // backfilled. 'sim829' (not 'battleSim') matches server/db.js's one-time
 // pt.battleSim -> pt.sim829 rename, which brought book 829 in line with
 // every other sim's pt.simNNN naming (it predates that convention).
-const SIM_HISTORY_KEYS = ['sim829', 'sim8', 'sim286', 'sim198', 'sim199', 'sim200', 'sim186', 'sim201', 'sim202', 'sim203'];
+const SIM_HISTORY_KEYS = ['sim829', 'sim8', 'sim286', 'sim198', 'sim199', 'sim200', 'sim186', 'sim201', 'sim202', 'sim203', 'sim204'];
 
 function processStateXp(userId, bookId, oldState, newState, totalSections) {
   if (newState?.isDemoBook) return;
@@ -831,7 +831,7 @@ function processStateXp(userId, bookId, oldState, newState, totalSections) {
     if (oldLen < 1 && newLen >= 1)
       awardXp(userId, 'run_depth', owSeriesId ? `series:${owSeriesId}:${i}` : `${bookId}:${i}`);
 
-    // Battle simulators (all 10, listed in SIM_HISTORY_KEYS) each log
+    // Battle simulators (all, listed in SIM_HISTORY_KEYS) each log
     // finished battles into their own history array with an identical
     // { outcome: 'win'|'loss', ts } shape - award a small, repeatable amount
     // per outcome using the entry's own ts as the ref (same trick

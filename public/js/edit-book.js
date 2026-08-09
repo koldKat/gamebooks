@@ -3,10 +3,10 @@
 import { state, getToken, isDemoMode, apiFetch, clearToken, clearUsername, isTerminal, parseSecId } from './state.js?v=13';
 import { t } from './i18n.js?v=49';
 import { naturalCompare, naturalCompareByName, foldForSearch, matchesSearch } from './sort.js?v=1';
-import { getCachedBooks, getCachedAllSeries, getCachedStashes, _starLabelHtml, _refreshBooksListOnly, _refreshLibraryUi } from './books.js?v=158';
-import { refreshCoinsDisplay } from './shop.js?v=69';
-import { showAlert, showConfirm } from './play.js?v=104';
-import { escapeHtml, compressImage } from './util.js?v=60';
+import { getCachedBooks, getCachedAllSeries, getCachedStashes, _starLabelHtml, _refreshBooksListOnly, _refreshLibraryUi } from './books.js?v=159';
+import { refreshCoinsDisplay } from './shop.js?v=70';
+import { showAlert, showConfirm } from './play.js?v=105';
+import { escapeHtml, compressImage } from './util.js?v=61';
 
 let _hooks = {};
 export function setEditBookHooks(h) { _hooks = h || {}; }
