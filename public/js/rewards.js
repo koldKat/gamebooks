@@ -3,7 +3,7 @@
 import { getToken, getUsername } from './state.js?v=13';
 import { updateCoinsDisplay, refreshCoinsDisplay, COIN_SVG } from './shop.js?v=74';
 import { renderBooksXpSummary } from './profile.js?v=90';
-import { _broadcastLiveEvent } from './livetab.js?v=79';
+import { _broadcastLiveEvent } from './livetab.js?v=80';
 import { _scheduleLiveUiRefresh } from './notif.js?v=71';
 import { escapeHtml } from './util.js?v=65';
 
