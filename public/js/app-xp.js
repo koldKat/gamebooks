@@ -1,17 +1,20 @@
-// app-xp.js - Admin-only "app-wide XP" summary widget. Mirrors the shape of a
-// single user's personal XP bar (Lvl/title/heartbeat rate/bar/xp text/boost),
-// including the linear XP-gain tween, but aggregated across every account.
-// Also owns the "someone else earned XP/GC" live floaters (SSE-fed via
-// livetab.js's _connectAppXpSSE). Only ever shown to the logged-in admin, and
-// only while the Books/landing screen is visible.
+// app-xp.js - "app-wide XP" and avg-user-level summary widgets. Mirrors the
+// shape of a single user's personal XP bar (Lvl/title/heartbeat rate/bar/xp
+// text/boost), including the linear XP-gain tween, but aggregated across
+// every account. Gated by getCanSeeAppXp (boot.js's _canSeeAppXp) - true for
+// the admin, plus a standing one-off exception letting sashii see just these
+// two bars without any other admin capability. Also owns the "someone else
+// earned XP/GC" live floaters (SSE-fed via livetab.js's _connectAppXpSSE) -
+// those stay admin-only (getIsAdmin), not part of the sashii exception.
+// Both only ever shown while the Books/landing screen is visible.
 // To remove: delete this file, remove its import line and setAppXpHooks()/
 // refreshAppXp()/handleAppXpEvent() calls from boot.js/livetab.js, and remove
 // #app-xp-*/#app-reward-float-layer markup/CSS.
 
 import { apiFetch, getToken, isDemoMode } from './state.js?v=13';
-import { COIN_SVG } from './shop.js?v=70';
-import { escapeHtml } from './util.js?v=61';
-import { t } from './i18n.js?v=49';
+import { COIN_SVG } from './shop.js?v=74';
+import { escapeHtml } from './util.js?v=65';
+import { t } from './i18n.js?v=52';
 
 let _hooks = {};
 export function setAppXpHooks(h) { _hooks = h || {}; }
@@ -120,7 +123,7 @@ function _renderAvgLevel(data) {
 export async function refreshAppXp() {
   const wrap    = document.getElementById('app-xp-summary');
   const avgWrap = document.getElementById('avg-lvl-summary');
-  if (!getToken() || isDemoMode || !_hooks.getIsAdmin?.()) {
+  if (!getToken() || isDemoMode || !_hooks.getCanSeeAppXp?.()) {
     if (wrap) wrap.hidden = true;
     if (avgWrap) avgWrap.hidden = true;
     _displayedXp = null; _displayedBoostXp = null;

@@ -10,25 +10,35 @@ export function setAdminUsername(name) {
   _adminUsername = name || null;
 }
 
+// No hardcoded username fallback, on purpose - a hardcoded name would go
+// stale the moment the real admin renamed. `profile.isAdmin` is the real,
+// server-computed, id-based value (server/db/auth.js's isUserAdmin()) and is
+// used whenever it's available. Before that arrives (or if profile is null),
+// this falls back to comparing against `_adminUsername`, which is itself
+// fetched fresh from /api/config's adminUsername (server/db/auth.js's
+// getAdminUsername(), also id-based - `SELECT username FROM users WHERE
+// is_admin = 1` - just exposed as a username string for this comparison) -
+// so there's still no literal name baked into the client. Before that config
+// fetch resolves, this correctly returns false rather than guessing.
 export function resolveIsAdmin(profile = null) {
   if (typeof profile?.isAdmin === 'boolean') return profile.isAdmin;
   const username = String(profile?.username || getUsername() || '').trim().toLowerCase();
-  if (!username) return false;
   const configured = String(_adminUsername || '').trim().toLowerCase();
-  return username === 'koldkat' || (!!configured && username === configured);
+  return !!username && !!configured && username === configured;
 }
 
-// Mirrors resolveIsAdmin()'s logic exactly (same hardcoded 'koldkat' fallback,
-// same case-insensitive compare) - these two answer the same question ("is
-// this user the admin") and must agree, or a user resolveIsAdmin() already
-// treats as admin (e.g. in the brief window before /api/config's
-// adminUsername arrives) could render without their badge here.
-export function adminBadge(username) {
-  const u = String(username || '').trim().toLowerCase();
-  if (!u) return '';
-  const configured = String(_adminUsername || '').trim().toLowerCase();
-  if (u !== 'koldkat' && (!configured || u !== configured)) return '';
-  return '<span class="admin-badge" data-tooltip="Admin">★</span>';
+// Takes the already-resolved boolean directly (matching authorBadge/
+// contributorBadge below), not a username to re-derive it from - all 3
+// callers (boot.js) are rendering the CURRENTLY LOGGED IN user's own header,
+// where resolveIsAdmin()'s result (_isAdmin) is already sitting in scope and
+// is strictly more reliable: it's driven by profile.isAdmin the moment
+// /api/profile resolves, while re-deriving via a username compare here would
+// depend on /api/config's adminUsername having *also* already arrived (a
+// separate, unawaited fetch - see boot.js) - a real race that could leave
+// the actual admin's own badge silently missing for a moment on login/
+// profile-save even though _isAdmin was already correctly true.
+export function adminBadge(isAdmin) {
+  return isAdmin ? '<span class="admin-badge" data-tooltip="Admin">★</span>' : '';
 }
 
 export function authorBadge(username) {

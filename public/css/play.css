@@ -367,6 +367,49 @@
 }
 #edit-modal-overlay.active { display: flex; }
 
+#add-node-modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 2000;
+  align-items: center;
+  justify-content: center;
+}
+#add-node-modal-overlay.active { display: flex; }
+#add-node-input {
+  width: 8rem;
+  text-align: center;
+  background: #111827;
+  border: 1px solid #4b5563;
+  color: #f9fafb;
+  border-radius: 5px;
+  padding: 0.2rem 0.3rem;
+  font-size: 0.9rem;
+  transition: border-color 0.15s;
+}
+#add-node-input.invalid { border-color: #ef4444; }
+#add-node-modal .modal-actions { justify-content: flex-end; }
+#add-node-modal .modal-actions .primary-btn,
+#add-node-modal .modal-actions .secondary-btn {
+  flex: none; width: auto; padding: 0.25rem 0.8rem; font-size: 0.82rem;
+}
+#add-node-modal {
+  background: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  width: fit-content;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+#add-node-modal .modal-title {
+  font-size: 0.9rem;
+  margin-bottom: 0;
+}
+
 #start-node-modal-overlay {
   display: none;
   position: fixed;

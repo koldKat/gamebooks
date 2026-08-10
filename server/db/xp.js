@@ -695,7 +695,7 @@ function _checkGroupWonAll(userId, seriesId, parentBookId) {
 // backfilled. 'sim829' (not 'battleSim') matches server/db.js's one-time
 // pt.battleSim -> pt.sim829 rename, which brought book 829 in line with
 // every other sim's pt.simNNN naming (it predates that convention).
-const SIM_HISTORY_KEYS = ['sim829', 'sim8', 'sim286', 'sim198', 'sim199', 'sim200', 'sim186', 'sim201', 'sim202', 'sim203', 'sim204'];
+const SIM_HISTORY_KEYS = ['sim829', 'sim8', 'sim286', 'sim198', 'sim199', 'sim200', 'sim186', 'sim201', 'sim202', 'sim203', 'sim204', 'sim205'];
 
 function processStateXp(userId, bookId, oldState, newState, totalSections) {
   if (newState?.isDemoBook) return;

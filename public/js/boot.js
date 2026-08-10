@@ -14,46 +14,47 @@ import {
 import {
   network, visNodes, initGraph, destroyNetwork,
   subtreeToDelete, deleteNodes, findPathTo, canReach, setGraphOpenWorld, applyConnectorStyle,
-} from './graph.js?v=104';
-import { render, openEditModal, closeEditModal, openNoteModal, closeNoteModal, showConfirm, showAlert, confirmAlphanumericSwitch, maxFastTravels, setFastTravelHandler, showFastTravelDialog, setOnTrailToggle, openPortalModal, setDiscoverableLimit, setOnChoicesRecorded, startPlaythrough, setAltStartHandler } from './play.js?v=105';
-import { t, applyTranslations, setTranslationOverride } from './i18n.js?v=49';
-import { initCharSheet, setCharSheetVisible, renderCharSheetDisplay } from './charsheet.js?v=78';
-import { initInventory, setInventoryVisible, renderInventoryDisplay, preloadItems, setExtraDisplayItemsProvider } from './inventory.js?v=163';
-import { initEquipment, setEquipmentVisible, getVisibleEquippedItems } from './equipment.js?v=150';
-import { initNotes, hideNotesUI, loadNotesForBook, setOnXpAwarded as setNotesOnXpAwarded } from './notes.js?v=83';
-import { initParty, connectPartySSE, disconnectPartySSE, loadPartyInvites, setPartyHooks } from './party.js?v=137';
-import { initAuth, setOnAuthSuccess, showAuthForm, showResetPanel, hasPendingResetToken } from './auth.js?v=61';
-import { initStats, closeStatsModal } from './stats.js?v=81';
-import { setAddBookHooks, initAddBook, _closeAddBook, _closeAddComp, _closeAddSeries } from './add-book.js?v=170';
+} from './graph.js?v=107';
+import { render, openEditModal, closeEditModal, openNoteModal, closeNoteModal, showConfirm, showAlert, confirmAlphanumericSwitch, maxFastTravels, setFastTravelHandler, showFastTravelDialog, setOnTrailToggle, openPortalModal, setDiscoverableLimit, setOnChoicesRecorded, startPlaythrough, setAltStartHandler } from './play.js?v=109';
+import { t, applyTranslations, setTranslationOverride } from './i18n.js?v=52';
+import { initCharSheet, setCharSheetVisible, renderCharSheetDisplay } from './charsheet.js?v=82';
+import { initInventory, setInventoryVisible, renderInventoryDisplay, preloadItems, setExtraDisplayItemsProvider } from './inventory.js?v=167';
+import { initEquipment, setEquipmentVisible, getVisibleEquippedItems } from './equipment.js?v=154';
+import { initNotes, hideNotesUI, loadNotesForBook, setOnXpAwarded as setNotesOnXpAwarded } from './notes.js?v=87';
+import { initParty, connectPartySSE, disconnectPartySSE, loadPartyInvites, setPartyHooks } from './party.js?v=141';
+import { initAuth, setOnAuthSuccess, showAuthForm, showResetPanel, hasPendingResetToken } from './auth.js?v=65';
+import { initStats, closeStatsModal } from './stats.js?v=85';
+import { setAddBookHooks, initAddBook, _closeAddBook, _closeAddComp, _closeAddSeries } from './add-book.js?v=174';
 import {
   setEditBookHooks, initEditBook,
   openEditBookModal, closeEditBookModal, openEditCompModal, openEditSeriesModal,
   _openEditStash, _closeEditStash, _closeAddStash,
   _adminPdfHref,
   maxSectionInUse,
-} from './edit-book.js?v=171';
+} from './edit-book.js?v=175';
 import {
   setPrefsHooks, savePrefs, syncPrefs,
   _setLandingPanelCollapsed, _toggleAllLandingPanelsCollapsed,
   _setPlayPanelCollapsed, _toggleAllPlayPanelsCollapsed,
-} from './prefs.js?v=160';
-import { initBattleSim, setBattleSimVisible, renderBattleSim } from './battlesim/battlesim829.js?v=125';
-import { initBattleSim8, setSim8Visible, renderSim8 } from './battlesim/battlesim8.js?v=97';
-import { initSim286, setSim286Visible, renderSim286 } from './battlesim/battlesim286.js?v=56';
-import { initSim198, setSim198Visible, renderSim198 } from './battlesim/battlesim198.js?v=39';
-import { initSim199, setSim199Visible, renderSim199 } from './battlesim/battlesim199.js?v=32';
-import { initSim200, setSim200Visible, renderSim200 } from './battlesim/battlesim200.js?v=22';
-import { initSim186, setSim186Visible, renderSim186 } from './battlesim/battlesim186.js?v=23';
-import { initSim201, setSim201Visible, renderSim201 } from './battlesim/battlesim201.js?v=25';
-import { initSim202, setSim202Visible, renderSim202 } from './battlesim/battlesim202.js?v=8';
-import { initSim203, setSim203Visible, renderSim203 } from './battlesim/battlesim203.js?v=7';
-import { initSim204, setSim204Visible, renderSim204 } from './battlesim/battlesim204.js?v=2';
-import { initShop, updateCoinsDisplay, refreshCoinsDisplay, setShopHooks } from './shop.js?v=70';
-import { initProfile, updateAvatarUI, renderBooksXpSummary, setProfileHooks } from './profile.js?v=86';
-import { setPublicProfileHooks, closePublicModal, openPublicProfile, openPublicSeriesRun } from './public-profile.js?v=85';
-import { setLiveTabHooks, _ensureLiveTabControllerStarted, _connectUserBadgeSSE, _disconnectUserBadgeSSE, _connectAppXpSSE, _disconnectAppXpSSE } from './livetab.js?v=75';
-import { setAppXpHooks, refreshAppXp, handleAppXpEvent } from './app-xp.js?v=73';
-import { setCoversHooks, loadCovers, openCoverActivity, openSeriesActivity, _showCachedCoversPanel, _refreshPublicCatalogIfVisible, _isLandingBooksViewVisible, _updateLandingBgDragUi, setCoversPrefsState, _toggleCoverTooltipSettings, initCoversPanel, resetFeedDisplayPrefsForLogout } from './covers.js?v=116';
+} from './prefs.js?v=164';
+import { initBattleSim, setBattleSimVisible, renderBattleSim } from './battlesim/battlesim829.js?v=129';
+import { initBattleSim8, setSim8Visible, renderSim8 } from './battlesim/battlesim8.js?v=101';
+import { initSim286, setSim286Visible, renderSim286 } from './battlesim/battlesim286.js?v=60';
+import { initSim198, setSim198Visible, renderSim198 } from './battlesim/battlesim198.js?v=43';
+import { initSim199, setSim199Visible, renderSim199 } from './battlesim/battlesim199.js?v=36';
+import { initSim200, setSim200Visible, renderSim200 } from './battlesim/battlesim200.js?v=26';
+import { initSim186, setSim186Visible, renderSim186 } from './battlesim/battlesim186.js?v=27';
+import { initSim201, setSim201Visible, renderSim201 } from './battlesim/battlesim201.js?v=29';
+import { initSim202, setSim202Visible, renderSim202 } from './battlesim/battlesim202.js?v=12';
+import { initSim203, setSim203Visible, renderSim203 } from './battlesim/battlesim203.js?v=11';
+import { initSim204, setSim204Visible, renderSim204 } from './battlesim/battlesim204.js?v=6';
+import { initSim205, setSim205Visible, renderSim205 } from './battlesim/battlesim205.js?v=5';
+import { initShop, updateCoinsDisplay, refreshCoinsDisplay, setShopHooks } from './shop.js?v=74';
+import { initProfile, updateAvatarUI, renderBooksXpSummary, setProfileHooks } from './profile.js?v=90';
+import { setPublicProfileHooks, closePublicModal, openPublicProfile, openPublicSeriesRun } from './public-profile.js?v=89';
+import { setLiveTabHooks, _ensureLiveTabControllerStarted, _connectUserBadgeSSE, _disconnectUserBadgeSSE, _connectAppXpSSE, _disconnectAppXpSSE } from './livetab.js?v=79';
+import { setAppXpHooks, refreshAppXp, handleAppXpEvent } from './app-xp.js?v=78';
+import { setCoversHooks, loadCovers, openCoverActivity, openSeriesActivity, _showCachedCoversPanel, _refreshPublicCatalogIfVisible, _isLandingBooksViewVisible, _updateLandingBgDragUi, setCoversPrefsState, _toggleCoverTooltipSettings, initCoversPanel, resetFeedDisplayPrefsForLogout } from './covers.js?v=120';
 import {
   setBooksHooks, initBooksPanel, renderBooksList,
   getCachedBooks, getCachedAllSeries, getCachedStashes,
@@ -61,23 +62,23 @@ import {
   setBooksDataFresh, setBooksRevealedAt,
   setCurrentUserId,
   _refreshBooksListOnly, _refreshLibraryUi, _starsHtml, _starLabelHtml, _flashRatingGate,
-} from './books.js?v=160';
+} from './books.js?v=164';
 import {
   setOpenWorldHooks, setupOpenWorldForBook,
   _syncSeriesRuns, _computeCrossBookReachability, _focusNodeAfterLoad,
   clearOpenWorldState, doJumpCrossBook,
   getOwSrcBookId, getOwSrcSection, getOwCrossBookRoute,
-} from './open-world.js?v=162';
-import { setFeedHooks, loadFeed, refreshDayCoverFlows } from './feed.js?v=137';
+} from './open-world.js?v=166';
+import { setFeedHooks, loadFeed, refreshDayCoverFlows } from './feed.js?v=141';
 import {
   setNotifHooks, _scheduleLiveUiRefresh,
   _closeNotifDropdown, _openNotifDropdown, isNotifDropdownOpen,
   resetNotifBadgesForLogout,
-} from './notif.js?v=67';
+} from './notif.js?v=71';
 import {
   _resetRewardSnapshotState, _positionRewardLayer,
   _processRewardSnapshot, _scheduleRewardProfileRefresh,
-} from './rewards.js?v=88';
+} from './rewards.js?v=92';
 import {
   setBgHooks, setCurrentBookCover, getCurrentBookCover,
   resetBgState, cancelBgMove, isBgInMove,
@@ -85,20 +86,20 @@ import {
   hideCtxMenu, _updateSidebarBookInfo, _hideBgCtxMenu,
   _positionMenu, _setupCtxSubmenuFlip, _showBgCtxMenu,
   _enterBgMoveMode, _exitBgMoveMode, _updateColorSwatches,
-} from './bg.js?v=43';
-import { initTips } from './tips.js?v=52';
-import { initInbox } from './inbox.js?v=113';
-import { initDice } from './dice.js?v=153';
+} from './bg.js?v=46';
+import { initTips } from './tips.js?v=56';
+import { initInbox } from './inbox.js?v=117';
+import { initDice } from './dice.js?v=157';
 import { initTooltip } from './tooltip.js?v=2';
-import { exportAll, exportBook } from './export.js?v=108';
-import { initFeedback } from './feedback.js?v=60';
-import { setDemoHooks, getDemoBooks, setDemoBooks, getDemoVisited, startDemoMode, exitDemoMode, wasInDemoMode } from './demo.js?v=105';
+import { exportAll, exportBook } from './export.js?v=112';
+import { initFeedback } from './feedback.js?v=64';
+import { setDemoHooks, getDemoBooks, setDemoBooks, getDemoVisited, startDemoMode, exitDemoMode, wasInDemoMode } from './demo.js?v=109';
 import {
   setAdminUsername, resolveIsAdmin,
   adminBadge, authorBadge, contributorBadge, displayFor,
   registerAuthor, registerContributor,
-} from './user.js?v=8';
-import { escapeHtml, fetchPublic as publicFetch } from './util.js?v=61';
+} from './user.js?v=10';
+import { escapeHtml, fetchPublic as publicFetch } from './util.js?v=65';
 
 window._isMobile = /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
   || (navigator.maxTouchPoints > 1 && window.innerWidth < 1024);
@@ -107,6 +108,15 @@ window._isMobile = /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini
 // ── Edit book modal ───────────────────────────────────────��───────────────────
 
 let _isAdmin               = false;
+// Separate from _isAdmin on purpose - a narrow, one-off exception letting
+// user id 17 (sashii, as of when this was added) see the app-wide XP/
+// avg-level bars (app-xp.js) without granting him any of the other
+// admin-only capabilities _isAdmin gates (edit permissions, admin ctx-menu
+// overrides, etc.). Matched by id, not username - see server/db/auth.js's
+// canSeeAppXp() for why (usernames are user-editable) - and must mirror that
+// server-side check exactly, or the widgets fetch data he can't actually see.
+const APP_XP_EXTRA_USER_ID = 17;
+let _canSeeAppXp           = false;
 let _hasPdfAccess          = false;
 // Refresh #inv-display, merging visible inventory slots with any equipped
 // items the player has marked "show on screen".
@@ -191,6 +201,7 @@ async function navigateToBook(bookId) {
         _processRewardSnapshot(profile);
         if (profile.id) { _currentUserId = profile.id; setCurrentUserId(_currentUserId); }
         _isAdmin = resolveIsAdmin(profile);
+        _canSeeAppXp = _isAdmin || profile.id === APP_XP_EXTRA_USER_ID;
         _hasPdfAccess = !!profile.pdfAccess || _isAdmin;
         refreshAppXp();
         _connectAppXpSSE();
@@ -234,6 +245,12 @@ async function navigateToBook(bookId) {
 // ── Context menu ──────────────────────────────────────────────────────────────
 
 let ctxNodeId             = null;
+// Canvas-space (graph) coordinates of the last empty-canvas right-click, used
+// by the "+ Add node" flow to place the new node exactly where the user
+// clicked. Only meaningful right after a real empty-canvas right-click; not
+// cleared afterward since it's only ever read immediately from the "+ Add
+// node" button's own click handler, matching ctxNodeId's own lifecycle.
+let ctxCanvasPos          = null;
 // currentBookCover lives in bg.js
 let _currentBook = {
   isbn: null, issn: null, asin: null, pdfPath: null, pages: null,
@@ -316,6 +333,7 @@ function showLogin() {
   setSim202Visible(false);
   setSim203Visible(false);
   setSim204Visible(false);
+  setSim205Visible(false);
   setDiceRollerVisible(false);
   setGuideVisible(false);
   if (_isMobile()) document.body.classList.add('mobile-auth');
@@ -404,6 +422,7 @@ async function showBooks() {
   setSim202Visible(false);
   setSim203Visible(false);
   setSim204Visible(false);
+  setSim205Visible(false);
   setDiceRollerVisible(false);
   setGuideVisible(false);
   document.body.classList.remove('mobile-auth');
@@ -422,7 +441,7 @@ async function showBooks() {
   _positionRewardLayer();
   document.getElementById('right-toggle').classList.add('visible');
   document.getElementById('sidebar-toggle').classList.remove('visible');
-  document.getElementById('books-username').innerHTML = escapeHtml(getUsername() || '') + adminBadge(getUsername());
+  document.getElementById('books-username').innerHTML = escapeHtml(getUsername() || '') + adminBadge(_isAdmin);
   _updateUsernameTooltip();
   document.getElementById('feedback-btn').style.display = '';
   document.getElementById('forum-btn').style.display    = '';
@@ -490,6 +509,7 @@ async function showBooks() {
     _processRewardSnapshot(profile);
     if (profile.id) { _currentUserId = profile.id; setCurrentUserId(_currentUserId); }
     _isAdmin = resolveIsAdmin(profile);
+    _canSeeAppXp = _isAdmin || profile.id === APP_XP_EXTRA_USER_ID;
     _hasPdfAccess = !!profile.pdfAccess || _isAdmin;
     refreshAppXp();
     _connectAppXpSSE();
@@ -503,7 +523,7 @@ async function showBooks() {
       registerAuthor(profile.username, !!profile.isAuthor, profile.displayName);
       registerContributor(profile.username, !!profile.isContributor);
       const _dn = profile.displayName || profile.username;
-      document.getElementById('books-username').innerHTML = escapeHtml(_dn) + adminBadge(profile.username) + authorBadge(profile.username) + contributorBadge(profile.username);
+      document.getElementById('books-username').innerHTML = escapeHtml(_dn) + adminBadge(_isAdmin) + authorBadge(profile.username) + contributorBadge(profile.username);
       _updateUsernameTooltip();
     }
     const seriesRes = await apiFetch('/api/series');
@@ -584,7 +604,12 @@ async function showMain(bookId, isbn = null, issn = null, asin = null, cover = n
   network.on('oncontext', params => {
     params.event.preventDefault();
     const nodeId = network.getNodeAt(params.pointer.DOM);
-    if (nodeId === undefined) { hideCtxMenu(); _showBgCtxMenu(params.event.clientX, params.event.clientY); return; }
+    if (nodeId === undefined) {
+      hideCtxMenu();
+      ctxCanvasPos = network.DOMtoCanvas(params.pointer.DOM);
+      _showBgCtxMenu(params.event.clientX, params.event.clientY);
+      return;
+    }
     _hideBgCtxMenu();
     ctxNodeId = nodeId;
     const pt     = currentPlaythrough();
@@ -646,6 +671,7 @@ async function showMain(bookId, isbn = null, issn = null, asin = null, cover = n
   setSim202Visible(bookId === 202);
   setSim203Visible(bookId === 203);
   setSim204Visible(bookId === 204);
+  setSim205Visible(bookId === 205);
   setDiceRollerVisible(true);
   setGuideVisible(true);
   if (state.notesPinned) {
@@ -795,6 +821,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initSim202();
   initSim203();
   initSim204();
+  initSim205();
   setExtraDisplayItemsProvider(async () => await getVisibleEquippedItems());
   setOnViewingPtChange(() => {
     _refreshInvDisplay();
@@ -810,6 +837,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderSim202();
     renderSim203();
     renderSim204();
+    renderSim205();
   });
   initTooltip();
 
@@ -955,7 +983,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       registerAuthor(data.username, !!data.isAuthor, data.displayName);
       registerContributor(data.username, !!data.isContributor);
       const dn = data.displayName || data.username;
-      document.getElementById('books-username').innerHTML = escapeHtml(dn || '') + adminBadge(data.username) + authorBadge(data.username) + contributorBadge(data.username);
+      document.getElementById('books-username').innerHTML = escapeHtml(dn || '') + adminBadge(_isAdmin) + authorBadge(data.username) + contributorBadge(data.username);
       _updateUsernameTooltip();
     },
     getMousedownOverlay:   () => _mousedownOnOverlay,
@@ -1023,6 +1051,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
   setAppXpHooks({
     getIsAdmin: () => _isAdmin,
+    getCanSeeAppXp: () => _canSeeAppXp,
   });
   document.getElementById('download-backup-btn').addEventListener('click', exportAll);
 
@@ -1068,7 +1097,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await apiFetch('/api/logout', { method: 'POST' }).catch(() => {});
     clearBooksCache();
     localStorage.removeItem('books_list_v1'); localStorage.removeItem('series_list_v1'); localStorage.removeItem('stashes_list_v1');
-    clearToken(); clearUsername(); _isAdmin = false; setCoversPrefsState({}); resetFeedDisplayPrefsForLogout(); showLogin();
+    clearToken(); clearUsername(); _isAdmin = false; _canSeeAppXp = false; setCoversPrefsState({}); resetFeedDisplayPrefsForLogout(); showLogin();
   });
 
 
@@ -1160,7 +1189,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   function _pruneDiscovered(id) {
     const n = state.graph[id];
     if (!n?.discovered) return;
-    const hasMetadata = n.note || n.priority || n.battle || n.color || n.portals || n.showNote;
+    const hasMetadata = n.note || n.priority || n.battle || n.color || n.portals || n.showNote || n.manual;
     if (!hasMetadata && (!n.choices || n.choices.length === 0)) delete state.graph[id];
   }
 
@@ -1273,6 +1302,90 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('ctx-jump-shortest-btn').addEventListener('click', () => doJump('shortest'));
   document.getElementById('ctx-jump-normal-btn').addEventListener('click',   () => doJump('normal'));
   document.getElementById('ctx-jump-low-btn').addEventListener('click',      () => doJump('low'));
+
+  // "+ Add node": places a freestanding node at wherever the empty-canvas
+  // right-click that opened bg-ctx-menu landed (ctxCanvasPos), for sections
+  // that exist in the book but aren't reachable through any recorded choice
+  // (e.g. bonus episodes) - lets you park a note/color on them without first
+  // inventing a fake incoming choice just to get them onto the map.
+  let _addNodeClickPos = null;
+
+  function openAddNodeModal() {
+    _addNodeClickPos = ctxCanvasPos;
+    _hideBgCtxMenu();
+    document.getElementById('add-node-input').classList.remove('invalid');
+    document.getElementById('add-node-input').value = '';
+    document.getElementById('add-node-modal-overlay').classList.add('active');
+    setTimeout(() => { document.getElementById('add-node-input').focus(); }, 50);
+  }
+  document.getElementById('bg-ctx-addnode-btn').addEventListener('click', openAddNodeModal);
+
+  function closeAddNodeModal() {
+    document.getElementById('add-node-modal-overlay').classList.remove('active');
+  }
+  document.getElementById('add-node-cancel').addEventListener('click', closeAddNodeModal);
+  document.getElementById('add-node-modal-overlay').addEventListener('click', e => {
+    if (e.target === e.currentTarget && _mousedownOnOverlay === e.currentTarget) closeAddNodeModal();
+  });
+
+  // Same brief red-border flash as #find-node-input's own .not-found class
+  // (graph toolbar's "jump to section" field) - no text message, just a
+  // 0.8s border flash, per how that field already handles an invalid entry.
+  function _flashAddNodeInvalid() {
+    const inp = document.getElementById('add-node-input');
+    inp.classList.add('invalid');
+    setTimeout(() => inp.classList.remove('invalid'), 800);
+  }
+
+  // Creates a brand new node and drops it exactly at the click position -
+  // the caller (add-node-save handler below) has already rejected any id
+  // that's already on the map, so this never touches an existing node's
+  // position or data. Deliberately NOT setting discovered: true - per
+  // mappedCountFor (state.js) and nodeColor (graph.js), a node only counts
+  // (and colors) as merely "discovered" when discovered is explicitly true
+  // AND it has no choices/portals; omitting the flag entirely is what makes
+  // mappedCountFor's own `!graph[s]?.discovered` clause treat it as fully
+  // mapped immediately, matching "mapped and discovered" - the whole point
+  // of a manually-placed node, since it'll never get its own choices to
+  // record. `manual: true` marks it as worth keeping to graph.js's
+  // deleteNodes()/this file's own _pruneDiscovered()/play.js's note-save
+  // cleanup and _cleanupOrphanedTargets, all of which otherwise silently
+  // delete a bare node with no choices/note/priority/color/battle/portals
+  // the next time some unrelated node gets cleaned up - without this flag a
+  // freshly-added, still-empty bonus node would be exactly that
+  // "worth deleting" shape.
+  function _applyAddNode(id, pos) {
+    state.graph[id] = { choices: [], manual: true };
+    state.positions[id] = pos;
+    saveState();
+    render();
+    closeAddNodeModal();
+  }
+
+  document.getElementById('add-node-save').addEventListener('click', () => {
+    const raw = document.getElementById('add-node-input').value.trim();
+    if (!raw) { _flashAddNodeInvalid(); return; }
+    const id = parseSecId(raw);
+    if (!isValidSecId(id) || (typeof id === 'number' && id < 1)) { _flashAddNodeInvalid(); return; }
+    // Range check only applies to plain numeric ids - an alphanumeric label
+    // like "115-L" isn't part of the book's sequential numbered range at all.
+    if (typeof id === 'number' && state.totalSections > 0 && id > state.totalSections) { _flashAddNodeInvalid(); return; }
+    if (state.graph[id]) { _flashAddNodeInvalid(); return; }
+    const pos = _addNodeClickPos || { x: 0, y: 0 };
+    if (typeof id === 'string' && !state.alphanumericSections) {
+      confirmAlphanumericSwitch(id, () => _applyAddNode(id, pos));
+      return;
+    }
+    _applyAddNode(id, pos);
+  });
+
+  document.getElementById('add-node-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter')  document.getElementById('add-node-save').click();
+    if (e.key === 'Escape') closeAddNodeModal();
+  });
+  document.getElementById('add-node-input').addEventListener('input', e => {
+    e.target.classList.remove('invalid');
+  });
 
   function openStartNodeModal() {
     hideCtxMenu();

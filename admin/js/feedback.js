@@ -3,7 +3,7 @@
 // To remove: delete this file and its <script type="module"> import in
 // admin/index.html; remove the Feedback tab HTML/CSS.
 
-import { api, esc, fmtMsgBody, fmtAttachments, showAlert, showConfirm } from './core.js?v=1';
+import { api, esc, fmtMsgBody, fmtAttachments, showAlert, showConfirm } from './core.js?v=2';
 
 export async function loadFeedback() {
   const meta = document.getElementById('feedback-meta');
