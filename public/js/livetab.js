@@ -81,11 +81,17 @@ function _refreshAppXpStaggered() {
 
 function _startLeaderIntervals() {
   if (!_feedPollInterval) {
+    // Deliberately not gated on document.visibilityState: a tab left open
+    // (screen off, minimized, backgrounded) should keep earning idle_heartbeat
+    // XP the same way a visible one does - the feed_changed SSE handler above
+    // already does this (it only checks isLandingVisible, the SPA's own view
+    // state, not OS/browser-level visibility), so gating this poll on
+    // visibility just meant heartbeat rate depended on OS/browser background-tab
+    // behavior (e.g. whether the screen turning off still counts as "open")
+    // instead of on whether the user actually left the site open.
     _feedPollInterval = setInterval(() => {
-      if (document.visibilityState === 'visible') {
-        _hooks.loadFeed?.();
-        _refreshAppXpStaggered();
-      }
+      _hooks.loadFeed?.();
+      _refreshAppXpStaggered();
     }, 60_000);
   }
   if (!_booksPollInterval) {

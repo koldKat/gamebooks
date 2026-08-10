@@ -785,7 +785,7 @@ appLevel = floor((-1 + sqrt(1 + 8 × totalXp / (number_of_users × 1000))) / 2)
 | `visit_all_series` | 40 × N | `seriesId` | Once per user per series. Same trigger as `discover_all_series` but for `visit_all`. |
 | `discover_all_anthology` | 30 × N | `parentBookId` | Once per user per anthology. Fires after a child book's `discover_all` when all non-demo children have `discover_all`. |
 | `visit_all_anthology` | 40 × N | `parentBookId` | Once per user per anthology. Same trigger as `discover_all_anthology` but for `visit_all`. |
-| `idle_heartbeat` | 1 | `minuteBucket` | Once per minute per user while an authenticated feed refresh hits the server (used by the 60-second activity-feed poll) |
+| `idle_heartbeat` | 1 | `minuteBucket` | Once per minute per user while an authenticated feed refresh hits the server (used by the 60-second activity-feed poll, and by the feed's SSE push - both fire regardless of `document.visibilityState`, so a leader tab left open in the background or with the screen off keeps earning it) |
 | `favorite_cover` | 5 | `book:id` / `series:id` | Once per cover item, first time a logged-in user favorites a book, anthology, or series cover from the public covers wall |
 | `inventory_started` | 25 | `bookId` | Once per book, first time any playthrough's inventory becomes non-empty |
 | `add_item` | 5 | `bookId:itemId` | Once per book per distinct item ID, first time that item appears in any playthrough's inventory |
