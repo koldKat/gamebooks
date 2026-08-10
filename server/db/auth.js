@@ -44,6 +44,20 @@ function isUserAdmin(userId) {
   return !!db.prepare('SELECT is_admin FROM users WHERE id = ?').get(userId)?.is_admin;
 }
 
+// Standing one-off exception (not an admin grant): user id 17 (sashii, as of
+// when this was added) can see the two app-wide XP/avg-level bars
+// (GET /api/app-xp) without any other admin capability. Matched by id, not
+// username - usernames are user-editable (updateUsername below), so a
+// username match would silently break if he renamed himself, or worse,
+// silently transfer to whoever claimed the name "sashii" next. Client-side
+// mirror is boot.js's _canSeeAppXp/getCanSeeAppXp (matches profile.id the
+// same way), which must agree with this or the widgets fetch data he can't
+// actually see (or vice versa, a 403 the client didn't expect).
+const APP_XP_EXTRA_USER_ID = 17;
+function canSeeAppXp(userId) {
+  return isUserAdmin(userId) || userId === APP_XP_EXTRA_USER_ID;
+}
+
 function getAdminUsername() {
   return db.prepare('SELECT username FROM users WHERE is_admin = 1 ORDER BY id LIMIT 1').get()?.username ?? '';
 }
@@ -285,7 +299,7 @@ function deleteSession(token) {
 
 module.exports = {
   hashPassword, verifyPassword, generateToken,
-  getUserById, getUserByUsername, isUserAdmin, getAdminUsername, getRandomMaintenanceMessage, searchUsers,
+  getUserById, getUserByUsername, isUserAdmin, canSeeAppXp, getAdminUsername, getRandomMaintenanceMessage, searchUsers,
   adminUpdateUser, updateUsername, updatePassword, updateAvatar, getUserPrefs, setUserPrefs,
   createUser, setUserEmail, getUserEmail,
   createPasswordResetToken, validateResetToken, consumeResetToken,

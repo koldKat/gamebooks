@@ -604,7 +604,7 @@ function getAllAnthologiesAdmin() {
 function adminGetUser(userId) {
   const row = db.prepare(`
     SELECT u.id, u.username, u.display_name, u.email, u.is_author, u.is_contributor, u.pdf_access, u.created_at, u.last_country, u.last_city,
-           u.active_country, u.active_city, u.last_domain, u.failed_login_attempts, u.locked_until, u.is_protected,
+           u.active_country, u.active_city, u.last_domain, u.failed_login_attempts, u.locked_until, u.is_protected, u.is_admin,
            u.public_profile, u.hide_from_feed,
            COUNT(DISTINCT s.token) AS session_count
     FROM users u
@@ -1124,7 +1124,7 @@ function getAppXpSummary() {
 function adminGetUsers() {
   const users = db.prepare(`
     SELECT u.id, u.username, u.display_name, u.is_author, u.is_contributor, u.created_at, u.last_country, u.last_city,
-           u.active_country, u.active_city, u.last_domain, u.failed_login_attempts, u.locked_until, u.is_protected,
+           u.active_country, u.active_city, u.last_domain, u.failed_login_attempts, u.locked_until, u.is_protected, u.is_admin,
            COUNT(DISTINCT CASE WHEN b.is_demo = 0 AND b.parent_book_id IS NULL THEN b.id END) AS book_count,
            COUNT(DISTINCT s.token)   AS session_count,
            COALESCE(u.last_active_at, MAX(CASE WHEN b.is_demo = 0 THEN ub.updated_at ELSE NULL END), u.created_at) AS last_active

@@ -12,12 +12,12 @@
 
 import {
   api, el, badge, mkBtn, appendCell, emptyRow, mkLevelCell, mkGeoCell, addMetaItem, addStatCard,
-  fmtDate, fmtDateTime, fmtBytes, pdfUrl, esc, adminBadge, authorBadge, contributorBadge, ADMIN_USERNAME,
+  fmtDate, fmtDateTime, fmtBytes, pdfUrl, esc, adminBadge, authorBadge, contributorBadge,
   daysInactiveClass, fmtDaysInactive, flashSaved, showAlert, showConfirm,
   storeData, getSorted, getFiltered, foldForSearch, naturalCompare, naturalCompareByName, _tableData,
   setSearchFields, wireTableSearch, initSortHeaders, renderPaged,
-} from './core.js?v=1';
-import { loadAll, loadTools } from './dashboard.js?v=9';
+} from './core.js?v=2';
+import { loadAll, loadTools } from './dashboard.js?v=10';
 
 // ── Gift modal ────────────────────────────────────────────────────────────────
 
@@ -228,7 +228,7 @@ function renderUserRow(tbody, u) {
     link.addEventListener('click', () => loadUserDetail(u.id));
     nameCell.appendChild(link);
     requestAnimationFrame(() => { if (link.scrollWidth > link.clientWidth) link.dataset.tooltip = u.username; });
-    if (u.username === ADMIN_USERNAME) nameCell.insertAdjacentHTML('beforeend', adminBadge(u.username));
+    if (u.is_admin) nameCell.insertAdjacentHTML('beforeend', adminBadge(true));
     if (u.is_author) nameCell.insertAdjacentHTML('beforeend', authorBadge(true));
     if (u.is_contributor) nameCell.insertAdjacentHTML('beforeend', contributorBadge(true));
 
@@ -503,7 +503,7 @@ export async function loadUserDetail(userId) {
   try {
     const { user, books } = await api('GET', `/api/admin/users/${userId}`);
 
-    document.getElementById('user-crumb').innerHTML = esc(user.username) + adminBadge(user.username) + authorBadge(user.is_author) + contributorBadge(user.is_contributor)
+    document.getElementById('user-crumb').innerHTML = esc(user.username) + adminBadge(user.is_admin) + authorBadge(user.is_author) + contributorBadge(user.is_contributor)
       + (user.display_name ? ` <span style="color:#6b7280;font-size:0.82rem;font-weight:400">(${esc(user.display_name)})</span>` : '');
 
     document.getElementById('ue-username').value              = user.username;

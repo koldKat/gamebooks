@@ -243,6 +243,8 @@ try { db.exec(`ALTER TABLE series ADD COLUMN is_open_world INTEGER NOT NULL DEFA
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 203').run(); } catch (_) {}
 // Same one-off flag for book 204 (Scorpion Swamp).
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 204').run(); } catch (_) {}
+// Same one-off flag for book 205 (Caverns of the Snow Witch).
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 205').run(); } catch (_) {}
 
 // One-time migration: book 829's sim was the first one built, before the
 // pt.simNNN naming convention existed, so its state lived under pt.battleSim
@@ -423,10 +425,17 @@ db.exec(`
   SELECT created_by, id FROM series WHERE created_by IS NOT NULL
 `);
 
-// One-time: mark the two protected accounts
-db.prepare(`UPDATE users SET is_protected = 1 WHERE LOWER(username) IN ('koldkat', 'sashii') AND is_protected = 0`).run();
-// One-time: mark the actual admin account
-db.prepare(`UPDATE users SET is_admin = 1 WHERE LOWER(username) = 'koldkat' AND is_admin = 0`).run();
+// One-time: mark the two protected accounts, and the actual admin account.
+// Matched by id, not username - usernames are user-editable (updateUsername
+// in server/db/auth.js), so matching by name here would risk either losing
+// the flag on a rename (harmless, since is_protected/is_admin already
+// persisted stays set), or worse, silently granting it to an unrelated
+// future user who registers the vacated username on the next server start
+// (this runs unconditionally on every boot, gated only by the row's own
+// flag being 0). id 1 is koldKat (the actual admin account), id 17 is
+// sashii. Same reasoning as server/db/auth.js's canSeeAppXp().
+db.prepare(`UPDATE users SET is_protected = 1 WHERE id IN (1, 17) AND is_protected = 0`).run();
+db.prepare(`UPDATE users SET is_admin = 1 WHERE id = 1 AND is_admin = 0`).run();
 
 // feedback.user_id is nullable (migrated) - no migration needed here.
 
@@ -638,7 +647,7 @@ if (hasColumn('sessions', 'expires_at')) {
 
 const {
   hashPassword, verifyPassword, generateToken,
-  getUserById, getUserByUsername, isUserAdmin, getAdminUsername, getRandomMaintenanceMessage, searchUsers,
+  getUserById, getUserByUsername, isUserAdmin, canSeeAppXp, getAdminUsername, getRandomMaintenanceMessage, searchUsers,
   adminUpdateUser, updateUsername, updatePassword, updateAvatar, getUserPrefs, setUserPrefs,
   createUser, setUserEmail, getUserEmail,
   createPasswordResetToken, validateResetToken, consumeResetToken,
@@ -776,7 +785,7 @@ module.exports = {
   forumDeleteThread, forumDeletePost,
   forumToggleLock, forumTogglePin, forumIsAdmin,
   getAllBooksForExport, getBookForExport,
-  getUserByUsername, isUserAdmin, getAdminUsername, getRandomMaintenanceMessage, searchUsers,
+  getUserByUsername, isUserAdmin, canSeeAppXp, getAdminUsername, getRandomMaintenanceMessage, searchUsers,
   createParty, inviteToParty, acceptPartyInvite, declinePartyInvite,
   leaveParty, getPartyForBook, getPendingInvites, fanOutState, getPartyMemberIds,
   getAppBirthTimestamp,

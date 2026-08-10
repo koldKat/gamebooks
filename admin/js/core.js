@@ -142,9 +142,12 @@ export function _esc(s) {
   return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-export const ADMIN_USERNAME = 'koldKat';
-export function adminBadge(username) {
-  return username === ADMIN_USERNAME ? '<span class="admin-badge" data-tooltip="Admin">★</span>' : '';
+// Takes the row's own is_admin flag directly (id-based, from the DB), not a
+// username comparison - a hardcoded admin username would silently stop
+// badging the real admin on a rename, matching authorBadge/contributorBadge
+// below which already take a boolean rather than re-deriving one from a name.
+export function adminBadge(isAdmin) {
+  return isAdmin ? '<span class="admin-badge" data-tooltip="Admin">★</span>' : '';
 }
 export function authorBadge(isAuthor) {
   return isAuthor ? '<span class="author-badge" data-tooltip="Author">★</span>' : '';

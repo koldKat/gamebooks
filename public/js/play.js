@@ -5,12 +5,12 @@ import {
   currentPlaythrough, currentSection, allDiscoveredSections, mappedCount,
   currentUserLevel, bonusUndos, bonusFastTravels, apiFetch,
 } from './state.js?v=13';
-import { network, visNodes, syncGraph, inevitableOutcome } from './graph.js?v=104';
-import { t } from './i18n.js?v=49';
-import { renderCharSheetDisplay } from './charsheet.js?v=78';
+import { network, visNodes, syncGraph, inevitableOutcome } from './graph.js?v=107';
+import { t } from './i18n.js?v=52';
+import { renderCharSheetDisplay } from './charsheet.js?v=82';
 import { naturalCompare } from './sort.js?v=1';
-import { instantiateLoadout } from './equipment.js?v=150';
-import { escapeHtml } from './util.js?v=61';
+import { instantiateLoadout } from './equipment.js?v=154';
+import { escapeHtml } from './util.js?v=65';
 
 // ── Discoverable sections cap ────────────────────────────────────���───────────
 let _discoverableLimit = null;
@@ -895,7 +895,7 @@ function _cleanupOrphanedTargets(sec, oldChoices, newChoices) {
     });
 
     const node = state.graph[target];
-    const hasMetadata = node && (node.note || node.priority || node.battle || node.color || node.portals || node.showNote);
+    const hasMetadata = node && (node.note || node.priority || node.battle || node.color || node.portals || node.showNote || node.manual);
     if (node && !hasMetadata) {
       delete state.graph[target];
     }
@@ -1142,7 +1142,7 @@ export function undoRun() {
   while (pt.path.length > 1) {
     const node = state.graph[pt.path[pt.path.length - 1]];
     if (!node || node.choices.length !== 1) break; // real decision point, dead end, or missing node
-    const hasMetadata = node.note || node.priority || node.battle || node.color || node.portals || node.showNote;
+    const hasMetadata = node.note || node.priority || node.battle || node.color || node.portals || node.showNote || node.manual;
     const wouldAutoNav = !isTerminal(node.choices[0]) && !pt.path.includes(node.choices[0]) && !(_owIsOpenWorld && node.portals?.length);
     if (hasMetadata && !wouldAutoNav) break;
     pt.path.pop();
@@ -1249,7 +1249,7 @@ export function openNoteModal(nodeId) {
       // Same "worth keeping" check as _cleanupOrphanedTargets/_pruneDiscovered
       // (boot.js) - was missing `portals` here too, so clearing the note off
       // a node whose only other content was a portal silently deleted it.
-      if (n.discovered && !n.priority && !n.battle && !n.color && !n.portals) delete state.graph[nodeId];
+      if (n.discovered && !n.priority && !n.battle && !n.color && !n.portals && !n.manual) delete state.graph[nodeId];
     }
     saveState();
     render();

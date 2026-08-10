@@ -33,7 +33,7 @@ async function handleSubmitFeedback(req, res) {
 async function handleGetAppXpSummary(req, res) {
   const userId = await authenticate(req, res);
   if (userId === null) return;
-  if (!db.isUserAdmin(userId)) return send(res, 403, { error: 'Admin only' });
+  if (!db.canSeeAppXp(userId)) return send(res, 403, { error: 'Admin only' });
   send(res, 200, db.getAppXpSummary());
 }
 

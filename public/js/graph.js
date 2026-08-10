@@ -3,7 +3,7 @@ import {
   state, viewingPt, isTerminal, parseSecId, isValidSecId,
   currentPlaythrough, allDiscoveredSections, saveState,
 } from './state.js?v=13';
-import { t } from './i18n.js?v=49';
+import { t } from './i18n.js?v=52';
 
 export let network  = null;
 export let visNodes = null;
@@ -1101,7 +1101,7 @@ export function deleteNodes(ids) {
   const visited = new Set(state.playthroughs.flatMap(pt => pt.path));
   Object.keys(state.graph).forEach(sec => {
     const node = state.graph[sec];
-    const hasMetadata = node.note || node.priority || node.battle || node.color || node.portals || node.showNote;
+    const hasMetadata = node.note || node.priority || node.battle || node.color || node.portals || node.showNote || node.manual;
     if (node.choices.length === 0 && !visited.has(parseSecId(sec)) && !hasMetadata)
       delete state.graph[sec];
   });

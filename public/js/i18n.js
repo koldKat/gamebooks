@@ -593,6 +593,9 @@ const translations = {
 
     'bg.show_background': 'Show background',
     'bg.hide_background': 'Hide background',
+    'bg.add_node': '+ Add node',
+    'bg.add_node.title': 'Add Node',
+    'bg.add_node.label': 'Section number:',
     'bg.grid': 'Grid ▸',
     'bg.show_grid': 'Show grid',
     'bg.snap_to_grid': 'Snap to grid',
