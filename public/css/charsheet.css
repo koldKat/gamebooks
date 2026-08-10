@@ -578,6 +578,15 @@ body.sidebar-collapsed #notes-display { left: 1rem; }
   pointer-events: none;
   text-align: right;
   text-shadow: 0 1px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.6);
+  /* Without this, a field with no natural line breaks (e.g. a long
+     comma-joined list value) has nothing to stop it from growing this
+     shrink-to-fit box as wide as the text itself, right off the left edge
+     of the screen. Capped to --play-btn-row-w (charsheet.js's own
+     ResizeObserver, already tracks #play-btn-row's real current width,
+     battle-sim button included when the book has one) so a long value wraps
+     onto multiple lines instead, staying the same width as the button row
+     directly beneath it rather than spilling past it. */
+  max-width: var(--play-btn-row-w, 220px);
 }
 .cs-line  { display: block; }
 .cs-label { color: #9ca3af; }
