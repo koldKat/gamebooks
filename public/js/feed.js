@@ -493,7 +493,7 @@ export async function loadFeed() {
 
     function renderDayItems(items) {
       const thisDayIndex = dayIndex++;
-      const skipTypes = new Set(['level_up', 'user_joined', 'book_rated', 'series_rated', 'book_created']);
+      const skipTypes = new Set(['level_up', 'user_joined', 'book_rated', 'series_rated', 'book_created', 'series_created']);
       const userCounts = new Map();
       for (const e of items) {
         if (skipTypes.has(e.type)) continue;
@@ -508,7 +508,7 @@ export async function loadFeed() {
       const rendered = new Set();
       let out = '';
       for (const e of items) {
-        if (e.type === 'level_up' || e.type === 'book_rated' || e.type === 'series_rated' || e.type === 'book_created') {
+        if (e.type === 'level_up' || e.type === 'book_rated' || e.type === 'series_rated' || e.type === 'book_created' || e.type === 'series_created') {
           // Always its own standalone entry - never merged into a same-user
           // collapse group, even if that user has enough other actions today
           // to trigger one (grouping keys purely on username, so without this
