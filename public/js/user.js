@@ -41,6 +41,18 @@ export function adminBadge(isAdmin) {
   return isAdmin ? '<span class="admin-badge" data-tooltip="Admin">★</span>' : '';
 }
 
+// For badging OTHER users (feed.js's per-entry usernames) - there's no
+// per-entry isAdmin boolean coming from the server (feed entries only ever
+// carried isAuthor/isContributor), so this compares against _adminUsername
+// the same way resolveIsAdmin()'s fallback does. Do not pass a username into
+// adminBadge() above - it takes a boolean now and a truthy non-empty
+// username string would make it return the star for every single user.
+export function adminBadgeForUsername(username) {
+  const u = String(username || '').trim().toLowerCase();
+  const configured = String(_adminUsername || '').trim().toLowerCase();
+  return (!!u && !!configured && u === configured) ? adminBadge(true) : '';
+}
+
 export function authorBadge(username) {
   if (!_authorMap[username]?.isAuthor) return '';
   return '<span class="author-badge" data-tooltip="Author">★</span>';
