@@ -52,7 +52,7 @@ import { initSim205, setSim205Visible, renderSim205 } from './battlesim/battlesi
 import { initShop, updateCoinsDisplay, refreshCoinsDisplay, setShopHooks } from './shop.js?v=74';
 import { initProfile, updateAvatarUI, renderBooksXpSummary, setProfileHooks } from './profile.js?v=90';
 import { setPublicProfileHooks, closePublicModal, openPublicProfile, openPublicSeriesRun } from './public-profile.js?v=89';
-import { setLiveTabHooks, _ensureLiveTabControllerStarted, _connectUserBadgeSSE, _disconnectUserBadgeSSE, _connectAppXpSSE, _disconnectAppXpSSE } from './livetab.js?v=80';
+import { setLiveTabHooks, _ensureLiveTabControllerStarted, _connectUserBadgeSSE, _disconnectUserBadgeSSE, _connectAppXpSSE, _disconnectAppXpSSE } from './livetab.js?v=81';
 import { setAppXpHooks, refreshAppXp, handleAppXpEvent } from './app-xp.js?v=78';
 import { setCoversHooks, loadCovers, openCoverActivity, openSeriesActivity, _showCachedCoversPanel, _refreshPublicCatalogIfVisible, _isLandingBooksViewVisible, _updateLandingBgDragUi, setCoversPrefsState, _toggleCoverTooltipSettings, initCoversPanel, resetFeedDisplayPrefsForLogout } from './covers.js?v=120';
 import {
@@ -78,7 +78,7 @@ import {
 import {
   _resetRewardSnapshotState, _positionRewardLayer,
   _processRewardSnapshot, _scheduleRewardProfileRefresh,
-} from './rewards.js?v=93';
+} from './rewards.js?v=94';
 import {
   setBgHooks, setCurrentBookCover, getCurrentBookCover,
   resetBgState, cancelBgMove, isBgInMove,
@@ -96,9 +96,9 @@ import { initFeedback } from './feedback.js?v=64';
 import { setDemoHooks, getDemoBooks, setDemoBooks, getDemoVisited, startDemoMode, exitDemoMode, wasInDemoMode } from './demo.js?v=109';
 import {
   setAdminUsername, resolveIsAdmin,
-  adminBadge, authorBadge, contributorBadge, displayFor,
+  adminBadge, adminBadgeForUsername, authorBadge, contributorBadge, displayFor,
   registerAuthor, registerContributor,
-} from './user.js?v=10';
+} from './user.js?v=11';
 import { escapeHtml, fetchPublic as publicFetch } from './util.js?v=65';
 
 window._isMobile = /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
@@ -991,7 +991,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initProfile();
   setPublicProfileHooks({
     publicFetch,
-    adminBadge,
+    adminBadge: adminBadgeForUsername,
     authorBadge,
     contributorBadge,
     displayFor,
@@ -1012,7 +1012,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     lockView:            _lockView,
     navigateToBook,
     displayFor,
-    adminBadge,
+    adminBadge: adminBadgeForUsername,
     authorBadge,
     contributorBadge,
     onFavoriteToggled:   () => _scheduleRewardProfileRefresh(250),
@@ -1022,7 +1022,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     publicFetch,
     scheduleRewardProfileRefresh: _scheduleRewardProfileRefresh,
     displayFor,
-    adminBadge,
+    adminBadge: adminBadgeForUsername,
     authorBadge,
     contributorBadge,
     registerAuthor:    registerAuthor,
