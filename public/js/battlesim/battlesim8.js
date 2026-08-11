@@ -2,8 +2,8 @@
 // State stored in pt.sim8. Rules: roll N dice (N=Умение); 4-5→1 щ., 6→2 щ.
 // Адрин напада пръв; при foeFirst - врагът напада преди него.
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../state.js?v=11';
-import { showAlert } from '../play.js?v=109';
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../state.js?v=13';
+import { showAlert } from '../play.js?v=110';
 import { getPlayBtnRow } from '../charsheet.js?v=82';
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../util.js?v=65';
 import { t } from '../i18n.js?v=52';

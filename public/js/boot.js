@@ -37,18 +37,18 @@ import {
   _setLandingPanelCollapsed, _toggleAllLandingPanelsCollapsed,
   _setPlayPanelCollapsed, _toggleAllPlayPanelsCollapsed,
 } from './prefs.js?v=164';
-import { initBattleSim, setBattleSimVisible, renderBattleSim } from './battlesim/battlesim829.js?v=129';
-import { initBattleSim8, setSim8Visible, renderSim8 } from './battlesim/battlesim8.js?v=101';
-import { initSim286, setSim286Visible, renderSim286 } from './battlesim/battlesim286.js?v=60';
-import { initSim198, setSim198Visible, renderSim198 } from './battlesim/battlesim198.js?v=43';
-import { initSim199, setSim199Visible, renderSim199 } from './battlesim/battlesim199.js?v=36';
-import { initSim200, setSim200Visible, renderSim200 } from './battlesim/battlesim200.js?v=26';
-import { initSim186, setSim186Visible, renderSim186 } from './battlesim/battlesim186.js?v=27';
-import { initSim201, setSim201Visible, renderSim201 } from './battlesim/battlesim201.js?v=29';
-import { initSim202, setSim202Visible, renderSim202 } from './battlesim/battlesim202.js?v=12';
-import { initSim203, setSim203Visible, renderSim203 } from './battlesim/battlesim203.js?v=11';
-import { initSim204, setSim204Visible, renderSim204 } from './battlesim/battlesim204.js?v=6';
-import { initSim205, setSim205Visible, renderSim205 } from './battlesim/battlesim205.js?v=5';
+import { initBattleSim, setBattleSimVisible, renderBattleSim } from './battlesim/battlesim829.js?v=130';
+import { initBattleSim8, setSim8Visible, renderSim8 } from './battlesim/battlesim8.js?v=102';
+import { initSim286, setSim286Visible, renderSim286 } from './battlesim/battlesim286.js?v=61';
+import { initSim198, setSim198Visible, renderSim198 } from './battlesim/battlesim198.js?v=44';
+import { initSim199, setSim199Visible, renderSim199 } from './battlesim/battlesim199.js?v=37';
+import { initSim200, setSim200Visible, renderSim200 } from './battlesim/battlesim200.js?v=27';
+import { initSim186, setSim186Visible, renderSim186 } from './battlesim/battlesim186.js?v=28';
+import { initSim201, setSim201Visible, renderSim201 } from './battlesim/battlesim201.js?v=30';
+import { initSim202, setSim202Visible, renderSim202 } from './battlesim/battlesim202.js?v=13';
+import { initSim203, setSim203Visible, renderSim203 } from './battlesim/battlesim203.js?v=12';
+import { initSim204, setSim204Visible, renderSim204 } from './battlesim/battlesim204.js?v=7';
+import { initSim205, setSim205Visible, renderSim205 } from './battlesim/battlesim205.js?v=6';
 import { initShop, updateCoinsDisplay, refreshCoinsDisplay, setShopHooks } from './shop.js?v=74';
 import { initProfile, updateAvatarUI, renderBooksXpSummary, setProfileHooks } from './profile.js?v=90';
 import { setPublicProfileHooks, closePublicModal, openPublicProfile, openPublicSeriesRun } from './public-profile.js?v=89';
