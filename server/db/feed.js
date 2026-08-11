@@ -1242,11 +1242,12 @@ function getAllPublicAnthologies() {
 function getBookActivity(bookId) {
   const book = db.prepare(
     `SELECT b.id, b.name, b.total_sections, b.isbn, b.issn, b.asin, b.cover_path,
-            b.pages, b.authors, b.description, b.is_public, b.is_container,
+            b.pages, b.authors, b.description, b.is_public, b.is_container, b.book_order,
             COALESCE(b.series_number, p.series_number) AS series_number,
             p.id AS parentId, p.name AS parentName,
             COALESCE(s.id,  ps.id)   AS seriesId,
-            COALESCE(s.name, ps.name) AS seriesName
+            COALESCE(s.name, ps.name) AS seriesName,
+            s.id AS ownSeriesId, s.name AS ownSeriesName, b.series_number AS ownSeriesNumber
      FROM books b
      LEFT JOIN books p   ON p.id  = b.parent_book_id
      LEFT JOIN series s  ON s.id  = b.series_id
@@ -1333,9 +1334,19 @@ function getBookActivity(bookId) {
       isContainer,
       parentId:      book.parentId    || null,
       parentName:    book.parentName  || null,
+      bookOrder:     book.book_order  ?? null,
       seriesId:      book.seriesId    || null,
       seriesName:    book.seriesName  || null,
       seriesNumber:  book.series_number || null,
+      // Undiluted by the parent-anthology COALESCE above - seriesId/seriesName/
+      // seriesNumber deliberately inherit the parent's series for feed/display
+      // context (a child with no series of its own still shows its anthology's
+      // series tag), but an edit form needs the book's own actual series_id,
+      // not a value that would silently attach it directly to the anthology's
+      // series if saved as-is. See covers.js's admin-edit handler.
+      ownSeriesId:     book.ownSeriesId     || null,
+      ownSeriesName:   book.ownSeriesName   || null,
+      ownSeriesNumber: book.ownSeriesNumber || null,
       children,
       ..._getAggregateRating(book.id),
       authorRatings: _getAuthorRatings(book.authors),

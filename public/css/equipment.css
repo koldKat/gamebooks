@@ -249,6 +249,13 @@
 }
 .inv-modal-hdr .inv-close-btn { margin-left: 0; }
 .inv-modal-hdr:has(.inv-count) .inv-close-btn { margin-left: 0; }
+/* Every .inv-modal-hdr with an .inv-count relies on ITS margin-left:auto to
+   push the close button along with it (see above) - but every battle sim's
+   modal header has only a title and the close button, nothing else, so
+   nothing was ever pushing the close button to the header's right edge. It
+   sat right next to the title text instead of in the top-right corner,
+   across all thirteen sims (they all share this header markup). */
+.inv-modal-hdr:not(:has(.inv-count)) .inv-close-btn { margin-left: auto; }
 .inv-close-btn:hover { color: #d1d5db; background: #1f2937; }
 
 .inv-grid {

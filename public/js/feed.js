@@ -2,7 +2,7 @@
 
 import { getToken, apiFetch } from './state.js?v=13';
 import { openPublicProfile, openPublicSeriesRun, openPublicRun } from './public-profile.js?v=89';
-import { openCoverActivity, openSeriesActivity } from './covers.js?v=120';
+import { openCoverActivity, openSeriesActivity } from './covers.js?v=123';
 import { escapeHtml } from './util.js?v=65';
 import { t } from './i18n.js?v=52';
 
