@@ -4,7 +4,7 @@
 // Visible to all logged-in users.
 
 import { state, currentPlaythrough, saveState, apiFetch, viewingPt } from './state.js?v=13';
-import { showConfirm } from './play.js?v=109';
+import { showConfirm } from './play.js?v=110';
 import { getPlayBtnRow } from './charsheet.js?v=82';
 import { escapeHtml, shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from './util.js?v=65';
 import { t } from './i18n.js?v=52';
@@ -26,7 +26,11 @@ function _invLineHtml(item, displayName, note, qty, badgeText = null, kind = nul
   const qtyHtml  = (qty > 1)   ? ` <span class="inv-line-qty">×${qty}</span>`                      : '';
   const badgeHtml = badgeText ? ` <span class="inv-line-slot">${escapeHtml(badgeText)}</span>` : '';
   const cls = kind ? `inv-line inv-line--${kind}` : 'inv-line';
-  return `<span class="${cls}"><span class="inv-line-icon">${item.svg_data}</span><span class="inv-line-name">${escapeHtml(displayName)}</span>${qtyHtml}${badgeHtml}${noteHtml}</span>`;
+  // Badge always last (rightmost, since the whole line is right-aligned) -
+  // name/qty/note stay together on the left so the badge reads as a
+  // consistent right-hand column across every line, not shifted around by
+  // whether a note happens to be present.
+  return `<span class="${cls}"><span class="inv-line-icon">${item.svg_data}</span><span class="inv-line-name">${escapeHtml(displayName)}</span>${qtyHtml}${noteHtml}${badgeHtml}</span>`;
 }
 
 

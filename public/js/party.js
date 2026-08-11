@@ -5,7 +5,7 @@
 // remove the party-* CSS from style.css.
 
 import { currentBookId, apiFetch, getToken, isDemoMode, loadState } from './state.js?v=13';
-import { render, suppressAutoNav, showAlert, showConfirm } from './play.js?v=109';
+import { render, suppressAutoNav, showAlert, showConfirm } from './play.js?v=110';
 import { escapeHtml } from './util.js?v=65';
 import { t } from './i18n.js?v=52';
 

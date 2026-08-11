@@ -9,7 +9,7 @@ import { network, visNodes, syncGraph, inevitableOutcome } from './graph.js?v=10
 import { t } from './i18n.js?v=52';
 import { renderCharSheetDisplay } from './charsheet.js?v=82';
 import { naturalCompare } from './sort.js?v=1';
-import { instantiateLoadout } from './equipment.js?v=154';
+import { instantiateLoadout } from './equipment.js?v=155';
 import { escapeHtml } from './util.js?v=65';
 
 // ── Discoverable sections cap ────────────────────────────────────���───────────
