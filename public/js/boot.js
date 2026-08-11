@@ -24,19 +24,19 @@ import { initNotes, hideNotesUI, loadNotesForBook, setOnXpAwarded as setNotesOnX
 import { initParty, connectPartySSE, disconnectPartySSE, loadPartyInvites, setPartyHooks } from './party.js?v=141';
 import { initAuth, setOnAuthSuccess, showAuthForm, showResetPanel, hasPendingResetToken } from './auth.js?v=65';
 import { initStats, closeStatsModal } from './stats.js?v=85';
-import { setAddBookHooks, initAddBook, _closeAddBook, _closeAddComp, _closeAddSeries } from './add-book.js?v=174';
+import { setAddBookHooks, initAddBook, _closeAddBook, _closeAddComp, _closeAddSeries } from './add-book.js?v=177';
 import {
   setEditBookHooks, initEditBook,
   openEditBookModal, closeEditBookModal, openEditCompModal, openEditSeriesModal,
   _openEditStash, _closeEditStash, _closeAddStash,
   _adminPdfHref,
   maxSectionInUse,
-} from './edit-book.js?v=175';
+} from './edit-book.js?v=178';
 import {
   setPrefsHooks, savePrefs, syncPrefs,
   _setLandingPanelCollapsed, _toggleAllLandingPanelsCollapsed,
   _setPlayPanelCollapsed, _toggleAllPlayPanelsCollapsed,
-} from './prefs.js?v=164';
+} from './prefs.js?v=167';
 import { initBattleSim, setBattleSimVisible, renderBattleSim } from './battlesim/battlesim829.js?v=130';
 import { initBattleSim8, setSim8Visible, renderSim8 } from './battlesim/battlesim8.js?v=102';
 import { initSim286, setSim286Visible, renderSim286 } from './battlesim/battlesim286.js?v=61';
@@ -49,12 +49,13 @@ import { initSim202, setSim202Visible, renderSim202 } from './battlesim/battlesi
 import { initSim203, setSim203Visible, renderSim203 } from './battlesim/battlesim203.js?v=12';
 import { initSim204, setSim204Visible, renderSim204 } from './battlesim/battlesim204.js?v=7';
 import { initSim205, setSim205Visible, renderSim205 } from './battlesim/battlesim205.js?v=6';
+import { initSim206, setSim206Visible, renderSim206 } from './battlesim/battlesim206.js?v=2';
 import { initShop, updateCoinsDisplay, refreshCoinsDisplay, setShopHooks } from './shop.js?v=74';
 import { initProfile, updateAvatarUI, renderBooksXpSummary, setProfileHooks } from './profile.js?v=90';
 import { setPublicProfileHooks, closePublicModal, openPublicProfile, openPublicSeriesRun } from './public-profile.js?v=89';
 import { setLiveTabHooks, _ensureLiveTabControllerStarted, _connectUserBadgeSSE, _disconnectUserBadgeSSE, _connectAppXpSSE, _disconnectAppXpSSE } from './livetab.js?v=81';
 import { setAppXpHooks, refreshAppXp, handleAppXpEvent } from './app-xp.js?v=78';
-import { setCoversHooks, loadCovers, openCoverActivity, openSeriesActivity, _showCachedCoversPanel, _refreshPublicCatalogIfVisible, _isLandingBooksViewVisible, _updateLandingBgDragUi, setCoversPrefsState, _toggleCoverTooltipSettings, initCoversPanel, resetFeedDisplayPrefsForLogout } from './covers.js?v=120';
+import { setCoversHooks, loadCovers, openCoverActivity, openSeriesActivity, _showCachedCoversPanel, _refreshPublicCatalogIfVisible, _isLandingBooksViewVisible, _updateLandingBgDragUi, setCoversPrefsState, _toggleCoverTooltipSettings, initCoversPanel, resetFeedDisplayPrefsForLogout } from './covers.js?v=123';
 import {
   setBooksHooks, initBooksPanel, renderBooksList,
   getCachedBooks, getCachedAllSeries, getCachedStashes,
@@ -62,14 +63,14 @@ import {
   setBooksDataFresh, setBooksRevealedAt,
   setCurrentUserId,
   _refreshBooksListOnly, _refreshLibraryUi, _starsHtml, _starLabelHtml, _flashRatingGate,
-} from './books.js?v=164';
+} from './books.js?v=167';
 import {
   setOpenWorldHooks, setupOpenWorldForBook,
   _syncSeriesRuns, _computeCrossBookReachability, _focusNodeAfterLoad,
   clearOpenWorldState, doJumpCrossBook,
   getOwSrcBookId, getOwSrcSection, getOwCrossBookRoute,
-} from './open-world.js?v=167';
-import { setFeedHooks, loadFeed, refreshDayCoverFlows } from './feed.js?v=142';
+} from './open-world.js?v=170';
+import { setFeedHooks, loadFeed, refreshDayCoverFlows } from './feed.js?v=145';
 import {
   setNotifHooks, _scheduleLiveUiRefresh,
   _closeNotifDropdown, _openNotifDropdown, isNotifDropdownOpen,
@@ -89,7 +90,7 @@ import {
 } from './bg.js?v=46';
 import { initTips } from './tips.js?v=56';
 import { initInbox } from './inbox.js?v=117';
-import { initDice } from './dice.js?v=157';
+import { initDice } from './dice.js?v=160';
 import { initTooltip } from './tooltip.js?v=2';
 import { exportAll, exportBook } from './export.js?v=112';
 import { initFeedback } from './feedback.js?v=64';
@@ -334,6 +335,7 @@ function showLogin() {
   setSim203Visible(false);
   setSim204Visible(false);
   setSim205Visible(false);
+  setSim206Visible(false);
   setDiceRollerVisible(false);
   setGuideVisible(false);
   if (_isMobile()) document.body.classList.add('mobile-auth');
@@ -423,6 +425,7 @@ async function showBooks() {
   setSim203Visible(false);
   setSim204Visible(false);
   setSim205Visible(false);
+  setSim206Visible(false);
   setDiceRollerVisible(false);
   setGuideVisible(false);
   document.body.classList.remove('mobile-auth');
@@ -672,6 +675,7 @@ async function showMain(bookId, isbn = null, issn = null, asin = null, cover = n
   setSim203Visible(bookId === 203);
   setSim204Visible(bookId === 204);
   setSim205Visible(bookId === 205);
+  setSim206Visible(bookId === 206);
   setDiceRollerVisible(true);
   setGuideVisible(true);
   if (state.notesPinned) {
@@ -822,6 +826,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initSim203();
   initSim204();
   initSim205();
+  initSim206();
   setExtraDisplayItemsProvider(async () => await getVisibleEquippedItems());
   setOnViewingPtChange(() => {
     _refreshInvDisplay();
@@ -838,6 +843,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderSim203();
     renderSim204();
     renderSim205();
+    renderSim206();
   });
   initTooltip();
 
@@ -1009,6 +1015,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     getIsAdmin:          () => _isAdmin,
     refreshBooksListOnly: _refreshBooksListOnly,
     openEditBookModal,
+    openEditCompModal,
     lockView:            _lockView,
     navigateToBook,
     displayFor,

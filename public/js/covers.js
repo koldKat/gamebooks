@@ -1143,7 +1143,15 @@ function renderCoverActivity(bookId, bookName, entries, userRating, bookMeta, us
       <span class="star-label">${_hooks.starLabelHtml?.(avgRating, voteCount) ?? ''}</span>
     </div>`;
   }
-  if (userOwnsBook && !_isMobile()) {
+  // An anthology has nothing of its own to open - it's a grouping shell
+  // (total_sections: 0, no playthroughs), never a playable book. This button
+  // used to show anyway and navigate straight into the container itself,
+  // same as any real book, which made no sense: the "Books in anthology"
+  // list below (bookMeta.children) is the only correct way to open one of
+  // its actual books, exactly like books.js's own list already treats
+  // containers as a fundamentally different card, never a directly-openable
+  // one, via its own separate _renderContainerItem() render path.
+  if (userOwnsBook && !_isMobile() && !bookMeta?.isContainer) {
     headerHtml += `<button class="add-to-library-btn open-owned-book-btn" data-book-id="${bookId}">${t('covers.open_book')}</button>`;
   }
   if (bookMeta?.isPublic && userLoggedIn && !userOwnsBook) {
@@ -1241,6 +1249,41 @@ function renderCoverActivity(bookId, bookName, entries, userRating, bookMeta, us
   const adminEditBtn = body.querySelector('.catalog-admin-edit-btn');
   if (adminEditBtn) {
     adminEditBtn.addEventListener('click', () => {
+      // Anthologies have their own dedicated modal (openEditCompModal) -
+      // openEditBookModal accepts an initialIsContainer param but never
+      // actually reads it (its own save handler always writes
+      // is_container: false), so passing an anthology through it silently
+      // shows the plain book form (requiring a section count an anthology
+      // doesn't have) and would flip is_container off on save. books.js's
+      // own edit-button handler already branches on this; this one didn't.
+      if (bookMeta?.isContainer) {
+        _hooks.openEditCompModal?.({
+          bookId,
+          initialName:          bookMeta?.name          || bookName,
+          initialIsbn:          bookMeta?.isbn           || '',
+          initialIssn:          bookMeta?.issn           || '',
+          initialAsin:          bookMeta?.asin           || '',
+          initialCoverUrl:      bookMeta?.coverUrl       || null,
+          initialPdfPath:       bookMeta?.pdfPath        || null,
+          initialPdfSize:       bookMeta?.pdfSize        || null,
+          initialPages:         bookMeta?.pages          ? String(bookMeta.pages) : '',
+          initialAuthors:       bookMeta?.authors        || '',
+          initialDescription:   bookMeta?.description    || '',
+          initialIsPublic:      bookMeta?.isPublic       ?? true,
+          initialSeriesName:    bookMeta?.seriesName     || '',
+          initialSeriesNumber:  bookMeta?.seriesNumber   || '',
+          onSave: async (name, isbn, issn, asin, pages, authors, description, isPublic, seriesName, seriesNum) => {
+            try {
+              await apiFetch(`/api/books/${bookId}`, {
+                method: 'PATCH',
+                body: JSON.stringify({ name, total_sections: 0, isbn: isbn || null, issn: issn || null, asin: asin || null, pages: pages || null, authors: authors || null, description: description || null, is_public: isPublic, series_name: seriesName || null, series_number: seriesNum || null, is_container: 1 }),
+              });
+            } catch (_) {}
+            openCoverActivity(bookId, bookName);
+          },
+        });
+        return;
+      }
       _hooks.openEditBookModal?.({
         bookId,
         initialName:          bookMeta?.name          || bookName,
@@ -1255,10 +1298,19 @@ function renderCoverActivity(bookId, bookName, entries, userRating, bookMeta, us
         initialAuthors:       bookMeta?.authors        || '',
         initialDescription:   bookMeta?.description    || '',
         initialIsPublic:      bookMeta?.isPublic       ?? true,
-        initialSeriesName:    bookMeta?.seriesName     || '',
-        initialSeriesNumber:  bookMeta?.seriesNumber   || '',
+        // Deliberately ownSeriesName/ownSeriesNumber here, not the plain
+        // seriesName/seriesNumber above - those inherit the parent
+        // anthology's series via COALESCE (see getBookActivity(), correct
+        // for the read-only "Series: X" line further up this same dialog,
+        // showing the anthology's series context even for a child with none
+        // of its own), which would otherwise show an anthology's series in
+        // this book's own edit form and, if saved, actually attach the
+        // child directly to a series it was never really in.
+        initialSeriesName:    bookMeta?.ownSeriesName     || '',
+        initialSeriesNumber:  bookMeta?.ownSeriesNumber   || '',
         initialIsContainer:   bookMeta?.isContainer    ?? false,
         initialParentBookId:  bookMeta?.parentId       || null,
+        initialBookOrder:     bookMeta?.bookOrder      ?? null,
         minSections: 1,
         onSave: async (name, sections, isbn, issn, asin, pages, authors, description, discoverableSections, isPublic, seriesName, seriesNumber, isContainer, parentId, bookOrder) => {
           try {

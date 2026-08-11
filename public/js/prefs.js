@@ -2,8 +2,8 @@
 
 import { getToken, isDemoMode, apiFetch } from './state.js?v=13';
 import { setTrailCollapsed, setChoicesRecordedCount, CHOICES_PULSE_THRESHOLD } from './play.js?v=110';
-import { setCoversPrefsState, _updateLandingBgDragUi } from './covers.js?v=120';
-import { setExpandedPrefs, renderBooksList, getCachedBooks, getCachedAllSeries, getCachedStashes } from './books.js?v=164';
+import { setCoversPrefsState, _updateLandingBgDragUi } from './covers.js?v=123';
+import { setExpandedPrefs, renderBooksList, getCachedBooks, getCachedAllSeries, getCachedStashes } from './books.js?v=167';
 
 let _hooks = {};
 export function setPrefsHooks(h) { _hooks = h || {}; }

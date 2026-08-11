@@ -245,6 +245,8 @@ try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 203').run(); } 
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 204').run(); } catch (_) {}
 // Same one-off flag for book 205 (Caverns of the Snow Witch).
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 205').run(); } catch (_) {}
+// Same one-off flag for book 206 (House of Hell).
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 206').run(); } catch (_) {}
 
 // One-time migration: book 829's sim was the first one built, before the
 // pt.simNNN naming convention existed, so its state lived under pt.battleSim
