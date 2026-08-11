@@ -5,7 +5,7 @@ import { t } from './i18n.js?v=52';
 import { naturalCompare, naturalCompareByName, foldForSearch, matchesSearch } from './sort.js?v=1';
 import { getCachedBooks, getCachedAllSeries, getCachedStashes, _starLabelHtml, _refreshBooksListOnly, _refreshLibraryUi } from './books.js?v=164';
 import { refreshCoinsDisplay } from './shop.js?v=74';
-import { showAlert, showConfirm } from './play.js?v=109';
+import { showAlert, showConfirm } from './play.js?v=110';
 import { escapeHtml, compressImage } from './util.js?v=65';
 
 let _hooks = {};

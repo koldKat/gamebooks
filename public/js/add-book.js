@@ -4,7 +4,7 @@ import { apiFetch, isDemoMode } from './state.js?v=13';
 import { t } from './i18n.js?v=52';
 import { getCachedAllSeries, _refreshLibraryUi, setInvalidateAutocompleteCaches } from './books.js?v=164';
 import { naturalCompare, matchesSearch } from './sort.js?v=1';
-import { showAlert } from './play.js?v=109';
+import { showAlert } from './play.js?v=110';
 import {
   _setModalUploadProgress, _setButtonsDisabled, _uploadPdfWithProgress,
   _acceptPdfSelection, _setPdfInlineLabel, formatFileSize,

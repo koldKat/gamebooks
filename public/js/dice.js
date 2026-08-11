@@ -2,7 +2,7 @@
 
 import { state, viewingPt, currentPlaythrough, saveState } from './state.js?v=13';
 import { _setPlayPanelCollapsed } from './prefs.js?v=164';
-import { setAfterRenderFn } from './play.js?v=109';
+import { setAfterRenderFn } from './play.js?v=110';
 
 const SUPPORTED_DICE = [4, 6, 8, 10, 12, 20, '%'];
 const MIN_DICE = 1;

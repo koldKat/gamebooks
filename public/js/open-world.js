@@ -13,10 +13,10 @@ import {
 } from './graph.js?v=107';
 import {
   render, showAlert, startPortalRun, startPlaythrough, setOpenWorldContext, setOnViewPublicRun,
-} from './play.js?v=109';
+} from './play.js?v=110';
 import { t } from './i18n.js?v=52';
 import { setOnCharSheetSaved } from './charsheet.js?v=82';
-import { instantiateLoadout } from './equipment.js?v=154';
+import { instantiateLoadout } from './equipment.js?v=155';
 import { getCachedBooks } from './books.js?v=164';
 
 let _hooks = {};
