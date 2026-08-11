@@ -41,7 +41,8 @@ async function handleWatchState(req, res, userId, requestedBookId) {
   // it's book-level (like graph notes), not tied to any one playthrough, so
   // it's real content worth showing even on a run with an empty charsheet.
   const notebook = db.getNotebook(userId, bookId);
-  send(res, 200, { username: user.username, bookId, isOpenWorld, state, items, notebook });
+  const bgPref = db.getBookBgPref(userId, bookId);
+  send(res, 200, { username: user.username, bookId, isOpenWorld, state, items, notebook, bgPref });
 }
 
 module.exports = { handleWatchState };

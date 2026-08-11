@@ -166,6 +166,19 @@ function setBookBgPref(userId, bookId, hidden, posY) {
     .run(hidden ? 1 : 0, clamped, userId, bookId);
 }
 
+// For the admin watch view - mirrors the same hidden/pos_y a real player sees
+// (bg.js's own resetBgState()), plus the book's cover_path so the watch
+// canvas can render the identical background image rather than a blank one.
+function getBookBgPref(userId, bookId) {
+  const row  = db.prepare('SELECT bg_hidden, bg_pos_y FROM user_books WHERE user_id = ? AND book_id = ?').get(userId, bookId);
+  const book = db.prepare('SELECT cover_path FROM books WHERE id = ?').get(bookId);
+  return {
+    bgHidden: !!row?.bg_hidden,
+    bgPosY:   row?.bg_pos_y ?? 50,
+    coverUrl: book?.cover_path ? `/covers/${book.cover_path}` : null,
+  };
+}
+
 function awardPdfXp(bookId, uploaderId) {
   if (uploaderId) {
     awardXp(uploaderId, 'pdf_available', String(bookId));
@@ -1103,7 +1116,7 @@ function setSeriesRating(userId, seriesId, rating) {
 
 module.exports = {
   getBooks, getStashes, createStash, updateStash, deleteStash,
-  setBookBgPref, awardPdfXp, setBookPdf, removeBookCover, removeBookPdf, setBookCover,
+  setBookBgPref, getBookBgPref, awardPdfXp, setBookPdf, removeBookCover, removeBookPdf, setBookCover,
   getBookContainerFields, getOrCreateSeries, getAllSeries, getBookEnemies, addSeriesToLibrary,
   getSeriesById, updateSeries, getSeriesCharacter, saveSeriesCharacter, getSeriesRuns,
   updateSeriesRunPosition, completeSeriesRun, updateSeriesRunPublic, migratePreSeriesRuns,

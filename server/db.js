@@ -687,7 +687,7 @@ const {
 
 const {
   getBooks, getStashes, createStash, updateStash, deleteStash,
-  setBookBgPref, awardPdfXp, setBookPdf, removeBookCover, removeBookPdf, setBookCover,
+  setBookBgPref, getBookBgPref, awardPdfXp, setBookPdf, removeBookCover, removeBookPdf, setBookCover,
   getBookContainerFields, getOrCreateSeries, getAllSeries, getBookEnemies, addSeriesToLibrary,
   getSeriesById, updateSeries, getSeriesCharacter, saveSeriesCharacter, getSeriesRuns,
   updateSeriesRunPosition, completeSeriesRun, updateSeriesRunPublic, migratePreSeriesRuns,
@@ -758,7 +758,7 @@ module.exports = {
   getFeed,
   createDemoBook, refreshDemoBooks, getDemoBookState,
   setPublicProfile, setHideFromFeed, setAuthor, setContributor, setPdfAccess, setDisplayName, adminUpdateUser, getPublicProfile, getProfileStats, getPublicRun, getPublicSeriesRun, getPublicCovers, getAllPublicBooks, getAllPublicSeries, getAllPublicAnthologies, getPublicBooksInSeries, getBookActivity, getPublicBookMeta, getPublicSeriesInfo, getBooksForSitemap, getAnthologiesForSitemap, getSeriesForSitemap, getPublicProfilesForSitemap,
-  getBookRating, setBookRating, getSeriesRating, setSeriesRating, canUserRateBook, canUserRateSeries, setBookBgPref,
+  getBookRating, setBookRating, getSeriesRating, setSeriesRating, canUserRateBook, canUserRateSeries, setBookBgPref, getBookBgPref,
   awardXp, awardCoins, awardIdleHeartbeatXp, getUserXpInfo, claimBonusGc, processStateXp, runXpMigration, migratePublicBookXp, migrateEquipmentXp, setXpFeedHook, setAppXpHook,
   getXpAmount, getXpConfig, setXpAmount,
   createFeedbackThread, addFeedbackMessage, getThreadsForUser, getAllThreads,

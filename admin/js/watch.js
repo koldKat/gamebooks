@@ -63,6 +63,26 @@ const requestedBookId = params.get('bookId');
 const titleEl  = document.getElementById('watch-title');
 const subEl    = document.getElementById('watch-sub');
 const statusEl = document.getElementById('watch-status');
+const graphContainerEl = document.getElementById('graph-container');
+
+// Mirrors bg.js's _applyBgPref() exactly (same gradient overlay/position math)
+// so the watched canvas looks like what the player actually sees - moved
+// where they moved it, or blank if they hid it, not always the raw cover.
+let lastBgKey = null;
+function applyBgPref(bgPref) {
+  const key = bgPref ? `${bgPref.bgHidden}|${bgPref.bgPosY}|${bgPref.coverUrl}` : null;
+  if (key === lastBgKey) return;
+  lastBgKey = key;
+  if (!bgPref || bgPref.bgHidden || !bgPref.coverUrl) {
+    graphContainerEl.style.backgroundImage = '';
+    graphContainerEl.style.backgroundColor = '#111827';
+    return;
+  }
+  graphContainerEl.style.backgroundImage =
+    `linear-gradient(rgba(15,23,42,0.92), rgba(15,23,42,0.92)), url(${bgPref.coverUrl})`;
+  graphContainerEl.style.backgroundPositionY = `${bgPref.bgPosY}%`;
+  graphContainerEl.style.backgroundColor = '';
+}
 
 let network = null, visNodes = null, visEdges = null;
 let lastStateJson = null; // skip a redraw if nothing actually changed since last poll
@@ -98,6 +118,27 @@ function knownSections(graph, playthroughs, startSection) {
   });
   (playthroughs || []).forEach(pt => (pt.path || []).forEach(s => { if (!isTerm(s)) set.add(s); }));
   return set;
+}
+
+// Mirrors graph.js's inevitableOutcome()/edgeColor() exactly - an edge whose
+// destination chains through single-choice sections straight into a death/win
+// terminal gets tinted red/green ahead of time, same as the real canvas.
+function inevitableOutcome(graph, destId, visited = new Set()) {
+  if (destId === -1 || destId === '-1') return 'death';
+  if (destId === 0  || destId === '0')  return 'win';
+  if (visited.has(destId)) return null;
+  visited.add(destId);
+  const data = graph[destId];
+  if (!data || data.choices?.length !== 1) return null;
+  return inevitableOutcome(graph, data.choices[0], visited);
+}
+
+function edgeColor(graph, dest, isRunEdge) {
+  const outcome = inevitableOutcome(graph, dest);
+  if (outcome === 'death') return { color: '#e74c3c', opacity: 0.8, highlight: '#e74c3c' };
+  if (outcome === 'win')   return { color: '#27ae60', opacity: 0.8, highlight: '#27ae60' };
+  if (isRunEdge)           return { color: '#f5a623', opacity: 1,   highlight: '#f5a623' };
+  return { color: '#4b5563', opacity: 0.7, highlight: '#9ca3af' };
 }
 
 function nodeColor(secId, graph, playthroughs, startSection, activePt) {
@@ -301,6 +342,14 @@ function render(state, isOpenWorld) {
   const edgeUpdates = [];
   overlayNodes = [];
 
+  // Mirrors graph.js's runEdges set - which consecutive path[i]->path[i+1]
+  // pairs the watched player's current run has actually walked, so those
+  // edges get the same orange/thick treatment as the real canvas instead of
+  // looking identical to every other undiscovered choice.
+  const runEdges = new Set();
+  const runPath  = activePt?.path || [];
+  for (let i = 0; i < runPath.length - 1; i++) runEdges.add(`${runPath[i]}->${runPath[i + 1]}`);
+
   const known = knownSections(graph, playthroughs, state.startSection);
   for (const secId of known) {
     const data = graph[secId] || {};
@@ -347,9 +396,16 @@ function render(state, isOpenWorld) {
     }
     for (const dest of (data.choices || [])) {
       if (isTerm(dest)) continue;
-      const edgeId = `${secId}->${dest}`;
+      const edgeId    = `${secId}->${dest}`;
+      const isRunEdge = runEdges.has(edgeId);
       seenEdgeIds.add(edgeId);
-      edgeUpdates.push({ id: edgeId, from: secId, to: dest });
+      edgeUpdates.push({
+        id:    edgeId,
+        from:  secId,
+        to:    dest,
+        color: edgeColor(graph, dest, isRunEdge),
+        width: isRunEdge ? 2.5 : 1.2,
+      });
     }
   }
   visNodes.update(nodeUpdates);
@@ -471,6 +527,7 @@ function resetForNewBook() {
   lastPositions = new Map();
   overlayNodes = [];
   lastFocusedSec = null;
+  lastBgKey = null;
 }
 
 async function poll() {
@@ -497,6 +554,10 @@ async function poll() {
     // comparison at all. Cheap enough (one textContent/class toggle) to just
     // apply every poll regardless.
     renderNotes(data.state, data.notebook);
+    // Same reasoning - bg_hidden/bg_pos_y live in user_books, not state_data,
+    // so the state-changed check above wouldn't catch a background move/hide
+    // either. applyBgPref() has its own no-op guard for "nothing changed".
+    applyBgPref(data.bgPref);
     statusEl.textContent = `updated ${new Date().toLocaleTimeString()}`;
     statusEl.classList.remove('stale');
   } catch (e) {
