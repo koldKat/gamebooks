@@ -593,10 +593,11 @@ function getAllAnthologiesAdmin() {
   return db.prepare(`
     SELECT b.id, b.name, b.description, b.is_public, b.created_at,
            u.username AS created_by_username,
-           COUNT(c.id) AS child_count
+           COUNT(DISTINCT c.id) + COUNT(DISTINCT m.book_id) AS child_count
     FROM books b
     LEFT JOIN users u ON u.id = b.created_by
     LEFT JOIN books c ON c.parent_book_id = b.id AND c.is_demo = 0
+    LEFT JOIN book_anthology_memberships m ON m.anthology_id = b.id
     WHERE b.is_demo = 0 AND b.is_container = 1
     GROUP BY b.id
   `).all().sort(_naturalCompareByName);

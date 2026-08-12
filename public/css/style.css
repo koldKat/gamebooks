@@ -185,6 +185,11 @@ body.sidebar-collapsed #play-btns-bar   { left: 50vw; }
   width: 100%;
 }
 .series-row input[type="text"] { flex: 1; min-width: 0; }
+/* A select+order-number pair should split 75:25, not the 50:50 that
+   ".app-select { flex:1 }" + the input[type=text] rule above default to -
+   flex-grow ratios here (not a fixed width) so it holds at any modal width. */
+.series-row .app-select:has(+ .order-num-input) { flex: 3 1 0%; }
+.series-row .order-num-input { flex: 1 1 0%; min-width: 0; }
 
 .series-badge {
   display: inline-flex;
@@ -197,6 +202,65 @@ body.sidebar-collapsed #play-btns-bar   { left: 50vw; }
   padding: 0.05em 0.45em;
   margin-top: 0.2rem;
   white-space: nowrap;
+}
+
+.also-appears-list {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 0.4rem;
+  width: 100%;
+}
+.also-appears-chip {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  min-height: 2.1rem;
+  font-size: 0.7rem;
+  color: #a78bfa;
+  background: rgba(167,139,250,0.1);
+  border: 1px solid rgba(167,139,250,0.3);
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+.also-appears-chip-name {
+  min-width: 0;
+  padding: 0.45rem 0.6rem;
+  overflow-wrap: normal;
+}
+.also-appears-chip button {
+  position: absolute;
+  right: 0.55rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 0.85em;
+  line-height: 1;
+  padding: 0;
+  opacity: 0.7;
+}
+.also-appears-chip button:hover { opacity: 1; }
+.also-appears-chip .also-appears-chip-order {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  background: rgba(0,0,0,0.2);
+  border: 1px solid rgba(167,139,250,0.3);
+  border-radius: 6px;
+  color: inherit;
+  font-size: 0.82rem;
+  font-family: inherit;
+  padding: 0.45rem 1.55rem 0.45rem 0.6rem;
+  text-align: center;
+}
+.also-appears-chip-order:focus {
+  outline: none;
+  border-color: #a78bfa;
 }
 
 .book-item--container {
@@ -550,4 +614,3 @@ input[type="email"]:disabled {
     font-size: 0.8rem;
   }
 }
-

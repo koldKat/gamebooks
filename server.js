@@ -87,6 +87,7 @@ const {
 
 const {
   handleAcceptPartyInvite,
+  handleAddAnthologyMember,
   handleAddBookToLibrary,
   handleAddSeriesToLibrary,
   handleCreateBook,
@@ -122,6 +123,7 @@ const {
   handleGetUserStream,
   handleInviteToParty,
   handleLeaveParty,
+  handleRemoveAnthologyMember,
   handleResetBookProgress,
   handleResetSeriesForUser,
   handleSaveSeriesCharacter,
@@ -246,6 +248,8 @@ const bookIdRe        = /^\/api\/books\/(\d+)$/;
 const bookStateRe     = /^\/api\/books\/(\d+)\/state$/;
 const bookResetRe     = /^\/api\/books\/(\d+)\/reset$/;
 const bookEnemiesRe   = /^\/api\/books\/(\d+)\/enemies$/;
+const anthologyMembersRe     = /^\/api\/books\/(\d+)\/anthology-members$/;
+const anthologyMemberByIdRe  = /^\/api\/books\/(\d+)\/anthology-members\/(\d+)$/;
 const bookCoverRe       = /^\/api\/books\/(\d+)\/cover$/;
 const bookCoverDeleteRe = /^\/api\/books\/(\d+)\/cover\/delete$/;
 const bookPdfRe         = /^\/api\/books\/(\d+)\/pdf$/;
@@ -414,6 +418,8 @@ const _routeRequest = async (req, res) => {
     if ((m = urlPath.match(bookAddRe))   && method === 'POST')   return await handleAddBookToLibrary(req, res, +m[1]);
     if ((m = urlPath.match(bookIdRe))    && method === 'PATCH')  return await handleUpdateBook(req, res, +m[1]);
     if ((m = urlPath.match(bookIdRe))    && method === 'DELETE') return await handleDeleteBook(req, res, +m[1]);
+    if ((m = urlPath.match(anthologyMembersRe))    && method === 'POST')   return await handleAddAnthologyMember(req, res, +m[1]);
+    if ((m = urlPath.match(anthologyMemberByIdRe)) && method === 'DELETE') return await handleRemoveAnthologyMember(req, res, +m[1], +m[2]);
     if ((m = urlPath.match(bookEnemiesRe)) && method === 'GET')  return await handleGetBookEnemies(req, res, +m[1]);
     if ((m = urlPath.match(bookStateRe)) && method === 'GET')    return await handleGetState(req, res, +m[1]);
     if ((m = urlPath.match(bookStateRe)) && method === 'PUT')    return await handleSaveState(req, res, +m[1]);

@@ -157,7 +157,7 @@
   <p>JavaScript is required to use this application.</p>
   </noscript>
 
-  <link rel="stylesheet" href="/css/style.css?v=628">
+  <link rel="stylesheet" href="/css/style.css?v=636">
   <!-- style.css holds shared/base rules only now; each file below owns the CSS for
        its like-named JS module (see docs/technical.md). reduce-motion.css and
        mobile.css load last since they're cross-cutting overrides on top of
@@ -170,7 +170,7 @@
   <link rel="stylesheet" href="/css/battlesim.css?v=24">
   <link rel="stylesheet" href="/css/demo.css?v=29">
   <link rel="stylesheet" href="/css/profile.css?v=1">
-  <link rel="stylesheet" href="/css/public-profile.css?v=7">
+  <link rel="stylesheet" href="/css/public-profile.css?v=9">
   <link rel="stylesheet" href="/css/login.css?v=1">
   <link rel="stylesheet" href="/css/add-book.css?v=3">
   <link rel="stylesheet" href="/css/play.css?v=23">
@@ -1289,14 +1289,14 @@
         <label>Series <span class="optional-hint">(optional)</span>:</label>
         <div class="series-row">
           <select id="cb-series" class="app-select"><option value="">- None -</option></select>
-          <input type="text" id="cb-series-num" autocomplete="off" placeholder="Order #" style="width:6rem" data-i18n-placeholder="ph.order_num">
+          <input type="text" id="cb-series-num" class="order-num-input" autocomplete="off" placeholder="#" data-i18n-placeholder="ph.order_num_short">
         </div>
       </div>
       <div class="input-group" id="cb-parent-row">
         <label>Part of anthology <span class="optional-hint">(optional)</span>:</label>
         <div class="series-row">
           <select id="cb-parent" class="app-select"><option value="">- None -</option></select>
-          <input type="text" inputmode="numeric" id="cb-order" autocomplete="off" placeholder="Order #" style="width:6rem" data-i18n-placeholder="ph.order_num">
+          <input type="text" inputmode="numeric" id="cb-order" class="order-num-input" autocomplete="off" maxlength="3" placeholder="#" data-i18n-placeholder="ph.order_num_short">
         </div>
       </div>
       <div class="input-group create-public-row">
@@ -1383,7 +1383,7 @@
         <label>Series <span class="optional-hint">(optional)</span>:</label>
         <div class="series-row">
           <select id="cc-series" class="app-select"><option value="">- None -</option></select>
-          <input type="text" id="cc-series-num" autocomplete="off" placeholder="Order #" style="width:6rem" data-i18n-placeholder="ph.order_num">
+          <input type="text" id="cc-series-num" class="order-num-input" autocomplete="off" placeholder="#" data-i18n-placeholder="ph.order_num_short">
         </div>
       </div>
       <div class="input-group create-public-row">
@@ -1543,7 +1543,7 @@
         <label>Series <span class="optional-hint">(optional)</span>:</label>
         <div class="series-row">
           <select id="ecc-series" class="app-select"><option value="">- None -</option></select>
-          <input type="text" id="ecc-series-num" autocomplete="off" placeholder="Order #" style="width:6rem" data-i18n-placeholder="ph.order_num">
+          <input type="text" id="ecc-series-num" class="order-num-input" autocomplete="off" placeholder="#" data-i18n-placeholder="ph.order_num_short">
         </div>
       </div>
       <div class="input-group">
@@ -1719,7 +1719,7 @@
           <select id="edit-book-series-select" class="app-select">
             <option value="">- None -</option>
           </select>
-          <input type="text" id="edit-book-series-number-input" autocomplete="off" placeholder="Order #" style="width:6rem" data-i18n-placeholder="ph.order_num">
+          <input type="text" id="edit-book-series-number-input" class="order-num-input" autocomplete="off" placeholder="#" data-i18n-placeholder="ph.order_num_short">
         </div>
       </div>
       <div class="input-group" id="edit-book-parent-row">
@@ -1728,8 +1728,19 @@
           <select id="edit-book-parent-input" class="app-select">
             <option value="">- None -</option>
           </select>
-          <input type="text" inputmode="numeric" id="edit-book-order-input" autocomplete="off" placeholder="Order #" style="width:6rem" data-i18n-placeholder="ph.order_num">
+          <input type="text" inputmode="numeric" id="edit-book-order-input" class="order-num-input" autocomplete="off" maxlength="3" placeholder="#" data-i18n-placeholder="ph.order_num_short">
         </div>
+      </div>
+      <div class="input-group" id="edit-book-also-appears-row">
+        <label><span data-i18n="editbook.also_appears_in">Also appears in</span> <span class="optional-hint">(optional)</span>:</label>
+        <div class="series-row">
+          <select id="edit-book-also-appears-select" class="app-select">
+            <option value="" data-i18n="editbook.add_anthology">- Add anthology -</option>
+          </select>
+          <input type="text" inputmode="numeric" id="edit-book-also-appears-order-input" class="order-num-input" autocomplete="off" maxlength="3" placeholder="#" data-i18n-placeholder="ph.order_num_short">
+          <button type="button" id="edit-book-also-appears-add-btn" class="secondary-btn" data-i18n="editbook.add">Add</button>
+        </div>
+        <div id="edit-book-also-appears-list" class="also-appears-list"></div>
       </div>
       <div class="input-group">
         <label>Rating:</label>
@@ -1861,7 +1872,7 @@
   </div>
   <div id="reward-float-layer" aria-hidden="true"></div>
   <div id="app-reward-float-layer" aria-hidden="true"></div>
-<script type="module" src="/js/main.js?v=1276"></script>
+<script type="module" src="/js/main.js?v=1285"></script>
 
 <!-- ── Tutorial video modal ─────────────────────────────────────────────── -->
 <div id="video-modal">

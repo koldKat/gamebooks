@@ -340,10 +340,13 @@
 
 .book-modal-in-collection {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.4rem;
   font-size: 0.78rem;
   margin-bottom: 0.1rem;
+  min-width: 0;
+  max-width: 100%;
 }
 .in-collection-label {
   color: #6b7280;
@@ -361,6 +364,15 @@
   border: 1px solid rgba(167,139,250,0.3);
   border-radius: 4px;
   transition: background 0.12s, color 0.12s;
+  /* A flex item's default min-width:auto holds it at its full unbroken
+     text width, which flex-wrap on the parent can't shrink - a long
+     anthology name (or several buttons in a row) would push straight
+     past the dialog edge instead of wrapping. */
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: break-word;
+  text-align: left;
 }
 .book-modal-parent-btn:hover {
   background: rgba(167,139,250,0.2);

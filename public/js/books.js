@@ -1,11 +1,11 @@
 // books.js - Books list rendering, caching, search/filter, expand prefs, cover queue
 import { getToken, isDemoMode, apiFetch, getDemoState, setDemoState } from './state.js?v=13';
 import { foldForSearch, naturalCompare, naturalCompareByName } from './sort.js?v=1';
-import { refreshCoinsDisplay } from './shop.js?v=74';
-import { openCoverActivity, openSeriesActivity, _startLandingCoverRotation, _resetLandingCoverQueue, _effectiveLandingCoverSource, loadCovers } from './covers.js?v=123';
-import { t } from './i18n.js?v=52';
-import { showConfirm, showTwoChoice } from './play.js?v=110';
-import { escapeHtml } from './util.js?v=65';
+import { refreshCoinsDisplay } from './shop.js?v=79';
+import { openCoverActivity, openSeriesActivity, _startLandingCoverRotation, _resetLandingCoverQueue, _effectiveLandingCoverSource, loadCovers } from './covers.js?v=128';
+import { t } from './i18n.js?v=57';
+import { showConfirm, showTwoChoice } from './play.js?v=115';
+import { escapeHtml } from './util.js?v=70';
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────
 let _hooks = {};
@@ -514,7 +514,7 @@ function _hasBattleSim(b) {
   return !!(b.is_container && (_cachedBooks || []).some(c => c.parent_book_id === b.id && c.has_battle_sim));
 }
 
-function _bookItemHtml(b, isChild, containerExpanded, childCount, aggrStats, isAdmin) {
+function _bookItemHtml(b, isChild, containerExpanded, childCount, aggrStats, isAdmin, containerId = null) {
   const effectiveSections = b.is_container ? (aggrStats?.totalSections || 0) : (b.discoverable_sections ?? b.total_sections);
   const effectiveVisited  = b.is_container ? (aggrStats?.visited || 0)        : b.visited;
   const pct         = effectiveSections > 0
@@ -528,7 +528,12 @@ function _bookItemHtml(b, isChild, containerExpanded, childCount, aggrStats, isA
   const extraClass  = (b.is_container ? ' book-item--container' : (isChild ? ' book-item--child' : '')) + (inParty ? ' book-item--party' : '');
   const experimentalCoverCards = !isDemoMode;
   const ownCoverUrl   = b.cover_path ? `/covers/${b.cover_path}` : '';
-  const parentContainer = isChild && b.parent_book_id ? (_cachedBooks || []).find(x => x.id === b.parent_book_id && x.is_container) : null;
+  // Cover inheritance uses the anthology this item is actually being rendered
+  // under (containerId), not always b.parent_book_id - a book shown as a
+  // secondary member of anthology X should pick up X's cover, not its
+  // primary anthology's, even though parent_book_id still points elsewhere.
+  const effectiveContainerId = containerId ?? b.parent_book_id;
+  const parentContainer = isChild && effectiveContainerId ? (_cachedBooks || []).find(x => x.id === effectiveContainerId && x.is_container) : null;
   const anthologyCoverUrl = isChild && parentContainer?.cover_path ? `/covers/${parentContainer.cover_path}` : '';
   const coverUrl      = anthologyCoverUrl || ownCoverUrl;
   const flowCoverUrl  = b.is_container ? ownCoverUrl : anthologyCoverUrl;
@@ -541,7 +546,7 @@ function _bookItemHtml(b, isChild, containerExpanded, childCount, aggrStats, isA
     ` data-sections="${b.total_sections}" data-isbn="${escapeHtml(b.isbn || '')}" data-issn="${escapeHtml(b.issn || '')}" data-asin="${escapeHtml(b.asin || '')}"` +
     ` data-cover="${escapeHtml(b.cover_path ? `/covers/${b.cover_path}` : '')}" data-pdf="${escapeHtml(b.pdf_path || '')}"` +
     ` data-pdf-size="${escapeHtml(String(b.pdf_size ?? ''))}"` +
-    (b.parent_book_id && !b.cover_path ? (() => { const p = _cachedBooks?.find(x => x.id === b.parent_book_id); return p?.cover_path ? ` data-parent-cover="${escapeHtml(`/covers/${p.cover_path}`)}"` : ''; })() : '') +
+    (effectiveContainerId && !b.cover_path ? (() => { const p = _cachedBooks?.find(x => x.id === effectiveContainerId); return p?.cover_path ? ` data-parent-cover="${escapeHtml(`/covers/${p.cover_path}`)}"` : ''; })() : '') +
     ` data-pages="${escapeHtml(String(b.pages || ''))}" data-authors="${escapeHtml(b.authors || '')}" data-description="${escapeHtml(b.description || '')}"` +
     ` data-discoverable="${b.discoverable_sections ?? ''}" data-public="${b.is_public ? '1' : '0'}"` +
     ` data-series="${escapeHtml(b.series_name || '')}" data-series-num="${escapeHtml(b.series_number || '')}"` +
@@ -692,6 +697,31 @@ export function renderBooksList(books, allSeries = [], stashes = []) {
     return;
   }
 
+  // A book's containers = its one primary parent_book_id plus any secondary
+  // book_anthology_memberships - a book can now legitimately be a child in
+  // more than one anthology at once, so every "is this a child of X" check
+  // below loops over all of a book's containers instead of just its parent.
+  const _containerIdsFor = b => [...new Set(b.parent_book_id
+    ? [b.parent_book_id, ...(b.extra_anthology_ids || [])]
+    : (b.extra_anthology_ids || []))];
+
+  // A book's book_order column is only its position within its *primary*
+  // parent_book_id - a secondary membership has its own order scoped to that
+  // one anthology (server/db/books.js's extra_anthology_orders), so sorting a
+  // children group must resolve order per-container, not read b.book_order
+  // directly (that would apply the wrong anthology's order to a secondary child).
+  const _orderForContainer = (b, pid) => pid === b.parent_book_id ? b.book_order : (b.extra_anthology_orders?.[pid] ?? null);
+  const _sortChildrenMap = map => {
+    for (const pid of Object.keys(map)) {
+      const pidNum = Number(pid);
+      map[pid].sort((a, b) => _compareByRecentOptionalNumberThenName(
+        { ...a, book_order: _orderForContainer(a, pidNum) },
+        { ...b, book_order: _orderForContainer(b, pidNum) },
+        'book_order'
+      ));
+    }
+  };
+
   const _sortBooks = arr => [...arr].sort((a, b) => {
     if (a.is_demo !== b.is_demo) return (a.is_demo ? 1 : 0) - (b.is_demo ? 1 : 0);
     const aHas = a.last_run_at != null, bHas = b.last_run_at != null;
@@ -721,7 +751,7 @@ export function renderBooksList(books, allSeries = [], stashes = []) {
     let visited = 0, totalSections = 0;
     const containerIds = new Set(Object.keys(containerChildrenMap).map(id => Number(id)));
     for (const b of activeBooks) {
-      if (b.parent_book_id && containerIds.has(Number(b.parent_book_id))) continue;
+      if (_containerIdsFor(b).some(pid => containerIds.has(Number(pid)))) continue;
       if (b.is_container) {
         const children = containerChildrenMap[b.id] || [];
         visited       += children.reduce((s, c) => s + (c.visited || 0), 0);
@@ -747,11 +777,13 @@ export function renderBooksList(books, allSeries = [], stashes = []) {
   );
   const allContainerIds = new Set(books.filter(b => b.is_container).map(b => b.id));
   const booksForMain = books.filter(b => {
-    const childOfVisibleContainer = !!(b.parent_book_id && allContainerIds.has(b.parent_book_id) && !hiddenContainerIds.has(b.parent_book_id));
+    const myContainerIds = _containerIdsFor(b);
+    const childOfVisibleContainer = myContainerIds.some(pid => allContainerIds.has(pid) && !hiddenContainerIds.has(pid));
+    const onlyHiddenContainers    = myContainerIds.length > 0 && myContainerIds.every(pid => hiddenContainerIds.has(pid));
     return (
       !stashedBookToStash.has(b.id) &&
       (childOfVisibleContainer || !(b.series_id && stashedSeriesToStash.has(b.series_id))) &&
-      !(b.parent_book_id && hiddenContainerIds.has(b.parent_book_id))
+      !onlyHiddenContainers
     );
   });
   const visibleSeries = allSeries.filter(s => !stashedSeriesToStash.has(s.id));
@@ -760,12 +792,14 @@ export function renderBooksList(books, allSeries = [], stashes = []) {
   const childrenMap  = {};
   const childIds     = new Set();
   for (const b of booksForMain) {
-    if (b.parent_book_id && containerIds.has(b.parent_book_id)) {
-      (childrenMap[b.parent_book_id] ??= []).push(b);
-      childIds.add(b.id);
+    for (const pid of _containerIdsFor(b)) {
+      if (containerIds.has(pid)) {
+        (childrenMap[pid] ??= []).push(b);
+        childIds.add(b.id);
+      }
     }
   }
-  for (const arr of Object.values(childrenMap)) arr.sort((a, b) => _compareByRecentOptionalNumberThenName(a, b, 'book_order'));
+  _sortChildrenMap(childrenMap);
 
   const topLevel = booksForMain.filter(b => !childIds.has(b.id));
   const seriesIdsInLibrary = new Set(visibleSeries.map(s => s.id));
@@ -787,7 +821,7 @@ export function renderBooksList(books, allSeries = [], stashes = []) {
     const out = [_bookItemHtml(b, false, expanded, myChildren.length, { visited: aggrV, totalSections: aggrS }, isAdmin)];
     if (myChildren.length) {
       out.push(`<div class="book-children-group" data-parent="${b.id}" style="${expanded ? '' : 'display:none'}">`);
-      for (const child of myChildren) out.push(_bookItemHtml(child, true, false, 0, null, isAdmin));
+      for (const child of myChildren) out.push(_bookItemHtml(child, true, false, 0, null, isAdmin, b.id));
       out.push('</div>');
     }
     return out.join('');
@@ -807,7 +841,7 @@ export function renderBooksList(books, allSeries = [], stashes = []) {
           if (excludedBookIds.has(b.id)) return false;
           const inStashByBook      = (stash?.bookIds   || []).includes(b.id);
           const inStashBySeries    = b.series_id && (stash?.seriesIds || []).includes(b.series_id);
-          const childOfIncluded    = b.parent_book_id && stashDirectSeriesBookIds.has(b.parent_book_id);
+          const childOfIncluded    = _containerIdsFor(b).some(pid => stashDirectSeriesBookIds.has(pid));
           return inStashByBook || inStashBySeries || childOfIncluded;
         });
     const baseBooks           = stashId == null ? (seriesMap[series.id] || []) : sourcePool.filter(b => b.series_id === series.id);
@@ -815,14 +849,16 @@ export function renderBooksList(books, allSeries = [], stashes = []) {
     const activeBooks         = [...baseBooks];
     const seenIds             = new Set(activeBooks.map(b => b.id));
     for (const b of sourcePool) {
-      if (b.parent_book_id && activeContainerIds.has(b.parent_book_id) && !seenIds.has(b.id)) { activeBooks.push(b); seenIds.add(b.id); }
+      if (_containerIdsFor(b).some(pid => activeContainerIds.has(pid)) && !seenIds.has(b.id)) { activeBooks.push(b); seenIds.add(b.id); }
     }
     const activeChildrenMap = {};
     const activeChildIds    = new Set();
     for (const b of activeBooks) {
-      if (b.parent_book_id && activeContainerIds.has(b.parent_book_id)) { (activeChildrenMap[b.parent_book_id] ??= []).push(b); activeChildIds.add(b.id); }
+      for (const pid of _containerIdsFor(b)) {
+        if (activeContainerIds.has(pid)) { (activeChildrenMap[pid] ??= []).push(b); activeChildIds.add(b.id); }
+      }
     }
-    for (const arr of Object.values(activeChildrenMap)) arr.sort((a, b) => _compareByRecentOptionalNumberThenName(a, b, 'book_order'));
+    _sortChildrenMap(activeChildrenMap);
     return { activeBooks, activeChildrenMap, activeChildIds, topInSeries: _sortSeriesBooks(activeBooks.filter(b => !activeChildIds.has(b.id))) };
   }
 
@@ -838,7 +874,7 @@ export function renderBooksList(books, allSeries = [], stashes = []) {
           if (excludedBookIds.has(b.id)) return false;
           const inStashByBook   = (stash?.bookIds   || []).includes(b.id);
           const inStashBySeries = b.series_id && (stash?.seriesIds || []).includes(b.series_id);
-          const childOfIncluded = b.parent_book_id && stashDirectSeriesBookIds.has(b.parent_book_id);
+          const childOfIncluded = _containerIdsFor(b).some(pid => stashDirectSeriesBookIds.has(pid));
           return inStashByBook || inStashBySeries || childOfIncluded;
         });
     const baseBooks          = stashId == null ? (seriesMap[s.id] || []) : sourcePool.filter(b => b.series_id === s.id);
@@ -846,14 +882,16 @@ export function renderBooksList(books, allSeries = [], stashes = []) {
     const activeBooks        = [...baseBooks];
     const seenIds            = new Set(activeBooks.map(b => b.id));
     for (const b of sourcePool) {
-      if (b.parent_book_id && activeContainerIds.has(b.parent_book_id) && !seenIds.has(b.id)) { activeBooks.push(b); seenIds.add(b.id); }
+      if (_containerIdsFor(b).some(pid => activeContainerIds.has(pid)) && !seenIds.has(b.id)) { activeBooks.push(b); seenIds.add(b.id); }
     }
     const activeChildrenMap = {};
     const activeChildIds    = new Set();
     for (const b of activeBooks) {
-      if (b.parent_book_id && activeContainerIds.has(b.parent_book_id)) { (activeChildrenMap[b.parent_book_id] ??= []).push(b); activeChildIds.add(b.id); }
+      for (const pid of _containerIdsFor(b)) {
+        if (activeContainerIds.has(pid)) { (activeChildrenMap[pid] ??= []).push(b); activeChildIds.add(b.id); }
+      }
     }
-    for (const arr of Object.values(activeChildrenMap)) arr.sort((a, b) => _compareByRecentOptionalNumberThenName(a, b, 'book_order'));
+    _sortChildrenMap(activeChildrenMap);
     const topInSeries   = _sortSeriesBooks(activeBooks.filter(b => !activeChildIds.has(b.id)));
     const booksInSeries = activeBooks;
     const keyPrefix     = stashId ? `stash_${stashId}_sr_` : 'sr_';
@@ -897,7 +935,7 @@ export function renderBooksList(books, allSeries = [], stashes = []) {
     const stashBooksRaw        = [...explicitStashBooks];
     const stashSeenBookIds     = new Set(stashBooksRaw.map(b => b.id));
     for (const b of books) {
-      if (!excludedBookIds.has(b.id) && b.parent_book_id && explicitContainerIds.has(b.parent_book_id) && !stashSeenBookIds.has(b.id)) {
+      if (!excludedBookIds.has(b.id) && _containerIdsFor(b).some(pid => explicitContainerIds.has(pid)) && !stashSeenBookIds.has(b.id)) {
         stashBooksRaw.push(b); stashSeenBookIds.add(b.id);
       }
     }
@@ -905,9 +943,11 @@ export function renderBooksList(books, allSeries = [], stashes = []) {
     const stashChildrenMap  = {};
     const stashChildIds     = new Set();
     for (const b of stashBooksRaw) {
-      if (b.parent_book_id && stashContainerIds.has(b.parent_book_id)) { (stashChildrenMap[b.parent_book_id] ??= []).push(b); stashChildIds.add(b.id); }
+      for (const pid of _containerIdsFor(b)) {
+        if (stashContainerIds.has(pid)) { (stashChildrenMap[pid] ??= []).push(b); stashChildIds.add(b.id); }
+      }
     }
-    for (const arr of Object.values(stashChildrenMap)) arr.sort((a, b) => _compareByRecentOptionalNumberThenName(a, b, 'book_order'));
+    _sortChildrenMap(stashChildrenMap);
     const stashBooksTop  = stashBooksRaw.filter(b => !stashChildIds.has(b.id));
     const stashContainers  = _sortBooks(stashBooksTop.filter(b =>  b.is_container));
     const stashStandalone  = _sortBooks(stashBooksTop.filter(b => !b.is_container));
@@ -951,7 +991,7 @@ export function renderBooksList(books, allSeries = [], stashes = []) {
       parts.push(_bookItemHtml(b, false, expanded, myChildren.length, { visited: aggrV, totalSections: aggrS }, isAdmin));
       if (myChildren.length) {
         parts.push(`<div class="book-children-group" data-parent="${b.id}" style="${expanded ? '' : 'display:none'}">`);
-        for (const child of myChildren) parts.push(_bookItemHtml(child, true, false, 0, null, isAdmin));
+        for (const child of myChildren) parts.push(_bookItemHtml(child, true, false, 0, null, isAdmin, b.id));
         parts.push('</div>');
       }
     }

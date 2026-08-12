@@ -7,7 +7,7 @@
 const { db, _naturalCompareByName } = require('./connection');
 const { computeLevel, getTitleForLevel, getUserXpInfo, _insertNotif } = require('./xp');
 const { getRandomLevelUpTemplate, getRandomJoinTemplate } = require('./content');
-const { _getAggregateRating, _getAuthorRatings } = require('./books');
+const { _getAggregateRating, _getAuthorRatings, getAnthologyExtraMembers } = require('./books');
 
 // ── Activity feed ─────────────────────────────────────────────────────────────
 
@@ -1121,9 +1121,12 @@ function getPublicBookMeta(bookId) {
     parentName:    row.parentName || null,
   };
   if (result.isContainer) {
-    result.children = db.prepare(
-      'SELECT id, name, total_sections, book_order FROM books WHERE parent_book_id = ? AND is_demo = 0'
-    ).all(bookId).sort((a, b) => {
+    const primaryChildren = db.prepare('SELECT id, name, total_sections, book_order FROM books WHERE parent_book_id = ? AND is_demo = 0').all(bookId);
+    const primaryChildIds = new Set(primaryChildren.map(c => c.id));
+    result.children = [
+      ...primaryChildren,
+      ...getAnthologyExtraMembers(bookId).filter(c => !primaryChildIds.has(c.id)),
+    ].sort((a, b) => {
       const aOrder = a.book_order;
       const bOrder = b.book_order;
       const aHas = aOrder != null;
@@ -1316,7 +1319,12 @@ function getBookActivity(bookId) {
   entries.sort((a, b) => (b.runs[0]?.completedAt || 0) - (a.runs[0]?.completedAt || 0));
   const isContainer = book.is_container === 1;
   const children = isContainer
-    ? db.prepare('SELECT id, name, total_sections FROM books WHERE parent_book_id = ? AND is_demo = 0 ORDER BY book_order IS NULL, book_order, name').all(bookId)
+    ? (() => {
+        const primary = db.prepare('SELECT id, name, total_sections, book_order FROM books WHERE parent_book_id = ? AND is_demo = 0').all(bookId);
+        const primaryIds = new Set(primary.map(c => c.id));
+        return [...primary, ...getAnthologyExtraMembers(bookId).filter(c => !primaryIds.has(c.id))]
+          .sort((a, b) => (a.book_order == null) - (b.book_order == null) || (a.book_order ?? 0) - (b.book_order ?? 0) || a.name.localeCompare(b.name));
+      })()
     : [];
   return {
     book: {
@@ -1334,6 +1342,16 @@ function getBookActivity(bookId) {
       isContainer,
       parentId:      book.parentId    || null,
       parentName:    book.parentName  || null,
+      // Secondary memberships (book_anthology_memberships) - parentId/parentName
+      // above stays the one *primary* anthology; a book can now also belong to
+      // any number of others, which the "Anthology: X" chip needs to show too,
+      // not just the primary one.
+      secondaryAnthologies: db.prepare(
+        `SELECT a.id, a.name FROM book_anthology_memberships m
+         JOIN books a ON a.id = m.anthology_id
+         WHERE m.book_id = ?
+         ORDER BY a.name`
+      ).all(bookId),
       bookOrder:     book.book_order  ?? null,
       seriesId:      book.seriesId    || null,
       seriesName:    book.seriesName  || null,

@@ -1,12 +1,12 @@
 // edit-book.js - Edit/add book, anthology, series, and stash modals
 
 import { state, getToken, isDemoMode, apiFetch, clearToken, clearUsername, isTerminal, parseSecId } from './state.js?v=13';
-import { t } from './i18n.js?v=52';
+import { t } from './i18n.js?v=57';
 import { naturalCompare, naturalCompareByName, foldForSearch, matchesSearch } from './sort.js?v=1';
-import { getCachedBooks, getCachedAllSeries, getCachedStashes, _starLabelHtml, _refreshBooksListOnly, _refreshLibraryUi } from './books.js?v=167';
-import { refreshCoinsDisplay } from './shop.js?v=74';
-import { showAlert, showConfirm } from './play.js?v=110';
-import { escapeHtml, compressImage } from './util.js?v=65';
+import { getCachedBooks, getCachedAllSeries, getCachedStashes, _starLabelHtml, _refreshBooksListOnly, _refreshLibraryUi } from './books.js?v=174';
+import { refreshCoinsDisplay } from './shop.js?v=79';
+import { showAlert, showConfirm } from './play.js?v=115';
+import { escapeHtml, compressImage } from './util.js?v=70';
 
 let _hooks = {};
 export function setEditBookHooks(h) { _hooks = h || {}; }
@@ -159,6 +159,64 @@ export function _populateParentBookSelect(selectId, selectedId = null, excludeBo
     if (book.id === selectedId) opt.selected = true;
     sel.appendChild(opt);
   });
+}
+
+// A book's *secondary* anthology memberships - separate from the single
+// parent_book_id select above. Reads/writes server/db/books.js's
+// book_anthology_memberships table via /api/books/:id/anthology-members.
+function _renderAlsoAppearsIn(bookId, primaryParentId) {
+  const list = document.getElementById('edit-book-also-appears-list');
+  const sel  = document.getElementById('edit-book-also-appears-select');
+  if (!list || !sel) return;
+  const books   = getCachedBooks() || [];
+  const thisBook = books.find(b => b.id === bookId);
+  const memberIds = new Set(thisBook?.extra_anthology_ids || []);
+
+  const orders = thisBook?.extra_anthology_orders || {};
+  list.innerHTML = '';
+  for (const id of memberIds) {
+    const anthology = books.find(b => b.id === id);
+    if (!anthology) continue;
+    const chip = document.createElement('span');
+    chip.className = 'also-appears-chip';
+    const currentOrder = orders[id] ?? '';
+    chip.innerHTML = `<span class="also-appears-chip-name">${escapeHtml(anthology.name)}</span>` +
+      `<input type="text" inputmode="numeric" class="also-appears-chip-order" maxlength="3" value="${escapeHtml(String(currentOrder))}" placeholder="${t('ph.order_num_short')}">` +
+      `<button type="button" data-anthology-id="${id}" aria-label="${t('editbook.remove')}">✕</button>`;
+    chip.querySelector('.also-appears-chip-order').addEventListener('change', async e => {
+      const newOrder = e.target.value.trim() ? parseInt(e.target.value, 10) : null;
+      try {
+        const res = await apiFetch(`/api/books/${id}/anthology-members`, {
+          method: 'POST', body: JSON.stringify({ book_id: bookId, book_order: newOrder }),
+        });
+        if (!res.ok) return void showAlert(t('editbook.add_anthology_failed'));
+        if (thisBook) thisBook.extra_anthology_orders = { ...(thisBook.extra_anthology_orders || {}), [id]: newOrder };
+        _refreshBooksListOnly?.();
+      } catch { showAlert(t('editbook.add_anthology_failed')); }
+    });
+    chip.querySelector('button').addEventListener('click', async () => {
+      try {
+        const res = await apiFetch(`/api/books/${id}/anthology-members/${bookId}`, { method: 'DELETE' });
+        if (!res.ok) return void showAlert(t('editbook.remove_anthology_failed'));
+        memberIds.delete(id);
+        if (thisBook) thisBook.extra_anthology_ids = [...memberIds];
+        _renderAlsoAppearsIn(bookId, primaryParentId);
+        _refreshBooksListOnly?.();
+      } catch { showAlert(t('editbook.remove_anthology_failed')); }
+    });
+    list.appendChild(chip);
+  }
+
+  const available = _sortedByName(books.filter(b =>
+    b.is_container && b.id !== bookId && b.id !== primaryParentId && !memberIds.has(b.id)
+  ));
+  sel.innerHTML = `<option value="">${t('editbook.add_anthology')}</option>`;
+  for (const a of available) {
+    const opt = document.createElement('option');
+    opt.value = String(a.id);
+    opt.textContent = a.name;
+    sel.appendChild(opt);
+  }
 }
 
 export function _populateSeriesSelect(selectId, selectedName) {
@@ -500,6 +558,7 @@ let _editStarAvgRating     = null;
 let _editStarVoteCount     = 0;
 let _editStarBookId        = null;
 let _editStarInitialized   = false;
+let _alsoAppearsAddWired   = false;
 let _editStarUpdateFn      = null;
 
 export function openEditBookModal({ bookId, initialName, initialSections, initialIsbn = '', initialIssn = '', initialAsin = '', initialCoverUrl = null, initialPdfPath = null, initialPdfSize = null, initialPages = '', initialAuthors = '', initialDescription = '', initialDiscoverableSections = null, showDiscoverableSections = false, discoverableHint = 0, minSections = 1, initialIsPublic = false, initialSeriesName = '', initialSeriesNumber = '', initialIsContainer = false, initialParentBookId = null, initialBookOrder = null, onSave }) {
@@ -578,6 +637,43 @@ export function openEditBookModal({ bookId, initialName, initialSections, initia
   const _parentInput = document.getElementById('edit-book-parent-input');
   _populateParentBookSelect('edit-book-parent-input', initialParentBookId, bookId);
   document.getElementById('edit-book-order-input').value = initialBookOrder != null ? String(initialBookOrder) : '';
+
+  const _alsoAppearsRow = document.getElementById('edit-book-also-appears-row');
+  if (_alsoAppearsRow) _alsoAppearsRow.style.display = initialIsContainer ? 'none' : '';
+  if (!initialIsContainer) _renderAlsoAppearsIn(bookId, initialParentBookId);
+  if (!_alsoAppearsAddWired) {
+    _alsoAppearsAddWired = true;
+    // Wired once (not per modal-open, unlike _syncChildUi's own listener below)
+    // to avoid stacking a new closure-captured bookId onto this persistent
+    // input every time the modal reopens for a different book - reads
+    // _editBookId live instead, same pattern as the Add button just below.
+    _parentInput.addEventListener('change', () => {
+      _renderAlsoAppearsIn(_editBookId, _parentInput.value ? +_parentInput.value : null);
+    });
+    document.getElementById('edit-book-also-appears-add-btn')?.addEventListener('click', async () => {
+      const sel        = document.getElementById('edit-book-also-appears-select');
+      const orderInput = document.getElementById('edit-book-also-appears-order-input');
+      const anthologyId = sel.value ? +sel.value : null;
+      const bookOrder    = orderInput?.value.trim() ? parseInt(orderInput.value, 10) : null;
+      if (_editBookId == null) return;
+      if (!anthologyId) return void showAlert(t('editbook.select_anthology_first'));
+      try {
+        const res = await apiFetch(`/api/books/${anthologyId}/anthology-members`, {
+          method: 'POST', body: JSON.stringify({ book_id: _editBookId, book_order: bookOrder }),
+        });
+        if (!res.ok) return void showAlert(t('editbook.add_anthology_failed'));
+        const book = (getCachedBooks() || []).find(b => b.id === _editBookId);
+        if (book) {
+          book.extra_anthology_ids = [...new Set([...(book.extra_anthology_ids || []), anthologyId])];
+          book.extra_anthology_orders = { ...(book.extra_anthology_orders || {}), [anthologyId]: bookOrder };
+        }
+        if (orderInput) orderInput.value = '';
+        const currentParentId = document.getElementById('edit-book-parent-input')?.value || null;
+        _renderAlsoAppearsIn(_editBookId, currentParentId ? +currentParentId : null);
+        _refreshBooksListOnly?.();
+      } catch { showAlert(t('editbook.add_anthology_failed')); }
+    });
+  }
 
   const _identifiersRow = document.getElementById('edit-book-identifiers-row');
   const _coverSection   = document.getElementById('edit-book-cover-section');
