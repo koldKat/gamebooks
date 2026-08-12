@@ -168,13 +168,7 @@ function _takeLiveLeadership() {
 
 function _applyFollowerLiveEvent(type, payload = null) {
   if (type === 'config_changed') {
-    // A version bump means new JS/CSS is live server-side - a plain text
-    // update here would leave this tab still running the old bundle
-    // indefinitely if the player never does a real reload (closing and
-    // reopening a tab often just resumes it from browser memory instead of
-    // re-fetching). Reloading is safe: all real progress is server-persisted
-    // state, not held only in this tab's memory - see navigateToBook().
-    location.reload();
+    if (payload?.version) document.getElementById('app-version').textContent = payload.version;
     return;
   }
   if (type === 'feed_changed') {
@@ -248,8 +242,8 @@ function _connectFeedSSE() {
     _feedSource.onmessage = e => {
       let payload; try { payload = JSON.parse(e.data); } catch { payload = {}; }
       if (payload.type === 'config_changed') {
+        if (payload.version) document.getElementById('app-version').textContent = payload.version;
         _broadcastLiveEvent('config_changed', { version: payload.version });
-        location.reload();
         return;
       }
       _feedDirty = true;

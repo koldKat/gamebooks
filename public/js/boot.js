@@ -50,10 +50,11 @@ import { initSim203, setSim203Visible, renderSim203 } from './battlesim/battlesi
 import { initSim204, setSim204Visible, renderSim204 } from './battlesim/battlesim204.js?v=7';
 import { initSim205, setSim205Visible, renderSim205 } from './battlesim/battlesim205.js?v=6';
 import { initSim206, setSim206Visible, renderSim206 } from './battlesim/battlesim206.js?v=2';
+import { initSim207, setSim207Visible, renderSim207 } from './battlesim/battlesim207.js?v=2';
 import { initShop, updateCoinsDisplay, refreshCoinsDisplay, setShopHooks } from './shop.js?v=74';
 import { initProfile, updateAvatarUI, renderBooksXpSummary, setProfileHooks } from './profile.js?v=90';
 import { setPublicProfileHooks, closePublicModal, openPublicProfile, openPublicSeriesRun } from './public-profile.js?v=89';
-import { setLiveTabHooks, _ensureLiveTabControllerStarted, _connectUserBadgeSSE, _disconnectUserBadgeSSE, _connectAppXpSSE, _disconnectAppXpSSE } from './livetab.js?v=81';
+import { setLiveTabHooks, _ensureLiveTabControllerStarted, _connectUserBadgeSSE, _disconnectUserBadgeSSE, _connectAppXpSSE, _disconnectAppXpSSE } from './livetab.js?v=82';
 import { setAppXpHooks, refreshAppXp, handleAppXpEvent } from './app-xp.js?v=78';
 import { setCoversHooks, loadCovers, openCoverActivity, openSeriesActivity, _showCachedCoversPanel, _refreshPublicCatalogIfVisible, _isLandingBooksViewVisible, _updateLandingBgDragUi, setCoversPrefsState, _toggleCoverTooltipSettings, initCoversPanel, resetFeedDisplayPrefsForLogout } from './covers.js?v=123';
 import {
@@ -79,7 +80,7 @@ import {
 import {
   _resetRewardSnapshotState, _positionRewardLayer,
   _processRewardSnapshot, _scheduleRewardProfileRefresh,
-} from './rewards.js?v=94';
+} from './rewards.js?v=95';
 import {
   setBgHooks, setCurrentBookCover, getCurrentBookCover,
   resetBgState, cancelBgMove, isBgInMove,
@@ -336,6 +337,7 @@ function showLogin() {
   setSim204Visible(false);
   setSim205Visible(false);
   setSim206Visible(false);
+  setSim207Visible(false);
   setDiceRollerVisible(false);
   setGuideVisible(false);
   if (_isMobile()) document.body.classList.add('mobile-auth');
@@ -426,6 +428,7 @@ async function showBooks() {
   setSim204Visible(false);
   setSim205Visible(false);
   setSim206Visible(false);
+  setSim207Visible(false);
   setDiceRollerVisible(false);
   setGuideVisible(false);
   document.body.classList.remove('mobile-auth');
@@ -676,6 +679,7 @@ async function showMain(bookId, isbn = null, issn = null, asin = null, cover = n
   setSim204Visible(bookId === 204);
   setSim205Visible(bookId === 205);
   setSim206Visible(bookId === 206);
+  setSim207Visible(bookId === 207);
   setDiceRollerVisible(true);
   setGuideVisible(true);
   if (state.notesPinned) {
@@ -827,6 +831,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initSim204();
   initSim205();
   initSim206();
+  initSim207();
   setExtraDisplayItemsProvider(async () => await getVisibleEquippedItems());
   setOnViewingPtChange(() => {
     _refreshInvDisplay();
@@ -844,6 +849,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderSim204();
     renderSim205();
     renderSim206();
+    renderSim207();
   });
   initTooltip();
 
