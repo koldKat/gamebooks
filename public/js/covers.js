@@ -1,10 +1,10 @@
 // covers.js - Covers panel, lazy grid, landing bg rotation, cover/series activity modals
 import { getToken, isDemoMode, apiFetch } from './state.js?v=13';
-import { openPublicModal, closePublicModal, openPublicProfile, renderPublicProfile, openPublicRun, openPublicSeriesRun, _destroyPubNetworks } from './public-profile.js?v=89';
-import { refreshCoinsDisplay } from './shop.js?v=74';
+import { openPublicModal, closePublicModal, openPublicProfile, renderPublicProfile, openPublicRun, openPublicSeriesRun, _destroyPubNetworks } from './public-profile.js?v=94';
+import { refreshCoinsDisplay } from './shop.js?v=79';
 import { foldForSearch, matchesSearch, naturalCompare, naturalCompareByName } from './sort.js?v=1';
-import { escapeHtml, fetchPublic as publicFetch } from './util.js?v=65';
-import { t } from './i18n.js?v=52';
+import { escapeHtml, fetchPublic as publicFetch } from './util.js?v=70';
+import { t } from './i18n.js?v=57';
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────
 let _hooks = {};
@@ -1098,8 +1098,17 @@ function renderCoverActivity(bookId, bookName, entries, userRating, bookMeta, us
     headerHtml += `<img class="book-modal-cover" src="${escapeHtml(bookMeta.coverUrl)}" alt="${escapeHtml(bookName)}">`;
   }
   headerHtml += '<div class="book-modal-meta">';
-  if (bookMeta?.parentId) {
-    headerHtml += `<div class="book-modal-in-collection"><span class="in-collection-label">Anthology:</span><button class="book-modal-parent-btn" data-book-id="${bookMeta.parentId}" data-book-name="${escapeHtml(bookMeta.parentName)}">${escapeHtml(bookMeta.parentName)}</button></div>`;
+  // A book's primary anthology (parentId/parentName) plus any secondary
+  // memberships (book_anthology_memberships) - this chip used to show only
+  // the primary one, silently hiding that the book also belongs elsewhere.
+  const anthologyChips = [
+    ...(bookMeta?.parentId ? [{ id: bookMeta.parentId, name: bookMeta.parentName }] : []),
+    ...(bookMeta?.secondaryAnthologies || []),
+  ];
+  if (anthologyChips.length) {
+    headerHtml += `<div class="book-modal-in-collection"><span class="in-collection-label">${anthologyChips.length > 1 ? t('covers.anthologies_label') : t('covers.anthology_label')}</span>` +
+      anthologyChips.map(a => `<button class="book-modal-parent-btn" data-book-id="${a.id}" data-book-name="${escapeHtml(a.name)}">${escapeHtml(a.name)}</button>`).join('') +
+      `</div>`;
   }
   if (bookMeta?.seriesName) {
     const seriesLabel = bookMeta.seriesNumber

@@ -26,6 +26,12 @@ function getBooks(userId) {
     WHERE ub.user_id = ?
     ORDER BY ub.created_at ASC
   `).all(userId);
+  const extraAnthologyIds = {};
+  const extraAnthologyOrders = {};
+  for (const row of db.prepare('SELECT book_id, anthology_id, book_order FROM book_anthology_memberships').all()) {
+    (extraAnthologyIds[row.book_id] ??= []).push(row.anthology_id);
+    (extraAnthologyOrders[row.book_id] ??= {})[row.anthology_id] = row.book_order;
+  }
   return rows.map(({ state_data, ub_created_at, ub_updated_at, user_rating, bg_hidden, bg_pos_y, ...b }) => {
     let visited = 0;
     let last_run_at = null;
@@ -64,6 +70,8 @@ function getBooks(userId) {
       voteCount,
       bgHidden: !!bg_hidden,
       bgPosY: bg_pos_y ?? 50,
+      extra_anthology_ids: extraAnthologyIds[b.id] || [],
+      extra_anthology_orders: extraAnthologyOrders[b.id] || {},
     };
   });
 }
@@ -228,6 +236,53 @@ function setBookCover(userId, bookId, coverPath, isAdmin = false) {
 
 function getBookContainerFields(bookId) {
   return db.prepare('SELECT series_id, series_number, is_container, parent_book_id, book_order FROM books WHERE id = ?').get(bookId) ?? null;
+}
+
+// A book's *secondary* anthology memberships - see book_anthology_memberships'
+// own comment in server/db.js. Same "creator of the anthology, or admin" gate
+// as updateBook()'s primary-parent editing, since this is fundamentally the
+// same action (editing which books an anthology lists as its own).
+function addAnthologyMember(userId, anthologyId, bookId, bookOrder, isAdmin = false) {
+  const anthology = db.prepare('SELECT id, created_by, is_container FROM books WHERE id = ?').get(anthologyId);
+  if (!anthology || !anthology.is_container) return { error: 'not_an_anthology' };
+  if (!isAdmin && anthology.created_by !== null && anthology.created_by !== userId) return { error: 'forbidden' };
+  const book = db.prepare('SELECT id, is_container, parent_book_id, created_by FROM books WHERE id = ?').get(bookId);
+  if (!book || book.is_container) return { error: 'invalid_book' };
+  if (bookId === anthologyId) return { error: 'invalid_book' };
+  if (book.parent_book_id === anthologyId) return { error: 'already_primary' };
+  const isNew = !db.prepare('SELECT 1 FROM book_anthology_memberships WHERE book_id = ? AND anthology_id = ?').get(bookId, anthologyId);
+  db.prepare(
+    'INSERT OR REPLACE INTO book_anthology_memberships (book_id, anthology_id, book_order) VALUES (?, ?, ?)'
+  ).run(bookId, anthologyId, bookOrder ?? null);
+  return { ok: true, isNew, bookCreatedBy: book.created_by, bookOrderSet: bookOrder != null };
+}
+
+function removeAnthologyMember(userId, anthologyId, bookId, isAdmin = false) {
+  const anthology = db.prepare('SELECT id, created_by, is_container FROM books WHERE id = ?').get(anthologyId);
+  if (!anthology || !anthology.is_container) return { error: 'not_an_anthology' };
+  if (!isAdmin && anthology.created_by !== null && anthology.created_by !== userId) return { error: 'forbidden' };
+  db.prepare('DELETE FROM book_anthology_memberships WHERE book_id = ? AND anthology_id = ?').run(bookId, anthologyId);
+  return { ok: true };
+}
+
+// Called after a book's primary parent_book_id changes - if it now matches
+// an existing secondary membership, that membership is now a pure duplicate
+// (the book would otherwise get double-listed as a child everywhere the two
+// are combined). Not creator-gated: the caller already authorized the parent
+// change itself, this just keeps the two relationships from overlapping.
+function _pruneRedundantAnthologyMembership(bookId, parentBookId) {
+  if (!parentBookId) return;
+  db.prepare('DELETE FROM book_anthology_memberships WHERE book_id = ? AND anthology_id = ?').run(bookId, parentBookId);
+}
+
+// A single anthology's secondary members only (not its parent_book_id
+// children) - callers combine this with their own primary-children query.
+function getAnthologyExtraMembers(anthologyId) {
+  return db.prepare(
+    `SELECT b.id, b.name, b.total_sections, m.book_order FROM book_anthology_memberships m
+     JOIN books b ON b.id = m.book_id
+     WHERE m.anthology_id = ? AND b.is_demo = 0`
+  ).all(anthologyId);
 }
 
 function getOrCreateSeries(name, userId, addToLibrary = false) {
@@ -1118,6 +1173,8 @@ module.exports = {
   getBooks, getStashes, createStash, updateStash, deleteStash,
   setBookBgPref, getBookBgPref, awardPdfXp, setBookPdf, removeBookCover, removeBookPdf, setBookCover,
   getBookContainerFields, getOrCreateSeries, getAllSeries, getBookEnemies, addSeriesToLibrary,
+  addAnthologyMember, removeAnthologyMember, getAnthologyExtraMembers,
+  _pruneRedundantAnthologyMembership,
   getSeriesById, updateSeries, getSeriesCharacter, saveSeriesCharacter, getSeriesRuns,
   updateSeriesRunPosition, completeSeriesRun, updateSeriesRunPublic, migratePreSeriesRuns,
   reverseSeriesOpenWorld, createSeriesRun, getActiveSeriesRunsForUser, deleteSeriesRun,

@@ -349,6 +349,22 @@ db.exec(`CREATE TABLE IF NOT EXISTS book_enemies (
   created_at INTEGER DEFAULT (strftime('%s','now'))
 )`);
 
+// A book's *secondary* anthology memberships - purely additive on top of its
+// one primary parent_book_id, which stays the sole source of truth for
+// series inheritance, discover-all/visit-all XP milestones, and every other
+// place a book's "real" anthology matters. This table only ever affects
+// which anthologies list a book among their children for display - a story
+// reprinted in a "best of" compilation shares its actual progress/state
+// automatically (state is keyed by book_id, not by which anthology you
+// browsed in from), so no state-tracking machinery needed touching at all.
+db.exec(`CREATE TABLE IF NOT EXISTS book_anthology_memberships (
+  book_id      INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+  anthology_id INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+  book_order   INTEGER DEFAULT NULL,
+  created_at   INTEGER DEFAULT (strftime('%s','now')),
+  PRIMARY KEY (book_id, anthology_id)
+)`);
+
 // One-time backfill: assign a permanent template to every level_up event that doesn't have one yet
 {
   const unassigned = db.prepare(`SELECT id FROM xp_events WHERE event = 'level_up' AND template_id IS NULL`).all();
@@ -693,6 +709,7 @@ const {
   getBooks, getStashes, createStash, updateStash, deleteStash,
   setBookBgPref, getBookBgPref, awardPdfXp, setBookPdf, removeBookCover, removeBookPdf, setBookCover,
   getBookContainerFields, getOrCreateSeries, getAllSeries, getBookEnemies, addSeriesToLibrary,
+  addAnthologyMember, removeAnthologyMember, getAnthologyExtraMembers, _pruneRedundantAnthologyMembership,
   getSeriesById, updateSeries, getSeriesCharacter, saveSeriesCharacter, getSeriesRuns,
   updateSeriesRunPosition, completeSeriesRun, updateSeriesRunPublic, migratePreSeriesRuns,
   reverseSeriesOpenWorld, createSeriesRun, getActiveSeriesRunsForUser, deleteSeriesRun,
@@ -750,6 +767,7 @@ module.exports = {
   createSession, getSession, refreshSession, deleteSession, purgeExpiredSessions, purgeOldNotifications, purgeOldHeartbeats, walCheckpoint,
   getBooks, getStashes, createStash, updateStash, deleteStash, createBook, getBookById, getBookState, getActiveBookInSeries, saveBookState, resetBookProgress, updateBook, deleteBook, setBookCover, removeBookCover, setBookPdf, removeBookPdf, awardPdfXp, addBookToLibrary,
   getAllSeries, getSeriesById, getOrCreateSeries, createSeries, updateSeries, deleteSeries, deleteSeriesRow, addSeriesToLibrary, removeSeriesEntryOnly, removeSeriesFromLibrary, countSeriesOtherUsers, countBooksInSeries, getNextSeriesUser, transferSeriesOwnership, getBookContainerFields, getBookEnemies,
+  addAnthologyMember, removeAnthologyMember, getAnthologyExtraMembers, _pruneRedundantAnthologyMembership,
   getSeriesCharacter, saveSeriesCharacter,
   getSeriesRuns, createSeriesRun, updateSeriesRun, deleteSeriesRun, patchSeriesRunDeletion, resetSeriesForUser, getActiveSeriesRunsForUser, updateSeriesRunPosition, completeSeriesRun, updateSeriesRunPublic, migratePreSeriesRuns, reverseSeriesOpenWorld,
   getNotebook, setNotebook,

@@ -389,6 +389,7 @@ async function handleUpdateBook(req, res, bookId) {
       discoverable_sections ?? null, is_public === true, isAdmin,
       seriesId, resolvedSeriesNumber, resolvedIsContainer, resolvedParentBookId, resolvedBookOrder))
     return send(res, 404, { error: 'Not found' });
+  db._pruneRedundantAnthologyMembership(bookId, resolvedParentBookId);
   send(res, 200, { ok: true });
   // XP always goes to the book's creator, not the requester (admin may edit others' books)
   if (!old.isbn        && isbn)               db.awardXp(userId, 'add_isbn',          bookId);
@@ -404,6 +405,51 @@ async function handleUpdateBook(req, res, bookId) {
   if (cur?.book_order == null && resolvedParentBookId && resolvedBookOrder != null) db.awardXp(userId, 'add_anthology_order', bookId);
   if (old?.is_public || is_public === true) publicCatalogPush({ type: 'public_catalog_changed', entity: 'book', id: bookId, action: 'update' });
   feedPush({ type: 'feed_changed', entity: 'book', action: 'update', id: bookId });
+}
+
+async function handleAddAnthologyMember(req, res, anthologyId) {
+  const fromLocalhost = isLocalhost(req);
+  let userId = null;
+  if (fromLocalhost) {
+    const adminUser = db.getUserByUsername('koldKat');
+    userId = adminUser?.id ?? null;
+  } else {
+    userId = await authenticate(req, res);
+    if (userId === null) return;
+  }
+  const isAdmin = fromLocalhost || !!db.isUserAdmin(userId);
+  const { book_id, book_order } = await readBody(req);
+  const result = db.addAnthologyMember(userId, anthologyId, book_id, book_order, isAdmin);
+  if (result?.error) return send(res, result.error === 'forbidden' ? 403 : 400, { error: result.error });
+  send(res, 200, { ok: true });
+  // XP always goes to the book's creator, not the requester (the anthology's
+  // creator may be adding someone else's book) - same rule as handleUpdateBook.
+  // Both events reuse the primary-anthology XP events, but with a ref scoped
+  // to this specific anthology (`bookId:anthologyId`) rather than bare bookId -
+  // the primary attachment already claimed the bare-bookId ref, so reusing it
+  // here would silently no-op for any book that's ever had a primary anthology
+  // (i.e. almost always), paying zero XP for secondary memberships entirely.
+  const xpRef = `${book_id}:${anthologyId}`;
+  if (result.isNew && result.bookCreatedBy) db.awardXp(result.bookCreatedBy, 'add_book_to_anthology', xpRef);
+  if (result.bookOrderSet && result.bookCreatedBy) db.awardXp(result.bookCreatedBy, 'add_anthology_order', xpRef);
+  feedPush({ type: 'feed_changed', entity: 'book', action: 'update', id: anthologyId });
+}
+
+async function handleRemoveAnthologyMember(req, res, anthologyId, bookId) {
+  const fromLocalhost = isLocalhost(req);
+  let userId = null;
+  if (fromLocalhost) {
+    const adminUser = db.getUserByUsername('koldKat');
+    userId = adminUser?.id ?? null;
+  } else {
+    userId = await authenticate(req, res);
+    if (userId === null) return;
+  }
+  const isAdmin = fromLocalhost || !!db.isUserAdmin(userId);
+  const result = db.removeAnthologyMember(userId, anthologyId, bookId, isAdmin);
+  if (result?.error) return send(res, result.error === 'forbidden' ? 403 : 400, { error: result.error });
+  send(res, 200, { ok: true });
+  feedPush({ type: 'feed_changed', entity: 'book', action: 'update', id: anthologyId });
 }
 
 async function handleDeleteBook(req, res, bookId) {
@@ -777,6 +823,7 @@ module.exports = {
   handleCreateBook,
   handleCreateParty,
   handleCreateSeries,
+  handleAddAnthologyMember,
   handleCreateSeriesRun,
   handleCreateStash,
   handleDeclinePartyInvite,
@@ -807,6 +854,7 @@ module.exports = {
   handleGetUserStream,
   handleInviteToParty,
   handleLeaveParty,
+  handleRemoveAnthologyMember,
   handleResetBookProgress,
   handleResetSeriesForUser,
   handleSaveSeriesCharacter,
