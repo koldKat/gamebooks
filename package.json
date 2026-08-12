@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node server.js",
     "test": "node --test",
-    "check:versions": "node scripts/check-versions.js"
+    "check:versions": "node scripts/check-versions.js",
+    "docs:build": "node scripts/generate-docs.js",
+    "docs:check": "node scripts/generate-docs.js --check"
   },
   "dependencies": {
     "better-sqlite3": "^9.6.0",

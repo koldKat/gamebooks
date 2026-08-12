@@ -82,6 +82,12 @@ Before moving ANY function out of main.js:
 
 When the user says a panel/feature "should be read only" outside some condition, that means visible with actions disabled — NOT hidden. Conflating these caused a major regression.
 
+## 8. Documentation is generated — never hand-edit the HTML docs
+
+`docs/user-guide.md`, `docs/admin.md`, and `docs/technical.md` are the only source of truth. `public/guide.html`, `admin/admin-guide.html`, and `admin/technical.html` are generated from them by `npm run docs:build` (`scripts/generate-docs.js`) — never edit those three `.html` files directly, edits will be silently lost the next time someone runs the build.
+
+After editing any `docs/*.md` file, run `npm run docs:build` before declaring the task done. Run `npm run docs:check` to verify the HTML is current without regenerating it.
+
 ---
 
 ## Tech stack quick reference

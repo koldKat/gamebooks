@@ -22,6 +22,8 @@ activity feed, forums, and public profiles.
   public profiles, ratings, and a feedback/inbox system
 - **Export** - download your data per-book or for your whole account
 - **Demo mode** - try the tracker without an account
+- **Multi-platform tracking** - the same account works across every domain this app is deployed
+  on; the admin panel records which domain each user last signed in from
 
 See [`docs/user-guide.md`](docs/user-guide.md) for the full walkthrough of every feature above.
 
@@ -81,11 +83,17 @@ The SQLite database (`database.sqlite`) is created automatically on first run.
 | `npm start`              | Start the server                              |
 | `npm test`                | Run the test suite (`node --test`)            |
 | `npm run check:versions`  | Verify `?v=N` cache-busting versions are consistent across all imports |
+| `npm run docs:build`      | Regenerate the HTML docs from `docs/*.md`     |
+| `npm run docs:check`      | Fail if the HTML docs are stale relative to their markdown source |
 
 ## Documentation
 
-Full docs live in [`docs/`](docs/):
+Full docs live in [`docs/`](docs/) as the single source of truth - each is
+regenerated into a styled HTML page (sticky table of contents, scroll-spy,
+anchor links) by `npm run docs:build` (see `scripts/generate-docs.js`).
+Never hand-edit the generated `.html` files; edit the `.md` source and
+rebuild.
 
-- [`docs/user-guide.md`](docs/user-guide.md) - how to use the app
-- [`docs/admin.md`](docs/admin.md) - admin panel reference
-- [`docs/technical.md`](docs/technical.md) - project structure, architecture, and implementation notes
+- [`docs/user-guide.md`](docs/user-guide.md) → `public/guide.html` - how to use the app
+- [`docs/admin.md`](docs/admin.md) → `admin/admin-guide.html` - admin panel reference
+- [`docs/technical.md`](docs/technical.md) → `admin/technical.html` - project structure, architecture, and implementation notes
