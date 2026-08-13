@@ -191,17 +191,37 @@ function _darkenHex(hex) {
   return `#${[r, g, b].map(c => Math.round(c * 0.6).toString(16).padStart(2, '0')).join('')}`;
 }
 
-function _inevitableOutcome(graph, destId, visited = new Set()) {
-  if (_isTerm(destId)) return (destId === -1 || destId === '-1') ? 'death' : 'win';
-  if (visited.has(destId)) return null;
-  visited.add(destId);
-  const data = graph[destId];
-  if (!data || (data.choices || []).length !== 1) return null;
-  return _inevitableOutcome(graph, data.choices[0], visited);
+// Mirrors graph.js's computeOutcomes() - a section is 'death' only if EVERY
+// one of its choices is itself already 'death', and 'win' only if EVERY one
+// of its choices is itself already 'win' (same quantifier both ways - not
+// just a single unbranching chain, and not "any choice can reach 0" either,
+// since a section with one path to certain victory and another to certain
+// death promises nothing - the player could still pick the death branch).
+// Unmapped sections and true cycles stay unresolved rather than guessed.
+// Computed once per SVG build (full-graph fixed-point solve), not once per edge.
+function _computeOutcomes(graph) {
+  const outcome = {};
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const idStr of Object.keys(graph)) {
+      if (idStr in outcome) continue;
+      const choices = graph[idStr]?.choices || [];
+      if (!choices.length) continue;
+      const outs = choices.map(c => {
+        if (c === -1 || c === '-1') return 'death';
+        if (c === 0  || c === '0')  return 'win';
+        return outcome[c] ?? 'unknown';
+      });
+      if (outs.every(o => o === 'death'))      { outcome[idStr] = 'death'; changed = true; }
+      else if (outs.every(o => o === 'win'))   { outcome[idStr] = 'win';   changed = true; }
+    }
+  }
+  return outcome;
 }
 
-function _edgeColor(graph, dest) {
-  const outcome = _inevitableOutcome(graph, dest);
+function _edgeColor(outcomes, dest) {
+  const outcome = _isTerm(dest) ? ((dest === -1 || dest === '-1') ? 'death' : 'win') : (outcomes[dest] ?? null);
   if (outcome === 'death') return '#e74c3c';
   if (outcome === 'win')   return '#27ae60';
   return '#4b5563';
@@ -299,6 +319,7 @@ function buildGraphSvg(graph, positions, playthroughs, startSection, connectorSt
   const px = n => n.x - minX + PAD + R;
   const py = n => n.y - minY + PAD + R;
 
+  const outcomes = _computeOutcomes(graph || {});
   const edgeParts = [];
   for (const n of nodes) {
     for (const dest of (n.data.choices || [])) {
@@ -306,7 +327,7 @@ function buildGraphSvg(graph, positions, playthroughs, startSection, connectorSt
       const to = byKey.get(String(dest));
       if (!to) continue;
       const x1 = px(n), y1 = py(n), x2 = px(to), y2 = py(to);
-      const color = _edgeColor(graph, dest);
+      const color = _edgeColor(outcomes, dest);
       const ctrl  = _curveControlPoint(x1, y1, x2, y2, connectorStyle);
       // shorten the end point so the arrowhead lands on the destination node's edge, not
       // its center - along the curve's own tangent (through ctrl) when curved, otherwise

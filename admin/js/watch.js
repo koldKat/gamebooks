@@ -120,21 +120,38 @@ function knownSections(graph, playthroughs, startSection) {
   return set;
 }
 
-// Mirrors graph.js's inevitableOutcome()/edgeColor() exactly - an edge whose
-// destination chains through single-choice sections straight into a death/win
-// terminal gets tinted red/green ahead of time, same as the real canvas.
-function inevitableOutcome(graph, destId, visited = new Set()) {
-  if (destId === -1 || destId === '-1') return 'death';
-  if (destId === 0  || destId === '0')  return 'win';
-  if (visited.has(destId)) return null;
-  visited.add(destId);
-  const data = graph[destId];
-  if (!data || data.choices?.length !== 1) return null;
-  return inevitableOutcome(graph, data.choices[0], visited);
+// Mirrors graph.js's computeOutcomes()/edgeColor() exactly - a section is
+// 'death' only if EVERY one of its choices is itself already 'death', and
+// 'win' only if EVERY one of its choices is itself already 'win' (same
+// quantifier both ways - not just a single unbranching chain of choices, and
+// not "any choice can reach 0" either, since a section with one path to
+// certain victory and another to certain death promises nothing - the player
+// could still pick the death branch). Unmapped sections and true cycles stay
+// unresolved rather than guessed. Computed once per render (full-graph
+// fixed-point solve), not once per edge.
+function computeOutcomes(graph) {
+  const outcome = {};
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const idStr of Object.keys(graph)) {
+      if (idStr in outcome) continue;
+      const choices = graph[idStr]?.choices || [];
+      if (!choices.length) continue;
+      const outs = choices.map(c => {
+        if (c === -1 || c === '-1') return 'death';
+        if (c === 0  || c === '0')  return 'win';
+        return outcome[c] ?? 'unknown';
+      });
+      if (outs.every(o => o === 'death'))      { outcome[idStr] = 'death'; changed = true; }
+      else if (outs.every(o => o === 'win'))   { outcome[idStr] = 'win';   changed = true; }
+    }
+  }
+  return outcome;
 }
 
-function edgeColor(graph, dest, isRunEdge) {
-  const outcome = inevitableOutcome(graph, dest);
+function edgeColor(outcomes, dest, isRunEdge) {
+  const outcome = dest === -1 || dest === '-1' ? 'death' : dest === 0 || dest === '0' ? 'win' : (outcomes[dest] ?? null);
   if (outcome === 'death') return { color: '#e74c3c', opacity: 0.8, highlight: '#e74c3c' };
   if (outcome === 'win')   return { color: '#27ae60', opacity: 0.8, highlight: '#27ae60' };
   if (isRunEdge)           return { color: '#f5a623', opacity: 1,   highlight: '#f5a623' };
@@ -329,6 +346,7 @@ function render(state, isOpenWorld) {
   const graph = state.graph || {};
   const playthroughs = state.playthroughs || [];
   const activePt = state.activePtIndex != null ? playthroughs[state.activePtIndex] : null;
+  const outcomes = computeOutcomes(graph);
 
   // Diffed update, not clear()+add() - a full recreate re-seeds every
   // position-less node with physics:true again on every poll, restarting the
@@ -403,7 +421,7 @@ function render(state, isOpenWorld) {
         id:    edgeId,
         from:  secId,
         to:    dest,
-        color: edgeColor(graph, dest, isRunEdge),
+        color: edgeColor(outcomes, dest, isRunEdge),
         width: isRunEdge ? 2.5 : 1.2,
       });
     }

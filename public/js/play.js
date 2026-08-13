@@ -5,11 +5,11 @@ import {
   currentPlaythrough, currentSection, allDiscoveredSections, mappedCount,
   currentUserLevel, bonusUndos, bonusFastTravels, apiFetch,
 } from './state.js?v=13';
-import { network, visNodes, syncGraph, inevitableOutcome } from './graph.js?v=112';
+import { network, visNodes, syncGraph, computeOutcomes } from './graph.js?v=115';
 import { t } from './i18n.js?v=57';
 import { renderCharSheetDisplay } from './charsheet.js?v=87';
 import { naturalCompare } from './sort.js?v=1';
-import { instantiateLoadout } from './equipment.js?v=160';
+import { instantiateLoadout } from './equipment.js?v=163';
 import { escapeHtml } from './util.js?v=70';
 
 // ── Discoverable sections cap ────────────────────────────────────���───────────
@@ -387,13 +387,17 @@ function renderPlaythroughPanel() {
         return a - b;
       });
       // A real destination (not literal -1/0) still gets colored red/green
-      // when it inevitably leads to death/win through an unbranching chain -
-      // same inevitableOutcome() check the graph's own edge coloring already
-      // uses, so a choice pill agrees with the connector leading to it.
+      // when it inevitably leads to death/win, including through branching
+      // paths that each independently only ever end that way - same
+      // computeOutcomes() check the graph's own edge coloring already uses,
+      // so a choice pill agrees with the connector leading to it. Resolved
+      // once for the whole graph rather than once per choice - each call
+      // would otherwise redo the same full-graph solve for every button.
+      const outcomes = computeOutcomes();
       const choiceOutcomeClass = c => {
         if (c === -1) return 'death-btn';
         if (c === 0) return 'win-btn';
-        const outcome = inevitableOutcome(c);
+        const outcome = outcomes[c] ?? null;
         return outcome === 'death' ? 'death-btn' : outcome === 'win' ? 'win-btn' : '';
       };
       html += sortedChoices.map(c => {

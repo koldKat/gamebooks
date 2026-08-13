@@ -3,7 +3,7 @@
 // Адрин напада пръв; при foeFirst - врагът напада преди него.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../state.js?v=13';
-import { showAlert } from '../play.js?v=115';
+import { showAlert } from '../play.js?v=118';
 import { getPlayBtnRow } from '../charsheet.js?v=87';
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../util.js?v=70';
 import { t } from '../i18n.js?v=57';
