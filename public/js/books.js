@@ -4,7 +4,7 @@ import { foldForSearch, naturalCompare, naturalCompareByName } from './sort.js?v
 import { refreshCoinsDisplay } from './shop.js?v=79';
 import { openCoverActivity, openSeriesActivity, _startLandingCoverRotation, _resetLandingCoverQueue, _effectiveLandingCoverSource, loadCovers } from './covers.js?v=128';
 import { t } from './i18n.js?v=57';
-import { showConfirm, showTwoChoice } from './play.js?v=115';
+import { showConfirm, showTwoChoice } from './play.js?v=118';
 import { escapeHtml } from './util.js?v=70';
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────
