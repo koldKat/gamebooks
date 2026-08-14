@@ -1,0 +1,99 @@
+/* liveread.css - floating "live reading" panel (see public/js/liveread.js).
+   Deliberately not an .inv-overlay: no full-screen backdrop, so the graph
+   underneath stays visible and clickable while the panel is open. */
+
+/* #play-btn-row has no generic button style - every trigger button (see
+   charsheet.css's #charsheet-btn, equipment.css's #inventory-btn/#equipment-btn,
+   battlesim.css's per-ID list) needs its own rule here. */
+#liveread-btn {
+  background: rgba(31, 41, 55, 0.88);
+  border: 1px solid #374151;
+  border-radius: 7px;
+  color: #9ca3af;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+}
+#liveread-btn:hover { background: #374151; }
+
+.liveread-panel {
+  display: none;
+  flex-direction: column;
+  position: fixed;
+  /* Matches #run-trail-float/#dice-roller-wrap's left-docking convention -
+     sits beside the book sidebar, not on top of it. */
+  left: calc(var(--sidebar-w) + 12px);
+  /* Pinned between the top of the viewport and the bottom button row/XP bar
+     (--play-btn-row-h, the same var #stats-hud uses to stay clear of them)
+     instead of vertically centered with a fixed max-height - centering plus
+     a flat 78vh cap didn't account for the bottom bar's actual height, so on
+     shorter viewports the panel could overlap #play-btn-row/#play-bottom-stack. */
+  top: 12px;
+  bottom: calc(1rem + var(--play-btn-row-h, 2.1rem) + 0.4rem);
+  width: 380px;
+  max-width: calc(100vw - var(--sidebar-w) - 32px);
+  background: #111827;
+  border: 1px solid #374151;
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  z-index: 350;
+  overflow: hidden;
+}
+.liveread-panel.active { display: flex; }
+body.sidebar-collapsed .liveread-panel { left: 12px; }
+
+.liveread-body {
+  /* Without min-height:0, a flex item's default min-height is its content
+     size - it would grow past the panel's max-height instead of scrolling,
+     clipping the bottom against .liveread-panel's overflow:hidden. */
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 0.9rem 1rem;
+  overflow-y: auto;
+  line-height: 1.55;
+  color: #d1d5db;
+  font-size: 0.88rem;
+  /* Echoes the source HTML exports' own book-page typography (serif) while
+     keeping the app's dark colors rather than the source's black-on-white
+     page. Georgia specifically dropped from the stack - non-Microsoft
+     Georgia substitutes have a documented history of incomplete extended-
+     Cyrillic glyph coverage (й rendering as a separate и + combining-mark
+     glyph pulled from a fallback font instead of one precomposed glyph),
+     which broke Bulgarian book content. Times New Roman has full Cyrillic
+     coverage across platforms. */
+  font-family: 'Times New Roman', serif;
+}
+/* Justify without hyphenation produces big uneven word-gaps ("rivers") at
+   this panel's 380px width - hyphens:auto lets the line-breaker split long
+   words instead of stretching spaces to fill the line. */
+.liveread-body p {
+  margin: 0 0 0.75rem;
+  text-align: justify;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+.liveread-body p:last-child { margin-bottom: 0; }
+.liveread-body a { color: #38bdf8; text-decoration: underline; cursor: pointer; }
+.liveread-body a:hover { color: #7dd3fc; }
+.liveread-empty { opacity: 0.7; font-style: italic; margin: 0; }
+
+/* Some source exports (e.g. book 868) mark up choice/ending/note paragraphs
+   with these classes in their own <style> block - dark-theme equivalents of
+   the same visual distinction, not just plain narrative text. */
+.liveread-body p.choice {
+  font-weight: 600;
+  text-align: left;
+  border-left: 3px solid #38bdf8;
+  padding-left: 0.6rem;
+}
+.liveread-body p.end {
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: 0.08em;
+  color: #f3f4f6;
+}
+.liveread-body p.note { font-style: italic; opacity: 0.75; text-align: left; }

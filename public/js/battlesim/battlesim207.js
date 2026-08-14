@@ -36,11 +36,13 @@
 //
 // One genuinely new mechanic, a recurring per-round effect rather than a
 // one-off score change:
-// - enemySkillDecay (per-encounter checkbox): every time you land a hit,
-//   the enemy's own SKILL permanently drops by 1 (floored at 0), in
-//   addition to the normal 2 STAMINA wound. Covers the two Minion of Death
-//   fights (§81/§96), the Wraith (§219), and both Envoy of Death fights
-//   (§220/§271) - all five explicitly print "each hit also -1 SKILL".
+// - skillDrain (per-encounter checkbox): every time the ENEMY lands a hit
+//   on YOU, your own SKILL permanently drops by 1 (floored at 0), in
+//   addition to the normal STAMINA wound - a life-draining attack against
+//   the player, not a wound-blunting effect on the enemy. Covers the two
+//   Minion of Death fights (§81/§96), the Wraith (§219), and both Envoy of
+//   Death fights (§220/§271) - all five explicitly print "each time it
+//   strikes you, you lose 1 SKILL point as well as the normal STAMINA loss."
 //
 // Four persistent SKILL toggles, all +1: Apothecus skill ring (§98, worn,
 // stacks with anything else), Magical Silver Chainmail (§117, worn, also
@@ -68,10 +70,10 @@
 // All state lives in pt.sim207, per-user/per-book via currentPlaythrough().
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../state.js?v=13';
-import { showAlert } from '../play.js?v=118';
-import { getPlayBtnRow } from '../charsheet.js?v=87';
-import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../util.js?v=70';
-import { t } from '../i18n.js?v=57';
+import { showAlert } from '../play.js?v=122';
+import { getPlayBtnRow } from '../charsheet.js?v=89';
+import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../util.js?v=72';
+import { t } from '../i18n.js?v=59';
 
 const SVG_SKULL  = `<svg class="sim-icon sim-icon-dead"  viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8c0 2.8 1.4 5.3 3.6 6.8V20a1 1 0 0 0 1 1h6.8a1 1 0 0 0 1-1v-2.2C18.6 16.3 20 13.8 20 11a8 8 0 0 0-8-8zm-2.5 13v-1.5a.5.5 0 0 0-.5-.5H8l-.5-1 1-1-1-1 1-1H9a2.5 2.5 0 0 1 5 0h.5l1 1-1 1 1 1-.5 1h-1a.5.5 0 0 0-.5.5V16h-4z"/></svg>`;
 const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v7a6 6 0 0 1-12 0V2zm-2 1H2v4a4 4 0 0 0 4 4v-1a3 3 0 0 1-3-3V3zm16 0h2v4a4 4 0 0 1-4 4v-1a3 3 0 0 0 3-3V3zm-7 13v2H9v2h6v-2h-2v-2a6 6 0 0 0 5-5.92V2H6v8.08A6 6 0 0 0 13 16z"/></svg>`;
@@ -102,7 +104,7 @@ function _data() {
         winAfterHits: 0,
         enemyStaminaFloor: 0,
         hitsLandedThisFight: 0,
-        enemySkillDecay: false,
+        skillDrain: false,
         hasSkillRing: false,
         hasChainmail: false,
         hasHolySword: false,
@@ -133,7 +135,7 @@ function _data() {
   if (d.player.winAfterHits === undefined) d.player.winAfterHits = 0;
   if (d.player.enemyStaminaFloor === undefined) d.player.enemyStaminaFloor = 0;
   if (d.player.hitsLandedThisFight === undefined) d.player.hitsLandedThisFight = 0;
-  if (d.player.enemySkillDecay === undefined) d.player.enemySkillDecay = false;
+  if (d.player.skillDrain === undefined) d.player.skillDrain = false;
   if (d.player.hasSkillRing === undefined) d.player.hasSkillRing = false;
   if (d.player.hasChainmail === undefined) d.player.hasChainmail = false;
   if (d.player.hasHolySword === undefined) d.player.hasHolySword = false;
@@ -175,7 +177,7 @@ function _resetEncounterKnobs(d) {
   d.player.winAfterHits = 0;
   d.player.enemyStaminaFloor = 0;
   d.player.hitsLandedThisFight = 0;
-  d.player.enemySkillDecay = false;
+  d.player.skillDrain = false;
   d.pairedFight = false;
   d.tripleFight = false;
   d.sideEnemy = { name: '', skill: 0, staminaMax: 0 };
@@ -218,12 +220,7 @@ function _runRound() {
   } else if (playerWins) {
     d.enemy.stamina = Math.max(floor, d.enemy.stamina - 2);
     d.player.hitsLandedThisFight++;
-    if (d.player.enemySkillDecay && d.enemy.skill > 0) {
-      d.enemy.skill = Math.max(0, d.enemy.skill - 1);
-      _appendLog(d, `You wound ${_enemyNameSafe(d)} for 2 and blunt its attack - SKILL now ${d.enemy.skill}. STAMINA: ${d.enemy.stamina}/${d.enemy.staminaMax}.`);
-    } else {
-      _appendLog(d, `You wound ${_enemyNameSafe(d)} for 2. STAMINA: ${d.enemy.stamina}/${d.enemy.staminaMax}.`);
-    }
+    _appendLog(d, `You wound ${_enemyNameSafe(d)} for 2. STAMINA: ${d.enemy.stamina}/${d.enemy.staminaMax}.`);
     if (d.player.winAfterHits > 0 && d.player.hitsLandedThisFight >= d.player.winAfterHits && d.enemy.stamina > floor) {
       d.enemy.stamina = floor;
       _appendLog(d, `You've landed enough blows to press your advantage - the fight ends here.`);
@@ -231,7 +228,14 @@ function _runRound() {
     if (d.enemy.stamina > floor) d.pendingLuckQueue.push({ kind: 'player-hit' });
   } else {
     d.player.stamina = Math.max(0, d.player.stamina - woundDmg);
-    _appendLog(d, `${_enemyNameSafe(d)} wounds you for ${woundDmg}. STAMINA: ${d.player.stamina}/${d.player.staminaInitial}.`);
+    // skillDrain: a life-draining attack against the PLAYER, not a
+    // wound-blunting effect on the enemy - see the header comment above.
+    if (d.player.skillDrain && d.player.skill > 0) {
+      d.player.skill = Math.max(0, d.player.skill - 1);
+      _appendLog(d, `${_enemyNameSafe(d)} wounds you for ${woundDmg} and drains your SKILL - now ${d.player.skill}. STAMINA: ${d.player.stamina}/${d.player.staminaInitial}.`);
+    } else {
+      _appendLog(d, `${_enemyNameSafe(d)} wounds you for ${woundDmg}. STAMINA: ${d.player.stamina}/${d.player.staminaInitial}.`);
+    }
     if (d.player.stamina > 0) d.pendingLuckQueue.push({ kind: 'enemy-hit' });
   }
 
@@ -487,7 +491,7 @@ function _renderInputs() {
   document.getElementById('sim207-enemy-wounddmg').value   = d.player.enemyWoundDamage;
   document.getElementById('sim207-enemy-winhits').value    = d.player.winAfterHits;
   document.getElementById('sim207-enemy-floor').value      = d.player.enemyStaminaFloor;
-  document.getElementById('sim207-enemy-decay').checked    = d.player.enemySkillDecay;
+  document.getElementById('sim207-enemy-decay').checked    = d.player.skillDrain;
 
   document.getElementById('sim207-paired').checked = d.pairedFight;
   document.getElementById('sim207-side-pick').value = d.sideEnemy.name;
@@ -684,7 +688,7 @@ export function initSim207() {
             ${_numField('Win after N landed hits (0=off)', 'sim207-enemy-winhits')}
             ${_numField('Battle ends at N STAMINA (0=normal)', 'sim207-enemy-floor')}
             <div class="inv-edit-row">
-              <label class="inv-edit-check-label"><input type="checkbox" id="sim207-enemy-decay" class="inv-edit-check"> Each landed hit also costs the enemy 1 SKILL</label>
+              <label class="inv-edit-check-label"><input type="checkbox" id="sim207-enemy-decay" class="inv-edit-check"> Each hit against you also drains 1 SKILL</label>
             </div>
             <div class="inv-edit-row">
               <label class="inv-edit-check-label"><input type="checkbox" id="sim207-paired" class="inv-edit-check"> Second attacker fights alongside (never woundable)</label>
@@ -833,7 +837,7 @@ export function initSim207() {
   document.getElementById('sim207-enemy-decay').addEventListener('change', e => {
     const d = _data();
     if (!d) return;
-    d.player.enemySkillDecay = e.target.checked;
+    d.player.skillDrain = e.target.checked;
     saveState();
   });
 

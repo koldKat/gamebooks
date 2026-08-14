@@ -365,6 +365,24 @@ db.exec(`CREATE TABLE IF NOT EXISTS book_anthology_memberships (
   PRIMARY KEY (book_id, anthology_id)
 )`);
 
+// Canonical playable section text for the "live reading" feature (POC,
+// gated to a single hardcoded user - see server/routes/books.js's
+// handleGetBookSection). Distinct from state.graph (per-user, hand-built as
+// a player reads their own physical/PDF copy) - this is admin-supplied
+// source content shared by every reader of the book, imported once via a
+// one-off script per book (no admin UI yet). `choices` is a JSON array of
+// target section ids (numbers, or -1/0 for death/win), parsed once at
+// import time from the source HTML's own <a href="#section-N"> links -
+// never derived at request time.
+db.exec(`CREATE TABLE IF NOT EXISTS book_sections (
+  book_id    INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+  section_id TEXT    NOT NULL,
+  html       TEXT    NOT NULL,
+  choices    TEXT    NOT NULL DEFAULT '[]',
+  PRIMARY KEY (book_id, section_id)
+)`);
+try { db.exec(`ALTER TABLE books ADD COLUMN has_live_reading INTEGER DEFAULT 0`); } catch (_) {}
+
 // One-time backfill: assign a permanent template to every level_up event that doesn't have one yet
 {
   const unassigned = db.prepare(`SELECT id FROM xp_events WHERE event = 'level_up' AND template_id IS NULL`).all();
@@ -709,7 +727,7 @@ const {
   getBooks, getStashes, createStash, updateStash, deleteStash,
   setBookBgPref, getBookBgPref, awardPdfXp, setBookPdf, removeBookCover, removeBookPdf, setBookCover,
   getBookContainerFields, getOrCreateSeries, getAllSeries, getBookEnemies, addSeriesToLibrary,
-  addAnthologyMember, removeAnthologyMember, getAnthologyExtraMembers, _pruneRedundantAnthologyMembership,
+  addAnthologyMember, removeAnthologyMember, getAnthologyExtraMembers, _pruneRedundantAnthologyMembership, getBookSection, _canLiveRead,
   getSeriesById, updateSeries, getSeriesCharacter, saveSeriesCharacter, getSeriesRuns,
   updateSeriesRunPosition, completeSeriesRun, updateSeriesRunPublic, migratePreSeriesRuns,
   reverseSeriesOpenWorld, createSeriesRun, getActiveSeriesRunsForUser, deleteSeriesRun,
@@ -767,7 +785,7 @@ module.exports = {
   createSession, getSession, refreshSession, deleteSession, purgeExpiredSessions, purgeOldNotifications, purgeOldHeartbeats, walCheckpoint,
   getBooks, getStashes, createStash, updateStash, deleteStash, createBook, getBookById, getBookState, getActiveBookInSeries, saveBookState, resetBookProgress, updateBook, deleteBook, setBookCover, removeBookCover, setBookPdf, removeBookPdf, awardPdfXp, addBookToLibrary,
   getAllSeries, getSeriesById, getOrCreateSeries, createSeries, updateSeries, deleteSeries, deleteSeriesRow, addSeriesToLibrary, removeSeriesEntryOnly, removeSeriesFromLibrary, countSeriesOtherUsers, countBooksInSeries, getNextSeriesUser, transferSeriesOwnership, getBookContainerFields, getBookEnemies,
-  addAnthologyMember, removeAnthologyMember, getAnthologyExtraMembers, _pruneRedundantAnthologyMembership,
+  addAnthologyMember, removeAnthologyMember, getAnthologyExtraMembers, _pruneRedundantAnthologyMembership, getBookSection, _canLiveRead,
   getSeriesCharacter, saveSeriesCharacter,
   getSeriesRuns, createSeriesRun, updateSeriesRun, deleteSeriesRun, patchSeriesRunDeletion, resetSeriesForUser, getActiveSeriesRunsForUser, updateSeriesRunPosition, completeSeriesRun, updateSeriesRunPublic, migratePreSeriesRuns, reverseSeriesOpenWorld,
   getNotebook, setNotebook,

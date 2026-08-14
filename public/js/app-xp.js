@@ -12,9 +12,9 @@
 // #app-xp-*/#app-reward-float-layer markup/CSS.
 
 import { apiFetch, getToken, isDemoMode } from './state.js?v=13';
-import { COIN_SVG } from './shop.js?v=79';
-import { escapeHtml } from './util.js?v=70';
-import { t } from './i18n.js?v=57';
+import { COIN_SVG } from './shop.js?v=81';
+import { escapeHtml } from './util.js?v=72';
+import { t } from './i18n.js?v=59';
 
 let _hooks = {};
 export function setAppXpHooks(h) { _hooks = h || {}; }

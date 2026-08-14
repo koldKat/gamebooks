@@ -11,12 +11,33 @@ const {
   awardXp, awardCoins, _discoveredSet, _visitedSet, _permanentVisitedCount, _checkGroupMilestone,
 } = require('./xp');
 
+// "Live reading" POC (server/routes/books.js's handleGetBookSection) is
+// gated to these two accounts by username - kept under wraps until it's
+// ready to announce more broadly.
+const _LIVE_READ_USERNAMES = new Set(['koldKat', 'sashii']);
+function _canLiveRead(userId) {
+  const row = db.prepare('SELECT username FROM users WHERE id = ?').get(userId);
+  return _LIVE_READ_USERNAMES.has(row?.username);
+}
+
+// Canonical, admin-imported section text for the live-reading feature -
+// distinct from state.graph (per-user). Returns null if this book has no
+// imported data for that section, or the section id isn't real at all.
+function getBookSection(bookId, sectionId) {
+  const row = db.prepare('SELECT html, choices FROM book_sections WHERE book_id = ? AND section_id = ?').get(bookId, String(sectionId));
+  if (!row) return null;
+  let choices = [];
+  try { choices = JSON.parse(row.choices); } catch {}
+  return { html: row.html, choices };
+}
+
 function getBooks(userId) {
+  const canLiveRead = _canLiveRead(userId);
   const rows = db.prepare(`
     SELECT b.id, b.name, b.total_sections, b.discoverable_sections,
            b.isbn, b.issn, b.asin, b.cover_path, b.pdf_path, b.created_at, b.created_by, b.is_public,
            b.pages, b.authors, b.description, b.is_demo,
-           b.series_id, b.series_number, b.is_container, b.parent_book_id, b.book_order, b.has_battle_sim,
+           b.series_id, b.series_number, b.is_container, b.parent_book_id, b.book_order, b.has_battle_sim, b.has_live_reading,
            s.name AS series_name,
            ub.state_data, ub.created_at AS ub_created_at, ub.updated_at AS ub_updated_at, ub.rating AS user_rating,
            ub.party_id, ub.bg_hidden, ub.bg_pos_y
@@ -32,7 +53,7 @@ function getBooks(userId) {
     (extraAnthologyIds[row.book_id] ??= []).push(row.anthology_id);
     (extraAnthologyOrders[row.book_id] ??= {})[row.anthology_id] = row.book_order;
   }
-  return rows.map(({ state_data, ub_created_at, ub_updated_at, user_rating, bg_hidden, bg_pos_y, ...b }) => {
+  return rows.map(({ state_data, ub_created_at, ub_updated_at, user_rating, bg_hidden, bg_pos_y, has_live_reading, ...b }) => {
     let visited = 0;
     let last_run_at = null;
     try {
@@ -72,6 +93,11 @@ function getBooks(userId) {
       bgPosY: bg_pos_y ?? 50,
       extra_anthology_ids: extraAnthologyIds[b.id] || [],
       extra_anthology_orders: extraAnthologyOrders[b.id] || {},
+      // Gated client-side visibility: !!b.has_live_reading alone would leak the
+      // button to every reader of a book with imported live-reading data - only
+      // ever true for the one hardcoded POC user, everyone else always sees false
+      // regardless of the book's own flag.
+      hasLiveReading: canLiveRead && !!has_live_reading,
     };
   });
 }
@@ -1175,6 +1201,7 @@ module.exports = {
   getBookContainerFields, getOrCreateSeries, getAllSeries, getBookEnemies, addSeriesToLibrary,
   addAnthologyMember, removeAnthologyMember, getAnthologyExtraMembers,
   _pruneRedundantAnthologyMembership,
+  getBookSection, _canLiveRead,
   getSeriesById, updateSeries, getSeriesCharacter, saveSeriesCharacter, getSeriesRuns,
   updateSeriesRunPosition, completeSeriesRun, updateSeriesRunPublic, migratePreSeriesRuns,
   reverseSeriesOpenWorld, createSeriesRun, getActiveSeriesRunsForUser, deleteSeriesRun,

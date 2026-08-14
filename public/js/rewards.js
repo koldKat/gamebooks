@@ -1,11 +1,11 @@
 // rewards.js - XP/coin floater queue and reward snapshot processing
 
 import { getToken, getUsername } from './state.js?v=13';
-import { updateCoinsDisplay, refreshCoinsDisplay, COIN_SVG } from './shop.js?v=79';
-import { renderBooksXpSummary } from './profile.js?v=95';
-import { _broadcastLiveEvent } from './livetab.js?v=87';
-import { _scheduleLiveUiRefresh } from './notif.js?v=76';
-import { escapeHtml } from './util.js?v=70';
+import { updateCoinsDisplay, refreshCoinsDisplay, COIN_SVG } from './shop.js?v=81';
+import { renderBooksXpSummary } from './profile.js?v=97';
+import { _broadcastLiveEvent } from './livetab.js?v=89';
+import { _scheduleLiveUiRefresh } from './notif.js?v=78';
+import { escapeHtml } from './util.js?v=72';
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let _lastRewardXp        = null;
