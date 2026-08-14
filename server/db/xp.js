@@ -428,6 +428,25 @@ function _discoveredSet(graph) {
   return s;
 }
 
+// Mirrors public/js/state.js's mappedCountFor() predicate exactly - a manually-
+// added node (bg.js's "+ Add node", no `discovered` flag) reads as fully mapped
+// immediately even with zero choices, same as any node with real choices/
+// portals. Used so such nodes also count toward visit_all/book_completed -
+// a deliberately-noted bonus episode (e.g. one the player knows about from
+// reading the book directly, not from playing) shouldn't block 100%
+// completion just because it was never walked into via an actual playthrough.
+function _mappedSet(graph) {
+  const s = new Set();
+  for (const [sec, data] of Object.entries(graph)) {
+    if (!data?.discovered || (data.choices || []).length > 0 || (data.portals || []).length > 0) {
+      const n = Number(sec);
+      const id = (!isNaN(n) && n > 0) ? n : (sec !== '-1' && sec !== '0' ? sec : null);
+      if (id !== null) s.add(id);
+    }
+  }
+  return s;
+}
+
 function _visitedSet(playthroughs) {
   const s = new Set();
   for (const pt of playthroughs)
@@ -732,7 +751,11 @@ function processStateXp(userId, bookId, oldState, newState, totalSections) {
   for (const sec of newVis)
     if (!oldVis.has(sec)) awardXp(userId, 'visit_node', `${bookId}:${sec}`);
   if (effective > 0 && oldVis.size < effective) {
-    const trulyVisited = newVis.size >= effective ? newVis.size : _permanentVisitedCount(userId, bookId);
+    // Union with _mappedSet so manually-added/noted nodes (never walked into
+    // via a real playthrough, but already showing 100% in the "Mapped" stat)
+    // can complete the book too - see _mappedSet's own comment.
+    const combined = new Set([...newVis, ...(_mappedSet(newGraph))]);
+    const trulyVisited = combined.size >= effective ? combined.size : Math.max(combined.size, _permanentVisitedCount(userId, bookId));
     if (trulyVisited >= effective) {
       awardXp(userId, 'visit_all', bookId);
       awardCoins(userId, 'book_completed', bookId, 1);
@@ -983,7 +1006,8 @@ function migrateXpForUser(userId) {
 
     const vis = _visitedSet(pts);
     for (const sec of vis) awardXp(userId, 'visit_node', `${bid}:${sec}`);
-    if (effective > 0 && vis.size >= effective) {
+    const visOrMapped = new Set([...vis, ...(_mappedSet(graph))]);
+    if (effective > 0 && visOrMapped.size >= effective) {
       awardXp(userId, 'visit_all', bid);
       awardCoins(userId, 'book_completed', bid, 1);
     }
