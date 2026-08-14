@@ -756,7 +756,7 @@ appLevel = floor((-1 + sqrt(1 + 8 × totalXp / (number_of_users × 1000))) / 2)
 | `death_run` | 10 | `bookId:runIndex` | Per completed death run |
 | `win_run` | 20 | `bookId:runIndex` | Per completed win run |
 | `discover_all` | 30 | `bookId` | Once per book when discovered ≥ effective_sections (`discoverable_sections ?? total_sections`) |
-| `visit_all` | 40 | `bookId` | Once per book when visited ≥ effective_sections (`discoverable_sections ?? total_sections`). Also grants 1 one-time Gold Coin milestone for that user/book. |
+| `visit_all` | 40 | `bookId` | Once per book when visited ≥ effective_sections (`discoverable_sections ?? total_sections`). "Visited" is `_visitedSet(playthroughs)` (real `pt.path` traversal) unioned with `_mappedSet(graph)` - a manually-added node (bg.js's "+ Add node", no `discovered` flag - see "Mapped" in the Node colour logic section) counts here too, so a noted-but-never-played bonus episode doesn't block 100% completion. Also grants 1 one-time Gold Coin milestone for that user/book. |
 | `add_book` | 50 | `bookId` | Per book created |
 | `add_isbn` | 25 | `bookId` | Once per book when ISBN first set |
 | `add_issn` | 25 | `bookId` | Once per book when ISSN first set |
@@ -1148,6 +1148,8 @@ Each `.book-item` card has a progress bar background: `rgba(107,114,128,0.18)` f
 - Authenticated refreshes award `idle_heartbeat` XP (at most once per minute). Client schedules a short profile refresh afterwards so the XP floater updates.
 
 `#feed-toggle` (`▴ / ▾`) is a feed-collapse tab centered above the feed. Feed hidden state is **session-only** - not persisted across reloads. Hidden on mobile. Position computed via JS `_syncFeedTogglePos` (not pure CSS) so it stays centered on `#feed-panel` when side panels expand/collapse. Called on panel toggle, resize, and landing reveal.
+
+**Per-user "N actions today" collapse group:** `renderDayItems()` in `feed.js` groups a single user's entries for one day behind a `▶ N actions today` toggle once that user has `COLLAPSE_THRESHOLD` (6, i.e. "more than 5") entries that day. `skipTypes` (`level_up`, `user_joined`, `book_rated`, `series_rated`, `book_created`, `series_created`, `all_visited`, `all_discovered`, `first_win`, `first_loss`, `first_battle_death`) are excluded from both the threshold count *and* the group's body, and are separately given an explicit standalone-render bypass earlier in the same loop - both halves are required, or a skipped type falls into neither the group body (filtered out) nor a standalone entry (never reached), and silently disappears from the feed entirely for that day.
 
 - `userPublicProfile = true` → username renders as `<button class="feed-user-pub">` (opens profile modal).
 - `runIsPublic = true` → verb renders as `<button class="feed-verb-pub">` (opens public run modal).

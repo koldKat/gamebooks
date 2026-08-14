@@ -25,9 +25,11 @@
 //
 // One genuinely new mechanic this book needed:
 // - enemyStaminaFloor (numeric, 0 = off): the battle ends in a win once the
-//   enemy's STAMINA reaches this floor rather than 0. Covers the Giant
-//   (§12/§211), whose club fight is explicitly capped at 6 STAMINA rather
-//   than a normal kill.
+//   enemy's STAMINA reaches this floor rather than 0. Covers only the first
+//   Giant fight (§12 - "If you reduce the Giant's STAMINA to 6, turn to
+//   61", set the floor to 6 by hand for that encounter). The second Giant
+//   fight (§211, after his beard's set alight) is a normal kill to 0 -
+//   "If you kill the Giant, turn to 366" - leave the floor at 0 there.
 // One extension to the existing paired-fight mechanic:
 // - A third simultaneous attacker (sideEnemy2, only offered once pairedFight
 //   is on) for the one three-way encounter in this book, the Swamp Orc trio

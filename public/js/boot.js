@@ -47,7 +47,7 @@ import { initSim186, setSim186Visible, renderSim186 } from './battlesim/battlesi
 import { initSim201, setSim201Visible, renderSim201 } from './battlesim/battlesim201.js?v=42';
 import { initSim202, setSim202Visible, renderSim202 } from './battlesim/battlesim202.js?v=25';
 import { initSim203, setSim203Visible, renderSim203 } from './battlesim/battlesim203.js?v=24';
-import { initSim204, setSim204Visible, renderSim204 } from './battlesim/battlesim204.js?v=19';
+import { initSim204, setSim204Visible, renderSim204 } from './battlesim/battlesim204.js?v=20';
 import { initSim205, setSim205Visible, renderSim205 } from './battlesim/battlesim205.js?v=19';
 import { initSim206, setSim206Visible, renderSim206 } from './battlesim/battlesim206.js?v=14';
 import { initSim207, setSim207Visible, renderSim207 } from './battlesim/battlesim207.js?v=15';
@@ -73,7 +73,7 @@ import {
   clearOpenWorldState, doJumpCrossBook,
   getOwSrcBookId, getOwSrcSection, getOwCrossBookRoute,
 } from './open-world.js?v=184';
-import { setFeedHooks, loadFeed, refreshDayCoverFlows } from './feed.js?v=152';
+import { setFeedHooks, loadFeed, refreshDayCoverFlows } from './feed.js?v=153';
 import {
   setNotifHooks, _scheduleLiveUiRefresh,
   _closeNotifDropdown, _openNotifDropdown, isNotifDropdownOpen,
