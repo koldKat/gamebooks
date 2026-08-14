@@ -5,12 +5,12 @@ import {
   currentPlaythrough, currentSection, allDiscoveredSections, mappedCount,
   currentUserLevel, bonusUndos, bonusFastTravels, apiFetch,
 } from './state.js?v=13';
-import { network, visNodes, syncGraph, computeOutcomes } from './graph.js?v=115';
-import { t } from './i18n.js?v=57';
-import { renderCharSheetDisplay } from './charsheet.js?v=87';
+import { network, visNodes, syncGraph, computeOutcomes } from './graph.js?v=117';
+import { t } from './i18n.js?v=59';
+import { renderCharSheetDisplay } from './charsheet.js?v=89';
 import { naturalCompare } from './sort.js?v=1';
-import { instantiateLoadout } from './equipment.js?v=163';
-import { escapeHtml } from './util.js?v=70';
+import { instantiateLoadout } from './equipment.js?v=167';
+import { escapeHtml } from './util.js?v=72';
 
 // ── Discoverable sections cap ────────────────────────────────────���───────────
 let _discoverableLimit = null;
@@ -129,8 +129,13 @@ export function setOpenWorldContext({ isOpenWorld = false, seriesId = null, seri
 
 // ── Render pipeline ─────────────────────────────────────────────────────────
 
-let _afterRenderFn = null;
-export function setAfterRenderFn(fn) { _afterRenderFn = fn; }
+// A list rather than a single slot - dice.js registers its own post-render
+// restore here, and liveread.js needs the same "ran after every render()"
+// timing (fast-travel jumps and the sidebar's own choice buttons move pt.path
+// without going through setViewingPt, so liveread.js can't just hook
+// setOnViewingPtChange the way the rest of its lifecycle does).
+let _afterRenderFns = [];
+export function setAfterRenderFn(fn) { if (fn) _afterRenderFns.push(fn); }
 
 // New players often don't realize the choices box needs typing into - pulse it
 // until they've used it enough times to have clearly figured it out. Synced
@@ -142,8 +147,14 @@ let _onChoicesRecordedFn   = null;
 export function setChoicesRecordedCount(n) { _choicesRecordedCount = Number(n) || 0; }
 export function setOnChoicesRecorded(fn)   { _onChoicesRecordedFn = fn; }
 
-let _suppressAutoNav = false;
-export function suppressAutoNav(v) { _suppressAutoNav = !!v; }
+// Ref-counted rather than a plain boolean: party.js wraps SSE-driven state
+// syncs in suppressAutoNav(true)/(false), and liveread.js wraps its whole
+// open/close lifecycle the same way - a boolean would let whichever one
+// finishes first (e.g. a party sync completing while the reading panel is
+// still open) clear the other's still-active suppression via its own
+// finally-block false call.
+let _suppressAutoNavDepth = 0;
+export function suppressAutoNav(v) { _suppressAutoNavDepth = Math.max(0, _suppressAutoNavDepth + (v ? 1 : -1)); }
 
 // Tracks the section an auto-nav timer is already pending for, so overlapping
 // render() calls (e.g. from saveState/SSE side effects) don't each schedule
@@ -180,7 +191,7 @@ export function render() {
       centerBtn.textContent = t('play.center_default');
     }
   }
-  if (_afterRenderFn) _afterRenderFn();
+  _afterRenderFns.forEach(fn => fn());
 }
 
 function updateStats() {
@@ -367,7 +378,7 @@ function renderPlaythroughPanel() {
             `<button id="record-btn" class="primary-btn">${t('record.btn')}</button>` +
           `</div>` +
         `</div>`;
-    } else if (secData.choices.length === 1 && !isTerminal(secData.choices[0]) && !pt.path.includes(secData.choices[0]) && !_suppressAutoNav && !(_owIsOpenWorld && secData.portals?.length)) {
+    } else if (secData.choices.length === 1 && !isTerminal(secData.choices[0]) && !pt.path.includes(secData.choices[0]) && !(_suppressAutoNavDepth > 0) && !(_owIsOpenWorld && secData.portals?.length)) {
       const dest = secData.choices[0];
       if (_pendingAutoNavFrom !== sec) {
         _pendingAutoNavFrom = sec;
@@ -836,7 +847,9 @@ export function deleteRun(index) {
   });
 }
 
-function _commitChoices(sec, choices) {
+// Exported so liveread.js can reveal-on-arrival choices from imported
+// book_sections data using the same dedup/orphan-cleanup path as manual entry.
+export function commitChoices(sec, choices) {
   const deduped = [...new Set(choices)].sort((a, b) => {
     const av = isValidSecId(a), bv = isValidSecId(b);
     if (av && bv) {
@@ -916,7 +929,7 @@ function _cleanupOrphanedTargets(sec, oldChoices, newChoices) {
 // "this section has no choices" - see call sites.
 export function handleRecordChoices(sec, raw, allowEmpty = false) {
   if (raw === '') {
-    if (allowEmpty) _commitChoices(sec, []);
+    if (allowEmpty) commitChoices(sec, []);
     return;
   }
   if (!raw) return;
@@ -930,7 +943,7 @@ export function handleRecordChoices(sec, raw, allowEmpty = false) {
 
   if (hasAlpha && !state.alphanumericSections) {
     const example = parsed.find(n => typeof n === 'string');
-    confirmAlphanumericSwitch(example, () => _commitChoices(sec, parsed));
+    confirmAlphanumericSwitch(example, () => commitChoices(sec, parsed));
     return;
   }
 
@@ -948,7 +961,7 @@ export function handleRecordChoices(sec, raw, allowEmpty = false) {
     }
   }
 
-  _commitChoices(sec, choices);
+  commitChoices(sec, choices);
 }
 
 export function navigate(sec) {
@@ -972,7 +985,7 @@ export function navigate(sec) {
   // Skip animation if this section will be immediately auto-navigated away from -
   // stacking multiple 1s vis.js animations corrupts its internal camera state.
   const secData = state.graph[sec];
-  const willAutoNav = !_suppressAutoNav && secData?.choices.length === 1 && !isTerminal(secData.choices[0]) && !pt.path.includes(secData.choices[0]) && !(_owIsOpenWorld && secData.portals?.length);
+  const willAutoNav = !(_suppressAutoNavDepth > 0) && secData?.choices.length === 1 && !isTerminal(secData.choices[0]) && !pt.path.includes(secData.choices[0]) && !(_owIsOpenWorld && secData.portals?.length);
   if (network && !willAutoNav) network.focus(sec, { animation: true, scale: 1.2 });
 }
 

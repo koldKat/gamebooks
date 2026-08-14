@@ -606,6 +606,20 @@ async function handleGetBookEnemies(req, res, bookId) {
   send(res, 200, db.getBookEnemies(bookId));
 }
 
+// "Live reading" POC - gated to one hardcoded account (db._canLiveRead), not
+// exposed to anyone else regardless of the book's own has_live_reading flag.
+// Section ids can be alphanumeric elsewhere in the app, but the route param
+// itself already arrives as a plain string, so no parseSecId/Number
+// conversion is needed here - db.getBookSection compares it as a string.
+async function handleGetBookSection(req, res, bookId, sectionId) {
+  const userId = await authenticate(req, res);
+  if (userId === null) return;
+  if (!db._canLiveRead(userId)) return send(res, 403, { error: 'forbidden' });
+  const section = db.getBookSection(bookId, sectionId);
+  if (!section) return send(res, 404, { error: 'not found' });
+  send(res, 200, section);
+}
+
 async function handleSaveState(req, res, bookId) {
   const userId = await authenticate(req, res);
   if (userId === null) return;
@@ -836,6 +850,7 @@ module.exports = {
   handleGetActiveSeriesRuns,
   handleGetAppXpStream,
   handleGetBookEnemies,
+  handleGetBookSection,
   handleGetBookRating,
   handleGetBooks,
   handleGetBookStream,
