@@ -29,6 +29,19 @@ export function clampViewportScale(scale) {
 export const RESTORE_MIN_VIEWPORT_SCALE = 0.6;
 
 let _stabilizeHandler  = null;
+let _restabilizeTimer  = null;
+
+// A burst of render() calls in quick succession (e.g. losing a run, marking it
+// public, and starting a new one, each chaining through saveState/UI-update
+// callbacks within a few ms of each other) used to restart the physics solver
+// from scratch on every single call - interrupting a not-yet-finished
+// stabilize() pass before it ever got to fire stabilizationIterationsDone,
+// which could leave the graph visibly re-jostling indefinitely (worse the
+// more fixed obstacles, e.g. manually-added nodes, the solver has to route
+// around under avoidOverlap). Debouncing so only the last call in a tight
+// burst actually kicks off a pass fixes it without changing anything for a
+// single, isolated render().
+const RESTABILIZE_DEBOUNCE_MS = 150;
 
 // World-space spacing (graph units, not screen pixels) - fixed rather than
 // user-configurable, and shared by both the grid overlay and snap-to-grid so
@@ -113,6 +126,8 @@ export function destroyNetwork() {
   visNodes          = null;
   visEdges          = null;
   _stabilizeHandler = null;
+  clearTimeout(_restabilizeTimer);
+  _restabilizeTimer = null;
   _graphIsOpenWorld = false;
   _graphSeriesBooks = [];
   _graphCrossBookRoute = null;
@@ -913,18 +928,25 @@ export function syncGraph() {
   // - Existing layout, new nodes added: re-enable physics to place them, save on settle.
   // - Existing layout, all nodes positioned: keep physics off.
   if (hasSavedPositions && hasUnpositioned) {
-    if (_stabilizeHandler) network.off('stabilizationIterationsDone', _stabilizeHandler);
-    _stabilizeHandler = () => {
-      network.setOptions({ physics: { enabled: false } });
-      Object.assign(state.positions, network.getPositions());
-      saveState();
-      network.off('stabilizationIterationsDone', _stabilizeHandler);
-      _stabilizeHandler = null;
-    };
-    network.on('stabilizationIterationsDone', _stabilizeHandler);
-    network.setOptions({ physics: { enabled: true, stabilization: { fit: false } } });
-    network.stabilize(300);
+    clearTimeout(_restabilizeTimer);
+    _restabilizeTimer = setTimeout(() => {
+      _restabilizeTimer = null;
+      if (!network) return; // book switched away before the timer fired
+      if (_stabilizeHandler) network.off('stabilizationIterationsDone', _stabilizeHandler);
+      _stabilizeHandler = () => {
+        network.setOptions({ physics: { enabled: false } });
+        Object.assign(state.positions, network.getPositions());
+        saveState();
+        network.off('stabilizationIterationsDone', _stabilizeHandler);
+        _stabilizeHandler = null;
+      };
+      network.on('stabilizationIterationsDone', _stabilizeHandler);
+      network.setOptions({ physics: { enabled: true, stabilization: { fit: false } } });
+      network.stabilize(300);
+    }, RESTABILIZE_DEBOUNCE_MS);
   } else if (hasSavedPositions) {
+    clearTimeout(_restabilizeTimer);
+    _restabilizeTimer = null;
     network.setOptions({ physics: { enabled: false } });
   }
 }

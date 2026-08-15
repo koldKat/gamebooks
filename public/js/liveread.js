@@ -8,7 +8,7 @@
 // stays visible and interactive underneath while reading.
 
 import { state, apiFetch, currentBookId, currentPlaythrough, currentSection, viewingPt, isTerminal, parseSecId } from './state.js?v=13';
-import { navigate, commitChoices, showAlert, suppressAutoNav } from './play.js?v=122';
+import { navigate, commitChoices, showAlert, suppressAutoNav } from './play.js?v=123';
 import { t } from './i18n.js?v=59';
 import { getPlayBtnRow } from './charsheet.js?v=89';
 import { shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from './util.js?v=72';
@@ -151,6 +151,17 @@ export function initLiveRead() {
   btn.innerHTML = shortcutLabel(t('liveread.title'));
   btn.style.display = 'none';
   getPlayBtnRow().appendChild(btn);
+
+  // Docked under #legend on the right edge (see liveread.css) - tracks its
+  // real height (varies with the collapse toggle and the portal legend row)
+  // into --legend-h the same way charsheet.js tracks --play-btn-row-h, so the
+  // panel's own top offset stays accurate instead of guessing a fixed value.
+  const legend = document.getElementById('legend');
+  if (legend) {
+    new ResizeObserver(() => {
+      document.documentElement.style.setProperty('--legend-h', `${legend.offsetHeight}px`);
+    }).observe(legend);
+  }
 
   btn.addEventListener('click', _toggle);
   document.getElementById('liveread-close').addEventListener('click', _close);

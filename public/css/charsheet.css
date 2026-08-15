@@ -438,7 +438,9 @@ body.sidebar-collapsed #play-bottom-stack {
   transform: translateY(-50%);
   width: 20vw;
   max-height: 65vh;
-  z-index: 100;
+  /* Above .liveread-panel's z-index (350) - a pinned notebook must always
+     win over the reading panel, not get silently buried underneath it. */
+  z-index: 400;
   border-radius: 6px;
   transition: left 0.25s ease, background-color 0.15s;
 }

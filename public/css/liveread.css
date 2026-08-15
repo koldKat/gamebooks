@@ -24,18 +24,22 @@
   display: none;
   flex-direction: column;
   position: fixed;
-  /* Matches #run-trail-float/#dice-roller-wrap's left-docking convention -
-     sits beside the book sidebar, not on top of it. */
-  left: calc(var(--sidebar-w) + 12px);
-  /* Pinned between the top of the viewport and the bottom button row/XP bar
-     (--play-btn-row-h, the same var #stats-hud uses to stay clear of them)
-     instead of vertically centered with a fixed max-height - centering plus
-     a flat 78vh cap didn't account for the bottom bar's actual height, so on
-     shorter viewports the panel could overlap #play-btn-row/#play-bottom-stack. */
-  top: 12px;
-  bottom: calc(1rem + var(--play-btn-row-h, 2.1rem) + 0.4rem);
+  /* Deliberately NOT on the left-docking convention (#run-trail-float,
+     #notes-display, #dice-roller-wrap all live there, stacked top/middle/
+     bottom of that same column) - a reading panel needs to stay open for
+     the whole session alongside all three. Docked right instead, directly
+     under #legend. --legend-h is tracked by a ResizeObserver in liveread.js
+     (same pattern as charsheet.js's --play-btn-row-h) since the legend's
+     real height varies with its collapse toggle and portal row.
+     max-height, NOT also bottom-anchored to #play-btn-row - anchoring both
+     ends stretches it across nearly the whole remaining strip again, same
+     "takes up all the space" complaint just moved to the other edge. A
+     capped height leaves clear room above the button row on its own. */
+  right: 12px;
+  top: calc(var(--legend-h, 260px) + 24px);
+  max-height: 50vh;
   width: 380px;
-  max-width: calc(100vw - var(--sidebar-w) - 32px);
+  max-width: calc(100vw - 24px);
   background: #111827;
   border: 1px solid #374151;
   border-radius: 10px;
@@ -44,7 +48,6 @@
   overflow: hidden;
 }
 .liveread-panel.active { display: flex; }
-body.sidebar-collapsed .liveread-panel { left: 12px; }
 
 .liveread-body {
   /* Without min-height:0, a flex item's default min-height is its content
