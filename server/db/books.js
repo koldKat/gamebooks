@@ -8,7 +8,7 @@
 
 const { db, _foldForSearch, _naturalCompare, _naturalCompareByName, _getPdfSize } = require('./connection');
 const {
-  awardXp, awardCoins, _discoveredSet, _visitedSet, _permanentVisitedCount, _checkGroupMilestone,
+  awardXp, awardCoins, _discoveredSet, _visitedSet, _mappedSet, _permanentVisitedCount, _checkGroupMilestone,
 } = require('./xp');
 
 // "Live reading" POC (server/routes/books.js's handleGetBookSection) is
@@ -69,6 +69,12 @@ function getBooks(userId) {
       if (pts.length > 0 && last_run_at === null && ub_updated_at) {
         last_run_at = ub_updated_at * 1000; // SQLite epoch seconds → ms
       }
+      // Union with _mappedSet so a manually-added/noted node (never walked
+      // into via a real playthrough, but already counted as "Mapped" and
+      // already able to complete the visit_all achievement - see xp.js's
+      // processStateXp) doesn't leave the books-list progress bar/pill stuck
+      // just short of 100% for a book that's otherwise fully done.
+      for (const sec of _mappedSet(s.graph || {})) seen.add(sec);
       visited = seen.size;
       // Same deleted-run undercount as _visitedSet (see _permanentVisitedCount) - a
       // section visited in a run that's since been deleted vanishes from `seen` even
@@ -945,7 +951,7 @@ function updateBook(userId, bookId, name, totalSections, isbn, issn, asin, pages
     for (const row of userRows) {
       let s = {}; try { s = JSON.parse(row.state_data || '{}'); } catch {}
       const disc = _discoveredSet(s.graph || {});
-      const vis  = _visitedSet(s.playthroughs || []);
+      const vis  = new Set([...(_visitedSet(s.playthroughs || [])), ...(_mappedSet(s.graph || {}))]);
       if (disc.size >= discoverableSections) {
         awardXp(row.user_id, 'discover_all', bookId);
         _checkGroupMilestone(row.user_id, seriesId, parentBookId,
@@ -953,7 +959,7 @@ function updateBook(userId, bookId, name, totalSections, isbn, issn, asin, pages
       }
       const trulyVisited = vis.size >= discoverableSections
         ? vis.size
-        : _permanentVisitedCount(row.user_id, bookId);
+        : Math.max(vis.size, _permanentVisitedCount(row.user_id, bookId));
       if (trulyVisited >= discoverableSections) {
         awardXp(row.user_id, 'visit_all', bookId);
         awardCoins(row.user_id, 'book_completed', bookId, 1);

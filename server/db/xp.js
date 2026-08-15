@@ -1087,7 +1087,7 @@ module.exports = {
   setXpFeedHook, setAppXpHook,
   awardCoins, awardXp, awardIdleHeartbeatXp, getUserXpInfo, claimBonusGc,
   getBookCreator, getBookIdentifiers,
-  _discoveredSet, _visitedSet, _permanentVisitedCount,
+  _discoveredSet, _visitedSet, _mappedSet, _permanentVisitedCount,
   _buildDemoState, createDemoBook, refreshDemoBooks, getDemoBookState,
   _checkGroupMilestone, _checkGroupWonAll, processStateXp,
   migrateXpForUser, runXpMigration, migratePublicBookXp, migrateEquipmentXp,

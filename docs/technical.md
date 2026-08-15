@@ -623,6 +623,8 @@ INDEX idx_attachments_kind_linked ON attachments (kind, linked_id)
 
 `discoverable_sections` is an optional override (integer, `NULL` when not set) that caps the XP thresholds for `discover_all` and `visit_all`. It is stored on the shared `books` row so it applies to all users tracking the same title. It is only editable from the Edit Book dialog, and the dialog only reveals the field when the exploration wall has been hit (discovered == visited) - the condition that signals the user has mapped the entire reachable graph. Added via `ALTER TABLE` migration on startup.
 
+When `discoverable_sections` is changed on an existing book, `handleUpdateBook` (`server/db/books.js`) retroactively re-checks `discover_all`/`visit_all` for every user tracking that book against the new threshold, so users who were already at/past the new (lower) bar get the achievement immediately rather than waiting for their next state save. This check unions `_visitedSet(playthroughs)` with `_mappedSet(graph)`, same as the live per-save check (see `visit_all` above) - a manual node already counted toward the threshold there is honoured here too.
+
 **Series** (`series` table, linked via `books.series_id`): groups books into named series. `series_number` on `books` is free text (`"12"` or `"XII"`). `is_public INTEGER NOT NULL DEFAULT 0` controls public API visibility.
 
 **Series library membership** (`user_series` table): a series only appears in a user's list if they have an explicit `user_series` row.
@@ -1113,6 +1115,8 @@ Values are `'1'` (collapsed/hidden) or `'0'` (expanded/visible). `ui_prefs` is a
 ### Book list (`renderBooksList`)
 
 Each `.book-item` card has a progress bar background: `rgba(107,114,128,0.18)` fills `(visited / effective_sections) × 100%` left-to-right, where `effective_sections = discoverable_sections ?? total_sections`. Zero-visited cards have no background.
+
+`visited` here comes from `getBooks()` in `server/db/books.js`, which computes its own `seen` Set from `pt.path` across all playthroughs, unioned with `_mappedSet(graph)` (same manual-node union as the `visit_all` XP check - see above) so a manually-added/noted node doesn't leave a fully-explored book stuck just short of 100% on this card. Falls back to `_permanentVisitedCount` when the live count is short (deleted-run undercount, same as the XP check). This is computed fresh on every `getBooks()` call (no caching), so it reflects immediately on next page load - no backfill needed, unlike the `visit_all` XP/coin award which only fires on a state save or an explicit `migrateXpForUser` backfill run.
 
 **Completion percentage floor rule:** every "N out of total (X%)" display in the app shows `100%` only when `n >= total` exactly; otherwise the percentage is floored and capped at 99% (`Math.min(99, Math.floor(n / total * 100))`), never rounded up - prevents e.g. 318/319 sections displaying as a misleading "100%". Implemented independently (not centralized) in `books.js` (`_bookItemHtml`, `_aggregateProgress` consumers, stash aggregate), `play.js` (`updateStats › pct`), and `stats.js` (the shared `pct` helper) - a new completion display needs the same floor applied by hand.
 
