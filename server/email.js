@@ -49,7 +49,7 @@ async function sendAdminEmail(subject, text, bodyHtml) {
           <div style="background:#f9fafb;border-left:3px solid #d1d5db;padding:12px 16px;border-radius:0 4px 4px 0;font-size:0.95rem;color:#374151;line-height:1.6;white-space:pre-wrap">${bodyHtml}</div>
         </td></tr>
         <tr><td style="padding:0 32px 28px;text-align:center">
-          <a href="https://koldkat.net" style="display:inline-block;background:#111827;color:#f5a623;text-decoration:none;padding:10px 28px;border-radius:5px;font-size:0.9rem;font-weight:600">Open Gamebook Tracker →</a>
+          <a href="https://pathmap.net" style="display:inline-block;background:#111827;color:#f5a623;text-decoration:none;padding:10px 28px;border-radius:5px;font-size:0.9rem;font-weight:600">Open Gamebook Tracker →</a>
         </td></tr>
         <tr><td style="background:#f9fafb;padding:14px 32px;text-align:center;border-top:1px solid #e5e7eb">
           <span style="font-size:0.78rem;color:#9ca3af">Admin notification - Gamebook Tracker</span>
@@ -94,7 +94,7 @@ async function sendReplyEmail(to, username, originalMessage, reply) {
         </td></tr>
 
         <tr><td style="padding:0 32px 28px;text-align:center">
-          <a href="https://koldkat.net" style="display:inline-block;background:#111827;color:#f5a623;text-decoration:none;padding:10px 28px;border-radius:5px;font-size:0.9rem;font-weight:600">
+          <a href="https://pathmap.net" style="display:inline-block;background:#111827;color:#f5a623;text-decoration:none;padding:10px 28px;border-radius:5px;font-size:0.9rem;font-weight:600">
             View in inbox →
           </a>
         </td></tr>
@@ -112,7 +112,7 @@ async function sendReplyEmail(to, username, originalMessage, reply) {
     from,
     to,
     subject: 'Reply to your feedback - Gamebook Tracker',
-    text:    `Hi ${username},\n\nYour message:\n"${originalMessage}"\n\nReply:\n${reply}\n\nView the full conversation:\nhttps://koldkat.net`,
+    text:    `Hi ${username},\n\nYour message:\n"${originalMessage}"\n\nReply:\n${reply}\n\nView the full conversation:\nhttps://pathmap.net`,
     html,
   });
 }

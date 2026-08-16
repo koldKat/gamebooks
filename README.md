@@ -8,7 +8,9 @@ activity feed, forums, and public profiles.
 ## Features
 
 - **Interactive graph** - every section you visit is plotted as a node; choices become edges,
-  colour-coded by line/dot, with fast travel, zoom/pan, right-click actions, and section notes
+  colour-coded by line/dot, with fast travel, zoom/pan, right-click actions, section notes, an
+  optional grid overlay with snap-to-grid and fog-of-grid, and manually-added nodes for sections
+  reachable outside your recorded path
 - **Character sheet & inventory** - custom fields, equipment slots, item templates, and a
   compact overlay for quick reference mid-playthrough
 - **Runs & progress** - start/undo/end runs, reset a book, and keep a running history of every
@@ -17,6 +19,8 @@ activity feed, forums, and public profiles.
   runs; spend coins in the shop; a public "Stats for Nerds" panel shows live server/app internals
 - **Open World series** - portal sections link books together into one connected world, with a
   cross-book journey viewer
+- **Series & anthologies** - group books by reading order or under a shared anthology/magazine
+  entry, with per-anthology cover art and a book allowed to belong to more than one
 - **Battle Simulators** - dice-driven combat simulators for select books
 - **Social features** - a public activity feed, forums, Play Together (live shared party runs),
   public profiles, ratings, and a feedback/inbox system

@@ -83,14 +83,26 @@ function _startLeaderIntervals() {
   if (!_feedPollInterval) {
     // Deliberately not gated on document.visibilityState: a tab left open
     // (screen off, minimized, backgrounded) should keep earning idle_heartbeat
-    // XP the same way a visible one does - the feed_changed SSE handler above
-    // already does this (it only checks isLandingVisible, the SPA's own view
-    // state, not OS/browser-level visibility), so gating this poll on
-    // visibility just meant heartbeat rate depended on OS/browser background-tab
+    // XP the same way a visible one does, so gating this poll on visibility
+    // just meant heartbeat rate depended on OS/browser background-tab
     // behavior (e.g. whether the screen turning off still counts as "open")
     // instead of on whether the user actually left the site open.
+    // sendHeartbeat is the *only* thing that awards idle_heartbeat XP - it
+    // used to be a side effect of loadFeed's GET /api/feed call, which also
+    // meant every SSE-triggered feed reload from *other users'* activity
+    // (see feed_changed below) granted an extra roll too, bursting in sync
+    // with how busy the site happened to be rather than this user's own
+    // idle time. Kept split from loadFeed on purpose now, even though they
+    // fire together here - only this dedicated per-tab timer should trigger it.
+    // This same interval also runs for anonymous public-feed viewers
+    // (loadFeed itself supports that via publicFetch), but POST /api/heartbeat
+    // requires a logged-in user - gate on getToken() so an anonymous visitor
+    // doesn't send a doomed authenticated request every 60s for nothing.
+    // isDemoMode still has a token (guest session) but shouldn't earn real
+    // XP, same reasoning as every other getToken()-gated call in this file.
     _feedPollInterval = setInterval(() => {
       _hooks.loadFeed?.();
+      if (getToken() && !isDemoMode) _hooks.sendHeartbeat?.();
       _refreshAppXpStaggered();
     }, 60_000);
   }

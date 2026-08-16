@@ -31,6 +31,24 @@ export const RESTORE_MIN_VIEWPORT_SCALE = 0.6;
 let _stabilizeHandler  = null;
 let _restabilizeTimer  = null;
 
+// True from the moment a stabilize() pass is issued until its
+// stabilizationIterationsDone handler actually fires. Debouncing (below)
+// only stops a *new* pass from being scheduled too soon after the last
+// *request* - it says nothing about whether the *previous* pass has
+// actually finished running yet. A graph with several fixed obstacles
+// (e.g. manually-added nodes, which still count toward avoidOverlap
+// collision-avoidance even though they don't move) can take longer than
+// the debounce window to converge, so a second debounced call could fire
+// while the first stabilize(300) is still active - starting a *second*
+// concurrent physics pass on top of the first, each one independently
+// shoving nodes around. That reads as the graph jittering chaotically
+// while genuinely nothing should be moving it, confirmed via a user
+// report that it stopped entirely with DevTools open the whole time
+// (the added JS overhead widened timing enough that the first pass
+// always finished before a second one could be scheduled - the same
+// "adding a print statement masks a race" pattern from threaded code).
+let _stabilizing = false;
+
 // A burst of render() calls in quick succession (e.g. losing a run, marking it
 // public, and starting a new one, each chaining through saveState/UI-update
 // callbacks within a few ms of each other) used to restart the physics solver
@@ -126,6 +144,7 @@ export function destroyNetwork() {
   visNodes          = null;
   visEdges          = null;
   _stabilizeHandler = null;
+  _stabilizing      = false;
   clearTimeout(_restabilizeTimer);
   _restabilizeTimer = null;
   _graphIsOpenWorld = false;
@@ -929,11 +948,21 @@ export function syncGraph() {
   // - Existing layout, all nodes positioned: keep physics off.
   if (hasSavedPositions && hasUnpositioned) {
     clearTimeout(_restabilizeTimer);
-    _restabilizeTimer = setTimeout(() => {
+    _restabilizeTimer = setTimeout(function scheduleStabilize() {
       _restabilizeTimer = null;
       if (!network) return; // book switched away before the timer fired
+      // A previous pass is still actually running (not just previously
+      // requested) - don't start a second, concurrent one on top of it.
+      // Re-check shortly instead; the in-flight pass's own completion
+      // handler will run this same logic again once it finishes, but
+      // this guard also covers the case where syncGraph() itself never
+      // gets called again (e.g. the player stopped interacting) - without
+      // it, hasUnpositioned staying true with nothing left to trigger a
+      // fresh render could leave those nodes silently never placed.
+      if (_stabilizing) { _restabilizeTimer = setTimeout(scheduleStabilize, RESTABILIZE_DEBOUNCE_MS); return; }
       if (_stabilizeHandler) network.off('stabilizationIterationsDone', _stabilizeHandler);
       _stabilizeHandler = () => {
+        _stabilizing = false;
         network.setOptions({ physics: { enabled: false } });
         Object.assign(state.positions, network.getPositions());
         saveState();
@@ -941,12 +970,24 @@ export function syncGraph() {
         _stabilizeHandler = null;
       };
       network.on('stabilizationIterationsDone', _stabilizeHandler);
+      _stabilizing = true;
       network.setOptions({ physics: { enabled: true, stabilization: { fit: false } } });
       network.stabilize(300);
     }, RESTABILIZE_DEBOUNCE_MS);
   } else if (hasSavedPositions) {
     clearTimeout(_restabilizeTimer);
     _restabilizeTimer = null;
+    // Force-disabling physics here while a stabilize() pass is still
+    // actually in flight would leave _stabilizing stuck true forever (its
+    // own completion handler, which is what normally clears it, never gets
+    // to run) - silently blocking every future restabilize attempt for
+    // this book until the network is torn down. Go through the same
+    // cleanup the completion handler would have done instead of just
+    // cutting physics off underneath it.
+    if (_stabilizing) {
+      _stabilizing = false;
+      if (_stabilizeHandler) { network.off('stabilizationIterationsDone', _stabilizeHandler); _stabilizeHandler = null; }
+    }
     network.setOptions({ physics: { enabled: false } });
   }
 }
