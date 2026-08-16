@@ -5,11 +5,11 @@ import {
   currentPlaythrough, currentSection, allDiscoveredSections, mappedCount,
   currentUserLevel, bonusUndos, bonusFastTravels, apiFetch,
 } from './state.js?v=13';
-import { network, visNodes, syncGraph, computeOutcomes } from './graph.js?v=121';
+import { network, visNodes, syncGraph, computeOutcomes } from './graph.js?v=126';
 import { t } from './i18n.js?v=59';
 import { renderCharSheetDisplay } from './charsheet.js?v=89';
 import { naturalCompare } from './sort.js?v=1';
-import { instantiateLoadout } from './equipment.js?v=171';
+import { instantiateLoadout } from './equipment.js?v=176';
 import { escapeHtml } from './util.js?v=72';
 
 // ── Discoverable sections cap ────────────────────────────────────���───────────
@@ -751,8 +751,12 @@ export function startPlaythrough(entrySection = null) {
   setViewingPt(null, true);
   saveState();
   render();
-  const focusSec = state.playthroughs[state.activePtIndex]?.path.at(-1) ?? startSec;
-  if (network) setTimeout(() => network.focus(focusSec, { scale: Math.max(network.getScale(), 1.2), animation: { duration: 400, easingFunction: 'easeInOutQuad' } }), 50);
+  const newPt     = state.playthroughs[state.activePtIndex];
+  const focusSec  = newPt?.path.at(-1) ?? startSec;
+  // See wouldAutoNav's own doc comment - this used to be unconditional,
+  // which is what let it stack on top of the auto-nav chain's own focus()
+  // calls (see the graph physics jitter investigation for the full story).
+  if (network && !wouldAutoNav(focusSec, newPt)) setTimeout(() => network.focus(focusSec, { scale: Math.max(network.getScale(), 1.2), animation: { duration: 400, easingFunction: 'easeInOutQuad' } }), 50);
 }
 
 // runIndex: the series-level run index being resumed. charSheet: the shared charsheet to apply.
@@ -783,7 +787,7 @@ export function startPortalRun(entrySection, runIndex, charSheet = null) {
     setViewingPt(null, true);
     saveState();
     render();
-    if (network) network.focus(entrySec, { animation: true, scale: 1.2 });
+    if (network && !wouldAutoNav(entrySec, pt)) network.focus(entrySec, { animation: true, scale: 1.2 });
     return;
   }
 
@@ -801,7 +805,7 @@ export function startPortalRun(entrySection, runIndex, charSheet = null) {
   setViewingPt(null, true);
   saveState();
   render();
-  if (network) network.focus(entrySec, { animation: true, scale: 1.2 });
+  if (network && !wouldAutoNav(entrySec, pt)) network.focus(entrySec, { animation: true, scale: 1.2 });
 }
 
 export function loadRun(index) {
@@ -822,7 +826,7 @@ export function loadRun(index) {
     saveState();
     render();
     const sec = pt.path.length > 0 ? pt.path[pt.path.length - 1] : null;
-    if (sec && network && visNodes?.get(sec)) network.focus(sec, { animation: true, scale: 1.2 });
+    if (sec && network && visNodes?.get(sec) && !wouldAutoNav(sec, pt)) network.focus(sec, { animation: true, scale: 1.2 });
     if (_onRunActivated) _onRunActivated(index);
   }
 }
@@ -964,6 +968,23 @@ export function handleRecordChoices(sec, raw, allowEmpty = false) {
   commitChoices(sec, choices);
 }
 
+// True if landing on `sec` (with `pt`'s current path) will make
+// renderPlaythroughPanel() immediately auto-navigate away from it again
+// (exactly the condition that function itself checks - see its own choices
+// .length===1 branch). Any caller about to call network.focus() right after
+// render() on an active playthrough needs this same guard: stacking a
+// focus() animation for a section on top of the auto-nav chain's own
+// focus() calls (each hop, as it fires) corrupts vis-network's internal
+// camera state - it doesn't cleanly resolve on its own, only a full page
+// refresh (recreating the Network instance) reliably clears it. Exported so
+// every focus()-after-render() call site across boot.js/play.js/
+// open-world.js can share one definition instead of each hand-rolling (or,
+// as happened for several of them, simply omitting) the same check.
+export function wouldAutoNav(sec, pt) {
+  const secData = state.graph[sec];
+  return !(_suppressAutoNavDepth > 0) && secData?.choices.length === 1 && !isTerminal(secData.choices[0]) && !pt?.path.includes(secData.choices[0]) && !(_owIsOpenWorld && secData.portals?.length);
+}
+
 export function navigate(sec) {
   const pt = currentPlaythrough();
   if (!pt) return;
@@ -984,9 +1005,7 @@ export function navigate(sec) {
   render();
   // Skip animation if this section will be immediately auto-navigated away from -
   // stacking multiple 1s vis.js animations corrupts its internal camera state.
-  const secData = state.graph[sec];
-  const willAutoNav = !(_suppressAutoNavDepth > 0) && secData?.choices.length === 1 && !isTerminal(secData.choices[0]) && !pt.path.includes(secData.choices[0]) && !(_owIsOpenWorld && secData.portals?.length);
-  if (network && !willAutoNav) network.focus(sec, { animation: true, scale: 1.2 });
+  if (network && !wouldAutoNav(sec, pt)) network.focus(sec, { animation: true, scale: 1.2 });
 }
 
 function maxUndos() {
@@ -1150,7 +1169,7 @@ export function undoRun() {
   // than silently skipping past it. But stopping there is only actually meaningful if
   // the render pipeline won't immediately auto-navigate straight back through it: once
   // popped, that node's one recorded destination is no longer in pt.path, which is
-  // exactly the condition auto-nav fires on (see the `willAutoNav`/choices.length===1
+  // exactly the condition auto-nav fires on (see `wouldAutoNavHere`/choices.length===1
   // check further down) - landing on a metadata node right before its own auto-nav
   // fires just re-plays the undo's own forward step, sending the user right back
   // where they started. So only stop at a metadata node when auto-nav wouldn't
@@ -1160,8 +1179,8 @@ export function undoRun() {
     const node = state.graph[pt.path[pt.path.length - 1]];
     if (!node || node.choices.length !== 1) break; // real decision point, dead end, or missing node
     const hasMetadata = node.note || node.priority || node.battle || node.color || node.portals || node.showNote || node.manual;
-    const wouldAutoNav = !isTerminal(node.choices[0]) && !pt.path.includes(node.choices[0]) && !(_owIsOpenWorld && node.portals?.length);
-    if (hasMetadata && !wouldAutoNav) break;
+    const wouldAutoNavHere = !isTerminal(node.choices[0]) && !pt.path.includes(node.choices[0]) && !(_owIsOpenWorld && node.portals?.length);
+    if (hasMetadata && !wouldAutoNavHere) break;
     pt.path.pop();
   }
   pt.undosUsed = used + 1;
@@ -1169,7 +1188,7 @@ export function undoRun() {
   saveState();
   render();
   const sec = pt.path[pt.path.length - 1];
-  if (network) network.focus(sec, { animation: true, scale: 1.2 });
+  if (network && !wouldAutoNav(sec, pt)) network.focus(sec, { animation: true, scale: 1.2 });
 }
 
 export function endPlaythrough(result) {

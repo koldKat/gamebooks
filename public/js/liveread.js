@@ -8,7 +8,7 @@
 // stays visible and interactive underneath while reading.
 
 import { state, apiFetch, currentBookId, currentPlaythrough, currentSection, viewingPt, isTerminal, parseSecId } from './state.js?v=13';
-import { navigate, commitChoices, showAlert, suppressAutoNav } from './play.js?v=126';
+import { navigate, commitChoices, showAlert, suppressAutoNav } from './play.js?v=132';
 import { t } from './i18n.js?v=59';
 import { getPlayBtnRow } from './charsheet.js?v=89';
 import { shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from './util.js?v=72';

@@ -10,14 +10,14 @@ import {
   network, visNodes, setGraphCrossBookRoute,
   canReachInGraph, allReachableInGraph, clampViewportScale, findPathTo,
   RESTORE_MIN_VIEWPORT_SCALE,
-} from './graph.js?v=121';
+} from './graph.js?v=126';
 import {
-  render, showAlert, startPortalRun, startPlaythrough, setOpenWorldContext, setOnViewPublicRun,
-} from './play.js?v=126';
+  render, showAlert, startPortalRun, startPlaythrough, setOpenWorldContext, setOnViewPublicRun, wouldAutoNav,
+} from './play.js?v=132';
 import { t } from './i18n.js?v=59';
 import { setOnCharSheetSaved } from './charsheet.js?v=89';
-import { instantiateLoadout } from './equipment.js?v=171';
-import { getCachedBooks } from './books.js?v=185';
+import { instantiateLoadout } from './equipment.js?v=176';
+import { getCachedBooks } from './books.js?v=190';
 
 let _hooks = {};
 export function setOpenWorldHooks(h) { _hooks = h || {}; }
@@ -345,7 +345,7 @@ export async function _handleNewSeriesRun() {
     _cachedSeriesRuns[run_index].completed = 0;
   }
   render();
-  if (network && Object.keys(state.positions).length > 0) {
+  if (network && Object.keys(state.positions).length > 0 && !wouldAutoNav(startSec, pt)) {
     network.focus(startSec, { scale: Math.max(network.getScale(), 1.2), animation: { duration: 400, easingFunction: 'easeInOutQuad' } });
   }
 }
@@ -354,7 +354,7 @@ export async function _handleNewSeriesRun() {
 export function _focusNodeAfterLoad(sec) {
   if (!network || !sec) return;
   const doFocus = () => {
-    if (visNodes?.get(sec)) {
+    if (visNodes?.get(sec) && !wouldAutoNav(sec, currentPlaythrough())) {
       network.selectNodes([sec]);
       network.focus(sec, { scale: Math.max(clampViewportScale(state.viewport?.scale ?? 1.0), RESTORE_MIN_VIEWPORT_SCALE), animation: { duration: 400, easingFunction: 'easeInOutQuad' } });
     }
@@ -454,7 +454,7 @@ export async function doJumpCrossBook(targetSection, mode) {
   _owCrossBookRoute = null;
   setGraphCrossBookRoute(null);
   render();
-  if (network) network.focus(targetSection, { animation: true, scale: 1.2 });
+  if (network && !wouldAutoNav(targetSection, pt)) network.focus(targetSection, { animation: true, scale: 1.2 });
 }
 
 // ── Wire setOpenWorldContext/setOnViewPublicRun/setOnCharSheetSaved ───────────
