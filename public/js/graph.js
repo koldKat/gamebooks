@@ -245,6 +245,22 @@ function _darkenHex(hex) {
   return `#${[r,g,b].map(c => Math.round(c*0.6).toString(16).padStart(2,'0')).join('')}`;
 }
 
+// A saved position is an object ({x, y}), which is always truthy regardless
+// of what's inside it - `!pos` alone treats {x: NaN, y: 40} as "already
+// positioned" just as readily as a real coordinate. A NaN/Infinity
+// coordinate poisons vis-network's physics (pairwise force calculations
+// between every node pair), causing chaotic movement across the *whole*
+// graph that never self-corrects during the live session - nothing else
+// ever re-examines an already-"positioned" node's actual coordinate
+// validity. Traced to JSON.stringify silently turning NaN into null on
+// save (saveState's JSON.stringify(state)), which is why reloading the
+// page "fixed" it: the reloaded value is null, correctly fails a plain
+// truthy check, and gets a fresh valid position - not because anything
+// about the corruption itself was time-limited.
+function _hasValidPos(pos) {
+  return !!pos && Number.isFinite(pos.x) && Number.isFinite(pos.y);
+}
+
 // The "start" node to highlight follows whichever run is actually being
 // displayed, not always the book's default `state.startSection` - a run
 // begun via the alternate-start button (see play.js) has its own path[0],
@@ -528,11 +544,11 @@ function _getPositionedNeighbors(sec, posMap) {
     const src = parseSecId(srcKey);
     if (src === sec) {
       for (const dest of (data.choices || [])) {
-        if (!isTerminal(dest) && posMap[dest]) outgoing.push(dest);
+        if (!isTerminal(dest) && _hasValidPos(posMap[dest])) outgoing.push(dest);
       }
       continue;
     }
-    if ((data.choices || []).includes(sec) && posMap[src]) incoming.push(src);
+    if ((data.choices || []).includes(sec) && _hasValidPos(posMap[src])) incoming.push(src);
   }
   return { incoming, outgoing, all: [...incoming, ...outgoing] };
 }
@@ -553,9 +569,9 @@ function _buildPlacedEdges(posMap, excludeNode = null) {
   for (const [fromKey, data] of Object.entries(state.graph)) {
     const from = parseSecId(fromKey);
     if (excludeNode !== null && from === excludeNode) continue;
-    if (!posMap[from]) continue;
+    if (!_hasValidPos(posMap[from])) continue;
     for (const to of (data.choices || [])) {
-      if (isTerminal(to) || !posMap[to]) continue;
+      if (isTerminal(to) || !_hasValidPos(posMap[to])) continue;
       if (excludeNode !== null && to === excludeNode) continue;
       edges.push({
         from,
@@ -682,7 +698,7 @@ function _assignLocalPositions(allSections) {
   let progressed = true;
   while (progressed) {
     progressed = false;
-    const pending = [...allSections].filter(sec => !state.positions[sec]);
+    const pending = [...allSections].filter(sec => !_hasValidPos(state.positions[sec]));
     pending.sort((a, b) => {
       const aNeighbors = _getPositionedNeighbors(a, state.positions).all.length;
       const bNeighbors = _getPositionedNeighbors(b, state.positions).all.length;
@@ -879,13 +895,14 @@ export function syncGraph() {
   const startSec = _effectiveStartSec(currentPlaythrough() || viewingPt);
   allSections.forEach(sec => {
     const pos         = state.positions[sec];
+    const posValid    = _hasValidPos(pos);
     const choices     = state.graph[sec]?.choices || [];
     const hasTerminal = choices.some(isTerminal);
     const hasBattle   = !!state.graph[sec]?.battle;
     const portals     = _graphIsOpenWorld ? (state.graph[sec]?.portals || []) : [];
     const isPortal    = portals.length > 0;
     const isXBookReachable = !!(_graphCrossBookRoute && _graphCrossBookRoute.has(sec));
-    if (!pos) hasUnpositioned = true;
+    if (!posValid) hasUnpositioned = true;
     const nodeUpdate = {
       id:          sec,
       label:       isPortal ? `${nodeLabel(sec)}\n⇒` : nodeLabel(sec),
@@ -908,8 +925,8 @@ export function syncGraph() {
       borderWidth: (hasTerminal || hasBattle) ? 4 : (isPortal || isXBookReachable) ? 3 : 2,
       shapeProperties: isXBookReachable ? { borderDashes: [4, 3] } : { borderDashes: false },
       font:        sec === startSec ? { size: 11, color: '#fde047', face: 'Segoe UI, system-ui, sans-serif', bold: true } : undefined,
-      physics:     !pos,
-      ...(pos ? { x: pos.x, y: pos.y } : {}),
+      physics:     !posValid,
+      ...(posValid ? { x: pos.x, y: pos.y } : {}),
     };
     nodeUpdates.push(nodeUpdate);
   });
