@@ -5,11 +5,11 @@ import {
   currentPlaythrough, currentSection, allDiscoveredSections, mappedCount,
   currentUserLevel, bonusUndos, bonusFastTravels, apiFetch,
 } from './state.js?v=13';
-import { network, visNodes, syncGraph, computeOutcomes } from './graph.js?v=120';
+import { network, visNodes, syncGraph, computeOutcomes } from './graph.js?v=121';
 import { t } from './i18n.js?v=59';
 import { renderCharSheetDisplay } from './charsheet.js?v=89';
 import { naturalCompare } from './sort.js?v=1';
-import { instantiateLoadout } from './equipment.js?v=170';
+import { instantiateLoadout } from './equipment.js?v=171';
 import { escapeHtml } from './util.js?v=72';
 
 // ── Discoverable sections cap ────────────────────────────────────���───────────
