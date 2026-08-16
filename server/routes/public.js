@@ -37,7 +37,7 @@ function servePublicBookPage(req, res, bookId) {
       res.writeHead(404, { 'Content-Type': 'text/plain' }); return res.end('Not found');
     }
 
-    const SITE = 'https://koldkat.net';
+    const SITE = 'https://pathmap.net';
     const bookUrl  = `${SITE}/book/${bookId}`;
     const title    = `${meta.name} - Gamebook Tracker`;
     const desc     = meta.description
@@ -118,7 +118,7 @@ function servePublicAnthologyPage(req, res, anthologyId) {
       res.writeHead(404, { 'Content-Type': 'text/plain' }); return res.end('Not found');
     }
 
-    const SITE         = 'https://koldkat.net';
+    const SITE         = 'https://pathmap.net';
     const pageUrl      = `${SITE}/anthology/${anthologyId}`;
     const title        = `${meta.name} - Gamebook Tracker`;
     const childCount   = (meta.children || []).length;
@@ -192,7 +192,7 @@ function servePublicSeriesPage(req, res, seriesId) {
       res.writeHead(404, { 'Content-Type': 'text/plain' }); return res.end('Not found');
     }
 
-    const SITE      = 'https://koldkat.net';
+    const SITE      = 'https://pathmap.net';
     const pageUrl   = `${SITE}/series/${seriesId}`;
     const title     = `${data.name} - Series - Gamebook Tracker`;
     const bookCount = data.books.length;
@@ -257,7 +257,7 @@ function servePublicProfilePage(req, res, username) {
       res.writeHead(404, { 'Content-Type': 'text/plain' }); return res.end('Not found');
     }
 
-    const SITE      = 'https://koldkat.net';
+    const SITE      = 'https://pathmap.net';
     const dn        = profile.displayName || profile.username;
     const profileUrl = `${SITE}/user/${encodeURIComponent(profile.username)}`;
     const title     = `${dn} - Gamebook Tracker`;
@@ -312,7 +312,7 @@ function servePublicProfilePage(req, res, username) {
 // ── Public feed SSR page ──────────────────────────────────────────────────────
 
 function servePublicFeedPage(req, res) {
-  const SITE    = 'https://koldkat.net';
+  const SITE    = 'https://pathmap.net';
   const escape     = escapeHtml;
   const ANN_COLORS = {
     red: '#f87171', orange: '#fb923c', amber: '#fbbf24', green: '#4ade80',

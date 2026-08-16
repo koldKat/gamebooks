@@ -1,6 +1,6 @@
 'use strict';
 
-const SITE = 'https://koldkat.net';
+const SITE = 'https://pathmap.net';
 
 const { escapeHtml: esc } = require('./html-escape');
 function fmtDate(ts) {

@@ -59,7 +59,7 @@ function serveStatic(req, res) {
 }
 
 function serveSitemap(req, res) {
-  const SITE = 'https://koldkat.net';
+  const SITE = 'https://pathmap.net';
   const today = new Date().toISOString().slice(0, 10);
   let guideLastmod = today;
   try { guideLastmod = fs.statSync(path.join(ROOT, 'guide.html')).mtime.toISOString().slice(0, 10); } catch (_) {}

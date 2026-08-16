@@ -88,7 +88,7 @@ async function handleForgotPassword(req, res) {
   if (result?.token && transporter) {
     // Never trust req.headers.host here - it's attacker-controlled, and this link gets
     // emailed to the real user, so a spoofed Host would poison the reset link itself.
-    const appUrl = db.getAdminSetting('app_url') || 'https://koldkat.net';
+    const appUrl = db.getAdminSetting('app_url') || 'https://pathmap.net';
     const resetLink = `${appUrl}/?reset_token=${result.token}`;
     const fromAddr = db.getAdminSetting('smtp_from') || db.getAdminSetting('smtp_user') || process.env.SMTP_FROM || process.env.SMTP_USER;
     const from = fromAddr ? `Gamebook Tracker <${fromAddr}>` : undefined;

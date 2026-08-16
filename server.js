@@ -357,11 +357,25 @@ const _routeRequest = async (req, res) => {
     if (method === 'GET'    && urlPath === '/api/prefs')   return await handleGetPrefs(req, res);
     if (method === 'PATCH'  && urlPath === '/api/prefs')   return await handleSetPrefs(req, res);
     if (method === 'GET'    && urlPath === '/api/feed') {
-      const userId = authenticateOptional(req);
+      return send(res, 200, { entries: db.getFeed(), pinned: db.getPinnedAnnouncement() });
+    }
+    // Idle-heartbeat XP has its own endpoint rather than living as a side
+    // effect of GET /api/feed (where it used to be): a GET handler awarding
+    // XP broke the "GET is side-effect-free" expectation, and worse, tied
+    // heartbeat cadence to *feed reload* frequency - which includes every
+    // SSE-triggered reload fired by *other users'* activity (see livetab.js's
+    // feed_changed handler), not just this user's own idle time. That made
+    // heartbeat (and the bonus-coin roll it can trigger) burst in sync with
+    // how many other people happened to be active, not a clean per-user
+    // clock. Called only from the dedicated 60s leader-tab interval now
+    // (livetab.js's _feedPollInterval), decoupled from feed reloads.
+    if (method === 'POST'   && urlPath === '/api/heartbeat') {
+      const userId = await authenticate(req, res);
+      if (userId === null) return;
       // Same invisibility contract as handleSaveState: an admin's own polling
       // while impersonating must not earn the impersonated user real XP.
-      if (userId !== null && !isRequestImpersonating(req)) db.awardIdleHeartbeatXp(userId);
-      return send(res, 200, { entries: db.getFeed(), pinned: db.getPinnedAnnouncement() });
+      if (!isRequestImpersonating(req)) db.awardIdleHeartbeatXp(userId);
+      return send(res, 200, { ok: true });
     }
     if (method === 'GET'    && urlPath === '/api/feed/stream')   return await handleGetFeedStream(req, res);
     if (method === 'GET'    && urlPath === '/api/public/stream') return await handleGetPublicCatalogStream(req, res);
