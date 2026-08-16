@@ -3,9 +3,9 @@
 import { state, getToken, isDemoMode, apiFetch, clearToken, clearUsername, isTerminal, parseSecId } from './state.js?v=13';
 import { t } from './i18n.js?v=59';
 import { naturalCompare, naturalCompareByName, foldForSearch, matchesSearch } from './sort.js?v=1';
-import { getCachedBooks, getCachedAllSeries, getCachedStashes, _starLabelHtml, _refreshBooksListOnly, _refreshLibraryUi } from './books.js?v=184';
+import { getCachedBooks, getCachedAllSeries, getCachedStashes, _starLabelHtml, _refreshBooksListOnly, _refreshLibraryUi } from './books.js?v=185';
 import { refreshCoinsDisplay } from './shop.js?v=81';
-import { showAlert, showConfirm } from './play.js?v=125';
+import { showAlert, showConfirm } from './play.js?v=126';
 import { escapeHtml, compressImage } from './util.js?v=72';
 
 let _hooks = {};
