@@ -179,6 +179,7 @@ The Player XP panel shows your level, title, XP bar, and active boosts. On the l
 | **C** | Open / close the Character Sheet (not while typing in a text field) |
 | **E** | Open / close the Equipment panel (not while typing in a text field) |
 | **S** | Open / close the Battle Simulator, if one is available for the current book (not while typing in a text field) |
+| **R** | Open / close Live Reading, if the current book has it (not while typing in a text field) |
 | **Ctrl+X** | Hide or restore all play-area side panels at once |
 
 **PDF access:** if the book has a PDF and you've been given access (or you're an admin), a **PDF** link appears next to the book title at the top of the sidebar.
@@ -699,6 +700,21 @@ When a simulator is available, a panel appears in the play area alongside your t
 - Each simulator follows the exact rules for its specific book (dice counts, damage tables, special abilities)
 - Some simulators read your current equipment and character sheet to prefill your stats
 - The simulator doesn't affect your section tracker - it's a helper, not a replacement
+
+---
+
+## Live Reading
+
+Some books have their actual text available to read right inside the app. Click **Read Book** in the play area to open it.
+
+**How it works:**
+- The panel shows the current section's prose, with every choice as a clickable link
+- Clicking a choice moves your run forward and reveals that section on your graph automatically - no manual note-taking needed
+- Hover a choice to see where it leads highlighted on the graph before you click it
+- Adjust text size with the "− 100% +" control in the panel header
+- The graph stays visible and interactive underneath - you can still edit notes, colours, and connections by hand exactly as before
+
+Not every book has this yet - it's rolling out gradually, one book at a time.
 
 ---
 

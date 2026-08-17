@@ -326,6 +326,8 @@ const MIME = {
   '.rar':  'application/vnd.rar',
   '.gz':   'application/gzip',
   '.tar':  'application/x-tar',
+  '.woff2': 'font/woff2',
+  '.woff':  'font/woff',
 };
 
 module.exports = {

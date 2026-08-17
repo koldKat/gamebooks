@@ -22,6 +22,8 @@ activity feed, forums, and public profiles.
 - **Series & anthologies** - group books by reading order or under a shared anthology/magazine
   entry, with per-anthology cover art and a book allowed to belong to more than one
 - **Battle Simulators** - dice-driven combat simulators for select books
+- **Live reading** - read a book's actual prose section-by-section in-app, with clickable
+  in-text choices that build your graph as you go, for select books
 - **Social features** - a public activity feed, forums, Play Together (live shared party runs),
   public profiles, ratings, and a feedback/inbox system
 - **Export** - download your data per-book or for your whole account

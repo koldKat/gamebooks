@@ -1142,13 +1142,14 @@ function getPublicBookMeta(bookId) {
 function getAllPublicBooks() {
   const rows = db.prepare(
     `SELECT b.id, b.name, b.cover_path, b.created_at, b.published_at, b.authors,
-            b.is_container, b.total_sections, b.description, b.has_battle_sim,
+            b.is_container, b.total_sections, b.description, b.has_battle_sim, b.has_live_reading,
             b.isbn, b.issn, b.asin, b.pages,
             b.series_id, b.series_number, s.name AS series_name,
             GROUP_CONCAT(c.name, '|||') AS child_names,
             GROUP_CONCAT(c.id) AS child_ids,
             COALESCE(SUM(c.total_sections), 0) AS children_total_sections,
             COALESCE(MAX(c.has_battle_sim), 0) AS child_has_battle_sim,
+            COALESCE(MAX(c.has_live_reading), 0) AS child_has_live_reading,
             COUNT(DISTINCT ub.user_id) AS library_count
      FROM books b
      LEFT JOIN books c ON c.parent_book_id = b.id AND c.is_demo = 0
@@ -1181,6 +1182,7 @@ function getAllPublicBooks() {
     childNames: r.child_names ? r.child_names.split('|||') : [],
     childIds: r.child_ids ? r.child_ids.split(',').map(Number) : [],
     hasBattleSim: !!(r.has_battle_sim || r.child_has_battle_sim),
+    hasLiveReading: !!(r.has_live_reading || r.child_has_live_reading),
   }));
 }
 

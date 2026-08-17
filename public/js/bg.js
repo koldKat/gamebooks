@@ -1,7 +1,7 @@
 // bg.js - Graph background preference, bg/node context menus
 
 import { apiFetch, isDemoMode, currentBookId, state } from './state.js?v=13';
-import { t } from './i18n.js?v=59';
+import { t } from './i18n.js?v=61';
 
 let _hooks = {};
 export function setBgHooks(h) { _hooks = h || {}; }

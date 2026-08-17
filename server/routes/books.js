@@ -606,8 +606,10 @@ async function handleGetBookEnemies(req, res, bookId) {
   send(res, 200, db.getBookEnemies(bookId));
 }
 
-// "Live reading" POC - gated to one hardcoded account (db._canLiveRead), not
-// exposed to anyone else regardless of the book's own has_live_reading flag.
+// "Live reading" - open to every authenticated user (db._canLiveRead is now
+// an always-true stub, see its own comment). Still gated per-book by that
+// book's own has_live_reading flag (whether admin-imported prose exists at
+// all), just no longer gated by who's asking.
 // Section ids can be alphanumeric elsewhere in the app, but the route param
 // itself already arrives as a plain string, so no parseSecId/Number
 // conversion is needed here - db.getBookSection compares it as a string.

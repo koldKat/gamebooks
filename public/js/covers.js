@@ -1,10 +1,10 @@
 // covers.js - Covers panel, lazy grid, landing bg rotation, cover/series activity modals
 import { getToken, isDemoMode, apiFetch } from './state.js?v=13';
-import { openPublicModal, closePublicModal, openPublicProfile, renderPublicProfile, openPublicRun, openPublicSeriesRun, _destroyPubNetworks } from './public-profile.js?v=96';
-import { refreshCoinsDisplay } from './shop.js?v=81';
+import { openPublicModal, closePublicModal, openPublicProfile, renderPublicProfile, openPublicRun, openPublicSeriesRun, _destroyPubNetworks } from './public-profile.js?v=98';
+import { refreshCoinsDisplay } from './shop.js?v=83';
 import { foldForSearch, matchesSearch, naturalCompare, naturalCompareByName } from './sort.js?v=1';
-import { escapeHtml, fetchPublic as publicFetch } from './util.js?v=72';
-import { t } from './i18n.js?v=59';
+import { escapeHtml, fetchPublic as publicFetch } from './util.js?v=74';
+import { t } from './i18n.js?v=61';
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────
 let _hooks = {};
@@ -38,9 +38,10 @@ let _coversPanelRunning  = false;
 let _coversPanelGen      = 0;
 let _coversSortMode   = localStorage.getItem('covers-sort') || 'latest';
 let _coversKindMode   = localStorage.getItem('covers-kind') || 'all';
-let _coversBattleSimOnly = localStorage.getItem('covers-battlesim-only') === '1';
-let _coversOpenWorldOnly = localStorage.getItem('covers-openworld-only') === '1';
-let _coversNotMineOnly   = localStorage.getItem('covers-notmine-only') === '1';
+let _coversBattleSimOnly   = localStorage.getItem('covers-battlesim-only') === '1';
+let _coversLiveReadingOnly = localStorage.getItem('covers-livereading-only') === '1';
+let _coversOpenWorldOnly   = localStorage.getItem('covers-openworld-only') === '1';
+let _coversNotMineOnly     = localStorage.getItem('covers-notmine-only') === '1';
 let _favoriteBookIds   = new Set();
 let _favoriteSeriesIds = new Set();
 let _coverTooltipTitlePct  = Math.max(100, Math.min(148, parseInt(localStorage.getItem('cover-tooltip-title-pct') || '100', 10) || 100));
@@ -244,6 +245,13 @@ function _hasBattleSim(item) {
   return !!item.hasBattleSim;
 }
 
+// Same shape as _hasBattleSim above - a series covers multiple books and
+// doesn't map to one book's live-reading availability.
+function _hasLiveReading(item) {
+  if (item.isSeries) return false;
+  return !!item.hasLiveReading;
+}
+
 // Cross-referenced against the logged-in user's own library (getCachedBooks,
 // wired in via setCoversHooks - covers.js can't import books.js directly,
 // since books.js already imports from covers.js) rather than anything the
@@ -272,6 +280,7 @@ function _visibleCoverItems() {
   // they're excluded outright rather than shown/hidden by any single book's
   // sim status.
   if (_coversBattleSimOnly) items = items.filter(_hasBattleSim);
+  if (_coversLiveReadingOnly) items = items.filter(_hasLiveReading);
   // Open world is a series-only concept - non-series items never match.
   if (_coversOpenWorldOnly) items = items.filter(i => !!i.isOpenWorld);
   if (_coversNotMineOnly && getToken() && !isDemoMode) items = items.filter(_isNotInMyBooks);
@@ -311,6 +320,7 @@ function _makeCoverThumbHTML(c) {
     (c.isContainer ? `<span class="cover-anthology-badge">anthology</span>` : '') +
     (c.isOpenWorld ? `<span class="cover-open-world-badge" data-tooltip="${escapeHtml(t('covers.open_world_series'))}"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span>` : '') +
     (_hasBattleSim(c) ? `<span class="cover-battlesim-badge" data-tooltip="${escapeHtml(t('covers.has_battle_sim'))}"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="4" x2="20" y2="20"/><line x1="20" y1="4" x2="4" y2="20"/><line x1="4" y1="4" x2="8" y2="4"/><line x1="4" y1="4" x2="4" y2="8"/><line x1="20" y1="4" x2="16" y2="4"/><line x1="20" y1="4" x2="20" y2="8"/></svg></span>` : '') +
+    (_hasLiveReading(c) ? `<span class="cover-livereading-badge"${_hasBattleSim(c) ? ' data-badge-offset="1"' : ''} data-tooltip="${escapeHtml(t('covers.has_live_reading'))}"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h7a2 2 0 0 1 2 2v14a2 2 0 0 0-2-2H2z"/><path d="M22 4h-7a2 2 0 0 0-2 2v14a2 2 0 0 1 2-2h7z"/></svg></span>` : '') +
     (c.isSeries
       ? (
         c.coverSources?.length
@@ -2031,6 +2041,8 @@ export function initCoversPanel() {
   }
   _wireCoversFilterChip('covers-filter-battlesim', 'covers-battlesim-only',
     () => _coversBattleSimOnly, v => { _coversBattleSimOnly = v; });
+  _wireCoversFilterChip('covers-filter-livereading', 'covers-livereading-only',
+    () => _coversLiveReadingOnly, v => { _coversLiveReadingOnly = v; });
   _wireCoversFilterChip('covers-filter-openworld', 'covers-openworld-only',
     () => _coversOpenWorldOnly, v => { _coversOpenWorldOnly = v; });
   _wireCoversFilterChip('covers-filter-notmine', 'covers-notmine-only',

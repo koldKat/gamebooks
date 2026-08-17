@@ -1,10 +1,10 @@
 // feed.js - Activity feed rendering, hover image previews, feed SSE reload
 
 import { getToken, apiFetch } from './state.js?v=13';
-import { openPublicProfile, openPublicSeriesRun, openPublicRun } from './public-profile.js?v=96';
-import { openCoverActivity, openSeriesActivity } from './covers.js?v=130';
-import { escapeHtml } from './util.js?v=72';
-import { t } from './i18n.js?v=59';
+import { openPublicProfile, openPublicSeriesRun, openPublicRun } from './public-profile.js?v=98';
+import { openCoverActivity, openSeriesActivity } from './covers.js?v=132';
+import { escapeHtml } from './util.js?v=74';
+import { t } from './i18n.js?v=61';
 
 let _hooks = {};
 export function setFeedHooks(h) { _hooks = h || {}; }

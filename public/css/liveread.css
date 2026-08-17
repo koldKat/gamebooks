@@ -2,6 +2,14 @@
    Deliberately not an .inv-overlay: no full-screen backdrop, so the graph
    underneath stays visible and clickable while the panel is open. */
 
+/* Self-hosted (public/vendor/fonts/pt-serif/), same reasoning as vis-network
+   being vendored rather than pulled from a CDN. PT Serif was designed
+   specifically for on-screen reading (unlike Times New Roman, a print-era
+   metrics-compatible substitute never actually optimized for low-res
+   screens) and has full native Cyrillic coverage, not a bolted-on fallback -
+   see .liveread-body's own font-family comment for why that matters here. */
+@import url('/vendor/fonts/pt-serif/pt-serif.css');
+
 /* #play-btn-row has no generic button style - every trigger button (see
    charsheet.css's #charsheet-btn, equipment.css's #inventory-btn/#equipment-btn,
    battlesim.css's per-ID list) needs its own rule here. */
@@ -49,6 +57,28 @@
 }
 .liveread-panel.active { display: flex; }
 
+/* Reuses .inv-close-btn's look (plain icon button, hover background) for
+   consistency with the rest of the header rather than inventing a new
+   button style. Wrapped in its own margin-left:auto group so both the
+   font buttons and the close button end up together at the header's right
+   edge - #liveread-close's own .inv-modal-hdr:not(:has(.inv-count))
+   auto-margin (equipment.css) still applies but is a no-op once this
+   wrapper has already pushed everything after the title to the right. */
+.liveread-font-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  margin-left: auto;
+}
+.liveread-font-btn { font-size: 0.9rem; font-weight: 700; }
+.liveread-font-pct {
+  font-size: 0.68rem;
+  color: #6b7280;
+  min-width: 2.4em;
+  text-align: center;
+  user-select: none;
+}
+
 .liveread-body {
   /* Without min-height:0, a flex item's default min-height is its content
      size - it would grow past the panel's max-height instead of scrolling,
@@ -59,16 +89,28 @@
   overflow-y: auto;
   line-height: 1.55;
   color: #d1d5db;
-  font-size: 0.88rem;
+  /* Set inline on #liveread-panel by liveread.js's font +/- controls (a
+     scoped CSS var, not a global one, so it can't leak into any other
+     panel that happens to share this stylesheet). */
+  font-size: var(--liveread-font-size, 0.88rem);
   /* Echoes the source HTML exports' own book-page typography (serif) while
      keeping the app's dark colors rather than the source's black-on-white
-     page. Georgia specifically dropped from the stack - non-Microsoft
-     Georgia substitutes have a documented history of incomplete extended-
-     Cyrillic glyph coverage (й rendering as a separate и + combining-mark
-     glyph pulled from a fallback font instead of one precomposed glyph),
-     which broke Bulgarian book content. Times New Roman has full Cyrillic
-     coverage across platforms. */
-  font-family: 'Times New Roman', serif;
+     page. PT Serif (self-hosted, see the @import above) replaces the
+     original Times New Roman - both Georgia AND Times New Roman turned out
+     to be poor screen choices: Georgia (specifically non-Microsoft
+     substitutes) has a documented history of incomplete extended-Cyrillic
+     glyph coverage (й rendering as a separate и + combining-mark glyph
+     pulled from a fallback font instead of one precomposed glyph, which
+     broke Bulgarian content), and Times New Roman - though it does have
+     full Cyrillic coverage - was only ever hinted for print, not the low
+     line-count, backlit reading this panel actually does, and read as
+     cramped/strained at normal panel widths regardless of language. PT
+     Serif was drawn specifically for on-screen reading with native (not
+     retrofitted) Cyrillic support, so it fixes both problems at once
+     instead of trading one off against the other. Kept 'Times New Roman'
+     in the stack as the fallback for the brief moment before the webfont
+     loads (font-display:swap) or on the rare chance it fails outright. */
+  font-family: 'PT Serif', 'Times New Roman', serif;
 }
 /* Justify without hyphenation produces big uneven word-gaps ("rivers") at
    this panel's 380px width - hyphens:auto lets the line-breaker split long
@@ -100,3 +142,100 @@
   color: #f3f4f6;
 }
 .liveread-body p.note { font-style: italic; opacity: 0.75; text-align: left; }
+
+/* Some source exports (e.g. books 204/209/210) mark up stat blocks and
+   multi-choice lists as <pre class="statline">/"stats"> instead of <p> -
+   <pre> defaults to white-space:pre (no wrapping at all) plus a monospace
+   font, neither of which had ever been reset for this panel. A single long
+   line (a multi-sentence intro before a choice list, not just a short stat
+   callout) would run straight off the edge of the panel instead of
+   wrapping, forcing a horizontal scrollbar. pre-wrap keeps the source's own
+   intentional line breaks (each choice still gets its own line) while
+   letting any individual line that's too long wrap normally like the rest
+   of the prose. word-break covers the rare single "word" (a run-on
+   dice-notation string with no spaces) that's still wider than the panel
+   even after wrapping at spaces. */
+.liveread-body pre {
+  margin: 0 0 0.75rem;
+  font-family: inherit;
+  font-size: inherit;
+  white-space: pre-wrap;
+  word-break: break-word;
+  border-left: 3px solid #38bdf8;
+  padding-left: 0.6rem;
+}
+.liveread-body pre:last-child { margin-bottom: 0; }
+
+/* Same stat-block accent as <pre>, for the books that mark it up as a plain
+   <p class="statline"|"stats"> instead - already wraps fine as a normal <p>
+   (no pre-wrap needed), just had no visual distinction from ordinary prose. */
+.liveread-body p.statline, .liveread-body p.stats {
+  border-left: 3px solid #38bdf8;
+  padding-left: 0.6rem;
+  font-weight: 600;
+}
+.liveread-body p.combat-note { font-style: italic; opacity: 0.75; text-align: left; }
+/* Explicitly flags a hole in the source PDF (a missing section the import
+   couldn't recover) - amber, not the same blue as ordinary structural
+   content, so it doesn't read as just another stat block. */
+.liveread-body p.source-gap {
+  border-left: 3px solid #f59e0b;
+  padding-left: 0.6rem;
+  color: #fbbf24;
+  font-style: italic;
+}
+
+/* A branching-choice list, one option per line via <br> rather than
+   separate <p> tags - never had spacing between the lines or any visual
+   separation from the paragraph introducing it. */
+.liveread-body div.choices {
+  margin: 0 0 0.75rem;
+  border-left: 3px solid #38bdf8;
+  padding-left: 0.6rem;
+  line-height: 1.9;
+}
+.liveread-body div.choices:last-child { margin-bottom: 0; }
+
+/* A source PDF passage the exporter kept split across several short lines
+   (each its own child <div>) instead of merging into one flowing
+   paragraph - used for inscriptions/carved text/similar "read this exactly
+   as laid out" content. Plain stacked <div>s already wrap fine on their
+   own; this only adds the same visual framing as everything else that
+   isn't ordinary narrative prose, so it reads as a deliberately quoted
+   block rather than a formatting glitch. */
+.liveread-body div.listblock {
+  margin: 0 0 0.75rem;
+  border-left: 3px solid #6b7280;
+  padding-left: 0.6rem;
+  font-style: italic;
+  opacity: 0.9;
+}
+.liveread-body div.listblock:last-child { margin-bottom: 0; }
+
+/* Tables (a combat roster or a shop's item/cost list) never had any styling
+   at all - bare browser-default tables with no borders/spacing look broken
+   next to the rest of the panel's deliberate typography. table-layout:fixed
+   plus width:100% keeps a table from ever forcing the panel wider than its
+   own fixed width, the same overflow risk <pre> had before its own fix
+   above, just via a different default (an unconstrained table sizes itself
+   to its content's natural width, not to its container). */
+.liveread-body table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+}
+.liveread-body table:last-child { margin-bottom: 0; }
+.liveread-body th, .liveread-body td {
+  border: 1px solid #374151;
+  padding: 0.3rem 0.5rem;
+  text-align: left;
+  overflow-wrap: break-word;
+}
+.liveread-body th {
+  background: rgba(56,189,248,0.12);
+  color: #38bdf8;
+  font-weight: 600;
+}
+.liveread-body td.skill, .liveread-body td.stamina { text-align: center; width: 22%; }
