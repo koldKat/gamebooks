@@ -5,7 +5,18 @@
    (left) and #play-btn-row (right) - not the plain viewport midpoint - via
    --dice-roller-w (dice.js) and --play-btn-row-w (charsheet.js), both tracked
    by ResizeObserver, so this doesn't drift under either side once one of them
-   grows wide enough to matter on a narrower screen. */
+   grows wide enough to matter on a narrower screen.
+   bottom is a flat 1rem, deliberately NOT tracking --play-btn-row-h the way
+   #stats-hud below does - a fix attempt briefly added that offset, on the
+   wrong assumption that this stack sits in the same vertical column as
+   #play-btn-row the way #stats-hud does. It doesn't: this stack is
+   horizontally CENTERED (between the dice roller and #play-btn-row), not
+   docked to the right above the button row, so it was never at risk of
+   #play-btn-row's wrapped rows growing upward into it - only of the two
+   columns crowding each other *horizontally* on a narrow screen, which
+   --play-btn-row-w (already tracked below) already accounts for on its own.
+   The height offset just made this stack float uselessly high above the
+   button row on every screen size, confirmed by a follow-up screenshot. */
 #play-bottom-stack {
   display: none;
   position: fixed;

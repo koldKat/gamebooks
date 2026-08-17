@@ -1,17 +1,19 @@
-// liveread.js - "Live reading" POC: a floating, non-blocking panel that renders
+// liveread.js - "Live reading": a floating, non-blocking panel that renders
 // a book's actual prose section-by-section (from admin-imported book_sections
 // data) with clickable in-text choices, feeding state.graph via reveal-on-arrival
-// as the player reads. Gated server-side to a single hardcoded account
-// (db._canLiveRead) - the client only ever sees hasLiveReading:true for that
-// account, so no extra gating is needed here beyond respecting that flag.
+// as the player reads. Open to every user (db._canLiveRead is now an
+// always-true stub - see its own comment) - not yet announced anywhere, but
+// no longer account-gated. Still per-book: the client only sees
+// hasLiveReading:true for books with admin-imported prose.
 // Deliberately NOT built on .inv-overlay: the whole point is that the graph
 // stays visible and interactive underneath while reading.
 
 import { state, apiFetch, currentBookId, currentPlaythrough, currentSection, viewingPt, isTerminal, parseSecId } from './state.js?v=13';
-import { navigate, commitChoices, showAlert, suppressAutoNav } from './play.js?v=132';
-import { t } from './i18n.js?v=59';
-import { getPlayBtnRow } from './charsheet.js?v=89';
-import { shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from './util.js?v=72';
+import { navigate, commitChoices, showAlert, suppressAutoNav } from './play.js?v=136';
+import { network, setLightweightRestabilize } from './graph.js?v=130';
+import { t } from './i18n.js?v=61';
+import { getPlayBtnRow } from './charsheet.js?v=91';
+import { shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from './util.js?v=74';
 
 // Bumped on every call and re-checked after each await so a slower, now-stale
 // fetch (e.g. from a rapid double-click on two different choice links) can't
@@ -59,6 +61,16 @@ async function _showSection(sec) {
   body.innerHTML = data.html;
   body.scrollTop = 0;
   if (data.choices?.length) commitChoices(sec, data.choices);
+  // Hovering an in-text choice link highlights the matching node on the graph,
+  // same as the run trail's pills and the choice-list buttons (play.js).
+  if (network) {
+    body.querySelectorAll('a[href^="#section-"]').forEach(a => {
+      const id = parseSecId(a.getAttribute('href').slice('#section-'.length));
+      if (id === null) return;
+      a.addEventListener('mouseenter', () => network.selectNodes([id]));
+      a.addEventListener('mouseleave', () => network.selectNodes([]));
+    });
+  }
 }
 
 function _onChoiceClick(e) {
@@ -89,12 +101,14 @@ function _open() {
     return;
   }
   suppressAutoNav(true);
+  setLightweightRestabilize(true);
   panel.classList.add('active');
   _showSection(currentSection() ?? (state.startSection ?? 1));
 }
 
 function _close() {
   suppressAutoNav(false);
+  setLightweightRestabilize(false);
   // Reset so a later reopen always re-fetches, even onto the same section id -
   // it could belong to a different book by then (_shownSec doesn't track book).
   _shownSec = undefined;
@@ -134,6 +148,58 @@ export function renderLiveRead() {
   _close();
 }
 
+// Persisted client-side only (same as trailCollapsed) - this is a reading
+// preference, not per-book/per-user state worth round-tripping to the server.
+// Stored and stepped in whole percent (not rem) so the readout is always an
+// exact multiple of FONT_SIZE_STEP_PCT - stepping in rem directly (e.g.
+// 0.08rem against a 0.88rem base) produces an ugly, non-round percentage.
+const FONT_SIZE_KEY = 'liveread-font-pct';
+const FONT_SIZE_MIN_PCT = 70;
+const FONT_SIZE_MAX_PCT = 130;
+const FONT_SIZE_STEP_PCT = 5;
+const FONT_SIZE_DEFAULT_PCT = 100;
+const FONT_SIZE_BASE_REM = 0.88;
+
+function _fontSizePct() {
+  const saved = parseInt(localStorage.getItem(FONT_SIZE_KEY), 10);
+  return Number.isFinite(saved) ? Math.min(FONT_SIZE_MAX_PCT, Math.max(FONT_SIZE_MIN_PCT, saved)) : FONT_SIZE_DEFAULT_PCT;
+}
+
+function _applyFontSize(panel) {
+  const pct = _fontSizePct();
+  panel.style.setProperty('--liveread-font-size', `${(FONT_SIZE_BASE_REM * pct / 100).toFixed(3)}rem`);
+  const pctEl = panel.querySelector('#liveread-font-pct');
+  if (pctEl) pctEl.textContent = `${pct}%`;
+}
+
+function _stepFontSize(panel, dir) {
+  const next = Math.min(FONT_SIZE_MAX_PCT, Math.max(FONT_SIZE_MIN_PCT, _fontSizePct() + dir * FONT_SIZE_STEP_PCT));
+  localStorage.setItem(FONT_SIZE_KEY, String(next));
+  _applyFontSize(panel);
+}
+
+// getComputedStyle(el).lineHeight reports what the CSS *asked for*, not
+// necessarily the exact box height the browser actually laid the text out
+// in (rem-to-px rounding, the browser's own text zoom/accessibility
+// settings, subpixel layout) - close enough to look right at a glance but
+// not pixel-exact, which is exactly what "ignore system settings" is
+// asking to eliminate. Range.getClientRects() instead measures the real,
+// already-laid-out line box of actual text on screen - one rect per
+// wrapped line - so this can't drift from what the reader is looking at.
+function _renderedLineHeight(body) {
+  const walker = document.createTreeWalker(body, NodeFilter.SHOW_TEXT, {
+    acceptNode: n => n.textContent.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP,
+  });
+  const node = walker.nextNode();
+  if (node) {
+    const range = document.createRange();
+    range.selectNodeContents(node);
+    const rects = range.getClientRects();
+    if (rects.length) return rects[0].height;
+  }
+  return parseFloat(getComputedStyle(body).lineHeight) || 24;
+}
+
 export function initLiveRead() {
   const panel = document.createElement('div');
   panel.id = 'liveread-panel';
@@ -141,10 +207,30 @@ export function initLiveRead() {
   panel.innerHTML = `
     <div class="inv-modal-hdr">
       <span id="liveread-heading" class="inv-modal-title">${t('liveread.title')}</span>
+      <div class="liveread-font-controls">
+        <button id="liveread-font-dec" class="inv-close-btn liveread-font-btn" aria-label="${t('liveread.font_decrease')}">−</button>
+        <span id="liveread-font-pct" class="liveread-font-pct"></span>
+        <button id="liveread-font-inc" class="inv-close-btn liveread-font-btn" aria-label="${t('liveread.font_increase')}">+</button>
+      </div>
       <button id="liveread-close" class="inv-close-btn" aria-label="${t('btn.close')}">✕</button>
     </div>
     <div id="liveread-body" class="liveread-body"></div>`;
   document.body.appendChild(panel);
+  _applyFontSize(panel);
+  document.getElementById('liveread-font-dec').addEventListener('click', () => _stepFontSize(panel, -1));
+  document.getElementById('liveread-font-inc').addEventListener('click', () => _stepFontSize(panel, 1));
+
+  // Overrides the browser's default wheel-scroll amount, which multiplies by
+  // an OS-level "lines per scroll" setting (can be anywhere from ~3 to 10+
+  // lines per tick depending on the reader's own system config) - fixed at
+  // exactly one text line per tick instead.
+  // { passive: false } is required for preventDefault() to actually suppress
+  // the browser's own native scroll - wheel listeners default to passive.
+  const body = document.getElementById('liveread-body');
+  body.addEventListener('wheel', e => {
+    e.preventDefault();
+    body.scrollTop += Math.sign(e.deltaY) * _renderedLineHeight(body);
+  }, { passive: false });
 
   const btn = document.createElement('button');
   btn.id = 'liveread-btn';

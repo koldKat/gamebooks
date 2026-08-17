@@ -11,13 +11,14 @@ const {
   awardXp, awardCoins, _discoveredSet, _visitedSet, _mappedSet, _permanentVisitedCount, _checkGroupMilestone,
 } = require('./xp');
 
-// "Live reading" POC (server/routes/books.js's handleGetBookSection) is
-// gated to these two accounts by username - kept under wraps until it's
-// ready to announce more broadly.
-const _LIVE_READ_USERNAMES = new Set(['koldKat', 'sashii']);
-function _canLiveRead(userId) {
-  const row = db.prepare('SELECT username FROM users WHERE id = ?').get(userId);
-  return _LIVE_READ_USERNAMES.has(row?.username);
+// "Live reading" (server/routes/books.js's handleGetBookSection) used to be
+// gated to two accounts by username while it was a POC. Open to everyone
+// now that it's proven out - still not announced anywhere (no changelog/
+// forum post) until deliberately publicized, but functionally live for
+// every user. Kept as its own function (rather than deleting the gate
+// entirely) so a future re-gate, if ever needed, has one place to change.
+function _canLiveRead(_userId) {
+  return true;
 }
 
 // Canonical, admin-imported section text for the live-reading feature -

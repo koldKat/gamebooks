@@ -3,7 +3,7 @@ import {
   state, viewingPt, isTerminal, parseSecId, isValidSecId,
   currentPlaythrough, allDiscoveredSections, saveState,
 } from './state.js?v=13';
-import { t } from './i18n.js?v=59';
+import { t } from './i18n.js?v=61';
 
 export let network  = null;
 export let visNodes = null;
@@ -63,6 +63,29 @@ let _stabilizing = false;
 // hasUnpositioned fresh from current state - rather than trusting a snapshot
 // from whenever this flag got set.
 let _pendingSync = false;
+
+// Live-reading reveals a brand-new, never-before-mapped section on every
+// single page turn - the read section usually has no already-positioned
+// neighbor yet for _assignLocalPositions to place it next to, so it falls
+// through to a full stabilize() pass below on every page turn, at normal
+// reading pace (several seconds apart) well outside RESTABILIZE_DEBOUNCE_MS.
+// A full 300-iteration pass on the whole graph every single page is real,
+// sustained CPU cost that a slower reader would feel continuously. A single
+// newly-revealed node doesn't need the same convergence a fresh full layout
+// does, so liveread.js sets this for as long as its panel is open to trade
+// precision for a much cheaper settle each time - the reader isn't watching
+// the physics settle anyway, just the prose.
+let _lightweightRestabilize = false;
+export function setLightweightRestabilize(on) { _lightweightRestabilize = on; }
+
+// The lighter iteration count above only cuts the cost of *one* pass - it
+// doesn't stop a fresh pass from firing on nearly every page turn if pages
+// are read faster than RESTABILIZE_DEBOUNCE_MS apart but not truly
+// back-to-back (rapid-fire clicking during testing, not just normal
+// reading, can land in exactly that gap). Widening the debounce while
+// reading is active coalesces a burst of fast clicks into far fewer passes
+// total, on top of each surviving pass already being cheaper.
+const LIGHTWEIGHT_RESTABILIZE_DEBOUNCE_MS = 600;
 
 // A burst of render() calls in quick succession (e.g. losing a run, marking it
 // public, and starting a new one, each chaining through saveState/UI-update
@@ -1017,8 +1040,8 @@ export function syncGraph() {
         network.on('stabilizationIterationsDone', _stabilizeHandler);
         _stabilizing = true;
         network.setOptions({ physics: { enabled: true, stabilization: { fit: false } } });
-        network.stabilize(300);
-      }, RESTABILIZE_DEBOUNCE_MS);
+        network.stabilize(_lightweightRestabilize ? 60 : 300);
+      }, _lightweightRestabilize ? LIGHTWEIGHT_RESTABILIZE_DEBOUNCE_MS : RESTABILIZE_DEBOUNCE_MS);
     }
   } else if (hasSavedPositions) {
     clearTimeout(_restabilizeTimer);
