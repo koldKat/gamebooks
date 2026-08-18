@@ -1041,7 +1041,7 @@ function getProfileStats(userId) {
   const rootRows      = bookRows.filter(b => !b.parent_book_id);
   const totalBooks    = rootRows.length;
   const createdBooks  = rootRows.filter(b => b.created_by === userId).length;
-  let booksPlayed = 0, totalRuns = 0, wins = 0, deaths = 0, battles = 0;
+  let booksPlayed = 0;
   for (const row of bookRows) {
     let s; try { s = JSON.parse(row.state_data); } catch { continue; }
     // preSeriesRuns holds runs that pre-date a book's series turning open-world
@@ -1051,11 +1051,27 @@ function getProfileStats(userId) {
     const allRuns = [...(s.playthroughs || []), ...(s.preSeriesRuns || [])];
     const completed = allRuns.filter(pt => pt.result === 'death' || pt.result === 'success' || pt.result === 'battle');
     if (completed.length) booksPlayed++;
-    totalRuns += completed.length;
-    wins    += completed.filter(pt => pt.result === 'success').length;
-    deaths  += completed.filter(pt => pt.result === 'death').length;
-    battles += completed.filter(pt => pt.result === 'battle').length;
   }
+  // totalRuns/wins/deaths/battles come from the permanent xp_events ledger -
+  // the same source the runs-milestone GC coin uses - rather than re-deriving
+  // from each book's live state_data. A book removed from the library, or a
+  // playthrough array later pruned/reset (resetBookProgress, series-run
+  // deletion), used to make an already-earned, already-paid-out run silently
+  // vanish from this total forever even though the milestone coin (and the
+  // run itself) were real - caught when a user's own profile total (592) had
+  // drifted below their already-awarded 600-run milestone.
+  const runCounts = db.prepare(`
+    SELECT event, COUNT(*) AS n FROM xp_events
+    WHERE user_id = ? AND event IN ('win_run','death_run','battle_run')
+    GROUP BY event
+  `).all(userId);
+  let wins = 0, deaths = 0, battles = 0;
+  for (const { event, n } of runCounts) {
+    if (event === 'win_run')    wins    = n;
+    if (event === 'death_run')  deaths  = n;
+    if (event === 'battle_run') battles = n;
+  }
+  const totalRuns = wins + deaths + battles;
   return { totalBooks, createdBooks, booksPlayed, totalRuns, wins, deaths, battles };
 }
 

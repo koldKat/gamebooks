@@ -9,10 +9,10 @@
 // stays visible and interactive underneath while reading.
 
 import { state, apiFetch, currentBookId, currentPlaythrough, currentSection, viewingPt, isTerminal, parseSecId } from './state.js?v=13';
-import { navigate, commitChoices, showAlert, suppressAutoNav } from './play.js?v=139';
-import { network, setLightweightRestabilize } from './graph.js?v=132';
-import { t } from './i18n.js?v=63';
-import { shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from './util.js?v=77';
+import { navigate, commitChoices, showAlert, suppressAutoNav } from './play.js?v=143';
+import { network, setLightweightRestabilize } from './graph.js?v=135';
+import { t } from './i18n.js?v=64';
+import { shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from './util.js?v=79';
 
 // Bumped on every call and re-checked after each await so a slower, now-stale
 // fetch (e.g. from a rapid double-click on two different choice links) can't
@@ -72,18 +72,57 @@ async function _showSection(sec) {
   }
 }
 
+// Imported source HTML occasionally has an in-text link that isn't a real,
+// choosable section - e.g. a closing "Epilogue" some books tack on after
+// their actual win section, with no section number of its own and nothing
+// for the reader to decide there. Importing that as a normal #section-N
+// target would register it as a real graph node/choice, which is wrong -
+// section 307 (say) is already the win node, the epilogue is just bonus
+// prose hung off of it. Any in-text link whose href isn't #section-N is
+// treated as this kind of pure-text aside: shown inline with a Back link,
+// never touching state.graph/commitChoices/navigate at all.
+async function _showExtra(key) {
+  const body = document.getElementById('liveread-body');
+  if (!body) return;
+  const token = ++_showToken;
+  let res;
+  try {
+    res = await apiFetch(`/api/books/${currentBookId}/sections/${encodeURIComponent(key)}`);
+  } catch (_) {
+    return;
+  }
+  if (token !== _showToken) return;
+  if (!res.ok) return;
+  const data = await res.json();
+  if (token !== _showToken) return;
+  body.innerHTML = `${data.html}<p class="liveread-back"><a href="#" id="liveread-back-link">${t('btn.back')}</a></p>`;
+  body.scrollTop = 0;
+  document.getElementById('liveread-back-link')?.addEventListener('click', e => {
+    e.preventDefault();
+    const sec = _shownSec;
+    _shownSec = undefined;
+    _showSection(sec);
+  });
+}
+
 function _onChoiceClick(e) {
-  const a = e.target.closest('a[href^="#section-"]');
+  const a = e.target.closest('a[href^="#"]');
   if (!a) return;
+  const href = a.getAttribute('href').slice(1);
+  if (!href) return;
   e.preventDefault();
-  if (!currentPlaythrough()) return;
-  const sec = parseSecId(a.getAttribute('href').slice('#section-'.length));
-  if (sec === null) return;
-  navigate(sec);
-  // navigate() no-ops (just shows an alert) instead of moving pt.path when an
-  // alphanumeric book's discoverable-section limit is already reached - only
-  // show the target section if the player was actually moved there.
-  if (isTerminal(sec) || currentSection() === sec) _showSection(sec);
+  if (href.startsWith('section-')) {
+    if (!currentPlaythrough()) return;
+    const sec = parseSecId(href.slice('section-'.length));
+    if (sec === null) return;
+    navigate(sec);
+    // navigate() no-ops (just shows an alert) instead of moving pt.path when an
+    // alphanumeric book's discoverable-section limit is already reached - only
+    // show the target section if the player was actually moved there.
+    if (isTerminal(sec) || currentSection() === sec) _showSection(sec);
+    return;
+  }
+  _showExtra(href);
 }
 
 // The app-wide "single known choice -> auto-navigate past it" feature

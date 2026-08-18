@@ -116,13 +116,16 @@
 .liveread-body a { color: #38bdf8; text-decoration: underline; cursor: pointer; }
 .liveread-body a:hover { color: #7dd3fc; }
 .liveread-empty { opacity: 0.7; font-style: italic; margin: 0; }
+.liveread-back { margin-top: 1rem; border-top: 1px solid #374151; padding-top: 0.75rem; }
 
 /* Some source exports (e.g. book 868) mark up choice/ending/note paragraphs
    with these classes in their own <style> block - dark-theme equivalents of
    the same visual distinction, not just plain narrative text. */
 .liveread-body p.choice {
   font-weight: 600;
-  text-align: left;
+  text-align: justify;
+  hyphens: auto;
+  -webkit-hyphens: auto;
   border-left: 3px solid #38bdf8;
   padding-left: 0.6rem;
 }

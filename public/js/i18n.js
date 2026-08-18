@@ -506,7 +506,7 @@ const translations = {
     'liveread.no_active_playthrough': 'Start a game in this book to read it.',
     'liveread.no_section_data': 'No text imported for this section yet.',
     'liveread.the_end_win': 'The End - you won.',
-    'liveread.the_end_death': 'The End - you died.',
+    'liveread.the_end_death': 'The End - you lost.',
     'liveread.font_decrease': 'Decrease text size',
     'liveread.font_increase': 'Increase text size',
     'liveread.not_available': 'Not available for this book',

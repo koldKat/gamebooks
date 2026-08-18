@@ -17,7 +17,7 @@ import {
   storeData, getSorted, getFiltered, foldForSearch, naturalCompare, naturalCompareByName, _tableData,
   setSearchFields, wireTableSearch, initSortHeaders, renderPaged,
 } from './core.js?v=2';
-import { loadAll, loadTools } from './dashboard.js?v=10';
+import { loadAll, loadTools } from './dashboard.js?v=11';
 
 // ── Gift modal ────────────────────────────────────────────────────────────────
 
@@ -501,7 +501,7 @@ export async function loadUserDetail(userId) {
   document.getElementById('user-books-meta').textContent = '';
 
   try {
-    const { user, books } = await api('GET', `/api/admin/users/${userId}`);
+    const { user, books, totals } = await api('GET', `/api/admin/users/${userId}`);
 
     document.getElementById('user-crumb').innerHTML = esc(user.username) + adminBadge(user.is_admin) + authorBadge(user.is_author) + contributorBadge(user.is_contributor)
       + (user.display_name ? ` <span style="color:#6b7280;font-size:0.82rem;font-weight:400">(${esc(user.display_name)})</span>` : '');
@@ -517,10 +517,13 @@ export async function loadUserDetail(userId) {
     document.getElementById('ue-error').style.display         = 'none';
 
     const metaBar = document.getElementById('user-meta-bar');
-    const totalRuns    = books.reduce((s, b) => s + (b.playthroughs || 0), 0);
-    const totalWins    = books.reduce((s, b) => s + (b.wins    || 0), 0);
-    const totalDeaths  = books.reduce((s, b) => s + (b.deaths  || 0), 0);
-    const totalBattles = books.reduce((s, b) => s + (b.battles || 0), 0);
+    // From the permanent xp_events ledger (server's `totals`), not summed
+    // from the per-book breakdown below - see server/db/admin.js's own
+    // comment on adminGetUserBooks for why those can disagree.
+    const totalRuns    = totals.runs;
+    const totalWins    = totals.wins;
+    const totalDeaths  = totals.deaths;
+    const totalBattles = totals.battles;
     const createdCount = books.filter(b => b.created_by === user.id).length;
 
     addMetaItem(metaBar, 'Joined', fmtDate(user.created_at));

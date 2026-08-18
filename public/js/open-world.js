@@ -4,20 +4,20 @@
 // whichever book is currently loaded. Also owns cross-book fast travel.
 
 import {
-  state, saveState, apiFetch, isValidSecId, setViewingPt, currentPlaythrough, currentBookId,
+  state, saveState, apiFetch, isValidSecId, setViewingPt, currentPlaythrough, currentBookId, currentSection,
 } from './state.js?v=13';
 import {
   network, visNodes, setGraphCrossBookRoute,
   canReachInGraph, allReachableInGraph, clampViewportScale, findPathTo,
   RESTORE_MIN_VIEWPORT_SCALE,
-} from './graph.js?v=132';
+} from './graph.js?v=135';
 import {
   render, showAlert, startPortalRun, startPlaythrough, setOpenWorldContext, setOnViewPublicRun, wouldAutoNav,
-} from './play.js?v=139';
-import { t } from './i18n.js?v=63';
-import { setOnCharSheetSaved } from './charsheet.js?v=94';
-import { instantiateLoadout } from './equipment.js?v=183';
-import { getCachedBooks } from './books.js?v=197';
+} from './play.js?v=143';
+import { t } from './i18n.js?v=64';
+import { setOnCharSheetSaved } from './charsheet.js?v=96';
+import { instantiateLoadout } from './equipment.js?v=187';
+import { getCachedBooks } from './books.js?v=203';
 
 let _hooks = {};
 export function setOpenWorldHooks(h) { _hooks = h || {}; }
@@ -354,9 +354,25 @@ export async function _handleNewSeriesRun() {
 export function _focusNodeAfterLoad(sec) {
   if (!network || !sec) return;
   const doFocus = () => {
-    if (visNodes?.get(sec) && !wouldAutoNav(sec, currentPlaythrough())) {
-      network.selectNodes([sec]);
-      network.focus(sec, { scale: Math.max(clampViewportScale(state.viewport?.scale ?? 1.0), RESTORE_MIN_VIEWPORT_SCALE), animation: { duration: 400, easingFunction: 'easeInOutQuad' } });
+    // Re-derive the actual current section at fire time instead of trusting
+    // the `sec` this was scheduled with. boot.js's showMain() calls this
+    // right after render() with `currentSection()` read synchronously - but
+    // if that section starts a straight-path auto-nav chain,
+    // renderPlaythroughPanel()'s own chain-continuation (play.js, chained
+    // setTimeout(0) hops) hasn't run yet at that point, only after. By the
+    // time this 50ms-later check runs, the chain has usually already
+    // advanced pt.path past the stale `sec` - wouldAutoNav(sec, ...) then
+    // incorrectly reads as "not auto-navving" (pt.path now already includes
+    // what was `sec`'s one next choice), so this fired its own focus() at
+    // the stale, already-passed-through node at the same time the chain's
+    // own correctly-guarded focus() fired at the real final section - two
+    // stacked animations, the exact corrupted-camera-state bug the
+    // wouldAutoNav guard exists to prevent, just reached through a second,
+    // subtler path than the one it was originally written for.
+    const liveSec = currentSection() ?? sec;
+    if (visNodes?.get(liveSec) && !wouldAutoNav(liveSec, currentPlaythrough())) {
+      network.selectNodes([liveSec]);
+      network.focus(liveSec, { scale: Math.max(clampViewportScale(state.viewport?.scale ?? 1.0), RESTORE_MIN_VIEWPORT_SCALE), animation: { duration: 400, easingFunction: 'easeInOutQuad' } });
     }
   };
   if (Object.keys(state.positions).length === 0) {
