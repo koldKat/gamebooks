@@ -25,7 +25,14 @@
   transform: translateX(-50%);
   z-index: 100;
   flex-direction: column;
-  align-items: center;
+  /* stretch, not center - #play-btns-bar and #play-xp-summary each sized
+     independently under center, so once #liveread-btn joined the button
+     row it could end up wider than the XP card's own 300px min-width,
+     leaving the card visibly narrower than the row above it instead of
+     matching it. stretch makes both match whichever one is naturally
+     wider, with no JS width-tracking needed - #play-xp-summary's own
+     min-width still applies as the floor when the button row is narrower. */
+  align-items: stretch;
   gap: 0.45rem;
   transition: left 0.25s ease;
 }
@@ -38,7 +45,7 @@ body.sidebar-collapsed #play-bottom-stack {
   gap: 0.4rem;
   align-items: center;
 }
-#guide-btn, #notebook-btn, #party-btn {
+#guide-btn, #notebook-btn, #party-btn, #liveread-btn {
   background: rgba(31, 41, 55, 0.88);
   border: 1px solid #374151;
   border-radius: 7px;
@@ -52,13 +59,26 @@ body.sidebar-collapsed #play-bottom-stack {
   box-shadow: 0 2px 8px rgba(0,0,0,0.35);
   white-space: nowrap;
 }
-#guide-btn:hover, #notebook-btn:hover, #party-btn:hover { background: #374151; }
+#guide-btn:hover, #notebook-btn:hover, #party-btn:hover, #liveread-btn:not(:disabled):hover { background: #374151; }
+/* Stays visible-but-disabled rather than hidden when the current book has
+   no live-reading data, so #play-btns-bar's own width doesn't shift every
+   time the reader switches to/from a book that has it - see #liveread-btn
+   comment further down (liveread.css) for why. */
+#liveread-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 #party-btn.party-active { color: #34d399; border-color: #34d399; }
 #party-btn.party-active:hover { background: #064e3b; }
 
 #play-xp-summary {
   min-width: 300px;
-  max-width: min(92vw, 420px);
+  /* No max-width cap - #play-bottom-stack's align-items:stretch (above)
+     already ties this to #play-btns-bar's own natural width, which is
+     inherently bounded by its own short button labels, not by anything
+     that needs a second, redundant cap here. A hardcoded 420px cap used to
+     be here and silently won over stretch once #liveread-btn made the
+     4-button row wider than that - the card stayed capped while the row
+     above it kept growing, so Notebook visibly stuck out past the card's
+     right edge instead of the two staying aligned. */
+  max-width: 92vw;
   width: 100%;
   background: rgba(31, 41, 55, 0.9);
   border: 1px solid #374151;
@@ -564,6 +584,15 @@ body.sidebar-collapsed #notes-display { left: 1rem; }
   cursor: pointer;
   backdrop-filter: blur(6px);
   box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+  /* Without this, #play-btn-row's flex-wrap:wrap-reverse combined with
+     flex-direction:row-reverse could shrink/miscalculate this button's slot
+     at the wrap boundary once enough buttons were showing at once (5+,
+     e.g. Simulator appearing alongside Read Book/Equipment/Inventory/
+     Character Sheet) instead of cleanly wrapping it to a new row - visually
+     it landed stacked directly on top of the neighboring button rather than
+     above it. None of these buttons should ever need to shrink below their
+     own label's width anyway. */
+  flex-shrink: 0;
 }
 #charsheet-btn:hover { background: #374151; }
 

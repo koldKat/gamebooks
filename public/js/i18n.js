@@ -509,6 +509,7 @@ const translations = {
     'liveread.the_end_death': 'The End - you died.',
     'liveread.font_decrease': 'Decrease text size',
     'liveread.font_increase': 'Increase text size',
+    'liveread.not_available': 'Not available for this book',
 
     'covers.activity_load_failed': 'Could not load activity.',
     'covers.series_load_failed':   'Could not load series info.',
@@ -659,6 +660,7 @@ const translations = {
     'shortcuts.charsheet': 'Open / close the Character Sheet (play area only, not while typing)',
     'shortcuts.equipment': 'Open / close the Equipment panel (play area only, not while typing)',
     'shortcuts.battlesim': 'Open / close the Battle Simulator, if one is available for the current book (play area only, not while typing)',
+    'shortcuts.liveread': 'Open / close Live Reading, if the current book has it (play area only, not while typing)',
 
     'ph.search':               'Search…',
     'ph.confirm_password':     'Confirm password',
