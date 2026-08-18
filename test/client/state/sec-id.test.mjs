@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseSecId, isValidSecId, isTerminal } from '../public/js/state.js';
+import { parseSecId, isValidSecId, isTerminal } from '../../../public/js/state.js';
 
 describe('parseSecId', () => {
   test('parses positive integer strings as numbers', () => {

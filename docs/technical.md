@@ -197,7 +197,7 @@ Layer 4 (top):
 
 Each JS module's own "how to remove this module" header comment points at its own CSS file.
 
-`server.js`'s `computeCodeStats()` (feeds "Lines of code"/"Code size" in Stats for Nerds) scans the `public/css/`/`public/js`/`admin` directories dynamically, not a hardcoded file list - a new file needs a server restart to be picked up.
+`server/runtime-state.js`'s `computeCodeStats()` (feeds "Lines of code"/"Code size"/"JS modules" in Stats for Nerds) scans `server/`, `public/js/`, `admin/js/`, `test/`, `public/css/`, plus `server.js` and the top-level HTML files, dynamically - not a hardcoded file list, so a new file needs a server restart to be picked up, not a code change here. `walkJsFiles()` matches both `.js` and `.mjs` (added 2026-08-19 so the new `test/*.test.mjs` suite counts) - `test/`'s own walk has its own inner `try/catch`, separate from the outer one wrapping the rest of the function, so a missing `test/` directory (e.g. excluded from some future deployment) degrades to a zero test count instead of silently zeroing every stat in the panel.
 
 ---
 
@@ -2110,3 +2110,15 @@ Both `sendAdminEmail` and `sendReplyEmail` use the same template: dark amber hea
 ### Admin SMTP settings (`/api/admin/smtp/test`)
 
 `POST /api/admin/smtp/test` sends a test email to `smtp_user` to verify configuration. Returns `{ ok: true }` on success or `{ error: message }` on failure.
+
+## Automated tests (`test/`)
+
+`node --test` (Node's built-in test runner, no external framework/dev dependency) - `npm test` runs it, auto-discovering the whole `test/` tree recursively. Added 2026-08-19, starting from a single flat file.
+
+**Structure:** folder-per-module-domain, not flat - `test/client/<module>/*.test.mjs` for `public/js/*.js`, `test/server/<module>/*.test.mjs` for `server/*.js`. Each file targets one function/concern rather than one giant file per source module.
+
+**Deliberately not covered, and why - two structural blockers, not oversights:**
+- **DOM-coupled client code**: most of `public/js/*.js` transitively imports `i18n.js`, which reads `localStorage` at module *top level* (not inside a function) - throws immediately under plain Node with no DOM. `graph.js` and everything downstream of it is skipped for this reason. `state.js` and `sort.js` are covered because they have zero imports of their own.
+- **Live-DB-coupled server code**: `server/db/connection.js` opens a connection to the real `database.sqlite` eagerly at `require()` time, hardcoded path, no env-var override - unlike a from-scratch design (inject `db` as a parameter, construct `new Database(':memory:')` in tests), changing this would mean changing how the live server boots, which was explicitly ruled out. So `server/db/*.js` and anything requiring `./db` (including `request-helpers.js`) is skipped. `server/export.js`, `server/html-escape.js`, and `server/impersonation-context.js` are covered because none of them require `./db`.
+
+Going forward: new code should get tests where it fits one of the two testable shapes above (no DOM, no live DB) - see the module's own imports before assuming it's covered-or-not by pattern-matching against this list, since that can change as files are refactored.

@@ -233,12 +233,15 @@ const APP_LAUNCH_EPOCH = Math.floor(new Date('2026-03-26T00:40:05Z').getTime() /
 
 let _codeStats = { linesOfCode: 0, codeBytes: 0, jsModules: 0 };
 (function computeCodeStats() {
+  // Matches .mjs too (not just .js) so test/ - all .test.mjs files - actually
+  // gets picked up below; every other walked directory happens to be .js-only
+  // in practice, so widening this here doesn't change their counts.
   function walkJsFiles(dir) {
     let out = [];
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
       const p = `${dir}/${entry.name}`;
       if (entry.isDirectory()) out = out.concat(walkJsFiles(p));
-      else if (entry.name.endsWith('.js')) out.push(p);
+      else if (entry.name.endsWith('.js') || entry.name.endsWith('.mjs')) out.push(p);
     }
     return out;
   }
@@ -246,11 +249,20 @@ let _codeStats = { linesOfCode: 0, codeBytes: 0, jsModules: 0 };
     const serverJsFiles = walkJsFiles('server');
     const publicJsFiles = walkJsFiles('public/js');
     const adminJsFiles  = walkJsFiles('admin/js');
+    // Own try/catch, not folded into the outer one below - test/ is a newer,
+    // less load-bearing addition than the other three directories, and this
+    // whole IIFE only has ONE catch around it. Without isolating this walk,
+    // test/ ever going missing in some deployment (excluded from a docker
+    // image, etc.) would throw here and silently zero out every stat in the
+    // panel, not just the test count.
+    let testJsFiles = [];
+    try { testJsFiles = walkJsFiles('test'); } catch (_) {}
     const files = [
       'server.js',
       ...serverJsFiles,
       ...publicJsFiles,
       ...adminJsFiles,
+      ...testJsFiles,
       ...fs.readdirSync('public/css').filter(f => f.endsWith('.css')).map(f => `public/css/${f}`),
       'public/index.html',
       'public/guide.html',
@@ -262,7 +274,7 @@ let _codeStats = { linesOfCode: 0, codeBytes: 0, jsModules: 0 };
     }
     _codeStats.linesOfCode = lines;
     _codeStats.codeBytes   = bytes;
-    _codeStats.jsModules   = 1 + serverJsFiles.length + publicJsFiles.length + adminJsFiles.length;
+    _codeStats.jsModules   = 1 + serverJsFiles.length + publicJsFiles.length + adminJsFiles.length + testJsFiles.length;
   } catch (_) {}
 })();
 
