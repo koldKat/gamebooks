@@ -12,10 +12,10 @@
 // state lives in pt.sim286, per-user/per-book via currentPlaythrough().
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../state.js?v=13';
-import { showAlert } from '../play.js?v=139';
-import { getPlayBtnRow } from '../charsheet.js?v=94';
-import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../util.js?v=77';
-import { t } from '../i18n.js?v=63';
+import { showAlert } from '../play.js?v=143';
+import { getPlayBtnRow } from '../charsheet.js?v=96';
+import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../util.js?v=79';
+import { t } from '../i18n.js?v=64';
 
 // Book rule: initial life roll (2d6×4) plus up to 2 rerolls, 3 throws total per run.
 const MAX_LIFE_ROLLS = 3;
@@ -75,6 +75,19 @@ const TECH_ITEMS = [
 // Dream outcomes when a troubled sleep (2d6 roll of 2-5) sends you into the
 // "Област на съня" - the 2d6 sum on the follow-up roll (2-12) selects which
 // of these 11 you land in, matching the book's own numbering exactly.
+// Labels for 9 and 11 were swapped until 2026-08-19 (re-verified against
+// the full book text once it became available). The underlying mechanical
+// effect in _resolveDream (below) was already correct for both - only the
+// display name was wrong:
+// - 9's own text ("Ти дори не разбираш какво се е случило. Просто
+//   заспиваш... и се събуждаш на 11" - an unconditional link straight to
+//   section 11, the game's standing death destination per the front-matter
+//   rule "Ако загинеш на сън, неминуемо попадаш на 11") is an instant,
+//   no-roll death - correctly modeled as life=0, but was mislabeled with
+//   dream 11's own name ("Безформени кошмари").
+// - 11's text ("Сънуваш някакви безформени кошмари... жизнените ти точки
+//   са намалели с 5") is the actual -5-life nightmare, correctly modeled,
+//   but had 9's generic "Кошмари" label instead of its own.
 const DREAM_LABELS = {
   2:  'Хроноцентърът избухва',
   3:  'Медицински център на бъдещето',
@@ -83,9 +96,9 @@ const DREAM_LABELS = {
   6:  'Арената на Нерон',
   7:  'Курорт на бъдещето',
   8:  'Полет с извънземни',
-  9:  'Безформени кошмари',
+  9:  'Необясним сън',
   10: 'Освобождаването на д\'Артанян',
-  11: 'Кошмари',
+  11: 'Безформени кошмари',
   12: 'Горската колиба',
 };
 
@@ -98,7 +111,7 @@ function _data() {
       // the book requires throwing dice for both before you have any stats
       // at all, so the sim shouldn't hand out free points before that roll.
       player: { life: 0, lifeMax: 0, weaponKey: 'sword', customMinHit: 6, customAeCost: 0, shieldKey: 'none', aeMax: 0, enemyFirst: false, gloveBonus: 5, extraDef: 0 },
-      enemy:  { name: '', hp: 20, hpMax: 20, minHit: 6 },
+      enemy:  { name: '', hp: 20, hpMax: 20, minHit: 6, fixedDamage: 0, extraAttackers: 0 },
       battleStart: { playerLife: 0, enemyHp: 20 },
       effects: { tempShield: false, doubleAttack: false, pendingBonus: 0, enemyStun: 0 },
       roundsThisBattle: 0,
@@ -122,6 +135,8 @@ function _data() {
   if (d.player.enemyFirst === undefined) d.player.enemyFirst = false;
   if (d.player.gloveBonus === undefined) d.player.gloveBonus = 5;
   if (d.player.extraDef === undefined) d.player.extraDef = 0;
+  if (d.enemy.fixedDamage === undefined) d.enemy.fixedDamage = 0;
+  if (d.enemy.extraAttackers === undefined) d.enemy.extraAttackers = 0;
   if (d.lifeRollCount === undefined) d.lifeRollCount = 0;
   if (d.aeRolled === undefined) d.aeRolled = false;
   if (d.roundsThisBattle === undefined) d.roundsThisBattle = 0;
@@ -219,20 +234,50 @@ function _playerAttackOnce(d) {
     : `Хвърляш: ${roll} (мин. ${minHit}) → Пропуск.`);
 }
 
-function _enemyAttackOnce(d) {
+// labelOverride is used by _resolveExtraAttackers below - several encounters
+// (sec 13/15/29/173) put multiple identical attackers in front of the
+// player at once, all sharing the tracked enemy's own minHit/HP/fixedDamage
+// stats (that's genuinely how the book writes them: "Всеки от тях има по
+// X жизнени точки", one shared stat line for the whole group), but each
+// rolls its own attack independently every round.
+function _enemyAttackOnce(d, labelOverride = null) {
+  const label = labelOverride ?? _enemyNameSafe(d);
   if (d.effects.enemyStun > 0) {
     d.effects.enemyStun--;
-    _appendLog(d, `${_enemyNameSafe(d)} е зашеметен от газа и пропуска удара си.`);
+    _appendLog(d, `${label} е зашеметен от газа и пропуска удара си.`);
     return;
   }
   const roll = _roll2d6();
-  const raw  = Math.max(0, roll - (d.enemy.minHit || 0));
+  const minHit = d.enemy.minHit || 0;
+  const hit  = roll > minHit;
+  // Fixed-damage enemies (e.g. Robot sec 52 "всеки негов успешен удар е с
+  // постоянна сила – 4 точки", Tyrannosaurus sec 67 "всеки негов успешен
+  // удар ще ти струва 7 жизнени точки") deal a flat amount on any
+  // successful hit instead of the usual roll-minus-minimum - still reduced
+  // by the player's own shield/armor same as a normal hit, since the book
+  // never says otherwise and shields are described as a blanket "-N off
+  // whatever lands" rule.
+  const raw  = hit ? (d.enemy.fixedDamage > 0 ? d.enemy.fixedDamage : (roll - minHit)) : 0;
   const dmg  = Math.max(0, raw + _totalPlayerDef(d));
   if (dmg > 0) {
     d.player.life = Math.max(0, d.player.life - dmg);
-    _appendLog(d, `${_enemyNameSafe(d)} хвърля: ${roll} (мин. ${d.enemy.minHit}) → Удар за ${dmg}. Твоето ТЖ: ${d.player.life}/${d.player.lifeMax}.`);
+    _appendLog(d, `${label} хвърля: ${roll} (мин. ${minHit}) → Удар за ${dmg}. Твоето ТЖ: ${d.player.life}/${d.player.lifeMax}.`);
   } else {
-    _appendLog(d, `${_enemyNameSafe(d)} хвърля: ${roll} (мин. ${d.enemy.minHit}) → Пропуск.`);
+    _appendLog(d, `${label} хвърля: ${roll} (мин. ${minHit}) → Пропуск.`);
+  }
+}
+
+// Sec 15 ("на всеки твой удар четиримата ще отговарят един след друг") and
+// sec 29 ("на всеки твой замах двамата ще отговарят едновременно") both
+// describe every surviving extra attacker striking back the same round,
+// stopping only if the player goes down partway through - matches the
+// existing single-companion pattern this app already uses elsewhere
+// (never individually woundable; the player only ever damages the one
+// tracked d.enemy.hp pool), just generalized from 1 companion to N.
+function _resolveExtraAttackers(d) {
+  const n = d.enemy.extraAttackers || 0;
+  for (let i = 1; i <= n && d.player.life > 0; i++) {
+    _enemyAttackOnce(d, `${_enemyNameSafe(d)} (доп. ${i})`);
   }
 }
 
@@ -258,6 +303,7 @@ function _runRound() {
 
   if (d.player.enemyFirst) {
     _enemyAttackOnce(d);
+    if (d.player.life > 0) _resolveExtraAttackers(d);
     if (d.player.life <= 0) {
       _appendLog(d, `${SVG_SKULL} Ти падна в битката.`);
       _recordOutcome(d, 'loss');
@@ -275,6 +321,7 @@ function _runRound() {
     _recordOutcome(d, 'win');
   } else if (!d.player.enemyFirst) {
     _enemyAttackOnce(d);
+    if (d.player.life > 0) _resolveExtraAttackers(d);
     if (d.player.life <= 0) {
       _appendLog(d, `${SVG_SKULL} Ти падна в битката.`);
       _recordOutcome(d, 'loss');
@@ -525,7 +572,7 @@ function _resolveDream(d, n) {
     }
     case 9: {
       d.player.life = 0;
-      _appendLog(d, `Безформени кошмари: не разбираш какво стана... събуждаш се на 11.`);
+      _appendLog(d, `Необясним сън: не разбираш какво стана... събуждаш се на 11.`);
       break;
     }
     case 10: {
@@ -686,6 +733,8 @@ function _renderInputs() {
   document.getElementById('sim286-enemy-hp').value      = d.enemy.hp;
   document.getElementById('sim286-enemy-hpmax').value   = d.enemy.hpMax;
   document.getElementById('sim286-enemy-minhit').value  = d.enemy.minHit;
+  document.getElementById('sim286-enemy-fixeddmg').value = d.enemy.fixedDamage;
+  document.getElementById('sim286-enemy-extra').value    = d.enemy.extraAttackers;
 
   document.getElementById('sim286-tech-list').innerHTML = _techButtonsHtml(d);
   _renderStatus(); // also renders the effects badges, as its last step
@@ -772,6 +821,14 @@ function _setupEnemyAutocomplete() {
     d.enemy.name = enemy.name;
     if (enemy.hp != null)     { d.enemy.hp = enemy.hp; d.enemy.hpMax = enemy.hp; }
     if (enemy.attack != null) d.enemy.minHit = enemy.attack;
+    // book_enemies has no column for these two - fixed-damage/multi-attacker
+    // enemies are called out in their own roster name (see the "фикс."/"x2"/
+    // "x4" hints seeded there) as a reminder to set these two fields by hand
+    // after picking; always reset to off so switching enemies can't leave a
+    // stale fixed-damage or extra-attacker value from whichever fight was
+    // configured last.
+    d.enemy.fixedDamage = 0;
+    d.enemy.extraAttackers = 0;
     d.battleStart = { playerLife: d.player.life, enemyHp: d.enemy.hp };
     d.roundsThisBattle = 0;
     d.healUsedThisBattle = false;
@@ -910,6 +967,8 @@ export function initSim286() {
             ${_numField('Точки живот (ТЖ)', 'sim286-enemy-hp')}
             ${_numField('Максимум ТЖ',      'sim286-enemy-hpmax')}
             ${_numField('Минимум удар',     'sim286-enemy-minhit')}
+            ${_numField('Фиксирани щети (0 = обичайно)', 'sim286-enemy-fixeddmg')}
+            ${_numField('Допълнителни противници', 'sim286-enemy-extra')}
           </div>
           <div id="sim286-effects" class="bsim-effects"></div>
           <div id="sim286-status" class="bsim-status"></div>
@@ -997,6 +1056,8 @@ export function initSim286() {
     'sim286-enemy-hp':        ['enemy', 'hp'],
     'sim286-enemy-hpmax':     ['enemy', 'hpMax'],
     'sim286-enemy-minhit':    ['enemy', 'minHit'],
+    'sim286-enemy-fixeddmg':  ['enemy', 'fixedDamage'],
+    'sim286-enemy-extra':     ['enemy', 'extraAttackers'],
   };
   function _applyField(id, val) {
     const d = _data();

@@ -81,7 +81,7 @@ async function handleAdminGetUser(req, res, userId) {
   if (!requireLocalhost(req, res)) return;
   const user = db.adminGetUser(userId);
   if (!user) return send(res, 404, { error: 'Not found' });
-  send(res, 200, { user, books: db.adminGetUserBooks(userId) });
+  send(res, 200, { user, ...db.adminGetUserBooks(userId) });
 }
 
 async function handleAdminGetBookStats(req, res, bookId) {

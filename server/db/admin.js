@@ -624,7 +624,7 @@ function adminGetUserBooks(userId) {
     WHERE ub.user_id = ? AND b.is_demo = 0
     ORDER BY ub.created_at ASC
   `).all(userId);
-  return rows.map(b => {
+  const books = rows.map(b => {
     let mapped = 0, discovered = 0, playthroughs = 0, wins = 0, deaths = 0, battles = 0, last_run_at = null;
     try {
       const s = JSON.parse(b.state_data);
@@ -652,6 +652,30 @@ function adminGetUserBooks(userId) {
              created_at: b.created_at, updated_at: b.updated_at,
              mapped, discovered, playthroughs, wins, deaths, battles, last_run_at };
   });
+
+  // Per-book numbers above still come from each book's own live state_data
+  // (a legitimate "what does this book currently show" view), but the user
+  // detail page's overall Runs summary used to just sum those together,
+  // which undercounts for the same reason adminGetUsers()/getProfileStats()
+  // did - a book removed from the library, or a playthrough array later
+  // pruned/reset, drops out of the sum forever even though it was already
+  // earned. `totals` reads the permanent xp_events ledger instead (same
+  // source the runs-milestone GC coin uses) so the summary always agrees
+  // with the milestone regardless of what any individual book's state shows.
+  const runRows = db.prepare(`
+    SELECT event, COUNT(*) AS n FROM xp_events
+    WHERE user_id = ? AND event IN ('win_run','death_run','battle_run')
+    GROUP BY event
+  `).all(userId);
+  const totals = { runs: 0, wins: 0, deaths: 0, battles: 0 };
+  for (const { event, n } of runRows) {
+    totals.runs += n;
+    if (event === 'win_run')    totals.wins    = n;
+    if (event === 'death_run')  totals.deaths  = n;
+    if (event === 'battle_run') totals.battles = n;
+  }
+
+  return { books, totals };
 }
 
 function adminGetBookStats(bookId) {
@@ -1136,47 +1160,57 @@ function adminGetUsers() {
     GROUP BY u.id
     ORDER BY last_active DESC, u.created_at DESC
   `).all();
+  // "active" (started, no result yet) has no permanent event to read - only
+  // ever derivable from each book's current state_data - so that part alone
+  // still scans it live.
   const allUb = db.prepare(`
     SELECT ub.user_id, ub.state_data FROM user_books ub
     JOIN books b ON b.id = ub.book_id WHERE b.is_demo = 0
   `).all();
-  const byUser = {};
+  const activeByUser = {};
   for (const b of allUb) {
-    if (!byUser[b.user_id]) byUser[b.user_id] = { runs: 0, wins: 0, deaths: 0, battles: 0, active: 0 };
+    if (!activeByUser[b.user_id]) activeByUser[b.user_id] = 0;
     try {
       const s = JSON.parse(b.state_data || '{}');
-      // preSeriesRuns holds runs that pre-date a book's series turning open-world
-      // (migratePreSeriesRuns) - still real, played-out runs, counted alongside
-      // playthroughs here too (matching getProfileStats() in server/db/feed.js).
-      // Only playthroughs feeds "active" - an incomplete preSeriesRuns entry
-      // isn't reachable via the normal continue flow (activePtIndex never
-      // points into that array), so it isn't a "currently active" run in the
-      // sense adminGetBookStats' activePlaythroughs means.
       for (const pt of (s.playthroughs || [])) {
         // Excludes untouched open-world series-run placeholders (startedAt: null) -
         // a book in a series carries one padding slot per series run so numbers line
         // up across books, but a slot the run never actually visited here isn't a
-        // real active run of this book - it was inflating this admin count (and the
-        // per-book/per-user ones above) by exactly the number of padding slots.
+        // real active run of this book.
         if (pt.startedAt == null) continue;
-        // Completed-only, matching getProfileStats() (server/db/feed.js) - an
-        // in-progress run (no result yet) previously inflated this count relative
-        // to what the user's own profile shows for the same thing.
-        if (pt.result === 'success') { byUser[b.user_id].runs++; byUser[b.user_id].wins++; }
-        else if (pt.result === 'death') { byUser[b.user_id].runs++; byUser[b.user_id].deaths++; }
-        else if (pt.result === 'battle') { byUser[b.user_id].runs++; byUser[b.user_id].battles++; }
-        else byUser[b.user_id].active++; // no result yet - matches adminGetBookStats' activePlaythroughs
-      }
-      for (const pt of (s.preSeriesRuns || [])) {
-        if (pt.result === 'success') { byUser[b.user_id].runs++; byUser[b.user_id].wins++; }
-        else if (pt.result === 'death') { byUser[b.user_id].runs++; byUser[b.user_id].deaths++; }
-        else if (pt.result === 'battle') { byUser[b.user_id].runs++; byUser[b.user_id].battles++; }
+        if (!pt.result) activeByUser[b.user_id]++; // no result yet - matches adminGetBookStats' activePlaythroughs
       }
     } catch {}
   }
+  // runs/wins/deaths/battles come from the permanent xp_events ledger - the
+  // same source getProfileStats() (server/db/feed.js) and the runs-milestone
+  // GC coin use - rather than re-deriving from each book's live state_data.
+  // A book removed from a user's library, or a playthrough array later
+  // pruned/reset, used to make an already-earned, already-paid-out run
+  // silently vanish from this admin count forever, disagreeing with both the
+  // milestone that already fired for it and the user's own profile total.
+  const runRows = db.prepare(`
+    SELECT user_id, event, COUNT(*) AS n FROM xp_events
+    WHERE event IN ('win_run','death_run','battle_run')
+    GROUP BY user_id, event
+  `).all();
+  const runsByUser = {};
+  for (const { user_id, event, n } of runRows) {
+    if (!runsByUser[user_id]) runsByUser[user_id] = { runs: 0, wins: 0, deaths: 0, battles: 0 };
+    runsByUser[user_id].runs += n;
+    if (event === 'win_run')    runsByUser[user_id].wins    = n;
+    if (event === 'death_run')  runsByUser[user_id].deaths  = n;
+    if (event === 'battle_run') runsByUser[user_id].battles = n;
+  }
   return users.map(u => {
     const xpInfo = getUserXpInfo(u.id);
-    return { ...u, ...(byUser[u.id] || { runs: 0, wins: 0, deaths: 0, battles: 0, active: 0 }), ...xpInfo, luckyClaimed: xpInfo.bonusGcClaimed };
+    return {
+      ...u,
+      ...(runsByUser[u.id] || { runs: 0, wins: 0, deaths: 0, battles: 0 }),
+      active: activeByUser[u.id] || 0,
+      ...xpInfo,
+      luckyClaimed: xpInfo.bonusGcClaimed,
+    };
   });
 }
 

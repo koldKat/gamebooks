@@ -1,11 +1,11 @@
 // books.js - Books list rendering, caching, search/filter, expand prefs, cover queue
 import { getToken, isDemoMode, apiFetch, getDemoState, setDemoState } from './state.js?v=13';
 import { foldForSearch, naturalCompare, naturalCompareByName } from './sort.js?v=1';
-import { refreshCoinsDisplay } from './shop.js?v=86';
-import { openCoverActivity, openSeriesActivity, _startLandingCoverRotation, _resetLandingCoverQueue, _effectiveLandingCoverSource, loadCovers } from './covers.js?v=135';
-import { t } from './i18n.js?v=63';
-import { showConfirm, showTwoChoice } from './play.js?v=139';
-import { escapeHtml } from './util.js?v=77';
+import { refreshCoinsDisplay } from './shop.js?v=88';
+import { openCoverActivity, openSeriesActivity, _startLandingCoverRotation, _resetLandingCoverQueue, _effectiveLandingCoverSource, loadCovers } from './covers.js?v=138';
+import { t } from './i18n.js?v=64';
+import { showConfirm, showTwoChoice } from './play.js?v=143';
+import { escapeHtml } from './util.js?v=79';
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────
 let _hooks = {};
@@ -270,12 +270,31 @@ function _scheduleAnthologyCardCoverFlows(root = document.getElementById('books-
   _anthologyFlowRaf = requestAnimationFrame(() => { _anthologyFlowRaf = null; _applyAnthologyCardCoverFlows(root); });
 }
 
-function _queueBookCovers(container) {
+// `reset: false` appends to whatever's already queued/running instead of
+// wiping it - used when expanding a collapsed anthology/series/stash group
+// reveals more covers mid-flight, so that doesn't cancel/drop covers the
+// initial full-list pass had already queued but not gotten to yet.
+function _queueBookCovers(container, { reset = true } = {}) {
   if (!container) return;
-  const gen = ++_bookCoverGen;
-  _bookCoverQueue   = [];
-  _bookCoverRunning = false;
+  if (reset) {
+    _bookCoverGen++;
+    _bookCoverQueue   = [];
+    _bookCoverRunning = false;
+  }
+  const gen = _bookCoverGen;
+  // offsetParent is null for anything display:none (itself or an ancestor) -
+  // a collapsed anthology/series/stash group leaves its children's
+  // [data-pending-cover] elements in the DOM (see _bookItemHtml/the
+  // book-children-group markup) purely hidden via CSS, not absent, so a
+  // plain querySelectorAll here used to queue and eagerly load every single
+  // child's cover regardless of whether its parent was ever expanded - for
+  // an account with most books living inside anthologies, that meant
+  // loading hundreds of covers nobody was about to look at on a simple
+  // library page load. Only currently-visible covers get queued here now;
+  // the expand-toggle handlers below call this again (reset: false) on just
+  // the newly-revealed group once a container/series/stash actually opens.
   container.querySelectorAll('[data-pending-cover]').forEach(el => {
+    if (el.offsetParent === null) return;
     const url = el.dataset.pendingCover;
     if (_bookCoverLoadedUrls.has(url)) {
       el.style.setProperty('--bci', `url('${url}')`);
@@ -284,7 +303,7 @@ function _queueBookCovers(container) {
       _bookCoverQueue.push({ el, url });
     }
   });
-  if (!_bookCoverQueue.length) return;
+  if (!_bookCoverQueue.length || _bookCoverRunning) return;
   _bookCoverRunning = true;
   (function next() {
     if (gen !== _bookCoverGen) return;
@@ -415,6 +434,7 @@ export function _applyBooksSearchFilter() {
   const query = foldForSearch((_booksSearchQuery || '').trim());
   if (!query) {
     _restoreBooksSearchFilter(list);
+    _queueBookCovers(list, { reset: false });
     _scheduleAnthologyCardCoverFlows(list);
     return;
   }
@@ -464,6 +484,11 @@ export function _applyBooksSearchFilter() {
     empty.textContent = t('books.no_matches');
     list.appendChild(empty);
   }
+  // A matching book inside a collapsed anthology/series/stash force-reveals
+  // that group above (_filterContainerRow/_filterBooksGroup) - its cover was
+  // skipped by the initial load pass (still collapsed then), so it needs
+  // queuing now that search has made it visible.
+  _queueBookCovers(list, { reset: false });
   _scheduleAnthologyCardCoverFlows(list);
 }
 
@@ -1057,6 +1082,7 @@ export function renderBooksList(books, allSeries = [], stashes = []) {
       row.dataset.expanded = nowExpanded ? '1' : '0';
       if (group) group.style.display = nowExpanded ? '' : 'none';
       _saveExpandedPref('stash', String(sid), `stash_expanded_${sid}`, nowExpanded);
+      if (nowExpanded && group) _queueBookCovers(group, { reset: false });
       _scheduleAnthologyCardCoverFlows(list);
     });
   });
@@ -1072,6 +1098,7 @@ export function renderBooksList(books, allSeries = [], stashes = []) {
       row.dataset.expanded = nowExpanded ? '1' : '0';
       if (group) group.style.display = nowExpanded ? '' : 'none';
       _saveExpandedPref('series', `${stashId || 'main'}:${sid}`, `${stashId ? `stash_${stashId}_sr_` : 'sr_'}expanded_${sid}`, nowExpanded);
+      if (nowExpanded && group) _queueBookCovers(group, { reset: false });
       _scheduleAnthologyCardCoverFlows(list);
     });
   });
@@ -1087,6 +1114,7 @@ export function renderBooksList(books, allSeries = [], stashes = []) {
       row.dataset.expanded = nowExpanded ? '1' : '0';
       if (group) group.style.display = nowExpanded ? '' : 'none';
       _saveExpandedPref('book', String(bid), `bk_expanded_${bid}`, nowExpanded);
+      if (nowExpanded && group) _queueBookCovers(group, { reset: false });
       _scheduleAnthologyCardCoverFlows(list);
     });
   });

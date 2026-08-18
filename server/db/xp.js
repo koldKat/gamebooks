@@ -706,15 +706,20 @@ function _checkGroupWonAll(userId, seriesId, parentBookId) {
   }
 }
 
-// Per-playthrough state keys used by all 10 battle simulator modules (see
+// Per-playthrough state keys used by every battle simulator module (see
 // processStateXp below) - kept as one list so a future sim just needs
 // adding here, not duplicated at each call site. sim201/sim202/sim203 were
 // missing from this list for a while after each shipped (silently no
 // battlesim_win/battlesim_loss XP for those three books) until caught and
-// backfilled. 'sim829' (not 'battleSim') matches server/db.js's one-time
-// pt.battleSim -> pt.sim829 rename, which brought book 829 in line with
-// every other sim's pt.simNNN naming (it predates that convention).
-const SIM_HISTORY_KEYS = ['sim829', 'sim8', 'sim286', 'sim198', 'sim199', 'sim200', 'sim186', 'sim201', 'sim202', 'sim203', 'sim204', 'sim205', 'sim206', 'sim207', 'sim208'];
+// backfilled - sim209/sim210/sim211 quietly repeated the exact same gap
+// (each shipped without a corresponding addition here) until caught again
+// while adding sim212 - this list still isn't wired to anything that would
+// catch a future sim missing from it automatically, so it's worth
+// double-checking here specifically whenever a new battlesimNNN.js ships.
+// 'sim829' (not 'battleSim') matches server/db.js's one-time pt.battleSim ->
+// pt.sim829 rename, which brought book 829 in line with every other sim's
+// pt.simNNN naming (it predates that convention).
+const SIM_HISTORY_KEYS = ['sim829', 'sim8', 'sim286', 'sim198', 'sim199', 'sim200', 'sim186', 'sim201', 'sim202', 'sim203', 'sim204', 'sim205', 'sim206', 'sim207', 'sim208', 'sim209', 'sim210', 'sim211', 'sim212'];
 
 function processStateXp(userId, bookId, oldState, newState, totalSections) {
   if (newState?.isDemoBook) return;

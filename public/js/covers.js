@@ -1,10 +1,10 @@
 // covers.js - Covers panel, lazy grid, landing bg rotation, cover/series activity modals
 import { getToken, isDemoMode, apiFetch } from './state.js?v=13';
-import { openPublicModal, closePublicModal, openPublicProfile, renderPublicProfile, openPublicRun, openPublicSeriesRun, _destroyPubNetworks } from './public-profile.js?v=101';
-import { refreshCoinsDisplay } from './shop.js?v=86';
+import { openPublicModal, closePublicModal, openPublicProfile, renderPublicProfile, openPublicRun, openPublicSeriesRun, _destroyPubNetworks } from './public-profile.js?v=103';
+import { refreshCoinsDisplay } from './shop.js?v=88';
 import { foldForSearch, matchesSearch, naturalCompare, naturalCompareByName } from './sort.js?v=1';
-import { escapeHtml, fetchPublic as publicFetch } from './util.js?v=77';
-import { t } from './i18n.js?v=63';
+import { escapeHtml, fetchPublic as publicFetch } from './util.js?v=79';
+import { t } from './i18n.js?v=64';
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────
 let _hooks = {};
@@ -31,8 +31,29 @@ let _landingCoverPosPrefs = {};
 let _landingBgActive     = 'a';
 let _landingBgQueue      = [];
 let _landingBgQueueIdx   = 0;
+// Capped at _COVER_BLOB_CACHE_MAX full-size decoded cover images (see
+// _cacheCoverBlobUrl below) - uncapped, this grew for as long as the tab
+// stayed open, since nothing ever called URL.revokeObjectURL() on an entry.
+// A large personal library scrolled through the covers panel over a long
+// session pinned every distinct cover ever seen as a live Blob in memory,
+// the actual source of a ~300MB browser-tab leak report - not a one-off
+// per-book cost, but one that scaled with how much of the library was
+// ever scrolled past, matching that report exactly.
 const _coverBlobUrlCache    = new Map();
 const _coverFetchPromiseCache = new Map();
+const _COVER_BLOB_CACHE_MAX = 60;
+
+// FIFO eviction (insertion order, via Map) rather than true LRU - simple and
+// good enough here since the covers panel is scrolled roughly linearly, not
+// randomly re-visited in a pattern true LRU would meaningfully improve on.
+function _cacheCoverBlobUrl(url, blobUrl) {
+  _coverBlobUrlCache.set(url, blobUrl);
+  while (_coverBlobUrlCache.size > _COVER_BLOB_CACHE_MAX) {
+    const oldestUrl = _coverBlobUrlCache.keys().next().value;
+    URL.revokeObjectURL(_coverBlobUrlCache.get(oldestUrl));
+    _coverBlobUrlCache.delete(oldestUrl);
+  }
+}
 let _coversPanelQueue    = [];
 let _coversPanelRunning  = false;
 let _coversPanelGen      = 0;
@@ -109,7 +130,7 @@ async function _loadCoverWithProgress(url, img, bar) {
     }
 
     const blobUrl = URL.createObjectURL(new Blob(chunks));
-    _coverBlobUrlCache.set(url, blobUrl);
+    _cacheCoverBlobUrl(url, blobUrl);
     return blobUrl;
   })();
   _coverFetchPromiseCache.set(url, loadPromise);
@@ -136,7 +157,7 @@ function _preloadCoverBlob(url) {
   if (_coverBlobUrlCache.has(url) || _coverFetchPromiseCache.has(url)) return;
   const p = fetch(url)
     .then(r => r.blob())
-    .then(b => { const bu = URL.createObjectURL(b); _coverBlobUrlCache.set(url, bu); _coverFetchPromiseCache.delete(url); return bu; })
+    .then(b => { const bu = URL.createObjectURL(b); _cacheCoverBlobUrl(url, bu); _coverFetchPromiseCache.delete(url); return bu; })
     .catch(() => { _coverFetchPromiseCache.delete(url); });
   _coverFetchPromiseCache.set(url, p);
 }

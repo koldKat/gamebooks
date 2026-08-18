@@ -569,6 +569,21 @@ function resetSeriesForUser(userId, seriesId) {
   db.transaction(() => {
     db.prepare('DELETE FROM series_runs WHERE user_id = ? AND series_id = ?').run(userId, seriesId);
     for (const bookId of bookIds) resetBookProgress(userId, bookId);
+    // Open-world series books log per-run XP (win_run/death_run/etc, see
+    // xp.js's processStateXp) under a series-scoped ref (`series:<id>:...`),
+    // not a book-scoped one, so the run isn't double-counted across every
+    // book in the series. resetBookProgress's own cleanup only ever matches
+    // bookId-scoped refs, so those series-scoped rows survive a per-book
+    // reset untouched - safe to do here instead, since resetting the whole
+    // series (every member book, above) is the one case where nothing else
+    // in the series could still legitimately depend on that run history.
+    const placeholders = RESETTABLE_PROGRESS_EVENTS.map(() => '?').join(',');
+    db.prepare(`
+      DELETE FROM xp_events
+      WHERE user_id = ?
+        AND event IN (${placeholders})
+        AND ref LIKE ?
+    `).run(userId, ...RESETTABLE_PROGRESS_EVENTS, `series:${seriesId}:%`);
   })();
   return bookIds;
 }
@@ -850,6 +865,32 @@ function saveBookState(userId, bookId, stateObj, { skipTimestamp = false } = {})
   return ubResult.changes > 0;
 }
 
+// Shared by resetBookProgress (bookId-scoped cleanup) and resetSeriesForUser
+// (series-scoped cleanup, see its own comment) - one list so the two never
+// drift apart on which events count as "progress" worth wiping on a reset.
+const RESETTABLE_PROGRESS_EVENTS = [
+  'discover_node',
+  'visit_node',
+  'discover_all',
+  'visit_all',
+  'add_note',
+  'set_priority',
+  'mark_battle',
+  'set_color',
+  'death_run',
+  'battle_run',
+  'win_run',
+  'share_run',
+  'charsheet_saved',
+  'charsheet_run',
+  'run_depth',
+  'add_charsheet_field',
+  'inventory_started',
+  'add_item',
+  'equipment_started',
+  'equip_item',
+];
+
 function resetBookProgress(userId, bookId) {
   const book = db.prepare(`
     SELECT name, total_sections
@@ -868,39 +909,17 @@ function resetBookProgress(userId, bookId) {
     charSheetTemplate: null,
     alphanumericSections: false,
   };
-  const progressEvents = [
-    'discover_node',
-    'visit_node',
-    'discover_all',
-    'visit_all',
-    'add_note',
-    'set_priority',
-    'mark_battle',
-    'set_color',
-    'death_run',
-    'battle_run',
-    'win_run',
-    'share_run',
-    'charsheet_saved',
-    'charsheet_run',
-    'run_depth',
-    'add_charsheet_field',
-    'inventory_started',
-    'add_item',
-    'equipment_started',
-    'equip_item',
-  ];
 
   const tx = db.transaction(() => {
     const saved = saveBookState(userId, bookId, stateObj);
     if (!saved) return false;
-    const placeholders = progressEvents.map(() => '?').join(',');
+    const placeholders = RESETTABLE_PROGRESS_EVENTS.map(() => '?').join(',');
     db.prepare(`
       DELETE FROM xp_events
       WHERE user_id = ?
         AND event IN (${placeholders})
         AND (ref = ? OR ref LIKE ?)
-    `).run(userId, ...progressEvents, bookId, `${bookId}:%`);
+    `).run(userId, ...RESETTABLE_PROGRESS_EVENTS, bookId, `${bookId}:%`);
     return true;
   });
 
