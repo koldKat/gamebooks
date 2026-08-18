@@ -1,8 +1,8 @@
 // feedback.js - Feedback submission modal
 
 import { getUsername, getToken, apiFetch } from './state.js?v=13';
-import { t } from './i18n.js?v=61';
-import { uploadAttachment, addAttachmentItem } from './util.js?v=74';
+import { t } from './i18n.js?v=63';
+import { uploadAttachment, addAttachmentItem } from './util.js?v=77';
 
 export function initFeedback() {
   document.getElementById('feedback-btn').addEventListener('click', () => {

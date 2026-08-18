@@ -1,7 +1,7 @@
 // util.js - Shared pure utility functions
 
 import { apiFetch } from './state.js?v=13';
-import { t } from './i18n.js?v=61';
+import { t } from './i18n.js?v=63';
 
 export function escapeHtml(str) {
   return String(str ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -48,7 +48,14 @@ export function registerPanelShortcut(keyCode, { getButton, getOverlay, otherOve
     if (e.code !== keyCode || typing || e.ctrlKey || e.metaKey) return;
     if (extraGuard && !extraGuard()) return;
     const btn = getButton();
-    if (!btn || btn.style.display === 'none') return;
+    // display:none covers every other panel trigger (hidden outright when
+    // unavailable); disabled covers #liveread-btn specifically, which stays
+    // visible-but-disabled instead so #play-btns-bar's width doesn't shift
+    // on every book switch - without this check here too, the KeyR shortcut
+    // could still open the panel on a book with no live-reading data, since
+    // it calls open() directly rather than simulating a click the disabled
+    // attribute would actually block.
+    if (!btn || btn.style.display === 'none' || btn.disabled) return;
     const overlay = getOverlay();
     if (overlay?.classList.contains('active')) { close(); return; }
     (otherOverlayIds || []).forEach(id => document.getElementById(id)?.classList.remove('active'));

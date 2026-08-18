@@ -10,23 +10,14 @@
    see .liveread-body's own font-family comment for why that matters here. */
 @import url('/vendor/fonts/pt-serif/pt-serif.css');
 
-/* #play-btn-row has no generic button style - every trigger button (see
-   charsheet.css's #charsheet-btn, equipment.css's #inventory-btn/#equipment-btn,
-   battlesim.css's per-ID list) needs its own rule here. */
-#liveread-btn {
-  background: rgba(31, 41, 55, 0.88);
-  border: 1px solid #374151;
-  border-radius: 7px;
-  color: #9ca3af;
-  padding: 0.4rem 0.85rem;
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  cursor: pointer;
-  backdrop-filter: blur(6px);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.35);
-}
-#liveread-btn:hover { background: #374151; }
+/* #liveread-btn itself lives in the static #play-btns-bar (index.html,
+   between #guide-btn and #notebook-btn), not appended to #play-btn-row like
+   every other panel's trigger - that row was getting crowded enough
+   (Equipment/Inventory/Character Sheet/Battle Simulator, sometimes all four
+   at once) that this button landing on top of whichever one sat at the
+   wrap boundary instead of cleanly wrapping. Styled in charsheet.css
+   alongside #guide-btn/#notebook-btn/#party-btn (the row it actually lives
+   in now) instead of getting its own rule here. */
 
 .liveread-panel {
   display: none;

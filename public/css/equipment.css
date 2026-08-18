@@ -19,6 +19,7 @@
   cursor: pointer;
   backdrop-filter: blur(6px);
   box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+  flex-shrink: 0;
 }
 #inventory-btn:hover { background: #374151; color: #d1d5db; }
 
@@ -36,6 +37,7 @@
   cursor: pointer;
   backdrop-filter: blur(6px);
   box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+  flex-shrink: 0;
 }
 #equipment-btn:hover { background: #374151; color: #d1d5db; }
 

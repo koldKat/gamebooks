@@ -9,11 +9,10 @@
 // stays visible and interactive underneath while reading.
 
 import { state, apiFetch, currentBookId, currentPlaythrough, currentSection, viewingPt, isTerminal, parseSecId } from './state.js?v=13';
-import { navigate, commitChoices, showAlert, suppressAutoNav } from './play.js?v=136';
-import { network, setLightweightRestabilize } from './graph.js?v=130';
-import { t } from './i18n.js?v=61';
-import { getPlayBtnRow } from './charsheet.js?v=91';
-import { shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from './util.js?v=74';
+import { navigate, commitChoices, showAlert, suppressAutoNav } from './play.js?v=139';
+import { network, setLightweightRestabilize } from './graph.js?v=132';
+import { t } from './i18n.js?v=63';
+import { shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from './util.js?v=77';
 
 // Bumped on every call and re-checked after each await so a slower, now-stale
 // fetch (e.g. from a rapid double-click on two different choice links) can't
@@ -121,9 +120,17 @@ function _toggle() {
   else _open();
 }
 
+// Stays visible-but-disabled rather than hidden when the current book has
+// no live-reading data - #play-btns-bar only has 2-3 buttons in it, so
+// toggling this one's presence on every book switch made the whole row's
+// width (and the buttons after it) visibly shift back and forth.
 export function setLiveReadVisible(visible) {
   const btn = document.getElementById('liveread-btn');
-  if (btn) btn.style.display = visible ? '' : 'none';
+  if (btn) {
+    btn.disabled = !visible;
+    if (visible) btn.removeAttribute('data-tooltip');
+    else btn.setAttribute('data-tooltip', t('liveread.not_available'));
+  }
   if (!visible) _close();
 }
 
@@ -232,11 +239,14 @@ export function initLiveRead() {
     body.scrollTop += Math.sign(e.deltaY) * _renderedLineHeight(body);
   }, { passive: false });
 
-  const btn = document.createElement('button');
-  btn.id = 'liveread-btn';
+  // Lives in the static #play-btns-bar (between User Guide and Notebook),
+  // not appended to #play-btn-row like every other panel's trigger button -
+  // that row already gets crowded with 4-5 buttons (Equipment/Inventory/
+  // Character Sheet/Battle Simulator) and this one landing on top of
+  // whichever button happened to be at the wrap boundary once it joined
+  // them. #play-btns-bar has room since it's only ever had 2-3 buttons.
+  const btn = document.getElementById('liveread-btn');
   btn.innerHTML = shortcutLabel(t('liveread.title'));
-  btn.style.display = 'none';
-  getPlayBtnRow().appendChild(btn);
 
   // Docked under #legend on the right edge (see liveread.css) - tracks its
   // real height (varies with the collapse toggle and the portal legend row)
