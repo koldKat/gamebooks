@@ -23,9 +23,9 @@ import {
   setViewingPt,
 } from '../../js/state.js?v=14';
 import { initGraphView, refreshGraph } from './graph-view.js?v=6';
-import { openNotebook } from './notebook.js?v=5';
+import { openNotebook } from './notebook.js?v=6';
 import { hasSim, openSimForBook } from './battlesim-dispatch.js?v=1';
-import { t } from '../../js/i18n.js?v=72';
+import { t } from '../../js/i18n.js?v=73';
 
 function _escapeHtml(s) {
   return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
