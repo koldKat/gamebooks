@@ -4,9 +4,9 @@
 // there's no active playthrough.
 
 import { state, currentPlaythrough, saveState, apiFetch, viewingPt } from './state.js?v=14';
-import { getInventorySlots, addItemToInventory, removeAllFromInventoryAt, refreshInventoryUI, renderInventoryDisplay } from './inventory.js?v=213';
-import { getPlayBtnRow } from './charsheet.js?v=106';
-import { escapeHtml, shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from './util.js?v=89';
+import { getInventorySlots, addItemToInventory, removeAllFromInventoryAt, refreshInventoryUI, renderInventoryDisplay } from './inventory.js?v=214';
+import { getPlayBtnRow } from './charsheet.js?v=107';
+import { escapeHtml, shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from './util.js?v=90';
 import { t } from './i18n.js?v=73';
 
 // x/y are percentages, positioned over the dummy silhouette (eq-body box, 380x600px).
