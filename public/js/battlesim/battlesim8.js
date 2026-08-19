@@ -2,15 +2,18 @@
 // State stored in pt.sim8. Rules: roll N dice (N=Умение); 4-5→1 щ., 6→2 щ.
 // Адрин напада пръв; при foeFirst - врагът напада преди него.
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../state.js?v=13';
-import { showAlert } from '../play.js?v=143';
-import { getPlayBtnRow } from '../charsheet.js?v=96';
-import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../util.js?v=79';
-import { t } from '../i18n.js?v=64';
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../state.js?v=14';
+import { showAlert } from '../confirm.js?v=5';
+import { getPlayBtnRow } from '../charsheet.js?v=105';
+import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../util.js?v=88';
+import { t } from '../i18n.js?v=72';
 
 const SVG_SKULL  = `<svg class="sim-icon sim-icon-dead"  viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8c0 2.8 1.4 5.3 3.6 6.8V20a1 1 0 0 0 1 1h6.8a1 1 0 0 0 1-1v-2.2C18.6 16.3 20 13.8 20 11a8 8 0 0 0-8-8zm-2.5 13v-1.5a.5.5 0 0 0-.5-.5H8l-.5-1 1-1-1-1 1-1H9a2.5 2.5 0 0 1 5 0h.5l1 1-1 1 1 1-.5 1h-1a.5.5 0 0 0-.5.5V16h-4z"/></svg>`;
 const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v7a6 6 0 0 1-12 0V2zm-2 1H2v4a4 4 0 0 0 4 4v-1a3 3 0 0 1-3-3V3zm16 0h2v4a4 4 0 0 1-4 4v-1a3 3 0 0 0 3-3V3zm-7 13v2H9v2h6v-2h-2v-2a6 6 0 0 0 5-5.92V2H6v8.08A6 6 0 0 0 13 16z"/></svg>`;
 const SVG_TARGET = `<svg class="sim-icon sim-icon-target" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="6"  fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="2"  fill="currentColor"/></svg>`;
+
+const AXE_DICE_BONUS = 1;
+const POTION_HEAL_BONUS = 6;
 
 function _data() {
   const pt = currentPlaythrough();
@@ -87,14 +90,14 @@ function _renderHistory() {
   const sumEl  = document.getElementById('s8-history-summary');
   const listEl = document.getElementById('s8-history-list');
   if (!d || !sumEl || !listEl) return;
-  sumEl.textContent = `История на битките (${d.history.length})`;
+  sumEl.textContent = t('battlesim8.history.summary', { n: d.history.length });
   if (!d.history.length) {
-    listEl.innerHTML = '<div class="bsim-history-empty">Все още няма приключени битки.</div>';
+    listEl.innerHTML = `<div class="bsim-history-empty">${t('battlesim8.history.empty')}</div>`;
     return;
   }
   listEl.innerHTML = d.history.slice().reverse().map(h => {
     const icon   = h.outcome === 'win' ? SVG_TROPHY : SVG_SKULL;
-    const result = h.outcome === 'win' ? 'победа' : 'загуба';
+    const result = h.outcome === 'win' ? t('battlesim8.history.won') : t('battlesim8.history.lost');
     const date   = new Date(h.ts).toLocaleDateString('bg-BG', { day: '2-digit', month: '2-digit', year: 'numeric' });
     return `<div class="bsim-history-row">
       <span>${icon} ${escapeHtml(h.enemy)} - ${result}</span>
@@ -115,7 +118,7 @@ function _updateItemBtns() {
   if (bowBtn) {
     const canFire = alive && preRound && !d.bowFired && d.items?.bow && (d.items?.arrows > 0);
     bowBtn.style.display = canFire ? '' : 'none';
-    if (canFire) bowBtn.textContent = `Стреляй стрела (${d.items.arrows} в колчана)`;
+    if (canFire) bowBtn.textContent = t('battlesim8.btn.bow_fire_count', { n: d.items.arrows });
   }
   if (potBtn) {
     const inBattle = d.round > 1 && d.player.life > 0 && d.enemy.life > 0;
@@ -128,8 +131,8 @@ function _updateStatus() {
   const d  = _data();
   const el = document.getElementById('s8-status');
   if (!d || !el) return;
-  if (d.player.life <= 0)     el.innerHTML = `${SVG_SKULL} Ти падна в битката.`;
-  else if (d.enemy.life <= 0) el.innerHTML = `${SVG_TROPHY} Победа!`;
+  if (d.player.life <= 0)     el.innerHTML = `${SVG_SKULL} ${t('battlesim8.status.fallen')}`;
+  else if (d.enemy.life <= 0) el.innerHTML = `${SVG_TROPHY} ${t('battlesim8.status.victory')}`;
   else                        el.innerHTML = '';
   document.getElementById('s8-round').disabled = d.player.life <= 0 || d.enemy.life <= 0;
 }
@@ -170,8 +173,8 @@ function _runRound() {
   if (!d || d.player.life <= 0 || d.enemy.life <= 0) return;
 
   const useAxe  = !!d.items?.axe;
-  const aDice   = _rollDice(d.player.skill + (useAxe ? 1 : 0));
-  const eDice   = _rollDice(d.enemy.skill  + (useAxe ? 1 : 0));
+  const aDice   = _rollDice(d.player.skill + (useAxe ? AXE_DICE_BONUS : 0));
+  const eDice   = _rollDice(d.enemy.skill  + (useAxe ? AXE_DICE_BONUS : 0));
 
   let cmNote = '';
   if (d.items?.chainmail) {
@@ -180,7 +183,7 @@ function _runRound() {
     if (wi >= 0) {
       const old = eDice[wi];
       eDice[wi] = 1 + Math.floor(Math.random() * 6);
-      cmNote = ` <span class="s8-rules-note">(ризница: ${old}→${eDice[wi]})</span>`;
+      cmNote = t('battlesim8.log.chainmail_note', { old, new: eDice[wi] });
     }
   }
 
@@ -188,38 +191,38 @@ function _runRound() {
   const eDmg    = _calcDmg(eDice);
   const rn      = d.round++;
   const en      = escapeHtml(_enemyName(d));
-  const axeNote = useAxe ? ' <span class="s8-rules-note">(брадва)</span>' : '';
+  const axeNote = useAxe ? t('battlesim8.log.axe_note') : '';
 
   if (d.enemy.foeFirst) {
     // Enemy strikes first; sixWins only applies if the player survives
     d.player.life = Math.max(0, d.player.life - eDmg);
     if (d.player.life <= 0) {
-      _appendLog(d, `<b>Рунд ${rn}:</b> ${en} ${_diceHtml(eDice)}${axeNote}${cmNote} → ${_dmgHtml(eDmg, 's8-dmg-enemy')} | <span class="s8-dead">Адрин умира</span>`);
+      _appendLog(d, t('battlesim8.log.round_foefirst_dead', { rn, en, eDice: _diceHtml(eDice), axeNote, cmNote, eDmg: _dmgHtml(eDmg, 's8-dmg-enemy') }));
       _recordOutcome(d, 'loss');
     } else if (d.sixWins && aDice.includes(6)) {
       d.enemy.life = 0;
-      _appendLog(d, `<b>Рунд ${rn}:</b> ${en} ${_diceHtml(eDice)}${axeNote}${cmNote} → ${_dmgHtml(eDmg, 's8-dmg-enemy')} &nbsp; Адрин ${_diceHtml(aDice)}${axeNote} → <span class="s8-win">${SVG_TARGET} шестица - автоматична победа!</span>`);
+      _appendLog(d, t('battlesim8.log.round_foefirst_sixwin', { rn, en, eDice: _diceHtml(eDice), axeNote, cmNote, eDmg: _dmgHtml(eDmg, 's8-dmg-enemy'), aDice: _diceHtml(aDice), target: SVG_TARGET }));
       _recordOutcome(d, 'win');
     } else {
       d.enemy.life = Math.max(0, d.enemy.life - aDmg);
-      const bar = `<span class="s8-hpbar">Адрин Ж${d.player.life} · ${en} Ж${Math.max(0, d.enemy.life)}</span>`;
-      _appendLog(d, `<b>Рунд ${rn}:</b> ${en} ${_diceHtml(eDice)}${axeNote}${cmNote} → ${_dmgHtml(eDmg, 's8-dmg-enemy')} &nbsp; Адрин ${_diceHtml(aDice)}${axeNote} → ${_dmgHtml(aDmg, 's8-dmg-player')} &nbsp; ${bar}`);
-      if (d.enemy.life <= 0) { _appendLog(d, `<span class="s8-win">${SVG_TROPHY} ${en} е победен!</span>`); _recordOutcome(d, 'win'); }
+      const bar = t('battlesim8.log.hpbar', { playerLife: d.player.life, en, enemyLife: Math.max(0, d.enemy.life) });
+      _appendLog(d, t('battlesim8.log.round_foefirst_normal', { rn, en, eDice: _diceHtml(eDice), axeNote, cmNote, eDmg: _dmgHtml(eDmg, 's8-dmg-enemy'), aDice: _diceHtml(aDice), aDmg: _dmgHtml(aDmg, 's8-dmg-player'), bar }));
+      if (d.enemy.life <= 0) { _appendLog(d, t('battlesim8.log.enemy_defeated', { trophy: SVG_TROPHY, en })); _recordOutcome(d, 'win'); }
     }
   } else if (d.sixWins && aDice.includes(6)) {
     d.enemy.life = 0;
-    _appendLog(d, `<b>Рунд ${rn}:</b> Адрин ${_diceHtml(aDice)}${axeNote} → <span class="s8-win">${SVG_TARGET} шестица - автоматична победа!</span>`);
+    _appendLog(d, t('battlesim8.log.round_sixwin', { rn, aDice: _diceHtml(aDice), axeNote, target: SVG_TARGET }));
     _recordOutcome(d, 'win');
   } else {
     d.enemy.life = Math.max(0, d.enemy.life - aDmg);
     if (d.enemy.life <= 0) {
-      _appendLog(d, `<b>Рунд ${rn}:</b> Адрин ${_diceHtml(aDice)}${axeNote} → ${_dmgHtml(aDmg, 's8-dmg-player')} | <span class="s8-win">${en} умира</span>`);
+      _appendLog(d, t('battlesim8.log.round_enemy_dead', { rn, aDice: _diceHtml(aDice), axeNote, aDmg: _dmgHtml(aDmg, 's8-dmg-player'), en }));
       _recordOutcome(d, 'win');
     } else {
       d.player.life = Math.max(0, d.player.life - eDmg);
-      const bar = `<span class="s8-hpbar">Адрин Ж${d.player.life} · ${en} Ж${Math.max(0, d.enemy.life)}</span>`;
-      _appendLog(d, `<b>Рунд ${rn}:</b> Адрин ${_diceHtml(aDice)}${axeNote} → ${_dmgHtml(aDmg, 's8-dmg-player')} &nbsp; ${en} ${_diceHtml(eDice)}${axeNote}${cmNote} → ${_dmgHtml(eDmg, 's8-dmg-enemy')} &nbsp; ${bar}`);
-      if (d.player.life <= 0) { _appendLog(d, `<span class="s8-dead">${SVG_SKULL} Адрин умира.</span>`); _recordOutcome(d, 'loss'); }
+      const bar = t('battlesim8.log.hpbar', { playerLife: d.player.life, en, enemyLife: Math.max(0, d.enemy.life) });
+      _appendLog(d, t('battlesim8.log.round_normal', { rn, aDice: _diceHtml(aDice), axeNote, aDmg: _dmgHtml(aDmg, 's8-dmg-player'), en, eDice: _diceHtml(eDice), cmNote, eDmg: _dmgHtml(eDmg, 's8-dmg-enemy'), bar }));
+      if (d.player.life <= 0) { _appendLog(d, t('battlesim8.log.player_dead', { skull: SVG_SKULL })); _recordOutcome(d, 'loss'); }
     }
   }
 
@@ -242,9 +245,9 @@ function _fireBow() {
   d.bowFired   = true;
   d.enemy.life = Math.max(0, d.enemy.life - dmg);
 
-  _appendLog(d, `<b>Стрела:</b> ${_diceHtml(dice)} → ${_dmgHtml(dmg, 's8-dmg-player')} на ${en} &nbsp; <span class="s8-hpbar">${en} Ж${d.enemy.life} · стрели останали: ${d.items.arrows}</span>`);
+  _appendLog(d, t('battlesim8.log.arrow', { dice: _diceHtml(dice), dmg: _dmgHtml(dmg, 's8-dmg-player'), en, enemyLife: d.enemy.life, arrows: d.items.arrows }));
   if (d.enemy.life <= 0) {
-    _appendLog(d, `<span class="s8-win">${SVG_TROPHY} ${en} пада от стрелата!</span>`);
+    _appendLog(d, t('battlesim8.log.arrow_kill', { trophy: SVG_TROPHY, en }));
     _recordOutcome(d, 'win');
   }
 
@@ -260,12 +263,12 @@ function _usePotion() {
   if (!d || inBattle || !d.items?.potion || d.player.life <= 0 || d.player.life >= d.player.lifeMax) return;
 
   const roll  = 1 + Math.floor(Math.random() * 6);
-  const heal  = roll + 6;
+  const heal  = roll + POTION_HEAL_BONUS;
   const before = d.player.life;
   d.player.life  = Math.min(d.player.lifeMax, d.player.life + heal);
   d.items.potion = false;
 
-  _appendLog(d, `<b>Лечебна отвара:</b> зар ${roll} + 6 = +${heal} Живот &nbsp; <span class="s8-hpbar">Адрин Ж${before} → Ж${d.player.life}</span>`);
+  _appendLog(d, t('battlesim8.log.potion', { roll, heal, before, after: d.player.life }));
 
   saveState();
   _renderInputs();
@@ -279,8 +282,8 @@ function _resetBattle() {
   d.player.life = d.player.lifeMax;
   d.round       = 1;
   d.bowFired    = false;
-  if (d.log.length) _appendLog(d, '──────────');
-  _appendLog(d, 'Битката е нулирана.');
+  if (d.log.length) _appendLog(d, t('battlesim8.log.reset_sep'));
+  _appendLog(d, t('battlesim8.log.reset'));
   saveState();
   _renderInputs();
   _renderLog();
@@ -411,79 +414,78 @@ export function initBattleSim8() {
   overlay.innerHTML = `
     <div class="inv-modal bsim-modal">
       <div class="inv-modal-hdr">
-        <span class="inv-modal-title">Симулатор - Зарево над Кордоба</span>
+        <span class="inv-modal-title">${t('battlesim8.ui.title')}</span>
         <button id="s8-close" class="inv-close-btn" aria-label="${t('btn.close')}">✕</button>
       </div>
       <div class="bsim-body">
         <div class="bsim-col bsim-col-left">
           <div class="bsim-side">
-            <div class="bsim-side-title">Ти (Адрин)</div>
-            ${_statField('Умение', 's8-player-skill', 'player', 'skill')}
-            ${_statField('Живот', 's8-player-life', 'player', 'life')}
-            ${_statField('Максимум Живот', 's8-player-lifemax', 'player', 'lifeMax')}
+            <div class="bsim-side-title">${t('battlesim8.ui.you')}</div>
+            ${_statField(t('battlesim8.ui.skill'), 's8-player-skill', 'player', 'skill')}
+            ${_statField(t('battlesim8.ui.life'), 's8-player-life', 'player', 'life')}
+            ${_statField(t('battlesim8.ui.life_max'), 's8-player-lifemax', 'player', 'lifeMax')}
           </div>
           <div class="bsim-side">
-            <div class="bsim-side-title">Враг</div>
+            <div class="bsim-side-title">${t('battlesim8.ui.enemy')}</div>
             <div class="inv-edit-row">
-              <span class="inv-edit-label bsim-stat-label">Избор</span>
+              <span class="inv-edit-label bsim-stat-label">${t('battlesim8.ui.pick')}</span>
               <div class="autocomplete-wrap bsim-enemy-ac">
-                <input id="s8-enemy-pick" class="inv-edit-input" type="text" autocomplete="off" readonly placeholder="Въведи или избери…" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" aria-controls="s8-enemy-pick-dropdown">
+                <input id="s8-enemy-pick" class="inv-edit-input" type="text" autocomplete="off" readonly placeholder="${t('battlesim8.ui.pick_placeholder')}" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" aria-controls="s8-enemy-pick-dropdown">
                 <ul id="s8-enemy-pick-dropdown" class="autocomplete-dropdown" role="listbox"></ul>
               </div>
             </div>
-            ${_statField('Умение', 's8-enemy-skill', 'enemy', 'skill')}
-            ${_statField('Живот', 's8-enemy-life', 'enemy', 'life')}
-            ${_statField('Максимум Живот', 's8-enemy-lifemax', 'enemy', 'lifeMax')}
+            ${_statField(t('battlesim8.ui.skill'), 's8-enemy-skill', 'enemy', 'skill')}
+            ${_statField(t('battlesim8.ui.life'), 's8-enemy-life', 'enemy', 'life')}
+            ${_statField(t('battlesim8.ui.life_max'), 's8-enemy-lifemax', 'enemy', 'lifeMax')}
             <div class="inv-edit-row">
-              <span class="inv-edit-label bsim-stat-label">Ред на атака</span>
+              <span class="inv-edit-label bsim-stat-label">${t('battlesim8.ui.attack_order')}</span>
               <input id="s8-enemy-foe-first" type="checkbox" class="inv-edit-check">
-              <label for="s8-enemy-foe-first" class="inv-edit-check-label">Врагът напада пръв</label>
+              <label for="s8-enemy-foe-first" class="inv-edit-check-label">${t('battlesim8.ui.foe_first')}</label>
             </div>
           </div>
           <div class="bsim-side">
-            <div class="bsim-side-title">Предмети</div>
+            <div class="bsim-side-title">${t('battlesim8.ui.items')}</div>
             <div class="inv-edit-row">
               <input id="s8-item-bow" type="checkbox" class="inv-edit-check">
-              <label for="s8-item-bow" class="inv-edit-check-label">Лък</label>
+              <label for="s8-item-bow" class="inv-edit-check-label">${t('battlesim8.ui.bow')}</label>
               <div class="inv-qty-wrap s8-arrows-wrap">
                 <button class="inv-qty-btn" id="s8-arrows-dec">−</button>
                 <input id="s8-arrows" class="inv-edit-input inv-qty-input" type="text" inputmode="numeric" style="width:44px">
                 <button class="inv-qty-btn" id="s8-arrows-inc">+</button>
               </div>
-              <span class="s8-rules-note" style="margin-left:4px">стрели</span>
+              <span class="s8-rules-note" style="margin-left:4px">${t('battlesim8.ui.arrows')}</span>
             </div>
             <div class="inv-edit-row">
               <input id="s8-item-chainmail" type="checkbox" class="inv-edit-check">
-              <label for="s8-item-chainmail" class="inv-edit-check-label">Ризница (прехвърля 1 вражески зар)</label>
+              <label for="s8-item-chainmail" class="inv-edit-check-label">${t('battlesim8.ui.chainmail')}</label>
             </div>
             <div class="inv-edit-row">
               <input id="s8-item-axe" type="checkbox" class="inv-edit-check">
-              <label for="s8-item-axe" class="inv-edit-check-label">Брадва (+1 зар на атака, +1 зар на враг)</label>
+              <label for="s8-item-axe" class="inv-edit-check-label">${t('battlesim8.ui.axe', { n: AXE_DICE_BONUS })}</label>
             </div>
             <div class="inv-edit-row">
               <input id="s8-item-potion" type="checkbox" class="inv-edit-check">
-              <label for="s8-item-potion" class="inv-edit-check-label">Лечебна отвара (1 зар+6)</label>
+              <label for="s8-item-potion" class="inv-edit-check-label">${t('battlesim8.ui.potion', { n: POTION_HEAL_BONUS })}</label>
             </div>
           </div>
           <div class="s8-rules-note">
-            Всеки рунд - хвърляш N зара (N = Умение).
-            Зар 1–3 → пропуск · 4–5 → 1 щ. · 6 → 2 щ.
+            ${t('battlesim8.ui.rules_note')}
           </div>
           <div class="inv-edit-row">
             <input id="s8-six-wins" type="checkbox" class="inv-edit-check">
-            <label for="s8-six-wins" class="inv-edit-check-label">Шестица = автоматична победа</label>
+            <label for="s8-six-wins" class="inv-edit-check-label">${t('battlesim8.ui.six_wins')}</label>
           </div>
           <div id="s8-status" class="bsim-status"></div>
           <div class="inv-modal-ftr">
-            <button id="s8-round" class="inv-add-btn bsim-action-primary">Рунд</button>
-            <button id="s8-bow-fire" class="inv-add-btn" style="display:none">Стреляй с лък</button>
-            <button id="s8-potion-use" class="inv-add-btn" style="display:none">Пий отвара</button>
-            <button id="s8-reset" class="inv-add-btn">Нулирай</button>
+            <button id="s8-round" class="inv-add-btn bsim-action-primary">${t('battlesim8.btn.round')}</button>
+            <button id="s8-bow-fire" class="inv-add-btn" style="display:none">${t('battlesim8.btn.bow_fire')}</button>
+            <button id="s8-potion-use" class="inv-add-btn" style="display:none">${t('battlesim8.btn.potion_use')}</button>
+            <button id="s8-reset" class="inv-add-btn">${t('battlesim8.btn.reset')}</button>
           </div>
         </div>
         <div class="bsim-col bsim-col-right">
           <details class="bsim-history">
-            <summary id="s8-history-summary">История на битките (0)</summary>
+            <summary id="s8-history-summary">${t('battlesim8.history.summary', { n: 0 })}</summary>
             <div id="s8-history-list" class="bsim-history-list"></div>
           </details>
           <div id="s8-log" class="bsim-log"></div>

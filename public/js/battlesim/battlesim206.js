@@ -80,14 +80,19 @@
 //
 // All state lives in pt.sim206, per-user/per-book via currentPlaythrough().
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../state.js?v=13';
-import { showAlert } from '../play.js?v=143';
-import { getPlayBtnRow } from '../charsheet.js?v=96';
-import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../util.js?v=79';
-import { t } from '../i18n.js?v=64';
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../state.js?v=14';
+import { showAlert } from '../confirm.js?v=5';
+import { getPlayBtnRow } from '../charsheet.js?v=105';
+import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../util.js?v=88';
+import { t } from '../i18n.js?v=72';
 
 const SVG_SKULL  = `<svg class="sim-icon sim-icon-dead"  viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8c0 2.8 1.4 5.3 3.6 6.8V20a1 1 0 0 0 1 1h6.8a1 1 0 0 0 1-1v-2.2C18.6 16.3 20 13.8 20 11a8 8 0 0 0-8-8zm-2.5 13v-1.5a.5.5 0 0 0-.5-.5H8l-.5-1 1-1-1-1 1-1H9a2.5 2.5 0 0 1 5 0h.5l1 1-1 1 1 1-.5 1h-1a.5.5 0 0 0-.5.5V16h-4z"/></svg>`;
 const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v7a6 6 0 0 1-12 0V2zm-2 1H2v4a4 4 0 0 0 4 4v-1a3 3 0 0 1-3-3V3zm16 0h2v4a4 4 0 0 1-4 4v-1a3 3 0 0 0 3-3V3zm-7 13v2H9v2h6v-2h-2v-2a6 6 0 0 0 5-5.92V2H6v8.08A6 6 0 0 0 13 16z"/></svg>`;
+
+const FIRESPRITE_LUCKY_DMG = 0;
+const FIRESPRITE_UNLUCKY_DMG = 4;
+const FIRESPRITE_BASELINE_DMG = 3;
+const GHOUL_PARALYSIS_THRESHOLD = 4;
 
 function _data() {
   const pt = currentPlaythrough();
@@ -220,32 +225,32 @@ function _runRound() {
 
   const playerAS = _roll2d6() + _effectiveSkill(d);
   const enemyAS  = _roll2d6() + d.enemy.skill;
-  _appendLog(d, `Round ${d.roundsThisBattle}: you ${playerAS} vs ${_enemyNameSafe(d)} ${enemyAS}.`);
+  _appendLog(d, t('battlesim206.log.round', { round: d.roundsThisBattle, playerAS, enemy: _enemyNameSafe(d), enemyAS }));
 
   let playerWins = false, tie = false;
   if (playerAS === enemyAS) tie = true;
   else playerWins = playerAS > enemyAS;
 
   if (tie) {
-    _appendLog(d, 'Both blows are avoided.');
+    _appendLog(d, t('battlesim206.log.both_avoided'));
   } else if (playerWins) {
     d.enemy.stamina = Math.max(floor, d.enemy.stamina - 2);
     d.player.hitsLandedThisFight++;
-    _appendLog(d, `You wound ${_enemyNameSafe(d)} for 2. STAMINA: ${d.enemy.stamina}/${d.enemy.staminaMax}.`);
+    _appendLog(d, t('battlesim206.log.you_wound', { enemy: _enemyNameSafe(d), n: 2, stamina: d.enemy.stamina, staminaMax: d.enemy.staminaMax }));
     if (d.player.winAfterHits > 0 && d.player.hitsLandedThisFight >= d.player.winAfterHits && d.enemy.stamina > floor) {
       d.enemy.stamina = floor;
-      _appendLog(d, `You've landed enough blows to press your advantage - the fight ends here.`);
+      _appendLog(d, t('battlesim206.log.press_advantage'));
     }
     if (d.enemy.stamina > floor) d.pendingLuckQueue.push({ kind: 'player-hit' });
   } else if (d.player.fireSpriteWound) {
     // Sec.9: the wound isn't applied yet - baseline 3 STAMINA, but you may
     // optionally Test Your Luck on it (Lucky = 0, Unlucky = 4, skip = keep
     // the 3), replacing rather than adjusting the usual table.
-    _appendLog(d, `${_enemyNameSafe(d)} readies a scorching bite - optionally Test Your Luck.`);
+    _appendLog(d, t('battlesim206.log.firesprite_ready', { enemy: _enemyNameSafe(d) }));
     d.pendingLuckQueue.push({ kind: 'fire-sprite-wound' });
   } else {
     d.player.stamina = Math.max(0, d.player.stamina - woundDmg);
-    _appendLog(d, `${_enemyNameSafe(d)} wounds you for ${woundDmg}. STAMINA: ${d.player.stamina}/${d.player.staminaInitial}.`);
+    _appendLog(d, t('battlesim206.log.enemy_wounds', { enemy: _enemyNameSafe(d), n: woundDmg, stamina: d.player.stamina, staminaMax: d.player.staminaInitial }));
     if (d.player.ghoulWoundCounter) d.player.woundEventsThisFight++;
     if (d.player.stamina > 0) d.pendingLuckQueue.push({ kind: 'enemy-hit' });
   }
@@ -253,10 +258,10 @@ function _runRound() {
   const paralysed = _checkGhoulParalysis(d);
 
   if (d.enemy.stamina <= floor) {
-    _appendLog(d, `${SVG_TROPHY} ${_enemyNameSafe(d)} is defeated!`);
+    _appendLog(d, t('battlesim206.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyNameSafe(d) }));
     _recordOutcome(d, 'win');
   } else if (!paralysed && d.player.stamina <= 0) {
-    _appendLog(d, `${SVG_SKULL} You have fallen in battle.`);
+    _appendLog(d, t('battlesim206.log.fallen', { skull: SVG_SKULL }));
     _recordOutcome(d, 'loss');
     d.pendingLuckQueue = [];
   }
@@ -273,7 +278,7 @@ function _runRound() {
 // STAMINA to 0 itself, which would otherwise also satisfy that check).
 function _checkGhoulParalysis(d) {
   if (d.player.ghoulWoundCounter && d.player.woundEventsThisFight >= 4 && d.player.stamina > 0) {
-    _appendLog(d, `${SVG_SKULL} Four wounds paralyse you - the Ghoul finishes you off.`);
+    _appendLog(d, t('battlesim206.log.ghoul_paralysis', { skull: SVG_SKULL }));
     d.player.stamina = 0;
     _recordOutcome(d, 'loss');
     d.pendingLuckQueue = [];
@@ -296,29 +301,29 @@ function _testLuck() {
   if (event.kind === 'player-hit') {
     if (lucky) {
       d.enemy.stamina = Math.max(floor, d.enemy.stamina - 2);
-      _appendLog(d, `Test Your Luck: ${roll} (Lucky) - the wound is worse. ${_enemyNameSafe(d)} STAMINA: ${d.enemy.stamina}/${d.enemy.staminaMax}.`);
+      _appendLog(d, t('battlesim206.log.luck_player_hit_lucky', { roll, enemy: _enemyNameSafe(d), stamina: d.enemy.stamina, staminaMax: d.enemy.staminaMax }));
     } else {
       d.enemy.stamina = Math.min(d.enemy.staminaMax, d.enemy.stamina + 1);
-      _appendLog(d, `Test Your Luck: ${roll} (Unlucky) - the wound is less severe. ${_enemyNameSafe(d)} STAMINA: ${d.enemy.stamina}/${d.enemy.staminaMax}.`);
+      _appendLog(d, t('battlesim206.log.luck_player_hit_unlucky', { roll, enemy: _enemyNameSafe(d), stamina: d.enemy.stamina, staminaMax: d.enemy.staminaMax }));
     }
-    if (d.enemy.stamina <= floor) { _appendLog(d, `${SVG_TROPHY} ${_enemyNameSafe(d)} is defeated!`); _recordOutcome(d, 'win'); }
+    if (d.enemy.stamina <= floor) { _appendLog(d, t('battlesim206.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyNameSafe(d) })); _recordOutcome(d, 'win'); }
   } else if (event.kind === 'fire-sprite-wound') {
-    const dmg = lucky ? 0 : 4;
+    const dmg = lucky ? FIRESPRITE_LUCKY_DMG : FIRESPRITE_UNLUCKY_DMG;
     d.player.stamina = Math.max(0, d.player.stamina - dmg);
-    _appendLog(d, `Test Your Luck: ${roll} (${lucky ? 'Lucky' : 'Unlucky'}) - the bite costs you ${dmg} STAMINA. STAMINA: ${d.player.stamina}/${d.player.staminaInitial}.`);
+    _appendLog(d, t('battlesim206.log.firesprite_result', { roll, outcome: lucky ? t('battlesim206.log.lucky') : t('battlesim206.log.unlucky'), n: dmg, stamina: d.player.stamina, staminaMax: d.player.staminaInitial }));
     if (d.player.ghoulWoundCounter) d.player.woundEventsThisFight++;
   } else {
     if (lucky) {
       d.player.stamina = Math.min(d.player.staminaInitial, d.player.stamina + 1);
-      _appendLog(d, `Test Your Luck: ${roll} (Lucky) - ${_enemyNameSafe(d)}'s wound is less severe. Your STAMINA: ${d.player.stamina}/${d.player.staminaInitial}.`);
+      _appendLog(d, t('battlesim206.log.luck_hit_lucky', { roll, enemy: _enemyNameSafe(d), stamina: d.player.stamina, staminaMax: d.player.staminaInitial }));
     } else {
       d.player.stamina = Math.max(0, d.player.stamina - 1);
-      _appendLog(d, `Test Your Luck: ${roll} (Unlucky) - ${_enemyNameSafe(d)}'s wound is worse. Your STAMINA: ${d.player.stamina}/${d.player.staminaInitial}.`);
+      _appendLog(d, t('battlesim206.log.luck_hit_unlucky', { roll, enemy: _enemyNameSafe(d), stamina: d.player.stamina, staminaMax: d.player.staminaInitial }));
     }
   }
   const paralysed = _checkGhoulParalysis(d);
   if (!paralysed && d.player.stamina <= 0) {
-    _appendLog(d, `${SVG_SKULL} You have fallen in battle.`);
+    _appendLog(d, t('battlesim206.log.fallen', { skull: SVG_SKULL }));
     _recordOutcome(d, 'loss');
     d.pendingLuckQueue = [];
   }
@@ -332,12 +337,12 @@ function _skipLuck() {
   const event = d.pendingLuckQueue.shift();
   if (event.kind === 'fire-sprite-wound') {
     // Declining the optional test keeps the flat 3 STAMINA baseline.
-    d.player.stamina = Math.max(0, d.player.stamina - 3);
-    _appendLog(d, `You take the bite at its baseline: 3 STAMINA. STAMINA: ${d.player.stamina}/${d.player.staminaInitial}.`);
+    d.player.stamina = Math.max(0, d.player.stamina - FIRESPRITE_BASELINE_DMG);
+    _appendLog(d, t('battlesim206.log.firesprite_baseline', { n: FIRESPRITE_BASELINE_DMG, stamina: d.player.stamina, staminaMax: d.player.staminaInitial }));
     if (d.player.ghoulWoundCounter) d.player.woundEventsThisFight++;
     const paralysed = _checkGhoulParalysis(d);
     if (!paralysed && d.player.stamina <= 0) {
-      _appendLog(d, `${SVG_SKULL} You have fallen in battle.`);
+      _appendLog(d, t('battlesim206.log.fallen', { skull: SVG_SKULL }));
       _recordOutcome(d, 'loss');
       d.pendingLuckQueue = [];
     }
@@ -355,8 +360,8 @@ function _resetBattle() {
   d.player.hitsLandedThisFight = 0;
   d.player.woundEventsThisFight = 0;
   d.pendingLuckQueue = [];
-  if (d.log.length) _appendLog(d, '──────────');
-  _appendLog(d, `Battle reset. ${_enemyNameSafe(d)}'s STAMINA and yours are restored.`);
+  if (d.log.length) _appendLog(d, t('battlesim206.log.reset_sep'));
+  _appendLog(d, t('battlesim206.log.reset', { enemy: _enemyNameSafe(d) }));
   saveState();
   _renderAll();
 }
@@ -371,10 +376,10 @@ function _renderStatus() {
   const hasEnemy = d.enemy.staminaMax > 0;
   const floor = _enemyFloor(d);
   const frightened = d.player.fearMax > 0 && d.player.fear >= d.player.fearMax;
-  if (notReady)                                    el.innerHTML = 'Roll your starting SKILL, STAMINA, LUCK and FEAR to begin.';
-  else if (frightened)                             el.innerHTML = `${SVG_SKULL} Frightened to death.`;
-  else if (d.player.stamina <= 0)                   el.innerHTML = `${SVG_SKULL} You have fallen in battle.`;
-  else if (hasEnemy && d.enemy.stamina <= floor)     el.innerHTML = `${SVG_TROPHY} Victory!`;
+  if (notReady)                                    el.innerHTML = t('battlesim206.status.not_ready');
+  else if (frightened)                             el.innerHTML = t('battlesim206.status.frightened', { skull: SVG_SKULL });
+  else if (d.player.stamina <= 0)                   el.innerHTML = t('battlesim206.status.fallen', { skull: SVG_SKULL });
+  else if (hasEnemy && d.enemy.stamina <= floor)     el.innerHTML = t('battlesim206.status.victory', { trophy: SVG_TROPHY });
   else                                               el.innerHTML = '';
   const over = notReady || frightened || d.player.stamina <= 0 || (hasEnemy && d.enemy.stamina <= floor);
   document.getElementById('sim206-round').disabled = over || !!d.pendingLuckQueue.length;
@@ -387,14 +392,14 @@ function _renderHistory() {
   const sumEl  = document.getElementById('sim206-history-summary');
   const listEl = document.getElementById('sim206-history-list');
   if (!d || !sumEl || !listEl) return;
-  sumEl.textContent = `Battle History (${d.history.length})`;
+  sumEl.textContent = t('battlesim206.history.summary', { n: d.history.length });
   if (!d.history.length) {
-    listEl.innerHTML = '<div class="bsim-history-empty">No finished battles yet.</div>';
+    listEl.innerHTML = `<div class="bsim-history-empty">${t('battlesim206.history.empty')}</div>`;
     return;
   }
   listEl.innerHTML = d.history.slice().reverse().map(h => {
     const icon   = h.outcome === 'win' ? SVG_TROPHY : SVG_SKULL;
-    const result = h.outcome === 'win' ? 'won' : 'lost';
+    const result = h.outcome === 'win' ? t('battlesim206.history.won') : t('battlesim206.history.lost');
     const date   = new Date(h.ts).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
     return `<div class="bsim-history-row">
       <span>${icon} ${escapeHtml(h.enemy)} - ${result}</span>
@@ -413,29 +418,29 @@ function _renderLog() {
 function _renderItemsHtml(d) {
   return `
     <div class="bsim-tech-row">
-      <div class="bsim-tech-name">Wooden Branch <span class="bsim-tech-uses">(sec. 50)</span></div>
-      <div class="bsim-tech-desc">WEAPON: +3 SKILL while wielded - only one weapon bonus applies at a time.</div>
-      <div class="bsim-tech-footer"><label class="inv-edit-check-label"><input type="checkbox" id="sim206-item-branch" class="inv-edit-check" ${d.player.hasWoodenBranch ? 'checked' : ''}> Wielding it</label></div>
+      <div class="bsim-tech-name">${t('battlesim206.ui.item_branch_name')} <span class="bsim-tech-uses">(sec. 50)</span></div>
+      <div class="bsim-tech-desc">${t('battlesim206.ui.item_branch_desc')}</div>
+      <div class="bsim-tech-footer"><label class="inv-edit-check-label"><input type="checkbox" id="sim206-item-branch" class="inv-edit-check" ${d.player.hasWoodenBranch ? 'checked' : ''}> ${t('battlesim206.ui.wielding_it')}</label></div>
     </div>
     <div class="bsim-tech-row">
-      <div class="bsim-tech-name">Ornate Letter-Opener <span class="bsim-tech-uses">(sec. 81)</span></div>
-      <div class="bsim-tech-desc">WEAPON: raises current SKILL to Initial SKILL for that fight - a set, not a stacking bonus.</div>
-      <div class="bsim-tech-footer"><label class="inv-edit-check-label"><input type="checkbox" id="sim206-item-letteropener" class="inv-edit-check" ${d.player.hasLetterOpener ? 'checked' : ''}> Wielding it</label></div>
+      <div class="bsim-tech-name">${t('battlesim206.ui.item_letteropener_name')} <span class="bsim-tech-uses">(sec. 81)</span></div>
+      <div class="bsim-tech-desc">${t('battlesim206.ui.item_letteropener_desc')}</div>
+      <div class="bsim-tech-footer"><label class="inv-edit-check-label"><input type="checkbox" id="sim206-item-letteropener" class="inv-edit-check" ${d.player.hasLetterOpener ? 'checked' : ''}> ${t('battlesim206.ui.wielding_it')}</label></div>
     </div>
     <div class="bsim-tech-row">
-      <div class="bsim-tech-name">Sharp Meat-Knife <span class="bsim-tech-uses">(sec. 83)</span></div>
-      <div class="bsim-tech-desc">WEAPON: +3 SKILL while wielded - only one weapon bonus applies at a time.</div>
-      <div class="bsim-tech-footer"><label class="inv-edit-check-label"><input type="checkbox" id="sim206-item-meatknife" class="inv-edit-check" ${d.player.hasMeatKnife ? 'checked' : ''}> Wielding it</label></div>
+      <div class="bsim-tech-name">${t('battlesim206.ui.item_meatknife_name')} <span class="bsim-tech-uses">(sec. 83)</span></div>
+      <div class="bsim-tech-desc">${t('battlesim206.ui.item_meatknife_desc')}</div>
+      <div class="bsim-tech-footer"><label class="inv-edit-check-label"><input type="checkbox" id="sim206-item-meatknife" class="inv-edit-check" ${d.player.hasMeatKnife ? 'checked' : ''}> ${t('battlesim206.ui.wielding_it')}</label></div>
     </div>
     <div class="bsim-tech-row">
-      <div class="bsim-tech-name">Short Silver Dagger <span class="bsim-tech-uses">(sec. 192)</span></div>
-      <div class="bsim-tech-desc">WEAPON: +2 SKILL while wielded - only one weapon bonus applies at a time.</div>
-      <div class="bsim-tech-footer"><label class="inv-edit-check-label"><input type="checkbox" id="sim206-item-dagger" class="inv-edit-check" ${d.player.hasSilverDagger ? 'checked' : ''}> Wielding it</label></div>
+      <div class="bsim-tech-name">${t('battlesim206.ui.item_dagger_name')} <span class="bsim-tech-uses">(sec. 192)</span></div>
+      <div class="bsim-tech-desc">${t('battlesim206.ui.item_dagger_desc')}</div>
+      <div class="bsim-tech-footer"><label class="inv-edit-check-label"><input type="checkbox" id="sim206-item-dagger" class="inv-edit-check" ${d.player.hasSilverDagger ? 'checked' : ''}> ${t('battlesim206.ui.wielding_it')}</label></div>
     </div>
     <div class="bsim-tech-row">
-      <div class="bsim-tech-name">Kris Knife <span class="bsim-tech-uses">(sec. 35)</span></div>
-      <div class="bsim-tech-desc">WEAPON: +3 SKILL vs the Earl of Drumer/Franklins, +6 vs the Hell Demon (only weapon that can harm it), 0 against anything else - applied automatically once the enemy is picked. Its own one-time +3 LUCK isn't applied by this toggle - add it to Initial LUCK by hand when you find it.</div>
-      <div class="bsim-tech-footer"><label class="inv-edit-check-label"><input type="checkbox" id="sim206-item-kris" class="inv-edit-check" ${d.player.hasKrisKnife ? 'checked' : ''}> Wielding it</label></div>
+      <div class="bsim-tech-name">${t('battlesim206.ui.item_kris_name')} <span class="bsim-tech-uses">(sec. 35)</span></div>
+      <div class="bsim-tech-desc">${t('battlesim206.ui.item_kris_desc')}</div>
+      <div class="bsim-tech-footer"><label class="inv-edit-check-label"><input type="checkbox" id="sim206-item-kris" class="inv-edit-check" ${d.player.hasKrisKnife ? 'checked' : ''}> ${t('battlesim206.ui.wielding_it')}</label></div>
     </div>`;
 }
 
@@ -456,7 +461,7 @@ function _renderInputs() {
 
   const rollBtn = document.getElementById('sim206-roll');
   rollBtn.disabled = d.rolled;
-  rollBtn.textContent = d.rolled ? 'Rolled' : 'Roll starting SKILL/STAMINA/LUCK/FEAR';
+  rollBtn.textContent = d.rolled ? t('battlesim206.btn.rolled') : t('battlesim206.btn.roll');
 
   document.getElementById('sim206-enemy-pick').value    = d.enemy.name;
   document.getElementById('sim206-enemy-skill').value   = d.enemy.skill;
@@ -467,7 +472,7 @@ function _renderInputs() {
   document.getElementById('sim206-enemy-floor').value      = d.player.enemyStaminaFloor;
   document.getElementById('sim206-enemy-firesprite').checked = d.player.fireSpriteWound;
   document.getElementById('sim206-enemy-ghoul').checked     = d.player.ghoulWoundCounter;
-  document.getElementById('sim206-ghoul-count').textContent = d.player.ghoulWoundCounter ? `${d.player.woundEventsThisFight}/4 wounds` : '';
+  document.getElementById('sim206-ghoul-count').textContent = d.player.ghoulWoundCounter ? t('battlesim206.ui.ghoul_count', { n: d.player.woundEventsThisFight, max: GHOUL_PARALYSIS_THRESHOLD }) : '';
 
   document.getElementById('sim206-item-list').innerHTML = _renderItemsHtml(d);
 
@@ -602,67 +607,67 @@ export function initSim206() {
   overlay.innerHTML = `
     <div class="inv-modal bsim-modal">
       <div class="inv-modal-hdr">
-        <span class="inv-modal-title">Battle Simulator</span>
+        <span class="inv-modal-title">${t('battlesim.title')}</span>
         <button id="sim206-close" class="inv-close-btn" aria-label="${t('btn.close')}">✕</button>
       </div>
       <div class="bsim-body">
         <div class="bsim-col bsim-col-left">
           <div class="bsim-side">
-            <div class="bsim-side-title">You</div>
+            <div class="bsim-side-title">${t('battlesim206.ui.you')}</div>
             <div class="inv-edit-row bsim-life-roll-row">
-              <button id="sim206-roll" class="inv-edit-done bsim-ae-roll-btn" type="button">Roll starting SKILL/STAMINA/LUCK/FEAR</button>
+              <button id="sim206-roll" class="inv-edit-done bsim-ae-roll-btn" type="button">${t('battlesim206.btn.roll')}</button>
             </div>
-            ${_numField('SKILL', 'sim206-player-skill')}
-            ${_numField('Starting SKILL (Initial-3, unarmed)', 'sim206-player-skillstarting')}
-            ${_numField('Initial SKILL', 'sim206-player-skillmax')}
-            ${_numField('STAMINA', 'sim206-player-stamina')}
-            ${_numField('Initial STAMINA', 'sim206-player-staminamax')}
-            ${_numField('LUCK', 'sim206-player-luck')}
-            ${_numField('Initial LUCK', 'sim206-player-luckmax')}
-            ${_numField('FEAR', 'sim206-player-fear')}
-            ${_numField('Maximum FEAR', 'sim206-player-fearmax')}
-            ${_numField('Attack modifier (weapon bonus, etc.)', 'sim206-player-atkmod')}
+            ${_numField(t('battlesim206.ui.skill'), 'sim206-player-skill')}
+            ${_numField(t('battlesim206.ui.skill_starting'), 'sim206-player-skillstarting')}
+            ${_numField(t('battlesim206.ui.skill_initial'), 'sim206-player-skillmax')}
+            ${_numField(t('battlesim206.ui.stamina'), 'sim206-player-stamina')}
+            ${_numField(t('battlesim206.ui.stamina_initial'), 'sim206-player-staminamax')}
+            ${_numField(t('battlesim206.ui.luck'), 'sim206-player-luck')}
+            ${_numField(t('battlesim206.ui.luck_initial'), 'sim206-player-luckmax')}
+            ${_numField(t('battlesim206.ui.fear'), 'sim206-player-fear')}
+            ${_numField(t('battlesim206.ui.fear_max'), 'sim206-player-fearmax')}
+            ${_numField(t('battlesim206.ui.atkmod'), 'sim206-player-atkmod')}
           </div>
           <div class="bsim-side">
-            <div class="bsim-side-title">Enemy</div>
+            <div class="bsim-side-title">${t('battlesim206.ui.enemy')}</div>
             <div class="inv-edit-row">
-              <span class="inv-edit-label bsim-stat-label">Pick</span>
+              <span class="inv-edit-label bsim-stat-label">${t('battlesim206.ui.pick')}</span>
               <div class="autocomplete-wrap bsim-enemy-ac">
                 <input id="sim206-enemy-pick" class="inv-edit-input" type="text" autocomplete="off" readonly role="combobox" aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" aria-controls="sim206-enemy-pick-dropdown">
                 <ul id="sim206-enemy-pick-dropdown" class="autocomplete-dropdown" role="listbox"></ul>
               </div>
             </div>
-            ${_numField('SKILL', 'sim206-enemy-skill')}
-            ${_numField('STAMINA', 'sim206-enemy-stamina')}
-            ${_numField('Max STAMINA', 'sim206-enemy-staminamax')}
-            ${_numField('Wound damage', 'sim206-enemy-wounddmg')}
-            ${_numField('Win after N landed hits (0=off)', 'sim206-enemy-winhits')}
-            ${_numField('Battle ends at N STAMINA (0=normal)', 'sim206-enemy-floor')}
+            ${_numField(t('battlesim206.ui.skill'), 'sim206-enemy-skill')}
+            ${_numField(t('battlesim206.ui.stamina'), 'sim206-enemy-stamina')}
+            ${_numField(t('battlesim206.ui.stamina_max'), 'sim206-enemy-staminamax')}
+            ${_numField(t('battlesim206.ui.wound_dmg'), 'sim206-enemy-wounddmg')}
+            ${_numField(t('battlesim206.ui.win_after_hits'), 'sim206-enemy-winhits')}
+            ${_numField(t('battlesim206.ui.stamina_floor'), 'sim206-enemy-floor')}
             <div class="inv-edit-row">
-              <label class="inv-edit-check-label"><input type="checkbox" id="sim206-enemy-firesprite" class="inv-edit-check"> Fire Sprite wound (baseline 3, optional Test Luck: Lucky=0, Unlucky=4)</label>
+              <label class="inv-edit-check-label"><input type="checkbox" id="sim206-enemy-firesprite" class="inv-edit-check"> ${t('battlesim206.ui.firesprite_toggle', { baseline: FIRESPRITE_BASELINE_DMG, lucky: FIRESPRITE_LUCKY_DMG, unlucky: FIRESPRITE_UNLUCKY_DMG })}</label>
             </div>
             <div class="inv-edit-row">
-              <label class="inv-edit-check-label"><input type="checkbox" id="sim206-enemy-ghoul" class="inv-edit-check"> Ghoul paralysis (4th wound this fight is fatal) <span id="sim206-ghoul-count" class="bsim-ae-display"></span></label>
+              <label class="inv-edit-check-label"><input type="checkbox" id="sim206-enemy-ghoul" class="inv-edit-check"> ${t('battlesim206.ui.ghoul_toggle', { n: GHOUL_PARALYSIS_THRESHOLD })} <span id="sim206-ghoul-count" class="bsim-ae-display"></span></label>
             </div>
           </div>
           <div id="sim206-status" class="bsim-status"></div>
           <div id="sim206-luck-prompt" class="inv-edit-row bsim-heal-row" style="display:none">
-            <span class="inv-edit-label bsim-stat-label">Test Your Luck?</span>
-            <button id="sim206-luck-yes" class="inv-edit-done bsim-heal-btn" type="button">Test Luck</button>
-            <button id="sim206-luck-no" class="inv-edit-done bsim-heal-btn" type="button">Skip</button>
+            <span class="inv-edit-label bsim-stat-label">${t('battlesim206.btn.luck_prompt')}</span>
+            <button id="sim206-luck-yes" class="inv-edit-done bsim-heal-btn" type="button">${t('battlesim206.btn.luck_yes')}</button>
+            <button id="sim206-luck-no" class="inv-edit-done bsim-heal-btn" type="button">${t('battlesim206.btn.luck_no')}</button>
           </div>
           <div class="inv-modal-ftr">
-            <button id="sim206-round" class="inv-add-btn bsim-action-primary">Round</button>
-            <button id="sim206-reset" class="inv-add-btn">Reset</button>
+            <button id="sim206-round" class="inv-add-btn bsim-action-primary">${t('battlesim206.btn.round')}</button>
+            <button id="sim206-reset" class="inv-add-btn">${t('battlesim206.btn.reset')}</button>
           </div>
         </div>
         <div class="bsim-col bsim-col-right">
           <details class="bsim-history" open>
-            <summary>Items</summary>
+            <summary>${t('battlesim206.ui.items')}</summary>
             <div id="sim206-item-list" class="bsim-tech-list"></div>
           </details>
           <details class="bsim-history">
-            <summary id="sim206-history-summary">Battle History (0)</summary>
+            <summary id="sim206-history-summary">${t('battlesim206.history.summary', { n: 0 })}</summary>
             <div id="sim206-history-list" class="bsim-history-list"></div>
           </details>
           <div id="sim206-log" class="bsim-log"></div>
@@ -711,7 +716,7 @@ export function initSim206() {
     d.player.luck    = d.player.luckInitial;
     d.player.fear    = 0;
     d.rolled = true;
-    _appendLog(d, `Starting stats rolled: SKILL ${d.player.skillInitial} (Starting ${d.player.skillStarting}, unarmed), STAMINA ${d.player.staminaInitial}, LUCK ${d.player.luckInitial}, Maximum FEAR ${d.player.fearMax}.`);
+    _appendLog(d, t('battlesim206.log.rolled', { skill: d.player.skillInitial, starting: d.player.skillStarting, stamina: d.player.staminaInitial, luck: d.player.luckInitial, fearMax: d.player.fearMax }));
     saveState();
     _renderAll();
   });

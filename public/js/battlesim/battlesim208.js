@@ -54,24 +54,28 @@
 //
 // All state lives in pt.sim208, per-user/per-book via currentPlaythrough().
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../state.js?v=13';
-import { showAlert } from '../play.js?v=143';
-import { getPlayBtnRow } from '../charsheet.js?v=96';
-import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../util.js?v=79';
-import { t } from '../i18n.js?v=64';
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../state.js?v=14';
+import { showAlert } from '../confirm.js?v=5';
+import { getPlayBtnRow } from '../charsheet.js?v=105';
+import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../util.js?v=88';
+import { t } from '../i18n.js?v=72';
 
 const SVG_SKULL  = `<svg class="sim-icon sim-icon-dead"  viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8c0 2.8 1.4 5.3 3.6 6.8V20a1 1 0 0 0 1 1h6.8a1 1 0 0 0 1-1v-2.2C18.6 16.3 20 13.8 20 11a8 8 0 0 0-8-8zm-2.5 13v-1.5a.5.5 0 0 0-.5-.5H8l-.5-1 1-1-1-1 1-1H9a2.5 2.5 0 0 1 5 0h.5l1 1-1 1 1 1-.5 1h-1a.5.5 0 0 0-.5.5V16h-4z"/></svg>`;
 const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v7a6 6 0 0 1-12 0V2zm-2 1H2v4a4 4 0 0 0 4 4v-1a3 3 0 0 1-3-3V3zm16 0h2v4a4 4 0 0 1-4 4v-1a3 3 0 0 0 3-3V3zm-7 13v2H9v2h6v-2h-2v-2a6 6 0 0 0 5-5.92V2H6v8.08A6 6 0 0 0 13 16z"/></svg>`;
 
 // Deity (§308) weapon table - rolled fresh each round when deityMode is on.
 const DEITY_WEAPONS = [
-  { name: 'whip',              skill: 10, dmg: 3,        instant: false },
-  { name: 'bolas',             skill: 9,  dmg: 2,        instant: false },
-  { name: 'spear',             skill: 7,  dmg: 1,        instant: false },
-  { name: 'electric lash',     skill: 8,  dmg: 2,        instant: false },
-  { name: 'assault blaster',   skill: 6,  dmg: null,     instant: false }, // 1d6
-  { name: 'disintegrator',     skill: 5,  dmg: null,     instant: true  },
+  { name: 'battlesim208.weapon.whip',       skill: 10, dmg: 3,        instant: false },
+  { name: 'battlesim208.weapon.bolas',      skill: 9,  dmg: 2,        instant: false },
+  { name: 'battlesim208.weapon.spear',      skill: 7,  dmg: 1,        instant: false },
+  { name: 'battlesim208.weapon.lash',       skill: 8,  dmg: 2,        instant: false },
+  { name: 'battlesim208.weapon.blaster',    skill: 6,  dmg: null,     instant: false }, // 1d6
+  { name: 'battlesim208.weapon.disintegrator', skill: 5, dmg: null,   instant: true  },
 ];
+
+const HAND_WOUND_DMG = 2;
+const LASH_DMG = 2;
+const UNARMED_DMG = 1;
 
 function _data() {
   const pt = currentPlaythrough();
@@ -142,16 +146,16 @@ function _runHandToHandRound() {
 
   const playerAS = _roll2d6() + d.skill;
   const enemyAS  = _roll2d6() + d.enemy.skill;
-  _appendLog(d, `Round ${d.roundsThisBattle}: you ${playerAS} vs ${_enemyNameSafe(d)} ${enemyAS}.`);
+  _appendLog(d, t('battlesim208.log.round', { round: d.roundsThisBattle, playerAS, enemy: _enemyNameSafe(d), enemyAS }));
 
   if (playerAS > enemyAS) {
-    d.enemy.stamina = Math.max(0, d.enemy.stamina - 2);
-    _appendLog(d, `You wound ${_enemyNameSafe(d)} for 2. STAMINA: ${d.enemy.stamina}/${d.enemy.staminaMax}.`);
+    d.enemy.stamina = Math.max(0, d.enemy.stamina - HAND_WOUND_DMG);
+    _appendLog(d, t('battlesim208.log.you_wound', { enemy: _enemyNameSafe(d), n: HAND_WOUND_DMG, stamina: d.enemy.stamina, staminaMax: d.enemy.staminaMax }));
   } else if (playerAS < enemyAS) {
-    d.stamina = Math.max(0, d.stamina - 2);
-    _appendLog(d, `${_enemyNameSafe(d)} wounds you for 2. STAMINA: ${d.stamina}/${d.staminaInitial}.`);
+    d.stamina = Math.max(0, d.stamina - HAND_WOUND_DMG);
+    _appendLog(d, t('battlesim208.log.enemy_wounds', { enemy: _enemyNameSafe(d), n: HAND_WOUND_DMG, stamina: d.stamina, staminaMax: d.staminaInitial }));
   } else {
-    _appendLog(d, 'Both blows are avoided.');
+    _appendLog(d, t('battlesim208.log.both_avoided'));
   }
 
   _checkBattleEnd(d);
@@ -164,8 +168,8 @@ function _runHandToHandRound() {
 // round; the defender fires back if it survived.
 
 function _weaponDamage(weapon) {
-  if (weapon === 'lash')    return { amount: 2, note: '' };
-  if (weapon === 'unarmed') return { amount: 1, note: '' };
+  if (weapon === 'lash')    return { amount: LASH_DMG, note: '' };
+  if (weapon === 'unarmed') return { amount: UNARMED_DMG, note: '' };
   const r = _roll1d6();
   return { amount: r, note: ` (1d6 roll ${r})` }; // assault blaster
 }
@@ -179,30 +183,30 @@ function _resolvePlayerHit(d, dmg) {
   const roll = _roll2d6();
   d.armour = Math.max(0, d.armour - 1);
   if (roll <= before) {
-    _appendLog(d, `Armour test: ${roll} vs ${before} - your armour absorbs the hit. ARMOUR now ${d.armour}.`);
+    _appendLog(d, t('battlesim208.log.armour_absorb', { roll, before, armour: d.armour }));
     return;
   }
   d.stamina = Math.max(0, d.stamina - dmg.amount);
-  const dmgText = Number.isFinite(dmg.amount) ? `${dmg.amount} damage${dmg.note}` : `a fatal hit${dmg.note}`;
-  _appendLog(d, `Armour test: ${roll} vs ${before} - penetrated! You take ${dmgText}. ARMOUR now ${d.armour}. STAMINA: ${d.stamina}/${d.staminaInitial}.`);
+  const dmgText = Number.isFinite(dmg.amount) ? t('battlesim208.log.dmg_amount', { n: dmg.amount, note: dmg.note }) : t('battlesim208.log.dmg_fatal', { note: dmg.note });
+  _appendLog(d, t('battlesim208.log.armour_penetrate', { roll, before, dmgText, armour: d.armour, stamina: d.stamina, staminaMax: d.staminaInitial }));
 }
 
 function _runGunfireRound() {
   const d = _data();
   if (!d || _notReady(d) || d.stamina <= 0 || d.enemy.stamina <= 0) return;
   d.roundsThisBattle++;
-  _appendLog(d, `Round ${d.roundsThisBattle}:`);
+  _appendLog(d, t('battlesim208.log.gunfire_round', { round: d.roundsThisBattle }));
 
   const shots = d.enemyExtraAttack ? 2 : 1;
 
   const playerRoll = _roll2d6();
-  _appendLog(d, `You fire (roll ${playerRoll} vs SKILL ${d.skill}).`);
+  _appendLog(d, t('battlesim208.log.you_fire', { roll: playerRoll, skill: d.skill }));
   if (playerRoll < d.skill) {
     const dmg = _weaponDamage(d.weapon);
     d.enemy.stamina = Math.max(0, d.enemy.stamina - dmg.amount);
-    _appendLog(d, `Hit! ${_enemyNameSafe(d)} takes ${dmg.amount}${dmg.note}. STAMINA: ${d.enemy.stamina}/${d.enemy.staminaMax}.`);
+    _appendLog(d, t('battlesim208.log.you_hit', { enemy: _enemyNameSafe(d), n: dmg.amount, note: dmg.note, stamina: d.enemy.stamina, staminaMax: d.enemy.staminaMax }));
   } else {
-    _appendLog(d, 'Miss.');
+    _appendLog(d, t('battlesim208.log.miss'));
   }
 
   if (d.enemy.stamina > 0) {
@@ -221,11 +225,11 @@ function _runGunfireRound() {
         dmg = _weaponDamage(d.enemyWeapon);
       }
       const enemyRoll = _roll2d6();
-      _appendLog(d, `${_enemyNameSafe(d)} fires${weaponLabel ? ` (${escapeHtml(weaponLabel)})` : ''} (roll ${enemyRoll} vs SKILL ${enemySkill}).`);
+      _appendLog(d, t('battlesim208.log.enemy_fires', { enemy: _enemyNameSafe(d), weapon: weaponLabel ? t('battlesim208.log.enemy_fires_weapon_suffix', { weapon: escapeHtml(t(weaponLabel)) }) : '', roll: enemyRoll, skill: enemySkill }));
       if (enemyRoll < enemySkill) {
         _resolvePlayerHit(d, dmg);
       } else {
-        _appendLog(d, 'Miss.');
+        _appendLog(d, t('battlesim208.log.miss'));
       }
       if (d.stamina <= 0) break;
     }
@@ -238,10 +242,10 @@ function _runGunfireRound() {
 
 function _checkBattleEnd(d) {
   if (d.enemy.stamina <= 0) {
-    _appendLog(d, `${SVG_TROPHY} ${_enemyNameSafe(d)} is defeated!`);
+    _appendLog(d, t('battlesim208.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyNameSafe(d) }));
     _recordOutcome(d, 'win');
   } else if (d.stamina <= 0) {
-    _appendLog(d, `${SVG_SKULL} You have fallen.`);
+    _appendLog(d, t('battlesim208.log.fallen', { skull: SVG_SKULL }));
     _recordOutcome(d, 'loss');
   }
 }
@@ -259,8 +263,8 @@ function _resetBattle() {
   d.roundsThisBattle = 0;
   d.enemy.stamina = d.enemy.staminaMax;
   d.stamina = d.staminaInitial;
-  if (d.log.length) _appendLog(d, '──────────');
-  _appendLog(d, `Battle reset. ${_enemyNameSafe(d)}'s STAMINA and yours are restored.`);
+  if (d.log.length) _appendLog(d, t('battlesim208.log.reset_sep'));
+  _appendLog(d, t('battlesim208.log.reset', { enemy: _enemyNameSafe(d) }));
   saveState();
   _renderAll();
 }
@@ -367,11 +371,11 @@ function _renderInputs(skipEnemyPick) {
 
   const status = document.getElementById('sim208-status');
   if (!d.rolled) {
-    status.textContent = 'Roll your starting stats to begin.';
+    status.textContent = t('battlesim208.status.not_ready');
   } else if (d.stamina <= 0) {
-    status.textContent = 'You have fallen. Reset to try again.';
+    status.textContent = t('battlesim208.status.fallen');
   } else if (d.enemy.stamina <= 0 && d.enemy.staminaMax > 0) {
-    status.textContent = `${_enemyName(d)} is defeated.`;
+    status.textContent = t('battlesim208.status.defeated', { enemy: _enemyName(d) });
   } else {
     status.textContent = '';
   }
@@ -390,14 +394,14 @@ function _renderHistory() {
   const sumEl  = document.getElementById('sim208-history-summary');
   const listEl = document.getElementById('sim208-history-list');
   if (!d || !sumEl || !listEl) return;
-  sumEl.textContent = `Battle History (${d.history.length})`;
+  sumEl.textContent = t('battlesim208.history.summary', { n: d.history.length });
   if (!d.history.length) {
-    listEl.innerHTML = '<div class="bsim-history-empty">No finished battles yet.</div>';
+    listEl.innerHTML = `<div class="bsim-history-empty">${t('battlesim208.history.empty')}</div>`;
     return;
   }
   listEl.innerHTML = d.history.slice().reverse().map(h => {
     const icon   = h.outcome === 'win' ? SVG_TROPHY : SVG_SKULL;
-    const result = h.outcome === 'win' ? 'won' : 'lost';
+    const result = h.outcome === 'win' ? t('battlesim208.history.won') : t('battlesim208.history.lost');
     const date   = new Date(h.ts).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
     return `<div class="bsim-history-row">
       <span>${icon} ${escapeHtml(h.enemy)} - ${result}</span>
@@ -459,77 +463,77 @@ export function initSim208() {
   overlay.innerHTML = `
     <div class="inv-modal bsim-modal">
       <div class="inv-modal-hdr">
-        <span class="inv-modal-title">Battle Simulator</span>
+        <span class="inv-modal-title">${t('battlesim.title')}</span>
         <button id="sim208-close" class="inv-close-btn" aria-label="${t('btn.close')}">✕</button>
       </div>
       <div class="bsim-body">
         <div class="bsim-col bsim-col-left">
           <div class="bsim-side">
             <div class="inv-edit-row bsim-life-roll-row">
-              <button id="sim208-roll" class="inv-edit-done bsim-ae-roll-btn" type="button">Roll starting stats (SKILL/STAMINA/LUCK/ARMOUR)</button>
+              <button id="sim208-roll" class="inv-edit-done bsim-ae-roll-btn" type="button">${t('battlesim208.btn.roll')}</button>
             </div>
-            ${_numField('SKILL', 'sim208-skill')}
-            ${_numField('Initial SKILL', 'sim208-skillmax')}
-            ${_numField('STAMINA', 'sim208-stamina')}
-            ${_numField('Initial STAMINA', 'sim208-staminamax')}
-            ${_numField('LUCK', 'sim208-luck')}
-            ${_numField('Initial LUCK', 'sim208-luckmax')}
-            ${_numField('ARMOUR', 'sim208-armour')}
-            ${_numField('Initial ARMOUR', 'sim208-armourmax')}
+            ${_numField(t('battlesim208.ui.skill'), 'sim208-skill')}
+            ${_numField(t('battlesim208.ui.skill_initial'), 'sim208-skillmax')}
+            ${_numField(t('battlesim208.ui.stamina'), 'sim208-stamina')}
+            ${_numField(t('battlesim208.ui.stamina_initial'), 'sim208-staminamax')}
+            ${_numField(t('battlesim208.ui.luck'), 'sim208-luck')}
+            ${_numField(t('battlesim208.ui.luck_initial'), 'sim208-luckmax')}
+            ${_numField(t('battlesim208.ui.armour'), 'sim208-armour')}
+            ${_numField(t('battlesim208.ui.armour_initial'), 'sim208-armourmax')}
             <div class="inv-edit-row">
-              <span class="inv-edit-label bsim-stat-label">Combat type</span>
+              <span class="inv-edit-label bsim-stat-label">${t('battlesim208.ui.combat_type')}</span>
               <select id="sim208-mode" class="inv-edit-input bsim-select">
-                <option value="handtohand">Hand-to-hand</option>
-                <option value="gunfire">Gunfire</option>
+                <option value="handtohand">${t('battlesim208.ui.mode_handtohand')}</option>
+                <option value="gunfire">${t('battlesim208.ui.mode_gunfire')}</option>
               </select>
             </div>
           </div>
           <div class="bsim-side">
             <div class="inv-edit-row">
-              <span class="inv-edit-label bsim-stat-label">Your weapon</span>
+              <span class="inv-edit-label bsim-stat-label">${t('battlesim208.ui.your_weapon')}</span>
               <select id="sim208-weapon" class="inv-edit-input bsim-select">
-                <option value="lash">Electric lash (2)</option>
-                <option value="blaster">Assault blaster (1d6)</option>
-                <option value="unarmed">Unarmed (1)</option>
+                <option value="lash">${t('battlesim208.ui.weapon_lash', { n: LASH_DMG })}</option>
+                <option value="blaster">${t('battlesim208.ui.weapon_blaster')}</option>
+                <option value="unarmed">${t('battlesim208.ui.weapon_unarmed', { n: UNARMED_DMG })}</option>
               </select>
             </div>
             <div class="inv-edit-row">
-              <span class="inv-edit-label bsim-stat-label">Enemy weapon</span>
+              <span class="inv-edit-label bsim-stat-label">${t('battlesim208.ui.enemy_weapon')}</span>
               <select id="sim208-enemy-weapon" class="inv-edit-input bsim-select">
-                <option value="blaster">Assault blaster (1d6)</option>
-                <option value="lash">Electric lash (2)</option>
-                <option value="unarmed">Unarmed (1)</option>
+                <option value="blaster">${t('battlesim208.ui.weapon_blaster')}</option>
+                <option value="lash">${t('battlesim208.ui.weapon_lash', { n: LASH_DMG })}</option>
+                <option value="unarmed">${t('battlesim208.ui.weapon_unarmed', { n: UNARMED_DMG })}</option>
               </select>
             </div>
             <div class="inv-edit-row bsim-ae-row">
-              <label class="inv-edit-check-label"><input type="checkbox" id="sim208-enemy-extra" class="inv-edit-check"> Enemy attacks/fires twice per round</label>
+              <label class="inv-edit-check-label"><input type="checkbox" id="sim208-enemy-extra" class="inv-edit-check"> ${t('battlesim208.ui.enemy_extra_toggle')}</label>
             </div>
             <div id="sim208-gunfire-fields">
               <div class="inv-edit-row bsim-ae-row">
-                <label class="inv-edit-check-label"><input type="checkbox" id="sim208-deity-mode" class="inv-edit-check"> Deity fight (§308) - random weapon each round</label>
+                <label class="inv-edit-check-label"><input type="checkbox" id="sim208-deity-mode" class="inv-edit-check"> ${t('battlesim208.ui.deity_toggle')}</label>
               </div>
-              <div class="bsim-tech-desc">A hit against you always tests ARMOUR first (2d6 ≤ ARMOUR negates it); ARMOUR drops by 1 after every test.</div>
+              <div class="bsim-tech-desc">${t('battlesim208.ui.armour_desc')}</div>
             </div>
             <div class="inv-edit-row">
-              <span class="inv-edit-label bsim-stat-label">Pick</span>
+              <span class="inv-edit-label bsim-stat-label">${t('battlesim208.ui.pick')}</span>
               <div class="autocomplete-wrap bsim-enemy-ac">
                 <input id="sim208-enemy-pick" class="inv-edit-input" type="text" autocomplete="off" readonly role="combobox" aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" aria-controls="sim208-enemy-pick-dropdown">
                 <ul id="sim208-enemy-pick-dropdown" class="autocomplete-dropdown" role="listbox"></ul>
               </div>
             </div>
-            ${_numField('Enemy SKILL', 'sim208-enemy-skill')}
-            ${_numField('Enemy STAMINA', 'sim208-enemy-stamina')}
-            ${_numField('Enemy Max STAMINA', 'sim208-enemy-staminamax')}
+            ${_numField(t('battlesim208.ui.enemy_skill'), 'sim208-enemy-skill')}
+            ${_numField(t('battlesim208.ui.enemy_stamina'), 'sim208-enemy-stamina')}
+            ${_numField(t('battlesim208.ui.enemy_stamina_max'), 'sim208-enemy-staminamax')}
           </div>
           <div id="sim208-status" class="bsim-status"></div>
           <div class="inv-modal-ftr">
-            <button id="sim208-round" class="inv-add-btn bsim-action-primary">Round</button>
-            <button id="sim208-reset" class="inv-add-btn">Reset</button>
+            <button id="sim208-round" class="inv-add-btn bsim-action-primary">${t('battlesim208.btn.round')}</button>
+            <button id="sim208-reset" class="inv-add-btn">${t('battlesim208.btn.reset')}</button>
           </div>
         </div>
         <div class="bsim-col bsim-col-right">
           <details class="bsim-history">
-            <summary id="sim208-history-summary">Battle History (0)</summary>
+            <summary id="sim208-history-summary">${t('battlesim208.history.summary', { n: 0 })}</summary>
             <div id="sim208-history-list" class="bsim-history-list"></div>
           </details>
           <div id="sim208-log" class="bsim-log"></div>
@@ -575,7 +579,7 @@ export function initSim208() {
     d.luck    = d.luckInitial;
     d.armour  = d.armourInitial;
     d.rolled  = true;
-    _appendLog(d, 'Starting stats rolled.');
+    _appendLog(d, t('battlesim208.log.rolled'));
     saveState();
     _renderAll();
   });

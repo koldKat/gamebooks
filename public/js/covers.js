@@ -1,10 +1,10 @@
 // covers.js - Covers panel, lazy grid, landing bg rotation, cover/series activity modals
-import { getToken, isDemoMode, apiFetch } from './state.js?v=13';
-import { openPublicModal, closePublicModal, openPublicProfile, renderPublicProfile, openPublicRun, openPublicSeriesRun, _destroyPubNetworks } from './public-profile.js?v=103';
-import { refreshCoinsDisplay } from './shop.js?v=88';
+import { getToken, isDemoMode, apiFetch } from './state.js?v=14';
+import { openPublicModal, closePublicModal, openPublicProfile, renderPublicProfile, openPublicRun, openPublicSeriesRun, _destroyPubNetworks } from './public-profile.js?v=114';
+import { refreshCoinsDisplay } from './shop.js?v=97';
 import { foldForSearch, matchesSearch, naturalCompare, naturalCompareByName } from './sort.js?v=1';
-import { escapeHtml, fetchPublic as publicFetch } from './util.js?v=79';
-import { t } from './i18n.js?v=64';
+import { escapeHtml, fetchPublic as publicFetch } from './util.js?v=88';
+import { t } from './i18n.js?v=72';
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────
 let _hooks = {};
@@ -301,7 +301,11 @@ function _visibleCoverItems() {
   // they're excluded outright rather than shown/hidden by any single book's
   // sim status.
   if (_coversBattleSimOnly) items = items.filter(_hasBattleSim);
-  if (_coversLiveReadingOnly) items = items.filter(_hasLiveReading);
+  // Mobile is reading-only (see mobile/reader.js) - forced on regardless of
+  // the "Book available" chip's own stored toggle state, since there's
+  // nowhere for a non-reading book to go on mobile anyway. The chip itself
+  // is hidden there (mobile.css) so it can't be toggled back off.
+  if (_coversLiveReadingOnly || _isMobile()) items = items.filter(_hasLiveReading);
   // Open world is a series-only concept - non-series items never match.
   if (_coversOpenWorldOnly) items = items.filter(i => !!i.isOpenWorld);
   if (_coversNotMineOnly && getToken() && !isDemoMode) items = items.filter(_isNotInMyBooks);
@@ -454,6 +458,21 @@ function _appendLazyBatch() {
       _appendLazyBatch();
     }
   });
+}
+
+// _appendLazyBatch's own "do I need another batch?" check reads
+// panel.clientHeight, which is 0 while #covers-panel is display:none (mobile,
+// before the Add Book toggle reveals it) - the very first batch looks like
+// it already overflows a zero-height container, so the fill loop stops
+// after just one batch instead of filling the space the panel actually has
+// once shown. Call this right after revealing the panel to pick the fill
+// back up; harmless (and a same-tick no-op) if the panel was already full.
+export function _refillLazyIfShort() {
+  const panel = document.getElementById('covers-panel');
+  if (panel && _lazyItems && _lazyOffset < _lazyItems.length &&
+      panel.scrollHeight <= panel.clientHeight + 50) {
+    _appendLazyBatch();
+  }
 }
 
 export function _startLazy(items) {
@@ -1191,7 +1210,12 @@ function renderCoverActivity(bookId, bookName, entries, userRating, bookMeta, us
   // its actual books, exactly like books.js's own list already treats
   // containers as a fundamentally different card, never a directly-openable
   // one, via its own separate _renderContainerItem() render path.
-  if (userOwnsBook && !_isMobile() && !bookMeta?.isContainer) {
+  // Shown on mobile too, admin-only, now that /mobile (a genuinely separate
+  // mobile-first frontend, see project_mobile_support_idea) exists as a real
+  // destination for it - see the click handler below for where it actually
+  // sends you, since desktop's own navigateToBook()/showMain() still just
+  // bounces every mobile visit straight back to the books list.
+  if (userOwnsBook && (!_isMobile() || _hooks.getIsAdmin?.()) && !bookMeta?.isContainer) {
     headerHtml += `<button class="add-to-library-btn open-owned-book-btn" data-book-id="${bookId}">${t('covers.open_book')}</button>`;
   }
   if (bookMeta?.isPublic && userLoggedIn && !userOwnsBook) {
@@ -1370,9 +1394,19 @@ function renderCoverActivity(bookId, bookName, entries, userRating, bookMeta, us
     openOwnedBtn.addEventListener('click', async (e) => {
       e.preventDefault();
       e.stopPropagation();
+      // navigateToBook()/showMain() still unconditionally bounce every
+      // mobile visit back to the books list (see boot.js) - /mobile is the
+      // real destination for a mobile admin now, not the desktop play
+      // screen this button otherwise opens.
+      const targetBookId = +openOwnedBtn.dataset.bookId;
+      // Missing ?book= here (just '/mobile', no id) sent every mobile Open
+      // tap - including the one from inside Add Book's own detail dialog,
+      // the exact flow this panel exists for - to /mobile's bare "open a
+      // book from My Books" placeholder instead of the book itself,
+      // regardless of which book was actually tapped.
+      if (_isMobile() && _hooks.getIsAdmin?.()) { window.location.href = `/mobile?book=${encodeURIComponent(targetBookId)}`; return; }
       openOwnedBtn.disabled = true;
       openOwnedBtn.textContent = t('covers.opening');
-      const targetBookId = +openOwnedBtn.dataset.bookId;
       _hooks.lockView?.('book', 1500);
       await _hooks.navigateToBook?.(targetBookId);
       closePublicModal();
@@ -1851,6 +1885,13 @@ export function initCoversPanel() {
     if (_coverPopupSeries) _coverPopupSeries.innerHTML = '';
   };
   document.getElementById('covers-panel').addEventListener('mouseover', e => {
+    // Touch fires a synthetic mouseover on tap, same quirk tooltip.js works
+    // around - the popup would show right where the finger landed and
+    // swallow the click meant to open the book details dialog underneath
+    // it, so tapping a cover looked like it opened "the bigger picture"
+    // instead of the dialog. There's no real hover on mobile to preview
+    // anyway - skip it there entirely rather than fighting the touch event.
+    if (_isMobile()) return;
     const thumb = e.target.closest('.cover-thumb');
     if (!thumb) { _hideCoverPopup(); return; }
     if (thumb.dataset.seriesId) {

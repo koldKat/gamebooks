@@ -257,15 +257,27 @@ let _codeStats = { linesOfCode: 0, codeBytes: 0, jsModules: 0 };
     // panel, not just the test count.
     let testJsFiles = [];
     try { testJsFiles = walkJsFiles('test'); } catch (_) {}
+    // Own try/catch too, same isolation reasoning as test/ above - public/mobile/
+    // is its own separate tree (not walked by the public/js walk above), newer
+    // and less load-bearing than the other four.
+    let mobileJsFiles = [];
+    let mobileCssFiles = [];
+    try {
+      mobileJsFiles  = walkJsFiles('public/mobile/js');
+      mobileCssFiles = fs.readdirSync('public/mobile/css').filter(f => f.endsWith('.css')).map(f => `public/mobile/css/${f}`);
+    } catch (_) {}
     const files = [
       'server.js',
       ...serverJsFiles,
       ...publicJsFiles,
       ...adminJsFiles,
       ...testJsFiles,
+      ...mobileJsFiles,
       ...fs.readdirSync('public/css').filter(f => f.endsWith('.css')).map(f => `public/css/${f}`),
+      ...mobileCssFiles,
       'public/index.html',
       'public/guide.html',
+      'public/mobile/index.html',
       ...fs.readdirSync('admin').filter(f => f.endsWith('.html')).map(f => `admin/${f}`),
     ];
     let lines = 0, bytes = 0;
@@ -274,7 +286,7 @@ let _codeStats = { linesOfCode: 0, codeBytes: 0, jsModules: 0 };
     }
     _codeStats.linesOfCode = lines;
     _codeStats.codeBytes   = bytes;
-    _codeStats.jsModules   = 1 + serverJsFiles.length + publicJsFiles.length + adminJsFiles.length + testJsFiles.length;
+    _codeStats.jsModules   = 1 + serverJsFiles.length + publicJsFiles.length + adminJsFiles.length + testJsFiles.length + mobileJsFiles.length;
   } catch (_) {}
 })();
 

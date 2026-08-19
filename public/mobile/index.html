@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gamebook Tracker</title>
+<link rel="stylesheet" href="/css/confirm.css?v=1">
+<link rel="stylesheet" href="/css/autocomplete.css?v=1">
+<link rel="stylesheet" href="/css/equipment.css?v=13">
+<link rel="stylesheet" href="/css/battlesim.css?v=31">
+<link rel="stylesheet" href="/mobile/css/style.css?v=11">
+</head>
+<body>
+<div id="screen"></div>
+<!-- Hidden mount point so getPlayBtnRow() (charsheet.js, shared with every
+     battlesim*.js overlay) has somewhere to attach its auto-created trigger
+     button on this page - real mobile UI is reader.js's own inline button
+     row instead, which drives the sim by clicking this hidden button
+     programmatically, so it's never meant to be seen. -->
+<div id="m-sim-btn-row" style="display:none"></div>
+<script src="/vendor/vis-network/vis-network.min.js?v=1"></script>
+<script type="module" src="/mobile/js/app.js?v=18"></script>
+</body>
+</html>

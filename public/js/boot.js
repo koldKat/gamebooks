@@ -10,59 +10,61 @@ import {
   isDemoMode,
   setOnViewingPtChange,
   mappedCountFor, discoveredSectionsFor,
-} from './state.js?v=13';
+} from './state.js?v=14';
 import {
   network, visNodes, initGraph, destroyNetwork,
   subtreeToDelete, deleteNodes, findPathTo, canReach, setGraphOpenWorld, applyConnectorStyle,
-} from './graph.js?v=135';
-import { render, openEditModal, closeEditModal, openNoteModal, closeNoteModal, showConfirm, showAlert, confirmAlphanumericSwitch, maxFastTravels, setFastTravelHandler, showFastTravelDialog, setOnTrailToggle, openPortalModal, setDiscoverableLimit, setOnChoicesRecorded, startPlaythrough, setAltStartHandler, setAfterRenderFn, wouldAutoNav } from './play.js?v=143';
-import { t, applyTranslations, setTranslationOverride } from './i18n.js?v=64';
-import { initCharSheet, setCharSheetVisible, renderCharSheetDisplay } from './charsheet.js?v=96';
-import { initInventory, setInventoryVisible, renderInventoryDisplay, preloadItems, setExtraDisplayItemsProvider } from './inventory.js?v=200';
-import { initEquipment, setEquipmentVisible, getVisibleEquippedItems } from './equipment.js?v=187';
-import { initNotes, hideNotesUI, loadNotesForBook, setOnXpAwarded as setNotesOnXpAwarded } from './notes.js?v=119';
-import { initParty, connectPartySSE, disconnectPartySSE, loadPartyInvites, setPartyHooks } from './party.js?v=173';
-import { initAuth, setOnAuthSuccess, showAuthForm, showResetPanel, hasPendingResetToken } from './auth.js?v=79';
-import { initStats, closeStatsModal } from './stats.js?v=99';
-import { setAddBookHooks, initAddBook, _closeAddBook, _closeAddComp, _closeAddSeries } from './add-book.js?v=213';
+} from './graph.js?v=147';
+import { render, openEditModal, closeEditModal, openNoteModal, closeNoteModal, showConfirm, showAlert, confirmAlphanumericSwitch, maxFastTravels, setFastTravelHandler, showFastTravelDialog, setOnTrailToggle, openPortalModal, setDiscoverableLimit, setOnChoicesRecorded, startPlaythrough, setAltStartHandler, setAfterRenderFn, wouldAutoNav } from './play.js?v=155';
+import { t, applyTranslations, setTranslationOverride } from './i18n.js?v=72';
+import { initCharSheet, setCharSheetVisible, renderCharSheetDisplay } from './charsheet.js?v=105';
+import { initInventory, setInventoryVisible, renderInventoryDisplay, preloadItems, setExtraDisplayItemsProvider } from './inventory.js?v=212';
+import { initEquipment, setEquipmentVisible, getVisibleEquippedItems } from './equipment.js?v=199';
+import { initNotes, hideNotesUI, loadNotesForBook, setOnXpAwarded as setNotesOnXpAwarded } from './notes.js?v=131';
+import { initParty, connectPartySSE, disconnectPartySSE, loadPartyInvites, setPartyHooks } from './party.js?v=185';
+import { initAuth, setOnAuthSuccess, showAuthForm, showResetPanel, hasPendingResetToken } from './auth.js?v=88';
+import { initStats, closeStatsModal } from './stats.js?v=108';
+import { setAddBookHooks, initAddBook, _closeAddBook, _closeAddComp, _closeAddSeries } from './add-book.js?v=235';
 import {
   setEditBookHooks, initEditBook,
   openEditBookModal, closeEditBookModal, openEditCompModal, openEditSeriesModal,
   _openEditStash, _closeEditStash, _closeAddStash,
   _adminPdfHref,
   maxSectionInUse,
-} from './edit-book.js?v=216';
+} from './edit-book.js?v=238';
 import {
   setPrefsHooks, savePrefs, syncPrefs,
   _setLandingPanelCollapsed, _toggleAllLandingPanelsCollapsed,
   _setPlayPanelCollapsed, _toggleAllPlayPanelsCollapsed,
-} from './prefs.js?v=203';
-import { initBattleSim, setBattleSimVisible, renderBattleSim } from './battlesim/battlesim829.js?v=147';
-import { initBattleSim8, setSim8Visible, renderSim8 } from './battlesim/battlesim8.js?v=119';
-import { initSim286, setSim286Visible, renderSim286 } from './battlesim/battlesim286.js?v=79';
-import { initSim198, setSim198Visible, renderSim198 } from './battlesim/battlesim198.js?v=61';
-import { initSim199, setSim199Visible, renderSim199 } from './battlesim/battlesim199.js?v=54';
-import { initSim200, setSim200Visible, renderSim200 } from './battlesim/battlesim200.js?v=44';
-import { initSim186, setSim186Visible, renderSim186 } from './battlesim/battlesim186.js?v=45';
-import { initSim201, setSim201Visible, renderSim201 } from './battlesim/battlesim201.js?v=47';
-import { initSim202, setSim202Visible, renderSim202 } from './battlesim/battlesim202.js?v=30';
-import { initSim203, setSim203Visible, renderSim203 } from './battlesim/battlesim203.js?v=29';
-import { initSim204, setSim204Visible, renderSim204 } from './battlesim/battlesim204.js?v=25';
-import { initSim205, setSim205Visible, renderSim205 } from './battlesim/battlesim205.js?v=24';
-import { initSim206, setSim206Visible, renderSim206 } from './battlesim/battlesim206.js?v=19';
-import { initSim207, setSim207Visible, renderSim207 } from './battlesim/battlesim207.js?v=20';
-import { initSim208, setSim208Visible, renderSim208 } from './battlesim/battlesim208.js?v=12';
-import { initSim209, setSim209Visible, renderSim209 } from './battlesim/battlesim209.js?v=8';
-import { initSim210, setSim210Visible, renderSim210 } from './battlesim/battlesim210.js?v=6';
-import { initSim211, setSim211Visible, renderSim211 } from './battlesim/battlesim211.js?v=6';
-import { initSim212, setSim212Visible, renderSim212 } from './battlesim/battlesim212.js?v=3';
-import { initLiveRead, setLiveReadVisible, renderLiveRead } from './liveread.js?v=37';
-import { initShop, updateCoinsDisplay, refreshCoinsDisplay, setShopHooks } from './shop.js?v=88';
-import { initProfile, updateAvatarUI, renderBooksXpSummary, setProfileHooks } from './profile.js?v=104';
-import { setPublicProfileHooks, closePublicModal, openPublicProfile, openPublicSeriesRun } from './public-profile.js?v=103';
-import { setLiveTabHooks, _ensureLiveTabControllerStarted, _connectUserBadgeSSE, _disconnectUserBadgeSSE, _connectAppXpSSE, _disconnectAppXpSSE } from './livetab.js?v=98';
-import { setAppXpHooks, refreshAppXp, handleAppXpEvent } from './app-xp.js?v=92';
-import { setCoversHooks, loadCovers, openCoverActivity, openSeriesActivity, _showCachedCoversPanel, _refreshPublicCatalogIfVisible, _isLandingBooksViewVisible, _updateLandingBgDragUi, setCoversPrefsState, _toggleCoverTooltipSettings, initCoversPanel, resetFeedDisplayPrefsForLogout } from './covers.js?v=138';
+} from './prefs.js?v=225';
+import { initBattleSim, setBattleSimVisible, renderBattleSim } from './battlesim/battlesim829.js?v=159';
+import { initBattleSim8, setSim8Visible, renderSim8 } from './battlesim/battlesim8.js?v=131';
+import { initSim286, setSim286Visible, renderSim286 } from './battlesim/battlesim286.js?v=91';
+import { initSim198, setSim198Visible, renderSim198 } from './battlesim/battlesim198.js?v=73';
+import { initSim199, setSim199Visible, renderSim199 } from './battlesim/battlesim199.js?v=66';
+import { initSim200, setSim200Visible, renderSim200 } from './battlesim/battlesim200.js?v=56';
+import { initSim186, setSim186Visible, renderSim186 } from './battlesim/battlesim186.js?v=57';
+import { initSim201, setSim201Visible, renderSim201 } from './battlesim/battlesim201.js?v=59';
+import { initSim202, setSim202Visible, renderSim202 } from './battlesim/battlesim202.js?v=42';
+import { initSim203, setSim203Visible, renderSim203 } from './battlesim/battlesim203.js?v=41';
+import { initSim204, setSim204Visible, renderSim204 } from './battlesim/battlesim204.js?v=37';
+import { initSim205, setSim205Visible, renderSim205 } from './battlesim/battlesim205.js?v=36';
+import { initSim206, setSim206Visible, renderSim206 } from './battlesim/battlesim206.js?v=31';
+import { initSim207, setSim207Visible, renderSim207 } from './battlesim/battlesim207.js?v=32';
+import { initSim208, setSim208Visible, renderSim208 } from './battlesim/battlesim208.js?v=24';
+import { initSim209, setSim209Visible, renderSim209 } from './battlesim/battlesim209.js?v=20';
+import { initSim210, setSim210Visible, renderSim210 } from './battlesim/battlesim210.js?v=18';
+import { initSim211, setSim211Visible, renderSim211 } from './battlesim/battlesim211.js?v=18';
+import { initSim212, setSim212Visible, renderSim212 } from './battlesim/battlesim212.js?v=15';
+import { initSim213, setSim213Visible, renderSim213 } from './battlesim/battlesim213.js?v=13';
+import { initSim214, setSim214Visible, renderSim214 } from './battlesim/battlesim214.js?v=8';
+import { initLiveRead, setLiveReadVisible, renderLiveRead } from './liveread.js?v=49';
+import { initShop, updateCoinsDisplay, refreshCoinsDisplay, setShopHooks } from './shop.js?v=97';
+import { initProfile, updateAvatarUI, renderBooksXpSummary, setProfileHooks } from './profile.js?v=112';
+import { setPublicProfileHooks, closePublicModal, openPublicProfile, openPublicSeriesRun } from './public-profile.js?v=114';
+import { setLiveTabHooks, _ensureLiveTabControllerStarted, _connectUserBadgeSSE, _disconnectUserBadgeSSE, _connectAppXpSSE, _disconnectAppXpSSE } from './livetab.js?v=107';
+import { setAppXpHooks, refreshAppXp, handleAppXpEvent } from './app-xp.js?v=103';
+import { setCoversHooks, loadCovers, openCoverActivity, openSeriesActivity, _showCachedCoversPanel, _refreshPublicCatalogIfVisible, _isLandingBooksViewVisible, _updateLandingBgDragUi, setCoversPrefsState, _toggleCoverTooltipSettings, initCoversPanel, resetFeedDisplayPrefsForLogout, _refillLazyIfShort } from './covers.js?v=154';
 import {
   setBooksHooks, initBooksPanel, renderBooksList,
   getCachedBooks, getCachedAllSeries, getCachedStashes,
@@ -70,23 +72,23 @@ import {
   setBooksDataFresh, setBooksRevealedAt,
   setCurrentUserId,
   _refreshBooksListOnly, _refreshLibraryUi, _starsHtml, _starLabelHtml, _flashRatingGate,
-} from './books.js?v=203';
+} from './books.js?v=225';
 import {
   setOpenWorldHooks, setupOpenWorldForBook,
   _syncSeriesRuns, _computeCrossBookReachability, _focusNodeAfterLoad,
   clearOpenWorldState, doJumpCrossBook,
   getOwSrcBookId, getOwSrcSection, getOwCrossBookRoute,
-} from './open-world.js?v=207';
-import { setFeedHooks, loadFeed, refreshDayCoverFlows } from './feed.js?v=161';
+} from './open-world.js?v=229';
+import { setFeedHooks, loadFeed, refreshDayCoverFlows } from './feed.js?v=177';
 import {
   setNotifHooks, _scheduleLiveUiRefresh,
   _closeNotifDropdown, _openNotifDropdown, isNotifDropdownOpen,
   resetNotifBadgesForLogout,
-} from './notif.js?v=85';
+} from './notif.js?v=94';
 import {
   _resetRewardSnapshotState, _positionRewardLayer,
   _processRewardSnapshot, _scheduleRewardProfileRefresh,
-} from './rewards.js?v=111';
+} from './rewards.js?v=120';
 import {
   setBgHooks, setCurrentBookCover, getCurrentBookCover,
   resetBgState, cancelBgMove, isBgInMove,
@@ -94,20 +96,20 @@ import {
   hideCtxMenu, _updateSidebarBookInfo, _hideBgCtxMenu,
   _positionMenu, _setupCtxSubmenuFlip, _showBgCtxMenu,
   _enterBgMoveMode, _exitBgMoveMode, _updateColorSwatches,
-} from './bg.js?v=58';
-import { initTips } from './tips.js?v=70';
-import { initInbox } from './inbox.js?v=149';
-import { initDice } from './dice.js?v=196';
+} from './bg.js?v=67';
+import { initTips } from './tips.js?v=79';
+import { initInbox } from './inbox.js?v=161';
+import { initDice } from './dice.js?v=218';
 import { initTooltip } from './tooltip.js?v=2';
-import { exportAll, exportBook } from './export.js?v=144';
-import { initFeedback } from './feedback.js?v=78';
-import { setDemoHooks, getDemoBooks, setDemoBooks, getDemoVisited, startDemoMode, exitDemoMode, wasInDemoMode } from './demo.js?v=141';
+import { exportAll, exportBook } from './export.js?v=156';
+import { initFeedback } from './feedback.js?v=87';
+import { setDemoHooks, getDemoBooks, setDemoBooks, getDemoVisited, startDemoMode, exitDemoMode, wasInDemoMode } from './demo.js?v=153';
 import {
   setAdminUsername, resolveIsAdmin,
   adminBadge, adminBadgeForUsername, authorBadge, contributorBadge, displayFor,
   registerAuthor, registerContributor,
-} from './user.js?v=11';
-import { escapeHtml, fetchPublic as publicFetch } from './util.js?v=79';
+} from './user.js?v=12';
+import { escapeHtml, fetchPublic as publicFetch } from './util.js?v=88';
 
 window._isMobile = /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
   || (navigator.maxTouchPoints > 1 && window.innerWidth < 1024);
@@ -331,6 +333,8 @@ function showLogin() {
   setSim210Visible(false);
   setSim211Visible(false);
   setSim212Visible(false);
+  setSim213Visible(false);
+  setSim214Visible(false);
   setLiveReadVisible(false);
   setDiceRollerVisible(false);
   setGuideVisible(false);
@@ -390,6 +394,23 @@ function _updateUsernameTooltip() {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
+// Mobile My Books/Add Book full-screen panels - see the _mobilePanelWired
+// guard inside showBooks() for why this (and its wiring) run exactly once
+// rather than on every showBooks() call. Opening a panel pushes a history
+// entry so the phone's real back gesture closes it first instead of
+// exiting the app; switching directly from one panel to the other replaces
+// that entry instead of stacking a second one, so back from Add Book
+// (opened while My Books was already up) goes straight to closed, not back
+// to My Books.
+let _mobilePanelWired = false;
+function _openMobilePanel(name) {
+  const alreadyOpen = document.body.classList.contains('mobile-books-open') ||
+                      document.body.classList.contains('mobile-addbook-open');
+  document.body.classList.remove('mobile-books-open', 'mobile-addbook-open');
+  document.body.classList.add(`mobile-${name}-open`);
+  history[alreadyOpen ? 'replaceState' : 'pushState']({ mobilePanel: name }, '');
+}
+
 async function showBooks() {
   if (_isViewLocked('book')) return;
   // Reachable from deep inside the public book/series detail dialog (e.g.
@@ -428,6 +449,8 @@ async function showBooks() {
   setSim210Visible(false);
   setSim211Visible(false);
   setSim212Visible(false);
+  setSim213Visible(false);
+  setSim214Visible(false);
   setLiveReadVisible(false);
   setDiceRollerVisible(false);
   setGuideVisible(false);
@@ -691,6 +714,8 @@ async function showMain(bookId, isbn = null, issn = null, asin = null, cover = n
   setSim210Visible(bookId === 210);
   setSim211Visible(bookId === 211);
   setSim212Visible(bookId === 212);
+  setSim213Visible(bookId === 213);
+  setSim214Visible(bookId === 214);
   // Gated server-side already (db._canLiveRead) - hasLiveReading only ever
   // comes back true for that one account regardless of who's asking, so no
   // extra username check is needed here (unlike the earlier single-book POC).
@@ -772,6 +797,35 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('sidebar-toggle').addEventListener('click', () => {
     _setPlayPanelCollapsed('sidebar-collapsed', !document.body.classList.contains('sidebar-collapsed'));
   });
+  // Mobile only (see mobile.css) - on desktop, "My Books" already sits in
+  // #landing-right next to the feed, so there's nothing to open/close here.
+  // Wired exactly once (_mobilePanelWired guard) rather than every
+  // showBooks() call like the covers-toggle/right-toggle/etc. listeners
+  // just above - those re-attach harmlessly on every call since toggling a
+  // boolean class an extra time or two roughly cancels out, but this
+  // block's history.pushState() does not: N stacked duplicate listeners
+  // from N earlier showBooks() calls would push N history entries on a
+  // single tap, needing N back-presses to close a panel opened with one tap.
+  if (!_mobilePanelWired) {
+    _mobilePanelWired = true;
+    window.addEventListener('popstate', e => {
+      if (!e.state?.mobilePanel) document.body.classList.remove('mobile-books-open', 'mobile-addbook-open');
+    });
+    document.getElementById('mobile-books-btn').addEventListener('click', () => _openMobilePanel('books'));
+    document.getElementById('mobile-books-close-btn').addEventListener('click', () => history.back());
+    // Same idea as My Books above - #covers-panel is the search/browse-and-
+    // add panel, permanently hidden on mobile otherwise (mobile.css).
+    // Toggled full screen instead of the fixed-left-column layout it has on
+    // desktop.
+    document.getElementById('mobile-addbook-btn').addEventListener('click', () => {
+      _openMobilePanel('addbook');
+      // The panel's own lazy-fill loop measured a zero height while it was
+      // hidden and stopped after one small batch - top it up now that it
+      // actually has room, once the reveal's layout has been committed.
+      requestAnimationFrame(() => requestAnimationFrame(_refillLazyIfShort));
+    });
+    document.getElementById('mobile-addbook-close-btn').addEventListener('click', () => history.back());
+  }
   initCoversPanel();
   document.getElementById('shortcuts-modal-close')?.addEventListener('click', () => _toggleShortcutsModal(false));
   document.getElementById('shortcuts-modal-overlay')?.addEventListener('mousedown', e => { _mousedownOnOverlay = e.target === e.currentTarget ? e.target : null; });
@@ -852,6 +906,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   initSim210();
   initSim211();
   initSim212();
+  initSim213();
+  initSim214();
   initLiveRead();
   // renderLiveRead() also needs to run after every render() (fast-travel
   // jumps and the sidebar's own choice buttons move pt.path without going
@@ -880,6 +936,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderSim210();
     renderSim211();
     renderSim212();
+    renderSim213();
+    renderSim214();
     renderLiveRead();
   });
   initTooltip();
@@ -1794,6 +1852,42 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // ── Public modal ──────────────────────────────────────────────────
+  // Opened from dozens of call sites across covers.js/feed.js/public-
+  // profile.js itself, too many to thread a "push a history entry" call
+  // through individually - watched here instead, via the one thing they
+  // all share: #public-modal-overlay gaining/losing its .active class.
+  // Only pushes/pops a step when a mobile panel (My Books/Add Book) is
+  // already open underneath - opening the same dialog from the plain feed
+  // (no panel open) is a normal top-level view, not a nested one, and
+  // already had no back-button problem of its own before this. Without
+  // this, back while the dialog was open over Add Book popped Add Book's
+  // own history entry instead (the dialog itself was never on the stack),
+  // which *looked* like the dialog surviving the panel closing under it -
+  // and since the dialog had nowhere further to go on a second back press,
+  // that press just kept consuming real browser history until it left the
+  // app entirely.
+  let _dialogHistoryPushed = false;
+  new MutationObserver(() => {
+    const isActive = document.getElementById('public-modal-overlay').classList.contains('active');
+    const panelOpen = document.body.classList.contains('mobile-books-open') ||
+                       document.body.classList.contains('mobile-addbook-open');
+    if (isActive && panelOpen && !_dialogHistoryPushed && !history.state?.dialogOpen) {
+      _dialogHistoryPushed = true;
+      history.pushState({ ...history.state, dialogOpen: true }, '');
+    } else if (!isActive && _dialogHistoryPushed) {
+      _dialogHistoryPushed = false;
+      // Closed via the X/backdrop/Escape, not via back - consume the
+      // pushed entry so a later back press doesn't land on a stale
+      // "dialog was open" state with nothing left to close.
+      if (history.state?.dialogOpen) history.back();
+    }
+  }).observe(document.getElementById('public-modal-overlay'), { attributes: true, attributeFilter: ['class'] });
+  window.addEventListener('popstate', e => {
+    if (!e.state?.dialogOpen && document.getElementById('public-modal-overlay').classList.contains('active')) {
+      _dialogHistoryPushed = false;
+      closePublicModal();
+    }
+  });
   document.getElementById('pub-close-btn').addEventListener('click', closePublicModal);
   document.getElementById('public-modal-overlay').addEventListener('click', e => {
     if (e.target === document.getElementById('public-modal-overlay') && _mousedownOnOverlay === e.currentTarget) closePublicModal();

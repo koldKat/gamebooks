@@ -1,0 +1,302 @@
+/* Mobile-first frontend - written fresh for public/mobile/, no shared desktop
+   CSS. Deliberately not @media-query-gated - this file is only ever loaded
+   by public/mobile/index.html, which is never served to desktop. */
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: #111827;
+  color: #e5e7eb;
+  font: 16px/1.5 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Every scrollable pane on this page (reader, book list, manual mode) -
+   themed to match desktop's #landing-right scrollbar instead of the
+   browser's default light one. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #374151 transparent;
+}
+*::-webkit-scrollbar { width: 6px; height: 6px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+*::-webkit-scrollbar-thumb:hover { background: #4b5563; }
+
+#screen {
+  /* Must be a definite height, not just min-height - the reader's
+     top/graph split below relies on percentage flex-basis, which only
+     resolves against a definite ancestor height. With min-height alone,
+     a short section's top pane would collapse to its own content height
+     instead of taking its share of the split, pushing the graph down into
+     a sliver at the very bottom instead of an even 50/50. */
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+button, input {
+  font: inherit;
+  color: inherit;
+}
+
+/* ── Top bar (book list / reader) ─────────────────────────────────────── */
+
+.m-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  padding-top: calc(0.75rem + env(safe-area-inset-top));
+  background: rgba(17, 24, 39, 0.95);
+  border-bottom: 1px solid #374151;
+  backdrop-filter: blur(6px);
+}
+.m-topbar button {
+  background: rgba(55, 65, 81, 0.6);
+  border: 1px solid #374151;
+  border-radius: 6px;
+  color: #e5e7eb;
+  padding: 0.4rem 0.7rem;
+  cursor: pointer;
+}
+.m-username { color: #9ca3af; font-size: 0.85rem; }
+.m-book-title {
+  flex: 1;
+  text-align: center;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Login screen ──────────────────────────────────────────────────────── */
+
+.m-login {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+  gap: 1rem;
+  padding: 1.5rem;
+  max-width: 420px;
+  margin: 0 auto;
+  width: 100%;
+}
+.m-login h1 {
+  text-align: center;
+  color: #f5a623;
+  font-size: 1.6rem;
+  margin: 0 0 0.5rem;
+}
+.m-login form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.m-login input {
+  background: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 8px;
+  padding: 0.75rem 0.9rem;
+  font-size: 1rem;
+}
+.m-login button[type="submit"] {
+  background: #f5a623;
+  border: none;
+  border-radius: 8px;
+  color: #111827;
+  font-weight: 600;
+  padding: 0.8rem;
+  cursor: pointer;
+}
+.m-error { color: #f87171; font-size: 0.85rem; min-height: 1.1em; }
+.m-empty { padding: 1.5rem; text-align: center; color: #9ca3af; }
+
+/* ── Reader: double-screen layout ────────────────────────────────────────
+   Top pane is in-app reading, bottom pane is always the graph - a fixed
+   split, no physics on the graph so it never needs settling time before
+   it's usable. */
+
+.m-panes {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.m-top {
+  flex: 1 1 50%;
+  overflow-y: auto;
+  min-height: 0;
+  padding: 1rem 1.1rem 1.5rem;
+  max-width: 640px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+.m-top p { margin: 0 0 0.9rem; text-align: justify; hyphens: auto; }
+.m-top p:last-child { margin-bottom: 0; }
+.m-top a { color: #38bdf8; text-decoration: underline; }
+.m-top p.choice {
+  font-weight: 600;
+  border-left: 3px solid #38bdf8;
+  padding-left: 0.6rem;
+}
+.m-end {
+  text-align: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: 0.04em;
+  margin: auto 0;
+}
+/* Wraps .m-end + .m-manual-hint together for the "not available" notice -
+   .m-end's own margin:auto only centers itself when it's the sole flex
+   item of .m-top (the plain win/death screen); paired with a second
+   paragraph it needs a shared wrapper to center as a group instead. */
+.m-notice { margin: auto 0; }
+.m-back-link { margin-top: 1.5rem; border-top: 1px solid #374151; padding-top: 1rem; }
+
+/* Sits between the reading pane and the graph pane - Notebook is always
+   available (every book has one); Battle Sim only shows for books that
+   have one (see battlesim-dispatch.js's SIMS table). */
+.m-tool-row {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-top: 1px solid #374151;
+  background: rgba(17, 24, 39, 0.95);
+}
+.m-tool-btn {
+  flex: 1;
+  background: rgba(55, 65, 81, 0.6);
+  border: 1px solid #374151;
+  border-radius: 6px;
+  color: #e5e7eb;
+  padding: 0.5rem 0.7rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.m-tool-btn:active { background: rgba(75, 85, 99, 0.7); }
+
+.m-graph {
+  flex: 1 1 50%;
+  min-height: 0;
+  border-top: 2px solid #374151;
+  background: #0b1220;
+  position: relative;
+}
+
+.m-graph-error { padding: 1rem; text-align: center; color: #9ca3af; }
+
+/* Shown for a gap in an otherwise-covered book (a section without imported
+   text) or a book with no reading at all - sits directly under .m-end,
+   which already centers itself in .m-top via margin:auto. */
+.m-manual-hint { color: #9ca3af; margin: 0.5rem 0 0; font-size: 0.9rem; text-align: center; }
+
+/* ── Generic full-screen overlay (notebook, any future mobile modal) ───── */
+
+.m-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 3000;
+  align-items: center;
+  justify-content: center;
+  padding: env(safe-area-inset-top) 0.75rem env(safe-area-inset-bottom);
+}
+.m-overlay.active { display: flex; }
+
+.m-notebook-modal {
+  background: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 10px;
+  width: 100%;
+  max-width: 480px;
+  height: min(80vh, 640px);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.6);
+}
+.m-notebook-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #374151;
+  font-weight: 600;
+  color: #e5e7eb;
+}
+.m-notebook-input {
+  flex: 1;
+  min-height: 0;
+  resize: none;
+  border: none;
+  background: transparent;
+  color: #e5e7eb;
+  padding: 0.9rem 1rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  font-family: inherit;
+}
+.m-notebook-input:focus { outline: none; }
+.m-notebook-ftr {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid #374151;
+}
+
+.m-icon-btn {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+}
+
+.m-btn-primary, .m-btn-secondary {
+  border-radius: 6px;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  border: 1px solid #4b5563;
+}
+.m-btn-secondary { background: #374151; color: #9ca3af; }
+.m-btn-primary { background: #1d4ed8; color: #dbeafe; border-color: #1e40af; }
+
+/* ── Toast (toast.js) ─────────────────────────────────────────────────── */
+
+#m-toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(1.5rem + env(safe-area-inset-bottom));
+  transform: translate(-50%, 12px);
+  background: #15803d;
+  color: #bbf7d0;
+  border: 1px solid #166534;
+  border-radius: 8px;
+  padding: 0.55rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  z-index: 4000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s, transform 0.15s;
+}
+#m-toast.active {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}

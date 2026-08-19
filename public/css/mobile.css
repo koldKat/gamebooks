@@ -2,7 +2,73 @@
 @media (max-width: 768px) {
   .mobile-lite-suffix { display: inline; }
   /* Hide desktop-only panels and toggles */
-  #covers-panel, #covers-toggle, #right-toggle, #feed-toggle { display: none !important; }
+  #covers-toggle, #right-toggle, #feed-toggle { display: none !important; }
+  /* .pub-overlay's z-index:300 (public-profile.css) is fine on desktop, but
+     #covers-panel/#landing-right sit at z-index:500 full-screen here - a
+     book detail dialog opened from Add Book was rendering (and staying
+     genuinely open/interactive) completely hidden underneath the still-
+     visible panel, reading as "tapping a cover does nothing" until closing
+     the panel out from under it revealed the dialog that was there the
+     whole time. No !important - mobile.css already loads after
+     public-profile.css so plain source order is enough to win here, and
+     staying non-important leaves boot.js's one-off inline zIndex='3001'
+     bump (opening a book link found inside the already-open forum modal,
+     z-index 3000) still able to win on top of this when it's set, since an
+     inline style always beats an external stylesheet rule unless that
+     rule is !important. */
+  .pub-overlay { z-index: 600; }
+  /* #covers-panel itself isn't in that hidden list - it's the search/add-book
+     panel, revealed full screen via the header's Add Book button below
+     (mobile-addbook-open), same full-screen-toggle pattern as My Books/
+     #landing-right. */
+  #covers-panel {
+    display: none !important;
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    height: 100dvh !important;
+    z-index: 500;
+    padding: 1rem 1rem calc(1rem + env(safe-area-inset-bottom)) !important;
+    padding-top: calc(1rem + env(safe-area-inset-top)) !important;
+    box-sizing: border-box;
+    border: none !important;
+    /* Same translucency issue #landing-right had - rgba(17,24,39,0.45) is
+       fine floating over the landing background on desktop, but bleeds
+       whatever's underneath through once this is full-screen. */
+    background: #111827 !important;
+    /* Same reasoning as #landing-right's own transform reset above -
+       body.covers-collapsed's translateX() (a persisted desktop panel-
+       collapse toggle) would otherwise slide this off-screen underneath
+       the display:none/flex toggle below. */
+    transform: none !important;
+  }
+  body.mobile-addbook-open #covers-panel { display: flex !important; flex-direction: column; }
+  body.mobile-addbook-open #feed-panel   { display: none !important; }
+  #mobile-addbook-close-btn {
+    display: none;
+    /* Sticky, not just the first child of a scrolling panel - #covers-header
+       right after it is sticky (covers.js's covers-lazy/covers-searching
+       state), but this button on its own isn't, so scrolling even a little
+       into the catalog scrolled it away entirely with no way back to the
+       feed short of scrolling all the way back to the very top. z-index
+       above the header (50) so it stays on top when both are stuck. */
+    position: sticky;
+    top: 0;
+    z-index: 60;
+    align-self: flex-start;
+    width: 100%;
+    text-align: left;
+    background: #111827;
+    border: none;
+    color: #9ca3af;
+    font-size: 0.95rem;
+    padding: 0.25rem 0 1rem;
+    cursor: pointer;
+  }
+  body.mobile-addbook-open #mobile-addbook-close-btn { display: block; }
+  /* Forced on unconditionally in covers.js's _visibleCoverItems() on mobile -
+     showing the chip would imply it can be toggled off, which it can't. */
+  #covers-filter-livereading { display: none !important; }
   #demo-btn                                    { display: none !important; }
   /* The Cheat Sheet is a list of keyboard shortcuts - Ctrl+X/Ctrl+Y need a
      keyboard, and I/C/E only apply to the play/tracker area, which is itself
@@ -37,7 +103,8 @@
     padding-bottom: 0.75rem !important;
   }
 
-  /* Right panel: hidden after login, full-screen only on mobile auth */
+  /* Right panel: hidden after login, full-screen on mobile auth OR when the
+     feed's "My Books" button opens it (mobile-books-open). */
   #landing-right {
     display: none !important;
     position: fixed !important;
@@ -50,14 +117,83 @@
     box-sizing: border-box;
     overflow-y: auto;
     border: none !important;
+    /* Desktop's rgba(17,24,39,0.45) is deliberately translucent - it's meant
+       to float over the landing background there. Full-screen on mobile,
+       that same translucency let the feed content underneath bleed straight
+       through it. */
+    background: #111827 !important;
+    /* demo.css's body.right-collapsed #landing-right rule (an unrelated
+       desktop panel-collapse toggle, persisted to localStorage and restored
+       on every load regardless of viewport) applies a translateX() that
+       would otherwise slide this off-screen here too, on top of - not
+       instead of - the display:none/flex toggle below. */
+    transform: none !important;
   }
-  body.mobile-auth #landing-right {
+  body.mobile-auth #landing-right,
+  body.mobile-books-open #landing-right {
     display: flex !important;
     align-items: stretch;
     justify-content: flex-start;
     flex-direction: column;
   }
   body.mobile-auth #feed-panel { display: none !important; }
+
+  /* inline-flex, not inline-block - landing.css's shared button rule
+     centers the label via align-items/justify-content on a flex box, an
+     inline-block would keep it themed but drop that centering, leaving the
+     text sitting off the vertical middle. */
+  #mobile-books-btn, #mobile-addbook-btn { display: inline-flex !important; }
+  #mobile-books-close-btn { display: none !important; }
+  body.mobile-books-open #mobile-books-close-btn {
+    /* Sticky, not just the first child of #landing-right's own scrolling
+       area - same reachability bug as #mobile-addbook-close-btn below:
+       without this, scrolling down the books list scrolled the only way
+       back to the feed away with it. */
+    display: block !important;
+    position: sticky;
+    top: 0;
+    z-index: 60;
+    align-self: flex-start;
+    width: 100%;
+    text-align: left;
+    background: #111827;
+    border: none;
+    color: #9ca3af;
+    font-size: 0.95rem;
+    padding: 0.25rem 0 1rem;
+    cursor: pointer;
+  }
+
+  /* My Books / Add Book need to stand out from the rest of the banner's grey
+     buttons - each gets its own color, and both pulse continuously (same 4s
+     ease-in-out ring, same rate landing.css's #notif-btn/#forum-btn/
+     #bonus-gc-btn already use). Deliberately NOT gated behind
+     body.reduce-motion the way those are (reduce-motion.css never mentions
+     these two ids) - these are the only two ways into My Books/Add Book on
+     mobile at all, not a decorative "something's waiting" extra, so they
+     keep pulsing even with animations otherwise turned off. Desktop never
+     sees these buttons (display:none there), so this doesn't reintroduce a
+     forced-animation regression outside mobile. */
+  #mobile-books-btn {
+    border-color: #2563eb !important;
+    color: #93c5fd !important;
+    animation: mobile-books-pulse 4s ease-in-out infinite;
+  }
+  #mobile-books-btn:hover { border-color: #3b82f6 !important; color: #bfdbfe !important; }
+  #mobile-addbook-btn {
+    border-color: #d97706 !important;
+    color: #fcd34d !important;
+    animation: mobile-addbook-pulse 4s ease-in-out infinite;
+  }
+  #mobile-addbook-btn:hover { border-color: #f59e0b !important; color: #fde68a !important; }
+  @keyframes mobile-books-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+    50%      { box-shadow: 0 0 0 5px rgba(59, 130, 246, 0.35); }
+  }
+  @keyframes mobile-addbook-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+    50%      { box-shadow: 0 0 0 5px rgba(245, 158, 11, 0.35); }
+  }
 
   #login-screen {
     width: min(100%, 44rem);

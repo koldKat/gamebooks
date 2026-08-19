@@ -6,8 +6,8 @@
 // To remove: delete this file, remove its import line and setLiveTabHooks() /
 // initLiveTabController() calls from boot.js.
 
-import { getToken, isDemoMode } from './state.js?v=13';
-import { refreshCoinsDisplay } from './shop.js?v=88';
+import { getToken, isDemoMode } from './state.js?v=14';
+import { refreshCoinsDisplay } from './shop.js?v=97';
 
 // Callbacks wired in by main.js at boot
 let _hooks = {};

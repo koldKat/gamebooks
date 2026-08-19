@@ -4,10 +4,10 @@
 // updateAvatarUI()/renderBooksXpSummary()/setProfileHooks() calls
 // from boot.js, and delete public/css/profile.css and its <link> in index.html.
 
-import { apiFetch, setUsername, isDemoMode, getToken, setCurrentUserLevel, getUsername } from './state.js?v=13';
-import { t } from './i18n.js?v=64';
-import { updateCoinsDisplay } from './shop.js?v=88';
-import { escapeHtml, compressToBlob } from './util.js?v=79';
+import { apiFetch, setUsername, isDemoMode, getToken, setCurrentUserLevel, getUsername } from './state.js?v=14';
+import { t } from './i18n.js?v=72';
+import { updateCoinsDisplay } from './shop.js?v=97';
+import { escapeHtml, compressToBlob } from './util.js?v=88';
 
 let _hooks = {};
 export function setProfileHooks(h) { _hooks = h || {}; }

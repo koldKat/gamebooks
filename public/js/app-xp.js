@@ -11,10 +11,10 @@
 // refreshAppXp()/handleAppXpEvent() calls from boot.js/livetab.js, and remove
 // #app-xp-*/#app-reward-float-layer markup/CSS.
 
-import { apiFetch, getToken, isDemoMode } from './state.js?v=13';
-import { COIN_SVG } from './shop.js?v=88';
-import { escapeHtml } from './util.js?v=79';
-import { t } from './i18n.js?v=64';
+import { apiFetch, getToken, isDemoMode } from './state.js?v=14';
+import { COIN_SVG } from './shop.js?v=97';
+import { escapeHtml } from './util.js?v=88';
+import { t } from './i18n.js?v=72';
 
 let _hooks = {};
 export function setAppXpHooks(h) { _hooks = h || {}; }
@@ -224,15 +224,47 @@ function _spawnAppRewardFloater(type, html) {
   _drainAppRewardFloaterQueue();
 }
 
+// Per-username accumulate-then-flush, same 750ms window rewards.js's own
+// (single-user) _queueRewardFloater uses - without this, a user racking up
+// several XP/GC awards in a burst (e.g. a fast run through several sections)
+// used to spawn one floater per SSE event, so the admin feed would show an
+// unbroken stream of tiny "+5 XP - username" chips back to back instead of
+// one combined "+37 XP - username". Keyed per-username (unlike rewards.js's
+// single global accumulator) since this feed mixes events from every user at
+// once and two different users' deltas must never merge into one chip.
+const _appRewardAccum       = new Map(); // username -> { xp, coins }
+const _appRewardFlushTimers = new Map(); // username -> timer id
+
 export function handleAppXpEvent(payload) {
   if (!payload || !_hooks.getIsAdmin?.() || !(_isBooksScreenVisible() || _isMainScreenVisible())) return;
-  const username = escapeHtml(String(payload.username || '?'));
+  const rawUsername = String(payload.username || '?');
+  const username = escapeHtml(rawUsername);
   const xpDelta    = Math.max(0, Math.round(Number(payload.xpDelta) || 0));
   const coinDelta  = Math.max(0, Math.round(Number(payload.coinDelta) || 0));
-  if (xpDelta > 0) {
-    _spawnAppRewardFloater('xp', `<span>+${xpDelta.toLocaleString()} XP</span><span class="app-reward-float-sep">-</span><span class="app-reward-float-user">${username}</span>`);
-  }
-  if (coinDelta > 0) {
-    _spawnAppRewardFloater('coins', `${COIN_SVG}<span>+${coinDelta.toLocaleString()}</span><span class="app-reward-float-sep">-</span><span class="app-reward-float-user">${username}</span>`);
-  }
+  if (xpDelta <= 0 && coinDelta <= 0) return;
+
+  const accum = _appRewardAccum.get(rawUsername) || { xp: 0, coins: 0 };
+  accum.xp    += xpDelta;
+  accum.coins += coinDelta;
+  _appRewardAccum.set(rawUsername, accum);
+
+  if (_appRewardFlushTimers.has(rawUsername)) return;
+  _appRewardFlushTimers.set(rawUsername, setTimeout(() => {
+    _appRewardFlushTimers.delete(rawUsername);
+    const { xp, coins } = _appRewardAccum.get(rawUsername) || { xp: 0, coins: 0 };
+    _appRewardAccum.delete(rawUsername);
+    // Re-check the same gate handleAppXpEvent applied at queue time - up to
+    // 750ms has passed, and the admin could have navigated away from the
+    // one or two screens this feed is shown on in the meantime. The old
+    // code spawned synchronously with no gap between check and spawn, so
+    // this staleness window didn't exist before; skipping the check here
+    // would resurrect a floater the admin should no longer be seeing.
+    if (!_hooks.getIsAdmin?.() || !(_isBooksScreenVisible() || _isMainScreenVisible())) return;
+    if (xp > 0) {
+      _spawnAppRewardFloater('xp', `<span>+${xp.toLocaleString()} XP</span><span class="app-reward-float-sep">-</span><span class="app-reward-float-user">${username}</span>`);
+    }
+    if (coins > 0) {
+      _spawnAppRewardFloater('coins', `${COIN_SVG}<span>+${coins.toLocaleString()}</span><span class="app-reward-float-sep">-</span><span class="app-reward-float-user">${username}</span>`);
+    }
+  }, 750));
 }

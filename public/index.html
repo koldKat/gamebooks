@@ -167,17 +167,19 @@
   <link rel="stylesheet" href="/css/shop.css?v=3">
   <link rel="stylesheet" href="/css/dice.css?v=2">
   <link rel="stylesheet" href="/css/feedback.css?v=4">
-  <link rel="stylesheet" href="/css/battlesim.css?v=30">
+  <link rel="stylesheet" href="/css/battlesim.css?v=31">
   <link rel="stylesheet" href="/css/liveread.css?v=21">
   <link rel="stylesheet" href="/css/demo.css?v=29">
   <link rel="stylesheet" href="/css/profile.css?v=1">
   <link rel="stylesheet" href="/css/public-profile.css?v=9">
   <link rel="stylesheet" href="/css/login.css?v=3">
   <link rel="stylesheet" href="/css/add-book.css?v=3">
-  <link rel="stylesheet" href="/css/play.css?v=28">
-  <link rel="stylesheet" href="/css/landing.css?v=31">
+  <link rel="stylesheet" href="/css/confirm.css?v=1">
+  <link rel="stylesheet" href="/css/autocomplete.css?v=1">
+  <link rel="stylesheet" href="/css/play.css?v=30">
+  <link rel="stylesheet" href="/css/landing.css?v=33">
   <link rel="stylesheet" href="/css/reduce-motion.css?v=4">
-  <link rel="stylesheet" href="/css/mobile.css?v=8">
+  <link rel="stylesheet" href="/css/mobile.css?v=20">
   <script src="/vendor/vis-network/vis-network.min.js?v=1"></script>
 </head>
 <body>
@@ -190,6 +192,7 @@
 
   <!-- ── Covers panel (fixed left) ────────────────────────────────── -->
   <div id="covers-panel">
+    <button id="mobile-addbook-close-btn" style="display:none">‹ <span data-i18n="mobile.back_to_feed">Back to feed</span></button>
     <div id="covers-header">
       <span id="covers-header-label"><span id="covers-count"></span><span id="covers-sort" tabindex="0" role="button" aria-haspopup="listbox"><span id="covers-sort-label">Latest</span><ul id="covers-sort-menu" role="listbox"><li role="option" data-value="alpha">A–Z</li><li role="option" data-value="za">Z–A</li><li role="option" data-value="latest">Latest</li><li role="option" data-value="oldest">Oldest</li><li role="option" data-value="random">Random</li><li role="option" data-value="popular">Popular</li><li role="option" data-value="longest">Longest</li><li role="option" data-value="shortest">Shortest</li></ul></span> <span id="covers-kind" tabindex="0" role="button" aria-haspopup="listbox"><span id="covers-kind-label">All</span><ul id="covers-kind-menu" role="listbox"><li role="option" data-value="all">All</li><li role="option" data-value="books">Books</li><li role="option" data-value="anthologies">Anthologies</li><li role="option" data-value="series">Series</li><li role="option" data-value="favorites">Favorites</li></ul></span><span id="covers-total"></span></span>
       <div class="covers-search-wrap">
@@ -235,6 +238,8 @@
         <div id="app-banner-right">
           <div id="app-banner-brand"><span class="brand-flag">bulgarian made</span></div>
           <div id="app-banner-btns">
+            <button id="mobile-addbook-btn" style="display:none" data-i18n="mobile.add_book">Add Book</button>
+            <button id="mobile-books-btn" style="display:none" data-i18n="books.title">My Books</button>
             <button id="bonus-gc-btn" data-tooltip="No lucky coin waiting" data-i18n-tooltip="bonus_gc.tooltip_empty" disabled><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7.5" fill="#f59e0b" stroke="#92400e" stroke-width="0.75"/><circle cx="8" cy="8" r="5.5" fill="none" stroke="#fde68a" stroke-width="1"/><text x="8" y="8" text-anchor="middle" dominant-baseline="central" font-size="7" font-weight="bold" fill="#78350f" font-family="serif">G</text></svg></button>
             <button id="app-banner-f1-btn" data-tooltip="Keyboard shortcuts" data-i18n-tooltip="title.f1_shortcuts">F1</button>
             <a href="/guide.html" target="_blank" id="app-banner-guide-btn">User Guide</a>
@@ -255,6 +260,8 @@
 
     <!-- Right: login / books screens -->
     <div id="landing-right">
+
+      <button id="mobile-books-close-btn" style="display:none">‹ <span data-i18n="mobile.back_to_feed">Back to feed</span></button>
 
       <!-- ── Login / Register screen ──────────────────────────────── -->
       <div id="login-screen" style="display:none">
@@ -1883,7 +1890,7 @@
   </div>
   <div id="reward-float-layer" aria-hidden="true"></div>
   <div id="app-reward-float-layer" aria-hidden="true"></div>
-<script type="module" src="/js/main.js?v=1350"></script>
+<script type="module" src="/js/main.js?v=1384"></script>
 
 <!-- ── Tutorial video modal ─────────────────────────────────────────────── -->
 <div id="video-modal">

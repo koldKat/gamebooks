@@ -40,11 +40,11 @@
 //
 // All state lives in pt.sim186, per-user/per-book via currentPlaythrough().
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../state.js?v=13';
-import { showAlert } from '../play.js?v=143';
-import { getPlayBtnRow } from '../charsheet.js?v=96';
-import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../util.js?v=79';
-import { t } from '../i18n.js?v=64';
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../state.js?v=14';
+import { showAlert } from '../confirm.js?v=5';
+import { getPlayBtnRow } from '../charsheet.js?v=105';
+import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../util.js?v=88';
+import { t } from '../i18n.js?v=72';
 
 const SVG_SKULL  = `<svg class="sim-icon sim-icon-dead"  viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8c0 2.8 1.4 5.3 3.6 6.8V20a1 1 0 0 0 1 1h6.8a1 1 0 0 0 1-1v-2.2C18.6 16.3 20 13.8 20 11a8 8 0 0 0-8-8zm-2.5 13v-1.5a.5.5 0 0 0-.5-.5H8l-.5-1 1-1-1-1 1-1H9a2.5 2.5 0 0 1 5 0h.5l1 1-1 1 1 1-.5 1h-1a.5.5 0 0 0-.5.5V16h-4z"/></svg>`;
 const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v7a6 6 0 0 1-12 0V2zm-2 1H2v4a4 4 0 0 0 4 4v-1a3 3 0 0 1-3-3V3zm16 0h2v4a4 4 0 0 1-4 4v-1a3 3 0 0 0 3-3V3zm-7 13v2H9v2h6v-2h-2v-2a6 6 0 0 0 5-5.92V2H6v8.08A6 6 0 0 0 13 16z"/></svg>`;
@@ -59,7 +59,10 @@ const CREW = [
   ['guard1',      'Security Guard 1',    false],
   ['guard2',      'Security Guard 2',    false],
 ];
-const CREW_LABELS = Object.fromEntries(CREW.map(([key, label]) => [key, label]));
+
+const OFFICER_PENALTY = 3;
+const HELMET_SKILL_BONUS = 1;
+const NORMAL_DMG = 2;
 
 function _freshCrewMember() {
   return { skill: 0, skillInitial: 0, stamina: 0, staminaInitial: 0, alive: true, replaced: false };
@@ -139,7 +142,7 @@ function _appendLog(d, line) {
 function _enemyName(d) { return d.enemy.name.trim() || 'the enemy'; }
 function _enemyNameSafe(d) { return escapeHtml(_enemyName(d)); }
 function _enemyShipNameSafe(d) { return escapeHtml(d.enemyShip.name.trim() || 'the alien ship'); }
-function _fighterLabel(d) { return CREW_LABELS[d.fighterKey] || 'Captain'; }
+function _fighterLabel(d) { return t(`battlesim186.crew.${d.fighterKey}`) || t('battlesim186.crew.captain'); }
 
 function _fighter(d) { return d.crew[d.fighterKey] || d.crew.captain; }
 function _isOfficer(key) { const spec = CREW.find(c => c[0] === key); return spec ? spec[2] : false; }
@@ -147,14 +150,14 @@ function _isOfficer(key) { const spec = CREW.find(c => c[0] === key); return spe
 function _effectiveSkill(d) {
   const f = _fighter(d);
   let skill = f.skill;
-  if (_isOfficer(d.fighterKey) && !d.waiveOfficerPenalty) skill -= 3;
-  if (d.hasHelmet) skill += 1;
+  if (_isOfficer(d.fighterKey) && !d.waiveOfficerPenalty) skill -= OFFICER_PENALTY;
+  if (d.hasHelmet) skill += HELMET_SKILL_BONUS;
   skill += (d.attackModifier || 0);
   return skill;
 }
 
 // Nerve-stick (enemy hits you) / armor-deflect (you hit enemy) variant
-// damage tables - see module header. 'normal' is always a flat 2.
+// damage tables - see module header. 'normal' is always a flat NORMAL_DMG.
 function _rollDamage(variant) {
   if (variant === 'nerve') {
     const r = _roll1d6();
@@ -164,7 +167,7 @@ function _rollDamage(variant) {
     const r = _roll1d6();
     return { amount: r >= 5 ? 1 : 0, note: ` (armor roll ${r})` };
   }
-  return { amount: 2, note: '' };
+  return { amount: NORMAL_DMG, note: '' };
 }
 
 // Uncapped (was previously trimmed to the last 100) - the admin dashboard
@@ -193,22 +196,22 @@ function _runHandToHandRound() {
   if (d.enemyExtraAttack) enemyAS2 = _roll2d6() + d.enemy.skill;
   const enemyBest = enemyAS2 !== null ? Math.max(enemyAS, enemyAS2) : enemyAS;
 
-  _appendLog(d, `Round ${d.roundsThisBattle}: ${escapeHtml(_fighterLabel(d))} ${playerAS} vs ${_enemyNameSafe(d)} ${enemyAS}${enemyAS2 !== null ? `/${enemyAS2}` : ''}.`);
+  _appendLog(d, t('battlesim186.log.round', { round: d.roundsThisBattle, fighter: escapeHtml(_fighterLabel(d)), playerAS, enemy: _enemyNameSafe(d), enemyAS, enemyAS2: enemyAS2 !== null ? `/${enemyAS2}` : '' }));
 
   if (playerAS > enemyBest) {
     const dmg = _rollDamage(d.playerDamageVariant);
     d.enemy.stamina = Math.max(0, d.enemy.stamina - dmg.amount);
-    _appendLog(d, `${escapeHtml(_fighterLabel(d))} wounds ${_enemyNameSafe(d)} for ${dmg.amount}${dmg.note}. STAMINA: ${d.enemy.stamina}/${d.enemy.staminaMax}.`);
+    _appendLog(d, t('battlesim186.log.fighter_wounds', { fighter: escapeHtml(_fighterLabel(d)), enemy: _enemyNameSafe(d), n: dmg.amount, note: dmg.note, stamina: d.enemy.stamina, staminaMax: d.enemy.staminaMax }));
   } else if (playerAS < enemyBest) {
     const hits = enemyAS2 !== null ? [enemyAS, enemyAS2].filter(r => r > playerAS).length : 1;
     for (let i = 0; i < hits; i++) {
       if (f.stamina <= 0) break;
       const dmg = _rollDamage(d.enemyDamageVariant);
       f.stamina = Math.max(0, f.stamina - dmg.amount);
-      _appendLog(d, `${_enemyNameSafe(d)} wounds ${escapeHtml(_fighterLabel(d))} for ${dmg.amount}${dmg.note}. STAMINA: ${f.stamina}/${f.staminaInitial}.`);
+      _appendLog(d, t('battlesim186.log.enemy_wounds_fighter', { enemy: _enemyNameSafe(d), fighter: escapeHtml(_fighterLabel(d)), n: dmg.amount, note: dmg.note, stamina: f.stamina, staminaMax: f.staminaInitial }));
     }
   } else {
-    _appendLog(d, 'Both blows are avoided.');
+    _appendLog(d, t('battlesim186.log.both_avoided'));
   }
 
   // Extra attacker: a second, independent Attack Strength roll compared only
@@ -218,27 +221,27 @@ function _runHandToHandRound() {
     const extraAS = _roll2d6() + d.extraSkill;
     const defenderAS = d.extraTarget === 'enemy' ? playerAS : enemyBest;
     const defenderLabel = d.extraTarget === 'enemy' ? _enemyNameSafe(d) : escapeHtml(_fighterLabel(d));
-    _appendLog(d, `Extra attacker: ${extraAS} vs ${defenderLabel}'s ${defenderAS}.`);
+    _appendLog(d, t('battlesim186.log.extra_attacker_roll', { extraAS, defender: defenderLabel, defenderAS }));
     if (extraAS > defenderAS) {
       if (d.extraTarget === 'enemy') {
         const dmg = _rollDamage(d.playerDamageVariant);
         d.enemy.stamina = Math.max(0, d.enemy.stamina - dmg.amount);
-        _appendLog(d, `The extra attacker wounds ${_enemyNameSafe(d)} for ${dmg.amount}${dmg.note}. STAMINA: ${d.enemy.stamina}/${d.enemy.staminaMax}.`);
+        _appendLog(d, t('battlesim186.log.extra_wounds_enemy', { enemy: _enemyNameSafe(d), n: dmg.amount, note: dmg.note, stamina: d.enemy.stamina, staminaMax: d.enemy.staminaMax }));
       } else {
         const dmg = _rollDamage(d.enemyDamageVariant);
         f.stamina = Math.max(0, f.stamina - dmg.amount);
-        _appendLog(d, `The extra attacker wounds ${escapeHtml(_fighterLabel(d))} for ${dmg.amount}${dmg.note}. STAMINA: ${f.stamina}/${f.staminaInitial}.`);
+        _appendLog(d, t('battlesim186.log.extra_wounds_fighter', { fighter: escapeHtml(_fighterLabel(d)), n: dmg.amount, note: dmg.note, stamina: f.stamina, staminaMax: f.staminaInitial }));
       }
     } else {
-      _appendLog(d, 'The extra attacker\'s blow is fended off.');
+      _appendLog(d, t('battlesim186.log.extra_fended_off'));
     }
   }
 
   if (d.enemy.stamina <= 0) {
-    _appendLog(d, `${SVG_TROPHY} ${_enemyNameSafe(d)} is defeated!`);
+    _appendLog(d, `${SVG_TROPHY} ${t('battlesim186.log.enemy_defeated', { enemy: _enemyNameSafe(d) })}`);
     _recordOutcome(d, 'win');
   } else if (f.stamina <= 0) {
-    _appendLog(d, `${SVG_SKULL} ${escapeHtml(_fighterLabel(d))} has fallen in battle.`);
+    _appendLog(d, `${SVG_SKULL} ${t('battlesim186.log.fighter_fallen', { fighter: escapeHtml(_fighterLabel(d)) })}`);
     f.alive = false;
     _recordOutcome(d, 'loss');
   }
@@ -256,28 +259,28 @@ function _runHandToHandRound() {
 function _playerPhaserShot(d, f) {
   const skill = _effectiveSkill(d);
   const roll = _roll2d6();
-  _appendLog(d, `${escapeHtml(_fighterLabel(d))} fires (roll ${roll} vs SKILL ${skill}).`);
+  _appendLog(d, t('battlesim186.log.fighter_fires', { fighter: escapeHtml(_fighterLabel(d)), roll, skill }));
   if (roll < skill) {
     d.enemy.stamina = 0;
-    _appendLog(d, `${SVG_TROPHY} Hit! ${_enemyNameSafe(d)} is ${d.phaserSetting === 'stun' ? 'stunned' : 'killed'}.`);
+    _appendLog(d, `${SVG_TROPHY} ${t('battlesim186.log.phaser_hit', { enemy: _enemyNameSafe(d), result: d.phaserSetting === 'stun' ? t('battlesim186.log.phaser_stunned') : t('battlesim186.log.phaser_killed') })}`);
     _recordOutcome(d, 'win');
     return true;
   }
-  _appendLog(d, 'Miss.');
+  _appendLog(d, t('battlesim186.log.miss'));
   return false;
 }
 
 function _enemyPhaserShot(d, f) {
   const enemyRoll = _roll2d6();
-  _appendLog(d, `${_enemyNameSafe(d)} fires (roll ${enemyRoll} vs SKILL ${d.enemy.skill}).`);
+  _appendLog(d, t('battlesim186.log.enemy_fires', { enemy: _enemyNameSafe(d), roll: enemyRoll, skill: d.enemy.skill }));
   if (enemyRoll < d.enemy.skill) {
     f.stamina = 0;
     f.alive = false;
-    _appendLog(d, `${SVG_SKULL} Hit! ${escapeHtml(_fighterLabel(d))} is stunned or killed. Your mission has ended.`);
+    _appendLog(d, `${SVG_SKULL} ${t('battlesim186.log.phaser_enemy_hit', { fighter: escapeHtml(_fighterLabel(d)) })}`);
     _recordOutcome(d, 'loss');
     return true;
   }
-  _appendLog(d, 'Miss.');
+  _appendLog(d, t('battlesim186.log.miss'));
   return false;
 }
 
@@ -290,7 +293,7 @@ function _runPhaserRound() {
   const f = _fighter(d);
   if (!d || _notReady(d) || f.stamina <= 0 || d.enemy.stamina <= 0) return;
   d.roundsThisBattle++;
-  _appendLog(d, `Round ${d.roundsThisBattle}:`);
+  _appendLog(d, t('battlesim186.log.round_no_as', { round: d.roundsThisBattle }));
 
   if (d.enemyFiresFirst) {
     if (_enemyPhaserShot(d, f)) { saveState(); _renderAll(); return; }
@@ -308,17 +311,17 @@ function _runPhaserRound() {
 
 function _playerShipShot(d) {
   const toHit = _roll2d6();
-  _appendLog(d, `You fire (roll ${toHit} vs WEAPONS STRENGTH ${d.ship.weapons}).`);
+  _appendLog(d, t('battlesim186.log.ship_fire', { roll: toHit, weapons: d.ship.weapons }));
   if (toHit < d.ship.weapons) {
     const dmgRoll = _roll2d6();
     const dmg = dmgRoll === 12 ? 6 : (dmgRoll <= d.enemyShip.shields ? 2 : 4);
     d.enemyShip.shields = Math.max(0, d.enemyShip.shields - dmg);
-    _appendLog(d, `Direct hit! Damage roll ${dmgRoll} - ${dmg} damage. ${_enemyShipNameSafe(d)} SHIELDS: ${d.enemyShip.shields}.`);
+    _appendLog(d, t('battlesim186.log.ship_direct_hit', { dmgRoll, dmg, enemy: _enemyShipNameSafe(d), shields: d.enemyShip.shields }));
   } else {
-    _appendLog(d, 'Miss.');
+    _appendLog(d, t('battlesim186.log.miss'));
   }
   if (d.enemyShip.shields <= 0) {
-    _appendLog(d, `${SVG_TROPHY} ${_enemyShipNameSafe(d)} explodes!`);
+    _appendLog(d, `${SVG_TROPHY} ${t('battlesim186.log.ship_explodes', { enemy: _enemyShipNameSafe(d) })}`);
     _recordOutcome(d, 'win');
     return true;
   }
@@ -327,17 +330,17 @@ function _playerShipShot(d) {
 
 function _enemyShipShot(d) {
   const toHit = _roll2d6();
-  _appendLog(d, `${_enemyShipNameSafe(d)} fires (roll ${toHit} vs WEAPONS STRENGTH ${d.enemyShip.weapons}).`);
+  _appendLog(d, t('battlesim186.log.enemyship_fire', { enemy: _enemyShipNameSafe(d), roll: toHit, weapons: d.enemyShip.weapons }));
   if (toHit < d.enemyShip.weapons) {
     const dmgRoll = _roll2d6();
     const dmg = dmgRoll === 12 ? 6 : (dmgRoll <= d.ship.shields ? 2 : 4);
     d.ship.shields = Math.max(0, d.ship.shields - dmg);
-    _appendLog(d, `Direct hit! Damage roll ${dmgRoll} - ${dmg} damage. Your SHIELDS: ${d.ship.shields}.`);
+    _appendLog(d, t('battlesim186.log.ship_direct_hit_you', { dmgRoll, dmg, shields: d.ship.shields }));
   } else {
-    _appendLog(d, 'Miss.');
+    _appendLog(d, t('battlesim186.log.miss'));
   }
   if (d.ship.shields <= 0) {
-    _appendLog(d, `${SVG_SKULL} The Traveller is destroyed!`);
+    _appendLog(d, `${SVG_SKULL} ${t('battlesim186.log.ship_destroyed')}`);
     _recordOutcome(d, 'loss');
     return true;
   }
@@ -348,7 +351,7 @@ function _runShipRound() {
   const d = _data();
   if (!d || _notReady(d) || d.ship.shields <= 0 || d.enemyShip.shields <= 0) return;
   d.roundsThisBattle++;
-  _appendLog(d, `Round ${d.roundsThisBattle}:`);
+  _appendLog(d, t('battlesim186.log.round_no_as', { round: d.roundsThisBattle }));
 
   if (d.enemyFiresFirst) {
     if (_enemyShipShot(d)) { saveState(); _renderAll(); return; }
@@ -377,15 +380,15 @@ function _resetBattle() {
   if (d.mode === 'ship') {
     d.enemyShip.shields = d.enemyShip.shieldsMax;
     d.ship.shields = d.ship.shieldsInitial;
-    if (d.log.length) _appendLog(d, '──────────');
-    _appendLog(d, `Battle reset. ${_enemyShipNameSafe(d)}'s SHIELDS and yours are restored.`);
+    if (d.log.length) _appendLog(d, t('battlesim186.log.reset_sep'));
+    _appendLog(d, t('battlesim186.log.reset_ship', { enemy: _enemyShipNameSafe(d) }));
   } else {
     const f = _fighter(d);
     d.enemy.stamina = d.enemy.staminaMax;
     f.stamina = f.staminaInitial;
     f.alive = true;
-    if (d.log.length) _appendLog(d, '──────────');
-    _appendLog(d, `Battle reset. ${_enemyNameSafe(d)}'s STAMINA and ${escapeHtml(_fighterLabel(d))}'s are restored.`);
+    if (d.log.length) _appendLog(d, t('battlesim186.log.reset_sep'));
+    _appendLog(d, t('battlesim186.log.reset_crew', { enemy: _enemyNameSafe(d), fighter: escapeHtml(_fighterLabel(d)) }));
   }
   saveState();
   _renderAll();
@@ -405,7 +408,7 @@ function _replaceCrewMember(key) {
   c.stamina = c.staminaInitial;
   c.alive = true;
   c.replaced = true;
-  _appendLog(d, `${escapeHtml(CREW_LABELS[key])} is replaced: SKILL ${c.skillInitial}, STAMINA ${c.staminaInitial}. The replacement cannot be sent on away missions.`);
+  _appendLog(d, t('battlesim186.log.crew_replaced', { name: escapeHtml(t(`battlesim186.crew.${key}`)), skill: c.skillInitial, stamina: c.staminaInitial }));
   saveState();
   _renderAll();
 }
@@ -420,16 +423,16 @@ function _renderStatus() {
   let over, statusHtml = '';
   if (d.mode === 'ship') {
     const hasEnemy = d.enemyShip.shieldsMax > 0;
-    if (notReady) statusHtml = 'Roll starting stats to begin.';
-    else if (d.ship.shields <= 0) statusHtml = `${SVG_SKULL} The Traveller has been destroyed.`;
-    else if (hasEnemy && d.enemyShip.shields <= 0) statusHtml = `${SVG_TROPHY} Victory!`;
+    if (notReady) statusHtml = t('battlesim186.status.not_ready');
+    else if (d.ship.shields <= 0) statusHtml = `${SVG_SKULL} ${t('battlesim186.status.ship_destroyed')}`;
+    else if (hasEnemy && d.enemyShip.shields <= 0) statusHtml = `${SVG_TROPHY} ${t('battlesim186.status.victory')}`;
     over = notReady || d.ship.shields <= 0 || (hasEnemy && d.enemyShip.shields <= 0);
   } else {
     const f = _fighter(d);
     const hasEnemy = d.enemy.staminaMax > 0;
-    if (notReady) statusHtml = 'Roll starting stats to begin.';
-    else if (f.stamina <= 0) statusHtml = `${SVG_SKULL} ${escapeHtml(_fighterLabel(d))} has fallen in battle.`;
-    else if (hasEnemy && d.enemy.stamina <= 0) statusHtml = `${SVG_TROPHY} Victory!`;
+    if (notReady) statusHtml = t('battlesim186.status.not_ready');
+    else if (f.stamina <= 0) statusHtml = `${SVG_SKULL} ${t('battlesim186.status.fighter_fallen', { fighter: escapeHtml(_fighterLabel(d)) })}`;
+    else if (hasEnemy && d.enemy.stamina <= 0) statusHtml = `${SVG_TROPHY} ${t('battlesim186.status.victory')}`;
     over = notReady || f.stamina <= 0 || (hasEnemy && d.enemy.stamina <= 0);
   }
   el.innerHTML = statusHtml;
@@ -443,23 +446,23 @@ function _renderStatus() {
 // space for the input boxes themselves once a long badge (e.g. "(replacement
 // - cannot be sent on away missions)") forced an extra wrap.
 function _renderCrewHtml(d) {
-  return CREW.map(([key, label, isOfficer]) => {
+  return CREW.map(([key, , isOfficer]) => {
     const c = d.crew[key];
     const badges = [
-      isOfficer ? '-3 SKILL in combat' : '',
-      !c.alive ? 'down' : '',
-      c.replaced ? 'replacement - cannot be sent on away missions' : '',
+      isOfficer ? t('battlesim186.badge.officer_penalty') : '',
+      !c.alive ? t('battlesim186.badge.down') : '',
+      c.replaced ? t('battlesim186.badge.replacement') : '',
     ].filter(Boolean);
     const badgeHtml = badges.length ? `<div class="bsim-tech-desc">${escapeHtml(badges.join(' · '))}</div>` : '';
     const replaceBtn = key !== 'captain'
-      ? `<div class="bsim-tech-footer"><button class="inv-edit-done bsim-tech-btn" data-replace="${key}" ${_notReady(d) ? 'disabled' : ''}>Lost - Replace</button></div>`
+      ? `<div class="bsim-tech-footer"><button class="inv-edit-done bsim-tech-btn" data-replace="${key}" ${_notReady(d) ? 'disabled' : ''}>${t('battlesim186.btn.replace')}</button></div>`
       : '';
     return `
     <div class="bsim-tech-row">
-      <div class="bsim-tech-name">${escapeHtml(label)}</div>
+      <div class="bsim-tech-name">${escapeHtml(t(`battlesim186.crew.${key}`))}</div>
       ${badgeHtml}
       <div class="inv-edit-row">
-        <span class="inv-edit-label bsim-stat-label">SKILL</span>
+        <span class="inv-edit-label bsim-stat-label">${t('battlesim186.ui.skill')}</span>
         <div class="inv-qty-wrap">
           <button class="inv-qty-btn" data-id="sim186-${key}-skill" data-delta="-1">−</button>
           <input id="sim186-${key}-skill" class="inv-edit-input inv-qty-input" type="text" inputmode="numeric">
@@ -467,7 +470,7 @@ function _renderCrewHtml(d) {
         </div>
       </div>
       <div class="inv-edit-row">
-        <span class="inv-edit-label bsim-stat-label">STAMINA</span>
+        <span class="inv-edit-label bsim-stat-label">${t('battlesim186.ui.stamina')}</span>
         <div class="inv-qty-wrap">
           <button class="inv-qty-btn" data-id="sim186-${key}-stamina" data-delta="-1">−</button>
           <input id="sim186-${key}-stamina" class="inv-edit-input inv-qty-input" type="text" inputmode="numeric">
@@ -509,14 +512,14 @@ function _renderHistory() {
   const sumEl  = document.getElementById('sim186-history-summary');
   const listEl = document.getElementById('sim186-history-list');
   if (!d || !sumEl || !listEl) return;
-  sumEl.textContent = `Battle History (${d.history.length})`;
+  sumEl.textContent = t('battlesim186.history.summary', { n: d.history.length });
   if (!d.history.length) {
-    listEl.innerHTML = '<div class="bsim-history-empty">No finished battles yet.</div>';
+    listEl.innerHTML = `<div class="bsim-history-empty">${t('battlesim186.history.empty')}</div>`;
     return;
   }
   listEl.innerHTML = d.history.slice().reverse().map(h => {
     const icon   = h.outcome === 'win' ? SVG_TROPHY : SVG_SKULL;
-    const result = h.outcome === 'win' ? 'won' : 'lost';
+    const result = h.outcome === 'win' ? t('battlesim186.history.won') : t('battlesim186.history.lost');
     const date   = new Date(h.ts).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
     return `<div class="bsim-history-row">
       <span>${icon} ${escapeHtml(h.fighter)} vs ${escapeHtml(h.enemy)} - ${result}</span>
@@ -548,7 +551,7 @@ function _renderInputs(forceCrewRebuild = false) {
 
   const rollBtn = document.getElementById('sim186-roll');
   rollBtn.disabled = d.rolled;
-  rollBtn.textContent = d.rolled ? 'Rolled' : 'Roll starting stats (crew, LUCK, ship)';
+  rollBtn.textContent = d.rolled ? t('battlesim186.btn.rolled') : t('battlesim186.btn.roll');
 
   document.getElementById('sim186-item-helmet').checked = d.hasHelmet;
   document.getElementById('sim186-mode').value = d.mode;
@@ -725,137 +728,137 @@ export function initSim186() {
   overlay.innerHTML = `
     <div class="inv-modal bsim-modal">
       <div class="inv-modal-hdr">
-        <span class="inv-modal-title">Battle Simulator</span>
+        <span class="inv-modal-title">${t('battlesim.title')}</span>
         <button id="sim186-close" class="inv-close-btn" aria-label="${t('btn.close')}">✕</button>
       </div>
       <div class="bsim-body">
         <div class="bsim-col bsim-col-left">
           <div class="bsim-side">
             <div class="inv-edit-row bsim-life-roll-row">
-              <button id="sim186-roll" class="inv-edit-done bsim-ae-roll-btn" type="button">Roll starting stats (crew, LUCK, ship)</button>
+              <button id="sim186-roll" class="inv-edit-done bsim-ae-roll-btn" type="button">${t('battlesim186.btn.roll')}</button>
             </div>
-            ${_numField('LUCK', 'sim186-luck')}
-            ${_numField('Initial LUCK', 'sim186-luckmax')}
+            ${_numField(t('battlesim186.ui.luck'), 'sim186-luck')}
+            ${_numField(t('battlesim186.ui.luck_initial'), 'sim186-luckmax')}
             <details class="bsim-history" open>
-              <summary>Crew</summary>
+              <summary>${t('battlesim186.ui.crew')}</summary>
               <div id="sim186-crew-list" class="bsim-tech-list"></div>
             </details>
             <details class="bsim-history">
-              <summary>Items</summary>
+              <summary>${t('battlesim186.ui.items')}</summary>
               <div class="bsim-tech-list">
                 <div class="bsim-tech-row">
-                  <div class="bsim-tech-name">Alien Helmet <span class="bsim-tech-uses">(sec. 269)</span></div>
-                  <div class="bsim-tech-desc">+1 SKILL while worn.</div>
-                  <div class="bsim-tech-footer"><label class="inv-edit-check-label"><input type="checkbox" id="sim186-item-helmet" class="inv-edit-check"> Have it</label></div>
+                  <div class="bsim-tech-name">${t('battlesim186.ui.item_helmet_name')} <span class="bsim-tech-uses">(sec. 269)</span></div>
+                  <div class="bsim-tech-desc">${t('battlesim186.ui.item_helmet_desc', { n: HELMET_SKILL_BONUS })}</div>
+                  <div class="bsim-tech-footer"><label class="inv-edit-check-label"><input type="checkbox" id="sim186-item-helmet" class="inv-edit-check"> ${t('battlesim186.ui.have_it')}</label></div>
                 </div>
               </div>
             </details>
             <div class="inv-edit-row">
-              <span class="inv-edit-label bsim-stat-label">Combat type</span>
+              <span class="inv-edit-label bsim-stat-label">${t('battlesim186.ui.combat_type')}</span>
               <select id="sim186-mode" class="inv-edit-input bsim-select">
-                <option value="handtohand">Hand-to-hand</option>
-                <option value="phaser">Phaser</option>
-                <option value="ship">Ship-to-ship</option>
+                <option value="handtohand">${t('battlesim186.ui.mode_handtohand')}</option>
+                <option value="phaser">${t('battlesim186.ui.mode_phaser')}</option>
+                <option value="ship">${t('battlesim186.ui.mode_ship')}</option>
               </select>
             </div>
           </div>
           <div id="sim186-crew-combat-fields" class="bsim-side">
             <div class="inv-edit-row">
-              <span class="inv-edit-label bsim-stat-label">Fighter</span>
+              <span class="inv-edit-label bsim-stat-label">${t('battlesim186.ui.fighter')}</span>
               <select id="sim186-fighter" class="inv-edit-input bsim-select">
-                ${CREW.map(([key, label]) => `<option value="${key}">${escapeHtml(label)}</option>`).join('')}
+                ${CREW.map(([key]) => `<option value="${key}">${escapeHtml(t(`battlesim186.crew.${key}`))}</option>`).join('')}
               </select>
             </div>
-            ${_numField('Attack Strength mod.', 'sim186-atkmod')}
+            ${_numField(t('battlesim186.ui.atk_mod'), 'sim186-atkmod')}
             <div class="inv-edit-row bsim-ae-row">
-              <label class="inv-edit-check-label"><input type="checkbox" id="sim186-waive-officer" class="inv-edit-check"> Waive Officer -3 penalty this fight</label>
+              <label class="inv-edit-check-label"><input type="checkbox" id="sim186-waive-officer" class="inv-edit-check"> ${t('battlesim186.ui.waive_officer', { n: OFFICER_PENALTY })}</label>
             </div>
             <div class="inv-edit-row">
-              <span class="inv-edit-label bsim-stat-label">Enemy hit dmg</span>
+              <span class="inv-edit-label bsim-stat-label">${t('battlesim186.ui.enemy_hit_dmg')}</span>
               <select id="sim186-enemy-dmg" class="inv-edit-input bsim-select">
-                <option value="normal">Normal (2)</option>
-                <option value="nerve">Nerve-stick (1d6: 4-6=4, 1-3=2)</option>
+                <option value="normal">${t('battlesim186.ui.dmg_normal', { n: NORMAL_DMG })}</option>
+                <option value="nerve">${t('battlesim186.ui.dmg_nerve')}</option>
               </select>
             </div>
             <div class="inv-edit-row">
-              <span class="inv-edit-label bsim-stat-label">Your hit dmg</span>
+              <span class="inv-edit-label bsim-stat-label">${t('battlesim186.ui.your_hit_dmg')}</span>
               <select id="sim186-player-dmg" class="inv-edit-input bsim-select">
-                <option value="normal">Normal (2)</option>
-                <option value="armor">Armor-deflect (1d6: 5-6=1, 1-4=0)</option>
+                <option value="normal">${t('battlesim186.ui.dmg_normal', { n: NORMAL_DMG })}</option>
+                <option value="armor">${t('battlesim186.ui.dmg_armor')}</option>
               </select>
             </div>
             <div id="sim186-handtohand-fields">
               <div class="inv-edit-row bsim-ae-row">
-                <label class="inv-edit-check-label"><input type="checkbox" id="sim186-enemy-extra" class="inv-edit-check"> Enemy attacks twice per round</label>
+                <label class="inv-edit-check-label"><input type="checkbox" id="sim186-enemy-extra" class="inv-edit-check"> ${t('battlesim186.ui.enemy_extra')}</label>
               </div>
               <div class="inv-edit-row bsim-ae-row">
-                <label class="inv-edit-check-label"><input type="checkbox" id="sim186-extra-toggle" class="inv-edit-check"> Extra attacker (2-vs-1)</label>
+                <label class="inv-edit-check-label"><input type="checkbox" id="sim186-extra-toggle" class="inv-edit-check"> ${t('battlesim186.ui.extra_toggle')}</label>
               </div>
               <div class="inv-edit-row">
-                <span class="inv-edit-label bsim-stat-label">Extra targets</span>
+                <span class="inv-edit-label bsim-stat-label">${t('battlesim186.ui.extra_targets')}</span>
                 <select id="sim186-extra-target" class="inv-edit-input bsim-select">
-                  <option value="enemy">The enemy</option>
-                  <option value="you">Your fighter</option>
+                  <option value="enemy">${t('battlesim186.ui.extra_target_enemy')}</option>
+                  <option value="you">${t('battlesim186.ui.extra_target_you')}</option>
                 </select>
               </div>
-              ${_numField('Extra attacker SKILL', 'sim186-extra-skill')}
+              ${_numField(t('battlesim186.ui.extra_skill'), 'sim186-extra-skill')}
             </div>
             <div id="sim186-phaser-fields" style="display:none">
               <div class="inv-edit-row">
-                <span class="inv-edit-label bsim-stat-label">Phaser set to</span>
+                <span class="inv-edit-label bsim-stat-label">${t('battlesim186.ui.phaser_setting')}</span>
                 <select id="sim186-phaser-setting" class="inv-edit-input bsim-select">
-                  <option value="kill">Kill</option>
-                  <option value="stun">Stun</option>
+                  <option value="kill">${t('battlesim186.ui.phaser_kill')}</option>
+                  <option value="stun">${t('battlesim186.ui.phaser_stun')}</option>
                 </select>
               </div>
               <div class="inv-edit-row bsim-ae-row">
-                <label class="inv-edit-check-label"><input type="checkbox" id="sim186-phaser-enemy-first" class="inv-edit-check"> Enemy fires first this round</label>
+                <label class="inv-edit-check-label"><input type="checkbox" id="sim186-phaser-enemy-first" class="inv-edit-check"> ${t('battlesim186.ui.phaser_enemy_first')}</label>
               </div>
-              <div class="bsim-tech-desc">A hit ends the fight immediately - no STAMINA tracked in phaser combat.</div>
+              <div class="bsim-tech-desc">${t('battlesim186.ui.phaser_note')}</div>
             </div>
             <div class="inv-edit-row">
-              <span class="inv-edit-label bsim-stat-label">Pick</span>
+              <span class="inv-edit-label bsim-stat-label">${t('battlesim186.ui.pick')}</span>
               <div class="autocomplete-wrap bsim-enemy-ac">
                 <input id="sim186-enemy-pick" class="inv-edit-input" type="text" autocomplete="off" readonly role="combobox" aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" aria-controls="sim186-enemy-pick-dropdown">
                 <ul id="sim186-enemy-pick-dropdown" class="autocomplete-dropdown" role="listbox"></ul>
               </div>
             </div>
-            ${_numField('Enemy SKILL', 'sim186-enemy-skill')}
+            ${_numField(t('battlesim186.ui.enemy_skill'), 'sim186-enemy-skill')}
             <div id="sim186-enemy-stamina-fields">
-              ${_numField('Enemy STAMINA', 'sim186-enemy-stamina')}
-              ${_numField('Enemy Max STAMINA', 'sim186-enemy-staminamax')}
+              ${_numField(t('battlesim186.ui.enemy_stamina'), 'sim186-enemy-stamina')}
+              ${_numField(t('battlesim186.ui.enemy_stamina_max'), 'sim186-enemy-staminamax')}
             </div>
           </div>
           <div id="sim186-ship-fields" class="bsim-side" style="display:none">
-            <div class="bsim-side-title">Your ship</div>
-            ${_numField('WEAPONS STRENGTH', 'sim186-ship-weapons')}
-            ${_numField('Initial WEAPONS STRENGTH', 'sim186-ship-weaponsmax')}
-            ${_numField('SHIELDS', 'sim186-ship-shields')}
-            ${_numField('Initial SHIELDS', 'sim186-ship-shieldsmax')}
-            <div class="bsim-side-title">Alien ship</div>
+            <div class="bsim-side-title">${t('battlesim186.ui.your_ship')}</div>
+            ${_numField(t('battlesim186.ui.weapons'), 'sim186-ship-weapons')}
+            ${_numField(t('battlesim186.ui.weapons_initial'), 'sim186-ship-weaponsmax')}
+            ${_numField(t('battlesim186.ui.shields'), 'sim186-ship-shields')}
+            ${_numField(t('battlesim186.ui.shields_initial'), 'sim186-ship-shieldsmax')}
+            <div class="bsim-side-title">${t('battlesim186.ui.alien_ship')}</div>
             <div class="inv-edit-row">
-              <span class="inv-edit-label bsim-stat-label">Pick</span>
+              <span class="inv-edit-label bsim-stat-label">${t('battlesim186.ui.pick')}</span>
               <div class="autocomplete-wrap bsim-enemy-ac">
                 <input id="sim186-enemyship-pick" class="inv-edit-input" type="text" autocomplete="off" readonly role="combobox" aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" aria-controls="sim186-enemyship-pick-dropdown">
                 <ul id="sim186-enemyship-pick-dropdown" class="autocomplete-dropdown" role="listbox"></ul>
               </div>
             </div>
-            ${_numField('Alien WEAPONS STRENGTH', 'sim186-enemyship-weapons')}
-            ${_numField('Alien SHIELDS', 'sim186-enemyship-shields')}
-            ${_numField('Alien Max SHIELDS', 'sim186-enemyship-shieldsmax')}
+            ${_numField(t('battlesim186.ui.alien_weapons'), 'sim186-enemyship-weapons')}
+            ${_numField(t('battlesim186.ui.alien_shields'), 'sim186-enemyship-shields')}
+            ${_numField(t('battlesim186.ui.alien_shields_max'), 'sim186-enemyship-shieldsmax')}
             <div class="inv-edit-row bsim-ae-row">
-              <label class="inv-edit-check-label"><input type="checkbox" id="sim186-ship-enemy-first" class="inv-edit-check"> Alien fires first this round</label>
+              <label class="inv-edit-check-label"><input type="checkbox" id="sim186-ship-enemy-first" class="inv-edit-check"> ${t('battlesim186.ui.alien_fires_first')}</label>
             </div>
           </div>
           <div id="sim186-status" class="bsim-status"></div>
           <div class="inv-modal-ftr">
-            <button id="sim186-round" class="inv-add-btn bsim-action-primary">Round</button>
-            <button id="sim186-reset" class="inv-add-btn">Reset</button>
+            <button id="sim186-round" class="inv-add-btn bsim-action-primary">${t('battlesim186.btn.round')}</button>
+            <button id="sim186-reset" class="inv-add-btn">${t('battlesim186.btn.reset')}</button>
           </div>
         </div>
         <div class="bsim-col bsim-col-right">
           <details class="bsim-history">
-            <summary id="sim186-history-summary">Battle History (0)</summary>
+            <summary id="sim186-history-summary">${t('battlesim186.history.summary', { n: 0 })}</summary>
             <div id="sim186-history-list" class="bsim-history-list"></div>
           </details>
           <div id="sim186-log" class="bsim-log"></div>
@@ -908,7 +911,7 @@ export function initSim186() {
     d.ship.weapons = d.ship.weaponsInitial;
     d.ship.shields = d.ship.shieldsInitial;
     d.rolled = true;
-    _appendLog(d, 'Starting stats rolled for all crew, LUCK, and ship.');
+    _appendLog(d, t('battlesim186.log.rolled'));
     saveState();
     _renderAll();
   });

@@ -69,16 +69,18 @@
 //
 // All state lives in pt.sim204, per-user/per-book via currentPlaythrough().
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../state.js?v=13';
-import { showAlert } from '../play.js?v=143';
-import { getPlayBtnRow } from '../charsheet.js?v=96';
-import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../util.js?v=79';
-import { t } from '../i18n.js?v=64';
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../state.js?v=14';
+import { showAlert } from '../confirm.js?v=5';
+import { getPlayBtnRow } from '../charsheet.js?v=105';
+import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../util.js?v=88';
+import { t } from '../i18n.js?v=72';
 
 const SVG_SKULL  = `<svg class="sim-icon sim-icon-dead"  viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8c0 2.8 1.4 5.3 3.6 6.8V20a1 1 0 0 0 1 1h6.8a1 1 0 0 0 1-1v-2.2C18.6 16.3 20 13.8 20 11a8 8 0 0 0-8-8zm-2.5 13v-1.5a.5.5 0 0 0-.5-.5H8l-.5-1 1-1-1-1 1-1H9a2.5 2.5 0 0 1 5 0h.5l1 1-1 1 1 1-.5 1h-1a.5.5 0 0 0-.5.5V16h-4z"/></svg>`;
 const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v7a6 6 0 0 1-12 0V2zm-2 1H2v4a4 4 0 0 0 4 4v-1a3 3 0 0 1-3-3V3zm16 0h2v4a4 4 0 0 1-4 4v-1a3 3 0 0 0 3-3V3zm-7 13v2H9v2h6v-2h-2v-2a6 6 0 0 0 5-5.92V2H6v8.08A6 6 0 0 0 13 16z"/></svg>`;
 
-const SCORE_LABELS = { skill: 'SKILL', stamina: 'STAMINA', luck: 'LUCK' };
+const SCORE_LABELS = { skill: 'battlesim204.ui.skill', stamina: 'battlesim204.ui.stamina', luck: 'battlesim204.ui.luck' };
+const HEALING_POWDER_HEAL = 2;
+const SIDE_WOUND_DMG = 2;
 
 function _data() {
   const pt = currentPlaythrough();
@@ -199,22 +201,22 @@ function _runRound() {
 
   const playerAS = _roll2d6() + _effectiveSkill(d) + (d.player.attackModifier || 0);
   const enemyAS  = _roll2d6() + d.enemy.skill;
-  _appendLog(d, `Round ${d.roundsThisBattle}: you ${playerAS} vs ${_enemyNameSafe(d)} ${enemyAS}.`);
+  _appendLog(d, t('battlesim204.log.round', { round: d.roundsThisBattle, playerAS, enemy: _enemyNameSafe(d), enemyAS }));
 
   if (playerAS === enemyAS) {
-    _appendLog(d, 'Both blows are avoided.');
+    _appendLog(d, t('battlesim204.log.both_avoided'));
   } else if (playerAS > enemyAS) {
     d.enemy.stamina = Math.max(floor, d.enemy.stamina - 2);
     d.player.hitsLandedThisFight++;
-    _appendLog(d, `You wound ${_enemyNameSafe(d)} for 2. STAMINA: ${d.enemy.stamina}/${d.enemy.staminaMax}.`);
+    _appendLog(d, t('battlesim204.log.you_wound', { enemy: _enemyNameSafe(d), n: 2, stamina: d.enemy.stamina, staminaMax: d.enemy.staminaMax }));
     if (d.player.winAfterHits > 0 && d.player.hitsLandedThisFight >= d.player.winAfterHits && d.enemy.stamina > floor) {
       d.enemy.stamina = floor;
-      _appendLog(d, `You've landed enough blows to press your advantage - the fight ends here.`);
+      _appendLog(d, t('battlesim204.log.press_advantage'));
     }
     if (d.enemy.stamina > floor) d.pendingLuckQueue.push({ kind: 'player-hit' });
   } else {
     d.player.stamina = Math.max(0, d.player.stamina - woundDmg);
-    _appendLog(d, `${_enemyNameSafe(d)} wounds you for ${woundDmg}. STAMINA: ${d.player.stamina}/${d.player.staminaInitial}.`);
+    _appendLog(d, t('battlesim204.log.enemy_wounds', { enemy: _enemyNameSafe(d), n: woundDmg, stamina: d.player.stamina, staminaMax: d.player.staminaInitial }));
     if (d.player.stamina > 0) d.pendingLuckQueue.push({ kind: 'enemy-hit' });
   }
 
@@ -223,33 +225,33 @@ function _runRound() {
   if (d.pairedFight && d.sideEnemy.staminaMax > 0 && d.player.stamina > 0) {
     const sidePlayerAS = _roll2d6() + _effectiveSkill(d) + (d.player.attackModifier || 0);
     const sideAS = _roll2d6() + d.sideEnemy.skill;
-    _appendLog(d, `${_sideEnemyNameSafe(d)} attacks separately: you ${sidePlayerAS} vs ${sideAS}.`);
+    _appendLog(d, t('battlesim204.log.side_round', { enemy: _sideEnemyNameSafe(d), playerAS: sidePlayerAS, enemyAS: sideAS }));
     if (sideAS > sidePlayerAS) {
-      d.player.stamina = Math.max(0, d.player.stamina - 2);
-      _appendLog(d, `${_sideEnemyNameSafe(d)} wounds you for 2. STAMINA: ${d.player.stamina}/${d.player.staminaInitial}.`);
+      d.player.stamina = Math.max(0, d.player.stamina - SIDE_WOUND_DMG);
+      _appendLog(d, t('battlesim204.log.side_wounds', { enemy: _sideEnemyNameSafe(d), n: SIDE_WOUND_DMG, stamina: d.player.stamina, staminaMax: d.player.staminaInitial }));
       if (d.player.stamina > 0) d.pendingLuckQueue.push({ kind: 'side-hit' });
     } else {
-      _appendLog(d, `You fend off ${_sideEnemyNameSafe(d)}'s blow.`);
+      _appendLog(d, t('battlesim204.log.side_fend', { enemy: _sideEnemyNameSafe(d) }));
     }
   }
   if (d.pairedFight && d.tripleFight && d.sideEnemy2.staminaMax > 0 && d.player.stamina > 0) {
     const side2PlayerAS = _roll2d6() + _effectiveSkill(d) + (d.player.attackModifier || 0);
     const side2AS = _roll2d6() + d.sideEnemy2.skill;
-    _appendLog(d, `${_sideEnemy2NameSafe(d)} attacks separately: you ${side2PlayerAS} vs ${side2AS}.`);
+    _appendLog(d, t('battlesim204.log.side_round', { enemy: _sideEnemy2NameSafe(d), playerAS: side2PlayerAS, enemyAS: side2AS }));
     if (side2AS > side2PlayerAS) {
-      d.player.stamina = Math.max(0, d.player.stamina - 2);
-      _appendLog(d, `${_sideEnemy2NameSafe(d)} wounds you for 2. STAMINA: ${d.player.stamina}/${d.player.staminaInitial}.`);
+      d.player.stamina = Math.max(0, d.player.stamina - SIDE_WOUND_DMG);
+      _appendLog(d, t('battlesim204.log.side_wounds', { enemy: _sideEnemy2NameSafe(d), n: SIDE_WOUND_DMG, stamina: d.player.stamina, staminaMax: d.player.staminaInitial }));
       if (d.player.stamina > 0) d.pendingLuckQueue.push({ kind: 'side2-hit' });
     } else {
-      _appendLog(d, `You fend off ${_sideEnemy2NameSafe(d)}'s blow.`);
+      _appendLog(d, t('battlesim204.log.side_fend', { enemy: _sideEnemy2NameSafe(d) }));
     }
   }
 
   if (d.enemy.stamina <= floor) {
-    _appendLog(d, `${SVG_TROPHY} ${_enemyNameSafe(d)} is defeated!`);
+    _appendLog(d, t('battlesim204.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyNameSafe(d) }));
     _recordOutcome(d, 'win');
   } else if (d.player.stamina <= 0) {
-    _appendLog(d, `${SVG_SKULL} You have fallen in battle.`);
+    _appendLog(d, t('battlesim204.log.fallen', { skull: SVG_SKULL }));
     _recordOutcome(d, 'loss');
     d.pendingLuckQueue = [];
   }
@@ -271,23 +273,23 @@ function _testLuck() {
   if (event.kind === 'player-hit') {
     if (lucky) {
       d.enemy.stamina = Math.max(floor, d.enemy.stamina - 2);
-      _appendLog(d, `Test Your Luck: ${roll} (Lucky) - the wound is worse. ${_enemyNameSafe(d)} STAMINA: ${d.enemy.stamina}/${d.enemy.staminaMax}.`);
+      _appendLog(d, t('battlesim204.log.luck_player_hit_lucky', { roll, enemy: _enemyNameSafe(d), stamina: d.enemy.stamina, staminaMax: d.enemy.staminaMax }));
     } else {
       d.enemy.stamina = Math.min(d.enemy.staminaMax, d.enemy.stamina + 1);
-      _appendLog(d, `Test Your Luck: ${roll} (Unlucky) - the wound is less severe. ${_enemyNameSafe(d)} STAMINA: ${d.enemy.stamina}/${d.enemy.staminaMax}.`);
+      _appendLog(d, t('battlesim204.log.luck_player_hit_unlucky', { roll, enemy: _enemyNameSafe(d), stamina: d.enemy.stamina, staminaMax: d.enemy.staminaMax }));
     }
-    if (d.enemy.stamina <= floor) { _appendLog(d, `${SVG_TROPHY} ${_enemyNameSafe(d)} is defeated!`); _recordOutcome(d, 'win'); }
+    if (d.enemy.stamina <= floor) { _appendLog(d, t('battlesim204.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyNameSafe(d) })); _recordOutcome(d, 'win'); }
   } else {
     const source = event.kind === 'side-hit' ? _sideEnemyNameSafe(d) : event.kind === 'side2-hit' ? _sideEnemy2NameSafe(d) : _enemyNameSafe(d);
     if (lucky) {
       d.player.stamina = Math.min(d.player.staminaInitial, d.player.stamina + 1);
-      _appendLog(d, `Test Your Luck: ${roll} (Lucky) - ${source}'s wound is less severe. Your STAMINA: ${d.player.stamina}/${d.player.staminaInitial}.`);
+      _appendLog(d, t('battlesim204.log.luck_hit_lucky', { roll, source, stamina: d.player.stamina, staminaMax: d.player.staminaInitial }));
     } else {
       d.player.stamina = Math.max(0, d.player.stamina - 1);
-      _appendLog(d, `Test Your Luck: ${roll} (Unlucky) - ${source}'s wound is worse. Your STAMINA: ${d.player.stamina}/${d.player.staminaInitial}.`);
+      _appendLog(d, t('battlesim204.log.luck_hit_unlucky', { roll, source, stamina: d.player.stamina, staminaMax: d.player.staminaInitial }));
     }
     if (d.player.stamina <= 0) {
-      _appendLog(d, `${SVG_SKULL} You have fallen in battle.`);
+      _appendLog(d, t('battlesim204.log.fallen', { skull: SVG_SKULL }));
       _recordOutcome(d, 'loss');
       d.pendingLuckQueue = [];
     }
@@ -312,8 +314,8 @@ function _resetBattle() {
   d.roundsThisBattle = 0;
   d.player.hitsLandedThisFight = 0;
   d.pendingLuckQueue = [];
-  if (d.log.length) _appendLog(d, '──────────');
-  _appendLog(d, `Battle reset. ${_enemyNameSafe(d)}'s STAMINA and yours are restored.`);
+  if (d.log.length) _appendLog(d, t('battlesim204.log.reset_sep'));
+  _appendLog(d, t('battlesim204.log.reset', { enemy: _enemyNameSafe(d) }));
   saveState();
   _renderAll();
 }
@@ -324,13 +326,13 @@ function _useHealingPowder() {
   const d = _data();
   if (!d || _notReady(d) || !d.player.hasHealingPowder || d.player.healingPowderUsed) return;
   if (d.roundsThisBattle > 0 && d.player.stamina > 0 && d.enemy.stamina > 0) {
-    showAlert('You cannot use the Healing Powder in the middle of a fight.');
+    showAlert(t('battlesim204.alert.powder_midfight'));
     return;
   }
   d.player.healingPowderUsed = true;
   const before = d.player.stamina;
-  d.player.stamina = Math.min(d.player.staminaInitial, d.player.stamina + 2);
-  _appendLog(d, `You test the Healing Powder on your wounds: STAMINA ${before} → ${d.player.stamina}/${d.player.staminaInitial}.`);
+  d.player.stamina = Math.min(d.player.staminaInitial, d.player.stamina + HEALING_POWDER_HEAL);
+  _appendLog(d, t('battlesim204.log.powder', { before, stamina: d.player.stamina, staminaMax: d.player.staminaInitial }));
   saveState();
   _renderAll();
 }
@@ -339,15 +341,15 @@ function _useMistressPotion() {
   const d = _data();
   if (!d || _notReady(d) || !d.player.hasMistressPotion || d.player.mistressPotionUsed) return;
   if (d.roundsThisBattle > 0 && d.player.stamina > 0 && d.enemy.stamina > 0) {
-    showAlert('You cannot drink a potion in the middle of a fight.');
+    showAlert(t('battlesim204.alert.potion_midfight'));
     return;
   }
   d.player.mistressPotionUsed = true;
   const key   = d.player.mistressPotionScore;
-  const label = SCORE_LABELS[key];
+  const label = t(SCORE_LABELS[key]);
   const initialKey = `${key}Initial`;
   d.player[key] = d.player[initialKey];
-  _appendLog(d, `You drink the Mistress of Birds' potion: ${label} restored to ${d.player[initialKey]}.`);
+  _appendLog(d, t('battlesim204.log.mistress', { label, n: d.player[initialKey] }));
   saveState();
   _renderAll();
 }
@@ -361,9 +363,9 @@ function _renderStatus() {
   const notReady = _notReady(d);
   const hasEnemy = d.enemy.staminaMax > 0;
   const floor = _enemyFloor(d);
-  if (notReady)                                    el.innerHTML = 'Roll your starting SKILL, STAMINA and LUCK to begin.';
-  else if (d.player.stamina <= 0)                   el.innerHTML = `${SVG_SKULL} You have fallen in battle.`;
-  else if (hasEnemy && d.enemy.stamina <= floor)     el.innerHTML = `${SVG_TROPHY} Victory!`;
+  if (notReady)                                    el.innerHTML = t('battlesim204.status.not_ready');
+  else if (d.player.stamina <= 0)                   el.innerHTML = t('battlesim204.status.fallen', { skull: SVG_SKULL });
+  else if (hasEnemy && d.enemy.stamina <= floor)     el.innerHTML = t('battlesim204.status.victory', { trophy: SVG_TROPHY });
   else                                               el.innerHTML = '';
   const over = notReady || d.player.stamina <= 0 || (hasEnemy && d.enemy.stamina <= floor);
   document.getElementById('sim204-round').disabled = over || !!d.pendingLuckQueue.length;
@@ -374,39 +376,39 @@ function _renderStatus() {
 function _renderItemsHtml(d) {
   return `
     <div class="bsim-tech-row">
-      <div class="bsim-tech-name">Ranger's Helmet <span class="bsim-tech-uses">(sec. 219)</span></div>
-      <div class="bsim-tech-desc">Finely made helmet: +1 SKILL while retained.</div>
-      <div class="bsim-tech-footer"><label class="inv-edit-check-label"><input type="checkbox" id="sim204-item-helmet" class="inv-edit-check" ${d.player.hasRangerHelmet ? 'checked' : ''}> Have it</label></div>
+      <div class="bsim-tech-name">${t('battlesim204.ui.item_helmet_name')} <span class="bsim-tech-uses">(sec. 219)</span></div>
+      <div class="bsim-tech-desc">${t('battlesim204.ui.item_helmet_desc')}</div>
+      <div class="bsim-tech-footer"><label class="inv-edit-check-label"><input type="checkbox" id="sim204-item-helmet" class="inv-edit-check" ${d.player.hasRangerHelmet ? 'checked' : ''}> ${t('battlesim204.ui.have_it')}</label></div>
     </div>
     <div class="bsim-tech-row">
-      <div class="bsim-tech-name">Grimslade's Magic Sword (gift) <span class="bsim-tech-uses">(sec. 241)</span></div>
-      <div class="bsim-tech-desc">+1 SKILL while wielded - only one weapon bonus applies at a time, don't also enable the jagged sword below.</div>
-      <div class="bsim-tech-footer"><label class="inv-edit-check-label"><input type="checkbox" id="sim204-item-giftsword" class="inv-edit-check" ${d.player.hasGiftSword ? 'checked' : ''}> Wielding it</label></div>
+      <div class="bsim-tech-name">${t('battlesim204.ui.item_giftsword_name')} <span class="bsim-tech-uses">(sec. 241)</span></div>
+      <div class="bsim-tech-desc">${t('battlesim204.ui.item_giftsword_desc')}</div>
+      <div class="bsim-tech-footer"><label class="inv-edit-check-label"><input type="checkbox" id="sim204-item-giftsword" class="inv-edit-check" ${d.player.hasGiftSword ? 'checked' : ''}> ${t('battlesim204.ui.wielding_it')}</label></div>
     </div>
     <div class="bsim-tech-row">
-      <div class="bsim-tech-name">Grimslade's jagged Magic Sword (looted) <span class="bsim-tech-uses">(sec. 140/340)</span></div>
-      <div class="bsim-tech-desc">+2 SKILL while wielded - only one weapon bonus applies at a time, don't also enable the gift sword above.</div>
-      <div class="bsim-tech-footer"><label class="inv-edit-check-label"><input type="checkbox" id="sim204-item-jaggedsword" class="inv-edit-check" ${d.player.hasJaggedSword ? 'checked' : ''}> Wielding it</label></div>
+      <div class="bsim-tech-name">${t('battlesim204.ui.item_jaggedsword_name')} <span class="bsim-tech-uses">(sec. 140/340)</span></div>
+      <div class="bsim-tech-desc">${t('battlesim204.ui.item_jaggedsword_desc')}</div>
+      <div class="bsim-tech-footer"><label class="inv-edit-check-label"><input type="checkbox" id="sim204-item-jaggedsword" class="inv-edit-check" ${d.player.hasJaggedSword ? 'checked' : ''}> ${t('battlesim204.ui.wielding_it')}</label></div>
     </div>
     <div class="bsim-tech-row">
-      <div class="bsim-tech-name">Healing Powder <span class="bsim-tech-uses">(sec. 246/67)</span></div>
-      <div class="bsim-tech-desc">Single use: restores 2 STAMINA.</div>
+      <div class="bsim-tech-name">${t('battlesim204.ui.item_powder_name')} <span class="bsim-tech-uses">(sec. 246/67)</span></div>
+      <div class="bsim-tech-desc">${t('battlesim204.ui.item_powder_desc', { n: HEALING_POWDER_HEAL })}</div>
       <div class="bsim-tech-footer">
-        <label class="inv-edit-check-label"><input type="checkbox" id="sim204-item-powder" class="inv-edit-check" ${d.player.hasHealingPowder ? 'checked' : ''}> Have it</label>
-        <button id="sim204-use-powder" class="inv-edit-done bsim-ae-roll-btn" type="button" ${(!d.player.hasHealingPowder || d.player.healingPowderUsed) ? 'disabled' : ''}>${d.player.healingPowderUsed ? 'Used' : 'Use'}</button>
+        <label class="inv-edit-check-label"><input type="checkbox" id="sim204-item-powder" class="inv-edit-check" ${d.player.hasHealingPowder ? 'checked' : ''}> ${t('battlesim204.ui.have_it')}</label>
+        <button id="sim204-use-powder" class="inv-edit-done bsim-ae-roll-btn" type="button" ${(!d.player.hasHealingPowder || d.player.healingPowderUsed) ? 'disabled' : ''}>${d.player.healingPowderUsed ? t('battlesim204.btn.used') : t('battlesim204.btn.use')}</button>
       </div>
     </div>
     <div class="bsim-tech-row">
-      <div class="bsim-tech-name">Mistress of Birds' Potion <span class="bsim-tech-uses">(sec. 164)</span></div>
-      <div class="bsim-tech-desc">Single use: restores any one chosen score to its Initial value.</div>
+      <div class="bsim-tech-name">${t('battlesim204.ui.item_mistress_name')} <span class="bsim-tech-uses">(sec. 164)</span></div>
+      <div class="bsim-tech-desc">${t('battlesim204.ui.item_mistress_desc')}</div>
       <div class="bsim-tech-footer">
-        <label class="inv-edit-check-label"><input type="checkbox" id="sim204-item-mistress" class="inv-edit-check" ${d.player.hasMistressPotion ? 'checked' : ''}> Have it</label>
+        <label class="inv-edit-check-label"><input type="checkbox" id="sim204-item-mistress" class="inv-edit-check" ${d.player.hasMistressPotion ? 'checked' : ''}> ${t('battlesim204.ui.have_it')}</label>
         <select id="sim204-mistress-score" class="inv-edit-input bsim-select" ${(!d.player.hasMistressPotion || d.player.mistressPotionUsed) ? 'disabled' : ''}>
-          <option value="skill" ${d.player.mistressPotionScore === 'skill' ? 'selected' : ''}>SKILL</option>
-          <option value="stamina" ${d.player.mistressPotionScore === 'stamina' ? 'selected' : ''}>STAMINA</option>
-          <option value="luck" ${d.player.mistressPotionScore === 'luck' ? 'selected' : ''}>LUCK</option>
+          <option value="skill" ${d.player.mistressPotionScore === 'skill' ? 'selected' : ''}>${t('battlesim204.ui.skill')}</option>
+          <option value="stamina" ${d.player.mistressPotionScore === 'stamina' ? 'selected' : ''}>${t('battlesim204.ui.stamina')}</option>
+          <option value="luck" ${d.player.mistressPotionScore === 'luck' ? 'selected' : ''}>${t('battlesim204.ui.luck')}</option>
         </select>
-        <button id="sim204-use-mistress" class="inv-edit-done bsim-ae-roll-btn" type="button" ${(!d.player.hasMistressPotion || d.player.mistressPotionUsed) ? 'disabled' : ''}>${d.player.mistressPotionUsed ? 'Used' : 'Drink'}</button>
+        <button id="sim204-use-mistress" class="inv-edit-done bsim-ae-roll-btn" type="button" ${(!d.player.hasMistressPotion || d.player.mistressPotionUsed) ? 'disabled' : ''}>${d.player.mistressPotionUsed ? t('battlesim204.btn.used') : t('battlesim204.btn.drink')}</button>
       </div>
     </div>`;
 }
@@ -416,14 +418,14 @@ function _renderHistory() {
   const sumEl  = document.getElementById('sim204-history-summary');
   const listEl = document.getElementById('sim204-history-list');
   if (!d || !sumEl || !listEl) return;
-  sumEl.textContent = `Battle History (${d.history.length})`;
+  sumEl.textContent = t('battlesim204.history.summary', { n: d.history.length });
   if (!d.history.length) {
-    listEl.innerHTML = '<div class="bsim-history-empty">No finished battles yet.</div>';
+    listEl.innerHTML = `<div class="bsim-history-empty">${t('battlesim204.history.empty')}</div>`;
     return;
   }
   listEl.innerHTML = d.history.slice().reverse().map(h => {
     const icon   = h.outcome === 'win' ? SVG_TROPHY : SVG_SKULL;
-    const result = h.outcome === 'win' ? 'won' : 'lost';
+    const result = h.outcome === 'win' ? t('battlesim204.history.won') : t('battlesim204.history.lost');
     const date   = new Date(h.ts).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
     return `<div class="bsim-history-row">
       <span>${icon} ${escapeHtml(h.enemy)} - ${result}</span>
@@ -453,7 +455,7 @@ function _renderInputs() {
 
   const rollBtn = document.getElementById('sim204-roll');
   rollBtn.disabled = d.rolled;
-  rollBtn.textContent = d.rolled ? 'Rolled' : 'Roll starting SKILL/STAMINA/LUCK';
+  rollBtn.textContent = d.rolled ? t('battlesim204.btn.rolled') : t('battlesim204.btn.roll');
 
   document.getElementById('sim204-enemy-pick').value    = d.enemy.name;
   document.getElementById('sim204-enemy-skill').value   = d.enemy.skill;
@@ -609,86 +611,86 @@ export function initSim204() {
   overlay.innerHTML = `
     <div class="inv-modal bsim-modal">
       <div class="inv-modal-hdr">
-        <span class="inv-modal-title">Battle Simulator</span>
+        <span class="inv-modal-title">${t('battlesim.title')}</span>
         <button id="sim204-close" class="inv-close-btn" aria-label="${t('btn.close')}">✕</button>
       </div>
       <div class="bsim-body">
         <div class="bsim-col bsim-col-left">
           <div class="bsim-side">
-            <div class="bsim-side-title">You</div>
+            <div class="bsim-side-title">${t('battlesim204.ui.you')}</div>
             <div class="inv-edit-row bsim-life-roll-row">
-              <button id="sim204-roll" class="inv-edit-done bsim-ae-roll-btn" type="button">Roll starting SKILL/STAMINA/LUCK</button>
+              <button id="sim204-roll" class="inv-edit-done bsim-ae-roll-btn" type="button">${t('battlesim204.btn.roll')}</button>
             </div>
-            ${_numField('SKILL', 'sim204-player-skill')}
-            ${_numField('Initial SKILL', 'sim204-player-skillmax')}
-            ${_numField('STAMINA', 'sim204-player-stamina')}
-            ${_numField('Initial STAMINA', 'sim204-player-staminamax')}
-            ${_numField('LUCK', 'sim204-player-luck')}
-            ${_numField('Initial LUCK', 'sim204-player-luckmax')}
-            ${_numField('Attack modifier', 'sim204-player-atkmod')}
+            ${_numField(t('battlesim204.ui.skill'), 'sim204-player-skill')}
+            ${_numField(t('battlesim204.ui.skill_initial'), 'sim204-player-skillmax')}
+            ${_numField(t('battlesim204.ui.stamina'), 'sim204-player-stamina')}
+            ${_numField(t('battlesim204.ui.stamina_initial'), 'sim204-player-staminamax')}
+            ${_numField(t('battlesim204.ui.luck'), 'sim204-player-luck')}
+            ${_numField(t('battlesim204.ui.luck_initial'), 'sim204-player-luckmax')}
+            ${_numField(t('battlesim204.ui.atkmod'), 'sim204-player-atkmod')}
           </div>
           <div class="bsim-side">
-            <div class="bsim-side-title">Enemy</div>
+            <div class="bsim-side-title">${t('battlesim204.ui.enemy')}</div>
             <div class="inv-edit-row">
-              <span class="inv-edit-label bsim-stat-label">Pick</span>
+              <span class="inv-edit-label bsim-stat-label">${t('battlesim204.ui.pick')}</span>
               <div class="autocomplete-wrap bsim-enemy-ac">
                 <input id="sim204-enemy-pick" class="inv-edit-input" type="text" autocomplete="off" readonly role="combobox" aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" aria-controls="sim204-enemy-pick-dropdown">
                 <ul id="sim204-enemy-pick-dropdown" class="autocomplete-dropdown" role="listbox"></ul>
               </div>
             </div>
-            ${_numField('SKILL', 'sim204-enemy-skill')}
-            ${_numField('STAMINA', 'sim204-enemy-stamina')}
-            ${_numField('Max STAMINA', 'sim204-enemy-staminamax')}
-            ${_numField('Wound damage', 'sim204-enemy-wounddmg')}
-            ${_numField('Win after N landed hits (0=off)', 'sim204-enemy-winhits')}
-            ${_numField('Battle ends at N STAMINA (0=normal)', 'sim204-enemy-floor')}
+            ${_numField(t('battlesim204.ui.skill'), 'sim204-enemy-skill')}
+            ${_numField(t('battlesim204.ui.stamina'), 'sim204-enemy-stamina')}
+            ${_numField(t('battlesim204.ui.stamina_max'), 'sim204-enemy-staminamax')}
+            ${_numField(t('battlesim204.ui.wound_dmg'), 'sim204-enemy-wounddmg')}
+            ${_numField(t('battlesim204.ui.win_after_hits'), 'sim204-enemy-winhits')}
+            ${_numField(t('battlesim204.ui.stamina_floor'), 'sim204-enemy-floor')}
             <div class="inv-edit-row">
-              <label class="inv-edit-check-label"><input type="checkbox" id="sim204-paired" class="inv-edit-check"> Second attacker fights alongside (never woundable)</label>
+              <label class="inv-edit-check-label"><input type="checkbox" id="sim204-paired" class="inv-edit-check"> ${t('battlesim204.ui.paired_toggle')}</label>
             </div>
             <div id="sim204-side-fields" style="display:none">
               <div class="inv-edit-row">
-                <span class="inv-edit-label bsim-stat-label">Pick</span>
+                <span class="inv-edit-label bsim-stat-label">${t('battlesim204.ui.pick')}</span>
                 <div class="autocomplete-wrap bsim-enemy-ac">
                   <input id="sim204-side-pick" class="inv-edit-input" type="text" autocomplete="off" readonly role="combobox" aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" aria-controls="sim204-side-pick-dropdown">
                   <ul id="sim204-side-pick-dropdown" class="autocomplete-dropdown" role="listbox"></ul>
                 </div>
               </div>
-              ${_numField('SKILL', 'sim204-side-skill')}
-              ${_numField('Max STAMINA', 'sim204-side-staminamax')}
+              ${_numField(t('battlesim204.ui.skill'), 'sim204-side-skill')}
+              ${_numField(t('battlesim204.ui.stamina_max'), 'sim204-side-staminamax')}
               <div id="sim204-triple-row" class="inv-edit-row" style="display:none">
-                <label class="inv-edit-check-label"><input type="checkbox" id="sim204-triple" class="inv-edit-check"> Third attacker also fights alongside (Swamp Orcs)</label>
+                <label class="inv-edit-check-label"><input type="checkbox" id="sim204-triple" class="inv-edit-check"> ${t('battlesim204.ui.triple_toggle')}</label>
               </div>
               <div id="sim204-side2-fields" style="display:none">
                 <div class="inv-edit-row">
-                  <span class="inv-edit-label bsim-stat-label">Pick</span>
+                  <span class="inv-edit-label bsim-stat-label">${t('battlesim204.ui.pick')}</span>
                   <div class="autocomplete-wrap bsim-enemy-ac">
                     <input id="sim204-side2-pick" class="inv-edit-input" type="text" autocomplete="off" readonly role="combobox" aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" aria-controls="sim204-side2-pick-dropdown">
                     <ul id="sim204-side2-pick-dropdown" class="autocomplete-dropdown" role="listbox"></ul>
                   </div>
                 </div>
-                ${_numField('SKILL', 'sim204-side2-skill')}
-                ${_numField('Max STAMINA', 'sim204-side2-staminamax')}
+                ${_numField(t('battlesim204.ui.skill'), 'sim204-side2-skill')}
+                ${_numField(t('battlesim204.ui.stamina_max'), 'sim204-side2-staminamax')}
               </div>
             </div>
           </div>
           <div id="sim204-status" class="bsim-status"></div>
           <div id="sim204-luck-prompt" class="inv-edit-row bsim-heal-row" style="display:none">
-            <span class="inv-edit-label bsim-stat-label">Test Your Luck?</span>
-            <button id="sim204-luck-yes" class="inv-edit-done bsim-heal-btn" type="button">Test Luck</button>
-            <button id="sim204-luck-no" class="inv-edit-done bsim-heal-btn" type="button">Skip</button>
+            <span class="inv-edit-label bsim-stat-label">${t('battlesim204.btn.luck_prompt')}</span>
+            <button id="sim204-luck-yes" class="inv-edit-done bsim-heal-btn" type="button">${t('battlesim204.btn.luck_yes')}</button>
+            <button id="sim204-luck-no" class="inv-edit-done bsim-heal-btn" type="button">${t('battlesim204.btn.luck_no')}</button>
           </div>
           <div class="inv-modal-ftr">
-            <button id="sim204-round" class="inv-add-btn bsim-action-primary">Round</button>
-            <button id="sim204-reset" class="inv-add-btn">Reset</button>
+            <button id="sim204-round" class="inv-add-btn bsim-action-primary">${t('battlesim204.btn.round')}</button>
+            <button id="sim204-reset" class="inv-add-btn">${t('battlesim204.btn.reset')}</button>
           </div>
         </div>
         <div class="bsim-col bsim-col-right">
           <details class="bsim-history" open>
-            <summary>Items</summary>
+            <summary>${t('battlesim204.ui.items')}</summary>
             <div id="sim204-item-list" class="bsim-tech-list"></div>
           </details>
           <details class="bsim-history">
-            <summary id="sim204-history-summary">Battle History (0)</summary>
+            <summary id="sim204-history-summary">${t('battlesim204.history.summary', { n: 0 })}</summary>
             <div id="sim204-history-list" class="bsim-history-list"></div>
           </details>
           <div id="sim204-log" class="bsim-log"></div>
@@ -734,7 +736,7 @@ export function initSim204() {
     d.player.stamina = d.player.staminaInitial;
     d.player.luck    = d.player.luckInitial;
     d.rolled = true;
-    _appendLog(d, `Starting stats rolled: SKILL ${d.player.skillInitial}, STAMINA ${d.player.staminaInitial}, LUCK ${d.player.luckInitial}.`);
+    _appendLog(d, t('battlesim204.log.rolled', { skill: d.player.skillInitial, stamina: d.player.staminaInitial, luck: d.player.luckInitial }));
     saveState();
     _renderAll();
   });

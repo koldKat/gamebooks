@@ -4,15 +4,18 @@ import {
   state, viewingPt, viewingPtIndex, setViewingPt, saveState, isTerminal, parseSecId, isValidSecId,
   currentPlaythrough, currentSection, allDiscoveredSections, mappedCount,
   currentUserLevel, bonusUndos, bonusFastTravels, apiFetch,
-} from './state.js?v=13';
-import { network, visNodes, syncGraph, computeOutcomes } from './graph.js?v=135';
-import { t } from './i18n.js?v=64';
-import { renderCharSheetDisplay } from './charsheet.js?v=96';
+} from './state.js?v=14';
+import { network, visNodes, syncGraph, computeOutcomes } from './graph.js?v=147';
+import { t } from './i18n.js?v=72';
+import { renderCharSheetDisplay } from './charsheet.js?v=105';
 import { naturalCompare } from './sort.js?v=1';
-import { instantiateLoadout } from './equipment.js?v=187';
-import { escapeHtml } from './util.js?v=79';
+import { instantiateLoadout } from './equipment.js?v=199';
+import { escapeHtml } from './util.js?v=88';
+import { showConfirm, showAlert } from './confirm.js?v=5';
 
-// ── Discoverable sections cap ────────────────────────────────────���───────────
+export { showConfirm, showAlert };
+
+// ── Discoverable sections cap ───────────────────────────────────────────────
 let _discoverableLimit = null;
 export function setDiscoverableLimit(n) { _discoverableLimit = (n != null && n > 0) ? n : null; }
 
@@ -24,38 +27,6 @@ export function setOnTrailToggle(fn) { _onTrailToggle = fn; }
 
 // ── Pre-series runs collapsed state ───────────────────────────────────────────
 let _preSeriesCollapsed = localStorage.getItem('preSeriesCollapsed') !== '0'; // default collapsed
-
-// ── Custom confirm dialog ────────────────────────────────────────────────────
-
-export function showConfirm(message, onConfirm, { confirmLabel = null, danger = true, showCancel = true, win = false } = {}) {
-  const overlay  = document.getElementById('confirm-overlay');
-  const msgEl    = document.getElementById('confirm-message');
-  const okEl     = document.getElementById('confirm-ok');
-  const cancelEl = document.getElementById('confirm-cancel');
-
-  msgEl.textContent            = message;
-  okEl.textContent             = confirmLabel ?? t('btn.delete');
-  okEl.classList.toggle('warn', !danger && !win);
-  okEl.classList.toggle('win', win);
-  cancelEl.style.display       = showCancel ? '' : 'none';
-  overlay.classList.add('active');
-
-  const newOk     = okEl.cloneNode(true);
-  const newCancel = cancelEl.cloneNode(true);
-  okEl.parentNode.replaceChild(newOk, okEl);
-  cancelEl.parentNode.replaceChild(newCancel, cancelEl);
-
-  const close = () => {
-    overlay.classList.remove('active');
-    newCancel.style.display = ''; // restore for next use
-  };
-  newOk.addEventListener('click',     () => { close(); onConfirm(); });
-  newCancel.addEventListener('click', close);
-}
-
-export function showAlert(message) {
-  showConfirm(message, () => {}, { confirmLabel: t('btn.ok'), danger: false, showCancel: false });
-}
 
 // Shared by play.js's own choice-parsing and boot.js's start-node/alt-start
 // dialogs - all three hit the same "typed an alphanumeric ID while the book

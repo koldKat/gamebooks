@@ -2,8 +2,8 @@ import { COLORS } from './constants.js?v=1';
 import {
   state, viewingPt, isTerminal, parseSecId, isValidSecId,
   currentPlaythrough, allDiscoveredSections, saveState,
-} from './state.js?v=13';
-import { t } from './i18n.js?v=64';
+} from './state.js?v=14';
+import { t } from './i18n.js?v=72';
 
 export let network  = null;
 export let visNodes = null;
@@ -754,6 +754,59 @@ function naturalCompareIds(a, b) {
   return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' });
 }
 
+// ── First-layout grid (no saved positions at all) ───────────────────────────
+// _assignLocalPositions()'s overlap-scoring approach is the right tool for
+// dropping a handful of newly-discovered nodes into an already-laid-out map,
+// but asked to lay out an entire book from nothing it has no sense of an
+// overall direction to grow in - every candidate is judged only against its
+// immediate neighbors, so branches fan out radially and, on a real book,
+// distant unrelated branches end up crossing each other's connectors.
+// Mobile's graph-view.js solves first-layout with a plain BFS-depth grid -
+// each node's distance (in choices) from the start section becomes its row -
+// which reads cleanly because every node at the same depth lines up. Ported
+// here with the axes swapped: BFS depth drives X (rightward), sibling index
+// within a depth drives Y, so desktop grows right the way mobile grows down.
+const _GRID_LAYER_GAP = 130; // horizontal spacing between BFS depth layers
+const _GRID_COL_GAP   = 70;  // vertical spacing between siblings at the same layer
+
+function _bfsDepth(startSec, allSections) {
+  const depth = new Map();
+  if (startSec === undefined || startSec === null || !allSections.has(startSec)) return depth;
+  depth.set(startSec, 0);
+  const queue = [startSec];
+  while (queue.length) {
+    const cur = queue.shift();
+    const choices = state.graph[cur]?.choices || [];
+    for (const c of choices) {
+      if (isTerminal(c) || depth.has(c) || !allSections.has(c)) continue;
+      depth.set(c, depth.get(cur) + 1);
+      queue.push(c);
+    }
+  }
+  return depth;
+}
+
+// Same "only fill gaps, never move an existing position" contract as
+// _assignLocalPositions - relevant once a book has grown past its very first
+// sync and mixes freshly-discovered nodes in with already-gridded ones.
+function _assignGridPositions(allSections, startSec) {
+  const missing = [...allSections].filter(sec => !_hasValidPos(state.positions[sec]));
+  if (!missing.length) return false;
+  const depth = _bfsDepth(startSec, allSections);
+  const maxDepth = depth.size ? Math.max(...depth.values()) : 0;
+  missing.sort(naturalCompareIds);
+  for (const sec of missing) {
+    const x = (depth.has(sec) ? depth.get(sec) : maxDepth + 1) * _GRID_LAYER_GAP;
+    let maxY = -_GRID_COL_GAP;
+    for (const other of allSections) {
+      const p = state.positions[other];
+      if (p && Math.abs(p.x - x) < _GRID_LAYER_GAP / 2 && p.y > maxY) maxY = p.y;
+    }
+    state.positions[sec] = { x, y: maxY + _GRID_COL_GAP };
+  }
+  return true;
+}
+
 // ── Connector style ──────────────────────────────────────────────────────────
 
 const CONNECTOR_STYLES = {
@@ -909,13 +962,41 @@ export function syncGraph() {
   if (!visNodes || !visEdges) return;
 
   const allSections = allDiscoveredSections();
+  const startSec = _effectiveStartSec(currentPlaythrough() || viewingPt);
 
   const hasSavedPositions = Object.keys(state.positions).length > 0;
-  const locallyPlaced = hasSavedPositions ? _assignLocalPositions(allSections) : false;
+  // A book with zero saved positions at all used to fall through to vis-
+  // network's own forceAtlas2Based physics simulation entirely (see
+  // initGraph()). _assignLocalPositions()'s per-neighbor overlap scoring is
+  // built for dropping a handful of new nodes into an already-laid-out map,
+  // not for laying out an entire book from nothing - with no sense of an
+  // overall growth direction, unrelated branches end up crossing each
+  // other's connectors on a real book. _assignGridPositions() (BFS-depth
+  // grid, ported from mobile's graph-view.js with the axes swapped so
+  // desktop grows right instead of down) replaces it for exactly this one
+  // case - no physics simulation either way (CPU cost, and the exact class
+  // of jitter/race-condition bug this project already hit once).
+  //
+  // hasSavedPositions alone can't drive this choice on every call: the grid
+  // pass itself makes state.positions non-empty the instant it places the
+  // very first node, so re-deriving "is this a grid book?" from position
+  // count would flip to _assignLocalPositions the very next sync - every
+  // node after the first ends up radially placed instead of gridded (found
+  // via a real book: only the start node landed on-grid, everything
+  // discovered afterward scattered). state.gridLayout is a persisted,
+  // one-way flag - once a book starts in the grid regime it stays there for
+  // every node discovered afterward, in this session or a later one. Books
+  // with a genuine pre-existing (pre-this-feature or hand-dragged) layout
+  // never set it, so they keep using _assignLocalPositions exactly as
+  // before - existing saved layouts are still never touched.
+  const useGrid = state.gridLayout || !hasSavedPositions;
+  const locallyPlaced = useGrid
+    ? _assignGridPositions(allSections, startSec)
+    : _assignLocalPositions(allSections);
+  if (useGrid) state.gridLayout = true;
 
   const nodeUpdates = [];
   let hasUnpositioned = false;
-  const startSec = _effectiveStartSec(currentPlaythrough() || viewingPt);
   allSections.forEach(sec => {
     const pos         = state.positions[sec];
     const posValid    = _hasValidPos(pos);
@@ -999,7 +1080,12 @@ export function syncGraph() {
   _buildOverlayCache();
 
   // Physics management:
-  // - Initial layout (no saved positions): initGraph owns physics; don't interfere.
+  // - Initial layout (no saved positions): the BFS-depth-grid pass above
+  //   already pinned every reachable node (physics: !posValid, above), so
+  //   initGraph's forceAtlas2Based sim - still nominally "enabled" at the
+  //   network level - has nothing left to actually move. Its
+  //   stabilizationIterationsDone handler still fires (trivially, near-
+  //   instantly) and persists the same positions again; harmless.
   // - Existing layout, new nodes added: re-enable physics to place them, save on settle.
   // - Existing layout, all nodes positioned: keep physics off.
   //
