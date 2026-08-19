@@ -249,6 +249,20 @@ try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 205').run(); } 
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 206').run(); } catch (_) {}
 // Same one-off flag for book 207 (Talisman of Death).
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 207').run(); } catch (_) {}
+// Same one-off flag for book 208 (Space Assassin).
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 208').run(); } catch (_) {}
+// Same one-off flag for book 209 (Freeway Fighter).
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 209').run(); } catch (_) {}
+// Same one-off flag for book 210 (Temple of Terror).
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 210').run(); } catch (_) {}
+// Same one-off flag for book 211 (The Rings of Kether).
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 211').run(); } catch (_) {}
+// Same one-off flag for book 212 (Seas of Blood).
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 212').run(); } catch (_) {}
+// Same one-off flag for book 213 (Appointment with F.E.A.R.).
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 213').run(); } catch (_) {}
+// Same one-off flag for book 214 (Rebel Planet).
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 214').run(); } catch (_) {}
 
 // One-time migration: book 829's sim was the first one built, before the
 // pt.simNNN naming convention existed, so its state lived under pt.battleSim
@@ -778,6 +792,39 @@ const {
   getAppBirthTimestamp,
   backupDb,
 } = require('./db/misc');
+
+// One-time backfill: sim213/sim214 were missing from server/db/xp.js's
+// SIM_HISTORY_KEYS from the day each shipped (the same gap that previously
+// hit sim201-203 and sim209-211, see that list's own comment) - anyone who
+// fought in either sim before the fix earned no battlesim_win/battlesim_loss
+// XP for it. Scans every already-recorded history entry (not just ones
+// newer than some snapshot, unlike the live incremental path in
+// processStateXp) and awards through the same awardXp() used live, so the
+// ref format (`${simKey}:${entry.ts}`) matches exactly - if this somehow
+// ran twice, xp_events' UNIQUE constraint + INSERT OR IGNORE makes every
+// individual award idempotent regardless of the outer admin_settings gate.
+{
+  const done = db.prepare(`SELECT value FROM admin_settings WHERE key = 'sim213_214_xp_backfilled'`).get();
+  if (!done) {
+    const rows = db.prepare('SELECT user_id, state_data FROM user_books WHERE book_id IN (213, 214)').all();
+    for (const row of rows) {
+      let s;
+      try { s = JSON.parse(row.state_data); } catch { continue; }
+      for (const pt of [...(s.playthroughs || []), ...(s.preSeriesRuns || [])]) {
+        for (const simKey of ['sim213', 'sim214']) {
+          const history = pt?.[simKey]?.history;
+          if (!Array.isArray(history)) continue;
+          for (const entry of history) {
+            if (!entry) continue;
+            if (entry.outcome === 'win')  awardXp(row.user_id, 'battlesim_win',  `${simKey}:${entry.ts}`);
+            if (entry.outcome === 'loss') awardXp(row.user_id, 'battlesim_loss', `${simKey}:${entry.ts}`);
+          }
+        }
+      }
+    }
+    db.prepare(`INSERT OR REPLACE INTO admin_settings (key, value) VALUES ('sim213_214_xp_backfilled', '1')`).run();
+  }
+}
 
 module.exports = {
   getUserById, updateUsername, updatePassword, updateAvatar,

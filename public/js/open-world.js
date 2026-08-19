@@ -13,11 +13,11 @@ import {
 } from './graph.js?v=148';
 import {
   render, showAlert, startPortalRun, startPlaythrough, setOpenWorldContext, setOnViewPublicRun, wouldAutoNav,
-} from './play.js?v=156';
+} from './play.js?v=157';
 import { t } from './i18n.js?v=73';
-import { setOnCharSheetSaved } from './charsheet.js?v=106';
-import { instantiateLoadout } from './equipment.js?v=200';
-import { getCachedBooks } from './books.js?v=226';
+import { setOnCharSheetSaved } from './charsheet.js?v=107';
+import { instantiateLoadout } from './equipment.js?v=201';
+import { getCachedBooks } from './books.js?v=227';
 
 let _hooks = {};
 export function setOpenWorldHooks(h) { _hooks = h || {}; }

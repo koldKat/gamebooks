@@ -12,8 +12,8 @@
 // #app-xp-*/#app-reward-float-layer markup/CSS.
 
 import { apiFetch, getToken, isDemoMode } from './state.js?v=14';
-import { COIN_SVG } from './shop.js?v=98';
-import { escapeHtml } from './util.js?v=89';
+import { COIN_SVG } from './shop.js?v=99';
+import { escapeHtml } from './util.js?v=90';
 import { t } from './i18n.js?v=73';
 
 let _hooks = {};

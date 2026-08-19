@@ -10,7 +10,7 @@
 import { state, currentBookId, apiFetch } from '../../js/state.js?v=14';
 import { showAlert } from '../../js/confirm.js?v=6';
 import { t } from '../../js/i18n.js?v=73';
-import { escapeHtml } from '../../js/util.js?v=89';
+import { escapeHtml } from '../../js/util.js?v=90';
 import { showToast } from './toast.js?v=1';
 
 let _overlay = null;
