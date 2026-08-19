@@ -1,11 +1,11 @@
 // books.js - Books list rendering, caching, search/filter, expand prefs, cover queue
-import { getToken, isDemoMode, apiFetch, getDemoState, setDemoState } from './state.js?v=13';
+import { getToken, isDemoMode, apiFetch, getDemoState, setDemoState } from './state.js?v=14';
 import { foldForSearch, naturalCompare, naturalCompareByName } from './sort.js?v=1';
-import { refreshCoinsDisplay } from './shop.js?v=88';
-import { openCoverActivity, openSeriesActivity, _startLandingCoverRotation, _resetLandingCoverQueue, _effectiveLandingCoverSource, loadCovers } from './covers.js?v=138';
-import { t } from './i18n.js?v=64';
-import { showConfirm, showTwoChoice } from './play.js?v=143';
-import { escapeHtml } from './util.js?v=79';
+import { refreshCoinsDisplay } from './shop.js?v=97';
+import { openCoverActivity, openSeriesActivity, _startLandingCoverRotation, _resetLandingCoverQueue, _effectiveLandingCoverSource, loadCovers } from './covers.js?v=154';
+import { t } from './i18n.js?v=72';
+import { showConfirm, showTwoChoice } from './play.js?v=155';
+import { escapeHtml } from './util.js?v=88';
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────
 let _hooks = {};
@@ -702,17 +702,33 @@ function _scheduleBooksListRefresh(delay = 350) {
 }
 
 // ── Main render ───────────────────────────────────────────────────────────────
-export function renderBooksList(books, allSeries = [], stashes = []) {
-  if (!Array.isArray(books)) return;
+export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
+  if (!Array.isArray(allOwnedBooks)) return;
   const openWorldSeriesIds = new Set((allSeries || []).filter(s => s.is_open_world).map(s => s.id));
-  for (const b of books) b.isOpenWorld = b.series_id != null && openWorldSeriesIds.has(b.series_id);
-  _cachedBooks     = books;
+  for (const b of allOwnedBooks) b.isOpenWorld = b.series_id != null && openWorldSeriesIds.has(b.series_id);
+  // _cachedBooks/getCachedBooks() is the app-wide "what does this user own"
+  // source (autocomplete, the "not in my books" covers filter, add-to-
+  // library duplicate checks, etc.) - it must stay the FULL list regardless
+  // of viewport, cached/persisted from allOwnedBooks before the reading-only
+  // cut below ever touches `books`.
+  _cachedBooks     = allOwnedBooks;
   _cachedAllSeries = allSeries;
   _cachedStashes   = Array.isArray(stashes) ? stashes : [];
-  try { localStorage.setItem(_BOOKS_LS_KEY,   JSON.stringify(books));           } catch (_) {}
+  try { localStorage.setItem(_BOOKS_LS_KEY,   JSON.stringify(allOwnedBooks));   } catch (_) {}
   try { localStorage.setItem(_SERIES_LS_KEY,  JSON.stringify(allSeries));       } catch (_) {}
   try { localStorage.setItem(_STASHES_LS_KEY, JSON.stringify(_cachedStashes));  } catch (_) {}
   if (_effectiveLandingCoverSource() === 'mine') { _resetLandingCoverQueue(); _startLandingCoverRotation(); }
+
+  // Mobile is reading-only (see mobile/reader.js) - a book with no in-app
+  // reading has nowhere to go there, so it's dropped from the rendered list
+  // below entirely rather than shown only to dead-end. Containers/
+  // anthologies stay regardless of their own hasLiveReading (always false -
+  // they're folders, not readable content); a series with none of its books
+  // left just shows an empty/short group, same graceful-degradation the
+  // "not mine" covers filter already accepts elsewhere. Everything from
+  // here down uses this `books`, never allOwnedBooks - the whole point is
+  // that only the rendering, not the cache above, sees the cut list.
+  const books = _isMobile() ? allOwnedBooks.filter(b => b.is_container || b.hasLiveReading) : allOwnedBooks;
 
   const isAdmin = _hooks.getIsAdmin?.() ?? false;
   const list = document.getElementById('books-list');
@@ -840,6 +856,9 @@ export function renderBooksList(books, allSeries = [], stashes = []) {
 
   function _renderContainerItem(b, customChildrenMap = childrenMap) {
     const myChildren = customChildrenMap[b.id] || [];
+    // Mobile is reading-only - an anthology with none of its children left
+    // after the hasLiveReading cut has nothing to show.
+    if (_isMobile() && !myChildren.length) return '';
     const expanded   = _getExpandedPref('book', String(b.id), `bk_expanded_${b.id}`);
     const aggrV = myChildren.reduce((s, c) => s + (c.visited || 0), 0);
     const aggrS = myChildren.reduce((s, c) => s + ((c.discoverable_sections ?? c.total_sections) || 0), 0);
@@ -887,6 +906,17 @@ export function renderBooksList(books, allSeries = [], stashes = []) {
     return { activeBooks, activeChildrenMap, activeChildIds, topInSeries: _sortSeriesBooks(activeBooks.filter(b => !activeChildIds.has(b.id))) };
   }
 
+  // A container always survives the mobile hasLiveReading cut (it's a
+  // folder, not readable content itself) - counting it toward "does this
+  // series/stash have anything to show" via plain length/count would give a
+  // false positive whenever its own children all got filtered out, since
+  // the container itself renders nothing on mobile (its own per-item skip
+  // elsewhere). Only a standalone book, or a container that still has
+  // surviving children, counts as real renderable content.
+  function _hasRenderableTop(topArr, childrenMap) {
+    return topArr.some(b => !b.is_container || (childrenMap[b.id] || []).length);
+  }
+
   function _renderSeriesSection(s, stashId = null) {
     const stash = stashId == null ? null : _cachedStashes.find(x => x.id === stashId);
     const excludedBookIds = new Set(stash?.excludedBookIds || []);
@@ -919,6 +949,11 @@ export function renderBooksList(books, allSeries = [], stashes = []) {
     _sortChildrenMap(activeChildrenMap);
     const topInSeries   = _sortSeriesBooks(activeBooks.filter(b => !activeChildIds.has(b.id)));
     const booksInSeries = activeBooks;
+    // Mobile is reading-only - a series with nothing actually renderable
+    // left after the hasLiveReading cut has nowhere useful for the "browse
+    // series" hint below to send you either, so skip the whole section
+    // (header included) rather than showing an empty shell.
+    if (_isMobile() && !_hasRenderableTop(topInSeries, activeChildrenMap)) return;
     const keyPrefix     = stashId ? `stash_${stashId}_sr_` : 'sr_';
     const expanded      = _getExpandedPref('series', `${stashId ?? 'main'}:${s.id}`, `${keyPrefix}expanded_${s.id}`);
     const { visited: aggrV, totalSections: aggrS } = _aggregateProgress(booksInSeries, activeChildrenMap);
@@ -977,10 +1012,28 @@ export function renderBooksList(books, allSeries = [], stashes = []) {
     const stashContainers  = _sortBooks(stashBooksTop.filter(b =>  b.is_container));
     const stashStandalone  = _sortBooks(stashBooksTop.filter(b => !b.is_container));
     const stashExpanded    = _getExpandedPref('stash', String(stash.id), `stash_expanded_${stash.id}`);
+    let stashHasAnyBooks = false;
     const stashSeriesItemCount = stashSeries.reduce((sum, s) => {
-      const { activeBooks } = _getSeriesActiveBooksForContext(s, stash.id);
+      const { activeBooks, activeChildrenMap, topInSeries } = _getSeriesActiveBooksForContext(s, stash.id);
+      if (_hasRenderableTop(topInSeries, activeChildrenMap)) stashHasAnyBooks = true;
       return sum + 1 + activeBooks.length;
     }, 0);
+    // Not stashBooksRaw.length - a container in there always survives the
+    // hasLiveReading cut (it's a folder, not readable content itself), so
+    // a stash holding only a now-empty anthology would still count as
+    // non-empty by raw length even though stashContainers' own per-item
+    // skip (below) hides that container entirely, leaving nothing actually
+    // rendered. Standalone books are real content on their own; a container
+    // only counts if it still has surviving children to show.
+    if (stashStandalone.length) stashHasAnyBooks = true;
+    if (stashContainers.some(c => (stashChildrenMap[c.id] || []).length)) stashHasAnyBooks = true;
+    // Mobile is reading-only - a stash whose books (direct or via its
+    // series) all got dropped by the hasLiveReading cut has nothing left to
+    // show. Checked separately from stashItemCount below, which counts each
+    // series header as "1 item" regardless of whether that series itself
+    // has any books left - a stash holding only now-empty series would
+    // otherwise read as non-empty and still get rendered.
+    if (_isMobile() && !stashHasAnyBooks) continue;
     const stashItemCount = stashSeriesItemCount + stashBooksRaw.length;
     const stashCountLabel = stashItemCount === 1 ? '1 item' : `${stashItemCount} items`;
     let stashAggrV = 0, stashAggrS = 0;
@@ -1010,6 +1063,7 @@ export function renderBooksList(books, allSeries = [], stashes = []) {
     for (const s of stashSeries) _renderSeriesSection(s, stash.id);
     for (const b of stashContainers) {
       const myChildren = stashChildrenMap[b.id] || [];
+      if (_isMobile() && !myChildren.length) continue;
       const expanded   = _getExpandedPref('book', String(b.id), `bk_expanded_${b.id}`);
       const aggrV = myChildren.reduce((sum, c) => sum + (c.visited || 0), 0);
       const aggrS = myChildren.reduce((sum, c) => sum + ((c.discoverable_sections ?? c.total_sections) || 0), 0);
@@ -1131,6 +1185,11 @@ export function renderBooksList(books, allSeries = [], stashes = []) {
   list.querySelectorAll('.book-open-btn').forEach(btn =>
     btn.addEventListener('click', () => {
       const id = /^\d+$/.test(btn.dataset.id) ? +btn.dataset.id : btn.dataset.id;
+      // showMain() unconditionally bounces every mobile visit back to this
+      // same books list (see boot.js) - it's a no-op here, which is exactly
+      // why "Open" looked like it did nothing. /mobile (admin-only preview)
+      // is the real destination for a mobile admin now.
+      if (_isMobile() && _hooks.getIsAdmin?.()) { window.location.href = `/mobile?book=${encodeURIComponent(id)}`; return; }
       _hooks.showMain?.(id, btn.dataset.isbn || null, btn.dataset.issn || null, btn.dataset.asin || null,
         btn.dataset.cover || btn.dataset.parentCover || null, btn.dataset.pdf || null,
         btn.dataset.pages ? Number(btn.dataset.pages) : null, btn.dataset.authors || null,

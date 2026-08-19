@@ -1,7 +1,7 @@
 // util.js - Shared pure utility functions
 
-import { apiFetch } from './state.js?v=13';
-import { t } from './i18n.js?v=64';
+import { apiFetch } from './state.js?v=14';
+import { t } from './i18n.js?v=72';
 
 export function escapeHtml(str) {
   return String(str ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));

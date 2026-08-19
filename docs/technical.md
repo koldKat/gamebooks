@@ -74,6 +74,10 @@ gamebooks/
       charsheet.css, equipment.css, shop.css, dice.css, feedback.css, battlesim.css,
       demo.css, profile.css, public-profile.css, login.css, add-book.css, play.css,
       landing.css        One file per like-named JS module
+      confirm.css, autocomplete.css  Extracted out of play.css 2026-08-19 (confirm/alert dialog,
+                          enemy-picker autocomplete dropdown) so they can be linked standalone on
+                          mobile/index.html without pulling in all of play.css's much larger
+                          desktop-only ruleset
       reduce-motion.css, mobile.css  Cross-cutting overrides, loaded last in index.html
     js/
       constants.js       Shared constants (COLORS)
@@ -88,6 +92,13 @@ gamebooks/
       util.js            Shared utility helpers: escapeHtml, compressImage, compressToBlob (client-side JPEG quality iteration), registerPanelShortcut (single-key panel toggle shared by charsheet/inventory/equipment/battlesim*), shortcutLabel (first-letter shortcut hint span)
       autocomplete.js    Shared name-autocomplete helpers for add/edit modals
       auth.js            Login, register, forgot-password, reset-password forms
+      confirm.js         showConfirm()/showAlert() - extracted out of play.js 2026-08-19 so
+                         battlesim*.js and the mobile reader can import just this, not play.js's
+                         whole tree (graph.js, charsheet.js, equipment.js). Reuses index.html's
+                         static #confirm-overlay markup when present (desktop); builds an
+                         equivalent overlay dynamically when it isn't (mobile). play.js re-exports
+                         both names so every existing `import { showAlert } from './play.js'`
+                         call site elsewhere in the app is unaffected.
       notes.js           Notebook modal and pinned notes overlay
       battlesim/         All battle simulator modules, one file per book, grouped in their own
                          subfolder (imported only by boot.js, never by each other)
@@ -110,6 +121,8 @@ gamebooks/
         battlesim210.js    Battle simulator for book 210, Temple of Terror (standard SKILL/STAMINA/LUCK system, identical Test Your Luck table to book 198, closely reuses book 201's engine rather than inventing one fresh since the rules are the same shape; no potions or toggleable equipment in this book - checked explicitly, no "while worn/carried" persistent bonus exists anywhere in the text; a plain attackModifier knob covers the Mutant Orc's -2 Attack Strength penalty (sec 249, unless carrying a dagger); pairedFight/sideEnemy (reused verbatim from book 201) covers the Skeleton Warriors (sec 274) and the Sand Snapper's two Tentacles (sec 377) - both explicitly "attack separately, choose which one to fight," the side attacker never woundable; two toggleable per-round side-effects - Fiend's fiery breath (sec 216, 1d6 every round regardless of the main exchange, 1-2 costs 1 extra STAMINA) and Giant Firefly's electric shock (sec 339, 1d6 only on rounds the Firefly's own attack already won, 1-3 costs 2 extra STAMINA) - both Luck-eligible; Provisions (10, +4 STAMINA) and a plain Gold stepper, neither combat-relevant beyond Provisions' healing. Not modeled: sections 311/363, "Giant Eagle vs Pterodactyl," a spectator battle between two NPCs the player never participates in - resolved and read, not fought, so it doesn't fit a player-vs-enemy sim)
         battlesim211.js    Battle simulator for book 211, The Rings of Kether (three combat systems, none the plain single-opposed-roll shape most other sims use: Hand-to-Hand is the one exception, standard opposed 2d6+SKILL/flat 2 damage, but this book never ties Luck to combat at all - no Luck-queue mechanism exists in this sim, unlike most others, LUCK is tracked purely for narrative page prompts; Blaster Combat and Ship-to-Ship both use independent rolls instead of an opposed roll - each side rolls 2d6 against their own SKILL/WEAPONS STRENGTH separately (roll < stat = hit), not "higher wins" - Blaster flat 4 STAMINA, Ship flat 1 SHIELDS; Smart Missiles are an alternative to a normal round with an editable damage field (default effectively "always destroys") rather than a hardcoded instant-kill, since the one stationary-target fight in the book (Asteroid Defences, sec 312) explicitly caps missile damage at 2 SHIELDS instead; two independent stat pools - person (SKILL/STAMINA/LUCK, shared by Blaster and Hand-to-Hand) and ship (WEAPONS STRENGTH/SHIELDS) - each with its own round counter and Reset scope, applying book 209's fix for that bug class from the start instead of finding it the hard way again; Energy Tablets (4, +6 STAMINA) and a plain Money/kopecks stepper. Not modeled: section 50's one-off "if your ship is destroyed, roll a die - even means eject and survive" - a single narrative branch, not a repeatable mechanic)
         battlesim212.js    Battle simulator for book 212, Seas of Blood (one combat engine reused across two independent stat pools rather than a mode-specific engine per pool - the book's own rules explicitly state Individual Combat and Large-scale Battles are the same procedure, substituting CREW STRIKE/CREW STRENGTH for SKILL/STAMINA: simultaneous opposed 2d6+attack roll each side, higher wins, flat 2 damage to the loser, ties miss both ways; no Test Your Luck anywhere in combat, LUCK is narrative-only, same situation as book 211; person (SKILL/STAMINA/LUCK) and crew (CREW STRIKE/CREW STRENGTH) pools each have their own enemy tracker and round counter so Reset/mode-switch can't touch the untouched pool; a permanent Awkmute's-staff toggle (won sec 63, kept sec 125) changes a landed personal-combat hit: 1d6, 1-2 costs the opponent 1 SKILL instead of the normal 2 STAMINA, hidden in Crew Battle mode since it's a personal weapon; an Escape button in Crew Battle mode costs a flat 2 CREW STRENGTH per the book's own rule, no equivalent exists in Individual Combat)
+        battlesim213.js    Battle simulator for book 213, Appointment with F.E.A.R. (standard SKILL/STAMINA/LUCK system, no Potions/Provisions at all - not in this book's rules; two things unique to it: an enemy reduced to exactly 0 STAMINA in one blow is an automatic kill (-1 Hero Point, no choice offered), but one reduced to 1-2 STAMINA instead pauses the fight (pendingSurrender) with a real choice - Capture (win, no penalty), Finish (win, -1 Hero Point), or Keep Attacking (clears the pause, a later hit landing on 0 triggers the automatic-kill case) - Hero Points otherwise a plain running counter awarded by hand for narrative "+N Hero Points" text; a Super Power picked once at roll time (not a branching chargen system) - Super Strength fixes Initial SKILL to 13 instead of rolling it, Energy Blast gets a pre-fight-only "Attempt" button (-2 STAMINA, 2d6 vs SKILL, hit = instant win/stun) and Psi-Powers gets an anytime-outside-combat "Use" button (-2 STAMINA), ETS has no described combat mechanic; a forceLossAfterRounds knob is note-only (no auto-resolution, the actual consequence is book-text-dependent and varies by encounter) for three fights that force a non-combat story branch after a fixed round count and one (unarmed Titanium Cyborg, sec 87) that's unwinnable by design; the Radiation Dogs' d6 hit-effect table, the Serpent's poison bite, the Ice Queen's SKILL-freeze, and Sidney Knox's mind-battle (a temporary 6-point "mental STAMINA" pool distinct from the player's real one) are all noted in that enemy's book_enemies name rather than built as bespoke mechanics, same "apply narrative one-offs by hand" precedent as every other sim; §87's SKILL 15 is unverified - never appeared in the user's scan-verified combat report, only in an earlier OCR read ("SKILLIS") - flagged in its own book_enemies name)
+        battlesim214.js    Battle simulator for book 214, Rebel Planet (standard SKILL/STAMINA/LUCK system, no Potions/Provisions or Hero Points/Super Powers - not in this book's rules, one of the leaner sims as a result; two things worth real mechanics rather than a one-off note - a Tail attack toggle (several Arcadians can swipe regardless of the round's normal result: an extra d6/round, 5-6 = flat 2 STAMINA, independent of the main Attack Strength roll since the book describes it as happening "whatever the result of that Attack Round otherwise"; §136's variant only fires every OTHER round, noted in its own book_enemies name rather than a second toggle) and an Escalating damage toggle (the Street Fighter robot, sec 190 only - each successive successful hit costs 1 more STAMINA than the last, 2/3/4/..., tracked via enemyHitStreak; LUCK still reduces each hit by 1 through the same Test Your Luck queue every other sim uses, no separate handling needed). Not modeled, all noted in book_enemies names instead: the Scabrok's three pre-fight-modified stat lines (sec 106 full, sec 133/341 reduced by a Luck test the player takes before opening the sim), the Central Arcadian's one-time post-first-wound SKILL debuff (sec 243), the Brawler's unarmed "sudden death rule of p. 24" (rule text unavailable to cross-check), and several fights whose book-text outcome branches on wound *count* rather than STAMINA reaching 0 (sec 17, 298) - all book-text-dependent, informational-only in the log, same "sim is convenience, not enforcement" precedent as every other sim)
       add-book.js        Create Book, Create Anthology, Create Series modals
       edit-book.js       Edit Book/Anthology/Series/Stash modals; ISBN/ISSN/ASIN validation
       books.js           Books list rendering, panel management, stash UI
@@ -139,6 +152,38 @@ gamebooks/
     avatars/         Uploaded user avatar images (auto-created, git-ignored)
     covers/          Uploaded book cover images (auto-created, git-ignored)
     attachments/     Uploaded message/post attachments (auto-created, git-ignored)
+    mobile/          Separate reading-only frontend, served by GET /mobile (admin-gated - see
+                     server.js). Its own index.html/css, deliberately doesn't import boot.js or
+                     most of public/js/ - see "Mobile reader" below for the reuse boundary.
+      index.html       Shell: login screen + #screen mount point. Links confirm.css/autocomplete.css/
+                       equipment.css/battlesim.css from public/css/ directly (reused as-is, not
+                       copied) alongside its own mobile/css/style.css. Has a hidden #m-sim-btn-row
+                       sink div for getPlayBtnRow()'s fallback (see charsheet.js).
+      css/style.css    Mobile-first styles: login, book reader panes, tool row, notebook modal, toast
+      js/
+        app.js             Tiny screen router (login/reader), admin-gate check via GET /api/profile
+        auth.js            Login form
+        reader.js          The "double-screen" play view - top pane is in-app reading (own
+                           minimal commitChoices/startPlaythrough, not play.js's), bottom pane is
+                           always the graph; a tool row between the two panes holds Notebook
+                           (always) and Battle Sim (only if battlesim-dispatch.js has one for
+                           this book)
+        graph-view.js      Mobile's own vis-network wrapper - graph.js isn't reused (desktop-DOM-
+                           coupled, reads localStorage at module top level)
+        notebook.js        Plain per-book notebook - same GET/PUT /api/books/:id/notebook data as
+                           desktop's notes.js, deliberately without desktop's "pin to play area"
+                           toggle (nothing to pin to on mobile). Reads the save response's
+                           xpAwarded flag and fires toast.js on success - desktop's own feedback
+                           for this same event is quieter still (just refreshes the header XP/coin
+                           counter via notes.js's setOnXpAwarded), but mobile has no persistent
+                           counter to refresh, so a toast is the closer equivalent.
+        toast.js           Minimal auto-dismissing toast - mobile's only reward-feedback mechanism
+                           right now, not an attempt at porting rewards.js's full floater animation
+        battlesim-dispatch.js  bookId → battle-sim lookup table, one entry per book that has a
+                           sim. Dynamically imports the specific battlesim*.js module, calls its
+                           init function once, then clicks its already-wired trigger button
+                           (found by id) rather than needing each file's differently-named "open"
+                           function. Add one line here per future battlesim*.js.
 ```
 
 ---
@@ -154,23 +199,32 @@ Layer 0 (no project imports):
 Layer 1 (import only from layer 0):
   graph.js       ← state.js, i18n.js, constants.js
   charsheet.js   ← state.js, i18n.js
+  confirm.js     ← i18n.js
   autocomplete.js ← state.js
   user.js        ← state.js
 
 Layer 2:
   inventory.js   ← state.js, play.js*, charsheet.js
   equipment.js   ← state.js, inventory.js, charsheet.js
-  play.js          ← state.js, graph.js, charsheet.js, inventory.js*, equipment.js*, i18n.js
+  play.js          ← state.js, graph.js, charsheet.js, inventory.js*, equipment.js*, i18n.js, confirm.js
 
   * three-way cycle: equipment.js → inventory.js → play.js → equipment.js
     Works because none consume each other's exports at module-evaluation time.
 
 Layer 3 (feature modules - import from layers 0–2 as needed):
-  notes.js, battlesim829.js, battlesim8.js, battlesim286.js, battlesim198.js, battlesim199.js, battlesim200.js, battlesim186.js, battlesim201.js, battlesim202.js, battlesim203.js, battlesim204.js, battlesim205.js, battlesim206.js, battlesim207.js, battlesim208.js, battlesim209.js, battlesim210.js, battlesim211.js, battlesim212.js, auth.js, add-book.js, edit-book.js,
+  notes.js, battlesim829.js, battlesim8.js, battlesim286.js, battlesim198.js, battlesim199.js, battlesim200.js, battlesim186.js, battlesim201.js, battlesim202.js, battlesim203.js, battlesim204.js, battlesim205.js, battlesim206.js, battlesim207.js, battlesim208.js, battlesim209.js, battlesim210.js, battlesim211.js, battlesim212.js, battlesim213.js, battlesim214.js, auth.js, add-book.js, edit-book.js,
   books.js, covers.js, feed.js, open-world.js, shop.js, profile.js,
   public-profile.js, prefs.js, livetab.js, notif.js, rewards.js, bg.js,
   stats.js, party.js, tips.js, inbox.js, dice.js, tooltip.js, export.js,
   feedback.js, demo.js
+
+  All 21 battlesim*.js files import confirm.js (for showAlert) and
+  charsheet.js (for getPlayBtnRow) - never play.js directly, even though
+  every trigger button they create still ends up in the same #play-btn-row
+  play.js's other panels use. This is what lets public/mobile/'s reader
+  dynamically import a single battlesim*.js module in isolation without
+  pulling in play.js/graph.js/vis-network at all - see public/mobile/js/
+  battlesim-dispatch.js below.
 
 Layer 4 (top):
   boot.js   ← imports all of the above
@@ -191,13 +245,13 @@ Layer 4 (top):
 
 **Load order matters for two files:** `reduce-motion.css` and `mobile.css` are cross-cutting overrides (`body.reduce-motion .foo`, `@media` blocks, several with `!important`) rather than one module's own styling, so they're the last two `<link>` tags in `index.html`, after every per-module file.
 
-**"Something's waiting for you" pulse convention (unified 2026-08-08):** every decorative infinite pulse that means "you have something to claim/read/check" runs at the same `4s ease-in-out infinite` rate - `#notif-btn`/`#forum-btn`/`#inbox-btn`'s `notif-pulse`, `#bonus-gc-btn`'s `bonus-gc-pulse`, `.shop-btn--spendable`'s `shop-btn-pulse`, and `#covers-sort-label`/`#covers-kind-label`'s `covers-sort-flash` (the original rate all the others were synced to). Each is its own `@keyframes` (different visual effect - box-shadow ring, glow, opacity flash) but the timing is deliberately shared so multiple pulsing elements on screen at once feel like one consistent UI language rather than a handful of independently-tuned animations. All are gated behind `body.reduce-motion` in `reduce-motion.css`. `mobile-guest-pulse` and `create-public-pulse` already ran at 4s independently (separate CTA-style pulses, not "something's waiting") and weren't touched; the login-page's 60s background-graph animation is unrelated decoration and also untouched.
+**"Something's waiting for you" pulse convention (unified 2026-08-08):** every decorative infinite pulse that means "you have something to claim/read/check" runs at the same `4s ease-in-out infinite` rate - `#notif-btn`/`#forum-btn`/`#inbox-btn`'s `notif-pulse`, `#bonus-gc-btn`'s `bonus-gc-pulse`, `.shop-btn--spendable`'s `shop-btn-pulse`, and `#covers-sort-label`/`#covers-kind-label`'s `covers-sort-flash` (the original rate all the others were synced to). Each is its own `@keyframes` (different visual effect - box-shadow ring, glow, opacity flash) but the timing is deliberately shared so multiple pulsing elements on screen at once feel like one consistent UI language rather than a handful of independently-tuned animations. All are gated behind `body.reduce-motion` in `reduce-motion.css`, **except** `#mobile-books-btn`'s `mobile-books-pulse` and `#mobile-addbook-btn`'s `mobile-addbook-pulse` (both mobile-only, `mobile.css`) - those two are the only way into My Books/Add Book on mobile at all, not a decorative extra, so they deliberately keep pulsing with animations otherwise turned off; `reduce-motion.css` never references either id. `mobile-guest-pulse` and `create-public-pulse` already ran at 4s independently (separate CTA-style pulses, not "something's waiting") and weren't touched; the login-page's 60s background-graph animation is unrelated decoration and also untouched.
 
 **Full-viewport mobile modals must use `100dvh`, not `100vh`, for `height`/`max-height`.** `100vh` is sized against the browser's *largest* possible viewport (address bar hidden); when the address bar reappears (e.g. after scrolling inside an iframe or a tall modal), the actual visible area shrinks below that stale `100vh` figure and a fixed-height/fixed-position modal overflows past the top of the screen, hiding its header/close button behind the address bar with no way to scroll back up to it. Always declare `height: 100vh` (or `max-height`) first as a fallback, then repeat the property with `100dvh` immediately after - unsupported browsers simply ignore the invalid second declaration. Applies to `#forum-modal` (`charsheet.css`) and `.pub-modal`/`.pub-modal--run`/`.modal-inner`/`#stats-modal` (`mobile.css`).
 
 Each JS module's own "how to remove this module" header comment points at its own CSS file.
 
-`server/runtime-state.js`'s `computeCodeStats()` (feeds "Lines of code"/"Code size"/"JS modules" in Stats for Nerds) scans `server/`, `public/js/`, `admin/js/`, `test/`, `public/css/`, plus `server.js` and the top-level HTML files, dynamically - not a hardcoded file list, so a new file needs a server restart to be picked up, not a code change here. `walkJsFiles()` matches both `.js` and `.mjs` (added 2026-08-19 so the new `test/*.test.mjs` suite counts) - `test/`'s own walk has its own inner `try/catch`, separate from the outer one wrapping the rest of the function, so a missing `test/` directory (e.g. excluded from some future deployment) degrades to a zero test count instead of silently zeroing every stat in the panel.
+`server/runtime-state.js`'s `computeCodeStats()` (feeds "Lines of code"/"Code size"/"JS modules" in Stats for Nerds) scans `server/`, `public/js/`, `admin/js/`, `test/`, `public/mobile/js/`, `public/css/`, `public/mobile/css/`, plus `server.js` and the top-level HTML files (`public/index.html`, `public/guide.html`, `public/mobile/index.html`, `admin/*.html`), dynamically - not a hardcoded file list, so a new file needs a server restart to be picked up, not a code change here. `walkJsFiles()` matches both `.js` and `.mjs` (added 2026-08-19 so the new `test/*.test.mjs` suite counts) - `test/` and `public/mobile/` each have their own inner `try/catch`, separate from the outer one wrapping the rest of the function, so either directory going missing (e.g. excluded from some future deployment, or `public/mobile/` before it existed) degrades that one count to zero instead of silently zeroing every stat in the panel. `public/mobile/` was added to the scan 2026-08-20, having been overlooked when mobile was first built - it previously counted for nothing here despite being real, shipped code.
 
 ---
 
@@ -1112,6 +1166,8 @@ Values are `'1'` (collapsed/hidden) or `'0'` (expanded/visible). `ui_prefs` is a
 
 **Live "someone else earned XP/GC" floaters:** admin-only (`getIsAdmin`, not the sashii exception above), rendered on the Books screen or in the play area (mutually exclusive - only one screen is visible at a time). Backed by `GET /api/app-xp/stream` (admin-only SSE, unaffected by `canSeeAppXp`); a separate floater layer/queue from the personal reward floater, positioned in the gap between panels appropriate to whichever screen is showing.
 
+`handleAppXpEvent` accumulates per-username over a 750ms window (`_appRewardAccum`/`_appRewardFlushTimers`, same window and combining shape as `rewards.js`'s single-user `_queueRewardFloater`, just keyed per-username here since this feed mixes events from every user at once) before spawning one combined chip, rather than one chip per SSE event - a user racking up several awards in a burst previously spammed a chip per event. The admin/visibility gate is checked again at flush time, not just when the event first arrives, since up to 750ms can pass between the two and the admin may have navigated away from either eligible screen in the meantime.
+
 ### Avg User Level widget (`app-xp.js`)
 
 `#avg-lvl-summary` shows the average of each user's own level (`floor(sumLevels / users)`), painted from the same `GET /api/app-xp` response as the App XP widget above it. Distinct from "level of the average XP" (which is the App widget's own `level` figure, skewed upward by a few high-XP users).
@@ -1129,6 +1185,14 @@ Each `.book-item` card has a progress bar background: `rgba(107,114,128,0.18)` f
 **Compact number formatting (Stats for Nerds):** `stats.js`'s `fmt` switches to the compact `fmtCompact` form (K/M/B/T/Qa/Qi suffixes) once the absolute value reaches 10,000, applied universally rather than to an allowlisted set of fields. Decimal precision increases one place per tier. Guards a rounding-boundary edge case where e.g. `999999` would naively format to `"1000.0K"` - the tier bumps up one level and redivides instead.
 
 **Render order:** series header rows → series books → no-series containers → standalone books.
+
+**Mobile reading-only filter:** `renderBooksList(allOwnedBooks, ...)` renders a `hasLiveReading`-filtered `books` (containers/anthologies always kept, they're folders not readable content) on mobile - matches `covers.js`'s `_visibleCoverItems()` forcing its own "Book available" filter on regardless of the chip's stored toggle (mobile.css hides the chip, since it can't be turned off there). Both are consequences of mobile being reading-only (`public/mobile/`'s reader has no manual-entry fallback) - a book with no in-app text has nowhere to go on mobile. Critically, `_cachedBooks`/`getCachedBooks()` (the app-wide "what does this user own" source - autocomplete, the "not in my books" covers filter, add-to-library duplicate checks, book-by-id lookups all over `boot.js`/`edit-book.js`/`open-world.js`) is cached/persisted from the *unfiltered* `allOwnedBooks`, before the reading-only cut - only the actual rendered list gets the cut. Caching the filtered list instead would silently make the app think the user owns far fewer books than they do on mobile, breaking most of those lookups.
+
+**Mobile My Books / Add Book full-screen panels (`boot.js`):** on mobile, `#landing-right` (My Books) and `#covers-panel` (Add Book, desktop's search/browse catalog) are toggled full-screen via `body.mobile-books-open`/`body.mobile-addbook-open` instead of the fixed side-column layout they have on desktop - see `mobile.css`. `_openMobilePanel(name)` pushes a `history` entry (`replaceState` instead of `pushState` when switching directly from one panel to the other, so that reads as one back-stack entry, not two) specifically so the phone's real back gesture closes the panel first - without this, back had no panel state to act on, so the first press did nothing and the *second* press was the browser's own real back navigation, reading as "back exits the app" instead of "back closes the dialog." A `popstate` listener closes whichever panel is open whenever the popped state has no `mobilePanel` key. Both close buttons are `position: sticky` for the same reason both are the first child of their own scrolling panel and would otherwise scroll out of reach the moment there's enough content to scroll.
+
+`_openMobilePanel` and its `popstate` listener live at module scope, wired exactly once behind a `_mobilePanelWired` guard inside `showBooks()`, not inline in its body like `covers-toggle`/`right-toggle`/`feed-toggle`/`sidebar-toggle`'s own listeners just above them. `showBooks()` runs many times a session (login, hash routing, every mobile "Open a book" bounce-back in `showMain()`) - those older toggles re-attach harmlessly every call since one extra boolean-toggle roughly cancels out, but N stacked duplicate listeners calling `history.pushState()` do not: a single tap would push N history entries, needing N back-presses to close a panel opened with one tap. Any *new* per-`showBooks()`-call wiring that has a real (non-idempotent) side effect needs the same one-time guard, not the older inline pattern.
+
+**`.pub-overlay` (book/profile/run detail dialog) nested inside a mobile panel:** two separate, real bugs here, both since fixed. First, `.pub-overlay`'s desktop `z-index: 300` (`public-profile.css`) sits *below* `#covers-panel`/`#landing-right`'s `z-index: 500` full-screen mobile panels - opening a book's detail dialog from inside Add Book rendered it fully open and interactive but completely hidden underneath the still-visible panel, reading as "tapping a cover does nothing." Fixed with a mobile-only `.pub-overlay { z-index: 600; }` in `mobile.css` - deliberately not `!important`, so `boot.js`'s one-off inline `zIndex='3001'` bump (opening a book link found inside the already-open forum modal, `z-index:3000`) still wins on top of it when set, since a non-important external rule loses to any inline style. Second, that dialog had no history entry of its own (the gap previously noted here), so back while it was open over Add Book popped *Add Book's* entry (the panel closing revealed the dialog, which - now correctly positioned above it - looked like it had just appeared), and a second back had nothing dialog-related left to consume, so it continued into real browser history and left the app. Fixed with a `MutationObserver` on `#public-modal-overlay`'s `class` attribute (too many open call sites across `covers.js`/`feed.js`/`public-profile.js` to thread a push call through individually) that pushes a `{ dialogOpen: true }` history entry only when the dialog opens while a mobile panel is already open underneath, and a `popstate` listener that closes the dialog when that entry pops. Scoped deliberately to the nested-in-a-mobile-panel case only - opening the same dialog from the plain feed (no panel open) still has no history entry of its own; a fully general "every modal is back-button-aware" pass across the app is a larger, separate undertaking, not something this covers.
 
 **Create modals:** three amber buttons at the top - Create Book (`#add-book-overlay`, `cb-` prefixes), Create Anthology (`#add-comp-overlay`, `cc-` prefixes), Create Series (`#add-series-overlay`, `csr-` prefixes). Edit modals: ✎ on anthology → `#edit-comp-overlay` (`ecc-`); ✎ on book → Edit Book modal; ✎ on series → `#edit-series-overlay` (`esr-`).
 
@@ -1410,7 +1474,7 @@ Text metrics measured once in a detached `_measureCtx`. Per-frame, `drawOverlays
 
 ## Graph layout and physics
 
-On first load (no saved positions) vis-network runs `forceAtlas2Based` physics until stabilisation, then disables physics and saves all positions to `state.positions`.
+On first load (no saved positions at all), `syncGraph` calls `_assignGridPositions()` instead of `_assignLocalPositions()`. This is a BFS-depth grid - each node's distance (in choices) from the playthrough's start section becomes its column, siblings within a column stack vertically - ported from `public/mobile/js/graph-view.js`'s `_layout()` with the axes swapped (mobile grows down, desktop grows right). `_assignLocalPositions()`'s per-neighbor overlap scoring was tried first for this case (seeding just the start position and letting it grow outward) but was the wrong tool for laying out an entire book from nothing: with no sense of an overall growth direction, unrelated branches ended up crossing each other's connectors on a real book. Every node the grid places gets `physics: false`, so `initGraph`'s `forceAtlas2Based` solver (still nominally enabled at the network level) has nothing left to move; its `stabilizationIterationsDone` handler still fires, near-instantly, and persists the same positions again. A node unreachable from the start section by any recorded choice (e.g. a disconnected manually-added node) still gets a grid slot - one column past the deepest real depth - rather than falling through to physics, matching `_assignLocalPositions`'s "always place something" contract as closely as the grid can. Existing saved layouts are completely unaffected: `_assignGridPositions` only runs when `state.positions` is empty at sync time.
 
 On subsequent loads (`state.positions` is non-empty) physics is disabled from the start. `improvedLayout` is also disabled to prevent vis-network from overriding saved positions.
 

@@ -1,0 +1,49 @@
+/* ── Autocomplete dropdown (enemy pickers, name pickers) ─────────────────
+   Extracted out of play.css so it can be linked standalone (mobile, for the
+   battlesim*.js enemy-picker inputs) without pulling in play.css's much
+   larger desktop-only ruleset. */
+
+.autocomplete-wrap {
+  position: relative;
+}
+.autocomplete-wrap input {
+  width: 100%;
+  box-sizing: border-box;
+}
+.autocomplete-dropdown {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 999;
+  background: #1f2937;
+  border: 1px solid #374151;
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.autocomplete-dropdown.open { display: block; }
+.autocomplete-dropdown li {
+  padding: 0.45rem 0.75rem;
+  font-size: 0.82rem;
+  color: #d1d5db;
+  cursor: pointer;
+  border-bottom: 1px solid #374151;
+}
+.autocomplete-dropdown li:last-child { border-bottom: none; }
+.autocomplete-dropdown li:hover,
+.autocomplete-dropdown li.ac-active { background: #374151; color: #f9fafb; }
+.autocomplete-dropdown li .ac-sub {
+  font-size: 0.72rem;
+  color: #6b7280;
+  margin-left: 0.4rem;
+}
+
+.autocomplete-dropdown li .ac-sub.ac-owned {
+  color: #f5a623;
+}

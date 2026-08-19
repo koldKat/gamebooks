@@ -5,6 +5,7 @@ export let state = {
   playthroughs: [],
   activePtIndex: null,
   positions: {},
+  gridLayout: false,
 };
 
 // Not persisted - tracks which completed run's path is displayed
@@ -306,6 +307,7 @@ function _emptyState() {
     playthroughs:         [],
     activePtIndex:        null,
     positions:            {},
+    gridLayout:           false,
     viewport:             undefined,
     charSheetTemplate:    null,
     inventoryTemplate:    null,

@@ -36,23 +36,24 @@
 // repeatable mechanic worth a permanent toggle.
 // All state lives in pt.sim211, per-user/per-book via currentPlaythrough().
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../state.js?v=13';
-import { showAlert } from '../play.js?v=143';
-import { getPlayBtnRow } from '../charsheet.js?v=96';
-import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../util.js?v=79';
-import { t } from '../i18n.js?v=64';
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../state.js?v=14';
+import { showAlert } from '../confirm.js?v=5';
+import { getPlayBtnRow } from '../charsheet.js?v=105';
+import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../util.js?v=88';
+import { t } from '../i18n.js?v=72';
 
 const SVG_SKULL  = `<svg class="sim-icon sim-icon-dead"  viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8c0 2.8 1.4 5.3 3.6 6.8V20a1 1 0 0 0 1 1h6.8a1 1 0 0 0 1-1v-2.2C18.6 16.3 20 13.8 20 11a8 8 0 0 0-8-8zm-2.5 13v-1.5a.5.5 0 0 0-.5-.5H8l-.5-1 1-1-1-1 1-1H9a2.5 2.5 0 0 1 5 0h.5l1 1-1 1 1 1-.5 1h-1a.5.5 0 0 0-.5.5V16h-4z"/></svg>`;
 const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v7a6 6 0 0 1-12 0V2zm-2 1H2v4a4 4 0 0 0 4 4v-1a3 3 0 0 1-3-3V3zm16 0h2v4a4 4 0 0 1-4 4v-1a3 3 0 0 0 3-3V3zm-7 13v2H9v2h6v-2h-2v-2a6 6 0 0 0 5-5.92V2H6v8.08A6 6 0 0 0 13 16z"/></svg>`;
 
 const MODES = [
-  ['handtohand', 'Hand-to-Hand'],
-  ['blaster',    'Blaster Combat'],
-  ['ship',       'Ship-to-Ship'],
+  ['handtohand', 'battlesim211.mode.handtohand'],
+  ['blaster',    'battlesim211.mode.blaster'],
+  ['ship',       'battlesim211.mode.ship'],
 ];
 
 const MAX_ENERGY_TABLETS = 4;
 const MAX_SMART_MISSILES = 2;
+const ENERGY_TABLET_RESTORE = 6;
 // Effectively "always destroys" for a normal ship - only the Asteroid
 // Defences fight (sec 312) needs this dialed down to 2.
 const DEFAULT_MISSILE_DAMAGE = 99;
@@ -128,7 +129,7 @@ function _foeNameSafe(d) { return escapeHtml(_foeName(d)); }
 
 function _recordOutcome(d, side, outcome) {
   d.history.push({
-    enemy: `${_foeName(d)} (${MODES.find(m => m[0] === d.mode)[1]})`,
+    enemy: `${_foeName(d)} (${t(MODES.find(m => m[0] === d.mode)[1])})`,
     outcome,
     statLabel: side.selfHp.toUpperCase(),
     statValue: side.self[side.selfHp], statMax: _selfMaxHp(d, side),
@@ -148,34 +149,35 @@ function _runRound() {
   if (d.mode === 'handtohand') {
     const playerAS = _roll2d6() + side.self[side.selfAtk];
     const enemyAS  = _roll2d6() + side.foe[side.foeAtk];
-    _appendLog(d, `Round ${d[side.roundsKey]}: you ${playerAS} vs ${_foeNameSafe(d)} ${enemyAS}.`);
+    _appendLog(d, t('battlesim211.log.round', { round: d[side.roundsKey], playerAS, enemy: _foeNameSafe(d), enemyAS }));
     if (playerAS === enemyAS) {
-      _appendLog(d, 'Both blows are avoided.');
+      _appendLog(d, t('battlesim211.log.both_avoided'));
     } else if (playerAS > enemyAS) {
       side.foe[side.foeHp] = Math.max(0, side.foe[side.foeHp] - side.dmg);
-      _appendLog(d, `You wound ${_foeNameSafe(d)} for ${side.dmg}. STAMINA: ${side.foe[side.foeHp]}/${side.foe[side.foeHpMax]}.`);
+      _appendLog(d, t('battlesim211.log.you_wound', { enemy: _foeNameSafe(d), dmg: side.dmg, hp: side.foe[side.foeHp], hpMax: side.foe[side.foeHpMax] }));
     } else {
       side.self[side.selfHp] = Math.max(0, side.self[side.selfHp] - side.dmg);
-      _appendLog(d, `${_foeNameSafe(d)} wounds you for ${side.dmg}. STAMINA: ${side.self[side.selfHp]}/${_selfMaxHp(d, side)}.`);
+      _appendLog(d, t('battlesim211.log.enemy_wounds', { enemy: _foeNameSafe(d), dmg: side.dmg, hp: side.self[side.selfHp], hpMax: _selfMaxHp(d, side) }));
     }
   } else {
     // Blaster / Ship: independent rolls, not opposed - you roll against your
     // own stat, then (if the foe survived) they roll against theirs.
     const label = d.mode === 'ship' ? 'SHIELDS' : 'STAMINA';
+    const atkLabel = side.selfAtk === 'weaponsStrength' ? t('battlesim211.ui.weapons_strength') : t('battlesim211.ui.skill');
     const selfRoll = _roll2d6();
     if (selfRoll < side.self[side.selfAtk]) {
       side.foe[side.foeHp] = Math.max(0, side.foe[side.foeHp] - side.dmg);
-      _appendLog(d, `Round ${d[side.roundsKey]}: you roll ${selfRoll} vs your own ${side.selfAtk === 'weaponsStrength' ? 'WEAPONS STRENGTH' : 'SKILL'} ${side.self[side.selfAtk]} - hit! ${_foeNameSafe(d)} ${label}: ${side.foe[side.foeHp]}/${side.foe[side.foeHpMax]}.`);
+      _appendLog(d, t('battlesim211.log.self_roll_hit', { round: d[side.roundsKey], roll: selfRoll, atkLabel, atk: side.self[side.selfAtk], enemy: _foeNameSafe(d), label, hp: side.foe[side.foeHp], hpMax: side.foe[side.foeHpMax] }));
     } else {
-      _appendLog(d, `Round ${d[side.roundsKey]}: you roll ${selfRoll} vs your own ${side.selfAtk === 'weaponsStrength' ? 'WEAPONS STRENGTH' : 'SKILL'} ${side.self[side.selfAtk]} - miss.`);
+      _appendLog(d, t('battlesim211.log.self_roll_miss', { round: d[side.roundsKey], roll: selfRoll, atkLabel, atk: side.self[side.selfAtk] }));
     }
     if (side.foe[side.foeHp] > 0) {
       const foeRoll = _roll2d6();
       if (foeRoll < side.foe[side.foeAtk]) {
         side.self[side.selfHp] = Math.max(0, side.self[side.selfHp] - side.dmg);
-        _appendLog(d, `${_foeNameSafe(d)} rolls ${foeRoll} vs their ${side.selfAtk === 'weaponsStrength' ? 'WEAPONS STRENGTH' : 'SKILL'} ${side.foe[side.foeAtk]} - hit! Your ${label}: ${side.self[side.selfHp]}/${_selfMaxHp(d, side)}.`);
+        _appendLog(d, t('battlesim211.log.foe_roll_hit', { enemy: _foeNameSafe(d), roll: foeRoll, atkLabel, atk: side.foe[side.foeAtk], label, hp: side.self[side.selfHp], hpMax: _selfMaxHp(d, side) }));
       } else {
-        _appendLog(d, `${_foeNameSafe(d)} rolls ${foeRoll} vs their ${side.selfAtk === 'weaponsStrength' ? 'WEAPONS STRENGTH' : 'SKILL'} ${side.foe[side.foeAtk]} - miss.`);
+        _appendLog(d, t('battlesim211.log.foe_roll_miss', { enemy: _foeNameSafe(d), roll: foeRoll, atkLabel, atk: side.foe[side.foeAtk] }));
       }
     }
   }
@@ -187,10 +189,14 @@ function _runRound() {
 
 function _checkOutcome(d, side) {
   if (side.foe[side.foeHp] <= 0) {
-    _appendLog(d, `${SVG_TROPHY} ${_foeNameSafe(d)} is ${d.mode === 'ship' ? 'destroyed' : 'defeated'}!`);
+    _appendLog(d, d.mode === 'ship'
+      ? t('battlesim211.log.defeated_destroyed', { trophy: SVG_TROPHY, enemy: _foeNameSafe(d) })
+      : t('battlesim211.log.defeated_generic',   { trophy: SVG_TROPHY, enemy: _foeNameSafe(d) }));
     _recordOutcome(d, side, 'win');
   } else if (side.self[side.selfHp] <= 0) {
-    _appendLog(d, `${SVG_SKULL} You are ${d.mode === 'ship' ? 'destroyed' : 'dead'}.`);
+    _appendLog(d, d.mode === 'ship'
+      ? t('battlesim211.log.dead_ship',   { skull: SVG_SKULL })
+      : t('battlesim211.log.dead_person', { skull: SVG_SKULL }));
     _recordOutcome(d, side, 'loss');
   }
 }
@@ -208,7 +214,7 @@ function _fireMissile() {
   d.roundsShip++;
   const dmg = Math.max(1, d.missileDamage);
   d.enemyShip.shields = Math.max(0, d.enemyShip.shields - dmg);
-  _appendLog(d, `You launch a Smart Missile: -${dmg} SHIELDS. ${_foeNameSafe(d)} SHIELDS: ${d.enemyShip.shields}/${d.enemyShip.shieldsMax}. (${d.ship.smartMissiles} left)`);
+  _appendLog(d, t('battlesim211.log.missile', { dmg, enemy: _foeNameSafe(d), shields: d.enemyShip.shields, shieldsMax: d.enemyShip.shieldsMax, left: d.ship.smartMissiles }));
   _checkOutcome(d, _activeSide(d));
   saveState();
   _renderAll();
@@ -227,8 +233,8 @@ function _resetBattle() {
   side.foe[side.foeHp] = side.foe[side.foeHpMax];
   side.self[side.selfHp] = _selfMaxHp(d, side);
   d[side.roundsKey] = 0;
-  if (d.log.length) _appendLog(d, '──────────');
-  _appendLog(d, 'Battle reset.');
+  if (d.log.length) _appendLog(d, t('battlesim211.log.reset_sep'));
+  _appendLog(d, t('battlesim211.log.reset'));
   saveState();
   _renderAll();
 }
@@ -241,14 +247,14 @@ function _useEnergyTablet() {
   const side = _activeSide(d);
   const midFight = d[side.roundsKey] > 0 && side.self[side.selfHp] > 0 && side.foe[side.foeHp] > 0;
   if (midFight) {
-    showAlert('You cannot take an Energy Tablet while engaged in combat.');
+    showAlert(t('battlesim211.alert.energy_midfight'));
     return;
   }
   if (d.player.energyTabletsLeft <= 0 || d.player.stamina >= d.player.staminaInitial) return;
   d.player.energyTabletsLeft--;
   const before = d.player.stamina;
-  d.player.stamina = Math.min(d.player.staminaInitial, d.player.stamina + 6);
-  _appendLog(d, `You take an Energy Tablet: STAMINA ${before} → ${d.player.stamina}/${d.player.staminaInitial}.`);
+  d.player.stamina = Math.min(d.player.staminaInitial, d.player.stamina + ENERGY_TABLET_RESTORE);
+  _appendLog(d, t('battlesim211.log.energy_tablet', { before, stamina: d.player.stamina, staminaMax: d.player.staminaInitial }));
   saveState();
   _renderAll();
 }
@@ -262,9 +268,9 @@ function _renderStatus() {
   const notReady = _notReady(d);
   const side = _activeSide(d);
   const hasFoe = side.foe[side.foeHpMax] > 0;
-  if (notReady)                                el.innerHTML = 'Roll your starting stats to begin.';
-  else if (side.self[side.selfHp] <= 0)         el.innerHTML = `${SVG_SKULL} You have fallen.`;
-  else if (hasFoe && side.foe[side.foeHp] <= 0) el.innerHTML = `${SVG_TROPHY} Victory!`;
+  if (notReady)                                el.innerHTML = t('battlesim211.status.not_ready');
+  else if (side.self[side.selfHp] <= 0)         el.innerHTML = t('battlesim211.status.fallen', { skull: SVG_SKULL });
+  else if (hasFoe && side.foe[side.foeHp] <= 0) el.innerHTML = t('battlesim211.status.victory', { trophy: SVG_TROPHY });
   else                                          el.innerHTML = '';
   const over = notReady || side.self[side.selfHp] <= 0 || (hasFoe && side.foe[side.foeHp] <= 0);
   document.getElementById('sim211-round').disabled = over;
@@ -280,14 +286,14 @@ function _renderHistory() {
   const sumEl  = document.getElementById('sim211-history-summary');
   const listEl = document.getElementById('sim211-history-list');
   if (!d || !sumEl || !listEl) return;
-  sumEl.textContent = `Battle History (${d.history.length})`;
+  sumEl.textContent = t('battlesim211.history.summary', { n: d.history.length });
   if (!d.history.length) {
-    listEl.innerHTML = '<div class="bsim-history-empty">No finished battles yet.</div>';
+    listEl.innerHTML = `<div class="bsim-history-empty">${t('battlesim211.history.empty')}</div>`;
     return;
   }
   listEl.innerHTML = d.history.slice().reverse().map(h => {
     const icon   = h.outcome === 'win' ? SVG_TROPHY : SVG_SKULL;
-    const result = h.outcome === 'win' ? 'won' : 'lost';
+    const result = h.outcome === 'win' ? t('battlesim211.history.won') : t('battlesim211.history.lost');
     const date   = new Date(h.ts).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
     return `<div class="bsim-history-row">
       <span>${icon} ${escapeHtml(h.enemy)} - ${result}</span>
@@ -322,7 +328,7 @@ function _renderInputs() {
 
   const rollBtn = document.getElementById('sim211-roll');
   rollBtn.disabled = d.rolled;
-  rollBtn.textContent = d.rolled ? 'Rolled' : 'Roll starting stats';
+  rollBtn.textContent = d.rolled ? t('battlesim211.btn.rolled') : t('battlesim211.btn.roll');
 
   document.getElementById('sim211-energy-left').textContent = `${d.player.energyTabletsLeft}/${MAX_ENERGY_TABLETS}`;
   document.getElementById('sim211-missiles-left').textContent = `${d.ship.smartMissiles}/${MAX_SMART_MISSILES}`;
@@ -471,86 +477,86 @@ export function initSim211() {
   overlay.innerHTML = `
     <div class="inv-modal bsim-modal">
       <div class="inv-modal-hdr">
-        <span class="inv-modal-title">Battle Simulator</span>
+        <span class="inv-modal-title">${t('battlesim.title')}</span>
         <button id="sim211-close" class="inv-close-btn" aria-label="${t('btn.close')}">✕</button>
       </div>
       <div class="bsim-body">
         <div class="bsim-col bsim-col-left">
           <div class="inv-edit-row">
-            <span class="inv-edit-label bsim-stat-label">Combat type</span>
+            <span class="inv-edit-label bsim-stat-label">${t('battlesim211.ui.combat_type')}</span>
             <select id="sim211-mode" class="inv-edit-input bsim-select">
-              ${MODES.map(m => `<option value="${m[0]}">${escapeHtml(m[1])}</option>`).join('')}
+              ${MODES.map(m => `<option value="${m[0]}">${escapeHtml(t(m[1]))}</option>`).join('')}
             </select>
           </div>
           <div class="bsim-side">
-            <div class="bsim-side-title">You</div>
+            <div class="bsim-side-title">${t('battlesim211.ui.you')}</div>
             <div class="inv-edit-row bsim-life-roll-row">
-              <button id="sim211-roll" class="inv-edit-done bsim-ae-roll-btn" type="button">Roll starting stats</button>
+              <button id="sim211-roll" class="inv-edit-done bsim-ae-roll-btn" type="button">${t('battlesim211.btn.roll')}</button>
             </div>
             <div id="sim211-person-fields">
-              ${_numField('SKILL', 'sim211-player-skill')}
-              ${_numField('Initial SKILL', 'sim211-player-skillmax')}
-              ${_numField('STAMINA', 'sim211-player-stamina')}
-              ${_numField('Initial STAMINA', 'sim211-player-staminamax')}
+              ${_numField(t('battlesim211.ui.skill'), 'sim211-player-skill')}
+              ${_numField(t('battlesim211.ui.skill_initial'), 'sim211-player-skillmax')}
+              ${_numField(t('battlesim211.ui.stamina'), 'sim211-player-stamina')}
+              ${_numField(t('battlesim211.ui.stamina_initial'), 'sim211-player-staminamax')}
               <div class="inv-edit-row bsim-ae-row">
-                <span class="inv-edit-label bsim-stat-label">Energy Tablets</span>
+                <span class="inv-edit-label bsim-stat-label">${t('battlesim211.ui.energy_tablets')}</span>
                 <span id="sim211-energy-left" class="bsim-ae-display"></span>
-                <button id="sim211-energy" class="inv-edit-done bsim-ae-roll-btn" type="button">Take (+6 STAMINA)</button>
+                <button id="sim211-energy" class="inv-edit-done bsim-ae-roll-btn" type="button">${t('battlesim211.btn.energy_take', { n: ENERGY_TABLET_RESTORE, stamina: t('battlesim211.ui.stamina') })}</button>
               </div>
             </div>
             <div id="sim211-ship-fields" style="display:none">
-              ${_numField('WEAPONS STRENGTH', 'sim211-ship-ws')}
-              ${_numField('Initial WEAPONS STRENGTH', 'sim211-ship-wsmax')}
-              ${_numField('SHIELDS', 'sim211-ship-shields')}
-              ${_numField('Initial SHIELDS', 'sim211-ship-shieldsmax')}
+              ${_numField(t('battlesim211.ui.weapons_strength'), 'sim211-ship-ws')}
+              ${_numField(t('battlesim211.ui.weapons_strength_initial'), 'sim211-ship-wsmax')}
+              ${_numField(t('battlesim211.ui.shields'), 'sim211-ship-shields')}
+              ${_numField(t('battlesim211.ui.shields_initial'), 'sim211-ship-shieldsmax')}
               <div class="inv-edit-row bsim-ae-row">
-                <span class="inv-edit-label bsim-stat-label">Smart Missiles</span>
+                <span class="inv-edit-label bsim-stat-label">${t('battlesim211.ui.smart_missiles')}</span>
                 <span id="sim211-missiles-left" class="bsim-ae-display"></span>
               </div>
-              ${_numField('Missile SHIELDS dmg', 'sim211-missile-dmg')}
+              ${_numField(t('battlesim211.ui.missile_dmg'), 'sim211-missile-dmg')}
             </div>
-            ${_numField('LUCK', 'sim211-player-luck')}
-            ${_numField('Initial LUCK', 'sim211-player-luckmax')}
-            ${_numField('Money (kopecks)', 'sim211-player-money')}
+            ${_numField(t('battlesim211.ui.luck'), 'sim211-player-luck')}
+            ${_numField(t('battlesim211.ui.luck_initial'), 'sim211-player-luckmax')}
+            ${_numField(t('battlesim211.ui.money'), 'sim211-player-money')}
           </div>
           <div class="bsim-side">
-            <div class="bsim-side-title">Enemy (Blaster/Hand-to-Hand)</div>
+            <div class="bsim-side-title">${t('battlesim211.ui.enemy_blaster')}</div>
             <div class="inv-edit-row">
-              <span class="inv-edit-label bsim-stat-label">Pick</span>
+              <span class="inv-edit-label bsim-stat-label">${t('battlesim211.ui.pick')}</span>
               <div class="autocomplete-wrap bsim-enemy-ac">
                 <input id="sim211-enemy-pick" class="inv-edit-input" type="text" autocomplete="off" readonly role="combobox" aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" aria-controls="sim211-enemy-pick-dropdown">
                 <ul id="sim211-enemy-pick-dropdown" class="autocomplete-dropdown" role="listbox"></ul>
               </div>
             </div>
-            ${_numField('SKILL', 'sim211-enemy-skill')}
-            ${_numField('STAMINA', 'sim211-enemy-stamina')}
-            ${_numField('Max STAMINA', 'sim211-enemy-staminamax')}
+            ${_numField(t('battlesim211.ui.skill'), 'sim211-enemy-skill')}
+            ${_numField(t('battlesim211.ui.stamina'), 'sim211-enemy-stamina')}
+            ${_numField(t('battlesim211.ui.stamina_max'), 'sim211-enemy-staminamax')}
           </div>
           <div class="bsim-side">
-            <div class="bsim-side-title">Enemy ship</div>
+            <div class="bsim-side-title">${t('battlesim211.ui.enemy_ship')}</div>
             <div class="inv-edit-row">
-              <span class="inv-edit-label bsim-stat-label">Pick</span>
+              <span class="inv-edit-label bsim-stat-label">${t('battlesim211.ui.pick')}</span>
               <div class="autocomplete-wrap bsim-enemy-ac">
                 <input id="sim211-enemyship-pick" class="inv-edit-input" type="text" autocomplete="off" readonly role="combobox" aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" aria-controls="sim211-enemyship-pick-dropdown">
                 <ul id="sim211-enemyship-pick-dropdown" class="autocomplete-dropdown" role="listbox"></ul>
               </div>
             </div>
-            ${_numField('WEAPONS STRENGTH', 'sim211-enemyship-ws')}
-            ${_numField('SHIELDS', 'sim211-enemyship-shields')}
-            ${_numField('Max SHIELDS', 'sim211-enemyship-shieldsmax')}
+            ${_numField(t('battlesim211.ui.weapons_strength'), 'sim211-enemyship-ws')}
+            ${_numField(t('battlesim211.ui.shields'), 'sim211-enemyship-shields')}
+            ${_numField(t('battlesim211.ui.shields_max'), 'sim211-enemyship-shieldsmax')}
           </div>
           <div id="sim211-status" class="bsim-status"></div>
           <div class="inv-modal-ftr">
-            <button id="sim211-round" class="inv-add-btn bsim-action-primary">Round</button>
+            <button id="sim211-round" class="inv-add-btn bsim-action-primary">${t('battlesim211.btn.round')}</button>
             <div id="sim211-missile-row" style="display:none">
-              <button id="sim211-missile" class="inv-add-btn">Fire Smart Missile</button>
+              <button id="sim211-missile" class="inv-add-btn">${t('battlesim211.btn.fire_missile')}</button>
             </div>
-            <button id="sim211-reset" class="inv-add-btn">Reset</button>
+            <button id="sim211-reset" class="inv-add-btn">${t('battlesim211.btn.reset')}</button>
           </div>
         </div>
         <div class="bsim-col bsim-col-right">
           <details class="bsim-history" open>
-            <summary id="sim211-history-summary">Battle History (0)</summary>
+            <summary id="sim211-history-summary">${t('battlesim211.history.summary', { n: 0 })}</summary>
             <div id="sim211-history-list" class="bsim-history-list"></div>
           </details>
           <div id="sim211-log" class="bsim-log"></div>
@@ -608,7 +614,7 @@ export function initSim211() {
     d.ship.weaponsStrength = d.ship.weaponsStrengthInitial;
     d.ship.shields         = d.ship.shieldsInitial;
     d.rolled = true;
-    _appendLog(d, `Starting stats rolled: SKILL ${d.player.skillInitial}, STAMINA ${d.player.staminaInitial}, LUCK ${d.player.luckInitial}, WEAPONS STRENGTH ${d.ship.weaponsStrengthInitial}, SHIELDS ${d.ship.shieldsInitial}.`);
+    _appendLog(d, t('battlesim211.log.rolled', { skill: d.player.skillInitial, stamina: d.player.staminaInitial, luck: d.player.luckInitial, ws: d.ship.weaponsStrengthInitial, shields: d.ship.shieldsInitial }));
     saveState();
     _renderAll();
   });

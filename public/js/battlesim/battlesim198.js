@@ -13,11 +13,11 @@
 // direction. All state lives in pt.sim198, per-user/per-book via
 // currentPlaythrough().
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../state.js?v=13';
-import { showAlert } from '../play.js?v=143';
-import { getPlayBtnRow } from '../charsheet.js?v=96';
-import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../util.js?v=79';
-import { t } from '../i18n.js?v=64';
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../state.js?v=14';
+import { showAlert } from '../confirm.js?v=5';
+import { getPlayBtnRow } from '../charsheet.js?v=105';
+import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../util.js?v=88';
+import { t } from '../i18n.js?v=72';
 
 const SVG_SKULL  = `<svg class="sim-icon sim-icon-dead"  viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8c0 2.8 1.4 5.3 3.6 6.8V20a1 1 0 0 0 1 1h6.8a1 1 0 0 0 1-1v-2.2C18.6 16.3 20 13.8 20 11a8 8 0 0 0-8-8zm-2.5 13v-1.5a.5.5 0 0 0-.5-.5H8l-.5-1 1-1-1-1 1-1H9a2.5 2.5 0 0 1 5 0h.5l1 1-1 1 1 1-.5 1h-1a.5.5 0 0 0-.5.5V16h-4z"/></svg>`;
 const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v7a6 6 0 0 1-12 0V2zm-2 1H2v4a4 4 0 0 0 4 4v-1a3 3 0 0 1-3-3V3zm16 0h2v4a4 4 0 0 1-4 4v-1a3 3 0 0 0 3-3V3zm-7 13v2H9v2h6v-2h-2v-2a6 6 0 0 0 5-5.92V2H6v8.08A6 6 0 0 0 13 16z"/></svg>`;
@@ -32,6 +32,22 @@ const POTIONS = [
 ];
 
 const MAX_PROVISIONS = 10;
+const PROVISIONS_HEAL = 4;
+const RUM_STAMINA_BONUS = 6;
+const RUM_LUCK_BONUS = 1;
+const MAGICSWORD_SKILL_BONUS = 2;
+// The book's Magic Sword also grants +2 LUCK per its own text, but no LUCK
+// bonus has ever been applied anywhere in this sim (pre-existing gap, not
+// introduced by i18n conversion) - the description below states it but the
+// mechanic doesn't back it. Flagged, not silently "fixed" as part of an i18n
+// pass since that would be a behavior change, not a translation extraction.
+const RIVERSWORD_SKILL_BONUS = 1;
+const HELMET_SKILL_BONUS = 1;
+const INVIS_SKILL_BONUS = 2;
+const INVIS_PLAYER_DMG = 3;
+const HOLYWATER_STAMINA_PENALTY = 2;
+const HOLYWATER_SKILL_PENALTY = 1;
+const HOLYWATER_LUCK_BONUS = 4;
 
 function _data() {
   const pt = currentPlaythrough();
@@ -97,10 +113,10 @@ function _enemyNameSafe(d) { return escapeHtml(_enemyName(d)); }
 // extra-bonus fields rather than forcing an artificial either/or choice.
 function _effectiveSkill(d) {
   let skill = d.player.skill;
-  if (d.player.hasMagicSword) skill += 2;
-  if (d.player.hasRiverSword) skill += 1;
-  if (d.player.hasMagicHelmet) skill += 1;
-  if (d.player.invisibilityActive) skill += 2;
+  if (d.player.hasMagicSword) skill += MAGICSWORD_SKILL_BONUS;
+  if (d.player.hasRiverSword) skill += RIVERSWORD_SKILL_BONUS;
+  if (d.player.hasMagicHelmet) skill += HELMET_SKILL_BONUS;
+  if (d.player.invisibilityActive) skill += INVIS_SKILL_BONUS;
   return skill;
 }
 
@@ -130,35 +146,35 @@ function _runRound() {
   const attack = () => {
     const playerRoll = _roll2d6() + _effectiveSkill(d);
     const enemyRoll   = _roll2d6() + d.enemy.skill;
-    _appendLog(d, `Round ${d.roundsThisBattle}: you ${playerRoll} vs ${_enemyNameSafe(d)} ${enemyRoll}.`);
+    _appendLog(d, t('battlesim198.log.round', { round: d.roundsThisBattle, playerAS: playerRoll, enemy: _enemyNameSafe(d), enemyAS: enemyRoll }));
     if (playerRoll === enemyRoll) {
-      _appendLog(d, 'Both blows are avoided.');
+      _appendLog(d, t('battlesim198.log.both_avoided'));
       return;
     }
     if (playerRoll > enemyRoll) {
-      const dmg = d.player.invisibilityActive ? 3 : 2;
+      const dmg = d.player.invisibilityActive ? INVIS_PLAYER_DMG : 2;
       d.enemy.stamina = Math.max(0, d.enemy.stamina - dmg);
-      _appendLog(d, `You wound ${_enemyNameSafe(d)} for ${dmg}. STAMINA: ${d.enemy.stamina}/${d.enemy.staminaMax}.`);
+      _appendLog(d, t('battlesim198.log.you_wound', { enemy: _enemyNameSafe(d), n: dmg, stamina: d.enemy.stamina, staminaMax: d.enemy.staminaMax }));
       if (d.enemy.stamina > 0) d.pendingLuck = 'player-hit';
     } else {
       let dmg = 2;
       if (d.player.invisibilityActive) {
         const r = _roll1d6();
         dmg = r === 6 ? 0 : (r === 2 || r === 4) ? 1 : 2;
-        _appendLog(d, `${_enemyNameSafe(d)} swings through where you were - invisibility roll ${r}.`);
+        _appendLog(d, t('battlesim198.log.invis_dodge', { enemy: _enemyNameSafe(d), roll: r }));
       }
       d.player.stamina = Math.max(0, d.player.stamina - dmg);
-      _appendLog(d, `${_enemyNameSafe(d)} wounds you for ${dmg}. STAMINA: ${d.player.stamina}/${d.player.staminaInitial}.`);
+      _appendLog(d, t('battlesim198.log.enemy_wounds', { enemy: _enemyNameSafe(d), n: dmg, stamina: d.player.stamina, staminaMax: d.player.staminaInitial }));
       if (d.player.stamina > 0 && dmg > 0) d.pendingLuck = 'enemy-hit';
     }
   };
   attack();
 
   if (d.enemy.stamina <= 0) {
-    _appendLog(d, `${SVG_TROPHY} ${_enemyNameSafe(d)} is defeated!`);
+    _appendLog(d, `${SVG_TROPHY} ${t('battlesim198.log.defeated', { enemy: _enemyNameSafe(d) })}`);
     _recordOutcome(d, 'win');
   } else if (d.player.stamina <= 0) {
-    _appendLog(d, `${SVG_SKULL} You have fallen in battle.`);
+    _appendLog(d, `${SVG_SKULL} ${t('battlesim198.log.fallen')}`);
     _recordOutcome(d, 'loss');
   }
 
@@ -179,21 +195,21 @@ function _testLuck() {
   if (d.pendingLuck === 'player-hit') {
     if (lucky) {
       d.enemy.stamina = Math.max(0, d.enemy.stamina - 2);
-      _appendLog(d, `Test Your Luck: ${roll} (Lucky) - the wound is worse. ${_enemyNameSafe(d)} STAMINA: ${d.enemy.stamina}/${d.enemy.staminaMax}.`);
+      _appendLog(d, t('battlesim198.log.luck_player_hit_lucky', { roll, enemy: _enemyNameSafe(d), stamina: d.enemy.stamina, staminaMax: d.enemy.staminaMax }));
     } else {
       d.enemy.stamina = Math.min(d.enemy.staminaMax, d.enemy.stamina + 1);
-      _appendLog(d, `Test Your Luck: ${roll} (Unlucky) - the wound is less severe. ${_enemyNameSafe(d)} STAMINA: ${d.enemy.stamina}/${d.enemy.staminaMax}.`);
+      _appendLog(d, t('battlesim198.log.luck_player_hit_unlucky', { roll, enemy: _enemyNameSafe(d), stamina: d.enemy.stamina, staminaMax: d.enemy.staminaMax }));
     }
-    if (d.enemy.stamina <= 0) { _appendLog(d, `${SVG_TROPHY} ${_enemyNameSafe(d)} is defeated!`); _recordOutcome(d, 'win'); }
+    if (d.enemy.stamina <= 0) { _appendLog(d, `${SVG_TROPHY} ${t('battlesim198.log.defeated', { enemy: _enemyNameSafe(d) })}`); _recordOutcome(d, 'win'); }
   } else {
     if (lucky) {
       d.player.stamina = Math.min(d.player.staminaInitial, d.player.stamina + 1);
-      _appendLog(d, `Test Your Luck: ${roll} (Lucky) - the wound is less severe. Your STAMINA: ${d.player.stamina}/${d.player.staminaInitial}.`);
+      _appendLog(d, t('battlesim198.log.luck_hit_lucky', { roll, stamina: d.player.stamina, staminaMax: d.player.staminaInitial }));
     } else {
       d.player.stamina = Math.max(0, d.player.stamina - 1);
-      _appendLog(d, `Test Your Luck: ${roll} (Unlucky) - the wound is worse. Your STAMINA: ${d.player.stamina}/${d.player.staminaInitial}.`);
+      _appendLog(d, t('battlesim198.log.luck_hit_unlucky', { roll, stamina: d.player.stamina, staminaMax: d.player.staminaInitial }));
     }
-    if (d.player.stamina <= 0) { _appendLog(d, `${SVG_SKULL} You have fallen in battle.`); _recordOutcome(d, 'loss'); }
+    if (d.player.stamina <= 0) { _appendLog(d, `${SVG_SKULL} ${t('battlesim198.log.fallen')}`); _recordOutcome(d, 'loss'); }
   }
   d.pendingLuck = null;
   saveState();
@@ -214,8 +230,8 @@ function _resetBattle() {
   d.player.stamina = d.player.staminaInitial;
   d.roundsThisBattle = 0;
   d.pendingLuck = null;
-  if (d.log.length) _appendLog(d, '──────────');
-  _appendLog(d, `Battle reset. ${_enemyNameSafe(d)}'s STAMINA and yours are restored.`);
+  if (d.log.length) _appendLog(d, t('battlesim198.log.reset_sep'));
+  _appendLog(d, t('battlesim198.log.reset', { enemy: _enemyNameSafe(d) }));
   saveState();
   _renderAll();
 }
@@ -226,18 +242,18 @@ function _eatProvisions() {
   const d = _data();
   if (!d || _notReady(d)) return;
   if (d.roundsThisBattle > 0 && d.player.stamina > 0 && d.enemy.stamina > 0) {
-    showAlert('You cannot eat Provisions in the middle of a fight.');
+    showAlert(t('battlesim198.alert.provisions_midfight'));
     return;
   }
   if (d.player.provisionsLeft <= 0) return;
   if (d.player.stamina >= d.player.staminaInitial) {
-    showAlert('Your STAMINA is already full.');
+    showAlert(t('battlesim198.alert.stamina_full'));
     return;
   }
   d.player.provisionsLeft--;
   const before = d.player.stamina;
-  d.player.stamina = Math.min(d.player.staminaInitial, d.player.stamina + 4);
-  _appendLog(d, `You eat some Provisions: STAMINA ${before} → ${d.player.stamina}/${d.player.staminaInitial}.`);
+  d.player.stamina = Math.min(d.player.staminaInitial, d.player.stamina + PROVISIONS_HEAL);
+  _appendLog(d, t('battlesim198.log.provisions', { before, stamina: d.player.stamina, staminaMax: d.player.staminaInitial }));
   saveState();
   _renderAll();
 }
@@ -248,14 +264,14 @@ function _usePotion() {
   d.player.potionUsesLeft--;
   if (d.player.potionKey === 'skill') {
     d.player.skill = d.player.skillInitial;
-    _appendLog(d, `You drink the Potion of Skill: SKILL restored to ${d.player.skillInitial}.`);
+    _appendLog(d, t('battlesim198.log.potion_skill', { n: d.player.skillInitial }));
   } else if (d.player.potionKey === 'strength') {
     d.player.stamina = d.player.staminaInitial;
-    _appendLog(d, `You drink the Potion of Strength: STAMINA restored to ${d.player.staminaInitial}.`);
+    _appendLog(d, t('battlesim198.log.potion_strength', { n: d.player.staminaInitial }));
   } else {
     d.player.luckInitial += 1;
     d.player.luck = d.player.luckInitial;
-    _appendLog(d, `You drink the Potion of Fortune: Initial LUCK is now ${d.player.luckInitial}, LUCK refilled.`);
+    _appendLog(d, t('battlesim198.log.potion_fortune', { n: d.player.luckInitial }));
   }
   saveState();
   _renderAll();
@@ -269,7 +285,7 @@ function _useInvisibility() {
   if (!d || !d.player.invisibilityHave || d.player.invisibilityUsed) return;
   d.player.invisibilityUsed = true;
   d.player.invisibilityActive = true;
-  _appendLog(d, 'You drink the Potion of Invisibility.');
+  _appendLog(d, t('battlesim198.log.invisibility_drink'));
   saveState();
   _renderAll();
 }
@@ -278,10 +294,10 @@ function _useHolyWater() {
   const d = _data();
   if (!d || !d.player.holyWaterHave || d.player.holyWaterUsed) return;
   d.player.holyWaterUsed = true;
-  d.player.stamina = Math.max(0, Math.min(d.player.staminaInitial, d.player.staminaInitial - 2));
-  d.player.skill = Math.max(0, d.player.skillInitial - 1);
-  d.player.luck = Math.min(d.player.luckInitial + 4, d.player.luck + 4);
-  _appendLog(d, 'You drink the Holy Water.');
+  d.player.stamina = Math.max(0, Math.min(d.player.staminaInitial, d.player.staminaInitial - HOLYWATER_STAMINA_PENALTY));
+  d.player.skill = Math.max(0, d.player.skillInitial - HOLYWATER_SKILL_PENALTY);
+  d.player.luck = Math.min(d.player.luckInitial + HOLYWATER_LUCK_BONUS, d.player.luck + HOLYWATER_LUCK_BONUS);
+  _appendLog(d, t('battlesim198.log.holywater_drink'));
   saveState();
   _renderAll();
 }
@@ -290,9 +306,9 @@ function _useRum() {
   const d = _data();
   if (!d || !d.player.rumHave || d.player.rumUsed) return;
   d.player.rumUsed = true;
-  d.player.stamina = Math.min(d.player.staminaInitial, d.player.stamina + 6);
-  d.player.luck = d.player.luck + 1;
-  _appendLog(d, 'You drink the Rum: +6 STAMINA, +1 LUCK.');
+  d.player.stamina = Math.min(d.player.staminaInitial, d.player.stamina + RUM_STAMINA_BONUS);
+  d.player.luck = d.player.luck + RUM_LUCK_BONUS;
+  _appendLog(d, t('battlesim198.log.rum_drink', { stamina: RUM_STAMINA_BONUS, luck: RUM_LUCK_BONUS }));
   saveState();
   _renderAll();
 }
@@ -305,9 +321,9 @@ function _renderStatus() {
   if (!d || !el) return;
   const notReady = _notReady(d);
   const hasEnemy = d.enemy.staminaMax > 0;
-  if (notReady)                                    el.innerHTML = 'Roll your starting SKILL, STAMINA and LUCK to begin.';
-  else if (d.player.stamina <= 0)                   el.innerHTML = `${SVG_SKULL} You have fallen in battle.`;
-  else if (hasEnemy && d.enemy.stamina <= 0)         el.innerHTML = `${SVG_TROPHY} Victory!`;
+  if (notReady)                                    el.innerHTML = t('battlesim198.status.not_ready');
+  else if (d.player.stamina <= 0)                   el.innerHTML = `${SVG_SKULL} ${t('battlesim198.status.fallen')}`;
+  else if (hasEnemy && d.enemy.stamina <= 0)         el.innerHTML = `${SVG_TROPHY} ${t('battlesim198.status.victory')}`;
   else                                               el.innerHTML = '';
   const over = notReady || d.player.stamina <= 0 || (hasEnemy && d.enemy.stamina <= 0);
   document.getElementById('sim198-round').disabled = over || !!d.pendingLuck;
@@ -322,42 +338,42 @@ function _renderItemsHtml(d) {
   const notReady = _notReady(d);
   return `
     <div class="bsim-tech-row">
-      <div class="bsim-tech-name">Magic Sword <span class="bsim-tech-uses">(sec. 27)</span></div>
-      <div class="bsim-tech-desc">+2 SKILL, +2 LUCK.</div>
-      <div class="bsim-tech-footer"><label class="inv-edit-check-label"><input type="checkbox" id="sim198-item-magicsword" class="inv-edit-check" ${d.player.hasMagicSword ? 'checked' : ''}> Have it</label></div>
+      <div class="bsim-tech-name">${t('battlesim198.ui.item_magicsword_name')} <span class="bsim-tech-uses">(sec. 27)</span></div>
+      <div class="bsim-tech-desc">${t('battlesim198.ui.item_magicsword_desc', { n: MAGICSWORD_SKILL_BONUS })}</div>
+      <div class="bsim-tech-footer"><label class="inv-edit-check-label"><input type="checkbox" id="sim198-item-magicsword" class="inv-edit-check" ${d.player.hasMagicSword ? 'checked' : ''}> ${t('battlesim198.ui.have_it')}</label></div>
     </div>
     <div class="bsim-tech-row">
-      <div class="bsim-tech-name">River Sword <span class="bsim-tech-uses">(sec. 344)</span></div>
-      <div class="bsim-tech-desc">+1 SKILL while used.</div>
-      <div class="bsim-tech-footer"><label class="inv-edit-check-label"><input type="checkbox" id="sim198-item-riversword" class="inv-edit-check" ${d.player.hasRiverSword ? 'checked' : ''}> Have it</label></div>
+      <div class="bsim-tech-name">${t('battlesim198.ui.item_riversword_name')} <span class="bsim-tech-uses">(sec. 344)</span></div>
+      <div class="bsim-tech-desc">${t('battlesim198.ui.item_riversword_desc', { n: RIVERSWORD_SKILL_BONUS })}</div>
+      <div class="bsim-tech-footer"><label class="inv-edit-check-label"><input type="checkbox" id="sim198-item-riversword" class="inv-edit-check" ${d.player.hasRiverSword ? 'checked' : ''}> ${t('battlesim198.ui.have_it')}</label></div>
     </div>
     <div class="bsim-tech-row">
-      <div class="bsim-tech-name">Magic Helmet <span class="bsim-tech-uses">(sec. 325)</span></div>
-      <div class="bsim-tech-desc">+1 to all your Attack Strength rolls while worn.</div>
-      <div class="bsim-tech-footer"><label class="inv-edit-check-label"><input type="checkbox" id="sim198-item-helmet" class="inv-edit-check" ${d.player.hasMagicHelmet ? 'checked' : ''}> Have it</label></div>
+      <div class="bsim-tech-name">${t('battlesim198.ui.item_helmet_name')} <span class="bsim-tech-uses">(sec. 325)</span></div>
+      <div class="bsim-tech-desc">${t('battlesim198.ui.item_helmet_desc', { n: HELMET_SKILL_BONUS })}</div>
+      <div class="bsim-tech-footer"><label class="inv-edit-check-label"><input type="checkbox" id="sim198-item-helmet" class="inv-edit-check" ${d.player.hasMagicHelmet ? 'checked' : ''}> ${t('battlesim198.ui.have_it')}</label></div>
     </div>
     <div class="bsim-tech-row">
-      <div class="bsim-tech-name">Potion of Invisibility <span class="bsim-tech-uses">(sec. 39/105)</span></div>
-      <div class="bsim-tech-desc">Good for one dose. While active: +2 Attack Strength, your hits do 3 damage. Enemy hits are reduced (1d6: odd=2, 2/4=1, 6=parried).</div>
+      <div class="bsim-tech-name">${t('battlesim198.ui.item_invisibility_name')} <span class="bsim-tech-uses">(sec. 39/105)</span></div>
+      <div class="bsim-tech-desc">${t('battlesim198.ui.item_invisibility_desc', { skillBonus: INVIS_SKILL_BONUS, dmg: INVIS_PLAYER_DMG })}</div>
       <div class="bsim-tech-footer">
-        <label class="inv-edit-check-label"><input type="checkbox" id="sim198-item-invisibility-have" class="inv-edit-check" ${d.player.invisibilityHave ? 'checked' : ''}> Have it</label>
-        <button class="inv-edit-done bsim-tech-btn${(notReady || !d.player.invisibilityHave || d.player.invisibilityUsed) ? ' bsim-tech-row--depleted' : ''}" id="sim198-item-invisibility-use" ${(notReady || !d.player.invisibilityHave || d.player.invisibilityUsed) ? 'disabled' : ''}>${d.player.invisibilityUsed ? 'Used' : 'Drink'}</button>
+        <label class="inv-edit-check-label"><input type="checkbox" id="sim198-item-invisibility-have" class="inv-edit-check" ${d.player.invisibilityHave ? 'checked' : ''}> ${t('battlesim198.ui.have_it')}</label>
+        <button class="inv-edit-done bsim-tech-btn${(notReady || !d.player.invisibilityHave || d.player.invisibilityUsed) ? ' bsim-tech-row--depleted' : ''}" id="sim198-item-invisibility-use" ${(notReady || !d.player.invisibilityHave || d.player.invisibilityUsed) ? 'disabled' : ''}>${d.player.invisibilityUsed ? t('battlesim198.btn.used') : t('battlesim198.btn.drink')}</button>
       </div>
     </div>
     <div class="bsim-tech-row">
-      <div class="bsim-tech-name">Holy Water <span class="bsim-tech-uses">(sec. 109)</span></div>
-      <div class="bsim-tech-desc">One-time: STAMINA to Initial−2, SKILL to Initial−1, +4 LUCK.</div>
+      <div class="bsim-tech-name">${t('battlesim198.ui.item_holywater_name')} <span class="bsim-tech-uses">(sec. 109)</span></div>
+      <div class="bsim-tech-desc">${t('battlesim198.ui.item_holywater_desc', { staminaPenalty: HOLYWATER_STAMINA_PENALTY, skillPenalty: HOLYWATER_SKILL_PENALTY, luckBonus: HOLYWATER_LUCK_BONUS })}</div>
       <div class="bsim-tech-footer">
-        <label class="inv-edit-check-label"><input type="checkbox" id="sim198-item-holywater-have" class="inv-edit-check" ${d.player.holyWaterHave ? 'checked' : ''}> Have it</label>
-        <button class="inv-edit-done bsim-tech-btn${(notReady || !d.player.holyWaterHave || d.player.holyWaterUsed) ? ' bsim-tech-row--depleted' : ''}" id="sim198-item-holywater-use" ${(notReady || !d.player.holyWaterHave || d.player.holyWaterUsed) ? 'disabled' : ''}>${d.player.holyWaterUsed ? 'Used' : 'Drink'}</button>
+        <label class="inv-edit-check-label"><input type="checkbox" id="sim198-item-holywater-have" class="inv-edit-check" ${d.player.holyWaterHave ? 'checked' : ''}> ${t('battlesim198.ui.have_it')}</label>
+        <button class="inv-edit-done bsim-tech-btn${(notReady || !d.player.holyWaterHave || d.player.holyWaterUsed) ? ' bsim-tech-row--depleted' : ''}" id="sim198-item-holywater-use" ${(notReady || !d.player.holyWaterHave || d.player.holyWaterUsed) ? 'disabled' : ''}>${d.player.holyWaterUsed ? t('battlesim198.btn.used') : t('battlesim198.btn.drink')}</button>
       </div>
     </div>
     <div class="bsim-tech-row">
-      <div class="bsim-tech-name">Rum <span class="bsim-tech-uses">(sec. 330)</span></div>
-      <div class="bsim-tech-desc">One-time: +6 STAMINA, +1 LUCK.</div>
+      <div class="bsim-tech-name">${t('battlesim198.ui.item_rum_name')} <span class="bsim-tech-uses">(sec. 330)</span></div>
+      <div class="bsim-tech-desc">${t('battlesim198.ui.item_rum_desc', { stamina: RUM_STAMINA_BONUS, luck: RUM_LUCK_BONUS })}</div>
       <div class="bsim-tech-footer">
-        <label class="inv-edit-check-label"><input type="checkbox" id="sim198-item-rum-have" class="inv-edit-check" ${d.player.rumHave ? 'checked' : ''}> Have it</label>
-        <button class="inv-edit-done bsim-tech-btn${(notReady || !d.player.rumHave || d.player.rumUsed) ? ' bsim-tech-row--depleted' : ''}" id="sim198-item-rum-use" ${(notReady || !d.player.rumHave || d.player.rumUsed) ? 'disabled' : ''}>${d.player.rumUsed ? 'Used' : 'Drink'}</button>
+        <label class="inv-edit-check-label"><input type="checkbox" id="sim198-item-rum-have" class="inv-edit-check" ${d.player.rumHave ? 'checked' : ''}> ${t('battlesim198.ui.have_it')}</label>
+        <button class="inv-edit-done bsim-tech-btn${(notReady || !d.player.rumHave || d.player.rumUsed) ? ' bsim-tech-row--depleted' : ''}" id="sim198-item-rum-use" ${(notReady || !d.player.rumHave || d.player.rumUsed) ? 'disabled' : ''}>${d.player.rumUsed ? t('battlesim198.btn.used') : t('battlesim198.btn.drink')}</button>
       </div>
     </div>`;
 }
@@ -367,14 +383,14 @@ function _renderHistory() {
   const sumEl  = document.getElementById('sim198-history-summary');
   const listEl = document.getElementById('sim198-history-list');
   if (!d || !sumEl || !listEl) return;
-  sumEl.textContent = `Battle History (${d.history.length})`;
+  sumEl.textContent = t('battlesim198.history.summary', { n: d.history.length });
   if (!d.history.length) {
-    listEl.innerHTML = '<div class="bsim-history-empty">No finished battles yet.</div>';
+    listEl.innerHTML = `<div class="bsim-history-empty">${t('battlesim198.history.empty')}</div>`;
     return;
   }
   listEl.innerHTML = d.history.slice().reverse().map(h => {
     const icon   = h.outcome === 'win' ? SVG_TROPHY : SVG_SKULL;
-    const result = h.outcome === 'win' ? 'won' : 'lost';
+    const result = h.outcome === 'win' ? t('battlesim198.history.won') : t('battlesim198.history.lost');
     const date   = new Date(h.ts).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
     return `<div class="bsim-history-row">
       <span>${icon} ${escapeHtml(h.enemy)} - ${result}</span>
@@ -403,12 +419,12 @@ function _renderInputs() {
 
   const rollBtn = document.getElementById('sim198-roll');
   rollBtn.disabled = d.rolled;
-  rollBtn.textContent = d.rolled ? 'Rolled' : 'Roll starting SKILL/STAMINA/LUCK';
+  rollBtn.textContent = d.rolled ? t('battlesim198.btn.rolled') : t('battlesim198.btn.roll');
 
   const potionSel = document.getElementById('sim198-potion');
   potionSel.value = d.player.potionKey;
   potionSel.disabled = d.rolled;
-  document.getElementById('sim198-potion-uses').textContent = `${d.player.potionUsesLeft} use(s) left`;
+  document.getElementById('sim198-potion-uses').textContent = t('battlesim198.ui.uses_left', { n: d.player.potionUsesLeft });
   document.getElementById('sim198-potion-use').disabled = _notReady(d) || d.player.potionUsesLeft <= 0;
 
   document.getElementById('sim198-provisions-left').textContent = `${d.player.provisionsLeft}/${MAX_PROVISIONS}`;
@@ -558,69 +574,69 @@ export function initSim198() {
   overlay.innerHTML = `
     <div class="inv-modal bsim-modal">
       <div class="inv-modal-hdr">
-        <span class="inv-modal-title">Battle Simulator</span>
+        <span class="inv-modal-title">${t('battlesim.title')}</span>
         <button id="sim198-close" class="inv-close-btn" aria-label="${t('btn.close')}">✕</button>
       </div>
       <div class="bsim-body">
         <div class="bsim-col bsim-col-left">
           <div class="bsim-side">
-            <div class="bsim-side-title">You</div>
+            <div class="bsim-side-title">${t('battlesim198.ui.you')}</div>
             <div class="inv-edit-row bsim-life-roll-row">
-              <button id="sim198-roll" class="inv-edit-done bsim-ae-roll-btn" type="button">Roll starting SKILL/STAMINA/LUCK</button>
+              <button id="sim198-roll" class="inv-edit-done bsim-ae-roll-btn" type="button">${t('battlesim198.btn.roll')}</button>
             </div>
-            ${_numField('SKILL', 'sim198-player-skill')}
-            ${_numField('Initial SKILL', 'sim198-player-skillmax')}
-            ${_numField('STAMINA', 'sim198-player-stamina')}
-            ${_numField('Initial STAMINA', 'sim198-player-staminamax')}
-            ${_numField('LUCK', 'sim198-player-luck')}
-            ${_numField('Initial LUCK', 'sim198-player-luckmax')}
+            ${_numField(t('battlesim198.ui.skill'), 'sim198-player-skill')}
+            ${_numField(t('battlesim198.ui.skill_initial'), 'sim198-player-skillmax')}
+            ${_numField(t('battlesim198.ui.stamina'), 'sim198-player-stamina')}
+            ${_numField(t('battlesim198.ui.stamina_initial'), 'sim198-player-staminamax')}
+            ${_numField(t('battlesim198.ui.luck'), 'sim198-player-luck')}
+            ${_numField(t('battlesim198.ui.luck_initial'), 'sim198-player-luckmax')}
             <div class="inv-edit-row">
-              <span class="inv-edit-label bsim-stat-label">Potion</span>
+              <span class="inv-edit-label bsim-stat-label">${t('battlesim198.ui.potion')}</span>
               <select id="sim198-potion" class="inv-edit-input bsim-select">
-                ${POTIONS.map(p => `<option value="${p[0]}">${escapeHtml(p[1])}</option>`).join('')}
+                ${POTIONS.map(p => `<option value="${p[0]}">${escapeHtml(t(`battlesim198.potion.${p[0]}`))}</option>`).join('')}
               </select>
             </div>
             <div class="inv-edit-row bsim-ae-row">
               <span id="sim198-potion-uses" class="bsim-ae-display"></span>
-              <button id="sim198-potion-use" class="inv-edit-done bsim-ae-roll-btn" type="button">Drink</button>
+              <button id="sim198-potion-use" class="inv-edit-done bsim-ae-roll-btn" type="button">${t('battlesim198.btn.drink')}</button>
             </div>
             <div class="inv-edit-row bsim-ae-row">
-              <span class="inv-edit-label bsim-stat-label">Provisions</span>
+              <span class="inv-edit-label bsim-stat-label">${t('battlesim198.ui.provisions')}</span>
               <span id="sim198-provisions-left" class="bsim-ae-display"></span>
-              <button id="sim198-provisions" class="inv-edit-done bsim-ae-roll-btn" type="button">Eat (+4 STAMINA)</button>
+              <button id="sim198-provisions" class="inv-edit-done bsim-ae-roll-btn" type="button">${t('battlesim198.btn.provisions_eat', { n: PROVISIONS_HEAL })}</button>
             </div>
           </div>
           <div class="bsim-side">
-            <div class="bsim-side-title">Enemy</div>
+            <div class="bsim-side-title">${t('battlesim198.ui.enemy')}</div>
             <div class="inv-edit-row">
-              <span class="inv-edit-label bsim-stat-label">Pick</span>
+              <span class="inv-edit-label bsim-stat-label">${t('battlesim198.ui.pick')}</span>
               <div class="autocomplete-wrap bsim-enemy-ac">
                 <input id="sim198-enemy-pick" class="inv-edit-input" type="text" autocomplete="off" readonly role="combobox" aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" aria-controls="sim198-enemy-pick-dropdown">
                 <ul id="sim198-enemy-pick-dropdown" class="autocomplete-dropdown" role="listbox"></ul>
               </div>
             </div>
-            ${_numField('SKILL', 'sim198-enemy-skill')}
-            ${_numField('STAMINA', 'sim198-enemy-stamina')}
-            ${_numField('Max STAMINA', 'sim198-enemy-staminamax')}
+            ${_numField(t('battlesim198.ui.skill'), 'sim198-enemy-skill')}
+            ${_numField(t('battlesim198.ui.stamina'), 'sim198-enemy-stamina')}
+            ${_numField(t('battlesim198.ui.stamina_max'), 'sim198-enemy-staminamax')}
           </div>
           <div id="sim198-status" class="bsim-status"></div>
           <div id="sim198-luck-prompt" class="inv-edit-row bsim-heal-row" style="display:none">
-            <span class="inv-edit-label bsim-stat-label">Test Your Luck?</span>
-            <button id="sim198-luck-yes" class="inv-edit-done bsim-heal-btn" type="button">Test Luck</button>
-            <button id="sim198-luck-no" class="inv-edit-done bsim-heal-btn" type="button">Skip</button>
+            <span class="inv-edit-label bsim-stat-label">${t('battlesim198.btn.luck_prompt')}</span>
+            <button id="sim198-luck-yes" class="inv-edit-done bsim-heal-btn" type="button">${t('battlesim198.btn.luck_yes')}</button>
+            <button id="sim198-luck-no" class="inv-edit-done bsim-heal-btn" type="button">${t('battlesim198.btn.luck_no')}</button>
           </div>
           <div class="inv-modal-ftr">
-            <button id="sim198-round" class="inv-add-btn bsim-action-primary">Round</button>
-            <button id="sim198-reset" class="inv-add-btn">Reset</button>
+            <button id="sim198-round" class="inv-add-btn bsim-action-primary">${t('battlesim198.btn.round')}</button>
+            <button id="sim198-reset" class="inv-add-btn">${t('battlesim198.btn.reset')}</button>
           </div>
         </div>
         <div class="bsim-col bsim-col-right">
           <details class="bsim-history" open>
-            <summary>Items &amp; Potions</summary>
+            <summary>${t('battlesim198.ui.items_potions')}</summary>
             <div id="sim198-item-list" class="bsim-tech-list"></div>
           </details>
           <details class="bsim-history">
-            <summary id="sim198-history-summary">Battle History (0)</summary>
+            <summary id="sim198-history-summary">${t('battlesim198.history.summary', { n: 0 })}</summary>
             <div id="sim198-history-list" class="bsim-history-list"></div>
           </details>
           <div id="sim198-log" class="bsim-log"></div>
@@ -668,7 +684,7 @@ export function initSim198() {
     d.player.stamina = d.player.staminaInitial;
     d.player.luck    = d.player.luckInitial;
     d.rolled = true;
-    _appendLog(d, `Starting stats rolled: SKILL ${d.player.skillInitial}, STAMINA ${d.player.staminaInitial}, LUCK ${d.player.luckInitial}.`);
+    _appendLog(d, t('battlesim198.log.rolled', { skill: d.player.skillInitial, stamina: d.player.staminaInitial, luck: d.player.luckInitial }));
     saveState();
     _renderAll();
   });

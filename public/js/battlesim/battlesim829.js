@@ -9,23 +9,22 @@
 // - this module never writes back to them. All sim-specific state lives in
 // pt.sim829, which is already per-user/per-book via currentPlaythrough().
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../state.js?v=13';
-import { showAlert } from '../play.js?v=143';
-import { getPlayBtnRow } from '../charsheet.js?v=96';
-import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../util.js?v=79';
-import { t } from '../i18n.js?v=64';
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../state.js?v=14';
+import { showAlert } from '../confirm.js?v=5';
+import { getPlayBtnRow } from '../charsheet.js?v=105';
+import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../util.js?v=88';
+import { t } from '../i18n.js?v=72';
 
 const SVG_SKULL  = `<svg class="sim-icon sim-icon-dead"  viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8c0 2.8 1.4 5.3 3.6 6.8V20a1 1 0 0 0 1 1h6.8a1 1 0 0 0 1-1v-2.2C18.6 16.3 20 13.8 20 11a8 8 0 0 0-8-8zm-2.5 13v-1.5a.5.5 0 0 0-.5-.5H8l-.5-1 1-1-1-1 1-1H9a2.5 2.5 0 0 1 5 0h.5l1 1-1 1 1 1-.5 1h-1a.5.5 0 0 0-.5.5V16h-4z"/></svg>`;
 const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v7a6 6 0 0 1-12 0V2zm-2 1H2v4a4 4 0 0 0 4 4v-1a3 3 0 0 1-3-3V3zm16 0h2v4a4 4 0 0 1-4 4v-1a3 3 0 0 0 3-3V3zm-7 13v2H9v2h6v-2h-2v-2a6 6 0 0 0 5-5.92V2H6v8.08A6 6 0 0 0 13 16z"/></svg>`;
 
 
-const RANGED_TYPE_LABELS = {
-  bow: 'Лък',
-  musket: 'Мускет',
-  spear: 'Копие за хвърляне',
-  shuriken: 'Шурикен',
-  magic: 'Магия',
-};
+// Labels live in i18n.js under battlesim829.type.<key>.
+function _rangedTypeLabel(key) { return t(`battlesim829.type.${key}`) || key; }
+
+const BASE_HP_MAX = 12;
+const ENDURANCE_HP_BONUS = 3;
+const THROWING_ACCURACY_BONUS = 1;
 
 function _data() {
   const pt = currentPlaythrough();
@@ -114,7 +113,7 @@ function _syncStatFromEquipment(d, pt, stat) {
   if (stat === 'a') d.player.a = baseA + (d.player.skills.weapon || 0);
   if (stat === 'd') d.player.d = baseD + (d.player.skills.parry  || 0);
   if (stat === 'hpMax') {
-    d.player.hpMax = 12 + (d.player.skills.endurance ? 3 : 0);
+    d.player.hpMax = BASE_HP_MAX + (d.player.skills.endurance ? ENDURANCE_HP_BONUS : 0);
     d.player.hp = Math.min(d.player.hp, d.player.hpMax);
   }
 }
@@ -158,7 +157,7 @@ function _rangedAccuracy(d, weapon) {
     case 'bow':      return (weapon?.t || 0) + (d.player.skills.archery >= 1 ? 1 : 0);
     case 'musket':   return 4;
     case 'spear':
-    case 'shuriken': return (weapon?.t || 0) + (d.player.skills.throwing ? 1 : 0);
+    case 'shuriken': return (weapon?.t || 0) + (d.player.skills.throwing ? THROWING_ACCURACY_BONUS : 0);
     case 'magic':    return r.magicT || 0;
     default:         return 0;
   }
@@ -176,7 +175,7 @@ function _rangedDamage(d, weapon, roll) {
   }
 }
 function _rangedDamageDisplay(d, weapon) {
-  return d.player.ranged.type === 'shuriken' ? 'резултат от зара (1–6)' : String(_rangedDamage(d, weapon, 0));
+  return d.player.ranged.type === 'shuriken' ? t('battlesim829.ranged.dmg_shuriken') : String(_rangedDamage(d, weapon, 0));
 }
 
 // Map a stepper's data-group to its target object - 'ranged' lives nested
@@ -206,14 +205,14 @@ function _renderHistory() {
   const listEl    = document.getElementById('bsim-history-list');
   if (!d || !summaryEl || !listEl) return;
   const hist = d.history;
-  summaryEl.textContent = `История на битките (${hist.length})`;
+  summaryEl.textContent = t('battlesim829.history.summary', { n: hist.length });
   if (!hist.length) {
-    listEl.innerHTML = '<div class="bsim-history-empty">Все още няма приключени битки.</div>';
+    listEl.innerHTML = `<div class="bsim-history-empty">${t('battlesim829.history.empty')}</div>`;
     return;
   }
   listEl.innerHTML = hist.slice().reverse().map(h => {
     const icon   = h.outcome === 'win' ? SVG_TROPHY : SVG_SKULL;
-    const result = h.outcome === 'win' ? 'победа' : 'загуба';
+    const result = h.outcome === 'win' ? t('battlesim829.history.won') : t('battlesim829.history.lost');
     const date   = new Date(h.ts).toLocaleDateString('bg-BG', { day: '2-digit', month: '2-digit', year: 'numeric' });
     return `<div class="bsim-history-row">
       <span>${icon} ${escapeHtml(h.enemy)} - ${result}</span>
@@ -234,8 +233,8 @@ function _updateStatus() {
   const pt = currentPlaythrough();
   const el = document.getElementById('bsim-status');
   if (!d || !pt || !el) return;
-  if (d.player.hp <= 0)      el.innerHTML = `${SVG_SKULL} Ти падна в битката.`;
-  else if (d.enemy.hp <= 0)  el.innerHTML = `${SVG_TROPHY} Победа!`;
+  if (d.player.hp <= 0)      el.innerHTML = `${SVG_SKULL} ${t('battlesim829.status.fallen')}`;
+  else if (d.enemy.hp <= 0)  el.innerHTML = `${SVG_TROPHY} ${t('battlesim829.status.victory')}`;
   else                       el.innerHTML = '';
   const over = d.player.hp <= 0 || d.enemy.hp <= 0;
   document.getElementById('bsim-round').disabled = over;
@@ -254,7 +253,7 @@ function _renderRangedPanel(d, pt) {
   if (sel) {
     sel.innerHTML = weapons.length
       ? weapons.map(w => `<option value="${escapeHtml(w.key)}">${escapeHtml(w.label)} (Т:${w.t}${w.a ? ', А:' + w.a : ''}) ×${w.qty}</option>`).join('')
-      : `<option value="">- няма оръжия с „Т:“ в екипировка/инвентар -</option>`;
+      : `<option value="">${t('battlesim829.ranged.no_weapons')}</option>`;
     if (weapons.some(w => w.key === d.player.ranged.weaponKey)) {
       sel.value = d.player.ranged.weaponKey;
     } else if (weapons.length) {
@@ -272,10 +271,10 @@ function _renderRangedPanel(d, pt) {
   if (magicRow) magicRow.style.display = d.player.ranged.type === 'magic' ? 'flex' : 'none';
 
   const weapon = weapons.find(w => w.key === d.player.ranged.weaponKey);
-  const t          = _rangedAccuracy(d, weapon);
+  const acc        = _rangedAccuracy(d, weapon);
   const dmgDisplay = _rangedDamageDisplay(d, weapon);
   const infoEl = document.getElementById('bsim-ranged-info');
-  if (infoEl) infoEl.textContent = `Точност (Т): ${t} · Щети при удар: ${dmgDisplay}`;
+  if (infoEl) infoEl.textContent = t('battlesim829.ranged.info', { acc, dmg: dmgDisplay });
 }
 
 function _renderInputs() {
@@ -314,12 +313,12 @@ function _enemyAttack(d) {
   if (eTotal > d.player.d) {
     const dmg = eTotal - d.player.d;
     d.player.hp = Math.max(0, d.player.hp - dmg);
-    _appendLog(d, `${_enemyNameSafe(d)} хвърля зара: ${eRoll} (+${d.enemy.a} = ${eTotal} атака) срещу твоята З ${d.player.d} → Удар за ${dmg}. Твоето ТЖ: ${d.player.hp}/${d.player.hpMax}.`);
+    _appendLog(d, t('battlesim829.log.enemy_hit', { enemy: _enemyNameSafe(d), roll: eRoll, a: d.enemy.a, total: eTotal, def: d.player.d, dmg, hp: d.player.hp, hpMax: d.player.hpMax }));
   } else {
-    _appendLog(d, `${_enemyNameSafe(d)} хвърля зара: ${eRoll} (+${d.enemy.a} = ${eTotal} атака) срещу твоята З ${d.player.d} → Пропуск.`);
+    _appendLog(d, t('battlesim829.log.enemy_miss', { enemy: _enemyNameSafe(d), roll: eRoll, a: d.enemy.a, total: eTotal, def: d.player.d }));
   }
   if (d.player.hp <= 0) {
-    _appendLog(d, `${SVG_SKULL} Ти падна в битката.`);
+    _appendLog(d, `${SVG_SKULL} ${t('battlesim829.log.player_fallen')}`);
     _recordOutcome(d, 'loss');
   }
 }
@@ -333,13 +332,13 @@ function _runRound() {
   if (pTotal > d.enemy.d) {
     const dmg = pTotal - d.enemy.d;
     d.enemy.hp = Math.max(0, d.enemy.hp - dmg);
-    _appendLog(d, `Хвърляш зара: ${pRoll} (+${d.player.a} = ${pTotal} атака) срещу З ${d.enemy.d} на ${_enemyNameSafe(d)} → Удар за ${dmg}. ТЖ на ${_enemyNameSafe(d)}: ${d.enemy.hp}/${d.enemy.hpMax}.`);
+    _appendLog(d, t('battlesim829.log.player_hit', { roll: pRoll, a: d.player.a, total: pTotal, def: d.enemy.d, enemy: _enemyNameSafe(d), dmg, hp: d.enemy.hp, hpMax: d.enemy.hpMax }));
   } else {
-    _appendLog(d, `Хвърляш зара: ${pRoll} (+${d.player.a} = ${pTotal} атака) срещу З ${d.enemy.d} на ${_enemyNameSafe(d)} → Пропуск.`);
+    _appendLog(d, t('battlesim829.log.player_miss', { roll: pRoll, a: d.player.a, total: pTotal, def: d.enemy.d, enemy: _enemyNameSafe(d) }));
   }
 
   if (d.enemy.hp <= 0) {
-    _appendLog(d, `${SVG_TROPHY} ${_enemyNameSafe(d)} е победен!`);
+    _appendLog(d, `${SVG_TROPHY} ${t('battlesim829.log.enemy_defeated', { enemy: _enemyNameSafe(d) })}`);
     _recordOutcome(d, 'win');
   } else {
     _enemyAttack(d);
@@ -359,7 +358,7 @@ function _heal() {
 
   const before = d.player.hp;
   d.player.hp = Math.min(d.player.hpMax, d.player.hp + amount);
-  _appendLog(d, `Прекарваш рунд в лекуване - ТЖ ${before} → ${d.player.hp}/${d.player.hpMax}.`);
+  _appendLog(d, t('battlesim829.log.heal', { before, hp: d.player.hp, hpMax: d.player.hpMax }));
 
   _enemyAttack(d);
 
@@ -382,21 +381,21 @@ function _rangedAttack() {
   const weapon  = weapons.find(w => w.key === r.weaponKey);
   if (r.type !== 'magic' && !weapon) return;
 
-  const t    = _rangedAccuracy(d, weapon);
+  const acc  = _rangedAccuracy(d, weapon);
   const roll = _roll();
   r.attempts--;
 
-  const typeLabel = RANGED_TYPE_LABELS[r.type] || r.type;
-  if (roll <= t) {
+  const typeLabel = _rangedTypeLabel(r.type);
+  if (roll <= acc) {
     const dmg = Math.max(0, _rangedDamage(d, weapon, roll));
     d.enemy.hp = Math.max(0, d.enemy.hp - dmg);
-    _appendLog(d, `Далечна атака (${typeLabel}): хвърляне ${roll} (≤ Т:${t}) → Точно попадение за ${dmg}. ТЖ на ${_enemyNameSafe(d)}: ${d.enemy.hp}/${d.enemy.hpMax}.`);
+    _appendLog(d, t('battlesim829.log.ranged_hit', { type: typeLabel, roll, acc, dmg, enemy: _enemyNameSafe(d), hp: d.enemy.hp, hpMax: d.enemy.hpMax }));
   } else {
-    _appendLog(d, `Далечна атака (${typeLabel}): хвърляне ${roll} (> Т:${t}) → Пропуск.`);
+    _appendLog(d, t('battlesim829.log.ranged_miss', { type: typeLabel, roll, acc }));
   }
 
   if (d.enemy.hp <= 0) {
-    _appendLog(d, `${SVG_TROPHY} ${_enemyNameSafe(d)} е победен!`);
+    _appendLog(d, `${SVG_TROPHY} ${t('battlesim829.log.enemy_defeated', { enemy: _enemyNameSafe(d) })}`);
     _recordOutcome(d, 'win');
   }
 
@@ -410,7 +409,7 @@ function _flee() {
   const d = _data();
   if (!d) return;
   const roll = _roll();
-  _appendLog(d, `Опит за бягство: хвърляне ${roll} (сравни с прага, посочен за тази среща).`);
+  _appendLog(d, t('battlesim829.log.flee', { roll }));
   saveState();
   _renderLog();
 }
@@ -420,8 +419,8 @@ function _resetBattle() {
   if (!d) return;
   d.enemy.hp  = d.enemy.hpMax;
   d.player.hp = d.player.hpMax;
-  if (d.log.length) _appendLog(d, '──────────');
-  _appendLog(d, `Битката е нулирана. ТЖ на ${_enemyNameSafe(d)} и твоето ТЖ са възстановени.`);
+  if (d.log.length) _appendLog(d, t('battlesim829.log.reset_sep'));
+  _appendLog(d, t('battlesim829.log.reset', { enemy: _enemyNameSafe(d) }));
   saveState();
   _renderInputs();
   _renderLog();
@@ -494,7 +493,7 @@ function _checkField(label, id, note) {
 function _enemyNameField() {
   return `
     <div class="inv-edit-row">
-      <span class="inv-edit-label bsim-stat-label">Избери враг</span>
+      <span class="inv-edit-label bsim-stat-label">${t('battlesim829.ui.pick_enemy')}</span>
       <div class="autocomplete-wrap bsim-enemy-ac">
         <input id="bsim-enemy-pick" class="inv-edit-input" type="text" autocomplete="off" readonly role="combobox" aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" aria-controls="bsim-enemy-pick-dropdown">
         <ul id="bsim-enemy-pick-dropdown" class="autocomplete-dropdown" role="listbox"></ul>
@@ -600,94 +599,94 @@ export function initBattleSim() {
   overlay.innerHTML = `
     <div class="inv-modal bsim-modal">
       <div class="inv-modal-hdr">
-        <span class="inv-modal-title">Симулатор на битки</span>
+        <span class="inv-modal-title">${t('battlesim829.ui.title')}</span>
         <button id="bsim-close" class="inv-close-btn" aria-label="${t('btn.close')}">✕</button>
       </div>
       <div class="bsim-body">
         <div class="bsim-col bsim-col-left">
           <div class="bsim-side">
             <div class="bsim-side-title">
-              <span>Ти</span>
-              <button id="bsim-sync-equip" class="bsim-sync-btn" type="button" data-tooltip="Презареди А/З/ТЖ от екипировка и умения">⟳ От екипировка</button>
+              <span>${t('battlesim829.ui.you')}</span>
+              <button id="bsim-sync-equip" class="bsim-sync-btn" type="button" data-tooltip="${t('battlesim829.ui.sync_equip_tooltip')}">${t('battlesim829.ui.sync_equip')}</button>
             </div>
-            ${_statField('Атака (А)',          'bsim-player-a',     'player', 'a')}
-            ${_statField('Защита (З)',         'bsim-player-d',     'player', 'd')}
-            ${_statField('Точки живот (ТЖ)',   'bsim-player-hp',    'player', 'hp')}
-            ${_statField('Максимум ТЖ',        'bsim-player-hpmax', 'player', 'hpMax')}
+            ${_statField(t('battlesim829.ui.attack'),   'bsim-player-a',     'player', 'a')}
+            ${_statField(t('battlesim829.ui.defense'),  'bsim-player-d',     'player', 'd')}
+            ${_statField(t('battlesim829.ui.life'),     'bsim-player-hp',    'player', 'hp')}
+            ${_statField(t('battlesim829.ui.life_max'), 'bsim-player-hpmax', 'player', 'hpMax')}
           </div>
           <div class="bsim-side">
-            <div class="bsim-side-title">Умения</div>
-            ${_selectField('Боравене с оръжие', 'bsim-skill-weapon', [
-              [0, '-'], [1, 'I (+1 Атака)'], [2, 'II (+2 Атака)'], [3, 'III (+3 Атака)'],
+            <div class="bsim-side-title">${t('battlesim829.ui.skills')}</div>
+            ${_selectField(t('battlesim829.ui.skill_weapon'), 'bsim-skill-weapon', [
+              [0, t('battlesim829.skill_weapon.0')], [1, t('battlesim829.skill_weapon.1')], [2, t('battlesim829.skill_weapon.2')], [3, t('battlesim829.skill_weapon.3')],
             ])}
-            ${_selectField('Париране', 'bsim-skill-parry', [
-              [0, '-'], [1, 'I (+1 Защита)'], [2, 'II (+2 Защита)'],
+            ${_selectField(t('battlesim829.ui.skill_parry'), 'bsim-skill-parry', [
+              [0, t('battlesim829.skill_parry.0')], [1, t('battlesim829.skill_parry.1')], [2, t('battlesim829.skill_parry.2')],
             ])}
-            ${_checkField('Издръжливост', 'bsim-skill-endurance', 'Максимум ТЖ 12 → 15')}
+            ${_checkField(t('battlesim829.ui.endurance'), 'bsim-skill-endurance', t('battlesim829.ui.endurance_note', { base: BASE_HP_MAX, total: BASE_HP_MAX + ENDURANCE_HP_BONUS }))}
           </div>
           <div class="bsim-side">
-            <div class="bsim-side-title">Враг</div>
+            <div class="bsim-side-title">${t('battlesim829.ui.enemy')}</div>
             ${_enemyNameField()}
-            ${_statField('Атака (А)',        'bsim-enemy-a',     'enemy', 'a')}
-            ${_statField('Защита (З)',       'bsim-enemy-d',     'enemy', 'd')}
-            ${_statField('Точки живот (ТЖ)', 'bsim-enemy-hp',    'enemy', 'hp')}
-            ${_statField('Максимум ТЖ',      'bsim-enemy-hpmax', 'enemy', 'hpMax')}
-            ${_statField('Проектоброня (ПБ)', 'bsim-enemy-pb',   'enemy', 'pb')}
+            ${_statField(t('battlesim829.ui.attack'),   'bsim-enemy-a',     'enemy', 'a')}
+            ${_statField(t('battlesim829.ui.defense'),  'bsim-enemy-d',     'enemy', 'd')}
+            ${_statField(t('battlesim829.ui.life'),     'bsim-enemy-hp',    'enemy', 'hp')}
+            ${_statField(t('battlesim829.ui.life_max'), 'bsim-enemy-hpmax', 'enemy', 'hpMax')}
+            ${_statField(t('battlesim829.ui.enemy_pb'), 'bsim-enemy-pb',   'enemy', 'pb')}
           </div>
           <div class="bsim-side">
-            <div class="bsim-side-title">Далечен бой</div>
+            <div class="bsim-side-title">${t('battlesim829.ui.ranged_combat')}</div>
             <div class="inv-edit-row">
-              <span class="inv-edit-label bsim-stat-label">Оръжие</span>
+              <span class="inv-edit-label bsim-stat-label">${t('battlesim829.ui.weapon')}</span>
               <select id="bsim-ranged-weapon" class="inv-edit-input bsim-select"></select>
             </div>
             <div class="inv-edit-row">
-              <span class="inv-edit-label bsim-stat-label">Тип</span>
+              <span class="inv-edit-label bsim-stat-label">${t('battlesim829.ui.type')}</span>
               <select id="bsim-ranged-type" class="inv-edit-input bsim-select">
-                <option value="bow">Лък</option>
-                <option value="musket">Мускет</option>
-                <option value="spear">Копие за хвърляне</option>
-                <option value="shuriken">Шурикен</option>
-                <option value="magic">Магия</option>
+                <option value="bow">${t('battlesim829.type.bow')}</option>
+                <option value="musket">${t('battlesim829.type.musket')}</option>
+                <option value="spear">${t('battlesim829.type.spear')}</option>
+                <option value="shuriken">${t('battlesim829.type.shuriken')}</option>
+                <option value="magic">${t('battlesim829.type.magic')}</option>
               </select>
             </div>
-            ${_selectField('Стрелба с лък', 'bsim-skill-archery', [
-              [0, '-'], [1, 'I (+1 Точност с лък)'], [2, 'II (+2 щети с лък)'],
+            ${_selectField(t('battlesim829.ui.skill_archery'), 'bsim-skill-archery', [
+              [0, t('battlesim829.skill_archery.0')], [1, t('battlesim829.skill_archery.1')], [2, t('battlesim829.skill_archery.2')],
             ])}
-            ${_checkField('Хвърляне на оръжия', 'bsim-skill-throwing', '+1 Т за копия/шурикени')}
+            ${_checkField(t('battlesim829.ui.skill_throwing'), 'bsim-skill-throwing', t('battlesim829.ui.throwing_note', { n: THROWING_ACCURACY_BONUS }))}
             <div id="bsim-ranged-magic-row" class="bsim-ranged-magic-row">
-              ${_statField('Магическа Т',      'bsim-ranged-magic-t',   'ranged', 'magicT')}
-              ${_statField('Магически щети',   'bsim-ranged-magic-dmg', 'ranged', 'magicDmg')}
+              ${_statField(t('battlesim829.ui.magic_t'),   'bsim-ranged-magic-t',   'ranged', 'magicT')}
+              ${_statField(t('battlesim829.ui.magic_dmg'), 'bsim-ranged-magic-dmg', 'ranged', 'magicDmg')}
             </div>
             <div id="bsim-ranged-info" class="bsim-ranged-info"></div>
             <div class="inv-edit-row">
-              <span class="inv-edit-label bsim-stat-label">Опити</span>
+              <span class="inv-edit-label bsim-stat-label">${t('battlesim829.ui.attempts')}</span>
               <div class="inv-qty-wrap">
                 <button class="inv-qty-btn" data-id="bsim-ranged-attempts" data-group="ranged" data-key="attempts" data-delta="-1">−</button>
                 <input id="bsim-ranged-attempts" class="inv-edit-input inv-qty-input" type="text" inputmode="numeric" data-group="ranged" data-key="attempts">
                 <button class="inv-qty-btn" data-id="bsim-ranged-attempts" data-group="ranged" data-key="attempts" data-delta="1">+</button>
               </div>
-              <button id="bsim-ranged-attack" class="inv-edit-done bsim-ranged-attack-btn">Стрелба</button>
+              <button id="bsim-ranged-attack" class="inv-edit-done bsim-ranged-attack-btn">${t('battlesim829.btn.ranged_attack')}</button>
             </div>
           </div>
           <div id="bsim-status" class="bsim-status"></div>
           <div class="inv-edit-row bsim-heal-row">
-            <span class="inv-edit-label bsim-stat-label">Лечение</span>
+            <span class="inv-edit-label bsim-stat-label">${t('battlesim829.ui.heal')}</span>
             <div class="inv-qty-wrap">
               <button class="inv-qty-btn" data-id="bsim-heal-amount" data-delta="-1" data-min="1">−</button>
               <input id="bsim-heal-amount" class="inv-edit-input inv-qty-input" type="text" inputmode="numeric" value="1">
               <button class="inv-qty-btn" data-id="bsim-heal-amount" data-delta="1" data-min="1">+</button>
             </div>
-            <button id="bsim-heal" class="inv-edit-done bsim-heal-btn">Лекувай</button>
+            <button id="bsim-heal" class="inv-edit-done bsim-heal-btn">${t('battlesim829.btn.heal')}</button>
           </div>
           <div class="inv-modal-ftr">
-            <button id="bsim-round" class="inv-add-btn bsim-action-primary">Рунд</button>
-            <button id="bsim-flee" class="inv-add-btn">Бягство</button>
-            <button id="bsim-reset" class="inv-add-btn">Нулирай</button>
+            <button id="bsim-round" class="inv-add-btn bsim-action-primary">${t('battlesim829.btn.round')}</button>
+            <button id="bsim-flee" class="inv-add-btn">${t('battlesim829.btn.flee')}</button>
+            <button id="bsim-reset" class="inv-add-btn">${t('battlesim829.btn.reset')}</button>
           </div>
         </div>
         <div class="bsim-col bsim-col-right">
           <details class="bsim-history">
-            <summary id="bsim-history-summary">История на битките (0)</summary>
+            <summary id="bsim-history-summary">${t('battlesim829.history.summary', { n: 0 })}</summary>
             <div id="bsim-history-list" class="bsim-history-list"></div>
           </details>
           <div id="bsim-log" class="bsim-log"></div>

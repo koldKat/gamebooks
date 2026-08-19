@@ -1,15 +1,5 @@
-/* ── Custom confirm dialog ────────────────────────────────────── */
-
-#confirm-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.6);
-  z-index: 3000;
-  align-items: center;
-  justify-content: center;
-}
-#confirm-overlay.active { display: flex; }
+/* Custom confirm/alert dialog CSS lives in confirm.css now (extracted so it
+   can be linked standalone on mobile without pulling in this whole file). */
 
 #choice-overlay {
   display: none;
@@ -65,67 +55,6 @@
   color: #9ca3af;
 }
 #choice-cancel:hover { background: #4b5563; color: #d1d5db; }
-
-#confirm-dialog {
-  background: #1f2937;
-  border: 1px solid #374151;
-  border-radius: 10px;
-  padding: 0.9rem 1rem;
-  width: 340px;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  box-shadow: 0 16px 48px rgba(0,0,0,0.6);
-}
-
-#confirm-message {
-  font-size: 0.92rem;
-  color: #d1d5db;
-  line-height: 1.5;
-}
-
-.confirm-actions {
-  display: flex;
-  gap: 0.5rem;
-  justify-content: flex-end;
-}
-
-#confirm-ok {
-  background: #7f1d1d;
-  color: #fca5a5;
-  border: 1px solid #991b1b;
-  border-radius: 6px;
-  padding: 0.3rem 0.85rem;
-  font-size: 0.82rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.12s;
-}
-#confirm-ok:hover { background: #991b1b; }
-#confirm-ok.warn {
-  background: #f5a623;
-  color: #111827;
-  border-color: #e09518;
-}
-#confirm-ok.warn:hover { background: #e09518; }
-#confirm-ok.win {
-  background: #15803d;
-  color: #bbf7d0;
-  border-color: #166534;
-}
-#confirm-ok.win:hover { background: #166534; }
-
-#confirm-cancel {
-  background: #374151;
-  color: #9ca3af;
-  border: 1px solid #4b5563;
-  border-radius: 6px;
-  padding: 0.3rem 0.85rem;
-  font-size: 0.82rem;
-  cursor: pointer;
-  transition: background 0.12s;
-}
-#confirm-cancel:hover { background: #4b5563; color: #d1d5db; }
 
 /* ── Node context menu ────────────────────────────────────────── */
 
@@ -953,50 +882,8 @@ body {
   flex-direction: column;
 }
 
-.autocomplete-wrap {
-  position: relative;
-}
-.autocomplete-wrap input {
-  width: 100%;
-  box-sizing: border-box;
-}
-.autocomplete-dropdown {
-  display: none;
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  z-index: 999;
-  background: #1f2937;
-  border: 1px solid #374151;
-  border-top: none;
-  border-radius: 0 0 6px 6px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  max-height: 200px;
-  overflow-y: auto;
-}
-.autocomplete-dropdown.open { display: block; }
-.autocomplete-dropdown li {
-  padding: 0.45rem 0.75rem;
-  font-size: 0.82rem;
-  color: #d1d5db;
-  cursor: pointer;
-  border-bottom: 1px solid #374151;
-}
-.autocomplete-dropdown li:last-child { border-bottom: none; }
-.autocomplete-dropdown li:hover,
-.autocomplete-dropdown li.ac-active { background: #374151; color: #f9fafb; }
-.autocomplete-dropdown li .ac-sub {
-  font-size: 0.72rem;
-  color: #6b7280;
-  margin-left: 0.4rem;
-}
-
-.autocomplete-dropdown li .ac-sub.ac-owned {
-  color: #f5a623;
-}
+/* .autocomplete-wrap/.autocomplete-dropdown CSS lives in autocomplete.css
+   now (extracted so it can be linked standalone on mobile). */
 
 .input-group label {
   font-size: 0.78rem;

@@ -35,19 +35,21 @@
 // Round did nothing, no error) rather than close enough to "first hit
 // decides it" either way.
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../state.js?v=13';
-import { showAlert } from '../play.js?v=143';
-import { getPlayBtnRow } from '../charsheet.js?v=96';
-import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../util.js?v=79';
-import { t } from '../i18n.js?v=64';
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../state.js?v=14';
+import { showAlert } from '../confirm.js?v=5';
+import { getPlayBtnRow } from '../charsheet.js?v=105';
+import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../util.js?v=88';
+import { t } from '../i18n.js?v=72';
 
 const SVG_SKULL  = `<svg class="sim-icon sim-icon-dead"  viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8c0 2.8 1.4 5.3 3.6 6.8V20a1 1 0 0 0 1 1h6.8a1 1 0 0 0 1-1v-2.2C18.6 16.3 20 13.8 20 11a8 8 0 0 0-8-8zm-2.5 13v-1.5a.5.5 0 0 0-.5-.5H8l-.5-1 1-1-1-1 1-1H9a2.5 2.5 0 0 1 5 0h.5l1 1-1 1 1 1-.5 1h-1a.5.5 0 0 0-.5.5V16h-4z"/></svg>`;
 const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v7a6 6 0 0 1-12 0V2zm-2 1H2v4a4 4 0 0 0 4 4v-1a3 3 0 0 1-3-3V3zm16 0h2v4a4 4 0 0 1-4 4v-1a3 3 0 0 0 3-3V3zm-7 13v2H9v2h6v-2h-2v-2a6 6 0 0 0 5-5.92V2H6v8.08A6 6 0 0 0 13 16z"/></svg>`;
 
 const MODES = [
-  ['person', 'Individual Combat'],
-  ['crew',   'Large-scale (Crew) Battle'],
+  ['person', 'battlesim212.mode.person'],
+  ['crew',   'battlesim212.mode.crew'],
 ];
+
+const ESCAPE_CREW_COST = 2;
 
 function _roll2d6() { return 2 + Math.floor(Math.random() * 6) + Math.floor(Math.random() * 6); }
 function _roll1d6() { return 1 + Math.floor(Math.random() * 6); }
@@ -123,21 +125,21 @@ function _runRound() {
 
   const selfAS = _roll2d6() + side.self[side.selfAtk];
   const foeAS  = _roll2d6() + side.foe[side.foeAtk];
-  _appendLog(d, `Round ${d[side.roundsKey]}: you ${selfAS} vs ${_foeNameSafe(d)} ${foeAS}.`);
+  _appendLog(d, t('battlesim212.log.round', { round: d[side.roundsKey], selfAS, enemy: _foeNameSafe(d), enemyAS: foeAS }));
 
   if (selfAS === foeAS) {
-    _appendLog(d, 'Both blows are avoided.');
+    _appendLog(d, t('battlesim212.log.both_avoided'));
   } else if (selfAS > foeAS) {
     if (d.mode === 'person' && d.player.hasStaff && _roll1d6() <= 2) {
       side.foe.skill = Math.max(0, side.foe.skill - 1);
-      _appendLog(d, `The Awkmute's staff strikes true - ${_foeNameSafe(d)} loses 1 SKILL (now ${side.foe.skill}).`);
+      _appendLog(d, t('battlesim212.log.staff_strike', { enemy: _foeNameSafe(d), skill: side.foe.skill }));
     } else {
       side.foe[side.foeHp] = Math.max(0, side.foe[side.foeHp] - 2);
-      _appendLog(d, `You wound ${_foeNameSafe(d)} for 2. ${side.label}: ${side.foe[side.foeHp]}/${side.foe[side.foeHpMax]}.`);
+      _appendLog(d, t('battlesim212.log.you_wound', { enemy: _foeNameSafe(d), label: side.label, hp: side.foe[side.foeHp], hpMax: side.foe[side.foeHpMax] }));
     }
   } else {
     side.self[side.selfHp] = Math.max(0, side.self[side.selfHp] - 2);
-    _appendLog(d, `${_foeNameSafe(d)} wounds you for 2. ${side.label}: ${side.self[side.selfHp]}/${_selfMaxHp(d, side)}.`);
+    _appendLog(d, t('battlesim212.log.enemy_wounds', { enemy: _foeNameSafe(d), label: side.label, hp: side.self[side.selfHp], hpMax: _selfMaxHp(d, side) }));
   }
 
   _checkOutcome(d, side);
@@ -147,24 +149,24 @@ function _runRound() {
 
 function _checkOutcome(d, side) {
   if (side.foe[side.foeHp] <= 0) {
-    _appendLog(d, `${SVG_TROPHY} ${_foeNameSafe(d)} is defeated!`);
+    _appendLog(d, t('battlesim212.log.defeated', { trophy: SVG_TROPHY, enemy: _foeNameSafe(d) }));
     _recordOutcome(d, side, 'win');
   } else if (side.self[side.selfHp] <= 0) {
-    _appendLog(d, `${SVG_SKULL} You are ${d.mode === 'crew' ? 'wiped out' : 'dead'}.`);
+    _appendLog(d, d.mode === 'crew' ? t('battlesim212.log.dead_crew', { skull: SVG_SKULL }) : t('battlesim212.log.dead_person', { skull: SVG_SKULL }));
     _recordOutcome(d, side, 'loss');
   }
 }
 
-// Escaping a Large-scale Battle automatically costs 2 CREW STRENGTH per the
-// book's own rule ("Whenever you choose to escape... you automatically
-// lose 2 CREW STRENGTH") - not available in Individual Combat, which has
-// no equivalent rule.
+// Escaping a Large-scale Battle automatically costs ESCAPE_CREW_COST CREW
+// STRENGTH per the book's own rule ("Whenever you choose to escape... you
+// automatically lose 2 CREW STRENGTH") - not available in Individual Combat,
+// which has no equivalent rule.
 function _escape() {
   const d = _data();
   if (!d || _notReady(d) || d.mode !== 'crew') return;
   if (d.crew.strength <= 0 || d.enemyCrew.strength <= 0) return;
-  d.crew.strength = Math.max(0, d.crew.strength - 2);
-  _appendLog(d, `You break off and escape: -2 CREW STRENGTH. CREW STRENGTH: ${d.crew.strength}/${d.crew.strengthInitial}.`);
+  d.crew.strength = Math.max(0, d.crew.strength - ESCAPE_CREW_COST);
+  _appendLog(d, t('battlesim212.log.escape', { cost: ESCAPE_CREW_COST, strength: d.crew.strength, strengthMax: d.crew.strengthInitial }));
   d.roundsCrew = 0;
   saveState();
   _renderAll();
@@ -181,8 +183,8 @@ function _resetBattle() {
   side.foe[side.foeHp] = side.foe[side.foeHpMax];
   side.self[side.selfHp] = _selfMaxHp(d, side);
   d[side.roundsKey] = 0;
-  if (d.log.length) _appendLog(d, '──────────');
-  _appendLog(d, 'Battle reset.');
+  if (d.log.length) _appendLog(d, t('battlesim212.log.reset_sep'));
+  _appendLog(d, t('battlesim212.log.reset'));
   saveState();
   _renderAll();
 }
@@ -196,9 +198,9 @@ function _renderStatus() {
   const notReady = _notReady(d);
   const side = _activeSide(d);
   const hasFoe = side.foe[side.foeHpMax] > 0;
-  if (notReady)                                el.innerHTML = 'Roll your starting stats to begin.';
-  else if (side.self[side.selfHp] <= 0)         el.innerHTML = `${SVG_SKULL} You have fallen.`;
-  else if (hasFoe && side.foe[side.foeHp] <= 0) el.innerHTML = `${SVG_TROPHY} Victory!`;
+  if (notReady)                                el.innerHTML = t('battlesim212.status.not_ready');
+  else if (side.self[side.selfHp] <= 0)         el.innerHTML = t('battlesim212.status.fallen', { skull: SVG_SKULL });
+  else if (hasFoe && side.foe[side.foeHp] <= 0) el.innerHTML = t('battlesim212.status.victory', { trophy: SVG_TROPHY });
   else                                          el.innerHTML = '';
   const over = notReady || side.self[side.selfHp] <= 0 || (hasFoe && side.foe[side.foeHp] <= 0);
   document.getElementById('sim212-round').disabled  = over;
@@ -212,14 +214,14 @@ function _renderHistory() {
   const sumEl  = document.getElementById('sim212-history-summary');
   const listEl = document.getElementById('sim212-history-list');
   if (!d || !sumEl || !listEl) return;
-  sumEl.textContent = `Battle History (${d.history.length})`;
+  sumEl.textContent = t('battlesim212.history.summary', { n: d.history.length });
   if (!d.history.length) {
-    listEl.innerHTML = '<div class="bsim-history-empty">No finished battles yet.</div>';
+    listEl.innerHTML = `<div class="bsim-history-empty">${t('battlesim212.history.empty')}</div>`;
     return;
   }
   listEl.innerHTML = d.history.slice().reverse().map(h => {
     const icon   = h.outcome === 'win' ? SVG_TROPHY : SVG_SKULL;
-    const result = h.outcome === 'win' ? 'won' : 'lost';
+    const result = h.outcome === 'win' ? t('battlesim212.history.won') : t('battlesim212.history.lost');
     const date   = new Date(h.ts).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
     return `<div class="bsim-history-row">
       <span>${icon} ${escapeHtml(h.enemy)} - ${result}</span>
@@ -398,79 +400,79 @@ export function initSim212() {
   overlay.innerHTML = `
     <div class="inv-modal bsim-modal">
       <div class="inv-modal-hdr">
-        <span class="inv-modal-title">Battle Simulator</span>
+        <span class="inv-modal-title">${t('battlesim.title')}</span>
         <button id="sim212-close" class="inv-close-btn" aria-label="${t('btn.close')}">✕</button>
       </div>
       <div class="bsim-body">
         <div class="bsim-col bsim-col-left">
           <div class="inv-edit-row">
-            <span class="inv-edit-label bsim-stat-label">Combat type</span>
+            <span class="inv-edit-label bsim-stat-label">${t('battlesim212.ui.combat_type')}</span>
             <select id="sim212-mode" class="inv-edit-input bsim-select">
-              ${MODES.map(m => `<option value="${m[0]}">${escapeHtml(m[1])}</option>`).join('')}
+              ${MODES.map(m => `<option value="${m[0]}">${escapeHtml(t(m[1]))}</option>`).join('')}
             </select>
           </div>
           <div class="bsim-side">
-            <div class="bsim-side-title">You</div>
+            <div class="bsim-side-title">${t('battlesim212.ui.you')}</div>
             <div class="inv-edit-row bsim-life-roll-row">
-              <button id="sim212-roll" class="inv-edit-done bsim-ae-roll-btn" type="button">Roll starting stats</button>
+              <button id="sim212-roll" class="inv-edit-done bsim-ae-roll-btn" type="button">${t('battlesim212.btn.roll')}</button>
             </div>
             <div id="sim212-person-fields">
-              ${_numField('SKILL', 'sim212-player-skill')}
-              ${_numField('Initial SKILL', 'sim212-player-skillmax')}
-              ${_numField('STAMINA', 'sim212-player-stamina')}
-              ${_numField('Initial STAMINA', 'sim212-player-staminamax')}
+              ${_numField(t('battlesim212.ui.skill'), 'sim212-player-skill')}
+              ${_numField(t('battlesim212.ui.skill_initial'), 'sim212-player-skillmax')}
+              ${_numField(t('battlesim212.ui.stamina'), 'sim212-player-stamina')}
+              ${_numField(t('battlesim212.ui.stamina_initial'), 'sim212-player-staminamax')}
               <div id="sim212-staff-row" class="bsim-tech-footer">
-                <label class="inv-edit-check-label"><input type="checkbox" id="sim212-staff" class="inv-edit-check"> Awkmute's staff held</label>
+                <label class="inv-edit-check-label"><input type="checkbox" id="sim212-staff" class="inv-edit-check"> ${t('battlesim212.ui.staff_held')}</label>
               </div>
             </div>
             <div id="sim212-crew-fields" style="display:none">
-              ${_numField('CREW STRIKE', 'sim212-crew-strike')}
-              ${_numField('Initial CREW STRIKE', 'sim212-crew-strikemax')}
-              ${_numField('CREW STRENGTH', 'sim212-crew-strength')}
-              ${_numField('Initial CREW STRENGTH', 'sim212-crew-strengthmax')}
+              ${_numField(t('battlesim212.ui.crew_strike'), 'sim212-crew-strike')}
+              ${_numField(t('battlesim212.ui.crew_strike_initial'), 'sim212-crew-strikemax')}
+              ${_numField(t('battlesim212.ui.crew_strength'), 'sim212-crew-strength')}
+              ${_numField(t('battlesim212.ui.crew_strength_initial'), 'sim212-crew-strengthmax')}
             </div>
-            ${_numField('LUCK', 'sim212-player-luck')}
-            ${_numField('Initial LUCK', 'sim212-player-luckmax')}
-            ${_numField('Gold Pieces', 'sim212-player-gold')}
+            ${_numField(t('battlesim212.ui.luck'), 'sim212-player-luck')}
+            ${_numField(t('battlesim212.ui.luck_initial'), 'sim212-player-luckmax')}
+            ${_numField(t('battlesim212.ui.gold'), 'sim212-player-gold')}
           </div>
           <div id="sim212-enemy-fields" class="bsim-side">
-            <div class="bsim-side-title">Enemy (Individual Combat)</div>
+            <div class="bsim-side-title">${t('battlesim212.ui.enemy_individual')}</div>
             <div class="inv-edit-row">
-              <span class="inv-edit-label bsim-stat-label">Pick</span>
+              <span class="inv-edit-label bsim-stat-label">${t('battlesim212.ui.pick')}</span>
               <div class="autocomplete-wrap bsim-enemy-ac">
                 <input id="sim212-enemy-pick" class="inv-edit-input" type="text" autocomplete="off" readonly role="combobox" aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" aria-controls="sim212-enemy-pick-dropdown">
                 <ul id="sim212-enemy-pick-dropdown" class="autocomplete-dropdown" role="listbox"></ul>
               </div>
             </div>
-            ${_numField('SKILL', 'sim212-enemy-skill')}
-            ${_numField('STAMINA', 'sim212-enemy-stamina')}
-            ${_numField('Max STAMINA', 'sim212-enemy-staminamax')}
+            ${_numField(t('battlesim212.ui.skill'), 'sim212-enemy-skill')}
+            ${_numField(t('battlesim212.ui.stamina'), 'sim212-enemy-stamina')}
+            ${_numField(t('battlesim212.ui.stamina_max'), 'sim212-enemy-staminamax')}
           </div>
           <div id="sim212-enemycrew-fields" class="bsim-side" style="display:none">
-            <div class="bsim-side-title">Enemy (Crew Battle)</div>
+            <div class="bsim-side-title">${t('battlesim212.ui.enemy_crew')}</div>
             <div class="inv-edit-row">
-              <span class="inv-edit-label bsim-stat-label">Pick</span>
+              <span class="inv-edit-label bsim-stat-label">${t('battlesim212.ui.pick')}</span>
               <div class="autocomplete-wrap bsim-enemy-ac">
                 <input id="sim212-enemycrew-pick" class="inv-edit-input" type="text" autocomplete="off" readonly role="combobox" aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" aria-controls="sim212-enemycrew-pick-dropdown">
                 <ul id="sim212-enemycrew-pick-dropdown" class="autocomplete-dropdown" role="listbox"></ul>
               </div>
             </div>
-            ${_numField('STRIKE', 'sim212-enemycrew-strike')}
-            ${_numField('STRENGTH', 'sim212-enemycrew-strength')}
-            ${_numField('Max STRENGTH', 'sim212-enemycrew-strengthmax')}
+            ${_numField(t('battlesim212.ui.strike'), 'sim212-enemycrew-strike')}
+            ${_numField(t('battlesim212.ui.strength'), 'sim212-enemycrew-strength')}
+            ${_numField(t('battlesim212.ui.strength_max'), 'sim212-enemycrew-strengthmax')}
           </div>
           <div id="sim212-status" class="bsim-status"></div>
           <div class="inv-modal-ftr">
-            <button id="sim212-round" class="inv-add-btn bsim-action-primary">Round</button>
+            <button id="sim212-round" class="inv-add-btn bsim-action-primary">${t('battlesim212.btn.round')}</button>
             <div id="sim212-escape-row" style="display:none">
-              <button id="sim212-escape" class="inv-add-btn">Escape (-2 CREW STRENGTH)</button>
+              <button id="sim212-escape" class="inv-add-btn">${t('battlesim212.btn.escape', { n: ESCAPE_CREW_COST, strength: t('battlesim212.ui.crew_strength') })}</button>
             </div>
-            <button id="sim212-reset" class="inv-add-btn">Reset</button>
+            <button id="sim212-reset" class="inv-add-btn">${t('battlesim212.btn.reset')}</button>
           </div>
         </div>
         <div class="bsim-col bsim-col-right">
           <details class="bsim-history" open>
-            <summary id="sim212-history-summary">Battle History (0)</summary>
+            <summary id="sim212-history-summary">${t('battlesim212.history.summary', { n: 0 })}</summary>
             <div id="sim212-history-list" class="bsim-history-list"></div>
           </details>
           <div id="sim212-log" class="bsim-log"></div>
@@ -534,7 +536,7 @@ export function initSim212() {
     d.crew.strike   = d.crew.strikeInitial;
     d.crew.strength = d.crew.strengthInitial;
     d.rolled = true;
-    _appendLog(d, `Starting stats rolled: SKILL ${d.player.skillInitial}, STAMINA ${d.player.staminaInitial}, LUCK ${d.player.luckInitial}, CREW STRIKE ${d.crew.strikeInitial}, CREW STRENGTH ${d.crew.strengthInitial}.`);
+    _appendLog(d, t('battlesim212.log.rolled', { skill: d.player.skillInitial, stamina: d.player.staminaInitial, luck: d.player.luckInitial, crewStrike: d.crew.strikeInitial, crewStrength: d.crew.strengthInitial }));
     saveState();
     _renderAll();
   });

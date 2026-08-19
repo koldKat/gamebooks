@@ -5,9 +5,9 @@
 // battlesim8.js and battlesim829.js all import from it too), and delete
 // public/css/charsheet.css (and its <link> in index.html).
 
-import { state, saveState, currentPlaythrough, viewingPt } from './state.js?v=13';
-import { t } from './i18n.js?v=64';
-import { escapeHtml, shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from './util.js?v=79';
+import { state, saveState, currentPlaythrough, viewingPt } from './state.js?v=14';
+import { t } from './i18n.js?v=72';
+import { escapeHtml, shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from './util.js?v=88';
 
 // Working copy - populated when modal opens, discarded on cancel
 let _draft = null;
@@ -25,11 +25,19 @@ export function setOnCharSheetSaved(fn) { _onCharSheetSaved = fn || null; }
 // center itself between this row and the dice roller instead of the plain
 // viewport midpoint.
 let _playBtnRow = null;
+// Desktop mounts under #main-screen (the only page that has one). Any other
+// page - currently just the mobile reader - provides its own mount point via
+// #m-sim-btn-row instead, so the same battlesim*.js modules' plain
+// getPlayBtnRow() calls work unchanged in both places. The --play-btn-row-h/-w
+// custom properties are desktop-only layout hooks (read by #stats-hud and
+// dice.js's #play-bottom-stack) - harmless to still set when nothing reads
+// them, so the ResizeObserver runs unconditionally either way.
 export function getPlayBtnRow() {
   if (_playBtnRow) return _playBtnRow;
+  const mount = document.getElementById('main-screen') || document.getElementById('m-sim-btn-row');
   _playBtnRow = document.createElement('div');
   _playBtnRow.id = 'play-btn-row';
-  document.getElementById('main-screen').appendChild(_playBtnRow);
+  mount.appendChild(_playBtnRow);
   new ResizeObserver(() => {
     document.documentElement.style.setProperty('--play-btn-row-h', `${_playBtnRow.offsetHeight}px`);
     document.documentElement.style.setProperty('--play-btn-row-w', `${_playBtnRow.offsetWidth}px`);

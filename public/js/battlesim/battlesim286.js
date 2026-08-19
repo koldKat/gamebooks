@@ -11,14 +11,15 @@
 // shields subtracting a flat amount from incoming enemy damage instead. All
 // state lives in pt.sim286, per-user/per-book via currentPlaythrough().
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../state.js?v=13';
-import { showAlert } from '../play.js?v=143';
-import { getPlayBtnRow } from '../charsheet.js?v=96';
-import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../util.js?v=79';
-import { t } from '../i18n.js?v=64';
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../state.js?v=14';
+import { showAlert } from '../confirm.js?v=5';
+import { getPlayBtnRow } from '../charsheet.js?v=105';
+import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../util.js?v=88';
+import { t } from '../i18n.js?v=72';
 
 // Book rule: initial life roll (2d6×4) plus up to 2 rerolls, 3 throws total per run.
 const MAX_LIFE_ROLLS = 3;
+const TECH_ATTEMPT_COST = 3;
 
 const SVG_SKULL  = `<svg class="sim-icon sim-icon-dead"  viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8c0 2.8 1.4 5.3 3.6 6.8V20a1 1 0 0 0 1 1h6.8a1 1 0 0 0 1-1v-2.2C18.6 16.3 20 13.8 20 11a8 8 0 0 0-8-8zm-2.5 13v-1.5a.5.5 0 0 0-.5-.5H8l-.5-1 1-1-1-1 1-1H9a2.5 2.5 0 0 1 5 0h.5l1 1-1 1 1 1-.5 1h-1a.5.5 0 0 0-.5.5V16h-4z"/></svg>`;
 const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v7a6 6 0 0 1-12 0V2zm-2 1H2v4a4 4 0 0 0 4 4v-1a3 3 0 0 1-3-3V3zm16 0h2v4a4 4 0 0 1-4 4v-1a3 3 0 0 0 3-3V3zm-7 13v2H9v2h6v-2h-2v-2a6 6 0 0 0 5-5.92V2H6v8.08A6 6 0 0 0 13 16z"/></svg>`;
@@ -31,24 +32,26 @@ const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" ari
 // АЕ-budgeted equipment list, so it costs 0. 'custom' has no fixed cost either
 // - the player sets their own via a stepper (see FIELD_MAP's customAeCost).
 const WEAPONS = [
-  ['sword',   'Меч',      6, 20],
-  ['mace',    'Боздуган', 5, 20],
-  ['halberd', 'Алебарда', 6, 15],
-  ['dagger',  'Кинжал',   7, 5],
-  ['machete', 'Мачете',   6, 7],
-  ['rapier',  'Шпага',    5, 11],
-  ['harpoon', 'Харпун',   7, 2],
-  ['axe',     'Брадва',   7, 2],
-  ['glove',   'Силова ръкавица (мин. 4, +5 щети)', 4, 0],
-  ['custom',  'Друго (ръчно)', null, null],
+  ['sword',   6, 20],
+  ['mace',    5, 20],
+  ['halberd', 6, 15],
+  ['dagger',  7, 5],
+  ['machete', 6, 7],
+  ['rapier',  5, 11],
+  ['harpoon', 7, 2],
+  ['axe',     7, 2],
+  ['glove',   4, 0],
+  ['custom',  null, null],
 ];
 
-// Shields: [key, label, defense reduction (negative), energyCost (АЕ)].
+// Shields: [key, defense reduction (negative), energyCost (АЕ)]. Labels for
+// both arrays live in i18n.js under battlesim286.weapon.*/battlesim286.shield.*
+// (looked up by key), not stored inline here.
 const SHIELDS = [
-  ['none',   'Няма', 0, 0],
-  ['small',  'Малък щит (-2)', -2, 50],
-  ['medium', 'Среден щит (-3)', -3, 100],
-  ['large',  'Голям щит (-4)', -4, 120],
+  ['none',   0, 0],
+  ['small',  -2, 50],
+  ['medium', -3, 100],
+  ['large',  -4, 120],
 ];
 
 // Tech gadgets. 'kind' drives _activateTech()'s behavior:
@@ -61,20 +64,25 @@ const SHIELDS = [
 // All items (except 'revive', which has its own fixed 15hp cost) cost 3hp per
 // attempt and need a 2d6 roll >= 6 to succeed - whether or not the roll
 // succeeds, that attempt still counts against maxUses.
+// name/desc live in i18n.js under battlesim286.tech.<key>.name/.desc, looked
+// up via _techName()/_techDesc() below rather than stored inline here.
 const TECH_ITEMS = [
-  { key: 'shield_temp', name: 'Временен енергетичен щит', desc: 'До края на схватката отнема допълнителни 4 точки от всеки вражески удар.', kind: 'buff_shield', maxUses: 3 },
-  { key: 'grav_shock',  name: 'Гравитационен шок',         desc: 'Прибавя 10 точки към следващия ти успешен удар.',                          kind: 'buff_next',   maxUses: 3 },
-  { key: 'gas',         name: 'Упойващ газ',               desc: 'Противникът пропуска следващите 3 удара.',                                  kind: 'stun',        maxUses: 3 },
-  { key: 'laser',       name: 'Лазер',                     desc: 'Поразява противника с 10 точки веднага.',                                   kind: 'direct',      maxUses: 3, damage: 10 },
-  { key: 'time_accel',  name: 'Ускорител на времето',      desc: 'До края на схватката нанасяш по 2 удара на рунд.',                          kind: 'double',      maxUses: 3 },
-  { key: 'blaster',     name: 'Бластер',                   desc: '10 заряда по 10 точки. Първият изстрел изисква активиране (роля + 3 ТЖ), после стреляй свободно.', kind: 'direct', maxUses: 10, damage: 10, charged: true },
-  { key: 'raygun',      name: 'Лъчемет',                   desc: '2 заряда по 75 точки. Първият изстрел изисква активиране (роля + 3 ТЖ), после стреляй свободно.',  kind: 'direct', maxUses: 2,  damage: 75, charged: true },
-  { key: 'dehronator',  name: 'Дехронатор',                desc: 'Връща схватката към нейното начало (пълно възстановяване на ТЖ на двама ви). Може да се използва само веднъж за цялата мисия.', kind: 'revive', maxUses: 1, cost: 15 },
+  { key: 'shield_temp', kind: 'buff_shield', maxUses: 3 },
+  { key: 'grav_shock',  kind: 'buff_next',   maxUses: 3 },
+  { key: 'gas',         kind: 'stun',        maxUses: 3 },
+  { key: 'laser',       kind: 'direct',      maxUses: 3, damage: 10 },
+  { key: 'time_accel',  kind: 'double',      maxUses: 3 },
+  { key: 'blaster',     kind: 'direct', maxUses: 10, damage: 10, charged: true },
+  { key: 'raygun',      kind: 'direct', maxUses: 2,  damage: 75, charged: true },
+  { key: 'dehronator',  kind: 'revive', maxUses: 1, cost: 15 },
 ];
+function _techName(key) { return t(`battlesim286.tech.${key}.name`); }
+function _techDesc(key) { return t(`battlesim286.tech.${key}.desc`); }
 
 // Dream outcomes when a troubled sleep (2d6 roll of 2-5) sends you into the
 // "Област на съня" - the 2d6 sum on the follow-up roll (2-12) selects which
-// of these 11 you land in, matching the book's own numbering exactly.
+// of these 11 you land in, matching the book's own numbering exactly. Labels
+// live in i18n.js under battlesim286.dream.<n>.
 // Labels for 9 and 11 were swapped until 2026-08-19 (re-verified against
 // the full book text once it became available). The underlying mechanical
 // effect in _resolveDream (below) was already correct for both - only the
@@ -88,19 +96,6 @@ const TECH_ITEMS = [
 // - 11's text ("Сънуваш някакви безформени кошмари... жизнените ти точки
 //   са намалели с 5") is the actual -5-life nightmare, correctly modeled,
 //   but had 9's generic "Кошмари" label instead of its own.
-const DREAM_LABELS = {
-  2:  'Хроноцентърът избухва',
-  3:  'Медицински център на бъдещето',
-  4:  'Необитаем остров',
-  5:  'Черният кактус',
-  6:  'Арената на Нерон',
-  7:  'Курорт на бъдещето',
-  8:  'Полет с извънземни',
-  9:  'Необясним сън',
-  10: 'Освобождаването на д\'Артанян',
-  11: 'Безформени кошмари',
-  12: 'Горската колиба',
-};
 
 function _data() {
   const pt = currentPlaythrough();
@@ -169,8 +164,8 @@ function _notReady(d) {
 function _loadoutAE(d) {
   const w = WEAPONS.find(w => w[0] === d.player.weaponKey);
   const s = SHIELDS.find(s => s[0] === d.player.shieldKey);
-  const weaponAE = w ? (w[0] === 'custom' ? (d.player.customAeCost || 0) : w[3]) : 0;
-  const shieldAE = s ? s[3] : 0;
+  const weaponAE = w ? (w[0] === 'custom' ? (d.player.customAeCost || 0) : w[2]) : 0;
+  const shieldAE = s ? s[2] : 0;
   return weaponAE + shieldAE;
 }
 
@@ -193,12 +188,12 @@ function _enemyNameSafe(d) { return escapeHtml(_enemyName(d)); }
 function _weaponMinHit(d) {
   const w = WEAPONS.find(w => w[0] === d.player.weaponKey);
   if (!w) return 6;
-  return w[0] === 'custom' ? (d.player.customMinHit || 0) : w[2];
+  return w[0] === 'custom' ? (d.player.customMinHit || 0) : w[1];
 }
 function _weaponIsGlove(d) { return d.player.weaponKey === 'glove'; }
 function _shieldDef(d) {
   const s = SHIELDS.find(s => s[0] === d.player.shieldKey);
-  return s ? s[2] : 0;
+  return s ? s[1] : 0;
 }
 // d.player.extraDef is stored as a positive "how many points" value (matching
 // how the book states shield/armor protection before the minus sign) so it
@@ -230,8 +225,8 @@ function _playerAttackOnce(d) {
   if (!hit) dmg = 0;
   d.enemy.hp = Math.max(0, d.enemy.hp - dmg);
   _appendLog(d, dmg > 0
-    ? `Хвърляш: ${roll} (мин. ${minHit}) → Удар за ${dmg}. ТЖ на ${_enemyNameSafe(d)}: ${d.enemy.hp}/${d.enemy.hpMax}.`
-    : `Хвърляш: ${roll} (мин. ${minHit}) → Пропуск.`);
+    ? t('battlesim286.log.player_hit', { roll, minHit, dmg, enemy: _enemyNameSafe(d), hp: d.enemy.hp, hpMax: d.enemy.hpMax })
+    : t('battlesim286.log.player_miss', { roll, minHit }));
 }
 
 // labelOverride is used by _resolveExtraAttackers below - several encounters
@@ -244,7 +239,7 @@ function _enemyAttackOnce(d, labelOverride = null) {
   const label = labelOverride ?? _enemyNameSafe(d);
   if (d.effects.enemyStun > 0) {
     d.effects.enemyStun--;
-    _appendLog(d, `${label} е зашеметен от газа и пропуска удара си.`);
+    _appendLog(d, t('battlesim286.log.enemy_stunned', { label }));
     return;
   }
   const roll = _roll2d6();
@@ -261,9 +256,9 @@ function _enemyAttackOnce(d, labelOverride = null) {
   const dmg  = Math.max(0, raw + _totalPlayerDef(d));
   if (dmg > 0) {
     d.player.life = Math.max(0, d.player.life - dmg);
-    _appendLog(d, `${label} хвърля: ${roll} (мин. ${minHit}) → Удар за ${dmg}. Твоето ТЖ: ${d.player.life}/${d.player.lifeMax}.`);
+    _appendLog(d, t('battlesim286.log.enemy_hit', { label, roll, minHit, dmg, life: d.player.life, lifeMax: d.player.lifeMax }));
   } else {
-    _appendLog(d, `${label} хвърля: ${roll} (мин. ${minHit}) → Пропуск.`);
+    _appendLog(d, t('battlesim286.log.enemy_miss', { label, roll, minHit }));
   }
 }
 
@@ -277,7 +272,7 @@ function _enemyAttackOnce(d, labelOverride = null) {
 function _resolveExtraAttackers(d) {
   const n = d.enemy.extraAttackers || 0;
   for (let i = 1; i <= n && d.player.life > 0; i++) {
-    _enemyAttackOnce(d, `${_enemyNameSafe(d)} (доп. ${i})`);
+    _enemyAttackOnce(d, t('battlesim286.ui.extra_attacker_label', { enemy: _enemyNameSafe(d), n: i }));
   }
 }
 
@@ -305,7 +300,7 @@ function _runRound() {
     _enemyAttackOnce(d);
     if (d.player.life > 0) _resolveExtraAttackers(d);
     if (d.player.life <= 0) {
-      _appendLog(d, `${SVG_SKULL} Ти падна в битката.`);
+      _appendLog(d, `${SVG_SKULL} ${t('battlesim286.log.player_fallen')}`);
       _recordOutcome(d, 'loss');
       saveState();
       _renderAll();
@@ -317,13 +312,13 @@ function _runRound() {
   if (d.effects.doubleAttack && d.enemy.hp > 0) _playerAttackOnce(d);
 
   if (d.enemy.hp <= 0) {
-    _appendLog(d, `${SVG_TROPHY} ${_enemyNameSafe(d)} е победен!`);
+    _appendLog(d, `${SVG_TROPHY} ${t('battlesim286.log.enemy_defeated', { enemy: _enemyNameSafe(d) })}`);
     _recordOutcome(d, 'win');
   } else if (!d.player.enemyFirst) {
     _enemyAttackOnce(d);
     if (d.player.life > 0) _resolveExtraAttackers(d);
     if (d.player.life <= 0) {
-      _appendLog(d, `${SVG_SKULL} Ти падна в битката.`);
+      _appendLog(d, `${SVG_SKULL} ${t('battlesim286.log.player_fallen')}`);
       _recordOutcome(d, 'loss');
     }
   }
@@ -340,21 +335,21 @@ function _heal(amount) {
   const d = _data();
   if (!d || amount <= 0) return;
   if (_notReady(d)) {
-    showAlert('Хвърли начални ТЖ и АЕ, преди да продължиш.');
+    showAlert(t('battlesim286.alert.not_ready'));
     return;
   }
   if (d.roundsThisBattle > 0 && d.player.life > 0 && d.enemy.hp > 0) {
-    showAlert('Не можеш да възстановяваш жизнени точки по време на сражение.');
+    showAlert(t('battlesim286.alert.heal_midfight'));
     return;
   }
   if (d.healUsedThisBattle) {
-    showAlert('Вече използва лечебно средство в тази среща - изчакай следващата.');
+    showAlert(t('battlesim286.alert.heal_used'));
     return;
   }
   const before = d.player.life;
   d.player.life = Math.min(d.player.lifeMax, d.player.life + amount);
   d.healUsedThisBattle = true;
-  _appendLog(d, `Възстановяваш ${amount} ТЖ: ${before} → ${d.player.life}/${d.player.lifeMax}.`);
+  _appendLog(d, t('battlesim286.log.heal', { n: amount, before, life: d.player.life, lifeMax: d.player.lifeMax }));
   saveState();
   _renderAll();
 }
@@ -368,8 +363,8 @@ function _resetBattle() {
   d.roundsThisBattle = 0;
   d.healUsedThisBattle = false;
   d.battleStart = { playerLife: d.player.life, enemyHp: d.enemy.hp };
-  if (d.log.length) _appendLog(d, '──────────');
-  _appendLog(d, `Схватката е нулирана. ТЖ на ${_enemyNameSafe(d)} и твоите ТЖ са възстановени.`);
+  if (d.log.length) _appendLog(d, t('battlesim286.log.reset_sep'));
+  _appendLog(d, t('battlesim286.log.reset', { enemy: _enemyNameSafe(d) }));
   saveState();
   _renderAll();
 }
@@ -392,9 +387,9 @@ function _activateTech(key) {
     d.enemy.hp    = d.battleStart.enemyHp;
     d.dehronatorUsed = true;
     state.usesLeft = 0;
-    _appendLog(d, `Дехронаторът връща схватката в началото ѝ. Цена: ${item.cost} ТЖ. Твоето ТЖ: ${d.player.life}/${d.player.lifeMax}.`);
+    _appendLog(d, t('battlesim286.log.dehronator', { cost: item.cost, life: d.player.life, lifeMax: d.player.lifeMax }));
     if (d.player.life <= 0) {
-      _appendLog(d, `${SVG_SKULL} Цената на дехронатора те довършва.`);
+      _appendLog(d, `${SVG_SKULL} ${t('battlesim286.log.dehronator_death')}`);
       _recordOutcome(d, 'loss');
     }
     saveState();
@@ -417,8 +412,8 @@ function _activateTech(key) {
     if (state.usesLeft <= 0) return;
     state.usesLeft--;
     d.enemy.hp = Math.max(0, d.enemy.hp - item.damage);
-    _appendLog(d, `${item.name}: изстрел за ${item.damage} точки. ТЖ на ${_enemyNameSafe(d)}: ${d.enemy.hp}/${d.enemy.hpMax} (заряди: ${state.usesLeft}).`);
-    if (d.enemy.hp <= 0) { _appendLog(d, `${SVG_TROPHY} ${_enemyNameSafe(d)} е победен!`); _recordOutcome(d, 'win'); }
+    _appendLog(d, t('battlesim286.log.charged_shot', { name: _techName(item.key), dmg: item.damage, enemy: _enemyNameSafe(d), hp: d.enemy.hp, hpMax: d.enemy.hpMax, left: state.usesLeft }));
+    if (d.enemy.hp <= 0) { _appendLog(d, `${SVG_TROPHY} ${t('battlesim286.log.enemy_defeated', { enemy: _enemyNameSafe(d) })}`); _recordOutcome(d, 'win'); }
     saveState();
     _renderAll();
     return;
@@ -430,12 +425,12 @@ function _activateTech(key) {
     return; // items 1-5: 3 attempts total, win or lose
   }
 
-  d.player.life = Math.max(0, d.player.life - 3);
+  d.player.life = Math.max(0, d.player.life - TECH_ATTEMPT_COST);
   if (!item.charged) state.usesLeft--; // charged items: cost paid, but the attempt itself never spends a charge
   const roll = _roll2d6();
   const ok   = roll >= 6;
   if (!ok) {
-    _appendLog(d, `${item.name}: опит за активиране (${roll}, трябва ≥6) → неуспех. -3 ТЖ.`);
+    _appendLog(d, t('battlesim286.log.activate_fail', { name: _techName(item.key), roll, cost: TECH_ATTEMPT_COST }));
   } else {
     switch (item.kind) {
       case 'buff_shield': d.effects.tempShield   = true; break;
@@ -447,14 +442,14 @@ function _activateTech(key) {
         d.enemy.hp = Math.max(0, d.enemy.hp - item.damage);
         break;
     }
-    _appendLog(d, `${item.name}: активиране (${roll}) → успех. -3 ТЖ. ${item.desc}`);
+    _appendLog(d, t('battlesim286.log.activate_success', { name: _techName(item.key), roll, cost: TECH_ATTEMPT_COST, desc: _techDesc(item.key) }));
     if (item.kind === 'direct') {
-      _appendLog(d, `Поразяваш ${_enemyNameSafe(d)} за ${item.damage} точки. ТЖ: ${d.enemy.hp}/${d.enemy.hpMax}.`);
-      if (d.enemy.hp <= 0) { _appendLog(d, `${SVG_TROPHY} ${_enemyNameSafe(d)} е победен!`); _recordOutcome(d, 'win'); }
+      _appendLog(d, t('battlesim286.log.direct_hit', { enemy: _enemyNameSafe(d), dmg: item.damage, hp: d.enemy.hp, hpMax: d.enemy.hpMax }));
+      if (d.enemy.hp <= 0) { _appendLog(d, `${SVG_TROPHY} ${t('battlesim286.log.enemy_defeated', { enemy: _enemyNameSafe(d) })}`); _recordOutcome(d, 'win'); }
     }
   }
   if (d.player.life <= 0) {
-    _appendLog(d, `${SVG_SKULL} Ти падна в битката.`);
+    _appendLog(d, `${SVG_SKULL} ${t('battlesim286.log.player_fallen')}`);
     _recordOutcome(d, 'loss');
   }
   saveState();
@@ -467,27 +462,27 @@ function _sleepAttempt() {
   const d = _data();
   if (!d) return;
   if (_notReady(d)) {
-    showAlert('Хвърли начални ТЖ и АЕ, преди да продължиш.');
+    showAlert(t('battlesim286.alert.not_ready'));
     return;
   }
   // "Можеш да спиш във всеки епизод, освен когато си нападнат" - sleep is
   // blocked mid-fight for the same reason manual healing is.
   if (d.roundsThisBattle > 0 && d.player.life > 0 && d.enemy.hp > 0) {
-    showAlert('Не можеш да спиш, докато си нападнат.');
+    showAlert(t('battlesim286.alert.sleep_midfight'));
     return;
   }
   const roll = _roll2d6();
   if (roll >= 6) {
     const before = d.player.life;
     d.player.life = Math.min(d.player.lifeMax, d.player.life + roll);
-    _appendLog(d, `Спокоен сън: хвърляне ${roll} → ТЖ ${before} → ${d.player.life}/${d.player.lifeMax}.`);
+    _appendLog(d, t('battlesim286.log.sleep_calm', { roll, before, life: d.player.life, lifeMax: d.player.lifeMax }));
     saveState();
     _renderAll();
     return;
   }
-  _appendLog(d, `Тревожен сън: хвърляне ${roll} (2-5) → навлизаш в областта на сънищата.`);
+  _appendLog(d, t('battlesim286.log.sleep_troubled', { roll }));
   const dreamRoll = _roll2d6();
-  _appendLog(d, `Хвърляне за съня: ${dreamRoll} → ${DREAM_LABELS[dreamRoll]}.`);
+  _appendLog(d, t('battlesim286.log.dream_roll', { roll: dreamRoll, label: t(`battlesim286.dream.${dreamRoll}`) }));
   _resolveDream(d, dreamRoll);
   saveState();
   _renderAll();
@@ -498,25 +493,25 @@ function _resolveDream(d, n) {
   switch (n) {
     case 2: {
       const roll = _roll2d6();
-      if (roll <= 7) { _appendLog(d, `Хвърляне ${roll} (2-7) → избягваш взрива, събуждаш се без промяна.`); }
-      else { d.player.life = 0; _appendLog(d, `Хвърляне ${roll} (8-12) → хроноцентърът избухва. Попадаш на 11.`); }
+      if (roll <= 7) { _appendLog(d, t('battlesim286.dream2.safe', { roll })); }
+      else { d.player.life = 0; _appendLog(d, t('battlesim286.dream2.explode', { roll })); }
       break;
     }
     case 3: {
       const roll = _roll2d6();
       if (roll >= 9 && roll <= 12) {
         d.player.life = Math.min(d.player.lifeMax, d.player.life + roll);
-        _appendLog(d, `Медицински център: хвърляне ${roll} (9-12) → +${roll} ТЖ.`);
+        _appendLog(d, t('battlesim286.dream3.gain', { roll }));
       } else {
         d.player.life = Math.max(0, d.player.life - roll);
-        _appendLog(d, `Медицински център: хвърляне ${roll} (извън 9-12) → -${roll} ТЖ.`);
+        _appendLog(d, t('battlesim286.dream3.loss', { roll }));
       }
       break;
     }
     case 4: {
       const days = _roll1d6();
       d.player.life = Math.max(0, d.player.life - days);
-      _appendLog(d, `Необитаем остров: ${days} дни до спасяването → -${days} ТЖ.`);
+      _appendLog(d, t('battlesim286.dream4.result', { days }));
       break;
     }
     case 5: {
@@ -524,89 +519,89 @@ function _resolveDream(d, n) {
       const loss = Math.floor(sum / 2);
       if (loss > sleepLife) {
         d.player.life = 0;
-        _appendLog(d, `Черният кактус: губиш ${loss} ТЖ по пътя (сбор ${sum}/2) → не издържаш. Попадаш на 11.`);
+        _appendLog(d, t('battlesim286.dream5.death', { loss, sum }));
       } else {
         d.player.life = sleepLife - loss;
         d.player.life = Math.min(d.player.lifeMax, d.player.life + 25);
-        _appendLog(d, `Черният кактус: губиш ${loss} ТЖ по пътя, после пиеш от сока → +25 ТЖ. ТЖ: ${d.player.life}/${d.player.lifeMax}.`);
+        _appendLog(d, t('battlesim286.dream5.survive', { loss, life: d.player.life, lifeMax: d.player.lifeMax }));
       }
       break;
     }
     case 6: {
       const netRoll = _roll2d6();
       if (netRoll >= 7) {
-        _appendLog(d, `Арената на Нерон: мрежата хваща лъва (${netRoll}, 7-12) → победа без бой.`);
+        _appendLog(d, t('battlesim286.dream6.net_catch', { roll: netRoll }));
         break;
       }
-      _appendLog(d, `Арената на Нерон: мрежата пропуска (${netRoll}) → бой до победа или гибел (лъв: 20 ТЖ, мин. 6; ти: -1 защита, мин. 5).`);
+      _appendLog(d, t('battlesim286.dream6.net_miss', { roll: netRoll }));
       let lionHp = 20;
       while (lionHp > 0 && d.player.life > 0) {
         const pr = _roll2d6();
         const pd = pr > 5 ? pr - 5 : 0;
         lionHp = Math.max(0, lionHp - pd);
-        _appendLog(d, `  Удряш лъва: ${pr} → ${pd > 0 ? `удар за ${pd}, ТЖ на лъва: ${lionHp}` : 'пропуск'}.`);
+        _appendLog(d, pd > 0 ? t('battlesim286.dream6.player_hit', { roll: pr, dmg: pd, lionHp }) : t('battlesim286.dream6.player_miss', { roll: pr }));
         if (lionHp <= 0) break;
         const er = _roll2d6();
         const ed = er > 6 ? Math.max(0, (er - 6) - 1) : 0;
         d.player.life = Math.max(0, d.player.life - ed);
-        _appendLog(d, `  Лъвът те удря: ${er} → ${ed > 0 ? `-${ed} ТЖ (${d.player.life}/${d.player.lifeMax})` : 'пропуск'}.`);
+        _appendLog(d, ed > 0 ? t('battlesim286.dream6.lion_hit', { roll: er, dmg: ed, life: d.player.life, lifeMax: d.player.lifeMax }) : t('battlesim286.dream6.lion_miss', { roll: er }));
       }
-      _appendLog(d, lionHp <= 0 ? `${SVG_TROPHY} Побеждаваш лъва.` : `${SVG_SKULL} Лъвът те поваля.`);
+      _appendLog(d, lionHp <= 0 ? `${SVG_TROPHY} ${t('battlesim286.dream6.win')}` : `${SVG_SKULL} ${t('battlesim286.dream6.lose')}`);
       break;
     }
     case 7: {
       d.player.life = Math.min(d.player.lifeMax, d.player.life + 15);
-      _appendLog(d, `Курорт на бъдещето: чудесна почивка → +15 ТЖ.`);
+      _appendLog(d, t('battlesim286.dream7.result'));
       break;
     }
     case 8: {
       const years = _roll2d6() * 10;
       if (years < 100) {
         d.player.life = d.player.lifeMax;
-        _appendLog(d, `Полет с извънземни: ${years} години → пристигаш навреме, пълно възстановяване.`);
+        _appendLog(d, t('battlesim286.dream8.safe', { years }));
       } else {
         d.player.life = 0;
-        _appendLog(d, `Полет с извънземни: ${years} години → умираш от старост на борда. Попадаш на 11.`);
+        _appendLog(d, t('battlesim286.dream8.death', { years }));
       }
       break;
     }
     case 9: {
       d.player.life = 0;
-      _appendLog(d, `Необясним сън: не разбираш какво стана... събуждаш се на 11.`);
+      _appendLog(d, t('battlesim286.dream9.result'));
       break;
     }
     case 10: {
-      _appendLog(d, `Освобождаването на д'Артанян: дуел с 4 гвардейци, по един удар всеки.`);
+      _appendLog(d, t('battlesim286.dream10.intro'));
       for (let i = 1; i <= 4 && d.player.life > 0; i++) {
         const pr = _roll1d6(), gr = _roll1d6();
         if (pr > gr) {
           const gain = pr - gr;
           d.player.life = Math.min(d.player.lifeMax, d.player.life + gain);
-          _appendLog(d, `  Гвардеец ${i}: ти ${pr} срещу ${gr} → +${gain} ТЖ.`);
+          _appendLog(d, t('battlesim286.dream10.guard_win', { n: i, pr, gr, gain }));
         } else if (pr < gr) {
           const loss = gr - pr;
           d.player.life = Math.max(0, d.player.life - loss);
-          _appendLog(d, `  Гвардеец ${i}: ти ${pr} срещу ${gr} → -${loss} ТЖ.`);
+          _appendLog(d, t('battlesim286.dream10.guard_lose', { n: i, pr, gr, loss }));
         } else {
-          _appendLog(d, `  Гвардеец ${i}: равен резултат (${pr}) → преминаваш нататък.`);
+          _appendLog(d, t('battlesim286.dream10.guard_tie', { n: i, roll: pr }));
         }
       }
       break;
     }
     case 11: {
       d.player.life = Math.max(0, d.player.life - 5);
-      _appendLog(d, `Кошмари: събуждаш се с -5 ТЖ.`);
+      _appendLog(d, t('battlesim286.dream11.result'));
       break;
     }
     case 12: {
       d.player.life = Math.min(d.player.lifeMax, d.player.life + 18);
-      _appendLog(d, `Горската колиба: билковото питие → +18 ТЖ.`);
+      _appendLog(d, t('battlesim286.dream12.result'));
       break;
     }
   }
   // Overrides the stale/unrelated enemy name that'd otherwise be pulled from
   // whatever was last fought for real - a dream death has nothing to do with it.
-  if (d.player.life <= 0) _recordOutcome(d, 'loss', `Сън: ${DREAM_LABELS[n]}`);
+  if (d.player.life <= 0) _recordOutcome(d, 'loss', t('battlesim286.log.dream_death_label', { label: t(`battlesim286.dream.${n}`) }));
 }
 
 // ── Render ────────────────────────────────────────────────────────────────
@@ -625,11 +620,11 @@ function _techButtonsHtml(d) {
       ? (s.usesLeft <= 0 || notReady || d.player.life <= 0)
       : (s.usesLeft <= 0 || battleOver);
     const label = item.kind === 'revive'
-      ? `${item.name} (${item.cost} ТЖ)`
-      : (item.charged && s.activated ? `${item.name} - изстрел` : `${item.name} - активирай`);
+      ? t('battlesim286.ui.tech_revive_label', { name: _techName(item.key), cost: item.cost })
+      : (item.charged && s.activated ? t('battlesim286.ui.tech_fire_label', { name: _techName(item.key) }) : t('battlesim286.ui.tech_activate_label', { name: _techName(item.key) }));
     return `<div class="bsim-tech-row${depleted ? ' bsim-tech-row--depleted' : ''}">
-      <div class="bsim-tech-name">${escapeHtml(item.name)}</div>
-      <div class="bsim-tech-desc">${escapeHtml(item.desc)}</div>
+      <div class="bsim-tech-name">${escapeHtml(_techName(item.key))}</div>
+      <div class="bsim-tech-desc">${escapeHtml(_techDesc(item.key))}</div>
       <div class="bsim-tech-footer">
         <button class="inv-edit-done bsim-tech-btn" data-tech="${item.key}" ${depleted ? 'disabled' : ''}>${escapeHtml(label)}</button>
         <span class="bsim-tech-uses">${s.usesLeft}/${item.maxUses}</span>
@@ -644,14 +639,14 @@ function _renderHistory() {
   const listEl    = document.getElementById('sim286-history-list');
   if (!d || !summaryEl || !listEl) return;
   const hist = d.history;
-  summaryEl.textContent = `История на битките (${hist.length})`;
+  summaryEl.textContent = t('battlesim286.history.summary', { n: hist.length });
   if (!hist.length) {
-    listEl.innerHTML = '<div class="bsim-history-empty">Все още няма приключени битки.</div>';
+    listEl.innerHTML = `<div class="bsim-history-empty">${t('battlesim286.history.empty')}</div>`;
     return;
   }
   listEl.innerHTML = hist.slice().reverse().map(h => {
     const icon   = h.outcome === 'win' ? SVG_TROPHY : SVG_SKULL;
-    const result = h.outcome === 'win' ? 'победа' : 'загуба';
+    const result = h.outcome === 'win' ? t('battlesim286.history.won') : t('battlesim286.history.lost');
     const date   = new Date(h.ts).toLocaleDateString('bg-BG', { day: '2-digit', month: '2-digit', year: 'numeric' });
     return `<div class="bsim-history-row">
       <span>${icon} ${escapeHtml(h.enemy)} - ${result}</span>
@@ -672,9 +667,9 @@ function _renderStatus() {
   const el = document.getElementById('sim286-status');
   if (!d || !el) return;
   const notReady = _notReady(d);
-  if (notReady)                el.innerHTML = 'Хвърли начални ТЖ и АЕ, за да започнеш.';
-  else if (d.player.life <= 0) el.innerHTML = `${SVG_SKULL} Ти падна в битката.`;
-  else if (d.enemy.hp <= 0)    el.innerHTML = `${SVG_TROPHY} Победа!`;
+  if (notReady)                el.innerHTML = t('battlesim286.status.not_ready');
+  else if (d.player.life <= 0) el.innerHTML = `${SVG_SKULL} ${t('battlesim286.status.fallen')}`;
+  else if (d.enemy.hp <= 0)    el.innerHTML = `${SVG_TROPHY} ${t('battlesim286.status.victory')}`;
   else                         el.innerHTML = '';
   const over = notReady || d.player.life <= 0 || d.enemy.hp <= 0;
   document.getElementById('sim286-round').disabled = over;
@@ -690,10 +685,10 @@ function _renderEffectsBadges(d) {
   const el = document.getElementById('sim286-effects');
   if (!el) return;
   const badges = [];
-  if (d.effects.tempShield)   badges.push('Временен щит активен');
-  if (d.effects.doubleAttack) badges.push('Ускорено време: 2 удара/рунд');
-  if (d.effects.pendingBonus > 0) badges.push(`Гравитационен бонус: +${d.effects.pendingBonus} на следващия удар`);
-  if (d.effects.enemyStun > 0) badges.push(`Врагът е зашеметен (${d.effects.enemyStun} удара)`);
+  if (d.effects.tempShield)   badges.push(t('battlesim286.badge.temp_shield'));
+  if (d.effects.doubleAttack) badges.push(t('battlesim286.badge.double_attack'));
+  if (d.effects.pendingBonus > 0) badges.push(t('battlesim286.badge.pending_bonus', { n: d.effects.pendingBonus }));
+  if (d.effects.enemyStun > 0) badges.push(t('battlesim286.badge.enemy_stun', { n: d.effects.enemyStun }));
   el.textContent = badges.join(' · ');
 }
 
@@ -706,10 +701,10 @@ function _renderInputs() {
   document.getElementById('sim286-enemy-first').checked  = d.player.enemyFirst;
   const lifeRollBtn = document.getElementById('sim286-life-roll');
   lifeRollBtn.disabled   = d.lifeRollCount >= MAX_LIFE_ROLLS;
-  lifeRollBtn.textContent = `Хвърли начални ТЖ (2d6×4) - ${d.lifeRollCount}/${MAX_LIFE_ROLLS}`;
+  lifeRollBtn.textContent = t('battlesim286.btn.life_roll', { count: d.lifeRollCount, max: MAX_LIFE_ROLLS });
   const aeRollBtn = document.getElementById('sim286-ae-roll');
   aeRollBtn.disabled   = d.aeRolled;
-  aeRollBtn.textContent = d.aeRolled ? 'Хвърлено (2d6×10)' : 'Хвърли (2d6×10)';
+  aeRollBtn.textContent = d.aeRolled ? t('battlesim286.btn.ae_rolled') : t('battlesim286.btn.ae_roll');
   document.getElementById('sim286-weapon').value  = d.player.weaponKey;
   document.getElementById('sim286-shield').value  = d.player.shieldKey;
   const customRow = document.getElementById('sim286-custom-minhit-row');
@@ -725,7 +720,7 @@ function _renderInputs() {
   const aeSpent = _loadoutAE(d);
   const aeEl = document.getElementById('sim286-ae-display');
   if (aeEl) {
-    aeEl.textContent = `${aeSpent} / ${d.player.aeMax} АЕ`;
+    aeEl.textContent = t('battlesim286.ui.ae_display', { spent: aeSpent, max: d.player.aeMax });
     aeEl.classList.toggle('bsim-ae-over', aeSpent > d.player.aeMax);
   }
 
@@ -806,7 +801,7 @@ function _setupEnemyAutocomplete() {
     matches = ql ? list.filter(e => e.name.toLowerCase().includes(ql)) : list;
     if (!matches.length) { closeDropdown(); return; }
     dropdown.innerHTML = matches.map((e, i) =>
-      `<li role="option" id="sim286-enemy-pick-opt-${i}" data-idx="${i}">${escapeHtml(e.name)}<span class="ac-sub">ТЖ:${e.hp ?? '?'} мин.:${e.attack ?? '?'}</span></li>`
+      `<li role="option" id="sim286-enemy-pick-opt-${i}" data-idx="${i}">${escapeHtml(e.name)}<span class="ac-sub">${t('battlesim286.ui.ac_life')}:${e.hp ?? '?'} ${t('battlesim286.ui.ac_minhit')}:${e.attack ?? '?'}</span></li>`
     ).join('');
     activeIdx = -1;
     dropdown.classList.add('open');
@@ -892,26 +887,26 @@ export function initSim286() {
   overlay.innerHTML = `
     <div class="inv-modal bsim-modal">
       <div class="inv-modal-hdr">
-        <span class="inv-modal-title">Симулатор на битки</span>
+        <span class="inv-modal-title">${t('battlesim286.ui.title')}</span>
         <button id="sim286-close" class="inv-close-btn" aria-label="${t('btn.close')}">✕</button>
       </div>
       <div class="bsim-body">
         <div class="bsim-col bsim-col-left">
           <div class="bsim-side">
-            <div class="bsim-side-title">Ти</div>
-            ${_numField('Точки живот (ТЖ)', 'sim286-player-life')}
-            ${_numField('Максимум ТЖ',      'sim286-player-lifemax')}
+            <div class="bsim-side-title">${t('battlesim286.ui.you')}</div>
+            ${_numField(t('battlesim286.ui.life'), 'sim286-player-life')}
+            ${_numField(t('battlesim286.ui.life_max'), 'sim286-player-lifemax')}
             <div class="inv-edit-row bsim-life-roll-row">
-              <button id="sim286-life-roll" class="inv-edit-done bsim-ae-roll-btn" type="button">Хвърли начални ТЖ (2d6×4)</button>
+              <button id="sim286-life-roll" class="inv-edit-done bsim-ae-roll-btn" type="button">${t('battlesim286.btn.life_roll_static')}</button>
             </div>
             <div class="inv-edit-row">
-              <span class="inv-edit-label bsim-stat-label">Оръжие</span>
+              <span class="inv-edit-label bsim-stat-label">${t('battlesim286.ui.weapon')}</span>
               <select id="sim286-weapon" class="inv-edit-input bsim-select">
-                ${WEAPONS.map(w => `<option value="${w[0]}">${escapeHtml(w[1])}${w[3] != null ? ` (${w[3]} АЕ)` : ''}</option>`).join('')}
+                ${WEAPONS.map(w => `<option value="${w[0]}">${escapeHtml(t(`battlesim286.weapon.${w[0]}`))}${w[2] != null ? ` (${w[2]} АЕ)` : ''}</option>`).join('')}
               </select>
             </div>
             <div id="sim286-custom-minhit-row" class="inv-edit-row" style="display:none">
-              <span class="inv-edit-label bsim-stat-label">Минимум удар</span>
+              <span class="inv-edit-label bsim-stat-label">${t('battlesim286.ui.custom_minhit')}</span>
               <div class="inv-qty-wrap">
                 <button class="inv-qty-btn" data-id="sim286-custom-minhit" data-delta="-1">−</button>
                 <input id="sim286-custom-minhit" class="inv-edit-input inv-qty-input" type="text" inputmode="numeric">
@@ -919,7 +914,7 @@ export function initSim286() {
               </div>
             </div>
             <div id="sim286-custom-ae-row" class="inv-edit-row" style="display:none">
-              <span class="inv-edit-label bsim-stat-label">Заряд (АЕ)</span>
+              <span class="inv-edit-label bsim-stat-label">${t('battlesim286.ui.custom_ae')}</span>
               <div class="inv-qty-wrap">
                 <button class="inv-qty-btn" data-id="sim286-custom-ae" data-delta="-1">−</button>
                 <input id="sim286-custom-ae" class="inv-edit-input inv-qty-input" type="text" inputmode="numeric">
@@ -927,7 +922,7 @@ export function initSim286() {
               </div>
             </div>
             <div id="sim286-glove-bonus-row" class="inv-edit-row" style="display:none">
-              <span class="inv-edit-label bsim-stat-label" data-tooltip="Обичайно +5, но някои срещи го намаляват (+1 до +3) или го увеличават (+10 срещу Огнената сянка, ако си приел ъпгрейда на 181)">Бонус на ръкавицата</span>
+              <span class="inv-edit-label bsim-stat-label" data-tooltip="${t('battlesim286.ui.glove_bonus_tooltip')}">${t('battlesim286.ui.glove_bonus')}</span>
               <div class="inv-qty-wrap">
                 <button class="inv-qty-btn" data-id="sim286-glove-bonus" data-delta="-1">−</button>
                 <input id="sim286-glove-bonus" class="inv-edit-input inv-qty-input" type="text" inputmode="numeric">
@@ -935,7 +930,7 @@ export function initSim286() {
               </div>
             </div>
             <div class="inv-edit-row">
-              <span class="inv-edit-label bsim-stat-label" data-tooltip="Намери ли скафандър с повишена защита или подобен предмет, добави точките му тук - те се сумират с щита">Доп. защита</span>
+              <span class="inv-edit-label bsim-stat-label" data-tooltip="${t('battlesim286.ui.extra_def_tooltip')}">${t('battlesim286.ui.extra_def')}</span>
               <div class="inv-qty-wrap">
                 <button class="inv-qty-btn" data-id="sim286-extra-def" data-delta="-1">−</button>
                 <input id="sim286-extra-def" class="inv-edit-input inv-qty-input" type="text" inputmode="numeric">
@@ -943,58 +938,58 @@ export function initSim286() {
               </div>
             </div>
             <div class="inv-edit-row">
-              <span class="inv-edit-label bsim-stat-label">Щит</span>
+              <span class="inv-edit-label bsim-stat-label">${t('battlesim286.ui.shield')}</span>
               <select id="sim286-shield" class="inv-edit-input bsim-select">
-                ${SHIELDS.map(s => `<option value="${s[0]}">${escapeHtml(s[1])}${s[3] ? ` (${s[3]} АЕ)` : ''}</option>`).join('')}
+                ${SHIELDS.map(s => `<option value="${s[0]}">${escapeHtml(t(`battlesim286.shield.${s[0]}`))}${s[2] ? ` (${s[2]} АЕ)` : ''}</option>`).join('')}
               </select>
             </div>
             <div class="inv-edit-row bsim-ae-row">
-              <span class="inv-edit-label bsim-stat-label">Заряд</span>
+              <span class="inv-edit-label bsim-stat-label">${t('battlesim286.ui.charge')}</span>
               <span id="sim286-ae-display" class="bsim-ae-display"></span>
-              <button id="sim286-ae-roll" class="inv-edit-done bsim-ae-roll-btn" type="button">Хвърли (2d6×10)</button>
+              <button id="sim286-ae-roll" class="inv-edit-done bsim-ae-roll-btn" type="button">${t('battlesim286.btn.ae_roll')}</button>
             </div>
-            ${_checkField('Врагът напада първи', 'sim286-enemy-first', 'според епизода')}
+            ${_checkField(t('battlesim286.ui.enemy_first'), 'sim286-enemy-first', t('battlesim286.ui.enemy_first_note'))}
           </div>
           <div class="bsim-side">
-            <div class="bsim-side-title">Враг</div>
+            <div class="bsim-side-title">${t('battlesim286.ui.enemy')}</div>
             <div class="inv-edit-row">
-              <span class="inv-edit-label bsim-stat-label">Избор</span>
+              <span class="inv-edit-label bsim-stat-label">${t('battlesim286.ui.pick')}</span>
               <div class="autocomplete-wrap bsim-enemy-ac">
                 <input id="sim286-enemy-pick" class="inv-edit-input" type="text" autocomplete="off" readonly role="combobox" aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" aria-controls="sim286-enemy-pick-dropdown">
                 <ul id="sim286-enemy-pick-dropdown" class="autocomplete-dropdown" role="listbox"></ul>
               </div>
             </div>
-            ${_numField('Точки живот (ТЖ)', 'sim286-enemy-hp')}
-            ${_numField('Максимум ТЖ',      'sim286-enemy-hpmax')}
-            ${_numField('Минимум удар',     'sim286-enemy-minhit')}
-            ${_numField('Фиксирани щети (0 = обичайно)', 'sim286-enemy-fixeddmg')}
-            ${_numField('Допълнителни противници', 'sim286-enemy-extra')}
+            ${_numField(t('battlesim286.ui.life'), 'sim286-enemy-hp')}
+            ${_numField(t('battlesim286.ui.life_max'), 'sim286-enemy-hpmax')}
+            ${_numField(t('battlesim286.ui.enemy_minhit'), 'sim286-enemy-minhit')}
+            ${_numField(t('battlesim286.ui.enemy_fixeddmg'), 'sim286-enemy-fixeddmg')}
+            ${_numField(t('battlesim286.ui.enemy_extra'), 'sim286-enemy-extra')}
           </div>
           <div id="sim286-effects" class="bsim-effects"></div>
           <div id="sim286-status" class="bsim-status"></div>
           <div class="inv-edit-row bsim-heal-row">
-            <span class="inv-edit-label bsim-stat-label">Лечение</span>
+            <span class="inv-edit-label bsim-stat-label">${t('battlesim286.ui.heal')}</span>
             <div class="inv-qty-wrap">
               <button class="inv-qty-btn" data-id="sim286-heal-amount" data-delta="-1" data-min="1">−</button>
               <input id="sim286-heal-amount" class="inv-edit-input inv-qty-input" type="text" inputmode="numeric" value="10">
               <button class="inv-qty-btn" data-id="sim286-heal-amount" data-delta="1" data-min="1">+</button>
             </div>
-            <button id="sim286-heal-roll" class="inv-edit-done bsim-heal-btn" type="button" data-tooltip="Много лечебни средства в книгата възстановяват колкото покажат зарчетата">Хвърли (2d6)</button>
-            <button id="sim286-heal" class="inv-edit-done bsim-heal-btn">Лекувай</button>
+            <button id="sim286-heal-roll" class="inv-edit-done bsim-heal-btn" type="button" data-tooltip="${t('battlesim286.ui.heal_roll_tooltip')}">${t('battlesim286.btn.heal_roll')}</button>
+            <button id="sim286-heal" class="inv-edit-done bsim-heal-btn">${t('battlesim286.btn.heal')}</button>
           </div>
           <div class="inv-modal-ftr">
-            <button id="sim286-round" class="inv-add-btn bsim-action-primary">Рунд</button>
-            <button id="sim286-sleep" class="inv-add-btn">Сън</button>
-            <button id="sim286-reset" class="inv-add-btn">Нулирай</button>
+            <button id="sim286-round" class="inv-add-btn bsim-action-primary">${t('battlesim286.btn.round')}</button>
+            <button id="sim286-sleep" class="inv-add-btn">${t('battlesim286.btn.sleep')}</button>
+            <button id="sim286-reset" class="inv-add-btn">${t('battlesim286.btn.reset')}</button>
           </div>
         </div>
         <div class="bsim-col bsim-col-right">
           <details class="bsim-history" open>
-            <summary>Технически арсенал</summary>
+            <summary>${t('battlesim286.ui.tech_arsenal')}</summary>
             <div id="sim286-tech-list" class="bsim-tech-list"></div>
           </details>
           <details class="bsim-history">
-            <summary id="sim286-history-summary">История на битките (0)</summary>
+            <summary id="sim286-history-summary">${t('battlesim286.history.summary', { n: 0 })}</summary>
             <div id="sim286-history-list" class="bsim-history-list"></div>
           </details>
           <div id="sim286-log" class="bsim-log"></div>
@@ -1111,7 +1106,7 @@ export function initSim286() {
     if (needed > d.player.aeMax) {
       d.player.weaponKey = prevKey;
       e.target.value = prevKey;
-      showAlert(`Не достига заряд - нужни са ${needed} АЕ, а имаш ${d.player.aeMax}.`);
+      showAlert(t('battlesim286.alert.insufficient_ae', { needed, have: d.player.aeMax }));
       return;
     }
     saveState();
@@ -1126,7 +1121,7 @@ export function initSim286() {
     if (needed > d.player.aeMax) {
       d.player.shieldKey = prevKey;
       e.target.value = prevKey;
-      showAlert(`Не достига заряд - нужни са ${needed} АЕ, а имаш ${d.player.aeMax}.`);
+      showAlert(t('battlesim286.alert.insufficient_ae', { needed, have: d.player.aeMax }));
       return;
     }
     saveState();
