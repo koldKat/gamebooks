@@ -19,6 +19,8 @@ const translations = {
     'books.open':         'Open',
     'books.sections':     '{n} sections',
 
+    'mobile.back_to_feed': 'Back to feed',
+    'mobile.add_book':     'Add Book',
     'mobile.not_admin':    "This preview isn't open yet - check back soon.",
     'mobile.open_from_my_books': "Open a book from My Books on the main site - it'll land you here.",
     'mobile.no_reading':   '"{title}" doesn\'t have in-app reading yet - play it on desktop instead.',

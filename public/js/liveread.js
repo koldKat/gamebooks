@@ -9,10 +9,10 @@
 // stays visible and interactive underneath while reading.
 
 import { state, apiFetch, currentBookId, currentPlaythrough, currentSection, viewingPt, isTerminal, parseSecId } from './state.js?v=14';
-import { navigate, commitChoices, showAlert, suppressAutoNav } from './play.js?v=155';
-import { network, setLightweightRestabilize } from './graph.js?v=147';
-import { t } from './i18n.js?v=72';
-import { shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from './util.js?v=88';
+import { navigate, commitChoices, showAlert, suppressAutoNav } from './play.js?v=156';
+import { network, setLightweightRestabilize } from './graph.js?v=148';
+import { t } from './i18n.js?v=73';
+import { shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from './util.js?v=89';
 
 // Bumped on every call and re-checked after each await so a slower, now-stale
 // fetch (e.g. from a rapid double-click on two different choice links) can't
