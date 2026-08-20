@@ -3,9 +3,9 @@
 // To remove: delete this file, remove its import line and initNotes()/loadNotesForBook()/
 // hideNotesUI() calls from boot.js, and remove the notebook/notes-display CSS from style.css.
 
-import { state, saveState, apiFetch, currentBookId } from './state.js?v=1412';
-import { showAlert } from './play.js?v=1412';
-import { t } from './i18n.js?v=1412';
+import { state, saveState, apiFetch, currentBookId } from './state.js?v=1417';
+import { showAlert } from './play.js?v=1417';
+import { t } from './i18n.js?v=1417';
 
 let _notesText  = '';
 let _nbFraction = 0;   // 0–1 scroll position, shared by both notebook views

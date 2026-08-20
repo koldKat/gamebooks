@@ -5,19 +5,19 @@
 
 import {
   state, saveState, apiFetch, isValidSecId, setViewingPt, currentPlaythrough, currentBookId, currentSection,
-} from './state.js?v=1412';
+} from './state.js?v=1417';
 import {
   network, visNodes, setGraphCrossBookRoute,
   canReachInGraph, allReachableInGraph, clampViewportScale, findPathTo,
   RESTORE_MIN_VIEWPORT_SCALE,
-} from './graph.js?v=1412';
+} from './graph.js?v=1417';
 import {
   render, showAlert, startPortalRun, startPlaythrough, setOpenWorldContext, setOnViewPublicRun, wouldAutoNav,
-} from './play.js?v=1412';
-import { t } from './i18n.js?v=1412';
-import { setOnCharSheetSaved } from './charsheet.js?v=1412';
-import { instantiateLoadout } from './equipment.js?v=1412';
-import { getCachedBooks } from './books.js?v=1412';
+} from './play.js?v=1417';
+import { t } from './i18n.js?v=1417';
+import { setOnCharSheetSaved } from './charsheet.js?v=1417';
+import { instantiateLoadout } from './equipment.js?v=1417';
+import { getCachedBooks } from './books.js?v=1417';
 
 let _hooks = {};
 export function setOpenWorldHooks(h) { _hooks = h || {}; }

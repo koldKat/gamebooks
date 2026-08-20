@@ -6,7 +6,7 @@
 import {
   api, el, badge, mkBtn, appendCell, _esc, showConfirm,
   storeData, getFiltered, renderPaged, setSearchFields, wireTableSearch,
-} from './core.js?v=1412';
+} from './core.js?v=1417';
 
 export function renderSeriesTable(series) {
   const tbody = document.getElementById('series-body');

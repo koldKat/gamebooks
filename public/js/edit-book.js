@@ -1,12 +1,12 @@
 // edit-book.js - Edit/add book, anthology, series, and stash modals
 
-import { state, getToken, isDemoMode, apiFetch, clearToken, clearUsername, isTerminal, parseSecId } from './state.js?v=1412';
-import { t } from './i18n.js?v=1412';
-import { naturalCompare, naturalCompareByName, foldForSearch, matchesSearch } from './sort.js?v=1412';
-import { getCachedBooks, getCachedAllSeries, getCachedStashes, _starLabelHtml, _refreshBooksListOnly, _refreshLibraryUi } from './books.js?v=1412';
-import { refreshCoinsDisplay } from './shop.js?v=1412';
-import { showAlert, showConfirm } from './play.js?v=1412';
-import { escapeHtml, compressImage } from './util.js?v=1412';
+import { state, getToken, isDemoMode, apiFetch, clearToken, clearUsername, isTerminal, parseSecId } from './state.js?v=1417';
+import { t } from './i18n.js?v=1417';
+import { naturalCompare, naturalCompareByName, foldForSearch, matchesSearch } from './sort.js?v=1417';
+import { getCachedBooks, getCachedAllSeries, getCachedStashes, _starLabelHtml, _refreshBooksListOnly, _refreshLibraryUi } from './books.js?v=1417';
+import { refreshCoinsDisplay } from './shop.js?v=1417';
+import { showAlert, showConfirm } from './play.js?v=1417';
+import { escapeHtml, compressImage } from './util.js?v=1417';
 
 let _hooks = {};
 export function setEditBookHooks(h) { _hooks = h || {}; }

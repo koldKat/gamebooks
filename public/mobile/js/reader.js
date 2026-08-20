@@ -20,19 +20,31 @@
 // are small, deliberately-local reimplementations of the same DOM-free
 // logic play.js already has (play.js:856-888, startPlaythrough, undoRun,
 // doJump, endPlaythrough).
+//
+// This file owns pane orchestration, section navigation, and playthrough
+// lifecycle only - the long-press node context menu (context-menu.js), its
+// note editor (note-modal.js), and the toolbar's Fast Travel dialog
+// (fast-travel-dialog.js) are each their own self-contained UI module, not
+// built here. reader.js passes them the playthrough-lifecycle functions
+// they need (checkXpReward/maxFastTravels/doFastTravel) as plain parameters
+// on each call rather than those files importing reader.js back - avoids a
+// reader.js <-> {context-menu,note-modal,fast-travel-dialog}.js import
+// cycle, since reader.js is already the one importing all three.
 
 import {
   state, loadState, saveState, apiFetch, currentBookId,
   currentPlaythrough, currentSection, isTerminal, isValidSecId, parseSecId,
   setViewingPt, viewingPt, currentUserLevel, bonusUndos, bonusFastTravels,
-} from '../../js/state.js?v=1412';
-import { canReach, findPathTo } from '../../js/graph.js?v=1412';
-import { showAlert, showConfirm } from '../../js/confirm.js?v=1412';
-import { initGraphView, refreshGraph } from './graph-view.js?v=1412';
-import { openNotebook } from './notebook.js?v=1412';
-import { hasSim, openSimForBook } from './battlesim-dispatch.js?v=1412';
-import { showToast } from './toast.js?v=1412';
-import { t } from '../../js/i18n.js?v=1412';
+} from '../../js/state.js?v=1417';
+import { canReach, findPathTo } from '../../js/graph.js?v=1417';
+import { showAlert, showConfirm } from '../../js/confirm.js?v=1417';
+import { initGraphView, refreshGraph } from './graph-view.js?v=1417';
+import { openNotebook } from './notebook.js?v=1417';
+import { hasSim, openSimForBook } from './battlesim-dispatch.js?v=1417';
+import { showToast } from './toast.js?v=1417';
+import { openNodeContextMenu, hideNodeContextMenu } from './context-menu.js?v=1417';
+import { openFastTravelDialog } from './fast-travel-dialog.js?v=1417';
+import { t } from '../../js/i18n.js?v=1417';
 
 // Reward feedback (see toast.js's own header comment for why mobile uses a
 // toast rather than porting rewards.js's fly-to-badge floaters). Desktop
@@ -236,7 +248,7 @@ export async function renderReader(mount, book, onBack) {
   document.getElementById('m-back-btn').addEventListener('click', onBack);
   document.getElementById('m-notebook-btn').addEventListener('click', () => openNotebook(book.id));
   document.getElementById('m-undo-btn').addEventListener('click', _undoRun);
-  document.getElementById('m-fasttravel-btn').addEventListener('click', _openFastTravelDialog);
+  document.getElementById('m-fasttravel-btn').addEventListener('click', () => openFastTravelDialog(_doFastTravel));
   document.getElementById('m-win-btn').addEventListener('click', () =>
     showConfirm(t('mobile.confirm_win'), () => _endPlaythrough('success'), { confirmLabel: t('runs.victory'), danger: false, win: true }));
   document.getElementById('m-loss-btn').addEventListener('click', () =>
@@ -264,11 +276,15 @@ export async function renderReader(mount, book, onBack) {
     battlesimBtn.addEventListener('click', () => openSimForBook(book.id));
   }
 
+  // Stable function references, built once per renderReader() call and
+  // reused for the whole reader session - context-menu.js captures this in
+  // its own one-time DOM-build closures (see that file's own comment).
+  const ctxHooks = { checkXpReward: _checkXpReward, maxFastTravels: _maxFastTravels, doFastTravel: _doFastTravel };
   initGraphView(
     document.getElementById('m-graph'),
     sec => _onGraphTap(parseSecId(sec) ?? sec),
-    (sec, x, y) => _openNodeContextMenu(parseSecId(sec) ?? sec, x, y),
-    _hideNodeContextMenu,
+    (sec, x, y) => openNodeContextMenu(parseSecId(sec) ?? sec, x, y, ctxHooks),
+    hideNodeContextMenu,
   );
 
   // Fresh per book session - a leftover pending amount from a book closed
@@ -368,260 +384,6 @@ function _doFastTravel(mode, id) {
   saveState();
   document.getElementById('ft-overlay')?.classList.remove('active');
   _showSection(id);
-}
-
-function _openFastTravelDialog() {
-  let overlay = document.getElementById('ft-overlay');
-  if (!overlay) {
-    overlay = document.createElement('div');
-    overlay.id = 'ft-overlay';
-    overlay.className = 'inv-overlay';
-    overlay.innerHTML = `
-      <div class="inv-modal ft-modal">
-        <div class="inv-modal-hdr">
-          <span class="inv-modal-title">${t('ctx.fasttravel')}</span>
-          <button id="ft-close-btn" class="inv-close-btn" aria-label="${t('btn.close')}">✕</button>
-        </div>
-        <div class="ft-modal-body">
-          <div class="ft-input-row">
-            <span class="ft-input-row-label">${t('ft.section_placeholder')}</span>
-            <div class="ft-qty-wrap">
-              <button class="ft-qty-btn" id="ft-dec-btn">−</button>
-              <input id="ft-input" class="ft-qty-input" type="text" inputmode="numeric">
-              <button class="ft-qty-btn" id="ft-inc-btn">+</button>
-            </div>
-          </div>
-          <div class="ft-dialog-modes">
-            <button class="inv-add-btn" data-mode="high">${t('ctx.fasttravel.high')}</button>
-            <button class="inv-add-btn" data-mode="shortest">${t('ctx.fasttravel.shortest')}</button>
-            <button class="inv-add-btn" data-mode="normal">${t('ctx.fasttravel.normal')}</button>
-            <button class="inv-add-btn" data-mode="low">${t('ctx.fasttravel.low')}</button>
-          </div>
-        </div>
-      </div>`;
-    document.body.appendChild(overlay);
-    document.getElementById('ft-close-btn').addEventListener('click', () => overlay.classList.remove('active'));
-    let _mdOnOverlay = false;
-    overlay.addEventListener('mousedown', e => { _mdOnOverlay = e.target === overlay; });
-    overlay.addEventListener('click', e => { if (e.target === overlay && _mdOnOverlay) overlay.classList.remove('active'); });
-    const input = document.getElementById('ft-input');
-    input.addEventListener('input', () => { input.value = input.value.replace(/[^0-9]/g, ''); });
-    document.getElementById('ft-dec-btn').addEventListener('click', () => {
-      const v = parseInt(input.value, 10);
-      if (v > 1) input.value = v - 1;
-    });
-    document.getElementById('ft-inc-btn').addEventListener('click', () => {
-      const v = parseInt(input.value, 10);
-      input.value = isNaN(v) ? 1 : v + 1;
-    });
-    overlay.querySelectorAll('.ft-dialog-modes button').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const id = parseSecId(input.value);
-        if (id === null) return;
-        _doFastTravel(btn.dataset.mode, id);
-      });
-    });
-  }
-  document.getElementById('ft-input').value = '';
-  overlay.classList.add('active');
-}
-
-// ── Node context menu (long-press) ──────────────────────────────────────
-// Same 4 actions as desktop's right-click node menu (public/index.html's
-// #node-ctx-menu) minus Edit choices/Color/Add portal/Delete node - those
-// are either desktop-only concepts (open-world portals) or edit operations
-// mobile deliberately doesn't expose (see file header - reading-only).
-
-// Same "worth keeping" check as boot.js's own _pruneDiscovered/play.js's
-// _cleanupOrphanedTargets/graph.js's orphan-pruning pass - every place that
-// clears a piece of node metadata needs this same check, or a node with
-// nothing else on it (e.g. a manually-added node, or one whose only
-// content was the metadata just cleared) silently vanishes instead of
-// staying on the map.
-function _pruneDiscovered(id) {
-  const n = state.graph[id];
-  if (!n?.discovered) return;
-  const hasMetadata = n.note || n.priority || n.battle || n.color || n.portals || n.showNote || n.manual;
-  if (!hasMetadata && (!n.choices || n.choices.length === 0)) delete state.graph[id];
-}
-
-function _setPriority(id, value) {
-  if (!state.graph[id]) state.graph[id] = { choices: [], discovered: true };
-  if (value === 'normal') delete state.graph[id].priority;
-  else                    state.graph[id].priority = value;
-  _pruneDiscovered(id);
-  saveState();
-  // set_priority XP (server/db/xp.js) only fires the first time a node
-  // gains a priority tag, but the check itself is cheap either way - same
-  // reasoning as _checkXpReward's other call sites.
-  _checkXpReward();
-  refreshGraph(currentSection());
-}
-
-function _toggleBattle(id) {
-  if (!state.graph[id]) state.graph[id] = { choices: [], discovered: true };
-  if (state.graph[id].battle) delete state.graph[id].battle;
-  else                        state.graph[id].battle = true;
-  _pruneDiscovered(id);
-  saveState();
-  _checkXpReward();
-  refreshGraph(currentSection());
-}
-
-function _hideNodeContextMenu() {
-  document.getElementById('m-ctx-menu')?.classList.remove('active');
-}
-
-let _lastHoldAt = 0;
-
-function _openNodeContextMenu(id, x, y) {
-  _lastHoldAt = Date.now();
-  let menu = document.getElementById('m-ctx-menu');
-  if (!menu) {
-    menu = document.createElement('div');
-    menu.id = 'm-ctx-menu';
-    menu.className = 'm-ctx-menu';
-    menu.innerHTML = `
-      <button id="m-ctx-note-btn" class="m-ctx-btn">${t('ctx.note')}</button>
-      <div class="m-ctx-submenu-wrap">
-        <button class="m-ctx-btn m-ctx-trigger" data-submenu="m-ctx-priority-panel">${t('ctx.priority')}</button>
-        <div class="m-ctx-submenu-panel" id="m-ctx-priority-panel">
-          <button class="m-ctx-btn" data-priority="high">${t('ctx.priority.high')}</button>
-          <button class="m-ctx-btn" data-priority="normal">${t('ctx.priority.normal')}</button>
-          <button class="m-ctx-btn" data-priority="low">${t('ctx.priority.low')}</button>
-        </div>
-      </div>
-      <button id="m-ctx-ft-btn" class="m-ctx-btn">${t('ctx.fasttravel')}</button>
-      <button id="m-ctx-battle-btn" class="m-ctx-btn">${t('ctx.battle')}</button>`;
-    document.body.appendChild(menu);
-
-    // Some mobile browsers still fire a trailing synthetic click on the
-    // canvas right after the long-press's own contextmenu event, not just
-    // one or the other - without this window, that trailing click would
-    // hit this same listener and immediately close the menu that same
-    // gesture just opened, reading as the long-press having done nothing.
-    document.addEventListener('click', e => {
-      if (Date.now() - _lastHoldAt < 400) return;
-      if (menu.classList.contains('active') && !menu.contains(e.target)) _hideNodeContextMenu();
-    });
-
-    menu.querySelectorAll('.m-ctx-trigger').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const panel = document.getElementById(btn.dataset.submenu);
-        const wasOpen = panel.classList.contains('open');
-        menu.querySelectorAll('.m-ctx-submenu-panel').forEach(p => p.classList.remove('open'));
-        if (!wasOpen) panel.classList.add('open');
-        // Expanding a submenu grows the menu's own height after it was
-        // already clamped against the collapsed size - re-clamp now or a
-        // menu opened near the bottom edge overflows off-screen the moment
-        // its submenu opens.
-        _clampContextMenu();
-      });
-    });
-    document.getElementById('m-ctx-note-btn').addEventListener('click', () => {
-      const id2 = menu.dataset.nodeId;
-      _hideNodeContextMenu();
-      if (id2) _openNoteModal(parseSecId(id2) ?? id2);
-    });
-    document.getElementById('m-ctx-battle-btn').addEventListener('click', () => {
-      const id2 = menu.dataset.nodeId;
-      _hideNodeContextMenu();
-      if (id2) _toggleBattle(parseSecId(id2) ?? id2);
-    });
-    document.getElementById('m-ctx-priority-panel').querySelectorAll('button').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const id2 = menu.dataset.nodeId;
-        _hideNodeContextMenu();
-        if (id2) _setPriority(parseSecId(id2) ?? id2, btn.dataset.priority);
-      });
-    });
-    // Unlike the toolbar's own Fast Travel dialog (which still offers all
-    // 4 modes plus manual section entry), the context menu's version is
-    // meant to be a one-tap shortcut - it always takes the shortest route
-    // to the tapped node, no submenu.
-    document.getElementById('m-ctx-ft-btn').addEventListener('click', () => {
-      const id2 = menu.dataset.nodeId;
-      _hideNodeContextMenu();
-      if (id2) _doFastTravel('shortest', parseSecId(id2) ?? id2);
-    });
-  }
-
-  menu.dataset.nodeId = String(id);
-  menu.querySelectorAll('.m-ctx-submenu-panel').forEach(p => p.classList.remove('open'));
-
-  const pt = currentPlaythrough();
-  const ftLeft = pt ? (_maxFastTravels() - (pt.fastTravelsUsed || 0)) : 0;
-  const from = currentSection();
-  const showJump = !!pt && !pt.completed && ftLeft > 0 && !!state.graph[id] && canReach(from, id);
-  document.getElementById('m-ctx-ft-btn').style.display = showJump ? '' : 'none';
-
-  menu.classList.add('active');
-  menu.style.left = '0px';
-  menu.style.top  = '0px';
-  _clampContextMenu(x, y);
-}
-
-// Re-clampable independent of the open call: a submenu expanding after the
-// menu was already positioned can grow it past the bottom edge again.
-let _ctxAnchor = { x: 0, y: 0 };
-function _clampContextMenu(x, y) {
-  const menu = document.getElementById('m-ctx-menu');
-  if (!menu) return;
-  if (x !== undefined) _ctxAnchor = { x, y };
-  const rect = menu.getBoundingClientRect();
-  const left = Math.min(_ctxAnchor.x, window.innerWidth - rect.width - 8);
-  const top  = Math.min(_ctxAnchor.y, window.innerHeight - rect.height - 8);
-  menu.style.left = `${Math.max(8, left)}px`;
-  menu.style.top  = `${Math.max(8, top)}px`;
-}
-
-// Mobile-local note editor - desktop's openNoteModal (play.js) targets
-// #note-modal-* elements that don't exist here, so this is its own small
-// modal rather than an import, same reasoning as the fast-travel dialog.
-function _openNoteModal(id) {
-  let overlay = document.getElementById('m-note-overlay');
-  if (!overlay) {
-    overlay = document.createElement('div');
-    overlay.id = 'm-note-overlay';
-    overlay.className = 'inv-overlay';
-    overlay.innerHTML = `
-      <div class="inv-modal m-note-modal">
-        <div class="inv-modal-hdr">
-          <span class="inv-modal-title" id="m-note-title"></span>
-          <button id="m-note-close-btn" class="inv-close-btn" aria-label="${t('btn.close')}">✕</button>
-        </div>
-        <div class="ft-modal-body">
-          <textarea id="m-note-input" class="m-note-input"></textarea>
-          <div class="inv-modal-ftr">
-            <button id="m-note-save-btn" class="inv-add-btn">${t('btn.save')}</button>
-          </div>
-        </div>
-      </div>`;
-    document.body.appendChild(overlay);
-    document.getElementById('m-note-close-btn').addEventListener('click', () => overlay.classList.remove('active'));
-    let _mdOnOverlay = false;
-    overlay.addEventListener('mousedown', e => { _mdOnOverlay = e.target === overlay; });
-    overlay.addEventListener('click', e => { if (e.target === overlay && _mdOnOverlay) overlay.classList.remove('active'); });
-  }
-  document.getElementById('m-note-title').textContent = t('modal.note.title', { n: id });
-  const input = document.getElementById('m-note-input');
-  input.value = state.graph[id]?.note || '';
-  document.getElementById('m-note-save-btn').onclick = () => {
-    const note = input.value.trim();
-    if (note) {
-      if (!state.graph[id]) state.graph[id] = { choices: [], discovered: true };
-      state.graph[id].note = note;
-    } else if (state.graph[id]) {
-      delete state.graph[id].note;
-      delete state.graph[id].showNote;
-      _pruneDiscovered(id);
-    }
-    saveState();
-    _checkXpReward();
-    refreshGraph(currentSection());
-    overlay.classList.remove('active');
-  };
-  overlay.classList.add('active');
 }
 
 async function _showSection(sec) {

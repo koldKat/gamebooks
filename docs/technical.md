@@ -157,8 +157,16 @@ gamebooks/
       index.html       Shell: login screen + #screen mount point. Links confirm.css/autocomplete.css/
                        equipment.css/battlesim.css from public/css/ directly (reused as-is, not
                        copied) alongside its own mobile/css/style.css. Has a hidden #m-sim-btn-row
-                       sink div for getPlayBtnRow()'s fallback (see charsheet.js).
-      css/style.css    Mobile-first styles: login, book reader panes, tool row, notebook modal, toast
+                       sink div for getPlayBtnRow()'s fallback (see charsheet.js). Links its own
+                       manifest.json (display: "standalone", start_url: "/mobile") rather than
+                       public/manifest.json (desktop's own, display: "browser") - Android's "Add to
+                       Home Screen" only drops the address bar when the manifest it finds says
+                       standalone/fullscreen/minimal-ui.
+      css/style.css    Mobile-first styles: login, book reader panes, tool row, notebook modal, toast.
+                       html/body set overscroll-behavior-x: none, opting the whole page out of
+                       Chromium/Brave-on-Android's built-in edge-swipe back/forward gesture, since
+                       graph-view.js's own canvas panning competes with the browser's native
+                       gesture recognizer for the same horizontal touch-drags.
       js/
         app.js             Tiny screen router (login/reader), admin-gate check via GET /api/profile
                            (same response also feeds currentUserLevel/bonusUndos/bonusFastTravels
@@ -167,23 +175,33 @@ gamebooks/
                            trips (GET /api/profile, then GET /api/books).
         auth.js            Login form
         reader.js          The "double-screen" play view - top pane is in-app reading (own
-                           minimal commitChoices/startPlaythrough/undoRun/fast-travel, not
-                           play.js's), bottom pane is always the graph; two tool rows between
-                           the two panes hold Undo/Fast Travel (own local reimplementations,
-                           same level-based credit formula as play.js) above Notebook (always)
-                           and Battle Sim (only if battlesim-dispatch.js has one for this book).
-                           Fast Travel reuses graph.js's canReach/findPathTo directly (pure
-                           pathfinding, safe to import without pulling in graph.js's
-                           vis-network-coupled initGraph/syncGraph) behind the same numeric
-                           entry + high/shortest/normal/low dialog shape as desktop's
-                           showFastTravelDialog/doJump. A plain tap on the graph never advances
-                           pt.path, even onto an adjacent already-known choice - real navigation
-                           only ever happens by tapping a choice's in-text link (or via long-press
-                           Fast Travel below). Tapping the node the reader is actually standing on
-                           just shows that section live (same as _returnToCurrent) - anything else
-                           opens a read-only preview, and only for a node in pt.mVisited (every
-                           section ever actually read this run, permanent - unlike pt.path, which
-                           undo shrinks); tapping an unvisited node is a no-op, and an in-text link
+                           minimal commitChoices/startPlaythrough/undoRun/fast-travel/
+                           endPlaythrough, not play.js's), bottom pane is always the graph. Owns
+                           pane orchestration, section navigation, and playthrough lifecycle only -
+                           the long-press context menu, its note editor, and the toolbar's Fast
+                           Travel dialog are each their own module (context-menu.js/note-modal.js/
+                           fast-travel-dialog.js below), wired in via a `hooks` object
+                           ({ checkXpReward, maxFastTravels, doFastTravel }) passed on each call
+                           rather than those files importing reader.js back, avoiding an import
+                           cycle. Two tool rows between the panes hold Undo/Fast Travel (own local
+                           reimplementations, same level-based credit formula as play.js) above
+                           Notebook (always) and Battle Sim (only if battlesim-dispatch.js has one
+                           for this book); a third row (Win/Loss/Battle Death, hidden until the run
+                           has taken its first step) mirrors play.js's endPlaythrough() - for when
+                           the book's own text ends a run without linking a numbered 0/-1 choice, or
+                           for Battle Death specifically, which never has an in-text link at all
+                           (the outcome comes from a battle sim, not the book). Battle Death's own
+                           click handler also sets the current node's battle flag directly (same as
+                           play.js's battle-death-btn handler) before calling
+                           _endPlaythrough('battle'), which makes the node get graph-view.js's
+                           battle-cross overlay. A plain tap on the graph never advances pt.path,
+                           even onto an adjacent already-known choice - real navigation only ever
+                           happens by tapping a choice's in-text link (or via the context menu's
+                           Fast Travel). Tapping the node the reader is actually standing on just
+                           shows that section live (same as _returnToCurrent) - anything else opens
+                           a read-only preview, and only for a node in pt.mVisited (every section
+                           ever actually read this run, permanent - unlike pt.path, which undo
+                           shrinks); tapping an unvisited node is a no-op, and an in-text link
                            inside a preview that points at an unvisited section previews it in turn
                            rather than chaining straight into it.
                            mVisited is mobile-only - desktop's play.js never touches it - so it's
@@ -192,18 +210,7 @@ gamebooks/
                            _showSection() commits and saves the newly-discovered section's own
                            choices itself (a second saveState(), separate from _navigate's own
                            save which fires before the section fetch resolves).
-                           Long-press (vis-network's 'oncontext', which mobile browsers already
-                           raise on touch-and-hold - same event desktop's own right-click menu
-                           uses) opens a node context menu with the same 4 actions as desktop's
-                           #node-ctx-menu that make sense read-only: Edit note, Priority,
-                           Fast Travel, Toggle battle - own local reimplementations of
-                           play.js's/boot.js's note/priority/battle logic, same reasoning as
-                           Undo/Fast Travel. Unlike the toolbar's own Fast Travel dialog (still the
-                           full high/shortest/normal/low + manual section entry), the context
-                           menu's Fast Travel is a one-tap shortcut straight to the shortest route
-                           to the held node, no submenu. The menu clamps itself on-screen against
-                           the viewport on open, and re-clamps whenever the Priority submenu
-                           expands. Two topbar icon toggles (text-lines/graph-nodes) switch between
+                           Two topbar icon toggles (text-lines/graph-nodes) switch between
                            the default 50/50 split and a single pane at full height (_paneMode:
                            'both'|'text'|'graph', toggling itself off returns to 'both') - the tool
                            rows stay visible in every mode. Switching out of text-only mode re-runs
@@ -222,15 +229,33 @@ gamebooks/
                            desktop, adapted to toast.js's single-message display. The accumulated
                            total and its display-window deadline both reset at the top of
                            renderReader(), scoped per book session rather than persisting globally.
-                           Manual Win/Loss/Battle Death buttons (#m-endrun-row, one row, hidden
-                           until the run has taken its first step) mirror play.js's endPlaythrough() -
-                           for when the book's own text ends a run without linking a numbered
-                           0/-1 choice, or for Battle Death specifically, which never has an
-                           in-text link at all (the outcome comes from a battle sim, not the book).
-                           Battle Death's own click handler also sets the current node's battle
-                           flag directly (same as play.js's battle-death-btn handler) before
-                           calling _endPlaythrough('battle'), which makes the node get graph-view.js's
-                           battle-cross overlay.
+        context-menu.js    Long-press node context menu (vis-network's 'oncontext', which mobile
+                           browsers already raise on touch-and-hold - same event desktop's own
+                           right-click menu uses). Same 4 actions as desktop's #node-ctx-menu that
+                           make sense read-only: Edit note (opens note-modal.js), Priority, Fast
+                           Travel, Toggle battle - own local reimplementations of play.js's/boot.js's
+                           note/priority/battle logic. Unlike the toolbar's own Fast Travel dialog
+                           (fast-travel-dialog.js, still the full high/shortest/normal/low + manual
+                           section entry), this menu's Fast Travel is a one-tap shortcut straight to
+                           the shortest route to the held node, no submenu. The menu clamps itself
+                           on-screen against the viewport on open, and re-clamps whenever the
+                           Priority submenu expands. Exports pruneDiscovered() (same "worth keeping"
+                           check as boot.js's own _pruneDiscovered/play.js's
+                           _cleanupOrphanedTargets/graph.js's orphan-pruning pass) - note-modal.js
+                           imports it for the same reason its own save handler needs it.
+        note-modal.js      Per-node note editor, opened from context-menu.js's Edit note action.
+                           Desktop's openNoteModal (play.js) targets #note-modal-* elements that
+                           don't exist here, so this is its own small modal rather than an import,
+                           same reasoning as fast-travel-dialog.js.
+        fast-travel-dialog.js  The toolbar's Fast Travel dialog: numeric section entry +
+                           high/shortest/normal/low path-preference modes, same shape as desktop's
+                           showFastTravelDialog()/doJump() rather than a mobile-native tap-to-arm
+                           flow - desktop's dialog is genuinely the wanted UX here, not a
+                           compromise. Reuses graph.js's canReach/findPathTo indirectly (via
+                           reader.js's own doFastTravel, passed in as a parameter - this file
+                           doesn't import graph.js itself) behind .inv-overlay/.inv-modal (already
+                           linked via equipment.css) and its own .ft-qty-* stepper instead of
+                           desktop's .cs-num-wrap/.ft-dialog-* (neither of which mobile links).
         graph-view.js      Mobile's own vis-network wrapper - graph.js isn't reused (desktop-DOM-
                            coupled, reads localStorage at module top level). _bfsDepth() (backs
                            _layout()'s BFS-depth grid) stores depth in a plain object, not a Map -

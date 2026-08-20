@@ -4,9 +4,9 @@
 // refreshCoinsDisplay()/updateCoinsDisplay()/setShopHooks() calls from boot.js,
 // and delete public/css/shop.css (and its <link> in index.html).
 
-import { apiFetch, getToken } from './state.js?v=1412';
-import { escapeHtml } from './util.js?v=1412';
-import { t } from './i18n.js?v=1412';
+import { apiFetch, getToken } from './state.js?v=1417';
+import { escapeHtml } from './util.js?v=1417';
+import { t } from './i18n.js?v=1417';
 
 // Callbacks wired in by main.js at boot
 let _hooks = {};
