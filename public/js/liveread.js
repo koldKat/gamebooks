@@ -8,11 +8,11 @@
 // Deliberately NOT built on .inv-overlay: the whole point is that the graph
 // stays visible and interactive underneath while reading.
 
-import { state, apiFetch, currentBookId, currentPlaythrough, currentSection, viewingPt, isTerminal, parseSecId } from './state.js?v=1412';
-import { navigate, commitChoices, showAlert, suppressAutoNav } from './play.js?v=1412';
-import { network, setLightweightRestabilize } from './graph.js?v=1412';
-import { t } from './i18n.js?v=1412';
-import { shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from './util.js?v=1412';
+import { state, apiFetch, currentBookId, currentPlaythrough, currentSection, viewingPt, isTerminal, parseSecId } from './state.js?v=1417';
+import { navigate, commitChoices, showAlert, suppressAutoNav } from './play.js?v=1417';
+import { network, setLightweightRestabilize } from './graph.js?v=1417';
+import { t } from './i18n.js?v=1417';
+import { shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from './util.js?v=1417';
 
 // Bumped on every call and re-checked after each await so a slower, now-stale
 // fetch (e.g. from a rapid double-click on two different choice links) can't

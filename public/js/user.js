@@ -1,6 +1,6 @@
 // user.js - admin/author/contributor state and badge helpers
 
-import { getUsername } from './state.js?v=1412';
+import { getUsername } from './state.js?v=1417';
 
 let _adminUsername  = null;
 const _authorMap    = {};

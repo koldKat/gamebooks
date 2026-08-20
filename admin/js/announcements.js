@@ -4,7 +4,7 @@
 // To remove: delete this file and its <script type="module"> import in
 // admin/index.html; remove the Announcements tab HTML/CSS.
 
-import { mkBtn, showConfirm } from './core.js?v=1412';
+import { mkBtn, showConfirm } from './core.js?v=1417';
 
 let _annEditId = null;
 let _annEditIsDraft = false;

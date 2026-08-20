@@ -6,8 +6,8 @@
 // To remove: delete this file and its <script type="module"> import in
 // admin/index.html; remove the Stats cards and Tools tab HTML/CSS.
 
-import { api, fmtBytes, fmtDuration, esc, showAlert, showConfirm, flashSaved } from './core.js?v=1412';
-import { loadUsers, loadBooks } from './users-books.js?v=1412';
+import { api, fmtBytes, fmtDuration, esc, showAlert, showConfirm, flashSaved } from './core.js?v=1417';
+import { loadUsers, loadBooks } from './users-books.js?v=1417';
 
 export function loadAll() { loadStats(); loadAdminGc(); loadUsers(); loadBooks(); loadAppSize(); }
 

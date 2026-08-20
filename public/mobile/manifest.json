@@ -1,0 +1,16 @@
+{
+  "name": "Gamebook Tracker",
+  "short_name": "Gamebook Tracker",
+  "description": "Read and track your gamebook playthroughs.",
+  "start_url": "/mobile",
+  "display": "standalone",
+  "background_color": "#111827",
+  "theme_color": "#111827",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
