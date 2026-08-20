@@ -38,12 +38,18 @@
 // compared only against whichever side is being ganged up on - the extra
 // attacker can only deal damage, never receive it, per the rules text).
 //
+// Not modeled: section 245, "Eagle vs Ganzigite," a spectator battle
+// between two NPCs - its "continue reading" link leads into unrelated
+// hand-to-hand combat text, confirming the player never participates, same
+// "resolved and read, not fought" exclusion book 210 documents for its own
+// spectator battle (sections 311/363, Giant Eagle vs Pterodactyl).
+//
 // All state lives in pt.sim186, per-user/per-book via currentPlaythrough().
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../state.js?v=14';
 import { showAlert } from '../confirm.js?v=6';
-import { getPlayBtnRow } from '../charsheet.js?v=107';
-import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../util.js?v=90';
+import { getPlayBtnRow } from '../charsheet.js?v=108';
+import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../util.js?v=91';
 import { t } from '../i18n.js?v=73';
 
 const SVG_SKULL  = `<svg class="sim-icon sim-icon-dead"  viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8c0 2.8 1.4 5.3 3.6 6.8V20a1 1 0 0 0 1 1h6.8a1 1 0 0 0 1-1v-2.2C18.6 16.3 20 13.8 20 11a8 8 0 0 0-8-8zm-2.5 13v-1.5a.5.5 0 0 0-.5-.5H8l-.5-1 1-1-1-1 1-1H9a2.5 2.5 0 0 1 5 0h.5l1 1-1 1 1 1-.5 1h-1a.5.5 0 0 0-.5.5V16h-4z"/></svg>`;

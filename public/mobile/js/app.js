@@ -12,8 +12,8 @@
 // same desktop "Open" button) - see books.js's book-open-btn handler.
 
 import { getToken, clearToken, apiFetch } from '../../js/state.js?v=14';
-import { renderLogin } from './auth.js?v=6';
-import { renderReader } from './reader.js?v=20';
+import { renderLogin } from './auth.js?v=7';
+import { renderReader } from './reader.js?v=23';
 import { t } from '../../js/i18n.js?v=73';
 
 const mount = document.getElementById('screen');

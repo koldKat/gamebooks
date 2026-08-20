@@ -23,8 +23,8 @@ import {
   setViewingPt,
 } from '../../js/state.js?v=14';
 import { initGraphView, refreshGraph } from './graph-view.js?v=6';
-import { openNotebook } from './notebook.js?v=7';
-import { hasSim, openSimForBook } from './battlesim-dispatch.js?v=1';
+import { openNotebook } from './notebook.js?v=8';
+import { hasSim, openSimForBook } from './battlesim-dispatch.js?v=4';
 import { t } from '../../js/i18n.js?v=73';
 
 function _escapeHtml(s) {
