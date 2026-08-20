@@ -5,7 +5,7 @@
 
 import { setToken, setUsername } from './state.js?v=14';
 import { t } from './i18n.js?v=73';
-import { fetchPublic } from './util.js?v=90';
+import { fetchPublic } from './util.js?v=91';
 
 // Called after a successful login/register (main.js wires this to showBooks()).
 let _onAuthSuccess = null;
