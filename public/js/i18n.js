@@ -29,6 +29,8 @@ const translations = {
     'mobile.not_available': 'Not available in the mobile reader yet.',
     'mobile.manual_hint':  "This part of the book hasn't been typed up for in-app reading - finish it on desktop, then come back.",
     'mobile.back':         '‹ Back',
+    'mobile.preview_banner': 'Previewing §{sec} - your progress hasn\'t moved.',
+    'mobile.preview_return': 'Return to where you left off',
 
     'stats.mapped':       'Mapped',
     'stats.discovered':   'Discovered',

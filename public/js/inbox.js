@@ -1,10 +1,10 @@
 // inbox.js - Inbox thread list, conversation view, and reply UI
 
 import { apiFetch, getUsername } from './state.js?v=14';
-import { t } from './i18n.js?v=73';
-import { showConfirm } from './play.js?v=158';
-import { refreshInboxBadge } from './notif.js?v=97';
-import { escapeHtml, isImageFilename, uploadAttachment, addAttachmentItem } from './util.js?v=91';
+import { t } from './i18n.js?v=74';
+import { showConfirm } from './play.js?v=159';
+import { refreshInboxBadge } from './notif.js?v=98';
+import { escapeHtml, isImageFilename, uploadAttachment, addAttachmentItem } from './util.js?v=92';
 
 let _inboxThreads    = [];
 let _currentThreadId = null;
