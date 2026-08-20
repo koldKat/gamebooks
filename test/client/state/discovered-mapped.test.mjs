@@ -38,6 +38,26 @@ describe('discoveredSectionsFor', () => {
     assert.ok(set.has('A5B'));
     assert.ok(set.has('C1'));
   });
+
+  test('a numeric-looking string choice target collapses into its number-typed twin, not a duplicate entry', () => {
+    // Section 5 is both a real graph key (number 5, via parseSecId) and a
+    // choice target written as the string "5" - these must resolve to one
+    // Set entry, not two, or any consumer that renders one node per Set
+    // member (mobile's graph-view.js among them) draws it twice.
+    const graph = {
+      1: { choices: ['5'] },
+      5: { choices: [] },
+    };
+    const set = discoveredSectionsFor(graph, [], 1);
+    const fives = [...set].filter(id => id === 5 || id === '5');
+    assert.deepEqual(fives, [5]);
+  });
+
+  test('a string-typed terminal sentinel in choices is excluded, not added as a fake section', () => {
+    const graph = { 1: { choices: ['-1', '0'] } };
+    const set = discoveredSectionsFor(graph, [], 1);
+    assert.deepEqual([...set], [1]);
+  });
 });
 
 describe('mappedCountFor', () => {

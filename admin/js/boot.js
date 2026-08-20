@@ -5,13 +5,13 @@
 // To remove: this is the last file standing after every tab was extracted -
 // removing it means reverting to an inline <script> in admin/index.html.
 
-import { loadTips } from './tips.js?v=2';
-import { loadAdminAnthologies } from './anthologies.js?v=2';
-import { loadAdminSeries } from './series.js?v=2';
-import { loadFeedback } from './feedback.js?v=2';
-import { loadAnnouncements } from './announcements.js?v=5';
-import { loadInventory } from './inventory.js?v=2';
-import { loadTools, loadAll, loadLive, loadStats, loadAdminGc, loadAppSize } from './dashboard.js?v=11';
+import { loadTips } from './tips.js?v=1412';
+import { loadAdminAnthologies } from './anthologies.js?v=1412';
+import { loadAdminSeries } from './series.js?v=1412';
+import { loadFeedback } from './feedback.js?v=1412';
+import { loadAnnouncements } from './announcements.js?v=1412';
+import { loadInventory } from './inventory.js?v=1412';
+import { loadTools, loadAll, loadLive, loadStats, loadAdminGc, loadAppSize } from './dashboard.js?v=1412';
 // users-books.js has no exports this file calls directly, but its top-level
 // code (gift modal DOM wiring, Users/Books sort-header + search self-wiring)
 // must still run - imported transitively via dashboard.js's own import of it.

@@ -131,14 +131,29 @@ export function allDiscoveredSections() {
 }
 
 export function discoveredSectionsFor(graph, playthroughs, startSection) {
-  const startSec = isValidSecId(startSection) ? startSection : 1;
+  const startSec = isValidSecId(startSection) ? parseSecId(startSection) : 1;
   const set = new Set([startSec]);
   Object.entries(graph || {}).forEach(([sec, data]) => {
     const s = parseSecId(sec);
     if (s !== null && !isTerminal(s)) set.add(s);
-    (data.choices || []).forEach(c => { if (!isTerminal(c)) set.add(c); });
+    // parseSecId() first, then isTerminal() on the parsed value - a choices
+    // array entry isn't guaranteed to already be a number the way a graph
+    // key already is above. Checking isTerminal() on the raw value would
+    // miss a string-typed "-1"/"0" sentinel (isTerminal does a strict ===
+    // against the number forms), and skipping parseSecId entirely would let
+    // a numeric-looking string section (e.g. "88") into this Set alongside
+    // its already-number-typed twin from elsewhere, as two separate entries
+    // for what's really one section - every consumer of this Set (mobile's
+    // graph-view.js among them) has to treat them as one and the same.
+    (data.choices || []).forEach(c => {
+      const cid = parseSecId(c);
+      if (cid !== null && !isTerminal(cid)) set.add(cid);
+    });
   });
-  (playthroughs || []).forEach(pt => (pt.path || []).forEach(s => { if (!isTerminal(s)) set.add(s); }));
+  (playthroughs || []).forEach(pt => (pt.path || []).forEach(s => {
+    const sid = parseSecId(s);
+    if (sid !== null && !isTerminal(sid)) set.add(sid);
+  }));
   return set;
 }
 

@@ -1,21 +1,21 @@
 // add-book.js - Add Book, Add Anthology, and Add Series modals
 
-import { apiFetch, isDemoMode } from './state.js?v=14';
-import { t } from './i18n.js?v=74';
-import { getCachedAllSeries, _refreshLibraryUi, setInvalidateAutocompleteCaches } from './books.js?v=229';
-import { naturalCompare, matchesSearch } from './sort.js?v=1';
-import { showAlert } from './play.js?v=159';
+import { apiFetch, isDemoMode } from './state.js?v=1412';
+import { t } from './i18n.js?v=1412';
+import { getCachedAllSeries, _refreshLibraryUi, setInvalidateAutocompleteCaches } from './books.js?v=1412';
+import { naturalCompare, matchesSearch } from './sort.js?v=1412';
+import { showAlert } from './play.js?v=1412';
 import {
   _setModalUploadProgress, _setButtonsDisabled, _uploadPdfWithProgress,
   _acceptPdfSelection, _setPdfInlineLabel, formatFileSize,
   _populateSeriesSelect, _populateParentBookSelect,
   validateIsbn, validateIssn, validateAsin,
-} from './edit-book.js?v=242';
+} from './edit-book.js?v=1412';
 import {
   invalidateAutocompleteCaches, _loadAutocompleteBooks, _loadSeriesAutocomplete,
   _setModalCover, _setupNameAutocomplete, _setupPlainAutocomplete, _setupAuthorsAutocomplete,
-} from './autocomplete.js?v=220';
-import { escapeHtml, compressImage } from './util.js?v=92';
+} from './autocomplete.js?v=1412';
+import { escapeHtml, compressImage } from './util.js?v=1412';
 
 let _hooks = {};
 export function setAddBookHooks(h) { _hooks = h || {}; }

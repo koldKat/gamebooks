@@ -2,9 +2,9 @@
 // Graph snapshots (graph.svg) are generated entirely server-side (see buildGraphSvg in
 // server/export.js) from each book's saved positions/colors - no rendering happens here.
 
-import { state, currentBookId, apiFetch } from './state.js?v=14';
-import { showAlert } from './play.js?v=159';
-import { t } from './i18n.js?v=74';
+import { state, currentBookId, apiFetch } from './state.js?v=1412';
+import { showAlert } from './play.js?v=1412';
+import { t } from './i18n.js?v=1412';
 
 function _downloadBlob(blob, cd, fallbackFilename) {
   const matchUtf8  = cd.match(/filename\*=UTF-8''([^;\s]+)/i);

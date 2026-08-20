@@ -100,23 +100,57 @@ let gridState = { showGrid: false, fogOfGrid: false };
 
 function isTerm(v) { return v === -1 || v === 0 || v === '-1' || v === '0'; }
 
+// Mirrors state.js's parseSecId() - this file is deliberately self-contained
+// (no imports, see the header comment) so it can't just reuse that one.
+// Normalizes a raw graph key / choices[] entry / playthrough path entry to
+// one canonical type (positive int -> Number, "-1"/"0" and their number
+// forms -> the Number sentinel, anything else -> trimmed String), so the
+// same logical section reached two different ways - e.g. a graph key versus
+// a choices[] entry pointing at it - always resolves to the same value
+// instead of two different-typed ones.
+function normalizeSecId(raw) {
+  if (raw === null || raw === undefined) return null;
+  const s = String(raw).trim();
+  if (!s) return null;
+  if (s === '-1') return -1;
+  if (s === '0')  return 0;
+  const n = Number(s);
+  if (!isNaN(n) && Number.isInteger(n) && n > 0) return n;
+  return s;
+}
+
 // Mirrors state.js's discoveredSectionsFor() - a section only gets its own
 // state.graph entry once choices are recorded from it, or it's referenced as
 // someone else's choice target. The player's current position (no choices
 // recorded there yet) and any discovered-but-unmapped section (referenced as
 // a choice, never actually visited) both only ever show up in a playthrough's
 // path or a graph entry's choices[] - iterating Object.keys(graph) alone
-// silently drops both.
+// silently drops both. Every value that reaches the Set goes through
+// normalizeSecId() first, same as discoveredSectionsFor() itself - without
+// it, a numeric-looking string choice target (e.g. "88") lands in this Set
+// as a separate entry from its already-number-typed twin (the same section
+// as an actual graph key), and this viewer would draw the node twice.
 function knownSections(graph, playthroughs, startSection) {
-  const startSec = (startSection && startSection !== '') ? startSection : 1;
+  // Not `normalizeSecId(startSection) ?? 1` - that only falls back on
+  // null/undefined, but 0/-1 are the win/death sentinels, not valid start
+  // sections either (matches state.js's own isValidSecId gate, and the
+  // original `startSection && startSection !== ''` check here before it).
+  const normalizedStart = normalizeSecId(startSection);
+  const startSec = (normalizedStart !== null && !isTerm(normalizedStart)) ? normalizedStart : 1;
   const set = new Set([startSec]);
   Object.entries(graph || {}).forEach(([secKey, data]) => {
-    if (secKey === '-1' || secKey === '0') return;
-    const secId = /^-?\d+$/.test(secKey) ? Number(secKey) : secKey;
+    const secId = normalizeSecId(secKey);
+    if (secId === null || isTerm(secId)) return;
     set.add(secId);
-    (data.choices || []).forEach(c => { if (!isTerm(c)) set.add(c); });
+    (data.choices || []).forEach(c => {
+      const cid = normalizeSecId(c);
+      if (cid !== null && !isTerm(cid)) set.add(cid);
+    });
   });
-  (playthroughs || []).forEach(pt => (pt.path || []).forEach(s => { if (!isTerm(s)) set.add(s); }));
+  (playthroughs || []).forEach(pt => (pt.path || []).forEach(s => {
+    const sid = normalizeSecId(s);
+    if (sid !== null && !isTerm(sid)) set.add(sid);
+  }));
   return set;
 }
 
