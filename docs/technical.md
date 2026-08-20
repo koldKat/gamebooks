@@ -166,7 +166,12 @@ gamebooks/
                            minimal commitChoices/startPlaythrough, not play.js's), bottom pane is
                            always the graph; a tool row between the two panes holds Notebook
                            (always) and Battle Sim (only if battlesim-dispatch.js has one for
-                           this book)
+                           this book). Tapping a graph node only advances pt.path for a real
+                           outgoing choice from the current section - any other tap opens a
+                           read-only preview (own fetch/render path, no pt.path/refreshGraph
+                           side effects, in-text links chain to further previews rather than
+                           real navigation) so looking up an already-visited node can never be
+                           mistaken for choosing to go there.
         graph-view.js      Mobile's own vis-network wrapper - graph.js isn't reused (desktop-DOM-
                            coupled, reads localStorage at module top level)
         notebook.js        Plain per-book notebook - same GET/PUT /api/books/:id/notebook data as

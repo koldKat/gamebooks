@@ -24,8 +24,8 @@ import {
 } from '../../js/state.js?v=14';
 import { initGraphView, refreshGraph } from './graph-view.js?v=6';
 import { openNotebook } from './notebook.js?v=8';
-import { hasSim, openSimForBook } from './battlesim-dispatch.js?v=4';
-import { t } from '../../js/i18n.js?v=73';
+import { hasSim, openSimForBook } from './battlesim-dispatch.js?v=5';
+import { t } from '../../js/i18n.js?v=74';
 
 function _escapeHtml(s) {
   return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -107,7 +107,7 @@ export async function renderReader(mount, book, onBack) {
     battlesimBtn.addEventListener('click', () => openSimForBook(book.id));
   }
 
-  initGraphView(document.getElementById('m-graph'), sec => _navigate(parseSecId(sec) ?? sec));
+  initGraphView(document.getElementById('m-graph'), sec => _onGraphTap(parseSecId(sec) ?? sec));
 
   await loadState(book.id);
   if (!currentPlaythrough()) {
@@ -169,6 +169,20 @@ async function _showSection(sec) {
   });
 }
 
+// Tapping the graph is the only navigation gesture mobile has (see file
+// header), so it has to distinguish two very different intents: tapping a
+// live, reachable-from-here choice should actually advance the run, same as
+// tapping that choice's in-text link would; tapping anywhere else on the
+// map (older visited nodes, other branches) is just looking something up
+// and must never silently rewrite pt.path with a phantom "you chose to
+// jump here" entry - that's real fast-travel territory (desktop gates it
+// behind an explicit Jump action), not something a plain tap should do.
+function _onGraphTap(sec) {
+  const curChoices = state.graph[currentSection()]?.choices || [];
+  if (curChoices.includes(sec)) _navigate(sec);
+  else _previewSection(sec);
+}
+
 function _navigate(sec) {
   const pt = currentPlaythrough();
   if (!pt) return;
@@ -218,5 +232,56 @@ async function _showExtra(key) {
   document.getElementById('m-extra-back')?.addEventListener('click', e => {
     e.preventDefault();
     _showSection(currentSection());
+  });
+}
+
+// Read-only lookup for a graph tap that isn't a live choice from the
+// current section (see _onGraphTap) - renders the section's text but never
+// touches pt.path/state.graph beyond the same harmless reveal-on-arrival
+// commit _showSection itself does, and never calls refreshGraph(), so the
+// graph stays centered on the player's real position throughout. In-text
+// links inside a preview chain to more previews rather than real
+// navigation - clicking a choice link while just looking something up on
+// the map should not be able to silently move the run.
+async function _previewSection(sec) {
+  const top = document.getElementById('m-top');
+  if (!top) return;
+  const token = ++_showToken;
+
+  let res;
+  try {
+    res = await apiFetch(`/api/books/${currentBookId}/sections/${encodeURIComponent(sec)}`);
+  } catch (_) {
+    return;
+  }
+  if (token !== _showToken || !res.ok) return;
+  const data = await res.json();
+  if (token !== _showToken) return;
+
+  if (data.choices?.length) _commitChoices(sec, data.choices);
+
+  top.innerHTML = `
+    <p class="m-preview-banner">${t('mobile.preview_banner', { sec })}</p>
+    ${data.html}
+    <p class="m-back-link"><a href="#" id="m-preview-return">${t('mobile.preview_return')}</a></p>`;
+  top.scrollTop = 0;
+
+  document.getElementById('m-preview-return').addEventListener('click', e => {
+    e.preventDefault();
+    _showSection(currentSection());
+  });
+  top.querySelectorAll('a[href^="#"]').forEach(a => {
+    if (a.id === 'm-preview-return') return;
+    const href = a.getAttribute('href').slice(1);
+    if (!href) return;
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      if (href.startsWith('section-')) {
+        const dest = parseSecId(href.slice('section-'.length));
+        if (dest !== null) _previewSection(dest);
+      } else {
+        _showExtra(href);
+      }
+    });
   });
 }

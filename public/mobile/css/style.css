@@ -164,6 +164,13 @@ button, input {
    paragraph it needs a shared wrapper to center as a group instead. */
 .m-notice { margin: auto 0; }
 .m-back-link { margin-top: 1.5rem; border-top: 1px solid #374151; padding-top: 1rem; }
+.m-preview-banner {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  font-style: italic;
+  border-bottom: 1px solid #374151;
+  padding-bottom: 0.9rem;
+}
 
 /* Sits between the reading pane and the graph pane - Notebook is always
    available (every book has one); Battle Sim only shows for books that
