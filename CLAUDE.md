@@ -4,28 +4,25 @@ These rules are non-negotiable and apply every session without exception.
 
 ---
 
-## 1. Version bumping — ALWAYS, IMMEDIATELY
+## 1. Version bumping — ONE global version, ALWAYS, IMMEDIATELY
 
-After ANY edit to `public/js/main.js` or `public/css/style.css`, bump the version in `public/index.html` before declaring the task done.
+The whole app shares a single cache-busting version number. Every `?v=N` in every `public/`/`admin/` `.js`/`.css`/`.html` file (script `src`, `<link>` `href`, ES `import` specifier) must carry the exact same `N` — not per-file, not per-module.
 
-- `main.js` → `<script type="module" src="/js/main.js?v=NNN">`
-- `style.css` → `<link rel="stylesheet" href="/css/style.css?v=NNN">`
+After ANY edit to a versioned file, bump that one number everywhere before declaring the task done:
 
-Run `grep "?v=" public/index.html` to see current versions, then increment.
+```
+grep -rl '?v=OLD' public/ admin/ | xargs sed -i 's/?v=OLD/?v=NEW/g'
+```
 
-## 2. Version cascade — ALL importers must be bumped
+(`OLD`/`NEW` are plain integers — find the current one via `node scripts/check-versions.js`.) The vendored `vis-network.min.js?v=N` reference is the one exception — it versions the third-party library itself and is bumped only when that vendored file is replaced, never as part of an app change.
 
-ES module versioned imports (`?v=N`) require a full cascade. If module A changes, every module that imports A must also be bumped, then `index.html` last.
+Run `node scripts/check-versions.js` after every bump — it fails loudly if anything was missed, so there's no need to manually trace which files import which.
 
-Cascade chain: `state.js → graph.js → ui.js → main.js`. Also: `charsheet.js → main.js`, `inventory.js → main.js`.
-
-Use `grep -r "modulename.js?v="` to find all import sites.
-
-## 3. Never restart the server
+## 2. Never restart the server
 
 NEVER run `node server.js`, `pm2 restart`, `kill`, or any equivalent. The user handles all server restarts. After server-side changes just say "restart the server to apply."
 
-## 4. SVG icon pack processing
+## 3. SVG icon pack processing
 
 New packs are always in `~/Downloads`. Do not look elsewhere.
 
@@ -37,7 +34,7 @@ Processing rules:
 5. **Valid types only**: `weapon`, `armor`, `consumable`, `tool`, `jewelry`, `miscellaneous`. Default unknown items to `tool`. There is NO `other` type.
 6. **Run import scripts from the project root** — `better-sqlite3` is in the project's `node_modules`.
 
-## 5. No monolithic files — module placement rules
+## 4. No monolithic files — module placement rules
 
 `main.js` is a 10,000+ line monolith being actively split. Do NOT add significant new code to it. Full refactor plan is in memory file `project_refactor_main.md`.
 
@@ -57,7 +54,7 @@ If both can't be answered cleanly → new module, or wrong module.
 - Before adding to an existing module: does this match that responsibility? If no → it doesn't go there
 - If wiring a new feature requires adding multiple unrelated hooks to an existing module, it belongs elsewhere
 
-## 6. Refactor safety — mandatory pre-flight for every extraction
+## 5. Refactor safety — mandatory pre-flight for every extraction
 
 Before moving ANY function out of main.js:
 
@@ -78,11 +75,11 @@ Before moving ANY function out of main.js:
    node --input-type=module --check < public/js/main.js
    ```
 
-## 7. Read-only means visible-but-disabled, not hidden
+## 6. Read-only means visible-but-disabled, not hidden
 
 When the user says a panel/feature "should be read only" outside some condition, that means visible with actions disabled — NOT hidden. Conflating these caused a major regression.
 
-## 8. Documentation is generated — never hand-edit the HTML docs
+## 7. Documentation is generated — never hand-edit the HTML docs
 
 `docs/user-guide.md`, `docs/admin.md`, and `docs/technical.md` are the only source of truth. `public/guide.html`, `admin/admin-guide.html`, and `admin/technical.html` are generated from them by `npm run docs:build` (`scripts/generate-docs.js`) — never edit those three `.html` files directly, edits will be silently lost the next time someone runs the build.
 

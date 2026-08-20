@@ -1,8 +1,8 @@
 // auth.js - Login screen. Owns nothing beyond the login form itself.
 
-import { apiFetch, setToken, setUsername } from '../../js/state.js?v=14';
-import { t } from '../../js/i18n.js?v=74';
-import { escapeHtml } from '../../js/util.js?v=92';
+import { apiFetch, setToken, setUsername } from '../../js/state.js?v=1412';
+import { t } from '../../js/i18n.js?v=1412';
+import { escapeHtml } from '../../js/util.js?v=1412';
 
 export function renderLogin(mount, onSuccess) {
   mount.innerHTML = `

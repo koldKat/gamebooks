@@ -11,10 +11,10 @@
 // deep-links straight into a single book's reader (?book=123, set by that
 // same desktop "Open" button) - see books.js's book-open-btn handler.
 
-import { getToken, clearToken, apiFetch } from '../../js/state.js?v=14';
-import { renderLogin } from './auth.js?v=7';
-import { renderReader } from './reader.js?v=25';
-import { t } from '../../js/i18n.js?v=74';
+import { getToken, clearToken, apiFetch, setCurrentUserLevel, setBonusUndos, setBonusFastTravels } from '../../js/state.js?v=1412';
+import { renderLogin } from './auth.js?v=1412';
+import { renderReader } from './reader.js?v=1412';
+import { t } from '../../js/i18n.js?v=1412';
 
 const mount = document.getElementById('screen');
 
@@ -58,11 +58,32 @@ function _escapeHtml(s) {
   return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
+// Shown immediately, before either of checkAdminThenShowReader's own network
+// round trips (GET /api/profile, then GET /api/books) even start - without
+// this, the spinner only ever appeared once renderReader() itself ran, i.e.
+// after both of those requests had already finished, leaving the actual
+// slow part of the load (which can be most of it, on a slow connection) as
+// a blank screen with no feedback at all.
+function _showLoadingScreen() {
+  mount.innerHTML = `<div class="m-loading m-loading-full"><div class="m-spinner"></div><span>${_escapeHtml(t('mobile.loading'))}</span></div>`;
+}
+
 async function checkAdminThenShowReader() {
+  _showLoadingScreen();
   let isAdmin = false;
   try {
     const res = await apiFetch('/api/profile');
-    if (res.ok) isAdmin = !!(await res.json()).isAdmin;
+    if (res.ok) {
+      const profile = await res.json();
+      isAdmin = !!profile.isAdmin;
+      // Same fields boot.js's own profile fetch feeds into state.js - without
+      // these, currentUserLevel/bonusUndos/bonusFastTravels stay at their
+      // module defaults (0) forever on mobile, so Undo/Fast Travel always
+      // show the bare level<=30 base (3) regardless of the real account.
+      setCurrentUserLevel(profile.level || 0);
+      setBonusUndos(profile.bonusUndos || 0);
+      setBonusFastTravels(profile.bonusFastTravels || 0);
+    }
   } catch (_) { /* isAdmin stays false */ }
   if (!isAdmin) { clearToken(); showNotAdmin(); return; }
 
