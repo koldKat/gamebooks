@@ -356,6 +356,7 @@
   color: #e5e7eb; font-size: 0.72rem; padding: 3px 6px; outline: none;
 }
 .inv-edit-input:focus { border-color: #4b5563; }
+.inv-edit-input[readonly] { color: #6b7280; cursor: default; }
 .inv-qty-wrap { display: flex; align-items: center; flex: 1; min-width: 0; }
 .inv-qty-btn {
   flex-shrink: 0; width: 22px; background: #2d3748; border: 1px solid #374151;

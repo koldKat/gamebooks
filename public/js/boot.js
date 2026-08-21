@@ -10,62 +10,83 @@ import {
   isDemoMode,
   setOnViewingPtChange,
   mappedCountFor, discoveredSectionsFor,
-} from './state.js?v=1417';
+} from './state.js?v=1462';
 import {
   network, visNodes, initGraph, destroyNetwork,
   subtreeToDelete, deleteNodes, findPathTo, canReach, setGraphOpenWorld, applyConnectorStyle,
-} from './graph.js?v=1417';
-import { render, openEditModal, closeEditModal, openNoteModal, closeNoteModal, showConfirm, showAlert, confirmAlphanumericSwitch, maxFastTravels, setFastTravelHandler, showFastTravelDialog, setOnTrailToggle, openPortalModal, setDiscoverableLimit, setOnChoicesRecorded, startPlaythrough, setAltStartHandler, setAfterRenderFn, wouldAutoNav } from './play.js?v=1417';
-import { t, applyTranslations, setTranslationOverride } from './i18n.js?v=1417';
-import { initCharSheet, setCharSheetVisible, renderCharSheetDisplay } from './charsheet.js?v=1417';
-import { initInventory, setInventoryVisible, renderInventoryDisplay, preloadItems, setExtraDisplayItemsProvider } from './inventory.js?v=1417';
-import { initEquipment, setEquipmentVisible, getVisibleEquippedItems } from './equipment.js?v=1417';
-import { initNotes, hideNotesUI, loadNotesForBook, setOnXpAwarded as setNotesOnXpAwarded } from './notes.js?v=1417';
-import { initParty, connectPartySSE, disconnectPartySSE, loadPartyInvites, setPartyHooks } from './party.js?v=1417';
-import { initAuth, setOnAuthSuccess, showAuthForm, showResetPanel, hasPendingResetToken } from './auth.js?v=1417';
-import { initStats, closeStatsModal } from './stats.js?v=1417';
-import { setAddBookHooks, initAddBook, _closeAddBook, _closeAddComp, _closeAddSeries } from './add-book.js?v=1417';
+} from './graph.js?v=1462';
+import { render, openEditModal, closeEditModal, openNoteModal, closeNoteModal, showConfirm, showAlert, confirmAlphanumericSwitch, maxFastTravels, setFastTravelHandler, showFastTravelDialog, setOnTrailToggle, openPortalModal, setDiscoverableLimit, setOnChoicesRecorded, startPlaythrough, setAltStartHandler, setAfterRenderFn, wouldAutoNav } from './play.js?v=1462';
+import { t, applyTranslations, setTranslationOverride } from './i18n.js?v=1462';
+import { initCharSheet, setCharSheetVisible, renderCharSheetDisplay } from './charsheet.js?v=1462';
+import { initInventory, setInventoryVisible, renderInventoryDisplay, preloadItems, setExtraDisplayItemsProvider } from './inventory.js?v=1462';
+import { initEquipment, setEquipmentVisible, getVisibleEquippedItems } from './equipment.js?v=1462';
+import { initNotes, hideNotesUI, loadNotesForBook, setOnXpAwarded as setNotesOnXpAwarded } from './notes.js?v=1462';
+import { initParty, connectPartySSE, disconnectPartySSE, loadPartyInvites, setPartyHooks } from './party.js?v=1462';
+import { initAuth, setOnAuthSuccess, showAuthForm, showResetPanel, hasPendingResetToken } from './auth.js?v=1462';
+import { initStats, closeStatsModal } from './stats.js?v=1462';
+import { setAddBookHooks, initAddBook, _closeAddBook, _closeAddComp, _closeAddSeries } from './add-book.js?v=1462';
 import {
   setEditBookHooks, initEditBook,
   openEditBookModal, closeEditBookModal, openEditCompModal, openEditSeriesModal,
   _openEditStash, _closeEditStash, _closeAddStash,
   _adminPdfHref,
   maxSectionInUse,
-} from './edit-book.js?v=1417';
+} from './edit-book.js?v=1462';
 import {
   setPrefsHooks, savePrefs, syncPrefs,
   _setLandingPanelCollapsed, _toggleAllLandingPanelsCollapsed,
   _setPlayPanelCollapsed, _toggleAllPlayPanelsCollapsed,
-} from './prefs.js?v=1417';
-import { initBattleSim, setBattleSimVisible, renderBattleSim } from './battlesim/battlesim829.js?v=1417';
-import { initBattleSim8, setSim8Visible, renderSim8 } from './battlesim/battlesim8.js?v=1417';
-import { initSim286, setSim286Visible, renderSim286 } from './battlesim/battlesim286.js?v=1417';
-import { initSim198, setSim198Visible, renderSim198 } from './battlesim/battlesim198.js?v=1417';
-import { initSim199, setSim199Visible, renderSim199 } from './battlesim/battlesim199.js?v=1417';
-import { initSim200, setSim200Visible, renderSim200 } from './battlesim/battlesim200.js?v=1417';
-import { initSim186, setSim186Visible, renderSim186 } from './battlesim/battlesim186.js?v=1417';
-import { initSim201, setSim201Visible, renderSim201 } from './battlesim/battlesim201.js?v=1417';
-import { initSim202, setSim202Visible, renderSim202 } from './battlesim/battlesim202.js?v=1417';
-import { initSim203, setSim203Visible, renderSim203 } from './battlesim/battlesim203.js?v=1417';
-import { initSim204, setSim204Visible, renderSim204 } from './battlesim/battlesim204.js?v=1417';
-import { initSim205, setSim205Visible, renderSim205 } from './battlesim/battlesim205.js?v=1417';
-import { initSim206, setSim206Visible, renderSim206 } from './battlesim/battlesim206.js?v=1417';
-import { initSim207, setSim207Visible, renderSim207 } from './battlesim/battlesim207.js?v=1417';
-import { initSim208, setSim208Visible, renderSim208 } from './battlesim/battlesim208.js?v=1417';
-import { initSim209, setSim209Visible, renderSim209 } from './battlesim/battlesim209.js?v=1417';
-import { initSim210, setSim210Visible, renderSim210 } from './battlesim/battlesim210.js?v=1417';
-import { initSim211, setSim211Visible, renderSim211 } from './battlesim/battlesim211.js?v=1417';
-import { initSim212, setSim212Visible, renderSim212 } from './battlesim/battlesim212.js?v=1417';
-import { initSim213, setSim213Visible, renderSim213 } from './battlesim/battlesim213.js?v=1417';
-import { initSim214, setSim214Visible, renderSim214 } from './battlesim/battlesim214.js?v=1417';
-import { initSim215, setSim215Visible, renderSim215 } from './battlesim/battlesim215.js?v=1417';
-import { initLiveRead, setLiveReadVisible, renderLiveRead } from './liveread.js?v=1417';
-import { initShop, updateCoinsDisplay, refreshCoinsDisplay, setShopHooks } from './shop.js?v=1417';
-import { initProfile, updateAvatarUI, renderBooksXpSummary, setProfileHooks } from './profile.js?v=1417';
-import { setPublicProfileHooks, closePublicModal, openPublicProfile, openPublicSeriesRun } from './public-profile.js?v=1417';
-import { setLiveTabHooks, _ensureLiveTabControllerStarted, _connectUserBadgeSSE, _disconnectUserBadgeSSE, _connectAppXpSSE, _disconnectAppXpSSE } from './livetab.js?v=1417';
-import { setAppXpHooks, refreshAppXp, handleAppXpEvent } from './app-xp.js?v=1417';
-import { setCoversHooks, loadCovers, openCoverActivity, openSeriesActivity, _showCachedCoversPanel, _refreshPublicCatalogIfVisible, _isLandingBooksViewVisible, _updateLandingBgDragUi, setCoversPrefsState, _toggleCoverTooltipSettings, initCoversPanel, resetFeedDisplayPrefsForLogout, _refillLazyIfShort } from './covers.js?v=1417';
+} from './prefs.js?v=1462';
+import { initBattleSim, setBattleSimVisible, renderBattleSim } from './battlesim/battlesim829.js?v=1462';
+import { initBattleSim8, setSim8Visible, renderSim8 } from './battlesim/battlesim8.js?v=1462';
+import { initSim286, setSim286Visible, renderSim286 } from './battlesim/battlesim286.js?v=1462';
+import { initSim198, setSim198Visible, renderSim198 } from './battlesim/battlesim198.js?v=1462';
+import { initSim199, setSim199Visible, renderSim199 } from './battlesim/battlesim199.js?v=1462';
+import { initSim200, setSim200Visible, renderSim200 } from './battlesim/battlesim200.js?v=1462';
+import { initSim186, setSim186Visible, renderSim186 } from './battlesim/battlesim186.js?v=1462';
+import { initSim201, setSim201Visible, renderSim201 } from './battlesim/battlesim201.js?v=1462';
+import { initSim202, setSim202Visible, renderSim202 } from './battlesim/battlesim202.js?v=1462';
+import { initSim203, setSim203Visible, renderSim203 } from './battlesim/battlesim203.js?v=1462';
+import { initSim83, setSim83Visible, renderSim83 } from './battlesim/battlesim83.js?v=1462';
+import { initSim86, setSim86Visible, renderSim86 } from './battlesim/battlesim86.js?v=1462';
+import { initSim114, setSim114Visible, renderSim114 } from './battlesim/battlesim114.js?v=1462';
+import { initSim115, setSim115Visible, renderSim115 } from './battlesim/battlesim115.js?v=1462';
+import { initSim123, setSim123Visible, renderSim123 } from './battlesim/battlesim123.js?v=1462';
+import { initSim130, setSim130Visible, renderSim130 } from './battlesim/battlesim130.js?v=1462';
+import { initSim92, setSim92Visible, renderSim92 } from './battlesim/battlesim92.js?v=1462';
+import { initSim108, setSim108Visible, renderSim108 } from './battlesim/battlesim108.js?v=1462';
+import { initSim216, setSim216Visible, renderSim216 } from './battlesim/battlesim216.js?v=1462';
+import { initSim193, setSim193Visible, renderSim193 } from './battlesim/battlesim193.js?v=1462';
+import { initSim217, setSim217Visible, renderSim217 } from './battlesim/battlesim217.js?v=1462';
+import { initSim526, setSim526Visible, renderSim526 } from './battlesim/battlesim526.js?v=1462';
+import { initSim324, setSim324Visible, renderSim324 } from './battlesim/battlesim324.js?v=1462';
+import { initSim325, setSim325Visible, renderSim325 } from './battlesim/battlesim325.js?v=1462';
+import { initSim122, setSim122Visible, renderSim122 } from './battlesim/battlesim122.js?v=1462';
+import { initSim80, setSim80Visible, renderSim80 } from './battlesim/battlesim80.js?v=1462';
+import { initSim82, setSim82Visible, renderSim82 } from './battlesim/battlesim82.js?v=1462';
+import { initSim118, setSim118Visible, renderSim118 } from './battlesim/battlesim118.js?v=1462';
+import { initSim218, setSim218Visible, renderSim218 } from './battlesim/battlesim218.js?v=1462';
+import { initSim323, setSim323Visible, renderSim323 } from './battlesim/battlesim323.js?v=1462';
+import { initSim322, setSim322Visible, renderSim322 } from './battlesim/battlesim322.js?v=1462';
+import { initSim204, setSim204Visible, renderSim204 } from './battlesim/battlesim204.js?v=1462';
+import { initSim205, setSim205Visible, renderSim205 } from './battlesim/battlesim205.js?v=1462';
+import { initSim206, setSim206Visible, renderSim206 } from './battlesim/battlesim206.js?v=1462';
+import { initSim207, setSim207Visible, renderSim207 } from './battlesim/battlesim207.js?v=1462';
+import { initSim208, setSim208Visible, renderSim208 } from './battlesim/battlesim208.js?v=1462';
+import { initSim209, setSim209Visible, renderSim209 } from './battlesim/battlesim209.js?v=1462';
+import { initSim210, setSim210Visible, renderSim210 } from './battlesim/battlesim210.js?v=1462';
+import { initSim211, setSim211Visible, renderSim211 } from './battlesim/battlesim211.js?v=1462';
+import { initSim212, setSim212Visible, renderSim212 } from './battlesim/battlesim212.js?v=1462';
+import { initSim213, setSim213Visible, renderSim213 } from './battlesim/battlesim213.js?v=1462';
+import { initSim214, setSim214Visible, renderSim214 } from './battlesim/battlesim214.js?v=1462';
+import { initSim215, setSim215Visible, renderSim215 } from './battlesim/battlesim215.js?v=1462';
+import { initLiveRead, setLiveReadVisible, renderLiveRead } from './liveread.js?v=1462';
+import { initShop, updateCoinsDisplay, refreshCoinsDisplay, setShopHooks } from './shop.js?v=1462';
+import { initProfile, updateAvatarUI, renderBooksXpSummary, setProfileHooks } from './profile.js?v=1462';
+import { setPublicProfileHooks, closePublicModal, openPublicProfile, openPublicSeriesRun } from './public-profile.js?v=1462';
+import { setLiveTabHooks, _ensureLiveTabControllerStarted, _connectUserBadgeSSE, _disconnectUserBadgeSSE, _connectAppXpSSE, _disconnectAppXpSSE } from './livetab.js?v=1462';
+import { setAppXpHooks, refreshAppXp, handleAppXpEvent } from './app-xp.js?v=1462';
+import { setCoversHooks, loadCovers, openCoverActivity, openSeriesActivity, _showCachedCoversPanel, _refreshPublicCatalogIfVisible, _isLandingBooksViewVisible, _updateLandingBgDragUi, setCoversPrefsState, _toggleCoverTooltipSettings, initCoversPanel, resetFeedDisplayPrefsForLogout, _refillLazyIfShort } from './covers.js?v=1462';
 import {
   setBooksHooks, initBooksPanel, renderBooksList,
   getCachedBooks, getCachedAllSeries, getCachedStashes,
@@ -73,23 +94,23 @@ import {
   setBooksDataFresh, setBooksRevealedAt,
   setCurrentUserId,
   _refreshBooksListOnly, _refreshLibraryUi, _starsHtml, _starLabelHtml, _flashRatingGate,
-} from './books.js?v=1417';
+} from './books.js?v=1462';
 import {
   setOpenWorldHooks, setupOpenWorldForBook,
   _syncSeriesRuns, _computeCrossBookReachability, _focusNodeAfterLoad,
   clearOpenWorldState, doJumpCrossBook,
   getOwSrcBookId, getOwSrcSection, getOwCrossBookRoute,
-} from './open-world.js?v=1417';
-import { setFeedHooks, loadFeed, refreshDayCoverFlows } from './feed.js?v=1417';
+} from './open-world.js?v=1462';
+import { setFeedHooks, loadFeed, refreshDayCoverFlows } from './feed.js?v=1462';
 import {
   setNotifHooks, _scheduleLiveUiRefresh,
   _closeNotifDropdown, _openNotifDropdown, isNotifDropdownOpen,
   resetNotifBadgesForLogout,
-} from './notif.js?v=1417';
+} from './notif.js?v=1462';
 import {
   _resetRewardSnapshotState, _positionRewardLayer,
   _processRewardSnapshot, _scheduleRewardProfileRefresh,
-} from './rewards.js?v=1417';
+} from './rewards.js?v=1462';
 import {
   setBgHooks, setCurrentBookCover, getCurrentBookCover,
   resetBgState, cancelBgMove, isBgInMove,
@@ -97,20 +118,20 @@ import {
   hideCtxMenu, _updateSidebarBookInfo, _hideBgCtxMenu,
   _positionMenu, _setupCtxSubmenuFlip, _showBgCtxMenu,
   _enterBgMoveMode, _exitBgMoveMode, _updateColorSwatches,
-} from './bg.js?v=1417';
-import { initTips } from './tips.js?v=1417';
-import { initInbox } from './inbox.js?v=1417';
-import { initDice } from './dice.js?v=1417';
-import { initTooltip } from './tooltip.js?v=1417';
-import { exportAll, exportBook } from './export.js?v=1417';
-import { initFeedback } from './feedback.js?v=1417';
-import { setDemoHooks, getDemoBooks, setDemoBooks, getDemoVisited, startDemoMode, exitDemoMode, wasInDemoMode } from './demo.js?v=1417';
+} from './bg.js?v=1462';
+import { initTips } from './tips.js?v=1462';
+import { initInbox } from './inbox.js?v=1462';
+import { initDice } from './dice.js?v=1462';
+import { initTooltip } from './tooltip.js?v=1462';
+import { exportAll, exportBook } from './export.js?v=1462';
+import { initFeedback } from './feedback.js?v=1462';
+import { setDemoHooks, getDemoBooks, setDemoBooks, getDemoVisited, startDemoMode, exitDemoMode, wasInDemoMode } from './demo.js?v=1462';
 import {
   setAdminUsername, resolveIsAdmin,
   adminBadge, adminBadgeForUsername, authorBadge, contributorBadge, displayFor,
   registerAuthor, registerContributor,
-} from './user.js?v=1417';
-import { escapeHtml, fetchPublic as publicFetch } from './util.js?v=1417';
+} from './user.js?v=1462';
+import { escapeHtml, fetchPublic as publicFetch } from './util.js?v=1462';
 
 window._isMobile = /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
   || (navigator.maxTouchPoints > 1 && window.innerWidth < 1024);
@@ -325,6 +346,27 @@ function showLogin() {
   setSim201Visible(false);
   setSim202Visible(false);
   setSim203Visible(false);
+  setSim83Visible(false);
+  setSim86Visible(false);
+  setSim114Visible(false);
+  setSim115Visible(false);
+  setSim123Visible(false);
+  setSim130Visible(false);
+  setSim92Visible(false);
+  setSim108Visible(false);
+  setSim216Visible(false);
+  setSim193Visible(false);
+  setSim217Visible(false);
+  setSim526Visible(false);
+  setSim322Visible(false);
+  setSim323Visible(false);
+  setSim324Visible(false);
+  setSim325Visible(false);
+  setSim122Visible(false);
+  setSim80Visible(false);
+  setSim82Visible(false);
+  setSim118Visible(false);
+  setSim218Visible(false);
   setSim204Visible(false);
   setSim205Visible(false);
   setSim206Visible(false);
@@ -442,6 +484,27 @@ async function showBooks() {
   setSim201Visible(false);
   setSim202Visible(false);
   setSim203Visible(false);
+  setSim83Visible(false);
+  setSim86Visible(false);
+  setSim114Visible(false);
+  setSim115Visible(false);
+  setSim123Visible(false);
+  setSim130Visible(false);
+  setSim92Visible(false);
+  setSim108Visible(false);
+  setSim216Visible(false);
+  setSim193Visible(false);
+  setSim217Visible(false);
+  setSim526Visible(false);
+  setSim322Visible(false);
+  setSim323Visible(false);
+  setSim324Visible(false);
+  setSim325Visible(false);
+  setSim122Visible(false);
+  setSim80Visible(false);
+  setSim82Visible(false);
+  setSim118Visible(false);
+  setSim218Visible(false);
   setSim204Visible(false);
   setSim205Visible(false);
   setSim206Visible(false);
@@ -708,6 +771,27 @@ async function showMain(bookId, isbn = null, issn = null, asin = null, cover = n
   setSim201Visible(bookId === 201);
   setSim202Visible(bookId === 202);
   setSim203Visible(bookId === 203);
+  setSim83Visible(bookId === 83);
+  setSim86Visible(bookId === 86);
+  setSim114Visible(bookId === 114);
+  setSim115Visible(bookId === 115);
+  setSim123Visible(bookId === 123);
+  setSim130Visible(bookId === 130);
+  setSim92Visible(bookId === 92);
+  setSim108Visible(bookId === 108);
+  setSim216Visible(bookId === 216);
+  setSim193Visible(bookId === 193);
+  setSim217Visible(bookId === 217);
+  setSim526Visible(bookId === 526);
+  setSim324Visible(bookId === 324);
+  setSim325Visible(bookId === 325);
+  setSim122Visible(bookId === 122);
+  setSim80Visible(bookId === 80);
+  setSim82Visible(bookId === 82);
+  setSim118Visible(bookId === 118);
+  setSim218Visible(bookId === 218);
+  setSim323Visible(bookId === 323);
+  setSim322Visible(bookId === 322);
   setSim204Visible(bookId === 204);
   setSim205Visible(bookId === 205);
   setSim206Visible(bookId === 206);
@@ -901,6 +985,27 @@ document.addEventListener('DOMContentLoaded', async () => {
   initSim201();
   initSim202();
   initSim203();
+  initSim83();
+  initSim86();
+  initSim114();
+  initSim115();
+  initSim123();
+  initSim130();
+  initSim92();
+  initSim108();
+  initSim216();
+  initSim193();
+  initSim217();
+  initSim526();
+  initSim324();
+  initSim325();
+  initSim122();
+  initSim80();
+  initSim82();
+  initSim118();
+  initSim218();
+  initSim323();
+  initSim322();
   initSim204();
   initSim205();
   initSim206();
@@ -932,6 +1037,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderSim201();
     renderSim202();
     renderSim203();
+    renderSim83();
+    renderSim86();
+    renderSim114();
+    renderSim115();
+    renderSim123();
+    renderSim130();
+    renderSim92();
+    renderSim108();
+    renderSim216();
+    renderSim193();
+    renderSim217();
+    renderSim526();
+    renderSim324();
+    renderSim325();
+    renderSim122();
+    renderSim80();
+    renderSim82();
+    renderSim118();
+    renderSim218();
+    renderSim323();
+    renderSim322();
     renderSim204();
     renderSim205();
     renderSim206();

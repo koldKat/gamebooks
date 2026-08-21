@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Home-screen/install icon only - not the shared /favicon.svg (browser
+       tab, desktop taskbar, admin panel), which stays transparent on
+       purpose and is used in contexts where that's fine. Android's
+       adaptive-icon renderer fills any transparent area behind an install
+       icon with a plain white circle by default - every other installed
+       app in this project's family bakes its own opaque background into
+       its icon instead of relying on the OS default, which is why theirs
+       look like a deliberate icon and this book's used to look like a
+       blank white circle. Same artwork as favicon.svg, background_color
+       (#111827) added behind it. -->
+  <rect x="0" y="0" width="32" height="32" fill="#111827"/>
+  <!-- edges -->
+  <line x1="16" y1="16" x2="6"  y2="7"  stroke="#4b5563" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="16" y1="16" x2="26" y2="7"  stroke="#4b5563" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="16" y1="16" x2="6"  y2="26" stroke="#4b5563" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="16" y1="16" x2="26" y2="26" stroke="#4b5563" stroke-width="1.8" stroke-linecap="round"/>
+  <!-- child nodes -->
+  <circle cx="6"  cy="7"  r="4" fill="#8e44ad" stroke="#6c3483" stroke-width="1.2"/>
+  <circle cx="26" cy="7"  r="4" fill="#e74c3c" stroke="#c0392b" stroke-width="1.2"/>
+  <circle cx="6"  cy="26" r="4" fill="#8e44ad" stroke="#6c3483" stroke-width="1.2"/>
+  <circle cx="26" cy="26" r="4" fill="#27ae60" stroke="#1e8449" stroke-width="1.2"/>
+  <!-- central node -->
+  <circle cx="16" cy="16" r="6" fill="#f5a623" stroke="#c47d00" stroke-width="1.5"/>
+</svg>

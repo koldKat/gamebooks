@@ -8,11 +8,11 @@
 // Deliberately NOT built on .inv-overlay: the whole point is that the graph
 // stays visible and interactive underneath while reading.
 
-import { state, apiFetch, currentBookId, currentPlaythrough, currentSection, viewingPt, isTerminal, parseSecId } from './state.js?v=1417';
-import { navigate, commitChoices, showAlert, suppressAutoNav } from './play.js?v=1417';
-import { network, setLightweightRestabilize } from './graph.js?v=1417';
-import { t } from './i18n.js?v=1417';
-import { shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from './util.js?v=1417';
+import { state, apiFetch, currentBookId, currentPlaythrough, currentSection, viewingPt, isTerminal, parseSecId } from './state.js?v=1462';
+import { navigate, commitChoices, showAlert, suppressAutoNav } from './play.js?v=1462';
+import { network, setLightweightRestabilize } from './graph.js?v=1462';
+import { t } from './i18n.js?v=1462';
+import { shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from './util.js?v=1462';
 
 // Bumped on every call and re-checked after each await so a slower, now-stale
 // fetch (e.g. from a rapid double-click on two different choice links) can't
@@ -25,6 +25,50 @@ let _showToken = 0;
 // _showSection() would re-fetch and reset scrollTop on every single render(),
 // yanking the panel back to the top out from under the player mid-scroll.
 let _shownSec;
+
+// Only the very first section fetched after opening the panel shows the
+// loading spinner - reset on open/close, cleared as soon as that first show
+// is triggered so later page-to-page navigation swaps straight to the new
+// text with no spinner flash. A cache hit (see below) also skips it, even
+// on the first show.
+let _isFirstShowSinceOpen = true;
+
+// In-memory only, never persisted - every response is cached by `bookId:sec`
+// key, and every section shown fires an unawaited prefetch of its own
+// choices' targets so a reader who clicks a link they were just looking at
+// gets it instantly, no spinner, no round trip. Doesn't shrink between book
+// switches (stale entries for a previous book just sit unused), which is
+// fine at this scale - a session visits at most a few dozen sections, each
+// a few KB of HTML.
+const _sectionCache = new Map();
+
+function _cacheKey(sec) { return `${currentBookId}:${sec}`; }
+
+// { ok:true, data } on success (from cache or network) or { ok:false,
+// networkError } - networkError distinguishes a fetch exception (caller
+// stays silent, matches the original behavior) from a clean !res.ok
+// response (caller shows a message).
+async function _fetchSectionData(sec) {
+  const key = _cacheKey(sec);
+  if (_sectionCache.has(key)) return { ok: true, data: _sectionCache.get(key) };
+  let res;
+  try {
+    res = await apiFetch(`/api/books/${currentBookId}/sections/${encodeURIComponent(sec)}`);
+  } catch (_) {
+    return { ok: false, networkError: true };
+  }
+  if (!res.ok) return { ok: false, networkError: false };
+  const data = await res.json();
+  _sectionCache.set(key, data);
+  return { ok: true, data };
+}
+
+function _prefetchChoices(choices) {
+  for (const c of choices || []) {
+    if (isTerminal(c) || _sectionCache.has(_cacheKey(c))) continue;
+    _fetchSectionData(c).catch(() => {});
+  }
+}
 
 function _updateHeading(sec) {
   const el = document.getElementById('liveread-heading');
@@ -44,19 +88,18 @@ async function _showSection(sec) {
     return;
   }
 
-  let res;
-  try {
-    res = await apiFetch(`/api/books/${currentBookId}/sections/${encodeURIComponent(sec)}`);
-  } catch (_) {
+  if (_isFirstShowSinceOpen && !_sectionCache.has(_cacheKey(sec))) {
+    body.innerHTML = `<div class="liveread-loading"><div class="liveread-spinner"></div><span>${t('liveread.loading')}</span></div>`;
+  }
+  _isFirstShowSinceOpen = false;
+
+  const result = await _fetchSectionData(sec);
+  if (token !== _showToken) return;
+  if (!result.ok) {
+    if (!result.networkError) body.innerHTML = `<p class="liveread-empty">${t('liveread.no_section_data')}</p>`;
     return;
   }
-  if (token !== _showToken) return;
-  if (!res.ok) {
-    body.innerHTML = `<p class="liveread-empty">${t('liveread.no_section_data')}</p>`;
-    return;
-  }
-  const data = await res.json();
-  if (token !== _showToken) return;
+  const data = result.data;
   body.innerHTML = data.html;
   body.scrollTop = 0;
   if (data.choices?.length) commitChoices(sec, data.choices);
@@ -70,6 +113,7 @@ async function _showSection(sec) {
       a.addEventListener('mouseleave', () => network.selectNodes([]));
     });
   }
+  _prefetchChoices(data.choices);
 }
 
 // Imported source HTML occasionally has an in-text link that isn't a real,
@@ -85,16 +129,14 @@ async function _showExtra(key) {
   const body = document.getElementById('liveread-body');
   if (!body) return;
   const token = ++_showToken;
-  let res;
-  try {
-    res = await apiFetch(`/api/books/${currentBookId}/sections/${encodeURIComponent(key)}`);
-  } catch (_) {
-    return;
+  if (_isFirstShowSinceOpen && !_sectionCache.has(_cacheKey(key))) {
+    body.innerHTML = `<div class="liveread-loading"><div class="liveread-spinner"></div><span>${t('liveread.loading')}</span></div>`;
   }
+  _isFirstShowSinceOpen = false;
+  const result = await _fetchSectionData(key);
   if (token !== _showToken) return;
-  if (!res.ok) return;
-  const data = await res.json();
-  if (token !== _showToken) return;
+  if (!result.ok) return;
+  const data = result.data;
   body.innerHTML = `${data.html}<p class="liveread-back"><a href="#" id="liveread-back-link">${t('btn.back')}</a></p>`;
   body.scrollTop = 0;
   document.getElementById('liveread-back-link')?.addEventListener('click', e => {
@@ -141,6 +183,7 @@ function _open() {
   suppressAutoNav(true);
   setLightweightRestabilize(true);
   panel.classList.add('active');
+  _isFirstShowSinceOpen = true;
   _showSection(currentSection() ?? (state.startSection ?? 1));
 }
 
@@ -150,6 +193,7 @@ function _close() {
   // Reset so a later reopen always re-fetches, even onto the same section id -
   // it could belong to a different book by then (_shownSec doesn't track book).
   _shownSec = undefined;
+  _isFirstShowSinceOpen = true;
   document.getElementById('liveread-panel')?.classList.remove('active');
 }
 

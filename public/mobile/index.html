@@ -5,16 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Gamebook Tracker</title>
 <meta name="theme-color" content="#111827">
-<!-- Own manifest, not public/manifest.json (desktop's own, display: "browser")
-     - without this, "Add to Home Screen" on this page had nothing telling
-     Android to launch it address-bar-free, unlike every other installed
-     site. display: "standalone" here is what actually removes it. -->
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<!-- Own manifest, not public/manifest.json (desktop's own) - both are
+     standalone now, but installing from the root URL (what a phone browser
+     actually lands on unless the user manually navigates to /mobile first)
+     used to show the address bar regardless of anything fixed here, since
+     Chrome reads whichever page's own <link rel="manifest"> was active at
+     install time - editing this file never touched that one. -->
 <link rel="manifest" href="/mobile/manifest.json">
-<link rel="stylesheet" href="/css/confirm.css?v=1417">
-<link rel="stylesheet" href="/css/autocomplete.css?v=1417">
-<link rel="stylesheet" href="/css/equipment.css?v=1417">
-<link rel="stylesheet" href="/css/battlesim.css?v=1417">
-<link rel="stylesheet" href="/mobile/css/style.css?v=1417">
+<link rel="stylesheet" href="/css/confirm.css?v=1462">
+<link rel="stylesheet" href="/css/autocomplete.css?v=1462">
+<link rel="stylesheet" href="/css/equipment.css?v=1462">
+<link rel="stylesheet" href="/css/battlesim.css?v=1462">
+<link rel="stylesheet" href="/mobile/css/style.css?v=1462">
 </head>
 <body>
 <div id="screen"></div>
@@ -25,6 +29,6 @@
      programmatically, so it's never meant to be seen. -->
 <div id="m-sim-btn-row" style="display:none"></div>
 <script src="/vendor/vis-network/vis-network.min.js?v=1"></script>
-<script type="module" src="/mobile/js/app.js?v=1417"></script>
+<script type="module" src="/mobile/js/app.js?v=1462"></script>
 </body>
 </html>

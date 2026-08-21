@@ -4,9 +4,9 @@
 // refreshCoinsDisplay()/updateCoinsDisplay()/setShopHooks() calls from boot.js,
 // and delete public/css/shop.css (and its <link> in index.html).
 
-import { apiFetch, getToken } from './state.js?v=1417';
-import { escapeHtml } from './util.js?v=1417';
-import { t } from './i18n.js?v=1417';
+import { apiFetch, getToken } from './state.js?v=1462';
+import { escapeHtml } from './util.js?v=1462';
+import { t } from './i18n.js?v=1462';
 
 // Callbacks wired in by main.js at boot
 let _hooks = {};
@@ -70,6 +70,17 @@ const SHOP_ITEMS = [
 
 let _shopData = null;
 let _rewardProfileFetchPromise = null;
+let _rewardProfileDebounceTimer = null;
+let _rewardProfilePendingResolvers = [];
+// Several independent, uncoordinated call sites can each ask for a refresh
+// within the same real burst (e.g. creating a book with several metadata
+// fields fires many awardXp events server-side; rewards.js/notif.js/livetab.js
+// each have their own reasons to call this) - without merging, each call used
+// to fire its own /api/profile fetch, and the XP bar (profile.js) would then
+// see several small, choppy back-to-back updates instead of one clean jump to
+// the final total. Trailing-debounce so any calls within REWARD_PROFILE_DEBOUNCE_MS
+// of each other collapse into a single fetch, shared by every caller.
+const REWARD_PROFILE_DEBOUNCE_MS = 300;
 
 function _shopHasAffordable(balance) {
   if (!_shopData || balance <= 0) return false;
@@ -135,23 +146,34 @@ async function _claimBonusGc() {
   }
 }
 
-export async function refreshCoinsDisplay() {
-  if (!getToken()) return;
-  if (_rewardProfileFetchPromise) return _rewardProfileFetchPromise;
-  _rewardProfileFetchPromise = (async () => {
-    try {
-      const res = await apiFetch('/api/profile');
-      if (!res.ok) return;
-      const data = await res.json();
-      _hooks.onRewardSnapshot?.(data);
-      if (!_shopData) _shopData = data;
-      else _shopData.pendingBonusGc = data.pendingBonusGc;
-      updateCoinsDisplay(data.coinsBalance || 0);
-      updateBonusGcIndicator(data.pendingBonusGc);
-    } catch {}
-    finally { _rewardProfileFetchPromise = null; }
-  })();
-  return _rewardProfileFetchPromise;
+export function refreshCoinsDisplay() {
+  if (!getToken()) return Promise.resolve();
+  if (_rewardProfileFetchPromise) return _rewardProfileFetchPromise; // a merged fetch is already in flight - join it
+  return new Promise(resolve => {
+    _rewardProfilePendingResolvers.push(resolve);
+    clearTimeout(_rewardProfileDebounceTimer);
+    _rewardProfileDebounceTimer = setTimeout(() => {
+      _rewardProfileDebounceTimer = null;
+      const resolvers = _rewardProfilePendingResolvers;
+      _rewardProfilePendingResolvers = [];
+      _rewardProfileFetchPromise = (async () => {
+        try {
+          const res = await apiFetch('/api/profile');
+          if (!res.ok) return;
+          const data = await res.json();
+          _hooks.onRewardSnapshot?.(data);
+          if (!_shopData) _shopData = data;
+          else _shopData.pendingBonusGc = data.pendingBonusGc;
+          updateCoinsDisplay(data.coinsBalance || 0);
+          updateBonusGcIndicator(data.pendingBonusGc);
+        } catch {}
+        finally {
+          _rewardProfileFetchPromise = null;
+          resolvers.forEach(r => r());
+        }
+      })();
+    }, REWARD_PROFILE_DEBOUNCE_MS);
+  });
 }
 
 function renderShopItems() {

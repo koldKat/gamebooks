@@ -1,6 +1,6 @@
 /* ── Battle Simulator (Пътят на пъдпъдъка) ───────────────────────────────── */
 
-#battlesim-btn, #sim8-btn, #sim286-btn, #sim198-btn, #sim199-btn, #sim200-btn, #sim186-btn, #sim201-btn, #sim202-btn, #sim203-btn, #sim204-btn, #sim205-btn, #sim206-btn, #sim207-btn, #sim208-btn, #sim209-btn, #sim210-btn, #sim211-btn, #sim212-btn, #sim213-btn, #sim214-btn, #sim215-btn {
+#battlesim-btn, #sim8-btn, #sim286-btn, #sim198-btn, #sim199-btn, #sim200-btn, #sim186-btn, #sim201-btn, #sim202-btn, #sim203-btn, #sim83-btn, #sim86-btn, #sim114-btn, #sim115-btn, #sim123-btn, #sim130-btn, #sim92-btn, #sim108-btn, #sim216-btn, #sim193-btn, #sim217-btn, #sim526-btn, #sim322-btn, #sim323-btn, #sim324-btn, #sim325-btn, #sim122-btn, #sim80-btn, #sim82-btn, #sim118-btn, #sim218-btn, #sim204-btn, #sim205-btn, #sim206-btn, #sim207-btn, #sim208-btn, #sim209-btn, #sim210-btn, #sim211-btn, #sim212-btn, #sim213-btn, #sim214-btn, #sim215-btn {
   background: rgba(31, 41, 55, 0.88);
   border: 1px solid #374151;
   border-radius: 7px;
@@ -18,7 +18,7 @@
      are showing at once. */
   flex-shrink: 0;
 }
-#battlesim-btn:hover, #sim8-btn:hover, #sim286-btn:hover, #sim198-btn:hover, #sim199-btn:hover, #sim200-btn:hover, #sim186-btn:hover, #sim201-btn:hover, #sim202-btn:hover, #sim203-btn:hover, #sim204-btn:hover, #sim205-btn:hover, #sim206-btn:hover, #sim207-btn:hover, #sim208-btn:hover, #sim209-btn:hover, #sim210-btn:hover, #sim211-btn:hover, #sim212-btn:hover, #sim213-btn:hover, #sim214-btn:hover, #sim215-btn:hover { background: #374151; color: #d1d5db; }
+#battlesim-btn:hover, #sim8-btn:hover, #sim286-btn:hover, #sim198-btn:hover, #sim199-btn:hover, #sim200-btn:hover, #sim186-btn:hover, #sim201-btn:hover, #sim202-btn:hover, #sim203-btn:hover, #sim83-btn:hover, #sim86-btn:hover, #sim114-btn:hover, #sim115-btn:hover, #sim123-btn:hover, #sim130-btn:hover, #sim92-btn:hover, #sim108-btn:hover, #sim216-btn:hover, #sim193-btn:hover, #sim217-btn:hover, #sim526-btn:hover, #sim322-btn:hover, #sim323-btn:hover, #sim324-btn:hover, #sim325-btn:hover, #sim122-btn:hover, #sim80-btn:hover, #sim82-btn:hover, #sim118-btn:hover, #sim218-btn:hover, #sim204-btn:hover, #sim205-btn:hover, #sim206-btn:hover, #sim207-btn:hover, #sim208-btn:hover, #sim209-btn:hover, #sim210-btn:hover, #sim211-btn:hover, #sim212-btn:hover, #sim213-btn:hover, #sim214-btn:hover, #sim215-btn:hover { background: #374151; color: #d1d5db; }
 
 /* Modal reuses .inv-overlay/.inv-modal/.inv-modal-hdr/.inv-modal-ftr and the
    .inv-edit-row/.inv-qty-* stepper pattern from inventory.js's item-edit

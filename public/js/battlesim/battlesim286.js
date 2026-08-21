@@ -11,11 +11,11 @@
 // shields subtracting a flat amount from incoming enemy damage instead. All
 // state lives in pt.sim286, per-user/per-book via currentPlaythrough().
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../state.js?v=1417';
-import { showAlert } from '../confirm.js?v=1417';
-import { getPlayBtnRow } from '../charsheet.js?v=1417';
-import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../util.js?v=1417';
-import { t } from '../i18n.js?v=1417';
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../state.js?v=1462';
+import { showAlert } from '../confirm.js?v=1462';
+import { getPlayBtnRow } from '../charsheet.js?v=1462';
+import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../util.js?v=1462';
+import { t } from '../i18n.js?v=1462';
 
 // Book rule: initial life roll (2d6×4) plus up to 2 rerolls, 3 throws total per run.
 const MAX_LIFE_ROLLS = 3;
