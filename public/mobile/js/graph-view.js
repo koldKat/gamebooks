@@ -16,9 +16,9 @@
 
 import {
   state, currentPlaythrough, viewingPt, isTerminal, allDiscoveredSections, saveState,
-} from '../../js/state.js?v=1417';
-import { COLORS } from '../../js/constants.js?v=1417';
-import { t } from '../../js/i18n.js?v=1417';
+} from '../../js/state.js?v=1462';
+import { COLORS } from '../../js/constants.js?v=1462';
+import { t } from '../../js/i18n.js?v=1462';
 
 const LAYER_GAP  = 120; // vertical spacing between BFS depth layers
 const COL_GAP    = 90;  // horizontal spacing between siblings at the same layer
@@ -165,9 +165,45 @@ function _bfsDepth(startSec) {
   return depth;
 }
 
+// Every section with a positioned choice-neighbor (parent or child, either
+// direction) to `sec`, per state.graph - mirrors graph.js's own
+// _getPositionedNeighbors(), reimplemented locally rather than imported for
+// the same reason as every other helper here (this file stays import-free
+// of graph.js on purpose).
+function _positionedNeighbors(sec) {
+  // .includes(sec) is strict-equality, same type trap _bfsDepth's own
+  // comment above documents: state.graph's choices values aren't guaranteed
+  // to be the same JS type as sec, so a string/number mismatch would
+  // silently miss a real connection. String() both sides before comparing.
+  const secStr = String(sec);
+  const out = [];
+  for (const [srcKey, data] of Object.entries(state.graph)) {
+    if (srcKey === secStr) {
+      for (const dest of (data.choices || [])) {
+        if (!isTerminal(dest) && _hasPos(state.positions[dest])) out.push(dest);
+      }
+      continue;
+    }
+    if ((data.choices || []).some(c => String(c) === secStr) && _hasPos(state.positions[srcKey])) out.push(srcKey);
+  }
+  return out;
+}
+
 // Assigns a grid slot to any discovered section that doesn't have a saved
 // position yet. Existing positions (from a prior mobile session, or from
 // desktop itself) are never touched - only gaps get filled in.
+//
+// A node discovered long after the book's initial layout is BFS-depth-from-
+// START at that moment, which has nothing to do with where its actual
+// parent ended up on screen - on a book with a long path that can place a
+// freshly-discovered node way down past the bottom of the visible map,
+// joined to its real parent only by one very long connector (same bug
+// desktop's _assignGridPositions had, axes swapped: desktop grows sideways
+// off-screen, this grows vertically off-screen). Any missing node with an
+// already-positioned neighbor gets placed next to that neighbor instead -
+// one row down, same "find the next free X slot in that row" logic as
+// below. Only a node with no positioned neighbor at all (the genuine
+// first-ever layout, nothing positioned yet) falls back to the depth grid.
 function _layout(sections, startSec) {
   const missing = sections.filter(id => !_hasPos(state.positions[id]));
   if (!missing.length) return;
@@ -175,7 +211,14 @@ function _layout(sections, startSec) {
   const depthValues = Object.values(depth);
   const maxDepth = depthValues.length ? Math.max(...depthValues) : 0;
   for (const id of missing) {
-    const y = (id in depth ? depth[id] : maxDepth + 1) * LAYER_GAP;
+    const neighbors = _positionedNeighbors(id);
+    let y;
+    if (neighbors.length) {
+      const neighborY = Math.max(...neighbors.map(n => state.positions[n].y));
+      y = neighborY + LAYER_GAP;
+    } else {
+      y = (id in depth ? depth[id] : maxDepth + 1) * LAYER_GAP;
+    }
     let maxX = -COL_GAP;
     for (const other of sections) {
       const p = state.positions[other];

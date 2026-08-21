@@ -1,9 +1,9 @@
-import { COLORS } from './constants.js?v=1417';
+import { COLORS } from './constants.js?v=1462';
 import {
   state, viewingPt, isTerminal, parseSecId, isValidSecId,
   currentPlaythrough, allDiscoveredSections, saveState,
-} from './state.js?v=1417';
-import { t } from './i18n.js?v=1417';
+} from './state.js?v=1462';
+import { t } from './i18n.js?v=1462';
 
 export let network  = null;
 export let visNodes = null;
@@ -561,6 +561,13 @@ function nodeTitle(secId, portals) {
 }
 
 function _getPositionedNeighbors(sec, posMap) {
+  // .includes(sec) is strict-equality: data.choices' raw values aren't
+  // guaranteed to be the same JS type as sec (which callers pass in already
+  // normalized via parseSecId/allDiscoveredSections) - the same string-vs-
+  // number trap this project already fixed once in state.js's own
+  // discoveredSectionsFor. String() both sides before comparing so a real
+  // connection can't be silently missed here too.
+  const secStr = String(sec);
   const incoming = [];
   const outgoing = [];
   for (const [srcKey, data] of Object.entries(state.graph)) {
@@ -571,7 +578,7 @@ function _getPositionedNeighbors(sec, posMap) {
       }
       continue;
     }
-    if ((data.choices || []).includes(sec) && _hasValidPos(posMap[src])) incoming.push(src);
+    if ((data.choices || []).some(c => String(c) === secStr) && _hasValidPos(posMap[src])) incoming.push(src);
   }
   return { incoming, outgoing, all: [...incoming, ...outgoing] };
 }
@@ -789,6 +796,23 @@ function _bfsDepth(startSec, allSections) {
 // Same "only fill gaps, never move an existing position" contract as
 // _assignLocalPositions - relevant once a book has grown past its very first
 // sync and mixes freshly-discovered nodes in with already-gridded ones.
+//
+// A node discovered long after the book's initial layout is BFS-depth-from-
+// START at that moment, which has nothing to do with where its own actual
+// parent ended up on screen (the parent's own position may itself have come
+// from an earlier partial layout, a drag, or simply not line up with pure
+// depth*_GRID_LAYER_GAP spacing) - on a book with a long path, that raw
+// depth can be large enough to place the new node thousands of pixels off
+// to the side of the parent it's actually connected to, joined only by one
+// very long connector (found via a real book: two nodes discovered ~20
+// choices deep landed off past the edge of the visible map, the "start-
+// relative" bug the grid formula has always had, not something that only
+// affects the initial layout's missing-neighbor fallback). Any missing node
+// with an already-positioned neighbor gets placed next to that neighbor -
+// one grid column over, same "find the next free Y slot in that column"
+// logic as below - instead of trusting raw BFS depth. Only a node with NO
+// positioned neighbor at all (the genuine first-ever bulk layout, where
+// nothing is positioned yet) falls back to the depth grid.
 function _assignGridPositions(allSections, startSec) {
   const missing = [...allSections].filter(sec => !_hasValidPos(state.positions[sec]));
   if (!missing.length) return false;
@@ -796,7 +820,14 @@ function _assignGridPositions(allSections, startSec) {
   const maxDepth = depth.size ? Math.max(...depth.values()) : 0;
   missing.sort(naturalCompareIds);
   for (const sec of missing) {
-    const x = (depth.has(sec) ? depth.get(sec) : maxDepth + 1) * _GRID_LAYER_GAP;
+    const neighbors = _getPositionedNeighbors(sec, state.positions).all;
+    let x;
+    if (neighbors.length) {
+      const neighborX = Math.max(...neighbors.map(id => state.positions[id].x));
+      x = neighborX + _GRID_LAYER_GAP;
+    } else {
+      x = (depth.has(sec) ? depth.get(sec) : maxDepth + 1) * _GRID_LAYER_GAP;
+    }
     let maxY = -_GRID_COL_GAP;
     for (const other of allSections) {
       const p = state.positions[other];

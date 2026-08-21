@@ -4,10 +4,10 @@
 // updateAvatarUI()/renderBooksXpSummary()/setProfileHooks() calls
 // from boot.js, and delete public/css/profile.css and its <link> in index.html.
 
-import { apiFetch, setUsername, isDemoMode, getToken, setCurrentUserLevel, getUsername } from './state.js?v=1417';
-import { t } from './i18n.js?v=1417';
-import { updateCoinsDisplay } from './shop.js?v=1417';
-import { escapeHtml, compressToBlob } from './util.js?v=1417';
+import { apiFetch, setUsername, isDemoMode, getToken, setCurrentUserLevel, getUsername } from './state.js?v=1462';
+import { t } from './i18n.js?v=1462';
+import { updateCoinsDisplay } from './shop.js?v=1462';
+import { escapeHtml, compressToBlob } from './util.js?v=1462';
 
 let _hooks = {};
 export function setProfileHooks(h) { _hooks = h || {}; }
@@ -72,29 +72,45 @@ function _renderBoostAmount(prefix, data, boostXp) {
 
 let _displayedXp      = null; // last value rendered into books/play bars (may be mid-animation)
 let _displayedBoostXp = null; // last "XP earned from boost" value rendered (mirrors _displayedXp)
-let _xpAnimGen    = 0;
+let _animQueue    = []; // pending {toXp, toBoostXp, data} segments, played back to back
+let _animRunning  = false;
+let _animGen      = 0; // bumped only on a hard reset (see _xpApply's else branch), to invalidate in-flight rAF closures
 const XP_ANIM_MS_PER_LEVEL = 100; // e.g. lvl 37 -> 3.7s; low levels earn less XP, so near-instant is fine
 
-function _animateXpTo(toXp, data) {
+// Segments are queued, never interrupted: if a new XP update arrives while
+// one is still animating, it's appended rather than restarting/overwriting
+// the current tween - each segment always plays its own full
+// XP_ANIM_MS_PER_LEVEL duration, so two updates back to back take the sum of
+// both durations (e.g. 4.7s + 4.7s = 9.4s at level 47), matching how the
+// underlying reward snapshots themselves arrive sequentially.
+function _runAnimQueue(gen) {
+  if (_animRunning) return;
+  const next = _animQueue.shift();
+  if (!next) return;
+  _animRunning = true;
+  const { toXp, toBoostXp, data } = next;
   const fromXp      = _displayedXp != null ? _displayedXp : toXp;
-  const toBoostXp    = Math.floor(Number(data?.xpFromBoost) || 0);
-  const fromBoostXp  = _displayedBoostXp != null ? _displayedBoostXp : toBoostXp;
-  const gen = ++_xpAnimGen;
+  const fromBoostXp = _displayedBoostXp != null ? _displayedBoostXp : toBoostXp;
   const durationMs = Math.max(0, Number(data?.level) || 0) * XP_ANIM_MS_PER_LEVEL;
+  const finish = () => {
+    _displayedXp = toXp;
+    _displayedBoostXp = toBoostXp;
+    _animRunning = false;
+    _runAnimQueue(gen);
+  };
   if (fromXp === toXp || durationMs <= 0) {
     _xpRenderPrefix('books', toXp, data);
     _xpRenderPrefix('play',  toXp, data);
     _renderBoostAmount('books', data, toBoostXp);
     _renderBoostAmount('play',  data, toBoostXp);
-    _displayedXp = toXp;
-    _displayedBoostXp = toBoostXp;
+    finish();
     return;
   }
   const start = performance.now();
   function step(now) {
-    if (gen !== _xpAnimGen) return; // superseded by a newer update
+    if (gen !== _animGen) { _animRunning = false; return; } // invalidated by a hard reset
     const t      = Math.min(1, (now - start) / durationMs);
-    const current      = fromXp      + (toXp      - fromXp)      * t; // linear: a restart only changes rate, never bursts
+    const current      = fromXp      + (toXp      - fromXp)      * t;
     const currentBoost = fromBoostXp + (toBoostXp - fromBoostXp) * t;
     _xpRenderPrefix('books', current, data);
     _xpRenderPrefix('play',  current, data);
@@ -103,18 +119,30 @@ function _animateXpTo(toXp, data) {
     _displayedXp = current;
     _displayedBoostXp = currentBoost;
     if (t < 1) requestAnimationFrame(step);
-    else { _displayedXp = toXp; _displayedBoostXp = toBoostXp; }
+    else finish();
   }
   requestAnimationFrame(step);
+}
+
+function _enqueueXpAnim(toXp, data) {
+  const toBoostXp = Math.floor(Number(data?.xpFromBoost) || 0);
+  _animQueue.push({ toXp, toBoostXp, data });
+  _runAnimQueue(_animGen);
 }
 
 function _xpApply(xp, data, fromXp = null) {
   _xpRenderPrefix('profile', xp, data); // profile bar/text always snaps instantly
   if (fromXp != null && Number.isFinite(fromXp) && fromXp !== xp) {
-    _displayedXp = fromXp;
-    _animateXpTo(xp, data);
+    // Seed _displayedXp from the snapshot's fromXp only when nothing has
+    // been rendered yet - once an animation is running, _displayedXp already
+    // holds its true, real-time interpolated position and this segment
+    // queues after it rather than overwriting it.
+    if (_displayedXp == null) _displayedXp = fromXp;
+    _enqueueXpAnim(xp, data);
   } else {
-    _xpAnimGen++; // cancel any in-flight animation
+    _animGen++; // hard reset (no known prior position): invalidate any in-flight animation
+    _animQueue = [];
+    _animRunning = false;
     _xpRenderPrefix('books', xp, data);
     _xpRenderPrefix('play',  xp, data);
     const boostXp = Math.floor(Number(data?.xpFromBoost) || 0);

@@ -11,10 +11,10 @@
 // deep-links straight into a single book's reader (?book=123, set by that
 // same desktop "Open" button) - see books.js's book-open-btn handler.
 
-import { getToken, clearToken, apiFetch, setCurrentUserLevel, setBonusUndos, setBonusFastTravels } from '../../js/state.js?v=1417';
-import { renderLogin } from './auth.js?v=1417';
-import { renderReader } from './reader.js?v=1417';
-import { t } from '../../js/i18n.js?v=1417';
+import { getToken, clearToken, apiFetch, setCurrentUserLevel, setBonusUndos, setBonusFastTravels } from '../../js/state.js?v=1462';
+import { renderLogin } from './auth.js?v=1462';
+import { renderReader } from './reader.js?v=1462';
+import { t } from '../../js/i18n.js?v=1462';
 
 const mount = document.getElementById('screen');
 

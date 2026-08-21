@@ -362,6 +362,13 @@
   background: transparent;
   color: #9ca3af;
   border: 1px solid #6b7280;
+  /* flex: 1 1 auto (not a margin push) - grows this one button's own width
+     to close the gap between the row and the .book-item rows' right edge
+     below, while staying directly adjacent to the other 3 (normal gap, no
+     isolating empty space). flex-basis: auto means it only ever grows from
+     its natural content size, never shrinks below it. */
+  flex: 1 1 auto;
+  text-align: center;
 }
 #open-add-stash-btn:hover {
   background: rgba(107, 114, 128, 0.12);

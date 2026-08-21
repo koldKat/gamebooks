@@ -35,16 +35,16 @@ import {
   state, loadState, saveState, apiFetch, currentBookId,
   currentPlaythrough, currentSection, isTerminal, isValidSecId, parseSecId,
   setViewingPt, viewingPt, currentUserLevel, bonusUndos, bonusFastTravels,
-} from '../../js/state.js?v=1417';
-import { canReach, findPathTo } from '../../js/graph.js?v=1417';
-import { showAlert, showConfirm } from '../../js/confirm.js?v=1417';
-import { initGraphView, refreshGraph } from './graph-view.js?v=1417';
-import { openNotebook } from './notebook.js?v=1417';
-import { hasSim, openSimForBook } from './battlesim-dispatch.js?v=1417';
-import { showToast } from './toast.js?v=1417';
-import { openNodeContextMenu, hideNodeContextMenu } from './context-menu.js?v=1417';
-import { openFastTravelDialog } from './fast-travel-dialog.js?v=1417';
-import { t } from '../../js/i18n.js?v=1417';
+} from '../../js/state.js?v=1462';
+import { canReach, findPathTo } from '../../js/graph.js?v=1462';
+import { showAlert, showConfirm } from '../../js/confirm.js?v=1462';
+import { initGraphView, refreshGraph } from './graph-view.js?v=1462';
+import { openNotebook } from './notebook.js?v=1462';
+import { hasSim, openSimForBook } from './battlesim-dispatch.js?v=1462';
+import { showToast } from './toast.js?v=1462';
+import { openNodeContextMenu, hideNodeContextMenu } from './context-menu.js?v=1462';
+import { openFastTravelDialog } from './fast-travel-dialog.js?v=1462';
+import { t } from '../../js/i18n.js?v=1462';
 
 // Reward feedback (see toast.js's own header comment for why mobile uses a
 // toast rather than porting rewards.js's fly-to-badge floaters). Desktop

@@ -241,6 +241,49 @@ try { db.exec(`ALTER TABLE series ADD COLUMN is_open_world INTEGER NOT NULL DEFA
 // above only ever runs once, so each new sim added after it needs its own
 // small idempotent UPDATE rather than re-running the whole backfill.
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 203').run(); } catch (_) {}
+// Same one-off flag for book 83 (Войната на Понтиак / War of Pontiac).
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 83').run(); } catch (_) {}
+// Same one-off flag for book 86 (Гората на демона / Forest of the Demon).
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 86').run(); } catch (_) {}
+// Same one-off flag for book 114 (Огнена пустиня / Fiery Desert).
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 114').run(); } catch (_) {}
+// Same one-off flag for book 115 (Окото на дявола / Eye of the Devil).
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 115').run(); } catch (_) {}
+// Same one-off flag for book 123 (Прокълнатата земя / Damned Land).
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 123').run(); } catch (_) {}
+// Same one-off flag for book 130 (Тайната на светещия мъх / Secret of the Glowing Moss).
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 130').run(); } catch (_) {}
+// Same one-off flag for book 92 (Замъкът на таласъмите / Castle of the Goblins).
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 92').run(); } catch (_) {}
+// Same one-off flag for book 108 (Ледените пирати / The Ice Pirates).
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 108').run(); } catch (_) {}
+// Same one-off flag for book 216 (Sword of the Samurai).
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 216').run(); } catch (_) {}
+// Same one-off flag for book 193 (Flight from the Dark, Lone Wolf book 1).
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 193').run(); } catch (_) {}
+// Same one-off flag for book 217 (Trial of Champions).
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 217').run(); } catch (_) {}
+// Same one-off flag for book 526 (GrailQuest 1: The Castle of Darkness).
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 526').run(); } catch (_) {}
+// Same one-off flag for book 322 (Fire on the Water, Lone Wolf book 2).
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 322').run(); } catch (_) {}
+// Same one-off flag for book 324 (The Chasm of Doom, Lone Wolf book 4).
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 324').run(); } catch (_) {}
+// Same one-off flag for book 323 (The Caverns of Kalte, Lone Wolf book 3).
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 323').run(); } catch (_) {}
+// Same one-off flag for book 325 (Shadow on the Sand, Lone Wolf book 5).
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 325').run(); } catch (_) {}
+// Same one-off flag for book 122 (Проклятието на меча / Curse of the Sword).
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 122').run(); } catch (_) {}
+// Same one-off flag for book 80 (Бойците на Орм / The Fighters of Orm).
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 80').run(); } catch (_) {}
+// Same one-off flag for book 82 (Варварският бог / The Barbarian God).
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 82').run(); } catch (_) {}
+// Same one-off flag for book 118 (Полет от мрака - Bulgarian edition of
+// Lone Wolf book 1, Flight from the Dark, separate from book 193's English one).
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 118').run(); } catch (_) {}
+// Same one-off flag for book 218 (Robot Commando).
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 218').run(); } catch (_) {}
 // Same one-off flag for book 204 (Scorpion Swamp).
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 204').run(); } catch (_) {}
 // Same one-off flag for book 205 (Caverns of the Snow Witch).
@@ -398,6 +441,18 @@ db.exec(`CREATE TABLE IF NOT EXISTS book_sections (
   PRIMARY KEY (book_id, section_id)
 )`);
 try { db.exec(`ALTER TABLE books ADD COLUMN has_live_reading INTEGER DEFAULT 0`); } catch (_) {}
+
+// Best-effort text pulled from a book's own PDF front matter (everything
+// before its first numbered section) - staging area for later manual
+// review, not served to players. intro_text/rules_text is a heuristic
+// split on a rules-header keyword; when no such keyword is found the
+// whole front matter lands in intro_text and rules_text stays null.
+db.exec(`CREATE TABLE IF NOT EXISTS book_frontmatter (
+  book_id     INTEGER PRIMARY KEY REFERENCES books(id) ON DELETE CASCADE,
+  intro_text  TEXT,
+  rules_text  TEXT,
+  extracted_at INTEGER DEFAULT (strftime('%s', 'now'))
+)`);
 
 // One-time backfill: assign a permanent template to every level_up event that doesn't have one yet
 {
