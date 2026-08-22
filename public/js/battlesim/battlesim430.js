@@ -1,22 +1,31 @@
-// ── Battle Simulator (Полет от мрака / Flight from the Dark, Bulgarian
-// edition of Lone Wolf book 1, id 118) ──
+// ── Battle Simulator (Пламък над водата / Fire on the Water, Bulgarian
+// edition of Lone Wolf book 2, id 430) ──
 // Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 118 only) by the caller in boot.js via
-// setSim118Visible().
-// To remove: delete this file, remove its import line and initSim118()/
-// setSim118Visible() calls from boot.js, remove 'sim118' from
+// Visibility is gated (book 430 only) by the caller in boot.js via
+// setSim430Visible().
+// To remove: delete this file, remove its import line and initSim430()/
+// setSim430Visible() calls from boot.js, remove 'sim430' from
 // SIM_HISTORY_KEYS in server/db/xp.js, and remove the .bsim-* CSS (shared
 // with the other battlesim*.js files, so only remove it if all are gone).
 //
-// This is the SAME underlying book as battlesim193.js (book 193, the English
-// Project Aon "Flight from the Dark") - a separate, independently created
-// Bulgarian translation (id 118, translator Симеон Николов), not a
-// duplicate import. Section numbering matches 1:1 between the two editions
-// (confirmed by spot-checking several sections' choice destinations), and
-// this book's own worked example (СИЛА... БОЙНИ УМЕНИЯ 15 vs 20, ratio -3,
-// pick 6 -> enemy loses 6, Lone Wolf loses 3) is identical to book 193's -
-// so the Combat Ratio + Combat Results Table system and COMBAT_TABLE below
-// are reused unchanged from battlesim193.js rather than re-derived.
+// This is the SAME underlying book as battlesim322.js (book 322, the English
+// Project Aon "Fire on the Water") - a separate, independently created
+// Bulgarian translation (id 430), not a duplicate import. Section numbering
+// matches 1:1 between the two editions (spot-checked, e.g. both §50 reach
+// §249 with the same priest/coach scene), and this book's own worked
+// example is identical to every other Lone Wolf sim's canonical one, so the
+// Combat Ratio + Combat Results Table system and COMBAT_TABLE below are
+// reused unchanged from battlesim118.js/battlesim322.js rather than
+// re-derived.
+//
+// Imported directly from the raw PDF (unlike book 118, which came from a
+// pre-made HTML draft) - required a custom section-header parser since
+// pdftotext's page breaks (form-feed characters) and line-wrapped choice
+// text ("...мини на\n253.") both produced false section-boundary matches;
+// resolved by requiring a real header's line to be heavily
+// indented/centered (30+ leading spaces), which cleanly separated the 350
+// genuine headers from 18 false positives. Confirmed 0 missing-choice-link
+// mismatches after import.
 //
 // Combat Ratio = effective БОЙНИ УМЕНИЯ minus enemy's, computed once when an
 // enemy is selected and fixed for the whole fight. Each round, pick 0-9
@@ -31,33 +40,30 @@
 //
 // attackModifier is a free-form +/- field covering every one-off БОЙНИ
 // УМЕНИЯ change this book's own rules describe by hand: Мозъчна атака
-// (Mindblast, +2, some enemies immune - noted per encounter), Мозъчен щит
-// (Mindshield, cancels an enemy's own Mindblast penalty against you),
-// Боравене с оръжие (Weaponskill, +2 with the matching weapon), and
-// terrain/surprise penalties or bonuses stated by hand in individual
-// sections (e.g. -1 fighting a Kraan through dust at §229, +4 from a
-// surprise attack at §55). Same precedent as every other sim in this app.
-//
-// One single-use consumable modeled as an obtain-toggle + Use button, same
-// shape as book 193/216's potions: the starting-equipment Целебна течност
-// (Healing Potion, +4 ENDURANCE, once, after combat only).
+// (Mindblast, +2, some enemies immune), Мозъчен щит (Mindshield, cancels an
+// enemy's own Mindblast penalty against you), surprise-attack bonuses
+// (+2 for one round, e.g. §7/§270's Ganon/Dorier fight), and terrain/injury
+// penalties stated by hand in individual sections. Same precedent as every
+// other sim in this app.
 //
 // Every multi-enemy fight in this book is explicitly fought "one at a time"
 // per the book's own text - no pairedFight/sideEnemy mechanic needed, just
 // re-pick the next roster enemy after defeating the current one. A few
-// fights (§72, §208, §340) combine two creatures into one stat block
-// ("fight them as a single enemy"), already represented as one book_enemies
-// row each.
+// fights (§7=§270, §30, §34, §128, §131, §185, §268, §282, §296, §348)
+// combine multiple creatures into one or more stat blocks per the book's
+// own "fight them as one/one at a time" instructions, already represented
+// as separate book_enemies rows each.
 //
 // book_enemies.attack holds БОЙНИ УМЕНИЯ, .hp holds ИЗДРЪЖЛИВОСТ, .defense
-// unused - same convention as book 193. 39 rows, directly cross-referenced
-// against book 193's already-verified roster (same numbers at every
-// matching section number) with Bulgarian names read from this book's own
-// section text; several same-named/close-stat encounters (Вордак x4, Краан
-// x2, Телохранител x2) go to different destinations, kept as separate rows
-// rather than merged, same as book 193.
+// unused - same convention as book 118/193/322. 41 rows, directly
+// cross-referenced against book 322's already-verified roster (same
+// numbers at every matching section number, confirmed one by one) with
+// Bulgarian names read from this book's own section text; Ganon/Dorier's
+// two encounters (§7, §270) share identical stats and the same "if you win"
+// destination (§33) but are kept as two separate rows, matching book 322's
+// own precedent of not merging that particular pair.
 //
-// All state lives in pt.sim118, per-user/per-book via currentPlaythrough().
+// All state lives in pt.sim430, per-user/per-book via currentPlaythrough().
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../state.js?v=1464';
 import { showAlert } from '../confirm.js?v=1464';
@@ -73,7 +79,7 @@ const HEALING_POTION_HEAL = 4;
 // Rows = the 10-value random pick, printed order 1,2,3,4,5,6,7,8,9,0.
 // Columns = Combat Ratio, bucketed: -11-, -10/-9, -8/-7, -6/-5, -4/-3,
 // -2/-1, 0, 1/2, 3/4, 5/6, 7/8, 9/10, 11+. Cell = [enemyLoss, lwLoss]
-// ('K' sentinel = automatically killed). Byte-identical to battlesim193.js.
+// ('K' sentinel = automatically killed). Byte-identical to battlesim118.js.
 const COMBAT_TABLE = [
   [[0,'K'], [0,'K'], [0,8], [0,6], [1,6], [2,5], [3,5], [4,5], [5,4], [6,4], [7,4], [8,3], [9,3]],
   [[0,'K'], [0,8],   [0,7], [1,6], [2,5], [3,5], [4,4], [5,4], [6,3], [7,3], [8,3], [9,3], [10,2]],
@@ -108,8 +114,8 @@ function _pickRow(pick) { return pick === 0 ? 9 : pick - 1; }
 function _data() {
   const pt = currentPlaythrough();
   if (!pt) return null;
-  if (!pt.sim118) {
-    pt.sim118 = {
+  if (!pt.sim430) {
+    pt.sim430 = {
       combatSkill: 0, combatSkillInitial: 0,
       endurance: 0, enduranceInitial: 0,
       attackModifier: 0,
@@ -122,7 +128,7 @@ function _data() {
       history: [],
     };
   }
-  const d = pt.sim118;
+  const d = pt.sim430;
   if (d.combatSkill === undefined) d.combatSkill = 0;
   if (d.combatSkillInitial === undefined) d.combatSkillInitial = 0;
   if (d.endurance === undefined) d.endurance = 0;
@@ -163,18 +169,18 @@ function _runRound() {
   const pick = _pick10();
   const col = _ratioCol(d.ratio);
   const [enemyLoss, lwLoss] = COMBAT_TABLE[_pickRow(pick)][col];
-  _appendLog(d, t('battlesim118.log.round', { round: d.roundsThisBattle, ratio: d.ratio, pick }));
+  _appendLog(d, t('battlesim430.log.round', { round: d.roundsThisBattle, ratio: d.ratio, pick }));
 
   if (enemyLoss === 'K') d.enemy.endurance = 0;
   else d.enemy.endurance = Math.max(0, d.enemy.endurance - enemyLoss);
   if (lwLoss === 'K') d.endurance = 0;
   else d.endurance = Math.max(0, d.endurance - lwLoss);
 
-  _appendLog(d, t('battlesim118.log.result', {
+  _appendLog(d, t('battlesim430.log.result', {
     enemy: _enemyNameSafe(d),
-    enemyLoss: enemyLoss === 'K' ? t('battlesim118.log.k_word') : enemyLoss,
+    enemyLoss: enemyLoss === 'K' ? t('battlesim430.log.k_word') : enemyLoss,
     enemyEndurance: d.enemy.endurance, enemyEnduranceMax: d.enemy.enduranceMax,
-    lwLoss: lwLoss === 'K' ? t('battlesim118.log.k_word') : lwLoss,
+    lwLoss: lwLoss === 'K' ? t('battlesim430.log.k_word') : lwLoss,
     endurance: d.endurance, enduranceMax: d.enduranceInitial,
   }));
 
@@ -185,10 +191,10 @@ function _runRound() {
 
 function _checkBattleEnd(d) {
   if (d.enemy.endurance <= 0) {
-    _appendLog(d, t('battlesim118.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyNameSafe(d) }));
+    _appendLog(d, t('battlesim430.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyNameSafe(d) }));
     _recordOutcome(d, 'win');
   } else if (d.endurance <= 0) {
-    _appendLog(d, t('battlesim118.log.fallen', { skull: SVG_SKULL }));
+    _appendLog(d, t('battlesim430.log.fallen', { skull: SVG_SKULL }));
     _recordOutcome(d, 'loss');
   }
 }
@@ -199,8 +205,8 @@ function _resetBattle() {
   d.roundsThisBattle = 0;
   d.enemy.endurance = d.enemy.enduranceMax;
   d.endurance = d.enduranceInitial;
-  if (d.log.length) _appendLog(d, t('battlesim118.log.reset_sep'));
-  _appendLog(d, t('battlesim118.log.reset', { enemy: _enemyNameSafe(d) }));
+  if (d.log.length) _appendLog(d, t('battlesim430.log.reset_sep'));
+  _appendLog(d, t('battlesim430.log.reset', { enemy: _enemyNameSafe(d) }));
   saveState();
   _renderAll();
 }
@@ -209,13 +215,13 @@ function _usePotion() {
   const d = _data();
   if (!d || !d.rolled || !d.hasHealingPotion || d.healingPotionUsed) return;
   if (d.roundsThisBattle > 0 && d.endurance > 0 && d.enemy.endurance > 0) {
-    showAlert(t('battlesim118.alert.potion_midfight'));
+    showAlert(t('battlesim430.alert.potion_midfight'));
     return;
   }
   d.healingPotionUsed = true;
   const before = d.endurance;
   d.endurance = Math.min(d.enduranceInitial, d.endurance + HEALING_POTION_HEAL);
-  _appendLog(d, t('battlesim118.log.potion', { before, endurance: d.endurance, enduranceMax: d.enduranceInitial }));
+  _appendLog(d, t('battlesim430.log.potion', { before, endurance: d.endurance, enduranceMax: d.enduranceInitial }));
   saveState();
   _renderAll();
 }
@@ -299,58 +305,58 @@ function _setVal(id, v) { const el = document.getElementById(id); if (el) el.val
 function _renderInputs(skipEnemyPick) {
   const d = _data();
   if (!d) return;
-  _setVal('sim118-cs', d.combatSkill);
-  _setVal('sim118-csmax', d.combatSkillInitial);
-  _setVal('sim118-en', d.endurance);
-  _setVal('sim118-enmax', d.enduranceInitial);
-  _setVal('sim118-atkmod', d.attackModifier);
-  _setVal('sim118-enemy-skill', d.enemy.skill);
-  _setVal('sim118-enemy-en', d.enemy.endurance);
-  _setVal('sim118-enemy-enmax', d.enemy.enduranceMax);
-  _setVal('sim118-ratio', d.ratio);
-  if (!skipEnemyPick) _setVal('sim118-enemy-pick', d.enemy.name);
+  _setVal('sim430-cs', d.combatSkill);
+  _setVal('sim430-csmax', d.combatSkillInitial);
+  _setVal('sim430-en', d.endurance);
+  _setVal('sim430-enmax', d.enduranceInitial);
+  _setVal('sim430-atkmod', d.attackModifier);
+  _setVal('sim430-enemy-skill', d.enemy.skill);
+  _setVal('sim430-enemy-en', d.enemy.endurance);
+  _setVal('sim430-enemy-enmax', d.enemy.enduranceMax);
+  _setVal('sim430-ratio', d.ratio);
+  if (!skipEnemyPick) _setVal('sim430-enemy-pick', d.enemy.name);
 
-  const potionBtn = document.getElementById('sim118-use-potion');
+  const potionBtn = document.getElementById('sim430-use-potion');
   potionBtn.disabled = !d.rolled || !d.hasHealingPotion || d.healingPotionUsed;
-  potionBtn.textContent = d.healingPotionUsed ? t('battlesim118.btn.used') : t('battlesim118.btn.drink');
+  potionBtn.textContent = d.healingPotionUsed ? t('battlesim430.btn.used') : t('battlesim430.btn.drink');
 
-  const rollBtn = document.getElementById('sim118-roll');
+  const rollBtn = document.getElementById('sim430-roll');
   rollBtn.disabled = d.rolled;
-  rollBtn.textContent = d.rolled ? t('battlesim118.btn.rolled') : t('battlesim118.btn.roll');
+  rollBtn.textContent = d.rolled ? t('battlesim430.btn.rolled') : t('battlesim430.btn.roll');
 
-  const status = document.getElementById('sim118-status');
+  const status = document.getElementById('sim430-status');
   if (!d.rolled) {
-    status.textContent = t('battlesim118.status.not_ready');
+    status.textContent = t('battlesim430.status.not_ready');
   } else if (d.endurance <= 0) {
-    status.textContent = t('battlesim118.status.fallen');
+    status.textContent = t('battlesim430.status.fallen');
   } else if (d.enemy.endurance <= 0 && d.enemy.enduranceMax > 0) {
-    status.textContent = t('battlesim118.status.defeated', { enemy: _enemyName(d) });
+    status.textContent = t('battlesim430.status.defeated', { enemy: _enemyName(d) });
   } else {
     status.textContent = '';
   }
-  document.getElementById('sim118-round').disabled = !d.rolled || d.endurance <= 0 || d.enemy.endurance <= 0;
+  document.getElementById('sim430-round').disabled = !d.rolled || d.endurance <= 0 || d.enemy.endurance <= 0;
 }
 
 function _renderLog() {
   const d = _data();
-  const el = document.getElementById('sim118-log');
+  const el = document.getElementById('sim430-log');
   if (!el || !d) return;
   el.innerHTML = d.log.slice().reverse().join('<br>');
 }
 
 function _renderHistory() {
   const d      = _data();
-  const sumEl  = document.getElementById('sim118-history-summary');
-  const listEl = document.getElementById('sim118-history-list');
+  const sumEl  = document.getElementById('sim430-history-summary');
+  const listEl = document.getElementById('sim430-history-list');
   if (!d || !sumEl || !listEl) return;
-  sumEl.textContent = t('battlesim118.history.summary', { n: d.history.length });
+  sumEl.textContent = t('battlesim430.history.summary', { n: d.history.length });
   if (!d.history.length) {
-    listEl.innerHTML = `<div class="bsim-history-empty">${t('battlesim118.history.empty')}</div>`;
+    listEl.innerHTML = `<div class="bsim-history-empty">${t('battlesim430.history.empty')}</div>`;
     return;
   }
   listEl.innerHTML = d.history.slice().reverse().map(h => {
     const icon   = h.outcome === 'win' ? SVG_TROPHY : SVG_SKULL;
-    const result = h.outcome === 'win' ? t('battlesim118.history.won') : t('battlesim118.history.lost');
+    const result = h.outcome === 'win' ? t('battlesim430.history.won') : t('battlesim430.history.lost');
     const date   = new Date(h.ts).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
     return `<div class="bsim-history-row">
       <span>${icon} ${escapeHtml(h.enemy)} - ${result}</span>
@@ -365,30 +371,30 @@ function _renderAll() {
   _renderHistory();
 }
 
-export function renderSim118() {
-  const overlay = document.getElementById('sim118-overlay');
+export function renderSim430() {
+  const overlay = document.getElementById('sim430-overlay');
   if (!overlay || !overlay.classList.contains('active')) return;
-  if (!_data()) { closeSim118(); return; }
+  if (!_data()) { closeSim430(); return; }
   _renderAll();
 }
 
-function openSim118() {
+function openSim430() {
   if (!_data()) {
     showAlert(t('battlesim.no_active_playthrough'));
     return;
   }
   _renderAll();
-  document.getElementById('sim118-overlay').classList.add('active');
+  document.getElementById('sim430-overlay').classList.add('active');
 }
 
-function closeSim118() {
-  document.getElementById('sim118-overlay')?.classList.remove('active');
+function closeSim430() {
+  document.getElementById('sim430-overlay')?.classList.remove('active');
 }
 
-export function setSim118Visible(visible) {
-  const btn = document.getElementById('sim118-btn');
+export function setSim430Visible(visible) {
+  const btn = document.getElementById('sim430-btn');
   if (btn) btn.style.display = visible ? '' : 'none';
-  if (!visible) closeSim118();
+  if (!visible) closeSim430();
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
@@ -405,89 +411,89 @@ function _numField(label, id, width, readonly) {
     </div>`;
 }
 
-export function initSim118() {
+export function initSim430() {
   const overlay = document.createElement('div');
-  overlay.id        = 'sim118-overlay';
+  overlay.id        = 'sim430-overlay';
   overlay.className = 'inv-overlay';
   overlay.innerHTML = `
     <div class="inv-modal bsim-modal">
       <div class="inv-modal-hdr">
-        <span class="inv-modal-title">${t('battlesim118.ui.title')}</span>
-        <button id="sim118-close" class="inv-close-btn" aria-label="${t('btn.close')}">✕</button>
+        <span class="inv-modal-title">${t('battlesim430.ui.title')}</span>
+        <button id="sim430-close" class="inv-close-btn" aria-label="${t('btn.close')}">✕</button>
       </div>
       <div class="bsim-body">
         <div class="bsim-col bsim-col-left">
           <div class="bsim-side">
             <div class="inv-edit-row bsim-life-roll-row">
-              <button id="sim118-roll" class="inv-edit-done bsim-ae-roll-btn" type="button">${t('battlesim118.btn.roll')}</button>
+              <button id="sim430-roll" class="inv-edit-done bsim-ae-roll-btn" type="button">${t('battlesim430.btn.roll')}</button>
             </div>
-            ${_numField(t('battlesim118.ui.cs'), 'sim118-cs')}
-            ${_numField(t('battlesim118.ui.cs_initial'), 'sim118-csmax')}
-            ${_numField(t('battlesim118.ui.en'), 'sim118-en')}
-            ${_numField(t('battlesim118.ui.en_initial'), 'sim118-enmax')}
-            ${_numField(t('battlesim118.ui.atkmod'), 'sim118-atkmod')}
+            ${_numField(t('battlesim430.ui.cs'), 'sim430-cs')}
+            ${_numField(t('battlesim430.ui.cs_initial'), 'sim430-csmax')}
+            ${_numField(t('battlesim430.ui.en'), 'sim430-en')}
+            ${_numField(t('battlesim430.ui.en_initial'), 'sim430-enmax')}
+            ${_numField(t('battlesim430.ui.atkmod'), 'sim430-atkmod')}
             <div class="inv-edit-row">
-              <span class="inv-edit-label bsim-stat-label">${t('battlesim118.ui.potion')}</span>
-              <button id="sim118-use-potion" class="inv-edit-done bsim-ae-roll-btn" type="button">${t('battlesim118.btn.drink')}</button>
+              <span class="inv-edit-label bsim-stat-label">${t('battlesim430.ui.potion')}</span>
+              <button id="sim430-use-potion" class="inv-edit-done bsim-ae-roll-btn" type="button">${t('battlesim430.btn.drink')}</button>
             </div>
           </div>
           <div class="bsim-side">
             <div class="inv-edit-row">
-              <span class="inv-edit-label bsim-stat-label">${t('battlesim118.ui.pick')}</span>
+              <span class="inv-edit-label bsim-stat-label">${t('battlesim430.ui.pick')}</span>
               <div class="autocomplete-wrap bsim-enemy-ac">
-                <input id="sim118-enemy-pick" class="inv-edit-input" type="text" autocomplete="off" readonly role="combobox" aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" aria-controls="sim118-enemy-pick-dropdown">
-                <ul id="sim118-enemy-pick-dropdown" class="autocomplete-dropdown" role="listbox"></ul>
+                <input id="sim430-enemy-pick" class="inv-edit-input" type="text" autocomplete="off" readonly role="combobox" aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" aria-controls="sim430-enemy-pick-dropdown">
+                <ul id="sim430-enemy-pick-dropdown" class="autocomplete-dropdown" role="listbox"></ul>
               </div>
             </div>
-            ${_numField(t('battlesim118.ui.enemy_cs'), 'sim118-enemy-skill')}
-            ${_numField(t('battlesim118.ui.enemy_en'), 'sim118-enemy-en')}
-            ${_numField(t('battlesim118.ui.enemy_en_max'), 'sim118-enemy-enmax')}
-            ${_numField(t('battlesim118.ui.ratio'), 'sim118-ratio', null, true)}
+            ${_numField(t('battlesim430.ui.enemy_cs'), 'sim430-enemy-skill')}
+            ${_numField(t('battlesim430.ui.enemy_en'), 'sim430-enemy-en')}
+            ${_numField(t('battlesim430.ui.enemy_en_max'), 'sim430-enemy-enmax')}
+            ${_numField(t('battlesim430.ui.ratio'), 'sim430-ratio', null, true)}
           </div>
-          <div id="sim118-status" class="bsim-status"></div>
+          <div id="sim430-status" class="bsim-status"></div>
           <div class="inv-modal-ftr">
-            <button id="sim118-round" class="inv-add-btn bsim-action-primary">${t('battlesim118.btn.round')}</button>
-            <button id="sim118-reset" class="inv-add-btn">${t('battlesim118.btn.reset')}</button>
+            <button id="sim430-round" class="inv-add-btn bsim-action-primary">${t('battlesim430.btn.round')}</button>
+            <button id="sim430-reset" class="inv-add-btn">${t('battlesim430.btn.reset')}</button>
           </div>
         </div>
         <div class="bsim-col bsim-col-right">
           <details class="bsim-history">
-            <summary id="sim118-history-summary">${t('battlesim118.history.summary', { n: 0 })}</summary>
-            <div id="sim118-history-list" class="bsim-history-list"></div>
+            <summary id="sim430-history-summary">${t('battlesim430.history.summary', { n: 0 })}</summary>
+            <div id="sim430-history-list" class="bsim-history-list"></div>
           </details>
-          <div id="sim118-log" class="bsim-log"></div>
+          <div id="sim430-log" class="bsim-log"></div>
         </div>
       </div>
     </div>`;
   document.body.appendChild(overlay);
 
   const btn = document.createElement('button');
-  btn.id            = 'sim118-btn';
+  btn.id            = 'sim430-btn';
   btn.innerHTML     = shortcutLabel(t('battlesim.title'));
   btn.style.display = 'none';
   getPlayBtnRow().appendChild(btn);
 
-  btn.addEventListener('click', openSim118);
-  document.getElementById('sim118-close').addEventListener('click', closeSim118);
+  btn.addEventListener('click', openSim430);
+  document.getElementById('sim430-close').addEventListener('click', closeSim430);
   let _mdOnOverlay = false;
   overlay.addEventListener('mousedown', e => { _mdOnOverlay = e.target === overlay; });
-  overlay.addEventListener('click', e => { if (e.target === overlay && _mdOnOverlay) closeSim118(); });
+  overlay.addEventListener('click', e => { if (e.target === overlay && _mdOnOverlay) closeSim430(); });
   registerPanelShortcut('KeyS', {
     getButton:  () => btn,
     getOverlay: () => overlay,
-    otherOverlayIds: ALL_PANEL_OVERLAY_IDS.filter(id => id !== 'sim118-overlay'),
-    open:  openSim118,
-    close: closeSim118,
+    otherOverlayIds: ALL_PANEL_OVERLAY_IDS.filter(id => id !== 'sim430-overlay'),
+    open:  openSim430,
+    close: closeSim430,
   });
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && overlay.classList.contains('active')) closeSim118();
+    if (e.key === 'Escape' && overlay.classList.contains('active')) closeSim430();
   });
 
-  document.getElementById('sim118-round').addEventListener('click', _runRound);
-  document.getElementById('sim118-reset').addEventListener('click', _resetBattle);
-  document.getElementById('sim118-use-potion').addEventListener('click', _usePotion);
+  document.getElementById('sim430-round').addEventListener('click', _runRound);
+  document.getElementById('sim430-reset').addEventListener('click', _resetBattle);
+  document.getElementById('sim430-use-potion').addEventListener('click', _usePotion);
 
-  document.getElementById('sim118-roll').addEventListener('click', () => {
+  document.getElementById('sim430-roll').addEventListener('click', () => {
     const d = _data();
     if (!d || d.rolled) return;
     d.combatSkillInitial = _pick10() + 10;
@@ -496,18 +502,18 @@ export function initSim118() {
     d.endurance   = d.enduranceInitial;
     d.rolled = true;
     d.ratio  = _effectiveSkill(d) - d.enemy.skill;
-    _appendLog(d, t('battlesim118.log.rolled', { cs: d.combatSkillInitial, en: d.enduranceInitial }));
+    _appendLog(d, t('battlesim430.log.rolled', { cs: d.combatSkillInitial, en: d.enduranceInitial }));
     saveState();
     _renderAll();
   });
 
-  document.getElementById('sim118-enemy-pick').addEventListener('input', e => {
+  document.getElementById('sim430-enemy-pick').addEventListener('input', e => {
     const d = _data();
     if (!d) return;
     d.enemy.name = e.target.value;
     saveState();
   });
-  _setupAutocomplete('sim118-enemy-pick', 'sim118-enemy-pick-dropdown', enemy => {
+  _setupAutocomplete('sim430-enemy-pick', 'sim430-enemy-pick-dropdown', enemy => {
     const d = _data();
     if (!d) return;
     d.enemy.name          = enemy.name;
@@ -521,21 +527,21 @@ export function initSim118() {
   });
 
   const fieldMap = {
-    'sim118-cs': ['combatSkill'], 'sim118-csmax': ['combatSkillInitial'],
-    'sim118-en': ['endurance'], 'sim118-enmax': ['enduranceInitial'],
-    'sim118-atkmod': ['attackModifier'],
-    'sim118-enemy-skill': ['enemy', 'skill'], 'sim118-enemy-en': ['enemy', 'endurance'], 'sim118-enemy-enmax': ['enemy', 'enduranceMax'],
+    'sim430-cs': ['combatSkill'], 'sim430-csmax': ['combatSkillInitial'],
+    'sim430-en': ['endurance'], 'sim430-enmax': ['enduranceInitial'],
+    'sim430-atkmod': ['attackModifier'],
+    'sim430-enemy-skill': ['enemy', 'skill'], 'sim430-enemy-en': ['enemy', 'endurance'], 'sim430-enemy-enmax': ['enemy', 'enduranceMax'],
   };
   for (const [id, path] of Object.entries(fieldMap)) {
     const input = document.getElementById(id);
     input.addEventListener('change', () => {
       const d = _data();
       if (!d) return;
-      const allowNegative = id === 'sim118-atkmod';
+      const allowNegative = id === 'sim430-atkmod';
       const val = allowNegative ? (parseInt(input.value, 10) || 0) : Math.max(0, parseInt(input.value, 10) || 0);
       if (path.length === 1) d[path[0]] = val;
       else d[path[0]][path[1]] = val;
-      if (id === 'sim118-cs' || id === 'sim118-atkmod' || id === 'sim118-enemy-skill') d.ratio = _effectiveSkill(d) - d.enemy.skill;
+      if (id === 'sim430-cs' || id === 'sim430-atkmod' || id === 'sim430-enemy-skill') d.ratio = _effectiveSkill(d) - d.enemy.skill;
       saveState();
       _renderInputs(true);
     });

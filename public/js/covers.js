@@ -1,10 +1,10 @@
 // covers.js - Covers panel, lazy grid, landing bg rotation, cover/series activity modals
-import { getToken, isDemoMode, apiFetch } from './state.js?v=1462';
-import { openPublicModal, closePublicModal, openPublicProfile, renderPublicProfile, openPublicRun, openPublicSeriesRun, _destroyPubNetworks } from './public-profile.js?v=1462';
-import { refreshCoinsDisplay } from './shop.js?v=1462';
-import { foldForSearch, matchesSearch, naturalCompare, naturalCompareByName } from './sort.js?v=1462';
-import { escapeHtml, fetchPublic as publicFetch } from './util.js?v=1462';
-import { t } from './i18n.js?v=1462';
+import { getToken, isDemoMode, apiFetch } from './state.js?v=1464';
+import { openPublicModal, closePublicModal, openPublicProfile, renderPublicProfile, openPublicRun, openPublicSeriesRun, _destroyPubNetworks } from './public-profile.js?v=1464';
+import { refreshCoinsDisplay } from './shop.js?v=1464';
+import { foldForSearch, matchesSearch, naturalCompare, naturalCompareByName } from './sort.js?v=1464';
+import { escapeHtml, fetchPublic as publicFetch } from './util.js?v=1464';
+import { t } from './i18n.js?v=1464';
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────
 let _hooks = {};
@@ -1210,12 +1210,12 @@ function renderCoverActivity(bookId, bookName, entries, userRating, bookMeta, us
   // its actual books, exactly like books.js's own list already treats
   // containers as a fundamentally different card, never a directly-openable
   // one, via its own separate _renderContainerItem() render path.
-  // Shown on mobile too, admin-only, now that /mobile (a genuinely separate
-  // mobile-first frontend, see project_mobile_support_idea) exists as a real
-  // destination for it - see the click handler below for where it actually
-  // sends you, since desktop's own navigateToBook()/showMain() still just
-  // bounces every mobile visit straight back to the books list.
-  if (userOwnsBook && (!_isMobile() || _hooks.getIsAdmin?.()) && !bookMeta?.isContainer) {
+  // Shown on mobile too, now that /mobile (a genuinely separate mobile-first
+  // frontend, see project_mobile_support_idea) exists as a real destination
+  // for it - see the click handler below for where it actually sends you,
+  // since desktop's own navigateToBook()/showMain() still just bounces
+  // every mobile visit straight back to the books list.
+  if (userOwnsBook && !bookMeta?.isContainer) {
     headerHtml += `<button class="add-to-library-btn open-owned-book-btn" data-book-id="${bookId}">${t('covers.open_book')}</button>`;
   }
   if (bookMeta?.isPublic && userLoggedIn && !userOwnsBook) {
@@ -1396,15 +1396,15 @@ function renderCoverActivity(bookId, bookName, entries, userRating, bookMeta, us
       e.stopPropagation();
       // navigateToBook()/showMain() still unconditionally bounce every
       // mobile visit back to the books list (see boot.js) - /mobile is the
-      // real destination for a mobile admin now, not the desktop play
-      // screen this button otherwise opens.
+      // real destination on mobile now, not the desktop play screen this
+      // button otherwise opens.
       const targetBookId = +openOwnedBtn.dataset.bookId;
       // Missing ?book= here (just '/mobile', no id) sent every mobile Open
       // tap - including the one from inside Add Book's own detail dialog,
       // the exact flow this panel exists for - to /mobile's bare "open a
       // book from My Books" placeholder instead of the book itself,
       // regardless of which book was actually tapped.
-      if (_isMobile() && _hooks.getIsAdmin?.()) { window.location.href = `/mobile?book=${encodeURIComponent(targetBookId)}`; return; }
+      if (_isMobile()) { window.location.href = `/mobile?book=${encodeURIComponent(targetBookId)}`; return; }
       openOwnedBtn.disabled = true;
       openOwnedBtn.textContent = t('covers.opening');
       _hooks.lockView?.('book', 1500);

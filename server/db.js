@@ -284,6 +284,9 @@ try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 82').run(); } c
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 118').run(); } catch (_) {}
 // Same one-off flag for book 218 (Robot Commando).
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 218').run(); } catch (_) {}
+// Same one-off flag for book 430 (Пламък над водата - Bulgarian edition of
+// Lone Wolf book 2, Fire on the Water, separate from book 322's English one).
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 430').run(); } catch (_) {}
 // Same one-off flag for book 204 (Scorpion Swamp).
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 204').run(); } catch (_) {}
 // Same one-off flag for book 205 (Caverns of the Snow Witch).

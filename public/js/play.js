@@ -4,14 +4,14 @@ import {
   state, viewingPt, viewingPtIndex, setViewingPt, saveState, isTerminal, parseSecId, isValidSecId,
   currentPlaythrough, currentSection, allDiscoveredSections, mappedCount,
   currentUserLevel, bonusUndos, bonusFastTravels, apiFetch,
-} from './state.js?v=1462';
-import { network, visNodes, syncGraph, computeOutcomes } from './graph.js?v=1462';
-import { t } from './i18n.js?v=1462';
-import { renderCharSheetDisplay } from './charsheet.js?v=1462';
-import { naturalCompare } from './sort.js?v=1462';
-import { instantiateLoadout } from './equipment.js?v=1462';
-import { escapeHtml } from './util.js?v=1462';
-import { showConfirm, showAlert } from './confirm.js?v=1462';
+} from './state.js?v=1464';
+import { network, visNodes, syncGraph, computeOutcomes } from './graph.js?v=1464';
+import { t } from './i18n.js?v=1464';
+import { renderCharSheetDisplay } from './charsheet.js?v=1464';
+import { naturalCompare } from './sort.js?v=1464';
+import { instantiateLoadout } from './equipment.js?v=1464';
+import { escapeHtml } from './util.js?v=1464';
+import { showConfirm, showAlert } from './confirm.js?v=1464';
 
 export { showConfirm, showAlert };
 
