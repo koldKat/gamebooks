@@ -603,18 +603,15 @@ const _routeRequest = async (req, res) => {
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' });
       return fs.createReadStream(indexPath).pipe(res);
     }
-    // Admin-only preview of the from-scratch mobile frontend (public/mobile/) -
-    // see project_mobile_support_idea. Served unconditionally, same as /demo
+    // From-scratch mobile frontend (public/mobile/) - see
+    // project_mobile_support_idea. Served unconditionally, same as /demo
     // above - a bare GET here (typed into a phone's address bar) can never
     // carry a Bearer token (that only exists once public/mobile/js's own
     // fetch calls attach it, and only after a real login), so gating the
     // shell itself by authenticate() would 401 before anyone could ever see
-    // the login screen to get a token in the first place. The admin-only
-    // restriction is enforced client-side instead (public/mobile/js/app.js,
-    // checked against GET /api/profile's isAdmin after login) - not a hard
-    // security boundary, just keeps this out of the way for everyone else
-    // while it's still a preview; the real data underneath is already
-    // protected per-user by the normal API auth regardless.
+    // the login screen to get a token in the first place. Open to any
+    // logged-in user (public/mobile/js/app.js) - the real data underneath is
+    // already protected per-user by the normal API auth regardless.
     if (method === 'GET' && urlPath === '/mobile') {
       const indexPath = path.join(ROOT, 'mobile', 'index.html');
       addSecurityHeaders(res);

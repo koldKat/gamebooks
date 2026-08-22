@@ -1,11 +1,11 @@
 // books.js - Books list rendering, caching, search/filter, expand prefs, cover queue
-import { getToken, isDemoMode, apiFetch, getDemoState, setDemoState } from './state.js?v=1462';
-import { foldForSearch, naturalCompare, naturalCompareByName } from './sort.js?v=1462';
-import { refreshCoinsDisplay } from './shop.js?v=1462';
-import { openCoverActivity, openSeriesActivity, _startLandingCoverRotation, _resetLandingCoverQueue, _effectiveLandingCoverSource, loadCovers } from './covers.js?v=1462';
-import { t } from './i18n.js?v=1462';
-import { showConfirm, showTwoChoice } from './play.js?v=1462';
-import { escapeHtml } from './util.js?v=1462';
+import { getToken, isDemoMode, apiFetch, getDemoState, setDemoState } from './state.js?v=1464';
+import { foldForSearch, naturalCompare, naturalCompareByName } from './sort.js?v=1464';
+import { refreshCoinsDisplay } from './shop.js?v=1464';
+import { openCoverActivity, openSeriesActivity, _startLandingCoverRotation, _resetLandingCoverQueue, _effectiveLandingCoverSource, loadCovers } from './covers.js?v=1464';
+import { t } from './i18n.js?v=1464';
+import { showConfirm, showTwoChoice } from './play.js?v=1464';
+import { escapeHtml } from './util.js?v=1464';
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────
 let _hooks = {};
@@ -1187,9 +1187,9 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
       const id = /^\d+$/.test(btn.dataset.id) ? +btn.dataset.id : btn.dataset.id;
       // showMain() unconditionally bounces every mobile visit back to this
       // same books list (see boot.js) - it's a no-op here, which is exactly
-      // why "Open" looked like it did nothing. /mobile (admin-only preview)
-      // is the real destination for a mobile admin now.
-      if (_isMobile() && _hooks.getIsAdmin?.()) { window.location.href = `/mobile?book=${encodeURIComponent(id)}`; return; }
+      // why "Open" looked like it did nothing. /mobile is the real
+      // destination on mobile now.
+      if (_isMobile()) { window.location.href = `/mobile?book=${encodeURIComponent(id)}`; return; }
       _hooks.showMain?.(id, btn.dataset.isbn || null, btn.dataset.issn || null, btn.dataset.asin || null,
         btn.dataset.cover || btn.dataset.parentCover || null, btn.dataset.pdf || null,
         btn.dataset.pages ? Number(btn.dataset.pages) : null, btn.dataset.authors || null,
