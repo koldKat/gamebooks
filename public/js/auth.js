@@ -3,9 +3,9 @@
 // To remove: delete this file, remove its import line and setOnAuthSuccess()/initAuth()/
 // showAuthForm()/showResetPanel()/hasPendingResetToken() calls from boot.js.
 
-import { setToken, setUsername } from './state.js?v=1467';
-import { t } from './i18n.js?v=1467';
-import { fetchPublic } from './util.js?v=1467';
+import { setToken, setUsername } from './state.js';
+import { t } from './i18n.js';
+import { fetchPublic } from './util.js';
 
 // Called after a successful login/register (main.js wires this to showBooks()).
 let _onAuthSuccess = null;

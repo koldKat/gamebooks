@@ -25,9 +25,13 @@ function serveStatic(req, res) {
     let cacheControl;
     if (['.jpg', '.jpeg', '.png', '.gif', '.webp', '.avif', '.svg', '.ico'].includes(ext)) {
       cacheControl = 'public, max-age=31536000, immutable';
-    } else if (['.js', '.css'].includes(ext)) {
-      cacheControl = 'public, max-age=3600';
     } else {
+      // .js/.css used to get max-age=3600, which needed the app-wide
+      // ?v=N cache-busting cascade (every reference bumped together on
+      // every change) to actually show up within the hour. no-cache still
+      // lets the browser skip re-downloading unchanged bytes (the ETag
+      // check below returns 304), it just always asks first - a change is
+      // visible on the very next load, no versioning required.
       cacheControl = 'no-cache';
     }
     const etagCache = getEtagCache();

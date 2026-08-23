@@ -169,7 +169,7 @@ gamebooks/
       demo.js            Demo mode
       user.js            Admin/author/contributor state and badge helpers
       boot.js            Application entry point: screen routing, hook wiring, DOMContentLoaded init
-      main.js            Single-line entry point: `import './boot.js?v=N'`
+      main.js            Single-line entry point: `import './boot.js'`
     avatars/         Uploaded user avatar images (auto-created, git-ignored)
     covers/          Uploaded book cover images (auto-created, git-ignored)
     attachments/     Uploaded message/post attachments (auto-created, git-ignored)
@@ -370,15 +370,13 @@ Layer 4 (top):
 
 `index.html` loads `js/main.js` as `type="module"`. The vis-network library is loaded via CDN as a global (`vis`) before the module script runs.
 
-**Versioning:** one global cache-busting version, shared by every `?v=N` in the app (every `public/`/`admin/` script `src`, `<link>` `href`, and ES `import` specifier) - not per-file. A change anywhere means bumping that single number everywhere: `grep -rl '?v=OLD' public/ admin/ | xargs sed -i 's/?v=OLD/?v=NEW/g'`, then `node scripts/check-versions.js` to confirm nothing was missed. The vendored `vis-network.min.js?v=N` is the one exception, versioned independently since it's a third-party file bumped only when replaced.
+**No cache-busting query strings.** Static `.js`/`.css` are served with `Cache-Control: no-cache` (see `server/static.js`) - the browser revalidates with the server on every load (an ETag-backed 304 if unchanged), so a plain refresh always picks up a new deploy. No `?v=N` versioning scheme is needed or used.
 
 ---
 
 ## CSS file structure
 
 `style.css` holds only genuinely shared/base rules (tooltips, buttons, inputs, scrollbars, generic layout not owned by any one module). Everything else is a per-module file (one per like-named JS module, e.g. `shop.css` for `shop.js`). `public-profile.css` is shared by both `public-profile.js` and `covers.js` (cover activity view lives in the same `#public-modal` markup both use).
-
-CSS files share the same single global version number as JS (see Versioning above) - each stylesheet is an independent `<link>` in `index.html`, but its `?v=N` still has to match the app-wide number, not its own counter.
 
 **Load order matters for two files:** `reduce-motion.css` and `mobile.css` are cross-cutting overrides (`body.reduce-motion .foo`, `@media` blocks, several with `!important`) rather than one module's own styling, so they're the last two `<link>` tags in `index.html`, after every per-module file.
 
@@ -1698,7 +1696,6 @@ Per-run dice state, stored on `pt.diceState` (`{ count, die, lastResult, previou
 ## Character sheet (`charsheet.js`)
 
 A self-contained module for tracking book-specific character stats per book. Imports only `state.js` and `i18n.js`. To remove: delete `charsheet.js`, remove its import line from `boot.js`, and delete `public/css/charsheet.css` (and its `<link>` in `index.html`).
-Every local ES module import carries a `?v=N` query string, including ones that rarely change (`constants.js`, `i18n.js`) - static `.js` files are served with `Cache-Control: public, max-age=3600`, and the query string is what forces a fresh fetch after an update. `check-versions.js` compares `?v=N` references against each other; `grep -rnE "from ['\"]\./[a-zA-Z0-9_-]+\.js['\"]" public/js/*.js` finds any local import with no `?v=` at all.
 
 **Exports:**
 - `initCharSheet()` - call once from `DOMContentLoaded`. Injects the modal overlay into `document.body`, and the open button + compact display into `#main-screen`.

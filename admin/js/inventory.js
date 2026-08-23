@@ -6,7 +6,7 @@
 // #new-inv-save listener wiring (this file owns them) and the Inventory tab
 // HTML/CSS.
 
-import { api, el, mkBtn, _esc, showConfirm, matchesQuery, renderPaged, _pageState } from './core.js?v=1467';
+import { api, el, mkBtn, _esc, showConfirm, matchesQuery, renderPaged, _pageState } from './core.js';
 
 let _allItems = [];
 

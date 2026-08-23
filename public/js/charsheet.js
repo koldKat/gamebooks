@@ -5,9 +5,9 @@
 // battlesim8.js and battlesim829.js all import from it too), and delete
 // public/css/charsheet.css (and its <link> in index.html).
 
-import { state, saveState, currentPlaythrough, viewingPt } from './state.js?v=1467';
-import { t } from './i18n.js?v=1467';
-import { escapeHtml, shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from './util.js?v=1467';
+import { state, saveState, currentPlaythrough, viewingPt } from './state.js';
+import { t } from './i18n.js';
+import { escapeHtml, shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from './util.js';
 
 // Working copy - populated when modal opens, discarded on cancel
 let _draft = null;

@@ -1,9 +1,9 @@
-import { COLORS } from './constants.js?v=1467';
+import { COLORS } from './constants.js';
 import {
   state, viewingPt, isTerminal, parseSecId, isValidSecId,
   currentPlaythrough, allDiscoveredSections, saveState,
-} from './state.js?v=1467';
-import { t } from './i18n.js?v=1467';
+} from './state.js';
+import { t } from './i18n.js';
 
 export let network  = null;
 export let visNodes = null;
