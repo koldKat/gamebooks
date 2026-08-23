@@ -253,6 +253,16 @@ gamebooks/
                            desktop, adapted to toast.js's single-message display. The accumulated
                            total and its display-window deadline both reset at the top of
                            renderReader(), scoped per book session rather than persisting globally.
+                           Section cache and prefetch: mirrors liveread.js's own _sectionCache/
+                           _prefetchChoices pattern (see that entry below for the full reasoning) -
+                           a plain in-memory Map keyed by section id (bare id, not bookId:sec, since
+                           renderReader() already clears the whole cache on every fresh book open
+                           instead of scoping the key itself). _showSection()/_previewSection() both
+                           check it before fetching, and _showSection() fires an unawaited
+                           _prefetchChoices() after every successful render for whatever the section
+                           links to next - so the loading spinner only shows on a genuine cache miss
+                           (in steady state, only the very first section of a run) rather than on
+                           every single navigation.
         context-menu.js    Long-press node context menu (vis-network's 'oncontext', which mobile
                            browsers already raise on touch-and-hold - same event desktop's own
                            right-click menu uses). Same 4 actions as desktop's #node-ctx-menu that
