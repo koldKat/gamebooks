@@ -5,10 +5,10 @@
 // fast-travel-dialog.js. Extracted out of reader.js as a self-contained UI
 // widget, per CLAUDE.md's module-placement rule.
 
-import { state, saveState, currentSection } from '../../js/state.js?v=1467';
-import { refreshGraph } from './graph-view.js?v=1467';
-import { t } from '../../js/i18n.js?v=1467';
-import { pruneDiscovered } from './context-menu.js?v=1467';
+import { state, saveState, currentSection } from '../../js/state.js';
+import { refreshGraph } from './graph-view.js';
+import { t } from '../../js/i18n.js';
+import { pruneDiscovered } from './context-menu.js';
 
 // hooks: { checkXpReward } - reader.js's own XP-poll logic, passed in per
 // call rather than imported directly, same reasoning as context-menu.js's

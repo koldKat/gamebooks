@@ -16,8 +16,8 @@ import {
   daysInactiveClass, fmtDaysInactive, flashSaved, showAlert, showConfirm,
   storeData, getSorted, getFiltered, foldForSearch, naturalCompare, naturalCompareByName, _tableData,
   setSearchFields, wireTableSearch, initSortHeaders, renderPaged,
-} from './core.js?v=1467';
-import { loadAll, loadTools } from './dashboard.js?v=1467';
+} from './core.js';
+import { loadAll, loadTools } from './dashboard.js';
 
 // ── Gift modal ────────────────────────────────────────────────────────────────
 

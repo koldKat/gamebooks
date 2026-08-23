@@ -10,10 +10,10 @@
 // deep-links straight into a single book's reader (?book=123, set by that
 // same desktop "Open" button) - see books.js's book-open-btn handler.
 
-import { getToken, apiFetch, setCurrentUserLevel, setBonusUndos, setBonusFastTravels } from '../../js/state.js?v=1467';
-import { renderLogin } from './auth.js?v=1467';
-import { renderReader } from './reader.js?v=1467';
-import { t } from '../../js/i18n.js?v=1467';
+import { getToken, apiFetch, setCurrentUserLevel, setBonusUndos, setBonusFastTravels } from '../../js/state.js';
+import { renderLogin } from './auth.js';
+import { renderReader } from './reader.js';
+import { t } from '../../js/i18n.js';
 
 // #screen's CSS uses calc(var(--vh, 1vh) * 100) instead of 100dvh - `dvh`
 // support (and correct behavior) isn't universal, especially inside an

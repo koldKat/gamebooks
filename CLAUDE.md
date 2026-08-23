@@ -4,19 +4,9 @@ These rules are non-negotiable and apply every session without exception.
 
 ---
 
-## 1. Version bumping — ONE global version, ALWAYS, IMMEDIATELY
+## 1. No cache-busting version strings — do not add them back
 
-The whole app shares a single cache-busting version number. Every `?v=N` in every `public/`/`admin/` `.js`/`.css`/`.html` file (script `src`, `<link>` `href`, ES `import` specifier) must carry the exact same `N` — not per-file, not per-module.
-
-After ANY edit to a versioned file, bump that one number everywhere before declaring the task done:
-
-```
-grep -rl '?v=OLD' public/ admin/ | xargs sed -i 's/?v=OLD/?v=NEW/g'
-```
-
-(`OLD`/`NEW` are plain integers — find the current one via `node scripts/check-versions.js`.) The vendored `vis-network.min.js?v=N` reference is the one exception — it versions the third-party library itself and is bumped only when that vendored file is replaced, never as part of an app change.
-
-Run `node scripts/check-versions.js` after every bump — it fails loudly if anything was missed, so there's no need to manually trace which files import which.
+Static `.js`/`.css` are served with `Cache-Control: no-cache` (`server/static.js`) — the browser always revalidates with the server (ETag-backed 304 if unchanged), so a plain refresh already picks up any change. There is deliberately no `?v=N` query string anywhere in `public/`/`admin/` and no version-bumping step after an edit. (Removed 2026-08-23 — the app previously used `Cache-Control: public, max-age=3600` for JS/CSS, which needed a global `?v=N` cascade bumped across ~150 files on every change to force a fresh fetch within the hour; switching to `no-cache` made the whole scheme unnecessary.)
 
 ## 2. Never restart the server
 
@@ -70,7 +60,7 @@ Before moving ANY function out of main.js:
      grep -q "function $fn\b\|import.*\b$fn\b" public/js/main.js || echo "MISSING: $fn"
    done
    ```
-4. **Syntax check before bumping version:**
+4. **Syntax check before declaring done:**
    ```bash
    node --input-type=module --check < public/js/main.js
    ```
@@ -91,6 +81,6 @@ After editing any `docs/*.md` file, run `npm run docs:build` before declaring th
 
 - **DB**: SQLite via `better-sqlite3`, path: `database.sqlite` in project root
 - **Server**: `server.js`, plain Node.js, no framework
-- **Frontend**: ES modules, versioned with `?v=N` cache busting
+- **Frontend**: ES modules, served with `Cache-Control: no-cache` — no version query strings
 - **State**: per-user per-book JSON in `user_books.state_data`
 - **Valid item types**: `weapon`, `armor`, `consumable`, `tool`, `jewelry`, `miscellaneous`

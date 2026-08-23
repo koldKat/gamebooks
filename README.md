@@ -37,7 +37,7 @@ See [`docs/user-guide.md`](docs/user-guide.md) for the full walkthrough of every
 
 - **Server**: plain Node.js (no framework), `server.js` + `server/`
 - **Database**: SQLite via `better-sqlite3`
-- **Frontend**: vanilla ES modules under `public/js/`, versioned with `?v=N` cache-busting
+- **Frontend**: vanilla ES modules under `public/js/`, served with `Cache-Control: no-cache` (no version query strings)
 - **Email**: Nodemailer (optional - only needed for password reset / notification emails)
 - **Geolocation**: `geoip-lite`, with an optional MaxMind GeoLite2 database for better accuracy
 
@@ -88,7 +88,6 @@ The SQLite database (`database.sqlite`) is created automatically on first run.
 |--------------------------|-----------------------------------------------|
 | `npm start`              | Start the server                              |
 | `npm test`                | Run the test suite (`node --test`)            |
-| `npm run check:versions`  | Verify `?v=N` cache-busting versions are consistent across all imports |
 | `npm run docs:build`      | Regenerate the HTML docs from `docs/*.md`     |
 | `npm run docs:check`      | Fail if the HTML docs are stale relative to their markdown source |
 
