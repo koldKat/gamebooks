@@ -4,7 +4,7 @@
 // admin/index.html; remove #tips-type-filter/#tips-active-filter/#new-tip-save
 // listener wiring (this file owns them) and the Tips tab HTML/CSS.
 
-import { api, el, badge, mkBtn, appendCell, _esc, showConfirm } from './core.js?v=1464';
+import { api, el, badge, mkBtn, appendCell, _esc, showConfirm } from './core.js?v=1467';
 
 let _allTips = [];
 

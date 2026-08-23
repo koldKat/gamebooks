@@ -12,11 +12,11 @@
 // reader.js at all, avoiding a reader.js <-> context-menu.js import cycle
 // (reader.js is the one importing this file, not the other way around).
 
-import { state, saveState, currentPlaythrough, currentSection, parseSecId } from '../../js/state.js?v=1464';
-import { canReach } from '../../js/graph.js?v=1464';
-import { refreshGraph } from './graph-view.js?v=1464';
-import { t } from '../../js/i18n.js?v=1464';
-import { openNoteModal } from './note-modal.js?v=1464';
+import { state, saveState, currentPlaythrough, currentSection, parseSecId } from '../../js/state.js?v=1467';
+import { canReach } from '../../js/graph.js?v=1467';
+import { refreshGraph } from './graph-view.js?v=1467';
+import { t } from '../../js/i18n.js?v=1467';
+import { openNoteModal } from './note-modal.js?v=1467';
 
 // Same "worth keeping" check as boot.js's own _pruneDiscovered/play.js's
 // _cleanupOrphanedTargets/graph.js's orphan-pruning pass - every place that

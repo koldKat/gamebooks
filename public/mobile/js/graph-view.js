@@ -16,9 +16,9 @@
 
 import {
   state, currentPlaythrough, viewingPt, isTerminal, allDiscoveredSections, saveState,
-} from '../../js/state.js?v=1464';
-import { COLORS } from '../../js/constants.js?v=1464';
-import { t } from '../../js/i18n.js?v=1464';
+} from '../../js/state.js?v=1467';
+import { COLORS } from '../../js/constants.js?v=1467';
+import { t } from '../../js/i18n.js?v=1467';
 
 const LAYER_GAP  = 120; // vertical spacing between BFS depth layers
 const COL_GAP    = 90;  // horizontal spacing between siblings at the same layer

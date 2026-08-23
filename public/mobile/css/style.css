@@ -40,8 +40,15 @@ html, body {
      a short section's top pane would collapse to its own content height
      instead of taking its share of the split, pushing the graph down into
      a sliver at the very bottom instead of an even 50/50. */
+  /* 100vh is the base fallback (pre-JS, before app.js's first paint).
+     --vh is app.js's own window.innerHeight-measured value, set on load
+     and kept current on resize/orientationchange - deliberately used
+     INSTEAD of 100dvh, not alongside it: 100dvh measured taller than the
+     real visible area inside at least one embedded/in-app browser (Viber's
+     own), so a later `height: 100dvh` override here would have silently
+     won back the wrong value on exactly the browsers this exists to fix. */
   height: 100vh;
-  height: 100dvh;
+  height: calc(var(--vh, 1vh) * 100);
   display: flex;
   flex-direction: column;
 }
@@ -148,6 +155,14 @@ button, input {
   display: flex;
   flex-direction: column;
   min-height: 0;
+  /* The button rows below the reading pane sit flush against the bottom of
+     #screen's own height (see #screen's own comment on --vh) - on a real
+     phone that box can still overlap the home-indicator gesture area,
+     pushing win/loss/battle-death and notebook/battlesim off the visible
+     screen even though they technically "fit" within the CSS height. This
+     reserves the same safe area on every pane mode (both/text/graph), not
+     just the one row that happens to be last in a given mode. */
+  padding-bottom: env(safe-area-inset-bottom);
 }
 .m-top {
   flex: 1 1 50%;
@@ -298,7 +313,10 @@ button, input {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
   min-width: 190px;
   z-index: 500;
+  /* Same --vh reasoning as #screen's own height - plain 100vh can measure
+     taller than the real visible area in an embedded/in-app browser. */
   max-height: calc(100vh - 16px);
+  max-height: calc(var(--vh, 1vh) * 100 - 16px);
   overflow-y: auto;
 }
 .m-ctx-menu.active { display: flex; }

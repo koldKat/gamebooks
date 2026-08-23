@@ -7,7 +7,7 @@
 import {
   api, badge, mkBtn, appendCell, _esc, showAlert, showConfirm,
   storeData, getFiltered, renderPaged, setSearchFields, wireTableSearch,
-} from './core.js?v=1464';
+} from './core.js?v=1467';
 
 export function renderAnthologiesTable(anthologies) {
   const tbody = document.getElementById('anthologies-body');
