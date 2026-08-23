@@ -317,29 +317,46 @@ export function initGraphView(container, onTap, onHold, onDragStart) {
     interaction: { dragNodes: true, tooltipDelay: 99999 },
   });
   // Some mobile browsers still fire a trailing synthetic click right after
-  // a long-press's own contextmenu event, not strictly one or the other -
-  // without this window, that trailing click would open a preview (or,
-  // worse, look like nothing happened) on the same gesture that just
-  // opened the long-press context menu.
-  let _lastHoldAt = 0;
+  // a long-press's own contextmenu event (or after a real node drag), not
+  // strictly one gesture or the other - without suppressing it, that
+  // trailing click reached _onTap and re-ran _showSection() on whatever
+  // node the reader was already standing on, visibly "reloading" the
+  // current section's text on every long-press/drag. This used to be a
+  // fixed 400ms window from the moment the hold/drag *started*, which
+  // assumed the touch released quickly - reading the context menu (or a
+  // slower drag) before lifting the finger easily exceeds that, so the
+  // click slipped through anyway. A plain flag set at hold/drag-start and
+  // consumed by the very next click has no such timing assumption; the
+  // safety-net timeout below only exists in case a browser never actually
+  // fires that trailing click at all, so a stray flag can't go on
+  // swallowing later, unrelated taps forever.
+  let _suppressNextClick = false;
+  let _suppressResetTimer = null;
+  function _armClickSuppression() {
+    _suppressNextClick = true;
+    clearTimeout(_suppressResetTimer);
+    _suppressResetTimer = setTimeout(() => { _suppressNextClick = false; }, 2000);
+  }
   network.on('click', params => {
-    if (Date.now() - _lastHoldAt < 400) return;
+    if (_suppressNextClick) { _suppressNextClick = false; clearTimeout(_suppressResetTimer); return; }
     if (params.nodes.length) _onTap?.(params.nodes[0]);
   });
   network.on('oncontext', params => {
     params.event.preventDefault();
     const nodeId = network.getNodeAt(params.pointer.DOM);
     if (nodeId === undefined) return;
-    _lastHoldAt = Date.now();
+    _armClickSuppression();
     _onHold?.(nodeId, params.event.clientX, params.event.clientY);
   });
   // A long-press can open the context menu and then keep moving into a drag
   // on the same touch (the browser's own contextmenu firing doesn't cancel
   // the gesture) - without closing it here, the menu would sit on top of
   // the node the whole time it's being dragged, blocking the one thing the
-  // player needs to see (where the node is landing).
+  // player needs to see (where the node is landing). Also arms the same
+  // trailing-click suppression as a long-press - a real node drag can fire
+  // a trailing click on release just as easily.
   network.on('dragStart', params => {
-    if (params.nodes.length) _onDragStart?.();
+    if (params.nodes.length) { _armClickSuppression(); _onDragStart?.(); }
   });
   network.on('dragEnd', params => {
     if (!params.nodes.length) return;

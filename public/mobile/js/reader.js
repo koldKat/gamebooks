@@ -217,7 +217,46 @@ function _ensureMVisited(pt) {
 // request already won.
 let _showToken = 0;
 
+// section id -> { html, choices } for this book/reader session only - reset
+// in renderReader() on every fresh book open, since ids aren't unique
+// across books. Book text is static within a session (no live-editing
+// concern worth guarding against here), so once fetched a section is
+// trusted as-is rather than revalidated. Populated two ways: eagerly for
+// every choice link right after the section that links to it renders (see
+// _prefetchChoices), and incidentally by _showSection/_previewSection
+// themselves caching whatever they fetch - so even without the eager
+// prefetch ever finishing, a section is never fetched from the network
+// twice.
+const _sectionCache = new Map();
+
+function _prefetchChoices(choices) {
+  for (const raw of choices || []) {
+    // A choices array entry isn't guaranteed to already be normalized the
+    // way _showSection/_previewSection's own `sec` argument is (both are
+    // fed a parseSecId()'d value from their callers) - an un-normalized
+    // "0"/"-1" string sentinel would slip past a raw isTerminal() check
+    // (strict ===) and get fetched as if it were a real section, and a
+    // numeric-looking string vs. number mismatch would key the cache
+    // differently than _showSection's own String(sec) lookup expects,
+    // making every prefetch here a wasted, permanent cache miss. Same class
+    // of bug graph.js's _bfsDepth just had to be fixed for.
+    const c = parseSecId(raw);
+    if (c === null || isTerminal(c)) continue;
+    const key = String(c);
+    if (_sectionCache.has(key)) continue;
+    // Fire-and-forget, deliberately not gated by _showToken - this is
+    // background work for a section the reader hasn't asked to see yet, so
+    // a stale in-flight request here isn't "wrong", it just finishes and
+    // populates the cache for whenever (if ever) they actually tap it.
+    apiFetch(`/api/books/${currentBookId}/sections/${encodeURIComponent(c)}`)
+      .then(res => res.ok ? res.json() : null)
+      .then(data => { if (data) _sectionCache.set(key, data); })
+      .catch(() => {});
+  }
+}
+
 export async function renderReader(mount, book, onBack) {
+  _sectionCache.clear();
   mount.innerHTML = `
     <div class="m-topbar">
       <button id="m-back-btn">${t('mobile.back_home')}</button>
@@ -396,32 +435,43 @@ async function _showSection(sec) {
   const top = document.getElementById('m-top');
   if (!top) return;
   const token = ++_showToken;
-  top.innerHTML = _loadingHtml(t('mobile.loading'));
 
-  let res;
-  try {
-    res = await apiFetch(`/api/books/${currentBookId}/sections/${encodeURIComponent(sec)}`);
-  } catch (_) {
-    return;
-  }
-  if (token !== _showToken) return;
+  const cacheKey = String(sec);
+  let data = _sectionCache.get(cacheKey);
+  if (!data) {
+    top.innerHTML = _loadingHtml(t('mobile.loading'));
+    let res;
+    try {
+      res = await apiFetch(`/api/books/${currentBookId}/sections/${encodeURIComponent(sec)}`);
+    } catch (_) {
+      return;
+    }
+    if (token !== _showToken) return;
 
-  if (!res.ok) {
-    top.innerHTML = `
-      <div class="m-notice">
-        <p class="m-end">${t('mobile.not_available')}</p>
-        <p class="m-manual-hint">${t('mobile.manual_hint')}</p>
-      </div>`;
-    refreshGraph(sec);
-    _hideGraphLoading();
-    _updateRunControls();
-    return;
+    if (!res.ok) {
+      top.innerHTML = `
+        <div class="m-notice">
+          <p class="m-end">${t('mobile.not_available')}</p>
+          <p class="m-manual-hint">${t('mobile.manual_hint')}</p>
+        </div>`;
+      refreshGraph(sec);
+      _hideGraphLoading();
+      _updateRunControls();
+      return;
+    }
+    data = await res.json();
+    if (token !== _showToken) return;
+    _sectionCache.set(cacheKey, data);
   }
-  const data = await res.json();
-  if (token !== _showToken) return;
 
   top.innerHTML = data.html;
   top.scrollTop = 0;
+  // Warm the cache for wherever this section's own choices lead next, so
+  // the spinner from this function's own cache-miss branch above is, at
+  // steady state, only ever seen once per section the reader actually
+  // reaches - by the time they've read this section and tapped a choice,
+  // that choice's own fetch has usually already finished in the background.
+  _prefetchChoices(data.choices);
   if (data.choices?.length) {
     _commitChoices(sec, data.choices);
     // _navigate's own saveState() already fired before this fetch resolved,
@@ -609,15 +659,20 @@ async function _previewSection(sec) {
   if (!top) return;
   const token = ++_showToken;
 
-  let res;
-  try {
-    res = await apiFetch(`/api/books/${currentBookId}/sections/${encodeURIComponent(sec)}`);
-  } catch (_) {
-    return;
+  const cacheKey = String(sec);
+  let data = _sectionCache.get(cacheKey);
+  if (!data) {
+    let res;
+    try {
+      res = await apiFetch(`/api/books/${currentBookId}/sections/${encodeURIComponent(sec)}`);
+    } catch (_) {
+      return;
+    }
+    if (token !== _showToken || !res.ok) return;
+    data = await res.json();
+    if (token !== _showToken) return;
+    _sectionCache.set(cacheKey, data);
   }
-  if (token !== _showToken || !res.ok) return;
-  const data = await res.json();
-  if (token !== _showToken) return;
 
   if (data.choices?.length) _commitChoices(sec, data.choices);
 

@@ -663,7 +663,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
-  padding: 0.05rem 0 0.1rem;
+  padding: 0.35rem 0 0.1rem;
 }
 
 .section-display {
@@ -684,6 +684,28 @@ body {
   color: #6b7280;
   text-transform: uppercase;
   letter-spacing: 0.06em;
+  /* Without this, the label's default line-height pads its own line box
+     well past its actual glyph height while .section-display's line-height:1
+     doesn't - .section-row's align-items:center then centers each element's
+     line box, not its visible text, throwing the two out of visual
+     alignment by a couple pixels despite "center" being set correctly.
+     Matching line-height:1 here means both boxes tightly wrap their own
+     text, so centering the boxes actually centers the *boxes* - confirmed
+     via a rendered test page, the two boxes' centers land within a
+     fraction of a pixel of each other. (baseline alignment was tried
+     first - it lines up the text bottoms, not the middles, which reads as
+     "the label sank to the bottom of the number" precisely because the
+     number is so much taller.)
+     Still reads as slightly high, though: the box centers match, but not
+     the glyphs' visual ink within them - .section-display's bold digits
+     sit visually lower in their box than this label's thin small-caps text
+     does in its own, a font-metric mismatch no box-alignment property can
+     fix. This small manual nudge corrects for that specific optical
+     difference between these two exact styles - it isn't a generic
+     technique, just the offset this pairing needed. */
+  line-height: 1;
+  position: relative;
+  top: 0.1rem;
 }
 
 .run-controls-group {

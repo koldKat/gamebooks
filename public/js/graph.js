@@ -573,8 +573,11 @@ function _getPositionedNeighbors(sec, posMap) {
   for (const [srcKey, data] of Object.entries(state.graph)) {
     const src = parseSecId(srcKey);
     if (src === sec) {
-      for (const dest of (data.choices || [])) {
-        if (!isTerminal(dest) && _hasValidPos(posMap[dest])) outgoing.push(dest);
+      for (const raw of (data.choices || [])) {
+        // Same raw-vs-normalized trap as _bfsDepth below - isTerminal()'s
+        // own strict === would miss a string-typed "-1"/"0" sentinel.
+        const dest = parseSecId(raw);
+        if (dest !== null && !isTerminal(dest) && _hasValidPos(posMap[dest])) outgoing.push(dest);
       }
       continue;
     }
@@ -694,7 +697,10 @@ function _chooseLocalPosition(sec, posMap) {
     ? _avgPoint(
         Object.keys(posMap)
           .map(parseSecId)
-          .filter(id => id !== sec && incoming.some(parent => (state.graph[parent]?.choices || []).includes(id))),
+          // Same raw-vs-normalized trap as _bfsDepth/_getPositionedNeighbors -
+          // .includes(id) is strict-equality, so a raw un-normalized choices
+          // entry can silently miss a real sibling connection here too.
+          .filter(id => id !== sec && incoming.some(parent => (state.graph[parent]?.choices || []).some(c => parseSecId(c) === id))),
         posMap
       )
     : null;
@@ -784,8 +790,21 @@ function _bfsDepth(startSec, allSections) {
   while (queue.length) {
     const cur = queue.shift();
     const choices = state.graph[cur]?.choices || [];
-    for (const c of choices) {
-      if (isTerminal(c) || depth.has(c) || !allSections.has(c)) continue;
+    for (const raw of choices) {
+      // allSections is built via parseSecId() (allDiscoveredSections/
+      // discoveredSectionsFor in state.js), but a choices array entry is
+      // whatever the graph happened to store it as - not guaranteed to
+      // already be the same type (a numeric-looking string section id can
+      // slip in via a book import that stored choice targets as strings).
+      // depth/allSections are a Map/Set, so .has() is strict-equality with
+      // no coercion: an un-normalized raw value here silently drops that
+      // whole branch as "unreachable" instead of throwing, corrupting every
+      // downstream node's depth - and therefore its grid position - without
+      // any error. Same class of bug _getPositionedNeighbors already had to
+      // fix (String() there; parseSecId() here to match this Set's actual
+      // value type, not stringify it).
+      const c = parseSecId(raw);
+      if (c === null || isTerminal(c) || depth.has(c) || !allSections.has(c)) continue;
       depth.set(c, depth.get(cur) + 1);
       queue.push(c);
     }
