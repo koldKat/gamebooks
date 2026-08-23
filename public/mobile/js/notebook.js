@@ -7,11 +7,11 @@
 // graph-view concept with nothing to pin to here, so this is just the
 // plain editable notebook, always full-screen when open.
 
-import { state, currentBookId, apiFetch } from '../../js/state.js?v=1464';
-import { showAlert } from '../../js/confirm.js?v=1464';
-import { t } from '../../js/i18n.js?v=1464';
-import { escapeHtml } from '../../js/util.js?v=1464';
-import { showToast } from './toast.js?v=1464';
+import { state, currentBookId, apiFetch } from '../../js/state.js?v=1467';
+import { showAlert } from '../../js/confirm.js?v=1467';
+import { t } from '../../js/i18n.js?v=1467';
+import { escapeHtml } from '../../js/util.js?v=1467';
+import { showToast } from './toast.js?v=1467';
 
 let _overlay = null;
 

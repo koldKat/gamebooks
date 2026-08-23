@@ -68,7 +68,26 @@
 }
 @media (max-width: 640px) {
   .bsim-body { flex-direction: column; }
-  .bsim-col-right { border-left: none; border-top: 1px solid #1f2937; }
+  /* .bsim-col-left carries every interactive control (stats, the enemy
+     picker, and critically the Round/Reset buttons in its own
+     .inv-modal-ftr) - .bsim-col-right is just history/log, read-only and
+     often near-empty at the start of a fight. Splitting the stacked mobile
+     layout flex:1/flex:1 (desktop's side-by-side split) gave both columns
+     equal height regardless of what's actually in them, squeezing the left
+     column's real controls into half the modal and, since .bsim-col-right
+     itself never had its own overflow rule, silently clipping whatever
+     didn't fit instead of scrolling to it - reachable in theory by
+     scrolling .bsim-col-left, but easy to mistake for a dead dialog with no
+     way to actually start a round. Capping the right column's height and
+     giving it its own scroll leaves the rest to the left column instead. */
+  .bsim-col-right {
+    border-left: none;
+    border-top: 1px solid #1f2937;
+    flex: 0 1 auto;
+    max-height: 35%;
+    overflow-y: auto;
+  }
+  .bsim-col-left { flex: 1 1 auto; }
 }
 .bsim-side {
   display: flex;

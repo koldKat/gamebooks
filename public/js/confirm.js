@@ -10,7 +10,7 @@
 // doesn't have that markup gets an equivalent overlay built on first use,
 // with the same ids/classes, so confirm.css styles it the same way.
 
-import { t } from './i18n.js?v=1464';
+import { t } from './i18n.js?v=1467';
 
 let _els = null;
 

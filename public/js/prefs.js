@@ -1,9 +1,9 @@
 // prefs.js - Server-side UI pref persistence and panel collapse helpers
 
-import { getToken, isDemoMode, apiFetch } from './state.js?v=1464';
-import { setTrailCollapsed, setChoicesRecordedCount, CHOICES_PULSE_THRESHOLD } from './play.js?v=1464';
-import { setCoversPrefsState, _updateLandingBgDragUi } from './covers.js?v=1464';
-import { setExpandedPrefs, renderBooksList, getCachedBooks, getCachedAllSeries, getCachedStashes } from './books.js?v=1464';
+import { getToken, isDemoMode, apiFetch } from './state.js?v=1467';
+import { setTrailCollapsed, setChoicesRecordedCount, CHOICES_PULSE_THRESHOLD } from './play.js?v=1467';
+import { setCoversPrefsState, _updateLandingBgDragUi } from './covers.js?v=1467';
+import { setExpandedPrefs, renderBooksList, getCachedBooks, getCachedAllSeries, getCachedStashes } from './books.js?v=1467';
 
 let _hooks = {};
 export function setPrefsHooks(h) { _hooks = h || {}; }

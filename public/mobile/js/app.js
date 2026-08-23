@@ -10,10 +10,29 @@
 // deep-links straight into a single book's reader (?book=123, set by that
 // same desktop "Open" button) - see books.js's book-open-btn handler.
 
-import { getToken, apiFetch, setCurrentUserLevel, setBonusUndos, setBonusFastTravels } from '../../js/state.js?v=1464';
-import { renderLogin } from './auth.js?v=1464';
-import { renderReader } from './reader.js?v=1464';
-import { t } from '../../js/i18n.js?v=1464';
+import { getToken, apiFetch, setCurrentUserLevel, setBonusUndos, setBonusFastTravels } from '../../js/state.js?v=1467';
+import { renderLogin } from './auth.js?v=1467';
+import { renderReader } from './reader.js?v=1467';
+import { t } from '../../js/i18n.js?v=1467';
+
+// #screen's CSS uses calc(var(--vh, 1vh) * 100) instead of 100dvh - `dvh`
+// support (and correct behavior) isn't universal, especially inside an
+// in-app/embedded browser (Viber, Messenger, etc.) that reports its own
+// chrome differently than a real mobile browser. On one of those, #screen
+// measured taller than the actual visible area even with a 100dvh rule
+// present, so the button rows at the bottom were only reachable by
+// scrolling the whole page - exactly the "why can I scroll to see them,
+// that's unacceptable" bug report. window.innerHeight is what every
+// browser/webview agrees on as the real, currently-visible height (shrinks
+// when a toolbar is showing, grows when it hides), so recomputing --vh from
+// it on load/resize is the standard fix for this class of viewport-unit
+// bug, independent of whether dvh itself is trustworthy here.
+function _setVhVar() {
+  document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);
+}
+_setVhVar();
+window.addEventListener('resize', _setVhVar);
+window.addEventListener('orientationchange', _setVhVar);
 
 const mount = document.getElementById('screen');
 
