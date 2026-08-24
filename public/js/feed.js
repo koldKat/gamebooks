@@ -248,7 +248,24 @@ export async function loadFeed() {
   // whole feed was reloading once a minute) would be far worse than the
   // silent swap-in this used to do before the spinner existed.
   if (!el.querySelector('.feed-entry, #feed-header')) {
-    el.innerHTML = `<div class="feed-loading"><div class="feed-spinner"></div><span>${t('feed.loading')}</span></div>`;
+    // Same graph (center node + 4 children) as favicon.svg, not an
+    // unrelated book icon - this app's whole subject is mapping a
+    // gamebook's own node graph, so re-using that exact shape/palette
+    // reads as "the app", not just "some generic loading animation".
+    el.innerHTML = `<div class="feed-loading">
+      <svg class="feed-loading-graph" viewBox="0 0 32 32">
+        <line x1="16" y1="16" x2="6"  y2="7"  stroke="#4b5563" stroke-width="1.8" stroke-linecap="round"/>
+        <line x1="16" y1="16" x2="26" y2="7"  stroke="#4b5563" stroke-width="1.8" stroke-linecap="round"/>
+        <line x1="16" y1="16" x2="6"  y2="26" stroke="#4b5563" stroke-width="1.8" stroke-linecap="round"/>
+        <line x1="16" y1="16" x2="26" y2="26" stroke="#4b5563" stroke-width="1.8" stroke-linecap="round"/>
+        <circle class="flg-node flg-n1" cx="6"  cy="7"  r="4" fill="#8e44ad" stroke="#6c3483" stroke-width="1.2"/>
+        <circle class="flg-node flg-n2" cx="26" cy="7"  r="4" fill="#e74c3c" stroke="#c0392b" stroke-width="1.2"/>
+        <circle class="flg-node flg-n3" cx="6"  cy="26" r="4" fill="#3498db" stroke="#2980b9" stroke-width="1.2"/>
+        <circle class="flg-node flg-n4" cx="26" cy="26" r="4" fill="#27ae60" stroke="#1e8449" stroke-width="1.2"/>
+        <circle class="flg-center" cx="16" cy="16" r="6" fill="#f5a623" stroke="#c47d00" stroke-width="1.5"/>
+      </svg>
+      <span>${t('feed.loading')}</span>
+    </div>`;
   }
   try {
     const res              = getToken() ? await apiFetch('/api/feed') : await _hooks.publicFetch?.('/api/feed');

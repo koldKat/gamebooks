@@ -1175,6 +1175,17 @@ body.covers-collapsed #center-scroll-top {
 body.right-collapsed #center-scroll-top {
   left: calc(50% + var(--landing-panel-w) / 2);
 }
+/* Both single-class rules above have equal specificity, so when both
+   covers and right are collapsed at once, only whichever rule comes later
+   in the file wins outright - it doesn't combine the two half-panel-width
+   offsets back to center, it just applies the right-collapsed shift alone
+   and leaves the button off-center. The two-class selector here has higher
+   specificity than either single-class rule, so it correctly wins over
+   both regardless of source order once both panels are gone and the center
+   panel is the only thing left to center on. */
+body.covers-collapsed.right-collapsed #center-scroll-top {
+  left: 50%;
+}
 
 /* ── Books screen ─────────────────────────────────────────────── */
 

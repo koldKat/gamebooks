@@ -393,15 +393,64 @@ button, input {
    height:100% child doesn't fill it the way it does inside #m-top's own
    flex chain; flex:1 is what actually stretches it to fill the viewport. */
 .m-loading-full { flex: 1; height: auto; }
-.m-spinner {
-  width: 26px;
-  height: 26px;
-  border: 3px solid rgba(255, 255, 255, 0.15);
-  border-top-color: #f5a623;
-  border-radius: 50%;
-  animation: m-spin 0.8s linear infinite;
+/* Same center-node-plus-4-children graph icon as favicon.svg/desktop's
+   .feed-loading-graph, reimplemented here with its own mlg-* class prefix
+   rather than importing desktop's CSS - mobile keeps its own small bundle,
+   never loads public/css/demo.css. */
+.mlg-graph { width: 30px; height: 30px; }
+.mlg-graph .mlg-center {
+  transform-origin: 16px 16px;
+  animation: mlg-pulse 1.3s ease-in-out infinite;
 }
-@keyframes m-spin { to { transform: rotate(360deg); } }
+.mlg-graph .mlg-node {
+  transform-origin: center;
+  transform-box: fill-box;
+  opacity: 0;
+}
+@keyframes mlg-pulse {
+  0%, 100% { transform: scale(1);    opacity: 1; }
+  50%      { transform: scale(1.15); opacity: 0.75; }
+}
+/* Each node gets its own keyframes (not a shared animation + staggered
+   delay) so all four can genuinely be visible together for one shared dwell
+   window before any of them starts disappearing - see demo.css's .flg-*
+   rules, which this mirrors 1:1 including the clockwise ordering. */
+.mlg-n1 { animation: mlg-n1-cycle 2.2s ease-in-out infinite; }
+.mlg-n2 { animation: mlg-n2-cycle 2.2s ease-in-out infinite; }
+.mlg-n4 { animation: mlg-n3-cycle 2.2s ease-in-out infinite; }
+.mlg-n3 { animation: mlg-n4-cycle 2.2s ease-in-out infinite; }
+@keyframes mlg-n1-cycle {
+  0%       { opacity: 0; transform: scale(0.3); }
+  7%       { opacity: 1; transform: scale(1.3); }
+  11%      { transform: scale(1); }
+  50%      { opacity: 1; transform: scale(1); }
+  60%      { opacity: 0; transform: scale(0.3); }
+  100%     { opacity: 0; transform: scale(0.3); }
+}
+@keyframes mlg-n2-cycle {
+  0%, 9%   { opacity: 0; transform: scale(0.3); }
+  16%      { opacity: 1; transform: scale(1.3); }
+  20%      { transform: scale(1); }
+  59%      { opacity: 1; transform: scale(1); }
+  69%      { opacity: 0; transform: scale(0.3); }
+  100%     { opacity: 0; transform: scale(0.3); }
+}
+@keyframes mlg-n3-cycle {
+  0%, 18%  { opacity: 0; transform: scale(0.3); }
+  25%      { opacity: 1; transform: scale(1.3); }
+  29%      { transform: scale(1); }
+  68%      { opacity: 1; transform: scale(1); }
+  78%      { opacity: 0; transform: scale(0.3); }
+  100%     { opacity: 0; transform: scale(0.3); }
+}
+@keyframes mlg-n4-cycle {
+  0%, 27%  { opacity: 0; transform: scale(0.3); }
+  34%      { opacity: 1; transform: scale(1.3); }
+  38%      { transform: scale(1); }
+  77%      { opacity: 1; transform: scale(1); }
+  87%      { opacity: 0; transform: scale(0.3); }
+  100%     { opacity: 0; transform: scale(0.3); }
+}
 
 .m-graph-error { padding: 1rem; text-align: center; color: #9ca3af; }
 
