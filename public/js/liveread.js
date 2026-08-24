@@ -14,6 +14,23 @@ import { network, setLightweightRestabilize } from './graph.js';
 import { t } from './i18n.js';
 import { shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from './util.js';
 
+// Reuses the same .feed-loading-graph/.flg-* markup and CSS (demo.css) as the
+// activity feed's loading indicator, both loaded on index.html.
+const _loadingHtml = () => `<div class="liveread-loading">
+  <svg class="feed-loading-graph" viewBox="0 0 32 32">
+    <line x1="16" y1="16" x2="6"  y2="7"  stroke="#4b5563" stroke-width="1.8" stroke-linecap="round"/>
+    <line x1="16" y1="16" x2="26" y2="7"  stroke="#4b5563" stroke-width="1.8" stroke-linecap="round"/>
+    <line x1="16" y1="16" x2="6"  y2="26" stroke="#4b5563" stroke-width="1.8" stroke-linecap="round"/>
+    <line x1="16" y1="16" x2="26" y2="26" stroke="#4b5563" stroke-width="1.8" stroke-linecap="round"/>
+    <circle class="flg-node flg-n1" cx="6"  cy="7"  r="4" fill="#8e44ad" stroke="#6c3483" stroke-width="1.2"/>
+    <circle class="flg-node flg-n2" cx="26" cy="7"  r="4" fill="#e74c3c" stroke="#c0392b" stroke-width="1.2"/>
+    <circle class="flg-node flg-n3" cx="6"  cy="26" r="4" fill="#3498db" stroke="#2980b9" stroke-width="1.2"/>
+    <circle class="flg-node flg-n4" cx="26" cy="26" r="4" fill="#27ae60" stroke="#1e8449" stroke-width="1.2"/>
+    <circle class="flg-center" cx="16" cy="16" r="6" fill="#f5a623" stroke="#c47d00" stroke-width="1.5"/>
+  </svg>
+  <span>${t('liveread.loading')}</span>
+</div>`;
+
 // Bumped on every call and re-checked after each await so a slower, now-stale
 // fetch (e.g. from a rapid double-click on two different choice links) can't
 // overwrite the panel with the wrong section after a newer request already won.
@@ -89,7 +106,7 @@ async function _showSection(sec) {
   }
 
   if (_isFirstShowSinceOpen && !_sectionCache.has(_cacheKey(sec))) {
-    body.innerHTML = `<div class="liveread-loading"><div class="liveread-spinner"></div><span>${t('liveread.loading')}</span></div>`;
+    body.innerHTML = _loadingHtml();
   }
   _isFirstShowSinceOpen = false;
 
@@ -130,7 +147,7 @@ async function _showExtra(key) {
   if (!body) return;
   const token = ++_showToken;
   if (_isFirstShowSinceOpen && !_sectionCache.has(_cacheKey(key))) {
-    body.innerHTML = `<div class="liveread-loading"><div class="liveread-spinner"></div><span>${t('liveread.loading')}</span></div>`;
+    body.innerHTML = _loadingHtml();
   }
   _isFirstShowSinceOpen = false;
   const result = await _fetchSectionData(key);

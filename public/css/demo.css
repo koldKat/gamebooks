@@ -279,30 +279,101 @@ body.no-feed-glass-cards .feed-day-card--glass::before { display: none !importan
   color: #4b5563;
 }
 
-/* Same border-spin pattern as liveread.css's own .liveread-spinner/mobile's
-   .m-spinner - a functional loading indicator, not decorative, so it's
-   deliberately not gated behind body.reduce-motion. Only shown while
-   #feed-content is genuinely empty (first load, or a previous load that
-   errored) - a background refresh with existing entries already on screen
-   swaps them in directly, no flash back to a spinner. */
+/* A functional loading indicator, not decorative, so deliberately not
+   gated behind body.reduce-motion (same exemption as liveread.js's own
+   reuse of this markup, and mobile's own .m-spinner). Only shown while
+   #feed-content is
+   genuinely empty (first load, or a previous load that errored) - a
+   background refresh with existing entries already on screen swaps them in
+   directly, no flash back to a spinner. Plain sans-serif, not italic - the
+   generic .liveread-loading style this was first copied from used italic,
+   but on this panel's own font/size it just read as a mistake, not intentional
+   styling. */
 .feed-loading {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.85rem;
   padding: 2.5rem 0;
   color: #9ca3af;
-  font-style: italic;
+  font-size: 0.85rem;
 }
-.feed-spinner {
-  width: 26px;
-  height: 26px;
-  border: 3px solid rgba(255, 255, 255, 0.15);
-  border-top-color: #38bdf8;
-  border-radius: 50%;
-  animation: feed-spin 0.8s linear infinite;
+
+/* The same center-node-plus-4-children graph as favicon.svg (this app's
+   actual subject is mapping a gamebook's own choice graph), not an
+   unrelated book/spinner icon - plain SVG circles/lines, animated with
+   opacity+scale only, no skew/rotate/3D of any kind to get wrong. */
+.feed-loading-graph {
+  width: 34px;
+  height: 34px;
 }
-@keyframes feed-spin { to { transform: rotate(360deg); } }
+.feed-loading-graph .flg-center {
+  transform-origin: 16px 16px;
+  animation: flg-pulse 1.3s ease-in-out infinite;
+}
+.feed-loading-graph .flg-node {
+  transform-origin: center;
+  transform-box: fill-box;
+  opacity: 0;
+}
+@keyframes flg-pulse {
+  0%, 100% { transform: scale(1);    opacity: 1; }
+  50%      { transform: scale(1.15); opacity: 0.75; }
+}
+/* Each child node gets its own keyframes (not one shared animation with a
+   staggered delay, like an earlier version of this used) because a shared
+   delay only shifts WHEN a node's own identical blink happens - it can't
+   produce a genuine group build-up/tear-down, where all four need to
+   still be visible together for one shared dwell window before any of
+   them starts disappearing. Order is clockwise starting top-left (n1
+   top-left, n2 top-right, n4 bottom-right, n3 bottom-left - n3/n4's SVG
+   markup order is top-left-then-bottom-left/bottom-right, i.e. NOT
+   clockwise, so the keyframe assignment below deliberately doesn't match
+   the n1/n2/n3/n4 numbering straight down) - the same FIFO order for
+   disappearing as appearing, not reversed. Each node's own timeline is
+   just the previous one's shifted later by one step, popping in with a
+   brief overshoot (scale 0->1.15->1) and fading out the same way in
+   reverse. */
+.flg-n1 { animation: flg-n1-cycle 2.2s ease-in-out infinite; }
+.flg-n2 { animation: flg-n2-cycle 2.2s ease-in-out infinite; }
+.flg-n4 { animation: flg-n3-cycle 2.2s ease-in-out infinite; }
+.flg-n3 { animation: flg-n4-cycle 2.2s ease-in-out infinite; }
+/* Wider transition windows (~7-10% of the cycle, not the ~4% this used to
+   be) and a bigger scale range (0.3 -> 1.3 overshoot -> 1, not 0.5 -> 1.15)
+   so growing in and shrinking out both read as real motion rather than a
+   near-instant snap. */
+@keyframes flg-n1-cycle {
+  0%       { opacity: 0; transform: scale(0.3); }
+  7%       { opacity: 1; transform: scale(1.3); }
+  11%      { transform: scale(1); }
+  50%      { opacity: 1; transform: scale(1); }
+  60%      { opacity: 0; transform: scale(0.3); }
+  100%     { opacity: 0; transform: scale(0.3); }
+}
+@keyframes flg-n2-cycle {
+  0%, 9%   { opacity: 0; transform: scale(0.3); }
+  16%      { opacity: 1; transform: scale(1.3); }
+  20%      { transform: scale(1); }
+  59%      { opacity: 1; transform: scale(1); }
+  69%      { opacity: 0; transform: scale(0.3); }
+  100%     { opacity: 0; transform: scale(0.3); }
+}
+@keyframes flg-n3-cycle {
+  0%, 18%  { opacity: 0; transform: scale(0.3); }
+  25%      { opacity: 1; transform: scale(1.3); }
+  29%      { transform: scale(1); }
+  68%      { opacity: 1; transform: scale(1); }
+  78%      { opacity: 0; transform: scale(0.3); }
+  100%     { opacity: 0; transform: scale(0.3); }
+}
+@keyframes flg-n4-cycle {
+  0%, 27%  { opacity: 0; transform: scale(0.3); }
+  34%      { opacity: 1; transform: scale(1.3); }
+  38%      { transform: scale(1); }
+  77%      { opacity: 1; transform: scale(1); }
+  87%      { opacity: 0; transform: scale(0.3); }
+  100%     { opacity: 0; transform: scale(0.3); }
+}
 
 .feed-user-group {
 }

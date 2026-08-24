@@ -75,7 +75,20 @@ function _escapeHtml(s) {
 // slow part of the load (which can be most of it, on a slow connection) as
 // a blank screen with no feedback at all.
 function _showLoadingScreen() {
-  mount.innerHTML = `<div class="m-loading m-loading-full"><div class="m-spinner"></div><span>${_escapeHtml(t('mobile.loading'))}</span></div>`;
+  mount.innerHTML = `<div class="m-loading m-loading-full">
+    <svg class="mlg-graph" viewBox="0 0 32 32">
+      <line x1="16" y1="16" x2="6"  y2="7"  stroke="#4b5563" stroke-width="1.8" stroke-linecap="round"/>
+      <line x1="16" y1="16" x2="26" y2="7"  stroke="#4b5563" stroke-width="1.8" stroke-linecap="round"/>
+      <line x1="16" y1="16" x2="6"  y2="26" stroke="#4b5563" stroke-width="1.8" stroke-linecap="round"/>
+      <line x1="16" y1="16" x2="26" y2="26" stroke="#4b5563" stroke-width="1.8" stroke-linecap="round"/>
+      <circle class="mlg-node mlg-n1" cx="6"  cy="7"  r="4" fill="#8e44ad" stroke="#6c3483" stroke-width="1.2"/>
+      <circle class="mlg-node mlg-n2" cx="26" cy="7"  r="4" fill="#e74c3c" stroke="#c0392b" stroke-width="1.2"/>
+      <circle class="mlg-node mlg-n3" cx="6"  cy="26" r="4" fill="#3498db" stroke="#2980b9" stroke-width="1.2"/>
+      <circle class="mlg-node mlg-n4" cx="26" cy="26" r="4" fill="#27ae60" stroke="#1e8449" stroke-width="1.2"/>
+      <circle class="mlg-center" cx="16" cy="16" r="6" fill="#f5a623" stroke="#c47d00" stroke-width="1.5"/>
+    </svg>
+    <span>${_escapeHtml(t('mobile.loading'))}</span>
+  </div>`;
 }
 
 async function loadThenShowReader() {
