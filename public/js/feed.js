@@ -237,6 +237,19 @@ async function _applyDayCoverFlows(root, dayCoverLists = _lastDayCoverLists) {
 export async function loadFeed() {
   const el = document.getElementById('feed-content');
   if (!el) return;
+  // GET /api/feed can be slow on a bad connection - #feed-content sits
+  // empty (its own initial markup in index.html) until this resolves, which
+  // reads as the page having silently failed to load anything. Only show
+  // the spinner on a genuinely empty panel (first load, or a previous call
+  // that errored) - livetab.js's own leader-tab timer calls loadFeed()
+  // every 60s regardless of whether the landing page is even visible, and
+  // wiping real, already-rendered entries back to a spinner on every one of
+  // those background refreshes (found the hard way: it looked like the
+  // whole feed was reloading once a minute) would be far worse than the
+  // silent swap-in this used to do before the spinner existed.
+  if (!el.querySelector('.feed-entry, #feed-header')) {
+    el.innerHTML = `<div class="feed-loading"><div class="feed-spinner"></div><span>${t('feed.loading')}</span></div>`;
+  }
   try {
     const res              = getToken() ? await apiFetch('/api/feed') : await _hooks.publicFetch?.('/api/feed');
     const { entries, pinned } = await res.json();
@@ -733,7 +746,15 @@ export async function loadFeed() {
       item.addEventListener('mouseleave', _hideFeedPreview);
     });
   } catch (_) {
-    // Feed is best-effort; silently ignore errors
+    // Feed is best-effort; silently ignore errors. Only clear the spinner
+    // set above if it's actually still showing (a genuinely empty panel) -
+    // a failed background poll must never wipe entries a previous
+    // successful call already rendered, same reasoning as the spinner
+    // guard above.
+    if (el.querySelector('.feed-loading')) {
+      el.innerHTML = `<div id="feed-header">${t('feed.header')} <span class="feed-header-sub">${t('feed.header_sub')}</span></div>` +
+                      `<p class="feed-empty">${t('feed.empty')}</p>`;
+    }
   }
 }
 

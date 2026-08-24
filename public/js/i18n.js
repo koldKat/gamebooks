@@ -422,6 +422,7 @@ const translations = {
     'feed.header':     'Activity',
     'feed.header_sub': '(last 30 days)',
     'feed.empty':      'No activity in the last 30 days.',
+    'feed.loading':    'Loading activity…',
     'feed.day_today':     'Today',
     'feed.day_yesterday': 'Yesterday',
 
