@@ -375,3 +375,29 @@
   color: #d1d5db;
   border-color: #9ca3af;
 }
+/* Below 768px (this app's own mobile breakpoint, matches _isMobile() in
+   books.js/covers.js/boot.js) the 4 buttons' natural widths don't fit one
+   row - .books-add-actions' flex-wrap:wrap then drops #open-add-stash-btn
+   to a line of its own, where its flex:1 1 auto grow (meant to close the
+   gap on desktop's wide single row) stretches it to fill that entire line
+   by itself. Forcing nowrap and giving every button (stash included) an
+   equal flex:1 1 0 keeps all 4 on one row, evenly sized/spaced to fill the
+   row's full width, instead of wrapping or staying left-packed. */
+@media (max-width: 768px) {
+  .books-add-actions {
+    flex-wrap: nowrap;
+    gap: 0.3rem;
+  }
+  .books-add-btn {
+    flex: 1 1 0;
+    min-width: 0;
+    font-size: 0.68rem;
+    line-height: 1.15;
+    padding: 0.3rem 0.3rem;
+    text-align: center;
+    white-space: normal;
+  }
+  #open-add-stash-btn {
+    flex: 1 1 0;
+  }
+}
