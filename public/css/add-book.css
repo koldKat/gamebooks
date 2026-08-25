@@ -515,6 +515,8 @@
   padding: 0.2rem 0.5rem;
   font-size: 0.82rem;
 }
+.book-actions .primary-btn:disabled { opacity: 0.35; cursor: default; }
+.book-actions .primary-btn:disabled:hover { background: #f5a623; }
 
 .book-secondary-actions {
   display: flex;

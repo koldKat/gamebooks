@@ -23,6 +23,7 @@ const translations = {
     'mobile.add_book':     'Add Book',
     'mobile.open_from_my_books': "Open a book from My Books on the main site - it'll land you here.",
     'mobile.no_reading':   '"{title}" doesn\'t have in-app reading yet - play it on desktop instead.',
+    'mobile.no_reading_tooltip': 'No in-app reading yet - play this one on desktop instead.',
     'mobile.loading':      'Loading…',
     'mobile.loading_graph': 'Loading graph…',
     'mobile.back_home':    '‹ Home',

@@ -617,7 +617,11 @@ function _bookItemHtml(b, isChild, containerExpanded, childCount, aggrStats, isA
     `</div>` +
     `<div class="book-actions">` +
       (!b.is_container
-        ? `<button class="book-open-btn primary-btn"${commonAttrs} data-creator="${isCreator ? '1' : '0'}">${t('books.open')}</button>`
+        ? (_isMobile() && !b.hasLiveReading
+            ? `<span data-tooltip="${escapeHtml(t('mobile.no_reading_tooltip'))}" style="display:inline-flex">` +
+                `<button class="book-open-btn primary-btn" disabled${commonAttrs} data-creator="${isCreator ? '1' : '0'}">${t('books.open')}</button>` +
+              `</span>`
+            : `<button class="book-open-btn primary-btn"${commonAttrs} data-creator="${isCreator ? '1' : '0'}">${t('books.open')}</button>`)
         : '') +
       `<div class="book-secondary-actions">` +
         (!isCreator && !isAdmin
@@ -719,16 +723,7 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
   try { localStorage.setItem(_STASHES_LS_KEY, JSON.stringify(_cachedStashes));  } catch (_) {}
   if (_effectiveLandingCoverSource() === 'mine') { _resetLandingCoverQueue(); _startLandingCoverRotation(); }
 
-  // Mobile is reading-only (see mobile/reader.js) - a book with no in-app
-  // reading has nowhere to go there, so it's dropped from the rendered list
-  // below entirely rather than shown only to dead-end. Containers/
-  // anthologies stay regardless of their own hasLiveReading (always false -
-  // they're folders, not readable content); a series with none of its books
-  // left just shows an empty/short group, same graceful-degradation the
-  // "not mine" covers filter already accepts elsewhere. Everything from
-  // here down uses this `books`, never allOwnedBooks - the whole point is
-  // that only the rendering, not the cache above, sees the cut list.
-  const books = _isMobile() ? allOwnedBooks.filter(b => b.is_container || b.hasLiveReading) : allOwnedBooks;
+  const books = allOwnedBooks;
 
   const isAdmin = _hooks.getIsAdmin?.() ?? false;
   const list = document.getElementById('books-list');
@@ -856,9 +851,6 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
 
   function _renderContainerItem(b, customChildrenMap = childrenMap) {
     const myChildren = customChildrenMap[b.id] || [];
-    // Mobile is reading-only - an anthology with none of its children left
-    // after the hasLiveReading cut has nothing to show.
-    if (_isMobile() && !myChildren.length) return '';
     const expanded   = _getExpandedPref('book', String(b.id), `bk_expanded_${b.id}`);
     const aggrV = myChildren.reduce((s, c) => s + (c.visited || 0), 0);
     const aggrS = myChildren.reduce((s, c) => s + ((c.discoverable_sections ?? c.total_sections) || 0), 0);
@@ -906,13 +898,9 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
     return { activeBooks, activeChildrenMap, activeChildIds, topInSeries: _sortSeriesBooks(activeBooks.filter(b => !activeChildIds.has(b.id))) };
   }
 
-  // A container always survives the mobile hasLiveReading cut (it's a
-  // folder, not readable content itself) - counting it toward "does this
-  // series/stash have anything to show" via plain length/count would give a
-  // false positive whenever its own children all got filtered out, since
-  // the container itself renders nothing on mobile (its own per-item skip
-  // elsewhere). Only a standalone book, or a container that still has
-  // surviving children, counts as real renderable content.
+  // A container itself is a folder, not readable content - only a
+  // standalone book, or a container that has children, counts toward "does
+  // this series/stash have anything to show".
   function _hasRenderableTop(topArr, childrenMap) {
     return topArr.some(b => !b.is_container || (childrenMap[b.id] || []).length);
   }
@@ -949,11 +937,10 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
     _sortChildrenMap(activeChildrenMap);
     const topInSeries   = _sortSeriesBooks(activeBooks.filter(b => !activeChildIds.has(b.id)));
     const booksInSeries = activeBooks;
-    // Mobile is reading-only - a series with nothing actually renderable
-    // left after the hasLiveReading cut has nowhere useful for the "browse
-    // series" hint below to send you either, so skip the whole section
+    // A series with nothing actually renderable has nowhere useful for the
+    // "browse series" hint below to send you, so skip the whole section
     // (header included) rather than showing an empty shell.
-    if (_isMobile() && !_hasRenderableTop(topInSeries, activeChildrenMap)) return;
+    if (!_hasRenderableTop(topInSeries, activeChildrenMap)) return;
     const keyPrefix     = stashId ? `stash_${stashId}_sr_` : 'sr_';
     const expanded      = _getExpandedPref('series', `${stashId ?? 'main'}:${s.id}`, `${keyPrefix}expanded_${s.id}`);
     const { visited: aggrV, totalSections: aggrS } = _aggregateProgress(booksInSeries, activeChildrenMap);
@@ -1018,22 +1005,22 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
       if (_hasRenderableTop(topInSeries, activeChildrenMap)) stashHasAnyBooks = true;
       return sum + 1 + activeBooks.length;
     }, 0);
-    // Not stashBooksRaw.length - a container in there always survives the
-    // hasLiveReading cut (it's a folder, not readable content itself), so
-    // a stash holding only a now-empty anthology would still count as
-    // non-empty by raw length even though stashContainers' own per-item
-    // skip (below) hides that container entirely, leaving nothing actually
-    // rendered. Standalone books are real content on their own; a container
-    // only counts if it still has surviving children to show.
+    // Not stashBooksRaw.length - a container in there is a folder, not
+    // readable content itself, so a stash holding only an empty anthology
+    // would still count as non-empty by raw length even though
+    // stashContainers' own per-item skip (below) hides that container
+    // entirely, leaving nothing actually rendered. Standalone books are
+    // real content on their own; a container only counts if it has
+    // children to show.
     if (stashStandalone.length) stashHasAnyBooks = true;
     if (stashContainers.some(c => (stashChildrenMap[c.id] || []).length)) stashHasAnyBooks = true;
-    // Mobile is reading-only - a stash whose books (direct or via its
-    // series) all got dropped by the hasLiveReading cut has nothing left to
-    // show. Checked separately from stashItemCount below, which counts each
-    // series header as "1 item" regardless of whether that series itself
-    // has any books left - a stash holding only now-empty series would
-    // otherwise read as non-empty and still get rendered.
-    if (_isMobile() && !stashHasAnyBooks) continue;
+    // A stash whose books (direct or via its series) have nothing left to
+    // show has no reason to render. Checked separately from stashItemCount
+    // below, which counts each series header as "1 item" regardless of
+    // whether that series itself has any books - a stash holding only an
+    // empty series would otherwise read as non-empty and still get
+    // rendered.
+    if (!stashHasAnyBooks) continue;
     const stashItemCount = stashSeriesItemCount + stashBooksRaw.length;
     const stashCountLabel = stashItemCount === 1 ? '1 item' : `${stashItemCount} items`;
     let stashAggrV = 0, stashAggrS = 0;
@@ -1063,7 +1050,6 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
     for (const s of stashSeries) _renderSeriesSection(s, stash.id);
     for (const b of stashContainers) {
       const myChildren = stashChildrenMap[b.id] || [];
-      if (_isMobile() && !myChildren.length) continue;
       const expanded   = _getExpandedPref('book', String(b.id), `bk_expanded_${b.id}`);
       const aggrV = myChildren.reduce((sum, c) => sum + (c.visited || 0), 0);
       const aggrS = myChildren.reduce((sum, c) => sum + ((c.discoverable_sections ?? c.total_sections) || 0), 0);
