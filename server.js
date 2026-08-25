@@ -367,8 +367,12 @@ const _routeRequest = async (req, res) => {
     // feed_changed handler), not just this user's own idle time. That made
     // heartbeat (and the bonus-coin roll it can trigger) burst in sync with
     // how many other people happened to be active, not a clean per-user
-    // clock. Called only from the dedicated 60s leader-tab interval now
-    // (livetab.js's _feedPollInterval), decoupled from feed reloads.
+    // clock. Called from a dedicated 60s interval, decoupled from feed
+    // reloads - desktop's leader-tab one (livetab.js's _feedPollInterval)
+    // or mobile's own plain per-page interval (public/mobile/js/app.js,
+    // no leader election needed there). awardIdleHeartbeatXp's own
+    // minuteRef dedups any overlapping calls within the same real-world
+    // minute regardless of source, so both can call this endpoint safely.
     if (method === 'POST'   && urlPath === '/api/heartbeat') {
       const userId = await authenticate(req, res);
       if (userId === null) return;

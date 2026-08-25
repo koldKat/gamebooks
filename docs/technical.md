@@ -1011,7 +1011,7 @@ appLevel = floor((-1 + sqrt(1 + 8 × totalXp / (number_of_users × 1000))) / 2)
 | `visit_all_series` | 40 × N | `seriesId` | Once per user per series. Same trigger as `discover_all_series` but for `visit_all`. |
 | `discover_all_anthology` | 30 × N | `parentBookId` | Once per user per anthology. Fires after a child book's `discover_all` when all non-demo children have `discover_all`. |
 | `visit_all_anthology` | 40 × N | `parentBookId` | Once per user per anthology. Same trigger as `discover_all_anthology` but for `visit_all`. |
-| `idle_heartbeat` | 1 | `minuteBucket` | Once per minute per user, fired by the leader tab's own dedicated 60-second timer hitting `POST /api/heartbeat` (fires regardless of `document.visibilityState`, so a leader tab left open in the background or with the screen off keeps earning it). Its own endpoint, not a `GET /api/feed` side effect - see below. |
+| `idle_heartbeat` | 1 | `minuteBucket` | Once per minute per user, fired by a dedicated 60-second timer hitting `POST /api/heartbeat` - desktop's leader tab (`livetab.js`, fires regardless of `document.visibilityState`, so a leader tab left open in the background or with the screen off keeps earning it) or mobile's own plain per-page interval (`public/mobile/js/app.js`, no leader election needed there). Its own endpoint, not a `GET /api/feed` side effect - see below. |
 | `favorite_cover` | 5 | `book:id` / `series:id` | Once per cover item, first time a logged-in user favorites a book, anthology, or series cover from the public covers wall |
 | `inventory_started` | 25 | `bookId` | Once per book, first time any playthrough's inventory becomes non-empty |
 | `add_item` | 5 | `bookId:itemId` | Once per book per distinct item ID, first time that item appears in any playthrough's inventory |
@@ -1207,7 +1207,7 @@ On boot, `boot.js` checks `localStorage` for `gamebook_auth_token`:
 - Token present → `showBooks()` (fetches `/api/books`)
 - No token → `showLogin()`
 
-If any API call returns `401`, `apiFetch` fires an `auth-expired` DOM event, clears the stored token and username, and `boot.js` redirects to the login screen.
+If any API call returns `401`, `apiFetch` fires an `auth-expired` DOM event, clears the stored token and username, and redirects to the login screen - `boot.js` on desktop, `public/mobile/js/app.js` on mobile (also stopping its heartbeat interval, see below).
 
 If any call (authenticated or not) returns `503`, both `apiFetch` (`state.js`) and `publicFetch` (`boot.js`) dispatch a `maintenance-mode` window event. A `{ once: true }` listener calls `location.reload()` - the user lands on the maintenance page after the reload. `publicFetch` is a thin wrapper around `fetch` used for all unauthenticated public API calls (feed, public book/series/user activity, public run data) so that maintenance-mode ejection works even for logged-out users browsing the feed.
 
@@ -1361,7 +1361,7 @@ Each `.book-item` card has a progress bar background: `rgba(107,114,128,0.18)` f
 - Empty result → `<p class="feed-empty">` placeholder.
 - `#feed-content` shows a `.feed-loading` indicator (`.feed-loading-graph` - an inline copy of `favicon.svg`'s own center-node-plus-4-children graph, opacity/scale-animated only, distinct from the unrelated `.feed-book`/`.feed-book-btn` book-title link - not gated behind `reduce-motion` since it's functional) only when the panel doesn't already contain a `.feed-entry`/`#feed-header` - i.e. a genuinely first/empty load, not `livetab.js`'s 60-second background poll, which swaps fresh entries in directly with no flash.
 - Errors silently ignored - feed failure never breaks login. The catch only replaces content with the empty-state placeholder if the spinner is still showing (a first-load failure); a failed background poll leaves whatever entries are already on screen untouched instead of wiping them.
-- `GET /api/feed` is a pure read with no side effects; it does not award `idle_heartbeat` XP. Heartbeat XP only comes from `livetab.js`'s dedicated 60-second leader-tab timer hitting `POST /api/heartbeat` directly - see `idle_heartbeat` in the XP events table above. `loadFeed()` still schedules a short profile refresh after every call (`scheduleRewardProfileRefresh(150)`) so the coin/XP floater picks up whatever the heartbeat timer most recently did.
+- `GET /api/feed` is a pure read with no side effects; it does not award `idle_heartbeat` XP. On desktop, heartbeat XP only comes from `livetab.js`'s dedicated 60-second leader-tab timer hitting `POST /api/heartbeat` directly - see `idle_heartbeat` in the XP events table above. `loadFeed()` still schedules a short profile refresh after every call (`scheduleRewardProfileRefresh(150)`) so the coin/XP floater picks up whatever the heartbeat timer most recently did.
 
 `#feed-toggle` (`▴ / ▾`) is a feed-collapse tab centered above the feed. Feed hidden state is **session-only** - not persisted across reloads. Hidden on mobile. Position computed via JS `_syncFeedTogglePos` (not pure CSS) so it stays centered on `#feed-panel` when side panels expand/collapse. Called on panel toggle, resize, and landing reveal.
 

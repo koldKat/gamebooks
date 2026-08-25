@@ -92,6 +92,15 @@ function _showLoadingScreen() {
 }
 
 async function loadThenShowReader() {
+  // This is both the initial-load path (getToken() below) and the login
+  // form's onSuccess callback (auth.js) - the latter is what actually needs
+  // this call, to restart the interval after a re-login triggered by the
+  // auth-expired handler, which stops it. Without it here, a token that
+  // expired mid-session and was re-logged-in from would leave heartbeat
+  // dead for the rest of the page's life despite the user being validly
+  // logged in again. _startHeartbeat's own _heartbeatTimer guard makes the
+  // initial-load call harmless/idempotent.
+  _startHeartbeat();
   _showLoadingScreen();
   try {
     const res = await apiFetch('/api/profile');
@@ -120,6 +129,34 @@ async function loadThenShowReader() {
   if (!book.hasLiveReading) { showNoReading(book); return; }
   showReader(book);
 }
+
+// Mirrors desktop's boot.js/livetab.js: idle_heartbeat XP is earned for
+// having the app open and logged in, not gated on any specific screen or
+// activity within it - so this runs for the whole mobile page's lifetime
+// (login screen excluded, no book/no reading screens included), the same
+// as desktop counts time on its books list or any other logged-in screen.
+// No multi-tab leader election like livetab.js's - the server already
+// dedups idle_heartbeat awards per real-world minute (awardIdleHeartbeatXp's
+// minuteRef), and a phone doesn't realistically have this page open in
+// several tabs at once the way a desktop browser does, so a plain interval
+// is enough here.
+let _heartbeatTimer = null;
+function _startHeartbeat() {
+  if (_heartbeatTimer) return;
+  _heartbeatTimer = setInterval(() => { apiFetch('/api/heartbeat', { method: 'POST' }).catch(() => {}); }, 60_000);
+}
+function _stopHeartbeat() {
+  if (_heartbeatTimer) { clearInterval(_heartbeatTimer); _heartbeatTimer = null; }
+}
+
+// apiFetch (state.js) dispatches this on any 401 - desktop's boot.js has
+// the same listener (window.addEventListener('auth-expired', showLogin)).
+// Without it here, an expired token mid-read left the player stuck looking
+// at stale reader content with every fetch silently failing (reader.js's
+// _showSection treats a 401 the same as a dropped connection - stays
+// silent rather than showing an error) and no way back to the login
+// screen short of manually reloading the page.
+window.addEventListener('auth-expired', () => { _stopHeartbeat(); showLogin(); });
 
 if (getToken()) loadThenShowReader();
 else showLogin();
