@@ -368,10 +368,18 @@ body.sidebar-collapsed #play-btns-bar   { left: 50vw; }
 }
 .book-item--child .book-sections { font-size: 0.72rem; }
 
-.book-item--party {
+/* .book-item.book-item--party, not just .book-item--party - the base
+   .book-item rule (add-book.css, `border: 1px solid #374151` shorthand,
+   which resets all 4 sides) has equal specificity as a single-class
+   selector and loads AFTER this file on index.html, so a same-specificity
+   .book-item--party alone was silently losing to it on source order and
+   never actually rendering the party border at all - not just faintly,
+   completely invisible, identical to a regular card. The compound selector
+   here has strictly higher specificity, so it wins regardless of which
+   stylesheet loads in which order. */
+.book-item.book-item--party {
   border-color: rgba(52,211,153,0.5);
   border-left: 3px solid rgba(52,211,153,0.8);
-  background: rgba(52,211,153,0.04);
 }
 
 .pub-type-row {
