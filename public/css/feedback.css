@@ -75,6 +75,17 @@
   color: #6b7280;
   grid-column: 1 / -1;
 }
+/* Only the initial loading state (openStatsModal's first fetch) gets the
+   animated .feed-loading-graph/.flg-* icon - a failed-fetch state (same
+   .stats-loading class, plain text) stays as-is, since an animated "still
+   loading" icon would be misleading for an error. */
+.stats-loading--active {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem 0;
+}
 .stats-section { min-width: 0; }
 .stats-section--players { grid-area: players; }
 .stats-section--books { grid-area: books; }

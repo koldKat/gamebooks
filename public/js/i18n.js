@@ -2870,6 +2870,8 @@ const translations = {
     'battlesim829.log.reset_sep':     '──────────',
     'battlesim829.log.reset':         'Битката е нулирана. ТЖ на {enemy} и твоето ТЖ са възстановени.',
 
+    'graph.loading': 'Loading graph…',
+
     'liveread.title': 'Read Book',
     'liveread.reading_section': 'Reading section {n}',
     'liveread.loading': 'Loading...',

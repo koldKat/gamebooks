@@ -1,4 +1,4 @@
-// books.js - Books list rendering, caching, search/filter, expand prefs, cover queue
+// books.js - Books list rendering, caching, search/filter, expand prefs, viewport-lazy cover loading
 import { getToken, isDemoMode, apiFetch, getDemoState, setDemoState } from './state.js';
 import { foldForSearch, naturalCompare, naturalCompareByName } from './sort.js';
 import { refreshCoinsDisplay } from './shop.js';
@@ -27,9 +27,7 @@ let _booksDataFresh           = false;
 let _booksRefreshPromise      = null;
 let _booksSearchApplyTimer    = null;
 let _booksRevealedAt          = 0;
-let _bookCoverQueue           = [];
-let _bookCoverRunning         = false;
-let _bookCoverGen             = 0;
+let _bookCoverObserver        = null;
 const _bookCoverLoadedUrls    = new Set();
 let _bookExpandedPrefs        = {};
 let _seriesExpandedPrefs      = {};
@@ -270,58 +268,126 @@ function _scheduleAnthologyCardCoverFlows(root = document.getElementById('books-
   _anthologyFlowRaf = requestAnimationFrame(() => { _anthologyFlowRaf = null; _applyAnthologyCardCoverFlows(root); });
 }
 
-// `reset: false` appends to whatever's already queued/running instead of
-// wiping it - used when expanding a collapsed anthology/series/stash group
-// reveals more covers mid-flight, so that doesn't cancel/drop covers the
-// initial full-list pass had already queued but not gotten to yet.
+// Real accounts can have 1000+ covers in the DOM at once (anthologies/series
+// mostly expanded, a big library). Left uncapped, that many simultaneous
+// `new Image()` requests can overwhelm the browser's per-host connection
+// queue (or this app's own single-process static server) badly enough that
+// most of them silently error out - onerror never throws, it just strips
+// data-pending-cover and leaves the card blank, which looks like "covers
+// don't load at all" with nothing in the console to explain why.
+// _bookCoverInFlightUrls also dedups the case where the same not-yet-loaded
+// url gets observed again while already mid-fetch - it's registered as a
+// waiter on the existing request instead of starting a redundant second one.
+const _BOOK_COVER_MAX_CONCURRENT = 6;
+let _bookCoverActiveCount        = 0;
+const _bookCoverPendingQueue     = [];
+const _bookCoverInFlightUrls     = new Map();
+
+function _loadBookCover(el) {
+  const url = el.dataset.pendingCover;
+  if (!url) return;
+  if (_bookCoverLoadedUrls.has(url)) {
+    el.style.setProperty('--bci', `url('${url}')`);
+    el.removeAttribute('data-pending-cover');
+    return;
+  }
+  const waiters = _bookCoverInFlightUrls.get(url);
+  if (waiters) { waiters.push(el); return; }
+  _bookCoverPendingQueue.push(el);
+  _drainBookCoverQueue();
+}
+
+function _drainBookCoverQueue() {
+  while (_bookCoverActiveCount < _BOOK_COVER_MAX_CONCURRENT && _bookCoverPendingQueue.length) {
+    const el = _bookCoverPendingQueue.shift();
+    const url = el.dataset.pendingCover;
+    if (!url) continue;
+    if (_bookCoverLoadedUrls.has(url)) {
+      el.style.setProperty('--bci', `url('${url}')`);
+      el.removeAttribute('data-pending-cover');
+      continue;
+    }
+    const waiters = _bookCoverInFlightUrls.get(url);
+    if (waiters) { waiters.push(el); continue; }
+    _bookCoverInFlightUrls.set(url, [el]);
+    _bookCoverActiveCount++;
+    const img = new Image();
+    const finish = success => {
+      const els = _bookCoverInFlightUrls.get(url) || [];
+      _bookCoverInFlightUrls.delete(url);
+      _bookCoverActiveCount--;
+      if (success) _bookCoverLoadedUrls.add(url);
+      for (const w of els) {
+        if (success) w.style.setProperty('--bci', `url('${url}')`);
+        w.removeAttribute('data-pending-cover');
+      }
+      _drainBookCoverQueue();
+    };
+    img.onload  = () => finish(true);
+    img.onerror = () => finish(false);
+    img.src = url;
+  }
+}
+
+// #landing-right (not #landing-wrapper, and not the default browser-viewport
+// root) is the actual scrollable ancestor of #books-list. #landing-wrapper
+// does have its own overflow-y:auto (landing.css), but #landing-right sits
+// inside it as position:fixed with its own separate overflow-y:auto
+// (demo.css, loaded unconditionally - the filename is misleading, this rule
+// isn't demo-mode-gated) - a position:fixed element is taken out of normal
+// flow, so #landing-wrapper's scroll position never actually changes when
+// the books list scrolls; only #landing-right's own scrollTop does. Rooting
+// on #landing-wrapper meant the observer was watching an ancestor that, from
+// a scrolling perspective, never moves - every element's intersection state
+// got stuck at whatever it was on the very first check, never updating on
+// scroll or on an expand/collapse reveal. rootMargin is a small head start
+// (just enough to avoid a hard blank-then-pop-in flash right at the edge of
+// the panel), not a real preload buffer - a larger margin here made a big
+// library feel like it was eagerly loading everything at once rather than
+// genuinely just what's visible.
+function _getBookCoverObserver() {
+  if (_bookCoverObserver) return _bookCoverObserver;
+  const root = document.getElementById('landing-right');
+  _bookCoverObserver = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (!entry.isIntersecting) continue;
+      _bookCoverObserver.unobserve(entry.target);
+      _loadBookCover(entry.target);
+    }
+  }, { root: root || null, rootMargin: '80px 0px' });
+  return _bookCoverObserver;
+}
+
+// [data-pending-cover] presence is itself the "still needs loading" filter
+// - _loadBookCover() removes the attribute the moment a cover resolves
+// (success or failure), so a previously-loaded element simply stops
+// matching the querySelectorAll below on every later call. That means no
+// separate "already observed" bookkeeping is needed: every element found
+// here still genuinely needs a cover, and gets an explicit
+// unobserve()+observe() (not a bare observe()) to FORCE a fresh
+// IntersectionObserver check rather than trusting the ancestor's
+// display:none -> visible transition (an anthology/series/stash
+// expand-toggle, or the search filter revealing a match) to reliably
+// re-trigger the observer's own automatic recheck on its own timing.
+// unobserve() is a safe no-op for anything not currently being observed
+// (the common case), so this costs nothing extra for the normal path.
+//
+// `reset: true` (full renderBooksList() rebuild) disconnects first, since
+// every existing target belongs to DOM that's about to be discarded.
 function _queueBookCovers(container, { reset = true } = {}) {
   if (!container) return;
-  if (reset) {
-    _bookCoverGen++;
-    _bookCoverQueue   = [];
-    _bookCoverRunning = false;
-  }
-  const gen = _bookCoverGen;
-  // offsetParent is null for anything display:none (itself or an ancestor) -
-  // a collapsed anthology/series/stash group leaves its children's
-  // [data-pending-cover] elements in the DOM (see _bookItemHtml/the
-  // book-children-group markup) purely hidden via CSS, not absent, so a
-  // plain querySelectorAll here used to queue and eagerly load every single
-  // child's cover regardless of whether its parent was ever expanded - for
-  // an account with most books living inside anthologies, that meant
-  // loading hundreds of covers nobody was about to look at on a simple
-  // library page load. Only currently-visible covers get queued here now;
-  // the expand-toggle handlers below call this again (reset: false) on just
-  // the newly-revealed group once a container/series/stash actually opens.
+  const observer = _getBookCoverObserver();
+  if (reset) observer.disconnect();
   container.querySelectorAll('[data-pending-cover]').forEach(el => {
-    if (el.offsetParent === null) return;
     const url = el.dataset.pendingCover;
     if (_bookCoverLoadedUrls.has(url)) {
       el.style.setProperty('--bci', `url('${url}')`);
       el.removeAttribute('data-pending-cover');
-    } else {
-      _bookCoverQueue.push({ el, url });
+      return;
     }
+    observer.unobserve(el);
+    observer.observe(el);
   });
-  if (!_bookCoverQueue.length || _bookCoverRunning) return;
-  _bookCoverRunning = true;
-  (function next() {
-    if (gen !== _bookCoverGen) return;
-    const item = _bookCoverQueue.shift();
-    if (!item) { _bookCoverRunning = false; return; }
-    const { el, url } = item;
-    if (_bookCoverQueue.length) { const pre = new Image(); pre.src = _bookCoverQueue[0].url; }
-    const img  = new Image();
-    img.onload = () => {
-      if (gen !== _bookCoverGen) return;
-      _bookCoverLoadedUrls.add(url);
-      el.style.setProperty('--bci', `url('${url}')`);
-      el.removeAttribute('data-pending-cover');
-      next();
-    };
-    img.onerror = () => { if (gen !== _bookCoverGen) return; el.removeAttribute('data-pending-cover'); next(); };
-    img.src = url;
-  })();
 }
 
 // ── Search / filter ───────────────────────────────────────────────────────────
