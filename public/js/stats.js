@@ -13,7 +13,25 @@ export function closeStatsModal() {
 export async function openStatsModal() {
   const overlay = document.getElementById('stats-modal-overlay');
   const body    = document.getElementById('stats-modal-body');
-  body.innerHTML = `<p class="stats-loading">${t('stats.loading')}</p>`;
+  // Inlined rather than imported - this module is deliberately self-contained
+  // (see header comment), so it carries its own copy of the same
+  // .feed-loading-graph/.flg-* animated icon markup used by the feed/
+  // live-reading/graph/sidebar loaders (demo.css, loaded globally) instead
+  // of importing it from feed.js/boot.js.
+  body.innerHTML = `<div class="stats-loading stats-loading--active">
+    <svg class="feed-loading-graph" viewBox="0 0 32 32">
+      <line x1="16" y1="16" x2="6"  y2="7"  stroke="#4b5563" stroke-width="1.8" stroke-linecap="round"/>
+      <line x1="16" y1="16" x2="26" y2="7"  stroke="#4b5563" stroke-width="1.8" stroke-linecap="round"/>
+      <line x1="16" y1="16" x2="6"  y2="26" stroke="#4b5563" stroke-width="1.8" stroke-linecap="round"/>
+      <line x1="16" y1="16" x2="26" y2="26" stroke="#4b5563" stroke-width="1.8" stroke-linecap="round"/>
+      <circle class="flg-node flg-n1" cx="6"  cy="7"  r="4" fill="#8e44ad" stroke="#6c3483" stroke-width="1.2"/>
+      <circle class="flg-node flg-n2" cx="26" cy="7"  r="4" fill="#e74c3c" stroke="#c0392b" stroke-width="1.2"/>
+      <circle class="flg-node flg-n3" cx="6"  cy="26" r="4" fill="#3498db" stroke="#2980b9" stroke-width="1.2"/>
+      <circle class="flg-node flg-n4" cx="26" cy="26" r="4" fill="#27ae60" stroke="#1e8449" stroke-width="1.2"/>
+      <circle class="flg-center" cx="16" cy="16" r="6" fill="#f5a623" stroke="#c47d00" stroke-width="1.5"/>
+    </svg>
+    <span>${t('stats.loading')}</span>
+  </div>`;
   overlay.classList.add('active');
   try {
     const res  = await fetchPublic('/api/site-stats');

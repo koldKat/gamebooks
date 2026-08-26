@@ -137,6 +137,23 @@ import { escapeHtml, fetchPublic as publicFetch } from './util.js';
 window._isMobile = /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
   || (navigator.maxTouchPoints > 1 && window.innerWidth < 1024);
 
+// Same .feed-loading-graph/.flg-* animated graph icon used by the activity
+// feed and live-reading - shared here since showMain() below needs it twice
+// (once for #graph-container, once for the #sidebar overlay).
+function _loadingGraphSvg() {
+  return `<svg class="feed-loading-graph" viewBox="0 0 32 32">
+    <line x1="16" y1="16" x2="6"  y2="7"  stroke="#4b5563" stroke-width="1.8" stroke-linecap="round"/>
+    <line x1="16" y1="16" x2="26" y2="7"  stroke="#4b5563" stroke-width="1.8" stroke-linecap="round"/>
+    <line x1="16" y1="16" x2="6"  y2="26" stroke="#4b5563" stroke-width="1.8" stroke-linecap="round"/>
+    <line x1="16" y1="16" x2="26" y2="26" stroke="#4b5563" stroke-width="1.8" stroke-linecap="round"/>
+    <circle class="flg-node flg-n1" cx="6"  cy="7"  r="4" fill="#8e44ad" stroke="#6c3483" stroke-width="1.2"/>
+    <circle class="flg-node flg-n2" cx="26" cy="7"  r="4" fill="#e74c3c" stroke="#c0392b" stroke-width="1.2"/>
+    <circle class="flg-node flg-n3" cx="6"  cy="26" r="4" fill="#3498db" stroke="#2980b9" stroke-width="1.2"/>
+    <circle class="flg-node flg-n4" cx="26" cy="26" r="4" fill="#27ae60" stroke="#1e8449" stroke-width="1.2"/>
+    <circle class="flg-center" cx="16" cy="16" r="6" fill="#f5a623" stroke="#c47d00" stroke-width="1.5"/>
+  </svg>`;
+}
+
 
 // ── Edit book modal ───────────────────────────────────────��───────────────────
 
@@ -694,6 +711,22 @@ async function showMain(bookId, isbn = null, issn = null, asin = null, cover = n
     if (showPdfBtn) pdfDlBtn.href = _adminPdfHref(pdfPath);
   }
   setViewingPt(null);
+  // On a slow connection GET /api/books/:id/state can take a moment, during
+  // which #graph-container/#sidebar would otherwise just sit empty/stale.
+  // #graph-container: initGraph() overwrites this the instant it constructs
+  // the new vis.Network right after, so it never needs explicit clearing.
+  // #sidebar: its stats/playthrough-panel elements already exist in the
+  // static HTML shell and render() only updates them in place, so this
+  // overlay is removed explicitly once render() + _updateSidebarBookInfo()
+  // actually populate it, below.
+  const _graphContainerEl = document.getElementById('graph-container');
+  if (_graphContainerEl) {
+    _graphContainerEl.innerHTML = `<div class="graph-loading">${_loadingGraphSvg()}<span>${t('graph.loading')}</span></div>`;
+  }
+  const _sidebarEl = document.getElementById('sidebar');
+  if (_sidebarEl) {
+    _sidebarEl.insertAdjacentHTML('beforeend', `<div class="sidebar-loading">${_loadingGraphSvg()}<span>${t('graph.loading')}</span></div>`);
+  }
   await loadState(bookId);
   if (_currentBook.isOpenWorld && _currentBook.seriesId) {
     const seriesRuns = await _syncSeriesRuns(_currentBook.seriesId);
@@ -758,6 +791,7 @@ async function showMain(bookId, isbn = null, issn = null, asin = null, cover = n
   }
   render();
   _updateSidebarBookInfo();
+  document.querySelector('#sidebar .sidebar-loading')?.remove();
   const _openSec = currentSection();
   _focusNodeAfterLoad(_openSec);
   setCharSheetVisible(true);
