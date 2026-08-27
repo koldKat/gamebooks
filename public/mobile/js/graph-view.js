@@ -283,6 +283,18 @@ function _nodeColor(id, startSec, curSec, everVisitedSecs, finalNode, finalResul
   if (hasDeath && hasVictory) return _withHighlight(COLORS.bothOutline);
   if (hasDeath)                return _withHighlight(COLORS.deathOutline);
   if (hasVictory)              return _withHighlight(COLORS.victoryOutline);
+  // Mirrors graph.js's own mapped-vs-discovered branch exactly (graph.js:357-358).
+  // commitChoices (both platforms' own copy) never sets discovered:true for the
+  // section it's committing - that flag is only ever set by a context-menu/
+  // note-modal action creating a placeholder node with no real choice data of
+  // its own (see note-modal.js/context-menu.js). So COLORS.mapped (purple) is
+  // the normal color for any node whose own choices have genuinely been read
+  // at least once (in any run, on either platform) - COLORS.discovered (grey)
+  // is the rare exception for one of those metadata-only placeholders.
+  // Hardcoding COLORS.discovered here unconditionally (the previous version)
+  // meant every real, actually-read node on mobile showed grey instead of the
+  // purple desktop shows for the exact same state.
+  if (state.graph[id] && (!state.graph[id].discovered || state.graph[id].portals?.length > 0)) return _withHighlight(COLORS.mapped);
   return _withHighlight(COLORS.discovered);
 }
 

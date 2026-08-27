@@ -899,15 +899,33 @@ function getFeed() {
   }
 
   // Suppress run_completed entries already represented by a first_win/first_loss/first_battle_death entry.
-  const firstWinKeys   = new Set();
-  const firstLossKeys  = new Set();
-  const firstBatKeys   = new Set();
+  // Keyed by completedAt as well as username:bookId:runIndex, not just the
+  // latter - runIndex comes from _resolveRunIndex's best-effort match of the
+  // first_X event's stored startedAt against the *current* playthroughs
+  // array, which silently resolves to the wrong (unrelated, much later) run
+  // whenever the run that actually caused the first_X event was never itself
+  // recorded as a win_run/death_run/battle_run event (an orphaned first_X -
+  // seen in practice: a first_loss with no death_run anywhere near it in
+  // xp_events). _getFirstRunRef then has no genuine match to work with and
+  // falls back to whatever win_run/death_run/battle_run event it can find for
+  // that book, which can land on a completely different, much later
+  // completion - silently suppressing that later run's own real
+  // announcement from ever appearing in the feed. Requiring completedAt to
+  // be within a minute (same save, effectively the same real-world event)
+  // is what actually confirms these two entries are about the same
+  // completion, rather than just an accidental index collision.
+  const SAME_EVENT_WINDOW_MS = 60_000;
+  const firstWinTimes  = new Map(); // key -> completedAt[]
+  const firstLossTimes = new Map();
+  const firstBatTimes  = new Map();
+  const _addFirstTime = (map, key, ts) => { if (!map.has(key)) map.set(key, []); map.get(key).push(ts); };
+  const _hasCloseMatch = (map, key, ts) => (map.get(key) || []).some(t => Math.abs(t - ts) <= SAME_EVENT_WINDOW_MS);
   for (const e of entries) {
     if (toRemove.has(e)) continue;
     const k = `${e.username}:${e.bookId}:${e.runIndex ?? ''}`;
-    if (e.type === 'first_win')          firstWinKeys.add(k);
-    else if (e.type === 'first_loss')    firstLossKeys.add(k);
-    else if (e.type === 'first_battle_death') firstBatKeys.add(k);
+    if (e.type === 'first_win')          _addFirstTime(firstWinTimes, k, e.completedAt);
+    else if (e.type === 'first_loss')    _addFirstTime(firstLossTimes, k, e.completedAt);
+    else if (e.type === 'first_battle_death') _addFirstTime(firstBatTimes, k, e.completedAt);
   }
   for (const e of entries) {
     // series_run_completed carries the end book's own bookId/runIndex (see
@@ -917,9 +935,9 @@ function getFeed() {
     // run N" and again as "won for the first time".
     if (toRemove.has(e) || (e.type !== 'run_completed' && e.type !== 'series_run_completed')) continue;
     const k = `${e.username}:${e.bookId}:${e.runIndex ?? ''}`;
-    if      (e.result === 'success' && firstWinKeys.has(k))  toRemove.add(e);
-    else if (e.result === 'death'   && firstLossKeys.has(k)) toRemove.add(e);
-    else if (e.result === 'battle'  && firstBatKeys.has(k))  toRemove.add(e);
+    if      (e.result === 'success' && _hasCloseMatch(firstWinTimes, k, e.completedAt))  toRemove.add(e);
+    else if (e.result === 'death'   && _hasCloseMatch(firstLossTimes, k, e.completedAt)) toRemove.add(e);
+    else if (e.result === 'battle'  && _hasCloseMatch(firstBatTimes, k, e.completedAt))  toRemove.add(e);
   }
 
   const merged = entries.filter(e => !toRemove.has(e));
