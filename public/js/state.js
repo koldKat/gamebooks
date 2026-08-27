@@ -172,6 +172,20 @@ export function mappedCountFor(graph) {
     .length;
 }
 
+// Single-node version of mappedCountFor's own predicate - "mapped" (purple
+// in the legend/nodeColor) means the player has actually read this
+// section's own text at some point, in any run ever, not just the one
+// currently active/displayed (state.graph is account-wide, not per-run).
+// Used to gate letting a reader tap/click a graph node to preview its text
+// - a node that's merely known-as-a-destination but never actually visited
+// (grey/"Discovered") must not be previewable, or a player could read
+// ahead just by touching the map. Shared by desktop (liveread.js) and
+// mobile (reader.js) so the two can't drift on what counts as "visited".
+export function isSectionMapped(secId) {
+  const node = state.graph[secId];
+  return !!node && (!node.discovered || (node.choices || []).length > 0 || (node.portals || []).length > 0);
+}
+
 // ── Demo mode ─────────────────────────────────────────────────────────────────
 
 export let isDemoMode = false;

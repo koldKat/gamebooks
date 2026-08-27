@@ -713,7 +713,8 @@ Some books have their actual text available to read right inside the app. Click 
 - Hover a choice to see where it leads highlighted on the graph before you click it
 - Adjust text size with the "− 100% +" control in the panel header
 - The graph stays visible and interactive underneath - you can still edit notes, colours, and connections by hand exactly as before
-- Marking a run as a Victory or a Loss shows an achievement-style end screen with how much XP that run earned
+- Marking a run as a Victory or a Loss shows a trophy or broken-shield end screen instead of a plain "The End" line
+- Click any purple ("Mapped") dot on the graph to re-read that section's text without moving your run - a "Return to where you left off" link brings you back. Only sections you've actually read before are clickable this way; grey ("Discovered") dots you haven't visited yet stay off-limits, so you can't read ahead just by clicking around the map
 
 Not every book has this yet - it's rolling out gradually, one book at a time.
 

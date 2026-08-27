@@ -8,11 +8,12 @@
 // Deliberately NOT built on .inv-overlay: the whole point is that the graph
 // stays visible and interactive underneath while reading.
 
-import { state, apiFetch, currentBookId, currentPlaythrough, currentSection, viewingPt, isTerminal, parseSecId } from './state.js';
+import { state, apiFetch, currentBookId, currentPlaythrough, currentSection, viewingPt, isTerminal, parseSecId, isSectionMapped } from './state.js';
 import { navigate, commitChoices, showAlert, suppressAutoNav } from './play.js';
 import { network, setLightweightRestabilize } from './graph.js';
 import { t } from './i18n.js';
 import { shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from './util.js';
+import { TROPHY_SVG, BROKEN_SHIELD_SVG, terminalHeadingKey } from './liveread-shared.js';
 
 // Reuses the same .feed-loading-graph/.flg-* markup and CSS (demo.css) as the
 // activity feed's loading indicator, both loaded on index.html.
@@ -92,71 +93,27 @@ function _updateHeading(sec) {
   if (el) el.textContent = isTerminal(sec) ? t('liveread.title') : t('liveread.reading_section', { n: sec });
 }
 
-// Trophy (win) / broken-shield (loss) badge icons, matching the loading
-// spinner's inline-SVG line-art style rather than an image asset - this is
-// decorative chrome, not an admin-imported item icon, so the SVG pack rules
-// (CLAUDE.md #3) don't apply here.
-const _TROPHY_SVG = `<svg class="liveread-end-icon" viewBox="0 0 48 48" fill="none">
-  <path d="M14 8h20v10a10 10 0 0 1-20 0V8Z" stroke="#f5a623" stroke-width="2.5" stroke-linejoin="round"/>
-  <path d="M14 10H7v3a7 7 0 0 0 7 7" stroke="#f5a623" stroke-width="2.5" stroke-linecap="round"/>
-  <path d="M34 10h7v3a7 7 0 0 1-7 7" stroke="#f5a623" stroke-width="2.5" stroke-linecap="round"/>
-  <path d="M24 28v6" stroke="#f5a623" stroke-width="2.5" stroke-linecap="round"/>
-  <path d="M16 40h16l-2-6H18l-2 6Z" stroke="#f5a623" stroke-width="2.5" stroke-linejoin="round"/>
-</svg>`;
-const _BROKEN_SHIELD_SVG = `<svg class="liveread-end-icon" viewBox="0 0 48 48" fill="none">
-  <path d="M24 6 8 12v11c0 10 7 16.5 16 19 9-2.5 16-9 16-19V12L24 6Z" stroke="#e74c3c" stroke-width="2.5" stroke-linejoin="round"/>
-  <path d="M20 16l4 6-5 4 5 6-3 6" stroke="#e74c3c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>`;
-
-// pt.lastRunXpEarned is set asynchronously by play.js's endPlaythrough() once
-// the post-save /api/profile round trip resolves (see its own comment) -
-// undefined for the first render right after the run ends (still in
-// flight), a number (possibly 0) once known, and permanently undefined for
-// an old already-completed run this session never tracked the earning of.
-function _xpLineHtml(pt) {
-  if (typeof pt?.lastRunXpEarned === 'number') {
-    return pt.lastRunXpEarned > 0
-      ? `<div class="liveread-end-xp">${t('liveread.xp_earned', { n: pt.lastRunXpEarned.toLocaleString() })}</div>`
-      : '';
-  }
-  // Still waiting on the fetch - only worth showing "tallying" for a run
-  // that just ended (completedAt very recent); an old completed run being
-  // re-viewed should just show the badge with no XP line at all.
-  if (pt?.completedAt && Date.now() - pt.completedAt < 15000) {
-    return `<div class="liveread-end-xp liveread-end-xp--pending">${t('liveread.tallying')}</div>`;
-  }
-  return '';
-}
-
 function _terminalHtml(sec) {
   const win = sec === 0;
   return `<div class="liveread-end liveread-end--${win ? 'win' : 'death'}">
-    ${win ? _TROPHY_SVG : _BROKEN_SHIELD_SVG}
-    <div class="liveread-end-heading">${t(win ? 'liveread.victory_heading' : 'liveread.death_heading')}</div>
-    ${_xpLineHtml(viewingPt)}
+    ${win ? TROPHY_SVG : BROKEN_SHIELD_SVG}
+    <div class="liveread-end-heading">${t(terminalHeadingKey(win))}</div>
   </div>`;
 }
-
-// Last XP-line state actually painted for the terminal screen (undefined
-// while pending, a number once resolved) - lets a terminal re-render skip
-// the DOM replace (and the entrance animation firing again) when nothing
-// about the display has actually changed, even though render() re-invokes
-// this far more often than pt.lastRunXpEarned itself changes.
-let _shownTerminalXp;
 
 async function _showSection(sec) {
   const body = document.getElementById('liveread-body');
   if (!body) return;
   if (isTerminal(sec)) {
-    const xp = viewingPt?.lastRunXpEarned;
-    if (sec === _shownSec && xp === _shownTerminalXp) return;
+    if (sec === _shownSec) return;
+    _previewSec = null;
     _shownSec = sec;
-    _shownTerminalXp = xp;
     _updateHeading(sec);
     body.innerHTML = _terminalHtml(sec);
     return;
   }
   if (sec === _shownSec) return;
+  _previewSec = null;
   _shownSec = sec;
   _updateHeading(sec);
   const token = ++_showToken;
@@ -220,6 +177,12 @@ async function _showExtra(key) {
   });
 }
 
+// Non-null while showing a read-only preview opened by clicking a graph
+// node (previewSection, below) - holds the previewed section id purely to
+// let _onChoiceClick tell preview mode apart from normal reading. Cleared
+// by _returnToCurrent.
+let _previewSec = null;
+
 function _onChoiceClick(e) {
   const a = e.target.closest('a[href^="#"]');
   if (!a) return;
@@ -227,9 +190,19 @@ function _onChoiceClick(e) {
   if (!href) return;
   e.preventDefault();
   if (href.startsWith('section-')) {
-    if (!currentPlaythrough()) return;
     const sec = parseSecId(href.slice('section-'.length));
     if (sec === null) return;
+    if (_previewSec !== null) {
+      // Same isSectionMapped gate as a graph click (see previewSection) - a
+      // link inside an already-visited section's own preview could easily
+      // point forward at a section the reader hasn't reached yet, and
+      // chaining straight into that would be exactly the spoiler this
+      // whole gate exists to prevent. Never real navigation in preview
+      // mode - only ever another preview.
+      if (isSectionMapped(sec)) previewSection(sec);
+      return;
+    }
+    if (!currentPlaythrough()) return;
     navigate(sec);
     // navigate() no-ops (just shows an alert) instead of moving pt.path when an
     // alphanumeric book's discoverable-section limit is already reached - only
@@ -238,6 +211,82 @@ function _onChoiceClick(e) {
     return;
   }
   _showExtra(href);
+}
+
+// Opened by clicking a graph node (see boot.js's network 'click' handler) -
+// a read-only lookup of a section's own text, gated on isSectionMapped
+// (state.js) so it only ever shows content the reader has actually read
+// before, in any run ever - never a spoiler for a section merely known as
+// a destination but never visited. Mirrors mobile's own _previewSection
+// (reader.js) exactly, including committing the section's choices again
+// on preview (harmless/idempotent - the reader already legitimately
+// visited it, this just refreshes state.graph from the source of truth).
+export async function previewSection(sec) {
+  // Clicking the node the reader is actually standing on isn't a lookup -
+  // wrapping it in the preview banner ("you're just looking, nothing
+  // moved") on content that IS their real position would be confusing/
+  // wrong framing. Same special case as mobile's _onGraphTap.
+  if (sec === currentSection()) {
+    if (document.getElementById('liveread-panel')?.classList.contains('active')) _returnToCurrent();
+    return;
+  }
+  if (!isSectionMapped(sec)) return;
+  const panel = document.getElementById('liveread-panel');
+  const body  = document.getElementById('liveread-body');
+  if (!panel || !body) return;
+  if (!panel.classList.contains('active')) {
+    suppressAutoNav(true);
+    setLightweightRestabilize(true);
+    panel.classList.add('active');
+    _isFirstShowSinceOpen = true;
+  }
+  // Deliberately NOT touching _shownSec here - it must keep pointing at
+  // whatever the real current section is. renderLiveRead() fires on every
+  // render() and unconditionally calls _showSection(currentSection()); as
+  // long as _shownSec still matches that real section, _showSection's own
+  // guard no-ops those calls and leaves this preview undisturbed on
+  // screen. Clearing _shownSec here would make that guard fail on the very
+  // next background render(), silently snapping back to the real section
+  // mid-preview.
+  const token = ++_showToken;
+  if (_isFirstShowSinceOpen && !_sectionCache.has(_cacheKey(sec))) {
+    body.innerHTML = _loadingHtml();
+  }
+  _isFirstShowSinceOpen = false;
+  const result = await _fetchSectionData(sec);
+  if (token !== _showToken) return;
+  if (!result.ok) {
+    // Same convention as _showSection: leave a pure network error silent
+    // (transient, will resolve on the next interaction), but a clean
+    // !res.ok needs an explicit message - without this, a freshly-opened
+    // panel whose very first fetch failed would be stuck showing the
+    // loading spinner forever, with nothing to indicate anything went
+    // wrong or any way to tell it apart from "still loading."
+    if (!result.networkError) body.innerHTML = `<p class="liveread-empty">${t('liveread.no_section_data')}</p>`;
+    return;
+  }
+  const data = result.data;
+  if (data.choices?.length) commitChoices(sec, data.choices);
+  _previewSec = sec;
+  _updateHeading(sec);
+  body.innerHTML = `<p class="liveread-preview-banner">${t('mobile.preview_banner', { sec })}</p>${data.html}<p class="liveread-back"><a href="#" id="liveread-preview-return">${t('mobile.preview_return')}</a></p>`;
+  body.scrollTop = 0;
+  document.getElementById('liveread-preview-return').addEventListener('click', e => {
+    e.preventDefault();
+    _returnToCurrent();
+  });
+}
+
+// Leaves preview mode and re-renders wherever the player's actual run
+// currently stands - the same fallback order renderLiveRead already uses
+// (an active run's current section, else a just-finished run's terminal
+// screen, else nothing to show).
+function _returnToCurrent() {
+  _previewSec = null;
+  const sec = currentSection();
+  if (sec != null) { _shownSec = undefined; _showSection(sec); return; }
+  if (viewingPt?.completed) { _shownSec = undefined; _showSection(viewingPt.result === 'success' ? 0 : -1); return; }
+  _close();
 }
 
 // The app-wide "single known choice -> auto-navigate past it" feature
