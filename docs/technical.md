@@ -966,7 +966,7 @@ appLevel = floor((-1 + sqrt(1 + 8 × totalXp / (number_of_users × 1000))) / 2)
 | `visit_node` | 2 | `bookId:sectionId` | First time a section appears in any run path, per book |
 | `death_run` | 10 | `bookId:runIndex` | Per completed death run |
 | `win_run` | 20 | `bookId:runIndex` | Per completed win run |
-| `discover_all` | 30 | `bookId` | Once per book when discovered ≥ effective_sections (`discoverable_sections ?? total_sections`) |
+| `discover_all` | 30 | `bookId` | Once per book when discovered ≥ effective_sections (`discoverable_sections ?? total_sections`). "Discovered" is `_discoveredSet(graph)`'s union of every graph key plus every choices[] entry across the whole graph - both sides go through the shared `_normSec()` helper (same normalization `_mappedSet`/`_visitedSet` use) before being added to the Set, since an unnormalized string/number pair for the same section (e.g. `'13'` and `13`) would otherwise count as two separate discovered sections and inflate the total past the book's real size, awarding this before the player had actually seen everything. |
 | `visit_all` | 40 | `bookId` | Once per book when visited ≥ effective_sections (`discoverable_sections ?? total_sections`). "Visited" is `_visitedSet(playthroughs)` (real `pt.path` traversal) unioned with `_mappedSet(graph)` - a manually-added node (bg.js's "+ Add node", no `discovered` flag - see "Mapped" in the Node colour logic section) counts here too, so a noted-but-never-played bonus episode doesn't block 100% completion. Also grants 1 one-time Gold Coin milestone for that user/book. |
 | `add_book` | 50 | `bookId` | Per book created |
 | `add_isbn` | 25 | `bookId` | Once per book when ISBN first set |
