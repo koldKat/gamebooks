@@ -300,7 +300,13 @@ gamebooks/
                            every choices-array entry through parseSecId before it reaches this
                            file's sections list. Node colour uses
                            pt.mVisited for the "visited" state, not the live pt.path, so undoing a
-                           step doesn't un-paint a node the reader already actually read. Priority/
+                           step doesn't un-paint a node the reader already actually read. Its own
+                           fallback color for a node not otherwise highlighted mirrors graph.js's
+                           mapped-vs-discovered branch exactly (state.graph[id].discovered, set only
+                           by a context-menu/note-modal action creating a metadata-only placeholder
+                           node, never by commitChoices itself) - COLORS.mapped (purple) is the
+                           normal color for a genuinely-read node, COLORS.discovered (grey) the rare
+                           placeholder-only exception, same as desktop. Priority/
                            battle/note markers are a separate 'afterDrawing' canvas overlay, same
                            split as desktop's own drawOverlays() (graph.js) - vis-network's own
                            node `color` never reflects them on either platform. Reuses graph.js's
