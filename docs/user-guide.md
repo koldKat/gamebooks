@@ -208,7 +208,7 @@ Your preference is saved per book.
 
 - **Right-click on empty space** → **Grid** → **Show grid** - overlay a fixed-spacing grid across the whole graph. It pans and zooms with the map.
 - **Right-click on empty space** → **Grid** → **Fog of grid** - only shows the grid in a circle around each dot, instead of across the whole map. Mutually exclusive with Show grid - turning one on turns the other off.
-- **Right-click on empty space** → **Grid** → **Snap to grid** - while on, dropping a dot after dragging it snaps to the nearest grid line. It only affects dots you move after turning it on - nothing already on the map gets nudged. Works independently of the other two.
+- **Right-click on empty space** → **Grid** → **Snap to grid** - while on, dropping a dot after dragging it snaps to the nearest grid line. It only affects dots you move after turning it on - nothing already on the map gets nudged. Works independently of the other two. While it's on, zooming out is capped so a grid cell never gets smaller than a comfortable touch target - snapping only feels accurate if you can see where a cell actually starts and ends.
 
 All three work even for books without a cover image, and all are saved per book.
 
@@ -713,6 +713,7 @@ Some books have their actual text available to read right inside the app. Click 
 - Hover a choice to see where it leads highlighted on the graph before you click it
 - Adjust text size with the "− 100% +" control in the panel header
 - The graph stays visible and interactive underneath - you can still edit notes, colours, and connections by hand exactly as before
+- Marking a run as a Victory or a Loss shows an achievement-style end screen with how much XP that run earned
 
 Not every book has this yet - it's rolling out gradually, one book at a time.
 

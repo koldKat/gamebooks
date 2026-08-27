@@ -14,6 +14,7 @@ import {
 import {
   network, visNodes, initGraph, destroyNetwork,
   subtreeToDelete, deleteNodes, findPathTo, canReach, setGraphOpenWorld, applyConnectorStyle,
+  enforceSnapZoomFloor,
 } from './graph.js';
 import { render, openEditModal, closeEditModal, openNoteModal, closeNoteModal, showConfirm, showAlert, confirmAlphanumericSwitch, maxFastTravels, setFastTravelHandler, showFastTravelDialog, setOnTrailToggle, openPortalModal, setDiscoverableLimit, setOnChoicesRecorded, startPlaythrough, setAltStartHandler, setAfterRenderFn, wouldAutoNav } from './play.js';
 import { t, applyTranslations, setTranslationOverride } from './i18n.js';
@@ -1842,6 +1843,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('bg-ctx-snap-btn').addEventListener('click', e => {
     e.stopPropagation();
     state.snapToGrid = !state.snapToGrid;
+    // Covers turning it on while already zoomed out past the point where a
+    // grid cell is bigger than typical touch imprecision - the 'zoom'
+    // listener alone would never catch this since no further zooming may
+    // happen before the next drag.
+    if (state.snapToGrid) enforceSnapZoomFloor();
     saveState();
     _hideBgCtxMenu();
   });

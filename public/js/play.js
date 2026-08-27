@@ -5,6 +5,7 @@ import {
   currentPlaythrough, currentSection, allDiscoveredSections, mappedCount,
   currentUserLevel, bonusUndos, bonusFastTravels, apiFetch,
 } from './state.js';
+import { _processRewardSnapshot } from './rewards.js';
 import { network, visNodes, syncGraph, computeOutcomes } from './graph.js';
 import { t } from './i18n.js';
 import { renderCharSheetDisplay } from './charsheet.js';
@@ -1181,7 +1182,25 @@ export function endPlaythrough(result) {
     if (!state.graph[sec].choices.includes(sentinel))
       state.graph[sec].choices.push(sentinel);
   }
-  saveState();
+  saveState().then(() => _refreshRunEndRewards(pt));
+  render();
+}
+
+// Ending a run never fed the reward-snapshot system at all (unlike adding a
+// book/note/favorite, which all call scheduleRewardProfileRefresh) - so the
+// XP a run actually earns never showed anywhere: no floater, no number on
+// the live-reading end screen. Piggybacks on the same /api/profile + reward
+// snapshot machinery those other actions use instead of re-deriving the
+// delta locally. pt.lastRunXpEarned is read by liveread.js's terminal
+// screen; render() is called again after it resolves so an already-open
+// panel updates from "Tallying rewards..." to the real number.
+async function _refreshRunEndRewards(pt) {
+  let res;
+  try { res = await apiFetch('/api/profile'); } catch (_) { return; }
+  if (!res.ok) return;
+  const profile = await res.json();
+  const snap = _processRewardSnapshot(profile);
+  pt.lastRunXpEarned = snap && snap.xpDelta > 0 ? snap.xpDelta : 0;
   render();
 }
 

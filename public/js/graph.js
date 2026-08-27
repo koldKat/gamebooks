@@ -104,6 +104,31 @@ const RESTABILIZE_DEBOUNCE_MS = 150;
 // snapped nodes always land on a line the player can actually see.
 export const GRID_SIZE = 40;
 
+// Below this many on-screen pixels per grid cell, ordinary touch imprecision
+// (a finger's drop point is nowhere near as exact as a mouse cursor) is
+// bigger than the cell itself - a drag meant to return a node to its exact
+// snapped spot lands one cell to either side just as often as on target,
+// which reads as "snapping to the middle between two grid lines." Enforced
+// as a live zoom floor only while snapToGrid is on (see enforceSnapZoomFloor
+// below) - MIN_VIEWPORT_SCALE above is a much looser absolute bound that
+// still allows this.
+const SNAP_MIN_SCREEN_PX = 28;
+export function minSnapScale() { return SNAP_MIN_SCREEN_PX / GRID_SIZE; }
+
+// Called on every 'zoom' event (below) and once right after snapToGrid is
+// switched on (boot.js) - the latter covers the case where the graph was
+// already zoomed out past the floor before the toggle, which the zoom
+// listener alone would never catch since no further zooming may happen.
+export function enforceSnapZoomFloor() {
+  if (!network || !state.snapToGrid) return;
+  const floor = minSnapScale();
+  // position explicit (not omitted) - no other moveTo() call exists
+  // elsewhere in this codebase to lean on for "omitting position keeps the
+  // current center" being vis-network's actual default, so pin it via
+  // getViewPosition() instead of assuming.
+  if (network.getScale() < floor) network.moveTo({ scale: floor, position: network.getViewPosition() });
+}
+
 // ── Overlay draw cache ────────────────────────────────────────────────────────
 // Rebuilt in syncGraph() (state-change time), consumed in drawOverlays() (per frame).
 // Avoids iterating all nodes and calling measureText on every afterDrawing event.
@@ -963,7 +988,10 @@ export function initGraph() {
     }, 500);
   };
 
-  network.on('zoom', saveViewport);
+  network.on('zoom', () => {
+    enforceSnapZoomFloor();
+    saveViewport();
+  });
 
   network.on('dragStart', params => {
     if (!params.nodes.length) return;

@@ -104,13 +104,17 @@ export function _resetRewardSnapshotState() {
   _rewardFloaterQueue = []; _rewardFloaterActive = false;
 }
 
+// Returns { xpDelta, coinDelta, levelDelta } for callers that need the exact
+// amount just earned (e.g. the live-reading run-end screen) - null on the
+// very first snapshot of a session, when there's no prior value to diff
+// against yet.
 export function _processRewardSnapshot(data, opts = {}) {
   const { broadcast = true } = opts;
-  if (!data || typeof data !== 'object') return;
+  if (!data || typeof data !== 'object') return null;
   const xp    = Number(data.xp); const coins = Number(data.coinsBalance);
   const level = Number(data.level); const title = data.title || '';
   const rewardUserKey = String(data.userId ?? getUsername() ?? '');
-  if (!Number.isFinite(xp) || !Number.isFinite(coins) || !Number.isFinite(level)) { renderBooksXpSummary(data); return; }
+  if (!Number.isFinite(xp) || !Number.isFinite(coins) || !Number.isFinite(level)) { renderBooksXpSummary(data); return null; }
   if (_lastRewardUserKey !== null && rewardUserKey && _lastRewardUserKey !== rewardUserKey) {
     _resetRewardSnapshotState();
   }
@@ -120,7 +124,7 @@ export function _processRewardSnapshot(data, opts = {}) {
     _lastRewardUserKey = rewardUserKey; _lastRewardXp = xp; _lastRewardCoins = coins;
     _lastRewardLevel = level;
     renderBooksXpSummary(data);
-    if (broadcast) _broadcastLiveEvent('reward_snapshot', data); return;
+    if (broadcast) _broadcastLiveEvent('reward_snapshot', data); return null;
   }
   const xpDelta    = xp    - _lastRewardXp;
   const coinDelta  = coins - _lastRewardCoins;
@@ -136,6 +140,7 @@ export function _processRewardSnapshot(data, opts = {}) {
       _spawnRewardFloater('level', `<span class="reward-float-kicker">LEVEL UP!</span><span>Lvl ${reachedLevel}</span>${title ? `<span class="reward-float-title">${escapeHtml(title)}</span>` : ''}`);
     }
   }
+  return { xpDelta, coinDelta, levelDelta };
 }
 
 export function _scheduleRewardProfileRefresh(delay = 750) {

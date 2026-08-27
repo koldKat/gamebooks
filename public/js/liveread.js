@@ -92,18 +92,74 @@ function _updateHeading(sec) {
   if (el) el.textContent = isTerminal(sec) ? t('liveread.title') : t('liveread.reading_section', { n: sec });
 }
 
+// Trophy (win) / broken-shield (loss) badge icons, matching the loading
+// spinner's inline-SVG line-art style rather than an image asset - this is
+// decorative chrome, not an admin-imported item icon, so the SVG pack rules
+// (CLAUDE.md #3) don't apply here.
+const _TROPHY_SVG = `<svg class="liveread-end-icon" viewBox="0 0 48 48" fill="none">
+  <path d="M14 8h20v10a10 10 0 0 1-20 0V8Z" stroke="#f5a623" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M14 10H7v3a7 7 0 0 0 7 7" stroke="#f5a623" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M34 10h7v3a7 7 0 0 1-7 7" stroke="#f5a623" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M24 28v6" stroke="#f5a623" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M16 40h16l-2-6H18l-2 6Z" stroke="#f5a623" stroke-width="2.5" stroke-linejoin="round"/>
+</svg>`;
+const _BROKEN_SHIELD_SVG = `<svg class="liveread-end-icon" viewBox="0 0 48 48" fill="none">
+  <path d="M24 6 8 12v11c0 10 7 16.5 16 19 9-2.5 16-9 16-19V12L24 6Z" stroke="#e74c3c" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M20 16l4 6-5 4 5 6-3 6" stroke="#e74c3c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>`;
+
+// pt.lastRunXpEarned is set asynchronously by play.js's endPlaythrough() once
+// the post-save /api/profile round trip resolves (see its own comment) -
+// undefined for the first render right after the run ends (still in
+// flight), a number (possibly 0) once known, and permanently undefined for
+// an old already-completed run this session never tracked the earning of.
+function _xpLineHtml(pt) {
+  if (typeof pt?.lastRunXpEarned === 'number') {
+    return pt.lastRunXpEarned > 0
+      ? `<div class="liveread-end-xp">${t('liveread.xp_earned', { n: pt.lastRunXpEarned.toLocaleString() })}</div>`
+      : '';
+  }
+  // Still waiting on the fetch - only worth showing "tallying" for a run
+  // that just ended (completedAt very recent); an old completed run being
+  // re-viewed should just show the badge with no XP line at all.
+  if (pt?.completedAt && Date.now() - pt.completedAt < 15000) {
+    return `<div class="liveread-end-xp liveread-end-xp--pending">${t('liveread.tallying')}</div>`;
+  }
+  return '';
+}
+
+function _terminalHtml(sec) {
+  const win = sec === 0;
+  return `<div class="liveread-end liveread-end--${win ? 'win' : 'death'}">
+    ${win ? _TROPHY_SVG : _BROKEN_SHIELD_SVG}
+    <div class="liveread-end-heading">${t(win ? 'liveread.victory_heading' : 'liveread.death_heading')}</div>
+    ${_xpLineHtml(viewingPt)}
+  </div>`;
+}
+
+// Last XP-line state actually painted for the terminal screen (undefined
+// while pending, a number once resolved) - lets a terminal re-render skip
+// the DOM replace (and the entrance animation firing again) when nothing
+// about the display has actually changed, even though render() re-invokes
+// this far more often than pt.lastRunXpEarned itself changes.
+let _shownTerminalXp;
+
 async function _showSection(sec) {
   const body = document.getElementById('liveread-body');
   if (!body) return;
+  if (isTerminal(sec)) {
+    const xp = viewingPt?.lastRunXpEarned;
+    if (sec === _shownSec && xp === _shownTerminalXp) return;
+    _shownSec = sec;
+    _shownTerminalXp = xp;
+    _updateHeading(sec);
+    body.innerHTML = _terminalHtml(sec);
+    return;
+  }
   if (sec === _shownSec) return;
   _shownSec = sec;
   _updateHeading(sec);
   const token = ++_showToken;
-
-  if (isTerminal(sec)) {
-    body.innerHTML = `<p class="liveread-empty">${sec === 0 ? t('liveread.the_end_win') : t('liveread.the_end_death')}</p>`;
-    return;
-  }
 
   if (_isFirstShowSinceOpen && !_sectionCache.has(_cacheKey(sec))) {
     body.innerHTML = _loadingHtml();
