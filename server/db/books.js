@@ -59,10 +59,15 @@ function getBooks(userId) {
     let last_run_at = null;
     try {
       const s = JSON.parse(state_data || '{}');
-      const seen = new Set();
       const pts = s.playthroughs || [];
+      // _visitedSet/_mappedSet (xp.js) normalize each section id via
+      // _normSec before adding to their Set - building this by hand with a
+      // plain `seen.add(sec)` (as this used to) doesn't, so a path/graph
+      // mixing string and number ids for the same section counted it twice,
+      // inflating `visited` past `total_sections` and forcing the books-list
+      // progress bar/pill to show 100% for a book far from actually done.
+      const seen = new Set([..._visitedSet(pts), ..._mappedSet(s.graph || {})]);
       for (const pt of pts) {
-        for (const sec of (pt.path || [])) seen.add(sec);
         const ts = pt.completedAt || pt.lastActionAt || pt.startedAt || null;
         if (ts && (last_run_at === null || ts > last_run_at)) last_run_at = ts;
       }
@@ -70,12 +75,6 @@ function getBooks(userId) {
       if (pts.length > 0 && last_run_at === null && ub_updated_at) {
         last_run_at = ub_updated_at * 1000; // SQLite epoch seconds → ms
       }
-      // Union with _mappedSet so a manually-added/noted node (never walked
-      // into via a real playthrough, but already counted as "Mapped" and
-      // already able to complete the visit_all achievement - see xp.js's
-      // processStateXp) doesn't leave the books-list progress bar/pill stuck
-      // just short of 100% for a book that's otherwise fully done.
-      for (const sec of _mappedSet(s.graph || {})) seen.add(sec);
       visited = seen.size;
       // Same deleted-run undercount as _visitedSet (see _permanentVisitedCount) - a
       // section visited in a run that's since been deleted vanishes from `seen` even

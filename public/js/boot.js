@@ -82,7 +82,7 @@ import { initSim212, setSim212Visible, renderSim212 } from './battlesim/battlesi
 import { initSim213, setSim213Visible, renderSim213 } from './battlesim/battlesim213.js';
 import { initSim214, setSim214Visible, renderSim214 } from './battlesim/battlesim214.js';
 import { initSim215, setSim215Visible, renderSim215 } from './battlesim/battlesim215.js';
-import { initLiveRead, setLiveReadVisible, renderLiveRead } from './liveread.js';
+import { initLiveRead, setLiveReadVisible, renderLiveRead, previewSection } from './liveread.js';
 import { initShop, updateCoinsDisplay, refreshCoinsDisplay, setShopHooks } from './shop.js';
 import { initProfile, updateAvatarUI, renderBooksXpSummary, setProfileHooks } from './profile.js';
 import { setPublicProfileHooks, closePublicModal, openPublicProfile, openPublicSeriesRun } from './public-profile.js';
@@ -771,6 +771,17 @@ async function showMain(bookId, isbn = null, issn = null, asin = null, cover = n
     if (ctxPortalBtn) ctxPortalBtn.style.display = _currentBook.isOpenWorld ? '' : 'none';
     _updateColorSwatches(nodeId);
     _positionMenu(document.getElementById('node-ctx-menu'), params.event.clientX, params.event.clientY);
+  });
+
+  // A plain left-click on a node opens a read-only Live Reading preview of
+  // its text - previewSection (liveread.js) does its own isSectionMapped
+  // gate internally and silently no-ops for a node that's never actually
+  // been visited (grey/"Discovered" only, not purple/"Mapped"), so nothing
+  // extra to check here. params.nodes is empty for a click on empty
+  // canvas/an edge - only ever act on an actual node.
+  network.on('click', params => {
+    if (params.nodes.length !== 1) return;
+    previewSection(params.nodes[0]);
   });
 
   // Restore viewing run across F5

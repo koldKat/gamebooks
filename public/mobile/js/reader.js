@@ -35,6 +35,7 @@ import {
   state, loadState, saveState, apiFetch, currentBookId,
   currentPlaythrough, currentSection, isTerminal, isValidSecId, parseSecId,
   setViewingPt, viewingPt, currentUserLevel, bonusUndos, bonusFastTravels,
+  isSectionMapped,
 } from '../../js/state.js';
 import { canReach, findPathTo } from '../../js/graph.js';
 import { showAlert, showConfirm } from '../../js/confirm.js';
@@ -45,6 +46,7 @@ import { showToast } from './toast.js';
 import { openNodeContextMenu, hideNodeContextMenu } from './context-menu.js';
 import { openFastTravelDialog } from './fast-travel-dialog.js';
 import { t } from '../../js/i18n.js';
+import { TROPHY_SVG, BROKEN_SHIELD_SVG, terminalHeadingKey } from '../../js/liveread-shared.js';
 
 // Reward feedback (see toast.js's own header comment for why mobile uses a
 // toast rather than porting rewards.js's fly-to-badge floaters). Desktop
@@ -531,11 +533,15 @@ async function _showSection(sec) {
 // in-text link instead (see _showSection's own link wiring), the one and
 // only way pt.path is allowed to change from a tap. A tap only ever opens
 // a read-only preview, and only for a node the player has actually read
-// before (pt.mVisited) - showing an unvisited node's real text on a tap
-// would let the reader skip ahead just by touching the map, which is
-// exactly the "cheating" this gate exists to prevent. Long-press (see
-// _onGraphHold) is the only tap-adjacent gesture that can still move the
-// run, via its own explicit Fast Travel action.
+// before - checked via isSectionMapped (state.js), i.e. any section
+// colored purple/"Mapped" in the legend, in ANY run ever, not just the one
+// currently active (pt.mVisited alone would only cover the current run -
+// a section read to completion in a past run, then abandoned, is just as
+// legitimately "already read" as one on today's path). Showing an
+// unvisited node's real text on a tap would let the reader skip ahead just
+// by touching the map, which is exactly the "cheating" this gate exists to
+// prevent. Long-press (see _onGraphHold) is the only tap-adjacent gesture
+// that can still move the run, via its own explicit Fast Travel action.
 function _onGraphTap(sec) {
   // Graph-only mode exists so the reader can pan/zoom/drag the map without
   // the reading pane in the way - _previewSection/_returnToCurrent both
@@ -552,9 +558,7 @@ function _onGraphTap(sec) {
   // instead of real navigation, forcing an extra "return to where you left
   // off" tap before any choice could be clicked at all.
   if (sec === currentSection()) { _returnToCurrent(); return; }
-  const pt = currentPlaythrough() || viewingPt;
-  const mVisited = pt ? _ensureMVisited(pt) : [];
-  if (mVisited.includes(sec)) _previewSection(sec);
+  if (isSectionMapped(sec)) _previewSection(sec);
 }
 
 function _navigate(sec) {
@@ -628,25 +632,14 @@ function _returnToCurrent() {
   else _showSection(currentSection());
 }
 
-// Same trophy/broken-shield achievement treatment as desktop's liveread.js
-// (_TROPHY_SVG/_BROKEN_SHIELD_SVG there) - duplicated rather than imported,
-// matching this file's own reasoning at the top for not pulling in
-// liveread.js. XP itself isn't re-plumbed here: _checkXpReward() already
+// Same trophy/broken-shield treatment as desktop's liveread.js - both pull
+// the icon markup and heading-key choice from the same liveread-shared.js
+// (zero imports of its own, safe to pull in without dragging along
+// anything heavy - see this file's own header comment for why that
+// matters here). XP itself isn't re-plumbed here: _checkXpReward() already
 // fires on every terminal transition (see _navigate/_endPlaythrough above)
 // and shows it via the existing toast - no need for a second, redundant
 // number embedded in this screen too.
-const _TROPHY_SVG = `<svg class="m-end-icon" viewBox="0 0 48 48" fill="none">
-  <path d="M14 8h20v10a10 10 0 0 1-20 0V8Z" stroke="#f5a623" stroke-width="2.5" stroke-linejoin="round"/>
-  <path d="M14 10H7v3a7 7 0 0 0 7 7" stroke="#f5a623" stroke-width="2.5" stroke-linecap="round"/>
-  <path d="M34 10h7v3a7 7 0 0 1-7 7" stroke="#f5a623" stroke-width="2.5" stroke-linecap="round"/>
-  <path d="M24 28v6" stroke="#f5a623" stroke-width="2.5" stroke-linecap="round"/>
-  <path d="M16 40h16l-2-6H18l-2 6Z" stroke="#f5a623" stroke-width="2.5" stroke-linejoin="round"/>
-</svg>`;
-const _BROKEN_SHIELD_SVG = `<svg class="m-end-icon" viewBox="0 0 48 48" fill="none">
-  <path d="M24 6 8 12v11c0 10 7 16.5 16 19 9-2.5 16-9 16-19V12L24 6Z" stroke="#e74c3c" stroke-width="2.5" stroke-linejoin="round"/>
-  <path d="M20 16l4 6-5 4 5 6-3 6" stroke="#e74c3c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>`;
-
 function _showEndScreen(result) {
   if (_paneMode === 'graph') _setPaneMode('both'); // see _showSection's own comment
   const top = document.getElementById('m-top');
@@ -654,8 +647,8 @@ function _showEndScreen(result) {
   ++_showToken; // invalidate any in-flight section fetch
   const win = result === 'success';
   top.innerHTML = `<div class="m-end-achievement m-end-achievement--${win ? 'win' : 'death'}">
-    ${win ? _TROPHY_SVG : _BROKEN_SHIELD_SVG}
-    <div class="m-end-heading">${t(win ? 'liveread.victory_heading' : 'liveread.death_heading')}</div>
+    ${win ? TROPHY_SVG : BROKEN_SHIELD_SVG}
+    <div class="m-end-heading">${t(terminalHeadingKey(win))}</div>
   </div>`;
   _updateRunControls();
 }

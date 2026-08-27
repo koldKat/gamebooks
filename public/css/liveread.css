@@ -129,6 +129,18 @@
 }
 .liveread-back { margin-top: 1rem; border-top: 1px solid #374151; padding-top: 0.75rem; }
 
+/* Shown by previewSection() (a graph-node click) - matches mobile's own
+   .m-preview-banner exactly, so the "you're just looking, not really here"
+   framing reads the same on both platforms. */
+.liveread-preview-banner {
+  font-size: 0.8rem;
+  color: #9ca3af;
+  font-style: italic;
+  border-bottom: 1px solid #374151;
+  padding-bottom: 0.75rem;
+  margin: 0 0 0.75rem;
+}
+
 /* Run-end achievement screen (win/death) - a one-shot entrance (not the
    infinite decorative kind gated behind body.reduce-motion), cheap
    opacity+transform only, so it's fine to always play. */
@@ -145,9 +157,12 @@
   from { opacity: 0; transform: translateY(6px) scale(0.96); }
   to   { opacity: 1; transform: none; }
 }
-.liveread-end-icon { width: 56px; height: 56px; }
-.liveread-end--death .liveread-end-icon { filter: drop-shadow(0 0 6px rgba(231, 76, 60, 0.35)); }
-.liveread-end--win   .liveread-end-icon { filter: drop-shadow(0 0 6px rgba(245, 166, 35, 0.4)); }
+/* .end-icon (not liveread-prefixed) is the shared class name emitted by
+   liveread-shared.js's SVG constants - same class name mobile's own CSS
+   targets under its own .m-end-achievement wrapper. */
+.liveread-end .end-icon { width: 56px; height: 56px; }
+.liveread-end--death .end-icon { filter: drop-shadow(0 0 6px rgba(231, 76, 60, 0.35)); }
+.liveread-end--win   .end-icon { filter: drop-shadow(0 0 6px rgba(245, 166, 35, 0.4)); }
 .liveread-end-heading {
   font-family: inherit;
   font-size: 1.3rem;
@@ -156,12 +171,6 @@
 }
 .liveread-end--win   .liveread-end-heading { color: #f5a623; }
 .liveread-end--death .liveread-end-heading { color: #e74c3c; }
-.liveread-end-xp {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #4ade80;
-}
-.liveread-end-xp--pending { color: #9ca3af; font-weight: 400; font-style: italic; }
 
 /* Some source exports (e.g. book 868) mark up choice/ending/note paragraphs
    with these classes in their own <style> block - dark-theme equivalents of

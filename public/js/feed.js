@@ -527,7 +527,11 @@ export async function loadFeed() {
       // major one-time achievements - never sweep them into a same-user
       // "N actions today" collapse group no matter how many other actions
       // (runs started/completed, etc.) that user racked up that day.
-      const skipTypes = new Set(['level_up', 'user_joined', 'book_rated', 'series_rated', 'book_created', 'series_created', 'all_visited', 'all_discovered', 'first_win', 'first_loss', 'first_battle_death']);
+      // visit_all_series/discover_all_series/visit_all_anthology/
+      // discover_all_anthology are the group-wide equivalent (every book in
+      // a whole series/anthology, not just one) - an even bigger milestone
+      // than the single-book ones above, so they get the same protection.
+      const skipTypes = new Set(['level_up', 'user_joined', 'book_rated', 'series_rated', 'book_created', 'series_created', 'all_visited', 'all_discovered', 'first_win', 'first_loss', 'first_battle_death', 'visit_all_series', 'discover_all_series', 'visit_all_anthology', 'discover_all_anthology']);
       const userCounts = new Map();
       for (const e of items) {
         if (skipTypes.has(e.type)) continue;
@@ -542,7 +546,7 @@ export async function loadFeed() {
       const rendered = new Set();
       let out = '';
       for (const e of items) {
-        if (e.type === 'level_up' || e.type === 'book_rated' || e.type === 'series_rated' || e.type === 'book_created' || e.type === 'series_created' || e.type === 'all_visited' || e.type === 'all_discovered' || e.type === 'first_win' || e.type === 'first_loss' || e.type === 'first_battle_death') {
+        if (skipTypes.has(e.type) && e.type !== 'user_joined') {
           // Always its own standalone entry - never merged into a same-user
           // collapse group, even if that user has enough other actions today
           // to trigger one (grouping keys purely on username, so without this
