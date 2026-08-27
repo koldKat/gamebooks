@@ -416,14 +416,28 @@ function getBookIdentifiers(userId, bookId) {
   return { isbn: row.isbn || null, issn: row.issn || null, asin: row.asin || null, pages: row.pages || null, authors: row.authors || null, description: row.description || null, discoverable_sections: row.discoverable_sections ?? null, is_public: row.is_public ?? 0 };
 }
 
+// A choices array entry isn't guaranteed to already be a number the way a
+// graph object key already is (Object.keys always stringifies, but a raw
+// choices[] value can be either, depending on how it was stored) - adding
+// it to a Set unnormalized let '13' (string) and 13 (number) count as two
+// separate discovered sections instead of one, inflating discover_all's
+// count well past the book's real total and awarding it before the player
+// had actually seen everything. Same normalization graph.js's client-side
+// _bfsDepth/_getPositionedNeighbors already needed for the identical reason.
+function _normSec(v) {
+  const n = Number(v);
+  return (!isNaN(n) && n > 0) ? n : (v !== -1 && v !== 0 && v !== '-1' && v !== '0' ? v : null);
+}
+
 function _discoveredSet(graph) {
   const s = new Set();
   for (const [sec, data] of Object.entries(graph)) {
-    const n = Number(sec);
-    const id = (!isNaN(n) && n > 0) ? n : (sec !== '-1' && sec !== '0' ? sec : null);
+    const id = _normSec(sec);
     if (id !== null) s.add(id);
-    for (const c of (data.choices || []))
-      if (c !== -1 && c !== 0) s.add(c);
+    for (const c of (data.choices || [])) {
+      const cid = _normSec(c);
+      if (cid !== null) s.add(cid);
+    }
   }
   return s;
 }
@@ -439,19 +453,28 @@ function _mappedSet(graph) {
   const s = new Set();
   for (const [sec, data] of Object.entries(graph)) {
     if (!data?.discovered || (data.choices || []).length > 0 || (data.portals || []).length > 0) {
-      const n = Number(sec);
-      const id = (!isNaN(n) && n > 0) ? n : (sec !== '-1' && sec !== '0' ? sec : null);
+      const id = _normSec(sec);
       if (id !== null) s.add(id);
     }
   }
   return s;
 }
 
+// pt.path entries come straight from client navigation, same unnormalized-
+// string-vs-number risk _discoveredSet above has for choices[] - without
+// _normSec here, a run whose path mixes string and number section ids would
+// undercount toward visit_all in the opposite direction discover_all was
+// overcounting (each real section counted as 2 distinct "visited" entries
+// inflates the numerator here too, but the more common failure mode is
+// visit_all never reaching 100% because the set looks artificially larger
+// than the book's own effective total).
 function _visitedSet(playthroughs) {
   const s = new Set();
   for (const pt of playthroughs)
-    for (const sec of (pt.path || []))
-      s.add(sec);
+    for (const sec of (pt.path || [])) {
+      const id = _normSec(sec);
+      if (id !== null) s.add(id);
+    }
   return s;
 }
 
