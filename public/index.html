@@ -268,34 +268,34 @@
       <div id="login-screen" style="display:none">
         <h1 data-i18n="app.title">Gamebook Tracker</h1>
         <p class="login-sub" data-i18n="app.tagline">Map every branch across all your playthroughs</p>
-        <div class="auth-form">
-          <input type="text"     id="login-username" data-i18n-placeholder="auth.username" placeholder="Username" autocomplete="username">
-          <input type="password" id="login-password" data-i18n-placeholder="auth.password" placeholder="Password" autocomplete="current-password">
-          <input type="password" id="register-password-confirm" placeholder="Confirm password" autocomplete="new-password" style="display:none" data-i18n-placeholder="ph.confirm_password">
-          <input type="email"    id="register-email" placeholder="Email (optional - for password recovery)" autocomplete="email" style="display:none" data-i18n-placeholder="ph.email_optional">
+        <form class="auth-form" id="login-form">
+          <input type="text"     id="login-username" name="username" data-i18n-placeholder="auth.username" placeholder="Username" autocomplete="username">
+          <input type="password" id="login-password" name="password" data-i18n-placeholder="auth.password" placeholder="Password" autocomplete="current-password">
+          <input type="password" id="register-password-confirm" name="new-password-confirm" placeholder="Confirm password" autocomplete="new-password" style="display:none" data-i18n-placeholder="ph.confirm_password">
+          <input type="email"    id="register-email" name="email" placeholder="Email (optional - for password recovery)" autocomplete="email" style="display:none" data-i18n-placeholder="ph.email_optional">
           <small id="register-email-hint" style="display:none">Only used to recover your account if you forget your password.</small>
           <div id="login-error" class="auth-error"></div>
-          <button id="login-btn"    class="primary-btn"  data-i18n="auth.login">Log In</button>
-          <button id="register-btn" class="auth-alt-btn" data-i18n="auth.register">Create Account</button>
-          <button id="forgot-pw-btn" class="auth-link-btn">Forgot your password?</button>
-        </div>
-        <div id="forgot-pw-panel" style="display:none">
+          <button type="button" id="login-btn"    class="primary-btn"  data-i18n="auth.login">Log In</button>
+          <button type="button" id="register-btn" class="auth-alt-btn" data-i18n="auth.register">Create Account</button>
+          <button type="button" id="forgot-pw-btn" class="auth-link-btn">Forgot your password?</button>
+        </form>
+        <form id="forgot-pw-panel" style="display:none">
           <p class="forgot-pw-intro">Enter your username or email address and we'll send you a reset link.</p>
-          <input type="text" id="forgot-identifier" placeholder="Username or email" autocomplete="username email" data-i18n-placeholder="ph.username_or_email">
+          <input type="text" id="forgot-identifier" name="username" placeholder="Username or email" autocomplete="username email" data-i18n-placeholder="ph.username_or_email">
           <div id="forgot-error" class="auth-error"></div>
           <div id="forgot-success" class="auth-success" style="display:none"></div>
-          <button id="forgot-submit-btn" class="primary-btn">Send reset link</button>
-          <button id="forgot-back-btn" class="auth-link-btn">Back to login</button>
-        </div>
-        <div id="reset-pw-panel" style="display:none">
+          <button type="button" id="forgot-submit-btn" class="primary-btn">Send reset link</button>
+          <button type="button" id="forgot-back-btn" class="auth-link-btn">Back to login</button>
+        </form>
+        <form id="reset-pw-panel" style="display:none">
           <p class="forgot-pw-intro">Enter your new password below.</p>
-          <input type="password" id="reset-password" placeholder="New password" autocomplete="new-password" data-i18n-placeholder="ph.new_password">
-          <input type="password" id="reset-password-confirm" placeholder="Confirm new password" autocomplete="new-password" data-i18n-placeholder="ph.confirm_new_password">
+          <input type="password" id="reset-password" name="new-password" placeholder="New password" autocomplete="new-password" data-i18n-placeholder="ph.new_password">
+          <input type="password" id="reset-password-confirm" name="new-password-confirm" placeholder="Confirm new password" autocomplete="new-password" data-i18n-placeholder="ph.confirm_new_password">
           <div id="reset-error" class="auth-error"></div>
           <div id="reset-success" class="auth-success" style="display:none">Password updated - you can now log in.</div>
-          <button id="reset-submit-btn" class="primary-btn">Set new password</button>
-          <button id="reset-back-btn" class="auth-link-btn">Back to login</button>
-        </div>
+          <button type="button" id="reset-submit-btn" class="primary-btn">Set new password</button>
+          <button type="button" id="reset-back-btn" class="auth-link-btn">Back to login</button>
+        </form>
         <section id="login-promo" aria-label="About Gamebook Tracker">
           <div class="login-promo-graph" aria-hidden="true">
             <svg class="login-promo-graph-svg" viewBox="0 0 100 480" preserveAspectRatio="xMidYMin meet">
