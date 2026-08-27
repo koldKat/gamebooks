@@ -1249,12 +1249,14 @@ export function subtreeToDelete(rootId) {
 
 // Graph-agnostic BFS: can `from` reach `to` in the given graph object?
 export function canReachInGraph(graph, from, to) {
+  from = parseSecId(from); to = parseSecId(to);
   if (from == null || to == null || from === to) return false;
   const seen = new Set([from]);
   const queue = [from];
   while (queue.length) {
     const node = queue.shift();
-    for (const next of (graph[node]?.choices ?? [])) {
+    for (const raw of (graph[node]?.choices ?? [])) {
+      const next = parseSecId(raw);
       if (next === -1 || next === 0) continue;
       if (next === to) return true;
       if (!seen.has(next) && graph[next]) { seen.add(next); queue.push(next); }
@@ -1265,11 +1267,13 @@ export function canReachInGraph(graph, from, to) {
 
 // Returns a Set of all sections reachable from `from` in the given graph (excluding `from` and terminals).
 export function allReachableInGraph(graph, from) {
+  from = parseSecId(from);
   const seen = new Set([from]);
   const queue = [from];
   while (queue.length) {
     const node = queue.shift();
-    for (const next of (graph[node]?.choices ?? [])) {
+    for (const raw of (graph[node]?.choices ?? [])) {
+      const next = parseSecId(raw);
       if (next === -1 || next === 0) continue; // skip death/win terminals
       if (!seen.has(next) && graph[next]) { seen.add(next); queue.push(next); }
     }
@@ -1279,13 +1283,22 @@ export function allReachableInGraph(graph, from) {
 }
 
 // Quick forward-reachability check (BFS, follows directed edges only).
+// from/to and each choices[] entry are normalized via parseSecId before
+// comparison - a handful of books have their choices[] stored as strings
+// (an older import quirk) while callers pass Number-typed targets (e.g.
+// the fast-travel dialog's parseSecId(input.value)), so a bare `===`
+// compare would silently never match and report "no path" even though the
+// node is genuinely reachable (manual node-by-node navigation doesn't hit
+// this since it never does this comparison).
 export function canReach(from, to) {
+  from = parseSecId(from); to = parseSecId(to);
   if (from === to) return false;
   const seen = new Set([from]);
   const queue = [from];
   while (queue.length) {
     const node = queue.shift();
-    for (const next of (state.graph[node]?.choices ?? [])) {
+    for (const raw of (state.graph[node]?.choices ?? [])) {
+      const next = parseSecId(raw);
       if (next === -1 || next === 0) continue;
       if (next === to) return true;
       if (!seen.has(next) && state.graph[next]) { seen.add(next); queue.push(next); }
@@ -1297,6 +1310,7 @@ export function canReach(from, to) {
 // Returns an array [from, ..., to] or null if unreachable.
 // mode: 'high' | 'shortest' | 'normal' | 'low'
 export function findPathTo(from, to, mode) {
+  from = parseSecId(from); to = parseSecId(to);
   if (from === to) return null;
 
   const bfsPath = _bfsShortestPath(from, to);
@@ -1309,7 +1323,8 @@ export function findPathTo(from, to, mode) {
     const queue = [[from, [from]]];
     while (queue.length) {
       const [node, path] = queue.shift();
-      for (const next of (state.graph[node]?.choices ?? [])) {
+      for (const raw of (state.graph[node]?.choices ?? [])) {
+        const next = parseSecId(raw);
         if (next === -1 || next === 0) continue;
         if (seen.has(next)) continue;
         const p = state.graph[next]?.priority;
@@ -1348,7 +1363,8 @@ function _findMaxPriorityPath(from, to, want, bfsPath) {
     const node = path[path.length - 1];
     if (path.length >= maxLen) continue;
 
-    for (const next of (state.graph[node]?.choices ?? [])) {
+    for (const raw of (state.graph[node]?.choices ?? [])) {
+      const next = parseSecId(raw);
       if (next === -1 || next === 0) continue;
       if (path.includes(next)) continue; // cycle guard
 
@@ -1381,7 +1397,8 @@ function _bfsShortestPath(from, to) {
     const path = queue.shift();
     const node = path[path.length - 1];
     const choices = state.graph[node]?.choices ?? [];
-    for (const next of choices) {
+    for (const raw of choices) {
+      const next = parseSecId(raw);
       if (next === -1 || next === 0) continue;
       if (seen.has(next)) continue;
       const newPath = [...path, next];
