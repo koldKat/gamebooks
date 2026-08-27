@@ -193,9 +193,37 @@ button, input {
 }
 /* Wraps .m-end + .m-manual-hint together for the "not available" notice -
    .m-end's own margin:auto only centers itself when it's the sole flex
-   item of .m-top (the plain win/death screen); paired with a second
-   paragraph it needs a shared wrapper to center as a group instead. */
+   item of .m-top; paired with a second paragraph it needs a shared wrapper
+   to center as a group instead. */
 .m-notice { margin: auto 0; }
+
+/* Run-end achievement screen (win/death) - separate from .m-end (still used
+   for the plain-text "not available" notice above) since this one needs a
+   flex column for the icon+heading, not a single centered line of text.
+   Same one-shot entrance animation as desktop's .liveread-end. */
+.m-end-achievement {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.5rem;
+  margin: auto 0;
+  animation: m-end-achievement-in 0.4s ease-out;
+}
+@keyframes m-end-achievement-in {
+  from { opacity: 0; transform: translateY(6px) scale(0.96); }
+  to   { opacity: 1; transform: none; }
+}
+.m-end-icon { width: 56px; height: 56px; }
+.m-end-achievement--death .m-end-icon { filter: drop-shadow(0 0 6px rgba(231, 76, 60, 0.35)); }
+.m-end-achievement--win   .m-end-icon { filter: drop-shadow(0 0 6px rgba(245, 166, 35, 0.4)); }
+.m-end-heading {
+  font-weight: 700;
+  font-size: 1.2rem;
+  letter-spacing: 0.04em;
+}
+.m-end-achievement--win   .m-end-heading { color: #f5a623; }
+.m-end-achievement--death .m-end-heading { color: #e74c3c; }
 .m-back-link { margin-top: 1.5rem; border-top: 1px solid #374151; padding-top: 1rem; }
 .m-preview-banner {
   font-size: 0.8rem;
