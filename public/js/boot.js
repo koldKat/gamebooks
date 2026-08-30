@@ -67,6 +67,7 @@ import { initSim80, setSim80Visible, renderSim80 } from './battlesim/battlesim80
 import { initSim82, setSim82Visible, renderSim82 } from './battlesim/battlesim82.js';
 import { initSim118, setSim118Visible, renderSim118 } from './battlesim/battlesim118.js';
 import { initSim218, setSim218Visible, renderSim218 } from './battlesim/battlesim218.js';
+import { initSim219, setSim219Visible, renderSim219 } from './battlesim/battlesim219.js';
 import { initSim430, setSim430Visible, renderSim430 } from './battlesim/battlesim430.js';
 import { initSim323, setSim323Visible, renderSim323 } from './battlesim/battlesim323.js';
 import { initSim322, setSim322Visible, renderSim322 } from './battlesim/battlesim322.js';
@@ -88,7 +89,7 @@ import { initProfile, updateAvatarUI, renderBooksXpSummary, setProfileHooks } fr
 import { setPublicProfileHooks, closePublicModal, openPublicProfile, openPublicSeriesRun } from './public-profile.js';
 import { setLiveTabHooks, _ensureLiveTabControllerStarted, _connectUserBadgeSSE, _disconnectUserBadgeSSE, _connectAppXpSSE, _disconnectAppXpSSE } from './livetab.js';
 import { setAppXpHooks, refreshAppXp, handleAppXpEvent } from './app-xp.js';
-import { setCoversHooks, loadCovers, openCoverActivity, openSeriesActivity, _showCachedCoversPanel, _refreshPublicCatalogIfVisible, _isLandingBooksViewVisible, _updateLandingBgDragUi, setCoversPrefsState, _toggleCoverTooltipSettings, initCoversPanel, resetFeedDisplayPrefsForLogout, _refillLazyIfShort } from './covers.js';
+import { setCoversHooks, loadCovers, openCoverActivity, openSeriesActivity, _showCachedCoversPanel, _refreshPublicCatalogIfVisible, _isLandingBooksViewVisible, _updateLandingBgDragUi, setCoversPrefsState, _toggleCoverTooltipSettings, initCoversPanel, resetFeedDisplayPrefsForLogout, _refillLazyIfShort, _stopLandingCoverRotation } from './covers.js';
 import {
   setBooksHooks, initBooksPanel, renderBooksList,
   getCachedBooks, getCachedAllSeries, getCachedStashes,
@@ -386,6 +387,7 @@ function showLogin() {
   setSim82Visible(false);
   setSim118Visible(false);
   setSim218Visible(false);
+  setSim219Visible(false);
   setSim430Visible(false);
   setSim204Visible(false);
   setSim205Visible(false);
@@ -525,6 +527,7 @@ async function showBooks() {
   setSim82Visible(false);
   setSim118Visible(false);
   setSim218Visible(false);
+  setSim219Visible(false);
   setSim430Visible(false);
   setSim204Visible(false);
   setSim205Visible(false);
@@ -839,6 +842,7 @@ async function showMain(bookId, isbn = null, issn = null, asin = null, cover = n
   setSim82Visible(bookId === 82);
   setSim118Visible(bookId === 118);
   setSim218Visible(bookId === 218);
+  setSim219Visible(bookId === 219);
   setSim430Visible(bookId === 430);
   setSim323Visible(bookId === 323);
   setSim322Visible(bookId === 322);
@@ -1054,6 +1058,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initSim82();
   initSim118();
   initSim218();
+  initSim219();
   initSim430();
   initSim323();
   initSim322();
@@ -1107,6 +1112,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderSim82();
     renderSim118();
     renderSim218();
+    renderSim219();
     renderSim430();
     renderSim323();
     renderSim322();
