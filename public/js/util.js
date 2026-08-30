@@ -107,6 +107,17 @@ export function compressImage(file, maxBytes = 512 * 1024, maxDim = 1200) {
   });
 }
 
+// Add/edit-book cover preview <img> elements were each set via a bare
+// img.src = URL.createObjectURL(blob) on every file pick, with nothing ever
+// calling URL.revokeObjectURL() on the previous one - picking a different
+// cover, or reopening the dialog repeatedly in one session, pinned every
+// blob ever previewed in memory for the rest of the tab's life. Revoke the
+// element's current blob: src (if any) before assigning the new one.
+export function setPreviewImgBlob(img, blob) {
+  if (img.src && img.src.startsWith('blob:')) URL.revokeObjectURL(img.src);
+  img.src = URL.createObjectURL(blob);
+}
+
 // ── Feedback/inbox attachment upload ──────────────────────────────────────────
 // Used to be two separately-maintained near-identical copies (feedback.js's
 // _uploadFile, inbox.js's _uploadAttachment) - both used a raw fetch() instead

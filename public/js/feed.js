@@ -234,7 +234,20 @@ async function _applyDayCoverFlows(root, dayCoverLists = _lastDayCoverLists) {
   }
 }
 
-export async function loadFeed() {
+// Single-flight guard: livetab.js's 60s interval and an SSE-triggered
+// feed_changed refresh can land in the same tick, and each call rebuilds
+// #feed-content's entire DOM (entries, day-card background layers) from
+// scratch - overlapping calls raced the same rebuild for no benefit, just
+// doubled GET /api/feed + DOM work. A caller arriving mid-refresh reuses
+// the in-flight promise instead of starting a second one.
+let _loadFeedInFlight = null;
+export function loadFeed() {
+  if (_loadFeedInFlight) return _loadFeedInFlight;
+  _loadFeedInFlight = _loadFeedImpl().finally(() => { _loadFeedInFlight = null; });
+  return _loadFeedInFlight;
+}
+
+async function _loadFeedImpl() {
   const el = document.getElementById('feed-content');
   if (!el) return;
   // GET /api/feed can be slow on a bad connection - #feed-content sits

@@ -6,7 +6,7 @@ import { naturalCompare, naturalCompareByName, foldForSearch, matchesSearch } fr
 import { getCachedBooks, getCachedAllSeries, getCachedStashes, _starLabelHtml, _refreshBooksListOnly, _refreshLibraryUi } from './books.js';
 import { refreshCoinsDisplay } from './shop.js';
 import { showAlert, showConfirm } from './play.js';
-import { escapeHtml, compressImage } from './util.js';
+import { escapeHtml, compressImage, setPreviewImgBlob } from './util.js';
 
 let _hooks = {};
 export function setEditBookHooks(h) { _hooks = h || {}; }
@@ -1041,7 +1041,7 @@ export function initEditBook(mousedownOnOverlayRef) {
     _pendingCoverBlob = blob;
     const coverImg = document.getElementById('edit-book-cover-img');
     const coverPh  = document.getElementById('edit-book-cover-placeholder');
-    coverImg.src = URL.createObjectURL(blob); coverImg.style.display = 'block';
+    setPreviewImgBlob(coverImg, blob); coverImg.style.display = 'block';
     coverPh.style.display = 'none';
   });
 
@@ -1218,7 +1218,7 @@ export function initEditBook(mousedownOnOverlayRef) {
     _eccCover = blob;
     const img = document.getElementById('ecc-cover-img');
     const ph  = document.getElementById('ecc-cover-placeholder');
-    img.src = URL.createObjectURL(blob); img.style.display = 'block'; ph.style.display = 'none';
+    setPreviewImgBlob(img, blob); img.style.display = 'block'; ph.style.display = 'none';
   });
   document.getElementById('ecc-pdf-btn').addEventListener('click', () => {
     document.getElementById('ecc-pdf-file').value = '';

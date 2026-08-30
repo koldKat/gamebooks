@@ -666,6 +666,19 @@ async function showMain(bookId, isbn = null, issn = null, asin = null, cover = n
   const _pvi2 = document.getElementById('login-promo-video-iframe');
   if (_pvi2) _pvi2.src = '';
   document.getElementById('landing-wrapper').style.display = 'none';
+  // landing-bg-a/-b/-dim are siblings of landing-wrapper (not descendants -
+  // see landing.css), so hiding landing-wrapper alone leaves them visible
+  // and still full-viewport position:fixed behind the app, and their 60s
+  // rotation timer kept repainting them for the rest of the session even
+  // with a book/graph open. Mirror _revealLanding()'s visibility toggle in
+  // reverse here, and stop the timer - both get restored by _revealLanding()
+  // + _startLandingCoverRotation() (via loadCovers()/_showCachedCoversPanel())
+  // the next time showBooks() runs.
+  _stopLandingCoverRotation();
+  ['landing-bg-a', 'landing-bg-b', 'landing-bg-dim'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.visibility = 'hidden';
+  });
   window._syncScrollTopBtns?.();
   document.getElementById('main-screen').style.display     = 'flex';
   document.getElementById('legend').style.display          = 'flex';
