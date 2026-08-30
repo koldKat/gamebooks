@@ -15,7 +15,7 @@ import {
   invalidateAutocompleteCaches, _loadAutocompleteBooks, _loadSeriesAutocomplete,
   _setModalCover, _setupNameAutocomplete, _setupPlainAutocomplete, _setupAuthorsAutocomplete,
 } from './autocomplete.js';
-import { escapeHtml, compressImage } from './util.js';
+import { escapeHtml, compressImage, setPreviewImgBlob } from './util.js';
 
 let _hooks = {};
 export function setAddBookHooks(h) { _hooks = h || {}; }
@@ -234,7 +234,7 @@ export function initAddBook(mousedownOnOverlayRef) {
     try { blob = await compressImage(file, 256 * 1024, 900); } catch { showAlert('Could not read that image - try a different file.'); return; }
     if (!blob) return;
     _cbCover = blob;
-    const img = document.getElementById('cb-cover-img'); img.src = URL.createObjectURL(blob); img.style.display = 'block';
+    const img = document.getElementById('cb-cover-img'); setPreviewImgBlob(img, blob); img.style.display = 'block';
     document.getElementById('cb-cover-placeholder').style.display = 'none';
   });
   document.getElementById('cb-pdf-btn').addEventListener('click', () => { document.getElementById('cb-pdf-file').value = ''; document.getElementById('cb-pdf-file').click(); });
@@ -320,7 +320,7 @@ export function initAddBook(mousedownOnOverlayRef) {
     try { blob = await compressImage(file, 256 * 1024, 900); } catch { showAlert('Could not read that image - try a different file.'); return; }
     if (!blob) return;
     _ccCover = blob;
-    const img = document.getElementById('cc-cover-img'); img.src = URL.createObjectURL(blob); img.style.display = 'block';
+    const img = document.getElementById('cc-cover-img'); setPreviewImgBlob(img, blob); img.style.display = 'block';
     document.getElementById('cc-cover-placeholder').style.display = 'none';
   });
   document.getElementById('cc-pdf-btn').addEventListener('click', () => { document.getElementById('cc-pdf-file').value = ''; document.getElementById('cc-pdf-file').click(); });

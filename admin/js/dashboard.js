@@ -190,7 +190,14 @@ export async function loadAppSize() {
   }
 }
 
+// Single-flight guard: polled every 1s (admin/js/boot.js) - if a request
+// ever takes longer than a second (a stalled/slow server), overlapping
+// calls would pile up instead of the next tick just reusing the one still
+// in flight.
+let _loadLiveInFlight = false;
 export async function loadLive() {
+  if (_loadLiveInFlight) return;
+  _loadLiveInFlight = true;
   try {
     const d = await api('GET', '/api/admin/live');
     document.getElementById('s-heap-used').textContent  = fmtBytes(d.heapUsed);
@@ -201,7 +208,7 @@ export async function loadLive() {
     document.getElementById('s-app-age').textContent         = fmtDuration(d.appAge);
     document.getElementById('s-traffic-in').textContent  = fmtBytes(d.trafficIn);
     document.getElementById('s-traffic-out').textContent = fmtBytes(d.trafficOut);
-  } catch (e) { console.error('Live:', e); }
+  } catch (e) { console.error('Live:', e); } finally { _loadLiveInFlight = false; }
 }
 
 document.getElementById('smtp-save-btn').addEventListener('click', async () => {

@@ -41,7 +41,15 @@ let _landingBgQueueIdx   = 0;
 // ever scrolled past, matching that report exactly.
 const _coverBlobUrlCache    = new Map();
 const _coverFetchPromiseCache = new Map();
-const _COVER_BLOB_CACHE_MAX = 60;
+// Lowered from 60 - even capped, 60 full-size (up to 675x900) decoded covers
+// is ~140MB before browser/GPU overhead, on top of whatever the now-added
+// off-screen thumb unload (_ensureThumbVisibilityObserver, _appendLazyBatch)
+// already frees. This is a cache of recently-*fetched* blobs (which the
+// unload/reload cycle deliberately re-uses to avoid a network re-fetch), not
+// the set of currently-visible thumbs, so it stays well below the number of
+// items scrolled past in a session - keep it a bit larger than one lazy
+// batch's worth of thumbs so ordinary scrolling doesn't refetch constantly.
+const _COVER_BLOB_CACHE_MAX = 24;
 
 // FIFO eviction (insertion order, via Map) rather than true LRU - simple and
 // good enough here since the covers panel is scrolled roughly linearly, not
@@ -80,6 +88,39 @@ let _lazyOffset   = 0;
 let _lazyScrollFn = null;
 let _lazyGrid     = null;
 const _LAZY_BATCH = 20;
+
+// Lazy-appending batches never removes anything, so a long scroll through a
+// large library left hundreds of decoded <img> bitmaps alive in memory at
+// once (the blob URL cache below is capped, but that only bounds the blob
+// URL table - a live <img src="blob:..."> in the DOM keeps its own decoded
+// bitmap regardless of whether the URL is still in that cache). This
+// observer discards the image (clears .src, releasing the decoded bitmap)
+// once a thumb scrolls far enough outside the viewport, and reloads it -
+// via the same _enqueueCoverLoad()/blob-cache pipeline everything else
+// uses, so it's an instant cache hit if the blob's still cached - once it
+// scrolls back near the viewport. A large rootMargin means this only ever
+// affects thumbs well off-screen, not the ones about to be scrolled to.
+let _thumbVisibilityObserver = null;
+function _ensureThumbVisibilityObserver() {
+  if (_thumbVisibilityObserver) return _thumbVisibilityObserver;
+  const panel = document.getElementById('covers-panel');
+  if (!panel) return null;
+  _thumbVisibilityObserver = new IntersectionObserver(entries => {
+    for (const entry of entries) {
+      const thumb = entry.target;
+      const img   = thumb.querySelector('img');
+      const url   = thumb.dataset.coverUrl;
+      if (!img || !url) continue;
+      if (entry.isIntersecting) {
+        if (!img.src) _enqueueCoverLoad(url, img, thumb.querySelector('.cover-load-bar'));
+      } else if (img.src) {
+        img.removeAttribute('src');
+        img.style.opacity = '0';
+      }
+    }
+  }, { root: panel, rootMargin: '1200px 0px 1200px 0px', threshold: 0 });
+  return _thumbVisibilityObserver;
+}
 
 // ── Cover blob/fetch caching ───────────────────────────────────────────────────
 async function _loadCoverWithProgress(url, img, bar) {
@@ -429,6 +470,8 @@ function _stopLazy() {
   _coversPanelQueue = [];
   _coversPanelGen++;
   _coversPanelRunning = false;
+  _thumbVisibilityObserver?.disconnect();
+  _thumbVisibilityObserver = null;
 }
 
 function _appendLazyBatch() {
@@ -443,11 +486,14 @@ function _appendLazyBatch() {
   }
   _lazyGrid.appendChild(frag);
   const allThumbs = _lazyGrid.querySelectorAll('.cover-thumb');
+  const visObserver = _ensureThumbVisibilityObserver();
   for (let i = start; i < end; i++) {
     const c = _lazyItems[i];
     if (!c.coverUrl) continue;
     const thumb = allThumbs[i];
-    if (thumb) _enqueueCoverLoad(c.coverUrl, thumb.querySelector('img'), thumb.querySelector('.cover-load-bar'));
+    if (!thumb) continue;
+    _enqueueCoverLoad(c.coverUrl, thumb.querySelector('img'), thumb.querySelector('.cover-load-bar'));
+    visObserver?.observe(thumb);
   }
   _lazyOffset = end;
   _updateCoversCount();

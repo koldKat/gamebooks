@@ -101,11 +101,16 @@ body.demo-active #logout-btn {
    collapse these into "just always apply it to .feed-day-card--glass" -
    with covers off, cards that would have shown a real cover only carry the
    plain .feed-day-card class, not --glass, so they'd be skipped entirely
-   and mismatch against the ones that do. */
+   and mismatch against the ones that do.
+   No background-attachment: fixed here (removed) - it forced each matching
+   card into its own always-on GPU compositing layer that had to recompute
+   on every scroll of the feed, and with a long feed that's potentially many
+   such layers alive at once. The crop no longer tracks the real page
+   background pixel-for-pixel while scrolling, but --landing-cover-pos still
+   keeps it reasonably aligned. */
 .feed-day-card--glass,
 body.no-feed-day-covers:not(.no-feed-glass-cards) .feed-day-card {
   background-image: var(--landing-cover-url, none);
-  background-attachment: fixed;
   background-size: cover;
   background-position: var(--landing-cover-pos, center);
 }

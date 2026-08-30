@@ -101,7 +101,17 @@ function _startLeaderIntervals() {
     // isDemoMode still has a token (guest session) but shouldn't earn real
     // XP, same reasoning as every other getToken()-gated call in this file.
     _feedPollInterval = setInterval(() => {
-      _hooks.loadFeed?.();
+      // loadFeed() rebuilds #feed-content's whole DOM (entries, day-card
+      // background layers) - the feed panel is only reachable from the
+      // books/landing screen (its toggle button is hidden while a book is
+      // open, boot.js's showMain()), so skip the rebuild entirely while
+      // #main-screen is showing instead of doing it for a screen the user
+      // can't even see. Unlike heartbeat below, this check is scoped to
+      // "is a book open", not document.visibilityState - a backgrounded
+      // landing tab still benefits from a fresh feed the moment it's
+      // foregrounded again. showBooks() already calls loadFeed() directly
+      // on return, so nothing goes stale beyond this interval's own cadence.
+      if (document.getElementById('main-screen')?.style.display === 'none') _hooks.loadFeed?.();
       if (getToken() && !isDemoMode) _hooks.sendHeartbeat?.();
       _refreshAppXpStaggered();
     }, 60_000);
