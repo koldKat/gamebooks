@@ -286,6 +286,10 @@ try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 118').run(); } 
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 218').run(); } catch (_) {}
 // Same one-off flag for book 219 (Masks of Mayhem).
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 219').run(); } catch (_) {}
+// Same one-off flag for book 220 (Creature of Havoc).
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 220').run(); } catch (_) {}
+// Same one-off flag for book 221 (Beneath Nightmare Castle).
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 221').run(); } catch (_) {}
 // Same one-off flag for book 430 (Пламък над водата - Bulgarian edition of
 // Lone Wolf book 2, Fire on the Water, separate from book 322's English one).
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 430').run(); } catch (_) {}
