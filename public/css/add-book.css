@@ -110,12 +110,22 @@
   padding: 0;
   text-decoration: underline;
 }
-.series-books-group > .book-item:not(.book-item--container) {
+.series-books-group > .book-item:not(.book-item--container):not(.book-item--party) {
   border-radius: 0;
   border: none;
   border-top: 1px solid #1f2937;
 }
-.series-books-group > .book-item:not(.book-item--container):first-child { border-top: none; }
+.series-books-group > .book-item:not(.book-item--container):not(.book-item--party):first-child { border-top: none; }
+/* Party books still need the flat-list divider look, just not at the cost of
+   the party border - style.css's .book-item.book-item--party (specificity
+   0,2,0) can't win against this file's 0,3,0 reset above on its own, so the
+   exclusion here lets that rule apply normally instead of stacking a third
+   competing selector. */
+.series-books-group > .book-item.book-item--party {
+  border-radius: 0;
+  border-top: 1px solid #1f2937;
+}
+.series-books-group > .book-item.book-item--party:first-child { border-top: none; }
 
 .stash-block {
   border: 1px solid rgba(52,211,153,0.55);
