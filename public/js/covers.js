@@ -894,7 +894,16 @@ export async function loadCovers({ force = true } = {}) {
     const publicSeries = await seriesRes.json();
     const nextFingerprint = _coversFingerprint(covers, publicBooks, publicSeries);
     const dataChanged = nextFingerprint !== _coversDataFingerprint;
-    if (!force && !dataChanged) return;
+    // A create/edit/delete action triggers loadCovers directly for an
+    // immediate optimistic refresh, AND (if this tab is the multi-tab
+    // "leader") the resulting server SSE push echoes back and triggers a
+    // second loadCovers on the very same tab (livetab.js's covers_changed
+    // relay isn't aware the change originated locally). Both calls pass
+    // force:true, so skipping the redraw here when the fetched data hasn't
+    // actually changed since the last render is what prevents the visible
+    // double-reload, without weakening the fetch itself (still always
+    // refetches, so genuinely new data from other users still renders).
+    if (!dataChanged) return;
     _coversDataFingerprint = nextFingerprint;
     if (!_isLandingBooksViewVisible()) return;
     _allBooks    = publicBooks;
