@@ -513,6 +513,7 @@
   line-height: 1.5;
   margin-top: 0.25rem;
   white-space: pre-wrap;
+  text-align: justify;
 }
 
 /* ── Star rating widget ───────────────────────────────────────── */

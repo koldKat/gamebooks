@@ -79,12 +79,13 @@ const ANN_COLORS = {
   teal: '#2dd4bf', blue: '#60a5fa', purple: '#a78bfa', pink: '#f472b6',
 };
 
-// [Label](/book/123) is a relative in-app link, not a hardcoded absolute
-// domain (this app is served from several domains - koldkat.net, pathmap.net,
-// bookplay.net, etc. - a baked-in domain would resolve on the wrong one).
-// Rendered without target=_blank; the click-interceptor below already
-// resolves it to the current origin correctly since it's relative. Genuine
-// external https:// links are untouched and still open in a new tab.
+// [Label](/book/123) or [Label](/series/45) is a relative in-app link, not a
+// hardcoded absolute domain (this app is served from several domains -
+// koldkat.net, pathmap.net, bookplay.net, etc. - a baked-in domain would
+// resolve on the wrong one). Rendered without target=_blank; the
+// click-interceptor below already resolves it to the current origin
+// correctly since it's relative. Genuine external https:// links are
+// untouched and still open in a new tab.
 function formatAnnBody(str) {
   return escapeHtml(str)
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
@@ -93,7 +94,7 @@ function formatAnnBody(str) {
     .replace(/~~(.+?)~~/g,     '<s>$1</s>')
     .replace(/\{color:(red|orange|amber|green|teal|blue|purple|pink)\}(.+?)\{\/color\}/g,
       (_, color, text) => `<span style="color:${ANN_COLORS[color]}">${text}</span>`)
-    .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+|\/book\/\d+)\)/g, (_, label, target) =>
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+|\/book\/\d+|\/series\/\d+)\)/g, (_, label, target) =>
       target.startsWith('/')
         ? `<a href="${target}">${label}</a>`
         : `<a href="${target}" target="_blank" rel="noopener noreferrer">${label}</a>`);
@@ -410,6 +411,7 @@ async function _loadFeedImpl() {
         html = t('feed.tmpl.added', { user: userEl, noun: nounLabel(e.isContainer), book: bookBtn(e.bookId, e.bookName) });
       } else if (e.type === 'series_created') {
         html = t('feed.tmpl.created_series', { user: userEl, series: _seriesTag(e) });
+        extraClass = 'feed-entry--created';
       } else if (e.type === 'series_added') {
         html = t('feed.tmpl.added_series', { user: userEl, series: _seriesTag(e) });
       } else if (e.type === 'series_run_started') {
@@ -556,9 +558,37 @@ async function _loadFeedImpl() {
       const collapseJoins = joinItems.length >= JOIN_COLLAPSE_THRESHOLD;
       let joinGroupRendered = false;
 
+      // A series/anthology created together with its member books in the
+      // same import produces 1 container event (series_created, or
+      // book_created with isContainer) plus N book_created children from the
+      // same user this same day - fold those N lines into the container's
+      // own entry via an inline expand toggle, rather than spamming the feed
+      // with N+1 separate rows. Only collapses when a real batch exists (at
+      // least one matching child); a container created on its own (no
+      // members yet) renders exactly as before.
+      const batchChildrenByContainer = new Map();
+      const batchConsumedChildren = new Set();
+      for (const e of items) {
+        let children = null;
+        // Excludes anything already claimed by an earlier container this
+        // pass - a book could in principle match both a fresh series and a
+        // fresh anthology (seriesId and parentBookId both set) in the same
+        // batch; first container wins rather than rendering it twice.
+        if (e.type === 'series_created') {
+          children = items.filter(x => x.type === 'book_created' && !x.isContainer && !batchConsumedChildren.has(x) && x.username === e.username && x.seriesId === e.seriesId);
+        } else if (e.type === 'book_created' && e.isContainer) {
+          children = items.filter(x => x.type === 'book_created' && !x.isContainer && !batchConsumedChildren.has(x) && x.username === e.username && x.parentBookId === e.bookId);
+        }
+        if (children && children.length) {
+          batchChildrenByContainer.set(e, children);
+          children.forEach(c => batchConsumedChildren.add(c));
+        }
+      }
+
       const rendered = new Set();
       let out = '';
       for (const e of items) {
+        if (batchConsumedChildren.has(e)) continue;
         if (skipTypes.has(e.type) && e.type !== 'user_joined') {
           // Always its own standalone entry - never merged into a same-user
           // collapse group, even if that user has enough other actions today
@@ -567,7 +597,20 @@ async function _loadFeedImpl() {
           // of e.g. run_completed entries, or silently dropped if that group
           // was already rendered).
           const { html: body, isParty, extraClass } = renderEntry(e);
-          if (body) out += `<div class="feed-entry${isParty ? ' feed-entry--party' : ''}${extraClass ? ' ' + extraClass : ''}">${body}</div>`;
+          if (!body) continue;
+          const children = batchChildrenByContainer.get(e);
+          if (children) {
+            const id = `feed-collapse-${collapseId++}`;
+            const preview = children.slice(0, 2).map(_makeEntryHtml).join('');
+            const rest    = children.slice(2).map(_makeEntryHtml).join('');
+            out += `<div class="feed-entry${isParty ? ' feed-entry--party' : ''}${extraClass ? ' ' + extraClass : ''}">${body} `;
+            out += `<button class="feed-group-toggle feed-group-toggle--inline" data-target="${id}" data-group-key="${escapeHtml(thisDayIndex + ':batch:' + (e.seriesId ?? e.bookId))}" aria-expanded="false">`;
+            out += `<span class="feed-group-chevron">▶</span><span class="feed-group-count">${t('feed.books_in_batch', { n: children.length })}</span>`;
+            out += `</button></div>`;
+            out += `<div class="feed-group-body" id="${id}" hidden>${preview}${rest}</div>`;
+          } else {
+            out += `<div class="feed-entry${isParty ? ' feed-entry--party' : ''}${extraClass ? ' ' + extraClass : ''}">${body}</div>`;
+          }
           continue;
         }
         if (e.type === 'user_joined') {
@@ -699,18 +742,20 @@ async function _loadFeedImpl() {
       if (!a.dataset.seriesId) return;
       a.addEventListener('click', e => { e.preventDefault(); openSeriesActivity(+a.dataset.seriesId, a.dataset.seriesName); });
     });
-    // An announcement can link a book via formatAnnBody()'s [Label](/book/123)
-    // syntax - same real, crawlable /book/:id page used elsewhere (e.g. the
-    // no-JS feed SEO page), but intercepted here so clicking it from inside
-    // the app opens the in-app detail dialog instead of navigating away,
-    // same as .feed-series-tag above.
+    // An announcement can link a book or series via formatAnnBody()'s
+    // [Label](/book/123) / [Label](/series/45) syntax - same real, crawlable
+    // /book/:id and /series/:id pages used elsewhere (e.g. the no-JS feed SEO
+    // page), but intercepted here so clicking it from inside the app opens
+    // the in-app detail dialog instead of navigating away, same as
+    // .feed-series-tag above.
     el.querySelectorAll('.feed-ann-body a, .feed-pinned-body a').forEach(a => {
       let u;
       try { u = new URL(a.href); } catch { return; }
       if (u.origin !== location.origin) return;
-      const m = u.pathname.match(/^\/book\/(\d+)$/);
-      if (!m) return;
-      a.addEventListener('click', e => { e.preventDefault(); openCoverActivity(+m[1], a.textContent); });
+      const bookM = u.pathname.match(/^\/book\/(\d+)$/);
+      if (bookM) { a.addEventListener('click', e => { e.preventDefault(); openCoverActivity(+bookM[1], a.textContent); }); return; }
+      const seriesM = u.pathname.match(/^\/series\/(\d+)$/);
+      if (seriesM) { a.addEventListener('click', e => { e.preventDefault(); openSeriesActivity(+seriesM[1], a.textContent); }); return; }
     });
 
     // Hover image previews (desktop only - touch devices have no reliable mouseleave)
