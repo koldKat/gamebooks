@@ -70,6 +70,15 @@ import { initSim218, setSim218Visible, renderSim218 } from './battlesim/battlesi
 import { initSim219, setSim219Visible, renderSim219 } from './battlesim/battlesim219.js';
 import { initSim220, setSim220Visible, renderSim220 } from './battlesim/battlesim220.js';
 import { initSim221, setSim221Visible, renderSim221 } from './battlesim/battlesim221.js';
+import { initSim222, setSim222Visible, renderSim222 } from './battlesim/battlesim222.js';
+import { initSim370, setSim370Visible, renderSim370 } from './battlesim/battlesim370.js';
+import { initSim375, setSim375Visible, renderSim375 } from './battlesim/battlesim375.js';
+import { initSim376, setSim376Visible, renderSim376 } from './battlesim/battlesim376.js';
+import { initSim377, setSim377Visible, renderSim377 } from './battlesim/battlesim377.js';
+import { initSim378, setSim378Visible, renderSim378 } from './battlesim/battlesim378.js';
+import { initSim78, setSim78Visible, renderSim78 } from './battlesim/battlesim78.js';
+import { initSim107, setSim107Visible, renderSim107 } from './battlesim/battlesim107.js';
+import { initSim135, setSim135Visible, renderSim135 } from './battlesim/battlesim135.js';
 import { initSim430, setSim430Visible, renderSim430 } from './battlesim/battlesim430.js';
 import { initSim323, setSim323Visible, renderSim323 } from './battlesim/battlesim323.js';
 import { initSim322, setSim322Visible, renderSim322 } from './battlesim/battlesim322.js';
@@ -392,6 +401,15 @@ function showLogin() {
   setSim219Visible(false);
   setSim220Visible(false);
   setSim221Visible(false);
+  setSim222Visible(false);
+  setSim370Visible(false);
+  setSim375Visible(false);
+  setSim376Visible(false);
+  setSim377Visible(false);
+  setSim378Visible(false);
+  setSim78Visible(false);
+  setSim107Visible(false);
+  setSim135Visible(false);
   setSim430Visible(false);
   setSim204Visible(false);
   setSim205Visible(false);
@@ -534,6 +552,15 @@ async function showBooks() {
   setSim219Visible(false);
   setSim220Visible(false);
   setSim221Visible(false);
+  setSim222Visible(false);
+  setSim370Visible(false);
+  setSim375Visible(false);
+  setSim376Visible(false);
+  setSim377Visible(false);
+  setSim378Visible(false);
+  setSim78Visible(false);
+  setSim107Visible(false);
+  setSim135Visible(false);
   setSim430Visible(false);
   setSim204Visible(false);
   setSim205Visible(false);
@@ -864,6 +891,15 @@ async function showMain(bookId, isbn = null, issn = null, asin = null, cover = n
   setSim219Visible(bookId === 219);
   setSim220Visible(bookId === 220);
   setSim221Visible(bookId === 221);
+  setSim222Visible(bookId === 222);
+  setSim370Visible(bookId === 370);
+  setSim375Visible(bookId === 375);
+  setSim376Visible(bookId === 376);
+  setSim377Visible(bookId === 377);
+  setSim378Visible(bookId === 378);
+  setSim78Visible(bookId === 78);
+  setSim107Visible(bookId === 107);
+  setSim135Visible(bookId === 135);
   setSim430Visible(bookId === 430);
   setSim323Visible(bookId === 323);
   setSim322Visible(bookId === 322);
@@ -1082,6 +1118,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   initSim219();
   initSim220();
   initSim221();
+  initSim222();
+  initSim370();
+  initSim375();
+  initSim376();
+  initSim377();
+  initSim378();
+  initSim78();
+  initSim107();
+  initSim135();
   initSim430();
   initSim323();
   initSim322();
@@ -1138,6 +1183,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderSim219();
     renderSim220();
     renderSim221();
+    renderSim222();
+    renderSim370();
+    renderSim375();
+    renderSim376();
+    renderSim377();
+    renderSim378();
+    renderSim78();
+    renderSim107();
+    renderSim135();
     renderSim430();
     renderSim323();
     renderSim322();
@@ -1239,6 +1293,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       // for this case; closePublicModal() resets it back to the CSS default.
       document.getElementById('public-modal-overlay').style.zIndex = '3001';
       await openCoverActivity(+e.data.bookId, '');
+      return;
+    }
+    if (e.data?.type === 'gamebooks-open-series' && e.data.seriesId) {
+      // Same forum-stays-open-underneath treatment as gamebooks-open-book above.
+      document.getElementById('public-modal-overlay').style.zIndex = '3001';
+      await openSeriesActivity(+e.data.seriesId, '');
       return;
     }
     if (e.data?.type !== 'gamebooks-open-app') return;

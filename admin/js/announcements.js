@@ -34,7 +34,7 @@ function annFormatBody(s) {
     // nowhere "in-app" to open a /book/123 link into (it's the admin panel,
     // a different app) - always open in a new tab so clicking a preview
     // link never navigates the admin away from what they're doing.
-    .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+|\/book\/\d+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+|\/book\/\d+|\/series\/\d+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
 }
 
 function annFmt(ts) {

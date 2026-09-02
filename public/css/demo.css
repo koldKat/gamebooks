@@ -407,6 +407,13 @@ body.no-feed-glass-cards .feed-day-card--glass::before { display: none !importan
   width: 100%;
   text-align: left;
 }
+.feed-group-toggle--inline {
+  display: inline-flex;
+  width: auto;
+  padding: 0 0 0 0.3rem;
+  font-size: 0.75rem;
+  vertical-align: baseline;
+}
 .feed-group-toggle:hover { color: #d1d5db; }
 .feed-group-chevron {
   font-size: 0.65rem;

@@ -325,7 +325,7 @@ function servePublicFeedPage(req, res) {
     .replace(/~~(.+?)~~/g,     '<s>$1</s>')
     .replace(/\{color:(red|orange|amber|green|teal|blue|purple|pink)\}(.+?)\{\/color\}/g,
       (_, color, text) => `<span style="color:${ANN_COLORS[color]}">${text}</span>`)
-    .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+|\/book\/\d+)\)/g, (_, label, target) =>
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+|\/book\/\d+|\/series\/\d+)\)/g, (_, label, target) =>
       target.startsWith('/')
         ? `<a href="${target}">${label}</a>`
         : `<a href="${target}" target="_blank" rel="noopener noreferrer">${label}</a>`);
