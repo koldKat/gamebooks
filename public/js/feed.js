@@ -383,13 +383,18 @@ async function _loadFeedImpl() {
               : ` <span class="feed-series-tag" style="cursor:default">${escapeHtml(e.seriesName)}${e.seriesNumber ? ' #' + escapeHtml(e.seriesNumber) : ''}</span>`)
           : '';
         const tags = collectionTag + seriesTag;
-        if (!e.bookIsPublic) return `<span class="feed-book">${escapeHtml(name)}</span>${tags}`;
+        // An anthology's own name renders as a purple pill (#a78bfa, matching
+        // the covers wall's .cover-anthology-badge), the same way a series's
+        // own name pills up amber in the "created series" template - not a
+        // separate badge next to plain title text, the title *is* the pill.
+        const pillClass = e.isContainer ? ' feed-anthology-pill' : '';
+        if (!e.bookIsPublic) return `<span class="feed-book${pillClass}">${escapeHtml(name)}</span>${tags}`;
         const effectiveCover = e.coverUrl || e.parentCoverUrl || null;
         const cover = effectiveCover ? ` data-cover="${escapeHtml(effectiveCover)}"` : '';
         const parentAttrs = e.parentBookId
           ? ` data-parent-id="${e.parentBookId}" data-parent-name="${escapeHtml(e.parentBookName)}"`
           : '';
-        return `<button class="feed-book feed-book-btn" data-book-id="${id}" data-book-name="${escapeHtml(name)}"${cover}${parentAttrs}>${escapeHtml(name)}</button>${tags}`;
+        return `<button class="feed-book feed-book-btn${pillClass}" data-book-id="${id}" data-book-name="${escapeHtml(name)}"${cover}${parentAttrs}>${escapeHtml(name)}</button>${tags}`;
       };
       const verbLabel = cls => cls === 'won' ? t('feed.verb.won') : cls === 'died' ? t('feed.verb.died') : t('feed.verb.lost');
       const nounLabel = isContainer => isContainer ? t('feed.noun.anthology') : t('feed.noun.book');
