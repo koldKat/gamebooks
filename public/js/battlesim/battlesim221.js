@@ -61,17 +61,14 @@
 // after 1 round regardless of outcome), and the Runic Axe's effect of
 // disabling those Escape options (narrative gating, not combat math).
 //
-// Five STAMINA values in book_enemies for this book are best-guess
-// reconstructions, not confirmed print values - this book's PDF text layer
-// is unreadable/OCR-garbled at the relevant pages, so they could not be
-// cross-checked against the original. Flagged here and in docs/technical.md:
-// - Vitriol Essence, 2nd encounter (§224): 6, assumed equal to its 1st
-//   encounter (§10) since the text says it "recovered some of his strength"
-//   after being reduced to 2 - the source number itself was unreadable.
-// - Young Man (§226): 8, guessed from OCR "STAMINA B".
-// - Bakk-Ruman (§272): 9, guessed from OCR "STAMINAQ" (no digit present).
-// - Crate of Limbs (§314): 15, guessed from OCR "STAMINA IS".
-// - Unknown Assailant / Ogre (§394): 8, guessed from OCR "STAMINA 8B".
+// All book_enemies STAMINA values for this book have since been confirmed
+// against 300dpi scans of the source PDF's page images (the embedded PDF
+// text layer itself is unreadable/font-garbled, but the pages are scans, so
+// tesseract OCR + direct pixel inspection worked). Five entries were
+// previously flagged as unverified best-guesses; four guesses turned out
+// correct (Vitriol Essence §224: 6, Young Man §226: 8, Bakk-Ruman §272: 9,
+// Unknown Assailant/Ogre §394: 8) and one was wrong and corrected: Crate of
+// Limbs (§314) is STAMINA 18, not the previously-guessed 15.
 //
 // All state lives in pt.sim221, per-user/per-book via currentPlaythrough().
 
