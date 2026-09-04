@@ -72,6 +72,7 @@ import { initSim220, setSim220Visible, renderSim220 } from './battlesim/battlesi
 import { initSim223, setSim223Visible, renderSim223 } from './battlesim/battlesim223.js';
 import { initSim221, setSim221Visible, renderSim221 } from './battlesim/battlesim221.js';
 import { initSim222, setSim222Visible, renderSim222 } from './battlesim/battlesim222.js';
+import { initSim224, setSim224Visible, renderSim224 } from './battlesim/battlesim224.js';
 import { initSim370, setSim370Visible, renderSim370 } from './battlesim/battlesim370.js';
 import { initSim375, setSim375Visible, renderSim375 } from './battlesim/battlesim375.js';
 import { initSim376, setSim376Visible, renderSim376 } from './battlesim/battlesim376.js';
@@ -80,6 +81,11 @@ import { initSim378, setSim378Visible, renderSim378 } from './battlesim/battlesi
 import { initSim78, setSim78Visible, renderSim78 } from './battlesim/battlesim78.js';
 import { initSim107, setSim107Visible, renderSim107 } from './battlesim/battlesim107.js';
 import { initSim135, setSim135Visible, renderSim135 } from './battlesim/battlesim135.js';
+import { initSim317, setSim317Visible, renderSim317 } from './battlesim/battlesim317.js';
+import { initSim318, setSim318Visible, renderSim318 } from './battlesim/battlesim318.js';
+import { initSim319, setSim319Visible, renderSim319 } from './battlesim/battlesim319.js';
+import { initSim320, setSim320Visible, renderSim320 } from './battlesim/battlesim320.js';
+import { initSim321, setSim321Visible, renderSim321 } from './battlesim/battlesim321.js';
 import { initSim430, setSim430Visible, renderSim430 } from './battlesim/battlesim430.js';
 import { initSim323, setSim323Visible, renderSim323 } from './battlesim/battlesim323.js';
 import { initSim322, setSim322Visible, renderSim322 } from './battlesim/battlesim322.js';
@@ -404,6 +410,7 @@ function showLogin() {
   setSim223Visible(false);
   setSim221Visible(false);
   setSim222Visible(false);
+  setSim224Visible(false);
   setSim370Visible(false);
   setSim375Visible(false);
   setSim376Visible(false);
@@ -412,6 +419,11 @@ function showLogin() {
   setSim78Visible(false);
   setSim107Visible(false);
   setSim135Visible(false);
+  setSim317Visible(false);
+  setSim318Visible(false);
+  setSim319Visible(false);
+  setSim320Visible(false);
+  setSim321Visible(false);
   setSim430Visible(false);
   setSim204Visible(false);
   setSim205Visible(false);
@@ -556,6 +568,7 @@ async function showBooks() {
   setSim223Visible(false);
   setSim221Visible(false);
   setSim222Visible(false);
+  setSim224Visible(false);
   setSim370Visible(false);
   setSim375Visible(false);
   setSim376Visible(false);
@@ -564,6 +577,11 @@ async function showBooks() {
   setSim78Visible(false);
   setSim107Visible(false);
   setSim135Visible(false);
+  setSim317Visible(false);
+  setSim318Visible(false);
+  setSim319Visible(false);
+  setSim320Visible(false);
+  setSim321Visible(false);
   setSim430Visible(false);
   setSim204Visible(false);
   setSim205Visible(false);
@@ -896,6 +914,7 @@ async function showMain(bookId, isbn = null, issn = null, asin = null, cover = n
   setSim223Visible(bookId === 223);
   setSim221Visible(bookId === 221);
   setSim222Visible(bookId === 222);
+  setSim224Visible(bookId === 224);
   setSim370Visible(bookId === 370);
   setSim375Visible(bookId === 375);
   setSim376Visible(bookId === 376);
@@ -904,6 +923,11 @@ async function showMain(bookId, isbn = null, issn = null, asin = null, cover = n
   setSim78Visible(bookId === 78);
   setSim107Visible(bookId === 107);
   setSim135Visible(bookId === 135);
+  setSim317Visible(bookId === 317);
+  setSim318Visible(bookId === 318);
+  setSim319Visible(bookId === 319);
+  setSim320Visible(bookId === 320);
+  setSim321Visible(bookId === 321);
   setSim430Visible(bookId === 430);
   setSim323Visible(bookId === 323);
   setSim322Visible(bookId === 322);
@@ -1124,6 +1148,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initSim223();
   initSim221();
   initSim222();
+  initSim224();
   initSim370();
   initSim375();
   initSim376();
@@ -1132,6 +1157,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   initSim78();
   initSim107();
   initSim135();
+  initSim317();
+  initSim318();
+  initSim319();
+  initSim320();
+  initSim321();
   initSim430();
   initSim323();
   initSim322();
@@ -1189,6 +1219,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderSim220();
     renderSim221();
     renderSim222();
+    renderSim224();
     renderSim223();
     renderSim370();
     renderSim375();
@@ -1198,6 +1229,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderSim78();
     renderSim107();
     renderSim135();
+    renderSim317();
+    renderSim318();
+    renderSim319();
+    renderSim320();
+    renderSim321();
     renderSim430();
     renderSim323();
     renderSim322();

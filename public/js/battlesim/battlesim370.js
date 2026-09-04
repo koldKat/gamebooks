@@ -80,13 +80,30 @@
 // book_enemies column reuse for this book's stat shape (documented since it
 // doesn't match the plain attack/defense/hp used elsewhere): hp = Издръжливост
 // (Endurance, confirmed identical across every branch of a given named
-// enemy); attack = a representative starting Defense value (this book's
-// enemies are fought via different named techniques on different branches,
-// each with its own Defense - this is just an autocomplete-fill default for
-// the Hand-strike Defense field, not a canonical number - every Defense
-// field must still be re-entered per encounter from the section text);
-// pb = the enemy's damage dice count, defense = the enemy's flat damage
-// bonus (together reconstructing "Щети: {pb} зара + {defense}").
+// enemy) EXCEPT weakened "Астарот" (not the full-strength "Седмият херцог
+// на ада Астарот"), whose Endurance is 2 on one branch (§189) and 6 on
+// another (§388/§412) despite being narrated as the same weakened-form
+// fight - re-enter Endurance from the section text for this one enemy,
+// same as Defense below; attack = a representative starting Defense value
+// (this book's enemies are fought via different named techniques on
+// different branches, each with its own Defense - this is just an
+// autocomplete-fill default for the Hand-strike Defense field, not a
+// canonical number - every Defense field must still be re-entered per
+// encounter from the section text); pb = the enemy's damage dice count,
+// defense = the enemy's flat damage bonus (together reconstructing
+// "Щети: {pb} зара + {defense}"). "Четирима полуоркове" (§187, group of 4)
+// uses a wholly different sub-system - a flat fumble check per attack
+// ("roll fate dice, hit on a 1 or 2") rather than an opposed to-hit roll -
+// and is NOT modeled by this simulator; its book_enemies row exists only
+// so its per-orc Endurance/Defense/damage numbers autocomplete for manual
+// tracking, since the sim has no concept of a 4-body group fight.
+// "Призрак бандит" (§307/§313) states no "Щети" line at all in the source
+// text - a miss sends the player straight to a narrative soul-drain
+// section instead of a dice-rolled damage loss. Its book_enemies pb=1 is
+// an arbitrary filler value (no real damage die is ever specified for it)
+// purely so the autocomplete form has something in the field; treat this
+// fight as pass/fail against Endurance, not as taking numeric counter-
+// damage on a miss.
 //
 // Data gap: Призрак Бандит (Ghost Bandit, §307/§313) never prints a "Щети:"
 // line in either encounter - its touch attack is narrated as life-draining
