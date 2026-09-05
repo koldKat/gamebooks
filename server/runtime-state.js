@@ -185,7 +185,7 @@ const _uptimeStart = Math.floor(Date.now() / 1000);
     const prevDowntime = parseInt(db.getAdminSetting('server_total_downtime_s') || '0');
     db.setAdminSetting('server_total_downtime_s', String(prevDowntime + gap));
   }
-  if (gap > 5) {
+  if (gap > 15) {
     // Real restart - begin a new session. This threshold is deliberately kept (unlike
     // the downtime accumulation above) so a quick deploy reload doesn't reset the
     // "how long has this deployment been stable" session clock every time.

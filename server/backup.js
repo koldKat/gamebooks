@@ -71,4 +71,4 @@ function start() {
   }, msUntilNextHour());
 }
 
-module.exports = { start };
+module.exports = { start, BACKUP_DIR };

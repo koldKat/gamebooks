@@ -294,11 +294,20 @@ async function handleAdminAppSize(req, res) {
   send(res, 200, { bytes });
 }
 
+const BACKUP_DIR_NAME = path.basename(require('../backup').BACKUP_DIR);
+
 function findBackupFiles(dir, ignorePatterns) {
   const results = [];
   let entries;
   try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return results; }
   for (const entry of entries) {
+    // The real backups directory must never be skipped here, even if the
+    // user's app-size ignore patterns happen to also match its name (e.g.
+    // a literal "backups" line) - that setting is for app-size only.
+    if (entry.isDirectory() && entry.name === BACKUP_DIR_NAME && dir === PROJECT_ROOT) {
+      results.push(...findBackupFiles(path.join(dir, entry.name), ignorePatterns));
+      continue;
+    }
     if (ignorePatterns.some(p => globMatch(entry.name, p))) continue;
     const fullPath = path.join(dir, entry.name);
     if (entry.isDirectory()) {

@@ -275,6 +275,8 @@ export async function loadState(bookId) {
   }
 
   // Ensure fields added after initial release
+  if (!state.graph)                      state.graph         = {};
+  if (!Array.isArray(state.playthroughs)) state.playthroughs = [];
   if (!state.positions)                  state.positions     = {};
   if (state.activePtIndex === undefined) state.activePtIndex = null;
   if (state.bookName      === undefined) state.bookName      = '';

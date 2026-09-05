@@ -903,7 +903,22 @@ export async function loadCovers({ force = true } = {}) {
     // actually changed since the last render is what prevents the visible
     // double-reload, without weakening the fetch itself (still always
     // refetches, so genuinely new data from other users still renders).
-    if (!dataChanged) return;
+    //
+    // Panel visibility isn't implied by data freshness, though - if
+    // _showCachedCoversPanel() no-op'd earlier (its own cache arrays were
+    // still empty, e.g. right after a hard refresh that landed directly on
+    // a book/graph page) the panel can be sitting inactive even though the
+    // data we just fetched is identical to what's already cached. Without
+    // this, that combination left the panel permanently hidden until a
+    // second hard refresh, since this early return used to skip the
+    // classList.add('active') below unconditionally.
+    if (!dataChanged) {
+      if (_isLandingBooksViewVisible() && (covers.length || _allBooks.length || _allSeriesCovers.length)) {
+        panel.classList.add('active');
+        document.getElementById('covers-toggle')?.classList.add('visible');
+      }
+      return;
+    }
     _coversDataFingerprint = nextFingerprint;
     if (!_isLandingBooksViewVisible()) return;
     _allBooks    = publicBooks;

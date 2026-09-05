@@ -139,6 +139,16 @@ function _xpApply(xp, data, fromXp = null) {
     // queues after it rather than overwriting it.
     if (_displayedXp == null) _displayedXp = fromXp;
     _enqueueXpAnim(xp, data);
+  } else if (_displayedXp != null && fromXp === xp) {
+    // A duplicate/unchanged snapshot (e.g. a second independent /api/profile
+    // refetch landing moments after the first, both reporting the same xp -
+    // routine after actions like a book/PDF upload, which can trigger more
+    // than one profile refresh in quick succession) - true no-op. Must NOT
+    // fall through to the hard-reset branch below, which would bump _animGen
+    // and abort any tween already in flight from the first snapshot,
+    // snapping straight to the final value and making a multi-second XP
+    // gain animation look instant.
+    return;
   } else {
     _animGen++; // hard reset (no known prior position): invalidate any in-flight animation
     _animQueue = [];
