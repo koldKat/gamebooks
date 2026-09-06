@@ -466,7 +466,8 @@ const translations = {
     'feed.new_adventurers':  'New adventurers',
     'feed.joined_today':     ' - {n} joined today',
     'feed.actions_today':    ' - {n} actions today',
-    'feed.books_in_batch':   ' - {n} books',
+    'feed.books_in_batch':   '{n} books',
+    'feed.more_books_in_batch': '+{n} more',
     'feed.hover_level':      'Lvl {n}',
 
     'pub.loading':             'Loading…',
