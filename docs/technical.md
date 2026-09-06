@@ -138,6 +138,8 @@ gamebooks/
         battlesim224.js    Battle simulator for book 224, Phantoms of Fear - Fighting Fantasy SKILL/STAMINA/LUCK opposed-roll combat.
         battlesim225.js    Battle simulator for book 225, Midnight Rogue - Fighting Fantasy SKILL/STAMINA/LUCK opposed-roll combat.
         battlesim228.js    Battle simulator for book 228, Slaves of the Abyss - Fighting Fantasy SKILL/STAMINA/LUCK opposed-roll combat.
+        battlesim229.js    Battle simulator for book 229, Sky Lord - Fighting Fantasy SKILL/STAMINA/LUCK opposed-roll combat (sequential multi-enemy fights, no simultaneous side-attacker mechanic).
+        battlesim230.js    Battle simulator for book 230, Stealer of Souls - Fighting Fantasy SKILL/STAMINA/LUCK opposed-roll combat (mixed sequential/simultaneous multi-enemy fights per source text).
         battlesim317.js    Battle simulator for book 317, The Battlepits of Krarth (Blood Sword 1) - Fighting Prowess/Endurance Attack Strength combat.
         battlesim318.js    Battle simulator for book 318, The Kingdom of Wyrd (Blood Sword 2) - Fighting Prowess/Endurance Attack Strength combat.
         battlesim319.js    Battle simulator for book 319, The Demon's Claw (Blood Sword 3) - Fighting Prowess/Endurance Attack Strength combat.
