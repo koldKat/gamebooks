@@ -417,6 +417,30 @@ db.exec(`CREATE TABLE IF NOT EXISTS book_enemies (
   created_at INTEGER DEFAULT (strftime('%s','now'))
 )`);
 
+// Per-book audit/import checklist - one row per book, real booleans (not
+// loose integers) for each standing-checklist item so a claim like "book N
+// is done" is queryable and falsifiable instead of just asserted in a memory
+// file or chat. Every column starts at 0/NULL and is only flipped to 1
+// immediately after that specific check has actually been performed on that
+// specific book - never batch-set, never inferred from "probably fine".
+db.exec(`CREATE TABLE IF NOT EXISTS book_import_checklist (
+  book_id                INTEGER PRIMARY KEY REFERENCES books(id) ON DELETE CASCADE,
+  extraction_method      TEXT,
+  unimportable           INTEGER NOT NULL DEFAULT 0 CHECK(unimportable IN (0,1)),
+  paragraph_implosion_ck INTEGER NOT NULL DEFAULT 0 CHECK(paragraph_implosion_ck IN (0,1)),
+  paragraph_explosion_ck INTEGER NOT NULL DEFAULT 0 CHECK(paragraph_explosion_ck IN (0,1)),
+  section_glue_ck        INTEGER NOT NULL DEFAULT 0 CHECK(section_glue_ck IN (0,1)),
+  links_conservative_ck  INTEGER NOT NULL DEFAULT 0 CHECK(links_conservative_ck IN (0,1)),
+  graph_connectivity_ck  INTEGER NOT NULL DEFAULT 0 CHECK(graph_connectivity_ck IN (0,1)),
+  frontmatter_done       INTEGER NOT NULL DEFAULT 0 CHECK(frontmatter_done IN (0,1)),
+  sim_applicable         INTEGER CHECK(sim_applicable IN (0,1)),
+  enemy_roster_reported  INTEGER NOT NULL DEFAULT 0 CHECK(enemy_roster_reported IN (0,1)),
+  sim_registered         INTEGER NOT NULL DEFAULT 0 CHECK(sim_registered IN (0,1)),
+  prose_full_read        INTEGER NOT NULL DEFAULT 0 CHECK(prose_full_read IN (0,1)),
+  notes                  TEXT,
+  updated_at             INTEGER DEFAULT (strftime('%s','now'))
+)`);
+
 // A book's *secondary* anthology memberships - purely additive on top of its
 // one primary parent_book_id, which stays the sole source of truth for
 // series inheritance, discover-all/visit-all XP milestones, and every other
