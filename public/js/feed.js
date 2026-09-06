@@ -590,6 +590,36 @@ async function _loadFeedImpl() {
         }
       }
 
+      // Books added to an already-existing series/anthology (no fresh
+      // container event today, e.g. volume 5 dropped in a week after the
+      // series itself was created) never match a container above and would
+      // otherwise render as N separate same-day rows. Group same-user
+      // same-series/anthology book_created siblings under the first one as
+      // the same inline-toggle batch, using that first entry's own rendered
+      // body (title + series tag) as the visible head instead of a
+      // dedicated container event. Uses "+N more" wording rather than the
+      // container batch's "N books" - here the head is itself one of the
+      // books, not a separate container standing apart from an N-book
+      // count, so the toggle should only cover the rest.
+      const looseKeyOf = e => e.seriesId != null ? `s:${e.seriesId}` : (e.parentBookId != null ? `a:${e.parentBookId}` : null);
+      const looseGroups = new Map();
+      for (const e of items) {
+        if (e.type !== 'book_created' || e.isContainer || batchConsumedChildren.has(e)) continue;
+        const key = looseKeyOf(e);
+        if (!key) continue;
+        const gk = `${e.username}|${key}`;
+        if (!looseGroups.has(gk)) looseGroups.set(gk, []);
+        looseGroups.get(gk).push(e);
+      }
+      const looseBatchHeads = new Set();
+      for (const group of looseGroups.values()) {
+        if (group.length < 2) continue;
+        const [head, ...rest] = group;
+        batchChildrenByContainer.set(head, rest);
+        rest.forEach(c => batchConsumedChildren.add(c));
+        looseBatchHeads.add(head);
+      }
+
       const rendered = new Set();
       let out = '';
       for (const e of items) {
@@ -610,7 +640,8 @@ async function _loadFeedImpl() {
             const rest    = children.slice(2).map(_makeEntryHtml).join('');
             out += `<div class="feed-entry${isParty ? ' feed-entry--party' : ''}${extraClass ? ' ' + extraClass : ''}">${body} `;
             out += `<button class="feed-group-toggle feed-group-toggle--inline" data-target="${id}" data-group-key="${escapeHtml(thisDayIndex + ':batch:' + (e.seriesId ?? e.bookId))}" aria-expanded="false">`;
-            out += `<span class="feed-group-chevron">▶</span><span class="feed-group-count">${t('feed.books_in_batch', { n: children.length })}</span>`;
+            const countKey = looseBatchHeads.has(e) ? 'feed.more_books_in_batch' : 'feed.books_in_batch';
+            out += `<span class="feed-group-chevron">▶</span><span class="feed-group-count">${t(countKey, { n: children.length })}</span>`;
             out += `</button></div>`;
             out += `<div class="feed-group-body" id="${id}" hidden>${preview}${rest}</div>`;
           } else {
