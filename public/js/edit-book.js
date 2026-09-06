@@ -4,6 +4,7 @@ import { state, getToken, isDemoMode, apiFetch, clearToken, clearUsername, isTer
 import { t } from './i18n.js';
 import { naturalCompare, naturalCompareByName, foldForSearch, matchesSearch } from './sort.js';
 import { getCachedBooks, getCachedAllSeries, getCachedStashes, _starLabelHtml, _refreshBooksListOnly, _refreshLibraryUi } from './books.js';
+import { pauseCoversAutoRefresh, resumeCoversAutoRefresh } from './covers.js';
 import { refreshCoinsDisplay } from './shop.js';
 import { showAlert, showConfirm } from './play.js';
 import { escapeHtml, compressImage, setPreviewImgBlob } from './util.js';
@@ -834,6 +835,13 @@ export function openEditBookModal({ bookId, initialName, initialSections, initia
       if (asin === null) { idHint.textContent = t('err.asin_invalid'); idHint.style.color = '#f87171'; return; }
     }
 
+    // A cover upload and a PDF upload in the same save are two separate
+    // server mutations, each broadcasting its own covers_changed SSE event -
+    // pause the panel's auto-refresh here so it doesn't visibly reload once
+    // per step, then resume once both are settled (see matching comment in
+    // add-book.js's Add Book handler).
+    pauseCoversAutoRefresh();
+
     if (_pendingCoverBlob && _editBookId) {
       try {
         const coverRes  = await apiFetch(`/api/books/${_editBookId}/cover`, {
@@ -845,6 +853,7 @@ export function openEditBookModal({ bookId, initialName, initialSections, initia
         if (coverData.coverUrl) _hooks.setCurrentBookCover?.(coverData.coverUrl);
         _hooks.scheduleRewardProfileRefresh?.();
       } catch (_) {
+        resumeCoversAutoRefresh();
         errEl.textContent = t('editbook.cover_upload_failed');
         return;
       }
@@ -860,6 +869,7 @@ export function openEditBookModal({ bookId, initialName, initialSections, initia
         // periodic poll) happened to fire next, which felt inconsistent/silent.
         _hooks.scheduleRewardProfileRefresh?.();
       } catch (e) {
+        resumeCoversAutoRefresh();
         errEl.textContent = e?.message || t('editbook.pdf_upload_failed');
         _setButtonsDisabled(['edit-book-save', 'edit-book-cancel'], false);
         return;
@@ -867,6 +877,8 @@ export function openEditBookModal({ bookId, initialName, initialSections, initia
         _setButtonsDisabled(['edit-book-save', 'edit-book-cancel'], false);
       }
     }
+
+    resumeCoversAutoRefresh();
 
     const pages       = parseInt(document.getElementById('edit-book-pages-input').value, 10) || null;
     const authors     = document.getElementById('edit-book-authors-input').value.trim() || null;
