@@ -23,6 +23,19 @@ let _allSeriesCovers     = [];
 let _coversDataFingerprint = '';
 let _loadCoversInFlight  = false;
 let _loadCoversPending   = null;
+let _coversAutoRefreshPaused = false;
+
+// A book/anthology creation flow that also attaches a PDF makes two separate
+// server mutations (create, then upload), each broadcasting its own
+// covers_changed SSE event with genuinely different data (no-PDF, then
+// has-PDF) - the fingerprint dedup in loadCovers() only catches *identical*
+// back-to-back calls, so these two real-but-transient states still render
+// twice before the caller's own final _refreshLibraryUi call. Callers doing
+// a known multi-step mutation should pause here and resume immediately
+// before their own final refresh, so only that last, fully-settled state
+// renders.
+export function pauseCoversAutoRefresh() { _coversAutoRefreshPaused = true; }
+export function resumeCoversAutoRefresh() { _coversAutoRefreshPaused = false; }
 let _landingBgPosY       = 50;
 let _landingBgDragging   = false;
 let _landingBgDragDirty  = false;
@@ -874,6 +887,7 @@ function _coversFingerprint(covers, books, series) {
 }
 
 export async function loadCovers({ force = true } = {}) {
+  if (_coversAutoRefreshPaused) return;
   if (_loadCoversInFlight) {
     _loadCoversPending = { force: force || (_loadCoversPending?.force ?? false) };
     return;
