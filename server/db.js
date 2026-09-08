@@ -317,6 +317,11 @@ try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 213').run(); } 
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 214').run(); } catch (_) {}
 // Same one-off flag for book 215 (Demons of the Deep).
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 215').run(); } catch (_) {}
+// Same one-off flag for book 232 (Armies of Death). Books 222-231 also have
+// has_battle_sim = 1 set (via one-off UPDATE outside this migration list,
+// same gap pre-existing for those) but are not backfilled here - out of
+// scope for this book's own import.
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 232').run(); } catch (_) {}
 
 // One-time migration: book 829's sim was the first one built, before the
 // pt.simNNN naming convention existed, so its state lived under pt.battleSim
