@@ -286,9 +286,11 @@ gamebooks/
                            renderReader(), scoped per book session rather than persisting globally.
                            Section cache and prefetch: mirrors liveread.js's own _sectionCache/
                            _prefetchChoices pattern (see that entry below for the full reasoning) -
-                           a plain in-memory Map keyed by section id (bare id, not bookId:sec, since
-                           renderReader() already clears the whole cache on every fresh book open
-                           instead of scoping the key itself). _showSection()/_previewSection() both
+                           a plain in-memory Map keyed by section id (bare id, not liveread.js's
+                           bookId:sec - renderReader() eagerly clears the whole cache on every fresh
+                           book open, whereas desktop's equivalent clear is lazy, on the new book's
+                           first fetch, so desktop's key still needs the book prefix to never serve
+                           a stale cross-book hit in between). _showSection()/_previewSection() both
                            check it before fetching, and _showSection() fires an unawaited
                            _prefetchChoices() after every successful render for whatever the section
                            links to next - so the loading spinner only shows on a genuine cache miss
@@ -1823,7 +1825,7 @@ A self-contained module that renders a book's actual prose section-by-section in
 
 **Loading state:** `_showSection()`/`_showExtra()` both replace `#liveread-body` with a `.liveread-loading` indicator (the same `.feed-loading-graph`/`.flg-*` animated graph icon as the activity feed, both defined in `demo.css`) before fetching, then overwrite it with the real HTML once the response resolves - mobile's reader uses its own `mlg-*`-prefixed copy of the same markup/animation (`public/mobile/css/style.css`), since mobile never loads `demo.css`. Not gated behind `reduce-motion`, since it's a functional loading indicator rather than a decorative animation. The indicator only shows for the first section fetched after the panel opens (`_isFirstShowSinceOpen`, reset in `_open()`/`_close()`) - normal page-to-page reading swaps text with no flash, and a cache hit (see below) skips it even on that first show.
 
-**Section cache and prefetch:** `_sectionCache` (a plain in-memory `Map`, keyed `bookId:sec`, never persisted) holds every section response fetched this session. `_fetchSectionData()` checks it before hitting the network, and every successful `_showSection()` fires an unawaited `_prefetchChoices()` for the section's own `choices` array (skipping terminals and already-cached targets) - a reader who clicks a link they were just looking at gets it from cache instantly. The cache doesn't shrink on book switch; stale entries for a previous book just sit unused.
+**Section cache and prefetch:** `_sectionCache` (a plain in-memory `Map`, keyed `bookId:sec`, never persisted) holds every section response fetched this session. `_fetchSectionData()` checks it before hitting the network, and every successful `_showSection()` fires an unawaited `_prefetchChoices()` for the section's own `choices` array (skipping terminals and already-cached targets) - a reader who clicks a link they were just looking at gets it from cache instantly. The cache doesn't shrink *within* a book - but it is dropped wholesale on book switch: `_fetchSectionData()` clears it whenever `currentBookId` no longer matches the book that populated it (`_cacheBookId`), bounding it to one book's sections instead of letting a long session across many books/open-world junctions accumulate every visited-and-prefetched section for the tab's whole life. The clear is lazy (the new book's first fetch, not a book-open hook), which is exactly why the `bookId:` key prefix has to stay - between the switch and that first fetch, a bare-`sec` key could still hit the previous book's entry.
 
 **Hovering an in-text choice link** highlights the matching node on the graph (`network.selectNodes([id])`/`selectNodes([])` on mouseenter/mouseleave), wired fresh after every `_showSection()` re-render since the body's `innerHTML` is fully replaced each time - same pattern as the run-trail's pills and the choice-list buttons in `play.js`.
 

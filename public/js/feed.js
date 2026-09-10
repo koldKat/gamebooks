@@ -125,7 +125,15 @@ function _feedHoverThumbWidth() {
 // A day-card is a single fixed box (unlike an anthology stack of separately
 // positioned cards), so this only needs the image's true rendered height to
 // tile it at natural size - no cross-card offset math like books.js needs.
+// Day-card cover meta (natural dimensions for tiling), cached per URL - a
+// feed refresh re-asks for the same handful of covers constantly, so this
+// turns N card re-layouts into one image load. Entries are tiny (a resolved
+// {width, height}) but the key set is every distinct cover URL ever shown in
+// a day card, which on a long-lived tab grows without bound as new books
+// appear site-wide - cap it FIFO (same eviction shape as covers.js's blob
+// cache) so 24h+ sessions don't accumulate it forever.
 const _dayCoverMetaCache = new Map();
+const _DAY_COVER_META_MAX = 200;
 function _loadDayCoverMeta(url) {
   if (_dayCoverMetaCache.has(url)) return _dayCoverMetaCache.get(url);
   const pending = new Promise(resolve => {
@@ -135,6 +143,9 @@ function _loadDayCoverMeta(url) {
     img.src = url;
   });
   _dayCoverMetaCache.set(url, pending);
+  while (_dayCoverMetaCache.size > _DAY_COVER_META_MAX) {
+    _dayCoverMetaCache.delete(_dayCoverMetaCache.keys().next().value);
+  }
   return pending;
 }
 

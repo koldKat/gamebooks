@@ -54,11 +54,13 @@ let _isFirstShowSinceOpen = true;
 // In-memory only, never persisted - every response is cached by `bookId:sec`
 // key, and every section shown fires an unawaited prefetch of its own
 // choices' targets so a reader who clicks a link they were just looking at
-// gets it instantly, no spinner, no round trip. Doesn't shrink between book
-// switches (stale entries for a previous book just sit unused), which is
-// fine at this scale - a session visits at most a few dozen sections, each
-// a few KB of HTML.
+// gets it instantly, no spinner, no round trip. Dropped wholesale on book
+// switch (see _fetchSectionData): entries for a previous book would only sit
+// unused, and a long session across many books/open-world jumps otherwise
+// accumulated every visited-and-prefetched section for the tab's whole life.
+// Bounded to one book's sections - at most a few hundred KB of HTML.
 const _sectionCache = new Map();
+let _cacheBookId = null;
 
 function _cacheKey(sec) { return `${currentBookId}:${sec}`; }
 
@@ -67,6 +69,10 @@ function _cacheKey(sec) { return `${currentBookId}:${sec}`; }
 // stays silent, matches the original behavior) from a clean !res.ok
 // response (caller shows a message).
 async function _fetchSectionData(sec) {
+  if (currentBookId !== _cacheBookId) {
+    _sectionCache.clear();
+    _cacheBookId = currentBookId;
+  }
   const key = _cacheKey(sec);
   if (_sectionCache.has(key)) return { ok: true, data: _sectionCache.get(key) };
   let res;
