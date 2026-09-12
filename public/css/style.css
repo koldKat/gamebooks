@@ -340,6 +340,10 @@ body.sidebar-collapsed #play-btns-bar   { left: 50vw; }
 }
 .book-item--container {
   cursor: pointer;
+  /* Same as .series-header-row/.stash-header-row: the whole card is a
+     toggle, so a mousedown here starts a selection gesture that the
+     expand-click's synchronous DOM mutation would flash. */
+  user-select: none;
 }
 .book-item--container .book-secondary-actions {
   cursor: default;

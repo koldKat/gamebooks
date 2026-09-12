@@ -62,6 +62,59 @@ export function setExpandedPrefs(bookExp, seriesExp, stashExp) {
 // ── Ghost-click guard ─────────────────────────────────────────────────────────
 export function _justRevealedBooks() { return Date.now() - _booksRevealedAt < 350; }
 
+// ── Lazy collapsed groups ─────────────────────────────────────────────────────
+// Collapsed stash/series/anthology bodies are NOT rendered into the DOM at
+// list-build time - a big library (1000+ books, mostly hidden inside collapsed
+// groups) would otherwise put tens of thousands of never-seen nodes on the
+// page. renderBooksList() registers a builder per hidden group and emits an
+// empty placeholder <div data-lazy-group>; the first expand (or a search,
+// which matches against DOM text/data-attrs and so needs everything present)
+// materializes it via _materializeLazyGroup(). Groups default to expanded, so
+// this only costs anything for content the user has explicitly collapsed.
+const _lazyGroupBuilders = new Map();
+let   _wireLazyContent   = null; // current render's wiring fn, set by renderBooksList
+// Builder keys carry a per-render sequence number because the same container
+// can legitimately appear in more than one stash block - data-parent is NOT
+// unique across the list, so it can't serve as the builder key.
+let   _lazyGroupSeq      = 0;
+
+function _materializeLazyGroup(group) {
+  const key = group?.dataset?.lazyGroup;
+  if (!key) return;
+  const build = _lazyGroupBuilders.get(key);
+  // Call the builder - it returns an array of item HTML strings (not one
+  // joined blob) so a big group can be parsed, inserted, and wired
+  // incrementally - one giant innerHTML parse plus one giant wiring pass
+  // blocks the main thread long enough to swallow the next scroll gesture.
+  const built = build ? build() : [];
+  const items = (Array.isArray(built) ? built : [built]).filter(Boolean);
+  delete group.dataset.lazyGroup;
+  _lazyGroupBuilders.delete(key);
+  const CHUNK = 100;
+  if (items.length <= CHUNK || !_wireLazyContent) {
+    group.innerHTML = items.join('');
+    _wireLazyContent?.(group);
+    _queueBookCovers(group, { reset: false });
+    _scheduleAnthologyCardCoverFlows();
+    return;
+  }
+  let i = 0;
+  const step = () => {
+    group.insertAdjacentHTML('beforeend', items.slice(i, i + CHUNK).join(''));
+    i = Math.min(i + CHUNK, items.length);
+    // Wire only the elements inserted this chunk (an item string can expand
+    // to more than one top-level element - a series header + its group - so
+    // count elements, don't index by item).
+    const kids = group.children;
+    for (let k = _wiredCount; k < kids.length; k++) _wireLazyContent(kids[k]);
+    _wiredCount = kids.length;
+    if (i < items.length) requestAnimationFrame(step);
+    else { _queueBookCovers(group, { reset: false }); _scheduleAnthologyCardCoverFlows(); }
+  };
+  let _wiredCount = 0;
+  requestAnimationFrame(step);
+}
+
 // ── Expand prefs ──────────────────────────────────────────────────────────────
 function _getExpandMap(kind) {
   if (kind === 'book')   return _bookExpandedPrefs;
@@ -214,17 +267,31 @@ export function _flashRatingGate(widget, msg) {
 }
 
 // ── Cover meta / lazy loading ─────────────────────────────────────────────────
+// Dimension probes are capped like the cover loader below: an expand/collapse
+// in a big library can make the flow pass probe hundreds of anthology covers
+// at once, and uncapped simultaneous Image decodes are a big part of the
+// post-toggle scroll jank. Cache-first, so repeats are free.
+const _META_MAX_CONCURRENT = 6;
+let   _metaActiveCount     = 0;
+const _metaPendingQueue    = [];
 function _loadCoverMeta(url) {
   if (!url) return Promise.resolve(null);
   if (_coverMetaCache.has(url)) return _coverMetaCache.get(url);
-  const pending = new Promise(resolve => {
-    const img = new Image();
-    img.onload  = () => resolve({ width: img.naturalWidth || 0, height: img.naturalHeight || 0 });
-    img.onerror = () => resolve(null);
-    img.src = url;
-  });
+  const pending = new Promise(resolve => { _metaPendingQueue.push({ url, resolve }); });
   _coverMetaCache.set(url, pending);
+  _drainMetaQueue();
   return pending;
+}
+function _drainMetaQueue() {
+  while (_metaActiveCount < _META_MAX_CONCURRENT && _metaPendingQueue.length) {
+    const { url, resolve } = _metaPendingQueue.shift();
+    _metaActiveCount++;
+    const img = new Image();
+    const done = meta => { _metaActiveCount--; resolve(meta); _drainMetaQueue(); };
+    img.onload  = () => done({ width: img.naturalWidth || 0, height: img.naturalHeight || 0 });
+    img.onerror = () => done(null);
+    img.src = url;
+  }
 }
 
 async function _applyAnthologyCardCoverFlows(root = document.getElementById('books-list')) {
@@ -235,15 +302,25 @@ async function _applyAnthologyCardCoverFlows(root = document.getElementById('boo
     card.style.removeProperty('--bk-cover-repeat');
   });
 
-  const containerRows = root.querySelectorAll('.book-item--container[data-container-id][data-anthology-cover-url]');
-  for (const row of containerRows) {
-    const group = root.querySelector(`.book-children-group[data-parent="${row.dataset.containerId}"]`);
+  const containerRows = [...root.querySelectorAll('.book-item--container[data-container-id][data-anthology-cover-url]')];
+  // Fetch every cover's dimensions in parallel, then do ALL offsetTop/Height
+  // reads before ANY style writes. The previous loop awaited each cover and
+  // wrote styles per anthology, so every anthology after the first forced
+  // its own synchronous relayout of the whole list - with dozens of expanded
+  // anthologies that froze scrolling for a beat after each expand/collapse.
+  const metas = await Promise.all(containerRows.map(row => _loadCoverMeta(row.dataset.anthologyCoverUrl)));
+  const writes = [];
+  for (let i = 0; i < containerRows.length; i++) {
+    const row  = containerRows[i];
+    const meta = metas[i];
+    // The children group is always this card's own next sibling (same
+    // adjacency invariant the expand-toggle relies on) - a container can
+    // appear in more than one stash, so a data-parent query could grab the
+    // other copy's group.
+    const group = row.nextElementSibling?.classList.contains('book-children-group') ? row.nextElementSibling : null;
     if (!group || group.style.display === 'none') continue;
     const childCards = Array.from(group.querySelectorAll('.book-item--child[data-anthology-cover-url]'));
-    if (!childCards.length) continue;
-    const coverUrl = row.dataset.anthologyCoverUrl;
-    const meta = await _loadCoverMeta(coverUrl);
-    if (!meta?.width || !meta?.height) continue;
+    if (!childCards.length || !meta?.width || !meta?.height) continue;
 
     const cards    = [row, ...childCards];
     const stackTop = row.offsetTop;
@@ -256,10 +333,13 @@ async function _applyAnthologyCardCoverFlows(root = document.getElementById('boo
 
     for (const card of cards) {
       const cardTop = card.offsetTop - stackTop;
-      card.style.setProperty('--book-card-cover-size',     `100% ${imgH}px`);
-      card.style.setProperty('--book-card-cover-position', `center ${topOffset - cardTop}px`);
-      card.style.setProperty('--bk-cover-repeat',          'repeat-y');
+      writes.push([card, `100% ${imgH}px`, `center ${topOffset - cardTop}px`]);
     }
+  }
+  for (const [card, size, pos] of writes) {
+    card.style.setProperty('--book-card-cover-size',     size);
+    card.style.setProperty('--book-card-cover-position', pos);
+    card.style.setProperty('--bk-cover-repeat',          'repeat-y');
   }
 }
 
@@ -504,6 +584,14 @@ export function _applyBooksSearchFilter() {
     _scheduleAnthologyCardCoverFlows(list);
     return;
   }
+
+  // Search matches against DOM text/data-* attributes, so collapsed lazy
+  // groups must exist in the DOM before filtering - materialize them all.
+  // Materializing a group can register NEW lazy builders for groups nested
+  // inside it (a collapsed series within a collapsed stash), so loop until
+  // none remain rather than walking a static snapshot.
+  let lazyGroup;
+  while ((lazyGroup = list.querySelector('[data-lazy-group]'))) _materializeLazyGroup(lazyGroup);
 
   list.querySelector('.books-search-empty')?.remove();
   let anyVisible = false;
@@ -774,6 +862,10 @@ function _scheduleBooksListRefresh(delay = 350) {
 // ── Main render ───────────────────────────────────────────────────────────────
 export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
   if (!Array.isArray(allOwnedBooks)) return;
+  // Any builders from a previous render belong to DOM that's about to be
+  // replaced - reset along with everything else.
+  _lazyGroupBuilders.clear();
+  _lazyGroupSeq = 0;
   const openWorldSeriesIds = new Set((allSeries || []).filter(s => s.is_open_world).map(s => s.id));
   for (const b of allOwnedBooks) b.isOpenWorld = b.series_id != null && openWorldSeriesIds.has(b.series_id);
   // _cachedBooks/getCachedBooks() is the app-wide "what does this user own"
@@ -922,9 +1014,16 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
     const aggrS = myChildren.reduce((s, c) => s + ((c.discoverable_sections ?? c.total_sections) || 0), 0);
     const out = [_bookItemHtml(b, false, expanded, myChildren.length, { visited: aggrV, totalSections: aggrS }, isAdmin)];
     if (myChildren.length) {
-      out.push(`<div class="book-children-group" data-parent="${b.id}" style="${expanded ? '' : 'display:none'}">`);
-      for (const child of myChildren) out.push(_bookItemHtml(child, true, false, 0, null, isAdmin, b.id));
-      out.push('</div>');
+      if (expanded) {
+        out.push(`<div class="book-children-group" data-parent="${b.id}">`);
+        for (const child of myChildren) out.push(_bookItemHtml(child, true, false, 0, null, isAdmin, b.id));
+        out.push('</div>');
+      } else {
+        const childKey = `children:${b.id}:${_lazyGroupSeq++}`;
+        _lazyGroupBuilders.set(childKey, () =>
+          myChildren.map(child => _bookItemHtml(child, true, false, 0, null, isAdmin, b.id)));
+        out.push(`<div class="book-children-group" data-parent="${b.id}" data-lazy-group="${childKey}" style="display:none"></div>`);
+      }
     }
     return out.join('');
   }
@@ -972,6 +1071,7 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
   }
 
   function _renderSeriesSection(s, stashId = null) {
+    const out = [];
     const stash = stashId == null ? null : _cachedStashes.find(x => x.id === stashId);
     const excludedBookIds = new Set(stash?.excludedBookIds || []);
     const stashDirectSeriesBookIds = new Set(
@@ -1006,7 +1106,7 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
     // A series with nothing actually renderable has nowhere useful for the
     // "browse series" hint below to send you, so skip the whole section
     // (header included) rather than showing an empty shell.
-    if (!_hasRenderableTop(topInSeries, activeChildrenMap)) return;
+    if (!_hasRenderableTop(topInSeries, activeChildrenMap)) return '';
     const keyPrefix     = stashId ? `stash_${stashId}_sr_` : 'sr_';
     const expanded      = _getExpandedPref('series', `${stashId ?? 'main'}:${s.id}`, `${keyPrefix}expanded_${s.id}`);
     const { visited: aggrV, totalSections: aggrS } = _aggregateProgress(booksInSeries, activeChildrenMap);
@@ -1015,7 +1115,7 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
     const barColor  = fullyDone ? 'rgba(34,197,94,0.6)' : 'rgba(245,166,35,0.5)';
     const countLabel  = activeBooks.length === 1 ? '1 book' : `${activeBooks.length} books`;
     const sectLabel   = aggrS > 0 ? ` · ${aggrS} sections` : '';
-    parts.push(
+    out.push(
       `<div class="series-header-row" data-series-id="${s.id}" data-expanded="${expanded ? '1' : '0'}" data-stash-id="${stashId ?? ''}" data-open-world="${s.is_open_world ? '1' : '0'}">` +
         `<span class="series-header-chevron">▶</span>` +
         `<span class="series-header-name" data-tooltip="${escapeHtml(s.name)}">${escapeHtml(s.name)}${s.is_open_world ? ` <span class="series-open-world-badge" data-tooltip="${escapeHtml(t('covers.open_world_series'))}"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span>` : ''}</span>` +
@@ -1030,13 +1130,27 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
         `<div class="series-header-bar" style="width:${pct}%;background:${barColor}"></div>` +
       `</div>`
     );
-    parts.push(`<div class="series-books-group" data-series-id="${s.id}" data-stash-id="${stashId ?? ''}" style="${expanded ? '' : 'display:none'}">`);
-    if (booksInSeries.length) {
-      for (const b of topInSeries) parts.push(b.is_container ? _renderContainerItem(b, activeChildrenMap) : _bookItemHtml(b, false, false, 0, null, isAdmin));
+    const _seriesBodyHtml = () => {
+      const inner = [];
+      if (booksInSeries.length) {
+        for (const b of topInSeries) inner.push(b.is_container ? _renderContainerItem(b, activeChildrenMap) : _bookItemHtml(b, false, false, 0, null, isAdmin));
+      } else {
+        inner.push(`<div class="series-empty-hint">${t('books.series_empty_hint')} <button class="series-browse-btn" data-series-id="${s.id}" data-series-name="${escapeHtml(s.name)}">${t('books.browse_series')}</button></div>`);
+      }
+      // Array of separate item HTML strings (not one joined blob) so lazy
+      // materialization can insert/wire in chunks - see _materializeLazyGroup.
+      return inner;
+    };
+    if (expanded) {
+      out.push(`<div class="series-books-group" data-series-id="${s.id}" data-stash-id="${stashId ?? ''}">`);
+      out.push(_seriesBodyHtml().join(''));
+      out.push('</div>');
     } else {
-      parts.push(`<div class="series-empty-hint">${t('books.series_empty_hint')} <button class="series-browse-btn" data-series-id="${s.id}" data-series-name="${escapeHtml(s.name)}">${t('books.browse_series')}</button></div>`);
+      const seriesKey = `series:${stashId ?? ''}:${s.id}`;
+      _lazyGroupBuilders.set(seriesKey, _seriesBodyHtml);
+      out.push(`<div class="series-books-group" data-series-id="${s.id}" data-stash-id="${stashId ?? ''}" data-lazy-group="${seriesKey}" style="display:none"></div>`);
     }
-    parts.push('</div>');
+    return out.join('');
   }
 
   // ── Stash sections ──────────────────────────────────────────────────────────
@@ -1112,26 +1226,28 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
         `<div class="stash-header-bar" style="width:${stashPct}%;background:${stashBarColor}"></div>` +
       `</div>`
     );
-    parts.push(`<div class="stash-items-group" data-stash-id="${stash.id}" style="${stashExpanded ? '' : 'display:none'}">`);
-    for (const s of stashSeries) _renderSeriesSection(s, stash.id);
-    for (const b of stashContainers) {
-      const myChildren = stashChildrenMap[b.id] || [];
-      const expanded   = _getExpandedPref('book', String(b.id), `bk_expanded_${b.id}`);
-      const aggrV = myChildren.reduce((sum, c) => sum + (c.visited || 0), 0);
-      const aggrS = myChildren.reduce((sum, c) => sum + ((c.discoverable_sections ?? c.total_sections) || 0), 0);
-      parts.push(_bookItemHtml(b, false, expanded, myChildren.length, { visited: aggrV, totalSections: aggrS }, isAdmin));
-      if (myChildren.length) {
-        parts.push(`<div class="book-children-group" data-parent="${b.id}" style="${expanded ? '' : 'display:none'}">`);
-        for (const child of myChildren) parts.push(_bookItemHtml(child, true, false, 0, null, isAdmin, b.id));
-        parts.push('</div>');
-      }
+    const _stashBodyHtml = () => {
+      const inner = [];
+      for (const s of stashSeries) { const h = _renderSeriesSection(s, stash.id); if (h) inner.push(h); }
+      for (const b of stashContainers) inner.push(_renderContainerItem(b, stashChildrenMap));
+      for (const b of stashStandalone) inner.push(_bookItemHtml(b, false, false, 0, null, isAdmin));
+      // Array of item strings, not one blob - see _materializeLazyGroup.
+      return inner;
+    };
+    if (stashExpanded) {
+      parts.push(`<div class="stash-items-group" data-stash-id="${stash.id}">`);
+      parts.push(_stashBodyHtml().join(''));
+      parts.push('</div>');
+    } else {
+      const stashKey = `stash:${stash.id}`;
+      _lazyGroupBuilders.set(stashKey, _stashBodyHtml);
+      parts.push(`<div class="stash-items-group" data-stash-id="${stash.id}" data-lazy-group="${stashKey}" style="display:none"></div>`);
     }
-    for (const b of stashStandalone) parts.push(_bookItemHtml(b, false, false, 0, null, isAdmin));
-    parts.push('</div></div>');
+    parts.push('</div>');
   }
 
   // ── Series sections ─────────────────────────────────────────────────────────
-  for (const s of visibleSeries) _renderSeriesSection(s);
+  for (const s of visibleSeries) parts.push(_renderSeriesSection(s));
 
   // ── No-series: containers then standalone ───────────────────────────────────
   for (const b of _sortBooks(noSeries.filter(b =>  b.is_container))) parts.push(_renderContainerItem(b));
@@ -1140,6 +1256,21 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
   list.innerHTML = parts.join('');
 
   // ── Event wiring ────────────────────────────────────────────────────────────
+  // Nested function (not a second copy) so lazily-materialized groups can be
+  // wired with the same handlers after insertion - _materializeLazyGroup()
+  // calls this with the fresh subtree. The parameter shadows the outer
+  // `list`, so the whole block below addresses whatever subtree it's given.
+  function _wireRenderedContent(list) {
+  // Hover highlight via a class in addition to :hover (add-book.css matches
+  // both). Expand/collapse mutates the tree under the cursor, and Chromium
+  // drops :hover for a frame around the mutation - with the 0.1s background
+  // transition that reads as a black-to-grey flash. The JS-toggled class
+  // survives DOM mutations, so the highlight stays put while children load.
+  list.querySelectorAll('.series-header-row, .stash-header-row').forEach(row => {
+    row.addEventListener('mouseenter', () => row.classList.add('is-hover'));
+    row.addEventListener('mouseleave', () => row.classList.remove('is-hover'));
+  });
+
   list.querySelectorAll('.series-edit-btn:not([disabled])').forEach(btn => {
     btn.addEventListener('click', e => {
       e.stopPropagation();
@@ -1183,9 +1314,11 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
       if (_justRevealedBooks()) return;
       if (e.target.closest('.stash-del-btn') || e.target.closest('.stash-edit-btn')) return;
       const sid      = row.dataset.stashId;
-      const group    = list.querySelector(`.stash-items-group[data-stash-id="${sid}"]`);
+      // Always this header's own next sibling (see the container toggle).
+      const group    = row.nextElementSibling?.classList.contains('stash-items-group') ? row.nextElementSibling : null;
       const nowExpanded = row.dataset.expanded !== '1';
       row.dataset.expanded = nowExpanded ? '1' : '0';
+      if (nowExpanded && group) _materializeLazyGroup(group);
       if (group) group.style.display = nowExpanded ? '' : 'none';
       _saveExpandedPref('stash', String(sid), `stash_expanded_${sid}`, nowExpanded);
       if (nowExpanded && group) _queueBookCovers(group, { reset: false });
@@ -1199,9 +1332,13 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
       if (e.target.closest('.series-edit-btn') || e.target.closest('.series-del-btn')) return;
       const sid     = row.dataset.seriesId;
       const stashId = row.dataset.stashId || '';
-      const group   = list.querySelector(`.series-books-group[data-series-id="${sid}"][data-stash-id="${stashId}"]`);
+      // Always this header's own next sibling (see the container toggle) -
+      // chunk-wired subtrees scope queries to a single child, and a list-wide
+      // query could also grab another copy of the same series.
+      const group   = row.nextElementSibling?.classList.contains('series-books-group') ? row.nextElementSibling : null;
       const nowExpanded = row.dataset.expanded !== '1';
       row.dataset.expanded = nowExpanded ? '1' : '0';
+      if (nowExpanded && group) _materializeLazyGroup(group);
       if (group) group.style.display = nowExpanded ? '' : 'none';
       _saveExpandedPref('series', `${stashId || 'main'}:${sid}`, `${stashId ? `stash_${stashId}_sr_` : 'sr_'}expanded_${sid}`, nowExpanded);
       if (nowExpanded && group) _queueBookCovers(group, { reset: false });
@@ -1215,9 +1352,13 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
       if (e.target.closest('.book-secondary-actions')) return;
       if (e.target.closest('.star-rating')) return;
       const bid = row.dataset.containerId;
-      const group = list.querySelector(`.book-children-group[data-parent="${bid}"]`);
+      // The children group is always this card's own next sibling - a
+      // container can appear in more than one stash block, so a
+      // list-wide data-parent query would grab the first copy's group.
+      const group = row.nextElementSibling?.classList.contains('book-children-group') ? row.nextElementSibling : null;
       const nowExpanded = row.dataset.expanded !== '1';
       row.dataset.expanded = nowExpanded ? '1' : '0';
+      if (nowExpanded && group) _materializeLazyGroup(group);
       if (group) group.style.display = nowExpanded ? '' : 'none';
       _saveExpandedPref('book', String(bid), `bk_expanded_${bid}`, nowExpanded);
       if (nowExpanded && group) _queueBookCovers(group, { reset: false });
@@ -1464,6 +1605,11 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
       row.addEventListener('mouseleave', () => updateStars(null));
     });
   }
+
+  } // end _wireRenderedContent
+
+  _wireRenderedContent(list);
+  _wireLazyContent = _wireRenderedContent;
 
   _applyBooksSearchFilter();
   _scheduleAnthologyCardCoverFlows(list);

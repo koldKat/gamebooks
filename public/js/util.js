@@ -155,34 +155,3 @@ export function addAttachmentItem(container, name) {
   container.appendChild(item);
   return item;
 }
-
-// ── Long-session memory diagnostics (manual, opt-in) ─────────────────────────
-// For chasing the "tab open ~24h climbs ~100MB then Aw-Snap" report: this
-// distinguishes a JS-heap/DOM leak (our bug, fixable in this code) from
-// browser image-cache growth (Chromium's purgeable decoded-image cache
-// holding covers from the always-on landing rotation - not directly visible
-// to JS). If jsHeapMB and domNodes stay flat while Brave's tab memory still
-// climbs, the growth is image/GPU cache, not a JS leak.
-//   _memProbe()         - one console line, snapshot right now
-//   _memProbeLog(ms)    - log every ms (default 30min); returns a stop fn
-// performance.memory is Chromium-only (Brave included), null elsewhere.
-window._memProbe = function (label = '') {
-  const m = performance.memory;
-  const row = {
-    label,
-    at: new Date().toISOString().slice(11, 19),
-    jsHeapMB: m ? +(m.usedJSHeapSize / 1048576).toFixed(1) : null,
-    jsHeapLimitMB: m ? +(m.jsHeapSizeLimit / 1048576).toFixed(1) : null,
-    domNodes: document.querySelectorAll('*').length,
-    dayCards: document.querySelectorAll('.feed-day-card').length,
-    feedEntries: document.querySelectorAll('.feed-entry').length,
-    coverThumbs: document.querySelectorAll('.cover-thumb').length,
-  };
-  console.log('[memprobe]', JSON.stringify(row));
-  return row;
-};
-window._memProbeLog = function (ms = 30 * 60 * 1000) {
-  window._memProbe('start');
-  const t = setInterval(() => window._memProbe('tick'), ms);
-  return () => { clearInterval(t); window._memProbe('stop'); };
-};

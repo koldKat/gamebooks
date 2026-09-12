@@ -13,7 +13,12 @@
   user-select: none;
   transition: background 0.1s;
 }
-.series-header-row:hover { background: #111827; }
+/* :hover stays as the fallback, but books.js also toggles .is-hover on
+   mouseenter/leave: expand/collapse mutates the tree under the cursor, and
+   Chromium drops :hover for a frame around the mutation - with the 0.1s
+   background transition that reads as a black-to-grey flash. The class
+   survives DOM mutations. */
+.series-header-row:hover, .series-header-row.is-hover { background: #111827; }
 .series-header-chevron {
   font-size: 0.6rem;
   color: #f5a623;
@@ -159,7 +164,8 @@
   transition: width 0.3s;
   border-radius: 0 2px 0 0;
 }
-.stash-header-row:hover { background: #13221f; }
+/* See .series-header-row's :hover/.is-hover note above. */
+.stash-header-row:hover, .stash-header-row.is-hover { background: #13221f; }
 .stash-header-chevron {
   font-size: 0.6rem;
   color: #34d399;
