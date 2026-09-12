@@ -11,6 +11,7 @@ const backup = require('./server/backup');
 const { renderForumIndex, renderForumCategory, renderForumThread } = require('./server/forum');
 const { buildFullExportZip, buildBookExportZip, safeFilename } = require('./server/export');
 const { escapeHtml, escapeJsonString } = require('./server/html-escape');
+const { parseRequestUrl } = require('./server/request-url');
 
 const {
   sseRegister, sseUnregister, ssePush,
@@ -316,7 +317,27 @@ const partyInviteDeclineRe    = /^\/api\/party-invites\/(\d+)\/decline$/;
 // resulting call chain - not just the routes that explicitly check
 // isRequestImpersonating() - can see whether the account behind this request
 // is currently impersonated.
-const handler = (req, res) => runWithImpersonationContext(req, () => _routeRequest(req, res));
+const handler = async (req, res) => {
+  if (!parseRequestUrl(req.url)) {
+    addSecurityHeaders(res);
+    res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' });
+    res.end('Bad request');
+    return;
+  }
+
+  try {
+    await runWithImpersonationContext(req, () => _routeRequest(req, res));
+  } catch (error) {
+    console.error('[request] failed outside router:', error);
+    if (res.headersSent) {
+      res.end();
+      return;
+    }
+    addSecurityHeaders(res);
+    res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' });
+    res.end('Internal server error');
+  }
+};
 
 const _routeRequest = async (req, res) => {
   const { method } = req;

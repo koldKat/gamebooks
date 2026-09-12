@@ -119,14 +119,36 @@ export function minSnapScale() { return SNAP_MIN_SCREEN_PX / GRID_SIZE; }
 // switched on (boot.js) - the latter covers the case where the graph was
 // already zoomed out past the floor before the toggle, which the zoom
 // listener alone would never catch since no further zooming may happen.
+//
+// Reverting a sub-floor zoom pins the view to the last AT-OR-ABOVE-FLOOR
+// center, not the network's live one. vis zooms each wheel tick around the
+// cursor: its zoom() recomputes the translation so the pointer's canvas point
+// stays fixed and only THEN emits 'zoom' - so by the time this handler runs,
+// the center has already crept one tick toward the pointer. Pinning that
+// crept center every tick made the view slide steadily sideways (toward the
+// cursor) on every wheel tick below the floor instead of holding still.
+// Canvas coords, refreshed on above-floor zooms and on view-drag end (pure
+// pans fire no 'zoom' event). Reset per graph in initGraph().
+let _lastAboveFloorViewPos = null;
+
 export function enforceSnapZoomFloor() {
   if (!network || !state.snapToGrid) return;
   const floor = minSnapScale();
-  // position explicit (not omitted) - no other moveTo() call exists
-  // elsewhere in this codebase to lean on for "omitting position keeps the
-  // current center" being vis-network's actual default, so pin it via
-  // getViewPosition() instead of assuming.
-  if (network.getScale() < floor) network.moveTo({ scale: floor, position: network.getViewPosition() });
+  if (network.getScale() < floor) {
+    // position explicit (not omitted) - no other moveTo() call exists
+    // elsewhere in this codebase to lean on for "omitting position keeps the
+    // current center" being vis-network's actual default, so pin it via
+    // getViewPosition() instead of assuming.
+    const pos = _lastAboveFloorViewPos ?? network.getViewPosition();
+    network.moveTo({ scale: floor, position: pos });
+    // Seed the anchor with the pinned position - a user who starts AT the
+    // floor and only ever wheels down never triggers an above-floor 'zoom'
+    // event, so without this the anchor would stay null and every tick would
+    // pin the freshly crept center (the sideways-slide bug) forever.
+    _lastAboveFloorViewPos = pos;
+  } else {
+    _lastAboveFloorViewPos = network.getViewPosition();
+  }
 }
 
 // ── Overlay draw cache ────────────────────────────────────────────────────────
@@ -956,6 +978,9 @@ export function initGraph() {
     { nodes: visNodes, edges: visEdges },
     options
   );
+  // The floor-revert anchor is canvas coords for THIS graph only - a stale
+  // position from a previous book would teleport the view.
+  _lastAboveFloorViewPos = null;
 
   if (!hasSavedLayout) {
     _stabilizeHandler = () => {
@@ -991,6 +1016,16 @@ export function initGraph() {
   network.on('zoom', () => {
     enforceSnapZoomFloor();
     saveViewport();
+  });
+
+  // Pure background pans change the view center without firing any 'zoom'
+  // event, which would leave the snap floor's revert anchor pointing at the
+  // pre-pan center - the first sub-floor wheel tick after a pan would then
+  // jump the view backwards. Refresh the anchor on drag end instead.
+  network.on('dragEnd', () => {
+    if (state.snapToGrid && network.getScale() >= minSnapScale()) {
+      _lastAboveFloorViewPos = network.getViewPosition();
+    }
   });
 
   network.on('dragStart', params => {
