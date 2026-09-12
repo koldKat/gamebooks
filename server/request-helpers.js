@@ -8,6 +8,7 @@ const path  = require('path');
 const geoip = require('geoip-lite');
 const db    = require('./db');
 const { runInImpersonationContext } = require('./impersonation-context');
+const { requestQueryParameter } = require('./request-url');
 
 function getClientIp(req) {
   const xff = req.headers['x-forwarded-for'];
@@ -205,10 +206,9 @@ function readRawBody(req, maxBytes = MAX_PNG_BODY) {
 }
 
 function tokenFromReq(req) {
-  const auth = req.headers['authorization'] || '';
+  const auth = req.headers?.authorization || '';
   if (auth.startsWith('Bearer ')) return auth.slice(7);
-  const qs = new URL(req.url, 'http://x').searchParams.get('token');
-  return qs || null;
+  return requestQueryParameter(req, 'token');
 }
 
 async function authenticate(req, res) {
