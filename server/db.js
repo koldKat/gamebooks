@@ -271,6 +271,8 @@ try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 322').run(); } 
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 234').run(); } catch (_) {}
 // Same one-off flag for book 324 (The Chasm of Doom, Lone Wolf book 4).
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 324').run(); } catch (_) {}
+// Same one-off flag for book 716 (Арена 3).
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 716').run(); } catch (_) {}
 // Same one-off flag for book 323 (The Caverns of Kalte, Lone Wolf book 3).
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 323').run(); } catch (_) {}
 // Same one-off flag for book 325 (Shadow on the Sand, Lone Wolf book 5).
