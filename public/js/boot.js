@@ -108,6 +108,8 @@ import { initSim437, setSim437Visible, renderSim437 } from './battlesim/battlesi
 import { initSim438, setSim438Visible, renderSim438 } from './battlesim/battlesim438.js';
 import { initSim439, setSim439Visible, renderSim439 } from './battlesim/battlesim439.js';
 import { initSim440, setSim440Visible, renderSim440 } from './battlesim/battlesim440.js';
+import { initSim441, setSim441Visible, renderSim441 } from './battlesim/battlesim441.js';
+import { initSim462, setSim462Visible, renderSim462 } from './battlesim/battlesim462.js';
 import { initSim228, setSim228Visible, renderSim228 } from './battlesim/battlesim228.js';
 import { initSim229, setSim229Visible, renderSim229 } from './battlesim/battlesim229.js';
 import { initSim230, setSim230Visible, renderSim230 } from './battlesim/battlesim230.js';
@@ -470,6 +472,8 @@ function showLogin() {
   setSim438Visible(false);
   setSim439Visible(false);
   setSim440Visible(false);
+  setSim441Visible(false);
+  setSim462Visible(false);
   setSim228Visible(false);
   setSim229Visible(false);
   setSim230Visible(false);
@@ -652,6 +656,8 @@ async function showBooks() {
   setSim438Visible(false);
   setSim439Visible(false);
   setSim440Visible(false);
+  setSim441Visible(false);
+  setSim462Visible(false);
   setSim228Visible(false);
   setSim229Visible(false);
   setSim230Visible(false);
@@ -1022,6 +1028,8 @@ async function showMain(bookId, isbn = null, issn = null, asin = null, cover = n
   setSim438Visible(bookId === 438);
   setSim439Visible(bookId === 439);
   setSim440Visible(bookId === 440);
+  setSim441Visible(bookId === 441);
+  setSim462Visible(bookId === 462);
   setSim228Visible(bookId === 228);
   setSim229Visible(bookId === 229);
   setSim230Visible(bookId === 230);
@@ -1280,6 +1288,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   initSim438();
   initSim439();
   initSim440();
+  initSim441();
+  initSim462();
   initSim228();
   initSim229();
   initSim230();
@@ -1376,6 +1386,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderSim438();
     renderSim439();
     renderSim440();
+    renderSim441();
+    renderSim462();
     renderSim228();
     renderSim229();
     renderSim230();
