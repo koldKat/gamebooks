@@ -523,6 +523,7 @@ export function initSim753() {
     const d = _data();
     if (!d) return;
     d.enemy.name = enemy.name;
+    _resetEncounterKnobs(d);
     if (enemy.attack != null)  d.enemy.attack = enemy.attack;
     if (enemy.defense != null) d.enemy.defense = enemy.defense;
     if (enemy.hp != null)      d.enemy.hitsNeeded = enemy.hp;
@@ -530,7 +531,6 @@ export function initSim753() {
     d.enemy.hitsLanded = 0;
     d.player.damage = 0;
     d.roundsThisBattle = 0;
-    _resetEncounterKnobs(d);
     saveState();
     _renderAll();
   });
