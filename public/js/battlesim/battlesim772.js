@@ -275,6 +275,7 @@ function _runRound(playerAction) {
   const d = _data();
   if (!d || _battleOver(d)) return;
   if (playerAction.move === 'passive' && d.playerPassiveUsed) return;
+  if (playerAction.move === 'passive') d.playerPassiveUsed = true;
   const staticEnemy = _enemy(d.enemyId);
   // Preserve any passive-penalty mutation across rounds within one fight
   // by storing a live copy on d once the fight starts (stats used for
@@ -357,7 +358,6 @@ function _runRound(playerAction) {
       } else {
         playerOutcome = 'draw'; enemyOutcome = 'draw';
       }
-      d.playerPassiveUsed = true;
     }
   } else {
     // Both defend - nobody wins.
