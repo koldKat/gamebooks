@@ -73,6 +73,9 @@ import { initSim80, setSim80Visible, renderSim80 } from './battlesim/battlesim80
 import { initSim82, setSim82Visible, renderSim82 } from './battlesim/battlesim82.js';
 import { initSim118, setSim118Visible, renderSim118 } from './battlesim/battlesim118.js';
 import { initSim218, setSim218Visible, renderSim218 } from './battlesim/battlesim218.js';
+import { initSim734, setSim734Visible, renderSim734 } from './battlesim/battlesim734.js';
+import { initSim739, setSim739Visible, renderSim739 } from './battlesim/battlesim739.js';
+import { initSim740, setSim740Visible, renderSim740 } from './battlesim/battlesim740.js';
 import { initSim219, setSim219Visible, renderSim219 } from './battlesim/battlesim219.js';
 import { initSim220, setSim220Visible, renderSim220 } from './battlesim/battlesim220.js';
 import { initSim223, setSim223Visible, renderSim223 } from './battlesim/battlesim223.js';
@@ -442,6 +445,9 @@ function showLogin() {
   setSim82Visible(false);
   setSim118Visible(false);
   setSim218Visible(false);
+  setSim734Visible(false);
+  setSim739Visible(false);
+  setSim740Visible(false);
   setSim219Visible(false);
   setSim220Visible(false);
   setSim223Visible(false);
@@ -631,6 +637,9 @@ async function showBooks() {
   setSim82Visible(false);
   setSim118Visible(false);
   setSim218Visible(false);
+  setSim734Visible(false);
+  setSim739Visible(false);
+  setSim740Visible(false);
   setSim219Visible(false);
   setSim220Visible(false);
   setSim223Visible(false);
@@ -1008,6 +1017,9 @@ async function showMain(bookId, isbn = null, issn = null, asin = null, cover = n
   setSim82Visible(bookId === 82);
   setSim118Visible(bookId === 118);
   setSim218Visible(bookId === 218);
+  setSim734Visible(bookId === 734);
+  setSim739Visible(bookId === 739);
+  setSim740Visible(bookId === 740);
   setSim219Visible(bookId === 219);
   setSim220Visible(bookId === 220);
   setSim223Visible(bookId === 223);
@@ -1273,6 +1285,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   initSim82();
   initSim118();
   initSim218();
+  initSim734();
+  initSim739();
+  initSim740();
   initSim219();
   initSim220();
   initSim223();
@@ -1376,6 +1391,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderSim82();
     renderSim118();
     renderSim218();
+    renderSim734();
+    renderSim739();
+    renderSim740();
     renderSim219();
     renderSim220();
     renderSim221();
