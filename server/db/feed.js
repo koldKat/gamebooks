@@ -945,6 +945,61 @@ function getFeed() {
   return merged;
 }
 
+// ── Feed change fingerprint ───────────────────────────────────────────────────
+// Cheap version string for GET /api/feed/version, which the client's 60s
+// leader-tab poll uses to skip the full getFeed() rebuild (a heavyweight
+// multi-join sweep whose client-side render rebuilds the entire feed DOM)
+// when nothing feed-visible happened. Each aggregate below mirrors one
+// getFeed() source; the client reloads only when the combined string moves.
+// Deliberately a WHITELIST of XP events rather than all of xp_events: the
+// excluded events fire per-minute in normal play (idle_heartbeat for every
+// idle user each minute, visit_node/discover_node per section read) and
+// would flip the fingerprint every tick, defeating the gate. Changes that
+// don't move any aggregate here (avatar upload, display-name edit, re-rating
+// an already-rated book - rate events are UNIQUE per user+ref, so re-rating
+// adds no row) still reach clients via the feed_changed SSE push; this
+// endpoint only backs the poll that covers pushes the SSE stream missed.
+function getFeedVersion() {
+  const xe = db.prepare(
+    `SELECT COUNT(*) AS n, COALESCE(MAX(created_at), 0) AS m
+     FROM xp_events
+     WHERE event IN ('rate_book','rate_series','level_up','visit_all','discover_all',
+                     'first_win','first_loss','first_battle_death',
+                     'death_run','battle_run','win_run','share_run','run_depth',
+                     'won_all_series','won_all_anthology','party_formed')`
+  ).get();
+  const us = db.prepare(
+    `SELECT COUNT(*) AS n, COALESCE(MAX(us.added_at), 0) AS m, COALESCE(MAX(s.published_at), 0) AS p
+     FROM user_series us JOIN series s ON s.id = us.series_id
+     WHERE s.is_public = 1`
+  ).get();
+  const sr = db.prepare(
+    `SELECT COUNT(*) AS n, COALESCE(MAX(sr.started_at), 0) AS s, COALESCE(MAX(sr.completed_at), 0) AS c
+     FROM series_runs sr JOIN series s ON s.id = sr.series_id
+     WHERE s.is_open_world = 1 AND s.is_public = 1`
+  ).get();
+  const ub = db.prepare(
+    'SELECT COUNT(*) AS n, COALESCE(MAX(created_at), 0) AS m FROM user_books'
+  ).get();
+  const uu = db.prepare(
+    'SELECT COUNT(*) AS n, COALESCE(MAX(created_at), 0) AS m FROM users'
+  ).get();
+  const an = db.prepare(
+    'SELECT COUNT(*) AS n, COALESCE(MAX(published_at), 0) AS m FROM announcements WHERE is_draft = 0'
+  ).get();
+  const pin = db.prepare(
+    'SELECT id FROM announcements WHERE pinned = 1 AND is_draft = 0 LIMIT 1'
+  ).get();
+  // The calendar date is part of the fingerprint so the feed rebuilds once
+  // after midnight - day labels (Today/Yesterday) are computed at render
+  // time client-side and would otherwise sit stale on a quiet day.
+  return [
+    xe.n, xe.m, us.n, us.m, us.p, sr.n, sr.s, sr.c,
+    ub.n, ub.m, uu.n, uu.m, an.n, an.m, pin?.id ?? 0,
+    new Date().toISOString().slice(0, 10),
+  ].join(':');
+}
+
 function setPublicProfile(userId, value) {
   db.prepare("UPDATE users SET public_profile = ? WHERE id = ?").run(value ? 1 : 0, userId);
 }
@@ -1576,6 +1631,7 @@ function getPublicSeriesRun(seriesId, userId, runIndex) {
 
 module.exports = {
   getFeed,
+  getFeedVersion,
   setPublicProfile, setHideFromFeed, setAuthor, setContributor, setPdfAccess, setDisplayName,
   getPublicProfile, getProfileStats,
   getPublicCovers, getBooksForSitemap, getAnthologiesForSitemap, getSeriesForSitemap, getPublicProfilesForSitemap,

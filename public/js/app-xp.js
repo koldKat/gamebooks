@@ -82,7 +82,18 @@ function _runAnimQueue(gen) {
     _animRunning = false;
     _runAnimQueue(gen);
   };
-  if (fromXp === toXp || durationMs <= 0) {
+  // Snap, don't tween, sub-resolution increments: heartbeat XP accrues for
+  // every idle user every minute, so the app-wide total creeps upward on a
+  // ~60s cadence by ~100 XP against a level span of ~500k - far below the
+  // bar's painting resolution (pct is rounded to whole percents), so the
+  // tween ran a 700ms rAF loop every minute with nothing visible to show
+  // for it. Only genuinely visible growth (a real award, a level-up) spends
+  // an animation; creep just paints the new number.
+  const scale = Math.max(1, Number(data.users) || 0) * 1000;
+  const { levelXp, nextLevelXp } = _levelBounds(fromXp, scale);
+  const span = Math.max(1, nextLevelXp - levelXp);
+  const jump = Math.abs(toXp - fromXp);
+  if (jump < span / 1000 || durationMs <= 0) {
     _paintXp(toXp, data); _paintBoost(toBoostXp, data);
     finish();
     return;
