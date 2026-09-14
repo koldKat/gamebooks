@@ -837,11 +837,15 @@ function _rotateLandingCover() {
 // No-op if the interval already exists - the only case that starts it (and
 // paints one cover immediately, since otherwise nothing would show until
 // the first tick) is the very first call this session.
+// Under reduce-motion, the recurring rotation itself is skipped (same
+// exemption as this codebase's other infinite decorative animations - see
+// reduce-motion.css) - the one-time initial paint below still runs so a
+// cover shows at all, but it never repeats or crossfades after that.
 export function _startLandingCoverRotation() {
   if (document.getElementById('landing-wrapper')?.style.display === 'none') return;
   _applyLandingBgPosition();
   if (window._landingCoverInterval) return;
-  window._landingCoverInterval = setInterval(_rotateLandingCover, 60_000);
+  if (!_reduceMotion) window._landingCoverInterval = setInterval(_rotateLandingCover, 60_000);
   _rotateLandingCover();
 }
 
@@ -1837,6 +1841,12 @@ export function initCoversPanel() {
   document.getElementById('reduce-motion-cb')?.addEventListener('change', e => {
     _reduceMotion = !!e.target.checked;
     _persistReduceMotionPref();
+    if (_reduceMotion) {
+      clearInterval(window._landingCoverInterval);
+      window._landingCoverInterval = null;
+    } else if (!window._landingCoverInterval && document.getElementById('landing-wrapper')?.style.display !== 'none') {
+      window._landingCoverInterval = setInterval(_rotateLandingCover, 60_000);
+    }
   });
   document.getElementById('feed-day-covers-cb')?.addEventListener('change', e => {
     _feedDayCovers = !!e.target.checked;

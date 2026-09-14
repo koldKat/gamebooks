@@ -380,6 +380,14 @@ const _routeRequest = async (req, res) => {
     if (method === 'GET'    && urlPath === '/api/feed') {
       return send(res, 200, { entries: db.getFeed(), pinned: db.getPinnedAnnouncement() });
     }
+    // Cheap change fingerprint for the client's 60s feed poll: a handful of
+    // COUNT/MAX aggregates it can afford to hit every minute, so the poll
+    // skips the full getFeed() rebuild (and the whole-feed DOM re-render on
+    // the client) whenever nothing feed-visible happened. See
+    // server/db/feed.js's getFeedVersion for what the fingerprint covers.
+    if (method === 'GET'    && urlPath === '/api/feed/version') {
+      return send(res, 200, { version: db.getFeedVersion() });
+    }
     // Idle-heartbeat XP has its own endpoint rather than living as a side
     // effect of GET /api/feed (where it used to be): a GET handler awarding
     // XP broke the "GET is side-effect-free" expectation, and worse, tied

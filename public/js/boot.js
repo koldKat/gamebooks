@@ -80,6 +80,8 @@ import { initSim740, setSim740Visible, renderSim740 } from './battlesim/battlesi
 import { initSim753, setSim753Visible, renderSim753 } from './battlesim/battlesim753.js';
 import { initSim760, setSim760Visible, renderSim760 } from './battlesim/battlesim760.js';
 import { initSim772, setSim772Visible, renderSim772 } from './battlesim/battlesim772.js';
+import { initSim781, setSim781Visible, renderSim781 } from './battlesim/battlesim781.js';
+import { initSim869, setSim869Visible, renderSim869 } from './battlesim/battlesim869.js';
 import { initSim219, setSim219Visible, renderSim219 } from './battlesim/battlesim219.js';
 import { initSim220, setSim220Visible, renderSim220 } from './battlesim/battlesim220.js';
 import { initSim223, setSim223Visible, renderSim223 } from './battlesim/battlesim223.js';
@@ -143,7 +145,7 @@ import { initLiveRead, setLiveReadVisible, renderLiveRead, previewSection } from
 import { initShop, updateCoinsDisplay, refreshCoinsDisplay, setShopHooks } from './shop.js';
 import { initProfile, updateAvatarUI, renderBooksXpSummary, setProfileHooks } from './profile.js';
 import { setPublicProfileHooks, closePublicModal, openPublicProfile, openPublicSeriesRun } from './public-profile.js';
-import { setLiveTabHooks, _ensureLiveTabControllerStarted, _connectUserBadgeSSE, _disconnectUserBadgeSSE, _connectAppXpSSE, _disconnectAppXpSSE } from './livetab.js';
+import { setLiveTabHooks, _ensureLiveTabControllerStarted, _connectUserBadgeSSE, _disconnectUserBadgeSSE, _connectAppXpSSE, _disconnectAppXpSSE, _syncFeedVersionBaseline } from './livetab.js';
 import { setAppXpHooks, refreshAppXp, handleAppXpEvent } from './app-xp.js';
 import { setCoversHooks, loadCovers, openCoverActivity, openSeriesActivity, _showCachedCoversPanel, _refreshPublicCatalogIfVisible, _isLandingBooksViewVisible, _updateLandingBgDragUi, setCoversPrefsState, _toggleCoverTooltipSettings, initCoversPanel, resetFeedDisplayPrefsForLogout, _refillLazyIfShort, _stopLandingCoverRotation } from './covers.js';
 import {
@@ -456,6 +458,8 @@ function showLogin() {
   setSim753Visible(false);
   setSim760Visible(false);
   setSim772Visible(false);
+  setSim781Visible(false);
+  setSim869Visible(false);
   setSim219Visible(false);
   setSim220Visible(false);
   setSim223Visible(false);
@@ -551,6 +555,7 @@ function showLogin() {
     document.getElementById('login-username').focus();
   }
   loadFeed();
+  _syncFeedVersionBaseline();
   _showCachedCoversPanel();
   loadCovers();
   _updateLandingBgDragUi();
@@ -652,6 +657,8 @@ async function showBooks() {
   setSim753Visible(false);
   setSim760Visible(false);
   setSim772Visible(false);
+  setSim781Visible(false);
+  setSim869Visible(false);
   setSim219Visible(false);
   setSim220Visible(false);
   setSim223Visible(false);
@@ -757,6 +764,7 @@ async function showBooks() {
   if (_ms) { _ms.style.backgroundImage = ''; _ms.style.backgroundColor = '#0f172a'; }
 
   loadFeed();
+  _syncFeedVersionBaseline();
   _showCachedCoversPanel();
   loadCovers();
   _updateLandingBgDragUi();
@@ -1036,6 +1044,8 @@ async function showMain(bookId, isbn = null, issn = null, asin = null, cover = n
   setSim753Visible(bookId === 753);
   setSim760Visible(bookId === 760);
   setSim772Visible(bookId === 772);
+  setSim781Visible(bookId === 781);
+  setSim869Visible(bookId === 869);
   setSim219Visible(bookId === 219);
   setSim220Visible(bookId === 220);
   setSim223Visible(bookId === 223);
@@ -1308,6 +1318,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   initSim753();
   initSim760();
   initSim772();
+  initSim781();
+  initSim869();
   initSim219();
   initSim220();
   initSim223();
@@ -1418,6 +1430,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderSim753();
     renderSim760();
     renderSim772();
+    renderSim781();
+    renderSim869();
     renderSim219();
     renderSim220();
     renderSim221();

@@ -6,7 +6,7 @@
 // To remove: delete this file, remove its import line and setLiveTabHooks() /
 // initLiveTabController() calls from boot.js.
 
-import { getToken, isDemoMode } from './state.js';
+import { getToken, isDemoMode, apiFetch } from './state.js';
 import { refreshCoinsDisplay } from './shop.js';
 
 // Callbacks wired in by main.js at boot
@@ -38,6 +38,8 @@ let _userBadgeDirty      = false;
 let _coinsDirty          = false;
 let _feedPollInterval    = null;
 let _booksPollInterval   = null;
+let _lastFeedVersion     = null;
+let _feedVersionPrimed   = false;
 
 // ── Exports ───────────────────────────────────────────────────────────────────
 
@@ -79,6 +81,50 @@ function _refreshAppXpStaggered() {
   _appXpStaggerTimer = setTimeout(() => { _appXpStaggerTimer = null; _hooks.refreshAppXp?.(); }, APP_XP_STAGGER_MS);
 }
 
+// ── Version-gated feed refresh ────────────────────────────────────────────────
+// This tick used to call loadFeed() unconditionally, which rebuilds
+// #feed-content's whole DOM (entries, day-card background layers) every
+// minute even when nothing changed. Gate it on a cheap server-side
+// fingerprint instead: /api/feed/version answers from a handful of COUNT/MAX
+// aggregates, so a quiet minute costs one tiny request instead of a full
+// feed fetch + DOM rebuild. SSE feed_changed events still reload the feed
+// immediately; this poll is only the fallback for pushes the SSE stream
+// missed, so on any version-fetch failure we fall back to the old
+// unconditional reload rather than let the feed go stale.
+
+async function _fetchFeedVersion() {
+  const res = getToken()
+    ? await apiFetch('/api/feed/version')
+    : await _hooks.publicFetch?.('/api/feed/version');
+  if (!res || !res.ok) throw new Error('feed version fetch failed');
+  const data = await res.json();
+  return data.version;
+}
+
+async function _refreshFeedIfChanged() {
+  let version;
+  try { version = await _fetchFeedVersion(); }
+  catch (_) { _hooks.loadFeed?.(); return; }
+  // First tick primes the baseline without reloading - boot already did the
+  // initial loadFeed(), so rebuilding here would duplicate it.
+  if (!_feedVersionPrimed) { _feedVersionPrimed = true; _lastFeedVersion = version; return; }
+  if (version === _lastFeedVersion) return;
+  _lastFeedVersion = version;
+  _hooks.loadFeed?.();
+}
+
+// Re-baseline after an SSE-triggered reload so the next 60s tick doesn't see
+// the already-rendered change as "new" and rebuild the feed a second time.
+// Also exported for boot.js's direct loadFeed() calls (showLogin/showBooks),
+// which reload the feed outside this gated path for the same reason.
+export async function _syncFeedVersionBaseline() {
+  try {
+    const version = await _fetchFeedVersion();
+    _feedVersionPrimed = true;
+    _lastFeedVersion = version;
+  } catch (_) {}
+}
+
 function _startLeaderIntervals() {
   if (!_feedPollInterval) {
     // Deliberately not gated on document.visibilityState: a tab left open
@@ -111,7 +157,9 @@ function _startLeaderIntervals() {
       // landing tab still benefits from a fresh feed the moment it's
       // foregrounded again. showBooks() already calls loadFeed() directly
       // on return, so nothing goes stale beyond this interval's own cadence.
-      if (document.getElementById('main-screen')?.style.display === 'none') _hooks.loadFeed?.();
+      // Gated on the /api/feed/version fingerprint: the rebuild only happens
+      // when the feed actually changed (see _refreshFeedIfChanged above).
+      if (document.getElementById('main-screen')?.style.display === 'none') _refreshFeedIfChanged();
       if (getToken() && !isDemoMode) _hooks.sendHeartbeat?.();
       _refreshAppXpStaggered();
     }, 60_000);
@@ -197,7 +245,7 @@ function _applyFollowerLiveEvent(type, payload = null) {
     _feedDirty = true;
     if (_hooks.isLandingVisible?.() && document.visibilityState === 'visible') {
       clearTimeout(_feedSseDebounce);
-      _feedSseDebounce = setTimeout(() => { _feedDirty = false; _hooks.loadFeed?.(); _refreshAppXpStaggered(); }, 1500);
+      _feedSseDebounce = setTimeout(() => { _feedDirty = false; _hooks.loadFeed?.(); _syncFeedVersionBaseline(); _refreshAppXpStaggered(); }, 1500);
     }
     return;
   }
@@ -271,7 +319,7 @@ function _connectFeedSSE() {
       _feedDirty = true;
       if (_hooks.isLandingVisible?.()) {
         clearTimeout(_feedSseDebounce);
-        _feedSseDebounce = setTimeout(() => { _feedDirty = false; _hooks.loadFeed?.(); _refreshAppXpStaggered(); }, 1500);
+        _feedSseDebounce = setTimeout(() => { _feedDirty = false; _hooks.loadFeed?.(); _syncFeedVersionBaseline(); _refreshAppXpStaggered(); }, 1500);
       }
       _broadcastLiveEvent('feed_changed');
     };
@@ -347,7 +395,7 @@ export function _ensureLiveTabControllerStarted() {
 
   function _onTabBecomeVisible() {
     _takeLiveLeadership();
-    if (_feedDirty && _hooks.isLandingVisible?.())          { _feedDirty = false; _hooks.loadFeed?.(); }
+    if (_feedDirty && _hooks.isLandingVisible?.())          { _feedDirty = false; _hooks.loadFeed?.(); _syncFeedVersionBaseline(); }
     if (_publicCatalogDirty && _hooks.isLandingVisible?.()) { _publicCatalogDirty = false; _hooks.loadCovers?.({ force: true }); }
     if (_userBadgeDirty && getToken() && !isDemoMode) {
       _userBadgeDirty = false;
@@ -361,7 +409,7 @@ export function _ensureLiveTabControllerStarted() {
 
   function _onWindowFocus() {
     _takeLiveLeadership();
-    if (_feedDirty && _hooks.isLandingVisible?.())          { _feedDirty = false; _hooks.loadFeed?.(); }
+    if (_feedDirty && _hooks.isLandingVisible?.())          { _feedDirty = false; _hooks.loadFeed?.(); _syncFeedVersionBaseline(); }
     if (_publicCatalogDirty && _hooks.isLandingVisible?.()) { _publicCatalogDirty = false; _hooks.loadCovers?.({ force: true }); }
   }
 

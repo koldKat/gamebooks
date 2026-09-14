@@ -855,6 +855,7 @@ const {
 
 const {
   getFeed,
+  getFeedVersion,
   setPublicProfile, setHideFromFeed, setAuthor, setContributor, setPdfAccess, setDisplayName,
   getPublicProfile, getProfileStats,
   getPublicCovers, getBooksForSitemap, getAnthologiesForSitemap, getSeriesForSitemap, getPublicProfilesForSitemap,
@@ -942,6 +943,7 @@ module.exports = {
   adminGetBooks, adminDeleteBook, adminGetBookRatings, adminDeleteRating, adminRefundShopItem, adminVacuum, giftBook, purchaseShopItem,
   getShopItems, setShopItemCost,
   getFeed,
+  getFeedVersion,
   createDemoBook, refreshDemoBooks, getDemoBookState,
   setPublicProfile, setHideFromFeed, setAuthor, setContributor, setPdfAccess, setDisplayName, adminUpdateUser, getPublicProfile, getProfileStats, getPublicRun, getPublicSeriesRun, getPublicCovers, getAllPublicBooks, getAllPublicSeries, getAllPublicAnthologies, getPublicBooksInSeries, getBookActivity, getPublicBookMeta, getPublicSeriesInfo, getBooksForSitemap, getAnthologiesForSitemap, getSeriesForSitemap, getPublicProfilesForSitemap,
   getBookRating, setBookRating, getSeriesRating, setSeriesRating, canUserRateBook, canUserRateSeries, setBookBgPref, getBookBgPref,
