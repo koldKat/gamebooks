@@ -349,7 +349,8 @@ export async function openProfileModal() {
     document.getElementById('profile-error').textContent = t('profile.load_failed');
   }
   document.getElementById('profile-modal-overlay').classList.add('active');
-  document.getElementById('profile-username-input').focus();
+  // No default focus: on desktop it needlessly selects the username field,
+  // and on mobile focusing an input pops the keyboard over half the modal.
 }
 
 export function closeProfileModal() {
