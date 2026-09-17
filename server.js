@@ -407,8 +407,9 @@ const _routeRequest = async (req, res) => {
       if (userId === null) return;
       // Same invisibility contract as handleSaveState: an admin's own polling
       // while impersonating must not earn the impersonated user real XP.
-      if (!isRequestImpersonating(req)) db.awardIdleHeartbeatXp(userId);
-      return send(res, 200, { ok: true });
+      let hb = { awarded: false, coinRolled: false };
+      if (!isRequestImpersonating(req)) hb = db.awardIdleHeartbeatXp(userId);
+      return send(res, 200, { ok: true, ...hb });
     }
     if (method === 'GET'    && urlPath === '/api/feed/stream')   return await handleGetFeedStream(req, res);
     if (method === 'GET'    && urlPath === '/api/public/stream') return await handleGetPublicCatalogStream(req, res);

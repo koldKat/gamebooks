@@ -54,7 +54,13 @@ function _xpRenderPrefix(prefix, xp, data) {
   const fill = document.getElementById(`${prefix}-xp-bar-fill`);
   const el   = document.getElementById(`${prefix}-xp-text`);
   if (fill) fill.style.width = `${pct}%`;
-  if (el) el[prefix === 'books' ? 'innerHTML' : 'textContent'] = prefix === 'books' ? fullHtml : short;
+  if (!el) return;
+  if (prefix === 'profile') { el.textContent = short; return; }
+  // The play bar used to get the short "N XP to next LVL" label (plain text,
+  // no total) because its slot was too narrow for the full one; the panel
+  // has since been widened, so it now renders the same
+  // "X XP · N to next LVL" label as the books panel bar.
+  el.innerHTML = fullHtml;
 }
 
 function _xpBoostHtml(xpBoostPct, xpFromBoostWhole) {

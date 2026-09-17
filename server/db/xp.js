@@ -62,6 +62,10 @@ db.transaction(() => {
 })();
 
 let _xpCache = new Map(db.prepare('SELECT event, amount FROM xp_config').all().map(r => [r.event, r.amount]));
+// Sequence suffix for per-use undo/fast_travel award refs (see
+// processStateXp) - guarantees ref uniqueness within the process even if
+// two saves land in the same millisecond.
+let _xpRefSeq = 0;
 
 function getXpAmount(event) { return _xpCache.get(event) ?? 0; }
 function getXpConfig()      { return db.prepare('SELECT event, amount FROM xp_config ORDER BY event').all(); }
@@ -348,7 +352,7 @@ function awardXp(userId, event, ref, amountOverride = null) {
 
 function awardIdleHeartbeatXp(userId) {
   const base = getXpAmount('idle_heartbeat');
-  const row  = db.prepare('SELECT xp, bonus_heartbeat_xp, heartbeat_carry FROM users WHERE id = ?').get(userId);
+  const row  = db.prepare('SELECT xp, bonus_heartbeat_xp, heartbeat_carry, pending_bonus_gc FROM users WHERE id = ?').get(userId);
   const purchased  = row?.bonus_heartbeat_xp ?? 0;
   const freeBoosts = Math.max(0, computeLevel(row?.xp || 0) - 10);
   const carry      = row?.heartbeat_carry ?? 0;
@@ -359,13 +363,20 @@ function awardIdleHeartbeatXp(userId) {
   const minuteRef   = String(Math.floor(Date.now() / 60_000));
   const awarded = awardXp(userId, 'idle_heartbeat', minuteRef, wholeAmount);
   if (awarded) db.prepare('UPDATE users SET heartbeat_carry = ? WHERE id = ?').run(newCarry, userId);
+  let coinRolled = false;
   if (awarded) {
     const banked     = db.prepare('SELECT heartbeat_minutes_banked FROM users WHERE id = ?').get(userId)?.heartbeat_minutes_banked || 0;
     const liveCount  = db.prepare("SELECT COUNT(*) AS n FROM xp_events WHERE user_id = ? AND event = 'idle_heartbeat'").get(userId)?.n || 0;
     const playDays   = Math.floor((banked + liveCount) / 1440);
     if (playDays > 0) awardCoins(userId, 'playtime_24h', playDays, 1);
+    // The bonus-coin roll happens inside awardXp's transaction - diff the
+    // pending flag to learn whether this very heartbeat produced one, so the
+    // caller can surface it in the UI immediately instead of waiting for the
+    // next feed/profile refresh cycle.
+    const pendingAfter = db.prepare('SELECT pending_bonus_gc FROM users WHERE id = ?').get(userId)?.pending_bonus_gc;
+    coinRolled = !row?.pending_bonus_gc && !!pendingAfter;
   }
-  return awarded;
+  return { awarded: !!awarded, coinRolled };
 }
 
 function getUserXpInfo(userId) {
@@ -909,6 +920,31 @@ function processStateXp(userId, bookId, oldState, newState, totalSections) {
       }
     }
   }
+
+  // Undo / fast travel - awarded PER USE, not first-time-only, diffed from
+  // the counters every playthrough already keeps (undosUsed /
+  // fastTravelsUsed, bumped client-side where each action happens): each
+  // unit of total-counter growth across all playthroughs is one award, so a
+  // save batching several uses pays them all at once. Amounts are tiny
+  // (config: undo 1, fast_travel 2) and both actions are client-supplied,
+  // so a determined client could inflate the counters - accepted
+  // deliberately, same reasoning as battlesim_win/loss above: spamming is
+  // possible but self-limiting and pays less than just playing.
+  // Totals-diff (not per-playthrough matching) means deleting a run drops
+  // its counted uses from the baseline - already-awarded uses stay awarded,
+  // and a replacement run's uses re-pay only once the total climbs past the
+  // pre-delete peak. Immaterial at these amounts.
+  // Refs carry Date.now() + a loop index + a process-lifetime sequence:
+  // unique per award, and immune to the reset-progress case where the
+  // counters zero out and a counter-derived ref would collide with
+  // already-logged rows (INSERT OR IGNORE would then silently eat real
+  // awards).
+  const _uses = (pts, key) => (pts || []).reduce((n, pt) => n + Math.max(0, Math.floor(pt?.[key] ?? 0)), 0);
+  const undoDelta = _uses(newPts, 'undosUsed') - _uses(oldPts, 'undosUsed');
+  const ftDelta   = _uses(newPts, 'fastTravelsUsed') - _uses(oldPts, 'fastTravelsUsed');
+  const _stamp = Date.now();
+  for (let i = 0; i < undoDelta; i++) awardXp(userId, 'undo', `${bookId}:${_stamp}:u:${i}:${_xpRefSeq++}`);
+  for (let i = 0; i < ftDelta;   i++) awardXp(userId, 'fast_travel', `${bookId}:${_stamp}:f:${i}:${_xpRefSeq++}`);
 
   // Reconciliation safety net: the transition check above (`!oldPt?.completed && newPt?.completed`)
   // compares against a snapshot that can go stale under racing saves (e.g. two tabs saving the

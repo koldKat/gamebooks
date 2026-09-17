@@ -492,6 +492,25 @@
   margin-left: 0.3rem;
   flex-shrink: 0;
 }
+/* Green matches the covers wall's livereading badge (#34d399 border there) -
+   same meaning, same color cue, different layout context (inline here,
+   absolutely positioned on covers). */
+.book-livereading-badge {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  color: #34d399;
+  margin-left: 0.3rem;
+  flex-shrink: 0;
+}
+.book-pdf-badge {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  color: #fbbf24;
+  margin-left: 0.3rem;
+  flex-shrink: 0;
+}
 .book-active-run-badge {
   display: inline-flex;
   align-items: center;
