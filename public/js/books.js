@@ -693,6 +693,34 @@ function _hasBattleSim(b) {
   return !!(b.is_container && (_cachedBooks || []).some(c => c.parent_book_id === b.id && c.has_battle_sim));
 }
 
+function _pdfBadgeHtml(pdfPath, isAdmin) {
+  if (!pdfPath || !isAdmin) return '';
+  return `<span class="book-pdf-badge" data-tooltip="${escapeHtml(t('books.has_pdf'))}"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>`;
+}
+
+// Surgical DOM update for a single book's PDF state after an upload/remove
+// from the edit modal (edit-book.js's onPdfChanged hook) - patches the cached
+// row and every rendered card for that book instead of paying for a full
+// list re-fetch/re-render. Cards are matched by data-id; a book normally
+// renders once, but anthology secondary membership can show it twice, so all
+// matches are updated.
+export function _syncPdfBadgeOnCards(bookId, pdfPath, pdfSize = null) {
+  _patchCachedBook(bookId, { pdf_path: pdfPath, pdf_size: pdfSize });
+  const isAdmin = _hooks.getIsAdmin?.() ?? false;
+  document.querySelectorAll(`.book-item[data-id="${bookId}"]`).forEach(card => {
+    if (pdfPath) card.setAttribute('data-pdf', pdfPath); else card.removeAttribute('data-pdf');
+    if (pdfSize != null) card.setAttribute('data-pdf-size', String(pdfSize)); else card.removeAttribute('data-pdf-size');
+    card.querySelector('.book-pdf-badge')?.remove();
+    if (!pdfPath) return;
+    const badge = _pdfBadgeHtml(pdfPath, isAdmin);
+    if (!badge) return;
+    // Keep the badge order from _bookItemHtml: ..., pdf, active-run badge.
+    const activeBadge = card.querySelector('.book-active-run-badge');
+    if (activeBadge) activeBadge.insertAdjacentHTML('beforebegin', badge);
+    else card.querySelector('.book-name-row')?.insertAdjacentHTML('beforeend', badge);
+  });
+}
+
 function _bookItemHtml(b, isChild, containerExpanded, childCount, aggrStats, isAdmin, containerId = null) {
   const effectiveSections = b.is_container ? (aggrStats?.totalSections || 0) : (b.discoverable_sections ?? b.total_sections);
   const effectiveVisited  = b.is_container ? (aggrStats?.visited || 0)        : b.visited;
@@ -748,9 +776,7 @@ function _bookItemHtml(b, isChild, containerExpanded, childCount, aggrStats, isA
     : '';
   // PDF presence is private metadata - only advertise it on the card for
   // admins (the play-area PDF link itself is gated separately via pdfAccess).
-  const pdfBadge = b.pdf_path && isAdmin
-    ? `<span class="book-pdf-badge" data-tooltip="${escapeHtml(t('books.has_pdf'))}"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>`
-    : '';
+  const pdfBadge = _pdfBadgeHtml(b.pdf_path, isAdmin);
   let cardStyle      = bg;
   let pendingCoverAttr = '';
   if (experimentalCoverCards && coverUrl) {

@@ -159,7 +159,7 @@ import {
   setCachedBooks, setCachedAllSeries, clearBooksCache,
   setBooksDataFresh, setBooksRevealedAt,
   setCurrentUserId,
-  _refreshBooksListOnly, _refreshLibraryUi, _starsHtml, _starLabelHtml, _flashRatingGate,
+  _refreshBooksListOnly, _refreshLibraryUi, _syncPdfBadgeOnCards, _starsHtml, _starLabelHtml, _flashRatingGate,
 } from './books.js';
 import {
   setOpenWorldHooks, setupOpenWorldForBook,
@@ -1794,6 +1794,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     resolveIsAdmin:      () => resolveIsAdmin(),
     setCurrentBookCover,
     scheduleRewardProfileRefresh: _scheduleRewardProfileRefresh,
+    // Fired by the edit modals after a successful PDF upload/remove - patches
+    // just that book's card(s) in place (badge + data attributes) instead of
+    // re-rendering the whole list, and keeps the play area in sync when the
+    // affected book is the open one (showMain is otherwise the only place the
+    // sidebar PDF button gets wired, so it stayed stale until re-open).
+    onPdfChanged:        (bookId, pdfPath, pdfSize) => {
+      _syncPdfBadgeOnCards(bookId, pdfPath, pdfSize);
+      if (String(bookId) !== String(currentBookId)) return;
+      _currentBook.pdfPath = pdfPath;
+      const pdfDlBtn = document.getElementById('pdf-download-btn');
+      if (!pdfDlBtn) return;
+      const showPdfBtn = _hasPdfAccess && !!pdfPath && !_currentBook.parentBookId;
+      pdfDlBtn.style.display = showPdfBtn ? '' : 'none';
+      if (showPdfBtn) pdfDlBtn.href = _adminPdfHref(pdfPath);
+    },
   });
   initEditBook(() => _mousedownOnOverlay);
   setAddBookHooks({ resolveIsAdmin: () => resolveIsAdmin(), scheduleRewardProfileRefresh: _scheduleRewardProfileRefresh });

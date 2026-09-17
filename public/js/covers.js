@@ -834,28 +834,23 @@ function _rotateLandingCover() {
   _landingBgActive = next;
 }
 
-// No-op if the interval already exists - the only case that starts it (and
-// paints one cover immediately, since otherwise nothing would show until
-// the first tick) is the very first call this session.
-// Under reduce-motion, the recurring rotation itself is skipped (same
-// exemption as this codebase's other infinite decorative animations - see
-// reduce-motion.css) and no interval ever exists. That breaks the
-// interval-exists no-op guard routine callers rely on (showBooks(), prefs
-// syncs, the drag-release prefs save), so under reduce-motion this function
-// paints ONLY when nothing is currently visible - the first paint of the
-// session, or right after _stopLandingCoverRotation blanked the layers for
-// the Ctrl+X hide toggle - and is a pure no-op while a cover is showing,
-// exactly as if the guard above had tripped. Without that, every routine
-// call rotated immediately.
+// No-op if the interval already exists - the only case that starts it is the
+// very first call this session. The 60s rotation runs under BOTH motion
+// modes: it's a slow periodic swap, not a continuous animation, and the user
+// expects the background to keep changing either way (reduce-motion only
+// calms HOW it changes - reduce-motion.css drops the crossfade transition, so
+// the swap is instant). The immediate paint, however, is gated on nothing
+// currently being visible (first paint of the session, or right after
+// _stopLandingCoverRotation blanked the layers for the Ctrl+X hide toggle) in
+// both modes: routine callers (showBooks(), prefs syncs, the drag-release
+// prefs save) hit this function constantly, and painting unconditionally made
+// every one of those rotate the background on the spot instead of waiting for
+// the next tick.
 export function _startLandingCoverRotation() {
   if (document.getElementById('landing-wrapper')?.style.display === 'none') return;
   _applyLandingBgPosition();
   if (window._landingCoverInterval) return;
-  if (!_reduceMotion) {
-    window._landingCoverInterval = setInterval(_rotateLandingCover, 60_000);
-    _rotateLandingCover();
-    return;
-  }
+  window._landingCoverInterval = setInterval(_rotateLandingCover, 60_000);
   const a = document.getElementById('landing-bg-a');
   const b = document.getElementById('landing-bg-b');
   if (a?.style.opacity !== '1' && b?.style.opacity !== '1') _rotateLandingCover();
@@ -1853,12 +1848,8 @@ export function initCoversPanel() {
   document.getElementById('reduce-motion-cb')?.addEventListener('change', e => {
     _reduceMotion = !!e.target.checked;
     _persistReduceMotionPref();
-    if (_reduceMotion) {
-      clearInterval(window._landingCoverInterval);
-      window._landingCoverInterval = null;
-    } else if (!window._landingCoverInterval && document.getElementById('landing-wrapper')?.style.display !== 'none') {
-      window._landingCoverInterval = setInterval(_rotateLandingCover, 60_000);
-    }
+    // The 60s landing rotation keeps running either way (reduce-motion only
+    // calms the transition via CSS) - nothing to start/stop here.
   });
   document.getElementById('feed-day-covers-cb')?.addEventListener('change', e => {
     _feedDayCovers = !!e.target.checked;

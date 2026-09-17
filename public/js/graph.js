@@ -776,6 +776,23 @@ function _chooseLocalPosition(sec, posMap) {
   return best ? { x: best.x, y: best.y } : null;
 }
 
+// First free Y slot in the column at colX, starting at startY and stepping
+// down by _GRID_COL_GAP - treating a slot as taken when any positioned node
+// sits in the same column band within half a gap. Deliberately LOCAL: the
+// previous "bottom of the column" scan (max Y over the whole map) stacked new
+// options below unrelated nodes from other branches that happen to sit in the
+// same column band, landing them far below the parent they belong to (one
+// column right of it, but rows down where some distant branch ends).
+function _firstFreeColumnSlot(colX, startY) {
+  let y = startY;
+  for (;;) {
+    const taken = Object.values(state.positions).some(p => p &&
+      Math.abs(p.x - colX) < _GRID_LAYER_GAP / 2 && Math.abs(p.y - y) < _GRID_COL_GAP / 2);
+    if (!taken) return y;
+    y += _GRID_COL_GAP;
+  }
+}
+
 // Directional placement for in-app reading on books whose layout isn't the
 // BFS grid: a new node with a positioned incoming parent (i.e. an option of
 // the node just stepped on) goes one column to the RIGHT of that parent,
@@ -791,13 +808,10 @@ function _chooseDirectionalPosition(sec) {
   const parentId  = incoming.reduce((a, b) => (state.positions[a].x >= state.positions[b].x ? a : b));
   const parentPos = state.positions[parentId];
   const colX = parentPos.x + _GRID_LAYER_GAP;
-  // First sibling sits at the parent's own height; later ones stack below
-  // whatever already occupies the column (same band scan the grid uses).
-  let maxY = parentPos.y - _GRID_COL_GAP;
-  for (const p of Object.values(state.positions)) {
-    if (p && Math.abs(p.x - colX) < _GRID_LAYER_GAP / 2 && p.y > maxY) maxY = p.y;
-  }
-  return { x: colX, y: maxY + _GRID_COL_GAP };
+  // First sibling sits at the parent's own height, later ones stack below it
+  // (_firstFreeColumnSlot is a local first-free-slot search, not the grid's
+  // old whole-map bottom-of-column scan).
+  return { x: colX, y: _firstFreeColumnSlot(colX, parentPos.y) };
 }
 
 function _assignLocalPositions(allSections) {
@@ -926,19 +940,20 @@ function _assignGridPositions(allSections, startSec) {
     // gaps, so a stray outgoing edge can't yank a new node away from its
     // actual parent.
     const anchors = neighbors.incoming.length ? neighbors.incoming : neighbors.all;
-    let x;
+    let x, yStart;
     if (anchors.length) {
-      const anchorX = Math.max(...anchors.map(id => state.positions[id].x));
-      x = anchorX + _GRID_LAYER_GAP;
+      // X AND Y both anchor on the same neighbor: one column right of it,
+      // siblings stacking DOWN from its own height. Anchoring only X (and
+      // stacking Y from the top of the map) left fresh options rows away
+      // below the node just stepped on whenever the parent sat above y=0.
+      const anchorId = anchors.reduce((a, b) => (state.positions[a].x >= state.positions[b].x ? a : b));
+      x = state.positions[anchorId].x + _GRID_LAYER_GAP;
+      yStart = state.positions[anchorId].y;
     } else {
       x = (depth.has(sec) ? depth.get(sec) : maxDepth + 1) * _GRID_LAYER_GAP;
+      yStart = 0;
     }
-    let maxY = -_GRID_COL_GAP;
-    for (const other of allSections) {
-      const p = state.positions[other];
-      if (p && Math.abs(p.x - x) < _GRID_LAYER_GAP / 2 && p.y > maxY) maxY = p.y;
-    }
-    let y = maxY + _GRID_COL_GAP;
+    let y = _firstFreeColumnSlot(x, yStart);
     // _GRID_LAYER_GAP/_GRID_COL_GAP aren't multiples of GRID_SIZE, so with
     // snap on a child of an on-grid parent landed 10px/30px off the visual
     // grid. New nodes were never hand-placed, so snapping them disturbs
