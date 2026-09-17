@@ -204,6 +204,20 @@ function _positionedNeighbors(sec) {
 // one row down, same "find the next free X slot in that row" logic as
 // below. Only a node with no positioned neighbor at all (the genuine
 // first-ever layout, nothing positioned yet) falls back to the depth grid.
+// First free X slot in the row at rowY, starting at startX and stepping
+// right by COL_GAP - local to the anchor, not a whole-map rightmost scan
+// (same bug desktop's _firstFreeColumnSlot fixes: unrelated branches in the
+// same row band used to push fresh options far to the side of their parent).
+function _firstFreeRowSlot(rowY, startX) {
+  let x = startX;
+  for (;;) {
+    const taken = Object.values(state.positions).some(p => p &&
+      Math.abs(p.y - rowY) < LAYER_GAP / 2 && Math.abs(p.x - x) < COL_GAP / 2);
+    if (!taken) return x;
+    x += COL_GAP;
+  }
+}
+
 function _layout(sections, startSec) {
   const missing = sections.filter(id => !_hasPos(state.positions[id]));
   if (!missing.length) return;
@@ -219,19 +233,19 @@ function _layout(sections, startSec) {
     String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' }));
   for (const id of missing) {
     const neighbors = _positionedNeighbors(id);
-    let y;
+    let y, xStart;
     if (neighbors.length) {
-      const neighborY = Math.max(...neighbors.map(n => state.positions[n].y));
-      y = neighborY + LAYER_GAP;
+      // X AND Y both anchor on the same neighbor: one row below it, siblings
+      // stacking RIGHT from its own column (local first-free-slot, same
+      // reasoning as desktop's _firstFreeColumnSlot).
+      const anchorId = neighbors.reduce((a, b) => (state.positions[a].y >= state.positions[b].y ? a : b));
+      y = state.positions[anchorId].y + LAYER_GAP;
+      xStart = state.positions[anchorId].x;
     } else {
       y = (id in depth ? depth[id] : maxDepth + 1) * LAYER_GAP;
+      xStart = 0;
     }
-    let maxX = -COL_GAP;
-    for (const other of sections) {
-      const p = state.positions[other];
-      if (p && Math.abs(p.y - y) < LAYER_GAP / 2 && p.x > maxX) maxX = p.x;
-    }
-    let x = maxX + COL_GAP;
+    let x = _firstFreeRowSlot(y, xStart);
     // Mobile has no snap toggle (drags always snap to GRID_SIZE) and
     // LAYER_GAP/COL_GAP aren't multiples of it - snap layout placements too
     // so auto-placed nodes sit on the same grid as dragged ones.

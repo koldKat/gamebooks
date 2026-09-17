@@ -862,12 +862,17 @@ export function openEditBookModal({ bookId, initialName, initialSections, initia
     if (_pendingPdfFile && _editBookId) {
       _setButtonsDisabled(['edit-book-save', 'edit-book-cancel'], true);
       try {
-        await _uploadPdfWithProgress(`/api/books/${_editBookId}/pdf`, _pendingPdfFile, 'edit-book');
+        const pdfData = await _uploadPdfWithProgress(`/api/books/${_editBookId}/pdf`, _pendingPdfFile, 'edit-book');
         // A book's first-ever PDF awards XP server-side, but nothing else in
         // this flow would ever prompt the client to notice - the XP bar was
         // only catching up whenever some unrelated refresh (SSE badge event,
         // periodic poll) happened to fire next, which felt inconsistent/silent.
         _hooks.scheduleRewardProfileRefresh?.();
+        // The My Books card reads pdf_path only when the list renders, and a
+        // PDF-only save takes the no-re-render path in the panel's onSave -
+        // without this the card's PDF badge (and the ✎ modal's own stale
+        // data-pdf) would stay as-was until some unrelated full refresh.
+        _hooks.onPdfChanged?.(_editBookId, pdfData?.pdfUrl ? pdfData.pdfUrl.split('/').pop() : null, _pendingPdfFile?.size ?? null);
       } catch (e) {
         resumeCoversAutoRefresh();
         errEl.textContent = e?.message || t('editbook.pdf_upload_failed');
@@ -1006,8 +1011,9 @@ export function openEditCompModal({ bookId, initialName, initialIsbn = '', initi
     if (_eccPdf && _eccBookId) {
       _setButtonsDisabled(['ecc-save', 'ecc-cancel'], true);
       try {
-        await _uploadPdfWithProgress(`/api/books/${_eccBookId}/pdf`, _eccPdf, 'ecc');
+        const pdfData = await _uploadPdfWithProgress(`/api/books/${_eccBookId}/pdf`, _eccPdf, 'ecc');
         _hooks.scheduleRewardProfileRefresh?.();
+        _hooks.onPdfChanged?.(_eccBookId, pdfData?.pdfUrl ? pdfData.pdfUrl.split('/').pop() : null, _eccPdf?.size ?? null);
       } catch (e) { errEl.textContent = e?.message || t('editbook.pdf_upload_failed'); return; }
       finally { _setButtonsDisabled(['ecc-save', 'ecc-cancel'], false); }
     }
@@ -1077,6 +1083,9 @@ export function initEditBook(mousedownOnOverlayRef) {
     document.getElementById('edit-book-pdf-current').style.display = 'none';
     _pendingPdfFile = null;
     document.getElementById('edit-book-pdf-name').textContent = '';
+    // Immediate mutation (not part of Save) - same stale-card reason as the
+    // upload path above.
+    _hooks.onPdfChanged?.(_editBookId, null, null);
   });
 
   // Create stash modal
@@ -1254,6 +1263,7 @@ export function initEditBook(mousedownOnOverlayRef) {
         _eccPdf = null;
         _setPdfCurrentLink(document.getElementById('ecc-pdf-link'), null);
         document.getElementById('ecc-pdf-current').style.display = 'none';
+        _hooks.onPdfChanged?.(_eccBookId, null, null);
       } catch (_) {}
     });
   });
