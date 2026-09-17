@@ -18,6 +18,7 @@ const translations = {
     'books.empty':        'No books yet. Create one below.',
     'books.open':         'Open',
     'books.sections':     '{n} sections',
+    'books.has_pdf':      'PDF available',
 
     'mobile.back_to_feed': 'Back to feed',
     'mobile.add_book':     'Add Book',

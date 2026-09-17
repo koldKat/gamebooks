@@ -776,6 +776,30 @@ function _chooseLocalPosition(sec, posMap) {
   return best ? { x: best.x, y: best.y } : null;
 }
 
+// Directional placement for in-app reading on books whose layout isn't the
+// BFS grid: a new node with a positioned incoming parent (i.e. an option of
+// the node just stepped on) goes one column to the RIGHT of that parent,
+// siblings stacking downward in that column - instead of _chooseLocalPosition's
+// directionless radial ring, which scattered new options below/around the
+// parent with no rightward growth. Only used when at least one incoming
+// parent is positioned; anything parentless falls through to the radial
+// scoring. Mirrors the grid regime's parent-anchored placement and mobile's
+// always-parent-relative _layout().
+function _chooseDirectionalPosition(sec) {
+  const { incoming } = _getPositionedNeighbors(sec, state.positions);
+  if (!incoming.length) return null;
+  const parentId  = incoming.reduce((a, b) => (state.positions[a].x >= state.positions[b].x ? a : b));
+  const parentPos = state.positions[parentId];
+  const colX = parentPos.x + _GRID_LAYER_GAP;
+  // First sibling sits at the parent's own height; later ones stack below
+  // whatever already occupies the column (same band scan the grid uses).
+  let maxY = parentPos.y - _GRID_COL_GAP;
+  for (const p of Object.values(state.positions)) {
+    if (p && Math.abs(p.x - colX) < _GRID_LAYER_GAP / 2 && p.y > maxY) maxY = p.y;
+  }
+  return { x: colX, y: maxY + _GRID_COL_GAP };
+}
+
 function _assignLocalPositions(allSections) {
   let changed = false;
   let progressed = true;
@@ -788,7 +812,7 @@ function _assignLocalPositions(allSections) {
       return bNeighbors - aNeighbors || naturalCompareIds(a, b);
     });
     for (const sec of pending) {
-      const pos = _chooseLocalPosition(sec, state.positions);
+      const pos = _chooseDirectionalPosition(sec) ?? _chooseLocalPosition(sec, state.positions);
       if (!pos) continue;
       // A newly-added node was never hand-placed by the user, so snapping it
       // doesn't touch anything the "snap never retroactive" rule protects -
@@ -884,13 +908,28 @@ function _assignGridPositions(allSections, startSec) {
   if (!missing.length) return false;
   const depth = _bfsDepth(startSec, allSections);
   const maxDepth = depth.size ? Math.max(...depth.values()) : 0;
-  missing.sort(naturalCompareIds);
+  // Place parents before children: within a single sync a freshly-landed
+  // node and its own new option nodes are all missing at once, and plain
+  // id-sorting can put a child before its parent - the child then finds no
+  // positioned parent yet and falls into the depth-from-START fallback
+  // below, landing relative to the start node's column instead of beside
+  // the node that was just stepped on (the "auto-place is relative to the
+  // start node" bug). BFS depth ascending guarantees every node's parents
+  // are already positioned when it is (parents are always one depth
+  // shallower); id order inside a depth keeps the layout deterministic.
+  missing.sort((a, b) => (depth.get(a) ?? maxDepth + 1) - (depth.get(b) ?? maxDepth + 1) || naturalCompareIds(a, b));
   for (const sec of missing) {
-    const neighbors = _getPositionedNeighbors(sec, state.positions).all;
+    const neighbors = _getPositionedNeighbors(sec, state.positions);
+    // Anchor on incoming parents (the nodes whose choice led here - i.e.
+    // the node just stepped on during reading) whenever any are positioned;
+    // only fall back to children/other neighbors for genuinely parentless
+    // gaps, so a stray outgoing edge can't yank a new node away from its
+    // actual parent.
+    const anchors = neighbors.incoming.length ? neighbors.incoming : neighbors.all;
     let x;
-    if (neighbors.length) {
-      const neighborX = Math.max(...neighbors.map(id => state.positions[id].x));
-      x = neighborX + _GRID_LAYER_GAP;
+    if (anchors.length) {
+      const anchorX = Math.max(...anchors.map(id => state.positions[id].x));
+      x = anchorX + _GRID_LAYER_GAP;
     } else {
       x = (depth.has(sec) ? depth.get(sec) : maxDepth + 1) * _GRID_LAYER_GAP;
     }
@@ -899,7 +938,16 @@ function _assignGridPositions(allSections, startSec) {
       const p = state.positions[other];
       if (p && Math.abs(p.x - x) < _GRID_LAYER_GAP / 2 && p.y > maxY) maxY = p.y;
     }
-    state.positions[sec] = { x, y: maxY + _GRID_COL_GAP };
+    let y = maxY + _GRID_COL_GAP;
+    // _GRID_LAYER_GAP/_GRID_COL_GAP aren't multiples of GRID_SIZE, so with
+    // snap on a child of an on-grid parent landed 10px/30px off the visual
+    // grid. New nodes were never hand-placed, so snapping them disturbs
+    // nothing deliberate - same rule as _assignLocalPositions' own snap.
+    if (state.snapToGrid) {
+      x = Math.round(x / GRID_SIZE) * GRID_SIZE;
+      y = Math.round(y / GRID_SIZE) * GRID_SIZE;
+    }
+    state.positions[sec] = { x, y };
   }
   return true;
 }

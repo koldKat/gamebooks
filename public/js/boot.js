@@ -1730,11 +1730,21 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
   // The only trigger for idle_heartbeat XP (and the bonus-coin roll it can
   // fire) - called solely from livetab.js's dedicated 60s leader-tab timer,
-  // deliberately not tied to feed reloads. Fire-and-forget: nothing in the
-  // UI needs to react to the response itself (a pending bonus coin surfaces
-  // separately via the existing /api/profile refresh already scheduled
-  // after loadFeed).
-  const _sendHeartbeat = () => { apiFetch('/api/heartbeat', { method: 'POST' }).catch(() => {}); };
+  // deliberately not tied to feed reloads. The response reports what the
+  // heartbeat actually did; on any award (XP, playtime coins, or a rolled
+  // bonus coin) schedule a reward-profile refresh so the coins display, coin
+  // button and XP bar catch up without waiting for a feed reload - overnight
+  // the feed version fingerprint can stay unchanged for hours while heartbeats
+  // keep accruing, and this is the only per-minute UI touchpoint left.
+  const _sendHeartbeat = () => {
+    apiFetch('/api/heartbeat', { method: 'POST' })
+      .then(async res => {
+        if (!res?.ok) return;
+        const data = await res.json().catch(() => null);
+        if (data?.awarded || data?.coinRolled) _scheduleRewardProfileRefresh(150);
+      })
+      .catch(() => {});
+  };
 
   setLiveTabHooks({
     loadFeed:                    loadFeed,
@@ -1748,6 +1758,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     getIsAdmin:                  () => _isAdmin,
     onAppXpEvent:                handleAppXpEvent,
     sendHeartbeat:                _sendHeartbeat,
+    scheduleRewardProfileRefresh: _scheduleRewardProfileRefresh,
   });
   setAppXpHooks({
     getIsAdmin: () => _isAdmin,
@@ -2416,6 +2427,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (isNotifDropdownOpen() && !e.target.closest('#notif-dropdown') && !e.target.closest('#notif-btn'))
       _closeNotifDropdown();
   });
+
+  // The dropdown is position:fixed and anchored to the button's rect at open
+  // time, so scrolling the content behind it leaves it visually detached.
+  // Close on any scroll outside the dropdown's own list - capture phase,
+  // because scroll events don't bubble (window scrolls report document as
+  // the target).
+  document.addEventListener('scroll', e => {
+    if (isNotifDropdownOpen() && e.target !== document.getElementById('notif-dropdown'))
+      _closeNotifDropdown();
+  }, { capture: true });
 
   // ── Forum ─────────────────────────────────────────────────────────
   document.getElementById('forum-btn').addEventListener('click', () => {

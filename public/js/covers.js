@@ -839,14 +839,26 @@ function _rotateLandingCover() {
 // the first tick) is the very first call this session.
 // Under reduce-motion, the recurring rotation itself is skipped (same
 // exemption as this codebase's other infinite decorative animations - see
-// reduce-motion.css) - the one-time initial paint below still runs so a
-// cover shows at all, but it never repeats or crossfades after that.
+// reduce-motion.css) and no interval ever exists. That breaks the
+// interval-exists no-op guard routine callers rely on (showBooks(), prefs
+// syncs, the drag-release prefs save), so under reduce-motion this function
+// paints ONLY when nothing is currently visible - the first paint of the
+// session, or right after _stopLandingCoverRotation blanked the layers for
+// the Ctrl+X hide toggle - and is a pure no-op while a cover is showing,
+// exactly as if the guard above had tripped. Without that, every routine
+// call rotated immediately.
 export function _startLandingCoverRotation() {
   if (document.getElementById('landing-wrapper')?.style.display === 'none') return;
   _applyLandingBgPosition();
   if (window._landingCoverInterval) return;
-  if (!_reduceMotion) window._landingCoverInterval = setInterval(_rotateLandingCover, 60_000);
-  _rotateLandingCover();
+  if (!_reduceMotion) {
+    window._landingCoverInterval = setInterval(_rotateLandingCover, 60_000);
+    _rotateLandingCover();
+    return;
+  }
+  const a = document.getElementById('landing-bg-a');
+  const b = document.getElementById('landing-bg-b');
+  if (a?.style.opacity !== '1' && b?.style.opacity !== '1') _rotateLandingCover();
 }
 
 // Explicit user action only (the Ctrl+X hide toggle) - actually blanks the

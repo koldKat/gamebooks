@@ -395,6 +395,13 @@ export function _ensureLiveTabControllerStarted() {
 
   function _onTabBecomeVisible() {
     _takeLiveLeadership();
+    // Catch up on what the backgrounded/frozen tab missed: the version-gated
+    // feed check (cheap no-op when nothing changed) and a reward-profile
+    // refresh (coins display, coin button, XP bar) - both are no-ops when
+    // current, and neither fires on its own here because the 60s tick may
+    // still be throttled for a while after the tab wakes.
+    _refreshFeedIfChanged();
+    if (getToken() && !isDemoMode) _hooks.scheduleRewardProfileRefresh?.(150);
     if (_feedDirty && _hooks.isLandingVisible?.())          { _feedDirty = false; _hooks.loadFeed?.(); _syncFeedVersionBaseline(); }
     if (_publicCatalogDirty && _hooks.isLandingVisible?.()) { _publicCatalogDirty = false; _hooks.loadCovers?.({ force: true }); }
     if (_userBadgeDirty && getToken() && !isDemoMode) {
@@ -409,6 +416,7 @@ export function _ensureLiveTabControllerStarted() {
 
   function _onWindowFocus() {
     _takeLiveLeadership();
+    _refreshFeedIfChanged();
     if (_feedDirty && _hooks.isLandingVisible?.())          { _feedDirty = false; _hooks.loadFeed?.(); _syncFeedVersionBaseline(); }
     if (_publicCatalogDirty && _hooks.isLandingVisible?.()) { _publicCatalogDirty = false; _hooks.loadCovers?.({ force: true }); }
   }

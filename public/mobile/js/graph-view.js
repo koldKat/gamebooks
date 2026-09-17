@@ -210,6 +210,13 @@ function _layout(sections, startSec) {
   const depth = _bfsDepth(startSec);
   const depthValues = Object.values(depth);
   const maxDepth = depthValues.length ? Math.max(...depthValues) : 0;
+  // Parents before children - same id-sort bug and fix as desktop
+  // graph.js's _assignGridPositions: a child sorting before its just-landed
+  // parent used to find no positioned parent and fall into the
+  // depth-from-START fallback, placing it relative to the start row instead
+  // of below the node that was just stepped on.
+  missing.sort((a, b) => (depth[a] ?? maxDepth + 1) - (depth[b] ?? maxDepth + 1) ||
+    String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' }));
   for (const id of missing) {
     const neighbors = _positionedNeighbors(id);
     let y;
@@ -224,7 +231,13 @@ function _layout(sections, startSec) {
       const p = state.positions[other];
       if (p && Math.abs(p.y - y) < LAYER_GAP / 2 && p.x > maxX) maxX = p.x;
     }
-    state.positions[id] = { x: maxX + COL_GAP, y };
+    let x = maxX + COL_GAP;
+    // Mobile has no snap toggle (drags always snap to GRID_SIZE) and
+    // LAYER_GAP/COL_GAP aren't multiples of it - snap layout placements too
+    // so auto-placed nodes sit on the same grid as dragged ones.
+    x = Math.round(x / GRID_SIZE) * GRID_SIZE;
+    y = Math.round(y / GRID_SIZE) * GRID_SIZE;
+    state.positions[id] = { x, y };
   }
 }
 

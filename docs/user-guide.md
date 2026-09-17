@@ -246,7 +246,7 @@ Press **Record & Choose** (or Enter), then click the button for the path you act
 
 ### Undoing a step
 
-The **Undo** button takes you back to the last real decision point. If several sections in a row only had one possible destination, they're all skipped in a single undo instead of clicking through them one at a time. Each playthrough gets a limited number of undos based on your level (you can buy more in the shop):
+The **Undo** button takes you back to the last real decision point. If several sections in a row only had one possible destination, they're all skipped in a single undo instead of clicking through them one at a time. Each undo earns **1 XP**. Each playthrough gets a limited number of undos based on your level (you can buy more in the shop):
 
 | Level | Undos available |
 |-------|-----------|
@@ -350,7 +350,7 @@ Jump directly to a section you've already visited, skipping everything in betwee
 | Normal | Avoids both high- and low-priority sections |
 | Low priority | Prefers sections you've marked as low priority |
 
-Each playthrough gets a limited number of Fast Travels (same level table as undos, and you can buy more in the shop). You can also click the **Fast Travel** button in the sidebar to type a section number directly.
+Each playthrough gets a limited number of Fast Travels (same level table as undos, and you can buy more in the shop). Each Fast Travel earns **2 XP** for the jump itself, plus the usual mapping XP for any section along the route you hadn't visited yet. You can also click the **Fast Travel** button in the sidebar to type a section number directly.
 
 ### Section notes
 
