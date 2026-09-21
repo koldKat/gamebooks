@@ -1121,6 +1121,19 @@ body.right-collapsed #right-toggle { right: 0; }
   padding: 0;
 }
 #feed-toggle:hover { color: #f9fafb; background: rgba(31, 41, 55, 0.92); }
+/* Re-centers on #feed-panel (not the viewport) when either side panel is
+   collapsed, same formula and same equal-specificity gotcha as
+   #center-scroll-top just below - see the comment on that rule for why the
+   combined-class selector is needed once both panels are gone. */
+body.covers-collapsed #feed-toggle {
+  left: calc(50% - var(--landing-panel-w) / 2);
+}
+body.right-collapsed #feed-toggle {
+  left: calc(50% + var(--landing-panel-w) / 2);
+}
+body.covers-collapsed.right-collapsed #feed-toggle {
+  left: 50%;
+}
 body.feed-collapsed #feed-toggle {
   top: 0;
 }

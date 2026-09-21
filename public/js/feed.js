@@ -911,8 +911,7 @@ document.addEventListener('fullscreenchange', _scheduleDayCoverRecompute);
 // panels collapse or expand (Ctrl+X, or the individual panel toggles) -
 // that never fires a `resize` event at all (the window itself doesn't
 // change size, only the feed panel's CSS width), so it needs an explicit
-// call. Wired from prefs.js's _setLandingPanelCollapsed, right alongside
-// its existing syncFeedTogglePos hook call.
+// call. Wired from prefs.js's _setLandingPanelCollapsed.
 export function refreshDayCoverFlows() {
   _scheduleDayCoverRecompute();
 }

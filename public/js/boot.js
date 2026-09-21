@@ -395,21 +395,11 @@ function setGuideVisible(v) {
 
 function _isMobile() { return window.innerWidth <= 768; }
 
-function _syncFeedTogglePos() {
-  const toggle = document.getElementById('feed-toggle');
-  if (!toggle) return;
-  const panelW   = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--landing-panel-w')) || 270;
-  const leftPad  = document.body.classList.contains('covers-collapsed') ? 0 : panelW;
-  const rightPad = document.body.classList.contains('right-collapsed')  ? 0 : panelW;
-  toggle.style.left = (leftPad + (window.innerWidth - leftPad - rightPad) / 2) + 'px';
-}
-
 function _revealLanding() {
   ['landing-wrapper','landing-bg-a','landing-bg-b','landing-bg-dim'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.visibility = '';
   });
-  _syncFeedTogglePos();
 }
 
 function showLogin() {
@@ -1678,7 +1668,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   window.addEventListener('auth-expired', showLogin);
   window.addEventListener('maintenance-mode', () => location.reload(), { once: true });
-  window.addEventListener('resize', _syncFeedTogglePos);
 
   // ── Tips bar ──────────────────────────────────────────────────────
   initTips();
@@ -1819,7 +1808,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     getCurrentBookSeriesId:   () => _currentBook.seriesId,
     openPublicSeriesRun,
   });
-  setPrefsHooks({ syncFeedTogglePos: _syncFeedTogglePos, refreshDayCovers: refreshDayCoverFlows });
+  setPrefsHooks({ refreshDayCovers: refreshDayCoverFlows });
   setEditBookHooks({
     resolveIsAdmin:      () => resolveIsAdmin(),
     setCurrentBookCover,

@@ -131,7 +131,6 @@ export function _setLandingPanelCollapsed(prefKey, collapsed) {
     savePrefs({ [prefKey]: collapsed ? '1' : '0' });
   }
   _updateLandingBgDragUi();
-  _hooks.syncFeedTogglePos?.();
   _hooks.refreshDayCovers?.();
 }
 
