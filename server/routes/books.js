@@ -6,7 +6,7 @@
 
 const db = require('../db');
 const {
-  authenticate, send, readBody, getClientIp, tokenFromReq, isLocalhost, isRequestImpersonating,
+  authenticate, authenticateOptional, send, readBody, getClientIp, tokenFromReq, isLocalhost, isRequestImpersonating,
 } = require('../request-helpers');
 const {
   sseRegister, sseUnregister, ssePush,
@@ -235,7 +235,10 @@ async function handleAddSeriesToLibrary(req, res, seriesId, query) {
 }
 
 async function handleGetPublicSeriesInfo(req, res, seriesId) {
-  const data = db.getPublicSeriesInfo(seriesId);
+  const userId = authenticateOptional(req);
+  const user = userId ? db.getUserById(userId) : null;
+  const hasPdfAccess = !!user && (!!user.pdf_access || !!user.is_admin);
+  const data = db.getPublicSeriesInfo(seriesId, hasPdfAccess);
   if (!data) return send(res, 404, { error: 'not found' });
   send(res, 200, data);
 }

@@ -1337,11 +1337,14 @@ function getBookActivity(bookId) {
   const book = db.prepare(
     `SELECT b.id, b.name, b.total_sections, b.isbn, b.issn, b.asin, b.cover_path,
             b.pages, b.authors, b.description, b.is_public, b.is_container, b.book_order,
+            b.has_battle_sim, b.has_live_reading,
             COALESCE(b.series_number, p.series_number) AS series_number,
             p.id AS parentId, p.name AS parentName,
             COALESCE(s.id,  ps.id)   AS seriesId,
             COALESCE(s.name, ps.name) AS seriesName,
-            s.id AS ownSeriesId, s.name AS ownSeriesName, b.series_number AS ownSeriesNumber
+            s.id AS ownSeriesId, s.name AS ownSeriesName, b.series_number AS ownSeriesNumber,
+            (SELECT MAX(c.has_battle_sim) FROM books c WHERE c.parent_book_id = b.id AND c.is_demo = 0) AS child_has_battle_sim,
+            (SELECT MAX(c.has_live_reading) FROM books c WHERE c.parent_book_id = b.id AND c.is_demo = 0) AS child_has_live_reading
      FROM books b
      LEFT JOIN books p   ON p.id  = b.parent_book_id
      LEFT JOIN series s  ON s.id  = b.series_id
@@ -1431,6 +1434,8 @@ function getBookActivity(bookId) {
       description:   book.description || null,
       isPublic:      book.is_public === 1,
       isContainer,
+      hasBattleSim:  !!book.has_battle_sim || !!book.child_has_battle_sim,
+      hasLiveReading: !!book.has_live_reading,
       parentId:      book.parentId    || null,
       parentName:    book.parentName  || null,
       // Secondary memberships (book_anthology_memberships) - parentId/parentName

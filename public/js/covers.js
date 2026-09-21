@@ -1033,13 +1033,36 @@ export async function openSeriesActivity(seriesId, seriesName) {
   document.getElementById('pub-back-btn').style.display  = 'none';
   document.getElementById('pub-modal-body').innerHTML    = `<p class="pub-loading">${t('covers.loading')}</p>`;
   try {
-    const res = await publicFetch(`/api/public/series/${seriesId}`);
+    // Send the auth token if we have one (unauthenticated visitors still get
+    // a 200) so the server can decide whether to include pdfPath on each
+    // book - the endpoint is otherwise public, but PDF availability is
+    // per-user metadata (see server/db/books.js getPublicSeriesInfo).
+    const token = getToken();
+    const res = await publicFetch(`/api/public/series/${seriesId}`, token ? { headers: { Authorization: `Bearer ${token}` } } : undefined);
     if (!res.ok) throw new Error();
     const data = await res.json();
     renderSeriesActivity(data);
   } catch {
     document.getElementById('pub-modal-body').innerHTML = `<p class="pub-error">${t('covers.series_load_failed')}</p>`;
   }
+}
+
+// Battle sim / live reading / PDF badges for series-modal book rows. Mirrors
+// the SVGs and badge classes used in books.js's My Books cards so the icon
+// language is consistent app-wide; the PDF badge only renders if the server
+// included a pdfPath (it strips that field server-side for users without
+// pdf_access, so no client-side gating is needed here).
+function _seriesRowBadges(b) {
+  const battleSim = b.hasBattleSim
+    ? `<span class="book-battlesim-badge" data-tooltip="${escapeHtml(t('covers.has_battle_sim'))}"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="4" x2="20" y2="20"/><line x1="20" y1="4" x2="4" y2="20"/><line x1="4" y1="4" x2="8" y2="4"/><line x1="4" y1="4" x2="4" y2="8"/><line x1="20" y1="4" x2="16" y2="4"/><line x1="20" y1="4" x2="20" y2="8"/></svg></span>`
+    : '';
+  const liveReading = b.hasLiveReading
+    ? `<span class="book-livereading-badge" data-tooltip="${escapeHtml(t('covers.has_live_reading'))}"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h7a2 2 0 0 1 2 2v14a2 2 0 0 0-2-2H2z"/><path d="M22 4h-7a2 2 0 0 0-2 2v14a2 2 0 0 1 2-2h7z"/></svg></span>`
+    : '';
+  const pdf = b.pdfPath
+    ? `<span class="book-pdf-badge" data-tooltip="${escapeHtml(t('books.has_pdf'))}"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>`
+    : '';
+  return battleSim + liveReading + pdf;
 }
 
 function renderSeriesActivity(data) {
@@ -1069,11 +1092,13 @@ function renderSeriesActivity(data) {
     html += `<div class="book-modal-children-section"><div class="book-modal-children-header">${t('covers.books_in_series')}</div><div class="book-modal-children-list">`;
     for (const b of data.books) {
       const num = b.seriesNumber ? ` <span class="child-row-num">#${escapeHtml(b.seriesNumber)}</span>` : '';
+      const badges = _seriesRowBadges(b);
       if (b.isContainer) {
         const sub = `<span class="child-row-sections">${b.childCount} ${b.childCount === 1 ? 'book' : 'books'}</span>`;
         html += `<div class="book-modal-anthology-row" data-anthology-id="${b.id}">
           <button class="book-modal-child-row anthology-name-btn" data-book-id="${b.id}" data-book-name="${escapeHtml(b.name)}">
             <span class="child-row-name">${escapeHtml(b.name)}${num}</span>
+            <span class="child-row-badges">${badges}</span>
             ${sub}
             <span class="child-row-arrow">&#x203a;</span>
           </button>
@@ -1085,6 +1110,7 @@ function renderSeriesActivity(data) {
             const csub = c.totalSections ? `<span class="child-row-sections">${c.totalSections} sections</span>` : '';
             html += `<button class="book-modal-child-row anthology-child-btn" data-book-id="${c.id}" data-book-name="${escapeHtml(c.name)}">
               <span class="child-row-name">${escapeHtml(c.name)}</span>
+              <span class="child-row-badges">${_seriesRowBadges(c)}</span>
               ${csub}
               <span class="child-row-arrow">&#x203a;</span>
             </button>`;
@@ -1095,6 +1121,7 @@ function renderSeriesActivity(data) {
         const sub = b.totalSections ? `<span class="child-row-sections">${b.totalSections} sections</span>` : '';
         html += `<button class="book-modal-child-row" data-book-id="${b.id}" data-book-name="${escapeHtml(b.name)}">
           <span class="child-row-name">${escapeHtml(b.name)}${num}</span>
+          <span class="child-row-badges">${badges}</span>
           ${sub}
           <span class="child-row-arrow">&#x203a;</span>
         </button>`;
@@ -1240,7 +1267,11 @@ function renderCoverActivity(bookId, bookName, entries, userRating, bookMeta, us
 
   let headerHtml = '<div class="book-modal-header">';
   if (bookMeta?.coverUrl) {
-    headerHtml += `<img class="book-modal-cover" src="${escapeHtml(bookMeta.coverUrl)}" alt="${escapeHtml(bookName)}">`;
+    const coverBadges = _seriesRowBadges(bookMeta);
+    headerHtml += `<div class="book-modal-cover-col">` +
+      `<img class="book-modal-cover" src="${escapeHtml(bookMeta.coverUrl)}" alt="${escapeHtml(bookName)}">` +
+      (coverBadges ? `<div class="book-modal-cover-badges">${coverBadges}</div>` : '') +
+      `</div>`;
   }
   headerHtml += '<div class="book-modal-meta">';
   // A book's primary anthology (parentId/parentName) plus any secondary

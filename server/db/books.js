@@ -684,14 +684,15 @@ function createSeries(name, description, userId, isPublic = false) {
   return { id, name: trimmed, existed: false };
 }
 
-function getPublicSeriesInfo(seriesId) {
+function getPublicSeriesInfo(seriesId, hasPdfAccess = false) {
   const series = db.prepare('SELECT id, name, description, is_public FROM series WHERE id = ? AND is_public = 1').get(seriesId);
   if (!series) return null;
   // Top-level books/anthologies in this series only (no anthology children)
   const books = db.prepare(
     `SELECT b.id, b.name, b.total_sections, b.cover_path, b.is_container, b.series_number,
-            b.isbn, b.issn, b.pages, b.authors,
-            (SELECT COUNT(*) FROM books c WHERE c.parent_book_id = b.id AND c.is_demo = 0) AS child_count
+            b.isbn, b.issn, b.pages, b.authors, b.has_battle_sim, b.has_live_reading, b.pdf_path,
+            (SELECT COUNT(*) FROM books c WHERE c.parent_book_id = b.id AND c.is_demo = 0) AS child_count,
+            (SELECT MAX(c.has_battle_sim) FROM books c WHERE c.parent_book_id = b.id AND c.is_demo = 0) AS child_has_battle_sim
      FROM books b
      WHERE b.series_id = ? AND b.is_demo = 0
        AND (b.parent_book_id IS NULL OR b.parent_book_id = 0)
@@ -700,7 +701,7 @@ function getPublicSeriesInfo(seriesId) {
               CAST(b.series_number AS REAL)`
   ).all(seriesId);
   const childrenStmt = db.prepare(
-    `SELECT id, name, total_sections, cover_path, isbn, issn, pages, authors
+    `SELECT id, name, total_sections, cover_path, isbn, issn, pages, authors, has_battle_sim, has_live_reading, pdf_path
      FROM books WHERE parent_book_id = ? AND is_demo = 0 AND is_public = 1
      ORDER BY COALESCE(book_order, id)`
   );
@@ -733,6 +734,9 @@ function getPublicSeriesInfo(seriesId) {
             issn:          c.issn || null,
             pages:         c.pages || null,
             authors:       c.authors || null,
+            hasBattleSim:  !!c.has_battle_sim,
+            hasLiveReading: !!c.has_live_reading,
+            pdfPath:       hasPdfAccess ? (c.pdf_path || null) : null,
           }))
         : [];
       return {
@@ -747,6 +751,9 @@ function getPublicSeriesInfo(seriesId) {
         issn:          b.issn || null,
         pages:         b.pages || null,
         authors:       b.authors || null,
+        hasBattleSim:  !!b.has_battle_sim || !!b.child_has_battle_sim,
+        hasLiveReading: !!b.has_live_reading,
+        pdfPath:       hasPdfAccess ? (b.pdf_path || null) : null,
         children,
       };
     }),

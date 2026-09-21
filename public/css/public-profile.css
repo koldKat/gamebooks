@@ -320,6 +320,26 @@
   object-fit: cover;
 }
 
+.book-modal-cover-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.book-modal-cover-badges {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  width: 72px;
+}
+/* Badges here have no adjacent name text to hug, so drop the inline-context
+   left margin from add-book.css and space them with a gap instead. */
+.book-modal-cover-badges > * { margin-left: 0; }
+.book-modal-cover-badges > * + * { margin-left: 0.35rem; }
+
 .book-modal-meta {
   display: flex;
   flex-direction: column;
@@ -440,6 +460,11 @@
   flex: 1;
   font-size: 0.88rem;
   font-weight: 500;
+}
+.child-row-badges {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
 }
 .child-row-sections {
   font-size: 0.75rem;
