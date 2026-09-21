@@ -329,6 +329,7 @@ try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 232').run(); } 
 // Books 233-239 also have has_battle_sim = 1 set the same one-off way,
 // same pre-existing gap, not backfilled here - out of scope for this book.
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 240').run(); } catch (_) {}
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 241').run(); } catch (_) {}
 
 // One-time migration: book 829's sim was the first one built, before the
 // pt.simNNN naming convention existed, so its state lived under pt.battleSim

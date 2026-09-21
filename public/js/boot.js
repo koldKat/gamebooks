@@ -150,6 +150,7 @@ import { initSim213, setSim213Visible, renderSim213 } from './battlesim/battlesi
 import { initSim214, setSim214Visible, renderSim214 } from './battlesim/battlesim214.js';
 import { initSim215, setSim215Visible, renderSim215 } from './battlesim/battlesim215.js';
 import { initSim240, setSim240Visible, renderSim240 } from './battlesim/battlesim240.js';
+import { initSim241, setSim241Visible, renderSim241 } from './battlesim/battlesim241.js';
 import { initLiveRead, setLiveReadVisible, renderLiveRead, previewSection } from './liveread.js';
 import { initShop, updateCoinsDisplay, refreshCoinsDisplay, setShopHooks } from './shop.js';
 import { initProfile, updateAvatarUI, renderBooksXpSummary, setProfileHooks } from './profile.js';
@@ -535,6 +536,7 @@ function showLogin() {
   setSim214Visible(false);
   setSim215Visible(false);
   setSim240Visible(false);
+  setSim241Visible(false);
   setLiveReadVisible(false);
   setDiceRollerVisible(false);
   setGuideVisible(false);
@@ -743,6 +745,7 @@ async function showBooks() {
   setSim214Visible(false);
   setSim215Visible(false);
   setSim240Visible(false);
+  setSim241Visible(false);
   setLiveReadVisible(false);
   setDiceRollerVisible(false);
   setGuideVisible(false);
@@ -1141,6 +1144,7 @@ async function showMain(bookId, isbn = null, issn = null, asin = null, cover = n
   setSim214Visible(bookId === 214);
   setSim215Visible(bookId === 215);
   setSim240Visible(bookId === 240);
+  setSim241Visible(bookId === 241);
   // Gated server-side already (db._canLiveRead) - hasLiveReading only ever
   // comes back true for that one account regardless of who's asking, so no
   // extra username check is needed here (unlike the earlier single-book POC).
@@ -1424,6 +1428,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initSim214();
   initSim215();
   initSim240();
+  initSim241();
   initLiveRead();
   // renderLiveRead() also needs to run after every render() (fast-travel
   // jumps and the sidebar's own choice buttons move pt.path without going
@@ -1545,6 +1550,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderSim214();
     renderSim215();
     renderSim240();
+    renderSim241();
     renderLiveRead();
   });
   initTooltip();
