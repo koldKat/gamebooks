@@ -1042,12 +1042,40 @@ function getSiteStats() {
     WHERE json_extract(node.value, '$.portals') IS NOT NULL
   `).get();
   const owPortals      = owPortalsRow?.n || 0;
-  const owPreSeriesRunsRow = db.prepare(`
-    SELECT COALESCE(SUM(json_array_length(json_extract(state_data, '$.preSeriesRuns'))), 0) AS n
-    FROM user_books
-    WHERE json_extract(state_data, '$.preSeriesRuns') IS NOT NULL
-  `).get();
-  const owPreSeriesRuns = owPreSeriesRunsRow?.n || 0;
+  // preSeriesRuns only exists in state_data once the player has opened that
+  // book's open-world graph view at least once - that's what triggers the
+  // client-side _syncSeriesRuns() migration (public/js/open-world.js) which
+  // moves eligible playthroughs into it. A player who has played (and even
+  // restarted) an open-world book without ever opening its graph view still
+  // has those runs sitting in plain state.playthroughs, uncounted by a
+  // simple preSeriesRuns sum. Replicate that same eligibility check here
+  // (predates the series' earliest formal run, and has either moved past
+  // the start or finished) so the dashboard reflects actual play, not just
+  // which books happen to have been migrated client-side yet.
+  const owSeriesMinRunTs = new Map();
+  for (const r of db.prepare(`SELECT series_id, MIN(started_at) AS minTs FROM series_runs GROUP BY series_id`).all()) {
+    owSeriesMinRunTs.set(r.series_id, (r.minTs || 0) * 1000);
+  }
+  let owPreSeriesRuns = 0;
+  const owBookStateRows = db.prepare(`
+    SELECT ub.state_data, b.series_id
+    FROM user_books ub JOIN books b ON b.id = ub.book_id JOIN series s ON s.id = b.series_id
+    WHERE s.is_open_world = 1
+  `).all();
+  for (const row of owBookStateRows) {
+    let st;
+    try { st = JSON.parse(row.state_data); } catch (_) { continue; }
+    if (Array.isArray(st.preSeriesRuns)) {
+      owPreSeriesRuns += st.preSeriesRuns.length;
+    } else if (Array.isArray(st.playthroughs)) {
+      const minTs = owSeriesMinRunTs.get(row.series_id) || 0;
+      for (const p of st.playthroughs) {
+        if (p.startedAt && (minTs === 0 || p.startedAt < minTs) && ((p.path && p.path.length > 0) || p.completed)) {
+          owPreSeriesRuns++;
+        }
+      }
+    }
+  }
 
   return {
     // Users

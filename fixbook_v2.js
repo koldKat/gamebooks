@@ -53,7 +53,7 @@ function buildNormMap(inner) {
 }
 
 const rows = db.prepare('SELECT section_id, html FROM book_sections WHERE book_id = ?').all(bookId);
-const results = { fixed: [], rejectedMidSentence: [], skippedNoPdf: [], errors: [] };
+const results = { fixed: [], rejectedMidSentence: [], skippedNoPdf: [], errors: [], partialFixes: [] };
 const upd = db.prepare('UPDATE book_sections SET html=? WHERE book_id=? AND section_id=?');
 
 for (const row of rows) {
@@ -68,7 +68,7 @@ for (const row of rows) {
   let cutPoints = []; // positions in `inner` (original string) where we cut
   let searchStart = 0;
   let anyRejected = false;
-  let failed = false;
+  let anyNotFound = false;
 
   for (let i = 0; i < pdfP.length - 1; i++) {
     const anchor35 = normalize(pdfP[i]).slice(-35);
@@ -79,7 +79,18 @@ for (const row of rows) {
       idx = norm.indexOf(anchor18, searchStart);
       anchorLen = anchor18.length;
     }
-    if (idx === -1) { failed = true; break; }
+    if (idx === -1) {
+      // This one boundary couldn't be located (often a single stray artifact
+      // paragraph - a lone page-number digit, a footnote marker - that
+      // extract_xml.py mis-split as its own "paragraph"). Previously this
+      // aborted the entire section's fix, even when every other boundary
+      // matched fine. Skip just this boundary instead: leave searchStart
+      // where it was so the NEXT anchor still searches forward from the
+      // last confirmed position, and this paragraph's text simply stays
+      // merged with whatever follows rather than blocking the whole section.
+      anyNotFound = true;
+      continue;
+    }
     const endOfAnchorNormIdx = idx + anchorLen; // position right after anchor in norm
     const beforeText = norm.slice(0, endOfAnchorNormIdx);
     searchStart = endOfAnchorNormIdx;
@@ -87,8 +98,6 @@ for (const row of rows) {
     const innerPos = map[Math.min(endOfAnchorNormIdx - 1, map.length - 1)];
     cutPoints.push(innerPos);
   }
-
-  if (failed) { results.errors.push({ id, reason: 'anchor-not-found' }); continue; }
 
   cutPoints = [...new Set(cutPoints)].sort((a, b) => a - b);
   if (cutPoints.length === 0) {
@@ -107,10 +116,11 @@ for (const row of rows) {
 
   const newHtml = parts.map(p => `<p>${p}</p>`).join('');
   upd.run(newHtml, bookId, id);
-  results.fixed.push({ id, newParas: parts.length });
+  results.fixed.push({ id, newParas: parts.length, partial: anyNotFound });
+  if (anyNotFound) results.partialFixes.push(id);
 }
 
-console.log('FIXED:', results.fixed.length);
+console.log('FIXED:', results.fixed.length, '(of which partial - one or more boundaries unlocatable:', results.partialFixes.length + ')');
 console.log('REJECTED (mid-sentence only, genuine single-flow):', results.rejectedMidSentence.length);
 console.log('SKIPPED (PDF shows <=1 para):', results.skippedNoPdf.length);
 console.log('ERRORS:', results.errors.length, JSON.stringify(results.errors));
