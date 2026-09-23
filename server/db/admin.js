@@ -1065,9 +1065,16 @@ function getSiteStats() {
   for (const row of owBookStateRows) {
     let st;
     try { st = JSON.parse(row.state_data); } catch (_) { continue; }
-    if (Array.isArray(st.preSeriesRuns)) {
-      owPreSeriesRuns += st.preSeriesRuns.length;
-    } else if (Array.isArray(st.playthroughs)) {
+    if (Array.isArray(st.preSeriesRuns)) owPreSeriesRuns += st.preSeriesRuns.length;
+    // The migration guard (`if (state.preSeriesRuns === undefined)`) only
+    // ever runs once per book/player, so it's not an either/or with the
+    // above - a player who keeps playing after that first migration (and
+    // before any formal series run exists) accumulates further eligible
+    // pre-series entries that stay in playthroughs forever, never getting
+    // swept. Scan playthroughs unconditionally too; migrated entries are
+    // spliced OUT of playthroughs by the client when moved (see
+    // open-world.js), so there's no overlap/double-count risk here.
+    if (Array.isArray(st.playthroughs)) {
       const minTs = owSeriesMinRunTs.get(row.series_id) || 0;
       for (const p of st.playthroughs) {
         if (p.startedAt && (minTs === 0 || p.startedAt < minTs) && ((p.path && p.path.length > 0) || p.completed)) {
