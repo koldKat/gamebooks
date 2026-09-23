@@ -55,8 +55,20 @@ export async function _syncSeriesRuns(seriesId) {
 
   let needsSave = false;
 
-  // One-time migration: identify pre-series runs
-  if (state.preSeriesRuns === undefined) {
+  // Sweep pre-series runs. This used to be a one-time-only migration
+  // (guarded by `state.preSeriesRuns === undefined`), but that guard meant
+  // any run added *after* the first sweep - still genuinely pre-series,
+  // since nothing here has actually registered a real series run yet -
+  // was left sitting in plain playthroughs. The `current > needed` branch
+  // below then saw a pile of "extra" playthroughs it didn't recognize and,
+  // one by one, called the create-run API to retroactively register each
+  // of them as if it had just started *now* - which is both wrong (they're
+  // old runs, not new ones) and loud (the feed announces every single one
+  // as "began series run N" today). Running this sweep on every sync
+  // instead keeps genuinely-pre-series runs out of that reconciliation
+  // entirely, no matter how many sync calls happen in between.
+  if (state.preSeriesRuns === undefined) state.preSeriesRuns = [];
+  {
     const minSeriesTs = seriesRuns.length > 0
       ? Math.min(...seriesRuns.map(sr => (sr.started_at || 0) * 1000).filter(x => x > 0))
       : 0;
@@ -64,8 +76,8 @@ export async function _syncSeriesRuns(seriesId) {
       p.startedAt && (minSeriesTs === 0 || p.startedAt < minSeriesTs) &&
       (p.path?.length > 0 || p.completed)
     );
-    state.preSeriesRuns = toMigrate;
     if (toMigrate.length > 0) {
+      state.preSeriesRuns.push(...toMigrate);
       // Same activePtIndex-adjustment care as the prune loop below - without
       // this, an in-progress run migrated out from under activePtIndex would
       // either point past the end of the shrunk array, or (worse) silently
@@ -79,8 +91,8 @@ export async function _syncSeriesRuns(seriesId) {
       } else if (activePt) {
         state.activePtIndex = state.playthroughs.indexOf(activePt);
       }
+      needsSave = true;
     }
-    needsSave = true;
   }
 
   const needed  = seriesRuns.length;

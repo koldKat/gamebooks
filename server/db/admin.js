@@ -1053,9 +1053,10 @@ function getSiteStats() {
   // series (and therefore any run of its books) first existed as open-world.
   // Everything at or after that cutoff is a real, current-era run and must
   // NOT be counted here even if the client hasn't migrated it into
-  // state.preSeriesRuns yet (that migration is a one-time, best-effort
-  // sweep of legacy data - it does not mean everything left outside it is
-  // still "pre-series").
+  // state.preSeriesRuns yet (open-world.js's _syncSeriesRuns sweeps
+  // qualifying runs into preSeriesRuns on every sync, not just once, but a
+  // player whose client hasn't synced since this cutoff still has them
+  // sitting in plain playthroughs - checked below as a fallback).
   const owSeriesCreatedTs = new Map();
   for (const r of db.prepare(`SELECT id, created_at FROM series WHERE is_open_world = 1`).all()) {
     owSeriesCreatedTs.set(r.id, r.created_at * 1000);
