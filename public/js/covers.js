@@ -918,7 +918,16 @@ export async function loadCovers({ force = true } = {}) {
     const publicBooks = await booksRes.json();
     const publicSeries = await seriesRes.json();
     const nextFingerprint = _coversFingerprint(covers, publicBooks, publicSeries);
-    const dataChanged = nextFingerprint !== _coversDataFingerprint;
+    // This tab's own render caches (_allBooks/_allCovers/_allSeriesCovers) can
+    // still be empty even when the fingerprint already matches - e.g. a hard
+    // refresh that lands directly on a book/graph page calls loadCovers()
+    // once while the landing view isn't visible yet (see the `return` below),
+    // which records the fingerprint but never populates these caches. A later
+    // call with identical server data would then match the fingerprint and
+    // wrongly skip population forever. Treat "caches still empty" as changed
+    // so that call actually fills them in.
+    const cachesEmpty = !_allBooks.length && !_allCovers.length && !_allSeriesCovers.length;
+    const dataChanged = nextFingerprint !== _coversDataFingerprint || cachesEmpty;
     // A create/edit/delete action triggers loadCovers directly for an
     // immediate optimistic refresh, AND (if this tab is the multi-tab
     // "leader") the resulting server SSE push echoes back and triggers a

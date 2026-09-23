@@ -46,6 +46,7 @@ import { initSim199, setSim199Visible, renderSim199 } from './battlesim/battlesi
 import { initSim200, setSim200Visible, renderSim200 } from './battlesim/battlesim200.js';
 import { initSim186, setSim186Visible, renderSim186 } from './battlesim/battlesim186.js';
 import { initSim201, setSim201Visible, renderSim201 } from './battlesim/battlesim201.js';
+import { initSim246, setSim246Visible, renderSim246 } from './battlesim/battlesim246.js';
 import { initSim234, setSim234Visible, renderSim234 } from './battlesim/battlesim234.js';
 import { initSim235, setSim235Visible, renderSim235 } from './battlesim/battlesim235.js';
 import { initSim716, setSim716Visible, renderSim716 } from './battlesim/battlesim716.js';
@@ -152,6 +153,7 @@ import { initSim215, setSim215Visible, renderSim215 } from './battlesim/battlesi
 import { initSim240, setSim240Visible, renderSim240 } from './battlesim/battlesim240.js';
 import { initSim241, setSim241Visible, renderSim241 } from './battlesim/battlesim241.js';
 import { initSim242, setSim242Visible, renderSim242 } from './battlesim/battlesim242.js';
+import { initSim245, setSim245Visible, renderSim245 } from './battlesim/battlesim245.js';
 import { initSim243, setSim243Visible, renderSim243 } from './battlesim/battlesim243.js';
 import { initSim244, setSim244Visible, renderSim244 } from './battlesim/battlesim244.js';
 import { initLiveRead, setLiveReadVisible, renderLiveRead, previewSection } from './liveread.js';
@@ -425,6 +427,7 @@ function showLogin() {
   setSim200Visible(false);
   setSim186Visible(false);
   setSim201Visible(false);
+  setSim246Visible(false);
   setSim234Visible(false);
   setSim235Visible(false);
   setSim716Visible(false);
@@ -531,6 +534,7 @@ function showLogin() {
   setSim240Visible(false);
   setSim241Visible(false);
   setSim242Visible(false);
+  setSim245Visible(false);
   setSim243Visible(false);
   setSim244Visible(false);
   setLiveReadVisible(false);
@@ -637,6 +641,7 @@ async function showBooks() {
   setSim200Visible(false);
   setSim186Visible(false);
   setSim201Visible(false);
+  setSim246Visible(false);
   setSim234Visible(false);
   setSim235Visible(false);
   setSim716Visible(false);
@@ -743,6 +748,7 @@ async function showBooks() {
   setSim240Visible(false);
   setSim241Visible(false);
   setSim242Visible(false);
+  setSim245Visible(false);
   setSim243Visible(false);
   setSim244Visible(false);
   setLiveReadVisible(false);
@@ -1039,6 +1045,7 @@ async function showMain(bookId, isbn = null, issn = null, asin = null, cover = n
   setSim200Visible(bookId === 200);
   setSim186Visible(bookId === 186);
   setSim201Visible(bookId === 201);
+  setSim246Visible(bookId === 246);
   setSim234Visible(bookId === 234);
   setSim235Visible(bookId === 235);
   setSim716Visible(bookId === 716);
@@ -1145,6 +1152,7 @@ async function showMain(bookId, isbn = null, issn = null, asin = null, cover = n
   setSim240Visible(bookId === 240);
   setSim241Visible(bookId === 241);
   setSim242Visible(bookId === 242);
+  setSim245Visible(bookId === 245);
   setSim243Visible(bookId === 243);
   setSim244Visible(bookId === 244);
   // Gated server-side already (db._canLiveRead) - hasLiveReading only ever
@@ -1326,6 +1334,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initSim200();
   initSim186();
   initSim201();
+  initSim246();
   initSim234();
   initSim235();
   initSim716();
@@ -1432,6 +1441,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initSim240();
   initSim241();
   initSim242();
+  initSim245();
   initSim243();
   initSim244();
   initLiveRead();
@@ -1451,6 +1461,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderSim200();
     renderSim186();
     renderSim201();
+    renderSim246();
     renderSim234();
     renderSim235();
     renderSim716();
@@ -1557,6 +1568,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderSim240();
     renderSim241();
     renderSim242();
+    renderSim245();
     renderSim243();
     renderSim244();
     renderLiveRead();
