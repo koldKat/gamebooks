@@ -271,18 +271,24 @@
   color: #6b7280;
 }
 .pub-book.pub-book-collapsed .pub-book-runs { display: none; }
+.pub-book-runs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin-bottom: 0.25rem;
+}
 
 .pub-run-btn {
   display: block;
   background: #1f2937;
   border: 1px solid #374151;
   border-radius: 6px;
-  padding: 0.4rem 0.75rem;
-  margin-bottom: 0.3rem;
+  padding: 0.2rem 0.6rem;
   cursor: pointer;
   font-size: 0.82rem;
   text-align: left;
   width: 100%;
+  box-sizing: border-box;
 }
 .pub-run-btn:hover { background: #2d3748; border-color: #4b5563; }
 .pub-run-btn.pub-run-death { color: #f87171; }
@@ -290,10 +296,14 @@
 
 .pub-run-locked {
   display: block;
-  padding: 0.4rem 0.75rem;
-  margin-bottom: 0.3rem;
+  background: #1f2937;
+  border: 1px solid #2d3748;
+  border-radius: 6px;
+  padding: 0.2rem 0.6rem;
   font-size: 0.82rem;
   color: #4b5563;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .pub-loading, .pub-error, .pub-empty {
