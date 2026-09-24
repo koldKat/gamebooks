@@ -1306,6 +1306,7 @@ function getAllPublicSeries() {
     LEFT JOIN user_series us ON us.series_id = s.id
     WHERE s.is_public = 1
     GROUP BY s.id
+    HAVING COUNT(DISTINCT b.id) > 0
   `).all().map(r => ({
     ...r,
     is_open_world: !!r.is_open_world,

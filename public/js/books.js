@@ -1137,10 +1137,13 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
     _sortChildrenMap(activeChildrenMap);
     const topInSeries   = _sortSeriesBooks(activeBooks.filter(b => !activeChildIds.has(b.id)));
     const booksInSeries = activeBooks;
-    // A series with nothing actually renderable has nowhere useful for the
-    // "browse series" hint below to send you, so skip the whole section
-    // (header included) rather than showing an empty shell.
-    if (!_hasRenderableTop(topInSeries, activeChildrenMap)) return '';
+    // A genuinely empty series (booksInSeries.length === 0, e.g. just
+    // created) still renders its header with the "no books yet" hint below -
+    // that's the only place a user can find it to add books. But a series
+    // that has books which all got filtered out of view (stash exclusions,
+    // or containers with no children) has nowhere useful for that hint to
+    // send you, so that case still skips the whole section.
+    if (booksInSeries.length && !_hasRenderableTop(topInSeries, activeChildrenMap)) return '';
     const keyPrefix     = stashId ? `stash_${stashId}_sr_` : 'sr_';
     const expanded      = _getExpandedPref('series', `${stashId ?? 'main'}:${s.id}`, `${keyPrefix}expanded_${s.id}`);
     const { visited: aggrV, totalSections: aggrS } = _aggregateProgress(booksInSeries, activeChildrenMap);
