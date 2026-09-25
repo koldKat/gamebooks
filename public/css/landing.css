@@ -639,7 +639,29 @@ body.cover-tooltip-title-bold #cover-tooltip-settings-preview {
 /* Set by covers.js only when this same cover also has the battle-sim badge
    (which claims the same bottom-left corner) - shifts this one one slot to
    the right instead of overlapping it. */
-.cover-livereading-badge[data-badge-offset="1"] { left: 26px; }
+.cover-livereading-badge[data-badge-offset="1"] { left: 20px; }
+/* Bottom-left, stacked after battle-sim (slot 1) and live-reading (slot 2).
+   Bottom-right stays reserved for the open-world badge. Amber to match the
+   app's accent. */
+.cover-pdf-badge {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  color: #f5a623;
+  background: rgba(17,24,39,0.82);
+  border: 1px solid rgba(245,166,35,0.45);
+  border-radius: 3px;
+  /* Keep hoverable so its data-tooltip actually fires (same reasoning as
+     .cover-open-world-badge above). */
+}
+.cover-pdf-badge[data-badge-offset="1"] { left: 20px; }
+.cover-pdf-badge[data-badge-offset="2"] { left: 36px; }
 .cover-series-grid {
   position: absolute;
   inset: 0;

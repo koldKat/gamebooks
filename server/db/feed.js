@@ -1228,11 +1228,11 @@ function getPublicBookMeta(bookId) {
   return result;
 }
 
-function getAllPublicBooks() {
+function getAllPublicBooks(hasPdfAccess = false) {
   const rows = db.prepare(
     `SELECT b.id, b.name, b.cover_path, b.created_at, b.published_at, b.authors,
             b.is_container, b.total_sections, b.description, b.has_battle_sim, b.has_live_reading,
-            b.isbn, b.issn, b.asin, b.pages,
+            b.isbn, b.issn, b.asin, b.pages, b.pdf_path,
             b.series_id, b.series_number, s.name AS series_name,
             GROUP_CONCAT(c.name, '|||') AS child_names,
             GROUP_CONCAT(c.id) AS child_ids,
@@ -1272,6 +1272,9 @@ function getAllPublicBooks() {
     childIds: r.child_ids ? r.child_ids.split(',').map(Number) : [],
     hasBattleSim: !!(r.has_battle_sim || r.child_has_battle_sim),
     hasLiveReading: !!(r.has_live_reading || r.child_has_live_reading),
+    // PDF availability is per-user metadata - only present for admins and
+    // pdf_access holders (same gating as getPublicSeriesInfo's pdfPath).
+    pdfPath: hasPdfAccess ? (r.pdf_path || null) : null,
   }));
 }
 

@@ -327,6 +327,13 @@ function _hasLiveReading(item) {
   return !!item.hasLiveReading;
 }
 
+// How many badges already occupy the cover thumb's bottom-left corner
+// (battle-sim, then live-reading) - the PDF badge stacks after them via
+// its data-badge-offset slots.
+function _bottomLeftBadgeCount(item) {
+  return (_hasBattleSim(item) ? 1 : 0) + (_hasLiveReading(item) ? 1 : 0);
+}
+
 // Cross-referenced against the logged-in user's own library (getCachedBooks,
 // wired in via setCoversHooks - covers.js can't import books.js directly,
 // since books.js already imports from covers.js) rather than anything the
@@ -400,6 +407,7 @@ function _makeCoverThumbHTML(c) {
     (c.isOpenWorld ? `<span class="cover-open-world-badge" data-tooltip="${escapeHtml(t('covers.open_world_series'))}"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span>` : '') +
     (_hasBattleSim(c) ? `<span class="cover-battlesim-badge" data-tooltip="${escapeHtml(t('covers.has_battle_sim'))}"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="4" x2="20" y2="20"/><line x1="20" y1="4" x2="4" y2="20"/><line x1="4" y1="4" x2="8" y2="4"/><line x1="4" y1="4" x2="4" y2="8"/><line x1="20" y1="4" x2="16" y2="4"/><line x1="20" y1="4" x2="20" y2="8"/></svg></span>` : '') +
     (_hasLiveReading(c) ? `<span class="cover-livereading-badge"${_hasBattleSim(c) ? ' data-badge-offset="1"' : ''} data-tooltip="${escapeHtml(t('covers.has_live_reading'))}"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h7a2 2 0 0 1 2 2v14a2 2 0 0 0-2-2H2z"/><path d="M22 4h-7a2 2 0 0 0-2 2v14a2 2 0 0 1 2-2h7z"/></svg></span>` : '') +
+    (!c.isSeries && c.pdfPath ? `<span class="cover-pdf-badge"${_bottomLeftBadgeCount(c) ? ` data-badge-offset="${_bottomLeftBadgeCount(c)}"` : ''} data-tooltip="${escapeHtml(t('books.has_pdf'))}"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>` : '') +
     (c.isSeries
       ? (
         c.coverSources?.length
@@ -892,7 +900,7 @@ function _coversFingerprint(covers, books, series) {
   });
   return JSON.stringify({
     covers: sortRows((Array.isArray(covers) ? covers : []).map(c => [c.id, c.name, c.coverUrl || c.cover_path || '', c.createdAt || c.created_at || 0, c.isContainer ? 1 : 0])),
-    books: sortRows((Array.isArray(books) ? books : []).map(b => [b.id, b.name, b.coverUrl || b.cover_path || '', b.createdAt || b.created_at || 0, b.seriesId || b.series_id || 0, b.isContainer ? 1 : (b.is_container ? 1 : 0)])),
+    books: sortRows((Array.isArray(books) ? books : []).map(b => [b.id, b.name, b.coverUrl || b.cover_path || '', b.createdAt || b.created_at || 0, b.seriesId || b.series_id || 0, b.isContainer ? 1 : (b.is_container ? 1 : 0), b.pdfPath ? 1 : 0])),
     series: sortRows((Array.isArray(series) ? series : []).map(s => [s.id, s.name])),
   });
 }
@@ -909,9 +917,13 @@ export async function loadCovers({ force = true } = {}) {
   if (!panel || !grid) { _loadCoversInFlight = false; _drainPendingLoadCovers(); return; }
   try {
     const noStore = { cache: 'no-store' };
+    // The books payload carries per-user pdfPath (stripped server-side for
+    // non-admins/non-pdf_access), so the request must include the auth token
+    // when we have one - same pattern as openSeriesActivity below.
+    const _auth = getToken() ? { headers: { Authorization: `Bearer ${getToken()}` } } : {};
     const [coversRes, booksRes, seriesRes] = await Promise.all([
       publicFetch('/api/public/covers', noStore),
-      publicFetch('/api/public/books', noStore),
+      publicFetch('/api/public/books', { ...noStore, ..._auth }),
       publicFetch('/api/public/series', noStore),
     ]);
     const covers = await coversRes.json();

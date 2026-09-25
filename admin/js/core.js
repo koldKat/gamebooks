@@ -304,9 +304,17 @@ export function getSorted(tableId) {
 // ── Search (layers on top of getSorted; same tableId keys as _tableData) ──────
 
 export const _searchState = {}; // tableId → { query, fields: [...] }
+export const _rowFilters  = {}; // tableId → (row) => boolean, applied after search
 
 export function setSearchFields(tableId, fields) {
   _searchState[tableId] = { query: '', fields };
+}
+
+// Optional per-table row filter layered on top of the search query - e.g. the
+// books tab's "Missing PDF only" toggle. Applied by getFiltered, so sort,
+// pagination and search all compose with it automatically.
+export function setRowFilter(tableId, fn) {
+  _rowFilters[tableId] = fn;
 }
 
 export function matchesQuery(text, q) {
@@ -316,8 +324,12 @@ export function matchesQuery(text, q) {
 export function getFiltered(tableId) {
   const sorted = getSorted(tableId);
   const search = _searchState[tableId];
-  if (!search || !search.query) return sorted;
-  return sorted.filter(row => search.fields.some(f => matchesQuery(row[f], search.query)));
+  let rows = (search && search.query)
+    ? sorted.filter(row => search.fields.some(f => matchesQuery(row[f], search.query)))
+    : sorted;
+  const rowFilter = _rowFilters[tableId];
+  if (rowFilter) rows = rows.filter(rowFilter);
+  return rows;
 }
 
 // Wires a .admin-search-input/.admin-search-clear pair to a table's search

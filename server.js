@@ -344,6 +344,17 @@ const _routeRequest = async (req, res) => {
 
   const urlPath    = req.url.split('?')[0];
 
+  // PDF availability is per-user metadata: true only when the request carries
+  // a valid admin or pdf_access token. Used by the public books/covers
+  // payloads so permitted users see PDF badges while everyone else (guests
+  // included) gets pdfPath stripped. Mirrors handleGetPublicSeriesInfo.
+  const _requesterHasPdfAccess = (request) => {
+    const userId = authenticateOptional(request);
+    if (!userId) return false;
+    const u = db.getUserById(userId);
+    return !!(u && (u.pdf_access || u.is_admin));
+  };
+
   // Traffic accounting - runs for every request, including any future routes
   const _tBytesIn  = req.socket.bytesRead;
   const _tBytesOut = req.socket.bytesWritten;
@@ -414,7 +425,7 @@ const _routeRequest = async (req, res) => {
     if (method === 'GET'    && urlPath === '/api/feed/stream')   return await handleGetFeedStream(req, res);
     if (method === 'GET'    && urlPath === '/api/public/stream') return await handleGetPublicCatalogStream(req, res);
     if (method === 'GET'    && urlPath === '/api/public/covers') return send(res, 200, db.getPublicCovers());
-    if (method === 'GET'    && urlPath === '/api/public/books')       return send(res, 200, db.getAllPublicBooks());
+    if (method === 'GET'    && urlPath === '/api/public/books')       return send(res, 200, db.getAllPublicBooks(_requesterHasPdfAccess(req)));
     if (method === 'GET'    && urlPath === '/api/public/series')      return send(res, 200, db.getAllPublicSeries());
     if (method === 'GET'    && urlPath === '/api/public/anthologies') return send(res, 200, db.getAllPublicAnthologies());
     if (method === 'GET' && (m = urlPath.match(/^\/api\/public\/series\/(\d+)$/))) return await handleGetPublicSeriesInfo(req, res, +m[1]);

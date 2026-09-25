@@ -15,7 +15,7 @@ import {
   fmtDate, fmtDateTime, fmtBytes, pdfUrl, esc, adminBadge, authorBadge, contributorBadge,
   daysInactiveClass, fmtDaysInactive, flashSaved, showAlert, showConfirm,
   storeData, getSorted, getFiltered, foldForSearch, naturalCompare, naturalCompareByName, _tableData,
-  setSearchFields, wireTableSearch, initSortHeaders, renderPaged,
+  setSearchFields, wireTableSearch, initSortHeaders, renderPaged, setRowFilter,
 } from './core.js';
 import { loadAll, loadTools } from './dashboard.js';
 
@@ -1152,3 +1152,12 @@ initSortHeaders('pts',    renderPtsTable);
 
 setSearchFields('books', ['name', 'owner']);
 wireTableSearch('books', 'books-search', 'books-search-clear', renderBooksTable);
+
+// "Missing PDF only" toolbar filter - composed with search/sort/pagination
+// via core.js's per-table row filter, so the existing pipelines pick it up
+// without any changes to their call sites.
+const _booksPdfFilterSel = document.getElementById('books-pdf-filter');
+setRowFilter('books', b => _booksPdfFilterSel?.value !== 'missing' || !b.pdf_path);
+_booksPdfFilterSel?.addEventListener('change', () => {
+  renderPaged('books', getFiltered('books'), renderBooksTable);
+});
