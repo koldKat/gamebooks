@@ -143,6 +143,14 @@
      inline-block would keep it themed but drop that centering, leaving the
      text sitting off the vertical middle. */
   #mobile-books-btn, #mobile-addbook-btn { display: inline-flex !important; }
+  /* Guests (mobile-guest-btn dismissed the login overlay) get the feed only:
+     My Books is an account feature, and a "Back to feed" from that panel's
+     history-based close would bounce them to the login screen via the
+     popstate router. Add Book stays - the public catalog is the promo that
+     gets them browsing. Guests get a compact Log In way back instead. */
+  body.guest-browsing #mobile-books-btn { display: none !important; }
+  #mobile-login-btn { display: none !important; }
+  body.guest-browsing #mobile-login-btn { display: inline-flex !important; }
   #mobile-books-close-btn { display: none !important; }
   body.mobile-books-open #mobile-books-close-btn {
     /* Sticky, not just the first child of #landing-right's own scrolling
@@ -202,16 +210,22 @@
 
   #mobile-guest-btn {
     display: block;
-    margin-top: 1.25rem;
-    background: none;
-    border: none;
-    color: #6b7280;
-    font-size: 0.8rem;
-    cursor: pointer;
-    text-decoration: underline;
+    width: 280px;
+    max-width: 100%;
+    margin-top: 1rem;
+    padding: 0.55rem 1rem;
+    background: rgba(245, 166, 35, 0.08);
+    border: 1.5px solid #d97706;
+    border-radius: 0.5rem;
+    color: #fcd34d;
+    font-size: 0.95rem;
+    font-weight: 600;
     font-family: inherit;
+    text-align: center;
+    cursor: pointer;
     animation: mobile-guest-pulse 4s ease-in-out infinite;
   }
+  #mobile-guest-btn:hover { border-color: #f59e0b; color: #fde68a; }
 
   /* Scroll-to-top buttons: only center one visible, always centered */
   #covers-scroll-top, #right-scroll-top { display: none !important; }

@@ -241,6 +241,7 @@
           <div id="app-banner-btns">
             <button id="mobile-addbook-btn" style="display:none" data-i18n="mobile.add_book">Add Book</button>
             <button id="mobile-books-btn" style="display:none" data-i18n="books.title">My Books</button>
+            <button id="mobile-login-btn" style="display:none" data-i18n="auth.login">Log In</button>
             <button id="bonus-gc-btn" data-tooltip="No lucky coin waiting" data-i18n-tooltip="bonus_gc.tooltip_empty" disabled><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7.5" fill="#f59e0b" stroke="#92400e" stroke-width="0.75"/><circle cx="8" cy="8" r="5.5" fill="none" stroke="#fde68a" stroke-width="1"/><text x="8" y="8" text-anchor="middle" dominant-baseline="central" font-size="7" font-weight="bold" fill="#78350f" font-family="serif">G</text></svg></button>
             <button id="app-banner-f1-btn" data-tooltip="Keyboard shortcuts" data-i18n-tooltip="title.f1_shortcuts">F1</button>
             <a href="/guide.html" target="_blank" id="app-banner-guide-btn">User Guide</a>
@@ -279,6 +280,7 @@
           <button type="button" id="register-btn" class="auth-alt-btn" data-i18n="auth.register">Create Account</button>
           <button type="button" id="forgot-pw-btn" class="auth-link-btn">Forgot your password?</button>
         </form>
+        <button type="button" id="mobile-guest-btn" data-i18n="auth.browse_guest">Browse without signing in</button>
         <form id="forgot-pw-panel" style="display:none">
           <p class="forgot-pw-intro">Enter your username or email address and we'll send you a reset link.</p>
           <input type="text" id="forgot-identifier" name="username" placeholder="Username or email" autocomplete="username email" data-i18n-placeholder="ph.username_or_email">
@@ -536,7 +538,6 @@
             <span class="login-promo-tag">and more</span>
           </div>
         </section>
-        <button id="mobile-guest-btn">Browse without signing in</button>
       </div>
 
       <!-- ── Books screen ─────────────────────────────────────────── -->

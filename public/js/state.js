@@ -77,9 +77,14 @@ export async function apiFetch(urlPath, options = {}) {
     throw new Error('Maintenance');
   }
   if (res.status === 401) {
-    clearToken();
-    clearUsername();
-    window.dispatchEvent(new Event('auth-expired'));
+    // Guests have no session to expire - a 401 for them just means "login
+    // required", which the caller handles (or swallows). Only a request
+    // that actually carried a token represents an expired/invalid session.
+    if (token) {
+      clearToken();
+      clearUsername();
+      window.dispatchEvent(new Event('auth-expired'));
+    }
     throw new Error('Unauthorized');
   }
   return res;

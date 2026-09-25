@@ -690,18 +690,8 @@
 }
 
 @keyframes mobile-guest-pulse {
-  0%, 100% {
-    opacity: 0.72;
-    color: #6b7280;
-    text-shadow: 0 0 0 rgba(245, 166, 35, 0);
-    filter: drop-shadow(0 0 0 rgba(245, 166, 35, 0));
-  }
-  50% {
-    opacity: 1;
-    color: #f3c46b;
-    text-shadow: 0 0 10px rgba(245, 166, 35, 0.42);
-    filter: drop-shadow(0 0 8px rgba(245, 166, 35, 0.34));
-  }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 166, 35, 0); }
+  50%      { box-shadow: 0 0 0 5px rgba(245, 166, 35, 0.3); }
 }
 
 /* ── Cover activity view ──────────────────────────────────────── */

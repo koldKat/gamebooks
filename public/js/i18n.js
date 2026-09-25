@@ -6540,6 +6540,7 @@ const translations = {
     'auth.confirm': 'Confirm',
     'auth.send_reset_link': 'Send reset link',
     'auth.demo_username': 'Demo',
+    'auth.browse_guest': 'Browse without signing in',
 
     'editbook.pdf_too_large': 'PDF is too large. Max {size}.',
     'editbook.current_pdf': 'Current PDF',

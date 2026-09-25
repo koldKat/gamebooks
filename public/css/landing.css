@@ -887,7 +887,8 @@ body.feed-collapsed #feed-panel {
 #display-settings-btn,
 #bonus-gc-btn,
 #mobile-books-btn,
-#mobile-addbook-btn {
+#mobile-addbook-btn,
+#mobile-login-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -907,6 +908,7 @@ body.feed-collapsed #feed-panel {
 #app-banner-f1-btn:hover { border-color: #6b7280; color: #e2e8f0; }
 #stats-btn:hover { border-color: #6b7280; color: #e2e8f0; }
 #mobile-books-btn:hover { border-color: #6b7280; color: #e2e8f0; }
+#mobile-login-btn:hover { border-color: #6b7280; color: #e2e8f0; }
 #demo-btn:hover      { border-color: #f5a623; color: #f5a623; }
 
 /* Random-chance bonus coin, rolled server-side on every XP event - fixed

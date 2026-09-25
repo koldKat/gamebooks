@@ -541,6 +541,7 @@ function showLogin() {
   setDiceRollerVisible(false);
   setGuideVisible(false);
   if (_isMobile()) document.body.classList.add('mobile-auth');
+  document.body.classList.remove('guest-browsing');
   document.body.classList.add('promo-active');
   const _pvi = document.getElementById('login-promo-video-iframe');
   if (_pvi && !_pvi.src) _pvi.src = _pvi.dataset.src;
@@ -755,6 +756,7 @@ async function showBooks() {
   setDiceRollerVisible(false);
   setGuideVisible(false);
   document.body.classList.remove('mobile-auth');
+  document.body.classList.remove('guest-browsing');
   document.body.classList.remove('promo-active');
   const _pvi = document.getElementById('login-promo-video-iframe');
   if (_pvi) _pvi.src = '';
@@ -1711,9 +1713,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // ── Login screen ─────────────────────────────────────────────────
   initAuth();
+  // Guests browse the public feed/covers only - My Books stays hidden
+  // (see the guest-browsing rules in mobile.css), Add Book stays visible
+  // as the catalog promo. Dismissing the login overlay reveals the feed
+  // underneath; guest-browsing marks the state so the popstate router
+  // below doesn't yank them back to login.
   document.getElementById('mobile-guest-btn').addEventListener('click', () => {
     document.body.classList.remove('mobile-auth');
+    document.body.classList.add('guest-browsing');
   });
+  // The only way back to the login screen once the overlay is dismissed -
+  // there is deliberately no history entry to go back to (the overlay was
+  // reached via replaceState, not pushState).
+  document.getElementById('mobile-login-btn').addEventListener('click', () => showLogin());
 
   // ── Profile modal ─────────────────────────────────────────────────
   setProfileHooks({
@@ -2615,7 +2627,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       const s = e.state;
       if (s?.view === 'book') await navigateToBook(s.bookId);
       else if (getToken())    await showBooks();
-      else                    showLogin();
+      // A guest who dismissed the login overlay to browse the feed has no
+      // in-app view to return to - landing them on showLogin() here turns
+      // every back navigation (e.g. closing a book dialog) into a jarring
+      // jump back to the login screen.
+      else if (!document.body.classList.contains('guest-browsing')) showLogin();
     } finally {
       _suppressHistory = false;
     }
