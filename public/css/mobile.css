@@ -57,6 +57,10 @@
     z-index: 60;
     align-self: flex-start;
     width: 100%;
+    /* flex (via the body.mobile-addbook-open rule below) for the same ‹ +
+       label vertical-centering reason as the mobile-books-close-btn rule. */
+    align-items: center;
+    gap: 0.3rem;
     text-align: left;
     background: #111827;
     border: none;
@@ -65,7 +69,7 @@
     padding: 0.25rem 0 1rem;
     cursor: pointer;
   }
-  body.mobile-addbook-open #mobile-addbook-close-btn { display: block; }
+  body.mobile-addbook-open #mobile-addbook-close-btn { display: flex; }
   /* Forced on unconditionally in covers.js's _visibleCoverItems() on mobile -
      showing the chip would imply it can be toggled off, which it can't. */
   #covers-filter-livereading { display: none !important; }
@@ -157,12 +161,17 @@
        area - same reachability bug as #mobile-addbook-close-btn below:
        without this, scrolling down the books list scrolled the only way
        back to the feed away with it. */
-    display: block !important;
+    display: flex !important;
     position: sticky;
     top: 0;
     z-index: 60;
     align-self: flex-start;
     width: 100%;
+    /* flex, not block + text-align - the ‹ glyph and the label span have
+       different native vertical positions inside the line box, and flex
+       align-items is what actually centers them against each other. */
+    align-items: center;
+    gap: 0.3rem;
     text-align: left;
     background: #111827;
     border: none;
