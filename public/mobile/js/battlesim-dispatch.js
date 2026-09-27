@@ -38,6 +38,7 @@ const SIMS = {
   286: { path: '../../js/battlesim/battlesim286.js',  init: 'initSim286',     btn: 'sim286-btn' },
   829: { path: '../../js/battlesim/battlesim829.js', init: 'initBattleSim',  btn: 'battlesim-btn' },
   80:  { path: '../../js/battlesim/battlesim80.js',  init: 'initSim80',      btn: 'sim80-btn' },
+  161: { path: '../../js/battlesim/battlesim161.js', init: 'initSim161',    btn: 'sim161-btn' },
   82:  { path: '../../js/battlesim/battlesim82.js',  init: 'initSim82',      btn: 'sim82-btn' },
   83:  { path: '../../js/battlesim/battlesim83.js',  init: 'initSim83',      btn: 'sim83-btn' },
   86:  { path: '../../js/battlesim/battlesim86.js',  init: 'initSim86',      btn: 'sim86-btn' },
