@@ -92,10 +92,11 @@ function _shopHasAffordable(balance) {
 }
 
 export function updateCoinsDisplay(balance) {
+  const balanceStr = Number(balance || 0).toLocaleString();
   const el = document.getElementById('coins-display');
-  if (el) el.innerHTML = `${COIN_SVG} ${balance}`;
+  if (el) el.innerHTML = `${COIN_SVG} ${balanceStr}`;
   const shopBalance = document.getElementById('shop-balance');
-  if (shopBalance) shopBalance.innerHTML = `${COIN_SVG} ${balance}`;
+  if (shopBalance) shopBalance.innerHTML = `${COIN_SVG} ${balanceStr}`;
   if (_shopData && typeof _shopData === 'object') _shopData.coinsBalance = balance;
   const btn = document.getElementById('shop-btn');
   if (btn) btn.classList.toggle('shop-btn--spendable', _shopHasAffordable(balance));
@@ -103,7 +104,7 @@ export function updateCoinsDisplay(balance) {
 
 function updateSpentDisplay(spent) {
   const el = document.getElementById('shop-spent');
-  if (el) el.textContent = t('shop.spent', { n: spent });
+  if (el) el.textContent = t('shop.spent', { n: Number(spent || 0).toLocaleString() });
 }
 
 // Mirrors the server's _rollBonusGc formula exactly (xp.js) - level x 0.01%
@@ -240,7 +241,6 @@ export async function openShopModal() {
     _shopData = await res.json();
     _hooks.onRewardSnapshot?.(_shopData);
     updateCoinsDisplay(_shopData.coinsBalance || 0);
-    document.getElementById('shop-balance').innerHTML = `${COIN_SVG} ${_shopData.coinsBalance || 0}`;
     updateSpentDisplay(_shopData.coinsSpent || 0);
     updateBonusGcIndicator(_shopData.pendingBonusGc);
     renderShopItems();
