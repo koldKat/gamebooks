@@ -344,6 +344,7 @@ try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 263').run(); } 
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 264').run(); } catch (_) {}
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 253').run(); } catch (_) {}
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 267').run(); } catch (_) {}
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 254').run(); } catch (_) {}
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 272').run(); } catch (_) {}
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 259').run(); } catch (_) {}
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 260').run(); } catch (_) {}
@@ -354,6 +355,7 @@ try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 661').run(); } 
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 696').run(); } catch (_) {}
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 246').run(); } catch (_) {}
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 161').run(); } catch (_) {}
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 274').run(); } catch (_) {}
 
 // One-time migration: book 829's sim was the first one built, before the
 // pt.simNNN naming convention existed, so its state lived under pt.battleSim
