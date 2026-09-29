@@ -926,14 +926,16 @@ async function showBooks() {
   }
 
   try {
-    const [booksRes, profileRes, stashesRes] = await Promise.all([
+    const [booksRes, profileRes, stashesRes, seriesRes] = await Promise.all([
       apiFetch('/api/books'),
       apiFetch('/api/profile'),
       apiFetch('/api/stashes'),
+      apiFetch('/api/series'),
     ]);
     const books   = await booksRes.json();
     const profile = await profileRes.json();
     const stashes = stashesRes.ok ? await stashesRes.json() : [];
+    const allSeries = seriesRes.ok ? await seriesRes.json() : [];
     _processRewardSnapshot(profile);
     if (profile.id) { _currentUserId = profile.id; setCurrentUserId(_currentUserId); }
     _isAdmin = resolveIsAdmin(profile);
@@ -954,8 +956,6 @@ async function showBooks() {
       document.getElementById('books-username').innerHTML = escapeHtml(_dn) + adminBadge(_isAdmin) + authorBadge(profile.username) + contributorBadge(profile.username);
       _updateUsernameTooltip();
     }
-    const seriesRes = await apiFetch('/api/series');
-    const allSeries = seriesRes.ok ? await seriesRes.json() : [];
     await _prefsReady;
     renderBooksList(books, allSeries, Array.isArray(stashes) ? stashes : []);
     setBooksDataFresh(true);

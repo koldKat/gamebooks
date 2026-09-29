@@ -4,6 +4,7 @@
 
 const fs   = require('fs');
 const path = require('path');
+const zlib = require('zlib');
 const db   = require('./db');
 const { ROOT } = require('./paths');
 const { addSecurityHeaders } = require('./request-helpers');
@@ -57,6 +58,25 @@ function serveStatic(req, res) {
                ['.zip', '.7z', '.rar', '.gz', '.tar'].includes(ext)) {
       headers['Content-Disposition'] = 'attachment';
     }
+    const gzipExts = new Set(['.html', '.js', '.css', '.json', '.svg', '.xml', '.txt']);
+    const acceptsGzip = /\bgzip\b/.test(req.headers['accept-encoding'] || '');
+    if (acceptsGzip && gzipExts.has(ext) && data.length > 1024) {
+      zlib.gzip(data, (zipErr, zipped) => {
+        if (zipErr) {
+          res.writeHead(200, headers);
+          return res.end(data);
+        }
+        res.writeHead(200, {
+          ...headers,
+          'Content-Encoding': 'gzip',
+          'Content-Length': zipped.length,
+          'Vary': 'Accept-Encoding',
+        });
+        res.end(zipped);
+      });
+      return;
+    }
+    if (gzipExts.has(ext)) headers['Vary'] = 'Accept-Encoding';
     res.writeHead(200, headers);
     res.end(data);
   });
