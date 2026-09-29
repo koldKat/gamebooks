@@ -70,6 +70,7 @@ import { initSim227, setSim227Visible, renderSim227 } from './battlesim/battlesi
 import { initSim526, setSim526Visible, renderSim526 } from './battlesim/battlesim526.js';
 import { initSim324, setSim324Visible, renderSim324 } from './battlesim/battlesim324.js';
 import { initSim276, setSim276Visible, renderSim276 } from './battlesim/battlesim276.js';
+import { initSim278, setSim278Visible, renderSim278 } from './battlesim/battlesim278.js';
 import { initSim325, setSim325Visible, renderSim325 } from './battlesim/battlesim325.js';
 import { initSim122, setSim122Visible, renderSim122 } from './battlesim/battlesim122.js';
 import { initSim80, setSim80Visible, renderSim80 } from './battlesim/battlesim80.js';
@@ -480,6 +481,7 @@ function showLogin() {
   setSim323Visible(false);
   setSim324Visible(false);
   setSim276Visible(false);
+  setSim278Visible(false);
   setSim325Visible(false);
   setSim122Visible(false);
   setSim80Visible(false);
@@ -722,6 +724,7 @@ async function showBooks() {
   setSim323Visible(false);
   setSim324Visible(false);
   setSim276Visible(false);
+  setSim278Visible(false);
   setSim325Visible(false);
   setSim122Visible(false);
   setSim80Visible(false);
@@ -1152,6 +1155,7 @@ async function showMain(bookId, isbn = null, issn = null, asin = null, cover = n
   setSim526Visible(bookId === 526);
   setSim324Visible(bookId === 324);
   setSim276Visible(bookId === 276);
+  setSim278Visible(bookId === 278);
   setSim325Visible(bookId === 325);
   setSim122Visible(bookId === 122);
   setSim80Visible(bookId === 80);
@@ -1468,6 +1472,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initSim526();
   initSim324();
   initSim276();
+  initSim278();
   initSim325();
   initSim122();
   initSim80();
@@ -1622,6 +1627,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderSim526();
     renderSim324();
     renderSim276();
+    renderSim278();
     renderSim325();
     renderSim122();
     renderSim80();

@@ -273,6 +273,8 @@ try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 234').run(); } 
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 324').run(); } catch (_) {}
 // Same one-off flag for book 276 (Highway Holocaust, Freeway Warrior book 1).
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 276').run(); } catch (_) {}
+// Same one-off flag for book 278 (Slaughter Mountain Run, Freeway Warrior book 2).
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 278').run(); } catch (_) {}
 // Same one-off flag for book 716 (Арена 3).
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 716').run(); } catch (_) {}
 // Same one-off flag for book 323 (The Caverns of Kalte, Lone Wolf book 3).
