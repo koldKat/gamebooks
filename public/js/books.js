@@ -89,7 +89,11 @@ function _materializeLazyGroup(group) {
   const built = build ? build() : [];
   const items = (Array.isArray(built) ? built : [built]).filter(Boolean);
   delete group.dataset.lazyGroup;
-  _lazyGroupBuilders.delete(key);
+  // Remember the builder key so this now-materialized group can be RECLAIMED
+  // (its DOM + decoded cover backgrounds dropped) when collapsed, then rebuilt
+  // on re-expand. The builder is deliberately NOT deleted from the map for the
+  // same reason - renderBooksList() clears the whole map on the next full render.
+  group.dataset.lazyKey = key;
   const CHUNK = 100;
   if (items.length <= CHUNK || !_wireLazyContent) {
     group.innerHTML = items.join('');
@@ -113,6 +117,34 @@ function _materializeLazyGroup(group) {
   };
   let _wiredCount = 0;
   requestAnimationFrame(step);
+}
+
+// Cards-in-subtree above which collapsing a group RECLAIMS its DOM (drops the
+// nodes + their decoded cover backgrounds) instead of just hiding it. Below
+// this, a plain display:none is cheaper than paying to rebuild + re-decode
+// covers on every toggle. Only groups big enough to actually retain meaningful
+// memory get reclaimed.
+const _RECLAIM_MIN_CARDS = 20;
+
+// Collapse counterpart to _materializeLazyGroup: for a large materialized group
+// (a stash/series/anthology the user opened then closed), drop its DOM and, with
+// it, every decoded CSS cover background, then re-arm the empty lazy placeholder
+// so re-expanding rebuilds it from the retained builder. Without this a big
+// expanded-then-collapsed group stays fully resident (nodes + images) for the
+// life of the page - it was only display:none'd.
+function _maybeReclaimLazyGroup(group) {
+  const key = group?.dataset?.lazyKey;
+  if (!key || !_lazyGroupBuilders.has(key)) return; // no builder to rebuild with - leave it hidden
+  if (group.querySelectorAll('.book-item, .book-item--container').length < _RECLAIM_MIN_CARDS) return;
+  // The shared cover IntersectionObserver keeps a strong reference to every
+  // still-pending (off-screen) target it is watching, so removing those nodes
+  // without unobserving first would leak them. Loaded covers already unobserved
+  // themselves; unobserve() is a safe no-op for anything not being watched.
+  const observer = _getBookCoverObserver();
+  group.querySelectorAll('[data-pending-cover]').forEach(el => observer.unobserve(el));
+  group.replaceChildren();
+  group.dataset.lazyGroup = key;   // re-arm placeholder so the next expand re-materializes
+  delete group.dataset.lazyKey;
 }
 
 // ── Expand prefs ──────────────────────────────────────────────────────────────
@@ -1048,14 +1080,15 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
     const aggrS = myChildren.reduce((s, c) => s + ((c.discoverable_sections ?? c.total_sections) || 0), 0);
     const out = [_bookItemHtml(b, false, expanded, myChildren.length, { visited: aggrV, totalSections: aggrS }, isAdmin)];
     if (myChildren.length) {
+      const childKey = `children:${b.id}:${_lazyGroupSeq++}`;
+      _lazyGroupBuilders.set(childKey, () =>
+        myChildren.map(child => _bookItemHtml(child, true, false, 0, null, isAdmin, b.id)));
       if (expanded) {
-        out.push(`<div class="book-children-group" data-parent="${b.id}">`);
+        // Inline but tagged with data-lazy-key so a later collapse can reclaim it.
+        out.push(`<div class="book-children-group" data-parent="${b.id}" data-lazy-key="${childKey}">`);
         for (const child of myChildren) out.push(_bookItemHtml(child, true, false, 0, null, isAdmin, b.id));
         out.push('</div>');
       } else {
-        const childKey = `children:${b.id}:${_lazyGroupSeq++}`;
-        _lazyGroupBuilders.set(childKey, () =>
-          myChildren.map(child => _bookItemHtml(child, true, false, 0, null, isAdmin, b.id)));
         out.push(`<div class="book-children-group" data-parent="${b.id}" data-lazy-group="${childKey}" style="display:none"></div>`);
       }
     }
@@ -1178,13 +1211,14 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
       // materialization can insert/wire in chunks - see _materializeLazyGroup.
       return inner;
     };
+    const seriesKey = `series:${stashId ?? ''}:${s.id}`;
+    _lazyGroupBuilders.set(seriesKey, _seriesBodyHtml);
     if (expanded) {
-      out.push(`<div class="series-books-group" data-series-id="${s.id}" data-stash-id="${stashId ?? ''}">`);
+      // Inline but tagged with data-lazy-key so a later collapse can reclaim it.
+      out.push(`<div class="series-books-group" data-series-id="${s.id}" data-stash-id="${stashId ?? ''}" data-lazy-key="${seriesKey}">`);
       out.push(_seriesBodyHtml().join(''));
       out.push('</div>');
     } else {
-      const seriesKey = `series:${stashId ?? ''}:${s.id}`;
-      _lazyGroupBuilders.set(seriesKey, _seriesBodyHtml);
       out.push(`<div class="series-books-group" data-series-id="${s.id}" data-stash-id="${stashId ?? ''}" data-lazy-group="${seriesKey}" style="display:none"></div>`);
     }
     return out.join('');
@@ -1271,13 +1305,15 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
       // Array of item strings, not one blob - see _materializeLazyGroup.
       return inner;
     };
+    const stashKey = `stash:${stash.id}`;
+    _lazyGroupBuilders.set(stashKey, _stashBodyHtml);
     if (stashExpanded) {
-      parts.push(`<div class="stash-items-group" data-stash-id="${stash.id}">`);
+      // Rendered inline, but tagged with data-lazy-key so it can still be
+      // reclaimed (DOM freed) if the user collapses it - see _maybeReclaimLazyGroup.
+      parts.push(`<div class="stash-items-group" data-stash-id="${stash.id}" data-lazy-key="${stashKey}">`);
       parts.push(_stashBodyHtml().join(''));
       parts.push('</div>');
     } else {
-      const stashKey = `stash:${stash.id}`;
-      _lazyGroupBuilders.set(stashKey, _stashBodyHtml);
       parts.push(`<div class="stash-items-group" data-stash-id="${stash.id}" data-lazy-group="${stashKey}" style="display:none"></div>`);
     }
     parts.push('</div>');
@@ -1357,6 +1393,7 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
       row.dataset.expanded = nowExpanded ? '1' : '0';
       if (nowExpanded && group) _materializeLazyGroup(group);
       if (group) group.style.display = nowExpanded ? '' : 'none';
+      if (!nowExpanded && group) _maybeReclaimLazyGroup(group);
       _saveExpandedPref('stash', String(sid), `stash_expanded_${sid}`, nowExpanded);
       if (nowExpanded && group) _queueBookCovers(group, { reset: false });
       _scheduleAnthologyCardCoverFlows(list);
@@ -1377,6 +1414,7 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
       row.dataset.expanded = nowExpanded ? '1' : '0';
       if (nowExpanded && group) _materializeLazyGroup(group);
       if (group) group.style.display = nowExpanded ? '' : 'none';
+      if (!nowExpanded && group) _maybeReclaimLazyGroup(group);
       _saveExpandedPref('series', `${stashId || 'main'}:${sid}`, `${stashId ? `stash_${stashId}_sr_` : 'sr_'}expanded_${sid}`, nowExpanded);
       if (nowExpanded && group) _queueBookCovers(group, { reset: false });
       _scheduleAnthologyCardCoverFlows(list);
@@ -1397,6 +1435,7 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
       row.dataset.expanded = nowExpanded ? '1' : '0';
       if (nowExpanded && group) _materializeLazyGroup(group);
       if (group) group.style.display = nowExpanded ? '' : 'none';
+      if (!nowExpanded && group) _maybeReclaimLazyGroup(group);
       _saveExpandedPref('book', String(bid), `bk_expanded_${bid}`, nowExpanded);
       if (nowExpanded && group) _queueBookCovers(group, { reset: false });
       _scheduleAnthologyCardCoverFlows(list);
