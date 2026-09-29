@@ -1317,8 +1317,10 @@ function adminDeleteUser(userId) {
   // Cascade handles sessions, xp_events, user_books via FK ON DELETE CASCADE
   const result = db.prepare('DELETE FROM users WHERE id = ?').run(userId);
 
-  // Delete orphaned book rows (no more trackers)
+  // Delete orphaned book rows (no more trackers) + their book-keyed xp_events
+  // (no FK to books, so they'd otherwise outlive the row and be inherited on id reuse).
   for (const bookId of orphanBookIds) {
+    db.prepare('DELETE FROM xp_events WHERE ref LIKE ?').run(`${bookId}:%`);
     db.prepare('DELETE FROM books WHERE id = ?').run(bookId);
   }
 
@@ -1374,6 +1376,11 @@ function adminDeleteBook(bookId) {
   if (book?.cover_path) {
     try { require('fs').unlinkSync(require('path').join(__dirname, '..', 'public', 'covers', book.cover_path)); } catch (_) {}
   }
+  // Purge this book's xp_events (visit_node/visit_all markers keyed by
+  // "<bookId>:<section>") - they have no FK to books, so without this they
+  // outlive the row and get inherited by any future book that reuses this id,
+  // showing false "progress" on a never-played book. See _permanentVisitedCount.
+  db.prepare('DELETE FROM xp_events WHERE ref LIKE ?').run(`${bookId}:%`);
   return db.prepare('DELETE FROM books WHERE id = ?').run(bookId).changes > 0;
 }
 
