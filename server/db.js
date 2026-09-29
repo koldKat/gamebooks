@@ -359,6 +359,7 @@ try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 246').run(); } 
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 161').run(); } catch (_) {}
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 274').run(); } catch (_) {}
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 257').run(); } catch (_) {}
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 258').run(); } catch (_) {}
 
 // One-time migration: book 829's sim was the first one built, before the
 // pt.simNNN naming convention existed, so its state lived under pt.battleSim
