@@ -1,170 +1,47 @@
-// battlesim-dispatch.js - Mobile's bookId -> battle-sim lookup.
-//
-// Every battlesim*.js module already exports an init function that builds
-// its own overlay + a trigger button (id "simNNN-btn", or "battlesim-btn"/
-// "sim8-btn" for the two oldest ones) via getPlayBtnRow() - see charsheet.js,
-// which now falls back to #m-sim-btn-row (a hidden sink in mobile/index.html)
-// when #main-screen doesn't exist. Rather than needing each file's actual
-// "open" function name (not perfectly uniform across the 21 files), this
-// just clicks that already-wired trigger button once init has run - same
-// click path the desktop button itself uses, guaranteed to match.
-//
-// One entry per book that has a sim. Add one line here when a new
-// battlesim*.js ships - nothing else on the mobile side needs touching.
-const SIMS = {
-  8:   { path: '../../js/battlesim/battlesim8.js',   init: 'initBattleSim8', btn: 'sim8-btn' },
-  186: { path: '../../js/battlesim/battlesim186.js',  init: 'initSim186',     btn: 'sim186-btn' },
-  198: { path: '../../js/battlesim/battlesim198.js',  init: 'initSim198',     btn: 'sim198-btn' },
-  199: { path: '../../js/battlesim/battlesim199.js',  init: 'initSim199',     btn: 'sim199-btn' },
-  200: { path: '../../js/battlesim/battlesim200.js',  init: 'initSim200',     btn: 'sim200-btn' },
-  201: { path: '../../js/battlesim/battlesim201.js',  init: 'initSim201',     btn: 'sim201-btn' },
-  202: { path: '../../js/battlesim/battlesim202.js',  init: 'initSim202',     btn: 'sim202-btn' },
-  203: { path: '../../js/battlesim/battlesim203.js',  init: 'initSim203',     btn: 'sim203-btn' },
-  204: { path: '../../js/battlesim/battlesim204.js',  init: 'initSim204',     btn: 'sim204-btn' },
-  205: { path: '../../js/battlesim/battlesim205.js',  init: 'initSim205',     btn: 'sim205-btn' },
-  206: { path: '../../js/battlesim/battlesim206.js',  init: 'initSim206',     btn: 'sim206-btn' },
-  207: { path: '../../js/battlesim/battlesim207.js',  init: 'initSim207',     btn: 'sim207-btn' },
-  208: { path: '../../js/battlesim/battlesim208.js',  init: 'initSim208',     btn: 'sim208-btn' },
-  209: { path: '../../js/battlesim/battlesim209.js',  init: 'initSim209',     btn: 'sim209-btn' },
-  210: { path: '../../js/battlesim/battlesim210.js',  init: 'initSim210',     btn: 'sim210-btn' },
-  211: { path: '../../js/battlesim/battlesim211.js',  init: 'initSim211',     btn: 'sim211-btn' },
-  212: { path: '../../js/battlesim/battlesim212.js',  init: 'initSim212',     btn: 'sim212-btn' },
-  213: { path: '../../js/battlesim/battlesim213.js',  init: 'initSim213',     btn: 'sim213-btn' },
-  214: { path: '../../js/battlesim/battlesim214.js',   init: 'initSim214',     btn: 'sim214-btn' },
-  215: { path: '../../js/battlesim/battlesim215.js',   init: 'initSim215',     btn: 'sim215-btn' },
-  240: { path: '../../js/battlesim/battlesim240.js',   init: 'initSim240',     btn: 'sim240-btn' },
-  241: { path: '../../js/battlesim/battlesim241.js',   init: 'initSim241',     btn: 'sim241-btn' },
-  245: { path: '../../js/battlesim/battlesim245.js',   init: 'initSim245',     btn: 'sim245-btn' },
-  247: { path: '../../js/battlesim/battlesim247.js',   init: 'initSim247',     btn: 'sim247-btn' },
-  248: { path: '../../js/battlesim/battlesim248.js',   init: 'initSim248',     btn: 'sim248-btn' },
-  249: { path: '../../js/battlesim/battlesim249.js',   init: 'initSim249',     btn: 'sim249-btn' },
-  250: { path: '../../js/battlesim/battlesim250.js',   init: 'initSim250',     btn: 'sim250-btn' },
-  251: { path: '../../js/battlesim/battlesim251.js',   init: 'initSim251',     btn: 'sim251-btn' },
-  263: { path: '../../js/battlesim/battlesim263.js',   init: 'initSim263',     btn: 'sim263-btn' },
-  264: { path: '../../js/battlesim/battlesim264.js',   init: 'initSim264',     btn: 'sim264-btn' },
-  267: { path: '../../js/battlesim/battlesim267.js',   init: 'initSim267',     btn: 'sim267-btn' },
-  256: { path: '../../js/battlesim/battlesim256.js',   init: 'initSim256',     btn: 'sim256-btn' },
-  257: { path: '../../js/battlesim/battlesim257.js',   init: 'initSim257',     btn: 'sim257-btn' },
-  258: { path: '../../js/battlesim/battlesim258.js',   init: 'initSim258',     btn: 'sim258-btn' },
-  255: { path: '../../js/battlesim/battlesim255.js',   init: 'initSim255',     btn: 'sim255-btn' },
-  254: { path: '../../js/battlesim/battlesim254.js',   init: 'initSim254',     btn: 'sim254-btn' },
-  246: { path: '../../js/battlesim/battlesim246.js',   init: 'initSim246',     btn: 'sim246-btn' },
-  272: { path: '../../js/battlesim/battlesim272.js',   init: 'initSim272',     btn: 'sim272-btn' },
-  275: { path: '../../js/battlesim/battlesim275.js',   init: 'initSim275',     btn: 'sim275-btn' },
-  274: { path: '../../js/battlesim/battlesim274.js',   init: 'initSim274',     btn: 'sim274-btn' },
-  252: { path: '../../js/battlesim/battlesim252.js',   init: 'initSim252',     btn: 'sim252-btn' },
-  253: { path: '../../js/battlesim/battlesim253.js',   init: 'initSim253',     btn: 'sim253-btn' },
-  259: { path: '../../js/battlesim/battlesim259.js',   init: 'initSim259',     btn: 'sim259-btn' },
-  260: { path: '../../js/battlesim/battlesim260.js',   init: 'initSim260',     btn: 'sim260-btn' },
-  273: { path: '../../js/battlesim/battlesim273.js',   init: 'initSim273',     btn: 'sim273-btn' },
-  433: { path: '../../js/battlesim/battlesim433.js',   init: 'initSim433',     btn: 'sim433-btn' },
-  541: { path: '../../js/battlesim/battlesim541.js',   init: 'initSim541',     btn: 'sim541-btn' },
-  661: { path: '../../js/battlesim/battlesim661.js',   init: 'initSim661',     btn: 'sim661-btn' },
-  696: { path: '../../js/battlesim/battlesim696.js',   init: 'initSim696',     btn: 'sim696-btn' },
-  286: { path: '../../js/battlesim/battlesim286.js',  init: 'initSim286',     btn: 'sim286-btn' },
-  829: { path: '../../js/battlesim/battlesim829.js', init: 'initBattleSim',  btn: 'battlesim-btn' },
-  80:  { path: '../../js/battlesim/battlesim80.js',  init: 'initSim80',      btn: 'sim80-btn' },
-  161: { path: '../../js/battlesim/battlesim161.js', init: 'initSim161',    btn: 'sim161-btn' },
-  82:  { path: '../../js/battlesim/battlesim82.js',  init: 'initSim82',      btn: 'sim82-btn' },
-  83:  { path: '../../js/battlesim/battlesim83.js',  init: 'initSim83',      btn: 'sim83-btn' },
-  86:  { path: '../../js/battlesim/battlesim86.js',  init: 'initSim86',      btn: 'sim86-btn' },
-  92:  { path: '../../js/battlesim/battlesim92.js',  init: 'initSim92',      btn: 'sim92-btn' },
-  108: { path: '../../js/battlesim/battlesim108.js', init: 'initSim108',     btn: 'sim108-btn' },
-  114: { path: '../../js/battlesim/battlesim114.js', init: 'initSim114',     btn: 'sim114-btn' },
-  115: { path: '../../js/battlesim/battlesim115.js', init: 'initSim115',     btn: 'sim115-btn' },
-  118: { path: '../../js/battlesim/battlesim118.js', init: 'initSim118',     btn: 'sim118-btn' },
-  122: { path: '../../js/battlesim/battlesim122.js', init: 'initSim122',     btn: 'sim122-btn' },
-  123: { path: '../../js/battlesim/battlesim123.js', init: 'initSim123',     btn: 'sim123-btn' },
-  130: { path: '../../js/battlesim/battlesim130.js', init: 'initSim130',     btn: 'sim130-btn' },
-  193: { path: '../../js/battlesim/battlesim193.js', init: 'initSim193',     btn: 'sim193-btn' },
-  216: { path: '../../js/battlesim/battlesim216.js', init: 'initSim216',     btn: 'sim216-btn' },
-  217: { path: '../../js/battlesim/battlesim217.js', init: 'initSim217',     btn: 'sim217-btn' },
-  218: { path: '../../js/battlesim/battlesim218.js', init: 'initSim218',     btn: 'sim218-btn' },
-  322: { path: '../../js/battlesim/battlesim322.js', init: 'initSim322',     btn: 'sim322-btn' },
-  323: { path: '../../js/battlesim/battlesim323.js', init: 'initSim323',     btn: 'sim323-btn' },
-  324: { path: '../../js/battlesim/battlesim324.js', init: 'initSim324',     btn: 'sim324-btn' },
-  276: { path: '../../js/battlesim/battlesim276.js', init: 'initSim276',     btn: 'sim276-btn' },
-  278: { path: '../../js/battlesim/battlesim278.js', init: 'initSim278',     btn: 'sim278-btn' },
-  279: { path: '../../js/battlesim/battlesim279.js', init: 'initSim279',     btn: 'sim279-btn' },
-  280: { path: '../../js/battlesim/battlesim280.js', init: 'initSim280',     btn: 'sim280-btn' },
-  325: { path: '../../js/battlesim/battlesim325.js', init: 'initSim325',     btn: 'sim325-btn' },
-  430: { path: '../../js/battlesim/battlesim430.js', init: 'initSim430',     btn: 'sim430-btn' },
-  526: { path: '../../js/battlesim/battlesim526.js', init: 'initSim526',     btn: 'sim526-btn' },
-  78: { path: '../../js/battlesim/battlesim78.js', init: 'initSim78', btn: 'sim78-btn' },
-  107: { path: '../../js/battlesim/battlesim107.js', init: 'initSim107', btn: 'sim107-btn' },
-  135: { path: '../../js/battlesim/battlesim135.js', init: 'initSim135', btn: 'sim135-btn' },
-  219: { path: '../../js/battlesim/battlesim219.js', init: 'initSim219', btn: 'sim219-btn' },
-  220: { path: '../../js/battlesim/battlesim220.js', init: 'initSim220', btn: 'sim220-btn' },
-  221: { path: '../../js/battlesim/battlesim221.js', init: 'initSim221', btn: 'sim221-btn' },
-  222: { path: '../../js/battlesim/battlesim222.js', init: 'initSim222', btn: 'sim222-btn' },
-  223: { path: '../../js/battlesim/battlesim223.js', init: 'initSim223', btn: 'sim223-btn' },
-  224: { path: '../../js/battlesim/battlesim224.js', init: 'initSim224', btn: 'sim224-btn' },
-  225: { path: '../../js/battlesim/battlesim225.js', init: 'initSim225', btn: 'sim225-btn' },
-  226: { path: '../../js/battlesim/battlesim226.js', init: 'initSim226', btn: 'sim226-btn' },
-  227: { path: '../../js/battlesim/battlesim227.js', init: 'initSim227', btn: 'sim227-btn' },
-  228: { path: '../../js/battlesim/battlesim228.js', init: 'initSim228', btn: 'sim228-btn' },
-  229: { path: '../../js/battlesim/battlesim229.js', init: 'initSim229', btn: 'sim229-btn' },
-  230: { path: '../../js/battlesim/battlesim230.js', init: 'initSim230', btn: 'sim230-btn' },
-  231: { path: '../../js/battlesim/battlesim231.js', init: 'initSim231', btn: 'sim231-btn' },
-  232: { path: '../../js/battlesim/battlesim232.js', init: 'initSim232', btn: 'sim232-btn' },
-  233: { path: '../../js/battlesim/battlesim233.js', init: 'initSim233', btn: 'sim233-btn' },
-  234: { path: '../../js/battlesim/battlesim234.js', init: 'initSim234', btn: 'sim234-btn' },
-  235: { path: '../../js/battlesim/battlesim235.js', init: 'initSim235', btn: 'sim235-btn' },
-  236: { path: '../../js/battlesim/battlesim236.js', init: 'initSim236', btn: 'sim236-btn' },
-  237: { path: '../../js/battlesim/battlesim237.js', init: 'initSim237', btn: 'sim237-btn' },
-  238: { path: '../../js/battlesim/battlesim238.js', init: 'initSim238', btn: 'sim238-btn' },
-  239: { path: '../../js/battlesim/battlesim239.js', init: 'initSim239', btn: 'sim239-btn' },
-  242: { path: '../../js/battlesim/battlesim242.js', init: 'initSim242', btn: 'sim242-btn' },
-  243: { path: '../../js/battlesim/battlesim243.js', init: 'initSim243', btn: 'sim243-btn' },
-  244: { path: '../../js/battlesim/battlesim244.js', init: 'initSim244', btn: 'sim244-btn' },
-  317: { path: '../../js/battlesim/battlesim317.js', init: 'initSim317', btn: 'sim317-btn' },
-  318: { path: '../../js/battlesim/battlesim318.js', init: 'initSim318', btn: 'sim318-btn' },
-  319: { path: '../../js/battlesim/battlesim319.js', init: 'initSim319', btn: 'sim319-btn' },
-  320: { path: '../../js/battlesim/battlesim320.js', init: 'initSim320', btn: 'sim320-btn' },
-  321: { path: '../../js/battlesim/battlesim321.js', init: 'initSim321', btn: 'sim321-btn' },
-  370: { path: '../../js/battlesim/battlesim370.js', init: 'initSim370', btn: 'sim370-btn' },
-  375: { path: '../../js/battlesim/battlesim375.js', init: 'initSim375', btn: 'sim375-btn' },
-  376: { path: '../../js/battlesim/battlesim376.js', init: 'initSim376', btn: 'sim376-btn' },
-  377: { path: '../../js/battlesim/battlesim377.js', init: 'initSim377', btn: 'sim377-btn' },
-  378: { path: '../../js/battlesim/battlesim378.js', init: 'initSim378', btn: 'sim378-btn' },
-  397: { path: '../../js/battlesim/battlesim397.js', init: 'initSim397', btn: 'sim397-btn' },
-  398: { path: '../../js/battlesim/battlesim398.js', init: 'initSim398', btn: 'sim398-btn' },
-  399: { path: '../../js/battlesim/battlesim399.js', init: 'initSim399', btn: 'sim399-btn' },
-  414: { path: '../../js/battlesim/battlesim414.js', init: 'initSim414', btn: 'sim414-btn' },
-  415: { path: '../../js/battlesim/battlesim415.js', init: 'initSim415', btn: 'sim415-btn' },
-  416: { path: '../../js/battlesim/battlesim416.js', init: 'initSim416', btn: 'sim416-btn' },
-  431: { path: '../../js/battlesim/battlesim431.js', init: 'initSim431', btn: 'sim431-btn' },
-  432: { path: '../../js/battlesim/battlesim432.js', init: 'initSim432', btn: 'sim432-btn' },
-  434: { path: '../../js/battlesim/battlesim434.js', init: 'initSim434', btn: 'sim434-btn' },
-  435: { path: '../../js/battlesim/battlesim435.js', init: 'initSim435', btn: 'sim435-btn' },
-  436: { path: '../../js/battlesim/battlesim436.js', init: 'initSim436', btn: 'sim436-btn' },
-  437: { path: '../../js/battlesim/battlesim437.js', init: 'initSim437', btn: 'sim437-btn' },
-  438: { path: '../../js/battlesim/battlesim438.js', init: 'initSim438', btn: 'sim438-btn' },
-  439: { path: '../../js/battlesim/battlesim439.js', init: 'initSim439', btn: 'sim439-btn' },
-  440: { path: '../../js/battlesim/battlesim440.js', init: 'initSim440', btn: 'sim440-btn' },
-  441: { path: '../../js/battlesim/battlesim441.js', init: 'initSim441', btn: 'sim441-btn' },
-  462: { path: '../../js/battlesim/battlesim462.js', init: 'initSim462', btn: 'sim462-btn' },
-  464: { path: '../../js/battlesim/battlesim464.js', init: 'initSim464', btn: 'sim464-btn' },
-  716: { path: '../../js/battlesim/battlesim716.js', init: 'initSim716', btn: 'sim716-btn' },
-  753: { path: '../../js/battlesim/battlesim753.js', init: 'initSim753', btn: 'sim753-btn' },
-  760: { path: '../../js/battlesim/battlesim760.js', init: 'initSim760', btn: 'sim760-btn' },
-  772: { path: '../../js/battlesim/battlesim772.js', init: 'initSim772', btn: 'sim772-btn' },
-  781: { path: '../../js/battlesim/battlesim781.js', init: 'initSim781', btn: 'sim781-btn' },
-};
+// Mobile battle-sim dispatcher. Mirrors desktop's lazy loading: no battle sim
+// module is imported until the reader opens the simulator for the current book.
 
-export function hasSim(bookId) {
-  return Object.prototype.hasOwnProperty.call(SIMS, bookId);
-}
+const SUPPORTED_BATTLE_SIM_BOOKS = new Set([
+  8, 78, 80, 82, 83, 86, 92, 107, 108, 114, 115, 118, 122, 123, 130, 135, 161,
+  186, 193, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210,
+  211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225,
+  226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240,
+  241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255,
+  256, 257, 258, 259, 260, 263, 264, 267, 272, 273, 274, 275, 276, 278, 279,
+  280, 286, 317, 318, 319, 320, 321, 322, 323, 324, 325, 370, 375, 376, 377,
+  378, 397, 398, 399, 414, 415, 416, 430, 431, 432, 433, 434, 435, 436, 437,
+  438, 439, 440, 441, 462, 464, 465, 468, 526, 541, 661, 696, 716, 734, 739,
+  740, 753, 760, 772, 781, 829, 869, 871, 877, 881, 882,
+]);
 
 const _initialized = new Set();
 
+function _initExportName(bookId) {
+  if (bookId === 829) return 'initBattleSim';
+  if (bookId === 8) return 'initBattleSim8';
+  return `initSim${bookId}`;
+}
+
+function _triggerButtonId(bookId) {
+  if (bookId === 829) return 'battlesim-btn';
+  if (bookId === 8) return 'sim8-btn';
+  return `sim${bookId}-btn`;
+}
+
+export function hasSim(bookId) {
+  return SUPPORTED_BATTLE_SIM_BOOKS.has(Number(bookId));
+}
+
 export async function openSimForBook(bookId) {
-  const entry = SIMS[bookId];
-  if (!entry) return;
-  const mod = await import(entry.path);
-  if (!_initialized.has(bookId)) {
-    mod[entry.init]();
-    _initialized.add(bookId);
+  const id = Number(bookId);
+  if (!SUPPORTED_BATTLE_SIM_BOOKS.has(id)) return;
+
+  const mod = await import(`../../js/battlesim/battlesim${id}.js`);
+  if (!_initialized.has(id)) {
+    const init = mod[_initExportName(id)];
+    if (typeof init !== 'function') throw new Error(`Battle sim ${id} has no mobile init export`);
+    init();
+    _initialized.add(id);
   }
-  document.getElementById(entry.btn)?.click();
+  document.getElementById(_triggerButtonId(id))?.click();
 }
