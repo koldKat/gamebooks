@@ -328,6 +328,7 @@
   border-radius: 4px;
   flex-shrink: 0;
   object-fit: cover;
+  cursor: zoom-in; /* hover shows the enlarged #cover-preview-popup */
 }
 
 .book-modal-cover-col {
