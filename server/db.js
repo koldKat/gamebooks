@@ -277,6 +277,8 @@ try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 276').run(); } 
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 278').run(); } catch (_) {}
 // Same one-off flag for book 279 (The Omega Zone, Freeway Warrior book 3).
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 279').run(); } catch (_) {}
+// Same one-off flag for book 280 (California Countdown, Freeway Warrior book 4).
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 280').run(); } catch (_) {}
 // Same one-off flag for book 716 (Арена 3).
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 716').run(); } catch (_) {}
 // Same one-off flag for book 323 (The Caverns of Kalte, Lone Wolf book 3).
