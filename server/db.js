@@ -348,6 +348,7 @@ try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 256').run(); } 
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 255').run(); } catch (_) {}
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 254').run(); } catch (_) {}
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 272').run(); } catch (_) {}
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 275').run(); } catch (_) {}
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 259').run(); } catch (_) {}
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 260').run(); } catch (_) {}
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 273').run(); } catch (_) {}
