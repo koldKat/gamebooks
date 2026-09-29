@@ -42,7 +42,18 @@ async function handleWatchState(req, res, userId, requestedBookId) {
   // it's real content worth showing even on a run with an empty charsheet.
   const notebook = db.getNotebook(userId, bookId);
   const bgPref = db.getBookBgPref(userId, bookId);
-  send(res, 200, { username: user.username, bookId, isOpenWorld, state, items, notebook, bgPref });
+  // Live-reading text for the section the player is currently standing on -
+  // same canonical source the reader itself serves (db.getBookSection).
+  // Read-only garnish; null when the book has no imported text for that
+  // section (unimported book, or a terminal -1/0 node), and the client hides
+  // its panel then. Computed against the resolved bookId, so it follows
+  // open-world portal switches like everything else in this payload.
+  const playthroughs = state.playthroughs || [];
+  const activePt = state.activePtIndex != null ? playthroughs[state.activePtIndex] : null;
+  const path = activePt?.path || [];
+  const currentSec = path.length ? path[path.length - 1] : null;
+  const section = currentSec != null ? db.getBookSection(bookId, currentSec) : null;
+  send(res, 200, { username: user.username, bookId, isOpenWorld, state, items, notebook, bgPref, section, currentSec });
 }
 
 module.exports = { handleWatchState };

@@ -56,6 +56,42 @@
     pointer-events: none;
   }
   #watch-notes.visible { display: block; }
+
+  /* Imported live-reading text for the player's current section - read-only.
+     Top-right, just under the header. Anchors keep their reader styling but
+     are inert (pointer-events:none): seeing WHERE the in-text choices are is
+     the point; clicking one must do nothing. Panel itself stays interactive
+     so the prose can be scrolled. Hidden entirely when the watched book has
+     no imported text for the current section. */
+  #watch-text {
+    display: none;
+    position: fixed;
+    top: 48px;
+    right: 1rem;
+    width: 24vw;
+    max-width: 30rem;
+    max-height: 60vh;
+    overflow-y: auto;
+    z-index: 5;
+    padding: 0.6rem 0.75rem;
+    background: rgba(17,24,39,0.85);
+    border: 1px solid #374151;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    line-height: 1.6;
+    color: #e5e7eb;
+    text-align: justify;
+    hyphens: auto;
+  }
+  #watch-text.visible { display: block; }
+  #watch-text a { color: #60a5fa; pointer-events: none; }
+  .watch-text-sec {
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    color: #6b7280;
+    text-transform: uppercase;
+    margin-bottom: 0.4rem;
+  }
 </style>
 </head>
 <body>
@@ -66,6 +102,7 @@
   </div>
   <div id="graph-container"></div>
   <div id="watch-notes"></div>
+  <div id="watch-text"></div>
   <div id="watch-hud">
     <div id="watch-cs-display"></div>
     <div id="watch-inv-display"></div>

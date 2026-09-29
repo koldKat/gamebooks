@@ -566,6 +566,28 @@ function renderNotes(state, notebook) {
   el.textContent = notebook || '';
 }
 
+// Live-reading text for the player's current section, served as its own
+// payload field (see server/routes/watch.js) - null whenever the watched
+// book has no imported section text there, which hides the panel. The html
+// is admin-imported trusted content, same source liveread.js injects
+// unescaped; the anchors are made inert via CSS, not rewritten here, and
+// the stored DB row is never touched.
+let lastSectionKey = null;
+function renderSectionText(section, currentSec) {
+  const el = document.getElementById('watch-text');
+  if (!el) return;
+  const key = section ? `${currentSec}|${section.html.length}` : null;
+  if (key === lastSectionKey) return;
+  lastSectionKey = key;
+  if (!section) {
+    el.classList.remove('visible');
+    el.innerHTML = '';
+    return;
+  }
+  el.innerHTML = `<div class="watch-text-sec">Section ${escapeHtml(String(currentSec))}</div>` + section.html;
+  el.classList.add('visible');
+}
+
 // The player can portal to a different book mid-run in an open-world series -
 // the server already resolves and returns whichever book they're truly active
 // in (see server/routes/watch.js), this just has to notice the switch and
@@ -580,6 +602,7 @@ function resetForNewBook() {
   overlayNodes = [];
   lastFocusedSec = null;
   lastBgKey = null;
+  lastSectionKey = null;
 }
 
 async function poll() {
@@ -610,6 +633,9 @@ async function poll() {
     // so the state-changed check above wouldn't catch a background move/hide
     // either. applyBgPref() has its own no-op guard for "nothing changed".
     applyBgPref(data.bgPref);
+    // Section text is its own payload field too - renderSectionText() has
+    // its own key-based no-op guard, so this is a cheap toggle each poll.
+    renderSectionText(data.section, data.currentSec);
     statusEl.textContent = `updated ${new Date().toLocaleTimeString()}`;
     statusEl.classList.remove('stale');
   } catch (e) {

@@ -64,6 +64,10 @@
 //     own armour for this specific fight - a player-side detail, not an
 //     enemy stat, left as-is here).
 //   - Slaves (§177/§276, pair): FP 8, Dmg 1d6+2, End 15 each, Armour 0.
+//   - Psyche (the sorceress, §177/§276, fights alongside the Slaves): FP 8,
+//     Dmg 3d6+3, End 45, Armour 0. Seeded from her armed form at §276 (at
+//     §177 she is casting rather than striking, so her Fighting Prowess is
+//     not relevant there).
 //   - Demon (summoned by Psyche, §229/§481/§560): FP 8, Dmg 5d6, End 60,
 //     Armour 4.
 //   - Acolytes (chanting cultist guards, §239/§322/§485, groups of 4-8):
