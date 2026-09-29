@@ -76,24 +76,21 @@ function _runAnimQueue(gen) {
   const fromBoostXp = _displayedBoostXp != null ? _displayedBoostXp : toBoostXp;
   const animLevel = Math.min(Math.max(0, Number(data.level) || 0), ANIM_DURATION_LEVEL_CAP);
   const durationMs = animLevel * XP_ANIM_MS_PER_LEVEL;
+  const jump = Math.abs(toXp - fromXp);
   const finish = () => {
     _displayedXp = toXp;
     _displayedBoostXp = toBoostXp;
     _animRunning = false;
     _runAnimQueue(gen);
   };
-  // Snap, don't tween, sub-resolution increments: heartbeat XP accrues for
-  // every idle user every minute, so the app-wide total creeps upward on a
-  // ~60s cadence by ~100 XP against a level span of ~500k - far below the
-  // bar's painting resolution (pct is rounded to whole percents), so the
-  // tween ran a 700ms rAF loop every minute with nothing visible to show
-  // for it. Only genuinely visible growth (a real award, a level-up) spends
-  // an animation; creep just paints the new number.
-  const scale = Math.max(1, Number(data.users) || 0) * 1000;
-  const { levelXp, nextLevelXp } = _levelBounds(fromXp, scale);
-  const span = Math.max(1, nextLevelXp - levelXp);
-  const jump = Math.abs(toXp - fromXp);
-  if (jump < span / 1000 || durationMs <= 0) {
+  // Snap, don't tween, zero-length segments (duplicate/unchanged snapshot).
+  // Anything genuinely nonzero animates - same convention as profile.js's
+  // personal bars, which have no size threshold. The old jump < span/1000
+  // "sub-resolution" snap suppressed nearly every real award too (at app
+  // level 8 the span is ~560k, so any gain under 560 XP snapped), leaving
+  // this bar static while the personal bar tweened; and even sub-percent
+  // growth is visible here because the full XP counter rolls each frame.
+  if (jump === 0 || durationMs <= 0) {
     _paintXp(toXp, data); _paintBoost(toBoostXp, data);
     finish();
     return;
