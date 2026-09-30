@@ -53,6 +53,7 @@ gamebooks/
     js/
       core.js          Shared format/DOM-building helpers + generic sortable/searchable/
                        paginated-table system + showAlert/showConfirm
+      editor.js        Shared accessible editor dialogs and form builders (English-only admin UI)
       users-books.js   Users tab, Books tab, User/Book detail views, Confirm actions, Gift modal,
                        Navigation - kept as one module since the two detail views constantly
                        call back into each other
@@ -530,10 +531,14 @@ logged and returned as HTTP 500 instead of becoming an unhandled rejection.
 
 ## Admin panel JS structure
 
+`admin/js/editor.js` provides shared native `<dialog>` editors. `openEditor()` moves existing forms into scrollable dialog chrome and restores them on close, preserving handlers and IDs; `editFields()` builds labeled forms for series, inventory items, and tips. Native modal behavior traps focus and makes the background inert. Escape and close buttons respect the busy state, which temporarily disables controls and restores their previous disabled states after saves. Books and anthologies share the existing metadata/media editor; `/api/admin/books/:id/stats` includes container, parent, series, order, and discoverable-section fields so editing preserves associations and discovery targets. `core.js` supplies `mkEditBtn()` and `appendEditCell()` for matching blue buttons and a sticky left Edit column on entity tables. Player and book editors load directly over lists, including player-library books; saves refresh the current view without navigating away.
+
+Dialog cleanup runs synchronously before post-save refreshes and is idempotent when the native close event arrives later. Editors capture the record ID when opened. Book catalog responses are guarded by an editor generation and preserve the current anthology selection. The stats payload and book editor also round-trip `discoverable_sections` so metadata edits cannot silently reset completion limits.
+
 The Users, Books, Series, and Anthologies tabs share the search toolbar styling and filtering helpers in `admin/js/core.js`. `wireTableSearch()` trims queries and applies case-insensitive matching through `getFiltered()`. Both `wireTableSearch()` and `initSortHeaders()` accept `{ paginate: false }` for the Users table, so searching or sorting cannot truncate its unpaginated list to 50 rows. Users search matches `username` and `display_name` and reveals inactive matches immediately; Series and Anthologies search matches the item name and creator username.
 
 `admin/index.html` loads `admin/js/boot.js` as a module entrypoint; per-domain logic is split
-into 10 modules under `admin/js/` (see project structure above).
+into modules under `admin/js/` (see project structure above).
 
 **Serving mechanism:** `server/routes/admin.js`'s `serveAdminFile()` infers `Content-Type` from
 the filename extension (`.js` → `text/javascript`, else `text/html`) - required, since browsers

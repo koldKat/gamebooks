@@ -1,51 +1,31 @@
 // Inventory tab: the shared item-icon catalog. Type/active/search filters,
 // row-complete pagination (columns-per-row × 10, responsive to window width),
-// inline edit, and the "Add New Item" form.
+// dialog editing, and the "Add New Item" form.
 // To remove: delete this file and its <script type="module"> import in
 // admin/index.html; remove #inv-type-filter/#inv-active-filter/#inv-search/
 // #new-inv-save listener wiring (this file owns them) and the Inventory tab
 // HTML/CSS.
 
-import { api, el, mkBtn, _esc, showConfirm, matchesQuery, renderPaged, _pageState } from './core.js';
+import { api, el, mkBtn, mkEditBtn, _esc, showConfirm, matchesQuery, renderPaged, _pageState } from './core.js';
+import { editFields } from './editor.js';
 
 let _allItems = [];
 
-function _invOptions(values, selected) {
-  return values.map(v => `<option value="${v}"${v === selected ? ' selected' : ''}>${v}</option>`).join('');
-}
-
-function _renderInventoryEdit(card, it) {
-  card.innerHTML = `
-    <div class="inv-edit-form">
-      <input class="inv-edit-name" type="text" value="${_esc(it.name || '')}" placeholder="Name">
-      <input class="inv-edit-description" type="text" value="${_esc(it.description || '')}" placeholder="Description">
-      <select class="inv-edit-type">${_invOptions(['weapon', 'armor', 'consumable', 'tool', 'jewelry', 'miscellaneous'], it.type)}</select>
-      <textarea class="inv-edit-svg" spellcheck="false" placeholder="SVG markup">${_esc(it.svg_data || '')}</textarea>
-      <div class="inv-edit-error"></div>
-      <div class="inv-card-actions">
-        <button class="btn btn-info inv-edit-save" style="font-size:0.72rem;padding:0.15rem 0.5rem">Save</button>
-        <button class="btn inv-edit-cancel" style="font-size:0.72rem;padding:0.15rem 0.5rem">Cancel</button>
-      </div>
-    </div>
-  `;
-  card.querySelector('.inv-edit-cancel').addEventListener('click', _renderInventory);
-  card.querySelector('.inv-edit-save').addEventListener('click', async () => {
-    const errEl = card.querySelector('.inv-edit-error');
-    const payload = {
-      name: card.querySelector('.inv-edit-name').value.trim(),
-      description: card.querySelector('.inv-edit-description').value.trim(),
-      type: card.querySelector('.inv-edit-type').value,
-      svg_data: card.querySelector('.inv-edit-svg').value.trim(),
-    };
-    if (!payload.name) { errEl.textContent = 'Name is required.'; return; }
-    if (!payload.svg_data) { errEl.textContent = 'SVG markup is required.'; return; }
-    try {
+function _renderInventoryEdit(it) {
+  editFields({
+    title: `Edit Item: ${it.name}`,
+    fields: [
+      { key: 'name', label: 'Name', value: it.name, required: true },
+      { key: 'description', label: 'Description', type: 'textarea', value: it.description },
+      { key: 'type', label: 'Type', options: ['weapon', 'armor', 'consumable', 'tool', 'jewelry', 'miscellaneous'], value: it.type },
+      { key: 'svg_data', label: 'SVG markup', type: 'textarea', code: true, value: it.svg_data, required: true, rows: 8 },
+    ],
+    save: async payload => {
+      if (!payload.name || !payload.svg_data) throw new Error('Name and SVG markup are required.');
       await api('PATCH', `/api/admin/items/${it.id}`, payload);
       Object.assign(it, payload, { description: payload.description || null });
-      _renderInventory(false);
-    } catch (e) {
-      errEl.textContent = e.message || 'Failed to save.';
-    }
+    },
+    afterSave: () => _renderInventory(false),
   });
 }
 
@@ -106,17 +86,15 @@ function renderInventoryGrid(items) {
     });
     toggleLabel.appendChild(cb);
     toggleLabel.appendChild(document.createTextNode('Active'));
-    const editBtn = mkBtn('Edit', 'btn-info', () => _renderInventoryEdit(card, it));
-    editBtn.style.cssText = 'font-size:0.72rem;padding:0.15rem 0.5rem';
-    const delBtn = mkBtn('Del', 'btn-danger', () => {
+    const editBtn = mkEditBtn(() => _renderInventoryEdit(it));
+    const delBtn = mkBtn('Delete', 'btn-danger', () => {
       showConfirm(`Delete "${it.name}"?`, async () => {
         await api('DELETE', `/api/admin/items/${it.id}`);
         loadInventory();
       });
     });
-    delBtn.style.cssText = 'font-size:0.72rem;padding:0.15rem 0.5rem';
-    actions.appendChild(toggleLabel);
     actions.appendChild(editBtn);
+    actions.appendChild(toggleLabel);
     actions.appendChild(delBtn);
     card.appendChild(actions);
     grid.appendChild(card);

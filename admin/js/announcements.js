@@ -5,9 +5,11 @@
 // admin/index.html; remove the Announcements tab HTML/CSS.
 
 import { mkBtn, showConfirm } from './core.js';
+import { openEditor } from './editor.js';
 
 let _annEditId = null;
 let _annEditIsDraft = false;
+let _annEditor = null;
 
 function annEsc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -42,6 +44,7 @@ function annFmt(ts) {
 }
 
 function annResetCompose() {
+  _annEditor?.close();
   _annEditId = null;
   _annEditIsDraft = false;
   document.getElementById('ann-title').value = '';
@@ -60,6 +63,12 @@ function annStartEdit(row) {
   document.getElementById('ann-compose-error').textContent = '';
   document.getElementById('ann-compose-label').textContent = row.is_draft ? 'Edit Draft' : 'Edit Announcement';
   document.getElementById('ann-cancel-edit').style.display = '';
+  _annEditor = openEditor({
+    title: row.is_draft ? 'Edit Draft' : 'Edit Announcement',
+    content: document.getElementById('ann-compose'),
+    focus: '#ann-title',
+    onClose: () => { _annEditor = null; annResetCompose(); },
+  });
   document.getElementById('ann-publish-new').textContent   = row.is_draft ? 'Update & Publish' : 'Update';
   document.getElementById('ann-title').focus();
   document.getElementById('tab-announcements').scrollTop = 0;
@@ -84,7 +93,7 @@ function renderAnnCard(row) {
     <div class="ann-card-body">${annFormatBody(row.body)}</div>
     <div class="ann-card-meta">${date}</div>
     <div class="ann-card-actions">
-      <button class="ann-card-btn" data-id="${row.id}" data-action="edit">Edit</button>
+      <button class="btn btn-info admin-edit-btn" data-id="${row.id}" data-action="edit">Edit</button>
       ${publishBtn}
       ${pinBtn}
       <button class="btn btn-danger" data-id="${row.id}" data-action="delete">Delete</button>
@@ -165,11 +174,14 @@ function annTrim(s) {
 }
 
 async function annSubmit(publish) {
+  if (_annEditor?.dialog.getAttribute('aria-busy') === 'true') return;
+  const editor = _annEditor;
   const title = document.getElementById('ann-title').value.trim();
   const body  = annTrim(document.getElementById('ann-body').value);
   const errEl = document.getElementById('ann-compose-error');
   if (!title || !body) { errEl.textContent = 'Title and body are required.'; return; }
   errEl.textContent = '';
+  editor?.setBusy(true);
 
   try {
     if (_annEditId) {
@@ -179,7 +191,8 @@ async function annSubmit(publish) {
       });
       if (!r.ok) { errEl.textContent = `Save failed (${r.status})`; return; }
       if (publish && _annEditIsDraft) {
-        await fetch(`/api/admin/announcements/${_annEditId}/publish`, { method: 'POST' });
+        const published = await fetch(`/api/admin/announcements/${_annEditId}/publish`, { method: 'POST' });
+        if (!published.ok) { errEl.textContent = `Publish failed (${published.status})`; return; }
       }
     } else {
       const row = await fetch('/api/admin/announcements', {
@@ -193,7 +206,7 @@ async function annSubmit(publish) {
   } catch (e) {
     errEl.textContent = 'Network error - announcement not saved.';
     return;
-  }
+  } finally { editor?.setBusy(false); }
   annResetCompose();
   await loadAnnouncements();
 }

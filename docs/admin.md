@@ -2,6 +2,8 @@
 
 The admin panel is a localhost-only interface for server operators. It is not accessible to regular users.
 
+The admin interface is English-only; it does not use the player app's language selector or translation tables.
+
 ---
 
 ## Access
@@ -51,7 +53,7 @@ The top of the panel shows aggregate stats across all users and books:
 
 Users, Books, Series, and Anthologies share a left-aligned search toolbar with a clear button and a total count. Search is case-insensitive, ignores surrounding spaces, and filters as you type. The count shows all loaded items, before filtering. Users remain an unpaginated list when searching or sorting; the other three tabs keep their existing pagination.
 
-Lists all registered accounts. Columns: Username, Joined, Last Active, Inactive (days), Books, Runs, Active, Wins, Loss, Battle, Lvl, Earned, Spent, Gifted, Lucky (bonus GC lottery claims), Sess, Location, Domain, Actions. The search box filters by username or display name live as you type; matching inactive accounts are shown directly instead of remaining behind the collapsed inactive-accounts row.
+Lists all registered accounts. Columns: Edit, Username, Joined, Last Active, Inactive (days), Books, Runs, Active, Wins, Loss, Battle, Lvl, Earned, Spent, Gifted, Lucky (bonus GC lottery claims), Sess, Location, Domain, Actions. The search box filters by username or display name live as you type; matching inactive accounts are shown directly instead of remaining behind the collapsed inactive-accounts row.
 
 Username badges: **ADMIN**, **PROTECTED**, **AUTHOR**, **CONTRIBUTOR**, **LOCKED**.
 
@@ -61,6 +63,8 @@ Username badges: **ADMIN**, **PROTECTED**, **AUTHOR**, **CONTRIBUTOR**, **LOCKED
 
 Clicking a username opens a **user detail** view: meta bar (Joined, Books, Sessions, Last Location, Domain, Level) and a table of all their books with per-book stats.
 
+Editing uses consistent modal dialogs for players, books, series, anthologies, inventory items, tips, and announcements. Every editable table has an **Edit** column at the left, which stays visible when scrolling horizontally; cards put the same blue **Edit** button first. Editing opens over the current list without navigating into details, including books in a player's library. Detail views also use the same **Edit** button. Dialogs provide a title and close button, scroll within smaller viewports, keep keyboard focus inside, and support Cancel or Escape. Controls and dismissal are disabled while saving; failures stay in the dialog with an error message. Saving refreshes the current list or detail view.
+
 ### User actions
 
 | Action | Description |
@@ -68,7 +72,7 @@ Clicking a username opens a **user detail** view: meta bar (Joined, Books, Sessi
 | **Clear sessions** | Forces logout on all devices immediately |
 | **Lock** | Sets `locked_until` far in future; user cannot log in. Not available for protected accounts. |
 | **Unlock** | Clears the lock; restores login access |
-| **Edit** | Directly update username, display name, is_admin, is_protected, is_author, is_contributor |
+| **Edit** | Update username, author display name, password, email, public profile, and feed visibility in a dialog. Role toggles remain separate actions in the player detail view. |
 | **Author** | Toggle `is_author` flag and optionally set a display name |
 | **Contributor** | Toggle `is_contributor` flag |
 | **Grant/Revoke PDF Access** | Toggle `pdf_access` flag - allows the user to download book PDFs via `GET /books/:path`. Button shows "Grant PDF Access" when the user does not have access, "Revoke PDF Access" when they do. |
@@ -80,7 +84,7 @@ Clicking a username opens a **user detail** view: meta bar (Joined, Books, Sessi
 
 ## Books tab
 
-Lists every non-demo, non-container book across all users (standalone books and anthology children - anthology containers themselves are listed separately in the **Anthologies tab**, since a container has no playthroughs of its own and the Wins/Losses/Battle columns would be meaningless for it). Columns: Book, Owner, Sections, Wins, Losses, Battle, Last Updated, Actions. Paginated at 50 rows/page. The search box filters by book name or owner username live as you type, layered on top of the existing column-sort/pagination pipeline (`getFiltered()` wraps `getSorted()` in `admin/index.html`) rather than as a separate mechanism.
+Lists every non-demo, non-container book across all users (standalone books and anthology children - anthology containers themselves are listed separately in the **Anthologies tab**, since a container has no playthroughs of its own and the Wins/Losses/Battle columns would be meaningless for it). Columns: Edit, Book, Owner, Sections, Wins, Losses, Battle, Last Updated, Actions. Paginated at 50 rows/page. The search box filters by book name or owner username live as you type through the shared `getFiltered()`/`getSorted()` pipeline in `admin/js/core.js`.
 
 Clicking a book name opens the **book detail view** with three sections:
 
@@ -88,9 +92,10 @@ Clicking a book name opens the **book detail view** with three sections:
 - **Ratings** - all ratings with username, score, and delete button per rating
 - **PDF** - upload (max 256 MB, must start with `%PDF`); awards `pdf_available` XP to the uploader (or all library holders when uploaded from localhost) on **first upload only** - re-uploading to replace an existing PDF does not award XP again. Delete removes the file (XP not revoked). Existing PDF is shown as a `PDF (X MB)` link with size and a Remove button.
 
-The **Edit** form in the book detail view includes all metadata fields:
+The **Edit** dialog, available from the Books table or book detail view, includes all metadata fields:
 
 - **Name**, **Total Sections**, **Pages**, **ISBN**, **ASIN**, **ISSN**, **Author(s)**, **Description**
+- **Discoverable sections** - optional completion limit, preserved when editing; blank means all sections. Must be a whole number from 1 to Total Sections for playable books.
 - **Make public** - `is_public` toggle
 - **Is anthology (container)** - marks this book as a parent container. `total_sections` is stored as 0 when checked.
 - **Series** - text input with datalist autocomplete from `/api/admin/series`. Resolved to `series_id` on save via `getOrCreateSeries`.
@@ -118,20 +123,21 @@ The **Edit** form in the book detail view includes all metadata fields:
 
 ## Series tab
 
-Lists all series across all users. Columns: Name, Creator, Books (count), Public, Open World, Created, Description, Actions. Paginated at 50 rows/page. The search box filters by series name or creator username live as you type. Series didn't previously go through the shared `storeData`/`getSorted` pipeline the way Books/Users did (it rendered the raw fetched array directly) - it was brought onto that same pipeline specifically so search could reuse `getFiltered()` rather than inventing a parallel filtering mechanism; there's still no column sorting here, only search.
+Lists all series across all users. Columns: Edit, Name, Creator, Books (count), Public, Created, Description, Actions. Open World is available in the editor. Paginated at 50 rows/page. The search box filters by series name or creator username live as you type through the shared `storeData`/`getFiltered` pipeline; there is no column sorting here, only search.
 
-- **Edit** (inline) - update name, description, public flag, and the **Open world series** checkbox in-place without leaving the tab.
+- **Edit** - opens a dialog to update name, description, public flag, and the **Open world series** checkbox.
 - **Delete** - removes the series entirely, unlinks all books (`series_id = NULL`), and removes all `user_series` rows. Requires confirmation.
 
 ## Anthologies tab
 
-Lists all anthology container books (`is_container = 1`) across all users. Columns: Name, Creator, Books (child count), Public, Created, Description, Actions. Paginated at 50 rows/page. Uses `GET /api/admin/anthologies` (`db.getAllAnthologiesAdmin()`), a dedicated query separate from the Books tab's `adminGetBooks()`. The search box filters by anthology name or creator username live as you type - same `storeData`/`getFiltered` pipeline as Series, added at the same time for the same reason.
+Lists all anthology container books (`is_container = 1`) across all users. Columns: Edit, Name, Creator, Books (child count), Public, Created, Description, Actions. Paginated at 50 rows/page. Uses `GET /api/admin/anthologies` (`db.getAllAnthologiesAdmin()`), a dedicated query separate from the Books tab's `adminGetBooks()`. The search box filters by anthology name or creator username live as you type through the same `storeData`/`getFiltered` pipeline as Series.
 
+- **Edit** - opens the shared book/anthology dialog directly from the table, including cover, PDF, metadata, and series membership. The container flag and existing associations are populated before editing.
 - **Delete** - removes the container row. Children are **not** cascade-deleted; the foreign key (`parent_book_id → books ON DELETE SET NULL`) automatically orphans them (`parent_book_id = NULL`) rather than deleting them. Blocked with the same `has_readers` `409` response as a normal book delete if any `user_books` rows exist for the container itself. Reuses the existing `DELETE /api/admin/books/:id` endpoint - no anthology-specific delete route was needed.
 
 ### Open world series
 
-Ticking the **Open world series** checkbox on a series (via the inline Edit form in the admin Series tab, or via the Edit Series modal in the main app) sets `series.is_open_world = 1`. This enables the following for every book in that series:
+Ticking the **Open world series** checkbox on a series (via the Edit dialog in the admin Series tab, or via the Edit Series modal in the main app) sets `series.is_open_world = 1`. This enables the following for every book in that series:
 
 - Per-series shared runs (`series_runs` table) instead of independent per-book runs.
 - Portal nodes on the graph (teal diamonds ◇) that can be created by book authors/trackers to link sections in one book to sections in another book in the same series.
@@ -147,7 +153,7 @@ Ticking the **Open world series** checkbox on a series (via the inline Edit form
 Lists all tips from the `tips` table. Filterable by type (real/silly) and active status.
 
 - **Active toggle** (checkbox) - enable/disable a tip without deleting it. Inactive tips are never shown in the app.
-- **Click text** - inline edit: replaces the text cell with an input + Save button.
+- **Edit** or **click text** - opens a dialog for the text, type, and active status.
 - **→ Silly / → Real** - flips the type between real and silly in one click.
 - **Delete** - removes the tip permanently. Requires confirmation.
 - **Add New Tip** form at the bottom - enter text, select type (real/silly), click **Add Tip**.

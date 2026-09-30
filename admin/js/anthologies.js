@@ -5,22 +5,24 @@
 // admin/index.html; remove the Anthologies tab HTML/CSS.
 
 import {
-  api, badge, mkBtn, appendCell, _esc, showAlert, showConfirm,
+  api, el, badge, mkBtn, appendEditCell, appendCell, _esc, showAlert, showConfirm,
   storeData, getFiltered, renderPaged, setSearchFields, wireTableSearch,
 } from './core.js';
+import { editAdminBook } from './users-books.js';
 
 export function renderAnthologiesTable(anthologies) {
   const tbody = document.getElementById('anthologies-body');
   tbody.innerHTML = '';
   if (!anthologies.length) {
     const searching = !!document.getElementById('anthologies-search')?.value.trim();
-    tbody.innerHTML = `<tr><td colspan="7" style="color:#6b7280;padding:1rem">${searching ? 'No anthologies found.' : 'No anthologies yet.'}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" style="color:#6b7280;padding:1rem">${searching ? 'No anthologies found.' : 'No anthologies yet.'}</td></tr>`;
     return;
   }
   for (const a of anthologies) {
     const tr = tbody.insertRow();
+    appendEditCell(tr, () => editAdminBook(a.id));
     const nameTd = tr.insertCell();
-    nameTd.innerHTML = `<span class="link" style="font-weight:600">${_esc(a.name)}</span>`;
+    nameTd.textContent = a.name;
     appendCell(tr, a.created_by_username || '-');
     appendCell(tr, badge(a.child_count, a.child_count > 0 ? 'badge-green' : 'badge-grey'));
     appendCell(tr, a.is_public ? badge('Public','badge-green') : badge('Private','badge-grey'));
@@ -28,19 +30,21 @@ export function renderAnthologiesTable(anthologies) {
     const descTd = tr.insertCell();
     descTd.style.cssText = 'max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#9ca3af;font-size:0.8rem';
     descTd.textContent = a.description || '-';
-    appendCell(tr, mkBtn('Delete', 'btn-danger', () => _confirmDeleteAnthology(a.id, a.name)));
+    const actions = el('div', 'btn-group');
+    actions.appendChild(mkBtn('Delete', 'btn-danger', () => _confirmDeleteAnthology(a.id, a.name)));
+    appendCell(tr, actions);
   }
 }
 
 export async function loadAdminAnthologies() {
   const tbody = document.getElementById('anthologies-body');
-  tbody.innerHTML = '<tr><td colspan="7" style="color:#6b7280;padding:1rem">Loading…</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="8" style="color:#6b7280;padding:1rem">Loading…</td></tr>';
   try {
     const anthologies = await api('GET', '/api/admin/anthologies');
     document.getElementById('anthologies-meta').textContent = `${anthologies.length} ${anthologies.length === 1 ? 'anthology' : 'anthologies'}`;
     storeData('anthologies', anthologies);
     renderPaged('anthologies', getFiltered('anthologies'), renderAnthologiesTable);
-  } catch (e) { tbody.innerHTML = `<tr><td colspan="7" style="color:#f87171">${_esc(e.message)}</td></tr>`; }
+  } catch (e) { tbody.innerHTML = `<tr><td colspan="8" style="color:#f87171">${_esc(e.message)}</td></tr>`; }
 }
 
 function _confirmDeleteAnthology(id, name) {

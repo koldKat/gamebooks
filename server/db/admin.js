@@ -680,7 +680,7 @@ function adminGetUserBooks(userId) {
 
 function adminGetBookStats(bookId) {
   const book = db.prepare(
-    `SELECT b.id, b.name, b.total_sections, b.isbn, b.issn, b.asin, b.pages, b.authors, b.description,
+    `SELECT b.id, b.name, b.total_sections, b.discoverable_sections, b.isbn, b.issn, b.asin, b.pages, b.authors, b.description,
             b.is_public, b.cover_path, b.pdf_path, b.created_at, b.updated_at,
             b.series_id, b.series_number, b.is_container, b.parent_book_id, b.book_order,
             s.name AS series_name
@@ -736,8 +736,11 @@ function adminGetBookStats(bookId) {
   `).get(bookId);
 
   return { id: book.id, name: book.name, total_sections: book.total_sections,
+           discoverable_sections: book.discoverable_sections,
            isbn: book.isbn, issn: book.issn, asin: book.asin,
            pages: book.pages, authors: book.authors, description: book.description,
+           series_id: book.series_id, series_name: book.series_name, series_number: book.series_number,
+           is_container: book.is_container, parent_book_id: book.parent_book_id, book_order: book.book_order,
            is_public: book.is_public, cover_path: book.cover_path, pdf_path: book.pdf_path, pdf_size: _getPdfSize(book.pdf_path),
            created_at: book.created_at, updated_at: book.updated_at,
            owner_id: firstUb?.owner_id || null, owner: firstUb?.owner || '-',

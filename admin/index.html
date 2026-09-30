@@ -6,6 +6,24 @@
   <title>Admin - Gamebook Tracker</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <style>
+    .admin-editor { margin: auto; padding: 0; width: min(720px, 94vw); max-height: 90vh; max-height: 90dvh; border: 1px solid #374151; border-radius: 10px; background: #111827; color: #d1d5db; box-shadow: 0 20px 60px #0009; }
+    .admin-editor[open] { display: flex; flex-direction: column; }
+    .admin-editor::backdrop { background: #0009; }
+    .admin-editor-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.85rem 1rem; border-bottom: 1px solid #374151; flex-shrink: 0; }
+    .admin-editor-header h2 { font-size: 0.95rem; color: #f5a623; overflow-wrap: anywhere; }
+    .admin-editor-close { background: none; border: 0; color: #9ca3af; font-size: 1.4rem; cursor: pointer; padding: 0 0.3rem; }
+    .admin-editor-body { min-height: 0; overflow-y: auto; padding: 1rem; }
+    .admin-editor-body > #user-edit-form, .admin-editor-body > #book-edit-form { background: none !important; border: 0 !important; padding: 0 !important; margin: 0 !important; }
+    .admin-editor-fields { display: flex; flex-direction: column; gap: 0.8rem; }
+    .admin-editor-field { display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.82rem; }
+    .admin-editor-field input, .admin-editor-field textarea, .admin-editor-field select { width: 100%; background: #1f2937; color: #e5e7eb; border: 1px solid #374151; border-radius: 6px; padding: 0.5rem 0.65rem; font: inherit; }
+    .admin-editor-field textarea { resize: vertical; }
+    .admin-editor-field .admin-editor-code { font-family: monospace; min-height: 160px; }
+    .admin-editor-toggle { display: flex; flex-direction: row-reverse; justify-content: flex-end; align-items: center; gap: 0.5rem; font-size: 0.82rem; }
+    .admin-editor-error { color: #f87171; font-size: 0.82rem; }
+    .admin-editor-actions { position: sticky; bottom: -1rem; background: #111827; border-top: 1px solid #374151; padding: 0.75rem 0; display: flex; justify-content: flex-end; gap: 0.5rem; }
+    .admin-editor button:disabled { opacity: 0.4; cursor: wait; }
+    @media (max-width: 540px) { .admin-editor { width: 96vw; } .admin-editor-body > #user-edit-form > div:first-child { grid-template-columns: 1fr !important; } }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     #admin-tooltip {
@@ -197,31 +215,34 @@
 
     .table-wrap { overflow-x: auto; }
     .table-wrap td:last-child { min-width: 160px; max-width: 200px; }
+    .admin-edit-btn { min-width: 58px; }
+    .admin-edit-column { position: sticky; left: 0; z-index: 1; width: 80px; min-width: 80px; background: #111827; box-shadow: 1px 0 #374151; }
+    th.admin-edit-column { background: #1f2937; }
 
     /* Users table column widths */
-    #users-table th:nth-child(1)  { width: 110px; }  /* Username */
-    #users-table th:nth-child(2)  { width: 96px;  }  /* Joined */
-    #users-table td:nth-child(2),
-    #users-table td:nth-child(3)  { white-space: nowrap; }
-    #users-table th:nth-child(3)  { width: 96px;  }  /* Last Active */
-    #users-table th:nth-child(4)  { width: 58px;  }  /* Inactive */
-    #users-table th:nth-child(5)  { width: 46px;  }  /* Books */
-    #users-table th:nth-child(6)  { width: 44px;  }  /* Runs */
-    #users-table th:nth-child(7)  { width: 44px;  }  /* Active */
-    #users-table th:nth-child(8)  { width: 44px;  }  /* Wins */
-    #users-table th:nth-child(9)  { width: 44px;  }  /* Loss */
-    #users-table th:nth-child(10) { width: 44px;  }  /* Battle */
-    #users-table th:nth-child(11) { width: 38px;  }  /* Lvl */
-    #users-table th:nth-child(12) { width: 50px;  }  /* Earned */
-    #users-table th:nth-child(13) { width: 50px;  }  /* Spent */
-    #users-table th:nth-child(14) { width: 44px;  }  /* Gifted */
-    #users-table th:nth-child(15) { width: 44px;  }  /* Lucky */
-    #users-table th:nth-child(16) { width: 42px;  }  /* Sess */
-    #users-table th:nth-child(17) { width: 90px;  }  /* Location */
-    #users-table th:nth-child(18),
-    #users-table td:nth-child(18) { width: 1%; white-space: nowrap; }  /* Domain - shrink to content width (currently "pathmap.net") instead of a fixed guess */
+    #users-table th:nth-child(2)  { width: 110px; }  /* Username */
+    #users-table th:nth-child(3)  { width: 96px; }   /* Joined */
+    #users-table td:nth-child(3),
+    #users-table td:nth-child(4)  { white-space: nowrap; }
+    #users-table th:nth-child(4)  { width: 96px; }   /* Last Active */
+    #users-table th:nth-child(5)  { width: 58px; }   /* Inactive */
+    #users-table th:nth-child(6)  { width: 46px; }   /* Books */
+    #users-table th:nth-child(7),
+    #users-table th:nth-child(8),
+    #users-table th:nth-child(9),
+    #users-table th:nth-child(10),
+    #users-table th:nth-child(11) { width: 44px; }  /* Run stats */
+    #users-table th:nth-child(12) { width: 38px; }  /* Lvl */
+    #users-table th:nth-child(13),
+    #users-table th:nth-child(14) { width: 50px; }  /* Earned, Spent */
+    #users-table th:nth-child(15),
+    #users-table th:nth-child(16) { width: 44px; }  /* Gifted, Lucky */
+    #users-table th:nth-child(17) { width: 42px; }  /* Sess */
+    #users-table th:nth-child(18) { width: 90px; }  /* Location */
     #users-table th:nth-child(19),
-    #users-table td:nth-child(19) { min-width: 360px; width: 360px; }  /* Actions - up to 4 buttons (Clear sessions, Impersonate, Lock/Unlock, Delete) need room to fit on one row without wrapping */
+    #users-table td:nth-child(19) { width: 1%; white-space: nowrap; } /* Domain */
+    #users-table th:nth-child(20),
+    #users-table td:nth-child(20) { min-width: 360px; width: 360px; } /* Other actions */
     table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
 
     th {
@@ -499,7 +520,7 @@
     .ann-card-body a:hover { text-decoration: underline; }
     .ann-card-body a:visited { color: #60a5fa; }
     .ann-card-meta  { font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem; }
-    .ann-card-actions { display: flex; gap: 0.4rem; }
+    .ann-card-actions { display: flex; gap: 0.4rem; flex-wrap: wrap; }
     .ann-card-btn { background: #374151; color: #d1d5db; border: 1px solid #4b5563; border-radius: 5px; padding: 0.22rem 0.65rem; font-size: 0.78rem; cursor: pointer; font-family: inherit; transition: background 0.12s; }
     .ann-card-btn:hover { background: #4b5563; }
     .ann-card-btn.publish { background: #d97706; color: #fff; border-color: #f59e0b; }
@@ -523,7 +544,7 @@
     .inv-card-name { font-size: 0.78rem; font-weight: 600; color: #d1d5db; text-align: center; word-break: break-word; }
     .inv-card-desc { font-size: 0.68rem; color: #6b7280; text-align: center; word-break: break-word; line-height: 1.3; }
     .inv-card-badges { display: flex; flex-wrap: wrap; gap: 0.25rem; justify-content: center; }
-    .inv-card-actions { display: flex; gap: 0.35rem; align-items: center; flex-wrap: wrap; justify-content: center; }
+    .inv-card-actions { display: flex; gap: 0.35rem; align-items: center; flex-wrap: wrap; justify-content: flex-start; margin-top: auto; }
     .inv-toggle-label { font-size: 0.7rem; color: #6b7280; display: flex; align-items: center; gap: 0.25rem; cursor: pointer; user-select: none; }
     .inv-edit-form { width: 100%; display: grid; gap: 0.35rem; }
     .inv-edit-form input,
@@ -681,6 +702,7 @@
         <div class="table-wrap">
           <table>
             <thead><tr>
+              <th class="admin-edit-column">Edit</th>
               <th>Username</th>
               <th>Type</th>
               <th>Details</th>
@@ -702,6 +724,7 @@
       <div class="table-wrap">
         <table id="users-table">
           <thead><tr>
+            <th class="admin-edit-column">Edit</th>
             <th data-table="users" data-col="username">Username</th>
             <th data-table="users" data-col="created_at">Joined</th>
             <th data-table="users" data-col="last_active">Last Active</th>
@@ -743,6 +766,7 @@
       <div class="table-wrap">
         <table>
           <thead><tr>
+            <th class="admin-edit-column">Edit</th>
             <th data-table="books" data-col="name">Book</th>
             <th data-table="books" data-col="owner">Owner</th>
             <th data-table="books" data-col="total_sections">Sections</th>
@@ -771,6 +795,7 @@
       <div class="table-wrap">
         <table>
           <thead><tr>
+            <th class="admin-edit-column">Edit</th>
             <th>Name</th>
             <th>Creator</th>
             <th>Books</th>
@@ -798,6 +823,7 @@
       <div class="table-wrap">
         <table>
           <thead><tr>
+            <th class="admin-edit-column">Edit</th>
             <th>Name</th>
             <th>Creator</th>
             <th>Books</th>
@@ -831,6 +857,7 @@
       <div class="table-wrap">
         <table>
           <thead><tr>
+            <th class="admin-edit-column">Edit</th>
             <th style="width:55px">Type</th>
             <th style="width:50px">Active</th>
             <th>Text</th>
@@ -1124,6 +1151,7 @@
     <div class="table-wrap">
       <table>
         <thead><tr>
+          <th class="admin-edit-column">Edit</th>
           <th data-table="ubooks" data-col="name">Book</th>
           <th data-table="ubooks" data-col="total_sections">Sections</th>
           <th data-table="ubooks" data-col="mapped">Mapped</th>
@@ -1149,7 +1177,7 @@
       <span class="breadcrumb" id="book-crumb"></span>
       <span id="book-edit-saved" class="tools-saved-msg" style="margin-left:auto">Saved</span>
       <a id="book-pdf-open-btn" href="" target="_blank" class="btn btn-info" style="display:none;text-decoration:none">Open PDF</a>
-      <button id="book-edit-btn" class="btn btn-info">Edit</button>
+      <button id="book-edit-btn" class="btn btn-info admin-edit-btn">Edit</button>
     </div>
 
     <div id="book-meta-bar" class="meta-bar" style="margin-bottom:0.75rem"></div>
@@ -1178,6 +1206,11 @@
             <div>
               <div class="section-title" style="margin-bottom:0.35rem">Total Sections</div>
               <input type="text" inputmode="numeric" id="bef-sections" autocomplete="off" style="width:100%;background:#111827;border:1px solid #374151;border-radius:6px;color:#d1d5db;padding:0.35rem 0.6rem;font-size:0.85rem;font-family:inherit;box-sizing:border-box">
+            </div>
+
+            <div>
+              <label for="bef-discoverable" class="section-title" style="display:block;margin-bottom:0.35rem">Discoverable sections</label>
+              <input type="number" id="bef-discoverable" min="1" step="1" placeholder="All sections" style="width:100%;background:#111827;border:1px solid #374151;border-radius:6px;color:#d1d5db;padding:0.35rem 0.6rem;font-size:0.85rem;font-family:inherit;box-sizing:border-box">
             </div>
             <div>
               <div class="section-title" style="margin-bottom:0.35rem">Pages</div>

@@ -11,13 +11,91 @@
 // HTML/CSS, and the #gift-overlay modal HTML/CSS.
 
 import {
-  api, el, badge, mkBtn, appendCell, emptyRow, mkLevelCell, mkGeoCell, addMetaItem, addStatCard,
+  api, el, badge, mkBtn, mkEditBtn, appendEditCell, appendCell, emptyRow, mkLevelCell, mkGeoCell, addMetaItem, addStatCard,
   fmtDate, fmtDateTime, fmtBytes, pdfUrl, esc, adminBadge, authorBadge, contributorBadge,
   daysInactiveClass, fmtDaysInactive, flashSaved, showAlert, showConfirm,
   storeData, getSorted, getFiltered, foldForSearch, naturalCompare, naturalCompareByName, _tableData,
   setSearchFields, wireTableSearch, initSortHeaders, renderPaged, setRowFilter,
 } from './core.js';
 import { loadAll, loadTools } from './dashboard.js';
+import { openEditor } from './editor.js';
+
+let _userEditor = null;
+let _bookEditor = null;
+let _bookEditGeneration = 0;
+let _openingBookEditor = false;
+let _openingUserEditor = false;
+document.getElementById('user-edit-form').style.display = 'none';
+document.getElementById('user-edit-form').lastElementChild.classList.add('admin-editor-actions');
+document.getElementById('book-edit-form').lastElementChild.classList.add('admin-editor-actions');
+
+function populateUserEditForm(user) {
+  document.getElementById('ue-username').value = user.username;
+  document.getElementById('ue-display-name').value = user.display_name || '';
+  document.getElementById('ue-password').value = '';
+  document.getElementById('ue-email').value = user.email || '';
+  document.getElementById('ue-public-profile').checked = !!user.public_profile;
+  document.getElementById('ue-hide-feed').checked = !!user.hide_from_feed;
+  document.getElementById('ue-display-name-row').style.display = user.is_author ? 'block' : 'none';
+  document.getElementById('ue-status').textContent = '';
+  document.getElementById('ue-error').style.display = 'none';
+}
+
+async function editAdminUser(userId) {
+  if (_openingUserEditor || _userEditor?.dialog.open) return;
+  _openingUserEditor = true;
+  try {
+    const { user } = await api('GET', `/api/admin/users/${userId}`);
+    _currentUserId = userId;
+    populateUserEditForm(user);
+    openUserEditor();
+  } catch (error) { showAlert(error.message || 'Could not load the editor.'); }
+  finally { _openingUserEditor = false; }
+}
+
+function openUserEditor() {
+  const form = document.getElementById('user-edit-form');
+  document.getElementById('ue-error').style.display = 'none';
+  document.getElementById('ue-status').textContent = '';
+  document.getElementById('ue-password').value = '';
+  const controls = [...form.querySelectorAll('input')];
+  const original = controls.map(input => ({ input, value: input.value, checked: input.checked }));
+  _userEditor = openEditor({
+    title: `Edit Player: ${document.getElementById('ue-username').value}`,
+    content: form,
+    onClose: () => {
+      original.forEach(({ input, value, checked }) => { input.value = value; input.checked = checked; });
+      document.getElementById('ue-password').value = '';
+      _userEditor = null;
+    },
+  });
+  _userEditor.userId = _currentUserId;
+}
+
+function openBookEditor() {
+  if (!_bookDetailData) return;
+  _populateBookEditForm(_bookDetailData);
+  _bookEditor = openEditor({
+    title: `Edit ${_bookDetailData.is_container ? 'Anthology' : 'Book'}: ${_bookDetailData.name}`,
+    content: document.getElementById('book-edit-form'),
+    focus: '#bef-name',
+    onClose: () => { _pendingAdminPdf = null; _pendingAdminCover = null; _bookEditor = null; },
+  });
+  _bookEditor.bookId = _bookDetailData.id;
+  _bookEditor.data = _bookDetailData;
+}
+
+export async function editAdminBook(bookId) {
+  if (_openingBookEditor || _bookEditor?.dialog.open) return;
+  _openingBookEditor = true;
+  try {
+    const data = await api('GET', `/api/admin/books/${bookId}/stats`);
+    _currentBookId = bookId;
+    _bookDetailData = data;
+    openBookEditor();
+  } catch (error) { showAlert(error.message || 'Could not load the editor.'); }
+  finally { _openingBookEditor = false; }
+}
 
 // ── Gift modal ────────────────────────────────────────────────────────────────
 
@@ -147,6 +225,8 @@ document.getElementById('user-back-btn').addEventListener('click', () => {
 });
 
 document.getElementById('ue-save').addEventListener('click', async () => {
+  if (!_userEditor || _userEditor.dialog.getAttribute('aria-busy') === 'true') return;
+  const editor = _userEditor;
   const status  = document.getElementById('ue-status');
   const errEl   = document.getElementById('ue-error');
   const body = {
@@ -159,20 +239,27 @@ document.getElementById('ue-save').addEventListener('click', async () => {
   };
   status.textContent = 'Saving…';
   errEl.style.display = 'none';
+  editor.setBusy(true);
   try {
-    await api('POST', `/api/admin/users/${_currentUserId}/edit`, body);
+    await api('POST', `/api/admin/users/${editor.userId}/edit`, body);
     document.getElementById('ue-password').value = '';
     status.textContent = 'Saved';
-    loadUserDetail(_currentUserId);
+    editor.setBusy(false);
+    editor.close();
+    if (document.getElementById('view-user').style.display !== 'none') {
+      await loadUserDetail(editor.userId);
+    } else {
+      await loadUsers();
+    }
   } catch (err) {
     status.textContent = '';
     errEl.textContent = err.message || 'Error saving';
     errEl.style.display = '';
-  }
+  } finally { editor.setBusy(false); }
 });
 
 document.getElementById('ue-cancel').addEventListener('click', () => {
-  if (_currentUserId) loadUserDetail(_currentUserId);
+  _userEditor?.close();
 });
 document.getElementById('book-back-btn').addEventListener('click', () => {
   if (_backCtx && _backCtx.view === 'user') loadUserDetail(_backCtx.userId);
@@ -223,6 +310,7 @@ export function renderUsersTable(data) {
 
 function renderUserRow(tbody, u) {
     const tr = tbody.insertRow();
+    appendEditCell(tr, () => editAdminUser(u.id));
 
     const nameCell = tr.insertCell();
     const link = el('span', 'link', u.username);
@@ -337,6 +425,7 @@ function renderLockedTable(users, now) {
   if (!locked.length) return;
   for (const u of locked) {
     const tr = tbody.insertRow();
+    appendEditCell(tr, () => editAdminUser(u.id));
     const nameCell = tr.insertCell();
     const link = el('span', 'link', u.username);
     link.addEventListener('click', () => loadUserDetail(u.id));
@@ -388,11 +477,11 @@ export async function loadUsers() {
 export function renderBooksTable(data) {
   const tbody = document.getElementById('books-body');
   tbody.innerHTML = '';
-  if (!data.length) { emptyRow(tbody, 8, 'No books yet.'); return; }
+  if (!data.length) { emptyRow(tbody, 9, 'No books yet.'); return; }
 
   for (const b of data) {
     const tr = tbody.insertRow();
-
+    appendEditCell(tr, () => editAdminBook(b.id));
     const nameCell = tr.insertCell();
     const link = el('span', 'link', b.name);
     link.addEventListener('click', () => loadBookDetail(b.id, null));
@@ -407,7 +496,9 @@ export function renderBooksTable(data) {
     if (b.deaths  > 0) deathsCell.style.color  = '#f87171';
     if (b.battles > 0) battlesCell.style.color = '#fb923c';
     appendCell(tr, fmtDate(b.updated_at), 'muted');
-    appendCell(tr, mkBtn('Delete', 'btn-danger', () => confirmDeleteBook(b.id, b.name, null)));
+    const actions = el('div', 'btn-group');
+    actions.appendChild(mkBtn('Delete', 'btn-danger', () => confirmDeleteBook(b.id, b.name, null)));
+    appendCell(tr, actions);
   }
 }
 
@@ -426,11 +517,11 @@ export async function loadBooks() {
 export function renderUserBooksTable(data, userId) {
   const tbody = document.getElementById('user-books-body');
   tbody.innerHTML = '';
-  if (!data.length) { emptyRow(tbody, 10, 'No books yet.'); return; }
+  if (!data.length) { emptyRow(tbody, 11, 'No books yet.'); return; }
 
   for (const b of data) {
     const tr = tbody.insertRow();
-
+    appendEditCell(tr, () => editAdminBook(b.id));
     const nameCell = tr.insertCell();
     const link = el('span', 'link', b.name);
     link.addEventListener('click', () => loadBookDetail(b.id, { view: 'user', userId }));
@@ -458,7 +549,9 @@ export function renderUserBooksTable(data, userId) {
   }
 }
 
-export async function loadUserDetail(userId) {
+export async function loadUserDetail(userId, edit = false) {
+  if (edit && (_openingUserEditor || _userEditor?.dialog.open)) return;
+  if (edit) _openingUserEditor = true;
   _currentUserId = userId;
   _backCtx = { view: 'main' };
   showView('user');
@@ -503,19 +596,12 @@ export async function loadUserDetail(userId) {
 
   try {
     const { user, books, totals } = await api('GET', `/api/admin/users/${userId}`);
+    if (userId !== _currentUserId) return;
 
     document.getElementById('user-crumb').innerHTML = esc(user.username) + adminBadge(user.is_admin) + authorBadge(user.is_author) + contributorBadge(user.is_contributor)
       + (user.display_name ? ` <span style="color:#6b7280;font-size:0.82rem;font-weight:400">(${esc(user.display_name)})</span>` : '');
 
-    document.getElementById('ue-username').value              = user.username;
-    document.getElementById('ue-display-name').value          = user.display_name || '';
-    document.getElementById('ue-password').value              = '';
-    document.getElementById('ue-email').value                 = user.email || '';
-    document.getElementById('ue-public-profile').checked      = !!user.public_profile;
-    document.getElementById('ue-hide-feed').checked           = !!user.hide_from_feed;
-    document.getElementById('ue-display-name-row').style.display = user.is_author ? 'block' : 'none';
-    document.getElementById('ue-status').textContent          = '';
-    document.getElementById('ue-error').style.display         = 'none';
+    populateUserEditForm(user);
 
     const metaBar = document.getElementById('user-meta-bar');
     // From the permanent xp_events ledger (server's `totals`), not summed
@@ -696,6 +782,7 @@ export async function loadUserDetail(userId) {
     }
 
     const actionBar = document.getElementById('user-action-bar');
+    actionBar.appendChild(mkEditBtn(openUserEditor));
     actionBar.appendChild(mkBtn('Clear sessions', 'btn-warn', () => confirmClearSessions(user.id, user.username)));
     {
       const authorLabel = user.is_author ? 'Remove Author' : 'Mark as Author';
@@ -738,7 +825,9 @@ export async function loadUserDetail(userId) {
 
     storeData('ubooks', books);
     renderUserBooksTable(getSorted('ubooks'), user.id);
+    if (edit) openUserEditor();
   } catch (e) { console.error('User detail:', e); }
+  finally { if (edit) _openingUserEditor = false; }
 }
 
 // ── Book detail view ──────────────────────────────────────────────────────────
@@ -778,8 +867,10 @@ let _pendingAdminPdf = null;
 let _pendingAdminCover = null;
 
 function _populateBookEditForm(d) {
+  const generation = ++_bookEditGeneration;
   document.getElementById('bef-name').value           = d.name || '';
   document.getElementById('bef-sections').value       = d.total_sections || '';
+  document.getElementById('bef-discoverable').value   = d.discoverable_sections ?? '';
   document.getElementById('bef-isbn').value           = d.isbn || '';
   document.getElementById('bef-asin').value           = d.asin || '';
   document.getElementById('bef-issn').value           = d.issn || '';
@@ -799,26 +890,38 @@ function _populateBookEditForm(d) {
   _pendingAdminCover = null;
 
   // Populate series datalist
-  fetch('/api/admin/series').then(r => r.json()).then(series => {
+  api('GET', '/api/admin/series').then(series => {
+    if (generation !== _bookEditGeneration || !_bookEditor) return;
     const dl = document.getElementById('bef-series-list');
-    dl.innerHTML = [...series]
-      .sort((a, b) => naturalCompare(a.name, b.name))
-      .map(s => `<option value="${s.name.replace(/"/g,'&quot;')}">`).join('');
+    dl.replaceChildren(...[...series].sort(naturalCompareByName).map(s => new Option(s.name, s.name)));
   }).catch(() => {});
 
+  // Preserve the current association even if the catalog fetch fails or is slow.
+  const parentSelect = document.getElementById('bef-parent');
+  parentSelect.replaceChildren(new Option('- None -', ''));
+  if (d.parent_book_id != null) {
+    parentSelect.append(new Option(`Anthology #${d.parent_book_id}`, String(d.parent_book_id), true, true));
+  }
   // Populate parent anthology dropdown
-  fetch('/api/admin/anthologies').then(r => r.json()).then(books => {
+  api('GET', '/api/admin/anthologies').then(books => {
+    if (generation !== _bookEditGeneration || !_bookEditor) return;
     const sel = document.getElementById('bef-parent');
-    sel.innerHTML = '<option value="">- None -</option>';
+    const selected = sel.value;
+    const options = [new Option('- None -', '')];
     [...books]
-      .filter(b => b.id !== _currentBookId)
+      .filter(b => b.id !== d.id)
       .sort(naturalCompareByName)
       .forEach(b => {
         const o = document.createElement('option');
         o.value = b.id; o.textContent = b.name;
-        if (b.id === d.parent_book_id) o.selected = true;
-        sel.appendChild(o);
+        if (String(b.id) === selected) o.selected = true;
+        options.push(o);
       });
+    if (selected && !options.some(option => option.value === selected)) {
+      options.push(new Option(`Anthology #${selected}`, selected, true, true));
+    }
+    sel.replaceChildren(...options);
+    sel.value = selected;
   }).catch(() => {});
 
   // Cover
@@ -852,15 +955,11 @@ function _populateBookEditForm(d) {
 }
 
 document.getElementById('book-edit-btn').addEventListener('click', () => {
-  if (!_bookDetailData) return;
-  _populateBookEditForm(_bookDetailData);
-  document.getElementById('book-edit-form').style.display = '';
-  document.getElementById('book-edit-btn').style.display  = 'none';
+  openBookEditor();
 });
 
 document.getElementById('bef-cancel').addEventListener('click', () => {
-  document.getElementById('book-edit-form').style.display = 'none';
-  document.getElementById('book-edit-btn').style.display  = '';
+  _bookEditor?.close();
 });
 
 // Cover upload
@@ -873,7 +972,9 @@ document.getElementById('bef-cover-file').addEventListener('change', e => {
   if (!file) return;
   _pendingAdminCover = file;
   const reader = new FileReader();
+  const generation = _bookEditGeneration;
   reader.onload = ev => {
+    if (generation !== _bookEditGeneration || !_bookEditor || _pendingAdminCover !== file) return;
     const img = document.getElementById('bef-cover-img');
     const ph  = document.getElementById('bef-cover-ph');
     img.src = ev.target.result;
@@ -884,14 +985,20 @@ document.getElementById('bef-cover-file').addEventListener('change', e => {
   reader.readAsDataURL(file);
 });
 document.getElementById('bef-cover-remove').addEventListener('click', async () => {
-  if (!_currentBookId) return;
-  await fetch(`/api/books/${_currentBookId}/cover/delete`, { method: 'POST' }).catch(() => {});
-  const img = document.getElementById('bef-cover-img');
-  const ph  = document.getElementById('bef-cover-ph');
-  img.src = ''; img.style.display = 'none'; ph.style.display = '';
-  document.getElementById('bef-cover-remove').style.display = 'none';
-  _pendingAdminCover = null;
-  if (_bookDetailData) _bookDetailData.cover_path = null;
+  if (!_currentBookId || !_bookEditor) return;
+  const editor = _bookEditor;
+  editor.setBusy(true);
+  try {
+    const response = await fetch(`/api/books/${editor.bookId}/cover/delete`, { method: 'POST' });
+    if (!response.ok) throw new Error(`Cover removal failed (${response.status}).`);
+    const img = document.getElementById('bef-cover-img');
+    const ph  = document.getElementById('bef-cover-ph');
+    img.src = ''; img.style.display = 'none'; ph.style.display = '';
+    document.getElementById('bef-cover-remove').style.display = 'none';
+    _pendingAdminCover = null;
+    editor.data.cover_path = null;
+  } catch (error) { document.getElementById('bef-error').textContent = error.message; }
+  finally { editor.setBusy(false); }
 });
 
 // PDF upload
@@ -902,43 +1009,64 @@ document.getElementById('bef-pdf-btn').addEventListener('click', () => {
 document.getElementById('bef-pdf-file').addEventListener('change', e => {
   const file = e.target.files[0];
   if (!file) return;
+  if (file.size > 256 * 1024 * 1024) {
+    document.getElementById('bef-error').textContent = 'PDF is too large (maximum 256 MB).';
+    e.target.value = '';
+    return;
+  }
   _pendingAdminPdf = file;
   document.getElementById('bef-pdf-name').textContent = file.name;
 });
 document.getElementById('bef-pdf-remove').addEventListener('click', async () => {
-  if (!_currentBookId) return;
-  await fetch(`/api/books/${_currentBookId}/pdf`, { method: 'DELETE' });
-  document.getElementById('bef-pdf-link').style.display   = 'none';
-  document.getElementById('bef-pdf-remove').style.display = 'none';
-  document.getElementById('bef-pdf-name').textContent = '';
-  _pendingAdminPdf = null;
-  if (_bookDetailData) _bookDetailData.pdf_path = null;
+  if (!_currentBookId || !_bookEditor) return;
+  const editor = _bookEditor;
+  editor.setBusy(true);
+  try {
+    const response = await fetch(`/api/books/${editor.bookId}/pdf`, { method: 'DELETE' });
+    if (!response.ok) throw new Error(`PDF removal failed (${response.status}).`);
+    document.getElementById('bef-pdf-link').style.display   = 'none';
+    document.getElementById('bef-pdf-remove').style.display = 'none';
+    document.getElementById('bef-pdf-name').textContent = '';
+    _pendingAdminPdf = null;
+    editor.data.pdf_path = null;
+  } catch (error) { document.getElementById('bef-error').textContent = error.message; }
+  finally { editor.setBusy(false); }
 });
 
 document.getElementById('bef-save').addEventListener('click', async () => {
+  if (!_bookEditor || _bookEditor.dialog.getAttribute('aria-busy') === 'true') return;
+  const editor = _bookEditor;
   const errEl    = document.getElementById('bef-error');
   const name     = document.getElementById('bef-name').value.trim();
   const isContainer = document.getElementById('bef-container').checked;
   const sections = isContainer ? 0 : parseInt(document.getElementById('bef-sections').value, 10);
   if (!name || (!isContainer && !(sections >= 1))) { errEl.textContent = 'Name and sections are required.'; return; }
+  const discoverableInput = document.getElementById('bef-discoverable').value.trim();
+  const discoverable = isContainer || !discoverableInput ? null : Number(discoverableInput);
+  if (discoverable != null && (!Number.isInteger(discoverable) || discoverable < 1 || discoverable > sections)) {
+    errEl.textContent = 'Discoverable sections must be a whole number between 1 and total sections.';
+    return;
+  }
   errEl.textContent = '';
+  editor.setBusy(true);
   try {
     // Upload cover if pending
     if (_pendingAdminCover) {
       const buf = await _pendingAdminCover.arrayBuffer();
-      const cr = await fetch(`/api/books/${_currentBookId}/cover`, {
+      const cr = await fetch(`/api/books/${editor.bookId}/cover`, {
         method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: buf,
       });
       if (!cr.ok) { errEl.textContent = 'Cover upload failed.'; return; }
     }
 
     // Save metadata
-    const r = await fetch(`/api/books/${_currentBookId}`, {
+    const r = await fetch(`/api/books/${editor.bookId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name,
         total_sections:  sections,
+        discoverable_sections: discoverable,
         isbn:            document.getElementById('bef-isbn').value.trim() || null,
         asin:            document.getElementById('bef-asin').value.trim() || null,
         issn:            document.getElementById('bef-issn').value.trim() || null,
@@ -950,7 +1078,7 @@ document.getElementById('bef-save').addEventListener('click', async () => {
         series_name:     document.getElementById('bef-series').value.trim() || null,
         series_number:   document.getElementById('bef-series-num').value.trim() || null,
         parent_book_id:  parseInt(document.getElementById('bef-parent').value, 10) || null,
-        book_order:      parseInt(document.getElementById('bef-order').value, 10) || null,
+        book_order:      document.getElementById('bef-order').value.trim() === '' ? null : parseInt(document.getElementById('bef-order').value, 10),
       }),
     });
     if (!r.ok) { const j = await r.json(); errEl.textContent = j.error || 'Save failed.'; return; }
@@ -958,7 +1086,7 @@ document.getElementById('bef-save').addEventListener('click', async () => {
     // Upload PDF if pending
     if (_pendingAdminPdf) {
       const buf = await _pendingAdminPdf.arrayBuffer();
-      const pr = await fetch(`/api/books/${_currentBookId}/pdf`, {
+      const pr = await fetch(`/api/books/${editor.bookId}/pdf`, {
         method: 'POST', headers: { 'Content-Type': 'application/pdf' }, body: buf,
       });
       if (!pr.ok) {
@@ -968,14 +1096,25 @@ document.getElementById('bef-save').addEventListener('click', async () => {
       }
     }
 
-    document.getElementById('book-edit-form').style.display = 'none';
-    document.getElementById('book-edit-btn').style.display  = '';
-    await loadBookDetail(_currentBookId, _backCtx);
-    flashSaved(document.getElementById('book-edit-saved'));
+    editor.setBusy(false);
+    editor.close();
+    if (document.getElementById('view-book').style.display !== 'none') {
+      await loadBookDetail(editor.bookId, _backCtx);
+      flashSaved(document.getElementById('book-edit-saved'));
+    } else if (document.getElementById('view-user').style.display !== 'none') {
+      await loadUserDetail(_currentUserId);
+    } else {
+      await loadAll();
+      if (document.querySelector('.tab-btn.active')?.dataset.tab === 'anthologies') {
+        const { loadAdminAnthologies } = await import('./anthologies.js');
+        await loadAdminAnthologies();
+      }
+    }
   } catch (e) { errEl.textContent = 'Error: ' + e.message; }
+  finally { editor.setBusy(false); }
 });
 
-export async function loadBookDetail(bookId, backCtx) {
+export async function loadBookDetail(bookId, backCtx, edit = false) {
   _currentBookId = bookId;
   _backCtx = backCtx;
   showView('book');
@@ -994,6 +1133,7 @@ export async function loadBookDetail(bookId, backCtx) {
 
   try {
     const d = await api('GET', `/api/admin/books/${bookId}/stats`);
+    if (bookId !== _currentBookId) return;
 
     document.getElementById('book-back-btn').textContent =
       backCtx && backCtx.view === 'user' ? `← ${d.owner}` : '← Books';
@@ -1061,6 +1201,7 @@ export async function loadBookDetail(bookId, backCtx) {
     renderPtsTable(getSorted('pts'));
 
     loadBookRatings(bookId);
+    if (edit) openBookEditor();
   } catch (e) { console.error('Book detail:', e); }
 }
 

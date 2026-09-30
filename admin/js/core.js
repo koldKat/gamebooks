@@ -188,6 +188,14 @@ export function emptyRow(tbody, colspan, msg) {
   td.colSpan = colspan; td.className = 'empty'; td.textContent = msg;
 }
 
+export function mkEditBtn(onClick) {
+  return mkBtn('Edit', 'btn-info admin-edit-btn', onClick);
+}
+
+export function appendEditCell(tr, onClick) {
+  return appendCell(tr, mkEditBtn(onClick), 'admin-edit-column');
+}
+
 export function mkLevelCell(u) {
   const wrap = document.createElement('div');
   wrap.style.cssText = 'display:flex;flex-direction:column;gap:3px;min-width:80px';
