@@ -314,7 +314,7 @@
 
   /* Stats modal */
   #stats-modal-overlay {
-    padding-top: 0 !important;
+    padding: 0 !important;
     align-items: stretch !important;
   }
   #stats-modal {
@@ -483,4 +483,3 @@ body.sidebar-collapsed #reward-float-layer {
   height: 0.95rem;
   flex-shrink: 0;
 }
-

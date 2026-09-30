@@ -825,7 +825,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       _toggleCoverTooltipSettings();
       return;
     }
-    if (!(e.ctrlKey && !e.shiftKey && !e.altKey && (e.code === 'KeyX' || String(e.key || '').toLowerCase() === 'x'))) return;
+    const panelToggleModifier = (e.ctrlKey || e.metaKey) && !(e.ctrlKey && e.metaKey);
+    if (!(panelToggleModifier && !e.shiftKey && !e.altKey && (e.code === 'KeyX' || String(e.key || '').toLowerCase() === 'x'))) return;
     const tag = e.target?.tagName || '';
     const targetEl = e.target instanceof HTMLElement ? e.target : null;
     const targetVisible = !!(targetEl && targetEl.offsetParent !== null);

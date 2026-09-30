@@ -262,6 +262,7 @@
 
 .inv-grid {
   display: grid;
+  min-height: 0;
   grid-template-columns: repeat(5, 60px);
   gap: 6px;
   padding: 0.9rem;
@@ -445,6 +446,7 @@
 
 .inv-picker-grid {
   display: grid;
+  min-height: 0;
   grid-template-columns: repeat(5, 80px);
   justify-content: center;
   gap: 6px;

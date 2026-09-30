@@ -296,6 +296,7 @@ body.sidebar-collapsed #play-bottom-stack {
 #guide-modal-close:hover { background: #374151; color: #f3f4f6; }
 #guide-modal-frame {
   flex: 1;
+  min-height: 0;
   border: none;
   width: 100%;
 }
@@ -345,6 +346,7 @@ body.sidebar-collapsed #play-bottom-stack {
 #forum-modal-close:hover { background: #374151; color: #f3f4f6; }
 #forum-modal-frame {
   flex: 1;
+  min-height: 0;
   border: none;
   width: 100%;
   background: #0b1020;
@@ -411,6 +413,7 @@ body.sidebar-collapsed #play-bottom-stack {
 #notebook-modal-close:hover { background: #374151; color: #f3f4f6; }
 #notebook-modal-input {
   flex: 1;
+  min-height: 0;
   background: #111827;
   border: 1px solid #374151;
   border-radius: 6px;
@@ -991,4 +994,3 @@ select.cs-val { color: #d1d5db; }
 .cs-sc-sync-btn:disabled { opacity: 0.5; cursor: default; }
 .cs-sc-status { font-size: 0.72rem; color: #6b7280; }
 .cs-sc-fields { display: flex; flex-direction: column; gap: 0.15rem; font-size: 0.8rem; }
-

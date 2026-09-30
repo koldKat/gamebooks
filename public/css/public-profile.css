@@ -72,6 +72,7 @@
 
 .pub-modal-body {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding: 0.9rem 1rem;
   position: relative;
@@ -994,4 +995,3 @@
   font-size: 0.75rem;
   color: #6b7280;
 }
-

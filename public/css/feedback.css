@@ -23,13 +23,19 @@
   justify-content: center;
   padding-top: 4rem;
 }
+#stats-modal-overlay {
+  padding: 4vh 1rem;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
 #stats-modal-overlay.active { display: flex; }
 #stats-modal {
   background: #111827;
   border: 1px solid #374151;
   border-radius: 10px;
   width: min(784px, 92vw);
-  max-height: 80vh;
+  max-height: 92vh;
+  max-height: 92dvh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -58,7 +64,9 @@
 }
 #stats-modal-close:hover { color: #d1d5db; }
 #stats-modal-body {
+  min-height: 0;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   padding: 0.8rem 1rem 1rem;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -69,6 +77,12 @@
     "forum the-app battle-sims"
     "server the-app .";
   gap: 1rem;
+}
+#stats-modal-body::-webkit-scrollbar { width: 8px; }
+#stats-modal-body::-webkit-scrollbar-track { background: #111827; }
+#stats-modal-body::-webkit-scrollbar-thumb {
+  background: #4b5563;
+  border-radius: 999px;
 }
 .stats-loading {
   font-size: 0.82rem;
