@@ -44,3 +44,16 @@
   for (const entry of entries) entry.link.addEventListener('click', () => select(entry));
   update();
 })();
+
+// When a docs page is embedded in the in-app viewer (an <iframe>, e.g. the
+// play-area User Guide modal), the "Back to app" link is meaningless - there
+// is no app to go back to inside the frame. Drop it; keep it only when the
+// page is opened standalone (its own tab). Lives here rather than inline in
+// the generated pages because they are served with script-src 'self', which
+// blocks inline <script> blocks.
+(() => {
+  if (window.self === window.top) return;
+  document.documentElement.classList.add('in-app');
+  const back = document.querySelector('header nav .doc-back');
+  if (back) back.remove();
+})();

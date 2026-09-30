@@ -30,6 +30,9 @@
       transition: color 0.12s, background 0.12s;
     }
     header nav a:hover { color: #f5a623; background: #1f2937; }
+    /* Hidden when embedded in the in-app viewer (docs-toc.js adds .in-app to
+       <html>): the host page already provides its own dialog header. */
+    html.in-app header { display: none; }
 
     .layout { width: min(1180px, 100%); margin: 0 auto; display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 1.5rem; padding: 1.5rem 1rem 4rem; align-items: start; }
     .toc {
@@ -1801,15 +1804,5 @@ series_runs (
     </article>
   </div>
   <script src="/docs-toc.js"></script>
-  <script>
-    // When this page is embedded in the in-app viewer (an <iframe>, e.g. the
-    // play-area User Guide modal), the "Back to app" link is meaningless -
-    // there is no app to go back to inside the frame. Drop it; keep it only
-    // when the page is opened standalone (its own tab).
-    if (window.self !== window.top) {
-      var _back = document.querySelector('header nav .doc-back');
-      if (_back) _back.remove();
-    }
-  </script>
 </body>
 </html>
