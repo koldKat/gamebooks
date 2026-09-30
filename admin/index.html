@@ -216,39 +216,37 @@
     .table-wrap { overflow-x: auto; }
     .table-wrap td:last-child { min-width: 160px; max-width: 200px; }
     .admin-edit-btn { min-width: 58px; }
-    .admin-edit-column { position: sticky; left: 0; z-index: 1; width: 80px; min-width: 80px; background: #111827; box-shadow: 1px 0 #374151; }
-    th.admin-edit-column { background: #1f2937; }
 
     /* Users table column widths */
-    #users-table th:nth-child(2)  { width: 110px; }  /* Username */
-    #users-table th:nth-child(3)  { width: 96px; }   /* Joined */
-    #users-table td:nth-child(3),
-    #users-table td:nth-child(4)  { white-space: nowrap; }
-    #users-table th:nth-child(4)  { width: 96px; }   /* Last Active */
-    #users-table th:nth-child(5)  { width: 58px; }   /* Inactive */
-    #users-table th:nth-child(6)  { width: 46px; }   /* Books */
+    #users-table th:nth-child(1)  { width: 110px; }  /* Username */
+    #users-table th:nth-child(2)  { width: 96px; }   /* Joined */
+    #users-table td:nth-child(2),
+    #users-table td:nth-child(3)  { white-space: nowrap; }
+    #users-table th:nth-child(3)  { width: 96px; }   /* Last Active */
+    #users-table th:nth-child(4)  { width: 58px; }   /* Inactive */
+    #users-table th:nth-child(5)  { width: 46px; }   /* Books */
+    #users-table th:nth-child(6),
     #users-table th:nth-child(7),
     #users-table th:nth-child(8),
     #users-table th:nth-child(9),
-    #users-table th:nth-child(10),
-    #users-table th:nth-child(11) { width: 44px; }  /* Run stats */
-    #users-table th:nth-child(12) { width: 38px; }  /* Lvl */
-    #users-table th:nth-child(13),
-    #users-table th:nth-child(14) { width: 50px; }  /* Earned, Spent */
-    #users-table th:nth-child(15),
-    #users-table th:nth-child(16) { width: 44px; }  /* Gifted, Lucky */
-    #users-table th:nth-child(17) { width: 42px; }  /* Sess */
-    #users-table th:nth-child(18) { width: 90px; }  /* Location */
+    #users-table th:nth-child(10) { width: 44px; }  /* Run stats */
+    #users-table th:nth-child(11) { width: 38px; }  /* Lvl */
+    #users-table th:nth-child(12),
+    #users-table th:nth-child(13) { width: 50px; }  /* Earned, Spent */
+    #users-table th:nth-child(14),
+    #users-table th:nth-child(15) { width: 44px; }  /* Gifted, Lucky */
+    #users-table th:nth-child(16) { width: 42px; }  /* Sess */
+    #users-table th:nth-child(17) { width: 90px; }  /* Location */
+    #users-table th:nth-child(18),
+    #users-table td:nth-child(18) { width: 1%; white-space: nowrap; } /* Domain */
     #users-table th:nth-child(19),
-    #users-table td:nth-child(19) { width: 1%; white-space: nowrap; } /* Domain */
-    #users-table th:nth-child(20),
-    #users-table td:nth-child(20) { min-width: 360px; width: 360px; } /* Other actions */
+    #users-table td:nth-child(19) { min-width: 430px; width: 430px; } /* Actions */
     table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
 
     th {
       background: #1f2937; color: #9ca3af; font-weight: 600;
       font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em;
-      padding: 0.6rem 0.8rem; text-align: left;
+      padding: 0.3rem 0.8rem; text-align: left;
       border-bottom: 1px solid #374151;
     }
     th.sortable {
@@ -260,7 +258,10 @@
     th.sort-asc::after  { content: ' ▲'; font-size: 0.6rem; opacity: 0.7; }
     th.sort-desc::after { content: ' ▼'; font-size: 0.6rem; opacity: 0.7; }
 
-    td { padding: 0.55rem 0.8rem; border-bottom: 1px solid #1f2937; vertical-align: middle; }
+    td { padding: 0.22rem 0.8rem; border-bottom: 1px solid #1f2937; vertical-align: middle; }
+    td .btn { padding-top: 0.15rem; padding-bottom: 0.15rem; }
+    td .badge { padding-top: 0.08rem; padding-bottom: 0.08rem; }
+    td .btn-group { row-gap: 0.2rem; }
     tr:hover td { background: #1a2333; }
     .muted { color: #6b7280; font-size: 0.8rem; }
 
@@ -339,7 +340,7 @@
 
     /* ── Empty state ── */
 
-    .empty { text-align: center; color: #4b5563; font-size: 0.85rem; padding: 2.5rem 0; }
+    .empty { text-align: center; color: #4b5563; font-size: 0.85rem; padding: 0.75rem 0; }
 
     /* ── Confirm dialog ── */
 
@@ -702,7 +703,6 @@
         <div class="table-wrap">
           <table>
             <thead><tr>
-              <th class="admin-edit-column">Edit</th>
               <th>Username</th>
               <th>Type</th>
               <th>Details</th>
@@ -724,7 +724,6 @@
       <div class="table-wrap">
         <table id="users-table">
           <thead><tr>
-            <th class="admin-edit-column">Edit</th>
             <th data-table="users" data-col="username">Username</th>
             <th data-table="users" data-col="created_at">Joined</th>
             <th data-table="users" data-col="last_active">Last Active</th>
@@ -766,7 +765,6 @@
       <div class="table-wrap">
         <table>
           <thead><tr>
-            <th class="admin-edit-column">Edit</th>
             <th data-table="books" data-col="name">Book</th>
             <th data-table="books" data-col="owner">Owner</th>
             <th data-table="books" data-col="total_sections">Sections</th>
@@ -795,7 +793,6 @@
       <div class="table-wrap">
         <table>
           <thead><tr>
-            <th class="admin-edit-column">Edit</th>
             <th>Name</th>
             <th>Creator</th>
             <th>Books</th>
@@ -823,7 +820,6 @@
       <div class="table-wrap">
         <table>
           <thead><tr>
-            <th class="admin-edit-column">Edit</th>
             <th>Name</th>
             <th>Creator</th>
             <th>Books</th>
@@ -857,7 +853,6 @@
       <div class="table-wrap">
         <table>
           <thead><tr>
-            <th class="admin-edit-column">Edit</th>
             <th style="width:55px">Type</th>
             <th style="width:50px">Active</th>
             <th>Text</th>
@@ -1151,7 +1146,6 @@
     <div class="table-wrap">
       <table>
         <thead><tr>
-          <th class="admin-edit-column">Edit</th>
           <th data-table="ubooks" data-col="name">Book</th>
           <th data-table="ubooks" data-col="total_sections">Sections</th>
           <th data-table="ubooks" data-col="mapped">Mapped</th>

@@ -4,7 +4,7 @@
 // admin/index.html; remove #tips-type-filter/#tips-active-filter/#new-tip-save
 // listener wiring (this file owns them) and the Tips tab HTML/CSS.
 
-import { api, el, badge, mkBtn, appendEditCell, appendCell, _esc, showConfirm } from './core.js';
+import { api, el, badge, mkBtn, mkEditBtn, appendCell, _esc, showConfirm } from './core.js';
 import { editFields } from './editor.js';
 
 let _allTips = [];
@@ -13,7 +13,7 @@ export async function loadTips() {
   try {
     _allTips = await api('GET', '/api/admin/tips');
     _renderTips();
-  } catch (e) { document.getElementById('tips-body').innerHTML = `<tr><td colspan="5" style="color:#f87171">${_esc(e.message)}</td></tr>`; }
+  } catch (e) { document.getElementById('tips-body').innerHTML = `<tr><td colspan="4" style="color:#f87171">${_esc(e.message)}</td></tr>`; }
 }
 
 function _renderTips() {
@@ -28,7 +28,6 @@ function _renderTips() {
   tbody.innerHTML = '';
   for (const t of tips) {
     const tr = tbody.insertRow();
-    appendEditCell(tr, () => editTip(t));
     appendCell(tr, badge(t.type, t.type === 'real' ? 'badge-green' : 'badge-amber'));
     const activeTd = tr.insertCell();
     activeTd.innerHTML = `<label style="cursor:pointer"><input type="checkbox" data-id="${t.id}" class="tip-active-cb" ${t.active ? 'checked' : ''}></label>`;
@@ -36,6 +35,7 @@ function _renderTips() {
     textTd.style.cssText = 'color:#d1d5db;font-size:0.82rem';
     textTd.innerHTML = `<div class="tip-text-display" data-id="${t.id}" style="cursor:pointer" title="Click to edit">${_esc(t.text)}</div>`;
     const grp = el('div', 'btn-group');
+    grp.appendChild(mkEditBtn(() => editTip(t)));
     const delBtn = mkBtn('Delete', 'btn-danger', () => {
       showConfirm('Delete this tip?', async () => { await api('DELETE', `/api/admin/tips/${t.id}`); loadTips(); });
     });

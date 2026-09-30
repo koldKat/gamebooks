@@ -11,7 +11,7 @@
 // HTML/CSS, and the #gift-overlay modal HTML/CSS.
 
 import {
-  api, el, badge, mkBtn, mkEditBtn, appendEditCell, appendCell, emptyRow, mkLevelCell, mkGeoCell, addMetaItem, addStatCard,
+  api, el, badge, mkBtn, mkEditBtn, appendCell, emptyRow, mkLevelCell, mkGeoCell, addMetaItem, addStatCard,
   fmtDate, fmtDateTime, fmtBytes, pdfUrl, esc, adminBadge, authorBadge, contributorBadge,
   daysInactiveClass, fmtDaysInactive, flashSaved, showAlert, showConfirm,
   storeData, getSorted, getFiltered, foldForSearch, naturalCompare, naturalCompareByName, _tableData,
@@ -310,7 +310,6 @@ export function renderUsersTable(data) {
 
 function renderUserRow(tbody, u) {
     const tr = tbody.insertRow();
-    appendEditCell(tr, () => editAdminUser(u.id));
 
     const nameCell = tr.insertCell();
     const link = el('span', 'link', u.username);
@@ -389,6 +388,7 @@ function renderUserRow(tbody, u) {
     if (!u.last_domain) domainTd.className = 'muted';
 
     const group = el('div', 'btn-group');
+    group.appendChild(mkEditBtn(() => editAdminUser(u.id)));
     group.appendChild(mkBtn('Clear sessions', 'btn-warn',   () => confirmClearSessions(u.id, u.username)));
     group.appendChild(mkBtn('Impersonate', 'btn-info', async () => {
       const r = await fetch(`/api/admin/users/${u.id}/impersonate`, { method: 'POST' });
@@ -425,7 +425,6 @@ function renderLockedTable(users, now) {
   if (!locked.length) return;
   for (const u of locked) {
     const tr = tbody.insertRow();
-    appendEditCell(tr, () => editAdminUser(u.id));
     const nameCell = tr.insertCell();
     const link = el('span', 'link', u.username);
     link.addEventListener('click', () => loadUserDetail(u.id));
@@ -448,6 +447,7 @@ function renderLockedTable(users, now) {
     appendCell(tr, u.failed_login_attempts || 0, 'muted');
 
     const group = el('div', 'btn-group');
+    group.appendChild(mkEditBtn(() => editAdminUser(u.id)));
     group.appendChild(mkBtn('Unlock', 'btn-info', async () => {
       await api('POST', `/api/admin/users/${u.id}/unlock`);
       loadUsers();
@@ -477,11 +477,10 @@ export async function loadUsers() {
 export function renderBooksTable(data) {
   const tbody = document.getElementById('books-body');
   tbody.innerHTML = '';
-  if (!data.length) { emptyRow(tbody, 9, 'No books yet.'); return; }
+  if (!data.length) { emptyRow(tbody, 8, 'No books yet.'); return; }
 
   for (const b of data) {
     const tr = tbody.insertRow();
-    appendEditCell(tr, () => editAdminBook(b.id));
     const nameCell = tr.insertCell();
     const link = el('span', 'link', b.name);
     link.addEventListener('click', () => loadBookDetail(b.id, null));
@@ -497,6 +496,7 @@ export function renderBooksTable(data) {
     if (b.battles > 0) battlesCell.style.color = '#fb923c';
     appendCell(tr, fmtDate(b.updated_at), 'muted');
     const actions = el('div', 'btn-group');
+    actions.appendChild(mkEditBtn(() => editAdminBook(b.id)));
     actions.appendChild(mkBtn('Delete', 'btn-danger', () => confirmDeleteBook(b.id, b.name, null)));
     appendCell(tr, actions);
   }
@@ -517,11 +517,10 @@ export async function loadBooks() {
 export function renderUserBooksTable(data, userId) {
   const tbody = document.getElementById('user-books-body');
   tbody.innerHTML = '';
-  if (!data.length) { emptyRow(tbody, 11, 'No books yet.'); return; }
+  if (!data.length) { emptyRow(tbody, 10, 'No books yet.'); return; }
 
   for (const b of data) {
     const tr = tbody.insertRow();
-    appendEditCell(tr, () => editAdminBook(b.id));
     const nameCell = tr.insertCell();
     const link = el('span', 'link', b.name);
     link.addEventListener('click', () => loadBookDetail(b.id, { view: 'user', userId }));
@@ -541,6 +540,8 @@ export function renderUserBooksTable(data, userId) {
     appendCell(tr, fmtDate(b.updated_at), 'muted');
     const actCell = tr.insertCell();
     actCell.style.cssText = 'white-space:nowrap';
+    actCell.appendChild(mkEditBtn(() => editAdminBook(b.id)));
+    actCell.appendChild(document.createTextNode('\u00a0'));
     actCell.appendChild(mkBtn('Watch', 'btn-info', () => window.open(`/admin/watch?userId=${userId}&bookId=${b.id}`, '_blank')));
     actCell.appendChild(document.createTextNode('\u00a0'));
     actCell.appendChild(mkBtn('Gift', 'btn-info', () => showGiftModal(b.id, b.name, userId)));
