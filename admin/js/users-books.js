@@ -198,11 +198,12 @@ export function renderUsersTable(data) {
   // added), leaving these full-width rows spanning fewer columns than the
   // table actually has and reading as off-center.
   const colCount = document.querySelectorAll('#users-table thead th').length;
+  const searching = !!document.getElementById('users-search')?.value.trim();
   tbody.innerHTML = '';
-  if (!data.length) { emptyRow(tbody, colCount, 'No users yet.'); return; }
+  if (!data.length) { emptyRow(tbody, colCount, searching ? 'No users found.' : 'No users yet.'); return; }
 
-  const visible = data.filter(u => daysInactiveClass(u.days_inactive) !== 'act-stale');
-  const hidden  = data.filter(u => daysInactiveClass(u.days_inactive) === 'act-stale');
+  const visible = searching ? data : data.filter(u => daysInactiveClass(u.days_inactive) !== 'act-stale');
+  const hidden  = searching ? [] : data.filter(u => daysInactiveClass(u.days_inactive) === 'act-stale');
 
   for (const u of visible) renderUserRow(tbody, u);
 
@@ -377,7 +378,7 @@ export async function loadUsers() {
     }
     meta.textContent = `${users.length} user${users.length !== 1 ? 's' : ''}`;
     storeData('users', users);
-    renderUsersTable(getSorted('users'));
+    renderUsersTable(getFiltered('users'));
     renderLockedTable(users, now);
   } catch (e) { meta.textContent = 'Error loading users.'; console.error(e); }
 }
@@ -1145,10 +1146,13 @@ export function confirmDeleteBook(id, name, returnUserId) {
 
 // ── Self-wiring (sort headers + Books search) ─────────────────────────────────
 
-initSortHeaders('users',  renderUsersTable);
+initSortHeaders('users',  renderUsersTable, { paginate: false });
 initSortHeaders('books',  renderBooksTable);
 initSortHeaders('ubooks', data => renderUserBooksTable(data, _currentUserId));
 initSortHeaders('pts',    renderPtsTable);
+
+setSearchFields('users', ['username', 'display_name']);
+wireTableSearch('users', 'users-search', 'users-search-clear', renderUsersTable, { paginate: false });
 
 setSearchFields('books', ['name', 'owner']);
 wireTableSearch('books', 'books-search', 'books-search-clear', renderBooksTable);

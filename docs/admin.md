@@ -49,7 +49,9 @@ The top of the panel shows aggregate stats across all users and books:
 
 ## Users tab
 
-Lists all registered accounts. Columns: Username, Joined, Last Active, Inactive (days), Books, Runs, Active, Wins, Loss, Battle, Lvl, Earned, Spent, Gifted, Lucky (bonus GC lottery claims), Sess, Location, Domain, Actions.
+Users, Books, Series, and Anthologies share a left-aligned search toolbar with a clear button and a total count. Search is case-insensitive, ignores surrounding spaces, and filters as you type. The count shows all loaded items, before filtering. Users remain an unpaginated list when searching or sorting; the other three tabs keep their existing pagination.
+
+Lists all registered accounts. Columns: Username, Joined, Last Active, Inactive (days), Books, Runs, Active, Wins, Loss, Battle, Lvl, Earned, Spent, Gifted, Lucky (bonus GC lottery claims), Sess, Location, Domain, Actions. The search box filters by username or display name live as you type; matching inactive accounts are shown directly instead of remaining behind the collapsed inactive-accounts row.
 
 Username badges: **ADMIN**, **PROTECTED**, **AUTHOR**, **CONTRIBUTOR**, **LOCKED**.
 

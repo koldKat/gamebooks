@@ -333,16 +333,18 @@ export function getFiltered(tableId) {
 }
 
 // Wires a .admin-search-input/.admin-search-clear pair to a table's search
-// state, resetting to page 1 and re-rendering (through the existing sort +
-// pagination pipeline) on every keystroke and on clear.
-export function wireTableSearch(tableId, inputId, clearId, renderFn) {
+// state, resetting to page 1 when applicable and re-rendering through the
+// existing sort/filter pipeline on every keystroke and on clear.
+export function wireTableSearch(tableId, inputId, clearId, renderFn, { paginate = true } = {}) {
   const input = document.getElementById(inputId);
   const clearBtn = document.getElementById(clearId);
   const apply = () => {
-    _searchState[tableId].query = input.value;
+    _searchState[tableId].query = input.value.trim();
     clearBtn.style.display = input.value ? 'inline-block' : 'none';
     if (_pageState[tableId]) _pageState[tableId].page = 0;
-    renderPaged(tableId, getFiltered(tableId), renderFn);
+    const rows = getFiltered(tableId);
+    if (paginate) renderPaged(tableId, rows, renderFn);
+    else renderFn(rows);
   };
   input.addEventListener('input', apply);
   clearBtn.addEventListener('click', () => { input.value = ''; apply(); input.focus(); });
@@ -357,7 +359,7 @@ export function applySortIndicator(tableId) {
   }
 }
 
-export function initSortHeaders(tableId, renderFn) {
+export function initSortHeaders(tableId, renderFn, { paginate = true } = {}) {
   document.querySelectorAll(`th[data-table="${tableId}"][data-col]`).forEach(th => {
     th.classList.add('sortable');
     th.addEventListener('click', () => {
@@ -367,7 +369,9 @@ export function initSortHeaders(tableId, renderFn) {
       else { s.col = col; s.dir = 1; }
       applySortIndicator(tableId);
       if (_pageState[tableId]) _pageState[tableId].page = 0;
-      renderPaged(tableId, getFiltered(tableId), renderFn);
+      const rows = getFiltered(tableId);
+      if (paginate) renderPaged(tableId, rows, renderFn);
+      else renderFn(rows);
     });
   });
   applySortIndicator(tableId);

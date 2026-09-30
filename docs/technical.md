@@ -530,6 +530,8 @@ logged and returned as HTTP 500 instead of becoming an unhandled rejection.
 
 ## Admin panel JS structure
 
+The Users, Books, Series, and Anthologies tabs share the search toolbar styling and filtering helpers in `admin/js/core.js`. `wireTableSearch()` trims queries and applies case-insensitive matching through `getFiltered()`. Both `wireTableSearch()` and `initSortHeaders()` accept `{ paginate: false }` for the Users table, so searching or sorting cannot truncate its unpaginated list to 50 rows. Users search matches `username` and `display_name` and reveals inactive matches immediately; Series and Anthologies search matches the item name and creator username.
+
 `admin/index.html` loads `admin/js/boot.js` as a module entrypoint; per-domain logic is split
 into 10 modules under `admin/js/` (see project structure above).
 

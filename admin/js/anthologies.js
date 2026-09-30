@@ -12,7 +12,11 @@ import {
 export function renderAnthologiesTable(anthologies) {
   const tbody = document.getElementById('anthologies-body');
   tbody.innerHTML = '';
-  if (!anthologies.length) { tbody.innerHTML = '<tr><td colspan="7" style="color:#6b7280;padding:1rem">No anthologies yet.</td></tr>'; return; }
+  if (!anthologies.length) {
+    const searching = !!document.getElementById('anthologies-search')?.value.trim();
+    tbody.innerHTML = `<tr><td colspan="7" style="color:#6b7280;padding:1rem">${searching ? 'No anthologies found.' : 'No anthologies yet.'}</td></tr>`;
+    return;
+  }
   for (const a of anthologies) {
     const tr = tbody.insertRow();
     const nameTd = tr.insertCell();
@@ -33,6 +37,7 @@ export async function loadAdminAnthologies() {
   tbody.innerHTML = '<tr><td colspan="7" style="color:#6b7280;padding:1rem">Loading…</td></tr>';
   try {
     const anthologies = await api('GET', '/api/admin/anthologies');
+    document.getElementById('anthologies-meta').textContent = `${anthologies.length} ${anthologies.length === 1 ? 'anthology' : 'anthologies'}`;
     storeData('anthologies', anthologies);
     renderPaged('anthologies', getFiltered('anthologies'), renderAnthologiesTable);
   } catch (e) { tbody.innerHTML = `<tr><td colspan="7" style="color:#f87171">${_esc(e.message)}</td></tr>`; }

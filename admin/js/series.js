@@ -11,7 +11,11 @@ import {
 export function renderSeriesTable(series) {
   const tbody = document.getElementById('series-body');
   tbody.innerHTML = '';
-  if (!series.length) { tbody.innerHTML = '<tr><td colspan="7" style="color:#6b7280;padding:1rem">No series yet.</td></tr>'; return; }
+  if (!series.length) {
+    const searching = !!document.getElementById('series-search')?.value.trim();
+    tbody.innerHTML = `<tr><td colspan="7" style="color:#6b7280;padding:1rem">${searching ? 'No series found.' : 'No series yet.'}</td></tr>`;
+    return;
+  }
   for (const s of series) {
     const tr = tbody.insertRow();
     // Name (editable inline)
@@ -43,6 +47,7 @@ export async function loadAdminSeries() {
   tbody.innerHTML = '<tr><td colspan="7" style="color:#6b7280;padding:1rem">Loading…</td></tr>';
   try {
     const series = await api('GET', '/api/admin/series/all');
+    document.getElementById('series-meta').textContent = `${series.length} series`;
     storeData('series', series);
     renderPaged('series', getFiltered('series'), renderSeriesTable);
   } catch (e) { tbody.innerHTML = `<tr><td colspan="7" style="color:#f87171">${_esc(e.message)}</td></tr>`; }

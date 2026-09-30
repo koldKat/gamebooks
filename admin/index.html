@@ -691,7 +691,14 @@
           </table>
         </div>
       </div>
-      <div class="section-meta" id="users-meta"></div>
+      <div class="admin-toolbar">
+        <div class="admin-search-wrap">
+          <svg class="admin-search-icon" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="6.5" cy="6.5" r="4"/><line x1="9.7" y1="9.7" x2="13.5" y2="13.5"/></svg>
+          <input type="text" id="users-search" class="admin-search-input" placeholder="Search users…" autocomplete="off" spellcheck="false">
+          <button type="button" id="users-search-clear" class="admin-search-clear" aria-label="Clear search">✕</button>
+        </div>
+        <div class="section-meta" id="users-meta" style="margin:0"></div>
+      </div>
       <div class="table-wrap">
         <table id="users-table">
           <thead><tr>
@@ -753,13 +760,13 @@
 
     <!-- ── Series tab ───────────────────────────────────────────────────── -->
     <div id="tab-series" class="tab-panel">
-      <div class="admin-toolbar" style="justify-content:space-between">
-        <div class="section-title" style="margin:0">All Series</div>
+      <div class="admin-toolbar">
         <div class="admin-search-wrap">
           <svg class="admin-search-icon" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="6.5" cy="6.5" r="4"/><line x1="9.7" y1="9.7" x2="13.5" y2="13.5"/></svg>
           <input type="text" id="series-search" class="admin-search-input" placeholder="Search series…" autocomplete="off" spellcheck="false">
           <button type="button" id="series-search-clear" class="admin-search-clear" aria-label="Clear search">✕</button>
         </div>
+        <div class="section-meta" id="series-meta" style="margin:0"></div>
       </div>
       <div class="table-wrap">
         <table>
@@ -780,13 +787,13 @@
 
     <!-- ── Anthologies tab ──────────────────────────────────────────────── -->
     <div id="tab-anthologies" class="tab-panel">
-      <div class="admin-toolbar" style="justify-content:space-between">
-        <div class="section-title" style="margin:0">All Anthologies</div>
+      <div class="admin-toolbar">
         <div class="admin-search-wrap">
           <svg class="admin-search-icon" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="6.5" cy="6.5" r="4"/><line x1="9.7" y1="9.7" x2="13.5" y2="13.5"/></svg>
           <input type="text" id="anthologies-search" class="admin-search-input" placeholder="Search anthologies…" autocomplete="off" spellcheck="false">
           <button type="button" id="anthologies-search-clear" class="admin-search-clear" aria-label="Clear search">✕</button>
         </div>
+        <div class="section-meta" id="anthologies-meta" style="margin:0"></div>
       </div>
       <div class="table-wrap">
         <table>
