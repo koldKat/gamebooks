@@ -9,6 +9,9 @@ const {
   getTrafficStats, getResourceAverages, getCodeStats, _serverHardwareInfo, getAppBirthAt,
 } = require('../runtime-state');
 
+const SITE_STATS_CACHE_TTL_MS = 15_000;
+let _siteStatsCache = { at: 0, payload: null };
+
 async function handleGetSiteStats(req, res) {
   const now          = Math.floor(Date.now() / 1000);
   const totalTracked = now - getAppBirthAt();
@@ -19,8 +22,11 @@ async function handleGetSiteStats(req, res) {
   const codeStats = getCodeStats();
   const { trafficIn, trafficOut } = getTrafficStats();
   const { avgCpu, avgHeapUsed, avgHeapTotal, avgRss, avgSamples } = getResourceAverages();
+  const cacheFresh = _siteStatsCache.payload && (Date.now() - _siteStatsCache.at < SITE_STATS_CACHE_TTL_MS);
+  const siteStats = cacheFresh ? _siteStatsCache.payload : db.getSiteStats();
+  if (!cacheFresh) _siteStatsCache = { at: Date.now(), payload: siteStats };
   send(res, 200, {
-    ...db.getSiteStats(),
+    ...siteStats,
     ..._serverHardwareInfo(),
     linesOfCode: codeStats.linesOfCode,
     codeBytes:   codeStats.codeBytes,

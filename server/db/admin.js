@@ -759,6 +759,7 @@ function adminGetStats() {
   let finishedPlaythroughs = 0;
   let wins               = 0;
   let deaths             = 0;
+  let battleCount        = 0;
   let publicRuns         = 0;
   let battlesFought      = 0;
   let battlesWon         = 0;
@@ -779,14 +780,28 @@ function adminGetStats() {
       }
     }
   };
+  const childRowsByParent = new Map();
+  for (const child of db.prepare('SELECT id, parent_book_id, total_sections FROM books WHERE is_demo = 0 AND parent_book_id IS NOT NULL').all()) {
+    if (!childRowsByParent.has(child.parent_book_id)) childRowsByParent.set(child.parent_book_id, []);
+    childRowsByParent.get(child.parent_book_id).push(child);
+  }
+  const stateRowsByBook = new Map();
+  for (const ub of db.prepare(`
+    SELECT ub.book_id, ub.state_data
+    FROM user_books ub JOIN books b ON b.id = ub.book_id
+    WHERE b.is_demo = 0
+  `).all()) {
+    if (!stateRowsByBook.has(ub.book_id)) stateRowsByBook.set(ub.book_id, []);
+    stateRowsByBook.get(ub.book_id).push(ub);
+  }
   const bookRows = db.prepare('SELECT id, total_sections, is_container FROM books WHERE is_demo = 0 AND parent_book_id IS NULL').all();
   for (const book of bookRows) {
     if (book.is_container) {
       // Anthology: sections and gameplay live on child books
-      const childRows = db.prepare('SELECT id, total_sections FROM books WHERE parent_book_id = ? AND is_demo = 0').all(book.id);
+      const childRows = childRowsByParent.get(book.id) || [];
       for (const child of childRows) {
         totalSections += child.total_sections || 0;
-        const ubRows = db.prepare('SELECT state_data FROM user_books WHERE book_id = ?').all(child.id);
+        const ubRows = stateRowsByBook.get(child.id) || [];
         let bestMapped = 0, bestDiscovered = 0;
         for (const ub of ubRows) {
           try {
@@ -810,6 +825,7 @@ function adminGetStats() {
             finishedPlaythroughs += pts.filter(p => !!p.result).length;
             wins   += pts.filter(p => p.result === 'success').length;
             deaths += pts.filter(p => p.result === 'death').length;
+            battleCount += pts.filter(p => p.result === 'battle').length;
             publicRuns += pts.filter(p => p.isPublic).length;
             _tallyBattles(pts);
           } catch {}
@@ -820,7 +836,7 @@ function adminGetStats() {
       continue;
     }
     totalSections += book.total_sections || 0;
-    const ubRows = db.prepare('SELECT state_data FROM user_books WHERE book_id = ?').all(book.id);
+    const ubRows = stateRowsByBook.get(book.id) || [];
     // Graph stats: use the most complete graph among all users tracking this book
     let bestMapped = 0, bestDiscovered = 0;
     for (const ub of ubRows) {
@@ -843,6 +859,7 @@ function adminGetStats() {
         finishedPlaythroughs += pts.filter(p => !!p.result).length;
         wins   += pts.filter(p => p.result === 'success').length;
         deaths += pts.filter(p => p.result === 'death').length;
+        battleCount += pts.filter(p => p.result === 'battle').length;
         publicRuns += pts.filter(p => p.isPublic).length;
         _tallyBattles(pts);
       } catch {}
@@ -865,7 +882,7 @@ function adminGetStats() {
   const luckyGcClaimed   = db.prepare("SELECT COALESCE(SUM(amount), 0) AS n FROM coin_events WHERE event = 'bonus_gc_claim'").get().n;
   const battleSims       = db.prepare('SELECT COUNT(*) AS n FROM books WHERE has_battle_sim = 1').get().n;
   const battleWinRate    = battlesFought > 0 ? Math.round((battlesWon / battlesFought) * 100) : 0;
-  return { users, books, anthologies, series: seriesCount, sessions, totalSections, mappedSections, discoveredSections, playthroughs, activePlaythroughs, finishedPlaythroughs, wins, deaths, publicRuns, dbSize, feedbackUnread, totalCoinsEarned, totalCoinsSpent, totalCoinsAvailable, pdfCount, luckyGcGenerated, luckyGcClaimed, battleSims, battlesFought, battlesWon, battlesLost, battleWinRate };
+  return { users, books, anthologies, series: seriesCount, sessions, totalSections, mappedSections, discoveredSections, playthroughs, activePlaythroughs, finishedPlaythroughs, wins, deaths, battleCount, publicRuns, dbSize, feedbackUnread, totalCoinsEarned, totalCoinsSpent, totalCoinsAvailable, pdfCount, luckyGcGenerated, luckyGcClaimed, battleSims, battlesFought, battlesWon, battlesLost, battleWinRate };
 }
 
 function getSiteStats() {
@@ -929,14 +946,7 @@ function getSiteStats() {
   const avgPages   = pagesRow?.n > 0 ? Math.round(totalPages / pagesRow.n) : 0;
 
   // Gameplay extras
-  let battleCount = 0;
-  const allUb = db.prepare('SELECT state_data FROM user_books ub JOIN books b ON b.id = ub.book_id WHERE b.is_demo = 0').all();
-  for (const row of allUb) {
-    try {
-      const s = JSON.parse(row.state_data);
-      battleCount += (s.playthroughs || []).filter(p => p.result === 'battle').length;
-    } catch {}
-  }
+  const battleCount = base.battleCount || 0;
   const winRate = base.finishedPlaythroughs > 0
     ? Math.round((base.wins / base.finishedPlaythroughs) * 100)
     : 0;
