@@ -1,0 +1,238 @@
+// Run in its own VM process so stubs cannot leak into other client tests.
+import assert from 'node:assert/strict';
+import { readFileSync, readdirSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { createContext, SourceTextModule, SyntheticModule } from 'node:vm';
+
+const root = process.argv[1];
+const scenario = JSON.parse(process.argv[2] || '{"name":"integration"}');
+const calls = [], hooks = {}, elements = new Map(), storage = new Map();
+class Element {
+  constructor(id = '') {
+    this.id = id;
+    this.style = {};
+    this.dataset = {};
+    this.listeners = new Map();
+    this.value = '';
+    this.min = this.max = '';
+    this.scrollTop = 0;
+    this.tagName = 'DIV';
+    this.offsetParent = {};
+    const classes = new Set();
+    this.classList = {
+      add: (...names) => names.forEach(n => classes.add(n)),
+      remove: (...names) => names.forEach(n => classes.delete(n)),
+      contains: n => classes.has(n),
+      toggle: (n, on = !classes.has(n)) => { on ? classes.add(n) : classes.delete(n); return on; },
+    };
+    this.contentWindow = { location: { replace: url => calls.push(['forumNavigate', url]) } };
+  }
+  addEventListener(type, fn) { const list = this.listeners.get(type) || []; list.push(fn); this.listeners.set(type, list); }
+  removeEventListener(type, fn) { this.listeners.set(type, (this.listeners.get(type) || []).filter(f => f !== fn)); }
+  async emit(type, event = {}) {
+    for (const fn of [...(this.listeners.get(type) || [])]) await fn({ target: this, currentTarget: this, preventDefault() {}, stopPropagation() {}, ...event });
+  }
+  closest() { return null; }
+  focus() {}
+  blur() {}
+  select() {}
+  setAttribute(name, value) { this[name] = value; }
+  removeAttribute(name) { delete this[name]; }
+  insertAdjacentHTML() {}
+  appendChild() {}
+  remove() {}
+  scrollTo() {}
+}
+const el = id => { if (!elements.has(id)) elements.set(id, new Element(id)); return elements.get(id); };
+const document = new Element('document');
+Object.assign(document, { body: new Element('body'), activeElement: null, getElementById: el, querySelector: () => null, querySelectorAll: () => [], createElement: () => new Element() });
+const window = new Element('window');
+window.innerWidth = scenario.mobile ? 500 : 1280;
+const location = { pathname: scenario.pathname || '/', search: scenario.search || '', hash: scenario.hash || '', origin: 'https://example.test' };
+const history = {
+  state: null,
+  pushState(s, _, url) { this.state = s; if (url?.startsWith('#')) location.hash = url; calls.push(['pushState', s]); },
+  replaceState(s, _, url) { this.state = s; if (url?.startsWith('#')) location.hash = url; calls.push(['replaceState', s]); },
+  back() { calls.push(['back']); },
+};
+let token = scenario.token || null, username = 'Player', cachedBooks = null, cachedSeries = [];
+const book = { id: 1, name: 'Alpha', total_sections: 20, cover_path: 'alpha.jpg', pdf_path: 'alpha.pdf', parent_book_id: scenario.parentId || null, created_by: 9, bgPosY: 35 };
+const profile = { id: scenario.userId || 9, username, level: 12, coinsBalance: 7, pdfAccess: scenario.pdfAccess !== false, isAdmin: !!scenario.admin };
+let heartbeatResult = { awarded: true };
+const playState = { graph: {}, positions: {}, playthroughs: [], totalSections: 20, bookName: 'Alpha', startSection: 1 };
+const graphHandlers = new Map();
+const network = { on: (name, fn) => graphHandlers.set(name, fn), redraw() {}, focus() {}, selectNodes() {}, getNodeAt: () => 11, DOMtoCanvas: () => ({ x: 1, y: 2 }) };
+const overrides = {
+  state: playState, network, visNodes: { get: id => playState.graph[id] },
+  getToken: () => token, setToken: value => { token = value; }, clearToken: () => { token = null; },
+  getUsername: () => username, setUsername: value => { username = value; }, clearUsername: () => { username = ''; },
+  getCachedBooks: () => cachedBooks, setCachedBooks: books => { cachedBooks = books; }, clearBooksCache: () => { cachedBooks = null; },
+  getCachedAllSeries: () => cachedSeries, setCachedAllSeries: series => { cachedSeries = series; }, getCachedStashes: () => [],
+  currentBookId: null, isDemoMode: false, viewingPt: null,
+  currentSection: () => null, currentPlaythrough: () => null,
+  getVisibleEquippedItems: async () => [], getDemoBooks: () => [], getDemoVisited: () => [],
+  isValidSecId: value => Number.isInteger(value) && value > 0,
+  parseSecId: value => /^\d+$/.test(value) ? Number(value) : null,
+  resolveIsAdmin: data => !!data?.isAdmin, isNotifDropdownOpen: () => false,
+  wasInDemoMode: () => !!scenario.savedDemo, hasPendingResetToken: () => !!scenario.reset,
+  t: key => key, escapeHtml: text => text,
+  adminBadge: () => '', authorBadge: () => '', contributorBadge: () => '',
+  fetchPublic: async () => ({ ok: true, json: async () => ({}) }),
+  apiFetch: async (url, options) => {
+    calls.push(['apiFetch', url, options]);
+    return { ok: true, json: async () => url === '/api/profile' ? profile : url === '/api/books' ? [book] : url === '/api/heartbeat' ? heartbeatResult : [] };
+  },
+};
+const context = createContext({ window, document, location, history, navigator: { userAgent: 'Test', maxTouchPoints: 0 }, HTMLElement: Element, URLSearchParams, Event: class {}, MutationObserver: class { observe() {} }, localStorage: { getItem: k => storage.get(k) ?? null, setItem: (k, v) => storage.set(k, v), removeItem: k => storage.delete(k) }, setTimeout: () => 1, requestAnimationFrame: fn => fn(), console });
+const moduleSources = new Map(readdirSync(resolve(root, 'boot')).filter(n => n.endsWith('.js')).map(n => [resolve(root, 'boot', n), readFileSync(resolve(root, 'boot', n), 'utf8')]));
+moduleSources.set(resolve(root, 'boot.js'), readFileSync(resolve(root, 'boot.js'), 'utf8'));
+const stubNames = new Map();
+for (const [path, source] of moduleSources) {
+  for (const match of source.matchAll(/import \{([^}]+)\} from '([^']+)';/g)) {
+    const target = resolve(dirname(path), match[2]);
+    if (moduleSources.has(target)) continue;
+    const names = stubNames.get(target) || new Set();
+    for (const spec of match[1].split(',')) names.add(spec.trim().split(/\s+as\s+/)[0]);
+    stubNames.set(target, names);
+  }
+}
+const modules = new Map();
+for (const [path, names] of stubNames) {
+  modules.set(path, new SyntheticModule([...names], function () {
+    for (const name of names) {
+      this.setExport(name, Object.hasOwn(overrides, name) ? overrides[name] : (...args) => {
+        calls.push([name, ...args]);
+        if (name.startsWith('set') && name.endsWith('Hooks')) hooks[name] = args[0];
+        if (name === 'setOnAuthSuccess') hooks.authSuccess = args[0];
+        if (name === 'setFastTravelHandler') hooks.fastTravel = args[0];
+        if (name === 'setCurrentBookId') this.setExport('currentBookId', args[0]);
+        if (name === 'loadState') this.setExport('currentBookId', args[0]);
+      });
+    }
+  }, { context, identifier: path }));
+}
+for (const [path, source] of moduleSources) modules.set(path, new SourceTextModule(source, { context, identifier: path }));
+const entry = modules.get(resolve(root, 'boot.js'));
+await entry.link((specifier, parent) => modules.get(resolve(dirname(parent.identifier), specifier)));
+await entry.evaluate();
+assert.equal(el('main-screen').style.display, undefined, 'entry does not initialize before DOM ready');
+await document.emit('DOMContentLoaded');
+const screens = modules.get(resolve(root, 'boot/screens.js')).namespace;
+const bootState = modules.get(resolve(root, 'boot/state.js')).namespace.bootState;
+if (scenario.name !== 'integration') {
+  if (scenario.screen) assert.equal(el(scenario.screen).style.display, 'flex', scenario.name);
+  if (scenario.publicCall) assert.ok(calls.some(c => c[0] === scenario.publicCall && c[1] === scenario.publicId));
+  if (scenario.demo) assert.ok(calls.some(c => c[0] === 'startDemoMode'));
+  if (scenario.reset) assert.ok(calls.some(c => c[0] === 'showResetPanel'));
+  if (scenario.search) {
+    assert.equal(token, 'handoff');
+    assert.ok(calls.some(c => c[0] === 'replaceState' && Object.keys(c[1]).length === 0));
+  }
+  if (scenario.token || scenario.search) {
+    assert.equal(bootState._currentUserId, profile.id);
+    assert.equal(bootState._isAdmin, !!scenario.admin);
+    assert.equal(bootState._canSeeAppXp, !!scenario.admin || profile.id === 17);
+    assert.equal(bootState._hasPdfAccess, !!scenario.admin || profile.pdfAccess);
+    assert.ok(calls.some(c => c[0] === '_connectAppXpSSE'));
+    assert.ok(calls.findIndex(c => c[0] === 'setLiveTabHooks') < calls.findIndex(c => c[0] === '_ensureLiveTabControllerStarted'));
+  }
+  if (scenario.screen === 'main-screen') {
+    assert.equal(bootState._currentBook.pdfPath, 'alpha.pdf');
+    assert.equal(el('pdf-download-btn').style.display, (profile.pdfAccess || scenario.admin) && !scenario.parentId ? '' : 'none');
+    const loads = calls.filter(c => c[0] === 'loadState').length;
+    await window.emit('pageshow', { persisted: true });
+    assert.equal(calls.filter(c => c[0] === 'loadState').length, loads + 1, 'bfcache reloads the current book');
+    bootState._viewLockUntil = 0;
+    const pushes = calls.filter(c => c[0] === 'pushState').length;
+    await window.emit('popstate', { state: { view: 'books' } });
+    assert.equal(el('books-screen').style.display, 'flex');
+    assert.equal(calls.filter(c => c[0] === 'pushState').length, pushes, 'back navigation does not push another route');
+    assert.equal(bootState._suppressHistory, false);
+  }
+  console.log(`Fresh startup passed: ${scenario.name}`);
+  process.exit(0);
+}
+assert.equal(el('login-screen').style.display, 'flex');
+assert.equal(el('main-screen').style.display, 'none');
+assert.ok(hooks.setBooksHooks && hooks.setCoversHooks && hooks.setLiveTabHooks && hooks.setPartyHooks);
+assert.ok(calls.findIndex(c => c[0] === 'setLiveTabHooks') < calls.findIndex(c => c[0] === '_ensureLiveTabControllerStarted'));
+const liveHooks = hooks.setLiveTabHooks;
+assert.equal(typeof liveHooks.sendHeartbeat, 'function');
+assert.equal(typeof liveHooks.processRewardSnapshot, 'function');
+liveHooks.sendHeartbeat();
+await new Promise(resolve => setImmediate(resolve));
+assert.ok(calls.some(c => c[0] === 'apiFetch' && c[1] === '/api/heartbeat' && c[2].method === 'POST'));
+assert.ok(calls.some(c => c[0] === '_scheduleRewardProfileRefresh' && c[1] === 150));
+const rewardedHeartbeats = calls.filter(c => c[0] === '_scheduleRewardProfileRefresh').length;
+heartbeatResult = { awarded: false, coinRolled: false };
+liveHooks.sendHeartbeat();
+await new Promise(resolve => setImmediate(resolve));
+assert.equal(calls.filter(c => c[0] === '_scheduleRewardProfileRefresh').length, rewardedHeartbeats, 'empty heartbeat does not create reward refreshes');
+liveHooks.processRewardSnapshot(profile);
+liveHooks.onAppXpEvent({ totalXp: 123 });
+liveHooks.loadCovers({ force: true });
+liveHooks.refreshBooksListOnly();
+liveHooks.scheduleLiveUiRefresh({ inbox: true, notif: true, forum: true });
+assert.ok(calls.some(c => c[0] === '_processRewardSnapshot' && c[1] === profile));
+assert.ok(calls.some(c => c[0] === 'handleAppXpEvent' && c[1].totalXp === 123));
+assert.ok(calls.some(c => c[0] === 'loadCovers' && c[1]?.force));
+assert.ok(calls.some(c => c[0] === '_refreshBooksListOnly'));
+assert.ok(calls.some(c => c[0] === '_scheduleLiveUiRefresh' && c[1].inbox && c[1].notif && c[1].forum));
+await document.emit('keydown', { key: 'F1' });
+assert.ok(el('shortcuts-modal-overlay').classList.contains('active'));
+await document.emit('keydown', { key: 'Escape' });
+assert.ok(!el('shortcuts-modal-overlay').classList.contains('active'));
+await document.emit('keydown', { key: 'x', code: 'KeyX', ctrlKey: true });
+assert.ok(calls.some(c => c[0] === '_toggleAllLandingPanelsCollapsed'));
+const count = calls.filter(c => c[0] === '_toggleAllLandingPanelsCollapsed').length;
+const input = new Element(); input.tagName = 'INPUT';
+await document.emit('keydown', { key: 'x', code: 'KeyX', ctrlKey: true, target: input });
+assert.equal(calls.filter(c => c[0] === '_toggleAllLandingPanelsCollapsed').length, count);
+await el('forum-btn').emit('click');
+assert.ok(!el('forum-modal-overlay').classList.contains('active'));
+await el('forum-modal-frame').emit('load');
+assert.ok(el('forum-modal-overlay').classList.contains('active'));
+await el('forum-modal-close').emit('click');
+await el('forum-btn').emit('click');
+await el('forum-modal-close').emit('click');
+await el('forum-modal-frame').emit('load');
+assert.ok(!el('forum-modal-overlay').classList.contains('active'), 'cancelled navigation cannot reopen the forum');
+token = 'signed-in';
+await hooks.authSuccess();
+assert.equal(bootState._currentUserId, 9);
+assert.equal(el('books-screen').style.display, 'flex');
+assert.ok(calls.some(c => c[0] === 'renderBooksList'));
+await screens.navigateToBook(1);
+assert.equal(el('main-screen').style.display, 'flex');
+assert.equal(el('landing-wrapper').style.display, 'none');
+assert.ok(graphHandlers.has('oncontext') && graphHandlers.has('click'));
+assert.ok(calls.some(c => c[0] === 'resetBgState' && c[2] === 35));
+assert.ok(calls.some(c => c[0] === 'connectPartySSE' && c[1] === 1));
+await screens.showBooks();
+assert.equal(el('main-screen').style.display, 'flex', 'view lock protects the opened book');
+await document.emit('keydown', { key: 'x', code: 'KeyX', metaKey: true });
+assert.ok(calls.some(c => c[0] === '_toggleAllPlayPanelsCollapsed'));
+bootState.ctxNodeId = 11;
+playState.graph[11] = { choices: [] };
+await el('ctx-priority-high-btn').emit('click');
+assert.equal(playState.graph[11].priority, 'high');
+bootState._viewLockUntil = 0;
+await el('back-to-books-btn').emit('click');
+assert.equal(el('books-screen').style.display, 'flex');
+assert.equal(el('main-screen').style.display, 'none');
+await el('logout-btn').emit('click');
+assert.equal(token, null);
+assert.equal(el('login-screen').style.display, 'flex');
+token = 'second-login';
+window.innerWidth = 500;
+await hooks.authSuccess();
+assert.equal(el('feed-toggle').style.display, 'none');
+await screens.navigateToBook(1);
+assert.equal(el('main-screen').style.display, 'none', 'mobile cannot open desktop play view');
+await el('mobile-addbook-btn').emit('click');
+assert.ok(document.body.classList.contains('mobile-addbook-open'));
+assert.ok(calls.some(c => c[0] === '_refillLazyIfShort'));
+assert.equal(history.state.mobilePanel, 'addbook');
+await document.emit('keydown', { key: 'x', code: 'KeyX', ctrlKey: true });
+assert.ok(calls.filter(c => c[0] === '_toggleAllLandingPanelsCollapsed').length > count, 'shortcut survives logout and login');
+console.log('Boot startup, hooks, routing, shortcuts, forum, graph actions, login/logout and mobile checks passed.');
