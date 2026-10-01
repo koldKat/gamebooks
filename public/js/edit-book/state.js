@@ -1,0 +1,31 @@
+// Mutable dialog state and injected hooks. No DOM side effects.
+export const editState = {
+  _hooks: {},
+  _creatingStashBookIds: new Set(),
+  _creatingStashSeriesIds: new Set(),
+  _creatingStashExcludedBookIds: new Set(),
+  _editingStashId: null,
+  _editingStashBookIds: new Set(),
+  _editingStashSeriesIds: new Set(),
+  _editingStashExcludedBookIds: new Set(),
+  _pendingCoverBlob: null,
+  _pendingPdfFile: null,
+  _editBookId: null,
+  _bookSession: 0,
+  _anthologySession: 0,
+  _seriesSession: 0,
+  _editStarCurrentRating: null,
+  _editStarAvgRating: null,
+  _editStarVoteCount: 0,
+  _editStarBookId: null,
+  _editStarRequestSeq: 0,
+  _editStarInitialized: false,
+  _alsoAppearsAddWired: false,
+  _editStarUpdateFn: null,
+  _eccBookId: null,
+  _eccCover: null,
+  _eccPdf: null,
+  _esrSeriesId: null,
+};
+
+export function setEditBookHooks(h) { editState._hooks = h || {}; }

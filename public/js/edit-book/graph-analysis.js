@@ -1,0 +1,10 @@
+import { state, isTerminal, parseSecId } from '../state.js';
+
+export function maxSectionInUse(s = state) {
+  let max = 1;
+  const bump = n => { if (typeof n === 'number' && !isTerminal(n) && n > max) max = n; };
+  Object.keys(s.graph || {}).forEach(k => bump(parseSecId(k)));
+  Object.values(s.graph || {}).forEach(d => (d.choices || []).forEach(bump));
+  (s.playthroughs || []).forEach(pt => (pt.path || []).forEach(bump));
+  return max;
+}

@@ -89,7 +89,7 @@ gamebooks/
       inventory.js       Inventory grid - self-contained module (per-run item slots, drag reorder, template)
       equipment.js       Equipment panel - self-contained module (per-run equip slots, context menu, template)
       sort.js            Search/sort helpers (foldForSearch, matchesSearch, naturalCompare)
-      util.js            Shared utility helpers: escapeHtml, compressImage, compressToBlob (client-side JPEG quality iteration), setPreviewImgBlob (revokes an <img>'s previous blob: src before assigning a new one, used by add-book.js/edit-book.js's cover-preview file pickers), registerPanelShortcut (single-key panel toggle shared by charsheet/inventory/equipment/battlesim*), shortcutLabel (first-letter shortcut hint span)
+      util.js            Shared utility helpers: escapeHtml, compressImage, compressToBlob (client-side JPEG quality iteration), setPreviewImgBlob (revokes an <img>'s previous blob: src before assigning a new one, used by add-book.js and edit-book/book-bindings.js/edit-book/anthology.js cover-preview file pickers), registerPanelShortcut (single-key panel toggle shared by charsheet/inventory/equipment/battlesim*), shortcutLabel (first-letter shortcut hint span)
       autocomplete.js    Shared name-autocomplete helpers for add/edit modals
       auth.js            Login, register, forgot-password, reset-password forms
       confirm.js         showConfirm()/showAlert(). Linked separately from play.js so battlesim*.js
@@ -236,7 +236,25 @@ gamebooks/
         battlesim238.js    Battle simulator for book 238, Black Vein Prophecy - the dice-combat half of this book's hybrid system (physical fights only; its narrative "power word" magic duels are story-branch choices, not dice, and are out of scope, same as book 236's excluded Myurr alternate actions). Standard SKILL/STAMINA/LUCK combat plus a generic attack-modifier/damage-per-hit pair, and an optional second-enemy "parry mode" toggle for this book's simultaneous dual-opponent fights (Robber+Slaver sec.75, Slaver pair sec.213, Jungle Man pair sec.337) where only the nominated target can be wounded.
         battlesim239.js    Battle simulator for book 239, The Keep of the Lich-Lord - standard Fighting Fantasy SKILL/STAMINA/LUCK combat plus a RESOLVE stat used only for narrative undead-fear checks (out of scope for the sim). Generic attack-modifier and configurable damage-per-hit fields cover this book's one-off SKILL penalties and fixed/variant damage fights (e.g. the Skull Beast's bony shell taking only 1 STAMINA per hit and no LUCK bonus). An optional second-enemy toggle covers the book's two-named-opponent fights; the handful of 3-4-way simultaneous fights (Lady Lotmora plus two Vampires, sometimes joined by Kandogor) exceed the engine's two-enemy design and are approximated by fighting the strongest named foe as primary and the rest as the second slot. Baracas's wrestling bout (sec.167) uses a different opposed-roll mechanic and isn't modelled.
       add-book.js        Create Book, Create Anthology, Create Series modals
-      edit-book.js       Edit Book/Anthology/Series/Stash modals; ISBN/ISSN/ASIN validation
+      edit-book.js       Compatibility facade preserving the edit/upload helper API
+      edit-book/         Edit dialogs and shared creation-dialog utilities
+        state.js         Shared injected hooks, pending media, rating and stash selection state
+        init.js          Ordered book/stash/anthology/series event initialization
+        uploads.js       PDF size validation, labels, authenticated XHR/progress, control helpers
+        validators.js    ISBN/ISSN/ASIN validation (no DOM dependencies)
+        selectors.js     Series/parent anthology dropdown population and shared name sorting
+        memberships.js   Secondary anthology membership chips, ordering, and removal
+        book.js          Open/reset the book dialog, metadata and parent visibility, close
+        book-actions.js  Book validation, media upload/save flow, cancel and keyboard bindings
+        book-bindings.js Book cover/PDF file-input and PDF removal bindings
+        book-rating.js   Persistent rating widget and per-book rating requests
+        anthology.js     Anthology dialog opening, saves, media and close bindings
+        series.js        Series dialog opening, saves and close bindings
+        stash-helpers.js Inherited selection/exclusions, assignment, sorting and row markup
+        stash-picker.js  Searchable create/edit stash picker rendering
+        stash-dialogs.js Open/reset/close stash dialogs
+        stash-bindings.js Stash checkbox selection, saves and backdrop bindings
+        graph-analysis.js Maximum numbered section in graph choices and run paths
       books.js           My Books compatibility entry point (existing exports)
       books/             My Books feature modules
         state.js         Shared library caches, hooks, and expansion preferences
@@ -612,7 +630,7 @@ later, never at module-evaluation time.
 `feedback.js`'s feed-card HTML uses inline `onclick="toggleFeedbackCard(this)"` (built via
 `innerHTML` templates), which resolves against `window`, not module scope - the file exposes
 `window.toggleFeedbackCard = ...` at the bottom (and two more for its sibling handlers).
-Everything else in the codebase uses `addEventListener` instead.
+Module handlers generally use `addEventListener`; edit-book's per-open handlers use DOM event properties so reopening replaces the previous handler rather than accumulating listeners.
 
 ---
 
@@ -781,7 +799,7 @@ Avatar files are stored in `public/avatars/<userId>_<timestamp>.jpg` and served 
 
 Book cover files are stored in `public/covers/<userId>_<bookId>_<timestamp>.jpg`. The old cover file is deleted when a new one is uploaded. `coverUrl` is a path like `/covers/<filename>`. Cover upload uses `POST /api/books/:id/cover` with a raw JPEG body (max 256 KB). From the regular app it is creator-only and awards XP; from the admin panel (localhost) it bypasses both checks. Cover removal uses `POST /api/books/:id/cover/delete` (localhost-only), which deletes the file and clears `cover_path`. `db.setBookCover` accepts an `isAdmin` flag that skips the creator and user_books membership checks.
 
-Book PDF files are stored in `public/books/<bookId>_<timestamp>.pdf` and served via `GET /books/<filename>`. Upload: `POST /api/books/:id/pdf` (raw PDF body, max 128 MB, magic bytes `%PDF` validated). Remove: `DELETE /api/books/:id/pdf`. The old file is deleted when a new one is uploaded or when removed. `pdf_path` is stored on the `books` row. The static file gate (`GET /books/:path`) requires the request to be authenticated with a user who has `is_admin = 1` OR `pdf_access = 1`; unauthenticated requests and users without either flag receive `403`.
+Book PDF files are stored in `public/books/<bookId>_<timestamp>.pdf` and served via `GET /books/<filename>`. Upload: `POST /api/books/:id/pdf` (raw PDF body, max 256 MB, magic bytes `%PDF` validated). Remove: `DELETE /api/books/:id/pdf`. The old file is deleted when a new one is uploaded or when removed. `pdf_path` is stored on the `books` row. The static file gate (`GET /books/:path`) requires the request to be authenticated with a user who has `is_admin = 1` OR `pdf_access = 1`; unauthenticated requests and users without either flag receive `403`.
 
 ### Feedback API
 
@@ -2124,7 +2142,13 @@ A third div, `#landing-bg-dim` (same `position: fixed; z-index: -1`, painted aft
 
 ---
 
-## Identifier validation (`edit-book.js`)
+## Identifier validation (`edit-book/validators.js`, re-exported by `edit-book.js`)
+
+`edit-book.js` keeps all 23 existing exports so `add-book.js`, the desktop bootstrap, and library/detail-dialog hooks need no import changes. Implementations live in `edit-book/`; internal imports are acyclic and never back-import the facade. Mutable hooks, pending media and stash/rating state live in `editState` (`edit-book/state.js`). `initEditBook()` preserves event-registration order: book media inputs, stash dialogs, anthology bindings, then series bindings. Book actions receive the close callback explicitly, avoiding a book/action import cycle. The split does not move controls, change permissions or callback signatures, or add timers/observers. Audit hardening replaces per-open keyboard/parent/type/close handlers rather than accumulating listeners, rejects failed cover uploads before saving metadata, and keeps PDF links/cache intact on failed removal. Successful delayed PDF removal updates the original book without hiding another book's link. Rating loads/saves use a request sequence so late responses or rollbacks cannot overwrite a reopened dialog or a newer rating action.
+
+Book, anthology and series dialogs also track an open-session generation. Media save continuations cannot save or close a replacement dialog; upload callbacks retain the original item ID/file size for cache/reward updates. `_uploadPdfWithProgress` accepts an optional current-session predicate (existing three-argument callers remain compatible), guarding progress events and the delayed progress reset. Reopening restores Save/Cancel controls. Image compression results and anthology membership UI refreshes are session-guarded; membership changes update their original cached book. Anthology PDF removal captures its target before confirmation, reports failures without clearing the link, and does not clear another dialog after completion. Series saves still refresh the library after success but cannot close a newer edit dialog.
+
+Regression checks in `test/client/edit-book/` cover facade exports/dependency boundaries, identifiers and section counts, PDF size/progress/errors/retry behavior and auth/maintenance events, upload-disabled controls, book/anthology saves, secondary anthology membership add/remove, series flags, empty stashes and retained exclusions. They also cover repeated-open Enter saves, failed cover uploads/PDF deletion, delayed deletion, stale rating loads/save responses/rollbacks, and switching items during PDF/cover uploads, membership additions and series saves. Browser comparisons of the structural split used the real dialog DOM with mocked APIs/XHR and compared the original/split dialog state, API calls and reward callbacks; they did not upload production files or mutate the database.
 
 ### `validateIsbn(raw)`
 
