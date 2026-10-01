@@ -104,7 +104,25 @@ gamebooks/
         physics.js       Debounced single-flight stabilization with injected resync callback
         deletion.js      Protected subtree deletion and run/path cleanup
         pathfinding.js   Reachability and shortest/normal/priority fast-travel paths
-      play.js            Render pipeline, all playthrough actions, modals
+      play.js            Stable desktop play API; re-exports the play/ modules
+      play/              Desktop play-screen feature modules
+        context.js       Shared UI settings/hooks (book/run data stays in state.js)
+        settings.js      Public setters and ref-counted auto-navigation suppression
+        init.js          One-time panel renderer registration (avoids an internal cycle)
+        render.js        Ordered render pipeline, draft preservation and post-render hooks
+        stats.js         Mapped/discovered counts, progress bars and missing sections
+        panel.js         Panel DOM replacement and binding orchestration
+        markup.js        Active controls, runs and pre-series run HTML
+        bindings.js      Panel button, input, portal and run event bindings
+        trail.js         Floating run path, hover highlighting and collapse persistence
+        runs.js          Start/resume/view/delete, portal entry and loadout initialization
+        choices.js       Choice parsing, metadata preservation and orphan cleanup
+        navigation.js    Navigation, auto-navigation predicate and undo
+        limits.js        Level/bonus-based undo and fast-travel credits
+        completion.js    Completion state, outcome sentinels and reward refresh
+        dialogs.js       Alphanumeric confirmation, two-choice/start/fast-travel dialogs
+        node-dialogs.js  Edit choices and pinned notes
+        portal-dialog.js Portal add/edit dialog
       charsheet.js       Character sheet - self-contained module
       inventory.js       Inventory grid - self-contained module (per-run item slots, drag reorder, template)
       equipment.js       Equipment panel - self-contained module (per-run equip slots, context menu, template)
@@ -550,7 +568,7 @@ Layer 1 (import only from layer 0):
 Layer 2:
   inventory.js   ← state.js, play.js*, charsheet.js
   equipment.js   ← state.js, inventory.js, charsheet.js
-  play.js          ← state.js, graph.js, charsheet.js, inventory.js*, equipment.js*, i18n.js, confirm.js
+  play.js / play/ ← state.js, graph.js, charsheet.js, equipment.js*, rewards.js, i18n.js, confirm.js
 
   * three-way cycle: equipment.js → inventory.js → play.js → equipment.js
     Works because none consume each other's exports at module-evaluation time.
@@ -2136,13 +2154,21 @@ Imports `state.js`, `inventory.js` (to move items between inventory and equipmen
 
 ## Render pipeline (`play.js › render`)
 
+`play.js` is a compatibility facade retaining all 34 existing exports. Internal implementations live in `public/js/play/`; callers continue importing the facade. `play/init.js` registers `panel.js` with `render.js` once, so actions can call `render()` without an internal `render -> panel -> actions -> render` import cycle. The internal modules never back-import the facade. The existing external equipment/inventory cycle is unchanged; mobile's separate reader/controller is not routed through this desktop feature.
+
+The split preserves run data/persistence, callback ordering, reward hooks, loadouts, open-world placeholders/pre-series runs, choice validation and orphan cleanup. Subsequent regression reviews added targeted fixes for inherited issues: queued auto-navigation checks the originating state/run/section/network, current choices and reader/party suppression before navigating (stale callbacks cannot clear newer hops); delayed new-run camera focus checks that the same graph, run and section are still active; run deletion verifies its book/run slot at confirmation and its book/series callback context after the DELETE request; repeated two-choice/portal dialog openings no longer accumulate backdrop/Escape listeners. No additional timers or observers were introduced.
+
+`test/client/play/` checks the unchanged public API and acyclic internal dependencies; 42 isolated scenarios compare state, rendered HTML/stats, callbacks, API calls, reward-refresh requests and timers against a digest captured from the unsplit controller. Additional assertions cover queued-hop cancellation on run/book/graph changes, suppression and changed destinations, delayed focus after graph/book/section changes, deletion across confirmation/API waits and shifted run slots, plus stable listener counts and dismissal after repeated dialog openings. `browser-check.fixture` is a separate manual browser smoke check using the actual index DOM, CSS, vis-network, dice and reader modules with mocked HTTP responses. These checks do not exercise production SSE delivery or production XP/coin payouts.
+
 ```
 render()
   ├── syncGraph()               - updates vis-network nodes/edges to match state
   ├── updateStats()             - updates sidebar stat counters
   ├── renderPlaythroughPanel()  - rebuilds sidebar HTML and re-attaches events
   │     └── renderPathTrail()  - updates #run-trail-float element
-  └── renderCharSheetDisplay()  - refreshes the character sheet compact overlay
+  ├── renderCharSheetDisplay()  - refreshes the character sheet compact overlay
+  ├── restore choices draft and center-button state
+  └── post-render callbacks     - dice restoration and in-app reading, in registration order
 ```
 
 `renderPlaythroughPanel` replaces `panel.innerHTML` on every call. Event listeners are re-attached after each replacement.

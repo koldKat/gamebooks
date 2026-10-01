@@ -303,7 +303,25 @@
         physics.js       Debounced single-flight stabilization with injected resync callback
         deletion.js      Protected subtree deletion and run/path cleanup
         pathfinding.js   Reachability and shortest/normal/priority fast-travel paths
-      play.js            Render pipeline, all playthrough actions, modals
+      play.js            Stable desktop play API; re-exports the play/ modules
+      play/              Desktop play-screen feature modules
+        context.js       Shared UI settings/hooks (book/run data stays in state.js)
+        settings.js      Public setters and ref-counted auto-navigation suppression
+        init.js          One-time panel renderer registration (avoids an internal cycle)
+        render.js        Ordered render pipeline, draft preservation and post-render hooks
+        stats.js         Mapped/discovered counts, progress bars and missing sections
+        panel.js         Panel DOM replacement and binding orchestration
+        markup.js        Active controls, runs and pre-series run HTML
+        bindings.js      Panel button, input, portal and run event bindings
+        trail.js         Floating run path, hover highlighting and collapse persistence
+        runs.js          Start/resume/view/delete, portal entry and loadout initialization
+        choices.js       Choice parsing, metadata preservation and orphan cleanup
+        navigation.js    Navigation, auto-navigation predicate and undo
+        limits.js        Level/bonus-based undo and fast-travel credits
+        completion.js    Completion state, outcome sentinels and reward refresh
+        dialogs.js       Alphanumeric confirmation, two-choice/start/fast-travel dialogs
+        node-dialogs.js  Edit choices and pinned notes
+        portal-dialog.js Portal add/edit dialog
       charsheet.js       Character sheet - self-contained module
       inventory.js       Inventory grid - self-contained module (per-run item slots, drag reorder, template)
       equipment.js       Equipment panel - self-contained module (per-run equip slots, context menu, template)
@@ -743,7 +761,7 @@ Layer 1 (import only from layer 0):
 Layer 2:
   inventory.js   ← state.js, play.js*, charsheet.js
   equipment.js   ← state.js, inventory.js, charsheet.js
-  play.js          ← state.js, graph.js, charsheet.js, inventory.js*, equipment.js*, i18n.js, confirm.js
+  play.js / play/ ← state.js, graph.js, charsheet.js, equipment.js*, rewards.js, i18n.js, confirm.js
 
   * three-way cycle: equipment.js → inventory.js → play.js → equipment.js
     Works because none consume each other&#39;s exports at module-evaluation time.
@@ -1625,12 +1643,17 @@ snapToGrid?: boolean,            // if true, dragging a node snaps its dropped p
 <p><strong>On-screen display:</strong> equipped items marked &quot;show on screen&quot; merge into the same <code>#inv-display</code> overlay as visible inventory items and character sheet fields, each distinguished by a small kind badge (item/equipped slot name/none for charsheet).</p>
 <hr>
 <h2 id="render-pipeline-play-js-render">Render pipeline (<code>play.js › render</code>)<a class="anchor" href="#render-pipeline-play-js-render" aria-label="Link to section">#</a></h2>
+<p><code>play.js</code> is a compatibility facade retaining all 34 existing exports. Internal implementations live in <code>public/js/play/</code>; callers continue importing the facade. <code>play/init.js</code> registers <code>panel.js</code> with <code>render.js</code> once, so actions can call <code>render()</code> without an internal <code>render -&gt; panel -&gt; actions -&gt; render</code> import cycle. The internal modules never back-import the facade. The existing external equipment/inventory cycle is unchanged; mobile&#39;s separate reader/controller is not routed through this desktop feature.</p>
+<p>The split preserves run data/persistence, callback ordering, reward hooks, loadouts, open-world placeholders/pre-series runs, choice validation and orphan cleanup. Subsequent regression reviews added targeted fixes for inherited issues: queued auto-navigation checks the originating state/run/section/network, current choices and reader/party suppression before navigating (stale callbacks cannot clear newer hops); delayed new-run camera focus checks that the same graph, run and section are still active; run deletion verifies its book/run slot at confirmation and its book/series callback context after the DELETE request; repeated two-choice/portal dialog openings no longer accumulate backdrop/Escape listeners. No additional timers or observers were introduced.</p>
+<p><code>test/client/play/</code> checks the unchanged public API and acyclic internal dependencies; 42 isolated scenarios compare state, rendered HTML/stats, callbacks, API calls, reward-refresh requests and timers against a digest captured from the unsplit controller. Additional assertions cover queued-hop cancellation on run/book/graph changes, suppression and changed destinations, delayed focus after graph/book/section changes, deletion across confirmation/API waits and shifted run slots, plus stable listener counts and dismissal after repeated dialog openings. <code>browser-check.fixture</code> is a separate manual browser smoke check using the actual index DOM, CSS, vis-network, dice and reader modules with mocked HTTP responses. These checks do not exercise production SSE delivery or production XP/coin payouts.</p>
 <pre><code>render()
   ├── syncGraph()               - updates vis-network nodes/edges to match state
   ├── updateStats()             - updates sidebar stat counters
   ├── renderPlaythroughPanel()  - rebuilds sidebar HTML and re-attaches events
   │     └── renderPathTrail()  - updates #run-trail-float element
-  └── renderCharSheetDisplay()  - refreshes the character sheet compact overlay</code></pre>
+  ├── renderCharSheetDisplay()  - refreshes the character sheet compact overlay
+  ├── restore choices draft and center-button state
+  └── post-render callbacks     - dice restoration and in-app reading, in registration order</code></pre>
 <p><code>renderPlaythroughPanel</code> replaces <code>panel.innerHTML</code> on every call. Event listeners are re-attached after each replacement.</p>
 <p><code>#run-trail-float</code> and <code>#legend</code> are both <code>position: fixed</code> overlays rendered on top of the graph area. The trail floats at the top-left of the graph area (just right of the sidebar); the legend floats top-right. Both have <code>pointer-events: none</code> and use a frosted glass style (<code>backdrop-filter: blur</code>). <code>#legend</code> is hidden automatically when <code>#main-screen</code> has <code>display: none</code>.</p>
 <p>Two CSS custom properties in <code>:root</code> coordinate the layout:</p>

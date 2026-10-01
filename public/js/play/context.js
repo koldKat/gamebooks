@@ -1,0 +1,25 @@
+// Shared play UI state. Book/run data stays in ../state.js.
+export const playContext = {
+  _discoverableLimit: null,
+  _trailCollapsed: localStorage.getItem('trailCollapsed') === '1',
+  _onTrailToggle: null,
+  _preSeriesCollapsed: localStorage.getItem('preSeriesCollapsed') !== '0',
+  _owIsOpenWorld: false,
+  _owSeriesId: null,
+  _owSeriesBooks: [],
+  _owPortalHandler: null,
+  _onNewSeriesRun: null,
+  _owCrossBookEnabled: null,
+  _onViewPublicRun: null,
+  _onRunActivated: null,
+  _onRunDeleted: null,
+  _owGetRunLocation: null,
+  _afterRenderFns: [],
+  _choicesRecordedCount: 0,
+  _onChoicesRecordedFn: null,
+  _suppressAutoNavDepth: 0,
+  // Overlapping renders must not schedule duplicate auto-navigation hops.
+  _pendingAutoNav: null,
+  _fastTravelHandler: null,
+  _altStartHandler: null,
+};

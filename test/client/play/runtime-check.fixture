@@ -1,0 +1,270 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { resolve, dirname } from 'node:path';
+import { SourceTextModule, SyntheticModule, createContext } from 'node:vm';
+import { createHash } from 'node:crypto';
+
+const root = process.argv[1], baseline = process.argv[2], modules = new Map();
+const state = {}, elements = new Map(), timers = new Map(), effects = [], snapshots = [];
+let nextTimer = 0, viewingPt = null, viewingPtIndex = -1, rewardRefreshes = 0;
+const storage = new Map();
+class Element {
+  constructor(id = '', classes = '') {
+    this.id = id; this.classes = new Set(classes.split(/\s+/).filter(Boolean));
+    this.children = []; this.dataset = {}; this.style = {}; this.listeners = new Map();
+    this.value = ''; this.textContent = ''; this.disabled = false; this.checked = false;
+    this.classList = { add: c => this.classes.add(c), remove: c => this.classes.delete(c), contains: c => this.classes.has(c), toggle: (c, force) => {
+      const enabled = force === undefined ? !this.classes.has(c) : force;
+      if (enabled) this.classes.add(c); else this.classes.delete(c); return enabled;
+    } };
+    if (id) elements.set(id, this);
+  }
+  set innerHTML(html) {
+    for (const el of this.children) if (el.id && elements.get(el.id) === el) elements.delete(el.id);
+    this.html = html; this.children = [];
+    for (const match of html.matchAll(/<([a-z]+)\b([^>]*)>/gi)) {
+      const attrs = Object.fromEntries([...match[2].matchAll(/([\w-]+)="([^"]*)"/g)].map(m => [m[1], m[2]]));
+      const el = new Element(attrs.id || '', attrs.class || '');
+      for (const [key, value] of Object.entries(attrs)) if (key.startsWith('data-')) el.dataset[key.slice(5).replace(/-([a-z])/g, (_, c) => c.toUpperCase())] = value;
+      el.disabled = /\bdisabled\b/.test(match[2]); el.parentNode = this;
+      el.textContent = html.slice(match.index + match[0].length).split('<')[0];
+      el.value = attrs.value || ''; this.children.push(el);
+    }
+  }
+  get innerHTML() { return this.html || ''; }
+  querySelectorAll(selector) { return this.children.filter(el => selector.startsWith('.') ? el.classes.has(selector.slice(1)) : el.id === selector.slice(1)); }
+  querySelector(selector) { return this.querySelectorAll(selector)[0] || null; }
+  addEventListener(type, fn) { const list = this.listeners.get(type) || []; list.push(fn); this.listeners.set(type, list); }
+  dispatch(type, extra = {}) { for (const fn of [...(this.listeners.get(type) || [])]) fn({ target: this, stopPropagation() {}, ...extra }); }
+  click() { if (!this.disabled) this.dispatch('click'); }
+  focus() {} select() {}
+  cloneNode() { const el = new Element('', [...this.classes].join(' ')); Object.assign(el, { id: this.id, dataset: { ...this.dataset }, value: this.value, checked: this.checked }); return el; }
+  replaceChild(next, old) { this.children[this.children.indexOf(old)] = next; next.parentNode = this; if (next.id) elements.set(next.id, next); }
+  appendChild(el) { this.children.push(el); el.parentNode = this; if (el.id) elements.set(el.id, el); }
+}
+const body = new Element();
+const initialHtml = readFileSync(resolve(root, '../index.html'), 'utf8');
+for (const m of initialHtml.matchAll(/\bid="([^"]+)"/g)) body.appendChild(new Element(m[1]));
+const document = { body, getElementById: id => elements.get(id) || null, createElement: () => new Element(),
+  querySelectorAll: selector => [...elements.values()].flatMap(el => el.querySelectorAll(selector)), addEventListener() {} };
+// Use production helpers, with only persistence/auth state mocked.
+const stateSource = readFileSync(resolve(root, 'state.js'), 'utf8');
+function helper(name) {
+  const start = stateSource.indexOf('export function ' + name + '(');
+  assert.ok(start >= 0, name);
+  let depth = 0, opened = false, end = start;
+  for (; end < stateSource.length; end++) {
+    if (stateSource[end] === '{') { depth++; opened = true; }
+    if (stateSource[end] === '}' && --depth === 0 && opened) break;
+  }
+  return stateSource.slice(start + 7, end + 1);
+}
+const network = { focus: (...args) => effects.push(['focus', ...args]), selectNodes: ids => effects.push(['select', ids]), getScale: () => 0.8 };
+const context = createContext({ console, document, localStorage: { getItem: key => storage.get(key) ?? null, setItem: (key, val) => storage.set(key, String(val)) },
+  Date: class extends Date { static now() { return 1700000000000; } },
+  setTimeout: (fn, ms) => { const id = ++nextTimer; timers.set(id, { fn, ms }); return id; }, clearTimeout: id => timers.delete(id),
+  _fixtureState: state, _effects: effects, _setViewing: (pt, force) => {
+    viewingPt = pt; viewingPtIndex = pt ? state.playthroughs.indexOf(pt) : -1;
+    effects.push(['view', state.activePtIndex, viewingPtIndex, force ?? false]);
+  } });
+const helperNames = ['parseSecId', 'isValidSecId', 'currentPlaythrough', 'currentSection', 'allDiscoveredSections', 'discoveredSectionsFor', 'mappedCount', 'mappedCountFor'];
+const stateModule = new SourceTextModule(`
+  export let state = _fixtureState;
+  export const replaceState = next => { state = next; };
+  export let viewingPt = null, viewingPtIndex = -1, currentUserLevel = 0, bonusUndos = 0, bonusFastTravels = 0;
+  export const isTerminal = s => s === -1 || s === 0;
+  export function setViewingPt(pt, force) { viewingPt = pt; viewingPtIndex = pt ? state.playthroughs.indexOf(pt) : -1; _setViewing(pt, force); }
+  export const saveState = () => _effects.push(['save']);
+  export let apiFetch = async (...args) => { _effects.push(['api', ...args]); return {}; };
+  export const setApiFetch = fn => { apiFetch = fn; };
+  export const setLevel = (level, undos, fast) => { currentUserLevel = level; bonusUndos = undos; bonusFastTravels = fast; };
+  ${helperNames.map(name => 'export ' + helper(name)).join('\n')}
+`, { context, identifier: resolve(root, 'state.js') });
+modules.set(resolve(root, 'state.js'), stateModule);
+function stub(file, exports) {
+  modules.set(resolve(root, file), new SyntheticModule(Object.keys(exports), function () { for (const [k, v] of Object.entries(exports)) this.setExport(k, v); }, { context }));
+}
+stub('graph.js', { network, visNodes: { get: id => state.graph[id] }, syncGraph: () => effects.push(['graph']), computeOutcomes: () => ({}) });
+stub('i18n.js', { t: key => key });
+stub('charsheet.js', { renderCharSheetDisplay: () => effects.push(['charsheet']) });
+stub('equipment.js', { instantiateLoadout: () => ({ inventory: [{ name: 'Torch' }], equipment: { hand: 'Sword' }, equipmentVisible: true }) });
+stub('confirm.js', { showConfirm: (message, fn, options) => { effects.push(['confirm', message, options]); return fn(); }, showAlert: message => effects.push(['alert', message]) });
+stub('rewards.js', { _scheduleRewardProfileRefresh: () => { rewardRefreshes++; effects.push(['reward']); } });
+function moduleAt(path) {
+  if (modules.has(path)) return modules.get(path);
+  const source = readFileSync(path === resolve(root, 'play.js') && baseline ? baseline : path, 'utf8');
+  const mod = new SourceTextModule(source, { context, identifier: path }); modules.set(path, mod); return mod;
+}
+const entry = moduleAt(resolve(root, 'play.js'));
+await entry.link((specifier, parent) => moduleAt(resolve(dirname(parent.identifier), specifier))); await entry.evaluate();
+const api = entry.namespace;
+const expectedExports = ['showConfirm', 'showAlert', 'setDiscoverableLimit', 'setTrailCollapsed', 'setOnTrailToggle', 'confirmAlphanumericSwitch', 'showTwoChoice', 'setOnViewPublicRun', 'setOpenWorldContext', 'setAfterRenderFn', 'CHOICES_PULSE_THRESHOLD', 'setChoicesRecordedCount', 'setOnChoicesRecorded', 'suppressAutoNav', 'render', 'startPlaythrough', 'startPortalRun', 'loadRun', 'deleteRun', 'commitChoices', 'handleRecordChoices', 'wouldAutoNav', 'navigate', 'maxFastTravels', 'setFastTravelHandler', 'setAltStartHandler', 'showFastTravelDialog', 'undoRun', 'endPlaythrough', 'openEditModal', 'closeEditModal', 'openNoteModal', 'closeNoteModal', 'openPortalModal'];
+assert.deepEqual(Object.keys(api).sort(), expectedExports.sort());
+assert.equal(api.CHOICES_PULSE_THRESHOLD, 50);
+const el = id => { const found = document.getElementById(id); assert.ok(found, id); return found; };
+const plain = value => JSON.parse(JSON.stringify(value));
+function reset(extra = {}) {
+  for (const key of Object.keys(state)) delete state[key];
+  Object.assign(state, { bookName: 'Test book', totalSections: 20, startSection: 1, graph: {}, playthroughs: [], activePtIndex: null, charSheetTemplate: { fields: [{ name: 'HP', value: 10 }] }, ...extra });
+  stateModule.namespace.setViewingPt(null); effects.length = 0; timers.clear();
+  api.setOpenWorldContext(); api.setDiscoverableLimit(null); api.setChoicesRecordedCount(0);
+  api.setTrailCollapsed(false); api.setOnTrailToggle(null); api.setOnChoicesRecorded(null);
+  api.setFastTravelHandler(null); api.setAltStartHandler(null); api.setOnViewPublicRun(null);
+}
+function snapshot(label) {
+  snapshots.push({ label, state: plain(state), effects: plain(effects), viewingPtIndex, rewardRefreshes,
+    panel: el('playthrough-panel').innerHTML, trail: el('run-trail-float').innerHTML,
+    stats: ['book-title', 'mapped-count', 'total-count', 'discovered-count', 'discovered-total', 'pt-total', 'pt-outcomes', 'mapped-bar', 'discovered-bar', 'not-found-row', 'center-current-btn'].map(id => {
+      const node = el(id); return [id, node.textContent, node.innerHTML, node.style, node.disabled, node.dataset];
+    }), timers: [...timers.values()].map(timer => timer.ms), storage: [...storage] });
+  effects.length = 0;
+}
+function flush(ms) { for (const [id, timer] of [...timers]) if (timer.ms === ms) { timers.delete(id); timer.fn(); } }
+api.setAfterRenderFn(() => effects.push(['after-dice']));
+api.setAfterRenderFn(() => effects.push(['after-reader']));
+reset(); api.render(); snapshot('empty');
+api.startPlaythrough(); assert.deepEqual(plain(state.playthroughs[0].path), [1]);
+assert.notEqual(state.playthroughs[0].charSheet, state.charSheetTemplate);
+assert.equal(effects.find(e => e[0] === 'view')[1], 0, 'activate before inventory callback');
+assert.deepEqual(effects.slice(-2), [['after-dice'], ['after-reader']]); flush(50); snapshot('start');
+el('choices-input').value = '2, 3'; api.render(); assert.equal(el('choices-input').value, '2, 3');
+let recorded = 0; api.setOnChoicesRecorded(n => { recorded = n; }); el('record-btn').click();
+assert.equal(recorded, 1); assert.deepEqual(plain(state.graph[1].choices), [2, 3]); snapshot('record-and-preserve-draft');
+el('playthrough-panel').querySelectorAll('.choice-btn')[0].click();
+assert.deepEqual(plain(state.playthroughs[0].path), [1, 2]); snapshot('choice-button');
+api.undoRun(); assert.deepEqual(plain(state.playthroughs[0].path), [1]); assert.equal(state.playthroughs[0].undosUsed, 1); snapshot('undo');
+api.commitChoices(1, [2, 2, 0, -1, 3]); assert.deepEqual(plain(state.graph[1].choices), [2, 3, 0, -1]); snapshot('dedup-and-terminal-sort');
+api.navigate(0); assert.equal(state.playthroughs[0].result, 'success'); assert.equal(rewardRefreshes, 1); snapshot('victory');
+api.loadRun(0); assert.equal(state.activePtIndex, null); assert.equal(viewingPtIndex, 0); snapshot('view-completed');
+api.startPlaythrough(3); api.navigate(-1); assert.equal(state.playthroughs[1].result, 'death'); snapshot('loss');
+api.startPlaythrough(4); api.endPlaythrough('battle'); assert.equal(state.graph[4], undefined, 'battle loss must not mark graph dead end'); snapshot('battle-loss');
+await api.deleteRun(0); await Promise.resolve(); assert.equal(state.playthroughs.length, 2); snapshot('delete-run');
+reset({ graph: { 1: { choices: [2] }, 2: { choices: [3] }, 3: { choices: [4, 5] } } });
+api.startPlaythrough(); api.render(); assert.equal([...timers.values()].filter(v => v.ms === 0).length, 1, 'auto-navigation debounced');
+flush(0); flush(0); assert.deepEqual(plain(state.playthroughs[0].path), [1, 2, 3]);
+assert.equal(effects.filter(e => e[0] === 'focus').length, 1, 'only final hop focuses graph'); snapshot('auto-nav-chain');
+api.undoRun(); flush(0); flush(0); snapshot('forced-chain-undo');
+api.suppressAutoNav(true); api.suppressAutoNav(true); assert.equal(api.wouldAutoNav(1, state.playthroughs[0]), false);
+api.suppressAutoNav(false); assert.equal(api.wouldAutoNav(1, state.playthroughs[0]), false);
+api.suppressAutoNav(false); api.suppressAutoNav(false);
+reset({ graph: { 1: { choices: [2] }, 2: { choices: [] } } });
+api.suppressAutoNav(true); api.startPlaythrough(); assert.equal([...timers.values()].some(v => v.ms === 0), false); snapshot('suppressed-auto-nav'); api.suppressAutoNav(false);
+reset({ graph: { 1: { choices: [2, 3], note: 'Note', priority: 'high', color: '#abc', battle: true, showNote: true, portals: [] }, 2: { choices: [] }, 3: { choices: [], note: 'Keep' } }, playthroughs: [{ path: [1, 2], completed: false }], activePtIndex: 0 });
+api.commitChoices(1, []); assert.equal(state.graph[2], undefined); assert.ok(state.graph[3]); assert.equal(state.graph[1].note, 'Note'); assert.deepEqual(state.playthroughs[0].path, [1]); snapshot('orphan-cleanup-metadata');
+api.handleRecordChoices(1, ''); assert.deepEqual(plain(state.graph[1].choices), []);
+api.handleRecordChoices(1, '2;3 99,1'); assert.deepEqual(plain(state.graph[1].choices), [2, 3]); snapshot('numeric-limit');
+api.handleRecordChoices(1, 'A1, A2'); assert.equal(state.alphanumericSections, true); snapshot('alphanumeric-switch');
+state.totalSections = 1; api.handleRecordChoices(1, 'B3'); assert.equal(effects.at(-1)[0], 'alert'); snapshot('alphanumeric-cap');
+reset({ graph: { 1: { choices: [2] } } });
+api.openEditModal(1); el('edit-choices-input').value = ''; el('edit-modal-save').click(); assert.deepEqual(plain(state.graph[1].choices), []); assert.equal(el('edit-modal-overlay').classList.contains('active'), false); snapshot('edit-clear');
+api.openNoteModal(7); el('note-modal-input').value = 'Pinned note'; el('note-pin-cb').checked = true; el('note-modal-save').click(); assert.equal(state.graph[7].showNote, true); snapshot('note-save');
+state.graph[7].portals = [{ targetBookId: 9, targetSection: 8 }]; api.openNoteModal(7); el('note-modal-input').value = ''; el('note-modal-save').click(); assert.ok(state.graph[7].portals); snapshot('note-clear-preserves-portal');
+api.setOpenWorldContext({ isOpenWorld: true, seriesId: 77, seriesBooks: [{ id: 9, name: 'Other book' }] });
+api.openPortalModal(7); el('portal-book-select').value = '9'; el('portal-section-input').value = '12'; el('portal-label-input').value = 'Exit'; el('portal-modal-save').click(); assert.equal(state.graph[7].portals.length, 2); snapshot('portal-add');
+api.openPortalModal(7, 1); el('portal-section-input').value = '13'; el('portal-modal-save').click(); assert.equal(state.graph[7].portals[1].targetSection, 13); snapshot('portal-edit');
+api.startPortalRun(7, 2, { fields: [{ name: 'HP', value: 7 }] }); assert.equal(state.playthroughs.length, 3); assert.equal(state.playthroughs[2].portalEntry, true); snapshot('portal-placeholder-padding');
+state.playthroughs[2].completed = true; state.playthroughs[2].result = 'portal'; state.playthroughs[2].portalTarget = 9;
+api.startPortalRun(7, 2); assert.deepEqual(plain(state.playthroughs[2].path), [7]); assert.equal(state.playthroughs[2].portalTarget, undefined); snapshot('portal-resume');
+let activated = null, deleted = null;
+api.setOpenWorldContext({ isOpenWorld: true, seriesId: 77, onRunActivated: i => { activated = i; }, onRunDeleted: i => { deleted = i; } });
+api.loadRun(2); assert.equal(activated, 2); await api.deleteRun(1); await Promise.resolve(); await Promise.resolve(); assert.equal(deleted, 1); assert.equal(state.activePtIndex, 1); snapshot('series-run-hooks');
+reset({ playthroughs: [{ path: [], completed: false }], activePtIndex: 0 });
+api.setOpenWorldContext({ isOpenWorld: true, crossBookEnabled: () => true, getRunLocation: () => ({ bookId: 9, bookName: 'Remote book', section: 12 }) }); api.render(); assert.equal(el('center-current-btn').disabled, false); snapshot('cross-book-center');
+reset({ graph: { 1: { choices: [] }, 8: { choices: [] } }, playthroughs: [{ path: [8], completed: true, result: 'death' }] });
+api.render(); el('new-pt-btn').click(); el('start-picker-options').querySelectorAll('.ft-dialog-mode-btn')[1].click(); assert.deepEqual(plain(state.playthroughs.at(-1).path), [8]); snapshot('alternate-start-picker');
+let fastTravel = null; api.showFastTravelDialog((section, mode) => { fastTravel = [section, mode]; }); el('ft-dialog-input').value = '12';
+el('ft-dialog-overlay').querySelectorAll('.ft-dialog-mode-btn')[0].click(); assert.deepEqual(fastTravel, [12, 'high']); snapshot('fast-travel-picker');
+let toggled = null; api.setOnTrailToggle(value => { toggled = value; }); el('run-trail-float').querySelector('.trail-toggle-btn').click(); assert.equal(toggled, true); snapshot('trail-toggle');
+for (const [level, bonus, expected] of [[0, 0, 3], [30, 2, 5], [31, 0, 4], [100, 1, 11], [120, 0, 10]]) { stateModule.namespace.setLevel(level, bonus, bonus); assert.equal(api.maxFastTravels(), expected); }
+reset(); api.setDiscoverableLimit(5); api.render(); assert.equal(el('total-count').textContent, '5 (0%)'); snapshot('discoverable-cap');
+reset({ graph: { 1: { choices: [], portals: [{ targetBookId: 9, targetSection: 12, label: 'Exit' }] } },
+  playthroughs: [{ path: [1], completed: false }, { path: [1], completed: true, result: 'success' }], activePtIndex: 0,
+  preSeriesRuns: [{ path: [1], completed: true, result: 'death' }] });
+let portalTravel = null, newSeriesRuns = 0;
+api.setOpenWorldContext({ isOpenWorld: true, seriesId: 77, seriesBooks: [{ id: 9, name: 'Other book' }], onPortalTravel: p => { portalTravel = p; }, onNewSeriesRun: () => { newSeriesRuns++; } });
+api.render(); assert.equal(api.wouldAutoNav(1, state.playthroughs[0]), false); snapshot('pre-series-and-portals-panel');
+el('playthrough-panel').querySelector('.pre-series-runs-header').click(); snapshot('pre-series-collapse');
+el('playthrough-panel').querySelector('.portal-travel-btn').click(); assert.equal(portalTravel.targetSection, 12); snapshot('portal-travel-confirmation');
+el('playthrough-panel').querySelector('.run-public-btn').click(); assert.equal(state.playthroughs[1].isPublic, true); snapshot('series-run-public-toggle');
+el('new-pt-btn').click(); assert.equal(newSeriesRuns, 1); assert.equal(state.playthroughs.length, 2); snapshot('series-new-run-intercept');
+el('playthrough-panel').querySelector('.portal-del-btn').click(); assert.equal(state.graph[1].portals, undefined); snapshot('portal-delete');
+el('playthrough-panel').querySelector('.run-load-preseries').click(); assert.equal(state._viewingPreSeriesIdx, 0); assert.equal(viewingPt, state.preSeriesRuns[0]); snapshot('pre-series-view');
+el('playthrough-panel').querySelector('.run-del-preseries').click(); assert.equal(state.preSeriesRuns.length, 0); assert.equal(viewingPt, null); snapshot('pre-series-delete');
+reset({ graph: { 1: { choices: [2, 3] }, 2: { choices: [] } }, playthroughs: [{ path: [1, 2], completed: false, undosUsed: 3 }], activePtIndex: 0 });
+stateModule.namespace.setLevel(0, 0, 0); api.undoRun(); assert.deepEqual(state.playthroughs[0].path, [1, 2]); api.render(); assert.equal(el('undo-run-btn').disabled, true); snapshot('undo-cap');
+let alternativeStarts = 0, fastTravelClicks = 0;
+api.setAltStartHandler(() => { alternativeStarts++; }); api.setFastTravelHandler(() => { fastTravelClicks++; }); api.render();
+el('new-pt-alt-btn').click(); el('fasttravel-btn').click(); assert.equal(alternativeStarts, 1); assert.equal(fastTravelClicks, 1); snapshot('custom-start-fast-travel-hooks');
+let choiceActions = 0;
+api.showTwoChoice('Choose', 'A', () => { choiceActions++; }, 'B', () => { choiceActions += 10; });
+api.showTwoChoice('Choose again', 'A', () => { choiceActions++; }, 'B', () => { choiceActions += 10; });
+el('choice-a').click(); assert.equal(choiceActions, 1); assert.equal(el('choice-overlay').classList.contains('active'), false); snapshot('two-choice-reopened');
+console.log(JSON.stringify({ cases: snapshots.length, exports: Object.keys(api).length, digest: createHash('sha256').update(JSON.stringify(snapshots)).digest('hex') }));
+if (!baseline) {
+  reset({ graph: { 1: { choices: [2] }, 2: { choices: [] }, 8: { choices: [] } },
+    playthroughs: [{ path: [1], completed: false }, { path: [8], completed: false }], activePtIndex: 0 });
+  api.render(); api.loadRun(1); flush(0);
+  assert.deepEqual(state.playthroughs[1].path, [8], 'queued auto-nav must not navigate a different run');
+  reset({ graph: { 1: { choices: [2] }, 2: { choices: [] } }, playthroughs: [{ path: [1], completed: false }], activePtIndex: 0 });
+  api.render(); api.suppressAutoNav(true); flush(0);
+  assert.deepEqual(state.playthroughs[0].path, [1], 'reader/party suppression must cancel already queued navigation');
+  api.suppressAutoNav(false); api.render(); flush(0); assert.deepEqual(plain(state.playthroughs[0].path), [1, 2]);
+  reset({ graph: { 1: { choices: [2] }, 2: { choices: [] }, 3: { choices: [] } }, playthroughs: [{ path: [1], completed: false }], activePtIndex: 0 });
+  api.render(); state.graph[1].choices = [3]; api.render(); flush(0);
+  assert.deepEqual(plain(state.playthroughs[0].path), [1, 3], 'stale timer must not clear or run the replacement hop');
+  reset({ graph: { 1: { choices: [2] }, 2: { choices: [] } }, playthroughs: [{ path: [1], completed: false }], activePtIndex: 0 });
+  api.render();
+  const otherBook = plain(state); stateModule.namespace.replaceState(otherBook); api.render(); flush(0);
+  assert.deepEqual(state.playthroughs[0].path, [1], 'old book must not advance');
+  assert.deepEqual(otherBook.playthroughs[0].path, [1, 2], 'replacement book can schedule its own same-section hop');
+  stateModule.namespace.replaceState(state);
+  reset({ graph: { 1: { choices: [2] }, 2: { choices: [] } }, playthroughs: [{ path: [1], completed: false }], activePtIndex: 0 });
+  api.render(); modules.get(resolve(root, 'graph.js')).setExport('network', null); flush(0);
+  assert.deepEqual(state.playthroughs[0].path, [1], 'destroying the graph must cancel its queued hop');
+  modules.get(resolve(root, 'graph.js')).setExport('network', network);
+  reset({ graph: { 1: { choices: [2, 3] }, 2: { choices: [] } } });
+  api.startPlaythrough(); modules.get(resolve(root, 'graph.js')).setExport('network', null);
+  assert.doesNotThrow(() => flush(50), 'delayed run focus must tolerate graph destruction');
+  modules.get(resolve(root, 'graph.js')).setExport('network', network);
+  reset({ graph: { 1: { choices: [2, 3] }, 2: { choices: [] } } });
+  api.startPlaythrough(); api.navigate(2); effects.length = 0; flush(50);
+  assert.equal(effects.some(e => e[0] === 'focus'), false, 'delayed focus must not move camera back after navigation');
+  reset({ graph: { 1: { choices: [2, 3] } } });
+  api.startPlaythrough(); const focusBook = plain(state); stateModule.namespace.replaceState(focusBook);
+  effects.length = 0; flush(50); assert.equal(effects.some(e => e[0] === 'focus'), false, 'delayed focus cannot move another book camera');
+  stateModule.namespace.replaceState(state);
+  const confirmModule = modules.get(resolve(root, 'confirm.js')), immediateConfirm = confirmModule.namespace.showConfirm;
+  let confirmAction;
+  confirmModule.setExport('showConfirm', (_message, fn) => { confirmAction = fn; });
+  reset({ playthroughs: [{ path: [1], completed: false }], activePtIndex: 0 });
+  api.deleteRun(0); const deleteBook = plain(state); stateModule.namespace.replaceState(deleteBook);
+  await confirmAction(); assert.equal(deleteBook.playthroughs.length, 1, 'delete confirmation cannot delete from another book');
+  assert.equal(state.playthroughs.length, 1); stateModule.namespace.replaceState(state);
+  reset({ playthroughs: [{ path: [1], completed: false }, { path: [2], completed: false }], activePtIndex: 0 });
+  api.deleteRun(0); state.playthroughs.shift(); await confirmAction();
+  assert.equal(state.playthroughs.length, 1, 'delete confirmation cannot delete a shifted replacement run');
+  let deletePromise, releaseDelete, oldDeleteHooks = 0, newDeleteHooks = 0;
+  const originalFetch = stateModule.namespace.apiFetch;
+  stateModule.namespace.setApiFetch(() => new Promise(resolve => { releaseDelete = resolve; }));
+  confirmModule.setExport('showConfirm', (_message, fn) => { deletePromise = fn(); });
+  reset({ playthroughs: [{ path: [1], completed: false }], activePtIndex: 0 });
+  api.setOpenWorldContext({ isOpenWorld: true, seriesId: 77, onRunDeleted: () => { oldDeleteHooks++; } });
+  api.deleteRun(0); assert.equal(state.playthroughs.length, 0);
+  const waitingBook = plain(state); stateModule.namespace.replaceState(waitingBook);
+  api.setOpenWorldContext({ isOpenWorld: true, seriesId: 88, onRunDeleted: () => { newDeleteHooks++; } });
+  effects.length = 0; releaseDelete({}); await deletePromise;
+  assert.equal(oldDeleteHooks, 0); assert.equal(newDeleteHooks, 0, 'async delete must not call the new book hook');
+  assert.equal(effects.some(e => e[0] === 'graph'), false, 'async delete must not render the new book');
+  stateModule.namespace.replaceState(state); stateModule.namespace.setApiFetch(originalFetch);
+  confirmModule.setExport('showConfirm', immediateConfirm);
+  api.showTwoChoice('One', 'A', () => {}, 'B', () => {});
+  api.showTwoChoice('Two', 'A', () => {}, 'B', () => {});
+  assert.equal(el('choice-overlay').listeners.get('mousedown').length, 1, 'one backdrop mousedown listener');
+  assert.equal(el('choice-overlay').listeners.get('click').length, 1, 'one backdrop click listener');
+  el('choice-overlay').dispatch('mousedown'); el('choice-overlay').click();
+  assert.equal(el('choice-overlay').classList.contains('active'), false);
+  api.openPortalModal(1); api.openPortalModal(1); api.openPortalModal(1);
+  assert.equal(el('portal-section-input').listeners.get('keydown').length, 1, 'one portal Escape listener');
+  el('portal-section-input').dispatch('keydown', { key: 'Escape' });
+  assert.equal(el('portal-modal-overlay').classList.contains('active'), false);
+}

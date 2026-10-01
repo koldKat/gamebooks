@@ -1,0 +1,72 @@
+// Manual isolated-browser smoke check: actual index.html DOM and feature modules,
+// mocked HTTP responses, no authentication and no production database writes.
+const errors = [], checks = [], nativeFetch = window.fetch.bind(window);
+window.addEventListener('error', e => errors.push(e.message));
+window.addEventListener('unhandledrejection', e => errors.push(String(e.reason)));
+localStorage.clear();
+window.fetch = async () => new Response('{}', { headers: { 'Content-Type': 'application/json' } });
+const assert = (condition, label) => { if (!condition) throw Error(label); checks.push(label); };
+const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
+const el = id => document.getElementById(id);
+try {
+  // Enter through a consumer first, exercising the existing equipment/dice cycles.
+  const dice = await import('/js/dice.js');
+  const play = await import('/js/play.js');
+  const graph = await import('/js/graph.js');
+  const data = await import('/js/state.js');
+  const reader = await import('/js/liveread.js');
+  const { state } = data;
+  Object.assign(state, { bookName: 'Isolated play test', totalSections: 20, startSection: 1,
+    graph: { 1: { choices: [2, 3] }, 2: { choices: [] }, 3: { choices: [] } },
+    positions: {}, playthroughs: [], activePtIndex: null, charSheetTemplate: { fields: [] } });
+  el('login-screen').style.display = 'none'; el('books-screen').style.display = 'none'; el('main-screen').style.display = 'flex';
+  graph.initGraph(); dice.initDice(); reader.initLiveRead(); play.setAfterRenderFn(reader.renderLiveRead);
+  play.render(); el('new-pt-btn').click(); await pause(100);
+  assert(state.playthroughs.length === 1 && data.currentSection() === 1, 'new-run button and real module initialization');
+  assert(graph.visNodes.length === 3 && graph.visEdges.length === 2, 'real graph data and canvas');
+  el('playthrough-panel').querySelector('[data-choice="2"]').click();
+  assert(data.currentSection() === 2, 'choice-button navigation');
+  el('choices-input').value = '4, 5'; play.render();
+  assert(el('choices-input').value === '4, 5', 'draft survives real DOM replacement');
+  el('record-btn').click();
+  assert(JSON.stringify(state.graph[2].choices) === '[4,5]', 'record button');
+  el('undo-run-btn').click();
+  assert(data.currentSection() === 1 && state.playthroughs[0].undosUsed === 1, 'undo button');
+  play.openEditModal(2); el('edit-choices-input').value = ''; el('edit-modal-save').click();
+  assert(state.graph[2].choices.length === 0 && !el('edit-modal-overlay').classList.contains('active'), 'edit choices save/close');
+  play.openNoteModal(2); el('note-modal-input').value = 'Remember this'; el('note-pin-cb').checked = true; el('note-modal-save').click();
+  assert(state.graph[2].note === 'Remember this' && state.graph[2].showNote, 'pinned note save');
+  let trailCollapsed = false; play.setOnTrailToggle(v => { trailCollapsed = v; });
+  el('run-trail-float').querySelector('.trail-toggle-btn').click();
+  assert(trailCollapsed && localStorage.getItem('trailCollapsed') === '1', 'trail collapse callback/persistence');
+  let travel = null; play.showFastTravelDialog((section, mode) => { travel = [section, mode]; });
+  el('ft-dialog-input').value = '3'; el('ft-dialog-overlay').querySelector('[data-mode="shortest"]').click();
+  assert(JSON.stringify(travel) === '[3,"shortest"]', 'fast-travel dialog callback');
+  el('win-run-btn').click(); el('confirm-ok').click();
+  assert(state.playthroughs[0].completed && state.playthroughs[0].result === 'success' && data.viewingPtIndex === 0, 'completion and historical viewing');
+  assert(el('dice-throw-btn').disabled, 'dice restored read-only on completed run');
+  play.startPlaythrough(3); await pause(100);
+  assert(!el('dice-throw-btn').disabled && data.currentSection() === 3, 'new run restores live dice');
+  play.setOpenWorldContext({ isOpenWorld: true, seriesId: 77, seriesBooks: [{ id: 9, name: 'Other book' }] });
+  play.openPortalModal(3); el('portal-section-input').value = '8'; el('portal-label-input').value = 'Exit'; el('portal-modal-save').click();
+  assert(state.graph[3].portals?.[0].targetSection === 8, 'portal dialog add');
+  play.startPortalRun(3, 1); assert(state.playthroughs[1].path.length === 1, 'portal resume avoids duplicate entry');
+  play.setOpenWorldContext(); play.suppressAutoNav(true); state.graph[3].choices = [6]; state.graph[6] = { choices: [7] }; state.graph[7] = { choices: [] };
+  play.render(); await pause(30); assert(data.currentSection() === 3, 'reader/party auto-nav suppression');
+  play.suppressAutoNav(false); play.render(); play.render(); await pause(100);
+  assert(JSON.stringify(state.playthroughs[1].path) === '[3,6,7]', 'debounced auto-navigation chain');
+  state.graph[7].choices = [8]; state.graph[8] = { choices: [] };
+  play.render(); play.suppressAutoNav(true); await pause(30);
+  assert(data.currentSection() === 7, 'suppression cancels already queued hop');
+  play.suppressAutoNav(false); play.render(); await pause(30);
+  assert(data.currentSection() === 8, 'navigation resumes after suppression');
+  state.graph[8].choices = [9]; state.graph[9] = { choices: [] };
+  play.render(); play.loadRun(0); await pause(30);
+  assert(state.playthroughs[1].path.at(-1) === 8 && data.currentPlaythrough() === null, 'queued hop cannot affect historical viewing');
+  play.startPlaythrough(9); graph.destroyNetwork(); await pause(100);
+  assert(graph.network === null && errors.length === 0, 'pending new-run focus tolerates graph destruction');
+  assert(errors.length === 0, 'no browser errors or unhandled rejections');
+  await nativeFetch('/report', { method: 'POST', body: JSON.stringify({ ok: true, checks, errors }) });
+} catch (error) {
+  await nativeFetch('/report', { method: 'POST', body: JSON.stringify({ ok: false, error: String(error), stack: error.stack, checks, errors }) });
+}
