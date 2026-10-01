@@ -1,0 +1,195 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { resolve, dirname } from 'node:path';
+import { SourceTextModule, SyntheticModule, createContext } from 'node:vm';
+import { createHash } from 'node:crypto';
+
+const root = process.argv[1], baseline = process.argv[2];
+const modules = new Map(), calls = [], docListeners = new Map(), windowListeners = new Map();
+const frames = new Map(), timers = new Map(), observers = [], images = [];
+let token = 'account', payload = { entries: [], pinned: null }, fetchImpl = null, timerId = 0;
+class Element {
+  constructor(dataset = {}) {
+    this.dataset = dataset; this.style = {}; this.innerHTML = ''; this.textContent = '';
+    this.queries = new Map(); this.listeners = new Map(); this.attrs = new Map();
+    this.offsetWidth = 100; this.offsetHeight = 300;
+    const classes = new Set();
+    this.classList = { contains: k => classes.has(k), add: k => classes.add(k), remove: k => classes.delete(k), toggle: (k, enabled) => enabled ? classes.add(k) : classes.delete(k) };
+  }
+  querySelectorAll(q) { return this.queries.get(q) || []; }
+  querySelector(q) {
+    if (q === '.feed-entry, #feed-header') return /feed-entry|feed-header/.test(this.innerHTML) ? this : null;
+    if (q === '.feed-loading') return this.innerHTML.includes('feed-loading') ? this : null;
+    return this.queries.get(q) || null;
+  }
+  addEventListener(type, fn) { const list = this.listeners.get(type) || []; list.push(fn); this.listeners.set(type, list); }
+  removeEventListener(type, fn) { this.listeners.set(type, (this.listeners.get(type) || []).filter(item => item !== fn)); }
+  setAttribute(k, v) { this.attrs.set(k, v); }
+  getAttribute(k) { return this.attrs.get(k); }
+  async emit(type, event = {}) { for (const fn of this.listeners.get(type) || []) await fn({ target: this, currentTarget: this, ...event }); }
+}
+const feed = new Element(), elements = new Map([['feed-content', feed]]), body = new Element();
+for (const id of ['feed-img-preview', 'feed-img-preview-img', 'feed-img-preview-footer', 'feed-img-preview-level', 'feed-img-bar']) elements.set(id, new Element());
+const addListener = map => (type, fn) => { const list = map.get(type) || []; list.push(fn); map.set(type, list); };
+class FixedDate extends Date { constructor(...args) { super(...(args.length ? args : ['2026-10-02T12:00:00Z'])); } }
+class FakeImage {
+  constructor() { images.push(this); }
+  set src(url) { this.url = url; }
+  finish(width = 100, height = 150) { this.naturalWidth = width; this.naturalHeight = height; this.onload(); }
+}
+const context = createContext({
+  console, Date: FixedDate, URL, location: { origin: 'https://example.test' }, Image: FakeImage,
+  document: { body, getElementById: id => elements.get(id) || null, querySelector: () => null, addEventListener: addListener(docListeners) },
+  window: { innerWidth: 1200, innerHeight: 900, addEventListener: addListener(windowListeners) },
+  ResizeObserver: class { constructor(callback) { this.callback = callback; this.cards = new Set(); this.disconnects = 0; observers.push(this); } observe(card) { this.cards.add(card); } disconnect() { this.cards.clear(); this.disconnects++; } },
+  setTimeout: fn => { const id = ++timerId; timers.set(id, fn); return id; }, clearTimeout: id => timers.delete(id),
+  requestAnimationFrame: fn => { const id = ++timerId; frames.set(id, fn); return id; }, cancelAnimationFrame: id => frames.delete(id),
+});
+const escapeHtml = value => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+const t = (key, params = {}) => key + Object.entries(params).map(([k, v]) => `|${k}=${v}`).join('');
+const external = {
+  'state.js': { getToken: () => token, apiFetch: async url => { calls.push(['private', url]); return fetchImpl ? fetchImpl() : { ok: true, json: async () => payload }; } },
+  'util.js': { escapeHtml }, 'i18n.js': { t },
+  'public-profile.js': Object.fromEntries(['openPublicProfile', 'openPublicRun', 'openPublicSeriesRun'].map(k => [k, (...args) => calls.push([k, ...args])])),
+  'covers.js': Object.fromEntries(['openCoverActivity', 'openSeriesActivity'].map(k => [k, (...args) => calls.push([k, ...args])])),
+};
+for (const [name, values] of Object.entries(external)) modules.set(resolve(root, name), new SyntheticModule(Object.keys(values), function () { for (const [k, v] of Object.entries(values)) this.setExport(k, v); }, { context }));
+function moduleAt(path) {
+  if (modules.has(path)) return modules.get(path);
+  const source = readFileSync(path === resolve(root, 'feed.js') && baseline ? baseline : path, 'utf8');
+  const mod = new SourceTextModule(source, { context, identifier: path }); modules.set(path, mod); return mod;
+}
+const entry = moduleAt(resolve(root, 'feed.js'));
+await entry.link((specifier, parent) => moduleAt(resolve(dirname(parent.identifier), specifier)));
+await entry.evaluate();
+const api = entry.namespace;
+assert.deepEqual(Object.keys(api).sort(), ['loadFeed', 'refreshDayCoverFlows', 'setFeedHooks']);
+const hooks = {
+  publicFetch: async url => { calls.push(['public', url]); return fetchImpl ? fetchImpl() : { ok: true, json: async () => payload }; },
+  displayFor: name => `Display ${name}`, adminBadge: () => '[admin]', authorBadge: () => '[author]', contributorBadge: () => '[contributor]', starsHtml: rating => `[stars:${rating}]`,
+  registerAuthor: (...args) => calls.push(['author', ...args]), registerContributor: (...args) => calls.push(['contributor', ...args]), scheduleRewardProfileRefresh: delay => calls.push(['reward', delay]),
+};
+api.setFeedHooks(hooks);
+const snapshots = [];
+async function snapshot(entries, pinned = null) { payload = { entries, pinned }; await api.loadFeed(); snapshots.push(feed.innerHTML); }
+const base = { username: 'A <player>', userId: 7, userPublicProfile: true, userLevel: 5, userTitle: 'Ranger', avatarUrl: '/avatar.jpg', bookId: 1, bookName: 'Book <title>', bookIsPublic: true, coverUrl: '/cover.jpg', parentBookId: 2, parentBookName: 'Anthology', parentBookIsPublic: true, seriesId: 3, seriesName: 'Series', seriesIsPublic: true, seriesNumber: '2', runIndex: 0, runIsPublic: true, completedAt: '2026-10-02T10:00:00Z', pathLength: 10, lastSection: 20, rating: 4, title: 'News', body: '**Bold** [Book](/book/1)', level: 5, levelTitle: 'Ranger' };
+const types = ['run_completed', 'book_created', 'book_added', 'series_created', 'series_added', 'series_run_started', 'series_run_completed', 'run_started', 'user_joined', 'level_up', 'all_visited', 'all_discovered', 'first_win', 'first_loss', 'first_battle_death', 'won_all_series', 'won_all_anthology', 'visit_all_series', 'discover_all_series', 'visit_all_anthology', 'discover_all_anthology', 'party_formed', 'book_rated', 'series_rated', 'announcement'];
+for (const type of types) await snapshot([{ ...base, type }]);
+for (const result of ['success', 'battle', 'death']) await snapshot([{ ...base, type: 'run_completed', result, runIndex: -2 }]);
+await snapshot([{ ...base, type: 'book_created', isContainer: true }]);
+await snapshot([{ ...base, type: 'book_created', bookIsPublic: false, parentBookIsPublic: false, seriesIsPublic: false }]);
+assert.ok(!feed.innerHTML.includes('data-cover='), 'private book does not expose cover');
+await snapshot([{ ...base, type: 'run_completed', usernames: [{ username: 'Z', userPublicProfile: true }, { username: 'A', avatarUrl: '/a.jpg', userLevel: 2 }] }]);
+await snapshot(Array.from({ length: 6 }, () => ({ ...base, type: 'run_started' })).concat({ ...base, type: 'all_visited' }, { ...base, type: 'book_rated' }));
+assert.ok(feed.innerHTML.includes('feed.actions_today|n=6'));
+assert.ok(feed.innerHTML.includes('feed.tmpl.all_visited'));
+assert.ok(feed.innerHTML.includes('feed.tmpl.rated'));
+await snapshot(Array.from({ length: 5 }, (_, i) => ({ ...base, type: 'user_joined', username: `Player${i}` })));
+assert.ok(feed.innerHTML.includes('feed.joined_today|n=5'));
+await snapshot([{ ...base, type: 'series_created' }, ...Array.from({ length: 3 }, (_, i) => ({ ...base, type: 'book_created', bookId: 10 + i }))]);
+assert.ok(feed.innerHTML.includes('feed.books_in_batch|n=3'));
+await snapshot(Array.from({ length: 3 }, (_, i) => ({ ...base, type: 'book_created', bookId: 10 + i })));
+assert.ok(feed.innerHTML.includes('feed.more_books_in_batch|n=2'));
+await snapshot([{ ...base, type: 'book_created', completedAt: '2026-10-01T10:00:00Z' }, { ...base, type: 'run_started', completedAt: '2026-09-20T10:00:00Z' }], { title: '<Pinned>', body: '*italic* __underline__ ~~strike~~ {color:orange}Warm{/color} [Series](/series/3) [External](https://example.org/)' });
+await snapshot([]);
+await snapshot([], { title: 'Pinned only', body: 'Text' });
+const digest = createHash('sha256').update(JSON.stringify(snapshots)).digest('hex');
+
+// Auth routing, single-flight and failure recovery are exercised through the facade.
+token = null; await snapshot([{ ...base, type: 'book_created' }]); assert.equal(calls.filter(c => c[0] === 'public').length, 1);
+token = 'account';
+let resolveFetch;
+fetchImpl = () => new Promise(resolve => { resolveFetch = resolve; });
+const a = api.loadFeed(), b = api.loadFeed(); assert.equal(a, b);
+resolveFetch({ ok: true, json: async () => payload }); await a;
+const previous = feed.innerHTML;
+fetchImpl = async () => { throw new Error('offline'); }; await api.loadFeed(); assert.equal(feed.innerHTML, previous);
+feed.innerHTML = ''; await api.loadFeed(); assert.ok(feed.innerHTML.includes('feed.empty'));
+fetchImpl = null; await api.loadFeed();
+assert.equal(docListeners.get('click').length, 1);
+assert.equal(windowListeners.get('resize').length, 1);
+api.refreshDayCoverFlows(); api.refreshDayCoverFlows(); assert.equal(frames.size, 1); assert.equal(timers.size, 1);
+
+if (!baseline) {
+  const lastHtml = feed.innerHTML;
+  fetchImpl = async () => ({ ok: false, json: async () => ({ entries: [], pinned: null }) });
+  await api.loadFeed(); assert.equal(feed.innerHTML, lastHtml, 'HTTP failure preserves rendered feed');
+  fetchImpl = async () => ({ ok: true, json: async () => ({ entries: null }) });
+  await api.loadFeed(); assert.equal(feed.innerHTML, lastHtml, 'invalid payload preserves rendered feed');
+  const requests = [];
+  fetchImpl = () => new Promise(resolve => requests.push(resolve));
+  const oldAccount = api.loadFeed(); token = 'other-account';
+  const newAccount = api.loadFeed(); assert.notEqual(oldAccount, newAccount, 'account change starts a separate request');
+  const beforeRewardCalls = calls.filter(c => c[0] === 'reward').length;
+  requests[0]({ ok: true, json: async () => ({ entries: [], pinned: null }) }); await oldAccount;
+  assert.equal(feed.innerHTML, lastHtml, 'old account response cannot replace feed');
+  assert.equal(calls.filter(c => c[0] === 'reward').length, beforeRewardCalls);
+  assert.equal(api.loadFeed(), newAccount, 'old completion cannot clear newer in-flight guard');
+  requests[1]({ ok: true, json: async () => payload }); await newAccount;
+  // Account changes during JSON parsing must invalidate the response too.
+  let resolveJson;
+  fetchImpl = async () => ({ ok: true, json: () => new Promise(resolve => { resolveJson = resolve; }) });
+  const lateJson = api.loadFeed(); await new Promise(resolve => setImmediate(resolve));
+  token = null; const beforeLateJson = feed.innerHTML;
+  resolveJson({ entries: [], pinned: null }); await lateJson;
+  assert.equal(feed.innerHTML, beforeLateJson);
+  fetchImpl = null; token = 'account';
+  const day = modules.get(resolve(root, 'feed/day-covers.js')).namespace;
+  const card = new Element({ dayIndex: '0' }), stack = new Element();
+  card.queries.set('.feed-day-cover-stack', stack);
+  feed.queries.set('.feed-day-card[data-day-index]', [card]);
+  day.replaceDayCoverLists([['/natural.jpg']]);
+  const applying = day._applyDayCoverFlows(feed);
+  images.at(-1).finish(); await applying;
+  assert.ok(stack.innerHTML.includes('width:100px;height:150px'));
+  assert.ok(stack.innerHTML.includes('top:75px'), 'center cover uses natural aspect ratio');
+  await day._applyDayCoverFlows(feed); assert.equal(images.filter(img => img.url === '/natural.jpg').length, 1);
+  assert.equal(observers[0].cards.size, 1); day.replaceDayCoverLists([]); assert.equal(observers[0].cards.size, 0);
+  body.classList.add('no-feed-day-covers'); const beforeImages = images.length;
+  await day._applyDayCoverFlows(feed, [['/hidden.jpg']]); assert.equal(images.length, beforeImages);
+  body.classList.remove('no-feed-day-covers');
+  card.offsetWidth = 0;
+  await day._applyDayCoverFlows(feed, [['/zero-width.jpg']]);
+  assert.equal(images.length, beforeImages, 'hidden cards do not load images or generate zero-width tiles');
+  card.offsetWidth = 100;
+  const oldStack = stack.innerHTML;
+  const staleApply = day._applyDayCoverFlows(feed, [['/pending-old.jpg']]);
+  const pendingImage = images.at(-1);
+  day.replaceDayCoverLists([]); pendingImage.finish(); await staleApply;
+  assert.equal(stack.innerHTML, oldStack, 'stale image completion does not rewrite old cards');
+  assert.equal(observers[0].cards.size, 0);
+  // Empty results must take the same observer cleanup path as populated results.
+  await day._applyDayCoverFlows(feed, [['/natural.jpg']]); assert.equal(observers[0].cards.size, 1);
+  payload = { entries: [], pinned: null }; await api.loadFeed(); assert.equal(observers[0].cards.size, 0);
+
+  // Bindings dispatch the same library/profile/run actions and preserve expanded groups.
+  const binding = modules.get(resolve(root, 'feed/bindings.js')).namespace;
+  const target = new Element(), chevron = new Element(), toggle = new Element({ target: 'group', groupKey: 'saved' });
+  elements.set('group', target); toggle.queries.set('.feed-group-chevron', chevron);
+  const selectors = {
+    '.feed-group-toggle': [toggle], '.feed-user-pub': [new Element({ username: 'Player' })],
+    '.feed-verb-pub': [new Element({ bookId: '1', userId: '7', runIndex: '0' }), new Element({ bookId: '3', userId: '7', runIndex: '1', seriesRun: '1' })],
+    '.feed-book-btn': [new Element({ bookId: '1', bookName: 'Book' })], '.feed-anthology-tag': [new Element({ anthologyId: '2', anthologyName: 'Anthology' })], '.feed-series-tag': [new Element({ seriesId: '3', seriesName: 'Series' })],
+  };
+  for (const [selector, items] of Object.entries(selectors)) feed.queries.set(selector, items);
+  binding.bindFeedInteractions(feed, new Set(['saved'])); assert.equal(target.hidden, false);
+  await toggle.emit('click', { target: { closest: () => null } }); assert.equal(target.hidden, true);
+  await toggle.emit('click', { target: { closest: () => ({}) } }); assert.equal(target.hidden, true);
+  for (const [selector, items] of Object.entries(selectors)) if (selector !== '.feed-group-toggle') for (const item of items) await item.emit('click', { preventDefault() {} });
+  for (const name of ['openPublicProfile', 'openPublicRun', 'openPublicSeriesRun', 'openCoverActivity', 'openSeriesActivity']) assert.ok(calls.some(c => c[0] === name));
+  const previews = modules.get(resolve(root, 'feed/previews.js')).namespace;
+  const hover = new Element({ cover: '/cover.jpg' }); feed.queries.set('.feed-user, [data-cover]', [hover]);
+  previews.bindFeedPreviews(feed); await hover.emit('mouseenter', { clientX: 100, clientY: 100 });
+  const previewImg = elements.get('feed-img-preview-img');
+  for (let i = 0; i < 5; i++) await hover.emit('mouseenter', { clientX: 100, clientY: 100 });
+  assert.equal(previewImg.listeners.get('load').length, 1, 'hover load listeners do not accumulate');
+  assert.equal(previewImg.listeners.get('error').length, 1);
+  assert.equal(elements.get('feed-img-preview').style.display, 'block'); assert.equal(elements.get('feed-img-preview-img').style.width, '90px');
+  for (const fn of docListeners.get('click')) fn(); assert.equal(elements.get('feed-img-preview').style.display, 'none');
+  assert.equal(previewImg.listeners.get('load').length, 0);
+  assert.equal(previewImg.listeners.get('error').length, 0);
+  context.window.innerWidth = 768;
+  const mobileHover = new Element({ cover: '/cover.jpg' }); feed.queries.set('.feed-user, [data-cover]', [mobileHover]);
+  previews.bindFeedPreviews(feed); assert.equal(mobileHover.listeners.size, 0);
+}
+console.log(JSON.stringify({ digest, cases: snapshots.length - 1 }));
