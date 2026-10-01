@@ -31,7 +31,7 @@ function _renderInventoryEdit(it) {
 
 const INV_ROWS_PER_PAGE = 10;
 
-// #inv-grid uses `repeat(auto-fill, minmax(130px, 1fr))`, so its actual column
+// #inv-grid uses `repeat(auto-fill, minmax(170px, 1fr))`, so its actual column
 // count depends on the viewport/window width - reading it back from the
 // computed style (rather than recalculating from track/gap sizes ourselves)
 // guarantees this always matches whatever the grid really rendered, even if

@@ -1152,7 +1152,7 @@ CREATE TABLE IF NOT EXISTS xp_config (
 
 On startup, every known event is seeded with `INSERT OR IGNORE` so existing overrides are never reset. An in-memory `Map` (`_xpCache`) is built once from the table; `getXpAmount(event)` reads from it - zero DB round-trips per award. `setXpAmount(event, amount)` writes to both the DB and the cache atomically; changes take effect immediately without a restart.
 
-Admin panel → **XP Configuration** section lists all events with editable inputs. Saving posts each changed row to `POST /api/admin/xp-config`.
+Admin panel → **XP Configuration** uses a responsive three/two/one-column grid with accessible numeric inputs and minus/plus controls. Decimal amounts remain supported. Saving validates all inputs before posting each changed row to `POST /api/admin/xp-config`; controls are disabled during writes. Successful rows update the local baseline immediately, so retrying after a partial failure does not repeat completed writes.
 
 Two call patterns:
 - `awardXp(userId, event, ref)` - uses `getXpAmount(event)` automatically.

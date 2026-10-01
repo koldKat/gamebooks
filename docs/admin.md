@@ -234,6 +234,8 @@ Gifting a user GC (`POST /api/admin/users/:id/gift-gc`) increments `users.bonus_
 
 ## Tools tab
 
+**XP Configuration** uses a compact three-column grid, falling back to two columns and then one on smaller screens. Each event shows a readable label, its raw key, and minus/plus buttons that change the amount by 1 XP; decimal amounts can still be typed directly. Save validates every amount, submits only changed events, and disables the inputs while saving. Changes apply immediately. If a request fails midway, retrying sends only the remaining changes.
+
 | Section | Persisted | Description |
 |---------|-----------|-------------|
 | App Version | `app_version` | Version string shown in app banner; served via `GET /api/config` |
@@ -401,7 +403,7 @@ PDF upload/delete use `POST /api/books/:id/pdf` and `DELETE /api/books/:id/pdf`.
 | PATCH | `/api/admin/items/:id` | Update item (partial): `{ name?, description?, type?, svg_data?, active? }` |
 | DELETE | `/api/admin/items/:id` | Delete item permanently |
 
-The API always returns every item - type filter, active filter, search (by name/description), and pagination are all client-side only, in `admin/index.html`'s `_renderInventory()`/`renderInventoryGrid()`. Page size is **10 full rows**, not a fixed item count: `#inv-grid` uses `grid-template-columns: repeat(auto-fill, minmax(130px, 1fr))`, so the number of columns (and therefore items per page) depends on window width - `_inventoryColumnsPerRow()` reads the actual rendered column count back from `getComputedStyle` rather than recalculating it, so it always matches what really rendered even if the grid's CSS changes later. Recalculated on every render and on window resize (debounced, only while the Inventory tab is visible) so a page is never left with a half-filled last row after a resize. Changing any filter or the search query resets back to page 1; a resize does not, since the same items are still meant to be in view, just reflowed.
+The API always returns every item - type filter, active filter, search (by name/description), and pagination are all client-side only, in `admin/js/inventory.js`'s `_renderInventory()`/`renderInventoryGrid()`. Page size is **10 full rows**, not a fixed item count: `#inv-grid` uses `grid-template-columns: repeat(auto-fill, minmax(170px, 1fr))`, so the number of columns (and therefore items per page) depends on window width - `_inventoryColumnsPerRow()` reads the actual rendered column count back from `getComputedStyle` rather than recalculating it, so it always matches what really rendered even if the grid's CSS changes later. Recalculated on every render and on window resize (debounced, only while the Inventory tab is visible) so a page is never left with a half-filled last row after a resize. Changing any filter or the search query resets back to page 1; a resize does not, since the same items are still meant to be in view, just reflowed.
 
 ### Feedback
 

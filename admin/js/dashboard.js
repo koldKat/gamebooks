@@ -118,20 +118,43 @@ async function loadXpConfig() {
     const { config } = await api('GET', '/api/admin/xp-config');
     _xpConfigData = config;
     const table = document.getElementById('xp-config-table');
-    // Remove old rows (keep header row - first 2 children)
-    while (table.children.length > 2) table.removeChild(table.lastChild);
+    table.replaceChildren();
     for (const row of config) {
+      const card = document.createElement('div');
+      card.className = 'xp-config-row';
       const label = document.createElement('div');
-      label.textContent = row.event;
-      label.style.cssText = 'color:#d1d5db;font-family:monospace;font-size:0.78rem';
+      label.className = 'xp-config-name';
+      const name = row.event.replaceAll('_', ' ').replace(/^./, c => c.toUpperCase());
+      label.textContent = name;
+      const key = document.createElement('small');
+      key.textContent = row.event;
+      label.appendChild(key);
       const input = document.createElement('input');
-      input.type = 'text';
-      input.inputMode = 'numeric';
+      input.type = 'number';
+      input.min = '0';
+      input.step = 'any';
+      input.setAttribute('aria-label', `${name} XP amount`);
       input.value = row.amount;
       input.dataset.event = row.event;
-      input.style.cssText = 'width:5rem;text-align:left;background:#111827;border:1px solid #374151;border-radius:4px;color:#d1d5db;padding:0.15rem 0.4rem;font-size:0.78rem';
-      table.appendChild(input);
-      table.appendChild(label);
+      const stepper = document.createElement('div');
+      stepper.className = 'xp-config-stepper';
+      for (const delta of [-1, 1]) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'btn';
+        button.textContent = delta < 0 ? '-' : '+';
+        button.setAttribute('aria-label', `${delta < 0 ? 'Decrease' : 'Increase'} ${name} XP`);
+        button.addEventListener('click', () => {
+          const amount = Number(input.value);
+          if (!Number.isFinite(amount)) return;
+          input.value = Math.max(0, Math.round((amount + delta) * 1e6) / 1e6);
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+        if (delta < 0) stepper.appendChild(button);
+        else stepper.append(input, button);
+      }
+      card.append(label, stepper);
+      table.appendChild(card);
     }
   } catch (e) { console.error('XP config:', e); }
 }
@@ -272,18 +295,33 @@ document.getElementById('tools-version-save').addEventListener('click', async ()
 
 document.getElementById('xp-config-save').addEventListener('click', async () => {
   const btn = document.getElementById('xp-config-save');
+  if (btn.disabled) return;
+  const inputs = [...document.querySelectorAll('#xp-config-table input[data-event]')];
+  const changes = [];
+  for (const input of inputs) {
+    const amount = Number(input.value);
+    if (input.value.trim() === '' || !Number.isFinite(amount) || amount < 0) {
+      showAlert(`Enter a valid non-negative XP amount for ${input.dataset.event}.`);
+      input.focus();
+      return;
+    }
+    const row = _xpConfigData.find(row => row.event === input.dataset.event);
+    if (row && amount !== Number(row.amount)) changes.push({ row, amount });
+  }
+  const controls = [...document.querySelectorAll('#xp-config-table input, #xp-config-table button')];
   btn.disabled = true;
+  controls.forEach(control => { control.disabled = true; });
   try {
-    const inputs = document.querySelectorAll('#xp-config-table input[data-event]');
-    for (const input of inputs) {
-      const amount = parseFloat(input.value);
-      if (!isNaN(amount) && amount >= 0) {
-        await api('POST', '/api/admin/xp-config', { event: input.dataset.event, amount });
-      }
+    for (const { row, amount } of changes) {
+      await api('POST', '/api/admin/xp-config', { event: row.event, amount });
+      row.amount = amount;
     }
     flashSaved(document.getElementById('xp-config-saved'));
-  } catch (e) { showAlert('Failed to save XP config.'); }
-  btn.disabled = false;
+  } catch (e) { showAlert('Some XP changes could not be saved. Saved changes remain applied; retry to save the rest.'); }
+  finally {
+    btn.disabled = false;
+    controls.forEach(control => { control.disabled = false; });
+  }
 });
 
 document.getElementById('tools-notepad-save').addEventListener('click', async () => {

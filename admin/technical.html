@@ -978,7 +978,7 @@ appLevel = floor((-1 + sqrt(1 + 8 × totalXp / (number_of_users × 1000))) / 2)<
   amount REAL NOT NULL
 );</code></pre>
 <p>On startup, every known event is seeded with <code>INSERT OR IGNORE</code> so existing overrides are never reset. An in-memory <code>Map</code> (<code>_xpCache</code>) is built once from the table; <code>getXpAmount(event)</code> reads from it - zero DB round-trips per award. <code>setXpAmount(event, amount)</code> writes to both the DB and the cache atomically; changes take effect immediately without a restart.</p>
-<p>Admin panel → <strong>XP Configuration</strong> section lists all events with editable inputs. Saving posts each changed row to <code>POST /api/admin/xp-config</code>.</p>
+<p>Admin panel → <strong>XP Configuration</strong> uses a responsive three/two/one-column grid with accessible numeric inputs and minus/plus controls. Decimal amounts remain supported. Saving validates all inputs before posting each changed row to <code>POST /api/admin/xp-config</code>; controls are disabled during writes. Successful rows update the local baseline immediately, so retrying after a partial failure does not repeat completed writes.</p>
 <p>Two call patterns:</p>
 <ul>
 <li><code>awardXp(userId, event, ref)</code> - uses <code>getXpAmount(event)</code> automatically.</li>
