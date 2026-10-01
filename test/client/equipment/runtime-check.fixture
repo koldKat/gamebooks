@@ -1,0 +1,292 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { resolve, dirname } from 'node:path';
+import { SourceTextModule, SyntheticModule, createContext } from 'node:vm';
+import { createHash } from 'node:crypto';
+
+const root = process.argv[1], baseline = process.argv[2], modules = new Map();
+let state = { playthroughs: [], activePtIndex: null }, viewingPt = null;
+const ids = new Map(), effects = [], snapshots = [], documentListeners = new Map();
+const currentPlaythrough = () => state.activePtIndex == null ? null : (state.playthroughs[state.activePtIndex]?.completed ? null : state.playthroughs[state.activePtIndex] || null);
+class Element {
+  constructor(tag = 'div') {
+    this.tag = tag; this.children = []; this.style = {}; this.dataset = {}; this.listeners = new Map();
+    this.classes = new Set(); this.value = ''; this.checked = false; this.text = '';
+    this.classList = { add: c => this.classes.add(c), remove: c => this.classes.delete(c), contains: c => this.classes.has(c), toggle: (c, force) => {
+      const enabled = force === undefined ? !this.classes.has(c) : force;
+      if (enabled) this.classes.add(c); else this.classes.delete(c); return enabled;
+    } };
+  }
+  set id(value) { this._id = value; ids.set(value, this); } get id() { return this._id || ''; }
+  set className(value) { this.classes = new Set(value.split(/\s+/).filter(Boolean)); } get className() { return [...this.classes].join(' '); }
+  set textContent(value) { this.text = String(value); } get textContent() { return this.text + this.children.map(c => c.textContent).join(''); }
+  appendChild(el) { this.children.push(el); el.parentNode = this; return el; }
+  remove() {
+    this.parentNode.children = this.parentNode.children.filter(c => c !== this);
+    for (const el of [this, ...this.all()]) if (el.id && ids.get(el.id) === el) ids.delete(el.id);
+  }
+  set innerHTML(html) {
+    for (const el of this.all()) if (el.id && ids.get(el.id) === el) ids.delete(el.id);
+    this.html = html; this.children = []; this.text = '';
+    const stack = [this];
+    for (const match of html.matchAll(/<\/?([a-z][\w-]*)\b([^>]*)>|([^<]+)/gi)) {
+      if (match[3]) { stack.at(-1).text += match[3]; continue; }
+      if (match[0].startsWith('</')) { if (stack.length > 1) stack.pop(); continue; }
+      const node = new Element(match[1]);
+      for (const attr of match[2].matchAll(/([\w-]+)="([^"]*)"/g)) {
+        if (attr[1] === 'id') node.id = attr[2];
+        else if (attr[1] === 'class') node.className = attr[2];
+        else if (attr[1].startsWith('data-')) node.dataset[attr[1].slice(5).replace(/-([a-z])/g, (_, c) => c.toUpperCase())] = attr[2];
+      }
+      stack.at(-1).appendChild(node);
+      if (!/\/$/.test(match[2]) && !['input', 'br', 'hr', 'img'].includes(match[1])) stack.push(node);
+    }
+  }
+  get innerHTML() { return this.html || ''; }
+  all() { return this.children.flatMap(c => [c, ...c.all()]); }
+  matches(selector) {
+    if (selector.startsWith('.')) return this.classes.has(selector.slice(1));
+    if (selector.startsWith('#')) return this.id === selector.slice(1);
+    const data = selector.match(/^\[data-([\w-]+)(?:="([^"]*)")?\]$/);
+    if (data) { const key = data[1].replace(/-([a-z])/g, (_, c) => c.toUpperCase()); return key in this.dataset && (data[2] === undefined || this.dataset[key] === data[2]); }
+    return false;
+  }
+  closest(selector) { return this.matches(selector) ? this : this.parentNode?.closest(selector) || null; }
+  contains(target) { return target === this || this.all().includes(target); }
+  querySelectorAll(selector) { return this.all().filter(el => el.matches(selector)); }
+  querySelector(selector) { return this.querySelectorAll(selector)[0] || null; }
+  addEventListener(type, fn) { const list = this.listeners.get(type) || []; list.push(fn); this.listeners.set(type, list); }
+  dispatch(type, extra = {}) { for (const fn of [...(this.listeners.get(type) || [])]) fn({ target: this, stopPropagation() {}, preventDefault() {}, ...extra }); }
+  click() { this.dispatch('click'); }
+  focus() {} select() {}
+  getBoundingClientRect() { return { width: 196, height: 120, right: 196, bottom: 120 }; }
+}
+const body = new Element(), row = body.appendChild(new Element()); row.id = 'play-btn-row';
+const document = { body, createElement: tag => new Element(tag), getElementById: id => ids.get(id) || null,
+  querySelectorAll: selector => body.querySelectorAll(selector), addEventListener: (type, fn) => {
+    const list = documentListeners.get(type) || []; list.push(fn); documentListeners.set(type, list);
+  } };
+const items = [{ id: 1, name: 'Sword', svg_data: '<svg><path d="M1 2"/></svg>' }, { id: 2, name: 'Potion', svg_data: '<svg><circle r="2"/></svg>' }, { id: 3, name: 'Cloak', svg_data: '<svg><rect width="3"/></svg>' }];
+const saveState = () => effects.push(['save']);
+const apiFetch = async url => { effects.push(['api', url]); const requested = url.split('=')[1]?.split(',').map(Number) || []; return { ok: true, json: async () => items.filter(i => requested.includes(i.id)) }; };
+const context = createContext({ console, document, window: { innerWidth: 800, innerHeight: 600 } });
+function stub(file, exports) {
+  const mod = new SyntheticModule(Object.keys(exports), function () { for (const [k, v] of Object.entries(exports)) this.setExport(k, v); }, { context });
+  modules.set(resolve(root, file), mod); return mod;
+}
+const stateModule = stub('state.js', { state, viewingPt, currentPlaythrough, saveState, apiFetch });
+stub('i18n.js', { t: (key, p = {}) => key + (p.n ? ` ${p.n}` : '') });
+stub('charsheet.js', { getPlayBtnRow: () => row });
+stub('confirm.js', { showAlert: message => effects.push(['alert', message]) });
+const escapeHtml = value => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+stub('util.js', { escapeHtml, shortcutLabel: value => value, ALL_PANEL_OVERLAY_IDS: ['eq-overlay', 'inv-overlay'], registerPanelShortcut: (code, opts) => { effects.push(['shortcut', code, opts.otherOverlayIds, opts.capture]); } });
+// Execute the actual inventory transfer/normalization helpers, not simplified mocks.
+const inventorySource = readFileSync(resolve(root, 'inventory.js'), 'utf8');
+function functionSource(name) {
+  const start = inventorySource.indexOf('function ' + name + '('); assert.ok(start >= 0, name);
+  let parens = 0, paramsEnd = inventorySource.indexOf('(', start);
+  do { if (inventorySource[paramsEnd] === '(') parens++; if (inventorySource[paramsEnd] === ')') parens--; paramsEnd++; } while (parens);
+  let depth = 0, opened = false, end = inventorySource.indexOf('{', paramsEnd);
+  for (; end < inventorySource.length; end++) {
+    if (inventorySource[end] === '{') { depth++; opened = true; }
+    if (inventorySource[end] === '}' && --depth === 0 && opened) break;
+  }
+  return inventorySource.slice(start, end + 1);
+}
+context._effects = effects;
+const inventoryModule = new SourceTextModule(`import { state, currentPlaythrough, viewingPt, saveState } from './state.js';
+const MAX_SLOTS = 40;
+${['_slot', '_isReadOnly', '_inv', '_setInv'].map(functionSource).join('\n')}
+${['getInventorySlots', 'addItemToInventory', 'removeAllFromInventoryAt'].map(name => 'export ' + functionSource(name)).join('\n')}
+export const refreshInventoryUI = () => _effects.push(['inventory-refresh']);
+export const renderInventoryDisplay = extra => _effects.push(['display', JSON.parse(JSON.stringify(extra))]);`, { context, identifier: resolve(root, 'inventory.js') });
+modules.set(resolve(root, 'inventory.js'), inventoryModule);
+function moduleAt(path) {
+  if (modules.has(path)) return modules.get(path);
+  const source = readFileSync(path === resolve(root, 'equipment.js') && baseline ? baseline : path, 'utf8');
+  const mod = new SourceTextModule(source, { context, identifier: path }); modules.set(path, mod); return mod;
+}
+const entry = moduleAt(resolve(root, 'equipment.js'));
+await entry.link((specifier, parent) => moduleAt(resolve(dirname(parent.identifier), specifier))); await entry.evaluate();
+const api = entry.namespace;
+assert.deepEqual(Object.keys(api).sort(), ['getVisibleEquippedItems', 'initEquipment', 'instantiateLoadout', 'setEquipmentVisible'].sort());
+const plain = value => JSON.parse(JSON.stringify(value));
+const el = id => { const node = document.getElementById(id); assert.ok(node, id); return node; };
+const settle = async () => { for (let i = 0; i < 20; i++) await Promise.resolve(); };
+const slot = key => document.querySelectorAll('.eq-slot').find(s => s.dataset.key === key);
+async function event(node, type = 'click', extra = {}) { assert.ok(node); node.dispatch(type, extra); await settle(); }
+function snapshot(label, extra = {}) {
+  snapshots.push({ label, state: plain(state), effects: plain(effects), body: el('eq-body').innerHTML, items: el('eq-items').innerHTML,
+    picker: el('eq-picker-grid').innerHTML, overlays: ['eq-overlay', 'eq-picker-overlay', 'eq-rename-dialog', 'eq-edit-dialog'].map(id => [id, el(id).className]),
+    templateDisplay: el('eq-save-template-btn').style.display, buttonDisplay: el('equipment-btn').style.display, ...extra }); effects.length = 0;
+}
+api.initEquipment(); assert.equal(document.querySelectorAll('#equipment-btn').length, 1);
+assert.deepEqual(plain(api.instantiateLoadout()), { inventory: [], equipment: {}, equipmentVisible: {} });
+state.inventoryTemplate = [{ itemId: 1, qty: 2 }, { itemId: 2, qty: 4, note: 'Keep' }, { itemId: 3, qty: 1 }];
+state.equipmentTemplate = { head: 3, primary: { itemId: 1, qty: 5, label: 'Named sword', note: 'Sharp' }, item1: null };
+state.equipmentVisibleTemplate = { primary: true };
+const loadout = api.instantiateLoadout(); assert.deepEqual(plain(loadout.inventory), [{ itemId: 2, qty: 4, note: 'Keep' }]);
+assert.deepEqual(plain(loadout.equipment.head), { itemId: 3, label: '', note: '', qty: 1 });
+loadout.inventory[0].qty = 77; loadout.equipment.primary.note = 'Changed'; assert.equal(state.inventoryTemplate[1].qty, 4); assert.equal(state.equipmentTemplate.primary.note, 'Sharp');
+state.playthroughs = [{ path: [1], completed: false, equipment: { head: 3, primary: { itemId: 1, qty: 2, label: 'Named sword', note: 'Sharp' } }, equipmentVisible: { head: true, primary: true },
+  inventory: [{ itemId: 2, qty: 4, label: 'Heal <now>', note: 'Drink', visible: true }, { itemId: 1, qty: 1, note: '', visible: false }] }]; state.activePtIndex = 0;
+api.setEquipmentVisible(true); await event(el('equipment-btn'));
+assert.equal(el('eq-body').querySelectorAll('.eq-slot').length, 15); assert.equal(el('eq-items').querySelectorAll('.eq-slot').length, 5); snapshot('init-slots-and-loadout');
+const visible = await api.getVisibleEquippedItems(); assert.equal(visible.length, 2); assert.equal(visible[1].label, 'Named sword'); snapshot('visible-items', { visible: plain(visible) });
+await api.getVisibleEquippedItems(); assert.equal(effects.length, 0, 'equipped data cached');
+await event(slot('head')); assert.equal(el('eq-picker-overlay').classList.contains('active'), true); snapshot('inventory-picker');
+el('eq-search').value = 'heal'; await event(el('eq-search'), 'input'); assert.equal(el('eq-picker-grid').querySelectorAll('.inv-pick-item').length, 1); snapshot('picker-search');
+await event(el('eq-picker-grid').querySelector('.inv-pick-item')); assert.equal(state.playthroughs[0].equipment.head.itemId, 2); assert.equal(state.playthroughs[0].equipment.head.qty, 4);
+assert.equal(state.playthroughs[0].inventory.some(s => s.itemId === 3), true); snapshot('equip-whole-stack-and-return-old');
+async function contextAction(key, action) {
+  await event(slot(key), 'contextmenu', { clientX: 790, clientY: 590 });
+  const menu = document.querySelectorAll('.inv-ctx-menu')[0]; assert.ok(menu);
+  await event(menu, 'click', { target: menu.querySelector(`[data-action="${action}"]`) });
+}
+await contextAction('head', 'rename'); el('eq-rename-input').value = 'Healing stash'; await event(el('eq-rename-input'), 'keydown', { key: 'Enter' });
+assert.equal(state.playthroughs[0].equipment.head.label, 'Healing stash'); snapshot('rename');
+await contextAction('head', 'edit'); el('eq-edit-qty').value = '5'; await event(el('eq-edit-qty-inc')); await event(el('eq-edit-qty-dec'));
+el('eq-edit-note').value = 'For later'; el('eq-edit-visible').checked = false; await event(el('eq-edit-done'));
+assert.equal(state.playthroughs[0].equipment.head.qty, 5); assert.equal(state.playthroughs[0].equipment.head.note, 'For later'); snapshot('edit-metadata');
+await contextAction('head', 'toggle-visible'); assert.equal(state.playthroughs[0].equipmentVisible.head, true); snapshot('toggle-visible');
+const transfer = { data: '', setData(_type, data) { this.data = data; }, getData() { return this.data; } };
+await event(slot('head'), 'dragstart', { dataTransfer: transfer }); await event(slot('primary'), 'drop', { dataTransfer: transfer });
+assert.equal(state.playthroughs[0].equipment.primary.label, 'Healing stash'); assert.equal(state.playthroughs[0].equipment.head.itemId, 1); snapshot('swap-filled-slots');
+await event(slot('primary'), 'dragstart', { dataTransfer: transfer }); await event(slot('item1'), 'dragover', { dataTransfer: transfer }); await event(slot('item1'), 'drop', { dataTransfer: transfer });
+assert.equal(state.playthroughs[0].equipment.primary, undefined); assert.equal(state.playthroughs[0].equipment.item1.qty, 5); snapshot('move-to-consumable-row');
+const remove = slot('item1').querySelector('.eq-slot-remove'); await event(remove); assert.equal(state.playthroughs[0].equipment.item1, undefined);
+assert.ok(state.playthroughs[0].inventory.some(s => s.itemId === 2 && s.qty === 5 && s.note === 'For later')); snapshot('unequip-preserves-stack');
+await event(el('eq-save-template-btn')); const templateLoadout = api.instantiateLoadout(); assert.equal(templateLoadout.equipment.head.label, 'Named sword'); snapshot('save-template', { loadout: plain(templateLoadout) });
+await event(slot('feet')); await event(el('eq-picker-close')); snapshot('close-picker-and-prune-cache');
+await event(slot('feet')); snapshot('reopen-picker'); await event(el('eq-picker-close'));
+state.playthroughs[0].completed = true; state.activePtIndex = null; viewingPt = state.playthroughs[0]; stateModule.setExport('viewingPt', viewingPt);
+await event(el('equipment-btn')); assert.equal(document.querySelectorAll('.eq-slot-remove').length, 0); assert.equal(slot('head').listeners.size, 0); assert.equal(el('eq-save-template-btn').style.display, 'none');
+snapshot('historical-read-only', { visible: plain(await api.getVisibleEquippedItems()) });
+api.setEquipmentVisible(false); await settle(); assert.equal(el('eq-overlay').classList.contains('active'), false); assert.equal(el('eq-picker-overlay').classList.contains('active'), false); snapshot('hide-and-clear');
+console.log(JSON.stringify({ cases: snapshots.length, exports: Object.keys(api).length, digest: createHash('sha256').update(JSON.stringify(snapshots)).digest('hex') }));
+if (!baseline) {
+  const runtime = modules.get(resolve(root, 'equipment/runtime.js')).namespace.equipmentRuntime;
+  async function startRun(equipment, inventory = []) {
+    api.setEquipmentVisible(false); await settle();
+    state = { playthroughs: [{ path: [1], completed: false, equipment, equipmentVisible: { head: true }, inventory }], activePtIndex: 0 };
+    viewingPt = null; stateModule.setExport('state', state); stateModule.setExport('viewingPt', null);
+    api.setEquipmentVisible(true); await event(el('equipment-btn')); effects.length = 0;
+  }
+  const full = Array.from({ length: 40 }, (_, i) => ({ itemId: 2, label: `slot${i}`, qty: 1, visible: false, note: '' }));
+  await startRun({ head: { itemId: 1, label: 'Sword', note: 'Sharp', qty: 2 } }, full);
+  await event(slot('head').querySelector('.eq-slot-remove'));
+  assert.equal(state.playthroughs[0].equipment.head?.qty, 2, 'full inventory must not destroy unequipped equipment');
+  assert.equal(state.playthroughs[0].inventory.length, 40);
+  assert.equal(effects.some(e => e[0] === 'save'), false, 'failed transfer must not save partial state');
+  state.playthroughs[0].inventory[0] = { itemId: 1, label: 'Sword', note: 'Sharp', qty: 3, visible: true };
+  await event(slot('head').querySelector('.eq-slot-remove'));
+  assert.equal(state.playthroughs[0].equipment.head, undefined); assert.equal(state.playthroughs[0].inventory[0].qty, 5, 'full inventory allows a matching stack merge');
+  await startRun({ head: { itemId: 1, label: 'Old', qty: 1 } }); await contextAction('head', 'rename');
+  const renameRun = state.playthroughs[0];
+  state = { playthroughs: [{ equipment: { head: { itemId: 1, label: 'Other', qty: 1 } }, completed: false, inventory: [] }], activePtIndex: 0 };
+  stateModule.setExport('state', state); el('eq-rename-input').value = 'Wrong run'; await event(el('eq-rename-ok'));
+  assert.equal(state.playthroughs[0].equipment.head.label, 'Other', 'rename must not target another book'); assert.equal(renameRun.equipment.head.label, 'Old');
+  await startRun({ head: { itemId: 1, label: 'Old', note: 'Keep', qty: 1 } }); await contextAction('head', 'edit');
+  state.playthroughs.push({ equipment: { head: { itemId: 3, note: 'Other note', qty: 7 } }, inventory: [], completed: false }); state.activePtIndex = 1;
+  el('eq-edit-qty').value = '99'; el('eq-edit-note').value = 'Wrong'; await event(el('eq-edit-done'));
+  assert.equal(state.playthroughs[1].equipment.head.qty, 7, 'edit must not target another run'); assert.equal(state.playthroughs[1].equipment.head.note, 'Other note');
+  await startRun({}, [{ itemId: 1, qty: 1, label: 'First' }, { itemId: 2, qty: 2, label: 'Second' }]); await event(slot('feet'));
+  const stalePick = el('eq-picker-grid').querySelectorAll('.inv-pick-item')[0]; state.playthroughs[0].inventory.shift(); await event(stalePick);
+  assert.equal(state.playthroughs[0].equipment.feet, undefined, 'picker must not equip a shifted inventory entry'); assert.equal(state.playthroughs[0].inventory[0].qty, 2);
+  await event(el('eq-picker-grid').querySelector('.inv-pick-item')); assert.equal(state.playthroughs[0].equipment.feet.itemId, 2, 'refreshed picker can equip the current entry');
+  await startRun({}, [{ itemId: 3, qty: 1 }]);
+  const pending = []; stateModule.setExport('apiFetch', url => new Promise(resolve => pending.push({ url, resolve })));
+  await event(slot('feet')); assert.equal(pending.length, 1); await event(el('eq-picker-close'));
+  pending.shift().resolve({ ok: true, json: async () => [items[2]] }); await settle();
+  assert.equal(el('eq-picker-grid').querySelectorAll('.inv-pick-item').length, 0, 'closed picker must not repopulate');
+  assert.equal(runtime._itemCache.size, 0, 'closed picker must not retain its late browse response');
+  stateModule.setExport('apiFetch', apiFetch); await startRun({ head: 3 });
+  const hiddenContexts = [...runtime._slotContexts];
+  runtime._itemCache.clear(); stateModule.setExport('apiFetch', url => new Promise(resolve => pending.push({ url, resolve })));
+  const lateDisplay = api.getVisibleEquippedItems(); assert.equal(pending.length, 1); api.setEquipmentVisible(false);
+  pending.shift().resolve({ ok: true, json: async () => [items[2]] }); const lateItems = await lateDisplay; await settle();
+  assert.equal(runtime._itemCache.size, 0, 'hide must invalidate pending equipped-item fetches'); assert.equal(lateItems.length, 0);
+  assert.equal(runtime._slotContexts.length, 0); assert.ok(hiddenContexts.every(c => c.state === null && c.pt === null), 'hidden slot closures release book/run references');
+  stateModule.setExport('apiFetch', apiFetch);
+  await startRun({ head: { itemId: 1, label: 'Original', qty: 1 } });
+  await contextAction('head', 'edit');
+  state.playthroughs[0].equipment.head = { itemId: 3, label: 'Replacement', qty: 4, note: 'Keep' };
+  el('eq-edit-qty').value = '99'; el('eq-edit-note').value = 'Stale';
+  await event(el('eq-edit-done'));
+  assert.equal(state.playthroughs[0].equipment.head.qty, 4, 'edit must not overwrite a replaced slot in the same run');
+  assert.equal(state.playthroughs[0].equipment.head.note, 'Keep');
+  assert.equal(effects.some(e => e[0] === 'save'), false);
+
+  await startRun({ head: { itemId: 1, qty: 1 } });
+  const oldRun = state.playthroughs[0];
+  const oldTarget = slot('feet');
+  await event(slot('head'), 'dragstart', { dataTransfer: transfer });
+  state.playthroughs.push({ equipment: { head: { itemId: 3, qty: 2 } }, inventory: [], completed: false });
+  state.activePtIndex = 1;
+  await event(oldTarget, 'drop', { dataTransfer: transfer });
+  assert.equal(state.playthroughs[1].equipment.head.itemId, 3, 'stale drag must not move equipment in another run');
+  assert.equal(state.playthroughs[1].equipment.feet, undefined);
+  assert.equal(oldRun.equipment.head.itemId, 1);
+  assert.equal(effects.some(e => e[0] === 'save'), false);
+  assert.equal(runtime._dragContext, null);
+
+  await startRun({}, [{ itemId: 3, qty: 1 }]);
+  stateModule.setExport('apiFetch', url => new Promise(resolve => pending.push({ url, resolve })));
+  await event(slot('feet'));
+  const oldResponse = pending.shift();
+  let resolveOldJson;
+  oldResponse.resolve({ ok: true, json: () => new Promise(resolve => { resolveOldJson = resolve; }) });
+  await settle();
+  assert.equal(typeof resolveOldJson, 'function');
+  await event(el('eq-picker-close'));
+  await event(slot('head'));
+  assert.equal(pending.length, 1);
+  pending.shift().resolve({ ok: true, json: async () => [{ ...items[2], name: 'Current cloak' }] });
+  await settle();
+  assert.equal(runtime._pickerSession.key, 'head');
+  const currentPicker = el('eq-picker-grid').innerHTML;
+  assert.ok(currentPicker.includes('Current cloak'));
+  resolveOldJson([{ ...items[2], name: 'Stale cloak' }]);
+  await settle();
+  assert.equal(el('eq-picker-grid').innerHTML, currentPicker, 'late JSON must not replace a newer picker');
+  assert.equal(runtime._itemCache.get(3).name, 'Current cloak', 'late JSON must not overwrite the current cache');
+  await event(el('eq-picker-grid').querySelector('.inv-pick-item'));
+  assert.equal(state.playthroughs[0].equipment.head.itemId, 3);
+  assert.equal(state.playthroughs[0].equipment.feet, undefined, 'new picker retains its own target slot');
+  stateModule.setExport('apiFetch', apiFetch);
+  // Exercise the actual final HUD paint separately from the baseline display spy.
+  const hud = body.appendChild(new Element()); hud.id = 'inv-display';
+  const displayWaits = [];
+  context._displayWaits = displayWaits;
+  const displayModule = new SourceTextModule(`import { state, currentPlaythrough, viewingPt } from './state.js';
+let _displayRevision = 0;
+const _ensureInvItems = () => new Promise(resolve => _displayWaits.push(resolve));
+const _inv = () => [];
+const _byId = () => null;
+const t = key => key;
+const _invLineHtml = (item, label) => label;
+const _closePanel = () => {}, _closePicker = () => {};
+const _itemCache = new Map(); let _pickerItems = [];
+export ${functionSource('setInventoryVisible')}
+export async ${functionSource('renderInventoryDisplay')}`, { context, identifier: resolve(root, 'inventory-display-test.js') });
+  await displayModule.link(() => stateModule); await displayModule.evaluate();
+  const paint = displayModule.namespace.renderInventoryDisplay;
+  const extra = label => [{ item: { name: label }, label }];
+  const stalePaint = paint(extra('Old run'));
+  state.playthroughs.push({ equipment: {}, inventory: [], completed: false }); state.activePtIndex = 1;
+  displayWaits.shift()(); await stalePaint;
+  assert.equal(hud.innerHTML, '', 'inventory fetch must not paint equipment from a previous run');
+  const firstPaint = paint(extra('First'));
+  const secondPaint = paint(extra('Second'));
+  const firstResolve = displayWaits.shift(); displayWaits.shift()(); await secondPaint;
+  firstResolve(); await firstPaint;
+  assert.equal(hud.innerHTML, 'Second', 'older inventory display must not overwrite a newer paint');
+  let equipmentCurrent = true;
+  const hiddenPaint = paint(extra('Hidden equipment'), () => equipmentCurrent);
+  equipmentCurrent = false; displayWaits.shift()(); await hiddenPaint;
+  assert.equal(hud.innerHTML, 'Second', 'equipment invalidated during inventory fetch must not paint');
+  const hiddenInventoryPaint = paint(extra('Hidden inventory'));
+  displayModule.namespace.setInventoryVisible(false);
+  displayWaits.shift()(); await hiddenInventoryPaint;
+  assert.equal(hud.innerHTML, 'Second', 'hiding inventory invalidates a pending HUD paint');
+}

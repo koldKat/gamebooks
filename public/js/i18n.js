@@ -241,6 +241,7 @@ const translations = {
     'inv.search_placeholder': 'Search…',
     'inv.picker_loading':  'Loading…',
     'inv.picker_empty':    'No items found.',
+    'eq.inventory_full':  'Inventory is full. Free a slot before unequipping this item.',
 
     'eq.slot.head':    'Head',
     'eq.slot.neck':    'Neck',

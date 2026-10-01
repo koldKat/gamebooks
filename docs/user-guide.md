@@ -454,6 +454,8 @@ Like the inventory, equipment is **per playthrough**. When viewing a finished ru
 
 Click an empty slot to open a picker of items currently in your inventory, then pick one to equip it. Click the **✕** on an equipped item to send it back to your inventory.
 
+If all 40 inventory slots are full, an item stays equipped unless its whole stack can merge into a matching inventory stack. Free a slot and try again; a failed unequip never discards the item.
+
 ### Right-click menu
 
 Right-click an equipped item for options:

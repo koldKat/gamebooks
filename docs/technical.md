@@ -125,7 +125,23 @@ gamebooks/
         portal-dialog.js Portal add/edit dialog
       charsheet.js       Character sheet - self-contained module
       inventory.js       Inventory grid - self-contained module (per-run item slots, drag reorder, template)
-      equipment.js       Equipment panel - self-contained module (per-run equip slots, context menu, template)
+      equipment.js       Stable equipment API; re-exports equipment/ implementations
+      equipment/         Per-run equipment feature modules
+        runtime.js       Shared item cache and drag/menu/edit/picker UI state
+        constants.js     Slot definitions and unchanged silhouette SVG
+        setup.js         One-time grid refresh registration (avoids internal cycles)
+        model.js         Legacy/current entry helpers and set/unset/move/swap
+        cache.js         Batched item fetches and equipped-item resolution
+        grid.js          Slot markup and body/consumable-row rendering
+        slots.js         Slot click, drag/drop, remove and context-menu bindings
+        transfers.js     Whole-stack inventory-to-equipment transfers
+        display.js       Visible equipped items and merged on-screen display refresh
+        context-menu.js  Show/hide, rename and edit actions
+        dialogs.js       Rename and quantity/note/visibility edit dialogs
+        picker.js        Inventory-backed picker, search and cache pruning on close
+        loadout.js       Independent new-run loadouts from book templates
+        panel.js         Open/close and visibility teardown
+        init.js          DOM construction, controls, Escape and E shortcut bindings
       sort.js            Search/sort helpers (foldForSearch, matchesSearch, naturalCompare)
       util.js            Shared utility helpers: escapeHtml, compressImage, compressToBlob (client-side JPEG quality iteration), setPreviewImgBlob (revokes an <img>'s previous blob: src before assigning a new one, used by add-book.js and edit-book/book-bindings.js/edit-book/anthology.js cover-preview file pickers), registerPanelShortcut (single-key panel toggle shared by charsheet/inventory/equipment/battlesim*), shortcutLabel (first-letter shortcut hint span)
       autocomplete.js    Shared name-autocomplete helpers for add/edit modals
@@ -567,7 +583,7 @@ Layer 1 (import only from layer 0):
 
 Layer 2:
   inventory.js   ← state.js, play.js*, charsheet.js
-  equipment.js   ← state.js, inventory.js, charsheet.js
+  equipment.js / equipment/ ← state.js, inventory.js, charsheet.js
   play.js / play/ ← state.js, graph.js, charsheet.js, equipment.js*, rewards.js, i18n.js, confirm.js
 
   * three-way cycle: equipment.js → inventory.js → play.js → equipment.js
@@ -2121,7 +2137,19 @@ Check `SELECT DISTINCT book_id FROM book_sections` for which books currently hav
 
 ## Equipment (`equipment.js`)
 
-A self-contained module for a per-run equipment panel - a character silhouette with fixed slots (head, chest, weapon, off-hand, back, rings, etc., defined in `SLOTS`) plus five extra `ITEM_SLOTS` for consumables. Visual only, no stat effects. Available to all users (not gated).
+A per-run equipment panel - a character silhouette with fixed slots (head, chest, weapon, off-hand, back, rings, etc., defined in `equipment/constants.js`'s `SLOTS`) plus five extra `ITEM_SLOTS` for consumables. Visual only, no stat effects. Available to all users (not gated).
+
+`equipment.js` is a compatibility facade retaining all four exports below; implementations live in `public/js/equipment/`. The internal dependency graph is acyclic and never back-imports the facade. `equipment/setup.js` registers the grid renderer once in `runtime.js`, allowing UI actions to request a refresh without a `grid -> slot events -> picker/dialogs -> grid` import cycle. The existing external equipment/inventory/play dependency cycle remains unchanged. The split preserves the silhouette SVG, slot layout, markup, event registration timing, cache pruning, templates, metadata and transfer behavior; it adds no timers or observers. Mobile continues using its independent reader/controller rather than this desktop equipment panel.
+
+Subsequent regression fixes protect equipment actions with captured book/run/slot-entry contexts: stale slot clicks, drag/drop, menus and rename/edit saves cannot mutate another run or a replaced entry. Picker sessions are invalidated on close/reopen and recheck inventory item/quantity/label/note/visibility before transferring; a shifted or changed inventory row refreshes the picker instead of equipping the wrong stack. Batched fetches check the session/run context after both response and JSON awaits. Hiding equipment advances a cache epoch so in-flight fetches, grid renders and display refreshes cannot undo cache clearing. Unequip adds the entire stack to inventory first and removes equipment only after success; a full inventory with no matching merge target shows `eq.inventory_full`, keeps the item equipped and saves no partial state.
+
+`test/client/equipment/` verifies the facade and internal module boundaries. Sixteen isolated scenarios compare state, rendered panel/picker markup, saves, fetches and display updates against a digest captured from the unsplit controller. Inventory normalization and stack-transfer helpers in those tests are extracted from the actual inventory implementation; HTTP and the DOM are mocked. The separate manual `browser-check.fixture` uses the real DOM/CSS and character-sheet/inventory/equipment modules for transfers, drag/drop, dialogs, shortcuts, templates, display integration and historical read-only mode with mocked HTTP. These checks do not validate production API writes or mobile touch drag/drop (which the desktop equipment UI does not implement).
+
+Additional regressions cover failed full-inventory unequip, matching-stack merge at capacity, rename/edit across book/run changes, same-run slot replacement during editing, drag/drop across run changes, shifted picker rows, out-of-order picker responses (including delayed JSON), and equipped-item responses after hiding/clearing. The existing normal-path parity digest remains unchanged.
+
+The shared inventory HUD also guards its final asynchronous paint: each `renderInventoryDisplay()` captures the book/run and a display revision before fetching inventory data. A changed run, newer render or hidden inventory invalidates the pending paint. Equipment supplies an optional validity callback so hiding equipment during the inventory fetch also prevents its old equipped-item snapshot from being painted. Tests exercise the actual inventory renderer with delayed fetch completion and out-of-order renders.
+
+Closing/replacing picker sessions and hiding the equipment feature also release captured book/run references; slot-context bookkeeping is replaced on each grid render rather than accumulating. Tests assert reference release on hide as well as rejection of stale responses.
 
 Imports `state.js`, `inventory.js` (to move items between inventory and equipment - see the dependency-cycle note above), and `charsheet.js` (for `getPlayBtnRow`).
 

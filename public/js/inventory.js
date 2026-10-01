@@ -118,10 +118,16 @@ function _byId(id) {
 
 // extraItems: [{ itemId, item }, ...] - e.g. equipped items marked "show on screen",
 // supplied by equipment.js (which owns its own item cache).
-export async function renderInventoryDisplay(extraItems = []) {
+let _displayRevision = 0;
+export async function renderInventoryDisplay(extraItems = [], isCurrent = () => true) {
   const el = document.getElementById('inv-display');
   if (!el) return;
+  const revision = ++_displayRevision;
+  const bookState = state, pt = currentPlaythrough() || viewingPt;
   await _ensureInvItems();
+  // A newer render, hidden feature or changed run supersedes this async paint.
+  if (revision !== _displayRevision || bookState !== state ||
+      pt !== (currentPlaythrough() || viewingPt) || !isCurrent()) return;
   const inv = _inv().filter(s => s.visible);
   const lines = inv.map(({ itemId, note, qty, label }) => {
     const item = _byId(itemId);
@@ -615,6 +621,7 @@ export function setInventoryVisible(visible) {
     btn.style.display = visible ? '' : 'none';
   }
   if (!visible) {
+    _displayRevision++;
     _closePanel();
     _closePicker();
     _itemCache.clear();

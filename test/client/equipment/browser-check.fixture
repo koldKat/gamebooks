@@ -1,0 +1,83 @@
+// Isolated manual browser check using real DOM, CSS and inventory/equipment modules.
+// HTTP is mocked and currentBookId stays null: no production data is read or written.
+const errors = [], checks = [], nativeFetch = window.fetch.bind(window);
+window.addEventListener('error', e => errors.push(e.message));
+window.addEventListener('unhandledrejection', e => errors.push(String(e.reason)));
+localStorage.clear();
+const items = [{ id: 1, name: 'Sword', svg_data: '<svg><path d="M1 2"/></svg>' }, { id: 2, name: 'Potion', svg_data: '<svg><circle r="2"/></svg>' }, { id: 3, name: 'Cloak', svg_data: '<svg><rect width="3"/></svg>' }];
+window.fetch = async url => {
+  const text = String(url), requested = text.includes('?ids=') ? text.split('=')[1].split(',').map(Number) : null;
+  const id = text.match(/^\/api\/items\/(\d+)$/)?.[1];
+  const data = requested ? items.filter(i => requested.includes(i.id)) : id ? items.find(i => i.id === +id) : {};
+  return new Response(JSON.stringify(data), { headers: { 'Content-Type': 'application/json' } });
+};
+const assert = (condition, label) => { if (!condition) throw Error(label); checks.push(label); };
+const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
+const el = id => document.getElementById(id);
+const slot = key => document.querySelector(`.eq-slot[data-key="${key}"]`);
+try {
+  // Import inventory first to exercise the equipment -> inventory -> play cycle.
+  const inventory = await import('/js/inventory.js');
+  const equipment = await import('/js/equipment.js');
+  const charsheet = await import('/js/charsheet.js');
+  const data = await import('/js/state.js');
+  const { state } = data;
+  Object.assign(state, { bookName: 'Equipment smoke test', totalSections: 20, graph: {},
+    playthroughs: [{ path: [1], completed: false, equipment: { head: 3, primary: { itemId: 1, qty: 2, label: 'Named sword', note: 'Sharp' } },
+      equipmentVisible: { head: true, primary: true }, inventory: [{ itemId: 2, qty: 4, label: 'Heal <now>', note: 'Drink', visible: true }] }], activePtIndex: 0 });
+  el('login-screen').style.display = 'none'; el('books-screen').style.display = 'none'; el('main-screen').style.display = 'flex';
+  charsheet.initCharSheet(); inventory.initInventory(); equipment.initEquipment(); inventory.setExtraDisplayItemsProvider(equipment.getVisibleEquippedItems);
+  equipment.setEquipmentVisible(true); el('equipment-btn').click(); await pause(60);
+  assert(document.querySelectorAll('#eq-overlay').length === 1, 'one equipment panel');
+  assert(el('eq-body').querySelectorAll('.eq-slot').length === 15 && el('eq-items').querySelectorAll('.eq-slot').length === 5, 'body and consumable slots');
+  assert(el('eq-body').querySelectorAll('svg.eq-dummy').length === 1, 'unchanged equipment silhouette');
+  assert((await equipment.getVisibleEquippedItems()).length === 2, 'visible legacy and metadata equipment');
+  slot('head').click(); await pause(30); el('eq-search').value = 'heal'; el('eq-search').dispatchEvent(new Event('input', { bubbles: true }));
+  assert(el('eq-picker-grid').querySelectorAll('.inv-pick-item').length === 1, 'inventory picker search');
+  el('eq-picker-grid').querySelector('.inv-pick-item').click(); await pause(30);
+  assert(state.playthroughs[0].equipment.head.itemId === 2 && state.playthroughs[0].equipment.head.qty === 4, 'equip whole stack');
+  assert(state.playthroughs[0].inventory.some(s => s.itemId === 3), 'old equipment returns to inventory');
+  const contextAction = async (key, action) => {
+    slot(key).dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: 790, clientY: 590 }));
+    document.querySelector(`.inv-ctx-menu [data-action="${action}"]`).click(); await pause(30);
+  };
+  await contextAction('head', 'rename'); el('eq-rename-input').value = 'Healing stash'; el('eq-rename-ok').click(); await pause(30);
+  assert(state.playthroughs[0].equipment.head.label === 'Healing stash', 'rename saves metadata');
+  await contextAction('head', 'edit'); el('eq-edit-qty').value = '5'; el('eq-edit-note').value = 'For later'; el('eq-edit-visible').checked = true; el('eq-edit-done').click(); await pause(30);
+  assert(state.playthroughs[0].equipment.head.qty === 5 && state.playthroughs[0].equipment.head.note === 'For later', 'edit quantity and note');
+  assert(el('inv-display').textContent.includes('Healing stash'), 'real merged on-screen display');
+  const transfer = new DataTransfer(); slot('head').dispatchEvent(new DragEvent('dragstart', { bubbles: true, dataTransfer: transfer }));
+  slot('primary').dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: transfer })); await pause(30);
+  assert(state.playthroughs[0].equipment.primary.label === 'Healing stash' && state.playthroughs[0].equipment.head.itemId === 1, 'filled-slot drag swap');
+  const move = new DataTransfer(); slot('primary').dispatchEvent(new DragEvent('dragstart', { bubbles: true, dataTransfer: move }));
+  slot('item1').dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: move })); await pause(30);
+  assert(state.playthroughs[0].equipment.item1.qty === 5 && !state.playthroughs[0].equipment.primary, 'cross-group drag move');
+  slot('item1').querySelector('.eq-slot-remove').click(); await pause(30);
+  assert(state.playthroughs[0].inventory.some(s => s.itemId === 2 && s.qty === 5 && s.note === 'For later'), 'unequip preserves stack metadata');
+  el('eq-save-template-btn').click(); const loadout = equipment.instantiateLoadout();
+  assert(loadout.equipment.head.label === 'Named sword' && loadout.equipment.head !== state.equipmentTemplate.head, 'templates restore independent equipment entries');
+  slot('feet').click(); await pause(30); document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  assert(!el('eq-picker-overlay').classList.contains('active') && el('eq-overlay').classList.contains('active'), 'Escape closes picker before parent panel');
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  assert(!el('eq-overlay').classList.contains('active'), 'Escape closes panel');
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'e', code: 'KeyE', bubbles: true })); await pause(30);
+  assert(el('eq-overlay').classList.contains('active'), 'E shortcut opens equipment');
+  state.playthroughs[0].inventory = Array.from({ length: 40 }, (_, i) => ({ itemId: 2, qty: 1, label: 'slot' + i, note: '', visible: false }));
+  slot('head').querySelector('.eq-slot-remove').click(); await pause(30);
+  assert(state.playthroughs[0].equipment.head.itemId === 1 && state.playthroughs[0].inventory.length === 40, 'full inventory never destroys equipment');
+  assert(el('confirm-message').textContent.includes('Inventory is full'), 'full inventory warning'); el('confirm-ok').click();
+  await contextAction('head', 'edit');
+  state.playthroughs.push({ path: [1], completed: false, equipment: { head: { itemId: 3, qty: 7, note: 'Other run' } }, inventory: [] }); state.activePtIndex = 1;
+  el('eq-edit-qty').value = '99'; el('eq-edit-done').click(); await pause(30);
+  assert(state.playthroughs[1].equipment.head.qty === 7, 'stale edit cannot change another run');
+  state.activePtIndex = 0;
+  state.playthroughs[0].completed = true; state.activePtIndex = null; data.setViewingPt(state.playthroughs[0]);
+  el('equipment-btn').click(); await pause(30);
+  assert(!el('eq-body').querySelector('.eq-slot-remove') && el('eq-save-template-btn').style.display === 'none', 'historical run is read-only');
+  equipment.setEquipmentVisible(false); await pause(30);
+  assert(!el('eq-overlay').classList.contains('active') && !el('eq-picker-overlay').classList.contains('active') && el('equipment-btn').style.display === 'none', 'visibility teardown');
+  assert(errors.length === 0, 'no browser errors or unhandled rejections');
+  await nativeFetch('/report', { method: 'POST', body: JSON.stringify({ ok: true, checks, errors }) });
+} catch (error) {
+  await nativeFetch('/report', { method: 'POST', body: JSON.stringify({ ok: false, error: String(error), stack: error.stack, checks, errors }) });
+}
