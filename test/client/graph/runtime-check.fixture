@@ -1,0 +1,174 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { resolve, dirname } from 'node:path';
+import { SourceTextModule, SyntheticModule, createContext } from 'node:vm';
+import { createHash } from 'node:crypto';
+
+const root = process.argv[1], baseline = process.argv[2], modules = new Map();
+const state = {}, timers = new Map(), saves = [], snapshots = [], drawings = [], networks = [];
+let nextTimer = 0;
+const isTerminal = sec => sec === -1 || sec === 0;
+function parseSecId(raw) {
+  if (raw === null || raw === undefined) return null;
+  const s = String(raw).trim(); if (!s) return null;
+  if (s === '-1') return -1; if (s === '0') return 0;
+  const n = Number(s); return !isNaN(n) && Number.isInteger(n) && n > 0 ? n : s;
+}
+const isValidSecId = id => typeof id === 'number' ? id > 0 && Number.isInteger(id) : typeof id === 'string' && id.length > 0;
+const currentPlaythrough = () => { const pt = state.playthroughs[state.activePtIndex]; return pt && !pt.completed ? pt : null; };
+const allDiscoveredSections = () => new Set([parseSecId(state.startSection), ...Object.entries(state.graph).flatMap(([id, n]) => [parseSecId(id), ...n.choices.map(parseSecId)]), ...state.playthroughs.flatMap(p => p.path.map(parseSecId))].filter(id => id !== null && !isTerminal(id)));
+class Element {
+  constructor(tag = 'div') { this.tag = tag; this.children = []; this.style = {}; this.clientWidth = 800; this.clientHeight = 600; }
+  appendChild(child) { this.children.push(child); }
+  get textContent() { return this.children.map(c => c.text ?? (c.tag === 'br' ? '\n' : c.textContent)).join(''); }
+}
+const ctx = new Proxy({ measureText: s => ({ width: s.length * 6 }) }, { get: (o, k) => k in o ? o[k] : (...args) => drawings.push([k, ...args]) });
+const container = new Element(), legend = new Element();
+class DataSet {
+  constructor() { this.items = new Map(); }
+  update(items) { for (const item of Array.isArray(items) ? items : [items]) this.items.set(item.id, { ...this.items.get(item.id), ...item }); }
+  getIds() { return [...this.items.keys()]; }
+  remove(id) { this.items.delete(id); }
+  get(id) { return this.items.get(id); }
+  clear() { this.items.clear(); }
+  add(items) { this.update(items); }
+}
+class Network {
+  constructor(el, data, options) { this.data = data; this.options = options; this.listeners = new Map(); this.scale = 1; this.position = { x: 0, y: 0 }; this.stabilizations = []; networks.push(this); }
+  on(event, fn) { const list = this.listeners.get(event) || []; list.push(fn); this.listeners.set(event, list); }
+  off(event, fn) { this.listeners.set(event, (this.listeners.get(event) || []).filter(f => f !== fn)); }
+  emit(event, value = {}) { for (const fn of [...(this.listeners.get(event) || [])]) fn(value); }
+  setOptions(options) { this.lastOptions = options; }
+  stopSimulation() { this.stopped = true; }
+  stabilize(n) { this.stabilizations.push(n); }
+  getPositions(ids = this.data.nodes.getIds()) { return Object.fromEntries(ids.map(id => { const n = this.data.nodes.get(id); return [id, { x: n?.x ?? 400, y: n?.y ?? 400 }]; })); }
+  getScale() { return this.scale; }
+  getViewPosition() { return { ...this.position }; }
+  moveTo({ scale, position }) { this.scale = scale; this.position = { ...position }; }
+  DOMtoCanvas(pos) { return pos; }
+  destroy() { this.destroyed = true; this.listeners.clear(); }
+}
+const context = createContext({ console, vis: { DataSet, Network }, window: { vis: { DataSet, Network } },
+  document: { getElementById: () => container, querySelector: () => legend, createTextNode: text => ({ text }), createElement: tag => tag === 'canvas' ? { getContext: () => ctx } : new Element(tag) },
+  setTimeout: (fn, ms) => { const id = ++nextTimer; timers.set(id, { fn, ms }); return id; }, clearTimeout: id => timers.delete(id),
+});
+const stateExports = { state, viewingPt: null, isTerminal, parseSecId, isValidSecId, currentPlaythrough, allDiscoveredSections, saveState: () => saves.push(JSON.stringify(state)) };
+modules.set(resolve(root, 'state.js'), new SyntheticModule(Object.keys(stateExports), function () { for (const [k, v] of Object.entries(stateExports)) this.setExport(k, v); }, { context }));
+modules.set(resolve(root, 'i18n.js'), new SyntheticModule(['t'], function () { this.setExport('t', (key, p = {}) => key + JSON.stringify(p)); }, { context }));
+function moduleAt(path) {
+  if (modules.has(path)) return modules.get(path);
+  const source = readFileSync(path === resolve(root, 'graph.js') && baseline ? baseline : path, 'utf8');
+  const mod = new SourceTextModule(source, { context, identifier: path }); modules.set(path, mod); return mod;
+}
+const entry = moduleAt(resolve(root, 'graph.js'));
+await entry.link((specifier, parent) => moduleAt(resolve(dirname(parent.identifier), specifier))); await entry.evaluate();
+const api = entry.namespace;
+const expectedExports = ['network', 'visNodes', 'visEdges', 'MIN_VIEWPORT_SCALE', 'MAX_VIEWPORT_SCALE', 'RESTORE_MIN_VIEWPORT_SCALE', 'clampViewportScale', 'setLightweightRestabilize', 'GRID_SIZE', 'minSnapScale', 'enforceSnapZoomFloor', 'setGraphCrossBookRoute', 'setGraphOpenWorld', 'destroyNetwork', 'computeOutcomes', 'inevitableOutcome', 'applyConnectorStyle', 'initGraph', 'syncGraph', 'subtreeToDelete', 'canReachInGraph', 'allReachableInGraph', 'canReach', 'findPathTo', 'deleteNodes'];
+assert.deepEqual(Object.keys(api).sort(), expectedExports.sort());
+function reset(extra = {}) { api.destroyNetwork(); timers.clear(); Object.assign(state, { graph: {}, positions: {}, playthroughs: [], activePtIndex: null, startSection: 1, gridLayout: false, snapToGrid: false, showGrid: false, fogOfGrid: false, connectorStyle: 'straight', viewport: null, ...extra }); }
+function snapshot(label) {
+  snapshots.push({ label, state: JSON.parse(JSON.stringify(state)), nodes: [...api.visNodes.items.values()].map(n => ({ ...n, title: n.title.textContent })), edges: [...api.visEdges.items.values()], options: api.network.options });
+}
+for (const snapToGrid of [false, true]) {
+  reset({ graph: { 1: { choices: ['2', 3] }, 2: { choices: [4] }, 3: { choices: [-1] }, 4: { choices: [0] } }, snapToGrid });
+  api.initGraph(); api.syncGraph(); snapshot(`fresh-${snapToGrid}`);
+  const saved = JSON.stringify(state.positions);
+  api.syncGraph(); assert.equal(JSON.stringify(state.positions), saved, 'existing positions do not move');
+  state.graph[4].choices = [5]; state.graph[5] = { choices: [0] }; api.syncGraph(); snapshot(`incremental-${snapToGrid}`);
+  assert.equal(state.gridLayout, true);
+  assert.equal(state.positions[5].y, state.positions[4].y);
+}
+reset({ graph: { 1: { choices: [2] }, 2: { choices: [3] }, 3: { choices: [0], priority: 'high', battle: true, note: 'A\nB', showNote: true } }, positions: { 1: { x: 1000, y: -500 } } });
+api.initGraph(); api.syncGraph(); snapshot('saved-layout'); assert.deepEqual(state.positions[1], { x: 1000, y: -500 });
+state.showGrid = true; state.fogOfGrid = true;
+api.network.emit('beforeDrawing', ctx); api.network.emit('afterDrawing', ctx);
+assert.ok(drawings.some(d => d[0] === 'fillText')); assert.ok(drawings.some(d => d[0] === 'clip'));
+reset({ graph: { 1: { choices: [2] }, 2: { choices: [], portals: [{ targetBookId: 9, targetSection: 10 }] } }, playthroughs: [{ path: [1, 2], completed: false }], activePtIndex: 0 });
+api.setGraphOpenWorld(true, [{ id: 9, name: 'Other Book' }]); api.setGraphCrossBookRoute(new Map([[1, true]]));
+api.initGraph(); api.syncGraph(); snapshot('portal'); assert.equal(api.visNodes.get(2).shape, 'diamond');
+reset({ graph: { 1: { choices: [2] }, 2: { choices: [0] }, 7: { choices: [2] } }, playthroughs: [{ path: [7, 2], completed: false }], activePtIndex: 0 });
+api.initGraph(); api.syncGraph(); snapshot('alternate-start'); assert.equal(api.visNodes.get(7).label, '7\nSTART');
+state.playthroughs[0].portalEntry = true; api.syncGraph(); snapshot('portal-entry'); assert.equal(api.visNodes.get(1).label, '1\nSTART');
+for (const style of ['curvedCW', 'curvedCCW', 'cubic', 'horizontal', 'straight', 'unknown']) { api.applyConnectorStyle(style); snapshots.push({ style, options: api.network.lastOptions }); }
+state.snapToGrid = true; api.network.scale = 0.4; api.enforceSnapZoomFloor(); assert.equal(api.network.scale, 0.7);
+api.network.position = { x: 90, y: 80 }; api.network.emit('dragEnd', { nodes: [] });
+api.network.scale = 0.5; api.network.position = { x: 100, y: 100 }; api.enforceSnapZoomFloor(); assert.deepEqual(api.network.position, { x: 90, y: 80 });
+assert.equal(api.clampViewportScale(0.1), 0.3); assert.equal(api.clampViewportScale(9), 3);
+reset({ graph: { 1: { choices: [2] }, 2: { choices: [3] }, 3: { choices: [0] } }, positions: { 1: { x: 12, y: 15 }, 2: { x: 57, y: 65 }, 3: { x: 90, y: 100 } }, snapToGrid: true });
+api.initGraph(); api.syncGraph(); const beforeDrag = { ...state.positions[1] };
+api.network.emit('dragStart', { nodes: [2] }); api.network.emit('dragEnd', { nodes: [2] });
+assert.deepEqual(state.positions[1], beforeDrag); assert.equal(state.positions[2].x, 40); assert.equal(state.positions[2].y, 80); snapshot('snapped-drag');
+reset({ graph: { 1: { choices: [2, 3] }, 2: { choices: [-1] }, 3: { choices: [4] }, 4: { choices: [-1] }, 5: { choices: [0] }, 6: { choices: [6] } } });
+snapshots.push({ outcomes: api.computeOutcomes(), inevitable: [api.inevitableOutcome(1), api.inevitableOutcome(5), api.inevitableOutcome(6)] });
+reset({ graph: { 1: { choices: ['2', '4'] }, 2: { choices: [3], priority: 'high' }, 3: { choices: [6], priority: 'high' }, 4: { choices: [5] }, 5: { choices: [6], priority: 'low' }, 6: { choices: [0] } } });
+const paths = Object.fromEntries(['shortest', 'normal', 'high', 'low'].map(mode => [mode, api.findPathTo('1', '6', mode)]));
+assert.deepEqual([...paths.high], [1, 2, 3, 6]); assert.deepEqual([...paths.low], [1, 4, 5, 6]);
+assert.equal(api.canReach(1, '6'), true); assert.equal(api.canReachInGraph(state.graph, 6, 1), false);
+snapshots.push({ paths, reachable: [...api.allReachableInGraph(state.graph, '1')] });
+reset({ graph: { 1: { choices: [2, 4] }, 2: { choices: [3] }, 3: { choices: [2, 4] }, 4: { choices: [0] }, 7: { choices: [3] } }, playthroughs: [{ path: [7, 3, 4], completed: true, result: 'success' }] });
+snapshots.push({ subtree: [...api.subtreeToDelete(2)] });
+api.deleteNodes(new Set([2])); snapshots.push({ deleted: JSON.parse(JSON.stringify(state)) });
+reset({ graph: { 1: { choices: [2] }, 2: { choices: [0] }, '12-L': { choices: ['13-L'] }, '13-L': { choices: [] } }, positions: { 1: { x: 0, y: 0 }, 2: { x: NaN, y: 10 } } });
+api.initGraph(); api.syncGraph(); assert.ok(Number.isFinite(state.positions[2].x)); snapshot('alphanumeric-and-corrupt-position');
+const digest = createHash('sha256').update(JSON.stringify(snapshots)).digest('hex');
+// Isolated unanchored nodes require physics; repeated syncs debounce a single pass.
+reset({ graph: { 1: { choices: [] }, 99: { choices: [] } }, positions: { 1: { x: 0, y: 0 } } });
+api.setLightweightRestabilize(false); api.initGraph(); api.syncGraph(); api.syncGraph();
+assert.equal(timers.size, 1); const timer = [...timers.values()][0]; timers.clear(); timer.fn();
+assert.deepEqual(api.network.stabilizations, [300]); api.syncGraph(); assert.equal(timers.size, 0);
+api.network.emit('stabilizationIterationsDone'); assert.equal(api.network.lastOptions.physics.enabled, false);
+const oldNetwork = api.network; api.destroyNetwork(); assert.equal(api.network, null); assert.equal(api.visNodes, null); assert.equal(api.visEdges, null); assert.equal(oldNetwork.destroyed, true);
+if (!baseline) {
+  reset({ graph: { 1: { choices: [2, 3, 4] }, 2: { choices: ['-1'] }, 3: { choices: ['0'] }, 4: { choices: ['-1', '0'] } } });
+  api.initGraph(); api.syncGraph();
+  const deathNode = api.visNodes.get(2), winNode = api.visNodes.get(3), mixedNode = api.visNodes.get(4);
+  assert.equal(deathNode.color.border, '#e74c3c'); assert.equal(winNode.color.border, '#27ae60');
+  assert.equal(mixedNode.color.border, '#f59e0b'); assert.equal(deathNode.borderWidth, 4);
+  assert.ok(deathNode.title.textContent.includes('node.can_die'));
+  assert.ok(winNode.title.textContent.includes('node.can_win'));
+  assert.equal(api.visEdges.getIds().length, 3, 'string terminals must not produce edges to missing sentinel nodes');
+  const mobileGraph = moduleAt(resolve(root, '../mobile/js/graph-view.js'));
+  await mobileGraph.link((specifier, parent) => moduleAt(resolve(dirname(parent.identifier), specifier)));
+  await mobileGraph.evaluate(); mobileGraph.namespace.initGraphView(container, () => {}); mobileGraph.namespace.refreshGraph(1);
+  const mobileNetwork = networks.at(-1);
+  assert.equal(mobileNetwork.data.nodes.get('2').color.border, '#e74c3c');
+  assert.equal(mobileNetwork.data.nodes.get('3').color.border, '#27ae60');
+  assert.equal(mobileNetwork.data.nodes.get('4').color.border, '#f59e0b');
+  assert.equal(mobileNetwork.data.edges.getIds().length, 3, 'mobile skips string terminal edges too');
+  reset({ graph: { A1: { choices: ['A2'] }, A2: { choices: ['0'] }, B1: { choices: ['B2'] }, B2: { choices: ['-1'] }, MIX: { choices: ['A1', 'B1'] }, LOOP: { choices: ['LOOP'] } } });
+  const outcomes = api.computeOutcomes();
+  assert.equal(outcomes.A1, 'win'); assert.equal(outcomes.B1, 'death');
+  assert.equal(outcomes.MIX, undefined); assert.equal(outcomes.LOOP, undefined);
+  assert.equal(api.inevitableOutcome('-1'), 'death'); assert.equal(api.inevitableOutcome('0'), 'win');
+  const mobilePath = resolve(root, '../mobile/js/graph-view.js');
+  const mobileSource = readFileSync(mobilePath, 'utf8');
+  const start = mobileSource.indexOf('function _computeOutcomes()');
+  const end = mobileSource.indexOf('function _withHighlight', start);
+  assert.ok(start >= 0 && end > start);
+  const mobileOutcomes = new SourceTextModule("import { state } from './state.js';\nexport " + mobileSource.slice(start, end), { context, identifier: resolve(root, 'mobile-outcome-check.js') });
+  await mobileOutcomes.link(() => modules.get(resolve(root, 'state.js'))); await mobileOutcomes.evaluate();
+  assert.equal(JSON.stringify(mobileOutcomes.namespace._computeOutcomes()), JSON.stringify(outcomes), 'mobile and desktop outcome rules agree');
+  reset({ graph: { 1: { choices: ['2', '4'] }, 2: { choices: ['3'] }, 3: { choices: ['2', '4', '-1'] }, 4: { choices: ['0'] }, 7: { choices: ['3'] } }, playthroughs: [{ path: ['7', '3', '4'], completed: true, result: 'success' }] });
+  assert.deepEqual([...api.subtreeToDelete('2')], [2], 'mixed IDs preserve alternate-root reachable nodes and exclude terminal strings');
+  reset({ graph: { 1: { choices: ['2', 3] }, 2: { choices: [0] }, 3: { choices: [] } }, positions: { 2: { x: 1, y: 1 } }, playthroughs: [{ path: ['1', '2', 0], completed: true, result: 'success' }, { path: ['3'], completed: false }], activePtIndex: 0 });
+  api.deleteNodes(new Set(['2']));
+  assert.equal(state.graph[2], undefined); assert.equal(state.positions[2], undefined);
+  assert.deepEqual(state.graph[1].choices, [3], 'deletion removes string-typed incoming choices');
+  assert.deepEqual(state.playthroughs[0].path, ['1']); assert.equal(state.playthroughs[0].completed, false);
+  assert.equal(state.activePtIndex, null); assert.ok(state.graph[3], 'string-typed visited nodes survive orphan cleanup');
+  reset({ graph: { 1: { choices: [2] }, 2: { choices: [0] } }, positions: { 1: { x: 0, y: 0 }, 2: { x: 130, y: 0 } } });
+  api.initGraph(); api.syncGraph();
+  api.network.emit('zoom'); api.network.emit('dragEnd', { nodes: [2] });
+  assert.equal(timers.size, 2); api.destroyNetwork(); assert.equal(timers.size, 0, 'network destruction cancels drag and viewport saves');
+  reset({ graph: { 1: { choices: [] }, 99: { choices: [] } }, positions: { 1: { x: 0, y: 0 } } });
+  api.initGraph(); api.syncGraph();
+  const pending = [...timers.values()][0]; timers.clear(); pending.fn();
+  api.network.emit('dragStart', { nodes: [1] });
+  const runtime = modules.get(resolve(root, 'graph/runtime.js')).namespace.graphRuntime;
+  assert.equal(runtime._stabilizing, false, 'manual dragging releases the stabilization guard');
+  assert.equal(runtime._pendingSync, false); assert.equal(api.network.stopped, true);
+  state.graph[100] = { choices: [] }; api.syncGraph();
+  assert.equal(timers.size, 1, 'future unanchored nodes can schedule stabilization after a drag');
+  api.destroyNetwork(); assert.equal(timers.size, 0);
+}
+console.log(JSON.stringify({ digest, cases: snapshots.length }));

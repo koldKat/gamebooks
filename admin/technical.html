@@ -141,10 +141,11 @@
         <a class="toc-3" href="#crawlable-book-pages">Crawlable book pages</a>
         <a class="toc-2" href="#modal-close-on-outside-click-convention">Modal close-on-outside-click convention</a>
         <a class="toc-2" href="#terminal-outcomes">Terminal outcomes</a>
-        <a class="toc-2" href="#node-colour-logic-graph-js-nodecolor">Node colour logic (graph.js › nodeColor)</a>
+        <a class="toc-2" href="#graph-modules-graph-js-graph">Graph modules (graph.js, graph/)</a>
+        <a class="toc-2" href="#node-colour-logic-graph-appearance-js-nodecolor">Node colour logic (graph/appearance.js › nodeColor)</a>
         <a class="toc-2" href="#graph-layout-and-physics">Graph layout and physics</a>
         <a class="toc-3" href="#viewport-save-and-restore">Viewport save and restore</a>
-        <a class="toc-2" href="#node-deletion-graph-js-subtreetodelete-deletenodes">Node deletion (graph.js › subtreeToDelete + deleteNodes)</a>
+        <a class="toc-2" href="#node-deletion-graph-deletion-js-subtreetodelete-deletenodes">Node deletion (graph/deletion.js › subtreeToDelete + deleteNodes)</a>
         <a class="toc-2" href="#playthrough-actions-play-js">Playthrough actions (play.js)</a>
         <a class="toc-2" href="#dice-roller-dice-js">Dice roller (dice.js)</a>
         <a class="toc-2" href="#character-sheet-charsheet-js">Character sheet (charsheet.js)</a>
@@ -281,7 +282,27 @@
       constants.js       Shared constants (COLORS)
       i18n.js            Translation tables (en), t(), applyTranslations()
       state.js           State object, API persistence, auth helpers, pure helpers
-      graph.js           vis-network lifecycle, node rendering, deletion
+      graph.js           Compatibility facade with live network/DataSet exports
+      graph/             Desktop graph feature modules
+        runtime.js       Live vis bindings and shared mutable lifecycle/drawing state
+        viewport.js      Zoom bounds, grid spacing and snap zoom-floor anchor
+        settings.js      Open-world/cross-book context and lightweight settle mode
+        helpers.js       Position validation, effective start and section sorting
+        appearance.js    Node colours, labels and safe DOM tooltips
+        outcomes.js      Certain-death/win fixed-point analysis
+        overlay-cache.js Note measurement and cached overlay descriptors
+        overlays.js      Grid/fog and note/priority/battle canvas drawing
+        layout-constants.js Shared spacing and local placement limits
+        layout-helpers.js Positioned neighbours, centroids and column slots
+        layout-geometry.js Connector intersection/clearance scoring
+        layout-local.js  Existing-layout local/directional placement
+        layout-grid.js   First-layout BFS grid and incremental parent-relative placement
+        connectors.js    Connector style definitions and application
+        lifecycle.js     Network creation/destruction, drag/zoom bindings and save timers
+        sync.js          DataSet updates, placement dispatch and drawing-cache rebuild
+        physics.js       Debounced single-flight stabilization with injected resync callback
+        deletion.js      Protected subtree deletion and run/path cleanup
+        pathfinding.js   Reachability and shortest/normal/priority fast-travel paths
       play.js            Render pipeline, all playthrough actions, modals
       charsheet.js       Character sheet - self-contained module
       inventory.js       Inventory grid - self-contained module (per-run item slots, drag reorder, template)
@@ -1394,7 +1415,13 @@ snapToGrid?: boolean,            // if true, dragging a node snaps its dropped p
 <p>When <code>navigate(-1)</code> or <code>navigate(0)</code> is called, <code>endPlaythrough</code> is called directly with <code>&#39;death&#39;</code> or <code>&#39;success&#39;</code>.</p>
 <p>The <code>isTerminal(n)</code> helper returns <code>true</code> for -1 and 0. All node-creation and path code filters these out.</p>
 <hr>
-<h2 id="node-colour-logic-graph-js-nodecolor">Node colour logic (<code>graph.js › nodeColor</code>)<a class="anchor" href="#node-colour-logic-graph-js-nodecolor" aria-label="Link to section">#</a></h2>
+<h2 id="graph-modules-graph-js-graph">Graph modules (<code>graph.js</code>, <code>graph/</code>)<a class="anchor" href="#graph-modules-graph-js-graph" aria-label="Link to section">#</a></h2>
+<p>The facade preserves all 25 exports, including live ES-module bindings for <code>network</code>, <code>visNodes</code> and <code>visEdges</code>. Implementations are under <code>public/js/graph/</code>; internal imports are acyclic and never back-import the facade. <code>graphRuntime</code> holds mutable stabilization, open-world, viewport-anchor and drawing-cache state. Physics receives the resync callback explicitly, avoiding a sync/physics cycle. The layout algorithms, colours, connector styles, saved position format and persistence calls remain unchanged by the split; mobile continues using its independent <code>mobile/js/graph-view.js</code> rather than this desktop renderer.</p>
+<p>Lifecycle hardening cancels drag-save and viewport-save timers on network destruction, alongside the existing restabilization timer. Node dragging cancels pending/active stabilization, releases its single-flight flags and stops the simulation before freezing positions, so manual takeover cannot leave future settle requests blocked.</p>
+<p>Section-ID audit fixes: desktop outcome propagation keeps alphanumeric keys rather than coercing them to <code>NaN</code>; desktop/mobile both recognize numeric and string terminal IDs (<code>-1</code>/<code>0</code>), matching the existing admin/export rules. Outcome maps have no prototype. Subtree traversal, protected run roots, incoming-choice removal, visited-node protection and affected-run trimming compare IDs through <code>parseSecId</code>, preventing numeric/string mismatches without rewriting retained choices or run paths. Regression tests include alphanumeric win/death chains, unresolved mixed branches/cycles, desktop/mobile outcome agreement, string-terminal exclusion, alternate-root subtree protection and mixed-type deletion.</p>
+<p>Node terminal outlines, border widths, desktop tooltips and desktop/mobile edge exclusion also recognize string terminal IDs. Terminal choices never create connectors to missing <code>-1</code>/<code>0</code> nodes. Tests exercise the complete mobile graph module as well as desktop sync with string death/win/mixed terminal choices, checking node colours and edge counts.</p>
+<p><code>test/client/graph/</code> checks module boundaries and the complete public API plus exact parity with 20 pre-split (<code>3831baf</code>) state/node/edge/options/pathfinding snapshots. Fixtures cover fresh/incremental grid placement, existing-layout preservation, snapping, alternate/portal starts, open-world/cross-book badges, overlay/grid drawing, connector styles, zoom-floor anchoring, outcome propagation, priority paths, subtree protection, alphanumeric IDs and invalid saved positions. Lifecycle cases cover physics debounce/single-flight, live binding teardown, save-timer cleanup and stabilization takeover. These use isolated state, mocked canvas and vis-network, not production book data.</p>
+<h2 id="node-colour-logic-graph-appearance-js-nodecolor">Node colour logic (<code>graph/appearance.js › nodeColor</code>)<a class="anchor" href="#node-colour-logic-graph-appearance-js-nodecolor" aria-label="Link to section">#</a></h2>
 <p>The start section is <code>state.startSection ?? 1</code>. <code>allDiscoveredSections()</code> seeds its set with this value (not a hardcoded <code>1</code>), so renaming the start node correctly removes node 1 from the graph and the start colour/label follows the new ID.</p>
 <p>Priority order (highest first):</p>
 <ol>
@@ -1456,7 +1483,7 @@ snapToGrid?: boolean,            // if true, dragging a node snaps its dropped p
 <h3 id="viewport-save-and-restore">Viewport save and restore<a class="anchor" href="#viewport-save-and-restore" aria-label="Link to section">#</a></h3>
 <p>Pan and zoom are saved to <code>state.viewport</code> (<code>{ x, y, scale }</code>) with a 500ms debounce on every <code>zoom</code> event and on <code>dragEnd</code> when no nodes were dragged. On book open, <code>syncGraph</code> restores the viewport once (guarded by the module-level <code>_viewportRestored</code> flag) via <code>network.moveTo</code>. The flag resets to <code>false</code> in <code>destroyNetwork()</code> so it works correctly each time a book is opened.</p>
 <hr>
-<h2 id="node-deletion-graph-js-subtreetodelete-deletenodes">Node deletion (<code>graph.js › subtreeToDelete + deleteNodes</code>)<a class="anchor" href="#node-deletion-graph-js-subtreetodelete-deletenodes" aria-label="Link to section">#</a></h2>
+<h2 id="node-deletion-graph-deletion-js-subtreetodelete-deletenodes">Node deletion (<code>graph/deletion.js › subtreeToDelete + deleteNodes</code>)<a class="anchor" href="#node-deletion-graph-deletion-js-subtreetodelete-deletenodes" aria-label="Link to section">#</a></h2>
 <p><code>subtreeToDelete(rootId)</code> performs a BFS from <code>rootId</code> collecting all descendants, then removes any node still reachable (without passing through <code>rootId</code>) from a known graph root - the reachability BFS seeds from <code>state.startSection</code> <strong>and</strong> every playthrough&#39;s own <code>path[0]</code>, since a book can have more than one real root once the alternate-start button (<code>play.js</code>&#39;s &quot;⚑ Start at a specific section&quot;) has been used, and each alternate-start component is otherwise disjoint from a BFS rooted at <code>state.startSection</code> alone. Returns a <code>Set</code> of IDs to delete.</p>
 <p><code>deleteNodes(ids)</code>:</p>
 <ol>

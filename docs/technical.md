@@ -83,7 +83,27 @@ gamebooks/
       constants.js       Shared constants (COLORS)
       i18n.js            Translation tables (en), t(), applyTranslations()
       state.js           State object, API persistence, auth helpers, pure helpers
-      graph.js           vis-network lifecycle, node rendering, deletion
+      graph.js           Compatibility facade with live network/DataSet exports
+      graph/             Desktop graph feature modules
+        runtime.js       Live vis bindings and shared mutable lifecycle/drawing state
+        viewport.js      Zoom bounds, grid spacing and snap zoom-floor anchor
+        settings.js      Open-world/cross-book context and lightweight settle mode
+        helpers.js       Position validation, effective start and section sorting
+        appearance.js    Node colours, labels and safe DOM tooltips
+        outcomes.js      Certain-death/win fixed-point analysis
+        overlay-cache.js Note measurement and cached overlay descriptors
+        overlays.js      Grid/fog and note/priority/battle canvas drawing
+        layout-constants.js Shared spacing and local placement limits
+        layout-helpers.js Positioned neighbours, centroids and column slots
+        layout-geometry.js Connector intersection/clearance scoring
+        layout-local.js  Existing-layout local/directional placement
+        layout-grid.js   First-layout BFS grid and incremental parent-relative placement
+        connectors.js    Connector style definitions and application
+        lifecycle.js     Network creation/destruction, drag/zoom bindings and save timers
+        sync.js          DataSet updates, placement dispatch and drawing-cache rebuild
+        physics.js       Debounced single-flight stabilization with injected resync callback
+        deletion.js      Protected subtree deletion and run/path cleanup
+        pathfinding.js   Reachability and shortest/normal/priority fast-travel paths
       play.js            Render pipeline, all playthrough actions, modals
       charsheet.js       Character sheet - self-contained module
       inventory.js       Inventory grid - self-contained module (per-run item slots, drag reorder, template)
@@ -1783,7 +1803,19 @@ The `isTerminal(n)` helper returns `true` for -1 and 0. All node-creation and pa
 
 ---
 
-## Node colour logic (`graph.js › nodeColor`)
+## Graph modules (`graph.js`, `graph/`)
+
+The facade preserves all 25 exports, including live ES-module bindings for `network`, `visNodes` and `visEdges`. Implementations are under `public/js/graph/`; internal imports are acyclic and never back-import the facade. `graphRuntime` holds mutable stabilization, open-world, viewport-anchor and drawing-cache state. Physics receives the resync callback explicitly, avoiding a sync/physics cycle. The layout algorithms, colours, connector styles, saved position format and persistence calls remain unchanged by the split; mobile continues using its independent `mobile/js/graph-view.js` rather than this desktop renderer.
+
+Lifecycle hardening cancels drag-save and viewport-save timers on network destruction, alongside the existing restabilization timer. Node dragging cancels pending/active stabilization, releases its single-flight flags and stops the simulation before freezing positions, so manual takeover cannot leave future settle requests blocked.
+
+Section-ID audit fixes: desktop outcome propagation keeps alphanumeric keys rather than coercing them to `NaN`; desktop/mobile both recognize numeric and string terminal IDs (`-1`/`0`), matching the existing admin/export rules. Outcome maps have no prototype. Subtree traversal, protected run roots, incoming-choice removal, visited-node protection and affected-run trimming compare IDs through `parseSecId`, preventing numeric/string mismatches without rewriting retained choices or run paths. Regression tests include alphanumeric win/death chains, unresolved mixed branches/cycles, desktop/mobile outcome agreement, string-terminal exclusion, alternate-root subtree protection and mixed-type deletion.
+
+Node terminal outlines, border widths, desktop tooltips and desktop/mobile edge exclusion also recognize string terminal IDs. Terminal choices never create connectors to missing `-1`/`0` nodes. Tests exercise the complete mobile graph module as well as desktop sync with string death/win/mixed terminal choices, checking node colours and edge counts.
+
+`test/client/graph/` checks module boundaries and the complete public API plus exact parity with 20 pre-split (`3831baf`) state/node/edge/options/pathfinding snapshots. Fixtures cover fresh/incremental grid placement, existing-layout preservation, snapping, alternate/portal starts, open-world/cross-book badges, overlay/grid drawing, connector styles, zoom-floor anchoring, outcome propagation, priority paths, subtree protection, alphanumeric IDs and invalid saved positions. Lifecycle cases cover physics debounce/single-flight, live binding teardown, save-timer cleanup and stabilization takeover. These use isolated state, mocked canvas and vis-network, not production book data.
+
+## Node colour logic (`graph/appearance.js › nodeColor`)
 
 The start section is `state.startSection ?? 1`. `allDiscoveredSections()` seeds its set with this value (not a hardcoded `1`), so renaming the start node correctly removes node 1 from the graph and the start colour/label follows the new ID.
 
@@ -1882,7 +1914,7 @@ Pan and zoom are saved to `state.viewport` (`{ x, y, scale }`) with a 500ms debo
 
 ---
 
-## Node deletion (`graph.js › subtreeToDelete + deleteNodes`)
+## Node deletion (`graph/deletion.js › subtreeToDelete + deleteNodes`)
 
 `subtreeToDelete(rootId)` performs a BFS from `rootId` collecting all descendants, then removes any node still reachable (without passing through `rootId`) from a known graph root - the reachability BFS seeds from `state.startSection` **and** every playthrough's own `path[0]`, since a book can have more than one real root once the alternate-start button (`play.js`'s "⚑ Start at a specific section") has been used, and each alternate-start component is otherwise disjoint from a BFS rooted at `state.startSection` alone. Returns a `Set` of IDs to delete.
 

@@ -15,7 +15,7 @@
 // Reuses window.vis, the same vendored vis-network script desktop loads.
 
 import {
-  state, currentPlaythrough, viewingPt, isTerminal, allDiscoveredSections, saveState,
+  state, currentPlaythrough, viewingPt, isTerminal, parseSecId, allDiscoveredSections, saveState,
 } from '../../js/state.js';
 import { COLORS } from '../../js/constants.js';
 import { t } from '../../js/i18n.js';
@@ -276,8 +276,8 @@ function _computeOutcomes() {
       const choices = graph[idStr]?.choices || [];
       if (!choices.length) continue;
       const outs = choices.map(c => {
-        if (c === -1) return 'death';
-        if (c === 0)  return 'win';
+        if (c === -1 || c === '-1') return 'death';
+        if (c === 0 || c === '0')  return 'win';
         return outcome[c] ?? 'unknown';
       });
       if (outs.every(o => o === 'death')) { outcome[idStr] = 'death'; changed = true; }
@@ -304,7 +304,7 @@ function _nodeColor(id, startSec, curSec, everVisitedSecs, finalNode, finalResul
   // pt.path - undoing a step shrinks pt.path but shouldn't un-paint a node
   // the reader actually read earlier in the same run.
   if (everVisitedSecs.has(id)) return _withHighlight(COLORS.visitedRun);
-  const choices    = state.graph[id]?.choices || [];
+  const choices    = (state.graph[id]?.choices || []).map(parseSecId);
   const hasDeath   = choices.includes(-1);
   const hasVictory = choices.includes(0);
   if (hasDeath && hasVictory) return _withHighlight(COLORS.bothOutline);
@@ -457,7 +457,7 @@ export function refreshGraph(centerOnSec) {
   const edges = [];
   for (const [sec, data] of Object.entries(state.graph)) {
     for (const dest of data.choices || []) {
-      if (isTerminal(dest)) continue;
+      if (isTerminal(parseSecId(dest))) continue;
       const eid     = `${sec}>${dest}`;
       const isRun   = runEdges.has(eid);
       const outcome = outcomes[dest] ?? null;
