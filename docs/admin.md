@@ -234,7 +234,9 @@ Gifting a user GC (`POST /api/admin/users/:id/gift-gc`) increments `users.bonus_
 
 ## Tools tab
 
-**XP Configuration** uses a compact three-column grid, falling back to two columns and then one on smaller screens. Each event shows a readable label, its raw key, and minus/plus buttons that change the amount by 1 XP; decimal amounts can still be typed directly. Save validates every amount, submits only changed events, and disables the inputs while saving. Changes apply immediately. If a request fails midway, retrying sends only the remaining changes.
+The **Clean run** XP event (`clean_run`) defaults to 50 base XP, once per player/book for a completed win or loss without Undo or Fast Travel. It is editable in XP Configuration like other event amounts.
+
+**XP Configuration** uses a compact three-column grid, falling back to two columns and then one on smaller screens. Each event shows only its readable label (with "ow" expanded to "open world") and minus/plus buttons that change the amount by 1 XP; decimal amounts can still be typed directly. Internal event keys are unchanged. Save validates every amount, submits only changed events, and disables the inputs while saving. Changes apply immediately. If a request fails midway, retrying sends only the remaining changes.
 
 | Section | Persisted | Description |
 |---------|-----------|-------------|

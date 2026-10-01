@@ -498,6 +498,8 @@ Your current level, title, and progress toward the next level are also shown her
 
 You earn XP naturally - playing books, mapping sections, completing playthroughs, sharing books publicly, organising series, uploading avatars, and more. No grinding required.
 
+**Clean run:** complete a run with a victory or loss (including battle death) without using Undo or Fast Travel to earn **50 base XP**, plus your normal boost. Awarded once per book, not separately for each outcome. In open-world series, usage in other books during that series run also counts.
+
 Rewards appear as floating notices at the bottom-right of the screen:
 - `+50 XP` pill for XP gains
 - Coin icon for Gold Coin gains

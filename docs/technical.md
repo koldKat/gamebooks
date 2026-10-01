@@ -1017,6 +1017,8 @@ All `.bsim-modal` battle-sim dialogs use a fixed `height: min(760px, 90vh)` rath
 
 ### XP and levelling system
 
+**Clean run:** `clean_run` defaults to 50 base XP, awarded once per player/book (`ref = bookId`) on a newly completed victory or loss (including battle death) with a nonempty path and no undo or fast travel. `server/clean-run.js` checks the current run and its previous snapshot; for open-world series the corresponding touched run slots in other books are also checked. Portal exits and untouched placeholders do not qualify. Standard XP boosts and ledger deduplication apply. Existing historical runs are not bulk backfilled. The event is configurable in Admin Tools.
+
 Users earn XP through gameplay activity. XP is stored incrementally in `users.xp`; every awarded event is recorded in `xp_events` with a UNIQUE constraint on `(user_id, event, ref)` so XP can never be double-awarded regardless of how many times the same action fires. The XP amount and event semantics are never exposed to users - they see only level, title, and a progress bar.
 
 **Level formula**

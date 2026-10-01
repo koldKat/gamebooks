@@ -9,6 +9,7 @@
 const { db } = require('./connection');
 const { generateToken } = require('./auth');
 const { isImpersonatingContext } = require('../impersonation-context');
+const { isCleanRun } = require('../clean-run');
 
 // ── Impersonation tokens ──────────────────────────────────────────────────────
 
@@ -30,7 +31,7 @@ const _xpDefaults = {
   discover_node: 1, visit_node: 2, discover_all: 30, visit_all: 40,
   add_note: 5, set_priority: 2, mark_battle: 3, set_color: 2,
   run_depth: 25, death_run: 15, battle_run: 15, win_run: 20,
-  first_win: 100, first_loss: 50, first_battle_death: 25,
+  first_win: 100, first_loss: 50, first_battle_death: 25, clean_run: 50,
   // Same achievements as above, still once-per-book (not per-series) - just
   // worth more when that book's first win/loss/battle-death happens to occur
   // as part of an open-world series run, since that represents more
@@ -773,6 +774,26 @@ function processStateXp(userId, bookId, oldState, newState, totalSections) {
   const oldPts   = oldState?.playthroughs || [];
   const newPts   = newState?.playthroughs || [];
 
+  function awardCleanRun(run, index) {
+    const previous = oldPts.find(pt => pt?.startedAt === run.startedAt);
+    if (!isCleanRun(run, previous)) return;
+    const related = [];
+    if (owSeriesId) {
+      // Open-world runs share array slots across books; usage before a portal counts too.
+      const rows = db.prepare(`SELECT ub.state_data FROM user_books ub
+        JOIN books b ON b.id = ub.book_id
+        WHERE ub.user_id = ? AND b.series_id = ? AND b.id != ?`)
+        .all(userId, owSeriesId, bookId);
+      for (const row of rows) {
+        let data;
+        try { data = JSON.parse(row.state_data || '{}'); } catch { return; }
+        const pt = data?.playthroughs?.[index];
+        if (pt?.startedAt) related.push(pt);
+      }
+    }
+    if (isCleanRun(run, previous, related)) awardXp(userId, 'clean_run', String(bookId));
+  }
+
   // Discovered nodes - always per-book (genuinely different work in each book)
   const oldDisc = _discoveredSet(oldGraph);
   const newDisc = _discoveredSet(newGraph);
@@ -845,6 +866,7 @@ function processStateXp(userId, bookId, oldState, newState, totalSections) {
 
     if (!oldPt?.completed && newPt?.completed) {
       _anyRunJustCompleted = true;
+      awardCleanRun(newPt, i);
       if (newPt.result === 'death') {
         awardXp(userId, 'death_run', ref);
         // first_win/first_loss/first_battle_death use bookId as ref (not
@@ -984,7 +1006,10 @@ function processStateXp(userId, bookId, oldState, newState, totalSections) {
               if (!owSeriesId) _checkGroupWonAll(userId, bookRow?.series_id, bookRow?.parent_book_id);
             }
           }
-          if (awarded) _anyRunJustCompleted = true;
+          if (awarded) {
+            awardCleanRun(newPt, i);
+            _anyRunJustCompleted = true;
+          }
         }
       }
     }

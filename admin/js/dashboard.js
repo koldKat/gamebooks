@@ -124,11 +124,8 @@ async function loadXpConfig() {
       card.className = 'xp-config-row';
       const label = document.createElement('div');
       label.className = 'xp-config-name';
-      const name = row.event.replaceAll('_', ' ').replace(/^./, c => c.toUpperCase());
+      const name = row.event.replaceAll('_', ' ').replace(/\bow\b/g, 'open world').replace(/^./, c => c.toUpperCase());
       label.textContent = name;
-      const key = document.createElement('small');
-      key.textContent = row.event;
-      label.appendChild(key);
       const input = document.createElement('input');
       input.type = 'number';
       input.min = '0';
