@@ -250,7 +250,27 @@ gamebooks/
         lazy.js          Collapsed group materialization and reclamation
         covers.js        Lazy card covers and anthology cover layout
         helpers.js       Shared name sorting and mobile detection
-      covers.js          Public covers wall, cover rotation, cover/series activity modals
+      covers.js          Public covers compatibility entry point (existing exports)
+      covers/            Public catalog, landing backgrounds, and detail dialogs
+        state.js         Shared catalog, display preferences, and panel/background state
+        data.js          Catalog fetching, refresh guards, fingerprints, and visibility
+        filters.js       Type/availability/ownership filters, favorites, and sorting
+        series.js        Series composite cover entries and searchable membership
+        markup.js        Cover tile markup and favorite-button presentation
+        images.js        Bounded blob cache, image fetch queue, and visibility observer
+        grid.js          Grid rendering, lazy batches, counts, and cached panel display
+        background.js    Cover pools, rotation, positioning, and account persistence
+        activity.js      Book/series detail fetching and dialog entry points
+        book-dialog.js   Book/anthology metadata, actions, ratings, and activity
+        series-dialog.js Series contents, anthology expansion, and ratings
+        badges.js        Shared detail-dialog availability badges
+        prefs.js         Display setting application, persistence, and logout defaults
+        init.js          Single panel initialization entry point
+        settings-bindings.js Settings, context menu, and background drag listeners
+        panel-bindings.js Cover tile navigation and favorite listeners
+        preview.js       Cover hover previews (panel and detail dialogs)
+        search-bindings.js Search, sort/type menus, and filter-chip listeners
+        helpers.js       Shared natural sorting, shuffle, and mobile detection
       feed.js            Activity feed loading and rendering
       open-world.js      Open World / series-run cross-book state management
       shop.js            Gold Coin shop modal
@@ -1601,7 +1621,15 @@ This treatment is applied by two separate selectors sharing the same declaration
 
 ### Covers panel (`loadCovers`)
 
+**Module layout:** `public/js/covers.js` preserves the public API while implementation lives in `public/js/covers/`. `state.js` owns the shared catalog arrays, preferences, and panel/background state. Refresh guards remain private to `data.js`; the 24-entry blob cache and in-flight image-fetch map remain private to `images.js`; crossfade guards remain private to `background.js`. `init.js` runs the existing settings, tile navigation, preview, and search/menu bindings in their original order, with no new top-level listeners or timers. The compatibility entry point registers the book/series renderer callbacks used by `activity.js`, avoiding a navigation/render import cycle. Feature modules import one another directly, never back through `covers.js`. `covers/` is separate from `books/covers.js`, which handles owned-library card backgrounds, and from `public/covers/`, which stores uploaded images. Regression tests for composites, filters, background persistence, image caching, and module boundaries live in `test/client/covers/`.
+
 `loadCovers()` fetches `/api/public/covers`, `/api/public/books`, and `/api/public/series`, then renders a mixed wall into `#covers-grid`.
+
+**Refresh correctness (`covers/data.js`):** the fingerprint includes author/child/series search metadata, section totals, battle-sim/live-reading availability, PDF paths, and open-world series flags. Ownership popularity counters remain excluded to avoid rebuilding the grid for unrelated library additions. A hidden-page fetch does not commit the rendered fingerprint, so returning to the landing page applies changes rather than falsely treating old caches as current. Responses must be successful and array-shaped before application; failed refreshes preserve the last successful catalog. An empty catalog clears the old grid, lazy observers, and background rotation pool.
+
+**In-flight catalog guards:** pausing auto-refresh also suppresses application of a request that was already running. Each request captures its auth token; if the account changes while it is fetching/parsing, that response is discarded and one follow-up refresh is queued using the current token. This prevents transient upload states or previous-account PDF metadata from being applied late.
+
+**Background lifecycle (`covers/background.js`):** start/rotate requests respect the hidden-background preference and hidden landing view. Stopping rotation cancels both crossfade timeouts, clears queued rotations, and invalidates stale timeout/frame callbacks with a generation guard. A rapid hide/show or book-open transition cannot resurrect a hidden background or let an old fade blank a newly active layer.
 
 - Books/anthologies use their uploaded covers; series cards are built client-side as composites from up to four book covers.
 - Sort modes: Latest, Oldest, A–Z, Z–A, Random. Type filters: All, Books, Anthologies, Series, Favorites.
@@ -1610,6 +1638,10 @@ This treatment is applied by two separate selectors sharing the same declaration
 - Logged-in users get a hover `.cover-fav-btn` on each cover. Clicking it updates `ui_prefs.favoriteBookIds`/`favoriteSeriesIds` and can award the one-time `favorite_cover` XP.
 
 **Cover blob cache is capped at `_COVER_BLOB_CACHE_MAX` (24) full-size images, FIFO-evicted with `URL.revokeObjectURL()` on the loser.** `_loadCoverWithProgress`/`_preloadCoverBlob` decode every fetched cover into a `Blob` + `URL.createObjectURL`, keyed by URL in a module-level `Map` for the rest of the tab session. An uncapped version of this cache, or one without a `revokeObjectURL` call, scales unbounded memory growth with however much of the library has been scrolled/browsed, not with any single book - `_cacheCoverBlobUrl()` is the shared insert-and-evict entry point both callers go through to prevent that.
+
+**Image failures (`covers/images.js`):** failed HTTP responses are not cached as cover blobs. A failed prefetch falls back to the original image URL rather than assigning an undefined blob URL, and fallback image loads restore opacity when decoding completes.
+
+**In-flight image guards:** queued tile loads capture the grid generation and a per-image load version. Rebuilding the grid invalidates the generation; an off-screen observer notification invalidates that image's version even if its fetch is still pending. Stale completions, progress callbacks, and image-load callbacks cannot repopulate those tiles. The shared fetch can still finish and populate the bounded blob cache, allowing a later reveal to reuse it without another network request.
 
 This cache only bounds the blob URL table, not the decoded bitmap memory of every `<img>` currently sitting in `#covers-grid`'s DOM - the lazy-append batches (`_appendLazyBatch`) never remove earlier batches. `_ensureThumbVisibilityObserver()` is a separate `IntersectionObserver` (root `#covers-panel`, `rootMargin: 1200px`) that clears a thumb's `img.src` once it scrolls well outside that margin and re-triggers `_enqueueCoverLoad()` (an instant cache hit if the blob is still in `_coverBlobUrlCache`, a normal re-fetch otherwise) once it scrolls back near the viewport. Registered per-thumb inside `_appendLazyBatch` alongside the existing `_enqueueCoverLoad()` call, disconnected and recreated on every `_stopLazy()`/`_startLazy()` cycle. Only book/anthology thumbs get this treatment (identified by their `data-cover-url` attribute) - series thumbs render up to four covers directly via plain `<img src>` (native browser image cache, not this blob pipeline), never observed.
 
@@ -2053,7 +2085,7 @@ The global `document.addEventListener('click', hideCtxMenu)` closes the context 
 
 **Sidebar book cover** (`#sidebar-book-info`): shown only at `min-width: 1921px` and only when `_bgHidden === true`. 2:3 aspect ratio, full-width. Updated by `_updateSidebarBookInfo()` - called from `_applyBgPref()` and from the book-open flow after `render()`. `img.src = ''` triggers the `[src=""]` CSS rule to hide it.
 
-**Main page background:** `#landing-bg-a` and `#landing-bg-b` are two `position: fixed; z-index: -1` divs outside `#landing-wrapper`. `_rotateLandingCover()` picks from a shuffled queue of the user's books with covers and crossfades between layers (fade next layer in over 1.5s, then fade old layer out). See "Landing background rotation" under Covers panel below for the full timer/trigger design.
+**Main page background:** `#landing-bg-a` and `#landing-bg-b` are two `position: fixed; z-index: -1` divs outside `#landing-wrapper`. `_rotateLandingCover()` picks from a shuffled queue of all public covers or the player's own book covers, according to the selected source and crossfades between layers (fade next layer in over 1.5s, then fade old layer out). See "Landing background rotation" under Covers panel below for the full timer/trigger design.
 
 A third div, `#landing-bg-dim` (same `position: fixed; z-index: -1`, painted after `landing-bg-a`/`-b` in DOM order so it sits on top of whichever is currently visible), is a flat `rgba(15,23,42,0.92)` layer that darkens the cover for legibility behind the three landing panels. It's a separate layer rather than baked into `_rotateLandingCover()`'s `backgroundImage`, so it can fade independently of cover rotation: `_updateLandingBgDragUi()` in `covers.js` fades it to `opacity: 0` once `_canDragLandingBg()` is true (all three panels collapsed - the same check that already drives the background-drag affordance), and back to `1` the moment any panel is restored. Every code path that changes a landing panel's collapse state already calls `_updateLandingBgDragUi()` (via `_setLandingPanelCollapsed()` in `prefs.js`), so this needed no new call sites - including the Ctrl+X "collapse/restore all three" shortcut, since it just calls `_setLandingPanelCollapsed()` three times.
 
