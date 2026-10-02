@@ -143,6 +143,7 @@ const {
 
 
 const { handleShopPurchase, handleClaimBonusGc } = require('./server/routes/shop');
+const { handleReadingAccess } = require('./server/routes/reading-access');
 
 
 const {
@@ -251,6 +252,7 @@ const bookStateRe     = /^\/api\/books\/(\d+)\/state$/;
 const bookResetRe     = /^\/api\/books\/(\d+)\/reset$/;
 const bookEnemiesRe   = /^\/api\/books\/(\d+)\/enemies$/;
 const bookSectionRe   = /^\/api\/books\/(\d+)\/sections\/([^/]+)$/;
+const readingAccessRe = /^\/api\/books\/(\d+)\/reading-access$/;
 const anthologyMembersRe     = /^\/api\/books\/(\d+)\/anthology-members$/;
 const anthologyMemberByIdRe  = /^\/api\/books\/(\d+)\/anthology-members\/(\d+)$/;
 const bookCoverRe       = /^\/api\/books\/(\d+)\/cover$/;
@@ -457,6 +459,7 @@ const _routeRequest = async (req, res) => {
     if ((m = urlPath.match(anthologyMemberByIdRe)) && method === 'DELETE') return await handleRemoveAnthologyMember(req, res, +m[1], +m[2]);
     if ((m = urlPath.match(bookEnemiesRe)) && method === 'GET')  return await handleGetBookEnemies(req, res, +m[1]);
     if ((m = urlPath.match(bookSectionRe)) && method === 'GET')  return await handleGetBookSection(req, res, +m[1], m[2]);
+    if ((m = urlPath.match(readingAccessRe)) && (method === 'GET' || method === 'POST')) return await handleReadingAccess(req, res, +m[1], method === 'POST');
     if ((m = urlPath.match(bookStateRe)) && method === 'GET')    return await handleGetState(req, res, +m[1]);
     if ((m = urlPath.match(bookStateRe)) && method === 'PUT')    return await handleSaveState(req, res, +m[1]);
     if ((m = urlPath.match(bookResetRe)) && method === 'POST')   return await handleResetBookProgress(req, res, +m[1]);

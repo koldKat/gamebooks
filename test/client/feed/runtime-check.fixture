@@ -50,6 +50,12 @@ const t = (key, params = {}) => key + Object.entries(params).map(([k, v]) => `|$
 const external = {
   'core/state.js': { getToken: () => token, apiFetch: async url => { calls.push(['private', url]); return fetchImpl ? fetchImpl() : { ok: true, json: async () => payload }; } },
   'core/util.js': { escapeHtml }, 'i18n.js': { t },
+  // Rendering/wiring fixture; real DOM reconciliation is tested separately in update.test.mjs.
+  'feed/update.js': { updateFeedContents: (el, blocks) => {
+    el.innerHTML = blocks.map(block => block.html).join('');
+    if (!blocks.some(block => block.key.startsWith('day:'))) el.queries.delete('.feed-day-card[data-day-index]');
+    return { changed: true, changedRoots: [el], restoreScroll() {} };
+  } },
   'account/public-profile.js': Object.fromEntries(['openPublicProfile', 'openPublicRun', 'openPublicSeriesRun'].map(k => [k, (...args) => calls.push([k, ...args])])),
   'covers.js': Object.fromEntries(['openCoverActivity', 'openSeriesActivity'].map(k => [k, (...args) => calls.push([k, ...args])])),
 };
@@ -94,6 +100,18 @@ await snapshot([{ ...base, type: 'book_created', completedAt: '2026-10-01T10:00:
 await snapshot([]);
 await snapshot([], { title: 'Pinned only', body: 'Text' });
 const digest = createHash('sha256').update(JSON.stringify(snapshots)).digest('hex');
+
+if (!baseline) {
+  const render = modules.get(resolve(root, 'feed/render.js')).namespace.renderFeedContents;
+  const older = Array.from({ length: 6 }, () => ({ ...base, type: 'run_started', completedAt: '2026-10-01T10:00:00Z' }));
+  const before = render(older, null, '').html;
+  const after = render([{ ...base, type: 'user_joined' }, ...older], null, '').html;
+  const groupAttrs = html => html.match(/data-target="[^"]+" data-group-key="[^"]+"/g);
+  assert.deepEqual(groupAttrs(after), groupAttrs(before), 'adding a new day must not shift older group keys or IDs');
+  const batch = Array.from({ length: 3 }, (_, i) => ({ ...base, type: 'book_created', bookId: 10 + i }));
+  assert.deepEqual(groupAttrs(render([{ ...base, type: 'book_created', bookId: 20 }, ...batch], null, '').html),
+    groupAttrs(render(batch, null, '').html), 'new batch head must retain the container expansion key');
+}
 
 // Auth routing, single-flight and failure recovery are exercised through the facade.
 token = null; await snapshot([{ ...base, type: 'book_created' }]); assert.equal(calls.filter(c => c[0] === 'public').length, 1);

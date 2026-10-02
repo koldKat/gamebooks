@@ -3,13 +3,26 @@ import { readFileSync } from 'node:fs';
 import { createContext, SourceTextModule, SyntheticModule } from 'node:vm';
 
 const imports = [], calls = [], warnings = [], deferred = new Map();
+const translated = new Set();
 let failingId = null;
+let failingTranslationId = null;
 const context = createContext({ console: { warn: (...args) => warnings.push(args) } });
 const module = new SourceTextModule(readFileSync(process.argv[1], 'utf8'), {
   context,
   importModuleDynamically: async specifier => {
+    if (specifier === '../i18n/battlesim.js') {
+      const translations = new SyntheticModule(['loadBattleSimTranslations'], function () {
+        this.setExport('loadBattleSimTranslations', async id => {
+          if (id === failingTranslationId) throw Error('Translation load failed');
+          translated.add(id);
+        });
+      }, { context });
+      await translations.link(() => {}); await translations.evaluate();
+      return translations;
+    }
     assert.match(specifier, /^\.\/battlesim\d+\.js$/);
     const id = Number(specifier.match(/\d+/)[0]);
+    assert.ok(translated.has(id), 'translations precede simulator module evaluation');
     imports.push(id);
     if (deferred.has(id)) await deferred.get(id).promise;
     if (id === failingId) throw Error('Simulated load failure');
@@ -76,3 +89,10 @@ await Promise.all([first, second]);
 assert.equal(imports.filter(id => id === 219).length, 1, 'overlapping requests share one import');
 assert.equal(calls.filter(call => call[0] === 219 && call[1] === 'init').length, 1, 'overlapping requests initialize once');
 assert.equal(calls.filter(call => call[0] === 219 && call[1] === 'visible' && call[2]).length, 1, 'only latest request shows simulator');
+failingTranslationId = 220;
+await loader.showBattleSimForBook(220);
+assert.equal(imports.includes(220), false, 'translation failure must not import or initialize simulator');
+failingTranslationId = null;
+await loader.showBattleSimForBook(220);
+assert.equal(imports.filter(id => id === 220).length, 1, 'translation failure can be retried');
+assert.equal(calls.filter(call => call[0] === 220 && call[1] === 'init').length, 1);

@@ -480,13 +480,15 @@ db.exec(`CREATE TABLE IF NOT EXISTS book_sections (
 )`);
 try { db.exec(`ALTER TABLE books ADD COLUMN has_live_reading INTEGER DEFAULT 0`); } catch (_) {}
 
-// Stage PDF front matter for review, not player display; split at a rules heading when found.
+// Imported front matter is separate from numbered sections.
 db.exec(`CREATE TABLE IF NOT EXISTS book_frontmatter (
   book_id     INTEGER PRIMARY KEY REFERENCES books(id) ON DELETE CASCADE,
   intro_text  TEXT,
   rules_text  TEXT,
   extracted_at INTEGER DEFAULT (strftime('%s', 'now'))
 )`);
+
+const readingAccess = require('./db/reading-access').createReadingAccess(db);
 
 // One-time backfill: assign a permanent template to every level_up event that doesn't have one yet
 {
@@ -949,5 +951,6 @@ module.exports = {
   leaveParty, getPartyForBook, getPendingInvites, fanOutState, getPartyMemberIds,
   getAppBirthTimestamp,
   getAdminGcSupply, adminGiftGc,
+  readingAccess,
   backupDb,
 };

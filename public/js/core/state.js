@@ -229,18 +229,24 @@ export function resetBookProgress() {
     .catch(() => false);
 }
 
-export async function loadState(bookId) {
-  setCurrentBookId(bookId);
+export async function loadState(bookId, { strict = false, isCurrent = () => true } = {}) {
+  if (!strict) setCurrentBookId(bookId);
   if (isDemoMode) {
+    setCurrentBookId(bookId);
     const saved = _demoStateStore[bookId];
     state = saved ? JSON.parse(JSON.stringify(saved)) : _emptyState();
     return;
   }
   try {
     const res = await apiFetch(`/api/books/${bookId}/state`);
-    if (!res.ok) { state = _emptyState(); return; }
-    state = await res.json();
-  } catch (_) {
+    if (!res.ok) throw new Error('Book state unavailable');
+    const loaded = await res.json();
+    if (strict && (!loaded || typeof loaded !== 'object' || Array.isArray(loaded))) throw new Error('Invalid book state');
+    if (strict && !isCurrent()) return;
+    if (strict) setCurrentBookId(bookId);
+    state = loaded;
+  } catch (error) {
+    if (strict) throw error;
     state = _emptyState();
     return;
   }

@@ -3,12 +3,12 @@
 import { apiFetch, getToken } from '../core/state.js';
 import { escapeHtml } from '../core/util.js';
 import { t } from '../i18n.js';
+import { COIN_SVG } from '../ui-helpers/coin-icon.js';
+export { COIN_SVG };
 
 // Callbacks wired in by main.js at boot
 let _hooks = {};
 export function setShopHooks(h) { _hooks = h || {}; }
-
-export const COIN_SVG = `<svg class="coin-icon" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7.5" fill="#f59e0b" stroke="#92400e" stroke-width="0.75"/><circle cx="8" cy="8" r="5.5" fill="none" stroke="#fde68a" stroke-width="1"/><text x="8" y="8" text-anchor="middle" dominant-baseline="central" font-size="7" font-weight="bold" fill="#78350f" font-family="serif">G</text></svg>`;
 
 // Mirror the server cap: one purchase for levels 0-10, then one per additional 10 levels.
 function _undoFastTravelCap(level) {
@@ -80,6 +80,7 @@ function _shopHasAffordable(balance) {
 }
 
 export function updateCoinsDisplay(balance) {
+  window.dispatchEvent(new CustomEvent('coins-balance-changed', { detail: { token: getToken(), balance: Number(balance || 0) } }));
   const balanceStr = Number(balance || 0).toLocaleString();
   const el = document.getElementById('coins-display');
   if (el) el.innerHTML = `${COIN_SVG} ${balanceStr}`;

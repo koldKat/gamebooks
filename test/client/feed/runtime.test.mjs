@@ -12,6 +12,6 @@ test('feed preserves rendering, loading, interactions, previews and day covers',
   assert.equal(result.status, 0, result.stdout + result.stderr);
   const { digest, cases } = JSON.parse(result.stdout);
   assert.equal(cases, 38);
-  // Captured from e87332f's unsplit feed with the same fixed-date fixtures.
-  assert.equal(digest, '5d11c32e3b5319dd5e92f0e88fa023b03ba795d87daa1941f6a6bffdb2a14324');
+  // Same 38 rendering cases; collapse IDs/keys now use stable dates and group identities.
+  assert.equal(digest, 'd4290e145b44f32572838b15f32b17fb5a4e465feb461d4f73273dff25dd0919');
 });

@@ -15,10 +15,19 @@ test('translation split preserves the public API and unchanged lookup/DOM runtim
   assert.doesNotMatch(runtime, /import\(|fetch\(|setTimeout|setInterval/);
 });
 
-test('all translation entries, public lookups, interpolation and DOM bindings retain behavior', () => {
+test('lazy simulator tables preserve every translation, lookup, interpolation and DOM binding', () => {
   const fixture = readFileSync(new URL('./runtime.fixture', import.meta.url), 'utf8');
   const root = fileURLToPath(new URL('../../../public/js/', import.meta.url));
   const result = spawnSync(process.execPath, ['--experimental-vm-modules', '--input-type=module', '--eval', fixture, root],
+    { encoding: 'utf8', timeout: 15000 });
+  assert.ifError(result.error);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+});
+
+test('simulator translations load only on demand, deduplicate requests and recover from failure', () => {
+  const fixture = readFileSync(new URL('./lazy-runtime.fixture', import.meta.url), 'utf8');
+  const path = fileURLToPath(new URL('../../../public/js/i18n/battlesim.js', import.meta.url));
+  const result = spawnSync(process.execPath, ['--experimental-vm-modules', '--input-type=module', '--eval', fixture, path],
     { encoding: 'utf8', timeout: 15000 });
   assert.ifError(result.error);
   assert.equal(result.status, 0, result.stdout + result.stderr);

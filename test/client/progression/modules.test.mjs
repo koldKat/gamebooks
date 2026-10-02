@@ -10,7 +10,7 @@ test('progression relocation preserves XP, floaties and shop implementations wit
   const digests = {
     "app-xp": "353a3587b4278c1cd1af4880e265d43a79cbbf0ff0a2ed705c2baacc21c6b6e9",
     "rewards": "33fcb7bab962502059be6c89c7fa9ddefdf3d050c3a3490b6ebe69cc0b46d7fa",
-    "shop": "89838c39b1c8cbfd7293dd42c1a83ab1a39245d9c3044012e0640e51d84da353"
+    "shop": "a2b3418c0300ab4a997e99bfbf5de2f2b1b3b654569b9fd0696c80a8538aacc8"
   };
   for (const [name, digest] of Object.entries(digests)) {
     assert.equal(existsSync(new URL(name + '.js', dir)), false);
@@ -25,7 +25,7 @@ test('progression imports retain their original dependency identities', () => {
   const expected = {
     'app-xp': ['core/state.js', 'progression/shop.js', 'core/util.js', 'i18n.js'],
     rewards: ['core/state.js', 'progression/shop.js', 'account/profile.js', 'core/livetab.js', 'community/notif.js', 'core/util.js'],
-    shop: ['core/state.js', 'core/util.js', 'i18n.js'],
+    shop: ['core/state.js', 'core/util.js', 'i18n.js', 'ui-helpers/coin-icon.js'],
   };
   for (const [name, dependencies] of Object.entries(expected)) {
     const moduleUrl = new URL('progression/' + name + '.js', dir);

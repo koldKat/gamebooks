@@ -2,7 +2,7 @@
 // Avoid desktop play/reading imports; pass lifecycle hooks to separate dialogs.
 
 import {
-  state, loadState, saveState, apiFetch, currentBookId,
+  state, loadState, saveState, apiFetch, getToken, currentBookId,
   currentPlaythrough, currentSection, isTerminal, isValidSecId, parseSecId,
   setViewingPt, viewingPt, currentUserLevel, bonusUndos, bonusFastTravels,
   isSectionMapped,
@@ -17,6 +17,7 @@ import { openNodeContextMenu, hideNodeContextMenu } from './context-menu.js';
 import { openFastTravelDialog } from './fast-travel-dialog.js';
 import { t } from '../../js/i18n.js';
 import { TROPHY_SVG, BROKEN_SHIELD_SVG, terminalHeadingKey } from '../../js/reading/liveread-shared.js';
+import { showReadingGate } from '../../js/reading/access.js';
 
 // Debounce reward checks by 750ms to allow deferred server awards to land.
 // Merge nearby toast deltas instead of overwriting feedback.
@@ -144,6 +145,7 @@ function _ensureMVisited(pt) {
 
 // Check the request generation after each await so stale results cannot replace newer content.
 let _showToken = 0;
+let _readerSession = 0;
 
 // Cache section responses and prefetch choice targets; reset the cache on each book open.
 const _sectionCache = new Map();
@@ -163,7 +165,36 @@ function _prefetchChoices(choices) {
   }
 }
 
-export async function renderReader(mount, book, onBack) {
+export async function renderReader(mount, book, onBack, { startAtOne = false } = {}) {
+  ++_showToken;
+  const session = ++_readerSession;
+  const authToken = getToken();
+  mount.innerHTML = `<div class="m-topbar"><button type="button" id="m-access-back"></button></div><div class="m-top" id="m-access-body"></div>`;
+  const back = mount.querySelector('#m-access-back');
+  back.textContent = t('mobile.back_home');
+  back.addEventListener('click', () => { ++_readerSession; ++_showToken; onBack(); });
+  const gateBody = mount.querySelector('#m-access-body');
+  const isCurrent = () => authToken === getToken() && session === _readerSession && mount.isConnected;
+  const resume = async () => {
+    const opening = renderReader(mount, book, onBack, { startAtOne: true });
+    const openingSession = _readerSession;
+    try {
+      await opening;
+    } catch (error) {
+      if (openingSession !== _readerSession || authToken !== getToken() || !mount.isConnected) return;
+      console.warn('Unlocked reader failed to load', error);
+      mount.innerHTML = '<div class="m-topbar"><button id="m-access-back"></button></div><div class="m-top"><p id="m-access-error"></p><button id="m-access-retry" class="reading-unlock-button"></button></div>';
+      mount.querySelector('#m-access-error').textContent = t('auth.network_error');
+      const back = mount.querySelector('#m-access-back');
+      back.textContent = t('mobile.back_home');
+      back.addEventListener('click', () => { ++_readerSession; ++_showToken; onBack(); });
+      const retry = mount.querySelector('#m-access-retry');
+      retry.textContent = t('covers.error_retry');
+      retry.addEventListener('click', resume);
+    }
+  };
+  const locked = await showReadingGate(gateBody, book.id, { isCurrent, onUnlock: resume });
+  if (!isCurrent() || locked) return;
   _sectionCache.clear();
   mount.innerHTML = `
     <div class="m-topbar">
@@ -192,7 +223,7 @@ export async function renderReader(mount, book, onBack) {
         <div id="m-graph-loading" class="m-graph-loading">${_loadingHtml(t('mobile.loading_graph'))}</div>
       </div>
     </div>`;
-  document.getElementById('m-back-btn').addEventListener('click', onBack);
+  document.getElementById('m-back-btn').addEventListener('click', () => { ++_readerSession; ++_showToken; onBack(); });
   document.getElementById('m-notebook-btn').addEventListener('click', () => openNotebook(book.id));
   document.getElementById('m-undo-btn').addEventListener('click', _undoRun);
   document.getElementById('m-fasttravel-btn').addEventListener('click', () => openFastTravelDialog(_doFastTravel));
@@ -217,7 +248,14 @@ export async function renderReader(mount, book, onBack) {
   const battlesimBtn = document.getElementById('m-battlesim-btn');
   if (hasSim(book.id)) {
     battlesimBtn.style.display = '';
-    battlesimBtn.addEventListener('click', () => openSimForBook(book.id));
+    battlesimBtn.addEventListener('click', async () => {
+      try {
+        await openSimForBook(book.id);
+      } catch (error) {
+        console.warn('Mobile simulator failed to load', error);
+        showAlert(t('auth.network_error'));
+      }
+    });
   }
 
   // Keep stable hook references for the session's one-time dialog bindings.
@@ -233,9 +271,10 @@ export async function renderReader(mount, book, onBack) {
   _xpToastPending = 0;
   _xpToastVisibleUntil = 0;
   _seedXpBaseline();
-  await loadState(book.id);
-  if (!currentPlaythrough()) {
-    const startSec = isValidSecId(state.startSection) ? state.startSection : 1;
+  await loadState(book.id, { strict: true, isCurrent });
+  if (!isCurrent()) return;
+  if (!currentPlaythrough() || (startAtOne && currentSection() !== 1)) {
+    const startSec = startAtOne ? 1 : (isValidSecId(state.startSection) ? state.startSection : 1);
     _startPlaythrough(startSec);
     await saveState();
   } else {

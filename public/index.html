@@ -167,6 +167,7 @@
   <link rel="stylesheet" href="/css/feedback.css">
   <link rel="stylesheet" href="/css/battlesim.css">
   <link rel="stylesheet" href="/css/liveread.css">
+  <link rel="stylesheet" href="/css/reading-access.css">
   <link rel="stylesheet" href="/css/demo.css">
   <link rel="stylesheet" href="/css/profile.css">
   <link rel="stylesheet" href="/css/public-profile.css">
@@ -178,9 +179,26 @@
   <link rel="stylesheet" href="/css/landing.css">
   <link rel="stylesheet" href="/css/reduce-motion.css">
   <link rel="stylesheet" href="/css/mobile.css">
-  <script src="/vendor/vis-network/vis-network.min.js"></script>
+  <link rel="stylesheet" href="/css/startup.css">
+  <script defer src="/vendor/vis-network/vis-network.min.js"></script>
 </head>
 <body>
+  <div id="app-startup" role="status" aria-live="polite">
+    <svg class="feed-loading-graph" viewBox="0 0 32 32" aria-hidden="true">
+      <line x1="16" y1="16" x2="6" y2="7" stroke="#4b5563" stroke-width="1.8" stroke-linecap="round"/>
+      <line x1="16" y1="16" x2="26" y2="7" stroke="#4b5563" stroke-width="1.8" stroke-linecap="round"/>
+      <line x1="16" y1="16" x2="6" y2="26" stroke="#4b5563" stroke-width="1.8" stroke-linecap="round"/>
+      <line x1="16" y1="16" x2="26" y2="26" stroke="#4b5563" stroke-width="1.8" stroke-linecap="round"/>
+      <circle class="flg-node flg-n1" cx="6" cy="7" r="4" fill="#8e44ad" stroke="#6c3483" stroke-width="1.2"/>
+      <circle class="flg-node flg-n2" cx="26" cy="7" r="4" fill="#e74c3c" stroke="#c0392b" stroke-width="1.2"/>
+      <circle class="flg-node flg-n3" cx="6" cy="26" r="4" fill="#3498db" stroke="#2980b9" stroke-width="1.2"/>
+      <circle class="flg-node flg-n4" cx="26" cy="26" r="4" fill="#27ae60" stroke="#1e8449" stroke-width="1.2"/>
+      <circle class="flg-center" cx="16" cy="16" r="6" fill="#f5a623" stroke="#c47d00" stroke-width="1.5"/>
+    </svg>
+    <span id="app-startup-message">Loading Gamebook Tracker...</span>
+    <button id="app-startup-retry" type="button">Try again</button>
+  </div>
+  <script src="/startup.js"></script>
 
   <!-- ── Demo banner ─────────────────────────────────────────────── -->
   <div id="demo-banner">

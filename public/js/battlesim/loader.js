@@ -54,6 +54,8 @@ async function _loadBattleSim(id) {
 
   // Concurrent requests must share initialization, not just the module import.
   const pending = (async () => {
+    const { loadBattleSimTranslations } = await import('../i18n/battlesim.js');
+    await loadBattleSimTranslations(numericId);
     const mod = await import(`./battlesim${numericId}.js`);
     const sim = _exportsFor(numericId, mod);
     if (typeof sim.init !== 'function' ||

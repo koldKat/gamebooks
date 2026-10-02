@@ -19,11 +19,13 @@ const mount = document.getElementById('screen');
 function showLogin() {
   mount.innerHTML = '';
   renderLogin(mount, loadThenShowReader);
+  window.appStartup?.ready();
 }
 
-function showReader(book) {
+async function showReader(book) {
   mount.innerHTML = '';
-  renderReader(mount, book, () => { window.location.href = '/'; });
+  await renderReader(mount, book, () => { window.location.href = '/'; });
+  window.appStartup?.ready();
 }
 
 function showNoBook() {
@@ -32,6 +34,7 @@ function showNoBook() {
       <h1>${_escapeHtml(t('app.title'))}</h1>
       <p class="m-empty">${_escapeHtml(t('mobile.open_from_my_books'))}</p>
     </div>`;
+  window.appStartup?.ready();
 }
 
 // This reader requires imported text; it has no manual section-entry mode.
@@ -41,6 +44,7 @@ function showNoReading(book) {
       <h1>${_escapeHtml(t('app.title'))}</h1>
       <p class="m-empty">${_escapeHtml(t('mobile.no_reading', { title: book.name }))}</p>
     </div>`;
+  window.appStartup?.ready();
 }
 
 function _escapeHtml(s) {
@@ -91,7 +95,15 @@ async function loadThenShowReader() {
   const book = books.find(b => String(b.id) === wantedId);
   if (!book) { showNoBook(); return; }
   if (!book.hasLiveReading) { showNoReading(book); return; }
-  showReader(book);
+  try {
+    await showReader(book);
+  } catch (error) {
+    console.error('Mobile reader startup failed', error);
+    window.appStartup?.fail();
+    mount.innerHTML = `<div class="m-login"><p class="m-error">${_escapeHtml(t('auth.network_error'))}</p>
+      <button id="m-load-back" type="button">${_escapeHtml(t('mobile.back_home'))}</button></div>`;
+    document.getElementById('m-load-back').addEventListener('click', () => { window.location.href = '/'; });
+  }
 }
 
 // Heartbeat runs on every authenticated screen; the server deduplicates awards per minute.

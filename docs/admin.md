@@ -10,6 +10,16 @@ Tables use compact vertical padding for headers, rows, badges, and action button
 
 ## Access
 
+### Reading Unlock Trial
+
+Only *Assassins of Allansia* (book 263) currently requires a permanent reading unlock, priced at 0 GC. Paid purchases remain disabled. Existing saved runs in imported books receive permanent access once at the first startup after deployment, without tester labels. Imported introduction/rules text is shown before unlocking; check extraction quality before expanding the trial. Policy lives in `server/db/reading-access.js`; set `testBookId: null` and keep `paidEnabled: false` to disable the trial. Unlocks survive disabling the policy, removing a book from a library, and starting another run. There is no admin unlock editor yet.
+
+Mobile progress-load failures stop reader initialization instead of creating an empty replacement run. If unlocking succeeds but the reader fails to open, the player gets retry/back controls and keeps the permanent unlock.
+
+Unlocking requires player confirmation before any purchase request. Across all readable books, opening the reader automatically starts a run if none is active (including after resetting/deleting runs); existing active runs resume normally. Locked previews do not start runs before unlocking.
+
+Unlock confirmation is inline in the reader footer, with Cancel/Confirm controls and no modal popup.
+
 Open `http://localhost:3000/admin` in a browser on the same machine as the server.
 
 All `/api/admin/*` routes and the panel itself reject any connection that is not from localhost (`127.0.0.1`, `::1`, or `::ffff:127.0.0.1`). No login is required - the localhost restriction is the sole access control. `X-Forwarded-For` and similar headers are never trusted.

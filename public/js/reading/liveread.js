@@ -1,12 +1,13 @@
 // Non-blocking prose reader with reveal-on-arrival choices.
 // Available for books with imported text; keep the underlying graph interactive.
 
-import { state, apiFetch, currentBookId, currentPlaythrough, currentSection, viewingPt, isTerminal, parseSecId, isSectionMapped } from '../core/state.js';
-import { navigate, commitChoices, showAlert, suppressAutoNav } from '../play.js';
+import { state, apiFetch, getToken, currentBookId, currentPlaythrough, currentSection, viewingPt, isTerminal, parseSecId, isSectionMapped } from '../core/state.js';
+import { navigate, startPlaythrough, commitChoices, showAlert, suppressAutoNav } from '../play.js';
 import { network, setLightweightRestabilize } from '../graph.js';
 import { t } from '../i18n.js';
 import { shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from '../core/util.js';
 import { TROPHY_SVG, BROKEN_SHIELD_SVG, terminalHeadingKey } from './liveread-shared.js';
+import { showReadingGate } from './access.js';
 
 // Reuses the same .feed-loading-graph/.flg-* markup and CSS (demo.css) as the
 // activity feed's loading indicator, both loaded on index.html.
@@ -30,6 +31,9 @@ let _showToken = 0;
 
 // Track the displayed section so background renders cannot refetch it or reset scroll.
 let _shownSec;
+let _accessPending = false;
+let _accessLocked = false;
+let _accessBookId = null;
 
 // Show a spinner only for the first uncached section after opening.
 let _isFirstShowSinceOpen = true;
@@ -177,21 +181,17 @@ function _onChoiceClick(e) {
 
 // Preview only previously mapped sections; refreshing their choices is idempotent.
 export async function previewSection(sec) {
+  const panel = document.getElementById('liveread-panel');
+  if (!panel?.classList.contains('active')) return;
+  if (_accessPending || _accessLocked) return;
   // Clicking the current section is normal reading, not a preview.
   if (sec === currentSection()) {
-    if (document.getElementById('liveread-panel')?.classList.contains('active')) _returnToCurrent();
+    _returnToCurrent();
     return;
   }
   if (!isSectionMapped(sec)) return;
-  const panel = document.getElementById('liveread-panel');
   const body  = document.getElementById('liveread-body');
-  if (!panel || !body) return;
-  if (!panel.classList.contains('active')) {
-    suppressAutoNav(true);
-    setLightweightRestabilize(true);
-    panel.classList.add('active');
-    _isFirstShowSinceOpen = true;
-  }
+  if (!body) return;
   // Keep _shownSec at the actual position so background renders leave the preview intact.
   const token = ++_showToken;
   if (_isFirstShowSinceOpen && !_sectionCache.has(_cacheKey(sec))) {
@@ -227,21 +227,50 @@ function _returnToCurrent() {
 }
 
 // Suppress auto-navigation while reading so every section's prose remains visible.
-function _open() {
+async function _open() {
   const panel = document.getElementById('liveread-panel');
   if (!panel) return;
-  if (!currentPlaythrough()) {
-    showAlert(t('liveread.no_active_playthrough'));
-    return;
-  }
   suppressAutoNav(true);
   setLightweightRestabilize(true);
   panel.classList.add('active');
   _isFirstShowSinceOpen = true;
-  _showSection(currentSection() ?? (state.startSection ?? 1));
+  const bookId = currentBookId;
+  _accessBookId = bookId;
+  const authToken = getToken();
+  const token = ++_showToken;
+  const isCurrent = () => authToken === getToken() && token === _showToken && bookId === currentBookId && panel.classList.contains('active');
+  _accessPending = true;
+  _accessLocked = false;
+  const body = document.getElementById('liveread-body');
+  body.innerHTML = _loadingHtml();
+  const begin = (unlocked = false) => {
+    _accessPending = false;
+    _accessLocked = false;
+    _shownSec = undefined;
+    if (!currentPlaythrough() || (unlocked && currentSection() !== 1)) startPlaythrough(unlocked ? 1 : null);
+    _showSection(currentSection() ?? (state.startSection ?? 1));
+  };
+  try {
+    const locked = await showReadingGate(body, bookId, { isCurrent, onUnlock: () => begin(true) });
+    if (!isCurrent()) return;
+    _accessPending = false;
+    _accessLocked = locked;
+    if (!locked) begin();
+    else document.getElementById('liveread-heading').textContent = t('reading_access.intro');
+  } catch (_) {
+    if (!isCurrent()) return;
+    _accessPending = false;
+    _accessLocked = true;
+    body.textContent = t('auth.network_error');
+  }
 }
 
 function _close() {
+  document.getElementById('liveread-body')?.classList?.remove('reading-gate');
+  ++_showToken;
+  _accessPending = false;
+  _accessLocked = false;
+  _accessBookId = null;
   suppressAutoNav(false);
   setLightweightRestabilize(false);
   // Clear the section guard on close; the same ID may belong to another book on reopen.
@@ -271,6 +300,8 @@ export function setLiveReadVisible(visible) {
 export function renderLiveRead() {
   const panel = document.getElementById('liveread-panel');
   if (!panel || !panel.classList.contains('active')) return;
+  if (_accessBookId !== null && _accessBookId !== currentBookId) { _close(); return; }
+  if (_accessPending || _accessLocked) return;
   const sec = currentSection();
   if (sec != null) {
     _showSection(sec);
@@ -348,7 +379,8 @@ export function initLiveRead() {
   const body = document.getElementById('liveread-body');
   body.addEventListener('wheel', e => {
     e.preventDefault();
-    body.scrollTop += Math.sign(e.deltaY) * _renderedLineHeight(body);
+    const scroller = body.querySelector('.reading-gate-prose') || body;
+    scroller.scrollTop += Math.sign(e.deltaY) * _renderedLineHeight(body);
   }, { passive: false });
 
   // Mount with Guide and Notebook to avoid crowding the character/inventory action row.

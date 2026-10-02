@@ -1,5 +1,12 @@
 // English translations: play.
 export default {
+    'reading_access.intro': 'Introduction',
+    'reading_access.rules': 'Rules',
+    'reading_access.unlock': 'Unlock book · {cost}',
+    'reading_access.unlocking': 'Unlocking book…',
+    'reading_access.confirm': 'Unlock "{name}" permanently?',
+    'reading_access.confirm_action': 'Confirm · {cost}',
+    'reading_access.insufficient': 'Not enough gold coins to unlock this book.',
 
     'runs.header':  'Runs',
     'runs.new':     '+ New',
@@ -105,11 +112,6 @@ export default {
     'notes.save_failed': 'Could not save notebook.',
     'notes.notebook_title': 'Notebook',
     'notes.notebook_saved_xp': 'Notebook saved - XP earned!',
-
-    'battlesim.no_active_playthrough': 'Start a game in this book to use the simulator.',
-    'battlesim.title': 'Simulator',
-    'battlesim.default_enemy': 'the enemy',
-    'battlesim.default_side_enemy': 'the second attacker',
 
     'graph.loading': 'Loading graph…',
 

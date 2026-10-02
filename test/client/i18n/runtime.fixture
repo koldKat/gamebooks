@@ -14,7 +14,15 @@ async function environment(language) {
   const context = createContext({ document, localStorage: { getItem: key => { reads.push(key); return language; } } });
   function get(path) {
     path = resolve(path);
-    if (!modules.has(path)) modules.set(path, new SourceTextModule(readFileSync(path, 'utf8'), { context, identifier: path }));
+    if (!modules.has(path)) modules.set(path, new SourceTextModule(readFileSync(path, 'utf8'), {
+      context, identifier: path,
+      importModuleDynamically: async (specifier, parent) => {
+        const module = get(resolve(dirname(parent.identifier), specifier));
+        if (module.status === 'unlinked') await module.link((s, p) => get(resolve(dirname(p.identifier), s)));
+        if (module.status !== 'evaluated') await module.evaluate();
+        return module;
+      },
+    }));
     return modules.get(path);
   }
   async function load(path) {
@@ -32,9 +40,9 @@ async function environment(language) {
 }
 const en = await environment('en');
 assert.deepEqual(Object.keys(en.api).sort(), ['applyTranslations', 'setTranslationOverride', 't']);
-assert.equal(Object.keys(en.table).length, 7562);
-assert.equal(hash(sorted(en.table)), baseline, 'every key and exact Unicode/string value matches pre-split baseline');
-assert.equal(hash(Object.keys(en.table).sort().map(key => [key, en.api.t(key)])), baseline, 'every public lookup is immediately available');
+assert.equal(Object.keys(en.table).length, 665, 'only core and shared simulator strings are eager');
+assert.ok([...en.modules.keys()].every(path => !/battlesim\d+\.js$/.test(path)), 'startup loads no per-simulator tables');
+assert.equal(en.api.t('battlesim214.status.fallen'), 'battlesim214.status.fallen', 'simulator strings start unloaded');
 assert.deepEqual(en.reads, ['gamebook_lang'], 'language read once through the shared runtime');
 
 const paths = [];
@@ -46,13 +54,20 @@ function walk(dir) {
   }
 }
 walk(resolve(root, 'i18n/en'));
-assert.equal(paths.length, 20, 'feature tables and bounded simulator ranges');
+assert.equal(paths.length, 159, 'feature/shared tables and one table for each of 148 simulators');
+const lazy = await en.load('i18n/battlesim.js');
+const simulatorIds = [];
 const keys = new Set();
 for (const path of paths) {
   const source = readFileSync(path, 'utf8');
   assert.doesNotMatch(source, /^import |\b(?:document|localStorage|fetch)\s*[.(]/m, 'tables have no runtime dependencies');
   const literals = [...source.matchAll(/^\s*'([^']+)':/gm)].map(match => match[1]);
   const table = (await en.load(path)).default;
+  const simulatorId = path.match(/battlesim(\d+)\.js$/)?.[1];
+  if (simulatorId) {
+    simulatorIds.push(Number(simulatorId));
+    await lazy.loadBattleSimTranslations(simulatorId);
+  }
   assert.equal(literals.length, Object.keys(table).length, 'no overwritten duplicate literals in ' + path);
   for (const key of Object.keys(table)) {
     assert.equal(keys.has(key), false, 'no duplicate key across tables: ' + key);
@@ -60,15 +75,25 @@ for (const path of paths) {
     assert.equal(typeof table[key], 'string');
     assert.equal(en.api.t(key), table[key]);
   }
-  if (path.includes('/battlesim/')) {
-    const [low, high] = path.match(/(\d+)-(\d+)\.js$/).slice(1).map(Number);
+  if (simulatorId) {
     for (const key of Object.keys(table)) {
       const id = Number(key.match(/^battlesim(\d+)\./)?.[1]);
-      assert.ok(id >= low && id <= high, 'simulator belongs in declared range: ' + key);
+      assert.equal(id, Number(simulatorId), 'string belongs to its simulator: ' + key);
     }
   }
 }
 assert.equal(keys.size, Object.keys(en.table).length, 'aggregator includes every table exactly once');
+assert.equal(keys.size, 7569);
+const original = sorted(en.table).filter(([key]) => !key.startsWith('reading_access.'));
+assert.equal(hash(original), baseline, 'every original key and exact Unicode/string value matches pre-split baseline');
+assert.equal(hash(original.map(([key]) => [key, en.api.t(key)])), baseline, 'every original lookup is available after its table loads');
+assert.equal(en.api.t('reading_access.unlock', { cost: 0 }), 'Unlock book · 0');
+for (const path of ['battlesim/loader.js', '../mobile/js/battlesim-dispatch.js']) {
+  const source = readFileSync(resolve(root, path), 'utf8');
+  const registry = source.match(/const SUPPORTED_BATTLE_SIM_BOOKS = new Set\(\[([\s\S]*?)\]\)/)[1];
+  const ids = [...registry.matchAll(/\d+/g)].map(match => Number(match[0])).sort((a, b) => a - b);
+  assert.deepEqual([...simulatorIds].sort((a, b) => a - b), ids, 'every supported simulator has exactly one translation file');
+}
 for (const [key, value] of Object.entries(en.table)) {
   const params = Object.fromEntries([...value.matchAll(/\{(\w+)\}/g)].map(match => [match[1], '[' + match[1] + ']']));
   assert.equal(en.api.t(key, params), value.replace(/\{(\w+)\}/g, (_, name) => params[name] ?? '{' + name + '}'), key);
@@ -101,7 +126,10 @@ for (const [selector, datasetKey, target, key] of [
 assert.equal(en.document.title, 'Same shared override');
 assert.equal(en.document.documentElement.lang, 'en');
 const unknown = await environment('unavailable-language');
-assert.equal(hash(Object.keys(unknown.table).sort().map(key => [key, unknown.api.t(key)])), baseline, 'unknown language falls back to English for every string');
+const unknownLazy = await unknown.load('i18n/battlesim.js');
+for (const id of simulatorIds) await unknownLazy.loadBattleSimTranslations(id);
+assert.equal(hash(original.map(([key]) => [key, unknown.api.t(key)])), baseline, 'unknown language falls back to English for every original string');
+for (const key of Object.keys(unknown.table)) assert.equal(unknown.api.t(key), unknown.table[key]);
 unknown.api.applyTranslations();
 assert.equal(unknown.document.documentElement.lang, 'unavailable-language', 'stored language behavior unchanged');
 assert.equal(unknown.document.title, unknown.table['app.title']);

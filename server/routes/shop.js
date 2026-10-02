@@ -3,6 +3,7 @@
 // Shop route handler: XP-boost/undo/fast-travel/heartbeat-XP purchases.
 
 const db = require('../db');
+const { userBadgePush } = require('../sse');
 const { authenticate, send, readBody } = require('../request-helpers');
 
 async function handleShopPurchase(req, res) {
@@ -24,6 +25,7 @@ async function handleShopPurchase(req, res) {
   }
   if (result.error === 'not_found')           return send(res, 404, { error: 'Not found' });
   send(res, 200, { ok: true, newBalance: result.newBalance, ...db.getUserXpInfo(userId) });
+  userBadgePush(userId);
 }
 
 async function handleClaimBonusGc(req, res) {

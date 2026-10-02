@@ -5,11 +5,13 @@ import { renderFeedContents } from './render.js';
 import { replaceDayCoverLists, _applyDayCoverFlows } from './day-covers.js';
 import { bindFeedInteractions } from './bindings.js';
 import { bindFeedPreviews, _hideFeedPreview } from './previews.js';
+import { updateFeedContents } from './update.js';
 
 // Reuse the in-flight feed refresh to avoid duplicate requests and DOM rebuilds.
 let _loadFeedInFlight = null;
 let _loadFeedToken = null;
 let _loadFeedGeneration = 0;
+let _renderedFeedToken;
 export function loadFeed() {
   const token = getToken();
   if (_loadFeedInFlight && _loadFeedToken === token) return _loadFeedInFlight;
@@ -54,34 +56,30 @@ async function _loadFeedImpl(token, generation) {
 
     const feedHeaderHtml = `<div id="feed-header">${t('feed.header')} <span class="feed-header-sub">${t('feed.header_sub')}</span></div>`;
 
-    if (!entries.length && !pinned) {
-      replaceDayCoverLists([]);
-      _hideFeedPreview();
-      el.innerHTML = feedHeaderHtml + `<p class="feed-empty">${t('feed.empty')}</p>`;
-      return;
-    }
-
     // Register author info from entries
     for (const e of entries) {
       _hooks.registerAuthor?.(e.username, !!e.isAuthor, e.displayName);
       _hooks.registerContributor?.(e.username, !!e.isContributor);
     }
 
-    const { html, dayCoverLists } = renderFeedContents(entries, pinned, feedHeaderHtml);
+    const { blocks, dayCoverLists } = renderFeedContents(entries, pinned, feedHeaderHtml);
     // Snapshot expanded groups before re-rendering
     const _expandedKeys = new Set(
       [...el.querySelectorAll('.feed-group-toggle[aria-expanded="true"]')]
         .map(b => b.dataset.groupKey).filter(Boolean)
     );
 
-    // Disconnect day-card observers before replacing their DOM to release detached targets.
+    const update = updateFeedContents(el, blocks, _renderedFeedToken !== token);
+    _renderedFeedToken = token;
+    if (!update.changed) return;
     replaceDayCoverLists(dayCoverLists);
     _hideFeedPreview();
-    el.innerHTML = html;
+    for (const root of update.changedRoots) {
+      bindFeedInteractions(root, _expandedKeys);
+      bindFeedPreviews(root);
+    }
+    update.restoreScroll();
     _applyDayCoverFlows(el);
-
-    bindFeedInteractions(el, _expandedKeys);
-    bindFeedPreviews(el);
   } catch (_) {
     if (!isCurrent()) return;
     // On failure, remove only a live spinner; never clear previously rendered entries.

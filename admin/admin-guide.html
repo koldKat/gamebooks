@@ -109,6 +109,7 @@
     <aside class="toc">
       <b>Contents</b>
       <a class="toc-2" href="#access">Access</a>
+        <a class="toc-3" href="#reading-unlock-trial">Reading Unlock Trial</a>
         <a class="toc-2" href="#stats-cards">Stats cards</a>
         <a class="toc-2" href="#users-tab">Users tab</a>
         <a class="toc-3" href="#user-actions">User actions</a>
@@ -145,6 +146,11 @@
 <p>Tables use compact vertical padding for headers, rows, badges, and action buttons; text sizes are unchanged.</p>
 <hr>
 <h2 id="access">Access<a class="anchor" href="#access" aria-label="Link to section">#</a></h2>
+<h3 id="reading-unlock-trial">Reading Unlock Trial<a class="anchor" href="#reading-unlock-trial" aria-label="Link to section">#</a></h3>
+<p>Only <em>Assassins of Allansia</em> (book 263) currently requires a permanent reading unlock, priced at 0 GC. Paid purchases remain disabled. Existing saved runs in imported books receive permanent access once at the first startup after deployment, without tester labels. Imported introduction/rules text is shown before unlocking; check extraction quality before expanding the trial. Policy lives in <code>server/db/reading-access.js</code>; set <code>testBookId: null</code> and keep <code>paidEnabled: false</code> to disable the trial. Unlocks survive disabling the policy, removing a book from a library, and starting another run. There is no admin unlock editor yet.</p>
+<p>Mobile progress-load failures stop reader initialization instead of creating an empty replacement run. If unlocking succeeds but the reader fails to open, the player gets retry/back controls and keeps the permanent unlock.</p>
+<p>Unlocking requires player confirmation before any purchase request. Across all readable books, opening the reader automatically starts a run if none is active (including after resetting/deleting runs); existing active runs resume normally. Locked previews do not start runs before unlocking.</p>
+<p>Unlock confirmation is inline in the reader footer, with Cancel/Confirm controls and no modal popup.</p>
 <p>Open <code>http://localhost:3000/admin</code> in a browser on the same machine as the server.</p>
 <p>All <code>/api/admin/*</code> routes and the panel itself reject any connection that is not from localhost (<code>127.0.0.1</code>, <code>::1</code>, or <code>::ffff:127.0.0.1</code>). No login is required - the localhost restriction is the sole access control. <code>X-Forwarded-For</code> and similar headers are never trusted.</p>
 <hr>

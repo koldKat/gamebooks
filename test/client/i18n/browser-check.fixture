@@ -4,12 +4,16 @@
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
+import { readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { execFile } from 'node:child_process';
 
 const publicRoot = resolve(process.argv[1]);
 const executable = process.argv[2];
 const requests = [];
+let failFirst216 = true;
+const simulatorIds = readdirSync(resolve(publicRoot, 'js/i18n/en/battlesim'))
+  .filter(name => /^battlesim\d+\.js$/.test(name)).map(name => Number(name.match(/\d+/)[0]));
 const html = `<!doctype html><html><head><meta charset="utf-8"></head><body>
 <span data-i18n="books.title"></span>
 <input data-i18n-placeholder="ph.authors">
@@ -19,7 +23,18 @@ const html = `<!doctype html><html><head><meta charset="utf-8"></head><body>
 import { t, applyTranslations, setTranslationOverride } from '/js/i18n.js';
 import en from '/js/i18n/en/index.js';
 try {
-  const entries = Object.keys(en).sort().map(key => [key, t(key)]);
+  if (Object.keys(en).length !== 665) throw Error('eager dictionary size');
+  if (performance.getEntriesByType('resource').some(entry => /battlesim[0-9]+\\.js$/.test(entry.name))) throw Error('eager simulator request');
+  const { loadBattleSimTranslations } = await import('/js/i18n/battlesim.js');
+  await Promise.all([loadBattleSimTranslations(214), loadBattleSimTranslations('214')]);
+  if (t('battlesim214.status.fallen') === 'battlesim214.status.fallen') throw Error('lazy lookup');
+  if (Object.keys(en).some(key => /^battlesim215\\./.test(key))) throw Error('unrelated simulator loaded');
+  let failed = false;
+  try { await loadBattleSimTranslations(216); } catch { failed = true; }
+  if (!failed) throw Error('failure fixture did not fail');
+  await loadBattleSimTranslations(216);
+  await Promise.all(${JSON.stringify(simulatorIds)}.map(loadBattleSimTranslations));
+  const entries = Object.keys(en).filter(key => !key.startsWith('reading_access.')).sort().map(key => [key, t(key)]);
   const bytes = new TextEncoder().encode(JSON.stringify(entries));
   const digest = [...new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))]
     .map(n => n.toString(16).padStart(2, '0')).join('');
@@ -42,17 +57,23 @@ const server = createServer(async (req, res) => {
   requests.push(req.url);
   if (req.url === '/') { res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); res.end(html); return; }
   // Serve only the translation module graph, not application APIs or user data.
-  if (!/^\/js\/i18n(?:\.js|\/[a-z0-9/-]+\.js)$/.test(req.url)) { res.writeHead(404); res.end(); return; }
-  try { const source = await readFile(resolve(publicRoot, '.' + req.url)); res.writeHead(200, { 'Content-Type': 'text/javascript; charset=utf-8' }); res.end(source); }
+  const pathname = req.url.split('?')[0];
+  if (!/^\/js\/i18n(?:\.js|\/[a-z0-9/-]+\.js)$/.test(pathname)) { res.writeHead(404); res.end(); return; }
+  if (pathname.endsWith('/battlesim216.js') && failFirst216) {
+    failFirst216 = false; res.writeHead(503); res.end(); return;
+  }
+  try { const source = await readFile(resolve(publicRoot, '.' + pathname)); res.writeHead(200, { 'Content-Type': 'text/javascript; charset=utf-8' }); res.end(source); }
   catch { res.writeHead(404); res.end(); }
 });
 await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
 try {
   const url = 'http://127.0.0.1:' + server.address().port + '/';
   const output = await new Promise((resolve, reject) => execFile(executable,
-    ['--headless', '--no-sandbox', '--disable-gpu', '--no-first-run', '--disable-background-networking', '--dump-dom', '--virtual-time-budget=5000', url],
+    ['--headless', '--no-sandbox', '--disable-gpu', '--no-first-run', '--disable-background-networking', '--dump-dom', '--virtual-time-budget=15000', url],
     { timeout: 30000, maxBuffer: 1024 * 1024 }, (error, stdout, stderr) => error ? reject(error) : resolve({ stdout, stderr })));
   assert.match(output.stdout, /data-result="pass"/, output.stdout + '\n' + output.stderr);
-  assert.equal(new Set(requests.filter(path => path.endsWith('.js'))).size, 23, 'entire translation module graph loaded');
-  console.log('Native Chromium smoke passed: 7562 exact strings, all 23 modules and real DOM bindings.');
+  assert.equal(new Set(requests.map(path => path.split('?')[0]).filter(path => path.endsWith('.js'))).size, simulatorIds.length + 15, 'core graph plus lazy tables loaded');
+  assert.equal(requests.filter(path => path.split('?')[0].endsWith('/battlesim216.js')).length, 2, 'failed native import is retried');
+  assert.equal(requests.filter(path => path.endsWith('/battlesim214.js')).length, 1, 'concurrent requests fetch once');
+  console.log('Native Chromium smoke passed: 7562 exact strings, lazy tables, request deduplication and real DOM bindings.');
 } finally { await new Promise(resolve => server.close(resolve)); }

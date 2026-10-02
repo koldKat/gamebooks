@@ -1,0 +1,81 @@
+.reading-gate { display: flex; flex-direction: column; overflow: hidden; }
+.reading-gate-prose { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+.reading-gate-footer {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 0.6rem;
+}
+.reading-gate-footer .reading-unlock-button { margin-top: 0; }
+.reading-gate-footer .reading-unlock-status:empty { display: none; }
+.reading-gate-footer [hidden] { display: none; }
+.reading-unlock-confirmation { width: 100%; text-align: center; }
+.reading-gate-footer .reading-confirm-message { margin: 0 0 0.5rem; text-align: center; font-size: 0.8rem; line-height: 1.4; }
+.reading-confirm-actions { display: flex; justify-content: center; align-items: center; gap: 0.5rem; }
+.reading-confirm-actions .reading-unlock-button { margin: 0; }
+.reading-confirm-cancel {
+  background: #1f2937; color: #9ca3af; border: 1px solid #374151;
+  border-radius: 6px; padding: 0.25rem 0.7rem; font-family: inherit;
+  font-size: 0.78rem; cursor: pointer;
+}
+.reading-confirm-cancel:hover:not(:disabled) { color: #e5e7eb; border-color: #6b7280; }
+.reading-confirm-cancel:disabled { opacity: 0.35; cursor: default; }
+.reading-frontmatter {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  text-align: justify;
+  hyphens: auto;
+  flex-shrink: 0;
+}
+.reading-frontmatter--structured { white-space: normal; }
+.reading-gate-prose--263 > h2 {
+  margin: 0 0 0.7rem;
+  font-size: 1.1em;
+  line-height: 1.4;
+  font-weight: 600;
+  text-align: left;
+}
+.reading-gate-prose--263 > .reading-frontmatter + h2 {
+  margin-top: 1.3rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid #374151;
+}
+.reading-frontmatter--structured p { margin: 0 0 0.85rem; }
+.reading-frontmatter--structured h3 {
+  margin: 1.2rem 0 0.45rem;
+  font-size: 0.85em;
+  line-height: 1.45;
+  letter-spacing: 0.04em;
+  color: #d1d5db;
+  text-align: left;
+}
+.reading-frontmatter--structured ol { margin: 0.5rem 0 1rem; padding-left: 1.5rem; }
+.reading-frontmatter--structured li { margin-bottom: 0.65rem; padding-left: 0.15rem; }
+.reading-frontmatter--structured li::marker { color: #9ca3af; font-weight: 600; }
+.reading-unlock-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  align-self: center;
+  flex-shrink: 0;
+  margin: 0.75rem auto 0;
+  padding: 0.25rem 0.7rem;
+  border: 1px solid #2d5a1b;
+  border-radius: 6px;
+  background: #1c2a18;
+  color: #86efac;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.reading-unlock-button:hover:not(:disabled) { background: #243520; border-color: #4ade80; color: #4ade80; }
+.reading-unlock-button .coin-icon { width: 14px; height: 14px; display: block; }
+.reading-unlock-button:disabled { opacity: 0.35; cursor: default; }
+.reading-unlock-button:disabled:hover { background: #1c2a18; border-color: #2d5a1b; color: #86efac; }
+.reading-unlock-button:focus-visible { outline: 2px solid #86efac; outline-offset: 3px; }
+.reading-unlock-status { text-align: center !important; font-size: 0.8rem; margin-top: 0.5rem; }

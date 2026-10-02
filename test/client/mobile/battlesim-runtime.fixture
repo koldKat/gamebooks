@@ -1,0 +1,48 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createContext, SourceTextModule, SyntheticModule } from 'node:vm';
+
+const translated = new Set(), calls = [], imports = [];
+let failing = null;
+const context = createContext({ document: { getElementById: id => ({ click: () => calls.push(['click', id]) }) } });
+async function stub(exports) {
+  const module = new SyntheticModule(Object.keys(exports), function () {
+    for (const [name, value] of Object.entries(exports)) this.setExport(name, value);
+  }, { context });
+  await module.link(() => {}); await module.evaluate();
+  return module;
+}
+const module = new SourceTextModule(readFileSync(process.argv[1], 'utf8'), {
+  context,
+  importModuleDynamically: async specifier => {
+    if (specifier === '../../js/i18n/battlesim.js') return stub({
+      loadBattleSimTranslations: async id => {
+        if (id === failing) throw Error('Translation failure');
+        translated.add(id);
+      },
+    });
+    assert.match(specifier, /^\.\.\/\.\.\/js\/battlesim\/battlesim\d+\.js$/);
+    const id = Number(specifier.match(/battlesim(\d+)/)[1]);
+    assert.ok(translated.has(id), 'translations ready before mobile module evaluation');
+    imports.push(id);
+    const name = id === 8 ? 'initBattleSim8' : id === 829 ? 'initBattleSim' : 'initSim' + id;
+    return stub({ [name]: () => calls.push(['init', id]) });
+  },
+});
+await module.link(() => { throw Error('No eager mobile imports'); });
+await module.evaluate();
+const { openSimForBook: open } = module.namespace;
+assert.deepEqual(imports, []);
+await Promise.all([open(214), open('214')]);
+assert.equal(calls.filter(call => call[0] === 'init').length, 1, 'concurrent mobile opens initialize once');
+await open(214);
+assert.equal(calls.filter(call => call[0] === 'init').length, 1, 'cached mobile opens do not reinitialize');
+for (const id of [8, 829]) await open(id);
+for (const name of ['sim214-btn', 'sim8-btn', 'battlesim-btn']) assert.ok(calls.some(call => call[1] === name));
+failing = 215;
+await assert.rejects(open(215), /Translation failure/);
+assert.equal(imports.includes(215), false);
+failing = null; await open(215);
+assert.equal(calls.filter(call => call[0] === 'init' && call[1] === 215).length, 1);
+const count = imports.length; await open(999);
+assert.equal(imports.length, count);

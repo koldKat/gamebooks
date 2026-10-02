@@ -86,10 +86,11 @@ export async function _applyDayCoverFlows(root, dayCoverLists = _lastDayCoverLis
       guard++;
     }
 
-    stack.innerHTML = tiles.map(t => {
+    const html = tiles.map(t => {
       const left = Math.round((cardW - t.box.w) / 2);
       return `<div class="feed-day-cover-tile" style="top:${t.top}px;left:${left}px;width:${t.box.w}px;height:${t.box.h}px;background-image:url('${escapeHtml(t.cover)}')"></div>`;
     }).join('');
+    if (stack.innerHTML !== html) stack.innerHTML = html;
   }
 }
 

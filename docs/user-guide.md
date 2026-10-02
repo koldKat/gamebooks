@@ -4,6 +4,10 @@ Keep track of every branch, every choice, and every playthrough in your favourit
 
 ---
 
+## Starting the app
+
+The animated graph logo appears while the app starts, including when opened from your phone's home screen. If loading takes longer than 12 seconds, you can keep waiting or press **Try again** to reload. If you are offline, reconnect first. Reloading does not clear your login or saved progress.
+
 ## Landing page panels
 
 When you first arrive - whether you're logged in or not - the screen is divided into three panels side by side.
@@ -23,6 +27,8 @@ A public wall showing all the books, anthologies, and series in the tracker. Cli
 ### Centre - Activity feed
 
 Shows what everyone's been up to over the last 30 days. You don't need an account to read it.
+
+Live updates change the affected day's content without reloading the whole feed. Unchanged day cards stay in place, and expanded groups and your reading position are preserved where possible.
 
 Each day's card shows the covers of the public books played that day, faded behind the entries (cycling through more than one if several different books were active). Turn it off via **Show covers in feed** in the Ctrl+Y settings panel if you'd rather keep the feed plain. Days with no cover to show get a faint see-through tint instead, letting the rotating background peek through - toggle that separately with **Transparent background for day cards** if you'd rather those stayed flat too.
 
@@ -696,6 +702,8 @@ Some books come with a built-in **Battle Simulator** that appears automatically 
 
 When a simulator is available, a panel appears in the play area alongside your tracker - no special setup needed.
 
+On mobile, the simulator loads when you tap its button. If a network-error message appears, reconnect and tap the button again to retry.
+
 **What it does:**
 - Set up a fight by entering your character's stats and your enemy's stats
 - Click **Roll** to resolve each round - the simulator rolls the dice, applies the book's rules, and updates HP for both sides
@@ -712,6 +720,16 @@ When a simulator is available, a panel appears in the play area alongside your t
 ## Live Reading
 
 Some books have their actual text available to read right inside the app. Click **Read Book** in the play area to open it.
+
+Clicking a graph section does not open or reopen the reader. Section previews are available only while you have explicitly opened Live Reading, and only for mapped sections.
+
+For every readable book, opening the reader automatically starts a new run if none is active, including after deleting all runs or resetting progress. There is no start-a-run warning. If a run is already active, reading resumes it.
+
+**Unlock trial:** *Assassins of Allansia* shows its introduction and rules first, with a centered **Unlock book** button showing a zero price and the gold coin icon. Clicking it asks you to confirm the permanent unlock and its price; cancelling makes no purchase and starts no run. Unlocking costs nothing and permanently opens the book for your account, starting at section 1. Existing runs are preserved. Books you had already played before the trial retain access without needing to unlock them. No other books require purchasing yet; paid purchasing is not enabled.
+
+If the mobile reader fails to open after unlocking, use the displayed retry button or return home. The unlock stays saved, so retrying does not require another purchase. A failed progress load will not start a run from an empty fallback state.
+
+Unlock confirmation appears in place in the reader's bottom footer, not in a popup. **Cancel** restores the original button; **Confirm** shows the price with the gold coin icon. Both actions are disabled while the request is pending.
 
 **How it works:**
 - The panel shows the current section's prose, with every choice as a clickable link

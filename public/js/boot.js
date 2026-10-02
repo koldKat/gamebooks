@@ -10,4 +10,9 @@ document.addEventListener('mousedown', e => {
   bootState._mousedownOnOverlay = (e.target.classList.contains('modal-overlay') || e.target.classList.contains('pub-overlay') || e.target.classList.contains('inv-overlay')) ? e.target : null;
 });
 
-document.addEventListener('DOMContentLoaded', initApp);
+document.addEventListener('DOMContentLoaded', () => {
+  return initApp().then(() => window.appStartup?.ready()).catch(error => {
+    console.error('Application startup failed', error);
+    window.appStartup?.fail();
+  });
+});

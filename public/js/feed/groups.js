@@ -37,13 +37,13 @@ export function createDayRenderer() {
     return `<span class="feed-group-name"><span${pub}${av}${level}${userTitle}>${dn}</span>${badges}</span>`;
   }
 
-  let collapseId = 0;
   let dayIndex   = 0;
 
   const JOIN_COLLAPSE_THRESHOLD = 5;
 
-  function renderDayItems(items) {
-    const thisDayIndex = dayIndex++;
+  function renderDayItems(items, dayKey) {
+    const thisDayIndex = dayKey ?? dayIndex++;
+    const groupId = key => 'feed-collapse-' + encodeURIComponent(thisDayIndex + ':' + key);
     // Keep one-time book, series, and anthology achievements outside ordinary action groups.
     const skipTypes = new Set(['level_up', 'user_joined', 'book_rated', 'series_rated', 'book_created', 'series_created', 'all_visited', 'all_discovered', 'first_win', 'first_loss', 'first_battle_death', 'visit_all_series', 'discover_all_series', 'visit_all_anthology', 'discover_all_anthology']);
     const userCounts = new Map();
@@ -104,11 +104,14 @@ export function createDayRenderer() {
         if (!body) continue;
         const children = batchChildrenByContainer.get(e);
         if (children) {
-          const id = `feed-collapse-${collapseId++}`;
+          const containerKey = e.type === 'series_created' ? `s:${e.seriesId}`
+            : e.isContainer ? `a:${e.bookId}` : looseKeyOf(e);
+          const batchKey = 'batch:' + JSON.stringify([e.username, containerKey]);
+          const id = groupId(batchKey);
           const preview = children.slice(0, 2).map(_makeEntryHtml).join('');
           const rest    = children.slice(2).map(_makeEntryHtml).join('');
           out += `<div class="feed-entry${isParty ? ' feed-entry--party' : ''}${extraClass ? ' ' + extraClass : ''}">${body} `;
-          out += `<button class="feed-group-toggle feed-group-toggle--inline" data-target="${id}" data-group-key="${escapeHtml(thisDayIndex + ':batch:' + (e.seriesId ?? e.bookId))}" aria-expanded="false">`;
+          out += `<button class="feed-group-toggle feed-group-toggle--inline" data-target="${id}" data-group-key="${escapeHtml(thisDayIndex + ':' + batchKey)}" aria-expanded="false">`;
           const countKey = looseBatchHeads.has(e) ? 'feed.more_books_in_batch' : 'feed.books_in_batch';
           out += `<span class="feed-group-chevron">▶</span><span class="feed-group-count">${t(countKey, { n: children.length })}</span>`;
           out += `</button></div>`;
@@ -122,7 +125,7 @@ export function createDayRenderer() {
         if (collapseJoins) {
           if (joinGroupRendered) continue;
           joinGroupRendered = true;
-          const id = `feed-collapse-${collapseId++}`;
+          const id = groupId('__joins');
           const preview = joinItems.slice(0, 2).map(_makeEntryHtml).join('');
           const rest    = joinItems.slice(2).map(_makeEntryHtml).join('');
           out += `<div class="feed-user-group feed-user-group--joins">`;
@@ -142,14 +145,14 @@ export function createDayRenderer() {
         if (rendered.has(k)) continue;
         rendered.add(k);
         const userItems = items.filter(x => !skipTypes.has(x.type) && entryUserKey(x) === k);
-        const id = `feed-collapse-${collapseId++}`;
+        const id = groupId('user:' + k);
         const preview = userItems.slice(0, 2).map(_makeEntryHtml).join('');
         const rest    = userItems.slice(2).map(_makeEntryHtml).join('');
         const isPartyGroup = !!(e.usernames && e.usernames.length > 1);
         const label = renderGroupLabel(e, k);
         const partyTag = isPartyGroup ? ' <span class="feed-party-badge">party</span>' : '';
         out += `<div class="feed-user-group${isPartyGroup ? ' feed-user-group--party' : ''}">`;
-        out += `<button class="feed-group-toggle" data-target="${id}" data-group-key="${escapeHtml(thisDayIndex + ':' + k)}" aria-expanded="false">`;
+        out += `<button class="feed-group-toggle" data-target="${id}" data-group-key="${escapeHtml(thisDayIndex + ':user:' + k)}" aria-expanded="false">`;
         out += `<span class="feed-group-chevron">▶</span>${label}<span class="feed-group-count">${t('feed.actions_today', { n: userItems.length })}</span>${partyTag}`;
         out += `</button>`;
         out += `<div class="feed-group-body" id="${id}" hidden>${preview}${rest}</div>`;

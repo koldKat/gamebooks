@@ -1,0 +1,51 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createContext, SourceTextModule, SyntheticModule } from 'node:vm';
+
+const imports = [], urls = [], registered = [], held = new Map();
+let failing = null;
+const context = createContext({});
+const runtime = new SyntheticModule(['registerTranslations'], function () {
+  this.setExport('registerTranslations', table => registered.push(table));
+}, { context });
+const module = new SourceTextModule(readFileSync(process.argv[1], 'utf8'), {
+  context,
+  importModuleDynamically: async specifier => {
+    assert.match(specifier, /^\.\/en\/battlesim\/battlesim\d+\.js(?:\?retry=\d+)?$/);
+    urls.push(specifier);
+    const id = Number(specifier.match(/battlesim(\d+)/)[1]);
+    imports.push(id);
+    if (held.has(id)) await held.get(id);
+    if (failing === id) throw Error('Offline');
+    const table = new SyntheticModule(['default'], function () {
+      this.setExport('default', { ['battlesim' + id + '.ui.title']: 'Simulator ' + id });
+    }, { context });
+    await table.link(() => {}); await table.evaluate();
+    return table;
+  },
+});
+await module.link(specifier => { assert.equal(specifier, './runtime.js'); return runtime; });
+await module.evaluate();
+const { loadBattleSimTranslations: load } = module.namespace;
+assert.deepEqual(imports, [], 'no simulator table loads at startup');
+let release;
+held.set(214, new Promise(resolve => { release = resolve; }));
+const first = load(214), second = load('214');
+assert.equal(first, second, 'concurrent requests share a promise');
+release(); await first;
+assert.deepEqual(imports, [214]);
+assert.equal(registered.length, 1);
+await load(214);
+assert.equal(imports.length, 1, 'completed tables stay cached');
+await load(215);
+assert.deepEqual(imports, [214, 215], 'unrelated simulator tables are not fetched');
+failing = 216;
+await assert.rejects(load(216), /Offline/);
+assert.equal(registered.length, 2);
+failing = null;
+await load(216);
+assert.equal(imports.filter(id => id === 216).length, 2, 'failed table can be retried');
+assert.ok(urls.at(-1).endsWith('/battlesim216.js?retry=1'), 'retry bypasses the failed native module URL');
+assert.equal(registered.length, 3);
+for (const id of [0, -1, 1.5, 'not-an-id', '../214', Infinity]) await assert.rejects(load(id), /Invalid simulator ID/);
+assert.equal(imports.length, 4, 'invalid IDs never import');

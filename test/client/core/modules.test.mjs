@@ -8,7 +8,8 @@ import { spawnSync } from 'node:child_process';
 const dir = new URL('../../../public/js/', import.meta.url);
 test('core relocation preserves implementations without root wrappers or duplicate state', () => {
   const digests = {
-    state: '64015a4f39fa4487796340dba5605a82b268995ed898155450dd6cea5d365663',
+    // Strict reader loading is opt-in and covered by strict-load.test.mjs.
+    state: 'bdbfa3b4f0481f4ab7d0bbc80bcd82f35023b94f023b32378b8e66802bbaa39e',
     constants: 'b67245d28638c7d42c976068c7bc86ac822fff89d47c537d8fd9672ff19826a9',
     sort: 'a37194516dcc6faf776288906e52f3b9e8dc8d30a81df7158108d8b0e3742eb6',
     util: 'bf2c4f2663294ce6cfba6305a8def10d7d301ef1bc1c0bf22453bf487fbb544d',

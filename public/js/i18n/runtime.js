@@ -2,6 +2,10 @@ import en from './en/index.js';
 
 const translations = { en };
 
+export function registerTranslations(table) {
+  Object.assign(translations.en, table);
+}
+
 let _lang = localStorage.getItem('gamebook_lang') || 'en';
 
 const _overrides = {};

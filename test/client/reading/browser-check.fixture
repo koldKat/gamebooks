@@ -1,0 +1,113 @@
+// Isolated native DOM smoke; no production APIs or database connection.
+import assert from 'node:assert/strict';
+import { createServer } from 'node:http';
+import { readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
+import { execFile } from 'node:child_process';
+
+const root = resolve(process.argv[1]), executable = process.argv[2];
+const desktop = process.argv[3] === 'desktop';
+const readerSource = await readFile(resolve(root, 'js/reading/liveread.js'), 'utf8');
+const wheelHandler = readerSource.match(/body\.addEventListener\('wheel', e => \{([\s\S]*?)\}, \{ passive: false \}\)/)[1];
+let purchased = false, posts = 0;
+const html = `<!doctype html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="/mobile/css/style.css">
+${desktop ? '<link rel="stylesheet" href="/css/liveread.css">' : ''}
+<link rel="stylesheet" href="/css/reading-access.css"><link rel="stylesheet" href="/css/shop.css">
+</head><body>${desktop ? '<div class="liveread-panel active" style="top:20px"><div style="flex-shrink:0;padding:12px">Reader</div><div class="liveread-body" id="reader"></div></div>' : '<div id="screen"><div class="m-topbar">Reader</div><div class="m-top" id="reader"></div></div>'}
+<script type="module">
+import { showReadingGate } from '/js/reading/access.js';
+import { setToken } from '/js/core/state.js';
+setToken('test-account');
+const mount = document.getElementById('reader');
+const body = mount;
+const _renderedLineHeight = el => parseFloat(getComputedStyle(el).lineHeight) || 24;
+body.addEventListener('wheel', e => { ${wheelHandler} }, { passive: false });
+const wait = async fn => { for(let i=0;i<200;i++){if(fn()) return; await new Promise(r=>setTimeout(r,10));} throw Error('timeout'); };
+try {
+  let opened = false;
+  const options = { isCurrent: () => true, onUnlock: () => { opened = true; mount.textContent = 'Section 1'; } };
+  if(!await showReadingGate(mount,263,options)) throw Error('missing gate');
+  if(mount.querySelector('script')) throw Error('unsafe frontmatter');
+  const prose = mount.querySelector('.reading-gate-prose');
+  if(prose.scrollHeight <= prose.clientHeight) throw Error('frontmatter does not scroll');
+  const button = mount.querySelector('button');
+  if(button.querySelector('span').textContent !== 'Unlock book · 0' || !button.querySelector('svg.coin-icon')) throw Error('unlock price/icon');
+  if(getComputedStyle(mount.querySelector('.reading-frontmatter')).textAlign !== 'justify') throw Error('frontmatter alignment');
+  const rulesHeading = mount.querySelectorAll('.reading-gate-prose > h2')[1];
+  const rulesStyle = getComputedStyle(rulesHeading);
+  if(parseFloat(rulesStyle.marginTop) < 16 || rulesStyle.borderTopStyle !== 'solid') throw Error('rules section separation');
+  const bounds = button.getBoundingClientRect(), parent = mount.getBoundingClientRect();
+  if(Math.abs((bounds.left + bounds.right) / 2 - (parent.left + mount.clientLeft + mount.clientWidth / 2)) > 2) throw Error('button not centered');
+  if(bounds.height > 36) throw Error('button not compact');
+  if(bounds.bottom > innerHeight || parent.bottom - bounds.bottom > 40) throw Error('button not anchored at bottom');
+  const wheel = new WheelEvent('wheel', { deltaY: 100, bubbles: true, cancelable: true });
+  prose.dispatchEvent(wheel);
+  if(!wheel.defaultPrevented || prose.scrollTop <= 0) throw Error('wheel does not scroll frontmatter');
+  prose.scrollTop = prose.scrollHeight;
+  if(Math.abs(button.getBoundingClientRect().bottom - bounds.bottom) > 1) throw Error('button moved with prose');
+  const reference = document.createElement('button');
+  reference.className = 'shop-buy-btn';
+  reference.style.position = 'absolute'; reference.style.left = '-9999px';
+  mount.append(reference);
+  for(const disabled of [false,true]) {
+    button.disabled = reference.disabled = disabled;
+    const actualStyle = getComputedStyle(button), shopStyle = getComputedStyle(reference);
+    for(const prop of ['backgroundColor','borderColor','borderRadius','color','fontSize','fontWeight','fontFamily','paddingTop','paddingBottom','paddingLeft','paddingRight','opacity','cursor']) {
+      if(actualStyle[prop] !== shopStyle[prop]) throw Error('shop style mismatch: '+prop);
+    }
+  }
+  button.disabled = false; reference.remove();
+  button.scrollIntoView({block:'end'});
+  if(button.getBoundingClientRect().bottom > innerHeight + 1) throw Error('button offscreen');
+  button.click();
+  if(mount.querySelector('.reading-unlock-confirmation').hidden || document.getElementById('confirm-overlay')) throw Error('missing inline confirmation');
+  mount.querySelector('.reading-confirm-cancel').click();
+  if(opened || button.disabled) throw Error('cancelled unlock changed reader');
+  button.click(); button.click();
+  mount.querySelector('.reading-confirm-accept').click();
+  await wait(()=>!button.disabled);
+  if(opened) throw Error('failed request opened reader');
+  mount.querySelector('.reading-confirm-accept').click();
+  await wait(()=>opened);
+  if(mount.textContent !== 'Section 1') throw Error('reader handoff');
+  if(await showReadingGate(mount,263,options)) throw Error('purchase did not persist');
+  if(mount.textContent !== 'Section 1') throw Error('unlocked check replaced reader');
+  document.body.dataset.result = 'pass';
+} catch(error){document.body.dataset.result='fail'; document.body.dataset.error=error.message;}
+</script></body></html>`;
+const server = createServer(async (req, res) => {
+  if (req.url === '/') { res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.end(html); return; }
+  if (req.url === '/api/books/263/reading-access') {
+    assert.equal(req.headers.authorization, 'Bearer test-account');
+    res.setHeader('Content-Type', 'application/json');
+    if (req.method === 'POST') {
+      posts++;
+      if (posts === 1) { res.writeHead(500); res.end('{}'); return; }
+      purchased = true; res.end('{"ok":true}'); return;
+    }
+    res.end(JSON.stringify({ name: 'Trial book', locked: !purchased, cost: 0,
+      introText: '<script>alert(1)</script>\n' + 'Long introduction. '.repeat(1500), rulesText: 'Rules' }));
+    return;
+  }
+  if (!/^\/(?:js\/(?:reading\/(?:access|frontmatter)|ui-helpers\/(?:coin-icon|confirm)|core\/state|i18n(?:\/en\/[a-z/-]+|\/runtime)?)\.js|mobile\/css\/style\.css|css\/(?:reading-access|liveread|shop|confirm)\.css|vendor\/fonts\/pt-serif\/[a-z0-9_.-]+\.(?:css|woff2))$/.test(req.url)) {
+    res.writeHead(404); res.end(); return;
+  }
+  try {
+    const data = await readFile(resolve(root, '.' + req.url));
+    res.setHeader('Content-Type', req.url.endsWith('.css') ? 'text/css' : 'text/javascript; charset=utf-8');
+    res.end(data);
+  } catch { res.writeHead(404); res.end(); }
+});
+await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+try {
+  const url = 'http://127.0.0.1:' + server.address().port + '/';
+  const output = await new Promise((resolve, reject) => execFile(executable,
+    ['--headless', '--no-sandbox', '--disable-gpu', '--no-first-run', '--disable-background-networking',
+      '--window-size=390,844', '--dump-dom', '--virtual-time-budget=15000', url],
+    { timeout: 30000, maxBuffer: 1024 * 1024 }, (error, stdout) => error ? reject(error) : resolve(stdout)));
+  assert.match(output, /data-result="pass"/, output);
+  assert.equal(posts, 2, 'one failed purchase, one successful retry; double click is ignored');
+  console.log('Native ' + (desktop ? 'desktop' : 'mobile') + ' reader smoke passed: wheel scrolling, anchored footer, styling, unlock and retry.');
+} finally { await new Promise(resolve => server.close(resolve)); }

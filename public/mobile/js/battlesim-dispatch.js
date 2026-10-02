@@ -36,6 +36,8 @@ export async function openSimForBook(bookId) {
   const id = Number(bookId);
   if (!SUPPORTED_BATTLE_SIM_BOOKS.has(id)) return;
 
+  const { loadBattleSimTranslations } = await import('../../js/i18n/battlesim.js');
+  await loadBattleSimTranslations(id);
   const mod = await import(`../../js/battlesim/battlesim${id}.js`);
   if (!_initialized.has(id)) {
     const init = mod[_initExportName(id)];

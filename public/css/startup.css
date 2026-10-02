@@ -1,0 +1,29 @@
+#app-startup {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  background: #111827;
+  color: #d1d5db;
+  text-align: center;
+  font: 16px Georgia, serif;
+}
+#app-startup[hidden], #app-startup [hidden] { display: none; }
+#app-startup svg { width: 48px; height: 48px; }
+#app-startup button {
+  padding: 8px 18px;
+  border: 1px solid #b7791f;
+  border-radius: 6px;
+  background: #1f2937;
+  color: #f5a623;
+  font: inherit;
+  cursor: pointer;
+}
+@media (prefers-reduced-motion: reduce) {
+  #app-startup svg circle { animation: none; opacity: 1; }
+}

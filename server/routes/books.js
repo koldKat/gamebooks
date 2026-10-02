@@ -596,6 +596,9 @@ async function handleGetBookSection(req, res, bookId, sectionId) {
   const userId = await authenticate(req, res);
   if (userId === null) return;
   if (!db._canLiveRead(userId)) return send(res, 403, { error: 'forbidden' });
+  const access = db.readingAccess.getAccess(userId, bookId, false);
+  if (!access) return send(res, 404, { error: 'not found' });
+  if (access.locked) return send(res, 403, { error: 'reading_locked' });
   const section = db.getBookSection(bookId, sectionId);
   if (!section) return send(res, 404, { error: 'not found' });
   send(res, 200, section);

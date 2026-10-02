@@ -282,7 +282,8 @@
   <div class="layout">
     <aside class="toc">
       <b>Contents</b>
-      <a class="toc-2" href="#landing-page-panels">Landing page panels</a>
+      <a class="toc-2" href="#starting-the-app">Starting the app</a>
+        <a class="toc-2" href="#landing-page-panels">Landing page panels</a>
         <a class="toc-3" href="#left-book-covers">Left - Book covers</a>
         <a class="toc-3" href="#centre-activity-feed">Centre - Activity feed</a>
         <a class="toc-3" href="#right-login-books">Right - Login / Books</a>
@@ -362,6 +363,8 @@
 <h1 id="gamebook-tracker-user-guide">Gamebook Tracker - User Guide<a class="anchor" href="#gamebook-tracker-user-guide" aria-label="Link to section">#</a></h1>
 <p>Keep track of every branch, every choice, and every playthrough in your favourite gamebooks. Works with Fighting Fantasy, Choose Your Own Adventure, Lone Wolf, and anything else that uses numbered sections.</p>
 <hr>
+<h2 id="starting-the-app">Starting the app<a class="anchor" href="#starting-the-app" aria-label="Link to section">#</a></h2>
+<p>The animated graph logo appears while the app starts, including when opened from your phone&#39;s home screen. If loading takes longer than 12 seconds, you can keep waiting or press <strong>Try again</strong> to reload. If you are offline, reconnect first. Reloading does not clear your login or saved progress.</p>
 <h2 id="landing-page-panels">Landing page panels<a class="anchor" href="#landing-page-panels" aria-label="Link to section">#</a></h2>
 <p>When you first arrive - whether you&#39;re logged in or not - the screen is divided into three panels side by side.</p>
 <h3 id="left-book-covers">Left - Book covers<a class="anchor" href="#left-book-covers" aria-label="Link to section">#</a></h3>
@@ -376,6 +379,7 @@
 <blockquote>Click the ⚙ (cog) button in the header, or press <strong>Ctrl+Y</strong>, to adjust the cover-title font size, toggle bold text, hide Cyrillic covers, toggle <strong>Reduce animations</strong> (useful on low-powered devices), and toggle <strong>Show covers in feed</strong> / <strong>Transparent background for day cards</strong>.</blockquote>
 <h3 id="centre-activity-feed">Centre - Activity feed<a class="anchor" href="#centre-activity-feed" aria-label="Link to section">#</a></h3>
 <p>Shows what everyone&#39;s been up to over the last 30 days. You don&#39;t need an account to read it.</p>
+<p>Live updates change the affected day&#39;s content without reloading the whole feed. Unchanged day cards stay in place, and expanded groups and your reading position are preserved where possible.</p>
 <p>Each day&#39;s card shows the covers of the public books played that day, faded behind the entries (cycling through more than one if several different books were active). Turn it off via <strong>Show covers in feed</strong> in the Ctrl+Y settings panel if you&#39;d rather keep the feed plain. Days with no cover to show get a faint see-through tint instead, letting the rotating background peek through - toggle that separately with <strong>Transparent background for day cards</strong> if you&#39;d rather those stayed flat too.</p>
 <ul>
 <li>A <strong>tip bar</strong> cycles through helpful hints every 15 seconds (the orange bar counts down)</li>
@@ -737,6 +741,7 @@
 <h2 id="battle-simulators">Battle Simulators<a class="anchor" href="#battle-simulators" aria-label="Link to section">#</a></h2>
 <p>Some books come with a built-in <strong>Battle Simulator</strong> that appears automatically when you open them. It handles the book&#39;s specific combat rules so you can focus on the adventure, not the maths.</p>
 <p>When a simulator is available, a panel appears in the play area alongside your tracker - no special setup needed.</p>
+<p>On mobile, the simulator loads when you tap its button. If a network-error message appears, reconnect and tap the button again to retry.</p>
 <p><strong>What it does:</strong></p>
 <ul>
 <li>Set up a fight by entering your character&#39;s stats and your enemy&#39;s stats</li>
@@ -753,6 +758,11 @@
 <hr>
 <h2 id="live-reading">Live Reading<a class="anchor" href="#live-reading" aria-label="Link to section">#</a></h2>
 <p>Some books have their actual text available to read right inside the app. Click <strong>Read Book</strong> in the play area to open it.</p>
+<p>Clicking a graph section does not open or reopen the reader. Section previews are available only while you have explicitly opened Live Reading, and only for mapped sections.</p>
+<p>For every readable book, opening the reader automatically starts a new run if none is active, including after deleting all runs or resetting progress. There is no start-a-run warning. If a run is already active, reading resumes it.</p>
+<p><strong>Unlock trial:</strong> <em>Assassins of Allansia</em> shows its introduction and rules first, with a centered <strong>Unlock book</strong> button showing a zero price and the gold coin icon. Clicking it asks you to confirm the permanent unlock and its price; cancelling makes no purchase and starts no run. Unlocking costs nothing and permanently opens the book for your account, starting at section 1. Existing runs are preserved. Books you had already played before the trial retain access without needing to unlock them. No other books require purchasing yet; paid purchasing is not enabled.</p>
+<p>If the mobile reader fails to open after unlocking, use the displayed retry button or return home. The unlock stays saved, so retrying does not require another purchase. A failed progress load will not start a run from an empty fallback state.</p>
+<p>Unlock confirmation appears in place in the reader&#39;s bottom footer, not in a popup. <strong>Cancel</strong> restores the original button; <strong>Confirm</strong> shows the price with the gold coin icon. Both actions are disabled while the request is pending.</p>
 <p><strong>How it works:</strong></p>
 <ul>
 <li>The panel shows the current section&#39;s prose, with every choice as a clickable link</li>

@@ -5,7 +5,7 @@ import { pathToFileURL } from 'node:url';
 
 let section = 1;
 const requests = [], commits = [], suppression = [], physics = [];
-const active = new Set(['active']);
+const active = new Set();
 const panel = { classList: { contains: value => active.has(value), add: value => active.add(value), remove: value => active.delete(value) } };
 const body = { innerHTML: '', scrollTop: 9, querySelectorAll: () => [] };
 const button = { setAttribute() {}, removeAttribute() {} };
@@ -13,10 +13,11 @@ const elements = { 'liveread-panel': panel, 'liveread-body': body, 'liveread-hea
   'liveread-preview-return': { addEventListener() {} } };
 const context = createContext({ document: { getElementById: id => elements[id] }, console });
 const stubData = {
-  '../core/state.js': { state: { startSection: 1 }, currentBookId: 42, currentPlaythrough: () => ({}), currentSection: () => section,
+  '../core/state.js': { state: { startSection: 1 }, getToken: () => 'account', currentBookId: 42, currentPlaythrough: () => ({}), currentSection: () => section,
     viewingPt: null, isTerminal: sec => sec === 0 || sec === -1, parseSecId: Number, isSectionMapped: sec => sec === 1,
     apiFetch: async url => { requests.push(url); const sec = Number(url.split('/').at(-1)); return { ok: true, json: async () => ({ html: '<p>Section ' + sec + '</p>', choices: sec === 1 ? [2] : [] }) }; } },
-  '../play.js': { navigate() {}, commitChoices: (sec, choices) => commits.push([sec, [...choices]]), showAlert() {}, suppressAutoNav: value => suppression.push(value) },
+  '../play.js': { navigate() {}, startPlaythrough() {}, commitChoices: (sec, choices) => commits.push([sec, [...choices]]), showAlert() {}, suppressAutoNav: value => suppression.push(value) },
+  './access.js': { showReadingGate: async () => false },
   '../graph.js': { network: null, setLightweightRestabilize: value => physics.push(value) },
   '../i18n.js': { t: key => key },
   '../core/util.js': { shortcutLabel() {}, registerPanelShortcut() {}, ALL_PANEL_OVERLAY_IDS: [] },
@@ -31,6 +32,13 @@ await mod.link(specifier => {
 await mod.evaluate();
 const reader = mod.namespace;
 const settle = async () => { for (let i = 0; i < 12; i++) await Promise.resolve(); };
+await reader.previewSection(1);
+assert.equal(requests.length, 0, 'closed reader must not fetch a clicked section');
+assert.equal(active.has('active'), false, 'node clicks must not open the reader');
+assert.equal(body.innerHTML, '');
+assert.deepEqual(suppression, []);
+assert.deepEqual(physics, []);
+active.add('active');
 reader.renderLiveRead();
 await settle();
 assert.equal(body.innerHTML, '<p>Section 1</p>');
@@ -53,5 +61,13 @@ assert.equal(requests.length, 2, 'mapped preview uses cached section');
 reader.setLiveReadVisible(false);
 assert.equal(active.has('active'), false);
 assert.equal(button.disabled, true);
+assert.deepEqual(suppression, [false]);
+assert.deepEqual(physics, [false]);
+const closedHtml = body.innerHTML;
+await reader.previewSection(1);
+await reader.previewSection(2);
+assert.equal(active.has('active'), false, 'node clicks must not reopen a closed reader');
+assert.equal(body.innerHTML, closedHtml);
+assert.equal(requests.length, 2);
 assert.deepEqual(suppression, [false]);
 assert.deepEqual(physics, [false]);
