@@ -18,7 +18,7 @@ import { refreshAppXp } from '../app-xp.js';
 import { loadCovers, _showCachedCoversPanel, _updateLandingBgDragUi } from '../covers.js';
 import { renderBooksList, getCachedBooks, getCachedAllSeries, getCachedStashes, setBooksDataFresh, setBooksRevealedAt, setCurrentUserId } from '../books.js';
 import { loadFeed } from '../feed.js';
-import { _scheduleLiveUiRefresh, resetNotifBadgesForLogout } from '../notif.js';
+import { _scheduleLiveUiRefresh, resetNotifBadgesForLogout } from '../community/notif.js';
 import { _resetRewardSnapshotState, _positionRewardLayer, _processRewardSnapshot } from '../rewards.js';
 import { cancelBgMove } from '../bg.js';
 import { getDemoBooks, getDemoVisited } from '../demo.js';

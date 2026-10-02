@@ -232,7 +232,7 @@ function renderXpBlock(data) {
 
 // ── Image compression ─────────────────────────────────────────────────────────
 // The full load+resize+compress pipeline (compressImage) now lives in util.js,
-// shared with feedback.js/inbox.js/add-book.js/edit-book.js - this used to be
+// shared with community/feedback.js, community/inbox.js, add-book.js and edit-book.js - this used to be
 // a second, separately-maintained copy here that had quietly drifted (gave up
 // and returned null sooner than util.js's copy on a stubborn image). Only
 // compressToBlob is still needed directly in this file, for confirmCrop's

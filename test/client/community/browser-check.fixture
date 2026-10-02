@@ -1,0 +1,85 @@
+// Manual browser check: real DOM/modules with mocked HTTP and no production writes.
+const nativeFetch = window.fetch.bind(window), errors = [], checks = [], requests = [];
+window.addEventListener('error', e => errors.push(e.message));
+window.addEventListener('unhandledrejection', e => errors.push(String(e.reason)));
+localStorage.clear();
+let nextAttachment = 501;
+const threads = [{ id: 7, username: 'Tester', created_at: 1700000000, user_unread: 2,
+  messages: [{ sender: 'admin', body: 'Hello [help](https://example.test/help)', created_at: 1700000001,
+    attachments: [{ filename: 'guide.pdf', original_name: 'Guide.pdf' }, { filename: 'cover.png', original_name: 'Cover.png' }] }] }];
+const notifications = { unseen: 2, items: [
+  { type: 'level_up', payload: { level: 5, title: 'Ranger' }, seen: false, createdAt: Date.now() },
+  { type: 'coin_gain', payload: { amount: 1, reason: 'playtime_24h' }, seen: false, createdAt: Date.now() }] };
+window.fetch = async (url, options = {}) => {
+  const path = String(url); requests.push({ path, method: options.method || 'GET', body: options.body, headers: options.headers });
+  let data = {};
+  if (path === '/api/profile') data = { email: 'tester@example.test' };
+  else if (path === '/api/attachments') data = { id: nextAttachment++ };
+  else if (path === '/api/notifications') data = notifications;
+  else if (path === '/api/forum/latest') data = { lastPostAt: 200, userSeen: 100 };
+  else if (path === '/api/feedback' && (options.method || 'GET') === 'GET') data = threads;
+  else if (path === '/api/feedback/7/read') threads[0].user_unread = 0;
+  else if (path === '/api/feedback/7/reply') {
+    const payload = JSON.parse(options.body);
+    threads[0].messages.push({ sender: 'user', body: payload.message, created_at: 1700000002, attachments: [] });
+  }
+  return new Response(JSON.stringify(data), { headers: { 'Content-Type': 'application/json' } });
+};
+const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
+const el = id => document.getElementById(id);
+const assert = (value, label) => { if (!value) throw Error(label); checks.push(label); };
+try {
+  const state = await import('/js/state.js');
+  state.setToken('isolated-test-token'); state.setUsername('Tester');
+  const inbox = await import('/js/community/inbox.js');
+  const feedback = await import('/js/community/feedback.js');
+  const notif = await import('/js/community/notif.js');
+  inbox.initInbox(() => null); feedback.initFeedback();
+  el('books-screen').style.display = 'flex';
+  let rewards = 0, parties = 0, prefs = 0;
+  notif.setNotifHooks({ refreshCoinsDisplay: () => { rewards++; }, loadPartyInvites: () => { parties++; }, syncPrefs: () => { prefs++; } });
+  notif._scheduleLiveUiRefresh({ inbox: true, notif: true, forum: true, reward: true, party: true, prefs: true }, 0);
+  await pause(60);
+  assert(el('inbox-btn').textContent.includes('(2)') && el('inbox-btn').classList.contains('inbox-btn--active'), 'live inbox badge');
+  assert(el('notif-btn').classList.contains('notif-btn--active'), 'live notification badge');
+  assert(el('forum-btn').classList.contains('forum-btn--active'), 'live forum badge');
+  assert(rewards === 1 && parties === 1 && prefs === 1, 'reward party and preference refresh hooks');
+  notif._openNotifDropdown(el('notif-btn'), el('notif-btn')._notifData);
+  assert(el('notif-list').querySelectorAll('.notif-item').length === 2 && notif.isNotifDropdownOpen(), 'notification dropdown renders');
+  assert(el('notif-dropdown').scrollTop === 0, 'dropdown starts at top');
+  assert(requests.some(r => r.path === '/api/notifications/seen' && r.method === 'POST'), 'notifications marked seen');
+  notif._closeNotifDropdown(); assert(!notif.isNotifDropdownOpen(), 'notification dropdown closes');
+  el('inbox-btn').click(); await pause(40);
+  assert(el('inbox-modal-overlay').classList.contains('active') && el('inbox-list').querySelectorAll('.inbox-item').length === 1, 'inbox thread list opens');
+  el('inbox-list').querySelector('.inbox-item').click(); await pause(40);
+  assert(el('inbox-messages').textContent.includes('Hello') && el('inbox-threads-view').style.display === 'none', 'conversation and read state');
+  assert(el('inbox-messages').querySelector('.att-file-link') && el('inbox-messages').querySelector('.att-thumb'), 'file and image attachments render');
+  const attach = async id => {
+    const input = el(id);
+    Object.defineProperty(input, 'files', { configurable: true, value: [new File(['test attachment'], 'note.txt', { type: 'text/plain' })] });
+    input.dispatchEvent(new Event('change', { bubbles: true })); await pause(50);
+  };
+  await attach('inbox-file-input');
+  assert(el('inbox-att-list').querySelector('.att-item') && !el('inbox-att-list').querySelector('.att-uploading'), 'inbox attachment upload');
+  el('inbox-reply-input').value = 'Reply from test'; el('inbox-reply-send-btn').click(); await pause(50);
+  const reply = requests.find(r => r.path === '/api/feedback/7/reply');
+  assert(reply && JSON.parse(reply.body).attachment_ids[0] === 501, 'reply carries attachment ids');
+  assert(el('inbox-messages').textContent.includes('Reply from test') && !el('inbox-reply-send-btn').disabled, 'reply refreshes conversation');
+  el('inbox-back-btn').click(); assert(el('inbox-conv-view').style.display === 'none', 'back returns to threads');
+  el('inbox-close-btn').click(); assert(!el('inbox-modal-overlay').classList.contains('active'), 'inbox closes');
+  el('feedback-btn').click(); await pause(40);
+  assert(el('feedback-username-input').value === 'Tester' && el('feedback-email-input').value === 'tester@example.test', 'feedback profile prefills');
+  await attach('feedback-file-input');
+  el('feedback-message-input').value = 'Feedback from test'; el('feedback-submit-btn').click(); await pause(50);
+  const submission = requests.find(r => r.path === '/api/feedback' && r.method === 'POST');
+  const payload = JSON.parse(submission.body);
+  assert(payload.message === 'Feedback from test' && payload.attachment_ids[0] === 502, 'feedback carries message and attachment');
+  assert(!el('feedback-modal-overlay').classList.contains('active'), 'feedback closes on success');
+  assert(submission.headers.Authorization === 'Bearer isolated-test-token', 'authenticated requests preserved');
+  state.clearToken(); notif.resetNotifBadgesForLogout();
+  assert(!el('notif-btn').classList.contains('notif-btn--active') && !el('inbox-btn').classList.contains('inbox-btn--active') && !el('forum-btn').classList.contains('forum-btn--active'), 'logout clears badges');
+  assert(errors.length === 0, 'no browser errors or unhandled rejections');
+  await nativeFetch('/report', { method: 'POST', body: JSON.stringify({ ok: true, checks, errors }) });
+} catch (error) {
+  await nativeFetch('/report', { method: 'POST', body: JSON.stringify({ ok: false, error: String(error), stack: error.stack, checks, errors }) });
+}

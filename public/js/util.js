@@ -119,8 +119,8 @@ export function setPreviewImgBlob(img, blob) {
 }
 
 // ── Feedback/inbox attachment upload ──────────────────────────────────────────
-// Used to be two separately-maintained near-identical copies (feedback.js's
-// _uploadFile, inbox.js's _uploadAttachment) - both used a raw fetch() instead
+// Used to be two separately-maintained near-identical copies (community/feedback.js's
+// _uploadFile, community/inbox.js's _uploadAttachment) - both used a raw fetch() instead
 // of apiFetch, silently missing the app-wide 401/503 handling every other
 // authenticated call gets.
 

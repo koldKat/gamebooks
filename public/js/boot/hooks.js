@@ -16,14 +16,14 @@ import { setCoversHooks, loadCovers, _refreshPublicCatalogIfVisible, _isLandingB
 import { setBooksHooks, initBooksPanel, getCachedBooks, getCachedAllSeries, _refreshBooksListOnly, _syncPdfBadgeOnCards, _starsHtml, _starLabelHtml, _flashRatingGate } from '../books.js';
 import { setOpenWorldHooks } from '../open-world.js';
 import { setFeedHooks, loadFeed, refreshDayCoverFlows } from '../feed.js';
-import { setNotifHooks, _scheduleLiveUiRefresh } from '../notif.js';
+import { setNotifHooks, _scheduleLiveUiRefresh } from '../community/notif.js';
 import { _processRewardSnapshot, _scheduleRewardProfileRefresh } from '../rewards.js';
 import { setBgHooks, setCurrentBookCover } from '../bg.js';
 import { initTips } from '../tips.js';
-import { initInbox } from '../inbox.js';
+import { initInbox } from '../community/inbox.js';
 import { initDice } from '../dice.js';
 import { exportAll } from '../export.js';
-import { initFeedback } from '../feedback.js';
+import { initFeedback } from '../community/feedback.js';
 import { setDemoHooks, getDemoBooks, setDemoBooks, startDemoMode, exitDemoMode } from '../demo.js';
 import { resolveIsAdmin, adminBadge, adminBadgeForUsername, authorBadge, contributorBadge, displayFor, registerAuthor, registerContributor } from '../user.js';
 import { escapeHtml, fetchPublic as publicFetch } from '../util.js';

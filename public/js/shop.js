@@ -74,7 +74,7 @@ let _rewardProfileDebounceTimer = null;
 let _rewardProfilePendingResolvers = [];
 // Several independent, uncoordinated call sites can each ask for a refresh
 // within the same real burst (e.g. creating a book with several metadata
-// fields fires many awardXp events server-side; rewards.js/notif.js/livetab.js
+// fields fires many awardXp events server-side; rewards.js/community/notif.js/livetab.js
 // each have their own reasons to call this) - without merging, each call used
 // to fire its own /api/profile fetch, and the XP bar (profile.js) would then
 // see several small, choppy back-to-back updates instead of one clean jump to

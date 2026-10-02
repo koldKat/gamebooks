@@ -376,17 +376,18 @@ gamebooks/
       public-profile.js  Public profile modal, public run viewer, public series journey viewer
       prefs.js           UI preference persistence (panel collapse state, server sync)
       livetab.js         Live tab / SSE broadcast helpers, user badge SSE
-      notif.js           Notification dropdown and inbox badge
+      community/         Messaging and notifications (direct imports; no root facade)
+        notif.js         Notification dropdown, inbox/forum badges and live refresh batch
+        inbox.js         Inbox threads, conversations and replies with attachments
+        feedback.js      Feedback submission modal and attachments
       rewards.js         XP/coin reward floater (bottom-right toast)
       bg.js              Graph background image, background context menu, sidebar book info
       stats.js           Stats for Nerds modal
       party.js           Play Together invite flow and SSE live-sync
       tips.js            Tip bar (rotating tips with progress bar)
-      inbox.js           Inbox / feedback thread modal (replies with optional file attachments)
       dice.js            Dice roller
       tooltip.js         Tooltip system
       export.js          Export this book / Export everything
-      feedback.js        Feedback widget (submission with optional file attachments)
       demo.js            Demo mode
       user.js            Admin/author/contributor state and badge helpers
       boot.js            Entry point: mobile detection, backdrop tracking, DOMContentLoaded registration
@@ -608,9 +609,9 @@ Layer 2:
 Layer 3 (feature modules - import from layers 0–2 as needed):
   notes.js, battlesim829.js, battlesim8.js, battlesim286.js, battlesim198.js, battlesim199.js, battlesim200.js, battlesim186.js, battlesim201.js, battlesim202.js, battlesim203.js, battlesim234.js, battlesim231.js, battlesim232.js, battlesim83.js, battlesim86.js, battlesim114.js, battlesim115.js, battlesim123.js, battlesim130.js, battlesim92.js, battlesim108.js, battlesim216.js, battlesim193.js, battlesim217.js, battlesim526.js, battlesim322.js, battlesim323.js, battlesim324.js, battlesim276.js, battlesim278.js, battlesim279.js, battlesim280.js, battlesim325.js, battlesim122.js, battlesim80.js, battlesim82.js, battlesim118.js, battlesim218.js, battlesim219.js, battlesim220.js, battlesim221.js, battlesim222.js, battlesim430.js, battlesim204.js, battlesim205.js, battlesim206.js, battlesim207.js, battlesim208.js, battlesim209.js, battlesim210.js, battlesim211.js, battlesim212.js, battlesim213.js, battlesim214.js, battlesim215.js, battlesim240.js, battlesim241.js, battlesim242.js, battlesim243.js, battlesim244.js, battlesim245.js, battlesim247.js, battlesim248.js, battlesim249.js, battlesim250.js, battlesim251.js, battlesim252.js, battlesim253.js, battlesim263.js, battlesim264.js, battlesim267.js, battlesim256.js, battlesim257.js, battlesim258.js, battlesim255.js, battlesim254.js, battlesim272.js, battlesim275.js, battlesim274.js, battlesim259.js, battlesim260.js, battlesim273.js, battlesim433.js, battlesim541.js, battlesim661.js, battlesim696.js, battlesim716.js, auth.js, add-book.js, edit-book.js,
   books.js, covers.js, feed.js, open-world.js, shop.js, profile.js,
-  public-profile.js, prefs.js, livetab.js, notif.js, rewards.js, bg.js,
-  stats.js, party.js, tips.js, inbox.js, dice.js, tooltip.js, export.js,
-  feedback.js, demo.js
+  public-profile.js, prefs.js, livetab.js, community/notif.js, rewards.js, bg.js,
+  stats.js, party.js, tips.js, community/inbox.js, dice.js, tooltip.js, export.js,
+  community/feedback.js, demo.js
 
   All 48 battlesim*.js files import confirm.js (for showAlert) and
   charsheet.js (for getPlayBtnRow) - never play.js directly, even though
@@ -707,7 +708,7 @@ imports `loadUsers`/`loadBooks` back from `users-books.js` - a circular import, 
 modules as long as the imported bindings are only read inside function bodies that run
 later, never at module-evaluation time.
 
-`feedback.js`'s feed-card HTML uses inline `onclick="toggleFeedbackCard(this)"` (built via
+`admin/js/feedback.js`'s feed-card HTML uses inline `onclick="toggleFeedbackCard(this)"` (built via
 `innerHTML` templates), which resolves against `window`, not module scope - the file exposes
 `window.toggleFeedbackCard = ...` at the bottom (and two more for its sibling handlers).
 Module handlers generally use `addEventListener`; edit-book's per-open handlers use DOM event properties so reopening replaces the previous handler rather than accumulating listeners.
@@ -1482,7 +1483,9 @@ If any call (authenticated or not) returns `503`, both `apiFetch` (`state.js`) a
 
 **Convention: every client request goes through `apiFetch` (authenticated) or `fetchPublic`/`publicFetch` (public), never a raw `fetch()`.** These wrappers are what give a request its 401 (expired/invalid session → ejection flow) and 503 (maintenance mode → ejection flow) handling; a raw `fetch()` silently skips both, degrading to a generic error message instead of the normal ejection UX. Applies uniformly across the app - `export.js`, `demo.js`, `auth.js`'s pre-login flows, `party.js`, `stats.js`, `boot/shell.js`'s config/tagline loaders, `tips.js`. `covers.js`'s two raw `fetch()` calls (streaming cover-image bytes with a progress bar) are the deliberate exception - image/blob requests don't need JSON-oriented 401/503 handling.
 
-Attachment upload (`/api/attachments`) is consolidated into `util.js`'s `uploadAttachment()`/`isImageFilename()`/`addAttachmentItem()`, used by both `feedback.js` and `inbox.js` rather than each keeping its own copy.
+Attachment upload (`/api/attachments`) is consolidated into `util.js`'s `uploadAttachment()`/`isImageFilename()`/`addAttachmentItem()`, used by both `community/feedback.js` and `community/inbox.js` rather than each keeping its own copy.
+
+The desktop messaging/notification modules live in `public/js/community/` and are imported directly; there is no root `community.js` or compatibility wrapper at their old root paths. This is a path-only grouping: exports, DOM IDs, endpoints, attachment handling and the notification debounce/SSE hooks remain unchanged. Shared infrastructure stays at the JS root, the admin's separate feedback module is untouched, and mobile continues using its own entrypoint/controllers. Tests check all client import targets and the unchanged non-import source of each relocated module; the manual community browser fixture exercises mocked messaging/attachments and live refresh hints without production writes.
 
 `autocomplete.js`'s `_currentTokenBounds()` computes both the backward (previous comma) and forward (next comma / end of string) boundary of the author-name token under the caret; `_applyAuthor()` replaces the whole token span.
 
@@ -1782,7 +1785,7 @@ The actual `new Image()` fetch, once an element becomes intersecting, goes throu
 
 **Landing background rotation (`covers.js`):** a single `setInterval`, once started, ticks `_rotateLandingCover()` every 60s - under both motion modes (it's a slow periodic swap, not a continuous animation, so `reduce-motion` doesn't gate it; that only calms CSS animations/transitions elsewhere). `_startLandingCoverRotation()` is a no-op whenever the interval already exists; on the interval's first-ever creation it paints immediately only when neither `landing-bg-a`/`-b` currently shows a cover (inline `opacity: '1'`): the first paint of the session, or right after `_stopLandingCoverRotation()` blanked both layers (the Ctrl+X hide toggle) - while a cover is showing it waits for the next tick, so routine calls (returning to the landing screen, prefs syncs like the drag-release `landingCoverPos` save → badge SSE → `syncPrefs` → `setCoversPrefsState` → `_applyLandingBgHiddenPref`, a transient empty-pool/fetch-failure blip) never rotate out of cycle. `_stopLandingCoverRotation()` (which blanks both layers) is called both by the explicit Ctrl+X hide toggle and by `boot.js`'s `showMain()` when opening a book - `#landing-bg-a`/`-b`/`-dim` are siblings of `#landing-wrapper`, not descendants (see "Main page background" below), so hiding the wrapper alone leaves them visible and rotating behind the graph; `showMain()` also sets their `visibility: hidden` directly, mirroring `_revealLanding()`'s own un-hide in reverse. `_rotateLandingCover()` no-ops if there's no cover available, and guards against overlapping crossfades with an in-flight flag (`_rotationInFlight`/`_rotationQueued`) - a request arriving mid-transition queues instead of interrupting the current transition. Runs on mobile too, so the coverless feed day cards' `feed-day-card--glass` tint (above) has something to show through there - `_canDragLandingBg()` still returns `false` on mobile, so the drag-to-reposition affordance stays desktop-only.
 
-**Header badge refresh:** authenticated `EventSource('/api/user/stream?token=...')`. On a refresh hint the client immediately refetches `/api/notifications`, `/api/feedback`, and `/api/forum/latest` - no waiting for the 60-second fallback poll. `handleSetPrefs` (`server.js`) also calls `userBadgePush(userId)` after every successful `PATCH /api/prefs`, so the same stream doubles as a live UI-prefs sync: `_scheduleLiveUiRefresh`'s `prefs` flag (`notif.js`) calls `syncPrefs()` on receipt, reaching any other open tab/device for that user within the same ~100ms debounce as the badge refreshes, rather than only picking up the change on that session's next fresh load. Since `userBadgePush` broadcasts to every connection for that user including the one that made the change, a save can trigger its own tab's `syncPrefs()` too - `syncPrefs()` merges the GET response with `_localPrefOverrides` captured *after* the request resolves (not a snapshot taken before it), so a pref saved again while that GET was still in flight can't get clobbered back to its pre-save value for the moment it takes the next sync to catch up.
+**Header badge refresh:** authenticated `EventSource('/api/user/stream?token=...')`. On a refresh hint the client immediately refetches `/api/notifications`, `/api/feedback`, and `/api/forum/latest` - no waiting for the 60-second fallback poll. `handleSetPrefs` (`server.js`) also calls `userBadgePush(userId)` after every successful `PATCH /api/prefs`, so the same stream doubles as a live UI-prefs sync: `_scheduleLiveUiRefresh`'s `prefs` flag (`community/notif.js`) calls `syncPrefs()` on receipt, reaching any other open tab/device for that user within the same ~100ms debounce as the badge refreshes, rather than only picking up the change on that session's next fresh load. Since `userBadgePush` broadcasts to every connection for that user including the one that made the change, a save can trigger its own tab's `syncPrefs()` too - `syncPrefs()` merges the GET response with `_localPrefOverrides` captured *after* the request resolves (not a snapshot taken before it), so a pref saved again while that GET was still in flight can't get clobbered back to its pre-save value for the moment it takes the next sync to catch up.
 
 **Cover thumbnail click** → `openCoverActivity(bookId, bookName)`:
 - Fetches `GET /api/public/book/:id/activity`, renders a `.cover-activity-view` in `#public-modal-overlay`.
