@@ -1,4 +1,4 @@
-/* liveread.css - floating "live reading" panel (see public/js/liveread.js).
+/* liveread.css - floating "live reading" panel (see public/js/reading/liveread.js).
    Deliberately not an .inv-overlay: no full-screen backdrop, so the graph
    underneath stays visible and clickable while the panel is open. */
 

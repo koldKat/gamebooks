@@ -6,7 +6,7 @@ import { initInventory, setExtraDisplayItemsProvider } from '../inventory.js';
 import { initEquipment, getVisibleEquippedItems } from '../equipment.js';
 import { savePrefs, _setPlayPanelCollapsed } from '../prefs.js';
 import { renderActiveBattleSim } from '../battle-sim-loader.js';
-import { initLiveRead, renderLiveRead } from '../liveread.js';
+import { initLiveRead, renderLiveRead } from '../reading/liveread.js';
 import { initTooltip } from '../tooltip.js';
 import { _refreshInvDisplay } from './helpers.js';
 

@@ -1,0 +1,57 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createContext, SourceTextModule, SyntheticModule } from 'node:vm';
+import { pathToFileURL } from 'node:url';
+
+let section = 1;
+const requests = [], commits = [], suppression = [], physics = [];
+const active = new Set(['active']);
+const panel = { classList: { contains: value => active.has(value), add: value => active.add(value), remove: value => active.delete(value) } };
+const body = { innerHTML: '', scrollTop: 9, querySelectorAll: () => [] };
+const button = { setAttribute() {}, removeAttribute() {} };
+const elements = { 'liveread-panel': panel, 'liveread-body': body, 'liveread-heading': {}, 'liveread-btn': button,
+  'liveread-preview-return': { addEventListener() {} } };
+const context = createContext({ document: { getElementById: id => elements[id] }, console });
+const stubData = {
+  '../state.js': { state: { startSection: 1 }, currentBookId: 42, currentPlaythrough: () => ({}), currentSection: () => section,
+    viewingPt: null, isTerminal: sec => sec === 0 || sec === -1, parseSecId: Number, isSectionMapped: sec => sec === 1,
+    apiFetch: async url => { requests.push(url); const sec = Number(url.split('/').at(-1)); return { ok: true, json: async () => ({ html: '<p>Section ' + sec + '</p>', choices: sec === 1 ? [2] : [] }) }; } },
+  '../play.js': { navigate() {}, commitChoices: (sec, choices) => commits.push([sec, [...choices]]), showAlert() {}, suppressAutoNav: value => suppression.push(value) },
+  '../graph.js': { network: null, setLightweightRestabilize: value => physics.push(value) },
+  '../i18n.js': { t: key => key },
+  '../util.js': { shortcutLabel() {}, registerPanelShortcut() {}, ALL_PANEL_OVERLAY_IDS: [] },
+};
+const mod = new SourceTextModule(readFileSync(process.argv[1], 'utf8'), { context });
+await mod.link(specifier => {
+  if (specifier === './liveread-shared.js') return new SourceTextModule(readFileSync(new URL('./liveread-shared.js', pathToFileURL(process.argv[1])), 'utf8'), { context });
+  assert.ok(stubData[specifier], 'unexpected dependency: ' + specifier);
+  const values = stubData[specifier];
+  return new SyntheticModule(Object.keys(values), function () { for (const [name, value] of Object.entries(values)) this.setExport(name, value); }, { context });
+});
+await mod.evaluate();
+const reader = mod.namespace;
+const settle = async () => { for (let i = 0; i < 12; i++) await Promise.resolve(); };
+reader.renderLiveRead();
+await settle();
+assert.equal(body.innerHTML, '<p>Section 1</p>');
+assert.equal(body.scrollTop, 0);
+assert.deepEqual(commits, [[1, [2]]]);
+assert.deepEqual(requests, ['/api/books/42/sections/1', '/api/books/42/sections/2']);
+reader.renderLiveRead();
+await settle();
+assert.equal(requests.length, 2, 'unchanged section does not fetch again');
+section = 2;
+reader.renderLiveRead();
+await settle();
+assert.equal(body.innerHTML, '<p>Section 2</p>');
+assert.equal(requests.length, 2, 'navigation uses prefetched section');
+await reader.previewSection(3);
+assert.equal(requests.length, 2, 'unmapped preview cannot read ahead');
+await reader.previewSection(1);
+assert.match(body.innerHTML, /Section 1/);
+assert.equal(requests.length, 2, 'mapped preview uses cached section');
+reader.setLiveReadVisible(false);
+assert.equal(active.has('active'), false);
+assert.equal(button.disabled, true);
+assert.deepEqual(suppression, [false]);
+assert.deepEqual(physics, [false]);

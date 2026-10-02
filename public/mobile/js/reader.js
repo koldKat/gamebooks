@@ -46,7 +46,7 @@ import { showToast } from './toast.js';
 import { openNodeContextMenu, hideNodeContextMenu } from './context-menu.js';
 import { openFastTravelDialog } from './fast-travel-dialog.js';
 import { t } from '../../js/i18n.js';
-import { TROPHY_SVG, BROKEN_SHIELD_SVG, terminalHeadingKey } from '../../js/liveread-shared.js';
+import { TROPHY_SVG, BROKEN_SHIELD_SVG, terminalHeadingKey } from '../../js/reading/liveread-shared.js';
 
 // Reward feedback (see toast.js's own header comment for why mobile uses a
 // toast rather than porting rewards.js's fly-to-badge floaters). Desktop

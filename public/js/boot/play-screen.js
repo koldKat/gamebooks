@@ -10,7 +10,7 @@ import { loadNotesForBook } from '../notes.js';
 import { connectPartySSE } from '../party.js';
 import { _adminPdfHref } from '../edit-book.js';
 import { showBattleSimForBook } from '../battle-sim-loader.js';
-import { setLiveReadVisible, previewSection } from '../liveread.js';
+import { setLiveReadVisible, previewSection } from '../reading/liveread.js';
 import { loadCovers, _showCachedCoversPanel, _stopLandingCoverRotation } from '../covers.js';
 import { getCachedBooks, getCachedAllSeries } from '../books.js';
 import { setupOpenWorldForBook, _syncSeriesRuns, _computeCrossBookReachability, _focusNodeAfterLoad, clearOpenWorldState, getOwCrossBookRoute } from '../open-world.js';
