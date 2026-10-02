@@ -1,0 +1,155 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createContext, SourceTextModule, SyntheticModule } from 'node:vm';
+
+const source = readFileSync(process.argv[1], 'utf8');
+const plain = value => JSON.parse(JSON.stringify(value));
+const deferred = () => { let resolve; const promise = new Promise(fn => { resolve = fn; }); return { promise, resolve }; };
+function classList() {
+  const values = new Set();
+  return { contains: key => values.has(key), toggle: (key, on) => {
+    const enabled = on ?? !values.has(key);
+    if (enabled) values.add(key); else values.delete(key);
+    return enabled;
+  } };
+}
+async function harness() {
+  const elements = new Map(), storage = new Map(), requests = [], effects = [], frames = [];
+  const body = { classList: classList() };
+  const el = id => { if (!elements.has(id)) elements.set(id, { classList: classList(), textContent: '', scrollTop: 0 }); return elements.get(id); };
+  const state = { token: 'token', demo: false, books: [], series: [{ id: 2 }], stashes: [{ id: 3 }] };
+  let response = async () => ({ ok: true, json: async () => ({}) });
+  const dependencies = {
+    '../core/state.js': { getToken: () => state.token, isDemoMode: false, apiFetch: (url, options) => {
+      assert.equal(url, '/api/prefs'); requests.push(options ? plain(options) : null); return response(options);
+    } },
+    '../play.js': { setTrailCollapsed: value => effects.push(['trail', value]), setChoicesRecordedCount: value => effects.push(['choices', value]), CHOICES_PULSE_THRESHOLD: 50 },
+    '../covers.js': { setCoversPrefsState: p => effects.push(['cover-prefs', plain(p)]), _updateLandingBgDragUi: () => effects.push(['drag']) },
+    '../books.js': { setExpandedPrefs: (...values) => effects.push(['expanded', ...values]), renderBooksList: (...values) => effects.push(['render', ...values]),
+      getCachedBooks: () => state.books, getCachedAllSeries: () => state.series, getCachedStashes: () => state.stashes },
+  };
+  const context = createContext({ document: { body, getElementById: el }, localStorage: {
+    getItem: key => storage.get(key) ?? null, setItem: (key, value) => storage.set(key, value), removeItem: key => storage.delete(key),
+  }, requestAnimationFrame: fn => { frames.push(fn); return frames.length; } });
+  let stateModule;
+  const module = new SourceTextModule(source, { context });
+  await module.link(specifier => {
+    assert.ok(dependencies[specifier], specifier);
+    const values = dependencies[specifier];
+    const dependency = new SyntheticModule(Object.keys(values), function () {
+      for (const [name, value] of Object.entries(values)) this.setExport(name, value);
+    }, { context });
+    if (specifier === '../core/state.js') stateModule = dependency;
+    return dependency;
+  });
+  await module.evaluate();
+  const api = module.namespace;
+  api.setPrefsHooks({ refreshDayCovers: () => effects.push(['day-covers']) });
+  return { api, state, body, el, storage, requests, effects, frames,
+    respond: fn => { response = fn; }, demo: value => { state.demo = value; stateModule.setExport('isDemoMode', value); },
+    frame: () => { for (const fn of frames.splice(0)) fn(); },
+  };
+}
+
+// Every partial visibility combination must restore exactly, not show all panels.
+const landing = ['covers-collapsed', 'right-collapsed', 'feed-collapsed'];
+for (let mask = 0; mask < 7; mask++) {
+  const h = await harness();
+  landing.forEach((key, i) => h.body.classList.toggle(key, !!(mask & (1 << i))));
+  h.api._toggleAllLandingPanelsCollapsed();
+  assert.ok(landing.every(key => h.body.classList.contains(key)));
+  h.api._toggleAllLandingPanelsCollapsed();
+  landing.forEach((key, i) => assert.equal(h.body.classList.contains(key), !!(mask & (1 << i)), 'landing mask ' + mask));
+  assert.ok(h.requests.every(r => !Object.hasOwn(JSON.parse(r.body), 'feed-collapsed')), 'feed hide never sent to server');
+  assert.equal(h.storage.has('feed-collapsed'), false);
+}
+const play = [
+  ['sidebar-collapsed', null, 'sidebar-collapsed'], ['legendCollapsed', 'legend', 'legend-collapsed'],
+  ['diceRollerCollapsed', 'dice-roller', 'dice-collapsed'], ['trailCollapsed', 'run-trail-float', 'trail-collapsed'],
+  ['playXpCollapsed', 'play-xp-summary', 'play-xp-collapsed'],
+];
+for (let mask = 0; mask < 31; mask++) {
+  const h = await harness();
+  const list = id => id ? h.el(id).classList : h.body.classList;
+  play.forEach(([, id, cls], i) => list(id).toggle(cls, !!(mask & (1 << i))));
+  h.api._toggleAllPlayPanelsCollapsed();
+  assert.ok(play.every(([, id, cls]) => list(id).contains(cls)));
+  h.api._toggleAllPlayPanelsCollapsed();
+  play.forEach(([key, id, cls], i) => {
+    assert.equal(list(id).contains(cls), !!(mask & (1 << i)), 'play mask ' + mask);
+    assert.equal(h.storage.get(key), mask & (1 << i) ? '1' : '0');
+  });
+  assert.equal(h.requests.length, 10);
+}
+const fallback = await harness();
+landing.forEach(key => fallback.body.classList.toggle(key, true));
+fallback.api._toggleAllLandingPanelsCollapsed();
+assert.ok(landing.every(key => !fallback.body.classList.contains(key)), 'no snapshot restores all landing panels');
+play.forEach(([, id, cls]) => (id ? fallback.el(id) : fallback.body).classList.toggle(cls, true));
+fallback.api._toggleAllPlayPanelsCollapsed();
+assert.ok(play.every(([, id, cls]) => !(id ? fallback.el(id) : fallback.body).classList.contains(cls)));
+
+const scroll = await harness();
+scroll.storage.set('feed-collapsed', '1');
+scroll.el('landing-wrapper').scrollTop = 456;
+scroll.api._setLandingPanelCollapsed('feed-collapsed', true);
+scroll.el('landing-wrapper').scrollTop = 0;
+scroll.api._setLandingPanelCollapsed('feed-collapsed', true);
+scroll.api._setLandingPanelCollapsed('feed-collapsed', false);
+scroll.frame(); assert.equal(scroll.el('landing-wrapper').scrollTop, 0);
+scroll.frame(); assert.equal(scroll.el('landing-wrapper').scrollTop, 456, 'double-frame scroll restoration preserves original position');
+assert.equal(scroll.requests.length, 0);
+assert.equal(scroll.storage.has('feed-collapsed'), false);
+assert.equal(scroll.el('feed-toggle').textContent, '\u25b4');
+assert.equal(scroll.effects.filter(e => e[0] === 'drag').length, 3);
+assert.equal(scroll.effects.filter(e => e[0] === 'day-covers').length, 3);
+scroll.api._setLandingPanelCollapsed('unknown', true);
+scroll.api._setPlayPanelCollapsed('unknown', true);
+assert.equal(scroll.requests.length, 0, 'unknown panel keys ignored');
+
+const applied = await harness();
+applied.body.classList.toggle('feed-collapsed', false);
+applied.api.applyPrefs({ 'covers-collapsed': '1', 'right-collapsed': '0', 'sidebar-collapsed': '1',
+  legendCollapsed: '1', diceRollerCollapsed: '1', trailCollapsed: '1', playXpCollapsed: '1',
+  'feed-collapsed': '1', choicesRecordedCount: 17, bookExpanded: { 1: false }, seriesExpanded: {}, stashExpanded: {} });
+assert.equal(applied.body.classList.contains('feed-collapsed'), false, 'server cannot rehide feed');
+assert.equal(applied.body.classList.contains('covers-collapsed'), true);
+assert.equal(applied.el('covers-toggle').textContent, '\u203a');
+assert.equal(applied.el('right-toggle').textContent, '\u203a');
+assert.ok(applied.el('choices-input').classList.contains('choices-input--pulse'));
+assert.deepEqual(applied.effects.find(e => e[0] === 'render'), ['render', applied.state.books, applied.state.series, applied.state.stashes]);
+assert.ok(applied.effects.some(e => e[0] === 'trail' && e[1] === true));
+const renders = applied.effects.filter(e => e[0] === 'render').length;
+applied.state.books = null;
+applied.api.applyPrefs({ choicesRecordedCount: 50 });
+assert.equal(applied.el('choices-input').classList.contains('choices-input--pulse'), false);
+assert.equal(applied.effects.filter(e => e[0] === 'render').length, renders, 'no render without cached library');
+
+const sync = await harness();
+const pending = deferred();
+sync.respond(options => options ? Promise.resolve({ ok: true }) : pending.promise);
+sync.api.savePrefs({ 'covers-collapsed': '1' });
+const inflight = sync.api.syncPrefs();
+sync.api.savePrefs({ 'covers-collapsed': '0' });
+pending.resolve({ ok: true, json: async () => ({ 'covers-collapsed': '1' }) });
+await inflight;
+assert.equal(sync.body.classList.contains('covers-collapsed'), false, 'new local override wins over stale GET');
+sync.respond(async () => ({ ok: true, json: async () => ({ 'covers-collapsed': '1' }) }));
+await sync.api.syncPrefs();
+assert.equal(sync.body.classList.contains('covers-collapsed'), false, 'changed override retained until next sync');
+await sync.api.syncPrefs();
+assert.equal(sync.body.classList.contains('covers-collapsed'), true, 'acknowledged unchanged override can be cleared');
+const count = sync.requests.length;
+sync.state.token = null;
+sync.api.savePrefs({ legendCollapsed: '1' }); await sync.api.syncPrefs();
+assert.equal(sync.requests.length, count, 'logged-out calls do not send requests');
+sync.state.token = 'token'; sync.demo(true); await sync.api.syncPrefs();
+assert.equal(sync.requests.length, count, 'demo skips server sync');
+sync.demo(false);
+const before = sync.effects.length;
+sync.respond(async () => ({ ok: false })); await sync.api.syncPrefs();
+assert.equal(sync.effects.length, before, 'failed GET leaves UI alone');
+sync.respond(async () => { throw Error('network failure'); });
+await sync.api.syncPrefs(); sync.api.savePrefs({ legendCollapsed: '1' });
+await Promise.resolve();
+assert.equal(sync.effects.length, before, 'network failures handled without applying state');

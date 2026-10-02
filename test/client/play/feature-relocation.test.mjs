@@ -25,7 +25,7 @@ test('play-area feature relocation preserves implementations and removes root mo
 
 test('relocated play features retain their original dependency identities and order', () => {
   const expected = {
-    dice: ['core/state.js', 'prefs.js', 'play.js'],
+    dice: ['core/state.js', 'ui-helpers/prefs.js', 'play.js'],
     notes: ['core/state.js', 'play.js', 'i18n.js'],
     charsheet: ['core/state.js', 'i18n.js', 'core/util.js'],
     'open-world': ['core/state.js', 'graph.js', 'play.js', 'i18n.js', 'play/charsheet.js', 'equipment.js', 'books.js'],

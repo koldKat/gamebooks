@@ -4,7 +4,7 @@ import { applyTranslations } from '../i18n.js';
 import { initCharSheet, renderCharSheetDisplay } from '../play/charsheet.js';
 import { initInventory, setExtraDisplayItemsProvider } from '../inventory.js';
 import { initEquipment, getVisibleEquippedItems } from '../equipment.js';
-import { savePrefs, _setPlayPanelCollapsed } from '../prefs.js';
+import { savePrefs, _setPlayPanelCollapsed } from '../ui-helpers/prefs.js';
 import { renderActiveBattleSim } from '../battlesim/loader.js';
 import { initLiveRead, renderLiveRead } from '../reading/liveread.js';
 import { initTooltip } from '../ui-helpers/tooltip.js';

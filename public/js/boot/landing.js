@@ -8,7 +8,7 @@ import { setInventoryVisible } from '../inventory.js';
 import { setEquipmentVisible } from '../equipment.js';
 import { disconnectPartySSE } from '../play/party.js';
 import { showAuthForm, showResetPanel, hasPendingResetToken } from '../account/auth.js';
-import { syncPrefs } from '../prefs.js';
+import { syncPrefs } from '../ui-helpers/prefs.js';
 import { hideActiveBattleSim } from '../battlesim/loader.js';
 import { setLiveReadVisible } from '../reading/liveread.js';
 import { updateCoinsDisplay } from '../progression/shop.js';

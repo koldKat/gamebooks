@@ -20,6 +20,6 @@ test('account relocation keeps root wrappers absent and unchanged modules intact
   // Profile now has a separately tested logout/pending-fetch lifecycle fix.
   assert.equal(existsSync(new URL('profile.js', dir)), false);
   assert.ok(existsSync(new URL('account/profile.js', dir)));
-  assert.ok(existsSync(new URL('prefs.js', dir)));
+  assert.ok(existsSync(new URL('ui-helpers/prefs.js', dir)));
   assert.ok(existsSync(new URL('../mobile/js/auth.js', dir)), 'mobile keeps its independent authentication module');
 });

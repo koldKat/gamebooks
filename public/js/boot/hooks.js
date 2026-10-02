@@ -6,7 +6,7 @@ import { initParty, loadPartyInvites, setPartyHooks } from '../play/party.js';
 import { initAuth, setOnAuthSuccess } from '../account/auth.js';
 import { setAddBookHooks, initAddBook } from '../books/add-book.js';
 import { setEditBookHooks, initEditBook, openEditBookModal, openEditCompModal, openEditSeriesModal, _openEditStash, _adminPdfHref, maxSectionInUse } from '../edit-book.js';
-import { setPrefsHooks, savePrefs, syncPrefs } from '../prefs.js';
+import { setPrefsHooks, savePrefs, syncPrefs } from '../ui-helpers/prefs.js';
 import { initShop, refreshCoinsDisplay, setShopHooks } from '../progression/shop.js';
 import { initProfile, setProfileHooks } from '../account/profile.js';
 import { setPublicProfileHooks, openPublicSeriesRun } from '../account/public-profile.js';
