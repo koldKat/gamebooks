@@ -28,13 +28,7 @@ export function _populateSeriesSelect(selectId, selectedName) {
   const sel = document.getElementById(selectId);
   if (!sel) return;
   sel.innerHTML = `<option value="">${t('editbook.none')}</option>`;
-  // Demo mode has no real account/token, so this authenticated call always
-  // 401s - apiFetch's 401 handler clears the (already-absent) token and
-  // fires 'auth-expired', which shows the login screen behind whichever
-  // modal called this (Create Book/Anthology/Series all populate this
-  // select on open). The demo user never sees it happen since it's hidden
-  // behind the modal, only noticing once they close it. Nothing useful to
-  // fetch here anyway - the demo book isn't part of any real series.
+  // Skip authenticated series requests in demo mode to avoid session-expiry handling.
   if (isDemoMode) return;
   apiFetch('/api/series').then(async r => {
     if (!r.ok) return;

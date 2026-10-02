@@ -1,50 +1,6 @@
-// ── Battle Simulator (Starship Traveller, book 186) ──────────────────────────
-// Self-contained module. Imports from state.js, play.js, charsheet.js and util.js.
-// Visibility is gated (book 186 only) by the caller in boot.js via
-// setSim186Visible().
-// To remove: delete this file, remove its import line and initSim186()/
-// setSim186Visible() calls from boot.js, and remove the .bsim-* CSS (shared
-// with battlesim8.js/battlesim829.js/battlesim286.js/battlesim198.js/
-// battlesim199.js/battlesim200.js/battlesim201.js, so only remove it if all eight are gone).
-//
-// This book has no unified combat system - three completely separate ones,
-// selected via a mode toggle rather than picked automatically:
-// - Hand-to-hand: opposed 2d6+SKILL rolls, flat 2 STAMINA per hit, same
-//   shape as the SKILL/STAMINA/LUCK books but this book has no LUCK-based
-//   combat swing at all (LUCK is tracked on the Adventure Sheet but never
-//   used in a combat roll per the actual rules text).
-// - Phaser: NOT opposed - roll-under-SKILL, any hit stuns/kills outright
-//   (no STAMINA tracked in this mode), sides alternate until someone is hit.
-// - Ship-to-ship: roll-under-WEAPONS STRENGTH to hit, then a separate
-//   roll-vs-SHIELDS for a 2/4/6-tier damage roll, sides alternate.
-//
-// Crew is 7 fixed roles (Captain + Science/Medical/Engineering Officers +
-// Security Officer + 2 Security Guards), each individually rolled
-// SKILL=1d6+6/STAMINA=2d6+12, sharing one LUCK=1d6+6 box. The three
-// Officers (not Captain, not Security) take -3 SKILL whenever forced into
-// combat - applied automatically here based on role. If a non-Captain crew
-// member is lost, a replacement takes over at SKILL-2 with a fresh STAMINA
-// roll, flagged as unable to be chosen for away-mission duty (informational
-// only - the sim doesn't gate anything on it).
-//
-// Two generic knobs cover the book's recurring one-off encounter quirks
-// rather than hardcoding each encounter by name (same philosophy as book
-// 200's attackModifier/pairedFight fields): a manual Attack Strength
-// modifier (covers frenzied-condition bonuses, range penalties, etc.), and
-// alternate damage tables for hits landed in either direction (covers e.g.
-// the Qualk-Test guards' nerve-stick variant and the Manslayer Robot's
-// armor-deflection variant). An "extra attacker" toggle covers the book's
-// 2-vs-1 group-combat rule (a second, independent Attack Strength roll
-// compared only against whichever side is being ganged up on - the extra
-// attacker can only deal damage, never receive it, per the rules text).
-//
-// Not modeled: section 245, "Eagle vs Ganzigite," a spectator battle
-// between two NPCs - its "continue reading" link leads into unrelated
-// hand-to-hand combat text, confirming the player never participates, same
-// "resolved and read, not fought" exclusion book 210 documents for its own
-// spectator battle (sections 311/363, Giant Eagle vs Pterodactyl).
-//
-// All state lives in pt.sim186, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Starship Traveller, book 186)
+// Separate hand-to-hand, phaser, and ship modes; LUCK is not a combat modifier.
+// Phasers end on the first roll-under-SKILL hit; crew/ship pools stay independent.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -162,8 +118,7 @@ function _effectiveSkill(d) {
   return skill;
 }
 
-// Nerve-stick (enemy hits you) / armor-deflect (you hit enemy) variant
-// damage tables - see module header. 'normal' is always a flat NORMAL_DMG.
+// Nerve-stick and armour-deflect vary damage; normal uses flat NORMAL_DMG.
 function _rollDamage(variant) {
   if (variant === 'nerve') {
     const r = _roll1d6();
@@ -176,9 +131,7 @@ function _rollDamage(variant) {
   return { amount: NORMAL_DMG, note: '' };
 }
 
-// Uncapped (was previously trimmed to the last 100) - the admin dashboard
-// aggregates battle counts app-wide from this array, so per-user history needs
-// to be a true lifetime total, not a rolling window.
+// Keep lifetime outcomes: admin totals require the full history.
 function _recordOutcome(d, outcome) {
   d.history.push({
     enemy: d.mode === 'ship' ? (d.enemyShip.name.trim() || 'the alien ship') : _enemyName(d),
@@ -220,9 +173,7 @@ function _runHandToHandRound() {
     _appendLog(d, t('battlesim186.log.both_avoided'));
   }
 
-  // Extra attacker: a second, independent Attack Strength roll compared only
-  // against whichever side is being ganged up on - can only deal damage,
-  // never receive it (see module header).
+  // Extra attackers roll independently and can deal damage but cannot receive it.
   if (d.extraAttacker && d.extraSkill > 0 && f.stamina > 0 && d.enemy.stamina > 0) {
     const extraAS = _roll2d6() + d.extraSkill;
     const defenderAS = d.extraTarget === 'enemy' ? playerAS : enemyBest;
@@ -256,11 +207,7 @@ function _runHandToHandRound() {
   _renderAll();
 }
 
-// ── Phaser ───────────────────────────────────────────────────────────────────
-// Not opposed - roll-under-SKILL. A hit ends the fight immediately (no
-// STAMINA tracked in phaser combat per the rules text). Sides alternate:
-// the fighter shoots first each round; if they miss and the enemy is still
-// able to fire back, the enemy shoots too.
+// Phaser combat alternates roll-under-SKILL shots; the first hit ends the fight.
 
 function _playerPhaserShot(d, f) {
   const skill = _effectiveSkill(d);
@@ -290,10 +237,7 @@ function _enemyPhaserShot(d, f) {
   return false;
 }
 
-// "You will attack the alien ship first, unless instructions are given
-// otherwise" per the rules text - and at least one encounter (the Terryals,
-// sec 54) explicitly has the alien fire first in phaser combat. Both
-// _runPhaserRound and _runShipRound respect d.enemyFiresFirst for this.
+// Respect encounter-specific enemy-first firing in both phaser and ship combat.
 function _runPhaserRound() {
   const d = _data();
   const f = _fighter(d);
@@ -445,12 +389,7 @@ function _renderStatus() {
   document.getElementById('sim186-round').disabled = over;
 }
 
-// Each crew member gets a full-width row per field (matching the standard
-// _numField layout used everywhere else in this modal) rather than cramming
-// two steppers side by side - at the left column's width, two steppers plus
-// "SKILL /"/"STAMINA" labels squeezed into one flex-wrap row left almost no
-// space for the input boxes themselves once a long badge (e.g. "(replacement
-// - cannot be sent on away missions)") forced an extra wrap.
+// Give each crew stat a full-width row so badges cannot squeeze out the inputs.
 function _renderCrewHtml(d) {
   return CREW.map(([key, , isOfficer]) => {
     const c = d.crew[key];
@@ -488,11 +427,7 @@ function _renderCrewHtml(d) {
   }).join('');
 }
 
-// Crew list HTML (labels, badges, replace buttons) only needs rebuilding
-// when structure changes (rolled, alive/replaced status) - rebuilding it on
-// every plain stat edit would destroy and recreate all 7 rows' inputs each
-// keystroke, breaking focus/cursor position mid-typing. _renderCrewValues()
-// below just updates .value on the existing inputs, called on every render.
+// Rebuild crew markup only for structural changes; update values in place to preserve typing focus.
 let _crewHtmlBuilt = false;
 function _renderCrewList(d, force) {
   const el = document.getElementById('sim186-crew-list');
@@ -593,18 +528,13 @@ function _renderInputs(forceCrewRebuild = false) {
   phaserFields.style.display     = d.mode === 'phaser' ? '' : 'none';
   shipFields.style.display       = d.mode === 'ship' ? '' : 'none';
   crewCombatFields.style.display = d.mode === 'ship' ? 'none' : '';
-  // Phaser combat is a single roll-under-SKILL shot, not tracked via
-  // STAMINA at all - showing an "Enemy STAMINA" field there would be
-  // actively misleading, since it's never consulted by _runPhaserRound().
+  // Phaser combat ends on a hit; STAMINA is not used.
   enemyStaminaFields.style.display = d.mode === 'phaser' ? 'none' : '';
 
   _renderStatus();
 }
 
-// _renderAll() callers are always combat-affecting actions (roll, round,
-// reset, replace, enemy pick) that can change crew alive/replaced status,
-// so always force the crew list's structural rebuild here - only the bare
-// _renderInputs() calls from plain stat-field edits skip it.
+// Combat actions may change crew status, so force a structural refresh here.
 function _renderAll() {
   _renderInputs(true);
   _renderLog();
@@ -637,11 +567,7 @@ export function setSim186Visible(visible) {
   if (!visible) closeSim186();
 }
 
-// ── Enemy autocomplete (fed by book_enemies, seeded per book_id) ───────────
-// Shared list for both pickers - hand-to-hand/phaser enemies and ship
-// enemies live in the same book_enemies rows (attack/hp repurposed as
-// WEAPONS STRENGTH/SHIELDS for ship-only rows, per the existing convention
-// other combat-model sims already use for their own repurposed fields).
+// Both enemy pickers share book_enemies; ship rows use attack/hp for weapons/shields.
 
 let _enemyList = null;
 async function _loadEnemyList() {
@@ -979,9 +905,7 @@ export function initSim186() {
     d.phaserSetting = e.target.value;
     saveState();
   });
-  // Two checkboxes (one shown in Phaser mode, one in Ship mode) both drive
-  // the same underlying d.enemyFiresFirst flag - keep them in sync via
-  // _renderInputs() rather than duplicating the state.
+  // Keep Phaser/Ship checkboxes synchronized with the shared enemyFiresFirst flag.
   document.getElementById('sim186-phaser-enemy-first').addEventListener('change', e => {
     const d = _data();
     if (!d) return;
@@ -1098,11 +1022,7 @@ export function initSim186() {
     _applyField(btnEl.dataset.id, next);
   });
 
-  // Picking a new enemy is a new encounter - the per-encounter knobs below
-  // are tied to whichever specific fight set them (a range penalty, a
-  // damage variant, who fires first, etc.), so they must not silently
-  // carry over and misapply to a different one (same class of bug already
-  // fixed once for book 200's attackModifier/pairedFight fields).
+  // Reset encounter-specific settings when selecting another enemy.
   function _resetEncounterKnobs(d) {
     d.attackModifier = 0;
     d.waiveOfficerPenalty = false;

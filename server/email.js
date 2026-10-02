@@ -1,7 +1,6 @@
 'use strict';
 
-// Outgoing admin-notification and feedback-reply email via nodemailer, configured
-// from admin settings (falling back to env vars). No-ops silently if unconfigured.
+// Send configured notification/reply email; no-op when SMTP is unavailable.
 
 const db = require('./db');
 const { escapeHtml } = require('./html-escape');

@@ -1,8 +1,4 @@
-// ── Play Together (party) ──────────────────────────────────────────────────────
-// Self-contained module. Imports only from state.js, play.js and util.js.
-// To remove: delete this file, remove its import line and setPartyHooks()/initParty()/
-// connectPartySSE()/disconnectPartySSE()/loadPartyInvites() calls from boot.js, and
-// remove the party-* CSS from style.css.
+// Cooperative parties and live progress.
 
 import { currentBookId, apiFetch, getToken, isDemoMode, loadState } from '../core/state.js';
 import { render, suppressAutoNav, showAlert, showConfirm } from '../play.js';
@@ -57,10 +53,7 @@ export async function connectPartySSE(bookId) {
             const refreshedBookId = _sseBookId;
             const genBefore = _connectGen;
             await connectPartySSE(refreshedBookId);
-            // connectPartySSE()'s own disconnectPartySSE() call bumps the generation by
-            // exactly 1 in the common case - if it's anything else, a real navigation
-            // (another connectPartySSE()/disconnectPartySSE() call) ran concurrently and
-            // _currentParty no longer belongs to refreshedBookId, so skip rendering it.
+            // Our disconnect increments the generation once; any additional change means navigation superseded us.
             if (wasOpen && _connectGen === genBefore + 1) {
               // Preserve whatever the user was mid-typing in the invite box - a live
               // membership update shouldn't wipe out an in-progress invite.

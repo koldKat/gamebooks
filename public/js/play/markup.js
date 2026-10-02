@@ -88,13 +88,7 @@ export function renderPanelMarkup(pt, sec) {
         if (b >= 1) return 1;
         return a - b;
       });
-      // A real destination (not literal -1/0) still gets colored red/green
-      // when it inevitably leads to death/win, including through branching
-      // paths that each independently only ever end that way - same
-      // computeOutcomes() check the graph's own edge coloring already uses,
-      // so a choice pill agrees with the connector leading to it. Resolved
-      // once for the whole graph rather than once per choice - each call
-      // would otherwise redo the same full-graph solve for every button.
+      // Resolve outcomes once so choice pills match graph edges, including branching paths.
       const outcomes = computeOutcomes();
       const choiceOutcomeClass = c => {
         if (c === -1) return 'death-btn';
@@ -152,10 +146,7 @@ export function renderPanelMarkup(pt, sec) {
       const isViewing  = viewingPtIndex >= 0 && i === viewingPtIndex;
       const isPortalPaused = p.completed && p.result === 'portal';
       const isDone     = p.completed && !isPortalPaused;
-      // In OW: only suppress the Load button when the run is genuinely active IN this book
-      // (has actual progress here and isn't portal-paused to another book).
-      // Cross-book placeholder/portal-paused runs keep their Load button so the user can click
-      // to navigate to the book where the run lives.
+      // Hide Load only for a run actually active here; placeholders and portal-paused runs need it.
       const isActiveHere = playContext._owIsOpenWorld
         ? (isActive && p.path.length > 0 && !isPortalPaused)
         : isActive;

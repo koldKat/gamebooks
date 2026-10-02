@@ -123,11 +123,7 @@ async function handleSetPrefs(req, res) {
   // Merge with existing prefs so a partial PATCH doesn't wipe other keys
   const current = db.getUserPrefs(userId);
   const next = { ...current, ...body };
-  // For map-shaped prefs, merge by key instead of replacing the whole map -
-  // the client sends a full map snapshot on every toggle, so two PATCHes
-  // fired back-to-back (e.g. collapsing two series in a row) can race and
-  // whichever map snapshot is smaller ends up overwriting the other,
-  // silently dropping the most recently toggled key.
+  // Merge preference maps by key so racing snapshots cannot erase other toggles.
   for (const key of ['bookExpanded', 'seriesExpanded', 'stashExpanded', 'landingCoverPos']) {
     if (body[key] && typeof body[key] === 'object' && !Array.isArray(body[key])) {
       next[key] = { ...(current[key] && typeof current[key] === 'object' ? current[key] : {}), ...body[key] };
@@ -209,8 +205,7 @@ async function handleUploadAttachment(req, res) {
   if (!isAllowedAttachmentType(buf, originalName))
     return send(res, 415, { error: 'File type not allowed' });
 
-  // If magic bytes say JPEG but the extension differs (e.g. client compressed PNG→JPEG),
-  // normalize the extension so the file is served with the correct MIME type.
+  // Normalize the extension to the detected image MIME type.
   let fileExt = ext;
   if (buf.length >= 3 && buf[0] === 0xFF && buf[1] === 0xD8 && buf[2] === 0xFF) fileExt = '.jpg';
 

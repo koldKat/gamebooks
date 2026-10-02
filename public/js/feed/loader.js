@@ -6,12 +6,7 @@ import { replaceDayCoverLists, _applyDayCoverFlows } from './day-covers.js';
 import { bindFeedInteractions } from './bindings.js';
 import { bindFeedPreviews, _hideFeedPreview } from './previews.js';
 
-// Single-flight guard: livetab.js's 60s interval and an SSE-triggered
-// feed_changed refresh can land in the same tick, and each call rebuilds
-// #feed-content's entire DOM (entries, day-card background layers) from
-// scratch - overlapping calls raced the same rebuild for no benefit, just
-// doubled GET /api/feed + DOM work. A caller arriving mid-refresh reuses
-// the in-flight promise instead of starting a second one.
+// Reuse the in-flight feed refresh to avoid duplicate requests and DOM rebuilds.
 let _loadFeedInFlight = null;
 let _loadFeedToken = null;
 let _loadFeedGeneration = 0;
@@ -30,21 +25,9 @@ async function _loadFeedImpl(token, generation) {
   const isCurrent = () => generation === _loadFeedGeneration && getToken() === token;
   const el = document.getElementById('feed-content');
   if (!el) return;
-  // GET /api/feed can be slow on a bad connection - #feed-content sits
-  // empty (its own initial markup in index.html) until this resolves, which
-  // reads as the page having silently failed to load anything. Only show
-  // the spinner on a genuinely empty panel (first load, or a previous call
-  // that errored) - livetab.js's own leader-tab timer calls loadFeed()
-  // every 60s regardless of whether the landing page is even visible, and
-  // wiping real, already-rendered entries back to a spinner on every one of
-  // those background refreshes (found the hard way: it looked like the
-  // whole feed was reloading once a minute) would be far worse than the
-  // silent swap-in this used to do before the spinner existed.
+  // Show loading only on an empty feed; populated background refreshes retain existing entries.
   if (!el.querySelector('.feed-entry, #feed-header')) {
-    // Same graph (center node + 4 children) as favicon.svg, not an
-    // unrelated book icon - this app's whole subject is mapping a
-    // gamebook's own node graph, so re-using that exact shape/palette
-    // reads as "the app", not just "some generic loading animation".
+    // Reuse the app's choice-graph loading icon.
     el.innerHTML = `<div class="feed-loading">
       <svg class="feed-loading-graph" viewBox="0 0 32 32">
         <line x1="16" y1="16" x2="6"  y2="7"  stroke="#4b5563" stroke-width="1.8" stroke-linecap="round"/>
@@ -91,11 +74,7 @@ async function _loadFeedImpl(token, generation) {
         .map(b => b.dataset.groupKey).filter(Boolean)
     );
 
-    // el.innerHTML replaces the whole subtree below, so every previously-
-    // observed day-card is about to be detached - disconnect first or the
-    // ResizeObserver keeps holding references to them (and re-firing is moot
-    // anyway, since a detached element never resizes again), leaking memory
-    // a little more on every refresh over a long session.
+    // Disconnect day-card observers before replacing their DOM to release detached targets.
     replaceDayCoverLists(dayCoverLists);
     _hideFeedPreview();
     el.innerHTML = html;
@@ -105,11 +84,7 @@ async function _loadFeedImpl(token, generation) {
     bindFeedPreviews(el);
   } catch (_) {
     if (!isCurrent()) return;
-    // Feed is best-effort; silently ignore errors. Only clear the spinner
-    // set above if it's actually still showing (a genuinely empty panel) -
-    // a failed background poll must never wipe entries a previous
-    // successful call already rendered, same reasoning as the spinner
-    // guard above.
+    // On failure, remove only a live spinner; never clear previously rendered entries.
     if (el.querySelector('.feed-loading')) {
       el.innerHTML = `<div id="feed-header">${t('feed.header')} <span class="feed-header-sub">${t('feed.header_sub')}</span></div>` +
                       `<p class="feed-empty">${t('feed.empty')}</p>`;

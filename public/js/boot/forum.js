@@ -27,19 +27,8 @@ export function initGuideAndForum() {
     _cancelForumReveal();
   };
   const openForumModal = (url = '/forum') => {
-    // Clicking a link inside the iframe navigates its contentWindow but never
-    // touches the <iframe> element's own src attribute - so comparing against
-    // getAttribute('src') always saw the original '/forum' and skipped
-    // re-navigating, leaving the modal reopen wherever a PREVIOUS user last
-    // clicked to (e.g. a category or thread), not the forum home. Reset via
-    // contentWindow.location, which reflects where the iframe actually is.
-    //
-    // Reveal only once that reset navigation has actually finished loading -
-    // adding 'active' immediately left whatever the iframe was still
-    // rendering (the previous thread/category) visible for a brief moment
-    // until the new page replaced it, flickering before snapping to the
-    // forum home. See _cancelForumReveal (module scope, top of file) for
-    // why this must be cancelable from every close path, not just this one.
+    // Reset using the iframe's actual location, not its unchanged src attribute.
+    // Reveal after load, with cancellation on every close path.
     _cancelForumReveal();
     const reveal = () => { forumOverlay.classList.add('active'); bootState._forumRevealPending = null; forumFrame.removeEventListener('load', reveal); };
     bootState._forumRevealPending = reveal;
@@ -57,12 +46,7 @@ export function initGuideAndForum() {
   window.addEventListener('message', async e => {
     if (e.origin !== location.origin) return;
     if (e.data?.type === 'gamebooks-open-book' && e.data.bookId) {
-      // Keep the forum open underneath instead of closing it - closing would
-      // mean reopening resets the iframe to /forum home (openForumModal's
-      // default), losing whatever thread the link was clicked from. #pub-
-      // overlay normally sits at z-index 300, well below the forum's 3000,
-      // so it'd render invisibly behind it - bump it above the forum just
-      // for this case; closePublicModal() resets it back to the CSS default.
+      // Keep the forum underneath detail dialogs; temporarily raise the dialog's z-index.
       document.getElementById('public-modal-overlay').style.zIndex = '3001';
       await openCoverActivity(+e.data.bookId, '');
       return;

@@ -1,8 +1,6 @@
 'use strict';
 
-// Foundational HTTP request/response helpers shared by every route handler:
-// security headers, upload/attachment magic-byte sniffing, auth-failure rate
-// limiting, body reading, and session authentication (authenticate/authenticateOptional).
+// Shared HTTP/authentication, body-reading, rate-limit, and upload-validation helpers.
 
 const path  = require('path');
 const geoip = require('geoip-lite');
@@ -241,14 +239,7 @@ function authenticateOptional(req) {
   return session.user_id;
 }
 
-// Separate from authenticate()/authenticateOptional() - those already skip
-// updateUserLastActive for impersonation sessions, but their return value
-// (a bare userId) has no room to also tell a specific route handler "this
-// request is impersonated" when it needs that for its own side effects
-// (e.g. handleSaveState skipping the user_books.updated_at bump so browsing
-// while impersonating can't leak into admin's "last active" column via its
-// COALESCE fallback to that timestamp). Changing authenticate()'s signature
-// would ripple through every route handler in the app for one call site.
+// Expose impersonation separately from authentication for route-specific side effects.
 function isRequestImpersonating(req) {
   const token = tokenFromReq(req);
   if (!token) return false;
@@ -256,14 +247,7 @@ function isRequestImpersonating(req) {
   return !!session?.is_impersonation;
 }
 
-// The actual AsyncLocalStorage lives in its own module (not here) since
-// server/db/xp.js needs to read it too, and xp.js is required BY db.js,
-// which this file itself requires - putting the store here would make xp.js
-// require this file back, a circular require. See impersonation-context.js.
-// This wrapper is the one call site (server.js's request handler) needs:
-// it resolves "is this request impersonated" once and runs the rest of that
-// request's handling inside the context, so every XP/coin award anywhere in
-// the resulting call chain can see it without being passed `req` at all.
+// Keep AsyncLocalStorage separate to avoid an xp/db/request-helpers require cycle.
 function runWithImpersonationContext(req, fn) {
   return runInImpersonationContext(isRequestImpersonating(req), fn);
 }

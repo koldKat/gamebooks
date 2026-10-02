@@ -57,12 +57,7 @@ try { db.exec(`ALTER TABLE users ADD COLUMN heartbeat_minutes_banked   INTEGER N
 try { db.exec(`ALTER TABLE users ADD COLUMN bonus_gc_chance_purchased INTEGER NOT NULL DEFAULT 0`);        } catch (_) {}
 try { db.exec(`ALTER TABLE users ADD COLUMN pending_bonus_gc          INTEGER NOT NULL DEFAULT 0`);        } catch (_) {}
 try { db.exec(`ALTER TABLE users ADD COLUMN bonus_gc_generated        INTEGER NOT NULL DEFAULT 0`);        } catch (_) {}
-// Backfill: bonus_gc_generated only started counting the moment the column was added,
-// but coin_events' bonus_gc_claim rows (and any still-pending flag) predate it. A claim
-// always implies a prior generation, and a currently-pending coin implies one more that
-// hasn't been claimed yet, so claimed + pending is a safe floor for the true historical
-// total. MAX() keeps this idempotent across restarts - it only ever raises the floor,
-// never overwrites real counts accumulated since the column existed.
+// Backfill generated bonus coins from claims plus pending coins; MAX preserves newer totals.
 try {
   db.exec(`
     UPDATE users SET bonus_gc_generated = MAX(bonus_gc_generated, COALESCE((
@@ -222,12 +217,7 @@ try { db.exec(`ALTER TABLE series ADD COLUMN is_public     INTEGER NOT NULL DEFA
 try { db.exec(`ALTER TABLE series ADD COLUMN published_at  INTEGER DEFAULT NULL`); } catch (_) {}
 try { db.exec(`ALTER TABLE series ADD COLUMN is_open_world INTEGER NOT NULL DEFAULT 0`); } catch (_) {}
 
-// One-time migration: backfill has_battle_sim for the books whose sim module
-// existed before this column did (was previously a hardcoded ID list that's
-// since been removed - boot.js's per-book setSimNVisible() calls are still
-// needed since each sim is its own bespoke module boot.js dispatches to by
-// ID, but this column is now the single source of truth for "does this book
-// have one" used by the covers-wall badge/filter).
+// Backfill simulator availability for books predating the flag.
 {
   const done = db.prepare(`SELECT value FROM admin_settings WHERE key = 'has_battle_sim_migrated'`).get();
   if (!done) {
@@ -237,9 +227,7 @@ try { db.exec(`ALTER TABLE series ADD COLUMN is_open_world INTEGER NOT NULL DEFA
     db.prepare(`INSERT OR REPLACE INTO admin_settings (key, value) VALUES ('has_battle_sim_migrated', '1')`).run();
   }
 }
-// Same one-off flag for book 203 (Island of the Lizard King) - the migration
-// above only ever runs once, so each new sim added after it needs its own
-// small idempotent UPDATE rather than re-running the whole backfill.
+// Backfill book 203 separately without rerunning the completed simulator migration.
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 203').run(); } catch (_) {}
 // Same one-off flag for book 83 (Войната на Понтиак / War of Pontiac).
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 83').run(); } catch (_) {}
@@ -329,13 +317,9 @@ try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 213').run(); } 
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 214').run(); } catch (_) {}
 // Same one-off flag for book 215 (Demons of the Deep).
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 215').run(); } catch (_) {}
-// Same one-off flag for book 232 (Armies of Death). Books 222-231 also have
-// has_battle_sim = 1 set (via one-off UPDATE outside this migration list,
-// same gap pre-existing for those) but are not backfilled here - out of
-// scope for this book's own import.
+// Backfill book 232 separately; books 222-231 were already flagged outside this migration.
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 232').run(); } catch (_) {}
-// Books 233-239 also have has_battle_sim = 1 set the same one-off way,
-// same pre-existing gap, not backfilled here - out of scope for this book.
+// Books 233-239 already have simulator flags; this backfill starts at 240.
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 240').run(); } catch (_) {}
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 241').run(); } catch (_) {}
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 242').run(); } catch (_) {}
@@ -370,12 +354,7 @@ try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 274').run(); } 
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 257').run(); } catch (_) {}
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 258').run(); } catch (_) {}
 
-// One-time migration: book 829's sim was the first one built, before the
-// pt.simNNN naming convention existed, so its state lived under pt.battleSim
-// instead. Renamed to pt.sim829 for consistency with every other sim (and so
-// server/db/xp.js's SIM_HISTORY_KEYS can drop the one-off 'battleSim' entry) -
-// this moves any already-saved battleSim data over so existing players don't
-// lose their in-progress fight or battle history.
+// Rename legacy battleSim state to sim829 without losing saved fights/history.
 {
   const done = db.prepare(`SELECT value FROM admin_settings WHERE key = 'sim829_key_renamed'`).get();
   if (!done) {
@@ -427,19 +406,11 @@ try { db.exec(`ALTER TABLE series_runs ADD COLUMN completed_at INTEGER DEFAULT N
 try { db.exec(`ALTER TABLE xp_events ADD COLUMN template_id INTEGER DEFAULT NULL`); } catch (_) {}
 try { db.exec(`ALTER TABLE users ADD COLUMN join_template_id INTEGER DEFAULT NULL`); } catch (_) {}
 try { db.exec(`ALTER TABLE user_series ADD COLUMN rating REAL DEFAULT NULL`); } catch (_) {}
-// Which of the app's domains (koldkat.net / pathmap.net / bookplay.net / etc.) this
-// user was last seen on, from the Host header - refreshed alongside active_country/
-// active_city in authenticate()/authenticateOptional() (server.js). Unlike geo, the
-// domain rarely changes mid-session, so a single "last seen" value is enough - no
-// separate active/last pair needed.
+// Track the last domain from Host alongside active location.
 try { db.exec(`ALTER TABLE users ADD COLUMN last_domain TEXT DEFAULT NULL`); } catch (_) {}
 try { db.exec(`ALTER TABLE user_books  ADD COLUMN rated_at INTEGER DEFAULT NULL`); } catch (_) {}
 try { db.exec(`ALTER TABLE user_series ADD COLUMN rated_at INTEGER DEFAULT NULL`); } catch (_) {}
-// One-time backfill for existing ratings given before rated_at existed - matched to
-// the rate_book/rate_series XP award, which only ever has ONE row per user+book/series
-// (blocked from re-firing by xp_events' own UNIQUE(user_id, event, ref) index), so this
-// only recovers each rating's FIRST-ever timestamp, not a later re-rating's. Re-run-safe
-// (only fills rows still NULL), so this runs on every boot but is a no-op after the first.
+// Backfill null rating timestamps from first-award events; later re-ratings cannot be recovered.
 try {
   db.exec(`
     UPDATE user_books SET rated_at = (
@@ -469,12 +440,7 @@ db.exec(`CREATE TABLE IF NOT EXISTS book_enemies (
   created_at INTEGER DEFAULT (strftime('%s','now'))
 )`);
 
-// Per-book audit/import checklist - one row per book, real booleans (not
-// loose integers) for each standing-checklist item so a claim like "book N
-// is done" is queryable and falsifiable instead of just asserted in a memory
-// file or chat. Every column starts at 0/NULL and is only flipped to 1
-// immediately after that specific check has actually been performed on that
-// specific book - never batch-set, never inferred from "probably fine".
+// Per-book import checklist: mark checks only after performing them, never infer or batch-set.
 db.exec(`CREATE TABLE IF NOT EXISTS book_import_checklist (
   book_id                INTEGER PRIMARY KEY REFERENCES books(id) ON DELETE CASCADE,
   extraction_method      TEXT,
@@ -493,14 +459,8 @@ db.exec(`CREATE TABLE IF NOT EXISTS book_import_checklist (
   updated_at             INTEGER DEFAULT (strftime('%s','now'))
 )`);
 
-// A book's *secondary* anthology memberships - purely additive on top of its
-// one primary parent_book_id, which stays the sole source of truth for
-// series inheritance, discover-all/visit-all XP milestones, and every other
-// place a book's "real" anthology matters. This table only ever affects
-// which anthologies list a book among their children for display - a story
-// reprinted in a "best of" compilation shares its actual progress/state
-// automatically (state is keyed by book_id, not by which anthology you
-// browsed in from), so no state-tracking machinery needed touching at all.
+// Secondary anthology memberships affect display only.
+// The primary parent remains authoritative for inheritance and milestones; progress is keyed by book.
 db.exec(`CREATE TABLE IF NOT EXISTS book_anthology_memberships (
   book_id      INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
   anthology_id INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
@@ -509,15 +469,8 @@ db.exec(`CREATE TABLE IF NOT EXISTS book_anthology_memberships (
   PRIMARY KEY (book_id, anthology_id)
 )`);
 
-// Canonical playable section text for the "live reading" feature (POC,
-// gated to a single hardcoded user - see server/routes/books.js's
-// handleGetBookSection). Distinct from state.graph (per-user, hand-built as
-// a player reads their own physical/PDF copy) - this is admin-supplied
-// source content shared by every reader of the book, imported once via a
-// one-off script per book (no admin UI yet). `choices` is a JSON array of
-// target section ids (numbers, or -1/0 for death/win), parsed once at
-// import time from the source HTML's own <a href="#section-N"> links -
-// never derived at request time.
+// Shared imported prose, separate from per-player graphs.
+// Store parsed choice targets at import time rather than deriving them per request.
 db.exec(`CREATE TABLE IF NOT EXISTS book_sections (
   book_id    INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
   section_id TEXT    NOT NULL,
@@ -527,11 +480,7 @@ db.exec(`CREATE TABLE IF NOT EXISTS book_sections (
 )`);
 try { db.exec(`ALTER TABLE books ADD COLUMN has_live_reading INTEGER DEFAULT 0`); } catch (_) {}
 
-// Best-effort text pulled from a book's own PDF front matter (everything
-// before its first numbered section) - staging area for later manual
-// review, not served to players. intro_text/rules_text is a heuristic
-// split on a rules-header keyword; when no such keyword is found the
-// whole front matter lands in intro_text and rules_text stays null.
+// Stage PDF front matter for review, not player display; split at a rules heading when found.
 db.exec(`CREATE TABLE IF NOT EXISTS book_frontmatter (
   book_id     INTEGER PRIMARY KEY REFERENCES books(id) ON DELETE CASCADE,
   intro_text  TEXT,
@@ -619,15 +568,7 @@ db.exec(`
   SELECT created_by, id FROM series WHERE created_by IS NOT NULL
 `);
 
-// One-time: mark the two protected accounts, and the actual admin account.
-// Matched by id, not username - usernames are user-editable (updateUsername
-// in server/db/auth.js), so matching by name here would risk either losing
-// the flag on a rename (harmless, since is_protected/is_admin already
-// persisted stays set), or worse, silently granting it to an unrelated
-// future user who registers the vacated username on the next server start
-// (this runs unconditionally on every boot, gated only by the row's own
-// flag being 0). id 1 is koldKat (the actual admin account), id 17 is
-// sashii. Same reasoning as server/db/auth.js's canSeeAppXp().
+// Identify protected/admin accounts by stable IDs, never editable usernames.
 db.prepare(`UPDATE users SET is_protected = 1 WHERE id IN (1, 17) AND is_protected = 0`).run();
 db.prepare(`UPDATE users SET is_admin = 1 WHERE id = 1 AND is_admin = 0`).run();
 
@@ -786,12 +727,8 @@ db.exec(`
   );
 `);
 
-// One-time migration: move per-user state_data out of books into user_books,
-// drop user_id from books, and add is_demo column.
-// NOTE: we must NOT insert into user_books before DROP TABLE books, because
-// DROP TABLE triggers ON DELETE CASCADE on user_books.book_id and wipes the
-// rows we just inserted. Instead, we stash the data in a TEMP table first,
-// do the books table swap, then populate user_books afterwards.
+// Stage state in a TEMP table before swapping books.
+// Inserting user_books first would lose it to DROP TABLE's cascading deletes.
 if (hasColumn('books', 'user_id')) {
   db.transaction(() => {
     // Stash per-user state in a temp table (temp tables are not affected by FK cascades)
@@ -936,16 +873,7 @@ const {
   backupDb,
 } = require('./db/misc');
 
-// One-time backfill: sim213/sim214 were missing from server/db/xp.js's
-// SIM_HISTORY_KEYS from the day each shipped (the same gap that previously
-// hit sim201-203 and sim209-211, see that list's own comment) - anyone who
-// fought in either sim before the fix earned no battlesim_win/battlesim_loss
-// XP for it. Scans every already-recorded history entry (not just ones
-// newer than some snapshot, unlike the live incremental path in
-// processStateXp) and awards through the same awardXp() used live, so the
-// ref format (`${simKey}:${entry.ts}`) matches exactly - if this somehow
-// ran twice, xp_events' UNIQUE constraint + INSERT OR IGNORE makes every
-// individual award idempotent regardless of the outer admin_settings gate.
+// Backfill sim213/sim214 history using live award refs; unique constraints keep repeats harmless.
 {
   const done = db.prepare(`SELECT value FROM admin_settings WHERE key = 'sim213_214_xp_backfilled'`).get();
   if (!done) {

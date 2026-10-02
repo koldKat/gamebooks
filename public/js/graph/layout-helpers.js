@@ -3,12 +3,7 @@ import { _hasValidPos } from './helpers.js';
 import { _GRID_LAYER_GAP, _GRID_COL_GAP } from './layout-constants.js';
 
 export function _getPositionedNeighbors(sec, posMap) {
-  // .includes(sec) is strict-equality: data.choices' raw values aren't
-  // guaranteed to be the same JS type as sec (which callers pass in already
-  // normalized via parseSecId/allDiscoveredSections) - the same string-vs-
-  // number trap this project already fixed once in state.js's own
-  // discoveredSectionsFor. String() both sides before comparing so a real
-  // connection can't be silently missed here too.
+  // Compare normalized IDs so numeric strings cannot hide a real connection.
   const secStr = String(sec);
   const incoming = [];
   const outgoing = [];
@@ -39,13 +34,7 @@ export function _avgPoint(ids, posMap) {
   return { x: x / ids.length, y: y / ids.length };
 }
 
-// First free Y slot in the column at colX, starting at startY and stepping
-// down by _GRID_COL_GAP - treating a slot as taken when any positioned node
-// sits in the same column band within half a gap. Deliberately LOCAL: the
-// previous "bottom of the column" scan (max Y over the whole map) stacked new
-// options below unrelated nodes from other branches that happen to sit in the
-// same column band, landing them far below the parent they belong to (one
-// column right of it, but rows down where some distant branch ends).
+// Search free slots downward from the local parent height, not the global column bottom.
 export function _firstFreeColumnSlot(colX, startY) {
   let y = startY;
   for (;;) {

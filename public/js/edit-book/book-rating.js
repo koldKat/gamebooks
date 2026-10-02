@@ -39,11 +39,7 @@ export function initBookRating(bookId) {
         editState._editStarUpdateFn(+star.dataset.pos - (left ? 0.5 : 0));
       });
       star.addEventListener('click', async e => {
-        // Demo mode has no real account to attach a rating to - this
-        // widget's whole point is rating books you don't own, which
-        // doesn't apply to the fake demo book, and the PATCH below would
-        // 401 and silently log the demo out like everywhere else on this
-        // page (see the fetch below, and the Create-dialog guards).
+        // Demo sessions cannot rate real books; skip authenticated rating requests.
         if (isDemoMode) return;
         const left      = e.offsetX < star.offsetWidth / 2;
         const newRating = +star.dataset.pos - (left ? 0.5 : 0);
@@ -83,9 +79,7 @@ export function initBookRating(bookId) {
     _esw.addEventListener('mouseleave', () => editState._editStarUpdateFn(null));
   }
 
-  // Same isDemoMode reasoning as the star click handler above - this fetch
-  // fires unconditionally every time the modal opens, so a demo book (fake
-  // string id like "demo_1") would 401 the moment Edit is clicked on it.
+  // Skip authenticated rating fetches for demo books.
   if (isDemoMode) {
     editState._editStarUpdateFn(null);
   } else {

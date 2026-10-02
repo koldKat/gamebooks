@@ -1,52 +1,7 @@
-// ── Battle Simulator (Rebel Planet, book 214) ────────────────────────────────
-// Self-contained module. Imports from state.js, play.js, charsheet.js and util.js.
-// Visibility is gated (book 214 only) by the caller in boot.js via
-// setSim214Visible().
-// To remove: delete this file, remove its import line and initSim214()/
-// setSim214Visible() calls from boot.js, and remove the .bsim-* CSS (shared
-// with every other battlesimN.js in this folder, so only remove it if all
-// of them are gone).
-//
-// Standard Fighting Fantasy SKILL/STAMINA/LUCK core (2d6+SKILL Attack
-// Strength rolls, 2-STAMINA wounds, Test Your Luck damage modifiers) -
-// reused verbatim, same as every other sim here. This book has no
-// Potions/Provisions or Hero Points/Super Powers system (not in its rules),
-// so it's one of the leaner sims - no chargen branching beyond the plain
-// SKILL/STAMINA/LUCK roll.
-//
-// Two things unique to this book's roster, both worth real mechanics rather
-// than a one-off note:
-//
-// 1. Tail attack. Several Arcadians (§124, §289, and §136 in an "every OTHER
-//    round" variant - see that enemy's book_enemies note) can swipe with
-//    their tail regardless of the round's normal Attack Strength result: an
-//    extra d6 each qualifying round, 5-6 hits for a flat 2 STAMINA. Modeled
-//    as a per-fight toggle (d.player.hasTailAttack) rather than folding it
-//    into the enemy's own SKILL/STAMINA, since it's an independent roll that
-//    can land on a round the player otherwise wins.
-//
-// 2. Escalating damage (Street Fighter robot, §190 only). Its first
-//    successful hit costs 2 STAMINA, then 3, then 4, and so on - not the
-//    flat 2-per-wound every other fight in this app uses. Modeled as a
-//    second per-fight toggle (d.player.escalatingDamage) plus a hit counter;
-//    LUCK still reduces each hit by 1 exactly the way the existing Test Your
-//    Luck queue already works for every other enemy, so no separate luck
-//    handling was needed for this book's version of that rule.
-//
-// Everything else found in the roster - the Scabrok's three different
-// pre-fight-modified stat lines (§106 full, §133/§341 reduced via a Luck
-// test the player takes before ever opening the sim), the Central Arcadian's
-// one-time post-first-wound SKILL debuff (§243), the Brawler's unarmed
-// "sudden death rule of p. 24" (text not available to cross-check, so left
-// unmodeled per explicit instruction), and the several fights whose outcome
-// branches on being wounded N times rather than on STAMINA reaching 0
-// (§17, §298) - are noted directly in that enemy's book_enemies name rather
-// than built as bespoke mechanics, same "apply narrative one-offs by hand"
-// precedent book202's header documents. Wound-count/round-limit branches are
-// informational only in the log, same "sim is convenience, not enforcement"
-// precedent every sim in this app follows - it never auto-navigates the book.
-//
-// All state lives in pt.sim214, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Rebel Planet, book 214)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
+// Tail attacks are independent of the main exchange.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -154,10 +109,7 @@ function _runRound() {
     if (d.player.stamina > 0) d.pendingLuckQueue.push({ kind: 'enemy-hit' });
   }
 
-  // Tail attack: an independent extra roll, can land on a round the player
-  // otherwise won or drew - not folded into the main Attack Strength roll
-  // above because the book describes it as happening "whatever the result
-  // of that Attack Round otherwise".
+  // Roll tail attacks independently, regardless of the main exchange's result.
   if (d.player.hasTailAttack && d.player.stamina > 0) {
     const tailRoll = _roll1d6();
     if (tailRoll >= 5) {
@@ -188,9 +140,7 @@ function _resolveRoundEnd(d) {
     _recordOutcome(d, 'loss');
     return;
   }
-  // === not >= - a reminder every single round after the threshold (the
-  // fight is deliberately left clickable past it, informational only, see
-  // header) would spam the log for as long as the player keeps rolling.
+  // Warn once at the threshold; later rounds remain playable.
   if (d.player.forceLossAfterRounds > 0 && d.roundsThisBattle === d.player.forceLossAfterRounds) {
     _appendLog(d, t('battlesim214.log.round_limit'));
   }

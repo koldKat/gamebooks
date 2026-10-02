@@ -18,24 +18,14 @@ const {
 // This module lives at server/routes/admin.js - the project root is two levels up.
 const PROJECT_ROOT = path.join(__dirname, '..', '..');
 
-// Mirrors the admin-set app_version into a plain-text file at the repo root,
-// purely so it shows up in git history/diffs as a human-curated version log -
-// this file is never read except as a first-boot seed for admin_settings.
-// app_version (see handleAdminGetSettings/handlePublicConfig below) when that
-// DB row doesn't exist yet (fresh clone/fresh database). Deliberately never
-// written to automatically - only ever updated by this same admin-panel save,
-// same as the DB row it mirrors.
+// Mirror explicit admin version changes to the version file; use it only as a missing-setting seed.
 const VERSION_FILE = path.join(PROJECT_ROOT, 'VERSION');
 function _readVersionFileFallback() {
   try { return fs.readFileSync(VERSION_FILE, 'utf8').trim() || '0.8.8.1'; }
   catch (_) { return '0.8.8.1'; }
 }
 
-// ── Admin handlers ────────────────────────────────────────────────────────────
-
-// filename may include a subdirectory (e.g. 'js/core.js' for the admin panel's
-// own ES modules) - content-type is inferred from the extension so both the
-// HTML pages and the JS modules are served correctly from the same function.
+// Serve admin assets including subdirectories, with extension-based content types.
 function serveAdminFile(req, res, filename) {
   if (!requireLocalhost(req, res)) return;
   const filePath = path.join(PROJECT_ROOT, 'admin', filename);
@@ -301,9 +291,7 @@ function findBackupFiles(dir, ignorePatterns) {
   let entries;
   try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return results; }
   for (const entry of entries) {
-    // The real backups directory must never be skipped here, even if the
-    // user's app-size ignore patterns happen to also match its name (e.g.
-    // a literal "backups" line) - that setting is for app-size only.
+    // Never apply app-size ignore patterns to the actual backups directory.
     if (entry.isDirectory() && entry.name === BACKUP_DIR_NAME && dir === PROJECT_ROOT) {
       results.push(...findBackupFiles(path.join(dir, entry.name), ignorePatterns));
       continue;

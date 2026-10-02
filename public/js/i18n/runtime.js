@@ -24,10 +24,7 @@ export function applyTranslations() {
   document.querySelectorAll('[data-i18n-title]').forEach(el => {
     el.title = t(el.dataset.i18nTitle);
   });
-  // Same idea as data-i18n-title, but for the app's own themed data-tooltip
-  // system (tooltip.js) instead of the native browser title tooltip -
-  // static HTML can't call t() at parse time, so this attribute defers the
-  // translation to this runtime pass, same as data-i18n-title already does.
+  // Translate themed tooltips separately from native title attributes.
   document.querySelectorAll('[data-i18n-tooltip]').forEach(el => {
     el.dataset.tooltip = t(el.dataset.i18nTooltip);
   });

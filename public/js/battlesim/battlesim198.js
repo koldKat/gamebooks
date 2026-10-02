@@ -1,17 +1,6 @@
-// ── Battle Simulator (The Warlock of Firetop Mountain, book 198) ────────────
-// Self-contained module. Imports from state.js, play.js, charsheet.js and util.js.
-// Visibility is gated (book 198 only) by the caller in boot.js via
-// setSim198Visible().
-// To remove: delete this file, remove its import line and initSim198()/
-// setSim198Visible() calls from boot.js, and remove the .bsim-* CSS (shared
-// with battlesim8.js/battlesim829.js/battlesim286.js/battlesim199.js/
-// battlesim200.js/battlesim186.js/battlesim201.js, so only remove it if all eight are gone).
-//
-// Standard Fighting Fantasy SKILL/STAMINA/LUCK system: combat is opposed
-// 2d6+SKILL rolls each round, loser takes a flat 2 STAMINA, with an optional
-// Test Your Luck after a hit lands that nudges the damage by 1 in either
-// direction. All state lives in pt.sim198, per-user/per-book via
-// currentPlaythrough().
+// Battle Simulator (The Warlock of Firetop Mountain, book 198)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -22,9 +11,7 @@ import { t } from '../i18n.js';
 const SVG_SKULL  = `<svg class="sim-icon sim-icon-dead"  viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8c0 2.8 1.4 5.3 3.6 6.8V20a1 1 0 0 0 1 1h6.8a1 1 0 0 0 1-1v-2.2C18.6 16.3 20 13.8 20 11a8 8 0 0 0-8-8zm-2.5 13v-1.5a.5.5 0 0 0-.5-.5H8l-.5-1 1-1-1-1 1-1H9a2.5 2.5 0 0 1 5 0h.5l1 1-1 1 1 1-.5 1h-1a.5.5 0 0 0-.5.5V16h-4z"/></svg>`;
 const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v7a6 6 0 0 1-12 0V2zm-2 1H2v4a4 4 0 0 0 4 4v-1a3 3 0 0 1-3-3V3zm16 0h2v4a4 4 0 0 1-4 4v-1a3 3 0 0 0 3-3V3zm-7 13v2H9v2h6v-2h-2v-2a6 6 0 0 0 5-5.92V2H6v8.08A6 6 0 0 0 13 16z"/></svg>`;
 
-// Which of the 3 starting potions was picked (each: 2 uses). Skill/Strength
-// restore SKILL/STAMINA to Initial; Fortune permanently raises Initial LUCK
-// by 1 then refills current LUCK to that new Initial.
+// Two-dose potions restore initial stats; Fortune raises Initial LUCK by 1 before refilling.
 const POTIONS = [
   ['skill',    'Potion of Skill'],
   ['strength', 'Potion of Strength'],
@@ -36,11 +23,7 @@ const PROVISIONS_HEAL = 4;
 const RUM_STAMINA_BONUS = 6;
 const RUM_LUCK_BONUS = 1;
 const MAGICSWORD_SKILL_BONUS = 2;
-// The book's Magic Sword also grants +2 LUCK per its own text, but no LUCK
-// bonus has ever been applied anywhere in this sim (pre-existing gap, not
-// introduced by i18n conversion) - the description below states it but the
-// mechanic doesn't back it. Flagged, not silently "fixed" as part of an i18n
-// pass since that would be a behavior change, not a translation extraction.
+// Known gap: the Magic Sword description grants +2 LUCK, but the simulator does not apply it.
 const RIVERSWORD_SKILL_BONUS = 1;
 const HELMET_SKILL_BONUS = 1;
 const INVIS_SKILL_BONUS = 2;
@@ -107,10 +90,7 @@ function _appendLog(d, line) {
 function _enemyName(d) { return d.enemy.name.trim() || t('battlesim.default_enemy'); }
 function _enemyNameSafe(d) { return escapeHtml(_enemyName(d)); }
 
-// Magic Sword and river sword each independently grant +1/+2 SKILL - the book
-// treats them as separate finds, so if a player somehow keeps both this just
-// stacks, matching the "add whatever you found" spirit of the other sims'
-// extra-bonus fields rather than forcing an artificial either/or choice.
+// Stack independent Magic Sword and river-sword SKILL bonuses.
 function _effectiveSkill(d) {
   let skill = d.player.skill;
   if (d.player.hasMagicSword) skill += MAGICSWORD_SKILL_BONUS;
@@ -120,18 +100,14 @@ function _effectiveSkill(d) {
   return skill;
 }
 
-// Uncapped (was previously trimmed to the last 100) - the admin dashboard
-// aggregates battle counts app-wide from this array, so per-user history needs
-// to be a true lifetime total, not a rolling window.
+// Keep lifetime outcomes: admin totals require the full history.
 function _recordOutcome(d, outcome) {
   d.history.push({
     enemy: _enemyName(d), outcome,
     playerStamina: d.player.stamina, playerStaminaMax: d.player.staminaInitial,
     ts: Date.now(),
   });
-  // Invisibility was for this one encounter, not a permanent buff - once you
-  // win, it wears off so it doesn't silently carry over into later fights.
-  // Left alone on a loss so a Reset retries the same fight with it still on.
+  // Clear invisibility on victory; retain it after loss so Reset retries the same encounter.
   if (outcome === 'win') d.player.invisibilityActive = false;
 }
 
@@ -182,10 +158,7 @@ function _runRound() {
   _renderAll();
 }
 
-// Test Your Luck after a hit lands: costs 1 LUCK regardless of outcome. On
-// your own hit, Lucky deals 2 extra STAMINA damage (4 total), Unlucky gives
-// back 1 (only 1 total). On a hit you took, Lucky gives back 1 STAMINA (only
-// 1 total lost), Unlucky costs 1 extra (3 total).
+// Luck costs 1: own hits become 4/1 damage; incoming hits become 1/3 damage (lucky/unlucky).
 function _testLuck() {
   const d = _data();
   if (!d || !d.pendingLuck || d.player.luck <= 0) return;
@@ -277,9 +250,7 @@ function _usePotion() {
   _renderAll();
 }
 
-// Good for one dose per the book. Activates immediately and wears off
-// automatically the moment this fight is won (see _recordOutcome), since it
-// was only ever meant to cover the one encounter you drink it for.
+// Single-dose invisibility lasts until this encounter is won.
 function _useInvisibility() {
   const d = _data();
   if (!d || !d.player.invisibilityHave || d.player.invisibilityUsed) return;

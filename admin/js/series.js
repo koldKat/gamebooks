@@ -1,7 +1,4 @@
-// Series tab: lists all series, dialog edit (name/description/public/open-world),
-// and delete (unlinks all books, removes user_series rows).
-// To remove: delete this file and its <script type="module"> import in
-// admin/index.html; remove the Series tab HTML/CSS.
+// Series editing and deletion; deletion unlinks books.
 
 import {
   api, el, badge, mkBtn, mkEditBtn, appendCell, _esc, showConfirm,

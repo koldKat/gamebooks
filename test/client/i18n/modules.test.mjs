@@ -10,7 +10,7 @@ test('translation split preserves the public API and unchanged lookup/DOM runtim
   assert.match(facade, /export \{ t, applyTranslations, setTranslationOverride \} from '\.\/i18n\/runtime\.js';/);
   const runtime = readFileSync(new URL('../../../public/js/i18n/runtime.js', import.meta.url), 'utf8');
   assert.equal(createHash('sha256').update(runtime.slice(runtime.indexOf('let _lang'))).digest('hex'),
-    '9eb537ae5e8e0216db9d930e2d39f07290cfc62aba56dd656bbfa12de02f7023');
+    '5b8f18bc9bdfc18ab828b9a0730cd803be4fd76273db985fe29ebcb1d8afb8c0');
   assert.match(runtime, /^import en from '\.\/en\/index\.js';/);
   assert.doesNotMatch(runtime, /import\(|fetch\(|setTimeout|setInterval/);
 });

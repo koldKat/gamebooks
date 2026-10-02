@@ -1,8 +1,4 @@
-// Tips tab: lists/filters/edits/deletes the tips table, plus the "Add New Tip"
-// form. Self-contained - the tip list (_allTips) isn't read by any other tab.
-// To remove: delete this file and its <script type="module"> import in
-// admin/index.html; remove #tips-type-filter/#tips-active-filter/#new-tip-save
-// listener wiring (this file owns them) and the Tips tab HTML/CSS.
+// Tip management and creation.
 
 import { api, el, badge, mkBtn, mkEditBtn, appendCell, _esc, showConfirm } from './core.js';
 import { editFields } from './editor.js';

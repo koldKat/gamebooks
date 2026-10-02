@@ -2,9 +2,7 @@
 
 import { t } from '../i18n.js';
 
-// x/y are percentages, positioned over the dummy silhouette (eq-body box, 380x600px).
-// Center column = body slots (no horizontal overlap with side columns);
-// vertical gaps between same-column slots are kept > slot height (~74px) to avoid stacking.
+// Slot centers use body-relative percentages; same-column gaps must clear slot height.
 export const SLOTS = [
   { key: 'head',      label: () => t('eq.slot.head'),   x: 50, y: 14 },
   { key: 'neck',      label: () => t('eq.slot.neck'),   x: 50, y: 29 },

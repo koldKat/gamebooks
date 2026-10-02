@@ -29,13 +29,8 @@ export function _hideFeedPreview() {
     bar.style.opacity = '0';
   }
 }
-// Same fix as tooltip.js's own click guard: a hover preview shown right
-// before a click opens a new dialog (e.g. clicking a feed avatar/cover to
-// open its public profile/activity view) never gets a mouseleave, since the
-// pointer doesn't actually leave the element - it stays floating on top of
-// whatever just opened until the mouse happens to move again. Module-level
-// (registered once, not per feed render) since loadFeed() re-renders the
-// feed's own DOM on every SSE update.
+// Dismiss on click because opening an overlay may not trigger mouseleave.
+// Register once, not per feed render.
 document.addEventListener('click', _hideFeedPreview);
 
 function _positionFeedPreview(ev) {

@@ -1,32 +1,6 @@
-// ── Battle Simulator (Прокълнатата земя / Damned Land, book 123) ──────────
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 123 only) by the caller in boot.js via
-// setSim123Visible().
-// To remove: delete this file, remove its import line and initSim123()/
-// setSim123Visible() calls from boot.js, remove 'sim123' from
-// SIM_HISTORY_KEYS in server/db/xp.js, and remove the .bsim-* CSS (shared
-// with the other battlesim*.js files, so only remove it if all are gone).
-//
-// Same chitanka.info-family "magic dozen" formula as book 115 (same rules
-// template, same author): STRENGTH (10) and LIFE (30) are fixed starting
-// values, not dice-rolled - no roll step, just pre-filled fields. Damage is
-// the difference between the two totals, so a tie deals 0 damage with no
-// special-case needed.
-//
-// book_enemies.attack holds STRENGTH, .hp holds LIFE, .defense unused -
-// same convention as 86/114/115. Only 4 combat encounters (5 book_enemies
-// rows - §224 has two) exist in the book's 269 sections; checked the back
-// matter too, no hidden roster table.
-//
-// §224 is NOT modeled: it's a three-way round (first hai-van strikes, then
-// you, then the second hai-van, repeating) rather than the 1-on-1 exchange
-// this sim runs. Both hai-van are still in book_enemies, individually
-// selectable, so the fight can be approximated by running two consecutive
-// 1-on-1 rounds against the sim rather than the book's true interleaved
-// order - close enough for practical use, not worth a bespoke three-party
-// combat mode for one encounter in one book.
-//
-// All state lives in pt.sim123, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Прокълнатата земя / Damned Land, book 123)
+// Start at STRENGTH 10 / LIFE 30; opposed totals deal their difference as damage.
+// The three-way fight is not modeled; simulate its interleaved attacks manually.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';

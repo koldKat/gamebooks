@@ -1,22 +1,7 @@
-/* ── Character sheet ─────────────────────────────────────────────────────────
-   Remove block + charsheet.js + import lines in main.js/ui.js to uninstall.  */
+/* Character sheet. */
 
-/* Play area button bar (Guide + Notebook). Centered between the dice roller
-   (left) and #play-btn-row (right) - not the plain viewport midpoint - via
-   --dice-roller-w (dice.js) and --play-btn-row-w (charsheet.js), both tracked
-   by ResizeObserver, so this doesn't drift under either side once one of them
-   grows wide enough to matter on a narrower screen.
-   bottom is a flat 1rem, deliberately NOT tracking --play-btn-row-h the way
-   #stats-hud below does - a fix attempt briefly added that offset, on the
-   wrong assumption that this stack sits in the same vertical column as
-   #play-btn-row the way #stats-hud does. It doesn't: this stack is
-   horizontally CENTERED (between the dice roller and #play-btn-row), not
-   docked to the right above the button row, so it was never at risk of
-   #play-btn-row's wrapped rows growing upward into it - only of the two
-   columns crowding each other *horizontally* on a narrow screen, which
-   --play-btn-row-w (already tracked below) already accounts for on its own.
-   The height offset just made this stack float uselessly high above the
-   button row on every screen size, confirmed by a follow-up screenshot. */
+/* Center between the dice roller and panel buttons using their observed widths.
+   Do not add the right-hand button row's height to this separate column. */
 #play-bottom-stack {
   display: none;
   position: fixed;
@@ -25,13 +10,7 @@
   transform: translateX(-50%);
   z-index: 100;
   flex-direction: column;
-  /* stretch, not center - #play-btns-bar and #play-xp-summary each sized
-     independently under center, so once #liveread-btn joined the button
-     row it could end up wider than the XP card's own 300px min-width,
-     leaving the card visibly narrower than the row above it instead of
-     matching it. stretch makes both match whichever one is naturally
-     wider, with no JS width-tracking needed - #play-xp-summary's own
-     min-width still applies as the floor when the button row is narrower. */
+  /* Stretch the buttons and XP card to the same natural width. */
   align-items: stretch;
   gap: 0.45rem;
   transition: left 0.25s ease;
@@ -60,24 +39,14 @@ body.sidebar-collapsed #play-bottom-stack {
   white-space: nowrap;
 }
 #guide-btn:hover, #notebook-btn:hover, #party-btn:hover, #liveread-btn:not(:disabled):hover { background: #374151; }
-/* Stays visible-but-disabled rather than hidden when the current book has
-   no live-reading data, so #play-btns-bar's own width doesn't shift every
-   time the reader switches to/from a book that has it - see #liveread-btn
-   comment further down (liveread.css) for why. */
+/* Keep unavailable live reading visible but disabled to prevent row-width changes. */
 #liveread-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 #party-btn.party-active { color: #34d399; border-color: #34d399; }
 #party-btn.party-active:hover { background: #064e3b; }
 
 #play-xp-summary {
   min-width: 300px;
-  /* No max-width cap - #play-bottom-stack's align-items:stretch (above)
-     already ties this to #play-btns-bar's own natural width, which is
-     inherently bounded by its own short button labels, not by anything
-     that needs a second, redundant cap here. A hardcoded 420px cap used to
-     be here and silently won over stretch once #liveread-btn made the
-     4-button row wider than that - the card stayed capped while the row
-     above it kept growing, so Notebook visibly stuck out past the card's
-     right edge instead of the two staying aligned. */
+  /* Let stretch match the button row; a fixed width cap would break alignment. */
   max-width: 92vw;
   width: 100%;
   background: rgba(31, 41, 55, 0.9);
@@ -355,11 +324,7 @@ body.sidebar-collapsed #play-bottom-stack {
   #forum-modal {
     width: 100vw;
     height: 100vh;
-    /* dvh tracks the *current* visible viewport - when the address bar
-       reappears (e.g. after scrolling inside the forum iframe), a plain
-       100vh modal (sized against the largest possible viewport) overflows
-       past the top of the visible area, hiding the header/close button
-       behind the address bar with no way to scroll back up to it. */
+    /* Use dvh so browser chrome cannot hide the dialog's header or close button. */
     height: 100dvh;
     border-radius: 0;
     border-left: none;
@@ -558,9 +523,7 @@ body.sidebar-collapsed #notes-display { left: 1rem; }
 }
 #notes-display-save:hover { background: #2563eb; }
 
-/* Shared bottom-right action button row (charsheet/inventory/equipment/
-   battlesim). A flex container so buttons wrap to a row above when the
-   viewport is too narrow, instead of the old per-button JS anchoring. */
+/* Wrap shared play actions upward on narrow screens. */
 #play-btn-row {
   position: fixed;
   bottom: 1rem;
@@ -587,21 +550,12 @@ body.sidebar-collapsed #notes-display { left: 1rem; }
   cursor: pointer;
   backdrop-filter: blur(6px);
   box-shadow: 0 2px 8px rgba(0,0,0,0.35);
-  /* Without this, #play-btn-row's flex-wrap:wrap-reverse combined with
-     flex-direction:row-reverse could shrink/miscalculate this button's slot
-     at the wrap boundary once enough buttons were showing at once (5+,
-     e.g. Simulator appearing alongside Read Book/Equipment/Inventory/
-     Character Sheet) instead of cleanly wrapping it to a new row - visually
-     it landed stacked directly on top of the neighboring button rather than
-     above it. None of these buttons should ever need to shrink below their
-     own label's width anyway. */
+  /* Do not shrink buttons below their label width at reverse-wrap boundaries. */
   flex-shrink: 0;
 }
 #charsheet-btn:hover { background: #374151; }
 
-/* Stats HUD - wraps charsheet display + inventory display. Sits above
-   #play-btn-row regardless of how many rows it wraps to (height tracked via
-   --play-btn-row-h, kept in sync by a ResizeObserver in charsheet.js). */
+/* Position the HUD above the action row using its observed height. */
 #stats-hud {
   position: fixed;
   bottom: calc(1rem + var(--play-btn-row-h, 2.1rem) + 0.4rem);
@@ -623,14 +577,7 @@ body.sidebar-collapsed #notes-display { left: 1rem; }
   pointer-events: none;
   text-align: right;
   text-shadow: 0 1px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.6);
-  /* Without this, a field with no natural line breaks (e.g. a long
-     comma-joined list value) has nothing to stop it from growing this
-     shrink-to-fit box as wide as the text itself, right off the left edge
-     of the screen. Capped to --play-btn-row-w (charsheet.js's own
-     ResizeObserver, already tracks #play-btn-row's real current width,
-     battle-sim button included when the book has one) so a long value wraps
-     onto multiple lines instead, staying the same width as the button row
-     directly beneath it rather than spilling past it. */
+  /* Cap HUD width to the observed button row so long fields wrap on-screen. */
   max-width: var(--play-btn-row-w, 220px);
 }
 .cs-line  { display: block; }

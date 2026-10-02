@@ -27,14 +27,7 @@ export async function showMain(bookId, isbn = null, issn = null, asin = null, co
   const _pvi2 = document.getElementById('login-promo-video-iframe');
   if (_pvi2) _pvi2.src = '';
   document.getElementById('landing-wrapper').style.display = 'none';
-  // landing-bg-a/-b/-dim are siblings of landing-wrapper (not descendants -
-  // see landing.css), so hiding landing-wrapper alone leaves them visible
-  // and still full-viewport position:fixed behind the app, and their 60s
-  // rotation timer kept repainting them for the rest of the session even
-  // with a book/graph open. Mirror _revealLanding()'s visibility toggle in
-  // reverse here, and stop the timer - both get restored by _revealLanding()
-  // + _startLandingCoverRotation() (via loadCovers()/_showCachedCoversPanel())
-  // the next time showBooks() runs.
+  // Hide the sibling landing background layers and stop rotation while playing.
   _stopLandingCoverRotation();
   ['landing-bg-a', 'landing-bg-b', 'landing-bg-dim'].forEach(id => {
     const el = document.getElementById(id);
@@ -89,14 +82,7 @@ export async function showMain(bookId, isbn = null, issn = null, asin = null, co
     if (showPdfBtn) pdfDlBtn.href = _adminPdfHref(pdfPath);
   }
   setViewingPt(null);
-  // On a slow connection GET /api/books/:id/state can take a moment, during
-  // which #graph-container/#sidebar would otherwise just sit empty/stale.
-  // #graph-container: initGraph() overwrites this the instant it constructs
-  // the new vis.Network right after, so it never needs explicit clearing.
-  // #sidebar: its stats/playthrough-panel elements already exist in the
-  // static HTML shell and render() only updates them in place, so this
-  // overlay is removed explicitly once render() + _updateSidebarBookInfo()
-  // actually populate it, below.
+  // Show loading placeholders until graph initialization and sidebar rendering replace them.
   const _graphContainerEl = document.getElementById('graph-container');
   if (_graphContainerEl) {
     _graphContainerEl.innerHTML = `<div class="graph-loading">${_loadingGraphSvg()}<span>${t('graph.loading')}</span></div>`;
@@ -150,12 +136,7 @@ export async function showMain(bookId, isbn = null, issn = null, asin = null, co
     _positionMenu(document.getElementById('node-ctx-menu'), params.event.clientX, params.event.clientY);
   });
 
-  // A plain left-click on a node opens a read-only Live Reading preview of
-  // its text - previewSection (liveread.js) does its own isSectionMapped
-  // gate internally and silently no-ops for a node that's never actually
-  // been visited (grey/"Discovered" only, not purple/"Mapped"), so nothing
-  // extra to check here. params.nodes is empty for a click on empty
-  // canvas/an edge - only ever act on an actual node.
+  // Preview only node clicks; the reader itself rejects unmapped sections.
   network.on('click', params => {
     if (params.nodes.length !== 1) return;
     previewSection(params.nodes[0]);
@@ -166,11 +147,7 @@ export async function showMain(bookId, isbn = null, issn = null, asin = null, co
   if (!isNaN(_savedVw) && _savedVw >= 0 && state.playthroughs[_savedVw]?.completed) {
     setViewingPt(state.playthroughs[_savedVw]);
   } else if (!currentPlaythrough() && state.playthroughs.length > 0) {
-    // No active run and nothing restored from localStorage (e.g. never explicitly
-    // "viewed" a run in this browser before). Without a displayPt, charsheet/inventory/
-    // equipment hide entirely rather than showing read-only - default to the most
-    // recently completed run so a fully-finished book doesn't look like it has none
-    // of its recorded charsheet/inventory data.
+    // With no active/selected run, show the most recent completed run's saved panels.
     const completedRuns = state.playthroughs.filter(p => p.completed);
     if (completedRuns.length) {
       const latest = completedRuns.reduce((a, b) =>
@@ -188,9 +165,7 @@ export async function showMain(bookId, isbn = null, issn = null, asin = null, co
   _refreshInvDisplay();
   setEquipmentVisible(true);
   await showBattleSimForBook(bookId);
-  // Gated server-side already (db._canLiveRead) - hasLiveReading only ever
-  // comes back true for that one account regardless of who's asking, so no
-  // extra username check is needed here (unlike the earlier single-book POC).
+  // Use server-provided reading availability; no extra account check is needed.
   setLiveReadVisible(!!_bk?.hasLiveReading);
   setDiceRollerVisible(true);
   setGuideVisible(true);

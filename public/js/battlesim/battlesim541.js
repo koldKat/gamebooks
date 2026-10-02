@@ -1,51 +1,8 @@
-// ── Battle Simulator (Terrors Out of Time, book 541) ─────────────────────────
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 541 only) by the caller in boot.js via
-// setSim541Visible().
-// To remove: delete this file, remove its import line and initSim541()/
-// setSim541Visible() calls from boot.js, remove 'sim541' from
-// SIM_HISTORY_KEYS in server/db/xp.js, remove 'sim541-overlay' from
-// ALL_PANEL_OVERLAY_IDS in util.js and the #sim541-btn selectors in
-// battlesim.css.
-//
-// This is NOT a Fighting Fantasy SKILL/STAMINA/LUCK book. It's a
-// Lovecraftian investigator game with five attributes (Strength, Stamina,
-// Mentality, Endurance, Dexterity) and a "Conflict Table" resolver: your
-// attacking attribute rating is cross-indexed against the opponent's
-// matching defending attribute rating to get a new 2d6 target number
-// (roll <= target succeeds; the table's own edges collapse to an
-// automatic success/failure, printed as "A"/"-"). The book's own worked
-// example (Strength 7 vs opponent Strength 8 -> target 6) was used to
-// verify the transcription below, read directly from the source PDF's
-// Conflict Table (pp. attached to the "Combat" rules section), not
-// reconstructed from memory: the table's values are exactly
-//   7 + attacker - defender - (attacker > defender ? 1 : 0),
-//   clamped to '-' below 2 and 'A' above 11.
-// Weapons have a "STA damage / END damage" factor (book's own style,
-// e.g. "Club 3/-"); fists are 2/0. Rolling double-1 on the 2d6 doubles
-// that hit's damage, per the book's own rule, for both sides.
-//
-// The book's actual combat isn't a uniform repeatable round - nearly
-// every encounter is a bespoke, narrative, single Conflict Table check
-// (a lock, a grapple, a specific creature ability), and few of them
-// describe a genuine back-and-forth duel. This sim generalizes the
-// reusable core (attacker rolls vs Conflict Table, hit applies weapon
-// damage; if the enemy survives it attacks back the same way) into a
-// repeatable round, which is a simplification of the book's own more
-// varied, per-encounter presentation - same precedent as this app's
-// other bespoke sims (e.g. book 753's ATAKA/ЗАЩИТА generalization).
-// The player picks which attribute (Strength/Dexterity/Mentality) is
-// being tested each round, matching the book's "match your X against
-// its X" phrasing; STAMINA and ENDURANCE are the two health pools, per
-// the book's own Insanity and Death rules (either reaching 0 ends the
-// adventure).
-//
-// 24 roster entries seeded into book_enemies from a full-book scan
-// (name records which attribute was being tested, since encounters here
-// give a single contextual value rather than a full FF-style stat
-// block - there is no uniform monster stat block format in this book).
-//
-// All state lives in pt.sim541, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Terrors Out of Time, book 541)
+// Conflict target = 7+attacker-defender-(attacker>defender ? 1 : 0).
+// Targets below 2 fail automatically; above 11 succeed. Double-one doubles damage.
+// Repeated rounds generalize the source's mostly single-check encounters; either health pool can
+// end play.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';

@@ -8,9 +8,9 @@ import { spawnSync } from 'node:child_process';
 const dir = new URL('../../../public/js/', import.meta.url);
 test('library feature relocation preserves implementations without root wrappers', () => {
   const digests = {
-    "add-book": "3a968a7fd7c1d4fd3fbe70273caf2c0708e9f21b39ba30af939268d3ec611114",
-    "autocomplete": "973fae2fb21993ce7a5f50688bbfaf9b1e49058daf9c23835339cbb1db9db426",
-    "export": "13a85f1e5a59a6bb2316ed1a0e074de0dfb945d85c1356f740061ce3f9cb6d0c"
+    "add-book": "64efc045c061b102064e9a91f76dcbef547fce716f5682accfe35a7b787abd7c",
+    "autocomplete": "aaea976bce6b382fd4c9a0780a00ec2f3dcddbd158f3f8044dece4e16c9141bf",
+    "export": "450820edb2102369edfc517142930d5ca9310db47e4404fc2007b03fc94e22dc"
   };
   for (const [name, digest] of Object.entries(digests)) {
     assert.equal(existsSync(new URL(name + '.js', dir)), false);

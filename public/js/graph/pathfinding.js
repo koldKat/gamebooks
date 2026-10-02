@@ -1,8 +1,6 @@
 import { state, parseSecId } from '../core/state.js';
 
-// ── Fast-travel pathfinding ─────────────────────────────────────────────────
-
-// Graph-agnostic BFS: can `from` reach `to` in the given graph object?
+// Graph-agnostic reachability BFS.
 export function canReachInGraph(graph, from, to) {
   from = parseSecId(from); to = parseSecId(to);
   if (from == null || to == null || from === to) return false;
@@ -37,14 +35,7 @@ export function allReachableInGraph(graph, from) {
   return seen;
 }
 
-// Quick forward-reachability check (BFS, follows directed edges only).
-// from/to and each choices[] entry are normalized via parseSecId before
-// comparison - a handful of books have their choices[] stored as strings
-// (an older import quirk) while callers pass Number-typed targets (e.g.
-// the fast-travel dialog's parseSecId(input.value)), so a bare `===`
-// compare would silently never match and report "no path" even though the
-// node is genuinely reachable (manual node-by-node navigation doesn't hit
-// this since it never does this comparison).
+// Normalize endpoints and choices before directed BFS so numeric-string IDs match.
 export function canReach(from, to) {
   from = parseSecId(from); to = parseSecId(to);
   if (from === to) return false;
@@ -96,10 +87,7 @@ export function findPathTo(from, to, mode) {
   return _findMaxPriorityPath(from, to, wantPriority, bfsPath);
 }
 
-// Find path from `from` to `to` that passes through the most nodes with
-// priority === `want`. Uses BFS with per-node best-score tracking to prune
-// dominated paths (reached the same node with equal-or-better score via an
-// equal-or-shorter path) while allowing generous detours.
+// Prefer paths containing wanted-priority nodes; prune routes with no better score or length.
 function _findMaxPriorityPath(from, to, want, bfsPath) {
   // Allow up to (bfsPath.length) extra hops - generous for large books, capped
   // so the queue doesn't blow up on tiny books with huge graphs.
@@ -107,9 +95,7 @@ function _findMaxPriorityPath(from, to, want, bfsPath) {
   let bestPath  = bfsPath;
   let bestScore = _countPriority(bfsPath, want);
 
-  // bestAt[node] = { score, len } - prune a new path to `node` only when a
-  // previous one already reached it with score >= new AND length <= new
-  // (strictly dominated on both axes).
+  // Prune only when an earlier route has both at least this score and no greater length.
   const bestAt = new Map([[from, { score: 0, len: 1 }]]);
   const queue  = [{ path: [from], score: 0 }];
 

@@ -1,21 +1,5 @@
-// liveread-shared.js - the handful of in-app-reading pieces that are
-// genuinely identical between desktop (liveread.js) and mobile
-// (public/mobile/js/reader.js), so the two can't literally copy-paste-drift
-// on them the way the trophy/shield icons already did once. Deliberately
-// zero imports of its own, and must stay that way - mobile's reader.js
-// exists specifically to avoid pulling in liveread.js's own heavier import
-// chain (play.js -> charsheet.js/equipment.js, vis-network), so anything
-// added here has to be as import-free as this file is.
-//
-// This does NOT own the run-end screen's actual markup/DOM wiring - each
-// platform's own #liveread-body/#m-top structure, panel-vs-pane model, and
-// CSS are different enough that forcing them through one shared renderer
-// would cost more than it saves. It only owns the parts with truly zero
-// platform-specific shape: the icon SVGs and which i18n key the heading
-// uses. Both use the same `end-icon` class name on the <svg> itself -
-// each platform's own CSS still independently defines that class's actual
-// size/color/filter rules, scoped under its own wrapper (`.liveread-end`
-// vs `.m-end-achievement`).
+// Import-free reading helpers shared by desktop and mobile.
+// Keep platform-specific markup separate and avoid pulling desktop dependencies into mobile.
 
 export const TROPHY_SVG = `<svg class="end-icon" viewBox="0 0 48 48" fill="none">
   <path d="M14 8h20v10a10 10 0 0 1-20 0V8Z" stroke="#f5a623" stroke-width="2.5" stroke-linejoin="round"/>

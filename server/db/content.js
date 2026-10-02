@@ -1,10 +1,6 @@
 'use strict';
 
-// Small "pick a random flavor string" getters for taglines/join-templates/level-up
-// templates. Split out on its own (rather than living with feed.js, which needs
-// two of these) since the admin CRUD/seed-data counterparts for these same tables
-// (getAllLevelUpTemplatesAdmin, createLevelUpTemplate, etc.) belong conceptually
-// with admin.js - both require this file rather than either owning the getters.
+// Random flavor-string getters shared by feed and admin.
 
 const { db } = require('./connection');
 

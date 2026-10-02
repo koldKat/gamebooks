@@ -1,29 +1,18 @@
 'use strict';
 
-// Books/user_books/stashes/series/series_runs CRUD, book_enemies, ratings, and
-// the demo-book helper. Ratings (canUserRateBook/getBookRating/etc.) lived
-// physically elsewhere in the original server/db.js (interleaved with feed-related
-// code) but are pulled in here since getBooks()/getPublicSeriesInfo() in this same
-// file already depend on them, and ratings are fundamentally a book/series property.
+// Book, library, stash, series, run, enemy, and rating persistence.
 
 const { db, _foldForSearch, _naturalCompare, _naturalCompareByName, _getPdfSize } = require('./connection');
 const {
   awardXp, awardCoins, _discoveredSet, _visitedSet, _mappedSet, _permanentVisitedCount, _checkGroupMilestone,
 } = require('./xp');
 
-// "Live reading" (server/routes/books.js's handleGetBookSection) used to be
-// gated to two accounts by username while it was a POC. Open to everyone
-// now that it's proven out - still not announced anywhere (no changelog/
-// forum post) until deliberately publicized, but functionally live for
-// every user. Kept as its own function (rather than deleting the gate
-// entirely) so a future re-gate, if ever needed, has one place to change.
+// Live reading is account-unrestricted; retain one gate for any future access policy.
 function _canLiveRead(_userId) {
   return true;
 }
 
-// Canonical, admin-imported section text for the live-reading feature -
-// distinct from state.graph (per-user). Returns null if this book has no
-// imported data for that section, or the section id isn't real at all.
+// Read shared imported prose, not per-player graphs; missing sections return null.
 function getBookSection(bookId, sectionId) {
   const row = db.prepare('SELECT html, choices FROM book_sections WHERE book_id = ? AND section_id = ?').get(bookId, String(sectionId));
   if (!row) return null;
@@ -60,12 +49,7 @@ function getBooks(userId) {
     try {
       const s = JSON.parse(state_data || '{}');
       const pts = s.playthroughs || [];
-      // _visitedSet/_mappedSet (xp.js) normalize each section id via
-      // _normSec before adding to their Set - building this by hand with a
-      // plain `seen.add(sec)` (as this used to) doesn't, so a path/graph
-      // mixing string and number ids for the same section counted it twice,
-      // inflating `visited` past `total_sections` and forcing the books-list
-      // progress bar/pill to show 100% for a book far from actually done.
+      // Use normalized section sets so numeric/string IDs cannot inflate progress.
       const seen = new Set([..._visitedSet(pts), ..._mappedSet(s.graph || {})]);
       for (const pt of pts) {
         const ts = pt.completedAt || pt.lastActionAt || pt.startedAt || null;
@@ -76,10 +60,7 @@ function getBooks(userId) {
         last_run_at = ub_updated_at * 1000; // SQLite epoch seconds → ms
       }
       visited = seen.size;
-      // Same deleted-run undercount as _visitedSet (see _permanentVisitedCount) - a
-      // section visited in a run that's since been deleted vanishes from `seen` even
-      // though it really was visited, so the books-list progress bar/pill would show
-      // less than 100% (and stay grey) for a book the player has actually finished.
+      // Include permanent visit history when deleted runs no longer provide it.
       const effective = b.discoverable_sections ?? b.total_sections;
       if (effective && visited < effective) {
         const permanent = _permanentVisitedCount(userId, b.id);
@@ -99,10 +80,7 @@ function getBooks(userId) {
       bgPosY: bg_pos_y ?? 50,
       extra_anthology_ids: extraAnthologyIds[b.id] || [],
       extra_anthology_orders: extraAnthologyOrders[b.id] || {},
-      // Gated client-side visibility: !!b.has_live_reading alone would leak the
-      // button to every reader of a book with imported live-reading data - only
-      // ever true for the one hardcoded POC user, everyone else always sees false
-      // regardless of the book's own flag.
+      // Combine book availability with the reading-access policy.
       hasLiveReading: canLiveRead && !!has_live_reading,
     };
   });
@@ -206,9 +184,7 @@ function setBookBgPref(userId, bookId, hidden, posY) {
     .run(hidden ? 1 : 0, clamped, userId, bookId);
 }
 
-// For the admin watch view - mirrors the same hidden/pos_y a real player sees
-// (bg.js's own resetBgState()), plus the book's cover_path so the watch
-// canvas can render the identical background image rather than a blank one.
+// Include cover/visibility/position metadata so watch matches the player's background.
 function getBookBgPref(userId, bookId) {
   const row  = db.prepare('SELECT bg_hidden, bg_pos_y FROM user_books WHERE user_id = ? AND book_id = ?').get(userId, bookId);
   const book = db.prepare('SELECT cover_path FROM books WHERE id = ?').get(bookId);
@@ -270,10 +246,7 @@ function getBookContainerFields(bookId) {
   return db.prepare('SELECT series_id, series_number, is_container, parent_book_id, book_order FROM books WHERE id = ?').get(bookId) ?? null;
 }
 
-// A book's *secondary* anthology memberships - see book_anthology_memberships'
-// own comment in server/db.js. Same "creator of the anthology, or admin" gate
-// as updateBook()'s primary-parent editing, since this is fundamentally the
-// same action (editing which books an anthology lists as its own).
+// Authorize secondary membership edits like primary-parent edits: anthology creator or admin.
 function addAnthologyMember(userId, anthologyId, bookId, bookOrder, isAdmin = false) {
   const anthology = db.prepare('SELECT id, created_by, is_container FROM books WHERE id = ?').get(anthologyId);
   if (!anthology || !anthology.is_container) return { error: 'not_an_anthology' };
@@ -297,11 +270,7 @@ function removeAnthologyMember(userId, anthologyId, bookId, isAdmin = false) {
   return { ok: true };
 }
 
-// Called after a book's primary parent_book_id changes - if it now matches
-// an existing secondary membership, that membership is now a pure duplicate
-// (the book would otherwise get double-listed as a child everywhere the two
-// are combined). Not creator-gated: the caller already authorized the parent
-// change itself, this just keeps the two relationships from overlapping.
+// Remove secondary memberships duplicating an authorized primary-parent change.
 function _pruneRedundantAnthologyMembership(bookId, parentBookId) {
   if (!parentBookId) return;
   db.prepare('DELETE FROM book_anthology_memberships WHERE book_id = ? AND anthology_id = ?').run(bookId, parentBookId);
@@ -461,11 +430,7 @@ function migratePreSeriesRuns(seriesId) {
       );
       s.preSeriesRuns = toMigrate;
       if (toMigrate.length > 0) {
-        // activePtIndex points into playthroughs by position, not identity -
-        // migrating entries out from under it without adjusting would either
-        // point past the end of the shrunk array, or (worse) silently land
-        // on a *different* surviving playthrough that shifted into that same
-        // index, letting the player unknowingly resume the wrong run.
+        // Adjust activePtIndex after migration so it cannot refer to a different run.
         const toMigrateSet = new Set(toMigrate);
         const activePt = typeof s.activePtIndex === 'number' ? pts[s.activePtIndex] : null;
         s.playthroughs = pts.filter(p => !toMigrateSet.has(p));
@@ -481,11 +446,8 @@ function migratePreSeriesRuns(seriesId) {
   migrate();
 }
 
-// Reverse the open-world migration when is_open_world is turned off.
-// - Restores preSeriesRuns back into playthroughs (prepended, as they came first)
-// - Strips placeholder runs (startedAt=null, path=[], not completed) - sync artifacts
-// - Clears preSeriesRuns and resets activePtIndex
-// series_runs rows are left intact (historical data; re-enabling would reuse them)
+// When disabling open world, restore earlier runs, remove untouched placeholders, and reset the active index.
+// Retain series_runs history for re-enabling.
 function reverseSeriesOpenWorld(seriesId) {
   const rows = db.prepare(`
     SELECT ub.user_id, ub.book_id, ub.state_data
@@ -517,8 +479,7 @@ function createSeriesRun(userId, seriesId) {
 }
 
 function getActiveSeriesRunsForUser(userId) {
-  // Returns active (non-completed) series runs across all open-world series the user is in,
-  // where last_book_id is set. Used by the books screen to show "active here" badges.
+  // Return active series runs with a current book for library activity badges.
   return db.prepare(`
     SELECT sr.series_id, sr.run_index, sr.last_book_id, sr.last_section, s.name AS series_name
     FROM series_runs sr
@@ -545,9 +506,7 @@ function patchSeriesRunDeletion(userId, seriesId, runIndex) {
     if (!row?.state_data) continue;
     let stateObj;
     try { stateObj = JSON.parse(row.state_data); } catch (e) {
-      // This book's own playthroughs array won't get re-spliced/renumbered to
-      // match the series_runs rows this same deletion just shifted - silently
-      // skipping used to leave that mismatch with zero trace of why.
+      // Log failed run-state renumbering rather than silently retaining mismatched series indices.
       console.warn(`[series-run-delete] user ${userId} series ${seriesId} book ${bookId}: unparseable state_data, run-index patch skipped:`, e.message);
       continue;
     }
@@ -568,14 +527,7 @@ function resetSeriesForUser(userId, seriesId) {
   db.transaction(() => {
     db.prepare('DELETE FROM series_runs WHERE user_id = ? AND series_id = ?').run(userId, seriesId);
     for (const bookId of bookIds) resetBookProgress(userId, bookId);
-    // Open-world series books log per-run XP (win_run/death_run/etc, see
-    // xp.js's processStateXp) under a series-scoped ref (`series:<id>:...`),
-    // not a book-scoped one, so the run isn't double-counted across every
-    // book in the series. resetBookProgress's own cleanup only ever matches
-    // bookId-scoped refs, so those series-scoped rows survive a per-book
-    // reset untouched - safe to do here instead, since resetting the whole
-    // series (every member book, above) is the one case where nothing else
-    // in the series could still legitimately depend on that run history.
+    // A whole-series reset may clear series-scoped rewards; a single-book reset must leave them intact.
     const placeholders = RESETTABLE_PROGRESS_EVENTS.map(() => '?').join(',');
     db.prepare(`
       DELETE FROM xp_events
@@ -818,11 +770,7 @@ function getBookState(userId, bookId) {
   return s;
 }
 
-// Which book in an open-world series a user is currently actually playing in
-// right now - only one book's own state_data.activePtIndex is ever non-null
-// at a time (the app enforces a single active location per series), so that's
-// the source of truth for "which book do they need to be watched in", not
-// whichever book someone happened to open the watch view from.
+// Resolve the actively played book from activePtIndex, not the watch view's original book.
 function getActiveBookInSeries(userId, seriesId) {
   const rows = db.prepare(
     `SELECT ub.book_id, ub.state_data FROM user_books ub
@@ -847,13 +795,7 @@ function getBookById(bookId) {
   return { ...book, pdf_size: _getPdfSize(book.pdf_path) };
 }
 
-// skipTimestamp is set by handleSaveState when the request came from an
-// impersonation session - the data itself still saves (an admin fixing a
-// stuck state while impersonating should work), but updated_at doesn't
-// bump, since admin's own adminGetUsers() query falls back to
-// MAX(user_books.updated_at) as a "last active" proxy for users whose
-// last_active_at is still null, and that fallback has no way to tell
-// genuine user activity apart from an admin just browsing as them.
+// Impersonated saves preserve data but not activity timestamps.
 function saveBookState(userId, bookId, stateObj, { skipTimestamp = false } = {}) {
   // Deduplicate each playthrough's path (preserve first visit order) to guard
   // against unbounded growth if the user cycles through sections repeatedly.
@@ -871,9 +813,7 @@ function saveBookState(userId, bookId, stateObj, { skipTimestamp = false } = {})
   return ubResult.changes > 0;
 }
 
-// Shared by resetBookProgress (bookId-scoped cleanup) and resetSeriesForUser
-// (series-scoped cleanup, see its own comment) - one list so the two never
-// drift apart on which events count as "progress" worth wiping on a reset.
+// Share progress-event definitions between book and series resets.
 const RESETTABLE_PROGRESS_EVENTS = [
   'discover_node',
   'visit_node',
@@ -1018,8 +958,7 @@ function deleteBook(userId, bookId, cascade = true) {
     const childIds = db.prepare('SELECT id FROM books WHERE parent_book_id = ?').all(bookId).map(r => r.id);
     for (const cid of childIds) db.prepare('DELETE FROM user_books WHERE book_id = ? AND user_id = ?').run(cid, userId);
   }
-  // If not cascading, children stay in library as standalone (parent_book_id still points to the anthology,
-  // but since the anthology is removed from user_books, they'll render as orphaned standalones)
+  // Without cascading, keep children as standalone library entries.
   const result = db.prepare(
     'DELETE FROM user_books WHERE book_id = ? AND user_id = ?'
   ).run(bookId, userId);
@@ -1081,12 +1020,7 @@ function addBookToLibrary(userId, bookId) {
   return { ok: true };
 }
 
-// ── Ratings ───────────────────────────────────────────────────────────────────
-// Lived physically in a different part of the original file (interleaved with
-// feed-related code), moved here since getBooks()/getPublicSeriesInfo() above
-// already depend on it and ratings are fundamentally book/series data.
-
-// Resolve the user's own user_books entry for a given book (matching by ISBN/ISSN if available)
+// Resolve the player's rating entry, matching ISBN/ISSN when available.
 function _getUserBookId(userId, bookId) {
   const row = db.prepare('SELECT book_id FROM user_books WHERE user_id = ? AND book_id = ?').get(userId, bookId);
   return row ? row.book_id : null;
@@ -1100,14 +1034,7 @@ function _getAggregateRating(bookId) {
   return { avgRating: row?.avg_rating ?? null, voteCount: row?.vote_count || 0 };
 }
 
-// Per-author derived rating for a book's authors field (a free-text,
-// comma-separated field - see normalizeAuthors - not a normalized author
-// table), shown next to each author's name in the cover-activity dialog.
-// One name can appear on several books, so this pools every individual
-// rating across every public book crediting that exact name and averages
-// them directly (not an average of each book's own average), which weights
-// naturally toward books with more ratings rather than treating a
-// one-vote book the same as a hundred-vote one.
+// Average individual ratings across public books crediting the exact author name, not book averages.
 function _getAuthorRatings(authorsField) {
   const names = (authorsField || '').split(/\s*,\s*/).map(a => a.trim()).filter(Boolean);
   if (!names.length) return [];

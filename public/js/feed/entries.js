@@ -45,10 +45,7 @@ export function renderEntry(e) {
           : ` <span class="feed-series-tag" style="cursor:default">${escapeHtml(e.seriesName)}${e.seriesNumber ? ' #' + escapeHtml(e.seriesNumber) : ''}</span>`)
       : '';
     const tags = collectionTag + seriesTag;
-    // An anthology's own name renders as a purple pill (#a78bfa, matching
-    // the covers wall's .cover-anthology-badge), the same way a series's
-    // own name pills up amber in the "created series" template - not a
-    // separate badge next to plain title text, the title *is* the pill.
+    // Use the anthology title itself as the colored pill.
     const pillClass = e.isContainer ? ' feed-anthology-pill' : '';
     if (!e.bookIsPublic) return `<span class="feed-book${pillClass}">${escapeHtml(name)}</span>${tags}`;
     const effectiveCover = e.coverUrl || e.parentCoverUrl || null;
@@ -82,10 +79,7 @@ export function renderEntry(e) {
   } else if (e.type === 'series_added') {
     html = t('feed.tmpl.added_series', { user: userEl, series: _seriesTag(e) });
   } else if (e.type === 'series_run_started') {
-    // Book first, series shown as its usual attached tag (bookBtn already
-    // does this for every other entry type) - never "series" mentioned
-    // ahead of the book, which would break the pattern used everywhere
-    // else in the feed.
+    // Keep book-first ordering with its attached series tag.
     html = e.bookName
       ? t('feed.tmpl.series_run_started_in', { user: userEl, n: e.runIndex + 1, book: bookBtn(e.bookId, e.bookName) })
       : t('feed.tmpl.series_run_started', { user: userEl, n: e.runIndex + 1, series: _seriesTag(e) });

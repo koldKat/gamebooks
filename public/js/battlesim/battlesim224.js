@@ -1,56 +1,7 @@
-// ── Battle Simulator (Phantoms of Fear, book 224, Fighting Fantasy 28
-//    by Robin Waterfield) ──
-// Self-contained module. Imports from state.js, play.js, charsheet.js and util.js.
-// Visibility is gated (book 224 only) by the caller in boot.js via
-// setSim224Visible().
-// To remove: delete this file, remove its import line and initSim224()/
-// setSim224Visible() calls from boot.js, and remove the .bsim-* CSS (shared
-// with every other battlesimN.js, so only remove it if all of them are gone).
-// Also remove 'sim224' from SIM_HISTORY_KEYS in server/db/xp.js, and remove
-// 'sim224-overlay' from ALL_PANEL_OVERLAY_IDS in util.js and the #sim224-btn
-// selectors in battlesim.css.
-//
-// Standard Fighting Fantasy SKILL/STAMINA/LUCK system, same core numbers as
-// every other sim in this app (SKILL 1d6+6, STAMINA 2d6+12, LUCK 1d6+6;
-// opposed 2d6+SKILL roll, ties = no effect, loser -2 STAMINA; Test Your Luck
-// costs 1 LUCK, +/-1 STAMINA effect), confirmed from this book's own "Battles"
-// rules text. This book adds a fourth stat, POWER (1d6+6 start, for casting
-// spells and surviving the dream world) - not part of the combat math this
-// sim models, same precedent as every other spell-stat in this app's FF sims.
-//
-// No Provisions/Potions UI - not checked against this book's own equipment
-// rules in depth; STAMINA recoveries are one-off narrative section events,
-// hand-applied with the existing stat stepper like every other sim here.
-//
-// extraAttackers (max 1) + a single sideEnemy cover this book's one genuinely
-// simultaneous encounter: the two N'Yadach at §184, where the book's own text
-// says both attack every round and you pick which one to actually fight back
-// against. Every other multi-enemy fight in this book (Orcs §14, Wolves §79/
-// §273, Prowlers §130, Sciacalls §311, three Dark Elves §323) is fought one
-// at a time per the book's own text - no extra mechanic needed, re-pick the
-// next roster enemy after each kill via the dropdown.
-//
-// Deliberately not modeled as a bespoke mechanic: the six Dark Elves "running
-// battle" at §336, where failing to beat one within 4 Attack Rounds lets the
-// next one in line get free strikes against you - the round counter is
-// already visible in the log, so count rounds by hand and apply a -2 STAMINA
-// penalty (via the wound-damage field or a manual stepper edit) whenever a
-// fight against one of the six runs past round 4. ISHTRA (§201) and MORPHEUS
-// (§364) fight with POWER substituted for STAMINA per the book's own text
-// ("resolve as normal combat, but substitute POWER for STAMINA") - seeded in
-// book_enemies with their POWER score in the .hp column so the sim's normal
-// STAMINA-shaped math still works, but the player's own STAMINA field must be
-// swapped out by hand for their current POWER before that fight and swapped
-// back after.
-//
-// book_enemies (68 rows, read from all stat-block-bearing sections of 400
-// total). Recurring same-name/same-stat creatures across different sections
-// (COOK, BANSHEE, SKELETON SPIRIT, WILD MAN, WEEVIL MAN, SHAPECHANGER, the
-// Wolves) are kept as separate rows disambiguated by section number in the
-// name field, following this app's existing convention, since a player
-// needs the row matching whichever section they're actually on.
-//
-// All state lives in pt.sim224, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Phantoms of Fear, book 224, Fighting Fantasy 28 by Robin Waterfield)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
+// POWER and dream/spell effects are outside this combat model.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -135,9 +86,7 @@ function _resetEncounterKnobs(d) {
   d.sideEnemies = [_emptySideEnemy()];
 }
 
-// Uncapped (was previously trimmed to the last 100) - the admin dashboard
-// aggregates battle counts app-wide from this array, so per-user history needs
-// to be a true lifetime total, not a rolling window.
+// Keep lifetime outcomes: admin totals require the full history.
 function _recordOutcome(d, outcome) {
   d.history.push({
     enemy: _enemyName(d), outcome,
@@ -181,11 +130,7 @@ function _runRound() {
     if (d.player.stamina > 0) d.pendingLuckQueue.push({ kind: 'enemy-hit' });
   }
 
-  // Extra simultaneous attacker (the un-targeted Orc at §8): its own
-  // independent exchange with a fresh player roll every round, never
-  // wounded through this path - only the main "Enemy" slot can be wounded,
-  // matching the standard FF "every enemy attacks, you choose one to fight
-  // back against" multiple-enemy rule.
+  // The unchosen Orc rolls independently and cannot be wounded back.
   for (let i = 0; i < Math.min(d.extraAttackers, MAX_EXTRA_ATTACKERS) && d.player.stamina > 0; i++) {
     const side = d.sideEnemies[i];
     if (!side || side.staminaMax <= 0) continue;
@@ -653,9 +598,7 @@ export function initSim224() {
     if (!d) return;
     const map = FIELD_MAP[id];
     if (!map) return;
-    // Attack modifier is the one field allowed to go negative (bare-handed/
-    // disarmed/fatigue penalties are always a subtraction) - every other
-    // field stays clamped to 0 or above.
+    // Allow negative attack modifiers; other fields stay non-negative.
     val = id === 'sim224-player-atkmod' ? Number(val) : Math.max(0, val);
     if (id === 'sim224-player-skill') val = Math.min(val, d.player.skillInitial);
     if (id === 'sim224-player-stamina') val = Math.min(val, d.player.staminaInitial);

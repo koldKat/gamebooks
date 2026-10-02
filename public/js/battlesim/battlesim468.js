@@ -1,55 +1,8 @@
-// ── Battle Simulator (Леговището на снежната вещица / Caverns of the Snow
-// Witch - the original 1984 Ian Livingstone Fighting Fantasy book #4,
-// Bulgarian edition, book 468) ──
-// Self-contained module. Imports from state.js, play.js, charsheet.js and util.js.
-// Visibility is gated (book 468 only) by the caller in boot.js via
-// setSim468Visible().
-// To remove: delete this file, remove its import line and initSim468()/
-// setSim468Visible() calls from boot.js, and remove the .bsim-* CSS (shared
-// with every other battlesimN.js, so only remove it if all of them are gone).
-// Also remove 'sim468' from SIM_HISTORY_KEYS in server/db/xp.js, and remove
-// 'sim468-overlay' from ALL_PANEL_OVERLAY_IDS in util.js and the #sim468-btn
-// selectors in battlesim.css.
-//
-// Bulgarian-labeled Fighting Fantasy system (УМЕНИЕ/ИЗДРЪЖЛИВОСТ/КЪСМЕТ),
-// mechanically identical to the standard English SKILL/STAMINA/LUCK engine
-// already used across this app (opposed 2d6+УМЕНИЕ roll, ties = no effect,
-// loser -2 ИЗДРЪЖЛИВОСТ; "Изпитване на Късмета" costs 1 КЪСМЕТ, +/-1
-// ИЗДРЪЖЛИВОСТ effect). Cloned from battlesim464.js (itself cloned from
-// battlesim462.js, itself cloned from battlesim221.js) - same engine,
-// already Bulgarian-labeled and already free of any other book's
-// item-specific fields, so no dead code needed stripping this time.
-//
-// This book's own pre-existing book_sections rows (already imported before
-// this sweep reached it) were discarded and rebuilt from the raw PDF - the
-// existing content was severely corrupted (only 29/400 reachable, 0 broken
-// links - the graph was almost entirely disconnected). The rebuild found
-// the header-detection needed three variants: plain bare-number headers,
-// headers with a trailing period, and one single genuinely missing header
-// (§146's own number line was dropped from the source PDF, silently
-// merging its content into §145's tail - found by reading the raw text and
-// confirmed the split point by matching the "Феникс" narrative moment
-// already glimpsed at §217's forward reference). Also found and fixed one
-// doubled-word typo in the source PDF itself (§250's "обърни на на 354"
-// had dropped the anchor for its second choice).
-//
-// 398 of 400 sections are reachable; the other 2 (§333, §334) are genuine
-// unreferenced orphans - exhaustively searched the whole raw PDF text for
-// any mention of either number and found none beyond their own headers.
-// Not corruption (both have coherent, complete prose), just unused pages.
-//
-// No non-standard combat wrinkles in this book beyond the standard engine -
-// attackModifier/enemyWoundDamage/playerWoundDamage/enemyDefeatThreshold
-// are present only as the generic per-encounter override fields shared by
-// every sim in this app, not because this book needs them for anything
-// book-specific. A few encounters (§13 Hill Trolls, §145/§240/§386
-// Goblins, §212 Snow Wolves, §262 Zombie duplicates of the party) use the
-// "paired alternating target" mechanic already established as deliberately
-// unmodeled across every sim in this app - the player tracks the second
-// attacker's blocked/unblocked status by hand, re-picking from the
-// dropdown as named opponents fall.
-//
-// All state lives in pt.sim468, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Леговището на снежната вещица / Caverns of the Snow Witch - the original 1984
+// Ian Livingstone Fighting Fantasy book #4, Bulgarian edition, book 468)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
+// Narrative healing/items are applied manually.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -119,9 +72,7 @@ function _resetEncounterKnobs(d) {
   d.player.enemyDefeatThreshold = 0;
 }
 
-// Uncapped (was previously trimmed to the last 100) - the admin dashboard
-// aggregates battle counts app-wide from this array, so per-user history needs
-// to be a true lifetime total, not a rolling window.
+// Keep lifetime outcomes: admin totals require the full history.
 function _recordOutcome(d, outcome) {
   d.history.push({
     enemy: _enemyName(d), outcome,
@@ -575,9 +526,7 @@ export function initSim468() {
     if (!d) return;
     const map = FIELD_MAP[id];
     if (!map) return;
-    // Attack modifier is the one field allowed to go negative (bare-handed/
-    // disarmed/fatigue penalties are always a subtraction) - every other
-    // field stays clamped to 0 or above.
+    // Allow negative attack modifiers; other fields stay non-negative.
     val = id === 'sim468-player-atkmod' ? Number(val) : Math.max(0, val);
     if (id === 'sim468-player-skill') val = Math.min(val, d.player.skillInitial);
     if (id === 'sim468-player-stamina') val = Math.min(val, d.player.staminaInitial);

@@ -1,10 +1,4 @@
-// Stats cards (top of the Users tab) + Tools tab (SMTP, maintenance mode, app
-// version, XP config, notepad, DB backups, size-ignore patterns) + the Live
-// resource-usage poll (heap/RSS/CPU/traffic). loadAll() is the shared
-// "refresh everything on the main view" entry point, which is why it needs to
-// import loadUsers/loadBooks from users-books.js.
-// To remove: delete this file and its <script type="module"> import in
-// admin/index.html; remove the Stats cards and Tools tab HTML/CSS.
+// Dashboard statistics, tools, and live resource monitoring.
 
 import { api, fmtBytes, fmtDuration, esc, showAlert, showConfirm, flashSaved } from './core.js';
 import { loadUsers, loadBooks } from './users-books.js';
@@ -210,10 +204,7 @@ export async function loadAppSize() {
   }
 }
 
-// Single-flight guard: polled every 1s (admin/js/boot.js) - if a request
-// ever takes longer than a second (a stalled/slow server), overlapping
-// calls would pile up instead of the next tick just reusing the one still
-// in flight.
+// Reuse the in-flight request so the one-second poll cannot pile up.
 let _loadLiveInFlight = false;
 export async function loadLive() {
   if (_loadLiveInFlight) return;

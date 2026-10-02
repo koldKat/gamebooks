@@ -1,59 +1,6 @@
-// ── Battle Simulator (Flight from the Dark, Lone Wolf book 1, id 193) ──
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 193 only) by the caller in boot.js via
-// setSim193Visible().
-// To remove: delete this file, remove its import line and initSim193()/
-// setSim193Visible() calls from boot.js, remove 'sim193' from
-// SIM_HISTORY_KEYS in server/db/xp.js, and remove the .bsim-* CSS (shared
-// with the other battlesim*.js files, so only remove it if all are gone).
-//
-// Lone Wolf's own Combat Ratio + Combat Results Table system - a 2D table
-// lookup like books 92/108, not the Fighting Fantasy simultaneous-exchange
-// engine those FF sims (202-216) use. Combat Ratio = effective COMBAT SKILL
-// minus enemy COMBAT SKILL, computed once when an enemy is selected and
-// fixed for the whole fight (the rule text's numbered steps only repeat
-// "from Stage 3" - picking a number and reading the table - not the ratio
-// calculation itself). Each round, pick 0-9 (a 10-value die), bucket the
-// ratio into the table's 13 printed columns (-11 or less .. 11 or greater),
-// and COMBAT_TABLE[pickRow][ratioCol] gives [enemyLoss, lwLoss]
-// simultaneously, including 'K' (automatically killed) at the extremes.
-// Verified against the book's own worked example (ratio -3, pick 6 -> enemy
-// loses 6, Lone Wolf loses 3) and transcribed from the book's own printed
-// table (two page-halves, cross-checked against each other's duplicated "0"
-// column, which matched exactly).
-//
-// COMBAT SKILL = pick+10, ENDURANCE = pick+20, both rolled once at chargen
-// (0 counts as zero, same 10-value random pick as combat rounds). No LUCK
-// mechanic - that's a Fighting Fantasy system, not part of Lone Wolf.
-//
-// attackModifier is a free-form +/- field covering every one-off COMBAT
-// SKILL change this book's own rules describe by hand rather than a
-// dedicated toggle each: the Weaponskill Discipline (+2 if the matching
-// weapon is carried), Mindblast Discipline (+2, some enemies immune),
-// terrain/injury penalties (e.g. -1 fighting a Kraan through dust, §229),
-// and the Potion of question 6 in this book's random-equipment table
-// (+2 COMBAT SKILL for one fight). Same precedent as every other sim in
-// this app: apply the number, don't build a UI toggle per source.
-//
-// One single-use consumable modeled as an obtain-toggle + Use button, the
-// same shape as book 204/216's potions: the starting-equipment Healing
-// Potion (+4 ENDURANCE, once, after combat only).
-//
-// Every multi-enemy fight in this book (Giak pairs, the 4-Doomwolf pack
-// §253, the Leader+2 Soldiers §180) is explicitly fought "one at a time" in
-// the book's own text, not simultaneously like the FF sims' paired fights -
-// no pairedFight/sideEnemy mechanic needed, just re-pick the next roster
-// enemy after defeating the current one. §208's Giaks are the one exception
-// - fought "as a single enemy" with one combined stat block, already one
-// book_enemies row.
-//
-// book_enemies.attack holds COMBAT SKILL, .hp holds ENDURANCE, .defense
-// unused. 39 rows read from all 350 sections; several same-named/close-stat
-// encounters (Vordak x4, Kraan x2, Bodyguard x2, Doomwolf x2, Robber x2) go
-// to different destinations on checking, so kept as separate rows rather
-// than merged, even where stats coincide almost exactly.
-//
-// All state lives in pt.sim193, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Flight from the Dark, Lone Wolf book 1, id 193)
+// Combat Ratio is fixed on enemy selection; a 0-9 pick selects simultaneous table losses.
+// 'K' means instant death. Skill bonuses and narrative effects are entered manually.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -66,10 +13,8 @@ const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" ari
 
 const HEALING_POTION_HEAL = 4;
 
-// Rows = the 10-value random pick, printed order 1,2,3,4,5,6,7,8,9,0.
-// Columns = Combat Ratio, bucketed: -11-, -10/-9, -8/-7, -6/-5, -4/-3,
-// -2/-1, 0, 1/2, 3/4, 5/6, 7/8, 9/10, 11+. Cell = [enemyLoss, lwLoss]
-// ('K' sentinel = automatically killed).
+// Rows: 1-9, then 0. Columns: Combat Ratio buckets -11..11, clamped at the extremes.
+// Cells are [enemyLoss, playerLoss]; K means instant death.
 const COMBAT_TABLE = [
   [[0,'K'], [0,'K'], [0,8], [0,6], [1,6], [2,5], [3,5], [4,5], [5,4], [6,4], [7,4], [8,3], [9,3]],
   [[0,'K'], [0,8],   [0,7], [1,6], [2,5], [3,5], [4,4], [5,4], [6,3], [7,3], [8,3], [9,3], [10,2]],

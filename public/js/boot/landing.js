@@ -99,12 +99,7 @@ export function _updateUsernameTooltip() {
 
 export async function showBooks() {
   if (_isViewLocked('book')) return;
-  // Reachable from deep inside the public book/series detail dialog (e.g.
-  // "Add series to library"), which can now stay open on top of the forum
-  // instead of closing it - a freshly-shown books screen should never have
-  // an unrelated forum modal still sitting over it regardless of how this
-  // got called, so close it unconditionally here rather than patching every
-  // individual call site that might reach this with the forum still open.
+  // Close the forum on library navigation, regardless of the initiating dialog.
   document.getElementById('forum-modal-overlay')?.classList.remove('active');
   _cancelForumReveal();
   _revealLanding();
@@ -143,16 +138,7 @@ export async function showBooks() {
   document.getElementById('forum-btn').style.display    = '';
   document.getElementById('inbox-btn').style.display    = getToken() ? '' : 'none';
   document.getElementById('notif-btn').style.display    = getToken() ? '' : 'none';
-  // Guests and demo-mode visitors see it; every logged-in account already
-  // has the demo book in their own library regardless of how new it is, so
-  // there's nothing this button offers them that they don't already have.
-  // Explicitly hidden in the else branch, not left alone - this used to
-  // only ever set it visible, never hide it, on the theory that it starts
-  // hidden in index.html and nothing else could have shown it first. That
-  // was wrong: a login timing race (this running before getToken() reflects
-  // the just-completed login) could show it here, and with no explicit
-  // hide anywhere it then stayed visible for the rest of the session even
-  // once the user was fully logged in.
+  // Show demo entry only to guests/demo sessions; explicitly hide it after login.
   document.getElementById('demo-btn').style.display = (!getToken() || isDemoMode) ? '' : 'none';
   _pushNav('home', { view: 'books' });
   if (getToken()) { _scheduleLiveUiRefresh({ inbox: true, notif: true, forum: true, reward: true, party: true }, 40); }

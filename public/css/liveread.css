@@ -1,39 +1,16 @@
-/* liveread.css - floating "live reading" panel (see public/js/reading/liveread.js).
-   Deliberately not an .inv-overlay: no full-screen backdrop, so the graph
-   underneath stays visible and clickable while the panel is open. */
+/* Non-blocking reader panel; keep the underlying graph interactive. */
 
-/* Self-hosted (public/vendor/fonts/pt-serif/), same reasoning as vis-network
-   being vendored rather than pulled from a CDN. PT Serif was designed
-   specifically for on-screen reading (unlike Times New Roman, a print-era
-   metrics-compatible substitute never actually optimized for low-res
-   screens) and has full native Cyrillic coverage, not a bolted-on fallback -
-   see .liveread-body's own font-family comment for why that matters here. */
+/* Self-hosted PT Serif provides native Cyrillic glyphs for reading. */
 @import url('/vendor/fonts/pt-serif/pt-serif.css');
 
-/* #liveread-btn itself lives in the static #play-btns-bar (index.html,
-   between #guide-btn and #notebook-btn), not appended to #play-btn-row like
-   every other panel's trigger - that row was getting crowded enough
-   (Equipment/Inventory/Character Sheet/Battle Simulator, sometimes all four
-   at once) that this button landing on top of whichever one sat at the
-   wrap boundary instead of cleanly wrapping. Styled in charsheet.css
-   alongside #guide-btn/#notebook-btn/#party-btn (the row it actually lives
-   in now) instead of getting its own rule here. */
+/* The live-reading trigger belongs to the static play button bar; charsheet.css styles it. */
 
 .liveread-panel {
   display: none;
   flex-direction: column;
   position: fixed;
-  /* Deliberately NOT on the left-docking convention (#run-trail-float,
-     #notes-display, #dice-roller-wrap all live there, stacked top/middle/
-     bottom of that same column) - a reading panel needs to stay open for
-     the whole session alongside all three. Docked right instead, directly
-     under #legend. --legend-h is tracked by a ResizeObserver in liveread.js
-     (same pattern as charsheet.js's --play-btn-row-h) since the legend's
-     real height varies with its collapse toggle and portal row.
-     max-height, NOT also bottom-anchored to #play-btn-row - anchoring both
-     ends stretches it across nearly the whole remaining strip again, same
-     "takes up all the space" complaint just moved to the other edge. A
-     capped height leaves clear room above the button row on its own. */
+  /* Dock below the legend using its observed height.
+     Cap panel height without anchoring both ends, leaving space for the button row. */
   right: 12px;
   top: calc(var(--legend-h, 260px) + 24px);
   max-height: 50vh;
@@ -48,13 +25,7 @@
 }
 .liveread-panel.active { display: flex; }
 
-/* Reuses .inv-close-btn's look (plain icon button, hover background) for
-   consistency with the rest of the header rather than inventing a new
-   button style. Wrapped in its own margin-left:auto group so both the
-   font buttons and the close button end up together at the header's right
-   edge - #liveread-close's own .inv-modal-hdr:not(:has(.inv-count))
-   auto-margin (equipment.css) still applies but is a no-op once this
-   wrapper has already pushed everything after the title to the right. */
+/* Group font controls and close button at the header's right edge. */
 .liveread-font-controls {
   display: flex;
   align-items: center;
@@ -71,41 +42,19 @@
 }
 
 .liveread-body {
-  /* Without min-height:0, a flex item's default min-height is its content
-     size - it would grow past the panel's max-height instead of scrolling,
-     clipping the bottom against .liveread-panel's overflow:hidden. */
+  /* min-height:0 lets the flex child scroll within the panel's height limit. */
   flex: 1 1 auto;
   min-height: 0;
   padding: 0.9rem 1rem;
   overflow-y: auto;
   line-height: 1.55;
   color: #d1d5db;
-  /* Set inline on #liveread-panel by liveread.js's font +/- controls (a
-     scoped CSS var, not a global one, so it can't leak into any other
-     panel that happens to share this stylesheet). */
+  /* Scope font-size controls to this reader panel. */
   font-size: var(--liveread-font-size, 0.88rem);
-  /* Echoes the source HTML exports' own book-page typography (serif) while
-     keeping the app's dark colors rather than the source's black-on-white
-     page. PT Serif (self-hosted, see the @import above) replaces the
-     original Times New Roman - both Georgia AND Times New Roman turned out
-     to be poor screen choices: Georgia (specifically non-Microsoft
-     substitutes) has a documented history of incomplete extended-Cyrillic
-     glyph coverage (й rendering as a separate и + combining-mark glyph
-     pulled from a fallback font instead of one precomposed glyph, which
-     broke Bulgarian content), and Times New Roman - though it does have
-     full Cyrillic coverage - was only ever hinted for print, not the low
-     line-count, backlit reading this panel actually does, and read as
-     cramped/strained at normal panel widths regardless of language. PT
-     Serif was drawn specifically for on-screen reading with native (not
-     retrofitted) Cyrillic support, so it fixes both problems at once
-     instead of trading one off against the other. Kept 'Times New Roman'
-     in the stack as the fallback for the brief moment before the webfont
-     loads (font-display:swap) or on the rare chance it fails outright. */
+  /* Use self-hosted PT Serif for screen reading and native Cyrillic; keep a serif fallback. */
   font-family: 'PT Serif', 'Times New Roman', serif;
 }
-/* Justify without hyphenation produces big uneven word-gaps ("rivers") at
-   this panel's 380px width - hyphens:auto lets the line-breaker split long
-   words instead of stretching spaces to fill the line. */
+/* Hyphenate justified text to avoid wide word gaps in the narrow panel. */
 .liveread-body p {
   margin: 0 0 0.75rem;
   text-align: justify;
@@ -129,9 +78,7 @@
 }
 .liveread-back { margin-top: 1rem; border-top: 1px solid #374151; padding-top: 0.75rem; }
 
-/* Shown by previewSection() (a graph-node click) - matches mobile's own
-   .m-preview-banner exactly, so the "you're just looking, not really here"
-   framing reads the same on both platforms. */
+/* Read-only preview banner, matching mobile. */
 .liveread-preview-banner {
   font-size: 0.8rem;
   color: #9ca3af;
@@ -141,9 +88,7 @@
   margin: 0 0 0.75rem;
 }
 
-/* Run-end achievement screen (win/death) - a one-shot entrance (not the
-   infinite decorative kind gated behind body.reduce-motion), cheap
-   opacity+transform only, so it's fine to always play. */
+/* One-shot run-end entrance using opacity and transform. */
 .liveread-end {
   display: flex;
   flex-direction: column;
@@ -157,9 +102,7 @@
   from { opacity: 0; transform: translateY(6px) scale(0.96); }
   to   { opacity: 1; transform: none; }
 }
-/* .end-icon (not liveread-prefixed) is the shared class name emitted by
-   liveread-shared.js's SVG constants - same class name mobile's own CSS
-   targets under its own .m-end-achievement wrapper. */
+/* Shared reading icon class, scoped by each platform's wrapper. */
 .liveread-end .end-icon { width: 56px; height: 56px; }
 .liveread-end--death .end-icon { filter: drop-shadow(0 0 6px rgba(231, 76, 60, 0.35)); }
 .liveread-end--win   .end-icon { filter: drop-shadow(0 0 6px rgba(245, 166, 35, 0.4)); }
@@ -172,9 +115,7 @@
 .liveread-end--win   .liveread-end-heading { color: #f5a623; }
 .liveread-end--death .liveread-end-heading { color: #e74c3c; }
 
-/* Some source exports (e.g. book 868) mark up choice/ending/note paragraphs
-   with these classes in their own <style> block - dark-theme equivalents of
-   the same visual distinction, not just plain narrative text. */
+/* Dark-theme equivalents of source-prose structural classes. */
 .liveread-body p.choice {
   font-weight: 600;
   text-align: justify;
@@ -191,18 +132,7 @@
 }
 .liveread-body p.note { font-style: italic; opacity: 0.75; text-align: left; }
 
-/* Some source exports (e.g. books 204/209/210) mark up stat blocks and
-   multi-choice lists as <pre class="statline">/"stats"> instead of <p> -
-   <pre> defaults to white-space:pre (no wrapping at all) plus a monospace
-   font, neither of which had ever been reset for this panel. A single long
-   line (a multi-sentence intro before a choice list, not just a short stat
-   callout) would run straight off the edge of the panel instead of
-   wrapping, forcing a horizontal scrollbar. pre-wrap keeps the source's own
-   intentional line breaks (each choice still gets its own line) while
-   letting any individual line that's too long wrap normally like the rest
-   of the prose. word-break covers the rare single "word" (a run-on
-   dice-notation string with no spaces) that's still wider than the panel
-   even after wrapping at spaces. */
+/* Preserve source line breaks while wrapping long stat/choice lines and unbroken dice notation. */
 .liveread-body pre {
   margin: 0 0 0.75rem;
   font-family: inherit;
@@ -214,18 +144,14 @@
 }
 .liveread-body pre:last-child { margin-bottom: 0; }
 
-/* Same stat-block accent as <pre>, for the books that mark it up as a plain
-   <p class="statline"|"stats"> instead - already wraps fine as a normal <p>
-   (no pre-wrap needed), just had no visual distinction from ordinary prose. */
+/* Style paragraph stat blocks like preformatted stats. */
 .liveread-body p.statline, .liveread-body p.stats {
   border-left: 3px solid #38bdf8;
   padding-left: 0.6rem;
   font-weight: 600;
 }
 .liveread-body p.combat-note { font-style: italic; opacity: 0.75; text-align: left; }
-/* Explicitly flags a hole in the source PDF (a missing section the import
-   couldn't recover) - amber, not the same blue as ordinary structural
-   content, so it doesn't read as just another stat block. */
+/* Distinguish missing source text from ordinary stat blocks. */
 .liveread-body p.source-gap {
   border-left: 3px solid #f59e0b;
   padding-left: 0.6rem;
@@ -233,9 +159,7 @@
   font-style: italic;
 }
 
-/* A branching-choice list, one option per line via <br> rather than
-   separate <p> tags - never had spacing between the lines or any visual
-   separation from the paragraph introducing it. */
+/* Space line-broken choices separately from narrative prose. */
 .liveread-body div.choices {
   margin: 0 0 0.75rem;
   border-left: 3px solid #38bdf8;
@@ -244,13 +168,7 @@
 }
 .liveread-body div.choices:last-child { margin-bottom: 0; }
 
-/* A source PDF passage the exporter kept split across several short lines
-   (each its own child <div>) instead of merging into one flowing
-   paragraph - used for inscriptions/carved text/similar "read this exactly
-   as laid out" content. Plain stacked <div>s already wrap fine on their
-   own; this only adds the same visual framing as everything else that
-   isn't ordinary narrative prose, so it reads as a deliberately quoted
-   block rather than a formatting glitch. */
+/* Frame source inscriptions as quoted blocks without changing their line layout. */
 .liveread-body div.listblock {
   margin: 0 0 0.75rem;
   border-left: 3px solid #6b7280;
@@ -260,13 +178,7 @@
 }
 .liveread-body div.listblock:last-child { margin-bottom: 0; }
 
-/* Tables (a combat roster or a shop's item/cost list) never had any styling
-   at all - bare browser-default tables with no borders/spacing look broken
-   next to the rest of the panel's deliberate typography. table-layout:fixed
-   plus width:100% keeps a table from ever forcing the panel wider than its
-   own fixed width, the same overflow risk <pre> had before its own fix
-   above, just via a different default (an unconstrained table sizes itself
-   to its content's natural width, not to its container). */
+/* Constrain tables to panel width so long cells cannot cause horizontal overflow. */
 .liveread-body table {
   width: 100%;
   table-layout: fixed;

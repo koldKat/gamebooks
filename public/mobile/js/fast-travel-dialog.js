@@ -1,22 +1,9 @@
-// fast-travel-dialog.js - Mobile's toolbar Fast Travel dialog: manual
-// section entry + high/shortest/normal/low path-preference modes, same
-// shape as desktop's showFastTravelDialog()/doJump() rather than a mobile-
-// native tap-to-arm flow - desktop's dialog is genuinely the wanted UX
-// here, not a compromise. Reuses .inv-overlay/.inv-modal (already linked
-// via equipment.css) and its own .ft-qty-* stepper instead of desktop's
-// .cs-num-wrap/.ft-dialog-* (neither of which mobile links). Extracted out
-// of reader.js as a self-contained UI widget, per CLAUDE.md's module-
-// placement rule. Unlike the graph's long-press context menu (one-tap
-// shortest-route shortcut, no submenu), this dialog keeps all 4 modes plus
-// manual entry - the two are deliberately different depths of the same
-// feature, not a duplicate.
+// Mobile fast-travel dialog with manual entry and four route preferences.
 
 import { parseSecId } from '../../js/core/state.js';
 import { t } from '../../js/i18n.js';
 
-// doFastTravel: reader.js's own playthrough-navigation logic, passed in
-// per call rather than imported directly, same reasoning as context-menu.js
-// and note-modal.js's own hooks parameters.
+// Pass navigation in to avoid a reader/dialog import cycle.
 export function openFastTravelDialog(doFastTravel) {
   let overlay = document.getElementById('ft-overlay');
   if (!overlay) {

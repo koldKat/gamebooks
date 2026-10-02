@@ -57,9 +57,7 @@ export function applyPrefs(p) {
   }
   if ('choicesRecordedCount' in p) {
     setChoicesRecordedCount(p.choicesRecordedCount);
-    // The play area's choices-input may already be on screen from a render that
-    // ran before this (async) sync resolved - correct its pulse class directly
-    // rather than waiting for the next natural render() to notice.
+    // Apply onboarding pulse state directly if the async preference sync follows rendering.
     document.getElementById('choices-input')?.classList.toggle(
       'choices-input--pulse', Number(p.choicesRecordedCount) < CHOICES_PULSE_THRESHOLD
     );
@@ -67,13 +65,7 @@ export function applyPrefs(p) {
   if (getCachedBooks() && Array.isArray(getCachedBooks())) {
     renderBooksList(getCachedBooks(), getCachedAllSeries(), getCachedStashes());
   }
-  // Unlike the individual toggle buttons (which go through
-  // _setLandingPanelCollapsed and already call this), applying the user's
-  // saved panel state on initial load sets covers-collapsed/right-collapsed
-  // directly above - so the feed panel's width can change here too, and
-  // without this call the day-cover tiles would stay sized for whatever the
-  // pre-prefs default width was until some unrelated resize event happened
-  // to fire later.
+  // Recalculate feed tile sizes after applying saved panel widths.
   if ('covers-collapsed' in p || 'right-collapsed' in p) _hooks.refreshDayCovers?.();
 }
 
@@ -84,12 +76,7 @@ export async function syncPrefs() {
     const r = await apiFetch('/api/prefs');
     if (!r.ok) return;
     const serverPrefs = await r.json();
-    // Merge with the CURRENT overrides, not the pre-request snapshot - if a
-    // pref (e.g. Ctrl+X's panel-collapse toggle) got saved again while this
-    // GET was in flight, applying the stale snapshot would briefly stomp the
-    // just-made change back to its old value until the next sync corrected
-    // it - visible as a flash of the old state (panels re-collapsing for a
-    // moment right after being restored, then expanding again).
+    // Merge current overrides after the request, preserving preferences changed while it was in flight.
     applyPrefs({ ...serverPrefs, ..._localPrefOverrides });
     for (const k of Object.keys(snapshotBefore)) {
       if (_localPrefOverrides[k] === snapshotBefore[k]) delete _localPrefOverrides[k];
@@ -104,14 +91,7 @@ export function _setLandingPanelCollapsed(prefKey, collapsed) {
     'feed-collapsed':   { cls: 'feed-collapsed',   btn: 'feed-toggle',   collapsedText: '▾', expandedText: '▴' },
   }[prefKey];
   if (!cfg) return;
-  // #feed-panel collapses to max-height:0 (landing.css) rather than being
-  // unmounted, which shrinks #landing-wrapper's scrollable content and lets
-  // the browser clamp its scrollTop - on a long feed that clamp can land
-  // well above where you'd actually scrolled to. Since max-height can't be
-  // transitioned to/from its default `none` (not an animatable length), the
-  // panel is already back to full height the instant the class comes off,
-  // so restoring scrollTop next frame is enough - no need to wait out the
-  // opacity/transform entrance transition.
+  // Restore scroll next frame after expanding the feed; collapse may have clamped scrollTop.
   if (prefKey === 'feed-collapsed') {
     const wrapper = document.getElementById('landing-wrapper');
     const wasCollapsed = document.body.classList.contains(cfg.cls);

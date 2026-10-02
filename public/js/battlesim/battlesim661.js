@@ -1,49 +1,6 @@
-// ── Battle Simulator (Сенките на мрака, book 661, Kung-Fu style book) ────────
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 661 only) by the caller in boot.js via
-// setSim661Visible().
-// To remove: delete this file, remove its import line and initSim661()/
-// setSim661Visible() calls from boot.js, remove 'sim661' from
-// SIM_HISTORY_KEYS in server/db/xp.js, remove 'sim661-overlay' from
-// ALL_PANEL_OVERLAY_IDS in util.js and the #sim661-btn selectors in
-// battlesim.css.
-//
-// This book has FOUR stats (СИЛА/Strength, ЛОВКОСТ/Agility, БЪРЗИНА/Speed,
-// УМЕНИЕ/Skill) and a Rock-Paper-Scissors "form type" system (Paper beats
-// Rock, Scissors beats Paper, Rock beats Scissors, per the book's own
-// "Камък, лист и ножица" rule). Each combat form has a type plus its own
-// sub-points for СИЛА/ЛОВКОСТ/БЪРЗИНА.
-//
-// This sim is DELIBERATELY NOT a full automated round-by-round resolver,
-// unlike this app's other battle sims. The book itself says so explicitly
-// in its own rules ("За всяка отделна схватка книгата дава точни указания
-// кои точки да сравняваш" - "for each individual fight the book gives
-// exact instructions on which points to compare") and three worked
-// examples read directly from the book confirm this varies fight to
-// fight, not a fixed formula:
-//   - Section 113 (matching types, a tie): both sides compare
-//     (УМЕНИЕ + the tied type's matching stat, form value + general
-//     value) - this one case IS consistent and is auto-calculated below.
-//   - Section 123 (player's type beats the enemy's): both sides' totals
-//     included УМЕНИЕ.
-//   - Section 133 (player's type loses to the enemy's): NEITHER side's
-//     total included УМЕНИЕ - only the winning type's stat (form value +
-//     general value) was compared.
-// Those last two examples are not reconcilable into one general formula
-// from the text available, so rather than guess and risk silently wrong
-// outcomes, this sim shows both sides' raw component numbers (general
-// stat, form stat, and skill, for whichever stat the winning form-type
-// implies) for the type-mismatch case, and lets the reader add them up
-// per that specific encounter's own printed instruction, same as the
-// book itself requires. Only the confirmed tie-case total is computed
-// automatically. Win/Loss are recorded by the reader's own button press
-// rather than inferred.
-//
-// 10 named opponents seeded into book_enemies (attack=СИЛА,
-// defense=ЛОВКОСТ, hp=БЪРЗИНА, pb=УМЕНИЕ - reusing the existing 4-column
-// schema for this book's 4 stats, not FF's SKILL/STAMINA).
-//
-// All state lives in pt.sim661, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Сенките на мрака, book 661, Kung-Fu style book)
+// Rock-paper-scissors form comparison; only matching-type totals are automated.
+// Mismatched totals vary by encounter, so show components and let the reader record the outcome.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -57,9 +14,7 @@ const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" ari
 const TYPES = ['rock', 'paper', 'scissors'];
 const STAT_BY_TYPE = { rock: 'sila', paper: 'lovkost', scissors: 'barzina' };
 
-// Rock-Paper-Scissors per the book's own rule: "ЛИСТЪТ ПОКРИВА КАМЪКА,
-// НОЖИЦАТА РЕЖЕ ЛИСТА, КАМЪКЪТ ТРОШИ НОЖИЦАТА" (Paper covers Rock,
-// Scissors cuts Paper, Rock crushes Scissors).
+// Paper beats Rock, Scissors beats Paper, Rock beats Scissors.
 function _beats(a, b) {
   return (a === 'paper' && b === 'rock') || (a === 'scissors' && b === 'paper') || (a === 'rock' && b === 'scissors');
 }

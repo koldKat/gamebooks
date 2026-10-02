@@ -1,23 +1,7 @@
-// ── Battle Simulator (Assassins of Allansia, book 263) ───────────────────────
-// Self-contained module. Imports from state.js, play.js, charsheet.js and util.js.
-// Visibility is gated (book 263 only) by the caller in boot.js via
-// setSim263Visible().
-// To remove: delete this file, remove its import line and initSim263()/
-// setSim263Visible() calls from boot.js, and remove the .bsim-* CSS (shared
-// with other battlesimNNN.js modules, so only remove it if all are gone).
-//
-// Standard Fighting Fantasy SKILL/STAMINA/LUCK system: combat is opposed
-// 2d6+SKILL rolls each round, loser takes a flat 2 STAMINA, with an optional
-// Test Your Luck after a hit lands that nudges the damage by 1 in either
-// direction (Lucky hit = 4 total damage, Unlucky hit = 1; Lucky wound taken =
-// 1 total, Unlucky wound taken = 3 - matches this book's own "Using Luck in
-// Battles" rules exactly). Healing uses Provisions/meals: the book starts you
-// with 10 meals, each restoring 4 STAMINA (MAX_PROVISIONS/PROVISIONS_HEAL
-// below match this exactly). Not modeled: the assassin-pendant tracking
-// mechanic (collecting scorpion pendants from defeated assassins) and the
-// Warp Ring/Time Elapsed subsystems - this sim only tracks the SKILL/
-// STAMINA/LUCK combat loop. All state lives in pt.sim263, per-user/per-book
-// via currentPlaythrough().
+// Battle Simulator (Assassins of Allansia, book 263)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
+// Pendant and time/warp mechanics are outside combat.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -115,11 +99,7 @@ function _runRound() {
   _renderAll();
 }
 
-// Test Your Luck after a hit lands: costs 1 LUCK regardless of outcome. On
-// your own hit, Lucky deals 2 extra STAMINA damage (4 total), Unlucky gives
-// back 1 (only 1 total). On a hit you took, Lucky gives back 1 STAMINA (only
-// 1 total lost), Unlucky costs 1 extra (3 total). Matches the book's
-// "Using LUCK in Combat" rule.
+// Luck costs 1: own hits deal 4/1 damage; incoming hits deal 1/3 (lucky/unlucky).
 function _testLuck() {
   const d = _data();
   if (!d || !d.pendingLuck || d.player.luck <= 0) return;

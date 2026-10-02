@@ -1,8 +1,6 @@
 'use strict';
 
-// Book/library route handlers: books, stashes, series (incl. runs/characters),
-// public-catalog/feed/user/app-xp SSE streams, book CRUD, ratings, notebook,
-// export, state save/load, and party (Play Together) routes.
+// Book/library, run, stream, rating, export, notebook, and party HTTP handlers.
 
 const db = require('../db');
 const {
@@ -187,9 +185,7 @@ async function handleDeleteSeries(req, res, seriesId) {
     if (next) {
       db.transferSeriesOwnership(seriesId, next.user_id);
     } else {
-      // No remaining series owner: turn any remaining books into standalones
-      // and remove the now-ownerless series row instead of leaving a ghost
-      // series discoverable globally.
+      // Remove ownerless series and leave surviving books standalone.
       db.deleteSeries(seriesId);
     }
   }
@@ -425,13 +421,7 @@ async function handleAddAnthologyMember(req, res, anthologyId) {
   const result = db.addAnthologyMember(userId, anthologyId, book_id, book_order, isAdmin);
   if (result?.error) return send(res, result.error === 'forbidden' ? 403 : 400, { error: result.error });
   send(res, 200, { ok: true });
-  // XP always goes to the book's creator, not the requester (the anthology's
-  // creator may be adding someone else's book) - same rule as handleUpdateBook.
-  // Both events reuse the primary-anthology XP events, but with a ref scoped
-  // to this specific anthology (`bookId:anthologyId`) rather than bare bookId -
-  // the primary attachment already claimed the bare-bookId ref, so reusing it
-  // here would silently no-op for any book that's ever had a primary anthology
-  // (i.e. almost always), paying zero XP for secondary memberships entirely.
+  // Credit the book creator, not the anthology editor; scope secondary attachment refs to both IDs.
   const xpRef = `${book_id}:${anthologyId}`;
   if (result.isNew && result.bookCreatedBy) db.awardXp(result.bookCreatedBy, 'add_book_to_anthology', xpRef);
   if (result.bookOrderSet && result.bookCreatedBy) db.awardXp(result.bookCreatedBy, 'add_anthology_order', xpRef);
@@ -496,11 +486,7 @@ async function handleSetBookRating(req, res, bookId) {
   if (!result) return send(res, 404, { error: 'Not in your library' });
   if (result.blocked) return send(res, 403, { error: 'Complete a run first' });
   send(res, 200, { rating: rating ?? null, xpAwarded: result.xpAwarded, avgRating: result.avgRating, voteCount: result.voteCount });
-  // getFeed's book_rated block always reads the CURRENT rating live from user_books,
-  // not a snapshot from when the feed entry's xp_event fired - so re-rating or
-  // clearing a rating changes what an existing feed entry shows even though it
-  // doesn't create a new one. Push on every change, not just the first (xpAwarded),
-  // so connected clients actually see that update instead of a stale rating.
+  // Push every rating change: feed entries display current ratings, even without a new XP award.
   feedPush({ type: 'feed_changed', entity: 'book', action: 'rated', id: bookId });
 }
 
@@ -552,11 +538,7 @@ async function handleSetNotebook(req, res, bookId) {
   if (!db.setNotebook(userId, bookId, text)) return send(res, 404, { error: 'Not in your library' });
   let xpAwarded = false;
   if (typeof ptIdx === 'number' && ptIdx >= 0) {
-    // startedAt-based, not the raw array index - a deleted run's old slot can be reused
-    // by an unrelated later run, and an index-based ref would collide with the deleted
-    // run's leftover xp_events row, silently blocking the new run's legitimate award.
-    // Same fix already applied to death_run/win_run/battle_run/share_run/
-    // charsheet_saved/charsheet_run/add_charsheet_field - this one was missed then.
+    // Use startedAt refs so a reused run slot cannot collide with a deleted run's reward.
     const bookState = db.getBookState(userId, bookId);
     const startedAt = bookState?.playthroughs?.[ptIdx]?.startedAt;
     const ref = `${bookId}:${startedAt ?? ptIdx}`;
@@ -609,13 +591,7 @@ async function handleGetBookEnemies(req, res, bookId) {
   send(res, 200, db.getBookEnemies(bookId));
 }
 
-// "Live reading" - open to every authenticated user (db._canLiveRead is now
-// an always-true stub, see its own comment). Still gated per-book by that
-// book's own has_live_reading flag (whether admin-imported prose exists at
-// all), just no longer gated by who's asking.
-// Section ids can be alphanumeric elsewhere in the app, but the route param
-// itself already arrives as a plain string, so no parseSecId/Number
-// conversion is needed here - db.getBookSection compares it as a string.
+// Authenticated reading is available for books with imported text; retain string section IDs.
 async function handleGetBookSection(req, res, bookId, sectionId) {
   const userId = await authenticate(req, res);
   if (userId === null) return;
@@ -634,8 +610,7 @@ async function handleSaveState(req, res, bookId) {
   const oldState = db.getBookState(userId, bookId);
   if (!db.saveBookState(userId, bookId, stateObj, { skipTimestamp: impersonating })) return send(res, 404, { error: 'Not found' });
   send(res, 200, { ok: true });
-  // Track current position / completion for open world series.
-  // Must scan ALL playthroughs because endPlaythrough clears activePtIndex before saveState runs.
+  // Scan all runs: completion clears activePtIndex before state is saved.
   const bookMeta = db.getBookContainerFields(bookId);
   if (bookMeta?.series_id) {
     const series = db.getSeriesById(bookMeta.series_id);
@@ -645,13 +620,7 @@ async function handleSaveState(req, res, bookId) {
         const oldPt = oldPts[i];
         const isNowTerminal = newPt.completed && newPt.result !== 'portal';
         const wasTerminal = oldPt?.completed && oldPt?.result !== 'portal';
-        // startedAt check guards against a run's completion getting synced
-        // (open-world.js) onto a book the run never actually visited - without
-        // it, that book's own save looks like a genuine new completion here
-        // too and re-awards XP / re-stamps series_runs.completed_at. Not
-        // path.length - a since-fixed open-world.js bug could inject a single
-        // path entry into an untouched placeholder without ever setting
-        // startedAt, which defeated a path.length-only guard.
+        // Require startedAt before copying completion so untouched placeholders cannot earn rewards.
         if (isNowTerminal && !wasTerminal && newPt.startedAt) {
           // Newly completed - record completion and sync public status
           db.completeSeriesRun(userId, bookMeta.series_id, i, newPt.result);
@@ -666,9 +635,7 @@ async function handleSaveState(req, res, bookId) {
       });
     }
   }
-  // Same invisibility contract as the skipTimestamp save above - an admin's
-  // own actions while impersonating must not earn the impersonated user real
-  // XP for something the admin did, not them.
+  // Impersonated saves must not award the player's XP.
   if (oldState && !impersonating) db.processStateXp(userId, bookId, oldState, stateObj, stateObj.totalSections || 0);
   // Fan out to party members and award them the same XP milestones
   const party = db.getPartyForBook(userId, bookId);
@@ -676,9 +643,7 @@ async function handleSaveState(req, res, bookId) {
     const memberIds = db.getPartyMemberIds(party.partyId, userId);
     const memberOldStates = memberIds.map(id => ({ id, old: db.getBookState(id, bookId) }));
     const updatedIds = db.fanOutState(party.partyId, userId, stateObj);
-    // Same invisibility contract as the actor's own award above - a state
-    // change driven by an admin impersonating the actor must not earn OTHER
-    // real party members XP either, since the "progress" behind it isn't real.
+    // Impersonated actions must not award other party members either.
     if (!impersonating) {
       for (const { id, old } of memberOldStates) {
         if (old) db.processStateXp(id, bookId, old, stateObj, stateObj.totalSections || 0);

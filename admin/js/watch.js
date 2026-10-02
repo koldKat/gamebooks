@@ -1,14 +1,4 @@
-// watch.js - Admin-only, read-only live canvas viewer prototype.
-// Fully self-contained: no imports from any other admin/js or public/js module,
-// so it can't interfere with (or be broken by) anything else in the app.
-// Polls /api/admin/watch/:userId/:bookId every few seconds and redraws a
-// read-only vis-network graph. Nothing here ever writes anything, and the
-// polling is invisible to the watched user - it's a plain authenticated GET
-// against admin-only, localhost-gated data, same as the rest of the admin panel.
-// To remove: delete this file, admin/watch.html, server/routes/watch.js, the
-// getActiveBookInSeries export in server/db/books.js, the three lines in
-// server.js that wire them up, and the "Watch" button in
-// admin/js/users-books.js's renderUserBooksTable().
+// Read-only admin viewer; polls saved graph and HUD state.
 
 const POLL_MS = 1000;
 
@@ -25,9 +15,7 @@ const measureCtx   = document.createElement('canvas').getContext('2d');
 const GRID_SIZE  = 40;
 const FOG_RADIUS = 125;
 
-// Mirrors graph.js's CONNECTOR_STYLES/_smoothOption - the watched user's own
-// state.connectorStyle, not a fixed style, so the canvas actually looks like
-// what they see rather than always-straight lines regardless of their setting.
+// Match the watched player's connector style.
 const CONNECTOR_STYLES = {
   curvedCW:   { enabled: true, type: 'curvedCW',    roundness: 0.2 },
   curvedCCW:  { enabled: true, type: 'curvedCCW',   roundness: 0.2 },
@@ -65,9 +53,7 @@ const subEl    = document.getElementById('watch-sub');
 const statusEl = document.getElementById('watch-status');
 const graphContainerEl = document.getElementById('graph-container');
 
-// Mirrors bg.js's _applyBgPref() exactly (same gradient overlay/position math)
-// so the watched canvas looks like what the player actually sees - moved
-// where they moved it, or blank if they hid it, not always the raw cover.
+// Match the player's background visibility, gradient, and saved position.
 let lastBgKey = null;
 function applyBgPref(bgPref) {
   const key = bgPref ? `${bgPref.bgHidden}|${bgPref.bgPosY}|${bgPref.coverUrl}` : null;
@@ -92,22 +78,12 @@ let currentBookId = null; // which book's graph is actually on screen right now
 let overlayNodes = []; // rebuilt each render(), drawn each frame - see drawOverlays()
 let lastFocusedSec = null; // last section the camera was actually moved to
 
-// The watched player's own grid settings, not an admin-side control - the
-// point of this viewer is to show the canvas exactly as they see it, same
-// as connectorStyle above. Set at the top of render(), read by drawGrid()
-// on every 'beforeDrawing' frame.
+// Use the watched player's grid preferences.
 let gridState = { showGrid: false, fogOfGrid: false };
 
 function isTerm(v) { return v === -1 || v === 0 || v === '-1' || v === '0'; }
 
-// Mirrors state.js's parseSecId() - this file is deliberately self-contained
-// (no imports, see the header comment) so it can't just reuse that one.
-// Normalizes a raw graph key / choices[] entry / playthrough path entry to
-// one canonical type (positive int -> Number, "-1"/"0" and their number
-// forms -> the Number sentinel, anything else -> trimmed String), so the
-// same logical section reached two different ways - e.g. a graph key versus
-// a choices[] entry pointing at it - always resolves to the same value
-// instead of two different-typed ones.
+// Normalize IDs like core/state.js; numeric strings and terminal IDs must match graph keys.
 function normalizeSecId(raw) {
   if (raw === null || raw === undefined) return null;
   const s = String(raw).trim();
@@ -119,22 +95,10 @@ function normalizeSecId(raw) {
   return s;
 }
 
-// Mirrors state.js's discoveredSectionsFor() - a section only gets its own
-// state.graph entry once choices are recorded from it, or it's referenced as
-// someone else's choice target. The player's current position (no choices
-// recorded there yet) and any discovered-but-unmapped section (referenced as
-// a choice, never actually visited) both only ever show up in a playthrough's
-// path or a graph entry's choices[] - iterating Object.keys(graph) alone
-// silently drops both. Every value that reaches the Set goes through
-// normalizeSecId() first, same as discoveredSectionsFor() itself - without
-// it, a numeric-looking string choice target (e.g. "88") lands in this Set
-// as a separate entry from its already-number-typed twin (the same section
-// as an actual graph key), and this viewer would draw the node twice.
+// Include graph keys, choices, and run paths so unmapped/current nodes are not lost.
+// Normalize IDs before deduplication.
 function knownSections(graph, playthroughs, startSection) {
-  // Not `normalizeSecId(startSection) ?? 1` - that only falls back on
-  // null/undefined, but 0/-1 are the win/death sentinels, not valid start
-  // sections either (matches state.js's own isValidSecId gate, and the
-  // original `startSection && startSection !== ''` check here before it).
+  // Reject win/death sentinels as starting sections.
   const normalizedStart = normalizeSecId(startSection);
   const startSec = (normalizedStart !== null && !isTerm(normalizedStart)) ? normalizedStart : 1;
   const set = new Set([startSec]);
@@ -154,15 +118,8 @@ function knownSections(graph, playthroughs, startSection) {
   return set;
 }
 
-// Mirrors graph.js's computeOutcomes()/edgeColor() exactly - a section is
-// 'death' only if EVERY one of its choices is itself already 'death', and
-// 'win' only if EVERY one of its choices is itself already 'win' (same
-// quantifier both ways - not just a single unbranching chain of choices, and
-// not "any choice can reach 0" either, since a section with one path to
-// certain victory and another to certain death promises nothing - the player
-// could still pick the death branch). Unmapped sections and true cycles stay
-// unresolved rather than guessed. Computed once per render (full-graph
-// fixed-point solve), not once per edge.
+// Match graph outcomes: every choice must resolve to the same terminal outcome.
+// Leave unmapped nodes and cycles unresolved; solve once per render.
 function computeOutcomes(graph) {
   const outcome = {};
   let changed = true;
@@ -220,9 +177,7 @@ function nodeColor(secId, graph, playthroughs, startSection, activePt) {
     else base = COLORS.discovered;
   }
 
-  // Custom color (right-click a node -> paint it) overrides the base fill,
-  // same precedence graph.js uses - not for the "special state" colors
-  // above (current/visited/death/win), only the mapped/discovered fallback.
+  // Custom fill overrides only mapped/discovered colors, not current/visited/outcome colors.
   const customColor = graph[secId]?.color;
   if (customColor) base = { background: customColor, border: darkenHex(customColor) };
 
@@ -250,12 +205,7 @@ function ensureNetwork() {
   network.on('afterDrawing', ctx => drawOverlays(ctx));
 }
 
-// Mirrors graph.js's drawGrid() - same beforeDrawing hook (under nodes/edges),
-// same world-coordinate math via DOMtoCanvas(). No position-drag caching here
-// like graph.js has, since dragNodes is disabled in this read-only viewer -
-// there's never a mid-drag frame to worry about, only the player's own drags,
-// which land in state.positions and get picked up on the next poll like any
-// other position change.
+// Draw the grid in canvas coordinates beneath the graph.
 function drawGrid(ctx) {
   if (!network || (!gridState.showGrid && !gridState.fogOfGrid)) return;
   const container = document.getElementById('graph-container');
@@ -297,9 +247,7 @@ function drawGrid(ctx) {
   ctx.restore();
 }
 
-// Small icon overlays (priority triangle / battle cross / note book-icon) -
-// ported directly from graph.js's drawOverlays(), same shapes/colors/offsets,
-// minus the pinned-note text-box rendering (not worth it for a prototype).
+// Match the player's priority, battle, and note markers.
 function drawOverlays(ctx) {
   if (!overlayNodes.length) return;
   const ids = overlayNodes.map(n => n.sec);
@@ -348,9 +296,7 @@ function drawOverlays(ctx) {
       ctx.lineTo(bx + 2, by + bh - 1);
       ctx.stroke();
     }
-    // Pinned note (showNote:true) - a readable text box, not just the icon
-    // above. This is what section 45-style test notes actually look like on
-    // the real play area; the tiny icon alone is easy to miss entirely.
+    // Render pinned notes as text boxes.
     if (node.noteLayout) {
       const { lines, boxW, boxH } = node.noteLayout;
       const bx = p.x + 18, by = p.y - boxH / 2;
@@ -382,22 +328,14 @@ function render(state, isOpenWorld) {
   const activePt = state.activePtIndex != null ? playthroughs[state.activePtIndex] : null;
   const outcomes = computeOutcomes(graph);
 
-  // Diffed update, not clear()+add() - a full recreate re-seeds every
-  // position-less node with physics:true again on every poll, restarting the
-  // force-directed simulation from scratch every 3s. The graph never settles,
-  // which makes any path through it (however correctly colored) impossible
-  // to actually see or follow. Only ever set position/physics for a node the
-  // first time it's added; leave it alone on every later poll.
+  // Diff nodes instead of recreating them; resetting physics on each poll prevents settling.
   const seenNodeIds = new Set();
   const seenEdgeIds = new Set();
   const nodeUpdates = [];
   const edgeUpdates = [];
   overlayNodes = [];
 
-  // Mirrors graph.js's runEdges set - which consecutive path[i]->path[i+1]
-  // pairs the watched player's current run has actually walked, so those
-  // edges get the same orange/thick treatment as the real canvas instead of
-  // looking identical to every other undiscovered choice.
+  // Highlight only consecutive edges walked by the current run.
   const runEdges = new Set();
   const runPath  = activePt?.path || [];
   for (let i = 0; i < runPath.length - 1; i++) runEdges.add(`${runPath[i]}->${runPath[i + 1]}`);
@@ -423,11 +361,7 @@ function render(state, isOpenWorld) {
       if (pos) { update.x = pos.x; update.y = pos.y; update.physics = false; lastPositions.set(secId, `${pos.x},${pos.y}`); }
       else update.physics = true;
     } else if (pos) {
-      // The player can drag a node after it's already on screen here - a
-      // fixed-position node only ever got its x/y set once, on first
-      // appearance, so a later drag was silently never reflected. Re-apply
-      // only when the saved position actually changed, so an unmoved node
-      // isn't repositioned (and thus doesn't fight physics) every poll.
+      // Apply changed saved positions without disturbing unchanged nodes or physics.
       const key = `${pos.x},${pos.y}`;
       if (lastPositions.get(secId) !== key) {
         lastPositions.set(secId, key);
@@ -465,12 +399,7 @@ function render(state, isOpenWorld) {
   visNodes.getIds().forEach(id => { if (!seenNodeIds.has(id)) { visNodes.remove(id); lastPositions.delete(id); } });
   visEdges.getIds().forEach(id => { if (!seenEdgeIds.has(id)) visEdges.remove(id); });
 
-  // Only actually move the camera when the player's position genuinely
-  // changed - render() runs on every poll where anything at all in state
-  // changed (charsheet edits, inventory, etc, not just movement), so
-  // re-focusing unconditionally here fought any attempt to pan away and
-  // look at another part of the graph, snapping straight back within a
-  // second or two even though nothing about the player's position moved.
+  // Refocus only when the player's position changes; other updates must not undo admin panning.
   const currentSec = activePt?.path?.length ? activePt.path[activePt.path.length - 1] : null;
   if (currentSec != null && currentSec !== lastFocusedSec && visNodes.get(currentSec)) {
     lastFocusedSec = currentSec;
@@ -478,14 +407,7 @@ function render(state, isOpenWorld) {
   }
 }
 
-// ── On-field HUD: character sheet + inventory, exactly like #stats-hud ──────
-// The real play area never shows a full dump of everything the player is
-// carrying - only whatever they've explicitly marked "show on screen" via
-// charsheet.js's per-field `visible` flag, inventory.js's per-slot `visible`
-// flag, and equipment.js's equipmentVisible[slot] flag. This mirrors that
-// exactly (same filters, same #charsheet-display/#inv-display text format
-// and positioning as charsheet.css/inventory.js), rendered directly over the
-// canvas instead of in a separate panel with everything unconditionally shown.
+// Match the player's HUD: show only explicitly visible character, inventory, and equipment fields.
 
 function escapeHtml(str) {
   return String(str ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -512,13 +434,9 @@ function invLineHtml(name, qty, note, slotLabel, kind, iconSvg) {
   const noteHtml  = note?.trim() ? ` <span class="inv-line-note">${escapeHtml(note.trim())}</span>` : '';
   const qtyHtml   = qty > 1 ? ` <span class="inv-line-qty">×${qty}</span>` : '';
   const slotHtml  = slotLabel ? ` <span class="inv-line-slot">${escapeHtml(slotLabel)}</span>` : '';
-  // item.svg_data is trusted admin-managed content (same items table the real
-  // inventory.js injects unescaped via innerHTML), not user input - safe to
-  // inject directly, same as the real app does.
+  // SVG markup is trusted admin-managed catalog content, not player input.
   const iconHtml = iconSvg ? `<span class="inv-line-icon">${iconSvg}</span>` : '';
-  // Badge always last (rightmost, since .inv-line is justify-content:flex-end) -
-  // a note would otherwise become the last DOM child whenever one exists,
-  // bumping the badge out of its usual rightmost spot.
+  // Keep badges rightmost even when a note is present.
   return `<span class="inv-line inv-line--${kind}">${iconHtml}<span class="inv-line-name">${escapeHtml(name)}</span>${qtyHtml}${noteHtml}${slotHtml}</span>`;
 }
 
@@ -532,14 +450,7 @@ function renderHud(items, activePt) {
   ).join('');
 
   const invEl = document.getElementById('watch-inv-display');
-  // Only inventory slots explicitly marked "show on screen" - not merely
-  // "carried". Matches inventory.js's own _inv().filter(s => s.visible).
-  // A slot whose itemId no longer resolves to a real item (deleted from the
-  // catalog) is dropped entirely, not shown as a placeholder "Item #N" - the
-  // real player's own HUD (inventory.js's renderInventoryDisplay: `if
-  // (!item) return ''`) never shows those either, so falling back to a
-  // placeholder here made the watch view show dozens of phantom lines the
-  // player themselves never sees on screen.
+  // Show only visible inventory slots whose catalog item still exists.
   const invLines = (activePt?.inventory || [])
     .filter(s => s.itemId && s.visible && itemsById.has(s.itemId))
     .map(s => invLineHtml(s.label?.trim() || itemsById.get(s.itemId).name, s.qty ?? 1, s.note, 'Item', 'item', itemsById.get(s.itemId).svg_data));
@@ -553,25 +464,15 @@ function renderHud(items, activePt) {
   invEl.innerHTML = [...invLines, ...eqLines].join('');
 }
 
-// Notebook is book-level (state.notesPinned + a separate user_books.notebook
-// column), not tied to any one playthrough - shown whenever the player has
-// it pinned, same as notes.js's own #notes-display would, regardless of
-// whether the currently active run has anything else going on.
+// Pinned notebook state is book-level, not per-run.
 function renderNotes(state, notebook) {
   const el = document.getElementById('watch-notes');
-  // Matches notes.js's setNotesPinned() exactly - visible purely on the
-  // pinned flag, not on whether there's text yet (an empty pinned box is
-  // what the player themselves would see too).
+  // Show pinned notes even when empty, matching the player's view.
   el.classList.toggle('visible', !!state.notesPinned);
   el.textContent = notebook || '';
 }
 
-// Live-reading text for the player's current section, served as its own
-// payload field (see server/routes/watch.js) - null whenever the watched
-// book has no imported section text there, which hides the panel. The html
-// is admin-imported trusted content, same source liveread.js injects
-// unescaped; the anchors are made inert via CSS, not rewritten here, and
-// the stored DB row is never touched.
+// Imported section HTML is read-only here; CSS disables its choice links.
 let lastSectionKey = null;
 function renderSectionText(section, currentSec) {
   const el = document.getElementById('watch-text');
@@ -588,11 +489,7 @@ function renderSectionText(section, currentSec) {
   el.classList.add('visible');
 }
 
-// The player can portal to a different book mid-run in an open-world series -
-// the server already resolves and returns whichever book they're truly active
-// in (see server/routes/watch.js), this just has to notice the switch and
-// throw away all per-book state (positions/graph/physics) since none of it
-// applies to the new book at all.
+// Portal travel changes the active book; discard the previous book's graph and physics state.
 function resetForNewBook() {
   if (network) { network.destroy(); network = null; }
   visNodes = null; visEdges = null;
@@ -624,14 +521,9 @@ async function poll() {
       const activePt = data.state.activePtIndex != null ? data.state.playthroughs?.[data.state.activePtIndex] : null;
       renderHud(data.items, activePt);
     }
-    // Not gated on the state-changed check above - notebook text lives in its
-    // own DB column, not state_data, so editing it wouldn't be caught by that
-    // comparison at all. Cheap enough (one textContent/class toggle) to just
-    // apply every poll regardless.
+    // Notebook text is separate from state_data, so refresh it even when graph state is unchanged.
     renderNotes(data.state, data.notebook);
-    // Same reasoning - bg_hidden/bg_pos_y live in user_books, not state_data,
-    // so the state-changed check above wouldn't catch a background move/hide
-    // either. applyBgPref() has its own no-op guard for "nothing changed".
+    // Background metadata is outside state_data; check it separately.
     applyBgPref(data.bgPref);
     // Section text is its own payload field too - renderSectionText() has
     // its own key-based no-op guard, so this is a cheap toggle each poll.

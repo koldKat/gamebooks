@@ -1,59 +1,6 @@
-// ── Battle Simulator (Мутирала плът, book 781) ──────────────────────────────
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 781 only) by the caller in boot.js via
-// setSim781Visible().
-// To remove: delete this file, remove its import line and initSim781()/
-// setSim781Visible() calls from boot.js, remove 'sim781' from
-// SIM_HISTORY_KEYS in server/db/xp.js, remove 'sim781-overlay' from
-// ALL_PANEL_OVERLAY_IDS in util.js and the #sim781-btn selectors in
-// battlesim.css.
-//
-// This is a single-protagonist zombie-apocalypse book with a freeform
-// point-buy "Дневник на Приключението" journal (Сила/Физика, Психика,
-// Стрелба, Наблюдателност, Медицина, Живот - no canonical build, the
-// reader distributes points at difficulty-dependent totals), so - same
-// precedent as books 760/772 - the sim lets the reader type in their OWN
-// current journal numbers rather than hardcoding a fixed protagonist.
-//
-// Combat rule, documented on the book's own "Правила за игра"/"Битки" page
-// (see book_frontmatter.rules_text for book_id=781):
-//   Each round: player attacks first with a chosen weapon (1d6 + fixed
-//   bonus + relevant stat), reducing enemy Живот; then the enemy strikes
-//   back for its fixed Щети, reducing player Живот. Repeats until either
-//   side's Живот reaches 0. Alternative to attacking: "defensive tactic"
-//   - reduce the enemy's Щети this round by the player's Физика, but deal
-//   no damage that round.
-//   Weapons (Щети = 1d6 + X + relevant stat):
-//     кози крак        1d6+2+Физика   (melee, unlimited)
-//     брадва           1d6+4+Физика   (melee, unlimited)
-//     моторна резачка   1d6+16+Физика  (melee, unlimited)
-//     пистолет          1d6+4+Стрелба  (firearm, 2 rounds)
-//     пушка помпа        1d6+14+Стрелба (firearm, 5 rounds)
-//
-// Full enemy roster (verified via a complete read of all 100 sections this
-// session; a "momiche" mutant girl (§6/7/18/21/24/28/29) is a narrative
-// instant-death trap if attacked - no real stat-based fight - so it is
-// correctly excluded from the roster):
-//   Мутирал доберман (§59/62)       Щети 8  Живот 16
-//   Д-р Стоев (§55/61)              Щети 6  Живот 22 (19 on the alternate
-//                                            sneak-punch entry at §61 -
-//                                            editable, see note below)
-//   Д-р Ленова (§72 onward)         Щети 19 Живот 38 (several pre-fight
-//                                            narrative modifiers reduce her
-//                                            Щети before the loop starts -
-//                                            editable, see note below)
-//   Медицинска сестра-мутант (§70)  Щети 8  Живот 16 (also has pre-fight
-//                                            modifiers - editable)
-//   Продавач-мутант (§98)           Щети 10 Живот 22
-// Enemy Щети/Живот fields are left freely editable (same as the player's
-// own stats) so the reader can apply whichever of the book's narrative
-// pre-combat modifiers actually happened in their playthrough (Психика
-// reduction, bat companion, sedatives, vaccine syringe, gunfire before the
-// fight, etc.) rather than the sim silently guessing which branch they
-// took - matching this app's "sim is convenience, not enforcement"
-// precedent.
-//
-// All state lives in pt.sim781, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Мутирала плът, book 781)
+// Enter current journal stats; resolve the selected encounter's attack/defense rules.
+// No fixed starting build is assumed.
 
 import { currentPlaythrough, saveState } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';

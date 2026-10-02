@@ -10,7 +10,7 @@ test('live-tab relocation preserves implementation and dependency identities', (
   const source = readFileSync(sourceUrl, 'utf8');
   assert.equal(existsSync(new URL('../livetab.js', sourceUrl)), false);
   assert.equal(createHash('sha256').update(source.replace(/^import .*;$/gm, '')).digest('hex'),
-    '3ab10d7f885c4f199435a1f4190b25dbf232950ebff02bbf15f3a7754887fdde');
+    '4023296380ea64a222240ba20e05b025a458ab3fe7769a08efb1221919fb4d5f');
   const imports = [...source.matchAll(/^import .*from '([^']+)';$/gm)]
     .map(match => new URL(match[1], sourceUrl).href);
   assert.deepEqual(imports, ['core/state.js', 'progression/shop.js']

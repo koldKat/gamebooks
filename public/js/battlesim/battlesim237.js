@@ -1,44 +1,6 @@
-// ── Battle Simulator (Master of Chaos, book 237) ─────────────────────────────
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 237 only) by the caller in boot.js via
-// setSim237Visible().
-// To remove: delete this file, remove its import line and initSim237()/
-// setSim237Visible() calls from boot.js, remove 'sim237' from
-// SIM_HISTORY_KEYS in server/db/xp.js, remove 'sim237-overlay' from
-// ALL_PANEL_OVERLAY_IDS in util.js and the #sim237-btn selectors in
-// battlesim.css.
-//
-// Standard Fighting Fantasy SKILL/STAMINA/LUCK system (same core numbers and
-// Test Your Luck table as books 186/198/200/201/202/222/236): SKILL 1d6+6,
-// STAMINA 2d6+12, LUCK 1d6+6, normal wound 2 STAMINA, Attack Strength =
-// 2d6+SKILL.
-//
-// Book-specific knobs, confirmed against the full 400-section read:
-// - attackModifier: plain +/- Attack Strength knob, covering the many
-//   one-off temporary SKILL penalties/bonuses this book applies per
-//   encounter (e.g. "-1 SKILL fighting in the dark", "+2 SKILL with the
-//   Moon Sword", "-1 SKILL fighting with an unwieldy weapon").
-// - yourDamage / enemyDamage: numeric override for STAMINA lost per landed
-//   hit (both default 2, the FF standard). Covers this book's several
-//   "double damage" and reduced-damage variants (e.g. Two-Headed Troll's
-//   double damage on a 1-2 roll, sec.35; Necromancer's spectral claw doing
-//   only the pain penalty not extra damage; Assassin's poisoned blade doing
-//   4 STAMINA for its first three hits, sec.80) without hardcoding each
-//   named case - set the field for the fight, reset it after.
-// - secondEnemy: many encounters in this book pit the player against two
-//   named opponents "at the same time", resolved by rolling Attack Strength
-//   for all three combatants each round - whichever of the three rolls
-//   highest lands a blow that round (sec.109 Skeletons, sec.189 - actually
-//   fought one at a time - sec.225 Crewmen, sec.293 Gnomes). This is
-//   distinct from this book's many "fight them one at a time" pairs (e.g.
-//   sec.12 Guards, sec.189 Pirates), which need no special code at all -
-//   just fight the standard single-enemy engine twice, switching enemies
-//   via the autocomplete between kills. The toggle adds a second,
-//   independently-tracked enemy; each round all three Attack Strengths are
-//   rolled, and the single highest lands a wound (player wounds whichever
-//   enemy is targeted by the win; either enemy's win wounds the player).
-//
-// All state lives in pt.sim237, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Master of Chaos, book 237)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -133,9 +95,7 @@ function _runRound() {
   if (d.secondEnemy.active && d.secondEnemy.stamina > 0 && d.enemy.stamina > 0) {
     _runThreeWayRound(d);
   } else {
-    // Standard single-enemy round (also used once one of a simultaneous
-    // pair has fallen, or for the many "fight them one at a time" pairs
-    // in this book, which never need the secondEnemy toggle at all).
+    // Use single-enemy combat after one paired enemy falls or for sequential fights.
     const target = d.enemy.stamina > 0 ? d.enemy : d.secondEnemy;
     const targetName = d.enemy.stamina > 0 ? _enemyNameSafe(d) : _secondNameSafe(d);
     const playerAS = _roll2d6() + d.player.skill + (d.player.attackModifier || 0);
@@ -161,9 +121,7 @@ function _runRound() {
   _renderAll();
 }
 
-// Three-way "highest Attack Strength wins" mechanic (sec.109, 225, 293):
-// roll Attack Strength for player and both enemies; whichever of the three
-// is highest lands a wound on its target this round.
+// For simultaneous pairs, the highest Attack Strength among all three fighters lands a hit.
 function _runThreeWayRound(d) {
   const playerAS = _roll2d6() + d.player.skill + (d.player.attackModifier || 0);
   const enemy1AS = _roll2d6() + d.enemy.skill;
@@ -175,9 +133,7 @@ function _runThreeWayRound(d) {
   }));
 
   if (playerAS >= enemy1AS && playerAS >= enemy2AS) {
-    // Player has the highest (or tied-highest, treated as a hit per this
-    // book's ties-favour-the-active-attacker phrasing for these fights) -
-    // wound whichever enemy the player has targeted this round.
+    // Player ties count as hits against the chosen target.
     const target = d.secondEnemy.target === 'second' ? d.secondEnemy : d.enemy;
     const targetName = d.secondEnemy.target === 'second' ? _secondNameSafe(d) : _enemyNameSafe(d);
     const dmg = d.player.yourDamage;

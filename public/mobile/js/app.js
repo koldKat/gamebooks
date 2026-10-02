@@ -1,32 +1,12 @@
-// app.js - Entry point + tiny screen router. Open to every logged-in user -
-// no longer admin-gated (was a preview restriction, lifted once the reader
-// was solid; see server.js's /mobile route comment for the route itself,
-// which was always served unconditionally).
-//
-// No book list screen here on purpose - the desktop app's own "My Books"
-// panel (categorized, searchable, already full-screen on mobile via the
-// feed's My Books button) is the real one; duplicating a worse flat version
-// of it here just to browse books was the wrong call. This page only ever
-// deep-links straight into a single book's reader (?book=123, set by that
-// same desktop "Open" button) - see books.js's book-open-btn handler.
+// Mobile reader entry and screen routing.
+// Deep-link into a book; reuse the main app's library instead of duplicating it.
 
 import { getToken, apiFetch, setCurrentUserLevel, setBonusUndos, setBonusFastTravels } from '../../js/core/state.js';
 import { renderLogin } from './auth.js';
 import { renderReader } from './reader.js';
 import { t } from '../../js/i18n.js';
 
-// #screen's CSS uses calc(var(--vh, 1vh) * 100) instead of 100dvh - `dvh`
-// support (and correct behavior) isn't universal, especially inside an
-// in-app/embedded browser (Viber, Messenger, etc.) that reports its own
-// chrome differently than a real mobile browser. On one of those, #screen
-// measured taller than the actual visible area even with a 100dvh rule
-// present, so the button rows at the bottom were only reachable by
-// scrolling the whole page - exactly the "why can I scroll to see them,
-// that's unacceptable" bug report. window.innerHeight is what every
-// browser/webview agrees on as the real, currently-visible height (shrinks
-// when a toolbar is showing, grows when it hides), so recomputing --vh from
-// it on load/resize is the standard fix for this class of viewport-unit
-// bug, independent of whether dvh itself is trustworthy here.
+// Measure --vh from innerHeight for embedded browsers with unreliable viewport units.
 function _setVhVar() {
   document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);
 }
@@ -54,8 +34,7 @@ function showNoBook() {
     </div>`;
 }
 
-// Mobile is reading-only on purpose (see reader.js's header comment) - a
-// book with no imported text at all has nothing for this reader to do.
+// This reader requires imported text; it has no manual section-entry mode.
 function showNoReading(book) {
   mount.innerHTML = `
     <div class="m-login">
@@ -68,12 +47,7 @@ function _escapeHtml(s) {
   return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
-// Shown immediately, before either of loadThenShowReader's own network
-// round trips (GET /api/profile, then GET /api/books) even start - without
-// this, the spinner only ever appeared once renderReader() itself ran, i.e.
-// after both of those requests had already finished, leaving the actual
-// slow part of the load (which can be most of it, on a slow connection) as
-// a blank screen with no feedback at all.
+// Show loading feedback before profile and library requests start.
 function _showLoadingScreen() {
   mount.innerHTML = `<div class="m-loading m-loading-full">
     <svg class="mlg-graph" viewBox="0 0 32 32">
@@ -92,24 +66,14 @@ function _showLoadingScreen() {
 }
 
 async function loadThenShowReader() {
-  // This is both the initial-load path (getToken() below) and the login
-  // form's onSuccess callback (auth.js) - the latter is what actually needs
-  // this call, to restart the interval after a re-login triggered by the
-  // auth-expired handler, which stops it. Without it here, a token that
-  // expired mid-session and was re-logged-in from would leave heartbeat
-  // dead for the rest of the page's life despite the user being validly
-  // logged in again. _startHeartbeat's own _heartbeatTimer guard makes the
-  // initial-load call harmless/idempotent.
+  // Restart heartbeat on login as well as initial load; its timer guard makes this idempotent.
   _startHeartbeat();
   _showLoadingScreen();
   try {
     const res = await apiFetch('/api/profile');
     if (res.ok) {
       const profile = await res.json();
-      // Same fields boot.js's own profile fetch feeds into state.js - without
-      // these, currentUserLevel/bonusUndos/bonusFastTravels stay at their
-      // module defaults (0) forever on mobile, so Undo/Fast Travel always
-      // show the bare level<=30 base (3) regardless of the real account.
+      // Initialize level and purchased bonuses so mobile undo/travel limits match desktop.
       setCurrentUserLevel(profile.level || 0);
       setBonusUndos(profile.bonusUndos || 0);
       setBonusFastTravels(profile.bonusFastTravels || 0);
@@ -130,16 +94,7 @@ async function loadThenShowReader() {
   showReader(book);
 }
 
-// Mirrors desktop's boot.js/livetab.js: idle_heartbeat XP is earned for
-// having the app open and logged in, not gated on any specific screen or
-// activity within it - so this runs for the whole mobile page's lifetime
-// (login screen excluded, no book/no reading screens included), the same
-// as desktop counts time on its books list or any other logged-in screen.
-// No multi-tab leader election like livetab.js's - the server already
-// dedups idle_heartbeat awards per real-world minute (awardIdleHeartbeatXp's
-// minuteRef), and a phone doesn't realistically have this page open in
-// several tabs at once the way a desktop browser does, so a plain interval
-// is enough here.
+// Heartbeat runs on every authenticated screen; the server deduplicates awards per minute.
 let _heartbeatTimer = null;
 function _startHeartbeat() {
   if (_heartbeatTimer) return;
@@ -149,13 +104,7 @@ function _stopHeartbeat() {
   if (_heartbeatTimer) { clearInterval(_heartbeatTimer); _heartbeatTimer = null; }
 }
 
-// apiFetch (state.js) dispatches this on any 401 - desktop's boot.js has
-// the same listener (window.addEventListener('auth-expired', showLogin)).
-// Without it here, an expired token mid-read left the player stuck looking
-// at stale reader content with every fetch silently failing (reader.js's
-// _showSection treats a 401 the same as a dropped connection - stays
-// silent rather than showing an error) and no way back to the login
-// screen short of manually reloading the page.
+// Return to login on auth expiry instead of leaving stale reading content.
 window.addEventListener('auth-expired', () => { _stopHeartbeat(); showLogin(); });
 
 if (getToken()) loadThenShowReader();

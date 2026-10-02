@@ -1,7 +1,4 @@
-// ── Open-world series runs: sync, portal travel, cross-book reachability ──────
-// Owns all cross-book state and the handler functions. Wires the
-// setOpenWorldContext/setOnViewPublicRun/setOnCharSheetSaved callbacks for
-// whichever book is currently loaded. Also owns cross-book fast travel.
+// Open-world run synchronization, portal travel, and cross-book reachability.
 
 import {
   state, saveState, apiFetch, isValidSecId, setViewingPt, currentPlaythrough, currentBookId, currentSection,
@@ -42,10 +39,7 @@ export function clearOpenWorldState() {
   setGraphCrossBookRoute(null);
 }
 
-// ── Series runs sync ──────────────────────────────────────────────────────────
-// Ensures this book's playthroughs[] has one slot per series run.
-// Runs that pre-date the series join are moved to state.preSeriesRuns and
-// shown as Run -1, -2, etc. Returns the series runs array, or null on failure.
+// Align playthrough slots with series runs; keep earlier runs separately with negative numbers.
 export async function _syncSeriesRuns(seriesId) {
   if (!seriesId) return null;
   const r = await apiFetch(`/api/series/${seriesId}/runs`).catch(() => null);
@@ -55,18 +49,7 @@ export async function _syncSeriesRuns(seriesId) {
 
   let needsSave = false;
 
-  // Sweep pre-series runs. This used to be a one-time-only migration
-  // (guarded by `state.preSeriesRuns === undefined`), but that guard meant
-  // any run added *after* the first sweep - still genuinely pre-series,
-  // since nothing here has actually registered a real series run yet -
-  // was left sitting in plain playthroughs. The `current > needed` branch
-  // below then saw a pile of "extra" playthroughs it didn't recognize and,
-  // one by one, called the create-run API to retroactively register each
-  // of them as if it had just started *now* - which is both wrong (they're
-  // old runs, not new ones) and loud (the feed announces every single one
-  // as "began series run N" today). Running this sweep on every sync
-  // instead keeps genuinely-pre-series runs out of that reconciliation
-  // entirely, no matter how many sync calls happen in between.
+  // Sweep pre-series runs on every sync so later additions cannot become phantom series runs.
   if (state.preSeriesRuns === undefined) state.preSeriesRuns = [];
   {
     const minSeriesTs = seriesRuns.length > 0
@@ -78,11 +61,7 @@ export async function _syncSeriesRuns(seriesId) {
     );
     if (toMigrate.length > 0) {
       state.preSeriesRuns.push(...toMigrate);
-      // Same activePtIndex-adjustment care as the prune loop below - without
-      // this, an in-progress run migrated out from under activePtIndex would
-      // either point past the end of the shrunk array, or (worse) silently
-      // land on a *different* surviving playthrough that shifted into that
-      // same index, letting the player unknowingly resume the wrong run.
+      // Adjust the active index when migrating runs so it cannot select a different survivor.
       const toMigrateSet = new Set(toMigrate);
       const activePt = typeof state.activePtIndex === 'number' ? state.playthroughs[state.activePtIndex] : null;
       state.playthroughs = state.playthroughs.filter(p => !toMigrateSet.has(p));
@@ -142,17 +121,7 @@ export async function _syncSeriesRuns(seriesId) {
     if (sr.char_data) pt.charSheet = sr.char_data;
     const localTerminal  = pt.completed && pt.result !== 'portal';
     const seriesTerminal = sr.completed && sr.result !== 'portal';
-    // A run's completion must only ever be stamped onto the book it actually
-    // happened in. Every book in the series carries a placeholder for this
-    // run index, but a book the run never visited has no startedAt - copying
-    // the completion onto it too made the server treat it as a brand-new
-    // completion on that book's own save (duplicate XP) and re-stamped
-    // series_runs.completed_at to that later moment (scrambled feed
-    // ordering). startedAt alone (not path.length) is the signal - every
-    // genuine path mutation sets startedAt first, so path.length can't be
-    // spoofed into looking touched the way it once was (see the isolated
-    // portal-entry restore below, which used to inject a path entry here
-    // without ever setting startedAt).
+    // Copy completion only to books actually played, identified by startedAt, to avoid duplicate rewards.
     const touchedHere = !!pt.startedAt;
     if (seriesTerminal && touchedHere) {
       if (!pt.completed || pt.result === 'portal' || pt.result !== sr.result) {
@@ -175,11 +144,7 @@ export async function _syncSeriesRuns(seriesId) {
   seriesRuns.forEach((sr, i) => {
     if (sr.completed || !sr.last_section || sr.last_book_id !== currentBookId) return;
     const pt = state.playthroughs[i];
-    // A run's last_book_id can point at this book by default before the run has
-    // ever genuinely been played anywhere (e.g. freshly created) - without the
-    // startedAt check this pushed a stray path entry into an untouched placeholder,
-    // which then satisfied the touchedHere check above on every later sync and let
-    // this book's own save award XP for a run that never actually happened here.
+    // last_book_id alone does not prove play; require startedAt before restoring a path.
     if (!pt || pt.completed || !pt.startedAt) return;
     const secId = isValidSecId(+sr.last_section) ? +sr.last_section : sr.last_section;
     if (!secId) return;
@@ -336,13 +301,7 @@ export async function _handleNewSeriesRun() {
   }
   const startSec = isValidSecId(state.startSection) ? state.startSection : 1;
   const pt = state.playthroughs[run_index];
-  // pt can already exist as an untouched _syncSeriesRuns padding placeholder
-  // (startedAt: null) if the local array was already long enough - the while
-  // loop above only sets startedAt for slots it freshly creates. Without this,
-  // pushing the start section here left a genuinely-started run's placeholder
-  // looking exactly like an unplayed one (path content, but startedAt: null),
-  // which broke every "is this book actually hosting this run" check that
-  // relies on startedAt.
+  // Mark existing padding slots started before adding a real start section.
   if (!pt.startedAt) pt.startedAt = Date.now();
   if (!state.graph[startSec]) state.graph[startSec] = { choices: [], discovered: true };
   if (pt.path.length === 0) pt.path.push(startSec);
@@ -366,21 +325,7 @@ export async function _handleNewSeriesRun() {
 export function _focusNodeAfterLoad(sec) {
   if (!network || !sec) return;
   const doFocus = () => {
-    // Re-derive the actual current section at fire time instead of trusting
-    // the `sec` this was scheduled with. boot.js's showMain() calls this
-    // right after render() with `currentSection()` read synchronously - but
-    // if that section starts a straight-path auto-nav chain,
-    // renderPlaythroughPanel()'s own chain-continuation (play.js, chained
-    // setTimeout(0) hops) hasn't run yet at that point, only after. By the
-    // time this 50ms-later check runs, the chain has usually already
-    // advanced pt.path past the stale `sec` - wouldAutoNav(sec, ...) then
-    // incorrectly reads as "not auto-navving" (pt.path now already includes
-    // what was `sec`'s one next choice), so this fired its own focus() at
-    // the stale, already-passed-through node at the same time the chain's
-    // own correctly-guarded focus() fired at the real final section - two
-    // stacked animations, the exact corrupted-camera-state bug the
-    // wouldAutoNav guard exists to prevent, just reached through a second,
-    // subtler path than the one it was originally written for.
+    // Resolve the current section when the timer fires, after any auto-navigation chain.
     const liveSec = currentSection() ?? sec;
     if (visNodes?.get(liveSec) && !wouldAutoNav(liveSec, currentPlaythrough())) {
       network.selectNodes([liveSec]);
@@ -485,8 +430,7 @@ export async function doJumpCrossBook(targetSection, mode) {
   if (network && !wouldAutoNav(targetSection, pt)) network.focus(targetSection, { animation: true, scale: 1.2 });
 }
 
-// ── Wire setOpenWorldContext/setOnViewPublicRun/setOnCharSheetSaved ───────────
-// Called from showMain once bookId, seriesId, and isOpenWorld are known.
+// Wire open-world callbacks after book and series context is known.
 export function setupOpenWorldForBook(bookId, seriesId, isOpenWorld) {
   setOpenWorldContext({
     isOpenWorld,

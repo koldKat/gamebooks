@@ -45,10 +45,7 @@ export async function openSeriesActivity(seriesId, seriesName) {
   document.getElementById('pub-back-btn').style.display  = 'none';
   document.getElementById('pub-modal-body').innerHTML    = `<p class="pub-loading">${t('covers.loading')}</p>`;
   try {
-    // Send the auth token if we have one (unauthenticated visitors still get
-    // a 200) so the server can decide whether to include pdfPath on each
-    // book - the endpoint is otherwise public, but PDF availability is
-    // per-user metadata (see server/db/books.js getPublicSeriesInfo).
+    // Include optional auth so the server can filter per-user PDF metadata.
     const token = getToken();
     const res = await publicFetch(`/api/public/series/${seriesId}`, token ? { headers: { Authorization: `Bearer ${token}` } } : undefined);
     if (!res.ok) throw new Error();
@@ -59,8 +56,4 @@ export async function openSeriesActivity(seriesId, seriesName) {
   }
 }
 
-// Battle sim / live reading / PDF badges for series-modal book rows. Mirrors
-// the SVGs and badge classes used in books.js's My Books cards so the icon
-// language is consistent app-wide; the PDF badge only renders if the server
-// included a pdfPath (it strips that field server-side for users without
-// pdf_access, so no client-side gating is needed here).
+// PDF badges rely on the server's permission-filtered pdfPath.

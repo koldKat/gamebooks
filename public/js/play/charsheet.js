@@ -1,9 +1,4 @@
-// ── Character Sheet ───────────────────────────────────────────────────────────
-// Self-contained module. Imports only from state.js, i18n.js and util.js.
-// To remove: delete this file, remove its import lines from boot.js and every other
-// importer (grep for './charsheet.js' - play.js, equipment.js, inventory.js, open-world.js,
-// battlesim8.js and battlesim829.js all import from it too), and delete
-// public/css/charsheet.css (and its <link> in index.html).
+// Character sheet and shared play action row.
 
 import { state, saveState, currentPlaythrough, viewingPt } from '../core/state.js';
 import { t } from '../i18n.js';
@@ -17,21 +12,9 @@ let _readOnly = false;
 let _onCharSheetSaved = null;
 export function setOnCharSheetSaved(fn) { _onCharSheetSaved = fn || null; }
 
-// Shared bottom-right action button row (charsheet/inventory/equipment/battlesim
-// buttons). A flex container so buttons wrap naturally on narrow screens -
-// no per-button JS anchoring needed. #stats-hud reads --play-btn-row-h (kept
-// in sync via ResizeObserver) to sit above it regardless of how many rows wrap.
-// --play-btn-row-w is tracked the same way, so #play-bottom-stack (dice.js) can
-// center itself between this row and the dice roller instead of the plain
-// viewport midpoint.
+// Observe the wrapped action row so the HUD clears it and the bottom stack stays centered.
 let _playBtnRow = null;
-// Desktop mounts under #main-screen (the only page that has one). Any other
-// page - currently just the mobile reader - provides its own mount point via
-// #m-sim-btn-row instead, so the same battlesim*.js modules' plain
-// getPlayBtnRow() calls work unchanged in both places. The --play-btn-row-h/-w
-// custom properties are desktop-only layout hooks (read by #stats-hud and
-// dice.js's #play-bottom-stack) - harmless to still set when nothing reads
-// them, so the ResizeObserver runs unconditionally either way.
+// Mount on the desktop main screen or the mobile simulator row.
 export function getPlayBtnRow() {
   if (_playBtnRow) return _playBtnRow;
   const mount = document.getElementById('main-screen') || document.getElementById('m-sim-btn-row');
@@ -240,9 +223,7 @@ function wireRow(row, field) {
     const readVal = () => {
       switch (field.type) {
         case 'number':  {
-          // type="text" (needed for comma display) accepts any keystroke, unlike the
-          // native number input this replaced - filter live so garbage can't be typed
-          // or silently turn into a stored/displayed "NaN".
+          // Filter text-input keystrokes while allowing comma-formatted numeric display.
           const raw = String(valEl.value).replace(/[^0-9.\-]/g, '');
           if (raw !== valEl.value) valEl.value = raw;
           field.value = Number(raw) || 0;

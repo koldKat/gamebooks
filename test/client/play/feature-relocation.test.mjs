@@ -5,14 +5,14 @@ import { createHash } from 'node:crypto';
 
 const dir = new URL('../../../public/js/', import.meta.url);
 test('play-area feature relocation preserves implementations and removes root modules', () => {
-  // Source captured before the relocation, excluding single/multiline imports.
+  // Source baseline excludes imports; comment cleanup verified against unchanged executable ASTs.
   const digests = {
-    "dice": "69b88cecc8f0cf1f3af3869d3bf2516a1ad855eb5fab14a68fb233133737cafe",
-    "notes": "cecf0aff0511e7a5dd28662c1b10e53052974bef3f02e6567ccbeb0fe8c1dd1a",
-    "charsheet": "0490f98d4e79891aed8514d1539b91f0a4c6213a2271710669bacda022f2ed7a",
-    "open-world": "a416341135a747532d5e2301e53c73b353ccbabde8964ffeb30a81271d066445",
-    "party": "4f5f03ab9a8ef9371fbea87cfb8a121d3b7cbeb90456389fa3657cb54ad44a32",
-    "bg": "e20516bdddf683f1557e291b2db06013c7ed676740290f7a5ebd9acc75f7084c"
+    "dice": "fd6b7d336ddfd227e995f60446adf91ec142f4c4748531ea5f26a8bf9b9e4f6e",
+    "notes": "68ed0f4e8822186db2f2a3cf77c6c2868e1a09b4687b195b37ed0cf3c55046db",
+    "charsheet": "1f14bca5fdfc339160598da0794ffda059dd5d632e36021c1d727a9dc208e569",
+    "open-world": "81cfec1e03755016cc03e35e918e0fa559a16f76b3acc4f4969051d686dae4ef",
+    "party": "13f2a607dfb521f00424f696568e3b10601d8aff696987521e34dc6b4c812f16",
+    "bg": "ffb3a5b4d327041ef9c1e337194935580fb40c4e7224c6658491f8be7c8b4051"
   };
   for (const [name, digest] of Object.entries(digests)) {
     assert.equal(existsSync(new URL(name + '.js', dir)), false);

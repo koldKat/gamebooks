@@ -1,24 +1,7 @@
-// ── Battle Simulator (Night of the Necromancer, book 260) ────────────────────
-// Self-contained module. Imports from state.js, play.js, charsheet.js and util.js.
-// Visibility is gated (book 260 only) by the caller in boot.js via
-// setSim260Visible().
-// To remove: delete this file, remove its import line and initSim260()/
-// setSim260Visible() calls from boot.js, and remove the .bsim-* CSS (shared
-// with other battlesimNNN.js modules, so only remove it if all are gone).
-//
-// Standard Fighting Fantasy SKILL/STAMINA/LUCK system: combat is opposed
-// 2d6+SKILL rolls each round, loser takes a flat 2 STAMINA, with an optional
-// Test Your Luck after a hit lands that nudges the damage by 1 in either
-// direction. Healing uses Provisions eaten as Meals (4 STAMINA each), same
-// wording the book repeats every time you possess a new host body - the
-// per-body meal counts vary (2-6 in the text) so this sim uses a fixed cap
-// of 5 as a reasonable generic default, since the sim intentionally doesn't
-// track which host body you're in. The book's WILL stat is tracked
-// (starts at 6, uncapped) for reference but never consumed by this sim's
-// own combat math - per the book's own rules, WILL is spent only on
-// narrative "Test your Will" checks outside battle, never in the Battles
-// sequence itself. All state lives in pt.sim260, per-user/per-book via
-// currentPlaythrough().
+// Battle Simulator (Night of the Necromancer, book 260)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
+// The five-meal cap is a generic default; WILL is reference-only.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -118,11 +101,7 @@ function _runRound() {
   _renderAll();
 }
 
-// Test Your Luck after a hit lands: costs 1 LUCK regardless of outcome. On
-// your own hit, Lucky deals 2 extra STAMINA damage (4 total), Unlucky gives
-// back 1 (only 1 total). On a hit you took, Lucky gives back 1 STAMINA (only
-// 1 total lost), Unlucky costs 1 extra (3 total). Matches the book's
-// "Using LUCK in Combat" rule.
+// Luck costs 1: own hits deal 4/1 damage; incoming hits deal 1/3 (lucky/unlucky).
 function _testLuck() {
   const d = _data();
   if (!d || !d.pendingLuck || d.player.luck <= 0) return;

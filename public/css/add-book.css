@@ -13,11 +13,7 @@
   user-select: none;
   transition: background 0.1s;
 }
-/* :hover stays as the fallback, but books.js also toggles .is-hover on
-   mouseenter/leave: expand/collapse mutates the tree under the cursor, and
-   Chromium drops :hover for a frame around the mutation - with the 0.1s
-   background transition that reads as a black-to-grey flash. The class
-   survives DOM mutations. */
+/* Keep .is-hover across DOM mutations; Chromium may briefly drop :hover on expand/collapse. */
 .series-header-row:hover, .series-header-row.is-hover { background: #111827; }
 .series-header-chevron {
   font-size: 0.6rem;
@@ -121,11 +117,7 @@
   border-top: 1px solid #1f2937;
 }
 .series-books-group > .book-item:not(.book-item--container):not(.book-item--party):first-child { border-top: none; }
-/* Party books still need the flat-list divider look, just not at the cost of
-   the party border - style.css's .book-item.book-item--party (specificity
-   0,2,0) can't win against this file's 0,3,0 reset above on its own, so the
-   exclusion here lets that rule apply normally instead of stacking a third
-   competing selector. */
+/* Exclude party cards so this reset cannot override their dedicated border rule. */
 .series-books-group > .book-item.book-item--party {
   border-radius: 0;
   border-top: 1px solid #1f2937;
@@ -492,9 +484,7 @@
   margin-left: 0.3rem;
   flex-shrink: 0;
 }
-/* Green matches the covers wall's livereading badge (#34d399 border there) -
-   same meaning, same color cue, different layout context (inline here,
-   absolutely positioned on covers). */
+/* Match the green live-reading badge. */
 .book-livereading-badge {
   display: inline-flex;
   align-items: center;
@@ -707,4 +697,3 @@
   color: #4b5563;
   text-align: center;
 }
-

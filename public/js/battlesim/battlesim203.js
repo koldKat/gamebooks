@@ -1,79 +1,9 @@
-// ── Battle Simulator (Island of the Lizard King, book 203) ──────────────────
-// Self-contained module. Imports from state.js, play.js, charsheet.js and util.js.
-// Visibility is gated (book 203 only) by the caller in boot.js via
-// setSim203Visible().
-// To remove: delete this file, remove its import line and initSim203()/
-// setSim203Visible() calls from boot.js, and remove the .bsim-* CSS (shared
-// with battlesim8.js/battlesim829.js/battlesim286.js/battlesim198.js/
-// battlesim199.js/battlesim200.js/battlesim186.js/battlesim201.js/
-// battlesim202.js, so only remove it if all ten are gone).
-//
-// Standard Fighting Fantasy SKILL/STAMINA/LUCK system, same core numbers,
-// Test Your Luck table, and single-dose potion-of-three-choices setup as
-// books 201/202 - reused verbatim. The fourth-pass verified reference notes
-// the scan is missing the printed page with the initial dice-generation
-// formula, so this uses the same default every other FF sim in this app
-// uses (SKILL 1d6+6, STAMINA 2d6+12, LUCK 1d6+6).
-//
-// attackModifier/enemyWoundDamage/pairedFight/sideEnemy/winAfterHits are
-// reused exactly as book 200/201/202 built them - they already cover every
-// "-N SKILL/Attack Strength this fight" (Slime Sucker, Spit Toad, Cave
-// Woman, Giant Water-Snake), every "two attackers, choose one target,
-// untargeted one can wound but can't be wounded that round" case (Hydra's
-// two heads, paired Lizard Men, the two Pirates), and the Lizard Man §262
-// "win as soon as you land your first hit" limited encounter (winAfterHits
-// = 1).
-//
-// Three genuinely new mechanics, all first-round-of-battle effects:
-// - hasSogsHelmet (persistent item toggle): automatically win the first
-//   Attack Round of ANY battle - no roll happens that round. Per the
-//   reference this also cancels the Hill Troll's and Razorjaw's own
-//   "lose the first round without the helmet" penalty, which falls out
-//   naturally from the precedence order below (helmet is checked first).
-// - enemyAutoWinFirstRound (per-encounter checkbox): the enemy automatically
-//   wins the first Attack Round - no roll happens that round. Covers the
-//   Hill Troll (§30) directly; if hasSogsHelmet is also on, the helmet
-//   takes precedence and the round proceeds as an automatic player win
-//   instead, matching "prevents the Hill Troll opening disadvantage."
-// - hasClumsinessCurse (persistent item toggle, Potion of Clumsiness §311):
-//   before the first Attack Round of every future battle, roll 1d6 - on a
-//   1, drop the sword and automatically lose that round (same shape as
-//   enemyAutoWinFirstRound, but randomized and persistent for the rest of
-//   the game once triggered). Checked after the helmet (which still
-//   overrides) but before the plain enemyAutoWinFirstRound knob.
-// Precedence when more than one could apply on round 1: Sog's helmet wins
-// outright (unconditional per the text) > Clumsiness roll > plain
-// enemyAutoWinFirstRound > normal opposed roll.
-//
-// Two more persistent item toggles, both ongoing while-worn/wielded effects
-// per the reference (not one-time score bumps, which are applied by hand
-// via the Initial fields the same as every other sim in this app):
-// - hasBoneCharm (Sama's bone charm, §323): LUCK can never be reduced below
-//   7 by a Test Your Luck roll (or by the stat stepper, for consistency).
-// - hasRingOfConfusion (§297): -2 SKILL while worn (a curse), despite also
-//   being required for two narrative bypasses (Shaman Revulsion test,
-//   Shape Changer trap) that this sim doesn't otherwise model.
-// Two weapon toggles (Fire Sword §275, Magic Sword §392), each +2 SKILL
-// while wielded - kept as toggles rather than baked into Initial SKILL like
-// the book's flat one-time item rewards, since the core rules explicitly
-// say only one weapon's SKILL bonus can apply at a time (same reasoning as
-// book 202's Ninja Curved Sword) and a route only ever grants one of these
-// two, never both. The Fire Sword's own +2 LUCK is a one-time acquisition
-// bonus (no stacking-exclusivity concern for LUCK), applied via the Initial
-// LUCK field by hand instead.
-//
-// Deliberately NOT modeled, same precedent as every other sim in this app:
-// pre-battle one-off STAMINA/SKILL losses (Razorjaw's opening bite without
-// the helmet, Cave Woman's failed-dodge penalty, Spit Toad's opening bite,
-// the Delirious Prisoner's bare-handed penalty is covered by attackModifier
-// instead since it's an ongoing per-round penalty, not a one-off loss) -
-// apply those by hand with the stat steppers before starting the fight.
-// Also not modeled: the post-boss Gonchong sequence (§153/188/54/244/260/
-// 384) - it's a narrative branch-and-skill-check chain, not a stat battle,
-// and the Shaman's 6-test gate (§397) - none of the six tests are combat
-// either. Escape options are likewise left to manual stat edits.
-//
-// All state lives in pt.sim203, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Island of the Lizard King, book 203)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
+// Round-1 precedence: Sog's helmet > Clumsiness roll > enemy automatic win > normal roll.
+// The scan lacks chargen rules; standard FF defaults are assumed.
+// Bone Charm floors LUCK at 7; weapon bonuses are exclusive.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -187,9 +117,7 @@ function _resetEncounterKnobs(d) {
   d.sideEnemy = { name: '', skill: 0, staminaMax: 0 };
 }
 
-// Uncapped (was previously trimmed to the last 100) - the admin dashboard
-// aggregates battle counts app-wide from this array, so per-user history needs
-// to be a true lifetime total, not a rolling window.
+// Keep lifetime outcomes: admin totals require the full history.
 function _recordOutcome(d, outcome) {
   d.history.push({
     enemy: _enemyName(d), outcome,
@@ -198,11 +126,7 @@ function _recordOutcome(d, outcome) {
   });
 }
 
-// ── Combat ───────────────────────────────────────────────────────────────────
-
-// Only ever called on round 1 of a battle. Returns 'player' (auto-win),
-// 'enemy' (auto-lose), or null (roll normally) - see the header comment for
-// the precedence order and why.
+// First-round override returns player, enemy, or null; precedence is defined above.
 function _firstRoundOverride(d) {
   if (d.player.hasSogsHelmet) {
     _appendLog(d, t('battlesim203.log.helmet_win'));
@@ -262,12 +186,7 @@ function _runRound() {
     if (d.player.stamina > 0) d.pendingLuckQueue.push({ kind: 'enemy-hit' });
   }
 
-  // Paired fight: a second, independent exchange with its own fresh player
-  // roll every round (including round 1 - the first-round override above
-  // only ever applies to the main exchange) - covers the Hydra's two heads,
-  // paired Lizard Men, and the two Pirates. The side attacker is never
-  // wounded through this path, matching the literal "untargeted one can
-  // wound but cannot be wounded that round" rule.
+  // Roll separately for the side attacker even on round 1; main-target overrides do not apply to it.
   if (d.pairedFight && d.sideEnemy.staminaMax > 0 && d.player.stamina > 0) {
     const sidePlayerAS = _roll2d6() + _effectiveSkill(d) + (d.player.attackModifier || 0);
     const sideAS = _roll2d6() + d.sideEnemy.skill;
@@ -294,9 +213,7 @@ function _runRound() {
   _renderAll();
 }
 
-// Test Your Luck after a hit lands: costs 1 LUCK regardless of outcome
-// (floored at 7 instead of 0 if Sama's bone charm is carried). Same
-// Lucky/Unlucky table as every other FF sim in this app.
+// Luck costs 1; Sama's Bone Charm floors remaining LUCK at 7 instead of 0.
 function _testLuck() {
   const d = _data();
   if (!d || !d.pendingLuckQueue.length || d.player.luck <= 0) return;
@@ -866,10 +783,7 @@ export function initSim203() {
     if (!d) return;
     const map = FIELD_MAP[id];
     if (!map) return;
-    // Attack modifier is the one field allowed to go negative (bare-handed/
-    // disarmed/fatigue penalties are always a subtraction) - every other
-    // field stays clamped to 0 or above (LUCK's own floor is Sama's bone
-    // charm's 7-instead-of-0, same as the automatic Test Your Luck clamp).
+    // Only attack modifiers may be negative; LUCK bottoms at 7 with Sama's charm, otherwise 0.
     val = id === 'sim203-player-atkmod' ? Number(val) : Math.max(0, val);
     if (id === 'sim203-player-skill') val = Math.min(val, d.player.skillInitial);
     if (id === 'sim203-player-stamina') val = Math.min(val, d.player.staminaInitial);

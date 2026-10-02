@@ -1,16 +1,4 @@
-// context-menu.js - Mobile's long-press node context menu: Edit note,
-// Priority (high/normal/low), Fast Travel (one-tap shortest route, no
-// submenu), Toggle battle. Same 4 actions as desktop's right-click
-// #node-ctx-menu, minus the edit operations mobile deliberately doesn't
-// expose (see reader.js's own header comment - reading-only). Extracted
-// out of reader.js as a self-contained UI widget, per CLAUDE.md's module-
-// placement rule ("new modal/panel/widget -> new module from day one").
-//
-// checkXpReward/maxFastTravels/doFastTravel are reader.js's own playthrough-
-// lifecycle logic, not context-menu concerns - passed in per call via a
-// `hooks` object (not imported directly) so this file has no dependency on
-// reader.js at all, avoiding a reader.js <-> context-menu.js import cycle
-// (reader.js is the one importing this file, not the other way around).
+// Mobile node context menu with reader lifecycle hooks passed in to avoid an import cycle.
 
 import { state, saveState, currentPlaythrough, currentSection, parseSecId } from '../../js/core/state.js';
 import { canReach } from '../../js/graph.js';
@@ -18,13 +6,7 @@ import { refreshGraph } from './graph-view.js';
 import { t } from '../../js/i18n.js';
 import { openNoteModal } from './note-modal.js';
 
-// Same "worth keeping" check as boot.js's own _pruneDiscovered/play.js's
-// _cleanupOrphanedTargets/graph.js's orphan-pruning pass - every place that
-// clears a piece of node metadata needs this same check, or a node with
-// nothing else on it (e.g. a manually-added node, or one whose only
-// content was the metadata just cleared) silently vanishes instead of
-// staying on the map. Exported - note-modal.js's own save handler needs it
-// too, for the exact same reason.
+// Preserve nodes with remaining metadata when pruning cleared entries.
 export function pruneDiscovered(id) {
   const n = state.graph[id];
   if (!n?.discovered) return;
@@ -38,9 +20,7 @@ function setPriority(id, value, hooks) {
   else                    state.graph[id].priority = value;
   pruneDiscovered(id);
   saveState();
-  // set_priority XP (server/db/xp.js) only fires the first time a node
-  // gains a priority tag, but the check itself is cheap either way - same
-  // reasoning as every other hooks.checkXpReward() call site.
+  // Check rewards after priority changes; the server awards only the first tag.
   hooks.checkXpReward();
   refreshGraph(currentSection());
 }
@@ -75,10 +55,7 @@ function clampContextMenu(x, y) {
   menu.style.top  = `${Math.max(8, top)}px`;
 }
 
-// hooks: { checkXpReward, maxFastTravels, doFastTravel } - all reader.js's
-// own functions, passed fresh each call but always the same stable
-// references, so capturing them in the one-time DOM-build closures below is
-// safe even though that block only runs on the very first call.
+// Hooks are stable reader functions, safe to capture in the one-time DOM setup.
 export function openNodeContextMenu(id, x, y, hooks) {
   _lastHoldAt = Date.now();
   let menu = document.getElementById('m-ctx-menu');
@@ -100,11 +77,7 @@ export function openNodeContextMenu(id, x, y, hooks) {
       <button id="m-ctx-battle-btn" class="m-ctx-btn">${t('ctx.battle')}</button>`;
     document.body.appendChild(menu);
 
-    // Some mobile browsers still fire a trailing synthetic click on the
-    // canvas right after the long-press's own contextmenu event, not just
-    // one or the other - without this window, that trailing click would
-    // hit this same listener and immediately close the menu that same
-    // gesture just opened, reading as the long-press having done nothing.
+    // Ignore the trailing synthetic click after a long-press so it cannot immediately close the menu.
     document.addEventListener('click', e => {
       if (Date.now() - _lastHoldAt < 400) return;
       if (menu.classList.contains('active') && !menu.contains(e.target)) hideNodeContextMenu();
@@ -116,10 +89,7 @@ export function openNodeContextMenu(id, x, y, hooks) {
         const wasOpen = panel.classList.contains('open');
         menu.querySelectorAll('.m-ctx-submenu-panel').forEach(p => p.classList.remove('open'));
         if (!wasOpen) panel.classList.add('open');
-        // Expanding a submenu grows the menu's own height after it was
-        // already clamped against the collapsed size - re-clamp now or a
-        // menu opened near the bottom edge overflows off-screen the moment
-        // its submenu opens.
+        // Re-clamp after expanding a submenu changes its height.
         clampContextMenu();
       });
     });
@@ -140,10 +110,7 @@ export function openNodeContextMenu(id, x, y, hooks) {
         if (id2) setPriority(parseSecId(id2) ?? id2, btn.dataset.priority, hooks);
       });
     });
-    // Unlike the toolbar's own Fast Travel dialog (which still offers all
-    // 4 modes plus manual section entry), the context menu's version is
-    // meant to be a one-tap shortcut - it always takes the shortest route
-    // to the tapped node, no submenu.
+    // Context-menu travel uses the shortest route; the toolbar dialog offers all modes.
     document.getElementById('m-ctx-ft-btn').addEventListener('click', () => {
       const id2 = menu.dataset.nodeId;
       hideNodeContextMenu();

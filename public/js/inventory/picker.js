@@ -92,12 +92,7 @@ export function _renderPicker(query) {
   grid.querySelectorAll('.inv-pick-item').forEach(el => {
     el.addEventListener('click', () => {
       if (!_isPickerCurrent(session) || !grid.contains(el)) return;
-      // Route through addItemToInventory() instead of pushing a slot
-      // directly - it merges into an existing stack (same itemId/note/
-      // label/visible) if one exists, incrementing qty. The direct-push
-      // version always created a brand-new qty:1 slot, so picking the same
-      // item repeatedly here never stacked, unlike every other place items
-      // get added.
+      // Use the shared add helper to merge matching inventory stacks.
       if (!addItemToInventory(+el.dataset.id)) return;
       _closePicker();
       inventoryRuntime.renderGrid();

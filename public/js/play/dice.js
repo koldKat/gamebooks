@@ -106,11 +106,7 @@ function _formatDiceResultInline(result) {
   return `${result.rolls.map(String).join(' + ')} = ${result.total}`;
 }
 
-// #play-bottom-stack (party/guide/notebook buttons + XP summary) centers itself
-// between this and #play-btn-row on the other side, rather than the plain
-// viewport midpoint, so it doesn't get covered when either side grows wide
-// enough on a narrower screen. Tracked the same way charsheet.js already
-// tracks --play-btn-row-h for #stats-hud.
+// Observe dice width to center the bottom stack between dice and play actions.
 function _trackDiceRollerWidth() {
   const wrap = document.getElementById('dice-roller-wrap');
   if (!wrap) return;
@@ -142,9 +138,7 @@ export function initDice() {
 
   function getRunPt() { return viewingPt || currentPlaythrough(); }
 
-  // Read-only means visible-but-disabled, not hidden: viewing a completed/other
-  // run (currentPlaythrough() null while a pt still exists via viewingPt) should
-  // not let dice rolls silently overwrite that historical run's saved diceState.
+  // Disable dice for historical/viewed runs without hiding them or changing their saved state.
   function isDiceReadOnly() { return !!getRunPt() && !currentPlaythrough(); }
 
   function _applyDiceReadOnly() {

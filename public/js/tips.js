@@ -13,9 +13,7 @@ export function initTips() {
     const pool = useReal ? realPool  : sillyPool;
     let   deck = useReal ? realDeck  : sillyDeck;
     if (!pool.length) {
-      // Both pools empty (no active tips at all, e.g. an admin deactivated
-      // every tip, or a fresh install before any are seeded) - without this
-      // guard, flipping sides and recursing again would do so forever.
+      // Stop when both tip pools are empty to avoid infinite recursion.
       if (_triedOtherSide) return '';
       useReal = !useReal;
       return nextTip(true);

@@ -1,69 +1,7 @@
-// ── Battle Simulator (Пламък над водата / Fire on the Water, Bulgarian
-// edition of Lone Wolf book 2, id 430) ──
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 430 only) by the caller in boot.js via
-// setSim430Visible().
-// To remove: delete this file, remove its import line and initSim430()/
-// setSim430Visible() calls from boot.js, remove 'sim430' from
-// SIM_HISTORY_KEYS in server/db/xp.js, and remove the .bsim-* CSS (shared
-// with the other battlesim*.js files, so only remove it if all are gone).
-//
-// This is the SAME underlying book as battlesim322.js (book 322, the English
-// Project Aon "Fire on the Water") - a separate, independently created
-// Bulgarian translation (id 430), not a duplicate import. Section numbering
-// matches 1:1 between the two editions (spot-checked, e.g. both §50 reach
-// §249 with the same priest/coach scene), and this book's own worked
-// example is identical to every other Lone Wolf sim's canonical one, so the
-// Combat Ratio + Combat Results Table system and COMBAT_TABLE below are
-// reused unchanged from battlesim118.js/battlesim322.js rather than
-// re-derived.
-//
-// Imported directly from the raw PDF (unlike book 118, which came from a
-// pre-made HTML draft) - required a custom section-header parser since
-// pdftotext's page breaks (form-feed characters) and line-wrapped choice
-// text ("...мини на\n253.") both produced false section-boundary matches;
-// resolved by requiring a real header's line to be heavily
-// indented/centered (30+ leading spaces), which cleanly separated the 350
-// genuine headers from 18 false positives. Confirmed 0 missing-choice-link
-// mismatches after import.
-//
-// Combat Ratio = effective БОЙНИ УМЕНИЯ minus enemy's, computed once when an
-// enemy is selected and fixed for the whole fight. Each round, pick 0-9
-// (a 10-value die), bucket the ratio into the table's 13 printed columns
-// (-11 or less .. 11 or greater), and COMBAT_TABLE[pickRow][ratioCol] gives
-// [enemyLoss, lwLoss] simultaneously, including 'K' (automatically killed)
-// at the extremes.
-//
-// БОЙНИ УМЕНИЯ (COMBAT SKILL) = pick+10, ИЗДРЪЖЛИВОСТ (ENDURANCE) = pick+20,
-// both rolled once at chargen. No LUCK mechanic - that's Fighting Fantasy,
-// not Lone Wolf.
-//
-// attackModifier is a free-form +/- field covering every one-off БОЙНИ
-// УМЕНИЯ change this book's own rules describe by hand: Мозъчна атака
-// (Mindblast, +2, some enemies immune), Мозъчен щит (Mindshield, cancels an
-// enemy's own Mindblast penalty against you), surprise-attack bonuses
-// (+2 for one round, e.g. §7/§270's Ganon/Dorier fight), and terrain/injury
-// penalties stated by hand in individual sections. Same precedent as every
-// other sim in this app.
-//
-// Every multi-enemy fight in this book is explicitly fought "one at a time"
-// per the book's own text - no pairedFight/sideEnemy mechanic needed, just
-// re-pick the next roster enemy after defeating the current one. A few
-// fights (§7=§270, §30, §34, §128, §131, §185, §268, §282, §296, §348)
-// combine multiple creatures into one or more stat blocks per the book's
-// own "fight them as one/one at a time" instructions, already represented
-// as separate book_enemies rows each.
-//
-// book_enemies.attack holds БОЙНИ УМЕНИЯ, .hp holds ИЗДРЪЖЛИВОСТ, .defense
-// unused - same convention as book 118/193/322. 41 rows, directly
-// cross-referenced against book 322's already-verified roster (same
-// numbers at every matching section number, confirmed one by one) with
-// Bulgarian names read from this book's own section text; Ganon/Dorier's
-// two encounters (§7, §270) share identical stats and the same "if you win"
-// destination (§33) but are kept as two separate rows, matching book 322's
-// own precedent of not merging that particular pair.
-//
-// All state lives in pt.sim430, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Пламък над водата / Fire on the Water, Bulgarian edition of Lone Wolf book 2,
+// id 430)
+// Combat Ratio is fixed on enemy selection; a 0-9 pick selects simultaneous table losses.
+// 'K' means instant death. Skill bonuses and narrative effects are entered manually.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -76,10 +14,8 @@ const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" ari
 
 const HEALING_POTION_HEAL = 4;
 
-// Rows = the 10-value random pick, printed order 1,2,3,4,5,6,7,8,9,0.
-// Columns = Combat Ratio, bucketed: -11-, -10/-9, -8/-7, -6/-5, -4/-3,
-// -2/-1, 0, 1/2, 3/4, 5/6, 7/8, 9/10, 11+. Cell = [enemyLoss, lwLoss]
-// ('K' sentinel = automatically killed). Byte-identical to battlesim118.js.
+// Rows: 1-9, then 0. Columns: Combat Ratio buckets -11..11, clamped at the extremes.
+// Cells are [enemyLoss, playerLoss]; K means instant death.
 const COMBAT_TABLE = [
   [[0,'K'], [0,'K'], [0,8], [0,6], [1,6], [2,5], [3,5], [4,5], [5,4], [6,4], [7,4], [8,3], [9,3]],
   [[0,'K'], [0,8],   [0,7], [1,6], [2,5], [3,5], [4,4], [5,4], [6,3], [7,3], [8,3], [9,3], [10,2]],

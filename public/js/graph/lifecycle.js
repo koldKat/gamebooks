@@ -122,10 +122,7 @@ export function initGraph() {
     saveViewport();
   });
 
-  // Pure background pans change the view center without firing any 'zoom'
-  // event, which would leave the snap floor's revert anchor pointing at the
-  // pre-pan center - the first sub-floor wheel tick after a pan would then
-  // jump the view backwards. Refresh the anchor on drag end instead.
+  // Refresh the snap-floor center after panning, which emits no zoom event.
   network.on('dragEnd', () => {
     if (state.snapToGrid && network.getScale() >= minSnapScale()) {
       graphRuntime._lastAboveFloorViewPos = network.getViewPosition();
@@ -156,9 +153,7 @@ export function initGraph() {
   network.on('dragEnd', params => {
     if (params.nodes.length) {
       const positions = network.getPositions(params.nodes);
-      // Snap only ever applies to this drag's end position - never touches
-      // any node that wasn't just moved, so turning the toggle on can't
-      // retroactively reshape an already-placed graph.
+      // Snap only the dragged node; enabling snapping must not reposition existing nodes.
       if (state.snapToGrid) {
         for (const id of params.nodes) {
           positions[id].x = Math.round(positions[id].x / GRID_SIZE) * GRID_SIZE;

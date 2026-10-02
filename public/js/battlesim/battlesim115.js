@@ -1,31 +1,5 @@
-// ── Battle Simulator (Окото на дявола / Eye of the Devil, book 115) ────────
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 115 only) by the caller in boot.js via
-// setSim115Visible().
-// To remove: delete this file, remove its import line and initSim115()/
-// setSim115Visible() calls from boot.js, remove 'sim115' from
-// SIM_HISTORY_KEYS in server/db/xp.js, and remove the .bsim-* CSS (shared
-// with the other battlesim*.js files, so only remove it if all are gone).
-//
-// Same chitanka.info-family symmetric-STRENGTH pick-a-number formula as
-// books 86/114, but two real differences confirmed by reading the rules
-// from scratch rather than assuming the family template holds exactly:
-// - STRENGTH (12) and LIFE (32) are FIXED starting values (rules p.7-8),
-//   not dice-rolled at chargen like 86/114 - no "roll" step here, just
-//   pre-filled editable fields.
-// - Damage is the DIFFERENCE between the two totals, not a flat 2 (rules'
-//   own worked example: opponent totals 13 vs your 16, opponent loses
-//   exactly 3, the gap). A genuine tie naturally deals 0 damage under this
-//   formula - no special-case needed the way 86/114's flat-2 model needed
-//   an explicit "no damage on a tie" rule.
-//
-// book_enemies.attack holds STRENGTH, .hp holds LIFE, .defense unused -
-// same convention as 86/114. Only 6 combat encounters exist in this book's
-// 310 sections (confirmed via four independent text sweeps, plus checking
-// the back matter for a hidden roster table like book 92 had - none here);
-// this is a much shorter, puzzle/decision-heavy book, not a missed search.
-//
-// All state lives in pt.sim115, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Окото на дявола / Eye of the Devil, book 115)
+// Start at STRENGTH 12 / LIFE 32; opposed totals deal their difference as damage.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';

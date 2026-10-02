@@ -1,67 +1,7 @@
-// ── Battle Simulator (Crypt of the Sorcerer, book 222) ───────────────────────
-// Self-contained module. Imports from state.js, play.js, charsheet.js and util.js.
-// Visibility is gated (book 222 only) by the caller in boot.js via
-// setSim222Visible().
-// To remove: delete this file, remove its import line and initSim222()/
-// setSim222Visible() calls from boot.js, and remove the .bsim-* CSS (shared
-// with every other battlesimN.js, so only remove it if all of them are gone).
-// Also remove 'sim222' from SIM_HISTORY_KEYS in server/db/xp.js, and remove
-// 'sim222-overlay' from ALL_PANEL_OVERLAY_IDS in util.js and the #sim222-btn
-// selectors in battlesim.css.
-//
-// Standard Fighting Fantasy SKILL/STAMINA/LUCK system, same core numbers as
-// every other sim in this app (SKILL 1d6+6, STAMINA 2d6+12, LUCK 1d6+6;
-// opposed 2d6+SKILL roll, ties = no effect, loser -2 STAMINA; Test Your Luck
-// costs 1 LUCK, +/-1 STAMINA effect).
-//
-// No Provisions/Potions UI - this book explicitly tells the reader in its own
-// rules text that, unlike other Fighting Fantasy gamebooks, "you do not
-// start your adventure with Provisions", and there is no printed multi-use
-// potion system either. STAMINA recoveries are one-off narrative section
-// events, hand-applied with the existing stat stepper like any other sim
-// here (same precedent as books 220/221's own "no Provisions" notes).
-//
-// attackModifier/enemyWoundDamage/playerWoundDamage/enemyDefeatThreshold are
-// reused exactly as prior sims - they cover every generic "-N SKILL this
-// fight" penalty (Orc §120 unable to use sword, Ape Man §219 disarmed, Wood
-// Demon §260 pinned, Rat Man §238 first round only - apply by hand for that
-// last one, then remove it for round 2+).
-//
-// extraAttackers (max 1) + a single sideEnemy generalise book 220's larger
-// version of the same mechanic down to this book's one simultaneous
-// encounter: the two Orcs at §8. Both Orcs attack every round; the player
-// picks one (the main "Enemy" slot) to actually fight back against and can
-// only wound that one. The other Orc (the side slot) only ever deals
-// damage through this sim, matching book 220's existing side-enemy
-// precedent - to eventually kill it, defeat the main Orc first, then
-// re-pick the survivor into the main "Enemy" slot via the dropdown.
-//
-// Deliberately NOT modeled, matching this app's existing precedent for
-// narrative section routing that isn't itself a combat-math change (see
-// battlesim220.js's Hobbit/Black Elf round-count note and battlesim221.js's
-// Escape-option note): the Ape Man's (§83, §219) fixed-3-round fight that
-// continues to §254 regardless of outcome - the round counter is already
-// visible in the log, so just stop after round 3 and follow the book; the
-// Demonic Servant's (§68, §81) instant-collapse on 2 consecutive player
-// wins - watch the log for two "you wound" lines in a row and treat that as
-// an immediate win; Razaak's (§271) instant-loss on 2 consecutive Razaak
-// wins, same "watch the log" approach; the Clay Golem's (§299) post-round
-// 1d6 check that can end the fight outright on a roll of 1 (roll by hand
-// after each round); the Iron-Eater's (§296) win-on-a-single-round mechanic
-// and its cumulative "-1 SKILL per Attack Round lost" penalty (apply the
-// SKILL loss by hand with the stat stepper, then reset enemy STAMINA to 0
-// as soon as any round is won); the Chameleonite's (§239) on-horseback +2
-// Attack Strength (fold into attackModifier by hand if applicable); and the
-// Werewolf's (§252) wounded-vs-unwounded outcome branch (visible directly
-// from whether any "enemy wounds you" line appears in that fight's log).
-//
-// One STAMINA value in book_enemies for this book is a source-scan defect,
-// not a best-guess reconstruction: the Vampire Bat (§257) prints as
-// "STAMINA &" in the supplied scan (a literal ampersand where the digit
-// should be) - flagged here and in docs/technical.md. Seeded as STAMINA 6,
-// in line with this book's other low-tier single encounters.
-//
-// All state lives in pt.sim222, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Crypt of the Sorcerer, book 222)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
+// No starting provisions or reusable potion system.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -146,9 +86,7 @@ function _resetEncounterKnobs(d) {
   d.sideEnemies = [_emptySideEnemy()];
 }
 
-// Uncapped (was previously trimmed to the last 100) - the admin dashboard
-// aggregates battle counts app-wide from this array, so per-user history needs
-// to be a true lifetime total, not a rolling window.
+// Keep lifetime outcomes: admin totals require the full history.
 function _recordOutcome(d, outcome) {
   d.history.push({
     enemy: _enemyName(d), outcome,
@@ -192,11 +130,7 @@ function _runRound() {
     if (d.player.stamina > 0) d.pendingLuckQueue.push({ kind: 'enemy-hit' });
   }
 
-  // Extra simultaneous attacker (the un-targeted Orc at §8): its own
-  // independent exchange with a fresh player roll every round, never
-  // wounded through this path - only the main "Enemy" slot can be wounded,
-  // matching the standard FF "every enemy attacks, you choose one to fight
-  // back against" multiple-enemy rule.
+  // The unchosen Orc rolls independently and cannot be wounded back.
   for (let i = 0; i < Math.min(d.extraAttackers, MAX_EXTRA_ATTACKERS) && d.player.stamina > 0; i++) {
     const side = d.sideEnemies[i];
     if (!side || side.staminaMax <= 0) continue;
@@ -664,9 +598,7 @@ export function initSim222() {
     if (!d) return;
     const map = FIELD_MAP[id];
     if (!map) return;
-    // Attack modifier is the one field allowed to go negative (bare-handed/
-    // disarmed/fatigue penalties are always a subtraction) - every other
-    // field stays clamped to 0 or above.
+    // Allow negative attack modifiers; other fields stay non-negative.
     val = id === 'sim222-player-atkmod' ? Number(val) : Math.max(0, val);
     if (id === 'sim222-player-skill') val = Math.min(val, d.player.skillInitial);
     if (id === 'sim222-player-stamina') val = Math.min(val, d.player.staminaInitial);

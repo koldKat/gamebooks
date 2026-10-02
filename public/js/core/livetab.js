@@ -1,10 +1,4 @@
-// ── Live-tab controller ───────────────────────────────────────────────────────
-// Manages multi-tab coordination via BroadcastChannel + localStorage leader
-// election. One tab is the "leader" and owns SSE connections + poll intervals;
-// followers receive events via BroadcastChannel and apply them locally.
-//
-// To remove: delete this file, remove its import line and setLiveTabHooks() /
-// initLiveTabController() calls from boot.js.
+// One elected tab owns SSE and polling; followers receive BroadcastChannel updates.
 
 import { getToken, isDemoMode, apiFetch } from './state.js';
 import { refreshCoinsDisplay } from '../progression/shop.js';
@@ -62,35 +56,16 @@ function _disconnectFeedSSE() {
   }
 }
 
-// Deliberately not fired in the same tick as loadFeed(): loadFeed's own
-// scheduleRewardProfileRefresh(150) is what actually drives the viewer's own
-// XP bar tween (a plain state save carries no reward data in its response).
-// If the App-wide/Avg-Level bars' tween started at the exact same instant
-// every time, the two bars - which sit stacked right next to each other -
-// visually read as a single bar doing a fast burst then a slow crawl, since
-// their durations differ so much (theirs is short, yours is level * 100ms).
+// Stagger app-wide XP from personal XP so their stacked animations remain distinct.
 const APP_XP_STAGGER_MS = 1200;
 let _appXpStaggerTimer = null;
 function _refreshAppXpStaggered() {
-  // Coalesces bursts into one call, same reason as the feed SSE debounce -
-  // the app-xp stream's callers (below) fire once per individual award, with
-  // no debounce of their own, so several players earning XP within the same
-  // ~1.2s window would otherwise queue that many separate refetches instead
-  // of settling on one.
+  // Coalesce award bursts into one app-XP refresh.
   if (_appXpStaggerTimer) clearTimeout(_appXpStaggerTimer);
   _appXpStaggerTimer = setTimeout(() => { _appXpStaggerTimer = null; _hooks.refreshAppXp?.(); }, APP_XP_STAGGER_MS);
 }
 
-// ── Version-gated feed refresh ────────────────────────────────────────────────
-// This tick used to call loadFeed() unconditionally, which rebuilds
-// #feed-content's whole DOM (entries, day-card background layers) every
-// minute even when nothing changed. Gate it on a cheap server-side
-// fingerprint instead: /api/feed/version answers from a handful of COUNT/MAX
-// aggregates, so a quiet minute costs one tiny request instead of a full
-// feed fetch + DOM rebuild. SSE feed_changed events still reload the feed
-// immediately; this poll is only the fallback for pushes the SSE stream
-// missed, so on any version-fetch failure we fall back to the old
-// unconditional reload rather than let the feed go stale.
+// Use feed versions to avoid unchanged DOM rebuilds; reload on version-check failure.
 
 async function _fetchFeedVersion() {
   const res = getToken()
@@ -113,10 +88,7 @@ async function _refreshFeedIfChanged() {
   _hooks.loadFeed?.();
 }
 
-// Re-baseline after an SSE-triggered reload so the next 60s tick doesn't see
-// the already-rendered change as "new" and rebuild the feed a second time.
-// Also exported for boot.js's direct loadFeed() calls (showLogin/showBooks),
-// which reload the feed outside this gated path for the same reason.
+// Rebaseline after direct/SSE reloads so polling does not render the same change twice.
 export async function _syncFeedVersionBaseline() {
   try {
     const version = await _fetchFeedVersion();
@@ -127,38 +99,10 @@ export async function _syncFeedVersionBaseline() {
 
 function _startLeaderIntervals() {
   if (!_feedPollInterval) {
-    // Deliberately not gated on document.visibilityState: a tab left open
-    // (screen off, minimized, backgrounded) should keep earning idle_heartbeat
-    // XP the same way a visible one does, so gating this poll on visibility
-    // just meant heartbeat rate depended on OS/browser background-tab
-    // behavior (e.g. whether the screen turning off still counts as "open")
-    // instead of on whether the user actually left the site open.
-    // sendHeartbeat is the *only* thing that awards idle_heartbeat XP - it
-    // used to be a side effect of loadFeed's GET /api/feed call, which also
-    // meant every SSE-triggered feed reload from *other users'* activity
-    // (see feed_changed below) granted an extra roll too, bursting in sync
-    // with how busy the site happened to be rather than this user's own
-    // idle time. Kept split from loadFeed on purpose now, even though they
-    // fire together here - only this dedicated per-tab timer should trigger it.
-    // This same interval also runs for anonymous public-feed viewers
-    // (loadFeed itself supports that via publicFetch), but POST /api/heartbeat
-    // requires a logged-in user - gate on getToken() so an anonymous visitor
-    // doesn't send a doomed authenticated request every 60s for nothing.
-    // isDemoMode still has a token (guest session) but shouldn't earn real
-    // XP, same reasoning as every other getToken()-gated call in this file.
+    // Heartbeat awards come only from this timer, not feed reloads.
+    // Continue in background tabs, but skip anonymous and demo sessions.
     _feedPollInterval = setInterval(() => {
-      // loadFeed() rebuilds #feed-content's whole DOM (entries, day-card
-      // background layers) - the feed panel is only reachable from the
-      // books/landing screen (its toggle button is hidden while a book is
-      // open, boot.js's showMain()), so skip the rebuild entirely while
-      // #main-screen is showing instead of doing it for a screen the user
-      // can't even see. Unlike heartbeat below, this check is scoped to
-      // "is a book open", not document.visibilityState - a backgrounded
-      // landing tab still benefits from a fresh feed the moment it's
-      // foregrounded again. showBooks() already calls loadFeed() directly
-      // on return, so nothing goes stale beyond this interval's own cadence.
-      // Gated on the /api/feed/version fingerprint: the rebuild only happens
-      // when the feed actually changed (see _refreshFeedIfChanged above).
+      // Check feed versions only on the landing screen; heartbeat continues while playing.
       if (document.getElementById('main-screen')?.style.display === 'none') _refreshFeedIfChanged();
       if (getToken() && !isDemoMode) _hooks.sendHeartbeat?.();
       _refreshAppXpStaggered();
@@ -360,10 +304,7 @@ export function _connectAppXpSSE() {
     _appXpSource.onmessage = e => {
       let payload; try { payload = JSON.parse(e.data); } catch { return; }
       _hooks.onAppXpEvent?.(payload);
-      // The floater alone doesn't touch #app-xp-summary's own numbers - without
-      // this the bar only caught up on the next 60s poll or feed-SSE debounce,
-      // even though this exact event is live proof it's already stale. Reuses
-      // the same stagger as those other triggers, for the same anti-jank reason.
+      // Refresh the summary as well as the floater, using the shared stagger.
       _refreshAppXpStaggered();
       _broadcastLiveEvent('app_xp_event', payload);
     };
@@ -395,11 +336,7 @@ export function _ensureLiveTabControllerStarted() {
 
   function _onTabBecomeVisible() {
     _takeLiveLeadership();
-    // Catch up on what the backgrounded/frozen tab missed: the version-gated
-    // feed check (cheap no-op when nothing changed) and a reward-profile
-    // refresh (coins display, coin button, XP bar) - both are no-ops when
-    // current, and neither fires on its own here because the 60s tick may
-    // still be throttled for a while after the tab wakes.
+    // Catch up feed and reward state after a frozen/throttled tab becomes visible.
     _refreshFeedIfChanged();
     if (getToken() && !isDemoMode) _hooks.scheduleRewardProfileRefresh?.(150);
     if (_feedDirty && _hooks.isLandingVisible?.())          { _feedDirty = false; _hooks.loadFeed?.(); _syncFeedVersionBaseline(); }

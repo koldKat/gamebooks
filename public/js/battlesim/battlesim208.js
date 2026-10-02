@@ -1,58 +1,6 @@
-// ── Battle Simulator (Space Assassin, book 208) ─────────────────────────────
-// Self-contained module. Imports from state.js, play.js, charsheet.js and util.js.
-// Visibility is gated (book 208 only) by the caller in boot.js via
-// setSim208Visible().
-// To remove: delete this file, remove its import line and initSim208()/
-// setSim208Visible() calls from boot.js, remove 'sim208' from
-// SIM_HISTORY_KEYS in server/db/xp.js, and remove the .bsim-* CSS (shared
-// with battlesim8.js/battlesim829.js/battlesim286.js/battlesim198.js/
-// battlesim199.js/battlesim200.js/battlesim186.js/battlesim201.js/
-// battlesim202.js/battlesim203.js/battlesim204.js/battlesim205.js/
-// battlesim206.js/battlesim207.js, so only remove it if all fifteen are gone).
-//
-// No unified combat system - two completely separate ones, selected via a
-// mode toggle (same shape as book 186's hand-to-hand/phaser/ship split):
-// - Hand-to-hand: standard Fighting Fantasy opposed 2d6+SKILL Attack
-//   Strength rolls, flat 2 STAMINA per hit. LUCK is tracked (rules p.1) but
-//   never referenced by either combat system's own resolution steps, same
-//   as book 186 - it's for narrative Test Your Luck moments only.
-// - Gunfire: NOT opposed - each side rolls under their own SKILL to hit
-//   (attacker fires first every round, then the defender fires back if
-//   still alive). Damage depends on the firing side's weapon: electric
-//   lash flat 2, assault blaster 1d6, unarmed 1 (rules p.1 explicitly
-//   covers unarmed gunfire at 1pt/hit). "If your opponent's weapon is not
-//   specified, treat it as an assault blaster" (rules p.1) - default enemy
-//   weapon is assault blaster. A hit that would wound you first rolls an
-//   ARMOUR test: 2d6 <= current ARMOUR negates the wound entirely; ARMOUR
-//   then degrades by 1 regardless of the test's outcome (identical
-//   mechanic/wording to Test Your Luck, applied on every test, not just
-//   on failures).
-//
-// One book-specific boss encounter modeled directly rather than as a
-// generic knob, since nothing else in the book resembles it: the Deity
-// (§308) has a fixed six-weapon table and uses one at random each round
-// (rolled here) instead of a single fixed SKILL/weapon - whip SKILL10/dmg3,
-// bolas SKILL9/dmg2, spear SKILL7/dmg1, electric lash SKILL8/dmg2, assault
-// blaster SKILL6/dmg1-6, disintegrator SKILL5/instant death on any hit. A
-// "Deity fight (§308)" checkbox switches gunfire mode into this table.
-//
-// One generic recurring per-round checkbox, reused from book 186's
-// enemyExtraAttack shape: "Enemy fires/attacks twice per round" (covers
-// §211's Guard Robot, which explicitly fires twice per combat round).
-//
-// Deliberately NOT modeled, same precedent as every other sim in this app:
-// the point-buy weapon/armour shopping step during character creation
-// (rules p.1 - a one-time Adventure Sheet setup, not a battle mechanic;
-// just set the Weapon field to whatever was actually bought), grenades
-// (an explicitly pre-fight, book-gated, narrative-only action - apply
-// 1d6 damage per target by hand with the STAMINA steppers when the book
-// allows it), the many one-off "lose N STAMINA/ARMOUR" narrative penalties
-// printed outside of a fight (apply by hand), and the entire ~33-section
-// vehicle wargame starting at §381 (SHIELDS/STATUS/map system - a
-// genuinely separate mini-game the user explicitly chose to skip; its
-// map/scoresheet aren't even present in the source text extraction).
-//
-// All state lives in pt.sim208, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Space Assassin, book 208)
+// Hand-to-hand uses opposed rolls; gunfire uses independent roll-under-SKILL checks.
+// Incoming hits test ARMOUR, which decreases by 1 regardless of success; LUCK is narrative-only.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -163,9 +111,7 @@ function _runHandToHandRound() {
   _renderAll();
 }
 
-// ── Gunfire ──────────────────────────────────────────────────────────────────
-// Roll under own SKILL to hit (rules p.1). Attacker always fires first each
-// round; the defender fires back if it survived.
+// Gunfire rolls under own SKILL; the defender fires only if it survives the opening shot.
 
 function _weaponDamage(weapon) {
   if (weapon === 'lash')    return { amount: LASH_DMG, note: '' };
@@ -174,10 +120,7 @@ function _weaponDamage(weapon) {
   return { amount: r, note: ` (1d6 roll ${r})` }; // assault blaster
 }
 
-// A hit against the player tests ARMOUR (2d6 <= current ARMOUR negates the
-// wound; ARMOUR then always drops by 1, win or lose the test - identical
-// wording/shape to Test Your Luck). Hits the player deals out never test
-// anything - only the player wears armour in this book.
+// Incoming hits test 2d6 <= ARMOUR to negate damage; ARMOUR drops by 1 regardless.
 function _resolvePlayerHit(d, dmg) {
   const before = d.armour;
   const roll = _roll2d6();
@@ -213,10 +156,7 @@ function _runGunfireRound() {
     for (let i = 0; i < shots && d.stamina > 0; i++) {
       let enemySkill = d.enemy.skill, weaponLabel = null, dmg;
       if (d.deityMode) {
-        // "Use the gunfire rules for all the deity's weapons" (§308) - even
-        // the disintegrator's instant-destruction still goes through the
-        // normal ARMOUR test below (Infinity floors STAMINA at 0 via
-        // Math.max in _resolvePlayerHit, but only if the test is failed).
+        // Even disintegrator damage uses the ARMOUR test (sec 308).
         const w = DEITY_WEAPONS[Math.floor(Math.random() * DEITY_WEAPONS.length)];
         enemySkill  = w.skill;
         weaponLabel = w.name;

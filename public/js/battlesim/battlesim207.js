@@ -1,73 +1,7 @@
-// ── Battle Simulator (Talisman of Death, book 207) ──────────────────────────
-// Self-contained module. Imports from state.js, play.js, charsheet.js and util.js.
-// Visibility is gated (book 207 only) by the caller in boot.js via
-// setSim207Visible().
-// To remove: delete this file, remove its import line and initSim207()/
-// setSim207Visible() calls from boot.js, and remove the .bsim-* CSS (shared
-// with battlesim8.js/battlesim829.js/battlesim286.js/battlesim198.js/
-// battlesim199.js/battlesim200.js/battlesim186.js/battlesim201.js/
-// battlesim202.js/battlesim203.js/battlesim204.js/battlesim205.js/
-// battlesim206.js, so only remove it if all fourteen are gone).
-//
-// Standard Fighting Fantasy SKILL/STAMINA/LUCK system, same core numbers,
-// Test Your Luck table, and single-dose potion-of-three-choices starting
-// item as books 201/202/203/205 - the reference gives every one of these
-// explicitly (rules p.2). The reference also explicitly says weapon/item
-// SKILL bonuses stay capped at Initial SKILL, unlike book 206's flagged
-// ambiguity - but every sim in this app already leaves that ceiling
-// unenforced in code (a plain, uncapped addition via the Attack modifier
-// field and the persistent item toggles below), relying on the player to
-// self-manage it the same way every other sim's "Score ceilings" rule
-// already does, so this book doesn't change that established precedent.
-//
-// attackModifier/enemyWoundDamage/pairedFight/sideEnemy/winAfterHits/
-// enemyStaminaFloor are reused exactly as books 200-206 built them -
-// enemyStaminaFloor covers the Barman (§11, retires at 4) and the Griffin
-// (§313, ends at 6); winAfterHits covers the Willow Weird's four-landed-hits
-// stop (§36/§319) and Tyutchev's single-hit interrupt (§265); pairedFight/
-// sideEnemy covers this book's several true simultaneous-attacker fights
-// (Tyutchev/Cassandra §210/§368, the Captain/Elvira §362, the together
-// Two Thieves §286) - the core rule text (p.2) describes exactly this
-// shape generically ("choose one target, parry everyone else") for any
-// unspecified multi-opponent fight. One extension reused from book 204: a
-// third simultaneous attacker (sideEnemy2, gated behind pairedFight AND a
-// separate tripleFight checkbox) for this book's one three-way encounter,
-// the Back-stabber/Scarface/Second Cut-throat trio (§167).
-//
-// One genuinely new mechanic, a recurring per-round effect rather than a
-// one-off score change:
-// - skillDrain (per-encounter checkbox): every time the ENEMY lands a hit
-//   on YOU, your own SKILL permanently drops by 1 (floored at 0), in
-//   addition to the normal STAMINA wound - a life-draining attack against
-//   the player, not a wound-blunting effect on the enemy. Covers the two
-//   Minion of Death fights (§81/§96), the Wraith (§219), and both Envoy of
-//   Death fights (§220/§271) - all five explicitly print "each time it
-//   strikes you, you lose 1 SKILL point as well as the normal STAMINA loss."
-//
-// Four persistent SKILL toggles, all +1: Apothecus skill ring (§98, worn,
-// stacks with anything else), Magical Silver Chainmail (§117, worn, also
-// stacks with anything else - a genuinely separate armour slot from the
-// weapon-only toggles below), Holy Sword (§62 or §193, a weapon - mutually
-// exclusive with Dragonsbane by the core "only one weapon" rule, same
-// precedent as every other sim's weapon toggles, not enforced in code),
-// Dragonsbane (§371 or §395, a weapon).
-//
-// Deliberately NOT modeled, same precedent as every other sim in this app:
-// the Escape rule's automatic 2-STAMINA hit (only ever offered narratively,
-// apply it by hand), the many "Pre -N STAMINA/-N SKILL" one-off penalties
-// printed before a specific fight starts (Minion of Death, Ogre, Ice Demon,
-// Unseen Stalker ×3, Wraith, Envoy of Death, Griffin, Willow Weird, Back-
-// stabber trio - apply by hand with the steppers before starting each of
-// those), the Death-knight's STAMINA-triggered rescue branch (§91), the
-// Scarlet Mantis Monk's post-round flee roll (§288/§311 - a narrative fork,
-// not a stat change), the Unicorn-horn Amulet's one-battle-only +2 SKILL
-// (§87, apply by hand with the Attack modifier field for that single fight),
-// the Vapours-weakened/Scroll-weakened Hawkana pre-fight STAMINA/score
-// changes, and every other one-off SKILL/STAMINA/LUCK score change listed
-// in the reference - apply those by hand with the steppers when you reach
-// them, same as every other sim.
-//
-// All state lives in pt.sim207, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Talisman of Death, book 207)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
+// The printed Initial SKILL ceiling is player-managed, not enforced.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -187,9 +121,7 @@ function _resetEncounterKnobs(d) {
   d.sideEnemy2 = { name: '', skill: 0, staminaMax: 0 };
 }
 
-// Uncapped lifetime log - the admin dashboard aggregates battle counts
-// app-wide from this array, so per-user history needs to be a true lifetime
-// total, not a rolling window.
+// Keep lifetime outcomes: admin totals require the full history.
 function _recordOutcome(d, outcome) {
   d.history.push({
     enemy: _enemyName(d), outcome,
@@ -231,8 +163,7 @@ function _runRound() {
     if (d.enemy.stamina > floor) d.pendingLuckQueue.push({ kind: 'player-hit' });
   } else {
     d.player.stamina = Math.max(0, d.player.stamina - woundDmg);
-    // skillDrain: a life-draining attack against the PLAYER, not a
-    // wound-blunting effect on the enemy - see the header comment above.
+    // skillDrain reduces the wounded player's SKILL, not enemy damage.
     if (d.player.skillDrain && d.player.skill > 0) {
       d.player.skill = Math.max(0, d.player.skill - 1);
       _appendLog(d, t('battlesim207.log.enemy_wounds_drain', { enemy: _enemyNameSafe(d), n: woundDmg, skill: d.player.skill, stamina: d.player.stamina, staminaMax: d.player.staminaInitial }));
@@ -885,9 +816,7 @@ export function initSim207() {
     if (!d) return;
     const map = FIELD_MAP[id];
     if (!map) return;
-    // Attack modifier is the one field allowed to go negative (this book's
-    // several one-off pre-fight penalties are always a subtraction) - every
-    // other field stays clamped to 0 or above.
+    // Allow negative attack modifiers; other fields stay non-negative.
     val = id === 'sim207-player-atkmod' ? Number(val) : Math.max(0, val);
     if (id === 'sim207-player-skill') val = Math.min(val, d.player.skillInitial);
     if (id === 'sim207-player-stamina') val = Math.min(val, d.player.staminaInitial);

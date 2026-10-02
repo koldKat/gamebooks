@@ -1,51 +1,6 @@
-// ── Battle Simulator (Вълшебният капан, book 414) ──
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 414 only) by the caller in boot.js via
-// setSim414Visible().
-// To remove: delete this file, remove its import line and initSim414()/
-// setSim414Visible() calls from boot.js, remove 'sim414' from
-// SIM_HISTORY_KEYS in server/db/xp.js, remove 'sim414-overlay' from
-// ALL_PANEL_OVERLAY_IDS in util.js and the #sim414-btn selectors in
-// battlesim.css.
-//
-// Mechanic (from this book's own rules page): each side has Умение (Skill)
-// and Издръжливост (Endurance, starts at 50 for the player). To resolve one
-// exchange, both sides draw a random number from the book's printed random-
-// number table and add it to their Skill; modeled here as a random digit
-// 0-9 (the table is described only as "a table of numbers" with no printed
-// range, but this app's other random-number-table gamebooks use a uniform
-// 0-9 spread and nothing in this book's text suggests otherwise). Higher
-// total lands a hit; a tie means neither side had the advantage and both
-// redraw. A successful hit costs the loser 2 Endurance normally, or only 1
-// if the side that landed the hit is fighting unarmed (per the rule text:
-// "Ако някой се сражава без оръжие, успешните му удари отнемат на другия
-// само една точка Издръжливост"). This sim resolves one exchange per
-// button press rather than a full round of simultaneous action, since the
-// book's own procedure is already exchange-by-exchange (compare-then-hit,
-// not roll-then-separately-riposte like the Fighting Fantasy Attack
-// Strength systems built for other books in this app).
-//
-// Full enemy roster (41 rows, all stat-block-bearing sections found across
-// the book). Two variant fights aren't modeled at all, both flagged in
-// their own section text as genuinely different mechanics rather than
-// standard Skill-vs-Skill exchanges:
-//   - §83/§100 (wolves): a cumulative "collect 17 points total, adding a
-//     drawn number to Skill each time" threshold, not a two-sided compare.
-//   - (No other exclusions - §197's "fight to 7 lost points, hit=1 always"
-//     variant IS modeled, using unarmed=1 on both sides so every hit costs
-//     1, and enduranceInitial set to 7 for both.)
-// Multi-enemy sequential fights (§124/§129/§136, five distinct "Кожена
-// маска" bandits each; §244, eight identical "Проходен грабители" seeded
-// once) are resolved by hand-picking the next enemy from the dropdown
-// after each one falls, same convenience pattern as every other multi-
-// enemy sim in this app - the sim tracks one fight at a time, not a whole
-// encounter's roster automatically.
-//
-// book_enemies column reuse (only 4 numeric columns exist; this book only
-// needs 2): attack = Умение (Skill); hp = Издръжливост (Endurance).
-// defense/pb are unused, always 0.
-//
-// All state lives in pt.sim414, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Вълшебният капан, book 414)
+// Compare random digit + SKILL per exchange; ties miss.
+// The source does not specify the random-table range; 0-9 is assumed.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';

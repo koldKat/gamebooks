@@ -23,10 +23,7 @@
   white-space: nowrap;
   box-shadow: 0 8px 24px rgba(0,0,0,0.5);
   pointer-events: none;
-  /* Above every other overlay in the app, including the covers wall's
-     enlarged hover-preview popup (z-index 9999, public/css/landing.css) and
-     login.css's 10000 - the tooltip is transient hover feedback and should
-     never render underneath something else that's also hovering. */
+  /* Tooltips must sit above hover previews and login overlays. */
   z-index: 10001;
 }
 #app-tooltip.tip-wrap {
@@ -74,15 +71,7 @@
   transition: width 0.25s ease, min-width 0.25s ease, padding 0.25s ease, border-width 0.25s ease;
 }
 
-/* Shown over #sidebar while showMain() awaits GET /api/books/:id/state
-   (boot.js) - unlike #graph-container (where vis.Network just overwrites
-   whatever's there), #sidebar's stats/playthrough-panel elements already
-   exist in the static HTML shell and render() only updates them in place,
-   so nothing clears stale/zeroed content on its own. This sits as an
-   opaque overlay (not transparent like #sidebar's own background) to hide
-   that "0 / 0" flash, and is removed explicitly once render() +
-   _updateSidebarBookInfo() actually populate it (boot.js). Reuses the same
-   .feed-loading-graph/.flg-* animated graph icon as everywhere else.  */
+/* Hide stale sidebar content until the loaded book has rendered. */
 .sidebar-loading {
   position: absolute;
   inset: 0;
@@ -112,11 +101,7 @@ body.sidebar-collapsed #play-btns-bar   { left: 50vw; }
   background-color: transparent;
 }
 
-/* Shown in #graph-container while showMain() awaits GET /api/books/:id/state
-   (boot.js) - vis.Network takes ownership of the container's content the
-   moment initGraph() constructs it right after, so this never needs an
-   explicit clear. Reuses .feed-loading-graph/.flg-* (demo.css), same as
-   liveread.js's loading state - both loaded on index.html already. */
+/* vis.Network replaces the graph loading indicator when initialized. */
 .graph-loading {
   display: flex;
   flex-direction: column;
@@ -225,9 +210,7 @@ body.sidebar-collapsed #play-btns-bar   { left: 50vw; }
   width: 100%;
 }
 .series-row input[type="text"] { flex: 1; min-width: 0; }
-/* A select+order-number pair should split 75:25, not the 50:50 that
-   ".app-select { flex:1 }" + the input[type=text] rule above default to -
-   flex-grow ratios here (not a fixed width) so it holds at any modal width. */
+/* Split selector/order fields 75:25 at every modal width. */
 .series-row .app-select:has(+ .order-num-input) { flex: 3 1 0%; }
 .series-row .order-num-input { flex: 1 1 0%; min-width: 0; }
 
@@ -340,9 +323,7 @@ body.sidebar-collapsed #play-btns-bar   { left: 50vw; }
 }
 .book-item--container {
   cursor: pointer;
-  /* Same as .series-header-row/.stash-header-row: the whole card is a
-     toggle, so a mousedown here starts a selection gesture that the
-     expand-click's synchronous DOM mutation would flash. */
+  /* Avoid text-selection flashes when clicking to expand the card. */
   user-select: none;
 }
 .book-item--container .book-secondary-actions {
@@ -372,23 +353,9 @@ body.sidebar-collapsed #play-btns-bar   { left: 50vw; }
 }
 .book-item--child .book-sections { font-size: 0.72rem; }
 
-/* .book-item.book-item--party, not just .book-item--party - the base
-   .book-item rule (add-book.css, `border: 1px solid #374151` shorthand,
-   which resets all 4 sides) has equal specificity as a single-class
-   selector and loads AFTER this file on index.html, so a same-specificity
-   .book-item--party alone was silently losing to it on source order and
-   never actually rendering the party border at all - not just faintly,
-   completely invisible, identical to a regular card. The compound selector
-   here has strictly higher specificity, so it wins regardless of which
-   stylesheet loads in which order. */
+/* Use a compound selector to beat the later base card border regardless of load order. */
 .book-item.book-item--party {
-  /* Near-opaque, not the original 0.5/0.8 alpha - a translucent border
-     over a busy cover card (books.js's cover-card background stack) reads
-     inconsistently, patchy or washed-out, depending on what color the
-     cover art happens to have right at that edge. background-clip doesn't
-     help here (tested, no visible difference) - the fix is just not
-     letting the border be translucent enough for the cover underneath to
-     show through it at all. */
+  /* Keep borders opaque enough that cover art cannot make them look patchy. */
   border-color: rgba(52,211,153,0.9);
   border-left: 3px solid rgba(52,211,153,0.95);
 }

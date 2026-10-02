@@ -21,10 +21,7 @@ export function renderPathTrail(pt, header) {
     nodes.push(`<span class="trail-node ${cls}">${lbl}</span>`);
   }
 
-  // Each arrow is glued to the pill BEFORE it inside one wrapper (not the
-  // pill after), so when a row wraps, the break falls between two whole
-  // .trail-item units - the arrow stays at the end of the row it belongs
-  // to instead of landing at the start of the next one.
+  // Keep each arrow with the preceding pill when the trail wraps.
   const trailHtml = nodes.map((n, i) => i === nodes.length - 1 ? n : `<span class="trail-item">${n}<span class="trail-arrow">›</span></span>`).join('');
 
   el.classList.toggle('trail-collapsed', playContext._trailCollapsed);

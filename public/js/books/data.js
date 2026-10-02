@@ -91,15 +91,7 @@ export async function _refreshBooksListOnly() {
       }
       const safeSeriesArr  = Array.isArray(safeSeries)  ? safeSeries  : (booksState._cachedAllSeries || []);
       const safeStashesArr = Array.isArray(safeStashes) ? safeStashes : [];
-      // The periodic 5-minute poll (livetab.js) calls this on a large library
-      // even when nothing changed - renderBooksList does a full rebuild of
-      // #books-list, which is a visible flash/scroll-jump on a long list.
-      // Skipping the rebuild entirely when the fetched data is byte-identical
-      // to what's already on screen fixes that for the common case (nothing
-      // changed) without touching the render path itself, so every other
-      // caller (add/edit/delete a book, etc.) still gets its normal
-      // immediate, always-correct rebuild the moment the data actually
-      // differs.
+      // Skip unchanged poll results to preserve list DOM and scroll position.
       const fingerprint = JSON.stringify({ books, series: safeSeriesArr, stashes: safeStashesArr, activeRuns: booksState._activeSeriesRuns });
       if (fingerprint !== booksState._booksListFingerprint) {
         booksState._booksListFingerprint = fingerprint;

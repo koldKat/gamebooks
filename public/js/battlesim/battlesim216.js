@@ -1,69 +1,6 @@
-// ── Battle Simulator (Sword of the Samurai, book 216) ───────────────────────
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 216 only) by the caller in boot.js via
-// setSim216Visible().
-// To remove: delete this file, remove its import line and initSim216()/
-// setSim216Visible() calls from boot.js, remove 'sim216' from
-// SIM_HISTORY_KEYS in server/db/xp.js, and remove the .bsim-* CSS (shared
-// with the other battlesim*.js files, so only remove it if all are gone).
-//
-// Standard Fighting Fantasy SKILL/STAMINA/LUCK system, same core numbers,
-// Test Your Luck table and score ceilings as every other FF sim in this app -
-// SKILL 1d6+6, STAMINA 2d6+12, LUCK 1d6+6. Provisions ARE modeled here
-// (unlike book 204) since this book's rules are explicit: 10 meals, each
-// restores 4 STAMINA, capped at Initial - a plain "Eat a meal" consumable
-// rather than a made-up number.
-//
-// attackModifier/enemyWoundDamage/pairedFight/sideEnemy/sideEnemy2/
-// winAfterHits/enemyStaminaFloor are reused exactly as books 200-204 built
-// them. pairedFight/sideEnemy2 covers the six-Skeleton fight (§358, three
-// simultaneous at a time, fought twice in a row - re-enter the second trio
-// by hand after the first three fall). winAfterHits=3 covers the Silver
-// Samurai duel (§321/§341, same encounter reached two ways, same
-// destination §291 - "if you hit him three times").
-//
-// Two new one-off warrior-skill toggles, from this book's own Special
-// Rules (only one is ever chosen at chargen - a Samurai profession choice,
-// not enforced mutually exclusive here, same as every other sim's precedent
-// of noting rather than enforcing story constraints):
-// - hasIaijutsu: round 1 of any fight only, guaranteed 3-STAMINA hit on the
-//   enemy with no roll needed. Interprets "you will always hit your enemy in
-//   the first round only" together with the fast-draw framing (you strike
-//   before they can react) as also skipping the enemy's own attack that
-//   round - a judgment call, since the rule text doesn't say explicitly
-//   whether the enemy still gets to swing back.
-// - hasNitoKenjutsu: after a round where the player's raw 2d6 attack roll
-//   (before adding SKILL) is 9 or higher AND the exchange was won, one bonus
-//   attack fires immediately - "before your enemy has the chance to fight
-//   back", modeled as: bonus attack still needs its own roll to wound (not
-//   an auto-hit), but never risks a counter-wound even if it fails, and
-//   never chains to a third attack even if the bonus roll is also 9+.
-//
-// Honour points (starts at 3 per the rules text) are tracked as a plain
-// counter alongside SKILL/STAMINA/LUCK - the book's own +/- Honour
-// instructions are scattered across dozens of sections with no single
-// formula, so they're applied by hand with the stepper, same as any other
-// per-section stat change in every sim in this app.
-//
-// Deliberately NOT modeled: the Dai-Oni's (§292) on-hit extra-d6 roll that
-// branches to a side-narrative section - a flavor interrupt, not a damage
-// change, check it by hand when the Dai-Oni wounds you. Also not modeled:
-// Kyujutsu (archery, a separate to-hit-only roll used outside the round
-// system on specific pages) and Karumijutsu (heroic leaping, narrative-only)
-// - neither affects the combat round math this sim runs.
-//
-// book_enemies.attack holds SKILL, .hp holds STAMINA, .defense unused - same
-// convention as every other FF sim. 65 rows read from all 400 sections;
-// several recurring encounters (Kappa trio, Rokuro-Kubi, Charcoal-burner
-// pair, Samurai trio, Sabre-toothed Tiger, Groundhog, Silver Samurai,
-// Tsietsin's Bodyguard) are reached via more than one section but share one
-// row each, confirmed by checking each pair's actual "if you win"
-// destination; other same-named/same-stat encounters (Rokuro-Kubi x4 more,
-// Mukade x2, Dai-Oni x2, Ikiru x2, Shadow Demon x2, Undead Samurai x2, Guard
-// x2, Groundhog again separately) go to different destinations and are kept
-// as separate rows.
-//
-// All state lives in pt.sim216, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Sword of the Samurai, book 216)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -159,9 +96,7 @@ function _resetEncounterKnobs(d) {
   d.sideEnemy2 = { name: '', skill: 0, staminaMax: 0 };
 }
 
-// Uncapped lifetime log - the admin dashboard aggregates battle counts
-// app-wide from this array, so per-user history needs to be a true lifetime
-// total, not a rolling window.
+// Keep lifetime outcomes: admin totals require the full history.
 function _recordOutcome(d, outcome) {
   d.history.push({
     enemy: _enemyName(d), outcome,
@@ -813,9 +748,7 @@ export function initSim216() {
     if (!d) return;
     const map = FIELD_MAP[id];
     if (!map) return;
-    // Attack modifier is the one field allowed to go negative (bare-handed/
-    // disarmed/fatigue penalties are always a subtraction) - every other
-    // field stays clamped to 0 or above.
+    // Allow negative attack modifiers; other fields stay non-negative.
     val = id === 'sim216-player-atkmod' ? Number(val) : Math.max(0, val);
     if (id === 'sim216-player-skill') val = Math.min(val, d.player.skillInitial);
     if (id === 'sim216-player-stamina') val = Math.min(val, d.player.staminaInitial);

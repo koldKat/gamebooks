@@ -19,13 +19,7 @@ export function subtreeToDelete(rootId) {
       });
     }
   }
-  // Remove nodes still reachable from any known entry point without passing through
-  // rootId. The direct-parent check fails for cycles: a back-edge can pull ancestors
-  // into toDelete even though they remain reachable from a graph root. A book can have
-  // more than one real root once the alternate-start button (play.js) has been used to
-  // begin runs at a different section - each run's own path[0] is just as much a "root"
-  // as state.startSection, so a node only reachable from an alternate start (not from
-  // state.startSection) must still be protected from being swept up as a false orphan.
+  // Protect nodes reachable from any real start without passing through rootId, including alternate starts.
   const roots = new Set([isValidSecId(state.startSection) ? parseSecId(state.startSection) : 1]);
   (state.playthroughs || []).forEach(pt => {
     if (isValidSecId(pt?.path?.[0])) roots.add(parseSecId(pt.path[0]));
@@ -59,10 +53,7 @@ export function deleteNodes(ids) {
       data.choices = data.choices.filter(c => parseSecId(c) !== id);
     });
   });
-  // Sections left with no choices are effectively unmapped - unless they are part
-  // of a playthrough path (visited nodes keep their graph entry, priority and note),
-  // or they carry metadata worth not silently discarding (matches the same
-  // safeguard in play.js's _cleanupOrphanedTargets).
+  // Retain visited nodes and useful metadata even when choices become empty.
   const visited = new Set(state.playthroughs.flatMap(pt => pt.path.map(parseSecId)));
   Object.keys(state.graph).forEach(sec => {
     const node = state.graph[sec];

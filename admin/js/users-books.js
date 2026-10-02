@@ -1,14 +1,4 @@
-// Users + Books tabs, and their drill-down detail views (user detail -> their
-// books -> book detail -> owner -> back to user detail, etc.) plus the Gift
-// modal used from both. Kept as ONE module rather than split into users.js/
-// books.js - the two detail views call back into each other constantly
-// (viewing a user's books opens a book detail, which links back to the owner,
-// which reopens user detail...), genuinely one cohesive drill-down feature,
-// same precedent as party.js/play.js or charsheet.js's many-importer pattern
-// elsewhere in the app.
-// To remove: delete this file and its <script type="module"> import in
-// admin/index.html; remove the Users/Books tabs and user/book detail view
-// HTML/CSS, and the #gift-overlay modal HTML/CSS.
+// User/book drill-down views and the shared gift dialog.
 
 import {
   api, el, badge, mkBtn, mkEditBtn, appendCell, emptyRow, mkLevelCell, mkGeoCell, addMetaItem, addStatCard,
@@ -280,10 +270,7 @@ document.getElementById('refresh-btn').addEventListener('click', () => {
 
 export function renderUsersTable(data) {
   const tbody = document.getElementById('users-body');
-  // Derived from the live header rather than hardcoded - a hardcoded number
-  // here has gone stale before (most recently when the Active column was
-  // added), leaving these full-width rows spanning fewer columns than the
-  // table actually has and reading as off-center.
+  // Use the live column count so empty rows span the whole table.
   const colCount = document.querySelectorAll('#users-table thead th').length;
   const searching = !!document.getElementById('users-search')?.value.trim();
   tbody.innerHTML = '';
@@ -605,9 +592,7 @@ export async function loadUserDetail(userId, edit = false) {
     populateUserEditForm(user);
 
     const metaBar = document.getElementById('user-meta-bar');
-    // From the permanent xp_events ledger (server's `totals`), not summed
-    // from the per-book breakdown below - see server/db/admin.js's own
-    // comment on adminGetUserBooks for why those can disagree.
+    // Use permanent ledger totals, not the live per-book breakdown.
     const totalRuns    = totals.runs;
     const totalWins    = totals.wins;
     const totalDeaths  = totals.deaths;
@@ -734,10 +719,7 @@ export async function loadUserDetail(userId, edit = false) {
         boostVal.appendChild(hbRow);
       }
       if (user.bonusGcChancePurchased) {
-        // Same escalating-cost shape as heartbeat XP above (1st purchase = 1
-        // GC, 2nd = 2 GC, ...) - addBoostRow's flat count*costEach math would
-        // understate "Refund all"'s restored amount for this item, same as
-        // it would for xp_boost above (a pre-existing, separate issue).
+        // Refund escalating purchases using their cumulative cost, not count * unit cost.
         const gcCount = user.bonusGcChancePurchased;
         const gcLastCost = gcCount;
         const gcTotalCost = (gcCount * (gcCount + 1)) / 2;
@@ -1299,9 +1281,7 @@ wireTableSearch('users', 'users-search', 'users-search-clear', renderUsersTable,
 setSearchFields('books', ['name', 'owner']);
 wireTableSearch('books', 'books-search', 'books-search-clear', renderBooksTable);
 
-// "Missing PDF only" toolbar filter - composed with search/sort/pagination
-// via core.js's per-table row filter, so the existing pipelines pick it up
-// without any changes to their call sites.
+// Compose the missing-PDF filter with the table pipeline.
 const _booksPdfFilterSel = document.getElementById('books-pdf-filter');
 setRowFilter('books', b => _booksPdfFilterSel?.value !== 'missing' || !b.pdf_path);
 _booksPdfFilterSel?.addEventListener('change', () => {

@@ -1,10 +1,4 @@
-// Scroll-spy for the generated docs pages (public/guide.html, admin/admin-guide.html,
-// admin/technical.html) - highlights whichever section's heading the user has scrolled
-// to in the sticky sidebar TOC. Shared as one external file (not inlined per-page)
-// because public/guide.html is served with a CSP of script-src 'self', which silently
-// blocks inline <script> blocks - an external same-origin file is the only way this
-// runs there at all. See scripts/generate-docs.js, which emits <script src="/docs-toc.js">
-// on every generated page.
+// Shared documentation scroll-spy. Load externally because the public guide CSP blocks inline scripts.
 (() => {
   const menu = document.querySelector('.toc');
   if (!menu) return;
@@ -18,10 +12,7 @@
     active = entry;
     active.link.classList.add('active');
     active.link.setAttribute('aria-current', 'location');
-    // Keep the active entry visible within the TOC's own scrollbox - a long
-    // doc's sidebar (technical.html has 88 entries) is itself scrollable, so
-    // without this the highlight can be applied correctly and still be
-    // invisible, scrolled out of view in the sidebar.
+    // Scroll the active entry into view within the TOC's own scrollbox.
     const top = active.link.offsetTop;
     const bottom = top + active.link.offsetHeight;
     if (top < menu.scrollTop + 10) menu.scrollTop = Math.max(0, top - 10);
@@ -45,12 +36,7 @@
   update();
 })();
 
-// When a docs page is embedded in the in-app viewer (an <iframe>, e.g. the
-// play-area User Guide modal), the "Back to app" link is meaningless - there
-// is no app to go back to inside the frame. Drop it; keep it only when the
-// page is opened standalone (its own tab). Lives here rather than inline in
-// the generated pages because they are served with script-src 'self', which
-// blocks inline <script> blocks.
+// Hide Back to app inside embedded viewers; retain it for standalone pages.
 (() => {
   if (window.self === window.top) return;
   document.documentElement.classList.add('in-app');

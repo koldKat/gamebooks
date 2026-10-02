@@ -10,11 +10,7 @@ import { startPlaythrough } from './runs.js';
 
 const choiceBackdrops = new WeakMap();
 
-// Shared by play.js's own choice-parsing and boot.js's start-node/alt-start
-// dialogs - all three hit the same "typed an alphanumeric ID while the book
-// is still in numeric mode" fork and used to carry their own copy of this
-// confirm dialog (message, confirmLabel, and the alphanumericSections/
-// saveState flip itself).
+// Shared confirmation for alphanumeric choices and run starts.
 export function confirmAlphanumericSwitch(id, onConfirm) {
   showConfirm(
     t('play.alphanumeric_switch_confirm', { id }),
@@ -121,11 +117,7 @@ export function showFastTravelDialog(onConfirm) {
   setTimeout(() => input.focus(), 50);
 }
 
-// ── Start-run section picker ────────────────────────────────────────────────
-// Known starts = the book's default start plus every distinct path[0] seen
-// across existing playthroughs, filtered down to sections that still exist in
-// state.graph - so a start used once by mistake and then deleted from the
-// graph drops out of the list on its own, no separate cleanup needed.
+// Offer the default start and previous run starts that still exist in the graph.
 export function knownStartSections() {
   const defaultSec = isValidSecId(state.startSection) ? state.startSection : 1;
   const known = new Set();

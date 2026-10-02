@@ -1,46 +1,7 @@
-// ── Battle Simulator (Арена 3, book 716) ────────────────────────────────────
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 716 only) by the caller in boot.js via
-// setSim716Visible().
-// To remove: delete this file, remove its import line and initSim716()/
-// setSim716Visible() calls from boot.js, remove 'sim716' from
-// SIM_HISTORY_KEYS in server/db/xp.js, and remove the .bsim-* CSS (shared
-// with the other battlesim*.js files, so only remove it if all are gone).
-//
-// Book 716 has DOZENS of unique per-episode combat formulas (each fight's
-// text spells out its own stat combination and threshold), which would be
-// impractical to model one-by-one. Instead this implements the book's OWN
-// built-in generic "classic bojna sistema" (episode 50 - explicitly offered
-// as the simplified alternative for players who don't want to work through
-// every special-case formula):
-//   ATAKA = SILA + (BARZINA or LOVKOST, player's choice)
-//   ZASHTITA = REFLEKS + (whichever of BARZINA/LOVKOST wasn't used above)
-//   Each side lands as many hits per round as its BOJNO MAJSTORSTVO; a hit's
-//   damage is (attacker's ATAKA + 1d6) - defender's ZASHTITA, floored at 0,
-//   subtracted from the defender's IZDRZHLIVOST.
-//   If the enemy's starting IZDRZHLIVOST is exactly 10, the fight is
-//   "do parva krav" (non-lethal) - the book has the loser recover half their
-//   lost points afterward instead of dying.
-// The book's own strict phrasing alternates attacker/defender role each
-// round (one side always defends while the other attacks); this sim
-// resolves both sides' hits within the same round instead, for a faster
-// convenience tool - a deliberate simplification, consistent with "sim is
-// convenience, not enforcement" (it hands you the arithmetic, you already
-// decided the tactics via the book's branching text).
-//
-// Roster seeded into book_enemies (attack=ATAKA, defense=ZASHTITA,
-// pb=BOJNO MAJSTORSTVO, hp=IZDRZHLIVOST), all read straight from the book's
-// own stat blocks: Докер (16/6/1/10, non-lethal), Бързака (formula-derived
-// from the player's own БЪРЗИНА/РЕФЛЕКС per §29 - seeded with the book's
-// face-value 18/12 as a starting point, edit after picking your stats),
-// Горилчо (20/6/1/10, non-lethal), Ю Чан and Ю Чен (8/12/4/20 each), Густав
-// Хамър (20/8/2/36). The climactic final battle against Юмо Унищожителя
-// (§256-288) is NOT covered - the book gives it no symmetric fixed-stat
-// block at all, it's pure asymmetric branching against fixed thresholds
-// (same structural pattern as book 714/715's non-sim-applicable verdict),
-// so there is nothing here for a stat-vs-stat simulator to resolve.
-//
-// All state lives in pt.sim716, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Арена 3, book 716)
+// Episode 50's simplified attack/defense system, not every episode's bespoke formula.
+// Resolve both sides within one round as a convenience; endurance-10 fights are non-lethal.
+// The asymmetric final boss is outside this model.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -124,11 +85,7 @@ function _runRound() {
   _renderAll();
 }
 
-// Per the book's own rule (episode 50): in a non-lethal "do parva krav"
-// fight (enemy started with exactly 10 IZDRZHLIVOST), the PLAYER always
-// recovers half of THEIR OWN lost points after the battle, win or lose -
-// this isn't a consolation prize for the loser, both outcomes heal the
-// player the same way since neither side actually dies.
+// First-blood fights (initial enemy endurance 10) restore half the player's lost points after either outcome.
 function _checkBattleEnd(d) {
   if (d.enemy.izdr <= 0) {
     if (d.enemy.nonlethal) {

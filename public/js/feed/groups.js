@@ -44,14 +44,7 @@ export function createDayRenderer() {
 
   function renderDayItems(items) {
     const thisDayIndex = dayIndex++;
-    // all_visited/all_discovered/first_win/first_loss/first_battle_death are
-    // major one-time achievements - never sweep them into a same-user
-    // "N actions today" collapse group no matter how many other actions
-    // (runs started/completed, etc.) that user racked up that day.
-    // visit_all_series/discover_all_series/visit_all_anthology/
-    // discover_all_anthology are the group-wide equivalent (every book in
-    // a whole series/anthology, not just one) - an even bigger milestone
-    // than the single-book ones above, so they get the same protection.
+    // Keep one-time book, series, and anthology achievements outside ordinary action groups.
     const skipTypes = new Set(['level_up', 'user_joined', 'book_rated', 'series_rated', 'book_created', 'series_created', 'all_visited', 'all_discovered', 'first_win', 'first_loss', 'first_battle_death', 'visit_all_series', 'discover_all_series', 'visit_all_anthology', 'discover_all_anthology']);
     const userCounts = new Map();
     for (const e of items) {
@@ -64,22 +57,12 @@ export function createDayRenderer() {
     const collapseJoins = joinItems.length >= JOIN_COLLAPSE_THRESHOLD;
     let joinGroupRendered = false;
 
-    // A series/anthology created together with its member books in the
-    // same import produces 1 container event (series_created, or
-    // book_created with isContainer) plus N book_created children from the
-    // same user this same day - fold those N lines into the container's
-    // own entry via an inline expand toggle, rather than spamming the feed
-    // with N+1 separate rows. Only collapses when a real batch exists (at
-    // least one matching child); a container created on its own (no
-    // members yet) renders exactly as before.
+    // Group same-day member creation events beneath a newly created container when a batch exists.
     const batchChildrenByContainer = new Map();
     const batchConsumedChildren = new Set();
     for (const e of items) {
       let children = null;
-      // Excludes anything already claimed by an earlier container this
-      // pass - a book could in principle match both a fresh series and a
-      // fresh anthology (seriesId and parentBookId both set) in the same
-      // batch; first container wins rather than rendering it twice.
+      // Claim each child once if it matches both a fresh series and anthology.
       if (e.type === 'series_created') {
         children = items.filter(x => x.type === 'book_created' && !x.isContainer && !batchConsumedChildren.has(x) && x.username === e.username && x.seriesId === e.seriesId);
       } else if (e.type === 'book_created' && e.isContainer) {
@@ -91,17 +74,7 @@ export function createDayRenderer() {
       }
     }
 
-    // Books added to an already-existing series/anthology (no fresh
-    // container event today, e.g. volume 5 dropped in a week after the
-    // series itself was created) never match a container above and would
-    // otherwise render as N separate same-day rows. Group same-user
-    // same-series/anthology book_created siblings under the first one as
-    // the same inline-toggle batch, using that first entry's own rendered
-    // body (title + series tag) as the visible head instead of a
-    // dedicated container event. Uses "+N more" wording rather than the
-    // container batch's "N books" - here the head is itself one of the
-    // books, not a separate container standing apart from an N-book
-    // count, so the toggle should only cover the rest.
+    // Group additions to existing containers under the first book; count only the remaining books as more.
     const looseKeyOf = e => e.seriesId != null ? `s:${e.seriesId}` : (e.parentBookId != null ? `a:${e.parentBookId}` : null);
     const looseGroups = new Map();
     for (const e of items) {
@@ -126,12 +99,7 @@ export function createDayRenderer() {
     for (const e of items) {
       if (batchConsumedChildren.has(e)) continue;
       if (skipTypes.has(e.type) && e.type !== 'user_joined') {
-        // Always its own standalone entry - never merged into a same-user
-        // collapse group, even if that user has enough other actions today
-        // to trigger one (grouping keys purely on username, so without this
-        // explicit bypass a rating would get swept into an unrelated group
-        // of e.g. run_completed entries, or silently dropped if that group
-        // was already rendered).
+        // Ratings always remain standalone, outside same-user action groups.
         const { html: body, isParty, extraClass } = renderEntry(e);
         if (!body) continue;
         const children = batchChildrenByContainer.get(e);

@@ -3,11 +3,7 @@ let _coverMetaCache = new Map();
 let _bookCoverObserver = null;
 let _bookCoverLoadedUrls = new Set();
 
-// ── Cover meta / lazy loading ─────────────────────────────────────────────────
-// Dimension probes are capped like the cover loader below: an expand/collapse
-// in a big library can make the flow pass probe hundreds of anthology covers
-// at once, and uncapped simultaneous Image decodes are a big part of the
-// post-toggle scroll jank. Cache-first, so repeats are free.
+// Cache and cap dimension probes to avoid bursts of image decodes on group expansion.
 const _META_MAX_CONCURRENT = 6;
 let   _metaActiveCount     = 0;
 const _metaPendingQueue    = [];
@@ -40,20 +36,13 @@ export async function _applyAnthologyCardCoverFlows(root = document.getElementBy
   });
 
   const containerRows = [...root.querySelectorAll('.book-item--container[data-container-id][data-anthology-cover-url]')];
-  // Fetch every cover's dimensions in parallel, then do ALL offsetTop/Height
-  // reads before ANY style writes. The previous loop awaited each cover and
-  // wrote styles per anthology, so every anthology after the first forced
-  // its own synchronous relayout of the whole list - with dozens of expanded
-  // anthologies that froze scrolling for a beat after each expand/collapse.
+  // Resolve dimensions first, then batch all layout reads before style writes.
   const metas = await Promise.all(containerRows.map(row => _loadCoverMeta(row.dataset.anthologyCoverUrl)));
   const writes = [];
   for (let i = 0; i < containerRows.length; i++) {
     const row  = containerRows[i];
     const meta = metas[i];
-    // The children group is always this card's own next sibling (same
-    // adjacency invariant the expand-toggle relies on) - a container can
-    // appear in more than one stash, so a data-parent query could grab the
-    // other copy's group.
+    // Use this card's adjacent children group; the same container may appear in multiple stashes.
     const group = row.nextElementSibling?.classList.contains('book-children-group') ? row.nextElementSibling : null;
     if (!group || group.style.display === 'none') continue;
     const childCards = Array.from(group.querySelectorAll('.book-item--child[data-anthology-cover-url]'));
@@ -85,16 +74,7 @@ export function _scheduleAnthologyCardCoverFlows(root = document.getElementById(
   _anthologyFlowRaf = requestAnimationFrame(() => { _anthologyFlowRaf = null; _applyAnthologyCardCoverFlows(root); });
 }
 
-// Real accounts can have 1000+ covers in the DOM at once (anthologies/series
-// mostly expanded, a big library). Left uncapped, that many simultaneous
-// `new Image()` requests can overwhelm the browser's per-host connection
-// queue (or this app's own single-process static server) badly enough that
-// most of them silently error out - onerror never throws, it just strips
-// data-pending-cover and leaves the card blank, which looks like "covers
-// don't load at all" with nothing in the console to explain why.
-// _bookCoverInFlightUrls also dedups the case where the same not-yet-loaded
-// url gets observed again while already mid-fetch - it's registered as a
-// waiter on the existing request instead of starting a redundant second one.
+// Cap concurrent image requests and share in-flight URLs to avoid queue overload.
 const _BOOK_COVER_MAX_CONCURRENT = 6;
 let _bookCoverActiveCount        = 0;
 const _bookCoverPendingQueue     = [];
@@ -146,22 +126,8 @@ export function _drainBookCoverQueue() {
   }
 }
 
-// #landing-right (not #landing-wrapper, and not the default browser-viewport
-// root) is the actual scrollable ancestor of #books-list. #landing-wrapper
-// does have its own overflow-y:auto (landing.css), but #landing-right sits
-// inside it as position:fixed with its own separate overflow-y:auto
-// (demo.css, loaded unconditionally - the filename is misleading, this rule
-// isn't demo-mode-gated) - a position:fixed element is taken out of normal
-// flow, so #landing-wrapper's scroll position never actually changes when
-// the books list scrolls; only #landing-right's own scrollTop does. Rooting
-// on #landing-wrapper meant the observer was watching an ancestor that, from
-// a scrolling perspective, never moves - every element's intersection state
-// got stuck at whatever it was on the very first check, never updating on
-// scroll or on an expand/collapse reveal. rootMargin is a small head start
-// (just enough to avoid a hard blank-then-pop-in flash right at the edge of
-// the panel), not a real preload buffer - a larger margin here made a big
-// library feel like it was eagerly loading everything at once rather than
-// genuinely just what's visible.
+// Root the observer on #landing-right, the fixed panel that actually scrolls.
+// Use a small margin for preloading, not eager loading of the whole library.
 export function _getBookCoverObserver() {
   if (_bookCoverObserver) return _bookCoverObserver;
   const root = document.getElementById('landing-right');
@@ -175,22 +141,8 @@ export function _getBookCoverObserver() {
   return _bookCoverObserver;
 }
 
-// [data-pending-cover] presence is itself the "still needs loading" filter
-// - _loadBookCover() removes the attribute the moment a cover resolves
-// (success or failure), so a previously-loaded element simply stops
-// matching the querySelectorAll below on every later call. That means no
-// separate "already observed" bookkeeping is needed: every element found
-// here still genuinely needs a cover, and gets an explicit
-// unobserve()+observe() (not a bare observe()) to FORCE a fresh
-// IntersectionObserver check rather than trusting the ancestor's
-// display:none -> visible transition (an anthology/series/stash
-// expand-toggle, or the search filter revealing a match) to reliably
-// re-trigger the observer's own automatic recheck on its own timing.
-// unobserve() is a safe no-op for anything not currently being observed
-// (the common case), so this costs nothing extra for the normal path.
-//
-// `reset: true` (full renderBooksList() rebuild) disconnects first, since
-// every existing target belongs to DOM that's about to be discarded.
+// Reobserve pending covers to force a visibility check after expansion/search.
+// Disconnect old targets on a full list rebuild.
 export function _queueBookCovers(container, { reset = true } = {}) {
   if (!container) return;
   const observer = _getBookCoverObserver();

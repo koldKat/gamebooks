@@ -1,17 +1,8 @@
-/* Mobile-first frontend - written fresh for public/mobile/, no shared desktop
-   CSS. Deliberately not @media-query-gated - this file is only ever loaded
-   by public/mobile/index.html, which is never served to desktop. */
+/* Styles for the dedicated mobile frontend, not desktop media-query overrides. */
 
 * { box-sizing: border-box; }
 
-/* overscroll-behavior-x: a horizontal touch-drag that starts anywhere the
-   page's own JS also handles touch (graph-view.js's canvas does its own
-   panning) can trigger Chromium/Brave-on-Android's built-in edge-swipe
-   back/forward gesture at the same time - without this, the browser's own
-   gesture recognizer can get triggered and then never resolve if the
-   page's touch handling interrupts it mid-swipe, leaving that directional
-   arrow indicator stuck on screen until the browser tab itself is cleared.
-   This tells the browser the page never wants that gesture at all. */
+/* Disable horizontal overscroll gestures that conflict with canvas touch panning. */
 html, body {
   margin: 0;
   height: 100%;
@@ -21,9 +12,7 @@ html, body {
   overscroll-behavior-x: none;
 }
 
-/* Every scrollable pane on this page (reader, book list, manual mode) -
-   themed to match desktop's #landing-right scrollbar instead of the
-   browser's default light one. */
+/* Theme reader panes' scrollbars consistently. */
 * {
   scrollbar-width: thin;
   scrollbar-color: #374151 transparent;
@@ -34,19 +23,8 @@ html, body {
 *::-webkit-scrollbar-thumb:hover { background: #4b5563; }
 
 #screen {
-  /* Must be a definite height, not just min-height - the reader's
-     top/graph split below relies on percentage flex-basis, which only
-     resolves against a definite ancestor height. With min-height alone,
-     a short section's top pane would collapse to its own content height
-     instead of taking its share of the split, pushing the graph down into
-     a sliver at the very bottom instead of an even 50/50. */
-  /* 100vh is the base fallback (pre-JS, before app.js's first paint).
-     --vh is app.js's own window.innerHeight-measured value, set on load
-     and kept current on resize/orientationchange - deliberately used
-     INSTEAD of 100dvh, not alongside it: 100dvh measured taller than the
-     real visible area inside at least one embedded/in-app browser (Viber's
-     own), so a later `height: 100dvh` override here would have silently
-     won back the wrong value on exactly the browsers this exists to fix. */
+  /* A definite height is required for the reader's percentage flex split. */
+  /* Use the measured --vh, not a later dvh override; embedded browsers can overreport dvh. */
   height: 100vh;
   height: calc(var(--vh, 1vh) * 100);
   display: flex;
@@ -145,23 +123,14 @@ button, input {
 .m-error { color: #f87171; font-size: 0.85rem; min-height: 1.1em; }
 .m-empty { padding: 1.5rem; text-align: center; color: #9ca3af; }
 
-/* ── Reader: double-screen layout ────────────────────────────────────────
-   Top pane is in-app reading, bottom pane is always the graph - a fixed
-   split, no physics on the graph so it never needs settling time before
-   it's usable. */
+/* Fixed reading/graph split with physics disabled. */
 
 .m-panes {
   flex: 1;
   display: flex;
   flex-direction: column;
   min-height: 0;
-  /* The button rows below the reading pane sit flush against the bottom of
-     #screen's own height (see #screen's own comment on --vh) - on a real
-     phone that box can still overlap the home-indicator gesture area,
-     pushing win/loss/battle-death and notebook/battlesim off the visible
-     screen even though they technically "fit" within the CSS height. This
-     reserves the same safe area on every pane mode (both/text/graph), not
-     just the one row that happens to be last in a given mode. */
+  /* Reserve the home-indicator safe area in every pane mode. */
   padding-bottom: env(safe-area-inset-bottom);
 }
 .m-top {
@@ -191,16 +160,10 @@ button, input {
   letter-spacing: 0.04em;
   margin: auto 0;
 }
-/* Wraps .m-end + .m-manual-hint together for the "not available" notice -
-   .m-end's own margin:auto only centers itself when it's the sole flex
-   item of .m-top; paired with a second paragraph it needs a shared wrapper
-   to center as a group instead. */
+/* Center the unavailable notice and hint together, not as separate flex items. */
 .m-notice { margin: auto 0; }
 
-/* Run-end achievement screen (win/death) - separate from .m-end (still used
-   for the plain-text "not available" notice above) since this one needs a
-   flex column for the icon+heading, not a single centered line of text.
-   Same one-shot entrance animation as desktop's .liveread-end. */
+/* Run-end achievement layout and entrance animation, separate from unavailable-text notices. */
 .m-end-achievement {
   display: flex;
   flex-direction: column;
@@ -214,9 +177,7 @@ button, input {
   from { opacity: 0; transform: translateY(6px) scale(0.96); }
   to   { opacity: 1; transform: none; }
 }
-/* .end-icon (not m-prefixed) is the shared class name emitted by
-   liveread-shared.js's SVG constants - same class name desktop's own CSS
-   targets under its own .liveread-end wrapper. */
+/* Scope the shared reading icon class to mobile achievements. */
 .m-end-achievement .end-icon { width: 56px; height: 56px; }
 .m-end-achievement--death .end-icon { filter: drop-shadow(0 0 6px rgba(231, 76, 60, 0.35)); }
 .m-end-achievement--win   .end-icon { filter: drop-shadow(0 0 6px rgba(245, 166, 35, 0.4)); }
@@ -236,9 +197,7 @@ button, input {
   padding-bottom: 0.9rem;
 }
 
-/* Sits between the reading pane and the graph pane - Notebook is always
-   available (every book has one); Battle Sim only shows for books that
-   have one (see battlesim-dispatch.js's SIMS table). */
+/* Notebook is always available; simulator availability is book-specific. */
 .m-tool-row {
   display: flex;
   gap: 0.35rem;
@@ -261,11 +220,7 @@ button, input {
 .m-tool-btn:active { background: rgba(75, 85, 99, 0.7); }
 .m-tool-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .m-tool-row + .m-tool-row { border-top: none; padding-top: 0; }
-/* Manual run-outcome buttons - same colour convention as desktop's
-   .win-btn/.loss-btn/.battle-death-btn (play.css), just sized for the
-   shared .m-tool-btn touch target instead of desktop's compact sidebar.
-   All three share one row - #m-endrun-row's own buttons run a bit smaller
-   still (see below) since 3 labels have to fit where 2 used to. */
+/* Touch-sized outcome buttons using desktop colors. */
 #m-endrun-row .m-tool-btn { font-size: 0.7rem; padding: 0.35rem 0.15rem; }
 .m-win-btn  { background: #14532d; color: #86efac; border-color: #166534; }
 .m-win-btn:active  { background: #166534; color: #bbf7d0; }
@@ -278,14 +233,7 @@ button, input {
 .ft-modal-body { padding: 1rem 1.1rem 1.1rem; display: flex; flex-direction: column; gap: 1.1rem; }
 .ft-input-row { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
 .ft-input-row-label { color: #d1d5db; font-size: 0.92rem; }
-/* The wrap itself carries the visible background/border as one unified
-   pill - the +/-/input inside are transparent, so there's exactly one
-   border around the whole control instead of three fighting each other
-   (which is what .inv-qty-*'s own styling does: its input's background
-   matches .inv-modal's background exactly and its side borders are
-   stripped on purpose for the desktop battlesim number fields it was
-   built for, so reused as-is here it read as an empty gap - not just a
-   spacing problem, the field was genuinely invisible). */
+/* Give the stepper one shared background and border; keep its children transparent. */
 .ft-qty-wrap {
   flex: 0 0 auto;
   display: flex;
@@ -327,12 +275,7 @@ button, input {
   color: #d1d5db;
 }
 
-/* Long-press node context menu - a small floating list (not a full modal)
-   positioned at the touch point. Matches desktop's #node-ctx-menu look
-   (play.css) - rounded-highlight items with no dividing lines, not the
-   full-bleed bordered-row "plank" look this used to have - just with
-   taller tap targets for a finger; submenus expand inline downward instead
-   of flying out sideways (no room for that on a narrow screen). */
+/* Touch context menu with inline submenus and larger tap targets. */
 .m-ctx-menu {
   position: fixed;
   display: none;
@@ -418,16 +361,9 @@ button, input {
   padding: 2rem;
   text-align: center;
 }
-/* Used when .m-loading is a direct child of #screen (app.js's own
-   pre-reader loading screen, before the reader's nested flex layout even
-   exists) - #screen is itself a column flex container, where a plain
-   height:100% child doesn't fill it the way it does inside #m-top's own
-   flex chain; flex:1 is what actually stretches it to fill the viewport. */
+/* Use flex growth when the loader is a direct child of the screen. */
 .m-loading-full { flex: 1; height: auto; }
-/* Same center-node-plus-4-children graph icon as favicon.svg/desktop's
-   .feed-loading-graph, reimplemented here with its own mlg-* class prefix
-   rather than importing desktop's CSS - mobile keeps its own small bundle,
-   never loads public/css/demo.css. */
+/* Mobile-local version of the shared graph loader; avoid importing desktop CSS. */
 .mlg-graph { width: 30px; height: 30px; }
 .mlg-graph .mlg-center {
   transform-origin: 16px 16px;
@@ -442,10 +378,7 @@ button, input {
   0%, 100% { transform: scale(1);    opacity: 1; }
   50%      { transform: scale(1.15); opacity: 0.75; }
 }
-/* Each node gets its own keyframes (not a shared animation + staggered
-   delay) so all four can genuinely be visible together for one shared dwell
-   window before any of them starts disappearing - see demo.css's .flg-*
-   rules, which this mirrors 1:1 including the clockwise ordering. */
+/* Separate keyframes give all four nodes a shared visible dwell window. */
 .mlg-n1 { animation: mlg-n1-cycle 2.2s ease-in-out infinite; }
 .mlg-n2 { animation: mlg-n2-cycle 2.2s ease-in-out infinite; }
 .mlg-n4 { animation: mlg-n3-cycle 2.2s ease-in-out infinite; }
@@ -485,9 +418,7 @@ button, input {
 
 .m-graph-error { padding: 1rem; text-align: center; color: #9ca3af; }
 
-/* Shown for a gap in an otherwise-covered book (a section without imported
-   text) or a book with no reading at all - sits directly under .m-end,
-   which already centers itself in .m-top via margin:auto. */
+/* Show the unavailable-reading hint below the centered notice. */
 .m-manual-hint { color: #9ca3af; margin: 0.5rem 0 0; font-size: 0.9rem; text-align: center; }
 
 /* ── Generic full-screen overlay (notebook, any future mobile modal) ───── */

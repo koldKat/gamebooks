@@ -1,10 +1,4 @@
-// Inventory tab: the shared item-icon catalog. Type/active/search filters,
-// row-complete pagination (columns-per-row × 10, responsive to window width),
-// dialog editing, and the "Add New Item" form.
-// To remove: delete this file and its <script type="module"> import in
-// admin/index.html; remove #inv-type-filter/#inv-active-filter/#inv-search/
-// #new-inv-save listener wiring (this file owns them) and the Inventory tab
-// HTML/CSS.
+// Inventory catalog, responsive row-based pagination, and item editing.
 
 import { api, el, mkBtn, mkEditBtn, _esc, showConfirm, matchesQuery, renderPaged, _pageState } from './core.js';
 import { editFields } from './editor.js';
@@ -31,11 +25,7 @@ function _renderInventoryEdit(it) {
 
 const INV_ROWS_PER_PAGE = 10;
 
-// #inv-grid uses `repeat(auto-fill, minmax(170px, 1fr))`, so its actual column
-// count depends on the viewport/window width - reading it back from the
-// computed style (rather than recalculating from track/gap sizes ourselves)
-// guarantees this always matches whatever the grid really rendered, even if
-// its CSS changes later. Only meaningful while the tab is visible/laid out.
+// Read the rendered grid's column count; CSS determines page size.
 function _inventoryColumnsPerRow() {
   const grid = document.getElementById('inv-grid');
   const cols = getComputedStyle(grid).gridTemplateColumns.split(' ').filter(Boolean).length;

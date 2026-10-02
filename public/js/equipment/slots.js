@@ -21,8 +21,7 @@ export function _wireSlotEvents(container, ro) {
       _openPicker(el.dataset.key);
     });
 
-    // Drag-and-drop move/swap between slots - works across body slots and the
-    // item row alike, since equipmentRuntime._dragSourceKey/_swapEq aren't container-scoped.
+    // Allow moves/swaps across body slots and the item row.
     if (el.classList.contains('eq-slot--filled')) {
       el.draggable = true;
       el.addEventListener('dragstart', e => {

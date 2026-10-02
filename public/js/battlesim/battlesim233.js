@@ -1,70 +1,7 @@
-// ── Battle Simulator (Portal of Evil, book 233) ─────────────────────────────
-// Self-contained module. Imports from state.js, play.js, charsheet.js and util.js.
-// Visibility is gated (book 233 only) by the caller in boot.js via
-// setSim233Visible().
-// To remove: delete this file, remove its import line and initSim233()/
-// setSim233Visible() calls from boot.js, and remove the .bsim-* CSS (shared
-// with every other battlesimN.js, so only remove it if all of them are gone).
-//
-// Standard Fighting Fantasy SKILL/STAMINA/LUCK system, same core numbers and
-// Test Your Luck table as every other sim in this app. This book has NO
-// three-potion (Skill/Strength/Fortune) starting item, unlike books 201-232 -
-// its only restorative is Provisions (Meals, +4 STAMINA each, not usable
-// mid-battle) and a plot-only Potion of True Seeing that has no combat
-// effect. Unlike prior sims, the potion selector/button and its state
-// fields (potionKey/potionUsesLeft) have been removed entirely rather than
-// left in place unused, since this book has nothing for them to represent.
-//
-// This book's imported source is a hand-verified, source-checked HTML text
-// edition (not this app's usual raw-PDF-extraction pipeline) - the supplied
-// scan physically omits the complete text of §§124-125 and §§277-279, plus
-// the end of §276 and the beginning of §280; those gaps are preserved
-// exactly as marked in the source, no missing prose or route has been
-// invented. Separately, a 26-section island (§5/§38/§45/§56/§84/§95/§103/
-// §106/§127/§137/§154/§161/§186/§210/§212/§240/§267/§284/§298/§316/§319/
-// §321/§352/§361/§371/§385) has zero incoming links from anywhere in the
-// reachable 374-section graph - confirmed genuine (only the auto-generated
-// nav index references §84/§212/§321, the cluster's three internal entry
-// points) rather than a parsing artifact, and left as-is per standing
-// precedent that Fighting Fantasy books commonly carry this kind of
-// leftover/cut-content orphan cluster.
-//
-// attackModifier is a free-form +/- field covering every one-off SKILL
-// change this book's own text describes by hand: fighting one-handed/
-// blindfolded/restrained penalties (e.g. §35 Triceratops with only a
-// shortsword, -1 SKILL; §130 Saltsucker fight while bound, -2 SKILL, plus
-// an ongoing -1 SKILL each round the Saltsucker wins; §179 Giant Watersnail,
-// -2 SKILL plus -1 per round while dragged under; §201/§298 darkness/cold
-// penalties, -2/-3 SKILL), spear/light-source bonuses (§251 Triceratops
-// fought with a spear, +2 SKILL), and the recurring asymmetric-wound
-// Triceratops fights (§35/§251/§286, all SKILL 8 STAMINA 18: you only ever
-// inflict 1 STAMINA loss per wound, it inflicts 3) and the Ankylosaurus
-// (§54, flat 6 STAMINA loss whenever it wounds you) - both modeled via the
-// enemyWoundDamage/attack-modifier fields rather than the plain default
-// wound table, matching the book's own hand-written exceptions.
-//
-// Every multi-enemy encounter in this book is already split into separate
-// sequential book_enemies rows per the standard "re-pick the next roster
-// enemy after defeating the current one" pattern (e.g. §215 two Scurrellors,
-// §257/§282 two-three Goblins, §267 two Troglodytes, §262 two Gnome Slave
-// Warriors, §280/§364 two Slave Warriors) - no special simultaneous-fight
-// code needed for this book; none of its multi-enemy fights are truly
-// simultaneous (the book always resolves them one at a time).
-//
-// Deliberately NOT modeled, same precedent as every other sim in this app:
-// - The rope-cutting duel mini-games (§10/§52/§197, opposed dice vs a named
-//   NPC's SKILL) and the sword-toss gambling game (§121/§157/§248/§331) -
-//   narrative dice-vs-dice contests with no STAMINA/wound mechanic.
-// - The many compute-your-own-destination puzzles (the enchanted door's
-//   riddle at §77/§177/§184/§256/§386, the coin-type riddle at §285) - these
-//   are navigation, not combat, and are handled by reading the section text.
-// - HORFAK appears with two different stat blocks across four separate
-//   fight instances (§47/§51: SKILL 10/STAMINA 20, empowered by the Portal;
-//   §330/§354: SKILL 8/STAMINA 10, after being shown a mirror and losing the
-//   Portal's backing) - both stat lines are included as separate
-//   book_enemies rows, named to distinguish which encounter each belongs to.
-//
-// All state lives in pt.sim233, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Portal of Evil, book 233)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
+// Provisions heal outside combat; no starting potion selector.
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
 import { getPlayBtnRow } from '../play/charsheet.js';
@@ -138,9 +75,7 @@ function _resetEncounterKnobs(d) {
   d.sideEnemy = { name: '', skill: 0, staminaMax: 0 };
 }
 
-// Uncapped (was previously trimmed to the last 100) - the admin dashboard
-// aggregates battle counts app-wide from this array, so per-user history needs
-// to be a true lifetime total, not a rolling window.
+// Keep lifetime outcomes: admin totals require the full history.
 function _recordOutcome(d, outcome) {
   d.history.push({
     enemy: _enemyName(d), outcome,
@@ -183,11 +118,7 @@ function _runRound() {
     if (d.player.stamina > 0) d.pendingLuckQueue.push({ kind: 'enemy-hit' });
   }
 
-  // Paired fight: a second, independent exchange with its own fresh player
-  // roll every round - covers the Tree Man's two simultaneously-attacking
-  // branches at §155. The side attacker is never wounded through this path,
-  // matching the book's own "count this as a successful defence" rule for
-  // the branch not being actively fought.
+  // Tree Man's other branch rolls independently and cannot be wounded back (sec 155).
   if (d.pairedFight && d.sideEnemy.staminaMax > 0 && d.player.stamina > 0) {
     const sidePlayerAS = _roll2d6() + d.player.skill + (d.player.attackModifier || 0);
     const sideAS = _roll2d6() + d.sideEnemy.skill;
@@ -674,10 +605,7 @@ export function initSim233() {
     if (!d) return;
     const map = FIELD_MAP[id];
     if (!map) return;
-    // Attack modifier is the one field allowed to go negative (bare-handed/
-    // disarmed/fatigue/injury penalties are always a subtraction, e.g. the
-    // Axeman's own -1 SKILL at §302) - every other field stays clamped to
-    // 0 or above.
+    // Only attack modifiers may be negative; other fields stay non-negative.
     val = id === 'sim233-player-atkmod' ? Number(val) : Math.max(0, val);
     if (id === 'sim233-player-skill') val = Math.min(val, d.player.skillInitial);
     if (id === 'sim233-player-stamina') val = Math.min(val, d.player.staminaInitial);

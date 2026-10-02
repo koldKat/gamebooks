@@ -1,73 +1,6 @@
-// ── Battle Simulator (Тигрово око, book 869) ────────────────────────────────
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 869 only) by the caller in boot.js via
-// setSim869Visible().
-// To remove: delete this file, remove its import line and initSim869()/
-// setSim869Visible() calls from boot.js, remove 'sim869' from
-// SIM_HISTORY_KEYS in server/db/xp.js, remove 'sim869-overlay' from
-// ALL_PANEL_OVERLAY_IDS in util.js and the #sim869-btn selectors in
-// battlesim.css.
-//
-// This book has genuine dice+stat combat (СИЛА/ИЗДРЪЖЛИВОСТ/БОЙНИ УМЕНИЯ/
-// МАГИЯ, weapon class, magic/holy shields), but built as 7 separate named
-// rivals (Далгрен, Тиндълин, Лестор, Тейбрун, Уантор, Смайтъл, Матуал),
-// each with their OWN multi-branch attack-pattern formulas for a "fresh"
-// round 1 and a "weakened" round 2+ - verified via a full 251-section read
-// this session. No canonical player build exists (stats/gear evolve
-// through the journey via markets, clan aid, magic shrines, camping rolls
-// etc.), so - same precedent as books 760/772/781 - the reader types in
-// their own current numbers rather than a hardcoded protagonist. The 7
-// rivals' book-listed stats/gear prefill as a convenience and are fully
-// editable too.
-//
-// FAITHFULNESS NOTES (documented simplifications, so this isn't mistaken
-// for a bug later):
-//  - The book routes different fight ENTRIES (challenging someone
-//    directly vs. an ambush vs. re-engaging after a truce, etc.) through
-//    slightly different section numbers that are mathematically the same
-//    "attacker rolls, defender picks a response" exchange. This sim uses
-//    one unified turn loop (opponent attacks, then you attack) rather than
-//    reproducing each entry path's own section IDs - the arithmetic is
-//    identical either way.
-//  - A handful of "block succeeds -> now pick a THIRD follow-up move"
-//    chains (e.g. §98->114/123/131, §22->53/86/90/97) are collapsed into
-//    a single combined formula for that follow-up strike, since those
-//    branches are near-duplicate formulas across the book (same
-//    stat-comparison-plus-die shape, only the exact thresholds differ by
-//    a point or two). The "избий меча" (disarm, 1-in-6 on some of these)
-//    is modeled as bonus damage rather than launching the book's separate
-//    unarmed-combat subgame at §100/119/126/178.
-//  - Далгрен's round-2 "block+retreat/block+counter" chain (§127->155/160)
-//    is collapsed to two direct top-level choices at the top-level menu.
-//  - Тейбрун and Матуал are unique: instead of a formula-based round 2,
-//    the book gives each a one-off NARRATIVE event once weakened
-//    (Тейбрун offers a truce; Матуал fakes a collapse and stabs you if
-//    you fetch him water - §174 is an instant KRAY NA IGRATA in the book).
-//    Both are modeled as their real three-way choice instead of a fight
-//    formula.
-//  - "Zarche"/"две зарчета" (die/dice) always means summed 1-6 rolls here.
-//  - The "суицидна атака" (§99) failing routes the book's own text
-//    straight to §110 (a bonus hit FOR the player, oddly generous) rather
-//    than a real counter-check - reproduced exactly as written since that
-//    really is what the book says.
-//
-// All narration (button labels + resolution log lines) is routed through
-// i18n (`t()`), same convention as every other battlesim module. Shared
-// message SHAPES (e.g. "you lose N stamina") use one generic
-// battlesim869.g.* key with params rather than duplicating near-identical
-// strings per rival; rival-specific flavor text gets its own key.
-//
-// Full rival roster (book_id=869, verified via complete 251-section
-// prose read + КОНЕ И ИМУЩЕСТВО equipment appendix):
-//   Далгрен  (Ашеба no, Якранд yes) СИЛА 11 ИЗД 16 МАГИЯ 0  БУ 13  меч4 без щит
-//   Тиндълин (Якранд)               СИЛА 12 ИЗД 18 МАГИЯ 3  БУ 7   меч5 магически щит
-//   Матуал   (Ашеба)                СИЛА 10 ИЗД 10 МАГИЯ 5  БУ 15  меч4 свещен щит
-//   Смайтъл  (Ашеба)                СИЛА 8  ИЗД 6  МАГИЯ 12 БУ 14  меч5 свещен щит
-//   Уантор   (Ашеба)                СИЛА 12 ИЗД 12 МАГИЯ 3  БУ 13  меч5 свещен щит
-//   Лестор   (Якранд)               СИЛА 8  ИЗД 12 МАГИЯ 0  БУ 20  меч6 без щит
-//   Тейбрун  (Якранд)                СИЛА 14 ИЗД 12 МАГИЯ 2  БУ 12  меч4 без щит
-//
-// All state lives in pt.sim869, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Тигрово око, book 869)
+// Each named rival has distinct first-round and later-round attack formulas.
+// Enter current player stats; narrative progression and unsupported gear effects remain manual.
 
 import { currentPlaythrough, saveState } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -100,8 +33,7 @@ function _shieldAbsorb(shield) { return shield === 'holy' ? 2 : shield === 'magi
 
 const gt = (key, params) => t(`battlesim869.g.${key}`, params);
 
-// ── Entity helpers ──────────────────────────────────────────────────────
-// entity = { s, e, m, b, sword, shield, startE, startB, lostE, skillLossExtra }
+// Entity fields: s,e,m,b,sword,shield,startE,startB,lostE,skillLossExtra.
 
 function _freshEntity(base) {
   return {
@@ -130,10 +62,7 @@ function _loseB(ent, amt) {
 }
 
 function _magicExchange(attacker, defender) {
-  // Returns net stamina loss to defender from attacker's magic points,
-  // after the defender's shield + own magic reflect it. Used by the
-  // "std+magic" family of player attacks and several rivals' magic
-  // counters, per the book's repeated wording.
+  // Return net magic damage after shield reduction and reflected magic.
   const absorb = _shieldAbsorb(defender.shield) + defender.m;
   const leak = Math.max(0, attacker.m - absorb);
   return leak * 3;
@@ -141,9 +70,7 @@ function _magicExchange(attacker, defender) {
 
 function _kill(ent) { ent.e = 0; }
 
-// ── Rival round-1 (fresh) attack option builders ────────────────────────
-// Each returns an array of { label, run(player, opp) => logline }.
-// "player" always means "you" (the reader), "opp" the rival.
+// Attack options return {label,run(player,opp)}; player is the reader, opp the rival.
 
 function _dalgrenR1(player, opp) {
   return [

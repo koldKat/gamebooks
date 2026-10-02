@@ -1,47 +1,6 @@
-// ── Battle Simulator (City of Thieves, book 201) ─────────────────────────────
-// Self-contained module. Imports from state.js, play.js, charsheet.js and util.js.
-// Visibility is gated (book 201 only) by the caller in boot.js via
-// setSim201Visible().
-// To remove: delete this file, remove its import line and initSim201()/
-// setSim201Visible() calls from boot.js, and remove the .bsim-* CSS (shared
-// with battlesim8.js/battlesim829.js/battlesim286.js/battlesim198.js/
-// battlesim199.js/battlesim200.js/battlesim186.js, so only remove it if all
-// eight are gone).
-//
-// Standard Fighting Fantasy SKILL/STAMINA/LUCK system, same core numbers and
-// Test Your Luck table as book 198 (SKILL 1d6+6, STAMINA 2d6+12, LUCK 1d6+6,
-// normal wound 2 STAMINA). Potions here are single-dose ("each bottle
-// contains one measure"), unlike book 198's two-dose potions.
-//
-// Two mechanics reused from book 200 rather than invented fresh, because
-// this book's own rules ask for exactly the same shapes:
-// - attackModifier: a plain +/- Attack Strength knob, covering the several
-//   "fight bare-handed/disarmed" encounters (subtract 2 or 3 every round).
-// - pairedFight/sideEnemy: a second enemy that attacks every round via its
-//   own independent roll but can never be wounded back - covers the several
-//   "two guards attack together, you can only fight one" and "both dogs
-//   attack, pick a target" encounters.
-//
-// One new knob unique to this book: enemyWoundDamage (default 2) overrides
-// how much STAMINA a landed enemy hit costs this fight, covering the
-// Snakes' poison (4 instead of 2) and the Blacksmith's heated iron bar (3
-// instead of 2) without hardcoding either by name.
-//
-// One new per-round side-effect, modeled the same way book 200 modeled the
-// Fire Demon's whip: a toggleable item that rolls 1d6 every round in
-// addition to normal combat - the Lizardine's fiery breath (1-3 hits for 1
-// STAMINA, Luck-eligible; 4-6 dodges).
-//
-// Deliberately NOT modeled: pre-battle "entry strike" penalties (Serpent
-// Queen's bite before battle) - these are a one-off STAMINA/SKILL loss the
-// player can already apply by hand with the existing stat steppers before
-// starting the fight, same as any other narrative stat loss elsewhere in
-// the book. Also not modeled: the non-standard Luck-gated encounters with
-// no SKILL/STAMINA stat block at all (Spirit Stalker, Vampire, Animated
-// Suit of Armour) and the Zanbar Bone ingredient-compound puzzle - none of
-// these are battles a sim has anything to calculate.
-//
-// All state lives in pt.sim201, per-user/per-book via currentPlaythrough().
+// Battle Simulator (City of Thieves, book 201)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -137,23 +96,7 @@ function _enemyName(d) { return d.enemy.name.trim() || t('battlesim.default_enem
 function _enemyNameSafe(d) { return escapeHtml(_enemyName(d)); }
 function _sideEnemyNameSafe(d) { return escapeHtml(d.sideEnemy.name.trim() || 'the second attacker'); }
 
-// Persistent combat modifiers found in the full-audit pass - all fold into
-// the same roll the way book 198's item bonuses do (a +1 to Attack Strength
-// is equivalent to a +1 SKILL for combat purposes, so both are added here
-// rather than tracked as two separate mechanisms):
-// - Chainmail Coat (sec 46): +2 SKILL while worn
-// - Magic Shield (sec 340): +1 Attack Strength while using it
-// - Unicorn-Crest Shield (sec 374): +1 SKILL
-// - Magic Helmet (smoke ball smashed at sec 45, worn/effect at sec 376):
-//   +1 to Attack Strength while worn (its one-time +1 LUCK on pickup is a
-//   narrative reward, not modeled - same as every other one-time LUCK/
-//   STAMINA pickup in this book, apply by hand)
-// - Cursed Shield (sec 125): -1 SKILL, forced and not removable on that route
-// - Cursed/copper scorpion Brooch (sec 387): -1 SKILL while carried
-// - Magic Elven Boots (sec 362): +1 SKILL while worn - missed in the original
-//   audit pass, corrected in a later re-verification (that pass had first
-//   mislabeled it as a one-time +1 LUCK reward, which is why it was never
-//   added as a toggle in the first place).
+// Item bonuses add to combat SKILL/Attack Strength; one-time pickup rewards remain manual.
 function _effectiveSkill(d) {
   let skill = d.player.skill;
   if (d.player.hasChainmail) skill += 2;
@@ -173,16 +116,9 @@ function _resetEncounterKnobs(d) {
   d.sideEnemy = { name: '', skill: 0, staminaMax: 0 };
 }
 
-// Uncapped (was previously trimmed to the last 100) - the admin dashboard
-// aggregates battle counts app-wide from this array, so per-user history needs
-// to be a true lifetime total, not a rolling window.
+// Keep lifetime outcomes: admin totals require the full history.
 function _recordOutcome(d, outcome) {
-  // Healing Brooch (sec 13/132): "after any battle survived, immediately
-  // restore 1 STAMINA" - only applied if the player is still standing, so a
-  // loss doesn't get quietly patched up. Not the same item as the unrelated
-  // "Golden scorpion" lucky charm (sec 273, one-time +2 LUCK) or the cursed
-  // copper scorpion brooch (sec 387, -1 SKILL) - three different items that
-  // happen to share "scorpion brooch" imagery.
+  // Healing Brooch (sec 13/132) restores 1 STAMINA after survival, never after defeat.
   if (d.player.hasHealingBrooch && d.player.stamina > 0) {
     const before = d.player.stamina;
     d.player.stamina = Math.min(d.player.staminaInitial, d.player.stamina + HEALING_BROOCH_HEAL);
@@ -218,11 +154,7 @@ function _runRound() {
     if (d.player.stamina > 0) d.pendingLuckQueue.push({ kind: 'enemy-hit' });
   }
 
-  // Paired fight: "Both roll Attack Strength; choose one target. The other
-  // may wound you, but you cannot wound him that round" - a second,
-  // independent exchange with its own fresh player roll. Covers the several
-  // simultaneous two-attacker encounters (City Guard reinforcements, Wild
-  // Dogs) - the side enemy is never woundable, matching the literal rule.
+  // Side attackers roll independently each round and cannot be wounded.
   if (d.pairedFight && d.sideEnemy.staminaMax > 0 && d.player.stamina > 0) {
     const sidePlayerAS = _roll2d6() + _effectiveSkill(d) + (d.player.attackModifier || 0);
     const sideAS = _roll2d6() + d.sideEnemy.skill;
@@ -236,9 +168,7 @@ function _runRound() {
     }
   }
 
-  // Lizardine's fiery breath (sec 392): in addition to normal combat, roll
-  // 1 die every Attack Round. 1-3 costs 1 STAMINA from fire (Luck-eligible),
-  // 4-6 dodges.
+  // Lizardine breath: each round, 1-3 on 1d6 costs 1 Luck-eligible STAMINA (sec 392).
   if (d.player.lizardineBreath && d.player.stamina > 0) {
     const fireRoll = _roll1d6();
     if (fireRoll <= 3) {
@@ -256,9 +186,7 @@ function _runRound() {
   } else if (d.player.stamina <= 0) {
     _appendLog(d, t('battlesim201.log.fallen', { skull: SVG_SKULL }));
     _recordOutcome(d, 'loss');
-    // Once you're down, any hit queued earlier this same round (side
-    // attacker or fire breath wounding you before the killing blow landed)
-    // is moot - clear it so a dead battle can't still offer a Luck prompt.
+    // Clear queued Luck tests on defeat.
     d.pendingLuckQueue = [];
   }
 
@@ -266,12 +194,7 @@ function _runRound() {
   _renderAll();
 }
 
-// Test Your Luck after a hit lands: costs 1 LUCK regardless of outcome. On
-// your own hit, Lucky deals 2 extra STAMINA damage (4 total), Unlucky gives
-// back 1 (only 1 total). On a hit you took (from any source), Lucky gives
-// back 1 STAMINA, Unlucky costs 1 extra - same table as book 198, applied on
-// top of whatever this fight's enemyWoundDamage was. Processes one queued
-// event at a time.
+// Luck costs 1 per queued hit: outgoing damage +2/-1, incoming damage -1/+1 (lucky/unlucky).
 function _testLuck() {
   const d = _data();
   if (!d || !d.pendingLuckQueue.length || d.player.luck <= 0) return;
@@ -846,9 +769,7 @@ export function initSim201() {
     if (!d) return;
     const map = FIELD_MAP[id];
     if (!map) return;
-    // Attack modifier is the one field allowed to go negative (bare-handed/
-    // disarmed penalties are always a subtraction) - every other field stays
-    // clamped to 0 or above.
+    // Allow negative attack modifiers; other fields stay non-negative.
     val = id === 'sim201-player-atkmod' ? Number(val) : Math.max(0, val);
     if (id === 'sim201-player-skill') val = Math.min(val, d.player.skillInitial);
     if (id === 'sim201-player-stamina') val = Math.min(val, d.player.staminaInitial);

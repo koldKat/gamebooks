@@ -1,24 +1,7 @@
-// ── Battle Simulator (Kharé - Cityport of Traps, book 273, Sorcery! #2) ──────
-// Self-contained module. Imports from state.js, play.js, charsheet.js and util.js.
-// Visibility is gated (book 273 only) by the caller in boot.js via
-// setSim273Visible().
-// To remove: delete this file, remove its import line and initSim273()/
-// setSim273Visible() calls from boot.js, and remove the .bsim-* CSS (shared
-// with other battlesimNNN.js modules, so only remove it if all are gone).
-//
-// Standard Fighting Fantasy SKILL/STAMINA/LUCK system: combat is opposed
-// 2d6+SKILL rolls each round, loser takes a flat 2 STAMINA, with an optional
-// Test Your Luck after a hit lands that nudges the damage by 1 in either
-// direction. This is a Sorcery! book, which has two starting SKILL formulas
-// per the book's own rules: warrior (1d6+6, "simple game") or wizard
-// (1d6+4, "advanced game" - wizards are worse fighters but have spells,
-// which this sim doesn't model, matching this book's sim_applicable note
-// that only base combat is in scope). Both roll buttons are offered; the
-// player picks whichever matches their game. Healing uses Provisions eaten
-// as meals - notably lower than most FF books (2 STAMINA for the first
-// meal of the day, only 1 for a second, per the book's own text), starting
-// with 2 meals. All state lives in pt.sim273, per-user/per-book via
-// currentPlaythrough().
+// Battle Simulator (Kharé - Cityport of Traps, book 273, Sorcery! #2)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
+// Meal healing is a convenience default; spells and narrative state are not simulated.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -30,9 +13,7 @@ const SVG_SKULL  = `<svg class="sim-icon sim-icon-dead"  viewBox="0 0 24 24" ari
 const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v7a6 6 0 0 1-12 0V2zm-2 1H2v4a4 4 0 0 0 4 4v-1a3 3 0 0 1-3-3V3zm16 0h2v4a4 4 0 0 1-4 4v-1a3 3 0 0 0 3-3V3zm-7 13v2H9v2h6v-2h-2v-2a6 6 0 0 0 5-5.92V2H6v8.08A6 6 0 0 0 13 16z"/></svg>`;
 
 const MAX_PROVISIONS = 2;
-// The book gives 2 STAMINA for a first meal, only 1 for a second meal the
-// same day - this sim simplifies to a flat 2 per meal (convenience, not
-// day-state tracking).
+// Healing is simplified to 2 per meal; the book's same-day second meal restores only 1.
 const PROVISIONS_HEAL = 2;
 const SKILL_BONUS_WARRIOR = 6;
 const SKILL_BONUS_WIZARD = 4;
@@ -121,11 +102,7 @@ function _runRound() {
   _renderAll();
 }
 
-// Test Your Luck after a hit lands: costs 1 LUCK regardless of outcome. On
-// your own hit, Lucky deals 2 extra STAMINA damage (4 total), Unlucky gives
-// back 1 (only 1 total). On a hit you took, Lucky gives back 1 STAMINA (only
-// 1 total lost), Unlucky costs 1 extra (3 total). Matches the book's
-// "Using LUCK in Combat" rule.
+// Luck costs 1: own hits deal 4/1 damage; incoming hits deal 1/3 (lucky/unlucky).
 function _testLuck() {
   const d = _data();
   if (!d || !d.pendingLuck || d.player.luck <= 0) return;

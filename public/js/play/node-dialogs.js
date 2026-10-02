@@ -71,9 +71,7 @@ export function openNoteModal(nodeId) {
       delete state.graph[nodeId].note;
       delete state.graph[nodeId].showNote;
       const n = state.graph[nodeId];
-      // Same "worth keeping" check as _cleanupOrphanedTargets/_pruneDiscovered
-      // (boot.js) - was missing `portals` here too, so clearing the note off
-      // a node whose only other content was a portal silently deleted it.
+      // Retain nodes with portals or other metadata when clearing notes.
       if (n.discovered && !n.priority && !n.battle && !n.color && !n.portals && !n.manual) delete state.graph[nodeId];
     }
     saveState();

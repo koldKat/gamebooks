@@ -1,8 +1,4 @@
-// ── Public profile / run viewer ───────────────────────────────────────────────
-// Self-contained module. Imports only from state.js and util.js.
-// To remove: delete this file, remove its import line and setPublicProfileHooks()
-// call from boot.js, and delete public/css/public-profile.css (also shared by
-// covers.js's cover activity view) and its <link> in index.html.
+// Public profiles, runs, and series journeys.
 
 import { isValidSecId } from '../core/state.js';
 import { escapeHtml } from '../core/util.js';
@@ -77,9 +73,7 @@ export function renderPublicProfile(profile) {
   const allRuns = profile.books.flatMap(b => b.runs);
   const wins    = allRuns.filter(r => r.result === 'success').length;
   const losses  = allRuns.filter(r => r.result === 'death').length;
-  // Shown as its own stat, matching the admin panel's separate Wins/Losses/
-  // Battle Deaths columns - runs includes 'battle' results in its total, so
-  // this has to be broken out for wins+losses+battles to add up to it.
+  // Separate battle deaths so wins, losses, and battles sum to total runs.
   const battles = allRuns.filter(r => r.result === 'battle').length;
 
   const avatarHtml = profile.avatarUrl
@@ -253,9 +247,7 @@ function _pubRunPathNodes(path, result) {
   if (result === 'success') nodes.push('<span class="trail-node trail-win">★</span>');
   else if (result === 'battle') nodes.push('<span class="trail-node trail-battle">BTL</span>');
   else if (result === 'death') nodes.push('<span class="trail-node trail-death">✝</span>');
-  // Each arrow is glued to the pill before it in one wrapper (see play.js's
-  // renderPathTrail for the full reasoning) so a wrapped row ends with its
-  // own arrow instead of stranding one at the start of the next row.
+  // Keep each arrow with its preceding pill across wrapped rows.
   return nodes.map((n, i) => i === nodes.length - 1 ? n : `<span class="trail-item">${n}<span class="trail-arrow">›</span></span>`).join('');
 }
 
@@ -381,10 +373,7 @@ function _buildPubSegNetwork(container, graph, positions, path, result, allVisit
       } else {
         bg = '#606060'; border = '#404040';
       }
-      // Battle flag: keep whatever fill the rules above chose, just override the border -
-      // matches graph.js's nodeColor() precedence (a visited/mapped/end-node section
-      // that's ALSO flagged battle still shows its battle border, unlike before this fix,
-      // when isBattle was one branch in the chain above and got shadowed by inPath/etc).
+      // Battle status overrides only the border, preserving visited/mapped/terminal fill colors.
       if (isBattle) { border = '#f97316'; bw = Math.max(bw, 4); }
     }
 

@@ -1,13 +1,5 @@
-// ── Battle Simulator (Пътят на пъдпъдъка, book 829) ─────────────────────────
-// Self-contained module. Imports from state.js, play.js, charsheet.js and util.js.
-// Visibility is gated (book 829 only) by the caller in boot.js via
-// setBattleSimVisible().
-// To remove: delete this file, remove its import line and initBattleSim()/
-// setBattleSimVisible() calls from boot.js, and remove the .bsim-* CSS.
-//
-// Equipment/inventory are read-only inputs here (pt.equipment / pt.inventory)
-// - this module never writes back to them. All sim-specific state lives in
-// pt.sim829, which is already per-user/per-book via currentPlaythrough().
+// Battle Simulator (Пътят на пъдпъдъка, book 829)
+// Equipment/inventory are read-only inputs; simulator state belongs to the current run.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -64,18 +56,10 @@ function _appendLog(d, line) {
 }
 
 function _enemyName(d) { return d.enemy.name.trim() || 'врагът'; }
-// Escaped variant for log lines, which get dumped into innerHTML in
-// _renderLog() - the enemy name is free-text player input, so an unescaped
-// "<img src=x onerror=...>" would execute. _recordOutcome()'s history.enemy
-// deliberately stays unescaped - _renderHistory() already escapes it once at
-// render time, and escaping here too would double-escape it there.
+// Escape free-text names in HTML logs; store history names raw and escape once when rendered.
 function _enemyNameSafe(d) { return escapeHtml(_enemyName(d)); }
 
-// ── Equipment-derived base stats ────────────────────────────────────────────
-// pt.equipment[slot] = { itemId, label, note, qty } where note is free text
-// like "А: 2, З: 0" (melee) or "Т: 4, А: 2" (ranged). Base attack comes from
-// the main weapon (primary slot); base defense is the sum of "З:" values
-// across every equipped slot (armor + weapon).
+// Derive attack from the primary weapon and sum defense across equipped slots' note stats.
 const RE_STAT_A = /А\s*:\s*(-?\d+)/;
 const RE_STAT_D = /З\s*:\s*(-?\d+)/;
 const RE_STAT_T = /Т\s*:\s*(-?\d+)/;
@@ -104,10 +88,7 @@ function _equipmentBaseStats(pt) {
   return { baseA, baseD };
 }
 
-// Re-derive one stat from equipment + the matching skill, overwriting any
-// manual edit - mirrors how picking an enemy from the dropdown overwrites
-// its fields. Triggered when the relevant skill changes, or via the
-// "От екипировка" button for all three at once.
+// Recalculate from equipment when skills change or on explicit refresh, replacing manual overrides.
 function _syncStatFromEquipment(d, pt, stat) {
   const { baseA, baseD } = _equipmentBaseStats(pt);
   if (stat === 'a') d.player.a = baseA + (d.player.skills.weapon || 0);
@@ -118,9 +99,7 @@ function _syncStatFromEquipment(d, pt, stat) {
   }
 }
 
-// ── Ranged weapons ───────────────────────────────────────────────────────
-// Any equipped item or inventory item whose note contains "Т:" is a ranged
-// weapon option (bows, muskets, throwing spears/shurikens, etc).
+// Items with a ranged-stat marker in their note are ranged weapon options.
 function _rangedWeaponOptions(pt) {
   const out = [];
   const eq = pt.equipment || {};
@@ -184,11 +163,7 @@ function _getGroupObj(d, group) {
   return group === 'ranged' ? d.player.ranged : d[group];
 }
 
-// Per-run record of a finished battle's outcome - kept separate from the
-// rolling round-by-round log, which only covers the current battle.
-// Uncapped (was previously trimmed to the last 100) - the admin dashboard
-// aggregates battle counts app-wide from this array, so per-user history needs
-// to be a true lifetime total, not a rolling window.
+// Keep lifetime battle outcomes separate from the current fight's rolling log; never truncate totals.
 function _recordOutcome(d, outcome) {
   d.history.push({
     enemy: _enemyName(d),
@@ -457,9 +432,7 @@ export function setBattleSimVisible(visible) {
   if (!visible) closeBattleSim();
 }
 
-// Build one stat row using the same .inv-edit-row / .inv-qty-* pattern as
-// the inventory item-edit popover, bound to pt.sim829[group][key]
-// (group 'ranged' resolves to pt.sim829.player.ranged - see _getGroupObj).
+// Bind shared stat-row controls to the run's simulator group; ranged stats live under player.ranged.
 function _statField(label, id, group, key) {
   return `
     <div class="inv-edit-row">
@@ -727,8 +700,7 @@ export function initBattleSim() {
   // clamped to player.hpMax; raising/lowering player.hpMax re-clamps hp.
   overlay.querySelectorAll('.inv-qty-input[data-group]').forEach(input => {
     input.addEventListener('input', () => {
-      // type="text" (needed to avoid native number-input spinner/scroll-wheel quirks,
-      // see charsheet.js) accepts any keystroke - filter live so garbage can't be typed.
+      // Filter numeric text inputs; avoid native spinner/wheel behavior.
       const raw = String(input.value).replace(/[^0-9]/g, '');
       if (raw !== input.value) input.value = raw;
       const d = _data();

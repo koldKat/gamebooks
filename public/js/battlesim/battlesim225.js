@@ -1,56 +1,6 @@
-// ── Battle Simulator (Midnight Rogue, book 225, Fighting Fantasy 29
-//    by Graeme Davis) ──
-// Self-contained module. Imports from state.js, play.js, charsheet.js and util.js.
-// Visibility is gated (book 225 only) by the caller in boot.js via
-// setSim225Visible().
-// To remove: delete this file, remove its import line and initSim225()/
-// setSim225Visible() calls from boot.js, and remove the .bsim-* CSS (shared
-// with every other battlesimN.js, so only remove it if all of them are gone).
-// Also remove 'sim225' from SIM_HISTORY_KEYS in server/db/xp.js, and remove
-// 'sim225-overlay' from ALL_PANEL_OVERLAY_IDS in util.js and the #sim225-btn
-// selectors in battlesim.css.
-//
-// Standard Fighting Fantasy SKILL/STAMINA/LUCK system, same core numbers as
-// every other sim in this app (SKILL 1d6+6, STAMINA 2d6+12, LUCK 1d6+6;
-// opposed 2d6+SKILL roll, ties = no effect, loser -2 STAMINA; Test Your Luck
-// costs 1 LUCK, +/-1 STAMINA effect), confirmed from this book's own
-// "Skill, Stamina and Luck"/"Battles" rules text.
-//
-// extraAttackers (max 1) + a single sideEnemy cover this book's genuinely
-// simultaneous encounter: the two Guardsmen at §224, where the book's own
-// text says "you must fight both guardsmen together... roll an Attack
-// Strength against him [the other]" every round. The Dog+Servants pairing
-// (§176/§254/§336) is a similar shape (fight the Dog directly while
-// Servants pile on) and uses the same mechanic. Every other multi-enemy
-// fight (Thugs §28, Footpads §96, Skeletons §233/§366, Dwarves §369) is
-// fought one at a time per the book's own text - re-pick the next roster
-// enemy after each kill via the dropdown.
-//
-// The Poltergeist (§121/§152/§317/§339) never actually takes STAMINA
-// damage - the book's own text says a player win only means "you have not
-// wounded the Poltergeist, merely dodged its missile." Seeded at STAMINA 0
-// so the fight can't be "won" via the normal defeat check; the book instead
-// says to fight a fixed number of rounds (1 or 3, stated per section) then
-// move on regardless of outcome - count rounds in the log and leave manually
-// via choices rather than expecting the sim to declare victory.
-//
-// Weakened/duplicate variants (Wood Golem, Crystal Warrior, Ghoul, Ogre,
-// Guard) that recur with different STAMINA at different sections are kept
-// as separate book_enemies rows disambiguated by section number, matching
-// this app's existing convention (e.g. battlesim224.js) - a player needs
-// the row matching whichever section they're actually on.
-//
-// §284's clue-code puzzle (assemble three collected numbers into a section
-// to turn to) isn't a combat encounter and has no bearing on this sim -
-// noted here only because it's this book's own reason for a large chunk of
-// sections being unreachable by normal graph traversal, same shape as book
-// 398's §316 puzzle branch.
-//
-// book_enemies (40 rows, read from all 43 stat-block-bearing sections of
-// 400 total, deduplicated where multiple sections retell an identical
-// stat block).
-//
-// All state lives in pt.sim225, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Midnight Rogue, book 225, Fighting Fantasy 29 by Graeme Davis)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -135,9 +85,7 @@ function _resetEncounterKnobs(d) {
   d.sideEnemies = [_emptySideEnemy()];
 }
 
-// Uncapped (was previously trimmed to the last 100) - the admin dashboard
-// aggregates battle counts app-wide from this array, so per-user history needs
-// to be a true lifetime total, not a rolling window.
+// Keep lifetime outcomes: admin totals require the full history.
 function _recordOutcome(d, outcome) {
   d.history.push({
     enemy: _enemyName(d), outcome,
@@ -181,11 +129,7 @@ function _runRound() {
     if (d.player.stamina > 0) d.pendingLuckQueue.push({ kind: 'enemy-hit' });
   }
 
-  // Extra simultaneous attacker (the un-targeted Orc at §8): its own
-  // independent exchange with a fresh player roll every round, never
-  // wounded through this path - only the main "Enemy" slot can be wounded,
-  // matching the standard FF "every enemy attacks, you choose one to fight
-  // back against" multiple-enemy rule.
+  // The unchosen Orc rolls independently and cannot be wounded back.
   for (let i = 0; i < Math.min(d.extraAttackers, MAX_EXTRA_ATTACKERS) && d.player.stamina > 0; i++) {
     const side = d.sideEnemies[i];
     if (!side || side.staminaMax <= 0) continue;
@@ -653,9 +597,7 @@ export function initSim225() {
     if (!d) return;
     const map = FIELD_MAP[id];
     if (!map) return;
-    // Attack modifier is the one field allowed to go negative (bare-handed/
-    // disarmed/fatigue penalties are always a subtraction) - every other
-    // field stays clamped to 0 or above.
+    // Allow negative attack modifiers; other fields stay non-negative.
     val = id === 'sim225-player-atkmod' ? Number(val) : Math.max(0, val);
     if (id === 'sim225-player-skill') val = Math.min(val, d.player.skillInitial);
     if (id === 'sim225-player-stamina') val = Math.min(val, d.player.staminaInitial);

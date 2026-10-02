@@ -1,8 +1,4 @@
-// Announcements tab: draft/publish/pin workflow, "Show N older" collapse
-// (same convention as the Users tab's "Show N inactive users"), and the
-// New/Edit compose form.
-// To remove: delete this file and its <script type="module"> import in
-// admin/index.html; remove the Announcements tab HTML/CSS.
+// Announcements: draft, publish, pin, and edit controls.
 
 import { mkBtn, showConfirm } from './core.js';
 import { openEditor } from './editor.js';
@@ -15,11 +11,7 @@ function annEsc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// Same markup engine as the player-facing renderer (public/js/feed.js's
-// formatAnnBody/ANN_COLORS) - duplicated here rather than imported since
-// admin/js is a separate, self-contained bundle. Without this the admin
-// preview showed literal **/{color:...} tags instead of the formatted
-// result players actually see.
+// Match the player-facing announcement formatter without importing the desktop app.
 const ANN_COLORS = {
   red: '#f87171', orange: '#fb923c', amber: '#fbbf24', green: '#4ade80',
   teal: '#2dd4bf', blue: '#60a5fa', purple: '#a78bfa', pink: '#f472b6',
@@ -32,10 +24,7 @@ function annFormatBody(s) {
     .replace(/~~(.+?)~~/g,     '<s>$1</s>')
     .replace(/\{color:(red|orange|amber|green|teal|blue|purple|pink)\}(.+?)\{\/color\}/g,
       (_, color, text) => `<span style="color:${ANN_COLORS[color]}">${text}</span>`)
-    // Unlike the player-facing feed.js/forum.js renderers, this preview has
-    // nowhere "in-app" to open a /book/123 link into (it's the admin panel,
-    // a different app) - always open in a new tab so clicking a preview
-    // link never navigates the admin away from what they're doing.
+    // Open preview links in a new tab so they cannot replace the admin page.
     .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+|\/book\/\d+|\/series\/\d+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
 }
 
@@ -138,9 +127,7 @@ export async function loadAnnouncements() {
   const drafts = rows.filter(r => r.is_draft === 1);
   const publishedAll = rows.filter(r => r.is_draft === 0);
 
-  // Same "Show N inactive users (31+ days)" philosophy as the Users table:
-  // older entries are collapsed behind a button at the bottom, not hidden
-  // behind a hover/toggle affordance. Pinned announcements are always shown.
+  // Show pinned announcements; collapse older entries behind a bottom button.
   const thirtyDaysAgo = Math.floor(Date.now() / 1000) - 30 * 24 * 60 * 60;
   const visible = publishedAll.filter(r => r.pinned || r.published_at >= thirtyDaysAgo);
   const hidden  = publishedAll.filter(r => !r.pinned && r.published_at < thirtyDaysAgo);

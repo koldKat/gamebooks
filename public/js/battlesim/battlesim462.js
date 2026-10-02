@@ -1,62 +1,7 @@
-// ── Battle Simulator (Гората на обречените / Forest of the Doomed, book 462) ──
-// Self-contained module. Imports from state.js, play.js, charsheet.js and util.js.
-// Visibility is gated (book 462 only) by the caller in boot.js via
-// setSim462Visible().
-// To remove: delete this file, remove its import line and initSim462()/
-// setSim462Visible() calls from boot.js, and remove the .bsim-* CSS (shared
-// with every other battlesimN.js, so only remove it if all of them are gone).
-// Also remove 'sim462' from SIM_HISTORY_KEYS in server/db/xp.js, and remove
-// 'sim462-overlay' from ALL_PANEL_OVERLAY_IDS in util.js and the #sim462-btn
-// selectors in battlesim.css.
-//
-// Bulgarian-labeled Fighting Fantasy-style system (УМЕНИЕ/ИЗДРЪЖЛИВОСТ/
-// КЪСМЕТ), mechanically identical to the standard English SKILL/STAMINA/LUCK
-// engine already used across this app (УМЕНИЕ 1d6+6, ИЗДРЪЖЛИВОСТ 2d6+12,
-// КЪСМЕТ 1d6+6; opposed 2d6+УМЕНИЕ roll, ties = no effect, loser -2
-// ИЗДРЪЖЛИВОСТ; "Изпитване на Късмета" costs 1 КЪСМЕТ, +/-1 ИЗДРЪЖЛИВОСТ
-// effect). Cloned from battlesim221.js and relabeled - see that file for the
-// original English-language UI reference. All UI text in this file (i18n
-// keys, log messages) is Bulgarian to match the book's own language, per
-// this app's standing precedent for Bulgarian-sourced books.
-//
-// This is one of ~10 books in the ongoing ascending audit sweep found with
-// a systematic content gap in the source PDF itself: 38 of 400 sections
-// (roughly 10%) have no recoverable text anywhere in the PDF's content
-// stream (confirmed via three independent pdftotext modes, pdffonts, and
-// rendered page images - this is a retyped digital edition with real
-// embedded fonts, not a scan, so the gap is a transcription omission in
-// this specific file, not an OCR/extraction failure). None of the 38 gaps
-// fall on a monster stat-block section, so the enemy roster below is
-// complete and unaffected by the gap.
-//
-// No Provisions/Potions UI - this book's "Еликсири" (Lecheben/Contro over
-// Rastenia/Spokoystvie/Nasekomi/Protivootroven/Sveshtena Voda/etc.) are all
-// one-off single-use narrative items bought once from Yaztromo at the start
-// (§261) with encounter-specific effects (poison cure, plant control, calm,
-// insect control, etc.), not a repeatable three-choice heal system. Hand-
-// applied with the existing stat steppers, same precedent as every other
-// sim in this app with one-off rather than repeatable potions.
-//
-// attackModifier/enemyWoundDamage/playerWoundDamage/enemyDefeatThreshold
-// cover this book's few non-standard combat wrinkles: the cramped-position
-// penalty (-3 Сила на Нападение every round) fighting Gremlins in tunnels
-// (§49/§71/§165/§193), and the reduced-effectiveness attack against Живо
-// Дърво/Маймуночовек (fixed extra attack-penalty per round, §123/§352).
-//
-// No simultaneous/extraAttackers mechanic modeled: several encounters use a
-// "paired alternating target" rule instead (§96 Ловджийски кучета/Маскиран
-// човек, §104 Бандити, §276 Ловджийски кучета) - each round the player
-// picks one of a pair to actually damage, while the other's attack only
-// "blocks" (never wounds the player if the player's own roll would have
-// won). This dual-target bookkeeping doesn't fit this sim's single-enemy-
-// dropdown model and is deliberately left for the player to track by hand,
-// re-picking from the dropdown as different named opponents fall - same
-// precedent as every other unmodeled multi-attacker passive in this app's
-// sims. All other multi-enemy encounters (§7/29/43/49/79/212/231/330/377)
-// are ordinary sequential single-target fights, fully covered by the
-// dropdown's re-pick-after-defeat flow.
-//
-// All state lives in pt.sim462, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Гората на обречените / Forest of the Doomed, book 462)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
+// Track paired alternating targets manually; narrative elixirs are not reusable consumables.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -126,9 +71,7 @@ function _resetEncounterKnobs(d) {
   d.player.enemyDefeatThreshold = 0;
 }
 
-// Uncapped (was previously trimmed to the last 100) - the admin dashboard
-// aggregates battle counts app-wide from this array, so per-user history needs
-// to be a true lifetime total, not a rolling window.
+// Keep lifetime outcomes: admin totals require the full history.
 function _recordOutcome(d, outcome) {
   d.history.push({
     enemy: _enemyName(d), outcome,
@@ -582,9 +525,7 @@ export function initSim462() {
     if (!d) return;
     const map = FIELD_MAP[id];
     if (!map) return;
-    // Attack modifier is the one field allowed to go negative (bare-handed/
-    // disarmed/fatigue penalties are always a subtraction) - every other
-    // field stays clamped to 0 or above.
+    // Allow negative attack modifiers; other fields stay non-negative.
     val = id === 'sim462-player-atkmod' ? Number(val) : Math.max(0, val);
     if (id === 'sim462-player-skill') val = Math.min(val, d.player.skillInitial);
     if (id === 'sim462-player-stamina') val = Math.min(val, d.player.staminaInitial);

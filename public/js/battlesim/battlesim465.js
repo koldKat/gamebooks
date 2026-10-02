@@ -1,61 +1,6 @@
-// ── Battle Simulator (Свръхразум / "Superintellect", book 465) ──
-// Self-contained module. Imports from state.js, play.js, charsheet.js and util.js.
-// Visibility is gated (book 465 only) by the caller in boot.js via
-// setSim465Visible().
-// To remove: delete this file, remove its import line and initSim465()/
-// setSim465Visible() calls from boot.js, and remove the .bsim-* CSS (shared
-// with every other battlesimN.js, so only remove it if all of them are gone).
-// Also remove 'sim465' from SIM_HISTORY_KEYS in server/db/xp.js, and remove
-// 'sim465-overlay' from ALL_PANEL_OVERLAY_IDS in util.js and the #sim465-btn
-// selectors in battlesim.css.
-//
-// This book's own combat system is NOT the SKILL/STAMINA/LUCK engine used by
-// every other sim in this app (battlesim221.js and its clones) - it has no
-// per-character skill stat at all. Per the book's own "ПРАВИЛА НА ИГРАТА"
-// (rules text, see book_frontmatter): both sides simply roll 2d6 each round,
-// whoever rolls higher lands one hit on the other (ties = no effect), and
-// each enemy is described only by how many hits it takes to defeat it (its
-// "УДАРА" count). The player's own health is not a per-fight stat either -
-// it is the single "individual defensive field" (fixed at 50 hits for the
-// entire game, no re-roll, no per-book starting range) that persists across
-// every fight in the book, so the "player field" input here is meant to be
-// hand-synced by the reader to whatever their current field total is in
-// their own paper log, exactly like the enemyDefeatThreshold-style manual
-// inputs in every other sim in this app.
-//
-// This is a genuinely different, much simpler mechanic than the FF-style
-// engine, so this file is a fresh bespoke implementation rather than a clone
-// of battlesim221.js - there is no skill/attackModifier/luck/pendingLuckQueue
-// machinery here because none of it exists in this book.
-//
-// This book's own pre-existing book_sections rows (imported before this
-// sweep reached it) were kept as-is rather than rebuilt from the raw PDF -
-// unlike every other book handled this session, this one's reachability
-// signature (259/261, 0 broken links) was healthy enough that a full rebuild
-// wasn't warranted. Two genuine dropped-destination bugs were found and
-// fixed by cross-referencing the raw PDF text directly against the stored
-// html: §20 (both of its choices were entirely missing from the stored
-// html/choices) and §44 (one of its two choices, the jet-escape branch to
-// §189, was missing). A third apparent gap, §121, was extensively searched
-// for (every "verb ending in на/-" line in the raw PDF followed by a bare
-// destination number, every scene involving a robot/hypnotizer that could
-// plausibly lead there) and never found referenced anywhere else in the
-// book - it is accepted as a genuine benign single-section orphan, not
-// corruption.
-//
-// A separate, more consequential bug was also found and fixed: 11 sections
-// (12, 19, 58, 74, 76, 98, 107, 135, 176, 227, 245) had their enemy
-// stat-block hit-thresholds (e.g. "ПЪРВИ КОРАБ - 5 УДАРА", meaning "first
-// ship takes 5 hits to destroy") wrongly auto-linkified as if the "5" were
-// a destination, i.e. stored as `<a href="#section-5">5</a> УДАРА`. Section
-// 5 exists in the book (an unrelated Oracle/horoscope scene), so this didn't
-// show up as a broken link or a reachability gap - it silently added a false
-// edge to the graph and would have sent a reader who clicked it to the wrong
-// section mid-combat-setup. Fixed by stripping the anchor from all 25
-// instances and recomputing each section's `choices` column from what
-// actually remains linked.
-//
-// All state lives in pt.sim465, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Свръхразум / "Superintellect", book 465)
+// Opposed 2d6 without skill: higher roll lands one hit, ties miss.
+// The player's 50-hit defensive field carries damage between fights.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';

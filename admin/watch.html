@@ -20,9 +20,7 @@
     background-size: cover; background-position: center; background-repeat: no-repeat;
   }
 
-  /* Same positioning/styling as the real play area's #stats-hud (charsheet.css) -
-     no box, just text floating over the graph, bottom-right, only what the
-     player themselves marked "show on screen". */
+  /* Match the player's floating stats HUD. */
   #watch-hud {
     position: fixed; bottom: 1rem; right: 1rem; z-index: 5;
     display: flex; flex-direction: column; align-items: flex-end; gap: 0.2rem;
@@ -43,11 +41,7 @@
   .inv-line--equipped .inv-line-slot { color: #f5a623; border: 1px solid rgba(245,166,35,0.4); }
   .inv-line--item .inv-line-slot { color: #60a5fa; border: 1px solid rgba(96,165,250,0.4); }
 
-  /* Same positioning/styling as the real play area's #notes-display
-     (charsheet.css) in its default (non-hovering) state - no box, just text
-     over the graph, left side, vertically centered. The notebook is
-     book-level (state.notesPinned), not tied to any one playthrough - shown
-     whenever the player has it pinned, same as they'd see it themselves. */
+  /* Match the player's pinned notebook styling; this state is book-level. */
   #watch-notes {
     display: none; position: fixed; left: 1rem; top: 50%; transform: translateY(-50%);
     width: 20vw; max-height: 65vh; overflow-y: auto; z-index: 5;
@@ -57,12 +51,7 @@
   }
   #watch-notes.visible { display: block; }
 
-  /* Imported live-reading text for the player's current section - read-only.
-     Top-right, just under the header. Anchors keep their reader styling but
-     are inert (pointer-events:none): seeing WHERE the in-text choices are is
-     the point; clicking one must do nothing. Panel itself stays interactive
-     so the prose can be scrolled. Hidden entirely when the watched book has
-     no imported text for the current section. */
+  /* Read-only section text: keep choice links inert but allow prose scrolling. */
   #watch-text {
     display: none;
     position: fixed;

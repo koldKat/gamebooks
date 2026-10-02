@@ -1,49 +1,6 @@
-// ── Battle Simulator (California Countdown, Freeway Warrior book 4, id 280) ──
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 280 only) by the caller in boot.js via
-// setSim280Visible().
-// To remove: delete this file, remove its import line and initSim280()/
-// setSim280Visible() calls from boot.js, remove 'sim280' from
-// SIM_HISTORY_KEYS in server/db/xp.js, and remove the .bsim-* CSS (shared
-// with the other battlesim*.js files, so only remove it if all are gone).
-//
-// Same Combat Ratio + Close Combat Results Table system as the Lone Wolf
-// sims (books 193/322/323/324) and as this book's own predecessors (books
-// 276/278/279, Freeway Warrior 1/2/3), with Freeway Warrior's OWN printed
-// table values - verified against the "Close Combat Results Table" on the
-// inside back cover of this book's PDF (page 166) cell-for-cell: IDENTICAL
-// to the COMBAT_TABLE in battlesim276.js/battlesim278.js/battlesim279.js,
-// so re-derived here from the same source rather than reused. Also
-// cross-checked against this book's own worked example in the rules front
-// matter (Cal Phoenix CLOSE COMBAT SKILL 17 + Hunting Knife +2 = 19, vs
-// Renegade Clansman CLOSE COMBAT SKILL 18, Combat Ratio +1; random pick 4
-// -> enemy loses 4, Cal Phoenix loses 3 - matches COMBAT_TABLE row4/col
-// ('+1/+2') = [4,3]).
-// The table DIFFERS from the Lone Wolf COMBAT_TABLE cell-for-cell (same 13
-// ratio buckets and 10-row layout, different loss values), so it is
-// re-derived here rather than reused. Combat Ratio = effective CLOSE COMBAT
-// SKILL minus enemy CLOSE COMBAT SKILL, computed once when an enemy is
-// selected and fixed for the whole fight. Each round, pick 0-9, bucket the
-// ratio into the table's 13 printed columns (-11 or less .. 11 or greater),
-// and COMBAT_TABLE[pickRow][ratioCol] gives [enemyLoss, playerLoss]
-// simultaneously, including 'K' (automatically killed) at the extremes.
-//
-// CLOSE COMBAT SKILL and ENDURANCE are both rolled once at chargen per this
-// book's own Action Chart rules (no LUCK mechanic - that's Fighting
-// Fantasy, not Freeway Warrior/Lone Wolf).
-//
-// attackModifier is a free-form +/- field covering one-off CLOSE COMBAT
-// SKILL changes this book describes by hand (weapon bonuses, situational
-// penalties), same precedent as every other Combat-Ratio sim in this app.
-// One single-use Healing Potion consumable (+4 ENDURANCE, after combat
-// only), same precedent as the Lone Wolf sims.
-//
-// book_enemies.attack holds CLOSE COMBAT SKILL, .hp holds ENDURANCE,
-// .defense unused. 20 rows already seeded in book_enemies for book_id=280 -
-// this module does not hardcode a roster, it reads it live via
-// /api/books/280/enemies.
-//
-// All state lives in pt.sim280, per-user/per-book via currentPlaythrough().
+// Battle Simulator (California Countdown, Freeway Warrior book 4, id 280)
+// Freeway Warrior: fixed Combat Ratio and 0-9 picks produce simultaneous table losses.
+// Use this series' table, not Lone Wolf's; 'K' means instant death.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -56,12 +13,9 @@ const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" ari
 
 const HEALING_POTION_HEAL = 4;
 
-// Rows = the 10-value random pick, printed order 1,2,3,4,5,6,7,8,9,0.
-// Columns = Combat Ratio, bucketed: -11-, -10/-9, -8/-7, -6/-5, -4/-3,
-// -2/-1, 0, 1/2, 3/4, 5/6, 7/8, 9/10, 11+. Cell = [enemyLoss, playerLoss]
-// ('K' sentinel = automatically killed). Transcribed directly from the
-// "Close Combat Results Table" printed on the inside back cover of this
-// book (PDF page 166) - NOT the same values as the Lone Wolf COMBAT_TABLE.
+// Rows: 1-9, then 0. Columns: Combat Ratio buckets -11..11, clamped at the extremes.
+// Cells are [enemyLoss, playerLoss]; K means instant death.
+// Freeway Warrior uses different values from Lone Wolf.
 const COMBAT_TABLE = [
   [[0,'K'], [0,10],  [1,8], [1,7], [2,6], [3,5], [3,5], [3,4], [3,4], [3,3], [4,3], [5,3], [6,3]],
   [[2,6],   [3,5],   [4,4], [4,3], [5,3], [5,3], [5,3], [5,2], [5,2], [6,1], [6,1], [7,1], [8,0]],

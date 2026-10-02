@@ -1,60 +1,7 @@
-// ── Battle Simulator (Проклятието на меча / Curse of the Sword, book 122) ──
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 122 only) by the caller in boot.js via
-// setSim122Visible().
-// To remove: delete this file, remove its import line and initSim122()/
-// setSim122Visible() calls from boot.js, remove 'sim122' from
-// SIM_HISTORY_KEYS in server/db/xp.js, and remove the .bsim-* CSS (shared
-// with the other battlesim*.js files, so only remove it if all are gone).
-//
-// This book is structurally different from every other sim in this app: it
-// offers THREE independent combat systems, switchable even mid-fight at the
-// player's choice, built around a per-fight "БОЕН КОД" (Battle Code) rather
-// than a fixed COMBAT SKILL/SKILL stat.
-//
-// System 1 ("point comparison") is the book's primary, most-used method: at
-// each individual fight section, the text states the exact formula to sum
-// (e.g. "Battle Code = СИЛА + kendo points") and a printed threshold - a
-// single static comparison with no dice and nothing to simulate. This sim
-// does not model System 1's resolution; it just shows the enemy's printed
-// threshold as a reference number (book_enemies.defense) since it's faster
-// to read off the roster than to re-derive from the fight text.
-//
-// Systems 2 and 3 ARE modeled, since both are round-based, dice-driven, and
-// benefit from automation the same way every other sim in this app does:
-// each round both sides roll 2d6, add it to their own total (player: roll +
-// Battle Code; enemy: roll + БОЙНИ КАЧЕСТВА), and the difference is applied
-// to whichever side lost the exchange. System 2 applies the difference to
-// ИЗДРЪЖЛИВОСТ (Endurance) - fight ends at 0. System 3 applies the
-// difference to the player's own Battle Code instead, leaving Endurance
-// untouched entirely - fight ends only if Battle Code reaches 0 (forced
-// worst branch); otherwise the player checks their current, evolving Battle
-// Code against the section's own threshold whenever they choose to stop.
-// The book explicitly allows switching between Systems 2 and 3 from round to
-// round within the same fight, so the system selector is live, not locked in
-// at fight start.
-//
-// Deliberately NOT modeled: chargen/skill-journal tracking (СИЛА, ЛОВКОСТ,
-// БЪРЗИНА, the 15 selectable skills, weapon choice) - each fight states its
-// own Battle Code formula in the text, so the player computes it externally
-// from their journal and enters the result directly, same free-form-entry
-// precedent as attackModifier in every other sim. Also not modeled: several
-// fights' asymmetric early-stop conditions ("battle ends if either side
-// loses more than N points" rather than at 0/the printed threshold) - apply
-// those by hand by watching the log, same "note it, handle manually"
-// precedent as book 325's §4 exception.
-//
-// book_enemies.attack holds БОЙНИ КАЧЕСТВА (the enemy's own per-round dice
-// bonus), .hp holds ИЗДРЪЖЛИВОСТ (Endurance, spent by System 2), .defense
-// holds the informational System-1 threshold described above - a different
-// repurposing than every other sim's precedent, since this book needs a
-// third distinct number. 35 rows read from all 74 flagged sections (many
-// flagged sections turned out to be chargen/training branches with no
-// fight); a few same-name/same-stat/same-destination groups (kenjutsu master
-// §110=§120, Uesugi warband §260=§270, Kenshin Uesugi's duel §302=§306) are
-// merged into one row each.
-//
-// All state lives in pt.sim122, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Проклятието на меча / Curse of the Sword, book 122)
+// System 1 displays the encounter threshold only.
+// Systems 2/3 apply opposed 2d6-total differences to Endurance/Battle Code respectively.
+// Mode switches are allowed mid-fight; encounter-specific early stops are manual.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';

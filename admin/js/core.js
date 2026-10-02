@@ -1,13 +1,5 @@
-// Shared formatting/DOM-building helpers, plus the generic sortable/searchable/
-// paginated-table system every admin tab (Users, Books, Series, Anthologies,
-// Inventory) is built on. No tab-specific logic lives here.
-// To remove: this is the foundation every other admin/js/*.js module imports
-// from - removing it means rewriting all of them.
-
-// ── Confirm dialog ────────────────────────────────────────────────────────────
-// Wired here (not left to boot.js) since almost every tab module calls
-// showAlert/showConfirm - the #confirm-overlay markup itself lives in
-// admin/index.html and is assumed present the moment this module loads.
+// Shared admin helpers and sortable, searchable, paginated tables.
+// The confirm overlay must exist before these bindings run.
 
 let _confirmCb = null;
 
@@ -135,17 +127,12 @@ export function daysInactiveClass(days) {
   return 'act-stale';
 }
 
-// _esc is a pre-existing separate escaper (no single-quote escaping, unlike esc)
-// kept distinct rather than merged - some call sites embed values inside
-// single-quoted onclick="..." strings where esc()'s &#39; would double-escape.
+// Keep _esc distinct: esc's single-quote encoding would double-escape these onclick strings.
 export function _esc(s) {
   return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// Takes the row's own is_admin flag directly (id-based, from the DB), not a
-// username comparison - a hardcoded admin username would silently stop
-// badging the real admin on a rename, matching authorBadge/contributorBadge
-// below which already take a boolean rather than re-deriving one from a name.
+// Use the DB admin flag so renaming an account does not change its badge.
 export function adminBadge(isAdmin) {
   return isAdmin ? '<span class="admin-badge" data-tooltip="Admin">★</span>' : '';
 }
@@ -271,10 +258,7 @@ export function addStatCard(grid, label, value) {
   grid.appendChild(card);
 }
 
-// ── Generic sortable/searchable/paginated-table system ───────────────────────
-
-// tableId → { col, dir }. Pre-seeded for tables whose default sort isn't
-// "unsorted" - storeData() lazily adds an entry for any table not listed here.
+// Default table sorts; unlisted tables are initialized by storeData().
 export const _sortState = { users: { col: 'last_active', dir: -1 }, books: { col: 'name', dir: 1 }, pts: { col: 'lastActionAt', dir: -1 }, ubooks: { col: 'last_run_at', dir: -1 } };
 export const _tableData  = {}; // tableId → data[]
 
@@ -314,9 +298,7 @@ export function setSearchFields(tableId, fields) {
   _searchState[tableId] = { query: '', fields };
 }
 
-// Optional per-table row filter layered on top of the search query - e.g. the
-// books tab's "Missing PDF only" toggle. Applied by getFiltered, so sort,
-// pagination and search all compose with it automatically.
+// Compose row filters with search, sorting, and pagination.
 export function setRowFilter(tableId, fn) {
   _rowFilters[tableId] = fn;
 }
@@ -336,9 +318,7 @@ export function getFiltered(tableId) {
   return rows;
 }
 
-// Wires a .admin-search-input/.admin-search-clear pair to a table's search
-// state, resetting to page 1 when applicable and re-rendering through the
-// existing sort/filter pipeline on every keystroke and on clear.
+// Reset pagination and render through the table filter pipeline on search/clear.
 export function wireTableSearch(tableId, inputId, clearId, renderFn, { paginate = true } = {}) {
   const input = document.getElementById(inputId);
   const clearBtn = document.getElementById(clearId);
@@ -386,10 +366,7 @@ export function initSortHeaders(tableId, renderFn, { paginate = true } = {}) {
 export const PAGE_SIZE  = 50;
 export const _pageState = {}; // tableId → { page }
 
-// Slices fullData to the current page, renders it via renderFn, then draws
-// prev/next controls. Call this instead of renderFn(fullData) directly for
-// any paginated table; sort/reload call sites pass the same renderFn each
-// time so Prev/Next re-slice the same already-fetched array with no refetch.
+// Render the current page from cached data; pagination must not refetch.
 export function renderPaged(tableId, fullData, renderFn, pageSize = PAGE_SIZE) {
   if (!_pageState[tableId]) _pageState[tableId] = { page: 0 };
   const state = _pageState[tableId];

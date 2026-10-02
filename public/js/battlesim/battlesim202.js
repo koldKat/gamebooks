@@ -1,55 +1,6 @@
-// ── Battle Simulator (Deathtrap Dungeon, book 202) ───────────────────────────
-// Self-contained module. Imports from state.js, play.js, charsheet.js and util.js.
-// Visibility is gated (book 202 only) by the caller in boot.js via
-// setSim202Visible().
-// To remove: delete this file, remove its import line and initSim202()/
-// setSim202Visible() calls from boot.js, and remove the .bsim-* CSS (shared
-// with battlesim8.js/battlesim829.js/battlesim286.js/battlesim198.js/
-// battlesim199.js/battlesim200.js/battlesim186.js/battlesim201.js, so only
-// remove it if all nine are gone).
-//
-// Standard Fighting Fantasy SKILL/STAMINA/LUCK system, same core numbers,
-// Test Your Luck table, and single-dose potion-of-three-choices setup as
-// book 201 - reused verbatim rather than reinvented.
-//
-// Four new generic knobs cover every special combat rule found in the
-// third-pass verified reference, none of it hardcoded by encounter name:
-// - instaKillEnemyAS (numeric, 0 = off): if the enemy's (or the paired side
-//   enemy's) rolled Attack Strength ever equals this exact value, the player
-//   dies instantly regardless of remaining STAMINA. Covers the Giant
-//   Scorpion (sec.143): both SKILL-10 pincers attack independently every
-//   round via the existing attackModifier-free pairedFight mechanic, and a
-//   pincer roll of exactly 22 is an instant kill.
-// - instaKillOnEnemyWin (checkbox): the enemy winning even a single Attack
-//   Round is instant death, bypassing normal STAMINA loss entirely. Covers
-//   the Mirror Demon (sec.327).
-// - winAfterHits (numeric, 0 = off): once the player has landed this many
-//   successful wounds in the current fight, the enemy is instantly
-//   defeated instead of taking normal damage. Covers the Bloodbeast's
-//   "weakness known" route (sec.172, win after the 2nd landed hit).
-// - luckyKillOnWin (checkbox): every time the player lands a hit, instead of
-//   the normal 2-STAMINA wound Test Your Luck is mandatory - Lucky finds the
-//   weak point and ends the fight immediately, Unlucky undoes that hit's
-//   damage entirely (no partial credit) and the fight continues. Covers the
-//   Bloodbeast's "weakness unknown" route (sec.225).
-// attackModifier/enemyWoundDamage/pairedFight/sideEnemy are reused exactly
-// as book 200/201 built them - they already cover every "-N SKILL this
-// fight" (bare-handed Orcs, fatigued vs the Dwarf Trialmaster, restricted-
-// position Flying Guardians, dagger-route Bloodbeast) and "second attacker
-// fights alongside, never woundable" (the two Goblins) case in the roster.
-//
-// Deliberately NOT modeled, same precedent as book 201: pre-battle one-off
-// STAMINA/SKILL losses (Manticore tail hits, Ivy's grip, Orc weapon-knockaway,
-// Imitator's opening fist) - apply those by hand with the stat steppers
-// before starting the fight, same as any other narrative loss. Also not
-// modeled: Escape options (auto -2 STAMINA, Luck-eligible) - rare enough,
-// and easy enough to apply by hand, that a dedicated button isn't worth it,
-// matching every other sim in this app. One-time permanent stat rewards
-// (Amulet of Strength +1 SKILL/+1 STAMINA) are applied via the Initial
-// SKILL/STAMINA fields directly, not tracked as items - only ongoing
-// while-carried/while-worn bonuses get their own Items checkbox.
-//
-// All state lives in pt.sim202, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Deathtrap Dungeon, book 202)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -143,18 +94,7 @@ function _enemyName(d) { return d.enemy.name.trim() || t('battlesim.default_enem
 function _enemyNameSafe(d) { return escapeHtml(_enemyName(d)); }
 function _sideEnemyNameSafe(d) { return escapeHtml(d.sideEnemy.name.trim() || 'the second attacker'); }
 
-// Persistent while-carried/while-worn items found in the reference (one-time
-// permanent stat gains like the Amulet of Strength are applied via the
-// Initial SKILL/STAMINA fields directly, not tracked here):
-// - Dwarf Chainmail (sec.28): +1 SKILL while worn.
-// - Iron Shield (sec.95): +1 SKILL while carried (also blocks the
-//   Manticore's tail volley entirely on that route - no STAMINA loss to
-//   apply by hand in that case).
-// - Ninja Curved Sword (sec.286): +4 SKILL while wielded. Only one weapon
-//   bonus applies at a time per the core rules, so don't also enable
-//   Chainmail's sword-independent bonus alongside a different magic weapon
-//   if the book ever adds one - not a conflict for this book's roster today.
-// - Winged Helmet (sec.218): +1 SKILL while worn.
+// Equipment bonuses apply while worn/wielded; permanent stat gains remain manual.
 function _effectiveSkill(d) {
   let skill = d.player.skill;
   if (d.player.hasChainmail)    skill += 1;
@@ -176,9 +116,7 @@ function _resetEncounterKnobs(d) {
   d.sideEnemy = { name: '', skill: 0, staminaMax: 0 };
 }
 
-// Uncapped (was previously trimmed to the last 100) - the admin dashboard
-// aggregates battle counts app-wide from this array, so per-user history needs
-// to be a true lifetime total, not a rolling window.
+// Keep lifetime outcomes: admin totals require the full history.
 function _recordOutcome(d, outcome) {
   d.history.push({
     enemy: _enemyName(d), outcome,
@@ -238,10 +176,7 @@ function _runRound() {
     if (d.player.stamina > 0) d.pendingLuckQueue.push({ kind: 'enemy-hit' });
   }
 
-  // Paired fight: a second, independent exchange with its own fresh player
-  // roll - covers the two-attacker encounters (Goblins choosing a target
-  // each round, the Giant Scorpion's second pincer). The side attacker is
-  // never wounded through this path, matching the literal rule for both.
+  // Side attackers roll independently each round and cannot be wounded.
   if (d.pairedFight && d.sideEnemy.staminaMax > 0 && d.player.stamina > 0) {
     const sidePlayerAS = _roll2d6() + _effectiveSkill(d) + (d.player.attackModifier || 0);
     const sideAS = _roll2d6() + d.sideEnemy.skill;
@@ -272,9 +207,7 @@ function _runRound() {
   _renderAll();
 }
 
-// Test Your Luck after a hit lands: costs 1 LUCK regardless of outcome. Same
-// table as book 201's, plus a new 'weakpoint-hit' kind for luckyKillOnWin
-// fights - Lucky ends the fight outright, Unlucky means the hit did nothing.
+// Weak-point Luck checks kill on success and deal no damage on failure.
 function _testLuck() {
   const d = _data();
   if (!d || !d.pendingLuckQueue.length || d.player.luck <= 0) return;
@@ -323,9 +256,7 @@ function _skipLuck() {
   const d = _data();
   if (!d || !d.pendingLuckQueue.length) return;
   const event = d.pendingLuckQueue.shift();
-  // Skipping a mandatory weak-point check still needs a resolution - treat a
-  // skip as declining to press the advantage, i.e. the same as Unlucky (no
-  // effect), rather than leaving the hit's damage in limbo.
+  // Skipping a mandatory weak-point check declines the hit, matching failure.
   if (event.kind === 'weakpoint-hit') {
     _appendLog(d, t('battlesim202.log.weakpoint_decline', { stamina: d.enemy.stamina, staminaMax: d.enemy.staminaMax }));
   }
@@ -863,9 +794,7 @@ export function initSim202() {
     if (!d) return;
     const map = FIELD_MAP[id];
     if (!map) return;
-    // Attack modifier is the one field allowed to go negative (bare-handed/
-    // disarmed/fatigue penalties are always a subtraction) - every other
-    // field stays clamped to 0 or above.
+    // Allow negative attack modifiers; other fields stay non-negative.
     val = id === 'sim202-player-atkmod' ? Number(val) : Math.max(0, val);
     if (id === 'sim202-player-skill') val = Math.min(val, d.player.skillInitial);
     if (id === 'sim202-player-stamina') val = Math.min(val, d.player.staminaInitial);

@@ -8,10 +8,10 @@ import { spawnSync } from 'node:child_process';
 const dir = new URL('../../../public/js/', import.meta.url);
 test('core relocation preserves implementations without root wrappers or duplicate state', () => {
   const digests = {
-    state: 'fb7dc74e417574b1c6e483412ee9b6da3e2fdbfcf6f660412628baea3c8611d7',
+    state: '64015a4f39fa4487796340dba5605a82b268995ed898155450dd6cea5d365663',
     constants: 'b67245d28638c7d42c976068c7bc86ac822fff89d47c537d8fd9672ff19826a9',
     sort: 'a37194516dcc6faf776288906e52f3b9e8dc8d30a81df7158108d8b0e3742eb6',
-    util: '3d9db54f3e7b6ef467a08584b9afb4323271a8c3d5dd85a3d0c7e61d205892f2',
+    util: 'bf2c4f2663294ce6cfba6305a8def10d7d301ef1bc1c0bf22453bf487fbb544d',
   };
   for (const [name, digest] of Object.entries(digests)) {
     assert.equal(existsSync(new URL(name + '.js', dir)), false);

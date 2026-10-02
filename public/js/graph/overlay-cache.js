@@ -1,9 +1,7 @@
 import { state, parseSecId } from '../core/state.js';
 import { graphRuntime } from './runtime.js';
 
-// ── Overlay draw cache ────────────────────────────────────────────────────────
-// Rebuilt in syncGraph() (state-change time), consumed in drawOverlays() (per frame).
-// Avoids iterating all nodes and calling measureText on every afterDrawing event.
+// Build overlay measurements on state changes, not every drawing frame.
 export const _NOTE_FONT      = '10px Segoe UI, system-ui, sans-serif';
 export const _NOTE_PAD_X     = 5;
 export const _NOTE_PAD_Y     = 3;
@@ -11,14 +9,8 @@ export const _NOTE_LINE_H    = 12;
 export const _NOTE_FONT_PX   = 10;
 const _measureCtx     = document.createElement('canvas').getContext('2d');
 
-// Nodes that need any overlay drawn - only these are passed to getPositions().
-// Per-node overlay descriptor: { sec, priority, battle, note, noteLayout? }
-// Separate map for pinned-note layout (also a subset of graphRuntime._overlayNodes).
-// Cached positions (graph-space coords don't change during pan/zoom, only on drag).
-
-// Same caching strategy as the overlay cache above, for the fog-of-grid halo
-// positions - all nodes are candidates here (not just ones with an overlay),
-// so it's kept separate rather than reusing graphRuntime._overlayPositions.
+// Cache overlay descriptors and drag-sensitive positions.
+// Keep fog positions separate because fog can involve nodes without overlays.
 
 export function _buildOverlayCache() {
   graphRuntime._overlayNodeIds  = [];

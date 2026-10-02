@@ -1,118 +1,6 @@
-// ── Battle Simulator (Роди се сянка, book 399, Хроники на Орм) ──
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 399 only) by the caller in boot.js via
-// setSim399Visible().
-// To remove: delete this file, remove its import line and initSim399()/
-// setSim399Visible() calls from boot.js, remove 'sim399' from
-// SIM_HISTORY_KEYS in server/db/xp.js, remove 'sim399-overlay' from
-// ALL_PANEL_OVERLAY_IDS in util.js and the #sim399-btn selectors in
-// battlesim.css.
-//
-// This book's own rules ("ПРОВЕЖДАНЕ НА БИТКИ") define FIVE distinct combat
-// types, each with its own order/attack/defence formula, all sharing the
-// same shape: order = 1d6(Шанс) + Бързина + (equipment Speed, if armed);
-// attack = 1d6(Шанс) + [mode-specific stats]; damage = attack total minus
-// the DEFENDER's own stats per the SAME formula the ATTACKER is using (not
-// the defender's own combat type) - a fight can be asymmetric (§14/§61/§62
-// explicitly state the player fights with Vehicle-combat rules while the
-// monster fights with Unarmed-combat rules; each side's attacks still use
-// their own assigned formula). A negative result is NOT a miss - "Ако
-// резултатът е отрицателно число, загубата е в ущърб на атакуващия" (if the
-// result is negative, the ATTACKER takes that damage instead) - modeled
-// here as backlash, not a no-op miss.
-//
-// The five modes and their formulas (order add-in / attack sum / defence
-// subtracted from attack):
-//   - Невъоръжена схватка (unarmed): order +0; attack = Сила; defence =
-//     Устойчивост + Рефлекс.
-//   - Бой с хладни оръжия (melee): order + weapon Speed; attack = Сила +
-//     Боравене с хладни оръжия + weapon Power; defence = Устойчивост +
-//     Рефлекс + Боравене с хладни оръжия (the DEFENDER's own melee skill).
-//   - Престрелка (gunfight): order + weapon Speed; attack = Точност +
-//     Стрелба + weapon Power; defence = Устойчивост + Рефлекс.
-//   - Кибсхватка (cyberspace): order + computer Speed; attack = Точност +
-//     Пълзене + computer Power; defence = Устойчивост + Рефлекс.
-//   - Бой с превозни средства (vehicle): order + vehicle Speed; attack =
-//     Точност + Управление на МПС + vehicle Power + vehicle Armament;
-//     defence = Устойчивост + Рефлекс + vehicle Manoeuvrability.
-// To keep the form compact, one generic "Skill" field (relabelled per mode:
-// melee/shooting/netrunning/driving) and four generic equipment fields
-// (Power, Speed, Armament, Manoeuvrability - the last two only meaningful
-// for Vehicle combat) are shared across all five modes rather than showing
-// 15+ separately-named fields; unused fields for a given mode are simply
-// left at 0.
-//
-// Critical Endurance: each side's Издръжливост has two printed numbers
-// (e.g. "15 - 6") - the second is the critical threshold. The book's rules
-// state that once current Endurance drops to/below the critical value, ALL
-// of that character's remaining coefficients permanently drop by one point
-// (until Endurance is restored above the threshold by some other means,
-// which this sim can't track). Modeled as a one-time flag per side: the
-// first time a hit brings Endurance to/below its critical value, 1 is
-// subtracted from every stat field for that side (Speed/Str/Acc/Reflex/
-// Resilience/Skill/Power/EqSpeed/Weapon/Manoeuvrability), floor 0.
-//
-// Full enemy roster (13 rows, read from every stat-block-bearing section of
-// 398 total):
-//   - Гигантски гущер (§14): End 56-28, Speed 6, Str 10, Reflex 6, Resil 8.
-//     Player fights by Vehicle-combat rules (the player is in a digger),
-//     the lizard by Unarmed-combat rules - an asymmetric fight.
-//   - Служителка на "Бионаги" (§53, Cyberspace): End 18-12, Speed 2, Str 2,
-//     Acc 2, Reflex 2, Resil 3, Netrun 4; computer "Toshiba" - no printed
-//     Power/Speed for it, left at 0/0 (unconfirmed, not a source gap this
-//     sim can resolve).
-//   - Виртуален фехтовач (§58, Melee/rapier): End 15-6, Speed 3, Acc 4,
-//     Reflex 3, Resil 2, Melee 5; rapier Power 3, Speed 4.
-//   - Киберчудовище (§61): End 36-16, Speed 4, Str 8, Reflex 5, Resil 9.
-//     Same asymmetric shape as §14 (player: Vehicle-combat, monster:
-//     Unarmed-combat).
-//   - Киберпаяк (§62): End 16-8, Speed 4, Acc 8, Reflex 5, Resil 8; plasma
-//     cannon Power 4, Speed 2. Player fights by Vehicle-combat rules, the
-//     spider by Gunfight rules (asymmetric).
-//   - Виртуална котка-сънувач "Баст" (§78, Cyberspace): End 8-4, Speed 4,
-//     Acc 4, Reflex 5, Resil 3, Netrun 5; her symbiotic system (in place of
-//     a computer) has Power 4, Speed 5.
-//   - Неизвестен корпоративен служител (§122, Unarmed): End 14 (no printed
-//     critical value - the source states this specific fight ends early,
-//     at 10 Endurance rather than 0, a one-off rule override this sim
-//     doesn't special-case; seeded with critical 10 as the closest fit),
-//     Speed 2, Str 2, Reflex 2, Resil 3.
-//   - Уличен дилър (§147, Unarmed): End 6-2, Speed 1, Str 2, Reflex 1,
-//     Resil 2.
-//   - Защитна програма (§270, Cyberspace): End 10-4, Speed 2, Acc 2,
-//     Reflex 2, Resil 4, Netrun 3; Power 3, Speed 3.
-//   - Виртуални младежи (§291, Unarmed, two separate targets fought in
-//     sequence): Момче (Boy) End 12-8, Speed 1, Str 2, Reflex 2, Resil 2;
-//     Момиче (Girl) End 8-6, Speed 2, Str 1, Reflex 2, Resil 1 - only the
-//     Boy is seeded as the book_enemies row; switch to the Girl's numbers
-//     by hand once the Boy falls.
-//   - Андроидка убиец (§318): End 20-15, Speed 2, Str 2, Reflex 2, Resil 3,
-//     Melee 5 (grafted claws) - the source explicitly lets the player pick
-//     either Unarmed-combat or Melee-combat rules for this one; the sim
-//     doesn't lock this choice, just pick whichever mode on the player
-//     side.
-//   - Спецгард на "Саурон" (§385, Melee, standard blades): End 15-6,
-//     Speed 2, Acc 4, Reflex 2, Resil 3, Melee 4; blade Power/Speed not
-//     printed, left at 0/0. This section's first wave (four basic
-//     Gunfight-rules guards using human base stats from "Видово Сечение на
-//     населението", End 15-6/Speed 2/Str 2/Acc 2/Reflex 2/Resil 2, each
-//     with a different weapon) isn't seeded as its own row - reuse the
-//     "Човек" base stats by hand for those four fights.
-//   - Неизвестен противник (§396, Melee, standard blades): End 15-6,
-//     Speed 3, Acc 3, Reflex 2, Resil 2, Melee 5.
-//
-// book_enemies column reuse (only 4 numeric columns exist; this book's
-// shape needs far more than that): hp = Издръжливост (starting value); pb
-// = critical Endurance threshold (reused - NOT a damage-dice count, unlike
-// every other sim in this app); attack = the single most relevant "Skill"
-// number for that encounter's stated combat type (melee/shooting/netrun/
-// driving, whichever applies); defense = Устойчивост. Speed/Str/Acc/Reflex
-// and all equipment Power/Speed/Weapon/Manoeuvrability values have no
-// column at all - always re-entered by hand per fight from the notes above,
-// same as the free-entry pattern already used for Armour in the Blood
-// Sword sims.
-//
-// All state lives in pt.sim399, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Роди се сянка, book 399, Хроники на Орм)
+// Five combat modes can differ between player and enemy.
+// Damage uses the attacker's mode formula for both sides, not the defender's own mode.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -125,11 +13,7 @@ const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" ari
 
 const MODES = ['unarmed', 'melee', 'gunfight', 'cyber', 'vehicle'];
 
-// Which combat mode each book_enemies row's OWN stats are meant to be used
-// with (per the section text) - book_enemies has no column for this, so
-// it's kept here purely as an autocomplete convenience. Does not touch the
-// player's own mode field, since several of these fights are asymmetric
-// (the player's mode is a separate choice made from reading the section).
+// Autocomplete sets the enemy's combat mode without changing the player's independently chosen mode.
 const ENEMY_MODE = {
   'Гигантски гущер': 'unarmed',
   'Служителка на "Бионаги"': 'cyber',
@@ -296,9 +180,7 @@ function _attack() {
   let enemyOrder = _orderVal(d.enemy);
   let tieRerolls = 0;
   while (playerOrder === enemyOrder && tieRerolls < 20) {
-    // "Ако изискваният от правилата на битката сбор е еднакъв за двамата
-    // противници, хвърлянето се повтаря без никакви промени" - the book
-    // says reroll on a tie, not default to a fixed winner.
+    // Reroll tied initiative; do not choose a fixed winner.
     playerOrder = _orderVal(d.player);
     enemyOrder = _orderVal(d.enemy);
     tieRerolls++;

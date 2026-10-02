@@ -1,8 +1,4 @@
-// ── Shop ──────────────────────────────────────────────────────────────────────
-// Self-contained module. Imports only from state.js and util.js.
-// To remove: delete this file, remove its import line and initShop()/openShopModal()/
-// refreshCoinsDisplay()/updateCoinsDisplay()/setShopHooks() calls from boot.js,
-// and delete public/css/shop.css (and its <link> in index.html).
+// Gold shop purchases and coin display.
 
 import { apiFetch, getToken } from '../core/state.js';
 import { escapeHtml } from '../core/util.js';
@@ -14,8 +10,7 @@ export function setShopHooks(h) { _hooks = h || {}; }
 
 export const COIN_SVG = `<svg class="coin-icon" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7.5" fill="#f59e0b" stroke="#92400e" stroke-width="0.75"/><circle cx="8" cy="8" r="5.5" fill="none" stroke="#fde68a" stroke-width="1"/><text x="8" y="8" text-anchor="middle" dominant-baseline="central" font-size="7" font-weight="bold" fill="#78350f" font-family="serif">G</text></svg>`;
 
-// 1 purchase per 10 levels: level 0-10 -> 1, 11-20 -> 2, 21-30 -> 3, etc. Mirrors
-// undoFastTravelCap() in server/db.js (the real enforcement) - keep both in sync.
+// Mirror the server cap: one purchase for levels 0-10, then one per additional 10 levels.
 function _undoFastTravelCap(level) {
   return Math.floor((Math.max(level, 1) - 1) / 10) + 1;
 }
@@ -72,14 +67,7 @@ let _shopData = null;
 let _rewardProfileFetchPromise = null;
 let _rewardProfileDebounceTimer = null;
 let _rewardProfilePendingResolvers = [];
-// Several independent, uncoordinated call sites can each ask for a refresh
-// within the same real burst (e.g. creating a book with several metadata
-// fields fires many awardXp events server-side; rewards.js/community/notif.js/livetab.js
-// each have their own reasons to call this) - without merging, each call used
-// to fire its own /api/profile fetch, and the XP bar (profile.js) would then
-// see several small, choppy back-to-back updates instead of one clean jump to
-// the final total. Trailing-debounce so any calls within REWARD_PROFILE_DEBOUNCE_MS
-// of each other collapse into a single fetch, shared by every caller.
+// Trailing-debounce profile refreshes across all callers to avoid duplicate fetches and choppy XP updates.
 const REWARD_PROFILE_DEBOUNCE_MS = 300;
 
 function _shopHasAffordable(balance) {
@@ -107,10 +95,7 @@ function updateSpentDisplay(spent) {
   if (el) el.textContent = t('shop.spent', { n: Number(spent || 0).toLocaleString() });
 }
 
-// Mirrors the server's _rollBonusGc formula exactly (xp.js) - level x 0.01%
-// base, plus up to another level x 0.01% from purchases (capped at level
-// purchases there too) - just for display, the server is always the real
-// authority on what actually gets rolled.
+// Mirror the server's bonus-GC probability for display only; the server decides awards.
 function _bonusGcChancePct() {
   const level = _shopData?.level || 0;
   const purchased = Math.min(_shopData?.bonusGcChancePurchased || 0, level);

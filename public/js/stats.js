@@ -1,7 +1,4 @@
-// ── Stats for nerds ────────────────────────────────────────────────────────────
-// Self-contained module. Imports only from util.js. Fetches /api/site-stats and renders it.
-// To remove: delete this file, remove its import line and initStats()/closeStatsModal()
-// calls from boot.js, and remove the stats-modal CSS from style.css.
+// Stats dialog fetched from /api/site-stats.
 
 import { escapeHtml, fetchPublic } from './core/util.js';
 import { t } from './i18n.js';
@@ -13,11 +10,7 @@ export function closeStatsModal() {
 export async function openStatsModal() {
   const overlay = document.getElementById('stats-modal-overlay');
   const body    = document.getElementById('stats-modal-body');
-  // Inlined rather than imported - this module is deliberately self-contained
-  // (see header comment), so it carries its own copy of the same
-  // .feed-loading-graph/.flg-* animated icon markup used by the feed/
-  // live-reading/graph/sidebar loaders (demo.css, loaded globally) instead
-  // of importing it from feed.js/boot.js.
+  // Keep loader markup local to avoid importing the feed's dependency tree.
   body.innerHTML = `<div class="stats-loading stats-loading--active">
     <svg class="feed-loading-graph" viewBox="0 0 32 32">
       <line x1="16" y1="16" x2="6"  y2="7"  stroke="#4b5563" stroke-width="1.8" stroke-linecap="round"/>
@@ -38,8 +31,7 @@ export async function openStatsModal() {
     if (!res.ok) throw new Error('Failed to load stats');
     const s    = await res.json();
     const fmtAvgLevel = n => Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-    // K/M/B/T… with decimal places increasing per tier (K=1, M=2, B=3, T=4…) so
-    // bigger numbers keep roughly the same precision instead of losing more digits.
+    // Increase compact-number precision with each K/M/B/T tier.
     const COMPACT_SUFFIXES = ['', 'K', 'M', 'B', 'T', 'Qa', 'Qi'];
     const fmtCompact = n => {
       n = Number(n) || 0;
@@ -56,9 +48,7 @@ export async function openStatsModal() {
       const str = tier === 0 ? Math.round(v).toLocaleString() : v.toFixed(tier);
       return (neg ? '-' : '') + str + COMPACT_SUFFIXES[tier];
     };
-    // Every plain count in this modal switches to the compact K/M/B/T form once
-    // it crosses 10,000, so any stat that grows large stays readable - not just
-    // the handful of fields we know run high today.
+    // Compact all counts above 10,000.
     const fmt = n => {
       const num = Number(n) || 0;
       return Math.abs(num) >= 10000 ? fmtCompact(num) : num.toLocaleString();

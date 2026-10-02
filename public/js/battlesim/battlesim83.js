@@ -1,47 +1,6 @@
-// ── Battle Simulator (Войната на Понтиак / War of Pontiac, book 83) ────────
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 83 only) by the caller in boot.js via
-// setSim83Visible().
-// To remove: delete this file, remove its import line and initSim83()/
-// setSim83Visible() calls from boot.js, remove 'sim83' from
-// SIM_HISTORY_KEYS in server/db/xp.js, and remove the .bsim-* CSS (shared
-// with the other battlesim*.js files, so only remove it if all are gone).
-//
-// Rules p.5-6 ("ПРИЛОЖЕНИЕ ЗА ПРОВЕЖДАНЕ НА БИТКИ СЪС СЛУЧАЙНИ ЧИСЛА" -
-// the random-number combat appendix, explicitly scoped to single combat
-// only, not mass battles): each exchange is TWO number-picks made by the
-// acting side, not an opposed roll - pick a number for yourself (added to
-// your STRENGTH + the WEAPON you're using this fight) and a number for the
-// opponent (added to their DEFENSE); if your total is >= theirs, they lose
-// 2 ENDURANCE, otherwise you do. When the opponent attacks you instead,
-// the same two picks happen but using the opponent's ATTACK stat for
-// their side. The book's own enemy table gives every foe a DEFENSE,
-// ATTACK and ENDURANCE value (book_enemies.defense/attack/hp respectively)
-// - see the 12-entry roster on rules p.6.
-//
-// The book never states a separate player DEFENSE stat - STRENGTH is the
-// only combat stat on the character sheet (rules p.4: "ДНЕВНИК НА
-// ПРИКЛЮЧЕНИЕТО", Сила/Бързина/Престиж/Издръжливост). Modeled here as:
-// your own STRENGTH ALONE (no weapon bonus - the rules only ever grant
-// that while attacking, part Б) is used as your defense roll when the
-// enemy strikes back, since it's the only value the book gives you.
-// Flagged as an assumption, not a stated rule - if it plays wrong
-// against the physical book, this is the spot to revisit.
-//
-// WEAPON bonus is a free-entry number, not a fixed catalog: the rules
-// explicitly restrict which weapon is usable to whatever a given episode
-// names ("Можеш да се биеш само с оръжията, споменати в съответния
-// епизод"), and no weapon/bonus table is given anywhere in the book -
-// the reader is expected to already know the bonus from earlier in the
-// story. Left as a manual stepper for the player to set per fight.
-//
-// One "round" here = one full exchange: you strike once, then (if both
-// sides are still standing) the enemy strikes back once - matching every
-// other sim in this app's pattern of "player acts, then enemy acts" per
-// round, since the book's own text doesn't specify how many strikes make
-// up a "round" beyond "continues until someone's ENDURANCE reaches 0".
-//
-// All state lives in pt.sim83, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Войната на Понтиак / War of Pontiac, book 83)
+// Single-combat appendix: each side attacks using two random picks; wounds cost 2 ENDURANCE.
+// Player defense uses STRENGTH without a weapon bonus: an assumption where the source is silent.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -116,9 +75,7 @@ function _enemyStrike() {
   const enemyPick = _pick();
   const yourPick = _pick();
   const enemyTotal = enemyPick + d.enemy.attack;
-  // No weapon bonus here: the rules only ever grant it while attacking
-  // (part Б - "СИЛА + точките на ОРЪЖИЕТО, КОЕТО ЩЕ ИЗПОЛЗВАШ"), never
-  // while defending, so this uses STRENGTH alone.
+  // Weapon bonuses apply only to attacks; defense uses STRENGTH alone.
   const yourTotal = yourPick + d.strength;
   _appendLog(d, t('battlesim83.log.enemy_strikes', { enemy: _enemyNameSafe(d), enemyPick, attack: d.enemy.attack, enemyTotal, yourPick, strength: d.strength, yourTotal }));
   if (enemyTotal >= yourTotal) {

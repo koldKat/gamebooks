@@ -10,8 +10,7 @@
 }
 .pub-overlay.active { display: flex; }
 
-/* Base modal chrome (background/border/radius/flex/overflow) comes from .inv-modal
-   (see equipment.css) - only the overrides that differ from its defaults live here. */
+/* Inherit modal chrome; override only profile-specific styles. */
 .pub-modal {
   width: min(560px, 92vw);
   max-height: 82vh;
@@ -396,10 +395,7 @@
   border: 1px solid rgba(167,139,250,0.3);
   border-radius: 4px;
   transition: background 0.12s, color 0.12s;
-  /* A flex item's default min-width:auto holds it at its full unbroken
-     text width, which flex-wrap on the parent can't shrink - a long
-     anthology name (or several buttons in a row) would push straight
-     past the dialog edge instead of wrapping. */
+  /* Allow flex items to shrink so long names and actions wrap inside the dialog. */
   min-width: 0;
   max-width: 100%;
   white-space: normal;

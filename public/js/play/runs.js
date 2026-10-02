@@ -17,17 +17,13 @@ export function startPlaythrough(entrySection = null) {
   const { inventory: invTmpl, equipment: eqTmpl, equipmentVisible: eqVisTmpl } = instantiateLoadout();
   state.playthroughs.push({ path: [startSec], completed: false, result: null, undosUsed: 0, fastTravelsUsed: 0, startedAt: Date.now(), charSheet: sheet, inventory: invTmpl, equipment: eqTmpl, equipmentVisible: eqVisTmpl, diceState: { count: state.dicePrefs?.count ?? 2, die: state.dicePrefs?.die ?? 6, lastResult: null } });
   state.activePtIndex = state.playthroughs.length - 1;
-  // Fire AFTER the new playthrough is active, so the viewing-pt-change callback
-  // (which refreshes #inv-display and the charsheet) reflects the new run's
-  // inventory/equipment instead of the stale previous state.
+  // Notify viewing changes after activating the new run so displays read its inventory/character.
   setViewingPt(null, true);
   saveState();
   render();
   const newPt     = state.playthroughs[state.activePtIndex];
   const focusSec  = newPt?.path.at(-1) ?? startSec;
-  // See wouldAutoNav's own doc comment - this used to be unconditional,
-  // which is what let it stack on top of the auto-nav chain's own focus()
-  // calls (see the graph physics jitter investigation for the full story).
+  // Skip focus when auto-navigation owns the camera.
   if (network && !wouldAutoNav(focusSec, newPt)) {
     const bookState = state, focusNetwork = network;
     setTimeout(() => {
@@ -60,8 +56,7 @@ export function startPortalRun(entrySection, runIndex, charSheet = null) {
       if (!pt.equipment) { pt.equipment = eqTmpl; pt.equipmentVisible = eqVisTmpl; }
     }
     if (charSheet) pt.charSheet = JSON.parse(JSON.stringify(charSheet));
-    // Fire AFTER the run is active, so the viewing-pt-change callback refreshes
-    // #inv-display/charsheet from the now-current playthrough, not the stale one.
+    // Notify after activating the run so display callbacks read current state.
     setViewingPt(null, true);
     saveState();
     render();
@@ -98,8 +93,7 @@ export function loadRun(index) {
   } else {
     // Placeholder or in-progress run
     state.activePtIndex = index;
-    // Fire AFTER activation, so the viewing-pt-change callback refreshes
-    // #inv-display/charsheet from this run, not the previously-active one.
+    // Notify after activation so display callbacks read this run's state.
     setViewingPt(null, true);
     saveState();
     render();

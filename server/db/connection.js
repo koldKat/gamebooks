@@ -1,8 +1,6 @@
 'use strict';
 
-// Shared SQLite connection + small string/search utilities used across every
-// server/db/* domain module. Every other file in this directory requires this
-// one for `db` rather than opening its own connection.
+// Share one SQLite connection across database modules.
 
 const fs       = require('fs');
 const path     = require('path');

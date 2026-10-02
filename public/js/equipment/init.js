@@ -101,10 +101,7 @@ export function initEquipment() {
   overlay.addEventListener('click', e => { if (e.target === overlay && _mdOnOverlay) _closePanel(); });
   document.getElementById('eq-save-template-btn').addEventListener('click', () => {
     if (_isReadOnly()) return;
-    // Capture each equipped slot's itemId AND its current label/note/qty, so a
-    // new playthrough's instantiateLoadout() can restore the player's custom
-    // names - not just the pool defaults. equipmentVisibleTemplate separately
-    // remembers which slots were marked "show on screen".
+    // Save item metadata and visibility with the equipment template, not just IDs.
     state.equipmentTemplate = Object.fromEntries(
       Object.entries(_eq())
         .map(([k, v]) => [k, { itemId: _eqItemId(v), label: _eqMeta(v).label, note: _eqMeta(v).note, qty: _eqQty(v) }])

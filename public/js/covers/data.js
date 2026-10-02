@@ -12,15 +12,7 @@ let _loadCoversInFlight  = false;
 let _loadCoversPending   = null;
 let _coversAutoRefreshPaused = false;
 
-// A book/anthology creation flow that also attaches a PDF makes two separate
-// server mutations (create, then upload), each broadcasting its own
-// covers_changed SSE event with genuinely different data (no-PDF, then
-// has-PDF) - the fingerprint dedup in loadCovers() only catches *identical*
-// back-to-back calls, so these two real-but-transient states still render
-// twice before the caller's own final _refreshLibraryUi call. Callers doing
-// a known multi-step mutation should pause here and resume immediately
-// before their own final refresh, so only that last, fully-settled state
-// renders.
+// Pause refreshes during multi-step media mutations, then render the settled state once.
 export function pauseCoversAutoRefresh() { _coversAutoRefreshPaused = true; }
 export function resumeCoversAutoRefresh() { _coversAutoRefreshPaused = false; }
 export function _refreshPublicCatalogIfVisible() {
@@ -79,9 +71,7 @@ export async function loadCovers({ force = true } = {}) {
   try {
     const noStore = { cache: 'no-store' };
     const requestToken = getToken();
-    // The books payload carries per-user pdfPath (stripped server-side for
-    // non-admins/non-pdf_access), so the request must include the auth token
-    // when we have one - same pattern as openSeriesActivity below.
+    // Send the auth token for gated per-player PDF metadata.
     const _auth = requestToken ? { headers: { Authorization: `Bearer ${requestToken}` } } : {};
     const [coversRes, booksRes, seriesRes] = await Promise.all([
       publicFetch('/api/public/covers', noStore),
@@ -104,24 +94,8 @@ export async function loadCovers({ force = true } = {}) {
     // view; hidden-page fetches must not mark unapplied data as current.
     const cachesEmpty = !coversState._allBooks.length && !coversState._allCovers.length && !coversState._allSeriesCovers.length;
     const dataChanged = nextFingerprint !== _coversDataFingerprint || cachesEmpty;
-    // A create/edit/delete action triggers loadCovers directly for an
-    // immediate optimistic refresh, AND (if this tab is the multi-tab
-    // "leader") the resulting server SSE push echoes back and triggers a
-    // second loadCovers on the very same tab (livetab.js's covers_changed
-    // relay isn't aware the change originated locally). Both calls pass
-    // force:true, so skipping the redraw here when the fetched data hasn't
-    // actually changed since the last render is what prevents the visible
-    // double-reload, without weakening the fetch itself (still always
-    // refetches, so genuinely new data from other users still renders).
-    //
-    // Panel visibility isn't implied by data freshness, though - if
-    // _showCachedCoversPanel() no-op'd earlier (its own cache arrays were
-    // still empty, e.g. right after a hard refresh that landed directly on
-    // a book/graph page) the panel can be sitting inactive even though the
-    // data we just fetched is identical to what's already cached. Without
-    // this, that combination left the panel permanently hidden until a
-    // second hard refresh, since this early return used to skip the
-    // classList.add('active') below unconditionally.
+    // Fetch on forced refresh, but skip identical redraws.
+    // Restore panel visibility even when the cached data is unchanged.
     if (!dataChanged) {
       if (_isLandingBooksViewVisible() && (covers.length || coversState._allBooks.length || coversState._allSeriesCovers.length)) {
         panel.classList.add('active');
@@ -131,10 +105,7 @@ export async function loadCovers({ force = true } = {}) {
     }
     if (!_isLandingBooksViewVisible()) return;
     coversState._allBooks    = publicBooks;
-    // getAllPublicBooks() doesn't know about series flags - a book's own
-    // isOpenWorld has to be derived here from its seriesId, or every book
-    // belonging to an open-world series would never show the badge/match
-    // the filter even though the series itself does.
+    // Derive book open-world flags from their series.
     const openWorldSeriesIds = new Set((Array.isArray(publicSeries) ? publicSeries : []).filter(s => s.is_open_world).map(s => s.id));
     for (const b of coversState._allBooks) b.isOpenWorld = b.seriesId != null && openWorldSeriesIds.has(b.seriesId);
     coversState._allSeriesCovers = _buildSeriesCoverEntries(Array.isArray(publicSeries) ? publicSeries : [], Array.isArray(coversState._allBooks) ? coversState._allBooks : []);

@@ -1,7 +1,4 @@
-// ── Notebook + notes display overlay ──────────────────────────────────────────
-// Self-contained module. Imports from state.js and play.js.
-// To remove: delete this file, remove its import line and initNotes()/loadNotesForBook()/
-// hideNotesUI() calls from boot.js, and remove the notebook/notes-display CSS from style.css.
+// Notebook and notes overlay.
 
 import { state, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../play.js';
@@ -259,10 +256,7 @@ export function initNotes() {
     _nbApply(notesDisplayInput);
   });
   notesDisplay.addEventListener('mouseleave', () => {
-    // Don't discard an in-progress edit just because the mouse drifted off the panel -
-    // only the explicit Cancel button (below) should throw away unsaved text. Hovering
-    // back in later will show the same draft; saving or loading a different book's
-    // notes will properly overwrite it via setNotesDisplayText().
+    // Retain drafts on mouseleave; discard only on explicit Cancel.
     notesDisplay.classList.remove('hovering');
     _nbApply(notesDisplayBody);
   });
@@ -275,10 +269,7 @@ export function initNotes() {
 
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
-    // showAlert() (a failed save, see saveNotebook/saveNotesDisplay) has no Escape handling
-    // of its own - if its dialog is open on top of the notebook, let it own Escape first,
-    // otherwise dismissing it would also close the notebook underneath and, on next open,
-    // openNotebook() would blank + re-fetch, discarding the unsaved text the alert was about.
+    // Let a covering alert own Escape so dismissing it cannot discard the notebook draft.
     if (document.getElementById('confirm-overlay')?.classList.contains('active')) return;
     if (notebookOverlay.classList.contains('active')) closeNotebook();
   });

@@ -1,62 +1,7 @@
-// ── Battle Simulator (Джунглата на ужасите / The Jungle of Horrors,
-// Bulgarian edition of Lone Wolf book 8, id 436) ──
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 436 only) by the caller in boot.js via
-// setSim436Visible().
-// To remove: delete this file, remove its import line and initSim436()/
-// setSim436Visible() calls from boot.js, remove 'sim436' from
-// SIM_HISTORY_KEYS in server/db/xp.js, and remove the .bsim-* CSS (shared
-// with the other battlesim*.js files, so only remove it if all are gone).
-//
-// English original is book 328 ("The Jungle of Horrors"), which has no sim
-// of its own yet (has_battle_sim=0), so nothing to cross-reference there.
-// The Combat Ratio + Combat Results Table system and COMBAT_TABLE below are
-// the same Lone Wolf combat mechanic used unchanged from
-// battlesim118.js/battlesim322.js/battlesim430.js/battlesim431.js/
-// battlesim432.js/battlesim434.js/battlesim435.js rather than re-derived.
-//
-// Combat Ratio = effective БОЙНИ УМЕНИЯ minus enemy's, computed once when an
-// enemy is selected and fixed for the whole fight. Each round, pick 0-9
-// (a 10-value die), bucket the ratio into the table's 13 printed columns
-// (-11 or less .. 11 or greater), and COMBAT_TABLE[pickRow][ratioCol] gives
-// [enemyLoss, lwLoss] simultaneously, including 'K' (automatically killed)
-// at the extremes.
-//
-// БОЙНИ УМЕНИЯ (COMBAT SKILL) = pick+10, ИЗДРЪЖЛИВОСТ (ENDURANCE) = pick+20,
-// both rolled once at chargen. No LUCK mechanic - that's Fighting Fantasy,
-// not Lone Wolf.
-//
-// attackModifier is a free-form +/- field covering every one-off БОЙНИ
-// УМЕНИЯ change this book's own rules describe by hand: Мозъчна атака
-// (Mindblast, +2, some enemies immune), Мозъчен щит (Mindshield, cancels an
-// enemy's own Mindblast penalty against you), and terrain/injury penalties
-// stated by hand in individual sections. Same precedent as every other sim
-// in this app.
-//
-// Most multi-enemy encounters in this book (e.g. every "Монаси на меча"/
-// "Захда"-style group at §41/§110/§164/§231/§323) are given a single
-// combined БОЙНО УМЕНИЕ/ИЗДРЪЖЛИВОСТ stat line and fought as one enemy.
-// §13/§287 ("Вордак 1"/"Вордак 2") are the exception - two separate stat
-// lines fought sequentially, same as any other book's "re-pick the next
-// roster enemy after defeating the current one" pattern - no special code
-// needed, just two separate book_enemies rows.
-//
-// This book's own equipment rules (§42) offer three distinct healing
-// items with different amounts - Отвара от лаумспур (+4), Еликсирът на
-// Рендалим (+6), Цвят от оксидин (+2, also cures the коровакс infection
-// plot mechanic). Only Лаумспур is modeled here as the sim's single
-// post-battle heal slot, matching every other Lone Wolf sim in this app;
-// the other two are real per-book items but not simulated, same
-// precedent as un-modeled non-combat minigames in other books' sims.
-//
-// book_enemies.attack holds БОЙНО УМЕНИЕ, .hp holds ИЗДРЪЖЛИВОСТ, .defense
-// unused - same convention as every other Lone Wolf sim. 38 rows extracted
-// directly from this book's own section text (regex on every "Name: БОЙНО
-// УМЕНИЕ N, ИЗДРЪЖЛИВОСТ N" stat block). Five dropped ИЗДРЪЖЛИВОСТ values
-// (§30, §41, §47, §110, §308) found via the mandatory full prose read and
-// restored from the raw PDF before extraction.
-//
-// All state lives in pt.sim436, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Джунглата на ужасите / The Jungle of Horrors, Bulgarian edition of Lone Wolf
+// book 8, id 436)
+// Combat Ratio is fixed on enemy selection; a 0-9 pick selects simultaneous table losses.
+// 'K' means instant death. Skill bonuses and narrative effects are entered manually.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -69,10 +14,8 @@ const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" ari
 
 const HEALING_POTION_HEAL = 4;
 
-// Rows = the 10-value random pick, printed order 1,2,3,4,5,6,7,8,9,0.
-// Columns = Combat Ratio, bucketed: -11-, -10/-9, -8/-7, -6/-5, -4/-3,
-// -2/-1, 0, 1/2, 3/4, 5/6, 7/8, 9/10, 11+. Cell = [enemyLoss, lwLoss]
-// ('K' sentinel = automatically killed). Byte-identical to battlesim118.js.
+// Rows: 1-9, then 0. Columns: Combat Ratio buckets -11..11, clamped at the extremes.
+// Cells are [enemyLoss, playerLoss]; K means instant death.
 const COMBAT_TABLE = [
   [[0,'K'], [0,'K'], [0,8], [0,6], [1,6], [2,5], [3,5], [4,5], [5,4], [6,4], [7,4], [8,3], [9,3]],
   [[0,'K'], [0,8],   [0,7], [1,6], [2,5], [3,5], [4,4], [5,4], [6,3], [7,3], [8,3], [9,3], [10,2]],

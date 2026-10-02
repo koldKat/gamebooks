@@ -1,39 +1,6 @@
-// ── Battle Simulator (Seas of Blood, book 212) ────────────────────────────────
-// Self-contained module. Imports from state.js, play.js, charsheet.js and util.js.
-// Visibility is gated (book 212 only) by the caller in boot.js via
-// setSim212Visible().
-// To remove: delete this file, remove its import line and initSim212()/
-// setSim212Visible() calls from boot.js, and remove the .bsim-* CSS (shared
-// with every other battlesim*.js module, so only remove it if all of them
-// are gone).
-//
-// One combat engine, two independent stat pools - the book's own rules
-// (Individual Combat / Large-scale Battles) are explicitly the same
-// procedure twice: "use the same basic combat procedure, substituting CREW
-// STRIKE/CREW STRENGTH for your individual values." Simultaneous opposed
-// 2d6+attack roll each side, higher wins, flat 2 damage to the loser's
-// STAMINA/STRENGTH, ties miss both ways. No Test Your Luck anywhere in
-// combat at all (unlike most FF books) - LUCK exists only for narrative
-// page prompts, same situation book211's own header comment already noted
-// for a different book.
-// Two independent pools (person: SKILL/STAMINA/LUCK: crew: CREW
-// STRIKE/CREW STRENGTH) with their own enemy tracker and round counter, so
-// switching modes mid-fight can't let Reset or a stat edit touch the
-// untouched pool - same fix every prior dual-pool sim in this app needed.
-// One special permanent toggle: the Awkmute's staff (won at sec 63, kept at
-// sec 125) - once held, a landed personal-combat hit rolls 1d: 1-2 costs the
-// opponent 1 SKILL instead of the normal 2 STAMINA, 3-6 is a normal hit.
-// Only meaningful in Individual Combat - the player wields it personally,
-// not the crew, so the checkbox is hidden in Crew Battle mode.
-// All state lives in pt.sim212, per-user/per-book via currentPlaythrough().
-//
-// Not modeled: sec 48's punch-out minigame ("the first to hit the other
-// wins the bout") has no STAMINA at all in the book - a genuinely different
-// resolution rule this engine doesn't implement. Its book_enemies seed row
-// (Ogre Champion) uses STAMINA 2 as an approximation instead of leaving it
-// null - null left the fight silently unwinnable (STAMINA max stuck at 0,
-// Round did nothing, no error) rather than close enough to "first hit
-// decides it" either way.
+// Battle Simulator (Seas of Blood, book 212)
+// Opposed 2d6+attack with separate individual/crew pools; ties miss, wounds cost 2.
+// Crew escape costs 2 strength; LUCK is narrative-only.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -157,10 +124,7 @@ function _checkOutcome(d, side) {
   }
 }
 
-// Escaping a Large-scale Battle automatically costs ESCAPE_CREW_COST CREW
-// STRENGTH per the book's own rule ("Whenever you choose to escape... you
-// automatically lose 2 CREW STRENGTH") - not available in Individual Combat,
-// which has no equivalent rule.
+// Escaping large-scale combat costs 2 CREW STRENGTH; individual combat has no escape equivalent.
 function _escape() {
   const d = _data();
   if (!d || _notReady(d) || d.mode !== 'crew') return;
@@ -172,10 +136,7 @@ function _escape() {
   _renderAll();
 }
 
-// Only resets the pool the current mode is actually using - see every
-// other dual-pool sim in this app for why a blanket reset is wrong: it
-// would wipe real, unrelated damage in the other pool just because Reset
-// was hit on an unrelated fight.
+// Reset only the current pool, preserving unrelated damage.
 function _resetBattle() {
   const d = _data();
   if (!d) return;

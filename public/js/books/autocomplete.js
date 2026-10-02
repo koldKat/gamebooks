@@ -258,9 +258,7 @@ export function _setupAuthorsAutocomplete(inputId, dropdownId) {
     const before = raw.slice(0, caret);
     const lastComma = before.lastIndexOf(',');
     const start = lastComma >= 0 ? lastComma + 1 : 0;
-    // Forward boundary (next comma, or end of string) - the current token's real end,
-    // regardless of where the caret sits within it (clicking mid-token is supported,
-    // see the 'click' listener below).
+    // Replace the whole comma-delimited token, including text after the caret.
     const nextCommaRel = raw.slice(caret).indexOf(',');
     const end = nextCommaRel >= 0 ? caret + nextCommaRel : raw.length;
     const token = raw.slice(start, caret).trim();

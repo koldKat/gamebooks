@@ -60,10 +60,7 @@ export function initShell() {
   document.getElementById('sidebar-toggle').addEventListener('click', () => {
     _setPlayPanelCollapsed('sidebar-collapsed', !document.body.classList.contains('sidebar-collapsed'));
   });
-  // Mobile only (see mobile.css) - on desktop, "My Books" already sits in
-  // #landing-right next to the feed, so there's nothing to open/close here.
-  // Wire once: duplicate panel listeners would push multiple history entries
-  // for one tap, requiring multiple back gestures to close the panel.
+  // Wire mobile panel navigation once; duplicate handlers would push duplicate history entries.
   if (!bootState._mobilePanelWired) {
     bootState._mobilePanelWired = true;
     window.addEventListener('popstate', e => {
@@ -71,15 +68,10 @@ export function initShell() {
     });
     document.getElementById('mobile-books-btn').addEventListener('click', () => _openMobilePanel('books'));
     document.getElementById('mobile-books-close-btn').addEventListener('click', () => history.back());
-    // Same idea as My Books above - #covers-panel is the search/browse-and-
-    // add panel, permanently hidden on mobile otherwise (mobile.css).
-    // Toggled full screen instead of the fixed-left-column layout it has on
-    // desktop.
+    // Open the mobile catalog full-screen instead of using the desktop side panel.
     document.getElementById('mobile-addbook-btn').addEventListener('click', () => {
       _openMobilePanel('addbook');
-      // The panel's own lazy-fill loop measured a zero height while it was
-      // hidden and stopped after one small batch - top it up now that it
-      // actually has room, once the reveal's layout has been committed.
+      // Fill the revealed panel after layout; hidden panels report zero available height.
       requestAnimationFrame(() => requestAnimationFrame(_refillLazyIfShort));
     });
     document.getElementById('mobile-addbook-close-btn').addEventListener('click', () => history.back());

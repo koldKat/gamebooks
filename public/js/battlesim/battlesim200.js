@@ -1,40 +1,7 @@
-// ── Battle Simulator (The Forest of Doom, book 200) ──────────────────────────
-// Self-contained module. Imports from state.js, play.js, charsheet.js and util.js.
-// Visibility is gated (book 200 only) by the caller in boot.js via
-// setSim200Visible().
-// To remove: delete this file, remove its import line and initSim200()/
-// setSim200Visible() calls from boot.js, and remove the .bsim-* CSS (shared
-// with battlesim8.js/battlesim829.js/battlesim286.js/battlesim198.js/
-// battlesim199.js/battlesim186.js/battlesim201.js, so only remove it if all eight are gone).
-//
-// Fighting Fantasy SKILL/STAMINA/LUCK system, but this book's SKILL formula
-// is 1d6+5 (not the usual 1d6+6 used by books 198/199) - STAMINA (2d6+12)
-// and LUCK (1d6+6) match. No MAGIC, no Provisions-restore mechanic (like
-// book 199, unlike 198) - Provisions here are only spent in one narrative
-// survival check with no ongoing combat relevance, so they're not tracked.
-//
-// Two mechanics unique to this book among the sims built so far:
-// - Sequential multi-wave encounters (Killer Bees, Orcs, Wild Hill Men,
-//   Vampire Bats, Death Hawks, Hobgoblins) - handled the same way normal
-//   fights are: each wave is just its own row in book_enemies, picked in
-//   turn from the autocomplete after winning the previous wave, exactly
-//   like moving between two unrelated fights elsewhere in the book.
-// - "Choose one of a pair" fights (Bandits, Hunting Dogs): two enemies both
-//   attack every round via TWO separate, independent exchanges - a normal
-//   full battle roll against the chosen target, plus a second fresh
-//   Attack Strength roll (not a reuse of the first) against the other,
-//   whose hits still land if it wins but which the player can never wound
-//   back (a win there just fends off its blow). This needs real support
-//   (see pairedFight/sideEnemy below), since it can't be represented by
-//   re-picking a single enemy slot.
-//
-// Because a single round can now produce more than one Luck-eligible hit
-// (main enemy wounds you, side enemy wounds you, Fire Demon's bonus whip
-// hits you, you wound the main enemy) all in the same round, pendingLuck is
-// a queue here instead of the single-slot used by the other sims - Test
-// Luck/Skip processes one entry at a time until the queue is empty.
-//
-// All state lives in pt.sim200, per-user/per-book via currentPlaythrough().
+// Battle Simulator (The Forest of Doom, book 200)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
+// Starting SKILL is 1d6+5. Paired enemies and whip hits queue separate Luck tests.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -45,10 +12,7 @@ import { t } from '../i18n.js';
 const SVG_SKULL  = `<svg class="sim-icon sim-icon-dead"  viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8c0 2.8 1.4 5.3 3.6 6.8V20a1 1 0 0 0 1 1h6.8a1 1 0 0 0 1-1v-2.2C18.6 16.3 20 13.8 20 11a8 8 0 0 0-8-8zm-2.5 13v-1.5a.5.5 0 0 0-.5-.5H8l-.5-1 1-1-1-1 1-1H9a2.5 2.5 0 0 1 5 0h.5l1 1-1 1 1 1-.5 1h-1a.5.5 0 0 0-.5.5V16h-4z"/></svg>`;
 const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v7a6 6 0 0 1-12 0V2zm-2 1H2v4a4 4 0 0 0 4 4v-1a3 3 0 0 1-3-3V3zm16 0h2v4a4 4 0 0 1-4 4v-1a3 3 0 0 0 3-3V3zm-7 13v2H9v2h6v-2h-2v-2a6 6 0 0 0 5-5.92V2H6v8.08A6 6 0 0 0 13 16z"/></svg>`;
 
-// Which of the 3 starting potions was picked (each: 2 uses). Skill/Strength
-// restore SKILL/STAMINA to Initial; Fortune permanently raises Initial LUCK
-// by 1 then refills current LUCK to that new Initial. Same shape as book
-// 198's potion choice.
+// Two-dose potions restore SKILL/STAMINA; Fortune raises Initial LUCK by 1 and refills it.
 const POTIONS = [
   ['skill',    'battlesim200.potion.skill'],
   ['strength', 'battlesim200.potion.strength'],
@@ -123,9 +87,7 @@ function _effectiveSkill(d) {
   return skill;
 }
 
-// Uncapped (was previously trimmed to the last 100) - the admin dashboard
-// aggregates battle counts app-wide from this array, so per-user history needs
-// to be a true lifetime total, not a rolling window.
+// Keep lifetime outcomes: admin totals require the full history.
 function _recordOutcome(d, outcome) {
   d.history.push({
     enemy: _enemyName(d), outcome,
@@ -142,10 +104,7 @@ function _checkParalyze(d) {
     d.player.stamina = 0;
     _appendLog(d, t('battlesim200.log.paralysed', { skull: SVG_SKULL, n: d.player.woundsTakenThisFight }));
     _recordOutcome(d, 'loss');
-    // A round can queue Luck-eligible hits from multiple sources (main
-    // enemy, side enemy, whip) before wound count crosses the threshold at
-    // the very end - clear them all so a defeated battle doesn't leave
-    // stale "Test Luck?" prompts behind.
+    // Clear all queued Luck tests when the wound threshold ends the battle.
     d.pendingLuckQueue = [];
     return true;
   }
@@ -173,11 +132,7 @@ function _runRound() {
     if (d.player.stamina > 0) d.pendingLuckQueue.push({ kind: 'enemy-hit' });
   }
 
-  // Paired fight: "Attack your chosen Bandit as in a normal battle. Against
-  // the other you will throw for your Attack Strength in the normal way" -
-  // this is a second, independent exchange with its own fresh player roll,
-  // not a reuse of the roll thrown against the chosen target. It can still
-  // wound you if it wins, but a win on your side just fends off its blow.
+  // Roll independently against the side attacker; it may wound the player but cannot be wounded back.
   if (d.pairedFight && d.sideEnemy.staminaMax > 0 && d.player.stamina > 0) {
     const sidePlayerAS = _roll2d6() + _effectiveSkill(d) + (d.player.attackModifier || 0);
     const sideAS = _roll2d6() + d.sideEnemy.skill;
@@ -207,19 +162,13 @@ function _runRound() {
   }
 
   if (d.enemy.stamina <= 0) {
-    // A win can still leave an earlier same-round hit queued (e.g. a side
-    // attacker or the whip wounded you before your killing blow landed) -
-    // that's kept Luck-testable since it's real, separate damage that
-    // carries into future fights, unlike a loss (see below).
+    // Keep earlier same-round wounds Luck-testable after victory; that damage carries into later fights.
     _appendLog(d, t('battlesim200.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyNameSafe(d) }));
     _recordOutcome(d, 'win');
   } else if (d.player.stamina <= 0) {
     _appendLog(d, t('battlesim200.log.fallen', { skull: SVG_SKULL }));
     _recordOutcome(d, 'loss');
-    // Once you're down, any hit queued earlier this same round (e.g. the
-    // main enemy wounded you without finishing you off, then the side
-    // attacker or whip did) is moot - clear it so a dead battle can't still
-    // offer a "Test Your Luck?" prompt.
+    // Clear pending Luck tests after defeat.
     d.pendingLuckQueue = [];
   } else {
     _checkParalyze(d);
@@ -229,11 +178,7 @@ function _runRound() {
   _renderAll();
 }
 
-// Test Your Luck after a hit lands: costs 1 LUCK regardless of outcome. On
-// your own hit, Lucky deals 2 extra STAMINA damage (4 total), Unlucky gives
-// back 1 (only 1 total). On a hit you took (from any source - main enemy,
-// side enemy, or the whip), Lucky gives back 1 STAMINA, Unlucky costs 1
-// extra. Processes one queued event at a time.
+// Luck costs 1 per queued hit: outgoing damage +2/-1, incoming damage -1/+1 (lucky/unlucky).
 function _testLuck() {
   const d = _data();
   if (!d || !d.pendingLuckQueue.length || d.player.luck <= 0) return;
@@ -499,11 +444,7 @@ function _setupEnemyAutocomplete() {
     d.roundsThisBattle = 0;
     d.pendingLuckQueue = [];
     d.player.woundsTakenThisFight = 0;
-    // Attack modifier, paralyse threshold, the whip toggle, and paired-fight
-    // config are all tied to whichever specific encounter set them (Gremlin's
-    // -3, the Ghoul's paralyse rule, the Fire Demon's whip, the Bandit/
-    // Hunting Dog pairs) - picking a different enemy means a new encounter,
-    // so these must not silently carry over and misapply to it.
+    // Reset all encounter-specific modifiers when selecting a new enemy.
     d.player.attackModifier   = 0;
     d.player.paralyzeThreshold = 0;
     d.player.fireDemonWhip    = false;
@@ -675,8 +616,7 @@ export function initSim200() {
   document.getElementById('sim200-roll').addEventListener('click', () => {
     const d = _data();
     if (!d || d.rolled) return;
-    // This book's SKILL formula is 1d6+5, not the 1d6+6 used elsewhere -
-    // confirmed against the rules text ("Roll one die. Add 5...").
+    // This book starts at 1d6+5 SKILL, not the usual FF 1d6+6.
     d.player.skillInitial   = _roll1d6() + 5;
     d.player.staminaInitial = _roll2d6() + 12;
     d.player.luckInitial    = _roll1d6() + 6;
@@ -735,9 +675,7 @@ export function initSim200() {
     }
   });
 
-  // Plain numeric steppers. Most clamp at a 0 floor like the other sims, but
-  // the Attack Strength modifier genuinely needs to go negative (Gremlin
-  // -3, Ape Man -2 per the book's own text), so it gets its own min.
+  // Allow signed Attack Strength modifiers; clamp other stepper fields at zero.
   const FIELD_MAP = {
     'sim200-player-skill':      ['player', 'skill',    0],
     'sim200-player-skillmax':   ['player', 'skillInitial', 0],

@@ -70,18 +70,12 @@ export function initFeatureHooks() {
 
   // ── Login screen ─────────────────────────────────────────────────
   initAuth();
-  // Guests browse the public feed/covers only - My Books stays hidden
-  // (see the guest-browsing rules in mobile.css), Add Book stays visible
-  // as the catalog promo. Dismissing the login overlay reveals the feed
-  // underneath; guest-browsing marks the state so the popstate router
-  // below doesn't yank them back to login.
+  // Guest mode reveals feed/catalog without letting back navigation reopen login.
   document.getElementById('mobile-guest-btn').addEventListener('click', () => {
     document.body.classList.remove('mobile-auth');
     document.body.classList.add('guest-browsing');
   });
-  // The only way back to the login screen once the overlay is dismissed -
-  // there is deliberately no history entry to go back to (the overlay was
-  // reached via replaceState, not pushState).
+  // Show login explicitly: the overlay uses replaceState, so Back cannot reach it.
   document.getElementById('mobile-login-btn').addEventListener('click', () => showLogin());
 
   // ── Profile modal ─────────────────────────────────────────────────
@@ -146,14 +140,8 @@ export function initFeatureHooks() {
   setBgHooks({
     clearCtxNodeId: () => { bootState.ctxNodeId = null; },
   });
-  // The only trigger for idle_heartbeat XP (and the bonus-coin roll it can
-  // fire) - called solely from livetab.js's dedicated 60s leader-tab timer,
-  // deliberately not tied to feed reloads. The response reports what the
-  // heartbeat actually did; on any award (XP, playtime coins, or a rolled
-  // bonus coin) schedule a reward-profile refresh so the coins display, coin
-  // button and XP bar catch up without waiting for a feed reload - overnight
-  // the feed version fingerprint can stay unchanged for hours while heartbeats
-  // keep accruing, and this is the only per-minute UI touchpoint left.
+  // Only the leader timer sends heartbeat XP requests.
+  // Refresh rewards on an award even when the feed version is unchanged.
   const _sendHeartbeat = () => {
     apiFetch('/api/heartbeat', { method: 'POST' })
       .then(async res => {
@@ -212,11 +200,7 @@ export function initFeatureHooks() {
     resolveIsAdmin:      () => resolveIsAdmin(),
     setCurrentBookCover,
     scheduleRewardProfileRefresh: _scheduleRewardProfileRefresh,
-    // Fired by the edit modals after a successful PDF upload/remove - patches
-    // just that book's card(s) in place (badge + data attributes) instead of
-    // re-rendering the whole list, and keeps the play area in sync when the
-    // affected book is the open one (showMain is otherwise the only place the
-    // sidebar PDF button gets wired, so it stayed stale until re-open).
+    // Patch PDF cards and the active play link without rebuilding the library.
     onPdfChanged:        (bookId, pdfPath, pdfSize) => {
       _syncPdfBadgeOnCards(bookId, pdfPath, pdfSize);
       if (String(bookId) !== String(currentBookId)) return;

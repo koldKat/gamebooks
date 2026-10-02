@@ -1,11 +1,6 @@
 'use strict';
 
-// Auth: password hashing, users CRUD, sessions, password reset tokens, lockouts.
-// Also carries a few stray functions (getRandomMaintenanceMessage, purgeOldNotifications,
-// purgeOldHeartbeats, walCheckpoint) that lived in this section of the original
-// server/db.js even though they aren't strictly auth-related - kept here verbatim
-// rather than relocated, to keep this extraction a pure copy/paste with no risk of
-// subtly changing behavior.
+// Authentication, sessions, lockouts, and maintenance helpers.
 
 const crypto = require('crypto');
 const util   = require('util');
@@ -44,15 +39,8 @@ function isUserAdmin(userId) {
   return !!db.prepare('SELECT is_admin FROM users WHERE id = ?').get(userId)?.is_admin;
 }
 
-// Standing one-off exception (not an admin grant): user id 17 (sashii, as of
-// when this was added) can see the two app-wide XP/avg-level bars
-// (GET /api/app-xp) without any other admin capability. Matched by id, not
-// username - usernames are user-editable (updateUsername below), so a
-// username match would silently break if he renamed himself, or worse,
-// silently transfer to whoever claimed the name "sashii" next. Client-side
-// mirror is boot.js's _canSeeAppXp/getCanSeeAppXp (matches profile.id the
-// same way), which must agree with this or the widgets fetch data he can't
-// actually see (or vice versa, a 403 the client didn't expect).
+// User ID 17 may see app XP without admin privileges.
+// Keep the client permission mirror aligned; never match editable usernames.
 const APP_XP_EXTRA_USER_ID = 17;
 function canSeeAppXp(userId) {
   return isUserAdmin(userId) || userId === APP_XP_EXTRA_USER_ID;

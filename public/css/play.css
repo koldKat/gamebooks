@@ -203,11 +203,7 @@
 .ctx-color-custom-row {
   display: flex;
   align-items: center;
-  /* Left-aligned to match .ctx-color-grid's own left edge (same 0.2rem side
-     padding on both) rather than centered - centering each independently
-     only lines the custom swatch up under the first grid column when their
-     total widths happen to match, which isn't reliable once the button's
-     text length changes things. Flush-left on both is exact regardless. */
+  /* Align custom color controls with the swatch grid regardless of label width. */
   gap: 0.3rem;
   padding: 0 0.2rem 0.25rem;
 }
@@ -223,12 +219,7 @@
 #ctx-color-custom::-webkit-color-swatch-wrapper { padding: 0; }
 #ctx-color-custom::-webkit-color-swatch { border: none; border-radius: 2px; }
 #ctx-color-custom.active { box-shadow: 0 0 0 2px #fff, 0 0 0 3px rgba(255,255,255,0.4); }
-/* #node-ctx-menu button sets width:100% generically (every other item in
-   this menu is a full-width row), which wins over flex-basis:auto here -
-   an "auto" flex-basis falls back to reading the width property when one's
-   set, so without this override the button kept stretching to fill the row
-   width regardless of the flex shorthand below, leaving huge padding-look
-   empty space around the short "Clear color" text. */
+/* Override the menu's generic width:100% so Clear color sizes to its label. */
 #ctx-color-clear-btn { color: #9ca3af !important; font-size: 0.72rem !important; padding: 0.2rem 0.4rem !important; white-space: nowrap; width: auto !important; flex: 0 0 auto; }
 
 /* ── Edit modal ───────────────────────────────────────────────── */
@@ -684,25 +675,7 @@ body {
   color: #6b7280;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  /* Without this, the label's default line-height pads its own line box
-     well past its actual glyph height while .section-display's line-height:1
-     doesn't - .section-row's align-items:center then centers each element's
-     line box, not its visible text, throwing the two out of visual
-     alignment by a couple pixels despite "center" being set correctly.
-     Matching line-height:1 here means both boxes tightly wrap their own
-     text, so centering the boxes actually centers the *boxes* - confirmed
-     via a rendered test page, the two boxes' centers land within a
-     fraction of a pixel of each other. (baseline alignment was tried
-     first - it lines up the text bottoms, not the middles, which reads as
-     "the label sank to the bottom of the number" precisely because the
-     number is so much taller.)
-     Still reads as slightly high, though: the box centers match, but not
-     the glyphs' visual ink within them - .section-display's bold digits
-     sit visually lower in their box than this label's thin small-caps text
-     does in its own, a font-metric mismatch no box-alignment property can
-     fix. This small manual nudge corrects for that specific optical
-     difference between these two exact styles - it isn't a generic
-     technique, just the offset this pairing needed. */
+  /* Match line heights for box alignment; the small offset corrects this font pairing's optical baseline. */
   line-height: 1;
   position: relative;
   top: 0.1rem;
@@ -1344,14 +1317,7 @@ body {
 .trail-node {
   background: #374151;
   color: #9ca3af;
-  /* Uniform minimum width (instead of sizing purely to each number's own
-     digit count) so every row wraps at the same point every time - that's
-     what makes pills line up into columns row-to-row rather than being
-     staggered like ragged text, since a variable-width pill shifts where
-     every following pill on that row lands. min-width (not a hard width)
-     because section IDs aren't always short numbers - some books use
-     longer alphanumeric IDs, which still need to grow past this floor
-     rather than get clipped just to keep the common case's columns tidy. */
+  /* A minimum pill width aligns rows while still allowing longer alphanumeric section IDs. */
   min-width: 2.3rem;
   padding: 2px 7px;
   border-radius: 4px;
@@ -1446,15 +1412,7 @@ body {
 /* ── Data controls ────────────────────────────────────────────── */
 
 #data-controls {
-  /* Was margin-top: auto (pins this to the very bottom of the sidebar when
-     #playthrough-panel's content is short, consuming any leftover flex
-     space) - replaced with a small negative offset that instead tightens
-     the gap against #sidebar's own 0.9rem inter-child gap specifically for
-     this pair, without touching that gap for any other sidebar section.
-     Trade-off: no longer pins to the absolute bottom on a near-empty panel,
-     but that was never the actual complaint - the complaint was the gap
-     being too big when content (like a full pre-series runs list) already
-     reaches close to here. */
+  /* Tighten this pair's gap without changing spacing elsewhere in the sidebar. */
   margin-top: -0.5rem;
   display: flex;
   flex-direction: column;
@@ -1514,5 +1472,4 @@ body {
 #reset-btn:hover { background: #7f1d1d !important; border-color: #991b1b !important; }
 #export-book-btn { color: #93c5fd !important; }
 #export-book-btn:hover { background: #1e3a5f !important; border-color: #2563eb !important; }
-
 

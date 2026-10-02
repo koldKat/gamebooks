@@ -1,50 +1,6 @@
-// ── Battle Simulator (Езерният град, book 415) ──
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 415 only) by the caller in boot.js via
-// setSim415Visible().
-// To remove: delete this file, remove its import line and initSim415()/
-// setSim415Visible() calls from boot.js, remove 'sim415' from
-// SIM_HISTORY_KEYS in server/db/xp.js, remove 'sim415-overlay' from
-// ALL_PANEL_OVERLAY_IDS in util.js and the #sim415-btn selectors in
-// battlesim.css.
-//
-// Same mechanic as battlesim414.js (book 414, this book's own direct
-// prequel in the same Оргонд/Алкирия series - identical rules text, word
-// for word, down to the player's starting Умение 10/Издръжливост 50):
-// each side has Умение (Skill) and Издръжливост (Endurance). To resolve
-// one exchange, both sides draw a random number from the book's printed
-// random-number table and add it to their Skill (modeled here as a random
-// digit 0-9, matching book 414's own choice since neither book prints an
-// actual range); higher total lands a hit, a tie means neither side had
-// the advantage and both redraw. A successful hit costs the loser 2
-// Endurance normally, or only 1 if the side that landed the hit is
-// fighting unarmed.
-//
-// Full enemy roster (24 rows, all 20 stat-block-bearing sections found
-// across the book, several of which are pre-battle Умение-boosting spell
-// choices rather than separate enemies - e.g. §261/§264/§275/§278 each add
-// a temporary bonus before the §237 assassin fight, and §327/§330 do the
-// same before the §323 lake-monster fight - so those aren't seeded as
-// their own rows, the bonus is simply hand-added to the player's own
-// Умение field before the fight). §146 (a threshold "reach 17 total"
-// check, not a two-sided compare) isn't modeled, matching book 414's own
-// wolf-encounter exclusion. Recurring identical stat blocks (§154/§161/§24,
-// three retellings of the same two-bandit fight) are seeded once.
-// Multi-enemy group fights (§46/§72, river-folk; §29/§64/§88, circus
-// acrobats; §237, four masked assassins) are resolved by hand-picking the
-// next enemy from the dropdown after each one falls, same convenience
-// pattern as every other multi-enemy sim in this app.
-//
-// Alternate start: this book's own intro text states play begins at §178,
-// not §1 - see docs/technical.md's Live Reading section for the full
-// explanation. Not this sim's concern; noted here only so the roster
-// above isn't mistaken for missing anything reachable from §1 alone.
-//
-// book_enemies column reuse (only 4 numeric columns exist; this book only
-// needs 2): attack = Умение (Skill); hp = Издръжливост (Endurance).
-// defense/pb are unused, always 0.
-//
-// All state lives in pt.sim415, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Езерният град, book 415)
+// Compare random digit + SKILL per exchange; ties miss.
+// The source does not specify the random-table range; 0-9 is assumed.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';

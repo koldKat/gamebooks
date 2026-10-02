@@ -1,18 +1,11 @@
 import { naturalCompare } from '../core/sort.js';
 
-// A book's containers = its one primary parent_book_id plus any secondary
-// book_anthology_memberships - a book can now legitimately be a child in
-// more than one anthology at once, so every "is this a child of X" check
-// below loops over all of a book's containers instead of just its parent.
+// Container membership includes the primary parent and secondary anthology memberships.
 export const _containerIdsFor = b => [...new Set(b.parent_book_id
   ? [b.parent_book_id, ...(b.extra_anthology_ids || [])]
   : (b.extra_anthology_ids || []))];
 
-// A book's book_order column is only its position within its *primary*
-// parent_book_id - a secondary membership has its own order scoped to that
-// one anthology (server/db/books.js's extra_anthology_orders), so sorting a
-// children group must resolve order per-container, not read b.book_order
-// directly (that would apply the wrong anthology's order to a secondary child).
+// Resolve book order per anthology; secondary memberships do not use the primary book_order.
 export const _orderForContainer = (b, pid) => pid === b.parent_book_id ? b.book_order : (b.extra_anthology_orders?.[pid] ?? null);
 export const _sortChildrenMap = map => {
   for (const pid of Object.keys(map)) {

@@ -28,11 +28,7 @@ function _setDemoBanner(visible) {
   document.body.classList.toggle('demo-active', visible);
 }
 
-// Flags that demo mode is active so a page reload (no URL change once you've
-// navigated into a book) can resume the demo instead of falling through to the
-// login screen - isDemoMode itself is plain in-memory state and doesn't survive
-// a reload. Session-scoped since demo progress is never persisted either way
-// (startDemoMode always refetches a fresh canned state from the server).
+// Remember demo mode across reloads for this session; progress is still refetched.
 const _DEMO_FLAG_KEY = 'demoActive';
 export function wasInDemoMode() { return sessionStorage.getItem(_DEMO_FLAG_KEY) === '1'; }
 

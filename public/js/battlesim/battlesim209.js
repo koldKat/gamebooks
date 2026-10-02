@@ -1,30 +1,6 @@
-// ── Battle Simulator (Freeway Fighter, book 209) ─────────────────────────────
-// Self-contained module. Imports from state.js, play.js, charsheet.js and util.js.
-// Visibility is gated (book 209 only) by the caller in boot.js via
-// setSim209Visible().
-// To remove: delete this file, remove its import line and initSim209()/
-// setSim209Visible() calls from boot.js, and remove the .bsim-* CSS (shared
-// with the other battlesim*.js modules, so only remove it if all of them are gone).
-//
-// Three separate combat types, all using the same opposed 2d6+SKILL(or
-// FIREPOWER) Attack Round as every other Fighting Fantasy book, but differing
-// in damage and win condition:
-// - Hand Fighting: fixed damage per hit (book default 1, but weapons often
-//   override it per-section - "your knife and the thug's crowbar reduce
-//   STAMINA by 2 points" - so it's an editable field, not hardcoded).
-//   Ends when either side has lost 6 cumulative STAMINA this fight (knocked
-//   out) OR reaches 0 STAMINA (dead) - the *only* combat type with this dual
-//   win condition, tracked via playerHandLoss/enemyHandLoss, reset per battle.
-// - Shooting: 1d6 damage per hit, ends at 0 STAMINA (death). No KO threshold.
-// - Vehicle Combat: 1d6 damage to ARMOUR per hit, ends at 0 ARMOUR
-//   (destroyed). No KO threshold. A rocket (4 carried) is an instant-kill
-//   option instead of a normal Attack Round.
-// Two independent stat pools - player+enemy (SKILL/STAMINA, for Hand
-// Fighting/Shooting) and car+enemyCar (FIREPOWER/ARMOUR, for Vehicle Combat)
-// - both shown at once rather than toggled, since the book switches between
-// foot combat and car combat constantly within the same session. `mode`
-// just picks which pool _runRound() resolves against.
-// All state lives in pt.sim209, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Freeway Fighter, book 209)
+// Separate person/vehicle pools; hand fights end after 6 cumulative damage or death.
+// Shooting/vehicle hits deal 1d6; hand damage is encounter-specific.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -69,11 +45,7 @@ function _data() {
   }
   const d = pt.sim209;
   if (d.rolled === undefined) d.rolled = false;
-  // Two independent pools (person: hand/shoot share it; vehicle: its own)
-  // need their own "is a battle actually in progress" counter - a single
-  // shared one meant switching modes mid-fight silently lost track of
-  // whichever pool you'd left mid-battle (Med-Kit's "not usable mid-combat"
-  // guard would incorrectly read the *other*, untouched pool as at rest).
+  // Track combat separately for person and vehicle pools so mode switches preserve in-progress guards.
   if (d.roundsPerson === undefined) d.roundsPerson = d.roundsThisBattle ?? 0;
   if (d.roundsVehicle === undefined) d.roundsVehicle = 0;
   delete d.roundsThisBattle;
@@ -101,9 +73,7 @@ function _appendLog(d, line) {
   if (d.log.length > 200) d.log.shift();
 }
 
-// Which pool _runRound() reads/writes, based on the current mode - keeps the
-// round-resolution logic itself mode-agnostic instead of three near-duplicate
-// functions.
+// Map round fields to the current combat pool.
 function _activeSide(d) {
   return d.mode === 'vehicle'
     ? { self: d.car, foe: d.enemyCar, selfAtk: 'firepower', selfHp: 'armour', selfHpMax: 'armourInitial', foeAtk: 'firepower', foeHp: 'armour', foeHpMax: 'armourMax', roundsKey: 'roundsVehicle' }
@@ -116,10 +86,7 @@ function _foeName(d) {
 }
 function _foeNameSafe(d) { return escapeHtml(_foeName(d)); }
 
-// `side` decides which pool's own remaining/max values actually belong in
-// this entry - a Vehicle Combat win previously always logged the player's
-// (unrelated, likely untouched) person STAMINA instead of the car's ARMOUR,
-// which was the stat that fight actually turned on.
+// Record remaining/max stats from the combat's own pool.
 function _recordOutcome(d, side, outcome, note) {
   d.history.push({
     enemy: `${_foeName(d)} (${t(MODES.find(m => m[0] === d.mode)[1])}${note ? `, ${note}` : ''})`,
@@ -200,12 +167,7 @@ function _fireRocket() {
   _renderAll();
 }
 
-// Only resets the pool the current mode is actually using - Hand Fighting
-// and Shooting share the person pool (switching between those two mid-fight
-// is not something the book ever asks you to do, so treating them as one
-// battle is fine), but Vehicle Combat is a genuinely separate pool. A reset
-// that touched both unconditionally would wipe real, unrelated car damage
-// you'd already taken just because you hit Reset on an unrelated fistfight.
+// Reset only the current mode's pool; person and vehicle damage are independent.
 function _resetBattle() {
   const d = _data();
   if (!d) return;
@@ -384,10 +346,7 @@ export function setSim209Visible(visible) {
   if (!visible) closeSim209();
 }
 
-// ── Enemy autocomplete (fed by book_enemies, seeded per book_id) ───────────
-// Shared between the person-combat and car-combat pickers - book_enemies has
-// no notion of "is this a car," so both pickers draw from the same list and
-// it's on the reader to pick the right one for whichever mode they're in.
+// Both pickers share one enemy list; the reader chooses rows appropriate to the current mode.
 
 let _enemyList = null;
 async function _loadEnemyList() {
@@ -727,9 +686,7 @@ export function initSim209() {
     if (enemy.attack != null) d.enemy.skill = enemy.attack;
     if (enemy.hp != null) { d.enemy.stamina = enemy.hp; d.enemy.staminaMax = enemy.hp; }
     d.roundsPerson = 0;
-    // A new enemy means a fresh fight - carrying over cumulative
-    // Hand-Fighting knockout progress from whichever encounter you just
-    // left would start this one already partway to a KO for one side.
+    // Reset cumulative knockout progress for each new enemy.
     d.playerHandLoss = 0;
     d.enemyHandLoss = 0;
     saveState();

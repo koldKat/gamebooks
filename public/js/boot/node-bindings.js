@@ -21,10 +21,7 @@ export function initNodeBindings() {
     if (e.target === e.currentTarget && bootState._mousedownOnOverlay === e.currentTarget) closeNoteModal();
   });
 
-  // Same "worth keeping" check as play.js's _cleanupOrphanedTargets and
-  // graph.js's own orphan-pruning pass - was missing `portals`/`showNote`
-  // here, so toggling priority/battle/color off a node that only had a
-  // portal (no other choices) silently deleted the portal along with it.
+  // Keep the orphan-preservation rules aligned with graph/play cleanup, including portals and visible notes.
   function _pruneDiscovered(id) {
     const n = state.graph[id];
     if (!n?.discovered) return;
@@ -82,13 +79,7 @@ export function initNodeBindings() {
     render();
   });
 
-  // Opening the native color picker is itself a real click on this input,
-  // which bubbles to the document-level "click anywhere closes the context
-  // menu" listener below - that cleared bootState.ctxNodeId (via hideCtxMenu) before
-  // the picker's own async 'change' ever fired, so picking a color always
-  // silently no-op'd once the menu (and the id it remembered) was already
-  // gone. Stopping that initial click from bubbling keeps the menu, and
-  // bootState.ctxNodeId, alive for as long as the native picker itself is open.
+  // Stop the color-picker click from closing the menu before its async change event.
   document.getElementById('ctx-color-custom').addEventListener('click', e => {
     e.stopPropagation();
   });
@@ -152,11 +143,7 @@ export function initNodeBindings() {
   document.getElementById('ctx-jump-normal-btn').addEventListener('click',   () => doJump('normal'));
   document.getElementById('ctx-jump-low-btn').addEventListener('click',      () => doJump('low'));
 
-  // "+ Add node": places a freestanding node at wherever the empty-canvas
-  // right-click that opened bg-ctx-menu landed (bootState.ctxCanvasPos), for sections
-  // that exist in the book but aren't reachable through any recorded choice
-  // (e.g. bonus episodes) - lets you park a note/color on them without first
-  // inventing a fake incoming choice just to get them onto the map.
+  // Place standalone nodes at the captured canvas click without inventing incoming choices.
   let _addNodeClickPos = null;
 
   function openAddNodeModal() {
@@ -177,32 +164,15 @@ export function initNodeBindings() {
     if (e.target === e.currentTarget && bootState._mousedownOnOverlay === e.currentTarget) closeAddNodeModal();
   });
 
-  // Same brief red-border flash as #find-node-input's own .not-found class
-  // (graph toolbar's "jump to section" field) - no text message, just a
-  // 0.8s border flash, per how that field already handles an invalid entry.
+  // Use the same brief invalid-entry border flash as the graph toolbar.
   function _flashAddNodeInvalid() {
     const inp = document.getElementById('add-node-input');
     inp.classList.add('invalid');
     setTimeout(() => inp.classList.remove('invalid'), 800);
   }
 
-  // Creates a brand new node and drops it exactly at the click position -
-  // the caller (add-node-save handler below) has already rejected any id
-  // that's already on the map, so this never touches an existing node's
-  // position or data. Deliberately NOT setting discovered: true - per
-  // mappedCountFor (state.js) and nodeColor (graph.js), a node only counts
-  // (and colors) as merely "discovered" when discovered is explicitly true
-  // AND it has no choices/portals; omitting the flag entirely is what makes
-  // mappedCountFor's own `!graph[s]?.discovered` clause treat it as fully
-  // mapped immediately, matching "mapped and discovered" - the whole point
-  // of a manually-placed node, since it'll never get its own choices to
-  // record. `manual: true` marks it as worth keeping to graph.js's
-  // deleteNodes()/this file's own _pruneDiscovered()/play.js's note-save
-  // cleanup and _cleanupOrphanedTargets, all of which otherwise silently
-  // delete a bare node with no choices/note/priority/color/battle/portals
-  // the next time some unrelated node gets cleaned up - without this flag a
-  // freshly-added, still-empty bonus node would be exactly that
-  // "worth deleting" shape.
+  // Omit discovered:true so manual nodes count as mapped.
+  // manual:true prevents empty nodes from being pruned.
   function _applyAddNode(id, pos) {
     state.graph[id] = { choices: [], manual: true };
     state.positions[id] = pos;
@@ -351,10 +321,7 @@ export function initNodeBindings() {
     const toDelete = subtreeToDelete(id);
     const extra    = toDelete.size > 1 ? t('confirm.delete_node_extra', { n: toDelete.size - 1 }) : '';
     showConfirm(t('confirm.delete_node', { id, extra }), () => {
-      // Capture before deleteNodes mutates state - it may reopen (uncomplete) any
-      // playthrough whose path passed through a deleted node, including the one
-      // being viewed. Only stop viewing if THIS run's own path was affected -
-      // not just because it happens to already be incomplete for other reasons.
+      // Capture the viewed path before deletion; exit viewing only if that run was affected.
       const viewingPtAffected = !!viewingPt && viewingPt.path.some(s => toDelete.has(s));
       deleteNodes(toDelete);
       if (viewingPtAffected) setViewingPt(null);

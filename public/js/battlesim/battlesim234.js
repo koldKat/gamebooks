@@ -1,73 +1,7 @@
-// ── Battle Simulator (Vault of the Vampire, book 234) ────────────────────────
-// Self-contained module. Imports from state.js, confirm.js, charsheet.js and
-// util.js. Visibility is gated (book 234 only) by the caller in boot.js via
-// setSim234Visible().
-// To remove: delete this file, remove its import line and initSim234()/
-// setSim234Visible()/renderSim234() calls from boot.js, remove 'sim234' from
-// SIM_HISTORY_KEYS in server/db/xp.js, remove 'sim234-overlay' from
-// ALL_PANEL_OVERLAY_IDS in util.js, remove #sim234-btn from battlesim.css
-// (shared with the other bsim-* buttons, so only remove it if all are gone).
-//
-// Standard Fighting Fantasy SKILL/STAMINA/LUCK system (SKILL 1d6+6, STAMINA
-// 2d6+12, LUCK 1d6+6, normal wound 2 STAMINA, Test Your Luck costs 1 LUCK) -
-// same core numbers as books 198/201. This book adds a fourth stat, FAITH
-// (1d6+3), used throughout the narrative for "roll + FAITH" checks outside
-// combat; it isn't part of the Attack Strength formula, but is tracked here
-// since it's on the same Adventure Sheet and the player may want a place to
-// keep it alongside SKILL/STAMINA/LUCK.
-//
-// Mechanics reused from book 201's shape rather than invented fresh:
-// - attackModifier: a plain +/- Attack Strength knob (e.g. fighting bare-
-//   handed after losing a weapon, or the "-2 SKILL, partially blinded"
-//   penalty several encounters apply for their duration).
-// - enemyWoundDamage: overrides how much STAMINA a landed enemy hit costs -
-//   covers the Count's bite (4 instead of 2 with the Curse of the Healer)
-//   and other non-standard wound amounts.
-//
-// pairedFight/sideEnemy here is NOT book 201's mechanic of the same name -
-// checked against this book's own text (sec 121, 237, 295) before reusing
-// the name, and it's a different rule: "roll two dice to determine the
-// Attack Strength of yourself and of each [combatant]; the one with the
-// highest Attack Strength gets in a damaging blow" - a single three-way
-// roll-off where only one hit lands per round, not two independent 2-way
-// exchanges (which is what book 201's paired city-guard fights actually
-// are). Implemented as: roll all three Attack Strengths once; whoever is
-// highest wounds whoever is lowest of the *other* two involved in that
-// swing - i.e. if you're highest you wound the main enemy (or, if
-// randomTarget is on, a 1d6 picks main-vs-side, matching sec 121's "roll
-// one die to see which wolf you hit"); if the main or side enemy is
-// highest, it wounds you. Covers sec 295's "bear shields its mistress"
-// case naturally too: leave randomTarget off and the side enemy (Forest
-// Ranger) is simply never a valid target for your blows while the main
-// enemy (Brown Bear) still has STAMINA, same as the book says.
-// - A toggleable per-round side-effect die roll (modeled after book 201's
-//   Lizardine breath): covers the Thassalosses' freezing ray (extra 1d6,
-//   1-3 hits for 1 STAMINA) and the Vampire Mist / Horned Vampire Bat's
-//   continuous blood-drain (flat STAMINA loss every round regardless of
-//   who has the higher Attack Strength).
-//
-// One new mechanic unique to this book: sword-vs-vampire bonus. Nightstar
-// (the magic sword found at sec 328) gives +1 SKILL vs any creature, but
-// +2 SKILL specifically when the enemy is a Vampire - a checkbox pair
-// ("have Nightstar" / "fighting a Vampire") rather than hardcoding either
-// bonus to a specific enemy name.
-//
-// Deliberately NOT modeled: the Count Reiner Heydrich fight's own multi-
-// stage structure (regains 8 STAMINA and returns after being reduced to
-// 4 or below the first time, sec 178/212/268/339) - the book branches to a
-// different named paragraph for each stage, so re-rolling those specific
-// STAMINA/SKILL numbers into the Enemy fields by hand between rounds
-// (using the pick-list) covers it without extra state machinery. Also not
-// modeled: one-off narrative STAMINA/SKILL/LUCK/FAITH losses and gains
-// (apply those by hand with the steppers, same as any other book). Also
-// not modeled: spells (Forcewall, Greatstrike, Jandor's Bolt, Shatter,
-// Trueheal, Luckspell) - each has its own one-off effect described in its
-// own paragraph (extra damage on a hit, instant kill vs skeletal foes,
-// STAMINA/LUCK restoration) rather than a per-round combat mechanic, so
-// applying them is a matter of adjusting the STAMINA/enemy STAMINA fields
-// by hand at the right moment, same as a one-time item effect elsewhere.
-//
-// All state lives in pt.sim234, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Vault of the Vampire, book 234)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
+// FAITH is a reference stat, not part of Attack Strength.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -198,11 +132,7 @@ function _runRound() {
     if (tiedForTop) {
       _appendLog(d, t('battlesim234.log.both_avoided'));
     } else if (playerAS === top) {
-      // Target the main enemy while it still has STAMINA (matches sec
-      // 295's "bear shields its mistress" - the side enemy simply can't be
-      // hit yet). Once the main enemy is down, or randomTarget is on and
-      // both are still up (sec 121's "roll one die to see which wolf"),
-      // an extra 1d6 may send the blow to the side enemy instead.
+      // Hit the main target while it shields the side target; random-target encounters may redirect a blow.
       let hitSide = d.enemy.stamina <= 0;
       if (!hitSide && d.randomTarget && d.enemy.stamina > 0) hitSide = _roll1d6() >= 4;
       if (hitSide) {
@@ -237,10 +167,7 @@ function _runRound() {
     }
   }
 
-  // Continuous drain / freezing-ray toggle: covers the Thassalosses' extra
-  // 1d6 (1-3 hits for 1 STAMINA, 4-6 dodges) and the Vampire Mist / Horned
-  // Vampire Bat's flat ongoing blood-drain (always hits while active, no
-  // die roll of its own - so a 1-6 roll here just reports the fixed loss).
+  // Continuous drain is either a 1-3-on-1d6 hit or an unconditional fixed loss.
   if (d.player.drainEffect && d.player.stamina > 0) {
     const roll = _roll1d6();
     if (roll <= 3) {

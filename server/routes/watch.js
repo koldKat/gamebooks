@@ -1,17 +1,11 @@
 'use strict';
 
-// Admin-only, read-only "watch a user's live canvas" prototype. Fully separate
-// from the player-facing app and from admin.js - nothing here writes anything,
-// registers any presence, or is visible to the watched user in any way. Same
-// requireLocalhost gate as the rest of the admin panel (see admin.js), not a
-// login-based admin check.
+// Read-only admin canvas watch, behind the localhost gate; never writes or registers player presence.
 
 const db = require('../db');
 const { requireLocalhost, send } = require('../request-helpers');
 
-// Polled by admin/js/watch.js every few seconds - deliberately not push/SSE
-// for this prototype, to avoid touching the party SSE registry (keyed by
-// partyId, not meant for an arbitrary admin/user/book triple) at all.
+// Use independent admin-watch polling, not the party-scoped SSE registry.
 async function handleWatchState(req, res, userId, requestedBookId) {
   if (!requireLocalhost(req, res)) return;
   const user = db.adminGetUser(userId);
@@ -21,11 +15,7 @@ async function handleWatchState(req, res, userId, requestedBookId) {
   const series = meta?.series_id ? db.getSeriesById(meta.series_id) : null;
   const isOpenWorld = !!series?.is_open_world;
 
-  // Open-world: the player can portal to a different book in the series at
-  // any moment - always serve whichever book they're truly active in right
-  // now, not whichever one the "Watch" button happened to be clicked from.
-  // Falls back to the requested book if nobody's currently active anywhere
-  // in the series (they closed it, or haven't started yet).
+  // Follow the player's active open-world book, falling back to the requested book when inactive.
   let bookId = requestedBookId;
   if (isOpenWorld) {
     const activeBookId = db.getActiveBookInSeries(userId, meta.series_id);
@@ -37,17 +27,10 @@ async function handleWatchState(req, res, userId, requestedBookId) {
   // Includes svg_data (unlike getActiveItemsMeta) so the HUD can show the
   // same item icons the real inventory/equipment displays do, not just names.
   const items = db.getActiveItems();
-  // The notebook lives in its own user_books.notebook column, not state_data -
-  // it's book-level (like graph notes), not tied to any one playthrough, so
-  // it's real content worth showing even on a run with an empty charsheet.
+  // Notebook content is book-level, outside per-run state_data.
   const notebook = db.getNotebook(userId, bookId);
   const bgPref = db.getBookBgPref(userId, bookId);
-  // Live-reading text for the section the player is currently standing on -
-  // same canonical source the reader itself serves (db.getBookSection).
-  // Read-only garnish; null when the book has no imported text for that
-  // section (unimported book, or a terminal -1/0 node), and the client hides
-  // its panel then. Computed against the resolved bookId, so it follows
-  // open-world portal switches like everything else in this payload.
+  // Read canonical text for the resolved active book/section; return null when unavailable.
   const playthroughs = state.playthroughs || [];
   const activePt = state.activePtIndex != null ? playthroughs[state.activePtIndex] : null;
   const path = activePt?.path || [];

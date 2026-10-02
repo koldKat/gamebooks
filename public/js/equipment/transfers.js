@@ -4,11 +4,7 @@ import { addItemToInventory, removeAllFromInventoryAt, refreshInventoryUI } from
 import { _isReadOnly, _eq, _eqVisible, _eqItemId, _eqMeta, _eqQty, _setEq } from './model.js';
 import { _refreshOnScreenDisplay } from './display.js';
 
-// Equip the inventory slot at `invIdx` into `slotKey`, taking the whole stack
-// from inventory and returning whatever was previously equipped in that slot
-// back to inventory. Carries the inventory slot's "show on screen" flag,
-// custom label, note and quantity over to the equipped item, and restores the
-// previously-equipped item's own label/note/visibility/quantity when it goes back.
+// Move whole stacks and their metadata/visibility; return the old equipped item to inventory.
 export function _equipItem(slotKey, invIdx) {
   if (_isReadOnly()) return;
   const prevEntry = _eq()[slotKey];

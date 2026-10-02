@@ -1,33 +1,7 @@
-// ── Battle Simulator (The Citadel of Chaos, book 199) ───────────────────────
-// Self-contained module. Imports from state.js, play.js, charsheet.js and util.js.
-// Visibility is gated (book 199 only) by the caller in boot.js via
-// setSim199Visible().
-// To remove: delete this file, remove its import line and initSim199()/
-// setSim199Visible() calls from boot.js, and remove the .bsim-* CSS (shared
-// with battlesim8.js/battlesim829.js/battlesim286.js/battlesim198.js/
-// battlesim200.js/battlesim186.js/battlesim201.js, so only remove it if all eight are gone).
-//
-// Same core Fighting Fantasy SKILL/STAMINA/LUCK combat as book 198, plus a
-// MAGIC system unique to this book: a MAGIC score (2d6+6) is a total budget
-// of spell-casts chosen freely across a fixed list at the start of the
-// adventure. Skill/Stamina/Luck Spells have a well-defined universal formula
-// (restore that stat by floor(Initial/2), capped at Initial) and are
-// automated here; the other 9 spells (Creature Copy, E.S.P., Fire, Fool's
-// Gold, Illusion, Levitation, Shielding, Strength, Weakness) have entirely
-// narrative, per-section effects with no fixed formula, so they're tracked
-// as a simple use-counter only - casting one just logs it and decrements the
-// count, and any stat change it causes gets applied by hand via the plain
-// steppers, same spirit as book 198's one-off narrative bonuses.
-// This book also has no Provisions/eating mechanic at all - confirmed by a
-// full read of the rules text - STAMINA can only be restored via the
-// Stamina Spell, so there's no Provisions field here unlike book 198.
-// Two items carry a fixed mechanical bonus (Sun-Sword +4 SKILL, sec 345; the
-// Balthus Dire endgame's enchanted sword +2 Attack Strength, sec 353) and
-// are toggleable in the Items panel, same pattern as book 198's Magic Sword.
-// A third item, the two-dose Potion of Magik (sec 235), permanently raises
-// MAGIC score by 1 per dose - a one-time-use consumable like book 198's
-// Holy Water/Rum, not a passive toggle.
-// All state lives in pt.sim199, per-user/per-book via currentPlaythrough().
+// Battle Simulator (The Citadel of Chaos, book 199)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
+// MAGIC is a spell budget; restoration spells are automated, other spells only consume uses.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -38,10 +12,7 @@ import { t } from '../i18n.js';
 const SVG_SKULL  = `<svg class="sim-icon sim-icon-dead"  viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8c0 2.8 1.4 5.3 3.6 6.8V20a1 1 0 0 0 1 1h6.8a1 1 0 0 0 1-1v-2.2C18.6 16.3 20 13.8 20 11a8 8 0 0 0-8-8zm-2.5 13v-1.5a.5.5 0 0 0-.5-.5H8l-.5-1 1-1-1-1 1-1H9a2.5 2.5 0 0 1 5 0h.5l1 1-1 1 1 1-.5 1h-1a.5.5 0 0 0-.5.5V16h-4z"/></svg>`;
 const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v7a6 6 0 0 1-12 0V2zm-2 1H2v4a4 4 0 0 0 4 4v-1a3 3 0 0 1-3-3V3zm16 0h2v4a4 4 0 0 1-4 4v-1a3 3 0 0 0 3-3V3zm-7 13v2H9v2h6v-2h-2v-2a6 6 0 0 0 5-5.92V2H6v8.08A6 6 0 0 0 13 16z"/></svg>`;
 
-// [key, label, kind]. kind 'restore' = automated (Skill/Stamina/Luck Spells,
-// each restore that stat by floor(Initial/2), capped at Initial). kind
-// 'manual' = narrative-only, casting it just logs + decrements the count,
-// no fixed formula to automate.
+// restore spells refill by floor(Initial/2), capped at Initial; manual spells only consume/log uses.
 const SPELLS = [
   ['skillSpell',    'battlesim199.spell.skillSpell',    'restore'],
   ['staminaSpell',  'battlesim199.spell.staminaSpell',  'restore'],
@@ -106,12 +77,7 @@ function _notReady(d) { return !d.rolled; }
 function _roll2d6() { return 2 + Math.floor(Math.random() * 6) + Math.floor(Math.random() * 6); }
 function _roll1d6() { return 1 + Math.floor(Math.random() * 6); }
 
-// Sun-Sword (sec 345, +4 SKILL) and the enchanted sword from the Balthus
-// Dire endgame (sec 353, +2 to the Attack Strength roll - functionally the
-// same as +2 SKILL, since Attack Strength = 2d6+SKILL) are the only two
-// items in this book with a fixed mechanical bonus. The book never says you
-// can't carry both, so - matching book 198's "add whatever you found"
-// treatment of its own overlapping weapon bonuses - they simply stack.
+// Stack Sun-Sword (+4 SKILL, sec 345) and enchanted sword (+2 Attack Strength, sec 353) bonuses.
 function _effectiveSkill(d) {
   let skill = d.player.skill;
   if (d.player.hasSunSword) skill += 4;
@@ -127,9 +93,7 @@ function _appendLog(d, line) {
 function _enemyName(d) { return d.enemy.name.trim() || t('battlesim.default_enemy'); }
 function _enemyNameSafe(d) { return escapeHtml(_enemyName(d)); }
 
-// Uncapped (was previously trimmed to the last 100) - the admin dashboard
-// aggregates battle counts app-wide from this array, so per-user history needs
-// to be a true lifetime total, not a rolling window.
+// Keep lifetime outcomes: admin totals require the full history.
 function _recordOutcome(d, outcome) {
   d.history.push({
     enemy: _enemyName(d), outcome,
@@ -173,10 +137,7 @@ function _runRound() {
   _renderAll();
 }
 
-// Test Your Luck after a hit lands: costs 1 LUCK regardless of outcome. On
-// your own hit, Lucky deals 2 extra STAMINA damage (4 total), Unlucky gives
-// back 1 (only 1 total). On a hit you took, Lucky gives back 1 STAMINA (only
-// 1 total lost), Unlucky costs 1 extra (3 total). Same rules as book 198.
+// Luck costs 1: own hits become 4/1 damage; incoming hits become 1/3 damage (lucky/unlucky).
 function _testLuck() {
   const d = _data();
   if (!d || !d.pendingLuck || d.player.luck <= 0) return;
@@ -252,10 +213,7 @@ function _castSpell(key) {
   _renderAll();
 }
 
-// Potion of Magik (sec 235): 2 doses, each permanently raises MAGIC score by
-// 1 (the book frames it as "refunding" the spell you just cast rather than
-// growing your budget, but the net mechanical effect is the same either
-// way - one more spell-cast becomes available overall).
+// Potion of Magik (sec 235) has two doses, each permanently adding one spell cast.
 function _useMagikPotion() {
   const d = _data();
   if (!d || !d.player.magikHave || d.player.magikUsed >= MAGIK_DOSES) return;
@@ -274,9 +232,7 @@ function _renderStatus() {
   const el = document.getElementById('sim199-status');
   if (!d || !el) return;
   const notReady = _notReady(d);
-  // A fresh enemy defaults to stamina/staminaMax both 0 (no encounter picked
-  // yet), which looks identical to "defeated" if only stamina<=0 is checked -
-  // staminaMax>0 confirms a real enemy is actually loaded first.
+  // Require staminaMax>0 to distinguish a defeated enemy from an empty slot.
   const hasEnemy = d.enemy.staminaMax > 0;
   if (notReady)                                    el.innerHTML = t('battlesim199.status.not_ready');
   else if (d.player.stamina <= 0)                   el.innerHTML = t('battlesim199.status.fallen', { skull: SVG_SKULL });

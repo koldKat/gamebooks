@@ -21,11 +21,7 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
   lazyState.sequence = 0;
   const openWorldSeriesIds = new Set((allSeries || []).filter(s => s.is_open_world).map(s => s.id));
   for (const b of allOwnedBooks) b.isOpenWorld = b.series_id != null && openWorldSeriesIds.has(b.series_id);
-  // booksState._cachedBooks/getCachedBooks() is the app-wide "what does this user own"
-  // source (autocomplete, the "not in my books" covers filter, add-to-
-  // library duplicate checks, etc.) - it must stay the FULL list regardless
-  // of viewport, cached/persisted from allOwnedBooks before the reading-only
-  // cut below ever touches `books`.
+  // Cache the full owned library before applying mobile reading filters.
   booksState._cachedBooks     = allOwnedBooks;
   booksState._cachedAllSeries = allSeries;
   booksState._cachedStashes   = Array.isArray(stashes) ? stashes : [];
@@ -150,9 +146,7 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
     return { activeBooks, activeChildrenMap, activeChildIds, topInSeries: _sortSeriesBooks(activeBooks.filter(b => !activeChildIds.has(b.id))) };
   }
 
-  // A container itself is a folder, not readable content - only a
-  // standalone book, or a container that has children, counts toward "does
-  // this series/stash have anything to show".
+  // Empty containers are not readable content.
   function _hasRenderableTop(topArr, childrenMap) {
     return topArr.some(b => !b.is_container || (childrenMap[b.id] || []).length);
   }
@@ -190,12 +184,7 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
     _sortChildrenMap(activeChildrenMap);
     const topInSeries   = _sortSeriesBooks(activeBooks.filter(b => !activeChildIds.has(b.id)));
     const booksInSeries = activeBooks;
-    // A genuinely empty series (booksInSeries.length === 0, e.g. just
-    // created) still renders its header with the "no books yet" hint below -
-    // that's the only place a user can find it to add books. But a series
-    // that has books which all got filtered out of view (stash exclusions,
-    // or containers with no children) has nowhere useful for that hint to
-    // send you, so that case still skips the whole section.
+    // Show truly empty series, but hide series whose existing books were all filtered out.
     if (booksInSeries.length && !_hasRenderableTop(topInSeries, activeChildrenMap)) return '';
     const keyPrefix     = stashId ? `stash_${stashId}_sr_` : 'sr_';
     const expanded      = _getExpandedPref('series', `${stashId ?? 'main'}:${s.id}`, `${keyPrefix}expanded_${s.id}`);
@@ -276,21 +265,10 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
       if (_hasRenderableTop(topInSeries, activeChildrenMap)) stashHasAnyBooks = true;
       return sum + 1 + activeBooks.length;
     }, 0);
-    // Not stashBooksRaw.length - a container in there is a folder, not
-    // readable content itself, so a stash holding only an empty anthology
-    // would still count as non-empty by raw length even though
-    // stashContainers' own per-item skip (below) hides that container
-    // entirely, leaving nothing actually rendered. Standalone books are
-    // real content on their own; a container only counts if it has
-    // children to show.
+    // Containers count as visible content only when they have children.
     if (stashStandalone.length) stashHasAnyBooks = true;
     if (stashContainers.some(c => (stashChildrenMap[c.id] || []).length)) stashHasAnyBooks = true;
-    // A stash whose books (direct or via its series) have nothing left to
-    // show has no reason to render. Checked separately from stashItemCount
-    // below, which counts each series header as "1 item" regardless of
-    // whether that series itself has any books - a stash holding only an
-    // empty series would otherwise read as non-empty and still get
-    // rendered.
+    // Skip stashes with no visible content even if empty series headers count as items.
     if (!stashHasAnyBooks) continue;
     const stashItemCount = stashSeriesItemCount + stashBooksRaw.length;
     const stashCountLabel = stashItemCount === 1 ? '1 item' : `${stashItemCount} items`;

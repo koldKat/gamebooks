@@ -1,46 +1,7 @@
-// ── Battle Simulator (Варварският бог / The Barbarian God, book 82) ──
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 82 only) by the caller in boot.js via
-// setSim82Visible().
-// To remove: delete this file, remove its import line and initSim82()/
-// setSim82Visible() calls from boot.js, remove 'sim82' from
-// SIM_HISTORY_KEYS in server/db/xp.js, and remove the .bsim-* CSS (shared
-// with the other battlesim*.js files, so only remove it if all are gone).
-//
-// A single clean mechanic, verified against the book's own worked example
-// (enemy Strength 12, player Strength 7, table-pick 8 -> sum 15 > 12 ->
-// enemy loses 2 ЖИЗНЕНИ ТОЧКИ). Life points (start = 50 + a table-pick,
-// same non-dice "point at a table" convention as every other sim's
-// precedent) fall into four Levels, each with its own Strength bonus:
-// I "healthy" 62-41 (+5), II "wounded" 40-16 (+3), III "maimed" 15-1 (+1),
-// IV "dead" 0 (game over). Two combat skills (ЗА РЪКОПАШЕН БОЙ /
-// БОЙ С ХЛАДНИ ОРЪЖИЯ) are ALSO tiered by the same four Levels (1/0/0 and
-// 2/1/0) rather than independently trained - the fight text states which
-// one applies for a given encounter, so both a player's Strength and their
-// current skill tier are fully derived from current Life, not tracked as
-// separate numbers. Player Strength (this fight) = Level bonus + tiered
-// value of whichever skill the fight calls for.
-//
-// Each round only the PLAYER picks a random number 1-12 (added to their own
-// Strength) - the enemy's Strength is a fixed number with no roll of its
-// own. If the player's total is higher, the enemy loses 2 ЖИЗНЕНИ ТОЧКИ; if
-// lower, the player loses 2; a tie costs both 1. Repeat until someone is
-// out. A handful of encounters state a "fight until N points are lost"
-// framing instead of a separate enemy HP number - those roster rows use N
-// directly as the enemy's HP, but the same early-stop convention on the
-// PLAYER's side (ending before their absolute Life reaches 0) isn't
-// separately enforced here; watch the round count and stop by hand for
-// those specific fights, same "note it, handle manually" precedent as every
-// other sim's book-specific exceptions.
-//
-// book_enemies.attack holds the enemy's fixed Strength, .hp holds their
-// Life points (or the stated loss-threshold for the handful of encounters
-// that only give one). 15 rows read from all 777 sections (this book's
-// combat is a minor thread against exploration/dialogue, hence the thinner
-// roster); one same-name/same-stat/same-destination pair (mounted
-// barbarian §120=§454) is merged into one row.
-//
-// All state lives in pt.sim82, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Варварският бог / The Barbarian God, book 82)
+// Derive strength and skill tiers from current life.
+// Compare player strength + 1-12 pick with fixed enemy strength: damage 2; ties cost both 1.
+// Player-side early-stop thresholds are manual.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';

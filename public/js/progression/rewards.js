@@ -63,10 +63,7 @@ export function _positionRewardLayer() {
     }
   }
   if (mainVisible) {
-    // #play-btn-row (charsheet/inventory/equipment/battlesim toggles) uses
-    // flex-direction: row-reverse and wraps as more buttons are added, so any
-    // one button inside it (e.g. #charsheet-btn) is not a stable stand-in for
-    // the row's actual left edge - use the row and stack containers themselves.
+    // Measure the actual row containers, not wrapped or reversed child buttons.
     const playStack = document.getElementById('play-bottom-stack');
     const btnRow    = document.getElementById('play-btn-row');
     const stackRect = playStack?.getBoundingClientRect();
@@ -104,10 +101,7 @@ export function _resetRewardSnapshotState() {
   _rewardFloaterQueue = []; _rewardFloaterActive = false;
 }
 
-// Returns { xpDelta, coinDelta, levelDelta } for callers that need the exact
-// amount just earned (e.g. the live-reading run-end screen) - null on the
-// very first snapshot of a session, when there's no prior value to diff
-// against yet.
+// Return XP, coin, and level deltas; the first snapshot establishes a baseline.
 export function _processRewardSnapshot(data, opts = {}) {
   const { broadcast = true } = opts;
   if (!data || typeof data !== 'object') return null;

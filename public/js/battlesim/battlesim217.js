@@ -1,37 +1,7 @@
-// ── Battle Simulator (Trial of Champions, book 217) ─────────────────────────
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 217 only) by the caller in boot.js via
-// setSim217Visible().
-// To remove: delete this file, remove its import line and initSim217()/
-// setSim217Visible() calls from boot.js, remove 'sim217' from
-// SIM_HISTORY_KEYS in server/db/xp.js, and remove the .bsim-* CSS (shared
-// with the other battlesim*.js files, so only remove it if all are gone).
-//
-// Standard Fighting Fantasy SKILL/STAMINA/LUCK system, same core numbers,
-// Test Your Luck table and score ceilings as every other FF sim in this app -
-// SKILL 1d6+6, STAMINA 2d6+12, LUCK 1d6+6. Provisions are NOT modeled - this
-// book's own rules text is explicit that, unlike other FF books, it starts
-// with none at all, and STAMINA is regained "in various ways" with no single
-// numeric rule to build a consumable around.
-//
-// attackModifier/enemyWoundDamage/winAfterHits kept as generic hand-applied
-// knobs (matching every other FF sim's precedent) for one-off cases like the
-// Liche Queen's "-3 SKILL during this combat" (§80) or a magic weapon's +1/+2
-// SKILL bonus (only one ever applies at once per the rule text). No
-// pairedFight/sideEnemy mechanic - every multi-enemy encounter in this book
-// (2 Orcs §139/§192, 5 Rats §146, 2 Vampire Bats §186, 4 Xoroa Warriors §259)
-// is explicitly fought one at a time in the text, not simultaneously, so
-// re-pick the next roster enemy after defeating the current one. No
-// enemyStaminaFloor cases found either - every fight in this book runs to 0.
-//
-// book_enemies.attack holds SKILL, .hp holds STAMINA, .defense unused. 45
-// rows read from all 400 sections; two same-name/same-stat pairs (Giant
-// Centipede §154/§270, Slave §73/§349) share the exact same "if you win"
-// destination and are merged into one row each; other same-named encounters
-// (Bone Devil, Chaos Champion, Bloodworm) go to different destinations or
-// have different stats and are kept as separate rows.
-//
-// All state lives in pt.sim217, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Trial of Champions, book 217)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
+// No reusable provisions system; healing events are narrative.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -97,9 +67,7 @@ function _resetEncounterKnobs(d) {
   d.player.hitsLandedThisFight = 0;
 }
 
-// Uncapped lifetime log - the admin dashboard aggregates battle counts
-// app-wide from this array, so per-user history needs to be a true lifetime
-// total, not a rolling window.
+// Keep lifetime outcomes: admin totals require the full history.
 function _recordOutcome(d, outcome) {
   d.history.push({
     enemy: _enemyName(d), outcome,
@@ -534,9 +502,7 @@ export function initSim217() {
     if (!d) return;
     const map = FIELD_MAP[id];
     if (!map) return;
-    // Attack modifier is the one field allowed to go negative (bare-handed/
-    // disarmed/fatigue penalties are always a subtraction) - every other
-    // field stays clamped to 0 or above.
+    // Allow negative attack modifiers; other fields stay non-negative.
     val = id === 'sim217-player-atkmod' ? Number(val) : Math.max(0, val);
     if (id === 'sim217-player-skill') val = Math.min(val, d.player.skillInitial);
     if (id === 'sim217-player-stamina') val = Math.min(val, d.player.staminaInitial);

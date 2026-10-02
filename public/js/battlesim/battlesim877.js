@@ -1,46 +1,6 @@
-// ── Battle Simulator (Галактическият гигант, book 877) ──────────────────────
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 877 only) by the caller in boot.js via
-// setSim877Visible().
-// To remove: delete this file, remove its import line and initSim877()/
-// setSim877Visible() calls from boot.js, remove 'sim877' from
-// SIM_HISTORY_KEYS in server/db/xp.js, remove 'sim877-overlay' from
-// ALL_PANEL_OVERLAY_IDS in util.js and the #sim877-btn selectors in
-// battlesim.css.
-//
-// This is a single-protagonist sci-fi book with a fixed character-generation
-// procedure (book_frontmatter.rules_text for book_id=877):
-//   СИЛА (Strength)      = 2d6
-//   ЖИВОТ (Life)         = 1d6 + 12 (game over if it drops below 3)
-//   ЕСПЕРНА МОЩ (Esper)  = 3d6
-// The reader types in their own rolled/current numbers (same precedent as
-// 760/772/781/869/871) rather than the sim assuming a fixed build.
-//
-// Unlike most sims in this app, the book has no single uniform combat
-// formula - each of its 12 real fights/checks resolves differently, exactly
-// as printed in its own section. Verified via a full 215-section prose read
-// this session; the roster below is the complete list of genuine stat-based
-// encounters (pure narrative dice-check branches with no named
-// opponent are NOT included, per this app's established sim-scope rule):
-//   Робот-рак (§3)                 Сила 10               - no dice, pure compare
-//   Гора-октопод (§12)             Сила 12 / Живот 18     - multi-round duel
-//   Галактическа медуза (§37)      Сила 8  / Живот 18     - no dice, pure compare
-//   Хищна паяжина (§55)            Сила 15 / Живот 20     - no dice, threshold compare
-//   Хищна паяжина, 2-ри път (§103) Сила 10 / Живот 20     - no dice, threshold compare
-//   Невидим робот (§78)            Сила 20               - multi-round duel
-//   Стена от змии (§15)            Есперна сила 25        - no dice, pure compare
-//   Стена от змии, 2-ри път (§146) Есперна сила 12        - no dice, pure compare
-//   Двуглаво чудовище (§155)       Сила 4  / Живот 6      - 2 dice, 3-way compare
-//   Голямо двуглаво чудовище (§192) Сила 8  / Живот 12     - no dice, pure compare
-//   Робот-танк (§170)              Сила 20 / Живот 10      - 2d6 roll, threshold compare
-//   Робот-паяк (§195)              Сила 30               - no dice, pure compare
-// Several encounters have no dice at all - the book's fights are resolved
-// mostly by comparing the reader's already-rolled stats, with dice only
-// entering the multi-round duels and a handful of one-shot rolls. That is
-// faithfully reproduced here rather than papered over with an invented
-// uniform mechanic.
-//
-// All state lives in pt.sim877, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Галактическият гигант, book 877)
+// Use each encounter's own comparison/roll rules; there is no uniform combat engine.
+// Enter current Strength/Life/Esper; life below 3 ends play.
 
 import { currentPlaythrough, saveState } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';

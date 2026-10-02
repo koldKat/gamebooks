@@ -1,77 +1,6 @@
-// ── Battle Simulator (Вълшебната тетива, book 753) ──────────────────────────
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 753 only) by the caller in boot.js via
-// setSim753Visible().
-// To remove: delete this file, remove its import line and initSim753()/
-// setSim753Visible() calls from boot.js, remove 'sim753' from
-// SIM_HISTORY_KEYS in server/db/xp.js, remove 'sim753-overlay' from
-// ALL_PANEL_OVERLAY_IDS in util.js and the #sim753-btn selectors in
-// battlesim.css.
-//
-// This book (unlike most books audited around it this session) has a real
-// reader-facing dice combat system, fully documented in the book's own
-// epizod 5 ("НЕОБИЧАЙНА СХЕМА ЗА ПРОВЕЖДАНЕ НА БИТКИ"). It is NOT the usual
-// Fighting Fantasy SKILL/STAMINA/LUCK shape reused by every other sim in
-// this app - it is asymmetric:
-//   - Троловият удар (player hit): ATAKA (player.attack + 2d6) compared to
-//     enemy DEFENSE. If greater, that's ONE successful hit, just a binary
-//     counter - it does not do variable damage. The troll wins once he has
-//     landed the number of successful hits the fight calls for (1-6,
-//     varies per enemy, entered as "hits needed").
-//   - Противников удар (enemy hit): enemy ATAKA (enemy.attack + 2d6)
-//     compared to player DEFENSE. The excess, if positive, is added to the
-//     troll's own cumulative ПОРАЖЕНИЯ (damage) pool. The troll loses if
-//     that pool reaches 24 before he lands enough hits.
-// There is no enemy "life bar" concept at all in this book's own rules -
-// book_enemies.hp is repurposed here to hold "hits needed to win" (not a
-// wound pool), and book_enemies.pb holds "enemy strikes per round" (most
-// fights are 1, the two soldier fights are 2 - "нанасят по два
-// последователни удара").
-//
-// No formal starting-stat generation rules were found anywhere in the
-// book's numbered episodes (СИЛА/ИЗДРЪЖЛИВОСТ/БЪРЗИНА appear to live only
-// on the printed character-sheet pages, which aren't part of book_sections)
-// - ATAKA and ЗАЩИТА are freely editable fields with no roll button, same
-// fallback this app uses for books without formal stat-rolling. This also
-// matches the book's own text, where ATAKA/ЗАЩИТА are recomputed by hand
-// for nearly every fight from SILA + weapon weight + grip choice (one-
-// handed vs two-handed changes both numbers), so a fixed roll would be
-// wrong anyway - the player is expected to edit these before every fight.
-//
-// Full roster (verified via a complete read of all 290 sections this
-// session): weak royal soldiers (§7, 6 of them, hitsNeeded 2, 2 strikes/
-// round), strong royal soldiers (§211, 12 of them, hitsNeeded 6, 2 strikes/
-// round), Дуъргар as a fire-club wielder (§109, hitsNeeded 2, or 1 with
-// magical code ТЕТИВА - edit by hand), Дуъргар as a beast (§119, hitsNeeded
-// 4, or 2 with ТЕТИВА), the blatna-dух grappler (§242, hitsNeeded 1, player
-// ЗАЩИТА is fixed at 6 for this specific fight per the book's own text -
-// edit by hand), Грендъл the giant (§260/267/270, hitsNeeded 3, base
-// ATAKA/ЗАЩИТА 24/24 with situational +4 ATAKA/-8 ЗАЩИТА if the troll has
-// set trap code ЯМА, a variable adjustment if he has code БЪЧВА, or ЗАЩИТА
-// forced to 12 if he has code ЛЪК - all "apply by hand" since these are
-// one-off narrative modifiers, same precedent as every other sim's book-
-// specific exceptions), Френир normal (§281, hitsNeeded 2) and Френир
-// enraged (§282, hitsNeeded 4, only reachable if the troll skipped the
-// Shlemat-na-uzhasa item that auto-defeats this fight narratively - not
-// modeled, see below), and Кобалди dwarves (§279, hitsNeeded 1 - landing a
-// single hit routs them - enemy count varies 8/12/24 by situational code,
-// and crucially has NO БОЕН КОД arithmetic and a unique "random strikes per
-// round" mechanic: each round the enemy's strike count is the difference
-// between two separate 2d6 rolls, not a fixed number. A "Кобалди режим"
-// checkbox switches strikesPerRound to that dice-difference formula for
-// this one fight; every other fight uses a plain fixed strikesPerRound.
-//
-// Deliberately NOT modeled, matching this app's existing precedent for
-// mechanics too narratively bespoke to fit a generic ATAKA/ЗАЩИТА resolver:
-// Брок the stone beast (§115-137) - a multi-stage skill-check encounter
-// (troll SILA+weapon vs a table-roll threshold, then a follow-up table roll
-// deciding whether Brok flees, dies, or the troll must repeat the check)
-// with no ATAKA/ЗАЩИТА numbers printed anywhere in its own text; and the
-// Shlemat-na-uzhasa auto-win against enraged Fenrir at §285 (instant
-// narrative victory, no roll at all - if the troll has that item, he never
-// reaches the §282 dice fight in the first place).
-//
-// All state lives in pt.sim753, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Вълшебната тетива, book 753)
+// Player hits are counted against a target; enemy damage accumulates toward the troll's limit.
+// Encounter-specific exceptions are manual; this is not symmetric damage combat.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -130,9 +59,7 @@ function _resetEncounterKnobs(d) {
   d.kobaldiMode = false;
 }
 
-// Uncapped lifetime log - the admin dashboard aggregates battle counts
-// app-wide from this array, so per-user history needs to be a true lifetime
-// total, not a rolling window.
+// Keep lifetime outcomes: admin totals require the full history.
 function _recordOutcome(d, outcome) {
   d.history.push({
     enemy: _enemyName(d), outcome,
@@ -165,9 +92,7 @@ function _runRound() {
     return;
   }
 
-  // Противниковите удари: excess over player DEFENSE accumulates toward
-  // the 24-point damage cap. Kobaldi mode overrides the fixed
-  // strikesPerRound with the book's own dice-difference formula.
+  // Enemy damage accumulates toward 24; Kobaldi mode derives strike count from dice differences.
   const strikes = d.kobaldiMode
     ? Math.abs(_roll2d6() - _roll2d6())
     : Math.max(1, d.enemy.strikesPerRound || 1);

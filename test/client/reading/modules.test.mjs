@@ -8,8 +8,8 @@ import { spawnSync } from 'node:child_process';
 const dir = new URL('../../../public/js/', import.meta.url);
 test('reading relocation preserves implementations and exact dependency targets', () => {
   const digests = {
-    liveread: '15b706fed47aa58c7094adbaa5310c0928a5b1b35a4e1e3a8d530dccfdd30f32',
-    'liveread-shared': '451bde29c45746bee6ef1d1f44e742596fa7a1e69557d397d418e601078459d5',
+    liveread: '86c62138d797933d41d916939624eaa3528b48db604286633277c262890f4bc0',
+    'liveread-shared': '7a305b8967fc5494a00f3962a9075a3cdb435122061baadb8fa7aa3e0cbaa1dc',
   };
   for (const [name, digest] of Object.entries(digests)) {
     assert.equal(existsSync(new URL(name + '.js', dir)), false);
@@ -31,9 +31,9 @@ test('mobile keeps existing dependencies and imports only the shared reading mod
   assert.doesNotMatch(shared, /^import\s|\bimport\s*\(/m);
   const mobileUrl = new URL('../mobile/js/reader.js', dir);
   const mobile = readFileSync(mobileUrl, 'utf8');
-  // Pre-relocation mobile source, excluding the intentionally changed import.
+  // Mobile source baseline excludes imports; executable AST unchanged after comment cleanup.
   assert.equal(createHash('sha256').update(mobile.replace(/^import[\s\S]*?;$/gm, '')).digest('hex'),
-    '4ee10e0cafee845b2b802ca47f33e9dd72ff0cdf0a9dd033d066fab4df66a3d3');
+    'fd7ec5e93f4d2e68347fa33e73a28532d1d04ec4bec41816c9978418e9dfd264');
   const imports = [...mobile.matchAll(/^import[\s\S]*?from '([^']+)';$/gm)]
     .map(match => new URL(match[1], mobileUrl));
   const desktopImports = imports.filter(url => url.href.startsWith(dir.href));

@@ -6,11 +6,11 @@ import { fileURLToPath } from 'node:url';
 
 const dir = new URL('../../../public/js/', import.meta.url);
 test('progression relocation preserves XP, floaties and shop implementations without root wrappers', () => {
-  // Non-import source captured before the path-only relocation.
+  // Non-import source baseline; comment cleanup verified against unchanged executable ASTs.
   const digests = {
-    "app-xp": "62ebae94314ff21dd8ceeab81ea9d2573e118a713eaacf9ee54a2b46c4272b5a",
-    "rewards": "8da80d47d5afcb77b829bd8f4061974c2625b498d90149ea5958425d920d86e1",
-    "shop": "945d2d9497d587fa2a1239eb907b6f1ce56fc017b2bb1063d3d008e3b15c4125"
+    "app-xp": "353a3587b4278c1cd1af4880e265d43a79cbbf0ff0a2ed705c2baacc21c6b6e9",
+    "rewards": "33fcb7bab962502059be6c89c7fa9ddefdf3d050c3a3490b6ebe69cc0b46d7fa",
+    "shop": "89838c39b1c8cbfd7293dd42c1a83ab1a39245d9c3044012e0640e51d84da353"
   };
   for (const [name, digest] of Object.entries(digests)) {
     assert.equal(existsSync(new URL(name + '.js', dir)), false);

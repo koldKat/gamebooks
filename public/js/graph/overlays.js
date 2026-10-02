@@ -3,9 +3,7 @@ import { network, visNodes, graphRuntime } from './runtime.js';
 import { GRID_SIZE } from './viewport.js';
 import { _NOTE_FONT, _NOTE_PAD_X, _NOTE_PAD_Y, _NOTE_LINE_H } from './overlay-cache.js';
 
-// Fixed radius (graph units) a "fog of grid" halo extends around each node -
-// fixed rather than scaled to node spacing, same reasoning as GRID_SIZE
-// itself: one predictable constant instead of another speculative setting.
+// Use a fixed world-space radius for node grid halos.
 const FOG_RADIUS = 125;
 
 // Drawn on 'beforeDrawing' (under nodes/edges), in world coordinates so it
@@ -21,17 +19,12 @@ export function drawGrid(ctx) {
   ctx.strokeStyle = 'rgba(148, 163, 184, 0.15)';
   ctx.lineWidth   = 1 / network.getScale();
 
-  // Fog of grid: clip to a circular halo around each node first, so the
-  // grid lines drawn afterward only ever show up near a node - mutually
-  // exclusive with the always-visible "Show grid" (state.showGrid).
+  // Clip grid lines to node halos; mutually exclusive with the full grid.
   if (state.fogOfGrid) {
     if (!visNodes) { ctx.restore(); return; }
     const ids = visNodes.getIds();
     if (!ids.length) { ctx.restore(); return; }
-    // Same idea as the overlay position cache below - avoid recomputing
-    // every node's position and rebuilding a multi-circle clip path on
-    // every single beforeDrawing frame (fired continuously during pan/zoom)
-    // when nothing has actually moved.
+    // Reuse the fog clip path until node positions change.
     if (graphRuntime._fogDraggingActive || graphRuntime._fogPosDirty) {
       graphRuntime._fogPositions = network.getPositions(ids);
       graphRuntime._fogPosDirty  = false;

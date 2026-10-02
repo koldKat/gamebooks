@@ -1,72 +1,7 @@
-// ── Battle Simulator (Creature of Havoc, book 220) ───────────────────────────
-// Self-contained module. Imports from state.js, play.js, charsheet.js and util.js.
-// Visibility is gated (book 220 only) by the caller in boot.js via
-// setSim220Visible().
-// To remove: delete this file, remove its import line and initSim220()/
-// setSim220Visible() calls from boot.js, and remove the .bsim-* CSS (shared
-// with every other battlesimN.js, so only remove it if all of them are gone).
-// Also remove 'sim220' from SIM_HISTORY_KEYS in server/db/xp.js, and remove
-// 'sim220-overlay' from ALL_PANEL_OVERLAY_IDS in util.js and the #sim220-btn
-// selectors in battlesim.css.
-//
-// Standard Fighting Fantasy SKILL/STAMINA/LUCK system, same core numbers as
-// every other sim in this app (SKILL 1d6+6, STAMINA 2d6+12, LUCK 1d6+6;
-// opposed 2d6+SKILL roll, ties = no effect, loser -2 STAMINA; Test Your Luck
-// costs 1 LUCK, +/-1 STAMINA effect) - this book's own rules pages were not
-// found as plain text in book_sections (front-matter isn't indexed for this
-// title), so the standard rules used by every other sim here apply.
-//
-// No Provisions/Potions system, unlike most sims in this app - the player
-// character is an amnesiac shapeshifting creature (claws/bite, not a
-// conventional armed adventurer) and there is no printed Provisions or
-// three-potion mechanic anywhere in book_sections for this title (only
-// narrative one-off "feed on them, +4 STAMINA" and shopkeeper-food events,
-// which are hand-applied with the stamina stepper like any other one-off).
-// The book's light SKILL-bonus items (e.g. a metal breastplate, a magical
-// silvery coating) are handled through the existing generic attackModifier
-// field, same as every prior sim - not a persistent inventory UI.
-//
-// attackModifier/enemyWoundDamage/playerWoundDamage/enemyAutoWinFirstRound
-// are reused exactly as prior sims (see battlesim219.js) - they cover every
-// generic "-N SKILL this fight" penalty and every non-standard win/loss
-// damage amount.
-//
-// One field new to this sim:
-// - enemyDefeatThreshold: the enemy STAMINA value that counts as "defeated"
-//   (default 0). Needed because two fights end in a win once the enemy is
-//   merely reduced to a nonzero STAMINA, not beaten to 0: Thugruff (SS82,
-//   win = STAMINA 4) and the Master of Hellfire (SS143, win = STAMINA 2).
-//
-// extraAttackers (0-3) + sideEnemies[] generalise book 219's single
-// pairedFight/sideEnemy pair to cover this book's larger simultaneous
-// groups - every extra attacker fights its own independent exchange against
-// a fresh player roll each round, exactly like book 219's side attacker, and
-// is never wounded through this path (only the enemy selected as the main
-// target can be wounded - to whittle down a group, re-pick the next member
-// into the main "Enemy" slot after each one falls, same as any ordinary
-// multi-enemy chain). Covers: 2x Goblin (SS341), 3x Hobbit (SS42),
-// 3x Flesh-Feeder (SS447), 2x Brigand (SS429), 4x Zombie (SS411), and the
-// Warrior+Thief pair (SS320). The Warrior then Fighter in Leather Armour
-// fight (SS258) is sequential, not simultaneous - fought as two ordinary
-// single-target fights, re-picking the next enemy from the dropdown after
-// the first falls.
-//
-// Deliberately NOT modeled, matching this app's existing precedent for
-// dynamic/always-on per-round passives (see battlesim219.js's Chimera note):
-// the Ophidiotaur's tail-sting (SS238 - a flat 2 STAMINA hit to the player
-// every round regardless of outcome, negated only by a lucky Test Your
-// Luck), the Manic Beast's rage bonus (SS263 - +2 to its own Attack
-// Strength roll the round after it's wounded, lost if not wounded again the
-// following round), and the Giant Hornet's double-roll death mechanic
-// (SS332 - a double on its Attack Strength roll kills the player outright
-// unless the player also rolls a double). All three are hand-applied with
-// the existing stat steppers/Test Your Luck button rather than bespoke
-// toggles. Also not modeled: the Hobbit's (SS205) 3-round-or-elsewhere
-// branch and the Black Elf's (SS425) automatic 2-round fight end - both are
-// narrative section routing off the round counter already visible in the
-// log, not combat-mechanic changes, same precedent as every other sim here.
-//
-// All state lives in pt.sim220, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Creature of Havoc, book 220)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
+// No consumable pool; encounter-specific passives require manual adjustment.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -151,9 +86,7 @@ function _resetEncounterKnobs(d) {
   d.sideEnemies = [_emptySideEnemy(), _emptySideEnemy(), _emptySideEnemy()];
 }
 
-// Uncapped (was previously trimmed to the last 100) - the admin dashboard
-// aggregates battle counts app-wide from this array, so per-user history needs
-// to be a true lifetime total, not a rolling window.
+// Keep lifetime outcomes: admin totals require the full history.
 function _recordOutcome(d, outcome) {
   d.history.push({
     enemy: _enemyName(d), outcome,
@@ -197,12 +130,7 @@ function _runRound() {
     if (d.player.stamina > 0) d.pendingLuckQueue.push({ kind: 'enemy-hit' });
   }
 
-  // Extra simultaneous attackers: each fights its own independent exchange
-  // with a fresh player roll every round - covers 2x Goblin/Brigand,
-  // 3x Hobbit/Flesh-Feeder, 4x Zombie, and the Warrior+Thief pair. None of
-  // them are wounded through this path (only the main "Enemy" slot can be
-  // wounded), matching the standard FF "every enemy attacks, you choose one
-  // to fight back against" multiple-enemy rule.
+  // Each side attacker gets a fresh exchange; only the chosen main target can be wounded.
   for (let i = 0; i < Math.min(d.extraAttackers, MAX_EXTRA_ATTACKERS) && d.player.stamina > 0; i++) {
     const side = d.sideEnemies[i];
     if (!side || side.staminaMax <= 0) continue;
@@ -676,9 +604,7 @@ export function initSim220() {
     if (!d) return;
     const map = FIELD_MAP[id];
     if (!map) return;
-    // Attack modifier is the one field allowed to go negative (bare-handed/
-    // disarmed/fatigue penalties are always a subtraction) - every other
-    // field stays clamped to 0 or above.
+    // Allow negative attack modifiers; other fields stay non-negative.
     val = id === 'sim220-player-atkmod' ? Number(val) : Math.max(0, val);
     if (id === 'sim220-player-skill') val = Math.min(val, d.player.skillInitial);
     if (id === 'sim220-player-stamina') val = Math.min(val, d.player.staminaInitial);

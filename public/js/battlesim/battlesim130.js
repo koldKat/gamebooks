@@ -1,28 +1,6 @@
-// ── Battle Simulator (Тайната на светещия мъх / Secret of the Glowing Moss, book 130) ──
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 130 only) by the caller in boot.js via
-// setSim130Visible().
-// To remove: delete this file, remove its import line and initSim130()/
-// setSim130Visible() calls from boot.js, remove 'sim130' from
-// SIM_HISTORY_KEYS in server/db/xp.js, and remove the .bsim-* CSS (shared
-// with the other battlesim*.js files, so only remove it if all are gone).
-//
-// Same chitanka.info-family symmetric-STRENGTH pick-a-number formula and
-// fixed-2-damage combat as book 86, but book 130's own rules give a
-// different STRENGTH roll: max(0, pick - 6) + 10, not book 86's
-// ceil(pick/2) + 10 - read from this book's own rules text rather than
-// assumed from the shared author/template. LIFE = pick + 30, same constant
-// as book 86.
-//
-// book_enemies.attack holds STRENGTH, .hp holds LIFE, .defense unused -
-// same convention as 86/114. 9 combat encounters across the book's 252
-// sections; checked the back matter (character sheet template + chance
-// table only, no hidden roster). Two "Бандит" encounters (§76, §134) both
-// lead to the same next section (§99) but have different stats (8/18 vs
-// 9/12) - confirmed genuinely separate fights that happen to reconverge,
-// not the same encounter scraped twice.
-//
-// All state lives in pt.sim130, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Тайната на светещия мъх / Secret of the Glowing Moss, book 130)
+// Compare random pick + STRENGTH; higher deals 2 LIFE, ties miss.
+// Starting STRENGTH = max(0,pick-6)+10; LIFE = pick+30.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';

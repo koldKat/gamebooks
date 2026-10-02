@@ -1,11 +1,4 @@
-// notebook.js - Mobile's plain per-book notebook.
-//
-// Shares the exact same server-backed data as desktop's notebook (same
-// GET/PUT /api/books/:id/notebook endpoint, same text) - not a separate
-// mobile copy. Deliberately does NOT port desktop's "pin to play area"
-// toggle (notes.js's notesPinned/notes-display overlay) - that's a
-// graph-view concept with nothing to pin to here, so this is just the
-// plain editable notebook, always full-screen when open.
+// Full-screen notebook sharing desktop's server-backed text; no pinned overlay.
 
 import { state, currentBookId, apiFetch } from '../../js/core/state.js';
 import { showAlert } from '../../js/ui-helpers/confirm.js';

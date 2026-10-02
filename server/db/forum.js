@@ -103,10 +103,7 @@ function forumDeleteThread(threadId, userId, isAdmin) {
   if (!t) return { error: 'not_found' };
   if (!isAdmin && t.user_id !== userId) return { error: 'forbidden' };
 
-  // Hard delete - unlike forumDeletePost (soft delete) and feedback threads
-  // (soft delete), this actually removes rows, so it must also cascade the
-  // thread's own attachments and every post's attachments, and hand back the
-  // filenames so the caller can unlink them from disk.
+  // Hard deletion cascades attachments and returns their filenames for disk cleanup.
   const filenames = db.prepare(
     `SELECT filename FROM attachments WHERE (kind = 'forum_thread' AND linked_id = ?)
         OR (kind = 'forum_post' AND linked_id IN (SELECT id FROM forum_posts WHERE thread_id = ?))`

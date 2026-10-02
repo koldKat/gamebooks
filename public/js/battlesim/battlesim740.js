@@ -1,45 +1,6 @@
-// ── Battle Simulator (Майстори на меча, book 740) ───────────────────────────
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 740 only) by the caller in boot.js via
-// setSim740Visible().
-// To remove: delete this file, remove its import line and initSim740()/
-// setSim740Visible() calls from boot.js, remove 'sim740' from
-// SIM_HISTORY_KEYS in server/db/xp.js, remove 'sim740-overlay' from
-// ALL_PANEL_OVERLAY_IDS in util.js and the #sim740-btn selectors in
-// battlesim.css.
-//
-// Companion volume to book 739 (same author/series/mechanics, different
-// bracket): choose one of 4 playable fighters here - Воймир/Брис/Лия/Ясмин
-// - each following a different bracket path (Кенои and Сокол, playable in
-// book 739, appear here only as NPC opponents). Almost all "duels" in the
-// book are pure narrative technique-choice trees with no dice; only 8
-// sections across the whole book invoke the book's own formal "Проведи
-// Схватка" (Conduct a Duel) dice mechanic, each with an explicit "Твоите
-// жизнени точки са X, противниковите - Y, твоето Умение е по-голямо/
-// по-малко с Z" stat line. This sim models exactly that mechanic - nothing
-// else in the book is randomized (confirmed by reading all 340 sections;
-// the only other die usage is standalone "Провери Късмета си" luck checks
-// outside of Схватка, handled narratively by the book itself, not modeled
-// here).
-//
-// Схватка rules (identical to book 739's own ПРАВИЛА section II): each
-// round, both sides "pick" (roll) a number 1-6. Take (yourRoll -
-// enemyRoll), then add your Skill difference vs the enemy (positive if
-// your Skill is higher, negative if lower) with its own sign. If the
-// result is positive, the enemy loses that many life points. If negative,
-// you lose that many (absolute value). If zero, nothing happens and the
-// round repeats. Combat ends when either side's life points reach 0.
-//
-// book_enemies.attack holds the player's Skill delta vs that specific named
-// duel (positive = player better skilled, negative = worse, 0 = equal),
-// .hp holds the enemy's life points for that duel, .defense unused (0). 8
-// rows, one per formal Проведи Схватка instance found in the book (§9,
-// §26, §74, §122, §165, §189, §281, §300) - each entry's name records which
-// playable character's path it belongs to and the skill delta, since the
-// same opponent name (e.g. Джадаг, Сокол) recurs with different stats in
-// different bracket rounds.
-//
-// All state lives in pt.sim740, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Майстори на меча, book 740)
+// Simulate the numbered dice duels only; narrative technique-choice fights remain outside the
+// model.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';

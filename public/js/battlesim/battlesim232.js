@@ -1,48 +1,7 @@
-// ── Battle Simulator (Armies of Death, book 232) ─────────────────────────────
-// Self-contained module. Imports from state.js, play.js, charsheet.js and util.js.
-// Visibility is gated (book 232 only) by the caller in boot.js via
-// setSim232Visible().
-// To remove: delete this file, remove its import line and initSim232()/
-// setSim232Visible() calls from boot.js, and remove the .bsim-* CSS (shared
-// with every other battlesimN.js, so only remove it if all of them are gone).
-//
-// Standard Fighting Fantasy SKILL/STAMINA/LUCK system, same core numbers,
-// Test Your Luck table, Provisions and single-dose potion-of-three-choices
-// setup as books 201/202/203/219 - confirmed against this book's own printed
-// "Battles"/"Luck"/"Restoring Skill, Stamina and Luck" rules text (SKILL
-// 1d6+6, STAMINA 2d6+12, LUCK 1d6+6; opposed 2d6+SKILL roll, ties = no
-// effect, loser -2 STAMINA; Test Your Luck +/-1 STAMINA, costs 1 LUCK
-// always; 10 Provisions, +4 STAMINA each, not mid-battle; choose exactly
-// one of three single-dose potions - Skill/Strength/Fortune).
-//
-// attackModifier/enemyWoundDamage/pairedFight/sideEnemy are reused exactly
-// as prior sims. pairedFight covers this book's one genuinely simultaneous
-// two-attacker fight: the Tree Man at §155, whose two branches "will have a
-// separate attack on you in each Attack Round" while you choose one to
-// actually fight back against - modeled as the main enemy (the branch you
-// fight) plus a sideEnemy (the other branch, never woundable through this
-// sim, matching the book's own "count this as a successful defence" rule
-// for the untargeted branch). enemyWoundDamage covers the Axeman's own
-// -1 SKILL self-penalty at §302 by instead widening the attack-modifier
-// field if preferred, though that specific case is more naturally modeled
-// via attackModifier since it changes the player's roll, not the wound size.
-//
-// Deliberately NOT modeled, same precedent as every other sim in this app:
-// - The army/troop-management layer (Skirmish Battles, war-machine casualty
-//   dice, army composition and recruitment) that runs through most of this
-//   book - it depends on which troops were hired earlier in the specific
-//   playthrough and has its own separate casualty-table resolution, not the
-//   opposed-SKILL-roll combat this sim models. Track army size/casualties on
-//   the Adventure Sheet/charsheet by hand.
-// - The Big Belly Man pie-eating contest (§14/§217) - a dice-race mini-game
-//   with its own target-score mechanic, not a SKILL/STAMINA fight.
-// - The High-Low card/dice gambling game (§100) and the fly-on-the-jam bet
-//   (§161/§348) - narrative side-games with no combat stats.
-// - The many compute-your-own-destination puzzles (item prices/inscribed
-//   numbers recalled from earlier sections, the Oracle's rhyme) - these are
-//   navigation, not combat, and are handled by reading the section text.
-//
-// All state lives in pt.sim232, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Armies of Death, book 232)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
+// Only personal combat is simulated; army battles are narrative.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -127,9 +86,7 @@ function _resetEncounterKnobs(d) {
   d.sideEnemy = { name: '', skill: 0, staminaMax: 0 };
 }
 
-// Uncapped (was previously trimmed to the last 100) - the admin dashboard
-// aggregates battle counts app-wide from this array, so per-user history needs
-// to be a true lifetime total, not a rolling window.
+// Keep lifetime outcomes: admin totals require the full history.
 function _recordOutcome(d, outcome) {
   d.history.push({
     enemy: _enemyName(d), outcome,
@@ -172,11 +129,7 @@ function _runRound() {
     if (d.player.stamina > 0) d.pendingLuckQueue.push({ kind: 'enemy-hit' });
   }
 
-  // Paired fight: a second, independent exchange with its own fresh player
-  // roll every round - covers the Tree Man's two simultaneously-attacking
-  // branches at §155. The side attacker is never wounded through this path,
-  // matching the book's own "count this as a successful defence" rule for
-  // the branch not being actively fought.
+  // Tree Man's other branch rolls independently and cannot be wounded back (sec 155).
   if (d.pairedFight && d.sideEnemy.staminaMax > 0 && d.player.stamina > 0) {
     const sidePlayerAS = _roll2d6() + d.player.skill + (d.player.attackModifier || 0);
     const sideAS = _roll2d6() + d.sideEnemy.skill;
@@ -712,10 +665,7 @@ export function initSim232() {
     if (!d) return;
     const map = FIELD_MAP[id];
     if (!map) return;
-    // Attack modifier is the one field allowed to go negative (bare-handed/
-    // disarmed/fatigue/injury penalties are always a subtraction, e.g. the
-    // Axeman's own -1 SKILL at §302) - every other field stays clamped to
-    // 0 or above.
+    // Only attack modifiers may be negative; other fields stay non-negative.
     val = id === 'sim232-player-atkmod' ? Number(val) : Math.max(0, val);
     if (id === 'sim232-player-skill') val = Math.min(val, d.player.skillInitial);
     if (id === 'sim232-player-stamina') val = Math.min(val, d.player.staminaInitial);

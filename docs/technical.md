@@ -2736,6 +2736,10 @@ Both `sendAdminEmail` and `sendReplyEmail` use the same template: dark amber hea
 
 `node --test` (Node's built-in test runner, no external framework/dev dependency) - `npm test` runs it, auto-discovering the whole `test/` tree recursively.
 
+Source-parity hashes include comments. After the app-wide comment cleanup, these baselines were refreshed only after verifying unchanged JavaScript syntax trees, HTML markup and CSS rules across all 437 application source files. Behavioral fixture digests and the translation dictionary baseline were not changed.
+
+Code comments should explain constraints, non-obvious intent, security boundaries or game rules. Keep implementation history in commits/docs rather than narrating previous fixes or repeating visible code.
+
 **Structure:** folder-per-module-domain, not flat - `test/client/<module>/*.test.mjs` for `public/js/*.js`, `test/server/<module>/*.test.mjs` for `server/*.js`. Each file targets one function/concern rather than one giant file per source module.
 
 **Deliberately not covered, and why - two structural blockers, not oversights:**

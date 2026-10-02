@@ -1,66 +1,6 @@
-// ── Battle Simulator (Дракон в мазето, book 881) ─────────────────────────────
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 881 only) by the caller in boot.js via
-// setSim881Visible().
-// To remove: delete this file, remove its import line and initSim881()/
-// setSim881Visible() calls from boot.js, remove 'sim881' from
-// SIM_HISTORY_KEYS in server/db/xp.js, remove 'sim881-overlay' from
-// ALL_PANEL_OVERLAY_IDS in util.js and the #sim881-btn selectors in
-// battlesim.css.
-//
-// Core combat rule, printed on the book's own "Правила на приключението"
-// page (see book_frontmatter.rules_text for book_id=881): each round, add a
-// single die roll (Шанс) to the player's own СИЛА (5 at start, plus any
-// sword bonus) and compare to the enemy's fixed СИЛА:
-//   player total > enemy Сила  -> enemy loses 2 ИЗДРЪЖЛИВОСТ
-//   player total < enemy Сила  -> player loses 2 ИЗДРЪЖЛИВОСТ
-//   equal                      -> both lose 1 ИЗДРЪЖЛИВОСТ
-// Repeats until one side hits 0. Against several enemies at once, the player
-// exchanges one blow with each in turn, no choice of target (rule 2 on the
-// same page). Several individual encounters override this default (a
-// handful use "1 point per successful hit, no loss on a tie" instead) -
-// those are modelled explicitly per-encounter below rather than forcing a
-// single hard-coded formula, since the book itself does this per its own
-// printed text at each such fight.
-//
-// The player carries exactly one of three interchangeable swords, each
-// applying a different (sometimes negative) bonus to СИЛА for a given
-// fight, as spelled out in that fight's own section text:
-//   Фирфелд - heavy sword, best against groups/sturdy foes
-//   Лайм    - intelligent, best in the dark/against many fast enemies
-//   Истрин  - quick, best in ambushes/duels
-//
-// Full roster of genuine stat-based fights, verified via a complete
-// 333-section prose read this session (narrative-only dice checks with no
-// named opponent, e.g. the door-hinge/rope test at the very start, are
-// correctly excluded, as is the final dragon Смерч/Рийдуей fight - every
-// combat attempt against the dragon is a scripted instant death; the only
-// real win path is a name-guessing puzzle + diplomacy, so it is excluded as
-// a narrative trap rather than a real fight, matching this app's book 781
-// "momiche" precedent):
-//   Началник на стражата, unarmed (§3)     Сила 9  Изд 5   (1pt/hit, no tie loss)
-//   Началник на стражата, tояги (§11)      Сила 8  Изд 5   (1pt/hit, no tie loss)
-//   Оргфелт и бандата му (§89, 5 души)     Сила 6-10 Изд 6-9 each
-//   Крадци в Клент, 2ма (§74)              Сила 10/8 Изд 4/12
-//   Крадец в Клент, 1 (§80)                Сила 10 Изд 4
-//   Крадци в Клент, Истрин (§86)           Сила 10/8 Изд 6/6
-//   Нощен крадец, 1 (§102)                 Сила 8  Изд 6
-//   Нощни крадци, 5 (§103)                 Сила 6-10 Изд 4-12 each
-//   Планинско джудже, голи ръце (§168)     Сила 10 Изд 10  (1pt/hit, no tie loss)
-//   Планинско джудже, оръжие (§174)        Сила 8  Изд 10
-//   Стражи на Урик, 2ма (§202)             Сила 9/8 Изд 4/6
-//   Шеф на наемниците, голи ръце (§220)    Сила 10 Изд 10  (1pt/hit, no tie loss)
-//   Шеф на наемниците, мечове (§230)       Сила 10 Изд 10
-//   Алкейнски главорези, 3ма (§233)        Сила 8/9/7 Изд 4/6/8
-//   Вълкопаяци, 3ма (§269/296)             Сила 10/10/12 Изд 8/9/10 (tie = both -2)
-// Two special one-off mechanics are modelled as their own resolvers rather
-// than forced into the round-robin fighter, exactly as printed:
-//   Вълча глутница (§150) - kill 3 wolves, each needs Сила+Шанс>=10 or the
-//     player loses 3 Издръжливост and the wolf survives to try again.
-//   Джудже, надхвърляне с ножове (§180) - single opposed throw, Сила+Шанс
-//     >=10 to hit first; if missed, the enemy (Сила 6) throws back.
-//
-// All state lives in pt.sim881, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Дракон в мазето, book 881)
+// Compare player strength + 1d6 with fixed enemy strength; normal damage is 2, ties cost both 1.
+// Multiple enemies exchange blows in turn; encounter damage/tie overrides are explicit.
 
 import { currentPlaythrough, saveState } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';

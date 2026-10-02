@@ -1,97 +1,8 @@
-// ── Battle Simulator (Забраненият град / The Forbidden City, Bulgarian
-// edition of Grey Star (World of Lone Wolf) book 2, id 440) ──
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 440 only) by the caller in boot.js via
-// setSim440Visible().
-// To remove: delete this file, remove its import line and initSim440()/
-// setSim440Visible() calls from boot.js, remove 'sim440' from
-// SIM_HISTORY_KEYS in server/db/xp.js, and remove the .bsim-* CSS (shared
-// with the other battlesim*.js files, so only remove it if all are gone).
-//
-// English original is book 282 ("The Forbidden City"), which has no sim of
-// its own yet (has_battle_sim=0), so nothing to cross-reference there. This
-// is the direct sequel to book 439 (Grey Star the Wizard) - its own final
-// section literally ends mid-riddle with the answer deferred to this book,
-// and this book's opening section picks up with that same riddle's answer.
-// Same Grey Star combat system as battlesim439.js: БОЙНО УМЕНИЕ/ИЗДРЪЖЛИВОСТ
-// Combat Ratio, ВОЛЯ as an untracked magic-point pool. The Combat Ratio +
-// Combat Results Table system and COMBAT_TABLE below are the same mechanic
-// used unchanged from battlesim118.js/battlesim322.js/battlesim430.js-
-// battlesim439.js rather than re-derived.
-//
-// Combat Ratio = effective БОЙНИ УМЕНИЯ minus enemy's, computed once when an
-// enemy is selected and fixed for the whole fight. Each round, pick 0-9
-// (a 10-value die), bucket the ratio into the table's 13 printed columns
-// (-11 or less .. 11 or greater), and COMBAT_TABLE[pickRow][ratioCol] gives
-// [enemyLoss, lwLoss] simultaneously, including 'K' (automatically killed)
-// at the extremes.
-//
-// БОЙНИ УМЕНИЯ (COMBAT SKILL) = pick+10, ИЗДРЪЖЛИВОСТ (ENDURANCE) = pick+20,
-// both rolled once at chargen. ВОЛЯ (WILL, pick+20) is Grey Star's magic-
-// point pool for his Magical Powers (Elementalism/Alchemy/Sorcery/Prophecy/
-// Psychomancy/Charm/Invocation of the Dead) and Magical Wand - it has no
-// combat-round mechanic of its own (never appears in an enemy stat block)
-// and is not tracked here, same as every other un-simulated non-combat
-// resource in this app's sims.
-//
-// attackModifier is a free-form +/- field covering every one-off БОЙНО
-// УМЕНИЕ change this book's own rules describe by hand: surprise-attack
-// bonuses, ally assistance (e.g. §11/§203 Urik's boomerang softening up an
-// enemy first), and magic-resistance penalties against the king wizard
-// Шасарак's magically-bred Магди hounds (-2 БОЙНО УМЕНИЕ per this book's
-// own rules, every Магди encounter). Same precedent as every other sim in
-// this app.
-//
-// Every multi-enemy encounter in this book is already a single combined
-// stat line per the source text (e.g. §11/§225 "2/3 шадакински бойци" as
-// one БОЙНО УМЕНИЕ/ИЗДРЪЖЛИВОСТ line, §176 "3 отрепки" as one line) - no
-// sequential separate-stat-line encounters found in this book, unlike some
-// prior books in this run.
-//
-// This book's only combat-healing item is Лаумспур (potion form, +4
-// ИЗДРЪЖЛИВОСТ per dose, a one-off gift of two doses from Садо Дългия нож
-// at §133) - modeled here as the sim's single post-battle heal slot (+4).
-// This book ALSO has Кармо, a battle-prep potion that doubles both current
-// ИЗДРЪЖЛИВОСТ and ВОЛЯ for one fight but costs a random-roll ИЗДРЪЖЛИВОСТ
-// penalty as a side effect (§45) - a real book item, but a pre-fight
-// stat-doubler with a random cost doesn't fit this sim's single-heal-slot
-// model, so it is deliberately left unmodeled, same precedent as other
-// un-simulated one-off minigames/items in this app.
-//
-// book_enemies.attack holds БОЙНО УМЕНИЕ, .hp holds ИЗДРЪЖЛИВОСТ, .defense
-// unused - same convention as every other sim. 18 rows extracted directly
-// from this book's own section text (regex on every "Name: БОЙНО УМЕНИЕ N,
-// ИЗДРЪЖЛИВОСТ N" stat block). Two dropped ИЗДРЪЖЛИВОСТ values found and
-// restored during the mandatory full prose read (§11 -> 24, §163 -> 25) -
-// both caused by the same reflow bug as always (a genuine stat number on
-// its own line got discarded as page-footer noise because the preceding
-// text ended in "ИЗДРЪЖЛИВОСТ" rather than a link-destination "на").
-//
-// This book also surfaced a NEW corruption class not seen in books 434-439:
-// a run of consecutive sections (§50-§53) where the printed book's own
-// PAGE numbers happened to numerically collide with the SECTION numbers at
-// that point, and several of those bare page-number lines lacked the
-// period that normally disambiguates a section header from a page footer.
-// The original header-reconstruction algorithm (accept the first line
-// matching the expected sequential number) picked the bogus periodless
-// page-number line over the genuine period-suffixed section header in
-// several cases, silently merging two real sections' content together and
-// misnumbering everything after until the true headers happened to resync.
-// Fixed by rebuilding the header-acceptance algorithm to prefer a period-
-// suffixed candidate whenever one exists for the expected number, only
-// falling back to a periodless candidate (still needed for a few
-// legitimately period-less headers elsewhere in the book) when no
-// period-suffixed one is available - re-verified as monotonically
-// increasing by line number afterward. ~13 further illustration-caption-
-// bleed artifacts (duplicated/misplaced descriptive fragments, several with
-// stray page-footer digits bleeding mid-sentence, e.g. §24/§37/§76/§79/
-// §182/§220/§225/§247/§251/§254/§257/§298/§307) were fixed inline during
-// the prose read. One confirmed-benign orphan section (§162, a
-// pentagram-trap scene with zero incoming references anywhere in the
-// source PDF, matching book 439's §342 precedent) was left unreached.
-//
-// All state lives in pt.sim440, per-user/per-book via currentPlaythrough().
-// All state lives in pt.sim440, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Забраненият град / The Forbidden City, Bulgarian edition of Grey Star (World of
+// Lone Wolf) book 2, id 440)
+// Combat Ratio is fixed on enemy selection; a 0-9 pick selects simultaneous table losses.
+// 'K' means instant death. Skill bonuses and narrative effects are entered manually.
+// WILL/spellcasting are not simulated.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -104,10 +15,8 @@ const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" ari
 
 const HEALING_POTION_HEAL = 4;
 
-// Rows = the 10-value random pick, printed order 1,2,3,4,5,6,7,8,9,0.
-// Columns = Combat Ratio, bucketed: -11-, -10/-9, -8/-7, -6/-5, -4/-3,
-// -2/-1, 0, 1/2, 3/4, 5/6, 7/8, 9/10, 11+. Cell = [enemyLoss, lwLoss]
-// ('K' sentinel = automatically killed). Byte-identical to battlesim118.js.
+// Rows: 1-9, then 0. Columns: Combat Ratio buckets -11..11, clamped at the extremes.
+// Cells are [enemyLoss, playerLoss]; K means instant death.
 const COMBAT_TABLE = [
   [[0,'K'], [0,'K'], [0,8], [0,6], [1,6], [2,5], [3,5], [4,5], [5,4], [6,4], [7,4], [8,3], [9,3]],
   [[0,'K'], [0,8],   [0,7], [1,6], [2,5], [3,5], [4,4], [5,4], [6,3], [7,3], [8,3], [9,3], [10,2]],

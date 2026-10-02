@@ -10,12 +10,7 @@ export function bindFeedInteractions(el, _expandedKeys) {
       if (target) { target.hidden = false; btn.setAttribute('aria-expanded', 'true'); btn.querySelector('.feed-group-chevron').textContent = '▼'; }
     }
     btn.addEventListener('click', e => {
-      // The group label (rendered via renderGroupLabel) embeds each
-      // member's clickable .feed-user-pub username directly inside this
-      // button - a click there should open their profile only, not also
-      // toggle the group. Bail here rather than stopPropagation()ing in the
-      // username's own handler, so document-level click cleanup (context
-      // menus etc.) still runs normally for that click.
+      // Username clicks open profiles without toggling the group; leave document cleanup propagation intact.
       if (e.target.closest('.feed-user-pub')) return;
       const target = document.getElementById(btn.dataset.target);
       if (!target) return;
@@ -46,12 +41,7 @@ export function bindFeedInteractions(el, _expandedKeys) {
     if (!a.dataset.seriesId) return;
     a.addEventListener('click', e => { e.preventDefault(); openSeriesActivity(+a.dataset.seriesId, a.dataset.seriesName); });
   });
-  // An announcement can link a book or series via formatAnnBody()'s
-  // [Label](/book/123) / [Label](/series/45) syntax - same real, crawlable
-  // /book/:id and /series/:id pages used elsewhere (e.g. the no-JS feed SEO
-  // page), but intercepted here so clicking it from inside the app opens
-  // the in-app detail dialog instead of navigating away, same as
-  // .feed-series-tag above.
+  // Intercept book/series links to open detail dialogs while preserving crawlable URLs.
   el.querySelectorAll('.feed-ann-body a, .feed-pinned-body a').forEach(a => {
     let u;
     try { u = new URL(a.href); } catch { return; }

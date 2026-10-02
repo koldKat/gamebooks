@@ -1,52 +1,7 @@
-// ── Battle Simulator (Sky Lord, book 229, Fighting Fantasy 33 by Martin Allen) ──
-// Self-contained module. Imports from state.js, play.js, charsheet.js and util.js.
-// Visibility is gated (book 229 only) by the caller in boot.js via
-// setSim229Visible().
-// To remove: delete this file, remove its import line and initSim229()/
-// setSim229Visible() calls from boot.js, and remove the .bsim-* CSS (shared
-// with every other battlesimN.js, so only remove it if all of them are gone).
-// Also remove 'sim229' from SIM_HISTORY_KEYS in server/db/xp.js, and remove
-// 'sim229-overlay' from ALL_PANEL_OVERLAY_IDS in util.js and the #sim229-btn
-// selectors in battlesim.css.
-//
-// Standard Fighting Fantasy SKILL/STAMINA/LUCK system (SKILL 1d6+6, STAMINA
-// 2d6+12, LUCK 1d6+6; opposed 2d6+SKILL roll, ties = no effect, loser -2
-// STAMINA; Test Your Luck costs 1 LUCK, +/-1 STAMINA effect), confirmed
-// verbatim from this book's own "Combat" rules text (Personal Combat rules
-// 1-7 match the app's existing engine exactly).
-//
-// This book's own rules explicitly state multi-enemy fights are SEQUENTIAL,
-// not simultaneous: "In cases where you are instructed to fight more than
-// one opponent, fight only the first listed. If you defeat this opponent,
-// go on to fight the second listed, and so on." This is a genuinely
-// different rule from most other books in this app (which use simultaneous
-// paired/sideEnemy fights) - no extraAttackers/sideEnemy mechanic is needed
-// here. For a multi-enemy section, just re-pick the next roster enemy from
-// the autocomplete list after each kill.
-//
-// A second, entirely separate combat system exists in this book -
-// "Combat-Weapon Clashes" (RATING/LASERS/SHIELDS vehicle dogfights, e.g.
-// §303's Glip vs Grasshopper) - deliberately NOT modeled here, same
-// precedent as book 208's tank-wargame sub-mechanic: it's a self-contained
-// rules-book mini-game the player resolves by hand with dice and the
-// in-book RATING dial, not a SKILL/STAMINA fight.
-//
-// book_enemies (69 rows across 41 stat-block-bearing sections of 400
-// total). Three sections (§6, §116, §304) mention SKILL/STAMINA point
-// deductions but are narrative one-off penalties, not real encounters -
-// correctly excluded from book_enemies.
-//
-// This book's source PDF is missing 5 physical pages (§31-35 - the scan
-// jumps from §30 straight to §36); those 5 section anchors are retained as
-// honestly-marked placeholders with no invented text. A plain link-
-// following reachability check therefore reports 45/400 sections
-// unreachable - all fully explained: the 5 missing sections are exactly
-// what would have linked in five otherwise-unreferenced story roots (§92,
-// §241, §251, §303, §311), and BFS from those 5 roots independently
-// reconnects 390/400 sections, matching the preparer's own disclosure
-// note. Not a bug - see project_book_audit_ascending_id memory.
-//
-// All state lives in pt.sim229, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Sky Lord, book 229, Fighting Fantasy 33 by Martin Allen)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
+// Multiple enemies are sequential; vehicle/narrative systems are not modeled.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -108,9 +63,7 @@ function _resetEncounterKnobs(d) {
   d.player.playerWoundDamage = 2;
 }
 
-// Uncapped lifetime log - the admin dashboard aggregates battle counts
-// app-wide from this array, so per-user history needs to be a true lifetime
-// total, not a rolling window.
+// Keep lifetime outcomes: admin totals require the full history.
 function _recordOutcome(d, outcome) {
   d.history.push({
     enemy: _enemyName(d), outcome,
@@ -543,9 +496,7 @@ export function initSim229() {
     if (!d) return;
     const map = FIELD_MAP[id];
     if (!map) return;
-    // Attack modifier is the one field allowed to go negative (bare-handed/
-    // disarmed/fatigue penalties are always a subtraction) - every other
-    // field stays clamped to 0 or above.
+    // Allow negative attack modifiers; other fields stay non-negative.
     val = id === 'sim229-player-atkmod' ? Number(val) : Math.max(0, val);
     if (id === 'sim229-player-skill') val = Math.min(val, d.player.skillInitial);
     if (id === 'sim229-player-stamina') val = Math.min(val, d.player.staminaInitial);

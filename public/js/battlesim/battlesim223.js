@@ -1,61 +1,7 @@
-// ── Battle Simulator (Star Strider, book 223) ─────────────────────────────────
-// Self-contained module. Imports from state.js, play.js, charsheet.js and util.js.
-// Visibility is gated (book 223 only) by the caller in boot.js via
-// setSim223Visible().
-// To remove: delete this file, remove its import line and initSim223()/
-// setSim223Visible() calls from boot.js, and remove the .bsim-* CSS (shared
-// with every other battlesimN.js, so only remove it if all of them are gone).
-// Also remove 'sim223' from SIM_HISTORY_KEYS in server/db/xp.js, and remove
-// 'sim223-overlay' from ALL_PANEL_OVERLAY_IDS in util.js and the #sim223-btn
-// selectors in battlesim.css.
-//
-// Standard Fighting Fantasy SKILL/STAMINA/LUCK system, confirmed from this
-// book's own front-matter rules text (Combat + Abilities sections, read from
-// the source HTML, not assumed): SKILL 1d6+6, STAMINA 2d6+12, LUCK 1d6+6;
-// opposed 2d6+SKILL roll, ties = no effect, loser -2 STAMINA; Test Your Luck
-// costs 1 LUCK, +/-1 STAMINA effect - identical core numbers to every other
-// sim in this app.
-//
-// No Provisions/Potions system - this sci-fi-themed book (a Rogue Tracer
-// bounty-hunter hunting Gromulans on Earth) has no printed
-// Provisions/potion mechanic; STAMINA recoveries are one-off narrative
-// events, hand-applied with the stamina stepper like any other sim here.
-// FEAR and TIME are separate tracked resources in the book's own rules
-// (a countdown clock and a psychological Test-Your-Fear check) but neither
-// is combat math - not modeled, same precedent as every other sim here
-// only modeling the fight loop itself.
-//
-// One book-specific mechanic not covered by the generic fields: the book's
-// own Combat rules state "If you throw double 6 at any time while fighting
-// an Android, then you have found the 'weak spot' and de-activated it" -
-// an instant win against Android-type enemies on a double-6 Attack
-// Strength roll for the player, not tied to any STAMINA math. Not
-// automated (a double-6 roll is normal within the sim's existing 2d6
-// roller, nothing marks it as "this is a double" for the sim to act on
-// automatically) - watch the log for a 12 and, if any Android enemy is
-// active, zero its STAMINA by hand with the stat stepper, same precedent
-// as prior sims' hand-applied one-off dice-triggered instakills.
-//
-// attackModifier/enemyWoundDamage/playerWoundDamage/enemyAutoWinFirstRound/
-// enemyDefeatThreshold are reused exactly as prior sims (see
-// battlesim220.js) - none of them are exercised by default for this book's
-// roster (every fight here is fought to a plain STAMINA-0 defeat), but they
-// stay available as manual overrides same as every other sim.
-//
-// extraAttackers (0-3) + sideEnemies[] generalise book 220's version of the
-// same mechanic to this book's multi-enemy encounters - every extra
-// attacker fights its own independent exchange against a fresh player roll
-// each round, and is never wounded through this path (only the enemy
-// selected as the main target can be wounded - to whittle down a group,
-// re-pick the next member into the main "Enemy" slot after each one falls).
-// Covers: 2x Bandit (§157, a vehicle-chase "SPECIAL Encounter Box" fight
-// per the book's own rules - fought with this sim like normal combat but
-// should not reduce the player's real STAMINA per the printed instruction,
-// apply losses to a scratch/SPECIAL value instead of the tracked STAMINA
-// if playing strictly by the book), 3x Thug (§248), 2x Guard (§371),
-// 4x Guard (§343).
-//
-// All state lives in pt.sim223, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Star Strider, book 223)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
+// Double-six special attacks remain manual.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -140,9 +86,7 @@ function _resetEncounterKnobs(d) {
   d.sideEnemies = [_emptySideEnemy(), _emptySideEnemy(), _emptySideEnemy()];
 }
 
-// Uncapped (was previously trimmed to the last 100) - the admin dashboard
-// aggregates battle counts app-wide from this array, so per-user history needs
-// to be a true lifetime total, not a rolling window.
+// Keep lifetime outcomes: admin totals require the full history.
 function _recordOutcome(d, outcome) {
   d.history.push({
     enemy: _enemyName(d), outcome,
@@ -186,12 +130,7 @@ function _runRound() {
     if (d.player.stamina > 0) d.pendingLuckQueue.push({ kind: 'enemy-hit' });
   }
 
-  // Extra simultaneous attackers: each fights its own independent exchange
-  // with a fresh player roll every round - covers §157's 2x Bandit, §248's
-  // 3x Thug, §371's 2x Guard, and §343's 4x Guard. None of them are wounded
-  // through this path (only the main "Enemy" slot can be wounded), matching
-  // the standard FF "every enemy attacks, you choose one to fight back
-  // against" multiple-enemy rule.
+  // Each side attacker rolls independently; only the main target can be wounded.
   for (let i = 0; i < Math.min(d.extraAttackers, MAX_EXTRA_ATTACKERS) && d.player.stamina > 0; i++) {
     const side = d.sideEnemies[i];
     if (!side || side.staminaMax <= 0) continue;
@@ -665,9 +604,7 @@ export function initSim223() {
     if (!d) return;
     const map = FIELD_MAP[id];
     if (!map) return;
-    // Attack modifier is the one field allowed to go negative (bare-handed/
-    // disarmed/fatigue penalties are always a subtraction) - every other
-    // field stays clamped to 0 or above.
+    // Allow negative attack modifiers; other fields stay non-negative.
     val = id === 'sim223-player-atkmod' ? Number(val) : Math.max(0, val);
     if (id === 'sim223-player-skill') val = Math.min(val, d.player.skillInitial);
     if (id === 'sim223-player-stamina') val = Math.min(val, d.player.staminaInitial);

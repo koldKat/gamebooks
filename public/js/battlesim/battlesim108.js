@@ -1,48 +1,6 @@
-// ── Battle Simulator (Ледените пирати / The Ice Pirates, book 108) ──
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 108 only) by the caller in boot.js via
-// setSim108Visible().
-// To remove: delete this file, remove its import line and initSim108()/
-// setSim108Visible() calls from boot.js, remove 'sim108' from
-// SIM_HISTORY_KEYS in server/db/xp.js, and remove the .bsim-* CSS (shared
-// with the other battlesim*.js files, so only remove it if all are gone).
-//
-// Two-dimensional table lookup, not a summed single-index table like book
-// 92. attackLevel = effective player skill - enemy skill, bucketed into 7
-// printed columns (+5/+6 .. -5/-6, outer buckets absorb anything beyond).
-// chance = uniform pick 1-10, bucketed into 3 printed rows (1-3, 4-8,
-// 9-10). The table cell gives (player loss / enemy loss) directly,
-// including instant-death cells at the extremes. Verified against the
-// book's own worked example (skill 4 vs 5 = level -1, chance 7 falls in
-// the 4-8 row -> cell 5/5, matching "ти губиш 5 точки живот, а
-// противникът - също толкова").
-//
-// No dice-rolled starting stats - chargen is profession-based (external to
-// this book), so player skills are entered once and stay fixed until the
-// book raises them. LIFE is a fixed 30 (book_frontmatter's own rules text).
-// Player has 3 relevant combat skills (Ръкопашен бой / Бой с кинжал / Бой с
-// меч) and picks which weapon to fight with each round; effective skill
-// applies two penalties before computing attackLevel:
-//   - weapon mismatch: enemyWeaponTier - playerWeaponTier (golia raka=0,
-//     kinjal=1, mech=2), floored at 0 - reproduces all three stated cases
-//     (bare vs dagger = -1, dagger vs sword = -1, bare vs sword = -2) with
-//     one formula.
-//   - life penalty: -1 if life < 20, another -1 (stacking) if life < 10.
-//
-// book_enemies.attack holds the enemy's weapon skill, .hp holds LIFE,
-// .defense holds their weapon tier (0/1/2, same golia raka/kinjal/mech
-// scale as the player's weapon choice) - a different repurposing than the
-// other Bulgarian sims since this book's table needs a real weapon-tier
-// number, not an unused column. 9 rows read from all 478 sections; the
-// dagger-armed "Противник" fight (skill 2/life 10) recurs with verbatim
-// identical text at 8 different sections (§36, 315, 321, 334, 347, 353,
-// 373, 415) and is stored as a single row rather than eight duplicates.
-// §371's three-hantaec fight and §458's two-attacker fight are sequential
-// 1-on-1 rounds, each enemy its own row; §384 is the same §371 fight minus
-// the first hantaec (killed by a ranged attack beforehand) and reuses the
-// second/third hantaec rows rather than adding new ones.
-//
-// All state lives in pt.sim108, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Ледените пирати / The Ice Pirates, book 108)
+// Skill difference selects one of seven columns; a 1-10 pick selects one of three rows.
+// Table entries apply losses to both sides, including instant death.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';

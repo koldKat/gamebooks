@@ -1,50 +1,7 @@
-// ── Battle Simulator (Keep of the Lich-Lord, book 239) ─────────────────────────────
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 239 only) by the caller in boot.js via
-// setSim239Visible().
-// To remove: delete this file, remove its import line and initSim239()/
-// setSim239Visible() calls from boot.js, remove 'sim239' from
-// SIM_HISTORY_KEYS in server/db/xp.js, remove 'sim239-overlay' from
-// ALL_PANEL_OVERLAY_IDS in util.js and the #sim239-btn selectors in
-// battlesim.css.
-//
-// Standard Fighting Fantasy SKILL/STAMINA/LUCK system (same core numbers and
-// Test Your Luck table as books 186/198/200/201/202/222/236): SKILL 1d6+6,
-// STAMINA 2d6+12, LUCK 1d6+6, normal wound 2 STAMINA, Attack Strength =
-// 2d6+SKILL.
-//
-// Book-specific knobs, confirmed against the full 400-section read:
-// - attackModifier: plain +/- Attack Strength knob, covering this book's
-//   one-off temporary SKILL penalties (e.g. "-1 SKILL" from a razor
-//   door-handle gash sec.376, "-1 SKILL" while shaking with fear sec.250).
-// - yourDamage / enemyDamage: numeric override for STAMINA lost per landed
-//   hit (both default 2, the FF standard). Covers this book's fixed/variant
-//   damage fights (e.g. Skull Beast's bony shell taking only 1 STAMINA per
-//   hit and no LUCK bonus, sec.115/182/160/265/310/337/389; the Chaos
-//   Shaman's extra 1 STAMINA drain per round regardless of who wins,
-//   sec.58) without hardcoding each named case - set the field for the
-//   fight, reset it after.
-// - secondEnemy: covers this book's two-named-opponents-at-once fights
-//   (e.g. Chaos Pirate Ogre + Orc sec.6, the two Wights sec.76, the two
-//   Knights of Alptraum sec.204). Several fights in this book put the
-//   player against three or four opponents simultaneously (Lady Lotmora
-//   plus two Vampires, sec.120/150/190/309, sometimes joined by a
-//   traitorous Kandogor) - the engine only tracks two enemy pools at once,
-//   so for those, fight the strongest named foe (Lotmora/Kandogor) as the
-//   primary enemy and the accompanying Vampires as the second enemy slot,
-//   tracking any further attacker manually via the log; this is a known
-//   simplification, consistent with every other sim in this app treating
-//   combat as a convenience aid rather than a literal rules engine.
-//   This book's many "fight them one at a time" sequences (e.g. the three
-//   Whipperwolves sec.95, four Undead Guards sec.222) need no special code
-//   at all - just fight the standard single-enemy engine repeatedly,
-//   switching enemies via the autocomplete between kills.
-// - Baracas's wrestling bout (sec.167) uses a different resolution
-//   mechanic entirely (opposed SKILL rolls, no Attack Strength) and is not
-//   modelled here; treat it as a standard fight using his SKILL/STAMINA as
-//   an approximation, or resolve that one bout by hand per the book text.
-//
-// All state lives in pt.sim239, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Keep of the Lich-Lord, book 239)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
+// Encounter-specific damage and temporary penalties are manual overrides.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -139,9 +96,7 @@ function _runRound() {
   if (d.secondEnemy.active && d.secondEnemy.stamina > 0 && d.enemy.stamina > 0) {
     _runThreeWayRound(d);
   } else {
-    // Standard single-enemy round (also used once one of a simultaneous
-    // pair has fallen, or for the many "fight them one at a time" pairs
-    // in this book, which never need the secondEnemy toggle at all).
+    // Use single-enemy combat after one paired enemy falls or for sequential fights.
     const target = d.enemy.stamina > 0 ? d.enemy : d.secondEnemy;
     const targetName = d.enemy.stamina > 0 ? _enemyNameSafe(d) : _secondNameSafe(d);
     const playerAS = _roll2d6() + d.player.skill + (d.player.attackModifier || 0);
@@ -167,9 +122,7 @@ function _runRound() {
   _renderAll();
 }
 
-// Three-way "highest Attack Strength wins" mechanic (sec.109, 225, 293):
-// roll Attack Strength for player and both enemies; whichever of the three
-// is highest lands a wound on its target this round.
+// For simultaneous pairs, the highest Attack Strength among all three fighters lands a hit.
 function _runThreeWayRound(d) {
   const playerAS = _roll2d6() + d.player.skill + (d.player.attackModifier || 0);
   const enemy1AS = _roll2d6() + d.enemy.skill;
@@ -181,9 +134,7 @@ function _runThreeWayRound(d) {
   }));
 
   if (playerAS >= enemy1AS && playerAS >= enemy2AS) {
-    // Player has the highest (or tied-highest, treated as a hit per this
-    // book's ties-favour-the-active-attacker phrasing for these fights) -
-    // wound whichever enemy the player has targeted this round.
+    // Player ties count as hits against the chosen target.
     const target = d.secondEnemy.target === 'second' ? d.secondEnemy : d.enemy;
     const targetName = d.secondEnemy.target === 'second' ? _secondNameSafe(d) : _enemyNameSafe(d);
     const dmg = d.player.yourDamage;

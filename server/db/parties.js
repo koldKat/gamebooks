@@ -71,10 +71,7 @@ function acceptPartyInvite(inviteId, userId, { skipXp = false } = {}) {
     db.prepare('UPDATE party_invites SET status = ?, responded_at = strftime(\'%s\',\'now\') WHERE id = ?').run('accepted', inviteId);
   })();
 
-  // Same invisibility contract as handleSaveState - none of these represent
-  // real progress if an admin impersonating userId is the one clicking
-  // accept, so skip every reward here (to userId AND to the other real
-  // members it would otherwise also credit) rather than just userId's own.
+  // Impersonated party acceptance must award neither the impersonated player nor other members.
   if (!skipXp) {
     awardXp(userId, 'join_party', `${invite.party_id}:${userId}`);
     if (existingMembers.length === 1) {

@@ -1,7 +1,4 @@
-// Feedback tab: lists feedback threads, auto-marks unread as read on tab view,
-// renders messages/attachments, and handles reply/delete.
-// To remove: delete this file and its <script type="module"> import in
-// admin/index.html; remove the Feedback tab HTML/CSS.
+// Feedback threads, replies, attachments, and read status.
 
 import { api, esc, fmtMsgBody, fmtAttachments, showAlert, showConfirm } from './core.js';
 
@@ -80,11 +77,7 @@ async function sendReply(id) {
   } catch (e) { showAlert('Failed to send reply.'); }
 }
 
-// The feedback-card HTML above uses inline onclick="..." attributes (built as
-// strings via innerHTML) - those resolve against the global scope, not this
-// module's scope, so these three must be attached to window explicitly to
-// keep working, unlike everything else in this file which is wired via
-// addEventListener and stays properly module-scoped.
+// Inline onclick handlers resolve through window, not module scope.
 window.toggleFeedbackCard = toggleFeedbackCard;
 window.deleteFeedbackMsg  = deleteFeedbackMsg;
 window.sendReply          = sendReply;

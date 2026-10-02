@@ -72,10 +72,7 @@ export function _openEditAt(idx, x, y) {
   dlg.style.left = x + 'px';
   dlg.style.top  = y + 'px';
   dlg.classList.add('active');
-  // Clamp to viewport now that the dialog is visible/measurable (same pattern as
-  // _showCtx) - previously only clamped horizontally against a hardcoded guessed
-  // width, with no vertical check at all, so opening it from a slot near the
-  // bottom of the viewport could push it partly or fully off-screen.
+  // Clamp both axes using the visible dialog's measured dimensions.
   const r = dlg.getBoundingClientRect();
   if (r.right  > window.innerWidth  - 8) dlg.style.left = Math.max(8, window.innerWidth  - r.width  - 8) + 'px';
   if (r.bottom > window.innerHeight - 8) dlg.style.top  = Math.max(8, window.innerHeight - r.height - 8) + 'px';

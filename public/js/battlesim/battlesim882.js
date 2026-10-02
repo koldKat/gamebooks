@@ -1,75 +1,7 @@
-// ── Battle Simulator (Тайната на Зоро, book 882) ─────────────────────────────
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 882 only) by the caller in boot.js via
-// setSim882Visible().
-// To remove: delete this file, remove its import line and initSim882()/
-// setSim882Visible() calls from boot.js, remove 'sim882' from
-// SIM_HISTORY_KEYS in server/db/xp.js, remove 'sim882-overlay' from
-// ALL_PANEL_OVERLAY_IDS in util.js and the #sim882-btn selectors in
-// battlesim.css.
-//
-// This book (a Zorro adventure) has THREE distinct combat systems, all
-// spelled out on the book's own "Провеждане на схватка" rules page (see
-// book_frontmatter.rules_text for book_id=882):
-//
-//   РЪКОПАШНА СХВАТКА (hand-to-hand): each exchange, roll 1d6 for both
-//   sides and add to their own Ръкопашен бой; higher total lands the hit.
-//   That SAME roll is then added to the winner's Сила and the loser's
-//   Издръжливост is subtracted from it; the result comes off the loser's
-//   Живот. Multiple enemies are fought round-robin, one exchange each.
-//
-//   СХВАТКА С ШПАГИ (group sword fight): identical structure to hand-to-
-//   hand, but the hit-roll uses Фехтовка instead of Ръкопашен бой, and
-//   damage uses Сръчност + Бързина + Сила of the winner minus the loser's
-//   Издръжливост.
-//
-//   ДУЕЛ (formal 1v1 duel): the fighter with the higher Финт (ties broken
-//   by Шанс) strikes first. Each attacker's "series" is normally 3 hits -
-//   two using the higher of Пронизващ удар/Сечащ удар, one using the lower
-//   - after which the defender gets their own series. Each hit's strength
-//   is (relevant skill + a fresh 1d6); the difference between that and the
-//   defender's Блок comes off their Живот. The gap between the two
-//   fighters' Трикове scores gives the trailing fighter's series-
-//   interruption count for the whole duel (their series is cut to a single
-//   hit that many times, instead of the full three).
-//
-// Player starts with Живот 50, and assigns the five Лични качества (Сила/
-// Бързина/Сръчност/Издръжливост/Страст) plus five Умения (Фехтовка/
-// Боравене с камшик/Езда/Ръкопашен бой/Стрелба) at character creation, all
-// editable here as a convenience rather than tied to one of the book's five
-// pregenerated heroes (Хосе Валдес/Диего Понсела/Мигел Тимонеда/Антонио
-// Мартинес/Емилио Варгас), since the reader may have picked any of them or
-// grown their stats through the book's training questline by the time they
-// reach a given fight.
-//
-// Full roster of genuine stat-based fights, verified via a complete
-// 350-section prose read this session (representative/duplicate group
-// fights consolidated - e.g. the identical 6-sailor brawl recurs at
-// sections 12/21/38 and is listed once):
-//   Розарио Инсибил (§24)                 hand-to-hand, 1 opponent
-//   Шестима моряци (§12/21/38)            hand-to-hand, 6 opponents
-//   Четирима моряци (§221)                hand-to-hand, 4 opponents
-//   Войник на Рафаел Идалго (§133/159)    hand-to-hand, 1 opponent
-//   Лола Лоса (§329)                      hand-to-hand, 1 opponent
-//   Матео и бандата му (§43)              hand-to-hand, 10 opponents
-//   Трима разбойници с ножове (§160)      hand-to-hand, 3 opponents (+3 weapon bonus baked into their stats)
-//   Четирима войници до Фуентес (§178)    group sword fight
-//   Дванадесет войника на Ромеро (§196)   group sword fight
-//   Осем войника в Пуебло Ангулар (§104/342) group sword fight
-//   Четирима войника до портата (§286)    group sword fight
-//   Близнаците Морсиля (§186)             group sword fight, 2 opponents
-//   Капитан Армандо Ромеро (§105/297)     formal duel
-//   Дон Луис де Муерто (§187/212)         formal duel
-//   Виторио Галдос, от седлото (§339)     formal duel
-//   Виторио Галдос, на земята (§198)      formal duel
-// The final confrontation with Don Luis (§200/338) offers a pure quick-draw
-// pistol-duel alternative resolved by a single stat-vs-threshold roll, not
-// a real multi-round fight, so it is not part of the sim roster - same
-// treatment as the book's many other one-shot Шанс-vs-threshold checks
-// throughout (climbing a rope, sneaking past a lock, etc.), none of which
-// qualify as "combat" under this app's standing rule.
-//
-// All state lives in pt.sim882, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Тайната на Зоро, book 882)
+// Separate hand-to-hand, group sword, and formal duel modes.
+// Group exchanges reuse the winning roll for damage; duels use hit series and Trick interruptions.
+// Pistol quick-draw and narrative checks are outside the model.
 
 import { currentPlaythrough, saveState } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';

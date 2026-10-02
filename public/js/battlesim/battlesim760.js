@@ -1,47 +1,6 @@
-// ── Battle Simulator (Бойците на Европа, book 760) ──────────────────────────
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 760 only) by the caller in boot.js via
-// setSim760Visible().
-// To remove: delete this file, remove its import line and initSim760()/
-// setSim760Visible() calls from boot.js, remove 'sim760' from
-// SIM_HISTORY_KEYS in server/db/xp.js, remove 'sim760-overlay' from
-// ALL_PANEL_OVERLAY_IDS in util.js and the #sim760-btn selectors in
-// battlesim.css.
-//
-// This book is a 5-fighter round-robin tournament, not one fixed
-// protagonist facing narrative enemies (unlike every other sim in this
-// app). The reader picks ONE of 5 playable fighters at the start
-// (Хамелеона §10, Стейси Бул/Червената чума §20, Хорацио Б. Андреас §30,
-// Кръстника §40, Чери Уилсън/БА 764 §50), each with distinct stats, then
-// fights the other four (reader's choice of order) in round 1 and the
-// shared final boss "666" in round 2. All fights use one uniform
-// dice-based resolver, documented on the book's own rules page as
-// "Стандартна схватка" (Standard Combat):
-//   1. Initiative: whoever has higher (Interactive Status + Chance,
-//      Chance = d6) goes first for the whole fight; if the gap is 3+,
-//      that fighter opens with two consecutive hits before alternation
-//      begins.
-//   2. Hit power = attacker's Offensive Status + Chance (d6).
-//   3. Damage dealt = hit power minus defender's Defensive Status,
-//      floored at 0.
-//   4. Turns alternate until one fighter's Живот (Life) reaches 0.
-// Rather than hardcode the narrative bracket order, the sim lets the user
-// pick their fighter and any opponent (the other 4 rivals or 666) and
-// resolves that one fight - matching how the book's mechanic actually
-// works (same formula regardless of matchup) while staying honest about
-// not tracking the full tournament bracket, per this app's "sim is
-// convenience, not enforcement" precedent.
-//
-// Full roster (verified via a complete read of all 355 sections this
-// session; stats come from the book's own character-intro pages):
-//   Хамелеона            ОС3 ДС3 ИС3 Живот20 (built-in claws)
-//   Стейси Бул/Ч.чума    ОС3 ДС2 ИС4 Живот20 (hidden knives)
-//   Хорацио Б. Андреас   ОС3 ДС4 ИС2 Живот20 (bare-handed, carbon skeleton)
-//   Кръстника            ОС5 ДС2 ИС2 Живот20 (steel chain)
-//   Чери Уилсън/БА 764   ОС3 ДС1 ИС5 Живот20 (carbon staff, morphs)
-//   666 (final boss)     ОС6 ДС6 ИС6 Живот40 (AI construct)
-//
-// All state lives in pt.sim760, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Бойците на Европа, book 760)
+// Initiative uses interactive status + 1d6; a gap of 3+ grants two opening hits.
+// Alternate attacks dealing max(0,offensive status+1d6-defensive status); no bracket tracking.
 
 import { currentPlaythrough, saveState } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';

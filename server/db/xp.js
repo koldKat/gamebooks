@@ -1,10 +1,6 @@
 'use strict';
 
-// XP / leveling / coins / progress-XP awarding, plus impersonation tokens and the
-// demo-book builder (both lived in this same stretch of the original server/db.js,
-// kept here verbatim rather than relocated - see git history/docs for why). This is
-// the one domain module required by nearly every other one (books, feed, admin,
-// forum, parties all award XP/coins), the same role state.js plays on the frontend.
+// XP, levels, coins, and progress rewards.
 
 const { db } = require('./connection');
 const { generateToken } = require('./auth');
@@ -32,11 +28,7 @@ const _xpDefaults = {
   add_note: 5, set_priority: 2, mark_battle: 3, set_color: 2,
   run_depth: 25, death_run: 15, battle_run: 15, win_run: 20,
   first_win: 100, first_loss: 50, first_battle_death: 25, clean_run: 50,
-  // Same achievements as above, still once-per-book (not per-series) - just
-  // worth more when that book's first win/loss/battle-death happens to occur
-  // as part of an open-world series run, since that represents more
-  // investment (persistent character sheet, potentially several books) than
-  // a plain single-book run.
+  // First-outcome achievements remain per book; open-world completions use higher amounts.
   first_win_ow: 150, first_loss_ow: 75, first_battle_death_ow: 40,
   share_run: 20, charsheet_run: 10, charsheet_saved: 40,
   notebook_saved: 40, rate_book: 25, add_to_library: 15, add_book: 50,
@@ -63,9 +55,7 @@ db.transaction(() => {
 })();
 
 let _xpCache = new Map(db.prepare('SELECT event, amount FROM xp_config').all().map(r => [r.event, r.amount]));
-// Sequence suffix for per-use undo/fast_travel award refs (see
-// processStateXp) - guarantees ref uniqueness within the process even if
-// two saves land in the same millisecond.
+// Sequence per-use refs so awards remain unique when saves share a millisecond.
 let _xpRefSeq = 0;
 
 function getXpAmount(event) { return _xpCache.get(event) ?? 0; }
@@ -222,9 +212,7 @@ function setXpFeedHook(fn) {
   _xpFeedHook = typeof fn === 'function' ? fn : null;
 }
 
-// Fires on every successful XP/coin award for any user - powers the admin-only
-// "someone else earned XP/GC" floaters. Distinct from _xpFeedHook, which only
-// fires on level-up and carries no amount.
+// Reward hooks carry XP/coin amounts; the level-up feed hook does not.
 let _appXpHook = null;
 
 function setAppXpHook(fn) {
@@ -245,29 +233,15 @@ const _awardCoinsTx = db.transaction((userId, event, ref, amount) => {
   return r.changes > 0;
 });
 
-// Central safety net: no coins are ever awarded while the current request's
-// account is impersonated, regardless of which route/db function triggered
-// this call - see impersonation-context.js for why this lives here instead
-// of at each individual call site.
+// Reject all coin awards during impersonation, regardless of the caller.
 function awardCoins(userId, event, ref, amount) {
   if (isImpersonatingContext()) return false;
   return _awardCoinsTx(userId, event, String(ref), amount);
 }
 
-// ── Bonus GC lottery ─────────────────────────────────────────────────────────
-// A small chance, rolled on every genuine XP event (not deduped repeats - see
-// the r.changes > 0 gate around the call site below), of a bonus gold coin
-// appearing for the player to claim on the landing screen. Base chance is
-// level × 0.01%, uncapped. Players can also buy extra chance in the shop
-// (shop_items 'gc_chance', same escalating-cost pattern as xp_boost/undo/
-// etc.), capped at `level` purchases so purchased chance never exceeds the
-// level-based amount. Only one pending coin can exist at a time - rolling
-// while one is already waiting is a silent no-op, not a wasted/replaced roll.
-// `pending`/`gcChancePurchased` are passed in from _awardXpTx's own `before`
-// row - this fires on every XP event (very hot path: idle_heartbeat alone
-// ticks once a minute per active user, on top of every discover/visit/etc.),
-// so it deliberately doesn't run its own extra SELECT for data the caller
-// already has in hand.
+// Roll bonus GC only for genuine XP awards; keep at most one pending coin.
+// Chance is level x 0.01% plus purchased chance capped at level purchases.
+// Reuse the caller's row to avoid extra reads on this hot path.
 function _rollBonusGc(userId, xp, pending, gcChancePurchased) {
   if (pending) return;
   const level = computeLevel(xp);
@@ -278,11 +252,7 @@ function _rollBonusGc(userId, xp, pending, gcChancePurchased) {
   }
 }
 
-// Clearing the flag and awarding the coin happen in one transaction so a
-// claim can never clear the flag without actually paying out (or vice
-// versa). awardCoins() is called from inside here - better-sqlite3 nests
-// transactions as savepoints, same pattern _awardXpTx already uses below
-// for level-up coins.
+// Clear the pending flag and award the coin atomically.
 const _claimBonusGcTx = db.transaction((userId) => {
   const row = db.prepare('SELECT pending_bonus_gc FROM users WHERE id = ?').get(userId);
   if (!row?.pending_bonus_gc) return { error: 'nothing_to_claim' };
@@ -370,10 +340,7 @@ function awardIdleHeartbeatXp(userId) {
     const liveCount  = db.prepare("SELECT COUNT(*) AS n FROM xp_events WHERE user_id = ? AND event = 'idle_heartbeat'").get(userId)?.n || 0;
     const playDays   = Math.floor((banked + liveCount) / 1440);
     if (playDays > 0) awardCoins(userId, 'playtime_24h', playDays, 1);
-    // The bonus-coin roll happens inside awardXp's transaction - diff the
-    // pending flag to learn whether this very heartbeat produced one, so the
-    // caller can surface it in the UI immediately instead of waiting for the
-    // next feed/profile refresh cycle.
+    // Compare pending state after the transaction to report a newly generated coin immediately.
     const pendingAfter = db.prepare('SELECT pending_bonus_gc FROM users WHERE id = ?').get(userId)?.pending_bonus_gc;
     coinRolled = !row?.pending_bonus_gc && !!pendingAfter;
   }
@@ -428,14 +395,7 @@ function getBookIdentifiers(userId, bookId) {
   return { isbn: row.isbn || null, issn: row.issn || null, asin: row.asin || null, pages: row.pages || null, authors: row.authors || null, description: row.description || null, discoverable_sections: row.discoverable_sections ?? null, is_public: row.is_public ?? 0 };
 }
 
-// A choices array entry isn't guaranteed to already be a number the way a
-// graph object key already is (Object.keys always stringifies, but a raw
-// choices[] value can be either, depending on how it was stored) - adding
-// it to a Set unnormalized let '13' (string) and 13 (number) count as two
-// separate discovered sections instead of one, inflating discover_all's
-// count well past the book's real total and awarding it before the player
-// had actually seen everything. Same normalization graph.js's client-side
-// _bfsDepth/_getPositionedNeighbors already needed for the identical reason.
+// Normalize section IDs before deduplicating discovered choices.
 function _normSec(v) {
   const n = Number(v);
   return (!isNaN(n) && n > 0) ? n : (v !== -1 && v !== 0 && v !== '-1' && v !== '0' ? v : null);
@@ -454,13 +414,7 @@ function _discoveredSet(graph) {
   return s;
 }
 
-// Mirrors public/js/core/state.js's mappedCountFor() predicate exactly - a manually-
-// added node (bg.js's "+ Add node", no `discovered` flag) reads as fully mapped
-// immediately even with zero choices, same as any node with real choices/
-// portals. Used so such nodes also count toward visit_all/book_completed -
-// a deliberately-noted bonus episode (e.g. one the player knows about from
-// reading the book directly, not from playing) shouldn't block 100%
-// completion just because it was never walked into via an actual playthrough.
+// Match the client's mapped predicate, including manually added and portal-only nodes.
 function _mappedSet(graph) {
   const s = new Set();
   for (const [sec, data] of Object.entries(graph)) {
@@ -472,14 +426,7 @@ function _mappedSet(graph) {
   return s;
 }
 
-// pt.path entries come straight from client navigation, same unnormalized-
-// string-vs-number risk _discoveredSet above has for choices[] - without
-// _normSec here, a run whose path mixes string and number section ids would
-// undercount toward visit_all in the opposite direction discover_all was
-// overcounting (each real section counted as 2 distinct "visited" entries
-// inflates the numerator here too, but the more common failure mode is
-// visit_all never reaching 100% because the set looks artificially larger
-// than the book's own effective total).
+// Normalize path IDs before counting visited sections.
 function _visitedSet(playthroughs) {
   const s = new Set();
   for (const pt of playthroughs)
@@ -490,25 +437,13 @@ function _visitedSet(playthroughs) {
   return s;
 }
 
-// _visitedSet only sees CURRENT playthroughs, so a section visited in a run that was
-// later deleted silently disappears from it even though the section really was visited
-// (the graph entry recording its choices survives run deletion, but pt.path doesn't).
-// The visit_node XP ledger is append-only (INSERT OR IGNORE, never deleted) and is
-// exactly the permanent record of every section ever actually visited for this book -
-// use it as the source of truth for "has the player visited everything," falling back
-// to it only when the live count looks short, to avoid the extra query in the common case.
+// Fall back to the permanent visit ledger when live runs fall short after deletion.
 function _permanentVisitedCount(userId, bookId) {
   return db.prepare(`SELECT COUNT(*) AS n FROM xp_events WHERE user_id = ? AND event = 'visit_node' AND ref LIKE ?`)
     .get(userId, `${bookId}:%`).n;
 }
 
-// Shared demo state builder - single source of truth for graph/positions/runs.
-// createDemoBook, refreshDemoBooks, and getDemoBookState all call this.
-//
-// Structure: a mostly linear spine (1→5→8→11→14→17→18→21→22→26→29/30) with
-// short two-node branch pairs. Sections 4, 7, 12, 15 are referenced as choices
-// but never mapped - they appear as grey "discovered" nodes on the graph.
-// Three demo runs cover the mapped sections; those four nodes remain unvisited.
+// Shared demo graph, positions, and runs; four choice-only nodes remain unvisited.
 function _buildDemoState(now, day) {
   return {
     bookName:      'Demo Book',
@@ -657,11 +592,7 @@ function getDemoBookState() {
   return _buildDemoState(now, day);
 }
 
-// ── Group milestone helpers ───────────────────────────────────────────────────
-
-// Check if user has achieved perBookEvent on all books in series/anthology,
-// and if so award the group event. INSERT OR IGNORE prevents re-award if new
-// books are later added after the milestone was already earned.
+// Award a group milestone once all members qualify; unique inserts prevent repeat awards.
 function _checkGroupMilestone(userId, seriesId, parentBookId, perBookEvent, seriesEvent, anthologyEvent, awardCoinsOnComplete = false) {
   if (seriesId) {
     const total = db.prepare(
@@ -741,19 +672,7 @@ function _checkGroupWonAll(userId, seriesId, parentBookId) {
   }
 }
 
-// Per-playthrough state keys used by every battle simulator module (see
-// processStateXp below) - kept as one list so a future sim just needs
-// adding here, not duplicated at each call site. sim201/sim202/sim203 were
-// missing from this list for a while after each shipped (silently no
-// battlesim_win/battlesim_loss XP for those three books) until caught and
-// backfilled - sim209/sim210/sim211 quietly repeated the exact same gap
-// (each shipped without a corresponding addition here) until caught again
-// while adding sim212 - this list still isn't wired to anything that would
-// catch a future sim missing from it automatically, so it's worth
-// double-checking here specifically whenever a new battlesimNNN.js ships.
-// 'sim829' (not 'battleSim') matches server/db.js's one-time pt.battleSim ->
-// pt.sim829 rename, which brought book 829 in line with every other sim's
-// pt.simNNN naming (it predates that convention).
+// Keep every simulator history key in this shared list so new simulators receive outcome XP.
 const SIM_HISTORY_KEYS = ['sim829', 'sim8', 'sim286', 'sim198', 'sim199', 'sim200', 'sim186', 'sim201', 'sim202', 'sim203', 'sim83', 'sim86', 'sim114', 'sim115', 'sim123', 'sim130', 'sim92', 'sim108', 'sim216', 'sim193', 'sim217', 'sim526', 'sim322', 'sim323', 'sim324', 'sim325', 'sim122', 'sim80', 'sim82', 'sim118', 'sim218', 'sim430', 'sim204', 'sim205', 'sim206', 'sim207', 'sim208', 'sim209', 'sim210', 'sim211', 'sim212', 'sim213', 'sim214', 'sim215', 'sim219', 'sim220', 'sim221', 'sim222', 'sim224', 'sim370', 'sim375', 'sim376', 'sim377', 'sim378', 'sim78', 'sim107', 'sim135', 'sim223', 'sim317', 'sim318', 'sim319', 'sim320', 'sim397', 'sim321', 'sim398', 'sim399', 'sim414', 'sim415', 'sim416', 'sim225', 'sim431', 'sim432', 'sim226', 'sim227', 'sim228', 'sim229', 'sim230', 'sim231', 'sim232', 'sim233','sim434', 'sim435', 'sim436', 'sim437', 'sim438', 'sim439', 'sim440', 'sim441', 'sim462', 'sim464', 'sim465', 'sim468', 'sim234', 'sim235', 'sim716', 'sim734', 'sim739', 'sim740', 'sim753', 'sim760', 'sim772', 'sim781', 'sim869', 'sim871', 'sim161', 'sim877', 'sim881', 'sim882', 'sim236', 'sim237', 'sim238', 'sim239', 'sim240', 'sim241', 'sim242', 'sim243', 'sim244', 'sim245', 'sim246', 'sim247', 'sim248', 'sim249', 'sim250', 'sim251', 'sim252', 'sim259', 'sim260', 'sim273', 'sim433', 'sim541', 'sim661', 'sim696', 'sim263', 'sim264', 'sim253', 'sim267', 'sim256', 'sim257', 'sim258', 'sim255', 'sim254', 'sim272', 'sim274', 'sim275', 'sim276', 'sim278', 'sim279', 'sim280'];
 
 function processStateXp(userId, bookId, oldState, newState, totalSections) {
@@ -762,8 +681,7 @@ function processStateXp(userId, bookId, oldState, newState, totalSections) {
   const bookRow   = db.prepare('SELECT discoverable_sections, series_id, parent_book_id FROM books WHERE id = ?').get(bookId);
   const effective = bookRow?.discoverable_sections ?? totalSections;
 
-  // For open world series, per-run XP uses a series-scoped ref so that propagation
-  // across books (via _syncSeriesRuns) cannot award the same event multiple times.
+  // Series-scoped refs deduplicate rewards propagated across books.
   const seriesRow = bookRow?.series_id
     ? db.prepare('SELECT is_open_world FROM series WHERE id = ?').get(bookRow.series_id)
     : null;
@@ -811,9 +729,7 @@ function processStateXp(userId, bookId, oldState, newState, totalSections) {
   for (const sec of newVis)
     if (!oldVis.has(sec)) awardXp(userId, 'visit_node', `${bookId}:${sec}`);
   if (effective > 0 && oldVis.size < effective) {
-    // Union with _mappedSet so manually-added/noted nodes (never walked into
-    // via a real playthrough, but already showing 100% in the "Mapped" stat)
-    // can complete the book too - see _mappedSet's own comment.
+    // Include mapped/manual nodes so they can satisfy completion milestones.
     const combined = new Set([...newVis, ...(_mappedSet(newGraph))]);
     const trulyVisited = combined.size >= effective ? combined.size : Math.max(combined.size, _permanentVisitedCount(userId, bookId));
     if (trulyVisited >= effective) {
@@ -832,34 +748,17 @@ function processStateXp(userId, bookId, oldState, newState, totalSections) {
     if (data.color    && !oldGraph[sec]?.color)    awardXp(userId, 'set_color',    `${bookId}:${sec}`);
   }
 
-  // Character sheet fields added beyond the book's template - diffed against the
-  // template (not the previous save) so a fresh run started from a template doesn't
-  // award XP for the template's own fields, only ones the user adds afterwards.
-  // Field ids are preserved verbatim when a template is copied into a new run
-  // (see ui.js startPlaythrough), so any id absent from the template is user-added.
+  // Reward fields absent from the template, not inherited fields in fresh runs.
   const templateFieldIds = new Set(
     (newState?.charSheetTemplate?.fields ?? []).map(f => f?.id).filter(id => id != null)
   );
 
-  // Per-run events - use series-scoped ref for open world so propagation across books
-  // doesn't re-award the same event (UNIQUE constraint on user_id+event+ref deduplicates).
-  // The ref uses the run's own startedAt timestamp, not its array index - a deleted run's
-  // old index can be reused by an unrelated later run, and an index-based ref would make
-  // that later run's rewards collide with (and get silently blocked by) the deleted run's
-  // leftover xp_events rows. startedAt is assigned once at creation and never reused.
-  // run_depth is the one deliberate exception - see below.
+  // Use series-scoped, startedAt-based refs to deduplicate propagated rewards without reused-index collisions.
   let _anyRunJustCompleted = false;
   for (let i = 0; i < newPts.length; i++) {
     const oldPt = oldPts[i];
     const newPt = newPts[i];
-    // A synced series-run placeholder that was never actually played in this book
-    // (open-world.js's _syncSeriesRuns pads every book in a series with one slot per
-    // series run so numbers stay aligned) still gets its charSheet/result mirrored
-    // onto it for display, but must never earn this book's per-run XP - skip it
-    // entirely. Matches _syncSeriesRuns' own touchedHere check - startedAt alone,
-    // not path.length: a since-fixed open-world.js bug could inject a single path
-    // entry into an untouched placeholder without ever setting startedAt, which
-    // defeated a path.length-based guard.
+    // Untouched series placeholders must never earn this book's run XP.
     if (newPt && !newPt.startedAt) continue;
     const runKey = newPt?.startedAt ?? i;
     const ref    = owSeriesId ? `series:${owSeriesId}:${runKey}` : `${bookId}:${runKey}`;
@@ -869,10 +768,7 @@ function processStateXp(userId, bookId, oldState, newState, totalSections) {
       awardCleanRun(newPt, i);
       if (newPt.result === 'death') {
         awardXp(userId, 'death_run', ref);
-        // first_win/first_loss/first_battle_death use bookId as ref (not
-        // series-scoped) so they fire once per book per user regardless of
-        // open-world status - but pay out more when this particular
-        // completion happens as part of an open-world series run.
+        // First outcomes deduplicate per book, with higher amounts for open-world completions.
         awardXp(userId, 'first_loss', String(bookId), owSeriesId ? getXpAmount('first_loss_ow') : null);
       } else if (newPt.result === 'battle') {
         awardXp(userId, 'battle_run', ref);
@@ -888,11 +784,7 @@ function processStateXp(userId, bookId, oldState, newState, totalSections) {
       awardXp(userId, 'share_run', ref);
     if (!oldPt?.charSheetEdited && newPt?.charSheetEdited)
       awardXp(userId, 'charsheet_saved', ref);
-    // Same template-inheritance issue add_charsheet_field already guards against below:
-    // a run started from a template copies the template's fields immediately (see
-    // ui.js startPlaythrough), so "fields.length > 0" is trivially true for every new
-    // run with a template configured, with zero real action - award only if at least
-    // one field isn't from the template, i.e. the player actually engaged with it.
+    // Award character-sheet use only for player-added fields, not template copies.
     const hadOwnField = (oldPt?.charSheet?.fields ?? []).some(f => f?.id != null && !templateFieldIds.has(f.id));
     const hasOwnField  = (newPt?.charSheet?.fields ?? []).some(f => f?.id != null && !templateFieldIds.has(f.id));
     if (!hadOwnField && hasOwnField)
@@ -902,34 +794,13 @@ function processStateXp(userId, bookId, oldState, newState, totalSections) {
         awardXp(userId, 'add_charsheet_field', `${ref}:${field.id}`);
     }
 
-    // run_depth deliberately keeps the OLD index-based ref (not the startedAt-based
-    // `ref` above): starting a run costs nothing, so re-creating a run at the *same*
-    // slot after deleting it should not re-earn this - only a genuinely new, never-
-    // before-used slot should. Index-based dedup gives exactly that: slot 24 re-created
-    // after being deleted collides with its own old award (correctly no XP); a brand
-    // new slot 26 has never been used, so it awards fresh. This is intentionally
-    // different from the events above, which must survive slot reuse because
-    // completing/sharing/editing a charsheet each represents real, distinct effort.
+    // Keep run_depth index-based: recreating a previously rewarded slot must not earn it again.
     const oldLen = oldPt?.path?.length ?? 0;
     const newLen = newPt?.path?.length ?? 0;
     if (oldLen < 1 && newLen >= 1)
       awardXp(userId, 'run_depth', owSeriesId ? `series:${owSeriesId}:${i}` : `${bookId}:${i}`);
 
-    // Battle simulators (all, listed in SIM_HISTORY_KEYS) each log
-    // finished battles into their own history array with an identical
-    // { outcome: 'win'|'loss', ts } shape - award a small, repeatable amount
-    // per outcome using the entry's own ts as the ref (same trick
-    // idle_heartbeat uses for a naturally-unique, non-colliding ref per real
-    // event, rather than the "once ever" dedup most other events use).
-    // Deliberately no per-book/per-sim distinction - simulator practice
-    // isn't real playthrough progress, so it's not worth a bigger reward or
-    // an anti-farm mechanism, just a small nod for using it.
-    // Compares by max ts, not array length - history used to be capped at
-    // 100 entries via .shift() (removed 2026-08-09, now a true lifetime
-    // log), and a length-only comparison would have silently stopped
-    // awarding XP forever once that cap was hit. Kept the ts comparison
-    // even after removing the cap since it's still correct and there's no
-    // reason to change working logic for it.
+    // Award each simulator outcome by its history timestamp, not once per book.
     for (const simKey of SIM_HISTORY_KEYS) {
       const oldHist = oldPt?.[simKey]?.history ?? [];
       const newHist = newPt?.[simKey]?.history ?? [];
@@ -943,24 +814,7 @@ function processStateXp(userId, bookId, oldState, newState, totalSections) {
     }
   }
 
-  // Undo / fast travel - awarded PER USE, not first-time-only, diffed from
-  // the counters every playthrough already keeps (undosUsed /
-  // fastTravelsUsed, bumped client-side where each action happens): each
-  // unit of total-counter growth across all playthroughs is one award, so a
-  // save batching several uses pays them all at once. Amounts are tiny
-  // (config: undo 1, fast_travel 2) and both actions are client-supplied,
-  // so a determined client could inflate the counters - accepted
-  // deliberately, same reasoning as battlesim_win/loss above: spamming is
-  // possible but self-limiting and pays less than just playing.
-  // Totals-diff (not per-playthrough matching) means deleting a run drops
-  // its counted uses from the baseline - already-awarded uses stay awarded,
-  // and a replacement run's uses re-pay only once the total climbs past the
-  // pre-delete peak. Immaterial at these amounts.
-  // Refs carry Date.now() + a loop index + a process-lifetime sequence:
-  // unique per award, and immune to the reset-progress case where the
-  // counters zero out and a counter-derived ref would collide with
-  // already-logged rows (INSERT OR IGNORE would then silently eat real
-  // awards).
+  // Award every increase in undo/travel counters, including batched saves.
   const _uses = (pts, key) => (pts || []).reduce((n, pt) => n + Math.max(0, Math.floor(pt?.[key] ?? 0)), 0);
   const undoDelta = _uses(newPts, 'undosUsed') - _uses(oldPts, 'undosUsed');
   const ftDelta   = _uses(newPts, 'fastTravelsUsed') - _uses(oldPts, 'fastTravelsUsed');
@@ -968,18 +822,9 @@ function processStateXp(userId, bookId, oldState, newState, totalSections) {
   for (let i = 0; i < undoDelta; i++) awardXp(userId, 'undo', `${bookId}:${_stamp}:u:${i}:${_xpRefSeq++}`);
   for (let i = 0; i < ftDelta;   i++) awardXp(userId, 'fast_travel', `${bookId}:${_stamp}:f:${i}:${_xpRefSeq++}`);
 
-  // Reconciliation safety net: the transition check above (`!oldPt?.completed && newPt?.completed`)
-  // compares against a snapshot that can go stale under racing saves (e.g. two tabs saving the
-  // same book close together), silently skipping a completion's award forever since it never
-  // sees the transition again. Since awardXp's ref is unique per run-index and INSERT OR IGNORE
-  // no-ops anything already logged, it's safe (and cheap - only runs when the fast path above
-  // found nothing) to re-scan every completed run and let the ledger itself be the source of
-  // truth, self-healing any gap on the very next save of this book.
+  // Reconcile completed runs against unique award refs to recover transitions missed by racing saves.
   if (!_anyRunJustCompleted) {
-    // Excludes untouched series-run placeholders (see the same guard on the fast path
-    // above) - a leaked completed:true on one would otherwise re-earn XP on every
-    // single save of this book forever, since this net has no "just transitioned"
-    // requirement at all.
+    // Exclude untouched series placeholders from reconciliation too.
     const _touched = pt => !!pt?.startedAt;
     const completedCount = newPts.filter(pt => pt?.completed && _touched(pt)).length;
     if (completedCount > 0) {

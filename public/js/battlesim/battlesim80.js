@@ -1,44 +1,7 @@
-// ── Battle Simulator (Бойците на Орм / The Fighters of Orm, book 80) ──
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 80 only) by the caller in boot.js via
-// setSim80Visible().
-// To remove: delete this file, remove its import line and initSim80()/
-// setSim80Visible() calls from boot.js, remove 'sim80' from
-// SIM_HISTORY_KEYS in server/db/xp.js, and remove the .bsim-* CSS (shared
-// with the other battlesim*.js files, so only remove it if all are gone).
-//
-// A single clean system ("Стандартна схватка"), unlike book 122's three
-// switchable systems - every one of the 117 fight-referencing sections in
-// this book cites it, and the handful that don't are just narrative
-// aftermath text reusing the word "схватка", not alternate mechanics.
-//
-// Each round:
-// 1. Order: both sides roll 1d6, add it to their own Интерактивен статус.
-//    Whoever's total is higher strikes first; if the gap is 3 or more, that
-//    side gets two consecutive strikes before the other gets to hit back.
-//    A tied order roll is resolved as player-first with no double strike -
-//    the book's own text doesn't cover ties, so this is a judgment call.
-// 2. Each strike: attacker's Офанзивен статус + a fresh 1d6, minus the
-//    defender's Дефанзивен статус, floored at 0, subtracted from the
-//    defender's Живот.
-// 3. Repeat rounds until either side's Живот reaches 0.
-//
-// This is a closed, 5-fighter tournament cast (you play one, the other 4
-// are your possible opponents) rather than a growing roster read section by
-// section - book_enemies holds their starting stats straight from the
-// book's own introduction. Both the player's own stats and the currently
-// selected opponent's stats are plain editable fields (no chargen dice):
-// this book lets you spend prize money between fights to permanently raise
-// Офанзивен/Дефанзивен/Интерактивен/Живот, so both sides' numbers are
-// expected to grow over the course of a playthrough and are entered/adjusted
-// by hand, same free-form-entry precedent as every other sim in this app.
-//
-// book_enemies.attack holds Офанзивен статус, .hp holds Живот, .defense
-// holds Дефанзивен статус, .pb (otherwise-unused "personal best"-style 4th
-// numeric column, same repurposing precedent as battlesim829.js) holds
-// Интерактивен статус.
-//
-// All state lives in pt.sim80, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Бойците на Орм / The Fighters of Orm, book 80)
+// Initiative is 1d6 + interactive status; a gap of 3+ grants two opening strikes.
+// Damage is max(0, offensive status + 1d6 - defensive status).
+// Initiative ties default to player-first because the source leaves them unspecified.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';

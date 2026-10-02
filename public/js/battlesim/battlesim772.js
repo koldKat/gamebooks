@@ -1,48 +1,7 @@
-// ── Battle Simulator (Бойците на Кунг-Фу, book 772) ─────────────────────────
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 772 only) by the caller in boot.js via
-// setSim772Visible().
-// To remove: delete this file, remove its import line and initSim772()/
-// setSim772Visible() calls from boot.js, remove 'sim772' from
-// SIM_HISTORY_KEYS in server/db/xp.js, remove 'sim772-overlay' from
-// ALL_PANEL_OVERLAY_IDS in util.js and the #sim772-btn selectors in
-// battlesim.css.
-//
-// Unlike a single-protagonist sim, this book gives the reader 17
-// point-based stats in a paper "дневник" (journal) that end up wildly
-// different every playthrough depending on 100+ branching training
-// choices during the story - there is no canonical starting build to
-// hardcode. So this sim lets the player type in their OWN current stat
-// values (read off their journal) once, then pick one of the book's named
-// opponents (Ян Лучан excluded - every encounter with him is a scripted
-// instant win/loss narrative branch, never a real stat-based fight) and
-// run a round-based, 1d6-driven duel exactly as documented on the book's
-// own "Правила за бой" rules page (see book_frontmatter.rules_text for
-// book_id=772):
-//
-//   Player actions each round (player's free choice):
-//     - "Удар с крак"  (leg attack):      1d6 + Удар с крак + Мощ на ударите
-//     - "Удар с ръка"  (hand attack):     1d6 + Удар с ръка + Мощ на ударите
-//     - "Комбинирана атака" (combined):   1d6 + Удар с крак + Удар с ръка + Мощ на ударите
-//     - "Пасивна защита" (passive def.):  1d6 + Защита + Спокойствие + Бойна тактика
-//         - cannot win the round outright, once per fight only; if the
-//           total beats the attacker's roll, subtract 2 from every one of
-//           the attacker's stats except "Отклоняване на получен удар"
-//     - "Агресивна защита" (aggr. def.):  1d6 + Защита + Рефлекс + Бързина
-//         - CAN win the round if it beats the attacker's total
-//   Enemy has 3 attack stats (leg/hand/combined) and 3 matching defense
-//   stats, compared against the player's matching action. Enemy AI action
-//   sequence (attack vs defend, and which attack type) is opponent-
-//   specific - see ROSTER's `pattern` function below, one per enemy,
-//   implementing the documented behaviour rather than one generic AI.
-//   "Отклоняване на получен удар" - when the PLAYER lands a hit on an
-//   enemy that has specific numbers listed (not "не"), roll 1d6 again;
-//   landing on one of those numbers negates the player's round win.
-//   Higher total wins the round; ties are a draw (nobody wins).
-//   Win 2 consecutive rounds OR 3 non-consecutive rounds -> victory.
-//   Lose 2 consecutive OR 3 non-consecutive -> defeat.
-//
-// All state lives in pt.sim772, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Бойците на Кунг-Фу, book 772)
+// Enter journal stats; opponent-specific patterns select attack/defense actions.
+// Victory/defeat requires two consecutive or three total round wins/losses.
+// Passive defense is once per fight; NPC defense does not use the player's stat-drain effect.
 
 import { currentPlaythrough, saveState } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -66,13 +25,7 @@ const PLAYER_STAT_KEYS = [
   ['speed',    'battlesim772.stat.speed'],
 ];
 
-// Enemy AI: given round index (0-based) and history of own past actions,
-// return the action to take this round: one of
-// 'leg' | 'hand' | 'combined' | 'passive' | 'aggressive'.
-// (Enemies never use "passive"/"aggressive" defense distinction in the
-// book text - they just "defend"; we resolve enemy defense as aggressive
-// defense, since the book never grants NPCs the passive-defense stat
-// drain effect - only the player has access to that special rule.)
+// Select the enemy action from round/history; resolve NPC defense as aggressive, without player-only drain.
 const ROSTER = [
   {
     id: 'li_xiao', name: 'Ли Сяо',
@@ -243,9 +196,7 @@ function _enemyAttackTotal(e, move) {
   return { roll, total: roll + (stat || 0) };
 }
 
-// Enemy always resolves defense as aggressive-style (single relevant
-// defense stat for the matching attack type); the book never gives NPCs
-// the passive-defense stat-drain rule, only the player has it.
+// NPC defense is aggressive-style, without the player's passive stat-drain effect.
 function _enemyDefenseTotal(e, move) {
   const roll = _roll1d6();
   const stat = move === 'leg' ? e.defLeg : move === 'hand' ? e.defHand : e.defComb;
@@ -277,9 +228,7 @@ function _runRound(playerAction) {
   if (playerAction.move === 'passive' && d.playerPassiveUsed) return;
   if (playerAction.move === 'passive') d.playerPassiveUsed = true;
   const staticEnemy = _enemy(d.enemyId);
-  // Preserve any passive-penalty mutation across rounds within one fight
-  // by storing a live copy on d once the fight starts (stats used for
-  // totals come from this copy so passive-defense penalties persist).
+  // Keep live opponent stats for the fight so passive penalties persist between rounds.
   const liveEnemy = d._liveEnemy || (d._liveEnemy = { ...staticEnemy, pattern: undefined });
 
   const enemyAction = staticEnemy.pattern(d.roundIdx);

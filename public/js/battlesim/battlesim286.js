@@ -1,15 +1,5 @@
-// ── Battle Simulator (В лабиринта на времето, book 286) ─────────────────────
-// Self-contained module. Imports from state.js, play.js, charsheet.js and util.js.
-// Visibility is gated (book 286 only) by the caller in boot.js via
-// setSim286Visible().
-// To remove: delete this file, remove its import line and initSim286()/
-// setSim286Visible() calls from boot.js, and remove the .bsim-* CSS (shared
-// with battlesim8.js/battlesim829.js, so only remove it if all three are gone).
-//
-// Rules differ from book 829's opposed Attack/Defense system: book 286 uses a
-// flat weapon "minimum hit" threshold - damage = max(0, 2d6 - minHit) - with
-// shields subtracting a flat amount from incoming enemy damage instead. All
-// state lives in pt.sim286, per-user/per-book via currentPlaythrough().
+// Battle Simulator (В лабиринта на времето, book 286)
+// Weapon damage = max(0,2d6-minHit), with glove/tech bonuses; shields reduce incoming damage.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -24,13 +14,8 @@ const TECH_ATTEMPT_COST = 3;
 const SVG_SKULL  = `<svg class="sim-icon sim-icon-dead"  viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8c0 2.8 1.4 5.3 3.6 6.8V20a1 1 0 0 0 1 1h6.8a1 1 0 0 0 1-1v-2.2C18.6 16.3 20 13.8 20 11a8 8 0 0 0-8-8zm-2.5 13v-1.5a.5.5 0 0 0-.5-.5H8l-.5-1 1-1-1-1 1-1H9a2.5 2.5 0 0 1 5 0h.5l1 1-1 1 1 1-.5 1h-1a.5.5 0 0 0-.5.5V16h-4z"/></svg>`;
 const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v7a6 6 0 0 1-12 0V2zm-2 1H2v4a4 4 0 0 0 4 4v-1a3 3 0 0 1-3-3V3zm16 0h2v4a4 4 0 0 1-4 4v-1a3 3 0 0 0 3-3V3zm-7 13v2H9v2h6v-2h-2v-2a6 6 0 0 0 5-5.92V2H6v8.08A6 6 0 0 0 13 16z"/></svg>`;
 
-// ── Reference data ───────────────────────────────────────────────────────────
-
-// Weapons: [key, label, minHit, energyCost (АЕ)]. 'glove' is the special
-// silovata rakavitsa case (locked minHit 4, always +5 bonus damage, even on a
-// roll of exactly 4) - given to the player directly by Eternor, outside the
-// АЕ-budgeted equipment list, so it costs 0. 'custom' has no fixed cost either
-// - the player sets their own via a stepper (see FIELD_MAP's customAeCost).
+// Weapons: [key,label,minHit,energyCost]. Glove hits add +5 even at minHit and cost no AE.
+// Custom weapon cost is entered manually.
 const WEAPONS = [
   ['sword',   6, 20],
   ['mace',    5, 20],
@@ -44,9 +29,7 @@ const WEAPONS = [
   ['custom',  null, null],
 ];
 
-// Shields: [key, defense reduction (negative), energyCost (АЕ)]. Labels for
-// both arrays live in i18n.js under battlesim286.weapon.*/battlesim286.shield.*
-// (looked up by key), not stored inline here.
+// Shields: [key,negative defense reduction,energyCost]; labels come from translations.
 const SHIELDS = [
   ['none',   0, 0],
   ['small',  -2, 50],
@@ -54,18 +37,8 @@ const SHIELDS = [
   ['large',  -4, 120],
 ];
 
-// Tech gadgets. 'kind' drives _activateTech()'s behavior:
-//   buff_shield  - extra -4 defense for the rest of the current battle
-//   buff_next    - +10 damage on the player's next successful hit
-//   stun         - enemy skips its next 3 attacks
-//   double       - player attacks twice per round for the rest of the battle
-//   direct       - immediate flat damage to the enemy, no roll needed once activated
-//   revive       - resets the current battle back to its starting HP, once ever
-// All items (except 'revive', which has its own fixed 15hp cost) cost 3hp per
-// attempt and need a 2d6 roll >= 6 to succeed - whether or not the roll
-// succeeds, that attempt still counts against maxUses.
-// name/desc live in i18n.js under battlesim286.tech.<key>.name/.desc, looked
-// up via _techName()/_techDesc() below rather than stored inline here.
+// Tech attempts cost 3 HP and require 2d6>=6; failed attempts still consume a use.
+// Revive instead costs 15 HP and rewinds the battle once.
 const TECH_ITEMS = [
   { key: 'shield_temp', kind: 'buff_shield', maxUses: 3 },
   { key: 'grav_shock',  kind: 'buff_next',   maxUses: 3 },
@@ -79,32 +52,15 @@ const TECH_ITEMS = [
 function _techName(key) { return t(`battlesim286.tech.${key}.name`); }
 function _techDesc(key) { return t(`battlesim286.tech.${key}.desc`); }
 
-// Dream outcomes when a troubled sleep (2d6 roll of 2-5) sends you into the
-// "Област на съня" - the 2d6 sum on the follow-up roll (2-12) selects which
-// of these 11 you land in, matching the book's own numbering exactly. Labels
-// live in i18n.js under battlesim286.dream.<n>.
-// Labels for 9 and 11 were swapped until 2026-08-19 (re-verified against
-// the full book text once it became available). The underlying mechanical
-// effect in _resolveDream (below) was already correct for both - only the
-// display name was wrong:
-// - 9's own text ("Ти дори не разбираш какво се е случило. Просто
-//   заспиваш... и се събуждаш на 11" - an unconditional link straight to
-//   section 11, the game's standing death destination per the front-matter
-//   rule "Ако загинеш на сън, неминуемо попадаш на 11") is an instant,
-//   no-roll death - correctly modeled as life=0, but was mislabeled with
-//   dream 11's own name ("Безформени кошмари").
-// - 11's text ("Сънуваш някакви безформени кошмари... жизнените ти точки
-//   са намалели с 5") is the actual -5-life nightmare, correctly modeled,
-//   but had 9's generic "Кошмари" label instead of its own.
+// A troubled-sleep result (2-5 on 2d6) triggers a second roll selecting dreams 2-12.
+// Dream 9 is instant death; dream 11 loses 5 life.
 
 function _data() {
   const pt = currentPlaythrough();
   if (!pt) return null;
   if (!pt.sim286) {
     pt.sim286 = {
-      // life/lifeMax/aeMax all start at 0, not some generous placeholder -
-      // the book requires throwing dice for both before you have any stats
-      // at all, so the sim shouldn't hand out free points before that roll.
+      // Starting life/AE stay zero until rolled; never grant placeholder points.
       player: { life: 0, lifeMax: 0, weaponKey: 'sword', customMinHit: 6, customAeCost: 0, shieldKey: 'none', aeMax: 0, enemyFirst: false, gloveBonus: 5, extraDef: 0 },
       enemy:  { name: '', hp: 20, hpMax: 20, minHit: 6, fixedDamage: 0, extraAttackers: 0 },
       battleStart: { playerLife: 0, enemyHp: 20 },
@@ -136,13 +92,7 @@ function _data() {
   if (d.aeRolled === undefined) d.aeRolled = false;
   if (d.roundsThisBattle === undefined) d.roundsThisBattle = 0;
   if (d.healUsedThisBattle === undefined) d.healUsedThisBattle = false;
-  // Migration: saves from before life/AE required an explicit roll can carry
-  // a nonzero lifeMax/aeMax from the old always-free starting defaults with
-  // lifeRollCount/aeRolled still at their untouched zero/false - retroactively
-  // gating those behind _notReady() would freeze an in-progress playthrough
-  // that never needed to touch the roll buttons. Grandfather each stat in
-  // independently the first time it's seen already-set this way; a no-op for
-  // saves that legitimately rolled, since the roll handlers set both fields together.
+  // Grandfather previously initialized life/AE stats independently so legacy runs do not become roll-gated.
   if (d.lifeRollCount === 0 && d.player.lifeMax > 0) d.lifeRollCount = 1;
   if (!d.aeRolled && d.player.aeMax > 0) d.aeRolled = true;
   for (const item of TECH_ITEMS) {
@@ -151,16 +101,12 @@ function _data() {
   return d;
 }
 
-// True until the player has thrown both starting-life and starting-AE dice -
-// combat, healing, sleep, and tech gadgets all stay locked out until then,
-// same as the book requires those rolls before you have any stats to act with.
+// Require both starting rolls before combat, healing, sleep, or tech use.
 function _notReady(d) {
   return d.lifeRollCount === 0 || !d.aeRolled;
 }
 
-// Current loadout's total energy cost (weapon + shield). Tech gadgets and the
-// power glove sit outside the АЕ-budgeted equipment list per the book's own
-// framing (Eternor hands those over separately), so they're excluded here.
+// Only weapon and shield count toward AE; glove and tech are separate gifts.
 function _loadoutAE(d) {
   const w = WEAPONS.find(w => w[0] === d.player.weaponKey);
   const s = SHIELDS.find(s => s[0] === d.player.shieldKey);
@@ -178,11 +124,7 @@ function _appendLog(d, line) {
 }
 
 function _enemyName(d) { return d.enemy.name.trim() || 'противникът'; }
-// Escaped variant for log lines, which get dumped into innerHTML in
-// _renderLog() - the enemy name is free-text player input, so an unescaped
-// "<img src=x onerror=...>" would execute. _recordOutcome()'s history.enemy
-// deliberately stays unescaped - _renderHistory() already escapes it once at
-// render time, and escaping here too would double-escape it there.
+// Escape free-text names in HTML logs; store history names raw and escape once when rendered.
 function _enemyNameSafe(d) { return escapeHtml(_enemyName(d)); }
 
 function _weaponMinHit(d) {
@@ -195,23 +137,13 @@ function _shieldDef(d) {
   const s = SHIELDS.find(s => s[0] === d.player.shieldKey);
   return s ? s[1] : 0;
 }
-// d.player.extraDef is stored as a positive "how many points" value (matching
-// how the book states shield/armor protection before the minus sign) so it
-// can reuse the shared non-negative stepper - negated here, same sign
-// convention as _shieldDef(). Covers found items that stack with the equipped
-// shield (e.g. the "скафандър с повишена защита" spacesuit, -2, found at
-// section 156 - the text explicitly says it adds to whatever shield you carry).
+// Store extra defense as a positive stepper value; negate it when adding shield/armour protection.
 function _totalPlayerDef(d) {
   return _shieldDef(d) + (d.effects.tempShield ? -4 : 0) - (d.player.extraDef || 0);
 }
 
-// ── Combat resolution ─────────────────────────────────────────────────────
-
-// One player attack roll: max(0, roll - minHit), + glove's flat +5 bonus
-// (applies even when roll lands exactly on the minimum, or +10 instead of +5
-// against the final boss, if the player took the alien's offer to upgrade it
-// at section 181), + any pending one-shot tech bonus (gravity shock),
-// consumed on the first successful hit.
+// Damage is max(0, roll-minHit), plus glove bonus (+5; upgraded boss +10) and pending tech.
+// Consume one-shot tech on the first successful hit.
 function _playerAttackOnce(d) {
   const roll   = _roll2d6();
   const minHit = _weaponIsGlove(d) ? 4 : _weaponMinHit(d);
@@ -229,12 +161,7 @@ function _playerAttackOnce(d) {
     : t('battlesim286.log.player_miss', { roll, minHit }));
 }
 
-// labelOverride is used by _resolveExtraAttackers below - several encounters
-// (sec 13/15/29/173) put multiple identical attackers in front of the
-// player at once, all sharing the tracked enemy's own minHit/HP/fixedDamage
-// stats (that's genuinely how the book writes them: "Всеки от тях има по
-// X жизнени точки", one shared stat line for the whole group), but each
-// rolls its own attack independently every round.
+// Extra identical attackers share enemy stats but roll independently; override their log labels.
 function _enemyAttackOnce(d, labelOverride = null) {
   const label = labelOverride ?? _enemyNameSafe(d);
   if (d.effects.enemyStun > 0) {
@@ -245,13 +172,7 @@ function _enemyAttackOnce(d, labelOverride = null) {
   const roll = _roll2d6();
   const minHit = d.enemy.minHit || 0;
   const hit  = roll > minHit;
-  // Fixed-damage enemies (e.g. Robot sec 52 "всеки негов успешен удар е с
-  // постоянна сила – 4 точки", Tyrannosaurus sec 67 "всеки негов успешен
-  // удар ще ти струва 7 жизнени точки") deal a flat amount on any
-  // successful hit instead of the usual roll-minus-minimum - still reduced
-  // by the player's own shield/armor same as a normal hit, since the book
-  // never says otherwise and shields are described as a blanket "-N off
-  // whatever lands" rule.
+  // Fixed-damage hits still receive normal shield/armour reduction.
   const raw  = hit ? (d.enemy.fixedDamage > 0 ? d.enemy.fixedDamage : (roll - minHit)) : 0;
   const dmg  = Math.max(0, raw + _totalPlayerDef(d));
   if (dmg > 0) {
@@ -262,13 +183,7 @@ function _enemyAttackOnce(d, labelOverride = null) {
   }
 }
 
-// Sec 15 ("на всеки твой удар четиримата ще отговарят един след друг") and
-// sec 29 ("на всеки твой замах двамата ще отговарят едновременно") both
-// describe every surviving extra attacker striking back the same round,
-// stopping only if the player goes down partway through - matches the
-// existing single-companion pattern this app already uses elsewhere
-// (never individually woundable; the player only ever damages the one
-// tracked d.enemy.hp pool), just generalized from 1 companion to N.
+// Each surviving extra attacker strikes independently; only the tracked enemy pool is woundable.
 function _resolveExtraAttackers(d) {
   const n = d.enemy.extraAttackers || 0;
   for (let i = 1; i <= n && d.player.life > 0; i++) {
@@ -276,9 +191,7 @@ function _resolveExtraAttackers(d) {
   }
 }
 
-// Uncapped (was previously trimmed to the last 100) - the admin dashboard
-// aggregates battle counts app-wide from this array, so per-user history needs
-// to be a true lifetime total, not a rolling window.
+// Keep lifetime outcomes: admin totals require the full history.
 function _recordOutcome(d, outcome, enemyNameOverride = null) {
   d.history.push({
     enemy: enemyNameOverride ?? _enemyName(d), outcome,
@@ -288,9 +201,7 @@ function _recordOutcome(d, outcome, enemyNameOverride = null) {
   });
 }
 
-// Rule "Първи удар": the player strikes first by default - some episodes flip
-// this (d.player.enemyFirst), in which case the enemy gets the opening blow
-// each round instead, same alternation from then on.
+// Player attacks first unless the encounter's enemyFirst flag reverses the order.
 function _runRound() {
   const d = _data();
   if (!d || _notReady(d) || d.player.life <= 0 || d.enemy.hp <= 0) return;
@@ -327,10 +238,7 @@ function _runRound() {
   _renderAll();
 }
 
-// Recovery rules 1+3: can't heal mid-fight (only before the first blow, or
-// after the fight resolves, while resting up for the next one), and only
-// once per battle-cycle - the closest analog to "once per episode" this sim
-// can enforce, since it has no concept of the book's actual section numbers.
+// Heal only outside combat, once per battle cycle as the simulator's episode proxy.
 function _heal(amount) {
   const d = _data();
   if (!d || amount <= 0) return;
@@ -380,9 +288,7 @@ function _activateTech(key) {
 
   if (item.kind === 'revive') {
     if (d.dehronatorUsed || d.player.life <= 0) return;
-    // The 15hp cost applies through the rewind, not before it - resetting to
-    // battleStart.playerLife outright would silently erase the cost, since
-    // that's an overwrite, not a delta.
+    // Deduct revive's 15 HP from the restored starting life, not the overwritten current value.
     d.player.life = Math.max(0, d.battleStart.playerLife - item.cost);
     d.enemy.hp    = d.battleStart.enemyHp;
     d.dehronatorUsed = true;
@@ -397,17 +303,10 @@ function _activateTech(key) {
     return;
   }
 
-  // A decided battle (enemy already dead, or player already dead) must block
-  // every path below - without this, firing an already-activated charged
-  // weapon (or any other gadget) at a dead enemy re-triggers the 'win'/'loss'
-  // check and appends a duplicate history entry for a fight that already ended.
+  // Block actions after resolution to prevent duplicate outcome history.
   if (d.player.life <= 0 || d.enemy.hp <= 0) return;
 
-  // Charged weapons (blaster/raygun): once activated, subsequent shots are
-  // free fires with no roll and no attempt cap - the book explicitly exempts
-  // these two from the general "3 attempts max" rule, giving them their own
-  // charge counts (10/2) instead. usesLeft here means "shots remaining", not
-  // "attempts remaining" - a failed activation costs HP but never a charge.
+  // Activated charged weapons fire freely; failed activation costs HP but not ammunition.
   if (item.charged && state.activated) {
     if (state.usesLeft <= 0) return;
     state.usesLeft--;
@@ -599,19 +498,15 @@ function _resolveDream(d, n) {
       break;
     }
   }
-  // Overrides the stale/unrelated enemy name that'd otherwise be pulled from
-  // whatever was last fought for real - a dream death has nothing to do with it.
+  // Label dream deaths independently of the previous enemy.
   if (d.player.life <= 0) _recordOutcome(d, 'loss', t('battlesim286.log.dream_death_label', { label: t(`battlesim286.dream.${n}`) }));
 }
 
 // ── Render ────────────────────────────────────────────────────────────────
 
 function _techButtonsHtml(d) {
-  // Every gadget except the revive (dehronator) is blocked once the battle is
-  // decided - see the matching guard in _activateTech(). Dehronator has its
-  // own independent guard there (blocked only once already used, or once the
-  // player is already dead - it doesn't care whether the enemy is already down).
-  // Both also stay locked until the starting ТЖ/АЕ rolls are done (_notReady).
+  // Block gadgets after resolution except the revive, which has its own alive/unused guard.
+  // Require starting life/AE rolls for both.
   const notReady = _notReady(d);
   const battleOver = notReady || d.player.life <= 0 || d.enemy.hp <= 0;
   return TECH_ITEMS.map(item => {
@@ -767,9 +662,7 @@ export function setSim286Visible(visible) {
   if (!visible) closeSim286();
 }
 
-// ── Enemy autocomplete (reuses the /api/books/:id/enemies list - `attack`
-// is repurposed here to mean "enemy minimum hit", since book 286's flat
-// min-hit model has no opposed defense stat like book 829's) ────────────────
+// Enemy autocomplete stores minimum-hit thresholds in attack.
 
 let _enemyList = null;
 async function _loadEnemyList() {
@@ -816,12 +709,7 @@ function _setupEnemyAutocomplete() {
     d.enemy.name = enemy.name;
     if (enemy.hp != null)     { d.enemy.hp = enemy.hp; d.enemy.hpMax = enemy.hp; }
     if (enemy.attack != null) d.enemy.minHit = enemy.attack;
-    // book_enemies has no column for these two - fixed-damage/multi-attacker
-    // enemies are called out in their own roster name (see the "фикс."/"x2"/
-    // "x4" hints seeded there) as a reminder to set these two fields by hand
-    // after picking; always reset to off so switching enemies can't leave a
-    // stale fixed-damage or extra-attacker value from whichever fight was
-    // configured last.
+    // Reset manual fixed-damage/multi-attacker settings on enemy selection; roster labels indicate exceptions.
     d.enemy.fixedDamage = 0;
     d.enemy.extraAttackers = 0;
     d.battleStart = { playerLife: d.player.life, enemyHp: d.enemy.hp };
@@ -1027,10 +915,7 @@ export function initSim286() {
     const amount = Number(document.getElementById('sim286-heal-amount').value) || 0;
     _heal(amount);
   });
-  // Many of the book's recovery moments ("хвърли зарчетата, за да видиш колко
-  // жизнени точки ти е възстановило" - the healing fruit/balm etc.) just tell
-  // the reader to roll 2d6 for the amount - this fills the amount field with
-  // that roll rather than making the player reach for a physical die.
+  // Roll 2d6 into the healing amount field.
   document.getElementById('sim286-heal-roll').addEventListener('click', () => {
     document.getElementById('sim286-heal-amount').value = _roll2d6();
   });
@@ -1063,9 +948,7 @@ export function initSim286() {
     if (id === 'sim286-player-life') val = Math.min(val, d.player.lifeMax);
     d[map[0]][map[1]] = val;
     if (id === 'sim286-player-lifemax') d.player.life = Math.min(d.player.life, val);
-    // A manual correction to the enemy's HP (not via autocomplete/reset) means
-    // this now IS the fight's real starting point - without this, Dehronator
-    // would silently rewind to whatever stale number was there before the fix.
+    // Manual HP correction updates the starting snapshot used by revive.
     if (id === 'sim286-enemy-hp' || id === 'sim286-enemy-hpmax') d.battleStart.enemyHp = d.enemy.hp;
     saveState();
     _renderInputs();
@@ -1127,9 +1010,7 @@ export function initSim286() {
     saveState();
     _renderInputs();
   });
-  // "Хвърли зарчетата, те ще измерят заряда в АЕ" - a single roll, no reroll
-  // mentioned anywhere for this one (unlike starting life, which explicitly
-  // allows 2 more tries) - so this button is a genuine one-shot per playthrough.
+  // Starting AE is a one-shot roll; only life permits rerolls.
   document.getElementById('sim286-ae-roll').addEventListener('click', () => {
     const d = _data();
     if (!d || d.aeRolled) return;

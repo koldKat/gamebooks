@@ -1,76 +1,8 @@
-// ── Battle Simulator (Beneath Nightmare Castle, book 221) ───────────────────
-// Self-contained module. Imports from state.js, play.js, charsheet.js and util.js.
-// Visibility is gated (book 221 only) by the caller in boot.js via
-// setSim221Visible().
-// To remove: delete this file, remove its import line and initSim221()/
-// setSim221Visible() calls from boot.js, and remove the .bsim-* CSS (shared
-// with every other battlesimN.js, so only remove it if all of them are gone).
-// Also remove 'sim221' from SIM_HISTORY_KEYS in server/db/xp.js, and remove
-// 'sim221-overlay' from ALL_PANEL_OVERLAY_IDS in util.js and the #sim221-btn
-// selectors in battlesim.css.
-//
-// Standard Fighting Fantasy SKILL/STAMINA/LUCK system, same core numbers as
-// every other sim in this app (SKILL 1d6+6, STAMINA 2d6+12, LUCK 1d6+6;
-// opposed 2d6+SKILL roll, ties = no effect, loser -2 STAMINA; Test Your Luck
-// costs 1 LUCK, +/-1 STAMINA effect).
-//
-// No Provisions/Potions UI, unlike most sims in this app - this book's meal/
-// food events are one-off narrative STAMINA recoveries tied to specific
-// section choices (not a flat "10 Portions, +4 STAMINA any time" pool), and
-// its one printed potion (a single-use Potion of Berserk Rage, +4 SKILL for
-// one fight's duration, §263) is a one-off item rather than a repeatable
-// three-choice system like books 201/202/203/219. Both are hand-applied with
-// the existing stat steppers, same precedent as book 220's own "no
-// Provisions/Potions" note.
-//
-// attackModifier/enemyWoundDamage/playerWoundDamage/enemyDefeatThreshold are
-// reused exactly as prior sims (see battlesim219.js/battlesim220.js) - they
-// cover every generic "-N SKILL this fight" penalty (Vitriol Essence §10,
-// Bakk-Ruman §272, Young Man §226 mid-fight), every non-standard wound
-// amount (the Skeleton's §309 half-damage-taken, Vitriol Essence's §224
-// fixed 2-damage-dealt), and the one non-zero win condition (Vitriol
-// Essence's §10 "reduce to STAMINA 2, not 0").
-//
-// No simultaneous/extraAttackers mechanic is needed for this book - unlike
-// book 220, every multi-enemy encounter here resolves to ordinary
-// single-target fights: the six Swordsmen at §41 are fought one at a time
-// (re-pick the next from the dropdown after each falls), and the Giant
-// Spiders at §204 are explicitly "fought as if one opponent", i.e. a single
-// stat-block despite the plural name.
-//
-// Two fields new to this sim, both zero by default and dialed in per-fight
-// since the book's two named magic items have encounter-specific effects:
-// - talismanSkillReduction: Talisman of Loth's enemy-SKILL reduction
-//   (Griltig §96 and Southern Swordsman §126: -2; Xakhaz §167: -1; Luminous
-//   Warrior §241: no SKILL effect at all, see below - leave at 0 there).
-// - tridentBonusDamage: Trident of Skarlos's extra STAMINA damage added to
-//   a player wound (Xakhaz §167: +5; Luminous Warrior §241: +4; 0 elsewhere).
-//
-// Deliberately NOT modeled, matching this app's existing precedent for
-// dynamic/always-on per-round passives (see battlesim220.js's Ophidiotaur/
-// Manic Beast/Giant Hornet note): Vlodblad's (§76) enemy SKILL escalating by
-// 2 every round the player fails to wound it (resets on a wound), and the
-// Luminous Warrior's (§241) passive 1-STAMINA-per-round drain that applies
-// regardless of round outcome and is unaffected by the Talisman. Both are
-// hand-applied with the existing stat steppers rather than bespoke toggles.
-// Also not modeled, all narrative section routing rather than combat
-// mechanics: the "can Escape after N rounds" options at §76/§96/§187/§314
-// (player choice, not a computed outcome), the round-count branches at
-// §161/§193 ("if not killed within N rounds") and the fixed-length fights at
-// §186 (exactly 2 rounds then a narrative check) and §390 (auto-escapes
-// after 1 round regardless of outcome), and the Runic Axe's effect of
-// disabling those Escape options (narrative gating, not combat math).
-//
-// All book_enemies STAMINA values for this book have since been confirmed
-// against 300dpi scans of the source PDF's page images (the embedded PDF
-// text layer itself is unreadable/font-garbled, but the pages are scans, so
-// tesseract OCR + direct pixel inspection worked). Five entries were
-// previously flagged as unverified best-guesses; four guesses turned out
-// correct (Vitriol Essence §224: 6, Young Man §226: 8, Bakk-Ruman §272: 9,
-// Unknown Assailant/Ogre §394: 8) and one was wrong and corrected: Crate of
-// Limbs (§314) is STAMINA 18, not the previously-guessed 15.
-//
-// All state lives in pt.sim221, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Beneath Nightmare Castle, book 221)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
+// No reusable healing pool; Talisman/Trident effects are entered per encounter.
+// Escalating enemy skill and passive drain remain manual.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -146,9 +78,7 @@ function _resetEncounterKnobs(d) {
   d.player.tridentBonusDamage = 0;
 }
 
-// Uncapped (was previously trimmed to the last 100) - the admin dashboard
-// aggregates battle counts app-wide from this array, so per-user history needs
-// to be a true lifetime total, not a rolling window.
+// Keep lifetime outcomes: admin totals require the full history.
 function _recordOutcome(d, outcome) {
   d.history.push({
     enemy: _enemyName(d), outcome,
@@ -608,9 +538,7 @@ export function initSim221() {
     if (!d) return;
     const map = FIELD_MAP[id];
     if (!map) return;
-    // Attack modifier is the one field allowed to go negative (bare-handed/
-    // disarmed/fatigue penalties are always a subtraction) - every other
-    // field stays clamped to 0 or above.
+    // Allow negative attack modifiers; other fields stay non-negative.
     val = id === 'sim221-player-atkmod' ? Number(val) : Math.max(0, val);
     if (id === 'sim221-player-skill') val = Math.min(val, d.player.skillInitial);
     if (id === 'sim221-player-stamina') val = Math.min(val, d.player.staminaInitial);

@@ -7,13 +7,7 @@ export function escapeHtml(str) {
   return String(str ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
-// Highlights a label's first character in a different color, hinting that
-// pressing that key opens the panel (I/E/C/S - see registerPanelShortcut()
-// below). Assumes the label's first letter matches its shortcut key, which
-// holds for the current English-only translations - if a future language
-// swaps the leading letter, this stops matching its own shortcut and will
-// need reworking then (e.g. taking the key letter as a second argument and
-// highlighting its first occurrence instead of always index 0).
+// Highlight the shortcut letter; this assumes the current English label starts with that key.
 export function shortcutLabel(text) {
   const s = String(text ?? '');
   if (!s) return '';
@@ -26,21 +20,11 @@ export async function fetchPublic(url, options) {
   return res;
 }
 
-// Every play-area panel overlay ID, shared by registerPanelShortcut() callers
-// below via `otherOverlayIds: ALL_PANEL_OVERLAY_IDS.filter(id => id !== 'own-id')`
-// so opening one panel closes all the others, without each file re-typing
-// the same 6 literal ID strings.
+// Shared overlay IDs let panel shortcuts close every other panel.
 export const ALL_PANEL_OVERLAY_IDS = ['inv-overlay', 'eq-overlay', 'charsheet-modal-overlay', 'sim286-overlay', 'bsim-overlay', 's8-overlay', 'sim198-overlay', 'sim199-overlay', 'sim200-overlay', 'sim186-overlay', 'sim201-overlay', 'sim202-overlay', 'sim203-overlay', 'sim83-overlay', 'sim86-overlay', 'sim114-overlay', 'sim115-overlay', 'sim123-overlay', 'sim130-overlay', 'sim92-overlay', 'sim108-overlay', 'sim216-overlay', 'sim193-overlay', 'sim217-overlay', 'sim526-overlay', 'sim322-overlay', 'sim323-overlay', 'sim324-overlay', 'sim325-overlay', 'sim122-overlay', 'sim80-overlay', 'sim82-overlay', 'sim118-overlay', 'sim218-overlay', 'sim430-overlay', 'sim204-overlay', 'sim205-overlay', 'sim206-overlay', 'sim207-overlay', 'sim208-overlay', 'sim209-overlay', 'sim210-overlay', 'sim211-overlay', 'sim212-overlay', 'sim213-overlay', 'sim214-overlay', 'sim215-overlay', 'sim219-overlay', 'sim220-overlay', 'sim221-overlay', 'sim222-overlay', 'sim224-overlay', 'sim370-overlay', 'sim375-overlay', 'sim376-overlay', 'sim377-overlay', 'sim378-overlay', 'sim78-overlay', 'sim107-overlay', 'sim135-overlay', 'sim223-overlay', 'sim317-overlay', 'sim318-overlay', 'sim319-overlay', 'sim320-overlay', 'sim397-overlay', 'sim321-overlay', 'sim398-overlay', 'sim399-overlay', 'sim414-overlay', 'sim415-overlay', 'sim416-overlay', 'sim225-overlay', 'sim431-overlay', 'sim432-overlay', 'sim226-overlay', 'sim227-overlay', 'sim228-overlay', 'sim229-overlay', 'sim230-overlay', 'sim231-overlay', 'sim232-overlay', 'sim233-overlay','sim434-overlay', 'sim435-overlay', 'sim436-overlay', 'sim437-overlay', 'sim438-overlay', 'sim439-overlay', 'sim440-overlay', 'sim441-overlay', 'sim462-overlay', 'sim464-overlay', 'sim465-overlay', 'sim468-overlay', 'sim234-overlay', 'sim235-overlay', 'sim716-overlay', 'sim734-overlay', 'sim739-overlay', 'sim740-overlay', 'sim753-overlay', 'sim760-overlay', 'sim772-overlay', 'sim781-overlay', 'sim869-overlay', 'sim871-overlay', 'sim161-overlay', 'sim877-overlay', 'sim881-overlay', 'sim882-overlay', 'sim236-overlay', 'sim237-overlay', 'sim238-overlay', 'sim239-overlay', 'sim240-overlay', 'sim241-overlay', 'sim242-overlay', 'sim243-overlay', 'sim244-overlay', 'sim245-overlay', 'sim247-overlay', 'sim248-overlay', 'sim249-overlay', 'sim250-overlay', 'sim251-overlay', 'sim252-overlay', 'sim259-overlay', 'sim260-overlay', 'sim273-overlay', 'sim433-overlay', 'sim541-overlay', 'sim661-overlay', 'sim696-overlay', 'sim263-overlay', 'sim264-overlay', 'sim253-overlay', 'sim267-overlay', 'sim256-overlay', 'sim257-overlay', 'sim258-overlay', 'sim255-overlay', 'sim254-overlay', 'sim272-overlay', 'sim274-overlay', 'sim275-overlay', 'sim276-overlay', 'sim278-overlay', 'sim279-overlay', 'sim280-overlay'];
 
-// Single-key panel toggle shared by charsheet.js (C) / equipment.js (E) /
-// inventory.js (I) / the battlesim*.js trio (S) - each panel opens with its
-// own key, closes any other open panel first, and toggles itself closed if
-// already open. Uses e.code (physical key position) rather than e.key so it
-// fires the same regardless of the active keyboard layout/language.
-// `capture: true` is needed by charsheet.js's KeyC - the vis.js graph canvas
-// calls stopPropagation() on keydown, so that shortcut must fire during the
-// capture phase (before the canvas sees the event) rather than the default
-// bubble phase, or pressing C while the canvas has focus would do nothing.
+// Use physical key codes across keyboard layouts.
+// Capture before the graph canvas can stop propagation.
 export function registerPanelShortcut(keyCode, { getButton, getOverlay, otherOverlayIds, open, close, extraGuard, capture = false }) {
   document.addEventListener('keydown', e => {
     const tag = e.target.tagName;
@@ -48,13 +32,7 @@ export function registerPanelShortcut(keyCode, { getButton, getOverlay, otherOve
     if (e.code !== keyCode || typing || e.ctrlKey || e.metaKey) return;
     if (extraGuard && !extraGuard()) return;
     const btn = getButton();
-    // display:none covers every other panel trigger (hidden outright when
-    // unavailable); disabled covers #liveread-btn specifically, which stays
-    // visible-but-disabled instead so #play-btns-bar's width doesn't shift
-    // on every book switch - without this check here too, the KeyR shortcut
-    // could still open the panel on a book with no live-reading data, since
-    // it calls open() directly rather than simulating a click the disabled
-    // attribute would actually block.
+    // Reject both hidden and disabled triggers because shortcuts call open() directly.
     if (!btn || btn.style.display === 'none' || btn.disabled) return;
     const overlay = getOverlay();
     if (overlay?.classList.contains('active')) { close(); return; }
@@ -63,12 +41,7 @@ export function registerPanelShortcut(keyCode, { getButton, getOverlay, otherOve
   });
 }
 
-// Image compression - shrinks to fit within maxDim, then JPEG-quality iterates down until <= maxBytes.
-// Best-effort: at the quality floor it returns whatever blob it has rather
-// than giving up, since a slightly-over-budget blob is more useful to a
-// caller than nothing at all - `confirmCrop()` (profile.js) is the one
-// exception that wants a stricter "gave up" signal, and does its own
-// `if (!blob) return;` check for that.
+// Best-effort compression: resize, then lower JPEG quality; return the smallest blob at the floor.
 export function compressToBlob(canvas, maxBytes) {
   return new Promise(resolve => {
     const tryQ = q => {
@@ -107,22 +80,13 @@ export function compressImage(file, maxBytes = 512 * 1024, maxDim = 1200) {
   });
 }
 
-// Add/edit-book cover preview <img> elements were each set via a bare
-// img.src = URL.createObjectURL(blob) on every file pick, with nothing ever
-// calling URL.revokeObjectURL() on the previous one - picking a different
-// cover, or reopening the dialog repeatedly in one session, pinned every
-// blob ever previewed in memory for the rest of the tab's life. Revoke the
-// element's current blob: src (if any) before assigning the new one.
+// Revoke the previous blob URL before replacing a preview to release its memory.
 export function setPreviewImgBlob(img, blob) {
   if (img.src && img.src.startsWith('blob:')) URL.revokeObjectURL(img.src);
   img.src = URL.createObjectURL(blob);
 }
 
-// ── Feedback/inbox attachment upload ──────────────────────────────────────────
-// Used to be two separately-maintained near-identical copies (community/feedback.js's
-// _uploadFile, community/inbox.js's _uploadAttachment) - both used a raw fetch() instead
-// of apiFetch, silently missing the app-wide 401/503 handling every other
-// authenticated call gets.
+// Shared authenticated attachment upload retains session-expiry and maintenance handling.
 
 const _ATTACHMENT_IMG_EXTS = new Set(['.jpg', '.jpeg', '.png', '.gif', '.webp', '.avif']);
 

@@ -80,39 +80,8 @@ body.demo-active #logout-btn {
   margin-bottom: 0.6rem;
   overflow: hidden;
 }
-/* No cover available for this day - show the real currently-live rotating
-   cover as the card's own background, kept in sync via --landing-cover-url
-   (covers.js's _rotateLandingCover()), with the SAME 0.9-alpha overlay a
-   real cover-tile gets (.feed-day-cover-stack::after below), so the two
-   card kinds read identically instead of one looking washed-out next to
-   the other. A card-local copy rather than genuine transparency, on
-   purpose: #landing-bg-dim (landing.css) sits physically between the raw
-   #landing-bg-a/-b layers and anything painted on top of them, so a truly
-   transparent card could only ever show the pre-dimmed (~92% darker)
-   composite, never the raw image a cover-tile gets - no way to skip one
-   fixed layer while still showing another from the same stack. Painting
-   the card's own copy bypasses #landing-bg-dim entirely.
-   Two selectors share this treatment: with covers showing, only the
-   originally cover-less cards (.feed-day-card--glass) need it, to match
-   their real-cover neighbors. With "Show covers in feed" off, NONE of the
-   cards show a real per-day cover any more, so per the combo table below,
-   every card (not just originally-glass ones) gets it instead - that's
-   body.no-feed-day-covers:not(.no-feed-glass-cards) .feed-day-card. Do not
-   collapse these into "just always apply it to .feed-day-card--glass" -
-   with covers off, cards that would have shown a real cover only carry the
-   plain .feed-day-card class, not --glass, so they'd be skipped entirely
-   and mismatch against the ones that do.
-   background-attachment: fixed is required here, not decorative - it's
-   what makes each card act as a window onto the SAME viewport-registered
-   image as the real #landing-bg-a/-b layers behind it, instead of each
-   card painting its own independently-cropped copy (which looked like an
-   opaque patch slapped on the card rather than a transparent window once
-   tried without it - confirmed by seeing it live, not just in theory).
-   This only costs GPU layers while the feed is actually visible with a
-   bounded number of on-screen cards, not indefinitely - the real leak was
-   #landing-bg-a/-b's own 60s rotation timer never stopping while a book
-   was open (fixed separately in boot.js's showMain(), see covers.js's
-   _stopLandingCoverRotation() call there), not this property. */
+/* Paint a viewport-aligned cover copy to bypass the landing dim layer.
+   When day covers are off, apply it to every card, not only cover-less cards. */
 .feed-day-card--glass,
 body.no-feed-day-covers:not(.no-feed-glass-cards) .feed-day-card {
   background-image: var(--landing-cover-url, none);
@@ -120,21 +89,7 @@ body.no-feed-day-covers:not(.no-feed-glass-cards) .feed-day-card {
   background-size: cover;
   background-position: var(--landing-cover-pos, center);
 }
-/* The card's own background-image above swaps to the new cover instantly the
-   moment --landing-cover-url updates (background-image can't be transitioned
-   by the browser), while the real page background behind it crossfades over
-   1.5s (#landing-bg-a/b in landing.css) - so without this, the card visibly
-   "snapped" to the new cover well before the real background caught up.
-   This ::before layer holds the OLD cover at opacity 1 and fades it out over
-   the same 1.5s (covers.js sets --landing-cover-url-prev/-pos-prev and flips
-   --landing-cover-fade 1 -> 0 right after swapping the base image, skipping
-   the crossfade entirely when there's no real previous frame - see
-   _rotateLandingCover()/_stopLandingCoverRotation() for why that matters),
-   so the card reveals its new cover at the same rate the real background
-   does instead of popping in ahead of it. Sits behind .feed-day-content
-   (that has its own z-index:1) and behind the ::after dim overlay below
-   (both z-index: auto, so normal source order already puts ::before under
-   ::after here) - no explicit z-index needed. */
+/* Fade the old cover in ::before at the page crossfade rate; background-image cannot interpolate. */
 body:not(.no-feed-day-covers) .feed-day-card--glass::before,
 body.no-feed-day-covers:not(.no-feed-glass-cards) .feed-day-card::before {
   content: '';
@@ -153,9 +108,7 @@ body.no-feed-day-covers:not(.no-feed-glass-cards) .feed-day-card::after {
   inset: 0;
   background: rgba(31, 41, 55, 0.9);
 }
-/* Stacked cover tiles (one per distinct book played that day, cycled to fill
-   the card) sit behind the content; a flat overlay on top keeps text legible
-   regardless of how bright/busy the covers are. */
+/* Stack cover tiles behind a legibility overlay. */
 .feed-day-cover-stack {
   position: absolute;
   inset: 0;
@@ -167,9 +120,7 @@ body.no-feed-day-covers:not(.no-feed-glass-cards) .feed-day-card::after {
   background: rgba(31,41,55,0.9);
 }
 .feed-day-cover-tile {
-  /* left/width/top/height are set per-tile inline in feed.js - each tile's
-     box is sized to its own cover's aspect ratio, so 100% 100% here never
-     stretches or crops it. */
+  /* Each tile's inline box already matches its cover aspect ratio. */
   position: absolute;
   background-size: 100% 100%;
   background-position: center;
@@ -180,13 +131,7 @@ body.no-feed-day-covers:not(.no-feed-glass-cards) .feed-day-card::after {
   z-index: 1;
 }
 body.no-feed-day-covers .feed-day-cover-stack { display: none !important; }
-/* Two independent toggles, four combinations:
-   - covers on,  glass on  (default): covers show normally; cover-less days get the glass tint above.
-   - covers on,  glass off: covers show normally; cover-less days fall back to the flat opaque card.
-   - covers off, glass on:  no covers shown at all, but EVERY day card (not just cover-less ones)
-     gets the glass tint, since there's nothing left to distinguish a "would-have-had-a-cover" day
-     from any other once covers are off entirely.
-   - covers off, glass off: everything flat, same as the feature never existed. */
+/* Covers/glass are independent: glass applies to cover-less days, or every day when covers are off. */
 body.no-feed-glass-cards .feed-day-card--glass { background-color: #1f2937 !important; background-image: none !important; }
 body.no-feed-glass-cards .feed-day-card--glass::after { display: none !important; }
 body.no-feed-glass-cards .feed-day-card--glass::before { display: none !important; }
@@ -249,23 +194,14 @@ body.no-feed-glass-cards .feed-day-card--glass::before { display: none !importan
   letter-spacing: 0.03em;
 }
 
-/* Reuses .star-rating's colors/half-star gradient (public-profile.css) but this
-   one is read-only (someone else's rating shown in the feed, not a widget you
-   click), so it drops the pointer cursor and the block-level margin, and scales
-   down to sit inline with the rest of a feed line's text instead of a book/series
-   card's larger rating row. */
+/* Read-only inline feed rating; reuse star colors without widget spacing or cursors. */
 .feed-rating-stars.star-rating {
   cursor: default;
   margin-top: 0;
   vertical-align: middle;
 }
 .feed-rating-stars .star { font-size: 0.8rem; }
-/* Matches .feed-entry--rated's highlight color (console/terminal green) instead of
-   the star widget's usual amber - ties the feed's rating entries to their own
-   highlight rather than the amber used everywhere else a rating is shown (book
-   list, series card, etc). Extra .star-rating in the selector (not just
-   .feed-rating-stars) is needed to out-specify public-profile.css's own
-   .star-rating .star.on/.half rules regardless of which stylesheet loads second. */
+/* Override star selectors regardless of stylesheet order to use the rating event's green highlight. */
 .star-rating.feed-rating-stars .star.on { color: #33cc33; }
 .star-rating.feed-rating-stars .star.half {
   background: linear-gradient(90deg, #33cc33 50%, #374151 50%);
@@ -290,16 +226,7 @@ body.no-feed-glass-cards .feed-day-card--glass::before { display: none !importan
   color: #4b5563;
 }
 
-/* A functional loading indicator, not decorative, so deliberately not
-   gated behind body.reduce-motion (same exemption as liveread.js's own
-   reuse of this markup, and mobile's own .m-spinner). Only shown while
-   #feed-content is
-   genuinely empty (first load, or a previous load that errored) - a
-   background refresh with existing entries already on screen swaps them in
-   directly, no flash back to a spinner. Plain sans-serif, not italic - the
-   generic .liveread-loading style this was first copied from used italic,
-   but on this panel's own font/size it just read as a mistake, not intentional
-   styling. */
+/* Animate only initial loading, never failed requests or populated background refreshes. */
 .feed-loading {
   display: flex;
   flex-direction: column;
@@ -310,10 +237,7 @@ body.no-feed-glass-cards .feed-day-card--glass::before { display: none !importan
   font-size: 0.85rem;
 }
 
-/* The same center-node-plus-4-children graph as favicon.svg (this app's
-   actual subject is mapping a gamebook's own choice graph), not an
-   unrelated book/spinner icon - plain SVG circles/lines, animated with
-   opacity+scale only, no skew/rotate/3D of any kind to get wrong. */
+/* Choice-graph loading indicator; animate opacity and scale only. */
 .feed-loading-graph {
   width: 34px;
   height: 34px;
@@ -331,28 +255,13 @@ body.no-feed-glass-cards .feed-day-card--glass::before { display: none !importan
   0%, 100% { transform: scale(1);    opacity: 1; }
   50%      { transform: scale(1.15); opacity: 0.75; }
 }
-/* Each child node gets its own keyframes (not one shared animation with a
-   staggered delay, like an earlier version of this used) because a shared
-   delay only shifts WHEN a node's own identical blink happens - it can't
-   produce a genuine group build-up/tear-down, where all four need to
-   still be visible together for one shared dwell window before any of
-   them starts disappearing. Order is clockwise starting top-left (n1
-   top-left, n2 top-right, n4 bottom-right, n3 bottom-left - n3/n4's SVG
-   markup order is top-left-then-bottom-left/bottom-right, i.e. NOT
-   clockwise, so the keyframe assignment below deliberately doesn't match
-   the n1/n2/n3/n4 numbering straight down) - the same FIFO order for
-   disappearing as appearing, not reversed. Each node's own timeline is
-   just the previous one's shifted later by one step, popping in with a
-   brief overshoot (scale 0->1.15->1) and fading out the same way in
-   reverse. */
+/* Separate timelines let all nodes share a dwell period.
+   Clockwise order is n1, n2, n4, n3 for both appearance and disappearance. */
 .flg-n1 { animation: flg-n1-cycle 2.2s ease-in-out infinite; }
 .flg-n2 { animation: flg-n2-cycle 2.2s ease-in-out infinite; }
 .flg-n4 { animation: flg-n3-cycle 2.2s ease-in-out infinite; }
 .flg-n3 { animation: flg-n4-cycle 2.2s ease-in-out infinite; }
-/* Wider transition windows (~7-10% of the cycle, not the ~4% this used to
-   be) and a bigger scale range (0.3 -> 1.3 overshoot -> 1, not 0.5 -> 1.15)
-   so growing in and shrinking out both read as real motion rather than a
-   near-instant snap. */
+/* Longer transition windows make growth and shrinkage visible. */
 @keyframes flg-n1-cycle {
   0%       { opacity: 0; transform: scale(0.3); }
   7%       { opacity: 1; transform: scale(1.3); }
@@ -524,4 +433,3 @@ body.no-feed-glass-cards .feed-day-card--glass::before { display: none !importan
 #landing-right::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
 #landing-right::-webkit-scrollbar-thumb:hover { background: #4b5563; }
 body.right-collapsed #landing-right { transform: translateX(var(--landing-panel-w)); border-left: none; }
-

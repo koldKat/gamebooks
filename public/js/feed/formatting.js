@@ -1,9 +1,7 @@
 import { escapeHtml } from '../core/util.js';
 import { t } from '../i18n.js';
 
-// A cheap plain-text run preview for the feed's own won/lost/battle-death
-// links, same idea (and same i18n keys) as the one on the public-profile run
-// list - not the full vis-network run graph, which is only built on click.
+// Build lightweight run-preview tooltips; create the graph only on click.
 export function _runTooltip(e) {
   const parts = [];
   if (e.pathLength) parts.push(t('pub.run_tooltip_sections', { n: e.pathLength, s: e.pathLength === 1 ? '' : 's' }));
@@ -12,18 +10,12 @@ export function _runTooltip(e) {
   return parts.join(' · ');
 }
 
-// Negative runIndex = a preSeriesRuns entry (see getFeed() in server/db/feed.js),
-// displayed as "run -N" matching play.js's own convention - no +1 offset for
-// those, only genuine playthroughs indices (always >= 0) get the +1.
+// Negative pre-series run indices display unchanged; non-negative indices display +1.
 export function _runN(runIndex) {
   return runIndex < 0 ? runIndex : runIndex + 1;
 }
 
-// first_win/first_loss/first_battle_death share this - "series run N" when the
-// completion happened as part of an open-world series run (isSeriesRun, set
-// server-side from whether the underlying win_run/death_run/battle_run ref
-// was series-scoped), plain "run N" otherwise - matches the wording already
-// used for series_run_started/series_run_completed elsewhere in the feed.
+// Use series-run wording only when the server marks the achievement as series-scoped.
 export function _firstResultRunLabel(e) {
   if (e.runIndex == null) return '';
   const word = e.isSeriesRun ? t('feed.series_run_word') : t('feed.run_word');
@@ -41,13 +33,7 @@ const ANN_COLORS = {
   teal: '#2dd4bf', blue: '#60a5fa', purple: '#a78bfa', pink: '#f472b6',
 };
 
-// [Label](/book/123) or [Label](/series/45) is a relative in-app link, not a
-// hardcoded absolute domain (this app is served from several domains -
-// koldkat.net, pathmap.net, bookplay.net, etc. - a baked-in domain would
-// resolve on the wrong one). Rendered without target=_blank; the
-// click-interceptor below already resolves it to the current origin
-// correctly since it's relative. Genuine external https:// links are
-// untouched and still open in a new tab.
+// Keep in-app links relative to the current origin; external links still open in a new tab.
 export function formatAnnBody(str) {
   return escapeHtml(str)
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')

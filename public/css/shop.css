@@ -266,8 +266,7 @@
   white-space: nowrap;
 }
 
-/* Admin-only "avg user level" widget - same shape again, teal/lime this time so
-   all three bars (yours, app-wide, avg-user) read as visually distinct. */
+/* Average-player-level widget uses a distinct palette. */
 #avg-lvl-summary {
   display: flex;
   flex-direction: column;
@@ -362,11 +361,7 @@
   background: transparent;
   color: #9ca3af;
   border: 1px solid #6b7280;
-  /* flex: 1 1 auto (not a margin push) - grows this one button's own width
-     to close the gap between the row and the .book-item rows' right edge
-     below, while staying directly adjacent to the other 3 (normal gap, no
-     isolating empty space). flex-basis: auto means it only ever grows from
-     its natural content size, never shrinks below it. */
+  /* Grow from natural label width to fill the row without separating adjacent buttons. */
   flex: 1 1 auto;
   text-align: center;
 }
@@ -375,14 +370,7 @@
   color: #d1d5db;
   border-color: #9ca3af;
 }
-/* Below 768px (this app's own mobile breakpoint, matches _isMobile() in
-   books.js/covers.js/boot.js) the 4 buttons' natural widths don't fit one
-   row - .books-add-actions' flex-wrap:wrap then drops #open-add-stash-btn
-   to a line of its own, where its flex:1 1 auto grow (meant to close the
-   gap on desktop's wide single row) stretches it to fill that entire line
-   by itself. Forcing nowrap and giving every button (stash included) an
-   equal flex:1 1 0 keeps all 4 on one row, evenly sized/spaced to fill the
-   row's full width, instead of wrapping or staying left-packed. */
+/* Use equal non-wrapping buttons at the mobile breakpoint to avoid a full-width stash-only row. */
 @media (max-width: 768px) {
   .books-add-actions {
     flex-wrap: nowrap;

@@ -77,9 +77,7 @@ export async function apiFetch(urlPath, options = {}) {
     throw new Error('Maintenance');
   }
   if (res.status === 401) {
-    // Guests have no session to expire - a 401 for them just means "login
-    // required", which the caller handles (or swallows). Only a request
-    // that actually carried a token represents an expired/invalid session.
+    // Only token-bearing 401s expire sessions; guest 401s mean login is required.
     if (token) {
       clearToken();
       clearUsername();
@@ -94,9 +92,7 @@ export async function apiFetch(urlPath, options = {}) {
 
 export function isTerminal(sec) { return sec === -1 || sec === 0; }
 
-// Convert raw input / graph key to a canonical section ID.
-// Pure positive integers  → Number.  Alphanumeric strings → trimmed String.
-// "-1" / "0" (and their number forms) → Number sentinel.
+// Normalize positive integers/sentinels to numbers and alphanumeric IDs to trimmed strings.
 export function parseSecId(raw) {
   if (raw === null || raw === undefined) return null;
   const s = String(raw).trim();
@@ -127,10 +123,7 @@ export function currentSection() {
   return (pt && pt.path.length) ? pt.path[pt.path.length - 1] : null;
 }
 
-// Generic forms of allDiscoveredSections()/mappedCount() below, parameterized so they
-// can also be run against a book's state fetched independently of the live `state`
-// singleton (e.g. editing a book from the books list without opening it) - see
-// discoveredSectionsFor/mappedCountFor.
+// Parameterized progress helpers also support books outside the active state singleton.
 export function allDiscoveredSections() {
   return discoveredSectionsFor(state.graph, state.playthroughs, state.startSection);
 }
@@ -141,15 +134,7 @@ export function discoveredSectionsFor(graph, playthroughs, startSection) {
   Object.entries(graph || {}).forEach(([sec, data]) => {
     const s = parseSecId(sec);
     if (s !== null && !isTerminal(s)) set.add(s);
-    // parseSecId() first, then isTerminal() on the parsed value - a choices
-    // array entry isn't guaranteed to already be a number the way a graph
-    // key already is above. Checking isTerminal() on the raw value would
-    // miss a string-typed "-1"/"0" sentinel (isTerminal does a strict ===
-    // against the number forms), and skipping parseSecId entirely would let
-    // a numeric-looking string section (e.g. "88") into this Set alongside
-    // its already-number-typed twin from elsewhere, as two separate entries
-    // for what's really one section - every consumer of this Set (mobile's
-    // graph-view.js among them) has to treat them as one and the same.
+    // Normalize IDs before terminal checks and deduplication; numeric strings must match numbers.
     (data.choices || []).forEach(c => {
       const cid = parseSecId(c);
       if (cid !== null && !isTerminal(cid)) set.add(cid);
@@ -169,23 +154,13 @@ export function mappedCount() {
 export function mappedCountFor(graph) {
   return Object.keys(graph || {})
     .map(parseSecId)
-    // A section whose only way forward is a portal has nothing to record as a
-    // choice (portals live in node.portals[], separate from node.choices[]) -
-    // without the portals check it would sit as "discovered only" forever,
-    // even though it's been fully visited and explored.
+    // Portal-only sections are mapped even without ordinary choices.
     .filter(s => isValidSecId(s) && (!graph[s]?.discovered || graph[s].choices.length > 0 || graph[s].portals?.length > 0))
     .length;
 }
 
-// Single-node version of mappedCountFor's own predicate - "mapped" (purple
-// in the legend/nodeColor) means the player has actually read this
-// section's own text at some point, in any run ever, not just the one
-// currently active/displayed (state.graph is account-wide, not per-run).
-// Used to gate letting a reader tap/click a graph node to preview its text
-// - a node that's merely known-as-a-destination but never actually visited
-// (grey/"Discovered") must not be previewable, or a player could read
-// ahead just by touching the map. Shared by desktop (liveread.js) and
-// mobile (reader.js) so the two can't drift on what counts as "visited".
+// Only mapped sections may be previewed; knowing a destination must not reveal unread text.
+// Share this predicate across desktop and mobile.
 export function isSectionMapped(secId) {
   const node = state.graph[secId];
   return !!node && (!node.discovered || (node.choices || []).length > 0 || (node.portals || []).length > 0);
@@ -201,14 +176,7 @@ export function setDemoState(id, data) { _demoStateStore[id] = data; }
 export function getDemoState(id)       { return _demoStateStore[id] || null; }
 export function clearDemoStore()       { _demoStateStore = {}; }
 
-// ── Persistence ───────────────────────────────────────────────────────────────
-
-// Fire-and-forget: returns a Promise but callers need not await it.
-// Saves are serialized: if one is already in flight, this call is queued and
-// re-issued (with whatever `state` looks like by then) once it finishes.
-// Without this, two overlapping saves can complete out of order and the
-// slower one (holding an older snapshot) would overwrite the newer one on
-// the server, silently reverting edits like renames/notes/quantities.
+// Serialize saves so an older response cannot overwrite newer state.
 let _saveInFlight = null;
 let _saveQueued   = false;
 
@@ -241,9 +209,7 @@ export function saveState() {
   return _saveInFlight;
 }
 
-// Resolves true only once the server has actually confirmed the reset (or, in demo
-// mode, once the local demo store has been overwritten) - callers must check this
-// before touching the graph/UI, rather than assuming the reset succeeded.
+// Return true only after reset succeeds; callers must check before changing the graph/UI.
 export function resetBookProgress() {
   if (isDemoMode) {
     if (!currentBookId) return Promise.resolve(false);
@@ -305,7 +271,7 @@ export async function loadState(bookId) {
     data.choices = data.choices.filter(c => c !== id);
   });
 
-  // Migrate: -1/0 used to be pushed onto paths - move them to result instead
+  // Move legacy terminal path entries into result.
   state.playthroughs.forEach(pt => {
     const last = pt.path[pt.path.length - 1];
     if (isTerminal(last)) {
@@ -314,14 +280,7 @@ export async function loadState(bookId) {
         pt.completed = true;
         pt.result    = last === 0 ? 'success' : 'death';
       }
-      // Only for a run actually going through this migration (had a terminal
-      // sentinel as its only path entry) - was unconditional on ANY empty path,
-      // which ran on every single load of every book and stamped path: [1] onto
-      // every never-played open-world series-run placeholder (startedAt: null)
-      // the instant that book was merely opened, regardless of whether anyone
-      // touched it. That single line was the real root cause behind every
-      // "phantom placeholder looks touched" bug found this session - not the
-      // other, narrower ones already patched.
+      // Repair only terminal-ending migrations; untouched open-world placeholder paths must stay empty.
       if (!pt.path.length) pt.path = [1];
     }
   });

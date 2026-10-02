@@ -1,47 +1,6 @@
-// ── Battle Simulator (Вампирите на Флавия: Вкусът на кръвта, book 696) ───────
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 696 only) by the caller in boot.js via
-// setSim696Visible().
-// To remove: delete this file, remove its import line and initSim696()/
-// setSim696Visible() calls from boot.js, remove 'sim696' from
-// SIM_HISTORY_KEYS in server/db/xp.js, remove 'sim696-overlay' from
-// ALL_PANEL_OVERLAY_IDS in util.js and the #sim696-btn selectors in
-// battlesim.css.
-//
-// This book has its own fully-specified combat system, transcribed
-// directly from the book's own "СИТУАЦИИ / Обикновена схватка" (ordinary
-// combat) rules section (also present as the frontmatter's own
-// character-sheet stat block: Сила/Бързина/Издръжливост/Рефлекс,
-// Наблюдателност/Съобразителност/Вяра, Атака/Защита/Ловкост, Живот):
-//   1. Strike value  = Шанс + Сила + Атака (attacker's roll + Strength + Attack)
-//   2. Defense value = Шанс + Рефлекс + Защита (defender's roll + Reflex + Defense)
-//   3. If Defense > Strike: the blow fails and the defender becomes the
-//      attacker for the next exchange (no damage).
-//      If Defense is between Strike and Strike-2 (inclusive): minor damage.
-//      If Defense < Strike-2: major damage.
-//   4. Minor damage = Strike - (Шанс + Издръжливост); Major damage =
-//      Strike - Издръжливост. Damage is subtracted from Живот (Life/HP).
-//   5. The loser of that exchange defends next; roles alternate every
-//      round this way (the book's own "Ответен удар: към 2" - "counter-
-//      strike: to step 2").
-// "Шанс" (Chance) is a per-roll random value the book uses throughout
-// (e.g. "трикратен шанс" = "triple Chance" elsewhere in the text) but
-// never explicitly states the die size anywhere in the extractable
-// text - this sim assumes 1d6, matching every other book in this app's
-// die convention, and this is flagged here rather than silently assumed:
-// if actual play shows otherwise, only _rollChance() needs to change.
-// Weapon Атака/Защита/Боравене add to the wielder's own ratings per the
-// book's own "ИЗПОЛЗВАНЕ НА ОРЪЖИЯ" rule (Боравене is not modeled here,
-// it only matters for the book's multi-opponent turn-order rule, which
-// this sim doesn't simulate - it's a single-opponent duel convenience,
-// matching every other sim in this app).
-//
-// 18 creatures from the book's own "КАТАЛОГ НА СЪЩЕСТВАТА" seeded into
-// book_enemies (attack=Атака, defense=Защита, hp=Живот, pb=Издръжливост -
-// Сила/Бързина/Рефлекс aren't in the 4-column schema and default to 0,
-// editable by hand from the same catalog if needed for a specific fight).
-//
-// All state lives in pt.sim696, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Вампирите на Флавия: Вкусът на кръвта, book 696)
+// Strike uses Chance+Strength+Attack; defense uses Chance+Reflex+Defense.
+// Resolve minor/major damage separately; turn changes follow the source's exchange rules.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -132,10 +91,7 @@ function _runRound() {
     _appendLog(d, `${SVG_SKULL} ${t('battlesim696.log.fallen')}`);
     _recordOutcome(d, 'loss');
   } else {
-    // "Ответен удар: към 2" - the loser of this exchange defends next,
-    // i.e. roles swap unless the blow failed outright (attacker keeps
-    // trying, per the book's own step 3.1 sending failed blows back to
-    // step 2 with the same attacker).
+    // Swap attack/defense after a resolved exchange; failed blows leave the same attacker trying again.
     if (defense <= strike) d.attackerIsPlayer = !d.attackerIsPlayer;
   }
 

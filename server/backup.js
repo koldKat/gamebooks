@@ -27,12 +27,7 @@ async function runBackup() {
       execFile('zip', ['-j', zip, snap], err => (err ? reject(err) : resolve()))
     );
   } finally {
-    // Always clean up the raw snapshot, even if zipping failed - a transient
-    // zip failure (e.g. disk pressure, the likeliest cause) used to leave a
-    // junk .sqlite file behind, which only makes a disk-pressure problem
-    // worse on every subsequent failed hourly attempt. The error itself still
-    // propagates after this (finally doesn't swallow it), so start()'s
-    // console.error still logs the failure.
+    // Remove raw snapshots even when compression fails; propagate the error.
     try { fs.unlinkSync(snap); } catch (_) {}
   }
 

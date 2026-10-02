@@ -1,14 +1,5 @@
-// ── Custom confirm/alert dialog ─────────────────────────────────────────────
-// Self-contained module. Imports only i18n.js. Extracted out of play.js so it
-// can be imported without dragging in play.js's own heavy tree (graph.js,
-// charsheet.js, equipment.js) - battlesim*.js files and the mobile reader
-// both want just this, not all of play.js.
-//
-// Desktop's index.html already has static #confirm-overlay markup + matching
-// CSS (confirm.css) - reused as-is there, so desktop's behavior is byte-for-
-// byte identical to before this file existed. Any other page (mobile) that
-// doesn't have that markup gets an equivalent overlay built on first use,
-// with the same ids/classes, so confirm.css styles it the same way.
+// Lightweight confirm/alert dialogs shared by desktop and mobile.
+// Reuse desktop markup; build equivalent markup lazily on pages without it.
 
 import { t } from '../i18n.js';
 

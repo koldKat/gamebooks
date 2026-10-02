@@ -11,18 +11,9 @@ import { bindBookActions } from './book-actions.js';
 
 export function openEditBookModal({ bookId, initialName, initialSections, initialIsbn = '', initialIssn = '', initialAsin = '', initialCoverUrl = null, initialPdfPath = null, initialPdfSize = null, initialPages = '', initialAuthors = '', initialDescription = '', initialDiscoverableSections = null, showDiscoverableSections = false, discoverableHint = 0, minSections = 1, initialIsPublic = false, initialSeriesName = '', initialSeriesNumber = '', initialIsContainer = false, initialParentBookId = null, initialBookOrder = null, onSave }) {
   ++editState._bookSession;
-  // Reachable from a book's public detail dialog (covers.js), which can now
-  // stay open on top of the forum instead of closing it - but #edit-book-
-  // modal-overlay's own z-index (2000) sits below the forum's (3000), so it
-  // would render invisibly behind an open forum. Editing a book is a real
-  // "leaving the quick-look" action, same reasoning as navigateToBook.
+  // Close the forum before opening an editor so it cannot cover the edit dialog.
   document.getElementById('forum-modal-overlay')?.classList.remove('active');
-  // The public modal itself stays open underneath (Cancel/Save should land
-  // back on it) rather than being closed here, but if it was opened from the
-  // forum its own z-index is temporarily bumped to 3001 to clear the forum -
-  // now that the forum's closed, that override would otherwise still sit
-  // above this modal's 2000. Reset it directly rather than through
-  // closePublicModal(), which would also wipe the dialog's content/state.
+  // Reset the public dialog's temporary z-index without clearing its content.
   const pubOverlay = document.getElementById('public-modal-overlay');
   if (pubOverlay) pubOverlay.style.zIndex = '';
   editState._editBookId       = bookId;
@@ -92,10 +83,7 @@ export function openEditBookModal({ bookId, initialName, initialSections, initia
   if (!initialIsContainer) _renderAlsoAppearsIn(bookId, initialParentBookId);
   if (!editState._alsoAppearsAddWired) {
     editState._alsoAppearsAddWired = true;
-    // Wired once (not per modal-open, unlike _syncChildUi's own listener below)
-    // to avoid stacking a new closure-captured bookId onto this persistent
-    // input every time the modal reopens for a different book - reads
-    // editState._editBookId live instead, same pattern as the Add button just below.
+    // Wire once and read the current edit ID, rather than retaining a book ID from each open.
     _parentInput.addEventListener('change', () => {
       _renderAlsoAppearsIn(editState._editBookId, _parentInput.value ? +_parentInput.value : null);
     });

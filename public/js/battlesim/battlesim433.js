@@ -1,44 +1,6 @@
-// ── Battle Simulator (Сянка върху пясъка, book 433, Lone Wolf #5) ───────────
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 433 only) by the caller in boot.js via
-// setSim433Visible().
-// To remove: delete this file, remove its import line and initSim433()/
-// setSim433Visible() calls from boot.js, remove 'sim433' from
-// SIM_HISTORY_KEYS in server/db/xp.js, remove 'sim433-overlay' from
-// ALL_PANEL_OVERLAY_IDS in util.js and the #sim433-btn selectors in
-// battlesim.css.
-//
-// This is a Lone Wolf book, NOT Fighting Fantasy - it uses a completely
-// different combat system: no opposed dice rolls at all. Combat Ratio
-// (player COMBAT SKILL minus enemy COMBAT SKILL, БОЙНО УМЕНИЕ) is looked
-// up against a random number (0-9, drawn from the book's own Random
-// Number Table - equivalent to a d10 with one face reading 0) in a fixed
-// Combat Results Table (COMBAT RATIO columns x RANDOM NUMBER rows) that
-// gives simultaneous ENDURANCE (ИЗДРЪЖЛИВОСТ) loss for both sides each
-// round - there's no separate "hit or miss" step, every round both
-// combatants lose points (sometimes 0) and one column edge (Combat
-// Ratio <= -11 low rolls, or a beaten enemy at Ratio >= +11) can mean an
-// instant kill. The CRT below was transcribed directly from this book's
-// own two-page table (pp. 215-216 of the source PDF), not from memory or
-// another book, since this exact grid is what every Lone Wolf combat
-// round actually uses.
-//
-// There is no LUCK stat in Lone Wolf. Two optional flat bonuses are
-// offered as checkboxes instead of being baked into a stat: Weapon Skill
-// (+2 COMBAT SKILL, matching the "Боравене с оръжие" Kai Discipline) and
-// Mind Blast (+2 COMBAT SKILL, "Мозъчен взрив" Kai Discipline - not all
-// enemies are vulnerable to it per the book's own text, so this is a
-// manual toggle rather than something looked up per enemy). Starting
-// stats: COMBAT SKILL = random(0-9)+10, ENDURANCE = random(0-9)+20, per
-// the book's own character-generation rules. Healing models the book's
-// one starting Laumspur Potion (+4 ENDURANCE, single use after a fight,
-// per the book's own text) rather than a repeatable Provisions system,
-// since this book doesn't have one.
-//
-// 34 enemy stat blocks (БОЙНО УМЕНИЕ/ИЗДРЪЖЛИВОСТ pairs) seeded into
-// book_enemies from a full-book scan.
-//
-// All state lives in pt.sim433, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Сянка върху пясъка, book 433, Lone Wolf #5)
+// Combat Ratio is fixed on enemy selection; a 0-9 pick selects simultaneous table losses.
+// 'K' means instant death. Skill bonuses and narrative effects are entered manually.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -51,11 +13,8 @@ const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" ari
 
 const LAUMSPUR_HEAL = 4;
 
-// Combat Results Table, transcribed from the book's own two-page grid.
-// Rows indexed by random number 0-9. Columns are Combat Ratio buckets:
-// 0: <=-11, 1: -10/-9, 2: -8/-7, 3: -6/-5, 4: -4/-3, 5: -2/-1, 6: 0,
-// 7: 1/2, 8: 3/4, 9: 5/6, 10: 7/8, 11: 9/10, 12: >=11.
-// Each cell is [enemyLoss, selfLoss]; 'K' means an instant kill.
+// Rows use random 0-9; columns use ratio buckets <=-11 through >=11.
+// Cells are [enemyLoss,selfLoss]; K means instant death.
 const CRT = [
   /* 0 */ [[6,0],[7,0],[8,0],[9,0],[10,0],[11,0],[12,0],[14,0],[16,0],[18,0],['K',0],['K',0],['K',0]],
   /* 1 */ [[0,'K'],[0,'K'],[0,8],[0,6],[1,6],[2,5],[3,5],[4,5],[5,4],[6,4],[7,4],[8,3],[9,3]],

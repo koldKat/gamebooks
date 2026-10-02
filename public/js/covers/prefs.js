@@ -53,11 +53,7 @@ export function _applyFeedDayCoversPref() {
 export function _persistFeedDayCoversPref() {
   localStorage.setItem('feed-day-covers', coversState._feedDayCovers ? '1' : '0');
   _applyFeedDayCoversPref();
-  // Turning covers back on just removes the CSS class - it doesn't populate
-  // the cover-stack divs, since _applyDayCoverFlows() skips loading images
-  // entirely while the toggle is off (no point fetching covers just to hide
-  // them). So flipping it back on needs an explicit refresh, or the stacks
-  // stay empty shells until the next full feed reload.
+  // Repopulate cover stacks when re-enabling covers; hidden stacks were never loaded.
   coversState._hooks.refreshDayCovers?.();
   if (getToken() && !isDemoMode) {
     coversState._hooks.savePrefs?.({ feedDayCovers: coversState._feedDayCovers ? '1' : '0' });
@@ -78,14 +74,7 @@ export function _persistFeedGlassCardsPref() {
   }
 }
 
-// Called far more often than just the Ctrl+X toggle itself - also runs
-// every time prefs are (re)applied (setCoversPrefsState(), e.g. from
-// syncPrefs() on every showBooks()/showLogin()), regardless of whether
-// coversState._landingBgHidden actually changed. Only touch layer opacity when actually
-// hiding; showing/un-hiding must never blindly clear it back to '' (which
-// falls through to landing.css's default opacity: 0 and wipes out whichever
-// layer _rotateLandingCover() currently has visible at opacity: 1) - it
-// just ensures the rotation is running, which is a no-op if it already is.
+// Showing the background must not clear existing layer opacity; only ensure rotation is running.
 export function _applyLandingBgHiddenPref() {
   if (coversState._landingBgHidden) {
     ['a', 'b'].forEach(l => {
@@ -122,9 +111,7 @@ export function _applyLandingCoverSourcePrefs() {
 export function _persistLandingCoverSourcePref() {
   _applyLandingCoverSourcePrefs();
   if (getToken() && !isDemoMode) coversState._hooks.savePrefs?.({ landingCoverSource: coversState._landingCoverSource });
-  // Explicit settings change (switching public vs. own-library covers), not
-  // routine navigation - show the new pool right away rather than leaving
-  // the old source's cover up until the next 60s tick.
+  // Apply source changes immediately, without waiting for the rotation timer.
   _resetLandingCoverQueue();
   _startLandingCoverRotation();
   _rotateLandingCover();
@@ -140,13 +127,7 @@ export function _toggleCoverTooltipSettings(open) {
   overlay.classList.toggle('active', shouldOpen);
 }
 
-// Logged-out visitors have no UI to control the feed's cover/glass toggles -
-// covers should always show for them, regardless of what a previously
-// logged-in session on this browser had turned off. setCoversPrefsState({})
-// (called on logout) can't clear these itself since it only touches a key
-// when it's present in the object, so this exists specifically to force the
-// true logged-out default instead of silently carrying over whatever the
-// last logged-in user had set.
+// Restore guest cover/glass defaults instead of inheriting the previous account's preferences.
 export function resetFeedDisplayPrefsForLogout() {
   coversState._feedDayCovers = true;
   coversState._feedGlassCards = true;

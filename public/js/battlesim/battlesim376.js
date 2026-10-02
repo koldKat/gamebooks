@@ -1,74 +1,7 @@
-// ── Battle Simulator (Властелин! / The Overlord, book 376, Way of the Tiger 3) ──
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 376 only) by the caller in boot.js via
-// setSim376Visible().
-// To remove: delete this file, remove its import line and initSim376()/
-// setSim376Visible() calls from boot.js, remove 'sim376' from
-// SIM_HISTORY_KEYS in server/db/xp.js, and remove the .bsim-* CSS (shared
-// with the other battlesim*.js files, so only remove it if all are gone).
-//
-// Same series-wide combat system as books 370/375 (three independent
-// technique scores - удар с ръка/Hand, удар с крак/Kick, хвърляне/Throw,
-// plus Shuriken-jutsu as a separate ranged option with its own 5-count
-// resource). This book (book 3) also prints no rules recap of its own -
-// opens directly into story at §1, same as book 375 - confirmed identical
-// mechanic from this book's own ~20 in-story stat blocks ("[NAME] Защита
-// срещу [техника] «[име]»: N Издръжливост: N Щети: N зар[+N]"), matching
-// books 370/375's format exactly.
-//
-// Full enemy roster (10 rows, read from all 20 stat-block-bearing sections
-// of 420 total):
-//   - Върховен жрец на сенките (§6/18/30, three branches of one fight):
-//     End 15, Def Hand(«ухапване на кобра»)=7, Kick(«двузъба мълния»)=7,
-//     Throw(«тигрови зъби»)=7, dmg 1d+1.
-//   - Първи/Втори телохранител (§50/66/114, twin bodyguards fought
-//     simultaneously, same shape as book 375's Battle Dogs - if both are
-//     alive the player's Defense drops to 6 and only one enemy attack can
-//     be blocked per round; if only one remains, Defense rises to 8):
-//     First - End 9, Def Hand=6/Kick=7/Throw=5, dmg 1d+2.
-//     Second - End 8, Def Hand=7/Kick=6/Throw=6, dmg 1d+2.
-//   - Нинджа страж (§52/64/76, three branches of one fight): End 13,
-//     Def Hand(«ухапване на кобра»)=8, Kick(«крилат кон»)=8,
-//     Throw(«драконова опашка»)=7, dmg 1d+1.
-//   - Жрец на Немезида (§104/116/128): End 11, Def Hand(«тигрова лапа»)=8,
-//     Kick(«тигров скок»)=7, dmg 1d+1. Throw is NOT a normal attack option
-//     against this enemy - §128 is a scripted magical interrupt (the throw
-//     attempt always fails, costing a flat 2 Издръжливост, no roll of any
-//     kind) rather than a Defense-gated hit/miss. Left at Def Throw=0
-//     (unused field, matching how other sims leave inapplicable technique
-//     fields at their default) with this quirk documented here instead of
-//     modeled numerically.
-//   - Нинджа с кусаригама (§268, one Kick branch only): End 14,
-//     Def Kick(«двузъба мълния»)=8, dmg 1d+1. The Throw option («тигрови
-//     зъби», §280) is a scripted instant win with no roll at all (the enemy
-//     dies outright from the throw), not a normal Defense-gated attack -
-//     same reasoning as the Nemesis Priest's Throw quirk above, left
-//     unmodeled rather than forced into the roll-based shape.
-//   - Рогат циклоп (§250/262, →§298): End 19, Def Kick(«тигров скок»)=7,
-//     Hand(«железен юмрук»)=6, dmg 2 dice.
-//   - Рогат циклоп (втора среща) (§322/334, →§70 - same displayed name,
-//     a second distinct encounter later in the story with a different
-//     damage formula and a different-named Kick move, so kept as its own
-//     book_enemies row rather than merged): End 19, Def Kick(«двузъба
-//     мълния»)=7, Hand(«железен юмрук»)=6, dmg 1d+3.
-//   - Дяволско чудовище (§314/324/338, three branches of one fight): End 14,
-//     Def Kick(«двузъба мълния»)=8, Throw(«водовъртеж»)=6,
-//     Hand(саблен удар «тигрова лапа»)=7, dmg 1d+3.
-//   - Оживял скелет (§354, one Kick branch only, rules text says "Повтори
-//     горната битка" - repeat the battle above - so no other technique is
-//     ever offered): End 10, Def Kick(«крилат кон»)=6, dmg 1d+1.
-//
-// No Inner-Force/Fate/Block-mechanic differences found from books 370/375 -
-// the combat math implemented below is unchanged from those two sims.
-//
-// book_enemies column reuse, same convention as books 370/375: hp =
-// Издръжливост; attack = a representative starting Defense value
-// (autocomplete-fill default only, this book's enemies are fought via
-// different named techniques on different branches, each with its own
-// Defense - every Defense field must still be re-entered per encounter from
-// the section text); pb/defense = the enemy's damage dice count / flat bonus.
-//
-// All state lives in pt.sim376, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Властелин! / The Overlord, book 376, Way of the Tiger 3)
+// Way of the Tiger: roll 2d6 + technique against its encounter-specific defense.
+// Track hand/kick/throw independently; shuriken, blocks, and Inner Force use their own rules.
+// Narrative and unsupported encounter exceptions remain manual.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';

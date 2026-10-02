@@ -1,84 +1,8 @@
-// ── Battle Simulator (House of Hell, book 206) ──────────────────────────────
-// Self-contained module. Imports from state.js, play.js, charsheet.js and util.js.
-// Visibility is gated (book 206 only) by the caller in boot.js via
-// setSim206Visible().
-// To remove: delete this file, remove its import line and initSim206()/
-// setSim206Visible() calls from boot.js, and remove the .bsim-* CSS (shared
-// with battlesim8.js/battlesim829.js/battlesim286.js/battlesim198.js/
-// battlesim199.js/battlesim200.js/battlesim186.js/battlesim201.js/
-// battlesim202.js/battlesim203.js/battlesim204.js/battlesim205.js, so only
-// remove it if all thirteen are gone).
-//
-// House of Hell breaks from the usual Fighting Fantasy Adventure Sheet in two
-// ways the reference is explicit about (rules p.10, pp.6-7,9):
-// - You begin unarmed: Starting SKILL = Initial SKILL - 3. Weapons found in
-//   play add their stated bonus back on top of Starting SKILL, not Initial -
-//   the reference itself flags Sec.109's Kris +6 bonus as a genuine printed-
-//   rule tension with the "never exceed Initial" ceiling (arithmetically it
-//   reaches Initial+3) and says the simulator should preserve that as an
-//   ambiguity rather than silently cap or uncap it. So, like every other sim
-//   in this app, weapon/item SKILL bonuses here are plain, uncapped addition -
-//   nothing here enforces the Initial ceiling one way or the other. Five
-//   persistent weapon toggles cover the book's own combat-relevant items:
-//   Wooden Branch (sec.50, +3), Sharp Meat-Knife (sec.83, +3), Short Silver
-//   Dagger (sec.192, +2), Ornate Letter-Opener (sec.81 - a SET to Initial
-//   SKILL for that fight, not a stacking bonus, so it overrides Starting
-//   SKILL and every other weapon toggle rather than adding to them), and the
-//   Kris Knife (the key artifact) - its bonus depends on which enemy is
-//   currently picked (+3 vs the Earl of Drumer/Franklins, +6 vs the Hell
-//   Demon, 0 otherwise), applied automatically via the enemy name rather
-//   than by hand. Only one weapon should be toggled on at once, same
-//   precedent as every other sim's mutually-exclusive weapon toggles.
-// - A fourth stat, FEAR: Maximum FEAR = 1d6+6, Current FEAR starts at 0 and
-//   only ever rises (never explicitly reduced below 0). Reaching Maximum
-//   FEAR is an instant "frightened to death" ending, tracked here the same
-//   way STAMINA-reaching-0 already is. FEAR changes are all narrative
-//   (specific numbered sections), not combat-round events, so there's no
-//   round-by-round FEAR logic - just the Current/Maximum fields and the
-//   death check, adjusted by hand with the stepper like every other sim's
-//   one-off score changes.
-// No starting Provisions or Potion - the reference is explicit the rules
-// give neither (same precedent as book 204's Provisions omission).
-//
-// Standard Fighting Fantasy Attack Strength/wound/Test Your Luck rules
-// otherwise (rules pp.7-12): normal wound 2 STAMINA, Luck-after-wound and
-// Luck-after-wounded tables identical to every other sim in this app.
-// attackModifier/enemyWoundDamage/winAfterHits/enemyStaminaFloor are reused
-// exactly as books 200-205 built them. No paired/simultaneous-attacker
-// mechanic - every multi-enemy encounter in this book's roster is fought
-// sequentially ("fight one at a time"), which needs no special code: defeat
-// one, pick the next from the enemy list, encounter knobs reset as usual.
-//
-// Two genuinely new mechanics, both recurring per-round effects tied to a
-// specific fight rather than one-off score changes:
-// - fireSpriteWound (per-encounter checkbox, Sec.9): overrides the normal
-//   wound resolution for this fight only. A hit against you deals a flat 3
-//   STAMINA baseline, but you may optionally Test Your Luck on it: Lucky = 0
-//   damage, Unlucky = 4 damage, skip = keep the 3. This replaces (not adds
-//   to) the standard Luck-after-wounded ±1 adjustment for this fight, since
-//   the reference's numbers already are the full Lucky/Unlucky result, not a
-//   modifier on top of a pre-applied baseline.
-// - ghoulWoundCounter (per-encounter checkbox, Sec.126): the Ghoul's fight
-//   ends in paralysis-and-death on its 4th wound-EVENT against you,
-//   regardless of remaining STAMINA (Sec.186) - tracked as a separate wound
-//   counter, not inferred from STAMINA lost, exactly as the reference
-//   insists.
-//
-// Deliberately NOT modeled, same precedent as every other sim in this app:
-// the Escape rule's automatic hit (only ever offered narratively, apply it
-// by hand with the STAMINA stepper), the Man in White's exact-STAMINA-2
-// mercy threshold and the Fire Sprite escape's separately-ambiguous "last
-// hit" damage (the reference itself declines to guess a value), the Zombie's
-// one-off pre-fight opening blow at Sec.236 (-2 STAMINA/+2 FEAR before round
-// 1 - apply by hand before starting), the post-fall Great Dane's -2 Attack
-// Strength for its first 4 rounds only (Sec.78 - set the Attack modifier
-// field by hand, clear it after round 4, same as every other sim's bounded
-// per-encounter penalties), the Hunchback's persistent multi-visit state,
-// and the dozens of one-off SKILL/STAMINA/LUCK/FEAR score changes listed in
-// the reference's resource-change/FEAR indexes - apply those by hand with
-// the steppers when you reach them, same as every other sim.
-//
-// All state lives in pt.sim206, per-user/per-book via currentPlaythrough().
+// Battle Simulator (House of Hell, book 206)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
+// Start unarmed at Initial SKILL-3; weapon bonuses stay uncapped despite source ambiguity.
+// FEAR is tracked separately; encounter modifiers reset with enemy selection.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -163,11 +87,7 @@ function _appendLog(d, line) {
 function _enemyName(d) { return d.enemy.name.trim() || t('battlesim.default_enemy'); }
 function _enemyNameSafe(d) { return escapeHtml(_enemyName(d)); }
 
-// Kris Knife's bonus depends on which enemy you're fighting (rules p.39 and
-// the boss stat-block entries): +3 vs the Earl of Drumer/Franklins, +6 vs
-// the Hell Demon (a genuine printed-rule tension with the Initial-SKILL
-// ceiling the reference flags explicitly and says to preserve rather than
-// cap - see the module header), 0 against anything else.
+// Kris Knife: +3 against Drumer/Franklins, +6 against the Hell Demon, otherwise 0; do not cap it.
 function _krisBonus(d) {
   if (!d.player.hasKrisKnife) return 0;
   const name = _enemyName(d).toLowerCase();
@@ -177,9 +97,7 @@ function _krisBonus(d) {
 }
 
 function _effectiveSkill(d) {
-  // Sec.81's ornate letter-opener raises current SKILL to Initial SKILL for
-  // that fight - a set, not an addable bonus, so it overrides Starting SKILL
-  // and every other weapon bonus rather than stacking with them.
+  // The ornate letter-opener sets SKILL to Initial, replacing other weapon bonuses.
   const base = d.player.hasLetterOpener ? d.player.skillInitial : d.player.skill;
   let skill = base;
   if (d.player.hasWoodenBranch)  skill += 3;
@@ -200,9 +118,7 @@ function _resetEncounterKnobs(d) {
   d.player.woundEventsThisFight = 0;
 }
 
-// Uncapped lifetime log - the admin dashboard aggregates battle counts
-// app-wide from this array, so per-user history needs to be a true lifetime
-// total, not a rolling window.
+// Keep lifetime outcomes: admin totals require the full history.
 function _recordOutcome(d, outcome) {
   d.history.push({
     enemy: _enemyName(d), outcome,
@@ -243,9 +159,7 @@ function _runRound() {
     }
     if (d.enemy.stamina > floor) d.pendingLuckQueue.push({ kind: 'player-hit' });
   } else if (d.player.fireSpriteWound) {
-    // Sec.9: the wound isn't applied yet - baseline 3 STAMINA, but you may
-    // optionally Test Your Luck on it (Lucky = 0, Unlucky = 4, skip = keep
-    // the 3), replacing rather than adjusting the usual table.
+    // Fire Sprite damage is deferred: lucky 0, unlucky 4, skipped 3 STAMINA.
     _appendLog(d, t('battlesim206.log.firesprite_ready', { enemy: _enemyNameSafe(d) }));
     d.pendingLuckQueue.push({ kind: 'fire-sprite-wound' });
   } else {
@@ -270,12 +184,7 @@ function _runRound() {
   _renderAll();
 }
 
-// Sec.126/186: the Ghoul's fight ends in paralysis-and-death on its 4th
-// wound-event, regardless of remaining STAMINA - checked as a hard stop
-// alongside (not instead of) the normal STAMINA-reaches-0 check. Returns
-// true if it fired, so callers can skip their own generic STAMINA-reaches-0
-// check afterward instead of recording the same loss twice (this sets
-// STAMINA to 0 itself, which would otherwise also satisfy that check).
+// The Ghoul's fourth wound causes immediate paralysis/death; return true to avoid recording loss twice.
 function _checkGhoulParalysis(d) {
   if (d.player.ghoulWoundCounter && d.player.woundEventsThisFight >= 4 && d.player.stamina > 0) {
     _appendLog(d, t('battlesim206.log.ghoul_paralysis', { skull: SVG_SKULL }));
@@ -287,9 +196,7 @@ function _checkGhoulParalysis(d) {
   return false;
 }
 
-// Test Your Luck after a hit lands: costs 1 LUCK regardless of outcome. Same
-// Lucky/Unlucky table as every other FF sim in this app, except the
-// Fire-Sprite-wound event, which has its own full Lucky/Unlucky result.
+// Use standard Luck adjustments except for the Fire Sprite's replacement-damage event.
 function _testLuck() {
   const d = _data();
   if (!d || !d.pendingLuckQueue.length || d.player.luck <= 0) return;
@@ -784,9 +691,7 @@ export function initSim206() {
     if (!d) return;
     const map = FIELD_MAP[id];
     if (!map) return;
-    // Attack modifier is the one field allowed to go negative (this book's
-    // several one-off pre-fight SKILL/STAMINA penalties are always a
-    // subtraction) - every other field stays clamped to 0 or above.
+    // Allow negative attack modifiers; other fields stay non-negative.
     val = id === 'sim206-player-atkmod' ? Number(val) : Math.max(0, val);
     if (id === 'sim206-player-skill') val = Math.min(val, d.player.skillInitial);
     if (id === 'sim206-player-stamina') val = Math.min(val, d.player.staminaInitial);

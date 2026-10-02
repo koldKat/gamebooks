@@ -1,48 +1,7 @@
-// ── Battle Simulator (Dead of Night, book 236) ───────────────────────────────
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 236 only) by the caller in boot.js via
-// setSim236Visible().
-// To remove: delete this file, remove its import line and initSim236()/
-// setSim236Visible() calls from boot.js, remove 'sim236' from
-// SIM_HISTORY_KEYS in server/db/xp.js, remove 'sim236-overlay' from
-// ALL_PANEL_OVERLAY_IDS in util.js and the #sim236-btn selectors in
-// battlesim.css.
-//
-// Standard Fighting Fantasy SKILL/STAMINA/LUCK system (same core numbers and
-// Test Your Luck table as books 186/198/200/201/202): SKILL 1d6+6, STAMINA
-// 2d6+12, LUCK 1d6+6, normal wound 2 STAMINA, Attack Strength = 2d6+SKILL.
-// This book also tracks EVIL (narrative-only, never rolled against in
-// combat - not modeled here, same as this book's own non-combat Test Your
-// Luck calls).
-//
-// Book-specific knobs, all confirmed against the full 400-section read:
-// - attackModifier: plain +/- Attack Strength knob, covering the several
-//   "defending a narrow opening" (+1, sec.156) and "fight bare-handed" (-1,
-//   sec.221) one-off cases.
-// - thickArmour: the Armoured Ogre (sec.53) inflicts damage as normal but
-//   only TAKES 1 STAMINA of damage per landed hit instead of 2 (2 if Lucky,
-//   0 if Unlucky) - its armour is explicitly "very thick". One-fight toggle.
-// - demonSlayingSword: the sword given at sec.348 adds 4 to SKILL in any
-//   fight against Demons, "even if that takes your SKILL to over 12" - a
-//   persistent item, not reset between fights, so it lives outside
-//   _resetEncounterKnobs().
-// - myurrFight: the final battle (sec.398) is SKILL 14/STAMINA 25 with two
-//   book-specific rules bundled into one toggle - Myurr attacks twice per
-//   round (modeled as a second, unwoundable enemy Attack Strength roll each
-//   round, same shape as the "paired fight" mechanic other book sims use
-//   for simultaneous attackers), and only a magical weapon (the Demon-
-//   Slaying sword) can wound him at all - a normal weapon "neither gives
-//   nor receives" damage on a won round. Deliberately NOT modeled: Myurr's
-//   Holy-Water-throw and item-destroy alternate actions (sec.398 lists six
-//   named objects, one of which conceals his banishing gem) - these are
-//   one-off narrative choices with their own paragraph-specific results,
-//   not a repeatable dice mechanic, so the sim only covers the standard
-//   "fight as normal" branch as instructed by the book's own combat text.
-// - heroismPotion: found at sec.78, a single-dose item usable at the start
-//   of any one battle - restores 2 STAMINA immediately and adds 2 to SKILL
-//   for the duration of that fight only.
-//
-// All state lives in pt.sim236, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Dead of Night, book 236)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
+// EVIL and narrative resolutions are outside combat.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';

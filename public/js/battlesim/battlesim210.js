@@ -1,39 +1,6 @@
-// ── Battle Simulator (Temple of Terror, book 210) ────────────────────────────
-// Self-contained module. Imports from state.js, play.js, charsheet.js and util.js.
-// Visibility is gated (book 210 only) by the caller in boot.js via
-// setSim210Visible().
-// To remove: delete this file, remove its import line and initSim210()/
-// setSim210Visible() calls from boot.js, and remove the .bsim-* CSS (shared
-// with the other battlesim*.js modules, so only remove it if all of them are gone).
-//
-// Standard Fighting Fantasy SKILL/STAMINA/LUCK system, identical core numbers
-// and Test Your Luck table to book 198 (SKILL 1d6+6, STAMINA 2d6+12, LUCK
-// 1d6+6, normal wound 2 STAMINA). No potions in this book (the Adventure
-// Sheet has a Spells section instead, but no spell in the book carries a
-// fixed combat formula - narrative only, apply by hand like any other book's
-// one-off stat rewards).
-//
-// Two mechanics reused from book 200/201 rather than invented fresh:
-// - attackModifier: a plain +/- Attack Strength knob, covering the Mutant
-//   Orc's -2 (sec 249, unless armed with a dagger).
-// - pairedFight/sideEnemy: a second enemy that attacks every round via its
-//   own independent roll but can never be wounded back - covers the
-//   Skeleton Warriors (sec 274) and Sand Snapper's two Tentacles (sec 377),
-//   both explicitly "attack separately, choose which one to fight".
-//
-// Two toggleable per-round side-effects, same shape as book 201's Lizardine
-// breath:
-// - fireBreath (Fiend, sec 216): 1d6 every round regardless of the main
-//   exchange, 1-2 costs 1 extra STAMINA (Luck-eligible), 3-6 dodges.
-// - electricShock (Giant Firefly, sec 339): 1d6 only on rounds the enemy's
-//   own attack already won, 1-3 costs 2 extra STAMINA (Luck-eligible), 4-6
-//   nothing extra.
-//
-// Not modeled: sections 311/363, "Giant Eagle vs Pterodactyl" - a spectator
-// battle between two NPCs the player never participates in, just resolves
-// and reads the outcome. Doesn't fit a player-vs-enemy sim at all.
-//
-// All state lives in pt.sim210, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Temple of Terror, book 210)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -111,9 +78,7 @@ function _resetEncounterKnobs(d) {
   d.sideEnemy = { name: '', skill: 0, staminaMax: 0 };
 }
 
-// Uncapped (was previously trimmed to the last 100) - the admin dashboard
-// aggregates battle counts app-wide from this array, so per-user history needs
-// to be a true lifetime total, not a rolling window.
+// Keep lifetime outcomes: admin totals require the full history.
 function _recordOutcome(d, outcome) {
   d.history.push({
     enemy: _enemyName(d), outcome,
@@ -146,10 +111,7 @@ function _runRound() {
     if (d.player.stamina > 0) d.pendingLuckQueue.push({ kind: 'enemy-hit' });
   }
 
-  // Paired fight (Skeleton Warriors sec 274, Sand Snapper's Tentacles sec
-  // 377): "attack separately each round, choose which one to fight" - a
-  // second, independent exchange with its own fresh player roll. The side
-  // attacker is never woundable, matching the literal rule.
+  // Side attackers roll independently each round and cannot be wounded.
   if (d.pairedFight && d.sideEnemy.staminaMax > 0 && d.player.stamina > 0) {
     const sidePlayerAS = _roll2d6() + d.player.skill + (d.player.attackModifier || 0);
     const sideAS = _roll2d6() + d.sideEnemy.skill;
@@ -163,9 +125,7 @@ function _runRound() {
     }
   }
 
-  // Fiend's fiery breath (sec 216): in addition to normal combat, roll 1 die
-  // every Attack Round regardless of who won the main exchange. 1-2 burns
-  // you for 1 extra STAMINA (Luck-eligible), 3-6 you avoid the blast.
+  // Fiend breath: each round, 1-2 on 1d6 costs 1 Luck-eligible STAMINA (sec 216).
   if (d.player.fireBreath && d.player.stamina > 0) {
     const fireRoll = _roll1d6();
     if (fireRoll <= 2) {
@@ -177,10 +137,7 @@ function _runRound() {
     }
   }
 
-  // Giant Firefly's electric shock (sec 339): only rolled on a round the
-  // Firefly's own attack already won - "each time a Firefly wins an Attack
-  // Round, roll one die". 1-3 discharges for 2 extra STAMINA (Luck-eligible),
-  // 4-6 no discharge.
+  // After a Firefly win (sec 339), 1d6 on 1-3 deals 2 extra, Luck-eligible STAMINA damage.
   if (d.player.electricShock && enemyWonExchange && d.player.stamina > 0) {
     const shockRoll = _roll1d6();
     if (shockRoll <= 3) {
@@ -198,9 +155,7 @@ function _runRound() {
   } else if (d.player.stamina <= 0) {
     _appendLog(d, t('battlesim210.log.fallen', { skull: SVG_SKULL }));
     _recordOutcome(d, 'loss');
-    // Once you're down, any hit queued earlier this same round (side
-    // attacker or breath/shock wounding you before the killing blow landed)
-    // is moot - clear it so a dead battle can't still offer a Luck prompt.
+    // Clear queued Luck tests on defeat.
     d.pendingLuckQueue = [];
   }
 
@@ -208,11 +163,7 @@ function _runRound() {
   _renderAll();
 }
 
-// Test Your Luck after a hit lands: costs 1 LUCK regardless of outcome. On
-// your own hit, Lucky deals 2 extra STAMINA damage (4 total), Unlucky gives
-// back 1 (only 1 total). On a hit you took (from any source), Lucky gives
-// back 1 STAMINA, Unlucky costs 1 extra - same table as book 198. Processes
-// one queued event at a time.
+// Luck costs 1 per queued hit: outgoing damage +2/-1, incoming damage -1/+1 (lucky/unlucky).
 function _testLuck() {
   const d = _data();
   if (!d || !d.pendingLuckQueue.length || d.player.luck <= 0) return;
@@ -681,9 +632,7 @@ export function initSim210() {
     if (!d) return;
     const map = FIELD_MAP[id];
     if (!map) return;
-    // Attack modifier is the one field allowed to go negative (bare-handed/
-    // disarmed-style penalties are always a subtraction) - every other
-    // field stays clamped to 0 or above.
+    // Allow negative attack modifiers; other fields stay non-negative.
     val = id === 'sim210-player-atkmod' ? Number(val) : Math.max(0, val);
     if (id === 'sim210-player-skill') val = Math.min(val, d.player.skillInitial);
     if (id === 'sim210-player-stamina') val = Math.min(val, d.player.staminaInitial);

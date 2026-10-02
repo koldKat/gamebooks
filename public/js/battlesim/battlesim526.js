@@ -1,40 +1,6 @@
-// ── Battle Simulator (GrailQuest 1: The Castle of Darkness, book 526) ──
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 526 only) by the caller in boot.js via
-// setSim526Visible().
-// To remove: delete this file, remove its import line and initSim526()/
-// setSim526Visible() calls from boot.js, remove 'sim526' from
-// SIM_HISTORY_KEYS in server/db/xp.js, and remove the .bsim-* CSS (shared
-// with the other battlesim*.js files, so only remove it if all are gone).
-//
-// GrailQuest's own single-roll LIFE POINTS system - simpler than any FF/Lone
-// Wolf sim in this app, no opposed-roll comparison. Each round, both sides
-// roll 2d6 independently (not compared against each other): a roll meeting
-// or beating a hit threshold (7 by default, "more than 6") lands a hit for
-// (roll - 6) damage, plus any flat weapon bonus; a miss deals nothing. Armour
-// subtracts a flat amount from incoming damage before LIFE POINTS. At 5 or
-// fewer LIFE POINTS a combatant falls unconscious (not dead); at 0, dead -
-// tracked as a distinct status rather than folded into a single "loss".
-//
-// Weapon/armour toggles from the book's own rules-summary page: EJ (a named
-// magic sword) lowers the hit threshold to 4 and adds +5 damage; Dagger adds
-// +2 damage at the normal threshold; Dragonskin jacket subtracts 4 from
-// incoming damage. Only one weapon is ever wielded at a time (not enforced
-// in code, matching every other sim's precedent of noting rather than
-// enforcing story constraints).
-//
-// Mean Jake's opening duel (a first-to-lose-10-in-one-hit brawl, not the
-// reduce-to-0/5 pattern) and the Sleep/EXPERIENCE mechanics (both between-
-// fight bookkeeping, not combat-round math) are deliberately NOT modeled,
-// same precedent as every other sim in this app - apply those by hand.
-//
-// book_enemies.attack holds the enemy's flat damage bonus, .hp holds LIFE
-// POINTS, .defense unused. 13 rows: a partial roster gathered from the
-// book's own stat-block sentences ("X has N LIFE POINTS... does +N
-// damage"), not mapped to exact section numbers - add more via the in-app
-// enemy editor as needed.
-//
-// All state lives in pt.sim526, per-user/per-book via currentPlaythrough().
+// Battle Simulator (GrailQuest 1: The Castle of Darkness, book 526)
+// Independent 2d6 hit checks; damage is roll-6 plus weapon bonus, reduced by armour.
+// At <=5 life a fighter is unconscious; at 0, dead.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';

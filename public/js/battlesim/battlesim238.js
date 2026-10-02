@@ -1,47 +1,7 @@
-// ── Battle Simulator (Black Vein Prophecy, book 238) ─────────────────────────
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 238 only) by the caller in boot.js via
-// setSim238Visible().
-// To remove: delete this file, remove its import line and initSim238()/
-// setSim238Visible() calls from boot.js, remove 'sim238' from
-// SIM_HISTORY_KEYS in server/db/xp.js, remove 'sim238-overlay' from
-// ALL_PANEL_OVERLAY_IDS in util.js and the #sim238-btn selectors in
-// battlesim.css.
-//
-// Standard Fighting Fantasy SKILL/STAMINA/LUCK system (same core numbers and
-// Test Your Luck table as books 186/198/200/201/202/222/236/237): SKILL
-// 1d6+6, STAMINA 2d6+12, LUCK 1d6+6, normal wound 2 STAMINA, Attack Strength
-// = 2d6+SKILL.
-//
-// This book's fights are the "physical combat" subset of a hybrid system -
-// the other resolution path is a narrative "power word" magic duel
-// (Baopo/Biantai/Tiaohe/Shangsuo/Izkhao) resolved purely by story-branch
-// choice, never by dice, and is out of scope for a dice-combat sim (same
-// principle as book 236's Myurr alternate actions - one-off narrative
-// choices aren't modeled).
-//
-// Book-specific knobs, confirmed against the full 400-section read:
-// - attackModifier: plain +/- Attack Strength knob, covering this book's
-//   several "fight without a weapon: SKILL -4" and "fight amid ship's
-//   rigging: SKILL -4" one-off penalties (sec.85, 103, 149, 181, 228, 337,
-//   382), and the Jade Talisman's "fight the rest of the combat without a
-//   weapon" trade for surviving one blow unarmed (sec.237).
-// - yourDamage / enemyDamage: numeric override for STAMINA lost per landed
-//   hit (both default 2, the FF standard) - covers this book's few
-//   non-standard-damage fights without hardcoding each named case.
-// - secondEnemy ("parry mode"): several encounters pit the player against
-//   two opponents "at the same time", where the player nominates one target
-//   to actually fight (wound/be wounded normally) while the other makes a
-//   separate, un-woundable attack each round that can only ever hurt the
-//   player - "you will merely parry his blow" if the player's Attack
-//   Strength against the second opponent is higher (sec.75 Robber+Slaver,
-//   sec.213 Slaver+Slaver, sec.337 Jungle Man pair). This is distinct from
-//   this book's several "fight them one at a time" pairs/trios (e.g.
-//   sec.190 Mutated Bandits, sec.289 Kreehuls), which need no special code
-//   at all - just fight the standard single-enemy engine repeatedly,
-//   switching enemies via the autocomplete between kills.
-//
-// All state lives in pt.sim238, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Black Vein Prophecy, book 238)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
+// Only physical combat is simulated, not power-word duels.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -142,11 +102,7 @@ function _runRound() {
     if (d.player.stamina > 0) d.pendingLuckQueue.push({ kind: 'enemy-hit' });
   }
 
-  // Parry mode: the second, un-nominated opponent makes its own separate
-  // Attack Strength roll this round. If it beats the player's own roll
-  // (re-rolled fresh, as the book describes an independent simultaneous
-  // attack) the player is wounded; the second opponent itself can never be
-  // wounded this way - only "parried".
+  // Parry uses a fresh opposed roll; the unchosen opponent may wound but cannot be wounded back.
   if (d.secondEnemy.active && d.player.stamina > 0 && d.enemy.stamina > 0) {
     const playerAS2 = _roll2d6() + d.player.skill + (d.player.attackModifier || 0);
     const secondAS  = _roll2d6() + d.secondEnemy.skill;

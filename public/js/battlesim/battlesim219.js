@@ -1,57 +1,6 @@
-// ── Battle Simulator (Masks of Mayhem, book 219) ─────────────────────────────
-// Self-contained module. Imports from state.js, play.js, charsheet.js and util.js.
-// Visibility is gated (book 219 only) by the caller in boot.js via
-// setSim219Visible().
-// To remove: delete this file, remove its import line and initSim219()/
-// setSim219Visible() calls from boot.js, and remove the .bsim-* CSS (shared
-// with every other battlesimN.js, so only remove it if all of them are gone).
-//
-// Standard Fighting Fantasy SKILL/STAMINA/LUCK system, same core numbers,
-// Test Your Luck table, Provisions, and single-dose potion-of-three-choices
-// setup as books 201/202/203 - confirmed against this book's own printed
-// "How to Fight the Creatures of Khul" and "Equipment and Potions" rules
-// pages (SKILL 1d6+6, STAMINA 2d6+12, LUCK 1d6+6; opposed 2d6+SKILL roll,
-// ties = no effect, loser -2 STAMINA; Test Your Luck ±1/±2 STAMINA, costs
-// 1 LUCK always; 10 Provisions, +4 STAMINA each, not mid-battle; choose
-// exactly one of three single-dose potions - Skill/Strength/Fortune).
-//
-// attackModifier/enemyWoundDamage/pairedFight/sideEnemy are reused exactly
-// as prior sims - they cover every generic "-N SKILL this fight" penalty and
-// every "two attackers, choose one target, untargeted one can wound but
-// can't be wounded that round" case (the paired Pygmy Orcs at §129/§220,
-// paired Spriggans at §171, paired Blackhearts at §254, paired Tribesmen at
-// §282/§318, paired Skeletons at §386).
-//
-// One genuinely new, generic field not present in earlier sims:
-// - playerWoundDamage: the STAMINA the player deals to the enemy on a win,
-//   defaulting to 2 (the book's standard) but editable per-fight. Needed
-//   because three fights deal non-standard win damage: the Shadow Monster
-//   (§55, 1 STAMINA per hit), the Hellfire Spirit (§93/§281, 1 STAMINA per
-//   hit, 2 if using magical protection), and Morgana (§295, 1 STAMINA per
-//   hit, 2 if a lucky Test Your Luck roll). Symmetric to the existing
-//   enemyWoundDamage field, and reused by _testLuck()'s lucky-hit bonus too
-//   so Morgana's own Luck-scaled damage can be approximated by setting this
-//   field to 1 before the fight.
-//
-// The five-tentacle sequences (§207, §330, §379) and the two-Mordida fight
-// (§375, which alternates attackers rather than striking simultaneously)
-// are not modeled as special multi-enemy mechanics - they're fought as a
-// sequence of ordinary single-target fights, resetting/re-picking the next
-// enemy from the dropdown after each one falls, same as any other multi-
-// enemy chain elsewhere in the app.
-//
-// Deliberately NOT modeled, same precedent as every other sim in this app:
-// one-off narrative full-restores (the fountain at §308 letting you restore
-// SKILL, STAMINA or LUCK to Initial), the Chimera's always-wounds-every-
-// round-even-on-a-win effect (§145 - apply that STAMINA loss by hand with
-// the stat stepper), and the Sabre-toothed Tiger's "if not defeated within
-// four rounds, turn to 348" branch (§371 - a narrative check against the
-// round counter already visible in the log, not a combat-mechanic change).
-// The Cloak of Temporary Invisibility and Horn of Hever are one-time escape/
-// avoidance items, not combat modifiers, and are likewise left to manual
-// play rather than sim toggles.
-//
-// All state lives in pt.sim219, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Masks of Mayhem, book 219)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -139,9 +88,7 @@ function _resetEncounterKnobs(d) {
   d.sideEnemy = { name: '', skill: 0, staminaMax: 0 };
 }
 
-// Uncapped (was previously trimmed to the last 100) - the admin dashboard
-// aggregates battle counts app-wide from this array, so per-user history needs
-// to be a true lifetime total, not a rolling window.
+// Keep lifetime outcomes: admin totals require the full history.
 function _recordOutcome(d, outcome) {
   d.history.push({
     enemy: _enemyName(d), outcome,
@@ -185,11 +132,7 @@ function _runRound() {
     if (d.player.stamina > 0) d.pendingLuckQueue.push({ kind: 'enemy-hit' });
   }
 
-  // Paired fight: a second, independent exchange with its own fresh player
-  // roll every round - covers the paired Pygmy Orcs/Spriggans/Blackhearts/
-  // Tribesmen/Skeletons. The side attacker is never wounded through this
-  // path, matching the literal "untargeted one can wound but cannot be
-  // wounded that round" rule.
+  // Side attackers roll independently each round and cannot be wounded.
   if (d.pairedFight && d.sideEnemy.staminaMax > 0 && d.player.stamina > 0) {
     const sidePlayerAS = _roll2d6() + d.player.skill + (d.player.attackModifier || 0);
     const sideAS = _roll2d6() + d.sideEnemy.skill;
@@ -729,9 +672,7 @@ export function initSim219() {
     if (!d) return;
     const map = FIELD_MAP[id];
     if (!map) return;
-    // Attack modifier is the one field allowed to go negative (bare-handed/
-    // disarmed/fatigue penalties are always a subtraction) - every other
-    // field stays clamped to 0 or above.
+    // Allow negative attack modifiers; other fields stay non-negative.
     val = id === 'sim219-player-atkmod' ? Number(val) : Math.max(0, val);
     if (id === 'sim219-player-skill') val = Math.min(val, d.player.skillInitial);
     if (id === 'sim219-player-stamina') val = Math.min(val, d.player.staminaInitial);

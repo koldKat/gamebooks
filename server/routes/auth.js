@@ -86,8 +86,7 @@ async function handleForgotPassword(req, res) {
   if (result?.noEmail) return send(res, 200, { noEmail: true });
   const transporter = getTransporter();
   if (result?.token && transporter) {
-    // Never trust req.headers.host here - it's attacker-controlled, and this link gets
-    // emailed to the real user, so a spoofed Host would poison the reset link itself.
+    // Do not build emailed reset links from attacker-controlled Host headers.
     const appUrl = db.getAdminSetting('app_url') || 'https://pathmap.net';
     const resetLink = `${appUrl}/?reset_token=${result.token}`;
     const fromAddr = db.getAdminSetting('smtp_from') || db.getAdminSetting('smtp_user') || process.env.SMTP_FROM || process.env.SMTP_USER;

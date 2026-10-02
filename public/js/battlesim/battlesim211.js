@@ -1,40 +1,6 @@
-// ── Battle Simulator (The Rings of Kether, book 211) ─────────────────────────
-// Self-contained module. Imports from state.js, play.js, charsheet.js and util.js.
-// Visibility is gated (book 211 only) by the caller in boot.js via
-// setSim211Visible().
-// To remove: delete this file, remove its import line and initSim211()/
-// setSim211Visible() calls from boot.js, and remove the .bsim-* CSS (shared
-// with the other battlesim*.js modules, so only remove it if all of them are gone).
-//
-// Three combat systems, none of them the plain single opposed-roll every
-// other book uses:
-// - Hand-to-Hand: the one exception - standard opposed 2d6+SKILL, higher
-//   wins, flat 2 STAMINA damage. This book's rules never mention Test Your
-//   Luck as part of combat at all (unlike book 198's family) - LUCK is
-//   tracked but only ever used for narrative page prompts, so there's no
-//   Luck-queue mechanism here at all, unlike most other sims in this app.
-// - Blaster Combat: NOT opposed - each side independently rolls 2d6 against
-//   their OWN SKILL (roll < SKILL = hit), flat 4 STAMINA damage. Both
-//   checks happen every round (you roll, then if the enemy's still up they
-//   roll their own check against their own SKILL), not "higher wins."
-// - Ship-to-Ship: same independent-roll shape as Blaster, but against
-//   WEAPONS STRENGTH, 1 SHIELDS damage per hit. Smart Missiles are an
-//   alternative to a normal round - normally an instant kill, but the
-//   Asteroid Defences fight (sec 312) explicitly overrides that to a flat 2
-//   SHIELDS per missile instead, since it's shooting at a stationary target
-//   nothing else in the book does - so missile damage is an editable field
-//   (default effectively "always destroys"), not hardcoded either way.
-// Two independent stat pools - person (SKILL/STAMINA/LUCK, shared by
-// Blaster and Hand-to-Hand) and ship (WEAPONS STRENGTH/SHIELDS) - shown
-// side by side, each with its own round counter (roundsPerson/roundsShip)
-// so switching modes mid-fight can't let the Energy Tablet guard check the
-// wrong, untouched pool, and Reset only rewinds whichever pool the current
-// mode is using - same fix already needed once for book 209's sim, applied
-// from the start here instead of found the hard way again.
-// Not modeled: section 50's one-off "if your ship is destroyed, roll a die -
-// even means you eject and survive" - a single narrative branch, not a
-// repeatable mechanic worth a permanent toggle.
-// All state lives in pt.sim211, per-user/per-book via currentPlaythrough().
+// Battle Simulator (The Rings of Kether, book 211)
+// Hand-to-hand uses opposed rolls; blaster/ship combat uses independent threshold checks.
+// Person and ship pools reset independently; missiles replace the turn. LUCK is narrative-only.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -101,22 +67,14 @@ function _appendLog(d, line) {
   if (d.log.length > 200) d.log.shift();
 }
 
-// Which pool _runRound() reads/writes, based on the current mode - keeps the
-// round-resolution logic mode-agnostic for the two independent-roll modes
-// (Blaster/Ship share the same shape), with Hand-to-Hand handled separately
-// since it's a genuinely different (opposed-roll) resolution.
+// Map fields by combat pool; hand-to-hand uses opposed rolls rather than blaster/ship resolution.
 function _activeSide(d) {
   return d.mode === 'ship'
     ? { self: d.ship, foe: d.enemyShip, selfAtk: 'weaponsStrength', selfHp: 'shields', selfHpMax: 'weaponsStrengthInitial', foeAtk: 'weaponsStrength', foeHp: 'shields', foeHpMax: 'shieldsMax', roundsKey: 'roundsShip', dmg: 1 }
     : { self: d.player, foe: d.enemy, selfAtk: 'skill', selfHp: 'stamina', selfHpMax: 'staminaInitial', foeAtk: 'skill', foeHp: 'stamina', foeHpMax: 'staminaMax', roundsKey: 'roundsPerson', dmg: d.mode === 'blaster' ? 4 : 2 };
 }
 
-// staminaInitial/shieldsInitial (a "self max" field, not the odd-one-out
-// weaponsStrengthInitial pulled into _activeSide above only for the shared
-// selfHpMax slot) is what Reset restores the player's own pool to - kept
-// separate from _activeSide's generic field-name mapping since "self max
-// HP" and "self attack stat" happen to collide for the ship (both would
-// read weaponsStrengthInitial) if this weren't split out.
+// Reset from staminaInitial/shieldsInitial, not the generic mapping's attack-stat maximum.
 function _selfMaxHp(d, side) {
   return d.mode === 'ship' ? d.ship.shieldsInitial : d.player.staminaInitial;
 }
@@ -201,11 +159,7 @@ function _checkOutcome(d, side) {
   }
 }
 
-// An alternative to a normal round rather than a bonus action - the book
-// treats firing a missile as your whole turn, same as choosing to fire
-// phasers instead. Damage is editable (see missileDamage's own comment) -
-// normally huge enough to be an instant kill, dialed down to 2 for the one
-// fight in the book that explicitly says otherwise.
+// A missile replaces the normal turn; its damage remains editable for encounter exceptions.
 function _fireMissile() {
   const d = _data();
   if (!d || _notReady(d) || d.mode !== 'ship' || d.ship.smartMissiles <= 0) return;
@@ -220,12 +174,7 @@ function _fireMissile() {
   _renderAll();
 }
 
-// Only resets the pool the current mode is actually using - Blaster and
-// Hand-to-Hand share the person pool (the book never asks you to switch
-// between those two mid-fight), but Ship-to-Ship is a genuinely separate
-// pool. See battlesim209.js's own version of this same fix for why a
-// blanket reset is wrong: it would wipe real, unrelated ship damage just
-// because you hit Reset on an unrelated fistfight.
+// Reset only the current mode's pool, preserving unrelated ship/person damage.
 function _resetBattle() {
   const d = _data();
   if (!d) return;

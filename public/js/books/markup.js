@@ -40,12 +40,7 @@ export function _pdfBadgeHtml(pdfPath, isAdmin) {
   return `<span class="book-pdf-badge" data-tooltip="${escapeHtml(t('books.has_pdf'))}"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>`;
 }
 
-// Surgical DOM update for a single book's PDF state after an upload/remove
-// from the edit modal (edit-book.js's onPdfChanged hook) - patches the cached
-// row and every rendered card for that book instead of paying for a full
-// list re-fetch/re-render. Cards are matched by data-id; a book normally
-// renders once, but anthology secondary membership can show it twice, so all
-// matches are updated.
+// Patch all rendered copies and the cache after PDF changes, without rebuilding the library.
 export function _syncPdfBadgeOnCards(bookId, pdfPath, pdfSize = null) {
   _patchCachedBook(bookId, { pdf_path: pdfPath, pdf_size: pdfSize });
   const isAdmin = booksState._hooks.getIsAdmin?.() ?? false;
@@ -77,10 +72,7 @@ export function _bookItemHtml(b, isChild, containerExpanded, childCount, aggrSta
   const extraClass  = (b.is_container ? ' book-item--container' : (isChild ? ' book-item--child' : '')) + (inParty ? ' book-item--party' : '');
   const experimentalCoverCards = !isDemoMode;
   const ownCoverUrl   = b.cover_path ? `/covers/${b.cover_path}` : '';
-  // Cover inheritance uses the anthology this item is actually being rendered
-  // under (containerId), not always b.parent_book_id - a book shown as a
-  // secondary member of anthology X should pick up X's cover, not its
-  // primary anthology's, even though parent_book_id still points elsewhere.
+  // Inherit the cover from the rendered anthology, not always the primary parent.
   const effectiveContainerId = containerId ?? b.parent_book_id;
   const parentContainer = isChild && effectiveContainerId ? (booksState._cachedBooks || []).find(x => x.id === effectiveContainerId && x.is_container) : null;
   const anthologyCoverUrl = isChild && parentContainer?.cover_path ? `/covers/${parentContainer.cover_path}` : '';

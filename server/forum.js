@@ -16,21 +16,12 @@ function fmtRelative(ts) {
   if (diff < 604800) return Math.floor(diff / 86400) + 'd ago';
   return fmtDate(ts);
 }
-// Same markup engine as announcements (public/js/feed.js's formatAnnBody,
-// duplicated again in admin/js/announcements.js) - kept in sync by hand
-// since this one runs server-side against a stored post body, not client-side.
+// Keep server forum markup parsing aligned with client/admin announcement formatting.
 const FORUM_COLORS = {
   red: '#f87171', orange: '#fb923c', amber: '#fbbf24', green: '#4ade80',
   teal: '#2dd4bf', blue: '#60a5fa', purple: '#a78bfa', pink: '#f472b6',
 };
-// [Label](/book/123) or [Label](/series/45) is a relative in-app link, not a
-// hardcoded absolute domain (this app is served from several domains -
-// koldkat.net, pathmap.net, bookplay.net, etc. - a baked-in domain would be
-// wrong on the others). Rendered without target=_blank and intercepted
-// client-side (see the data-book-id/data-series-id handling further down) to
-// postMessage the parent into opening the real in-app book/series dialog
-// instead of navigating the forum iframe away. Genuine external https://
-// links still open in a new tab, same as before.
+// Keep in-app book/series links domain-relative and route them through the parent app.
 function renderBody(s) {
   return esc(s)
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')

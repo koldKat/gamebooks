@@ -1,40 +1,6 @@
-// ── Battle Simulator (Stealer of Souls, book 230, Fighting Fantasy 34 by Keith Martin) ──
-// Self-contained module. Imports from state.js, play.js, charsheet.js and util.js.
-// Visibility is gated (book 230 only) by the caller in boot.js via
-// setSim230Visible().
-// To remove: delete this file, remove its import line and initSim230()/
-// setSim230Visible() calls from boot.js, and remove the .bsim-* CSS (shared
-// with the other battlesimNNN.js modules, so only remove it if all are gone).
-//
-// Standard Fighting Fantasy SKILL/STAMINA/LUCK system (SKILL 1d6+6, STAMINA
-// 2d6+12, LUCK 1d6+6), Test Your Luck table, generic per-encounter knobs
-// (attackModifier/enemyWoundDamage/winAfterHits/enemyAutoWinFirstRound/
-// pairedFight+sideEnemy) reused verbatim from books 200-203/224-229.
-//
-// Provisions: 10 meals, each restores 4 STAMINA (never above Initial) -
-// confirmed verbatim from this book's own "Stamina and Provisions" rules
-// text. No other reusable companion/item mechanic exists in this book (a
-// two-dose Potion of Healing at §204 and Luck Powder at §39 are one-off
-// narrative loot, not guaranteed setup items - not modeled, same precedent
-// as excluding non-combat narrative one-offs in books 226/228).
-//
-// 47 stat-block encounters extracted across 36 sections. Multi-enemy
-// fights are mixed per this book's own rules ("sometimes you will have to
-// fight them all together; sometimes... one after the other") - sections
-// explicitly saying "together" (§87 Hobgoblins, §310 Natives, §363 Orcs,
-// and the first two of three Orcs at §185) use the pairedFight+sideEnemy
-// toggle; sections saying "one at a time" (§6, §59, §120, §281, §348) use
-// plain sequential re-pick, same as any single-enemy fight.
-//
-// Structural note: BFS from §1 reaches 398/400 sections. §5 and §391 are
-// confirmed genuine orphans - grepped the entire source HTML for both as
-// link targets and as plain "turn to" text; neither appears anywhere
-// except its own section header. No dynamic/puzzle mechanism explains
-// either (checked the §119 date-code puzzle, unrelated). Treated as an
-// original 1980s print error, not an extraction bug - same precedent as
-// book 202/229's disclosed unreachable sections.
-//
-// All state lives in pt.sim230, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Stealer of Souls, book 230, Fighting Fantasy 34 by Keith Martin)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -173,9 +139,7 @@ function _runRound() {
     if (d.player.stamina > 0) d.pendingLuckQueue.push({ kind: 'enemy-hit' });
   }
 
-  // Paired fight: a second, independent exchange with its own fresh player
-  // roll every round - covers any two-attacker encounters in this book. The
-  // side attacker is never wounded through this path.
+  // Side attackers roll independently and cannot be wounded.
   if (d.pairedFight && d.sideEnemy.staminaMax > 0 && d.player.stamina > 0) {
     const sidePlayerAS = _roll2d6() + d.player.skill + (d.player.attackModifier || 0);
     const sideAS = _roll2d6() + d.sideEnemy.skill;

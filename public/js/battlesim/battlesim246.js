@@ -1,41 +1,6 @@
-// ── Battle Simulator (Return to Firetop Mountain, book 246) ─────────────────
-// Self-contained module. Imports from state.js, play.js, charsheet.js and util.js.
-// Visibility is gated (book 246 only) by the caller in boot.js via
-// setSim246Visible().
-// To remove: delete this file, remove its import line and initSim246()/
-// setSim246Visible() calls from boot.js, and remove the .bsim-* CSS (shared
-// with the other battlesim*.js modules, so only remove it if all are gone).
-//
-// Standard Fighting Fantasy SKILL/STAMINA/LUCK system (SKILL 1d6+6, STAMINA
-// 2d6+12, LUCK 1d6+6, normal wound 2 STAMINA, Test Your Luck as usual).
-//
-// This book's full enemy roster (45 stat blocks across every fight in the
-// book, including each named slot of every multi-enemy encounter) is seeded
-// in book_enemies. Rather than hardcode 12+ bespoke per-monster mechanics,
-// three general knobs (reused from the book198/200/201 pattern) cover every
-// special rule found in a full read-through:
-// - attackModifier: covers SKILL-reduction fights (Metallix -2 while
-//   disarmed, Vampire Bat -2 in darkness, Chaos Beast Man's mid-fight
-//   transform into Mutant Beast Lord - just re-pick the stronger enemy).
-// - requiredWeapon toggle + reducedWoundDamage: covers "only a silver
-//   dagger truly hurts this thing" (Vampire sec.254 - 0 damage without one;
-//   Death Head sec.277 - 1 STAMINA instead of 2 without one).
-// - instantKillThreshold: covers "you don't wear it down, you finish it
-//   outright" fights - Undead Chaos Warrior (sec.2: win a round, then roll
-//   1 die, 5-6 kills it outright, 1-4 nothing) and the ghost-like
-//   Doppelgangers (sec.159/8: no STAMINA loss on either side, winner
-//   re-rolls both dice, a double decides it) both boil down to the same
-//   shape - win a round, then a follow-up roll (default 1d6, threshold 5)
-//   decides whether the enemy dies instantly instead of losing STAMINA.
-//
-// Deliberately NOT modeled: Zagor's four-Elemental staged pre-duel fight
-// (sec.14/55/94/186, decided by which golden dragon's tooth you throw, not
-// by combat rolls) and the two Inquisitor riddles/coin-count/age puzzle -
-// none of these are dice-vs-dice battles a sim has anything to calculate.
-// The final SKILL 11/STAMINA 18 Zagor duel itself (sec.27, "no armour, long
-// knives") is standard combat and is in the enemy roster as normal.
-//
-// All state lives in pt.sim246, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Return to Firetop Mountain, book 246)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -122,9 +87,7 @@ function _runRound() {
   if (playerAS === enemyAS) {
     _appendLog(d, t('battlesim246.log.both_avoided'));
   } else if (playerAS > enemyAS) {
-    // Instant-kill fights (Undead Chaos Warrior, Doppelgangers): winning a
-    // round doesn't wear STAMINA down - instead roll again to see if this
-    // is the blow that finishes it.
+    // Instant-kill encounters require a follow-up roll after winning, not gradual STAMINA damage.
     if (d.instantKillThreshold > 0) {
       const roll = _roll1d6();
       if (roll >= d.instantKillThreshold) {

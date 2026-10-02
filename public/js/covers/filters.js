@@ -34,10 +34,7 @@ export function _coverTooltipTitlePercent() {
   return coversState._coverTooltipTitlePct;
 }
 
-// A sim book can be a standalone tile OR live inside an anthology container
-// as a child (e.g. book 8 - its own tile never appears on the covers wall,
-// only its parent anthology's does), so containers count too if ANY of
-// their children has a sim, not just the container's own ID.
+// An anthology matches simulator filters if any child has a simulator.
 export function _hasBattleSim(item) {
   if (item.isSeries) return false;
   return !!item.hasBattleSim;
@@ -50,24 +47,16 @@ export function _hasLiveReading(item) {
   return !!item.hasLiveReading;
 }
 
-// How many badges already occupy the cover thumb's bottom-left corner
-// (battle-sim, then live-reading) - the PDF badge stacks after them via
-// its data-badge-offset slots.
+// Stack PDF badges after battle-sim and reading badges.
 export function _bottomLeftBadgeCount(item) {
   return (_hasBattleSim(item) ? 1 : 0) + (_hasLiveReading(item) ? 1 : 0);
 }
 
-// Cross-referenced against the logged-in user's own library (getCachedBooks,
-// wired in via setCoversHooks - covers.js can't import books.js directly,
-// since books.js already imports from covers.js) rather than anything the
-// server returns, since /api/public/books is a plain public listing with no
-// per-requester ownership info at all.
+// Resolve ownership from the hooked library cache; the public catalog has no viewer-specific ownership.
 export function _isNotInMyBooks(item) {
   const owned = Array.isArray(coversState._hooks.getCachedBooks?.()) ? coversState._hooks.getCachedBooks() : [];
   const ownedIds = new Set(owned.map(b => b.id));
-  // A series counts as "not mine" only if NONE of its books are owned -
-  // unlike the battle-sim/open-world filters, this one has a clean meaning
-  // for a whole series (not just individual books), so it isn't excluded.
+  // A series is not-owned only when none of its books are owned.
   if (item.isSeries) return !(item.bookIds || []).some(id => ownedIds.has(id));
   return !ownedIds.has(item.id);
 }
@@ -81,14 +70,9 @@ export function _visibleCoverItems() {
   else if (mode === 'series') items = base.filter(b => !!b.isSeries);
   else if (mode === 'favorites') items = base.filter(_isFavoriteCoverItem);
   else items = base;
-  // Series covers span multiple books and don't map to one battle sim, so
-  // they're excluded outright rather than shown/hidden by any single book's
-  // sim status.
+  // Exclude series covers from battle-sim filters; they do not represent one simulator.
   if (coversState._coversBattleSimOnly) items = items.filter(_hasBattleSim);
-  // Mobile is reading-only (see mobile/reader.js) - forced on regardless of
-  // the "Book available" chip's own stored toggle state, since there's
-  // nowhere for a non-reading book to go on mobile anyway. The chip itself
-  // is hidden there (mobile.css) so it can't be toggled back off.
+  // Mobile always filters to readable books, regardless of the saved availability toggle.
   if (coversState._coversLiveReadingOnly || _isMobile()) items = items.filter(_hasLiveReading);
   // Open world is a series-only concept - non-series items never match.
   if (coversState._coversOpenWorldOnly) items = items.filter(i => !!i.isOpenWorld);

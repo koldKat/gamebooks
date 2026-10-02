@@ -13,12 +13,7 @@ import { showMain } from './play-screen.js';
 import { APP_XP_EXTRA_USER_ID } from './state.js';
 
 export async function navigateToBook(bookId) {
-  // A book's detail dialog can now stay open on top of the forum (see the
-  // gamebooks-open-book handler below) instead of closing it - but actually
-  // navigating into the book's play view is a real navigation away from the
-  // dialog/forum entirely, not just "show a modal on top." If the forum is
-  // still open (z-index 3000) it would otherwise sit over the newly-shown
-  // play screen (no special z-index of its own), leaving it looking stuck.
+  // Close the forum before navigating to the play view.
   document.getElementById('forum-modal-overlay')?.classList.remove('active');
   _cancelForumReveal();
   _ensureLiveTabControllerStarted();

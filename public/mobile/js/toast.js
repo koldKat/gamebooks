@@ -1,10 +1,4 @@
-// toast.js - Minimal auto-dismissing toast, mobile's only reward feedback
-// mechanism right now. Desktop's equivalent for this same event (notebook
-// XP) is even quieter - notes.js just refreshes the header's XP/coin
-// counter (setOnXpAwarded -> refreshCoinsDisplay) - but mobile has no
-// persistent XP/level display anywhere to refresh, so a toast is the
-// closest equivalent, not an attempt at porting rewards.js's full
-// fly-to-badge floater animation.
+// Auto-dismissing mobile feedback; no desktop fly-to-badge animation.
 
 let _el = null;
 let _hideTimer = null;

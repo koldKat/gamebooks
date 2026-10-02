@@ -1,68 +1,9 @@
-// ── Battle Simulator (Магьосникът от огнената планина / The Warlock of
-// Firetop Mountain - the original 1982 Ian Livingstone/Steve Jackson book,
-// Fighting Fantasy #1 - Bulgarian edition, book 464) ──
-// Self-contained module. Imports from state.js, play.js, charsheet.js and util.js.
-// Visibility is gated (book 464 only) by the caller in boot.js via
-// setSim464Visible().
-// To remove: delete this file, remove its import line and initSim464()/
-// setSim464Visible() calls from boot.js, and remove the .bsim-* CSS (shared
-// with every other battlesimN.js, so only remove it if all of them are gone).
-// Also remove 'sim464' from SIM_HISTORY_KEYS in server/db/xp.js, and remove
-// 'sim464-overlay' from ALL_PANEL_OVERLAY_IDS in util.js and the #sim464-btn
-// selectors in battlesim.css.
-//
-// Bulgarian-labeled Fighting Fantasy system (УМЕНИЕ/ИЗДРЪЖЛИВОСТ/КЪСМЕТ),
-// mechanically identical to the standard English SKILL/STAMINA/LUCK engine
-// already used across this app (opposed 2d6+УМЕНИЕ roll, ties = no effect,
-// loser -2 ИЗДРЪЖЛИВОСТ; "Изпитване на Късмета" costs 1 КЪСМЕТ, +/-1
-// ИЗДРЪЖЛИВОСТ effect). Cloned from battlesim462.js (itself cloned from
-// battlesim221.js) - same engine, already Bulgarian-labeled and already
-// free of the other book's Talisman/Trident fields.
-//
-// This book's own pre-existing book_sections rows (already imported before
-// this sweep reached it) were discarded and rebuilt from the raw PDF - the
-// existing content had 0 broken links but only 342/400 reachable, and spot
-// checks found genuine content-merge corruption (a fragment of a LATER
-// section's text bled onto an EARLIER section with no boundary marker,
-// e.g. §285's stored html ending with a stray "287. Три Плъха-" fragment).
-// The rebuild found the same "caption-bleed" pattern extensively (~25
-// sections had a duplicate/misplaced fragment of a neighboring section's
-// opening line appended to their own tail) - all individually identified
-// and stripped during the mandatory prose read.
-//
-// 373 of 400 sections are reachable via static links; the other 27
-// (§169/173/174/182/186/192/198/200/204/219/226/231/233/245/276/288/290/
-// 302/321/335/347/368/387/400) are NOT corruption or missing content - they
-// are the destinations of this book's signature "three numbered keys, sum
-// them, turn to that page" combination-lock puzzle (§139/§182/§198: collect
-// keys throughout the dungeon, each stamped with a number, and the chest's
-// true opening page is the sum of three correct keys' numbers - a
-// player-computed destination that can never appear as a static link in
-// the source text). §400, the book's actual winning treasure-room ending,
-// is among these - fully intentional, confirmed by tracing §139's own
-// explicit rules text.
-//
-// attackModifier/enemyWoundDamage/playerWoundDamage/enemyDefeatThreshold
-// cover this book's non-standard combat wrinkles: the invisibility bonus
-// fighting the ranged Wraith at §39/§142 (+2 to the player's roll, fixed
-// enemy wound damage of 3, and a reduced/negated wound table when the enemy
-// lands a hit - hand-applied via the existing fields since the reduced-
-// damage table doesn't fit a single numeric field), and the "-2 to your
-// roll unless silver weapon" condition on werewolf-type creatures (§211).
-//
-// No simultaneous/extraAttackers mechanic modeled: a few encounters use a
-// "paired alternating target" rule instead (§140 Skeleton pairs) - each
-// round the player picks one of a pair to actually damage, while the other's
-// attack only "blocks" (never wounds the player if the player's own roll would have
-// won). This dual-target bookkeeping doesn't fit this sim's single-enemy-
-// dropdown model and is deliberately left for the player to track by hand,
-// re-picking from the dropdown as different named opponents fall - same
-// precedent as every other unmodeled multi-attacker passive in this app's
-// sims. All other multi-enemy encounters (§7/29/43/49/79/212/231/330/377)
-// are ordinary sequential single-target fights, fully covered by the
-// dropdown's re-pick-after-defeat flow.
-//
-// All state lives in pt.sim464, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Магьосникът от огнената планина / The Warlock of Firetop Mountain - the
+// original 1982 Ian Livingstone/Steve Jackson book, Fighting Fantasy #1 - Bulgarian edition, book
+// 464)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
+// Narrative healing/items are applied manually.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -132,9 +73,7 @@ function _resetEncounterKnobs(d) {
   d.player.enemyDefeatThreshold = 0;
 }
 
-// Uncapped (was previously trimmed to the last 100) - the admin dashboard
-// aggregates battle counts app-wide from this array, so per-user history needs
-// to be a true lifetime total, not a rolling window.
+// Keep lifetime outcomes: admin totals require the full history.
 function _recordOutcome(d, outcome) {
   d.history.push({
     enemy: _enemyName(d), outcome,
@@ -588,9 +527,7 @@ export function initSim464() {
     if (!d) return;
     const map = FIELD_MAP[id];
     if (!map) return;
-    // Attack modifier is the one field allowed to go negative (bare-handed/
-    // disarmed/fatigue penalties are always a subtraction) - every other
-    // field stays clamped to 0 or above.
+    // Allow negative attack modifiers; other fields stay non-negative.
     val = id === 'sim464-player-atkmod' ? Number(val) : Math.max(0, val);
     if (id === 'sim464-player-skill') val = Math.min(val, d.player.skillInitial);
     if (id === 'sim464-player-stamina') val = Math.min(val, d.player.staminaInitial);

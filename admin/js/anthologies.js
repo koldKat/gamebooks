@@ -1,8 +1,4 @@
-// Anthologies tab: lists all anthology container books across all users.
-// Deleting reuses the same DELETE /api/admin/books/:id route as regular books
-// (children get orphaned via parent_book_id ON DELETE SET NULL, not deleted).
-// To remove: delete this file and its <script type="module"> import in
-// admin/index.html; remove the Anthologies tab HTML/CSS.
+// Anthology management. Deletion unlinks children via ON DELETE SET NULL.
 
 import {
   api, el, badge, mkBtn, mkEditBtn, appendCell, _esc, showAlert, showConfirm,

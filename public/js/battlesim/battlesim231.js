@@ -1,67 +1,7 @@
-// ── Battle Simulator (Daggers of Darkness, book 231) ────────────────────────
-// Self-contained module. Imports from state.js, play.js, charsheet.js and util.js.
-// Visibility is gated (book 231 only) by the caller in boot.js via
-// setSim231Visible().
-// To remove: delete this file, remove its import line and initSim231()/
-// setSim231Visible() calls from boot.js, and remove the .bsim-* CSS (shared
-// with every other battlesimN.js in this app, so only remove it if all are
-// gone).
-//
-// Standard Fighting Fantasy SKILL/STAMINA/LUCK system (SKILL 1d6+6, STAMINA
-// 2d6+12, LUCK 1d6+6) and single-dose potion-of-three-choices setup, reused
-// verbatim from books 201/202/203. attackModifier/enemyWoundDamage/
-// pairedFight/sideEnemy/winAfterHits are also reused exactly as those books
-// built them.
-//
-// Four genuinely new mechanics for this book, all per-encounter knobs (reset
-// whenever a new enemy is picked, same lifecycle as attackModifier etc):
-// - darknessFight (checkbox): this encounter takes place in total darkness
-//   (Dark Monster sec.3, Mamlik sec.135, Dark Warrior sec.317). Combined
-//   with the persistent hasDarkfight toggle below: if the ability is NOT
-//   held, -2 SKILL for this fight only.
-// - useNecromancerLevel (checkbox): this is a Necromancer fight (sec.99/
-//   151/242) - your trained Necromancer Fighting Level (see below) is used
-//   AS your SKILL score for this battle, replacing (not adding to) your
-//   normal SKILL.
-// - drawThreshold (number, 0 = off): battle ends the instant either side's
-//   STAMINA drops to this value, not 0 - used for the two "fight until
-//   STAMINA drops to 4" encounters (Urgenj sec.191, Marauder sec.200). At
-//   0 STAMINA the loser is simply spared, not killed, but this sim treats
-//   reaching the threshold as an ordinary win/loss same as any other fight
-//   (the narrative distinction doesn't change the maths).
-// - doubleOneDrowns (checkbox): the Elkiem fight (sec.270) - if your own
-//   two dice for an Attack Round both come up 1, you have drowned instantly
-//   regardless of STAMINA remaining. Only your own roll is checked (the
-//   creature's own Attack Strength roll is unaffected).
-//
-// Two new persistent player fields (not per-encounter, since both are
-// trained/acquired once and then apply for the rest of the game):
-// - hasDarkfight (toggle): the Ability of Darkfight - if held, darkness
-//   fights proceed at normal SKILL (no penalty).
-// - necromancerLevel (number, sec.266's training mini-game result): the
-//   SKILL score substituted in whenever useNecromancerLevel is ticked.
-//
-// Deliberately NOT modeled, same precedent as every other sim in this app:
-// - The 24-unit Poison tracker. Nearly every combat in this book instructs
-//   "mark off N Poison units on the Adventure Sheet" - this is a whole-
-//   adventure meter (death when all 24 units are shaded), not a per-battle
-//   stat, and doesn't affect combat maths directly. Track it on the
-//   Adventure Sheet/charsheet, not here.
-// - Medallion power (three free "escape a lost fight" uses, restoring
-//   STAMINA to 4 at a cost of -1 SKILL/-1 LUCK/3 Poison units) - a whole-
-//   game resource, not a combat mechanic; apply the STAMINA/SKILL/LUCK
-//   adjustments by hand with the steppers if a route uses it.
-// - Item/Power bypass branches that skip a fight entirely or reduce the
-//   enemy count (Mamlik ring sec.92, Treffilli sec.228, flowers sec.219/
-//   358, Powers sec.158/369, gems sec.392) - these change whether/how many
-//   of a multi-enemy group you fight, which the existing single-enemy
-//   pick-and-reset flow already handles: simply don't start (or skip
-//   ahead to) the enemies the book says you avoid.
-// - Pre-battle one-off STAMINA/SKILL/LUCK losses narrated outside the
-//   fight itself (e.g. sec.14's ship-passage STAMINA deduction, sec.118's
-//   pre-fight arrow) - apply those by hand with the steppers first.
-//
-// All state lives in pt.sim231, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Daggers of Darkness, book 231)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
+// Darkness, Necromancer level, and other encounter overrides reset per enemy.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -159,12 +99,7 @@ function _enemyName(d) { return d.enemy.name.trim() || t('battlesim.default_enem
 function _enemyNameSafe(d) { return escapeHtml(_enemyName(d)); }
 function _sideEnemyNameSafe(d) { return escapeHtml(d.sideEnemy.name.trim() || 'the second attacker'); }
 
-// Necromancer fights replace SKILL outright with the trained level; darkness
-// fights subtract 2 only if the Darkfight ability isn't held. The two never
-// overlap in the source text, but if both were somehow ticked at once,
-// darkness applies to whichever base SKILL results (Necromancer level or
-// normal SKILL) rather than being mutually exclusive - there's no printed
-// case that needs a stricter precedence than that.
+// Necromancer mode replaces base SKILL; darkness subtracts 2 unless Darkfight is held.
 function _effectiveSkill(d) {
   let skill = d.player.useNecromancerLevel ? d.player.necromancerLevel : d.player.skill;
   if (d.player.darknessFight && !d.player.hasDarkfight) skill -= 2;
@@ -187,9 +122,7 @@ function _resetEncounterKnobs(d) {
   d.sideEnemy = { name: '', skill: 0, staminaMax: 0 };
 }
 
-// Uncapped (was previously trimmed to the last 100) - the admin dashboard
-// aggregates battle counts app-wide from this array, so per-user history needs
-// to be a true lifetime total, not a rolling window.
+// Keep lifetime outcomes: admin totals require the full history.
 function _recordOutcome(d, outcome) {
   d.history.push({
     enemy: _enemyName(d), outcome,
@@ -245,10 +178,7 @@ function _runRound() {
     if (d.player.stamina > threshold) d.pendingLuckQueue.push({ kind: 'enemy-hit' });
   }
 
-  // Paired fight: a second, independent exchange with its own fresh player
-  // roll every round (including round 1) - covers any "two simultaneous
-  // attackers, choose one target" case. The side attacker is never wounded
-  // through this path.
+  // Roll independently against the side attacker, which cannot be wounded.
   if (!drowned && d.pairedFight && d.sideEnemy.staminaMax > 0 && d.player.stamina > threshold) {
     const sidePlayerAS = _roll2d6() + _effectiveSkill(d) + (d.player.attackModifier || 0);
     const sideAS = _roll2d6() + d.sideEnemy.skill;
@@ -858,9 +788,7 @@ export function initSim231() {
     if (!d) return;
     const map = FIELD_MAP[id];
     if (!map) return;
-    // Attack modifier is the one field allowed to go negative (bare-handed/
-    // disarmed/fatigue penalties are always a subtraction) - every other
-    // field stays clamped to 0 or above.
+    // Allow negative attack modifiers; other fields stay non-negative.
     val = id === 'sim231-player-atkmod' ? Number(val) : Math.max(0, val);
     if (id === 'sim231-player-skill') val = Math.min(val, d.player.skillInitial);
     if (id === 'sim231-player-stamina') val = Math.min(val, d.player.staminaInitial);

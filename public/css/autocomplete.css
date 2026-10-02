@@ -1,7 +1,4 @@
-/* ── Autocomplete dropdown (enemy pickers, name pickers) ─────────────────
-   Extracted out of play.css so it can be linked standalone (mobile, for the
-   battlesim*.js enemy-picker inputs) without pulling in play.css's much
-   larger desktop-only ruleset. */
+/* Standalone autocomplete styles shared by desktop and mobile simulator inputs. */
 
 .autocomplete-wrap {
   position: relative;

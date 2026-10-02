@@ -43,15 +43,9 @@ export function commitChoices(sec, choices) {
   render();
 }
 
-// A choice that's removed from `sec` may leave its target node with no
-// incoming edges from anywhere. If a playthrough's current position is
-// that now-orphaned node, revert it back to the previous node in its path.
-// The orphaned node itself is also deleted, unless it carries metadata
-// (note/priority/battle/color/portals) worth preserving.
+// Rewind runs stranded on orphaned targets; retain orphan nodes with metadata.
 function _cleanupOrphanedTargets(sec, oldChoices, newChoices) {
-  // Protect the book's default start plus every run's own entry point (path[0])
-  // - a run begun via the alternate-start button (play.js's startPlaythrough)
-  // can legitimately sit on a node nothing else points to.
+  // Protect the default start and each run's path[0], including isolated alternate starts.
   const roots = new Set([isValidSecId(state.startSection) ? state.startSection : 1]);
   state.playthroughs.forEach(pt => { if (isValidSecId(pt?.path?.[0])) roots.add(pt.path[0]); });
   const removed = oldChoices.filter(c => !newChoices.includes(c) && !isTerminal(c) && c !== sec);
@@ -79,14 +73,7 @@ function _cleanupOrphanedTargets(sec, oldChoices, newChoices) {
   }
 }
 
-// allowEmpty: an explicitly empty box commits choices:[] ("no more choices
-// here", a genuine dead end) instead of silently doing nothing - that no-op
-// meant openEditModal's "clear everything and save" had no way to ever
-// actually remove the last choice(s) from an already-mapped node. Only
-// openEditModal opts into this; the first-time "Record & Choose" flow keeps
-// the old no-op behavior, since an empty submit there is far more likely to
-// be an accidental click/Enter before typing anything than a deliberate
-// "this section has no choices" - see call sites.
+// Only editing opts into clearing choices; empty first-time input remains a no-op.
 export function handleRecordChoices(sec, raw, allowEmpty = false) {
   if (raw === '') {
     if (allowEmpty) commitChoices(sec, []);

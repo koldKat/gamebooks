@@ -1,35 +1,5 @@
-// ── Battle Simulator (Замъкът на таласъмите / Castle of the Goblins, book 92) ──
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 92 only) by the caller in boot.js via
-// setSim92Visible().
-// To remove: delete this file, remove its import line and initSim92()/
-// setSim92Visible() calls from boot.js, remove 'sim92' from
-// SIM_HISTORY_KEYS in server/db/xp.js, and remove the .bsim-* CSS (shared
-// with the other battlesim*.js files, so only remove it if all are gone).
-//
-// Table-driven combat, not formula-driven like the other chitanka.info-family
-// sims. STRENGTH = pick + 10, LIFE = pick + 20 (both rolled once at battle
-// start). d.ratio = playerStrength - enemyStrength is computed once when an
-// enemy is selected and stays fixed for the whole fight. Each round, pick
-// 1-12, attackLevel = ratio + pick (clamped to the table's -12..+12 range),
-// and COMBAT_TABLE[attackLevel] gives BOTH sides' life loss simultaneously -
-// this is not "loser takes damage", both sides always lose some amount
-// (occasionally 0, occasionally instant death at the two extremes). Table
-// verified against the book's own worked example (ratio -5, pick 4, level
-// -1 -> enemy loses 8, player loses 4) and against the printed table's
-// rendered PDF pages.
-//
-// book_enemies.attack holds STRENGTH, .hp holds LIFE, .defense unused - same
-// convention as the other single-stat-pair Bulgarian sims. 18 combat
-// encounters across the book's 375 sections, every entry disambiguated with
-// its section number. §199's three-headed dragon (Първа/Втора/Трета глава)
-// and §32's six identical dwarves (Джудже) are multi-stage/multi-count
-// encounters fought as separate consecutive picks, not a bespoke group mode.
-// §324 (Тиквеняк) and §374 (Тиквеняк Първи) are the same final boss reached
-// via two different branches, both winning to §375 - kept as two rows since
-// they are reached from different sections.
-//
-// All state lives in pt.sim92, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Замъкът на таласъмите / Castle of the Goblins, book 92)
+// Fixed strength ratio + 1-12 pick selects simultaneous losses from the -12..12 table.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';

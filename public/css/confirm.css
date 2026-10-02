@@ -1,8 +1,4 @@
-/* ── Custom confirm/alert dialog (confirm.js) ─────────────────────────────
-   Extracted out of play.css so it can be linked standalone (mobile) without
-   pulling in play.css's much larger desktop-only ruleset. .confirm-actions
-   is also reused by #choice-dialog on desktop (see play.css) - that compound
-   override still works as long as this file loads alongside play.css there. */
+/* Standalone confirm styles also serve the desktop choice dialog. */
 
 #confirm-overlay {
   display: none;

@@ -27,10 +27,7 @@ export function renderFeedContents(entries, pinned, feedHeaderHtml) {
     groups[groups.length - 1].items.push(e);
   }
 
-  // All distinct public books active this day, most entries first, for the
-  // day-card background bleed - cycled across tiles rather than repeating
-  // a single "winner", so a day with several different books played shows
-  // more than just one of them. Private books never leak their cover.
+  // Use distinct public books for day-card covers; never expose private-book art.
   function _dayCovers(items) {
     const counts = new Map(); // bookId -> { n, cover, firstIndex }
     let order = 0;
@@ -63,10 +60,7 @@ export function renderFeedContents(entries, pinned, feedHeaderHtml) {
       stackHtml = `<div class="feed-day-cover-stack"></div>`;
       _lastDayCoverLists.push(covers);
     } else {
-      // No eligible cover for this day - rather than a flat opaque card that
-      // looks out of place next to its cover-bearing neighbors, let the
-      // real rotating landing background show through directly (like glass)
-      // instead of drawing a copy of it - always in sync, never stale.
+      // Use the glass-card treatment when no eligible day cover exists.
       cardCls += ' feed-day-card--glass';
     }
     html += `<div class="${cardCls}"${attr}>${stackHtml}<div class="feed-day-content"><div class="feed-day-header">${g.label}</div>`;

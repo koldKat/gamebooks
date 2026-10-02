@@ -1,35 +1,5 @@
-// reader.js - The "double-screen" play view: top pane is in-app reading,
-// bottom pane is always the graph (graph-view.js). Reading-only for
-// navigation specifically - mobile play is scoped to books with imported
-// text, no manual section entry/choice recording (typing section numbers
-// works fine at a desk next to a keyboard; on a phone it means putting the
-// book down, hunting-and-pecking on glass, then picking the book back up -
-// a much worse version of the same friction, not a smaller one). Reading
-// and tapping (in-text links, graph nodes) covers real navigation; the
-// manual Win/Loss/Battle Death buttons still exist (same as desktop) for
-// ending a run the book's own text doesn't link to a numbered 0/-1 choice,
-// or a battle-sim loss, which never has an in-text link at all. A gap in an
-// otherwise-covered book (a section or two without imported text) shows a
-// plain "not available here" message instead of falling into manual entry.
-//
-// Reuses state.js directly, and graph.js's canReach/findPathTo (pure
-// pathfinding, no vis-network/DOM coupling at module load), but does NOT
-// import play.js/liveread.js - those pull in charsheet.js/equipment.js and
-// vis-network gets loaded separately, on its own terms, for the graph pane
-// below. commitChoices/startPlaythrough/undoRun/fast-travel/endPlaythrough
-// are small, deliberately-local reimplementations of the same DOM-free
-// logic play.js already has (play.js:856-888, startPlaythrough, undoRun,
-// doJump, endPlaythrough).
-//
-// This file owns pane orchestration, section navigation, and playthrough
-// lifecycle only - the long-press node context menu (context-menu.js), its
-// note editor (note-modal.js), and the toolbar's Fast Travel dialog
-// (fast-travel-dialog.js) are each their own self-contained UI module, not
-// built here. reader.js passes them the playthrough-lifecycle functions
-// they need (checkXpReward/maxFastTravels/doFastTravel) as plain parameters
-// on each call rather than those files importing reader.js back - avoids a
-// reader.js <-> {context-menu,note-modal,fast-travel-dialog}.js import
-// cycle, since reader.js is already the one importing all three.
+// Mobile reading/navigation and run lifecycle; manual outcomes remain available.
+// Avoid desktop play/reading imports; pass lifecycle hooks to separate dialogs.
 
 import {
   state, loadState, saveState, apiFetch, currentBookId,
@@ -48,28 +18,8 @@ import { openFastTravelDialog } from './fast-travel-dialog.js';
 import { t } from '../../js/i18n.js';
 import { TROPHY_SVG, BROKEN_SHIELD_SVG, terminalHeadingKey } from '../../js/reading/liveread-shared.js';
 
-// Reward feedback (see toast.js's own header comment for why mobile uses a
-// toast rather than porting rewards.js's fly-to-badge floaters). Desktop
-// only learns XP was awarded via a live SSE push on /api/user/stream
-// (livetab.js) - deliberately not imported here, so mobile has to find out
-// on its own instead: cache the last known XP total, then after a real
-// navigation re-check it once the server's fire-and-forget award (see
-// processStateXp in server/routes/books.js, which runs *after* the save's
-// own response is already sent) has had time to land. 750ms matches
-// desktop's own _scheduleRewardProfileRefresh delay for the same race.
-//
-// Mirrors two things rewards.js does for the exact same reason - toast.js's
-// own showToast() just overwrites whatever's currently visible, so without
-// this a second award landing close behind the first would silently erase
-// it rather than show or merge it:
-//   1. Multiple _checkXpReward() calls within the same 750ms window collapse
-//      into a single poll (_xpFlushTimer), same as rewards.js's own
-//      _queueRewardFloater accumulating window.
-//   2. If a toast from an earlier poll is still on screen when a later one
-//      resolves, the new delta is added to it and the display timer resets,
-//      rather than replacing it - same spirit as rewards.js's floater queue,
-//      just additive instead of a literal stacked queue (mobile's toast only
-//      ever shows one message at a time).
+// Debounce reward checks by 750ms to allow deferred server awards to land.
+// Merge nearby toast deltas instead of overwriting feedback.
 let _lastKnownXp     = null;
 let _xpFlushTimer    = null;
 let _xpToastPending  = 0;
@@ -124,20 +74,13 @@ function _loadingHtml(label) {
   </div>`;
 }
 
-// The graph pane's own placeholder (see #m-graph-loading in renderReader) -
-// separate element layered over #m-graph rather than swapped innerHTML,
-// since initGraphView()'s vis.Network takes ownership of #m-graph's own
-// content the moment it's constructed. Hidden for good once the first real
-// section load populates the graph; nothing ever shows it again.
+// Overlay the graph loader separately: vis.Network owns the graph container.
 function _hideGraphLoading() {
   const el = document.getElementById('m-graph-loading');
   if (el) el.style.display = 'none';
 }
 
-// 'both' | 'text' | 'graph' - which pane(s) are showing. Each toggle button
-// sets its own mode, or clears back to 'both' if it's already active -
-// there's no state where both toggles could claim to be "on" at once, so
-// only one button ever needs the active look.
+// Pane modes are mutually exclusive toggles, each returning to both when deselected.
 let _paneMode = 'both';
 function _setPaneMode(mode) {
   const prev = _paneMode;
@@ -148,21 +91,13 @@ function _setPaneMode(mode) {
   panes.classList.toggle('m-graph-only', mode === 'graph');
   document.getElementById('m-toggle-text-btn')?.classList.toggle('active', mode === 'text');
   document.getElementById('m-toggle-graph-btn')?.classList.toggle('active', mode === 'graph');
-  // #m-graph-wrap sits at display:none the whole time text-only mode is
-  // active, so vis-network's own autoResize never sees it change size and
-  // the canvas/centering it last computed goes stale. Re-running
-  // refreshGraph() once the wrap is visible again forces a fresh
-  // moveTo() against the container's real (now non-zero) size.
+  // Refresh after revealing the graph so resize and centering use non-zero dimensions.
   if (prev === 'text' && mode !== 'text') {
     requestAnimationFrame(() => refreshGraph(currentSection()));
   }
 }
 
-// Mirrors play.js's commitChoices() - reveal-on-arrival: merge this
-// section's own choice list into state.graph, deduped/sorted, preserving
-// any existing per-node metadata (note/priority/etc - mobile never writes
-// those itself, kept only so a desktop session editing the same run later
-// doesn't lose anything).
+// Reveal and merge choices on arrival, preserving existing node metadata.
 function _commitChoices(sec, choices) {
   const deduped = [...new Set(choices)].sort((a, b) => {
     const av = isValidSecId(a), bv = isValidSecId(b);
@@ -186,14 +121,7 @@ function _commitChoices(sec, choices) {
   if (existing.showNote) state.graph[sec].showNote = existing.showNote;
 }
 
-// Mirrors play.js's startPlaythrough() shape, stripped to what mobile
-// needs. Doesn't call equipment.js's instantiateLoadout() (desktop-only
-// machinery, and a book's own configured starting-item template - if any -
-// won't get applied to a mobile-started run for now), but does fill in
-// empty-but-present inventory/equipment/diceState in the exact shape
-// instantiateLoadout() itself falls back to with no template configured, so
-// inventory.js/equipment.js/dice.js don't hit an undefined field if the same
-// run is later opened on desktop.
+// Initialize desktop-compatible run fields; mobile does not instantiate starting-item templates.
 function _startPlaythrough(startSec) {
   state.playthroughs.push({
     path: [startSec], completed: false, result: null,
@@ -201,68 +129,33 @@ function _startPlaythrough(startSec) {
     charSheet: { fields: [] },
     inventory: [], equipment: {}, equipmentVisible: {},
     diceState: { count: 2, die: 6, lastResult: null },
-    // Every section ever actually read this run, permanent - unlike
-    // pt.path (which undo shrinks), this never loses an entry. Drives both
-    // the graph's "visited" node colour (see graph-view.js's refreshGraph)
-    // and which nodes a tap is even allowed to preview (see _onGraphTap) -
-    // desktop has no equivalent since it doesn't gate graph taps at all.
+    // Keep visited sections permanently even when undo shrinks the live path.
     mVisited: [startSec],
   });
   state.activePtIndex = state.playthroughs.length - 1;
 }
 
-// A run saved before mVisited existed won't have it yet - seed it from the
-// live path. Also reconciles an EXISTING mVisited against the live path
-// every time, not just when missing - mVisited is mobile-only (desktop's
-// play.js has no idea it exists), so a session that goes mobile -> desktop
-// -> mobile comes back with pt.path grown by real desktop navigation but
-// mVisited untouched. pt.path is the one field both platforms reliably
-// keep current, so folding it in here on every load is what keeps a node
-// actually read on desktop from showing as unvisited (wrong graph colour,
-// and blocked from preview) the next time the same run is opened on mobile.
+// Merge the live path into mVisited on every load, including navigation done on desktop.
 function _ensureMVisited(pt) {
   if (!Array.isArray(pt.mVisited)) pt.mVisited = [];
   for (const sec of pt.path) if (!pt.mVisited.includes(sec)) pt.mVisited.push(sec);
   return pt.mVisited;
 }
 
-// Bumped on every call and re-checked after each await, same pattern as
-// liveread.js's own _showToken - a slower, now-stale fetch (e.g. from
-// tapping two links quickly) can't overwrite the panel after a newer
-// request already won.
+// Check the request generation after each await so stale results cannot replace newer content.
 let _showToken = 0;
 
-// section id -> { html, choices } for this book/reader session only - reset
-// in renderReader() on every fresh book open, since ids aren't unique
-// across books. Book text is static within a session (no live-editing
-// concern worth guarding against here), so once fetched a section is
-// trusted as-is rather than revalidated. Populated two ways: eagerly for
-// every choice link right after the section that links to it renders (see
-// _prefetchChoices), and incidentally by _showSection/_previewSection
-// themselves caching whatever they fetch - so even without the eager
-// prefetch ever finishing, a section is never fetched from the network
-// twice.
+// Cache section responses and prefetch choice targets; reset the cache on each book open.
 const _sectionCache = new Map();
 
 function _prefetchChoices(choices) {
   for (const raw of choices || []) {
-    // A choices array entry isn't guaranteed to already be normalized the
-    // way _showSection/_previewSection's own `sec` argument is (both are
-    // fed a parseSecId()'d value from their callers) - an un-normalized
-    // "0"/"-1" string sentinel would slip past a raw isTerminal() check
-    // (strict ===) and get fetched as if it were a real section, and a
-    // numeric-looking string vs. number mismatch would key the cache
-    // differently than _showSection's own String(sec) lookup expects,
-    // making every prefetch here a wasted, permanent cache miss. Same class
-    // of bug graph.js's _bfsDepth just had to be fixed for.
+    // Normalize choice IDs before terminal checks and cache lookups.
     const c = parseSecId(raw);
     if (c === null || isTerminal(c)) continue;
     const key = String(c);
     if (_sectionCache.has(key)) continue;
-    // Fire-and-forget, deliberately not gated by _showToken - this is
-    // background work for a section the reader hasn't asked to see yet, so
-    // a stale in-flight request here isn't "wrong", it just finishes and
-    // populates the cache for whenever (if ever) they actually tap it.
+    // Prefetch is independent of the display generation: stale display requests may still warm the cache.
     apiFetch(`/api/books/${currentBookId}/sections/${encodeURIComponent(c)}`)
       .then(res => res.ok ? res.json() : null)
       .then(data => { if (data) _sectionCache.set(key, data); })
@@ -309,10 +202,7 @@ export async function renderReader(mount, book, onBack) {
     showConfirm(t('mobile.confirm_loss'), () => _endPlaythrough('death'), { confirmLabel: t('runs.death') }));
   document.getElementById('m-battledeath-btn').addEventListener('click', () =>
     showConfirm(t('mobile.confirm_battle_death'), () => {
-      // Matches play.js's own battle-death-btn handler: marks the current
-      // node's battle flag too, not just the run outcome - otherwise this
-      // node would never get the graph's battle badge just because the
-      // death happened to come from a sim instead of the book text.
+      // Mark the section as a battle as well as ending the run.
       const sec = currentSection();
       if (sec !== null && !state.graph[sec]?.battle) {
         if (!state.graph[sec]) state.graph[sec] = { choices: [] };
@@ -330,9 +220,7 @@ export async function renderReader(mount, book, onBack) {
     battlesimBtn.addEventListener('click', () => openSimForBook(book.id));
   }
 
-  // Stable function references, built once per renderReader() call and
-  // reused for the whole reader session - context-menu.js captures this in
-  // its own one-time DOM-build closures (see that file's own comment).
+  // Keep stable hook references for the session's one-time dialog bindings.
   const ctxHooks = { checkXpReward: _checkXpReward, maxFastTravels: _maxFastTravels, doFastTravel: _doFastTravel };
   initGraphView(
     document.getElementById('m-graph'),
@@ -341,9 +229,7 @@ export async function renderReader(mount, book, onBack) {
     hideNodeContextMenu,
   );
 
-  // Fresh per book session - a leftover pending amount from a book closed
-  // less than 2.2s ago would otherwise get added onto this book's first
-  // real award, showing an inflated total that has nothing to do with it.
+  // Clear pending toast rewards between book sessions.
   _xpToastPending = 0;
   _xpToastVisibleUntil = 0;
   _seedXpBaseline();
@@ -361,10 +247,7 @@ export async function renderReader(mount, book, onBack) {
   await _showSection(currentSection());
 }
 
-// Same level-based formula as play.js's own maxUndos()/maxFastTravels() -
-// duplicated rather than imported since importing play.js would pull in
-// charsheet.js/equipment.js/graph.js's initGraph/syncGraph, exactly the
-// desktop-DOM-coupled weight this file's header explains mobile avoids.
+// Match desktop's level-based limits without importing its UI dependencies.
 function _maxUndos()       { const lvl = currentUserLevel || 0; return (lvl <= 30 ? 3 : Math.min(10, 3 + Math.ceil((lvl - 30) / 10))) + (bonusUndos || 0); }
 function _maxFastTravels() { const lvl = currentUserLevel || 0; return (lvl <= 30 ? 3 : Math.min(10, 3 + Math.ceil((lvl - 30) / 10))) + (bonusFastTravels || 0); }
 
@@ -381,17 +264,12 @@ function _updateRunControls() {
   undoBtn.disabled = !pt || undosLeft <= 0 || pt.path.length <= 1;
   ftBtn.textContent = t('runs.fasttravel', { n: ftLeft });
   ftBtn.disabled = !pt || ftLeft <= 0;
-  // Same gating as desktop's own !isPlaceholder check (play.js) - a run
-  // that hasn't taken its first step yet has no section to mark an outcome
-  // against.
+  // Require a started run before recording an outcome.
   const endRow = document.getElementById('m-endrun-row');
   if (endRow) endRow.style.display = (pt && pt.path.length > 0) ? '' : 'none';
 }
 
-// Mirrors play.js's undoRun() (same pop-past-forced-passthroughs walk-back
-// logic) minus the open-world portal check (mobile doesn't support
-// open-world/portals) and the final network.focus() call (refreshGraph's
-// own centerOnSec argument already does the equivalent re-centering).
+// Undo past forced nodes; mobile omits portal handling and lets refreshGraph recenter.
 function _undoRun() {
   const pt = currentPlaythrough();
   if (!pt) return;
@@ -413,14 +291,7 @@ function _undoRun() {
   _showSection(sec);
 }
 
-// ── Fast travel ──────────────────────────────────────────────────────────
-// Same dialog shape as desktop's showFastTravelDialog()/doJump() (numeric
-// section entry + high/shortest/normal/low path-preference modes) rather
-// than a mobile-native tap-to-arm flow - desktop's dialog is genuinely the
-// wanted UX here, not a compromise. Reuses .inv-overlay/.inv-modal (already
-// linked via equipment.css) and .inv-qty-* for the stepper instead of
-// desktop's own .cs-num-wrap/.ft-dialog-* (neither of which mobile links),
-// matching the app's broader modal/stepper convention instead.
+// Fast travel with manual section entry and four route preferences.
 function _doFastTravel(mode, id) {
   const pt = currentPlaythrough();
   if (!pt) return;
@@ -441,11 +312,7 @@ function _doFastTravel(mode, id) {
 }
 
 async function _showSection(sec) {
-  // Graph-only mode hides #m-top entirely - rendering into it there would
-  // be a silent no-op the reader can't see, so any real navigation brings
-  // the text back first. (Text-only mode is left alone: the graph being
-  // hidden doesn't stop reading, and refreshGraph() below still keeps its
-  // state current for whenever the reader switches back.)
+  // Restore text for real navigation; leave text-only mode unchanged.
   if (_paneMode === 'graph') _setPaneMode('both');
   const top = document.getElementById('m-top');
   if (!top) return;
@@ -481,38 +348,20 @@ async function _showSection(sec) {
 
   top.innerHTML = data.html;
   top.scrollTop = 0;
-  // Warm the cache for wherever this section's own choices lead next, so
-  // the spinner from this function's own cache-miss branch above is, at
-  // steady state, only ever seen once per section the reader actually
-  // reaches - by the time they've read this section and tapped a choice,
-  // that choice's own fetch has usually already finished in the background.
+  // Prefetch choice targets while the current section is being read.
   _prefetchChoices(data.choices);
   if (data.choices?.length) {
     _commitChoices(sec, data.choices);
-    // _navigate's own saveState() already fired before this fetch resolved,
-    // so it saved pt.path/mVisited but not these just-discovered choices -
-    // without a second save here they only reach the server the next time
-    // something else happens to call saveState (e.g. opening live-reading,
-    // which is why desktop wouldn't see them until then).
+    // Save again after fetching choices: the earlier navigation save did not contain them.
     saveState();
   }
-  // Checked regardless of whether this section had any choices to commit -
-  // a dead-end/leaf section (no outgoing choices at all) is still a real
-  // first-time visit and still XP-eligible; gating this on data.choices too
-  // would silently skip the toast for exactly that case. _navigate's own
-  // earlier save already carries a dead-end visit like this one, so there's
-  // always *some* save behind this check either way.
+  // Check rewards for leaf visits too, not only sections with choices.
   _checkXpReward();
   refreshGraph(sec);
   _hideGraphLoading();
   _updateRunControls();
 
-  // Any in-text link that isn't a real #section-N choice (e.g. an unnumbered
-  // "Epilogue" some books tack on after their win section) is pure bonus
-  // text - fetched and shown inline, never touching state.graph/pt.path.
-  // Same pattern as liveread.js's _showExtra, same reasoning: importing a
-  // non-numeric target as a real choice would register it as a graph node
-  // it isn't.
+  // Show non-section links as bonus prose without changing the graph or run path.
   top.querySelectorAll('a[href^="#"]').forEach(a => {
     const href = a.getAttribute('href').slice(1);
     if (!href) return;
@@ -528,35 +377,12 @@ async function _showSection(sec) {
   });
 }
 
-// A plain tap NEVER advances the run, even onto an adjacent already-known
-// choice - that's real navigation and belongs to tapping the choice's
-// in-text link instead (see _showSection's own link wiring), the one and
-// only way pt.path is allowed to change from a tap. A tap only ever opens
-// a read-only preview, and only for a node the player has actually read
-// before - checked via isSectionMapped (state.js), i.e. any section
-// colored purple/"Mapped" in the legend, in ANY run ever, not just the one
-// currently active (pt.mVisited alone would only cover the current run -
-// a section read to completion in a past run, then abandoned, is just as
-// legitimately "already read" as one on today's path). Showing an
-// unvisited node's real text on a tap would let the reader skip ahead just
-// by touching the map, which is exactly the "cheating" this gate exists to
-// prevent. Long-press (see _onGraphHold) is the only tap-adjacent gesture
-// that can still move the run, via its own explicit Fast Travel action.
+// Graph taps preview mapped sections only; in-text choices perform navigation.
+// Long-press Fast Travel is an explicit navigation exception.
 function _onGraphTap(sec) {
-  // Graph-only mode exists so the reader can pan/zoom/drag the map without
-  // the reading pane in the way - _previewSection/_returnToCurrent both
-  // force _setPaneMode('both') to have somewhere to put the text, which
-  // resizes #m-graph-wrap out from under an in-progress touch (the exact
-  // "why does the book reappear and I hit the wrong node" complaint). A tap
-  // while genuinely just looking at the map shouldn't be able to yank the
-  // layout back; the toggle button is the one deliberate way back to
-  // reading.
+  // Keep graph-only taps from restoring text and resizing the canvas during a gesture.
   if (_paneMode === 'graph') return;
-  // Tapping the node the reader is actually standing on isn't a lookup -
-  // routing it through _previewSection would show the read-only preview
-  // banner and turn its own in-text choice links into more previews
-  // instead of real navigation, forcing an extra "return to where you left
-  // off" tap before any choice could be clicked at all.
+  // Treat a tap on the current node as reading, not a read-only preview.
   if (sec === currentSection()) { _returnToCurrent(); return; }
   if (isSectionMapped(sec)) _previewSection(sec);
 }
@@ -569,10 +395,7 @@ function _navigate(sec) {
     pt.result      = sec === 0 ? 'success' : 'death';
     pt.completedAt = Date.now();
     pt.lastActionAt = Date.now();
-    // currentPlaythrough() stops returning this pt the instant .completed
-    // flips true - without keeping a reference here, the graph would lose
-    // the whole traveled path (and any final-node color) the moment the
-    // run ends. Mirrors play.js's endPlaythrough()/setViewingPt() pairing.
+    // Retain the completed run as viewingPt so its final path remains visible.
     setViewingPt(pt);
     saveState();
     _checkXpReward();
@@ -588,13 +411,7 @@ function _navigate(sec) {
   _showSection(sec);
 }
 
-// Mirrors play.js's endPlaythrough() - the manual Win/Loss/Battle Death
-// buttons, for when the book's own text ends a run without ever linking a
-// numbered win(0)/death(-1) choice (or, for Battle Death, when the ending
-// comes from a battle sim result rather than the book text at all - there's
-// never an in-text link for that one). isTerminal(sec)-driven endings (see
-// _navigate above) already cover the common case where the section DOES
-// link a real 0/-1 choice; this is the fallback for when it doesn't.
+// Manual outcomes cover unnumbered endings and simulated battle deaths.
 function _endPlaythrough(result) {
   const pt = currentPlaythrough();
   if (!pt) return;
@@ -604,10 +421,7 @@ function _endPlaythrough(result) {
   pt.completedAt  = Date.now();
   pt.lastActionAt = Date.now();
   setViewingPt(pt);
-  // Same skip-for-battle reasoning as play.js's own endPlaythrough(): a
-  // simulated combat loss ends THIS run, but the section itself may have
-  // real, not-yet-recorded branches - recording it as a graph-wide dead end
-  // would wrongly auto-end every future run that lands on this node.
+  // A simulated battle loss ends the run, not every future visit to this section.
   if (result !== 'battle' && sec !== null && isValidSecId(sec)) {
     if (!state.graph[sec]) state.graph[sec] = { choices: [] };
     const sentinel = result === 'success' ? 0 : -1;
@@ -619,27 +433,13 @@ function _endPlaythrough(result) {
   _showEndScreen(result);
 }
 
-// Shared by _showExtra's and _previewSection's "back"/"return" links - a
-// preview (or an extra) can be opened after the run has already ended
-// (tapping the graph is still allowed post-completion, see _onGraphTap),
-// in which case currentSection() is null and _showSection(null) would 404
-// into the "not available" error message instead of restoring the actual
-// win/death screen. viewingPt (set by _navigate's terminal branch) is what
-// still holds the finished run's result once currentPlaythrough() stops
-// returning it, same pairing play.js's own endPlaythrough() uses.
+// Return from previews/asides to the active section or viewingPt's terminal screen.
 function _returnToCurrent() {
   if (!currentPlaythrough() && viewingPt?.completed) _showEndScreen(viewingPt.result);
   else _showSection(currentSection());
 }
 
-// Same trophy/broken-shield treatment as desktop's liveread.js - both pull
-// the icon markup and heading-key choice from the same liveread-shared.js
-// (zero imports of its own, safe to pull in without dragging along
-// anything heavy - see this file's own header comment for why that
-// matters here). XP itself isn't re-plumbed here: _checkXpReward() already
-// fires on every terminal transition (see _navigate/_endPlaythrough above)
-// and shows it via the existing toast - no need for a second, redundant
-// number embedded in this screen too.
+// Use shared achievement icons/headings; reward toasts already report XP.
 function _showEndScreen(result) {
   if (_paneMode === 'graph') _setPaneMode('both'); // see _showSection's own comment
   const top = document.getElementById('m-top');
@@ -674,14 +474,7 @@ async function _showExtra(key) {
   });
 }
 
-// Read-only lookup for a graph tap that isn't a live choice from the
-// current section (see _onGraphTap) - renders the section's text but never
-// touches pt.path/state.graph beyond the same harmless reveal-on-arrival
-// commit _showSection itself does, and never calls refreshGraph(), so the
-// graph stays centered on the player's real position throughout. In-text
-// links inside a preview chain to more previews rather than real
-// navigation - clicking a choice link while just looking something up on
-// the map should not be able to silently move the run.
+// Preview without moving the run or graph center; in-text links lead to more previews.
 async function _previewSection(sec) {
   if (_paneMode === 'graph') _setPaneMode('both'); // see _showSection's own comment
   const top = document.getElementById('m-top');
@@ -723,11 +516,7 @@ async function _previewSection(sec) {
       e.preventDefault();
       if (href.startsWith('section-')) {
         const dest = parseSecId(href.slice('section-'.length));
-        // Same mVisited gate as a graph tap (_onGraphTap) - a link inside
-        // an already-visited section's own preview could easily point
-        // forward at a section the reader hasn't reached yet, and chaining
-        // straight into that would be exactly the spoiler this whole gate
-        // exists to prevent.
+        // Gate preview links to mapped sections to prevent spoilers.
         if (dest !== null) _onGraphTap(dest);
       } else {
         _showExtra(href);

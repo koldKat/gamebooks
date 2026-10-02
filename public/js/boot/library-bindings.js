@@ -23,11 +23,7 @@ export function initLibraryBindings() {
 
   document.getElementById('edit-book-btn').addEventListener('click', () => {
     const min      = Math.max(5, maxSectionInUse());
-    // Gate on the same two counts shown in the HUD ("Mapped" / "Discovered") rather than
-    // a graph-only vs. path-only comparison - a section can be fully recorded (mapped)
-    // without ever appearing in a playthrough's path (e.g. filled in manually), which
-    // made the old discSet/visSet comparison diverge from what the player actually sees
-    // and go by when deciding they've hit a wall.
+    // Compare the HUD's mapped/discovered counts, not graph keys versus run paths.
     const mapped    = mappedCountFor(state.graph);
     const discCount = discoveredSectionsFor(state.graph, state.playthroughs, state.startSection).size;
     const hitWall   = mapped > 0 && mapped === discCount && mapped < state.totalSections;

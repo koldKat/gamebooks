@@ -30,9 +30,7 @@ export function renderCoverActivity(bookId, bookName, entries, userRating, bookM
       `</div>`;
   }
   headerHtml += '<div class="book-modal-meta">';
-  // A book's primary anthology (parentId/parentName) plus any secondary
-  // memberships (book_anthology_memberships) - this chip used to show only
-  // the primary one, silently hiding that the book also belongs elsewhere.
+  // Include both primary and secondary anthology memberships.
   const anthologyChips = [
     ...(bookMeta?.parentId ? [{ id: bookMeta.parentId, name: bookMeta.parentName }] : []),
     ...(bookMeta?.secondaryAnthologies || []),
@@ -49,9 +47,7 @@ export function renderCoverActivity(bookId, bookName, entries, userRating, bookM
     headerHtml += `<div class="book-modal-in-collection"><span class="in-collection-label">Series:</span><button class="book-modal-series-btn" data-series-id="${bookMeta.seriesId || ''}" data-series-name="${escapeHtml(bookMeta.seriesName)}">${seriesLabel}</button></div>`;
   }
   if (bookMeta?.authors) {
-    // Each author name gets its own derived rating (pooled across every
-    // public book crediting that exact name), not one combined rating for
-    // the whole comma-separated line - see _getAuthorRatings (books.js).
+    // Rate authors individually across public books, not as one comma-separated credit.
     const ratingsByName = new Map((bookMeta.authorRatings || []).map(r => [r.name, r]));
     const authorNames = bookMeta.authors.split(/\s*,\s*/).map(a => a.trim()).filter(Boolean);
     const namesHtml = authorNames.map(name => {
@@ -84,19 +80,8 @@ export function renderCoverActivity(bookId, bookName, entries, userRating, bookM
       <span class="star-label">${coversState._hooks.starLabelHtml?.(avgRating, voteCount) ?? ''}</span>
     </div>`;
   }
-  // An anthology has nothing of its own to open - it's a grouping shell
-  // (total_sections: 0, no playthroughs), never a playable book. This button
-  // used to show anyway and navigate straight into the container itself,
-  // same as any real book, which made no sense: the "Books in anthology"
-  // list below (bookMeta.children) is the only correct way to open one of
-  // its actual books, exactly like books.js's own list already treats
-  // containers as a fundamentally different card, never a directly-openable
-  // one, via its own separate _renderContainerItem() render path.
-  // Shown on mobile too, now that /mobile (a genuinely separate mobile-first
-  // frontend, see project_mobile_support_idea) exists as a real destination
-  // for it - see the click handler below for where it actually sends you,
-  // since desktop's own navigateToBook()/showMain() still just bounces
-  // every mobile visit straight back to the books list.
+  // Anthologies are grouping shells; open their children instead.
+  // Mobile books use the separate /mobile reader.
   if (userOwnsBook && !bookMeta?.isContainer) {
     headerHtml += `<button class="add-to-library-btn open-owned-book-btn" data-book-id="${bookId}">${t('covers.open_book')}</button>`;
   }
@@ -195,13 +180,7 @@ export function renderCoverActivity(bookId, bookName, entries, userRating, bookM
   const adminEditBtn = body.querySelector('.catalog-admin-edit-btn');
   if (adminEditBtn) {
     adminEditBtn.addEventListener('click', () => {
-      // Anthologies have their own dedicated modal (openEditCompModal) -
-      // openEditBookModal accepts an initialIsContainer param but never
-      // actually reads it (its own save handler always writes
-      // is_container: false), so passing an anthology through it silently
-      // shows the plain book form (requiring a section count an anthology
-      // doesn't have) and would flip is_container off on save. books.js's
-      // own edit-button handler already branches on this; this one didn't.
+      // Use the anthology editor; the book editor saves is_container:false.
       if (bookMeta?.isContainer) {
         coversState._hooks.openEditCompModal?.({
           bookId,
@@ -244,14 +223,7 @@ export function renderCoverActivity(bookId, bookName, entries, userRating, bookM
         initialAuthors:       bookMeta?.authors        || '',
         initialDescription:   bookMeta?.description    || '',
         initialIsPublic:      bookMeta?.isPublic       ?? true,
-        // Deliberately ownSeriesName/ownSeriesNumber here, not the plain
-        // seriesName/seriesNumber above - those inherit the parent
-        // anthology's series via COALESCE (see getBookActivity(), correct
-        // for the read-only "Series: X" line further up this same dialog,
-        // showing the anthology's series context even for a child with none
-        // of its own), which would otherwise show an anthology's series in
-        // this book's own edit form and, if saved, actually attach the
-        // child directly to a series it was never really in.
+        // Edit only the book's direct series membership, not the anthology-inherited display context.
         initialSeriesName:    bookMeta?.ownSeriesName     || '',
         initialSeriesNumber:  bookMeta?.ownSeriesNumber   || '',
         initialIsContainer:   bookMeta?.isContainer    ?? false,
@@ -276,16 +248,9 @@ export function renderCoverActivity(bookId, bookName, entries, userRating, bookM
     openOwnedBtn.addEventListener('click', async (e) => {
       e.preventDefault();
       e.stopPropagation();
-      // navigateToBook()/showMain() still unconditionally bounce every
-      // mobile visit back to the books list (see boot.js) - /mobile is the
-      // real destination on mobile now, not the desktop play screen this
-      // button otherwise opens.
+      // Use /mobile rather than the desktop play view.
       const targetBookId = +openOwnedBtn.dataset.bookId;
-      // Missing ?book= here (just '/mobile', no id) sent every mobile Open
-      // tap - including the one from inside Add Book's own detail dialog,
-      // the exact flow this panel exists for - to /mobile's bare "open a
-      // book from My Books" placeholder instead of the book itself,
-      // regardless of which book was actually tapped.
+      // Pass the book ID so the mobile reader opens this book.
       if (_isMobile()) { window.location.href = `/mobile?book=${encodeURIComponent(targetBookId)}`; return; }
       openOwnedBtn.disabled = true;
       openOwnedBtn.textContent = t('covers.opening');

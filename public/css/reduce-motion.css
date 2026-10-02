@@ -35,10 +35,7 @@ body.reduce-motion .choices-input--pulse {
   gap: 0.5rem;
   flex-wrap: nowrap;
   overflow: hidden;
-  /* Matches the 32px avatar-circle (+2px border each side) in .books-header-right -
-     the tallest thing this row ever shows. Without it, switching to the shorter
-     search input (0.75rem font, thin padding) shrinks the row's height, shifting
-     everything below it up the moment search opens. */
+  /* Reserve avatar-row height so opening search does not shift the content below. */
   min-height: 36px;
 }
 
@@ -182,4 +179,3 @@ body.books-searching #books-search-close {
   transition: background 0.12s;
 }
 .logout-btn:hover { background: #1f2937; color: #d1d5db; }
-

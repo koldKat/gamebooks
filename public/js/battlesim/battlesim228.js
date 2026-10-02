@@ -1,59 +1,7 @@
-// ── Battle Simulator (Slaves of the Abyss, book 228, Fighting Fantasy 27
-//    by Steve Jackson) ──
-// Self-contained module. Imports from state.js, play.js, charsheet.js and util.js.
-// Visibility is gated (book 228 only) by the caller in boot.js via
-// setSim228Visible().
-// To remove: delete this file, remove its import line and initSim228()/
-// setSim228Visible() calls from boot.js, and remove the .bsim-* CSS (shared
-// with every other battlesimN.js, so only remove it if all of them are gone).
-// Also remove 'sim228' from SIM_HISTORY_KEYS in server/db/xp.js, and remove
-// 'sim228-overlay' from ALL_PANEL_OVERLAY_IDS in util.js and the #sim228-btn
-// selectors in battlesim.css.
-//
-// Standard Fighting Fantasy SKILL/STAMINA/LUCK system, same core numbers as
-// every other sim in this app (SKILL 1d6+6, STAMINA 2d6+12, LUCK 1d6+6;
-// opposed 2d6+SKILL roll, ties = no effect, loser -2 STAMINA; Test Your Luck
-// costs 1 LUCK, +/-1 STAMINA effect), confirmed from this book's own
-// Introduction rules text.
-//
-// One book-specific rule NOT automated, same precedent as book 223's
-// double-6 mechanic: this book's own rules state "Whenever you roll a
-// double 6 in battle you have scored a killing blow on your opponent...
-// only if you are using your sword." A double-6 roll is normal within the
-// sim's existing 2d6 roller and nothing marks it as "this is a double" -
-// watch the log for a 12 and, if the player is using their sword, zero the
-// enemy's STAMINA by hand with the stat stepper.
-//
-// No Provisions/Potions UI beyond the standard stat stepper - STAMINA
-// recoveries from eating a meal (this book's own rule: up to 4 STAMINA,
-// deduct one Provisions) are one-off narrative events, hand-applied like
-// every other sim here.
-//
-// extraAttackers (max 1) + a single sideEnemy cover this book's simultaneous
-// multi-enemy fights, all of which use the same "fight one, roll a separate
-// Attack Strength against the other every round" wording: 2 Guards (§83,
-// §242), 2-then-3 Black Elves (§120), 2-then-3 Villagers (§191), the
-// Kokomokoa swarms (§195, §215). Re-pick the next roster enemy into the
-// main slot after each kill, same precedent as every other sim's group
-// fights in this app.
-//
-// book_enemies (41 rows, read from all stat-block-bearing sections of 400
-// total). BYTHOS recurs at §196/§299 with identical stats (his "earthly
-// shell" form); QUAGRANT recurs at §314/§328/§378 with different stats per
-// encounter (its strength varies by which section triggers the fight) -
-// kept as separate rows disambiguated by section number, following this
-// app's existing convention.
-//
-// This book has extensive non-linear puzzle mechanics (a herb-name cipher
-// at §31, a "write down digits as you travel, then compute a 3-digit
-// paragraph number" forest code at §58/§166/§381, and two numbered Time
-// Sheet trigger boxes) that make a plain link-following reachability check
-// report ~46/400 sections unreachable - all confirmed legitimate compute-
-// your-own-destination content, not a bug. See
-// project_book_audit_ascending_id memory for the verification trail. None
-// of this affects the sim, which only models the fight loop itself.
-//
-// All state lives in pt.sim228, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Slaves of the Abyss, book 228, Fighting Fantasy 27 by Steve Jackson)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
+// Sword double-six killing blows remain manual.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -138,9 +86,7 @@ function _resetEncounterKnobs(d) {
   d.sideEnemies = [_emptySideEnemy()];
 }
 
-// Uncapped (was previously trimmed to the last 100) - the admin dashboard
-// aggregates battle counts app-wide from this array, so per-user history needs
-// to be a true lifetime total, not a rolling window.
+// Keep lifetime outcomes: admin totals require the full history.
 function _recordOutcome(d, outcome) {
   d.history.push({
     enemy: _enemyName(d), outcome,
@@ -184,11 +130,7 @@ function _runRound() {
     if (d.player.stamina > 0) d.pendingLuckQueue.push({ kind: 'enemy-hit' });
   }
 
-  // Extra simultaneous attacker (the un-targeted Orc at §8): its own
-  // independent exchange with a fresh player roll every round, never
-  // wounded through this path - only the main "Enemy" slot can be wounded,
-  // matching the standard FF "every enemy attacks, you choose one to fight
-  // back against" multiple-enemy rule.
+  // The unchosen Orc rolls independently and cannot be wounded back.
   for (let i = 0; i < Math.min(d.extraAttackers, MAX_EXTRA_ATTACKERS) && d.player.stamina > 0; i++) {
     const side = d.sideEnemies[i];
     if (!side || side.staminaMax <= 0) continue;
@@ -656,9 +598,7 @@ export function initSim228() {
     if (!d) return;
     const map = FIELD_MAP[id];
     if (!map) return;
-    // Attack modifier is the one field allowed to go negative (bare-handed/
-    // disarmed/fatigue penalties are always a subtraction) - every other
-    // field stays clamped to 0 or above.
+    // Allow negative attack modifiers; other fields stay non-negative.
     val = id === 'sim228-player-atkmod' ? Number(val) : Math.max(0, val);
     if (id === 'sim228-player-skill') val = Math.min(val, d.player.skillInitial);
     if (id === 'sim228-player-stamina') val = Math.min(val, d.player.staminaInitial);

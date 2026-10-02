@@ -1,50 +1,6 @@
-// ── Battle Simulator (Сага за Ринглас, book 871) ────────────────────────────
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 871 only) by the caller in boot.js via
-// setSim871Visible().
-// To remove: delete this file, remove its import line and initSim871()/
-// setSim871Visible() calls from boot.js, remove 'sim871' from
-// SIM_HISTORY_KEYS in server/db/xp.js, remove 'sim871-overlay' from
-// ALL_PANEL_OVERLAY_IDS in util.js and the #sim871-btn selectors in
-// battlesim.css.
-//
-// One uniform resolver for every fight in the book (documented on the
-// book's own "ПРАВИЛА ЗА БИТКИ" page, see book_frontmatter.rules_text):
-//   Ринглас's own "mishena" (target) is always 6; each opponent has its
-//   own target + ИЗДРЪЖЛИВОСТ (stamina) pool, given per-encounter.
-//   Round: roll 2d6 for Ринглас - if the sum beats the opponent's target,
-//   the opponent loses 1 stamina. Then roll 2d6 for the opponent - if the
-//   sum is LESS than Ринглас's target (6), Ринглас loses 1 stamina.
-//   Repeat until one side hits 0.
-//   Multi-enemy fights add +5 stamina to Ринглас for that encounter (and
-//   per the book's own wording this bonus stays in the running total
-//   afterward, it's not reverted), and a horse-attack roll is added each
-//   round: if the 2d6 roll is under the (shared) enemy target, Златогрив
-//   finishes off one attacker for 2 stamina.
-// A few individual fights grant a one-off roll modifier from a specific
-// item (e.g. the torch gives Ринглас +2 on his roll against wolves, the
-// strangling scarves give the wolves -3 on theirs) - modeled as optional
-// per-fight bonus/penalty fields rather than hardcoding item-tracking,
-// since the reader already knows from the story whether they have the
-// item for that specific encounter.
-//
-// Full enemy roster (verified via a complete read of all 300 sections
-// this session):
-//   Бандит (Батуърк)          target 8  stamina 10
-//   Каменни чудовища          target 9  stamina 12
-//   Рандовански рицар         target 9  stamina 6
-//   Водни духове              target 4  stamina 10
-//   Снежни воини              target 7  stamina 10
-//   Симаут, богът на бурите   target 10 stamina 5  (Ринглас +5 stamina for this fight)
-//   Блатни/глинени чудовища   target 5  stamina 10
-//   Рицари в брони            target 6  stamina 12 (multi-enemy)
-//   Дракон                    target 10 stamina 6
-//   Леден демон               target 8  stamina 6
-//   Вълци                     target 6  stamina 12 (multi-enemy; torch/scarves modifiers apply)
-//   Ледени лъвове             target 9  stamina 12 (multi-enemy)
-//   Вездесъщият паяк          target 7  stamina 10
-//
-// All state lives in pt.sim871, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Сага за Ринглас, book 871)
+// Player 2d6 > enemy target hits; enemy 2d6 < player target (6) hits; each costs 1 stamina.
+// Multi-enemy bonuses persist after the encounter; horse attacks resolve separately.
 
 import { currentPlaythrough, saveState } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';

@@ -1,10 +1,6 @@
 'use strict';
 
-// Process-lifetime runtime state: maintenance mode, traffic byte counters,
-// CPU/memory rolling averages, uptime/session tracking, code/hardware stats.
-// Exposed via accessor functions since this is mutable module-level state read
-// and written from many places (the main request loop, the Router's inline admin
-// endpoints, and routes/admin.js's stats/settings handlers) - not just here.
+// Shared process-lifetime metrics and maintenance state exposed through accessors.
 
 const fs = require('fs');
 const os = require('os');
@@ -129,8 +125,7 @@ let _avgHeapUsed = 0;
 let _avgHeapTotal = 0;
 let _avgRss      = 0;
 
-// Shared by the setInterval sampler below and the on-demand /api/admin/live endpoint -
-// both need "CPU % used since last sample" using the same running _lastCpuTime/_lastCpuUsage.
+// Share CPU sample state between periodic sampling and live requests.
 function sampleCpuPercent() {
   const now      = Date.now();
   const cpuNow   = process.cpuUsage();
@@ -174,21 +169,13 @@ const _uptimeStart = Math.floor(Date.now() / 1000);
   const lastHb    = parseInt(db.getAdminSetting('server_last_heartbeat') || '0');
   const ref        = stoppedAt > 0 ? stoppedAt : lastHb;
   const gap        = ref > 0 ? _uptimeStart - ref : 0;
-  // Always accumulate whatever gap actually occurred, not just gaps over the
-  // "real restart" threshold below - a crash-restart loop (the process dying and
-  // immediately relaunching, e.g. under a supervisor, repeatedly for hours) produces
-  // a series of individually-small gaps that each look like a trivial reload on their
-  // own, but genuinely summed to real user-facing downtime. Discarding sub-5s gaps
-  // entirely silently ate an entire multi-hour outage exactly this way - confirmed by
-  // the process's real start time not matching what session-uptime reported.
+  // Accumulate all restart gaps; repeated short crashes still contribute real downtime.
   if (gap > 0) {
     const prevDowntime = parseInt(db.getAdminSetting('server_total_downtime_s') || '0');
     db.setAdminSetting('server_total_downtime_s', String(prevDowntime + gap));
   }
   if (gap > 15) {
-    // Real restart - begin a new session. This threshold is deliberately kept (unlike
-    // the downtime accumulation above) so a quick deploy reload doesn't reset the
-    // "how long has this deployment been stable" session clock every time.
+    // Keep quick deploy reloads within the same stability session.
     db.setAdminSetting('server_session_start_at', String(_uptimeStart));
   } else if (!db.getAdminSetting('server_session_start_at')) {
     // First ever start
@@ -200,9 +187,7 @@ const _uptimeStart = Math.floor(Date.now() / 1000);
 const _sessionStartAt  = parseInt(db.getAdminSetting('server_session_start_at') || String(_uptimeStart));
 const _appBirthAt      = db.getAppBirthTimestamp(); // MIN(created_at) across users + books
 const _activeTagline   = db.getRandomTagline();
-// 10s (was 30s) - tightens the maximum blind spot on any single gap measurement,
-// including within a crash-restart loop where each cycle might not survive much longer
-// than the old interval.
+// Sample every 10s to bound unmeasured gaps, including short crash cycles.
 setInterval(() => {
   db.setAdminSetting('server_last_heartbeat', String(Math.floor(Date.now() / 1000)));
 }, 10_000);
@@ -233,9 +218,7 @@ const APP_LAUNCH_EPOCH = Math.floor(new Date('2026-03-26T00:40:05Z').getTime() /
 
 let _codeStats = { linesOfCode: 0, codeBytes: 0, jsModules: 0 };
 (function computeCodeStats() {
-  // Matches .mjs too (not just .js) so test/ - all .test.mjs files - actually
-  // gets picked up below; every other walked directory happens to be .js-only
-  // in practice, so widening this here doesn't change their counts.
+  // Include .mjs so test modules count in code statistics.
   function walkJsFiles(dir) {
     let out = [];
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -249,17 +232,10 @@ let _codeStats = { linesOfCode: 0, codeBytes: 0, jsModules: 0 };
     const serverJsFiles = walkJsFiles('server');
     const publicJsFiles = walkJsFiles('public/js');
     const adminJsFiles  = walkJsFiles('admin/js');
-    // Own try/catch, not folded into the outer one below - test/ is a newer,
-    // less load-bearing addition than the other three directories, and this
-    // whole IIFE only has ONE catch around it. Without isolating this walk,
-    // test/ ever going missing in some deployment (excluded from a docker
-    // image, etc.) would throw here and silently zero out every stat in the
-    // panel, not just the test count.
+    // Isolate optional test-directory scans so missing tests cannot zero out production code statistics.
     let testJsFiles = [];
     try { testJsFiles = walkJsFiles('test'); } catch (_) {}
-    // Own try/catch too, same isolation reasoning as test/ above - public/mobile/
-    // is its own separate tree (not walked by the public/js walk above), newer
-    // and less load-bearing than the other four.
+    // Isolate optional mobile-tree scans from other code statistics.
     let mobileJsFiles = [];
     let mobileCssFiles = [];
     try {
@@ -292,8 +268,7 @@ let _codeStats = { linesOfCode: 0, codeBytes: 0, jsModules: 0 };
 
 function getCodeStats() { return _codeStats; }
 
-// No API exists to look up a CPU's release date - this is a manual lookup for the
-// known deployment host. Update the entry if the hardware ever changes.
+// CPU release dates require a manual host-specific lookup.
 const CPU_RELEASE_DATES = {
   'i7-4785T': '2014-05-11',
 };
@@ -310,8 +285,7 @@ function _serverHardwareInfo() {
   const ageYears = releaseDate
     ? Math.floor((Date.now() - new Date(releaseDate).getTime()) / (365.25 * 86400 * 1000))
     : null;
-  // Trim registered/trademark marks and the trailing "CPU @ X.XXGHz" (already
-  // shown in its own row) - the raw string is long enough to overflow the stats grid.
+  // Remove trademark/frequency suffixes; frequency is displayed separately.
   const displayModel = model
     .replace(/\(R\)|\(TM\)/gi, '')
     .replace(/\s*CPU\s*@.*$/i, '')

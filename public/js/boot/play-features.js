@@ -17,9 +17,7 @@ export function initPlayFeatures() {
   initInventory();
   initEquipment();
   initLiveRead();
-  // renderLiveRead() also needs to run after every render() (fast-travel
-  // jumps and the sidebar's own choice buttons move pt.path without going
-  // through setViewingPt, unlike renderLiveRead()'s other trigger below).
+  // Refresh reading after every render; navigation can change paths without changing viewingPt.
   setAfterRenderFn(renderLiveRead);
   setExtraDisplayItemsProvider(async () => await getVisibleEquippedItems());
   setOnViewingPtChange(() => {

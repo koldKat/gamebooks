@@ -1,49 +1,6 @@
-// ── Battle Simulator (Blood of the Zombies, book 161) ───────────────────────
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 161 only) by the caller in boot.js via
-// setSim161Visible().
-// To remove: delete this file, remove its import line and initSim161()/
-// setSim161Visible() calls from boot.js, remove 'sim161' from
-// SIM_HISTORY_KEYS in server/db/xp.js, remove 'sim161-overlay' from
-// ALL_PANEL_OVERLAY_IDS in util.js and the #sim161-btn selectors in
-// battlesim.css.
-//
-// This book's combat system (book_frontmatter.rules_text) is NOT classic
-// Fighting Fantasy SKILL/STAMINA/LUCK - it's a horde-clearance system:
-//   - Player STAMINA: roll 2d6+20 to start.
-//   - Nearly every enemy (Zombies, Attack Dogs) has exactly 1 STAMINA point
-//     each - a weapon's DAMAGE roll each Attack Round directly equals the
-//     number of enemies killed that round (capped at however many remain).
-//   - Any enemies that survive a round each inflict DAMAGE back before the
-//     next round (normally 1 point per survivor, confirmed variable in a
-//     couple of specific encounters - e.g. axe-wielding Zombies at 2 each,
-//     one Attack Dog encounter at 2 each vs. another at 1 each - so this is
-//     exposed as an adjustable field, not hardcoded).
-//   - Grenades are a pre-combat, one-off "reduce enemy count by 2d6+1"
-//     action, not a per-round weapon.
-//   - Med Kits restore STAMINA once (usually +4, occasionally +2 - exposed
-//     as an adjustable amount rather than a fixed button).
-//   - Full read of all 400 sections found ONE named durable enemy that
-//     doesn't follow the 1-STAMINA-per-body horde rule: Gingrich Yurr in his
-//     final barehanded confrontation (7 STAMINA, section 117) - modeled as
-//     a separate "Duel" fight type where both sides roll their own weapon
-//     dice each round against the other's STAMINA pool directly, since he's
-//     a single durable body rather than a horde. "Zombie Kong" (section 158,
-//     a one-off combined-roll-vs-20 threshold puzzle) and any other single
-//     scripted set-piece checks are intentionally left out of scope, same as
-//     other sims in this project exclude one-off narrative-only mechanics.
-//
-// Weapon roster (DAMAGE dice, confirmed via full text search across all
-// sections):
-//   Barehanded            1d6-3
-//   Crowbar / Axe / Sword / Baseball bat   1d6
-//   Handgun / Pistol      1d6+2
-//   Sawn-off shotgun      1d6+4
-//   Shotgun               1d6+5
-//   Chainsaw              2d6+3
-//   Browning machine gun  2d6+15
-//
-// All state lives in pt.sim161, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Blood of the Zombies, book 161)
+// Weapon damage removes that many enemies; survivors each retaliate.
+// Start at 2d6+20 STAMINA; grenade kills and survivor damage are separate inputs.
 
 import { currentPlaythrough, saveState } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -467,8 +424,7 @@ export function initSim161() {
     'sim161-duel-player-mod': (d, v) => { d.duelPlayerDiceMod = v; },
     'sim161-duel-enemy-mod': (d, v) => { d.duelEnemyDiceMod = v; },
   };
-  // Signed fields (dice modifiers can be negative, e.g. barehanded 1d6-3) get a
-  // wider clamp than the plain non-negative qty fields the shared template uses.
+  // Allow signed dice modifiers, unlike ordinary quantity fields.
   const signedFields = new Set(['sim161-dice-mod', 'sim161-duel-player-mod', 'sim161-duel-enemy-mod']);
 
   overlay.querySelectorAll('.inv-qty-btn').forEach(btnEl => {

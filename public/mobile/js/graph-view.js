@@ -1,18 +1,5 @@
-// graph-view.js - The bottom pane of the reader's "double-screen" layout.
-// Deliberately NOT graph.js: that file's initGraph()/syncGraph() carry a lot
-// of desktop-only interaction (right-click context menu wiring, portals,
-// cross-book routing) that a touch screen doesn't need and that would
-// balloon this preview's import graph for no benefit. This is a
-// from-scratch, tap-to-travel renderer: physics is always off and every
-// node gets a deterministic grid position (state.positions is the same
-// field graph.js itself reads/writes, so a run opened on desktop later sees
-// the same layout instead of falling back to a physics simulation). Node/
-// edge colors reuse constants.js's COLORS directly (zero imports, safe) so
-// this matches desktop's palette instead of inventing its own. Node
-// dragging IS enabled (unlike the rest of graph.js's desktop-only
-// interaction) - always snapped to GRID_SIZE, no toggle, since freehand
-// placement on a touchscreen is too imprecise to be worth the option.
-// Reuses window.vis, the same vendored vis-network script desktop loads.
+// Touch graph renderer without desktop interaction imports.
+// Use shared positions/colors, deterministic placement, and grid-snapped dragging; physics stays off.
 
 import {
   state, currentPlaythrough, viewingPt, isTerminal, parseSecId, allDiscoveredSections, saveState,
@@ -24,9 +11,7 @@ const LAYER_GAP  = 120; // vertical spacing between BFS depth layers
 const COL_GAP    = 90;  // horizontal spacing between siblings at the same layer
 const GRID_SIZE  = 40;  // matches graph.js's own GRID_SIZE - shared state.positions data
 
-// Fixed default zoom - the graph should always read at a consistent size,
-// never drift wider/narrower as the map grows the way network.fit() (fit
-// the whole graph in view) would make it do session over session.
+// Use a fixed zoom rather than fitting the growing map.
 const DEFAULT_SCALE = 1.15;
 
 let network = null;
@@ -38,13 +23,7 @@ let _onDragStart = null;
 let _lastSig = null;
 let _dragSaveTimer = null;
 
-// Priority/battle/note markers - rebuilt in refreshGraph(), drawn every
-// frame in drawOverlays(). Same data desktop's graph.js paints (state.graph
-// entries with priority/battle/note set), reusing its exact glyph geometry/
-// colours (graph.js:437-506) so a node looks the same whichever platform
-// its metadata was set on - without this, setting priority/battle/a note
-// on mobile had no visible effect on the graph at all, even though the
-// underlying state.graph write (and its XP award) was working correctly.
+// Rebuild metadata markers on refresh using desktop glyph geometry and colors.
 let _overlayNodeIds = [];
 let _overlayNodes   = [];
 
@@ -118,12 +97,7 @@ function _drawOverlays(ctx) {
   }
 }
 
-// Shared by refreshGraph() (deciding whether to reset zoom) and the drag
-// handler below (keeping that same signature in sync after a manual
-// reposition) - a signature computed only in refreshGraph would go stale
-// the moment a node is dragged, and the very next refreshGraph() call would
-// read the new position as "the map changed shape" and reset the player's
-// zoom right after they just repositioned a node to look at it.
+// Update the layout signature on drag so the next refresh cannot reset zoom.
 function _computeSig(sections) {
   return sections.length + '|' + sections.map(id => `${id}:${Math.round(state.positions[id].x)},${Math.round(state.positions[id].y)}`).sort().join(',');
 }
@@ -132,23 +106,9 @@ function _hasPos(p) {
   return !!p && Number.isFinite(p.x) && Number.isFinite(p.y);
 }
 
-// A plain object, not a Map - state.graph's own keys (numeric IDs coerced
-// through Object.entries) and its choices array *values* (added to
-// allDiscoveredSections()'s Set without going through parseSecId first, see
-// state.js's discoveredSectionsFor) aren't guaranteed to be the same JS
-// type for the same logical section. A Map's has()/get() are type-strict -
-// number 88 and string "88" are different keys - so a node reachable via a
-// string-typed choice target would silently miss its own depth entry when
-// looked up by its number-typed graph key, landing in the "unreachable"
-// bucket below despite being genuinely connected. A plain object's keys are
-// always coerced to strings on access, so both typings land on the same
-// property - same reasoning _computeOutcomes() below already applies.
+// Object keys normalize numeric/string section IDs; Map lookups would distinguish them.
 function _bfsDepth(startSec) {
-  // Object.create(null), not {} - a plain object literal still inherits
-  // Object.prototype, so `c in depth` would read true for a section ID that
-  // happens to collide with a builtin property name (e.g. "constructor",
-  // "toString") on an alphanumeric-section book, even though nothing was
-  // ever actually added under that key.
+  // Use a null prototype so alphanumeric IDs cannot collide with inherited property names.
   const depth = Object.create(null);
   if (startSec === undefined || startSec === null) return depth;
   depth[startSec] = 0;
@@ -165,16 +125,9 @@ function _bfsDepth(startSec) {
   return depth;
 }
 
-// Every section with a positioned choice-neighbor (parent or child, either
-// direction) to `sec`, per state.graph - mirrors graph.js's own
-// _getPositionedNeighbors(), reimplemented locally rather than imported for
-// the same reason as every other helper here (this file stays import-free
-// of graph.js on purpose).
+// Find positioned choice neighbors in either direction without importing the desktop graph.
 function _positionedNeighbors(sec) {
-  // .includes(sec) is strict-equality, same type trap _bfsDepth's own
-  // comment above documents: state.graph's choices values aren't guaranteed
-  // to be the same JS type as sec, so a string/number mismatch would
-  // silently miss a real connection. String() both sides before comparing.
+  // Normalize both IDs to strings before comparing choice targets.
   const secStr = String(sec);
   const out = [];
   for (const [srcKey, data] of Object.entries(state.graph)) {
@@ -189,25 +142,8 @@ function _positionedNeighbors(sec) {
   return out;
 }
 
-// Assigns a grid slot to any discovered section that doesn't have a saved
-// position yet. Existing positions (from a prior mobile session, or from
-// desktop itself) are never touched - only gaps get filled in.
-//
-// A node discovered long after the book's initial layout is BFS-depth-from-
-// START at that moment, which has nothing to do with where its actual
-// parent ended up on screen - on a book with a long path that can place a
-// freshly-discovered node way down past the bottom of the visible map,
-// joined to its real parent only by one very long connector (same bug
-// desktop's _assignGridPositions had, axes swapped: desktop grows sideways
-// off-screen, this grows vertically off-screen). Any missing node with an
-// already-positioned neighbor gets placed next to that neighbor instead -
-// one row down, same "find the next free X slot in that row" logic as
-// below. Only a node with no positioned neighbor at all (the genuine
-// first-ever layout, nothing positioned yet) falls back to the depth grid.
-// First free X slot in the row at rowY, starting at startX and stepping
-// right by COL_GAP - local to the anchor, not a whole-map rightmost scan
-// (same bug desktop's _firstFreeColumnSlot fixes: unrelated branches in the
-// same row band used to push fresh options far to the side of their parent).
+// Preserve saved positions; place missing nodes near positioned neighbors.
+// Use depth-grid fallback only without an anchor, and search free slots locally.
 function _firstFreeRowSlot(rowY, startX) {
   let x = startX;
   for (;;) {
@@ -224,20 +160,14 @@ function _layout(sections, startSec) {
   const depth = _bfsDepth(startSec);
   const depthValues = Object.values(depth);
   const maxDepth = depthValues.length ? Math.max(...depthValues) : 0;
-  // Parents before children - same id-sort bug and fix as desktop
-  // graph.js's _assignGridPositions: a child sorting before its just-landed
-  // parent used to find no positioned parent and fall into the
-  // depth-from-START fallback, placing it relative to the start row instead
-  // of below the node that was just stepped on.
+  // Place parents before children so newly discovered branches can use their actual parent as anchor.
   missing.sort((a, b) => (depth[a] ?? maxDepth + 1) - (depth[b] ?? maxDepth + 1) ||
     String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' }));
   for (const id of missing) {
     const neighbors = _positionedNeighbors(id);
     let y, xStart;
     if (neighbors.length) {
-      // X AND Y both anchor on the same neighbor: one row below it, siblings
-      // stacking RIGHT from its own column (local first-free-slot, same
-      // reasoning as desktop's _firstFreeColumnSlot).
+      // Anchor both axes on one neighbor; stack siblings rightward into local free slots.
       const anchorId = neighbors.reduce((a, b) => (state.positions[a].y >= state.positions[b].y ? a : b));
       y = state.positions[anchorId].y + LAYER_GAP;
       xStart = state.positions[anchorId].x;
@@ -246,31 +176,22 @@ function _layout(sections, startSec) {
       xStart = 0;
     }
     let x = _firstFreeRowSlot(y, xStart);
-    // Mobile has no snap toggle (drags always snap to GRID_SIZE) and
-    // LAYER_GAP/COL_GAP aren't multiples of it - snap layout placements too
-    // so auto-placed nodes sit on the same grid as dragged ones.
+    // Snap automatic placements too: layer gaps are not exact grid multiples.
     x = Math.round(x / GRID_SIZE) * GRID_SIZE;
     y = Math.round(y / GRID_SIZE) * GRID_SIZE;
     state.positions[id] = { x, y };
   }
 }
 
-// Mirrors graph.js's computeOutcomes() exactly (a full-graph fixed-point
-// solve over state.graph, nothing DOM-touching) - reimplemented locally
-// rather than importing graph.js itself, same reasoning as reader.js's
-// commitChoices: that file drags in i18n.js/vis-network on its own terms.
+// Match desktop's fixed-point outcome calculation without its dependency tree.
 function _computeOutcomes() {
   const graph = state.graph;
-  // Object.create(null) - same reasoning as _bfsDepth's own depth object.
+  // Section IDs must not collide with inherited object properties.
   const outcome = Object.create(null);
   let changed = true;
   while (changed) {
     changed = false;
-    // idStr used directly as the key, not Number(idStr) - that coerces an
-    // alphanumeric section id (e.g. "A12") to NaN, silently dropping every
-    // such node out of outcome tracking for the rest of this book's session
-    // (graph[id]/outcome[id] lookups still work identically for numeric ids
-    // either way, since plain object keys coerce to string regardless).
+    // Keep section keys as strings to support alphanumeric IDs.
     for (const idStr of Object.keys(graph)) {
       if (idStr in outcome) continue;
       const choices = graph[idStr]?.choices || [];
@@ -300,9 +221,7 @@ function _nodeColor(id, startSec, curSec, everVisitedSecs, finalNode, finalResul
     if (finalResult === 'battle')  return _withHighlight(COLORS.battleDeath);
     return _withHighlight(COLORS.death);
   }
-  // Persistent "ever visited" set (pt.mVisited, see reader.js), not the live
-  // pt.path - undoing a step shrinks pt.path but shouldn't un-paint a node
-  // the reader actually read earlier in the same run.
+  // Color from permanent mVisited, not the undoable live path.
   if (everVisitedSecs.has(id)) return _withHighlight(COLORS.visitedRun);
   const choices    = (state.graph[id]?.choices || []).map(parseSecId);
   const hasDeath   = choices.includes(-1);
@@ -310,26 +229,12 @@ function _nodeColor(id, startSec, curSec, everVisitedSecs, finalNode, finalResul
   if (hasDeath && hasVictory) return _withHighlight(COLORS.bothOutline);
   if (hasDeath)                return _withHighlight(COLORS.deathOutline);
   if (hasVictory)              return _withHighlight(COLORS.victoryOutline);
-  // Mirrors graph.js's own mapped-vs-discovered branch exactly (graph.js:357-358).
-  // commitChoices (both platforms' own copy) never sets discovered:true for the
-  // section it's committing - that flag is only ever set by a context-menu/
-  // note-modal action creating a placeholder node with no real choice data of
-  // its own (see note-modal.js/context-menu.js). So COLORS.mapped (purple) is
-  // the normal color for any node whose own choices have genuinely been read
-  // at least once (in any run, on either platform) - COLORS.discovered (grey)
-  // is the rare exception for one of those metadata-only placeholders.
-  // Hardcoding COLORS.discovered here unconditionally (the previous version)
-  // meant every real, actually-read node on mobile showed grey instead of the
-  // purple desktop shows for the exact same state.
+  // Use mapped colors for recorded choices and discovered colors for metadata-only placeholders.
   if (state.graph[id] && (!state.graph[id].discovered || state.graph[id].portals?.length > 0)) return _withHighlight(COLORS.mapped);
   return _withHighlight(COLORS.discovered);
 }
 
-// onHold fires on a long-press - vis-network's 'oncontext' wraps the
-// browser's native `contextmenu` event, which mobile browsers already
-// raise on touch-and-hold by default, so this is the same event desktop's
-// right-click menu uses (graph.js/boot.js), not a separate gesture built
-// from scratch.
+// Use the browser's contextmenu event for touch-and-hold.
 export function initGraphView(container, onTap, onHold, onDragStart) {
   _onTap = onTap;
   _onHold = onHold;
@@ -355,20 +260,7 @@ export function initGraphView(container, onTap, onHold, onDragStart) {
     layout: { improvedLayout: false },
     interaction: { dragNodes: true, tooltipDelay: 99999 },
   });
-  // Some mobile browsers still fire a trailing synthetic click right after
-  // a long-press's own contextmenu event (or after a real node drag), not
-  // strictly one gesture or the other - without suppressing it, that
-  // trailing click reached _onTap and re-ran _showSection() on whatever
-  // node the reader was already standing on, visibly "reloading" the
-  // current section's text on every long-press/drag. This used to be a
-  // fixed 400ms window from the moment the hold/drag *started*, which
-  // assumed the touch released quickly - reading the context menu (or a
-  // slower drag) before lifting the finger easily exceeds that, so the
-  // click slipped through anyway. A plain flag set at hold/drag-start and
-  // consumed by the very next click has no such timing assumption; the
-  // safety-net timeout below only exists in case a browser never actually
-  // fires that trailing click at all, so a stray flag can't go on
-  // swallowing later, unrelated taps forever.
+  // Consume the next synthetic click after hold/drag, with a timeout if no click arrives.
   let _suppressNextClick = false;
   let _suppressResetTimer = null;
   function _armClickSuppression() {
@@ -387,13 +279,7 @@ export function initGraphView(container, onTap, onHold, onDragStart) {
     _armClickSuppression();
     _onHold?.(nodeId, params.event.clientX, params.event.clientY);
   });
-  // A long-press can open the context menu and then keep moving into a drag
-  // on the same touch (the browser's own contextmenu firing doesn't cancel
-  // the gesture) - without closing it here, the menu would sit on top of
-  // the node the whole time it's being dragged, blocking the one thing the
-  // player needs to see (where the node is landing). Also arms the same
-  // trailing-click suppression as a long-press - a real node drag can fire
-  // a trailing click on release just as easily.
+  // Close the menu on drag and suppress its trailing click.
   network.on('dragStart', params => {
     if (params.nodes.length) { _armClickSuppression(); _onDragStart?.(); }
   });
@@ -417,11 +303,7 @@ export function initGraphView(container, onTap, onHold, onDragStart) {
 export function refreshGraph(centerOnSec) {
   if (!network) return;
   _rebuildOverlayNodes();
-  // currentPlaythrough() stops returning a pt the instant it's marked
-  // completed (see state.js) - viewingPt (set by reader.js's _navigate
-  // right as a run ends) is what keeps the path/final-node display alive
-  // after that, same displayPt = pt || viewingPt pairing graph.js itself
-  // uses.
+  // Use viewingPt after completion to retain the final path and node.
   const livePt    = currentPlaythrough();
   const displayPt = livePt || viewingPt;
   const startSec  = displayPt?.path?.[0] ?? state.startSection ?? 1;
@@ -432,12 +314,7 @@ export function refreshGraph(centerOnSec) {
   const finalNode  = (displayPt?.completed && displayPt.path.length) ? displayPt.path[displayPt.path.length - 1] : null;
   const finalResult = finalNode !== null ? displayPt.result : null;
 
-  // The run's actual traveled route, so it reads as a path through the
-  // grid rather than just a static map - mirrors desktop's isRunEdge/
-  // orange-highlight convention (graph.js's syncGraph()). Edges only trace
-  // the LIVE path (an undone step really isn't part of the current route
-  // any more), but node colour uses the persistent mVisited set below -
-  // falls back to runPath for a run saved before mVisited existed.
+  // Highlight live path edges; node visits persist through undo, with a legacy runPath fallback.
   const runPath  = displayPt?.path || [];
   const runEdges = new Set();
   for (let i = 0; i < runPath.length - 1; i++) runEdges.add(`${runPath[i]}>${runPath[i + 1]}`);
@@ -471,11 +348,7 @@ export function refreshGraph(centerOnSec) {
   visEdges.clear();
   visEdges.add(edges);
 
-  // Reset to the default zoom (discarding any manual pinch/zoom) only when
-  // the map itself actually changed shape - a plain re-render (e.g. tapping
-  // a link that shows bonus text, not a real new section) leaves whatever
-  // zoom the player set alone. Always re-center on the current node either
-  // way, that part isn't optional.
+  // Reset zoom only when layout changes; always recenter on the current node.
   const sig     = _computeSig(sections);
   const changed = sig !== _lastSig;
   _lastSig = sig;

@@ -14,11 +14,7 @@ export function initDialogBindings(openForumModal) {
       _closeNotifDropdown();
   });
 
-  // The dropdown is position:fixed and anchored to the button's rect at open
-  // time, so scrolling the content behind it leaves it visually detached.
-  // Close on any scroll outside the dropdown's own list - capture phase,
-  // because scroll events don't bubble (window scrolls report document as
-  // the target).
+  // Capture non-bubbling scroll events and close the fixed dropdown unless its own list scrolled.
   document.addEventListener('scroll', e => {
     if (isNotifDropdownOpen() && e.target !== document.getElementById('notif-dropdown'))
       _closeNotifDropdown();
@@ -52,21 +48,7 @@ export function initDialogBindings(openForumModal) {
     _toggleCoverTooltipSettings();
   });
 
-  // ── Public modal ──────────────────────────────────────────────────
-  // Opened from dozens of call sites across covers.js/feed.js/public-
-  // profile.js itself, too many to thread a "push a history entry" call
-  // through individually - watched here instead, via the one thing they
-  // all share: #public-modal-overlay gaining/losing its .active class.
-  // Only pushes/pops a step when a mobile panel (My Books/Add Book) is
-  // already open underneath - opening the same dialog from the plain feed
-  // (no panel open) is a normal top-level view, not a nested one, and
-  // already had no back-button problem of its own before this. Without
-  // this, back while the dialog was open over Add Book popped Add Book's
-  // own history entry instead (the dialog itself was never on the stack),
-  // which *looked* like the dialog surviving the panel closing under it -
-  // and since the dialog had nowhere further to go on a second back press,
-  // that press just kept consuming real browser history until it left the
-  // app entirely.
+  // Track modal visibility centrally for history only when it overlays a mobile panel.
   let _dialogHistoryPushed = false;
   new MutationObserver(() => {
     const isActive = document.getElementById('public-modal-overlay').classList.contains('active');
@@ -77,9 +59,7 @@ export function initDialogBindings(openForumModal) {
       history.pushState({ ...history.state, dialogOpen: true }, '');
     } else if (!isActive && _dialogHistoryPushed) {
       _dialogHistoryPushed = false;
-      // Closed via the X/backdrop/Escape, not via back - consume the
-      // pushed entry so a later back press doesn't land on a stale
-      // "dialog was open" state with nothing left to close.
+      // Consume dialog history entries on explicit dismissal to avoid stale Back states.
       if (history.state?.dialogOpen) history.back();
     }
   }).observe(document.getElementById('public-modal-overlay'), { attributes: true, attributeFilter: ['class'] });

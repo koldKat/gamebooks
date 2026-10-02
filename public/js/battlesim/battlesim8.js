@@ -67,9 +67,7 @@ function _appendLog(d, html) {
 
 function _enemyName(d) { return d.enemy.name.trim() || 'врагът'; }
 
-// Uncapped (was previously trimmed to the last 100) - the admin dashboard
-// aggregates battle counts app-wide from this array, so per-user history needs
-// to be a true lifetime total, not a rolling window.
+// Keep lifetime outcomes: admin totals require the full history.
 function _recordOutcome(d, outcome) {
   d.history.push({
     enemy: _enemyName(d), outcome,
@@ -524,8 +522,7 @@ export function initBattleSim8() {
   // Group steppers (player/enemy stats)
   overlay.querySelectorAll('.inv-qty-input[data-group]').forEach(input => {
     input.addEventListener('input', () => {
-      // type="text" (needed to avoid native number-input spinner/scroll-wheel quirks,
-      // see charsheet.js) accepts any keystroke - filter live so garbage can't be typed.
+      // Filter numeric text inputs; avoid native spinner/wheel behavior.
       const raw = String(input.value).replace(/[^0-9]/g, '');
       if (raw !== input.value) input.value = raw;
       const d   = _data();

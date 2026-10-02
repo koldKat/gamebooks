@@ -126,11 +126,7 @@ export function _applyBooksSearchFilter() {
     return;
   }
 
-  // Search matches against DOM text/data-* attributes, so collapsed lazy
-  // groups must exist in the DOM before filtering - materialize them all.
-  // Materializing a group can register NEW lazy builders for groups nested
-  // inside it (a collapsed series within a collapsed stash), so loop until
-  // none remain rather than walking a static snapshot.
+  // Materialize lazy groups before DOM search; repeat until nested builders are exhausted.
   let lazyGroup;
   while ((lazyGroup = list.querySelector('[data-lazy-group],[data-materializing-group]'))) _materializeLazyGroup(lazyGroup, { immediate: true });
 
@@ -180,10 +176,7 @@ export function _applyBooksSearchFilter() {
     empty.textContent = t('books.no_matches');
     list.appendChild(empty);
   }
-  // A matching book inside a collapsed anthology/series/stash force-reveals
-  // that group above (_filterContainerRow/_filterBooksGroup) - its cover was
-  // skipped by the initial load pass (still collapsed then), so it needs
-  // queuing now that search has made it visible.
+  // Queue covers for groups made visible by search.
   _queueBookCovers(list, { reset: false });
   _scheduleAnthologyCardCoverFlows(list);
 }

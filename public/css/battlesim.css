@@ -12,10 +12,7 @@
   cursor: pointer;
   backdrop-filter: blur(6px);
   box-shadow: 0 2px 8px rgba(0,0,0,0.35);
-  /* See #charsheet-btn's own comment (charsheet.css) - without this,
-     #play-btn-row's wrap can miscalculate this button's slot and stack it
-     on top of a neighbor instead of wrapping to a new row once 5+ buttons
-     are showing at once. */
+  /* Do not shrink shortcut buttons below their label width at flex-wrap boundaries. */
   flex-shrink: 0;
 }
 #battlesim-btn:hover, #sim8-btn:hover, #sim286-btn:hover, #sim198-btn:hover, #sim199-btn:hover, #sim200-btn:hover, #sim186-btn:hover, #sim201-btn:hover, #sim202-btn:hover, #sim203-btn:hover, #sim83-btn:hover, #sim86-btn:hover, #sim114-btn:hover, #sim115-btn:hover, #sim123-btn:hover, #sim130-btn:hover, #sim92-btn:hover, #sim108-btn:hover, #sim216-btn:hover, #sim193-btn:hover, #sim217-btn:hover, #sim526-btn:hover, #sim322-btn:hover, #sim323-btn:hover, #sim324-btn:hover, #sim325-btn:hover, #sim122-btn:hover, #sim80-btn:hover, #sim82-btn:hover, #sim118-btn:hover, #sim218-btn:hover, #sim430-btn:hover, #sim204-btn:hover, #sim205-btn:hover, #sim206-btn:hover, #sim207-btn:hover, #sim208-btn:hover, #sim209-btn:hover, #sim210-btn:hover, #sim211-btn:hover, #sim212-btn:hover, #sim213-btn:hover, #sim214-btn:hover, #sim215-btn:hover, #sim219-btn:hover, #sim220-btn:hover, #sim221-btn:hover, #sim222-btn:hover, #sim224-btn:hover, #sim370-btn:hover, #sim375-btn:hover, #sim377-btn:hover, #sim376-btn:hover, #sim378-btn:hover, #sim78-btn:hover, #sim107-btn:hover, #sim135-btn:hover, #sim223-btn:hover, #sim317-btn:hover, #sim318-btn:hover, #sim319-btn:hover, #sim320-btn:hover, #sim397-btn:hover, #sim321-btn:hover, #sim398-btn:hover, #sim399-btn:hover, #sim414-btn:hover, #sim415-btn:hover, #sim416-btn:hover, #sim225-btn:hover, #sim431-btn:hover, #sim432-btn:hover, #sim226-btn:hover, #sim227-btn:hover, #sim228-btn:hover, #sim229-btn:hover, #sim230-btn:hover, #sim231-btn:hover, #sim232-btn:hover, #sim233-btn:hover, #sim434-btn:hover, #sim435-btn:hover, #sim436-btn:hover, #sim437-btn:hover, #sim438-btn:hover, #sim439-btn:hover, #sim440-btn:hover, #sim441-btn:hover, #sim462-btn:hover, #sim464-btn:hover, #sim465-btn:hover, #sim468-btn:hover, #sim234-btn:hover, #sim235-btn:hover, #sim716-btn:hover, #sim734-btn:hover, #sim739-btn:hover, #sim740-btn:hover, #sim753-btn:hover, #sim760-btn:hover, #sim772-btn:hover, #sim781-btn:hover, #sim869-btn:hover, #sim871-btn:hover, #sim161-btn:hover, #sim877-btn:hover, #sim881-btn:hover, #sim882-btn:hover, #sim236-btn:hover, #sim237-btn:hover, #sim238-btn:hover, #sim239-btn:hover, #sim240-btn:hover, #sim241-btn:hover, #sim242-btn:hover, #sim243-btn:hover, #sim244-btn:hover, #sim245-btn:hover, #sim246-btn:hover, #sim247-btn:hover, #sim248-btn:hover, #sim249-btn:hover, #sim250-btn:hover, #sim251-btn:hover, #sim252-btn:hover, #sim259-btn:hover, #sim260-btn:hover, #sim273-btn:hover, #sim433-btn:hover, #sim541-btn:hover, #sim661-btn:hover, #sim696-btn:hover, #sim263-btn:hover, #sim264-btn:hover, #sim253-btn:hover, #sim267-btn:hover, #sim256-btn:hover, #sim257-btn:hover, #sim258-btn:hover, #sim255-btn:hover, #sim254-btn:hover, #sim272-btn:hover, #sim275-btn:hover, #sim274-btn:hover, #sim276-btn:hover, #sim278-btn:hover, #sim279-btn:hover, #sim280-btn:hover { background: #374151; color: #d1d5db; }
@@ -23,15 +20,7 @@
 /* Modal reuses .inv-overlay/.inv-modal/.inv-modal-hdr/.inv-modal-ftr and the
    .inv-edit-row/.inv-qty-* stepper pattern from inventory.js's item-edit
    popover - only sizing/layout that's genuinely new lives here. */
-/* Fixed height, not just a max-height cap - opens at its final size right
-   away instead of growing into it as content (mainly the log) accumulates,
-   which felt like the dialog was misbehaving. Fixed px, not the shared
-   .inv-modal's 90vh: on a 2K/4K screen 90vh is enormous for what should stay
-   a small, compact utility dialog regardless of monitor size. 640px was too
-   tight on large screens - the Test Your Luck prompt row pushes the
-   Round/Reset footer buttons half off-screen the moment it appears, forcing
-   an immediate scrollbar. 760px was still too tight for book 186's longer
-   crew list, cutting the footer buttons off - bumped to 860px. */
+/* Use a fixed desktop height so controls and logs do not resize the dialog during combat. */
 .bsim-modal { width: min(720px, 95vw); height: min(860px, 90vh); }
 
 #bsim-close, #s8-close, #sim286-close, #sim198-close, #sim199-close, #sim200-close, #sim186-close, #sim201-close, #sim202-close, #sim203-close, #sim204-close, #sim205-close, #sim231-close, #sim232-close { margin-left: auto; }
@@ -54,11 +43,7 @@
   gap: 0.7rem;
   padding: 0.6rem 0.65rem;
   overflow-y: auto;
-  /* Puts the scrollbar on the left edge of the pane instead of the usual
-     right: flip the container to RTL (browsers put the scrollbar on the
-     side the content starts from) then flip every direct child straight
-     back to LTR so the actual field labels/inputs still read normally -
-     only the scrollbar's side is affected, nothing else. */
+  /* RTL moves the scrollbar left; reset children to LTR for normal text. */
   direction: rtl;
 }
 .bsim-col-left > * { direction: ltr; }
@@ -68,18 +53,7 @@
 }
 @media (max-width: 640px) {
   .bsim-body { flex-direction: column; }
-  /* .bsim-col-left carries every interactive control (stats, the enemy
-     picker, and critically the Round/Reset buttons in its own
-     .inv-modal-ftr) - .bsim-col-right is just history/log, read-only and
-     often near-empty at the start of a fight. Splitting the stacked mobile
-     layout flex:1/flex:1 (desktop's side-by-side split) gave both columns
-     equal height regardless of what's actually in them, squeezing the left
-     column's real controls into half the modal and, since .bsim-col-right
-     itself never had its own overflow rule, silently clipping whatever
-     didn't fit instead of scrolling to it - reachable in theory by
-     scrolling .bsim-col-left, but easy to mistake for a dead dialog with no
-     way to actually start a round. Capping the right column's height and
-     giving it its own scroll leaves the rest to the left column instead. */
+  /* On mobile, reserve most height for interactive controls and scroll the capped log independently. */
   .bsim-col-right {
     border-left: none;
     border-top: 1px solid #1f2937;
@@ -129,11 +103,7 @@
   margin: 0;
 }
 
-/* .inv-qty-btn's padding: 3px 0 makes the stepper row taller than the
-   .inv-qty-input (which has 0 vertical padding), leaving visible empty
-   space above/below the digit. Give both a matching fixed height instead
-   of stripping the button's padding (which made the +/- glyphs look
-   squished against the edges) - center them with flex instead. */
+/* Match stepper button/input heights and center glyphs without squashing padding. */
 .bsim-modal .inv-qty-input { line-height: 1; height: 22px; }
 .bsim-modal .inv-qty-btn {
   height: 22px;
@@ -248,11 +218,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
-  /* 8 gadget rows, expanded by default (unlike the collapsed-by-default
-     history <details>) - without this the list can push the log and history
-     panels below it past the modal's max-height: 90vh/overflow: hidden and
-     get silently clipped instead of scrolling, same risk .bsim-history-list
-     already guards against. */
+  /* Scroll gadget lists before they can clip the log or footer. */
   max-height: 220px;
   overflow-y: auto;
 }
@@ -284,4 +250,3 @@
 .sim-icon-dead   { color: #e05050; }
 .sim-icon-target { color: #4caf50; }
 .s8-rules-note { font-size: 0.68rem; color: #6b7280; line-height: 1.4; padding: 6px 0 2px; }
-

@@ -2,12 +2,9 @@
 const zlib = require('zlib');
 const { escapeHtml } = require('./html-escape');
 
-// Windows reserves these device names (case-insensitive, with or without an extension) -
-// a zip entry literally named "CON" or "CON.html" fails to extract with many Windows
-// zip tools, so a book titled e.g. "Con" would otherwise silently break its own export.
+// Avoid Windows reserved device names in ZIP entries, even with extensions.
 const _RESERVED_WIN_NAMES = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\..*)?$/i;
-// Keeps zip entries well under typical filesystem path limits even with multi-byte
-// UTF-8 names and the " (2)"-style dedup suffix buildFullExportZip may append.
+// Leave filename space for multibyte characters and duplicate-name suffixes.
 const _MAX_FILENAME_LEN = 150;
 
 // For display / HTML content - keeps all Unicode (Cyrillic, Japanese, etc.)
@@ -140,15 +137,7 @@ function _eqQty(entry) {
   return (entry && typeof entry === 'object') ? (entry.qty || 1) : 1;
 }
 
-// ── Graph snapshot (SVG, not PNG) ───────────────────────────────────────────────
-// Generated entirely from stored data (node positions, colors are just rules applied
-// to plain objects) - no browser/canvas needed, so this runs server-side in one pass
-// instead of round-tripping through the client to rasterize a live vis-network canvas.
-// That earlier canvas approach also produced blurry PNGs (a <canvas> has no notion of
-// "resolution" beyond its pixel size); SVG is vector, so it's sharp at any zoom/print
-// size instead. Colors mirror graph.js's nodeColor()/edgeColor() - specifically the
-// "no specific run being viewed" aggregate branch, since a static snapshot has no
-// single displayed run. Keep in sync with public/js/core/constants.js's COLORS if it changes.
+// Render graph SVG from stored data server-side, without browser/canvas dependencies.
 const GRAPH_COLORS = {
   death:          { background: '#e74c3c', border: '#c0392b' },
   victory:        { background: '#27ae60', border: '#1e8449' },
@@ -162,11 +151,7 @@ const GRAPH_COLORS = {
   start:          { background: '#fde047', border: '#a16207' },
 };
 
-// The exported HTML is meant to stand on its own outside the app (that's the whole
-// point of exporting), so - unlike relying on the live app's separate legend panel -
-// buildBookHtml() embeds one directly next to the graph image. Includes the
-// death+victory-both-available color (GRAPH_COLORS.bothOutline), which isn't
-// currently explained in either of the app's own live legends either.
+// Embed the legend so exported HTML is self-contained.
 function _exportLegendHtml() {
   const dot = (c) => `<span class="legend-dot" style="background:${c.background};border:2px solid ${c.border}"></span>`;
   const items = [
@@ -191,14 +176,7 @@ function _darkenHex(hex) {
   return `#${[r, g, b].map(c => Math.round(c * 0.6).toString(16).padStart(2, '0')).join('')}`;
 }
 
-// Mirrors graph.js's computeOutcomes() - a section is 'death' only if EVERY
-// one of its choices is itself already 'death', and 'win' only if EVERY one
-// of its choices is itself already 'win' (same quantifier both ways - not
-// just a single unbranching chain, and not "any choice can reach 0" either,
-// since a section with one path to certain victory and another to certain
-// death promises nothing - the player could still pick the death branch).
-// Unmapped sections and true cycles stay unresolved rather than guessed.
-// Computed once per SVG build (full-graph fixed-point solve), not once per edge.
+// Match the client's fixed-point outcomes: every choice must be certain death or certain victory.
 function _computeOutcomes(graph) {
   const outcome = {};
   let changed = true;
@@ -232,13 +210,7 @@ function _isValidStartSec(v) {
   return typeof v === 'number' ? (v > 0 && Number.isInteger(v)) : String(v).length > 0;
 }
 
-// graph[secId].color is stored, client-set state - the live UI only ever writes one of a
-// fixed set of swatch hex values, but the server never enforces that on save, and this
-// value gets interpolated straight into an SVG fill="..." attribute below. An untrusted
-// value here (e.g. a hand-crafted state payload posted directly to the save endpoint)
-// could break out of the attribute and inject markup/script into the exported SVG, which
-// executes if opened directly in a browser rather than as an <img> - reject anything that
-// isn't a genuine #rrggbb hex string instead of trusting stored data.
+// Validate stored colors before interpolating SVG attributes; client state is untrusted.
 function _isHexColor(v) { return typeof v === 'string' && /^#[0-9a-fA-F]{6}$/.test(v); }
 
 function _nodeColor(secId, graph, playthroughs, startSection) {
@@ -276,12 +248,7 @@ function _nodeColor(secId, graph, playthroughs, startSection) {
   return base;
 }
 
-// Mirrors graph.js's CONNECTOR_STYLES (vis-network's "smooth" edge types): 'straight'
-// draws a plain line; curvedCW/curvedCCW/cubic/horizontal all bow the edge away from a
-// straight line through a control point offset perpendicular to it - CW and CCW offset
-// in opposite directions, cubic/horizontal don't have a clean straight-line SVG
-// equivalent so they're approximated as a CW curve rather than left as straight lines
-// (visually closer to what the book actually uses than ignoring the setting entirely).
+// Approximate curved connector styles with SVG control points; preserve opposite CW/CCW bends.
 function _curveControlPoint(x1, y1, x2, y2, style) {
   if (style === 'straight') return null;
   const roundness = (style === 'cubic' || style === 'horizontal') ? 0.3 : 0.2;
@@ -302,10 +269,7 @@ function buildGraphSvg(graph, positions, playthroughs, startSection, connectorSt
   for (const [secKey, data] of Object.entries(graph || {})) {
     if (secKey === '-1' || secKey === '0') continue;
     const pos = positions?.[secKey];
-    // Number.isFinite (not typeof === 'number') - NaN and Infinity are both typeof
-    // 'number' and would otherwise poison every min/max/width/height computation below,
-    // producing a viewBox like "0 0 NaN Infinity" (blank/broken SVG) for the whole book
-    // over one bad coordinate.
+    // Reject non-finite coordinates to prevent invalid SVG bounds.
     if (!pos || !Number.isFinite(pos.x) || !Number.isFinite(pos.y)) continue;
     nodes.push({ key: secKey, x: pos.x, y: pos.y, data });
   }
@@ -329,9 +293,7 @@ function buildGraphSvg(graph, positions, playthroughs, startSection, connectorSt
       const x1 = px(n), y1 = py(n), x2 = px(to), y2 = py(to);
       const color = _edgeColor(outcomes, dest);
       const ctrl  = _curveControlPoint(x1, y1, x2, y2, connectorStyle);
-      // shorten the end point so the arrowhead lands on the destination node's edge, not
-      // its center - along the curve's own tangent (through ctrl) when curved, otherwise
-      // straight from the source.
+      // End arrows at the destination edge, using the curve tangent when applicable.
       const tx = ctrl ? ctrl.x : x1, ty = ctrl ? ctrl.y : y1;
       const tdx = x2 - tx, tdy = y2 - ty, tlen = Math.hypot(tdx, tdy) || 1;
       const ex = x2 - (tdx / tlen) * (R + 8), ey = y2 - (tdy / tlen) * (R + 8);
@@ -342,9 +304,7 @@ function buildGraphSvg(graph, positions, playthroughs, startSection, connectorSt
     }
   }
 
-  // Label sits below the node (vis-network's default for 'dot'-shaped nodes - it's never
-  // actually inside the dot in the live graph either) rather than crammed inside a small
-  // circle, where multi-digit section numbers would overflow or get truncated.
+  // Place labels below dot nodes, matching the live graph.
   const nodeParts = nodes.map(n => {
     const secId  = /^-?\d+$/.test(n.key) ? Number(n.key) : n.key;
     const color  = _nodeColor(secId, graph, playthroughs, startSection);
@@ -355,10 +315,7 @@ function buildGraphSvg(graph, positions, playthroughs, startSection, connectorSt
            `<text x="${cx.toFixed(1)}" y="${(cy + R + 13).toFixed(1)}" text-anchor="middle" font-size="10" fill="#d1d5db">${esc(n.key)}</text>`;
   }).join('\n  ');
 
-  // Cap whichever dimension is larger (not just width) so a mostly-vertical graph gets
-  // scaled down proportionally instead of ending up with a huge, mismatched intrinsic
-  // height - explicit width AND height (not just viewBox) so opening the file directly
-  // renders at a sane size instead of the browser guessing and padding it out.
+  // Cap the larger dimension and set explicit width/height for sane standalone rendering.
   const maxDim = 1600;
   const scale  = Math.min(1, maxDim / Math.max(width, height));
   const outW   = Math.round(width * scale);
@@ -372,8 +329,7 @@ function buildGraphSvg(graph, positions, playthroughs, startSection, connectorSt
 </svg>`;
 }
 
-// ── HTML generator ────────────────────────────────────────────────────────────
-// itemsById: Map<id, {name, type}> - optional, used for inventory/equipment names
+// Optional itemsById resolves inventory/equipment names.
 function buildBookHtml(book, username, itemsById = new Map()) {
   const esc = escapeHtml;
   const itemName = id => esc(itemsById.get(id)?.name ?? `Item #${id}`);
@@ -383,18 +339,11 @@ function buildBookHtml(book, username, itemsById = new Map()) {
   const pts   = state.playthroughs || [];
   const preSeriesRuns = state.preSeriesRuns || [];
 
-  // Terminal sentinels: numeric -1 (death) and 0 (win). All other IDs are real sections,
-  // including alphanumeric ones like "A1". We avoid Number(k) > 0 which breaks on strings.
+  // Only -1/0 are terminal; other IDs, including alphanumeric strings, are sections.
   const _isTerminal = v => v === -1 || v === 0 || v === '-1' || v === '0';
   const _isRealSec  = v => v != null && !_isTerminal(v);
 
-  // Mapped = sections with real recorded choices, not merely a discovered-as-choice stub.
-  // Mirrors the client's mappedCount() (state.js): a node can be flagged discovered:true
-  // and still end up with real choices recorded later, so checking the flag alone
-  // undercounts - must also count any node with a non-empty choices list. A node whose
-  // only way forward is a portal has nothing to record as a choice (portals live in
-  // node.portals[], separate from node.choices[]), so it also counts as mapped once it
-  // has one - otherwise it would sit as "discovered only" forever despite being visited.
+  // Count recorded choices and portal-only nodes as mapped, not merely discovered stubs.
   const _isMappedNode = k => !graph[k]?.discovered || (graph[k]?.choices?.length > 0) || (graph[k]?.portals?.length > 0);
   const mapped = Object.keys(graph).filter(k => _isRealSec(k) && _isMappedNode(k)).length;
 
@@ -407,17 +356,11 @@ function buildBookHtml(book, username, itemsById = new Map()) {
   pts.forEach(pt => (pt.path || []).forEach(s => { if (_isRealSec(s)) knownSet.add(String(s)); }));
   const discoveredOnly = Math.max(0, knownSet.size - mapped);
 
-  // In an open-world series, every book carries one playthrough slot per series run so
-  // numbers line up across books (_syncSeriesRuns, open-world.js) - but only the book(s)
-  // a run actually visited get a real startedAt; a book that a given run never touched
-  // still gets a padding slot with startedAt: null. Counting those slots as real runs of
-  // THIS book would inflate "Runs"/"in progress" with runs that happened elsewhere.
+  // Exclude untouched open-world placeholders from book run counts.
   const isPhantom = p => p.startedAt == null;
   const realPts    = pts.filter(p => !isPhantom(p));
   const allRuns    = [...realPts, ...preSeriesRuns];
-  // A 'portal' result means the run left this book for another one mid-series and hasn't
-  // actually ended yet - it's still in progress, just not here (open-world.js's own
-  // localTerminal/seriesTerminal split treats 'portal' the same way).
+  // Portal results pause the run in this book; they do not complete it.
   const finished   = allRuns.filter(p => p.completed && p.result !== 'portal');
   const inProgress = allRuns.length - finished.length;
   const wins       = finished.filter(p => p.result === 'success').length;
@@ -436,9 +379,7 @@ function buildBookHtml(book, username, itemsById = new Map()) {
     book.description    && `<tr><td>Description</td><td>${esc(book.description)}</td></tr>`,
   ].filter(Boolean).join('');
 
-  // Shared row rendering for both the main Runs table and Before Joining Series -
-  // pre-series runs use the same shape (result/path/date), just without the phantom
-  // concept, since they predate the book joining any series.
+  // Share table rows for current and pre-series runs.
   const _runResult = p => {
     if (!p.completed) return 'In progress';
     if (p.result === 'portal') return 'In progress';
@@ -466,9 +407,7 @@ function buildBookHtml(book, username, itemsById = new Map()) {
     _runRow(pt, `Run ${-(preSeriesRuns.length - i)}`)
   ).join('');
 
-  // Per-run details: charsheet, inventory, equipment. Phantom slots are skipped -
-  // their charSheet/inventory just mirror whatever the series' current character looks
-  // like for display continuity (open-world.js), not anything that happened in this run.
+  // Skip phantom slots in exported run details; mirrored character data is not genuine play.
   const _runDetailBlock = (pt, label) => {
     const result = _runResult(pt);
 
@@ -517,9 +456,7 @@ function buildBookHtml(book, username, itemsById = new Map()) {
     if (!isNaN(na) && !isNaN(nb)) return na - nb;
     return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' });
   };
-  // Same _isMappedNode definition as the "Mapped" stat above, so a discovered-only stub
-  // (empty choices, discovered:true) lands in the greyed "not yet visited" rows below
-  // instead of the main table with a blank Choices cell - previously these disagreed.
+  // Use the same mapped predicate for statistics and section-table placement.
   const mappedInGraph = new Set(Object.keys(graph).filter(k => _isRealSec(k) && _isMappedNode(k)));
   const discoveredOnlyIds = [...knownSet].filter(s => !mappedInGraph.has(s)).sort(_secSort);
   const sectionRows = [
@@ -598,12 +535,7 @@ ${book.notebook ? `<h2>Notebook</h2><pre>${esc(book.notebook)}</pre>` : ''}
 </html>`;
 }
 
-// ── Public API ────────────────────────────────────────────────────────────────
-// items: [{id, name, type}] array from DB - used to resolve item names in HTML
-// Graph snapshots are generated from book.state (graph/positions/playthroughs/
-// startSection) via buildGraphSvg - no client involvement needed, see buildGraphSvg's
-// comment for why. Books that have never been laid out just get a flat HTML file;
-// books with a renderable graph get their own folder alongside graph.svg.
+// Export book state with catalog item names; graph SVG needs no client rendering.
 function buildFullExportZip(username, books, items = []) {
   const date     = new Date().toISOString().slice(0, 10);
   const itemsById = new Map(items.map(it => [it.id, it]));

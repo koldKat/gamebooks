@@ -8,8 +8,8 @@ import { spawnSync } from 'node:child_process';
 const dir = new URL('../../../public/js/', import.meta.url);
 test('UI helper relocation preserves implementations and lightweight dependencies', () => {
   const digests = {
-    confirm: 'bfecf79a4b8b946856c86d1a7417e4aa5e2635da1450a96d065ebb79df91f18b',
-    tooltip: '325014a74416056b57cb207bc73ee587b885d5f71a53dff6da33048ca3cb5c9e',
+    confirm: 'f4ef543c741ef428b11a855cfe4884c3d07aaab591889187d7e83e6dde69973d',
+    tooltip: 'c2ca46f3adf6f0986d575f2275466cde6a9f052a6e9d1db6163f56a4c8f5969f',
   };
   for (const [name, digest] of Object.entries(digests)) {
     assert.equal(existsSync(new URL(name + '.js', dir)), false);

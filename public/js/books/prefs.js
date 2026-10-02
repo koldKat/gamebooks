@@ -19,9 +19,7 @@ export function _getExpandedPref(kind, key, localKey) {
   if (!isDemoMode && getToken() && Object.prototype.hasOwnProperty.call(map, key)) return map[key] !== '0';
   if (kind === 'series') {
     const [prefix, sid = ''] = String(key || '').split(':');
-    // Only bleed through main-list state for main-list lookups, not stash series.
-    // Stash series fall directly to their stash-specific localStorage key to avoid
-    // showing main-list expand state when the stash key was never persisted.
+    // Stash expansion falls back only to stash-specific storage, never main-list state.
     if (prefix === 'main') {
       const mainLocalVal = localStorage.getItem(`sr_expanded_${sid}`);
       if (mainLocalVal != null) return mainLocalVal !== '0';

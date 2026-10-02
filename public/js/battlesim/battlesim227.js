@@ -1,47 +1,6 @@
-// ── Battle Simulator (Battleblade Warrior, book 227) ─────────────────────────
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 227 only) by the caller in boot.js via
-// setSim227Visible().
-// To remove: delete this file, remove its import line and initSim227()/
-// setSim227Visible() calls from boot.js, remove 'sim227' from
-// SIM_HISTORY_KEYS in server/db/xp.js, and remove the .bsim-* CSS (shared
-// with the other battlesim*.js files, so only remove it if all are gone).
-//
-// Standard Fighting Fantasy SKILL/STAMINA/LUCK system, same core numbers,
-// Test Your Luck table and score ceilings as every other FF sim in this app -
-// SKILL 1d6+6, STAMINA 2d6+12, LUCK 1d6+6. Provisions per the book's own
-// rules text: 4 Provisions max, each restores up to 4 STAMINA, capped at
-// Initial.
-//
-// attackModifier/enemyWoundDamage/pairedFight/sideEnemy/sideEnemy2/
-// winAfterHits/enemyStaminaFloor are reused exactly as books 200-216 built
-// them. pairedFight covers this book's several "fight them two at a time"
-// group encounters (§43 three Rat Men, §64/§320 five Panther Warriors,
-// §70 four Ishkarim, §90/§216 four Lizard Men, §109/§212 Swamp Goblin
-// boat-raids, §200 three Shadow Ghouls, §266/§365 two Marsh Orcs, §332
-// three Krell) - the second (and third, via tripleFight) attacker strikes
-// independently every round and is never woundable, matching the printed
-// "resolve your own attack as usual; any OTHER opponent with a higher
-// Attack Strength scores a hit on you" rule. The book's multi-attack single
-// monsters (§207 Triceratops, §208 Calacorm, both "2 attacks per round") are
-// modeled the same way: a second, unwoundable "attacker" sharing the main
-// enemy's SKILL score.
-//
-// Deliberately NOT modeled: the §34 Tyrannosaurus-vs-Triceratops spectacle
-// (the player never fights it - "you may fight the battle out if you wish,
-// but by the time it is over you are well away from it" is flavor text, not
-// a real combat branch) and the §36 three-way battle where Lecarte and Snag
-// fight alongside the player against several Lizard Men (too irregular for
-// this sim's one-or-two-attacker model - resolve that fight by hand).
-//
-// book_enemies.attack holds SKILL, .hp holds STAMINA, .defense unused - same
-// convention as every other FF sim. 72 rows read from all 400 sections;
-// several recurring encounters (Black Panther x3, Giant Slug x4, Warrior-
-// King x2, Marsh Orc pair x2 entries) go to different destinations or are
-// separate instances and are kept as separate rows, matching this book's
-// own repeated-but-distinct stat blocks.
-//
-// All state lives in pt.sim227, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Battleblade Warrior, book 227)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -132,9 +91,7 @@ function _resetEncounterKnobs(d) {
   d.sideEnemy2 = { name: '', skill: 0, staminaMax: 0 };
 }
 
-// Uncapped lifetime log - the admin dashboard aggregates battle counts
-// app-wide from this array, so per-user history needs to be a true lifetime
-// total, not a rolling window.
+// Keep lifetime outcomes: admin totals require the full history.
 function _recordOutcome(d, outcome) {
   d.history.push({
     enemy: _enemyName(d), outcome,
@@ -177,10 +134,7 @@ function _runRound() {
     if (d.player.stamina > 0) d.pendingLuckQueue.push({ kind: 'enemy-hit' });
   }
 
-  // Simultaneous side attackers: fresh independent exchanges every round,
-  // never woundable themselves (choose-one-target rule, per the printed
-  // "Fighting More Than One Opponent" rules and this book's multi-attack
-  // monsters like the Triceratops/Calacorm).
+  // Side attackers roll independently each round and cannot be wounded.
   if (d.pairedFight && d.sideEnemy.staminaMax > 0 && d.player.stamina > 0) {
     const sidePlayerAS = _roll2d6() + _effectiveSkill(d) + (d.player.attackModifier || 0);
     const sideAS = _roll2d6() + d.sideEnemy.skill;
@@ -722,9 +676,7 @@ export function initSim227() {
     if (!d) return;
     const map = FIELD_MAP[id];
     if (!map) return;
-    // Attack modifier is the one field allowed to go negative (bare-handed/
-    // disarmed/fatigue penalties are always a subtraction) - every other
-    // field stays clamped to 0 or above.
+    // Allow negative attack modifiers; other fields stay non-negative.
     val = id === 'sim227-player-atkmod' ? Number(val) : Math.max(0, val);
     if (id === 'sim227-player-skill') val = Math.min(val, d.player.skillInitial);
     if (id === 'sim227-player-stamina') val = Math.min(val, d.player.staminaInitial);

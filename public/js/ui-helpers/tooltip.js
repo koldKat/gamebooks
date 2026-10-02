@@ -6,11 +6,7 @@ export function initTooltip() {
   let lastDismissAt = -1;
   document.addEventListener('mouseover', e => {
     const el = e.target.closest('[data-tooltip]');
-    // A click dismisses the tooltip, but DOM mutated under a stationary
-    // cursor (expand/collapse inserting or removing children) fires
-    // synthetic mouseovers that would pop it straight back. Only re-show
-    // once the pointer has actually moved since the dismiss - a real
-    // pointer move onto a new target always precedes its mouseover.
+    // Require pointer movement after dismissal so synthetic mouseovers cannot reopen the tooltip.
     if (el && lastMoveAt <= lastDismissAt) { tip.style.display = 'none'; return; }
     tip.style.display = el ? 'block' : 'none';
     if (el) {
@@ -30,9 +26,6 @@ export function initTooltip() {
     }
   });
   document.addEventListener('mouseleave', () => { tip.style.display = 'none'; });
-  // Touch devices fire a synthetic mouseover on tap (showing the tooltip) but
-  // never a matching mouseleave/mouseout, since there's no pointer to actually
-  // leave - without this the tooltip gets stuck on screen after tapping
-  // whatever triggered it, floating over the new modal/panel it just opened.
+  // Dismiss on touch: synthetic mouseover has no matching mouseleave.
   document.addEventListener('click', () => { lastDismissAt = Date.now(); tip.style.display = 'none'; });
 }

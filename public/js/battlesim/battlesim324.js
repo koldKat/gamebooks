@@ -1,44 +1,6 @@
-// ── Battle Simulator (The Chasm of Doom, Lone Wolf book 4, id 324) ──
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 324 only) by the caller in boot.js via
-// setSim324Visible().
-// To remove: delete this file, remove its import line and initSim324()/
-// setSim324Visible() calls from boot.js, remove 'sim324' from
-// SIM_HISTORY_KEYS in server/db/xp.js, and remove the .bsim-* CSS (shared
-// with the other battlesim*.js files, so only remove it if all are gone).
-//
-// Same Combat Ratio + Combat Results Table system as books 193/322/323 -
-// Project Aon's own "Game Rules" text and worked example (Winged Devil,
-// COMBAT SKILL 15 vs 20, ratio -3) are verbatim identical across all four
-// books, so the COMBAT_TABLE constant is reused rather than re-derived from
-// this book's own printed pages. Combat Ratio = effective COMBAT SKILL minus
-// enemy COMBAT SKILL, computed once when an enemy is selected and fixed for
-// the whole fight. Each round, pick 0-9, bucket the ratio into the table's 13
-// printed columns (-11 or less .. 11 or greater), and
-// COMBAT_TABLE[pickRow][ratioCol] gives [enemyLoss, lwLoss] simultaneously,
-// including 'K' (automatically killed) at the extremes.
-//
-// COMBAT SKILL = pick+10, ENDURANCE = pick+20, both rolled once at chargen.
-// No LUCK mechanic - that's Fighting Fantasy, not Lone Wolf.
-//
-// attackModifier is a free-form +/- field covering one-off COMBAT SKILL
-// changes this book describes by hand (Kai Discipline bonuses, terrain
-// penalties), same precedent as every other Lone Wolf sim in this app. One
-// single-use Healing Potion consumable (+4 ENDURANCE, after combat only).
-//
-// Every multi-enemy fight in this book (the 3-way Tunnel Guard packs §125/
-// §143/§208, the 6-way Guard squad §202) is fought one at a time per the
-// book's own text - no pairedFight/sideEnemy mechanic needed, re-pick the
-// next roster enemy after each kill.
-//
-// book_enemies.attack holds COMBAT SKILL, .hp holds ENDURANCE, .defense
-// unused. 52 rows read from all 350 sections; three same-name/same-stat/
-// same-destination pairs (Stoneworm §26=§88, Giant Meresquid §194=§234,
-// Barraka §122=§325) are merged into one row each. Unlike books 193/322/323,
-// this book's own missing-choice-link import defect count was zero - no
-// fixes needed here.
-//
-// All state lives in pt.sim324, per-user/per-book via currentPlaythrough().
+// Battle Simulator (The Chasm of Doom, Lone Wolf book 4, id 324)
+// Combat Ratio is fixed on enemy selection; a 0-9 pick selects simultaneous table losses.
+// 'K' means instant death. Skill bonuses and narrative effects are entered manually.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -51,10 +13,8 @@ const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" ari
 
 const HEALING_POTION_HEAL = 4;
 
-// Rows = the 10-value random pick, printed order 1,2,3,4,5,6,7,8,9,0.
-// Columns = Combat Ratio, bucketed: -11-, -10/-9, -8/-7, -6/-5, -4/-3,
-// -2/-1, 0, 1/2, 3/4, 5/6, 7/8, 9/10, 11+. Cell = [enemyLoss, lwLoss]
-// ('K' sentinel = automatically killed).
+// Rows: 1-9, then 0. Columns: Combat Ratio buckets -11..11, clamped at the extremes.
+// Cells are [enemyLoss, playerLoss]; K means instant death.
 const COMBAT_TABLE = [
   [[0,'K'], [0,'K'], [0,8], [0,6], [1,6], [2,5], [3,5], [4,5], [5,4], [6,4], [7,4], [8,3], [9,3]],
   [[0,'K'], [0,8],   [0,7], [1,6], [2,5], [3,5], [4,4], [5,4], [6,3], [7,3], [8,3], [9,3], [10,2]],

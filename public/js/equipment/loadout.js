@@ -3,14 +3,7 @@
 import { state } from '../core/state.js';
 import { _eqItemId, _eqMeta, _eqQty } from './model.js';
 
-// Build a fresh { inventory, equipment, equipmentVisible } set for a new playthrough
-// from the book's saved templates. equipmentTemplate entries carry their own
-// label/note/qty (captured at "Save as Template" time), so a re-equipped item
-// keeps the name the player gave it - no cross-referencing inventoryTemplate
-// needed (equipped items are never present there, since they've been moved out
-// of inventory). _eqItemId/_eqMeta/_eqQty also accept legacy itemId-only
-// template entries from saves made before this. The "show on screen" flag for
-// equipped slots comes from equipmentVisibleTemplate.
+// Clone templates into independent run state, preserving metadata and legacy ID-only entries.
 export function instantiateLoadout() {
   const inventory = state.inventoryTemplate ? state.inventoryTemplate.map(s => ({ ...s })) : [];
   const eqTemplate = state.equipmentTemplate ?? {};

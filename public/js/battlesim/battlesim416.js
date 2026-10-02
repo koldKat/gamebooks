@@ -1,49 +1,6 @@
-// ── Battle Simulator (Древният враг, book 416) ──
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 416 only) by the caller in boot.js via
-// setSim416Visible().
-// To remove: delete this file, remove its import line and initSim416()/
-// setSim416Visible() calls from boot.js, remove 'sim416' from
-// SIM_HISTORY_KEYS in server/db/xp.js, remove 'sim416-overlay' from
-// ALL_PANEL_OVERLAY_IDS in util.js and the #sim416-btn selectors in
-// battlesim.css.
-//
-// Same mechanic as battlesim414.js/battlesim415.js (books 414/415, this
-// book's own direct prequels in the same Оргонд/Алкирия series - identical
-// rules text, word for word, down to the player's starting Умение
-// 10/Издръжливост 50): each side has Умение (Skill) and Издръжливост
-// (Endurance). To resolve one exchange, both sides draw a random number
-// from the book's printed random-number table and add it to their Skill
-// (modeled here as a random digit 0-9, matching the earlier two books'
-// own choice); higher total lands a hit, a tie means neither side had the
-// advantage and both redraw. A successful hit costs the loser 2 Endurance
-// normally, or only 1 if the side that landed the hit is fighting
-// unarmed.
-//
-// Full enemy roster (28 rows, all 20 unique stat-block-bearing sections
-// found across the book). Several early-story encounters (§7/§9/§20/§24/
-// §31/§33/§35/§39) are narrative retellings of essentially the same
-// ambush fight depending on how the player approached it (solo attacker
-// vs. a pair, slightly different Умение on the first attacker in some
-// tellings) - seeded once at §33's telling (the fullest: two attackers,
-// 9/11 and 7/2) rather than duplicated per branch. §137/§139/§154 (three
-// identical retellings of a two-assassin fight) and §121/§134 (two
-// identical retellings of a three-attacker fight) are likewise seeded
-// once each. §369/§378 (an identical single-enemy retelling) is seeded
-// once. §105 is a pre-battle Умение-boosting spell effect before the
-// §72 fight, not a separate enemy - its +5 bonus is meant to be hand-added
-// to the player's own Умение field. Multi-enemy group fights (§121/§134
-// trio; §226/§256/§267/§321 pairs/groups) are resolved by hand-picking the
-// next enemy from the dropdown after each one falls, same convenience
-// pattern as every other multi-enemy sim in this app. §262/§308 explicitly
-// force the player to fight unarmed (disarmed before the fight) - toggle
-// the player's own "Без оръжие" checkbox for those two.
-//
-// book_enemies column reuse (only 4 numeric columns exist; this book only
-// needs 2): attack = Умение (Skill); hp = Издръжливост (Endurance).
-// defense/pb are unused, always 0.
-//
-// All state lives in pt.sim416, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Древният враг, book 416)
+// Compare random digit + SKILL per exchange; ties miss.
+// The source does not specify the random-table range; 0-9 is assumed.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';

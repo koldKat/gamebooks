@@ -5,11 +5,11 @@ import { createHash } from 'node:crypto';
 
 const dir = new URL('../../../public/js/', import.meta.url);
 test('account relocation keeps root wrappers absent and unchanged modules intact', () => {
-  // Non-import source captured from 362a441 before the path-only move.
+  // Non-import source baseline; comment cleanup verified against unchanged executable ASTs.
   const digests = {
-    auth: 'e9b227bf34d776f49c4780e6e807a4bae0e9bddbec7ada123591ac1a63fa1c05',
-    'public-profile': '26f563499b681d771ef42c517515a77b1feee76cfbc0e3b5a53a8abfdc7161c3',
-    user: 'c8ce4d40623ccdbbc022ec13447b2625202731179fd2e5db815cbc5d5217737e',
+    auth: 'f5a59cea9ac32de7dd96723dcd077f6f76e621b8ce0e00343aa0d9191d6be4dc',
+    'public-profile': '1431bd883bb1bf66a2711bba03869d9756453ce17d4742103ad3782e5dd1d138',
+    user: '6a0e5eee3143805e90dee5da269571f8ee1851736e9303489fa6b4123c59a70d',
   };
   for (const [name, digest] of Object.entries(digests)) {
     assert.equal(existsSync(new URL(name + '.js', dir)), false);

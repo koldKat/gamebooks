@@ -1,52 +1,6 @@
-// ── Battle Simulator (Demons of the Deep, book 215) ─────────────────────────
-// Self-contained module. Imports from state.js, confirm.js, charsheet.js and
-// util.js. Visibility is gated (book 215 only) by the caller in boot.js via
-// setSim215Visible().
-// To remove: delete this file, remove its import line and initSim215()/
-// setSim215Visible() calls from boot.js, and remove the .bsim-* CSS (shared
-// with every other battlesimN.js in this folder, so only remove it if all
-// of them are gone).
-//
-// Standard Fighting Fantasy SKILL/STAMINA/LUCK core (2d6+SKILL Attack
-// Strength rolls, 2-STAMINA wounds, Test Your Luck damage modifiers) -
-// reused verbatim, same as every other sim here.
-//
-// This is the most encounter-dense roster built so far (37 combat sections,
-// 53 book_enemies rows since sequential/simultaneous fights are split into
-// one row per named combatant, same convention book212 uses). Most of that
-// variety needs no bespoke code at all:
-// - Sequential "First X, Second X..." fights (batfish, skeletons, giant
-//   crabs, deep ones, pirates, barracudas) already work with zero new code:
-//   the player just re-picks the next enemy from the autocomplete after
-//   each kill, same as switching enemies mid-session in any other sim -
-//   the player's own STAMINA is untouched by an enemy switch.
-// - STAMINA-threshold branches (Sharkspear/Water Elemental/Statue's "if you
-//   reduce it to STAMINA 2..." alternate endings) need no code either - the
-//   enemy's live STAMINA is already visible on screen for the player to act
-//   on themselves outside the sim, same as every other sim's threshold text.
-// - The Sea Ogre encounters (sec 109/383, same creature, STAMINA carries
-//   over between them) and the Bone Demon's three-arm target-choice puzzle
-//   (sec 168), the Shark's ally Dolphin (sec 218), the "always 2 active"
-//   pirate gauntlet (sec 274), Cyrano's win-by-3-wounds duel (sec 22/137),
-//   and the Sea Hag's d6-branching curse (sec 254) are all genuinely
-//   one-off puzzle mechanics with no reusable shape - noted directly in
-//   that enemy's book_enemies name for the player to apply by hand, same
-//   "apply narrative one-offs by hand" precedent every other sim here
-//   follows, rather than built as bespoke code for each.
-//
-// Two things generalize cleanly and got real code:
-// 1. Attack modifier / wound-damage override (Muck Demon's -3 Attack
-//    Strength, Sea Snakes' 3-point poison bite instead of the usual 2) -
-//    same d.player.attackModifier / d.player.enemyWoundDamage fields every
-//    sim in this app already has.
-// 2. Swiftstinger (a one-time-use thrown dagger found at sec 263, usable in
-//    any later fight): auto-wins the round with no dice rolled for either
-//    side and deals a flat 10 STAMINA to the target, then is consumed. This
-//    is a discrete numeric mechanic reusable across the whole book, unlike
-//    everything else above, so it got a real button and its own toggle
-//    (d.player.hasSwiftstinger, set once the player has found the item).
-//
-// All state lives in pt.sim215, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Demons of the Deep, book 215)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -166,9 +120,7 @@ function _resolveRoundEnd(d) {
     _recordOutcome(d, 'loss');
     return;
   }
-  // === not >= - a reminder every single round after the threshold (the
-  // fight is deliberately left clickable past it, informational only) would
-  // spam the log for as long as the player keeps rolling.
+  // Warn once at the threshold; later rounds remain playable.
   if (d.player.forceLossAfterRounds > 0 && d.roundsThisBattle === d.player.forceLossAfterRounds) {
     _appendLog(d, t('battlesim215.log.round_limit'));
   }

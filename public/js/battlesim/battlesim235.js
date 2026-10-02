@@ -1,51 +1,6 @@
-// ── Battle Simulator (Fangs of Fury, book 235) ────────────────────────────────
-// Self-contained module. Imports from state.js, confirm.js, charsheet.js and
-// util.js. Visibility is gated (book 235 only) by the caller in boot.js via
-// setSim235Visible().
-// To remove: delete this file, remove its import line and initSim235()/
-// setSim235Visible()/renderSim235() calls from boot.js, remove 'sim235' from
-// SIM_HISTORY_KEYS in server/db/xp.js, remove 'sim235-overlay' from
-// ALL_PANEL_OVERLAY_IDS in util.js, remove #sim235-btn from battlesim.css
-// (shared with the other bsim-* buttons, so only remove it if all are gone).
-//
-// Standard Fighting Fantasy SKILL/STAMINA/LUCK system (SKILL 1d6+6, STAMINA
-// 2d6+12, LUCK 1d6+6, normal wound 2 STAMINA, Test Your Luck costs 1 LUCK) -
-// this book's own printed rules are the standard FF text verbatim, unlike
-// book 222 (no Provisions) - this book DOES have the usual 10-meal
-// Provisions system (+4 STAMINA/meal) plus a one-off Potion of Skill/
-// Strength/Fortune choice, same "apply by hand with the existing steppers"
-// precedent as every other book's potions here.
-//
-// attackModifier + enemyWoundDamage cover every "-N SKILL this fight"/
-// "unusual wound size" case found in the roster pass:
-// - Horned Devil (§130): "Reduce your SKILL by 2 for this combat only."
-// - Mage Warrior(s) (§246, §396 x3): -2 SKILL for the fight if the player
-//   doesn't carry a Wand (fold in via attackModifier by hand).
-// - Dragonman (§89, §117): a pre-fight STAMINA loss (4 points) if the
-//   player has no Black Cube, applied once before the fight starts with
-//   the ordinary STAMINA stepper - not a per-round mechanic.
-//
-// Deliberately NOT modeled, matching this app's precedent for narrative
-// branching that isn't itself a combat-math change: Jinxana's (§152)
-// instant-death-with-no-fight branch if the player carries neither a Wand
-// nor a Black Cube (the book kills you outright before any Attack Round);
-// the Schizoid Genie's (§329) unfightable-without-a-Wand branch (routes
-// straight to §30, no combat happens at all); the "Bridge Guard Orc(s)"
-// encounter (§221), where a 1d6 roll (not modeled here) sets how many
-// identical Orcs join the fight - roll the die by hand, then just re-pick
-// the same "BRIDGE GUARD ORC(S) (§221)" entry from the Enemy dropdown and
-// re-fight it that many times in sequence; and every other "Fight each in
-// turn" multi-enemy encounter (§82, §84, §138, §310, §347, §396) - this
-// book always resolves multiple creatures sequentially, one full battle at
-// a time, never simultaneously, so no extra side-enemy machinery is
-// needed: defeat the first, then re-pick the next name from the same
-// Enemy dropdown. Also not modeled: the fourteen-Walls-of-Defence Bracelet
-// timer (a narrative pressure gauge unrelated to combat math - track it on
-// paper as the book instructs) and one-off STAMINA/SKILL/LUCK gains or
-// losses from non-combat paragraphs (apply by hand with the steppers, same
-// as any other book here).
-//
-// All state lives in pt.sim235, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Fangs of Fury, book 235)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -565,9 +520,7 @@ export function initSim235() {
     if (!d) return;
     const map = FIELD_MAP[id];
     if (!map) return;
-    // Attack modifier is the one field allowed to go negative (a
-    // no-Wand/disarmed penalty is always a subtraction) - every other
-    // field stays clamped to 0 or above.
+    // Allow negative attack modifiers; other fields stay non-negative.
     val = id === 'sim235-player-atkmod' ? Number(val) : Math.max(0, val);
     if (id === 'sim235-player-skill') val = Math.min(val, d.player.skillInitial);
     if (id === 'sim235-player-stamina') val = Math.min(val, d.player.staminaInitial);

@@ -1,73 +1,7 @@
-// ── Battle Simulator (Scorpion Swamp, book 204) ─────────────────────────────
-// Self-contained module. Imports from state.js, play.js, charsheet.js and util.js.
-// Visibility is gated (book 204 only) by the caller in boot.js via
-// setSim204Visible().
-// To remove: delete this file, remove its import line and initSim204()/
-// setSim204Visible() calls from boot.js, and remove the .bsim-* CSS (shared
-// with battlesim8.js/battlesim829.js/battlesim286.js/battlesim198.js/
-// battlesim199.js/battlesim200.js/battlesim186.js/battlesim201.js/
-// battlesim202.js/battlesim203.js, so only remove it if all eleven are gone).
-//
-// Standard Fighting Fantasy SKILL/STAMINA/LUCK system, same core numbers,
-// Test Your Luck table and score ceilings as every other sim in this app -
-// the reference's own initial-score formula (section 1, PDF pp.7-8) is
-// SKILL 1d6+6, STAMINA 2d6+12, LUCK 1d6+6, the same default every other FF
-// sim in this app already uses. Provisions are deliberately NOT modeled - the
-// reference is explicit that the scan gives no starting quantity or meal-
-// restoration rule for the Adventure Sheet's Provisions box, so inventing one
-// would be a made up number, not an extracted one.
-//
-// attackModifier/enemyWoundDamage/pairedFight/sideEnemy/winAfterHits are
-// reused exactly as books 200-203 built them - enemyWoundDamage covers the
-// Giant's double-strength club (4) and Master of Spiders' poisoned wand (3);
-// pairedFight/sideEnemy covers the two-simultaneous-attacker cases (Giant
-// Frogs §146, Brigands §301).
-//
-// One genuinely new mechanic this book needed:
-// - enemyStaminaFloor (numeric, 0 = off): the battle ends in a win once the
-//   enemy's STAMINA reaches this floor rather than 0. Covers only the first
-//   Giant fight (§12 - "If you reduce the Giant's STAMINA to 6, turn to
-//   61", set the floor to 6 by hand for that encounter). The second Giant
-//   fight (§211, after his beard's set alight) is a normal kill to 0 -
-//   "If you kill the Giant, turn to 366" - leave the floor at 0 there.
-// One extension to the existing paired-fight mechanic:
-// - A third simultaneous attacker (sideEnemy2, only offered once pairedFight
-//   is on) for the one three-way encounter in this book, the Swamp Orc trio
-//   (§281) - all three attack every round, you choose one target, the other
-//   two can wound you but can't be wounded that round.
-//
-// Two persistent SKILL toggles (Ranger's Helmet §219, Grimslade's gift Magic
-// Sword §241) and one persistent weapon toggle that's mutually exclusive
-// with the gift sword by story (Grimslade's looted jagged Magic Sword §140/
-// §340, +2 instead of +1 - the core rule text is explicit only one weapon
-// bonus ever applies at once, matching every other sim's precedent of
-// noting this rather than enforcing it in code).
-// Two single-use consumables, each modeled as an obtain-toggle plus a Use
-// button rather than a numeric count, since the book only ever grants one of
-// each: Healing Powder (§246/§67, +2 STAMINA) and the Mistress of Birds'
-// potion (§164, restores any one chosen score to its Initial value - same
-// shape as a Potion of Fortune/Strength/Skill choice, just single-dose).
-//
-// Deliberately NOT modeled, same precedent as every other sim in this app:
-// pre-battle one-off SKILL/STAMINA losses (Master of Wolves' FIRE-route
-// counterspell penalty, Grimslade's weakness CURSE, the Dwarf potion's next-
-// combat-only SKILL penalty) - apply those by hand with the stat steppers
-// before starting the fight. Also not modeled: the Unicorn's "exactly two
-// Attack Rounds, then choose" limit (nothing stops you from choosing to
-// reset after round 2 yourself), Poomchukker's narrative fatal guard
-// intervention if he's reduced to 6 STAMINA or less (a scripted death, not a
-// dice outcome), revisit-state rules (Bear/Ranger/Sword Trees/Slime healing
-// or resetting between visits - re-enter the enemy's stats by hand), and
-// every CURSE/FIRE/ICE/ILLUSION/FRIENDSHIP/GROWTH/WITHERING narrative-branch
-// outcome that bypasses combat entirely rather than altering it. The Brigand
-// Leader's §79 duel ("a duel to first blood only; the first successful wound
-// ends it") is only half-covered: set winAfterHits to 1 for the case where
-// you land first, same as any other early-stop fight, but there's no
-// STAMINA-based analog for the enemy landing first - losing costs an item
-// (a gem/jewel/magical artefact), not STAMINA, so that side has to be ended
-// by hand rather than faked as a combat loss in the history log.
-//
-// All state lives in pt.sim204, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Scorpion Swamp, book 204)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
+// Provisions have no source quantity/healing rule and are not modeled.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -176,9 +110,7 @@ function _resetEncounterKnobs(d) {
   d.sideEnemy2 = { name: '', skill: 0, staminaMax: 0 };
 }
 
-// Uncapped lifetime log - the admin dashboard aggregates battle counts
-// app-wide from this array, so per-user history needs to be a true lifetime
-// total, not a rolling window.
+// Keep lifetime outcomes: admin totals require the full history.
 function _recordOutcome(d, outcome) {
   d.history.push({
     enemy: _enemyName(d), outcome,
@@ -831,9 +763,7 @@ export function initSim204() {
     if (!d) return;
     const map = FIELD_MAP[id];
     if (!map) return;
-    // Attack modifier is the one field allowed to go negative (bare-handed/
-    // disarmed/fatigue penalties are always a subtraction) - every other
-    // field stays clamped to 0 or above.
+    // Allow negative attack modifiers; other fields stay non-negative.
     val = id === 'sim204-player-atkmod' ? Number(val) : Math.max(0, val);
     if (id === 'sim204-player-skill') val = Math.min(val, d.player.skillInitial);
     if (id === 'sim204-player-stamina') val = Math.min(val, d.player.staminaInitial);

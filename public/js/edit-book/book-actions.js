@@ -39,9 +39,7 @@ export function bindBookActions({ pubTypeEl, minSections, showDiscoverableSectio
     const idHint   = document.getElementById('edit-book-isbn-hint');
     errEl.textContent = ''; idHint.textContent = '';
 
-    // Same reasoning as the Create-dialog guards - the demo's own fake book
-    // (id like "demo_1") can reach this Edit modal too, and saving would
-    // 401 against a real PATCH /api/books/:id call.
+    // Block real API saves for demo book IDs.
     if (isDemoMode) { errEl.textContent = t('addbook.demo_not_supported'); return; }
     if (!name) { errEl.textContent = t('err.name_empty'); return; }
     if (!(sections >= 1)) { errEl.textContent = t('err.sections_invalid'); return; }
@@ -58,11 +56,7 @@ export function bindBookActions({ pubTypeEl, minSections, showDiscoverableSectio
       if (asin === null) { idHint.textContent = t('err.asin_invalid'); idHint.style.color = '#f87171'; return; }
     }
 
-    // A cover upload and a PDF upload in the same save are two separate
-    // server mutations, each broadcasting its own covers_changed SSE event -
-    // pause the panel's auto-refresh here so it doesn't visibly reload once
-    // per step, then resume once both are settled (see matching comment in
-    // add-book.js's Add Book handler).
+    // Pause catalog refreshes while media mutations settle.
     pauseCoversAutoRefresh();
 
     const cover = editState._pendingCoverBlob;
@@ -90,15 +84,9 @@ export function bindBookActions({ pubTypeEl, minSections, showDiscoverableSectio
       _setButtonsDisabled(['edit-book-save', 'edit-book-cancel'], true);
       try {
         const pdfData = await _uploadPdfWithProgress(`/api/books/${bookId}/pdf`, pdf, 'edit-book', isCurrent);
-        // A book's first-ever PDF awards XP server-side, but nothing else in
-        // this flow would ever prompt the client to notice - the XP bar was
-        // only catching up whenever some unrelated refresh (SSE badge event,
-        // periodic poll) happened to fire next, which felt inconsistent/silent.
+        // Request reward refresh after PDF upload so its XP award appears immediately.
         editState._hooks.scheduleRewardProfileRefresh?.();
-        // The My Books card reads pdf_path only when the list renders, and a
-        // PDF-only save takes the no-re-render path in the panel's onSave -
-        // without this the card's PDF badge (and the ✎ modal's own stale
-        // data-pdf) would stay as-was until some unrelated full refresh.
+        // Patch PDF state on every card even when a PDF-only save skips list rendering.
         editState._hooks.onPdfChanged?.(bookId, pdfData?.pdfUrl ? pdfData.pdfUrl.split('/').pop() : null, pdf.size);
       } catch (e) {
         resumeCoversAutoRefresh();

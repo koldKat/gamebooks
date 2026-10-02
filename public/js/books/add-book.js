@@ -151,10 +151,7 @@ export function openAddSeries() {
   _csrDropdown.classList.remove('open');
   document.getElementById('add-series-overlay').classList.add('active');
   _csrInput.focus();
-  // Demo mode has no real account/token - this authenticated call would
-  // 401, and apiFetch's 401 handler clears the (already-absent) token and
-  // shows the login screen behind this modal (see the matching guard in
-  // _populateSeriesSelect, edit-book.js, for the full explanation).
+  // Skip authenticated series loading in demo mode to avoid session-expiry handling.
   if (isDemoMode) return;
   apiFetch('/api/series/autocomplete').then(r => r.json()).then(list => {
     _csrAllSeries = [...list].sort((a, b) => naturalCompare(a.name, b.name));
@@ -253,9 +250,7 @@ export function initAddBook(mousedownOnOverlayRef) {
   document.getElementById('cb-save').addEventListener('click', async () => {
     const errEl = document.getElementById('cb-error');
     errEl.textContent = '';
-    // Demo mode has no real account - any of the calls below would 401 and
-    // silently log the demo out (see the matching guards on dialog-open,
-    // above), so block it here too rather than let Save do the same thing.
+    // Block demo saves: real API calls would 401 and expire the demo session.
     if (isDemoMode) { errEl.textContent = t('addbook.demo_not_supported'); return; }
     const selectedId = _cbAc.getSelectedId();
     if (_cbAc.isSelectedOwned()) { errEl.textContent = t('addbook.book_already_in_library'); return; }
@@ -287,11 +282,7 @@ export function initAddBook(mousedownOnOverlayRef) {
     const seriesNum   = document.getElementById('cb-series-num').value.trim() || null;
     const parentId    = document.getElementById('cb-parent').value ? +document.getElementById('cb-parent').value : null;
     const bookOrder   = parseInt(document.getElementById('cb-order').value, 10) || null;
-    // Creating a book and then uploading its cover/PDF are separate server
-    // mutations, each broadcasting its own covers_changed SSE event with a
-    // genuinely different snapshot (no-PDF, then has-PDF) - without pausing,
-    // the covers panel visibly reloads once per step before our own final
-    // refresh below. Paused here, resumed immediately before each refresh.
+    // Pause catalog refreshes across create/media mutations; publish the final UI refresh once.
     pauseCoversAutoRefresh();
     try {
       const res  = await apiFetch('/api/books', { method: 'POST', body: JSON.stringify({ name, total_sections: sections, isbn: isbn || null, issn: issn || null, asin: asin || null, pages, authors, description, is_public: isPublic, series_name: seriesName, series_number: seriesNum, parent_book_id: parentId, book_order: bookOrder }) });
@@ -373,9 +364,7 @@ export function initAddBook(mousedownOnOverlayRef) {
     const isPublic    = document.getElementById('cc-public').checked;
     const seriesName  = document.getElementById('cc-series').value || null;
     const seriesNum   = document.getElementById('cc-series-num').value.trim() || null;
-    // See matching comment in the Add Book handler above: creation + a
-    // separate cover/PDF upload broadcast two distinct covers_changed
-    // states, so pause here and resume right before each refresh.
+    // Pause catalog updates across creation and uploads; resume before refreshing.
     pauseCoversAutoRefresh();
     try {
       const res  = await apiFetch('/api/books', { method: 'POST', body: JSON.stringify({ name, total_sections: 0, isbn: isbn || null, issn: issn || null, asin: asin || null, pages, authors, description, is_public: isPublic, series_name: seriesName, series_number: seriesNum, is_container: 1 }) });

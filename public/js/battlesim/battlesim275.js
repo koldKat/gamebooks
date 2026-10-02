@@ -1,27 +1,7 @@
-// ── Battle Simulator (The Crown of Kings, book 275) ──────────────────────────
-// Self-contained module. Imports from state.js, play.js, charsheet.js and util.js.
-// Visibility is gated (book 275 only) by the caller in boot.js via
-// setSim275Visible().
-// To remove: delete this file, remove its import line and initSim275()/
-// setSim275Visible() calls from boot.js, and remove the .bsim-* CSS (shared
-// with other battlesimNNN.js modules, so only remove it if all are gone).
-//
-// This is the fourth Sorcery! book (Steve Jackson), a different series from
-// standard Fighting Fantasy, but its combat core is identical: opposed
-// 2d6+SKILL rolls each round, loser takes a flat 2 STAMINA, with an optional
-// Test Your Luck after a hit lands that nudges the damage by 1 in either
-// direction (Lucky hit = 4 total damage, Unlucky hit = 1; Lucky wound taken =
-// 1 total, Unlucky wound taken = 3 - matches this book's own "Using Luck in
-// Battles" rules exactly). Starting Provisions is 2 meals (not the usual FF
-// convention of 10), so MAX_PROVISIONS=2; each meal's heal amount varies by
-// scene in the book's own text rather than a single fixed value, so
-// PROVISIONS_HEAL=4 is a reasonable default, not a verbatim book value. Not
-// modeled: the wizard/warrior character split, the 48-spell three-letter
-// spellcasting system (spell availability depends on the player's own
-// memorized Spell Book, external to this app), or Libra's once-per-adventure
-// divine aid - this sim only tracks the SKILL/STAMINA/LUCK combat loop
-// common to both play styles. All state lives in pt.sim275, per-user/per-book
-// via currentPlaythrough().
+// Battle Simulator (The Crown of Kings, book 275)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
+// Meal healing is a convenience default; spells and narrative state are not simulated.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -119,11 +99,7 @@ function _runRound() {
   _renderAll();
 }
 
-// Test Your Luck after a hit lands: costs 1 LUCK regardless of outcome. On
-// your own hit, Lucky deals 2 extra STAMINA damage (4 total), Unlucky gives
-// back 1 (only 1 total). On a hit you took, Lucky gives back 1 STAMINA (only
-// 1 total lost), Unlucky costs 1 extra (3 total). Matches the book's
-// "Using LUCK in Combat" rule.
+// Luck costs 1: own hits deal 4/1 damage; incoming hits deal 1/3 (lucky/unlucky).
 function _testLuck() {
   const d = _data();
   if (!d || !d.pendingLuck || d.player.luck <= 0) return;

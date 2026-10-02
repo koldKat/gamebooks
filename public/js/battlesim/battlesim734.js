@@ -1,68 +1,6 @@
-// ── Battle Simulator (Командир на роботи / Robot Commando, book 734) ────────
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 734 only) by the caller in boot.js via
-// setSim734Visible().
-// To remove: delete this file, remove its import line and initSim734()/
-// setSim734Visible() calls from boot.js, remove 'sim734' from
-// SIM_HISTORY_KEYS in server/db/xp.js, remove 'sim734-overlay' from
-// ALL_PANEL_OVERLAY_IDS in util.js and the #sim734-btn selectors in
-// battlesim.css.
-//
-// Same book as battlesim218.js (Robot Commando, English) - this is the
-// Bulgarian translation "Командир на роботи", section numbers and stats
-// confirmed identical 1:1 against book 218's own book_enemies rows while
-// reading this book's own text fresh. Mechanics and roster below are a
-// direct port of battlesim218.js's own verified structure; UI/log text is
-// Bulgarian to match this book's own source language and terminology
-// (УМЕНИЕ/ИЗДРЪЖЛИВОСТ/КЪСМЕТ/БРОНЯ/СКОРОСТ/БОНИФИКАЦИЯ), per this app's
-// standing "Sim UI language matches book" precedent.
-//
-// Standard Fighting Fantasy УМЕНИЕ/ИЗДРЪЖЛИВОСТ/КЪСМЕТ core (SKILL 1d6+6,
-// STAMINA 2d6+12, LUCK 1d6+6, same as every other FF sim in this app),
-// PLUS this book's own second combat mode: "Битки с Роботи", used whenever
-// piloting a robot against a foe with УМЕНИЕ/БРОНЯ/СКОРОСТ instead of
-// УМЕНИЕ/ИЗДРЪЖЛИВОСТ. A mode toggle (Лично/Робот) switches which life pool
-// is active (ИЗДРЪЖЛИВОСТ vs a separate БРОНЯ pool) and turns on two
-// robot-only terms: СКОРОСТ comparison (+1 Сила на Нападение to whichever
-// side's robot is faster - Бавна/Средна/Бърза/Светкавична, no bonus on a
-// tie) and a free-form БОНИФИКАЦИЯ field (the piloted robot's own listed
-// bonus, entered by hand since which robot is being piloted changes
-// throughout the book and there's no dedicated "robot garage" UI here).
-// БРОНЯ isn't a single persistent pool the way ИЗДРЪЖЛИВОСТ is - each robot
-// piloted has its own БРОНЯ score - so armourInitial is a plain editable
-// field reset by hand whenever the story puts the player in a different
-// robot, same free-form-entry precedent as attackModifier.
-//
-// attackModifier/enemyWoundDamage/winAfterHits are the same generic knobs
-// every FF sim in this app uses for one-off cases (e.g. this book's own
-// "faster foe gets +1" is handled by the СКОРОСТ fields, but other one-off
-// УМЕНИЕ penalties/bonuses stated by hand in individual sections still go
-// through attackModifier).
-//
-// pairedFight/sideEnemy (reused unchanged from book 218's mechanic) covers
-// this book's two "choose your target, the other one just attacks you
-// passively and can't be wounded back" fights: two Трицератопс (§117) and
-// two Триножки (§169) - both explicitly described that way in the text,
-// unlike this book's other multi-enemy fights (Мирмидонец pairs, 3
-// Гигантски Гущер, 3 street robots, 3 doctors), which are all fought one at
-// a time in sequence with no paired mechanic, matching book 218's default.
-//
-// Several enemies have a special ability described in the book's own text
-// that isn't modeled as a dedicated toggle (Трошач's double damage,
-// Боец's +1 on a big win margin, Супертанк's guaranteed 1 БРОНЯ chip even
-// on a losing round, Бойна Оса's auto-win on a 4+ margin, Строителен Робот's
-// instant-defeat on a low enemy roll, Анкилозавър's no-damage-next-turn
-// knockdown) - apply these by hand via the log/notes, same "note it, handle
-// manually" precedent as every other sim's book-specific exceptions.
-//
-// book_enemies.attack holds УМЕНИЕ, .hp holds БРОНЯ (robot-mode rows) or
-// ИЗДРЪЖЛИВОСТ (personal-mode rows), .defense holds СКОРОСТ (0=Бавна,
-// 1=Средна, 2=Бърза, 3=Светкавична) for robot-mode rows, unused (0) for
-// personal-mode rows. 41 rows, ported unchanged from book 218's own
-// verified data (cross-checked line-by-line against this book's own
-// Bulgarian text while reading it fresh - every stat block matched).
-//
-// All state lives in pt.sim734, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Командир на роботи / Robot Commando, book 734)
+// Personal FF combat and separate robot ARMOUR combat, matching book 218.
+// Speed and robot damage bonuses apply only in robot mode.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -154,9 +92,7 @@ function _resetEncounterKnobs(d) {
   d.sideEnemy = { name: '', skill: 0, lifeMax: 0 };
 }
 
-// Uncapped lifetime log - the admin dashboard aggregates battle counts
-// app-wide from this array, so per-user history needs to be a true lifetime
-// total, not a rolling window.
+// Keep lifetime outcomes: admin totals require the full history.
 function _recordOutcome(d, outcome) {
   d.history.push({
     enemy: _enemyName(d), outcome, mode: d.mode,
@@ -198,10 +134,7 @@ function _runRound() {
     if (_activeLife(d) > 0) d.pendingLuckQueue.push({ kind: 'enemy-hit' });
   }
 
-  // Paired side-enemy: attacks every round regardless of the main exchange's
-  // outcome, can never be wounded back (per the book's own "count this as
-  // though you have defended yourself" rule) - same mechanic/precedent as
-  // battlesim218.js.
+  // Side attackers act every round but cannot be wounded back.
   if (d.pairedFight && d.sideEnemy.lifeMax > 0 && _activeLife(d) > 0) {
     const sidePlayerAS = _roll2d6() + d.player.skill + (d.player.attackModifier || 0) + myBonus;
     const sideAS = _roll2d6() + d.sideEnemy.skill;

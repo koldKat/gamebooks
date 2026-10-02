@@ -89,10 +89,7 @@
   color: #6b7280;
   grid-column: 1 / -1;
 }
-/* Only the initial loading state (openStatsModal's first fetch) gets the
-   animated .feed-loading-graph/.flg-* icon - a failed-fetch state (same
-   .stats-loading class, plain text) stays as-is, since an animated "still
-   loading" icon would be misleading for an error. */
+/* Only initial loading uses the animated graph; errors remain static. */
 .stats-loading--active {
   display: flex;
   flex-direction: column;
@@ -343,16 +340,7 @@
 }
 #inbox-reply-input:focus { outline: none; border-color: #6b7280; }
 #inbox-reply-input::placeholder { color: #4b5563; }
-/* Self-contained, fully-scoped rule for all three buttons in this row -
-   deliberately not relying on play.css's shared button blocks (which style
-   #inbox-conv-close-btn elsewhere, including a flex:1 meant for its OLD row
-   with no flex:1 spacer - here that stretched it to fill the row and made it
-   huge). Scoping every property under #inbox-att-area gives this higher
-   specificity than any single-ID rule elsewhere, so there's no cross-file
-   load-order cascade to reason about: this is the one place that decides
-   how these three buttons look, full stop. Matches the app-wide compact
-   modal-button standard (padding/font-size) and the standard primary/
-   secondary/destructive color language used throughout the rest of the app. */
+/* Scope attachment buttons here to override shared flex sizing regardless of stylesheet order. */
 #inbox-att-area #inbox-reply-send-btn,
 #inbox-att-area #inbox-conv-delete-btn,
 #inbox-att-area #inbox-conv-close-btn {

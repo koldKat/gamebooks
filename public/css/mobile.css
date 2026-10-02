@@ -3,24 +3,10 @@
   .mobile-lite-suffix { display: inline; }
   /* Hide desktop-only panels and toggles */
   #covers-toggle, #right-toggle, #feed-toggle { display: none !important; }
-  /* .pub-overlay's z-index:300 (public-profile.css) is fine on desktop, but
-     #covers-panel/#landing-right sit at z-index:500 full-screen here - a
-     book detail dialog opened from Add Book was rendering (and staying
-     genuinely open/interactive) completely hidden underneath the still-
-     visible panel, reading as "tapping a cover does nothing" until closing
-     the panel out from under it revealed the dialog that was there the
-     whole time. No !important - mobile.css already loads after
-     public-profile.css so plain source order is enough to win here, and
-     staying non-important leaves boot.js's one-off inline zIndex='3001'
-     bump (opening a book link found inside the already-open forum modal,
-     z-index 3000) still able to win on top of this when it's set, since an
-     inline style always beats an external stylesheet rule unless that
-     rule is !important. */
+  /* Place detail dialogs above full-screen mobile panels.
+     Avoid !important so the forum's inline z-index bump can still win. */
   .pub-overlay { z-index: 600; }
-  /* #covers-panel itself isn't in that hidden list - it's the search/add-book
-     panel, revealed full screen via the header's Add Book button below
-     (mobile-addbook-open), same full-screen-toggle pattern as My Books/
-     #landing-right. */
+  /* Keep the public catalog available as the full-screen Add Book panel. */
   #covers-panel {
     display: none !important;
     position: fixed !important;
@@ -32,26 +18,16 @@
     padding-top: calc(1rem + env(safe-area-inset-top)) !important;
     box-sizing: border-box;
     border: none !important;
-    /* Same translucency issue #landing-right had - rgba(17,24,39,0.45) is
-       fine floating over the landing background on desktop, but bleeds
-       whatever's underneath through once this is full-screen. */
+    /* Use an opaque background for the full-screen mobile panel. */
     background: #111827 !important;
-    /* Same reasoning as #landing-right's own transform reset above -
-       body.covers-collapsed's translateX() (a persisted desktop panel-
-       collapse toggle) would otherwise slide this off-screen underneath
-       the display:none/flex toggle below. */
+    /* Cancel persisted desktop slide transforms before mobile panel toggling. */
     transform: none !important;
   }
   body.mobile-addbook-open #covers-panel { display: flex !important; flex-direction: column; }
   body.mobile-addbook-open #feed-panel   { display: none !important; }
   #mobile-addbook-close-btn {
     display: none;
-    /* Sticky, not just the first child of a scrolling panel - #covers-header
-       right after it is sticky (covers.js's covers-lazy/covers-searching
-       state), but this button on its own isn't, so scrolling even a little
-       into the catalog scrolled it away entirely with no way back to the
-       feed short of scrolling all the way back to the very top. z-index
-       above the header (50) so it stays on top when both are stuck. */
+    /* Keep the close button above the sticky catalog header while scrolling. */
     position: sticky;
     top: 0;
     z-index: 60;
@@ -74,12 +50,7 @@
      showing the chip would imply it can be toggled off, which it can't. */
   #covers-filter-livereading { display: none !important; }
   #demo-btn                                    { display: none !important; }
-  /* The Cheat Sheet is a list of keyboard shortcuts - Ctrl+X/Ctrl+Y need a
-     keyboard, and I/C/E only apply to the play/tracker area, which is itself
-     disabled on mobile. None of it is usable here, so don't advertise it.
-     The settings gear (mobile's only path into the Ctrl+Y panel - feed
-     toggles, background source, reduce animations) was removed on purpose;
-     those settings simply aren't reachable on mobile anymore. */
+  /* Hide desktop-only shortcuts and settings controls on mobile. */
   #app-banner-f1-btn { display: none !important; }
   #main-screen                                 { display: none !important; }
 
@@ -121,16 +92,9 @@
     box-sizing: border-box;
     overflow-y: auto;
     border: none !important;
-    /* Desktop's rgba(17,24,39,0.45) is deliberately translucent - it's meant
-       to float over the landing background there. Full-screen on mobile,
-       that same translucency let the feed content underneath bleed straight
-       through it. */
+    /* Full-screen panels must be opaque so the feed cannot show through. */
     background: #111827 !important;
-    /* demo.css's body.right-collapsed #landing-right rule (an unrelated
-       desktop panel-collapse toggle, persisted to localStorage and restored
-       on every load regardless of viewport) applies a translateX() that
-       would otherwise slide this off-screen here too, on top of - not
-       instead of - the display:none/flex toggle below. */
+    /* Cancel persisted desktop slide transforms before mobile panel toggling. */
     transform: none !important;
   }
   body.mobile-auth #landing-right,
@@ -142,34 +106,22 @@
   }
   body.mobile-auth #feed-panel { display: none !important; }
 
-  /* inline-flex, not inline-block - landing.css's shared button rule
-     centers the label via align-items/justify-content on a flex box, an
-     inline-block would keep it themed but drop that centering, leaving the
-     text sitting off the vertical middle. */
+  /* Retain flex-based label centering from shared button styles. */
   #mobile-books-btn, #mobile-addbook-btn { display: inline-flex !important; }
-  /* Guests (mobile-guest-btn dismissed the login overlay) get the feed only:
-     My Books is an account feature, and a "Back to feed" from that panel's
-     history-based close would bounce them to the login screen via the
-     popstate router. Add Book stays - the public catalog is the promo that
-     gets them browsing. Guests get a compact Log In way back instead. */
+  /* Guests can browse the public catalog, but My Books requires an account. */
   body.guest-browsing #mobile-books-btn { display: none !important; }
   #mobile-login-btn { display: none !important; }
   body.guest-browsing #mobile-login-btn { display: inline-flex !important; }
   #mobile-books-close-btn { display: none !important; }
   body.mobile-books-open #mobile-books-close-btn {
-    /* Sticky, not just the first child of #landing-right's own scrolling
-       area - same reachability bug as #mobile-addbook-close-btn below:
-       without this, scrolling down the books list scrolled the only way
-       back to the feed away with it. */
+    /* Keep the return-to-feed button reachable while scrolling. */
     display: flex !important;
     position: sticky;
     top: 0;
     z-index: 60;
     align-self: flex-start;
     width: 100%;
-    /* flex, not block + text-align - the ‹ glyph and the label span have
-       different native vertical positions inside the line box, and flex
-       align-items is what actually centers them against each other. */
+    /* Use flex alignment to center the glyph and label. */
     align-items: center;
     gap: 0.3rem;
     text-align: left;
@@ -181,16 +133,8 @@
     cursor: pointer;
   }
 
-  /* My Books / Add Book need to stand out from the rest of the banner's grey
-     buttons - each gets its own color, and both pulse continuously (same 4s
-     ease-in-out ring, same rate landing.css's #notif-btn/#forum-btn/
-     #bonus-gc-btn already use). Deliberately NOT gated behind
-     body.reduce-motion the way those are (reduce-motion.css never mentions
-     these two ids) - these are the only two ways into My Books/Add Book on
-     mobile at all, not a decorative "something's waiting" extra, so they
-     keep pulsing even with animations otherwise turned off. Desktop never
-     sees these buttons (display:none there), so this doesn't reintroduce a
-     forced-animation regression outside mobile. */
+  /* Mobile entry buttons use the shared four-second pulse.
+     They intentionally remain animated under reduce-motion as primary navigation. */
   #mobile-books-btn {
     border-color: #2563eb !important;
     color: #93c5fd !important;
@@ -271,10 +215,7 @@
     max-width: 100vw !important;
     max-height: 100vh !important;
     height: 100vh !important;
-    /* dvh tracks the *current* visible viewport, unlike vh (sized against the
-       largest possible one) - without it, the address bar reappearing after
-       scroll pushes this fixed-height modal past the top of the visible area,
-       taking the header/close button with it. Same fix as #forum-modal. */
+    /* Use dvh to keep the dialog's header reachable when browser chrome changes. */
     max-height: 100dvh !important;
     height: 100dvh !important;
     border-radius: 0 !important;
@@ -301,11 +242,7 @@
     overflow-y: auto;
   }
 
-  /* Landing settings panel - the desktop version is positioned relative to
-     --landing-panel-w (480px), which at mobile widths still resolves to
-     300px (the >768px breakpoint doesn't kick in below that) - left: calc(300px
-     + 1rem) on a ~390px phone renders almost entirely off-screen. Center it
-     instead, same width cap approach as the shortcuts modal. */
+  /* Center settings on mobile instead of using the desktop side-panel offset. */
   #cover-tooltip-settings {
     left: 50% !important;
     transform: translateX(-50%);
@@ -426,8 +363,7 @@ body.sidebar-collapsed #reward-float-layer {
   }
 }
 
-/* Admin-only "someone else earned XP/GC" floaters - same rise animation as the
-   personal reward floats, violet/pink so they read as "the app", not yours. */
+/* Admin app-reward floaters use distinct colors from personal rewards. */
 #app-reward-float-layer {
   position: fixed;
   bottom: 1rem;

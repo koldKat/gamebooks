@@ -1,60 +1,7 @@
-// ── Battle Simulator (Appointment with F.E.A.R., book 213) ──────────────────
-// Self-contained module. Imports from state.js, play.js, charsheet.js and util.js.
-// Visibility is gated (book 213 only) by the caller in boot.js via
-// setSim213Visible().
-// To remove: delete this file, remove its import line and initSim213()/
-// setSim213Visible() calls from boot.js, and remove the .bsim-* CSS (shared
-// with every other battlesimN.js in this folder, so only remove it if all
-// of them are gone).
-//
-// Standard Fighting Fantasy SKILL/STAMINA/LUCK core (2d6+SKILL Attack
-// Strength rolls, 2-STAMINA wounds, Test Your Luck damage modifiers) -
-// reused verbatim, same as every other sim here. This book has no
-// Potions/Provisions system at all (not in its rules), so unlike
-// battlesim201/202 there's none of that machinery.
-//
-// Two things unique to this book, both per explicit instruction:
-//
-// 1. Surrender vs. kill. The rules: an enemy reduced to exactly 0 STAMINA in
-//    one blow is automatically killed (-1 Hero Point, no choice offered -
-//    you never gave them the chance to yield). An enemy reduced to 1 or 2
-//    STAMINA instead surrenders - the fight pauses (pendingSurrender) and
-//    offers a real choice: Capture (win, no penalty) or keep attacking
-//    (clears the pause, next hit that lands on 0 triggers the automatic
-//    kill/-1 HP case above). Hero Points themselves are otherwise a plain
-//    running counter (d.player.heroPoints) the player awards by hand for
-//    narrative "+N Hero Points" text, same "apply narrative effects by
-//    hand" precedent as every other sim's pre-battle one-off losses.
-//
-// 2. Super Powers. Four are chosen once at the start of an adventure and
-//    stay fixed for that run (d.player.superPower) - not modeled as a
-//    branching character-class system (no sim in this app models chargen
-//    class selection), just the two with a real *combat* mechanic:
-//    - Super Strength: fixes Initial SKILL to 13 at roll time instead of
-//      rolling 1d6+6 for it (STAMINA/LUCK still roll normally).
-//    - Energy Blast: a pre-fight-only (roundsThisBattle===0) "Attempt"
-//      button, -2 STAMINA, 2d6 vs current SKILL - hit is an instant win
-//      (a stun, not a kill - no Hero Point effect), miss just proceeds to
-//      a normal fight having already paid the STAMINA cost.
-//    Psi-Powers' only combat-relevant effect is a flat -2 STAMINA per use
-//    (situational, not fight-specific) - modeled as a plain anytime-usable
-//    button, same "cannot use mid-fight" guard as Energy Blast/Provisions
-//    elsewhere. ETS has no described combat mechanic at all (gadgets are
-//    narrative/utility) - nothing to model.
-//
-// Per-encounter special rules found in the roster (Radiation Dogs' d6 hit-
-// effect table, the Serpent's poisonous bite, the Ice Queen's SKILL-freeze,
-// Sidney Knox's mind-battle using a temporary 6-point "mental STAMINA" pool
-// instead of the player's real one, three fights that force a non-combat
-// story branch after a fixed round count regardless of outcome, and the
-// unarmed Titanium Cyborg encounter that's unwinnable by design) are noted
-// directly in that enemy's book_enemies name rather than built as bespoke
-// mechanics - same "apply narrative one-offs by hand" precedent book202's
-// header documents. attackModifier already covers the one fight (§437,
-// -2 Attack Strength for the whole struggle) that needs an ongoing combat
-// number, not just a one-off note.
-//
-// All state lives in pt.sim213, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Appointment with F.E.A.R., book 213)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
+// Surrender, killing, Hero Points, and round limits share the outcome resolver.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -171,10 +118,7 @@ function _runRound() {
   _renderAll();
 }
 
-// Shared end-of-round check (also called after a Luck test resolves the
-// same round's pending hit) - surrender/kill/loss/round-limit outcomes all
-// funnel through here so they're consistent regardless of whether the
-// deciding hit came from a plain wound or a Luck-modified one.
+// Resolve surrender, death, and round limits consistently after attacks and Luck tests.
 function _resolveRoundEnd(d) {
   if (d.pendingLuckQueue.length) return; // wait for the Luck test to resolve first
 
@@ -197,9 +141,7 @@ function _resolveRoundEnd(d) {
     _recordOutcome(d, 'loss');
     return;
   }
-  // === not >= - a reminder every single round after the threshold (the
-  // fight is deliberately left clickable past it, informational only, see
-  // header) would spam the log for as long as the player keeps rolling.
+  // Warn once at the threshold; later rounds remain playable.
   if (d.player.forceLossAfterRounds > 0 && d.roundsThisBattle === d.player.forceLossAfterRounds) {
     _appendLog(d, t('battlesim213.log.round_limit'));
   }
@@ -209,11 +151,7 @@ function _captureEnemy() {
   const d = _data();
   if (!d || !d.pendingSurrender) return;
   d.pendingSurrender = false;
-  // Must actually zero this out, not just leave it at the 1-2 it surrendered
-  // at - every "is this fight over" check (the Round button's disabled
-  // state, the victory banner) looks for enemy.stamina <= 0. Left at 1-2,
-  // none of those checks would fire and Round would stay clickable against
-  // an enemy already supposedly in custody.
+  // Set surrendered enemies to zero STAMINA so battle-complete checks disable further rounds.
   d.enemy.stamina = 0;
   _appendLog(d, t('battlesim213.log.captured', { enemy: _enemyNameSafe(d) }));
   _appendLog(d, t('battlesim213.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyNameSafe(d) }));
@@ -700,10 +638,7 @@ export function initSim213() {
     'sim213-enemy-wounddmg':    ['player', 'enemyWoundDamage'],
     'sim213-enemy-roundlimit':  ['player', 'forceLossAfterRounds'],
   };
-  // Attack modifier and Hero Points are the two fields allowed to go
-  // negative (a fight-long Attack Strength penalty, and Hero Points lost
-  // for a kill, both need to go below 0) - every other field stays
-  // clamped to 0 or above.
+  // Attack modifiers and Hero Points may be negative; other fields stay non-negative.
   const NEGATIVE_OK = new Set(['sim213-player-atkmod', 'sim213-player-hero']);
   function _applyField(id, val) {
     const d = _data();

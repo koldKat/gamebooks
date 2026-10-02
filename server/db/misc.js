@@ -1,8 +1,6 @@
 'use strict';
 
-// Small leftover pieces that didn't warrant their own module: notifications
-// get/mark, per-user export helpers, GC (gold coin) supply accounting, and app
-// birth timestamp. The `notifications` table itself is created here too.
+// Notifications, exports, GC supply, and app-birth helpers.
 
 const { db, _naturalCompareByName } = require('./connection');
 const { _insertNotif } = require('./xp');
@@ -32,11 +30,7 @@ function getNotifications(userId) {
   return { unseen: items.filter(i => !i.seen).length, items };
 }
 
-// Scoped to the same most-recent-25 window getNotifications() returns - an
-// unscoped "mark everything seen" would silently mark overflow notifications
-// (beyond the visible 25) as seen without the user ever having seen them,
-// after which they'd just sit until purgeOldNotifications() deletes them
-// unread 30 days later.
+// Mark only the visible latest-25 notification window seen.
 function markNotificationsSeen(userId) {
   db.prepare(`
     UPDATE notifications SET seen = 1 WHERE seen = 0 AND id IN (
@@ -54,11 +48,7 @@ const _exportRow = ({ state_data, notebook, user_rating, series_name, series_ope
   state: (() => { try { return JSON.parse(state_data); } catch { return {}; } })(),
 });
 
-// Was missing discoverable_sections/cover_path/is_public even though the docs (and
-// backup.json's stated format) always claimed a full-account export carried them - a
-// restored/inspected backup was silently short these fields for every book. pdf_path is
-// deliberately excluded - PDF access is a separate, gated feature (admin/author/
-// pdf_access only) and most users shouldn't see that a book even has one.
+// Export full book metadata but omit gated PDF paths.
 const _exportQuery = `
   SELECT b.id, b.name, b.total_sections, b.discoverable_sections, b.isbn, b.issn, b.asin,
          b.pages, b.authors, b.description, b.created_at, b.cover_path, b.is_public,

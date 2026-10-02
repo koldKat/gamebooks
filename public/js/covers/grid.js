@@ -98,13 +98,7 @@ export function _appendLazyBatch() {
   });
 }
 
-// _appendLazyBatch's own "do I need another batch?" check reads
-// panel.clientHeight, which is 0 while #covers-panel is display:none (mobile,
-// before the Add Book toggle reveals it) - the very first batch looks like
-// it already overflows a zero-height container, so the fill loop stops
-// after just one batch instead of filling the space the panel actually has
-// once shown. Call this right after revealing the panel to pick the fill
-// back up; harmless (and a same-tick no-op) if the panel was already full.
+// Resume filling after a hidden mobile panel is revealed; its previous clientHeight was zero.
 export function _refillLazyIfShort() {
   const panel = document.getElementById('covers-panel');
   if (panel && coversState._lazyItems && coversState._lazyOffset < coversState._lazyItems.length &&
@@ -199,12 +193,7 @@ export function _showCachedCoversPanel() {
   toggle?.classList.add('visible');
   _refreshCoversDisplay();
   if (_landingCoverPool().length) {
-    // Runs on every return to the books/landing screen - no-op if the
-    // rotation interval is already going. Checks the *effective* pool
-    // (public covers or, with landingCoverSource 'mine', the user's own
-    // library) rather than hardcoding coversState._allCovers, which is empty whenever
-    // 'mine' is selected and would otherwise skip starting the rotation
-    // even when the owned-covers pool has plenty to show.
+    // Use the effective public/owned cover pool, and do not restart an existing rotation interval.
     _startLandingCoverRotation();
   }
 }

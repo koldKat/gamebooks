@@ -1,10 +1,6 @@
 'use strict';
 
-// All server-sent-event broadcast registries: party progress sync, the public
-// catalog live-update stream, the activity feed stream, admin-only "someone else
-// earned XP/GC" floaters, and per-user badge-state pushes (notifications/forum
-// unread counts). Wires two of these into db.js's XP/coin award hooks at require
-// time so awards anywhere in the app immediately reach connected clients.
+// Shared SSE registries; wire database reward hooks here so all award paths push updates.
 
 const db = require('./db');
 

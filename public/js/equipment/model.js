@@ -29,9 +29,7 @@ export function _eqVisible() {
   return (currentPlaythrough() || viewingPt)?.equipmentVisible ?? {};
 }
 
-// `pt.equipment[key]` and `equipmentTemplate[key]` entries are normally
-// `{ itemId, label, note, qty }`, but older saves may still hold a raw itemId
-// number - these helpers accept both.
+// Accept both structured equipment entries and legacy numeric item IDs.
 export function _eqItemId(entry) {
   return (entry && typeof entry === 'object') ? entry.itemId : entry;
 }
@@ -62,11 +60,7 @@ export function _unsetEq(key) {
   saveState();
 }
 
-// Move (or swap) an equipped item between two slots via drag-and-drop. No slot-type
-// restriction here, same as the picker - this system is visual-only, any item can
-// go in any slot. If the target slot is filled, the two entries trade places
-// (including their visible/show-on-screen flag each); if empty, the source just
-// moves over and its old slot becomes empty.
+// Slots are visual-only; swaps carry each item's metadata and visibility.
 export function _swapEq(fromKey, toKey) {
   if (fromKey === toKey) return;
   const pt = currentPlaythrough();

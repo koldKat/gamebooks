@@ -1,6 +1,4 @@
-// export.js - Book and full-library export/backup downloads
-// Graph snapshots (graph.svg) are generated entirely server-side (see buildGraphSvg in
-// server/export.js) from each book's saved positions/colors - no rendering happens here.
+// Export/backup downloads; the server renders graph snapshots from saved state.
 
 import { state, currentBookId, apiFetch } from '../core/state.js';
 import { showAlert } from '../play.js';

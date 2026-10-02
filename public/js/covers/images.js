@@ -1,28 +1,12 @@
 import { coversState } from './state.js';
 
-// Capped at _COVER_BLOB_CACHE_MAX full-size decoded cover images (see
-// _cacheCoverBlobUrl below) - uncapped, this grew for as long as the tab
-// stayed open, since nothing ever called URL.revokeObjectURL() on an entry.
-// A large personal library scrolled through the covers panel over a long
-// session pinned every distinct cover ever seen as a live Blob in memory,
-// the actual source of a ~300MB browser-tab leak report - not a one-off
-// per-book cost, but one that scaled with how much of the library was
-// ever scrolled past, matching that report exactly.
+// Bound cached blob URLs and revoke evicted entries.
 const _coverBlobUrlCache    = new Map();
 const _coverFetchPromiseCache = new Map();
-// Lowered from 60 - even capped, 60 full-size (up to 675x900) decoded covers
-// is ~140MB before browser/GPU overhead, on top of whatever the now-added
-// off-screen thumb unload (_ensureThumbVisibilityObserver, _appendLazyBatch)
-// already frees. This is a cache of recently-*fetched* blobs (which the
-// unload/reload cycle deliberately re-uses to avoid a network re-fetch), not
-// the set of currently-visible thumbs, so it stays well below the number of
-// items scrolled past in a session - keep it a bit larger than one lazy
-// batch's worth of thumbs so ordinary scrolling doesn't refetch constantly.
+// Keep the recent-fetch cache slightly larger than one lazy batch, not the whole scrolled catalog.
 const _COVER_BLOB_CACHE_MAX = 24;
 
-// FIFO eviction (insertion order, via Map) rather than true LRU - simple and
-// good enough here since the covers panel is scrolled roughly linearly, not
-// randomly re-visited in a pattern true LRU would meaningfully improve on.
+// Evict covers FIFO; the panel is typically scrolled linearly.
 export function _cacheCoverBlobUrl(url, blobUrl) {
   _coverBlobUrlCache.set(url, blobUrl);
   while (_coverBlobUrlCache.size > _COVER_BLOB_CACHE_MAX) {
@@ -35,17 +19,7 @@ export function _cacheCoverBlobUrl(url, blobUrl) {
 
 
 
-// Lazy-appending batches never removes anything, so a long scroll through a
-// large library left hundreds of decoded <img> bitmaps alive in memory at
-// once (the blob URL cache below is capped, but that only bounds the blob
-// URL table - a live <img src="blob:..."> in the DOM keeps its own decoded
-// bitmap regardless of whether the URL is still in that cache). This
-// observer discards the image (clears .src, releasing the decoded bitmap)
-// once a thumb scrolls far enough outside the viewport, and reloads it -
-// via the same _enqueueCoverLoad()/blob-cache pipeline everything else
-// uses, so it's an instant cache hit if the blob's still cached - once it
-// scrolls back near the viewport. A large rootMargin means this only ever
-// affects thumbs well off-screen, not the ones about to be scrolled to.
+// Unload decoded images well outside the viewport and reload through the shared blob cache.
 
 export function _ensureThumbVisibilityObserver() {
   if (coversState._thumbVisibilityObserver) return coversState._thumbVisibilityObserver;

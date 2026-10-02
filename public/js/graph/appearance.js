@@ -13,15 +13,7 @@ function _darkenHex(hex) {
   return `#${[r,g,b].map(c => Math.round(c*0.6).toString(16).padStart(2,'0')).join('')}`;
 }
 
-// vis-network falls back to its own hardcoded default hover/select palette
-// (#D2E5FF background, #2B7CE9 border) for any node color that doesn't
-// specify its own `highlight`/`hover` sub-colors - none of the COLORS.*
-// constants did, so simply hovering (interaction.hover: true, below) or
-// selecting any node (regardless of its real state) briefly repainted it
-// with that unrelated generic blue instead of its actual semantic color,
-// which read as a rendering bug. `highlight` applies on selection, `hover`
-// on mere mouse-over - both need to be set, or only one of the two
-// interactions would actually be fixed.
+// Set both hover and highlight colors so vis-network cannot replace semantic fills with its defaults.
 function _withHighlight(c) {
   const swatch = { background: c.background, border: c.border };
   return { ...c, highlight: swatch, hover: swatch };
@@ -68,9 +60,7 @@ export function nodeColor(secId) {
     if (hasDeath && hasVictory) base = COLORS.bothOutline;
     else if (hasDeath)          base = COLORS.deathOutline;
     else if (hasVictory)        base = COLORS.victoryOutline;
-    // A node whose only way forward is a portal has nothing to record as a choice
-    // (portals live in node.portals[], separate from node.choices[]) - without this
-    // it stays colored as merely "discovered" forever, even once fully visited.
+    // Portal-only nodes count as mapped even without choices.
     else if (state.graph[secId] && (!state.graph[secId].discovered || state.graph[secId].portals?.length > 0)) base = COLORS.mapped;
     else                                                            base = COLORS.discovered;
   }

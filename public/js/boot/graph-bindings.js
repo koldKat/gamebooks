@@ -50,10 +50,7 @@ export function initGraphBindings() {
   document.getElementById('bg-ctx-snap-btn').addEventListener('click', e => {
     e.stopPropagation();
     state.snapToGrid = !state.snapToGrid;
-    // Covers turning it on while already zoomed out past the point where a
-    // grid cell is bigger than typical touch imprecision - the 'zoom'
-    // listener alone would never catch this since no further zooming may
-    // happen before the next drag.
+    // Enforce the zoom floor immediately when snapping is enabled.
     if (state.snapToGrid) enforceSnapZoomFloor();
     saveState();
     _hideBgCtxMenu();
@@ -185,14 +182,7 @@ export function initGraphBindings() {
             _positionMenu(document.getElementById('node-ctx-menu'), params.event.clientX, params.event.clientY);
           });
           render();
-          // render() itself hides the charsheet/inventory/equipment buttons
-          // via their own renderXDisplay() (no active run left after a reset
-          // to show data for) - showMain's normal book-load sequence forces
-          // them visible again right after its own render() call for exactly
-          // this reason (a book view should keep showing these buttons even
-          // with no active run, same as a fresh load with zero playthroughs
-          // does). Reset never replayed that force-show step, so the buttons
-          // stayed hidden until the next full page load ran showMain() again.
+          // Restore panel buttons after reset just as a fresh book load does.
           setCharSheetVisible(true);
           setInventoryVisible(true);
           setEquipmentVisible(true);

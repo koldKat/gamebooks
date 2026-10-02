@@ -1,8 +1,4 @@
-/* Shared by every play-area shortcut button (charsheet/inventory/equipment/
-   battlesim*) - highlights the letter matching that panel's keyboard shortcut
-   (see util.js's shortcutLabel()/registerPanelShortcut()). Defined once here
-   since all these CSS files load together globally on every page - same
-   reuse pattern as .inv-modal etc., no per-file redefinition needed. */
+/* Shared shortcut-letter styling for all play-area panel buttons. */
 .shortcut-hint-letter { color: #93c5fd; font-weight: 700; }
 
 /* ── Inventory ────────────────────────────────────────────────────────────── */
@@ -45,22 +41,8 @@
 
 .eq-body {
   position: relative;
-  /* 310px floor on the vh term keeps every slot's percentage-based position clear of
-     the box edges and clear of its same-column neighbors. Two constraints, both driven
-     by box height (width * 8/5 aspect ratio): (1) the tightest same-column gap is 15%
-     (SLOTS in equipment.js), and two 74px-tall slots need centers >=74px apart to not
-     touch, so height must be >= 74/0.15 = ~493px, i.e. width >= ~308px; (2) the deepest
-     slot ("back", y=90%) needs its bottom half (37px) to clear the box's bottom edge,
-     i.e. height >= 37/0.10 = 370px, a looser requirement than (1). 310px width (496px
-     height) clears both with a small margin. Without this floor, 33vh alone can shrink
-     the box well below that on a short/wide viewport (e.g. a laptop with browser chrome
-     eating into effective vh), pushing slots past the edge and into each other,
-     triggering the overflow-y scrollbar below - this box was never meant to actually
-     scroll, everything in it is absolutely positioned over a fixed illustration.
-     The floor applies only to the vh term (not the whole expression) so the 80vw term -
-     there specifically to stop the box exceeding 80% of viewport width on narrow
-     phones - still wins on a narrow screen even if it's below 310px; a rare leftover
-     scrollbar risk on a genuinely tiny viewport beats forcing horizontal overflow. */
+  /* 310px keeps 74px slots clear at the tightest 15% vertical gap (~493px body height).
+     Keep the 80vw cap outside that floor so narrow phones do not overflow horizontally. */
   width: min(320px, 80vw, max(33vh, 310px));
   aspect-ratio: 5 / 8;
   margin: 0.45rem auto;
@@ -132,18 +114,8 @@
   justify-content: center;
   cursor: default;
 }
-/* Scales the slot footprint with #eq-body's own rendered height (via the
-   container-type:size on .eq-body above) instead of a fixed px box, so if
-   something ever forces the body smaller than its usual ~320x512 (e.g. a
-   short viewport squeezing it through flexbox), slots shrink together and
-   stay clear of each other instead of overlapping. Width is derived from
-   that same height via aspect-ratio (not its own cqw) specifically because
-   #eq-body's own box can get squashed out of its intended 5:8 ratio (its
-   width holds firm via its own width rule while flexbox eats into its
-   height) - sizing width and height from independent container axes would
-   inherit that same distortion into every slot. 14.453cqh is just 74px
-   (the slot's usual height) as a fraction of the box's usual 512px height,
-   so nothing changes visually at the normal/larger-resolution size. */
+/* Scale both slot axes from container height to preserve shape when flexbox squeezes the body.
+   14.453cqh corresponds to 74px at the normal 512px body height. */
 #eq-body .eq-slot {
   height: 14.453cqh;
   aspect-ratio: 60 / 74;
@@ -251,12 +223,7 @@
 }
 .inv-modal-hdr .inv-close-btn { margin-left: 0; }
 .inv-modal-hdr:has(.inv-count) .inv-close-btn { margin-left: 0; }
-/* Every .inv-modal-hdr with an .inv-count relies on ITS margin-left:auto to
-   push the close button along with it (see above) - but every battle sim's
-   modal header has only a title and the close button, nothing else, so
-   nothing was ever pushing the close button to the header's right edge. It
-   sat right next to the title text instead of in the top-right corner,
-   across all thirteen sims (they all share this header markup). */
+/* Headers without a count still need the close button pushed to the right. */
 .inv-modal-hdr:not(:has(.inv-count)) .inv-close-btn { margin-left: auto; }
 .inv-close-btn:hover { color: #d1d5db; background: #1f2937; }
 
@@ -381,13 +348,7 @@
 .inv-line-qty  { color: #60a5fa; font-size: 0.7rem; }
 .inv-line-note { color: #6b7280; font-size: 0.7rem; }
 
-/* Distinguishes the three kinds of line that can appear stacked in the combined
-   stats-hud display (#charsheet-display directly above #inv-display, both using
-   identical plain-text styling): a charsheet field (no badge, existing grey
-   .cs-label), a plain inventory item ("ITEM" badge, blue), and an equipped item
-   (its slot name as the badge, amber) - previously inventory and equipped items were
-   only told apart from charsheet fields by a small 16px icon, easy to miss at a glance,
-   and from each other not at all. */
+/* HUD badges distinguish inventory items from equipment slots; character fields stay unbadged. */
 .inv-line-slot {
   font-size: 0.62rem;
   font-weight: 600;

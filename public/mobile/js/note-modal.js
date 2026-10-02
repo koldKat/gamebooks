@@ -1,18 +1,11 @@
-// note-modal.js - Mobile's per-node note editor, opened from the graph's
-// long-press context menu (context-menu.js). Desktop's openNoteModal
-// (play.js) targets #note-modal-* elements that don't exist here, so this
-// is its own small modal rather than an import, same reasoning as
-// fast-travel-dialog.js. Extracted out of reader.js as a self-contained UI
-// widget, per CLAUDE.md's module-placement rule.
+// Mobile node note editor, independent of desktop-only dialog markup.
 
 import { state, saveState, currentSection } from '../../js/core/state.js';
 import { refreshGraph } from './graph-view.js';
 import { t } from '../../js/i18n.js';
 import { pruneDiscovered } from './context-menu.js';
 
-// hooks: { checkXpReward } - reader.js's own XP-poll logic, passed in per
-// call rather than imported directly, same reasoning as context-menu.js's
-// own hooks parameter (avoids a reader.js <-> note-modal.js import cycle).
+// Pass reward checks in to avoid a reader/note-modal import cycle.
 export function openNoteModal(id, hooks) {
   let overlay = document.getElementById('m-note-overlay');
   if (!overlay) {

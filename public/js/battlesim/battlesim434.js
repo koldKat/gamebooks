@@ -1,52 +1,7 @@
-// ── Battle Simulator (Царствата на терора / Kingdoms of Terror, Bulgarian
-// edition of Lone Wolf book 6, id 434) ──
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 434 only) by the caller in boot.js via
-// setSim434Visible().
-// To remove: delete this file, remove its import line and initSim434()/
-// setSim434Visible() calls from boot.js, remove 'sim434' from
-// SIM_HISTORY_KEYS in server/db/xp.js, and remove the .bsim-* CSS (shared
-// with the other battlesim*.js files, so only remove it if all are gone).
-//
-// English original is book 326 ("The Kingdoms of Terror"), which has no sim
-// of its own yet (has_battle_sim=0), so nothing to cross-reference there.
-// The Combat Ratio + Combat Results Table system and COMBAT_TABLE below are
-// the same Lone Wolf combat mechanic used unchanged from
-// battlesim118.js/battlesim322.js/battlesim430.js/battlesim431.js/
-// battlesim432.js rather than re-derived.
-//
-// Combat Ratio = effective БОЙНИ УМЕНИЯ minus enemy's, computed once when an
-// enemy is selected and fixed for the whole fight. Each round, pick 0-9
-// (a 10-value die), bucket the ratio into the table's 13 printed columns
-// (-11 or less .. 11 or greater), and COMBAT_TABLE[pickRow][ratioCol] gives
-// [enemyLoss, lwLoss] simultaneously, including 'K' (automatically killed)
-// at the extremes.
-//
-// БОЙНИ УМЕНИЯ (COMBAT SKILL) = pick+10, ИЗДРЪЖЛИВОСТ (ENDURANCE) = pick+20,
-// both rolled once at chargen. No LUCK mechanic - that's Fighting Fantasy,
-// not Lone Wolf.
-//
-// attackModifier is a free-form +/- field covering every one-off БОЙНИ
-// УМЕНИЯ change this book's own rules describe by hand: Мозъчна атака
-// (Mindblast, +2, some enemies immune), Мозъчен щит (Mindshield, cancels an
-// enemy's own Mindblast penalty against you), and terrain/injury penalties
-// stated by hand in individual sections. Same precedent as every other sim
-// in this app.
-//
-// Every multi-enemy encounter in this book (e.g. §159 three mercenaries,
-// §254/§270/§282/§337 groups of thieves/pirates/undead) is given a single
-// combined БОЙНО УМЕНИЕ/ИЗДРЪЖЛИВОСТ stat line and fought as one enemy per
-// the book's own text - no pairedFight/sideEnemy mechanic needed.
-//
-// book_enemies.attack holds БОЙНО УМЕНИЕ, .hp holds ИЗДРЪЖЛИВОСТ, .defense
-// unused - same convention as every other Lone Wolf sim. 26 rows extracted
-// directly from this book's own section text (regex on every "Name: БОЙНО
-// УМЕНИЕ N, ИЗДРЪЖЛИВОСТ N" stat block), excluding two non-combat entries
-// that don't fit the pattern: §26's archery-tournament target score
-// ("ИЗДРЪЖЛИВОСТ (точки на мишената)") and §156's canal-door "battle"
-// ("ИЗДРЪЖЛИВОСТ (точки УСТОЙЧИВОСТ)", not a real enemy).
-//
-// All state lives in pt.sim434, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Царствата на терора / Kingdoms of Terror, Bulgarian edition of Lone Wolf book
+// 6, id 434)
+// Combat Ratio is fixed on enemy selection; a 0-9 pick selects simultaneous table losses.
+// 'K' means instant death. Skill bonuses and narrative effects are entered manually.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -59,10 +14,8 @@ const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" ari
 
 const HEALING_POTION_HEAL = 4;
 
-// Rows = the 10-value random pick, printed order 1,2,3,4,5,6,7,8,9,0.
-// Columns = Combat Ratio, bucketed: -11-, -10/-9, -8/-7, -6/-5, -4/-3,
-// -2/-1, 0, 1/2, 3/4, 5/6, 7/8, 9/10, 11+. Cell = [enemyLoss, lwLoss]
-// ('K' sentinel = automatically killed). Byte-identical to battlesim118.js.
+// Rows: 1-9, then 0. Columns: Combat Ratio buckets -11..11, clamped at the extremes.
+// Cells are [enemyLoss, playerLoss]; K means instant death.
 const COMBAT_TABLE = [
   [[0,'K'], [0,'K'], [0,8], [0,6], [1,6], [2,5], [3,5], [4,5], [5,4], [6,4], [7,4], [8,3], [9,3]],
   [[0,'K'], [0,8],   [0,7], [1,6], [2,5], [3,5], [4,4], [5,4], [6,3], [7,3], [8,3], [9,3], [10,2]],

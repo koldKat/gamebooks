@@ -1,8 +1,4 @@
-// ── Profile modal, avatar crop, XP bar display ─────────────────────────────────
-// Self-contained module. Imports from state.js, i18n.js, shop.js, util.js.
-// To remove: delete this file, remove its import line and initProfile()/
-// updateAvatarUI()/renderBooksXpSummary()/setProfileHooks() calls
-// from boot.js, and delete public/css/profile.css and its <link> in index.html.
+// Profile editing, avatar cropping, and shared XP summaries.
 
 import { apiFetch, setUsername, isDemoMode, getToken, setCurrentUserLevel, getUsername } from '../core/state.js';
 import { t } from '../i18n.js';
@@ -57,10 +53,7 @@ function _xpRenderPrefix(prefix, xp, data) {
   if (fill) fill.style.width = `${pct}%`;
   if (!el) return;
   if (prefix === 'profile') { el.textContent = short; return; }
-  // The play bar used to get the short "N XP to next LVL" label (plain text,
-  // no total) because its slot was too narrow for the full one; the panel
-  // has since been widened, so it now renders the same
-  // "X XP · N to next LVL" label as the books panel bar.
+  // Use the same XP label in the books and play summaries.
   el.innerHTML = fullHtml;
 }
 
@@ -84,12 +77,7 @@ let _animRunning  = false;
 let _animGen      = 0; // bumped only on a hard reset (see _xpApply's else branch), to invalidate in-flight rAF closures
 const XP_ANIM_MS_PER_LEVEL = 100; // e.g. lvl 37 -> 3.7s; low levels earn less XP, so near-instant is fine
 
-// Segments are queued, never interrupted: if a new XP update arrives while
-// one is still animating, it's appended rather than restarting/overwriting
-// the current tween - each segment always plays its own full
-// XP_ANIM_MS_PER_LEVEL duration, so two updates back to back take the sum of
-// both durations (e.g. 4.7s + 4.7s = 9.4s at level 47), matching how the
-// underlying reward snapshots themselves arrive sequentially.
+// Queue XP animation segments; new snapshots must not interrupt the current tween.
 function _runAnimQueue(gen) {
   if (_animRunning) return;
   const next = _animQueue.shift();
@@ -140,21 +128,11 @@ function _enqueueXpAnim(toXp, data) {
 function _xpApply(xp, data, fromXp = null) {
   _xpRenderPrefix('profile', xp, data); // profile bar/text always snaps instantly
   if (fromXp != null && Number.isFinite(fromXp) && fromXp !== xp) {
-    // Seed _displayedXp from the snapshot's fromXp only when nothing has
-    // been rendered yet - once an animation is running, _displayedXp already
-    // holds its true, real-time interpolated position and this segment
-    // queues after it rather than overwriting it.
+    // Seed fromXp only before the first render; queued segments must not overwrite an active tween.
     if (_displayedXp == null) _displayedXp = fromXp;
     _enqueueXpAnim(xp, data);
   } else if (_displayedXp != null && fromXp === xp) {
-    // A duplicate/unchanged snapshot (e.g. a second independent /api/profile
-    // refetch landing moments after the first, both reporting the same xp -
-    // routine after actions like a book/PDF upload, which can trigger more
-    // than one profile refresh in quick succession) - true no-op. Must NOT
-    // fall through to the hard-reset branch below, which would bump _animGen
-    // and abort any tween already in flight from the first snapshot,
-    // snapping straight to the final value and making a multi-second XP
-    // gain animation look instant.
+    // Ignore unchanged snapshots without resetting the animation generation.
     return;
   } else {
     _animGen++; // hard reset (no known prior position): invalidate any in-flight animation
@@ -231,13 +209,7 @@ function renderXpBlock(data) {
   }
 }
 
-// ── Image compression ─────────────────────────────────────────────────────────
-// The full load+resize+compress pipeline (compressImage) now lives in util.js,
-// shared with community/feedback.js, community/inbox.js, add-book.js and edit-book.js - this used to be
-// a second, separately-maintained copy here that had quietly drifted (gave up
-// and returned null sooner than util.js's copy on a stubborn image). Only
-// compressToBlob is still needed directly in this file, for confirmCrop's
-// already-drawn canvas below.
+// Reuse core/util.js compression; cropping still needs compressToBlob for its existing canvas.
 
 const IMG_MAX_BYTES = 256 * 1024;
 

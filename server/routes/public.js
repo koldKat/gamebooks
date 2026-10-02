@@ -1,7 +1,6 @@
 'use strict';
 
-// Public (unauthenticated) route handlers: public profile/run lookups, plus
-// (appended separately) the public SSR pages for book/anthology/series/profile/feed.
+// Unauthenticated profile/run APIs and public SSR pages.
 
 const fs   = require('fs');
 const path = require('path');

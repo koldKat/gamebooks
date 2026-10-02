@@ -1,23 +1,7 @@
-// ── Battle Simulator (Moonrunner, book 244) ─────────────────────────────────
-// Self-contained module. Imports from state.js, play.js, charsheet.js and util.js.
-// Visibility is gated (book 244 only) by the caller in boot.js via
-// setSim244Visible().
-// To remove: delete this file, remove its import line and initSim244()/
-// setSim244Visible() calls from boot.js, and remove the .bsim-* CSS (shared
-// with other battlesimNNN.js modules, so only remove it if all are gone).
-//
-// Standard Fighting Fantasy SKILL/STAMINA/LUCK system: combat is opposed
-// 2d6+SKILL rolls each round, loser takes a flat 2 STAMINA, with an optional
-// Test Your Luck after a hit lands that nudges the damage by 1 in either
-// direction (identical formula to book 243's sim). Provisions start at 5 and
-// heal 4 STAMINA each, per this book's own rules text. One encounter (the
-// Obisian Predator, sections 91/279) has no STAMINA score at all - a fixed
-// round count or a Luck test ends the fight instead of STAMINA reaching 0 -
-// so it doesn't fit the normal win/loss loop; picking it from the enemy list
-// leaves STAMINA at whatever was last set and the player must track that
-// fight's outcome by hand. This is a convenience tool, not an enforcement
-// engine, so that one exception is left as-is rather than special-cased.
-// All state lives in pt.sim244, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Moonrunner, book 244)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
+// The Obisian Predator has no STAMINA value; track its round/Luck ending manually.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -115,11 +99,7 @@ function _runRound() {
   _renderAll();
 }
 
-// Test Your Luck after a hit lands: costs 1 LUCK regardless of outcome. On
-// your own hit, Lucky deals 2 extra STAMINA damage (4 total), Unlucky gives
-// back 1 (only 1 total). On a hit you took, Lucky gives back 1 STAMINA (only
-// 1 total lost), Unlucky costs 1 extra (3 total). Matches the book's
-// "using LUCK in combat" rule.
+// Luck costs 1: own hits deal 4/1 damage; incoming hits deal 1/3 (lucky/unlucky).
 function _testLuck() {
   const d = _data();
   if (!d || !d.pendingLuck || d.player.luck <= 0) return;

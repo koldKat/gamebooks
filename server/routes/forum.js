@@ -1,7 +1,6 @@
 'use strict';
 
-// Forum route handlers: SSR page serving + thread/post CRUD API endpoints.
-// Rendering itself lives in top-level server/forum.js; this is just the HTTP glue.
+// Forum HTTP handlers; SSR rendering lives in server/forum.js.
 
 const fs = require('fs');
 const path = require('path');

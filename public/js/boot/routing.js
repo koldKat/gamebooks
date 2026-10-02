@@ -14,10 +14,7 @@ export async function initRouting() {
       const s = e.state;
       if (s?.view === 'book') await navigateToBook(s.bookId);
       else if (getToken())    await showBooks();
-      // A guest who dismissed the login overlay to browse the feed has no
-      // in-app view to return to - landing them on showLogin() here turns
-      // every back navigation (e.g. closing a book dialog) into a jarring
-      // jump back to the login screen.
+      // Guest back navigation must return to the feed, not the login overlay.
       else if (!document.body.classList.contains('guest-browsing')) showLogin();
     } finally {
       bootState._suppressHistory = false;

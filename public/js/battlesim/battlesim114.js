@@ -1,36 +1,6 @@
-// ── Battle Simulator (Огнена пустиня / Fiery Desert, book 114) ─────────────
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 114 only) by the caller in boot.js via
-// setSim114Visible().
-// To remove: delete this file, remove its import line and initSim114()/
-// setSim114Visible() calls from boot.js, remove 'sim114' from
-// SIM_HISTORY_KEYS in server/db/xp.js, and remove the .bsim-* CSS (shared
-// with the other battlesim*.js files, so only remove it if all are gone).
-//
-// Same chitanka.info-family symmetric-STRENGTH formula as book 86 (both
-// sides pick a number, add own STRENGTH, higher total deals 2 LIFE damage,
-// tie = no damage - the rules never resolve a genuine draw). Different
-// LIFE constant though: pick + 20 here, not book 86's pick + 30 - worth
-// keeping distinct rather than copy-pasting the wrong book's number.
-//
-// One real per-book mechanic (rules p.11, "СРАЖЕНИЯ"): owning the
-// "бързоходни ботуши" (fast boots, found before the §278/§400 Agamor
-// fights) lets the PLAYER pick two numbers each exchange and use the
-// higher one, while the enemy still only picks one - a toggle, not
-// baked into any specific enemy, since it's an inventory state the
-// player carries across fights, not a fixed encounter property.
-//
-// book_enemies.attack holds STRENGTH (this book has one combat stat,
-// same convention as book 86), .hp holds LIFE, .defense is unused.
-// 40 rows, read from all 420 sections directly (no front-matter roster
-// appendix, same as book 86) - several duplicate-stat names (Дракон,
-// Трол, Змия, Василиск, Наемник) are genuinely separate encounters at
-// different sections, disambiguated by section number in the name since
-// autocomplete has no other way to tell them apart. Агамор (final boss)
-// has two distinct fights, §278 (first, tougher) and §400 (rematch,
-// weaker) - both real, not a data error.
-//
-// All state lives in pt.sim114, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Огнена пустиня / Fiery Desert, book 114)
+// Compare random pick + STRENGTH; higher deals 2 LIFE, ties miss.
+// LIFE starts at pick+20; fast boots let the player keep the higher of two picks.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';

@@ -1,62 +1,6 @@
-// ── Battle Simulator (Robot Commando, book 218) ──────────────────────────────
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 218 only) by the caller in boot.js via
-// setSim218Visible().
-// To remove: delete this file, remove its import line and initSim218()/
-// setSim218Visible() calls from boot.js, remove 'sim218' from
-// SIM_HISTORY_KEYS in server/db/xp.js, and remove the .bsim-* CSS (shared
-// with the other battlesim*.js files, so only remove it if all are gone).
-//
-// Standard Fighting Fantasy SKILL/STAMINA/LUCK core (same numbers/Test Your
-// Luck table as every other FF sim in this app: SKILL 1d6+6, STAMINA
-// 2d6+12, LUCK 1d6+6), PLUS this book's own second combat mode: "Robot
-// Combat", used whenever you're piloting a robot against a foe with SKILL/
-// ARMOUR/SPEED instead of SKILL/STAMINA. A mode toggle (Personal/Robot)
-// switches which life pool is active (STAMINA vs a separate ARMOUR pool)
-// and turns on two robot-only terms: SPEED comparison (+1 Attack Strength
-// to whichever side's robot is faster - Slow/Medium/Fast/VeryFast, no bonus
-// on a tie) and a free-form Combat Bonus field (the piloted robot's own
-// listed bonus, entered by hand since which robot you're using changes
-// throughout the book and there's no dedicated "robot garage" UI here).
-// ARMOUR isn't a single persistent pool the way STAMINA is - each robot you
-// pilot has its own ARMOUR score - so armourInitial is a plain editable
-// field the player resets by hand whenever the story puts them in a
-// different robot, same free-form-entry precedent as attackModifier.
-//
-// attackModifier/enemyWoundDamage/winAfterHits are the same generic knobs
-// every FF sim in this app uses for one-off cases (e.g. this book's own
-// "faster foe gets +1" is handled by the SPEED fields, but other one-off
-// SKILL penalties/bonuses stated by hand in individual sections still go
-// through attackModifier).
-//
-// pairedFight/sideEnemy (reused unchanged from books 200-216's mechanic)
-// covers this book's two "choose your target, the other one just attacks
-// you passively and can't be wounded back" fights: two Triceratops (§117)
-// and two Tripods (§169) - both explicitly described that way in the text,
-// unlike this book's other multi-enemy fights (Myrmidon pairs, 3 Giant
-// Lizards, 3 street robots, 3 doctors), which are all fought one at a time
-// in sequence with no paired mechanic, matching every other sim's default.
-//
-// Several enemies have a special ability described in the book's own text
-// that isn't modeled as a dedicated toggle (Crusher's double damage,
-// Battleman's +1 on a big win margin, Supertank's guaranteed 1 ARMOUR chip
-// even on a losing round, Wasp Fighter's auto-win on a 4+ margin,
-// Construction Robot's instant-defeat on a low enemy roll, Ankylosaurus's
-// no-damage-next-turn knockdown) - apply these by hand via the log/notes,
-// same "note it, handle manually" precedent as every other sim's
-// book-specific exceptions.
-//
-// book_enemies.attack holds SKILL, .hp holds ARMOUR (robot-mode rows) or
-// STAMINA (personal-mode rows), .defense holds SPEED (0=Slow, 1=Medium,
-// 2=Fast, 3=VeryFast) for robot-mode rows, unused (0) for personal-mode
-// rows. 41 rows read from all 400 sections; one same-name/same-stat/
-// same-destination trio (Giant Lizard §232=§328) is merged into three rows
-// (one per lizard, since it's a 3-enemy sequential fight, not a single
-// enemy); the two paired encounters (Triceratops §117, Tripod §169) are
-// kept as two separate rows each, labeled "(paired)" - pick one as the main
-// enemy and manually copy the other's stats into the Side Enemy fields.
-//
-// All state lives in pt.sim218, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Robot Commando, book 218)
+// Personal FF combat and separate robot ARMOUR combat.
+// Robot speed and bonus damage affect rounds; pool damage must not leak between modes.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -148,9 +92,7 @@ function _resetEncounterKnobs(d) {
   d.sideEnemy = { name: '', skill: 0, lifeMax: 0 };
 }
 
-// Uncapped lifetime log - the admin dashboard aggregates battle counts
-// app-wide from this array, so per-user history needs to be a true lifetime
-// total, not a rolling window.
+// Keep lifetime outcomes: admin totals require the full history.
 function _recordOutcome(d, outcome) {
   d.history.push({
     enemy: _enemyName(d), outcome, mode: d.mode,
@@ -192,10 +134,7 @@ function _runRound() {
     if (_activeLife(d) > 0) d.pendingLuckQueue.push({ kind: 'enemy-hit' });
   }
 
-  // Paired side-enemy: attacks every round regardless of the main exchange's
-  // outcome, can never be wounded back (per the book's own "count this as
-  // though you have defended yourself" rule) - same mechanic/precedent as
-  // battlesim216.js.
+  // Side attackers act every round but cannot be wounded back.
   if (d.pairedFight && d.sideEnemy.lifeMax > 0 && _activeLife(d) > 0) {
     const sidePlayerAS = _roll2d6() + d.player.skill + (d.player.attackModifier || 0) + myBonus;
     const sideAS = _roll2d6() + d.sideEnemy.skill;

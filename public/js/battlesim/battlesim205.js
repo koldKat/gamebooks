@@ -1,78 +1,6 @@
-// ── Battle Simulator (Caverns of the Snow Witch, book 205) ──────────────────
-// Self-contained module. Imports from state.js, play.js, charsheet.js and util.js.
-// Visibility is gated (book 205 only) by the caller in boot.js via
-// setSim205Visible().
-// To remove: delete this file, remove its import line and initSim205()/
-// setSim205Visible() calls from boot.js, and remove the .bsim-* CSS (shared
-// with battlesim8.js/battlesim829.js/battlesim286.js/battlesim198.js/
-// battlesim199.js/battlesim200.js/battlesim186.js/battlesim201.js/
-// battlesim202.js/battlesim203.js/battlesim204.js, so only remove it if all
-// twelve are gone).
-//
-// Standard Fighting Fantasy SKILL/STAMINA/LUCK system, same core numbers,
-// Test Your Luck table, score ceilings, single-dose potion-of-three-choices
-// starting item, and Provisions mechanic (10 meals, +4 STAMINA each, outside
-// battle only) as books 201-203 - all reused verbatim, the reference gives
-// every one of these explicitly (unlike book 204, which was missing the
-// Provisions numbers entirely).
-//
-// attackModifier/enemyWoundDamage/pairedFight/sideEnemy/winAfterHits/
-// enemyStaminaFloor are reused exactly as books 200-204 built them -
-// enemyStaminaFloor covers the Mountain Elf (§17/§382), who stops at 2
-// STAMINA rather than 0; pairedFight/sideEnemy covers the book's three
-// simultaneous-pair encounters (Hill Trolls §13/§296, Zombies §262);
-// attackModifier covers the book's several persistent per-fight SKILL/Attack
-// Strength penalties (Night Stalker's -2 Attack Strength every round from
-// darkness, bare-handed Goblins' -3 Attack Strength, the §357 Frost Giant
-// variant's -2 Attack Strength every round) - apply those by hand with the
-// stepper when starting the relevant fight.
-//
-// Three genuinely new mechanics, all recurring per-round effects rather than
-// first-round-only or persistent-item ones:
-// - bansheeFearCheck (per-encounter checkbox): before EVERY Attack Round
-//   (not just the first), roll 2d6 against effective SKILL - fail (roll >
-//   SKILL) auto-loses that round with no exchange rolled at all, matching
-//   the Banshee's (§185) explicit "2d6 <= SKILL or automatically lose that
-//   Attack Round" rule, which the reference is clear applies every round of
-//   that fight, not once.
-// - iceDemonGas (per-encounter checkbox): after every round resolves
-//   (regardless of who won it), roll 1d6 - on 1-3 the freezing gas lands for
-//   an extra -1 STAMINA. Covers both Ice Demon encounters (§108/§143), which
-//   share the identical rule.
-// - whiteDragonBreath (per-encounter checkbox, only meaningful for the
-//   White Dragon §223): after every round resolves, roll 1d6 - on 1-2 the
-//   freezing breath lands for an extra -2 STAMINA, unless hasGoldRing is on
-//   (the ring's magic resistance to freezing cold blocks it entirely per the
-//   item table).
-//
-// Seven persistent equipment toggles. Six give an ongoing SKILL bonus while
-// worn/wielded (not a one-time score bump, which is applied by hand via the
-// Initial fields like every other sim in this app): Sword of Speed and
-// Troll's magnificent sword (+1 SKILL each, both weapons - the core
-// one-weapon rule means don't enable both at once, same precedent as every
-// other sim's weapon toggles), Copper Armband (§293, +4 SKILL), Amulet of
-// Courage (+2 SKILL), Horned Centaur Helmet (+1 SKILL), and Shield (+1 SKILL). The
-// seventh, Gold Ring, gives no SKILL bonus - it only gates whiteDragonBreath
-// above; its own one-time +1 LUCK (also listed as a plain score change, like
-// most of this book's item bonuses) goes through the Initial LUCK stepper by
-// hand instead, same as every other one-off LUCK gain in this book.
-//
-// Deliberately NOT modeled, same precedent as every other sim in this app:
-// the dozens of one-off SKILL/STAMINA/LUCK score changes in the reference's
-// section 6 (Potion of Health, the Snow Witch anti-cold potion, the withered
-// rose, and every other named or unnamed one-time gain/loss) - apply those
-// by hand with the steppers when you reach them, same as Provisions/starting
-// potion cover the two mechanics that actually repeat. Also not modeled: the
-// Crystal Warrior's edged-weapons-useless gate (by the time you're fighting
-// it you already have the war-hammer, so it's just a normal 11/13 fight),
-// the Death Hawk's exactly-2-rounds-then-Ash-shoots resolution (stop the
-// fight yourself after round 2 and continue in the book), the Snow Witch's
-// Discs game and Vampire-form/globe endgame sequence (narrative branches and
-// checks, not a stat battle), and every other Luck/SKILL/dice check listed
-// in the reference that resolves a puzzle or narrative branch rather than
-// combat.
-//
-// All state lives in pt.sim205, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Caverns of the Snow Witch, book 205)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -200,9 +128,7 @@ function _resetEncounterKnobs(d) {
   d.sideEnemy = { name: '', skill: 0, staminaMax: 0 };
 }
 
-// Uncapped lifetime log - the admin dashboard aggregates battle counts
-// app-wide from this array, so per-user history needs to be a true lifetime
-// total, not a rolling window.
+// Keep lifetime outcomes: admin totals require the full history.
 function _recordOutcome(d, outcome) {
   d.history.push({
     enemy: _enemyName(d), outcome,
@@ -215,9 +141,7 @@ function _recordOutcome(d, outcome) {
 
 function _enemyFloor(d) { return Math.max(0, d.player.enemyStaminaFloor || 0); }
 
-// Banshee (§185): before EVERY Attack Round, 2d6 <= SKILL or automatically
-// lose that round with no exchange rolled at all. Returns true if the round
-// was auto-lost (caller skips the normal roll).
+// Banshee: fail 2d6 <= SKILL to lose the round without a normal exchange.
 function _bansheeCheck(d) {
   if (!d.player.bansheeFearCheck) return false;
   const roll = _roll2d6();
@@ -230,9 +154,7 @@ function _bansheeCheck(d) {
   return true;
 }
 
-// Ice Demon (§108/§143) and White Dragon (§223): an extra per-round damage
-// roll independent of the normal exchange's outcome, applied after it
-// resolves (as long as the player is still standing).
+// Apply extra damage rolls independently after the main exchange, if the player survives.
 function _extraRoundEffects(d) {
   if (d.player.iceDemonGas && d.player.stamina > 0) {
     const roll = _roll1d6();
@@ -925,9 +847,7 @@ export function initSim205() {
     if (!d) return;
     const map = FIELD_MAP[id];
     if (!map) return;
-    // Attack modifier is the one field allowed to go negative (bare-handed/
-    // darkness/fatigue penalties are always a subtraction) - every other
-    // field stays clamped to 0 or above.
+    // Allow negative attack modifiers; other fields stay non-negative.
     val = id === 'sim205-player-atkmod' ? Number(val) : Math.max(0, val);
     if (id === 'sim205-player-skill') val = Math.min(val, d.player.skillInitial);
     if (id === 'sim205-player-stamina') val = Math.min(val, d.player.staminaInitial);

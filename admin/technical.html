@@ -2025,6 +2025,8 @@ series_runs (
 <p><code>POST /api/admin/smtp/test</code> sends a test email to <code>smtp_user</code> to verify configuration. Returns <code>{ ok: true }</code> on success or <code>{ error: message }</code> on failure.</p>
 <h2 id="automated-tests-test">Automated tests (<code>test/</code>)<a class="anchor" href="#automated-tests-test" aria-label="Link to section">#</a></h2>
 <p><code>node --test</code> (Node&#39;s built-in test runner, no external framework/dev dependency) - <code>npm test</code> runs it, auto-discovering the whole <code>test/</code> tree recursively.</p>
+<p>Source-parity hashes include comments. After the app-wide comment cleanup, these baselines were refreshed only after verifying unchanged JavaScript syntax trees, HTML markup and CSS rules across all 437 application source files. Behavioral fixture digests and the translation dictionary baseline were not changed.</p>
+<p>Code comments should explain constraints, non-obvious intent, security boundaries or game rules. Keep implementation history in commits/docs rather than narrating previous fixes or repeating visible code.</p>
 <p><strong>Structure:</strong> folder-per-module-domain, not flat - <code>test/client/&lt;module&gt;/*.test.mjs</code> for <code>public/js/*.js</code>, <code>test/server/&lt;module&gt;/*.test.mjs</code> for <code>server/*.js</code>. Each file targets one function/concern rather than one giant file per source module.</p>
 <p><strong>Deliberately not covered, and why - two structural blockers, not oversights:</strong></p>
 <ul>

@@ -1,9 +1,4 @@
-// Entry point: the global tooltip, tab-switching, and the initial page-load
-// boot sequence. Every tab's own logic lives in its own admin/js/*.js module
-// (imported here purely for their side effects - registering tab-click
-// handlers - and the handful of load*() functions this file calls directly).
-// To remove: this is the last file standing after every tab was extracted -
-// removing it means reverting to an inline <script> in admin/index.html.
+// Admin startup, tooltips, and tab switching.
 
 import { loadTips } from './tips.js';
 import { loadAdminAnthologies } from './anthologies.js';
@@ -12,11 +7,7 @@ import { loadFeedback } from './feedback.js';
 import { loadAnnouncements } from './announcements.js';
 import { loadInventory } from './inventory.js';
 import { loadTools, loadAll, loadLive, loadStats, loadAdminGc, loadAppSize } from './dashboard.js';
-// users-books.js has no exports this file calls directly, but its top-level
-// code (gift modal DOM wiring, Users/Books sort-header + search self-wiring)
-// must still run - imported transitively via dashboard.js's own import of it.
-
-// ── Tooltip ───────────────────────────────────────────────────────────────────
+// dashboard.js imports users-books.js for its top-level event bindings.
 
 (function () {
   const tip = document.getElementById('admin-tooltip');

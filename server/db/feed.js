@@ -1,8 +1,6 @@
 'use strict';
 
-// Activity feed (getFeed) + public-listing/sitemap helpers + public profile data.
-// A few small profile-flag setters (setPublicProfile/setAuthor/etc.) lived physically
-// in this same stretch of the original server/db.js and are kept here verbatim.
+// Feed, public listings, sitemap, and profile data.
 
 const { db, _naturalCompareByName } = require('./connection');
 const { computeLevel, getTitleForLevel, getUserXpInfo, _insertNotif } = require('./xp');
@@ -28,8 +26,7 @@ function getFeed() {
      WHERE s.is_public = 1`
   ).all();
 
-  // Build a set of (userId, seriesId, added_at) for cascade-add suppression
-  // Books added within 10s of a series add by the same user are considered cascade adds
+  // Suppress book adds within 10s of the same player's series add.
   const _cascadeAdds = new Set();
   for (const sr of seriesRows) {
     const isCreator = sr.created_by === sr.user_id;
@@ -55,13 +52,7 @@ function getFeed() {
     _cascadeAdds.add(`${sr.user_id}:${sr.seriesId}:${sr.added_at}`);
   }
 
-  // ── Rating events (books/anthologies/series) ─────────────────────────────────
-  // Sourced from the rate_book/rate_series XP award rather than user_books.rated_at
-  // directly - xp_events has a UNIQUE(user_id, event, ref) index, so it only ever
-  // holds ONE row per user+book/series no matter how many times they re-rate, which
-  // is exactly the "first rating only, no re-rating spam" behavior wanted here.
-  // rated_at itself is still kept (see setBookRating/setSeriesRating) for other uses
-  // that want to know when a rating last changed, not just whether it's been shown.
+  // Show first-rating events from the unique award ledger, not latest rated_at timestamps.
   const ratedBookRows = db.prepare(
     `SELECT xe.created_at, ub.rating,
             b.id AS bookId, b.name AS bookName, b.is_container AS bookIsContainer,
@@ -81,9 +72,7 @@ function getFeed() {
   for (const row of ratedBookRows) {
     const eventMs = (row.created_at || 0) * 1000;
     const bookIsPublic = row.is_public === 1;
-    // row.rating is the CURRENT rating (joined from user_books), not the value at
-    // the time of this historical XP event - if the user has since cleared their
-    // rating entirely, skip rather than show a "rated" entry with no stars filled.
+    // Ratings are current, not event snapshots; omit cleared ratings.
     if (eventMs < cutoffMs || row.hide_from_feed || !bookIsPublic || row.rating == null) continue;
     entries.push({
       type: 'book_rated', username: row.username, bookName: row.bookName, bookId: row.bookId,
@@ -123,13 +112,7 @@ function getFeed() {
     });
   }
 
-  // ── Open world series run events ─────────────────────────────────────────────
-  // series_runs itself doesn't track which book a run started/ended in
-  // (last_book_id/last_section are explicitly nulled on completion - see the
-  // comment below), so it's derived from each book's own playthroughs[runIndex],
-  // the same way the public journey viewer (getPublicSeriesRun) builds its
-  // segment list. Cached per (seriesId, userId) since a user's series-run rows
-  // for the same series all read the same book set.
+  // Resolve series-run start/end books from per-book state; cache book sets per series/player.
   const _seriesRunBooksCache = new Map();
   function _getSeriesRunBooks(seriesId, userId) {
     const key = `${seriesId}:${userId}`;
@@ -148,24 +131,13 @@ function getFeed() {
     _seriesRunBooksCache.set(key, parsed);
     return parsed;
   }
-  // wantEnd=false: the book with the earliest pt.startedAt for this run index
-  // (where the run actually began). wantEnd=true: the book whose pt.completed
-  // is true with a non-portal result (where the run actually ended) - there's
-  // only ever one, since a portal-paused book always leaves result === 'portal'.
+  // Start uses the earliest startedAt; end uses a completed, non-portal result.
   function _seriesRunBook(seriesId, userId, runIndex, wantEnd) {
     const books = _getSeriesRunBooks(seriesId, userId);
     if (wantEnd) {
       return books.find(b => {
         const pt = b.playthroughs[runIndex];
-        // startedAt is required, not just completed+result: _syncSeriesRuns (client)
-        // copies the series-level completed/result onto EVERY book's own placeholder
-        // for this run index once it ends anywhere, even a book the run never
-        // actually visited (startedAt null) - without this check, whichever book
-        // happens to sort first (by id) wins regardless of where the run actually
-        // took place, silently misattributing "began/won/lost series run N" to the
-        // wrong book. Not path.length - a since-fixed open-world.js bug could inject
-        // a single path entry into an untouched placeholder without ever setting
-        // startedAt, which defeated a path.length-only guard.
+        // Require startedAt to exclude untouched placeholders, even if completion/path data was mirrored.
         return pt && pt.completed && pt.result && pt.result !== 'portal' && pt.startedAt;
       }) || null;
     }
@@ -214,10 +186,7 @@ function getFeed() {
     if (sr.completed && sr.result && sr.completed_at) {
       const endMs = sr.completed_at * 1000;
       if (endMs >= cutoffMs) {
-        // No lastSection here - completeSeriesRun() (books.js) explicitly nulls
-        // last_book_id/last_section on completion (that pair only tracks an
-        // in-progress run's current position), so by the time this entry is
-        // read it's always null. The feed tooltip falls back to just the date.
+        // Completed runs clear last_book_id/last_section; the tooltip falls back to the date.
         const endBook = _seriesRunBook(sr.seriesId, sr.userId, sr.run_index, true);
         entries.push({ ...base, type: 'series_run_completed', result: sr.result,
           runIsPublic: !!sr.is_public, completedAt: endMs,
@@ -340,11 +309,7 @@ function getFeed() {
             partyId: row.party_id || null });
         }
       }
-      // preSeriesRuns (migratePreSeriesRuns) predate the book's series turning
-      // open-world, so unlike the playthroughs loop above this one is NOT
-      // gated on seriesIsOpenWorld - these runs never get a series_run_completed
-      // entry either (they were never tracked in series_runs), so skipping them
-      // here would mean they never appear in the feed again after migration.
+      // Include pre-series runs independently of current open-world status.
       {
         const preRuns = state.preSeriesRuns || [];
         const fallbackTs2b = (row.updated_at || 0) * 1000;
@@ -402,9 +367,7 @@ function getFeed() {
         partyId: row.party_id || null });
     }
 
-    // preSeriesRuns - same reasoning as the private-book branch above: not
-    // gated on seriesIsOpenWorld, since these runs predate joining the series
-    // and never get a series_run_completed entry either.
+    // Include pre-series runs regardless of current open-world status.
     {
       const preRuns = state.preSeriesRuns || [];
       for (let i = 0; i < preRuns.length; i++) {
@@ -520,11 +483,7 @@ function getFeed() {
       partyId: row.party_id || null });
   }
 
-  // win_run/death_run/battle_run refs are startedAt-based (see processStateXp), not
-  // array-index-based, so the run's current position has to be recovered by matching
-  // startedAt against the live playthroughs array - a raw parseInt of the ref segment
-  // would be a giant timestamp, not a usable index. Older refs (recorded before that
-  // change) are plain indices, so fall back to treating the key as an index too.
+  // Resolve timestamp-based refs by startedAt; fall back to array indices for legacy refs.
   function _resolveRunIndex(stateDataJson, runKey) {
     if (runKey == null || !stateDataJson) return null;
     let parsed;
@@ -534,11 +493,7 @@ function getFeed() {
       const idx = pts.findIndex(p => p && String(p.startedAt) === String(runKey));
       if (idx !== -1) return idx;
     }
-    // Also check preSeriesRuns (migratePreSeriesRuns) - a run's startedAt-based
-    // key stays stable even after migration moves it out of playthroughs, so a
-    // first_win/first_loss/first_battle_death event recorded before migration
-    // still needs to resolve to the run's new location - both its tooltip data
-    // and the run_completed-suppression key below are keyed on this runIndex.
+    // Resolve migrated runs in preSeriesRuns too; their timestamp keys remain stable.
     const preRuns = parsed?.preSeriesRuns;
     if (Array.isArray(preRuns)) {
       const preIdx = preRuns.findIndex(p => p && String(p.startedAt) === String(runKey));
@@ -551,9 +506,7 @@ function getFeed() {
     return null;
   }
 
-  // Feeds the feed entry's own hover tooltip (a cheap plain-text preview,
-  // same idea as the one on the public-profile run list) without spinning up
-  // the full run graph just for a hover.
+  // Use a plain-text preview rather than building a graph for hover.
   function _runPathInfo(stateDataJson, runIndex) {
     if (runIndex == null || !stateDataJson) return { pathLength: null, lastSection: null };
     try {
@@ -565,15 +518,7 @@ function getFeed() {
     } catch { return { pathLength: null, lastSection: null }; }
   }
 
-  // win_run/death_run/battle_run refs are book-scoped (`bookId:startedAt`) for a
-  // book that wasn't in an open-world series at completion time, but
-  // series-scoped (`series:seriesId:startedAt`, see processStateXp) once it is -
-  // a book's history can contain both, e.g. pre-conversion losses plus later
-  // portal-hopped ones. Finds the earliest of either format so first_win/
-  // first_loss/first_battle_death (which always fire on the very first ever
-  // completion, in whichever format that completion happened to use) can
-  // still resolve their run - matching only the book-scoped format silently
-  // failed to link an open-world-native first win/loss to any run at all.
+  // Check both book- and series-scoped refs when resolving a book's first completion.
   const _getFirstRunRef = db.prepare(`
     SELECT ref FROM xp_events
     WHERE user_id = ? AND event = ?
@@ -585,14 +530,7 @@ function getFeed() {
     const parts = ref.split(':');
     return parts[0] === 'series' ? parts[2] : parts[1];
   }
-  // The seriesId arg to _getFirstRunRef MUST be a JS string, not a number -
-  // better-sqlite3 binds a plain JS number as SQLite REAL when it's not
-  // provably a safe integer in this driver's default mode, and concatenating
-  // a REAL in SQL stringifies it with a trailing ".0" ('series:123.0:%'
-  // instead of 'series:123:%'), so the LIKE silently never matches. CAST(?
-  // AS TEXT) does NOT fix this - casting an already-REAL bound value still
-  // produces "123.0". Stringifying in JS before binding is the only fix that
-  // actually works; confirmed by hand against a real row before landing this.
+  // Bind series IDs as strings: SQLite REAL concatenation can add .0 and break ref matching.
   function _seriesIdParam(seriesId) { return seriesId == null ? null : String(seriesId); }
   const _hasShareRun = db.prepare('SELECT 1 FROM xp_events WHERE user_id=? AND event=? AND ref=?');
 
@@ -618,13 +556,7 @@ function getFeed() {
     const winSeriesIdParam = _seriesIdParam(row.seriesId);
     const winRunRef   = _getFirstRunRef.get(row.userId, 'win_run', row.bookId, winSeriesIdParam, winSeriesIdParam)?.ref;
     const winRunIndex = _resolveRunIndex(row.state_data, _runKeyFromRef(winRunRef));
-    // The XP/achievement itself is permanent (deleting a run never revokes
-    // XP already earned - same policy as everywhere else in this file), but
-    // the feed entry announcing it shouldn't outlive the run it's about: if
-    // the run no longer resolves in current state (winRunIndex null - the
-    // player deleted it), there's nothing left to link to or show a path
-    // for, so skip the entry entirely rather than showing a dangling,
-    // unclickable "won for the first time" with no run behind it.
+    // Retain earned XP but omit feed announcements whose deleted runs no longer resolve.
     if (winRunIndex == null) continue;
     const winPathInfo  = _runPathInfo(row.state_data, winRunIndex);
     const runIsPublic  = winRunRef ? !!_hasShareRun.get(row.userId, 'share_run', winRunRef) : false;
@@ -852,9 +784,7 @@ function getFeed() {
       completedAt: row.published_at * 1000 });
   }
 
-  // ── Merge party run entries ──────────────────────────────────────────────────
-  // Group run_started / run_completed / first_win entries by (partyId, bookId, runIndex)
-  // and collapse party members into a single entry with combined usernames.
+  // Merge party run entries by party, book, and run index.
   const mergeTypes = new Set(['run_started', 'run_completed', 'all_visited', 'all_discovered', 'first_win']);
   const partyGroups = new Map(); // key → first entry
   const partyExtra  = new Map(); // key → additional { username, avatarUrl, userPublicProfile }[]
@@ -879,8 +809,7 @@ function getFeed() {
     }
   }
 
-  // ── Merge achievement entries (won_all_anthology / won_all_series) ───────────
-  // No partyId on these - merge any users who achieved the same thing in the feed window.
+  // Merge equivalent group achievements within the feed window.
   const achievementTypes = new Set(['won_all_anthology', 'won_all_series']);
   const achGroups = new Map();
   for (const e of entries) {
@@ -898,22 +827,7 @@ function getFeed() {
     }
   }
 
-  // Suppress run_completed entries already represented by a first_win/first_loss/first_battle_death entry.
-  // Keyed by completedAt as well as username:bookId:runIndex, not just the
-  // latter - runIndex comes from _resolveRunIndex's best-effort match of the
-  // first_X event's stored startedAt against the *current* playthroughs
-  // array, which silently resolves to the wrong (unrelated, much later) run
-  // whenever the run that actually caused the first_X event was never itself
-  // recorded as a win_run/death_run/battle_run event (an orphaned first_X -
-  // seen in practice: a first_loss with no death_run anywhere near it in
-  // xp_events). _getFirstRunRef then has no genuine match to work with and
-  // falls back to whatever win_run/death_run/battle_run event it can find for
-  // that book, which can land on a completely different, much later
-  // completion - silently suppressing that later run's own real
-  // announcement from ever appearing in the feed. Requiring completedAt to
-  // be within a minute (same save, effectively the same real-world event)
-  // is what actually confirms these two entries are about the same
-  // completion, rather than just an accidental index collision.
+  // Suppress duplicate first-outcome announcements only when run identity and completion times agree within a minute.
   const SAME_EVENT_WINDOW_MS = 60_000;
   const firstWinTimes  = new Map(); // key -> completedAt[]
   const firstLossTimes = new Map();
@@ -928,11 +842,7 @@ function getFeed() {
     else if (e.type === 'first_battle_death') _addFirstTime(firstBatTimes, k, e.completedAt);
   }
   for (const e of entries) {
-    // series_run_completed carries the end book's own bookId/runIndex (see
-    // _seriesRunBook above) in exactly the same shape run_completed does, so
-    // it needs the identical suppression - was missing entirely, so an
-    // open-world run's first win/loss showed up twice: once as "won series
-    // run N" and again as "won for the first time".
+    // Apply the same first-outcome suppression to series-run completion entries.
     if (toRemove.has(e) || (e.type !== 'run_completed' && e.type !== 'series_run_completed')) continue;
     const k = `${e.username}:${e.bookId}:${e.runIndex ?? ''}`;
     if      (e.result === 'success' && _hasCloseMatch(firstWinTimes, k, e.completedAt))  toRemove.add(e);
@@ -945,20 +855,8 @@ function getFeed() {
   return merged;
 }
 
-// ── Feed change fingerprint ───────────────────────────────────────────────────
-// Cheap version string for GET /api/feed/version, which the client's 60s
-// leader-tab poll uses to skip the full getFeed() rebuild (a heavyweight
-// multi-join sweep whose client-side render rebuilds the entire feed DOM)
-// when nothing feed-visible happened. Each aggregate below mirrors one
-// getFeed() source; the client reloads only when the combined string moves.
-// Deliberately a WHITELIST of XP events rather than all of xp_events: the
-// excluded events fire per-minute in normal play (idle_heartbeat for every
-// idle user each minute, visit_node/discover_node per section read) and
-// would flip the fingerprint every tick, defeating the gate. Changes that
-// don't move any aggregate here (avatar upload, display-name edit, re-rating
-// an already-rated book - rate events are UNIQUE per user+ref, so re-rating
-// adds no row) still reach clients via the feed_changed SSE push; this
-// endpoint only backs the poll that covers pushes the SSE stream missed.
+// Feed poll fingerprint covers feed-visible sources, excluding noisy heartbeat/node awards.
+// SSE handles changes that do not alter these aggregates; polling is a missed-push fallback.
 function getFeedVersion() {
   const xe = db.prepare(
     `SELECT COUNT(*) AS n, COALESCE(MAX(created_at), 0) AS m
@@ -990,9 +888,7 @@ function getFeedVersion() {
   const pin = db.prepare(
     'SELECT id FROM announcements WHERE pinned = 1 AND is_draft = 0 LIMIT 1'
   ).get();
-  // The calendar date is part of the fingerprint so the feed rebuilds once
-  // after midnight - day labels (Today/Yesterday) are computed at render
-  // time client-side and would otherwise sit stale on a quiet day.
+  // Include the date in the fingerprint so Today/Yesterday labels refresh after midnight.
   return [
     xe.n, xe.m, us.n, us.m, us.p, sr.n, sr.s, sr.c,
     ub.n, ub.m, uu.n, uu.m, an.n, an.m, pin?.id ?? 0,
@@ -1064,12 +960,7 @@ function getPublicProfile(username) {
       pathLength:  (pt.path || []).length,
       lastSection: pt.path && pt.path.length ? pt.path[pt.path.length - 1] : null,
     });
-    // preSeriesRuns (migratePreSeriesRuns) holds runs that pre-date a book's
-    // series turning open-world - still real, playable-back runs, just moved
-    // out of playthroughs so open-world's own run-slot indexing isn't
-    // disturbed. Indexed negative here (matching play.js's own "Run -N"
-    // display convention for these) so getPublicRun can tell which array a
-    // given index came from without an extra flag.
+    // Use negative indices for pre-series runs without disturbing current series-run slots.
     const preRuns = s.preSeriesRuns || [];
     const runs = [
       ...(s.playthroughs || []).map(mapRun),
@@ -1108,31 +999,19 @@ function getProfileStats(userId) {
     FROM user_books ub JOIN books b ON b.id = ub.book_id
     WHERE ub.user_id = ? AND b.is_demo = 0
   `).all(userId);
-  // Root-level only (anthology children excluded) - matches getPublicProfile's
-  // counting convention, where an anthology counts as one book regardless of
-  // how many of its children the user has added.
+  // Count root items only; an anthology counts once, not once per child.
   const rootRows      = bookRows.filter(b => !b.parent_book_id);
   const totalBooks    = rootRows.length;
   const createdBooks  = rootRows.filter(b => b.created_by === userId).length;
   let booksPlayed = 0;
   for (const row of bookRows) {
     let s; try { s = JSON.parse(row.state_data); } catch { continue; }
-    // preSeriesRuns holds runs that pre-date a book's series turning open-world
-    // (migratePreSeriesRuns) - still real, played-out runs, just moved out of
-    // playthroughs so open-world's own run-slot indexing isn't disturbed. They
-    // should still count here.
+    // Pre-series runs remain real historical runs and must count.
     const allRuns = [...(s.playthroughs || []), ...(s.preSeriesRuns || [])];
     const completed = allRuns.filter(pt => pt.result === 'death' || pt.result === 'success' || pt.result === 'battle');
     if (completed.length) booksPlayed++;
   }
-  // totalRuns/wins/deaths/battles come from the permanent xp_events ledger -
-  // the same source the runs-milestone GC coin uses - rather than re-deriving
-  // from each book's live state_data. A book removed from the library, or a
-  // playthrough array later pruned/reset (resetBookProgress, series-run
-  // deletion), used to make an already-earned, already-paid-out run silently
-  // vanish from this total forever even though the milestone coin (and the
-  // run itself) were real - caught when a user's own profile total (592) had
-  // drifted below their already-awarded 600-run milestone.
+  // Use the permanent outcome ledger so deleting/resetting live runs cannot lower earned totals.
   const runCounts = db.prepare(`
     SELECT event, COUNT(*) AS n FROM xp_events
     WHERE user_id = ? AND event IN ('win_run','death_run','battle_run')
@@ -1442,10 +1321,7 @@ function getBookActivity(bookId) {
       hasLiveReading: !!book.has_live_reading,
       parentId:      book.parentId    || null,
       parentName:    book.parentName  || null,
-      // Secondary memberships (book_anthology_memberships) - parentId/parentName
-      // above stays the one *primary* anthology; a book can now also belong to
-      // any number of others, which the "Anthology: X" chip needs to show too,
-      // not just the primary one.
+      // Show secondary anthology memberships as well as the primary parent.
       secondaryAnthologies: db.prepare(
         `SELECT a.id, a.name FROM book_anthology_memberships m
          JOIN books a ON a.id = m.anthology_id
@@ -1456,12 +1332,7 @@ function getBookActivity(bookId) {
       seriesId:      book.seriesId    || null,
       seriesName:    book.seriesName  || null,
       seriesNumber:  book.series_number || null,
-      // Undiluted by the parent-anthology COALESCE above - seriesId/seriesName/
-      // seriesNumber deliberately inherit the parent's series for feed/display
-      // context (a child with no series of its own still shows its anthology's
-      // series tag), but an edit form needs the book's own actual series_id,
-      // not a value that would silently attach it directly to the anthology's
-      // series if saved as-is. See covers.js's admin-edit handler.
+      // Keep the book's own series ID for editing, distinct from inherited display context.
       ownSeriesId:     book.ownSeriesId     || null,
       ownSeriesName:   book.ownSeriesName   || null,
       ownSeriesNumber: book.ownSeriesNumber || null,
@@ -1473,12 +1344,7 @@ function getBookActivity(bookId) {
   };
 }
 
-// Shared by getPublicRun/getPublicSeriesRun: the plain single-graph run
-// viewer (no journey segmentation, no per-segment result badge) - used both
-// for non-open-world books and for an open-world run that never actually
-// crossed a portal (journey.length === 1), since forcing that case through
-// the journey UI showed a lone, disconnected-looking result pill with no
-// portal transitions around it to give it context.
+// Use the single-graph viewer for standalone runs and series journeys with only one segment.
 function _standardRunView(bookName, st, runIndex, pt) {
   const allVisited = new Set();
   (st.playthroughs || []).forEach(p => {
@@ -1514,9 +1380,7 @@ function getPublicRun(bookId, userId, runIndex) {
   ).get(bookId, userId);
   if (!row) return null;
   let s; try { s = JSON.parse(row.state_data); } catch { return null; }
-  // Negative runIndex means a preSeriesRuns entry (see getPublicProfile) -
-  // these never went through open-world series-run tracking at all, so they
-  // skip straight to the plain pt.isPublic check below.
+  // Negative indices identify pre-series runs; apply standalone publication checks.
   const isPreSeries = runIndex < 0;
   const preRuns = s.preSeriesRuns || [];
   const pt = isPreSeries ? preRuns[preRuns.length + runIndex] : (s.playthroughs || [])[runIndex];
@@ -1619,9 +1483,7 @@ function getPublicSeriesRun(seriesId, userId, runIndex) {
   journey.sort((a, b) => a.startedAt - b.startedAt);
   if (!journey.length) return null;
 
-  // A run that never actually crossed a portal (journey.length === 1) falls
-  // through to the same plain single-graph view non-open-world runs use -
-  // see _standardRunView's comment for why the journey UI looks wrong here.
+  // Use the single-graph view when no portal was crossed.
   if (journey.length === 1) {
     const { st, spt, bookName } = statesByBookId.get(journey[0].bookId);
     return _standardRunView(bookName, st, runIndex, spt);

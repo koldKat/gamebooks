@@ -1,40 +1,6 @@
-// ── Battle Simulator (Гората на демона / Forest of the Demon, book 86) ─────
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 86 only) by the caller in boot.js via
-// setSim86Visible().
-// To remove: delete this file, remove its import line and initSim86()/
-// setSim86Visible() calls from boot.js, remove 'sim86' from
-// SIM_HISTORY_KEYS in server/db/xp.js, and remove the .bsim-* CSS (shared
-// with the other battlesim*.js files, so only remove it if all are gone).
-//
-// Rules p.5-7 ("СХВАТКИ"): a single symmetric exchange each round - both
-// sides simultaneously pick a number from the random-number table and add
-// it to their own STRENGTH; whichever total is higher deals 2 LIFE damage
-// to the loser (ties: neither side is "more powerful," no damage dealt -
-// the book's own worked example never covers a tie, this is the only
-// sensible reading of "the more powerful one" for a genuine draw).
-// Starting STRENGTH/LIFE are dice-rolled at chargen (p.5-6), not
-// player-allocated like book 83: STRENGTH = round-up(pick/2) + 10, LIFE =
-// pick + 30.
-//
-// book_enemies has no separate attack/defense column pair meaningfully
-// usable here - this book only has one combat stat - so enemy STRENGTH is
-// stored in book_enemies.attack, LIFE in .hp; .defense is unused.
-//
-// Enemy roster (37 book_enemies rows, none merged): reading every one of
-// the book's 503 sections directly (not just the front matter, which has
-// no roster appendix here unlike book 83) found several encounters that
-// reuse identical STRENGTH/LIFE values for a recurring enemy archetype
-// (three black gnomes, three dogs) at genuinely different sections with
-// different "if you win" destinations - confirmed NOT the same fight
-// reachable two ways, so nothing was deduped. The demon Зардинакс has 7
-// distinct stat-lines across the book (STRENGTH 14/15/16 depending on
-// which weapon/item you're using against him at that specific story
-// beat - a real difficulty choice, not noise) - every section number is
-// baked into that enemy's own book_enemies name since autocomplete has
-// no other way to disambiguate identically-named entries.
-//
-// All state lives in pt.sim86, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Гората на демона / Forest of the Demon, book 86)
+// Compare random pick + STRENGTH; higher deals 2 LIFE, ties miss.
+// Starting STRENGTH = ceil(pick/2)+10; LIFE = pick+30.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';

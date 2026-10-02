@@ -125,9 +125,7 @@ function _updateGridMenu() {
   document.getElementById('bg-ctx-fog-btn').classList.toggle('active', !!state.fogOfGrid);
 }
 
-// Background-cover items (toggle/move) only make sense when the book has a
-// cover; the grid/connector items don't depend on a cover, so the menu still
-// opens (with those items hidden) for books without one.
+// Hide cover actions without a cover, but retain grid/connector menu items.
 export function _showBgCtxMenu(x, y) {
   const menu = document.getElementById('bg-ctx-menu');
   const hasCover = !!currentBookCover;

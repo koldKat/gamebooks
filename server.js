@@ -281,10 +281,7 @@ const adminAnnouncementUnpubRe = /^\/api\/admin\/announcements\/(\d+)\/unpublish
 const adminAnnouncementPinRe   = /^\/api\/admin\/announcements\/(\d+)\/pin$/;
 const adminAnnouncementUnpinRe = /^\/api\/admin\/announcements\/(\d+)\/unpin$/;
 const publicUserRe        = /^\/api\/public\/user\/([^/]+)$/;
-// Run index allows a leading '-' - preSeriesRuns entries (see getPublicRun
-// in server/db/feed.js) are addressed with negative indices, matching
-// play.js's own "Run -N" display convention for runs that pre-date a book's
-// series turning open-world.
+// Negative run indices address preSeriesRuns.
 const publicRunRe         = /^\/api\/public\/book\/(\d+)\/user\/(\d+)\/run\/(-?\d+)$/;
 const publicSeriesRunRe   = /^\/api\/public\/series\/(\d+)\/user\/(\d+)\/run\/(\d+)$/;
 const bookAddRe           = /^\/api\/books\/(\d+)\/add$/;
@@ -312,11 +309,7 @@ const bookPartyInviteRe       = /^\/api\/books\/(\d+)\/party\/invite$/;
 const partyInviteAcceptRe     = /^\/api\/party-invites\/(\d+)\/accept$/;
 const partyInviteDeclineRe    = /^\/api\/party-invites\/(\d+)\/decline$/;
 
-// Wraps every single request in the impersonation-context AsyncLocalStorage
-// (see server/impersonation-context.js) so any XP/coin award anywhere in the
-// resulting call chain - not just the routes that explicitly check
-// isRequestImpersonating() - can see whether the account behind this request
-// is currently impersonated.
+// Scope every request's impersonation state so all XP/coin awards can enforce it.
 const handler = async (req, res) => {
   if (!parseRequestUrl(req.url)) {
     addSecurityHeaders(res);
@@ -344,10 +337,7 @@ const _routeRequest = async (req, res) => {
 
   const urlPath    = req.url.split('?')[0];
 
-  // PDF availability is per-user metadata: true only when the request carries
-  // a valid admin or pdf_access token. Used by the public books/covers
-  // payloads so permitted users see PDF badges while everyone else (guests
-  // included) gets pdfPath stripped. Mirrors handleGetPublicSeriesInfo.
+  // Expose PDF metadata only to valid admin or pdf_access tokens; strip it for other viewers.
   const _requesterHasPdfAccess = (request) => {
     const userId = authenticateOptional(request);
     if (!userId) return false;
@@ -391,28 +381,12 @@ const _routeRequest = async (req, res) => {
     if (method === 'GET'    && urlPath === '/api/feed') {
       return send(res, 200, { entries: db.getFeed(), pinned: db.getPinnedAnnouncement() });
     }
-    // Cheap change fingerprint for the client's 60s feed poll: a handful of
-    // COUNT/MAX aggregates it can afford to hit every minute, so the poll
-    // skips the full getFeed() rebuild (and the whole-feed DOM re-render on
-    // the client) whenever nothing feed-visible happened. See
-    // server/db/feed.js's getFeedVersion for what the fingerprint covers.
+    // The feed poll compares a cheap version fingerprint before rebuilding the feed.
     if (method === 'GET'    && urlPath === '/api/feed/version') {
       return send(res, 200, { version: db.getFeedVersion() });
     }
-    // Idle-heartbeat XP has its own endpoint rather than living as a side
-    // effect of GET /api/feed (where it used to be): a GET handler awarding
-    // XP broke the "GET is side-effect-free" expectation, and worse, tied
-    // heartbeat cadence to *feed reload* frequency - which includes every
-    // SSE-triggered reload fired by *other users'* activity (see livetab.js's
-    // feed_changed handler), not just this user's own idle time. That made
-    // heartbeat (and the bonus-coin roll it can trigger) burst in sync with
-    // how many other people happened to be active, not a clean per-user
-    // clock. Called from a dedicated 60s interval, decoupled from feed
-    // reloads - desktop's leader-tab one (livetab.js's _feedPollInterval)
-    // or mobile's own plain per-page interval (public/mobile/js/app.js,
-    // no leader election needed there). awardIdleHeartbeatXp's own
-    // minuteRef dedups any overlapping calls within the same real-world
-    // minute regardless of source, so both can call this endpoint safely.
+    // Award heartbeat on its own 60s clock, never as a feed-GET side effect.
+    // The server deduplicates overlapping requests per minute.
     if (method === 'POST'   && urlPath === '/api/heartbeat') {
       const userId = await authenticate(req, res);
       if (userId === null) return;
@@ -527,9 +501,7 @@ const _routeRequest = async (req, res) => {
     if (method === 'GET' && urlPath === '/admin/guide')     return serveAdminFile(req, res, 'admin-guide.html');
     if (method === 'GET' && urlPath === '/admin/technical') return serveAdminFile(req, res, 'technical.html');
     if (method === 'GET' && urlPath === '/admin/watch')     return serveAdminFile(req, res, 'watch.html');
-    // Admin panel's own ES modules (admin/js/*.js) - filename restricted to a safe
-    // charset (no '..', no path separators beyond the fixed 'js/' prefix) since it
-    // flows straight into a filesystem read.
+    // Restrict admin module filenames before using them in filesystem reads.
     if ((m = urlPath.match(/^\/admin\/js\/([a-zA-Z0-9_-]+\.js)$/)) && method === 'GET')
       return serveAdminFile(req, res, `js/${m[1]}`);
     if (method === 'GET'  && urlPath === '/api/admin/stats')  return await handleAdminStats(req, res);
@@ -648,15 +620,7 @@ const _routeRequest = async (req, res) => {
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' });
       return fs.createReadStream(indexPath).pipe(res);
     }
-    // From-scratch mobile frontend (public/mobile/) - see
-    // project_mobile_support_idea. Served unconditionally, same as /demo
-    // above - a bare GET here (typed into a phone's address bar) can never
-    // carry a Bearer token (that only exists once public/mobile/js's own
-    // fetch calls attach it, and only after a real login), so gating the
-    // shell itself by authenticate() would 401 before anyone could ever see
-    // the login screen to get a token in the first place. Open to any
-    // logged-in user (public/mobile/js/app.js) - the real data underneath is
-    // already protected per-user by the normal API auth regardless.
+    // Serve the mobile shell without authentication so login is reachable; its APIs remain protected.
     if (method === 'GET' && urlPath === '/mobile') {
       const indexPath = path.join(ROOT, 'mobile', 'index.html');
       addSecurityHeaders(res);

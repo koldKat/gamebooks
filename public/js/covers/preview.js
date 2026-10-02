@@ -24,12 +24,7 @@ export function _initCoverPreview() {
     _coverPopup.style.top  = Math.max(8, top) + 'px';
   };
   document.getElementById('covers-panel').addEventListener('mouseover', e => {
-    // Touch fires a synthetic mouseover on tap, same quirk tooltip.js works
-    // around - the popup would show right where the finger landed and
-    // swallow the click meant to open the book details dialog underneath
-    // it, so tapping a cover looked like it opened "the bigger picture"
-    // instead of the dialog. There's no real hover on mobile to preview
-    // anyway - skip it there entirely rather than fighting the touch event.
+    // Skip hover previews on mobile; synthetic mouseover can swallow the intended tap.
     if (_isMobile()) return;
     const thumb = e.target.closest('.cover-thumb');
     if (!thumb) { _hideCoverPopup(); return; }
@@ -72,10 +67,7 @@ export function _initCoverPreview() {
   });
   document.getElementById('covers-panel').addEventListener('mouseleave', _hideCoverPopup);
 
-  // Same enlarge-on-hover for the cover shown in a book's info dialog (the
-  // public modal header). The popup (#cover-preview-popup, z-index 9999) sits
-  // above the modal, so it previews over the dialog. Skipped on mobile (no
-  // real hover; a tap's synthetic mouseover would swallow the intended click).
+  // Preview dialog covers above the modal, except on touch-only mobile.
   const _pubOverlay = document.getElementById('public-modal-overlay');
   if (_pubOverlay) {
     _pubOverlay.addEventListener('mouseover', e => {

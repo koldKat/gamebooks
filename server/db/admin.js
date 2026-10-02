@@ -1,11 +1,6 @@
 'use strict';
 
-// Admin-facing content management: tips, level-up/join templates, taglines seed data,
-// items catalog, series/anthology admin listings, user/book admin stats, admin settings,
-// announcements, and the shop economy (purchase/refund) including gift-a-book.
-// Physically these lived interleaved across several mislabeled sections of the
-// original server/db.js - consolidated here by actual domain rather than by
-// original (often misleading) section comment.
+// Admin content management, statistics, settings, and shop economy.
 
 const { db, _naturalCompareByName, _getPdfSize } = require('./connection');
 const { computeLevel, getTitleForLevel, getUserXpInfo, awardXp, awardCoins, processStateXp, _insertNotif, SIM_HISTORY_KEYS } = require('./xp');
@@ -634,10 +629,7 @@ function adminGetUserBooks(userId) {
         for (const c of (d.choices || []))
           if (c !== -1 && c !== 0) seen.add(c);
       discovered   = seen.size;
-      // Excludes untouched open-world series-run placeholders (startedAt: null) - a
-      // book in a series carries one padding slot per series run so numbers line up
-      // across books, but a slot the run never actually visited here isn't a real
-      // playthrough of this book.
+      // Exclude untouched open-world padding slots (startedAt:null).
       const pts    = (s.playthroughs || []).filter(p => p.startedAt != null);
       playthroughs = pts.length;
       wins         = pts.filter(p => p.result === 'success').length;
@@ -653,15 +645,7 @@ function adminGetUserBooks(userId) {
              mapped, discovered, playthroughs, wins, deaths, battles, last_run_at };
   });
 
-  // Per-book numbers above still come from each book's own live state_data
-  // (a legitimate "what does this book currently show" view), but the user
-  // detail page's overall Runs summary used to just sum those together,
-  // which undercounts for the same reason adminGetUsers()/getProfileStats()
-  // did - a book removed from the library, or a playthrough array later
-  // pruned/reset, drops out of the sum forever even though it was already
-  // earned. `totals` reads the permanent xp_events ledger instead (same
-  // source the runs-milestone GC coin uses) so the summary always agrees
-  // with the milestone regardless of what any individual book's state shows.
+  // Use the permanent reward ledger for overall run totals; live book state can be deleted or reset.
   const runRows = db.prepare(`
     SELECT event, COUNT(*) AS n FROM xp_events
     WHERE user_id = ? AND event IN ('win_run','death_run','battle_run')
@@ -767,9 +751,7 @@ function adminGetStats() {
   let battlesFought      = 0;
   let battlesWon         = 0;
   let battlesLost        = 0;
-  // Tallies every finished battle logged across all 10 sim state keys, on
-  // any playthrough - same "pts" (startedAt-touched, non-padding) scope
-  // already used for wins/deaths below, not preSeriesRuns.
+  // Count simulator histories only in started, non-padding playthroughs.
   const _tallyBattles = pts => {
     for (const pt of pts) {
       for (const simKey of SIM_HISTORY_KEYS) {
@@ -818,10 +800,7 @@ function adminGetStats() {
                   if (c !== -1 && c !== 0) seen.add(c);
               bestDiscovered = seen.size;
             }
-            // Excludes untouched open-world series-run placeholders (startedAt: null) -
-            // every book in a series carries one padding slot per series run so numbers
-            // line up across books, but a slot the run never actually visited isn't a
-            // real playthrough of this book and shouldn't inflate its counts.
+            // Untouched open-world padding slots are not real book runs.
             const pts = (s.playthroughs || []).filter(p => p.startedAt != null);
             playthroughs         += pts.length;
             activePlaythroughs   += pts.filter(p => !p.result).length;
@@ -972,12 +951,7 @@ function getSiteStats() {
   const appTitle   = getTitleForLevel(appLevel);
   const avgLevel   = Number(avgLevelRow?.avg || 0);
   const avgTitle   = getTitleForLevel(Math.floor(avgLevel));
-  // A live sum of everyone's current level, NOT a count of 'level_up' xp_events -
-  // that log is deduped per (user, level number) to stop the level-up coin bonus
-  // being farmed by dropping and re-crossing the same level, so its count can fall
-  // behind a user's current level after any XP correction/revoke. This should
-  // always agree with getAppXpSummary()'s sumLevels, which the App-wide XP widget
-  // shows as "N total levels" - computing it the same way here keeps them in sync.
+  // Sum current player levels, not deduplicated level-up events, to agree with the app summary.
   const levelUps   = db.prepare(`
     SELECT COALESCE(SUM(CASE WHEN xp <= 0 THEN 0 ELSE CAST(floor((-1 + sqrt(1 + 8.0 * xp / 1000.0)) / 2) AS INTEGER) END), 0) AS n
     FROM users
@@ -997,9 +971,7 @@ function getSiteStats() {
   const forumPosts         = db.prepare('SELECT COUNT(*) AS n FROM forum_posts WHERE is_deleted = 0').get().n;
   const forumPinnedThreads = db.prepare('SELECT COUNT(*) AS n FROM forum_threads WHERE is_pinned = 1').get().n;
 
-  // Shop upgrades purchased
-  // xp_boost_pct stored in tenths-of-a-percent. Free boosts = 1 per level gained (=0.1%).
-  // Purchased boosts (in tenths) = xp_boost_pct - level.
+  // Purchased boost tenths = total xp_boost_pct minus free per-level tenths.
   const upgradeRow = db.prepare(
     'SELECT SUM(bonus_undos) AS undos, SUM(bonus_fast_travels) AS fts, SUM(bonus_heartbeat_xp) AS heartbeats, SUM(bonus_gc_chance_purchased) AS gcChances, SUM(coins_spent) AS spent FROM users'
   ).get();
@@ -1055,21 +1027,8 @@ function getSiteStats() {
     WHERE json_extract(node.value, '$.portals') IS NOT NULL
   `).get();
   const owPortals      = owPortalsRow?.n || 0;
-  // A "pre-series run" is a run that happened before its series ever became
-  // open-world - not before some client-side migration ran, and not before
-  // the series_runs table happened to gain a row (that table can sit at
-  // zero forever for a series whose players never use the formal
-  // multi-book run-tracking flow, which doesn't make every single play of
-  // it "pre-series"). There's no dedicated "became open-world at" column,
-  // so series.created_at is the cutoff - these series are open-world by
-  // design from creation, not converted later, so created_at is when the
-  // series (and therefore any run of its books) first existed as open-world.
-  // Everything at or after that cutoff is a real, current-era run and must
-  // NOT be counted here even if the client hasn't migrated it into
-  // state.preSeriesRuns yet (open-world.js's _syncSeriesRuns sweeps
-  // qualifying runs into preSeriesRuns on every sync, not just once, but a
-  // player whose client hasn't synced since this cutoff still has them
-  // sitting in plain playthroughs - checked below as a fallback).
+  // Use series.created_at as the open-world cutoff.
+  // Check both preSeriesRuns and unmigrated playthroughs; client migration timing is not the cutoff.
   const owSeriesCreatedTs = new Map();
   for (const r of db.prepare(`SELECT id, created_at FROM series WHERE is_open_world = 1`).all()) {
     owSeriesCreatedTs.set(r.id, r.created_at * 1000);
@@ -1089,10 +1048,7 @@ function getSiteStats() {
         if (!cutoff || !p.startedAt || p.startedAt < cutoff) owPreSeriesRuns++;
       }
     }
-    // Same cutoff applied to whatever's still sitting in plain
-    // playthroughs (not yet swept by the one-time client migration) - a
-    // run started before the series went open-world is pre-series
-    // regardless of which array it currently lives in.
+    // Apply the same historical cutoff to runs still in playthroughs.
     if (Array.isArray(st.playthroughs)) {
       for (const p of st.playthroughs) {
         if (p.startedAt && cutoff && p.startedAt < cutoff && ((p.path && p.path.length > 0) || p.completed)) {
@@ -1115,17 +1071,9 @@ function getSiteStats() {
     // Gameplay
     playthroughs: base.playthroughs, activePlaythroughs: base.activePlaythroughs,
     finishedPlaythroughs: base.finishedPlaythroughs, wins: base.wins, deaths: base.deaths,
-    // base.publicRuns comes from a plain pt.isPublic scan (adminGetStats), which is the
-    // real source of truth for standalone runs - but NOT for open-world series runs,
-    // where updateSeriesRunPublic() only ever writes series_runs.is_public and never
-    // touches pt.isPublic in the JSON, so those playthroughs would silently undercount
-    // here. owRunsPublic (below) is the authoritative count for series runs specifically,
-    // computed straight from series_runs - added on top rather than relied on alone,
-    // since it's disjoint from base.publicRuns (a series-run pt.isPublic is never set).
+    // Add authoritative series_runs.is_public counts to standalone public-run counts.
     publicRuns: base.publicRuns + owRunsPublic, battleCount, winRate,
-    // Distinct from battleCount/winRate above (those are about playthroughs whose
-    // *result* is a scripted in-book battle loss) - these are about actual use of
-    // the battle simulator feature itself, tallied across all 10 sim state keys.
+    // Count actual simulator outcomes, distinct from scripted battle-death run results.
     battleSims: base.battleSims, battlesFought: base.battlesFought,
     battlesWon: base.battlesWon, battlesLost: base.battlesLost, battleWinRate: base.battleWinRate,
     heartbeatMinutes, avgPlayMinutesPerPlayer,
@@ -1147,9 +1095,7 @@ function getSiteStats() {
   };
 }
 
-// Admin-only "app-wide XP" summary - mirrors a single user's XP bar shape but
-// aggregated across every account, scaled by user count so the app's level
-// doesn't dwarf individual players' (same appLevelScale as _buildAdminStatsPayload).
+// Scale aggregate XP by player count for the app-level summary.
 function getAppXpSummary() {
   const row = db.prepare(
     `SELECT COUNT(*) AS users, COALESCE(SUM(xp), 0) AS totalXp,
@@ -1175,15 +1121,11 @@ function getAppXpSummary() {
   const levelXp       = scale * level * (level + 1) / 2;
   const nextLevelXp   = scale * (level + 1) * (level + 2) / 2;
   const totalXpFromBoost = row.totalXpFromBoost || 0;
-  // Combined boost rate across every user's active boost (xp_boost_pct is stored in
-  // tenths-of-a-percent), same "sum everyone's rate" shape as heartbeatRatePerMin below -
-  // not a retrospective "% of XP earned via boost" fraction, since that's a different
-  // question from "how much boost is the app running right now".
+  // Sum active boost rates (stored in tenths of a percent), not historical boosted-XP fractions.
   const xpBoostPct   = Math.round(row.totalXpBoostPct) / 10;
   const heartbeatRatePerMin = users + (row.totalBonusHeartbeatXp + row.totalFreeHeartbeat) * 0.1;
 
-  // Avg user level = average of each user's own level (not "level of the average xp" -
-  // that's a different, more whale-skewed number, already covered by `level` above).
+  // Average individual levels, not the level computed from average XP.
   const sumLevels    = row.sumLevels || 0;
   const avgLevel     = users > 0 ? sumLevels / users : 0;
   const avgLevelFloor = Math.floor(avgLevel);
@@ -1213,9 +1155,7 @@ function adminGetUsers() {
     GROUP BY u.id
     ORDER BY last_active DESC, u.created_at DESC
   `).all();
-  // "active" (started, no result yet) has no permanent event to read - only
-  // ever derivable from each book's current state_data - so that part alone
-  // still scans it live.
+  // Active runs have no permanent event; count them from current state.
   const allUb = db.prepare(`
     SELECT ub.user_id, ub.state_data FROM user_books ub
     JOIN books b ON b.id = ub.book_id WHERE b.is_demo = 0
@@ -1226,22 +1166,13 @@ function adminGetUsers() {
     try {
       const s = JSON.parse(b.state_data || '{}');
       for (const pt of (s.playthroughs || [])) {
-        // Excludes untouched open-world series-run placeholders (startedAt: null) -
-        // a book in a series carries one padding slot per series run so numbers line
-        // up across books, but a slot the run never actually visited here isn't a
-        // real active run of this book.
+        // Exclude untouched open-world slots from active-run counts.
         if (pt.startedAt == null) continue;
         if (!pt.result) activeByUser[b.user_id]++; // no result yet - matches adminGetBookStats' activePlaythroughs
       }
     } catch {}
   }
-  // runs/wins/deaths/battles come from the permanent xp_events ledger - the
-  // same source getProfileStats() (server/db/feed.js) and the runs-milestone
-  // GC coin use - rather than re-deriving from each book's live state_data.
-  // A book removed from a user's library, or a playthrough array later
-  // pruned/reset, used to make an already-earned, already-paid-out run
-  // silently vanish from this admin count forever, disagreeing with both the
-  // milestone that already fired for it and the user's own profile total.
+  // Count historical outcomes from the permanent ledger so deletions cannot erase earned totals.
   const runRows = db.prepare(`
     SELECT user_id, event, COUNT(*) AS n FROM xp_events
     WHERE event IN ('win_run','death_run','battle_run')
@@ -1291,8 +1222,7 @@ function updateUserActiveGeo(userId, country, city) {
     .run(c, ci, now, userId);
 }
 
-// No throttle needed (unlike geo) - domain essentially never changes mid-session, so
-// the no-op guard below already skips the write on every request after the first.
+// Skip unchanged domains; no additional write throttle is needed.
 function updateUserLastDomain(userId, domain) {
   if (!domain) return;
   const row = db.prepare('SELECT last_domain FROM users WHERE id = ?').get(userId);
@@ -1330,8 +1260,7 @@ function adminDeleteUser(userId) {
   // Cascade handles sessions, xp_events, user_books via FK ON DELETE CASCADE
   const result = db.prepare('DELETE FROM users WHERE id = ?').run(userId);
 
-  // Delete orphaned book rows (no more trackers) + their book-keyed xp_events
-  // (no FK to books, so they'd otherwise outlive the row and be inherited on id reuse).
+  // Purge orphaned books and their non-FK XP markers to prevent inheritance on ID reuse.
   for (const bookId of orphanBookIds) {
     db.prepare('DELETE FROM xp_events WHERE ref LIKE ?').run(`${bookId}:%`);
     db.prepare('DELETE FROM books WHERE id = ?').run(bookId);
@@ -1345,9 +1274,7 @@ function adminClearUserSessions(userId) {
 }
 
 function adminGetBooks() {
-  // Anthology containers have no playthroughs of their own (wins/losses/battle
-  // stats are meaningless for them) and are listed separately in the Anthologies
-  // tab instead - see getAllAnthologiesAdmin().
+  // List anthologies separately; containers have no runs of their own.
   const books = db.prepare(`
     SELECT b.id, b.name, b.total_sections, b.created_at, b.updated_at, b.is_container
     FROM books b WHERE b.is_demo = 0 AND b.is_container = 0
@@ -1389,10 +1316,7 @@ function adminDeleteBook(bookId) {
   if (book?.cover_path) {
     try { require('fs').unlinkSync(require('path').join(__dirname, '..', 'public', 'covers', book.cover_path)); } catch (_) {}
   }
-  // Purge this book's xp_events (visit_node/visit_all markers keyed by
-  // "<bookId>:<section>") - they have no FK to books, so without this they
-  // outlive the row and get inherited by any future book that reuses this id,
-  // showing false "progress" on a never-played book. See _permanentVisitedCount.
+  // Purge book-scoped XP markers without foreign keys to prevent inheritance if IDs are reused.
   db.prepare('DELETE FROM xp_events WHERE ref LIKE ?').run(`${bookId}:%`);
   return db.prepare('DELETE FROM books WHERE id = ?').run(bookId).changes > 0;
 }
@@ -1499,21 +1423,12 @@ function unpinAnnouncement(id) {
   return db.prepare('SELECT * FROM announcements WHERE id = ?').get(id);
 }
 
-// 1 purchase per 10 levels: level 0-10 -> 1, 11-20 -> 2, 21-30 -> 3, etc. Mirrored in
-// public/js/progression/shop.js for the "Max"/cap UI state - keep both in sync if this changes.
+// Mirror the shop UI cap: levels 0-10 allow one purchase, then one per additional 10 levels.
 function undoFastTravelCap(level) {
   return Math.floor((Math.max(level, 1) - 1) / 10) + 1;
 }
 
-// ── Shop item config ─────────────────────────────────────────────────────────
-// Same pattern as xp_config (xp.js): was a hardcoded object here, duplicated
-// (different shape - id/cost/col/delta vs id/label/costFn/desc) in
-// public/js/progression/shop.js purely for client-side cost *display*. The server copy
-// here is the one that actually enforces cost/effect on purchase, so it's
-// the one worth making DB-editable; the client copy stays as-is since it's
-// UI/i18n-bound presentation logic (translated labels, formatted descriptions)
-// that can't cleanly become DB rows, and the server always re-validates the
-// real cost on purchase regardless of what the client displayed.
+// Server shop configuration enforces price/effect; client configuration handles translated display.
 db.prepare(`CREATE TABLE IF NOT EXISTS shop_items (
   id        TEXT PRIMARY KEY,
   cost      INTEGER NOT NULL,
@@ -1604,9 +1519,7 @@ function adminRefundShopItem(userId, item, all = false) {
   if (item !== 'xp_boost' && item !== 'heartbeat_xp' && item !== 'gc_chance' && current < def.delta) return { error: 'nothing_to_refund' };
   let refund;
   if (item === 'heartbeat_xp' || item === 'xp_boost' || item === 'gc_chance') {
-    // All three use escalating cost (1st purchase = 1 GC, 2nd = 2 GC, etc.);
-    // for xp_boost only, the column also carries free per-level boosts that
-    // were never purchased, so only the portion above that counts.
+    // Escalate costs by purchase count; exclude free level boosts when pricing xp_boost.
     const freeBoosts = item === 'xp_boost' ? computeLevel(db.prepare('SELECT xp FROM users WHERE id = ?').get(userId)?.xp || 0) : 0;
     const purchased = Math.max(0, current - freeBoosts);
     if (purchased < def.delta) return { error: 'nothing_to_refund' };

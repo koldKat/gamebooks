@@ -1,100 +1,8 @@
-// ── Battle Simulator (Отвъд кошмарната порта / Beyond the Nightmare Gate,
-// Bulgarian edition of Grey Star (World of Lone Wolf) book 3, id 441) ──
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 441 only) by the caller in boot.js via
-// setSim441Visible().
-// To remove: delete this file, remove its import line and initSim441()/
-// setSim441Visible() calls from boot.js, remove 'sim441' from
-// SIM_HISTORY_KEYS in server/db/xp.js, and remove the .bsim-* CSS (shared
-// with the other battlesim*.js files, so only remove it if all are gone).
-//
-// English original is book 283 ("Beyond the Nightmare Gate"), which has no
-// sim of its own yet (has_battle_sim=0), so nothing to cross-reference
-// there. This is the direct sequel to book 440 (The Forbidden City) - its
-// final section explicitly defers the saga's conclusion to "Book 4 ...
-// озаглавена Войната на маговете" (The War of the Magi), so this is the
-// last book in this sub-series to get a sim for now.
-// Same Grey Star combat system as battlesim439.js/battlesim440.js: БОЙНО
-// УМЕНИЕ/ИЗДРЪЖЛИВОСТ Combat Ratio, ВОЛЯ as an untracked magic-point pool.
-// The Combat Ratio + Combat Results Table system and COMBAT_TABLE below are
-// the same mechanic used unchanged from battlesim118.js/battlesim322.js/
-// battlesim430.js-battlesim440.js rather than re-derived.
-//
-// Combat Ratio = effective БОЙНИ УМЕНИЯ minus enemy's, computed once when an
-// enemy is selected and fixed for the whole fight. Each round, pick 0-9
-// (a 10-value die), bucket the ratio into the table's 13 printed columns
-// (-11 or less .. 11 or greater), and COMBAT_TABLE[pickRow][ratioCol] gives
-// [enemyLoss, lwLoss] simultaneously, including 'K' (automatically killed)
-// at the extremes.
-//
-// БОЙНИ УМЕНИЯ (COMBAT SKILL) = pick+10, ИЗДРЪЖЛИВОСТ (ENDURANCE) = pick+20,
-// both rolled once at chargen. ВОЛЯ (WILL, pick+20/25/30 depending on how
-// many prior books were completed - see this book's own rules_text) is Grey
-// Star's magic-point pool for his Magical Powers (Sorcery/Charm/
-// Elementalism/Alchemy/Prophecy/Psychomancy/Invocation of the Dead) and
-// Magical Wand - it has no combat-round mechanic of its own (never appears
-// in an enemy stat block) and is not tracked here, same as every other
-// un-simulated non-combat resource in this app's sims.
-//
-// attackModifier is a free-form +/- field covering the book's own one-off
-// БОЙНО УМЕНИЕ changes: fighting without the Magical Wand (-6, per this
-// book's own rules_text) or completely unarmed (-8), and the reduced skill
-// penalty when fighting the elesinci village leader with an Inkrustirana
-// kama instead of bare-handed (§322, -6 instead of the default -8).
-//
-// Every enemy encounter in this book is a single stat line - no combined
-// multi-enemy lines like "2/3 X" found here (unlike book 440).
-//
-// §97 ("Врата на Кулата", a locked tower door battered down using the
-// standard combat rules as if it were an opponent, ИЗДРЪЖЛИВОСТ losses
-// explicitly ignored per the book's own text) is a non-creature obstacle
-// dressed up in combat-table clothing, same "door as opponent" class as
-// prior books' precedent - deliberately excluded from book_enemies.
-// Джакса (Grey Star's shadow-double, created by the sorcerer-king Шасарак)
-// is fought at two different points with two different stat blocks (§123:
-// 30/30, §243: 30/35, the tougher final rematch) - kept as two separate
-// book_enemies rows, same precedent as book 233's HORFAK case. The dragon
-// at §153 and §277 is never actually fought (Tanit pacifies/warns off in
-// both branches), so it has no stat block and is correctly absent here.
-//
-// This book's only combat-healing item is лаумспур (a fresh herb chewed
-// on the trail, +4 ИЗДРЪЖЛИВОСТ, found at §293) - modeled here as the
-// sim's single post-battle heal slot (+4), same convention as book 440's
-// Лаумспур. The various narrative-only rest/food recoveries elsewhere in
-// the book (berries at §216 +2 ИЗДРЪЖЛИВОСТ, village hospitality at §324/
-// §338 +2-4 ИЗДРЪЖЛИВОСТ and +1-2 ВОЛЯ) are one-off story beats, not a
-// reusable item, so deliberately left unmodeled - same precedent as every
-// other un-simulated one-off recovery in this app's sims.
-//
-// book_enemies.attack holds БОЙНО УМЕНИЕ, .hp holds ИЗДРЪЖЛИВОСТ, .defense
-// unused - same convention as every other sim. 13 rows extracted directly
-// from this book's own section text (regex on every "Name: БОЙНО УМЕНИЕ N,
-// ИЗДРЪЖЛИВОСТ N" stat block), minus the §97 door exclusion above. One
-// name typo in the source PDF itself was corrected during extraction:
-// §194's "Съществото Мъглите" (missing the preposition "в", i.e. "The
-// Creature [in] the Mists") is stored as "Съществото в мъглите".
-//
-// This book's pre-existing book_sections rows (already imported before
-// this sweep reached it) turned out to be corrupted at the content level -
-// a cruder prior linkification pass had turned bare numbers inside cost
-// phrases (e.g. "на цената на 1 точка ВОЛЯ") into false section links, and
-// separately its choices column stored digit-strings instead of numbers,
-// which silently broke naive reachability math. Both rows and content were
-// discarded entirely and rebuilt from the raw PDF via this sweep's standard
-// pipeline rather than patched. The rebuild's own verb-based linkification
-// regex needed three additions to reach full reachability: the gerund
-// "преминавайки" (a form of "премин-" not covered by the existing
-// "премин(?:еш|и|авай)?" alternation), an entirely new verb "прелисти"
-// ("flip to page N"), and a dedicated pattern for the verb-less idiom "по
-// всяко време на N" ("at any time, [go] to N"). ~11 illustration-caption-
-// bleed artifacts (duplicated/misplaced descriptive fragments, e.g. §12/
-// §49/§53/§56/§62/§116/§121/§161/§174/§216/§241/§250) were fixed inline
-// during the mandatory prose read. One confirmed-benign orphan pair
-// (§144/§190) was left unreached - §190 has zero incoming references
-// anywhere in the source PDF except its own header, and §144 is only
-// reachable via §190.
-//
-// All state lives in pt.sim441, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Отвъд кошмарната порта / Beyond the Nightmare Gate, Bulgarian edition of Grey
+// Star (World of Lone Wolf) book 3, id 441)
+// Combat Ratio is fixed on enemy selection; a 0-9 pick selects simultaneous table losses.
+// 'K' means instant death. Skill bonuses and narrative effects are entered manually.
+// WILL/spellcasting are not simulated.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -107,10 +15,8 @@ const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" ari
 
 const HEALING_POTION_HEAL = 4;
 
-// Rows = the 10-value random pick, printed order 1,2,3,4,5,6,7,8,9,0.
-// Columns = Combat Ratio, bucketed: -11-, -10/-9, -8/-7, -6/-5, -4/-3,
-// -2/-1, 0, 1/2, 3/4, 5/6, 7/8, 9/10, 11+. Cell = [enemyLoss, lwLoss]
-// ('K' sentinel = automatically killed). Byte-identical to battlesim118.js.
+// Rows: 1-9, then 0. Columns: Combat Ratio buckets -11..11, clamped at the extremes.
+// Cells are [enemyLoss, playerLoss]; K means instant death.
 const COMBAT_TABLE = [
   [[0,'K'], [0,'K'], [0,8], [0,6], [1,6], [2,5], [3,5], [4,5], [5,4], [6,4], [7,4], [8,3], [9,3]],
   [[0,'K'], [0,8],   [0,7], [1,6], [2,5], [3,5], [4,4], [5,4], [6,3], [7,3], [8,3], [9,3], [10,2]],

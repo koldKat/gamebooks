@@ -17,11 +17,7 @@ function _findRenderedContent(root, selector) {
 }
 
 export function _wireRenderedContent(list) {
-  // Hover highlight via a class in addition to :hover (add-book.css matches
-  // both). Expand/collapse mutates the tree under the cursor, and Chromium
-  // drops :hover for a frame around the mutation - with the 0.1s background
-  // transition that reads as a black-to-grey flash. The JS-toggled class
-  // survives DOM mutations, so the highlight stays put while children load.
+  // Keep hover state across DOM mutations when Chromium temporarily drops :hover.
   _findRenderedContent(list, '.series-header-row, .stash-header-row').forEach(row => {
     row.addEventListener('mouseenter', () => row.classList.add('is-hover'));
     row.addEventListener('mouseleave', () => row.classList.remove('is-hover'));
@@ -89,9 +85,7 @@ export function _wireRenderedContent(list) {
       if (e.target.closest('.series-edit-btn') || e.target.closest('.series-del-btn')) return;
       const sid     = row.dataset.seriesId;
       const stashId = row.dataset.stashId || '';
-      // Always this header's own next sibling (see the container toggle) -
-      // chunk-wired subtrees scope queries to a single child, and a list-wide
-      // query could also grab another copy of the same series.
+      // Scope to this header's sibling group; the same series can appear in several stashes.
       const group   = row.nextElementSibling?.classList.contains('series-books-group') ? row.nextElementSibling : null;
       const nowExpanded = row.dataset.expanded !== '1';
       row.dataset.expanded = nowExpanded ? '1' : '0';
@@ -110,9 +104,7 @@ export function _wireRenderedContent(list) {
       if (e.target.closest('.book-secondary-actions')) return;
       if (e.target.closest('.star-rating')) return;
       const bid = row.dataset.containerId;
-      // The children group is always this card's own next sibling - a
-      // container can appear in more than one stash block, so a
-      // list-wide data-parent query would grab the first copy's group.
+      // Use this card's sibling group, not a list-wide lookup of duplicate containers.
       const group = row.nextElementSibling?.classList.contains('book-children-group') ? row.nextElementSibling : null;
       const nowExpanded = row.dataset.expanded !== '1';
       row.dataset.expanded = nowExpanded ? '1' : '0';
@@ -137,10 +129,7 @@ export function _wireRenderedContent(list) {
   _findRenderedContent(list, '.book-open-btn').forEach(btn =>
     btn.addEventListener('click', () => {
       const id = /^\d+$/.test(btn.dataset.id) ? +btn.dataset.id : btn.dataset.id;
-      // showMain() unconditionally bounces every mobile visit back to this
-      // same books list (see boot.js) - it's a no-op here, which is exactly
-      // why "Open" looked like it did nothing. /mobile is the real
-      // destination on mobile now.
+      // Mobile books open in /mobile; the desktop play view is unavailable there.
       if (_isMobile()) { window.location.href = `/mobile?book=${encodeURIComponent(id)}`; return; }
       booksState._hooks.showMain?.(id, btn.dataset.isbn || null, btn.dataset.issn || null, btn.dataset.asin || null,
         btn.dataset.cover || btn.dataset.parentCover || null, btn.dataset.pdf || null,

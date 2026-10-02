@@ -1,52 +1,8 @@
-// ── Battle Simulator (Legend of the Shadow Warriors, book 240) ──────────────
-// Self-contained module. Imports from state.js, play.js, charsheet.js and util.js.
-// Visibility is gated (book 240 only) by the caller in boot.js via
-// setSim240Visible().
-// To remove: delete this file, remove its import line and initSim240()/
-// setSim240Visible() calls from boot.js, and remove the .bsim-* CSS (shared
-// with every other battlesimNNN.js, so only remove it if all of them are gone).
-//
-// Standard Fighting Fantasy SKILL/STAMINA/LUCK system (1d6+6/2d6+12/1d6+6),
-// same combat core as book 198, plus five mechanics unique to this book:
-//
-// - Weapon choice: Sword (normal 2/4/1 wound-Lucky-Unlucky) vs Battle-axe
-//   (sec. 82: 4/6/2, but -1 to the player's own Attack Strength roll while
-//   wielding it).
-// - Armour choice: None / Chainmail (sec. 82: player takes only 1/0/2
-//   instead of 2/4/1 wound-Lucky-Unlucky since it can't be added to, only
-//   reduced; 10 hits) / Plate (sec. 97: takes 0 damage from any hit, 5
-//   hits). Either one becomes "None" automatically once its hit count is
-//   exhausted.
-// - Group fights ("fight more than one opponent at the same time", rules
-//   text): up to 8 side enemies alongside the primary target. Each side
-//   enemy gets its own independent Attack Strength exchange every round;
-//   if the player's roll is higher, it's parried (no effect either way,
-//   per the rules text - "you will not inflict a wound in this instance");
-//   if lower, the player takes a wound (same weapon/armour-modified amount
-//   as a normal hit, no Luck option per the rules text only mentioning it
-//   for the chosen-target's own exchange). Side enemies are never
-//   themselves damaged, matching the book's own rule.
-// - Disarm fights (secs. 20 x2 simultaneous, 392 x1): no STAMINA score at
-//   all - winning by a margin of 3+ on the Attack Strength roll disarms
-//   that specific opponent (removing it from the fight) instead of
-//   wounding it; losing still wounds the player normally.
-// - Pan-Terric Behemoth (sec. 152): "your blows will not harm the
-//   creature" - modeled as a per-fight "immune to wounds" toggle (a
-//   winning round is logged as parried, not damaging) plus a separate
-//   "Roll for the skull" 1d6 button per round (rolling a 6 wins outright).
-//
-// The Spear of Doom (found sec. 90, Life-force = 1d6+5) has two distinct
-// uses, both modeled: (1) in ANY fight, spend 1 Life-force to auto-win
-// instantly instead of rolling combat; (2) the unique Voivod-with-spear
-// fight (sec. 171) fights defensively - winning a round does not wound
-// Voivod at all - with a separate "Empower the Spear" 2d6-vs-current-
-// Life-force roll each round (success ends the fight per sec. 400).
-// Voivod "thrives on your death" (secs. 171 and 249 both state this): any
-// STAMINA the player loses in a round is also ADDED to Voivod's current
-// STAMINA (uncapped past staminaMax, per the text), modeled as a toggle
-// since it applies to both of Voivod's fight variants.
-//
-// All state lives in pt.sim240, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Legend of the Shadow Warriors, book 240)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
+// Weapon/armour choices alter damage; armour durability counts hits.
+// Disarming applies only to the chosen target; Luck totals are not reduced again by armour.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -154,10 +110,7 @@ function _recordOutcome(d, outcome) {
   });
 }
 
-// ── Armour absorption ───────────────────────────────────────────────────────
-
-// Applies armour reduction to a wound the PLAYER is taking, decrementing the
-// armour's remaining hit count. Returns the actual STAMINA lost.
+// Reduce incoming damage by armour and consume its remaining hit count.
 function _absorbHit(d, rawDmg, isLucky, isUnlucky) {
   const a = ARMOURS[d.player.armour];
   if (d.player.armour === 'none' || d.player.armourHitsLeft <= 0) return rawDmg;
@@ -221,10 +174,7 @@ function _runRound() {
       if (sPlayerRoll > sRoll) {
         _appendLog(d, t('battlesim240.log.side_fend', { enemy: _sideEnemyNameSafe(s, i) }));
       } else if (sPlayerRoll < sRoll) {
-        // A side enemy losing to the player is always just parried, never
-        // disarmed - disarmMode's margin rule only applies to the chosen
-        // primary target (matches sec. 20's own text: only the one you
-        // "attack" can be disarmed; the others just keep attacking).
+        // Only the chosen target can be disarmed; side attackers are merely parried.
         const dmg = _absorbHit(d, SIDE_WOUND_DMG, false, false);
         d.player.stamina = Math.max(0, d.player.stamina - dmg);
         _appendLog(d, t('battlesim240.log.side_wounds', { enemy: _sideEnemyNameSafe(s, i), n: dmg, stamina: d.player.stamina, staminaMax: d.player.staminaInitial }));
@@ -246,9 +196,7 @@ function _runRound() {
   _renderAll();
 }
 
-// Test Your Luck, processed one queued event at a time (primary hit first,
-// then any side-enemy events would be added the same way in future - today
-// only the primary exchange offers Luck, per the rules text).
+// Resolve queued Luck tests individually; only primary exchanges offer Luck here.
 function _testLuck() {
   const d = _data();
   if (!d || !d.pendingLuckQueue.length || d.player.luck <= 0) return;
@@ -264,10 +212,7 @@ function _testLuck() {
     _appendLog(d, t(key, { roll, enemy: _enemyNameSafe(d), stamina: d.enemy.stamina, staminaMax: d.enemy.staminaMax }));
     if (d.enemy.stamina <= 0) { _appendLog(d, `${SVG_TROPHY} ${t('battlesim240.log.defeated', { enemy: _enemyNameSafe(d) })}`); _recordOutcome(d, 'win'); }
   } else {
-    // Luck on a wound taken: Lucky -> 1 STAMINA lost total, Unlucky -> 3 total.
-    // The base hit already deducted the armour/weapon-modified amount; here
-    // we adjust toward the Lucky/Unlucky totals defined by the base rules
-    // (armour doesn't further modify the Luck adjustment itself).
+    // Adjust incoming hits to 1/3 total STAMINA loss for lucky/unlucky results, without further armour reduction.
     const before = d.player.stamina;
     if (lucky) {
       d.player.stamina = Math.min(d.player.staminaInitial, d.player.stamina + 1);

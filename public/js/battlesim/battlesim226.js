@@ -1,35 +1,7 @@
-// ── Battle Simulator (Chasms of Malice, book 226) ────────────────────────────
-// Self-contained module. Imports from state.js, play.js, charsheet.js and util.js.
-// Visibility is gated (book 226 only) by the caller in boot.js via
-// setSim226Visible().
-// To remove: delete this file, remove its import line and initSim226()/
-// setSim226Visible() calls from boot.js, and remove the .bsim-* CSS (shared
-// with the other battlesimNNN.js modules, so only remove it if all are gone).
-//
-// Standard Fighting Fantasy SKILL/STAMINA/LUCK system (SKILL 1d6+6, STAMINA
-// 2d6+12, LUCK 1d6+6), Test Your Luck table, generic per-encounter knobs
-// (attackModifier/enemyWoundDamage/winAfterHits/enemyAutoWinFirstRound/
-// pairedFight+sideEnemy) reused verbatim from books 200-203.
-//
-// Provisions: 5 meals, each restores 4 STAMINA (never above Initial) -
-// simpler than books 200-203 (no potion-of-three-choices system in this book).
-//
-// One book-specific mechanic: Tabasha the Bazouk, a companion cat. Per the
-// rules text, before setting off the player commits to ONE stat (SKILL or
-// LUCK) that she can restore to its Initial value; she may be called on for
-// this up to 9 times total (shared with her other, non-combat narrative
-// uses per the book - this sim only models the stat-restore call, so the
-// counter is a ceiling, not an exact prediction of remaining calls).
-//
-// 84 stat-block encounters extracted across 66 sections, including all 7
-// named "Khuddam" elite bosses tracked on the printed Adventure Sheet
-// (Churka §32, Griffkek §127, Barkek §182, Kahhrac §244, Gishrak §299,
-// Gurskut §331, Friankara §312). Friankara has two stat lines depending on
-// whether the player still has the Sword (SKILL 10/STAMINA 12) or is
-// disarmed (SKILL 12/STAMINA 16, harder) - the roster row uses the armed
-// figures, noted in the name.
-//
-// All state lives in pt.sim226, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Chasms of Malice, book 226)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
+// Tabasha's chosen companion role is fixed for the adventure.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -173,9 +145,7 @@ function _runRound() {
     if (d.player.stamina > 0) d.pendingLuckQueue.push({ kind: 'enemy-hit' });
   }
 
-  // Paired fight: a second, independent exchange with its own fresh player
-  // roll every round - covers any two-attacker encounters in this book. The
-  // side attacker is never wounded through this path.
+  // Side attackers roll independently and cannot be wounded.
   if (d.pairedFight && d.sideEnemy.staminaMax > 0 && d.player.stamina > 0) {
     const sidePlayerAS = _roll2d6() + d.player.skill + (d.player.attackModifier || 0);
     const sideAS = _roll2d6() + d.sideEnemy.skill;

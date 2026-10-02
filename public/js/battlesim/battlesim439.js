@@ -1,85 +1,8 @@
-// ── Battle Simulator (Магьосникът Сива звезда / Grey Star the Wizard,
-// Bulgarian edition of Grey Star (World of Lone Wolf) book 1, id 439) ──
-// Self-contained module. Imports from state.js, charsheet.js and util.js.
-// Visibility is gated (book 439 only) by the caller in boot.js via
-// setSim439Visible().
-// To remove: delete this file, remove its import line and initSim439()/
-// setSim439Visible() calls from boot.js, remove 'sim439' from
-// SIM_HISTORY_KEYS in server/db/xp.js, and remove the .bsim-* CSS (shared
-// with the other battlesim*.js files, so only remove it if all are gone).
-//
-// English original is book 281 ("Grey Star the Wizard"), which has no sim
-// of its own yet (has_battle_sim=0), so nothing to cross-reference there.
-// Grey Star is a spinoff series set in the World of Lone Wolf and uses the
-// same БОЙНО УМЕНИЕ/ИЗДРЪЖЛИВОСТ Combat Ratio system for physical combat
-// (its own stat blocks read identically, e.g. "Куоку: БОЙНО УМЕНИЕ 12,
-// ИЗДРЪЖЛИВОСТ 30"), so the Combat Ratio + Combat Results Table system and
-// COMBAT_TABLE below are the same mechanic used unchanged from
-// battlesim118.js/battlesim322.js/battlesim430.js/battlesim431.js/
-// battlesim432.js/battlesim434.js-battlesim438.js rather than re-derived.
-//
-// Combat Ratio = effective БОЙНИ УМЕНИЯ minus enemy's, computed once when an
-// enemy is selected and fixed for the whole fight. Each round, pick 0-9
-// (a 10-value die), bucket the ratio into the table's 13 printed columns
-// (-11 or less .. 11 or greater), and COMBAT_TABLE[pickRow][ratioCol] gives
-// [enemyLoss, lwLoss] simultaneously, including 'K' (automatically killed)
-// at the extremes.
-//
-// БОЙНИ УМЕНИЯ (COMBAT SKILL) = pick+10, ИЗДРЪЖЛИВОСТ (ENDURANCE) = pick+20,
-// both rolled once at chargen, same as Lone Wolf. Grey Star ALSO has a
-// third chargen-rolled stat, ВОЛЯ (WILL, pick+20) - his equivalent of a
-// magic-point pool spent on Magical Powers (Elementalism/Alchemy/Sorcery/
-// Prophecy/Psychomancy/Charm/Invocation of the Dead) and the Magical Wand.
-// ВОЛЯ has no combat-round mechanic of its own in this sim (it never
-// appears in an enemy stat block) and is not tracked here, matching every
-// other un-simulated non-combat resource in this app's sims (e.g. Kai
-// Discipline choices in the Lone Wolf sims aren't tracked either) - it only
-// matters for the book's own text-driven puzzle/escape sequences, not the
-// combat encounters this sim models.
-//
-// attackModifier is a free-form +/- field covering every one-off БОЙНО
-// УМЕНИЕ change this book's own rules describe by hand: surprise-attack
-// bonuses (e.g. §99 +2, §308/§309 +4), ally assistance (e.g. §120/§203/
-// §205 Shan/Tanit adding flat points), and defensive penalties for fighting
-// a poison-skinned foe carefully (e.g. §231 Kuoku, -2). Same precedent as
-// every other sim in this app.
-//
-// Every multi-enemy encounter in this book (e.g. §101 nine Neijin fought as
-// nine separate stat lines, §260/§272/§284 multiple Mantiz warriors) is
-// already represented as separate book_enemies rows per the standard
-// "re-pick the next roster enemy after defeating the current one" pattern -
-// no special code needed.
-//
-// This book's combat-healing items are Лаумспур (a potion form restoring 3
-// ИЗДРЪЖЛИВОСТ, sold at §183 and given by Джейнана at §161; a freshly-picked
-// raw-herb form at §38/§58 restores 4 but can't be carried) and the
-// Елексирът на Рендалим (+6, a one-off gift at §215) - NOT the Лаумспур/
-// Рендалим/Оксидин trio from books 434-437, a different combination. Only
-// the potion form of Лаумспур (+3) is modeled here as the sim's single
-// post-battle heal slot, matching every other Lone Wolf/Grey Star sim in
-// this app; Rendalim's elixir is a real but unmodeled one-off item, same
-// precedent as un-modeled non-combat minigames elsewhere.
-//
-// book_enemies.attack holds БОЙНО УМЕНИЕ, .hp holds ИЗДРЪЖЛИВОСТ, .defense
-// unused - same convention as every other sim. 34 rows extracted directly
-// from this book's own section text (regex on every "Name: БОЙНО УМЕНИЕ N,
-// ИЗДРЪЖЛИВОСТ N" stat block), including §259's "Здрачна стая" (Twilight
-// Room) - a mental/willpower duel represented with a genuine combat stat
-// block in the source text, so included as a real encounter. No dropped
-// ИЗДРЪЖЛИВОСТ values were found in this book during the mandatory full
-// prose read (clean header reconstruction: 350/350 genuine headers
-// recovered on the first pass); instead this book's corruption took the
-// form of ~13 illustration-caption-bleed artifacts (duplicated or misplaced
-// descriptive fragments and stray page-footer digits bleeding mid-sentence,
-// e.g. §110/§175/§187/§197/§224/§233/§266/§292/§344/§347/§350) and one
-// confirmed-benign orphan section (§342, a pit-climb scene with zero
-// incoming references anywhere in the source PDF - no riddle or duplicate
-// content explains it, so treated as a genuine authorial dead branch) -
-// all fixed/documented inline during the prose read. §110 is a genuine
-// riddle-destination (its own text says "(това е вярното решение на
-// задачата)"), matching the established riddle-destination pattern.
-//
-// All state lives in pt.sim439, per-user/per-book via currentPlaythrough().
+// Battle Simulator (Магьосникът Сива звезда / Grey Star the Wizard, Bulgarian edition of Grey Star
+// (World of Lone Wolf) book 1, id 439)
+// Combat Ratio is fixed on enemy selection; a 0-9 pick selects simultaneous table losses.
+// 'K' means instant death. Skill bonuses and narrative effects are entered manually.
+// WILL/spellcasting are not simulated.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -92,10 +15,8 @@ const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" ari
 
 const HEALING_POTION_HEAL = 4;
 
-// Rows = the 10-value random pick, printed order 1,2,3,4,5,6,7,8,9,0.
-// Columns = Combat Ratio, bucketed: -11-, -10/-9, -8/-7, -6/-5, -4/-3,
-// -2/-1, 0, 1/2, 3/4, 5/6, 7/8, 9/10, 11+. Cell = [enemyLoss, lwLoss]
-// ('K' sentinel = automatically killed). Byte-identical to battlesim118.js.
+// Rows: 1-9, then 0. Columns: Combat Ratio buckets -11..11, clamped at the extremes.
+// Cells are [enemyLoss, playerLoss]; K means instant death.
 const COMBAT_TABLE = [
   [[0,'K'], [0,'K'], [0,8], [0,6], [1,6], [2,5], [3,5], [4,5], [5,4], [6,4], [7,4], [8,3], [9,3]],
   [[0,'K'], [0,8],   [0,7], [1,6], [2,5], [3,5], [4,4], [5,4], [6,3], [7,3], [8,3], [9,3], [10,2]],

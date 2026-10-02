@@ -1,12 +1,5 @@
-// liveread.js - "Live reading": a floating, non-blocking panel that renders
-// a book's actual prose section-by-section (from admin-imported book_sections
-// data) with clickable in-text choices, feeding state.graph via reveal-on-arrival
-// as the player reads. Open to every user (db._canLiveRead is now an
-// always-true stub - see its own comment) - not yet announced anywhere, but
-// no longer account-gated. Still per-book: the client only sees
-// hasLiveReading:true for books with admin-imported prose.
-// Deliberately NOT built on .inv-overlay: the whole point is that the graph
-// stays visible and interactive underneath while reading.
+// Non-blocking prose reader with reveal-on-arrival choices.
+// Available for books with imported text; keep the underlying graph interactive.
 
 import { state, apiFetch, currentBookId, currentPlaythrough, currentSection, viewingPt, isTerminal, parseSecId, isSectionMapped } from '../core/state.js';
 import { navigate, commitChoices, showAlert, suppressAutoNav } from '../play.js';
@@ -32,42 +25,23 @@ const _loadingHtml = () => `<div class="liveread-loading">
   <span>${t('liveread.loading')}</span>
 </div>`;
 
-// Bumped on every call and re-checked after each await so a slower, now-stale
-// fetch (e.g. from a rapid double-click on two different choice links) can't
-// overwrite the panel with the wrong section after a newer request already won.
+// Reject stale section responses after each await.
 let _showToken = 0;
 
-// The section currently rendered in the panel - renderLiveRead() fires on
-// every render() (see setAfterRenderFn wiring in boot.js), which happens far
-// more often than the player actually changes section. Without this guard,
-// _showSection() would re-fetch and reset scrollTop on every single render(),
-// yanking the panel back to the top out from under the player mid-scroll.
+// Track the displayed section so background renders cannot refetch it or reset scroll.
 let _shownSec;
 
-// Only the very first section fetched after opening the panel shows the
-// loading spinner - reset on open/close, cleared as soon as that first show
-// is triggered so later page-to-page navigation swaps straight to the new
-// text with no spinner flash. A cache hit (see below) also skips it, even
-// on the first show.
+// Show a spinner only for the first uncached section after opening.
 let _isFirstShowSinceOpen = true;
 
-// In-memory only, never persisted - every response is cached by `bookId:sec`
-// key, and every section shown fires an unawaited prefetch of its own
-// choices' targets so a reader who clicks a link they were just looking at
-// gets it instantly, no spinner, no round trip. Dropped wholesale on book
-// switch (see _fetchSectionData): entries for a previous book would only sit
-// unused, and a long session across many books/open-world jumps otherwise
-// accumulated every visited-and-prefetched section for the tab's whole life.
-// Bounded to one book's sections - at most a few hundred KB of HTML.
+// Cache and prefetch sections in memory, keyed by book and section.
+// Clear on book switches to bound memory.
 const _sectionCache = new Map();
 let _cacheBookId = null;
 
 function _cacheKey(sec) { return `${currentBookId}:${sec}`; }
 
-// { ok:true, data } on success (from cache or network) or { ok:false,
-// networkError } - networkError distinguishes a fetch exception (caller
-// stays silent, matches the original behavior) from a clean !res.ok
-// response (caller shows a message).
+// Distinguish network exceptions (silent) from HTTP errors (shown to the reader).
 async function _fetchSectionData(sec) {
   if (currentBookId !== _cacheBookId) {
     _sectionCache.clear();
@@ -152,15 +126,7 @@ async function _showSection(sec) {
   _prefetchChoices(data.choices);
 }
 
-// Imported source HTML occasionally has an in-text link that isn't a real,
-// choosable section - e.g. a closing "Epilogue" some books tack on after
-// their actual win section, with no section number of its own and nothing
-// for the reader to decide there. Importing that as a normal #section-N
-// target would register it as a real graph node/choice, which is wrong -
-// section 307 (say) is already the win node, the epilogue is just bonus
-// prose hung off of it. Any in-text link whose href isn't #section-N is
-// treated as this kind of pure-text aside: shown inline with a Back link,
-// never touching state.graph/commitChoices/navigate at all.
+// Non-section links are prose-only asides with Back navigation; never add graph choices.
 async function _showExtra(key) {
   const body = document.getElementById('liveread-body');
   if (!body) return;
@@ -183,10 +149,7 @@ async function _showExtra(key) {
   });
 }
 
-// Non-null while showing a read-only preview opened by clicking a graph
-// node (previewSection, below) - holds the previewed section id purely to
-// let _onChoiceClick tell preview mode apart from normal reading. Cleared
-// by _returnToCurrent.
+// Track read-only previews separately from the actual run position.
 let _previewSec = null;
 
 function _onChoiceClick(e) {
@@ -199,39 +162,22 @@ function _onChoiceClick(e) {
     const sec = parseSecId(href.slice('section-'.length));
     if (sec === null) return;
     if (_previewSec !== null) {
-      // Same isSectionMapped gate as a graph click (see previewSection) - a
-      // link inside an already-visited section's own preview could easily
-      // point forward at a section the reader hasn't reached yet, and
-      // chaining straight into that would be exactly the spoiler this
-      // whole gate exists to prevent. Never real navigation in preview
-      // mode - only ever another preview.
+      // Preview links may open only mapped sections, never navigate the run or reveal spoilers.
       if (isSectionMapped(sec)) previewSection(sec);
       return;
     }
     if (!currentPlaythrough()) return;
     navigate(sec);
-    // navigate() no-ops (just shows an alert) instead of moving pt.path when an
-    // alphanumeric book's discoverable-section limit is already reached - only
-    // show the target section if the player was actually moved there.
+    // Show the destination only if navigation actually moved the run.
     if (isTerminal(sec) || currentSection() === sec) _showSection(sec);
     return;
   }
   _showExtra(href);
 }
 
-// Opened by clicking a graph node (see boot.js's network 'click' handler) -
-// a read-only lookup of a section's own text, gated on isSectionMapped
-// (state.js) so it only ever shows content the reader has actually read
-// before, in any run ever - never a spoiler for a section merely known as
-// a destination but never visited. Mirrors mobile's own _previewSection
-// (reader.js) exactly, including committing the section's choices again
-// on preview (harmless/idempotent - the reader already legitimately
-// visited it, this just refreshes state.graph from the source of truth).
+// Preview only previously mapped sections; refreshing their choices is idempotent.
 export async function previewSection(sec) {
-  // Clicking the node the reader is actually standing on isn't a lookup -
-  // wrapping it in the preview banner ("you're just looking, nothing
-  // moved") on content that IS their real position would be confusing/
-  // wrong framing. Same special case as mobile's _onGraphTap.
+  // Clicking the current section is normal reading, not a preview.
   if (sec === currentSection()) {
     if (document.getElementById('liveread-panel')?.classList.contains('active')) _returnToCurrent();
     return;
@@ -246,14 +192,7 @@ export async function previewSection(sec) {
     panel.classList.add('active');
     _isFirstShowSinceOpen = true;
   }
-  // Deliberately NOT touching _shownSec here - it must keep pointing at
-  // whatever the real current section is. renderLiveRead() fires on every
-  // render() and unconditionally calls _showSection(currentSection()); as
-  // long as _shownSec still matches that real section, _showSection's own
-  // guard no-ops those calls and leaves this preview undisturbed on
-  // screen. Clearing _shownSec here would make that guard fail on the very
-  // next background render(), silently snapping back to the real section
-  // mid-preview.
+  // Keep _shownSec at the actual position so background renders leave the preview intact.
   const token = ++_showToken;
   if (_isFirstShowSinceOpen && !_sectionCache.has(_cacheKey(sec))) {
     body.innerHTML = _loadingHtml();
@@ -262,12 +201,7 @@ export async function previewSection(sec) {
   const result = await _fetchSectionData(sec);
   if (token !== _showToken) return;
   if (!result.ok) {
-    // Same convention as _showSection: leave a pure network error silent
-    // (transient, will resolve on the next interaction), but a clean
-    // !res.ok needs an explicit message - without this, a freshly-opened
-    // panel whose very first fetch failed would be stuck showing the
-    // loading spinner forever, with nothing to indicate anything went
-    // wrong or any way to tell it apart from "still loading."
+    // Keep network failures silent, but show HTTP errors rather than leaving a spinner stuck.
     if (!result.networkError) body.innerHTML = `<p class="liveread-empty">${t('liveread.no_section_data')}</p>`;
     return;
   }
@@ -283,10 +217,7 @@ export async function previewSection(sec) {
   });
 }
 
-// Leaves preview mode and re-renders wherever the player's actual run
-// currently stands - the same fallback order renderLiveRead already uses
-// (an active run's current section, else a just-finished run's terminal
-// screen, else nothing to show).
+// Return to the active section or finished run's terminal screen.
 function _returnToCurrent() {
   _previewSec = null;
   const sec = currentSection();
@@ -295,12 +226,7 @@ function _returnToCurrent() {
   _close();
 }
 
-// The app-wide "single known choice -> auto-navigate past it" feature
-// (play.js's renderPlaythroughPanel) fires off the back of the very choice
-// reveal-on-arrival just committed into state.graph, silently advancing
-// pt.path past straight-path sections before the player ever sees their
-// text in this panel. Reading is meant to show every section, straight-path
-// or not, so auto-nav is suppressed for as long as the panel is open.
+// Suppress auto-navigation while reading so every section's prose remains visible.
 function _open() {
   const panel = document.getElementById('liveread-panel');
   if (!panel) return;
@@ -318,8 +244,7 @@ function _open() {
 function _close() {
   suppressAutoNav(false);
   setLightweightRestabilize(false);
-  // Reset so a later reopen always re-fetches, even onto the same section id -
-  // it could belong to a different book by then (_shownSec doesn't track book).
+  // Clear the section guard on close; the same ID may belong to another book on reopen.
   _shownSec = undefined;
   _isFirstShowSinceOpen = true;
   document.getElementById('liveread-panel')?.classList.remove('active');
@@ -331,10 +256,7 @@ function _toggle() {
   else _open();
 }
 
-// Stays visible-but-disabled rather than hidden when the current book has
-// no live-reading data - #play-btns-bar only has 2-3 buttons in it, so
-// toggling this one's presence on every book switch made the whole row's
-// width (and the buttons after it) visibly shift back and forth.
+// Keep unavailable reading buttons visible but disabled to prevent row layout shifts.
 export function setLiveReadVisible(visible) {
   const btn = document.getElementById('liveread-btn');
   if (btn) {
@@ -345,12 +267,7 @@ export function setLiveReadVisible(visible) {
   if (!visible) _close();
 }
 
-// Called after navigation / viewing-playthrough changes so an already-open
-// panel follows along, mirroring the battlesim*.js renderSimNNN() pattern.
-// A just-finished run fires this mid-endPlaythrough() (via setViewingPt())
-// with currentPlaythrough() already null - fall back to viewingPt's own
-// result so the terminal choice shows the end message instead of silently
-// closing the panel out from under the player.
+// Follow navigation and viewed-run changes; retain the terminal screen after completion.
 export function renderLiveRead() {
   const panel = document.getElementById('liveread-panel');
   if (!panel || !panel.classList.contains('active')) return;
@@ -366,11 +283,7 @@ export function renderLiveRead() {
   _close();
 }
 
-// Persisted client-side only (same as trailCollapsed) - this is a reading
-// preference, not per-book/per-user state worth round-tripping to the server.
-// Stored and stepped in whole percent (not rem) so the readout is always an
-// exact multiple of FONT_SIZE_STEP_PCT - stepping in rem directly (e.g.
-// 0.08rem against a 0.88rem base) produces an ugly, non-round percentage.
+// Store font size locally in whole-percent steps for an exact readout.
 const FONT_SIZE_KEY = 'liveread-font-pct';
 const FONT_SIZE_MIN_PCT = 70;
 const FONT_SIZE_MAX_PCT = 130;
@@ -396,14 +309,7 @@ function _stepFontSize(panel, dir) {
   _applyFontSize(panel);
 }
 
-// getComputedStyle(el).lineHeight reports what the CSS *asked for*, not
-// necessarily the exact box height the browser actually laid the text out
-// in (rem-to-px rounding, the browser's own text zoom/accessibility
-// settings, subpixel layout) - close enough to look right at a glance but
-// not pixel-exact, which is exactly what "ignore system settings" is
-// asking to eliminate. Range.getClientRects() instead measures the real,
-// already-laid-out line box of actual text on screen - one rect per
-// wrapped line - so this can't drift from what the reader is looking at.
+// Measure laid-out text with Range rather than computed lineHeight to account for browser text zoom.
 function _renderedLineHeight(body) {
   const walker = document.createTreeWalker(body, NodeFilter.SHOW_TEXT, {
     acceptNode: n => n.textContent.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP,
@@ -438,31 +344,18 @@ export function initLiveRead() {
   document.getElementById('liveread-font-dec').addEventListener('click', () => _stepFontSize(panel, -1));
   document.getElementById('liveread-font-inc').addEventListener('click', () => _stepFontSize(panel, 1));
 
-  // Overrides the browser's default wheel-scroll amount, which multiplies by
-  // an OS-level "lines per scroll" setting (can be anywhere from ~3 to 10+
-  // lines per tick depending on the reader's own system config) - fixed at
-  // exactly one text line per tick instead.
-  // { passive: false } is required for preventDefault() to actually suppress
-  // the browser's own native scroll - wheel listeners default to passive.
+  // Scroll one actual text line per wheel tick; passive:false allows suppressing native scrolling.
   const body = document.getElementById('liveread-body');
   body.addEventListener('wheel', e => {
     e.preventDefault();
     body.scrollTop += Math.sign(e.deltaY) * _renderedLineHeight(body);
   }, { passive: false });
 
-  // Lives in the static #play-btns-bar (between User Guide and Notebook),
-  // not appended to #play-btn-row like every other panel's trigger button -
-  // that row already gets crowded with 4-5 buttons (Equipment/Inventory/
-  // Character Sheet/Battle Simulator) and this one landing on top of
-  // whichever button happened to be at the wrap boundary once it joined
-  // them. #play-btns-bar has room since it's only ever had 2-3 buttons.
+  // Mount with Guide and Notebook to avoid crowding the character/inventory action row.
   const btn = document.getElementById('liveread-btn');
   btn.innerHTML = shortcutLabel(t('liveread.title'));
 
-  // Docked under #legend on the right edge (see liveread.css) - tracks its
-  // real height (varies with the collapse toggle and the portal legend row)
-  // into --legend-h the same way charsheet.js tracks --play-btn-row-h, so the
-  // panel's own top offset stays accurate instead of guessing a fixed value.
+  // Observe legend height so the docked reader clears collapsed and portal variants.
   const legend = document.getElementById('legend');
   if (legend) {
     new ResizeObserver(() => {
