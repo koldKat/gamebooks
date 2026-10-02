@@ -7,7 +7,7 @@
 // initLiveTabController() calls from boot.js.
 
 import { getToken, isDemoMode, apiFetch } from './state.js';
-import { refreshCoinsDisplay } from './shop.js';
+import { refreshCoinsDisplay } from './progression/shop.js';
 
 // Callbacks wired in by main.js at boot
 let _hooks = {};

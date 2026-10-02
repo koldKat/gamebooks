@@ -8,7 +8,7 @@ import { setInventoryVisible } from '../inventory.js';
 import { setEquipmentVisible } from '../equipment.js';
 import { getCachedBooks } from '../books.js';
 import { _syncSeriesRuns, _focusNodeAfterLoad, clearOpenWorldState, getOwSrcBookId, getOwSrcSection } from '../open-world.js';
-import { _positionRewardLayer } from '../rewards.js';
+import { _positionRewardLayer } from '../progression/rewards.js';
 import { isBgInMove, toggleBgHidden, nudgeBgPosY, hideCtxMenu, _hideBgCtxMenu, _positionMenu, _enterBgMoveMode, _exitBgMoveMode, _updateColorSwatches } from '../bg.js';
 import { exportBook } from '../export.js';
 import { showMain } from './screens.js';

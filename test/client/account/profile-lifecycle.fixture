@@ -18,7 +18,7 @@ const stubs = {
   '../state.js': { apiFetch: () => new Promise((resolve, reject) => pending.push({ resolve, reject })), getToken: () => token,
     getUsername: () => 'Tester', isDemoMode: false, setUsername() {}, setCurrentUserLevel() {} },
   '../i18n.js': { t: key => key },
-  '../shop.js': { updateCoinsDisplay() {} },
+  '../progression/shop.js': { updateCoinsDisplay() {} },
   '../util.js': { escapeHtml: value => String(value), compressToBlob() {} },
 };
 const mod = new SourceTextModule(readFileSync(process.argv[1], 'utf8'), { context });

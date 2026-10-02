@@ -1,11 +1,11 @@
 import { bootState } from './state.js';
 import { setUsername, apiFetch, setCurrentUserLevel, setBonusUndos, setBonusFastTravels } from '../state.js';
-import { updateCoinsDisplay } from '../shop.js';
+import { updateCoinsDisplay } from '../progression/shop.js';
 import { updateAvatarUI } from '../account/profile.js';
 import { _ensureLiveTabControllerStarted, _connectAppXpSSE } from '../livetab.js';
-import { refreshAppXp } from '../app-xp.js';
+import { refreshAppXp } from '../progression/app-xp.js';
 import { getCachedBooks, setCachedBooks, setCachedAllSeries, setCurrentUserId } from '../books.js';
-import { _processRewardSnapshot } from '../rewards.js';
+import { _processRewardSnapshot } from '../progression/rewards.js';
 import { resolveIsAdmin, registerAuthor, registerContributor } from '../account/user.js';
 import { _cancelForumReveal } from './helpers.js';
 import { showBooks } from './landing.js';

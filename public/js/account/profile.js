@@ -6,7 +6,7 @@
 
 import { apiFetch, setUsername, isDemoMode, getToken, setCurrentUserLevel, getUsername } from '../state.js';
 import { t } from '../i18n.js';
-import { updateCoinsDisplay } from '../shop.js';
+import { updateCoinsDisplay } from '../progression/shop.js';
 import { escapeHtml, compressToBlob } from '../util.js';
 
 let _hooks = {};

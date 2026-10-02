@@ -11,15 +11,15 @@ import { showAuthForm, showResetPanel, hasPendingResetToken } from '../account/a
 import { syncPrefs } from '../prefs.js';
 import { hideActiveBattleSim } from '../battle-sim-loader.js';
 import { setLiveReadVisible } from '../liveread.js';
-import { updateCoinsDisplay } from '../shop.js';
+import { updateCoinsDisplay } from '../progression/shop.js';
 import { updateAvatarUI, renderBooksXpSummary, closeProfileModal } from '../account/profile.js';
 import { _ensureLiveTabControllerStarted, _connectUserBadgeSSE, _disconnectUserBadgeSSE, _connectAppXpSSE, _disconnectAppXpSSE, _syncFeedVersionBaseline } from '../livetab.js';
-import { refreshAppXp } from '../app-xp.js';
+import { refreshAppXp } from '../progression/app-xp.js';
 import { loadCovers, _showCachedCoversPanel, _updateLandingBgDragUi } from '../covers.js';
 import { renderBooksList, getCachedBooks, getCachedAllSeries, getCachedStashes, setBooksDataFresh, setBooksRevealedAt, setCurrentUserId } from '../books.js';
 import { loadFeed } from '../feed.js';
 import { _scheduleLiveUiRefresh, resetNotifBadgesForLogout } from '../community/notif.js';
-import { _resetRewardSnapshotState, _positionRewardLayer, _processRewardSnapshot } from '../rewards.js';
+import { _resetRewardSnapshotState, _positionRewardLayer, _processRewardSnapshot } from '../progression/rewards.js';
 import { cancelBgMove } from '../bg.js';
 import { getDemoBooks, getDemoVisited } from '../demo.js';
 import { resolveIsAdmin, adminBadge, authorBadge, contributorBadge, registerAuthor, registerContributor } from '../account/user.js';

@@ -1500,7 +1500,7 @@ function unpinAnnouncement(id) {
 }
 
 // 1 purchase per 10 levels: level 0-10 -> 1, 11-20 -> 2, 21-30 -> 3, etc. Mirrored in
-// public/js/shop.js for the "Max"/cap UI state - keep both in sync if this changes.
+// public/js/progression/shop.js for the "Max"/cap UI state - keep both in sync if this changes.
 function undoFastTravelCap(level) {
   return Math.floor((Math.max(level, 1) - 1) / 10) + 1;
 }
@@ -1508,7 +1508,7 @@ function undoFastTravelCap(level) {
 // ── Shop item config ─────────────────────────────────────────────────────────
 // Same pattern as xp_config (xp.js): was a hardcoded object here, duplicated
 // (different shape - id/cost/col/delta vs id/label/costFn/desc) in
-// public/js/shop.js purely for client-side cost *display*. The server copy
+// public/js/progression/shop.js purely for client-side cost *display*. The server copy
 // here is the one that actually enforces cost/effect on purchase, so it's
 // the one worth making DB-editable; the client copy stays as-is since it's
 // UI/i18n-bound presentation logic (translated labels, formatted descriptions)

@@ -14,7 +14,7 @@ import { setLiveReadVisible, previewSection } from '../liveread.js';
 import { loadCovers, _showCachedCoversPanel, _stopLandingCoverRotation } from '../covers.js';
 import { getCachedBooks, getCachedAllSeries } from '../books.js';
 import { setupOpenWorldForBook, _syncSeriesRuns, _computeCrossBookReachability, _focusNodeAfterLoad, clearOpenWorldState, getOwCrossBookRoute } from '../open-world.js';
-import { _positionRewardLayer } from '../rewards.js';
+import { _positionRewardLayer } from '../progression/rewards.js';
 import { setCurrentBookCover, resetBgState, hideCtxMenu, _updateSidebarBookInfo, _hideBgCtxMenu, _positionMenu, _showBgCtxMenu, _updateColorSwatches } from '../bg.js';
 import { _loadingGraphSvg, _refreshInvDisplay, setDiceRollerVisible, setGuideVisible, _isMobile, _revealLanding } from './helpers.js';
 import { _pushNav, _lockView } from './navigation.js';
