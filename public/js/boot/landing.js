@@ -12,7 +12,7 @@ import { syncPrefs } from '../prefs.js';
 import { hideActiveBattleSim } from '../battle-sim-loader.js';
 import { setLiveReadVisible } from '../liveread.js';
 import { updateCoinsDisplay } from '../shop.js';
-import { updateAvatarUI, renderBooksXpSummary } from '../account/profile.js';
+import { updateAvatarUI, renderBooksXpSummary, closeProfileModal } from '../account/profile.js';
 import { _ensureLiveTabControllerStarted, _connectUserBadgeSSE, _disconnectUserBadgeSSE, _connectAppXpSSE, _disconnectAppXpSSE, _syncFeedVersionBaseline } from '../livetab.js';
 import { refreshAppXp } from '../app-xp.js';
 import { loadCovers, _showCachedCoversPanel, _updateLandingBgDragUi } from '../covers.js';
@@ -29,6 +29,7 @@ import { _pushNav, _isViewLocked } from './navigation.js';
 import { APP_XP_EXTRA_USER_ID } from './state.js';
 
 export function showLogin() {
+  closeProfileModal();
   _revealLanding();
   _ensureLiveTabControllerStarted();
   _disconnectUserBadgeSSE();

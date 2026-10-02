@@ -10,6 +10,7 @@ import { updateCoinsDisplay } from '../shop.js';
 import { escapeHtml, compressToBlob } from '../util.js';
 
 let _hooks = {};
+let _profileModalGeneration = 0;
 export function setProfileHooks(h) { _hooks = h || {}; }
 
 // ── Avatar ────────────────────────────────────────────────────────────────────
@@ -324,6 +325,8 @@ async function confirmCrop() {
 // ── Profile modal ─────────────────────────────────────────────────────────────
 
 export async function openProfileModal() {
+  const generation = ++_profileModalGeneration, token = getToken();
+  const isCurrent = () => generation === _profileModalGeneration && token === getToken();
   document.getElementById('profile-error').textContent = '';
   document.getElementById('profile-current-password').value = '';
   document.getElementById('profile-new-password').value     = '';
@@ -331,6 +334,7 @@ export async function openProfileModal() {
   try {
     const res  = await apiFetch('/api/profile');
     const data = await res.json();
+    if (!isCurrent()) return;
     _hooks.onRewardSnapshot?.(data);
     document.getElementById('profile-username-input').value = data.username || '';
     document.getElementById('profile-public-cb').checked    = data.publicProfile || false;
@@ -346,14 +350,17 @@ export async function openProfileModal() {
       if (dnInput) dnInput.value = data.displayName || '';
     }
   } catch (_) {
+    if (!isCurrent()) return;
     document.getElementById('profile-error').textContent = t('profile.load_failed');
   }
+  if (!isCurrent()) return;
   document.getElementById('profile-modal-overlay').classList.add('active');
   // No default focus: on desktop it needlessly selects the username field,
   // and on mobile focusing an input pops the keyboard over half the modal.
 }
 
 export function closeProfileModal() {
+  _profileModalGeneration++;
   document.getElementById('profile-modal-overlay').classList.remove('active');
 }
 

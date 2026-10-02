@@ -1,0 +1,65 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { SourceTextModule, SyntheticModule, createContext } from 'node:vm';
+
+const nodes = new Map(), pending = [];
+const el = id => {
+  if (!nodes.has(id)) {
+    const classes = new Set();
+    nodes.set(id, { style: {}, textContent: '', innerHTML: '', value: '',
+      querySelector: () => null,
+      classList: { add: c => classes.add(c), remove: c => classes.delete(c), contains: c => classes.has(c) } });
+  }
+  return nodes.get(id);
+};
+let token = 'first-session', snapshots = 0;
+const context = createContext({ document: { getElementById: el }, console });
+const stubs = {
+  '../state.js': { apiFetch: () => new Promise((resolve, reject) => pending.push({ resolve, reject })), getToken: () => token,
+    getUsername: () => 'Tester', isDemoMode: false, setUsername() {}, setCurrentUserLevel() {} },
+  '../i18n.js': { t: key => key },
+  '../shop.js': { updateCoinsDisplay() {} },
+  '../util.js': { escapeHtml: value => String(value), compressToBlob() {} },
+};
+const mod = new SourceTextModule(readFileSync(process.argv[1], 'utf8'), { context });
+await mod.link(specifier => {
+  const values = stubs[specifier]; assert.ok(values, specifier);
+  return new SyntheticModule(Object.keys(values), function () {
+    for (const [name, value] of Object.entries(values)) this.setExport(name, value);
+  }, { context });
+});
+await mod.evaluate();
+const profile = mod.namespace;
+profile.setProfileHooks({ onRewardSnapshot: () => { snapshots++; } });
+const overlay = el('profile-modal-overlay');
+overlay.classList.add('active'); profile.closeProfileModal();
+assert.equal(overlay.classList.contains('active'), false);
+
+const data = { username: 'Tester', xp: 0, level: 0 };
+const normal = profile.openProfileModal(); pending.shift().resolve({ json: async () => data }); await normal;
+assert.equal(overlay.classList.contains('active'), true, 'valid profile still opens');
+assert.equal(snapshots, 1);
+profile.closeProfileModal();
+
+const late = profile.openProfileModal();
+profile.closeProfileModal(); token = null;
+pending.shift().resolve({ json: async () => data }); await late;
+assert.equal(overlay.classList.contains('active'), false, 'late response cannot reopen after logout');
+assert.equal(snapshots, 1, 'late response does not apply account data');
+
+token = 'second-session';
+const slowJson = profile.openProfileModal(); let resolveJson;
+pending.shift().resolve({ json: () => new Promise(resolve => { resolveJson = resolve; }) });
+for (let i = 0; i < 5; i++) await Promise.resolve();
+profile.closeProfileModal(); resolveJson(data); await slowJson;
+assert.equal(overlay.classList.contains('active'), false, 'closing during JSON parsing cancels opening');
+
+const switched = profile.openProfileModal(); token = 'third-session';
+pending.shift().resolve({ json: async () => data }); await switched;
+assert.equal(overlay.classList.contains('active'), false, 'another session cannot receive the old profile');
+
+const failed = profile.openProfileModal(); profile.closeProfileModal();
+pending.shift().reject(new Error('late failure')); await failed;
+assert.equal(overlay.classList.contains('active'), false);
+assert.equal(el('profile-error').textContent, '', 'cancelled failure does not paint an error');
+console.log('Profile close, pending-response, delayed-JSON, session-switch and error guards passed.');

@@ -83,6 +83,17 @@ try {
   el('crop-confirm-btn').click(); await pause(150);
   assert(requests.some(r => r.path === '/api/profile/avatar' && r.body instanceof Blob) && !el('crop-modal-overlay').classList.contains('active'), 'avatar crop uploads compressed blob');
 
+  await profile.openProfileModal(); profile.closeProfileModal();
+  assert(!el('profile-modal-overlay').classList.contains('active'), 'profile close hides active dialog');
+  const normalFetch = window.fetch;
+  let finishProfile;
+  window.fetch = (url, ...args) => String(url) === '/api/profile' ? new Promise(resolve => { finishProfile = resolve; }) : normalFetch(url, ...args);
+  const pendingProfile = profile.openProfileModal(); state.clearToken(); profile.closeProfileModal();
+  finishProfile(new Response(JSON.stringify(profileData), { headers: { 'Content-Type': 'application/json' } }));
+  await pendingProfile;
+  assert(!el('profile-modal-overlay').classList.contains('active'), 'late profile response cannot reopen after logout');
+  window.fetch = normalFetch; state.setToken('isolated-test-token');
+
   user.setAdminUsername('TesterRenamed');
   assert(user.resolveIsAdmin() && !user.resolveIsAdmin({ isAdmin: false }) && user.resolveIsAdmin({ isAdmin: true }), 'admin resolution and server override');
   user.registerAuthor('Tester', true, 'Test Author'); user.registerContributor('Tester', true);
