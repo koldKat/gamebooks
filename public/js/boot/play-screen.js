@@ -9,7 +9,7 @@ import { setEquipmentVisible } from '../equipment.js';
 import { loadNotesForBook } from '../play/notes.js';
 import { connectPartySSE } from '../play/party.js';
 import { _adminPdfHref } from '../edit-book.js';
-import { showBattleSimForBook } from '../battle-sim-loader.js';
+import { showBattleSimForBook } from '../battlesim/loader.js';
 import { setLiveReadVisible, previewSection } from '../reading/liveread.js';
 import { loadCovers, _showCachedCoversPanel, _stopLandingCoverRotation } from '../covers.js';
 import { getCachedBooks, getCachedAllSeries } from '../books.js';

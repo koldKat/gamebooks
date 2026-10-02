@@ -15,6 +15,7 @@ const SUPPORTED_BATTLE_SIM_BOOKS = new Set([
 ]);
 
 const _loaded = new Map();
+const _loading = new Map();
 let _active = null;
 let _showSeq = 0;
 
@@ -49,17 +50,27 @@ async function _loadBattleSim(id) {
   const numericId = Number(id);
   if (!SUPPORTED_BATTLE_SIM_BOOKS.has(numericId)) return null;
   if (_loaded.has(numericId)) return _loaded.get(numericId);
+  if (_loading.has(numericId)) return _loading.get(numericId);
 
-  const mod = await import(`./battlesim/battlesim${numericId}.js`);
-  const sim = _exportsFor(numericId, mod);
-  if (typeof sim.init !== 'function' ||
-      typeof sim.render !== 'function' ||
-      typeof sim.setVisible !== 'function') {
-    throw new Error(`Battle sim ${numericId} has an invalid export shape`);
+  // Concurrent requests must share initialization, not just the module import.
+  const pending = (async () => {
+    const mod = await import(`./battlesim${numericId}.js`);
+    const sim = _exportsFor(numericId, mod);
+    if (typeof sim.init !== 'function' ||
+        typeof sim.render !== 'function' ||
+        typeof sim.setVisible !== 'function') {
+      throw new Error(`Battle sim ${numericId} has an invalid export shape`);
+    }
+    sim.init();
+    _loaded.set(numericId, sim);
+    return sim;
+  })();
+  _loading.set(numericId, pending);
+  try {
+    return await pending;
+  } finally {
+    _loading.delete(numericId);
   }
-  sim.init();
-  _loaded.set(numericId, sim);
-  return sim;
 }
 
 export function hideActiveBattleSim() {

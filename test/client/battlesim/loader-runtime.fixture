@@ -1,0 +1,78 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createContext, SourceTextModule, SyntheticModule } from 'node:vm';
+
+const imports = [], calls = [], warnings = [], deferred = new Map();
+let failingId = null;
+const context = createContext({ console: { warn: (...args) => warnings.push(args) } });
+const module = new SourceTextModule(readFileSync(process.argv[1], 'utf8'), {
+  context,
+  importModuleDynamically: async specifier => {
+    assert.match(specifier, /^\.\/battlesim\d+\.js$/);
+    const id = Number(specifier.match(/\d+/)[0]);
+    imports.push(id);
+    if (deferred.has(id)) await deferred.get(id).promise;
+    if (id === failingId) throw Error('Simulated load failure');
+    const names = id === 829 ? ['initBattleSim', 'renderBattleSim', 'setBattleSimVisible']
+      : id === 8 ? ['initBattleSim8', 'renderSim8', 'setSim8Visible']
+      : ['initSim' + id, 'renderSim' + id, 'setSim' + id + 'Visible'];
+    const sim = new SyntheticModule(names, function () {
+      this.setExport(names[0], () => calls.push([id, 'init']));
+      this.setExport(names[1], () => calls.push([id, 'render']));
+      this.setExport(names[2], visible => calls.push([id, 'visible', visible]));
+    }, { context });
+    await sim.link(() => { throw Error('Unexpected stub import'); });
+    await sim.evaluate();
+    return sim;
+  },
+});
+await module.link(() => { throw Error('Loader must not eagerly import simulators'); });
+await module.evaluate();
+const loader = module.namespace;
+assert.deepEqual(imports, [], 'landing startup loads no simulators');
+await loader.showBattleSimForBook('214');
+assert.deepEqual(imports, [214]);
+assert.deepEqual(calls, [[214, 'init'], [214, 'visible', true], [214, 'render']]);
+loader.renderActiveBattleSim();
+await loader.showBattleSimForBook(214);
+assert.deepEqual(imports, [214], 'cached simulator is not reimported');
+assert.equal(calls.filter(call => call[1] === 'init').length, 1);
+await loader.showBattleSimForBook(8);
+assert.ok(calls.some(call => call[0] === 214 && call[1] === 'visible' && call[2] === false));
+await loader.showBattleSimForBook(829);
+assert.ok(calls.some(call => call[0] === 8 && call[1] === 'init'));
+assert.ok(calls.some(call => call[0] === 829 && call[1] === 'init'));
+function defer(id) {
+  let resolve;
+  const promise = new Promise(done => { resolve = done; });
+  deferred.set(id, { promise, resolve });
+  return resolve;
+}
+const resolve215 = defer(215);
+const slow = loader.showBattleSimForBook(215);
+await loader.showBattleSimForBook(216);
+resolve215(); await slow;
+assert.equal(calls.some(call => call[0] === 215 && call[1] === 'visible' && call[2]), false, 'late import cannot replace newer book');
+const resolve217 = defer(217);
+const leaving = loader.showBattleSimForBook(217);
+loader.hideActiveBattleSim();
+resolve217(); await leaving;
+assert.equal(calls.some(call => call[0] === 217 && call[1] === 'visible' && call[2]), false, 'landing hides pending simulator');
+const count = imports.length;
+await loader.showBattleSimForBook(999);
+assert.equal(imports.length, count, 'unsupported books do not import');
+failingId = 218;
+await loader.showBattleSimForBook(218);
+assert.equal(warnings.length, 1);
+failingId = null;
+await loader.showBattleSimForBook(218);
+assert.equal(imports.filter(id => id === 218).length, 2, 'failed load can be retried');
+assert.ok(calls.some(call => call[0] === 218 && call[1] === 'visible' && call[2]));
+const resolve219 = defer(219);
+const first = loader.showBattleSimForBook(219);
+const second = loader.showBattleSimForBook(219);
+resolve219();
+await Promise.all([first, second]);
+assert.equal(imports.filter(id => id === 219).length, 1, 'overlapping requests share one import');
+assert.equal(calls.filter(call => call[0] === 219 && call[1] === 'init').length, 1, 'overlapping requests initialize once');
+assert.equal(calls.filter(call => call[0] === 219 && call[1] === 'visible' && call[2]).length, 1, 'only latest request shows simulator');
