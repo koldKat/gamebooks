@@ -13,7 +13,7 @@ import { hideActiveBattleSim } from '../battlesim/loader.js';
 import { setLiveReadVisible } from '../reading/liveread.js';
 import { updateCoinsDisplay } from '../progression/shop.js';
 import { updateAvatarUI, renderBooksXpSummary, closeProfileModal } from '../account/profile.js';
-import { _ensureLiveTabControllerStarted, _connectUserBadgeSSE, _disconnectUserBadgeSSE, _connectAppXpSSE, _disconnectAppXpSSE, _syncFeedVersionBaseline } from '../livetab.js';
+import { _ensureLiveTabControllerStarted, _connectUserBadgeSSE, _disconnectUserBadgeSSE, _connectAppXpSSE, _disconnectAppXpSSE, _syncFeedVersionBaseline } from '../core/livetab.js';
 import { refreshAppXp } from '../progression/app-xp.js';
 import { loadCovers, _showCachedCoversPanel, _updateLandingBgDragUi } from '../covers.js';
 import { renderBooksList, getCachedBooks, getCachedAllSeries, getCachedStashes, setBooksDataFresh, setBooksRevealedAt, setCurrentUserId } from '../books.js';

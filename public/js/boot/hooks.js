@@ -10,7 +10,7 @@ import { setPrefsHooks, savePrefs, syncPrefs } from '../prefs.js';
 import { initShop, refreshCoinsDisplay, setShopHooks } from '../progression/shop.js';
 import { initProfile, setProfileHooks } from '../account/profile.js';
 import { setPublicProfileHooks, openPublicSeriesRun } from '../account/public-profile.js';
-import { setLiveTabHooks } from '../livetab.js';
+import { setLiveTabHooks } from '../core/livetab.js';
 import { setAppXpHooks, refreshAppXp, handleAppXpEvent } from '../progression/app-xp.js';
 import { setCoversHooks, loadCovers, _refreshPublicCatalogIfVisible, _isLandingBooksViewVisible } from '../covers.js';
 import { setBooksHooks, initBooksPanel, getCachedBooks, getCachedAllSeries, _refreshBooksListOnly, _syncPdfBadgeOnCards, _starsHtml, _starLabelHtml, _flashRatingGate } from '../books.js';

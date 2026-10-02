@@ -1,0 +1,170 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createContext, SourceTextModule, SyntheticModule } from 'node:vm';
+
+const source = readFileSync(process.argv[1], 'utf8');
+const storage = new Map(), channels = [];
+const lockKey = 'gamebooks_live_tab_leader';
+let now = 100000, sequence = 0;
+const flush = async () => { for (let i = 0; i < 12; i++) await Promise.resolve(); };
+
+async function tab() {
+  const id = ++sequence;
+  const state = { token: 'token-' + id, demo: false, admin: true, landing: true, version: 'v1', failVersion: false };
+  const calls = [], streams = [], intervals = new Map(), timeouts = new Map();
+  const windowListeners = new Map(), documentListeners = new Map();
+  const elements = { 'main-screen': { style: { display: 'none' } }, 'books-screen': { style: { display: '' } }, 'app-version': { textContent: '' } };
+  const listener = map => (event, fn) => { const list = map.get(event) || []; list.push(fn); map.set(event, list); };
+  const document = { visibilityState: 'visible', getElementById: name => elements[name], addEventListener: listener(documentListeners) };
+  let timerId = 0;
+  class Stream {
+    constructor(url) { this.url = url; this.closed = false; streams.push(this); }
+    close() { this.closed = true; }
+  }
+  class Channel {
+    constructor(name) { this.name = name; channels.push(this); }
+    postMessage(msg) { for (const peer of channels) if (peer !== this && peer.name === this.name) peer.onmessage?.({ data: msg }); }
+  }
+  const context = createContext({
+    document, window: { addEventListener: listener(windowListeners) },
+    localStorage: { getItem: key => storage.get(key) ?? null, setItem: (key, value) => storage.set(key, value), removeItem: key => storage.delete(key) },
+    Date: class extends Date { static now() { return now; } }, Math: { random: () => id / 10 },
+    EventSource: Stream, BroadcastChannel: Channel,
+    setInterval: (fn, delay) => { const key = ++timerId; intervals.set(key, { fn, delay }); return key; },
+    clearInterval: key => intervals.delete(key),
+    setTimeout: (fn, delay) => { const key = ++timerId; timeouts.set(key, { fn, delay }); return key; },
+    clearTimeout: key => timeouts.delete(key),
+  });
+  const fetchVersion = async url => {
+    calls.push(['request', url]);
+    assert.equal(url, '/api/feed/version');
+    return { ok: !state.failVersion, json: async () => ({ version: state.version }) };
+  };
+  const deps = {
+    './state.js': { getToken: () => state.token, isDemoMode: false, apiFetch: fetchVersion },
+    '../progression/shop.js': { refreshCoinsDisplay: () => calls.push(['coins']) },
+  };
+  let stateModule;
+  const module = new SourceTextModule(source, { context });
+  await module.link(specifier => {
+    assert.ok(deps[specifier], specifier);
+    const values = deps[specifier];
+    const dependency = new SyntheticModule(Object.keys(values), function () {
+      for (const [name, value] of Object.entries(values)) this.setExport(name, value);
+    }, { context });
+    if (specifier === './state.js') stateModule = dependency;
+    return dependency;
+  });
+  await module.evaluate();
+  const api = module.namespace;
+  api.setLiveTabHooks({
+    getIsAdmin: () => state.admin, isLandingVisible: () => state.landing, publicFetch: fetchVersion,
+    loadFeed: () => calls.push(['feed']), loadCovers: options => calls.push(['covers', options]),
+    refreshPublicCatalogIfVisible: () => calls.push(['catalog']), refreshBooksListOnly: () => calls.push(['books']),
+    sendHeartbeat: () => calls.push(['heartbeat']), refreshAppXp: () => calls.push(['app-xp-refresh']),
+    scheduleRewardProfileRefresh: delay => calls.push(['profile', delay]),
+    scheduleLiveUiRefresh: (flags, delay) => calls.push(['badges', JSON.parse(JSON.stringify(flags)), delay]),
+    processRewardSnapshot: (payload, options) => calls.push(['reward', payload, options.broadcast]),
+    onAppXpEvent: payload => calls.push(['app-xp-event', payload]),
+  });
+  const tick = async (map, delay) => {
+    for (const [key, task] of [...map]) if (task.delay === delay) {
+      if (map === timeouts) map.delete(key);
+      task.fn();
+    }
+    await flush();
+  };
+  return {
+    state, calls, streams, intervals, timeouts, elements, document, api,
+    count: type => calls.filter(call => call[0] === type).length,
+    active: () => streams.filter(stream => !stream.closed),
+    emit: (path, payload = {}) => {
+      const stream = streams.findLast(item => !item.closed && item.url.startsWith(path));
+      assert.ok(stream, 'active stream: ' + path); stream.onmessage({ data: JSON.stringify(payload) });
+    },
+    event: (name, payload = {}) => { for (const fn of (name === 'visibilitychange' ? documentListeners : windowListeners).get(name) || []) fn(payload); },
+    interval: delay => tick(intervals, delay), timeout: delay => tick(timeouts, delay),
+    demo: value => { state.demo = value; stateModule.setExport('isDemoMode', value); },
+    listenerCount: () => [...windowListeners.values(), ...documentListeners.values()].reduce((n, list) => n + list.length, 0),
+  };
+}
+
+const a = await tab(), b = await tab();
+assert.equal(a.streams.length, 0, 'importing controller starts no connections');
+a.api._ensureLiveTabControllerStarted();
+b.api._ensureLiveTabControllerStarted();
+assert.equal(a.active().length, 4);
+assert.equal(b.active().length, 0, 'follower owns no streams');
+assert.deepEqual(a.active().map(s => s.url), ['/api/feed/stream', '/api/public/stream', '/api/user/stream?token=token-1', '/api/app-xp/stream?token=token-1']);
+const listeners = a.listenerCount(), timers = a.intervals.size;
+a.api._ensureLiveTabControllerStarted();
+assert.equal(a.listenerCount(), listeners);
+assert.equal(a.intervals.size, timers, 'repeated startup adds no polling');
+a.emit('/api/feed/stream', { type: 'config_changed', version: 'v2' });
+assert.equal(a.elements['app-version'].textContent, 'v2');
+assert.equal(b.elements['app-version'].textContent, 'v2');
+assert.equal(a.count('feed'), 0);
+a.emit('/api/feed/stream'); a.emit('/api/feed/stream');
+await a.timeout(1500); await b.timeout(1500);
+assert.equal(a.count('feed'), 1, 'feed event bursts coalesced');
+assert.equal(b.count('feed'), 1);
+a.emit('/api/public/stream');
+assert.equal(a.count('catalog'), 1);
+assert.equal(b.count('covers'), 1);
+a.emit('/api/user/stream');
+assert.equal(a.calls.find(c => c[0] === 'badges')[2], 120);
+assert.equal(b.calls.find(c => c[0] === 'badges')[2], 80);
+assert.deepEqual(b.calls.find(c => c[0] === 'badges')[1], { inbox: true, notif: true, forum: true, reward: true, party: true, prefs: true });
+const reward = { xp: 123, goldCoins: 7 };
+a.api._broadcastLiveEvent('reward_snapshot', reward);
+assert.deepEqual(b.calls.find(c => c[0] === 'reward'), ['reward', reward, false], 'follower receives reward without rebroadcasting');
+a.api._broadcastLiveEvent('coins_changed');
+assert.equal(b.count('coins'), 1);
+a.emit('/api/app-xp/stream', { xp: 5 });
+assert.equal(a.count('app-xp-event'), 1); assert.equal(b.count('app-xp-event'), 1);
+await a.timeout(1200); await b.timeout(1200);
+assert.equal(a.count('app-xp-refresh'), 1); assert.equal(b.count('app-xp-refresh'), 1);
+await a.interval(60000); await b.interval(60000);
+assert.equal(a.count('heartbeat'), 1); assert.equal(b.count('heartbeat'), 0);
+assert.equal(a.count('feed'), 1, 'unchanged version skips feed rebuild');
+a.state.version = 'v3'; await a.interval(60000);
+assert.equal(a.count('feed'), 2);
+a.state.failVersion = true; await a.interval(60000);
+assert.equal(a.count('feed'), 3, 'failed version request falls back to reload');
+a.state.failVersion = false;
+await a.interval(300000);
+assert.equal(a.count('books'), 1); assert.equal(b.count('books'), 1);
+a.elements['main-screen'].style.display = '';
+await a.interval(300000); await a.interval(60000);
+assert.equal(a.count('books'), 1);
+assert.equal(a.count('feed'), 3, 'play screen skips feed polling');
+assert.equal(a.count('heartbeat'), 4, 'heartbeat continues while playing');
+a.state.token = null; a.api._disconnectUserBadgeSSE(); a.api._disconnectAppXpSSE();
+a.api._connectUserBadgeSSE(); a.api._connectAppXpSSE();
+assert.equal(a.active().length, 2, 'logout retains public streams only');
+await a.interval(60000); assert.equal(a.count('heartbeat'), 4);
+a.state.token = 'new-token'; a.demo(true);
+a.api._connectUserBadgeSSE(); a.api._connectAppXpSSE(); await a.interval(60000);
+assert.equal(a.active().length, 2); assert.equal(a.count('heartbeat'), 4, 'demo earns no heartbeat');
+a.demo(false); a.state.admin = false;
+a.api._connectUserBadgeSSE(); a.api._connectAppXpSSE();
+assert.equal(a.active().length, 3, 'non-admin has no app-XP stream');
+assert.ok(a.active().some(s => s.url === '/api/user/stream?token=new-token'));
+b.document.visibilityState = 'hidden';
+a.api._broadcastLiveEvent('covers_changed'); a.api._broadcastLiveEvent('badges_changed'); a.api._broadcastLiveEvent('coins_changed');
+assert.equal(b.count('covers'), 1, 'hidden follower defers updates');
+b.document.visibilityState = 'visible'; b.event('visibilitychange');
+a.event('storage', { key: lockKey }); await flush();
+assert.equal(a.active().length, 0, 'old leader closes streams');
+assert.equal(b.active().length, 4, 'visible follower takes leadership');
+assert.equal(b.count('covers'), 2); assert.equal(b.count('coins'), 2); assert.equal(b.count('profile'), 1);
+assert.equal([...a.intervals.values()].filter(t => t.delay >= 60000).length, 0, 'old leader stops poll intervals');
+await b.interval(60000); assert.equal(b.count('heartbeat'), 1);
+now += 31000;
+await a.interval(10000); b.event('storage', { key: lockKey });
+assert.equal(a.active().length, 3, 'stale leader lock can be reclaimed');
+assert.equal(b.active().length, 0);
+a.event('pagehide');
+assert.equal(storage.has(lockKey), false, 'pagehide releases own lock');
+b.event('storage', { key: lockKey });
+assert.equal(b.active().length, 4, 'remaining tab claims released lock');
