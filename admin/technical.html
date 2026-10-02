@@ -285,7 +285,15 @@
         sort.js          Search folding, matching and natural sorting
         util.js          Shared DOM, shortcut, image and attachment utilities
         livetab.js       App-wide tab leadership, SSE broadcasts, and fallback polling
-      i18n.js            Translation tables (en), t(), applyTranslations()
+      i18n.js            Compatibility entry point: t(), applyTranslations(), overrides
+      i18n/              Synchronous translation runtime and feature tables
+        runtime.js       Language selection, lookup/interpolation, overrides and DOM application
+        en/              English tables: common, account, books, covers, community, equipment,
+                         mobile, play, progression and stats
+          index.js       Static table imports and English dictionary assembly
+          battlesim/     Simulator strings grouped by bounded book-ID ranges (000-199,
+                         200-209, 210-219, 220-239, 240-259, 260-299, 300-399, 400-499,
+                         500-799, 800-899); keys retain their battlesimNNN prefixes
       graph.js           Compatibility facade with live network/DataSet exports
       graph/             Desktop graph feature modules
         runtime.js       Live vis bindings and shared mutable lifecycle/drawing state
@@ -788,7 +796,10 @@
 <h2 id="module-dependency-graph">Module dependency graph<a class="anchor" href="#module-dependency-graph" aria-label="Link to section">#</a></h2>
 <p>The following is a high-level dependency overview; feature subfolders contain additional modules and some documented cycles:</p>
 <pre><code>Layer 0 (no project imports):
-  core/constants.js  i18n.js  core/state.js  core/sort.js
+  core/constants.js  core/state.js  core/sort.js  i18n/en/ feature tables
+
+Translation runtime (depends only on translation data):
+  i18n.js -&gt; i18n/runtime.js -&gt; i18n/en/index.js -&gt; feature tables
 
 Layer 1 (import only from layer 0):
   core/util.js   ← core/state.js, i18n.js
@@ -1780,18 +1791,21 @@ snapToGrid?: boolean,            // if true, dragging a node snaps its dropped p
 <hr>
 <h2 id="internationalisation-i18n-js">Internationalisation (<code>i18n.js</code>)<a class="anchor" href="#internationalisation-i18n-js" aria-label="Link to section">#</a></h2>
 <p>Only English is active. The infrastructure supports additional languages; no UI switcher is exposed.</p>
+<p><code>public/js/i18n.js</code> remains the three-export compatibility entry point. The unchanged runtime lives in <code>i18n/runtime.js</code>; <code>i18n/en/index.js</code> assembles 20 data-only tables (10 feature tables and 10 bounded simulator-ID ranges). All tables load through static imports before any caller uses <code>t()</code>: there is no asynchronous loading, missing-string window, network translation API, or new timer. Callers, HTML translation attributes, key names, values, Unicode, escaped text, and placeholder behavior are preserved. The split is organizational, not a bundle-size optimization; the native module graph adds requests while retaining the same eager translation payload.</p>
+<p><code>test/client/i18n/</code> verifies the unchanged runtime source and public exports, checks all 7,562 key/value pairs against a digest captured before the split, verifies every public lookup immediately and for an unknown-language fallback, rejects duplicate/omitted table entries, and exercises every string&#39;s placeholders. The isolated DOM fixture also checks empty/null overrides, shared override identity, unknown keys, falsy/missing parameters, default/stored languages, and all four translation attributes. These are mocked-DOM tests; no real-browser smoke test is implied. When intentionally changing strings or adding keys, review the dictionary changes and update the parity baseline/count deliberately.</p>
+<p><code>test/client/i18n/browser-check.fixture</code> provides a separate manual Chromium smoke check using an isolated loopback static server: it loads all 23 translation modules through native browser imports, checks all 7,562 public lookup values against the same parity digest, and exercises the four translation attributes, document title/language, overrides, and interpolation on real DOM elements. It passed after the split. It serves only translation modules and a test page, never production APIs/database data; it does not cover complete app flows or Safari/Firefox. Run via Node&#39;s <code>--input-type=module --eval</code> with the fixture source, public-directory path, and a local Chromium executable as arguments.</p>
 <h3 id="core-api">Core API<a class="anchor" href="#core-api" aria-label="Link to section">#</a></h3>
-<div class="table-wrap"><table><thead><tr><th>Export</th><th>Description</th></tr></thead><tbody><tr><td><code>t(key, params)</code></td><td>Returns the translated string for <code>key</code> in the current language; falls back to English then to the key itself. <code>{param}</code> placeholders are replaced from <code>params</code>. Checks <code>_overrides</code> first (see below).</td></tr><tr><td><code>applyTranslations()</code></td><td>Walks the DOM: sets <code>textContent</code> for <code>[data-i18n]</code> elements, <code>placeholder</code> for <code>[data-i18n-placeholder]</code> elements, <code>title</code> for <code>[data-i18n-title]</code> elements, and updates <code>document.title</code> and <code>document.documentElement.lang</code>.</td></tr><tr><td><code>setTranslationOverride(key, value)</code></td><td>Sets a runtime override for a single translation key. Overrides take priority over both the current language and the English fallback. Used by <code>boot/shell.js</code> to inject the server-chosen tagline into <code>app.tagline</code> without changing the translation table.</td></tr></tbody></table></div>
-<p><code>_lang</code> currently only ever resolves to <code>&#39;en&#39;</code> (read once from <code>localStorage</code>&#39;s <code>gamebook_lang</code> key at module load) - there is no <code>setLang()</code>/language-switcher UI implemented.</p>
+<div class="table-wrap"><table><thead><tr><th>Export</th><th>Description</th></tr></thead><tbody><tr><td><code>t(key, params)</code></td><td>Returns the translated string for <code>key</code> in the current language; falls back to English then to the key itself. <code>{param}</code> placeholders are replaced from <code>params</code>. Checks <code>_overrides</code> first (see below).</td></tr><tr><td><code>applyTranslations()</code></td><td>Walks the DOM: sets <code>textContent</code> for <code>[data-i18n]</code>, <code>placeholder</code> for <code>[data-i18n-placeholder]</code>, <code>title</code> for <code>[data-i18n-title]</code>, and themed tooltip text for <code>[data-i18n-tooltip]</code>; also updates <code>document.title</code> and <code>document.documentElement.lang</code>.</td></tr><tr><td><code>setTranslationOverride(key, value)</code></td><td>Sets a runtime override for a single translation key. Overrides take priority over both the current language and the English fallback. Used by <code>boot/shell.js</code> to inject the server-chosen tagline into <code>app.tagline</code> without changing the translation table.</td></tr></tbody></table></div>
+<p><code>_lang</code> is read once from localStorage&#39;s <code>gamebook_lang</code> key by <code>i18n/runtime.js</code>, defaulting to <code>en</code>. An unavailable stored language falls back to English for lookups; the stored code is still applied to the document language, preserving previous behavior. There is no <code>setLang()</code> or language-switcher UI implemented.</p>
 <h3 id="dynamic-content">Dynamic content<a class="anchor" href="#dynamic-content" aria-label="Link to section">#</a></h3>
-<p>Static HTML elements use <code>data-i18n</code> / <code>data-i18n-placeholder</code> / <code>data-i18n-title</code> attributes. Dynamically built HTML (books list, playthrough panel, node tooltips) calls <code>t()</code> at render time. <code>i18n.js</code> reads <code>gamebook_lang</code> from localStorage at module load, and <code>boot/play-features.js</code> calls <code>applyTranslations()</code> during startup. There is currently no <code>lang-changed</code> event listener or live language-switch control; changing the stored language requires a reload.</p>
+<p>Static HTML elements use <code>data-i18n</code> / <code>data-i18n-placeholder</code> / <code>data-i18n-title</code> / <code>data-i18n-tooltip</code> attributes. Dynamically built HTML (books list, playthrough panel, node tooltips) calls <code>t()</code> at render time. <code>i18n/runtime.js</code> reads <code>gamebook_lang</code> from localStorage at module load, and <code>boot/play-features.js</code> calls <code>applyTranslations()</code> during startup. There is currently no <code>lang-changed</code> event listener or live language-switch control; changing the stored language requires a reload.</p>
 <h3 id="adding-a-new-string">Adding a new string<a class="anchor" href="#adding-a-new-string" aria-label="Link to section">#</a></h3>
 <ol>
-<li>Add the key to the <code>en</code> object in <code>i18n.js</code>.</li>
+<li>Add the key to the appropriate <code>i18n/en/</code> feature table; simulator keys go in <code>i18n/en/battlesim/</code> by book-ID range. If introducing a new table, add its static import/spread to <code>i18n/en/index.js</code>. Keep keys unique across all tables.</li>
 <li>Use <code>data-i18n=&quot;key&quot;</code> in HTML or <code>t(&#39;key&#39;)</code> in JS.</li>
 </ol>
 <h3 id="adding-a-new-language">Adding a new language<a class="anchor" href="#adding-a-new-language" aria-label="Link to section">#</a></h3>
-<p>Add a new key at the same level as <code>en</code> in the translations object (e.g. <code>fr: { ... }</code>) with a full copy of all keys from <code>en</code>. A comment in <code>i18n.js</code> marks the insertion point. Then add a UI trigger that calls <code>setLang(&#39;fr&#39;)</code>.</p>
+<p>Create a matching language directory (for example <code>i18n/fr/</code>) with a complete dictionary/index. Import it synchronously into <code>i18n/runtime.js</code> and add <code>fr</code> alongside <code>en</code> in <code>translations</code>. Language selection currently requires updating <code>gamebook_lang</code> and reloading; there is no existing <code>setLang()</code> API. Adding a live switcher would be a separate behavior change.</p>
 <hr>
 <h2 id="automated-backups-server-backup-js">Automated backups (<code>server/backup.js</code>)<a class="anchor" href="#automated-backups-server-backup-js" aria-label="Link to section">#</a></h2>
 <p><code>backup.start()</code> is called once at server startup (before the listen call). It immediately attempts a startup backup, then schedules <strong>hourly</strong> runs on the hour using a self-resetting <code>setTimeout</code>.</p>

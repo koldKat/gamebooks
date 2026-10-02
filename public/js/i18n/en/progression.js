@@ -1,0 +1,33 @@
+// English translations: progression.
+export default {
+
+    'shop.item.xp_boost.label':       'XP Boost',
+    'shop.item.xp_boost.desc':        '+0.1% XP gain permanently (cap: {cap}% at your lvl)',
+    'shop.item.xp_boost.owned':       '+{pct}% XP boost purchased',
+    'shop.item.heartbeat_xp.label':   'Heartbeat XP',
+    'shop.item.heartbeat_xp.desc':    '+0.1 base idle heartbeat XP permanently (cap: {cap} XP at your lvl)',
+    'shop.item.heartbeat_xp.owned':   '+{pct} base heartbeat XP purchased',
+    'shop.item.undo.label':           'Extra Undo',
+    'shop.item.undo.desc':            '+1 undo per run permanently (cap: {cap} at your lvl)',
+    'shop.item.fast_travel.label':    'Fast Travel',
+    'shop.item.fast_travel.desc':     '+1 fast travel per run permanently (cap: {cap} at your lvl)',
+    'shop.item.owned':                '+{n} purchased',
+    'shop.item.gc_chance.label':      'Lucky Coin Chance',
+    'shop.item.gc_chance.desc':       '+0.01% lucky coin chance (cap: {cap}% at your lvl)',
+    'shop.item.gc_chance.owned':      '+{pct}% lucky coin chance purchased',
+    'bonus_gc.tooltip_empty': 'No lucky coin waiting',
+    'bonus_gc.tooltip_empty_pct': 'No lucky coin waiting (current chance: {pct}% per XP event, {claimed} claimed)',
+    'bonus_gc.tooltip_ready': 'A lucky gold coin is waiting - click to claim!',
+    'shop.btn.max':      'Max',
+    'shop.btn.buy':      'Buy',
+    'shop.spent':        '{n} spent',
+    'shop.loading':      'Loading\u2026',
+    'shop.load_failed':  'Failed to load.',
+    'shop.request_failed': 'Request failed',
+
+    'appxp.hb_rate':    '+{rate} heartbeat XP/min',
+    'appxp.users':      '{n} user{s}',
+    'appxp.total_levels': '{n} total levels',
+    'appxp.more_to_lvl':  '{n} more to Lvl {lvl}',
+    'appxp.range':        'range: Lvl {min}-{max}',
+};

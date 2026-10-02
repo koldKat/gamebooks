@@ -1,0 +1,110 @@
+import assert from 'node:assert/strict';
+import { readFileSync, readdirSync } from 'node:fs';
+import { resolve, dirname } from 'node:path';
+import { createHash } from 'node:crypto';
+import { createContext, SourceTextModule } from 'node:vm';
+
+const root = process.argv[1];
+const baseline = '40551d981101f74ecb41d3f122333dff4df98ecd82171bcb2eeab738f4e06f83';
+const hash = entries => createHash('sha256').update(JSON.stringify(entries)).digest('hex');
+const sorted = table => Object.keys(table).sort().map(key => [key, table[key]]);
+async function environment(language) {
+  const selectors = new Map(), modules = new Map(), reads = [];
+  const document = { documentElement: {}, title: '', querySelectorAll: selector => selectors.get(selector) || [] };
+  const context = createContext({ document, localStorage: { getItem: key => { reads.push(key); return language; } } });
+  function get(path) {
+    path = resolve(path);
+    if (!modules.has(path)) modules.set(path, new SourceTextModule(readFileSync(path, 'utf8'), { context, identifier: path }));
+    return modules.get(path);
+  }
+  async function load(path) {
+    const module = get(resolve(root, path));
+    if (module.status === 'unlinked') await module.link((specifier, parent) => {
+      assert.ok(specifier.startsWith('.'), 'only local synchronous dependencies');
+      return get(resolve(dirname(parent.identifier), specifier));
+    });
+    if (module.status !== 'evaluated') await module.evaluate();
+    return module.namespace;
+  }
+  const api = await load('i18n.js');
+  const table = (await load('i18n/en/index.js')).default;
+  return { api, table, document, selectors, modules, reads, load };
+}
+const en = await environment('en');
+assert.deepEqual(Object.keys(en.api).sort(), ['applyTranslations', 'setTranslationOverride', 't']);
+assert.equal(Object.keys(en.table).length, 7562);
+assert.equal(hash(sorted(en.table)), baseline, 'every key and exact Unicode/string value matches pre-split baseline');
+assert.equal(hash(Object.keys(en.table).sort().map(key => [key, en.api.t(key)])), baseline, 'every public lookup is immediately available');
+assert.deepEqual(en.reads, ['gamebook_lang'], 'language read once through the shared runtime');
+
+const paths = [];
+function walk(dir) {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const path = resolve(dir, entry.name);
+    if (entry.isDirectory()) walk(path);
+    else if (entry.name.endsWith('.js') && entry.name !== 'index.js') paths.push(path);
+  }
+}
+walk(resolve(root, 'i18n/en'));
+assert.equal(paths.length, 20, 'feature tables and bounded simulator ranges');
+const keys = new Set();
+for (const path of paths) {
+  const source = readFileSync(path, 'utf8');
+  assert.doesNotMatch(source, /^import |\b(?:document|localStorage|fetch)\s*[.(]/m, 'tables have no runtime dependencies');
+  const literals = [...source.matchAll(/^\s*'([^']+)':/gm)].map(match => match[1]);
+  const table = (await en.load(path)).default;
+  assert.equal(literals.length, Object.keys(table).length, 'no overwritten duplicate literals in ' + path);
+  for (const key of Object.keys(table)) {
+    assert.equal(keys.has(key), false, 'no duplicate key across tables: ' + key);
+    keys.add(key);
+    assert.equal(typeof table[key], 'string');
+    assert.equal(en.api.t(key), table[key]);
+  }
+  if (path.includes('/battlesim/')) {
+    const [low, high] = path.match(/(\d+)-(\d+)\.js$/).slice(1).map(Number);
+    for (const key of Object.keys(table)) {
+      const id = Number(key.match(/^battlesim(\d+)\./)?.[1]);
+      assert.ok(id >= low && id <= high, 'simulator belongs in declared range: ' + key);
+    }
+  }
+}
+assert.equal(keys.size, Object.keys(en.table).length, 'aggregator includes every table exactly once');
+for (const [key, value] of Object.entries(en.table)) {
+  const params = Object.fromEntries([...value.matchAll(/\{(\w+)\}/g)].map(match => [match[1], '[' + match[1] + ']']));
+  assert.equal(en.api.t(key, params), value.replace(/\{(\w+)\}/g, (_, name) => params[name] ?? '{' + name + '}'), key);
+}
+assert.equal(en.api.t('missing.key'), 'missing.key');
+en.api.setTranslationOverride('test.params', '{zero}|{no}|{empty}|{nil}|{missing}|{a-b}');
+assert.equal(en.api.t('test.params', { zero: 0, no: false, empty: '', nil: null }), '0|false||null|{missing}|{a-b}');
+en.api.setTranslationOverride('app.tagline', 'Custom {name}');
+assert.equal(en.api.t('app.tagline', { name: 'tagline' }), 'Custom tagline');
+en.api.setTranslationOverride('app.tagline', '');
+assert.equal(en.api.t('app.tagline'), '', 'empty override takes priority');
+en.api.setTranslationOverride('app.tagline', null);
+assert.equal(en.api.t('app.tagline'), en.table['app.tagline'], 'null override falls back');
+const runtime = await en.load('i18n/runtime.js');
+assert.equal(en.api.t, runtime.t, 'facade and direct runtime share function identity');
+runtime.setTranslationOverride('app.title', 'Same shared override');
+assert.equal(en.api.t('app.title'), 'Same shared override');
+
+for (const [selector, datasetKey, target, key] of [
+  ['[data-i18n]', 'i18n', 'textContent', 'books.title'],
+  ['[data-i18n-placeholder]', 'i18nPlaceholder', 'placeholder', 'ph.authors'],
+  ['[data-i18n-title]', 'i18nTitle', 'title', 'title.user_guide'],
+  ['[data-i18n-tooltip]', 'i18nTooltip', 'tooltip', 'bonus_gc.tooltip_empty'],
+]) {
+  const el = { dataset: { [datasetKey]: key } };
+  en.selectors.set(selector, [el]);
+  en.api.applyTranslations();
+  assert.equal(target === 'tooltip' ? el.dataset.tooltip : el[target], en.api.t(key));
+}
+assert.equal(en.document.title, 'Same shared override');
+assert.equal(en.document.documentElement.lang, 'en');
+const unknown = await environment('unavailable-language');
+assert.equal(hash(Object.keys(unknown.table).sort().map(key => [key, unknown.api.t(key)])), baseline, 'unknown language falls back to English for every string');
+unknown.api.applyTranslations();
+assert.equal(unknown.document.documentElement.lang, 'unavailable-language', 'stored language behavior unchanged');
+assert.equal(unknown.document.title, unknown.table['app.title']);
+const unset = await environment(null);
+unset.api.applyTranslations();
+assert.equal(unset.document.documentElement.lang, 'en');

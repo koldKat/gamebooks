@@ -1,0 +1,58 @@
+// Manual native-module/DOM smoke test; never connects to the production app.
+// Run with Node --input-type=module --eval, passing the public directory and
+// a local Chromium/headless-shell executable as the two arguments.
+import assert from 'node:assert/strict';
+import { createServer } from 'node:http';
+import { readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
+import { execFile } from 'node:child_process';
+
+const publicRoot = resolve(process.argv[1]);
+const executable = process.argv[2];
+const requests = [];
+const html = `<!doctype html><html><head><meta charset="utf-8"></head><body>
+<span data-i18n="books.title"></span>
+<input data-i18n-placeholder="ph.authors">
+<span data-i18n-title="title.user_guide"></span>
+<span data-i18n-tooltip="bonus_gc.tooltip_empty"></span>
+<script type="module">
+import { t, applyTranslations, setTranslationOverride } from '/js/i18n.js';
+import en from '/js/i18n/en/index.js';
+try {
+  const entries = Object.keys(en).sort().map(key => [key, t(key)]);
+  const bytes = new TextEncoder().encode(JSON.stringify(entries));
+  const digest = [...new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))]
+    .map(n => n.toString(16).padStart(2, '0')).join('');
+  if (entries.length !== 7562 || digest !== '40551d981101f74ecb41d3f122333dff4df98ecd82171bcb2eeab738f4e06f83') throw Error('string parity');
+  setTranslationOverride('app.title', 'Translation smoke');
+  applyTranslations();
+  if (document.title !== 'Translation smoke' || document.documentElement.lang !== 'en') throw Error('document translation');
+  for (const [selector, property, key] of [
+    ['[data-i18n]', 'textContent', 'books.title'],
+    ['[data-i18n-placeholder]', 'placeholder', 'ph.authors'],
+    ['[data-i18n-title]', 'title', 'title.user_guide'],
+  ]) if (document.querySelector(selector)[property] !== en[key]) throw Error(key);
+  if (document.querySelector('[data-i18n-tooltip]').dataset.tooltip !== en['bonus_gc.tooltip_empty']) throw Error('tooltip');
+  if (t('modal.edit.title', { n: 0 }) !== 'Edit Section 0') throw Error('interpolation');
+  document.body.dataset.result = 'pass';
+} catch (error) { document.body.dataset.result = 'fail'; document.body.dataset.error = error.message; }
+</script></body></html>`;
+
+const server = createServer(async (req, res) => {
+  requests.push(req.url);
+  if (req.url === '/') { res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); res.end(html); return; }
+  // Serve only the translation module graph, not application APIs or user data.
+  if (!/^\/js\/i18n(?:\.js|\/[a-z0-9/-]+\.js)$/.test(req.url)) { res.writeHead(404); res.end(); return; }
+  try { const source = await readFile(resolve(publicRoot, '.' + req.url)); res.writeHead(200, { 'Content-Type': 'text/javascript; charset=utf-8' }); res.end(source); }
+  catch { res.writeHead(404); res.end(); }
+});
+await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+try {
+  const url = 'http://127.0.0.1:' + server.address().port + '/';
+  const output = await new Promise((resolve, reject) => execFile(executable,
+    ['--headless', '--no-sandbox', '--disable-gpu', '--no-first-run', '--disable-background-networking', '--dump-dom', '--virtual-time-budget=5000', url],
+    { timeout: 30000, maxBuffer: 1024 * 1024 }, (error, stdout, stderr) => error ? reject(error) : resolve({ stdout, stderr })));
+  assert.match(output.stdout, /data-result="pass"/, output.stdout + '\n' + output.stderr);
+  assert.equal(new Set(requests.filter(path => path.endsWith('.js'))).size, 23, 'entire translation module graph loaded');
+  console.log('Native Chromium smoke passed: 7562 exact strings, all 23 modules and real DOM bindings.');
+} finally { await new Promise(resolve => server.close(resolve)); }
