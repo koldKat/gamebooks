@@ -1,6 +1,6 @@
 // grid.js - Internal equipment module; use ../equipment.js externally.
 
-import { escapeHtml } from '../util.js';
+import { escapeHtml } from '../core/util.js';
 import { t } from '../i18n.js';
 import { _isReadOnly, _eq, _eqItemId, _eqMeta, _eqQty, _captureEqContext, _isEqContextCurrent } from './model.js';
 import { equipmentRuntime } from './runtime.js';

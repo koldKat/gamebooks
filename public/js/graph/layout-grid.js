@@ -1,4 +1,4 @@
-import { state, parseSecId, isTerminal } from '../state.js';
+import { state, parseSecId, isTerminal } from '../core/state.js';
 import { _hasValidPos, naturalCompareIds } from './helpers.js';
 import { GRID_SIZE } from './viewport.js';
 import { _GRID_LAYER_GAP } from './layout-constants.js';

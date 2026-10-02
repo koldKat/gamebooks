@@ -13,13 +13,13 @@ const elements = { 'liveread-panel': panel, 'liveread-body': body, 'liveread-hea
   'liveread-preview-return': { addEventListener() {} } };
 const context = createContext({ document: { getElementById: id => elements[id] }, console });
 const stubData = {
-  '../state.js': { state: { startSection: 1 }, currentBookId: 42, currentPlaythrough: () => ({}), currentSection: () => section,
+  '../core/state.js': { state: { startSection: 1 }, currentBookId: 42, currentPlaythrough: () => ({}), currentSection: () => section,
     viewingPt: null, isTerminal: sec => sec === 0 || sec === -1, parseSecId: Number, isSectionMapped: sec => sec === 1,
     apiFetch: async url => { requests.push(url); const sec = Number(url.split('/').at(-1)); return { ok: true, json: async () => ({ html: '<p>Section ' + sec + '</p>', choices: sec === 1 ? [2] : [] }) }; } },
   '../play.js': { navigate() {}, commitChoices: (sec, choices) => commits.push([sec, [...choices]]), showAlert() {}, suppressAutoNav: value => suppression.push(value) },
   '../graph.js': { network: null, setLightweightRestabilize: value => physics.push(value) },
   '../i18n.js': { t: key => key },
-  '../util.js': { shortcutLabel() {}, registerPanelShortcut() {}, ALL_PANEL_OVERLAY_IDS: [] },
+  '../core/util.js': { shortcutLabel() {}, registerPanelShortcut() {}, ALL_PANEL_OVERLAY_IDS: [] },
 };
 const mod = new SourceTextModule(readFileSync(process.argv[1], 'utf8'), { context });
 await mod.link(specifier => {

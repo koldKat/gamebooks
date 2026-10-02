@@ -1,4 +1,4 @@
-import { state } from '../state.js';
+import { state } from '../core/state.js';
 import { network, visNodes, graphRuntime } from './runtime.js';
 import { GRID_SIZE } from './viewport.js';
 import { _NOTE_FONT, _NOTE_PAD_X, _NOTE_PAD_Y, _NOTE_LINE_H } from './overlay-cache.js';

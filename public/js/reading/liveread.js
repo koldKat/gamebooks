@@ -8,11 +8,11 @@
 // Deliberately NOT built on .inv-overlay: the whole point is that the graph
 // stays visible and interactive underneath while reading.
 
-import { state, apiFetch, currentBookId, currentPlaythrough, currentSection, viewingPt, isTerminal, parseSecId, isSectionMapped } from '../state.js';
+import { state, apiFetch, currentBookId, currentPlaythrough, currentSection, viewingPt, isTerminal, parseSecId, isSectionMapped } from '../core/state.js';
 import { navigate, commitChoices, showAlert, suppressAutoNav } from '../play.js';
 import { network, setLightweightRestabilize } from '../graph.js';
 import { t } from '../i18n.js';
-import { shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from '../util.js';
+import { shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from '../core/util.js';
 import { TROPHY_SVG, BROKEN_SHIELD_SVG, terminalHeadingKey } from './liveread-shared.js';
 
 // Reuses the same .feed-loading-graph/.flg-* markup and CSS (demo.css) as the

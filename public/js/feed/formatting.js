@@ -1,4 +1,4 @@
-import { escapeHtml } from '../util.js';
+import { escapeHtml } from '../core/util.js';
 import { t } from '../i18n.js';
 
 // A cheap plain-text run preview for the feed's own won/lost/battle-death

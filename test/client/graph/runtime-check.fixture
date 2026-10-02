@@ -53,7 +53,7 @@ const context = createContext({ console, vis: { DataSet, Network }, window: { vi
   setTimeout: (fn, ms) => { const id = ++nextTimer; timers.set(id, { fn, ms }); return id; }, clearTimeout: id => timers.delete(id),
 });
 const stateExports = { state, viewingPt: null, isTerminal, parseSecId, isValidSecId, currentPlaythrough, allDiscoveredSections, saveState: () => saves.push(JSON.stringify(state)) };
-modules.set(resolve(root, 'state.js'), new SyntheticModule(Object.keys(stateExports), function () { for (const [k, v] of Object.entries(stateExports)) this.setExport(k, v); }, { context }));
+modules.set(resolve(root, 'core/state.js'), new SyntheticModule(Object.keys(stateExports), function () { for (const [k, v] of Object.entries(stateExports)) this.setExport(k, v); }, { context }));
 modules.set(resolve(root, 'i18n.js'), new SyntheticModule(['t'], function () { this.setExport('t', (key, p = {}) => key + JSON.stringify(p)); }, { context }));
 function moduleAt(path) {
   if (modules.has(path)) return modules.get(path);
@@ -145,8 +145,8 @@ if (!baseline) {
   const start = mobileSource.indexOf('function _computeOutcomes()');
   const end = mobileSource.indexOf('function _withHighlight', start);
   assert.ok(start >= 0 && end > start);
-  const mobileOutcomes = new SourceTextModule("import { state } from './state.js';\nexport " + mobileSource.slice(start, end), { context, identifier: resolve(root, 'mobile-outcome-check.js') });
-  await mobileOutcomes.link(() => modules.get(resolve(root, 'state.js'))); await mobileOutcomes.evaluate();
+  const mobileOutcomes = new SourceTextModule("import { state } from './core/state.js';\nexport " + mobileSource.slice(start, end), { context, identifier: resolve(root, 'mobile-outcome-check.js') });
+  await mobileOutcomes.link(() => modules.get(resolve(root, 'core/state.js'))); await mobileOutcomes.evaluate();
   assert.equal(JSON.stringify(mobileOutcomes.namespace._computeOutcomes()), JSON.stringify(outcomes), 'mobile and desktop outcome rules agree');
   reset({ graph: { 1: { choices: ['2', '4'] }, 2: { choices: ['3'] }, 3: { choices: ['2', '4', '-1'] }, 4: { choices: ['0'] }, 7: { choices: ['3'] } }, playthroughs: [{ path: ['7', '3', '4'], completed: true, result: 'success' }] });
   assert.deepEqual([...api.subtreeToDelete('2')], [2], 'mixed IDs preserve alternate-root reachable nodes and exclude terminal strings');

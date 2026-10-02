@@ -13,7 +13,7 @@ try {
   const dice = await import('/js/dice.js');
   const play = await import('/js/play.js');
   const graph = await import('/js/graph.js');
-  const data = await import('/js/state.js');
+  const data = await import('/js/core/state.js');
   const reader = await import('/js/reading/liveread.js');
   const { state } = data;
   Object.assign(state, { bookName: 'Isolated play test', totalSections: 20, startSection: 1,

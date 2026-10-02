@@ -1,4 +1,4 @@
-import { state, saveState } from '../state.js';
+import { state, saveState } from '../core/state.js';
 import { network, graphRuntime } from './runtime.js';
 
 

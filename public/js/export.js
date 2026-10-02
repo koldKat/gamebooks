@@ -2,7 +2,7 @@
 // Graph snapshots (graph.svg) are generated entirely server-side (see buildGraphSvg in
 // server/export.js) from each book's saved positions/colors - no rendering happens here.
 
-import { state, currentBookId, apiFetch } from './state.js';
+import { state, currentBookId, apiFetch } from './core/state.js';
 import { showAlert } from './play.js';
 import { t } from './i18n.js';
 

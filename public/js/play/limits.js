@@ -1,6 +1,6 @@
 // limits.js - Internal play-screen module; use ../play.js externally.
 
-import { currentUserLevel, bonusUndos, bonusFastTravels } from '../state.js';
+import { currentUserLevel, bonusUndos, bonusFastTravels } from '../core/state.js';
 
 export function maxUndos() {
   const lvl  = currentUserLevel || 0;

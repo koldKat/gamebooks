@@ -1,5 +1,5 @@
 import { bootState } from './state.js';
-import { state, viewingPt, setViewingPt, saveState, parseSecId, isValidSecId, currentPlaythrough, currentSection, mappedCountFor } from '../state.js';
+import { state, viewingPt, setViewingPt, saveState, parseSecId, isValidSecId, currentPlaythrough, currentSection, mappedCountFor } from '../core/state.js';
 import { network, subtreeToDelete, deleteNodes, findPathTo, canReach } from '../graph.js';
 import { render, openEditModal, openNoteModal, closeNoteModal, showConfirm, showAlert, confirmAlphanumericSwitch, setFastTravelHandler, showFastTravelDialog, openPortalModal, startPlaythrough, setAltStartHandler, wouldAutoNav } from '../play.js';
 import { t } from '../i18n.js';

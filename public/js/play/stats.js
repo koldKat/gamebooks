@@ -1,6 +1,6 @@
 // stats.js - Internal play-screen module; use ../play.js externally.
 
-import { state, isTerminal, allDiscoveredSections, mappedCount } from '../state.js';
+import { state, isTerminal, allDiscoveredSections, mappedCount } from '../core/state.js';
 import { t } from '../i18n.js';
 import { playContext } from './context.js';
 

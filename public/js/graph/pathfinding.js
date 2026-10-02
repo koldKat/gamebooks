@@ -1,4 +1,4 @@
-import { state, parseSecId } from '../state.js';
+import { state, parseSecId } from '../core/state.js';
 
 // ── Fast-travel pathfinding ─────────────────────────────────────────────────
 

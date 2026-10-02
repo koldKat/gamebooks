@@ -1,6 +1,6 @@
 import { test, describe, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { state, currentPlaythrough, currentSection } from '../../../public/js/state.js';
+import { state, currentPlaythrough, currentSection } from '../../../public/js/core/state.js';
 
 // state is a shared module-level singleton (same instance every import, per
 // ES module caching) - reset the fields these two functions actually read

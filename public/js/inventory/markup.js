@@ -1,6 +1,6 @@
 // markup.js - Internal inventory module; use ../inventory.js externally.
 
-import { escapeHtml } from '../util.js';
+import { escapeHtml } from '../core/util.js';
 
 export function _invLineHtml(item, displayName, note, qty, badgeText = null, kind = null) {
   const noteHtml = note?.trim() ? ` <span class="inv-line-note">${escapeHtml(note.trim())}</span>` : '';

@@ -1,6 +1,6 @@
 import { booksState, _BOOKS_LS_KEY } from './state.js';
 import { _captureExpandedPrefsFromDom } from './prefs.js';
-import { getToken, isDemoMode, apiFetch } from '../state.js';
+import { getToken, isDemoMode, apiFetch } from '../core/state.js';
 import { loadCovers } from '../covers.js';
 
 let _booksStateRefreshTimer = null;

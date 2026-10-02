@@ -1,4 +1,4 @@
-import { state, parseSecId, isTerminal } from '../state.js';
+import { state, parseSecId, isTerminal } from '../core/state.js';
 import { _hasValidPos } from './helpers.js';
 import { _avgPoint } from './layout-helpers.js';
 import { _LOCAL_PLACE_RADII, _LOCAL_MIN_NODE_GAP, _LOCAL_SOFT_NODE_GAP, _LOCAL_EDGE_CLEARANCE } from './layout-constants.js';

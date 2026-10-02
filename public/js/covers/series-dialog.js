@@ -2,8 +2,8 @@ import { _refreshCoversDisplay } from './grid.js';
 import { openCoverActivity } from './activity.js';
 import { _seriesRowBadges } from './badges.js';
 import { coversState } from './state.js';
-import { getToken, apiFetch } from '../state.js';
-import { escapeHtml } from '../util.js';
+import { getToken, apiFetch } from '../core/state.js';
+import { escapeHtml } from '../core/util.js';
 import { t } from '../i18n.js';
 
 export function renderSeriesActivity(data) {

@@ -1,6 +1,6 @@
 // cache.js - Internal equipment module; use ../equipment.js externally.
 
-import { apiFetch } from '../state.js';
+import { apiFetch } from '../core/state.js';
 import { equipmentRuntime } from './runtime.js';
 import { _eq, _eqItemId, _captureEqContext, _isEqContextCurrent } from './model.js';
 

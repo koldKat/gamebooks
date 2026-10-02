@@ -1,6 +1,6 @@
 import { _isMobile, _shuffle } from './helpers.js';
 import { coversState } from './state.js';
-import { getToken, isDemoMode } from '../state.js';
+import { getToken, isDemoMode } from '../core/state.js';
 
 // ── Landing bg ─────────────────────────────────────────────────────────────────
 export function _landingCoverKey(cover) {

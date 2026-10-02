@@ -1,6 +1,6 @@
 // navigation.js - Internal play-screen module; use ../play.js externally.
 
-import { state, saveState, isTerminal, currentPlaythrough, allDiscoveredSections } from '../state.js';
+import { state, saveState, isTerminal, currentPlaythrough, allDiscoveredSections } from '../core/state.js';
 import { network } from '../graph.js';
 import { t } from '../i18n.js';
 import { showAlert } from '../ui-helpers/confirm.js';

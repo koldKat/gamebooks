@@ -15,11 +15,11 @@ const el = id => {
 let token = 'first-session', snapshots = 0;
 const context = createContext({ document: { getElementById: el }, console });
 const stubs = {
-  '../state.js': { apiFetch: () => new Promise((resolve, reject) => pending.push({ resolve, reject })), getToken: () => token,
+  '../core/state.js': { apiFetch: () => new Promise((resolve, reject) => pending.push({ resolve, reject })), getToken: () => token,
     getUsername: () => 'Tester', isDemoMode: false, setUsername() {}, setCurrentUserLevel() {} },
   '../i18n.js': { t: key => key },
   '../progression/shop.js': { updateCoinsDisplay() {} },
-  '../util.js': { escapeHtml: value => String(value), compressToBlob() {} },
+  '../core/util.js': { escapeHtml: value => String(value), compressToBlob() {} },
 };
 const mod = new SourceTextModule(readFileSync(process.argv[1], 'utf8'), { context });
 await mod.link(specifier => {

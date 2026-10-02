@@ -89,13 +89,13 @@ function stub(file, exports) {
   const mod = new SyntheticModule(Object.keys(exports), function () { for (const [k, v] of Object.entries(exports)) this.setExport(k, v); }, { context });
   modules.set(resolve(root, file), mod); return mod;
 }
-const stateModule = stub('state.js', { state, viewingPt, currentPlaythrough, saveState, apiFetch });
+const stateModule = stub('core/state.js', { state, viewingPt, currentPlaythrough, saveState, apiFetch });
 stub('play.js', { showConfirm: (message, action, options) => { confirmAction = action; effects.push(['confirm', message, options]); } });
 stub('charsheet.js', { getPlayBtnRow: () => row });
 stub('i18n.js', { t: (key, p = {}) => key + (p.name ? ' ' + p.name : '') });
 const escapeHtml = value => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 let shortcut;
-stub('util.js', { escapeHtml, shortcutLabel: value => value, ALL_PANEL_OVERLAY_IDS: ['eq-overlay', 'inv-overlay'],
+stub('core/util.js', { escapeHtml, shortcutLabel: value => value, ALL_PANEL_OVERLAY_IDS: ['eq-overlay', 'inv-overlay'],
   registerPanelShortcut: (code, opts) => { shortcut = opts; effects.push(['shortcut', code, opts.otherOverlayIds, opts.capture]); } });
 function moduleAt(path) {
   if (modules.has(path)) return modules.get(path);

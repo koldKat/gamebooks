@@ -1,6 +1,6 @@
 // render.js - Internal play-screen module; use ../play.js externally.
 
-import { state, viewingPtIndex, currentPlaythrough, currentSection } from '../state.js';
+import { state, viewingPtIndex, currentPlaythrough, currentSection } from '../core/state.js';
 import { syncGraph } from '../graph.js';
 import { t } from '../i18n.js';
 import { renderCharSheetDisplay } from '../charsheet.js';

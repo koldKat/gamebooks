@@ -1,4 +1,4 @@
-import { naturalCompare } from '../sort.js';
+import { naturalCompare } from '../core/sort.js';
 
 // A book's containers = its one primary parent_book_id plus any secondary
 // book_anthology_memberships - a book can now legitimately be a child in

@@ -1,9 +1,9 @@
 import { _isMobile } from './helpers.js';
 import { booksState } from './state.js';
 import { _patchCachedBook } from './data.js';
-import { isDemoMode } from '../state.js';
+import { isDemoMode } from '../core/state.js';
 import { t } from '../i18n.js';
-import { escapeHtml } from '../util.js';
+import { escapeHtml } from '../core/util.js';
 
 // ── Star rating helpers ───────────────────────────────────────────────────────
 export function _starsHtml(rating) {

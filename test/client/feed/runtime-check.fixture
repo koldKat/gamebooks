@@ -48,8 +48,8 @@ const context = createContext({
 const escapeHtml = value => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 const t = (key, params = {}) => key + Object.entries(params).map(([k, v]) => `|${k}=${v}`).join('');
 const external = {
-  'state.js': { getToken: () => token, apiFetch: async url => { calls.push(['private', url]); return fetchImpl ? fetchImpl() : { ok: true, json: async () => payload }; } },
-  'util.js': { escapeHtml }, 'i18n.js': { t },
+  'core/state.js': { getToken: () => token, apiFetch: async url => { calls.push(['private', url]); return fetchImpl ? fetchImpl() : { ok: true, json: async () => payload }; } },
+  'core/util.js': { escapeHtml }, 'i18n.js': { t },
   'account/public-profile.js': Object.fromEntries(['openPublicProfile', 'openPublicRun', 'openPublicSeriesRun'].map(k => [k, (...args) => calls.push([k, ...args])])),
   'covers.js': Object.fromEntries(['openCoverActivity', 'openSeriesActivity'].map(k => [k, (...args) => calls.push([k, ...args])])),
 };

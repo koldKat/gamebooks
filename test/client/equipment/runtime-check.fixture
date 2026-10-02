@@ -74,12 +74,12 @@ function stub(file, exports) {
   const mod = new SyntheticModule(Object.keys(exports), function () { for (const [k, v] of Object.entries(exports)) this.setExport(k, v); }, { context });
   modules.set(resolve(root, file), mod); return mod;
 }
-const stateModule = stub('state.js', { state, viewingPt, currentPlaythrough, saveState, apiFetch });
+const stateModule = stub('core/state.js', { state, viewingPt, currentPlaythrough, saveState, apiFetch });
 stub('i18n.js', { t: (key, p = {}) => key + (p.n ? ` ${p.n}` : '') });
 stub('charsheet.js', { getPlayBtnRow: () => row });
 stub('ui-helpers/confirm.js', { showAlert: message => effects.push(['alert', message]) });
 const escapeHtml = value => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-stub('util.js', { escapeHtml, shortcutLabel: value => value, ALL_PANEL_OVERLAY_IDS: ['eq-overlay', 'inv-overlay'], registerPanelShortcut: (code, opts) => { effects.push(['shortcut', code, opts.otherOverlayIds, opts.capture]); } });
+stub('core/util.js', { escapeHtml, shortcutLabel: value => value, ALL_PANEL_OVERLAY_IDS: ['eq-overlay', 'inv-overlay'], registerPanelShortcut: (code, opts) => { effects.push(['shortcut', code, opts.otherOverlayIds, opts.capture]); } });
 // Execute the actual inventory transfer/normalization helpers, not simplified mocks.
 const inventorySource = ['model', 'transfers', 'display', 'panel']
   .map(name => readFileSync(resolve(root, 'inventory', name + '.js'), 'utf8')).join('\n');
@@ -95,7 +95,7 @@ function functionSource(name) {
   return inventorySource.slice(start, end + 1).replace(/inventoryRuntime\./g, '');
 }
 context._effects = effects;
-const inventoryModule = new SourceTextModule(`import { state, currentPlaythrough, viewingPt, saveState } from './state.js';
+const inventoryModule = new SourceTextModule(`import { state, currentPlaythrough, viewingPt, saveState } from './core/state.js';
 const MAX_SLOTS = 40;
 ${['_slot', '_isReadOnly', '_inv', '_setInv'].map(functionSource).join('\n')}
 ${['getInventorySlots', 'addItemToInventory', 'removeAllFromInventoryAt'].map(name => 'export ' + functionSource(name)).join('\n')}
@@ -259,7 +259,7 @@ if (!baseline) {
   const hud = body.appendChild(new Element()); hud.id = 'inv-display';
   const displayWaits = [];
   context._displayWaits = displayWaits;
-  const displayModule = new SourceTextModule(`import { state, currentPlaythrough, viewingPt } from './state.js';
+  const displayModule = new SourceTextModule(`import { state, currentPlaythrough, viewingPt } from './core/state.js';
 let _displayRevision = 0;
 const _ensureInvItems = () => new Promise(resolve => _displayWaits.push(resolve));
 const _inv = () => [];

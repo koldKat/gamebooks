@@ -12,7 +12,7 @@
 // reader.js at all, avoiding a reader.js <-> context-menu.js import cycle
 // (reader.js is the one importing this file, not the other way around).
 
-import { state, saveState, currentPlaythrough, currentSection, parseSecId } from '../../js/state.js';
+import { state, saveState, currentPlaythrough, currentSection, parseSecId } from '../../js/core/state.js';
 import { canReach } from '../../js/graph.js';
 import { refreshGraph } from './graph-view.js';
 import { t } from '../../js/i18n.js';

@@ -1,8 +1,8 @@
 import { editState } from './state.js';
-import { apiFetch } from '../state.js';
+import { apiFetch } from '../core/state.js';
 import { t } from '../i18n.js';
 import { showAlert, showConfirm } from '../play.js';
-import { compressImage, setPreviewImgBlob } from '../util.js';
+import { compressImage, setPreviewImgBlob } from '../core/util.js';
 import { formatFileSize, _acceptPdfSelection, _setPdfInlineLabel, _setPdfCurrentLink, _setModalUploadProgress, _setButtonsDisabled, _uploadPdfWithProgress, _adminPdfHref } from './uploads.js';
 import { validateIsbn, validateIssn, validateAsin } from './validators.js';
 import { _populateSeriesSelect } from './selectors.js';

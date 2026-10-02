@@ -1,6 +1,6 @@
 // dice.js - Dice roller widget: roll, display, and persist dice state per playthrough
 
-import { state, viewingPt, currentPlaythrough, saveState } from './state.js';
+import { state, viewingPt, currentPlaythrough, saveState } from './core/state.js';
 import { _setPlayPanelCollapsed } from './prefs.js';
 import { setAfterRenderFn } from './play.js';
 

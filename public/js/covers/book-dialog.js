@@ -3,10 +3,10 @@ import { _refreshCoversDisplay } from './grid.js';
 import { openCoverActivity, openSeriesActivity } from './activity.js';
 import { _seriesRowBadges } from './badges.js';
 import { coversState } from './state.js';
-import { apiFetch } from '../state.js';
+import { apiFetch } from '../core/state.js';
 import { closePublicModal, renderPublicProfile, openPublicRun, _destroyPubNetworks } from '../account/public-profile.js';
 import { refreshCoinsDisplay } from '../progression/shop.js';
-import { escapeHtml, fetchPublic as publicFetch } from '../util.js';
+import { escapeHtml, fetchPublic as publicFetch } from '../core/util.js';
 import { t } from '../i18n.js';
 
 export function renderCoverActivity(bookId, bookName, entries, userRating, bookMeta, userLoggedIn, userOwnsBook, userCanRate = true) {

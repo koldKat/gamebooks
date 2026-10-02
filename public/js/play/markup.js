@@ -1,9 +1,9 @@
 // markup.js - Internal play-screen module; use ../play.js externally.
 
-import { state, viewingPt, viewingPtIndex, isTerminal, currentPlaythrough, currentSection } from '../state.js';
+import { state, viewingPt, viewingPtIndex, isTerminal, currentPlaythrough, currentSection } from '../core/state.js';
 import { network, computeOutcomes } from '../graph.js';
 import { t } from '../i18n.js';
-import { escapeHtml } from '../util.js';
+import { escapeHtml } from '../core/util.js';
 import { playContext } from './context.js';
 import { renderPathTrail } from './trail.js';
 import { maxUndos, maxFastTravels } from './limits.js';

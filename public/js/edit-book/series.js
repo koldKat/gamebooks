@@ -1,5 +1,5 @@
 import { editState } from './state.js';
-import { apiFetch } from '../state.js';
+import { apiFetch } from '../core/state.js';
 import { t } from '../i18n.js';
 import { _refreshLibraryUi } from '../books.js';
 

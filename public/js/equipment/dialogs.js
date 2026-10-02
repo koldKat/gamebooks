@@ -1,6 +1,6 @@
 // dialogs.js - Internal equipment module; use ../equipment.js externally.
 
-import { currentPlaythrough, saveState } from '../state.js';
+import { currentPlaythrough, saveState } from '../core/state.js';
 import { equipmentRuntime } from './runtime.js';
 import { _eq, _eqVisible, _eqItemId, _eqMeta, _eqQty, _isReadOnly, _captureEqContext, _isEqContextCurrent } from './model.js';
 import { _byId } from './cache.js';

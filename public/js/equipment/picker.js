@@ -1,7 +1,7 @@
 // picker.js - Internal equipment module; use ../equipment.js externally.
 
 import { getInventorySlots } from '../inventory.js';
-import { escapeHtml } from '../util.js';
+import { escapeHtml } from '../core/util.js';
 import { t } from '../i18n.js';
 import { equipmentRuntime } from './runtime.js';
 import { _eq, _eqItemId, _isReadOnly, _captureEqContext, _isEqContextCurrent, _releaseEqContext } from './model.js';

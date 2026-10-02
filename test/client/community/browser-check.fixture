@@ -29,7 +29,7 @@ const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
 const el = id => document.getElementById(id);
 const assert = (value, label) => { if (!value) throw Error(label); checks.push(label); };
 try {
-  const state = await import('/js/state.js');
+  const state = await import('/js/core/state.js');
   state.setToken('isolated-test-token'); state.setUsername('Tester');
   const inbox = await import('/js/community/inbox.js');
   const feedback = await import('/js/community/feedback.js');

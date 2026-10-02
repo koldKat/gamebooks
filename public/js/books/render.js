@@ -7,10 +7,10 @@ import { _applyBooksSearchFilter } from './search.js';
 import { _bookItemHtml } from './markup.js';
 import { _containerIdsFor, _sortChildrenMap, _sortBooks, _sortSeriesBooks, _aggregateProgress } from './groups.js';
 import { _wireRenderedContent } from './actions.js';
-import { naturalCompare } from '../sort.js';
+import { naturalCompare } from '../core/sort.js';
 import { _startLandingCoverRotation, _resetLandingCoverQueue, _effectiveLandingCoverSource } from '../covers.js';
 import { t } from '../i18n.js';
-import { escapeHtml } from '../util.js';
+import { escapeHtml } from '../core/util.js';
 
 // ── Main render ───────────────────────────────────────────────────────────────
 export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {

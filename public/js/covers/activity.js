@@ -1,7 +1,7 @@
 import { coversState } from './state.js';
-import { getToken, apiFetch } from '../state.js';
+import { getToken, apiFetch } from '../core/state.js';
 import { openPublicModal } from '../account/public-profile.js';
-import { fetchPublic as publicFetch } from '../util.js';
+import { fetchPublic as publicFetch } from '../core/util.js';
 import { t } from '../i18n.js';
 
 // ── Cover/series activity modals ───────────────────────────────────────────────

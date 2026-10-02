@@ -1,6 +1,6 @@
 // trail.js - Internal play-screen module; use ../play.js externally.
 
-import { currentPlaythrough } from '../state.js';
+import { currentPlaythrough } from '../core/state.js';
 import { network } from '../graph.js';
 import { t } from '../i18n.js';
 import { playContext } from './context.js';

@@ -4,7 +4,7 @@ import { inventoryRuntime } from './runtime.js';
 import { MAX_SLOTS } from './constants.js';
 import { _inv, _isReadOnly, _captureContext, _isContextCurrent } from './model.js';
 import { _ensureInvItems, _byId } from './cache.js';
-import { escapeHtml } from '../util.js';
+import { escapeHtml } from '../core/util.js';
 import { _wireSlotEvents } from './slots.js';
 import { renderInventoryDisplay } from './display.js';
 

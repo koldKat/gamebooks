@@ -1,5 +1,5 @@
 import { bootState } from './state.js';
-import { state, setViewingPt, resetState, saveState, resetBookProgress, loadState, parseSecId, isValidSecId, apiFetch, currentBookId, currentPlaythrough, currentSection } from '../state.js';
+import { state, setViewingPt, resetState, saveState, resetBookProgress, loadState, parseSecId, isValidSecId, apiFetch, currentBookId, currentPlaythrough, currentSection } from '../core/state.js';
 import { network, visNodes, initGraph, destroyNetwork, canReach, applyConnectorStyle, enforceSnapZoomFloor } from '../graph.js';
 import { render, closeEditModal, showConfirm, showAlert, maxFastTravels } from '../play.js';
 import { t } from '../i18n.js';

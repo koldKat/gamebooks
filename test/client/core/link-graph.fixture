@@ -1,0 +1,27 @@
+// Link actual module sources without evaluating DOM code or making API calls.
+import assert from 'node:assert/strict';
+import { readFileSync, readdirSync } from 'node:fs';
+import { resolve, dirname } from 'node:path';
+import { createContext, SourceTextModule } from 'node:vm';
+
+const modules = new Map(), context = createContext({});
+function walk(dir) {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const path = resolve(dir, entry.name);
+    if (entry.isDirectory()) walk(path);
+    else if (path.endsWith('.js')) modules.set(path, new SourceTextModule(readFileSync(path, 'utf8'), { context, identifier: path }));
+  }
+}
+walk(resolve(process.argv[1], 'js'));
+walk(resolve(process.argv[1], 'mobile/js'));
+for (const module of modules.values()) {
+  if (module.status !== 'unlinked') continue;
+  await module.link((specifier, parent) => {
+    assert.ok(specifier.startsWith('.'), 'unexpected external dependency: ' + specifier);
+    const path = resolve(dirname(parent.identifier), specifier);
+    assert.ok(modules.has(path), parent.identifier + ': missing dependency ' + specifier);
+    return modules.get(path);
+  });
+}
+assert.ok(modules.size > 300, 'full client module graph checked');
+for (const module of modules.values()) assert.equal(module.status, 'linked', module.identifier);

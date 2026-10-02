@@ -21,7 +21,7 @@ test('reading relocation preserves implementations and exact dependency targets'
   const source = readFileSync(moduleUrl, 'utf8');
   const imports = [...source.matchAll(/^import .*from '([^']+)';$/gm)]
     .map(match => fileURLToPath(new URL(match[1], moduleUrl)));
-  assert.deepEqual(imports, ['state.js', 'play.js', 'graph.js', 'i18n.js', 'util.js', 'reading/liveread-shared.js']
+  assert.deepEqual(imports, ['core/state.js', 'play.js', 'graph.js', 'i18n.js', 'core/util.js', 'reading/liveread-shared.js']
     .map(path => fileURLToPath(new URL(path, dir))));
 });
 
@@ -32,13 +32,13 @@ test('mobile keeps existing dependencies and imports only the shared reading mod
   const mobileUrl = new URL('../mobile/js/reader.js', dir);
   const mobile = readFileSync(mobileUrl, 'utf8');
   // Pre-relocation mobile source, excluding the intentionally changed import.
-  assert.equal(createHash('sha256').update(mobile.replace(/^import .*;$/gm, '')).digest('hex'),
-    '9fadce121748deb835f8a125e6f3a07e6dd2c059fc1b2d90f4c3a99ba1623cd7');
-  const imports = [...mobile.matchAll(/^import .*from '([^']+)';$/gm)]
+  assert.equal(createHash('sha256').update(mobile.replace(/^import[\s\S]*?;$/gm, '')).digest('hex'),
+    '4ee10e0cafee845b2b802ca47f33e9dd72ff0cdf0a9dd033d066fab4df66a3d3');
+  const imports = [...mobile.matchAll(/^import[\s\S]*?from '([^']+)';$/gm)]
     .map(match => new URL(match[1], mobileUrl));
   const desktopImports = imports.filter(url => url.href.startsWith(dir.href));
   assert.deepEqual(desktopImports.map(url => url.href),
-    ['graph.js', 'ui-helpers/confirm.js', 'i18n.js', 'reading/liveread-shared.js'].map(path => new URL(path, dir).href));
+    ['core/state.js', 'graph.js', 'ui-helpers/confirm.js', 'i18n.js', 'reading/liveread-shared.js'].map(path => new URL(path, dir).href));
   const module = await import(sharedUrl);
   assert.equal(module.terminalHeadingKey(true), 'liveread.victory_heading');
   assert.equal(module.terminalHeadingKey(false), 'liveread.death_heading');

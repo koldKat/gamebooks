@@ -1,4 +1,4 @@
-import { getToken, apiFetch } from '../state.js';
+import { getToken, apiFetch } from '../core/state.js';
 import { t } from '../i18n.js';
 import { feedHooks as _hooks } from './state.js';
 import { renderFeedContents } from './render.js';

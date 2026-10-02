@@ -1,4 +1,4 @@
-import { naturalCompareByName } from '../sort.js';
+import { naturalCompareByName } from '../core/sort.js';
 
 export function _sortedByName(items) {
   return [...items].sort(naturalCompareByName);

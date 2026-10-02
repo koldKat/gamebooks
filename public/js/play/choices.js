@@ -1,8 +1,8 @@
 // choices.js - Internal play-screen module; use ../play.js externally.
 
-import { state, saveState, isTerminal, parseSecId, isValidSecId, allDiscoveredSections } from '../state.js';
+import { state, saveState, isTerminal, parseSecId, isValidSecId, allDiscoveredSections } from '../core/state.js';
 import { t } from '../i18n.js';
-import { naturalCompare } from '../sort.js';
+import { naturalCompare } from '../core/sort.js';
 import { showAlert } from '../ui-helpers/confirm.js';
 import { render } from './render.js';
 import { confirmAlphanumericSwitch } from './dialogs.js';

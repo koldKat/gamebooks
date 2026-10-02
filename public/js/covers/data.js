@@ -3,9 +3,9 @@ import { _effectiveCoversKindMode, _visibleCoverItems } from './filters.js';
 import { _refreshCoversDisplay, _stopLazy } from './grid.js';
 import { _resetLandingCoverQueue, _startLandingCoverRotation } from './background.js';
 import { coversState } from './state.js';
-import { getToken, isDemoMode } from '../state.js';
-import { naturalCompare } from '../sort.js';
-import { fetchPublic as publicFetch } from '../util.js';
+import { getToken, isDemoMode } from '../core/state.js';
+import { naturalCompare } from '../core/sort.js';
+import { fetchPublic as publicFetch } from '../core/util.js';
 
 let _coversDataFingerprint = '';
 let _loadCoversInFlight  = false;

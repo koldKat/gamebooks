@@ -1,5 +1,5 @@
 import { _isMobile } from './helpers.js';
-import { escapeHtml } from '../util.js';
+import { escapeHtml } from '../core/util.js';
 
 export function _initCoverPreview() {
   // Cover hover preview

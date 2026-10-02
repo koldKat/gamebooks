@@ -1,4 +1,4 @@
-import { state, saveState } from '../state.js';
+import { state, saveState } from '../core/state.js';
 import { network, visNodes, visEdges, setNetwork, setVisNodes, setVisEdges, graphRuntime } from './runtime.js';
 import { clampViewportScale, enforceSnapZoomFloor, minSnapScale, GRID_SIZE } from './viewport.js';
 import { drawGrid, drawOverlays } from './overlays.js';

@@ -1,6 +1,6 @@
 // node-dialogs.js - Internal play-screen module; use ../play.js externally.
 
-import { state, saveState } from '../state.js';
+import { state, saveState } from '../core/state.js';
 import { t } from '../i18n.js';
 import { render } from './render.js';
 import { handleRecordChoices } from './choices.js';

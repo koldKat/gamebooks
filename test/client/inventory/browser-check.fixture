@@ -19,7 +19,7 @@ try {
   const inventory = await import('/js/inventory.js');
   const equipment = await import('/js/equipment.js');
   const charsheet = await import('/js/charsheet.js');
-  const data = await import('/js/state.js');
+  const data = await import('/js/core/state.js');
   const { state } = data;
   Object.assign(state, { bookName: 'Inventory smoke test', totalSections: 20, graph: {},
     playthroughs: [{ path: [1], completed: false, inventory: [1, { itemId: 2, qty: 3, note: 'Drink', visible: true }],

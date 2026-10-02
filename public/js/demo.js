@@ -1,9 +1,9 @@
 // demo.js - Demo mode: load guest session, manage demo books, and exit
 
-import { setDemoMode, setDemoState, getDemoState, clearDemoStore, parseSecId, getToken, setCurrentUserLevel } from './state.js';
+import { setDemoMode, setDemoState, getDemoState, clearDemoStore, parseSecId, getToken, setCurrentUserLevel } from './core/state.js';
 import { destroyNetwork } from './graph.js';
 import { showAlert } from './play.js';
-import { fetchPublic } from './util.js';
+import { fetchPublic } from './core/util.js';
 import { t } from './i18n.js';
 
 let _hooks = {};

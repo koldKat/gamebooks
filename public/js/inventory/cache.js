@@ -1,7 +1,7 @@
 // cache.js - Internal inventory module; use ../inventory.js externally.
 
 import { inventoryRuntime } from './runtime.js';
-import { apiFetch } from '../state.js';
+import { apiFetch } from '../core/state.js';
 import { _inv, _captureContext, _isContextCurrent } from './model.js';
 
 export async function _fetchItem(id, isCurrent = () => true) {

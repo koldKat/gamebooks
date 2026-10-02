@@ -1,6 +1,6 @@
 // loadout.js - Internal equipment module; use ../equipment.js externally.
 
-import { state } from '../state.js';
+import { state } from '../core/state.js';
 import { _eqItemId, _eqMeta, _eqQty } from './model.js';
 
 // Build a fresh { inventory, equipment, equipmentVisible } set for a new playthrough

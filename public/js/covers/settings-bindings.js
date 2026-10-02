@@ -3,7 +3,7 @@ import { _refreshCoversDisplay } from './grid.js';
 import { _persistLandingCoverPos, _applyLandingBgPosition, _canDragLandingBg, _updateLandingBgDragUi } from './background.js';
 import { _applyCoverTooltipTitlePrefs, _persistCoverTooltipPrefs, _applyReduceMotionPref, _persistReduceMotionPref, _applyFeedDayCoversPref, _persistFeedDayCoversPref, _applyFeedGlassCardsPref, _persistFeedGlassCardsPref, _applyLandingBgHiddenPref, _persistLandingBgHiddenPref, _applyLandingCoverSourcePrefs, _persistLandingCoverSourcePref, _toggleCoverTooltipSettings } from './prefs.js';
 import { coversState } from './state.js';
-import { getToken, isDemoMode } from '../state.js';
+import { getToken, isDemoMode } from '../core/state.js';
 import { t } from '../i18n.js';
 
 export function _initCoverSettings() {

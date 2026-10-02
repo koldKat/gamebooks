@@ -11,7 +11,7 @@
 // manual entry - the two are deliberately different depths of the same
 // feature, not a duplicate.
 
-import { parseSecId } from '../../js/state.js';
+import { parseSecId } from '../../js/core/state.js';
 import { t } from '../../js/i18n.js';
 
 // doFastTravel: reader.js's own playthrough-navigation logic, passed in

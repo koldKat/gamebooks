@@ -148,7 +148,7 @@ function _eqQty(entry) {
 // "resolution" beyond its pixel size); SVG is vector, so it's sharp at any zoom/print
 // size instead. Colors mirror graph.js's nodeColor()/edgeColor() - specifically the
 // "no specific run being viewed" aggregate branch, since a static snapshot has no
-// single displayed run. Keep in sync with public/js/constants.js's COLORS if it changes.
+// single displayed run. Keep in sync with public/js/core/constants.js's COLORS if it changes.
 const GRAPH_COLORS = {
   death:          { background: '#e74c3c', border: '#c0392b' },
   victory:        { background: '#27ae60', border: '#1e8449' },

@@ -1,7 +1,7 @@
 // display.js - Internal inventory module; use ../inventory.js externally.
 
 import { inventoryRuntime } from './runtime.js';
-import { state, currentPlaythrough, viewingPt } from '../state.js';
+import { state, currentPlaythrough, viewingPt } from '../core/state.js';
 import { t } from '../i18n.js';
 import { _inv } from './model.js';
 import { _ensureInvItems, _byId } from './cache.js';

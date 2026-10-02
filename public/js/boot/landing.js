@@ -1,5 +1,5 @@
 import { bootState } from './state.js';
-import { state, setViewingPt, getToken, getUsername, setUsername, apiFetch, setCurrentBookId, setCurrentUserLevel, setBonusUndos, setBonusFastTravels, isDemoMode } from '../state.js';
+import { state, setViewingPt, getToken, getUsername, setUsername, apiFetch, setCurrentBookId, setCurrentUserLevel, setBonusUndos, setBonusFastTravels, isDemoMode } from '../core/state.js';
 import { destroyNetwork } from '../graph.js';
 import { render, setDiscoverableLimit } from '../play.js';
 import { t } from '../i18n.js';
@@ -23,7 +23,7 @@ import { _resetRewardSnapshotState, _positionRewardLayer, _processRewardSnapshot
 import { cancelBgMove } from '../bg.js';
 import { getDemoBooks, getDemoVisited } from '../demo.js';
 import { resolveIsAdmin, adminBadge, authorBadge, contributorBadge, registerAuthor, registerContributor } from '../account/user.js';
-import { escapeHtml } from '../util.js';
+import { escapeHtml } from '../core/util.js';
 import { _cancelForumReveal, setDiceRollerVisible, setGuideVisible, _isMobile, _revealLanding } from './helpers.js';
 import { _pushNav, _isViewLocked } from './navigation.js';
 import { APP_XP_EXTRA_USER_ID } from './state.js';

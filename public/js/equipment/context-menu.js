@@ -1,6 +1,6 @@
 // context-menu.js - Internal equipment module; use ../equipment.js externally.
 
-import { currentPlaythrough, saveState } from '../state.js';
+import { currentPlaythrough, saveState } from '../core/state.js';
 import { t } from '../i18n.js';
 import { equipmentRuntime } from './runtime.js';
 import { _isReadOnly, _eq, _eqVisible, _eqItemId, _captureEqContext, _isEqContextCurrent } from './model.js';

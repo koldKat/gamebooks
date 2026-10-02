@@ -1,6 +1,6 @@
-import { naturalCompare } from '../sort.js';
+import { naturalCompare } from '../core/sort.js';
 import { getCachedBooks, getCachedStashes } from '../books.js';
-import { escapeHtml } from '../util.js';
+import { escapeHtml } from '../core/util.js';
 
 export function _stashAssignedBooksSet() {
   const set = new Set();

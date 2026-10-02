@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { naturalCompare, naturalCompareByName } from '../../../public/js/sort.js';
+import { naturalCompare, naturalCompareByName } from '../../../public/js/core/sort.js';
 
 describe('naturalCompare', () => {
   test('sorts embedded numbers numerically, not lexicographically', () => {

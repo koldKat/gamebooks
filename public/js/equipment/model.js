@@ -1,6 +1,6 @@
 // model.js - Internal equipment module; use ../equipment.js externally.
 
-import { state, currentPlaythrough, saveState, viewingPt } from '../state.js';
+import { state, currentPlaythrough, saveState, viewingPt } from '../core/state.js';
 
 export function _captureEqContext(key = null) {
   const pt = currentPlaythrough() || viewingPt;

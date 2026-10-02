@@ -1,10 +1,10 @@
 // add-book.js - Add Book, Add Anthology, and Add Series modals
 
-import { apiFetch, isDemoMode } from './state.js';
+import { apiFetch, isDemoMode } from './core/state.js';
 import { t } from './i18n.js';
 import { getCachedAllSeries, _refreshLibraryUi, setInvalidateAutocompleteCaches } from './books.js';
 import { pauseCoversAutoRefresh, resumeCoversAutoRefresh } from './covers.js';
-import { naturalCompare, matchesSearch } from './sort.js';
+import { naturalCompare, matchesSearch } from './core/sort.js';
 import { showAlert } from './play.js';
 import {
   _setModalUploadProgress, _setButtonsDisabled, _uploadPdfWithProgress,
@@ -16,7 +16,7 @@ import {
   invalidateAutocompleteCaches, _loadAutocompleteBooks, _loadSeriesAutocomplete,
   _setModalCover, _setupNameAutocomplete, _setupPlainAutocomplete, _setupAuthorsAutocomplete,
 } from './autocomplete.js';
-import { escapeHtml, compressImage, setPreviewImgBlob } from './util.js';
+import { escapeHtml, compressImage, setPreviewImgBlob } from './core/util.js';
 
 let _hooks = {};
 export function setAddBookHooks(h) { _hooks = h || {}; }

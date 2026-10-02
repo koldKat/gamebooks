@@ -1,4 +1,4 @@
-import { escapeHtml } from '../util.js';
+import { escapeHtml } from '../core/util.js';
 
 // ── Day-card cover backgrounds ──────────────────────────────────────────────
 // A day-card is a single fixed box (unlike an anthology stack of separately

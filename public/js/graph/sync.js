@@ -1,4 +1,4 @@
-import { state, viewingPt, currentPlaythrough, allDiscoveredSections, isTerminal, parseSecId, saveState } from '../state.js';
+import { state, viewingPt, currentPlaythrough, allDiscoveredSections, isTerminal, parseSecId, saveState } from '../core/state.js';
 import { visNodes, visEdges, graphRuntime } from './runtime.js';
 import { _hasValidPos, _effectiveStartSec } from './helpers.js';
 import { nodeColor, nodeLabel, nodeTitle } from './appearance.js';

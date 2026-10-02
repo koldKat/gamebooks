@@ -1,6 +1,6 @@
 // completion.js - Internal play-screen module; use ../play.js externally.
 
-import { state, setViewingPt, saveState, isValidSecId, currentPlaythrough, currentSection } from '../state.js';
+import { state, setViewingPt, saveState, isValidSecId, currentPlaythrough, currentSection } from '../core/state.js';
 import { _scheduleRewardProfileRefresh } from '../progression/rewards.js';
 import { render } from './render.js';
 

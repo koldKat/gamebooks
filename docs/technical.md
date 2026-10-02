@@ -80,9 +80,12 @@ gamebooks/
       autocomplete.css   Enemy-picker autocomplete dropdown, same standalone-linking reason
       reduce-motion.css, mobile.css  Cross-cutting overrides, loaded last in index.html
     js/
-      constants.js       Shared constants (COLORS)
+      core/              Shared application foundations (direct imports; no root facade)
+        constants.js     Shared constants (COLORS)
+        state.js         State singleton, API persistence, auth and cache helpers
+        sort.js          Search folding, matching and natural sorting
+        util.js          Shared DOM, shortcut, image and attachment utilities
       i18n.js            Translation tables (en), t(), applyTranslations()
-      state.js           State object, API persistence, auth helpers, pure helpers
       graph.js           Compatibility facade with live network/DataSet exports
       graph/             Desktop graph feature modules
         runtime.js       Live vis bindings and shared mutable lifecycle/drawing state
@@ -158,8 +161,6 @@ gamebooks/
         loadout.js       Independent new-run loadouts from book templates
         panel.js         Open/close and visibility teardown
         init.js          DOM construction, controls, Escape and E shortcut bindings
-      sort.js            Search/sort helpers (foldForSearch, matchesSearch, naturalCompare)
-      util.js            Shared utility helpers: escapeHtml, compressImage, compressToBlob (client-side JPEG quality iteration), setPreviewImgBlob (revokes an <img>'s previous blob: src before assigning a new one, used by add-book.js and edit-book/book-bindings.js/edit-book/anthology.js cover-preview file pickers), registerPanelShortcut (single-key panel toggle shared by charsheet/inventory/equipment/battlesim*), shortcutLabel (first-letter shortcut hint span)
       autocomplete.js    Shared name-autocomplete helpers for add/edit modals
       account/           Authentication, profiles and identity (direct imports; no root facade)
         auth.js          Login, register, forgot-password and reset-password forms
@@ -592,23 +593,24 @@ gamebooks/
 
 ## Module dependency graph
 
-The project has ~30 ES modules. They form a layered DAG:
+The following is a high-level dependency overview; feature subfolders contain additional modules and some documented cycles:
 
 ```
 Layer 0 (no project imports):
-  constants.js  i18n.js  state.js  sort.js
+  core/constants.js  i18n.js  core/state.js  core/sort.js
 
 Layer 1 (import only from layer 0):
-  graph.js       ← state.js, i18n.js, constants.js
-  charsheet.js   ← state.js, i18n.js
+  core/util.js   ← core/state.js, i18n.js
+  graph.js       ← core/state.js, i18n.js, core/constants.js
+  charsheet.js   ← core/state.js, i18n.js
   ui-helpers/confirm.js ← i18n.js
-  autocomplete.js ← state.js
-  account/user.js ← state.js
+  autocomplete.js ← core/state.js
+  account/user.js ← core/state.js
 
 Layer 2:
-  inventory.js / inventory/ ← state.js, play.js*, charsheet.js
-  equipment.js / equipment/ ← state.js, inventory.js, charsheet.js
-  play.js / play/ ← state.js, graph.js, charsheet.js, equipment.js*, progression/rewards.js, i18n.js, ui-helpers/confirm.js
+  inventory.js / inventory/ ← core/state.js, play.js*, charsheet.js
+  equipment.js / equipment/ ← core/state.js, inventory.js, charsheet.js
+  play.js / play/ ← core/state.js, graph.js, charsheet.js, equipment.js*, progression/rewards.js, i18n.js, ui-helpers/confirm.js
 
   * three-way cycle: equipment.js → inventory.js → play.js → equipment.js
     Works because none consume each other's exports at module-evaluation time.
@@ -643,6 +645,8 @@ The `boot/` dependency graph is acyclic and never back-imports `boot.js`. `initA
 ---
 
 Shared confirmation/alert dialogs and hover tooltips live in `public/js/ui-helpers/`, with direct imports and no root facade. The path-only relocation leaves interaction behavior unchanged: `play.js` still re-exports `showConfirm`/`showAlert`, lazy battle simulators and mobile reader/notebook callers import confirmation directly, and CSS stays in its existing locations. Regression checks cover implementation parity, import resolution, desktop/static and mobile/dynamic dialog markup, callback replacement, alert reuse, tooltip wrapping/positioning and click dismissal. General utilities, tips and Stats for Nerds remain separate.
+
+Shared application foundations live in `public/js/core/`: `state.js`, `constants.js`, `sort.js` and `util.js`. The relocation changes paths only; the state singleton, caches, API persistence and utility behavior stay unchanged. There is no root facade or duplicate state instance. Feature-folder state/constants files remain in place; desktop and mobile both continue sharing the same application state, now imported from `core/state.js`. Tests verify implementation parity and parse/link every desktop/mobile module against actual dependency exports without evaluating DOM code or accessing production APIs.
 
 ## CSS file structure
 
@@ -1469,7 +1473,7 @@ snapToGrid?: boolean,            // if true, dragging a node snaps its dropped p
 // }
 ```
 
-### Not persisted (module-level in `state.js`)
+### Not persisted (module-level in `core/state.js`)
 
 | Variable | Type | Purpose |
 |----------|------|---------|
@@ -1480,7 +1484,7 @@ Both reset to `null` on page load and when navigating back to the books screen.
 
 ---
 
-## Auth flow (client-side, `state.js` + `boot/`)
+## Auth flow (client-side, `core/state.js` + `boot/`)
 
 On boot, `boot/routing.js` checks `localStorage` for `gamebook_auth_token`:
 - Token present → `showBooks()` (fetches `/api/books`)
@@ -1488,11 +1492,11 @@ On boot, `boot/routing.js` checks `localStorage` for `gamebook_auth_token`:
 
 If any API call returns `401`, `apiFetch` fires an `auth-expired` DOM event, clears the stored token and username, and redirects to the login screen - `boot/hooks.js` on desktop, `public/mobile/js/app.js` on mobile (also stopping its heartbeat interval, see below).
 
-If any call (authenticated or not) returns `503`, both `apiFetch` (`state.js`) and `publicFetch` (`util.js`) dispatch a `maintenance-mode` window event. A `{ once: true }` listener calls `location.reload()` - the user lands on the maintenance page after the reload. `publicFetch` is a thin wrapper around `fetch` used for all unauthenticated public API calls (feed, public book/series/user activity, public run data) so that maintenance-mode ejection works even for logged-out users browsing the feed.
+If any call (authenticated or not) returns `503`, both `apiFetch` (`core/state.js`) and `publicFetch` (`core/util.js`) dispatch a `maintenance-mode` window event. A `{ once: true }` listener calls `location.reload()` - the user lands on the maintenance page after the reload. `publicFetch` is a thin wrapper around `fetch` used for all unauthenticated public API calls (feed, public book/series/user activity, public run data) so that maintenance-mode ejection works even for logged-out users browsing the feed.
 
 **Convention: every client request goes through `apiFetch` (authenticated) or `fetchPublic`/`publicFetch` (public), never a raw `fetch()`.** These wrappers are what give a request its 401 (expired/invalid session → ejection flow) and 503 (maintenance mode → ejection flow) handling; a raw `fetch()` silently skips both, degrading to a generic error message instead of the normal ejection UX. Applies uniformly across the app - `export.js`, `demo.js`, `account/auth.js`'s pre-login flows, `party.js`, `stats.js`, `boot/shell.js`'s config/tagline loaders, `tips.js`. `covers.js`'s two raw `fetch()` calls (streaming cover-image bytes with a progress bar) are the deliberate exception - image/blob requests don't need JSON-oriented 401/503 handling.
 
-Attachment upload (`/api/attachments`) is consolidated into `util.js`'s `uploadAttachment()`/`isImageFilename()`/`addAttachmentItem()`, used by both `community/feedback.js` and `community/inbox.js` rather than each keeping its own copy.
+Attachment upload (`/api/attachments`) is consolidated into `core/util.js`'s `uploadAttachment()`/`isImageFilename()`/`addAttachmentItem()`, used by both `community/feedback.js` and `community/inbox.js` rather than each keeping its own copy.
 
 The desktop messaging/notification modules live in `public/js/community/` and are imported directly; there is no root `community.js` or compatibility wrapper at their old root paths. This is a path-only grouping: exports, DOM IDs, endpoints, attachment handling and the notification debounce/SSE hooks remain unchanged. Shared infrastructure stays at the JS root, the admin's separate feedback module is untouched, and mobile continues using its own entrypoint/controllers. Tests check all client import targets and the unchanged non-import source of each relocated module; the manual community browser fixture exercises mocked messaging/attachments and live refresh hints without production writes.
 
@@ -1602,7 +1606,7 @@ Desktop XP widgets, reward snapshots/floaties and the Gold Coin shop are grouped
 
 ### Book list (`renderBooksList`)
 
-**Module layout:** `public/js/books.js` is the compatibility entry point; existing callers keep their imports and exported API. Implementation lives in `public/js/books/`, separated into rendering, markup, actions, search, grouping, preferences, data refresh, lazy groups, and card covers. `state.js` owns the shared caches and preferences, so search, autocomplete, edits, and refreshes see the same library. The entry point installs the renderer callback used by `data.js` and registers the existing window listeners once. Feature modules import one another directly, not the compatibility entry point; this avoids a refresh/render import cycle. Cover observer, image queues, and layout scheduling stay module-local in `books/covers.js`, distinct from the public covers wall in `public/js/covers.js`. The split preserves sorting, membership, collapse persistence, and refresh behavior. Follow-up fixes ensure every anthology is filtered even after an earlier match, search sees every lazy-loaded item before filtering, and chunk wiring includes the subtree root. Regression tests for grouping, cover loading, and lazy lifecycle live in `test/client/books/`.
+**Module layout:** `public/js/books.js` is the compatibility entry point; existing callers keep their imports and exported API. Implementation lives in `public/js/books/`, separated into rendering, markup, actions, search, grouping, preferences, data refresh, lazy groups, and card covers. `core/state.js` owns the shared caches and preferences, so search, autocomplete, edits, and refreshes see the same library. The entry point installs the renderer callback used by `data.js` and registers the existing window listeners once. Feature modules import one another directly, not the compatibility entry point; this avoids a refresh/render import cycle. Cover observer, image queues, and layout scheduling stay module-local in `books/covers.js`, distinct from the public covers wall in `public/js/covers.js`. The split preserves sorting, membership, collapse persistence, and refresh behavior. Follow-up fixes ensure every anthology is filtered even after an earlier match, search sees every lazy-loaded item before filtering, and chunk wiring includes the subtree root. Regression tests for grouping, cover loading, and lazy lifecycle live in `test/client/books/`.
 
 Each `.book-item` card has a progress bar background: `rgba(107,114,128,0.18)` fills `(visited / effective_sections) × 100%` left-to-right, where `effective_sections = discoverable_sections ?? total_sections`. Zero-visited cards have no background.
 
@@ -1730,7 +1734,7 @@ Mobile mirrors this pattern in `public/mobile/js/battlesim-dispatch.js`: `reader
 - `public/mobile/js/battlesim-dispatch.js`'s `SUPPORTED_BATTLE_SIM_BOOKS` set - omitting the id here means mobile's Battle Sim button never appears for that book.
 - `server/db/xp.js`'s `SIM_HISTORY_KEYS` array - omitting this doesn't break the sim itself, just silently pays zero `battlesim_win`/`battlesim_loss` XP forever. Its own comment documents this recurring across multiple sims already - nothing catches a miss automatically, so it's genuinely worth a deliberate double-check every time. A missed sim can be backfilled after the fact via a one-time gated migration in `server/db.js` (`admin_settings` flag) that scans every already-saved `pt.simNNN.history` entry and re-awards through the normal `awardXp()`, safe to run any time since `xp_events`' unique `(user_id, event, ref)` makes every individual award idempotent regardless of the outer gate.
 - `public/css/battlesim.css`'s two combined ID selectors (the base button style block and its `:hover` block) - **the trigger button has no generic `#play-btn-row button` fallback style, only this explicit per-ID list** (same pattern for `#charsheet-btn`/`#inventory-btn`/etc.). Omitting the new sim's `#simNNN-btn` from both doesn't break anything functionally - the button still renders and works - it just displays as an unstyled default HTML button instead of matching every other trigger button's dark pill styling. (The `#bsim-close, #s8-close, ... { margin-left: auto }` list a few lines below looks like a third instance of this pattern but isn't live anymore - `equipment.css`'s generic `.inv-modal-hdr:not(:has(.inv-count)) .inv-close-btn` rule already covers every close button by class regardless of ID, since all of them carry `class="inv-close-btn"`.)
-- `public/js/util.js`'s `ALL_PANEL_OVERLAY_IDS` array (`sim{NNN}-overlay`) - used only by `registerPanelShortcut()`'s keyboard-shortcut path to force-close other open panels before opening this one. Omitting a sim here is low-severity in practice (only one sim's trigger button is ever visible per book, and switching books already auto-closes the stale one via that sim's own `setSimNNNVisible(false)`), but still violates the array's documented "every panel overlay ID" invariant - keep it complete anyway.
+- `public/js/core/util.js`'s `ALL_PANEL_OVERLAY_IDS` array (`sim{NNN}-overlay`) - used only by `registerPanelShortcut()`'s keyboard-shortcut path to force-close other open panels before opening this one. Omitting a sim here is low-severity in practice (only one sim's trigger button is ever visible per book, and switching books already auto-closes the stale one via that sim's own `setSimNNNVisible(false)`), but still violates the array's documented "every panel overlay ID" invariant - keep it complete anyway.
 - `book_enemies` rows seeded for the new `book_id` (via direct SQL, no admin UI) and `books.has_battle_sim = 1` set for that book (in `server/db.js`, one hardcoded idempotent `UPDATE ... WHERE id = NNN` per sim, added to a growing list right after the one-time bulk migration). Nothing fails loudly if this is skipped - the covers-wall badge/filter and Stats for Nerds' "battle simulators available" count just silently undercount by one.
 - This document's own two lists: the per-sim description paragraph in this section (search for the previous `battlesimNNN.js` entry) and the `battlesimNNN.js` filename in the bulk module-file inventory list further down. Neither is enforced by anything - omitting them just leaves the new sim undocumented here, silently, exactly like every other item on this checklist. Found missing for two sims added in the same session that added this bullet (2026-09-27) - worth a deliberate check every time, same as the rest of this list.
 
@@ -1764,7 +1768,7 @@ This treatment is applied by two separate selectors sharing the same declaration
 
 ### Covers panel (`loadCovers`)
 
-**Module layout:** `public/js/covers.js` preserves the public API while implementation lives in `public/js/covers/`. `state.js` owns the shared catalog arrays, preferences, and panel/background state. Refresh guards remain private to `data.js`; the 24-entry blob cache and in-flight image-fetch map remain private to `images.js`; crossfade guards remain private to `background.js`. `init.js` runs the existing settings, tile navigation, preview, and search/menu bindings in their original order, with no new top-level listeners or timers. The compatibility entry point registers the book/series renderer callbacks used by `activity.js`, avoiding a navigation/render import cycle. Feature modules import one another directly, never back through `covers.js`. `covers/` is separate from `books/covers.js`, which handles owned-library card backgrounds, and from `public/covers/`, which stores uploaded images. Regression tests for composites, filters, background persistence, image caching, and module boundaries live in `test/client/covers/`.
+**Module layout:** `public/js/covers.js` preserves the public API while implementation lives in `public/js/covers/`. `core/state.js` owns the shared catalog arrays, preferences, and panel/background state. Refresh guards remain private to `data.js`; the 24-entry blob cache and in-flight image-fetch map remain private to `images.js`; crossfade guards remain private to `background.js`. `init.js` runs the existing settings, tile navigation, preview, and search/menu bindings in their original order, with no new top-level listeners or timers. The compatibility entry point registers the book/series renderer callbacks used by `activity.js`, avoiding a navigation/render import cycle. Feature modules import one another directly, never back through `covers.js`. `covers/` is separate from `books/covers.js`, which handles owned-library card backgrounds, and from `public/covers/`, which stores uploaded images. Regression tests for composites, filters, background persistence, image caching, and module boundaries live in `test/client/covers/`.
 
 `loadCovers()` fetches `/api/public/covers`, `/api/public/books`, and `/api/public/series`, then renders a mixed wall into `#covers-grid`.
 
@@ -2040,7 +2044,7 @@ Per-run dice state, stored on `pt.diceState` (`{ count, die, lastResult, previou
 
 ## Character sheet (`charsheet.js`)
 
-A self-contained module for tracking book-specific character stats per book. Imports only `state.js` and `i18n.js`. To remove: delete `charsheet.js`, remove its imports and integration calls from `boot/`, and delete `public/css/charsheet.css` (and its `<link>` in `index.html`).
+A self-contained module for tracking book-specific character stats per book. Imports only `core/state.js` and `i18n.js`. To remove: delete `charsheet.js`, remove its imports and integration calls from `boot/`, and delete `public/css/charsheet.css` (and its `<link>` in `index.html`).
 
 **Exports:**
 - `initCharSheet()` - call once from `DOMContentLoaded`. Injects the modal overlay into `document.body`, and the open button + compact display into `#main-screen`.
@@ -2070,7 +2074,7 @@ A self-contained module for tracking book-specific character stats per book. Imp
 
 ## Inventory (`inventory.js`)
 
-`inventory.js` is a compatibility facade for the implementations in `public/js/inventory/`. All nine public exports retain their signatures and existing callers continue importing the facade. `inventory/setup.js` registers the grid renderer on the shared runtime once, allowing dialogs, transfers, picker and panel actions to refresh it without an internal import cycle. The existing external inventory/play/equipment cycle is unchanged. Imports still include `state.js`, `play.js` (for `showConfirm`), and `charsheet.js` (for `getPlayBtnRow`). To remove the feature: delete the facade and its implementation directory, then remove its imports and integration calls from `boot/` and `equipment/`. Its CSS remains in `public/css/equipment.css`; no layout, translation keys, data schema or mobile controller changes accompany this split.
+`inventory.js` is a compatibility facade for the implementations in `public/js/inventory/`. All nine public exports retain their signatures and existing callers continue importing the facade. `inventory/setup.js` registers the grid renderer on the shared runtime once, allowing dialogs, transfers, picker and panel actions to refresh it without an internal import cycle. The existing external inventory/play/equipment cycle is unchanged. Imports still include `core/state.js`, `play.js` (for `showConfirm`), and `charsheet.js` (for `getPlayBtnRow`). To remove the feature: delete the facade and its implementation directory, then remove its imports and integration calls from `boot/` and `equipment/`. Its CSS remains in `public/css/equipment.css`; no layout, translation keys, data schema or mobile controller changes accompany this split.
 
 `test/client/inventory/` checks the internal dependency graph and compares 17 state/render/save/fetch scenarios against a digest captured from the unsplit controller at `d97de3b`. Coverage includes legacy entries, equipment HUD integration, rename/edit, visibility, drag reorder, metadata search, lazy SVG loading, stacking, templates, confirmed removal, equipment transfers, capacity, historical read-only mode and visibility cleanup. Equipment's existing tests continue exercising the actual inventory normalization/transfer/display functions from their new source modules. The manual inventory browser fixture uses real DOM/CSS, IntersectionObserver and inventory/equipment modules with mocked HTTP; no production writes or mobile touch interactions are covered.
 
@@ -2136,13 +2140,13 @@ A self-contained module that renders a book's actual prose section-by-section in
 
 **UI:** a floating panel (`liveread-panel`, `public/css/liveread.css`), docked right, internally scrollable, toggled by `#liveread-btn`. Deliberately not built on the `.inv-overlay` blocking-modal pattern used by every other panel in the app - it has no full-screen backdrop, so the graph stays visible and interactive underneath while reading.
 
-**Graph-node click preview:** clicking any graph node (`network.on('click', ...)` in `boot/play-screen.js`) opens a read-only preview of that section's text via `previewSection()` (`reading/liveread.js`), gated on `isSectionMapped()` (`state.js`) - true only for a section colored purple/"Mapped" in the legend, i.e. one the reader has actually read before, in any run ever (`state.graph` is account-wide, not per-run), never a section merely known-as-a-destination (grey/"Discovered") but never visited - clicking one of those silently no-ops, so a reader can't read ahead just by touching the map. Sets a module-level `_previewSec` flag so `_onChoiceClick` can tell preview mode apart from normal reading: an in-text link inside a preview never does real navigation, only ever opens another gated preview (or no-ops if its target isn't mapped either). The "Return to where you left off" link (`liveread-preview-return`) calls `_returnToCurrent()`, which re-renders wherever the actual run stands (current section, else a just-finished run's terminal screen, else closes the panel) - critically it clears `_shownSec` first, since `previewSection()` deliberately never touches `_shownSec` while previewing (it renders directly rather than going through `_showSection()`), so `_showSection()`'s own "already shown" cache guard doesn't silently no-op the return. Mobile's reader.js has the exact same gate (`_onGraphTap`/`_previewSection`/`isSectionMapped`) - the two were kept deliberately in sync after mobile's original version only checked the current run's own `pt.mVisited`, missing sections read in a past, different run.
+**Graph-node click preview:** clicking any graph node (`network.on('click', ...)` in `boot/play-screen.js`) opens a read-only preview of that section's text via `previewSection()` (`reading/liveread.js`), gated on `isSectionMapped()` (`core/state.js`) - true only for a section colored purple/"Mapped" in the legend, i.e. one the reader has actually read before, in any run ever (`state.graph` is account-wide, not per-run), never a section merely known-as-a-destination (grey/"Discovered") but never visited - clicking one of those silently no-ops, so a reader can't read ahead just by touching the map. Sets a module-level `_previewSec` flag so `_onChoiceClick` can tell preview mode apart from normal reading: an in-text link inside a preview never does real navigation, only ever opens another gated preview (or no-ops if its target isn't mapped either). The "Return to where you left off" link (`liveread-preview-return`) calls `_returnToCurrent()`, which re-renders wherever the actual run stands (current section, else a just-finished run's terminal screen, else closes the panel) - critically it clears `_shownSec` first, since `previewSection()` deliberately never touches `_shownSec` while previewing (it renders directly rather than going through `_showSection()`), so `_showSection()`'s own "already shown" cache guard doesn't silently no-op the return. Mobile's reader.js has the exact same gate (`_onGraphTap`/`_previewSection`/`isSectionMapped`) - the two were kept deliberately in sync after mobile's original version only checked the current run's own `pt.mVisited`, missing sections read in a past, different run.
 
 **`public/js/reading/liveread-shared.js`:** the one shared module between desktop's liveread.js and mobile's reader.js, deliberately zero-import so pulling it into mobile can never drag in anything heavier (see reader.js's own header comment on why mobile doesn't just import liveread.js directly). Owns only the pieces with truly zero platform-specific shape: the win/death `TROPHY_SVG`/`BROKEN_SHIELD_SVG` icon markup and `terminalHeadingKey(win)` (which i18n key the heading uses). Both SVGs use the generic class `end-icon`, not a platform-prefixed one - each platform's own CSS still independently defines that class's size/color/filter rules, scoped under its own wrapper (`.liveread-end` on desktop, `.m-end-achievement` on mobile). Everything else about the run-end screen (DOM ids, panel-vs-pane model, the rest of the markup) stays platform-specific on purpose - unifying it would cost a real DOM-abstraction layer for a screen that's simple enough not to need one.
 
 **Trigger button lives in `#play-btns-bar`, not `#play-btn-row`:** every other panel's trigger (`#charsheet-btn`, `#inventory-btn`, each `#simNNN-btn`) gets dynamically appended to `#play-btn-row` (`charsheet.js`'s `getPlayBtnRow()`), but that row can hold 4-5 buttons at once (Equipment/Inventory/Character Sheet/Battle Simulator) and a `flex-wrap`/`flex-direction:row-reverse` interaction there could stack a button on top of a neighbor instead of cleanly wrapping it to a new row if `#liveread-btn` joined them too (every button in that row also has `flex-shrink:0` to guard against this, but `#liveread-btn` is kept out of that row entirely rather than relying on that alone). It lives as static markup in `index.html`, between `#guide-btn` and `#notebook-btn` inside `#play-bottom-stack`'s `#play-btns-bar` - a row that only ever has 2-3 buttons, so there's no crowding risk there. Styled alongside its siblings in `charsheet.css`, not in `liveread.css`.
 
-**Stays visible-but-disabled, not hidden, when the current book has no live-reading data:** `setLiveReadVisible(visible)` toggles `btn.disabled` and a themed `data-tooltip` ("Not available for this book") instead of `display:none` - `#play-btns-bar` only has 2-3 buttons, so hiding/showing this one on every book switch visibly shifted the row's width and Notebook's position. `registerPanelShortcut`'s (`util.js`) guard had to be updated to also check `btn.disabled`, not just `display === 'none'` - it calls `open()` directly rather than simulating a click, so the native `disabled` attribute alone doesn't block the `R` keyboard shortcut the way it blocks a real click.
+**Stays visible-but-disabled, not hidden, when the current book has no live-reading data:** `setLiveReadVisible(visible)` toggles `btn.disabled` and a themed `data-tooltip` ("Not available for this book") instead of `display:none` - `#play-btns-bar` only has 2-3 buttons, so hiding/showing this one on every book switch visibly shifted the row's width and Notebook's position. `registerPanelShortcut`'s (`core/util.js`) guard had to be updated to also check `btn.disabled`, not just `display === 'none'` - it calls `open()` directly rather than simulating a click, so the native `disabled` attribute alone doesn't block the `R` keyboard shortcut the way it blocks a real click.
 
 **Positioning:** docked right, under `#legend` (`right: 12px; top: calc(var(--legend-h, 260px) + 24px)`), `top` anchor only with `max-height: 50vh` - a single anchor plus a capped height, rather than anchoring both top and bottom, avoids the panel expanding to cover a neighboring floating element (`#run-trail-float`/`#notes-display`/`#dice-roller-wrap`) on short viewports. `--legend-h` is tracked by a `ResizeObserver` in `reading/liveread.js`'s `initLiveRead()` (mirrors `charsheet.js`'s `--play-btn-row-h` tracking) since the legend's real height varies with its collapse toggle and the portal legend row's visibility.
 
@@ -2195,7 +2199,7 @@ The shared inventory HUD also guards its final asynchronous paint: each `renderI
 
 Closing/replacing picker sessions and hiding the equipment feature also release captured book/run references; slot-context bookkeeping is replaced on each grid render rather than accumulating. Tests assert reference release on hide as well as rejection of stale responses.
 
-Imports `state.js`, `inventory.js` (to move items between inventory and equipment - see the dependency-cycle note above), and `charsheet.js` (for `getPlayBtnRow`).
+Imports `core/state.js`, `inventory.js` (to move items between inventory and equipment - see the dependency-cycle note above), and `charsheet.js` (for `getPlayBtnRow`).
 
 **Exports:**
 - `initEquipment()` - call once from `DOMContentLoaded`. Injects the equipment button into `#main-screen`.
@@ -2613,7 +2617,7 @@ Both respond `application/zip` with `Content-Disposition: attachment`. Awards XP
 
 **Graph snapshots are SVG, generated entirely server-side** (`buildGraphSvg` in `server/export.js`) from each book's already-saved `state.positions`/`state.graph`/`state.playthroughs`/`state.startSection` - no browser, canvas, or headless renderer involved, and no client round-trip. `/api/export/all` is a single GET request.
 
-Node/edge coloring in `buildGraphSvg` is a parameterized reimplementation of `graph.js`'s `nodeColor()`/`edgeColor()` (specifically the "no specific run being viewed" aggregate-coloring branch, since a static snapshot has no single displayed run) - not imported from `graph.js`, which is tightly coupled to the single live `state` singleton on the client and has no server-side equivalent anyway. `GRAPH_COLORS` in `server/export.js` must be kept in sync with `public/js/constants.js`'s `COLORS` if either changes. Returns `null` (no graph file) for a book that's never been laid out (`Object.keys(positions).length === 0`).
+Node/edge coloring in `buildGraphSvg` is a parameterized reimplementation of `graph.js`'s `nodeColor()`/`edgeColor()` (specifically the "no specific run being viewed" aggregate-coloring branch, since a static snapshot has no single displayed run) - not imported from `graph.js`, which is tightly coupled to the single live `state` singleton on the client and has no server-side equivalent anyway. `GRAPH_COLORS` in `server/export.js` must be kept in sync with `public/js/core/constants.js`'s `COLORS` if either changes. Returns `null` (no graph file) for a book that's never been laid out (`Object.keys(positions).length === 0`).
 **Graph legend:** the exported HTML embeds `_exportLegendHtml()` directly under the graph image in `buildBookHtml()` whenever `book._hasGraph` is set, so the export stands on its own outside the app - includes the death-and-victory-both-available color (`GRAPH_COLORS.bothOutline`, amber).
 
 Edges honor the book's own `connectorStyle`, approximated in SVG where no clean equivalent exists. Node labels render below the node, matching the live graph. Output is scaled so the larger dimension is capped at 1600px.
@@ -2667,7 +2671,7 @@ Produces a self-contained, print-friendly HTML file. Inline CSS only - no extern
 
 **Open-world series runs:** in an open-world series, every book carries one `playthroughs` slot per series run so numbers stay aligned across books (`_syncSeriesRuns`, `open-world.js`), but a run only actually happened in the book(s) it visited - a book's own slot for a run it never touched is a padding placeholder with `startedAt: null`. `buildBookHtml` excludes these phantom slots from the stats line (mapped/runs/wins/losses/in-progress) so they don't inflate a book's numbers with runs that happened elsewhere, but still lists them in the Runs table (as "played in another book") so the row numbering matches what the live app shows. A run whose `result` is `'portal'` (left this book for another one mid-run) is treated as still in progress, not finished. A finished run that has a leftover `portalTarget` gets an inline "(continues in another book)" note; one with `portalEntry: true` (started here via a portal from elsewhere) gets "(started via portal)" next to its run label. `state.preSeriesRuns` (a book's run history from before it joined a series - see "Pre-series runs" above) gets its own "Before Joining Series" table and detail blocks, numbered the same negative-index convention the live run list uses, and counts toward the summary stats.
 
-A section counts as **mapped** if it has real recorded choices, not merely a `discovered: true` stub (a section can be flagged `discovered` and still pick up real choices later - checking the flag alone would undercount). This definition is shared between the "Mapped: N" stat and the section map table split (mapped rows vs. greyed "not yet visited" rows), and mirrors the client's own `mappedCount()` (`state.js`) so the exported numbers always match what the app showed at export time. Works correctly for both numeric and alphanumeric section IDs. Filenames in the full export are deduplicated if two books share the same safe name (appends ` (2)`, ` (3)`, etc.). All strings are HTML-escaped.
+A section counts as **mapped** if it has real recorded choices, not merely a `discovered: true` stub (a section can be flagged `discovered` and still pick up real choices later - checking the flag alone would undercount). This definition is shared between the "Mapped: N" stat and the section map table split (mapped rows vs. greyed "not yet visited" rows), and mirrors the client's own `mappedCount()` (`core/state.js`) so the exported numbers always match what the app showed at export time. Works correctly for both numeric and alphanumeric section IDs. Filenames in the full export are deduplicated if two books share the same safe name (appends ` (2)`, ` (3)`, etc.). All strings are HTML-escaped.
 
 `safeFilename` also rejects Windows-reserved device names (`CON`, `PRN`, `AUX`, `NUL`, `COM1`-`9`, `LPT1`-`9`, case-insensitive, with or without an extension) and caps the result at 150 characters.
 
@@ -2711,7 +2715,7 @@ Both `sendAdminEmail` and `sendReplyEmail` use the same template: dark amber hea
 **Structure:** folder-per-module-domain, not flat - `test/client/<module>/*.test.mjs` for `public/js/*.js`, `test/server/<module>/*.test.mjs` for `server/*.js`. Each file targets one function/concern rather than one giant file per source module.
 
 **Deliberately not covered, and why - two structural blockers, not oversights:**
-- **DOM-coupled client code**: most of `public/js/*.js` transitively imports `i18n.js`, which reads `localStorage` at module *top level* (not inside a function) - throws immediately under plain Node with no DOM. `graph.js` and everything downstream of it is skipped for this reason. `state.js`, `sort.js`, and the lightweight battle-sim dispatch/loader modules are covered because they have zero DOM access at import time.
+- **DOM-coupled client code**: most of `public/js/*.js` transitively imports `i18n.js`, which reads `localStorage` at module *top level* (not inside a function) - throws immediately under plain Node with no DOM. `graph.js` and everything downstream of it is skipped for this reason. `core/state.js`, `core/sort.js`, and the lightweight battle-sim dispatch/loader modules are covered because they have zero DOM access at import time.
 - **Live-DB-coupled server code**: `server/db/connection.js` opens a connection to the real `database.sqlite` eagerly at `require()` time, hardcoded path, no env-var override - unlike a from-scratch design (inject `db` as a parameter, construct `new Database(':memory:')` in tests), changing this would mean changing how the live server boots, which was explicitly ruled out. So `server/db/*.js` and anything requiring `./db` (including `request-helpers.js`) is skipped. `server/export.js`, `server/html-escape.js`, and `server/impersonation-context.js` are covered because none of them require `./db`.
 
 Going forward: new code should get tests where it fits one of the two testable shapes above (no DOM, no live DB) - see the module's own imports before assuming it's covered-or-not by pattern-matching against this list, since that can change as files are refactored.

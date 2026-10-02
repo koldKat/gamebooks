@@ -1,5 +1,5 @@
 import { editState } from './state.js';
-import { isDemoMode, apiFetch } from '../state.js';
+import { isDemoMode, apiFetch } from '../core/state.js';
 import { t } from '../i18n.js';
 import { _starLabelHtml } from '../books.js';
 import { refreshCoinsDisplay } from '../progression/shop.js';

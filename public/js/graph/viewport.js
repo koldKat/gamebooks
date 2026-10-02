@@ -1,4 +1,4 @@
-import { state } from '../state.js';
+import { state } from '../core/state.js';
 import { network, graphRuntime } from './runtime.js';
 
 // Bounds for persisted zoom level - keeps an accidental pinch/scroll zoom-out

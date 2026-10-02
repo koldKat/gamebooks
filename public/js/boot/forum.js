@@ -1,5 +1,5 @@
 import { bootState } from './state.js';
-import { getToken } from '../state.js';
+import { getToken } from '../core/state.js';
 import { render } from '../play.js';
 import { closePublicModal } from '../account/public-profile.js';
 import { openCoverActivity, openSeriesActivity } from '../covers.js';

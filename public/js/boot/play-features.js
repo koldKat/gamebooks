@@ -1,4 +1,4 @@
-import { setViewingPt, setOnViewingPtChange } from '../state.js';
+import { setViewingPt, setOnViewingPtChange } from '../core/state.js';
 import { render, setOnTrailToggle, setOnChoicesRecorded, setAfterRenderFn } from '../play.js';
 import { applyTranslations } from '../i18n.js';
 import { initCharSheet, renderCharSheetDisplay } from '../charsheet.js';

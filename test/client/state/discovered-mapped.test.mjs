@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { discoveredSectionsFor, mappedCountFor } from '../../../public/js/state.js';
+import { discoveredSectionsFor, mappedCountFor } from '../../../public/js/core/state.js';
 
 describe('discoveredSectionsFor', () => {
   test('always includes the start section, even with an empty graph', () => {

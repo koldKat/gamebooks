@@ -5,7 +5,7 @@ import { _saveExpandedPref } from './prefs.js';
 import { _scheduleAnthologyCardCoverFlows, _queueBookCovers } from './covers.js';
 import { _materializeLazyGroup, _maybeReclaimLazyGroup } from './lazy.js';
 import { _starLabelHtml, _flashRatingGate } from './markup.js';
-import { isDemoMode, apiFetch, getDemoState, setDemoState } from '../state.js';
+import { isDemoMode, apiFetch, getDemoState, setDemoState } from '../core/state.js';
 import { refreshCoinsDisplay } from '../progression/shop.js';
 import { openCoverActivity, openSeriesActivity } from '../covers.js';
 import { t } from '../i18n.js';

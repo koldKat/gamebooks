@@ -48,7 +48,7 @@ for (const m of initialHtml.matchAll(/\bid="([^"]+)"/g)) body.appendChild(new El
 const document = { body, getElementById: id => elements.get(id) || null, createElement: () => new Element(),
   querySelectorAll: selector => [...elements.values()].flatMap(el => el.querySelectorAll(selector)), addEventListener() {} };
 // Use production helpers, with only persistence/auth state mocked.
-const stateSource = readFileSync(resolve(root, 'state.js'), 'utf8');
+const stateSource = readFileSync(resolve(root, 'core/state.js'), 'utf8');
 function helper(name) {
   const start = stateSource.indexOf('export function ' + name + '(');
   assert.ok(start >= 0, name);
@@ -79,8 +79,8 @@ const stateModule = new SourceTextModule(`
   export const setApiFetch = fn => { apiFetch = fn; };
   export const setLevel = (level, undos, fast) => { currentUserLevel = level; bonusUndos = undos; bonusFastTravels = fast; };
   ${helperNames.map(name => 'export ' + helper(name)).join('\n')}
-`, { context, identifier: resolve(root, 'state.js') });
-modules.set(resolve(root, 'state.js'), stateModule);
+`, { context, identifier: resolve(root, 'core/state.js') });
+modules.set(resolve(root, 'core/state.js'), stateModule);
 function stub(file, exports) {
   modules.set(resolve(root, file), new SyntheticModule(Object.keys(exports), function () { for (const [k, v] of Object.entries(exports)) this.setExport(k, v); }, { context }));
 }

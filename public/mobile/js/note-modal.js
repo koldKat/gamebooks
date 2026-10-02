@@ -5,7 +5,7 @@
 // fast-travel-dialog.js. Extracted out of reader.js as a self-contained UI
 // widget, per CLAUDE.md's module-placement rule.
 
-import { state, saveState, currentSection } from '../../js/state.js';
+import { state, saveState, currentSection } from '../../js/core/state.js';
 import { refreshGraph } from './graph-view.js';
 import { t } from '../../js/i18n.js';
 import { pruneDiscovered } from './context-menu.js';

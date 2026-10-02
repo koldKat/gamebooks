@@ -1,5 +1,5 @@
 import { bootState } from './state.js';
-import { setUsername, apiFetch, setCurrentUserLevel, setBonusUndos, setBonusFastTravels } from '../state.js';
+import { setUsername, apiFetch, setCurrentUserLevel, setBonusUndos, setBonusFastTravels } from '../core/state.js';
 import { updateCoinsDisplay } from '../progression/shop.js';
 import { updateAvatarUI } from '../account/profile.js';
 import { _ensureLiveTabControllerStarted, _connectAppXpSSE } from '../livetab.js';

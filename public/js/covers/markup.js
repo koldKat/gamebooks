@@ -1,6 +1,6 @@
 import { _isFavoriteCoverItem, _hasBattleSim, _hasLiveReading, _bottomLeftBadgeCount } from './filters.js';
-import { getToken, isDemoMode } from '../state.js';
-import { escapeHtml } from '../util.js';
+import { getToken, isDemoMode } from '../core/state.js';
+import { escapeHtml } from '../core/util.js';
 import { t } from '../i18n.js';
 
 // ── Cover thumb HTML ───────────────────────────────────────────────────────────

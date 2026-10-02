@@ -5,7 +5,7 @@
 
 import {
   state, saveState, apiFetch, isValidSecId, setViewingPt, currentPlaythrough, currentBookId, currentSection,
-} from './state.js';
+} from './core/state.js';
 import {
   network, visNodes, setGraphCrossBookRoute,
   canReachInGraph, allReachableInGraph, clampViewportScale, findPathTo,

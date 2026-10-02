@@ -1,5 +1,5 @@
 import { bootState } from './state.js';
-import { state, setViewingPt, loadState, isValidSecId, currentPlaythrough, currentSection, isDemoMode } from '../state.js';
+import { state, setViewingPt, loadState, isValidSecId, currentPlaythrough, currentSection, isDemoMode } from '../core/state.js';
 import { network, initGraph, destroyNetwork, canReach, setGraphOpenWorld } from '../graph.js';
 import { render, maxFastTravels, setDiscoverableLimit } from '../play.js';
 import { t } from '../i18n.js';

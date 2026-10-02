@@ -1,6 +1,6 @@
 import { editState } from './state.js';
 import { t } from '../i18n.js';
-import { foldForSearch, matchesSearch } from '../sort.js';
+import { foldForSearch, matchesSearch } from '../core/sort.js';
 import { getCachedBooks, getCachedAllSeries, getCachedStashes } from '../books.js';
 import { _sortedByName } from './selectors.js';
 import { _stashAssignedBooksSet, _stashAssignedSeriesSet, _stashItemKey, _renderStashRows, _buildStashPickerItems, _effectiveStashPickerSelection, _stashVisibleInheritedPickerBookIds, _sortStashPickerItems } from './stash-helpers.js';

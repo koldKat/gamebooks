@@ -1,4 +1,4 @@
-import { state, isTerminal, isValidSecId, parseSecId, saveState } from '../state.js';
+import { state, isTerminal, isValidSecId, parseSecId, saveState } from '../core/state.js';
 
 // ── Node deletion ───────────────────────────────────────────────────────────
 

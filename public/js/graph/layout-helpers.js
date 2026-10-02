@@ -1,4 +1,4 @@
-import { state, parseSecId, isTerminal } from '../state.js';
+import { state, parseSecId, isTerminal } from '../core/state.js';
 import { _hasValidPos } from './helpers.js';
 import { _GRID_LAYER_GAP, _GRID_COL_GAP } from './layout-constants.js';
 

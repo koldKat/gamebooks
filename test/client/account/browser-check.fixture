@@ -32,7 +32,7 @@ const el = id => document.getElementById(id);
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
 const assert = (condition, label) => { if (!condition) throw Error(label); checks.push(label); };
 try {
-  const state = await import('/js/state.js');
+  const state = await import('/js/core/state.js');
   const auth = await import('/js/account/auth.js');
   const profile = await import('/js/account/profile.js');
   const publicProfile = await import('/js/account/public-profile.js');

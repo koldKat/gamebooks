@@ -1,4 +1,4 @@
-import { escapeHtml } from '../util.js';
+import { escapeHtml } from '../core/util.js';
 import { t } from '../i18n.js';
 import { formatAnnBody } from './formatting.js';
 import { createDayRenderer } from './groups.js';

@@ -1,5 +1,5 @@
 import { bootState } from './state.js';
-import { state, saveState, clearToken, clearUsername, apiFetch, currentBookId, mappedCountFor, discoveredSectionsFor } from '../state.js';
+import { state, saveState, clearToken, clearUsername, apiFetch, currentBookId, mappedCountFor, discoveredSectionsFor } from '../core/state.js';
 import { render, setDiscoverableLimit } from '../play.js';
 import { openEditBookModal, closeEditBookModal, maxSectionInUse } from '../edit-book.js';
 import { setCoversPrefsState, resetFeedDisplayPrefsForLogout } from '../covers.js';

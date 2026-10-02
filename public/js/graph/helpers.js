@@ -1,4 +1,4 @@
-import { state, isValidSecId } from '../state.js';
+import { state, isValidSecId } from '../core/state.js';
 
 // A saved position is an object ({x, y}), which is always truthy regardless
 // of what's inside it - `!pos` alone treats {x: NaN, y: 40} as "already

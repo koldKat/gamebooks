@@ -1,5 +1,5 @@
 import { editState } from './state.js';
-import { state, isDemoMode, apiFetch } from '../state.js';
+import { state, isDemoMode, apiFetch } from '../core/state.js';
 import { t } from '../i18n.js';
 import { getCachedBooks, _refreshBooksListOnly } from '../books.js';
 import { showAlert } from '../play.js';

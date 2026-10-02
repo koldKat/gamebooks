@@ -1,4 +1,4 @@
-import { currentPlaythrough, currentSection } from '../state.js';
+import { currentPlaythrough, currentSection } from '../core/state.js';
 import { renderPanelMarkup } from './markup.js';
 import { bindPanelEvents } from './bindings.js';
 

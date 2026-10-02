@@ -1,5 +1,5 @@
 import { booksState } from './state.js';
-import { getToken, isDemoMode } from '../state.js';
+import { getToken, isDemoMode } from '../core/state.js';
 
 export function setExpandedPrefs(bookExp, seriesExp, stashExp) {
   booksState._bookExpandedPrefs   = (bookExp   && typeof bookExp   === 'object' && !Array.isArray(bookExp))   ? bookExp   : {};

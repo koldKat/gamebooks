@@ -1,8 +1,8 @@
 import { _effectiveCoversKindMode, _visibleCoverItems } from './filters.js';
 import { _startLazy, _refreshCoversDisplay } from './grid.js';
 import { coversState } from './state.js';
-import { getToken, isDemoMode } from '../state.js';
-import { foldForSearch, matchesSearch, naturalCompare } from '../sort.js';
+import { getToken, isDemoMode } from '../core/state.js';
+import { foldForSearch, matchesSearch, naturalCompare } from '../core/sort.js';
 
 export function _initCoverSearch() {
   // Covers search

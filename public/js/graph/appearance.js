@@ -1,5 +1,5 @@
-import { COLORS } from '../constants.js';
-import { state, viewingPt, currentPlaythrough, isTerminal, parseSecId } from '../state.js';
+import { COLORS } from '../core/constants.js';
+import { state, viewingPt, currentPlaythrough, isTerminal, parseSecId } from '../core/state.js';
 import { t } from '../i18n.js';
 import { graphRuntime } from './runtime.js';
 import { _effectiveStartSec } from './helpers.js';

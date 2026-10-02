@@ -1,5 +1,5 @@
 import { feedHooks as _hooks } from './state.js';
-import { escapeHtml } from '../util.js';
+import { escapeHtml } from '../core/util.js';
 import { t } from '../i18n.js';
 import { renderEntry, _makeEntryHtml } from './entries.js';
 

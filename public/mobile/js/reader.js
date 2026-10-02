@@ -36,7 +36,7 @@ import {
   currentPlaythrough, currentSection, isTerminal, isValidSecId, parseSecId,
   setViewingPt, viewingPt, currentUserLevel, bonusUndos, bonusFastTravels,
   isSectionMapped,
-} from '../../js/state.js';
+} from '../../js/core/state.js';
 import { canReach, findPathTo } from '../../js/graph.js';
 import { showAlert, showConfirm } from '../../js/ui-helpers/confirm.js';
 import { initGraphView, refreshGraph } from './graph-view.js';

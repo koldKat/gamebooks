@@ -1,9 +1,9 @@
 // dialogs.js - Internal play-screen module; use ../play.js externally.
 
-import { state, saveState, parseSecId, isValidSecId } from '../state.js';
+import { state, saveState, parseSecId, isValidSecId } from '../core/state.js';
 import { t } from '../i18n.js';
-import { naturalCompare } from '../sort.js';
-import { escapeHtml } from '../util.js';
+import { naturalCompare } from '../core/sort.js';
+import { escapeHtml } from '../core/util.js';
 import { showConfirm } from '../ui-helpers/confirm.js';
 import { playContext } from './context.js';
 import { startPlaythrough } from './runs.js';

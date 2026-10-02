@@ -1,5 +1,5 @@
 import { editState } from './state.js';
-import { isDemoMode, apiFetch } from '../state.js';
+import { isDemoMode, apiFetch } from '../core/state.js';
 import { t } from '../i18n.js';
 import { pauseCoversAutoRefresh, resumeCoversAutoRefresh } from '../covers.js';
 import { _setButtonsDisabled, _uploadPdfWithProgress } from './uploads.js';

@@ -1,8 +1,8 @@
 // init.js - Internal equipment module; use ../equipment.js externally.
 
-import { state, saveState } from '../state.js';
+import { state, saveState } from '../core/state.js';
 import { getPlayBtnRow } from '../charsheet.js';
-import { shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from '../util.js';
+import { shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from '../core/util.js';
 import { t } from '../i18n.js';
 import { equipmentRuntime } from './runtime.js';
 import { _isReadOnly, _eq, _eqVisible, _eqItemId, _eqMeta, _eqQty } from './model.js';

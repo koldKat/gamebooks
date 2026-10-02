@@ -2,8 +2,8 @@ import { booksState } from './state.js';
 import { _refreshBooksListOnly } from './data.js';
 import { _scheduleAnthologyCardCoverFlows, _queueBookCovers } from './covers.js';
 import { _materializeLazyGroup } from './lazy.js';
-import { getToken, isDemoMode } from '../state.js';
-import { foldForSearch } from '../sort.js';
+import { getToken, isDemoMode } from '../core/state.js';
+import { foldForSearch } from '../core/sort.js';
 import { t } from '../i18n.js';
 
 let _booksSearchOpen = false;

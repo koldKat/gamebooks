@@ -454,7 +454,7 @@ function _discoveredSet(graph) {
   return s;
 }
 
-// Mirrors public/js/state.js's mappedCountFor() predicate exactly - a manually-
+// Mirrors public/js/core/state.js's mappedCountFor() predicate exactly - a manually-
 // added node (bg.js's "+ Add node", no `discovered` flag) reads as fully mapped
 // immediately even with zero choices, same as any node with real choices/
 // portals. Used so such nodes also count toward visit_all/book_completed -

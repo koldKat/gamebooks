@@ -1,9 +1,9 @@
 // picker.js - Internal inventory module; use ../inventory.js externally.
 
 import { inventoryRuntime } from './runtime.js';
-import { apiFetch } from '../state.js';
+import { apiFetch } from '../core/state.js';
 import { t } from '../i18n.js';
-import { escapeHtml } from '../util.js';
+import { escapeHtml } from '../core/util.js';
 import { _inv, _isReadOnly, _captureContext, _isContextCurrent, _releaseContext } from './model.js';
 import { _fetchItem } from './cache.js';
 import { addItemToInventory } from './transfers.js';

@@ -3,7 +3,7 @@
 // To remove: delete this file, remove its import line and initNotes()/loadNotesForBook()/
 // hideNotesUI() calls from boot.js, and remove the notebook/notes-display CSS from style.css.
 
-import { state, saveState, apiFetch, currentBookId } from './state.js';
+import { state, saveState, apiFetch, currentBookId } from './core/state.js';
 import { showAlert } from './play.js';
 import { t } from './i18n.js';
 

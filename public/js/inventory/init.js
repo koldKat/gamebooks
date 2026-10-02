@@ -1,10 +1,10 @@
 // init.js - Internal inventory module; use ../inventory.js externally.
 
 import { inventoryRuntime } from './runtime.js';
-import { state, saveState, currentPlaythrough } from '../state.js';
+import { state, saveState, currentPlaythrough } from '../core/state.js';
 import { getPlayBtnRow } from '../charsheet.js';
 import { t } from '../i18n.js';
-import { shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from '../util.js';
+import { shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from '../core/util.js';
 import { MAX_SLOTS } from './constants.js';
 import { _inv, _isReadOnly } from './model.js';
 import { _openPanel, _closePanel } from './panel.js';

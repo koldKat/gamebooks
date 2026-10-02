@@ -1,6 +1,6 @@
 // runs.js - Internal play-screen module; use ../play.js externally.
 
-import { state, viewingPt, setViewingPt, saveState, isValidSecId, currentPlaythrough, currentSection, apiFetch } from '../state.js';
+import { state, viewingPt, setViewingPt, saveState, isValidSecId, currentPlaythrough, currentSection, apiFetch } from '../core/state.js';
 import { network, visNodes } from '../graph.js';
 import { t } from '../i18n.js';
 import { instantiateLoadout } from '../equipment.js';

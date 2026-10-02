@@ -1,6 +1,6 @@
 // model.js - Internal inventory module; use ../inventory.js externally.
 
-import { state, currentPlaythrough, saveState, viewingPt } from '../state.js';
+import { state, currentPlaythrough, saveState, viewingPt } from '../core/state.js';
 import { MAX_SLOTS } from './constants.js';
 import { inventoryRuntime } from './runtime.js';
 

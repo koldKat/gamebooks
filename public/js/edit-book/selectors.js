@@ -1,6 +1,6 @@
-import { isDemoMode, apiFetch } from '../state.js';
+import { isDemoMode, apiFetch } from '../core/state.js';
 import { t } from '../i18n.js';
-import { naturalCompare, naturalCompareByName } from '../sort.js';
+import { naturalCompare, naturalCompareByName } from '../core/sort.js';
 import { getCachedBooks } from '../books.js';
 
 export function _sortedByName(items) {

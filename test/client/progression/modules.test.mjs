@@ -23,9 +23,9 @@ test('progression relocation preserves XP, floaties and shop implementations wit
 
 test('progression imports retain their original dependency identities', () => {
   const expected = {
-    'app-xp': ['state.js', 'progression/shop.js', 'util.js', 'i18n.js'],
-    rewards: ['state.js', 'progression/shop.js', 'account/profile.js', 'livetab.js', 'community/notif.js', 'util.js'],
-    shop: ['state.js', 'util.js', 'i18n.js'],
+    'app-xp': ['core/state.js', 'progression/shop.js', 'core/util.js', 'i18n.js'],
+    rewards: ['core/state.js', 'progression/shop.js', 'account/profile.js', 'livetab.js', 'community/notif.js', 'core/util.js'],
+    shop: ['core/state.js', 'core/util.js', 'i18n.js'],
   };
   for (const [name, dependencies] of Object.entries(expected)) {
     const moduleUrl = new URL('progression/' + name + '.js', dir);

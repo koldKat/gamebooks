@@ -1,4 +1,4 @@
-import { state, isTerminal, parseSecId } from '../state.js';
+import { state, isTerminal, parseSecId } from '../core/state.js';
 
 export function maxSectionInUse(s = state) {
   let max = 1;

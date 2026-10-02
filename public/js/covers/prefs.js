@@ -1,7 +1,7 @@
 import { _setCoverFavoritesFromPrefs, _coverTooltipTitlePercent } from './filters.js';
 import { _effectiveLandingCoverSource, _landingCoverPool, _resetLandingCoverQueue, _rotateLandingCover, _startLandingCoverRotation, _stopLandingCoverRotation } from './background.js';
 import { coversState } from './state.js';
-import { getToken, isDemoMode } from '../state.js';
+import { getToken, isDemoMode } from '../core/state.js';
 import { t } from '../i18n.js';
 
 // ── Cover settings ─────────────────────────────────────────────────────────────

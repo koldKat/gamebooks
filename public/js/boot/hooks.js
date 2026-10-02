@@ -1,5 +1,5 @@
 import { bootState } from './state.js';
-import { state, apiFetch, currentBookId, setBonusUndos, setBonusFastTravels, mappedCountFor, discoveredSectionsFor } from '../state.js';
+import { state, apiFetch, currentBookId, setBonusUndos, setBonusFastTravels, mappedCountFor, discoveredSectionsFor } from '../core/state.js';
 import { t } from '../i18n.js';
 import { initNotes, setOnXpAwarded as setNotesOnXpAwarded } from '../notes.js';
 import { initParty, loadPartyInvites, setPartyHooks } from '../party.js';
@@ -26,7 +26,7 @@ import { exportAll } from '../export.js';
 import { initFeedback } from '../community/feedback.js';
 import { setDemoHooks, getDemoBooks, setDemoBooks, startDemoMode, exitDemoMode } from '../demo.js';
 import { resolveIsAdmin, adminBadge, adminBadgeForUsername, authorBadge, contributorBadge, displayFor, registerAuthor, registerContributor } from '../account/user.js';
-import { escapeHtml, fetchPublic as publicFetch } from '../util.js';
+import { escapeHtml, fetchPublic as publicFetch } from '../core/util.js';
 import { _toggleShortcutsModal } from './helpers.js';
 import { navigateToBook, showLogin, showBooks, showMain, _lockView, _updateUsernameTooltip } from './screens.js';
 

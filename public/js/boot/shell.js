@@ -1,11 +1,11 @@
 import { bootState } from './state.js';
-import { setToken } from '../state.js';
+import { setToken } from '../core/state.js';
 import { setTranslationOverride } from '../i18n.js';
 import { _setLandingPanelCollapsed, _toggleAllLandingPanelsCollapsed, _setPlayPanelCollapsed, _toggleAllPlayPanelsCollapsed } from '../prefs.js';
 import { _toggleCoverTooltipSettings, initCoversPanel, _refillLazyIfShort } from '../covers.js';
 import { _setupCtxSubmenuFlip } from '../bg.js';
 import { setAdminUsername } from '../account/user.js';
-import { fetchPublic as publicFetch } from '../util.js';
+import { fetchPublic as publicFetch } from '../core/util.js';
 import { _toggleShortcutsModal } from './helpers.js';
 import { _openMobilePanel } from './navigation.js';
 

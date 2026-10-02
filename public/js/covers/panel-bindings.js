@@ -3,7 +3,7 @@ import { _syncCoverFavoriteButton } from './markup.js';
 import { _removeFavoriteThumbInPlace } from './grid.js';
 import { openCoverActivity, openSeriesActivity } from './activity.js';
 import { coversState } from './state.js';
-import { getToken, isDemoMode } from '../state.js';
+import { getToken, isDemoMode } from '../core/state.js';
 
 export function _initCoverNavigation() {
   // Covers panel click (favorites + thumb navigation)

@@ -1,6 +1,6 @@
-import { getToken, clearToken, clearUsername } from '../state.js';
+import { getToken, clearToken, clearUsername } from '../core/state.js';
 import { t } from '../i18n.js';
-import { escapeHtml } from '../util.js';
+import { escapeHtml } from '../core/util.js';
 
 const _PDF_ICON_MARKUP = `
   <span class="inline-svg-icon pdf-svg-icon" aria-hidden="true">

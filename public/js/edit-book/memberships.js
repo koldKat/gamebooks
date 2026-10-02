@@ -1,8 +1,8 @@
-import { apiFetch } from '../state.js';
+import { apiFetch } from '../core/state.js';
 import { t } from '../i18n.js';
 import { getCachedBooks, _refreshBooksListOnly } from '../books.js';
 import { showAlert } from '../play.js';
-import { escapeHtml } from '../util.js';
+import { escapeHtml } from '../core/util.js';
 import { _sortedByName } from './selectors.js';
 import { editState } from './state.js';
 

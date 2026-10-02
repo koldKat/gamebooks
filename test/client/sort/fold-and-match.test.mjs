@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { foldForSearch, matchesSearch } from '../../../public/js/sort.js';
+import { foldForSearch, matchesSearch } from '../../../public/js/core/sort.js';
 
 describe('foldForSearch', () => {
   test('lowercases and normalizes for comparison', () => {
