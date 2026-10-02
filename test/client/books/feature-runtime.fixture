@@ -1,0 +1,80 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { createContext, SourceTextModule, SyntheticModule } from 'node:vm';
+
+let publicBooks = [{ id: 1, name: 'Public', authors: 'Alice, Bob' }];
+let ownedBooks = [{ id: 1, name: 'Owned', authors: 'Alice, Carol', total_sections: 20 }];
+let series = [{ id: 9, name: 'Series' }];
+const requests = [], downloads = [], alerts = [], timers = [], revoked = [];
+let fetchHandler = async url => ({ ok: true, json: async () => url === '/api/series/autocomplete' ? series : publicBooks });
+const buttons = new Map(['download-backup-btn', 'export-book-btn'].map(id => [id, { disabled: false, textContent: id }]));
+const context = createContext({
+  document: { getElementById: id => buttons.get(id), createElement: tag => {
+    assert.equal(tag, 'a'); const anchor = { click: () => downloads.push({ href: anchor.href, filename: anchor.download }) }; return anchor;
+  } },
+  URL: { createObjectURL: () => 'blob:mock-download', revokeObjectURL: url => revoked.push(url) },
+  setTimeout: (fn, delay) => { timers.push({ fn, delay }); return timers.length; },
+});
+const request = (url, options) => { requests.push([url, options]); return fetchHandler(url, options); };
+const values = {
+  '../core/state.js': { state: { bookName: 'Test: Book' }, currentBookId: 42, apiFetch: request },
+  '../books.js': { getCachedBooks: () => ownedBooks },
+  '../core/sort.js': { naturalCompare: (a, b) => String(a).localeCompare(String(b)), naturalCompareByName: (a, b) => a.name.localeCompare(b.name), matchesSearch: (a, b) => a.includes(b) },
+  '../core/util.js': { escapeHtml: value => String(value), fetchPublic: request },
+  '../i18n.js': { t: key => key },
+  '../play.js': { showAlert: message => alerts.push(message) },
+};
+async function load(name, extra = '') {
+  const module = new SourceTextModule(readFileSync(resolve(process.argv[1], name + '.js'), 'utf8') + extra, { context });
+  await module.link(specifier => {
+    assert.ok(values[specifier], 'unexpected dependency: ' + specifier);
+    const exports = values[specifier];
+    return new SyntheticModule(Object.keys(exports), function () { for (const [name, value] of Object.entries(exports)) this.setExport(name, value); }, { context });
+  });
+  await module.evaluate();
+  return module.namespace;
+}
+// Expose only the private data loader for testing; leave the source logic intact.
+const autocomplete = await load('autocomplete', '\nexport { _loadAuthorNames };');
+const books = await autocomplete._loadAutocompleteBooks();
+assert.equal(books.length, 1);
+assert.equal(books[0].name, 'Owned', 'owned metadata overrides the public match');
+assert.deepEqual([...await autocomplete._loadAuthorNames()], ['Alice', 'Carol']);
+await autocomplete._loadAutocompleteBooks();
+assert.equal(requests.filter(r => r[0] === '/api/public/books').length, 1, 'public catalog cached');
+await autocomplete._loadSeriesAutocomplete();
+await autocomplete._loadSeriesAutocomplete();
+assert.equal(requests.filter(r => r[0] === '/api/series/autocomplete').length, 1);
+publicBooks = [...publicBooks, { id: 2, name: 'New public book', authors: 'Dave' }];
+ownedBooks = [...ownedBooks, { id: 3, name: 'New owned book', authors: 'Eve, Alice' }];
+series = [...series, { id: 10, name: 'New series' }];
+autocomplete.invalidateAutocompleteCaches();
+assert.deepEqual([...await autocomplete._loadAuthorNames()], ['Alice', 'Carol', 'Dave', 'Eve']);
+assert.equal((await autocomplete._loadSeriesAutocomplete()).length, 2);
+assert.equal((await autocomplete._loadAutocompleteBooks()).length, 3);
+assert.equal(requests.filter(r => r[0] === '/api/public/books').length, 2);
+
+const exporter = await load('export');
+fetchHandler = async () => ({ ok: true, blob: async () => ({}), headers: { get: () => "attachment; filename*=UTF-8''Library%20backup.zip" } });
+await exporter.exportAll();
+assert.equal(requests.at(-1)[0], '/api/export/all');
+assert.equal(downloads.at(-1).filename, 'Library backup.zip');
+assert.equal(buttons.get('download-backup-btn').disabled, false);
+assert.equal(buttons.get('download-backup-btn').textContent, 'download-backup-btn');
+fetchHandler = async () => ({ ok: true, blob: async () => ({}), headers: { get: () => '' } });
+await exporter.exportBook();
+assert.equal(requests.at(-1)[0], '/api/export/book/42');
+assert.equal(requests.at(-1)[1].method, 'POST');
+assert.equal(downloads.at(-1).filename, 'Test Book.zip');
+assert.equal(buttons.get('export-book-btn').disabled, false);
+assert.equal(timers.length, 2);
+assert.ok(timers.every(timer => timer.delay === 60000));
+for (const timer of timers) timer.fn();
+assert.deepEqual(revoked, ['blob:mock-download', 'blob:mock-download']);
+fetchHandler = async () => ({ ok: false });
+await exporter.exportBook();
+assert.deepEqual(alerts, ['export.failed']);
+assert.equal(downloads.length, 2, 'failed export does not trigger a download');
+assert.equal(buttons.get('export-book-btn').disabled, false);
+assert.equal(buttons.get('export-book-btn').textContent, 'export-book-btn');

@@ -10,7 +10,7 @@ import { getCachedBooks } from '../books.js';
 import { _syncSeriesRuns, _focusNodeAfterLoad, clearOpenWorldState, getOwSrcBookId, getOwSrcSection } from '../play/open-world.js';
 import { _positionRewardLayer } from '../progression/rewards.js';
 import { isBgInMove, toggleBgHidden, nudgeBgPosY, hideCtxMenu, _hideBgCtxMenu, _positionMenu, _enterBgMoveMode, _exitBgMoveMode, _updateColorSwatches } from '../play/bg.js';
-import { exportBook } from '../export.js';
+import { exportBook } from '../books/export.js';
 import { showMain } from './screens.js';
 
 export function initGraphBindings() {

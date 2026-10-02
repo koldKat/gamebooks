@@ -2,7 +2,7 @@ import { bootState } from './state.js';
 import { state, apiFetch } from '../core/state.js';
 import { t } from '../i18n.js';
 import { initStats, closeStatsModal } from '../stats.js';
-import { _closeAddBook, _closeAddComp, _closeAddSeries } from '../add-book.js';
+import { _closeAddBook, _closeAddComp, _closeAddSeries } from '../books/add-book.js';
 import { closeEditBookModal, _closeEditStash, _closeAddStash } from '../edit-book.js';
 import { closePublicModal } from '../account/public-profile.js';
 import { _toggleCoverTooltipSettings } from '../covers.js';

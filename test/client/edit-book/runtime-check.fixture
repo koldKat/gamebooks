@@ -71,7 +71,7 @@ const overrides = {
 };
 const context = createContext({ document: { getElementById: el, createElement: () => new Element() }, window: { dispatchEvent: event => calls.push(['event', event.type]) }, Event: class { constructor(type) { this.type = type; } }, XMLHttpRequest: XHR, setTimeout: fn => timers.push(fn), console });
 sources.set(resolve(root, 'edit-book.js'), readFileSync(resolve(root, 'edit-book.js'), 'utf8'));
-sources.set(resolve(root, 'add-book.js'), readFileSync(resolve(root, 'add-book.js'), 'utf8'));
+sources.set(resolve(root, 'books/add-book.js'), readFileSync(resolve(root, 'books/add-book.js'), 'utf8'));
 if (existsSync(resolve(root, 'edit-book'))) for (const name of readdirSync(resolve(root, 'edit-book')).filter(n => n.endsWith('.js'))) sources.set(resolve(root, 'edit-book', name), readFileSync(resolve(root, 'edit-book', name), 'utf8'));
 const external = new Map();
 for (const [path, source] of sources) for (const match of source.matchAll(/import \{([^}]+)\} from '([^']+)';/g)) {
@@ -269,7 +269,7 @@ resolveSeries({ ok: true }); await delayedSeries;
 assert.ok(el('edit-series-overlay').classList.contains('active'), 'old series save must not close replacement dialog');
 apiHandler = null;
 assert.equal(calls.filter(c => c[0] === 'pauseCoversAutoRefresh').length, calls.filter(c => c[0] === 'resumeCoversAutoRefresh').length);
-const addModule = modules.get(resolve(root, 'add-book.js'));
+const addModule = modules.get(resolve(root, 'books/add-book.js'));
 await addModule.link((specifier, parent) => modules.get(resolve(dirname(parent.identifier), specifier)));
 await addModule.evaluate();
 const add = addModule.namespace;
