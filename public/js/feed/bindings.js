@@ -1,4 +1,4 @@
-import { openPublicProfile, openPublicSeriesRun, openPublicRun } from '../public-profile.js';
+import { openPublicProfile, openPublicSeriesRun, openPublicRun } from '../account/public-profile.js';
 import { openCoverActivity, openSeriesActivity } from '../covers.js';
 
 export function bindFeedInteractions(el, _expandedKeys) {

@@ -161,7 +161,11 @@ gamebooks/
       sort.js            Search/sort helpers (foldForSearch, matchesSearch, naturalCompare)
       util.js            Shared utility helpers: escapeHtml, compressImage, compressToBlob (client-side JPEG quality iteration), setPreviewImgBlob (revokes an <img>'s previous blob: src before assigning a new one, used by add-book.js and edit-book/book-bindings.js/edit-book/anthology.js cover-preview file pickers), registerPanelShortcut (single-key panel toggle shared by charsheet/inventory/equipment/battlesim*), shortcutLabel (first-letter shortcut hint span)
       autocomplete.js    Shared name-autocomplete helpers for add/edit modals
-      auth.js            Login, register, forgot-password, reset-password forms
+      account/           Authentication, profiles and identity (direct imports; no root facade)
+        auth.js          Login, register, forgot-password and reset-password forms
+        profile.js       Own profile modal, avatar crop and personal XP display
+        public-profile.js Public profile, run and series journey viewers
+        user.js          Admin/author/contributor state and badge helpers
       confirm.js         showConfirm()/showAlert(). Linked separately from play.js so battlesim*.js
                          and the mobile reader can import just this, not play.js's whole tree
                          (graph.js, charsheet.js, equipment.js). Reuses index.html's static
@@ -372,8 +376,6 @@ gamebooks/
         day-covers.js    Bounded image metadata cache, natural-size tiling and resize scheduling
       open-world.js      Open World / series-run cross-book state management
       shop.js            Gold Coin shop modal
-      profile.js         User profile modal, XP display, avatar
-      public-profile.js  Public profile modal, public run viewer, public series journey viewer
       prefs.js           UI preference persistence (panel collapse state, server sync)
       livetab.js         Live tab / SSE broadcast helpers, user badge SSE
       community/         Messaging and notifications (direct imports; no root facade)
@@ -389,7 +391,6 @@ gamebooks/
       tooltip.js         Tooltip system
       export.js          Export this book / Export everything
       demo.js            Demo mode
-      user.js            Admin/author/contributor state and badge helpers
       boot.js            Entry point: mobile detection, backdrop tracking, DOMContentLoaded registration
       boot/              Application startup and feature integration
         state.js         Shared navigation, permissions, current-book, and backdrop state
@@ -596,7 +597,7 @@ Layer 1 (import only from layer 0):
   charsheet.js   ← state.js, i18n.js
   confirm.js     ← i18n.js
   autocomplete.js ← state.js
-  user.js        ← state.js
+  account/user.js ← state.js
 
 Layer 2:
   inventory.js / inventory/ ← state.js, play.js*, charsheet.js
@@ -607,9 +608,9 @@ Layer 2:
     Works because none consume each other's exports at module-evaluation time.
 
 Layer 3 (feature modules - import from layers 0–2 as needed):
-  notes.js, battlesim829.js, battlesim8.js, battlesim286.js, battlesim198.js, battlesim199.js, battlesim200.js, battlesim186.js, battlesim201.js, battlesim202.js, battlesim203.js, battlesim234.js, battlesim231.js, battlesim232.js, battlesim83.js, battlesim86.js, battlesim114.js, battlesim115.js, battlesim123.js, battlesim130.js, battlesim92.js, battlesim108.js, battlesim216.js, battlesim193.js, battlesim217.js, battlesim526.js, battlesim322.js, battlesim323.js, battlesim324.js, battlesim276.js, battlesim278.js, battlesim279.js, battlesim280.js, battlesim325.js, battlesim122.js, battlesim80.js, battlesim82.js, battlesim118.js, battlesim218.js, battlesim219.js, battlesim220.js, battlesim221.js, battlesim222.js, battlesim430.js, battlesim204.js, battlesim205.js, battlesim206.js, battlesim207.js, battlesim208.js, battlesim209.js, battlesim210.js, battlesim211.js, battlesim212.js, battlesim213.js, battlesim214.js, battlesim215.js, battlesim240.js, battlesim241.js, battlesim242.js, battlesim243.js, battlesim244.js, battlesim245.js, battlesim247.js, battlesim248.js, battlesim249.js, battlesim250.js, battlesim251.js, battlesim252.js, battlesim253.js, battlesim263.js, battlesim264.js, battlesim267.js, battlesim256.js, battlesim257.js, battlesim258.js, battlesim255.js, battlesim254.js, battlesim272.js, battlesim275.js, battlesim274.js, battlesim259.js, battlesim260.js, battlesim273.js, battlesim433.js, battlesim541.js, battlesim661.js, battlesim696.js, battlesim716.js, auth.js, add-book.js, edit-book.js,
-  books.js, covers.js, feed.js, open-world.js, shop.js, profile.js,
-  public-profile.js, prefs.js, livetab.js, community/notif.js, rewards.js, bg.js,
+  notes.js, battlesim829.js, battlesim8.js, battlesim286.js, battlesim198.js, battlesim199.js, battlesim200.js, battlesim186.js, battlesim201.js, battlesim202.js, battlesim203.js, battlesim234.js, battlesim231.js, battlesim232.js, battlesim83.js, battlesim86.js, battlesim114.js, battlesim115.js, battlesim123.js, battlesim130.js, battlesim92.js, battlesim108.js, battlesim216.js, battlesim193.js, battlesim217.js, battlesim526.js, battlesim322.js, battlesim323.js, battlesim324.js, battlesim276.js, battlesim278.js, battlesim279.js, battlesim280.js, battlesim325.js, battlesim122.js, battlesim80.js, battlesim82.js, battlesim118.js, battlesim218.js, battlesim219.js, battlesim220.js, battlesim221.js, battlesim222.js, battlesim430.js, battlesim204.js, battlesim205.js, battlesim206.js, battlesim207.js, battlesim208.js, battlesim209.js, battlesim210.js, battlesim211.js, battlesim212.js, battlesim213.js, battlesim214.js, battlesim215.js, battlesim240.js, battlesim241.js, battlesim242.js, battlesim243.js, battlesim244.js, battlesim245.js, battlesim247.js, battlesim248.js, battlesim249.js, battlesim250.js, battlesim251.js, battlesim252.js, battlesim253.js, battlesim263.js, battlesim264.js, battlesim267.js, battlesim256.js, battlesim257.js, battlesim258.js, battlesim255.js, battlesim254.js, battlesim272.js, battlesim275.js, battlesim274.js, battlesim259.js, battlesim260.js, battlesim273.js, battlesim433.js, battlesim541.js, battlesim661.js, battlesim696.js, battlesim716.js, account/auth.js, add-book.js, edit-book.js,
+  books.js, covers.js, feed.js, open-world.js, shop.js, account/profile.js,
+  account/public-profile.js, prefs.js, livetab.js, community/notif.js, rewards.js, bg.js,
   stats.js, party.js, tips.js, community/inbox.js, dice.js, tooltip.js, export.js,
   community/feedback.js, demo.js
 
@@ -637,7 +638,7 @@ The `boot/` dependency graph is acyclic and never back-imports `boot.js`. `initA
 
 ## CSS file structure
 
-`style.css` holds only genuinely shared/base rules (tooltips, buttons, inputs, scrollbars, generic layout not owned by any one module). Everything else is a per-module file (one per like-named JS module, e.g. `shop.css` for `shop.js`). `public-profile.css` is shared by both `public-profile.js` and `covers.js` (cover activity view lives in the same `#public-modal` markup both use).
+`style.css` holds only genuinely shared/base rules (tooltips, buttons, inputs, scrollbars, generic layout not owned by any one module). Everything else is a per-module file (one per like-named JS module, e.g. `shop.css` for `shop.js`). `public-profile.css` is shared by both `account/public-profile.js` and `covers.js` (cover activity view lives in the same `#public-modal` markup both use).
 
 **Load order matters for two files:** `reduce-motion.css` and `mobile.css` are cross-cutting overrides (`body.reduce-motion .foo`, `@media` blocks, several with `!important`) rather than one module's own styling, so they're the last two `<link>` tags in `index.html`, after every per-module file.
 
@@ -1035,7 +1036,7 @@ INDEX idx_attachments_kind_linked ON attachments (kind, linked_id)
 - Archives (`.zip .7z .rar .gz`) are served with `Content-Disposition: attachment`; all other types are served inline.
 - `serveStatic` serves `/attachments/` without session auth (same pattern as `/avatars/` and `/covers/`).
 - JPEG magic bytes (`FF D8 FF`) override the client-supplied extension to `.jpg` at upload time.
-- Client-side image compression (`util.js › compressImage`): if an image file exceeds a caller-given byte budget (defaults to 512 KB/1200px; `add-book.js`/`edit-book.js` pass 256 KB/900px for book/anthology covers) the client iterates JPEG quality from 0.92 down to 0.1 via canvas until the blob fits or quality bottoms out - at the floor it returns the smallest blob it managed rather than giving up, so a caller always gets something to upload. `profile.js` imports this same implementation rather than keeping its own copy, and only keeps `compressToBlob` directly for `confirmCrop`'s already-drawn avatar canvas.
+- Client-side image compression (`util.js › compressImage`): if an image file exceeds a caller-given byte budget (defaults to 512 KB/1200px; `add-book.js`/`edit-book.js` pass 256 KB/900px for book/anthology covers) the client iterates JPEG quality from 0.92 down to 0.1 via canvas until the blob fits or quality bottoms out - at the floor it returns the smallest blob it managed rather than giving up, so a caller always gets something to upload. `account/profile.js` imports this same implementation rather than keeping its own copy, and only keeps `compressToBlob` directly for `confirmCrop`'s already-drawn avatar canvas.
 
 **Login rate limiting:**
 - 5 consecutive failed attempts → account temporarily locked for 15 minutes (`locked_until = now + 900`). Returns `403` with a descriptive message.
@@ -1370,7 +1371,7 @@ The profile modal shows a level badge, title, and progress bar between the avata
 - `#profile-xp-bar-fill` - width = `((xp - levelXp) / (nextLevelXp - levelXp)) × 100%`
 - `#profile-xp-text` - "X / Y XP" (or total XP at level 100)
 
-Populated by `renderXpBlock(data)` in `profile.js`, called from `openProfileModal` using the XP fields returned by `GET /api/profile`.
+Populated by `renderXpBlock(data)` in `account/profile.js`, called from `openProfileModal` using the XP fields returned by `GET /api/profile`.
 
 The client also uses `GET /api/profile` deltas to drive the bottom-right XP / coin reward floater (`#reward-float-layer`). `rewards.js` keeps the last seen `{ xp, coinsBalance }` snapshot, compares it against fresh profile responses, and shows a merged floating notice when XP or coins increase. This is intentionally client-side only - no separate reward event stream or schema is involved.
 
@@ -1481,15 +1482,17 @@ If any API call returns `401`, `apiFetch` fires an `auth-expired` DOM event, cle
 
 If any call (authenticated or not) returns `503`, both `apiFetch` (`state.js`) and `publicFetch` (`util.js`) dispatch a `maintenance-mode` window event. A `{ once: true }` listener calls `location.reload()` - the user lands on the maintenance page after the reload. `publicFetch` is a thin wrapper around `fetch` used for all unauthenticated public API calls (feed, public book/series/user activity, public run data) so that maintenance-mode ejection works even for logged-out users browsing the feed.
 
-**Convention: every client request goes through `apiFetch` (authenticated) or `fetchPublic`/`publicFetch` (public), never a raw `fetch()`.** These wrappers are what give a request its 401 (expired/invalid session → ejection flow) and 503 (maintenance mode → ejection flow) handling; a raw `fetch()` silently skips both, degrading to a generic error message instead of the normal ejection UX. Applies uniformly across the app - `export.js`, `demo.js`, `auth.js`'s pre-login flows, `party.js`, `stats.js`, `boot/shell.js`'s config/tagline loaders, `tips.js`. `covers.js`'s two raw `fetch()` calls (streaming cover-image bytes with a progress bar) are the deliberate exception - image/blob requests don't need JSON-oriented 401/503 handling.
+**Convention: every client request goes through `apiFetch` (authenticated) or `fetchPublic`/`publicFetch` (public), never a raw `fetch()`.** These wrappers are what give a request its 401 (expired/invalid session → ejection flow) and 503 (maintenance mode → ejection flow) handling; a raw `fetch()` silently skips both, degrading to a generic error message instead of the normal ejection UX. Applies uniformly across the app - `export.js`, `demo.js`, `account/auth.js`'s pre-login flows, `party.js`, `stats.js`, `boot/shell.js`'s config/tagline loaders, `tips.js`. `covers.js`'s two raw `fetch()` calls (streaming cover-image bytes with a progress bar) are the deliberate exception - image/blob requests don't need JSON-oriented 401/503 handling.
 
 Attachment upload (`/api/attachments`) is consolidated into `util.js`'s `uploadAttachment()`/`isImageFilename()`/`addAttachmentItem()`, used by both `community/feedback.js` and `community/inbox.js` rather than each keeping its own copy.
 
 The desktop messaging/notification modules live in `public/js/community/` and are imported directly; there is no root `community.js` or compatibility wrapper at their old root paths. This is a path-only grouping: exports, DOM IDs, endpoints, attachment handling and the notification debounce/SSE hooks remain unchanged. Shared infrastructure stays at the JS root, the admin's separate feedback module is untouched, and mobile continues using its own entrypoint/controllers. Tests check all client import targets and the unchanged non-import source of each relocated module; the manual community browser fixture exercises mocked messaging/attachments and live refresh hints without production writes.
 
+The desktop authentication/profile/identity modules live in `public/js/account/` (`auth.js`, `profile.js`, `public-profile.js`, `user.js`). Callers import those paths directly, without a root `account.js` or wrappers at the old root paths. This is another path-only grouping: the non-import source is checked against digests captured before the move at `362a441`. `prefs.js`, shared state/utilities, the existing root CSS files and mobile's independent `public/mobile/js/auth.js` stay in place. Feed, covers, rewards and boot imports (including the feed test's public-profile stub) use the relocated modules. The manual account browser fixture checks login/register/forgot/reset flows, profile save hooks, avatar cropping/upload, personal XP bars, identity badges and public run/journey graphs with real DOM/canvas/vis-network but mocked HTTP. It does not validate production sessions, emails or API writes.
+
 `autocomplete.js`'s `_currentTokenBounds()` computes both the backward (previous comma) and forward (next comma / end of string) boundary of the author-name token under the caret; `_applyAuthor()` replaces the whole token span.
 
-`party.js`'s `connectPartySSE(bookId)` uses a generation counter (`_connectGen`) to guard against overlapping calls for different books racing each other - `disconnectPartySSE()` bumps it, and a stale call whose generation no longer matches after its `await` discards its result instead of applying it. `profile.js`/`app-xp.js`'s own `_animGen` is a narrower variant of the same idiom, used only to invalidate in-flight XP-bar tween frames on a hard reset (login/logout/user switch) - normal sequential XP updates never bump it, since those are meant to queue and play back to back rather than cancel each other (see `_animQueue`/`_runAnimQueue` in both files).
+`party.js`'s `connectPartySSE(bookId)` uses a generation counter (`_connectGen`) to guard against overlapping calls for different books racing each other - `disconnectPartySSE()` bumps it, and a stale call whose generation no longer matches after its `await` discards its result instead of applying it. `account/profile.js`/`app-xp.js`'s own `_animGen` is a narrower variant of the same idiom, used only to invalidate in-flight XP-bar tween frames on a hard reset (login/logout/user switch) - normal sequential XP updates never bump it, since those are meant to queue and play back to back rather than cancel each other (see `_animQueue`/`_runAnimQueue` in both files).
 
 **Security: the forgot-password reset link must never be built from `req.headers.host`** - it's attacker-controlled, and this link is emailed to the account owner, so a spoofed `Host` header would poison the reset link toward an attacker's domain (Host Header Injection / password-reset poisoning, a real account-takeover path). The link is built from `db.getAdminSetting('app_url')`, hardcoded to `'https://pathmap.net'` if unset (`koldkat.net` is planned to eventually become a separate personal portfolio site, unrelated to this app, so pathmap.net is the forward-looking default) - never a header-derived fallback. Also: `handleForgotPassword`'s `429` rate-limit response must be checked via `res.ok` before assuming success, same as the other three auth handlers in this file.
 
@@ -1609,7 +1612,7 @@ Each `.book-item` card has a progress bar background: `rgba(107,114,128,0.18)` f
 
 `_openMobilePanel` and its `popstate` listener live at module scope, wired exactly once behind a `_mobilePanelWired` guard inside `showBooks()`, not inline in its body like `covers-toggle`/`right-toggle`/`feed-toggle`/`sidebar-toggle`'s own listeners just above them. `showBooks()` runs many times a session (login, hash routing, every mobile "Open a book" bounce-back in `showMain()`) - those older toggles re-attach harmlessly every call since one extra boolean-toggle roughly cancels out, but N stacked duplicate listeners calling `history.pushState()` do not: a single tap would push N history entries, needing N back-presses to close a panel opened with one tap. Any *new* per-`showBooks()`-call wiring that has a real (non-idempotent) side effect needs the same one-time guard, not the older inline pattern.
 
-**`.pub-overlay` (book/profile/run detail dialog) z-index and history, when nested inside a mobile panel:** desktop's `.pub-overlay` is `z-index: 300` (`public-profile.css`); `mobile.css` overrides it to `z-index: 600` on mobile, above `#covers-panel`/`#landing-right`'s full-screen `z-index: 500` panels, without `!important` - so `boot/forum.js`'s one-off inline `zIndex='3001'` bump (a book link opened from inside the forum modal, `z-index:3000`) still wins when set, since a non-important external rule loses to any inline style. A `MutationObserver` on `#public-modal-overlay`'s `class` attribute (too many open call sites across `covers.js`/`feed.js`/`public-profile.js` to thread a push call through individually) pushes a `{ dialogOpen: true }` history entry only when the dialog opens while a mobile panel is already open underneath, and a `popstate` listener closes the dialog when that entry pops - so back-button leaves the dialog, then the panel, rather than skipping straight past both into real browser history. Scoped to the nested-in-a-mobile-panel case only: opening the same dialog from the plain feed (no panel open) has no history entry of its own.
+**`.pub-overlay` (book/profile/run detail dialog) z-index and history, when nested inside a mobile panel:** desktop's `.pub-overlay` is `z-index: 300` (`public-profile.css`); `mobile.css` overrides it to `z-index: 600` on mobile, above `#covers-panel`/`#landing-right`'s full-screen `z-index: 500` panels, without `!important` - so `boot/forum.js`'s one-off inline `zIndex='3001'` bump (a book link opened from inside the forum modal, `z-index:3000`) still wins when set, since a non-important external rule loses to any inline style. A `MutationObserver` on `#public-modal-overlay`'s `class` attribute (too many open call sites across `covers.js`/`feed.js`/`account/public-profile.js` to thread a push call through individually) pushes a `{ dialogOpen: true }` history entry only when the dialog opens while a mobile panel is already open underneath, and a `popstate` listener closes the dialog when that entry pops - so back-button leaves the dialog, then the panel, rather than skipping straight past both into real browser history. Scoped to the nested-in-a-mobile-panel case only: opening the same dialog from the plain feed (no panel open) has no history entry of its own.
 
 **Create modals:** three amber buttons at the top - Create Book (`#add-book-overlay`, `cb-` prefixes), Create Anthology (`#add-comp-overlay`, `cc-` prefixes), Create Series (`#add-series-overlay`, `csr-` prefixes). Edit modals: ✎ on anthology → `#edit-comp-overlay` (`ecc-`); ✎ on book → Edit Book modal; ✎ on series → `#edit-series-overlay` (`esr-`).
 
@@ -1723,11 +1726,11 @@ Mobile mirrors this pattern in `public/mobile/js/battlesim-dispatch.js`: `reader
 
 `level_up` entries include `gainedAbility: boolean` and `newAbilityCount: number | null`. These are set when the new level crosses a threshold where `maxUndos`/`maxFastTravels` increase (levels 31, 41, 51, 61, 71, 81, 91 - each grants +1, from a base of 3 up to a max of 10). When `gainedAbility` is true, the feed renders an additional suffix styled as `.feed-ability` (purple): `· +1 undo & fast travel unlocked (N per run)`. Respects `hide_from_feed` - users who have opted out do not appear in level-up entries.
 
-**Author/Contributor/Admin badges in the feed:** every entry type's SQL in `getFeed()` selects `u.is_author, u.is_contributor, u.display_name` (and, for multi-user entries, per-member in `usernames[]`) so the client can register badge state directly from the feed payload (`feed.js` calls `registerAuthor`/`registerContributor` for every entry before rendering). The client's `_authorMap`/`_contributorSet` caches in `user.js` are otherwise only populated by viewing your own profile or someone else's *public* profile.
+**Author/Contributor/Admin badges in the feed:** every entry type's SQL in `getFeed()` selects `u.is_author, u.is_contributor, u.display_name` (and, for multi-user entries, per-member in `usernames[]`) so the client can register badge state directly from the feed payload (`feed.js` calls `registerAuthor`/`registerContributor` for every entry before rendering). The client's `_authorMap`/`_contributorSet` caches in `account/user.js` are otherwise only populated by viewing your own profile or someone else's *public* profile.
 
-`registerAuthor`/`registerContributor` (`user.js`) clear a username's cached entry when passed `false`, not just add it - all 5 call sites (`feed.js`, `public-profile.js`, `boot/landing.js`, `boot/screens.js`, and `boot/hooks.js`) always call with the real boolean (`registerAuthor(username, !!isAuthor, ...)`) and let the function itself decide whether to add or delete the entry.
+`registerAuthor`/`registerContributor` (`account/user.js`) clear a username's cached entry when passed `false`, not just add it - all 5 call sites (`feed.js`, `account/public-profile.js`, `boot/landing.js`, `boot/screens.js`, and `boot/hooks.js`) always call with the real boolean (`registerAuthor(username, !!isAuthor, ...)`) and let the function itself decide whether to add or delete the entry.
 
-`adminBadge()` (`user.js`) takes the already-resolved `isAdmin` boolean directly, matching `authorBadge`/`contributorBadge`'s own calling convention. All 3 callers (`boot/landing.js` and `boot/hooks.js`, rendering `#books-username` - the currently logged-in user's own header) read `bootState._isAdmin` (`resolveIsAdmin()`'s result), driven by `profile.isAdmin` the moment `/api/profile` resolves - a single source of truth for admin status, not re-derived per call site from a separate `adminUsername` comparison.
+`adminBadge()` (`account/user.js`) takes the already-resolved `isAdmin` boolean directly, matching `authorBadge`/`contributorBadge`'s own calling convention. All 3 callers (`boot/landing.js` and `boot/hooks.js`, rendering `#books-username` - the currently logged-in user's own header) read `bootState._isAdmin` (`resolveIsAdmin()`'s result), driven by `profile.isAdmin` the moment `/api/profile` resolves - a single source of truth for admin status, not re-derived per call site from a separate `adminUsername` comparison.
 
 **Day-card cover backgrounds:** each `.feed-day-card` gets a stack of tiles cycling through every distinct public book played that day, purely client-side in `feed/day-covers.js`. `_dayCovers(items)` (`feed/render.js`) tallies entries with `bookId && bookIsPublic` and a resolvable cover per book, returning all distinct qualifying books' covers sorted by entry count descending. Each qualifying day's cover list is pushed onto `_lastDayCoverLists` (reset per `loadFeed()` call); the card gets `data-day-index` plus an empty `.feed-day-cover-stack` first child, with entries/header wrapped in a sibling `.feed-day-content`.
 
@@ -1821,7 +1824,7 @@ If the book is missing or not public, unmodified `index.html` is served (SPA han
 
 `#public-modal` carries `class="inv-modal pub-modal"`, reusing the shared modal-chrome base (background/border/border-radius/flex/overflow) - `.pub-modal` only holds the declarations that genuinely differ (width, max-height, box-shadow). Same base class reused by `battlesim.css`'s `.bsim-modal`.
 
-All four deep-link types (`/book/:id`, `/anthology/:id`, `/series/:id`, `/user/:username`) open into the *same* shared `#public-modal-overlay`/`#pub-modal-body` - `covers.js`'s `openCoverActivity`/`openSeriesActivity` and `public-profile.js`'s `openPublicProfile`/`openPublicRun` all render into it, and `boot/dialog-bindings.js`'s close handlers all call `closePublicModal()` unconditionally regardless of which one is showing. `closePublicModal()`'s URL-reset must recognize all four path patterns, or closing that specific type leaves the URL bar stuck and reopens the modal unexpectedly on refresh.
+All four deep-link types (`/book/:id`, `/anthology/:id`, `/series/:id`, `/user/:username`) open into the *same* shared `#public-modal-overlay`/`#pub-modal-body` - `covers.js`'s `openCoverActivity`/`openSeriesActivity` and `account/public-profile.js`'s `openPublicProfile`/`openPublicRun` all render into it, and `boot/dialog-bindings.js`'s close handlers all call `closePublicModal()` unconditionally regardless of which one is showing. `closePublicModal()`'s URL-reset must recognize all four path patterns, or closing that specific type leaves the URL bar stuck and reopens the modal unexpectedly on refresh.
 
 **HTML escaping is centralized in `server/html-escape.js`** (`escapeHtml()`/`escapeJsonString()`), required everywhere server-side rather than each page hand-rolling its own copy. Client-side inline `<script>` blocks embedded in `server/forum.js`'s SSR pages (plain JS strings sent to the browser, not Node code - can't `require()` anything) keep their own local copies where genuinely needed (e.g. `_escBr()`, shared across the edit-thread-body and edit-post-body preview within the same rendered page).
 
@@ -2008,9 +2011,9 @@ The caller (`boot/node-bindings.js`) clears `viewingPt` only if **its own path**
 
 **Alternate start:** a book can be started from a section other than its configured default (e.g. flip/dos-a-dos print editions with two beginnings), via a dedicated modal. Hidden for open-world/series books, which use the series-run picker instead. With 2+ previously-used start sections, "New Run" opens a picker instead of starting immediately.
 
-**Node-color logic exists in three independent reimplementations** (`graph.js` canonical, `public-profile.js`, `server/export.js`) of the same rules. All three must stay in sync or a node's battle indicator can be silently lost.
+**Node-color logic exists in three independent reimplementations** (`graph.js` canonical, `account/public-profile.js`, `server/export.js`) of the same rules. All three must stay in sync or a node's battle indicator can be silently lost.
 
-`_buildPubSegNetwork`'s `hasDeath && hasWin` case (a section whose own choices include both a death and a win option) uses `COLORS.bothOutline`/`GRAPH_COLORS.bothOutline` (`#0f172a`/`#f59e0b`), matching the single-outcome `deathOutline`/`victoryOutline` pattern - distinct from the separate "ends"-based case (a node that's the historical ending point of both a death-run and a victory-run), which `public-profile.js`'s `endNodeMap` structure can't represent since it maps one id to one single result.
+`_buildPubSegNetwork`'s `hasDeath && hasWin` case (a section whose own choices include both a death and a win option) uses `COLORS.bothOutline`/`GRAPH_COLORS.bothOutline` (`#0f172a`/`#f59e0b`), matching the single-outcome `deathOutline`/`victoryOutline` pattern - distinct from the separate "ends"-based case (a node that's the historical ending point of both a death-run and a victory-run), which `account/public-profile.js`'s `endNodeMap` structure can't represent since it maps one id to one single result.
 
 Both endpoints are fully unauthenticated (no `authenticate()` call in their `server.js` handlers), and both build a multi-book journey by querying every book in the series the run passed through. Each of the two near-identical `seriesBooks` queries (`getPublicRun`, `getPublicSeriesRun`) independently filters `b.is_public = 1` - an open-world series being public only means the *series* is public, not every book in it.
 
@@ -2492,14 +2495,14 @@ Code that reuses an existing playthrough slot (rather than creating a fresh one)
 | `_handleNewSeriesRun` | Fills/extends `_cachedSeriesRuns[run_index]` with new run location |
 | `deleteRun` → `onRunDeleted` | Splices `_cachedSeriesRuns` to mirror server-side DELETE + renumber |
 
-### Public journey viewer (`public-profile.js › openPublicSeriesRun`)
+### Public journey viewer (`account/public-profile.js › openPublicSeriesRun`)
 
 For public open world series runs, the ⤢ button fetches `GET /api/public/series/:id/user/:userId/run/:runIndex` and renders a multi-segment journey dialog:
 
 - Each segment shows a vis-network graph with the path for that book visit highlighted.
 - Portal transitions between segments display the target book name.
 - The final result (Victory / Loss / Battle Death) is shown at the end.
-- A legend overlay (`div.pub-run-legend`) is injected into `#pub-modal-body` top-right, explaining node colours. Open-world runs include a portal diamond entry; single-book runs do not. Built by `_pubLegendHtml(isOpenWorld)` in `public-profile.js`.
+- A legend overlay (`div.pub-run-legend`) is injected into `#pub-modal-body` top-right, explaining node colours. Open-world runs include a portal diamond entry; single-book runs do not. Built by `_pubLegendHtml(isOpenWorld)` in `account/public-profile.js`.
 
 The dialog reuses the same `vis-network` graph rendering code as the regular public run viewer, applied per-segment.
 
@@ -2528,7 +2531,7 @@ Standard `run_started` and `run_completed` events are **suppressed** for books t
 | `_syncSeriesRuns`, `_computeCrossBookReachability` | `open-world.js` | Reconciles `series_runs` ↔ local `state_data`; cross-book reachability |
 | `doJumpCrossBook`, `clearOpenWorldState` | `open-world.js` | Cross-book fast travel; state teardown on book close |
 | `completeSeriesRun` | `play.js` | Pushes a terminal result from a book playthrough up to `series_runs` |
-| `openPublicSeriesRun` | `public-profile.js` | Fetches and renders the multi-segment public journey viewer |
+| `openPublicSeriesRun` | `account/public-profile.js` | Fetches and renders the multi-segment public journey viewer |
 | `getSeriesRuns`, `createSeriesRun`, `updateSeriesRun` | `server/db.js` | CRUD for `series_runs` |
 | `getSeriesCharacter`, `setSeriesCharacter` | `server/db.js` | Legacy character blob helpers |
 | `getPublicSeriesRunData` | `server/db.js` | Assembles segment data for the public journey viewer |

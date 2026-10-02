@@ -4,7 +4,7 @@ import { setTranslationOverride } from '../i18n.js';
 import { _setLandingPanelCollapsed, _toggleAllLandingPanelsCollapsed, _setPlayPanelCollapsed, _toggleAllPlayPanelsCollapsed } from '../prefs.js';
 import { _toggleCoverTooltipSettings, initCoversPanel, _refillLazyIfShort } from '../covers.js';
 import { _setupCtxSubmenuFlip } from '../bg.js';
-import { setAdminUsername } from '../user.js';
+import { setAdminUsername } from '../account/user.js';
 import { fetchPublic as publicFetch } from '../util.js';
 import { _toggleShortcutsModal } from './helpers.js';
 import { _openMobilePanel } from './navigation.js';

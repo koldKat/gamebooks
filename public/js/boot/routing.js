@@ -1,7 +1,7 @@
 import { bootState } from './state.js';
 import { state, loadState, getToken, currentBookId } from '../state.js';
 import { render } from '../play.js';
-import { openPublicProfile } from '../public-profile.js';
+import { openPublicProfile } from '../account/public-profile.js';
 import { openCoverActivity, openSeriesActivity } from '../covers.js';
 import { startDemoMode, wasInDemoMode } from '../demo.js';
 import { navigateToBook, showLogin, showBooks } from './screens.js';

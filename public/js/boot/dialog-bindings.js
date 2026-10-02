@@ -4,7 +4,7 @@ import { t } from '../i18n.js';
 import { initStats, closeStatsModal } from '../stats.js';
 import { _closeAddBook, _closeAddComp, _closeAddSeries } from '../add-book.js';
 import { closeEditBookModal, _closeEditStash, _closeAddStash } from '../edit-book.js';
-import { closePublicModal } from '../public-profile.js';
+import { closePublicModal } from '../account/public-profile.js';
 import { _toggleCoverTooltipSettings } from '../covers.js';
 import { _closeNotifDropdown, _openNotifDropdown, isNotifDropdownOpen } from '../community/notif.js';
 

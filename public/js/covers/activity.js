@@ -1,6 +1,6 @@
 import { coversState } from './state.js';
 import { getToken, apiFetch } from '../state.js';
-import { openPublicModal } from '../public-profile.js';
+import { openPublicModal } from '../account/public-profile.js';
 import { fetchPublic as publicFetch } from '../util.js';
 import { t } from '../i18n.js';
 

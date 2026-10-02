@@ -4,7 +4,7 @@ import { openCoverActivity, openSeriesActivity } from './activity.js';
 import { _seriesRowBadges } from './badges.js';
 import { coversState } from './state.js';
 import { apiFetch } from '../state.js';
-import { closePublicModal, renderPublicProfile, openPublicRun, _destroyPubNetworks } from '../public-profile.js';
+import { closePublicModal, renderPublicProfile, openPublicRun, _destroyPubNetworks } from '../account/public-profile.js';
 import { refreshCoinsDisplay } from '../shop.js';
 import { escapeHtml, fetchPublic as publicFetch } from '../util.js';
 import { t } from '../i18n.js';

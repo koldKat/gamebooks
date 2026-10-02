@@ -1,0 +1,111 @@
+// Manual account check with real DOM/modules and mocked HTTP; no production writes.
+const nativeFetch = window.fetch.bind(window), errors = [], checks = [], requests = [];
+window.addEventListener('error', e => errors.push(e.message));
+window.addEventListener('unhandledrejection', e => errors.push(String(e.reason)));
+localStorage.clear();
+history.replaceState({}, '', '/?reset_token=isolated-reset-token');
+let profileData = { username: 'Tester', email: 'tester@example.test', publicProfile: true, hideFeed: false,
+  avatarUrl: null, level: 5, title: 'Ranger', xp: 15000, nextLevelXp: 21000, coinsBalance: 3,
+  xpFromBoost: 123, xpBoostPct: 5, isAuthor: true, displayName: 'Test Author', totalBooks: 2, totalRuns: 1 };
+const publicData = { username: 'Tester', displayName: 'Test Author', isAuthor: true, isContributor: true,
+  userId: 7, level: 5, title: 'Ranger', totalBooks: 2, createdBooks: 1, books: [
+    { id: 10, name: 'Test book', runs: [{ index: 0, result: 'success', isPublic: true, pathLength: 2 }] }] };
+const graph = { 1: { choices: [2] }, 2: { choices: [0] } };
+window.fetch = async (url, options = {}) => {
+  const path = String(url); requests.push({ path, method: options.method || 'GET', body: options.body, headers: options.headers });
+  let data = {};
+  if (path === '/api/login' || path === '/api/register') data = { token: 'isolated-test-token', username: 'Tester' };
+  else if (path === '/api/profile/avatar') data = { avatarUrl: null };
+  else if (path === '/api/profile') {
+    if (options.method === 'PATCH') profileData = { ...profileData, ...JSON.parse(options.body) };
+    data = profileData;
+  } else if (path === '/api/public/user/Tester') data = publicData;
+  else if (path === '/api/public/book/10/user/7/run/0') data = { bookName: 'Test book', graph, positions: {}, startSection: 1,
+    run: { runNumber: 1, path: [1, 2], result: 'success' }, allVisited: [1, 2], endNodes: [] };
+  else if (path === '/api/public/series/3/user/7/run/0') data = { isOpenWorld: true, seriesName: 'Test series',
+    run: { runNumber: 1, result: 'success' }, journey: [
+      { bookName: 'First book', graph, positions: {}, path: [1, 2], startSection: 1 },
+      { bookName: 'Second book', graph, positions: {}, path: [1, 2], startSection: 1 }] };
+  return new Response(JSON.stringify(data), { headers: { 'Content-Type': 'application/json' } });
+};
+const el = id => document.getElementById(id);
+const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
+const assert = (condition, label) => { if (!condition) throw Error(label); checks.push(label); };
+try {
+  const state = await import('/js/state.js');
+  const auth = await import('/js/account/auth.js');
+  const profile = await import('/js/account/profile.js');
+  const publicProfile = await import('/js/account/public-profile.js');
+  const user = await import('/js/account/user.js');
+  assert(auth.hasPendingResetToken() && location.search === '', 'reset token captured and removed from URL');
+  let authSuccess = 0, profileSaved = null, rewardSnapshots = 0;
+  auth.setOnAuthSuccess(() => { authSuccess++; }); auth.initAuth();
+  el('login-btn').click(); await pause(30);
+  assert(el('login-error').textContent.length > 0 && !requests.some(r => r.path === '/api/login'), 'empty login validation');
+  el('login-username').value = ' Tester '; el('login-password').value = 'test-password';
+  el('login-btn').click(); await pause(40);
+  assert(state.getToken() === 'isolated-test-token' && state.getUsername() === 'Tester' && authSuccess === 1, 'login session and success hook');
+  el('register-btn').click(); assert(el('register-email').style.display === '', 'registration fields revealed');
+  el('register-password-confirm').value = 'wrong'; el('register-btn').click(); await pause(30);
+  assert(!requests.some(r => r.path === '/api/register'), 'registration password mismatch validation');
+  el('register-password-confirm').value = 'test-password'; el('register-email').value = 'tester@example.test';
+  el('register-btn').click(); await pause(40);
+  const registration = requests.find(r => r.path === '/api/register');
+  assert(registration && JSON.parse(registration.body).email === 'tester@example.test' && authSuccess === 2, 'registration request and success hook');
+  el('forgot-pw-btn').click(); assert(el('forgot-pw-panel').style.display === '', 'forgot-password panel opens');
+  el('forgot-identifier').value = 'Tester'; el('forgot-submit-btn').click(); await pause(40);
+  assert(requests.some(r => r.path === '/api/forgot-password') && !el('forgot-submit-btn').disabled, 'forgot-password submits and restores controls');
+  el('forgot-back-btn').click(); auth.showResetPanel();
+  el('reset-password').value = 'new-password'; el('reset-password-confirm').value = 'new-password';
+  el('reset-submit-btn').click(); await pause(40);
+  const reset = requests.find(r => r.path === '/api/reset-password');
+  assert(reset && JSON.parse(reset.body).token === 'isolated-reset-token' && !auth.hasPendingResetToken(), 'password reset consumes captured token');
+  auth.showAuthForm();
+
+  profile.setProfileHooks({ onSaveSuccess: data => { profileSaved = data; }, onRewardSnapshot: () => { rewardSnapshots++; } });
+  profile.initProfile(); await profile.openProfileModal();
+  assert(el('profile-modal-overlay').classList.contains('active') && el('profile-username-input').value === 'Tester', 'own profile loads');
+  assert(el('profile-email-input').value === 'tester@example.test' && el('profile-public-cb').checked, 'profile email and privacy fields');
+  assert(el('profile-display-name-row').style.display === '' && el('profile-display-name-input').value === 'Test Author', 'author display-name controls');
+  assert(el('profile-level-badge').textContent === 'Lvl 5' && el('books-xp-level').textContent === 'Lvl 5' && el('play-xp-level').textContent === 'Lvl 5', 'profile books and play XP summaries');
+  assert(el('books-xp-bar-fill').style.width !== '' && el('play-xp-bar-fill').style.width !== '', 'both XP bars render');
+  profile.renderBooksXpSummary({ ...profileData, xp: 15025 }, { fromXp: 15000 }); await pause(800);
+  assert(el('books-xp-text').textContent.includes('15,025') && el('play-xp-text').textContent.includes('15,025'), 'live XP tween reaches both bars');
+  el('profile-username-input').value = 'TesterRenamed'; el('profile-save-btn').click(); await pause(40);
+  assert(state.getUsername() === 'TesterRenamed' && profileSaved?.username === 'TesterRenamed' && rewardSnapshots === 2, 'profile save updates identity and hooks');
+  assert(!el('profile-modal-overlay').classList.contains('active'), 'profile closes after save');
+  const canvas = document.createElement('canvas'); canvas.width = 120; canvas.height = 80;
+  canvas.getContext('2d').fillRect(0, 0, 120, 80);
+  const image = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+  Object.defineProperty(el('profile-avatar-file'), 'files', { configurable: true, value: [new File([image], 'avatar.png', { type: 'image/png' })] });
+  el('profile-avatar-file').dispatchEvent(new Event('change', { bubbles: true })); await pause(100);
+  assert(el('crop-modal-overlay').classList.contains('active') && el('crop-canvas').width === 320, 'avatar crop loads real image and canvas');
+  el('crop-confirm-btn').click(); await pause(150);
+  assert(requests.some(r => r.path === '/api/profile/avatar' && r.body instanceof Blob) && !el('crop-modal-overlay').classList.contains('active'), 'avatar crop uploads compressed blob');
+
+  user.setAdminUsername('TesterRenamed');
+  assert(user.resolveIsAdmin() && !user.resolveIsAdmin({ isAdmin: false }) && user.resolveIsAdmin({ isAdmin: true }), 'admin resolution and server override');
+  user.registerAuthor('Tester', true, 'Test Author'); user.registerContributor('Tester', true);
+  assert(user.authorBadge('Tester') && user.contributorBadge('Tester') && user.displayFor('Tester') === 'Test Author', 'author contributor badges and display name');
+  publicProfile.setPublicProfileHooks({ publicFetch: (url, options) => window.fetch(url, options), displayFor: user.displayFor,
+    authorBadge: user.authorBadge, contributorBadge: user.contributorBadge, adminBadge: user.adminBadgeForUsername,
+    onRegisterAuthor: user.registerAuthor, onRegisterContributor: user.registerContributor });
+  await publicProfile.openPublicProfile('Tester');
+  assert(el('public-modal-overlay').classList.contains('active') && el('pub-modal-title').textContent.includes('Test Author'), 'public profile opens with role display');
+  assert(el('pub-modal-body').querySelector('.pub-run-btn'), 'public run button renders');
+  el('pub-modal-body').querySelector('.pub-book-name').click();
+  assert(!el('pub-modal-body').querySelector('.pub-book').classList.contains('pub-book-collapsed'), 'public book group expands');
+  await publicProfile.openPublicRun(10, 7, 0, publicData); await pause(60);
+  assert(el('pub-graph-container').querySelector('.vis-network') && el('pub-modal-body').querySelector('.pub-run-path'), 'public run graph and trail render');
+  el('pub-back-btn').click(); assert(el('pub-modal-body').querySelector('.pub-profile-header'), 'run back returns to profile');
+  await publicProfile.openPublicSeriesRun(3, 7, 0, publicData); await pause(60);
+  assert(el('pub-modal-body').querySelectorAll('.pub-graph-seg .vis-network').length === 2, 'public series journey graphs render');
+  history.replaceState({}, '', '/user/Tester'); publicProfile.closePublicModal();
+  assert(location.pathname === '/' && !el('public-modal-overlay').classList.contains('active') && el('pub-modal-body').innerHTML === '', 'public modal cleanup and deep-link reset');
+  user.registerAuthor('Tester', false); user.registerContributor('Tester', false);
+  assert(!user.authorBadge('Tester') && !user.contributorBadge('Tester') && user.displayFor('Tester') === 'Tester', 'role removal clears cached badges');
+  assert(errors.length === 0, 'no browser errors or unhandled rejections');
+  await nativeFetch('/report', { method: 'POST', body: JSON.stringify({ ok: true, checks, errors }) });
+} catch (error) {
+  await nativeFetch('/report', { method: 'POST', body: JSON.stringify({ ok: false, error: String(error), stack: error.stack, checks, errors }) });
+}

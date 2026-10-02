@@ -1,7 +1,7 @@
 import { bootState } from './state.js';
 import { getToken } from '../state.js';
 import { render } from '../play.js';
-import { closePublicModal } from '../public-profile.js';
+import { closePublicModal } from '../account/public-profile.js';
 import { openCoverActivity, openSeriesActivity } from '../covers.js';
 import { _cancelForumReveal } from './helpers.js';
 import { showBooks } from './screens.js';
