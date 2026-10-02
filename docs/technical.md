@@ -124,7 +124,23 @@ gamebooks/
         node-dialogs.js  Edit choices and pinned notes
         portal-dialog.js Portal add/edit dialog
       charsheet.js       Character sheet - self-contained module
-      inventory.js       Inventory grid - self-contained module (per-run item slots, drag reorder, template)
+      inventory.js       Stable inventory API; re-exports inventory/ implementations
+      inventory/         Per-run inventory feature modules
+        runtime.js       Shared cache, edit/drag/menu/picker state and display revision
+        constants.js     Inventory capacity (40 slots)
+        setup.js         One-time grid renderer registration
+        model.js         Legacy slot normalization and per-run persistence
+        transfers.js     Stack merge/add/remove and equipment integration exports
+        cache.js         On-demand item fetches and preloadItems
+        markup.js        Shared visible-item HUD line markup
+        display.js       Guarded HUD rendering and equipped-item provider registration
+        grid.js          Grid markup, capacity and read-only controls
+        slots.js         Context-menu and drag reorder bindings
+        context-menu.js  Visibility, rename, edit and confirmed removal actions
+        dialogs.js       Quantity/note/visibility editor and rename dialog
+        picker.js        Catalog search, lazy SVG observer and cache pruning
+        panel.js         Open/close and visibility cleanup
+        init.js          DOM construction, controls, Escape and I shortcut
       equipment.js       Stable equipment API; re-exports equipment/ implementations
       equipment/         Per-run equipment feature modules
         runtime.js       Shared item cache and drag/menu/edit/picker UI state
@@ -582,7 +598,7 @@ Layer 1 (import only from layer 0):
   user.js        ← state.js
 
 Layer 2:
-  inventory.js   ← state.js, play.js*, charsheet.js
+  inventory.js / inventory/ ← state.js, play.js*, charsheet.js
   equipment.js / equipment/ ← state.js, inventory.js, charsheet.js
   play.js / play/ ← state.js, graph.js, charsheet.js, equipment.js*, rewards.js, i18n.js, confirm.js
 
@@ -2038,10 +2054,20 @@ A self-contained module for tracking book-specific character stats per book. Imp
 
 ## Inventory (`inventory.js`)
 
-A self-contained module for managing per-run item slots. Imports `state.js`, `play.js` (for `showConfirm`), and `charsheet.js` (for `getPlayBtnRow`). To remove: delete `inventory.js`, remove its imports and integration calls from `boot/` and `equipment.js` - its CSS lives in `public/css/equipment.css` alongside equipment's own (the two sections were adjacent and small enough to combine when split out).
+`inventory.js` is a compatibility facade for the implementations in `public/js/inventory/`. All nine public exports retain their signatures and existing callers continue importing the facade. `inventory/setup.js` registers the grid renderer on the shared runtime once, allowing dialogs, transfers, picker and panel actions to refresh it without an internal import cycle. The existing external inventory/play/equipment cycle is unchanged. Imports still include `state.js`, `play.js` (for `showConfirm`), and `charsheet.js` (for `getPlayBtnRow`). To remove the feature: delete the facade and its implementation directory, then remove its imports and integration calls from `boot/` and `equipment/`. Its CSS remains in `public/css/equipment.css`; no layout, translation keys, data schema or mobile controller changes accompany this split.
+
+`test/client/inventory/` checks the internal dependency graph and compares 17 state/render/save/fetch scenarios against a digest captured from the unsplit controller at `d97de3b`. Coverage includes legacy entries, equipment HUD integration, rename/edit, visibility, drag reorder, metadata search, lazy SVG loading, stacking, templates, confirmed removal, equipment transfers, capacity, historical read-only mode and visibility cleanup. Equipment's existing tests continue exercising the actual inventory normalization/transfer/display functions from their new source modules. The manual inventory browser fixture uses real DOM/CSS, IntersectionObserver and inventory/equipment modules with mocked HTTP; no production writes or mobile touch interactions are covered.
+
+**Stale-operation safety:** slot/menu/rename/edit/drag/delete actions capture the book state, run, normalized slot index, raw entry identity and metadata. They recheck that context and current write access before mutating, preventing a pending action from targeting another run or a shifted/replaced/changed stack. Picker opens carry independent run-scoped sessions; closed/superseded sessions cannot paint metadata, add items or restart observers. Each observer callback captures its own observer and session, including queued callbacks after disconnect. Item fetches recheck validity after response/JSON awaits and a cache epoch invalidates pending writes when the feature hides. Grid refreshes check their run/epoch/revision before rendering and again after awaiting the equipped-item provider, then pass that guard through to the final HUD paint. Hide also closes rename/context-menu UI and invalidates pending deletion/drag operations; captured slot/session references are released rather than retaining previous books. Additional tests cover these races while the normal-path digest remains unchanged.
 
 **Exports:**
 - `initInventory()` - call once from `DOMContentLoaded`. Injects the inventory button into `#main-screen`.
+- `getInventorySlots()` - returns normalized active/viewed-run slots; legacy numeric entries remain supported.
+- `addItemToInventory(itemId, opts)` - merges matching metadata/visibility stacks or adds a slot up to capacity; returns success/failure.
+- `removeAllFromInventoryAt(idx)` - removes a whole stack for equipment transfers and returns its metadata, or `null`.
+- `refreshInventoryUI()` - refreshes the grid and merged HUD through the registered renderer.
+- `renderInventoryDisplay(extraItems, isCurrent)` - renders visible inventory and supplied equipment with the existing final-paint book/run/revision and optional caller-validity guards.
+- `setInventoryVisible(visible)` - controls the trigger and closes/prunes feature state when hidden.
 - `preloadItems()` - fetches the active/viewed run's items on demand; called by `boot/helpers.js` after the `boot/play-features.js` run-switch hook fires.
 - `setExtraDisplayItemsProvider(fn)` - registers an async callback (set by `boot/play-features.js`) that supplies extra items to merge into `#inv-display` on every grid refresh. Used to inject equipped "show on screen" items from `equipment.js` without creating a direct import (avoiding a deeper cycle).
 
@@ -2050,7 +2076,7 @@ A self-contained module for managing per-run item slots. Imports `state.js`, `pl
 **Item data loading:** inventory never fetches all items upfront. Instead:
 - On picker open, `GET /api/items?meta=1` fetches a lightweight list (id, name, type) - no SVG data.
 - SVGs are loaded lazily per tile via `IntersectionObserver` (`GET /api/items/:id`) only when the tile scrolls into view.
-- Individual item SVGs are cached in a module-level `Map` (`_itemCache`) keyed by id. The cache persists for the session.
+- Individual item SVGs are cached in `inventoryRuntime._itemCache`, a `Map` keyed by id. Closing the picker prunes unowned entries; hiding inventory clears the cache.
 
 **Scope:** the inventory is **per run**. Each playthrough carries its own `inventory: []` - an array of slot objects `{ itemId, label }`. There is one **template** per book (`state.inventoryTemplate`, `null` if unset). When a new run is started, its inventory is deep-copied from the template if one exists.
 

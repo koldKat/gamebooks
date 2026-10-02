@@ -1,0 +1,105 @@
+// Isolated manual browser check using real DOM, CSS and inventory/equipment modules.
+// HTTP is mocked and currentBookId stays null: no production data is read or written.
+const errors = [], checks = [], nativeFetch = window.fetch.bind(window);
+window.addEventListener('error', e => errors.push(e.message));
+window.addEventListener('unhandledrejection', e => errors.push(String(e.reason)));
+localStorage.clear();
+const items = [{ id: 1, name: 'Sword', svg_data: '<svg><path d="M1 2"/></svg>' }, { id: 2, name: 'Potion', svg_data: '<svg><circle r="2"/></svg>' }, { id: 3, name: 'Cloak', svg_data: '<svg><rect width="3"/></svg>' }];
+window.fetch = async url => {
+  const text = String(url), requested = text.includes('?ids=') ? text.split('=')[1].split(',').map(Number) : null;
+  const id = text.match(/^\/api\/items\/(\d+)$/)?.[1];
+  const data = text === '/api/items?meta=1' ? items.map(({ id, name }) => ({ id, name })) : requested ? items.filter(i => requested.includes(i.id)) : id ? items.find(i => i.id === +id) : {};
+  return new Response(JSON.stringify(data), { headers: { 'Content-Type': 'application/json' } });
+};
+const assert = (condition, label) => { if (!condition) throw Error(label); checks.push(label); };
+const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
+const el = id => document.getElementById(id);
+const slot = key => document.querySelector(`.eq-slot[data-key="${key}"]`);
+try {
+  const inventory = await import('/js/inventory.js');
+  const equipment = await import('/js/equipment.js');
+  const charsheet = await import('/js/charsheet.js');
+  const data = await import('/js/state.js');
+  const { state } = data;
+  Object.assign(state, { bookName: 'Inventory smoke test', totalSections: 20, graph: {},
+    playthroughs: [{ path: [1], completed: false, inventory: [1, { itemId: 2, qty: 3, note: 'Drink', visible: true }],
+      equipment: { head: 3 }, equipmentVisible: { head: true } }], activePtIndex: 0 });
+  el('login-screen').style.display = 'none'; el('books-screen').style.display = 'none'; el('main-screen').style.display = 'flex';
+  charsheet.initCharSheet(); inventory.initInventory(); equipment.initEquipment();
+  inventory.setExtraDisplayItemsProvider(equipment.getVisibleEquippedItems);
+  inventory.setInventoryVisible(true); el('inventory-btn').click(); await pause(100);
+  const filled = () => el('inv-grid').querySelectorAll('.inv-slot--filled');
+  assert(document.querySelectorAll('#inv-overlay').length === 1, 'one inventory panel');
+  assert(el('stats-hud').contains(el('charsheet-display')) && el('stats-hud').contains(el('inv-display')), 'shared HUD DOM');
+  assert(filled().length === 2 && el('inv-grid').children.length === 5, 'legacy slots and five-column grid');
+  assert(el('inv-display').textContent.includes('Potion') && el('inv-display').textContent.includes('Cloak'), 'real merged equipment HUD');
+  const action = async (idx, name) => {
+    filled()[idx].dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: 790, clientY: 590 }));
+    document.querySelector('.inv-ctx-menu [data-action="' + name + '"]').click(); await pause(40);
+  };
+  await action(0, 'rename'); el('inv-rename-input').value = 'Named sword'; el('inv-rename-ok').click(); await pause(40);
+  assert(inventory.getInventorySlots()[0].label === 'Named sword', 'rename saves metadata');
+  await action(1, 'edit'); el('inv-edit-qty').value = '5'; el('inv-edit-note').value = 'Keep';
+  el('inv-edit-visible').checked = false; el('inv-edit-done').click(); await pause(40);
+  assert(inventory.getInventorySlots()[1].qty === 5 && inventory.getInventorySlots()[1].note === 'Keep', 'quantity and note editor');
+  await action(1, 'toggle-visible'); assert(inventory.getInventorySlots()[1].visible, 'visibility toggle');
+  const transfer = new DataTransfer();
+  filled()[0].dispatchEvent(new DragEvent('dragstart', { bubbles: true, dataTransfer: transfer }));
+  filled()[1].dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: transfer })); await pause(40);
+  assert(inventory.getInventorySlots()[1].itemId === 1, 'drag reorder');
+  el('inv-add-btn').click(); await pause(150);
+  assert(el('inv-picker-grid').querySelectorAll('.inv-pick-item').length === 3, 'catalog metadata picker');
+  assert(el('inv-picker-grid').querySelectorAll('.inv-pick-svg svg').length === 3, 'real IntersectionObserver loads SVGs');
+  el('inv-search').value = 'cloak'; el('inv-search').dispatchEvent(new Event('input', { bubbles: true })); await pause(40);
+  assert(el('inv-picker-grid').querySelectorAll('.inv-pick-item').length === 1, 'catalog search');
+  el('inv-picker-grid').querySelector('.inv-pick-item').click(); await pause(40);
+  assert(inventory.getInventorySlots().length === 3 && !el('inv-picker-overlay').classList.contains('active'), 'picker adds and closes');
+  el('inv-add-btn').click(); await pause(60);
+  el('inv-search').value = 'cloak'; el('inv-search').dispatchEvent(new Event('input', { bubbles: true }));
+  el('inv-picker-grid').querySelector('.inv-pick-item').click(); await pause(40);
+  assert(inventory.getInventorySlots()[2].qty === 2, 'picker merges repeated selection');
+  el('inv-save-template-btn').click(); state.playthroughs[0].inventory[2].qty = 4;
+  assert(state.inventoryTemplate[2].qty === 2, 'independent template snapshot');
+  await action(0, 'edit');
+  state.playthroughs.push({ path: [1], completed: false, inventory: [{ itemId: 3, qty: 7 }], equipment: {} });
+  state.activePtIndex = 1; el('inv-edit-qty').value = '99'; el('inv-edit-done').click(); await pause(40);
+  assert(state.playthroughs[1].inventory[0].qty === 7 && state.playthroughs[0].inventory[0].qty === 5, 'stale inventory editor cannot change another run');
+  state.activePtIndex = 0; inventory.refreshInventoryUI(); await pause(40);
+  const originalInventory = state.playthroughs[0].inventory;
+  await action(0, 'remove'); state.playthroughs[0].inventory = originalInventory.slice(1);
+  el('confirm-ok').click(); await pause(40);
+  assert(state.playthroughs[0].inventory.length === 2 && state.playthroughs[0].inventory[0].label === 'Named sword', 'stale confirmation cannot remove a shifted item');
+  state.playthroughs[0].inventory = originalInventory; inventory.refreshInventoryUI(); await pause(40);
+  const normalFetch = window.fetch;
+  let finishMetadata;
+  window.fetch = (url, ...args) => String(url) === '/api/items?meta=1' ? new Promise(resolve => { finishMetadata = resolve; }) : normalFetch(url, ...args);
+  el('inv-add-btn').click(); await pause(30); el('inv-picker-close').click();
+  const closedPickerMarkup = el('inv-picker-grid').innerHTML;
+  finishMetadata(new Response(JSON.stringify([{ id: 3, name: 'Late cloak' }]), { headers: { 'Content-Type': 'application/json' } })); await pause(40);
+  const { inventoryRuntime } = await import('/js/inventory/runtime.js');
+  assert(el('inv-picker-grid').innerHTML === closedPickerMarkup && inventoryRuntime._pickerObserver === null, 'closed picker ignores late metadata and does not restart observer');
+  window.fetch = normalFetch;
+  await action(0, 'remove'); el('confirm-ok').click(); await pause(40);
+  assert(inventory.getInventorySlots().length === 2, 'confirmed removal');
+  el('inv-add-btn').click(); await pause(40); el('inv-search').blur();
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  assert(!el('inv-picker-overlay').classList.contains('active') && el('inv-overlay').classList.contains('active'), 'Escape closes picker first');
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  assert(!el('inv-overlay').classList.contains('active'), 'Escape closes inventory');
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'i', code: 'KeyI', bubbles: true })); await pause(40);
+  assert(el('inv-overlay').classList.contains('active'), 'I shortcut opens inventory');
+  state.playthroughs[0].inventory = Array.from({ length: 40 }, (_, i) => ({ itemId: 1, qty: 1, label: 'slot' + i }));
+  inventory.refreshInventoryUI(); await pause(40);
+  assert(el('inv-add-btn').disabled && !inventory.addItemToInventory(3), 'capacity blocks new stack');
+  assert(inventory.addItemToInventory(1, { label: 'slot0', qty: 2 }) && inventory.getInventorySlots()[0].qty === 3, 'matching stack merges at capacity');
+  state.playthroughs[0].completed = true; state.activePtIndex = null; data.setViewingPt(state.playthroughs[0]);
+  inventory.refreshInventoryUI(); await pause(40);
+  assert(el('inv-add-btn').style.display === 'none' && el('inv-save-template-btn').style.display === 'none' && !filled()[0].draggable, 'historical inventory is read-only');
+  assert(!inventory.addItemToInventory(2) && inventory.removeAllFromInventoryAt(0) === null, 'read-only transfer guard');
+  inventory.setInventoryVisible(false); await pause(40);
+  assert(!el('inv-overlay').classList.contains('active') && !el('inv-picker-overlay').classList.contains('active') && el('inventory-btn').style.display === 'none', 'visibility cleanup');
+  assert(errors.length === 0, 'no browser errors or unhandled rejections');
+  await nativeFetch('/report', { method: 'POST', body: JSON.stringify({ ok: true, checks, errors }) });
+} catch (error) {
+  await nativeFetch('/report', { method: 'POST', body: JSON.stringify({ ok: false, error: String(error), stack: error.stack, checks, errors }) });
+}

@@ -422,6 +422,8 @@ Click **Inventory** (bottom-right of the tracker screen) to see and manage the i
 
 Each playthrough has its own separate inventory. If you look back at a finished run, the inventory shows what you had then - you can view it but not change it.
 
+An edit, rename or removal applies only to the original item in the original run. If you switch runs or the item changes while a dialog is open, that pending action is discarded; reopen it for the current item.
+
 ### Adding items
 
 Click **+ Add Item**, then browse or search the list of available items. Click any item to add it. You can also type a short label on it - useful if you want to note a quantity or a specific version of an item.

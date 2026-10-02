@@ -1,0 +1,279 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { resolve, dirname } from 'node:path';
+import { SourceTextModule, SyntheticModule, createContext } from 'node:vm';
+import { createHash } from 'node:crypto';
+
+const root = process.argv[1], baseline = process.argv[2], modules = new Map();
+let state = { playthroughs: [], activePtIndex: null }, viewingPt = null;
+const ids = new Map(), effects = [], snapshots = [], documentListeners = new Map();
+const currentPlaythrough = () => state.activePtIndex == null ? null : (state.playthroughs[state.activePtIndex]?.completed ? null : state.playthroughs[state.activePtIndex] || null);
+class Element {
+  constructor(tag = 'div') {
+    this.tag = tag; this.children = []; this.style = {}; this.dataset = {}; this.listeners = new Map();
+    this.classes = new Set(); this.value = ''; this.checked = false; this.text = '';
+    this.classList = { add: c => this.classes.add(c), remove: c => this.classes.delete(c), contains: c => this.classes.has(c), toggle: (c, force) => {
+      const enabled = force === undefined ? !this.classes.has(c) : force;
+      if (enabled) this.classes.add(c); else this.classes.delete(c); return enabled;
+    } };
+  }
+  set id(value) { this._id = value; ids.set(value, this); } get id() { return this._id || ''; }
+  set className(value) { this.classes = new Set(value.split(/\s+/).filter(Boolean)); } get className() { return [...this.classes].join(' '); }
+  set textContent(value) { this.text = String(value); } get textContent() { return this.text + this.children.map(c => c.textContent).join(''); }
+  appendChild(el) { if (el.parentNode) el.parentNode.children = el.parentNode.children.filter(c => c !== el); this.children.push(el); el.parentNode = this; return el; }
+  insertBefore(el, before) { this.children.splice(this.children.indexOf(before), 0, el); el.parentNode = this; return el; }
+  remove() {
+    this.parentNode.children = this.parentNode.children.filter(c => c !== this);
+    for (const el of [this, ...this.all()]) if (el.id && ids.get(el.id) === el) ids.delete(el.id);
+  }
+  set innerHTML(html) {
+    for (const el of this.all()) if (el.id && ids.get(el.id) === el) ids.delete(el.id);
+    this.html = html; this.children = []; this.text = '';
+    const stack = [this];
+    for (const match of html.matchAll(/<\/?([a-z][\w-]*)\b([^>]*)>|([^<]+)/gi)) {
+      if (match[3]) { stack.at(-1).text += match[3]; continue; }
+      if (match[0].startsWith('</')) { if (stack.length > 1) stack.pop(); continue; }
+      const node = new Element(match[1]);
+      for (const attr of match[2].matchAll(/([\w-]+)="([^"]*)"/g)) {
+        if (attr[1] === 'id') node.id = attr[2];
+        else if (attr[1] === 'class') node.className = attr[2];
+        else if (attr[1].startsWith('data-')) node.dataset[attr[1].slice(5).replace(/-([a-z])/g, (_, c) => c.toUpperCase())] = attr[2];
+      }
+      stack.at(-1).appendChild(node);
+      if (!/\/$/.test(match[2]) && !['input', 'br', 'hr', 'img'].includes(match[1])) stack.push(node);
+    }
+  }
+  get innerHTML() { return this.html || ''; }
+  all() { return this.children.flatMap(c => [c, ...c.all()]); }
+  matches(selector) {
+    if (selector.startsWith('.')) return this.classes.has(selector.slice(1));
+    if (selector.startsWith('#')) return this.id === selector.slice(1);
+    const data = selector.match(/^\[data-([\w-]+)(?:="([^"]*)")?\]$/);
+    if (data) { const key = data[1].replace(/-([a-z])/g, (_, c) => c.toUpperCase()); return key in this.dataset && (data[2] === undefined || this.dataset[key] === data[2]); }
+    return false;
+  }
+  closest(selector) { return this.matches(selector) ? this : this.parentNode?.closest(selector) || null; }
+  contains(target) { return target === this || this.all().includes(target); }
+  querySelectorAll(selector) { return this.all().filter(el => el.matches(selector)); }
+  querySelector(selector) { return this.querySelectorAll(selector)[0] || null; }
+  addEventListener(type, fn) { const list = this.listeners.get(type) || []; list.push(fn); this.listeners.set(type, list); }
+  dispatch(type, extra = {}) { for (const fn of [...(this.listeners.get(type) || [])]) fn({ target: this, stopPropagation() {}, preventDefault() {}, ...extra }); }
+  click() { this.dispatch('click'); }
+  focus() {} select() {}
+  getBoundingClientRect() { return { width: 196, height: 120, right: 196, bottom: 120 }; }
+}
+const body = new Element(), row = body.appendChild(new Element()); row.id = 'play-btn-row';
+const document = { body, createElement: tag => new Element(tag), getElementById: id => ids.get(id) || null,
+  querySelectorAll: selector => body.querySelectorAll(selector), addEventListener: (type, fn) => {
+    const list = documentListeners.get(type) || []; list.push(fn); documentListeners.set(type, list);
+  } };
+
+const csDisplay = body.appendChild(new Element()); csDisplay.id = 'charsheet-display';
+const observers = [];
+class IntersectionObserver {
+  constructor(callback, options) { this.callback = callback; this.options = options; this.targets = new Set(); observers.push(this); }
+  observe(el) { this.targets.add(el); }
+  unobserve(el) { this.targets.delete(el); }
+  disconnect() { this.targets.clear(); }
+  reveal() { this.callback([...this.targets].map(target => ({ target, isIntersecting: true }))); }
+}
+const items = [{ id: 1, name: 'Sword', svg_data: '<svg><path d="M1 2"/></svg>' }, { id: 2, name: 'Potion', svg_data: '<svg><circle r="2"/></svg>' }, { id: 3, name: 'Cloak', svg_data: '<svg><rect width="3"/></svg>' }];
+let confirmAction = null;
+const saveState = () => effects.push(['save', JSON.parse(JSON.stringify(state))]);
+const apiFetch = async url => {
+  effects.push(['api', url]);
+  return { ok: true, json: async () => url.includes('?meta=1') ? items.map(({ id, name }) => ({ id, name })) : items.find(i => i.id === +url.split('/').at(-1)) };
+};
+const context = createContext({ console, document, IntersectionObserver, window: { innerWidth: 800, innerHeight: 600 } });
+function stub(file, exports) {
+  const mod = new SyntheticModule(Object.keys(exports), function () { for (const [k, v] of Object.entries(exports)) this.setExport(k, v); }, { context });
+  modules.set(resolve(root, file), mod); return mod;
+}
+const stateModule = stub('state.js', { state, viewingPt, currentPlaythrough, saveState, apiFetch });
+stub('play.js', { showConfirm: (message, action, options) => { confirmAction = action; effects.push(['confirm', message, options]); } });
+stub('charsheet.js', { getPlayBtnRow: () => row });
+stub('i18n.js', { t: (key, p = {}) => key + (p.name ? ' ' + p.name : '') });
+const escapeHtml = value => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+let shortcut;
+stub('util.js', { escapeHtml, shortcutLabel: value => value, ALL_PANEL_OVERLAY_IDS: ['eq-overlay', 'inv-overlay'],
+  registerPanelShortcut: (code, opts) => { shortcut = opts; effects.push(['shortcut', code, opts.otherOverlayIds, opts.capture]); } });
+function moduleAt(path) {
+  if (modules.has(path)) return modules.get(path);
+  const source = readFileSync(path === resolve(root, 'inventory.js') && baseline ? baseline : path, 'utf8');
+  const mod = new SourceTextModule(source, { context, identifier: path }); modules.set(path, mod); return mod;
+}
+const entry = moduleAt(resolve(root, 'inventory.js'));
+await entry.link((specifier, parent) => moduleAt(resolve(dirname(parent.identifier), specifier))); await entry.evaluate();
+const api = entry.namespace;
+assert.deepEqual(Object.keys(api).sort(), ['addItemToInventory', 'getInventorySlots', 'initInventory', 'preloadItems', 'refreshInventoryUI', 'removeAllFromInventoryAt', 'renderInventoryDisplay', 'setExtraDisplayItemsProvider', 'setInventoryVisible'].sort());
+const plain = value => JSON.parse(JSON.stringify(value));
+const el = id => { const node = document.getElementById(id); assert.ok(node, id); return node; };
+const settle = async () => { for (let i = 0; i < 40; i++) await Promise.resolve(); };
+async function event(node, type = 'click', extra = {}) { assert.ok(node); node.dispatch(type, extra); await settle(); }
+const filled = () => el('inv-grid').querySelectorAll('.inv-slot--filled');
+function snapshot(label) {
+  snapshots.push({ label, state: plain(state), effects: plain(effects), grid: el('inv-grid').innerHTML, hud: el('inv-display').innerHTML,
+    picker: el('inv-picker-grid').innerHTML, count: el('inv-count-label').textContent, addDisabled: el('inv-add-btn').disabled,
+    addDisplay: el('inv-add-btn').style.display, templateDisplay: el('inv-save-template-btn').style.display,
+    buttonDisplay: el('inventory-btn').style.display,
+    overlays: ['inv-overlay', 'inv-picker-overlay', 'inv-edit-dialog', 'inv-rename-dialog'].map(id => [id, el(id).className]),
+    observed: observers.at(-1)?.targets.size || 0 }); effects.length = 0;
+}
+api.initInventory();
+assert.equal(document.querySelectorAll('#inventory-btn').length, 1);
+assert.equal(el('stats-hud').contains(csDisplay), true);
+state.playthroughs = [{ inventory: [1, null, { itemId: 2, qty: 3, note: 'Drink <now>', label: 'Heal', visible: true }], completed: false }];
+state.activePtIndex = 0;
+api.setInventoryVisible(true); await event(el('inventory-btn'));
+assert.equal(filled().length, 2); assert.equal(el('inv-grid').querySelectorAll('.inv-slot').length, 5);
+snapshot('legacy-grid-and-hud');
+await api.preloadItems(); assert.equal(effects.length, 0);
+api.setExtraDisplayItemsProvider(async () => [{ item: items[2], label: 'Worn cloak', note: 'Warm', qty: 2, slotLabel: 'Back' }]);
+api.refreshInventoryUI(); await settle(); assert.ok(el('inv-display').innerHTML.includes('Worn cloak')); snapshot('equipment-display-provider');
+async function action(idx, name) {
+  await event(filled()[idx], 'contextmenu', { clientX: 790, clientY: 590 });
+  const menu = document.querySelectorAll('.inv-ctx-menu')[0]; assert.ok(menu);
+  await event(menu, 'click', { target: menu.querySelector('[data-action="' + name + '"]') });
+}
+await action(0, 'rename'); el('inv-rename-input').value = 'Named <sword>'; await event(el('inv-rename-ok'));
+assert.equal(api.getInventorySlots()[0].label, 'Named <sword>'); snapshot('rename');
+await action(1, 'edit'); el('inv-edit-qty').value = '5'; await event(el('inv-edit-qty-inc')); await event(el('inv-edit-qty-dec'));
+el('inv-edit-note').value = 'Keep'; el('inv-edit-visible').checked = false; await event(el('inv-edit-done'));
+assert.equal(api.getInventorySlots()[1].qty, 5); snapshot('edit');
+await action(1, 'toggle-visible'); assert.equal(api.getInventorySlots()[1].visible, true); snapshot('toggle-visible');
+const transfer = {};
+await event(filled()[0], 'dragstart', { dataTransfer: transfer }); await event(filled()[1], 'dragover', { dataTransfer: transfer });
+await event(filled()[1], 'drop', { dataTransfer: transfer }); assert.equal(api.getInventorySlots()[1].itemId, 1); snapshot('reorder');
+await event(el('inv-add-btn')); assert.equal(el('inv-picker-grid').querySelectorAll('.inv-pick-item').length, 3);
+assert.equal(observers.at(-1).targets.size, 3); snapshot('picker-metadata');
+observers.at(-1).reveal(); await settle(); assert.ok(el('inv-picker-grid').querySelector('.inv-pick-svg').innerHTML.includes('<svg>')); snapshot('lazy-picker-svgs');
+el('inv-search').value = 'cloak'; await event(el('inv-search'), 'input');
+assert.equal(el('inv-picker-grid').querySelectorAll('.inv-pick-item').length, 1); snapshot('picker-search');
+await event(el('inv-picker-grid').querySelector('.inv-pick-item')); assert.equal(api.getInventorySlots().length, 3); snapshot('picker-add');
+await event(el('inv-add-btn')); el('inv-search').value = 'cloak'; await event(el('inv-search'), 'input');
+await event(el('inv-picker-grid').querySelector('.inv-pick-item')); assert.equal(api.getInventorySlots()[2].qty, 2); snapshot('picker-stack-merge');
+await event(el('inv-save-template-btn')); state.playthroughs[0].inventory[2].qty = 4;
+assert.equal(state.inventoryTemplate[2].qty, 2); snapshot('independent-template');
+await action(0, 'remove'); assert.ok(confirmAction); confirmAction(); await settle();
+assert.equal(api.getInventorySlots().length, 2); snapshot('confirmed-remove');
+const removed = api.removeAllFromInventoryAt(1); assert.equal(removed.qty, 4);
+assert.equal(api.removeAllFromInventoryAt(99), null); api.refreshInventoryUI(); await settle(); snapshot('equipment-transfer');
+state.playthroughs[0].inventory = Array.from({ length: 40 }, (_, i) => ({ itemId: 1, qty: 1, label: 'slot' + i }));
+api.refreshInventoryUI(); await settle();
+assert.equal(el('inv-add-btn').disabled, true); assert.equal(api.addItemToInventory(3), false);
+assert.equal(api.addItemToInventory(1, { label: 'slot0', qty: 2 }), true); assert.equal(api.getInventorySlots()[0].qty, 3);
+api.refreshInventoryUI(); await settle(); snapshot('capacity-and-merge');
+state.playthroughs[0].completed = true; state.activePtIndex = null; viewingPt = state.playthroughs[0]; stateModule.setExport('viewingPt', viewingPt);
+api.refreshInventoryUI(); await settle(); assert.equal(el('inv-add-btn').style.display, 'none');
+assert.equal(api.addItemToInventory(2), false); assert.equal(api.removeAllFromInventoryAt(0), null);
+assert.equal(filled()[0].listeners.has('dragstart'), false); snapshot('historical-read-only');
+api.setInventoryVisible(false); await settle(); assert.equal(el('inv-overlay').classList.contains('active'), false);
+assert.equal(observers.at(-1).targets.size, 0); snapshot('hide-and-cleanup');
+assert.equal(shortcut.capture, true); assert.equal(shortcut.extraGuard(), false);
+console.log(JSON.stringify({ cases: snapshots.length, exports: Object.keys(api).length, digest: createHash('sha256').update(JSON.stringify(snapshots)).digest('hex') }));
+if (!baseline) {
+  async function startRun(inventory) {
+    api.setInventoryVisible(false); await settle();
+    state = { playthroughs: [{ path: [1], completed: false, inventory }], activePtIndex: 0 };
+    viewingPt = null; stateModule.setExport('state', state); stateModule.setExport('viewingPt', null);
+    api.setInventoryVisible(true); await event(el('inventory-btn')); effects.length = 0;
+  }
+  await startRun([{ itemId: 1, qty: 1, label: 'Original' }]); await action(0, 'edit');
+  state.playthroughs.push({ inventory: [{ itemId: 2, qty: 7, note: 'Other run' }], completed: false }); state.activePtIndex = 1;
+  el('inv-edit-qty').value = '99'; el('inv-edit-note').value = 'Stale'; await event(el('inv-edit-done'));
+  assert.equal(state.playthroughs[1].inventory[0].qty, 7, 'stale editor must not modify another run');
+  assert.equal(state.playthroughs[1].inventory[0].note, 'Other run');
+  assert.equal(effects.some(e => e[0] === 'save'), false);
+
+  await startRun([{ itemId: 1, label: 'Original' }, { itemId: 2, label: 'Survivor' }]); await action(0, 'remove');
+  state.playthroughs[0].inventory.shift(); confirmAction(); await settle();
+  assert.equal(state.playthroughs[0].inventory.length, 1, 'confirmation must not delete a shifted inventory entry');
+  assert.equal(state.playthroughs[0].inventory[0].label, 'Survivor');
+  assert.equal(effects.some(e => e[0] === 'save'), false);
+
+  await startRun([{ itemId: 1, label: 'Original' }]); await action(0, 'rename');
+  state.playthroughs[0].inventory[0] = { itemId: 3, label: 'Replacement' };
+  el('inv-rename-input').value = 'Wrong'; await event(el('inv-rename-ok'));
+  assert.equal(state.playthroughs[0].inventory[0].label, 'Replacement', 'rename must not change a replaced slot');
+
+  await startRun([{ itemId: 1 }, { itemId: 2 }]);
+  const oldTarget = filled()[1]; await event(filled()[0], 'dragstart', { dataTransfer: {} });
+  state.playthroughs.push({ inventory: [{ itemId: 3 }, { itemId: 2 }], completed: false }); state.activePtIndex = 1;
+  await event(oldTarget, 'drop', { dataTransfer: {} });
+  assert.equal(state.playthroughs[1].inventory[0].itemId, 3, 'stale drag must not reorder another run');
+
+  await startRun([]);
+  const pending = []; stateModule.setExport('apiFetch', url => new Promise(resolve => pending.push({ url, resolve })));
+  await event(el('inv-add-btn')); assert.equal(pending.length, 1);
+  await event(el('inv-picker-close'));
+  pending.shift().resolve({ ok: true, json: async () => [{ id: 3, name: 'Late cloak' }] }); await settle();
+  assert.equal(observers.at(-1)?.targets.size || 0, 0, 'closed picker must not restart its observer after a late response');
+
+  stateModule.setExport('apiFetch', apiFetch); await startRun([]); await event(el('inv-add-btn'));
+  const oldObserver = observers.at(-1);
+  stateModule.setExport('apiFetch', url => new Promise(resolve => pending.push({ url, resolve })));
+  oldObserver.reveal(); assert.equal(pending.length, 3);
+  const stalePickerRow = el('inv-picker-grid').querySelector('.inv-pick-item');
+  api.setInventoryVisible(false); await event(stalePickerRow);
+  assert.equal(state.playthroughs[0].inventory.length, 0, 'hidden picker rows must not add items');
+  for (const { url, resolve } of pending.splice(0)) resolve({ ok: true, json: async () => items.find(i => i.id === +url.split('/').at(-1)) });
+  await settle();
+  const runtime = modules.get(resolve(root, 'inventory/runtime.js')).namespace.inventoryRuntime;
+  assert.equal(runtime._itemCache.size, 0, 'hidden inventory must not be repopulated by late SVG fetches');
+  oldObserver.callback([{ target: stalePickerRow, isIntersecting: true }]);
+  await settle(); assert.equal(pending.length, 0, 'queued callbacks from disconnected observers must not restart fetches');
+  stateModule.setExport('apiFetch', apiFetch);
+
+  await startRun([]);
+  stateModule.setExport('apiFetch', url => new Promise(resolve => pending.push({ url, resolve })));
+  await event(el('inv-add-btn'));
+  const firstResponse = pending.shift();
+  let resolveOldJson;
+  firstResponse.resolve({ ok: true, json: () => new Promise(resolve => { resolveOldJson = resolve; }) });
+  await settle(); assert.equal(typeof resolveOldJson, 'function');
+  await event(el('inv-picker-close')); await event(el('inv-add-btn'));
+  pending.shift().resolve({ ok: true, json: async () => [{ id: 3, name: 'Current cloak' }] }); await settle();
+  const currentMarkup = el('inv-picker-grid').innerHTML;
+  const currentObserver = runtime._pickerObserver;
+  resolveOldJson([{ id: 1, name: 'Stale sword' }]); await settle();
+  assert.equal(el('inv-picker-grid').innerHTML, currentMarkup, 'old JSON must not replace a reopened picker');
+  assert.equal(runtime._pickerObserver, currentObserver);
+  await event(el('inv-picker-grid').querySelector('.inv-pick-item'));
+  assert.equal(pending.length, 1, 'adding the valid selection fetches its current item');
+  pending.shift().resolve({ ok: true, json: async () => items[2] }); await settle();
+  assert.equal(state.playthroughs[0].inventory[0].itemId, 3);
+  stateModule.setExport('apiFetch', apiFetch);
+
+  await startRun([{ itemId: 1 }, { itemId: 2 }]); await action(0, 'remove');
+  const lateConfirmation = confirmAction;
+  const hiddenContexts = [...runtime._slotContexts];
+  api.setInventoryVisible(false); lateConfirmation(); await settle();
+  assert.equal(state.playthroughs[0].inventory.length, 2, 'hidden inventory invalidates pending delete confirmation');
+  assert.ok(hiddenContexts.every(c => c.state === null && c.pt === null), 'hide releases captured slot book/run references');
+  assert.equal(runtime._slotContexts.length, 0);
+
+  await startRun([{ itemId: 1, visible: true }]);
+  const providerWaits = [];
+  api.setExtraDisplayItemsProvider(() => new Promise(resolve => providerWaits.push(resolve)));
+  api.refreshInventoryUI(); await settle(); assert.equal(providerWaits.length, 1);
+  state.playthroughs.push({ inventory: [{ itemId: 2, visible: true }], completed: false }); state.activePtIndex = 1;
+  api.refreshInventoryUI(); await settle(); assert.equal(providerWaits.length, 2);
+  const oldProviderResolve = providerWaits.shift();
+  providerWaits.shift()([{ item: items[2], label: 'Current equipment' }]); await settle();
+  const currentHud = el('inv-display').innerHTML;
+  assert.ok(currentHud.includes('Current equipment') && currentHud.includes('Potion'));
+  oldProviderResolve([{ item: items[0], label: 'Old equipment' }]); await settle();
+  assert.equal(el('inv-display').innerHTML, currentHud, 'delayed equipment provider must not overwrite the current run HUD');
+  api.setExtraDisplayItemsProvider(null);
+
+  await startRun([{ itemId: 1 }]);
+  runtime._itemCache.clear();
+  stateModule.setExport('apiFetch', url => new Promise(resolve => pending.push({ url, resolve })));
+  api.refreshInventoryUI(); await settle(); assert.equal(pending.length, 1);
+  const hiddenGrid = el('inv-grid').innerHTML;
+  api.setInventoryVisible(false);
+  pending.shift().resolve({ ok: true, json: async () => items[0] }); await settle();
+  assert.equal(runtime._itemCache.size, 0, 'late preload must not undo cache clearing');
+  assert.equal(el('inv-grid').innerHTML, hiddenGrid, 'late grid refresh must not paint after hiding');
+  stateModule.setExport('apiFetch', apiFetch);
+}

@@ -81,7 +81,8 @@ stub('confirm.js', { showAlert: message => effects.push(['alert', message]) });
 const escapeHtml = value => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 stub('util.js', { escapeHtml, shortcutLabel: value => value, ALL_PANEL_OVERLAY_IDS: ['eq-overlay', 'inv-overlay'], registerPanelShortcut: (code, opts) => { effects.push(['shortcut', code, opts.otherOverlayIds, opts.capture]); } });
 // Execute the actual inventory transfer/normalization helpers, not simplified mocks.
-const inventorySource = readFileSync(resolve(root, 'inventory.js'), 'utf8');
+const inventorySource = ['model', 'transfers', 'display', 'panel']
+  .map(name => readFileSync(resolve(root, 'inventory', name + '.js'), 'utf8')).join('\n');
 function functionSource(name) {
   const start = inventorySource.indexOf('function ' + name + '('); assert.ok(start >= 0, name);
   let parens = 0, paramsEnd = inventorySource.indexOf('(', start);
@@ -91,7 +92,7 @@ function functionSource(name) {
     if (inventorySource[end] === '{') { depth++; opened = true; }
     if (inventorySource[end] === '}' && --depth === 0 && opened) break;
   }
-  return inventorySource.slice(start, end + 1);
+  return inventorySource.slice(start, end + 1).replace(/inventoryRuntime\./g, '');
 }
 context._effects = effects;
 const inventoryModule = new SourceTextModule(`import { state, currentPlaythrough, viewingPt, saveState } from './state.js';
@@ -265,8 +266,10 @@ const _inv = () => [];
 const _byId = () => null;
 const t = key => key;
 const _invLineHtml = (item, label) => label;
-const _closePanel = () => {}, _closePicker = () => {};
+const _closePanel = () => {}, _closePicker = () => {}, _closeCtx = () => {}, _closeRename = () => {};
 const _itemCache = new Map(); let _pickerItems = [];
+let cacheEpoch = 0, gridRevision = 0, _confirmContext = null, _dragSrcIdx = -1, _dragContext = null, _slotContexts = [];
+${functionSource('_releaseContext')}
 export ${functionSource('setInventoryVisible')}
 export async ${functionSource('renderInventoryDisplay')}`, { context, identifier: resolve(root, 'inventory-display-test.js') });
   await displayModule.link(() => stateModule); await displayModule.evaluate();
