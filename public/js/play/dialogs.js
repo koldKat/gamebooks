@@ -4,7 +4,7 @@ import { state, saveState, parseSecId, isValidSecId } from '../state.js';
 import { t } from '../i18n.js';
 import { naturalCompare } from '../sort.js';
 import { escapeHtml } from '../util.js';
-import { showConfirm } from '../confirm.js';
+import { showConfirm } from '../ui-helpers/confirm.js';
 import { playContext } from './context.js';
 import { startPlaythrough } from './runs.js';
 

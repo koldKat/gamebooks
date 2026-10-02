@@ -4,7 +4,7 @@ import { state, viewingPt, setViewingPt, saveState, isValidSecId, currentPlaythr
 import { network, visNodes } from '../graph.js';
 import { t } from '../i18n.js';
 import { instantiateLoadout } from '../equipment.js';
-import { showConfirm } from '../confirm.js';
+import { showConfirm } from '../ui-helpers/confirm.js';
 import { playContext } from './context.js';
 import { render } from './render.js';
 import { wouldAutoNav } from './navigation.js';

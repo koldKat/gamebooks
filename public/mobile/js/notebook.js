@@ -8,7 +8,7 @@
 // plain editable notebook, always full-screen when open.
 
 import { state, currentBookId, apiFetch } from '../../js/state.js';
-import { showAlert } from '../../js/confirm.js';
+import { showAlert } from '../../js/ui-helpers/confirm.js';
 import { t } from '../../js/i18n.js';
 import { escapeHtml } from '../../js/util.js';
 import { showToast } from './toast.js';

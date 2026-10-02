@@ -88,7 +88,7 @@ stub('graph.js', { network, visNodes: { get: id => state.graph[id] }, syncGraph:
 stub('i18n.js', { t: key => key });
 stub('charsheet.js', { renderCharSheetDisplay: () => effects.push(['charsheet']) });
 stub('equipment.js', { instantiateLoadout: () => ({ inventory: [{ name: 'Torch' }], equipment: { hand: 'Sword' }, equipmentVisible: true }) });
-stub('confirm.js', { showConfirm: (message, fn, options) => { effects.push(['confirm', message, options]); return fn(); }, showAlert: message => effects.push(['alert', message]) });
+stub('ui-helpers/confirm.js', { showConfirm: (message, fn, options) => { effects.push(['confirm', message, options]); return fn(); }, showAlert: message => effects.push(['alert', message]) });
 stub('progression/rewards.js', { _scheduleRewardProfileRefresh: () => { rewardRefreshes++; effects.push(['reward']); } });
 function moduleAt(path) {
   if (modules.has(path)) return modules.get(path);
@@ -233,7 +233,7 @@ if (!baseline) {
   api.startPlaythrough(); const focusBook = plain(state); stateModule.namespace.replaceState(focusBook);
   effects.length = 0; flush(50); assert.equal(effects.some(e => e[0] === 'focus'), false, 'delayed focus cannot move another book camera');
   stateModule.namespace.replaceState(state);
-  const confirmModule = modules.get(resolve(root, 'confirm.js')), immediateConfirm = confirmModule.namespace.showConfirm;
+  const confirmModule = modules.get(resolve(root, 'ui-helpers/confirm.js')), immediateConfirm = confirmModule.namespace.showConfirm;
   let confirmAction;
   confirmModule.setExport('showConfirm', (_message, fn) => { confirmAction = fn; });
   reset({ playthroughs: [{ path: [1], completed: false }], activePtIndex: 0 });

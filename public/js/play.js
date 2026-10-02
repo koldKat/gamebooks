@@ -1,7 +1,7 @@
 // play.js - Stable public API for the desktop play screen.
 import './play/init.js';
 
-export { showConfirm, showAlert } from './confirm.js';
+export { showConfirm, showAlert } from './ui-helpers/confirm.js';
 export { setDiscoverableLimit, setTrailCollapsed, setOnTrailToggle, setOnViewPublicRun, setOpenWorldContext, setAfterRenderFn, CHOICES_PULSE_THRESHOLD, setChoicesRecordedCount, setOnChoicesRecorded, suppressAutoNav, setFastTravelHandler, setAltStartHandler } from './play/settings.js';
 export { confirmAlphanumericSwitch, showTwoChoice, showFastTravelDialog } from './play/dialogs.js';
 export { render } from './play/render.js';

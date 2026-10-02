@@ -43,7 +43,7 @@
 // All state lives in pt.sim877, per-user/per-book via currentPlaythrough().
 
 import { currentPlaythrough, saveState } from '../state.js';
-import { showAlert } from '../confirm.js';
+import { showAlert } from '../ui-helpers/confirm.js';
 import { getPlayBtnRow } from '../charsheet.js';
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../util.js';
 import { t } from '../i18n.js';

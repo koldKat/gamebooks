@@ -3,7 +3,7 @@
 import { state, setViewingPt, saveState, parseSecId, isValidSecId, currentSection, apiFetch } from '../state.js';
 import { network } from '../graph.js';
 import { t } from '../i18n.js';
-import { showConfirm } from '../confirm.js';
+import { showConfirm } from '../ui-helpers/confirm.js';
 import { playContext } from './context.js';
 import { startPlaythrough, loadRun, deleteRun } from './runs.js';
 import { undoRun, navigate } from './navigation.js';

@@ -38,7 +38,7 @@ test('mobile keeps existing dependencies and imports only the shared reading mod
     .map(match => new URL(match[1], mobileUrl));
   const desktopImports = imports.filter(url => url.href.startsWith(dir.href));
   assert.deepEqual(desktopImports.map(url => url.href),
-    ['graph.js', 'confirm.js', 'i18n.js', 'reading/liveread-shared.js'].map(path => new URL(path, dir).href));
+    ['graph.js', 'ui-helpers/confirm.js', 'i18n.js', 'reading/liveread-shared.js'].map(path => new URL(path, dir).href));
   const module = await import(sharedUrl);
   assert.equal(module.terminalHeadingKey(true), 'liveread.victory_heading');
   assert.equal(module.terminalHeadingKey(false), 'liveread.death_heading');

@@ -3,7 +3,7 @@
 import { addItemToInventory, refreshInventoryUI } from '../inventory.js';
 import { equipmentRuntime } from './runtime.js';
 import { _eq, _eqVisible, _eqItemId, _eqMeta, _eqQty, _unsetEq, _swapEq, _isReadOnly, _captureEqContext, _isEqContextCurrent } from './model.js';
-import { showAlert } from '../confirm.js';
+import { showAlert } from '../ui-helpers/confirm.js';
 import { t } from '../i18n.js';
 import { _refreshOnScreenDisplay } from './display.js';
 import { _showEqCtx } from './context-menu.js';

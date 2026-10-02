@@ -38,7 +38,7 @@ import {
   isSectionMapped,
 } from '../../js/state.js';
 import { canReach, findPathTo } from '../../js/graph.js';
-import { showAlert, showConfirm } from '../../js/confirm.js';
+import { showAlert, showConfirm } from '../../js/ui-helpers/confirm.js';
 import { initGraphView, refreshGraph } from './graph-view.js';
 import { openNotebook } from './notebook.js';
 import { hasSim, openSimForBook } from './battlesim-dispatch.js';

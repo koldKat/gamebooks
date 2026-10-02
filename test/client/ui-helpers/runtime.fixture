@@ -1,0 +1,80 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { createContext, SourceTextModule, SyntheticModule } from 'node:vm';
+
+function dom() {
+  const elements = new Map(), events = new Map();
+  function element(id = '') {
+    const classes = new Set(), listeners = new Map();
+    const el = { id, style: {}, textContent: '', offsetWidth: 40, offsetHeight: 20,
+      classList: { add: c => classes.add(c), remove: c => classes.delete(c), contains: c => classes.has(c),
+        toggle: (c, value) => value ? classes.add(c) : classes.delete(c) },
+      addEventListener: (name, fn) => listeners.set(name, fn), click: () => listeners.get('click')?.(),
+      cloneNode: () => { const copy = element(id); copy.style = { ...el.style }; copy.textContent = el.textContent;
+        for (const c of classes) copy.classList.add(c); return copy; },
+      parentNode: { replaceChild: next => elements.set(id, next) },
+    };
+    Object.defineProperty(el, 'innerHTML', { set: html => {
+      for (const match of html.matchAll(/id="([^"]+)"/g)) elements.set(match[1], element(match[1]));
+    } });
+    return el;
+  }
+  return { elements, events, element, document: { getElementById: id => elements.get(id) ?? null,
+    createElement: () => element(), body: { appendChild: el => elements.set(el.id, el) },
+    addEventListener: (name, fn) => events.set(name, fn) } };
+}
+async function load(name, context) {
+  const module = new SourceTextModule(readFileSync(resolve(process.argv[1], name + '.js'), 'utf8'), { context });
+  await module.link(specifier => {
+    assert.equal(specifier, '../i18n.js');
+    return new SyntheticModule(['t'], function () { this.setExport('t', key => key); }, { context });
+  });
+  await module.evaluate();
+  return module.namespace;
+}
+for (const mobile of [false, true]) {
+  const d = dom();
+  if (!mobile) for (const id of ['confirm-overlay', 'confirm-message', 'confirm-ok', 'confirm-cancel']) d.elements.set(id, d.element(id));
+  const helpers = await load('confirm', createContext({ document: d.document }));
+  let confirmed = 0;
+  helpers.showConfirm('Delete?', () => confirmed++);
+  assert.equal(d.elements.get('confirm-message').textContent, 'Delete?');
+  assert.equal(d.elements.get('confirm-overlay').classList.contains('active'), true);
+  d.elements.get('confirm-cancel').click();
+  assert.equal(confirmed, 0);
+  assert.equal(d.elements.get('confirm-overlay').classList.contains('active'), false);
+  helpers.showConfirm('Win?', () => confirmed++, { win: true, confirmLabel: 'Win' });
+  assert.equal(d.elements.get('confirm-ok').textContent, 'Win');
+  assert.equal(d.elements.get('confirm-ok').classList.contains('win'), true);
+  d.elements.get('confirm-ok').click();
+  assert.equal(confirmed, 1, 'latest callback fires exactly once');
+  helpers.showAlert('Notice');
+  assert.equal(d.elements.get('confirm-cancel').style.display, 'none');
+  d.elements.get('confirm-ok').click();
+  helpers.showConfirm('Again?', () => confirmed++);
+  assert.equal(d.elements.get('confirm-cancel').style.display, '');
+  d.elements.get('confirm-ok').click();
+  assert.equal(confirmed, 2);
+}
+const d = dom(), tip = d.element('app-tooltip');
+d.elements.set('app-tooltip', tip);
+let now = 100;
+const tooltip = await load('tooltip', createContext({ document: d.document, window: { innerWidth: 100, innerHeight: 80 }, Date: { now: () => now } }));
+tooltip.initTooltip();
+const target = { closest: () => ({ dataset: { tooltip: 'Wrapped title', tooltipWrap: '1' } }) };
+d.events.get('mouseover')({ target });
+assert.equal(tip.textContent, 'Wrapped title');
+assert.equal(tip.classList.contains('tip-wrap'), true);
+d.events.get('mousemove')({ clientX: 99, clientY: 79 });
+assert.equal(tip.style.left, '52px');
+assert.equal(tip.style.top, '52px');
+d.events.get('click')();
+d.events.get('mouseover')({ target });
+assert.equal(tip.style.display, 'none', 'synthetic hover after dismissal stays hidden');
+now++;
+d.events.get('mousemove')({ clientX: 5, clientY: 5 });
+d.events.get('mouseover')({ target });
+assert.equal(tip.style.display, 'block');
+d.events.get('mouseleave')();
+assert.equal(tip.style.display, 'none');

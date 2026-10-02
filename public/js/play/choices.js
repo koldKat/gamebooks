@@ -3,7 +3,7 @@
 import { state, saveState, isTerminal, parseSecId, isValidSecId, allDiscoveredSections } from '../state.js';
 import { t } from '../i18n.js';
 import { naturalCompare } from '../sort.js';
-import { showAlert } from '../confirm.js';
+import { showAlert } from '../ui-helpers/confirm.js';
 import { render } from './render.js';
 import { confirmAlphanumericSwitch } from './dialogs.js';
 

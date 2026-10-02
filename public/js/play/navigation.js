@@ -3,7 +3,7 @@
 import { state, saveState, isTerminal, currentPlaythrough, allDiscoveredSections } from '../state.js';
 import { network } from '../graph.js';
 import { t } from '../i18n.js';
-import { showAlert } from '../confirm.js';
+import { showAlert } from '../ui-helpers/confirm.js';
 import { playContext } from './context.js';
 import { render } from './render.js';
 import { endPlaythrough } from './completion.js';
