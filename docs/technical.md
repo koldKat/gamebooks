@@ -1784,6 +1784,8 @@ This treatment is applied by two separate selectors sharing the same declaration
 
 ### Covers panel (`loadCovers`)
 
+The shared `_visibleCoverItems()` filter excludes public books and anthologies without a nonblank `coverUrl` from all panel sorts, searches, favorites, and counts. The full catalogue remains cached for series metadata and dialogs; series entries retain their existing composite-cover behavior.
+
 **Module layout:** `public/js/covers.js` preserves the public API while implementation lives in `public/js/covers/`. `core/state.js` owns the shared catalog arrays, preferences, and panel/background state. Refresh guards remain private to `data.js`; the 24-entry blob cache and in-flight image-fetch map remain private to `images.js`; crossfade guards remain private to `background.js`. `init.js` runs the existing settings, tile navigation, preview, and search/menu bindings in their original order, with no new top-level listeners or timers. The compatibility entry point registers the book/series renderer callbacks used by `activity.js`, avoiding a navigation/render import cycle. Feature modules import one another directly, never back through `covers.js`. `covers/` is separate from `books/covers.js`, which handles owned-library card backgrounds, and from `public/covers/`, which stores uploaded images. Regression tests for composites, filters, background persistence, image caching, and module boundaries live in `test/client/covers/`.
 
 `loadCovers()` fetches `/api/public/covers`, `/api/public/books`, and `/api/public/series`, then renders a mixed wall into `#covers-grid`.

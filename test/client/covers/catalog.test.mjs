@@ -23,13 +23,29 @@ test('shared catalog filters and background preferences retain their behavior', 
       savePrefs: p => prefs.push(p),
     };
     coversState._allBooks = [
-      { id: 1, name: 'Book 10', hasLiveReading: true, totalSections: 20 },
-      { id: 4, name: 'Book 2', hasLiveReading: false, totalSections: 40 },
-      { id: 5, name: 'Мега', isContainer: true, hasLiveReading: true },
+      { id: 1, name: 'Book 10', coverUrl: '/covers/1.jpg', hasLiveReading: true, totalSections: 20 },
+      { id: 4, name: 'Book 2', coverUrl: '/covers/4.jpg', hasLiveReading: false, totalSections: 40 },
+      { id: 5, name: 'Мега', coverUrl: '/covers/5.jpg', isContainer: true, hasLiveReading: true },
+      { id: 6, name: 'Coverless book', hasLiveReading: true, totalSections: 100 },
+      { id: 7, name: 'Coverless anthology', coverUrl: '  ', isContainer: true },
     ];
     coversState._allSeriesCovers = [{ id: 'series_10', entityId: 10, name: 'Series', isSeries: true, bookIds: [1, 4] }];
     coversState._coversSortMode = 'alpha';
     assert.deepEqual(_sortedAllBooks().map(b => b.id), [4, 1, 'series_10', 5]);
+    for (const mode of ['all', 'books', 'anthologies', 'favorites']) {
+      coversState._coversKindMode = mode;
+      _setCoverFavoritesFromPrefs({ favoriteBookIds: [6, 7] });
+      assert.ok(!_visibleCoverItems().some(b => b.id === 6 || b.id === 7), `${mode} excludes coverless items`);
+    }
+    coversState._coversKindMode = 'all';
+    for (const sort of ['random', 'latest', 'oldest', 'popular', 'longest', 'shortest', 'za']) {
+      coversState._coversSortMode = sort;
+      assert.ok(!_sortedAllBooks().some(b => b.id === 6 || b.id === 7), `${sort} excludes coverless items`);
+    }
+    coversState._coversSortMode = 'alpha';
+    coversState._allBooks[3].coverUrl = '/covers/6.jpg';
+    assert.ok(_visibleCoverItems().some(b => b.id === 6), 'adding a cover makes the book visible');
+    delete coversState._allBooks[3].coverUrl;
     coversState._hideCyrillicCovers = true;
     assert.ok(!_visibleCoverItems().some(b => b.id === 5));
     coversState._coversKindMode = 'favorites';

@@ -62,7 +62,9 @@ export function _isNotInMyBooks(item) {
 }
 
 export function _visibleCoverItems() {
-  const base = [...coversState._allBooks, ...coversState._allSeriesCovers].filter(item => !coversState._hideCyrillicCovers || !_hasCyrillic(item.name));
+  const base = [...coversState._allBooks, ...coversState._allSeriesCovers].filter(item =>
+    (item.isSeries || !!item.coverUrl?.trim()) &&
+    (!coversState._hideCyrillicCovers || !_hasCyrillic(item.name)));
   const mode = _effectiveCoversKindMode();
   let items;
   if (mode === 'books') items = base.filter(b => !b.isSeries && !b.isContainer);
