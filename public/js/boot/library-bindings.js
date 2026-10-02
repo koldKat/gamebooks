@@ -4,7 +4,7 @@ import { render, setDiscoverableLimit } from '../play.js';
 import { openEditBookModal, closeEditBookModal, maxSectionInUse } from '../edit-book.js';
 import { setCoversPrefsState, resetFeedDisplayPrefsForLogout } from '../covers.js';
 import { clearBooksCache, _refreshLibraryUi } from '../books.js';
-import { getCurrentBookCover, _updateSidebarBookInfo } from '../bg.js';
+import { getCurrentBookCover, _updateSidebarBookInfo } from '../play/bg.js';
 import { showLogin, showBooks } from './screens.js';
 
 export function initLibraryBindings() {

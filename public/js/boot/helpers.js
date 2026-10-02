@@ -1,7 +1,7 @@
 import { bootState } from './state.js';
 import { renderInventoryDisplay, preloadItems } from '../inventory.js';
 import { getVisibleEquippedItems } from '../equipment.js';
-import { hideNotesUI } from '../notes.js';
+import { hideNotesUI } from '../play/notes.js';
 
 export function _loadingGraphSvg() {
   return `<svg class="feed-loading-graph" viewBox="0 0 32 32">

@@ -3,7 +3,7 @@
 import { state, viewingPtIndex, currentPlaythrough, currentSection } from '../core/state.js';
 import { syncGraph } from '../graph.js';
 import { t } from '../i18n.js';
-import { renderCharSheetDisplay } from '../charsheet.js';
+import { renderCharSheetDisplay } from './charsheet.js';
 import { playContext } from './context.js';
 import { updateStats } from './stats.js';
 

@@ -3,10 +3,10 @@ import { state, setViewingPt, getToken, getUsername, setUsername, apiFetch, setC
 import { destroyNetwork } from '../graph.js';
 import { render, setDiscoverableLimit } from '../play.js';
 import { t } from '../i18n.js';
-import { setCharSheetVisible } from '../charsheet.js';
+import { setCharSheetVisible } from '../play/charsheet.js';
 import { setInventoryVisible } from '../inventory.js';
 import { setEquipmentVisible } from '../equipment.js';
-import { disconnectPartySSE } from '../party.js';
+import { disconnectPartySSE } from '../play/party.js';
 import { showAuthForm, showResetPanel, hasPendingResetToken } from '../account/auth.js';
 import { syncPrefs } from '../prefs.js';
 import { hideActiveBattleSim } from '../battle-sim-loader.js';
@@ -20,7 +20,7 @@ import { renderBooksList, getCachedBooks, getCachedAllSeries, getCachedStashes, 
 import { loadFeed } from '../feed.js';
 import { _scheduleLiveUiRefresh, resetNotifBadgesForLogout } from '../community/notif.js';
 import { _resetRewardSnapshotState, _positionRewardLayer, _processRewardSnapshot } from '../progression/rewards.js';
-import { cancelBgMove } from '../bg.js';
+import { cancelBgMove } from '../play/bg.js';
 import { getDemoBooks, getDemoVisited } from '../demo.js';
 import { resolveIsAdmin, adminBadge, authorBadge, contributorBadge, registerAuthor, registerContributor } from '../account/user.js';
 import { escapeHtml } from '../core/util.js';

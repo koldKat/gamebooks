@@ -10,7 +10,7 @@ const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
 const el = id => document.getElementById(id);
 try {
   // Enter through a consumer first, exercising the existing equipment/dice cycles.
-  const dice = await import('/js/dice.js');
+  const dice = await import('/js/play/dice.js');
   const play = await import('/js/play.js');
   const graph = await import('/js/graph.js');
   const data = await import('/js/core/state.js');

@@ -19,7 +19,7 @@ try {
   // Import inventory first to exercise the equipment -> inventory -> play cycle.
   const inventory = await import('/js/inventory.js');
   const equipment = await import('/js/equipment.js');
-  const charsheet = await import('/js/charsheet.js');
+  const charsheet = await import('/js/play/charsheet.js');
   const data = await import('/js/core/state.js');
   const { state } = data;
   Object.assign(state, { bookName: 'Equipment smoke test', totalSections: 20, graph: {},

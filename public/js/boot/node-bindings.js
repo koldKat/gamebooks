@@ -3,8 +3,8 @@ import { state, viewingPt, setViewingPt, saveState, parseSecId, isValidSecId, cu
 import { network, subtreeToDelete, deleteNodes, findPathTo, canReach } from '../graph.js';
 import { render, openEditModal, openNoteModal, closeNoteModal, showConfirm, showAlert, confirmAlphanumericSwitch, setFastTravelHandler, showFastTravelDialog, openPortalModal, startPlaythrough, setAltStartHandler, wouldAutoNav } from '../play.js';
 import { t } from '../i18n.js';
-import { doJumpCrossBook, getOwCrossBookRoute } from '../open-world.js';
-import { hideCtxMenu, _hideBgCtxMenu } from '../bg.js';
+import { doJumpCrossBook, getOwCrossBookRoute } from '../play/open-world.js';
+import { hideCtxMenu, _hideBgCtxMenu } from '../play/bg.js';
 
 export function initNodeBindings() {
   document.getElementById('ctx-edit-btn').addEventListener('click', () => {

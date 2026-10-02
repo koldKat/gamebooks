@@ -1,7 +1,7 @@
 import { setViewingPt, setOnViewingPtChange } from '../core/state.js';
 import { render, setOnTrailToggle, setOnChoicesRecorded, setAfterRenderFn } from '../play.js';
 import { applyTranslations } from '../i18n.js';
-import { initCharSheet, renderCharSheetDisplay } from '../charsheet.js';
+import { initCharSheet, renderCharSheetDisplay } from '../play/charsheet.js';
 import { initInventory, setExtraDisplayItemsProvider } from '../inventory.js';
 import { initEquipment, getVisibleEquippedItems } from '../equipment.js';
 import { savePrefs, _setPlayPanelCollapsed } from '../prefs.js';

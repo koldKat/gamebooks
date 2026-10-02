@@ -4,10 +4,10 @@
 // connectPartySSE()/disconnectPartySSE()/loadPartyInvites() calls from boot.js, and
 // remove the party-* CSS from style.css.
 
-import { currentBookId, apiFetch, getToken, isDemoMode, loadState } from './core/state.js';
-import { render, suppressAutoNav, showAlert, showConfirm } from './play.js';
-import { escapeHtml } from './core/util.js';
-import { t } from './i18n.js';
+import { currentBookId, apiFetch, getToken, isDemoMode, loadState } from '../core/state.js';
+import { render, suppressAutoNav, showAlert, showConfirm } from '../play.js';
+import { escapeHtml } from '../core/util.js';
+import { t } from '../i18n.js';
 
 // Hooks into main.js for things that aren't part of this module's scope.
 let _hooks = {};

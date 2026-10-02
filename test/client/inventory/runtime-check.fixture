@@ -91,7 +91,7 @@ function stub(file, exports) {
 }
 const stateModule = stub('core/state.js', { state, viewingPt, currentPlaythrough, saveState, apiFetch });
 stub('play.js', { showConfirm: (message, action, options) => { confirmAction = action; effects.push(['confirm', message, options]); } });
-stub('charsheet.js', { getPlayBtnRow: () => row });
+stub('play/charsheet.js', { getPlayBtnRow: () => row });
 stub('i18n.js', { t: (key, p = {}) => key + (p.name ? ' ' + p.name : '') });
 const escapeHtml = value => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 let shortcut;

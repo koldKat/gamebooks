@@ -3,13 +3,13 @@ import { state, setViewingPt, resetState, saveState, resetBookProgress, loadStat
 import { network, visNodes, initGraph, destroyNetwork, canReach, applyConnectorStyle, enforceSnapZoomFloor } from '../graph.js';
 import { render, closeEditModal, showConfirm, showAlert, maxFastTravels } from '../play.js';
 import { t } from '../i18n.js';
-import { setCharSheetVisible } from '../charsheet.js';
+import { setCharSheetVisible } from '../play/charsheet.js';
 import { setInventoryVisible } from '../inventory.js';
 import { setEquipmentVisible } from '../equipment.js';
 import { getCachedBooks } from '../books.js';
-import { _syncSeriesRuns, _focusNodeAfterLoad, clearOpenWorldState, getOwSrcBookId, getOwSrcSection } from '../open-world.js';
+import { _syncSeriesRuns, _focusNodeAfterLoad, clearOpenWorldState, getOwSrcBookId, getOwSrcSection } from '../play/open-world.js';
 import { _positionRewardLayer } from '../progression/rewards.js';
-import { isBgInMove, toggleBgHidden, nudgeBgPosY, hideCtxMenu, _hideBgCtxMenu, _positionMenu, _enterBgMoveMode, _exitBgMoveMode, _updateColorSwatches } from '../bg.js';
+import { isBgInMove, toggleBgHidden, nudgeBgPosY, hideCtxMenu, _hideBgCtxMenu, _positionMenu, _enterBgMoveMode, _exitBgMoveMode, _updateColorSwatches } from '../play/bg.js';
 import { exportBook } from '../export.js';
 import { showMain } from './screens.js';
 

@@ -76,7 +76,7 @@ function stub(file, exports) {
 }
 const stateModule = stub('core/state.js', { state, viewingPt, currentPlaythrough, saveState, apiFetch });
 stub('i18n.js', { t: (key, p = {}) => key + (p.n ? ` ${p.n}` : '') });
-stub('charsheet.js', { getPlayBtnRow: () => row });
+stub('play/charsheet.js', { getPlayBtnRow: () => row });
 stub('ui-helpers/confirm.js', { showAlert: message => effects.push(['alert', message]) });
 const escapeHtml = value => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 stub('core/util.js', { escapeHtml, shortcutLabel: value => value, ALL_PANEL_OVERLAY_IDS: ['eq-overlay', 'inv-overlay'], registerPanelShortcut: (code, opts) => { effects.push(['shortcut', code, opts.otherOverlayIds, opts.capture]); } });

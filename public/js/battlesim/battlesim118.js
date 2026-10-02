@@ -61,7 +61,7 @@
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
-import { getPlayBtnRow } from '../charsheet.js';
+import { getPlayBtnRow } from '../play/charsheet.js';
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../core/util.js';
 import { t } from '../i18n.js';
 
