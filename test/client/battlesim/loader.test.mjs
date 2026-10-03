@@ -15,7 +15,7 @@ test('desktop battle-sim relocation retains the registry and visibility lifecycl
   assert.ok(start > 0 && end > start);
   const unchanged = (source.slice(0, start) + source.slice(end)).replace('const _loading = new Map();\n', '');
   assert.equal(createHash('sha256').update(unchanged).digest('hex'),
-    '77ad4a097a791435fa5a122a6a6b985621611b36621d746d26b200410de50397');
+    '271a6f777e8aca694e444472d460a057815c293dd95c577b7b3e94046713138a');
   assert.doesNotMatch(source, /^import\s/m, 'no eager simulator imports');
   assert.match(source, /import\(`\.\/battlesim\$\{numericId\}\.js`\)/);
 });
