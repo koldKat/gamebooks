@@ -31,7 +31,7 @@ test('every desktop-supported simulator exists with the expected dynamic export 
     const names = id === 829 ? ['initBattleSim', 'renderBattleSim', 'setBattleSimVisible']
       : id === 8 ? ['initBattleSim8', 'renderSim8', 'setSim8Visible']
       : ['initSim' + id, 'renderSim' + id, 'setSim' + id + 'Visible'];
-    for (const name of names) assert.match(module, new RegExp('export\\s+(?:async\\s+)?function\\s+' + name + '\\b'), id + ': ' + name);
+    for (const name of names) assert.match(module, new RegExp('export\\s+(?:(?:async\\s+)?function\\s+' + name + '\\b|const\\s+' + name + '\\b\\s*=)'), id + ': ' + name);
   }
 });
 
