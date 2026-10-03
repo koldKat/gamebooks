@@ -542,6 +542,7 @@ Click **GC** in the books screen header to open the shop.
 | **Extra Undo** | 3, 6, 9… GC (escalates per purchase) | +1 undo per playthrough, permanently | 1 per 10 levels |
 | **Fast Travel** | 5, 10, 15… GC (escalates per purchase) | +1 Fast Travel per playthrough, permanently | 1 per 10 levels |
 | **Lucky Coin Chance** | 1, 2, 3… GC (goes up each time) | +0.01% chance per XP event of a lucky gold coin appearing | Level × 0.01% |
+| **Coin Mint** | 1, 2, 3… GC (goes up each time) | +0.1% more gold coins minted from your XP, permanently (you already get a free Level × 0.1% to start) | Level × 0.1% |
 
 The shop header shows your current balance next to a **"N spent"** pill, so you can see your lifetime total spent at a glance alongside what you have left.
 
