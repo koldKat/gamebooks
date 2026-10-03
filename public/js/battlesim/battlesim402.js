@@ -1,7 +1,4 @@
-// Battle Simulator for book 402 (Cretan Chronicles) - MIGHT/PROTECTION engine.
-// See cretan.js for the full engine description. Honour defaults to 7 (book 400's
-// starting value); books 401/402 carry Honour over from the previous book, so the
-// player edits it to their current value.
+// Book 402 Return of the Wanderer (Cretan Chronicles); Honour carries over.
 import { createCretanSim } from './engines/cretan.js';
 
 const _sim = createCretanSim({

@@ -1,15 +1,4 @@
-// Shared MIGHT/PROTECTION battle engine for the Cretan Chronicles system
-// (books 400 "Bloodfeud of Altheus" and 401 "At the Court of King Minos").
-// NOT Fighting Fantasy and NOT Freeway Warrior: a strike rolls 2 dice + attacker
-// Might and lands if the total reaches the defender's total Protection (natural +
-// armour). Natural 11/12 auto-hit, 2/3 auto-miss. A Seriously Wounded combatant
-// rolls a single die (1 = auto-miss, 6 is not an auto-hit) unless both sides are
-// Seriously Wounded, in which case both roll two dice again. Each hit advances a
-// Healthy -> Wounded -> Seriously Wounded -> Dead wound track. Divine-only foes
-// (the Minotaur) can be struck only when the hero wields a divine weapon. Honour
-// may be spent, one strike at a time, to boost Might (own strike) or Protection
-// (incoming strike). Shame, retreat/surrender navigation, the Pankration boxing
-// sub-system and "Taking a Hint" are narrative/out-of-scope and not simulated.
+// Shared MIGHT/PROTECTION battle engine for the Cretan Chronicles (books 400-402).
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../../core/state.js';
 import { showAlert } from '../../ui-helpers/confirm.js';
@@ -25,11 +14,6 @@ const HEALTHY = 0, WOUNDED = 1, SERIOUS = 2, DEAD = 3;
 
 const _die = () => 1 + Math.floor(Math.random() * 6);
 
-// Resolve a single strike. Pure given its RNG; the dice are returned for logging.
-//  attackerMight   - total Might added to the dice (natural + weapon + boosts)
-//  defenderProt    - total Protection to beat (natural + armour + boosts)
-//  single          - true when the attacker rolls one die (Seriously Wounded)
-//  canHit          - false when a non-divine weapon strikes a divine-only foe
 export function resolveStrike(attackerMight, defenderProt, { single = false, canHit = true } = {}) {
   if (!canHit) return { dice: [], diceSum: 0, total: 0, hit: false, auto: 'nodivine', single };
   if (single) {
