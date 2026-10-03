@@ -22,7 +22,7 @@ const SHOP_ITEMS = [
     costFn:    d => (d.xpBoostPurchased  || 0) + 1,
     desc:      () => { const cap = _shopData?.level || 0; return t('shop.item.xp_boost.desc', { cap: (cap * 0.1).toFixed(1) }); },
     statKey:   'xpBoostPurchased',
-    statLabel: n => t('shop.item.xp_boost.owned', { pct: (n * 0.1).toFixed(1) }),
+    totalLabel: d => t('shop.item.xp_boost.total', { total: (((d.level || 0) + (d.xpBoostPurchased || 0)) * 0.1).toFixed(1), base: ((d.level || 0) * 0.1).toFixed(1), bought: ((d.xpBoostPurchased || 0) * 0.1).toFixed(1) }),
     atCap:     d => (d.xpBoostPurchased || 0) >= (d.level || 0),
   },
   {
@@ -31,8 +31,26 @@ const SHOP_ITEMS = [
     costFn:    d => (d.bonusHeartbeatXp  || 0) + 1,
     desc:      () => { const cap = _shopData?.level || 0; return t('shop.item.heartbeat_xp.desc', { cap: (cap * 0.1).toFixed(1) }); },
     statKey:   'bonusHeartbeatXp',
-    statLabel: n => t('shop.item.heartbeat_xp.owned', { pct: (n * 0.1).toFixed(1) }),
+    totalLabel: d => t('shop.item.heartbeat_xp.total', { total: (((d.level || 0) + (d.bonusHeartbeatXp || 0)) * 0.1).toFixed(1), base: ((d.level || 0) * 0.1).toFixed(1), bought: ((d.bonusHeartbeatXp || 0) * 0.1).toFixed(1) }),
     atCap:     d => (d.bonusHeartbeatXp  || 0) >= (d.level || 0),
+  },
+  {
+    id:        'gc_chance',
+    label:     () => t('shop.item.gc_chance.label'),
+    costFn:    d => (d.bonusGcChancePurchased || 0) + 1,
+    desc:      () => { const cap = _shopData?.level || 0; return t('shop.item.gc_chance.desc', { cap: (cap * 0.01).toFixed(2) }); },
+    statKey:   'bonusGcChancePurchased',
+    totalLabel: d => t('shop.item.gc_chance.total', { total: (((d.level || 0) + (d.bonusGcChancePurchased || 0)) * 0.01).toFixed(2), base: ((d.level || 0) * 0.01).toFixed(2), bought: ((d.bonusGcChancePurchased || 0) * 0.01).toFixed(2) }),
+    atCap:     d => (d.bonusGcChancePurchased || 0) >= (d.level || 0),
+  },
+  {
+    id:        'gc_mint',
+    label:     () => t('shop.item.gc_mint.label'),
+    costFn:    d => (d.bonusGcMintPurchased || 0) + 1,
+    desc:      () => { const cap = _shopData?.level || 0; return t('shop.item.gc_mint.desc', { cap: (cap * 0.1).toFixed(1) }); },
+    statKey:   'bonusGcMintPurchased',
+    totalLabel: d => t('shop.item.gc_mint.total', { total: (((d.level || 0) + (d.bonusGcMintPurchased || 0)) * 0.1).toFixed(1), base: ((d.level || 0) * 0.1).toFixed(1), bought: ((d.bonusGcMintPurchased || 0) * 0.1).toFixed(1) }),
+    atCap:     d => (d.bonusGcMintPurchased || 0) >= (d.level || 0),
   },
   {
     id:        'undo',
@@ -51,24 +69,6 @@ const SHOP_ITEMS = [
     statKey:   'bonusFastTravels',
     statLabel: n => t('shop.item.owned', { n }),
     atCap:     d => (d.bonusFastTravels || 0) >= _undoFastTravelCap(d.level || 0),
-  },
-  {
-    id:        'gc_chance',
-    label:     () => t('shop.item.gc_chance.label'),
-    costFn:    d => (d.bonusGcChancePurchased || 0) + 1,
-    desc:      () => { const cap = _shopData?.level || 0; return t('shop.item.gc_chance.desc', { cap: (cap * 0.01).toFixed(2) }); },
-    statKey:   'bonusGcChancePurchased',
-    statLabel: n => t('shop.item.gc_chance.owned', { pct: (n * 0.01).toFixed(2) }),
-    atCap:     d => (d.bonusGcChancePurchased || 0) >= (d.level || 0),
-  },
-  {
-    id:        'gc_mint',
-    label:     () => t('shop.item.gc_mint.label'),
-    costFn:    d => (d.bonusGcMintPurchased || 0) + 1,
-    desc:      () => { const cap = _shopData?.level || 0; return t('shop.item.gc_mint.desc', { cap: (cap * 0.1).toFixed(1) }); },
-    statKey:   'bonusGcMintPurchased',
-    statLabel: n => t('shop.item.gc_mint.owned', { pct: (n * 0.1).toFixed(1) }),
-    atCap:     d => (d.bonusGcMintPurchased || 0) >= (d.level || 0),
   },
 ];
 
@@ -186,7 +186,9 @@ function renderShopItems() {
       <div class="shop-item-info">
         <div class="shop-item-label">${escapeHtml(item.label())}</div>
         <div class="shop-item-desc">${escapeHtml(typeof item.desc === 'function' ? item.desc() : item.desc)}</div>
-        ${owned > 0 ? `<div class="shop-item-owned">${escapeHtml(item.statLabel(owned))}</div>` : ''}
+        ${item.totalLabel
+          ? `<div class="shop-item-owned">${escapeHtml(item.totalLabel(_shopData))}</div>`
+          : (owned > 0 ? `<div class="shop-item-owned">${escapeHtml(item.statLabel(owned))}</div>` : '')}
       </div>
       <div class="shop-item-buy">
         <div class="shop-item-cost">${COIN_SVG} ${cost}</div>
