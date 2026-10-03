@@ -61,6 +61,15 @@ const SHOP_ITEMS = [
     statLabel: n => t('shop.item.gc_chance.owned', { pct: (n * 0.01).toFixed(2) }),
     atCap:     d => (d.bonusGcChancePurchased || 0) >= (d.level || 0),
   },
+  {
+    id:        'gc_mint',
+    label:     () => t('shop.item.gc_mint.label'),
+    costFn:    d => (d.bonusGcMintPurchased || 0) + 1,
+    desc:      () => { const cap = _shopData?.level || 0; return t('shop.item.gc_mint.desc', { cap: (cap * 0.1).toFixed(1) }); },
+    statKey:   'bonusGcMintPurchased',
+    statLabel: n => t('shop.item.gc_mint.owned', { pct: (n * 0.1).toFixed(1) }),
+    atCap:     d => (d.bonusGcMintPurchased || 0) >= (d.level || 0),
+  },
 ];
 
 let _shopData = null;

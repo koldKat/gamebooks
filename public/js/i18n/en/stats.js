@@ -89,6 +89,7 @@ export default {
     'stats.upgrade_heartbeat_xp':      '- Heartbeat XP',
     'stats.upgrade_xp_boost_pct':      '- XP boost %',
     'stats.upgrade_gc_chance':         '- Lucky coin chance %',
+    'stats.upgrade_gc_mint':           '- Coin Mint %',
 
     'stats.total_ratings_given': 'Total ratings given',
     'stats.book_ratings':        'Book ratings',

@@ -1,5 +1,7 @@
 'use strict';
 
+const { coinBalance } = require('./xp');
+
 // Change this policy to disable the trial; paid access is deliberately off.
 const DEFAULT_POLICY = Object.freeze({ testBookId: 263, paidEnabled: false });
 
@@ -37,8 +39,8 @@ function createReadingAccess(db, policy = DEFAULT_POLICY) {
     const trial = book.id === policy.testBookId;
     const gated = trial || (policy.paidEnabled && normalCost > 0);
     const locked = gated && !purchased;
-    const user = includeFrontmatter ? db.prepare('SELECT xp, bonus_coins, coins_spent FROM users WHERE id = ?').get(userId) : null;
-    const balance = user ? Math.floor(user.xp / 1000) + user.bonus_coins - user.coins_spent : null;
+    const user = includeFrontmatter ? db.prepare('SELECT xp, bonus_coins, coins_spent, bonus_gc_mint_purchased FROM users WHERE id = ?').get(userId) : null;
+    const balance = user ? coinBalance(user) : null;
     const frontmatter = locked && includeFrontmatter
       ? db.prepare('SELECT intro_text, rules_text FROM book_frontmatter WHERE book_id = ?').get(bookId) : null;
     return { bookId: book.id, name: book.name, purchased, locked,
@@ -52,9 +54,9 @@ function createReadingAccess(db, policy = DEFAULT_POLICY) {
     if (!access) return { error: 'not_found' };
     if (access.purchased) return { ok: true, alreadyUnlocked: true, cost: 0 };
     if (!access.purchasingEnabled) return { error: 'purchasing_disabled' };
-    const user = db.prepare('SELECT xp, bonus_coins, coins_spent FROM users WHERE id = ?').get(userId);
+    const user = db.prepare('SELECT xp, bonus_coins, coins_spent, bonus_gc_mint_purchased FROM users WHERE id = ?').get(userId);
     if (!user) return { error: 'not_found' };
-    const balance = Math.floor(user.xp / 1000) + user.bonus_coins - user.coins_spent;
+    const balance = coinBalance(user);
     if (access.cost > 0 && balance < access.cost) return { error: 'insufficient_coins' };
     db.prepare('INSERT INTO reading_unlocks (user_id, book_id, cost_gc) VALUES (?, ?, ?)').run(userId, bookId, access.cost);
     if (access.cost) db.prepare('UPDATE users SET coins_spent = coins_spent + ? WHERE id = ?').run(access.cost, userId);

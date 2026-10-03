@@ -198,6 +198,21 @@ function xpForLevel(n) {
   return 1000 * n * (n + 1) / 2;
 }
 
+// Coin Mint: XP->coin conversion is scaled by (level + purchased) x 0.1%, with the
+// base level share free for everyone and purchases capped at level - see purchaseShopItem.
+function coinMintPct(xp, mintPurchased) {
+  const level = computeLevel(xp);
+  return (level + Math.min(mintPurchased || 0, level)) * 0.001;
+}
+function coinsFromXp(xp, mintPurchased) {
+  return Math.floor(((xp || 0) / 1000) * (1 + coinMintPct(xp, mintPurchased)));
+}
+// Spendable balance from a user row (xp, bonus_coins, coins_spent, bonus_gc_mint_purchased).
+function coinBalance(row) {
+  return coinsFromXp(row?.xp || 0, row?.bonus_gc_mint_purchased)
+    + (row?.bonus_coins || 0) - (row?.coins_spent || 0);
+}
+
 function getTitleForLevel(level) {
   return TITLES[Math.min(Math.max(level, 0), 100)];
 }
@@ -225,8 +240,8 @@ const _awardCoinsTx = db.transaction((userId, event, ref, amount) => {
   ).run(userId, event, String(ref), amount);
   if (r.changes > 0 && amount > 0) {
     db.prepare('UPDATE users SET bonus_coins = bonus_coins + ? WHERE id = ?').run(amount, userId);
-    const row = db.prepare('SELECT xp, coins_spent, bonus_coins FROM users WHERE id = ?').get(userId);
-    const balance = Math.floor((row?.xp || 0) / 1000) + (row?.bonus_coins || 0) - (row?.coins_spent || 0);
+    const row = db.prepare('SELECT xp, coins_spent, bonus_coins, bonus_gc_mint_purchased FROM users WHERE id = ?').get(userId);
+    const balance = coinBalance(row);
     _insertNotif.run(userId, 'coin_gain', JSON.stringify({ amount, balance, reason: event }));
     try { _appXpHook?.({ userId, coinDelta: amount }); } catch (_) {}
   }
@@ -268,7 +283,7 @@ function claimBonusGc(userId) {
 }
 
 const _awardXpTx = db.transaction((userId, event, ref, amount) => {
-  const before      = db.prepare('SELECT xp, xp_boost_pct, xp_boost_carry, coins_spent, bonus_coins, pending_bonus_gc, bonus_gc_chance_purchased FROM users WHERE id = ?').get(userId);
+  const before      = db.prepare('SELECT xp, xp_boost_pct, xp_boost_carry, coins_spent, bonus_coins, pending_bonus_gc, bonus_gc_chance_purchased, bonus_gc_mint_purchased FROM users WHERE id = ?').get(userId);
   const beforeXp    = before?.xp ?? 0;
   const boost       = before?.xp_boost_pct ?? 0;
   const carry       = before?.xp_boost_carry ?? 0;
@@ -304,8 +319,9 @@ const _awardXpTx = db.transaction((userId, event, ref, amount) => {
       db.prepare('UPDATE users SET xp_boost_pct = xp_boost_pct + ? WHERE id = ?').run(levelsGained, userId);
       try { _xpFeedHook?.({ type: 'feed_changed', entity: 'profile', action: 'level_up', id: userId }); } catch (_) {}
     }
-    const coinsBefore = Math.floor(beforeXp / 1000);
-    const coinsAfter  = Math.floor(after / 1000);
+    const mintPurchased = before?.bonus_gc_mint_purchased;
+    const coinsBefore = coinsFromXp(beforeXp, mintPurchased);
+    const coinsAfter  = coinsFromXp(after, mintPurchased);
     const coinsGained = coinsAfter - coinsBefore;
     if (coinsGained > 0) {
       _insertNotif.run(userId, 'coin_gain', JSON.stringify({ amount: coinsGained, balance: coinsAfter + bonusCoins - coinsSpent, reason: 'xp_milestone' }));
@@ -348,11 +364,11 @@ function awardIdleHeartbeatXp(userId) {
 }
 
 function getUserXpInfo(userId) {
-  const row  = db.prepare('SELECT xp, coins_spent, xp_boost_pct, bonus_undos, bonus_fast_travels, bonus_heartbeat_xp, bonus_coins, admin_gifted_coins, xp_from_boost, bonus_gc_chance_purchased, pending_bonus_gc FROM users WHERE id = ?').get(userId);
+  const row  = db.prepare('SELECT xp, coins_spent, xp_boost_pct, bonus_undos, bonus_fast_travels, bonus_heartbeat_xp, bonus_coins, admin_gifted_coins, xp_from_boost, bonus_gc_chance_purchased, bonus_gc_mint_purchased, pending_bonus_gc FROM users WHERE id = ?').get(userId);
   const bonusGcClaimed = db.prepare("SELECT COALESCE(SUM(amount), 0) AS n FROM coin_events WHERE user_id = ? AND event = 'bonus_gc_claim'").get(userId).n;
   const xp   = row?.xp || 0;
   const level = computeLevel(xp);
-  const coinsEarned  = Math.floor(xp / 1000) + (row?.bonus_coins || 0);
+  const coinsEarned  = coinsFromXp(xp, row?.bonus_gc_mint_purchased) + (row?.bonus_coins || 0);
   const coinsBalance = coinsEarned - (row?.coins_spent || 0);
   return {
     xp,
@@ -373,6 +389,8 @@ function getUserXpInfo(userId) {
     bonusHeartbeatXpFree: Math.max(0, level - 10),
     xpFromBoost:       row?.xp_from_boost     || 0,
     bonusGcChancePurchased: row?.bonus_gc_chance_purchased || 0,
+    bonusGcMintPurchased:   row?.bonus_gc_mint_purchased || 0,
+    gcMintPct:              coinMintPct(xp, row?.bonus_gc_mint_purchased) * 100,
     pendingBonusGc:         !!row?.pending_bonus_gc,
     bonusGcClaimed:         bonusGcClaimed,
   };
@@ -1018,6 +1036,7 @@ module.exports = {
   createImpersonationToken, consumeImpersonationToken,
   getXpAmount, getXpConfig, setXpAmount,
   TITLES, computeLevel, xpForLevel, getTitleForLevel,
+  coinMintPct, coinsFromXp, coinBalance,
   setXpFeedHook, setAppXpHook,
   awardCoins, awardXp, awardIdleHeartbeatXp, getUserXpInfo, claimBonusGc,
   getBookCreator, getBookIdentifiers,

@@ -55,6 +55,7 @@ try { db.exec(`ALTER TABLE users ADD COLUMN xp_boost_carry        REAL    NOT NU
 try { db.exec(`ALTER TABLE users ADD COLUMN heartbeat_carry              REAL    NOT NULL DEFAULT 0`);        } catch (_) {}
 try { db.exec(`ALTER TABLE users ADD COLUMN heartbeat_minutes_banked   INTEGER NOT NULL DEFAULT 0`);        } catch (_) {}
 try { db.exec(`ALTER TABLE users ADD COLUMN bonus_gc_chance_purchased INTEGER NOT NULL DEFAULT 0`);        } catch (_) {}
+try { db.exec(`ALTER TABLE users ADD COLUMN bonus_gc_mint_purchased   INTEGER NOT NULL DEFAULT 0`);        } catch (_) {}
 try { db.exec(`ALTER TABLE users ADD COLUMN pending_bonus_gc          INTEGER NOT NULL DEFAULT 0`);        } catch (_) {}
 try { db.exec(`ALTER TABLE users ADD COLUMN bonus_gc_generated        INTEGER NOT NULL DEFAULT 0`);        } catch (_) {}
 // Backfill generated bonus coins from claims plus pending coins; MAX preserves newer totals.

@@ -3,7 +3,7 @@
 // Notifications, exports, GC supply, and app-birth helpers.
 
 const { db, _naturalCompareByName } = require('./connection');
-const { _insertNotif } = require('./xp');
+const { _insertNotif, coinBalance } = require('./xp');
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS notifications (
@@ -90,8 +90,8 @@ function adminGiftGc(userId, amount, message) {
   db.prepare('UPDATE users SET bonus_coins = bonus_coins + ?, admin_gifted_coins = admin_gifted_coins + ? WHERE id = ?').run(amount, amount, userId);
   const prev   = parseInt(db.prepare("SELECT value FROM admin_settings WHERE key='admin_gc_gifted'").get()?.value || '0');
   db.prepare("INSERT OR REPLACE INTO admin_settings (key, value) VALUES ('admin_gc_gifted', ?)").run(String(prev + amount));
-  const row    = db.prepare('SELECT xp, coins_spent, bonus_coins FROM users WHERE id = ?').get(userId);
-  const balance = Math.floor((row?.xp || 0) / 1000) + (row?.bonus_coins || 0) - (row?.coins_spent || 0);
+  const row    = db.prepare('SELECT xp, coins_spent, bonus_coins, bonus_gc_mint_purchased FROM users WHERE id = ?').get(userId);
+  const balance = coinBalance(row);
   _insertNotif.run(userId, 'gc_gift', JSON.stringify({ amount, balance, message: message || null }));
   return { ok: true, balance };
 }

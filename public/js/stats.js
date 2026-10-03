@@ -182,6 +182,7 @@ export async function openStatsModal() {
           [t('stats.upgrade_heartbeat_xp'), fmt(s.upgradeHeartbeatXp)],
           [t('stats.upgrade_xp_boost_pct'), fmt(s.upgradeXpBoosts)],
           [t('stats.upgrade_gc_chance'), fmt(s.upgradeGcChance)],
+          [t('stats.upgrade_gc_mint'), fmt(s.upgradeGcMint)],
         ],
       },
       {
