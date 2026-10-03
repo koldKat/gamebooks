@@ -353,6 +353,11 @@ try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 161').run(); } 
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 274').run(); } catch (_) {}
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 257').run(); } catch (_) {}
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 258').run(); } catch (_) {}
+// Cretan Chronicles MIGHT/PROTECTION simulators (books 400 Bloodfeud of Altheus,
+// 401 At the Court of King Minos, 402 Return of the Wanderer).
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 400').run(); } catch (_) {}
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 401').run(); } catch (_) {}
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 402').run(); } catch (_) {}
 
 // Rename legacy battleSim state to sim829 without losing saved fights/history.
 {
