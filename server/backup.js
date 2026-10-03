@@ -3,6 +3,8 @@ const path       = require('path');
 const fs         = require('fs');
 const { execFile } = require('child_process');
 const db         = require('./db');
+const { purgeDeletedFeedbackThreads } = require('./db/feedback');
+const { cleanupFeedbackAttachments } = require('./feedback-cleanup');
 
 const BACKUP_DIR  = path.join(__dirname, '..', 'backups');
 const KEEP_HOURS  = 15 * 24; // keep 15 days of hourly backups
@@ -11,6 +13,9 @@ const INTERVAL_MS = 60 * 60 * 1000; // 1 hour
 function pad(n) { return String(n).padStart(2, '0'); }
 
 async function runBackup() {
+  purgeDeletedFeedbackThreads();
+  try { await cleanupFeedbackAttachments(); }
+  catch (error) { console.error('[feedback] attachment cleanup queued for retry:', error); }
   fs.mkdirSync(BACKUP_DIR, { recursive: true });
 
   const now   = new Date();

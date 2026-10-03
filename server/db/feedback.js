@@ -4,6 +4,11 @@
 
 const { db } = require('./connection');
 
+db.exec(`CREATE TABLE IF NOT EXISTS feedback_attachment_deletions (
+  filename TEXT PRIMARY KEY,
+  created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+)`);
+
 const _getThreadMsgs     = db.prepare('SELECT * FROM feedback_messages WHERE thread_id = ? ORDER BY created_at ASC');
 const _getMsgAttachments = db.prepare('SELECT id, filename, original_name, mime_type, size FROM attachments WHERE kind = ? AND linked_id = ? ORDER BY created_at ASC');
 
@@ -97,17 +102,39 @@ function markThreadUnreadByUser(threadId) {
   db.prepare('UPDATE feedback SET user_unread = 1 WHERE id = ?').run(threadId);
 }
 
+const _deleteThread = db.transaction((id, userId) => {
+  const thread = db.prepare('SELECT user_id FROM feedback WHERE id = ?').get(id);
+  if (!thread || (userId !== undefined && thread.user_id !== userId)) return { ok: false, filenames: [] };
+  const filenames = db.prepare(`SELECT filename FROM attachments
+    WHERE kind = 'feedback_message' AND linked_id IN
+      (SELECT id FROM feedback_messages WHERE thread_id = ?)`).all(id).map(a => a.filename);
+  const queue = db.prepare('INSERT OR IGNORE INTO feedback_attachment_deletions (filename) VALUES (?)');
+  for (const filename of filenames) queue.run(filename);
+  db.prepare(`DELETE FROM attachments WHERE kind = 'feedback_message' AND linked_id IN
+    (SELECT id FROM feedback_messages WHERE thread_id = ?)`).run(id);
+  db.prepare('DELETE FROM feedback_messages WHERE thread_id = ?').run(id);
+  db.prepare('DELETE FROM feedback WHERE id = ?').run(id);
+  return { ok: true, filenames };
+});
+
 function deleteFeedbackThread(id) {
-  db.prepare('UPDATE feedback SET deleted_by_admin = 1 WHERE id = ?').run(id);
+  return _deleteThread(id);
 }
 
 function deleteFeedbackThreadForUser(id, userId) {
-  db.prepare('UPDATE feedback SET deleted_by_user = 1 WHERE id = ? AND user_id = ?').run(id, userId);
+  if (!Number.isInteger(userId)) return { ok: false, filenames: [] };
+  return _deleteThread(id, userId);
+}
+
+function purgeDeletedFeedbackThreads() {
+  const ids = db.prepare('SELECT id FROM feedback WHERE deleted_by_user = 1 OR deleted_by_admin = 1').all();
+  for (const { id } of ids) deleteFeedbackThread(id);
+  return ids.length;
 }
 
 module.exports = {
   getAttachments, createAttachment, linkAttachments,
   createFeedbackThread, addFeedbackMessage, getThreadsForUser, getAllThreads,
   getFeedbackThreadById, markThreadReadByUser, markThreadReadByAdmin, markThreadUnreadByUser,
-  deleteFeedbackThread, deleteFeedbackThreadForUser,
+  deleteFeedbackThread, deleteFeedbackThreadForUser, purgeDeletedFeedbackThreads,
 };

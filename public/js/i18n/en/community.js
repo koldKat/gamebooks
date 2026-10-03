@@ -14,7 +14,8 @@ export default {
     'feedback.submit_error':     'Failed to send. Please try again.',
 
     'inbox.empty':          'No messages yet.',
-    'inbox.confirm_delete': 'Delete this thread?',
+    'inbox.confirm_delete': 'Permanently delete this thread, all its messages and attachments from both inboxes?',
+    'inbox.delete_failed': 'Failed to delete the thread or its attachments. Please refresh and try again.',
 
     'feed.header':     'Activity',
     'feed.header_sub': '(last 30 days)',

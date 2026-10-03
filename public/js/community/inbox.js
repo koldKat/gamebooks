@@ -2,7 +2,7 @@
 
 import { apiFetch, getUsername } from '../core/state.js';
 import { t } from '../i18n.js';
-import { showConfirm } from '../play.js';
+import { showConfirm, showAlert } from '../play.js';
 import { refreshInboxBadge } from './notif.js';
 import { escapeHtml, isImageFilename, uploadAttachment, addAttachmentItem } from '../core/util.js';
 
@@ -164,12 +164,16 @@ export function initInbox(mousedownOnOverlayRef) {
 
   document.getElementById('inbox-conv-delete-btn').addEventListener('click', () => {
     if (!_currentThreadId) return;
+    const threadId = _currentThreadId;
     showConfirm(t('inbox.confirm_delete'), async () => {
-      await apiFetch(`/api/feedback/${_currentThreadId}`, { method: 'DELETE' });
-      _inboxThreads = _inboxThreads.filter(th => th.id !== _currentThreadId);
-      _renderInboxList();
-      _showThreadList();
-      refreshInboxBadge();
+      try {
+        const res = await apiFetch(`/api/feedback/${threadId}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Delete failed');
+        _inboxThreads = _inboxThreads.filter(th => th.id !== threadId);
+        _renderInboxList();
+        if (_currentThreadId === threadId) _showThreadList();
+        refreshInboxBadge();
+      } catch { showAlert(t('inbox.delete_failed')); }
     }, { confirmLabel: t('btn.delete'), danger: true });
   });
 

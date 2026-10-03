@@ -6,7 +6,45 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const vm = require('vm');
-const { externalizeImages, MAX_BYTES } = require('../server/reading-image-storage');
+const { spawnSync } = require('child_process');
+const { externalizeImages, storeImage, MAX_BYTES } = require('../server/reading-image-storage');
+
+test('small JPEG, GIF and WebP imports are stored as actual PNG, not renamed originals', () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'reading-images-format-test-'));
+  try {
+    for (const format of ['jpeg', 'gif', 'webp']) {
+      const source = spawnSync('nice', ['-n', '10', 'convert', '-size', '8x8', 'xc:white', `${format}:-`]);
+      assert.equal(source.status, 0, source.stderr.toString());
+      const filename = storeImage(format, source.stdout.toString('base64'), directory);
+      assert.match(filename, /^[a-f0-9]{64}\.png$/);
+      const data = fs.readFileSync(path.join(directory, filename));
+      assert.equal(data.subarray(0, 8).toString('hex'), '89504e470d0a1a0a');
+      assert.ok(data.length <= MAX_BYTES);
+    }
+  } finally { fs.rmSync(directory, { recursive: true, force: true }); }
+});
+
+test('oversized images use PNG palette fallback and refuse uncapped output', () => {
+  const calls = [], writes = [];
+  let fits = true;
+  const context = vm.createContext({ Buffer, process, __dirname: '/app/server', module: { exports: {} }, require: name => {
+    if (name === 'fs') return { mkdirSync() {}, writeFileSync(file, data) { writes.push({ file, bytes: data.length }); } };
+    if (name === 'child_process') return { spawnSync(command, args) {
+      calls.push({ command, args });
+      return { status: 0, stdout: Buffer.alloc(fits && args.includes('-colors') ? 100 : MAX_BYTES + 1) };
+    } };
+    return require(name);
+  } });
+  vm.runInContext(fs.readFileSync(require.resolve('../server/reading-image-storage'), 'utf8'), context);
+  const oversized = Buffer.alloc(MAX_BYTES + 1).toString('base64');
+  assert.match(context.module.exports.storeImage('png', oversized), /\.png$/);
+  assert.equal(calls.length, 2);
+  assert.ok(calls.every(call => call.command === 'nice' && call.args.at(-1) === 'png:-'));
+  assert.equal(writes[0].bytes, 100);
+  fits = false;
+  assert.throws(() => context.module.exports.storeImage('png', oversized), /within 256 KB/);
+  assert.equal(writes.length, 1);
+});
 
 test('external images preserve surrounding prose, deduplicate, and cap size', () => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'reading-images-test-'));

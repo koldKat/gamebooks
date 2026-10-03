@@ -831,3 +831,4 @@ The **Inbox** button shows a count of unread messages from the admin. Click it t
 - Opening a conversation marks it as read and clears the badge
 - Use **+ Attach** below the reply box to attach files to your reply (same file types and 64 MB limit as feedback)
 - Images are shown inline; other files appear as download links
+- Deleting a conversation permanently removes it from both inboxes, including every message and attached file. This cannot be undone.

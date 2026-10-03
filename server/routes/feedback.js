@@ -7,6 +7,7 @@ const { authenticate, send, readBody, requireLocalhost, tokenFromReq } = require
 const { sendAdminEmail, sendReplyEmail } = require('../email');
 const { escapeHtml } = require('../html-escape');
 const { userBadgePushAll } = require('../sse');
+const { cleanupFeedbackAttachments } = require('../feedback-cleanup');
 
 async function handleSubmitFeedback(req, res) {
   // Accept both authenticated and anonymous submissions
@@ -95,6 +96,7 @@ async function handleAdminReply(req, res, id) {
   if (!requireLocalhost(req, res)) return;
   const { reply } = await readBody(req);
   if (!reply?.trim()) return send(res, 400, { error: 'reply required' });
+  if (!db.getFeedbackThreadById(id)) return send(res, 404, { error: 'Not found' });
   db.addFeedbackMessage(id, 'admin', reply.trim());
   db.markThreadReadByAdmin(id);
   const thread = db.getFeedbackThreadById(id);
@@ -112,16 +114,20 @@ async function handleAdminMarkRead(req, res, id) {
 async function handleDeleteFeedback(req, res, id) {
   const userId = await authenticate(req, res);
   if (userId === null) return;
-  db.deleteFeedbackThreadForUser(id, userId);
-  send(res, 200, { ok: true });
+  const result = db.isUserAdmin(userId) ? db.deleteFeedbackThread(id) : db.deleteFeedbackThreadForUser(id, userId);
+  if (!result.ok) return send(res, 404, { error: 'Not found' });
   userBadgePushAll();
+  await cleanupFeedbackAttachments(result.filenames);
+  send(res, 200, { ok: true });
 }
 
 async function handleAdminDeleteFeedback(req, res, id) {
   if (!requireLocalhost(req, res)) return;
-  db.deleteFeedbackThread(id);
-  send(res, 200, { ok: true });
+  const result = db.deleteFeedbackThread(id);
+  if (!result.ok) return send(res, 404, { error: 'Not found' });
   userBadgePushAll();
+  await cleanupFeedbackAttachments(result.filenames);
+  send(res, 200, { ok: true });
 }
 
 

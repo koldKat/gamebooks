@@ -61,9 +61,11 @@ function toggleFeedbackCard(headerEl) {
 }
 
 async function deleteFeedbackMsg(id) {
-  showConfirm('Delete this thread?', async () => {
-    await api('DELETE', `/api/admin/feedback/${id}`);
-    loadFeedback();
+  showConfirm('Permanently delete this thread, all its messages and attachments from both inboxes?', async () => {
+    try {
+      await api('DELETE', `/api/admin/feedback/${id}`);
+      loadFeedback();
+    } catch (error) { showAlert('Failed to delete the thread or its attachments. Please refresh and try again.'); }
   }, { label: 'Delete', variant: 'danger' });
 }
 

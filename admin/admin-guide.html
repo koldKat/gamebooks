@@ -249,7 +249,7 @@
 <ul>
 <li><strong>Mark as read</strong> - clears the unread highlight for that thread</li>
 <li><strong>Reply</strong> - appends an admin message; if SMTP is active, also emails the user</li>
-<li><strong>Delete</strong> - soft delete (<code>deleted_by_admin = 1</code>); the thread and its attachments are not actually removed, just hidden from this tab</li>
+<li><strong>Delete</strong> - permanently removes the thread, all messages, and their attachments from both inboxes and disk. The confirmation warns that this cannot be undone. Previously hidden/deleted threads are also purged; attachment deletion failures are queued for retry.</li>
 </ul>
 <hr>
 <h2 id="announcements-tab">Announcements tab<a class="anchor" href="#announcements-tab" aria-label="Link to section">#</a></h2>

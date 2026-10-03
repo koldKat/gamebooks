@@ -184,7 +184,7 @@ Users can attach files to their initial feedback submission and to inbox replies
 
 - **Mark as read** - clears the unread highlight for that thread
 - **Reply** - appends an admin message; if SMTP is active, also emails the user
-- **Delete** - soft delete (`deleted_by_admin = 1`); the thread and its attachments are not actually removed, just hidden from this tab
+- **Delete** - permanently removes the thread, all messages, and their attachments from both inboxes and disk. The confirmation warns that this cannot be undone. Previously hidden/deleted threads are also purged; attachment deletion failures are queued for retry.
 
 ---
 
