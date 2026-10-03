@@ -616,8 +616,7 @@ export function initSim200() {
   document.getElementById('sim200-roll').addEventListener('click', () => {
     const d = _data();
     if (!d || d.rolled) return;
-    // This book starts at 1d6+5 SKILL, not the usual FF 1d6+6.
-    d.player.skillInitial   = _roll1d6() + 5;
+    d.player.skillInitial   = _roll1d6() + 6;
     d.player.staminaInitial = _roll2d6() + 12;
     d.player.luckInitial    = _roll1d6() + 6;
     d.player.skill   = d.player.skillInitial;
