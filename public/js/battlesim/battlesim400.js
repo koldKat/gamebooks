@@ -2,7 +2,7 @@
 // See cretan.js for the full engine description. Honour defaults to 7 (book 400's
 // starting value); books 401/402 carry Honour over from the previous book, so the
 // player edits it to their current value.
-import { createCretanSim } from './cretan.js';
+import { createCretanSim } from './engines/cretan.js';
 
 const _sim = createCretanSim({
   bookId: 400,
