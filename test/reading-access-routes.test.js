@@ -9,6 +9,7 @@ test('section route rejects locked text before reading it, without affecting unl
   const handler = source.slice(source.indexOf('async function handleGetBookSection'), source.indexOf('async function handleSaveState'));
   let locked = true, reads = 0, response;
   const context = vm.createContext({ authenticate: async () => 1,
+    require: () => ({ setReadingImageCookie() {} }),
     send: (req, status, body) => { response = { status, body }; },
     db: { _canLiveRead: () => true, readingAccess: { getAccess: () => ({ locked }) },
       getBookSection: () => { reads++; return { html: 'text' }; } } });

@@ -14,6 +14,7 @@ database.sqlite-wal
 
 # Backups
 backups/
+reading-images/
 
 # User-uploaded content (avatars, covers, book PDFs, forum/feedback attachments)
 public/avatars/

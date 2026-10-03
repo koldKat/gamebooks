@@ -601,6 +601,7 @@ async function handleGetBookSection(req, res, bookId, sectionId) {
   if (access.locked) return send(res, 403, { error: 'reading_locked' });
   const section = db.getBookSection(bookId, sectionId);
   if (!section) return send(res, 404, { error: 'not found' });
+  require('../reading-images').setReadingImageCookie(req, res);
   send(res, 200, section);
 }
 
