@@ -25,13 +25,13 @@ let _lastKnownXp     = null;
 let _xpFlushTimer    = null;
 let _xpToastPending  = 0;
 let _xpToastVisibleUntil = 0;
-async function _seedXpBaseline() {
+export async function _seedXpBaseline() {
   try {
     const res = await apiFetch('/api/profile');
     if (res.ok) _lastKnownXp = (await res.json()).xp ?? null;
   } catch (_) {}
 }
-function _checkXpReward() {
+export function _checkXpReward() {
   if (_lastKnownXp === null || _xpFlushTimer) return;
   _xpFlushTimer = setTimeout(async () => {
     _xpFlushTimer = null;
@@ -57,6 +57,7 @@ function _escapeHtml(s) {
 
 const ICON_TEXT  = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="14" y2="18"/></svg>`;
 const ICON_GRAPH = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><line x1="7.5" y1="7.5" x2="10.5" y2="16.5"/><line x1="16.5" y1="7.5" x2="13.5" y2="16.5"/></svg>`;
+const ICON_TRACK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 17.5 16 6.5"/></svg>`;
 
 function _loadingHtml(label) {
   return `<div class="m-loading">
@@ -99,7 +100,7 @@ function _setPaneMode(mode) {
 }
 
 // Reveal and merge choices on arrival, preserving existing node metadata.
-function _commitChoices(sec, choices) {
+export function _commitChoices(sec, choices) {
   const deduped = [...new Set(choices)].sort((a, b) => {
     const av = isValidSecId(a), bv = isValidSecId(b);
     if (av && bv) {
@@ -123,7 +124,7 @@ function _commitChoices(sec, choices) {
 }
 
 // Initialize desktop-compatible run fields; mobile does not instantiate starting-item templates.
-function _startPlaythrough(startSec) {
+export function _startPlaythrough(startSec) {
   state.playthroughs.push({
     path: [startSec], completed: false, result: null,
     undosUsed: 0, fastTravelsUsed: 0, startedAt: Date.now(),
@@ -137,7 +138,7 @@ function _startPlaythrough(startSec) {
 }
 
 // Merge the live path into mVisited on every load, including navigation done on desktop.
-function _ensureMVisited(pt) {
+export function _ensureMVisited(pt) {
   if (!Array.isArray(pt.mVisited)) pt.mVisited = [];
   for (const sec of pt.path) if (!pt.mVisited.includes(sec)) pt.mVisited.push(sec);
   return pt.mVisited;
@@ -165,7 +166,7 @@ function _prefetchChoices(choices) {
   }
 }
 
-export async function renderReader(mount, book, onBack, { startAtOne = false } = {}) {
+export async function renderReader(mount, book, onBack, { startAtOne = false, isAdmin = false } = {}) {
   ++_showToken;
   const session = ++_readerSession;
   const authToken = getToken();
@@ -176,7 +177,7 @@ export async function renderReader(mount, book, onBack, { startAtOne = false } =
   const gateBody = mount.querySelector('#m-access-body');
   const isCurrent = () => authToken === getToken() && session === _readerSession && mount.isConnected;
   const resume = async () => {
-    const opening = renderReader(mount, book, onBack, { startAtOne: true });
+    const opening = renderReader(mount, book, onBack, { startAtOne: true, isAdmin });
     const openingSession = _readerSession;
     try {
       await opening;
@@ -202,6 +203,7 @@ export async function renderReader(mount, book, onBack, { startAtOne = false } =
       <span class="m-book-title">${_escapeHtml(book.name)}</span>
       <button id="m-toggle-text-btn" class="m-pane-toggle-btn" aria-label="${t('mobile.text_only')}">${ICON_TEXT}</button>
       <button id="m-toggle-graph-btn" class="m-pane-toggle-btn" aria-label="${t('mobile.graph_only')}">${ICON_GRAPH}</button>
+      ${isAdmin ? `<button id="m-mode-track-btn" class="m-pane-toggle-btn" aria-label="${t('track.switch_to_track')}">${ICON_TRACK}</button>` : ''}
     </div>
     <div class="m-panes" id="m-panes">
       <div id="m-top" class="m-top">${_loadingHtml(t('mobile.loading'))}</div>
@@ -243,6 +245,11 @@ export async function renderReader(mount, book, onBack, { startAtOne = false } =
     }, { confirmLabel: t('runs.battle_death') }));
   document.getElementById('m-toggle-text-btn').addEventListener('click', () => _setPaneMode(_paneMode === 'text' ? 'both' : 'text'));
   document.getElementById('m-toggle-graph-btn').addEventListener('click', () => _setPaneMode(_paneMode === 'graph' ? 'both' : 'graph'));
+  if (isAdmin) document.getElementById('m-mode-track-btn').addEventListener('click', async () => {
+    ++_readerSession; ++_showToken;
+    const { renderTrack } = await import('./track.js');
+    renderTrack(mount, book, onBack, { isAdmin: true });
+  });
   _setPaneMode('both');
 
   const battlesimBtn = document.getElementById('m-battlesim-btn');

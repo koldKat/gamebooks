@@ -452,7 +452,7 @@ gamebooks/
                        graph-view.js's own canvas panning competes with the browser's native
                        gesture recognizer for the same horizontal touch-drags.
       js/
-        app.js             Tiny screen router (login/reader), admin-gate check via GET /api/profile
+        app.js             Tiny screen router (login/reader/track), admin-gate check via GET /api/profile
                            (same response also feeds currentUserLevel/bonusUndos/bonusFastTravels
                            into state.js, same fields boot/landing.js and boot/screens.js set from profile responses). Shows a
                            spinner (.m-loading-full) immediately, before its two sequential round
@@ -594,6 +594,26 @@ gamebooks/
                            used both by notebook.js's own xpAwarded flag and by reader.js's
                            polled XP-diff check for ordinary reveal-on-arrival XP while reading,
                            not an attempt at porting rewards.js's full floater animation
+        track.js           Admin-only "track mode": lets an admin play ANY book (even one with no
+                           imported prose) by manually typing the section they turned to on paper/PDF,
+                           recording the path and earning XP with no in-app text. Gated entirely on
+                           GET /api/profile's isAdmin flag (read by app.js) - for every non-admin the
+                           open-book paths are byte-for-byte unchanged (non-imported → showNoReading,
+                           imported → reader with no toggle). It is NOT a new backend action: "Turn to
+                           N" reuses reader.js's own exported record helpers (_commitChoices records the
+                           current→N edge, _startPlaythrough/_ensureMVisited manage the run, saveState
+                           is what awards visit/choice XP server-side, _seedXpBaseline/_checkXpReward
+                           drive the same toast.js XP feedback) - the identical state the reader writes
+                           when you tap an in-text choice. UI is a lean MVP: big "You're at section N",
+                           a numeric "Turn to ___" stepper (reusing fast-travel-dialog.js's .ft-qty-*
+                           markup) + Go, tappable chips for the current section's already-recorded
+                           choices (re-walk a known branch), a newest-first trail list as the primary
+                           view, and Start run / Undo / Win / Loss lifecycle buttons mirroring reader.js.
+                           The graph (graph-view.js) is a read-only mini-map - no-op tap/hold handlers,
+                           no graph editing. For an imported book the reader's topbar gains a track-icon
+                           toggle (admin only) and track mode a "Read" button; the two switch via
+                           dynamic import() of each other so there's no static import cycle (track.js
+                           statically imports reader.js's helpers, reader.js imports track.js lazily).
         battlesim-dispatch.js  bookId → battle-sim lookup table, one entry per book that has a
                            sim. Dynamically imports the specific battlesim*.js module, calls its
                            init function once, then clicks its already-wired trigger button

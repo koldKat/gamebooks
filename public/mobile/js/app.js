@@ -16,6 +16,9 @@ window.addEventListener('orientationchange', _setVhVar);
 
 const mount = document.getElementById('screen');
 
+// Track mode is an admin-only test surface; every non-admin path stays byte-for-byte unchanged.
+let _isAdmin = false;
+
 function showLogin() {
   mount.innerHTML = '';
   renderLogin(mount, loadThenShowReader);
@@ -24,7 +27,15 @@ function showLogin() {
 
 async function showReader(book) {
   mount.innerHTML = '';
-  await renderReader(mount, book, () => { window.location.href = '/'; });
+  await renderReader(mount, book, () => { window.location.href = '/'; }, { isAdmin: _isAdmin });
+  window.appStartup?.ready();
+}
+
+// Admin-only: play any book by manually entering turned-to sections.
+async function showTrack(book) {
+  mount.innerHTML = '';
+  const { renderTrack } = await import('./track.js');
+  await renderTrack(mount, book, () => { window.location.href = '/'; }, { isAdmin: true });
   window.appStartup?.ready();
 }
 
@@ -81,6 +92,7 @@ async function loadThenShowReader() {
       setCurrentUserLevel(profile.level || 0);
       setBonusUndos(profile.bonusUndos || 0);
       setBonusFastTravels(profile.bonusFastTravels || 0);
+      _isAdmin = profile.isAdmin === true;
     }
   } catch (_) { /* profile fetch failed - level/bonus stay at module defaults */ }
 
@@ -94,7 +106,10 @@ async function loadThenShowReader() {
   } catch (_) { /* books stays empty, falls to showNoBook below */ }
   const book = books.find(b => String(b.id) === wantedId);
   if (!book) { showNoBook(); return; }
-  if (!book.hasLiveReading) { showNoReading(book); return; }
+  if (!book.hasLiveReading) {
+    if (_isAdmin) { await showTrack(book); return; }
+    showNoReading(book); return;
+  }
   try {
     await showReader(book);
   } catch (error) {

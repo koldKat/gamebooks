@@ -21,4 +21,17 @@ export default {
     'mobile.confirm_loss':   'Mark this run as a Loss?',
     'mobile.confirm_battle_death': 'Mark this run as a Battle Death?',
     'mobile.graph_load_error': 'Graph library failed to load.',
+
+    // Track mode (admin-only manual section-entry tracker)
+    'track.switch_to_track': 'Track mode',
+    'track.switch_to_read':  'Reader',
+    'track.read':            'Read',
+    'track.no_run':          'No run in progress - pick a starting section to begin tracking.',
+    'track.start_section':   'Start at section',
+    'track.start_run':       'Start run',
+    'track.at_section':      "You're at section {sec}",
+    'track.turn_to':         'Turn to',
+    'track.go':              'Go',
+    'track.undo':            'Undo',
+    'track.trail':           'Trail',
 };
