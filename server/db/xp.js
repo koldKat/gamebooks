@@ -191,7 +191,17 @@ const TITLES = [
 function computeLevel(xp) {
   if (xp <= 0) return 0;
   const n = Math.floor((-1 + Math.sqrt(1 + 8 * xp / 1000)) / 2);
+  // Real cap is now the XP-accrual gate at live user count (see _liveUserCount / _awardXpTx);
+  // this fixed 100 is a vestigial ceiling that only re-binds if the community exceeds 100 users.
   return Math.min(n, 100);
+}
+
+// Dynamic level cap = live registered user count. Cached briefly to avoid a COUNT per XP event.
+let _userCount = { n: 0, at: 0 };
+function _liveUserCount() {
+  const now = Date.now();
+  if (now - _userCount.at > 30_000) _userCount = { n: db.prepare('SELECT COUNT(*) AS n FROM users').get().n, at: now };
+  return _userCount.n;
 }
 
 function xpForLevel(n) {
@@ -289,7 +299,10 @@ const _awardXpTx = db.transaction((userId, event, ref, amount) => {
   const carry       = before?.xp_boost_carry ?? 0;
   const coinsSpent  = before?.coins_spent ?? 0;
   const bonusCoins  = before?.bonus_coins ?? 0;
-  const baseAmount  = Math.max(0, Number(amount) || 0);
+  // At the dynamic cap, freeze accrual: zero the amount so boosted=0 (no XP/coins/boosts/levelup),
+  // while the event insert + Lucky Coin roll below still fire.
+  const frozen      = _liveUserCount() <= computeLevel(beforeXp);
+  const baseAmount  = frozen ? 0 : Math.max(0, Number(amount) || 0);
   const baseWhole   = Math.floor(baseAmount);
   const rawExtra    = baseAmount > 0 ? baseAmount * (boost / 1000) : 0;
   const totalExtra  = rawExtra + carry;
@@ -339,7 +352,14 @@ function awardXp(userId, event, ref, amountOverride = null) {
 
 function awardIdleHeartbeatXp(userId) {
   const base = getXpAmount('idle_heartbeat');
-  const row  = db.prepare('SELECT xp, bonus_heartbeat_xp, heartbeat_carry, pending_bonus_gc FROM users WHERE id = ?').get(userId);
+  const row  = db.prepare('SELECT xp, bonus_heartbeat_xp, heartbeat_carry, pending_bonus_gc, bonus_gc_chance_purchased FROM users WHERE id = ?').get(userId);
+  // At the dynamic cap, skip the XP event entirely (no carry/playtime pollution) but keep the
+  // Lucky Coin roll ticking via a direct _rollBonusGc call.
+  if (!isImpersonatingContext() && _liveUserCount() <= computeLevel(row?.xp || 0)) {
+    _rollBonusGc(userId, row?.xp || 0, row?.pending_bonus_gc, row?.bonus_gc_chance_purchased);
+    const pendingAfter = db.prepare('SELECT pending_bonus_gc FROM users WHERE id = ?').get(userId)?.pending_bonus_gc;
+    return { awarded: false, coinRolled: !row?.pending_bonus_gc && !!pendingAfter };
+  }
   const purchased  = row?.bonus_heartbeat_xp ?? 0;
   const freeBoosts = Math.max(0, computeLevel(row?.xp || 0) - 10);
   const carry      = row?.heartbeat_carry ?? 0;
