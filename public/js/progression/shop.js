@@ -15,6 +15,12 @@ function _undoFastTravelCap(level) {
   return Math.floor((Math.max(level, 1) - 1) / 10) + 1;
 }
 
+// Base free undos/fast-travels per run (mirrors play/limits.js): 3 up to lvl 30, +1 per 10 levels after, max 10.
+function _undoFtBase(level) {
+  const lvl = level || 0;
+  return lvl <= 30 ? 3 : Math.min(10, 3 + Math.ceil((lvl - 30) / 10));
+}
+
 const SHOP_ITEMS = [
   {
     id:        'xp_boost',
@@ -58,7 +64,7 @@ const SHOP_ITEMS = [
     costFn:    d => ((d.bonusUndos       || 0) + 1) * 3,
     desc:      () => { const cap = _undoFastTravelCap(_shopData?.level || 0); return t('shop.item.undo.desc', { cap }); },
     statKey:   'bonusUndos',
-    statLabel: n => t('shop.item.owned', { n }),
+    totalLabel: d => { const base = _undoFtBase(d.level); const bought = d.bonusUndos || 0; return t('shop.item.undo.total', { total: base + bought, base, bought }); },
     atCap:     d => (d.bonusUndos || 0) >= _undoFastTravelCap(d.level || 0),
   },
   {
@@ -67,7 +73,7 @@ const SHOP_ITEMS = [
     costFn:    d => ((d.bonusFastTravels || 0) + 1) * 5,
     desc:      () => { const cap = _undoFastTravelCap(_shopData?.level || 0); return t('shop.item.fast_travel.desc', { cap }); },
     statKey:   'bonusFastTravels',
-    statLabel: n => t('shop.item.owned', { n }),
+    totalLabel: d => { const base = _undoFtBase(d.level); const bought = d.bonusFastTravels || 0; return t('shop.item.fast_travel.total', { total: base + bought, base, bought }); },
     atCap:     d => (d.bonusFastTravels || 0) >= _undoFastTravelCap(d.level || 0),
   },
 ];
@@ -180,15 +186,12 @@ function renderShopItems() {
     const cappedOut = item.atCap(_shopData);
     const cost      = item.costFn(_shopData);
     const canBuy    = !cappedOut && balance >= cost;
-    const owned     = _shopData[item.statKey] || 0;
     const btnLabel  = cappedOut ? t('shop.btn.max') : t('shop.btn.buy');
     return `<div class="shop-item">
       <div class="shop-item-info">
         <div class="shop-item-label">${escapeHtml(item.label())}</div>
         <div class="shop-item-desc">${escapeHtml(typeof item.desc === 'function' ? item.desc() : item.desc)}</div>
-        ${item.totalLabel
-          ? `<div class="shop-item-owned">${escapeHtml(item.totalLabel(_shopData))}</div>`
-          : (owned > 0 ? `<div class="shop-item-owned">${escapeHtml(item.statLabel(owned))}</div>` : '')}
+        <div class="shop-item-owned">${escapeHtml(item.totalLabel(_shopData))}</div>
       </div>
       <div class="shop-item-buy">
         <div class="shop-item-cost">${COIN_SVG} ${cost}</div>
