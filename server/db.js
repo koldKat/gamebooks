@@ -361,6 +361,8 @@ try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 401').run(); } 
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 402').run(); } catch (_) {}
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 412').run(); } catch (_) {}
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 481').run(); } catch (_) {}
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 491').run(); } catch (_) {}
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 486').run(); } catch (_) {}
 
 // Rename legacy battleSim state to sim829 without losing saved fights/history.
 {
