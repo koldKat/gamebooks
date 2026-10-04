@@ -34,7 +34,13 @@ try {
   if (!failed) throw Error('failure fixture did not fail');
   await loadBattleSimTranslations(216);
   await Promise.all(${JSON.stringify(simulatorIds)}.map(loadBattleSimTranslations));
-  const entries = Object.keys(en).filter(key => !key.startsWith('reading_access.')).sort().map(key => [key, t(key)]);
+  const added230 = {
+    'battlesim230.log.shared_round': '{enemy}: {enemyAS}, against your same Attack Strength of {playerAS}. Only the highest lands a blow.',
+    'battlesim230.ui.paired_source': 'Fight two opponents together (only the highest lands a blow)',
+    'battlesim230.btn.switch_target': 'Switch attack target',
+  };
+  for (const [key, value] of Object.entries(added230)) if (t(key) !== value) throw Error('new simulator string');
+  const entries = Object.keys(en).filter(key => !key.startsWith('reading_access.') && !Object.hasOwn(added230, key)).sort().map(key => [key, t(key)]);
   const bytes = new TextEncoder().encode(JSON.stringify(entries));
   const digest = [...new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))]
     .map(n => n.toString(16).padStart(2, '0')).join('');

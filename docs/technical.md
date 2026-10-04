@@ -246,7 +246,7 @@ gamebooks/
         battlesim225.js    Battle simulator for book 225, Midnight Rogue - Fighting Fantasy SKILL/STAMINA/LUCK opposed-roll combat.
         battlesim228.js    Slaves of the Abyss: simultaneous opponents roll independently; fatal side attacks override victory in new encounters. Legacy fights retain their rules until a new main enemy is selected. Sword killing blows and narrative effects remain manual.
         battlesim229.js    Battle simulator for book 229, Sky Lord - Fighting Fantasy SKILL/STAMINA/LUCK opposed-roll combat (sequential multi-enemy fights, no simultaneous side-attacker mechanic).
-        battlesim230.js    Battle simulator for book 230, Stealer of Souls - Fighting Fantasy SKILL/STAMINA/LUCK opposed-roll combat (mixed sequential/simultaneous multi-enemy fights per source text).
+        battlesim230.js    Stealer of Souls: new simultaneous encounters share one player roll; only the uniquely highest attacker wounds. Both opponents have current STAMINA; target switching is blocked during pending LUCK, and a surviving opponent takes over after a defeat. Victory requires defeating both. Legacy fights retain their rules until a new main enemy is selected. Section185's third opponent and narrative effects remain manual.
         battlesim317.js    Battle simulator for book 317, The Battlepits of Krarth (Blood Sword 1) - Fighting Prowess/Endurance Attack Strength combat.
         battlesim318.js    Battle simulator for book 318, The Kingdom of Wyrd (Blood Sword 2) - Fighting Prowess/Endurance Attack Strength combat.
         battlesim319.js    Battle simulator for book 319, The Demon's Claw (Blood Sword 3) - Fighting Prowess/Endurance Attack Strength combat.

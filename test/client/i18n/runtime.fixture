@@ -83,8 +83,14 @@ for (const path of paths) {
   }
 }
 assert.equal(keys.size, Object.keys(en.table).length, 'aggregator includes every table exactly once');
-assert.equal(keys.size, 7569);
-const original = sorted(en.table).filter(([key]) => !key.startsWith('reading_access.'));
+assert.equal(keys.size, 7572);
+const added230 = {
+  'battlesim230.log.shared_round': '{enemy}: {enemyAS}, against your same Attack Strength of {playerAS}. Only the highest lands a blow.',
+  'battlesim230.ui.paired_source': 'Fight two opponents together (only the highest lands a blow)',
+  'battlesim230.btn.switch_target': 'Switch attack target',
+};
+for (const [key, value] of Object.entries(added230)) assert.equal(en.api.t(key), value);
+const original = sorted(en.table).filter(([key]) => !key.startsWith('reading_access.') && !Object.hasOwn(added230, key));
 assert.equal(hash(original), baseline, 'every original key and exact Unicode/string value matches pre-split baseline');
 assert.equal(hash(original.map(([key]) => [key, en.api.t(key)])), baseline, 'every original lookup is available after its table loads');
 assert.equal(en.api.t('reading_access.unlock', { cost: 0 }), 'Unlock book · 0');

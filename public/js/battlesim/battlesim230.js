@@ -20,6 +20,7 @@ function _data() {
   if (!pt) return null;
   if (!pt.sim230) {
     pt.sim230 = {
+      combatRulesVersion: 2,
       player: {
         skill: 0, skillInitial: 0,
         stamina: 0, staminaInitial: 0,
@@ -33,7 +34,7 @@ function _data() {
       },
       enemy: { name: '', skill: 0, stamina: 0, staminaMax: 0 },
       pairedFight: false,
-      sideEnemy: { name: '', skill: 0, staminaMax: 0 },
+      sideEnemy: { name: '', skill: 0, stamina: 0, staminaMax: 0 },
       rolled: false,
       pendingLuckQueue: [],
       roundsThisBattle: 0,
@@ -72,13 +73,35 @@ function _enemyNameSafe(d) { return escapeHtml(_enemyName(d)); }
 function _sideEnemyNameSafe(d) { return escapeHtml(d.sideEnemy.name.trim() || t('battlesim.default_side_enemy')); }
 
 function _resetEncounterKnobs(d) {
+  d.combatRulesVersion = 2;
   d.player.attackModifier = 0;
   d.player.enemyWoundDamage = 2;
   d.player.winAfterHits = 0;
   d.player.enemyAutoWinFirstRound = false;
   d.player.hitsLandedThisFight = 0;
   d.pairedFight = false;
-  d.sideEnemy = { name: '', skill: 0, staminaMax: 0 };
+  d.sideEnemy = { name: '', skill: 0, stamina: 0, staminaMax: 0 };
+}
+
+function _hasSide(d) {
+  return d.combatRulesVersion === 2 && d.pairedFight && d.sideEnemy.stamina > 0;
+}
+
+function _finishOpponent(d) {
+  _appendLog(d, t('battlesim230.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyNameSafe(d) }));
+  if (_hasSide(d)) {
+    [d.enemy, d.sideEnemy] = [d.sideEnemy, d.enemy];
+  } else {
+    _recordOutcome(d, 'win');
+  }
+}
+
+function _switchTarget() {
+  const d = _data();
+  if (!d || !_hasSide(d) || d.enemy.stamina <= 0 || d.player.stamina <= 0 || d.pendingLuckQueue.length) return;
+  [d.enemy, d.sideEnemy] = [d.sideEnemy, d.enemy];
+  saveState();
+  _renderAll();
 }
 
 // Uncapped (not trimmed to a rolling window) - the admin dashboard aggregates
@@ -112,14 +135,23 @@ function _runRound() {
   const override = isFirstRound ? _firstRoundOverride(d) : null;
 
   let playerWins = false, tie = false;
+  let sideWins = false;
   if (override === 'enemy') {
     playerWins = false;
   } else {
     const playerAS = _roll2d6() + d.player.skill + (d.player.attackModifier || 0);
     const enemyAS  = _roll2d6() + d.enemy.skill;
     _appendLog(d, t('battlesim230.log.round', { round: d.roundsThisBattle, playerAS, enemy: _enemyNameSafe(d), enemyAS }));
-    if (playerAS === enemyAS) tie = true;
-    else playerWins = playerAS > enemyAS;
+    if (_hasSide(d)) {
+      const sideAS = _roll2d6() + d.sideEnemy.skill;
+      _appendLog(d, t('battlesim230.log.shared_round', { enemy: _sideEnemyNameSafe(d), playerAS, enemyAS: sideAS }));
+      playerWins = playerAS > enemyAS && playerAS > sideAS;
+      sideWins = sideAS > playerAS && sideAS > enemyAS;
+      tie = !playerWins && !sideWins && !(enemyAS > playerAS && enemyAS > sideAS);
+    } else {
+      if (playerAS === enemyAS) tie = true;
+      else playerWins = playerAS > enemyAS;
+    }
   }
 
   if (tie) {
@@ -134,13 +166,14 @@ function _runRound() {
     }
     if (d.enemy.stamina > 0) d.pendingLuckQueue.push({ kind: 'player-hit' });
   } else {
-    d.player.stamina = Math.max(0, d.player.stamina - woundDmg);
-    _appendLog(d, t('battlesim230.log.enemy_wounds', { enemy: _enemyNameSafe(d), n: woundDmg, stamina: d.player.stamina, staminaMax: d.player.staminaInitial }));
-    if (d.player.stamina > 0) d.pendingLuckQueue.push({ kind: 'enemy-hit' });
+    const damage = sideWins ? SIDE_WOUND_DMG : woundDmg;
+    d.player.stamina = Math.max(0, d.player.stamina - damage);
+    _appendLog(d, t('battlesim230.log.enemy_wounds', { enemy: sideWins ? _sideEnemyNameSafe(d) : _enemyNameSafe(d), n: damage, stamina: d.player.stamina, staminaMax: d.player.staminaInitial }));
+    if (d.player.stamina > 0) d.pendingLuckQueue.push({ kind: sideWins ? 'side-hit' : 'enemy-hit' });
   }
 
-  // Side attackers roll independently and cannot be wounded.
-  if (d.pairedFight && d.sideEnemy.staminaMax > 0 && d.player.stamina > 0) {
+  // Retain the old rules for saved encounters until a new main enemy is selected.
+  if (d.combatRulesVersion !== 2 && d.pairedFight && d.sideEnemy.staminaMax > 0 && d.player.stamina > 0) {
     const sidePlayerAS = _roll2d6() + d.player.skill + (d.player.attackModifier || 0);
     const sideAS = _roll2d6() + d.sideEnemy.skill;
     _appendLog(d, t('battlesim230.log.side_round', { enemy: _sideEnemyNameSafe(d), playerAS: sidePlayerAS, enemyAS: sideAS }));
@@ -153,7 +186,13 @@ function _runRound() {
     }
   }
 
-  if (d.enemy.stamina <= 0) {
+  if (d.combatRulesVersion === 2 && d.player.stamina <= 0) {
+    _appendLog(d, t('battlesim230.log.fallen', { skull: SVG_SKULL }));
+    _recordOutcome(d, 'loss');
+    d.pendingLuckQueue = [];
+  } else if (d.enemy.stamina <= 0 && d.combatRulesVersion === 2) {
+    _finishOpponent(d);
+  } else if (d.enemy.stamina <= 0) {
     _appendLog(d, t('battlesim230.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyNameSafe(d) }));
     _recordOutcome(d, 'win');
   } else if (d.player.stamina <= 0) {
@@ -182,7 +221,7 @@ function _testLuck() {
       d.enemy.stamina = Math.min(d.enemy.staminaMax, d.enemy.stamina + 1);
       _appendLog(d, t('battlesim230.log.luck_player_hit_unlucky', { roll, enemy: _enemyNameSafe(d), stamina: d.enemy.stamina, staminaMax: d.enemy.staminaMax }));
     }
-    if (d.enemy.stamina <= 0) { _appendLog(d, t('battlesim230.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyNameSafe(d) })); _recordOutcome(d, 'win'); }
+    if (d.enemy.stamina <= 0) _finishOpponent(d);
   } else {
     const source = event.kind === 'side-hit' ? _sideEnemyNameSafe(d) : _enemyNameSafe(d);
     if (lucky) {
@@ -214,6 +253,7 @@ function _resetBattle() {
   const d = _data();
   if (!d) return;
   d.enemy.stamina = d.enemy.staminaMax;
+  if (d.combatRulesVersion === 2) d.sideEnemy.stamina = d.sideEnemy.staminaMax;
   d.player.stamina = d.player.staminaInitial;
   d.roundsThisBattle = 0;
   d.player.hitsLandedThisFight = 0;
@@ -327,6 +367,13 @@ function _renderInputs() {
   document.getElementById('sim230-side-pick').value = d.sideEnemy.name;
   document.getElementById('sim230-side-skill').value = d.sideEnemy.skill;
   document.getElementById('sim230-side-staminamax').value = d.sideEnemy.staminaMax;
+  const sourceRules = d.combatRulesVersion === 2;
+  document.getElementById('sim230-paired-label').textContent = t(sourceRules ? 'battlesim230.ui.paired_source' : 'battlesim230.ui.paired_toggle');
+  document.getElementById('sim230-side-stamina-row').style.display = sourceRules ? '' : 'none';
+  document.getElementById('sim230-side-stamina').value = d.sideEnemy.stamina || 0;
+  const targetBtn = document.getElementById('sim230-switch-target');
+  targetBtn.style.display = sourceRules ? '' : 'none';
+  targetBtn.disabled = !_hasSide(d) || d.enemy.stamina <= 0 || d.player.stamina <= 0 || !!d.pendingLuckQueue.length;
   document.getElementById('sim230-side-fields').style.display = d.pairedFight ? '' : 'none';
 
   const pendingEl = document.getElementById('sim230-luck-prompt');
@@ -501,7 +548,7 @@ export function initSim230() {
               <label class="inv-edit-check-label"><input type="checkbox" id="sim230-enemy-firstwin" class="inv-edit-check"> ${t('battlesim230.ui.enemy_firstwin_toggle')}</label>
             </div>
             <div class="inv-edit-row">
-              <label class="inv-edit-check-label"><input type="checkbox" id="sim230-paired" class="inv-edit-check"> ${t('battlesim230.ui.paired_toggle')}</label>
+              <label class="inv-edit-check-label"><input type="checkbox" id="sim230-paired" class="inv-edit-check"> <span id="sim230-paired-label">${t('battlesim230.ui.paired_toggle')}</span></label>
             </div>
             <div id="sim230-side-fields" style="display:none">
               <div class="inv-edit-row">
@@ -512,7 +559,9 @@ export function initSim230() {
                 </div>
               </div>
               ${_numField(t('battlesim230.ui.skill'), 'sim230-side-skill')}
+              <div id="sim230-side-stamina-row">${_numField(t('battlesim230.ui.stamina'), 'sim230-side-stamina')}</div>
               ${_numField(t('battlesim230.ui.stamina_max'), 'sim230-side-staminamax')}
+              <button id="sim230-switch-target" class="inv-add-btn" type="button">${t('battlesim230.btn.switch_target')}</button>
             </div>
           </div>
           <div id="sim230-status" class="bsim-status"></div>
@@ -560,6 +609,7 @@ export function initSim230() {
   });
 
   document.getElementById('sim230-round').addEventListener('click', _runRound);
+  document.getElementById('sim230-switch-target').addEventListener('click', _switchTarget);
   document.getElementById('sim230-reset').addEventListener('click', _resetBattle);
   document.getElementById('sim230-luck-yes').addEventListener('click', _testLuck);
   document.getElementById('sim230-luck-no').addEventListener('click', _skipLuck);
@@ -625,6 +675,7 @@ export function initSim230() {
     'sim230-enemy-wounddmg':       ['player', 'enemyWoundDamage'],
     'sim230-enemy-winhits':        ['player', 'winAfterHits'],
     'sim230-side-skill':        ['sideEnemy', 'skill'],
+    'sim230-side-stamina':      ['sideEnemy', 'stamina'],
     'sim230-side-staminamax':   ['sideEnemy', 'staminaMax'],
   };
   function _applyField(id, val) {
@@ -639,11 +690,13 @@ export function initSim230() {
     if (id === 'sim230-player-stamina') val = Math.min(val, d.player.staminaInitial);
     if (id === 'sim230-player-luck') val = Math.min(val, d.player.luckInitial);
     if (id === 'sim230-enemy-stamina') val = Math.min(val, d.enemy.staminaMax);
+    if (id === 'sim230-side-stamina') val = Math.min(val, d.sideEnemy.staminaMax);
     d[map[0]][map[1]] = val;
     if (id === 'sim230-player-skillmax') d.player.skill = Math.min(d.player.skill, val);
     if (id === 'sim230-player-staminamax') d.player.stamina = Math.min(d.player.stamina, val);
     if (id === 'sim230-player-luckmax') d.player.luck = Math.min(d.player.luck, val);
     if (id === 'sim230-enemy-staminamax') d.enemy.stamina = Math.min(d.enemy.stamina, val);
+    if (id === 'sim230-side-staminamax' && d.combatRulesVersion === 2) d.sideEnemy.stamina = Math.min(d.sideEnemy.stamina, val);
     saveState();
     _renderInputs();
   }
@@ -684,6 +737,7 @@ export function initSim230() {
     d.sideEnemy.name = enemy.name;
     if (enemy.attack != null) d.sideEnemy.skill = enemy.attack;
     if (enemy.hp != null)     d.sideEnemy.staminaMax = enemy.hp;
+    if (enemy.hp != null && d.combatRulesVersion === 2) d.sideEnemy.stamina = enemy.hp;
     saveState();
     _renderAll();
   });
