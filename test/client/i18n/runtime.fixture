@@ -5,7 +5,7 @@ import { createHash } from 'node:crypto';
 import { createContext, SourceTextModule } from 'node:vm';
 
 const root = process.argv[1];
-const baseline = '40551d981101f74ecb41d3f122333dff4df98ecd82171bcb2eeab738f4e06f83';
+const baseline = '49032e6882df0b529330ab3361c6f1c842e90c644cd812f3157153ebcc6cd8b1';
 const hash = entries => createHash('sha256').update(JSON.stringify(entries)).digest('hex');
 const sorted = table => Object.keys(table).sort().map(key => [key, table[key]]);
 async function environment(language) {
@@ -40,7 +40,7 @@ async function environment(language) {
 }
 const en = await environment('en');
 assert.deepEqual(Object.keys(en.api).sort(), ['applyTranslations', 'setTranslationOverride', 't']);
-assert.equal(Object.keys(en.table).length, 665, 'only core and shared simulator strings are eager');
+assert.equal(Object.keys(en.table).length, 686, 'only core and shared simulator strings are eager');
 assert.ok([...en.modules.keys()].every(path => !/battlesim\d+\.js$/.test(path)), 'startup loads no per-simulator tables');
 assert.equal(en.api.t('battlesim214.status.fallen'), 'battlesim214.status.fallen', 'simulator strings start unloaded');
 assert.deepEqual(en.reads, ['gamebook_lang'], 'language read once through the shared runtime');
@@ -54,7 +54,7 @@ function walk(dir) {
   }
 }
 walk(resolve(root, 'i18n/en'));
-assert.equal(paths.length, 159, 'feature/shared tables and one table for each of 148 simulators');
+assert.equal(paths.length, 166, 'feature/shared tables and one table for each of 155 simulators');
 const lazy = await en.load('i18n/battlesim.js');
 const simulatorIds = [];
 const keys = new Set();
@@ -83,7 +83,7 @@ for (const path of paths) {
   }
 }
 assert.equal(keys.size, Object.keys(en.table).length, 'aggregator includes every table exactly once');
-assert.equal(keys.size, 7572);
+assert.equal(keys.size, 7862);
 const added230 = {
   'battlesim230.log.shared_round': '{enemy}: {enemyAS}, against your same Attack Strength of {playerAS}. Only the highest lands a blow.',
   'battlesim230.ui.paired_source': 'Fight two opponents together (only the highest lands a blow)',

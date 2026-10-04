@@ -4,4 +4,8 @@ export default {
     'battlesim.title': 'Simulator',
     'battlesim.default_enemy': 'the enemy',
     'battlesim.default_side_enemy': 'the second attacker',
+    'battlesim.cretan.stage_healthy': 'Healthy',
+    'battlesim.cretan.stage_wounded': 'Wounded',
+    'battlesim.cretan.stage_serious': 'Seriously Wounded',
+    'battlesim.cretan.stage_dead': 'Dead',
 };
