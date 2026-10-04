@@ -145,7 +145,7 @@ Lists all series across all users. Columns: Name, Creator, Books (count), Public
 Lists all anthology container books (`is_container = 1`) across all users. Columns: Name, Creator, Books (child count), Public, Created, Description, Actions. Paginated at 50 rows/page. Uses `GET /api/admin/anthologies` (`db.getAllAnthologiesAdmin()`), a dedicated query separate from the Books tab's `adminGetBooks()`. The search box filters by anthology name or creator username live as you type through the same `storeData`/`getFiltered` pipeline as Series.
 
 - **Edit** - opens the shared book/anthology dialog directly from the table, including cover, PDF, metadata, and series membership. The container flag and existing associations are populated before editing.
-- **Delete** - removes the container row. Children are **not** cascade-deleted; the foreign key (`parent_book_id → books ON DELETE SET NULL`) automatically orphans them (`parent_book_id = NULL`) rather than deleting them. Blocked with the same `has_readers` `409` response as a normal book delete if any `user_books` rows exist for the container itself. Reuses the existing `DELETE /api/admin/books/:id` endpoint - no anthology-specific delete route was needed.
+- **Delete** - removes the container row. Children are **not** cascade-deleted; the foreign key (`parent_book_id → books ON DELETE SET NULL`) automatically orphans them (`parent_book_id = NULL`) rather than deleting them. Blocked with the same `has_readers` `409` response as a normal book delete if any `user_books` rows exist for the container itself. Reuses the existing `DELETE /api/admin/books/:id` endpoint.
 
 ### Open world series
 
@@ -180,7 +180,7 @@ Shows all user feedback threads. Unread threads (new user messages) are highligh
 
 Feedback also appears in **koldKat's inbox** in the main app: koldKat's inbox loads all threads (not just his own), with `admin_unread` mapped to `user_unread` so the inbox badge lights up for new submissions. Replying from koldKat's inbox sends as 'admin' and triggers an email if the thread has an email address. Threads with email addresses can also be handled from this tab.
 
-Users can attach files to their initial feedback submission and to inbox replies. Attached images appear inline in the message; other files appear as download links - the admin feedback tab renders them the same way (`fmtAttachments()` in the panel's inline script, mirroring `community/inbox.js`'s `_renderAttachments`). `GET /api/admin/feedback` already returned an `attachments` array per message via `db.getAllThreads()`/`_attachMessages()` - the tab just wasn't reading it before. The admin reply (`POST /api/admin/feedback/:id/reply`) does not support attachments; use the inbox for attachment-enabled replies.
+Users can attach files to their initial feedback submission and to inbox replies. Attached images appear inline in the message; other files appear as download links - the admin feedback tab renders them the same way (`fmtAttachments()` in the panel's inline script, mirroring `community/inbox.js`'s `_renderAttachments`). The admin reply (`POST /api/admin/feedback/:id/reply`) does not support attachments; use the inbox for attachment-enabled replies.
 
 - **Mark as read** - clears the unread highlight for that thread
 - **Reply** - appends an admin message; if SMTP is active, also emails the user
@@ -387,7 +387,7 @@ PDF upload/delete use `POST /api/books/:id/pdf` and `DELETE /api/books/:id/pdf`.
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | `/api/admin/anthologies` | All anthology containers (`is_container = 1`) with creator username and child-book count: `[{id, name, description, is_public, created_at, created_by_username, child_count}]` (`db.getAllAnthologiesAdmin()`) |
-| DELETE | `/api/admin/books/:id` | Same delete route as regular books - reused rather than duplicated. Children are orphaned (`parent_book_id = NULL`) via foreign key, not cascade-deleted. |
+| DELETE | `/api/admin/books/:id` | Same delete route as regular books. Children are orphaned (`parent_book_id = NULL`) via foreign key, not cascade-deleted. |
 
 ### Series
 
