@@ -299,16 +299,23 @@ const _awardXpTx = db.transaction((userId, event, ref, amount) => {
   const carry       = before?.xp_boost_carry ?? 0;
   const coinsSpent  = before?.coins_spent ?? 0;
   const bonusCoins  = before?.bonus_coins ?? 0;
-  // At the dynamic cap, freeze accrual: zero the amount so boosted=0 (no XP/coins/boosts/levelup),
-  // while the event insert + Lucky Coin roll below still fire.
-  const frozen      = _liveUserCount() <= computeLevel(beforeXp);
-  const baseAmount  = frozen ? 0 : Math.max(0, Number(amount) || 0);
+  // At the dynamic cap, XP buffers up to one below the next level and never crosses it: award plain
+  // XP (no boost/carry) clamped to the room remaining, so a later signup lifts the cap and the next
+  // XP tick levels up. The event insert + Lucky Coin roll below still fire regardless.
+  const level       = computeLevel(beforeXp);
+  const frozen      = _liveUserCount() <= level;
+  const baseAmount  = Math.max(0, Number(amount) || 0);
   const baseWhole   = Math.floor(baseAmount);
   const rawExtra    = baseAmount > 0 ? baseAmount * (boost / 1000) : 0;
   const totalExtra  = rawExtra + carry;
-  const extraWhole  = Math.floor(totalExtra);
-  const newCarry    = totalExtra - extraWhole;
-  const boosted     = baseWhole + extraWhole;
+  let   extraWhole  = Math.floor(totalExtra);
+  let   newCarry    = totalExtra - extraWhole;
+  let   boosted     = baseWhole + extraWhole;
+  if (frozen) {
+    boosted    = Math.min(baseWhole, Math.max(0, xpForLevel(level + 1) - 1 - beforeXp));
+    extraWhole = 0;
+    newCarry   = carry;
+  }
   const r = db.prepare(
     'INSERT OR IGNORE INTO xp_events (user_id, event, ref) VALUES (?, ?, ?)'
   ).run(userId, event, ref);
@@ -353,12 +360,19 @@ function awardXp(userId, event, ref, amountOverride = null) {
 function awardIdleHeartbeatXp(userId) {
   const base = getXpAmount('idle_heartbeat');
   const row  = db.prepare('SELECT xp, bonus_heartbeat_xp, heartbeat_carry, pending_bonus_gc, bonus_gc_chance_purchased FROM users WHERE id = ?').get(userId);
-  // At the dynamic cap, skip the XP event entirely (no carry/playtime pollution) but keep the
-  // Lucky Coin roll ticking via a direct _rollBonusGc call.
-  if (!isImpersonatingContext() && _liveUserCount() <= computeLevel(row?.xp || 0)) {
-    _rollBonusGc(userId, row?.xp || 0, row?.pending_bonus_gc, row?.bonus_gc_chance_purchased);
+  // At the dynamic cap, buffer idle XP toward the next level WITHOUT an idle_heartbeat event (so
+  // playtime coins/carry stay frozen and can't dump on unfreeze), clamped so it never crosses the
+  // level, and keep the Lucky Coin roll ticking.
+  const curXp    = row?.xp || 0;
+  const curLevel = computeLevel(curXp);
+  if (!isImpersonatingContext() && _liveUserCount() <= curLevel) {
+    const room       = Math.max(0, xpForLevel(curLevel + 1) - 1 - curXp);
+    const freeBoosts = Math.max(0, curLevel - 10);
+    const add        = Math.min(Math.floor(base + ((row?.bonus_heartbeat_xp ?? 0) + freeBoosts) * 0.1), room);
+    if (add > 0) db.prepare('UPDATE users SET xp = xp + ? WHERE id = ?').run(add, userId);
+    _rollBonusGc(userId, curXp, row?.pending_bonus_gc, row?.bonus_gc_chance_purchased);
     const pendingAfter = db.prepare('SELECT pending_bonus_gc FROM users WHERE id = ?').get(userId)?.pending_bonus_gc;
-    return { awarded: false, coinRolled: !row?.pending_bonus_gc && !!pendingAfter };
+    return { awarded: add > 0, coinRolled: !row?.pending_bonus_gc && !!pendingAfter };
   }
   const purchased  = row?.bonus_heartbeat_xp ?? 0;
   const freeBoosts = Math.max(0, computeLevel(row?.xp || 0) - 10);
