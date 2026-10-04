@@ -20,6 +20,7 @@ function _data() {
   if (!pt) return null;
   if (!pt.sim227) {
     pt.sim227 = {
+      combatRulesVersion: 2,
       player: {
         skill: 0, skillInitial: 0,
         stamina: 0, staminaInitial: 0,
@@ -80,6 +81,7 @@ function _effectiveSkill(d) {
 }
 
 function _resetEncounterKnobs(d) {
+  d.combatRulesVersion = 2;
   d.player.attackModifier = 0;
   d.player.enemyWoundDamage = 2;
   d.player.winAfterHits = 0;
@@ -108,6 +110,7 @@ function _runRound() {
   const d = _data();
   if (!d || _notReady(d) || d.player.stamina <= 0 || d.enemy.stamina <= 0 || d.pendingLuckQueue.length) return;
   d.roundsThisBattle++;
+  const sourceRules = d.combatRulesVersion === 2;
 
   const woundDmg = Math.max(1, d.player.enemyWoundDamage || 2);
   const floor    = _enemyFloor(d);
@@ -134,9 +137,9 @@ function _runRound() {
     if (d.player.stamina > 0) d.pendingLuckQueue.push({ kind: 'enemy-hit' });
   }
 
-  // Side attackers roll independently each round and cannot be wounded.
+  // The printed rules share playerAS; keep independent rolls for saved fights.
   if (d.pairedFight && d.sideEnemy.staminaMax > 0 && d.player.stamina > 0) {
-    const sidePlayerAS = _roll2d6() + _effectiveSkill(d) + (d.player.attackModifier || 0);
+    const sidePlayerAS = sourceRules ? playerAS : _roll2d6() + _effectiveSkill(d) + (d.player.attackModifier || 0);
     const sideAS = _roll2d6() + d.sideEnemy.skill;
     _appendLog(d, t('battlesim227.log.side_round', { enemy: _sideEnemyNameSafe(d), playerAS: sidePlayerAS, enemyAS: sideAS }));
     if (sideAS > sidePlayerAS) {
@@ -148,7 +151,7 @@ function _runRound() {
     }
   }
   if (d.pairedFight && d.tripleFight && d.sideEnemy2.staminaMax > 0 && d.player.stamina > 0) {
-    const side2PlayerAS = _roll2d6() + _effectiveSkill(d) + (d.player.attackModifier || 0);
+    const side2PlayerAS = sourceRules ? playerAS : _roll2d6() + _effectiveSkill(d) + (d.player.attackModifier || 0);
     const side2AS = _roll2d6() + d.sideEnemy2.skill;
     _appendLog(d, t('battlesim227.log.side_round', { enemy: _sideEnemy2NameSafe(d), playerAS: side2PlayerAS, enemyAS: side2AS }));
     if (side2AS > side2PlayerAS) {
@@ -160,7 +163,11 @@ function _runRound() {
     }
   }
 
-  if (d.enemy.stamina <= floor) {
+  if (sourceRules && d.player.stamina <= 0) {
+    _appendLog(d, t('battlesim227.log.fallen', { skull: SVG_SKULL }));
+    _recordOutcome(d, 'loss');
+    d.pendingLuckQueue = [];
+  } else if (d.enemy.stamina <= floor) {
     _appendLog(d, t('battlesim227.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyNameSafe(d) }));
     _recordOutcome(d, 'win');
   } else if (d.player.stamina <= 0) {

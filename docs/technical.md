@@ -238,12 +238,13 @@ gamebooks/
         battlesim740.js    Battle simulator for book 740, Майстори на меча: Предизвикателството - companion volume to 739 (same author/mechanics, different bracket of 4 playable fighters); same generic Проведи Схватка calculator, 8 scattered formal duel instances.
         battlesim219.js    Battle simulator for book 219, Masks of Mayhem - Fighting Fantasy SKILL/STAMINA/LUCK opposed-roll combat.
         battlesim220.js    Creature of Havoc: new encounters use enemy damage1 and instant kills on player attack doubles; simultaneous attackers share the player roll. Legacy saved fights retain their rules/settings; selecting a new enemy enables combatRulesVersion2 without changing character stats.
+        battlesim227.js    Battleblade Warrior: new encounters share one player attack roll across simultaneous opponents; fatal side attacks override victory. Legacy fights retain their rules until a new main enemy is selected. Roster STAMINA uses hp; mental combat and narrative-only effects remain manual.
         battlesim221.js    Battle simulator for book 221, Beneath Nightmare Castle - Fighting Fantasy SKILL/STAMINA/LUCK opposed-roll combat.
         battlesim222.js    Battle simulator for book 222, Crypt of the Sorcerer - Fighting Fantasy SKILL/STAMINA/LUCK opposed-roll combat.
         battlesim223.js    Battle simulator for book 223, Star Strider - Fighting Fantasy SKILL/STAMINA/LUCK opposed-roll combat.
         battlesim224.js    Battle simulator for book 224, Phantoms of Fear - Fighting Fantasy SKILL/STAMINA/LUCK opposed-roll combat.
         battlesim225.js    Battle simulator for book 225, Midnight Rogue - Fighting Fantasy SKILL/STAMINA/LUCK opposed-roll combat.
-        battlesim228.js    Battle simulator for book 228, Slaves of the Abyss - Fighting Fantasy SKILL/STAMINA/LUCK opposed-roll combat.
+        battlesim228.js    Slaves of the Abyss: simultaneous opponents roll independently; fatal side attacks override victory in new encounters. Legacy fights retain their rules until a new main enemy is selected. Sword killing blows and narrative effects remain manual.
         battlesim229.js    Battle simulator for book 229, Sky Lord - Fighting Fantasy SKILL/STAMINA/LUCK opposed-roll combat (sequential multi-enemy fights, no simultaneous side-attacker mechanic).
         battlesim230.js    Battle simulator for book 230, Stealer of Souls - Fighting Fantasy SKILL/STAMINA/LUCK opposed-roll combat (mixed sequential/simultaneous multi-enemy fights per source text).
         battlesim317.js    Battle simulator for book 317, The Battlepits of Krarth (Blood Sword 1) - Fighting Prowess/Endurance Attack Strength combat.

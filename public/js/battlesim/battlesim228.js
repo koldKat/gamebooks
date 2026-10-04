@@ -1,4 +1,4 @@
-// Battle Simulator (Slaves of the Abyss, book 228, Fighting Fantasy 27 by Steve Jackson)
+// Battle Simulator (Slaves of the Abyss, book 228, Fighting Fantasy 32 by Paul Mason and Steve Williams)
 // Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
 // Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
 // Sword double-six killing blows remain manual.
@@ -22,6 +22,7 @@ function _data() {
   if (!pt) return null;
   if (!pt.sim228) {
     pt.sim228 = {
+      combatRulesVersion: 2,
       player: {
         skill: 0, skillInitial: 0,
         stamina: 0, staminaInitial: 0,
@@ -77,6 +78,7 @@ function _sideEnemyNameSafe(d, idx) { return escapeHtml((d.sideEnemies[idx] && d
 function _enemyDefeated(d) { return d.enemy.staminaMax > 0 && d.enemy.stamina <= (d.player.enemyDefeatThreshold || 0); }
 
 function _resetEncounterKnobs(d) {
+  d.combatRulesVersion = 2;
   d.player.attackModifier = 0;
   d.player.enemyWoundDamage = 2;
   d.player.playerWoundDamage = 2;
@@ -130,7 +132,7 @@ function _runRound() {
     if (d.player.stamina > 0) d.pendingLuckQueue.push({ kind: 'enemy-hit' });
   }
 
-  // The unchosen Orc rolls independently and cannot be wounded back.
+  // The unchosen opponent rolls independently and cannot be wounded back.
   for (let i = 0; i < Math.min(d.extraAttackers, MAX_EXTRA_ATTACKERS) && d.player.stamina > 0; i++) {
     const side = d.sideEnemies[i];
     if (!side || side.staminaMax <= 0) continue;
@@ -146,7 +148,11 @@ function _runRound() {
     }
   }
 
-  if (_enemyDefeated(d)) {
+  if (d.combatRulesVersion >= 2 && d.player.stamina <= 0) {
+    _appendLog(d, t('battlesim228.log.fallen', { skull: SVG_SKULL }));
+    _recordOutcome(d, 'loss');
+    d.pendingLuckQueue = [];
+  } else if (_enemyDefeated(d)) {
     _appendLog(d, t('battlesim228.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyNameSafe(d) }));
     _recordOutcome(d, 'win');
   } else if (d.player.stamina <= 0) {
