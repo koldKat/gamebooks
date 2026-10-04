@@ -74,7 +74,7 @@ function getAdminGcSupply(appBirthAt) {
   const series      = db.prepare('SELECT COUNT(*) AS n FROM series').get().n;
   const anthologies = db.prepare("SELECT COUNT(*) AS n FROM books WHERE is_demo=0 AND is_container=1 AND parent_book_id IS NULL").get().n;
   const visitAlls         = db.prepare("SELECT COUNT(*) AS n FROM xp_events WHERE event='visit_all'").get().n;
-  const levelUps          = db.prepare("SELECT COALESCE(SUM(MIN(CAST((-1 + SQRT(1 + 8.0 * xp / 1000)) / 2 AS INTEGER), 100)), 0) AS n FROM users WHERE xp > 0").get().n;
+  const levelUps          = db.prepare("SELECT COALESCE(SUM(CAST((-1 + SQRT(1 + 8.0 * xp / 1000)) / 2 AS INTEGER)), 0) AS n FROM users WHERE xp > 0").get().n;
   const authors           = db.prepare("SELECT COUNT(DISTINCT authors) AS n FROM books WHERE is_demo = 0 AND authors IS NOT NULL AND authors != ''").get().n;
   const pdfs              = db.prepare("SELECT COUNT(*) AS n FROM books WHERE is_demo = 0 AND pdf_path IS NOT NULL").get().n;
   const days              = Math.floor((Math.floor(Date.now() / 1000) - appBirthAt) / 86400);

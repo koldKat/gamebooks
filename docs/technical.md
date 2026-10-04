@@ -1215,13 +1215,13 @@ Users earn XP through gameplay activity. XP is stored incrementally in `users.xp
 **Level formula**
 ```
 xpForLevel(n)  = 1000 × n × (n+1) / 2
-computeLevel(xp) = min(floor((-1 + sqrt(1 + 8·xp/1000)) / 2), 100)
+computeLevel(xp) = floor((-1 + sqrt(1 + 8·xp/1000)) / 2)
 ```
-Level 1 = 1,000 XP · Level 2 = 3,000 · Level 10 = 55,000 · Level 100 = 5,050,000 (cap)
+Level 1 = 1,000 XP · Level 2 = 3,000 · Level 10 = 55,000 · Level 100 = 5,050,000. `computeLevel` is uncapped; it returns the raw quadratic level.
 
 `server/forum.js` keeps its own copy of `computeLevel()` (for the forum's user-panel level badge, since it's a separate SSR page with no access to `server/db.js`) - it must match the canonical version's `if (xp <= 0) return 0` guard, since nothing in the schema prevents `users.xp` from going negative (no CHECK constraint, and XP revocation is a real mechanism).
 
-**Dynamic level cap (= live registered user count):** the real per-player ceiling is not the fixed 100 in `computeLevel` - it is the current registered user count (`_liveUserCount()` in `xp.js`, a `COUNT(*) FROM users` cached for 30s to keep it off the hot path). It is an XP-accrual gate, never a level computation: a player accrues XP freely while `liveUserCount > their current level`; once `liveUserCount <= computeLevel(xp)` they are **capped** and XP buffers up to one below the next level's threshold (`xpForLevel(level + 1) - 1`) and no further, so the level never crosses while capped. Coins still mint from the buffered XP; boosts, `xp_boost_carry`, level-ups and milestone/playtime coins do not advance. Because XP only ever increases and the buffer never reaches the threshold, **level is naturally capped and never drops**: a drop in user count (deletion/ban) cannot lower anyone's xp, so a capped player stays at their peak level until signups push the count back above it, at which point the next XP tick crosses the buffered threshold and they level up. The cap floats up as the community grows. `computeLevel`'s fixed `min(..., 100)` is a vestigial ceiling below the user-count cap that only re-binds if the community exceeds 100 users.
+**Dynamic level cap (= live registered user count):** the per-player ceiling is the current registered user count (`_liveUserCount()` in `xp.js`, a `COUNT(*) FROM users` cached for 30s to keep it off the hot path). It is an XP-accrual gate, never a level computation - `computeLevel` is uncapped: a player accrues XP freely while `liveUserCount > their current level`; once `liveUserCount <= computeLevel(xp)` they are **capped** and XP buffers up to one below the next level's threshold (`xpForLevel(level + 1) - 1`) and no further, so the level never crosses while capped. Coins still mint from the buffered XP; boosts, `xp_boost_carry`, level-ups and milestone/playtime coins do not advance. Because XP only ever increases and the buffer never reaches the threshold, **level is naturally capped and never drops**: a drop in user count (deletion/ban) cannot lower anyone's xp, so a capped player stays at their peak level until signups push the count back above it, at which point the next XP tick crosses the buffered threshold and they level up. The cap floats up as the community grows.
 
 **At the cap, XP buffers toward the next level and the Lucky Coin roll keeps ticking** (`_rollBonusGc`), via two paths because the two XP entry points differ:
 - **Action/discrete events** (`_awardXpTx`): the awarded amount is clamped to the room left below the next level (`min(baseWhole, xpForLevel(level + 1) - 1 - beforeXp)`, with no boost or carry credit). The `INSERT OR IGNORE INTO xp_events` still fires and `_rollBonusGc` is gated on *that insert's* `r.changes > 0`, so the lucky roll fires at the capped level's chance and coins mint as the buffered xp rises. When the buffer is full the clamp is 0 and the `boosted > 0` block (xp add, boost carry, level-up, milestone coins, `_appXpHook` floatie) is skipped.
@@ -1266,6 +1266,8 @@ appLevel = floor((-1 + sqrt(1 + 8 × totalXp / (number_of_users × 1000))) / 2)
 | 23 | Surveyor | 49 | Grand Surveyor | 74 | Vanquisher | 99 | Timeless |
 | 24 | Discoverer | 50 | Master Mapper | 75 | Undefeated | 100 | Godwalker |
 | 25 | Frontiersman | | | | | | |
+
+Levels 101-120 continue the ladder with ascended titles: 101 Archon, 102 Radiant, 103 Celestial, 104 Empyrean, 105 Astral, 106 Starforger, 107 Voidwalker, 108 Aeon, 109 Demiurge, 110 Worldshaper, 111 Realmbinder, 112 Ineffable, 113 Boundless, 114 Deathless, 115 Primordial, 116 Omniscient, 117 Omnipotent, 118 Apotheosis, 119 Absolute, 120 Infinite. Past level 120 the title prestiges: it stays the top title (`Infinite`) with an incrementing Roman numeral - level 121 is "Infinite II", 122 "Infinite III", and so on (`getTitleForLevel` derives the base title and tier from `TITLES`, appending `toRoman(level - 120 + 1)`).
 
 **XP events** (admin reference - not shown to users)
 

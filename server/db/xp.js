@@ -186,14 +186,32 @@ const TITLES = [
   'Eternal',          //  98
   'Timeless',         //  99
   'Godwalker',        // 100
+  'Archon',           // 101
+  'Radiant',          // 102
+  'Celestial',        // 103
+  'Empyrean',         // 104
+  'Astral',           // 105
+  'Starforger',       // 106
+  'Voidwalker',       // 107
+  'Aeon',             // 108
+  'Demiurge',         // 109
+  'Worldshaper',      // 110
+  'Realmbinder',      // 111
+  'Ineffable',        // 112
+  'Boundless',        // 113
+  'Deathless',        // 114
+  'Primordial',       // 115
+  'Omniscient',       // 116
+  'Omnipotent',       // 117
+  'Apotheosis',       // 118
+  'Absolute',         // 119
+  'Infinite',         // 120
 ];
 
 function computeLevel(xp) {
   if (xp <= 0) return 0;
-  const n = Math.floor((-1 + Math.sqrt(1 + 8 * xp / 1000)) / 2);
-  // Real cap is now the XP-accrual gate at live user count (see _liveUserCount / _awardXpTx);
-  // this fixed 100 is a vestigial ceiling that only re-binds if the community exceeds 100 users.
-  return Math.min(n, 100);
+  // Uncapped; the only ceiling is the live-user-count XP-accrual gate in _awardXpTx.
+  return Math.floor((-1 + Math.sqrt(1 + 8 * xp / 1000)) / 2);
 }
 
 // Dynamic level cap = live registered user count. Cached briefly to avoid a COUNT per XP event.
@@ -223,8 +241,18 @@ function coinBalance(row) {
     + (row?.bonus_coins || 0) - (row?.coins_spent || 0);
 }
 
+function toRoman(n) {
+  const map = [[1000,'M'],[900,'CM'],[500,'D'],[400,'CD'],[100,'C'],[90,'XC'],[50,'L'],[40,'XL'],[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']];
+  let r = '';
+  for (const [v, s] of map) while (n >= v) { r += s; n -= v; }
+  return r;
+}
+
 function getTitleForLevel(level) {
-  return TITLES[Math.min(Math.max(level, 0), 100)];
+  const lv = Math.max(level, 0);
+  const top = TITLES.length - 1;
+  if (lv <= top) return TITLES[lv];
+  return TITLES[top] + ' ' + toRoman(lv - top + 1);
 }
 
 const _insertNotif = db.prepare(

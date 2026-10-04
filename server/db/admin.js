@@ -856,7 +856,7 @@ function adminGetStats() {
 
   const feedbackUnread = db.prepare('SELECT COALESCE(SUM(admin_unread), 0) AS n FROM feedback WHERE deleted_by_admin = 0').get()?.n ?? 0;
   // Mirror coinsFromXp per user: floor((xp/1000) * (1 + (level + min(mint,level))*0.1%)) + bonus_coins.
-  const _lvl = 'MIN(CAST(floor((-1 + sqrt(1 + 8.0 * xp / 1000.0)) / 2) AS INTEGER), 100)';
+  const _lvl = 'CAST(floor((-1 + sqrt(1 + 8.0 * xp / 1000.0)) / 2) AS INTEGER)';
   const coinRow = db.prepare(`SELECT SUM(
       CAST(floor((xp / 1000.0) * (1 + (${_lvl} + MIN(bonus_gc_mint_purchased, ${_lvl})) * 0.001)) AS INTEGER)
       + bonus_coins) AS earned,

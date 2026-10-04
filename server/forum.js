@@ -51,7 +51,7 @@ function renderAttachments(list) {
 }
 function computeLevel(xp) {
   if ((xp || 0) <= 0) return 0;
-  return Math.min(Math.floor((-1 + Math.sqrt(1 + 8 * xp / 1000)) / 2), 100);
+  return Math.floor((-1 + Math.sqrt(1 + 8 * xp / 1000)) / 2);
 }
 function userPanel(u) {
   const name    = u.username || '[deleted]';
