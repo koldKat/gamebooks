@@ -12,7 +12,7 @@ test('core relocation preserves implementations without root wrappers or duplica
     state: 'bdbfa3b4f0481f4ab7d0bbc80bcd82f35023b94f023b32378b8e66802bbaa39e',
     constants: 'b67245d28638c7d42c976068c7bc86ac822fff89d47c537d8fd9672ff19826a9',
     sort: 'a37194516dcc6faf776288906e52f3b9e8dc8d30a81df7158108d8b0e3742eb6',
-    util: 'bf2c4f2663294ce6cfba6305a8def10d7d301ef1bc1c0bf22453bf487fbb544d',
+    util: 'c1075b019b86fcc7a618892fa973b69222b60800890f3feaddbee1559cf18f35',
   };
   for (const [name, digest] of Object.entries(digests)) {
     assert.equal(existsSync(new URL(name + '.js', dir)), false);

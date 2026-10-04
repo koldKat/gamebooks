@@ -8,12 +8,12 @@ const { createReadingAccess } = require('../server/db/reading-access');
 function fixture(policy) {
   const db = new Database(':memory:');
   db.pragma('foreign_keys = ON');
-  db.exec(`CREATE TABLE users (id INTEGER PRIMARY KEY, xp INTEGER, bonus_coins INTEGER, coins_spent INTEGER);
+  db.exec(`CREATE TABLE users (id INTEGER PRIMARY KEY, xp INTEGER, bonus_coins INTEGER, coins_spent INTEGER, bonus_gc_mint_purchased INTEGER NOT NULL DEFAULT 0);
     CREATE TABLE books (id INTEGER PRIMARY KEY, name TEXT, total_sections INTEGER, has_live_reading INTEGER,
       is_demo INTEGER DEFAULT 0, is_public INTEGER DEFAULT 1, created_by INTEGER);
     CREATE TABLE user_books (user_id INTEGER, book_id INTEGER, state_data TEXT);
     CREATE TABLE book_frontmatter (book_id INTEGER PRIMARY KEY, intro_text TEXT, rules_text TEXT);
-    INSERT INTO users VALUES (1, 5000, 0, 0), (2, 0, 0, 0);
+    INSERT INTO users (id, xp, bonus_coins, coins_spent) VALUES (1, 5000, 0, 0), (2, 0, 0, 0);
     INSERT INTO books (id, name, total_sections, has_live_reading) VALUES
       (263, 'Trial', 400, 1), (202, 'Other', 400, 1), (999, 'Free', 99, 1);
     INSERT INTO book_frontmatter VALUES (263, 'Intro <script>', 'Rules');
