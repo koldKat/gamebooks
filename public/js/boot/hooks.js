@@ -183,6 +183,7 @@ export function initFeatureHooks() {
     openEditStash:                (id)   => _openEditStash(id),
     scheduleRewardProfileRefresh: _scheduleRewardProfileRefresh,
     getIsAdmin:                   () => bootState._isAdmin,
+    getHasPdfAccess:              () => bootState._hasPdfAccess,
     getDemoBooks,
     setDemoBooks,
     maxSectionInUse,
