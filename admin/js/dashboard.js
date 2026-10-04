@@ -18,7 +18,8 @@ function applyStats(d) {
   document.getElementById('s-books').textContent       = fmtN(d.books);
   document.getElementById('s-anthologies').textContent = fmtN(d.anthologies);
   document.getElementById('s-series').textContent      = fmtN(d.series);
-  document.getElementById('s-pdfs').textContent        = `${fmtN(d.pdfCount)} / ${fmtN(d.epubCount)}`;
+  document.getElementById('s-pdfs').textContent        = fmtN(d.pdfCount);
+  document.getElementById('s-epubs').textContent       = fmtN(d.epubCount);
   document.getElementById('s-sessions').textContent   = fmtN(d.sessions);
   document.getElementById('s-mapped').innerHTML       = withTotal(d.mappedSections);
   document.getElementById('s-discovered').innerHTML   = withTotal(d.discoveredSections);
