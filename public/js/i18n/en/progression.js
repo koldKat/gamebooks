@@ -19,6 +19,7 @@ export default {
     'shop.item.gc_mint.label':        'Coin Mint',
     'shop.item.gc_mint.desc':         '+0.1% gold coins minted from XP, forever (cap: {cap}% at your lvl)',
     'shop.item.gc_mint.total':        'Current: {total}% coin mint ({base} base + {bought} bought)',
+    'shop.item.gc_mint.effect':       '1 GC per ~{xpPerCoin} XP',
     'bonus_gc.tooltip_empty': 'No lucky coin waiting',
     'bonus_gc.tooltip_empty_pct': 'No lucky coin waiting (current chance: {pct}% per XP event, {claimed} claimed)',
     'bonus_gc.tooltip_ready': 'A lucky gold coin is waiting - click to claim!',

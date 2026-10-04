@@ -85,6 +85,7 @@
 .shop-item-label { font-size: 0.88rem; font-weight: 600; color: #f3f4f6; }
 .shop-item-desc  { font-size: 0.78rem; color: #6b7280; margin-top: 0.15rem; }
 .shop-item-owned { font-size: 0.75rem; color: #86efac; margin-top: 0.2rem; }
+.shop-item-effect { color: #f5a623; font-weight: 600; }
 .shop-item-buy   { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; }
 .shop-item-cost  { font-size: 0.75rem; font-weight: 700; color: #86efac; }
 .shop-buy-btn {

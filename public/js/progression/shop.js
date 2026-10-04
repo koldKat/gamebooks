@@ -56,6 +56,7 @@ const SHOP_ITEMS = [
     desc:      () => { const cap = _shopData?.level || 0; return t('shop.item.gc_mint.desc', { cap: (cap * 0.1).toFixed(1) }); },
     statKey:   'bonusGcMintPurchased',
     totalLabel: d => t('shop.item.gc_mint.total', { total: (((d.level || 0) + (d.bonusGcMintPurchased || 0)) * 0.1).toFixed(1), base: ((d.level || 0) * 0.1).toFixed(1), bought: ((d.bonusGcMintPurchased || 0) * 0.1).toFixed(1) }),
+    effect:    d => { const pts = (d.level || 0) + (d.bonusGcMintPurchased || 0); return t('shop.item.gc_mint.effect', { xpPerCoin: Math.round(1000 / (1 + pts * 0.001)).toLocaleString() }); },
     atCap:     d => (d.bonusGcMintPurchased || 0) >= (d.level || 0),
   },
   {
@@ -191,7 +192,7 @@ function renderShopItems() {
       <div class="shop-item-info">
         <div class="shop-item-label">${escapeHtml(item.label())}</div>
         <div class="shop-item-desc">${escapeHtml(typeof item.desc === 'function' ? item.desc() : item.desc)}</div>
-        <div class="shop-item-owned">${escapeHtml(item.totalLabel(_shopData))}</div>
+        <div class="shop-item-owned">${escapeHtml(item.totalLabel(_shopData))}${item.effect ? ` <span class="shop-item-effect">${escapeHtml(item.effect(_shopData))}</span>` : ''}</div>
       </div>
       <div class="shop-item-buy">
         <div class="shop-item-cost">${COIN_SVG} ${cost}</div>
