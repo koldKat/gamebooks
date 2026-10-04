@@ -7,8 +7,8 @@ import { pauseCoversAutoRefresh, resumeCoversAutoRefresh } from '../covers.js';
 import { naturalCompare, matchesSearch } from '../core/sort.js';
 import { showAlert } from '../play.js';
 import {
-  _setModalUploadProgress, _setButtonsDisabled, _uploadPdfWithProgress,
-  _acceptPdfSelection, _setPdfInlineLabel, formatFileSize,
+  _setModalUploadProgress, _setButtonsDisabled, _uploadPdfWithProgress, _uploadEpubWithProgress,
+  _acceptPdfSelection, _setPdfInlineLabel, _acceptEpubSelection, _setEpubInlineLabel, formatFileSize,
   _populateSeriesSelect, _populateParentBookSelect,
   validateIsbn, validateIssn, validateAsin,
 } from '../edit-book.js';
@@ -24,7 +24,7 @@ export function setAddBookHooks(h) { _hooks = h || {}; }
 // ── Add Book modal ────────────────────────────────────────────────────────────
 
 let _cbAc   = null;
-let _cbCover = null, _cbPdf = null;
+let _cbCover = null, _cbPdf = null, _cbEpub = null;
 
 function _syncCbUi() {
   const hasParent = !!document.getElementById('cb-parent').value;
@@ -33,10 +33,11 @@ function _syncCbUi() {
   document.getElementById('cb-pages-col').style.display       = hasParent ? 'none' : '';
   document.getElementById('cb-authors-row').style.display     = '';
   document.getElementById('cb-pdf-row').style.display         = (_hooks.resolveIsAdmin?.() && !hasParent) ? '' : 'none';
+  document.getElementById('cb-epub-row').style.display        = (_hooks.resolveIsAdmin?.() && !hasParent) ? '' : 'none';
 }
 
 export function openAddBook() {
-  _cbCover = null; _cbPdf = null;
+  _cbCover = null; _cbPdf = null; _cbEpub = null;
   ['cb-name','cb-sections','cb-pages','cb-isbn','cb-asin','cb-issn','cb-authors','cb-series','cb-series-num','cb-order'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   document.getElementById('cb-description').value = '';
   document.getElementById('cb-public').checked = true;
@@ -46,8 +47,11 @@ export function openAddBook() {
   document.getElementById('cb-fields-mag').style.display = 'none';
   document.getElementById('cb-id-hint').textContent = '';
   document.getElementById('cb-pdf-name').textContent = '';
+  document.getElementById('cb-epub-name').textContent = '';
   _setModalUploadProgress('cb', null);
+  _setModalUploadProgress('cb', null, 'epub');
   document.getElementById('cb-pdf-row').style.display = _hooks.resolveIsAdmin?.() ? '' : 'none';
+  document.getElementById('cb-epub-row').style.display = _hooks.resolveIsAdmin?.() ? '' : 'none';
   const img = document.getElementById('cb-cover-img'); img.src = ''; img.style.display = 'none';
   document.getElementById('cb-cover-placeholder').style.display = 'block';
   _populateParentBookSelect('cb-parent');
@@ -68,10 +72,10 @@ export function _closeAddBook() {
 // ── Add Anthology modal ───────────────────────────────────────────────────────
 
 let _ccAc   = null;
-let _ccCover = null, _ccPdf = null;
+let _ccCover = null, _ccPdf = null, _ccEpub = null;
 
 export function openAddComp() {
-  _ccCover = null; _ccPdf = null;
+  _ccCover = null; _ccPdf = null; _ccEpub = null;
   ['cc-name','cc-isbn','cc-asin','cc-issn','cc-pages','cc-authors','cc-series','cc-series-num'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   document.getElementById('cc-description').value = '';
   document.getElementById('cc-public').checked = true;
@@ -81,8 +85,11 @@ export function openAddComp() {
   document.getElementById('cc-fields-mag').style.display = 'none';
   document.getElementById('cc-id-hint').textContent = '';
   document.getElementById('cc-pdf-name').textContent = '';
+  document.getElementById('cc-epub-name').textContent = '';
   _setModalUploadProgress('cc', null);
+  _setModalUploadProgress('cc', null, 'epub');
   document.getElementById('cc-pdf-row').style.display = _hooks.resolveIsAdmin?.() ? '' : 'none';
+  document.getElementById('cc-epub-row').style.display = _hooks.resolveIsAdmin?.() ? '' : 'none';
   const img = document.getElementById('cc-cover-img'); img.src = ''; img.style.display = 'none';
   document.getElementById('cc-cover-placeholder').style.display = 'block';
   _populateSeriesSelect('cc-series', null);
@@ -242,6 +249,13 @@ export function initAddBook(mousedownOnOverlayRef) {
     _cbPdf = file;
     _setPdfInlineLabel(document.getElementById('cb-pdf-name'), `${file.name} (${formatFileSize(file.size)})`);
   });
+  document.getElementById('cb-epub-btn').addEventListener('click', () => { document.getElementById('cb-epub-file').value = ''; document.getElementById('cb-epub-file').click(); });
+  document.getElementById('cb-epub-file').addEventListener('change', e => {
+    const file = e.target.files[0]; if (!file) return;
+    if (!_acceptEpubSelection(file, { inputId: 'cb-epub-file', labelId: 'cb-epub-name', errorId: 'cb-error' })) { _cbEpub = null; return; }
+    _cbEpub = file;
+    _setEpubInlineLabel(document.getElementById('cb-epub-name'), `${file.name} (${formatFileSize(file.size)})`);
+  });
   document.getElementById('cb-cancel').addEventListener('click', _closeAddBook);
   document.getElementById('cb-close').addEventListener('click', _closeAddBook);
   document.getElementById('add-book-overlay').addEventListener('click', e => {
@@ -300,6 +314,12 @@ export function initAddBook(mousedownOnOverlayRef) {
         catch (e) { resumeCoversAutoRefresh(); _closeAddBook(); await _refreshLibraryUi({ feed: true, covers: true }); showAlert(`${t('addbook.book_pdf_upload_failed')}${e?.message ? `\n\n${e.message}` : ''}`); return; }
         finally { _setButtonsDisabled(['cb-save', 'cb-cancel'], false); }
       }
+      if (_cbEpub) {
+        _setButtonsDisabled(['cb-save', 'cb-cancel'], true);
+        try { await _uploadEpubWithProgress(`/api/books/${book.id}/epub`, _cbEpub, 'cb'); _hooks.scheduleRewardProfileRefresh?.(); }
+        catch (e) { resumeCoversAutoRefresh(); _closeAddBook(); await _refreshLibraryUi({ feed: true, covers: true }); showAlert(`${t('editbook.epub_upload_failed')}${e?.message ? `\n\n${e.message}` : ''}`); return; }
+        finally { _setButtonsDisabled(['cb-save', 'cb-cancel'], false); }
+      }
       resumeCoversAutoRefresh();
       _closeAddBook(); await _refreshLibraryUi({ feed: true, covers: true });
     } catch (_) { resumeCoversAutoRefresh(); errEl.textContent = t('err.create_book'); }
@@ -328,6 +348,13 @@ export function initAddBook(mousedownOnOverlayRef) {
     if (!_acceptPdfSelection(file, { inputId: 'cc-pdf-file', labelId: 'cc-pdf-name', errorId: 'cc-error' })) { _ccPdf = null; return; }
     _ccPdf = file;
     _setPdfInlineLabel(document.getElementById('cc-pdf-name'), `${file.name} (${formatFileSize(file.size)})`);
+  });
+  document.getElementById('cc-epub-btn').addEventListener('click', () => { document.getElementById('cc-epub-file').value = ''; document.getElementById('cc-epub-file').click(); });
+  document.getElementById('cc-epub-file').addEventListener('change', e => {
+    const file = e.target.files[0]; if (!file) return;
+    if (!_acceptEpubSelection(file, { inputId: 'cc-epub-file', labelId: 'cc-epub-name', errorId: 'cc-error' })) { _ccEpub = null; return; }
+    _ccEpub = file;
+    _setEpubInlineLabel(document.getElementById('cc-epub-name'), `${file.name} (${formatFileSize(file.size)})`);
   });
   document.getElementById('cc-cancel').addEventListener('click', _closeAddComp);
   document.getElementById('cc-close').addEventListener('click', _closeAddComp);
@@ -380,6 +407,12 @@ export function initAddBook(mousedownOnOverlayRef) {
         _setButtonsDisabled(['cc-save', 'cc-cancel'], true);
         try { await _uploadPdfWithProgress(`/api/books/${book.id}/pdf`, _ccPdf, 'cc'); _hooks.scheduleRewardProfileRefresh?.(); }
         catch (e) { resumeCoversAutoRefresh(); _closeAddComp(); await _refreshLibraryUi({ feed: true, covers: true }); showAlert(`${t('addbook.anthology_pdf_upload_failed')}${e?.message ? `\n\n${e.message}` : ''}`); return; }
+        finally { _setButtonsDisabled(['cc-save', 'cc-cancel'], false); }
+      }
+      if (_ccEpub) {
+        _setButtonsDisabled(['cc-save', 'cc-cancel'], true);
+        try { await _uploadEpubWithProgress(`/api/books/${book.id}/epub`, _ccEpub, 'cc'); _hooks.scheduleRewardProfileRefresh?.(); }
+        catch (e) { resumeCoversAutoRefresh(); _closeAddComp(); await _refreshLibraryUi({ feed: true, covers: true }); showAlert(`${t('editbook.epub_upload_failed')}${e?.message ? `\n\n${e.message}` : ''}`); return; }
         finally { _setButtonsDisabled(['cc-save', 'cc-cancel'], false); }
       }
       resumeCoversAutoRefresh();
