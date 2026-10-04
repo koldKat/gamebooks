@@ -38,11 +38,12 @@ function _data() {
         skill: 0, skillInitial: 0,
         stamina: 0, staminaInitial: 0,
         luck: 0, luckInitial: 0,
-        provisionsLeft: MAX_PROVISIONS,
+        provisionsLeft: 0,
         weapon: 'sword', armour: 'none', armourHitsLeft: 0,
         hasSpear: false, spearLifeForce: 0, spearRolled: false,
       },
       enemy: { name: '', skill: 0, stamina: 0, staminaMax: 0 },
+      correctedCombatRules: true,
       groupFight: false,
       sideEnemies: [],
       disarmMode: false,
@@ -155,12 +156,15 @@ function _runRound() {
       if (d.enemy.stamina > 0) d.pendingLuckQueue.push({ kind: 'player-hit' });
     }
   } else {
-    let dmg = _absorbHit(d, w.normal, false, false);
+    const armour = d.player.armourHitsLeft > 0 ? ARMOURS[d.player.armour] : null;
+    const dmg = _absorbHit(d, d.correctedCombatRules ? 2 : w.normal, false, false);
     d.player.stamina = Math.max(0, d.player.stamina - dmg);
     if (d.voivodThrives && dmg > 0) d.enemy.stamina += dmg;
     _appendLog(d, t('battlesim240.log.enemy_wounds', { enemy: _enemyNameSafe(d), n: dmg, stamina: d.player.stamina, staminaMax: d.player.staminaInitial }));
     if (d.voivodThrives && dmg > 0) _appendLog(d, t('battlesim240.log.voivod_thrives', { enemy: _enemyNameSafe(d), n: dmg, stamina: d.enemy.stamina }));
-    if (d.player.stamina > 0 && dmg > 0) d.pendingLuckQueue.push({ kind: 'enemy-hit' });
+    if (d.player.stamina > 0 && dmg > 0) d.pendingLuckQueue.push(d.correctedCombatRules
+      ? { kind: 'enemy-hit', damage: dmg, luckyDamage: armour ? armour.lucky : 1, unluckyDamage: armour ? armour.unlucky : 3 }
+      : { kind: 'enemy-hit' });
   }
 
   // Side-enemy exchanges (group fights)
@@ -184,7 +188,12 @@ function _runRound() {
     }
   }
 
-  if (d.enemy.stamina <= 0) {
+  if (d.correctedCombatRules && d.player.stamina <= 0) {
+    d.pendingLuckQueue = [];
+    _appendLog(d, `${SVG_SKULL} ${t('battlesim240.log.fallen')}`);
+    _recordOutcome(d, 'loss');
+  } else if (d.enemy.stamina <= 0) {
+    if (d.correctedCombatRules) d.pendingLuckQueue = [];
     _appendLog(d, `${SVG_TROPHY} ${t('battlesim240.log.defeated', { enemy: _enemyNameSafe(d) })}`);
     _recordOutcome(d, 'win');
   } else if (d.player.stamina <= 0) {
@@ -213,8 +222,11 @@ function _testLuck() {
     if (d.enemy.stamina <= 0) { _appendLog(d, `${SVG_TROPHY} ${t('battlesim240.log.defeated', { enemy: _enemyNameSafe(d) })}`); _recordOutcome(d, 'win'); }
   } else {
     // Adjust incoming hits to 1/3 total STAMINA loss for lucky/unlucky results, without further armour reduction.
-    const before = d.player.stamina;
-    if (lucky) {
+    if (d.correctedCombatRules && event.damage !== undefined) {
+      const adjustment = event.damage - (lucky ? event.luckyDamage : event.unluckyDamage);
+      d.player.stamina = Math.max(0, Math.min(d.player.staminaInitial, d.player.stamina + adjustment));
+      if (d.voivodThrives) d.enemy.stamina = Math.max(0, d.enemy.stamina - adjustment);
+    } else if (lucky) {
       d.player.stamina = Math.min(d.player.staminaInitial, d.player.stamina + 1);
     } else {
       d.player.stamina = Math.max(0, d.player.stamina - 1);
@@ -542,6 +554,7 @@ function _setupEnemyAutocomplete() {
     if (!d || !enemy) return;
     input.value = enemy.name;
     d.enemy.name = enemy.name;
+    d.correctedCombatRules = true;
     if (enemy.attack != null) d.enemy.skill = enemy.attack;
     if (enemy.hp != null)     { d.enemy.stamina = enemy.hp; d.enemy.staminaMax = enemy.hp; }
     d.roundsThisBattle = 0;

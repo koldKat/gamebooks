@@ -34,7 +34,7 @@ export default {
     'battlesim239.ui.stamina_max':    'Max STAMINA',
     'battlesim239.ui.yourdmg':        'Your damage per hit',
     'battlesim239.ui.enemydmg':       'Enemy damage per hit',
-    'battlesim239.ui.second_toggle':  'Fighting two enemies at once (highest Attack Strength wins the round)',
+    'battlesim239.ui.second_toggle':  'Fighting two enemies at once',
     'battlesim239.ui.second_name':    'Second enemy',
     'battlesim239.ui.second_default': 'second enemy',
     'battlesim239.ui.second_target':  'You are attacking',

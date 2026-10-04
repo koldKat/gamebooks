@@ -28,6 +28,7 @@ function _data() {
       enemy: { name: '', skill: 0, stamina: 0, staminaMax: 0 },
       secondEnemy: { active: false, name: '', skill: 0, stamina: 0, staminaMax: 0, target: 'enemy' },
       rolled: false,
+      correctedCombatRules: true,
       pendingLuckQueue: [],
       roundsThisBattle: 0,
       log: [],
@@ -63,6 +64,8 @@ function _secondName(d) { return d.secondEnemy.name.trim() || t('battlesim239.ui
 function _secondNameSafe(d) { return escapeHtml(_secondName(d)); }
 
 function _resetEncounterKnobs(d) {
+  // Only new encounters opt in; saved-fight loading and resetting preserve their rules.
+  d.correctedCombatRules = true;
   d.player.attackModifier = 0;
   d.player.yourDamage = 2;
   d.player.enemyDamage = 2;
@@ -122,7 +125,7 @@ function _runRound() {
   _renderAll();
 }
 
-// For simultaneous pairs, the highest Attack Strength among all three fighters lands a hit.
+// New pairs compare each enemy with the player; saved fights retain legacy rules.
 function _runThreeWayRound(d) {
   const playerAS = _roll2d6() + d.player.skill + (d.player.attackModifier || 0);
   const enemy1AS = _roll2d6() + d.enemy.skill;
@@ -132,6 +135,26 @@ function _runThreeWayRound(d) {
     e1: _enemyNameSafe(d), e1AS: enemy1AS,
     e2: _secondNameSafe(d), e2AS: enemy2AS,
   }));
+
+  if (d.correctedCombatRules) {
+    const target = d.secondEnemy.target === 'second' ? d.secondEnemy : d.enemy;
+    const targetAS = target === d.enemy ? enemy1AS : enemy2AS;
+    const targetName = target === d.enemy ? _enemyNameSafe(d) : _secondNameSafe(d);
+    if (playerAS > targetAS) {
+      target.stamina = Math.max(0, target.stamina - d.player.yourDamage);
+      _appendLog(d, t('battlesim239.log.you_wound', { enemy: targetName, n: d.player.yourDamage, stamina: target.stamina, staminaMax: target.staminaMax }));
+      if (target.stamina > 0) d.pendingLuckQueue.push({ kind: 'player-hit', on: target === d.enemy ? 'enemy' : 'second' });
+    } else if (playerAS === targetAS) {
+      _appendLog(d, t('battlesim239.log.both_avoided'));
+    }
+    for (const [enemyAS, name] of [[enemy1AS, _enemyNameSafe(d)], [enemy2AS, _secondNameSafe(d)]]) {
+      if (enemyAS <= playerAS || d.player.stamina <= 0) continue;
+      d.player.stamina = Math.max(0, d.player.stamina - d.player.enemyDamage);
+      _appendLog(d, t('battlesim239.log.enemy_wounds', { enemy: name, n: d.player.enemyDamage, stamina: d.player.stamina, staminaMax: d.player.staminaInitial }));
+      if (d.player.stamina > 0) d.pendingLuckQueue.push({ kind: 'enemy-hit' });
+    }
+    return;
+  }
 
   if (playerAS >= enemy1AS && playerAS >= enemy2AS) {
     // Player ties count as hits against the chosen target.
@@ -155,9 +178,16 @@ function _runThreeWayRound(d) {
 }
 
 function _checkBattleEnd(d) {
+  if (d.correctedCombatRules && d.player.stamina <= 0) {
+    _appendLog(d, t('battlesim239.log.fallen', { skull: SVG_SKULL }));
+    _recordOutcome(d, 'loss');
+    d.pendingLuckQueue = [];
+    return;
+  }
   if (d.enemy.stamina <= 0 && (!d.secondEnemy.active || d.secondEnemy.stamina <= 0)) {
     _appendLog(d, t('battlesim239.log.defeated', { trophy: SVG_TROPHY, enemy: d.secondEnemy.active ? `${_enemyNameSafe(d)} & ${_secondNameSafe(d)}` : _enemyNameSafe(d) }));
     _recordOutcome(d, 'win');
+    if (d.correctedCombatRules) d.pendingLuckQueue = [];
   } else if (d.player.stamina <= 0) {
     _appendLog(d, t('battlesim239.log.fallen', { skull: SVG_SKULL }));
     _recordOutcome(d, 'loss');
@@ -177,7 +207,7 @@ function _testLuck() {
     const target = event.on === 'second' ? d.secondEnemy : d.enemy;
     const targetName = event.on === 'second' ? _secondNameSafe(d) : _enemyNameSafe(d);
     if (lucky) {
-      target.stamina = Math.max(0, target.stamina - 1);
+      target.stamina = Math.max(0, target.stamina - (d.correctedCombatRules ? 2 : 1));
       _appendLog(d, t('battlesim239.log.luck_player_hit_lucky', { roll, enemy: targetName, stamina: target.stamina, staminaMax: target.staminaMax }));
     } else {
       target.stamina = Math.min(target.staminaMax, target.stamina + 1);
@@ -191,7 +221,7 @@ function _testLuck() {
       d.player.stamina = Math.max(0, d.player.stamina - 1);
       _appendLog(d, t('battlesim239.log.luck_hit_unlucky', { roll, stamina: d.player.stamina, staminaMax: d.player.staminaInitial }));
     }
-    if (d.player.stamina <= 0) {
+    if (d.player.stamina <= 0 && !d.correctedCombatRules) {
       _appendLog(d, t('battlesim239.log.fallen', { skull: SVG_SKULL }));
       _recordOutcome(d, 'loss');
       d.pendingLuckQueue = [];
