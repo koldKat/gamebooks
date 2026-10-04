@@ -33,7 +33,7 @@ test('mobile keeps existing dependencies and imports only the shared reading mod
   const mobile = readFileSync(mobileUrl, 'utf8');
   // The access hook is exercised separately; shared reading stays desktop-independent.
   assert.equal(createHash('sha256').update(mobile.replace(/^import[\s\S]*?;$/gm, '')).digest('hex'),
-    '307f6c960984521b0fbbd90842e127b496738ea83ea67dde67a13ecbf5e37619');
+    '5ed27dd107542ddd48f9c2e6759a3a26572b91283cf79dc62707011c4b273f1d');
   const imports = [...mobile.matchAll(/^import[\s\S]*?from '([^']+)';$/gm)]
     .map(match => new URL(match[1], mobileUrl));
   const desktopImports = imports.filter(url => url.href.startsWith(dir.href));

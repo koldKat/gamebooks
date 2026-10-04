@@ -25,13 +25,13 @@ let _lastKnownXp     = null;
 let _xpFlushTimer    = null;
 let _xpToastPending  = 0;
 let _xpToastVisibleUntil = 0;
-export async function _seedXpBaseline() {
+async function _seedXpBaseline() {
   try {
     const res = await apiFetch('/api/profile');
     if (res.ok) _lastKnownXp = (await res.json()).xp ?? null;
   } catch (_) {}
 }
-export function _checkXpReward() {
+function _checkXpReward() {
   if (_lastKnownXp === null || _xpFlushTimer) return;
   _xpFlushTimer = setTimeout(async () => {
     _xpFlushTimer = null;
@@ -99,7 +99,7 @@ function _setPaneMode(mode) {
 }
 
 // Reveal and merge choices on arrival, preserving existing node metadata.
-export function _commitChoices(sec, choices) {
+function _commitChoices(sec, choices) {
   const deduped = [...new Set(choices)].sort((a, b) => {
     const av = isValidSecId(a), bv = isValidSecId(b);
     if (av && bv) {
@@ -123,7 +123,7 @@ export function _commitChoices(sec, choices) {
 }
 
 // Initialize desktop-compatible run fields; mobile does not instantiate starting-item templates.
-export function _startPlaythrough(startSec) {
+function _startPlaythrough(startSec) {
   state.playthroughs.push({
     path: [startSec], completed: false, result: null,
     undosUsed: 0, fastTravelsUsed: 0, startedAt: Date.now(),
@@ -137,7 +137,7 @@ export function _startPlaythrough(startSec) {
 }
 
 // Merge the live path into mVisited on every load, including navigation done on desktop.
-export function _ensureMVisited(pt) {
+function _ensureMVisited(pt) {
   if (!Array.isArray(pt.mVisited)) pt.mVisited = [];
   for (const sec of pt.path) if (!pt.mVisited.includes(sec)) pt.mVisited.push(sec);
   return pt.mVisited;
