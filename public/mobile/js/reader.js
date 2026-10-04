@@ -247,8 +247,9 @@ export async function renderReader(mount, book, onBack, { startAtOne = false, is
   document.getElementById('m-toggle-graph-btn').addEventListener('click', () => _setPaneMode(_paneMode === 'graph' ? 'both' : 'graph'));
   if (isAdmin) document.getElementById('m-mode-track-btn').addEventListener('click', async () => {
     ++_readerSession; ++_showToken;
+    await saveState();
     const { renderTrack } = await import('./track.js');
-    renderTrack(mount, book, onBack, { isAdmin: true });
+    renderTrack(mount, book, onBack, { isAdmin: true, keepState: true });
   });
   _setPaneMode('both');
 

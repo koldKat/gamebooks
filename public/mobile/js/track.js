@@ -18,7 +18,7 @@ function _escapeHtml(s) {
 
 let _session = 0;
 
-export async function renderTrack(mount, book, onBack, { isAdmin = false } = {}) {
+export async function renderTrack(mount, book, onBack, { isAdmin = false, keepState = false } = {}) {
   if (!isAdmin) return; // defence in depth: track mode is admin-only
   const session = ++_session;
 
@@ -39,6 +39,7 @@ export async function renderTrack(mount, book, onBack, { isAdmin = false } = {})
   if (book.hasLiveReading) {
     mount.querySelector('#m-mode-read-btn').addEventListener('click', async () => {
       ++_session;
+      await saveState();
       const { renderReader } = await import('./reader.js');
       renderReader(mount, book, onBack, { isAdmin: true });
     });
@@ -51,8 +52,12 @@ export async function renderTrack(mount, book, onBack, { isAdmin = false } = {})
     () => {},
   );
 
-  await loadState(book.id);
-  if (session !== _session) return;
+  // Coming from the reader the state is already loaded with the live run; reloading
+  // from the server would discard it and look like a fresh run, so keep it.
+  if (!keepState) {
+    await loadState(book.id);
+    if (session !== _session) return;
+  }
   _seedXpBaseline();
   _render();
 }
