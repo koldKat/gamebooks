@@ -87,7 +87,7 @@ Editing uses consistent modal dialogs for players, books, series, anthologies, i
 | **Edit** | Update username, author display name, password, email, public profile, and feed visibility in a dialog. Role toggles remain separate actions in the player detail view. |
 | **Author** | Toggle `is_author` flag and optionally set a display name |
 | **Contributor** | Toggle `is_contributor` flag |
-| **Grant/Revoke PDF Access** | Toggle `pdf_access` flag - allows the user to download book PDFs via `GET /books/:path`. Button shows "Grant PDF Access" when the user does not have access, "Revoke PDF Access" when they do. |
+| **Grant/Revoke Book Access** | Toggle `pdf_access` flag - allows the user to download a book's PDF and EPUB files via `GET /books/:path`. Button shows "Grant Book Access" when the user does not have access, "Revoke Book Access" when they do. |
 | **Impersonate** | Generate a one-time login URL to log in as the user without their password |
 | **Refund** | Refund a shop item: specify item key such as `xp_boost`, `heartbeat_xp`, `undo`, `fast_travel`, `gc_chance`, or `gc_mint`, and whether to refund all purchases or just the latest |
 | **Delete** | Permanently remove user and all their data (cascades). Not available for protected accounts. |
@@ -103,6 +103,7 @@ Clicking a book name opens the **book detail view** with three sections:
 - **Stats** - section counts, run totals, wins/losses, full playthroughs table
 - **Ratings** - all ratings with username, score, and delete button per rating
 - **PDF** - upload (max 256 MB, must start with `%PDF`); awards `pdf_available` XP to the uploader (or all library holders when uploaded from localhost) on **first upload only** - re-uploading to replace an existing PDF does not award XP again. Delete removes the file (XP not revoked). Existing PDF is shown as a `PDF (X MB)` link with size and a Remove button.
+- **EPUB** - upload (max 256 MB, must be a ZIP whose first bytes are `PK\x03\x04` and that contains `application/epub+zip` in its first 100 bytes); awards `epub_available` XP (150) on **first upload only**, independent of `pdf_available`. A book may have both a PDF and an EPUB at once. Delete removes the file (XP not revoked). Existing EPUB is shown as an `EPUB (X MB)` link with size and a Remove button.
 
 The **Edit** dialog, available from the Books table or book detail view, includes all metadata fields:
 
@@ -116,6 +117,7 @@ The **Edit** dialog, available from the Books table or book detail view, include
 - **Part of anthology** - dropdown of all container books (`is_container = 1`), populated from `GET /api/admin/anthologies`. Selecting a parent links this book as a child.
 - **Order** - integer sort order within the parent anthology.
 - **PDF upload/remove** - upload a PDF (max 256 MB); existing PDF shown as a `PDF (X MB)` link with size; XP only awarded on first upload per book.
+- **EPUB upload/remove** - upload an EPUB (max 256 MB); existing EPUB shown as an `EPUB (X MB)` link with size; `epub_available` XP only awarded on first upload per book.
 - **Cover upload/remove** - upload/replace/remove cover image.
 
 **Saving** sends a `PATCH /api/books/:id` from localhost, which bypasses the per-user creator check and minimum section count (admin can set sections to 1).
@@ -144,7 +146,7 @@ Lists all series across all users. Columns: Name, Creator, Books (count), Public
 
 Lists all anthology container books (`is_container = 1`) across all users. Columns: Name, Creator, Books (child count), Public, Created, Description, Actions. Paginated at 50 rows/page. Uses `GET /api/admin/anthologies` (`db.getAllAnthologiesAdmin()`), a dedicated query separate from the Books tab's `adminGetBooks()`. The search box filters by anthology name or creator username live as you type through the same `storeData`/`getFiltered` pipeline as Series.
 
-- **Edit** - opens the shared book/anthology dialog directly from the table, including cover, PDF, metadata, and series membership. The container flag and existing associations are populated before editing.
+- **Edit** - opens the shared book/anthology dialog directly from the table, including cover, PDF, EPUB, metadata, and series membership. The container flag and existing associations are populated before editing.
 - **Delete** - removes the container row. Children are **not** cascade-deleted; the foreign key (`parent_book_id → books ON DELETE SET NULL`) automatically orphans them (`parent_book_id = NULL`) rather than deleting them. Blocked with the same `has_readers` `409` response as a normal book delete if any `user_books` rows exist for the container itself. Reuses the existing `DELETE /api/admin/books/:id` endpoint.
 
 ### Open world series
@@ -365,7 +367,7 @@ All endpoints require a localhost connection. No auth token.
 | POST | `/api/admin/users/:id/contributor` | Set contributor flag: `{ isContributor: bool }` |
 | POST | `/api/admin/users/:id/impersonate` | Generate one-time impersonation URL: returns `{ url }` |
 | POST | `/api/admin/users/:id/refund` | Refund shop item: `{ item: string, all?: bool }` |
-| POST | `/api/admin/users/:id/pdf-access` | Toggle PDF access: `{ pdfAccess: bool }` → `{ ok: true }` |
+| POST | `/api/admin/users/:id/pdf-access` | Toggle Book Access (gates both PDF and EPUB downloads): `{ pdfAccess: bool }` → `{ ok: true }` |
 | DELETE | `/api/admin/users/:id` | Delete user and all data (403 on protected accounts) |
 
 ### Books
@@ -380,7 +382,7 @@ All endpoints require a localhost connection. No auth token.
 | DELETE | `/api/admin/books/:id/ratings/:userBookId` | Delete a specific rating |
 | DELETE | `/api/admin/books/:id` | Delete book (409 if other users have it in library) |
 
-PDF upload/delete use `POST /api/books/:id/pdf` and `DELETE /api/books/:id/pdf`. Cover upload uses `POST /api/books/:id/cover`. These routes are not under `/api/admin/` but accept localhost connections without creator checks.
+PDF upload/delete use `POST /api/books/:id/pdf` and `DELETE /api/books/:id/pdf`; EPUB upload/delete use `POST /api/books/:id/epub` and `DELETE /api/books/:id/epub`. Cover upload uses `POST /api/books/:id/cover`. These routes are not under `/api/admin/` but accept localhost connections without creator checks.
 
 ### Anthologies
 

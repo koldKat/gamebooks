@@ -13,7 +13,7 @@ import { setPublicProfileHooks, openPublicSeriesRun } from '../account/public-pr
 import { setLiveTabHooks } from '../core/livetab.js';
 import { setAppXpHooks, refreshAppXp, handleAppXpEvent } from '../progression/app-xp.js';
 import { setCoversHooks, loadCovers, _refreshPublicCatalogIfVisible, _isLandingBooksViewVisible } from '../covers.js';
-import { setBooksHooks, initBooksPanel, getCachedBooks, getCachedAllSeries, _refreshBooksListOnly, _syncPdfBadgeOnCards, _starsHtml, _starLabelHtml, _flashRatingGate } from '../books.js';
+import { setBooksHooks, initBooksPanel, getCachedBooks, getCachedAllSeries, _refreshBooksListOnly, _syncPdfBadgeOnCards, _syncEpubBadgeOnCards, _starsHtml, _starLabelHtml, _flashRatingGate } from '../books.js';
 import { setOpenWorldHooks } from '../play/open-world.js';
 import { setFeedHooks, loadFeed, refreshDayCoverFlows } from '../feed.js';
 import { setNotifHooks, _scheduleLiveUiRefresh } from '../community/notif.js';
@@ -210,6 +210,17 @@ export function initFeatureHooks() {
       const showPdfBtn = bootState._hasPdfAccess && !!pdfPath && !bootState._currentBook.parentBookId;
       pdfDlBtn.style.display = showPdfBtn ? '' : 'none';
       if (showPdfBtn) pdfDlBtn.href = _adminPdfHref(pdfPath);
+    },
+    // Patch EPUB cards and the active play link without rebuilding the library.
+    onEpubChanged:       (bookId, epubPath, epubSize) => {
+      _syncEpubBadgeOnCards(bookId, epubPath, epubSize);
+      if (String(bookId) !== String(currentBookId)) return;
+      bootState._currentBook.epubPath = epubPath;
+      const epubDlBtn = document.getElementById('epub-download-btn');
+      if (!epubDlBtn) return;
+      const showEpubBtn = bootState._hasPdfAccess && !!epubPath && !bootState._currentBook.parentBookId;
+      epubDlBtn.style.display = showEpubBtn ? '' : 'none';
+      if (showEpubBtn) epubDlBtn.href = _adminPdfHref(epubPath);
     },
   });
   initEditBook(() => bootState._mousedownOnOverlay);

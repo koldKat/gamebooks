@@ -3,13 +3,13 @@ import { state, isDemoMode, apiFetch } from '../core/state.js';
 import { t } from '../i18n.js';
 import { getCachedBooks, _refreshBooksListOnly } from '../books.js';
 import { showAlert } from '../play.js';
-import { _setPdfCurrentLink, _setModalUploadProgress, _adminPdfHref } from './uploads.js';
+import { _setPdfCurrentLink, _setModalUploadProgress, _adminPdfHref, _setEpubCurrentLink } from './uploads.js';
 import { _populateParentBookSelect, _populateSeriesSelect } from './selectors.js';
 import { _renderAlsoAppearsIn } from './memberships.js';
 import { initBookRating } from './book-rating.js';
 import { bindBookActions } from './book-actions.js';
 
-export function openEditBookModal({ bookId, initialName, initialSections, initialIsbn = '', initialIssn = '', initialAsin = '', initialCoverUrl = null, initialPdfPath = null, initialPdfSize = null, initialPages = '', initialAuthors = '', initialDescription = '', initialDiscoverableSections = null, showDiscoverableSections = false, discoverableHint = 0, minSections = 1, initialIsPublic = false, initialSeriesName = '', initialSeriesNumber = '', initialIsContainer = false, initialParentBookId = null, initialBookOrder = null, onSave }) {
+export function openEditBookModal({ bookId, initialName, initialSections, initialIsbn = '', initialIssn = '', initialAsin = '', initialCoverUrl = null, initialPdfPath = null, initialPdfSize = null, initialEpubPath = null, initialEpubSize = null, initialPages = '', initialAuthors = '', initialDescription = '', initialDiscoverableSections = null, showDiscoverableSections = false, discoverableHint = 0, minSections = 1, initialIsPublic = false, initialSeriesName = '', initialSeriesNumber = '', initialIsContainer = false, initialParentBookId = null, initialBookOrder = null, onSave }) {
   ++editState._bookSession;
   // Close the forum before opening an editor so it cannot cover the edit dialog.
   document.getElementById('forum-modal-overlay')?.classList.remove('active');
@@ -19,6 +19,7 @@ export function openEditBookModal({ bookId, initialName, initialSections, initia
   editState._editBookId       = bookId;
   editState._pendingCoverBlob = null;
   editState._pendingPdfFile   = null;
+  editState._pendingEpubFile  = null;
 
   document.getElementById('edit-book-name-input').value          = initialName;
   document.getElementById('edit-book-sections-input').value      = initialSections;
@@ -69,6 +70,22 @@ export function openEditBookModal({ bookId, initialName, initialSections, initia
     pdfCurrent.style.display = '';
   } else {
     pdfCurrent.style.display = 'none';
+  }
+
+  const epubRow     = document.getElementById('edit-book-epub-row');
+  const epubCurrent = document.getElementById('edit-book-epub-current');
+  const epubLink    = document.getElementById('edit-book-epub-link');
+  const epubName    = document.getElementById('edit-book-epub-name');
+  document.getElementById('edit-book-epub-file').value = '';
+  epubName.textContent = '';
+  _setModalUploadProgress('edit-book', null, 'epub');
+  epubRow.style.display = ((isAdmin || !!initialEpubPath) && !initialParentBookId) ? '' : 'none';
+  if (initialEpubPath) {
+    epubLink.href = _adminPdfHref(initialEpubPath);
+    _setEpubCurrentLink(epubLink, initialEpubSize);
+    epubCurrent.style.display = '';
+  } else {
+    epubCurrent.style.display = 'none';
   }
 
   document.getElementById('edit-book-series-number-input').value = initialSeriesNumber || '';
@@ -131,6 +148,7 @@ export function openEditBookModal({ bookId, initialName, initialSections, initia
     if (_pagesCol)       _pagesCol.style.display       = isChild ? 'none' : '';
     if (_authorsRow)     _authorsRow.style.display     = '';
     if (pdfRow)          pdfRow.style.display          = (isAdmin && !isChild) ? '' : 'none';
+    if (epubRow)         epubRow.style.display         = (isAdmin && !isChild) ? '' : 'none';
   }
   _syncChildUi();
   _parentInput.onchange = () => { _hasParent = !!_parentInput.value; _syncChildUi(); };

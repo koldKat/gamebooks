@@ -20,7 +20,7 @@ import { _loadingGraphSvg, _refreshInvDisplay, setDiceRollerVisible, setGuideVis
 import { _pushNav, _lockView } from './navigation.js';
 import { showBooks } from './landing.js';
 
-export async function showMain(bookId, isbn = null, issn = null, asin = null, cover = null, pdfPath = null, pages = null, authors = null, description = null, discoverableSections = null, isPublic = false, isCreator = true, seriesName = null, seriesNumber = null, isContainer = false, parentBookId = null, bookOrder = null) {
+export async function showMain(bookId, isbn = null, issn = null, asin = null, cover = null, pdfPath = null, pages = null, authors = null, description = null, discoverableSections = null, isPublic = false, isCreator = true, seriesName = null, seriesNumber = null, isContainer = false, parentBookId = null, bookOrder = null, epubPath = null) {
   if (_isMobile()) { showBooks(); return; }
   _lockView('book', 1500);
   document.body.classList.remove('promo-active');
@@ -52,6 +52,7 @@ export async function showMain(bookId, isbn = null, issn = null, asin = null, co
   const _bk = getCachedBooks()?.find(b => b.id === bookId);
   resetBgState(!!(_bk?.bgHidden), _bk?.bgPosY ?? 50);
   bootState._currentBook.pdfPath              = pdfPath;
+  bootState._currentBook.epubPath             = epubPath;
   bootState._currentBook.pages                = pages;
   bootState._currentBook.authors              = authors;
   bootState._currentBook.description          = description;
@@ -80,6 +81,12 @@ export async function showMain(bookId, isbn = null, issn = null, asin = null, co
     const showPdfBtn = bootState._hasPdfAccess && !!pdfPath && !parentBookId;
     pdfDlBtn.style.display = showPdfBtn ? '' : 'none';
     if (showPdfBtn) pdfDlBtn.href = _adminPdfHref(pdfPath);
+  }
+  const epubDlBtn = document.getElementById('epub-download-btn');
+  if (epubDlBtn) {
+    const showEpubBtn = bootState._hasPdfAccess && !!epubPath && !parentBookId;
+    epubDlBtn.style.display = showEpubBtn ? '' : 'none';
+    if (showEpubBtn) epubDlBtn.href = _adminPdfHref(epubPath);
   }
   setViewingPt(null);
   // Show loading placeholders until graph initialization and sidebar rendering replace them.

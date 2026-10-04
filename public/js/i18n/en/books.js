@@ -7,6 +7,7 @@ export default {
     'books.open':         'Open',
     'books.sections':     '{n} sections',
     'books.has_pdf':      'PDF available',
+    'books.has_epub':     'EPUB available',
 
     'modal.book.title':            'Edit Book',
     'modal.book.name':             'Book name:',
@@ -57,6 +58,7 @@ export default {
     'editbook.name_required': 'Name required.',
     'editbook.failed': 'Failed.',
     'editbook.remove_pdf_confirm': 'Remove the PDF?',
+    'editbook.remove_epub_confirm': 'Remove the EPUB?',
 
     'books.delete_series': 'Delete series',
     'books.remove_from_library': 'Remove from library',
@@ -66,6 +68,10 @@ export default {
     'editbook.current_pdf': 'Current PDF',
     'editbook.current_pdf_size': 'Current PDF ({size})',
     'editbook.pdf_upload_failed': 'PDF upload failed.',
+    'editbook.epub_too_large': 'EPUB is too large. Max {size}.',
+    'editbook.current_epub': 'Current EPUB',
+    'editbook.current_epub_size': 'Current EPUB ({size})',
+    'editbook.epub_upload_failed': 'EPUB upload failed.',
     'editbook.none': '- None -',
     'editbook.network_error': 'Network error',
     'editbook.maintenance': 'Maintenance',

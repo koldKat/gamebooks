@@ -156,6 +156,8 @@ const {
   handleUploadCover,
   handleUploadPdf,
   handleDeletePdf,
+  handleUploadEpub,
+  handleDeleteEpub,
 } = require('./server/routes/profile');
 
 const {
@@ -259,6 +261,7 @@ const anthologyMemberByIdRe  = /^\/api\/books\/(\d+)\/anthology-members\/(\d+)$/
 const bookCoverRe       = /^\/api\/books\/(\d+)\/cover$/;
 const bookCoverDeleteRe = /^\/api\/books\/(\d+)\/cover\/delete$/;
 const bookPdfRe         = /^\/api\/books\/(\d+)\/pdf$/;
+const bookEpubRe        = /^\/api\/books\/(\d+)\/epub$/;
 const adminWatchStateRe   = /^\/api\/admin\/watch\/(\d+)\/(\d+)$/;
 const adminUserIdRe       = /^\/api\/admin\/users\/(\d+)$/;
 const adminUserSessRe        = /^\/api\/admin\/users\/(\d+)\/clear-sessions$/;
@@ -422,6 +425,11 @@ const _routeRequest = async (req, res) => {
             data.book.pdfPath = bookRow.pdf_path;
             data.book.pdfSize = bookRow.pdf_size ?? null;
           }
+          if (bookRow?.epub_path) {
+            data.book = data.book || {};
+            data.book.epubPath = bookRow.epub_path;
+            data.book.epubSize = bookRow.epub_size ?? null;
+          }
         }
       }
       return send(res, 200, data);
@@ -469,6 +477,8 @@ const _routeRequest = async (req, res) => {
     if ((m = urlPath.match(bookCoverDeleteRe)) && method === 'POST')   { if (!requireLocalhost(req, res)) return; db.removeBookCover(+m[1]); return send(res, 200, { ok: true }); }
     if ((m = urlPath.match(bookPdfRe))         && method === 'POST')   return await handleUploadPdf(req, res, +m[1]);
     if ((m = urlPath.match(bookPdfRe))         && method === 'DELETE') return await handleDeletePdf(req, res, +m[1]);
+    if ((m = urlPath.match(bookEpubRe))        && method === 'POST')   return await handleUploadEpub(req, res, +m[1]);
+    if ((m = urlPath.match(bookEpubRe))        && method === 'DELETE') return await handleDeleteEpub(req, res, +m[1]);
     if ((m = urlPath.match(bookRatingRe))    && method === 'GET')   return await handleGetBookRating(req, res, +m[1]);
     if ((m = urlPath.match(bookRatingRe))    && method === 'PATCH') return await handleSetBookRating(req, res, +m[1]);
     if ((m = urlPath.match(seriesRatingRe))  && method === 'GET')   return await handleGetSeriesRating(req, res, +m[1]);

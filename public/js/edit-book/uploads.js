@@ -14,7 +14,16 @@ const _PDF_ICON_MARKUP = `
     </svg>
   </span>
 `;
+const _EPUB_ICON_MARKUP = `
+  <span class="inline-svg-icon epub-svg-icon" aria-hidden="true">
+    <svg viewBox="0 0 24 24" focusable="false">
+      <path d="M4 4h7a3 3 0 0 1 3 3v13a2.5 2.5 0 0 0-2.5-2.5H4Z"></path>
+      <path d="M20 4h-4a3 3 0 0 0-3 3v13a2.5 2.5 0 0 1 2.5-2.5H20Z"></path>
+    </svg>
+  </span>
+`;
 const _PDF_MAX_BYTES = 256 * 1024 * 1024;
+const _EPUB_MAX_BYTES = 256 * 1024 * 1024;
 
 
 export function formatFileSize(bytes) {
@@ -58,9 +67,35 @@ export function _setPdfCurrentLink(linkEl, sizeBytes = null) {
   _setPdfInlineLabel(linkEl, sizeText ? t('editbook.current_pdf_size', { size: sizeText }) : t('editbook.current_pdf'));
 }
 
-export function _setModalUploadProgress(prefix, pct = null) {
-  const wrap = document.getElementById(`${prefix}-pdf-progress`);
-  const bar  = document.getElementById(`${prefix}-pdf-progress-bar`);
+export function _acceptEpubSelection(file, { inputId, labelId, errorId }) {
+  if (!file) return false;
+  const errEl = errorId ? document.getElementById(errorId) : null;
+  if (errEl) errEl.textContent = '';
+  if (file.size > _EPUB_MAX_BYTES) {
+    if (errEl) errEl.textContent = t('editbook.epub_too_large', { size: formatFileSize(_EPUB_MAX_BYTES) });
+    const input = inputId ? document.getElementById(inputId) : null;
+    if (input) input.value = '';
+    const label = labelId ? document.getElementById(labelId) : null;
+    if (label) label.textContent = '';
+    return false;
+  }
+  return true;
+}
+
+export function _setEpubInlineLabel(el, text) {
+  if (!el) return;
+  el.innerHTML = `${_EPUB_ICON_MARKUP}<span>${escapeHtml(text || '')}</span>`;
+}
+
+export function _setEpubCurrentLink(linkEl, sizeBytes = null) {
+  if (!linkEl) return;
+  const sizeText = formatFileSize(sizeBytes);
+  _setEpubInlineLabel(linkEl, sizeText ? t('editbook.current_epub_size', { size: sizeText }) : t('editbook.current_epub'));
+}
+
+export function _setModalUploadProgress(prefix, pct = null, kind = 'pdf') {
+  const wrap = document.getElementById(`${prefix}-${kind}-progress`);
+  const bar  = document.getElementById(`${prefix}-${kind}-progress-bar`);
   if (!wrap || !bar) return;
   if (pct == null) { wrap.style.display = 'none'; bar.style.width = '0%'; return; }
   wrap.style.display = 'block';
@@ -111,6 +146,49 @@ export function _uploadPdfWithProgress(urlPath, file, prefix, isCurrent = () => 
       if (status < 200 || status >= 300) {
         progress(null);
         reject(new Error(data?.error || t('editbook.pdf_upload_failed')));
+        return;
+      }
+      progress(100);
+      setTimeout(() => progress(null), 250);
+      resolve(data);
+    };
+    progress(0);
+    xhr.send(file);
+  });
+}
+
+export function _uploadEpubWithProgress(urlPath, file, prefix, isCurrent = () => true) {
+  const progress = pct => { if (isCurrent()) _setModalUploadProgress(prefix, pct, 'epub'); };
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', urlPath, true);
+    const token = getToken();
+    if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+    xhr.setRequestHeader('Content-Type', 'application/epub+zip');
+    xhr.upload.onprogress = e => {
+      if (!e.lengthComputable) return;
+      progress((e.loaded / e.total) * 100);
+    };
+    xhr.onerror = () => { progress(null); reject(new Error(t('editbook.network_error'))); };
+    xhr.onload = () => {
+      const status = xhr.status || 0;
+      if (status === 503) {
+        window.dispatchEvent(new Event('maintenance-mode'));
+        progress(null);
+        reject(new Error(t('editbook.maintenance')));
+        return;
+      }
+      if (status === 401) {
+        clearToken(); clearUsername();
+        window.dispatchEvent(new Event('auth-expired'));
+        progress(null);
+        reject(new Error(t('editbook.unauthorized')));
+        return;
+      }
+      const data = _parseResponseJsonSafe(xhr.responseText);
+      if (status < 200 || status >= 300) {
+        progress(null);
+        reject(new Error(data?.error || t('editbook.epub_upload_failed')));
         return;
       }
       progress(100);

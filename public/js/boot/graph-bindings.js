@@ -114,6 +114,7 @@ export function initGraphBindings() {
         srcBook.created_by === null || srcBook.created_by === bootState._currentUserId,
         srcBook.series_name || null, srcBook.series_number || null,
         !!srcBook.is_container, srcBook.parent_book_id ?? null, srcBook.book_order ?? null,
+        srcBook.epub_path || null,
       );
       // showMain/_syncSeriesRuns may have activated the wrong run (e.g. a cross-book run instead of
       // the one that lives here). Force the correct run index and re-render.

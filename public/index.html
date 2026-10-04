@@ -640,6 +640,7 @@
       <div class="book-title-row">
         <div id="book-title"></div>
         <a id="pdf-download-btn" target="_blank" rel="noopener" style="display:none" data-tooltip="Download PDF" data-i18n-tooltip="title.download_pdf">PDF</a>
+        <a id="epub-download-btn" target="_blank" rel="noopener" style="display:none" data-tooltip="Download EPUB" data-i18n-tooltip="title.download_epub">EPUB</a>
         <button id="edit-book-btn" data-tooltip="Edit book name / sections">✎</button>
       </div>
 
@@ -1606,6 +1607,17 @@
         <span id="ecc-pdf-name" style="font-size:0.78rem;color:#9ca3af;margin-top:0.25rem;display:block"></span>
         <div id="ecc-pdf-progress" class="modal-upload-progress" style="display:none"><div id="ecc-pdf-progress-bar" class="modal-upload-progress-bar"></div></div>
       </div>
+      <div class="input-group" id="ecc-epub-row" style="display:none">
+        <label>Book EPUB <span class="optional-hint">(optional)</span></label>
+        <div id="ecc-epub-current" style="display:none;margin-bottom:0.4rem">
+          <a id="ecc-epub-link" href="" target="_blank" rel="noopener" class="pdf-link"><span class="inline-svg-icon epub-svg-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M4 4h7a3 3 0 0 1 3 3v13a2.5 2.5 0 0 0-2.5-2.5H4Z"></path><path d="M20 4h-4a3 3 0 0 0-3 3v13a2.5 2.5 0 0 1 2.5-2.5H20Z"></path></svg></span><span>Current EPUB</span></a>
+          <button type="button" id="ecc-epub-remove" class="secondary-btn" style="margin-left:0.5rem;font-size:0.75rem">Remove</button>
+        </div>
+        <button type="button" id="ecc-epub-btn" class="secondary-btn">Upload EPUB</button>
+        <input type="file" id="ecc-epub-file" style="display:none" accept="application/epub+zip,.epub">
+        <span id="ecc-epub-name" style="font-size:0.78rem;color:#9ca3af;margin-top:0.25rem;display:block"></span>
+        <div id="ecc-epub-progress" class="modal-upload-progress" style="display:none"><div id="ecc-epub-progress-bar" class="modal-upload-progress-bar"></div></div>
+      </div>
       <div id="ecc-error" class="auth-error"></div>
       <div class="modal-actions">
         <button id="ecc-save" class="primary-btn">Save</button>
@@ -1805,6 +1817,17 @@
         <input type="file" id="edit-book-pdf-file" style="display:none" accept="application/pdf">
         <span id="edit-book-pdf-name" style="font-size:0.78rem;color:#9ca3af;margin-top:0.25rem;display:block"></span>
         <div id="edit-book-pdf-progress" class="modal-upload-progress" style="display:none"><div id="edit-book-pdf-progress-bar" class="modal-upload-progress-bar"></div></div>
+      </div>
+      <div class="input-group" id="edit-book-epub-row" style="display:none">
+        <label>Book EPUB <span class="optional-hint">(optional)</span></label>
+        <div id="edit-book-epub-current" style="display:none;margin-bottom:0.4rem">
+          <a id="edit-book-epub-link" href="" target="_blank" rel="noopener" class="pdf-link"><span class="inline-svg-icon epub-svg-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M4 4h7a3 3 0 0 1 3 3v13a2.5 2.5 0 0 0-2.5-2.5H4Z"></path><path d="M20 4h-4a3 3 0 0 0-3 3v13a2.5 2.5 0 0 1 2.5-2.5H20Z"></path></svg></span><span>Current EPUB</span></a>
+          <button type="button" id="edit-book-epub-remove" class="secondary-btn" style="margin-left:0.5rem;font-size:0.75rem">Remove</button>
+        </div>
+        <button type="button" id="edit-book-epub-btn" class="secondary-btn">Upload EPUB</button>
+        <input type="file" id="edit-book-epub-file" style="display:none" accept="application/epub+zip,.epub">
+        <span id="edit-book-epub-name" style="font-size:0.78rem;color:#9ca3af;margin-top:0.25rem;display:block"></span>
+        <div id="edit-book-epub-progress" class="modal-upload-progress" style="display:none"><div id="edit-book-epub-progress-bar" class="modal-upload-progress-bar"></div></div>
       </div>
       <div id="edit-book-error" class="auth-error"></div>
       <div class="modal-actions">

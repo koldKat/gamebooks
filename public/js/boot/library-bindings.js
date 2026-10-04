@@ -36,6 +36,7 @@ export function initLibraryBindings() {
       initialAsin:                 bootState._currentBook.asin        || '',
       initialCoverUrl:             getCurrentBookCover()  || null,
       initialPdfPath:              bootState._currentBook.pdfPath     || null,
+      initialEpubPath:             bootState._currentBook.epubPath    || null,
       initialPages:                bootState._currentBook.pages       ? String(bootState._currentBook.pages) : '',
       initialAuthors:              bootState._currentBook.authors     || '',
       initialDescription:          bootState._currentBook.description || '',

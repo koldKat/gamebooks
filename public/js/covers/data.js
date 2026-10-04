@@ -47,7 +47,7 @@ export function _coversFingerprint(covers, books, series) {
     books: sortRows((Array.isArray(books) ? books : []).map(b => [
       b.id, b.name, b.coverUrl || b.cover_path || '', b.createdAt || b.created_at || 0,
       b.seriesId || b.series_id || 0, b.isContainer ? 1 : (b.is_container ? 1 : 0),
-      b.pdfPath || '', b.authors || '', b.seriesName || '', b.seriesNumber || '',
+      b.pdfPath || '', b.epubPath || '', b.authors || '', b.seriesName || '', b.seriesNumber || '',
       b.childNames || [], b.childIds || [], b.totalSections || 0,
       !!b.hasBattleSim, !!b.hasLiveReading,
     ])),

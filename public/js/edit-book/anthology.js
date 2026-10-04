@@ -3,14 +3,14 @@ import { apiFetch } from '../core/state.js';
 import { t } from '../i18n.js';
 import { showAlert, showConfirm } from '../play.js';
 import { compressImage, setPreviewImgBlob } from '../core/util.js';
-import { formatFileSize, _acceptPdfSelection, _setPdfInlineLabel, _setPdfCurrentLink, _setModalUploadProgress, _setButtonsDisabled, _uploadPdfWithProgress, _adminPdfHref } from './uploads.js';
+import { formatFileSize, _acceptPdfSelection, _setPdfInlineLabel, _setPdfCurrentLink, _setModalUploadProgress, _setButtonsDisabled, _uploadPdfWithProgress, _adminPdfHref, _acceptEpubSelection, _setEpubInlineLabel, _setEpubCurrentLink, _uploadEpubWithProgress } from './uploads.js';
 import { validateIsbn, validateIssn, validateAsin } from './validators.js';
 import { _populateSeriesSelect } from './selectors.js';
 
-export function openEditCompModal({ bookId, initialName, initialIsbn = '', initialIssn = '', initialAsin = '', initialCoverUrl = null, initialPdfPath = null, initialPdfSize = null, initialPages = '', initialAuthors = '', initialDescription = '', initialSeriesName = '', initialSeriesNumber = '', initialIsPublic = false, onSave }) {
+export function openEditCompModal({ bookId, initialName, initialIsbn = '', initialIssn = '', initialAsin = '', initialCoverUrl = null, initialPdfPath = null, initialPdfSize = null, initialEpubPath = null, initialEpubSize = null, initialPages = '', initialAuthors = '', initialDescription = '', initialSeriesName = '', initialSeriesNumber = '', initialIsPublic = false, onSave }) {
   const session = ++editState._anthologySession;
   const isCurrent = () => session === editState._anthologySession && document.getElementById('edit-comp-overlay').classList.contains('active');
-  editState._eccBookId = bookId; editState._eccCover = null; editState._eccPdf = null;
+  editState._eccBookId = bookId; editState._eccCover = null; editState._eccPdf = null; editState._eccEpub = null;
   document.getElementById('ecc-name').value        = initialName || '';
   document.getElementById('ecc-isbn').value        = initialIsbn || '';
   document.getElementById('ecc-asin').value        = initialAsin || '';
@@ -23,8 +23,11 @@ export function openEditCompModal({ bookId, initialName, initialIsbn = '', initi
   document.getElementById('ecc-error').textContent = '';
   document.getElementById('ecc-id-hint').textContent = '';
   document.getElementById('ecc-pdf-name').textContent = '';
+  document.getElementById('ecc-epub-name').textContent = '';
   _setModalUploadProgress('ecc', null);
+  _setModalUploadProgress('ecc', null, 'epub');
   document.getElementById('ecc-pdf-row').style.display = (editState._hooks.resolveIsAdmin?.() || !!initialPdfPath) ? '' : 'none';
+  document.getElementById('ecc-epub-row').style.display = (editState._hooks.resolveIsAdmin?.() || !!initialEpubPath) ? '' : 'none';
   const pubType = initialIssn ? 'magazine' : 'book';
   document.getElementById('ecc-pub-type').value = pubType;
   document.getElementById('ecc-fields-book').style.display = pubType === 'book'     ? '' : 'none';
@@ -39,6 +42,13 @@ export function openEditCompModal({ bookId, initialName, initialIsbn = '', initi
     document.getElementById('ecc-pdf-current').style.display = '';
   } else {
     document.getElementById('ecc-pdf-current').style.display = 'none';
+  }
+  if (initialEpubPath) {
+    document.getElementById('ecc-epub-link').href = _adminPdfHref(initialEpubPath);
+    _setEpubCurrentLink(document.getElementById('ecc-epub-link'), initialEpubSize);
+    document.getElementById('ecc-epub-current').style.display = '';
+  } else {
+    document.getElementById('ecc-epub-current').style.display = 'none';
   }
   _populateSeriesSelect('ecc-series', initialSeriesName || null);
 
@@ -65,6 +75,7 @@ export function openEditCompModal({ bookId, initialName, initialIsbn = '', initi
     }
     const cover = editState._eccCover;
     const pdf = editState._eccPdf;
+    const epub = editState._eccEpub;
     if (cover && bookId) {
       try {
         const r = await apiFetch(`/api/books/${bookId}/cover`, { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: cover });
@@ -80,6 +91,16 @@ export function openEditCompModal({ bookId, initialName, initialIsbn = '', initi
         editState._hooks.scheduleRewardProfileRefresh?.();
         editState._hooks.onPdfChanged?.(bookId, pdfData?.pdfUrl ? pdfData.pdfUrl.split('/').pop() : null, pdf.size);
       } catch (e) { if (isCurrent()) errEl.textContent = e?.message || t('editbook.pdf_upload_failed'); return; }
+      finally { if (isCurrent()) _setButtonsDisabled(['ecc-save', 'ecc-cancel'], false); }
+    }
+    if (!isCurrent()) return;
+    if (epub && bookId) {
+      _setButtonsDisabled(['ecc-save', 'ecc-cancel'], true);
+      try {
+        const epubData = await _uploadEpubWithProgress(`/api/books/${bookId}/epub`, epub, 'ecc', isCurrent);
+        editState._hooks.scheduleRewardProfileRefresh?.();
+        editState._hooks.onEpubChanged?.(bookId, epubData?.epubUrl ? epubData.epubUrl.split('/').pop() : null, epub.size);
+      } catch (e) { if (isCurrent()) errEl.textContent = e?.message || t('editbook.epub_upload_failed'); return; }
       finally { if (isCurrent()) _setButtonsDisabled(['ecc-save', 'ecc-cancel'], false); }
     }
     if (!isCurrent()) return;
@@ -153,6 +174,38 @@ export function initAnthologyBindings(mousedownOnOverlayRef) {
         _setPdfCurrentLink(document.getElementById('ecc-pdf-link'), null);
         document.getElementById('ecc-pdf-current').style.display = 'none';
         document.getElementById('ecc-pdf-name').textContent = '';
+      } catch (_) {
+        if (session === editState._anthologySession) document.getElementById('ecc-error').textContent = t('err.save');
+      }
+    });
+  });
+  document.getElementById('ecc-epub-btn').addEventListener('click', () => {
+    document.getElementById('ecc-epub-file').value = '';
+    document.getElementById('ecc-epub-file').click();
+  });
+  document.getElementById('ecc-epub-file').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!_acceptEpubSelection(file, { inputId: 'ecc-epub-file', labelId: 'ecc-epub-name', errorId: 'ecc-error' })) {
+      editState._eccEpub = null; return;
+    }
+    editState._eccEpub = file;
+    _setEpubInlineLabel(document.getElementById('ecc-epub-name'), `${file.name} (${formatFileSize(file.size)})`);
+  });
+  document.getElementById('ecc-epub-remove').addEventListener('click', () => {
+    if (!editState._eccBookId) return;
+    const bookId = editState._eccBookId;
+    const session = editState._anthologySession;
+    return showConfirm(t('editbook.remove_epub_confirm'), async () => {
+      try {
+        const r = await apiFetch(`/api/books/${bookId}/epub`, { method: 'DELETE' });
+        if (!r.ok) throw new Error('EPUB removal failed');
+        editState._hooks.onEpubChanged?.(bookId, null, null);
+        if (session !== editState._anthologySession) return;
+        editState._eccEpub = null;
+        _setEpubCurrentLink(document.getElementById('ecc-epub-link'), null);
+        document.getElementById('ecc-epub-current').style.display = 'none';
+        document.getElementById('ecc-epub-name').textContent = '';
       } catch (_) {
         if (session === editState._anthologySession) document.getElementById('ecc-error').textContent = t('err.save');
       }

@@ -642,6 +642,26 @@ body.cover-tooltip-title-bold #cover-tooltip-settings-preview {
 }
 .cover-pdf-badge[data-badge-offset="1"] { left: 20px; }
 .cover-pdf-badge[data-badge-offset="2"] { left: 36px; }
+/* Stack after battle/reading/pdf badges; reserve bottom-right for open world. */
+.cover-epub-badge {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  color: #a78bfa;
+  background: rgba(17,24,39,0.82);
+  border: 1px solid rgba(167,139,250,0.45);
+  border-radius: 3px;
+  /* Keep pointer events for the badge tooltip. */
+}
+.cover-epub-badge[data-badge-offset="1"] { left: 20px; }
+.cover-epub-badge[data-badge-offset="2"] { left: 36px; }
+.cover-epub-badge[data-badge-offset="3"] { left: 52px; }
 .cover-series-grid {
   position: absolute;
   inset: 0;

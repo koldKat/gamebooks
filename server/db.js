@@ -79,6 +79,7 @@ try { db.exec(`ALTER TABLE user_books    ADD COLUMN bg_pos_y      REAL    NOT NU
 try { db.exec(`ALTER TABLE users        ADD COLUMN is_author      INTEGER NOT NULL DEFAULT 0`);        } catch (_) {}
 try { db.exec(`ALTER TABLE users        ADD COLUMN display_name   TEXT    DEFAULT NULL`);               } catch (_) {}
 try { db.exec(`ALTER TABLE books        ADD COLUMN pdf_path       TEXT    DEFAULT NULL`);               } catch (_) {}
+try { db.exec(`ALTER TABLE books        ADD COLUMN epub_path      TEXT    DEFAULT NULL`);               } catch (_) {}
 try { db.exec(`ALTER TABLE books        ADD COLUMN published_at   INTEGER DEFAULT NULL`);               } catch (_) {}
 try { db.exec(`ALTER TABLE users        ADD COLUMN last_active_at INTEGER DEFAULT NULL`);               } catch (_) {}
 try { db.exec(`ALTER TABLE users        ADD COLUMN is_contributor INTEGER NOT NULL DEFAULT 0`);         } catch (_) {}
@@ -831,6 +832,7 @@ const {
 const {
   getBooks, getStashes, createStash, updateStash, deleteStash,
   setBookBgPref, getBookBgPref, awardPdfXp, setBookPdf, removeBookCover, removeBookPdf, setBookCover,
+  awardEpubXp, setBookEpub, removeBookEpub,
   getBookContainerFields, getOrCreateSeries, getAllSeries, getBookEnemies, addSeriesToLibrary,
   addAnthologyMember, removeAnthologyMember, getAnthologyExtraMembers, _pruneRedundantAnthologyMembership, getBookSection, _canLiveRead,
   getSeriesById, updateSeries, getSeriesCharacter, saveSeriesCharacter, getSeriesRuns,
@@ -913,7 +915,7 @@ module.exports = {
   getUserById, updateUsername, updatePassword, updateAvatar,
   createUser, verifyUser, setUserEmail, getUserEmail, createPasswordResetToken, validateResetToken, consumeResetToken,
   createSession, getSession, refreshSession, deleteSession, purgeExpiredSessions, purgeOldNotifications, purgeOldHeartbeats, walCheckpoint,
-  getBooks, getStashes, createStash, updateStash, deleteStash, createBook, getBookById, getBookState, getActiveBookInSeries, saveBookState, resetBookProgress, updateBook, deleteBook, setBookCover, removeBookCover, setBookPdf, removeBookPdf, awardPdfXp, addBookToLibrary,
+  getBooks, getStashes, createStash, updateStash, deleteStash, createBook, getBookById, getBookState, getActiveBookInSeries, saveBookState, resetBookProgress, updateBook, deleteBook, setBookCover, removeBookCover, setBookPdf, removeBookPdf, awardPdfXp, setBookEpub, removeBookEpub, awardEpubXp, addBookToLibrary,
   getAllSeries, getSeriesById, getOrCreateSeries, createSeries, updateSeries, deleteSeries, deleteSeriesRow, addSeriesToLibrary, removeSeriesEntryOnly, removeSeriesFromLibrary, countSeriesOtherUsers, countBooksInSeries, getNextSeriesUser, transferSeriesOwnership, getBookContainerFields, getBookEnemies,
   addAnthologyMember, removeAnthologyMember, getAnthologyExtraMembers, _pruneRedundantAnthologyMembership, getBookSection, _canLiveRead,
   getSeriesCharacter, saveSeriesCharacter,

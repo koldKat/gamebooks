@@ -288,6 +288,47 @@ async function handleDeletePdf(req, res, bookId) {
   send(res, 200, { ok: true });
 }
 
+async function handleUploadEpub(req, res, bookId) {
+  let userId = null;
+  if (!isLocalhost(req)) {
+    userId = await authenticate(req, res);
+    if (userId === null) return;
+    const user = db.getUserById(userId);
+    if (!user?.is_protected && !user?.is_admin) return send(res, 403, { error: 'Admin only' });
+  } else {
+    userId = authenticateOptional(req);
+  }
+
+  let buf;
+  try { buf = await readRawBody(req, 256 * 1024 * 1024); }
+  catch (e) {
+    if (e.code === 'PAYLOAD_TOO_LARGE') return send(res, 413, { error: 'File too large (max 256 MB)' });
+    throw e;
+  }
+  if (!buf.length) return send(res, 400, { error: 'Empty body' });
+  if (buf[0] !== 0x50 || buf[1] !== 0x4b || buf[2] !== 0x03 || buf[3] !== 0x04 ||
+      !buf.slice(0, 100).includes(Buffer.from('application/epub+zip')))
+    return send(res, 415, { error: 'File must be an EPUB' });
+
+  const isFirstEpub = !db.getBookById(bookId)?.epub_path;
+  const filename = `${bookId}_${Date.now()}.epub`;
+  fs.writeFileSync(path.join(BOOKS_DIR, filename), buf);
+  db.setBookEpub(bookId, filename);
+  if (isFirstEpub) db.awardEpubXp(bookId, userId);
+  send(res, 200, { epubUrl: `/books/${filename}` });
+}
+
+async function handleDeleteEpub(req, res, bookId) {
+  if (!isLocalhost(req)) {
+    const userId = await authenticate(req, res);
+    if (userId === null) return;
+    const user = db.getUserById(userId);
+    if (!user?.is_protected && !user?.is_admin) return send(res, 403, { error: 'Admin only' });
+  }
+  db.removeBookEpub(bookId);
+  send(res, 200, { ok: true });
+}
+
 module.exports = {
   handleGetProfile,
   handleUpdateProfile,
@@ -298,4 +339,6 @@ module.exports = {
   handleUploadCover,
   handleUploadPdf,
   handleDeletePdf,
+  handleUploadEpub,
+  handleDeleteEpub,
 };

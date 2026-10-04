@@ -315,6 +315,7 @@ const MIME = {
   '.avif': 'image/avif',
   '.svg':  'image/svg+xml',
   '.pdf':  'application/pdf',
+  '.epub': 'application/epub+zip',
   '.txt':  'text/plain; charset=utf-8',
   '.xml':  'application/xml; charset=utf-8',
   '.csv':  'text/csv; charset=utf-8',

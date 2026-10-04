@@ -501,6 +501,14 @@
   margin-left: 0.3rem;
   flex-shrink: 0;
 }
+.book-epub-badge {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  color: #a78bfa;
+  margin-left: 0.3rem;
+  flex-shrink: 0;
+}
 .book-active-run-badge {
   display: inline-flex;
   align-items: center;

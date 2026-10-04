@@ -1186,6 +1186,7 @@
       <span class="breadcrumb" id="book-crumb"></span>
       <span id="book-edit-saved" class="tools-saved-msg" style="margin-left:auto">Saved</span>
       <a id="book-pdf-open-btn" href="" target="_blank" class="btn btn-info" style="display:none;text-decoration:none">Open PDF</a>
+      <a id="book-epub-open-btn" href="" target="_blank" class="btn btn-info" style="display:none;text-decoration:none">Open EPUB</a>
       <button id="book-edit-btn" class="btn btn-info admin-edit-btn">Edit</button>
     </div>
 
@@ -1255,6 +1256,16 @@
             <button type="button" id="bef-pdf-btn" class="btn btn-info" style="font-size:0.78rem">Upload PDF</button>
             <input type="file" id="bef-pdf-file" style="display:none" accept="application/pdf">
             <span id="bef-pdf-name" style="font-size:0.75rem;color:#9ca3af"></span>
+          </div>
+
+          <!-- EPUB row -->
+          <div style="background:#111827;border:1px solid #374151;border-radius:6px;padding:0.6rem 0.75rem;display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap">
+            <span class="section-title" style="margin:0;flex-shrink:0">EPUB</span>
+            <a id="bef-epub-link" href="" target="_blank" style="color:#60a5fa;font-size:0.82rem;display:none">Current EPUB</a>
+            <button type="button" id="bef-epub-remove" class="btn btn-danger" style="font-size:0.72rem;display:none">Remove</button>
+            <button type="button" id="bef-epub-btn" class="btn btn-info" style="font-size:0.78rem">Upload EPUB</button>
+            <input type="file" id="bef-epub-file" style="display:none" accept="application/epub+zip,.epub">
+            <span id="bef-epub-name" style="font-size:0.75rem;color:#9ca3af"></span>
           </div>
 
           <!-- Public + anthology toggles -->

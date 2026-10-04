@@ -3,7 +3,7 @@ import { apiFetch } from '../core/state.js';
 import { t } from '../i18n.js';
 import { showAlert } from '../play.js';
 import { compressImage, setPreviewImgBlob } from '../core/util.js';
-import { formatFileSize, _acceptPdfSelection, _setPdfInlineLabel } from './uploads.js';
+import { formatFileSize, _acceptPdfSelection, _setPdfInlineLabel, _acceptEpubSelection, _setEpubInlineLabel } from './uploads.js';
 
 export function initBookBindings() {
 
@@ -54,6 +54,38 @@ export function initBookBindings() {
     document.getElementById('edit-book-pdf-name').textContent = '';
     // Immediate mutation (not part of Save) - same stale-card reason as the
     // upload path above.
+  });
+
+  document.getElementById('edit-book-epub-btn').addEventListener('click', () => {
+    document.getElementById('edit-book-epub-file').value = '';
+    document.getElementById('edit-book-epub-file').click();
+  });
+  document.getElementById('edit-book-epub-file').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!_acceptEpubSelection(file, { inputId: 'edit-book-epub-file', labelId: 'edit-book-epub-name', errorId: 'edit-book-error' })) {
+      editState._pendingEpubFile = null;
+      return;
+    }
+    editState._pendingEpubFile = file;
+    _setEpubInlineLabel(document.getElementById('edit-book-epub-name'), `${file.name} (${formatFileSize(file.size)})`);
+  });
+  document.getElementById('edit-book-epub-remove').addEventListener('click', async () => {
+    if (!editState._editBookId) return;
+    const bookId = editState._editBookId;
+    const session = editState._bookSession;
+    try {
+      const res = await apiFetch(`/api/books/${bookId}/epub`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('EPUB removal failed');
+    } catch {
+      if (editState._bookSession === session) document.getElementById('edit-book-error').textContent = t('err.save');
+      return;
+    }
+    editState._hooks.onEpubChanged?.(bookId, null, null);
+    if (editState._bookSession !== session) return;
+    document.getElementById('edit-book-epub-current').style.display = 'none';
+    editState._pendingEpubFile = null;
+    document.getElementById('edit-book-epub-name').textContent = '';
   });
 
 

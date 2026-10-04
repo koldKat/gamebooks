@@ -50,8 +50,18 @@ function _getPdfSize(pdfPath) {
   }
 }
 
+function _getEpubSize(epubPath) {
+  if (!epubPath) return null;
+  try {
+    const size = fs.statSync(path.join(__dirname, '..', '..', 'public', 'books', epubPath)).size;
+    return Number.isFinite(size) ? size : null;
+  } catch {
+    return null;
+  }
+}
+
 module.exports = {
   db, hasColumn,
   _toSortableString, _foldForSearch, _naturalCompare, _naturalCompareByName,
-  _getPdfSize,
+  _getPdfSize, _getEpubSize,
 };

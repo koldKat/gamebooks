@@ -30,7 +30,8 @@ test('edit-book facade preserves the original public API', () => {
   assert.deepEqual(names.sort(), [
     'setEditBookHooks', 'formatFileSize', '_acceptPdfSelection', '_setPdfInlineLabel',
     '_setPdfCurrentLink', '_setModalUploadProgress', '_setButtonsDisabled', '_uploadPdfWithProgress',
-    '_adminPdfHref', '_populateParentBookSelect', '_populateSeriesSelect',
+    '_adminPdfHref', '_acceptEpubSelection', '_setEpubInlineLabel', '_setEpubCurrentLink', '_uploadEpubWithProgress',
+    '_populateParentBookSelect', '_populateSeriesSelect',
     'validateIsbn', 'validateIssn', 'validateAsin', '_openEditStash', '_closeEditStash', '_closeAddStash',
     'openEditBookModal', 'closeEditBookModal', 'openEditCompModal', 'openEditSeriesModal', 'initEditBook', 'maxSectionInUse',
   ].sort());

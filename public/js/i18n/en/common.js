@@ -82,6 +82,7 @@ export default {
     'title.display_settings': 'Display settings',
     'title.tutorial':     'Gamebook Tracker tutorial',
     'title.download_pdf': 'Download PDF',
+    'title.download_epub': 'Download EPUB',
     'title.user_guide':   'User Guide',
     'title.forum':        'Forum',
 };

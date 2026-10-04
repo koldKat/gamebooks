@@ -493,7 +493,8 @@ input[type="email"]:disabled {
 .inline-svg-icon svg {
   display: block;
 }
-.pdf-svg-icon svg {
+.pdf-svg-icon svg,
+.epub-svg-icon svg {
   width: 0.92rem;
   height: 0.92rem;
   fill: none;

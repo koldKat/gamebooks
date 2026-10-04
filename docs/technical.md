@@ -338,13 +338,13 @@ gamebooks/
       edit-book/         Edit dialogs and shared creation-dialog utilities
         state.js         Shared injected hooks, pending media, rating and stash selection state
         init.js          Ordered book/stash/anthology/series event initialization
-        uploads.js       PDF size validation, labels, authenticated XHR/progress, control helpers
+        uploads.js       PDF/EPUB size validation, labels, authenticated XHR/progress, control helpers
         validators.js    ISBN/ISSN/ASIN validation (no DOM dependencies)
         selectors.js     Series/parent anthology dropdown population and shared name sorting
         memberships.js   Secondary anthology membership chips, ordering, and removal
         book.js          Open/reset the book dialog, metadata and parent visibility, close
         book-actions.js  Book validation, media upload/save flow, cancel and keyboard bindings
-        book-bindings.js Book cover/PDF file-input and PDF removal bindings
+        book-bindings.js Book cover/PDF/EPUB file-input and PDF/EPUB removal bindings
         book-rating.js   Persistent rating widget and per-book rating requests
         anthology.js     Anthology dialog opening, saves, media and close bindings
         series.js        Series dialog opening, saves and close bindings
@@ -363,7 +363,7 @@ gamebooks/
         prefs.js         Expansion preference capture and persistence
         render.js        Library rendering orchestration
         groups.js        Membership, sorting, and aggregate progress helpers
-        markup.js        Book card markup, rating helpers, and PDF badge updates
+        markup.js        Book card markup, rating helpers, and PDF/EPUB badge updates
         actions.js       Rendered card/group action wiring
         search.js        My Books search and panel initialization
         lazy.js          Collapsed group materialization and reclamation
@@ -860,8 +860,8 @@ All `/api/*` routes except `/api/register`, `/api/login`, `/api/feed`, `/api/sit
 | `xpFromBoost` | **Extra** XP from boosts only (not total XP earned while boosted) |
 | `bonusHeartbeatXp` | Count of purchased Heartbeat XP upgrades; each = +0.1 base heartbeat XP |
 | `isAuthor` | Shows the display name field in the profile modal |
-| `isAdmin` | Shows admin-only controls (e.g. PDF upload rows) in the regular app |
-| `pdfAccess` | When `true` (or `isAdmin = true`), shows a **PDF** link in the play area |
+| `isAdmin` | Shows admin-only controls (e.g. PDF and EPUB upload rows) in the regular app |
+| `pdfAccess` | When `true` (or `isAdmin = true`), shows **PDF** and **EPUB** links in the play area |
 
 ### Shop API
 
@@ -918,6 +918,8 @@ Avatar files are stored in `public/avatars/<userId>_<timestamp>.jpg` and served 
 Book cover files are stored in `public/covers/<userId>_<bookId>_<timestamp>.jpg`. The old cover file is deleted when a new one is uploaded. `coverUrl` is a path like `/covers/<filename>`. Cover upload uses `POST /api/books/:id/cover` with a raw JPEG body (max 256 KB). From the regular app it is creator-only and awards XP; from the admin panel (localhost) it bypasses both checks. Cover removal uses `POST /api/books/:id/cover/delete` (localhost-only), which deletes the file and clears `cover_path`. `db.setBookCover` accepts an `isAdmin` flag that skips the creator and user_books membership checks.
 
 Book PDF files are stored in `public/books/<bookId>_<timestamp>.pdf` and served via `GET /books/<filename>`. Upload: `POST /api/books/:id/pdf` (raw PDF body, max 256 MB, magic bytes `%PDF` validated). Remove: `DELETE /api/books/:id/pdf`. The old file is deleted when a new one is uploaded or when removed. `pdf_path` is stored on the `books` row. The static file gate (`GET /books/:path`) requires the request to be authenticated with a user who has `is_admin = 1` OR `pdf_access = 1`; unauthenticated requests and users without either flag receive `403`.
+
+Book EPUB files are stored in `public/books/<bookId>_<timestamp>.epub` and served via the same `GET /books/<filename>` gate. Upload: `POST /api/books/:id/epub` (raw EPUB body, max 256 MB, validated by the ZIP magic bytes `PK\x03\x04` at offset 0 and the literal string `application/epub+zip` within the first 100 bytes). Remove: `DELETE /api/books/:id/epub`. The old file is deleted when a new one is uploaded or when removed. `epub_path` is stored on the `books` row. A book may have both a PDF and an EPUB at the same time; the two are independent. The static file gate serves both file types under the same `is_admin = 1` OR `pdf_access = 1` requirement.
 
 ### Feedback API
 
@@ -1024,7 +1026,7 @@ Uses `better-sqlite3` (synchronous SQLite). WAL mode enabled. `VACUUM` runs on e
 ```sql
 users (id, username UNIQUE, password_hash, salt, avatar_path, public_profile, xp, last_country, last_city, active_country, active_city, active_loc_at, last_domain, last_active_at, coins_spent, xp_boost_pct, bonus_undos, bonus_fast_travels, failed_login_attempts, locked_until, is_protected, is_admin, is_author, is_contributor, display_name, pdf_access INTEGER DEFAULT 0, join_template_id INTEGER, created_at)
 sessions (token PK, user_id → users, created_at, expires_at)
-books (id, name, total_sections, discoverable_sections, isbn, issn, asin, cover_path, pdf_path, is_demo, pages, authors, description, created_by → users, created_at, updated_at, series_id → series SET NULL, series_number TEXT, is_container INTEGER DEFAULT 0, parent_book_id → books SET NULL, book_order INTEGER)
+books (id, name, total_sections, discoverable_sections, isbn, issn, asin, cover_path, pdf_path, epub_path, is_demo, pages, authors, description, created_by → users, created_at, updated_at, series_id → series SET NULL, series_number TEXT, is_container INTEGER DEFAULT 0, parent_book_id → books SET NULL, book_order INTEGER)
   INDEX idx_books_series_id ON books(series_id)
   INDEX idx_books_parent_book_id ON books(parent_book_id)
 book_anthology_memberships (book_id → books CASCADE, anthology_id → books CASCADE, book_order INTEGER, created_at; PRIMARY KEY (book_id, anthology_id))
@@ -1087,7 +1089,7 @@ INDEX idx_attachments_kind_linked ON attachments (kind, linked_id)
 - Matched by id, not username, on purpose - the migration reruns unconditionally on every boot, and a username match would risk silently granting the flag to an unrelated future user who registers a vacated username (same reasoning as `db.canSeeAppXp()`/`resolveIsAdmin()`/`adminBadge()` elsewhere in this doc - none of the id/flag-based admin or trust checks in this app key off a literal username).
 - Protected users skip all lock logic in `verifyUser`.
 - `adminLockUser` and `handleAdminDeleteUser` refuse to act on them. Lock/Delete buttons hidden in the admin UI.
-- Also lets a protected non-admin account (i.e. sashii) upload/delete a book's PDF (`handleUploadPdf`/`handleDeletePdf` in `profile.js`, `403 Admin only` unless `user.is_protected || user.is_admin`) - same admin-adjacent trust level as the `canSeeAppXp` exception (see the `/api/app-xp` row above), just for a different capability.
+- Also lets a protected non-admin account (i.e. sashii) upload/delete a book's PDF or EPUB (`handleUploadPdf`/`handleDeletePdf` and `handleUploadEpub`/`handleDeleteEpub` in `profile.js`, `403 Admin only` unless `user.is_protected || user.is_admin`) - same admin-adjacent trust level as the `canSeeAppXp` exception (see the `/api/app-xp` row above), just for a different capability.
 
 **Admin accounts** (`is_admin = 1`):
 - Separate from `is_protected`. A protected account doesn't automatically have admin privileges.
@@ -1114,7 +1116,7 @@ INDEX idx_attachments_kind_linked ON attachments (kind, linked_id)
 - `display_name` is only editable by authors (via `PATCH /api/profile`) and replaces the username in all display contexts when set.
 - Client-side: `_authorMap` (keyed by username) caches `{ isAuthor, displayName }`. `displayFor(username)` returns `displayName || username`; `authorBadge(username)` returns the ★ span.
 
-`pdf_access` (`INTEGER DEFAULT 0`) controls whether a user can download book PDFs. When `pdf_access = 1` (or `is_admin = 1`), `GET /books/:path` serves the PDF file; otherwise a `403` is returned. Toggled by the admin via `POST /api/admin/users/:id/pdf-access` with body `{ pdfAccess: bool }`. Returned in `GET /api/profile` as `pdfAccess: bool`. Users with PDF access (or admins) see a small **PDF** link next to the book title in the play area; clicking it opens the PDF in a new tab. On the My Books panel, a book with a PDF shows an amber document badge (`.book-pdf-badge`) in its title row, gated on `isAdmin` only - pdf_access grantees see the play-area link but not the library badge, since the badge advertises PDF presence to anyone who can see the card. After a PDF upload/remove from the edit modals, the modals fire an `onPdfChanged` hook that updates the affected card(s) in place (badge span + `data-pdf`/`data-pdf-size` attributes + the `_cachedBooks` row) instead of re-rendering the list, and re-wires the play-area PDF button when the affected book is the open one.
+`pdf_access` (`INTEGER DEFAULT 0`) controls whether a user can download a book's PDF and EPUB files. The admin role that toggles it is labelled **Book Access** in the admin UI, since it gates both file types; the DB column and route path keep the `pdf_access` / `pdf-access` names. When `pdf_access = 1` (or `is_admin = 1`), `GET /books/:path` serves the PDF and EPUB files; otherwise a `403` is returned. Toggled by the admin via `POST /api/admin/users/:id/pdf-access` with body `{ pdfAccess: bool }`. Returned in `GET /api/profile` as `pdfAccess: bool`. Users with Book Access (or admins) see small **PDF** and **EPUB** links next to the book title in the play area; clicking one opens that file in a new tab. On the My Books panel, a book with a PDF shows an amber document badge (`.book-pdf-badge`) and a book with an EPUB shows a violet book badge (`.book-epub-badge`) in its title row, both gated on `isAdmin` only - pdf_access grantees see the play-area links but not the library badges, since a badge advertises file presence to anyone who can see the card. After a PDF upload/remove from the edit modals, the modals fire an `onPdfChanged` hook that updates the affected card(s) in place (badge span + `data-pdf`/`data-pdf-size` attributes + the `_cachedBooks` row) instead of re-rendering the list, and re-wires the play-area PDF button when the affected book is the open one; EPUB uploads/removes fire a parallel `onEpubChanged` hook with `data-epub`/`data-epub-size` and the play-area EPUB button.
 
 `join_template_id` is assigned once at registration by randomly selecting a row from the `join_templates` table. It is backfilled for existing users on server startup. It permanently identifies which join-feed template a user owns - the same template is always used for that user's `user_joined` feed entry so the text is stable across refreshes.
 
@@ -1308,6 +1310,7 @@ Levels 101-120 continue the ladder with ascended titles: 101 Archon, 102 Radiant
 | `book_added_by_other` | 150 | `bookId:adderId` | Once per adder per book, awarded to the book's creator when another user adds it to their library |
 | `series_added_by_other` | 150 | `seriesId:adderId` | Once per adder per series, awarded to the series creator when another user adds it to their library |
 | `pdf_available` | 150 | `bookId` | Once per book; awarded to the uploader (or all library holders if uploaded from localhost) on **first upload only** - re-uploads do not re-award |
+| `epub_available` | 150 | `bookId` | Once per book; awarded to the uploader (or all library holders if uploaded from localhost) on **first upload only** - re-uploads do not re-award. Independent of `pdf_available`, so uploading both a PDF and an EPUB for one book awards both |
 | `export_all` | 200 | `0` | Once per user, first time they use Export Everything |
 | `export_book` | 50 | `bookId` | Once per book, first time the user exports that book |
 | `create_series` | 50 | `seriesId` | Once per series, on first creation (not find-existing) |
@@ -1811,7 +1814,7 @@ The shared `_visibleCoverItems()` filter excludes public books and anthologies w
 
 `loadCovers()` fetches `/api/public/covers`, `/api/public/books`, and `/api/public/series`, then renders a mixed wall into `#covers-grid`.
 
-**Refresh correctness (`covers/data.js`):** the fingerprint includes author/child/series search metadata, section totals, battle-sim/live-reading availability, PDF paths, and open-world series flags. Ownership popularity counters remain excluded to avoid rebuilding the grid for unrelated library additions. A hidden-page fetch does not commit the rendered fingerprint, so returning to the landing page applies changes rather than falsely treating old caches as current. Responses must be successful and array-shaped before application; failed refreshes preserve the last successful catalog. An empty catalog clears the old grid, lazy observers, and background rotation pool.
+**Refresh correctness (`covers/data.js`):** the fingerprint includes author/child/series search metadata, section totals, battle-sim/live-reading availability, PDF and EPUB paths, and open-world series flags. Ownership popularity counters remain excluded to avoid rebuilding the grid for unrelated library additions. A hidden-page fetch does not commit the rendered fingerprint, so returning to the landing page applies changes rather than falsely treating old caches as current. Responses must be successful and array-shaped before application; failed refreshes preserve the last successful catalog. An empty catalog clears the old grid, lazy observers, and background rotation pool.
 
 **In-flight catalog guards:** pausing auto-refresh also suppresses application of a request that was already running. Each request captures its auth token; if the account changes while it is fetching/parsing, that response is discarded and one follow-up refresh is queued using the current token. This prevents transient upload states or previous-account PDF metadata from being applied late.
 
@@ -2350,7 +2353,7 @@ A third div, `#landing-bg-dim` (same `position: fixed; z-index: -1`, painted aft
 
 ## Identifier validation (`edit-book/validators.js`, re-exported by `edit-book.js`)
 
-`edit-book.js` keeps all 23 existing exports so `books/add-book.js`, the desktop bootstrap, and library/detail-dialog hooks need no import changes. Implementations live in `edit-book/`; internal imports are acyclic and never back-import the facade. Mutable hooks, pending media and stash/rating state live in `editState` (`edit-book/state.js`). `initEditBook()` preserves event-registration order: book media inputs, stash dialogs, anthology bindings, then series bindings. Book actions receive the close callback explicitly, avoiding a book/action import cycle. The edit dialog replaces per-open keyboard/parent/type/close handlers rather than accumulating listeners, rejects failed cover uploads before saving metadata, and keeps PDF links/cache intact on failed removal. Successful delayed PDF removal updates the original book without hiding another book's link. Rating loads/saves use a request sequence so late responses or rollbacks cannot overwrite a reopened dialog or a newer rating action.
+`edit-book.js` keeps all 27 existing exports so `books/add-book.js`, the desktop bootstrap, and library/detail-dialog hooks need no import changes. Implementations live in `edit-book/`; internal imports are acyclic and never back-import the facade. Mutable hooks, pending media and stash/rating state live in `editState` (`edit-book/state.js`). `initEditBook()` preserves event-registration order: book media inputs, stash dialogs, anthology bindings, then series bindings. Book actions receive the close callback explicitly, avoiding a book/action import cycle. The edit dialog replaces per-open keyboard/parent/type/close handlers rather than accumulating listeners, rejects failed cover uploads before saving metadata, and keeps PDF links/cache intact on failed removal. Successful delayed PDF removal updates the original book without hiding another book's link. Rating loads/saves use a request sequence so late responses or rollbacks cannot overwrite a reopened dialog or a newer rating action.
 
 Book, anthology and series dialogs also track an open-session generation. Media save continuations cannot save or close a replacement dialog; upload callbacks retain the original item ID/file size for cache/reward updates. `_uploadPdfWithProgress` accepts an optional current-session predicate (existing three-argument callers remain compatible), guarding progress events and the delayed progress reset. Reopening restores Save/Cancel controls. Image compression results and anthology membership UI refreshes are session-guarded; membership changes update their original cached book. Anthology PDF removal captures its target before confirmation, reports failures without clearing the link, and does not clear another dialog after completion. Series saves still refresh the library after success but cannot close a newer edit dialog.
 ### `validateIsbn(raw)`

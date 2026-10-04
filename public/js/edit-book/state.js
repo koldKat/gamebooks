@@ -10,6 +10,7 @@ export const editState = {
   _editingStashExcludedBookIds: new Set(),
   _pendingCoverBlob: null,
   _pendingPdfFile: null,
+  _pendingEpubFile: null,
   _editBookId: null,
   _bookSession: 0,
   _anthologySession: 0,
@@ -25,6 +26,7 @@ export const editState = {
   _eccBookId: null,
   _eccCover: null,
   _eccPdf: null,
+  _eccEpub: null,
   _esrSeriesId: null,
 };
 

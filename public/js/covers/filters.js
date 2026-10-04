@@ -52,6 +52,11 @@ export function _bottomLeftBadgeCount(item) {
   return (_hasBattleSim(item) ? 1 : 0) + (_hasLiveReading(item) ? 1 : 0);
 }
 
+// Stack EPUB badges after battle-sim, reading, and PDF badges.
+export function _epubBadgeOffset(item) {
+  return _bottomLeftBadgeCount(item) + (!item.isSeries && item.pdfPath ? 1 : 0);
+}
+
 // Resolve ownership from the hooked library cache; the public catalog has no viewer-specific ownership.
 export function _isNotInMyBooks(item) {
   const owned = Array.isArray(coversState._hooks.getCachedBooks?.()) ? coversState._hooks.getCachedBooks() : [];

@@ -71,7 +71,8 @@ export async function navigateToBook(bookId) {
       book.pages  || null, book.authors || null, book.description || null,
       book.discoverable_sections ?? null, !!book.is_public, isCreator,
       book.series_name || null, book.series_number || null,
-      !!book.is_container, book.parent_book_id ?? null, book.book_order ?? null);
+      !!book.is_container, book.parent_book_id ?? null, book.book_order ?? null,
+      book.epub_path || null);
   } else {
     await showBooks();
   }
