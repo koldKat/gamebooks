@@ -27,6 +27,7 @@ function _data() {
       enemy: { name: '', skill: 0, stamina: 0, staminaMax: 0 },
       secondEnemy: { active: false, name: '', skill: 0, stamina: 0, staminaMax: 0, target: 'enemy' },
       rolled: false,
+      correctedCombatRules: true,
       pendingLuckQueue: [],
       roundsThisBattle: 0,
       log: [],
@@ -62,6 +63,8 @@ function _secondName(d) { return d.secondEnemy.name.trim() || t('battlesim237.ui
 function _secondNameSafe(d) { return escapeHtml(_secondName(d)); }
 
 function _resetEncounterKnobs(d) {
+  // New encounters opt in; loading or resetting a saved fight does not.
+  d.correctedCombatRules = true;
   d.player.attackModifier = 0;
   d.player.yourDamage = 2;
   d.player.enemyDamage = 2;
@@ -132,8 +135,12 @@ function _runThreeWayRound(d) {
     e2: _secondNameSafe(d), e2AS: enemy2AS,
   }));
 
+  const highest = Math.max(playerAS, enemy1AS, enemy2AS);
+  if (d.correctedCombatRules && [playerAS, enemy1AS, enemy2AS].filter(as => as === highest).length > 1) {
+    _appendLog(d, t('battlesim237.log.highest_tied'));
+    return;
+  }
   if (playerAS >= enemy1AS && playerAS >= enemy2AS) {
-    // Player ties count as hits against the chosen target.
     const target = d.secondEnemy.target === 'second' ? d.secondEnemy : d.enemy;
     const targetName = d.secondEnemy.target === 'second' ? _secondNameSafe(d) : _enemyNameSafe(d);
     const dmg = d.player.yourDamage;
@@ -176,7 +183,7 @@ function _testLuck() {
     const target = event.on === 'second' ? d.secondEnemy : d.enemy;
     const targetName = event.on === 'second' ? _secondNameSafe(d) : _enemyNameSafe(d);
     if (lucky) {
-      target.stamina = Math.max(0, target.stamina - 1);
+      target.stamina = Math.max(0, target.stamina - (d.correctedCombatRules ? 2 : 1));
       _appendLog(d, t('battlesim237.log.luck_player_hit_lucky', { roll, enemy: targetName, stamina: target.stamina, staminaMax: target.staminaMax }));
     } else {
       target.stamina = Math.min(target.staminaMax, target.stamina + 1);

@@ -6,6 +6,7 @@ export default {
     'battlesim237.log.round':         'Round {round}: you {playerAS} vs {enemy} {enemyAS}.',
     'battlesim237.log.round_three':   'Round {round}: you {playerAS} vs {e1} {e1AS} vs {e2} {e2AS}.',
     'battlesim237.log.both_avoided':  'Both blows are avoided.',
+    'battlesim237.log.highest_tied':  'The highest Attack Strength is tied. No blow lands.',
     'battlesim237.log.you_wound':     'You wound {enemy} for {n}. STAMINA: {stamina}/{staminaMax}.',
     'battlesim237.log.enemy_wounds':  '{enemy} wounds you for {n}. STAMINA: {stamina}/{staminaMax}.',
     'battlesim237.log.defeated':      '{trophy} {enemy} is defeated!',

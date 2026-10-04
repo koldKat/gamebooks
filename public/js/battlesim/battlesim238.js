@@ -28,6 +28,7 @@ function _data() {
       enemy: { name: '', skill: 0, stamina: 0, staminaMax: 0 },
       secondEnemy: { active: false, name: '', skill: 0 },
       rolled: false,
+      correctedLuckDamage: true,
       pendingLuckQueue: [],
       roundsThisBattle: 0,
       log: [],
@@ -62,6 +63,8 @@ function _secondName(d) { return d.secondEnemy.name.trim() || t('battlesim238.ui
 function _secondNameSafe(d) { return escapeHtml(_secondName(d)); }
 
 function _resetEncounterKnobs(d) {
+  // Preserve legacy fights until a new encounter is selected.
+  d.correctedLuckDamage = true;
   d.player.attackModifier = 0;
   d.player.yourDamage = 2;
   d.player.enemyDamage = 2;
@@ -140,7 +143,7 @@ function _testLuck() {
   d.player.luck = Math.max(0, d.player.luck - 1);
   if (event.kind === 'player-hit') {
     if (lucky) {
-      d.enemy.stamina = Math.max(0, d.enemy.stamina - 1);
+      d.enemy.stamina = Math.max(0, d.enemy.stamina - (d.correctedLuckDamage ? 2 : 1));
       _appendLog(d, t('battlesim238.log.luck_player_hit_lucky', { roll, enemy: _enemyNameSafe(d), stamina: d.enemy.stamina, staminaMax: d.enemy.staminaMax }));
     } else {
       d.enemy.stamina = Math.min(d.enemy.staminaMax, d.enemy.stamina + 1);
@@ -486,7 +489,7 @@ export function initSim238() {
   document.getElementById('sim238-roll').addEventListener('click', () => {
     const d = _data();
     if (!d || d.rolled) return;
-    d.player.skillInitial   = _roll1d6() + 6;
+    d.player.skillInitial   = _roll1d6() + 4;
     d.player.staminaInitial = _roll2d6() + 12;
     d.player.luckInitial    = _roll1d6() + 6;
     d.player.skill   = d.player.skillInitial;
