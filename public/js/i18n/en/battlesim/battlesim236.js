@@ -10,6 +10,7 @@ export default {
     'battlesim236.log.no_effect':     'Your blow lands but a normal weapon cannot harm {enemy}.',
     'battlesim236.log.myurr_second':  "Myurr's second attack: you {playerAS} vs {enemyAS}.",
     'battlesim236.log.defeated':      '{trophy} {enemy} is defeated!',
+    'battlesim236.log.servant_destroyed': '{enemy} is destroyed by two blows in successive attack rounds.',
     'battlesim236.log.fallen':        '{skull} You have fallen in battle.',
     'battlesim236.log.luck_player_hit_lucky':   'Test Your Luck: {roll} (Lucky) - the wound is worse. {enemy} STAMINA: {stamina}/{staminaMax}.',
     'battlesim236.log.luck_player_hit_unlucky': 'Test Your Luck: {roll} (Unlucky) - the wound is less severe. {enemy} STAMINA: {stamina}/{staminaMax}.',

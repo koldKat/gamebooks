@@ -31,6 +31,10 @@ function _data() {
       rolled: false,
       pendingLuckQueue: [],
       roundsThisBattle: 0,
+      temporaryHeroism: true,
+      heroismSkillBonus: 0,
+      consecutiveServantHits: true,
+      lastServantHit: null,
       log: [],
       history: [],
     };
@@ -63,6 +67,7 @@ function _enemyNameSafe(d) { return escapeHtml(_enemyName(d)); }
 
 function _effectiveSkill(d) {
   let skill = d.player.skill;
+  if (d.temporaryHeroism) skill += d.heroismSkillBonus || 0;
   if (d.player.demonSlayingSword) skill += 4;
   return skill;
 }
@@ -72,9 +77,15 @@ function _resetEncounterKnobs(d) {
   d.player.thickArmour = false;
   d.player.myurrFight = false;
   d.player.heroismUsedThisFight = false;
+  // Adopt the corrected rule only when starting a new encounter.
+  d.temporaryHeroism = true;
+  d.heroismSkillBonus = 0;
+  d.consecutiveServantHits = true;
+  d.lastServantHit = null;
 }
 
 function _recordOutcome(d, outcome) {
+  if (d.temporaryHeroism) d.heroismSkillBonus = 0;
   d.history.push({
     enemy: _enemyName(d), outcome,
     playerStamina: d.player.stamina, playerStaminaMax: d.player.staminaInitial,
@@ -102,6 +113,13 @@ function _runRound() {
       const dmg = d.player.thickArmour ? 1 : 2;
       d.enemy.stamina = Math.max(0, d.enemy.stamina - dmg);
       _appendLog(d, t('battlesim236.log.you_wound', { enemy: _enemyNameSafe(d), n: dmg, stamina: d.enemy.stamina, staminaMax: d.enemy.staminaMax }));
+      if (d.consecutiveServantHits && /\bdemonic servant\b/i.test(d.enemy.name)) {
+        if (d.lastServantHit?.enemy === d.enemy.name && d.lastServantHit.round === d.roundsThisBattle - 1) {
+          d.enemy.stamina = 0;
+          _appendLog(d, t('battlesim236.log.servant_destroyed', { enemy: _enemyNameSafe(d) }));
+        }
+        d.lastServantHit = { enemy: d.enemy.name, round: d.roundsThisBattle };
+      }
       if (d.enemy.stamina > 0) d.pendingLuckQueue.push({ kind: 'player-hit' });
     }
   } else {
@@ -189,6 +207,8 @@ function _resetBattle() {
   d.player.stamina = d.player.staminaInitial;
   d.roundsThisBattle = 0;
   d.pendingLuckQueue = [];
+  d.consecutiveServantHits = true;
+  d.lastServantHit = null;
   if (d.log.length) _appendLog(d, t('battlesim236.log.reset_sep'));
   _appendLog(d, t('battlesim236.log.reset', { enemy: _enemyNameSafe(d) }));
   saveState();
@@ -206,8 +226,9 @@ function _useHeroism() {
   }
   d.player.heroismUsedThisFight = true;
   d.player.stamina = Math.min(d.player.staminaInitial, d.player.stamina + 2);
-  d.player.skill += 2;
-  _appendLog(d, t('battlesim236.log.heroism', { stamina: d.player.stamina, staminaMax: d.player.staminaInitial, skill: d.player.skill }));
+  if (d.temporaryHeroism) d.heroismSkillBonus = 2;
+  else d.player.skill += 2;
+  _appendLog(d, t('battlesim236.log.heroism', { stamina: d.player.stamina, staminaMax: d.player.staminaInitial, skill: d.player.skill + (d.heroismSkillBonus || 0) }));
   saveState();
   _renderAll();
 }

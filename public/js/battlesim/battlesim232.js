@@ -32,8 +32,8 @@ function _data() {
         skill: 0, skillInitial: 0,
         stamina: 0, staminaInitial: 0,
         luck: 0, luckInitial: 0,
-        potionKey: 'skill', potionUsesLeft: 1,
-        provisionsLeft: MAX_PROVISIONS,
+        potionKey: 'skill', potionUsesLeft: 0,
+        provisionsLeft: 0,
         attackModifier: 0,
         enemyWoundDamage: 2,
         enemyAutoWinFirstRound: false,
@@ -53,6 +53,7 @@ function _data() {
   if (!Array.isArray(d.pendingLuckQueue)) d.pendingLuckQueue = [];
   if (d.roundsThisBattle === undefined) d.roundsThisBattle = 0;
   if (!d.history) d.history = [];
+  // Keep legacy supplies when loading older characters.
   if (d.player.potionKey === undefined) d.player.potionKey = 'skill';
   if (d.player.potionUsesLeft === undefined) d.player.potionUsesLeft = 1;
   if (d.player.provisionsLeft === undefined) d.player.provisionsLeft = MAX_PROVISIONS;

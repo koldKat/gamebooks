@@ -12,6 +12,7 @@ const SVG_SKULL  = `<svg class="sim-icon sim-icon-dead"  viewBox="0 0 24 24" ari
 const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v7a6 6 0 0 1-12 0V2zm-2 1H2v4a4 4 0 0 0 4 4v-1a3 3 0 0 1-3-3V3zm16 0h2v4a4 4 0 0 1-4 4v-1a3 3 0 0 0 3-3V3zm-7 13v2H9v2h6v-2h-2v-2a6 6 0 0 0 5-5.92V2H6v8.08A6 6 0 0 0 13 16z"/></svg>`;
 
 const MAX_PROVISIONS = 10;
+const STARTING_PROVISIONS = 2;
 const PROVISIONS_HEAL = 4;
 const SIDE_WOUND_DMG = 2;
 
@@ -24,7 +25,7 @@ function _data() {
         skill: 0, skillInitial: 0,
         stamina: 0, staminaInitial: 0,
         luck: 0, luckInitial: 0,
-        provisionsLeft: MAX_PROVISIONS,
+        provisionsLeft: STARTING_PROVISIONS,
         attackModifier: 0,
         enemyWoundDamage: 2,
         enemyAutoWinFirstRound: false,
