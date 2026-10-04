@@ -17,8 +17,7 @@ const _PDF_ICON_MARKUP = `
 const _EPUB_ICON_MARKUP = `
   <span class="inline-svg-icon epub-svg-icon" aria-hidden="true">
     <svg viewBox="0 0 24 24" focusable="false">
-      <path d="M4 4h7a3 3 0 0 1 3 3v13a2.5 2.5 0 0 0-2.5-2.5H4Z"></path>
-      <path d="M20 4h-4a3 3 0 0 0-3 3v13a2.5 2.5 0 0 1 2.5-2.5H20Z"></path>
+      <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path>
     </svg>
   </span>
 `;
