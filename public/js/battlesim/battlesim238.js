@@ -26,9 +26,10 @@ function _data() {
         enemyDamage: 2,
       },
       enemy: { name: '', skill: 0, stamina: 0, staminaMax: 0 },
-      secondEnemy: { active: false, name: '', skill: 0 },
+      secondEnemy: { active: false, name: '', skill: 0, stamina: 0, staminaMax: 0, target: 'enemy' },
       rolled: false,
       correctedLuckDamage: true,
+      pairedCombat: true,
       pendingLuckQueue: [],
       roundsThisBattle: 0,
       log: [],
@@ -47,7 +48,9 @@ function _data() {
   return d;
 }
 
-function _notReady(d) { return !d.rolled; }
+function _paired(d) { return d.pairedCombat && d.secondEnemy.active; }
+function _notReady(d) { return !d.rolled || (_paired(d) && (!d.enemy.staminaMax || !d.secondEnemy.staminaMax)); }
+function _allDefeated(d) { return d.enemy.stamina <= 0 && (!_paired(d) || d.secondEnemy.stamina <= 0); }
 
 function _roll2d6() { return 2 + Math.floor(Math.random() * 6) + Math.floor(Math.random() * 6); }
 function _roll1d6() { return 1 + Math.floor(Math.random() * 6); }
@@ -65,12 +68,16 @@ function _secondNameSafe(d) { return escapeHtml(_secondName(d)); }
 function _resetEncounterKnobs(d) {
   // Preserve legacy fights until a new encounter is selected.
   d.correctedLuckDamage = true;
+  d.pairedCombat = true;
   d.player.attackModifier = 0;
   d.player.yourDamage = 2;
   d.player.enemyDamage = 2;
   d.secondEnemy.active = false;
   d.secondEnemy.name = '';
   d.secondEnemy.skill = 0;
+  d.secondEnemy.stamina = 0;
+  d.secondEnemy.staminaMax = 0;
+  d.secondEnemy.target = 'enemy';
 }
 
 function _recordOutcome(d, outcome) {
@@ -83,8 +90,52 @@ function _recordOutcome(d, outcome) {
 
 // ── Combat ───────────────────────────────────────────────────────────────────
 
+function _finishPairedRound(d) {
+  if (d.player.stamina <= 0) {
+    _appendLog(d, t('battlesim238.log.fallen', { skull: SVG_SKULL }));
+    _recordOutcome(d, 'loss');
+    d.pendingLuckQueue = [];
+  } else if (_allDefeated(d)) {
+    _appendLog(d, t('battlesim238.log.defeated', { trophy: SVG_TROPHY, enemy: `${_enemyNameSafe(d)} & ${_secondNameSafe(d)}` }));
+    _recordOutcome(d, 'win');
+    d.pendingLuckQueue = [];
+  }
+}
+
+function _runPairedRound(d) {
+  if (_notReady(d) || d.player.stamina <= 0 || _allDefeated(d) || d.pendingLuckQueue.length) return;
+  d.roundsThisBattle++;
+  let target = d.secondEnemy.target === 'secondEnemy' ? 'secondEnemy' : 'enemy';
+  if (d[target].stamina <= 0) target = target === 'enemy' ? 'secondEnemy' : 'enemy';
+  d.secondEnemy.target = target;
+  const other = target === 'enemy' ? 'secondEnemy' : 'enemy';
+  for (const key of [target, other]) {
+    const enemy = d[key];
+    if (enemy.stamina <= 0 || d.player.stamina <= 0) continue;
+    const name = key === 'enemy' ? _enemyNameSafe(d) : _secondNameSafe(d);
+    const playerAS = _roll2d6() + d.player.skill + (d.player.attackModifier || 0);
+    const enemyAS = _roll2d6() + enemy.skill;
+    _appendLog(d, t(key === target ? 'battlesim238.log.round' : 'battlesim238.log.second_attack', { round: d.roundsThisBattle, playerAS, enemy: name, enemyAS }));
+    if (enemyAS > playerAS) {
+      d.player.stamina = Math.max(0, d.player.stamina - d.player.enemyDamage);
+      _appendLog(d, t('battlesim238.log.enemy_wounds', { enemy: name, n: d.player.enemyDamage, stamina: d.player.stamina, staminaMax: d.player.staminaInitial }));
+      if (d.player.stamina > 0) d.pendingLuckQueue.push({ kind: 'enemy-hit' });
+    } else if (playerAS > enemyAS && key === target) {
+      enemy.stamina = Math.max(0, enemy.stamina - d.player.yourDamage);
+      _appendLog(d, t('battlesim238.log.you_wound', { enemy: name, n: d.player.yourDamage, stamina: enemy.stamina, staminaMax: enemy.staminaMax }));
+      if (enemy.stamina > 0) d.pendingLuckQueue.push({ kind: 'player-hit', target });
+    } else {
+      _appendLog(d, t(key === target ? 'battlesim238.log.both_avoided' : 'battlesim238.log.parried', { enemy: name }));
+    }
+  }
+  _finishPairedRound(d);
+  saveState();
+  _renderAll();
+}
+
 function _runRound() {
   const d = _data();
+  if (d && _paired(d)) return _runPairedRound(d);
   if (!d || _notReady(d) || d.player.stamina <= 0 || d.enemy.stamina <= 0 || d.pendingLuckQueue.length) return;
   d.roundsThisBattle++;
 
@@ -142,14 +193,16 @@ function _testLuck() {
   const lucky = roll <= d.player.luck;
   d.player.luck = Math.max(0, d.player.luck - 1);
   if (event.kind === 'player-hit') {
+    const enemy = _paired(d) && event.target === 'secondEnemy' ? d.secondEnemy : d.enemy;
+    const name = enemy === d.secondEnemy ? _secondNameSafe(d) : _enemyNameSafe(d);
     if (lucky) {
-      d.enemy.stamina = Math.max(0, d.enemy.stamina - (d.correctedLuckDamage ? 2 : 1));
-      _appendLog(d, t('battlesim238.log.luck_player_hit_lucky', { roll, enemy: _enemyNameSafe(d), stamina: d.enemy.stamina, staminaMax: d.enemy.staminaMax }));
+      enemy.stamina = Math.max(0, enemy.stamina - (d.correctedLuckDamage ? 2 : 1));
+      _appendLog(d, t('battlesim238.log.luck_player_hit_lucky', { roll, enemy: name, stamina: enemy.stamina, staminaMax: enemy.staminaMax }));
     } else {
-      d.enemy.stamina = Math.min(d.enemy.staminaMax, d.enemy.stamina + 1);
-      _appendLog(d, t('battlesim238.log.luck_player_hit_unlucky', { roll, enemy: _enemyNameSafe(d), stamina: d.enemy.stamina, staminaMax: d.enemy.staminaMax }));
+      enemy.stamina = Math.min(enemy.staminaMax, enemy.stamina + 1);
+      _appendLog(d, t('battlesim238.log.luck_player_hit_unlucky', { roll, enemy: name, stamina: enemy.stamina, staminaMax: enemy.staminaMax }));
     }
-    if (d.enemy.stamina <= 0) { _appendLog(d, t('battlesim238.log.defeated', { trophy: SVG_TROPHY, enemy: d.secondEnemy.active ? `${_enemyNameSafe(d)} & ${_secondNameSafe(d)}` : _enemyNameSafe(d) })); _recordOutcome(d, 'win'); }
+    if (_allDefeated(d)) { _appendLog(d, t('battlesim238.log.defeated', { trophy: SVG_TROPHY, enemy: d.secondEnemy.active ? `${_enemyNameSafe(d)} & ${_secondNameSafe(d)}` : _enemyNameSafe(d) })); _recordOutcome(d, 'win'); d.pendingLuckQueue = []; }
   } else {
     if (lucky) {
       d.player.stamina = Math.min(d.player.staminaInitial, d.player.stamina + 1);
@@ -180,6 +233,7 @@ function _resetBattle() {
   const d = _data();
   if (!d) return;
   d.enemy.stamina = d.enemy.staminaMax;
+  if (_paired(d)) { d.secondEnemy.stamina = d.secondEnemy.staminaMax; d.secondEnemy.target = 'enemy'; }
   d.player.stamina = d.player.staminaInitial;
   d.roundsThisBattle = 0;
   d.pendingLuckQueue = [];
@@ -197,11 +251,11 @@ function _renderStatus() {
   if (!d || !el) return;
   const notReady = _notReady(d);
   const hasEnemy = d.enemy.staminaMax > 0;
-  if (notReady)                                    el.innerHTML = t('battlesim238.status.not_ready');
+  if (notReady)                                    el.innerHTML = t(d.rolled && _paired(d) ? 'battlesim238.status.setup_pair' : 'battlesim238.status.not_ready');
   else if (d.player.stamina <= 0)                   el.innerHTML = t('battlesim238.status.fallen', { skull: SVG_SKULL });
-  else if (hasEnemy && d.enemy.stamina <= 0)         el.innerHTML = t('battlesim238.status.victory', { trophy: SVG_TROPHY });
+  else if (hasEnemy && _allDefeated(d))              el.innerHTML = t('battlesim238.status.victory', { trophy: SVG_TROPHY });
   else                                               el.innerHTML = '';
-  const over = notReady || d.player.stamina <= 0 || (hasEnemy && d.enemy.stamina <= 0);
+  const over = notReady || d.player.stamina <= 0 || (hasEnemy && _allDefeated(d));
   document.getElementById('sim238-round').disabled = over || !!d.pendingLuckQueue.length;
   document.getElementById('sim238-luck-yes').disabled = notReady || !d.pendingLuckQueue.length || d.player.luck <= 0;
   document.getElementById('sim238-luck-no').disabled  = notReady || !d.pendingLuckQueue.length;
@@ -259,9 +313,21 @@ function _renderInputs() {
   document.getElementById('sim238-enemy-staminamax').value = d.enemy.staminaMax;
 
   document.getElementById('sim238-second-toggle').checked = d.secondEnemy.active;
+  document.getElementById('sim238-second-toggle').disabled = !!d.pairedCombat && !!d.pendingLuckQueue.length;
   document.getElementById('sim238-second-fields').style.display = d.secondEnemy.active ? '' : 'none';
   document.getElementById('sim238-second-name').value = d.secondEnemy.name;
+  document.getElementById('sim238-second-name').disabled = !!d.pairedCombat && !!d.pendingLuckQueue.length;
   document.getElementById('sim238-second-skill').value = d.secondEnemy.skill;
+  document.getElementById('sim238-paired-fields').style.display = d.pairedCombat ? '' : 'none';
+  document.getElementById('sim238-second-stamina').value = d.secondEnemy.stamina ?? 0;
+  document.getElementById('sim238-second-staminamax').value = d.secondEnemy.staminaMax ?? 0;
+  const target = document.getElementById('sim238-target');
+  target.value = d.secondEnemy.target || 'enemy';
+  target.disabled = !!d.pendingLuckQueue.length;
+  document.getElementById('sim238-target-first').textContent = _enemyName(d);
+  document.getElementById('sim238-target-second').textContent = _secondName(d);
+  document.getElementById('sim238-second-label').textContent = t(d.pairedCombat ? 'battlesim238.ui.second_tracked' : 'battlesim238.ui.second_name');
+  document.getElementById('sim238-second-mode').textContent = t(d.pairedCombat ? 'battlesim238.ui.paired_toggle' : 'battlesim238.ui.second_toggle');
 
   const pendingEl = document.getElementById('sim238-luck-prompt');
   pendingEl.style.display = d.pendingLuckQueue.length ? '' : 'none';
@@ -315,7 +381,7 @@ async function _loadEnemyList() {
   return _enemyList;
 }
 
-function _setupEnemyAutocomplete(inputId, dropdownId, onSelect) {
+function _setupEnemyAutocomplete(inputId, dropdownId, onSelect, enabled = () => true) {
   const input    = document.getElementById(inputId);
   const dropdown = document.getElementById(dropdownId);
   let matches   = [];
@@ -328,6 +394,7 @@ function _setupEnemyAutocomplete(inputId, dropdownId, onSelect) {
   }
 
   function render(q) {
+    if (!enabled()) { closeDropdown(); return; }
     const list = _enemyList || [];
     const ql = q.trim().toLowerCase();
     matches = ql ? list.filter(e => e.name.toLowerCase().includes(ql)) : list;
@@ -342,7 +409,7 @@ function _setupEnemyAutocomplete(inputId, dropdownId, onSelect) {
   }
 
   function select(enemy) {
-    if (!enemy) return;
+    if (!enemy || !enabled()) return;
     input.value = enemy.name;
     onSelect(enemy);
     closeDropdown();
@@ -427,14 +494,28 @@ export function initSim238() {
             ${_numField(t('battlesim238.ui.stamina'), 'sim238-enemy-stamina')}
             ${_numField(t('battlesim238.ui.stamina_max'), 'sim238-enemy-staminamax')}
             <div class="inv-edit-row">
-              <label class="inv-edit-check-label"><input type="checkbox" id="sim238-second-toggle" class="inv-edit-check"> ${t('battlesim238.ui.second_toggle')}</label>
+              <label class="inv-edit-check-label"><input type="checkbox" id="sim238-second-toggle" class="inv-edit-check"> <span id="sim238-second-mode">${t('battlesim238.ui.second_toggle')}</span></label>
             </div>
             <div id="sim238-second-fields" style="display:none">
               <div class="inv-edit-row">
-                <span class="inv-edit-label bsim-stat-label">${t('battlesim238.ui.second_name')}</span>
-                <input id="sim238-second-name" class="inv-edit-input" type="text">
+                <span id="sim238-second-label" class="inv-edit-label bsim-stat-label">${t('battlesim238.ui.second_name')}</span>
+                <div class="autocomplete-wrap bsim-enemy-ac">
+                  <input id="sim238-second-name" class="inv-edit-input" type="text" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" aria-controls="sim238-second-dropdown">
+                  <ul id="sim238-second-dropdown" class="autocomplete-dropdown" role="listbox"></ul>
+                </div>
               </div>
               ${_numField(t('battlesim238.ui.skill'), 'sim238-second-skill')}
+              <div id="sim238-paired-fields">
+                ${_numField(t('battlesim238.ui.stamina'), 'sim238-second-stamina')}
+                ${_numField(t('battlesim238.ui.stamina_max'), 'sim238-second-staminamax')}
+                <div class="inv-edit-row">
+                  <span class="inv-edit-label bsim-stat-label">${t('battlesim238.ui.target')}</span>
+                  <select id="sim238-target" class="inv-edit-input">
+                    <option id="sim238-target-first" value="enemy">${t('battlesim238.ui.enemy')}</option>
+                    <option id="sim238-target-second" value="secondEnemy">${t('battlesim238.ui.second_default')}</option>
+                  </select>
+                </div>
+              </div>
             </div>
           </div>
           <div id="sim238-status" class="bsim-status"></div>
@@ -511,10 +592,12 @@ export function initSim238() {
   document.getElementById('sim238-second-toggle').addEventListener('change', e => {
     const d = _data();
     if (!d) return;
+    if (d.pairedCombat && d.pendingLuckQueue.length) { _renderInputs(); return; }
     d.secondEnemy.active = e.target.checked;
     if (!d.secondEnemy.active) {
       d.secondEnemy.name = '';
       d.secondEnemy.skill = 0;
+      if (d.pairedCombat) { d.secondEnemy.stamina = 0; d.secondEnemy.staminaMax = 0; d.secondEnemy.target = 'enemy'; }
     }
     saveState();
     _renderInputs();
@@ -526,6 +609,23 @@ export function initSim238() {
     d.secondEnemy.name = e.target.value;
     saveState();
   });
+
+  document.getElementById('sim238-target').addEventListener('change', e => {
+    const d = _data();
+    if (!d || !_paired(d) || d.pendingLuckQueue.length) { if (d) _renderInputs(); return; }
+    d.secondEnemy.target = e.target.value === 'secondEnemy' ? 'secondEnemy' : 'enemy';
+    saveState();
+  });
+
+  _setupEnemyAutocomplete('sim238-second-name', 'sim238-second-dropdown', enemy => {
+    const d = _data();
+    if (!d || !d.pairedCombat || d.pendingLuckQueue.length) return;
+    d.secondEnemy.name = enemy.name;
+    if (enemy.attack != null) d.secondEnemy.skill = enemy.attack;
+    if (enemy.hp != null) { d.secondEnemy.stamina = enemy.hp; d.secondEnemy.staminaMax = enemy.hp; }
+    saveState();
+    _renderAll();
+  }, () => { const d = _data(); return !!d?.pairedCombat && !d.pendingLuckQueue.length; });
 
   // Plain numeric steppers
   const FIELD_MAP = {
@@ -542,6 +642,8 @@ export function initSim238() {
     'sim238-enemy-stamina':     ['enemy', 'stamina'],
     'sim238-enemy-staminamax':  ['enemy', 'staminaMax'],
     'sim238-second-skill':      ['secondEnemy', 'skill'],
+    'sim238-second-stamina':    ['secondEnemy', 'stamina'],
+    'sim238-second-staminamax': ['secondEnemy', 'staminaMax'],
   };
   function _applyField(id, val) {
     const d = _data();
@@ -553,11 +655,13 @@ export function initSim238() {
     if (id === 'sim238-player-stamina') val = Math.min(val, d.player.staminaInitial);
     if (id === 'sim238-player-luck') val = Math.min(val, d.player.luckInitial);
     if (id === 'sim238-enemy-stamina') val = Math.min(val, d.enemy.staminaMax);
+    if (id === 'sim238-second-stamina') val = Math.min(val, d.secondEnemy.staminaMax);
     d[map[0]][map[1]] = val;
     if (id === 'sim238-player-skillmax') d.player.skill = Math.min(d.player.skill, val);
     if (id === 'sim238-player-staminamax') d.player.stamina = Math.min(d.player.stamina, val);
     if (id === 'sim238-player-luckmax') d.player.luck = Math.min(d.player.luck, val);
     if (id === 'sim238-enemy-staminamax') d.enemy.stamina = Math.min(d.enemy.stamina, val);
+    if (id === 'sim238-second-staminamax') d.secondEnemy.stamina = Math.min(d.secondEnemy.stamina, val);
     saveState();
     _renderInputs();
   }

@@ -73,6 +73,7 @@ test('Lucky killing blow records victory once, without negative enemy STAMINA', 
 
 test('single-opponent ties miss; parry opponent can wound but cannot be wounded', () => {
   const { d, run } = fixture();
+  delete d.pairedCombat;
   d.enemy.skill = 8;
   Object.assign(d.secondEnemy, { active: true, name: 'Slaver', skill: 9 });
   run('_runRound()');
@@ -85,6 +86,131 @@ test('single-opponent ties miss; parry opponent can wound but cannot be wounded'
   assert.equal(d.enemy.stamina, 10);
   assert.equal(d.player.stamina, 18);
   assert.equal(d.pendingLuckQueue.length, 0);
+});
+
+function pair() {
+  const f = fixture();
+  Object.assign(f.d.secondEnemy, { active: true, name: 'Slaver', skill: 7, stamina: 8, staminaMax: 8, target: 'enemy' });
+  return f;
+}
+
+test('paired fights wound only the target, can switch targets, preserve pending Luck target', () => {
+  const { d, run } = pair();
+  run('_runRound()');
+  assert.equal(d.enemy.stamina, 8);
+  assert.equal(d.secondEnemy.stamina, 8);
+  assert.equal(d.pendingLuckQueue[0].target, 'enemy');
+  d.secondEnemy.target = 'secondEnemy';
+  run('_testLuck()');
+  assert.equal(d.enemy.stamina, 6);
+  assert.equal(d.secondEnemy.stamina, 8);
+  run('_runRound(); _testLuck()');
+  assert.equal(d.enemy.stamina, 6);
+  assert.equal(d.secondEnemy.stamina, 4);
+});
+
+test('first enemy death does not end paired fight and surviving enemy still attacks that round', () => {
+  const { d, run } = pair();
+  d.enemy.stamina = 2;
+  d.secondEnemy.skill = 9;
+  run('_runRound()');
+  assert.equal(d.enemy.stamina, 0);
+  assert.equal(d.secondEnemy.stamina, 8);
+  assert.equal(d.player.stamina, 18);
+  assert.equal(d.history.length, 0);
+  run('_skipLuck(); _runRound()');
+  assert.equal(d.secondEnemy.target, 'secondEnemy');
+  assert.equal(d.player.stamina, 16);
+  assert.equal(d.enemy.stamina, 0);
+});
+
+test('both enemy deaths record one victory, reset restores both and reload preserves selected target', () => {
+  const { d, run } = pair();
+  d.enemy.stamina = 2;
+  d.secondEnemy.stamina = 2;
+  run('_runRound(); _runRound(); _runRound()');
+  assert.equal(d.enemy.stamina, 0);
+  assert.equal(d.secondEnemy.stamina, 0);
+  assert.equal(d.history.length, 1);
+  assert.equal(d.history[0].outcome, 'win');
+  run('_resetBattle()');
+  assert.equal(d.enemy.stamina, 10);
+  assert.equal(d.secondEnemy.stamina, 8);
+  d.secondEnemy.target = 'secondEnemy';
+  const saved = JSON.parse(JSON.stringify(d));
+  assert.deepEqual(JSON.parse(JSON.stringify(fixture(saved).d)), saved);
+});
+
+test('Lucky second-enemy kill continues until first dies; Unlucky second hit heals only second', () => {
+  const { d, run } = pair();
+  d.secondEnemy.target = 'secondEnemy';
+  d.secondEnemy.stamina = 3;
+  run('_runRound(); _testLuck()');
+  assert.equal(d.secondEnemy.stamina, 0);
+  assert.equal(d.enemy.stamina, 10);
+  assert.equal(d.history.length, 0);
+  const f = pair();
+  f.d.secondEnemy.target = 'secondEnemy';
+  f.d.player.luck = 1;
+  f.run('_runRound(); _testLuck()');
+  assert.equal(f.d.secondEnemy.stamina, 7);
+  assert.equal(f.d.enemy.stamina, 10);
+});
+
+test('paired ties miss, defeated foe cannot attack, zero second STAMINA requires setup', () => {
+  const { d, run } = pair();
+  d.enemy.skill = 8;
+  d.secondEnemy.skill = 8;
+  run('_runRound()');
+  assert.equal(d.player.stamina, 20);
+  assert.equal(d.enemy.stamina, 10);
+  assert.equal(d.secondEnemy.stamina, 8);
+  d.enemy.stamina = 0;
+  d.enemy.skill = 100;
+  d.secondEnemy.skill = 7;
+  run('_runRound()');
+  assert.equal(d.player.stamina, 20);
+  assert.equal(d.secondEnemy.stamina, 6);
+  const f = pair();
+  f.d.secondEnemy.staminaMax = 0;
+  f.run('_runRound()');
+  assert.equal(f.d.roundsThisBattle, 0);
+});
+
+test('paired two wounds queue independently and player death clears queue without victory', () => {
+  const { d, run } = pair();
+  d.enemy.skill = 9;
+  d.secondEnemy.skill = 10;
+  run('_runRound()');
+  assert.equal(d.player.stamina, 16);
+  assert.equal(d.pendingLuckQueue.length, 2);
+  run('_testLuck(); _testLuck()');
+  assert.equal(d.player.stamina, 18);
+  assert.equal(d.player.luck, 6);
+  d.player.stamina = 3;
+  run('_runRound(); _runRound()');
+  assert.equal(d.player.stamina, 0);
+  assert.equal(d.pendingLuckQueue.length, 0);
+  assert.equal(d.history.length, 1);
+  assert.equal(d.history[0].outcome, 'loss');
+});
+
+test('legacy paired fight has no added fields on load/reset and retains first-death outcome', () => {
+  const saved = JSON.parse(JSON.stringify(pair().d));
+  delete saved.pairedCombat;
+  saved.secondEnemy = { active: true, name: 'Slaver', skill: 9 };
+  const { d, run } = fixture(saved);
+  assert.deepEqual(JSON.parse(JSON.stringify(d)), saved);
+  d.enemy.stamina = 2;
+  run('_runRound()');
+  assert.equal(d.history.length, 1);
+  assert.equal(d.player.stamina, 20);
+  run('_resetBattle()');
+  assert.deepEqual(JSON.parse(JSON.stringify(d.secondEnemy)), saved.secondEnemy);
+  assert.equal(d.pairedCombat, undefined);
+  run('_resetEncounterKnobs(_data())');
+  assert.equal(d.pairedCombat, true);
+  assert.equal(d.secondEnemy.staminaMax, 0);
 });
 
 test('new character rolls SKILL die plus four without rerolling saved characters', () => {
@@ -110,4 +236,43 @@ test('new character rolls SKILL die plus four without rerolling saved characters
   const saved = JSON.parse(JSON.stringify(d));
   run('(function () {' + handler + '})()');
   assert.deepEqual(JSON.parse(JSON.stringify(d)), saved);
+});
+
+test('paired UI exposes STAMINA, roster selection and target control without changing legacy UI state', async () => {
+  for (const legacy of [false, true]) {
+    const f = pair();
+    if (legacy) delete f.d.pairedCombat;
+    const saved = JSON.parse(JSON.stringify(f.d));
+    const elements = new Map();
+    function element() {
+      const classes = new Set();
+      return { value: '', style: {}, dataset: {}, handlers: {}, classList: { add: k => classes.add(k), remove: k => classes.delete(k), contains: k => classes.has(k) },
+        addEventListener(k, fn) { (this.handlers[k] ||= []).push(fn); }, setAttribute() {}, removeAttribute() {}, appendChild() {}, querySelectorAll: () => [] };
+    }
+    const get = id => { if (!elements.has(id)) elements.set(id, element()); return elements.get(id); };
+    const document = { getElementById: get, createElement: element, addEventListener() {}, body: element() };
+    // Inject the same DOM methods used by initialization and real event handlers.
+    const context = vm.createContext({ currentPlaythrough: () => ({ sim238: f.d }), saveState() {}, t: k => k, escapeHtml: s => s,
+      document, getPlayBtnRow: () => element(), registerPanelShortcut() {}, shortcutLabel: s => s, ALL_PANEL_OVERLAY_IDS: [] });
+    vm.runInContext(source + '\ninitSim238(); _renderAll();', context);
+    assert.equal(get('sim238-paired-fields').style.display, legacy ? 'none' : '');
+    assert.equal(get('sim238-second-label').textContent, legacy ? 'battlesim238.ui.second_name' : 'battlesim238.ui.second_tracked');
+    assert.deepEqual(JSON.parse(JSON.stringify(f.d)), saved);
+    if (legacy) continue;
+    get('sim238-target').handlers.change[0]({ target: { value: 'secondEnemy' } });
+    assert.equal(f.d.secondEnemy.target, 'secondEnemy');
+    f.d.pendingLuckQueue.push({ kind: 'player-hit', target: 'enemy' });
+    get('sim238-target').handlers.change[0]({ target: { value: 'enemy' } });
+    assert.equal(f.d.secondEnemy.target, 'secondEnemy');
+    assert.equal(get('sim238-target').disabled, true);
+    f.d.pendingLuckQueue = [];
+    vm.runInContext('_enemyList = [{name:"Jungle Man II",attack:6,hp:6}];', context);
+    get('sim238-second-name').value = 'Jungle';
+    await get('sim238-second-name').handlers.focus[0]();
+    get('sim238-second-dropdown').handlers.mousedown[0]({ target: { closest: () => ({ dataset: { idx: '0' } }) }, preventDefault() {} });
+    assert.equal(f.d.secondEnemy.name, 'Jungle Man II');
+    assert.equal(f.d.secondEnemy.skill, 6);
+    assert.equal(f.d.secondEnemy.stamina, 6);
+    assert.equal(get('sim238-second-stamina').value, 6);
+  }
 });

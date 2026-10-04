@@ -1,6 +1,7 @@
 // English translations: simulator 238.
 export default {
     'battlesim238.status.not_ready':  'Roll your starting SKILL, STAMINA and LUCK to begin.',
+    'battlesim238.status.setup_pair': 'Choose both enemies and enter their STAMINA to begin.',
     'battlesim238.status.fallen':     '{skull} You have fallen in battle.',
     'battlesim238.status.victory':    '{trophy} Victory!',
     'battlesim238.log.round':         'Round {round}: you {playerAS} vs {enemy} {enemyAS}.',
@@ -38,6 +39,9 @@ export default {
     'battlesim238.ui.second_toggle':  'Fighting two enemies at once (parry mode - only the named enemy can be wounded)',
     'battlesim238.ui.second_name':    'Second enemy (parry only)',
     'battlesim238.ui.second_default': 'second enemy',
+    'battlesim238.ui.second_tracked': 'Second enemy',
+    'battlesim238.ui.paired_toggle':  'Fight two enemies (attack one, parry the other)',
+    'battlesim238.ui.target':         'Attack target',
     'battlesim238.btn.roll':          'Roll starting SKILL/STAMINA/LUCK',
     'battlesim238.btn.rolled':        'Rolled',
     'battlesim238.btn.luck_prompt':   'Test Your Luck?',
