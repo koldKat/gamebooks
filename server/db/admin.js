@@ -866,11 +866,12 @@ function adminGetStats() {
   const totalCoinsSpent     = coinRow?.spent  || 0;
   const totalCoinsAvailable = totalCoinsEarned - totalCoinsSpent;
   const pdfCount = db.prepare("SELECT COUNT(*) AS n FROM books WHERE pdf_path IS NOT NULL AND is_demo = 0").get().n;
+  const epubCount = db.prepare("SELECT COUNT(*) AS n FROM books WHERE epub_path IS NOT NULL AND is_demo = 0").get().n;
   const luckyGcGenerated = db.prepare('SELECT COALESCE(SUM(bonus_gc_generated), 0) AS n FROM users').get().n;
   const luckyGcClaimed   = db.prepare("SELECT COALESCE(SUM(amount), 0) AS n FROM coin_events WHERE event = 'bonus_gc_claim'").get().n;
   const battleSims       = db.prepare('SELECT COUNT(*) AS n FROM books WHERE has_battle_sim = 1').get().n;
   const battleWinRate    = battlesFought > 0 ? Math.round((battlesWon / battlesFought) * 100) : 0;
-  return { users, books, anthologies, series: seriesCount, sessions, totalSections, mappedSections, discoveredSections, playthroughs, activePlaythroughs, finishedPlaythroughs, wins, deaths, battleCount, publicRuns, dbSize, feedbackUnread, totalCoinsEarned, totalCoinsSpent, totalCoinsAvailable, pdfCount, luckyGcGenerated, luckyGcClaimed, battleSims, battlesFought, battlesWon, battlesLost, battleWinRate };
+  return { users, books, anthologies, series: seriesCount, sessions, totalSections, mappedSections, discoveredSections, playthroughs, activePlaythroughs, finishedPlaythroughs, wins, deaths, battleCount, publicRuns, dbSize, feedbackUnread, totalCoinsEarned, totalCoinsSpent, totalCoinsAvailable, pdfCount, epubCount, luckyGcGenerated, luckyGcClaimed, battleSims, battlesFought, battlesWon, battlesLost, battleWinRate };
 }
 
 function getSiteStats() {

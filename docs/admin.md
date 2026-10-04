@@ -34,7 +34,7 @@ The top of the panel shows aggregate stats across all users and books:
 |------|---------------|
 | **Users** | Total registered accounts (active only). Shows admin count separately. |
 | **Sessions** | Current live sessions (logged-in browsers) |
-| **PDFs** | Number of non-demo books that have a PDF attached |
+| **PDFs / EPUBs** | Number of non-demo books with a PDF attached, and the number with an EPUB attached |
 | **Books** | Total non-demo books across all accounts |
 | **Mapped Sections** | Sections where choices have been recorded, summed across all books - shown with percentage of total sections |
 | **Discovered Sections** | All sections ever seen (mapped + referenced but unmapped), summed across all books - shown with percentage of total sections |
