@@ -6,6 +6,7 @@ export default {
     'battlesim220.log.enemy_firststrike': "{enemy}'s opening strike is too fast - it automatically wins this Attack Round.",
     'battlesim220.log.round':         'Round {round}: you {playerAS} vs {enemy} {enemyAS}.',
     'battlesim220.log.both_avoided':  'Both blows are avoided.',
+    'battlesim220.log.instant_kill':  'Doubles! Your blow kills {enemy} instantly.',
     'battlesim220.log.you_wound':     'You wound {enemy} for {n}. STAMINA: {stamina}/{staminaMax}.',
     'battlesim220.log.enemy_wounds':  '{enemy} wounds you for {n}. STAMINA: {stamina}/{staminaMax}.',
     'battlesim220.log.side_round':    '{enemy} attacks separately: you {playerAS} vs {enemyAS}.',

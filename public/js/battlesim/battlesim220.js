@@ -1,5 +1,5 @@
 // Battle Simulator (Creature of Havoc, book 220)
-// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Creature wounds cost 2 STAMINA; enemy wounds cost 1; attack doubles kill instantly.
 // Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
 // No consumable pool; encounter-specific passives require manual adjustment.
 
@@ -22,12 +22,13 @@ function _data() {
   if (!pt) return null;
   if (!pt.sim220) {
     pt.sim220 = {
+      combatRulesVersion: 2,
       player: {
         skill: 0, skillInitial: 0,
         stamina: 0, staminaInitial: 0,
         luck: 0, luckInitial: 0,
         attackModifier: 0,
-        enemyWoundDamage: 2,
+        enemyWoundDamage: 1,
         playerWoundDamage: 2,
         enemyAutoWinFirstRound: false,
         enemyDefeatThreshold: 0,
@@ -48,7 +49,7 @@ function _data() {
   if (d.roundsThisBattle === undefined) d.roundsThisBattle = 0;
   if (!d.history) d.history = [];
   if (d.player.attackModifier === undefined) d.player.attackModifier = 0;
-  if (d.player.enemyWoundDamage === undefined) d.player.enemyWoundDamage = 2;
+  if (d.player.enemyWoundDamage === undefined) d.player.enemyWoundDamage = d.combatRulesVersion === 2 ? 1 : 2;
   if (d.player.playerWoundDamage === undefined) d.player.playerWoundDamage = 2;
   if (d.player.enemyAutoWinFirstRound === undefined) d.player.enemyAutoWinFirstRound = false;
   if (d.player.enemyDefeatThreshold === undefined) d.player.enemyDefeatThreshold = 0;
@@ -77,8 +78,10 @@ function _sideEnemyNameSafe(d, idx) { return escapeHtml((d.sideEnemies[idx] && d
 function _enemyDefeated(d) { return d.enemy.staminaMax > 0 && d.enemy.stamina <= (d.player.enemyDefeatThreshold || 0); }
 
 function _resetEncounterKnobs(d) {
+  // Upgrade only a newly selected encounter, never an existing saved fight.
+  d.combatRulesVersion = 2;
   d.player.attackModifier = 0;
-  d.player.enemyWoundDamage = 2;
+  d.player.enemyWoundDamage = 1;
   d.player.playerWoundDamage = 2;
   d.player.enemyAutoWinFirstRound = false;
   d.player.enemyDefeatThreshold = 0;
@@ -103,22 +106,28 @@ function _runRound() {
   const isFirstRound = d.roundsThisBattle === 0;
   d.roundsThisBattle++;
 
-  const enemyWoundDmg = Math.max(1, d.player.enemyWoundDamage || 2);
+  const sourceRules = d.combatRulesVersion === 2;
+  const enemyWoundDmg = Math.max(1, d.player.enemyWoundDamage || (sourceRules ? 1 : 2));
   const playerWoundDmg = Math.max(1, d.player.playerWoundDamage || 2);
 
-  let playerWins = false, tie = false;
+  let playerWins = false, tie = false, instantKill = false, playerAS;
   if (isFirstRound && d.player.enemyAutoWinFirstRound) {
     playerWins = false;
     _appendLog(d, t('battlesim220.log.enemy_firststrike', { enemy: _enemyNameSafe(d) }));
   } else {
-    const playerAS = _roll2d6() + d.player.skill + (d.player.attackModifier || 0);
+    const dice = [_roll1d6(), _roll1d6()];
+    playerAS = dice[0] + dice[1] + d.player.skill + (d.player.attackModifier || 0);
+    instantKill = sourceRules && dice[0] === dice[1];
     const enemyAS  = _roll2d6() + d.enemy.skill;
     _appendLog(d, t('battlesim220.log.round', { round: d.roundsThisBattle, playerAS, enemy: _enemyNameSafe(d), enemyAS }));
     if (playerAS === enemyAS) tie = true;
     else playerWins = playerAS > enemyAS;
   }
 
-  if (tie) {
+  if (instantKill) {
+    d.enemy.stamina = 0;
+    _appendLog(d, t('battlesim220.log.instant_kill', { enemy: _enemyNameSafe(d) }));
+  } else if (tie) {
     _appendLog(d, t('battlesim220.log.both_avoided'));
   } else if (playerWins) {
     d.enemy.stamina = Math.max(0, d.enemy.stamina - playerWoundDmg);
@@ -130,23 +139,24 @@ function _runRound() {
     if (d.player.stamina > 0) d.pendingLuckQueue.push({ kind: 'enemy-hit' });
   }
 
-  // Each side attacker gets a fresh exchange; only the chosen main target can be wounded.
+  // Source rules reuse the player's attack; legacy saved fights keep separate exchanges.
   for (let i = 0; i < Math.min(d.extraAttackers, MAX_EXTRA_ATTACKERS) && d.player.stamina > 0; i++) {
     const side = d.sideEnemies[i];
     if (!side || side.staminaMax <= 0) continue;
-    const sidePlayerAS = _roll2d6() + d.player.skill + (d.player.attackModifier || 0);
+    const sidePlayerAS = sourceRules && playerAS !== undefined ? playerAS : _roll2d6() + d.player.skill + (d.player.attackModifier || 0);
     const sideAS = _roll2d6() + side.skill;
     _appendLog(d, t('battlesim220.log.side_round', { enemy: _sideEnemyNameSafe(d, i), playerAS: sidePlayerAS, enemyAS: sideAS }));
     if (sideAS > sidePlayerAS) {
-      d.player.stamina = Math.max(0, d.player.stamina - SIDE_WOUND_DMG);
-      _appendLog(d, t('battlesim220.log.side_wounds', { enemy: _sideEnemyNameSafe(d, i), n: SIDE_WOUND_DMG, stamina: d.player.stamina, staminaMax: d.player.staminaInitial }));
+      const sideDamage = sourceRules ? enemyWoundDmg : SIDE_WOUND_DMG;
+      d.player.stamina = Math.max(0, d.player.stamina - sideDamage);
+      _appendLog(d, t('battlesim220.log.side_wounds', { enemy: _sideEnemyNameSafe(d, i), n: sideDamage, stamina: d.player.stamina, staminaMax: d.player.staminaInitial }));
       if (d.player.stamina > 0) d.pendingLuckQueue.push({ kind: 'side-hit', idx: i });
     } else {
       _appendLog(d, t('battlesim220.log.side_fend', { enemy: _sideEnemyNameSafe(d, i) }));
     }
   }
 
-  if (_enemyDefeated(d)) {
+  if (_enemyDefeated(d) && (!sourceRules || d.player.stamina > 0)) {
     _appendLog(d, t('battlesim220.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyNameSafe(d) }));
     _recordOutcome(d, 'win');
   } else if (d.player.stamina <= 0) {

@@ -13,9 +13,13 @@ test('desktop battle-sim relocation retains the registry and visibility lifecycl
   const start = source.indexOf('async function _loadBattleSim(');
   const end = source.indexOf('export function hideActiveBattleSim');
   assert.ok(start > 0 && end > start);
-  const unchanged = (source.slice(0, start) + source.slice(end)).replace('const _loading = new Map();\n', '');
+  // Normalize out the supported-books registry: it legitimately grows with every new sim,
+  // so the hash guards the loader logic, not the id list.
+  const unchanged = (source.slice(0, start) + source.slice(end))
+    .replace('const _loading = new Map();\n', '')
+    .replace(/const SUPPORTED_BATTLE_SIM_BOOKS = new Set\(\[[\s\S]*?\]\);/, 'SUPPORTED_SET');
   assert.equal(createHash('sha256').update(unchanged).digest('hex'),
-    '271a6f777e8aca694e444472d460a057815c293dd95c577b7b3e94046713138a');
+    'a2070edecb49f7b1938bd8ee0c857d7d2760d6518b35ff58e86dbdd766214c50');
   assert.doesNotMatch(source, /^import\s/m, 'no eager simulator imports');
   assert.match(source, /import\(`\.\/battlesim\$\{numericId\}\.js`\)/);
 });
