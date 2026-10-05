@@ -29,6 +29,8 @@
   flex-shrink: 0;
 }
 .reading-frontmatter--structured { white-space: normal; }
+.reading-frontmatter--structured figure { margin: 0 0 1rem; }
+.reading-frontmatter--structured figure img { display: block; max-width: 100%; height: auto; margin: 0 auto; }
 .reading-gate-prose--263 > h2 {
   margin: 0 0 0.7rem;
   font-size: 1.1em;

@@ -62,6 +62,8 @@
   -webkit-hyphens: auto;
 }
 .liveread-body p:last-child { margin-bottom: 0; }
+.liveread-body figure { margin: 0 0 0.75rem; }
+.liveread-body img { display: block; max-width: 100%; height: auto; margin: 0 auto; }
 .liveread-body a { color: #38bdf8; text-decoration: underline; cursor: pointer; }
 .liveread-body a:hover { color: #7dd3fc; }
 .liveread-empty { opacity: 0.7; font-style: italic; margin: 0; }
