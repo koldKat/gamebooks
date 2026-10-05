@@ -929,11 +929,13 @@ Book EPUB files are stored in `public/books/<bookId>_<timestamp>.epub` and serve
 | GET | `/api/feedback` | Get the current user's feedback threads (auth required) → `[{ id, username, email, message, created_at, admin_unread, user_unread, messages: [{ id, sender, body, created_at, attachments: [{ id, filename, original_name }] }] }]` |
 | POST | `/api/feedback/:id/reply` | User reply to a thread (auth required). Body: `{ message, attachment_ids?: number[] }`. |
 | POST | `/api/feedback/:id/read` | Mark a thread as read by the user (auth required) → `{ ok: true }`. Clears the `user_unread` flag. |
-| DELETE | `/api/feedback/:id` | Permanently delete a thread, all messages and attachment rows/files from both inboxes. Owner or authenticated admin only; unauthorized/missing threads return `404`. |
+| DELETE | `/api/feedback/:id` | Delete a thread for the acting side only - sets `deleted_by_user` for the owner or `deleted_by_admin` for an admin, hiding it from that side's inbox. The thread, its messages and attachment files are permanently removed only once **both** sides have deleted it. Owner or authenticated admin only; unauthorized/missing threads return `404`. |
 
 The `feedback` table allows `user_id = NULL` for anonymous submissions. Anonymous users cannot retrieve or reply to their threads (no user identity to look up). The admin inbox receives all threads regardless.
 
-Both feedback DELETE routes hard-delete the conversation and its attachment rows in one transaction. File names are saved atomically in `feedback_attachment_deletions` before row deletion; `server/feedback-cleanup.js` removes files and clears successful queue entries, tolerating already-missing files and protecting shared filenames/path boundaries. Failures remain queued rather than becoming untracked files. Cleanup and purging of legacy `deleted_by_user`/`deleted_by_admin` threads run at startup and through the existing hourly backup job, without a new polling timer. Cleanup failures are logged but do not prevent backups. Unlinked uploads and forum attachments are not purged by feedback deletion. Existing backups retain their normal retention policy.
+New replies clear the recipient's deletion flag, returning a previously hidden conversation to that side's inbox. The feedback and inbox forms block sending while attachments are uploading or have failed. Queued uploads stay with the compose session where they were selected and are discarded from the UI if that session changes.
+
+Both feedback DELETE routes soft-delete for the acting side, setting `deleted_by_user`/`deleted_by_admin`; the conversation and its attachment rows are hard-deleted in one transaction only once both flags are set. File names are saved atomically in `feedback_attachment_deletions` before row deletion; `server/feedback-cleanup.js` removes files and clears successful queue entries, tolerating already-missing files and protecting shared filenames/path boundaries. Failures remain queued rather than becoming untracked files. Purging of fully-deleted (both-sides) threads runs at startup and through the existing hourly backup job, without a new polling timer. Cleanup failures are logged but do not prevent backups. Unlinked uploads and forum attachments are not purged by feedback deletion. Existing backups retain their normal retention policy.
 
 ### Forum API
 
@@ -967,7 +969,7 @@ All forum pages use `addForumSecurityHeaders()` which allows `script-src: 'unsaf
 | POST | `/api/forum/threads` | Bearer token | Create a thread. Body: `{ title, body, category_id?, attachment_ids?: number[] }` (title max 200, body max 20000 chars) → `{ id }`. |
 | POST | `/api/forum/threads/:id/posts` | Bearer token | Reply to a thread. Body: `{ body, attachment_ids?: number[] }` (max 20000 chars) → `{ id }`. `403` if thread is locked. |
 | PATCH | `/api/forum/threads/:id` | Bearer token | Edit a thread's title and body. Body: `{ title, body }`. Owner or admin only. Returns `{ ok, edited_at }`. Sets `edited_at` timestamp; displayed as *edited date* in the thread view. |
-| DELETE | `/api/forum/threads/:id` | Bearer token | Hard-delete a thread and all its posts. Owner or admin only; `403` otherwise. Also deletes the thread's own `attachments` rows and every one of its posts' `attachments` rows, and unlinks the underlying files from `ATTACHMENTS_DIR` on disk (`db.forumDeleteThread` returns `{ ok, filenames }`; `server.js`'s handler does the actual `fs.unlinkSync` per filename). Individual forum-post deletion below remains a soft delete; feedback-thread deletion is permanent. |
+| DELETE | `/api/forum/threads/:id` | Bearer token | Hard-delete a thread and all its posts. Owner or admin only; `403` otherwise. Also deletes the thread's own `attachments` rows and every one of its posts' `attachments` rows, and unlinks the underlying files from `ATTACHMENTS_DIR` on disk (`db.forumDeleteThread` returns `{ ok, filenames }`; `server.js`'s handler does the actual `fs.unlinkSync` per filename). Individual forum-post deletion below remains a soft delete; feedback-thread deletion is per-side and becomes permanent only once both sides delete. |
 | PATCH | `/api/forum/posts/:id` | Bearer token | Edit a post's body. Body: `{ body }`. Owner or admin only. Returns `{ ok, edited_at }`. Soft-deleted posts cannot be edited. |
 | DELETE | `/api/forum/posts/:id` | Bearer token | Soft-delete a post (sets `is_deleted=1`, replaces body with `[deleted]`, decrements `reply_count`). Owner or admin only. |
 | POST | `/api/forum/threads/:id/lock` | Bearer token (admin) | Toggle thread locked state → `{ locked: bool }`. `403` if not admin. |
@@ -2736,7 +2738,7 @@ A section counts as **mapped** if it has real recorded choices, not merely a `di
 
 Accepts `[{ name, data }]`. For each file: computes CRC-32, deflates with `zlib.deflateRawSync`, falls back to STORE method if deflated size ≥ raw size. Writes local file headers, file data, central directory, and end-of-central-directory record into a single `Buffer`. Includes a Unicode Path Extra Field (`0x7075`) for correct UTF-8 filenames on all platforms.
 
-## Email (`server.js`)
+## Email (`server/email.js`)
 
 Email is opt-in via SMTP settings configured in the admin Tools tab (stored in `admin_settings`). `nodemailer` is the transport layer. On startup, `reinitTransporter()` reads SMTP settings from `admin_settings` (falling back to `SMTP_*` env vars) and initialises `_transporter`. Any save to an `smtp_*` key via `POST /api/admin/settings` re-calls `reinitTransporter()` immediately.
 
@@ -2755,7 +2757,9 @@ All are fire-and-forget (`.catch(() => {})`). Forum body is truncated to 500 cha
 
 ### User reply notification (`sendReplyEmail`)
 
-Triggered by `handleAdminReply` when the admin replies to a feedback thread **and** the thread has an email address on record. Sends an HTML email to the user with the original message quoted, the admin reply highlighted, and a link back to the app.
+Triggered by `handleAdminReply` or an admin reply through `handleUserReply` when the thread has an email address on record. Sends an HTML email to the user with the original message quoted, the admin reply highlighted, and a link back to the app.
+
+Feedback submissions and inbox replies pass the new message's linked attachment rows to `sendAdminEmail(subject, text, bodyHtml, attachments = [])` or `sendReplyEmail(to, username, originalMessage, reply, attachments = [])`. Files are read from `ATTACHMENTS_DIR` with their stored MIME type and original display name. Images are embedded in the HTML body using matching `cid` references; other files are included as downloadable attachments. Only attachments linked to the new message are sent, rather than the whole conversation. Calls without attachments continue to work, and sending is a no-op when SMTP is unavailable.
 
 ### HTML template
 

@@ -104,14 +104,34 @@ export function fmtAttachments(attachments) {
   const items = attachments.map(a => {
     const ext = a.filename.slice(a.filename.lastIndexOf('.')).toLowerCase();
     if (IMG_ATT_EXTS.has(ext)) {
-      return `<a href="/attachments/${esc(a.filename)}" target="_blank" class="att-thumb-wrap">
-        <img src="/attachments/${esc(a.filename)}" class="att-thumb" alt="${esc(a.original_name)}" loading="lazy">
-      </a>`;
+      return `<img src="/attachments/${esc(a.filename)}" class="att-image" alt="${esc(a.original_name)}" title="${esc(a.original_name)}" loading="lazy">`;
     }
     return `<a href="/attachments/${esc(a.filename)}" target="_blank" class="att-file-link">${esc(a.original_name)}</a>`;
   }).join('');
   return `<div class="msg-attachments">${items}</div>`;
 }
+
+// In-app full-size image viewer for attachment images; click backdrop or Esc to close.
+function openImageLightbox(src, alt = '') {
+  let overlay = document.getElementById('img-lightbox');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'img-lightbox';
+    overlay.className = 'img-lightbox';
+    overlay.innerHTML = '<img class="img-lightbox-img" alt="">';
+    overlay.addEventListener('click', () => overlay.classList.remove('active'));
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') overlay.classList.remove('active'); });
+    document.body.appendChild(overlay);
+  }
+  const img = overlay.querySelector('.img-lightbox-img');
+  img.src = src;
+  img.alt = alt;
+  overlay.classList.add('active');
+}
+document.addEventListener('click', e => {
+  const img = e.target.closest('.att-image');
+  if (img) openImageLightbox(img.getAttribute('src'), img.alt);
+});
 
 export function fmtDaysInactive(days) {
   if (days === null || days === undefined) return '-';

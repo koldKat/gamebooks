@@ -247,11 +247,11 @@
 <h2 id="feedback-tab">Feedback tab<a class="anchor" href="#feedback-tab" aria-label="Link to section">#</a></h2>
 <p>Shows all user feedback threads. Unread threads (new user messages) are highlighted; the tab shows a red count badge.</p>
 <p>Feedback also appears in <strong>koldKat&#39;s inbox</strong> in the main app: koldKat&#39;s inbox loads all threads (not just his own), with <code>admin_unread</code> mapped to <code>user_unread</code> so the inbox badge lights up for new submissions. Replying from koldKat&#39;s inbox sends as &#39;admin&#39; and triggers an email if the thread has an email address. Threads with email addresses can also be handled from this tab.</p>
-<p>Users can attach files to their initial feedback submission and to inbox replies. Attached images appear inline in the message; other files appear as download links - the admin feedback tab renders them the same way (<code>fmtAttachments()</code> in the panel&#39;s inline script, mirroring <code>community/inbox.js</code>&#39;s <code>_renderAttachments</code>). The admin reply (<code>POST /api/admin/feedback/:id/reply</code>) does not support attachments; use the inbox for attachment-enabled replies.</p>
+<p>Users can attach files to their initial feedback submission and to inbox replies. Attached images appear inline in the message and open in an image viewer when clicked; other files appear as download links. The admin feedback tab uses <code>fmtAttachments()</code> in <code>admin/js/core.js</code>. Feedback notification and inbox reply emails include the new message&#39;s attachments, with images embedded inline. The admin reply (<code>POST /api/admin/feedback/:id/reply</code>) does not support attachments; use the inbox for attachment-enabled replies.</p>
 <ul>
 <li><strong>Mark as read</strong> - clears the unread highlight for that thread</li>
 <li><strong>Reply</strong> - appends an admin message; if SMTP is active, also emails the user</li>
-<li><strong>Delete</strong> - permanently removes the thread, all messages, and their attachments from both inboxes and disk. The confirmation warns that this cannot be undone. Previously hidden/deleted threads are also purged; attachment deletion failures are queued for retry.</li>
+<li><strong>Delete</strong> - hides the thread from the admin inbox. The thread, messages, and attachment files are permanently removed only after both sides delete it; file cleanup failures are queued for retry. A new user reply brings a hidden thread back to the admin inbox.</li>
 </ul>
 <hr>
 <h2 id="announcements-tab">Announcements tab<a class="anchor" href="#announcements-tab" aria-label="Link to section">#</a></h2>

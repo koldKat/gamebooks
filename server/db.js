@@ -861,7 +861,7 @@ const {
   getAttachments, createAttachment, linkAttachments,
   createFeedbackThread, addFeedbackMessage, getThreadsForUser, getAllThreads,
   getFeedbackThreadById, markThreadReadByUser, markThreadReadByAdmin, markThreadUnreadByUser,
-  deleteFeedbackThread, deleteFeedbackThreadForUser,
+  deleteFeedbackThread, deleteFeedbackForUser, deleteFeedbackForAdmin,
 } = require('./db/feedback');
 
 const {
@@ -936,7 +936,7 @@ module.exports = {
   getXpAmount, getXpConfig, setXpAmount,
   createFeedbackThread, addFeedbackMessage, getThreadsForUser, getAllThreads,
   getFeedbackThreadById, markThreadReadByUser, markThreadReadByAdmin, markThreadUnreadByUser,
-  deleteFeedbackThread, deleteFeedbackThreadForUser,
+  deleteFeedbackThread, deleteFeedbackForUser, deleteFeedbackForAdmin,
   createAttachment, linkAttachments, getAttachments,
   getAdminSetting, setAdminSetting, getAllAdminSettings,
   getTips, getAllTipsAdmin, createTip, updateTip, deleteTip,

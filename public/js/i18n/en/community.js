@@ -12,10 +12,15 @@ export default {
 
     'feedback.message_required': 'Please enter a message.',
     'feedback.submit_error':     'Failed to send. Please try again.',
+    'att.upload_pending': 'Please wait for attachments to finish uploading.',
+    'att.upload_errors': 'Remove failed attachments or upload them again before sending.',
 
     'inbox.empty':          'No messages yet.',
-    'inbox.confirm_delete': 'Permanently delete this thread, all its messages and attachments from both inboxes?',
+    'inbox.confirm_delete': 'Delete this thread from your inbox? Messages and attachments are permanently removed only after both sides delete it.',
     'inbox.delete_failed': 'Failed to delete the thread or its attachments. Please refresh and try again.',
+    'inbox.message_one': '{n} message',
+    'inbox.message_many': '{n} messages',
+    'inbox.reply_failed': 'Failed to send your reply. Please try again.',
 
     'feed.header':     'Activity',
     'feed.header_sub': '(last 30 days)',

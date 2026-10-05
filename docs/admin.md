@@ -182,11 +182,11 @@ Shows all user feedback threads. Unread threads (new user messages) are highligh
 
 Feedback also appears in **koldKat's inbox** in the main app: koldKat's inbox loads all threads (not just his own), with `admin_unread` mapped to `user_unread` so the inbox badge lights up for new submissions. Replying from koldKat's inbox sends as 'admin' and triggers an email if the thread has an email address. Threads with email addresses can also be handled from this tab.
 
-Users can attach files to their initial feedback submission and to inbox replies. Attached images appear inline in the message; other files appear as download links - the admin feedback tab renders them the same way (`fmtAttachments()` in the panel's inline script, mirroring `community/inbox.js`'s `_renderAttachments`). The admin reply (`POST /api/admin/feedback/:id/reply`) does not support attachments; use the inbox for attachment-enabled replies.
+Users can attach files to their initial feedback submission and to inbox replies. Attached images appear inline in the message and open in an image viewer when clicked; other files appear as download links. The admin feedback tab uses `fmtAttachments()` in `admin/js/core.js`. Feedback notification and inbox reply emails include the new message's attachments, with images embedded inline. The admin reply (`POST /api/admin/feedback/:id/reply`) does not support attachments; use the inbox for attachment-enabled replies.
 
 - **Mark as read** - clears the unread highlight for that thread
 - **Reply** - appends an admin message; if SMTP is active, also emails the user
-- **Delete** - permanently removes the thread, all messages, and their attachments from both inboxes and disk. The confirmation warns that this cannot be undone. Previously hidden/deleted threads are also purged; attachment deletion failures are queued for retry.
+- **Delete** - hides the thread from the admin inbox. The thread, messages, and attachment files are permanently removed only after both sides delete it; file cleanup failures are queued for retry. A new user reply brings a hidden thread back to the admin inbox.
 
 ---
 

@@ -4,7 +4,7 @@ import { apiFetch, getUsername } from '../core/state.js';
 import { t } from '../i18n.js';
 import { showConfirm, showAlert } from '../play.js';
 import { refreshInboxBadge } from './notif.js';
-import { escapeHtml, isImageFilename, uploadAttachment, addAttachmentItem } from '../core/util.js';
+import { escapeHtml, isImageFilename, uploadAttachment, addAttachmentItem, openImageLightbox } from '../core/util.js';
 
 let _inboxThreads    = [];
 let _currentThreadId = null;
@@ -20,9 +20,7 @@ function _renderAttachments(attachments) {
   if (!attachments?.length) return '';
   const items = attachments.map(a => {
     if (isImageFilename(a.filename)) {
-      return `<a href="/attachments/${escapeHtml(a.filename)}" target="_blank" class="att-thumb-wrap">
-        <img src="/attachments/${escapeHtml(a.filename)}" class="att-thumb" alt="${escapeHtml(a.original_name)}" loading="lazy">
-      </a>`;
+      return `<img src="/attachments/${escapeHtml(a.filename)}" class="att-image" alt="${escapeHtml(a.original_name)}" title="${escapeHtml(a.original_name)}" loading="lazy">`;
     }
     return `<a href="/attachments/${escapeHtml(a.filename)}" target="_blank" class="att-file-link">${escapeHtml(a.original_name)}</a>`;
   }).join('');
@@ -49,7 +47,7 @@ function _renderInboxList() {
       <div class="inbox-item-meta">
         ${fromLabel}
         <span class="inbox-item-date">${date}</span>
-        <span class="inbox-item-count">${cnt} message${cnt !== 1 ? 's' : ''}</span>
+        <span class="inbox-item-count">${escapeHtml(t(cnt === 1 ? 'inbox.message_one' : 'inbox.message_many', { n: cnt }))}</span>
       </div>
       <div class="inbox-item-preview">${preview}</div>
     </div>`;
@@ -117,49 +115,69 @@ export function initInbox(mousedownOnOverlayRef) {
   });
 
   document.getElementById('inbox-file-input').addEventListener('change', async function() {
-    for (const file of this.files) {
+    if (!_currentThreadId || document.getElementById('inbox-reply-send-btn').disabled) return;
+    const contextThread = _currentThreadId;
+    const contextSession = _attSession;
+    const uploads = Array.from(this.files, file => {
       const item = addAttachmentItem(document.getElementById('inbox-att-list'), file.name);
-      const contextThread  = _currentThreadId;
-      const contextSession = _attSession;
+      // Wire removal up front so the ✕ works while still uploading or after a failure.
+      let removed = false, uploadedId = null;
+      item.querySelector('.att-item-rm').addEventListener('click', () => {
+        removed = true;
+        if (uploadedId != null) _pendingAttIds = _pendingAttIds.filter(id => id !== uploadedId);
+        item.remove();
+      });
+      return { file, item, isRemoved: () => removed, setId: id => { uploadedId = id; } };
+    });
+    this.value = '';
+    for (const { file, item, isRemoved, setId } of uploads) {
+      if (_currentThreadId !== contextThread || _attSession !== contextSession) break;
+      if (isRemoved()) continue;
       try {
         const data = await uploadAttachment(file);
-        if (_currentThreadId !== contextThread || _attSession !== contextSession) { item.remove(); continue; }
+        if (isRemoved() || _currentThreadId !== contextThread || _attSession !== contextSession) { item.remove(); continue; }
+        setId(data.id);
         _pendingAttIds.push(data.id);
         item.classList.remove('att-uploading');
-        item.querySelector('.att-item-rm').addEventListener('click', () => {
-          _pendingAttIds = _pendingAttIds.filter(id => id !== data.id);
-          item.remove();
-        });
       } catch {
+        if (isRemoved() || _currentThreadId !== contextThread || _attSession !== contextSession) continue;
         item.classList.replace('att-uploading', 'att-error');
         item.querySelector('.att-item-name').textContent = t('util.upload_failed', { name: file.name });
       }
     }
-    this.value = '';
   });
 
   document.getElementById('inbox-reply-send-btn').addEventListener('click', async () => {
     const input   = document.getElementById('inbox-reply-input');
     const message = input.value.trim();
     if (!message || !_currentThreadId) return;
+    const attachments = document.getElementById('inbox-att-list');
+    const uploadIssue = attachments.querySelector('.att-uploading') ? 'att.upload_pending'
+      : attachments.querySelector('.att-error') ? 'att.upload_errors' : null;
+    if (uploadIssue) { showAlert(t(uploadIssue)); return; }
+    const threadId = _currentThreadId;
+    const contextSession = _attSession;
     const btn = document.getElementById('inbox-reply-send-btn');
     btn.disabled = true;
     const idsToSend = [..._pendingAttIds];
     try {
-      const res = await apiFetch(`/api/feedback/${_currentThreadId}/reply`, {
+      const res = await apiFetch(`/api/feedback/${threadId}/reply`, {
         method: 'POST',
         body:   JSON.stringify({ message, attachment_ids: idsToSend }),
       });
       if (!res.ok) throw new Error();
+      if (_currentThreadId !== threadId || _attSession !== contextSession) return;
       input.value = '';
       _clearAttachments();
       const listRes = await apiFetch('/api/feedback');
       if (listRes.ok) {
-        _inboxThreads = await listRes.json();
+        const threads = await listRes.json();
+        if (_currentThreadId !== threadId || _attSession !== contextSession + 1) return;
+        _inboxThreads = threads;
         const updated = _inboxThreads.find(th => th.id === _currentThreadId);
         if (updated) _renderConversation(updated);
       }
-    } catch { /* silent */ } finally { btn.disabled = false; }
+    } catch { showAlert(t('inbox.reply_failed')); } finally { btn.disabled = false; }
   });
 
   document.getElementById('inbox-conv-delete-btn').addEventListener('click', () => {
@@ -178,6 +196,10 @@ export function initInbox(mousedownOnOverlayRef) {
   });
 
   const _closeInbox = () => document.getElementById('inbox-modal-overlay').classList.remove('active');
+  document.getElementById('inbox-messages').addEventListener('click', e => {
+    const img = e.target.closest('.att-image');
+    if (img) openImageLightbox(img.getAttribute('src'), img.alt);
+  });
   document.getElementById('inbox-close-btn').addEventListener('click', _closeInbox);
   document.getElementById('inbox-conv-close-btn').addEventListener('click', _closeInbox);
   document.getElementById('inbox-modal-close-x').addEventListener('click', _closeInbox);

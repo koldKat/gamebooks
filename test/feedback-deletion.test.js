@@ -17,7 +17,7 @@ function load(file, dependencies, globals = {}) {
 function fixture() {
   const db = new Database(':memory:');
   db.pragma('foreign_keys = ON');
-  db.exec(`CREATE TABLE feedback (id INTEGER PRIMARY KEY, user_id INTEGER, deleted_by_user INTEGER DEFAULT 0, deleted_by_admin INTEGER DEFAULT 0);
+  db.exec(`CREATE TABLE feedback (id INTEGER PRIMARY KEY, user_id INTEGER, deleted_by_user INTEGER DEFAULT 0, deleted_by_admin INTEGER DEFAULT 0, user_unread INTEGER DEFAULT 0, admin_unread INTEGER DEFAULT 0);
     CREATE TABLE feedback_messages (id INTEGER PRIMARY KEY, thread_id INTEGER REFERENCES feedback(id) ON DELETE CASCADE, created_at INTEGER);
     CREATE TABLE attachments (id INTEGER PRIMARY KEY, filename TEXT, original_name TEXT, mime_type TEXT, size INTEGER, kind TEXT, linked_id INTEGER, created_at INTEGER);
     INSERT INTO feedback (id,user_id) VALUES (1,7),(2,8),(3,NULL);
@@ -29,20 +29,36 @@ function fixture() {
   return { db, api };
 }
 
-test('hard deletion removes the whole conversation and only its attachment rows', () => {
+test('deleting hides one side; only once both sides delete is the thread and its attachments removed', () => {
   const { db, api } = fixture();
   try {
-    assert.equal(api.deleteFeedbackThreadForUser(1, 8).ok, false);
-    assert.equal(api.deleteFeedbackThreadForUser(3, null).ok, false);
-    const result = api.deleteFeedbackThreadForUser(1, 7);
+    // Wrong owner / anonymous threads cannot be user-deleted.
+    assert.equal(api.deleteFeedbackForUser(1, 8).ok, false);
+    assert.equal(api.deleteFeedbackForUser(3, null).ok, false);
+    // User deletes thread 1: soft only - thread and messages survive, nothing queued.
+    let result = api.deleteFeedbackForUser(1, 7);
+    assert.equal(result.ok, true);
+    assert.deepEqual(Array.from(result.filenames), []);
+    assert.equal(db.prepare('SELECT deleted_by_user FROM feedback WHERE id=1').get().deleted_by_user, 1);
+    assert.equal(db.prepare('SELECT COUNT(*) n FROM feedback WHERE id=1').get().n, 1);
+    assert.equal(db.prepare('SELECT COUNT(*) n FROM feedback_messages WHERE thread_id=1').get().n, 2);
+    assert.equal(db.prepare('SELECT COUNT(*) n FROM feedback_attachment_deletions').get().n, 0);
+    // Admin now deletes thread 1 too: both sides gone -> hard delete + attachment files queued.
+    result = api.deleteFeedbackForAdmin(1);
     assert.equal(result.ok, true);
     assert.deepEqual(Array.from(result.filenames), ['first.png', 'reply.png']);
     assert.equal(db.prepare('SELECT COUNT(*) n FROM feedback WHERE id=1').get().n, 0);
     assert.equal(db.prepare('SELECT COUNT(*) n FROM feedback_messages WHERE thread_id=1').get().n, 0);
     assert.deepEqual(db.prepare('SELECT id FROM attachments ORDER BY id').all().map(a => a.id), [3,4,5]);
     assert.equal(db.prepare('SELECT COUNT(*) n FROM feedback_attachment_deletions').get().n, 2);
-    assert.equal(api.deleteFeedbackThread(1).ok, false);
-    assert.equal(api.deleteFeedbackThread(3).ok, true);
+    // Deleting an already-removed or missing thread fails.
+    assert.equal(api.deleteFeedbackForAdmin(1).ok, false);
+    // Admin soft-deletes thread 2 (user 8 has not): it survives for the user.
+    result = api.deleteFeedbackForAdmin(2);
+    assert.equal(result.ok, true);
+    assert.deepEqual(Array.from(result.filenames), []);
+    assert.equal(db.prepare('SELECT deleted_by_admin FROM feedback WHERE id=2').get().deleted_by_admin, 1);
+    assert.equal(db.prepare('SELECT COUNT(*) n FROM feedback WHERE id=2').get().n, 1);
   } finally { db.close(); }
 });
 
@@ -57,12 +73,13 @@ test('deletion failures roll back thread, messages, attachment rows and cleanup 
   } finally { db.close(); }
 });
 
-test('legacy deletion flags are purged rather than remaining hidden', () => {
+test('threads are purged only once both sides have deleted them', () => {
   const { db, api } = fixture();
   try {
-    db.exec('UPDATE feedback SET deleted_by_user=1 WHERE id=1; UPDATE feedback SET deleted_by_admin=1 WHERE id=2');
-    assert.equal(api.purgeDeletedFeedbackThreads(), 2);
-    assert.deepEqual(db.prepare('SELECT id FROM feedback').all(), [{ id: 3 }]);
+    db.exec('UPDATE feedback SET deleted_by_user=1 WHERE id=1');                      // one side only - kept
+    db.exec('UPDATE feedback SET deleted_by_user=1, deleted_by_admin=1 WHERE id=2');  // both sides - purged
+    assert.equal(api.purgeDeletedFeedbackThreads(), 1);
+    assert.deepEqual(db.prepare('SELECT id FROM feedback ORDER BY id').all(), [{ id: 1 }, { id: 3 }]);
     assert.equal(api.purgeDeletedFeedbackThreads(), 0);
   } finally { db.close(); }
 });
@@ -113,8 +130,8 @@ test('feedback delete routes enforce owner/admin access and await file removal',
   const routes = load('../server/routes/feedback', {
     '../db': {
       isUserAdmin: () => admin,
-      deleteFeedbackThread: id => { deleted.push(['admin', id]); return { ok: true, filenames: ['file.png'] }; },
-      deleteFeedbackThreadForUser: (id, owner) => { deleted.push(['owner', id, owner]); return { ok: owner === 7 && id === 1, filenames: ['file.png'] }; },
+      deleteFeedbackForAdmin: id => { deleted.push(['admin', id]); return { ok: true, filenames: ['file.png'] }; },
+      deleteFeedbackForUser: (id, owner) => { deleted.push(['owner', id, owner]); return { ok: owner === 7 && id === 1, filenames: ['file.png'] }; },
     },
     '../request-helpers': { authenticate: async () => userId, requireLocalhost: () => local, send: (res, code) => { status = code; } },
     '../email': {}, '../html-escape': {}, '../sse': { userBadgePushAll() { badgePushes++; } },

@@ -61,7 +61,7 @@ function toggleFeedbackCard(headerEl) {
 }
 
 async function deleteFeedbackMsg(id) {
-  showConfirm('Permanently delete this thread, all its messages and attachments from both inboxes?', async () => {
+  showConfirm('Delete this thread from your inbox? Messages and attachments are permanently removed only after both sides delete it.', async () => {
     try {
       await api('DELETE', `/api/admin/feedback/${id}`);
       loadFeedback();

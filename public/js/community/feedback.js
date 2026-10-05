@@ -46,22 +46,34 @@ export function initFeedback() {
     fileInput.parentNode.replaceChild(fileInputNew, fileInput);
 
     fileInputNew.addEventListener('change', async () => {
-      for (const file of fileInputNew.files) {
+      if (newSubmit.disabled) return;
+      const uploads = Array.from(fileInputNew.files, file => {
         const item = addAttachmentItem(document.getElementById('feedback-att-list'), file.name);
+        // Wire removal up front so the ✕ works while still uploading or after a failure.
+        let removed = false, uploadedId = null;
+        item.querySelector('.att-item-rm').addEventListener('click', () => {
+          removed = true;
+          if (uploadedId != null) _pendingIds = _pendingIds.filter(id => id !== uploadedId);
+          item.remove();
+        });
+        return { file, item, isRemoved: () => removed, setId: id => { uploadedId = id; } };
+      });
+      fileInputNew.value = '';
+      for (const { file, item, isRemoved, setId } of uploads) {
+        if (!fileInputNew.isConnected) break;
+        if (isRemoved()) continue;
         try {
           const data = await uploadAttachment(file);
+          if (!fileInputNew.isConnected || isRemoved()) continue;
+          setId(data.id);
           _pendingIds.push(data.id);
           item.classList.remove('att-uploading');
-          item.querySelector('.att-item-rm').addEventListener('click', () => {
-            _pendingIds = _pendingIds.filter(id => id !== data.id);
-            item.remove();
-          });
         } catch {
+          if (!fileInputNew.isConnected || isRemoved()) continue;
           item.classList.replace('att-uploading', 'att-error');
           item.querySelector('.att-item-name').textContent = t('util.upload_failed', { name: file.name });
         }
       }
-      fileInputNew.value = '';
     });
 
     newCancel.addEventListener('click', () => {
@@ -69,6 +81,13 @@ export function initFeedback() {
     });
 
     newSubmit.addEventListener('click', async () => {
+      const attachments = document.getElementById('feedback-att-list');
+      const uploadIssue = attachments.querySelector('.att-uploading') ? 'att.upload_pending'
+        : attachments.querySelector('.att-error') ? 'att.upload_errors' : null;
+      if (uploadIssue) {
+        document.getElementById('feedback-error').textContent = t(uploadIssue);
+        return;
+      }
       const message = document.getElementById('feedback-message-input').value.trim();
       if (!message) {
         document.getElementById('feedback-error').textContent = t('feedback.message_required');
@@ -86,9 +105,9 @@ export function initFeedback() {
           }),
         });
         if (!res.ok) throw new Error();
-        document.getElementById('feedback-modal-overlay').classList.remove('active');
+        if (newSubmit.isConnected) document.getElementById('feedback-modal-overlay').classList.remove('active');
       } catch {
-        document.getElementById('feedback-error').textContent = t('feedback.submit_error');
+        if (newSubmit.isConnected) document.getElementById('feedback-error').textContent = t('feedback.submit_error');
       } finally {
         newSubmit.disabled = false;
       }

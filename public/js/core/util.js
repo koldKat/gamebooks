@@ -119,3 +119,21 @@ export function addAttachmentItem(container, name) {
   container.appendChild(item);
   return item;
 }
+
+// In-app full-size image viewer; click the backdrop or press Esc to close.
+export function openImageLightbox(src, alt = '') {
+  let overlay = document.getElementById('img-lightbox');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'img-lightbox';
+    overlay.className = 'img-lightbox';
+    overlay.innerHTML = '<img class="img-lightbox-img" alt="">';
+    overlay.addEventListener('click', () => overlay.classList.remove('active'));
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') overlay.classList.remove('active'); });
+    document.body.appendChild(overlay);
+  }
+  const img = overlay.querySelector('.img-lightbox-img');
+  img.src = src;
+  img.alt = alt;
+  overlay.classList.add('active');
+}

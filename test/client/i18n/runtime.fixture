@@ -5,7 +5,7 @@ import { createHash } from 'node:crypto';
 import { createContext, SourceTextModule } from 'node:vm';
 
 const root = process.argv[1];
-const baseline = 'f7f4097586b54d6e737407da7256122900df2962de7ef43e91623f17a4c8e476';
+const baseline = '48b9904748c74c7f93046d7abdb56705a3660f858d2f6f6d7846695c7ce18ce0'; // Includes reviewed feedback text updates.
 const hash = entries => createHash('sha256').update(JSON.stringify(entries)).digest('hex');
 const sorted = table => Object.keys(table).sort().map(key => [key, table[key]]);
 async function environment(language) {
@@ -40,7 +40,7 @@ async function environment(language) {
 }
 const en = await environment('en');
 assert.deepEqual(Object.keys(en.api).sort(), ['applyTranslations', 'setTranslationOverride', 't']);
-assert.equal(Object.keys(en.table).length, 686, 'only core and shared simulator strings are eager');
+assert.equal(Object.keys(en.table).length, 691, 'only core and shared simulator strings are eager');
 assert.ok([...en.modules.keys()].every(path => !/battlesim\d+\.js$/.test(path)), 'startup loads no per-simulator tables');
 assert.equal(en.api.t('battlesim214.status.fallen'), 'battlesim214.status.fallen', 'simulator strings start unloaded');
 assert.deepEqual(en.reads, ['gamebook_lang'], 'language read once through the shared runtime');
@@ -83,7 +83,7 @@ for (const path of paths) {
   }
 }
 assert.equal(keys.size, Object.keys(en.table).length, 'aggregator includes every table exactly once');
-assert.equal(keys.size, 7879);
+assert.equal(keys.size, 7884);
 const added230 = {
   'battlesim230.log.shared_round': '{enemy}: {enemyAS}, against your same Attack Strength of {playerAS}. Only the highest lands a blow.',
   'battlesim230.ui.paired_source': 'Fight two opponents together (only the highest lands a blow)',
@@ -91,7 +91,7 @@ const added230 = {
 };
 for (const [key, value] of Object.entries(added230)) assert.equal(en.api.t(key), value);
 const original = sorted(en.table).filter(([key]) => !key.startsWith('reading_access.') && !Object.hasOwn(added230, key));
-assert.equal(hash(original), baseline, 'every original key and exact Unicode/string value matches pre-split baseline');
+assert.equal(hash(original), baseline, 'every original key and exact Unicode/string value matches reviewed baseline');
 assert.equal(hash(original.map(([key]) => [key, en.api.t(key)])), baseline, 'every original lookup is available after its table loads');
 assert.equal(en.api.t('reading_access.unlock', { cost: 0 }), 'Unlock book · 0');
 for (const path of ['battlesim/loader.js', '../mobile/js/battlesim-dispatch.js']) {

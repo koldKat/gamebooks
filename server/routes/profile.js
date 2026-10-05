@@ -11,6 +11,7 @@ const {
   isAllowedImage, isAllowedAttachmentType, ATTACHMENT_MAX, AVATAR_UPLOAD_MAX, isLocalhost,
 } = require('../request-helpers');
 const { feedPush, userBadgePush, publicCatalogPush } = require('../sse');
+const { MIME } = require('../runtime-state');
 
 // ── Profile handlers ──────────────────────────────────────────────────────────
 

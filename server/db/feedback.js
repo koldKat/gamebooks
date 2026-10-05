@@ -121,13 +121,33 @@ function deleteFeedbackThread(id) {
   return _deleteThread(id);
 }
 
-function deleteFeedbackThreadForUser(id, userId) {
+// Deleting hides the thread for one side only; it is truly removed (and its attachment
+// files queued for cleanup) once BOTH sides have deleted it.
+const _softDeleteByUser = db.transaction((id, userId) => {
+  const thread = db.prepare('SELECT user_id, deleted_by_admin FROM feedback WHERE id = ?').get(id);
+  if (!thread || thread.user_id !== userId) return { ok: false, filenames: [] };
+  db.prepare('UPDATE feedback SET deleted_by_user = 1, user_unread = 0 WHERE id = ?').run(id);
+  return thread.deleted_by_admin ? _deleteThread(id) : { ok: true, filenames: [] };
+});
+
+const _softDeleteByAdmin = db.transaction(id => {
+  const thread = db.prepare('SELECT deleted_by_user FROM feedback WHERE id = ?').get(id);
+  if (!thread) return { ok: false, filenames: [] };
+  db.prepare('UPDATE feedback SET deleted_by_admin = 1, admin_unread = 0 WHERE id = ?').run(id);
+  return thread.deleted_by_user ? _deleteThread(id) : { ok: true, filenames: [] };
+});
+
+function deleteFeedbackForUser(id, userId) {
   if (!Number.isInteger(userId)) return { ok: false, filenames: [] };
-  return _deleteThread(id, userId);
+  return _softDeleteByUser(id, userId);
+}
+
+function deleteFeedbackForAdmin(id) {
+  return _softDeleteByAdmin(id);
 }
 
 function purgeDeletedFeedbackThreads() {
-  const ids = db.prepare('SELECT id FROM feedback WHERE deleted_by_user = 1 OR deleted_by_admin = 1').all();
+  const ids = db.prepare('SELECT id FROM feedback WHERE deleted_by_user = 1 AND deleted_by_admin = 1').all();
   for (const { id } of ids) deleteFeedbackThread(id);
   return ids.length;
 }
@@ -136,5 +156,5 @@ module.exports = {
   getAttachments, createAttachment, linkAttachments,
   createFeedbackThread, addFeedbackMessage, getThreadsForUser, getAllThreads,
   getFeedbackThreadById, markThreadReadByUser, markThreadReadByAdmin, markThreadUnreadByUser,
-  deleteFeedbackThread, deleteFeedbackThreadForUser, purgeDeletedFeedbackThreads,
+  deleteFeedbackThread, deleteFeedbackForUser, deleteFeedbackForAdmin, purgeDeletedFeedbackThreads,
 };

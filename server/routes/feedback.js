@@ -27,7 +27,8 @@ async function handleSubmitFeedback(req, res) {
   sendAdminEmail(
     `New feedback from ${username || 'anonymous'}`,
     `From: ${username || 'anonymous'}${email ? ` <${email}>` : ''}\n\n${message.trim()}`,
-    `<strong>From:</strong> ${escapeHtml(username || 'anonymous')}${email ? ` &lt;${escapeHtml(email)}&gt;` : ''}\n\n${escapeHtml(message.trim())}`
+    `<strong>From:</strong> ${escapeHtml(username || 'anonymous')}${email ? ` &lt;${escapeHtml(email)}&gt;` : ''}\n\n${escapeHtml(message.trim())}`,
+    db.getAttachments('feedback_message', messageId)
   );
 }
 
@@ -62,16 +63,17 @@ async function handleUserReply(req, res, id) {
     const msgId = db.addFeedbackMessage(id, 'admin', message.trim());
     if (safeAttIds1.length) db.linkAttachments(safeAttIds1, 'feedback_message', msgId, userId);
     db.markThreadReadByAdmin(id);
-    if (thread.email) sendReplyEmail(thread.email, thread.username, thread.message, message.trim()).catch(() => {});
+    if (thread.email) sendReplyEmail(thread.email, thread.username, thread.message, message.trim(), db.getAttachments('feedback_message', msgId)).catch(() => {});
     db.markThreadUnreadByUser(id);
   } else {
     const msgId = db.addFeedbackMessage(id, 'user', message.trim());
     if (safeAttIds1.length) db.linkAttachments(safeAttIds1, 'feedback_message', msgId, userId);
     const user = db.getUserById(userId);
-      sendAdminEmail(
+    sendAdminEmail(
       `Feedback reply from ${user?.username || 'user'}`,
       `${user?.username || 'user'} replied to thread #${id}:\n\n${message.trim()}`,
-      `<strong>${escapeHtml(user?.username || 'user')}</strong> replied to thread #${id}:\n\n${escapeHtml(message.trim())}`
+      `<strong>${escapeHtml(user?.username || 'user')}</strong> replied to thread #${id}:\n\n${escapeHtml(message.trim())}`,
+      db.getAttachments('feedback_message', msgId)
     );
   }
   send(res, 200, { ok: true });
@@ -114,7 +116,7 @@ async function handleAdminMarkRead(req, res, id) {
 async function handleDeleteFeedback(req, res, id) {
   const userId = await authenticate(req, res);
   if (userId === null) return;
-  const result = db.isUserAdmin(userId) ? db.deleteFeedbackThread(id) : db.deleteFeedbackThreadForUser(id, userId);
+  const result = db.isUserAdmin(userId) ? db.deleteFeedbackForAdmin(id) : db.deleteFeedbackForUser(id, userId);
   if (!result.ok) return send(res, 404, { error: 'Not found' });
   userBadgePushAll();
   await cleanupFeedbackAttachments(result.filenames);
@@ -123,7 +125,7 @@ async function handleDeleteFeedback(req, res, id) {
 
 async function handleAdminDeleteFeedback(req, res, id) {
   if (!requireLocalhost(req, res)) return;
-  const result = db.deleteFeedbackThread(id);
+  const result = db.deleteFeedbackForAdmin(id);
   if (!result.ok) return send(res, 404, { error: 'Not found' });
   userBadgePushAll();
   await cleanupFeedbackAttachments(result.filenames);
