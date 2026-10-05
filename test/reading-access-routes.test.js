@@ -29,6 +29,7 @@ test('unlock endpoint authenticates and blocks impersonation', async () => {
   let userId = null, impersonating = false, calls = 0, status;
   const context = vm.createContext({ module: { exports: {} }, require: path => {
     if (path === '../db') return { readingAccess: { unlock: () => { calls++; return { ok: true }; } } };
+    if (path === '../reading-images') return { setReadingImageCookie() {} };
     return { authenticate: async () => userId, isRequestImpersonating: () => impersonating,
       send: (req, code) => { status = code; } };
   } });
@@ -45,4 +46,26 @@ test('unlock endpoint authenticates and blocks impersonation', async () => {
   await handler({}, {}, 263, true);
   assert.equal(calls, 1);
   assert.equal(status, 200);
+});
+
+test('frontmatter previews establish the protected image cookie only after authorized access', async () => {
+  let userId = null, result = null, cookies = 0, status;
+  const context = vm.createContext({ module:{exports:{}}, require:name => {
+    if (name==='../db') return {readingAccess:{getAccess:()=>result}};
+    if (name==='../reading-images') return {setReadingImageCookie(){cookies++;}};
+    if (name==='../sse') return {userBadgePush(){}};
+    return {authenticate:async()=>userId,isRequestImpersonating:()=>false,send:(res,code)=>{status=code;}};
+  }});
+  vm.runInContext(fs.readFileSync(require.resolve('../server/routes/reading-access'),'utf8'),context);
+  const handler=context.module.exports.handleReadingAccess;
+  await handler({}, {}, 263);
+  assert.equal(cookies,0);
+  userId=1;
+  await handler({}, {}, 263);
+  assert.equal(status,404);
+  assert.equal(cookies,0);
+  result={locked:true,introText:'<p>Player matter</p>'};
+  await handler({}, {}, 263);
+  assert.equal(status,200);
+  assert.equal(cookies,1);
 });

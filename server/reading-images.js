@@ -25,16 +25,21 @@ async function handleReadingImage(req, res, bookId, filename) {
       if (cookie) authenticatedRequest.headers.authorization = `Bearer ${decodeURIComponent(cookie.slice(22))}`;
     } catch (_) { return send(res, 401, { error: 'Unauthorized' }); }
   }
+  let locked = false;
   if (!isLocalhostReal(req)) {
     const userId = await authenticate(authenticatedRequest, res);
     if (userId === null) return;
     if (!books._canLiveRead(userId)) return send(res, 403, { error: 'forbidden' });
     const access = books.readingAccess.getAccess(userId, bookId, false);
     if (!access) return send(res, 404, { error: 'not found' });
-    if (access.locked) return send(res, 403, { error: 'reading_locked' });
+    locked = access.locked;
   }
   const source = `/api/books/${bookId}/reading-images/${filename}`;
-  if (!db.prepare('SELECT 1 FROM book_sections WHERE book_id = ? AND instr(html, ?) > 0 LIMIT 1').get(bookId, source)) {
+  const inMatter = db.prepare(`SELECT 1 FROM book_frontmatter WHERE book_id = ?
+    AND (instr(intro_text, ?) > 0 OR instr(rules_text, ?) > 0)`).get(bookId, source, source);
+  // Locked previews may show player matter, never section-only artwork.
+  if (locked && !inMatter) return send(res, 403, { error: 'reading_locked' });
+  if (!inMatter && !db.prepare('SELECT 1 FROM book_sections WHERE book_id = ? AND instr(html, ?) > 0 LIMIT 1').get(bookId, source)) {
     return send(res, 404, { error: 'not found' });
   }
   let data;

@@ -91,7 +91,7 @@ const server = createServer(async (req, res) => {
       introText: '<script>alert(1)</script>\n' + 'Long introduction. '.repeat(1500), rulesText: 'Rules' }));
     return;
   }
-  if (!/^\/(?:js\/(?:reading\/(?:access|frontmatter)|ui-helpers\/(?:coin-icon|confirm)|core\/state|i18n(?:\/en\/[a-z/-]+|\/runtime)?)\.js|mobile\/css\/style\.css|css\/(?:reading-access|liveread|shop|confirm)\.css|vendor\/fonts\/pt-serif\/[a-z0-9_.-]+\.(?:css|woff2))$/.test(req.url)) {
+  if (!/^\/(?:js\/(?:reading\/(?:access|content)|ui-helpers\/(?:coin-icon|confirm)|core\/state|i18n(?:\/en\/[a-z/-]+|\/runtime)?)\.js|mobile\/css\/style\.css|css\/(?:reading-access|liveread|shop|confirm)\.css|vendor\/fonts\/pt-serif\/[a-z0-9_.-]+\.(?:css|woff2))$/.test(req.url)) {
     res.writeHead(404); res.end(); return;
   }
   try {

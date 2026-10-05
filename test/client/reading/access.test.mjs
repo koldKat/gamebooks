@@ -18,7 +18,7 @@ function setup({ locked = true, cost = 0, balance = 5 } = {}) {
   const context = vm.createContext({ document: { createElement: element, querySelectorAll: () => [mount], addEventListener() {} },
     window: { addEventListener: (type, fn) => { events[type] = fn; } },
     COIN_SVG: '<svg class="coin-icon"></svg>',
-    formatFrontmatter: () => false,
+    renderReadingMatter: () => false,
     getToken: () => token, t: (key, params) => params ? `${key}:${params.cost}` : key,
     apiFetch: async (url, options) => {
       requests.push([url, options?.method || 'GET']);

@@ -31,14 +31,14 @@
 .reading-frontmatter--structured { white-space: normal; }
 .reading-frontmatter--structured figure { margin: 0 0 1rem; }
 .reading-frontmatter--structured figure img { display: block; max-width: 100%; height: auto; margin: 0 auto; }
-.reading-gate-prose--263 > h2 {
+.reading-gate-prose > h2 {
   margin: 0 0 0.7rem;
   font-size: 1.1em;
   line-height: 1.4;
   font-weight: 600;
   text-align: left;
 }
-.reading-gate-prose--263 > .reading-frontmatter + h2 {
+.reading-gate-prose > .reading-frontmatter + h2 {
   margin-top: 1.3rem;
   padding-top: 0.85rem;
   border-top: 1px solid #374151;

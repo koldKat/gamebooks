@@ -1,7 +1,7 @@
 import { apiFetch, getToken } from '../core/state.js';
 import { t } from '../i18n.js';
 import { COIN_SVG } from '../ui-helpers/coin-icon.js';
-import { formatFrontmatter } from './frontmatter.js';
+import { renderReadingMatter } from './content.js';
 
 const gates = new WeakMap();
 let balanceEventsInstalled = false;
@@ -36,14 +36,13 @@ export async function showReadingGate(mount, bookId, { isCurrent, onUnlock, onEr
   mount.classList.add('reading-gate');
   const prose = document.createElement('div');
   prose.className = 'reading-gate-prose';
-  if (Number(bookId) === 263) prose.className += ' reading-gate-prose--263';
   for (const [heading, text] of [[t('reading_access.intro'), access.introText], [t('reading_access.rules'), access.rulesText]]) {
     if (!text) continue;
     const title = document.createElement('h2');
     title.textContent = heading;
     const content = document.createElement('div');
     content.className = 'reading-frontmatter';
-    if (!formatFrontmatter(content, bookId, text, document)) content.textContent = text;
+    if (!renderReadingMatter(content, bookId, text, document)) content.textContent = text;
     prose.append(title, content);
   }
   const button = document.createElement('button');

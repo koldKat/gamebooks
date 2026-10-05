@@ -93,3 +93,45 @@ test('image endpoint checks authentication, unlock, and book ownership before re
   assert.equal(status, 404);
   assert.equal(reads, 2);
 });
+
+test('locked books serve only their own frontmatter images; section artwork remains gated', async () => {
+  const filename=`${'b'.repeat(64)}.png`;
+  const source=`/api/books/263/reading-images/${filename}`;
+  let locked=true, matter=true, section=false, canRead=true, access=true, reads=0, status;
+  const context=vm.createContext({__dirname:'/app/server',module:{exports:{}},require:name=>{
+    if(name==='fs')return{promises:{readFile:async()=>{reads++;return Buffer.from('image');}}};
+    if(name==='path')return path;
+    if(name==='./db/connection')return{db:{prepare:sql=>({get:(id,url,other)=>{
+      if(id!==263||url!==source)return undefined;
+      if(sql.includes('book_frontmatter')){assert.equal(other,source);return matter?{1:1}:undefined;}
+      return section?{1:1}:undefined;
+    }})}};
+    if(name==='./db')return{_canLiveRead:()=>canRead,readingAccess:{getAccess:()=>access?{locked}:null}};
+    return{authenticate:async()=>1,isLocalhostReal:()=>false,tokenFromReq:req=>req.headers.authorization,send:(res,code)=>{status=code;}};
+  }});
+  vm.runInContext(fs.readFileSync(require.resolve('../server/reading-images'),'utf8'),context);
+  const handler=context.module.exports.handleReadingImage;
+  const req={headers:{authorization:'Bearer valid'}},res={writeHead(code){status=code;},end(){}};
+  await handler(req,res,263,filename);
+  assert.equal(status,200);
+  assert.equal(reads,1);
+  matter=false;section=true;
+  await handler(req,res,263,filename);
+  assert.equal(status,403);
+  assert.equal(reads,1);
+  locked=false;
+  await handler(req,res,263,filename);
+  assert.equal(status,200);
+  assert.equal(reads,2);
+  await handler(req,res,264,filename);
+  assert.equal(status,404);
+  assert.equal(reads,2);
+  canRead=false;
+  await handler(req,res,263,filename);
+  assert.equal(status,403);
+  assert.equal(reads,2);
+  canRead=true;access=false;
+  await handler(req,res,263,filename);
+  assert.equal(status,404);
+  assert.equal(reads,2);
+});
