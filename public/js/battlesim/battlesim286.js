@@ -73,6 +73,7 @@ function _data() {
       dehronatorUsed: false,
       log: [],
       history: [],
+      groupRules: true,
     };
   }
   const d = pt.sim286;
@@ -127,6 +128,37 @@ function _enemyName(d) { return d.enemy.name.trim() || 'противникът';
 // Escape free-text names in HTML logs; store history names raw and escape once when rendered.
 function _enemyNameSafe(d) { return escapeHtml(_enemyName(d)); }
 
+function _startGroup(d) {
+  d.groupRules = true;
+  d.group = { target: 0, hp: Array.from({ length: 1 + Math.min(20, d.enemy.extraAttackers || 0) }, (_, i) => i ? d.enemy.hpMax : d.enemy.hp) };
+  d.battleStart.playerLife = d.player.life;
+  d.battleStart.enemyHp = d.enemy.hp;
+  d.battleStart.group = structuredClone(d.group);
+}
+function _syncGroup(d) {
+  if (d.group) d.group.hp[d.group.target] = d.enemy.hp;
+}
+function _allEnemiesDefeated(d) {
+  return d.group ? d.group.hp.every((hp, i) => (i === d.group.target ? d.enemy.hp : hp) <= 0) : d.enemy.hp <= 0;
+}
+function _advanceTarget(d) {
+  _syncGroup(d);
+  if (!d.group || d.enemy.hp > 0) return;
+  const next = d.group.hp.findIndex(hp => hp > 0);
+  if (next >= 0) { d.group.target = next; d.enemy.hp = d.group.hp[next]; }
+}
+function _enemyTurn(d) {
+  if (!d.group) {
+    _enemyAttackOnce(d);
+    if (d.player.life > 0) _resolveExtraAttackers(d);
+    return;
+  }
+  _syncGroup(d);
+  for (let i = 0; i < d.group.hp.length && d.player.life > 0; i++) {
+    if (d.group.hp[i] > 0) _enemyAttackOnce(d, t('battlesim286.ui.group_member', { n: i + 1 }));
+  }
+}
+
 function _weaponMinHit(d) {
   const w = WEAPONS.find(w => w[0] === d.player.weaponKey);
   if (!w) return 6;
@@ -156,6 +188,7 @@ function _playerAttackOnce(d) {
   }
   if (!hit) dmg = 0;
   d.enemy.hp = Math.max(0, d.enemy.hp - dmg);
+  _syncGroup(d);
   _appendLog(d, dmg > 0
     ? t('battlesim286.log.player_hit', { roll, minHit, dmg, enemy: _enemyNameSafe(d), hp: d.enemy.hp, hpMax: d.enemy.hpMax })
     : t('battlesim286.log.player_miss', { roll, minHit }));
@@ -204,12 +237,13 @@ function _recordOutcome(d, outcome, enemyNameOverride = null) {
 // Player attacks first unless the encounter's enemyFirst flag reverses the order.
 function _runRound() {
   const d = _data();
-  if (!d || _notReady(d) || d.player.life <= 0 || d.enemy.hp <= 0) return;
+  if (!d || _notReady(d) || d.player.life <= 0 || _allEnemiesDefeated(d) || d.dream3) return;
+  if (d.groupRules && !d.group) _startGroup(d);
+  _advanceTarget(d);
   d.roundsThisBattle = (d.roundsThisBattle || 0) + 1;
 
   if (d.player.enemyFirst) {
-    _enemyAttackOnce(d);
-    if (d.player.life > 0) _resolveExtraAttackers(d);
+    _enemyTurn(d);
     if (d.player.life <= 0) {
       _appendLog(d, `${SVG_SKULL} ${t('battlesim286.log.player_fallen')}`);
       _recordOutcome(d, 'loss');
@@ -220,14 +254,14 @@ function _runRound() {
   }
 
   _playerAttackOnce(d);
-  if (d.effects.doubleAttack && d.enemy.hp > 0) _playerAttackOnce(d);
+  _advanceTarget(d);
+  if (d.effects.doubleAttack && !_allEnemiesDefeated(d)) { _playerAttackOnce(d); _advanceTarget(d); }
 
-  if (d.enemy.hp <= 0) {
+  if (_allEnemiesDefeated(d)) {
     _appendLog(d, `${SVG_TROPHY} ${t('battlesim286.log.enemy_defeated', { enemy: _enemyNameSafe(d) })}`);
     _recordOutcome(d, 'win');
   } else if (!d.player.enemyFirst) {
-    _enemyAttackOnce(d);
-    if (d.player.life > 0) _resolveExtraAttackers(d);
+    _enemyTurn(d);
     if (d.player.life <= 0) {
       _appendLog(d, `${SVG_SKULL} ${t('battlesim286.log.player_fallen')}`);
       _recordOutcome(d, 'loss');
@@ -241,12 +275,12 @@ function _runRound() {
 // Heal only outside combat, once per battle cycle as the simulator's episode proxy.
 function _heal(amount) {
   const d = _data();
-  if (!d || amount <= 0) return;
+  if (!d || amount <= 0 || d.dream3) return;
   if (_notReady(d)) {
     showAlert(t('battlesim286.alert.not_ready'));
     return;
   }
-  if (d.roundsThisBattle > 0 && d.player.life > 0 && d.enemy.hp > 0) {
+  if (d.roundsThisBattle > 0 && d.player.life > 0 && !_allEnemiesDefeated(d)) {
     showAlert(t('battlesim286.alert.heal_midfight'));
     return;
   }
@@ -264,13 +298,14 @@ function _heal(amount) {
 
 function _resetBattle() {
   const d = _data();
-  if (!d) return;
+  if (!d || d.dream3) return;
   d.enemy.hp    = d.enemy.hpMax;
   d.player.life = d.player.lifeMax;
   d.effects = { tempShield: false, doubleAttack: false, pendingBonus: 0, enemyStun: 0 };
   d.roundsThisBattle = 0;
   d.healUsedThisBattle = false;
   d.battleStart = { playerLife: d.player.life, enemyHp: d.enemy.hp };
+  _startGroup(d);
   if (d.log.length) _appendLog(d, t('battlesim286.log.reset_sep'));
   _appendLog(d, t('battlesim286.log.reset', { enemy: _enemyNameSafe(d) }));
   saveState();
@@ -284,13 +319,14 @@ function _activateTech(key) {
   if (!d) return;
   const item  = TECH_ITEMS.find(i => i.key === key);
   const state = d.tech[key];
-  if (!item || !state || _notReady(d)) return;
+  if (!item || !state || _notReady(d) || d.dream3) return;
 
   if (item.kind === 'revive') {
     if (d.dehronatorUsed || d.player.life <= 0) return;
     // Deduct revive's 15 HP from the restored starting life, not the overwritten current value.
     d.player.life = Math.max(0, d.battleStart.playerLife - item.cost);
     d.enemy.hp    = d.battleStart.enemyHp;
+    if (d.battleStart.group) d.group = structuredClone(d.battleStart.group);
     d.dehronatorUsed = true;
     state.usesLeft = 0;
     _appendLog(d, t('battlesim286.log.dehronator', { cost: item.cost, life: d.player.life, lifeMax: d.player.lifeMax }));
@@ -304,7 +340,9 @@ function _activateTech(key) {
   }
 
   // Block actions after resolution to prevent duplicate outcome history.
-  if (d.player.life <= 0 || d.enemy.hp <= 0) return;
+  if (d.player.life <= 0 || _allEnemiesDefeated(d)) return;
+  if (d.groupRules && !d.group) _startGroup(d);
+  _advanceTarget(d);
 
   // Activated charged weapons fire freely; failed activation costs HP but not ammunition.
   if (item.charged && state.activated) {
@@ -312,7 +350,8 @@ function _activateTech(key) {
     state.usesLeft--;
     d.enemy.hp = Math.max(0, d.enemy.hp - item.damage);
     _appendLog(d, t('battlesim286.log.charged_shot', { name: _techName(item.key), dmg: item.damage, enemy: _enemyNameSafe(d), hp: d.enemy.hp, hpMax: d.enemy.hpMax, left: state.usesLeft }));
-    if (d.enemy.hp <= 0) { _appendLog(d, `${SVG_TROPHY} ${t('battlesim286.log.enemy_defeated', { enemy: _enemyNameSafe(d) })}`); _recordOutcome(d, 'win'); }
+    _advanceTarget(d);
+    if (_allEnemiesDefeated(d)) { _appendLog(d, `${SVG_TROPHY} ${t('battlesim286.log.enemy_defeated', { enemy: _enemyNameSafe(d) })}`); _recordOutcome(d, 'win'); }
     saveState();
     _renderAll();
     return;
@@ -344,7 +383,8 @@ function _activateTech(key) {
     _appendLog(d, t('battlesim286.log.activate_success', { name: _techName(item.key), roll, cost: TECH_ATTEMPT_COST, desc: _techDesc(item.key) }));
     if (item.kind === 'direct') {
       _appendLog(d, t('battlesim286.log.direct_hit', { enemy: _enemyNameSafe(d), dmg: item.damage, hp: d.enemy.hp, hpMax: d.enemy.hpMax }));
-      if (d.enemy.hp <= 0) { _appendLog(d, `${SVG_TROPHY} ${t('battlesim286.log.enemy_defeated', { enemy: _enemyNameSafe(d) })}`); _recordOutcome(d, 'win'); }
+      _advanceTarget(d);
+      if (_allEnemiesDefeated(d)) { _appendLog(d, `${SVG_TROPHY} ${t('battlesim286.log.enemy_defeated', { enemy: _enemyNameSafe(d) })}`); _recordOutcome(d, 'win'); }
     }
   }
   if (d.player.life <= 0) {
@@ -359,14 +399,14 @@ function _activateTech(key) {
 
 function _sleepAttempt() {
   const d = _data();
-  if (!d) return;
+  if (!d || d.dream3) return;
   if (_notReady(d)) {
     showAlert(t('battlesim286.alert.not_ready'));
     return;
   }
   // "Можеш да спиш във всеки епизод, освен когато си нападнат" - sleep is
   // blocked mid-fight for the same reason manual healing is.
-  if (d.roundsThisBattle > 0 && d.player.life > 0 && d.enemy.hp > 0) {
+  if (d.roundsThisBattle > 0 && d.player.life > 0 && !_allEnemiesDefeated(d)) {
     showAlert(t('battlesim286.alert.sleep_midfight'));
     return;
   }
@@ -397,14 +437,8 @@ function _resolveDream(d, n) {
       break;
     }
     case 3: {
-      const roll = _roll2d6();
-      if (roll >= 9 && roll <= 12) {
-        d.player.life = Math.min(d.player.lifeMax, d.player.life + roll);
-        _appendLog(d, t('battlesim286.dream3.gain', { roll }));
-      } else {
-        d.player.life = Math.max(0, d.player.life - roll);
-        _appendLog(d, t('battlesim286.dream3.loss', { roll }));
-      }
+      d.dream3 = { total: 0 };
+      _appendLog(d, t('battlesim286.dream3.instructions'));
       break;
     }
     case 4: {
@@ -502,17 +536,43 @@ function _resolveDream(d, n) {
   if (d.player.life <= 0) _recordOutcome(d, 'loss', t('battlesim286.log.dream_death_label', { label: t(`battlesim286.dream.${n}`) }));
 }
 
+function _dream3Finish(d) {
+  const roll = d.dream3.total;
+  const gain = roll >= 9 && roll <= 12;
+  d.player.life = gain ? Math.min(d.player.lifeMax, d.player.life + roll) : Math.max(0, d.player.life - roll);
+  _appendLog(d, t(gain ? 'battlesim286.dream3.gain' : 'battlesim286.dream3.loss', { roll }));
+  delete d.dream3;
+  if (d.player.life <= 0) _recordOutcome(d, 'loss', t('battlesim286.log.dream_death_label', { label: t('battlesim286.dream.3') }));
+}
+function _dream3Roll() {
+  const d = _data();
+  if (!d?.dream3 || d.player.life <= 0) return;
+  const roll = _roll1d6();
+  d.dream3.total += roll;
+  _appendLog(d, t('battlesim286.dream3.roll', { roll, total: d.dream3.total }));
+  if (d.dream3.total >= 9) _dream3Finish(d);
+  saveState();
+  _renderAll();
+}
+function _dream3Stop() {
+  const d = _data();
+  if (!d?.dream3 || !d.dream3.total) return;
+  _dream3Finish(d);
+  saveState();
+  _renderAll();
+}
+
 // ── Render ────────────────────────────────────────────────────────────────
 
 function _techButtonsHtml(d) {
   // Block gadgets after resolution except the revive, which has its own alive/unused guard.
   // Require starting life/AE rolls for both.
   const notReady = _notReady(d);
-  const battleOver = notReady || d.player.life <= 0 || d.enemy.hp <= 0;
+  const battleOver = notReady || d.player.life <= 0 || _allEnemiesDefeated(d) || !!d.dream3;
   return TECH_ITEMS.map(item => {
     const s = d.tech[item.key];
     const depleted = item.kind === 'revive'
-      ? (s.usesLeft <= 0 || notReady || d.player.life <= 0)
+      ? (s.usesLeft <= 0 || notReady || d.player.life <= 0 || !!d.dream3)
       : (s.usesLeft <= 0 || battleOver);
     const label = item.kind === 'revive'
       ? t('battlesim286.ui.tech_revive_label', { name: _techName(item.key), cost: item.cost })
@@ -564,15 +624,19 @@ function _renderStatus() {
   const notReady = _notReady(d);
   if (notReady)                el.innerHTML = t('battlesim286.status.not_ready');
   else if (d.player.life <= 0) el.innerHTML = `${SVG_SKULL} ${t('battlesim286.status.fallen')}`;
-  else if (d.enemy.hp <= 0)    el.innerHTML = `${SVG_TROPHY} ${t('battlesim286.status.victory')}`;
+  else if (_allEnemiesDefeated(d)) el.innerHTML = `${SVG_TROPHY} ${t('battlesim286.status.victory')}`;
   else                         el.innerHTML = '';
-  const over = notReady || d.player.life <= 0 || d.enemy.hp <= 0;
-  document.getElementById('sim286-round').disabled = over;
+  const over = notReady || d.player.life <= 0 || _allEnemiesDefeated(d);
+  document.getElementById('sim286-round').disabled = over || !!d.dream3;
   // Recovery rules 1+3: no healing mid-fight, and only once per battle-cycle.
   const midFight = d.roundsThisBattle > 0 && !over;
-  document.getElementById('sim286-heal').disabled = over || midFight || d.healUsedThisBattle;
+  document.getElementById('sim286-heal').disabled = over || midFight || d.healUsedThisBattle || !!d.dream3;
   // "Не можеш да спиш, докато си нападнат" - same mid-fight block as healing.
-  document.getElementById('sim286-sleep').disabled = notReady || d.player.life <= 0 || midFight;
+  document.getElementById('sim286-sleep').disabled = notReady || d.player.life <= 0 || midFight || !!d.dream3;
+  document.getElementById('sim286-reset').disabled = !!d.dream3;
+  document.getElementById('sim286-dream3').style.display = d.dream3 ? '' : 'none';
+  document.getElementById('sim286-dream3-total').textContent = t('battlesim286.dream3.total', { total: d.dream3?.total || 0 });
+  document.getElementById('sim286-dream3-stop').disabled = !d.dream3?.total;
   _renderEffectsBadges(d);
 }
 
@@ -625,6 +689,12 @@ function _renderInputs() {
   document.getElementById('sim286-enemy-minhit').value  = d.enemy.minHit;
   document.getElementById('sim286-enemy-fixeddmg').value = d.enemy.fixedDamage;
   document.getElementById('sim286-enemy-extra').value    = d.enemy.extraAttackers;
+  document.getElementById('sim286-enemy-extra').disabled = !!d.group && d.roundsThisBattle > 0;
+  const target = document.getElementById('sim286-target');
+  target.closest('.inv-edit-row').style.display = d.group?.hp.length > 1 ? '' : 'none';
+  target.innerHTML = d.group ? d.group.hp.map((hp, i) => `<option value="${i}" ${hp <= 0 ? 'disabled' : ''}>${escapeHtml(t('battlesim286.ui.group_member', { n: i + 1 }))}: ${i === d.group.target ? d.enemy.hp : hp}/${d.enemy.hpMax}</option>`).join('') : '';
+  target.value = String(d.group?.target || 0);
+  target.disabled = !!d.dream3 || d.player.life <= 0;
 
   document.getElementById('sim286-tech-list').innerHTML = _techButtonsHtml(d);
   _renderStatus(); // also renders the effects badges, as its last step
@@ -704,7 +774,7 @@ function _setupEnemyAutocomplete() {
 
   function select(enemy) {
     const d = _data();
-    if (!d || !enemy) return;
+    if (!d || !enemy || d.dream3) return;
     input.value = enemy.name;
     d.enemy.name = enemy.name;
     if (enemy.hp != null)     { d.enemy.hp = enemy.hp; d.enemy.hpMax = enemy.hp; }
@@ -714,6 +784,7 @@ function _setupEnemyAutocomplete() {
     d.enemy.extraAttackers = 0;
     d.battleStart = { playerLife: d.player.life, enemyHp: d.enemy.hp };
     d.roundsThisBattle = 0;
+    _startGroup(d);
     d.healUsedThisBattle = false;
     closeDropdown();
     saveState();
@@ -852,9 +923,15 @@ export function initSim286() {
             ${_numField(t('battlesim286.ui.enemy_minhit'), 'sim286-enemy-minhit')}
             ${_numField(t('battlesim286.ui.enemy_fixeddmg'), 'sim286-enemy-fixeddmg')}
             ${_numField(t('battlesim286.ui.enemy_extra'), 'sim286-enemy-extra')}
+            <label class="inv-edit-row"><span class="inv-edit-label bsim-stat-label">${t('battlesim286.ui.target')}</span><select id="sim286-target" class="inv-edit-input"></select></label>
           </div>
           <div id="sim286-effects" class="bsim-effects"></div>
           <div id="sim286-status" class="bsim-status"></div>
+          <div id="sim286-dream3" class="inv-edit-row" style="display:none">
+            <span id="sim286-dream3-total" class="inv-edit-label"></span>
+            <button id="sim286-dream3-roll" class="inv-edit-done" type="button">${t('battlesim286.dream3.continue')}</button>
+            <button id="sim286-dream3-stop" class="inv-edit-done" type="button">${t('battlesim286.dream3.stop')}</button>
+          </div>
           <div class="inv-edit-row bsim-heal-row">
             <span class="inv-edit-label bsim-stat-label">${t('battlesim286.ui.heal')}</span>
             <div class="inv-qty-wrap">
@@ -911,6 +988,17 @@ export function initSim286() {
   document.getElementById('sim286-round').addEventListener('click', _runRound);
   document.getElementById('sim286-sleep').addEventListener('click', _sleepAttempt);
   document.getElementById('sim286-reset').addEventListener('click', _resetBattle);
+  document.getElementById('sim286-dream3-roll').addEventListener('click', _dream3Roll);
+  document.getElementById('sim286-dream3-stop').addEventListener('click', _dream3Stop);
+  document.getElementById('sim286-target').addEventListener('change', e => {
+    const d = _data(), index = Number(e.target.value);
+    if (!d?.group || d.dream3 || !Number.isInteger(index) || !(d.group.hp[index] > 0)) return;
+    _syncGroup(d);
+    d.group.target = index;
+    d.enemy.hp = d.group.hp[index];
+    saveState();
+    _renderAll();
+  });
   document.getElementById('sim286-heal').addEventListener('click', () => {
     const amount = Number(document.getElementById('sim286-heal-amount').value) || 0;
     _heal(amount);
@@ -944,12 +1032,16 @@ export function initSim286() {
     if (!d) return;
     const map = FIELD_MAP[id];
     if (!map) return;
+    if (d.dream3 || (id === 'sim286-enemy-extra' && d.group && d.roundsThisBattle > 0)) return;
     val = Math.max(0, val);
+    if (id === 'sim286-enemy-extra' && d.groupRules) val = Math.min(20, val);
     if (id === 'sim286-player-life') val = Math.min(val, d.player.lifeMax);
     d[map[0]][map[1]] = val;
     if (id === 'sim286-player-lifemax') d.player.life = Math.min(d.player.life, val);
     // Manual HP correction updates the starting snapshot used by revive.
     if (id === 'sim286-enemy-hp' || id === 'sim286-enemy-hpmax') d.battleStart.enemyHp = d.enemy.hp;
+    if (d.groupRules && d.roundsThisBattle === 0 && ['sim286-enemy-extra', 'sim286-enemy-hpmax'].includes(id)) _startGroup(d);
+    if (id === 'sim286-enemy-hp') _syncGroup(d);
     saveState();
     _renderInputs();
   }

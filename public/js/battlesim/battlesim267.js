@@ -53,6 +53,13 @@ function _appendLog(d, line) {
 }
 
 function _enemyName(d) { return d.enemy.name.trim() || t('battlesim.default_enemy'); }
+function _isCaldwell(name) { return /^caldwell(?:\s+\(zombie\))?$/i.test(name.trim()); }
+function _startSpecialRules(d) {
+  d.specialRules = { enemy: d.enemy.name.trim().toUpperCase(), lostRounds: 0, outcome: null, craggenKnife: false, demon283: false };
+}
+function _playerDamage(d) {
+  return d.specialRules?.enemy === 'BRONZE WARRIOR' && !d.specialRules.craggenKnife ? 1 : 2;
+}
 function _enemyNameSafe(d) { return escapeHtml(_enemyName(d)); }
 
 function _recordOutcome(d, outcome) {
@@ -67,7 +74,7 @@ function _recordOutcome(d, outcome) {
 
 function _runRound() {
   const d = _data();
-  if (!d || _notReady(d) || d.player.stamina <= 0 || d.enemy.stamina <= 0) return;
+  if (!d || _notReady(d) || d.player.stamina <= 0 || d.enemy.stamina <= 0 || d.specialRules?.outcome) return;
   d.roundsThisBattle++;
   d.pendingLuck = null;
 
@@ -78,17 +85,24 @@ function _runRound() {
   if (playerRoll === enemyRoll) {
     _appendLog(d, t('battlesim267.log.both_avoided'));
   } else if (playerRoll > enemyRoll) {
-    d.enemy.stamina = Math.max(0, d.enemy.stamina - 2);
-    _appendLog(d, t('battlesim267.log.you_wound', { enemy: _enemyNameSafe(d), n: 2, stamina: d.enemy.stamina, staminaMax: d.enemy.staminaMax }));
+    const damage = _playerDamage(d);
+    d.enemy.stamina = Math.max(0, d.enemy.stamina - damage);
+    _appendLog(d, t('battlesim267.log.you_wound', { enemy: _enemyNameSafe(d), n: damage, stamina: d.enemy.stamina, staminaMax: d.enemy.staminaMax }));
     if (d.enemy.stamina > 0) d.pendingLuck = 'player-hit';
+    if (d.specialRules?.enemy === 'DWARF') d.specialRules.outcome = 'win';
   } else {
-    const damage = d.caldwellDoubles && enemyDice[0] === enemyDice[1] ? 4 : 2;
+    const damage = d.caldwellDoubles && enemyDice[0] === enemyDice[1] ? 4 : d.specialRules?.enemy === 'HOWLING DEMON' && d.specialRules.demon283 ? 3 : 2;
     d.player.stamina = Math.max(0, d.player.stamina - damage);
     _appendLog(d, t('battlesim267.log.enemy_wounds', { enemy: _enemyNameSafe(d), n: damage, stamina: d.player.stamina, staminaMax: d.player.staminaInitial }));
     if (d.player.stamina > 0) d.pendingLuck = 'enemy-hit';
+    if (d.specialRules?.enemy === 'GHOUL' && ++d.specialRules.lostRounds >= 3) d.specialRules.outcome = 'loss';
   }
 
-  if (d.enemy.stamina <= 0) {
+  if (d.specialRules?.outcome) {
+    d.pendingLuck = null;
+    _appendLog(d, t(d.specialRules.outcome === 'win' ? 'battlesim267.log.dwarf_stopped' : 'battlesim267.log.paralysed'));
+    _recordOutcome(d, d.specialRules.outcome);
+  } else if (d.enemy.stamina <= 0) {
     _appendLog(d, `${SVG_TROPHY} ${t('battlesim267.log.defeated', { enemy: _enemyNameSafe(d) })}`);
     _recordOutcome(d, 'win');
   } else if (d.player.stamina <= 0) {
@@ -112,7 +126,7 @@ function _testLuck() {
       d.enemy.stamina = Math.max(0, d.enemy.stamina - 2);
       _appendLog(d, t('battlesim267.log.luck_player_hit_lucky', { roll, enemy: _enemyNameSafe(d), stamina: d.enemy.stamina, staminaMax: d.enemy.staminaMax }));
     } else {
-      d.enemy.stamina = Math.min(d.enemy.staminaMax, d.enemy.stamina + 1);
+      d.enemy.stamina = Math.min(d.enemy.staminaMax, d.enemy.stamina + Math.max(0, _playerDamage(d) - 1));
       _appendLog(d, t('battlesim267.log.luck_player_hit_unlucky', { roll, enemy: _enemyNameSafe(d), stamina: d.enemy.stamina, staminaMax: d.enemy.staminaMax }));
     }
     if (d.enemy.stamina <= 0) { _appendLog(d, `${SVG_TROPHY} ${t('battlesim267.log.defeated', { enemy: _enemyNameSafe(d) })}`); _recordOutcome(d, 'win'); }
@@ -144,7 +158,8 @@ function _resetBattle() {
   d.enemy.stamina = d.enemy.staminaMax;
   d.player.stamina = d.player.staminaInitial;
   d.roundsThisBattle = 0;
-  d.caldwellDoubles = d.enemy.name.trim().toLowerCase() === 'caldwell';
+  d.caldwellDoubles = _isCaldwell(d.enemy.name);
+  _startSpecialRules(d);
   d.pendingLuck = null;
   if (d.log.length) _appendLog(d, t('battlesim267.log.reset_sep'));
   _appendLog(d, t('battlesim267.log.reset', { enemy: _enemyNameSafe(d) }));
@@ -157,7 +172,7 @@ function _resetBattle() {
 function _eatProvisions() {
   const d = _data();
   if (!d || _notReady(d)) return;
-  if (d.roundsThisBattle > 0 && d.player.stamina > 0 && d.enemy.stamina > 0) {
+  if (d.specialRules?.outcome === 'loss' || (d.roundsThisBattle > 0 && d.player.stamina > 0 && d.enemy.stamina > 0 && !d.specialRules?.outcome)) {
     showAlert(t('battlesim267.alert.provisions_midfight'));
     return;
   }
@@ -184,15 +199,16 @@ function _renderStatus() {
   const hasEnemy = d.enemy.staminaMax > 0;
   if (notReady)                                    el.innerHTML = t('battlesim267.status.not_ready');
   else if (d.player.stamina <= 0)                   el.innerHTML = `${SVG_SKULL} ${t('battlesim267.status.fallen')}`;
-  else if (hasEnemy && d.enemy.stamina <= 0)         el.innerHTML = `${SVG_TROPHY} ${t('battlesim267.status.victory')}`;
+  else if (d.specialRules?.outcome === 'loss')      el.innerHTML = `${SVG_SKULL} ${t('battlesim267.log.paralysed')}`;
+  else if (d.specialRules?.outcome === 'win' || (hasEnemy && d.enemy.stamina <= 0)) el.innerHTML = `${SVG_TROPHY} ${t('battlesim267.status.victory')}`;
   else                                               el.innerHTML = '';
-  const over = notReady || d.player.stamina <= 0 || (hasEnemy && d.enemy.stamina <= 0);
+  const over = notReady || d.player.stamina <= 0 || !!d.specialRules?.outcome || (hasEnemy && d.enemy.stamina <= 0);
   document.getElementById('sim267-round').disabled = over || !!d.pendingLuck;
   document.getElementById('sim267-luck-yes').disabled = notReady || !d.pendingLuck || d.player.luck <= 0;
   document.getElementById('sim267-luck-no').disabled  = notReady || !d.pendingLuck;
   document.getElementById('sim267-provisions').disabled =
-    notReady || d.player.provisionsLeft <= 0 || d.player.stamina >= d.player.staminaInitial ||
-    (d.roundsThisBattle > 0 && d.player.stamina > 0 && d.enemy.stamina > 0);
+    notReady || d.specialRules?.outcome === 'loss' || d.player.provisionsLeft <= 0 || d.player.stamina >= d.player.staminaInitial ||
+    (d.roundsThisBattle > 0 && d.player.stamina > 0 && d.enemy.stamina > 0 && !d.specialRules?.outcome);
 }
 
 function _renderHistory() {
@@ -247,6 +263,12 @@ function _renderInputs() {
 
   const pendingEl = document.getElementById('sim267-luck-prompt');
   pendingEl.style.display = d.pendingLuck ? '' : 'none';
+  for (const [key, enemy] of [['craggenKnife', 'BRONZE WARRIOR'], ['demon283', 'HOWLING DEMON']]) {
+    const input = document.getElementById('sim267-' + key);
+    input.closest('.inv-edit-row').style.display = d.specialRules?.enemy === enemy ? '' : 'none';
+    input.checked = !!d.specialRules?.[key];
+    input.disabled = d.roundsThisBattle > 0;
+  }
 
   _renderStatus();
 }
@@ -328,10 +350,11 @@ function _setupEnemyAutocomplete() {
     if (!d || !enemy) return;
     input.value = enemy.name;
     d.enemy.name = enemy.name;
-    d.caldwellDoubles = enemy.name.trim().toLowerCase() === 'caldwell';
+    d.caldwellDoubles = _isCaldwell(enemy.name);
     if (enemy.attack != null) d.enemy.skill = enemy.attack;
     if (enemy.hp != null)     { d.enemy.stamina = enemy.hp; d.enemy.staminaMax = enemy.hp; }
     d.roundsThisBattle = 0;
+    _startSpecialRules(d);
     d.pendingLuck = null;
     closeDropdown();
     saveState();
@@ -418,6 +441,8 @@ export function initSim267() {
             ${_numField(t('battlesim267.ui.skill'), 'sim267-enemy-skill')}
             ${_numField(t('battlesim267.ui.stamina'), 'sim267-enemy-stamina')}
             ${_numField(t('battlesim267.ui.stamina_max'), 'sim267-enemy-staminamax')}
+            <label class="inv-edit-row"><span class="inv-edit-label">${t('battlesim267.ui.craggen_knife')}</span><input id="sim267-craggenKnife" type="checkbox"></label>
+            <label class="inv-edit-row"><span class="inv-edit-label">${t('battlesim267.ui.demon_283')}</span><input id="sim267-demon283" type="checkbox"></label>
           </div>
           <div id="sim267-status" class="bsim-status"></div>
           <div id="sim267-luck-prompt" class="inv-edit-row bsim-heal-row" style="display:none">
@@ -468,6 +493,13 @@ export function initSim267() {
   document.getElementById('sim267-luck-yes').addEventListener('click', _testLuck);
   document.getElementById('sim267-luck-no').addEventListener('click', _skipLuck);
   document.getElementById('sim267-provisions').addEventListener('click', _eatProvisions);
+  for (const key of ['craggenKnife', 'demon283']) document.getElementById('sim267-' + key).addEventListener('change', e => {
+    const d = _data();
+    if (!d?.specialRules || d.roundsThisBattle > 0) return;
+    d.specialRules[key] = e.target.checked;
+    saveState();
+    _renderAll();
+  });
 
   document.getElementById('sim267-roll').addEventListener('click', () => {
     const d = _data();
@@ -488,7 +520,10 @@ export function initSim267() {
     const d = _data();
     if (!d) return;
     d.enemy.name = e.target.value;
-    if (d.roundsThisBattle === 0) d.caldwellDoubles = d.enemy.name.trim().toLowerCase() === 'caldwell';
+    if (d.roundsThisBattle === 0) {
+      d.caldwellDoubles = _isCaldwell(d.enemy.name);
+      _startSpecialRules(d);
+    }
     saveState();
   });
 

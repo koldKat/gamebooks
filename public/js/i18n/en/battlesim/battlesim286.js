@@ -1,5 +1,12 @@
 // English translations: simulator 286.
 export default {
+    'battlesim286.ui.target': 'Цел',
+    'battlesim286.ui.group_member': 'Противник {n}',
+    'battlesim286.dream3.instructions': 'Хвърляй по един зар. Сбор 9-12 възстановява живот; спиране под 9 или сбор над 12 отнема сбора от живота.',
+    'battlesim286.dream3.roll': 'Зар: {roll}; сбор: {total}.',
+    'battlesim286.dream3.total': 'Медицински център: сбор {total}',
+    'battlesim286.dream3.continue': 'Хвърли 1 зар',
+    'battlesim286.dream3.stop': 'Спри и се събуди',
     'battlesim286.ui.title':          'Симулатор на битки',
     'battlesim286.ui.you':            'Ти',
     'battlesim286.ui.life':           'Точки живот (ТЖ)',

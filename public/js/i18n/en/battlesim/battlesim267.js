@@ -1,5 +1,9 @@
 // English translations: simulator 267.
 export default {
+    'battlesim267.ui.craggen_knife': 'Craggen Knife (2 damage instead of 1)',
+    'battlesim267.ui.demon_283': 'Section 283: Demon hits deal 3 STAMINA',
+    'battlesim267.log.dwarf_stopped': 'Your first hit ends this fight. Turn to section 285.',
+    'battlesim267.log.paralysed': 'Three lost Attack Rounds: you are paralysed. Turn to section 143.',
     'battlesim267.status.not_ready':  'Roll your starting SKILL, STAMINA and LUCK to begin.',
     'battlesim267.status.fallen':     'You have fallen in battle.',
     'battlesim267.status.victory':    'Victory!',
