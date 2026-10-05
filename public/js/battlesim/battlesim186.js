@@ -39,6 +39,7 @@ function _data() {
       luck: 0, luckInitial: 0,
       ship: { weapons: 0, weaponsInitial: 0, shields: 0, shieldsInitial: 0 },
       rolled: false,
+      shipCombatRulesVersion: 2,
       mode: 'handtohand', // 'handtohand' | 'phaser' | 'ship'
       fighterKey: 'captain',
       hasHelmet: false, // sec 268-269: an advanced alien helmet, +1 SKILL while worn - persistent equipment, not a per-encounter knob
@@ -259,18 +260,36 @@ function _runPhaserRound() {
 
 // ── Ship-to-ship ─────────────────────────────────────────────────────────────
 
+function _shipIsDestroyed(d, ship) {
+  return d.shipCombatRulesVersion === 2 ? ship.destroyed === true : ship.shields <= 0;
+}
+
+function _startShipFight(d, enemy) {
+  d.enemyShip.name = enemy.name;
+  if (enemy.attack != null) d.enemyShip.weapons = enemy.attack;
+  if (enemy.hp != null) {
+    d.enemyShip.shields = enemy.hp;
+    d.enemyShip.shieldsMax = enemy.hp;
+  }
+  d.shipCombatRulesVersion = 2;
+  d.ship.destroyed = false;
+  d.enemyShip.destroyed = false;
+  d.roundsThisBattle = 0;
+}
+
 function _playerShipShot(d) {
   const toHit = _roll2d6();
   _appendLog(d, t('battlesim186.log.ship_fire', { roll: toHit, weapons: d.ship.weapons }));
   if (toHit < d.ship.weapons) {
     const dmgRoll = _roll2d6();
     const dmg = dmgRoll === 12 ? 6 : (dmgRoll <= d.enemyShip.shields ? 2 : 4);
+    if (d.shipCombatRulesVersion === 2 && d.enemyShip.shields <= 0) d.enemyShip.destroyed = true;
     d.enemyShip.shields = Math.max(0, d.enemyShip.shields - dmg);
     _appendLog(d, t('battlesim186.log.ship_direct_hit', { dmgRoll, dmg, enemy: _enemyShipNameSafe(d), shields: d.enemyShip.shields }));
   } else {
     _appendLog(d, t('battlesim186.log.miss'));
   }
-  if (d.enemyShip.shields <= 0) {
+  if (_shipIsDestroyed(d, d.enemyShip)) {
     _appendLog(d, `${SVG_TROPHY} ${t('battlesim186.log.ship_explodes', { enemy: _enemyShipNameSafe(d) })}`);
     _recordOutcome(d, 'win');
     return true;
@@ -284,12 +303,13 @@ function _enemyShipShot(d) {
   if (toHit < d.enemyShip.weapons) {
     const dmgRoll = _roll2d6();
     const dmg = dmgRoll === 12 ? 6 : (dmgRoll <= d.ship.shields ? 2 : 4);
+    if (d.shipCombatRulesVersion === 2 && d.ship.shields <= 0) d.ship.destroyed = true;
     d.ship.shields = Math.max(0, d.ship.shields - dmg);
     _appendLog(d, t('battlesim186.log.ship_direct_hit_you', { dmgRoll, dmg, shields: d.ship.shields }));
   } else {
     _appendLog(d, t('battlesim186.log.miss'));
   }
-  if (d.ship.shields <= 0) {
+  if (_shipIsDestroyed(d, d.ship)) {
     _appendLog(d, `${SVG_SKULL} ${t('battlesim186.log.ship_destroyed')}`);
     _recordOutcome(d, 'loss');
     return true;
@@ -299,7 +319,7 @@ function _enemyShipShot(d) {
 
 function _runShipRound() {
   const d = _data();
-  if (!d || _notReady(d) || d.ship.shields <= 0 || d.enemyShip.shields <= 0) return;
+  if (!d || _notReady(d) || d.enemyShip.shieldsMax <= 0 || _shipIsDestroyed(d, d.ship) || _shipIsDestroyed(d, d.enemyShip)) return;
   d.roundsThisBattle++;
   _appendLog(d, t('battlesim186.log.round_no_as', { round: d.roundsThisBattle }));
 
@@ -330,6 +350,10 @@ function _resetBattle() {
   if (d.mode === 'ship') {
     d.enemyShip.shields = d.enemyShip.shieldsMax;
     d.ship.shields = d.ship.shieldsInitial;
+    if (d.shipCombatRulesVersion === 2) {
+      d.ship.destroyed = false;
+      d.enemyShip.destroyed = false;
+    }
     if (d.log.length) _appendLog(d, t('battlesim186.log.reset_sep'));
     _appendLog(d, t('battlesim186.log.reset_ship', { enemy: _enemyShipNameSafe(d) }));
   } else {
@@ -374,9 +398,9 @@ function _renderStatus() {
   if (d.mode === 'ship') {
     const hasEnemy = d.enemyShip.shieldsMax > 0;
     if (notReady) statusHtml = t('battlesim186.status.not_ready');
-    else if (d.ship.shields <= 0) statusHtml = `${SVG_SKULL} ${t('battlesim186.status.ship_destroyed')}`;
-    else if (hasEnemy && d.enemyShip.shields <= 0) statusHtml = `${SVG_TROPHY} ${t('battlesim186.status.victory')}`;
-    over = notReady || d.ship.shields <= 0 || (hasEnemy && d.enemyShip.shields <= 0);
+    else if (_shipIsDestroyed(d, d.ship)) statusHtml = `${SVG_SKULL} ${t('battlesim186.status.ship_destroyed')}`;
+    else if (hasEnemy && _shipIsDestroyed(d, d.enemyShip)) statusHtml = `${SVG_TROPHY} ${t('battlesim186.status.victory')}`;
+    over = notReady || !hasEnemy || _shipIsDestroyed(d, d.ship) || _shipIsDestroyed(d, d.enemyShip);
   } else {
     const f = _fighter(d);
     const hasEnemy = d.enemy.staminaMax > 0;
@@ -839,7 +863,7 @@ export function initSim186() {
     d.luckInitial = _roll1d6() + 6;
     d.luck = d.luckInitial;
     d.ship.weaponsInitial = _roll1d6() + 6;
-    d.ship.shieldsInitial = _roll2d6() + 12;
+    d.ship.shieldsInitial = _roll1d6() + 12;
     d.ship.weapons = d.ship.weaponsInitial;
     d.ship.shields = d.ship.shieldsInitial;
     d.rolled = true;
@@ -1049,10 +1073,7 @@ export function initSim186() {
   _setupAutocomplete('sim186-enemyship-pick', 'sim186-enemyship-pick-dropdown', enemy => {
     const d = _data();
     if (!d) return;
-    d.enemyShip.name = enemy.name;
-    if (enemy.attack != null) d.enemyShip.weapons = enemy.attack;
-    if (enemy.hp != null)     { d.enemyShip.shields = enemy.hp; d.enemyShip.shieldsMax = enemy.hp; }
-    d.roundsThisBattle = 0;
+    _startShipFight(d, enemy);
     _resetEncounterKnobs(d);
     saveState();
     _renderAll();
