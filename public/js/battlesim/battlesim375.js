@@ -37,6 +37,8 @@ function _data() {
       useInnerForce: false,
       pendingEnemyHit: null,
       pendingThrowFollowup: false,
+      correctedCombatRules: true,
+      allowZeroEnemyDamage: true,
       roundsThisBattle: 0,
       log: [],
       history: [],
@@ -105,9 +107,12 @@ function _consumeBlockPenalty(d, tech) {
 }
 
 function _enemyCounter(d) {
+  const dice = Math.max(d.allowZeroEnemyDamage ? 0 : 1, d.enemy.dmgDice);
+  const bonus = d.enemy.dmgBonus || 0;
+  if (d.allowZeroEnemyDamage && dice === 0 && bonus === 0) return;
   const enemyRoll = _roll2d6();
   if (enemyRoll > d.player.defense) {
-    const dmg = _rollNd6(Math.max(1, d.enemy.dmgDice)) + (d.enemy.dmgBonus || 0);
+    const dmg = _rollNd6(dice) + bonus;
     d.pendingEnemyHit = { dmg };
     _appendLog(d, t('battlesim375.log.enemy_hits_pending', { enemy: _enemyNameSafe(d), roll: enemyRoll, defense: d.player.defense, dmg }));
   } else {
@@ -170,7 +175,7 @@ function _attack() {
     return;
   }
 
-  let dmg = raw + _roll1d6();
+  let dmg = (d.correctedCombatRules && tech !== 'shuriken' ? 0 : raw) + _roll1d6();
   if (tech === 'kick') dmg += 2;
   if (useIF) dmg *= 2;
   d.enemy.endurance = Math.max(0, d.enemy.endurance - dmg);
@@ -197,12 +202,13 @@ function _throwFollowup(tech) {
 
   if (!hit) {
     _appendLog(d, t('battlesim375.log.followup_miss', { tech: _techLabel(tech) }));
+    if (d.correctedCombatRules) _enemyCounter(d);
     saveState();
     _renderAll();
     return;
   }
 
-  let dmg = raw + _roll1d6() + 2;
+  let dmg = (d.correctedCombatRules ? 0 : raw) + _roll1d6() + 2;
   if (tech === 'kick') dmg += 2;
   d.enemy.endurance = Math.max(0, d.enemy.endurance - dmg);
   _appendLog(d, t('battlesim375.log.you_hit', { tech: _techLabel(tech), enemy: _enemyNameSafe(d), n: dmg, endurance: d.enemy.endurance, enduranceMax: d.enemy.enduranceMax, innerForce: '' }));
@@ -270,6 +276,25 @@ async function _loadEnemyList() {
     _enemyList = [];
   }
   return _enemyList;
+}
+
+function _startEnemyFight(d, enemy) {
+  d.enemy.name = enemy.name;
+  d.enemy.endurance = enemy.hp ?? 0;
+  d.enemy.enduranceMax = enemy.hp ?? 0;
+  d.enemy.dmgDice = enemy.pb ?? 1;
+  d.enemy.dmgBonus = enemy.defense ?? 0;
+  d.enemy.defHand = enemy.attack ?? 0;
+  d.enemy.defKick = 0;
+  d.enemy.defThrow = 0;
+  d.enemy.defShuriken = 0;
+  d.player.defense = 0;
+  d.roundsThisBattle = 0;
+  d.pendingEnemyHit = null;
+  d.pendingThrowFollowup = false;
+  d.player.blockPenaltyPending = false;
+  d.correctedCombatRules = true;
+  d.allowZeroEnemyDamage = true;
 }
 
 function _setupAutocomplete(inputId, dropdownId, onSelect) {
@@ -595,20 +620,7 @@ export function initSim375() {
   _setupAutocomplete('sim375-enemy-pick', 'sim375-enemy-pick-dropdown', enemy => {
     const d = _data();
     if (!d) return;
-    d.enemy.name        = enemy.name;
-    d.enemy.endurance    = enemy.hp ?? 0;
-    d.enemy.enduranceMax = enemy.hp ?? 0;
-    d.enemy.dmgDice      = enemy.pb ?? 1;
-    d.enemy.dmgBonus     = enemy.defense ?? 0;
-    d.enemy.defHand      = enemy.attack ?? 0;
-    d.enemy.defKick      = 0;
-    d.enemy.defThrow     = 0;
-    d.enemy.defShuriken  = 0;
-    d.player.defense     = 0;
-    d.roundsThisBattle   = 0;
-    d.pendingEnemyHit     = null;
-    d.pendingThrowFollowup = false;
-    d.player.blockPenaltyPending = false;
+    _startEnemyFight(d, enemy);
     saveState();
     _renderAll();
   });

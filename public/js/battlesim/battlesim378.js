@@ -37,6 +37,7 @@ function _data() {
       useInnerForce: false,
       pendingEnemyHit: null,
       pendingThrowFollowup: false,
+      counterAfterMissedFollowup: true,
       roundsThisBattle: 0,
       log: [],
       history: [],
@@ -197,6 +198,7 @@ function _throwFollowup(tech) {
 
   if (!hit) {
     _appendLog(d, t('battlesim378.log.followup_miss', { tech: _techLabel(tech) }));
+    if (d.counterAfterMissedFollowup) _enemyCounter(d);
     saveState();
     _renderAll();
     return;
@@ -256,6 +258,27 @@ function _resetBattle() {
   _appendLog(d, t('battlesim378.log.reset', { enemy: _enemyNameSafe(d) }));
   saveState();
   _renderAll();
+}
+
+function _startEnemyFight(d, enemy) {
+  d.enemy = {
+    ...d.enemy,
+    name: enemy.name,
+    endurance: enemy.hp ?? 0,
+    enduranceMax: enemy.hp ?? 0,
+    dmgDice: enemy.pb ?? 1,
+    dmgBonus: enemy.defense ?? 0,
+    defHand: enemy.attack ?? 0,
+    defKick: 0,
+    defThrow: 0,
+    defShuriken: 0,
+  };
+  d.player.defense = 0;
+  d.roundsThisBattle = 0;
+  d.pendingEnemyHit = null;
+  d.pendingThrowFollowup = false;
+  d.player.blockPenaltyPending = false;
+  d.counterAfterMissedFollowup = true;
 }
 
 // ── Enemy autocomplete (fed by book_enemies, seeded per book_id) ───────────
@@ -595,20 +618,7 @@ export function initSim378() {
   _setupAutocomplete('sim378-enemy-pick', 'sim378-enemy-pick-dropdown', enemy => {
     const d = _data();
     if (!d) return;
-    d.enemy.name        = enemy.name;
-    d.enemy.endurance    = enemy.hp ?? 0;
-    d.enemy.enduranceMax = enemy.hp ?? 0;
-    d.enemy.dmgDice      = enemy.pb ?? 1;
-    d.enemy.dmgBonus     = enemy.defense ?? 0;
-    d.enemy.defHand      = enemy.attack ?? 0;
-    d.enemy.defKick      = 0;
-    d.enemy.defThrow     = 0;
-    d.enemy.defShuriken  = 0;
-    d.player.defense     = 0;
-    d.roundsThisBattle   = 0;
-    d.pendingEnemyHit     = null;
-    d.pendingThrowFollowup = false;
-    d.player.blockPenaltyPending = false;
+    _startEnemyFight(d, enemy);
     saveState();
     _renderAll();
   });
