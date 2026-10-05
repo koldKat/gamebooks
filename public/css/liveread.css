@@ -41,6 +41,40 @@
   user-select: none;
 }
 
+/* Three-line menu opening frontmatter/backmatter, anchored left of the close button. */
+/* The font controls' margin-left:auto already right-aligns the whole cluster, so cancel the
+   shared .inv-close-btn auto-margin that would otherwise shove the close button to the far edge. */
+#liveread-close { margin-left: 0; }
+.liveread-menu-wrap { position: relative; display: flex; }
+.liveread-menu-btn { font-size: 0.95rem; line-height: 1; }
+.liveread-menu-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 150px;
+  background: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  overflow: hidden;
+  z-index: 360;
+}
+.liveread-menu-dropdown[hidden] { display: none; }
+.liveread-menu-item {
+  background: none;
+  border: none;
+  color: #d1d5db;
+  text-align: left;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.liveread-menu-item:hover:not(:disabled) { background: #374151; }
+.liveread-menu-item:disabled { color: #4b5563; cursor: default; }
+
 .liveread-body {
   /* min-height:0 lets the flex child scroll within the panel's height limit. */
   flex: 1 1 auto;

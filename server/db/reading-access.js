@@ -49,6 +49,17 @@ function createReadingAccess(db, policy = DEFAULT_POLICY) {
       introText: frontmatter?.intro_text || '', rulesText: frontmatter?.rules_text || '' };
   }
 
+  // Frontmatter/backmatter for on-demand viewing during reading (getAccess withholds it once unlocked).
+  function getReadingMatter(userId, bookId) {
+    const book = db.prepare(`SELECT b.id FROM books b
+      WHERE b.id = ? AND b.has_live_reading = 1 AND
+        (b.is_public = 1 OR b.created_by = ? OR EXISTS
+          (SELECT 1 FROM user_books ub WHERE ub.book_id = b.id AND ub.user_id = ?))`).get(bookId, userId, userId);
+    if (!book) return null;
+    const fm = db.prepare('SELECT intro_text, rules_text FROM book_frontmatter WHERE book_id = ?').get(bookId);
+    return { introText: fm?.intro_text || '', rulesText: fm?.rules_text || '' };
+  }
+
   const unlock = db.transaction((userId, bookId) => {
     const access = getAccess(userId, bookId, false);
     if (!access) return { error: 'not_found' };
@@ -62,7 +73,7 @@ function createReadingAccess(db, policy = DEFAULT_POLICY) {
     if (access.cost) db.prepare('UPDATE users SET coins_spent = coins_spent + ? WHERE id = ?').run(access.cost, userId);
     return { ok: true, alreadyUnlocked: false, cost: access.cost, newBalance: balance - access.cost };
   });
-  return { getAccess, unlock };
+  return { getAccess, unlock, getReadingMatter };
 }
 
 module.exports = { createReadingAccess, DEFAULT_POLICY };

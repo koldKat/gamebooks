@@ -17,4 +17,13 @@ async function handleReadingAccess(req, res, bookId, purchase = false) {
   if (purchase && result.cost > 0 && !result.alreadyUnlocked) userBadgePush(userId);
 }
 
-module.exports = { handleReadingAccess };
+async function handleReadingMatter(req, res, bookId) {
+  const userId = await authenticate(req, res);
+  if (userId === null) return;
+  const result = readingAccess.getReadingMatter(userId, bookId);
+  if (!result) return send(res, 404, { error: 'not_found' });
+  setReadingImageCookie(req, res);
+  send(res, 200, result);
+}
+
+module.exports = { handleReadingAccess, handleReadingMatter };

@@ -8,6 +8,7 @@ import { t } from '../i18n.js';
 import { shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from '../core/util.js';
 import { TROPHY_SVG, BROKEN_SHIELD_SVG, terminalHeadingKey } from './liveread-shared.js';
 import { showReadingGate } from './access.js';
+import { renderReadingMatter } from './content.js';
 
 // Reuses the same .feed-loading-graph/.flg-* markup and CSS (demo.css) as the
 // activity feed's loading indicator, both loaded on index.html.
@@ -153,6 +154,89 @@ async function _showExtra(key) {
   });
 }
 
+// Frontmatter/backmatter for the open book; fetched once the gate clears.
+// Mapping lives in _initMatterMenu: front = introText, back = rulesText.
+let _matter = null;
+
+function _closeMenu() {
+  document.getElementById('liveread-menu-dropdown')?.setAttribute('hidden', '');
+  document.getElementById('liveread-menu')?.setAttribute('aria-expanded', 'false');
+  document.removeEventListener('click', _onDocClickMenu, true);
+}
+
+function _onDocClickMenu(e) {
+  if (e.target.closest('#liveread-menu-dropdown') || e.target.closest('#liveread-menu')) return;
+  _closeMenu();
+}
+
+function _toggleMenu() {
+  const dd = document.getElementById('liveread-menu-dropdown');
+  const btn = document.getElementById('liveread-menu');
+  if (!dd || !btn) return;
+  if (dd.hidden) {
+    dd.hidden = false;
+    btn.setAttribute('aria-expanded', 'true');
+    setTimeout(() => document.addEventListener('click', _onDocClickMenu, true), 0);
+  } else _closeMenu();
+}
+
+// Hide the menu until a book's matter is known, then show it only if some block has content.
+function _resetMatterMenu() {
+  _matter = null;
+  _closeMenu();
+  const btn = document.getElementById('liveread-menu');
+  if (btn) btn.style.display = 'none';
+}
+
+async function _initMatterMenu() {
+  const btn = document.getElementById('liveread-menu');
+  if (!btn) return;
+  btn.style.display = 'none';
+  const bookId = currentBookId;
+  let res;
+  try { res = await apiFetch(`/api/books/${bookId}/reading-matter`); } catch (_) { return; }
+  if (!res.ok || bookId !== currentBookId) return;
+  const data = await res.json();
+  if (bookId !== currentBookId) return;
+  _matter = { bookId, front: data.introText || '', back: data.rulesText || '' };
+  const frontBtn = document.getElementById('liveread-menu-front');
+  const backBtn = document.getElementById('liveread-menu-back');
+  if (frontBtn) frontBtn.disabled = !_matter.front;
+  if (backBtn) backBtn.disabled = !_matter.back;
+  if (_matter.front || _matter.back) btn.style.display = '';
+}
+
+// Render a matter block as a non-section aside with Back navigation, like _showExtra.
+function _showMatter(which) {
+  _closeMenu();
+  const body = document.getElementById('liveread-body');
+  if (!body || _accessPending || _accessLocked) return;
+  if (!_matter || _matter.bookId !== currentBookId) return;
+  const text = _matter[which];
+  if (!text) return;
+  // Keep _shownSec at the real position so background renders leave the aside intact.
+  const sec = _shownSec;
+  ++_showToken;
+  const heading = document.getElementById('liveread-heading');
+  if (heading) heading.textContent = t(which === 'front' ? 'liveread.frontmatter' : 'liveread.backmatter');
+  const content = document.createElement('div');
+  content.className = 'reading-frontmatter';
+  if (!renderReadingMatter(content, currentBookId, text, document)) content.textContent = text;
+  const back = document.createElement('p');
+  back.className = 'liveread-back';
+  const link = document.createElement('a');
+  link.href = '#';
+  link.textContent = t('btn.back');
+  back.append(link);
+  body.replaceChildren(content, back);
+  body.scrollTop = 0;
+  link.addEventListener('click', e => {
+    e.preventDefault();
+    _shownSec = undefined;
+    if (sec == null) _returnToCurrent(); else _showSection(sec);
+  });
+}
+
 // Track read-only previews separately from the actual run position.
 let _previewSec = null;
 
@@ -249,6 +333,7 @@ async function _open() {
     _shownSec = undefined;
     if (!currentPlaythrough() || (unlocked && currentSection() !== 1)) startPlaythrough(unlocked ? 1 : null);
     _showSection(currentSection() ?? (state.startSection ?? 1));
+    _initMatterMenu();
   };
   try {
     const locked = await showReadingGate(body, bookId, { isCurrent, onUnlock: () => begin(true) });
@@ -267,6 +352,7 @@ async function _open() {
 
 function _close() {
   document.getElementById('liveread-body')?.classList?.remove('reading-gate');
+  _resetMatterMenu();
   ++_showToken;
   _accessPending = false;
   _accessLocked = false;
@@ -367,6 +453,13 @@ export function initLiveRead() {
         <span id="liveread-font-pct" class="liveread-font-pct"></span>
         <button id="liveread-font-inc" class="inv-close-btn liveread-font-btn" aria-label="${t('liveread.font_increase')}">+</button>
       </div>
+      <div class="liveread-menu-wrap">
+        <button id="liveread-menu" class="inv-close-btn liveread-menu-btn" aria-label="${t('liveread.menu')}" aria-haspopup="true" aria-expanded="false" style="display:none">☰</button>
+        <div id="liveread-menu-dropdown" class="liveread-menu-dropdown" hidden>
+          <button id="liveread-menu-front" class="liveread-menu-item" type="button">${t('liveread.frontmatter')}</button>
+          <button id="liveread-menu-back" class="liveread-menu-item" type="button">${t('liveread.backmatter')}</button>
+        </div>
+      </div>
       <button id="liveread-close" class="inv-close-btn" aria-label="${t('btn.close')}">✕</button>
     </div>
     <div id="liveread-body" class="liveread-body"></div>`;
@@ -397,6 +490,9 @@ export function initLiveRead() {
 
   btn.addEventListener('click', _toggle);
   document.getElementById('liveread-close').addEventListener('click', _close);
+  document.getElementById('liveread-menu').addEventListener('click', _toggleMenu);
+  document.getElementById('liveread-menu-front').addEventListener('click', () => _showMatter('front'));
+  document.getElementById('liveread-menu-back').addEventListener('click', () => _showMatter('back'));
   document.getElementById('liveread-body').addEventListener('click', _onChoiceClick);
 
   registerPanelShortcut('KeyR', {

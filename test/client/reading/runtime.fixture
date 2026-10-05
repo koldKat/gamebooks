@@ -11,13 +11,14 @@ const body = { innerHTML: '', scrollTop: 9, querySelectorAll: () => [] };
 const button = { setAttribute() {}, removeAttribute() {} };
 const elements = { 'liveread-panel': panel, 'liveread-body': body, 'liveread-heading': {}, 'liveread-btn': button,
   'liveread-preview-return': { addEventListener() {} } };
-const context = createContext({ document: { getElementById: id => elements[id] }, console });
+const context = createContext({ document: { getElementById: id => elements[id], addEventListener() {}, removeEventListener() {} }, console });
 const stubData = {
   '../core/state.js': { state: { startSection: 1 }, getToken: () => 'account', currentBookId: 42, currentPlaythrough: () => ({}), currentSection: () => section,
     viewingPt: null, isTerminal: sec => sec === 0 || sec === -1, parseSecId: Number, isSectionMapped: sec => sec === 1,
     apiFetch: async url => { requests.push(url); const sec = Number(url.split('/').at(-1)); return { ok: true, json: async () => ({ html: '<p>Section ' + sec + '</p>', choices: sec === 1 ? [2] : [] }) }; } },
   '../play.js': { navigate() {}, startPlaythrough() {}, commitChoices: (sec, choices) => commits.push([sec, [...choices]]), showAlert() {}, suppressAutoNav: value => suppression.push(value) },
   './access.js': { showReadingGate: async () => false },
+  './content.js': { renderReadingMatter: () => false },
   '../graph.js': { network: null, setLightweightRestabilize: value => physics.push(value) },
   '../i18n.js': { t: key => key },
   '../core/util.js': { shortcutLabel() {}, registerPanelShortcut() {}, ALL_PANEL_OVERLAY_IDS: [] },

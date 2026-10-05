@@ -18,6 +18,7 @@ import { openFastTravelDialog } from './fast-travel-dialog.js';
 import { t } from '../../js/i18n.js';
 import { TROPHY_SVG, BROKEN_SHIELD_SVG, terminalHeadingKey } from '../../js/reading/liveread-shared.js';
 import { showReadingGate } from '../../js/reading/access.js';
+import { renderReadingMatter } from '../../js/reading/content.js';
 
 // Debounce reward checks by 750ms to allow deferred server awards to land.
 // Merge nearby toast deltas instead of overwriting feedback.
@@ -57,6 +58,8 @@ function _escapeHtml(s) {
 
 const ICON_TEXT  = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="14" y2="18"/></svg>`;
 const ICON_GRAPH = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><line x1="7.5" y1="7.5" x2="10.5" y2="16.5"/><line x1="16.5" y1="7.5" x2="13.5" y2="16.5"/></svg>`;
+// Three full-length lines (hamburger), distinct from the ragged text-pane icon.
+const ICON_MENU  = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>`;
 
 function _loadingHtml(label) {
   return `<div class="m-loading">
@@ -199,6 +202,7 @@ export async function renderReader(mount, book, onBack, { startAtOne = false } =
   mount.innerHTML = `
     <div class="m-topbar">
       <button id="m-back-btn">${t('mobile.back_home')}</button>
+      <button id="m-reading-menu-btn" class="m-pane-toggle-btn" aria-label="${t('liveread.menu')}" style="display:none">${ICON_MENU}</button>
       <span class="m-book-title">${_escapeHtml(book.name)}</span>
       <button id="m-toggle-text-btn" class="m-pane-toggle-btn" aria-label="${t('mobile.text_only')}">${ICON_TEXT}</button>
       <button id="m-toggle-graph-btn" class="m-pane-toggle-btn" aria-label="${t('mobile.graph_only')}">${ICON_GRAPH}</button>
@@ -223,7 +227,9 @@ export async function renderReader(mount, book, onBack, { startAtOne = false } =
         <div id="m-graph-loading" class="m-graph-loading">${_loadingHtml(t('mobile.loading_graph'))}</div>
       </div>
     </div>`;
-  document.getElementById('m-back-btn').addEventListener('click', () => { ++_readerSession; ++_showToken; onBack(); });
+  document.getElementById('m-back-btn').addEventListener('click', () => { _closeReadingMenu(); ++_readerSession; ++_showToken; onBack(); });
+  document.getElementById('m-reading-menu-btn').addEventListener('click', e => _openReadingMenu(e.currentTarget));
+  _initReadingMenu(book.id, isCurrent);
   document.getElementById('m-notebook-btn').addEventListener('click', () => openNotebook(book.id));
   document.getElementById('m-undo-btn').addEventListener('click', _undoRun);
   document.getElementById('m-fasttravel-btn').addEventListener('click', () => openFastTravelDialog(_doFastTravel));
@@ -562,4 +568,75 @@ async function _previewSection(sec) {
       }
     });
   });
+}
+
+// Frontmatter/backmatter menu: front = introText, back = rulesText (same mapping as desktop).
+let _mMatter = null;
+
+function _closeReadingMenu() {
+  document.getElementById('m-reading-menu')?.remove();
+  document.removeEventListener('click', _onDocTapReadingMenu, true);
+}
+
+function _onDocTapReadingMenu(e) {
+  if (e.target.closest('#m-reading-menu') || e.target.closest('#m-reading-menu-btn')) return;
+  _closeReadingMenu();
+}
+
+function _openReadingMenu(btn) {
+  if (document.getElementById('m-reading-menu')) { _closeReadingMenu(); return; }
+  const r = btn.getBoundingClientRect();
+  const menu = document.createElement('div');
+  menu.id = 'm-reading-menu';
+  menu.className = 'm-reading-menu';
+  const mkItem = (which, label) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = label;
+    b.disabled = !_mMatter?.[which];
+    b.addEventListener('click', () => { _closeReadingMenu(); _showMatter(which); });
+    return b;
+  };
+  menu.append(mkItem('front', t('liveread.frontmatter')), mkItem('back', t('liveread.backmatter')));
+  document.body.append(menu);
+  menu.style.top = `${r.bottom + 4}px`;
+  menu.style.left = `${Math.max(4, Math.min(r.left, window.innerWidth - menu.offsetWidth - 4))}px`;
+  setTimeout(() => document.addEventListener('click', _onDocTapReadingMenu, true), 0);
+}
+
+// isCurrent guards staleness: currentBookId is only set later by loadState, so don't compare against it here.
+async function _initReadingMenu(bookId, isCurrent) {
+  const btn = document.getElementById('m-reading-menu-btn');
+  if (!btn) return;
+  btn.style.display = 'none';
+  _mMatter = null;
+  let res;
+  try { res = await apiFetch(`/api/books/${bookId}/reading-matter`); } catch (_) { return; }
+  if (!res.ok || !isCurrent()) return;
+  const data = await res.json();
+  if (!isCurrent()) return;
+  _mMatter = { bookId, front: data.introText || '', back: data.rulesText || '' };
+  if (_mMatter.front || _mMatter.back) btn.style.display = '';
+}
+
+// Render a matter block in the text pane with Back navigation, like _showExtra.
+function _showMatter(which) {
+  const top = document.getElementById('m-top');
+  if (!top || !_mMatter || _mMatter.bookId !== currentBookId) return;
+  const text = _mMatter[which];
+  if (!text) return;
+  if (_paneMode === 'graph') _setPaneMode('both'); // see _showSection's own comment
+  ++_showToken;
+  const content = document.createElement('div');
+  content.className = 'reading-frontmatter';
+  if (!renderReadingMatter(content, currentBookId, text, document)) content.textContent = text;
+  const back = document.createElement('p');
+  back.className = 'm-back-link';
+  const link = document.createElement('a');
+  link.href = '#';
+  link.textContent = t('mobile.back');
+  back.append(link);
+  top.replaceChildren(content, back);
+  top.scrollTop = 0;
+  link.addEventListener('click', e => { e.preventDefault(); _returnToCurrent(); });
 }

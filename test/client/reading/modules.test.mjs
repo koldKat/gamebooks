@@ -8,7 +8,7 @@ import { spawnSync } from 'node:child_process';
 const dir = new URL('../../../public/js/', import.meta.url);
 test('reading relocation preserves implementations and exact dependency targets', () => {
   const digests = {
-    liveread: 'b7561581523ebc3c1e33f7f9a7cca90957adaa8017e043cfc404326e031ff661',
+    liveread: 'cf9a479942b6a8cf486c21192131e77e992b353b5458c36e4c6511047bddfe2a',
     'liveread-shared': '7a305b8967fc5494a00f3962a9075a3cdb435122061baadb8fa7aa3e0cbaa1dc',
   };
   for (const [name, digest] of Object.entries(digests)) {
@@ -21,7 +21,7 @@ test('reading relocation preserves implementations and exact dependency targets'
   const source = readFileSync(moduleUrl, 'utf8');
   const imports = [...source.matchAll(/^import .*from '([^']+)';$/gm)]
     .map(match => fileURLToPath(new URL(match[1], moduleUrl)));
-  assert.deepEqual(imports, ['core/state.js', 'play.js', 'graph.js', 'i18n.js', 'core/util.js', 'reading/liveread-shared.js', 'reading/access.js']
+  assert.deepEqual(imports, ['core/state.js', 'play.js', 'graph.js', 'i18n.js', 'core/util.js', 'reading/liveread-shared.js', 'reading/access.js', 'reading/content.js']
     .map(path => fileURLToPath(new URL(path, dir))));
 });
 
@@ -33,12 +33,12 @@ test('mobile keeps existing dependencies and imports only the shared reading mod
   const mobile = readFileSync(mobileUrl, 'utf8');
   // The access hook is exercised separately; shared reading stays desktop-independent.
   assert.equal(createHash('sha256').update(mobile.replace(/^import[\s\S]*?;$/gm, '')).digest('hex'),
-    '5ed27dd107542ddd48f9c2e6759a3a26572b91283cf79dc62707011c4b273f1d');
+    'dd4829ee7522c76d21f8024d8bf11fb1b90d49fecfa6ea8af617933079b07ac7');
   const imports = [...mobile.matchAll(/^import[\s\S]*?from '([^']+)';$/gm)]
     .map(match => new URL(match[1], mobileUrl));
   const desktopImports = imports.filter(url => url.href.startsWith(dir.href));
   assert.deepEqual(desktopImports.map(url => url.href),
-    ['core/state.js', 'graph.js', 'ui-helpers/confirm.js', 'i18n.js', 'reading/liveread-shared.js', 'reading/access.js'].map(path => new URL(path, dir).href));
+    ['core/state.js', 'graph.js', 'ui-helpers/confirm.js', 'i18n.js', 'reading/liveread-shared.js', 'reading/access.js', 'reading/content.js'].map(path => new URL(path, dir).href));
   const module = await import(sharedUrl);
   assert.equal(module.terminalHeadingKey(true), 'liveread.victory_heading');
   assert.equal(module.terminalHeadingKey(false), 'liveread.death_heading');

@@ -163,10 +163,10 @@ function desktopSetup({ hasRun = true } = {}) {
   let section = 25;
   const active = new Set();
   const panel = { classList: { add: x => active.add(x), remove: x => active.delete(x), contains: x => active.has(x) } };
-  const body = { innerHTML: '', textContent: '' };
+  const body = { innerHTML: '', textContent: '', style: {}, setAttribute() {} };
   const events = [], starts = [];
   const context = vm.createContext({
-    document: { getElementById: id => id === 'liveread-panel' ? panel : body },
+    document: { getElementById: id => id === 'liveread-panel' ? panel : body, addEventListener() {}, removeEventListener() {} },
     t: key => key, currentBookId: 263, state: { startSection: 1 },
     getToken: () => 'account',
     currentPlaythrough: () => hasRun ? ({}) : null, currentSection: () => hasRun ? section : null,

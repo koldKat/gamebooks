@@ -737,6 +737,7 @@ Unlock confirmation appears in place in the reader's bottom footer, not in a pop
 - Clicking a choice moves your run forward and reveals that section on your graph automatically - no manual note-taking needed
 - Hover a choice to see where it leads highlighted on the graph before you click it
 - Adjust text size with the "− 100% +" control in the panel header
+- The **☰ menu** next to the close button opens the book's reference material - **Frontmatter** (the introduction) and **Backmatter** (the rules and reference) - each with a link back to where you left off. An option is greyed out when the book has nothing for it
 - The graph stays visible and interactive underneath - you can still edit notes, colours, and connections by hand exactly as before
 - Marking a run as a Victory or a Loss shows a trophy or broken-shield end screen instead of a plain "The End" line
 - Click any purple ("Mapped") dot on the graph to re-read that section's text without moving your run - a "Return to where you left off" link brings you back. Only sections you've actually read before are clickable this way; grey ("Discovered") dots you haven't visited yet stay off-limits, so you can't read ahead just by clicking around the map
