@@ -24,7 +24,7 @@ function _data() {
         skill: 0, skillInitial: 0,
         stamina: 0, staminaInitial: 0,
         luck: 0, luckInitial: 0,
-        provisionsLeft: MAX_PROVISIONS,
+        provisionsLeft: 2,
       },
       enemy: { name: '', skill: 0, stamina: 0, staminaMax: 0 },
       rolled: false,
@@ -469,8 +469,8 @@ export function initSim243() {
   document.getElementById('sim243-roll').addEventListener('click', () => {
     const d = _data();
     if (!d || d.rolled) return;
-    d.player.skillInitial   = _roll1d6() + 6;
-    d.player.staminaInitial = _roll2d6() + 12;
+    d.player.skillInitial   = _roll1d6();
+    d.player.staminaInitial = _roll2d6();
     d.player.luckInitial    = _roll1d6() + 6;
     d.player.skill   = d.player.skillInitial;
     d.player.stamina = d.player.staminaInitial;

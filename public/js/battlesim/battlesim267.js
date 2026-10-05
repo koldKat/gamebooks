@@ -23,7 +23,7 @@ function _data() {
         skill: 0, skillInitial: 0,
         stamina: 0, staminaInitial: 0,
         luck: 0, luckInitial: 0,
-        provisionsLeft: 0,
+        provisionsLeft: 10,
       },
       enemy: { name: '', skill: 0, stamina: 0, staminaMax: 0 },
       rolled: false,
@@ -72,7 +72,8 @@ function _runRound() {
   d.pendingLuck = null;
 
   const playerRoll = _roll2d6() + d.player.skill;
-  const enemyRoll   = _roll2d6() + d.enemy.skill;
+  const enemyDice = [_roll1d6(), _roll1d6()];
+  const enemyRoll = enemyDice[0] + enemyDice[1] + d.enemy.skill;
   _appendLog(d, t('battlesim267.log.round', { round: d.roundsThisBattle, playerAS: playerRoll, enemy: _enemyNameSafe(d), enemyAS: enemyRoll }));
   if (playerRoll === enemyRoll) {
     _appendLog(d, t('battlesim267.log.both_avoided'));
@@ -81,8 +82,9 @@ function _runRound() {
     _appendLog(d, t('battlesim267.log.you_wound', { enemy: _enemyNameSafe(d), n: 2, stamina: d.enemy.stamina, staminaMax: d.enemy.staminaMax }));
     if (d.enemy.stamina > 0) d.pendingLuck = 'player-hit';
   } else {
-    d.player.stamina = Math.max(0, d.player.stamina - 2);
-    _appendLog(d, t('battlesim267.log.enemy_wounds', { enemy: _enemyNameSafe(d), n: 2, stamina: d.player.stamina, staminaMax: d.player.staminaInitial }));
+    const damage = d.caldwellDoubles && enemyDice[0] === enemyDice[1] ? 4 : 2;
+    d.player.stamina = Math.max(0, d.player.stamina - damage);
+    _appendLog(d, t('battlesim267.log.enemy_wounds', { enemy: _enemyNameSafe(d), n: damage, stamina: d.player.stamina, staminaMax: d.player.staminaInitial }));
     if (d.player.stamina > 0) d.pendingLuck = 'enemy-hit';
   }
 
@@ -142,6 +144,7 @@ function _resetBattle() {
   d.enemy.stamina = d.enemy.staminaMax;
   d.player.stamina = d.player.staminaInitial;
   d.roundsThisBattle = 0;
+  d.caldwellDoubles = d.enemy.name.trim().toLowerCase() === 'caldwell';
   d.pendingLuck = null;
   if (d.log.length) _appendLog(d, t('battlesim267.log.reset_sep'));
   _appendLog(d, t('battlesim267.log.reset', { enemy: _enemyNameSafe(d) }));
@@ -325,6 +328,7 @@ function _setupEnemyAutocomplete() {
     if (!d || !enemy) return;
     input.value = enemy.name;
     d.enemy.name = enemy.name;
+    d.caldwellDoubles = enemy.name.trim().toLowerCase() === 'caldwell';
     if (enemy.attack != null) d.enemy.skill = enemy.attack;
     if (enemy.hp != null)     { d.enemy.stamina = enemy.hp; d.enemy.staminaMax = enemy.hp; }
     d.roundsThisBattle = 0;
@@ -484,6 +488,7 @@ export function initSim267() {
     const d = _data();
     if (!d) return;
     d.enemy.name = e.target.value;
+    if (d.roundsThisBattle === 0) d.caldwellDoubles = d.enemy.name.trim().toLowerCase() === 'caldwell';
     saveState();
   });
 

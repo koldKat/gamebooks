@@ -23,7 +23,7 @@ function _data() {
         skill: 0, skillInitial: 0,
         stamina: 0, staminaInitial: 0,
         luck: 0, luckInitial: 0,
-        provisionsLeft: 0,
+        provisionsLeft: 10,
       },
       enemy: { name: '', skill: 0, stamina: 0, staminaMax: 0 },
       rolled: false,
