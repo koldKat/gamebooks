@@ -402,9 +402,8 @@ export function initSim526() {
   document.getElementById('sim526-roll').addEventListener('click', () => {
     const d = _data();
     if (!d || d.rolled) return;
-    // "Roll two dice together. Roll again, see if that's any better. Roll a
-    // third time if you like, and pick whichever is best."
-    d.lifeInitial = Math.max(_roll2d6(), _roll2d6(), _roll2d6());
+    // Keep the best of three rolls, then multiply by four.
+    d.lifeInitial = 4 * Math.max(_roll2d6(), _roll2d6(), _roll2d6());
     d.life = d.lifeInitial;
     d.rolled = true;
     _appendLog(d, t('battlesim526.log.rolled', { life: d.lifeInitial }));
@@ -426,7 +425,7 @@ export function initSim526() {
     d.enemy.life           = enemy.hp ?? 0;
     d.enemy.lifeMax        = enemy.hp ?? 0;
     d.enemy.hitReq          = DEFAULT_HIT_REQ;
-    d.enemy.armour          = 0;
+    d.enemy.armour          = enemy.defense ?? 0;
     d.roundsThisBattle     = 0;
     saveState();
     _renderInputs(true);
