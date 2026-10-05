@@ -22,6 +22,39 @@ const CLASS_PRESETS = {
   sorcerer:  { fp: 9,  dmgDice: 4, dmgBonus: 2, endurance: 80, armor: 2 },
 };
 
+// Armour is not stored in the roster's defense field (that is damage bonus).
+const PRINTED_ENEMY_ARMOUR = [
+  ['Тангбранд', 9, 48, 4, 0, 2],
+  ['Тъмничар', 7, 12, 1, 1, 1],
+  ['Тобиас', 10, 65, 5, 0, 3],
+  ['Грабители', 7, 15, 1, 0, 1],
+  ['Великанът Гарм', 7, 68, 7, 0, 1],
+  ['Твари', 7, 15, 1, 1, 2],
+  ['Великанът Тифон', 8, 70, 6, 1, 3],
+  ['Брадато куче', 8, 56, 4, 1, 1],
+  ['Пазач на съкровището', 9, 45, 3, 0, 1],
+  ['Бронзови Воини', 7, 10, 1, 0, 1],
+  ['Какодемон', 8, 27, 3, 3, 6],
+  ['Дворцови герои', 8, 24, 2, 1, 3],
+];
+
+function _selectEnemy(enemy) {
+  const d = _data();
+  if (!d) return;
+  const printed = PRINTED_ENEMY_ARMOUR.find(([name, fp, hp, dice, bonus]) =>
+    enemy.name === name && enemy.attack === fp && enemy.hp === hp &&
+    enemy.pb === dice && enemy.defense === bonus);
+  Object.assign(d.enemy, {
+    name: enemy.name, fp: enemy.attack ?? 0,
+    endurance: enemy.hp ?? 0, enduranceMax: enemy.hp ?? 0,
+    dmgDice: enemy.pb ?? 1, dmgBonus: enemy.defense ?? 0,
+    armor: printed ? printed[5] : 0,
+  });
+  d.roundsThisBattle = 0;
+  saveState();
+  _renderAll();
+}
+
 function _emptyEnemy() {
   return { name: '', fp: 0, endurance: 0, enduranceMax: 0, dmgDice: 1, dmgBonus: 0, armor: 0 };
 }
@@ -464,20 +497,7 @@ export function initSim397() {
     d.enemy.name = e.target.value;
     saveState();
   });
-  _setupAutocomplete('sim397-enemy-pick', 'sim397-enemy-pick-dropdown', enemy => {
-    const d = _data();
-    if (!d) return;
-    d.enemy.name        = enemy.name;
-    d.enemy.fp           = enemy.attack ?? 0;
-    d.enemy.endurance    = enemy.hp ?? 0;
-    d.enemy.enduranceMax = enemy.hp ?? 0;
-    d.enemy.dmgDice      = enemy.pb ?? 1;
-    d.enemy.dmgBonus     = enemy.defense ?? 0;
-    d.enemy.armor        = 0;
-    d.roundsThisBattle   = 0;
-    saveState();
-    _renderAll();
-  });
+  _setupAutocomplete('sim397-enemy-pick', 'sim397-enemy-pick-dropdown', _selectEnemy);
 
   const fieldMap = {
     'sim397-player-fp': ['player', 'fp'], 'sim397-player-endurance': ['player', 'endurance'],

@@ -509,6 +509,18 @@
   margin-left: 0.3rem;
   flex-shrink: 0;
 }
+/* The title row already spaces its children with gap. */
+.book-name-row > :is(.book-open-world-badge, .book-battlesim-badge,
+  .book-livereading-badge, .book-pdf-badge, .book-epub-badge) {
+  margin-left: 0;
+}
+/* Bare icons need a smaller gap than the cover panel's bordered badges. */
+.book-name-row > :is(.book-open-world-badge, .book-battlesim-badge,
+  .book-livereading-badge, .book-pdf-badge, .book-epub-badge) +
+  :is(.book-open-world-badge, .book-battlesim-badge,
+  .book-livereading-badge, .book-pdf-badge, .book-epub-badge) {
+  margin-left: calc(2px - 0.4rem);
+}
 .book-active-run-badge {
   display: inline-flex;
   align-items: center;
