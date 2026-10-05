@@ -676,7 +676,8 @@ function getPublicSeriesInfo(seriesId, hasPdfAccess = false) {
        AND (b.parent_book_id IS NULL OR b.parent_book_id = 0)
        AND (b.is_public = 1 OR b.is_container = 1)
      ORDER BY CASE WHEN b.series_number IS NULL OR b.series_number = '' THEN 1 ELSE 0 END,
-              CAST(b.series_number AS REAL)`
+              CAST(b.series_number AS REAL),
+              b.series_number`
   ).all(seriesId);
   const childrenStmt = db.prepare(
     `SELECT id, name, total_sections, cover_path, isbn, issn, pages, authors, has_battle_sim, has_live_reading, pdf_path, epub_path
@@ -684,11 +685,12 @@ function getPublicSeriesInfo(seriesId, hasPdfAccess = false) {
      ORDER BY COALESCE(book_order, id)`
   );
   books.sort((a, b) => {
-    const aNum = a.series_number == null || a.series_number === '' ? Number.NaN : Number(a.series_number);
-    const bNum = b.series_number == null || b.series_number === '' ? Number.NaN : Number(b.series_number);
-    const aValid = Number.isFinite(aNum);
-    const bValid = Number.isFinite(bNum);
-    if (aValid && bValid && aNum !== bNum) return aNum - bNum;
+    const aStr = a.series_number == null ? '' : String(a.series_number).trim();
+    const bStr = b.series_number == null ? '' : String(b.series_number).trim();
+    // Natural-compare the raw value so numbered-with-suffix orders correctly (2 < 2a < 3 < 3i, 2 < 10).
+    const aValid = aStr !== '' && Number.isFinite(parseFloat(aStr));
+    const bValid = bStr !== '' && Number.isFinite(parseFloat(bStr));
+    if (aValid && bValid) return _naturalCompare(aStr, bStr) || _naturalCompare(a.name, b.name);
     if (aValid !== bValid) return aValid ? -1 : 1;
     return _naturalCompare(a.name, b.name);
   });

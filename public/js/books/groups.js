@@ -30,10 +30,12 @@ export const _compareByRecentOptionalNumberThenName = (a, b, field) => {
   const aHas = a.last_run_at != null, bHas = b.last_run_at != null;
   if (aHas && bHas) return b.last_run_at - a.last_run_at;
   if (aHas) return -1; if (bHas) return 1;
-  const aNum = a[field] != null && String(a[field]).trim() !== '' ? parseFloat(a[field]) : null;
-  const bNum = b[field] != null && String(b[field]).trim() !== '' ? parseFloat(b[field]) : null;
-  const aValid = aNum != null && !isNaN(aNum), bValid = bNum != null && !isNaN(bNum);
-  if (aValid && bValid && aNum !== bNum) return aNum - bNum;
+  const aStr = a[field] != null ? String(a[field]).trim() : '';
+  const bStr = b[field] != null ? String(b[field]).trim() : '';
+  // Natural-compare the raw value so numbered-with-suffix orders correctly (2 < 2a < 3 < 3i, 2 < 10).
+  const aValid = aStr !== '' && !isNaN(parseFloat(aStr));
+  const bValid = bStr !== '' && !isNaN(parseFloat(bStr));
+  if (aValid && bValid) return naturalCompare(aStr, bStr) || naturalCompare(a.name, b.name);
   if (aValid) return -1; if (bValid) return 1;
   return naturalCompare(a.name, b.name);
 };

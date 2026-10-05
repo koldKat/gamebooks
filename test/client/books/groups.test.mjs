@@ -44,6 +44,15 @@ test('series sorting prefers recent play over series number', () => {
   assert.equal(books[0].name, 'Unnumbered');
 });
 
+test('series sorting orders numeric suffixes naturally, not by name', () => {
+  const books = [
+    { name: 'Cloistered', series_number: '3' }, { name: 'Endless', series_number: '3i' },
+    { name: 'Final', series_number: '2a' }, { name: 'Oblivionati', series_number: '2' },
+    { name: 'Shadowbound', series_number: '1' }, { name: 'Tenth', series_number: '10' },
+  ];
+  assert.deepEqual(_sortSeriesBooks(books).map(b => b.series_number), ['1', '2', '2a', '3', '3i', '10']);
+});
+
 test('progress uses anthology children rather than stale container sections or duplicate child rows', () => {
   const anthology = { id: 10, is_container: 1, visited: 99, total_sections: 99 };
   const child = { id: 11, parent_book_id: 10, visited: 4, total_sections: 20, discoverable_sections: 10 };
