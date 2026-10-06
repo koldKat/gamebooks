@@ -3,6 +3,8 @@ export default {
     'battlesim412.ui.title':   'Симулатор на битки - Принцът на Алкирия',
     'battlesim412.ui.you':     'Твоят герой',
     'battlesim412.ui.lp':      'Жизнени точки',
+    'battlesim412.ui.companion': 'Алвиан: +5 Сила в следващата битка',
+    'battlesim412.log.companion': 'Алвиан се бие до теб: +5 Сила за тази битка.',
     'battlesim412.ui.enemy':   'Противник',
     'battlesim412.ui.pick':    'Избери',
     'battlesim412.ui.str':     'Сила',

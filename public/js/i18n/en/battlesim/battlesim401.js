@@ -13,6 +13,8 @@ export default {
   'battlesim401.ui.honour_to_might': 'HONOUR → MIGHT (next strike)',
   'battlesim401.ui.honour_to_prot': 'HONOUR → PROTECTION (next strike)',
   'battlesim401.ui.honour_reward': 'HONOUR reward on victory',
+  'battlesim401.ui.carry_wounds': 'Carry wounds after next fight',
+  'battlesim401.log.wound_carry': 'Wounds carry into the following fight.',
   'battlesim401.ui.might': 'MIGHT',
   'battlesim401.ui.protection': 'PROTECTION',
   'battlesim401.ui.companions': 'Surviving companions (+MIGHT)',

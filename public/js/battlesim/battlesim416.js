@@ -1,6 +1,5 @@
 // Battle Simulator (Древният враг, book 416)
-// Compare random digit + SKILL per exchange; ties miss.
-// The source does not specify the random-table range; 0-9 is assumed.
+// New fights use the approved uniform 1-12 fallback; saved fights keep their range.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -24,6 +23,8 @@ function _data() {
       enemy: _emptyEnemy(),
       log: [],
       history: [],
+      printedCombatRules: 1,
+      chanceRollRange: 12,
     };
   }
   const d = pt.sim416;
@@ -41,7 +42,9 @@ function _data() {
   return d;
 }
 
-function _rollTable() { return Math.floor(Math.random() * 10); }
+function _rollTable(d) {
+  return d.chanceRollRange === 12 ? Math.floor(Math.random() * 12) + 1 : Math.floor(Math.random() * 10);
+}
 
 function _appendLog(d, line) {
   d.log.push(line);
@@ -88,8 +91,8 @@ function _exchange() {
   let playerRoll, enemyRoll, playerTotal, enemyTotal;
   let ties = 0;
   do {
-    playerRoll = _rollTable();
-    enemyRoll = _rollTable();
+    playerRoll = _rollTable(d);
+    enemyRoll = _rollTable(d);
     playerTotal = d.player.skill + playerRoll;
     enemyTotal = d.enemy.skill + enemyRoll;
     if (playerTotal === enemyTotal) {
@@ -97,6 +100,12 @@ function _exchange() {
       _appendLog(d, t('battlesim416.log.tie', { playerRoll, playerTotal, enemyRoll, enemyTotal, enemy: _enemyNameSafe(d) }));
     }
   } while (playerTotal === enemyTotal && ties < 20);
+
+  if (d.printedCombatRules === 1 && playerTotal === enemyTotal) {
+    saveState();
+    _renderAll();
+    return;
+  }
 
   if (playerTotal > enemyTotal) {
     const dmg = d.player.unarmed ? 1 : 2;
@@ -116,6 +125,8 @@ function _exchange() {
 function _resetBattle() {
   const d = _data();
   if (!d) return;
+  d.printedCombatRules = 1;
+  d.chanceRollRange = 12;
   d.enemy.endurance = d.enemy.enduranceMax;
   d.player.endurance = d.player.enduranceInitial;
   if (d.log.length) _appendLog(d, t('battlesim416.log.reset_sep'));
@@ -397,6 +408,8 @@ export function initSim416() {
     d.enemy.endurance    = enemy.hp ?? 0;
     d.enemy.enduranceMax = enemy.hp ?? 0;
     d.enemy.unarmed      = false;
+    d.printedCombatRules = 1;
+    d.chanceRollRange = 12;
     saveState();
     _renderAll();
   });

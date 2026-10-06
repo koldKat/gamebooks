@@ -32,8 +32,8 @@ export function strengthForLp(lp) { return lifeTier(lp).str; }
 
 // One strike: Шанс + player Strength vs enemy Strength.
 // sum > enemyStr -> enemy loses 2; sum < -> player loses 2; equal -> both lose 1.
-export function resolveStrike(playerLp, enemyStr, chance) {
-  const playerStr = strengthForLp(playerLp);
+export function resolveStrike(playerLp, enemyStr, chance, strengthBonus = 0) {
+  const playerStr = strengthForLp(playerLp) + strengthBonus;
   const sum = chance + playerStr;
   if (sum > enemyStr) return { chance, playerStr, sum, outcome: 'enemy',  playerLoss: 0, enemyLoss: 2 };
   if (sum < enemyStr) return { chance, playerStr, sum, outcome: 'player', playerLoss: 2, enemyLoss: 0 };

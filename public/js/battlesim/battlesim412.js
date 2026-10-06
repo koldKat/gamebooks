@@ -70,6 +70,12 @@ function _appendLog(d, line) { d.log.push(line); if (d.log.length > 300) d.log.s
 function _recordOutcome(d, outcome) { d.history.push({ enemy: _enemyName(d), outcome, ts: Date.now() }); }
 
 function _checkEnd(d) {
+  if (d.printedCombatRules === 1 && d.player.lp <= 0) {
+    d.over = true; d.winner = 'enemy';
+    _appendLog(d, t('battlesim412.log.fallen', { skull: SVG_SKULL }));
+    _recordOutcome(d, 'loss');
+    return true;
+  }
   if (d.enemy.hp <= 0) {
     d.over = true; d.winner = 'player';
     _appendLog(d, t('battlesim412.log.defeated', { trophy: SVG_TROPHY, name: _enemyName(d) }));
@@ -90,16 +96,20 @@ function _startBattle() {
   if (!d) return;
   const base = _enemy(d.enemyId);
   d.enemy = { str: d.enemy.str || base.str, hp: d.enemy.startHp || base.hp, startHp: d.enemy.startHp || base.hp };
-  d.player.lp = d.player.startLp;
+  d.printedCombatRules = 1;
+  d.companionBonus = d.nextCompanionBonus === true ? 5 : 0;
   d.over = false; d.winner = null; d.started = true;
   if (d.log.length) _appendLog(d, t('battlesim412.log.reset_sep'));
   _appendLog(d, t('battlesim412.log.start', { name: _enemyName(d) }));
+  if (d.companionBonus) _appendLog(d, t('battlesim412.log.companion'));
+  _checkEnd(d);
   saveState();
   _renderAll();
 }
 
 function _strikeOnce(d) {
-  const r = resolveStrike(d.player.lp, d.enemy.str, drawChance());
+  const bonus = d.printedCombatRules === 1 ? (d.companionBonus || 0) : 0;
+  const r = resolveStrike(d.player.lp, d.enemy.str, drawChance(), bonus);
   if (r.outcome === 'enemy') {
     d.enemy.hp = Math.max(0, d.enemy.hp - r.enemyLoss);
     _appendLog(d, t('battlesim412.log.strike_enemy', { chance: r.chance, pstr: r.playerStr, sum: r.sum, estr: d.enemy.str, name: _enemyName(d), hp: d.enemy.hp }));
@@ -168,7 +178,7 @@ function _renderStatus() {
   }
   const tier = lifeTier(d.player.lp);
   document.getElementById('sim412-player-stat').textContent =
-    t('battlesim412.stat.player', { lp: Math.max(0, d.player.lp), level: tier.level, str: tier.str });
+    t('battlesim412.stat.player', { lp: Math.max(0, d.player.lp), level: tier.level, str: tier.str + (d.printedCombatRules === 1 ? (d.companionBonus || 0) : 0) });
   document.getElementById('sim412-enemy-stat').textContent =
     t('battlesim412.stat.enemy', { name: _enemyName(d), str: d.enemy.str, hp: Math.max(0, d.enemy.hp) });
 }
@@ -206,7 +216,8 @@ function _renderInputs() {
   const d = _data();
   if (!d) return;
   document.getElementById('sim412-enemy-pick').innerHTML = _enemyOptions(d.enemyId);
-  document.getElementById('sim412-player-lp').value = d.player.startLp;
+  document.getElementById('sim412-player-lp').value = d.player.lp;
+  document.getElementById('sim412-companion').checked = d.nextCompanionBonus === true;
   document.getElementById('sim412-enemy-str').value = d.enemy.str;
   document.getElementById('sim412-enemy-hp').value = d.enemy.startHp;
   _renderStatus();
@@ -269,6 +280,7 @@ export function initSim412() {
           <div class="bsim-side">
             <div class="bsim-side-title">${t('battlesim412.ui.you')}</div>
             ${_numField(t('battlesim412.ui.lp'), 'sim412-player-lp', 'sim412-roll-lp')}
+            <label class="inv-edit-row"><span class="inv-edit-label bsim-stat-label">${t('battlesim412.ui.companion')}</span><input id="sim412-companion" type="checkbox"></label>
             <div id="sim412-player-stat" class="bsim-stat-summary"></div>
           </div>
           <div class="bsim-side">
@@ -323,6 +335,11 @@ export function initSim412() {
   document.getElementById('sim412-strike').addEventListener('click', _strike);
   document.getElementById('sim412-auto').addEventListener('click', _autoResolve);
   document.getElementById('sim412-roll-lp').addEventListener('click', _rollLp);
+  document.getElementById('sim412-companion').addEventListener('change', e => {
+    const d = _data(); if (!d) return;
+    d.nextCompanionBonus = e.target.checked;
+    saveState();
+  });
 
   const fieldSet = (d, id, val) => {
     if (id === 'sim412-player-lp') { d.player.startLp = val; d.player.lp = val; }

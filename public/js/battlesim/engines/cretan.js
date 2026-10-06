@@ -66,6 +66,7 @@ export function createCretanSim({ bookId, idPrefix, stateKey, i18nPrefix, defaul
         },
         enemy: { name: '', might: 0, protection: 0, companions: 0, needsDivine: false, pankration: false, stage: HEALTHY, hasStats: false },
         roundsThisBattle: 0,
+        ...([400, 401, 402].includes(bookId) ? { printedCombatRules: 1 } : {}),
         log: [],
         history: [],
       };
@@ -185,13 +186,16 @@ export function createCretanSim({ bookId, idPrefix, stateKey, i18nPrefix, defaul
   function _finishWin(d) {
     _appendLog(d, `${SVG_TROPHY} ${tk('log.victory', { enemy: _enemyNameSafe(d) })}`);
     const reward = Math.max(0, d.player.honourReward | 0);
-    if (reward) {
+    const printedRules = [400, 401, 402].includes(bookId) && d.printedCombatRules === 1;
+    const carryWounds = printedRules && [401, 402].includes(bookId) && d.carryWounds === true;
+    if (reward && (!printedRules || d.player.honour > 0)) {
       d.player.honour += reward;
       _appendLog(d, tk('log.honour_reward', { n: reward, honour: d.player.honour }));
     }
     // Survivors reset their Wound Record to Healthy at the end of a combat.
-    _appendLog(d, tk('log.wound_reset'));
+    _appendLog(d, tk(carryWounds ? 'log.wound_carry' : 'log.wound_reset'));
     _recordOutcome(d, 'win');
+    if (printedRules && !carryWounds) d.player.stage = HEALTHY;
   }
 
   function _finishLoss(d) {
@@ -202,6 +206,8 @@ export function createCretanSim({ bookId, idPrefix, stateKey, i18nPrefix, defaul
   function _resetBattle() {
     const d = _data();
     if (!d) return;
+    if ([400, 401, 402].includes(bookId)) d.printedCombatRules = 1;
+    if ([401, 402].includes(bookId)) d.carryWounds = d.nextCarryWounds === true;
     d.player.stage = HEALTHY;
     d.player.honour = d.player.honourInitial;
     d.player.honourToMight = 0;
@@ -247,6 +253,8 @@ export function createCretanSim({ bookId, idPrefix, stateKey, i18nPrefix, defaul
     _setVal(`${ID}-p-reward`, p.honourReward);
     const dw = document.getElementById(`${ID}-p-divine`);
     if (dw) dw.checked = !!p.divineWeapon;
+    const carry = document.getElementById(`${ID}-carry-wounds`);
+    if (carry) carry.checked = d.nextCarryWounds === true;
 
     _setVal(`${ID}-e-might`, e.might);
     _setVal(`${ID}-e-prot`, e.protection);
@@ -331,6 +339,9 @@ export function createCretanSim({ bookId, idPrefix, stateKey, i18nPrefix, defaul
   }
 
   function _applyEnemy(d, enemy) {
+    const carryPreviousWounds = [401, 402].includes(bookId) && d.printedCombatRules === 1 && d.carryWounds === true;
+    if ([400, 401, 402].includes(bookId)) d.printedCombatRules = 1;
+    if ([401, 402].includes(bookId)) d.carryWounds = d.nextCarryWounds === true;
     const attack = enemy.attack, defense = enemy.defense;
     d.enemy.name = enemy.name;
     d.enemy.pankration = /pankration/i.test(enemy.name) || attack == null || defense == null;
@@ -346,7 +357,7 @@ export function createCretanSim({ bookId, idPrefix, stateKey, i18nPrefix, defaul
     d.enemy.needsDivine = /minotaur/i.test(enemy.name);
     d.enemy.companions = 0;
     d.enemy.stage = HEALTHY;
-    d.player.stage = HEALTHY;
+    if (!carryPreviousWounds) d.player.stage = HEALTHY;
     d.roundsThisBattle = 0;
   }
 
@@ -455,6 +466,7 @@ export function createCretanSim({ bookId, idPrefix, stateKey, i18nPrefix, defaul
               ${_numField(tk('ui.honour_to_might'), `${ID}-p-h2m`)}
               ${_numField(tk('ui.honour_to_prot'), `${ID}-p-h2p`)}
               ${_numField(tk('ui.honour_reward'), `${ID}-p-reward`)}
+              ${[401, 402].includes(bookId) ? _checkField(tk('ui.carry_wounds'), `${ID}-carry-wounds`) : ''}
             </div>
             <div class="bsim-side">
               <div class="bsim-side-title">${tk('ui.enemy')}</div>
@@ -513,6 +525,11 @@ export function createCretanSim({ bookId, idPrefix, stateKey, i18nPrefix, defaul
 
     document.getElementById(`${ID}-strike`).addEventListener('click', _runRound);
     document.getElementById(`${ID}-reset`).addEventListener('click', _resetBattle);
+    document.getElementById(`${ID}-carry-wounds`)?.addEventListener('change', e => {
+      const d = _data(); if (!d) return;
+      d.nextCarryWounds = e.target.checked;
+      saveState();
+    });
 
     document.getElementById(`${ID}-p-divine`).addEventListener('change', e => {
       const d = _data(); if (!d) return;

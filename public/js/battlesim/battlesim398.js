@@ -13,14 +13,53 @@ import { t } from '../i18n.js';
 const SVG_SKULL  = `<svg class="sim-icon sim-icon-dead"  viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8c0 2.8 1.4 5.3 3.6 6.8V20a1 1 0 0 0 1 1h6.8a1 1 0 0 0 1-1v-2.2C18.6 16.3 20 13.8 20 11a8 8 0 0 0-8-8zm-2.5 13v-1.5a.5.5 0 0 0-.5-.5H8l-.5-1 1-1-1-1 1-1H9a2.5 2.5 0 0 1 5 0h.5l1 1-1 1 1 1-.5 1h-1a.5.5 0 0 0-.5.5V16h-4z"/></svg>`;
 const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v7a6 6 0 0 1-12 0V2zm-2 1H2v4a4 4 0 0 0 4 4v-1a3 3 0 0 1-3-3V3zm16 0h2v4a4 4 0 0 1-4 4v-1a3 3 0 0 0 3-3V3zm-7 13v2H9v2h6v-2h-2v-2a6 6 0 0 0 5-5.92V2H6v8.08A6 6 0 0 0 13 16z"/></svg>`;
 
-// Rank 16 (solo Adventurer) starting stats per class, from the book's own
-// character tables - autocomplete-style convenience defaults only.
+// Convenience presets follow the printed solo party table (rank 20).
 const CLASS_PRESETS = {
-  warrior:   { fp: 11, dmgDice: 7, dmgBonus: 1, endurance: 120, armor: 4 },
+  warrior:   { fp: 11, dmgDice: 7, dmgBonus: 1, endurance: 120, armor: 3 },
   trickster: { fp: 10, dmgDice: 7, dmgBonus: 0, endurance: 120, armor: 2 },
   mystic:    { fp: 10, dmgDice: 7, dmgBonus: 0, endurance: 100, armor: 2 },
   sorcerer:  { fp: 9,  dmgDice: 5, dmgBonus: 2, endurance: 100, armor: 2 },
 };
+
+// Roster defense is damage bonus; conditional and variable armour stays manual.
+const PRINTED_ENEMY_ARMOUR = [
+  ['Леден брониран рицар', 8, 90, 6, 0, 5],
+  ['Онака', 8, 40, 4, 0, 4],
+  ['Демон Владетел', 12, 90, 3, 0, 3],
+  ['Дявол', 9, 105, 5, 2, 1],
+  ['Огнени змии', 7, 21, 3, 3, 3],
+  ['Не-мъртва кралица', 8, 60, 4, 0, 3],
+  ['Последователи на Маговете (6, бронирани)', 7, 15, 3, 0, 3],
+  ['Кракен', 8, 50, 6, 0, 4],
+  ['Базилиск', 6, 24, 2, 0, 1],
+  ['Ледена мечка', 8, 38, 4, 0, 2],
+  ['Аргус', 9, 54, 3, 3, 3],
+  ['Орки', 6, 25, 3, 0, 2],
+  ['Квартирмайстори на Червената смърт', 8, 35, 5, 0, 5],
+  ['Великанът Снорид', 11, 950, 20, 0, 10],
+  ['Биофаг', 8, 30, 3, 0, 4],
+  ['Абаносов автомат', 9, 70, 3, 0, 7],
+  ['Не-мъртви прокажени', 6, 30, 3, 0, 3],
+  ['Бронтофон', 8, 40, 4, 0, 5],
+  ['Дракон', 8, 150, 7, 0, 4],
+];
+
+function _selectEnemy(enemy) {
+  const d = _data();
+  if (!d) return;
+  const printed = PRINTED_ENEMY_ARMOUR.find(([name, fp, hp, dice, bonus]) =>
+    enemy.name === name && enemy.attack === fp && enemy.hp === hp &&
+    enemy.pb === dice && enemy.defense === bonus);
+  Object.assign(d.enemy, {
+    name: enemy.name, fp: enemy.attack ?? 0,
+    endurance: enemy.hp ?? 0, enduranceMax: enemy.hp ?? 0,
+    dmgDice: enemy.pb ?? 1, dmgBonus: enemy.defense ?? 0,
+    armor: printed ? printed[5] : 0,
+  });
+  d.roundsThisBattle = 0;
+  saveState();
+  _renderAll();
+}
 
 function _emptyEnemy() {
   return { name: '', fp: 0, endurance: 0, enduranceMax: 0, dmgDice: 1, dmgBonus: 0, armor: 0 };
@@ -464,20 +503,7 @@ export function initSim398() {
     d.enemy.name = e.target.value;
     saveState();
   });
-  _setupAutocomplete('sim398-enemy-pick', 'sim398-enemy-pick-dropdown', enemy => {
-    const d = _data();
-    if (!d) return;
-    d.enemy.name        = enemy.name;
-    d.enemy.fp           = enemy.attack ?? 0;
-    d.enemy.endurance    = enemy.hp ?? 0;
-    d.enemy.enduranceMax = enemy.hp ?? 0;
-    d.enemy.dmgDice      = enemy.pb ?? 1;
-    d.enemy.dmgBonus     = enemy.defense ?? 0;
-    d.enemy.armor        = 0;
-    d.roundsThisBattle   = 0;
-    saveState();
-    _renderAll();
-  });
+  _setupAutocomplete('sim398-enemy-pick', 'sim398-enemy-pick-dropdown', _selectEnemy);
 
   const fieldMap = {
     'sim398-player-fp': ['player', 'fp'], 'sim398-player-endurance': ['player', 'endurance'],

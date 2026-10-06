@@ -23,6 +23,11 @@ export function _refreshPublicCatalogIfVisible() {
 }
 
 export function _isLandingBooksViewVisible() {
+  // Creation publishes one settled refresh after its media uploads finish.
+  if (['add-book-overlay', 'add-comp-overlay'].some(id => {
+    const overlay = document.getElementById(id);
+    return overlay?.dataset?.createBusy === 'true' && overlay.classList.contains('active');
+  })) return false;
   const landingVisible = document.getElementById('landing-wrapper')?.style.display !== 'none';
   const mainHidden = document.getElementById('main-screen')?.style.display === 'none';
   const booksVisible = document.getElementById('books-screen')?.style.display !== 'none';

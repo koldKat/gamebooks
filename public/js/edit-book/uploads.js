@@ -113,7 +113,7 @@ function _parseResponseJsonSafe(text) {
   try { return JSON.parse(text); } catch { return null; }
 }
 
-export function _uploadPdfWithProgress(urlPath, file, prefix, isCurrent = () => true) {
+export function _uploadPdfWithProgress(urlPath, file, prefix, isCurrent = () => true, { keepProgress = false } = {}) {
   const progress = pct => { if (isCurrent()) _setModalUploadProgress(prefix, pct); };
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
@@ -148,7 +148,7 @@ export function _uploadPdfWithProgress(urlPath, file, prefix, isCurrent = () => 
         return;
       }
       progress(100);
-      setTimeout(() => progress(null), 250);
+      if (!keepProgress) setTimeout(() => progress(null), 250);
       resolve(data);
     };
     progress(0);
@@ -156,7 +156,7 @@ export function _uploadPdfWithProgress(urlPath, file, prefix, isCurrent = () => 
   });
 }
 
-export function _uploadEpubWithProgress(urlPath, file, prefix, isCurrent = () => true) {
+export function _uploadEpubWithProgress(urlPath, file, prefix, isCurrent = () => true, { keepProgress = false } = {}) {
   const progress = pct => { if (isCurrent()) _setModalUploadProgress(prefix, pct, 'epub'); };
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
@@ -191,7 +191,7 @@ export function _uploadEpubWithProgress(urlPath, file, prefix, isCurrent = () =>
         return;
       }
       progress(100);
-      setTimeout(() => progress(null), 250);
+      if (!keepProgress) setTimeout(() => progress(null), 250);
       resolve(data);
     };
     progress(0);

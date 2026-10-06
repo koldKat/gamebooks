@@ -21,6 +21,15 @@ import { escapeHtml, compressImage, setPreviewImgBlob } from '../core/util.js';
 let _hooks = {};
 export function setAddBookHooks(h) { _hooks = h || {}; }
 
+const _creating = new Set();
+function _setCreateBusy(prefix, busy) {
+  if (busy) _creating.add(prefix); else _creating.delete(prefix);
+  const overlay = document.getElementById(prefix === 'cb' ? 'add-book-overlay' : 'add-comp-overlay');
+  if (overlay) overlay.dataset.createBusy = String(busy);
+  _setButtonsDisabled(['save', 'cancel', 'close', 'cover-btn', 'pdf-btn', 'epub-btn',
+    'cover-file', 'pdf-file', 'epub-file'].map(suffix => `${prefix}-${suffix}`), busy);
+}
+
 // ── Add Book modal ────────────────────────────────────────────────────────────
 
 let _cbAc   = null;
@@ -37,6 +46,7 @@ function _syncCbUi() {
 }
 
 export function openAddBook() {
+  if (_creating.has('cb')) return;
   _cbCover = null; _cbPdf = null; _cbEpub = null;
   ['cb-name','cb-sections','cb-pages','cb-isbn','cb-asin','cb-issn','cb-authors','cb-series','cb-series-num','cb-order'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   document.getElementById('cb-description').value = '';
@@ -64,7 +74,8 @@ export function openAddBook() {
   document.getElementById('cb-name').focus();
 }
 
-export function _closeAddBook() {
+export function _closeAddBook(force = false) {
+  if (_creating.has('cb') && force !== true) return;
   _cbAc.reset();
   document.getElementById('add-book-overlay').classList.remove('active');
 }
@@ -75,6 +86,7 @@ let _ccAc   = null;
 let _ccCover = null, _ccPdf = null, _ccEpub = null;
 
 export function openAddComp() {
+  if (_creating.has('cc')) return;
   _ccCover = null; _ccPdf = null; _ccEpub = null;
   ['cc-name','cc-isbn','cc-asin','cc-issn','cc-pages','cc-authors','cc-series','cc-series-num'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   document.getElementById('cc-description').value = '';
@@ -100,7 +112,8 @@ export function openAddComp() {
   document.getElementById('cc-name').focus();
 }
 
-export function _closeAddComp() {
+export function _closeAddComp(force = false) {
+  if (_creating.has('cc') && force !== true) return;
   _ccAc.reset();
   document.getElementById('add-comp-overlay').classList.remove('active');
 }
@@ -262,6 +275,7 @@ export function initAddBook(mousedownOnOverlayRef) {
     if (e.target === e.currentTarget && mousedownOnOverlayRef() === e.currentTarget) _closeAddBook();
   });
   document.getElementById('cb-save').addEventListener('click', async () => {
+    if (_creating.has('cb')) return;
     const errEl = document.getElementById('cb-error');
     errEl.textContent = '';
     // Block demo saves: real API calls would 401 and expire the demo session.
@@ -297,32 +311,36 @@ export function initAddBook(mousedownOnOverlayRef) {
     const parentId    = document.getElementById('cb-parent').value ? +document.getElementById('cb-parent').value : null;
     const bookOrder   = parseInt(document.getElementById('cb-order').value, 10) || null;
     // Pause catalog refreshes across create/media mutations; publish the final UI refresh once.
+    _setCreateBusy('cb', true);
+    if (_cbPdf) _setModalUploadProgress('cb', 0);
+    if (_cbEpub) _setModalUploadProgress('cb', 0, 'epub');
     pauseCoversAutoRefresh();
     try {
       const res  = await apiFetch('/api/books', { method: 'POST', body: JSON.stringify({ name, total_sections: sections, isbn: isbn || null, issn: issn || null, asin: asin || null, pages, authors, description, is_public: isPublic, series_name: seriesName, series_number: seriesNum, parent_book_id: parentId, book_order: bookOrder }) });
+      if (!res.ok) throw new Error();
       const book = await res.json();
       if (_cbCover) {
         try {
           const r = await apiFetch(`/api/books/${book.id}/cover`, { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: _cbCover });
-          if (!r.ok) { resumeCoversAutoRefresh(); _closeAddBook(); await _refreshLibraryUi({ feed: true, covers: true }); showAlert('Book created, but cover upload failed. You can retry from Edit Book.'); return; }
-          _hooks.scheduleRewardProfileRefresh?.();
-        } catch (_) { resumeCoversAutoRefresh(); _closeAddBook(); await _refreshLibraryUi({ feed: true, covers: true }); showAlert('Book created, but cover upload failed. You can retry from Edit Book.'); return; }
+          if (!r.ok) { resumeCoversAutoRefresh(); _closeAddBook(true); await _refreshLibraryUi({ feed: true, covers: true }); showAlert('Book created, but cover upload failed. You can retry from Edit Book.'); return; }
+        } catch (_) { resumeCoversAutoRefresh(); _closeAddBook(true); await _refreshLibraryUi({ feed: true, covers: true }); showAlert('Book created, but cover upload failed. You can retry from Edit Book.'); return; }
       }
       if (_cbPdf) {
-        _setButtonsDisabled(['cb-save', 'cb-cancel'], true);
-        try { await _uploadPdfWithProgress(`/api/books/${book.id}/pdf`, _cbPdf, 'cb'); _hooks.scheduleRewardProfileRefresh?.(); }
-        catch (e) { resumeCoversAutoRefresh(); _closeAddBook(); await _refreshLibraryUi({ feed: true, covers: true }); showAlert(`${t('addbook.book_pdf_upload_failed')}${e?.message ? `\n\n${e.message}` : ''}`); return; }
-        finally { _setButtonsDisabled(['cb-save', 'cb-cancel'], false); }
+        try { await _uploadPdfWithProgress(`/api/books/${book.id}/pdf`, _cbPdf, 'cb', () => _creating.has('cb'), { keepProgress: true }); }
+        catch (e) { resumeCoversAutoRefresh(); _closeAddBook(true); await _refreshLibraryUi({ feed: true, covers: true }); showAlert(`${t('addbook.book_pdf_upload_failed')}${e?.message ? `\n\n${e.message}` : ''}`); return; }
       }
       if (_cbEpub) {
-        _setButtonsDisabled(['cb-save', 'cb-cancel'], true);
-        try { await _uploadEpubWithProgress(`/api/books/${book.id}/epub`, _cbEpub, 'cb'); _hooks.scheduleRewardProfileRefresh?.(); }
-        catch (e) { resumeCoversAutoRefresh(); _closeAddBook(); await _refreshLibraryUi({ feed: true, covers: true }); showAlert(`${t('editbook.epub_upload_failed')}${e?.message ? `\n\n${e.message}` : ''}`); return; }
-        finally { _setButtonsDisabled(['cb-save', 'cb-cancel'], false); }
+        try { await _uploadEpubWithProgress(`/api/books/${book.id}/epub`, _cbEpub, 'cb', () => _creating.has('cb'), { keepProgress: true }); }
+        catch (e) { resumeCoversAutoRefresh(); _closeAddBook(true); await _refreshLibraryUi({ feed: true, covers: true }); showAlert(`${t('editbook.epub_upload_failed')}${e?.message ? `\n\n${e.message}` : ''}`); return; }
       }
       resumeCoversAutoRefresh();
-      _closeAddBook(); await _refreshLibraryUi({ feed: true, covers: true });
+      _closeAddBook(true); await _refreshLibraryUi({ feed: true, covers: true });
     } catch (_) { resumeCoversAutoRefresh(); errEl.textContent = t('err.create_book'); }
+    finally {
+      _setCreateBusy('cb', false);
+      _setModalUploadProgress('cb', null);
+      _setModalUploadProgress('cb', null, 'epub');
+    }
   });
   document.getElementById('open-add-book-btn').addEventListener('click', openAddBook);
 
@@ -362,6 +380,7 @@ export function initAddBook(mousedownOnOverlayRef) {
     if (e.target === e.currentTarget && mousedownOnOverlayRef() === e.currentTarget) _closeAddComp();
   });
   document.getElementById('cc-save').addEventListener('click', async () => {
+    if (_creating.has('cc')) return;
     const errEl = document.getElementById('cc-error');
     errEl.textContent = '';
     if (isDemoMode) { errEl.textContent = t('addbook.demo_not_supported'); return; }
@@ -392,32 +411,36 @@ export function initAddBook(mousedownOnOverlayRef) {
     const seriesName  = document.getElementById('cc-series').value || null;
     const seriesNum   = document.getElementById('cc-series-num').value.trim() || null;
     // Pause catalog updates across creation and uploads; resume before refreshing.
+    _setCreateBusy('cc', true);
+    if (_ccPdf) _setModalUploadProgress('cc', 0);
+    if (_ccEpub) _setModalUploadProgress('cc', 0, 'epub');
     pauseCoversAutoRefresh();
     try {
       const res  = await apiFetch('/api/books', { method: 'POST', body: JSON.stringify({ name, total_sections: 0, isbn: isbn || null, issn: issn || null, asin: asin || null, pages, authors, description, is_public: isPublic, series_name: seriesName, series_number: seriesNum, is_container: 1 }) });
+      if (!res.ok) throw new Error();
       const book = await res.json();
       if (_ccCover) {
         try {
           const r = await apiFetch(`/api/books/${book.id}/cover`, { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: _ccCover });
-          if (!r.ok) { resumeCoversAutoRefresh(); _closeAddComp(); await _refreshLibraryUi({ feed: true, covers: true }); showAlert('Anthology created, but cover upload failed. You can retry from Edit Anthology.'); return; }
-          _hooks.scheduleRewardProfileRefresh?.();
-        } catch (_) { resumeCoversAutoRefresh(); _closeAddComp(); await _refreshLibraryUi({ feed: true, covers: true }); showAlert('Anthology created, but cover upload failed. You can retry from Edit Anthology.'); return; }
+          if (!r.ok) { resumeCoversAutoRefresh(); _closeAddComp(true); await _refreshLibraryUi({ feed: true, covers: true }); showAlert('Anthology created, but cover upload failed. You can retry from Edit Anthology.'); return; }
+        } catch (_) { resumeCoversAutoRefresh(); _closeAddComp(true); await _refreshLibraryUi({ feed: true, covers: true }); showAlert('Anthology created, but cover upload failed. You can retry from Edit Anthology.'); return; }
       }
       if (_ccPdf) {
-        _setButtonsDisabled(['cc-save', 'cc-cancel'], true);
-        try { await _uploadPdfWithProgress(`/api/books/${book.id}/pdf`, _ccPdf, 'cc'); _hooks.scheduleRewardProfileRefresh?.(); }
-        catch (e) { resumeCoversAutoRefresh(); _closeAddComp(); await _refreshLibraryUi({ feed: true, covers: true }); showAlert(`${t('addbook.anthology_pdf_upload_failed')}${e?.message ? `\n\n${e.message}` : ''}`); return; }
-        finally { _setButtonsDisabled(['cc-save', 'cc-cancel'], false); }
+        try { await _uploadPdfWithProgress(`/api/books/${book.id}/pdf`, _ccPdf, 'cc', () => _creating.has('cc'), { keepProgress: true }); }
+        catch (e) { resumeCoversAutoRefresh(); _closeAddComp(true); await _refreshLibraryUi({ feed: true, covers: true }); showAlert(`${t('addbook.anthology_pdf_upload_failed')}${e?.message ? `\n\n${e.message}` : ''}`); return; }
       }
       if (_ccEpub) {
-        _setButtonsDisabled(['cc-save', 'cc-cancel'], true);
-        try { await _uploadEpubWithProgress(`/api/books/${book.id}/epub`, _ccEpub, 'cc'); _hooks.scheduleRewardProfileRefresh?.(); }
-        catch (e) { resumeCoversAutoRefresh(); _closeAddComp(); await _refreshLibraryUi({ feed: true, covers: true }); showAlert(`${t('editbook.epub_upload_failed')}${e?.message ? `\n\n${e.message}` : ''}`); return; }
-        finally { _setButtonsDisabled(['cc-save', 'cc-cancel'], false); }
+        try { await _uploadEpubWithProgress(`/api/books/${book.id}/epub`, _ccEpub, 'cc', () => _creating.has('cc'), { keepProgress: true }); }
+        catch (e) { resumeCoversAutoRefresh(); _closeAddComp(true); await _refreshLibraryUi({ feed: true, covers: true }); showAlert(`${t('editbook.epub_upload_failed')}${e?.message ? `\n\n${e.message}` : ''}`); return; }
       }
       resumeCoversAutoRefresh();
-      _closeAddComp(); await _refreshLibraryUi({ feed: true, covers: true });
+      _closeAddComp(true); await _refreshLibraryUi({ feed: true, covers: true });
     } catch (_) { resumeCoversAutoRefresh(); errEl.textContent = t('err.create_book'); }
+    finally {
+      _setCreateBusy('cc', false);
+      _setModalUploadProgress('cc', null);
+      _setModalUploadProgress('cc', null, 'epub');
+    }
   });
   document.getElementById('open-add-comp-btn').addEventListener('click', openAddComp);
 

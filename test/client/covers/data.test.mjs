@@ -16,7 +16,17 @@ test('catalog refresh preserves pause, queued-request, auth, and fingerprint beh
   const calls = [];
   globalThis.fetch = (url, options) => new Promise(resolve => calls.push({ url, options, resolve }));
   try {
-    const { loadCovers, pauseCoversAutoRefresh, resumeCoversAutoRefresh, _coversFingerprint } = await import('../../../public/js/covers/data.js');
+    const { loadCovers, pauseCoversAutoRefresh, resumeCoversAutoRefresh, _coversFingerprint, _isLandingBooksViewVisible } = await import('../../../public/js/covers/data.js');
+    wrapper.style.display = '';
+    for (const id of ['add-book-overlay', 'add-comp-overlay']) {
+      let active = true;
+      elements[id] = { dataset: { createBusy: 'true' }, classList: { contains: () => active } };
+      assert.equal(_isLandingBooksViewVisible(), false, 'live refresh waits during creation');
+      active = false;
+      assert.equal(_isLandingBooksViewVisible(), true, 'final refresh runs after closing');
+      delete elements[id];
+    }
+    wrapper.style.display = 'none';
     const rows = [{ id: 1, name: 'Alpha', coverUrl: '/a.jpg', libraryCount: 1 }, { id: 2, name: 'Beta' }];
     const fingerprint = _coversFingerprint(rows, rows, []);
     assert.equal(fingerprint, _coversFingerprint([...rows].reverse(), rows.map(r => ({ ...r, libraryCount: 100 })), []));

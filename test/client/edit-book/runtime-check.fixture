@@ -14,6 +14,8 @@ class Element {
     this.classList = { add: n => classes.add(n), remove: n => classes.delete(n), contains: n => classes.has(n) };
     this.parentNode = { replaceChild: neo => elements.set(id, neo) };
   }
+  set disabled(value) { this._disabled = value; calls.push(['disabled', this.id, value]); }
+  get disabled() { return this._disabled; }
   addEventListener(type, fn) { const list = this.listeners.get(type) || []; list.push(fn); this.listeners.set(type, list); }
   async emit(type, event = {}) {
     const e = { target: this, currentTarget: this, ...event };
@@ -294,6 +296,57 @@ for (const [prefix, open] of [['cb', add.openAddBook], ['cc', add.openAddComp]])
   assert.ok(!el(prefix === 'cb' ? 'add-book-overlay' : 'add-comp-overlay').classList.contains('active'), 'failed post-create upload leaves recovery to the edit dialog');
   assert.equal(el(`${prefix}-save`).disabled, false);
   assert.equal(el(`${prefix}-cancel`).disabled, false);
+}
+// Both formats are one busy save, including the handoff from PDF to EPUB.
+add.setAddBookHooks({ resolveIsAdmin: () => admin, scheduleRewardProfileRefresh: () => calls.push(['createRewardRefresh']) });
+for (const [prefix, open] of [['cb', add.openAddBook], ['cc', add.openAddComp]]) {
+  for (const epubStatus of [200, 500]) {
+    open();
+    el(`${prefix}-name`).value = 'Both formats';
+    if (prefix === 'cb') el('cb-sections').value = '17';
+    el(`${prefix}-pdf-file`).files = [pdf]; await el(`${prefix}-pdf-file`).emit('change');
+    el(`${prefix}-epub-file`).files = [{ name: 'book.epub', size: 42 }]; await el(`${prefix}-epub-file`).emit('change');
+    const before = calls.length;
+    const overlay = el(prefix === 'cb' ? 'add-book-overlay' : 'add-comp-overlay');
+    const create = el(`${prefix}-save`).emit('click');
+    assert.equal(el(`${prefix}-save`).disabled, true, 'locked before create request returns');
+    await new Promise(resolve => setImmediate(resolve));
+    await el(`${prefix}-save`).emit('click');
+    await el(`${prefix}-cancel`).emit('click');
+    await el(`${prefix}-close`).emit('click');
+    open();
+    assert.ok(overlay.classList.contains('active'), 'close and reopen are blocked while saving');
+    assert.equal(uploads.at(-1).url, '/api/books/99/pdf');
+    assert.equal(el(`${prefix}-epub-progress`).style.display, 'block', 'queued EPUB reserves its space');
+    const timersBefore = timers.length;
+    uploads.at(-1).finish(200, { pdfUrl: '/books/new.pdf' });
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(uploads.at(-1).url, '/api/books/99/epub');
+    assert.equal(el(`${prefix}-pdf-progress`).style.display, 'block');
+    assert.equal(el(`${prefix}-pdf-progress-bar`).style.width, '100%');
+    assert.equal(timers.length, timersBefore, 'PDF completion schedules no collapsing progress reset');
+    assert.ok(!calls.slice(before).some(c => c[0] === 'disabled' && c[1] === `${prefix}-save` && c[2] === false), 'button never re-enables between files');
+    assert.ok(!calls.slice(before).some(c => c[0] === '_refreshLibraryUi' || c[0] === 'createRewardRefresh'), 'no intermediate refresh');
+    assert.equal(calls.slice(before).filter(c => c[0] === 'apiFetch' && c[1] === '/api/books').length, 1, 'duplicate create is ignored');
+    uploads.at(-1).finish(epubStatus, epubStatus === 200 ? { epubUrl: '/books/new.epub' } : { error: 'EPUB failed' });
+    await create;
+    assert.equal(calls.slice(before).filter(c => c[0] === '_refreshLibraryUi').length, 1, 'one final refresh, including partial failure');
+    assert.equal(overlay.dataset.createBusy, 'false');
+    assert.ok(!overlay.classList.contains('active'));
+    for (const suffix of ['save', 'cancel', 'close', 'pdf-btn', 'epub-btn']) assert.equal(el(`${prefix}-${suffix}`).disabled, false);
+    assert.equal(el(`${prefix}-pdf-progress`).style.display, 'none');
+    assert.equal(el(`${prefix}-epub-progress`).style.display, 'none');
+  }
+  open();
+  el(`${prefix}-name`).value = 'Creation fails';
+  if (prefix === 'cb') el('cb-sections').value = '17';
+  apiOk = false;
+  const beforeUploads = uploads.length;
+  await el(`${prefix}-save`).emit('click');
+  apiOk = true;
+  assert.equal(uploads.length, beforeUploads, 'failed creation never starts uploads');
+  assert.equal(el(`${prefix}-save`).disabled, false);
+  assert.ok(el(prefix === 'cb' ? 'add-book-overlay' : 'add-comp-overlay').classList.contains('active'));
 }
 for (const status of [401, 503]) {
   const upload = edit._uploadPdfWithProgress('/upload', pdf, 'ecc'); uploads.at(-1).finish(status, {});
