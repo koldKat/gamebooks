@@ -1,5 +1,10 @@
 // English translations: simulator 431.
 export default {
+    'battlesim431.ui.next_fight':     'За следващата битка (избери противник или нулирай)',
+    'battlesim431.ui.double_damage':  'Сомерсверд срещу немъртви: двойна щета',
+    'battlesim431.ui.protection':     'Без загуба на ИЗДРЪЖЛИВОСТ през първите 2 рунда',
+    'battlesim431.ui.companion':      'Фенор: противникът губи още 3 точки на рунд',
+    'battlesim431.ui.mindblast':      'Без Мисловен щит: губиш още 2 точки на рунд',
     'battlesim431.ui.title':          'Симулатор - Пещерите на Калте',
     'battlesim431.status.not_ready':  'Хвърли начални точки за БОЙНИ УМЕНИЯ и ИЗДРЪЖЛИВОСТ, за да започнеш.',
     'battlesim431.status.fallen':     'Ти падна в битката. Нулирай, за да опиташ отново.',

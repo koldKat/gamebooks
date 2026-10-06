@@ -5,7 +5,7 @@ import { createHash } from 'node:crypto';
 import { createContext, SourceTextModule } from 'node:vm';
 
 const root = process.argv[1];
-const baseline = '7138e2a3d58b592d09ab8421ca7b2d22379bf7e03629e6f316dbd04c42258f1a'; // Includes reviewed feedback and simulator text updates.
+const baseline = '36d65bc078393d9066f49d2a3eb6e5df1bb20850f99a8d489100233e24c07f30'; // Includes reviewed feedback and simulator text updates.
 const hash = entries => createHash('sha256').update(JSON.stringify(entries)).digest('hex');
 const sorted = table => Object.keys(table).sort().map(key => [key, table[key]]);
 async function environment(language) {
@@ -83,7 +83,7 @@ for (const path of paths) {
   }
 }
 assert.equal(keys.size, Object.keys(en.table).length, 'aggregator includes every table exactly once');
-assert.equal(keys.size, 7890);
+assert.equal(keys.size, 7903);
 const added230 = {
   'battlesim230.log.shared_round': '{enemy}: {enemyAS}, against your same Attack Strength of {playerAS}. Only the highest lands a blow.',
   'battlesim230.ui.paired_source': 'Fight two opponents together (only the highest lands a blow)',

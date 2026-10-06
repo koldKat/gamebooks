@@ -30,6 +30,44 @@ const ENEMY_MODE = {
   'Неизвестен противник': 'melee',
 };
 
+const ENEMY_STATS = {
+  'Гигантски гущер': { speed: 6, str: 10, reflex: 6 },
+  'Служителка на "Бионаги"': { speed: 2, str: 2, acc: 2, reflex: 2, power: 3, eqspeed: 3 },
+  'Виртуален фехтовач': { speed: 3, acc: 4, reflex: 3, power: 3, eqspeed: 4, manual: true },
+  'Киберчудовище': { speed: 4, str: 8, reflex: 5 },
+  'Киберпаяк': { speed: 4, acc: 8, reflex: 5, power: 4, eqspeed: 2 },
+  'Виртуална котка-сънувач "Баст"': { speed: 4, acc: 4, reflex: 5, power: 4, eqspeed: 5 },
+  'Неизвестен корпоративен служител': { speed: 2, str: 2, reflex: 2 },
+  'Уличен дилър': { speed: 1, str: 2, reflex: 1 },
+  'Защитна програма': { speed: 2, acc: 2, reflex: 2, power: 3, eqspeed: 3 },
+  'Виртуални младежи (момче)': { speed: 1, str: 2, reflex: 2 },
+  'Андроидка убиец': { speed: 2, str: 2, reflex: 2, power: 1, eqspeed: 5 },
+  'Спецгард на "Саурон"': { speed: 2, acc: 4, reflex: 2, eqspeed: 5, manual: true },
+  'Неизвестен противник': { speed: 3, acc: 3, reflex: 2, eqspeed: 5, manual: true },
+};
+
+function _captureStopRule(d) {
+  d.stopBelowEndurance = d.enemy.name === 'Неизвестен корпоративен служител' ? 10 : 0;
+  if (d.stopBelowEndurance) d.enemy.enduranceCritical = 0;
+}
+
+function _applyEnemy(d, enemy) {
+  const { manual, ...stats } = Object.hasOwn(ENEMY_STATS, enemy.name) ? ENEMY_STATS[enemy.name] : {};
+  d.enemy = {
+    ..._emptySide(), ...stats,
+    name: enemy.name,
+    mode: Object.hasOwn(ENEMY_MODE, enemy.name) ? ENEMY_MODE[enemy.name] : 'unarmed',
+    skill: enemy.attack ?? 0,
+    resil: enemy.defense ?? 0,
+    endurance: enemy.hp ?? 0,
+    enduranceInitial: enemy.hp ?? 0,
+    enduranceCritical: enemy.pb ?? 0,
+  };
+  _captureStopRule(d);
+  d.roundsThisBattle = 0;
+  if (manual) _appendLog(d, t('battlesim399.log.manual_stats'));
+}
+
 function _emptySide() {
   return {
     mode: 'unarmed',
@@ -117,7 +155,13 @@ function _applyCritCheck(side) {
   return false;
 }
 
-function _battleOver(d) { return d.player.endurance <= 0 || (d.enemy.enduranceInitial > 0 && d.enemy.endurance <= 0); }
+function _belowStopRule(d, side) {
+  return d.stopBelowEndurance > 0 && side.endurance < d.stopBelowEndurance;
+}
+
+function _playerDefeated(d) { return d.player.endurance <= 0 || _belowStopRule(d, d.player); }
+function _enemyDefeated(d) { return d.enemy.enduranceInitial > 0 && (d.enemy.endurance <= 0 || _belowStopRule(d, d.enemy)); }
+function _battleOver(d) { return _playerDefeated(d) || _enemyDefeated(d); }
 
 function _recordOutcome(d, outcome) {
   d.history.push({
@@ -128,7 +172,7 @@ function _recordOutcome(d, outcome) {
 }
 
 function _applyEnemyDefeat(d) {
-  if (d.enemy.enduranceInitial > 0 && d.enemy.endurance <= 0) {
+  if (_enemyDefeated(d)) {
     _appendLog(d, t('battlesim399.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyNameSafe(d) }));
     _recordOutcome(d, 'win');
     return true;
@@ -137,8 +181,9 @@ function _applyEnemyDefeat(d) {
 }
 
 function _applyPlayerFall(d) {
-  if (d.player.endurance <= 0) {
-    _appendLog(d, t('battlesim399.log.fallen', { skull: SVG_SKULL }));
+  if (_playerDefeated(d)) {
+    const key = d.player.endurance > 0 ? 'battlesim399.log.stopped_loss' : 'battlesim399.log.fallen';
+    _appendLog(d, t(key, { skull: SVG_SKULL, n: d.stopBelowEndurance }));
     _recordOutcome(d, 'loss');
     return true;
   }
@@ -205,6 +250,7 @@ function _attack() {
 function _resetBattle() {
   const d = _data();
   if (!d) return;
+  _captureStopRule(d);
   d.enemy.endurance = d.enemy.enduranceInitial;
   d.enemy.critApplied = false;
   d.player.endurance = d.player.enduranceInitial;
@@ -320,8 +366,8 @@ function _renderInputs(skipEnemyPick) {
   document.getElementById('sim399-attack').disabled = over;
 
   const status = document.getElementById('sim399-status');
-  if (d.player.endurance <= 0) status.innerHTML = t('battlesim399.status.fallen', { skull: SVG_SKULL });
-  else if (d.enemy.enduranceInitial > 0 && d.enemy.endurance <= 0) status.innerHTML = t('battlesim399.status.victory', { trophy: SVG_TROPHY });
+  if (_playerDefeated(d)) status.innerHTML = t(d.player.endurance > 0 ? 'battlesim399.status.stopped_loss' : 'battlesim399.status.fallen', { skull: SVG_SKULL, n: d.stopBelowEndurance });
+  else if (_enemyDefeated(d)) status.innerHTML = t('battlesim399.status.victory', { trophy: SVG_TROPHY });
   else status.innerHTML = '';
 }
 
@@ -509,15 +555,7 @@ export function initSim399() {
   _setupAutocomplete('sim399-enemy-pick', 'sim399-enemy-pick-dropdown', enemy => {
     const d = _data();
     if (!d) return;
-    d.enemy.name              = enemy.name;
-    d.enemy.mode              = ENEMY_MODE[enemy.name] || d.enemy.mode;
-    d.enemy.skill             = enemy.attack ?? 0;
-    d.enemy.resil             = enemy.defense ?? 0;
-    d.enemy.endurance         = enemy.hp ?? 0;
-    d.enemy.enduranceInitial  = enemy.hp ?? 0;
-    d.enemy.enduranceCritical = enemy.pb ?? 0;
-    d.enemy.critApplied       = false;
-    d.roundsThisBattle        = 0;
+    _applyEnemy(d, enemy);
     saveState();
     _renderAll();
   });

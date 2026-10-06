@@ -60,6 +60,8 @@ function _data() {
       ratio: 0,
       enemy: { name: '', skill: 0, endurance: 0, enduranceMax: 0 },
       roundsThisBattle: 0,
+      printedDeathRules: 1,
+      combatEffects: {},
       log: [],
       history: [],
     };
@@ -97,6 +99,16 @@ function _recordOutcome(d, outcome) {
 
 function _effectiveSkill(d) { return d.combatSkill + (d.attackModifier || 0); }
 
+function _captureFightEffects(d) {
+  d.printedDeathRules = 1;
+  d.combatEffects = {
+    doubleDamage: !!d.nextDoubleDamage,
+    firstTwoRoundProtection: !!d.nextFirstTwoRoundProtection,
+    companionDamage: !!d.nextCompanionDamage,
+    unshieldedMindblast: !!d.nextUnshieldedMindblast,
+  };
+}
+
 function _runRound() {
   const d = _data();
   if (!d || !d.rolled || d.endurance <= 0 || d.enemy.endurance <= 0) return;
@@ -104,7 +116,12 @@ function _runRound() {
 
   const pick = _pick10();
   const col = _ratioCol(d.ratio);
-  const [enemyLoss, lwLoss] = COMBAT_TABLE[_pickRow(pick)][col];
+  let [enemyLoss, lwLoss] = COMBAT_TABLE[_pickRow(pick)][col];
+  const effects = d.combatEffects || {};
+  if (effects.doubleDamage && enemyLoss !== 'K') enemyLoss *= 2;
+  if (effects.companionDamage && enemyLoss !== 'K') enemyLoss += 3;
+  if (effects.firstTwoRoundProtection && d.roundsThisBattle <= 2) lwLoss = 0;
+  if (effects.unshieldedMindblast && lwLoss !== 'K') lwLoss += 2;
   _appendLog(d, t('battlesim431.log.round', { round: d.roundsThisBattle, ratio: d.ratio, pick }));
 
   if (enemyLoss === 'K') d.enemy.endurance = 0;
@@ -126,7 +143,10 @@ function _runRound() {
 }
 
 function _checkBattleEnd(d) {
-  if (d.enemy.endurance <= 0) {
+  if (d.printedDeathRules && d.endurance <= 0) {
+    _appendLog(d, t('battlesim431.log.fallen', { skull: SVG_SKULL }));
+    _recordOutcome(d, 'loss');
+  } else if (d.enemy.endurance <= 0) {
     _appendLog(d, t('battlesim431.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyNameSafe(d) }));
     _recordOutcome(d, 'win');
   } else if (d.endurance <= 0) {
@@ -139,6 +159,7 @@ function _resetBattle() {
   const d = _data();
   if (!d) return;
   d.roundsThisBattle = 0;
+  _captureFightEffects(d);
   d.enemy.endurance = d.enemy.enduranceMax;
   d.endurance = d.enduranceInitial;
   if (d.log.length) _appendLog(d, t('battlesim431.log.reset_sep'));
@@ -150,6 +171,7 @@ function _resetBattle() {
 function _usePotion() {
   const d = _data();
   if (!d || !d.rolled || !d.hasHealingPotion || d.healingPotionUsed) return;
+  if (d.printedDeathRules && d.endurance <= 0) return;
   if (d.roundsThisBattle > 0 && d.endurance > 0 && d.enemy.endurance > 0) {
     showAlert(t('battlesim431.alert.potion_midfight'));
     return;
@@ -253,8 +275,12 @@ function _renderInputs(skipEnemyPick) {
   if (!skipEnemyPick) _setVal('sim431-enemy-pick', d.enemy.name);
 
   const potionBtn = document.getElementById('sim431-use-potion');
-  potionBtn.disabled = !d.rolled || !d.hasHealingPotion || d.healingPotionUsed;
+  potionBtn.disabled = !d.rolled || !d.hasHealingPotion || d.healingPotionUsed || !!(d.printedDeathRules && d.endurance <= 0);
   potionBtn.textContent = d.healingPotionUsed ? t('battlesim431.btn.used') : t('battlesim431.btn.drink');
+  for (const field of ['DoubleDamage', 'FirstTwoRoundProtection', 'CompanionDamage', 'UnshieldedMindblast']) {
+    const input = document.getElementById('sim431-next-' + field);
+    if (input) input.checked = !!d['next' + field];
+  }
 
   const rollBtn = document.getElementById('sim431-roll');
   rollBtn.disabled = d.rolled;
@@ -386,6 +412,10 @@ export function initSim431() {
             ${_numField(t('battlesim431.ui.enemy_en_max'), 'sim431-enemy-enmax')}
             ${_numField(t('battlesim431.ui.ratio'), 'sim431-ratio', null, true)}
           </div>
+          <div class="bsim-side">
+            <div class="inv-edit-label">${t('battlesim431.ui.next_fight')}</div>
+            ${[['DoubleDamage', 'double_damage'], ['FirstTwoRoundProtection', 'protection'], ['CompanionDamage', 'companion'], ['UnshieldedMindblast', 'mindblast']].map(([field, label]) => `<label class="inv-edit-row"><input id="sim431-next-${field}" type="checkbox"><span class="bsim-stat-label">${t('battlesim431.ui.' + label)}</span></label>`).join('')}
+          </div>
           <div id="sim431-status" class="bsim-status"></div>
           <div class="inv-modal-ftr">
             <button id="sim431-round" class="inv-add-btn bsim-action-primary">${t('battlesim431.btn.round')}</button>
@@ -457,11 +487,20 @@ export function initSim431() {
     d.enemy.endurance      = enemy.hp ?? 0;
     d.enemy.enduranceMax   = enemy.hp ?? 0;
     d.roundsThisBattle     = 0;
+    _captureFightEffects(d);
     d.ratio                = _effectiveSkill(d) - d.enemy.skill;
     saveState();
     _renderInputs(true);
   });
 
+  for (const field of ['DoubleDamage', 'FirstTwoRoundProtection', 'CompanionDamage', 'UnshieldedMindblast']) {
+    document.getElementById('sim431-next-' + field).addEventListener('change', event => {
+      const d = _data();
+      if (!d) return;
+      d['next' + field] = event.target.checked;
+      saveState();
+    });
+  }
   const fieldMap = {
     'sim431-cs': ['combatSkill'], 'sim431-csmax': ['combatSkillInitial'],
     'sim431-en': ['endurance'], 'sim431-enmax': ['enduranceInitial'],

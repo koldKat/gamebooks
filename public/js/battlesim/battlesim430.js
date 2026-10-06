@@ -60,6 +60,8 @@ function _data() {
       ratio: 0,
       enemy: { name: '', skill: 0, endurance: 0, enduranceMax: 0 },
       roundsThisBattle: 0,
+      printedDeathRules: 1,
+      combatEffects: {},
       log: [],
       history: [],
     };
@@ -97,15 +99,29 @@ function _recordOutcome(d, outcome) {
 
 function _effectiveSkill(d) { return d.combatSkill + (d.attackModifier || 0); }
 
+function _captureFightEffects(d) {
+  d.combatEffects = {
+    doubleDamage: d.nextDoubleDamage === true,
+    firstRoundBonus: d.nextFirstRoundBonus === true,
+    halvorcProtection: d.nextHalvorcProtection === true,
+    unshieldedMindblast: d.nextUnshieldedMindblast === true,
+  };
+}
+
 function _runRound() {
   const d = _data();
   if (!d || !d.rolled || d.endurance <= 0 || d.enemy.endurance <= 0) return;
   d.roundsThisBattle++;
 
   const pick = _pick10();
-  const col = _ratioCol(d.ratio);
-  const [enemyLoss, lwLoss] = COMBAT_TABLE[_pickRow(pick)][col];
-  _appendLog(d, t('battlesim430.log.round', { round: d.roundsThisBattle, ratio: d.ratio, pick }));
+  const effects = d.combatEffects || {};
+  const ratio = d.ratio + (effects.firstRoundBonus && d.roundsThisBattle === 1 ? 2 : 0);
+  const col = _ratioCol(ratio);
+  let [enemyLoss, lwLoss] = COMBAT_TABLE[_pickRow(pick)][col];
+  if (effects.doubleDamage && enemyLoss !== 'K') enemyLoss *= 2;
+  if (effects.halvorcProtection && d.roundsThisBattle <= 2) lwLoss = 0;
+  if (effects.unshieldedMindblast && lwLoss !== 'K') lwLoss += 2;
+  _appendLog(d, t('battlesim430.log.round', { round: d.roundsThisBattle, ratio, pick }));
 
   if (enemyLoss === 'K') d.enemy.endurance = 0;
   else d.enemy.endurance = Math.max(0, d.enemy.endurance - enemyLoss);
@@ -126,7 +142,10 @@ function _runRound() {
 }
 
 function _checkBattleEnd(d) {
-  if (d.enemy.endurance <= 0) {
+  if (d.printedDeathRules === 1 && d.endurance <= 0) {
+    _appendLog(d, t('battlesim430.log.fallen', { skull: SVG_SKULL }));
+    _recordOutcome(d, 'loss');
+  } else if (d.enemy.endurance <= 0) {
     _appendLog(d, t('battlesim430.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyNameSafe(d) }));
     _recordOutcome(d, 'win');
   } else if (d.endurance <= 0) {
@@ -139,6 +158,8 @@ function _resetBattle() {
   const d = _data();
   if (!d) return;
   d.roundsThisBattle = 0;
+  d.printedDeathRules = 1;
+  _captureFightEffects(d);
   d.enemy.endurance = d.enemy.enduranceMax;
   d.endurance = d.enduranceInitial;
   if (d.log.length) _appendLog(d, t('battlesim430.log.reset_sep'));
@@ -149,7 +170,7 @@ function _resetBattle() {
 
 function _usePotion() {
   const d = _data();
-  if (!d || !d.rolled || !d.hasHealingPotion || d.healingPotionUsed) return;
+  if (!d || !d.rolled || !d.hasHealingPotion || d.healingPotionUsed || (d.printedDeathRules === 1 && d.endurance <= 0)) return;
   if (d.roundsThisBattle > 0 && d.endurance > 0 && d.enemy.endurance > 0) {
     showAlert(t('battlesim430.alert.potion_midfight'));
     return;
@@ -250,10 +271,13 @@ function _renderInputs(skipEnemyPick) {
   _setVal('sim430-enemy-en', d.enemy.endurance);
   _setVal('sim430-enemy-enmax', d.enemy.enduranceMax);
   _setVal('sim430-ratio', d.ratio);
+  for (const [id, field] of [['double-damage', 'nextDoubleDamage'], ['first-bonus', 'nextFirstRoundBonus'], ['halvorc', 'nextHalvorcProtection'], ['mindblast', 'nextUnshieldedMindblast']]) {
+    document.getElementById('sim430-' + id).checked = d[field] === true;
+  }
   if (!skipEnemyPick) _setVal('sim430-enemy-pick', d.enemy.name);
 
   const potionBtn = document.getElementById('sim430-use-potion');
-  potionBtn.disabled = !d.rolled || !d.hasHealingPotion || d.healingPotionUsed;
+  potionBtn.disabled = !d.rolled || !d.hasHealingPotion || d.healingPotionUsed || (d.printedDeathRules === 1 && d.endurance <= 0);
   potionBtn.textContent = d.healingPotionUsed ? t('battlesim430.btn.used') : t('battlesim430.btn.drink');
 
   const rollBtn = document.getElementById('sim430-roll');
@@ -386,6 +410,13 @@ export function initSim430() {
             ${_numField(t('battlesim430.ui.enemy_en_max'), 'sim430-enemy-enmax')}
             ${_numField(t('battlesim430.ui.ratio'), 'sim430-ratio', null, true)}
           </div>
+          <div class="bsim-side">
+            <p class="bsim-status">${t('battlesim430.ui.next_fight')}</p>
+            <label class="inv-edit-row"><span class="inv-edit-label bsim-stat-label">${t('battlesim430.ui.double_damage')}</span><input id="sim430-double-damage" type="checkbox"></label>
+            <label class="inv-edit-row"><span class="inv-edit-label bsim-stat-label">${t('battlesim430.ui.first_bonus')}</span><input id="sim430-first-bonus" type="checkbox"></label>
+            <label class="inv-edit-row"><span class="inv-edit-label bsim-stat-label">${t('battlesim430.ui.halvorc')}</span><input id="sim430-halvorc" type="checkbox"></label>
+            <label class="inv-edit-row"><span class="inv-edit-label bsim-stat-label">${t('battlesim430.ui.mindblast')}</span><input id="sim430-mindblast" type="checkbox"></label>
+          </div>
           <div id="sim430-status" class="bsim-status"></div>
           <div class="inv-modal-ftr">
             <button id="sim430-round" class="inv-add-btn bsim-action-primary">${t('battlesim430.btn.round')}</button>
@@ -457,6 +488,8 @@ export function initSim430() {
     d.enemy.endurance      = enemy.hp ?? 0;
     d.enemy.enduranceMax   = enemy.hp ?? 0;
     d.roundsThisBattle     = 0;
+    d.printedDeathRules    = 1;
+    _captureFightEffects(d);
     d.ratio                = _effectiveSkill(d) - d.enemy.skill;
     saveState();
     _renderInputs(true);
@@ -468,6 +501,14 @@ export function initSim430() {
     'sim430-atkmod': ['attackModifier'],
     'sim430-enemy-skill': ['enemy', 'skill'], 'sim430-enemy-en': ['enemy', 'endurance'], 'sim430-enemy-enmax': ['enemy', 'enduranceMax'],
   };
+  for (const [id, field] of [['double-damage', 'nextDoubleDamage'], ['first-bonus', 'nextFirstRoundBonus'], ['halvorc', 'nextHalvorcProtection'], ['mindblast', 'nextUnshieldedMindblast']]) {
+    document.getElementById('sim430-' + id).addEventListener('change', event => {
+      const d = _data();
+      if (!d) return;
+      d[field] = event.target.checked;
+      saveState();
+    });
+  }
   for (const [id, path] of Object.entries(fieldMap)) {
     const input = document.getElementById(id);
     input.addEventListener('change', () => {

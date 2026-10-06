@@ -254,7 +254,7 @@ gamebooks/
         battlesim397.js    Battle simulator for book 397, Пътят на съдбата - Bulgarian translation of book 320; same Fighting Prowess/Endurance combat.
         battlesim321.js    Battle simulator for book 321, The Walls of Spyte (Blood Sword 5) - Fighting Prowess/Endurance Attack Strength combat.
         battlesim398.js    Battle simulator for book 398, Стените на Спайт - Bulgarian translation of book 321; same Fighting Prowess/Endurance combat.
-        battlesim399.js    Battle simulator for book 399, Роди се сянка (Хроники на Орм) - five-mode combat system (unarmed/melee/gunfight/cyberspace/vehicle), each with its own order/attack/defence formula.
+        battlesim399.js    Battle simulator for book 399, Роди се сянка (Хроники на Орм) - five-mode combat system (unarmed/melee/gunfight/cyberspace/vehicle). Selecting an enemy clears stale stats and loads known physical/equipment presets; missing source values remain manual. New/reset §122 fights stop when either fighter drops strictly below 10 Endurance. Existing saved fights retain their values and stopping behavior until reset.
         battlesim414.js    Battle simulator for book 414, Вълшебният капан - random-number-table Умение/Издръжливост combat.
         battlesim415.js    Battle simulator for book 415, Езерният град - random-number-table Умение/Издръжливост combat.
         battlesim416.js    Battle simulator for book 416, Древният враг - random-number-table Умение/Издръжливост combat.
@@ -266,7 +266,8 @@ gamebooks/
         battlesim78.js     Battle simulator for book 78, Бойните ровове на Крарт - Bulgarian translation of book 317; Fighting Prowess/Endurance Attack Strength combat.
         battlesim107.js    Battle simulator for book 107, Демонски нокът - Bulgarian translation of book 319; Fighting Prowess/Endurance Attack Strength combat.
         battlesim135.js    Battle simulator for book 135, Царство Уирд - Bulgarian translation of book 318; Fighting Prowess/Endurance Attack Strength combat.
-        battlesim430.js    Battle simulator for book 430, Пламък над водата - Lone Wolf Combat Ratio / Combat Results Table lookup.
+        battlesim430.js    Battle simulator for book 430, Пламък над водата - Lone Wolf Combat Ratio / Combat Results Table lookup. Next-fight toggles cover double damage, a first-round +2 ratio bonus, Halvorc protection for two rounds, and unshielded Mindblast damage. Selecting/resetting a fight captures these settings and enables death-first outcomes with no post-death potion use; legacy saved fights retain their behavior until then.
+        battlesim431.js    Battle simulator for book 431, Пещерите на Калте - Lone Wolf Combat Ratio / Combat Results Table lookup. Next-fight toggles cover double damage, two-round protection, companion damage (+3), and unshielded Mindblast damage. Selecting/resetting captures settings and enables death-first outcomes with no post-death potion use; legacy saved fights retain their behavior until then.
         battlesim204.js    Battle simulator for book 204, Scorpion Swamp - Fighting Fantasy SKILL/STAMINA/LUCK opposed-roll combat.
         battlesim216.js    Battle simulator for book 216, Sword of the Samurai - Fighting Fantasy SKILL/STAMINA/LUCK opposed-roll combat.
         battlesim205.js    Battle simulator for book 205, Caverns of the Snow Witch - Fighting Fantasy SKILL/STAMINA/LUCK opposed-roll combat.
