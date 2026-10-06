@@ -8,7 +8,7 @@ import { setInventoryVisible } from '../inventory.js';
 import { setEquipmentVisible } from '../equipment.js';
 import { disconnectPartySSE } from '../play/party.js';
 import { showAuthForm, showResetPanel, hasPendingResetToken } from '../account/auth.js';
-import { syncPrefs } from '../ui-helpers/prefs.js';
+import { syncPrefs, restoreCachedPrefs } from '../ui-helpers/prefs.js';
 import { hideActiveBattleSim } from '../battlesim/loader.js';
 import { setLiveReadVisible } from '../reading/liveread.js';
 import { updateCoinsDisplay } from '../progression/shop.js';
@@ -99,12 +99,14 @@ export function _updateUsernameTooltip() {
 
 export async function showBooks() {
   if (_isViewLocked('book')) return;
+  const sessionToken = getToken();
   // Close the forum on library navigation, regardless of the initiating dialog.
   document.getElementById('forum-modal-overlay')?.classList.remove('active');
   _cancelForumReveal();
   _revealLanding();
   _ensureLiveTabControllerStarted();
-  const _prefsReady = syncPrefs();
+  if (!getCachedBooks()) restoreCachedPrefs();
+  const _prefsReady = syncPrefs({ renderBooks: false });
   if (document.activeElement instanceof HTMLElement && document.activeElement.closest('#login-screen')) {
     document.activeElement.blur();
   }
@@ -186,6 +188,9 @@ export async function showBooks() {
     } catch (_) {}
   }
 
+  // Cached content is usable immediately; initial routing still waits for refresh.
+  if (getCachedBooks()) window.appStartup?.ready();
+
   try {
     const [booksRes, profileRes, stashesRes, seriesRes] = await Promise.all([
       apiFetch('/api/books'),
@@ -193,10 +198,12 @@ export async function showBooks() {
       apiFetch('/api/stashes'),
       apiFetch('/api/series'),
     ]);
+    if (getToken() !== sessionToken) return;
     const books   = await booksRes.json();
     const profile = await profileRes.json();
     const stashes = stashesRes.ok ? await stashesRes.json() : [];
     const allSeries = seriesRes.ok ? await seriesRes.json() : [];
+    if (getToken() !== sessionToken) return;
     _processRewardSnapshot(profile);
     if (profile.id) { bootState._currentUserId = profile.id; setCurrentUserId(bootState._currentUserId); }
     bootState._isAdmin = resolveIsAdmin(profile);
@@ -218,6 +225,7 @@ export async function showBooks() {
       _updateUsernameTooltip();
     }
     await _prefsReady;
+    if (getToken() !== sessionToken) return;
     renderBooksList(books, allSeries, Array.isArray(stashes) ? stashes : []);
     setBooksDataFresh(true);
   } catch (_) {}

@@ -656,9 +656,11 @@ Layer 4 (top):
   main.js   ← imports boot.js only (single line)
 ```
 
-`index.html` loads `js/main.js` as `type="module"`. The vis-network library is loaded via CDN as a global (`vis`) before the module script runs.
+`index.html` loads `js/main.js` as `type="module"`. The bundled vis-network library is loaded on demand by `core/graph-library.js` when opening a player or public run graph. Concurrent requests share one load; a failed load can be retried. Guide and Forum iframes also load only when their dialogs open.
 
-The `boot/` dependency graph is acyclic and never back-imports `boot.js`. `initApp()` preserves startup order: shell bindings, play feature initialization, guide/forum setup, feature hooks, library/node/graph/dialog bindings, awaited initial routing, then the tutorial video. Feature modules receive the same hooks as before. The mobile reader remains independent and does not import this desktop bootstrap.
+The `boot/` dependency graph is acyclic and never back-imports `boot.js`. `initApp()` preserves startup order: shell bindings, play feature initialization, guide/forum setup, feature hooks, library/node/graph/dialog and tutorial video bindings, then awaited initial routing. All controls are bound before cached content releases the startup overlay. Feature modules receive the same hooks as before. The mobile reader remains independent and does not import this desktop bootstrap.
+
+On desktop library startup, a valid cached book list releases the startup overlay while fresh books, series, stashes and profile data continue loading. First visits without cached books await the initial fetch. Refresh results are ignored after a session change. `getBooks()` batches permanent visit counts and aggregate ratings, using four queries regardless of library size instead of per-book queries; progress includes deleted-run history with the same completion rules. JSON responses of at least 1 KiB are gzip-compressed asynchronously when the client accepts gzip, with `Vary: Accept-Encoding` and the existing `Cache-Control: no-store` policy; smaller responses remain plain JSON.
 
 **No cache-busting query strings.** Static `.js`/`.css` are served with `Cache-Control: no-cache` (see `server/static.js`) - the browser revalidates with the server on every load (an ETag-backed 304 if unchanged), so a plain refresh always picks up a new deploy. No `?v=N` versioning scheme is needed or used.
 
@@ -666,7 +668,7 @@ The `boot/` dependency graph is acyclic and never back-imports `boot.js`. `initA
 
 Shared confirmation/alert dialogs and hover tooltips live in `public/js/ui-helpers/`, with direct imports and no root facade. `play.js` still re-exports `showConfirm`/`showAlert`, lazy battle simulators and mobile reader/notebook callers import confirmation directly, and CSS stays in its existing locations. General utilities, tips and Stats for Nerds remain separate.
 
-Shared UI preference coordination lives in `public/js/ui-helpers/prefs.js`, distinct from the feature-specific `books/prefs.js` and `covers/prefs.js`. This is a path-only relocation. Its existing dependencies on the play, covers, and books facades remain; unlike confirmation/tooltip helpers, it is not a lightweight standalone dependency for mobile. Callers in boot and the desktop dice panel import it directly; no root wrapper is added.
+Shared UI preference coordination lives in `public/js/ui-helpers/prefs.js`, distinct from the feature-specific `books/prefs.js` and `covers/prefs.js`. Account-specific preferences are cached locally and restored before the initial cached library render. Startup synchronization applies preferences without rebuilding the list separately; the fresh library render uses the synchronized layout. Its existing dependencies on the play, covers, and books facades remain; unlike confirmation/tooltip helpers, it is not a lightweight standalone dependency for mobile. Callers in boot and the desktop dice panel import it directly; no root wrapper is added.
 
 Shared application foundations live in `public/js/core/`: `state.js`, `constants.js`, `sort.js` and `util.js`. There is no root facade or duplicate state instance. Feature-folder state/constants files remain in place; desktop and mobile both continue sharing the same application state, now imported from `core/state.js`.
 

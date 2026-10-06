@@ -1,7 +1,5 @@
 import { bootState } from './state.js';
 import { getToken } from '../core/state.js';
-import { render } from '../play.js';
-import { closePublicModal } from '../account/public-profile.js';
 import { openCoverActivity, openSeriesActivity } from '../covers.js';
 import { _cancelForumReveal } from './helpers.js';
 import { showBooks } from './screens.js';
@@ -11,7 +9,11 @@ export function initGuideAndForum() {
   const guideBtn     = document.getElementById('guide-btn');
   const guideOverlay = document.getElementById('guide-modal-overlay');
   const guideClose   = document.getElementById('guide-modal-close');
-  guideBtn.addEventListener('click', () => guideOverlay.classList.add('active'));
+  guideBtn.addEventListener('click', () => {
+    const frame = guideOverlay.querySelector('iframe');
+    if (frame && !frame.getAttribute('src')) frame.src = frame.dataset.src;
+    guideOverlay.classList.add('active');
+  });
   guideClose.addEventListener('click', () => guideOverlay.classList.remove('active'));
   guideOverlay.addEventListener('click', e => { if (e.target === guideOverlay && bootState._mousedownOnOverlay === e.target) guideOverlay.classList.remove('active'); });
   document.addEventListener('keydown', e => {

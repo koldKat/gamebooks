@@ -37,6 +37,18 @@ function getBooks(userId) {
     WHERE ub.user_id = ?
     ORDER BY ub.created_at ASC
   `).all(userId);
+  // Fetch library-wide summaries once rather than scanning visit history per book.
+  const permanentVisits = new Map(db.prepare(`
+    SELECT substr(ref, 1, instr(ref, ':') - 1) AS book_id, COUNT(*) AS n
+    FROM xp_events WHERE user_id = ? AND event = 'visit_node'
+    GROUP BY book_id
+  `).all(userId).map(row => [row.book_id, row.n]));
+  const ratings = new Map(db.prepare(`
+    SELECT book_id, AVG(rating) AS avg_rating, COUNT(rating) AS vote_count
+    FROM user_books WHERE rating IS NOT NULL
+      AND book_id IN (SELECT book_id FROM user_books WHERE user_id = ?)
+    GROUP BY book_id
+  `).all(userId).map(row => [row.book_id, row]));
   const extraAnthologyIds = {};
   const extraAnthologyOrders = {};
   for (const row of db.prepare('SELECT book_id, anthology_id, book_order FROM book_anthology_memberships').all()) {
@@ -63,11 +75,13 @@ function getBooks(userId) {
       // Include permanent visit history when deleted runs no longer provide it.
       const effective = b.discoverable_sections ?? b.total_sections;
       if (effective && visited < effective) {
-        const permanent = _permanentVisitedCount(userId, b.id);
+        const permanent = permanentVisits.get(String(b.id)) || 0;
         if (permanent > visited) visited = permanent;
       }
     } catch {}
-    const { avgRating, voteCount } = _getAggregateRating(b.id);
+    const rating = ratings.get(b.id);
+    const avgRating = rating?.avg_rating ?? null;
+    const voteCount = rating?.vote_count || 0;
     return {
       ...b,
       pdf_size: _getPdfSize(b.pdf_path),

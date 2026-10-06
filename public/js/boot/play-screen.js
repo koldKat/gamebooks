@@ -1,3 +1,4 @@
+import { ensureGraphLibrary } from '../core/graph-library.js';
 import { bootState } from './state.js';
 import { state, setViewingPt, loadState, isValidSecId, currentPlaythrough, currentSection, isDemoMode } from '../core/state.js';
 import { network, initGraph, destroyNetwork, canReach, setGraphOpenWorld } from '../graph.js';
@@ -98,7 +99,7 @@ export async function showMain(bookId, isbn = null, issn = null, asin = null, co
   if (_sidebarEl) {
     _sidebarEl.insertAdjacentHTML('beforeend', `<div class="sidebar-loading">${_loadingGraphSvg()}<span>${t('graph.loading')}</span></div>`);
   }
-  await loadState(bookId);
+  await Promise.all([loadState(bookId), ensureGraphLibrary()]);
   if (bootState._currentBook.isOpenWorld && bootState._currentBook.seriesId) {
     const seriesRuns = await _syncSeriesRuns(bootState._currentBook.seriesId);
     await _computeCrossBookReachability(seriesRuns, bookId);

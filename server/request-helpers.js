@@ -3,6 +3,7 @@
 // Shared HTTP/authentication, body-reading, rate-limit, and upload-validation helpers.
 
 const path  = require('path');
+const { gzip } = require('zlib');
 const geoip = require('geoip-lite');
 const db    = require('./db');
 const { runInImpersonationContext } = require('./impersonation-context');
@@ -156,10 +157,35 @@ function requireLocalhost(req, res) {
   return false;
 }
 
+// Honor an explicit gzip refusal even when a wildcard is accepted.
+function acceptsGzip(header = '') {
+  const encodings = String(header).toLowerCase().split(',').map(part => {
+    const [name, ...params] = part.trim().split(';');
+    const quality = params.find(param => param.trim().startsWith('q='));
+    return { name, q: quality ? Number(quality.trim().slice(2)) : 1 };
+  });
+  const encoding = encodings.find(item => item.name === 'gzip')
+    || encodings.find(item => item.name === '*');
+  return !!encoding && encoding.q > 0;
+}
+
 function send(res, status, body) {
   addSecurityHeaders(res);
-  res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
-  res.end(JSON.stringify(body));
+  const json = JSON.stringify(body);
+  const headers = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', Vary: 'Accept-Encoding' };
+  const finish = (data, compressed = false) => {
+    if (res.destroyed || res.writableEnded) return;
+    if (compressed) headers['Content-Encoding'] = 'gzip';
+    headers['Content-Length'] = Buffer.byteLength(data);
+    res.writeHead(status, headers);
+    res.end(data);
+  };
+  if (Buffer.byteLength(json) >= 1024 && acceptsGzip(res.req?.headers?.['accept-encoding'])) {
+    // Compression runs off the request thread; fall back to JSON on failure.
+    gzip(json, (error, compressed) => finish(error ? json : compressed, !error));
+  } else {
+    finish(json);
+  }
 }
 
 const MAX_JSON_BODY      = 1 * 1024 * 1024; // 1 MB

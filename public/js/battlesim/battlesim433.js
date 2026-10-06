@@ -1,6 +1,6 @@
 // Battle Simulator (Сянка върху пясъка, book 433, Lone Wolf #5)
 // Combat Ratio is fixed on enemy selection; a 0-9 pick selects simultaneous table losses.
-// 'K' means instant death. Skill bonuses and narrative effects are entered manually.
+// 'K' means instant death. Printed effects are captured for newly started fights.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -59,6 +59,8 @@ function _data() {
       roundsThisBattle: 0,
       log: [],
       history: [],
+      printedRules: 1,
+      combatEffects: {},
     };
   }
   const d = pt.sim433;
@@ -77,6 +79,21 @@ function _notReady(d) { return !d.rolled; }
 function _rollRandomNumber() { return Math.floor(Math.random() * 10); }
 
 function _playerCS(d) {
+  const effects = d.combatEffects;
+  if (effects?.captured) {
+    let cs = effects.baseCS;
+    const section = effects.section;
+    if (effects.mindBlast && ![12, 162, 299, 355, 375].includes(section)) cs += [64, 110].includes(section) ? 4 : 2;
+    if ([12, 135, 190, 357].includes(section)) cs -= 2;
+    if (section === 91) cs -= 4;
+    if ([106, 159, 316].includes(section) && d.roundsThisBattle <= 3) cs -= 2;
+    if (section === 393 && d.roundsThisBattle <= 1) cs -= 2;
+    if (section === 194 && !effects.mindshield) cs -= 3;
+    if ([299, 353, 355].includes(section) && !effects.mindshield) cs -= 2;
+    if (section === 57 && effects.previousElix) cs += 2;
+    if (section === 253 && effects.magicMace) cs += 5;
+    return cs;
+  }
   let cs = d.player.csBase;
   if (d.player.weaponBonus) cs += 2;
   if (d.player.mindBlast) cs += 2;
@@ -93,7 +110,38 @@ function _enemyNameSafe(d) { return escapeHtml(_enemyName(d)); }
 
 function _playerLost(d) { return d.rolled && d.player.ep <= 0; }
 function _playerWon(d)  { return d.enemy.epMax > 0 && d.enemy.ep <= 0; }
-function _battleOver(d) { return _notReady(d) || _playerLost(d) || _playerWon(d); }
+function _battleOver(d) { return _notReady(d) || _playerLost(d) || _playerWon(d) || !!d.combatEffects?.finished; }
+
+function _captureFightEffects(d) {
+  d.printedRules = 1;
+  d.combatEffects = {
+    captured: true,
+    section: Number(d.enemy.name.match(/§(\d+)/)?.[1]) || 0,
+    baseCS: d.player.csBase + (d.player.weaponBonus ? 2 : 0),
+    mindBlast: !!d.player.mindBlast,
+    mindshield: !!d.nextMindshield,
+    previousElix: !!d.nextPreviousElix,
+    magicMace: !!d.nextMagicMace,
+    protectedEntry: !!d.nextProtectedEntry,
+    lostEP: 0,
+  };
+}
+
+function _setRoute(d, section) {
+  d.combatEffects.finished = true;
+  d.combatEffects.route = section;
+  _appendLog(d, t('battlesim433.log.continue', { section }));
+}
+
+function _recoverCombatLoss(d) {
+  const effects = d.combatEffects;
+  if (!effects || ![20, 135].includes(effects.section)) return;
+  const recovered = Math.min(Math.floor(effects.lostEP / 2), d.player.epInitial - d.player.ep);
+  if (recovered > 0) {
+    d.player.ep += recovered;
+    _appendLog(d, t('battlesim433.log.recovered', { n: recovered }));
+  }
+}
 
 function _recordOutcome(d, outcome) {
   d.history.push({
@@ -108,11 +156,33 @@ function _recordOutcome(d, outcome) {
 function _runRound() {
   const d = _data();
   if (!d || _battleOver(d)) return;
+  const effects = d.combatEffects || {};
+  const stop = { 20: [3, 82], 330: [2, 394], 361: [3, 382] }[effects.section];
+  if (stop && d.roundsThisBattle >= stop[0]) {
+    _setRoute(d, stop[1]);
+    saveState();
+    _renderAll();
+    return;
+  }
   d.roundsThisBattle++;
 
   const ratio = _playerCS(d) - d.enemy.cs;
   const rn = _rollRandomNumber();
-  const [enemyLoss, selfLoss] = CRT[rn][_crCol(ratio)];
+  let [enemyLoss, selfLoss] = CRT[rn][_crCol(ratio)];
+  if (effects.section === 4 && d.roundsThisBattle === 1) enemyLoss = 0;
+  if ((effects.section === 119 && d.roundsThisBattle <= 3) ||
+      (effects.section === 280 && d.roundsThisBattle === 1) ||
+      (effects.section === 334 && effects.protectedEntry && d.roundsThisBattle <= 2)) selfLoss = 0;
+  if ([240, 370].includes(effects.section) && selfLoss !== 'K') selfLoss *= 2;
+  if (effects.section === 357 && rn === 1) {
+    d.player.ep = 0;
+    _appendLog(d, t('battlesim433.log.fallen'));
+    _recordOutcome(d, 'loss');
+    _setRoute(d, 293);
+    saveState();
+    _renderAll();
+    return;
+  }
 
   const enemyDied  = enemyLoss === 'K';
   const playerDied = selfLoss === 'K';
@@ -120,6 +190,7 @@ function _runRound() {
   else d.enemy.ep = 0;
   if (!playerDied) d.player.ep = Math.max(0, d.player.ep - selfLoss);
   else d.player.ep = 0;
+  if (effects.captured) effects.lostEP += playerDied ? 0 : selfLoss;
 
   _appendLog(d, t('battlesim433.log.round', {
     round: d.roundsThisBattle, ratio, rn,
@@ -130,13 +201,25 @@ function _runRound() {
     enemyEp: d.enemy.ep, enemyEpMax: d.enemy.epMax,
   }));
 
-  if (_playerWon(d)) {
+  if (d.printedRules && _playerLost(d)) {
+    const nonfatal = [20, 135].includes(effects.section);
+    _appendLog(d, `${SVG_SKULL} ${t(nonfatal ? 'battlesim433.log.knocked_out' : 'battlesim433.log.fallen')}`);
+    _recordOutcome(d, 'loss');
+    if (nonfatal) _setRoute(d, 161);
+  } else if (_playerWon(d)) {
+    _recoverCombatLoss(d);
     _appendLog(d, `${SVG_TROPHY} ${t('battlesim433.log.defeated', { enemy: _enemyNameSafe(d) })}`);
     _recordOutcome(d, 'win');
+    const routes = { 4: [4, 165, 180], 91: [4, 65, 180], 168: [3, 101, 46], 355: [4, 249, 304] }[effects.section];
+    if (routes) _setRoute(d, routes[d.roundsThisBattle <= routes[0] ? 1 : 2]);
   } else if (_playerLost(d)) {
     _appendLog(d, `${SVG_SKULL} ${t('battlesim433.log.fallen')}`);
     _recordOutcome(d, 'loss');
   }
+  if (effects.section === 244 && !_playerLost(d)) {
+    _setRoute(d, selfLoss > enemyLoss ? 347 : enemyLoss > selfLoss || enemyDied ? 327 : 271);
+  }
+  if (stop && d.roundsThisBattle >= stop[0] && !_playerLost(d) && !_playerWon(d)) _setRoute(d, stop[1]);
 
   saveState();
   _renderAll();
@@ -148,6 +231,7 @@ function _resetBattle() {
   d.enemy.ep = d.enemy.epMax;
   d.player.ep = d.player.epInitial;
   d.roundsThisBattle = 0;
+  _captureFightEffects(d);
   if (d.log.length) _appendLog(d, t('battlesim433.log.reset_sep'));
   _appendLog(d, t('battlesim433.log.reset', { enemy: _enemyNameSafe(d) }));
   saveState();
@@ -159,8 +243,9 @@ function _resetBattle() {
 function _useLaumspur() {
   const d = _data();
   if (!d || _notReady(d)) return;
+  if (d.printedRules && _playerLost(d)) return;
   if (d.player.laumspurUsed) return;
-  if (d.roundsThisBattle > 0 && d.player.ep > 0 && d.enemy.ep > 0) {
+  if (d.roundsThisBattle > 0 && d.player.ep > 0 && d.enemy.ep > 0 && !d.combatEffects?.finished) {
     showAlert(t('battlesim433.alert.laumspur_midfight'));
     return;
   }
@@ -185,14 +270,15 @@ function _renderStatus() {
   const notReady = _notReady(d);
   const hasEnemy = d.enemy.epMax > 0;
   if (notReady)                            el.innerHTML = t('battlesim433.status.not_ready');
+  else if (d.combatEffects?.route)          el.innerHTML = t('battlesim433.log.continue', { section: d.combatEffects.route });
   else if (_playerLost(d))                 el.innerHTML = `${SVG_SKULL} ${t('battlesim433.status.fallen')}`;
   else if (hasEnemy && _playerWon(d))      el.innerHTML = `${SVG_TROPHY} ${t('battlesim433.status.victory')}`;
   else                                      el.innerHTML = '';
   const over = _battleOver(d);
   document.getElementById('sim433-round').disabled = over;
   document.getElementById('sim433-laumspur').disabled =
-    notReady || d.player.laumspurUsed || d.player.ep >= d.player.epInitial ||
-    (d.roundsThisBattle > 0 && d.player.ep > 0 && d.enemy.ep > 0);
+    notReady || (d.printedRules && _playerLost(d)) || d.player.laumspurUsed || d.player.ep >= d.player.epInitial ||
+    (d.roundsThisBattle > 0 && d.player.ep > 0 && d.enemy.ep > 0 && !d.combatEffects?.finished);
 }
 
 function _renderHistory() {
@@ -233,6 +319,9 @@ function _renderInputs() {
   document.getElementById('sim433-player-epmax').value   = d.player.epInitial;
   document.getElementById('sim433-weapon').checked       = d.player.weaponBonus;
   document.getElementById('sim433-mindblast').checked    = d.player.mindBlast;
+  for (const [id, field] of [['mindshield', 'nextMindshield'], ['previous-elix', 'nextPreviousElix'], ['magic-mace', 'nextMagicMace'], ['protected-entry', 'nextProtectedEntry']]) {
+    document.getElementById('sim433-' + id).checked = !!d[field];
+  }
 
   const rollBtn = document.getElementById('sim433-roll');
   rollBtn.disabled = d.rolled;
@@ -329,6 +418,7 @@ function _setupEnemyAutocomplete() {
     if (enemy.attack != null) d.enemy.cs = enemy.attack;
     if (enemy.hp != null)     { d.enemy.ep = enemy.hp; d.enemy.epMax = enemy.hp; }
     d.roundsThisBattle = 0;
+    _captureFightEffects(d);
     closeDropdown();
     saveState();
     _renderAll();
@@ -402,6 +492,13 @@ export function initSim433() {
               <span class="inv-edit-label bsim-stat-label">${t('battlesim433.ui.mind_blast')}</span>
               <input id="sim433-mindblast" type="checkbox">
             </div>
+            <div class="bsim-side-title">${t('battlesim433.ui.next_fight')}</div>
+            ${[['mindshield', 'mindshield'], ['previous-elix', 'previous_elix'], ['magic-mace', 'magic_mace'], ['protected-entry', 'protected_entry']].map(([id, key]) => `
+              <div class="inv-edit-row">
+                <span class="inv-edit-label bsim-stat-label">${t('battlesim433.ui.' + key)}</span>
+                <input id="sim433-${id}" type="checkbox">
+              </div>`).join('')}
+            <p class="bsim-history-meta">${t('battlesim433.ui.manual_effects')}</p>
             <div class="inv-edit-row bsim-ae-row">
               <span class="inv-edit-label bsim-stat-label">${t('battlesim433.ui.laumspur')}</span>
               <span id="sim433-laumspur-used" class="bsim-ae-display"></span>
@@ -463,6 +560,14 @@ export function initSim433() {
   document.getElementById('sim433-round').addEventListener('click', _runRound);
   document.getElementById('sim433-reset').addEventListener('click', _resetBattle);
   document.getElementById('sim433-laumspur').addEventListener('click', _useLaumspur);
+  for (const [id, field] of [['mindshield', 'nextMindshield'], ['previous-elix', 'nextPreviousElix'], ['magic-mace', 'nextMagicMace'], ['protected-entry', 'nextProtectedEntry']]) {
+    document.getElementById('sim433-' + id).addEventListener('change', e => {
+      const d = _data();
+      if (!d) return;
+      d[field] = e.target.checked;
+      saveState();
+    });
+  }
 
   document.getElementById('sim433-roll').addEventListener('click', () => {
     const d = _data();
@@ -471,6 +576,7 @@ export function initSim433() {
     d.player.epInitial = _rollRandomNumber() + 20;
     d.player.ep = d.player.epInitial;
     d.rolled = true;
+    if (d.combatEffects?.captured) _captureFightEffects(d);
     _appendLog(d, t('battlesim433.log.rolled', { cs: d.player.csBase, ep: d.player.epInitial }));
     saveState();
     _renderAll();

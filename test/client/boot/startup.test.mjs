@@ -64,7 +64,8 @@ test('script failures offer retry; unrelated image failures do not', () => {
 test('both install entry points draw startup feedback before loading application scripts', () => {
   for (const name of ['index.html', 'mobile/index.html']) {
     const html = readFileSync(new URL('../../../public/' + name, import.meta.url), 'utf8');
-    assert.match(html, /<script defer src="\/vendor\/vis-network\/vis-network.min.js"><\/script>/);
+    if (name === 'index.html') assert.ok(!html.includes('<script defer src="/vendor/vis-network/vis-network.min.js">'));
+    else assert.match(html, /<script defer src="\/vendor\/vis-network\/vis-network.min.js"><\/script>/);
     const startup = html.slice(html.indexOf('id="app-startup"'), html.indexOf('<script src="/startup.js">'));
     assert.match(startup, /<svg class="(?:feed-loading-graph|mlg-graph)"/);
     assert.equal((startup.match(/<circle /g) || []).length, 5);

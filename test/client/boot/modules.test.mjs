@@ -38,6 +38,8 @@ test('boot startup and event integrations execute against isolated feature stubs
 });
 
 for (const scenario of [
+  { name: 'cached library reveals before refresh', token: 'token', cached: true, delayedLibrary: true, screen: 'books-screen' },
+  { name: 'uncached library waits for refresh', token: 'token', delayedLibrary: true, screen: 'books-screen' },
   { name: 'signed-in library', token: 'token', screen: 'books-screen' },
   { name: 'signed-in book deep link', token: 'token', hash: '#book/1', screen: 'main-screen' },
   { name: 'admin book deep link', token: 'token', hash: '#book/1', admin: true, screen: 'main-screen' },

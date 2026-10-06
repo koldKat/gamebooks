@@ -20,7 +20,7 @@ async function harness() {
   const state = { token: 'token', demo: false, books: [], series: [{ id: 2 }], stashes: [{ id: 3 }] };
   let response = async () => ({ ok: true, json: async () => ({}) });
   const dependencies = {
-    '../core/state.js': { getToken: () => state.token, isDemoMode: false, apiFetch: (url, options) => {
+    '../core/state.js': { getToken: () => state.token, getUsername: () => state.username || "Player", isDemoMode: false, apiFetch: (url, options) => {
       assert.equal(url, '/api/prefs'); requests.push(options ? plain(options) : null); return response(options);
     } },
     '../play.js': { setTrailCollapsed: value => effects.push(['trail', value]), setChoicesRecordedCount: value => effects.push(['choices', value]), CHOICES_PULSE_THRESHOLD: 50 },
@@ -153,3 +153,28 @@ sync.respond(async () => { throw Error('network failure'); });
 await sync.api.syncPrefs(); sync.api.savePrefs({ legendCollapsed: '1' });
 await Promise.resolve();
 assert.equal(sync.effects.length, before, 'network failures handled without applying state');
+
+const startup = await harness();
+startup.respond(async () => ({ ok: true, json: async () => ({ stashExpanded: { 3: '0' } }) }));
+await startup.api.syncPrefs({ renderBooks: false });
+assert.equal(startup.effects.filter(e => e[0] === 'render').length, 0, 'startup preference sync does not rebuild cached library');
+assert.deepEqual(JSON.parse(startup.storage.get('ui_prefs_v1:Player')), { stashExpanded: { 3: '0' } });
+startup.effects.length = 0;
+startup.api.restoreCachedPrefs();
+assert.equal(startup.effects.filter(e => e[0] === 'render').length, 0);
+assert.deepEqual(plain(startup.effects.find(e => e[0] === 'expanded')[3]), { 3: '0' });
+startup.api.savePrefs({ stashExpanded: { 3: '1' } });
+assert.deepEqual(JSON.parse(startup.storage.get('ui_prefs_v1:Player')).stashExpanded, { 3: '1' }, 'local changes are saved for the next cached startup');
+startup.effects.length = 0;
+startup.state.username = 'Other'; startup.api.restoreCachedPrefs();
+assert.equal(startup.effects.length, 0, 'another account cannot restore the previous account layout');
+
+const switching = await harness();
+const previousSession = deferred();
+switching.respond(() => previousSession.promise);
+const stale = switching.api.syncPrefs();
+switching.state.token = 'other-token';
+previousSession.resolve({ ok: true, json: async () => ({ 'covers-collapsed': '1' }) });
+await stale;
+assert.equal(switching.effects.length, 0, 'old session preferences cannot overwrite current session');
+assert.equal(switching.storage.size, 0);

@@ -1,3 +1,4 @@
+import { ensureGraphLibrary } from '../core/graph-library.js';
 // Public profiles, runs, and series journeys.
 
 import { isValidSecId } from '../core/state.js';
@@ -177,6 +178,7 @@ export async function openPublicRun(bookId, userId, runIndex, fromProfile) {
     const res = await _hooks.publicFetch(`/api/public/book/${bookId}/user/${userId}/run/${runIndex}`);
     if (!res.ok) throw new Error();
     const data = await res.json();
+    await ensureGraphLibrary();
     renderPublicRun(data);
   } catch {
     body.innerHTML = `<p class="pub-error">${t('pub.run_unavailable')}</p>`;
@@ -203,6 +205,7 @@ export async function openPublicSeriesRun(seriesId, userId, runIndex, fromProfil
     const res = await _hooks.publicFetch(`/api/public/series/${seriesId}/user/${userId}/run/${runIndex}`);
     if (!res.ok) throw new Error();
     const data = await res.json();
+    await ensureGraphLibrary();
     renderPublicRun(data);
   } catch {
     body.innerHTML = `<p class="pub-error">${t('pub.run_unavailable')}</p>`;

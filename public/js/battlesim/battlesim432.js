@@ -1,7 +1,7 @@
 // Battle Simulator (Бездната на обречените / The Chasm of Doom, Bulgarian edition of Lone Wolf book
 // 4, id 432)
 // Combat Ratio is fixed on enemy selection; a 0-9 pick selects simultaneous table losses.
-// 'K' means instant death. Skill bonuses and narrative effects are entered manually.
+// 'K' means instant death. Printed encounter effects are captured for new fights.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -62,6 +62,8 @@ function _data() {
       roundsThisBattle: 0,
       log: [],
       history: [],
+      printedDeathRules: 1,
+      combatEffects: {},
     };
   }
   const d = pt.sim432;
@@ -97,15 +99,39 @@ function _recordOutcome(d, outcome) {
 
 function _effectiveSkill(d) { return d.combatSkill + (d.attackModifier || 0); }
 
+function _captureFightEffects(d) {
+  d.printedDeathRules = 1;
+  d.combatEffects = {
+    section: Number(d.enemy.name.match(/§(\d+)/)?.[1]) || 0,
+    mindblast: !!d.nextMindblast,
+    mindshield: !!d.nextMindshield,
+  };
+}
+
+function _roundRatio(d) {
+  const effects = d.combatEffects || {};
+  let ratio = d.ratio;
+  if (effects.mindblast && ![26, 77, 88, 122, 325].includes(effects.section)) ratio += 2;
+  if (effects.section === 62 && d.roundsThisBattle <= 3) ratio -= 2;
+  if (effects.section === 153 && d.roundsThisBattle <= 2) ratio -= 4;
+  if (effects.section === 316) ratio -= 2;
+  if (effects.section === 122 && !effects.mindshield) ratio -= 4;
+  return ratio;
+}
+
 function _runRound() {
   const d = _data();
   if (!d || !d.rolled || d.endurance <= 0 || d.enemy.endurance <= 0) return;
   d.roundsThisBattle++;
 
   const pick = _pick10();
-  const col = _ratioCol(d.ratio);
-  const [enemyLoss, lwLoss] = COMBAT_TABLE[_pickRow(pick)][col];
-  _appendLog(d, t('battlesim432.log.round', { round: d.roundsThisBattle, ratio: d.ratio, pick }));
+  const ratio = _roundRatio(d);
+  const col = _ratioCol(ratio);
+  let [enemyLoss, lwLoss] = COMBAT_TABLE[_pickRow(pick)][col];
+  const effects = d.combatEffects || {};
+  if (effects.section === 147 && d.roundsThisBattle === 1) lwLoss = 0;
+  if (effects.section === 77 && !effects.mindshield && lwLoss !== 'K') lwLoss += 1;
+  _appendLog(d, t('battlesim432.log.round', { round: d.roundsThisBattle, ratio, pick }));
 
   if (enemyLoss === 'K') d.enemy.endurance = 0;
   else d.enemy.endurance = Math.max(0, d.enemy.endurance - enemyLoss);
@@ -126,7 +152,10 @@ function _runRound() {
 }
 
 function _checkBattleEnd(d) {
-  if (d.enemy.endurance <= 0) {
+  if (d.printedDeathRules && d.endurance <= 0) {
+    _appendLog(d, t('battlesim432.log.fallen', { skull: SVG_SKULL }));
+    _recordOutcome(d, 'loss');
+  } else if (d.enemy.endurance <= 0) {
     _appendLog(d, t('battlesim432.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyNameSafe(d) }));
     _recordOutcome(d, 'win');
   } else if (d.endurance <= 0) {
@@ -139,6 +168,7 @@ function _resetBattle() {
   const d = _data();
   if (!d) return;
   d.roundsThisBattle = 0;
+  _captureFightEffects(d);
   d.enemy.endurance = d.enemy.enduranceMax;
   d.endurance = d.enduranceInitial;
   if (d.log.length) _appendLog(d, t('battlesim432.log.reset_sep'));
@@ -150,6 +180,7 @@ function _resetBattle() {
 function _usePotion() {
   const d = _data();
   if (!d || !d.rolled || !d.hasHealingPotion || d.healingPotionUsed) return;
+  if (d.printedDeathRules && d.endurance <= 0) return;
   if (d.roundsThisBattle > 0 && d.endurance > 0 && d.enemy.endurance > 0) {
     showAlert(t('battlesim432.alert.potion_midfight'));
     return;
@@ -253,7 +284,10 @@ function _renderInputs(skipEnemyPick) {
   if (!skipEnemyPick) _setVal('sim432-enemy-pick', d.enemy.name);
 
   const potionBtn = document.getElementById('sim432-use-potion');
-  potionBtn.disabled = !d.rolled || !d.hasHealingPotion || d.healingPotionUsed;
+  potionBtn.disabled = !d.rolled || !d.hasHealingPotion || d.healingPotionUsed || (d.printedDeathRules && d.endurance <= 0);
+  for (const [id, key] of [['sim432-next-mindblast', 'nextMindblast'], ['sim432-next-mindshield', 'nextMindshield']]) {
+    document.getElementById(id).checked = !!d[key];
+  }
   potionBtn.textContent = d.healingPotionUsed ? t('battlesim432.btn.used') : t('battlesim432.btn.drink');
 
   const rollBtn = document.getElementById('sim432-roll');
@@ -368,6 +402,10 @@ export function initSim432() {
             ${_numField(t('battlesim432.ui.en'), 'sim432-en')}
             ${_numField(t('battlesim432.ui.en_initial'), 'sim432-enmax')}
             ${_numField(t('battlesim432.ui.atkmod'), 'sim432-atkmod')}
+            <div class="bsim-history-empty">${t('battlesim432.ui.next_fight')}</div>
+            <label class="inv-edit-row"><input id="sim432-next-mindblast" type="checkbox">${t('battlesim432.ui.mindblast')}</label>
+            <label class="inv-edit-row"><input id="sim432-next-mindshield" type="checkbox">${t('battlesim432.ui.mindshield')}</label>
+            <div class="bsim-history-empty">${t('battlesim432.ui.manual_effects')}</div>
             <div class="inv-edit-row">
               <span class="inv-edit-label bsim-stat-label">${t('battlesim432.ui.potion')}</span>
               <button id="sim432-use-potion" class="inv-edit-done bsim-ae-roll-btn" type="button">${t('battlesim432.btn.drink')}</button>
@@ -428,6 +466,14 @@ export function initSim432() {
   document.getElementById('sim432-round').addEventListener('click', _runRound);
   document.getElementById('sim432-reset').addEventListener('click', _resetBattle);
   document.getElementById('sim432-use-potion').addEventListener('click', _usePotion);
+  for (const [id, key] of [['sim432-next-mindblast', 'nextMindblast'], ['sim432-next-mindshield', 'nextMindshield']]) {
+    document.getElementById(id).addEventListener('change', event => {
+      const d = _data();
+      if (!d) return;
+      d[key] = event.target.checked;
+      saveState();
+    });
+  }
 
   document.getElementById('sim432-roll').addEventListener('click', () => {
     const d = _data();
@@ -457,6 +503,7 @@ export function initSim432() {
     d.enemy.endurance      = enemy.hp ?? 0;
     d.enemy.enduranceMax   = enemy.hp ?? 0;
     d.roundsThisBattle     = 0;
+    _captureFightEffects(d);
     d.ratio                = _effectiveSkill(d) - d.enemy.skill;
     saveState();
     _renderInputs(true);

@@ -37,4 +37,13 @@ export default {
     'battlesim433.btn.laumspur_use':  'Изпий (+{n} ИЗДРЪЖЛИВОСТ)',
     'battlesim433.btn.round':         'Рунд',
     'battlesim433.btn.reset':         'Нулирай',
+    'battlesim433.ui.next_fight':     'За следващата битка (избор или нулиране)',
+    'battlesim433.ui.mindshield':     'Мозъчен щит',
+    'battlesim433.ui.previous_elix':  'Предишна битка с еликс (§57)',
+    'battlesim433.ui.magic_mace':     'Инкрустиран боздуган (§253)',
+    'battlesim433.ui.protected_entry': 'Атака от §226 към §334',
+    'battlesim433.ui.manual_effects': 'Бонусите и защитата се запазват при избор или нулиране. Нанеси останалите предмети, рани преди боя и последствията от бягство ръчно. След загуба в §20/§135 следвай §161. В §4 въведи данните на противника ръчно.',
+    'battlesim433.log.continue':      'Продължи на §{section}.',
+    'battlesim433.log.recovered':     'Възстановяваш {n} ИЗДРЪЖЛИВОСТ след битката.',
+    'battlesim433.log.knocked_out':   'Победен си и губиш съзнание.',
 };

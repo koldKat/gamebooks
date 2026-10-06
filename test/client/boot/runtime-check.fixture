@@ -58,6 +58,9 @@ const history = {
 let token = scenario.token || null, username = 'Player', cachedBooks = null, cachedSeries = [];
 const book = { id: 1, name: 'Alpha', total_sections: 20, cover_path: 'alpha.jpg', pdf_path: 'alpha.pdf', parent_book_id: scenario.parentId || null, created_by: 9, bgPosY: 35 };
 const profile = { id: scenario.userId || 9, username, level: 12, coinsBalance: 7, pdfAccess: scenario.pdfAccess !== false, isAdmin: !!scenario.admin };
+let releaseLibrary;
+if (scenario.cached) storage.set('books_list_v1', JSON.stringify([book]));
+window.appStartup = { ready: () => calls.push(['startupReady']) };
 let heartbeatResult = { awarded: true };
 const playState = { graph: {}, positions: {}, playthroughs: [], totalSections: 20, bookName: 'Alpha', startSection: 1 };
 const graphHandlers = new Map();
@@ -67,6 +70,7 @@ const overrides = {
   getToken: () => token, setToken: value => { token = value; }, clearToken: () => { token = null; },
   getUsername: () => username, setUsername: value => { username = value; }, clearUsername: () => { username = ''; },
   getCachedBooks: () => cachedBooks, setCachedBooks: books => { cachedBooks = books; }, clearBooksCache: () => { cachedBooks = null; },
+  renderBooksList: (...args) => { calls.push(['renderBooksList', ...args]); cachedBooks = args[0]; },
   getCachedAllSeries: () => cachedSeries, setCachedAllSeries: series => { cachedSeries = series; }, getCachedStashes: () => [],
   currentBookId: null, isDemoMode: false, viewingPt: null,
   currentSection: () => null, currentPlaythrough: () => null,
@@ -80,7 +84,9 @@ const overrides = {
   fetchPublic: async () => ({ ok: true, json: async () => ({}) }),
   apiFetch: async (url, options) => {
     calls.push(['apiFetch', url, options]);
-    return { ok: true, json: async () => url === '/api/profile' ? profile : url === '/api/books' ? [book] : url === '/api/heartbeat' ? heartbeatResult : [] };
+    const response = { ok: true, json: async () => url === '/api/profile' ? profile : url === '/api/books' ? [book] : url === '/api/heartbeat' ? heartbeatResult : [] };
+    if (url === '/api/books' && scenario.delayedLibrary) return new Promise(resolve => { releaseLibrary = () => resolve(response); });
+    return response;
   },
 };
 const context = createContext({ window, document, location, history, navigator: { userAgent: 'Test', maxTouchPoints: 0 }, HTMLElement: Element, URLSearchParams, Event: class {}, MutationObserver: class { observe() {} }, localStorage: { getItem: k => storage.get(k) ?? null, setItem: (k, v) => storage.set(k, v), removeItem: k => storage.delete(k) }, setTimeout: () => 1, requestAnimationFrame: fn => fn(), console });
@@ -116,7 +122,17 @@ const entry = modules.get(resolve(root, 'boot.js'));
 await entry.link((specifier, parent) => modules.get(resolve(dirname(parent.identifier), specifier)));
 await entry.evaluate();
 assert.equal(el('main-screen').style.display, undefined, 'entry does not initialize before DOM ready');
-await document.emit('DOMContentLoaded');
+const startup = document.emit('DOMContentLoaded');
+if (scenario.delayedLibrary) {
+  for (let i = 0; i < 10 && !releaseLibrary; i++) await Promise.resolve();
+  assert.ok(releaseLibrary, 'library refresh starts in the background');
+  assert.equal(calls.some(c => c[0] === 'startupReady'), !!scenario.cached, 'cached library releases overlay before refresh');
+  assert.equal(calls.filter(c => c[0] === 'renderBooksList').length, scenario.cached ? 1 : 0);
+  assert.equal(calls.find(c => c[0] === 'syncPrefs')[1].renderBooks, false);
+  releaseLibrary();
+}
+await startup;
+if (scenario.delayedLibrary) assert.equal(calls.filter(c => c[0] === 'renderBooksList').length, scenario.cached ? 2 : 1);
 const screens = modules.get(resolve(root, 'boot/screens.js')).namespace;
 const bootState = modules.get(resolve(root, 'boot/state.js')).namespace.bootState;
 if (scenario.name !== 'integration') {

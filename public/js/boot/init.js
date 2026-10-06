@@ -19,6 +19,6 @@ export async function initApp() {
   initNodeBindings();
   initGraphBindings();
   initDialogBindings(openForumModal);
-  await initRouting();
   initVideoModal();
+  await initRouting();
 }

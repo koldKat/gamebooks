@@ -1,6 +1,6 @@
 // prefs.js - Server-side UI pref persistence and panel collapse helpers
 
-import { getToken, isDemoMode, apiFetch } from '../core/state.js';
+import { getToken, getUsername, isDemoMode, apiFetch } from '../core/state.js';
 import { setTrailCollapsed, setChoicesRecordedCount, CHOICES_PULSE_THRESHOLD } from '../play.js';
 import { setCoversPrefsState, _updateLandingBgDragUi } from '../covers.js';
 import { setExpandedPrefs, renderBooksList, getCachedBooks, getCachedAllSeries, getCachedStashes } from '../books.js';
@@ -16,10 +16,15 @@ let _feedScrollBeforeCollapse  = null;
 export function savePrefs(patch) {
   if (!getToken()) return;
   Object.assign(_localPrefOverrides, patch);
+  try {
+    const key = `ui_prefs_v1:${getUsername()}`;
+    const cached = JSON.parse(localStorage.getItem(key) || '{}');
+    localStorage.setItem(key, JSON.stringify({ ...cached, ...patch }));
+  } catch {}
   apiFetch('/api/prefs', { method: 'PATCH', body: JSON.stringify(patch) }).catch(() => {});
 }
 
-export function applyPrefs(p) {
+export function applyPrefs(p, { renderBooks = true } = {}) {
   setCoversPrefsState(p);
   setExpandedPrefs(p.bookExpanded, p.seriesExpanded, p.stashExpanded);
   const boolKeys = {
@@ -62,22 +67,36 @@ export function applyPrefs(p) {
       'choices-input--pulse', Number(p.choicesRecordedCount) < CHOICES_PULSE_THRESHOLD
     );
   }
-  if (getCachedBooks() && Array.isArray(getCachedBooks())) {
+  if (renderBooks && getCachedBooks() && Array.isArray(getCachedBooks())) {
     renderBooksList(getCachedBooks(), getCachedAllSeries(), getCachedStashes());
   }
   // Recalculate feed tile sizes after applying saved panel widths.
   if ('covers-collapsed' in p || 'right-collapsed' in p) _hooks.refreshDayCovers?.();
 }
 
-export async function syncPrefs() {
+// Restore account-specific layout before rendering a cached library.
+export function restoreCachedPrefs() {
   if (!getToken() || isDemoMode) return;
+  try {
+    const prefs = JSON.parse(localStorage.getItem(`ui_prefs_v1:${getUsername()}`) || 'null');
+    if (prefs && typeof prefs === 'object' && !Array.isArray(prefs)) applyPrefs(prefs, { renderBooks: false });
+  } catch {}
+}
+
+export async function syncPrefs(options) {
+  const sessionToken = getToken();
+  if (!sessionToken || isDemoMode) return;
+  const username = getUsername();
   try {
     const snapshotBefore = { ..._localPrefOverrides };
     const r = await apiFetch('/api/prefs');
     if (!r.ok) return;
     const serverPrefs = await r.json();
+    if (getToken() !== sessionToken) return;
     // Merge current overrides after the request, preserving preferences changed while it was in flight.
-    applyPrefs({ ...serverPrefs, ..._localPrefOverrides });
+    const prefs = { ...serverPrefs, ..._localPrefOverrides };
+    applyPrefs(prefs, options);
+    try { localStorage.setItem(`ui_prefs_v1:${username}`, JSON.stringify(prefs)); } catch {}
     for (const k of Object.keys(snapshotBefore)) {
       if (_localPrefOverrides[k] === snapshotBefore[k]) delete _localPrefOverrides[k];
     }
