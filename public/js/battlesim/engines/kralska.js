@@ -27,7 +27,7 @@ export function resolveRound(playerSila, enemySila) {
 
 // Factory: build a complete per-book simulator object. idPrefix/stateKey/i18nPrefix
 // and the starting Сила/Издръжливост are the only things that differ between books.
-export function createKralskaSim({ bookId, idPrefix, stateKey, i18nPrefix, startSila, startIzd }) {
+export function createKralskaSim({ bookId, idPrefix, stateKey, i18nPrefix, startSila, startIzd, preserveDeadPlayer = false }) {
   const ID = idPrefix;                 // e.g. 'sim481'
   const K  = i18nPrefix;               // e.g. 'battlesim481'
   const tk = (suffix, params) => t(`${K}.${suffix}`, params);
@@ -234,7 +234,7 @@ export function createKralskaSim({ bookId, idPrefix, stateKey, i18nPrefix, start
     d.enemy.izd = enemy.hp || 0;
     d.enemy.curIzd = d.enemy.izd;
     d.enemy.hasStats = enemy.attack != null && enemy.hp != null;
-    d.player.izd = d.player.izd > 0 ? d.player.izd : startIzd;
+    if (!preserveDeadPlayer) d.player.izd = d.player.izd > 0 ? d.player.izd : startIzd;
   }
 
   function _setupEnemyAutocomplete() {

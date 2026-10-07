@@ -1,5 +1,10 @@
 // English translations: simulator 468.
 export default {
+    'battlesim468.log.fear': 'Проверка срещу страха: {roll}, УМЕНИЕ {skill}.',
+    'battlesim468.log.breath': 'Леден дъх: {roll}; губиш {damage} ИЗДРЪЖЛИВОСТ.',
+    'battlesim468.ui.gold_ring': 'Златен пръстен (защита от дъха на Белия дракон)',
+    'battlesim468.ui.side_enemy': '{enemy}: ИЗДРЪЖЛИВОСТ {stamina}/{staminaMax}',
+    'battlesim468.ui.switch_target': 'Смени противника, когото нападаш',
     'battlesim468.status.not_ready':  'Хвърли начални точки за УМЕНИЕ, ИЗДРЪЖЛИВОСТ и КЪСМЕТ, за да започнеш.',
     'battlesim468.status.fallen':     '{skull} Ти падна в битката.',
     'battlesim468.status.victory':    '{trophy} Победа!',

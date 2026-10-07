@@ -9,6 +9,7 @@ const _sim = createKralskaSim({
   i18nPrefix: 'battlesim491',
   startSila: 5,
   startIzd: 20,
+  preserveDeadPlayer: true,
 });
 
 export const initSim491       = _sim.init;

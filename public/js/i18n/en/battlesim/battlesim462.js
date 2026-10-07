@@ -1,5 +1,14 @@
 // English translations: simulator 462.
 export default {
+    'battlesim462.ui.whip': 'Камшик на Огнения демон (§107)',
+    'battlesim462.ui.shield': 'Щит на император (§248)',
+    'battlesim462.ui.paralyze': 'Парализа след рани (0 = няма)',
+    'battlesim462.ui.paired': 'Битка с двама: нападаш единия, отбиваш другия',
+    'battlesim462.ui.side': 'Втори противник',
+    'battlesim462.btn.switch': 'Смени целта',
+    'battlesim462.log.shield': 'Щит: зар {roll}, щета {damage}.',
+    'battlesim462.log.whip': 'Камшик: зар {roll} (1–2: рана, 3–6: пропуск).',
+    'battlesim462.log.paralysed': 'Парализиран след {n} рани. Обърни на епизод 2.',
     'battlesim462.status.not_ready':  'Хвърли начални точки за УМЕНИЕ, ИЗДРЪЖЛИВОСТ и КЪСМЕТ, за да започнеш.',
     'battlesim462.status.fallen':     '{skull} Ти падна в битката.',
     'battlesim462.status.victory':    '{trophy} Победа!',

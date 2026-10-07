@@ -29,6 +29,9 @@ function _data() {
         enemyDefeatThreshold: 0,
       },
       enemy: { name: '', skill: 0, stamina: 0, staminaMax: 0 },
+      combatRulesVersion: 2,
+      encounter: { paired: false, breath: '', fear: false, goldRing: false },
+      sideEnemy: { name: '', skill: 0, stamina: 0, staminaMax: 0 },
       rolled: false,
       pendingLuckQueue: [],
       roundsThisBattle: 0,
@@ -70,6 +73,23 @@ function _resetEncounterKnobs(d) {
   d.player.playerWoundDamage = 2;
   d.player.enemyAutoWinFirstRound = false;
   d.player.enemyDefeatThreshold = 0;
+  d.combatRulesVersion = 2;
+  d.encounter = { paired: false, breath: '', fear: false, goldRing: d.encounter?.goldRing || false };
+  d.sideEnemy = { name: '', skill: 0, stamina: 0, staminaMax: 0 };
+  const section = Number(d.enemy.name.match(/§(\d+)\)?$/)?.[1]);
+  if ([37, 357].includes(section)) d.player.attackModifier = -2;
+  if ([188, 240, 332, 386].includes(section)) d.player.attackModifier = -3;
+  if (section === 17) d.player.enemyDefeatThreshold = 2;
+  if ([108, 143].includes(section)) d.encounter.breath = 'demon';
+  if (section === 223) d.encounter.breath = 'dragon';
+  d.encounter.fear = section === 185;
+  if ([13, 262, 296].includes(section)) {
+    const other = (_enemyList || []).find(enemy => enemy.name !== d.enemy.name && Number(enemy.name.match(/§(\d+)\)?$/)?.[1]) === section);
+    if (other) {
+      d.encounter.paired = true;
+      d.sideEnemy = { name: other.name, skill: other.attack, stamina: other.hp, staminaMax: other.hp };
+    }
+  }
 }
 
 // Keep lifetime outcomes: admin totals require the full history.
@@ -84,6 +104,12 @@ function _recordOutcome(d, outcome) {
 // ── Combat ───────────────────────────────────────────────────────────────────
 
 function _runRound() {
+  const d = _data();
+  if (d?.combatRulesVersion === 2) return _runSourceRound(d);
+  return _runLegacyRound();
+}
+
+function _runLegacyRound() {
   const d = _data();
   if (!d || _notReady(d) || d.player.stamina <= 0 || _enemyDefeated(d) || d.pendingLuckQueue.length) return;
   const isFirstRound = d.roundsThisBattle === 0;
@@ -129,8 +155,84 @@ function _runRound() {
   _renderAll();
 }
 
-// Test Your Luck after a hit lands: costs 1 LUCK regardless of outcome.
-// Same Lucky/Unlucky table as every other FF sim in this app.
+function _sideAlive(d) {
+  return d.encounter.paired && d.sideEnemy.staminaMax > 0 && d.sideEnemy.stamina > 0;
+}
+
+function _sourceFightOver(d) {
+  return _enemyDefeated(d) && !_sideAlive(d);
+}
+
+function _finishSourceRound(d) {
+  if (d.player.stamina <= 0) {
+    _appendLog(d, t('battlesim468.log.fallen', { skull: SVG_SKULL }));
+    _recordOutcome(d, 'loss');
+    d.pendingLuckQueue = [];
+  } else if (!d.pendingLuckQueue.length && _sourceFightOver(d)) {
+    _appendLog(d, t('battlesim468.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyNameSafe(d) }));
+    _recordOutcome(d, 'win');
+  } else if (!d.pendingLuckQueue.length && _enemyDefeated(d) && _sideAlive(d)) {
+    d.enemy.stamina = 0;
+    [d.enemy, d.sideEnemy] = [d.sideEnemy, d.enemy];
+    d.player.enemyDefeatThreshold = 0;
+  }
+}
+
+function _receiveSourceHit(d, source) {
+  const damage = Math.max(1, d.player.enemyWoundDamage || 2);
+  d.player.stamina = Math.max(0, d.player.stamina - damage);
+  _appendLog(d, t('battlesim468.log.enemy_wounds', { enemy: source, n: damage, stamina: d.player.stamina, staminaMax: d.player.staminaInitial }));
+  if (d.player.stamina > 0) d.pendingLuckQueue.push({ kind: 'enemy-hit', source });
+}
+
+function _runSourceRound(d) {
+  if (_notReady(d) || d.player.stamina <= 0 || _sourceFightOver(d) || d.enemy.staminaMax <= 0 || d.pendingLuckQueue.length) return;
+  let forced = d.roundsThisBattle++ === 0 && d.player.enemyAutoWinFirstRound;
+  if (d.encounter.fear) {
+    const roll = _roll2d6();
+    _appendLog(d, t('battlesim468.log.fear', { roll, skill: d.player.skill }));
+    forced ||= roll > d.player.skill;
+  }
+  const playerAS = forced ? 0 : _roll2d6() + d.player.skill + d.player.attackModifier;
+  const enemyAS = forced ? 1 : _roll2d6() + d.enemy.skill;
+  _appendLog(d, t('battlesim468.log.round', { round: d.roundsThisBattle, playerAS, enemy: _enemyNameSafe(d), enemyAS }));
+  if (playerAS > enemyAS) {
+    const damage = Math.max(1, d.player.playerWoundDamage || 2);
+    d.enemy.stamina = Math.max(0, d.enemy.stamina - damage);
+    _appendLog(d, t('battlesim468.log.you_wound', { enemy: _enemyNameSafe(d), n: damage, stamina: d.enemy.stamina, staminaMax: d.enemy.staminaMax }));
+    if (!_enemyDefeated(d)) d.pendingLuckQueue.push({ kind: 'player-hit' });
+  } else if (enemyAS > playerAS) _receiveSourceHit(d, _enemyNameSafe(d));
+  else _appendLog(d, t('battlesim468.log.both_avoided'));
+  if (_sideAlive(d) && d.player.stamina > 0) {
+    const playerSideAS = _roll2d6() + d.player.skill + d.player.attackModifier;
+    const sideAS = _roll2d6() + d.sideEnemy.skill;
+    const sideName = escapeHtml(d.sideEnemy.name);
+    _appendLog(d, t('battlesim468.log.round', { round: d.roundsThisBattle, playerAS: playerSideAS, enemy: sideName, enemyAS: sideAS }));
+    if (sideAS > playerSideAS) _receiveSourceHit(d, sideName);
+    else _appendLog(d, t('battlesim468.log.both_avoided'));
+  }
+  if (d.encounter.breath && d.player.stamina > 0) {
+    const roll = _roll1d6();
+    const demon = d.encounter.breath === 'demon';
+    const damage = roll <= (demon ? 3 : 2) && (demon || !d.encounter.goldRing) ? (demon ? 1 : 2) : 0;
+    d.player.stamina = Math.max(0, d.player.stamina - damage);
+    _appendLog(d, t('battlesim468.log.breath', { roll, damage }));
+  }
+  _finishSourceRound(d);
+  saveState();
+  _renderAll();
+}
+
+function _switchSourceTarget() {
+  const d = _data();
+  if (d?.combatRulesVersion !== 2 || !_sideAlive(d) || d.pendingLuckQueue.length || d.player.stamina <= 0) return;
+  [d.enemy, d.sideEnemy] = [d.sideEnemy, d.enemy];
+  d.player.enemyDefeatThreshold = 0;
+  saveState();
+  _renderAll();
+}
+
+// Luck modifies wounds, not the breath's fixed additional loss.
 function _testLuck() {
   const d = _data();
   if (!d || !d.pendingLuckQueue.length || d.player.luck <= 0) return;
@@ -139,7 +241,7 @@ function _testLuck() {
   const lucky = roll <= d.player.luck;
   d.player.luck = Math.max(0, d.player.luck - 1);
   if (event.kind === 'player-hit') {
-    const extra = Math.max(1, d.player.playerWoundDamage || 2);
+    const extra = d.combatRulesVersion === 2 ? 2 : Math.max(1, d.player.playerWoundDamage || 2);
     if (lucky) {
       d.enemy.stamina = Math.max(0, d.enemy.stamina - extra);
       _appendLog(d, t('battlesim468.log.luck_player_hit_lucky', { roll, enemy: _enemyNameSafe(d), stamina: d.enemy.stamina, staminaMax: d.enemy.staminaMax }));
@@ -147,9 +249,9 @@ function _testLuck() {
       d.enemy.stamina = Math.min(d.enemy.staminaMax, d.enemy.stamina + 1);
       _appendLog(d, t('battlesim468.log.luck_player_hit_unlucky', { roll, enemy: _enemyNameSafe(d), stamina: d.enemy.stamina, staminaMax: d.enemy.staminaMax }));
     }
-    if (_enemyDefeated(d)) { _appendLog(d, t('battlesim468.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyNameSafe(d) })); _recordOutcome(d, 'win'); }
+    if (d.combatRulesVersion !== 2 && _enemyDefeated(d)) { _appendLog(d, t('battlesim468.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyNameSafe(d) })); _recordOutcome(d, 'win'); }
   } else {
-    const source = _enemyNameSafe(d);
+    const source = event.source || _enemyNameSafe(d);
     if (lucky) {
       d.player.stamina = Math.min(d.player.staminaInitial, d.player.stamina + 1);
       _appendLog(d, t('battlesim468.log.luck_hit_lucky', { roll, source, stamina: d.player.stamina, staminaMax: d.player.staminaInitial }));
@@ -157,12 +259,13 @@ function _testLuck() {
       d.player.stamina = Math.max(0, d.player.stamina - 1);
       _appendLog(d, t('battlesim468.log.luck_hit_unlucky', { roll, source, stamina: d.player.stamina, staminaMax: d.player.staminaInitial }));
     }
-    if (d.player.stamina <= 0) {
+    if (d.combatRulesVersion !== 2 && d.player.stamina <= 0) {
       _appendLog(d, t('battlesim468.log.fallen', { skull: SVG_SKULL }));
       _recordOutcome(d, 'loss');
       d.pendingLuckQueue = [];
     }
   }
+  if (d.combatRulesVersion === 2) _finishSourceRound(d);
   saveState();
   _renderAll();
 }
@@ -171,6 +274,7 @@ function _skipLuck() {
   const d = _data();
   if (!d || !d.pendingLuckQueue.length) return;
   d.pendingLuckQueue.shift();
+  if (d.combatRulesVersion === 2) _finishSourceRound(d);
   saveState();
   _renderAll();
 }
@@ -179,6 +283,7 @@ function _resetBattle() {
   const d = _data();
   if (!d) return;
   d.enemy.stamina = d.enemy.staminaMax;
+  if (d.combatRulesVersion === 2) d.sideEnemy.stamina = d.sideEnemy.staminaMax;
   d.player.stamina = d.player.staminaInitial;
   d.roundsThisBattle = 0;
   d.pendingLuckQueue = [];
@@ -198,9 +303,9 @@ function _renderStatus() {
   const hasEnemy = d.enemy.staminaMax > 0;
   if (notReady)                                    el.innerHTML = t('battlesim468.status.not_ready');
   else if (d.player.stamina <= 0)                   el.innerHTML = t('battlesim468.status.fallen', { skull: SVG_SKULL });
-  else if (hasEnemy && _enemyDefeated(d))            el.innerHTML = t('battlesim468.status.victory', { trophy: SVG_TROPHY });
+  else if (hasEnemy && (d.combatRulesVersion === 2 ? _sourceFightOver(d) && !d.pendingLuckQueue.length : _enemyDefeated(d))) el.innerHTML = t('battlesim468.status.victory', { trophy: SVG_TROPHY });
   else                                               el.innerHTML = '';
-  const over = notReady || d.player.stamina <= 0 || (hasEnemy && _enemyDefeated(d));
+  const over = notReady || d.player.stamina <= 0 || !hasEnemy || (d.combatRulesVersion === 2 ? _sourceFightOver(d) : _enemyDefeated(d));
   document.getElementById('sim468-round').disabled = over || !!d.pendingLuckQueue.length;
   document.getElementById('sim468-luck-yes').disabled = notReady || !d.pendingLuckQueue.length || d.player.luck <= 0;
   document.getElementById('sim468-luck-no').disabled  = notReady || !d.pendingLuckQueue.length;
@@ -258,6 +363,15 @@ function _renderInputs() {
   document.getElementById('sim468-player-wounddmg').value  = d.player.playerWoundDamage;
   document.getElementById('sim468-enemy-threshold').value  = d.player.enemyDefeatThreshold;
   document.getElementById('sim468-enemy-firstwin').checked = d.player.enemyAutoWinFirstRound;
+  const sourceRules = d.combatRulesVersion === 2;
+  document.getElementById('sim468-source-controls').hidden = !sourceRules;
+  document.getElementById('sim468-gold-ring').checked = sourceRules && d.encounter.goldRing;
+  document.getElementById('sim468-gold-ring').disabled = !!d.pendingLuckQueue.length || d.player.stamina <= 0;
+  const side = document.getElementById('sim468-side-enemy');
+  side.hidden = !sourceRules || !d.encounter.paired;
+  side.textContent = sourceRules && d.encounter.paired ? t('battlesim468.ui.side_enemy', { enemy: d.sideEnemy.name, stamina: d.sideEnemy.stamina, staminaMax: d.sideEnemy.staminaMax }) : '';
+  document.getElementById('sim468-switch-target').hidden = !sourceRules || !_sideAlive(d);
+  document.getElementById('sim468-switch-target').disabled = !!d.pendingLuckQueue.length || d.player.stamina <= 0;
 
   const pendingEl = document.getElementById('sim468-luck-prompt');
   pendingEl.style.display = d.pendingLuckQueue.length ? '' : 'none';
@@ -426,6 +540,13 @@ export function initSim468() {
             <div class="inv-edit-row">
               <label class="inv-edit-check-label"><input type="checkbox" id="sim468-enemy-firstwin" class="inv-edit-check"> ${t('battlesim468.ui.enemy_firstwin_toggle')}</label>
             </div>
+            <div id="sim468-source-controls" hidden>
+              <div class="inv-edit-row">
+                <label class="inv-edit-check-label"><input type="checkbox" id="sim468-gold-ring" class="inv-edit-check"> ${t('battlesim468.ui.gold_ring')}</label>
+              </div>
+              <div id="sim468-side-enemy" class="bsim-status" hidden></div>
+              <button id="sim468-switch-target" class="inv-edit-done" type="button" hidden>${t('battlesim468.ui.switch_target')}</button>
+            </div>
           </div>
           <div id="sim468-status" class="bsim-status"></div>
           <div id="sim468-luck-prompt" class="inv-edit-row bsim-heal-row" style="display:none">
@@ -475,6 +596,13 @@ export function initSim468() {
   document.getElementById('sim468-reset').addEventListener('click', _resetBattle);
   document.getElementById('sim468-luck-yes').addEventListener('click', _testLuck);
   document.getElementById('sim468-luck-no').addEventListener('click', _skipLuck);
+  document.getElementById('sim468-switch-target').addEventListener('click', _switchSourceTarget);
+  document.getElementById('sim468-gold-ring').addEventListener('change', e => {
+    const d = _data();
+    if (d?.combatRulesVersion !== 2 || d.pendingLuckQueue.length || d.player.stamina <= 0) return;
+    d.encounter.goldRing = e.target.checked;
+    saveState();
+  });
 
   document.getElementById('sim468-roll').addEventListener('click', () => {
     const d = _data();

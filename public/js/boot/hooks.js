@@ -108,6 +108,7 @@ export function initFeatureHooks() {
     starLabelHtml:       _starLabelHtml,
     flashRatingGate:     _flashRatingGate,
     showBooks,
+    showLogin,
     getIsAdmin:          () => bootState._isAdmin,
     refreshBooksListOnly: _refreshBooksListOnly,
     openEditBookModal,

@@ -86,7 +86,10 @@ export function renderCoverActivity(bookId, bookName, entries, userRating, bookM
     headerHtml += `<button class="add-to-library-btn open-owned-book-btn" data-book-id="${bookId}">${t('covers.open_book')}</button>`;
   }
   if (bookMeta?.isPublic && userLoggedIn && !userOwnsBook) {
-    headerHtml += `<button class="add-to-library-btn" data-book-id="${bookId}">${t('covers.add_to_library')}</button>`;
+    headerHtml += `<button class="add-to-library-btn add-public-book-btn" data-book-id="${bookId}">${t('covers.add_to_library')}</button>`;
+  }
+  if (bookMeta?.isPublic && !userLoggedIn) {
+    headerHtml += `<button class="add-to-library-btn login-to-add-book-btn">${t('covers.login_to_add_book')}</button>`;
   }
   if (coversState._hooks.getIsAdmin?.()) {
     headerHtml += `<button class="add-to-library-btn catalog-admin-edit-btn" data-book-id="${bookId}" style="color:#f5a623;border-color:#92400e">✎ Admin Edit</button>`;
@@ -150,7 +153,16 @@ export function renderCoverActivity(bookId, bookName, entries, userRating, bookM
     });
   });
 
-  const addBtn = body.querySelector('.add-to-library-btn:not(.open-owned-book-btn):not(.catalog-admin-edit-btn)');
+  const loginBtn = body.querySelector('.login-to-add-book-btn');
+  if (loginBtn) {
+    loginBtn.addEventListener('click', () => {
+      closePublicModal();
+      document.body.classList.remove('mobile-addbook-open', 'mobile-books-open');
+      coversState._hooks.showLogin?.();
+    });
+  }
+
+  const addBtn = body.querySelector('.add-public-book-btn');
   if (addBtn) {
     addBtn.addEventListener('click', async () => {
       addBtn.disabled = true;

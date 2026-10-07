@@ -599,6 +599,8 @@ The **Make public** checkbox (creator only) makes the book findable by other use
 - Everyone tracking the book sees your changes immediately
 - If you delete it while others are tracking it, ownership passes to the next user
 
+When you open a public book, signed-in players see **+ Add to my library**, or **Open Book** if they already have it. On mobile, **Open Book** opens the mobile reader. Signed-out visitors see **Log in or sign up to add book**, which opens the login screen with the registration option.
+
 ### Series
 
 Create a series with **Create Series**. Add a book to a series via the **Series** dropdown in the Edit Book dialog. Books in the same series group together under a collapsible amber header. Suggestions include public series and your own series. A private series belonging only to another account stays hidden; you can create a separate series with the same name.

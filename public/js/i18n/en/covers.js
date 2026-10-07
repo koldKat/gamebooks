@@ -9,6 +9,7 @@ export default {
     'covers.loading':      'Loading…',
     'covers.series_label': '(Series)',
     'covers.add_to_library': '+ Add to my library',
+    'covers.login_to_add_book': 'Log in or sign up to add book',
     'covers.added_to_library': '✓ Added to library',
     'covers.failed': 'Failed',
     'covers.expand_anthology': 'Expand anthology',

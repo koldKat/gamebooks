@@ -1,5 +1,14 @@
 // English translations: simulator 464.
 export default {
+    'battlesim464.ui.shield': 'Щитът със златния полумесец (§155)',
+    'battlesim464.ui.silver': 'Сребърно оръжие срещу Люда',
+    'battlesim464.ui.fire': 'Огнен дъх',
+    'battlesim464.btn.switch_target': 'Смени противника',
+    'battlesim464.log.protection': 'Защита: зар {roll}, загуба {damage} ИЗДРЪЖЛИВОСТ.',
+    'battlesim464.log.fire': 'Огнен дъх: зар {roll}.',
+    'battlesim464.log.paralysed': 'Четири рани: Караконджулът те парализира.',
+    'battlesim464.log.skill_loss': 'Три рани от Люда: губиш 1 УМЕНИЕ.',
+    'battlesim464.log.immune': 'Обикновеното оръжие не наранява Люда.',
     'battlesim464.status.not_ready':  'Хвърли начални точки за УМЕНИЕ, ИЗДРЪЖЛИВОСТ и КЪСМЕТ, за да започнеш.',
     'battlesim464.status.fallen':     '{skull} Ти падна в битката.',
     'battlesim464.status.victory':    '{trophy} Победа!',
