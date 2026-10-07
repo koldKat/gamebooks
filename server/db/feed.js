@@ -1067,10 +1067,9 @@ function getPublicBookMeta(bookId) {
             b.isbn, b.issn, b.asin, b.pages, b.is_container,
             p.id AS parentId, p.name AS parentName, p.cover_path AS parentCoverPath
      FROM books b
-     LEFT JOIN books p ON p.id = b.parent_book_id
+     LEFT JOIN books p ON p.id = b.parent_book_id AND p.is_public = 1 AND p.is_demo = 0
      WHERE b.id = ? AND b.is_demo = 0
-       AND (b.is_public = 1
-            OR EXISTS (SELECT 1 FROM books pp WHERE pp.id = b.parent_book_id AND pp.is_public = 1))`
+       AND b.is_public = 1`
   ).get(bookId);
   if (!row) return null;
   const result = {
@@ -1089,11 +1088,11 @@ function getPublicBookMeta(bookId) {
     parentName:    row.parentName || null,
   };
   if (result.isContainer) {
-    const primaryChildren = db.prepare('SELECT id, name, total_sections, book_order FROM books WHERE parent_book_id = ? AND is_demo = 0').all(bookId);
+    const primaryChildren = db.prepare('SELECT id, name, total_sections, book_order FROM books WHERE parent_book_id = ? AND is_demo = 0 AND is_public = 1').all(bookId);
     const primaryChildIds = new Set(primaryChildren.map(c => c.id));
     result.children = [
       ...primaryChildren,
-      ...getAnthologyExtraMembers(bookId).filter(c => !primaryChildIds.has(c.id)),
+      ...getAnthologyExtraMembers(bookId, true).filter(c => !primaryChildIds.has(c.id)),
     ].sort((a, b) => {
       const aOrder = a.book_order;
       const bOrder = b.book_order;
@@ -1112,7 +1111,7 @@ function getAllPublicBooks(hasPdfAccess = false) {
     `SELECT b.id, b.name, b.cover_path, b.created_at, b.published_at, b.authors,
             b.is_container, b.total_sections, b.description, b.has_battle_sim, b.has_live_reading,
             b.isbn, b.issn, b.asin, b.pages, b.pdf_path, b.epub_path,
-            b.series_id, b.series_number, s.name AS series_name,
+            s.id AS series_id, CASE WHEN s.id IS NOT NULL THEN b.series_number END AS series_number, s.name AS series_name,
             GROUP_CONCAT(c.name, '|||') AS child_names,
             GROUP_CONCAT(c.id) AS child_ids,
             COALESCE(SUM(c.total_sections), 0) AS children_total_sections,
@@ -1120,15 +1119,12 @@ function getAllPublicBooks(hasPdfAccess = false) {
             COALESCE(MAX(c.has_live_reading), 0) AS child_has_live_reading,
             COUNT(DISTINCT ub.user_id) AS library_count
      FROM books b
-     LEFT JOIN books c ON c.parent_book_id = b.id AND c.is_demo = 0
-     LEFT JOIN series s ON s.id = b.series_id
+     LEFT JOIN books c ON c.parent_book_id = b.id AND c.is_demo = 0 AND c.is_public = 1
+     LEFT JOIN series s ON s.id = b.series_id AND s.is_public = 1
      LEFT JOIN user_books ub ON ub.book_id = b.id
      WHERE b.is_demo = 0
        AND (b.parent_book_id IS NULL OR b.parent_book_id = 0)
-       AND (
-         b.is_public = 1
-         OR EXISTS (SELECT 1 FROM books ch WHERE ch.parent_book_id = b.id AND ch.is_public = 1)
-       )
+       AND b.is_public = 1
      GROUP BY b.id`
   ).all();
   return rows.map(r => ({
@@ -1179,13 +1175,13 @@ function getAllPublicSeries() {
            COUNT(DISTINCT b.id) AS book_count,
            COALESCE(SUM(
              CASE WHEN b.is_container = 1
-               THEN (SELECT COALESCE(SUM(c.total_sections), 0) FROM books c WHERE c.parent_book_id = b.id AND c.is_demo = 0)
+               THEN (SELECT COALESCE(SUM(c.total_sections), 0) FROM books c WHERE c.parent_book_id = b.id AND c.is_demo = 0 AND c.is_public = 1)
                ELSE b.total_sections
              END
            ), 0) AS total_sections,
            COUNT(DISTINCT us.user_id) AS library_count
     FROM series s
-    LEFT JOIN books b ON b.series_id = s.id AND b.is_demo = 0
+    LEFT JOIN books b ON b.series_id = s.id AND b.is_demo = 0 AND b.is_public = 1
     LEFT JOIN user_series us ON us.series_id = s.id
     WHERE s.is_public = 1
     GROUP BY s.id
@@ -1204,7 +1200,7 @@ function getAllPublicAnthologies() {
     SELECT b.id, b.name, b.cover_path, b.authors, b.description,
            COUNT(c.id) AS child_count
     FROM books b
-    LEFT JOIN books c ON c.parent_book_id = b.id AND c.is_demo = 0
+    LEFT JOIN books c ON c.parent_book_id = b.id AND c.is_demo = 0 AND c.is_public = 1
     WHERE b.is_container = 1 AND b.is_public = 1 AND b.is_demo = 0
     GROUP BY b.id
   `).all().map(r => ({
@@ -1217,7 +1213,14 @@ function getAllPublicAnthologies() {
 }
 
 
-function getBookActivity(bookId) {
+function getBookActivity(bookId, userId = null) {
+  const visible = db.prepare(`
+    SELECT 1 FROM books b WHERE b.id = ? AND b.is_demo = 0
+      AND (b.is_public = 1 OR b.created_by = ? OR EXISTS (
+        SELECT 1 FROM user_books ub WHERE ub.book_id = b.id AND ub.user_id = ?
+      ))
+  `).get(bookId, userId, userId);
+  if (!visible) return null;
   const book = db.prepare(
     `SELECT b.id, b.name, b.total_sections, b.isbn, b.issn, b.asin, b.cover_path,
             b.pages, b.authors, b.description, b.is_public, b.is_container, b.book_order,
@@ -1227,12 +1230,12 @@ function getBookActivity(bookId) {
             COALESCE(s.id,  ps.id)   AS seriesId,
             COALESCE(s.name, ps.name) AS seriesName,
             s.id AS ownSeriesId, s.name AS ownSeriesName, b.series_number AS ownSeriesNumber,
-            (SELECT MAX(c.has_battle_sim) FROM books c WHERE c.parent_book_id = b.id AND c.is_demo = 0) AS child_has_battle_sim,
-            (SELECT MAX(c.has_live_reading) FROM books c WHERE c.parent_book_id = b.id AND c.is_demo = 0) AS child_has_live_reading
+            (SELECT MAX(c.has_battle_sim) FROM books c WHERE c.parent_book_id = b.id AND c.is_demo = 0 AND c.is_public = 1) AS child_has_battle_sim,
+            (SELECT MAX(c.has_live_reading) FROM books c WHERE c.parent_book_id = b.id AND c.is_demo = 0 AND c.is_public = 1) AS child_has_live_reading
      FROM books b
-     LEFT JOIN books p   ON p.id  = b.parent_book_id
-     LEFT JOIN series s  ON s.id  = b.series_id
-     LEFT JOIN series ps ON ps.id = p.series_id
+     LEFT JOIN books p   ON p.id  = b.parent_book_id AND p.is_public = 1 AND p.is_demo = 0
+     LEFT JOIN series s  ON s.id  = b.series_id AND s.is_public = 1
+     LEFT JOIN series ps ON ps.id = p.series_id AND ps.is_public = 1
      WHERE b.id = ?`
   ).get(bookId);
   if (!book) return null;
@@ -1245,8 +1248,8 @@ function getBookActivity(bookId) {
          FROM user_books ub
          JOIN books b ON b.id = ub.book_id
          JOIN users u ON u.id = ub.user_id
-         WHERE b.isbn = ?`
-      ).all(book.isbn)
+         WHERE b.isbn = ? AND b.is_demo = 0 AND (b.is_public = 1 OR b.id = ?)`
+      ).all(book.isbn, bookId)
     : book.issn
     ? db.prepare(
         `SELECT ub.state_data, ub.book_id AS id, b.name,
@@ -1254,8 +1257,8 @@ function getBookActivity(bookId) {
          FROM user_books ub
          JOIN books b ON b.id = ub.book_id
          JOIN users u ON u.id = ub.user_id
-         WHERE b.issn = ?`
-      ).all(book.issn)
+         WHERE b.issn = ? AND b.is_demo = 0 AND (b.is_public = 1 OR b.id = ?)`
+      ).all(book.issn, bookId)
     : db.prepare(
         `SELECT ub.state_data, ub.book_id AS id, b.name,
                 u.id AS userId, u.username, u.avatar_path, u.public_profile
@@ -1298,9 +1301,9 @@ function getBookActivity(bookId) {
   const isContainer = book.is_container === 1;
   const children = isContainer
     ? (() => {
-        const primary = db.prepare('SELECT id, name, total_sections, book_order FROM books WHERE parent_book_id = ? AND is_demo = 0').all(bookId);
+        const primary = db.prepare('SELECT id, name, total_sections, book_order FROM books WHERE parent_book_id = ? AND is_demo = 0 AND is_public = 1').all(bookId);
         const primaryIds = new Set(primary.map(c => c.id));
-        return [...primary, ...getAnthologyExtraMembers(bookId).filter(c => !primaryIds.has(c.id))]
+        return [...primary, ...getAnthologyExtraMembers(bookId, true).filter(c => !primaryIds.has(c.id))]
           .sort((a, b) => (a.book_order == null) - (b.book_order == null) || (a.book_order ?? 0) - (b.book_order ?? 0) || a.name.localeCompare(b.name));
       })()
     : [];
@@ -1326,7 +1329,7 @@ function getBookActivity(bookId) {
       secondaryAnthologies: db.prepare(
         `SELECT a.id, a.name FROM book_anthology_memberships m
          JOIN books a ON a.id = m.anthology_id
-         WHERE m.book_id = ?
+         WHERE m.book_id = ? AND a.is_public = 1 AND a.is_demo = 0
          ORDER BY a.name`
       ).all(bookId),
       bookOrder:     book.book_order  ?? null,

@@ -213,7 +213,7 @@ async function handleAddSeriesToLibrary(req, res, seriesId, query) {
   const userId = await authenticate(req, res);
   if (userId === null) return;
   const series = db.getSeriesById(seriesId);
-  if (!series) return send(res, 404, { error: 'not found' });
+  if (!series || !series.is_public) return send(res, 404, { error: 'not found' });
   db.addSeriesToLibrary(userId, seriesId);
   // XP for the series creator
   if (series.created_by && series.created_by !== userId)
@@ -374,10 +374,21 @@ async function handleUpdateBook(req, res, bookId) {
     }
   }
   const isAdmin = fromLocalhost || !!db.isUserAdmin(userId);
+  // Reject metadata edits before resolving names, which may create a new series.
+  if (!db.getBookById(bookId)) return send(res, 404, { error: 'Not found' });
+  if (!isAdmin) {
+    const creatorId = db.getBookCreator(bookId);
+    if ((creatorId !== null && creatorId !== userId) || !db.getBookState(userId, bookId))
+      return send(res, 404, { error: 'Not found' });
+  }
   const old = db.getBookIdentifiers(isAdmin ? null : userId, bookId);
   const cur = db.getBookContainerFields(bookId);
+  const currentSeries = cur?.series_id ? db.getSeriesById(cur.series_id) : null;
+  // Preserve an unchanged association, including an admin editing another owner's private series.
   const seriesId = series_name !== undefined
-    ? (series_name ? db.getOrCreateSeries(series_name, userId) : null)
+    ? (series_name
+      ? (currentSeries?.name === series_name.trim() ? currentSeries.id : db.getOrCreateSeries(series_name, userId))
+      : null)
     : (cur?.series_id ?? null);
   const resolvedSeriesNumber  = series_number  !== undefined ? (series_number  || null) : (cur?.series_number  ?? null);
   const resolvedIsContainer   = is_container   !== undefined ? !!is_container            : !!(cur?.is_container);

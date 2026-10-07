@@ -90,7 +90,7 @@ export function _bookItemHtml(b, isChild, containerExpanded, childCount, aggrSta
   const effectiveSections = b.is_container ? (aggrStats?.totalSections || 0) : (b.discoverable_sections ?? b.total_sections);
   const effectiveVisited  = b.is_container ? (aggrStats?.visited || 0)        : b.visited;
   const pct         = effectiveSections > 0
-    ? (effectiveVisited >= effectiveSections ? 100 : Math.min(99, Math.floor((effectiveVisited / effectiveSections) * 100)))
+    ? Math.max(0, Math.min(100, (effectiveVisited / effectiveSections) * 100))
     : 0;
   const fullyVisited = effectiveSections > 0 && effectiveVisited >= effectiveSections;
   const barColor    = fullyVisited ? 'rgba(34,197,94,0.25)' : 'rgba(107,114,128,0.28)';

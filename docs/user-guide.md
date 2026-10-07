@@ -122,7 +122,7 @@ After logging in you land on the **Books** screen.
 
 New accounts include a **Demo Book** - a fully mapped 50-section example with completed playthroughs, notes, and priorities. Delete it any time.
 
-Each book card shows a progress bar for sections you've visited across all playthroughs. The bar turns green once you've visited every section.
+Each book card shows a progress bar for sections you've visited across all playthroughs. The fill shows fractional progress, so small gains can move it between whole percentage points. The bar turns green once you've visited every section.
 
 | Button | What it does |
 |--------|-------------|
@@ -134,7 +134,7 @@ If an admin shared a book with you, **✎** is visible but greyed out - only the
 
 ### Creating books
 
-Click **Create Book** at the top of the books screen. As you type the name, a dropdown suggests books already in the system - selecting one fills in all the details automatically and changes the button to **Add to library**.
+Click **Create Book** at the top of the books screen. As you type the name, a dropdown suggests public books and books already in your library - selecting a public book fills in its details and changes the button to **Add to library**. A book already in your library shows **Already owned** instead.
 
 - **Sections** - total number of sections (minimum 5)
 - **Type** - Book (ISBN + ASIN) or Magazine (ISSN)
@@ -517,6 +517,8 @@ Rewards appear as floating notices at the bottom-right of the screen:
 
 Every level you gain adds a permanent **+0.1% XP boost** to all future XP. Shop purchases stack on top.
 
+XP and average-level bar fills show fractional progress; the number labels keep their usual readable formatting.
+
 Your XP bar also shows your **heartbeat XP rate** (the passive XP you earn just for having the tracker open) in aqua on the right of the level row - e.g. **+6.7 heartbeat XP/min**. If you've bought XP boosts in the shop, the boost percentage shows in aqua too, with the total bonus XP shown beside it.
 
 ---
@@ -599,7 +601,7 @@ The **Make public** checkbox (creator only) makes the book findable by other use
 
 ### Series
 
-Create a series with **Create Series**. Add a book to a series via the **Series** dropdown in the Edit Book dialog. Books in the same series group together under a collapsible amber header.
+Create a series with **Create Series**. Add a book to a series via the **Series** dropdown in the Edit Book dialog. Books in the same series group together under a collapsible amber header. Suggestions include public series and your own series. A private series belonging only to another account stays hidden; you can create a separate series with the same name.
 
 - Only the creator can edit a series; other users can add a public series to their own library
 - The creator earns **150 XP** each time another user adds their series
@@ -623,6 +625,8 @@ An anthology is a physical book containing several separate adventures - each tr
 
 1. Create the anthology first.
 2. Click **✎** on each book → set **Part of anthology** → Save.
+
+Private anthologies stay hidden from other users, even when one of their stories is public. Public anthology previews show only public stories.
 
 **Adding someone else's anthology:** click **+ Add to my library** on any public anthology to add it and all its public stories in one step.
 

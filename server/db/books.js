@@ -318,19 +318,19 @@ function _pruneRedundantAnthologyMembership(bookId, parentBookId) {
 
 // A single anthology's secondary members only (not its parent_book_id
 // children) - callers combine this with their own primary-children query.
-function getAnthologyExtraMembers(anthologyId) {
+function getAnthologyExtraMembers(anthologyId, publicOnly = false) {
   return db.prepare(
     `SELECT b.id, b.name, b.total_sections, m.book_order FROM book_anthology_memberships m
      JOIN books b ON b.id = m.book_id
-     WHERE m.anthology_id = ? AND b.is_demo = 0`
-  ).all(anthologyId);
+     WHERE m.anthology_id = ? AND b.is_demo = 0 AND (? = 0 OR b.is_public = 1)`
+  ).all(anthologyId, publicOnly ? 1 : 0);
 }
 
 function getOrCreateSeries(name, userId, addToLibrary = false) {
   if (!name || !name.trim()) return null;
   const trimmed = name.trim();
   const folded = _foldForSearch(trimmed);
-  const existing = db.prepare('SELECT id, name FROM series').all()
+  const existing = getSeriesAutocomplete(userId)
     .find(row => _foldForSearch(row.name) === folded);
   if (existing) {
     if (userId && addToLibrary) db.prepare('INSERT OR IGNORE INTO user_series (user_id, series_id) VALUES (?, ?)').run(userId, existing.id);
@@ -339,6 +339,20 @@ function getOrCreateSeries(name, userId, addToLibrary = false) {
   const id = db.prepare('INSERT INTO series (name, created_by) VALUES (?, ?)').run(trimmed, userId).lastInsertRowid;
   if (userId) db.prepare('INSERT OR IGNORE INTO user_series (user_id, series_id) VALUES (?, ?)').run(userId, id);
   return id;
+}
+
+// Public series plus private series already belonging to this account.
+function getSeriesAutocomplete(userId = null) {
+  return db.prepare(`
+    SELECT s.id, s.name, s.description, s.is_public, s.is_open_world,
+           u.username AS created_by_username
+    FROM series s LEFT JOIN users u ON u.id = s.created_by
+    WHERE s.is_public = 1 OR s.created_by = ?
+      OR EXISTS (SELECT 1 FROM user_series us WHERE us.series_id = s.id AND us.user_id = ?)
+    ORDER BY CASE WHEN s.created_by = ? OR EXISTS (
+      SELECT 1 FROM user_series us WHERE us.series_id = s.id AND us.user_id = ?
+    ) THEN 0 ELSE 1 END, s.id
+  `).all(userId, userId, userId, userId).map(row => ({ ...row, is_open_world: !!row.is_open_world }));
 }
 
 function getAllSeries(userId) {
@@ -657,13 +671,10 @@ function createSeries(name, description, userId, isPublic = false) {
   const trimmed = (name || '').trim();
   if (!trimmed) return null;
   const folded = _foldForSearch(trimmed);
-  const existing = db.prepare(`
-    SELECT s.id, s.name, u.username AS created_by_username
-    FROM series s LEFT JOIN users u ON u.id = s.created_by
-  `).all().find(row => _foldForSearch(row.name) === folded);
+  const existing = getSeriesAutocomplete(userId).find(row => _foldForSearch(row.name) === folded);
   if (existing) {
     if (description?.trim()) {
-      db.prepare('UPDATE series SET description = ? WHERE id = ? AND (description IS NULL OR description = \'\')').run(description.trim(), existing.id);
+      db.prepare('UPDATE series SET description = ? WHERE id = ? AND created_by = ? AND (description IS NULL OR description = \'\')').run(description.trim(), existing.id, userId);
     }
     if (userId) db.prepare('INSERT OR IGNORE INTO user_series (user_id, series_id) VALUES (?, ?)').run(userId, existing.id);
     return { id: existing.id, name: existing.name, existed: true, createdByUsername: existing.created_by_username || null };
@@ -683,12 +694,12 @@ function getPublicSeriesInfo(seriesId, hasPdfAccess = false) {
   const books = db.prepare(
     `SELECT b.id, b.name, b.total_sections, b.cover_path, b.is_container, b.series_number,
             b.isbn, b.issn, b.pages, b.authors, b.has_battle_sim, b.has_live_reading, b.pdf_path, b.epub_path,
-            (SELECT COUNT(*) FROM books c WHERE c.parent_book_id = b.id AND c.is_demo = 0) AS child_count,
-            (SELECT MAX(c.has_battle_sim) FROM books c WHERE c.parent_book_id = b.id AND c.is_demo = 0) AS child_has_battle_sim
+            (SELECT COUNT(*) FROM books c WHERE c.parent_book_id = b.id AND c.is_demo = 0 AND c.is_public = 1) AS child_count,
+            (SELECT MAX(c.has_battle_sim) FROM books c WHERE c.parent_book_id = b.id AND c.is_demo = 0 AND c.is_public = 1) AS child_has_battle_sim
      FROM books b
      WHERE b.series_id = ? AND b.is_demo = 0
        AND (b.parent_book_id IS NULL OR b.parent_book_id = 0)
-       AND (b.is_public = 1 OR b.is_container = 1)
+       AND b.is_public = 1
      ORDER BY CASE WHEN b.series_number IS NULL OR b.series_number = '' THEN 1 ELSE 0 END,
               CAST(b.series_number AS REAL),
               b.series_number`
@@ -1202,7 +1213,7 @@ module.exports = {
   getBooks, getStashes, createStash, updateStash, deleteStash,
   setBookBgPref, getBookBgPref, awardPdfXp, setBookPdf, removeBookCover, removeBookPdf, setBookCover,
   awardEpubXp, setBookEpub, removeBookEpub,
-  getBookContainerFields, getOrCreateSeries, getAllSeries, getBookEnemies, addSeriesToLibrary,
+  getBookContainerFields, getOrCreateSeries, getAllSeries, getSeriesAutocomplete, getBookEnemies, addSeriesToLibrary,
   addAnthologyMember, removeAnthologyMember, getAnthologyExtraMembers,
   _pruneRedundantAnthologyMembership,
   getBookSection, _canLiveRead,

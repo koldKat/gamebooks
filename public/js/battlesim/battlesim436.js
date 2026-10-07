@@ -1,7 +1,4 @@
-// Battle Simulator (Джунглата на ужасите / The Jungle of Horrors, Bulgarian edition of Lone Wolf
-// book 8, id 436)
-// Combat Ratio is fixed on enemy selection; a 0-9 pick selects simultaneous table losses.
-// 'K' means instant death. Skill bonuses and narrative effects are entered manually.
+// Jungle of Horrors: encounter rules are captured only for newly started fights.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -57,6 +54,8 @@ function _data() {
       attackModifier: 0,
       hasHealingPotion: true, healingPotionUsed: false,
       rolled: false,
+      printedRules: 1,
+      combatEffects: {},
       ratio: 0,
       enemy: { name: '', skill: 0, endurance: 0, enduranceMax: 0 },
       roundsThisBattle: 0,
@@ -95,22 +94,125 @@ function _recordOutcome(d, outcome) {
   d.history.push({ enemy: _enemyName(d), outcome, ts: Date.now() });
 }
 
-function _effectiveSkill(d) { return d.combatSkill + (d.attackModifier || 0); }
+function _captureFightEffects(d) {
+  d.printedRules = 1;
+  const section = Number(d.enemy.name.match(/§(\d+)/)?.[1]) || 0;
+  d.combatEffects = {
+    captured: true, section, initialEnemy: { ...d.enemy },
+    psychic: d.nextPsychic || 'none',
+    tracking: !!d.nextTracking, animal: !!d.nextAnimal,
+    shield: !!d.nextShield, spirit: !!d.nextSpirit,
+    curing: !!d.nextCuring, nexus: !!d.nextNexus,
+    primate: !!d.nextPrimate, tutelary: !!d.nextTutelary,
+    secondVordak: [13,287].includes(section) && /1\s*§/.test(d.enemy.name),
+  };
+  d.ratio = _effectiveSkill(d) - d.enemy.skill;
+}
 
-function _runRound() {
+function _psychic(d) {
+  const e = d.combatEffects;
+  if (!e?.captured || [74,159,199,339].includes(e.section)) return 'none';
+  if (e.psychic === 'blast' && ![8,13,30,47,101,110,169,183,257,287,308,323,333].includes(e.section)) return 'blast';
+  if (e.psychic === 'surge' && d.endurance > 6) return 'surge';
+  return 'none';
+}
+
+function _effectiveSkill(d) {
+  let skill = d.combatSkill + (d.attackModifier || 0);
+  const e = d.combatEffects;
+  if (!e?.captured) return skill;
+  if (e.section === 74) return 15;
+  const psychic = _psychic(d);
+  skill += (psychic === 'surge' ? 4 : psychic === 'blast' ? 2 : 0) * (e.section === 52 ? 3 : 1);
+  if ([8,101].includes(e.section) && !e.animal) skill -= 3;
+  if ([13,169,287,333].includes(e.section) && !e.shield) skill -= 2;
+  if ([30,47,183,308].includes(e.section) && e.spirit) skill += 2;
+  if (e.section === 41) skill += 5;
+  if ([88,106,162].includes(e.section) && e.animal) skill += 2;
+  if (e.section === 169 || [252,323].includes(e.section) && d.roundsThisBattle < 2) skill -= e.tutelary ? 2 : 4;
+  if (e.section === 298 && d.roundsThisBattle < 2 && !e.tracking) skill -= 3;
+  if (e.section === 313 && !e.tracking) skill -= 4;
+  if (e.section === 339 && !(e.nexus && e.primate)) skill -= 8;
+  return skill;
+}
+
+function _battleOver(d) {
+  return !d.rolled || d.endurance <= 0 || d.enemy.endurance <= 0 || !!d.combatEffects?.finished;
+}
+
+function _setRoute(d, section) {
+  d.combatEffects.finished = true;
+  d.combatEffects.route = section;
+  _appendLog(d, t('battlesim436.log.continue', { section }));
+}
+
+function _escapeRoute(d) {
+  const e = d.combatEffects;
+  if (!e?.captured || d.roundsThisBattle < 3) return 0;
+  if ([38,205,346].includes(e.section)) return 309;
+  if ([110,323].includes(e.section)) return 191;
+  if (e.section === 339) return 48;
+  return 0;
+}
+
+function _escape() {
   const d = _data();
-  if (!d || !d.rolled || d.endurance <= 0 || d.enemy.endurance <= 0) return;
+  if (!d || _battleOver(d)) return;
+  const route = _escapeRoute(d);
+  if (!route) return;
+  _runRound(true);
+  if (d.endurance > 0) _setRoute(d, route);
+  saveState();
+  _renderAll();
+}
+
+function _runRound(escaping = false) {
+  const d = _data();
+  if (!d || _battleOver(d)) return;
+  escaping = escaping === true;
+  const e = d.combatEffects || {};
+  if (e.captured && e.section === 13 && d.roundsThisBattle >= 6) {
+    _setRoute(d, 158);
+    saveState();
+    _renderAll();
+    return;
+  }
+  if (e.captured && [30,47,183,308].includes(e.section) && !e.shield) {
+    d.endurance = Math.max(0, d.endurance - 2);
+    _appendLog(d, t('battlesim436.log.extra_loss', { n: 2 }));
+    if (d.endurance <= 0) {
+      _checkBattleEnd(d);
+      saveState();
+      _renderAll();
+      return;
+    }
+  }
+  const psychic = _psychic(d);
+  d.ratio = e.captured ? _effectiveSkill(d) - d.enemy.skill : d.ratio;
   d.roundsThisBattle++;
 
   const pick = _pick10();
   const col = _ratioCol(d.ratio);
-  const [enemyLoss, lwLoss] = COMBAT_TABLE[_pickRow(pick)][col];
+  let [enemyLoss, lwLoss] = COMBAT_TABLE[_pickRow(pick)][col];
+  if (escaping || e.captured && e.section === 183 && d.roundsThisBattle === 1) enemyLoss = 0;
+  if (e.captured) {
+    if ([8,13,30,287,308].includes(e.section) && enemyLoss !== 'K') enemyLoss *= 2;
+    if (e.section === 251 && d.roundsThisBattle === 1) lwLoss = 0;
+    if (lwLoss !== 'K') {
+      if (e.section === 52 || e.section === 155 && !(e.curing && e.primate)) lwLoss *= 2;
+      if ([159,199].includes(e.section)) lwLoss /= 2;
+    }
+  }
   _appendLog(d, t('battlesim436.log.round', { round: d.roundsThisBattle, ratio: d.ratio, pick }));
 
   if (enemyLoss === 'K') d.enemy.endurance = 0;
   else d.enemy.endurance = Math.max(0, d.enemy.endurance - enemyLoss);
   if (lwLoss === 'K') d.endurance = 0;
   else d.endurance = Math.max(0, d.endurance - lwLoss);
+  if (psychic === 'surge' && d.endurance > 0) {
+    d.endurance = Math.max(0, d.endurance - 2);
+    _appendLog(d, t('battlesim436.log.extra_loss', { n: 2 }));
+  }
 
   _appendLog(d, t('battlesim436.log.result', {
     enemy: _enemyNameSafe(d),
@@ -121,14 +223,30 @@ function _runRound() {
   }));
 
   _checkBattleEnd(d);
+  if (e.captured && !_battleOver(d) && e.section === 257 && d.roundsThisBattle >= 2) _setRoute(d, 163);
   saveState();
   _renderAll();
 }
 
 function _checkBattleEnd(d) {
-  if (d.enemy.endurance <= 0) {
+  const e = d.combatEffects || {};
+  if (d.printedRules && d.endurance <= 0) {
+    _appendLog(d, t('battlesim436.log.fallen', { skull: SVG_SKULL }));
+    _recordOutcome(d, 'loss');
+  } else if (d.enemy.endurance <= 0 && e.secondVordak) {
+    e.secondVordak = false;
+    d.enemy = { name: t('battlesim436.ui.second_vordak', { section: e.section }), skill: 21, endurance: 26, enduranceMax: 26 };
+    _appendLog(d, t('battlesim436.log.second_vordak'));
+  } else if (d.enemy.endurance <= 0) {
     _appendLog(d, t('battlesim436.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyNameSafe(d) }));
     _recordOutcome(d, 'win');
+    if (e.captured) {
+      const route = { 8:202,13:79,30:268,38:9,40:87,41:106,47:195,52:129,74:254,
+        88:144,101:202,106:247,110:293,155:62,159:46,162:144,164:328,169:337,
+        183:268,199:46,205:9,231:328,233:321,241:231,251:87,252:313,257:12,
+        265:313,287:79,298:321,305:231,308:195,313:160,323:293,333:197,339:344,346:9 }[e.section];
+      if (route) _setRoute(d, route);
+    }
   } else if (d.endurance <= 0) {
     _appendLog(d, t('battlesim436.log.fallen', { skull: SVG_SKULL }));
     _recordOutcome(d, 'loss');
@@ -139,8 +257,10 @@ function _resetBattle() {
   const d = _data();
   if (!d) return;
   d.roundsThisBattle = 0;
+  if (d.combatEffects?.initialEnemy) d.enemy = { ...d.combatEffects.initialEnemy };
   d.enemy.endurance = d.enemy.enduranceMax;
   d.endurance = d.enduranceInitial;
+  _captureFightEffects(d);
   if (d.log.length) _appendLog(d, t('battlesim436.log.reset_sep'));
   _appendLog(d, t('battlesim436.log.reset', { enemy: _enemyNameSafe(d) }));
   saveState();
@@ -150,7 +270,8 @@ function _resetBattle() {
 function _usePotion() {
   const d = _data();
   if (!d || !d.rolled || !d.hasHealingPotion || d.healingPotionUsed) return;
-  if (d.roundsThisBattle > 0 && d.endurance > 0 && d.enemy.endurance > 0) {
+  if (d.printedRules && d.endurance <= 0) return;
+  if (d.roundsThisBattle > 0 && !_battleOver(d)) {
     showAlert(t('battlesim436.alert.potion_midfight'));
     return;
   }
@@ -246,14 +367,20 @@ function _renderInputs(skipEnemyPick) {
   _setVal('sim436-en', d.endurance);
   _setVal('sim436-enmax', d.enduranceInitial);
   _setVal('sim436-atkmod', d.attackModifier);
+  _setVal('sim436-psychic', d.nextPsychic || 'none');
+  for (const [id, key] of [['tracking','nextTracking'],['animal','nextAnimal'],['shield','nextShield'],['spirit','nextSpirit'],['curing','nextCuring'],['nexus','nextNexus'],['primate','nextPrimate'],['tutelary','nextTutelary']]) {
+    const input = document.getElementById('sim436-' + id);
+    if (input) input.checked = !!d[key];
+  }
   _setVal('sim436-enemy-skill', d.enemy.skill);
   _setVal('sim436-enemy-en', d.enemy.endurance);
   _setVal('sim436-enemy-enmax', d.enemy.enduranceMax);
-  _setVal('sim436-ratio', d.ratio);
-  if (!skipEnemyPick) _setVal('sim436-enemy-pick', d.enemy.name);
+  _setVal('sim436-ratio', d.combatEffects?.captured ? _effectiveSkill(d) - d.enemy.skill : d.ratio);
+  if (!skipEnemyPick || [13,287].includes(d.combatEffects?.section)) _setVal('sim436-enemy-pick', d.enemy.name);
 
   const potionBtn = document.getElementById('sim436-use-potion');
   potionBtn.disabled = !d.rolled || !d.hasHealingPotion || d.healingPotionUsed;
+  if (d.printedRules) potionBtn.disabled ||= d.endurance <= 0 || d.roundsThisBattle > 0 && !_battleOver(d);
   potionBtn.textContent = d.healingPotionUsed ? t('battlesim436.btn.used') : t('battlesim436.btn.drink');
 
   const rollBtn = document.getElementById('sim436-roll');
@@ -265,12 +392,16 @@ function _renderInputs(skipEnemyPick) {
     status.textContent = t('battlesim436.status.not_ready');
   } else if (d.endurance <= 0) {
     status.textContent = t('battlesim436.status.fallen');
+  } else if (d.combatEffects?.finished) {
+    status.textContent = t('battlesim436.log.continue', { section: d.combatEffects.route });
   } else if (d.enemy.endurance <= 0 && d.enemy.enduranceMax > 0) {
     status.textContent = t('battlesim436.status.defeated', { enemy: _enemyName(d) });
   } else {
     status.textContent = '';
   }
-  document.getElementById('sim436-round').disabled = !d.rolled || d.endurance <= 0 || d.enemy.endurance <= 0;
+  document.getElementById('sim436-round').disabled = _battleOver(d);
+  const escapeBtn = document.getElementById('sim436-escape');
+  if (escapeBtn) escapeBtn.disabled = _battleOver(d) || !_escapeRoute(d);
 }
 
 function _renderLog() {
@@ -368,6 +499,12 @@ export function initSim436() {
             ${_numField(t('battlesim436.ui.en'), 'sim436-en')}
             ${_numField(t('battlesim436.ui.en_initial'), 'sim436-enmax')}
             ${_numField(t('battlesim436.ui.atkmod'), 'sim436-atkmod')}
+            <details class="bsim-history">
+              <summary>${t('battlesim436.ui.next_fight')}</summary>
+              <p class="bsim-history-empty">${t('battlesim436.ui.effects_hint')}</p>
+              <div class="inv-edit-row"><span class="inv-edit-label bsim-stat-label">${t('battlesim436.ui.psychic')}</span><select id="sim436-psychic" class="inv-edit-input"><option value="none">${t('battlesim436.ui.none')}</option><option value="blast">${t('battlesim436.ui.blast')}</option><option value="surge">${t('battlesim436.ui.surge')}</option></select></div>
+              ${['tracking','animal','shield','spirit','curing','nexus','primate','tutelary'].map(id => `<label class="inv-edit-row"><span class="inv-edit-label bsim-stat-label">${t('battlesim436.ui.' + id)}</span><input type="checkbox" id="sim436-${id}"></label>`).join('')}
+            </details>
             <div class="inv-edit-row">
               <span class="inv-edit-label bsim-stat-label">${t('battlesim436.ui.potion')}</span>
               <button id="sim436-use-potion" class="inv-edit-done bsim-ae-roll-btn" type="button">${t('battlesim436.btn.drink')}</button>
@@ -389,6 +526,7 @@ export function initSim436() {
           <div id="sim436-status" class="bsim-status"></div>
           <div class="inv-modal-ftr">
             <button id="sim436-round" class="inv-add-btn bsim-action-primary">${t('battlesim436.btn.round')}</button>
+            <button id="sim436-escape" class="inv-add-btn">${t('battlesim436.btn.escape')}</button>
             <button id="sim436-reset" class="inv-add-btn">${t('battlesim436.btn.reset')}</button>
           </div>
         </div>
@@ -426,8 +564,23 @@ export function initSim436() {
   });
 
   document.getElementById('sim436-round').addEventListener('click', _runRound);
+  document.getElementById('sim436-escape').addEventListener('click', _escape);
   document.getElementById('sim436-reset').addEventListener('click', _resetBattle);
   document.getElementById('sim436-use-potion').addEventListener('click', _usePotion);
+  document.getElementById('sim436-psychic').addEventListener('change', event => {
+    const d = _data();
+    if (!d) return;
+    d.nextPsychic = ['none','blast','surge'].includes(event.target.value) ? event.target.value : 'none';
+    saveState();
+  });
+  for (const [id, key] of [['tracking','nextTracking'],['animal','nextAnimal'],['shield','nextShield'],['spirit','nextSpirit'],['curing','nextCuring'],['nexus','nextNexus'],['primate','nextPrimate'],['tutelary','nextTutelary']]) {
+    document.getElementById('sim436-' + id).addEventListener('change', event => {
+      const d = _data();
+      if (!d) return;
+      d[key] = event.target.checked;
+      saveState();
+    });
+  }
 
   document.getElementById('sim436-roll').addEventListener('click', () => {
     const d = _data();
@@ -457,7 +610,7 @@ export function initSim436() {
     d.enemy.endurance      = enemy.hp ?? 0;
     d.enemy.enduranceMax   = enemy.hp ?? 0;
     d.roundsThisBattle     = 0;
-    d.ratio                = _effectiveSkill(d) - d.enemy.skill;
+    _captureFightEffects(d);
     saveState();
     _renderInputs(true);
   });
@@ -474,7 +627,8 @@ export function initSim436() {
       const d = _data();
       if (!d) return;
       const allowNegative = id === 'sim436-atkmod';
-      const val = allowNegative ? (parseInt(input.value, 10) || 0) : Math.max(0, parseInt(input.value, 10) || 0);
+      const parse = d.printedRules && id === 'sim436-en' ? parseFloat : value => parseInt(value, 10);
+      const val = allowNegative ? (parse(input.value) || 0) : Math.max(0, parse(input.value) || 0);
       if (path.length === 1) d[path[0]] = val;
       else d[path[0]][path[1]] = val;
       if (id === 'sim436-cs' || id === 'sim436-atkmod' || id === 'sim436-enemy-skill') d.ratio = _effectiveSkill(d) - d.enemy.skill;
@@ -487,7 +641,9 @@ export function initSim436() {
       const input = document.getElementById(btn2.dataset.id);
       if (!input) return;
       const delta = parseInt(btn2.dataset.delta, 10);
-      input.value = (parseInt(input.value, 10) || 0) + delta;
+      const d = _data();
+      const value = d?.printedRules && btn2.dataset.id === 'sim436-en' ? parseFloat(input.value) : parseInt(input.value, 10);
+      input.value = (value || 0) + delta;
       input.dispatchEvent(new Event('change'));
     });
   });

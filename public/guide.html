@@ -418,11 +418,11 @@
 <h2 id="your-books">Your books<a class="anchor" href="#your-books" aria-label="Link to section">#</a></h2>
 <p>After logging in you land on the <strong>Books</strong> screen.</p>
 <p>New accounts include a <strong>Demo Book</strong> - a fully mapped 50-section example with completed playthroughs, notes, and priorities. Delete it any time.</p>
-<p>Each book card shows a progress bar for sections you&#39;ve visited across all playthroughs. The bar turns green once you&#39;ve visited every section.</p>
+<p>Each book card shows a progress bar for sections you&#39;ve visited across all playthroughs. The fill shows fractional progress, so small gains can move it between whole percentage points. The bar turns green once you&#39;ve visited every section.</p>
 <div class="table-wrap"><table><thead><tr><th>Button</th><th>What it does</th></tr></thead><tbody><tr><td><strong>Open</strong></td><td>Go into the tracker for that book</td></tr><tr><td><strong>✎</strong></td><td>Edit the book details (name, sections, identifiers, cover)</td></tr><tr><td><strong>✕</strong></td><td>Delete the book and your progress (asks for confirmation)</td></tr></tbody></table></div>
 <p>If an admin shared a book with you, <strong>✎</strong> is visible but greyed out - only the creator can change the book&#39;s details.</p>
 <h3 id="creating-books">Creating books<a class="anchor" href="#creating-books" aria-label="Link to section">#</a></h3>
-<p>Click <strong>Create Book</strong> at the top of the books screen. As you type the name, a dropdown suggests books already in the system - selecting one fills in all the details automatically and changes the button to <strong>Add to library</strong>.</p>
+<p>Click <strong>Create Book</strong> at the top of the books screen. As you type the name, a dropdown suggests public books and books already in your library - selecting a public book fills in its details and changes the button to <strong>Add to library</strong>. A book already in your library shows <strong>Already owned</strong> instead.</p>
 <ul>
 <li><strong>Sections</strong> - total number of sections (minimum 5)</li>
 <li><strong>Type</strong> - Book (ISBN + ASIN) or Magazine (ISSN)</li>
@@ -624,6 +624,7 @@
 <li>Orange <strong>LEVEL UP!</strong> pill with your new level and title</li>
 </ul>
 <p>Every level you gain adds a permanent <strong>+0.1% XP boost</strong> to all future XP. Shop purchases stack on top.</p>
+<p>XP and average-level bar fills show fractional progress; the number labels keep their usual readable formatting.</p>
 <p>Your XP bar also shows your <strong>heartbeat XP rate</strong> (the passive XP you earn just for having the tracker open) in aqua on the right of the level row - e.g. <strong>+6.7 heartbeat XP/min</strong>. If you&#39;ve bought XP boosts in the shop, the boost percentage shows in aqua too, with the total bonus XP shown beside it.</p>
 <hr>
 <h2 id="gold-coins-shop">Gold Coins &amp; Shop<a class="anchor" href="#gold-coins-shop" aria-label="Link to section">#</a></h2>
@@ -669,7 +670,7 @@
 <li>If you delete it while others are tracking it, ownership passes to the next user</li>
 </ul>
 <h3 id="series">Series<a class="anchor" href="#series" aria-label="Link to section">#</a></h3>
-<p>Create a series with <strong>Create Series</strong>. Add a book to a series via the <strong>Series</strong> dropdown in the Edit Book dialog. Books in the same series group together under a collapsible amber header.</p>
+<p>Create a series with <strong>Create Series</strong>. Add a book to a series via the <strong>Series</strong> dropdown in the Edit Book dialog. Books in the same series group together under a collapsible amber header. Suggestions include public series and your own series. A private series belonging only to another account stays hidden; you can create a separate series with the same name.</p>
 <ul>
 <li>Only the creator can edit a series; other users can add a public series to their own library</li>
 <li>The creator earns <strong>150 XP</strong> each time another user adds their series</li>
@@ -690,6 +691,7 @@
 <li>Create the anthology first.</li>
 <li>Click <strong>✎</strong> on each book → set <strong>Part of anthology</strong> → Save.</li>
 </ol>
+<p>Private anthologies stay hidden from other users, even when one of their stories is public. Public anthology previews show only public stories.</p>
 <p><strong>Adding someone else&#39;s anthology:</strong> click <strong>+ Add to my library</strong> on any public anthology to add it and all its public stories in one step.</p>
 <hr>
 <h2 id="open-world-series">Open World series<a class="anchor" href="#open-world-series" aria-label="Link to section">#</a></h2>

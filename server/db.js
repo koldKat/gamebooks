@@ -202,7 +202,7 @@ db.exec(`CREATE TABLE IF NOT EXISTS password_reset_tokens (
 // Series & anthology support
 db.exec(`CREATE TABLE IF NOT EXISTS series (
   id          INTEGER PRIMARY KEY AUTOINCREMENT,
-  name        TEXT    NOT NULL UNIQUE,
+  name        TEXT    NOT NULL,
   description TEXT,
   created_by  INTEGER REFERENCES users(id) ON DELETE SET NULL,
   created_at  INTEGER DEFAULT (strftime('%s','now'))
@@ -218,6 +218,8 @@ db.exec(`CREATE INDEX IF NOT EXISTS idx_books_parent_book_id ON books(parent_boo
 try { db.exec(`ALTER TABLE series ADD COLUMN is_public     INTEGER NOT NULL DEFAULT 0`); } catch (_) {}
 try { db.exec(`ALTER TABLE series ADD COLUMN published_at  INTEGER DEFAULT NULL`); } catch (_) {}
 try { db.exec(`ALTER TABLE series ADD COLUMN is_open_world INTEGER NOT NULL DEFAULT 0`); } catch (_) {}
+
+require('./db/series-schema').migrateSeriesNames(db);
 
 // Backfill simulator availability for books predating the flag.
 {
@@ -833,7 +835,7 @@ const {
   getBooks, getStashes, createStash, updateStash, deleteStash,
   setBookBgPref, getBookBgPref, awardPdfXp, setBookPdf, removeBookCover, removeBookPdf, setBookCover,
   awardEpubXp, setBookEpub, removeBookEpub,
-  getBookContainerFields, getOrCreateSeries, getAllSeries, getBookEnemies, addSeriesToLibrary,
+  getBookContainerFields, getOrCreateSeries, getAllSeries, getSeriesAutocomplete, getBookEnemies, addSeriesToLibrary,
   addAnthologyMember, removeAnthologyMember, getAnthologyExtraMembers, _pruneRedundantAnthologyMembership, getBookSection, _canLiveRead,
   getSeriesById, updateSeries, getSeriesCharacter, saveSeriesCharacter, getSeriesRuns,
   updateSeriesRunPosition, completeSeriesRun, updateSeriesRunPublic, migratePreSeriesRuns,
@@ -916,7 +918,7 @@ module.exports = {
   createUser, verifyUser, setUserEmail, getUserEmail, createPasswordResetToken, validateResetToken, consumeResetToken,
   createSession, getSession, refreshSession, deleteSession, purgeExpiredSessions, purgeOldNotifications, purgeOldHeartbeats, walCheckpoint,
   getBooks, getStashes, createStash, updateStash, deleteStash, createBook, getBookById, getBookState, getActiveBookInSeries, saveBookState, resetBookProgress, updateBook, deleteBook, setBookCover, removeBookCover, setBookPdf, removeBookPdf, awardPdfXp, setBookEpub, removeBookEpub, awardEpubXp, addBookToLibrary,
-  getAllSeries, getSeriesById, getOrCreateSeries, createSeries, updateSeries, deleteSeries, deleteSeriesRow, addSeriesToLibrary, removeSeriesEntryOnly, removeSeriesFromLibrary, countSeriesOtherUsers, countBooksInSeries, getNextSeriesUser, transferSeriesOwnership, getBookContainerFields, getBookEnemies,
+  getAllSeries, getSeriesAutocomplete, getSeriesById, getOrCreateSeries, createSeries, updateSeries, deleteSeries, deleteSeriesRow, addSeriesToLibrary, removeSeriesEntryOnly, removeSeriesFromLibrary, countSeriesOtherUsers, countBooksInSeries, getNextSeriesUser, transferSeriesOwnership, getBookContainerFields, getBookEnemies,
   addAnthologyMember, removeAnthologyMember, getAnthologyExtraMembers, _pruneRedundantAnthologyMembership, getBookSection, _canLiveRead,
   getSeriesCharacter, saveSeriesCharacter,
   getSeriesRuns, createSeriesRun, updateSeriesRun, deleteSeriesRun, patchSeriesRunDeletion, resetSeriesForUser, getActiveSeriesRunsForUser, updateSeriesRunPosition, completeSeriesRun, updateSeriesRunPublic, migratePreSeriesRuns, reverseSeriesOpenWorld,

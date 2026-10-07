@@ -414,9 +414,9 @@ const _routeRequest = async (req, res) => {
     if (method === 'GET' && (m = urlPath.match(publicRunRe)))         return await handlePublicRun(req, res, +m[1], +m[2], +m[3]);
     if (method === 'GET' && (m = urlPath.match(publicSeriesRunRe)))   return await handlePublicSeriesRun(req, res, +m[1], +m[2], +m[3]);
     if (method === 'GET' && (m = urlPath.match(publicBookActivityRe))) {
-      const data = db.getBookActivity(+m[1]);
-      if (!data) return send(res, 404, { error: 'Not found' });
       const reqUserId = authenticateOptional(req);
+      const data = db.getBookActivity(+m[1], reqUserId);
+      if (!data) return send(res, 404, { error: 'Not found' });
       if (reqUserId) {
         const u = db.getUserById(reqUserId);
         if (u?.is_admin || u?.pdf_access) {
@@ -603,7 +603,7 @@ const _routeRequest = async (req, res) => {
     if ((m = urlPath.match(/^\/api\/admin\/series\/(\d+)$/)) && method === 'DELETE') return await handleAdminDeleteSeries(req, res, +m[1]);
 
     if (method === 'GET' && urlPath === '/api/tips')             return send(res, 200, db.getTips());
-    if (method === 'GET' && urlPath === '/api/series/autocomplete') return send(res, 200, db.getAllSeries());
+    if (method === 'GET' && urlPath === '/api/series/autocomplete') return send(res, 200, db.getSeriesAutocomplete(authenticateOptional(req)));
     if (method === 'GET' && urlPath === '/api/config') return await handlePublicConfig(req, res);
 
     if (method === 'GET' && urlPath === '/sitemap.xml') return serveSitemap(req, res);

@@ -36,7 +36,7 @@ function _xpLevelBounds(xp) {
 
 function _xpLabelParts(xp, data) {
   const { levelXp, nextLevelXp } = _xpLevelBounds(xp);
-  const pct   = Math.max(0, Math.min(100, Math.round(((xp - levelXp) / (nextLevelXp - levelXp)) * 100)));
+  const pct   = Math.max(0, Math.min(100, ((xp - levelXp) / (nextLevelXp - levelXp)) * 100));
   const toGo  = Math.max(0, Math.round(nextLevelXp - xp));
   const xpStr = Math.round(xp).toLocaleString();
   const fullHtml = data?.nextLevelXp != null

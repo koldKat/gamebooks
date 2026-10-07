@@ -1,8 +1,7 @@
 // Battle Simulator (Отвъд кошмарната порта / Beyond the Nightmare Gate, Bulgarian edition of Grey
 // Star (World of Lone Wolf) book 3, id 441)
 // Combat Ratio is fixed on enemy selection; a 0-9 pick selects simultaneous table losses.
-// 'K' means instant death. Skill bonuses and narrative effects are entered manually.
-// WILL/spellcasting are not simulated.
+// Saved fights retain their rules; printed effects are captured for future fights.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -56,7 +55,9 @@ function _data() {
       combatSkill: 0, combatSkillInitial: 0,
       endurance: 0, enduranceInitial: 0,
       attackModifier: 0,
-      hasHealingPotion: true, healingPotionUsed: false,
+      printedRules: 1, willpower: 0, willpowerInitial: 0,
+      nextWeapon: 'staff', nextWillSpend: 1, previousBooks: 0,
+      hasHealingPotion: false, healingPotionUsed: false,
       rolled: false,
       ratio: 0,
       enemy: { name: '', skill: 0, endurance: 0, enduranceMax: 0 },
@@ -96,11 +97,52 @@ function _recordOutcome(d, outcome) {
   d.history.push({ enemy: _enemyName(d), outcome, ts: Date.now() });
 }
 
-function _effectiveSkill(d) { return d.combatSkill + (d.attackModifier || 0); }
+const VICTORY_ROUTES = { 17: [250], 57: [107], 64: [133], 87: [150], 97: [124], 108: [133], 123: [117], 137: [186], 178: [106], 188: [205], 194: [51], 243: [286], 296: [106], 322: [107] };
+const DEADLINES = { 87: [3,150], 123: [3,117], 194: [2,51], 296: [3,287] };
+
+function _captureFightEffects(d) {
+  d.printedRules = 1;
+  d.combatEffects = {
+    section: Number(d.enemy.name.match(/§(\d+)/)?.[1]) || 0,
+    weapon: ['staff','other','none'].includes(d.nextWeapon) ? d.nextWeapon : 'staff',
+    dagger: d.nextDagger === true, tanith: d.nextTanith === true,
+    willSpend: Math.max(1, Math.floor(Number(d.nextWillSpend) || 1)),
+  };
+  d.ratio = _effectiveSkill(d) - d.enemy.skill;
+}
+
+function _effectiveSkill(d) {
+  let skill = d.combatSkill + (d.attackModifier || 0);
+  const effects = d.combatEffects;
+  if (!effects) return skill;
+  if (effects.section === 57 || (effects.section === 322 && effects.weapon !== 'staff')) skill -= effects.dagger ? 6 : 8;
+  else if (effects.weapon === 'none') skill -= 8;
+  else if (effects.weapon !== 'staff' || !(d.willpower >= 1)) skill -= 6;
+  if (effects.section === 188 && effects.tanith) skill += 2;
+  return skill;
+}
+
+function _stopFight(d, routes) {
+  d.combatEffects.finished = true;
+  d.combatEffects.routes = routes;
+  if (routes.length) _appendLog(d, t('battlesim441.log.continue', { sections: routes.join(' / ') }));
+}
+
+function _escapeRoute(d) {
+  const effects = d.combatEffects;
+  if (!effects || effects.finished) return null;
+  if (effects.section === 97) return 61;
+  if (effects.section === 243) return 218;
+  if ([57,322].includes(effects.section) && d.roundsThisBattle >= 3 && d.endurance > d.enemy.endurance) return 99;
+  return null;
+}
 
 function _runRound() {
   const d = _data();
-  if (!d || !d.rolled || d.endurance <= 0 || d.enemy.endurance <= 0) return;
+  if (!d || !d.rolled || d.endurance <= 0 || d.enemy.endurance <= 0 || d.combatEffects?.finished) return;
+  if (d.printedRules === 1 && !d.combatEffects) _captureFightEffects(d);
+  const effects = d.combatEffects;
+  if (effects) d.ratio = _effectiveSkill(d) - d.enemy.skill;
   d.roundsThisBattle++;
 
   const pick = _pick10();
@@ -108,32 +150,69 @@ function _runRound() {
   const [enemyLoss, lwLoss] = COMBAT_TABLE[_pickRow(pick)][col];
   _appendLog(d, t('battlesim441.log.round', { round: d.roundsThisBattle, ratio: d.ratio, pick }));
 
-  if (enemyLoss === 'K') d.enemy.endurance = 0;
-  else d.enemy.endurance = Math.max(0, d.enemy.endurance - enemyLoss);
-  if (lwLoss === 'K') d.endurance = 0;
-  else d.endurance = Math.max(0, d.endurance - lwLoss);
+  let spent = 0;
+  if (effects?.weapon === 'staff' && effects.section !== 57 && d.willpower >= 1) {
+    spent = Math.min(effects.willSpend, Math.floor(d.willpower));
+    d.willpower -= spent;
+    _appendLog(d, t('battlesim441.log.will', { spent, will: d.willpower }));
+  }
+  const damage = enemyLoss === 'K' ? enemyLoss : enemyLoss * Math.max(1, spent);
+  if (damage === 'K') d.enemy.endurance = 0;
+  else d.enemy.endurance = Math.max(0, d.enemy.endurance - damage);
+  const playerLoss = effects?.section === 97 ? 0 : lwLoss;
+  if (playerLoss === 'K') d.endurance = 0;
+  else d.endurance = Math.max(0, d.endurance - playerLoss);
 
   _appendLog(d, t('battlesim441.log.result', {
     enemy: _enemyNameSafe(d),
-    enemyLoss: enemyLoss === 'K' ? t('battlesim441.log.k_word') : enemyLoss,
+    enemyLoss: damage === 'K' ? t('battlesim441.log.k_word') : damage,
     enemyEndurance: d.enemy.endurance, enemyEnduranceMax: d.enemy.enduranceMax,
-    lwLoss: lwLoss === 'K' ? t('battlesim441.log.k_word') : lwLoss,
+    lwLoss: playerLoss === 'K' ? t('battlesim441.log.k_word') : playerLoss,
     endurance: d.endurance, enduranceMax: d.enduranceInitial,
   }));
 
   _checkBattleEnd(d);
+  if (effects && !effects.finished) {
+    const deadline = DEADLINES[effects.section];
+    if (deadline && d.roundsThisBattle >= deadline[0]) _stopFight(d, [deadline[1]]);
+  }
   saveState();
   _renderAll();
 }
 
 function _checkBattleEnd(d) {
+  if (d.combatEffects && d.endurance <= 0) {
+    _recordOutcome(d, 'loss');
+    if (d.combatEffects.section === 243) {
+      _appendLog(d, t('battlesim441.log.jahksa_rescue'));
+      _stopFight(d, [350]);
+    } else {
+      d.combatEffects.finished = true;
+      _appendLog(d, t('battlesim441.log.fallen', { skull: SVG_SKULL }));
+    }
+    return;
+  }
   if (d.enemy.endurance <= 0) {
     _appendLog(d, t('battlesim441.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyNameSafe(d) }));
     _recordOutcome(d, 'win');
+    if (d.combatEffects) {
+      if (d.combatEffects.section === 243) _appendLog(d, t('battlesim441.log.jahksa_warning'));
+      _stopFight(d, VICTORY_ROUTES[d.combatEffects.section] || []);
+    }
   } else if (d.endurance <= 0) {
     _appendLog(d, t('battlesim441.log.fallen', { skull: SVG_SKULL }));
     _recordOutcome(d, 'loss');
   }
+}
+
+function _stopByChoice() {
+  const d = _data();
+  if (!d || !d.rolled || d.endurance <= 0 || d.enemy.endurance <= 0) return;
+  const route = _escapeRoute(d);
+  if (!route) return;
+  _stopFight(d, [route]);
+  saveState();
+  _renderAll();
 }
 
 function _resetBattle() {
@@ -141,9 +220,9 @@ function _resetBattle() {
   if (!d) return;
   d.roundsThisBattle = 0;
   d.enemy.endurance = d.enemy.enduranceMax;
-  d.endurance = d.enduranceInitial;
+  _captureFightEffects(d);
   if (d.log.length) _appendLog(d, t('battlesim441.log.reset_sep'));
-  _appendLog(d, t('battlesim441.log.reset', { enemy: _enemyNameSafe(d) }));
+  _appendLog(d, t('battlesim441.log.reset_future', { enemy: _enemyNameSafe(d) }));
   saveState();
   _renderAll();
 }
@@ -151,7 +230,8 @@ function _resetBattle() {
 function _usePotion() {
   const d = _data();
   if (!d || !d.rolled || !d.hasHealingPotion || d.healingPotionUsed) return;
-  if (d.roundsThisBattle > 0 && d.endurance > 0 && d.enemy.endurance > 0) {
+  if (d.printedRules === 1 && d.endurance <= 0) return;
+  if (d.roundsThisBattle > 0 && d.endurance > 0 && d.enemy.endurance > 0 && !d.combatEffects?.finished) {
     showAlert(t('battlesim441.alert.potion_midfight'));
     return;
   }
@@ -246,6 +326,14 @@ function _renderInputs(skipEnemyPick) {
   _setVal('sim441-csmax', d.combatSkillInitial);
   _setVal('sim441-en', d.endurance);
   _setVal('sim441-enmax', d.enduranceInitial);
+  _setVal('sim441-will', d.willpower ?? 0);
+  _setVal('sim441-willmax', d.willpowerInitial ?? 0);
+  _setVal('sim441-will-spend', d.nextWillSpend ?? 1);
+  _setVal('sim441-weapon', d.nextWeapon || 'staff');
+  _setVal('sim441-previous-books', d.previousBooks ?? 0);
+  document.getElementById('sim441-dagger').checked = d.nextDagger === true;
+  document.getElementById('sim441-tanith').checked = d.nextTanith === true;
+  document.getElementById('sim441-has-potion').checked = d.hasHealingPotion;
   _setVal('sim441-atkmod', d.attackModifier);
   _setVal('sim441-enemy-skill', d.enemy.skill);
   _setVal('sim441-enemy-en', d.enemy.endurance);
@@ -254,7 +342,7 @@ function _renderInputs(skipEnemyPick) {
   if (!skipEnemyPick) _setVal('sim441-enemy-pick', d.enemy.name);
 
   const potionBtn = document.getElementById('sim441-use-potion');
-  potionBtn.disabled = !d.rolled || !d.hasHealingPotion || d.healingPotionUsed;
+  potionBtn.disabled = !d.rolled || !d.hasHealingPotion || d.healingPotionUsed || (d.printedRules === 1 && d.endurance <= 0);
   potionBtn.textContent = d.healingPotionUsed ? t('battlesim441.btn.used') : t('battlesim441.btn.drink');
 
   const rollBtn = document.getElementById('sim441-roll');
@@ -264,6 +352,8 @@ function _renderInputs(skipEnemyPick) {
   const status = document.getElementById('sim441-status');
   if (!d.rolled) {
     status.textContent = t('battlesim441.status.not_ready');
+  } else if (d.combatEffects?.finished && d.combatEffects.routes?.length) {
+    status.textContent = t('battlesim441.log.continue', { sections: d.combatEffects.routes.join(' / ') });
   } else if (d.endurance <= 0) {
     status.textContent = t('battlesim441.status.fallen');
   } else if (d.enemy.endurance <= 0 && d.enemy.enduranceMax > 0) {
@@ -271,7 +361,10 @@ function _renderInputs(skipEnemyPick) {
   } else {
     status.textContent = '';
   }
-  document.getElementById('sim441-round').disabled = !d.rolled || d.endurance <= 0 || d.enemy.endurance <= 0;
+  document.getElementById('sim441-round').disabled = !d.rolled || d.endurance <= 0 || d.enemy.endurance <= 0 || d.combatEffects?.finished;
+  const stopBtn = document.getElementById('sim441-stop');
+  stopBtn.hidden = !_escapeRoute(d);
+  stopBtn.disabled = !d.rolled || d.endurance <= 0 || d.enemy.endurance <= 0;
 }
 
 function _renderLog() {
@@ -364,11 +457,23 @@ export function initSim441() {
             <div class="inv-edit-row bsim-life-roll-row">
               <button id="sim441-roll" class="inv-edit-done bsim-ae-roll-btn" type="button">${t('battlesim441.btn.roll')}</button>
             </div>
+            <div class="inv-edit-row"><span class="inv-edit-label bsim-stat-label">${t('battlesim441.ui.previous_books')}</span><select id="sim441-previous-books" class="inv-edit-input">${[0,1,2].map(value => `<option value="${value}">${t('battlesim441.ui.previous_' + value)}</option>`).join('')}</select></div>
             ${_numField(t('battlesim441.ui.cs'), 'sim441-cs')}
             ${_numField(t('battlesim441.ui.cs_initial'), 'sim441-csmax')}
             ${_numField(t('battlesim441.ui.en'), 'sim441-en')}
             ${_numField(t('battlesim441.ui.en_initial'), 'sim441-enmax')}
+            ${_numField(t('battlesim441.ui.will'), 'sim441-will')}
+            ${_numField(t('battlesim441.ui.will_initial'), 'sim441-willmax')}
             ${_numField(t('battlesim441.ui.atkmod'), 'sim441-atkmod')}
+            <details class="bsim-history">
+              <summary>${t('battlesim441.ui.next_fight')}</summary>
+              <div class="inv-edit-row"><span class="inv-edit-label bsim-stat-label">${t('battlesim441.ui.weapon')}</span><select id="sim441-weapon" class="inv-edit-input">${['staff','other','none'].map(value => `<option value="${value}">${t('battlesim441.ui.' + value)}</option>`).join('')}</select></div>
+              ${_numField(t('battlesim441.ui.will_spend'), 'sim441-will-spend')}
+              <label class="inv-edit-row"><span class="inv-edit-label bsim-stat-label">${t('battlesim441.ui.dagger')}</span><input type="checkbox" id="sim441-dagger"></label>
+              <label class="inv-edit-row"><span class="inv-edit-label bsim-stat-label">${t('battlesim441.ui.tanith')}</span><input type="checkbox" id="sim441-tanith"></label>
+              <p class="bsim-history-empty">${t('battlesim441.ui.effects_note')}</p>
+            </details>
+            <label class="inv-edit-row"><span class="inv-edit-label bsim-stat-label">${t('battlesim441.ui.has_potion')}</span><input type="checkbox" id="sim441-has-potion"></label>
             <div class="inv-edit-row">
               <span class="inv-edit-label bsim-stat-label">${t('battlesim441.ui.potion')}</span>
               <button id="sim441-use-potion" class="inv-edit-done bsim-ae-roll-btn" type="button">${t('battlesim441.btn.drink')}</button>
@@ -390,6 +495,7 @@ export function initSim441() {
           <div id="sim441-status" class="bsim-status"></div>
           <div class="inv-modal-ftr">
             <button id="sim441-round" class="inv-add-btn bsim-action-primary">${t('battlesim441.btn.round')}</button>
+            <button id="sim441-stop" class="inv-add-btn" hidden>${t('battlesim441.btn.stop')}</button>
             <button id="sim441-reset" class="inv-add-btn">${t('battlesim441.btn.reset')}</button>
           </div>
         </div>
@@ -429,17 +535,32 @@ export function initSim441() {
   document.getElementById('sim441-round').addEventListener('click', _runRound);
   document.getElementById('sim441-reset').addEventListener('click', _resetBattle);
   document.getElementById('sim441-use-potion').addEventListener('click', _usePotion);
+  document.getElementById('sim441-stop').addEventListener('click', _stopByChoice);
+  for (const [id, key] of [['weapon','nextWeapon'], ['previous-books','previousBooks']]) document.getElementById('sim441-' + id).addEventListener('change', e => {
+    const d = _data(); if (!d) return;
+    d[key] = key === 'previousBooks' ? Number(e.target.value) : e.target.value;
+    saveState();
+  });
+  for (const [id, key] of [['dagger','nextDagger'], ['tanith','nextTanith'], ['has-potion','hasHealingPotion']]) document.getElementById('sim441-' + id).addEventListener('change', e => {
+    const d = _data(); if (!d) return;
+    d[key] = e.target.checked; saveState(); _renderInputs(true);
+  });
 
   document.getElementById('sim441-roll').addEventListener('click', () => {
     const d = _data();
     if (!d || d.rolled) return;
     d.combatSkillInitial = _pick10() + 10;
+    if (d.printedRules === 1) {
+      d.willpowerInitial = _pick10() + ([20,25,30][d.previousBooks] ?? 20);
+      d.willpower = d.willpowerInitial;
+    }
     d.enduranceInitial   = _pick10() + 20;
     d.combatSkill = d.combatSkillInitial;
     d.endurance   = d.enduranceInitial;
     d.rolled = true;
+    if (d.printedRules === 1 && d.combatEffects) _captureFightEffects(d);
     d.ratio  = _effectiveSkill(d) - d.enemy.skill;
-    _appendLog(d, t('battlesim441.log.rolled', { cs: d.combatSkillInitial, en: d.enduranceInitial }));
+    _appendLog(d, t(d.printedRules === 1 ? 'battlesim441.log.rolled_future' : 'battlesim441.log.rolled', { cs: d.combatSkillInitial, en: d.enduranceInitial, will: d.willpowerInitial }));
     saveState();
     _renderAll();
   });
@@ -458,7 +579,7 @@ export function initSim441() {
     d.enemy.endurance      = enemy.hp ?? 0;
     d.enemy.enduranceMax   = enemy.hp ?? 0;
     d.roundsThisBattle     = 0;
-    d.ratio                = _effectiveSkill(d) - d.enemy.skill;
+    _captureFightEffects(d);
     saveState();
     _renderInputs(true);
   });
@@ -467,6 +588,8 @@ export function initSim441() {
     'sim441-cs': ['combatSkill'], 'sim441-csmax': ['combatSkillInitial'],
     'sim441-en': ['endurance'], 'sim441-enmax': ['enduranceInitial'],
     'sim441-atkmod': ['attackModifier'],
+    'sim441-will': ['willpower'], 'sim441-willmax': ['willpowerInitial'],
+    'sim441-will-spend': ['nextWillSpend'],
     'sim441-enemy-skill': ['enemy', 'skill'], 'sim441-enemy-en': ['enemy', 'endurance'], 'sim441-enemy-enmax': ['enemy', 'enduranceMax'],
   };
   for (const [id, path] of Object.entries(fieldMap)) {
@@ -474,11 +597,11 @@ export function initSim441() {
     input.addEventListener('change', () => {
       const d = _data();
       if (!d) return;
-      const allowNegative = id === 'sim441-atkmod';
+      const allowNegative = id === 'sim441-atkmod' || id === 'sim441-will';
       const val = allowNegative ? (parseInt(input.value, 10) || 0) : Math.max(0, parseInt(input.value, 10) || 0);
       if (path.length === 1) d[path[0]] = val;
       else d[path[0]][path[1]] = val;
-      if (id === 'sim441-cs' || id === 'sim441-atkmod' || id === 'sim441-enemy-skill') d.ratio = _effectiveSkill(d) - d.enemy.skill;
+      if (id === 'sim441-cs' || id === 'sim441-atkmod' || id === 'sim441-enemy-skill' || id === 'sim441-will') d.ratio = _effectiveSkill(d) - d.enemy.skill;
       saveState();
       _renderInputs(true);
     });

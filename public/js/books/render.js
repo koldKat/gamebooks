@@ -189,7 +189,7 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
     const keyPrefix     = stashId ? `stash_${stashId}_sr_` : 'sr_';
     const expanded      = _getExpandedPref('series', `${stashId ?? 'main'}:${s.id}`, `${keyPrefix}expanded_${s.id}`);
     const { visited: aggrV, totalSections: aggrS } = _aggregateProgress(booksInSeries, activeChildrenMap);
-    const pct       = aggrS > 0 ? (aggrV >= aggrS ? 100 : Math.min(99, Math.floor(aggrV / aggrS * 100))) : 0;
+    const pct       = aggrS > 0 ? Math.max(0, Math.min(100, aggrV / aggrS * 100)) : 0;
     const fullyDone = aggrS > 0 && aggrV >= aggrS;
     const barColor  = fullyDone ? 'rgba(34,197,94,0.6)' : 'rgba(245,166,35,0.5)';
     const countLabel  = activeBooks.length === 1 ? '1 book' : `${activeBooks.length} books`;
@@ -281,7 +281,7 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
     const stashDirectProgress = _aggregateProgress(stashBooksRaw, stashChildrenMap);
     stashAggrV += stashDirectProgress.visited;
     stashAggrS += stashDirectProgress.totalSections;
-    const stashPct      = stashAggrS > 0 ? (stashAggrV >= stashAggrS ? 100 : Math.min(99, Math.floor(stashAggrV / stashAggrS * 100))) : 0;
+    const stashPct      = stashAggrS > 0 ? Math.max(0, Math.min(100, stashAggrV / stashAggrS * 100)) : 0;
     const stashFullyDone = stashAggrS > 0 && stashAggrV >= stashAggrS;
     const stashBarColor = stashFullyDone ? 'rgba(34,197,94,0.6)' : 'rgba(52,211,153,0.5)';
     parts.push(

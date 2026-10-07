@@ -24,7 +24,7 @@ function _paintXp(xp, data) {
   const scale = Math.max(1, (data.users || 0) * 1000);
   const { levelXp, nextLevelXp } = _levelBounds(xp, scale);
   const span = Math.max(1, nextLevelXp - levelXp);
-  const pct  = Math.max(0, Math.min(100, Math.round(((xp - levelXp) / span) * 100)));
+  const pct  = Math.max(0, Math.min(100, ((xp - levelXp) / span) * 100));
   document.getElementById('app-xp-bar-fill').style.width = `${pct}%`;
   const toGo = Math.max(0, Math.round(nextLevelXp - xp));
   document.getElementById('app-xp-text').innerHTML =
@@ -123,7 +123,7 @@ function _renderAvgLevel(data) {
   document.getElementById('avg-lvl-level').textContent = t('feed.hover_level', { n: avgLevel });
   document.getElementById('avg-lvl-title').textContent  = avgLevelTitle || '';
   document.getElementById('avg-lvl-users').textContent  = t('appxp.users', { n: users.toLocaleString(), s: users === 1 ? '' : 's' });
-  const pct = Math.max(0, Math.min(100, Math.round(avgLevelFraction * 100)));
+  const pct = Math.max(0, Math.min(100, avgLevelFraction * 100));
   document.getElementById('avg-lvl-bar-fill').style.width = `${pct}%`;
   document.getElementById('avg-lvl-text').innerHTML =
     `<span class="lvl-val">${t('appxp.total_levels', { n: sumLevels.toLocaleString() })}</span> · ${t('appxp.more_to_lvl', { n: levelsNeededForNextAvg.toLocaleString(), lvl: avgLevel + 1 })}`;

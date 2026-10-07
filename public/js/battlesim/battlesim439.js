@@ -1,8 +1,7 @@
 // Battle Simulator (Магьосникът Сива звезда / Grey Star the Wizard, Bulgarian edition of Grey Star
 // (World of Lone Wolf) book 1, id 439)
 // Combat Ratio is fixed on enemy selection; a 0-9 pick selects simultaneous table losses.
-// 'K' means instant death. Skill bonuses and narrative effects are entered manually.
-// WILL/spellcasting are not simulated.
+// Saved fights retain their rules; source effects are captured for future fights.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -56,7 +55,9 @@ function _data() {
       combatSkill: 0, combatSkillInitial: 0,
       endurance: 0, enduranceInitial: 0,
       attackModifier: 0,
-      hasHealingPotion: true, healingPotionUsed: false,
+      printedRules: 1, willpower: 0, willpowerInitial: 0,
+      nextWeapon: 'staff', nextWillSpend: 1,
+      hasHealingPotion: false, healingPotionUsed: false,
       rolled: false,
       ratio: 0,
       enemy: { name: '', skill: 0, endurance: 0, enduranceMax: 0 },
@@ -96,40 +97,127 @@ function _recordOutcome(d, outcome) {
   d.history.push({ enemy: _enemyName(d), outcome, ts: Date.now() });
 }
 
-function _effectiveSkill(d) { return d.combatSkill + (d.attackModifier || 0); }
+const NEIJJIN = [[10,10],[9,10],[10,10],[7,9],[8,10],[10,12],[9,9],[11,9],[10,9]];
+const VICTORY_ROUTES = { 99: [88,94], 101: [130], 117: [164], 120: [189], 133: [71], 149: [165], 154: [103], 189: [215], 197: [213], 203: [156], 205: [176], 224: [127], 231: [256], 243: [125,338,333], 246: [290], 255: [75], 259: [296], 260: [213], 265: [40], 272: [322], 284: [310], 308: [127], 309: [171], 321: [37], 337: [44] };
+const DEADLINES = { 101: [5,130], 120: [3,189], 149: [4,165], 272: [3,315], 281: [1,null] };
 
-function _runRound() {
+function _captureFightEffects(d) {
+  const section = Number(d.enemy.name.match(/§(\d+)/)?.[1]) || 0;
+  d.printedRules = 1;
+  d.combatEffects = {
+    section, weapon: ['staff','other','none'].includes(d.nextWeapon) ? d.nextWeapon : 'staff',
+    dagger: d.nextDagger === true, spareWeapon: d.nextSpareWeapon === true,
+    shield: d.nextShield === true, willSpend: Math.max(1, Math.floor(Number(d.nextWillSpend) || 1)),
+    mentalSkill: (Number(d.willpower) || 0) + d.endurance,
+    initialEnemy: { ...d.enemy },
+  };
+  if (section === 101) d.combatEffects.sequence = Math.max(0, Math.min(8, Number(d.enemy.name.match(/Нейджин\s+(\d+)/)?.[1] || 1) - 1));
+  d.ratio = _effectiveSkill(d) - d.enemy.skill;
+}
+
+function _effectiveSkill(d) {
+  let skill = d.combatSkill + (d.attackModifier || 0);
+  const effects = d.combatEffects;
+  if (!effects) return skill;
+  if (effects.section === 259) return effects.mentalSkill + (d.attackModifier || 0);
+  if (effects.weapon === 'none') skill -= 8;
+  else if (effects.weapon !== 'staff' || !(d.willpower >= 1)) skill -= 6;
+  if (effects.dagger && effects.weapon !== 'none') skill++;
+  skill += ({ 99: 4, 120: 3, 189: 3, 203: 4, 205: 5, 231: -2, 243: 4, 281: -1, 308: 4 })[effects.section] || 0;
+  if (effects.section === 101 && effects.spareWeapon) skill += 2;
+  if (effects.section === 309 && d.roundsThisBattle < 2) skill += 4;
+  return skill;
+}
+
+function _stopFight(d, routes) {
+  d.combatEffects.finished = true;
+  d.combatEffects.routes = routes;
+  _appendLog(d, t('battlesim439.log.continue', { sections: routes.join(' / ') }));
+}
+
+function _escapeRoute(d) {
+  const effects = d.combatEffects;
+  if (!effects || effects.finished) return null;
+  if (effects.section === 133 && d.roundsThisBattle >= 2) return 27;
+  if (effects.section === 154 && d.roundsThisBattle >= 1) return 4;
+  return ({ 205: 163, 309: 137, 321: 137 })[effects.section] || null;
+}
+
+function _runRound(escape = false) {
   const d = _data();
-  if (!d || !d.rolled || d.endurance <= 0 || d.enemy.endurance <= 0) return;
+  escape = escape === true;
+  if (!d || !d.rolled || d.endurance <= 0 || d.enemy.endurance <= 0 || d.combatEffects?.finished) return;
+  if (d.printedRules === 1 && !d.combatEffects) _captureFightEffects(d);
+  const route = escape ? _escapeRoute(d) : null;
+  if (escape && !route) return;
+  const effects = d.combatEffects;
+  if (effects) d.ratio = _effectiveSkill(d) - d.enemy.skill;
   d.roundsThisBattle++;
 
   const pick = _pick10();
   const col = _ratioCol(d.ratio);
   const [enemyLoss, lwLoss] = COMBAT_TABLE[_pickRow(pick)][col];
   _appendLog(d, t('battlesim439.log.round', { round: d.roundsThisBattle, ratio: d.ratio, pick }));
-
-  if (enemyLoss === 'K') d.enemy.endurance = 0;
-  else d.enemy.endurance = Math.max(0, d.enemy.endurance - enemyLoss);
+  let spent = 0;
+  if (effects && effects.section !== 259 && effects.weapon === 'staff' && d.willpower > 0) {
+    spent = Math.min(effects.willSpend, Math.floor(d.willpower));
+    d.willpower -= spent;
+    _appendLog(d, t('battlesim439.log.will', { spent, will: d.willpower }));
+  }
+  const damage = enemyLoss === 'K' ? enemyLoss : enemyLoss * Math.max(1, spent);
+  if (!escape) {
+    if (damage === 'K') d.enemy.endurance = 0;
+    else d.enemy.endurance = Math.max(0, d.enemy.endurance - damage);
+  }
   if (lwLoss === 'K') d.endurance = 0;
   else d.endurance = Math.max(0, d.endurance - lwLoss);
+  if (effects?.section === 149) {
+    d.willpower = (Number(d.willpower) || 0) - 1;
+    d.endurance = Math.max(0, d.endurance - (effects.shield ? 1 : 2));
+    _appendLog(d, t('battlesim439.log.soul', { loss: effects.shield ? 1 : 2, will: d.willpower }));
+  }
 
   _appendLog(d, t('battlesim439.log.result', {
     enemy: _enemyNameSafe(d),
-    enemyLoss: enemyLoss === 'K' ? t('battlesim439.log.k_word') : enemyLoss,
+    enemyLoss: escape ? 0 : damage === 'K' ? t('battlesim439.log.k_word') : damage,
     enemyEndurance: d.enemy.endurance, enemyEnduranceMax: d.enemy.enduranceMax,
     lwLoss: lwLoss === 'K' ? t('battlesim439.log.k_word') : lwLoss,
     endurance: d.endurance, enduranceMax: d.enduranceInitial,
   }));
 
-  _checkBattleEnd(d);
+  if (escape && d.endurance > 0) _stopFight(d, [route]);
+  else _checkBattleEnd(d);
+  if (effects && !effects.finished) {
+    const deadline = DEADLINES[effects.section];
+    if (deadline && d.roundsThisBattle >= deadline[0]) _stopFight(d, [deadline[1] || (d.willpower >= 10 ? 331 : 32)]);
+  }
   saveState();
   _renderAll();
 }
 
 function _checkBattleEnd(d) {
+  if (d.combatEffects && d.endurance <= 0) {
+    d.combatEffects.finished = true;
+    _appendLog(d, t('battlesim439.log.fallen', { skull: SVG_SKULL }));
+    _recordOutcome(d, 'loss');
+    return;
+  }
   if (d.enemy.endurance <= 0) {
+    const effects = d.combatEffects;
+    if (effects?.section === 101 && effects.sequence < 8) {
+      effects.sequence++;
+      const [skill, endurance] = NEIJJIN[effects.sequence];
+      d.enemy = { name: t('battlesim439.ui.neijjin', { n: effects.sequence + 1 }), skill, endurance, enduranceMax: endurance };
+      _appendLog(d, t('battlesim439.log.next', { enemy: _enemyNameSafe(d) }));
+      return;
+    }
+    if (effects?.section === 281) {
+      _stopFight(d, [d.willpower >= 10 ? 331 : 32]);
+      return;
+    }
     _appendLog(d, t('battlesim439.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyNameSafe(d) }));
     _recordOutcome(d, 'win');
+    if (effects) _stopFight(d, VICTORY_ROUTES[effects.section] || []);
   } else if (d.endurance <= 0) {
     _appendLog(d, t('battlesim439.log.fallen', { skull: SVG_SKULL }));
     _recordOutcome(d, 'loss');
@@ -139,19 +227,21 @@ function _checkBattleEnd(d) {
 function _resetBattle() {
   const d = _data();
   if (!d) return;
+  const future = d.printedRules === 1;
+  if (future && d.combatEffects?.initialEnemy) d.enemy = { ...d.combatEffects.initialEnemy };
   d.roundsThisBattle = 0;
   d.enemy.endurance = d.enemy.enduranceMax;
-  d.endurance = d.enduranceInitial;
+  _captureFightEffects(d);
   if (d.log.length) _appendLog(d, t('battlesim439.log.reset_sep'));
-  _appendLog(d, t('battlesim439.log.reset', { enemy: _enemyNameSafe(d) }));
+  _appendLog(d, t('battlesim439.log.reset_future', { enemy: _enemyNameSafe(d) }));
   saveState();
   _renderAll();
 }
 
 function _usePotion() {
   const d = _data();
-  if (!d || !d.rolled || !d.hasHealingPotion || d.healingPotionUsed) return;
-  if (d.roundsThisBattle > 0 && d.endurance > 0 && d.enemy.endurance > 0) {
+  if (!d || !d.rolled || !d.hasHealingPotion || d.healingPotionUsed || (d.printedRules === 1 && d.endurance <= 0)) return;
+  if (d.roundsThisBattle > 0 && !d.combatEffects?.finished && d.endurance > 0 && d.enemy.endurance > 0) {
     showAlert(t('battlesim439.alert.potion_midfight'));
     return;
   }
@@ -247,6 +337,11 @@ function _renderInputs(skipEnemyPick) {
   _setVal('sim439-en', d.endurance);
   _setVal('sim439-enmax', d.enduranceInitial);
   _setVal('sim439-atkmod', d.attackModifier);
+  _setVal('sim439-will', d.willpower ?? 0);
+  _setVal('sim439-willmax', d.willpowerInitial ?? 0);
+  _setVal('sim439-will-spend', d.nextWillSpend ?? 1);
+  _setVal('sim439-weapon', d.nextWeapon ?? 'staff');
+  for (const [id, key] of [['dagger','nextDagger'], ['spare-weapon','nextSpareWeapon'], ['shield','nextShield'], ['has-potion','hasHealingPotion']]) document.getElementById('sim439-' + id).checked = d[key] === true;
   _setVal('sim439-enemy-skill', d.enemy.skill);
   _setVal('sim439-enemy-en', d.enemy.endurance);
   _setVal('sim439-enemy-enmax', d.enemy.enduranceMax);
@@ -254,7 +349,7 @@ function _renderInputs(skipEnemyPick) {
   if (!skipEnemyPick) _setVal('sim439-enemy-pick', d.enemy.name);
 
   const potionBtn = document.getElementById('sim439-use-potion');
-  potionBtn.disabled = !d.rolled || !d.hasHealingPotion || d.healingPotionUsed;
+  potionBtn.disabled = !d.rolled || !d.hasHealingPotion || d.healingPotionUsed || (d.printedRules === 1 && d.endurance <= 0);
   potionBtn.textContent = d.healingPotionUsed ? t('battlesim439.btn.used') : t('battlesim439.btn.drink');
 
   const rollBtn = document.getElementById('sim439-roll');
@@ -266,12 +361,17 @@ function _renderInputs(skipEnemyPick) {
     status.textContent = t('battlesim439.status.not_ready');
   } else if (d.endurance <= 0) {
     status.textContent = t('battlesim439.status.fallen');
+  } else if (d.combatEffects?.finished) {
+    status.textContent = t('battlesim439.log.continue', { sections: d.combatEffects.routes?.join(' / ') || '' });
   } else if (d.enemy.endurance <= 0 && d.enemy.enduranceMax > 0) {
     status.textContent = t('battlesim439.status.defeated', { enemy: _enemyName(d) });
   } else {
     status.textContent = '';
   }
-  document.getElementById('sim439-round').disabled = !d.rolled || d.endurance <= 0 || d.enemy.endurance <= 0;
+  document.getElementById('sim439-round').disabled = !d.rolled || d.endurance <= 0 || d.enemy.endurance <= 0 || d.combatEffects?.finished === true;
+  const escape = document.getElementById('sim439-escape');
+  escape.hidden = !d.combatEffects;
+  escape.disabled = !d.rolled || d.endurance <= 0 || d.enemy.endurance <= 0 || !_escapeRoute(d);
 }
 
 function _renderLog() {
@@ -368,7 +468,18 @@ export function initSim439() {
             ${_numField(t('battlesim439.ui.cs_initial'), 'sim439-csmax')}
             ${_numField(t('battlesim439.ui.en'), 'sim439-en')}
             ${_numField(t('battlesim439.ui.en_initial'), 'sim439-enmax')}
+            ${_numField(t('battlesim439.ui.will'), 'sim439-will')}
+            ${_numField(t('battlesim439.ui.will_initial'), 'sim439-willmax')}
             ${_numField(t('battlesim439.ui.atkmod'), 'sim439-atkmod')}
+            <details class="bsim-history">
+              <summary>${t('battlesim439.ui.next_fight')}</summary>
+              <div class="inv-edit-row"><span class="inv-edit-label bsim-stat-label">${t('battlesim439.ui.weapon')}</span><select id="sim439-weapon" class="inv-edit-input">${['staff','other','none'].map(value => `<option value="${value}">${t('battlesim439.ui.' + value)}</option>`).join('')}</select></div>
+              ${_numField(t('battlesim439.ui.will_spend'), 'sim439-will-spend')}
+              ${['dagger','spare-weapon','shield'].map(id => `<label class="inv-edit-row"><span class="inv-edit-label bsim-stat-label">${t('battlesim439.ui.' + id)}</span><input type="checkbox" id="sim439-${id}"></label>`).join('')}
+              <p class="bsim-history-empty">${t('battlesim439.ui.effects_note')}</p>
+              <p class="bsim-history-empty">${t('battlesim439.ui.mental_note')}</p>
+            </details>
+            <label class="inv-edit-row"><span class="inv-edit-label bsim-stat-label">${t('battlesim439.ui.has_potion')}</span><input type="checkbox" id="sim439-has-potion"></label>
             <div class="inv-edit-row">
               <span class="inv-edit-label bsim-stat-label">${t('battlesim439.ui.potion')}</span>
               <button id="sim439-use-potion" class="inv-edit-done bsim-ae-roll-btn" type="button">${t('battlesim439.btn.drink')}</button>
@@ -390,6 +501,7 @@ export function initSim439() {
           <div id="sim439-status" class="bsim-status"></div>
           <div class="inv-modal-ftr">
             <button id="sim439-round" class="inv-add-btn bsim-action-primary">${t('battlesim439.btn.round')}</button>
+            <button id="sim439-escape" class="inv-add-btn" hidden>${t('battlesim439.btn.escape')}</button>
             <button id="sim439-reset" class="inv-add-btn">${t('battlesim439.btn.reset')}</button>
           </div>
         </div>
@@ -429,17 +541,31 @@ export function initSim439() {
   document.getElementById('sim439-round').addEventListener('click', _runRound);
   document.getElementById('sim439-reset').addEventListener('click', _resetBattle);
   document.getElementById('sim439-use-potion').addEventListener('click', _usePotion);
+  document.getElementById('sim439-escape').addEventListener('click', () => _runRound(true));
+  document.getElementById('sim439-weapon').addEventListener('change', e => {
+    const d = _data(); if (!d) return;
+    d.nextWeapon = e.target.value; saveState();
+  });
+  for (const [id, key] of [['dagger','nextDagger'], ['spare-weapon','nextSpareWeapon'], ['shield','nextShield'], ['has-potion','hasHealingPotion']]) document.getElementById('sim439-' + id).addEventListener('change', e => {
+    const d = _data(); if (!d) return;
+    d[key] = e.target.checked; saveState(); _renderInputs(true);
+  });
 
   document.getElementById('sim439-roll').addEventListener('click', () => {
     const d = _data();
     if (!d || d.rolled) return;
     d.combatSkillInitial = _pick10() + 10;
+    if (d.printedRules === 1) {
+      d.willpowerInitial = _pick10() + 20;
+      d.willpower = d.willpowerInitial;
+    }
     d.enduranceInitial   = _pick10() + 20;
     d.combatSkill = d.combatSkillInitial;
     d.endurance   = d.enduranceInitial;
     d.rolled = true;
+    if (d.printedRules === 1 && d.combatEffects) _captureFightEffects(d);
     d.ratio  = _effectiveSkill(d) - d.enemy.skill;
-    _appendLog(d, t('battlesim439.log.rolled', { cs: d.combatSkillInitial, en: d.enduranceInitial }));
+    _appendLog(d, t(d.printedRules === 1 ? 'battlesim439.log.rolled_future' : 'battlesim439.log.rolled', { cs: d.combatSkillInitial, en: d.enduranceInitial, will: d.willpowerInitial }));
     saveState();
     _renderAll();
   });
@@ -458,7 +584,7 @@ export function initSim439() {
     d.enemy.endurance      = enemy.hp ?? 0;
     d.enemy.enduranceMax   = enemy.hp ?? 0;
     d.roundsThisBattle     = 0;
-    d.ratio                = _effectiveSkill(d) - d.enemy.skill;
+    _captureFightEffects(d);
     saveState();
     _renderInputs(true);
   });
@@ -467,6 +593,8 @@ export function initSim439() {
     'sim439-cs': ['combatSkill'], 'sim439-csmax': ['combatSkillInitial'],
     'sim439-en': ['endurance'], 'sim439-enmax': ['enduranceInitial'],
     'sim439-atkmod': ['attackModifier'],
+    'sim439-will': ['willpower'], 'sim439-willmax': ['willpowerInitial'],
+    'sim439-will-spend': ['nextWillSpend'],
     'sim439-enemy-skill': ['enemy', 'skill'], 'sim439-enemy-en': ['enemy', 'endurance'], 'sim439-enemy-enmax': ['enemy', 'enduranceMax'],
   };
   for (const [id, path] of Object.entries(fieldMap)) {
@@ -474,11 +602,12 @@ export function initSim439() {
     input.addEventListener('change', () => {
       const d = _data();
       if (!d) return;
-      const allowNegative = id === 'sim439-atkmod';
-      const val = allowNegative ? (parseInt(input.value, 10) || 0) : Math.max(0, parseInt(input.value, 10) || 0);
+      const allowNegative = id === 'sim439-atkmod' || id === 'sim439-will';
+      const number = id === 'sim439-en' ? parseFloat(input.value) : parseInt(input.value, 10);
+      const val = allowNegative ? (number || 0) : Math.max(0, number || 0);
       if (path.length === 1) d[path[0]] = val;
       else d[path[0]][path[1]] = val;
-      if (id === 'sim439-cs' || id === 'sim439-atkmod' || id === 'sim439-enemy-skill') d.ratio = _effectiveSkill(d) - d.enemy.skill;
+      if (id === 'sim439-cs' || id === 'sim439-atkmod' || id === 'sim439-enemy-skill' || id === 'sim439-will') d.ratio = _effectiveSkill(d) - d.enemy.skill;
       saveState();
       _renderInputs(true);
     });
@@ -488,7 +617,7 @@ export function initSim439() {
       const input = document.getElementById(btn2.dataset.id);
       if (!input) return;
       const delta = parseInt(btn2.dataset.delta, 10);
-      input.value = (parseInt(input.value, 10) || 0) + delta;
+      input.value = (parseFloat(input.value) || 0) + delta;
       input.dispatchEvent(new Event('change'));
     });
   });
