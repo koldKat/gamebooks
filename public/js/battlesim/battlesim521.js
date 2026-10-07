@@ -151,11 +151,13 @@ export function renderSim521() {
     : tk('rolled', { player: pending.player.total, enemies: pending.rolls.map(roll => roll.total).join(', '),
       damage: pending.enemyDamage + (pending.flankDamage ?? 0) }) : '';
   element('bonus-hit').innerHTML = (pending?.hits ?? []).map((hit, i) => `<option value="${i}">${escapeHtml(fight.encounter.foes[hit.index].name)}</option>`).join('') || '<option value="0">-</option>';
+  const selection = pending?.selection ?? {};
+  element('bonus-hit').value = String(selection.bonusHit ?? 0);
   element('bonus').disabled = !pending?.hits.length || p.fortune < 1 || Boolean(pending?.retry);
   element('defense').max = p.fortune;
-  element('defense').value = 0;
-  element('bonus').checked = false;
-  element('flanks').checked = false;
+  element('defense').value = selection.defensePoints ?? 0;
+  element('bonus').checked = selection.attackBonus ?? false;
+  element('flanks').checked = selection.blockFlanks ?? false;
   element('flanks-wrap').hidden = !pending?.flankDamage;
   element('tree').hidden = !fight?.encounter.treeEscapeFortune;
   element('tree').disabled = !fight || Boolean(pending) || fight.status !== 'fighting' || p.fortune < 3;
@@ -218,6 +220,15 @@ export function initSim521() {
   element('encounter').addEventListener('change', configure);
   element('start').addEventListener('click', start);
   for (const action of ['roll', 'settle', 'tree', 'canoe']) element(action).addEventListener('click', () => act(action));
+  for (const key of ['bonus', 'bonus-hit', 'defense', 'flanks']) {
+    element(key).addEventListener('change', () => {
+      const pending = data()?.fight?.pending;
+      if (!pending) return;
+      pending.selection = { attackBonus: element('bonus').checked, bonusHit: number('bonus-hit'),
+        defensePoints: Math.max(0, Math.floor(number('defense') || 0)), blockFlanks: element('flanks').checked };
+      saveAndRender();
+    });
+  }
   for (const key of ['expertise', 'vitality', 'fortune', 'weaponDamage']) {
     element(key).addEventListener('change', () => {
       const d = data();
