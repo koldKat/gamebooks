@@ -6,6 +6,7 @@ import { createContext, SourceTextModule } from 'node:vm';
 
 const root = process.argv[1];
 const baseline = 'dfb01830b7249210ee19f1881e53f3bbe73d9f35c9f9ea7ce399f93a52466276'; // Includes reviewed feedback and simulator text updates.
+const addedSimulatorIds = new Set([521, 522, 523, 524]);
 const hash = entries => createHash('sha256').update(JSON.stringify(entries)).digest('hex');
 const sorted = table => Object.keys(table).sort().map(key => [key, table[key]]);
 async function environment(language) {
@@ -54,7 +55,7 @@ function walk(dir) {
   }
 }
 walk(resolve(root, 'i18n/en'));
-assert.equal(paths.length, 166, 'feature/shared tables and one table for each of 155 simulators');
+assert.equal(paths.length, 166 + addedSimulatorIds.size, 'legacy tables plus one table per added simulator');
 const lazy = await en.load('i18n/battlesim.js');
 const simulatorIds = [];
 const keys = new Set();
@@ -83,7 +84,8 @@ for (const path of paths) {
   }
 }
 assert.equal(keys.size, Object.keys(en.table).length, 'aggregator includes every table exactly once');
-assert.equal(keys.size, 8089);
+const addedKeys = [...keys].filter(key => addedSimulatorIds.has(Number(key.match(/^battlesim(\d+)\./)?.[1])));
+assert.equal(keys.size - addedKeys.length, 8089, 'legacy key count remains unchanged');
 assert.equal(en.api.t('covers.login_to_add_book'), 'Log in or sign up to add book');
 const added230 = {
   'battlesim230.log.shared_round': '{enemy}: {enemyAS}, against your same Attack Strength of {playerAS}. Only the highest lands a blow.',
@@ -91,7 +93,8 @@ const added230 = {
   'battlesim230.btn.switch_target': 'Switch attack target',
 };
 for (const [key, value] of Object.entries(added230)) assert.equal(en.api.t(key), value);
-const original = sorted(en.table).filter(([key]) => !key.startsWith('reading_access.') && !Object.hasOwn(added230, key) && key !== 'covers.login_to_add_book');
+const original = sorted(en.table).filter(([key]) => !key.startsWith('reading_access.') && !Object.hasOwn(added230, key)
+  && key !== 'covers.login_to_add_book' && !addedSimulatorIds.has(Number(key.match(/^battlesim(\d+)\./)?.[1])));
 assert.equal(hash(original), baseline, 'every original key and exact Unicode/string value matches reviewed baseline');
 assert.equal(hash(original.map(([key]) => [key, en.api.t(key)])), baseline, 'every original lookup is available after its table loads');
 assert.equal(en.api.t('reading_access.unlock', { cost: 0 }), 'Unlock book · 0');
