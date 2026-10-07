@@ -31,12 +31,6 @@ async function runBackup() {
     await new Promise((resolve, reject) =>
       execFile('zip', ['-j', zip, snap], err => (err ? reject(err) : resolve()))
     );
-    const root = path.join(__dirname, '..');
-    if (fs.existsSync(path.join(root, 'reading-images'))) {
-      await new Promise((resolve, reject) =>
-        execFile('zip', ['-r', zip, 'reading-images'], { cwd: root }, err => (err ? reject(err) : resolve()))
-      );
-    }
   } catch (error) {
     try { fs.unlinkSync(zip); } catch (_) {}
     throw error;
