@@ -1,6 +1,9 @@
 // English translations: community.
 export default {
 
+    'notif.coin_mint_bonus': 'Coin Mint bonus',
+    'notif.gold_coins': '{amount} Gold Coin{s}',
+
     'modal.feedback.title':    'Send Feedback',
     'modal.feedback.username': 'Username:',
     'modal.feedback.email':    'Email (optional):',

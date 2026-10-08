@@ -157,7 +157,9 @@ export function _openNotifDropdown(btn, data) {
           shop_refund:         'Shop purchase refunded',
           runs_milestone:      'Completed runs milestone',
         };
-        if (n.payload.reason === 'bonus_gc_claim') {
+        if (n.payload.reason === 'coin_mint_bonus') {
+          text = `${escapeHtml(t('notif.coin_mint_bonus'))}: <strong>${escapeHtml(t('notif.gold_coins', { amount: amt, s: amt !== 1 ? 's' : '' }))}</strong>`;
+        } else if (n.payload.reason === 'bonus_gc_claim') {
           text = `<strong>${amt} Gold Coin${amt !== 1 ? 's' : ''}</strong> claimed <span style="color:#9ca3af;font-weight:normal">· Lucky coin</span>`;
         } else {
           const reasonLabel = coinReasonMap[n.payload.reason] || '';

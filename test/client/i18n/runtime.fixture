@@ -5,7 +5,7 @@ import { createHash } from 'node:crypto';
 import { createContext, SourceTextModule } from 'node:vm';
 
 const root = process.argv[1];
-const baseline = 'dfb01830b7249210ee19f1881e53f3bbe73d9f35c9f9ea7ce399f93a52466276'; // Includes reviewed feedback and simulator text updates.
+const baseline = '4f1b1de55771d4d47b9249c961fbd03b86021bec8ce06ffdcd0d1046198d61e3'; // Includes reviewed feedback and simulator updates.
 const addedSimulatorIds = new Set([521, 522, 523, 524, 534, 535, 536, 537, 548, 555, 557]);
 const hash = entries => createHash('sha256').update(JSON.stringify(entries)).digest('hex');
 const sorted = table => Object.keys(table).sort().map(key => [key, table[key]]);
@@ -41,7 +41,7 @@ async function environment(language) {
 }
 const en = await environment('en');
 assert.deepEqual(Object.keys(en.api).sort(), ['applyTranslations', 'setTranslationOverride', 't']);
-assert.equal(Object.keys(en.table).length, 692, 'only core and shared simulator strings are eager');
+assert.equal(Object.keys(en.table).length, 694, 'only core and shared simulator strings are eager');
 assert.ok([...en.modules.keys()].every(path => !/battlesim\d+\.js$/.test(path)), 'startup loads no per-simulator tables');
 assert.equal(en.api.t('battlesim214.status.fallen'), 'battlesim214.status.fallen', 'simulator strings start unloaded');
 assert.deepEqual(en.reads, ['gamebook_lang'], 'language read once through the shared runtime');
@@ -85,7 +85,12 @@ for (const path of paths) {
 }
 assert.equal(keys.size, Object.keys(en.table).length, 'aggregator includes every table exactly once');
 const addedKeys = [...keys].filter(key => addedSimulatorIds.has(Number(key.match(/^battlesim(\d+)\./)?.[1])));
-assert.equal(keys.size - addedKeys.length, 8089, 'legacy key count remains unchanged');
+const added734 = {
+  'battlesim734.log.next_enemy': 'Продължаваш срещу {enemy}.',
+  'battlesim734.btn.switch_target': 'Смени противника',
+};
+for (const [key, value] of Object.entries(added734)) assert.equal(en.api.t(key), value);
+assert.equal(keys.size - addedKeys.length - Object.keys(added734).length - 2, 8089, 'legacy key count remains unchanged');
 assert.equal(en.api.t('covers.login_to_add_book'), 'Log in or sign up to add book');
 const added230 = {
   'battlesim230.log.shared_round': '{enemy}: {enemyAS}, against your same Attack Strength of {playerAS}. Only the highest lands a blow.',
@@ -93,7 +98,13 @@ const added230 = {
   'battlesim230.btn.switch_target': 'Switch attack target',
 };
 for (const [key, value] of Object.entries(added230)) assert.equal(en.api.t(key), value);
-const original = sorted(en.table).filter(([key]) => !key.startsWith('reading_access.') && !Object.hasOwn(added230, key)
+const addedMint = {
+  'notif.coin_mint_bonus': 'Coin Mint bonus',
+  'notif.gold_coins': '{amount} Gold Coin{s}',
+};
+for (const [key, value] of Object.entries(addedMint)) assert.equal(en.api.t(key), value);
+assert.equal(en.api.t('notif.gold_coins', { amount: 2, s: 's' }), '2 Gold Coins');
+const original = sorted(en.table).filter(([key]) => !Object.hasOwn(addedMint, key)).filter(([key]) => !key.startsWith('reading_access.') && !Object.hasOwn(added230, key) && !Object.hasOwn(added734, key)
   && key !== 'covers.login_to_add_book' && !addedSimulatorIds.has(Number(key.match(/^battlesim(\d+)\./)?.[1])));
 assert.equal(hash(original), baseline, 'every original key and exact Unicode/string value matches reviewed baseline');
 assert.equal(hash(original.map(([key]) => [key, en.api.t(key)])), baseline, 'every original lookup is available after its table loads');

@@ -1,6 +1,5 @@
 // Battle Simulator (Сенките на мрака, book 661, Kung-Fu style book)
-// Rock-paper-scissors form comparison; only matching-type totals are automated.
-// Mismatched totals vary by encounter, so show components and let the reader record the outcome.
+// Encounter-specific totals stay manual, including matching forms.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../core/state.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -72,9 +71,11 @@ function _resolve() {
   const eType = d.enemy.formType;
   if (pType === eType) {
     const statKey = STAT_BY_TYPE[pType];
-    const playerTotal = _generalStat(d.player, statKey) + _formStat(d.player, statKey) + d.player.umenie;
-    const enemyTotal   = _generalStat(d.enemy, statKey) + _formStat(d.enemy, statKey) + d.enemy.umenie;
-    return { tie: true, statKey, playerTotal, enemyTotal };
+    return {
+      tie: true, statKey,
+      playerGeneral: _generalStat(d.player, statKey), playerForm: _formStat(d.player, statKey), playerSkill: d.player.umenie,
+      enemyGeneral: _generalStat(d.enemy, statKey), enemyForm: _formStat(d.enemy, statKey), enemySkill: d.enemy.umenie,
+    };
   }
   const winningType = _beats(pType, eType) ? pType : eType;
   const statKey = STAT_BY_TYPE[winningType];
@@ -95,7 +96,8 @@ function _renderResolution() {
   if (r.tie) {
     el.innerHTML = t('battlesim661.resolve.tie', {
       stat: t(`battlesim661.ui.${r.statKey}`),
-      playerTotal: r.playerTotal, enemyTotal: r.enemyTotal,
+      playerGeneral: r.playerGeneral, playerForm: r.playerForm, playerSkill: r.playerSkill,
+      enemyGeneral: r.enemyGeneral, enemyForm: r.enemyForm, enemySkill: r.enemySkill,
     });
   } else {
     el.innerHTML = t('battlesim661.resolve.mismatch', {

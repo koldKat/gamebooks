@@ -15,7 +15,7 @@ export default {
     'battlesim661.ui.form_sila':      'СИЛА на формата',
     'battlesim661.ui.form_lovkost':   'ЛОВКОСТ на формата',
     'battlesim661.ui.form_barzina':   'БЪРЗИНА на формата',
-    'battlesim661.resolve.tie':       'Еднакъв тип - сравни {stat}: твоите {playerTotal} срещу неговите {enemyTotal} (общо + форма + УМЕНИЕ). По-високият печели.',
+    'battlesim661.resolve.tie':       'Еднакъв тип. {stat}: ти имаш {playerGeneral} (общо), {playerForm} (форма), {playerSkill} (УМЕНИЕ); противникът има {enemyGeneral} (общо), {enemyForm} (форма), {enemySkill} (УМЕНИЕ). Следвай конкретния епизод за това кои показатели да събереш и как се решава равенството.',
     'battlesim661.resolve.mismatch':  '{winner} има превъзходство по тип - сравнете {stat}. Ти: {playerGeneral} (общо) + {playerForm} (форма) + {playerSkill} (УМЕНИЕ). {stat} на противника: {enemyGeneral} (общо) + {enemyForm} (форма) + {enemySkill} (УМЕНИЕ). Книгата ще ти каже точно кои от тези числа да съберете за тази конкретна схватка.',
     'battlesim661.log.win':           'Победа срещу {enemy}!',
     'battlesim661.log.loss':          'Загуба срещу {enemy}.',

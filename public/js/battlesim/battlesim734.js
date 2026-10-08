@@ -19,6 +19,7 @@ function _data() {
   if (!pt) return null;
   if (!pt.sim734) {
     pt.sim734 = {
+      combatRulesVersion: 2,
       mode: 'personal',
       player: {
         skill: 0, skillInitial: 0,
@@ -84,12 +85,47 @@ function _sideEnemyNameSafe(d) { return escapeHtml(d.sideEnemy.name.trim() || t(
 function _speedBonus(mySpeed, theirSpeed) { return mySpeed > theirSpeed ? 1 : 0; }
 
 function _resetEncounterKnobs(d) {
+  d.combatRulesVersion = 2;
+  delete d.battleOutcome;
   d.player.attackModifier = 0;
   d.player.enemyWoundDamage = 2;
   d.player.winAfterHits = 0;
   d.player.hitsLandedThisFight = 0;
   d.pairedFight = false;
   d.sideEnemy = { name: '', skill: 0, lifeMax: 0 };
+}
+
+function _finishCurrentRound(d) {
+  if (d.combatRulesVersion !== 2 || d.battleOutcome) return;
+  if (_activeLife(d) <= 0) {
+    d.battleOutcome = 'loss';
+    d.pendingLuckQueue = [];
+    _appendLog(d, t('battlesim734.log.fallen', { skull: SVG_SKULL }));
+    _recordOutcome(d, 'loss');
+  } else if (!d.pendingLuckQueue.length && d.enemy.life <= 0) {
+    if (d.pairedFight && d.sideEnemy.lifeMax > 0) {
+      d.enemy = { ...d.sideEnemy, life: d.sideEnemy.life ?? d.sideEnemy.lifeMax, speed: d.sideEnemy.speed ?? d.enemy.speed };
+      d.pairedFight = false;
+      d.sideEnemy = { name: '', skill: 0, lifeMax: 0 };
+      d.player.hitsLandedThisFight = 0;
+      _appendLog(d, t('battlesim734.log.next_enemy', { enemy: _enemyNameSafe(d) }));
+    } else {
+      d.battleOutcome = 'win';
+      _appendLog(d, t('battlesim734.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyNameSafe(d) }));
+      _recordOutcome(d, 'win');
+    }
+  }
+}
+
+function _switchTarget() {
+  const d = _data();
+  if (!d || _notReady(d) || _activeLife(d) <= 0 || d.combatRulesVersion !== 2 || !d.pairedFight || d.battleOutcome || d.pendingLuckQueue.length || d.sideEnemy.lifeMax <= 0) return;
+  const previous = { ...d.enemy };
+  d.enemy = { ...d.sideEnemy, life: d.sideEnemy.life ?? d.sideEnemy.lifeMax, speed: d.sideEnemy.speed ?? previous.speed };
+  d.sideEnemy = previous;
+  d.player.hitsLandedThisFight = 0;
+  saveState();
+  _renderAll();
 }
 
 // Keep lifetime outcomes: admin totals require the full history.
@@ -105,7 +141,7 @@ function _recordOutcome(d, outcome) {
 
 function _runRound() {
   const d = _data();
-  if (!d || _notReady(d) || _activeLife(d) <= 0 || d.enemy.life <= 0 || d.pendingLuckQueue.length) return;
+  if (!d || _notReady(d) || d.battleOutcome || _activeLife(d) <= 0 || d.enemy.life <= 0 || d.pendingLuckQueue.length) return;
   d.roundsThisBattle++;
 
   const robotMode = _isRobot(d);
@@ -131,13 +167,15 @@ function _runRound() {
   } else {
     _setActiveLife(d, Math.max(0, _activeLife(d) - woundDmg));
     _appendLog(d, t('battlesim734.log.enemy_wounds', { enemy: _enemyNameSafe(d), n: woundDmg, life: _activeLife(d), lifeMax: _activeLifeInitial(d) }));
-    if (_activeLife(d) > 0) d.pendingLuckQueue.push({ kind: 'enemy-hit' });
+    if (_activeLife(d) > 0) d.pendingLuckQueue.push({ kind: 'enemy-hit', damage: woundDmg });
   }
 
   // Side attackers act every round but cannot be wounded back.
   if (d.pairedFight && d.sideEnemy.lifeMax > 0 && _activeLife(d) > 0) {
-    const sidePlayerAS = _roll2d6() + d.player.skill + (d.player.attackModifier || 0) + myBonus;
-    const sideAS = _roll2d6() + d.sideEnemy.skill;
+    const sideSpeed = d.sideEnemy.speed ?? d.enemy.speed;
+    const sideBonus = d.combatRulesVersion === 2 && robotMode ? (d.player.robotCombatBonus || 0) + _speedBonus(d.player.robotSpeed, sideSpeed) : myBonus;
+    const sidePlayerAS = _roll2d6() + d.player.skill + (d.player.attackModifier || 0) + sideBonus;
+    const sideAS = _roll2d6() + d.sideEnemy.skill + (d.combatRulesVersion === 2 && robotMode ? _speedBonus(sideSpeed, d.player.robotSpeed) : 0);
     _appendLog(d, t('battlesim734.log.side_round', { enemy: _sideEnemyNameSafe(d), playerAS: sidePlayerAS, enemyAS: sideAS }));
     if (sideAS > sidePlayerAS) {
       _setActiveLife(d, Math.max(0, _activeLife(d) - SIDE_WOUND_DMG));
@@ -148,7 +186,9 @@ function _runRound() {
     }
   }
 
-  if (d.enemy.life <= 0) {
+  if (d.combatRulesVersion === 2) {
+    _finishCurrentRound(d);
+  } else if (d.enemy.life <= 0) {
     _appendLog(d, t('battlesim734.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyNameSafe(d) }));
     _recordOutcome(d, 'win');
   } else if (_activeLife(d) <= 0) {
@@ -178,22 +218,24 @@ function _testLuck() {
       d.enemy.life = Math.min(d.enemy.lifeMax, d.enemy.life + 1);
       _appendLog(d, t('battlesim734.log.luck_player_hit_unlucky', { roll, enemy: _enemyNameSafe(d), life: d.enemy.life, lifeMax: d.enemy.lifeMax }));
     }
-    if (d.enemy.life <= 0) { _appendLog(d, t('battlesim734.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyNameSafe(d) })); _recordOutcome(d, 'win'); }
+    if (d.combatRulesVersion !== 2 && d.enemy.life <= 0) { _appendLog(d, t('battlesim734.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyNameSafe(d) })); _recordOutcome(d, 'win'); }
   } else {
     const source = event.kind === 'side-hit' ? _sideEnemyNameSafe(d) : _enemyNameSafe(d);
+    const luckDamage = d.combatRulesVersion === 2 && event.damage === 4 ? 2 : 1;
     if (lucky) {
-      _setActiveLife(d, Math.min(_activeLifeInitial(d), _activeLife(d) + 1));
+      _setActiveLife(d, Math.min(_activeLifeInitial(d), _activeLife(d) + luckDamage));
       _appendLog(d, t('battlesim734.log.luck_hit_lucky', { roll, source, life: _activeLife(d), lifeMax: _activeLifeInitial(d) }));
     } else {
-      _setActiveLife(d, Math.max(0, _activeLife(d) - 1));
+      _setActiveLife(d, Math.max(0, _activeLife(d) - luckDamage));
       _appendLog(d, t('battlesim734.log.luck_hit_unlucky', { roll, source, life: _activeLife(d), lifeMax: _activeLifeInitial(d) }));
     }
-    if (_activeLife(d) <= 0) {
+    if (d.combatRulesVersion !== 2 && _activeLife(d) <= 0) {
       _appendLog(d, t('battlesim734.log.fallen', { skull: SVG_SKULL }));
       _recordOutcome(d, 'loss');
       d.pendingLuckQueue = [];
     }
   }
+  _finishCurrentRound(d);
   saveState();
   _renderAll();
 }
@@ -202,6 +244,7 @@ function _skipLuck() {
   const d = _data();
   if (!d || !d.pendingLuckQueue.length) return;
   d.pendingLuckQueue.shift();
+  _finishCurrentRound(d);
   saveState();
   _renderAll();
 }
@@ -209,6 +252,9 @@ function _skipLuck() {
 function _resetBattle() {
   const d = _data();
   if (!d) return;
+  d.combatRulesVersion = 2;
+  delete d.battleOutcome;
+  if (d.sideEnemy.lifeMax > 0) d.sideEnemy.life = d.sideEnemy.lifeMax;
   d.enemy.life = d.enemy.lifeMax;
   _setActiveLife(d, _activeLifeInitial(d));
   d.roundsThisBattle = 0;
@@ -230,12 +276,13 @@ function _renderStatus() {
   const hasEnemy = d.enemy.lifeMax > 0;
   if (notReady)                                  el.innerHTML = t('battlesim734.status.not_ready');
   else if (_activeLife(d) <= 0)                   el.innerHTML = t('battlesim734.status.fallen', { skull: SVG_SKULL });
-  else if (hasEnemy && d.enemy.life <= 0)          el.innerHTML = t('battlesim734.status.victory', { trophy: SVG_TROPHY });
+  else if (hasEnemy && (d.combatRulesVersion === 2 ? d.battleOutcome === 'win' : d.enemy.life <= 0)) el.innerHTML = t('battlesim734.status.victory', { trophy: SVG_TROPHY });
   else                                             el.innerHTML = '';
   const over = notReady || _activeLife(d) <= 0 || (hasEnemy && d.enemy.life <= 0);
   document.getElementById('sim734-round').disabled = over || !!d.pendingLuckQueue.length;
   document.getElementById('sim734-luck-yes').disabled = notReady || !d.pendingLuckQueue.length || d.player.luck <= 0;
   document.getElementById('sim734-luck-no').disabled  = notReady || !d.pendingLuckQueue.length;
+  document.getElementById('sim734-switch-target').disabled = notReady || _activeLife(d) <= 0 || d.combatRulesVersion !== 2 || !d.pairedFight || !!d.battleOutcome || !!d.pendingLuckQueue.length || d.sideEnemy.lifeMax <= 0;
 }
 
 function _renderHistory() {
@@ -306,6 +353,7 @@ function _renderInputs() {
   document.getElementById('sim734-side-skill').value = d.sideEnemy.skill;
   document.getElementById('sim734-side-lifemax').value = d.sideEnemy.lifeMax;
   document.getElementById('sim734-side-fields').style.display = d.pairedFight ? '' : 'none';
+  document.getElementById('sim734-side-speed').value = String(d.sideEnemy.speed ?? d.enemy.speed);
 
   const pendingEl = document.getElementById('sim734-luck-prompt');
   pendingEl.style.display = d.pendingLuckQueue.length ? '' : 'none';
@@ -509,6 +557,11 @@ export function initSim734() {
               </div>
               ${_numField(t('battlesim734.ui.skill'), 'sim734-side-skill')}
               ${_numField(t('battlesim734.ui.life_max'), 'sim734-side-lifemax')}
+              <div class="inv-edit-row">
+                <span class="inv-edit-label bsim-stat-label">${t('battlesim734.ui.enemy_speed')}</span>
+                <select id="sim734-side-speed" class="bsim-select">${_speedOptions()}</select>
+              </div>
+              <button id="sim734-switch-target" class="inv-edit-done" type="button">${t('battlesim734.btn.switch_target')}</button>
             </div>
           </div>
           <div id="sim734-status" class="bsim-status"></div>
@@ -580,6 +633,13 @@ export function initSim734() {
     d.enemy.speed = parseInt(e.target.value, 10) || 0;
     saveState();
   });
+  document.getElementById('sim734-side-speed').addEventListener('change', e => {
+    const d = _data();
+    if (!d) return;
+    d.sideEnemy.speed = parseInt(e.target.value, 10) || 0;
+    saveState();
+  });
+  document.getElementById('sim734-switch-target').addEventListener('click', _switchTarget);
 
   document.getElementById('sim734-paired').addEventListener('change', e => {
     const d = _data();

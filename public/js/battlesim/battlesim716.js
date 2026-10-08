@@ -26,6 +26,8 @@ function _data() {
       },
       enemy: { name: '', ataka: 0, zashtita: 0, bm: 1, izdr: 10, izdrMax: 10, nonlethal: true },
       roundsThisBattle: 0,
+      combatRulesVersion: 2,
+      battleOutcome: null,
       log: [],
       history: [],
     };
@@ -55,11 +57,16 @@ function _recordOutcome(d, outcome) {
   d.history.push({ enemy: _enemyName(d), outcome, ts: Date.now() });
 }
 
-function _ready(d) { return !!d && d.enemy.name.trim() !== '' && d.player.izdr > 0 && d.enemy.izdr > 0; }
+function _ready(d) { return !!d && !d.battleOutcome && d.enemy.name.trim() !== '' && d.player.izdr > 0 && d.enemy.izdr > 0; }
+
+function _firstBloodLimit(d) {
+  return d.combatRulesVersion === 2 && d.enemy.nonlethal ? Math.max(0, d.startEndurance - 10) : 0;
+}
 
 function _runRound() {
   const d = _data();
   if (!d || !_ready(d)) return;
+  if (d.combatRulesVersion === 2 && d.roundsThisBattle === 0) d.startEndurance = d.player.izdr;
   d.roundsThisBattle++;
 
   const pAtaka = _playerAtaka(d);
@@ -73,10 +80,10 @@ function _runRound() {
     _appendLog(d, t('battlesim716.log.player_hit', { roll, total: pAtaka + roll, zashtita: d.enemy.zashtita, dmg, enemy: _enemyNameSafe(d), izdr: d.enemy.izdr }));
   }
   for (let i = 0; i < Math.max(1, d.enemy.bm); i++) {
-    if (d.player.izdr <= 0 || d.enemy.izdr <= 0) break;
+    if (d.player.izdr <= _firstBloodLimit(d) || d.enemy.izdr <= 0) break;
     const roll = _roll();
     const dmg = Math.max(0, (d.enemy.ataka + roll) - pZashtita);
-    if (dmg > 0) d.player.izdr = Math.max(0, d.player.izdr - dmg);
+    if (dmg > 0) d.player.izdr = Math.max(_firstBloodLimit(d), d.player.izdr - dmg);
     _appendLog(d, t('battlesim716.log.enemy_hit', { enemy: _enemyNameSafe(d), roll, total: d.enemy.ataka + roll, zashtita: pZashtita, dmg, izdr: d.player.izdr }));
   }
 
@@ -87,6 +94,18 @@ function _runRound() {
 
 // First-blood fights (initial enemy endurance 10) restore half the player's lost points after either outcome.
 function _checkBattleEnd(d) {
+  if (d.combatRulesVersion === 2) {
+    if (d.battleOutcome) return;
+    const outcome = d.player.izdr <= _firstBloodLimit(d) ? 'loss' : d.enemy.izdr <= 0 ? 'win' : null;
+    if (!outcome) return;
+    d.battleOutcome = outcome;
+    const recover = d.enemy.nonlethal ? Math.floor((d.startEndurance - d.player.izdr) / 2) : 0;
+    d.player.izdr = Math.min(d.player.izdrMax, d.player.izdr + recover);
+    const key = outcome === 'win' ? 'defeated' : 'fallen';
+    _appendLog(d, t(`battlesim716.log.${key}${d.enemy.nonlethal ? '_nonlethal' : ''}`, { trophy: SVG_TROPHY, skull: SVG_SKULL, enemy: _enemyNameSafe(d), recover }));
+    _recordOutcome(d, outcome);
+    return;
+  }
   if (d.enemy.izdr <= 0) {
     if (d.enemy.nonlethal) {
       const recover = Math.floor((d.player.izdrMax - d.player.izdr) / 2);
@@ -112,6 +131,8 @@ function _resetBattle() {
   const d = _data();
   if (!d) return;
   d.roundsThisBattle = 0;
+  d.combatRulesVersion = 2;
+  d.battleOutcome = null;
   d.enemy.izdr = d.enemy.izdrMax;
   d.player.izdr = d.player.izdrMax;
   if (d.log.length) _appendLog(d, t('battlesim716.log.reset_sep'));
@@ -221,12 +242,12 @@ function _renderInputs(skipEnemyPick) {
   if (nlChk) nlChk.checked = !!d.enemy.nonlethal;
 
   const status = document.getElementById('sim716-status');
-  if (!_ready(d)) {
-    status.textContent = t('battlesim716.status.not_ready');
-  } else if (d.player.izdr <= 0) {
+  if (d.battleOutcome === 'loss' || d.player.izdr <= 0) {
     status.textContent = t('battlesim716.status.fallen');
-  } else if (d.enemy.izdr <= 0) {
+  } else if (d.battleOutcome === 'win' || d.enemy.izdr <= 0) {
     status.textContent = t('battlesim716.status.defeated', { enemy: _enemyName(d) });
+  } else if (!_ready(d)) {
+    status.textContent = t('battlesim716.status.not_ready');
   } else {
     status.textContent = '';
   }
@@ -434,7 +455,13 @@ export function initSim716() {
     d.enemy.izdr       = enemy.hp ?? 10;
     d.enemy.izdrMax    = enemy.hp ?? 10;
     d.enemy.nonlethal  = (enemy.hp ?? 10) <= 10;
+    if (enemy.name === 'Бързака') {
+      d.enemy.ataka = Math.max(0, d.enemy.ataka - d.player.barzina);
+      d.enemy.zashtita = Math.max(0, d.enemy.zashtita - d.player.reflekt);
+    }
     d.roundsThisBattle = 0;
+    d.combatRulesVersion = 2;
+    d.battleOutcome = null;
     saveState();
     _renderInputs(true);
   });

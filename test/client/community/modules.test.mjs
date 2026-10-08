@@ -9,11 +9,11 @@ const root = fileURLToPath(new URL('../../../public/', import.meta.url));
 const js = resolve(root, 'js');
 
 test('community relocation preserves each module implementation without root wrappers', () => {
-  // Baseline includes per-side deletion and attachment upload race fixes.
+  // Baseline includes feedback fixes and the Coin Mint purchase bonus notification.
   const digests = {
     inbox: '29c252f34e0b8e7fb803705f404130c7e520e01df68c9688c7e2eccbc2102478',
     feedback: 'cb26d728a3b4c4afdf5bbb37c568c0f3f0ebfaed4c7e2b746fcea497e04fde8d',
-    notif: 'e8e24f821145ad571d089f3008325074881583290eeb4e62778b5e1d35a7a10b',
+    notif: 'cf0bf5d7e63048e0ccdc6f3545f74fe6425fab71c48fc9d0adc0d1673470f773',
   };
   for (const [name, digest] of Object.entries(digests)) {
     assert.equal(existsSync(resolve(js, name + '.js')), false, 'no old root module: ' + name);

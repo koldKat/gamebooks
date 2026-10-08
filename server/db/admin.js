@@ -1473,7 +1473,7 @@ function setShopItemCost(id, cost, stepCost) {
   return { ok: true };
 }
 
-function purchaseShopItem(userId, item) {
+const _purchaseShopItemTx = db.transaction((userId, item) => {
   const def = _shopItemsCache.get(item);
   if (!def) return { error: 'invalid_item' };
   const row = db.prepare('SELECT xp, coins_spent, xp_boost_pct, bonus_undos, bonus_fast_travels, bonus_heartbeat_xp, bonus_gc_chance_purchased, bonus_gc_mint_purchased, bonus_coins FROM users WHERE id = ?').get(userId);
@@ -1524,7 +1524,18 @@ function purchaseShopItem(userId, item) {
   if (balance < cost) return { error: 'insufficient_coins' };
   db.prepare(`UPDATE users SET coins_spent = coins_spent + ?, ${def.col} = ${def.col} + ? WHERE id = ?`)
     .run(cost, def.delta, userId);
-  return { ok: true, newBalance: balance - cost };
+  const after = db.prepare('SELECT xp, coins_spent, bonus_coins, bonus_gc_mint_purchased FROM users WHERE id = ?').get(userId);
+  const newBalance = coinBalance(after);
+  const mintBonus = newBalance - (balance - cost);
+  if (item === 'gc_mint' && mintBonus > 0) {
+    // The balance formula already includes these coins; only record the explanation.
+    _insertNotif.run(userId, 'coin_gain', JSON.stringify({ amount: mintBonus, balance: newBalance, reason: 'coin_mint_bonus' }));
+  }
+  return { ok: true, newBalance };
+});
+
+function purchaseShopItem(userId, item) {
+  return _purchaseShopItemTx(userId, item);
 }
 
 function adminRefundShopItem(userId, item, all = false) {

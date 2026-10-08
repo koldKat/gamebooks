@@ -14,6 +14,7 @@ export default {
     'battlesim734.log.side_round':    'Втори нападател {enemy}: твоята Сила на Нападение {playerAS} срещу неговата {enemyAS}.',
     'battlesim734.log.side_wounds':   '{enemy} те ранява за {n} (не можеш да му отвърнеш). Точки: {life}/{lifeMax}.',
     'battlesim734.log.side_fend':     'Отбраняваш се от {enemy}, без да пострадаш.',
+    'battlesim734.log.next_enemy':    'Продължаваш срещу {enemy}.',
     'battlesim734.log.luck_player_hit_lucky':   'Изпитване на Късмет: {roll} (Късмет) - раната е по-тежка. Точки на {enemy}: {life}/{lifeMax}.',
     'battlesim734.log.luck_player_hit_unlucky': 'Изпитване на Късмет: {roll} (Без късмет) - раната е по-лека. Точки на {enemy}: {life}/{lifeMax}.',
     'battlesim734.log.luck_hit_lucky':          'Изпитване на Късмет: {roll} (Късмет) - раната от {source} е по-лека. Твоите точки: {life}/{lifeMax}.',
@@ -61,4 +62,5 @@ export default {
     'battlesim734.btn.luck_no':       'Пропусни',
     'battlesim734.btn.round':         'Тур',
     'battlesim734.btn.reset':         'Нулирай',
+    'battlesim734.btn.switch_target': 'Смени противника',
 };

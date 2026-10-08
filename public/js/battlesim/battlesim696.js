@@ -13,6 +13,16 @@ const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" ari
 
 function _rollChance() { return 1 + Math.floor(Math.random() * 6); }
 
+// Strength and reflex are printed in the creature catalogue, outside the shared roster fields.
+const CREATURE_ATTRIBUTES = {
+  'Обикновен човек': [3, 2], 'Полуджентри': [3, 3], 'Джентри': [5, 5],
+  'Обикновен вампир': [4, 3], 'Архвампир': [6, 6], 'Естер': [3, 2],
+  'Гном': [3, 2], 'Полугном': [3, 2], 'Верволф (таласъм-вълк)': [4, 3],
+  'Верфокс (таласъм-лисица)': [3, 3], 'Вербьор (таласъм-мечка)': [5, 2],
+  'Русалка (воден дух)': [2, 2], 'Вълк': [2, 2], 'Мечка': [5, 1],
+  'Глиган': [3, 2], 'Грифон': [5, 4], 'Барс': [3, 3], 'Еднорог': [3, 4],
+};
+
 function _data() {
   const pt = currentPlaythrough();
   if (!pt) return null;
@@ -26,6 +36,7 @@ function _data() {
       enemy: { name: '', sila: 0, refleks: 0, izdrazhlivost: 0, life: 0, lifeMax: 0, ataka: 0, zashtita: 0 },
       attackerIsPlayer: true,
       roundsThisBattle: 0,
+      exchangeRulesVersion: 2,
       log: [],
       history: [],
     };
@@ -91,8 +102,8 @@ function _runRound() {
     _appendLog(d, `${SVG_SKULL} ${t('battlesim696.log.fallen')}`);
     _recordOutcome(d, 'loss');
   } else {
-    // Swap attack/defense after a resolved exchange; failed blows leave the same attacker trying again.
-    if (defense <= strike) d.attackerIsPlayer = !d.attackerIsPlayer;
+    // Existing saved fights retain their original exchange rules until restarted.
+    if (d.exchangeRulesVersion >= 2 || defense <= strike) d.attackerIsPlayer = !d.attackerIsPlayer;
   }
 
   saveState();
@@ -106,6 +117,7 @@ function _resetBattle() {
   d.player.life = d.player.lifeInitial;
   d.attackerIsPlayer = true;
   d.roundsThisBattle = 0;
+  d.exchangeRulesVersion = 2;
   if (d.log.length) _appendLog(d, t('battlesim696.log.reset_sep'));
   _appendLog(d, t('battlesim696.log.reset', { enemy: _enemyNameSafe(d) }));
   saveState();
@@ -263,8 +275,11 @@ function _setupEnemyAutocomplete() {
     if (enemy.defense != null) d.enemy.zashtita = enemy.defense;
     if (enemy.hp != null)      { d.enemy.life = enemy.hp; d.enemy.lifeMax = enemy.hp; }
     if (enemy.pb != null)      d.enemy.izdrazhlivost = enemy.pb;
+    const attributes = CREATURE_ATTRIBUTES[enemy.name];
+    if (attributes) [d.enemy.sila, d.enemy.refleks] = attributes;
     d.attackerIsPlayer = true;
     d.roundsThisBattle = 0;
+    d.exchangeRulesVersion = 2;
     closeDropdown();
     saveState();
     _renderAll();
