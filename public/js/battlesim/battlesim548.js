@@ -97,7 +97,7 @@ export function setSim548Visible(value) {
 export function initSim548() {
   if (el('overlay')) return;
   const overlay = document.createElement('div'); overlay.id = `${ID}-overlay`; overlay.className = 'inv-overlay';
-  overlay.innerHTML = `<div class="inv-modal bsim-modal"><div class="inv-modal-hdr"><span class="inv-modal-title">${tk('title')}</span><button id="${ID}-close" class="inv-close-btn" aria-label="${t('btn.close')}">&times;</button></div>
+  overlay.innerHTML = `<div class="inv-modal bsim-modal bsim-compact-form"><div class="inv-modal-hdr"><span class="inv-modal-title">${tk('title')}</span><button id="${ID}-close" class="inv-close-btn" aria-label="${t('btn.close')}">&times;</button></div>
     <div class="bsim-body"><div class="bsim-col bsim-col-left"><div class="bsim-side"><div class="bsim-side-title">${tk('character')}</div>
     ${fields.map(field).join('')}<label class="inv-edit-row"><input id="${ID}-throwingKnife" type="checkbox">${tk('throwingKnife')}</label>
     <label class="inv-edit-row"><input id="${ID}-approaching" type="checkbox">${tk('approaching')}</label>

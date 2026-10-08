@@ -8,7 +8,7 @@ export default {
   'battlesim521.fortune_roll': 'Roll initial Fortune',
   'battlesim521.potion': 'Drink vitality potion (+8)',
   'battlesim521.encounter': 'Encounter',
-  'battlesim521.encounter_label': 'Section {section}: {enemy}',
+  'battlesim521.encounter_label': '{enemy} ({section})',
   'battlesim521.count': 'Surviving opponents',
   'battlesim521.manual': 'Enemy damage (manual)',
   'battlesim521.companions': 'Companion weapon damage',

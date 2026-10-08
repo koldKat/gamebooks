@@ -37,7 +37,7 @@ function record(d) {
   const f=d.fight;
   if (!f||f.recorded||!['win','loss'].includes(f.outcome)) return;
   f.recorded=true;
-  d.history.push({enemy:tk('section',{section:f.encounter.section}),outcome:f.outcome,
+  d.history.push({enemy:`${[...new Set(f.encounter.enemies)].join(', ')} (${tk('section',{section:f.encounter.section})})`,outcome:f.outcome,
     ts:Math.max(Date.now(),(d.history.at(-1)?.ts??0)+1)});
 }
 function store(d) {record(d);saveState();renderSim535();}
@@ -175,12 +175,12 @@ export function setSim535Visible(value) {
 export function initSim535() {
   if (el('overlay')) return;
   const overlay=document.createElement('div');overlay.id=`${ID}-overlay`;overlay.className='inv-overlay';
-  overlay.innerHTML=`<div class="inv-modal bsim-modal"><div class="inv-modal-hdr"><span class="inv-modal-title">${tk('title')}</span><button id="${ID}-close" class="inv-close-btn" aria-label="${t('btn.close')}">&times;</button></div>
+  overlay.innerHTML=`<div class="inv-modal bsim-modal bsim-compact-form"><div class="inv-modal-hdr"><span class="inv-modal-title">${tk('title')}</span><button id="${ID}-close" class="inv-close-btn" aria-label="${t('btn.close')}">&times;</button></div>
     <div class="bsim-body"><div class="bsim-col bsim-col-left"><div class="bsim-side"><div class="bsim-side-title">${tk('player')}</div>${fields.map(k=>field(k)).join('')}
     <label class="inv-edit-row">${tk('weapon')}<select id="${ID}-weapon" class="inv-edit-input">${Object.keys(FIRE_WOLF_WEAPONS).map(k=>`<option value="${k}">${tk(`weapon.${k}`)}</option>`).join('')}</select></label>
     <label class="inv-edit-row">${tk('armour')}<select id="${ID}-armour" class="inv-edit-input">${['none','leather','chain','plate'].map(k=>`<option value="${k}">${tk(k)}</option>`).join('')}</select></label>
     ${toggle('shield')}${toggle('rosewoodBox')}${button('roll_character')}</div>
-    <div class="bsim-side"><label class="inv-edit-row">${tk('encounter')}<select id="${ID}-encounter" class="inv-edit-input">${CRYPTS_ENCOUNTERS.map(e=>`<option value="${e.section}">${escapeHtml(tk('section',{section:e.section}))}: ${escapeHtml([...new Set(e.enemies)].join(', '))}</option>`).join('')}</select></label>
+    <div class="bsim-side"><label class="inv-edit-row">${tk('encounter')}<select id="${ID}-encounter" class="inv-edit-input">${CRYPTS_ENCOUNTERS.map(e=>`<option value="${e.section}">${escapeHtml([...new Set(e.enemies)].join(', '))} (${escapeHtml(tk('section',{section:e.section}))})</option>`).join('')}</select></label>
     ${options.map(toggle).join('')}<div id="${ID}-manual" hidden><p>${tk('manual_stats')}</p>${[...FIRE_WOLF_ATTRIBUTES,'skill','lifePoints','power'].map(k=>field(k,'manual-')).join('')}</div>
     <p>${tk('manual_note')}</p>${button('start')}<p id="${ID}-manual_group" hidden>${tk('manual_group')}</p><select id="${ID}-target" class="inv-edit-input" aria-label="${tk('enemy')}"></select>
     <div id="${ID}-foes"></div><div id="${ID}-status" class="bsim-status"></div>${actions.map(button).join('')}

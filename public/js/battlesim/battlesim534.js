@@ -51,7 +51,7 @@ function record(d) {
   const f = d.fight;
   if (!f || !['win', 'loss'].includes(f.outcome) || hasNext(d) || f.recorded) return;
   f.recorded = true;
-  d.history.push({ enemy: label(d.prepared.encounter.section), outcome: f.outcome,
+  d.history.push({ enemy: `${enemyLabel(d.prepared.encounter)} (${label(d.prepared.encounter.section)})`, outcome: f.outcome,
     ts: Math.max(Date.now(), (d.history.at(-1)?.ts ?? 0) + 1) });
 }
 function start() {
@@ -233,13 +233,13 @@ export function setSim534Visible(value) {
 export function initSim534() {
   if (el('overlay')) return;
   const overlay = document.createElement('div'); overlay.id = `${ID}-overlay`; overlay.className = 'inv-overlay';
-  overlay.innerHTML = `<div class="inv-modal bsim-modal"><div class="inv-modal-hdr"><span class="inv-modal-title">${tk('title')}</span>
+  overlay.innerHTML = `<div class="inv-modal bsim-modal bsim-compact-form"><div class="inv-modal-hdr"><span class="inv-modal-title">${tk('title')}</span>
     <button id="${ID}-close" class="inv-close-btn" aria-label="${t('btn.close')}">&times;</button></div>
     <div class="bsim-body"><div class="bsim-col bsim-col-left"><div class="bsim-side"><div class="bsim-side-title">${tk('character')}</div>
     ${fields.map(key => field(key)).join('')}<label class="inv-edit-row">${tk('armour')}<select id="${ID}-armour" class="inv-edit-input">
     ${['none', 'leather', 'chain', 'plate'].map(key => `<option value="${key}">${tk(key)}</option>`).join('')}</select></label>
     ${switches.map(toggle).join('')}${button('roll_character')}</div><div class="bsim-side"><label class="inv-edit-row">${tk('encounter')}
-    <select id="${ID}-encounter" class="inv-edit-input">${FIRE_WOLF_ENCOUNTERS.map(e => `<option value="${e.section}">${escapeHtml(label(e.section))}: ${escapeHtml(enemyLabel(e))}</option>`).join('')}</select></label>
+    <select id="${ID}-encounter" class="inv-edit-input">${FIRE_WOLF_ENCOUNTERS.map(e => `<option value="${e.section}">${escapeHtml(enemyLabel(e))} (${escapeHtml(label(e.section))})</option>`).join('')}</select></label>
     <div id="${ID}-illusion" hidden><p>${tk('illusion_note')}</p>${[...FIRE_WOLF_ATTRIBUTES, 'skill'].map(key => field(key, 'illusion-')).join('')}</div>
     <p>${tk('manual_note')}</p>${button('start')}${button('next')}<p id="${ID}-manual_group" hidden>${tk('manual_group')}</p>
     <select id="${ID}-target" class="inv-edit-input" aria-label="${tk('enemy')}" hidden></select><div id="${ID}-foes"></div>

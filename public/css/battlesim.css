@@ -173,6 +173,24 @@
 .bsim-sync-btn:hover { background: #1f2937; }
 .bsim-stat-label { width: 9rem; }
 
+/* Keep plain form labels and notes consistent with the older simulator fields. */
+.bsim-compact-form .inv-edit-row {
+  font-size: 0.7rem;
+  color: #6b7280;
+}
+.bsim-compact-form .inv-edit-row:has(input[type="checkbox"]) { color: #9ca3af; }
+.bsim-compact-form input[type="checkbox"] { accent-color: #3b82f6; cursor: pointer; }
+.bsim-compact-form .inv-edit-label { width: 9rem; }
+.bsim-compact-form select.inv-edit-input { height: 22px; cursor: pointer; }
+.bsim-compact-form .bsim-col-left p {
+  font-size: 0.68rem;
+  color: #6b7280;
+  line-height: 1.4;
+  margin: 0;
+  padding: 6px 0 2px;
+}
+.bsim-compact-form .bsim-col-left p:empty { display: none; }
+
 /* .inv-qty-input is a bare <input type="number"> - without this, native
    spin-button arrows eat into the box and clip 2-digit values. */
 .bsim-modal input[type="number"] { -moz-appearance: textfield; }

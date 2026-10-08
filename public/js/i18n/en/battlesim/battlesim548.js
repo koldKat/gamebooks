@@ -18,7 +18,7 @@ export default {
   'battlesim548.meal': 'Eat ration (+3 Health; outside combat only)',
   'battlesim548.approaching': 'About to enter combat (no food or discarding)',
   'battlesim548.encounter': 'Encounter',
-  'battlesim548.encounter_label': 'Section {section}: {enemy}',
+  'battlesim548.encounter_label': '{enemy} ({section})',
   'battlesim548.start': 'Start encounter',
   'battlesim548.replace_fight': 'Abandon the current fight and start this encounter? Current Health and supplies carry over.',
   'battlesim548.target': 'Target',

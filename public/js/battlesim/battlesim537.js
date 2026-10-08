@@ -47,7 +47,7 @@ function store(d) {
   const fight = d.fight;
   if (fight && !fight.recorded && ['win', 'loss'].includes(fight.outcome)) {
     fight.recorded = true;
-    d.history.push({ enemy: tk('section', { section: fight.encounter.section }), outcome: fight.outcome,
+    d.history.push({ enemy: `${fight.encounter.enemies.map(key => ANCIENT_EVIL_ROSTER[key].name).join(', ')} (${tk('section', { section: fight.encounter.section })})`, outcome: fight.outcome,
       ts: Math.max(Date.now(), (d.history.at(-1)?.ts ?? 0) + 1) });
   }
   saveState(); renderSim537();
@@ -125,12 +125,12 @@ export function setSim537Visible(value) { if (el('btn')) el('btn').style.display
 export function initSim537() {
   if (el('overlay')) return;
   const overlay = document.createElement('div'); overlay.id = `${ID}-overlay`; overlay.className = 'inv-overlay';
-  overlay.innerHTML = `<div class="inv-modal bsim-modal"><div class="inv-modal-hdr"><span class="inv-modal-title">${tk('title')}</span><button id="${ID}-close" class="inv-close-btn" aria-label="${t('btn.close')}">&times;</button></div>
+  overlay.innerHTML = `<div class="inv-modal bsim-modal bsim-compact-form"><div class="inv-modal-hdr"><span class="inv-modal-title">${tk('title')}</span><button id="${ID}-close" class="inv-close-btn" aria-label="${t('btn.close')}">&times;</button></div>
     <div class="bsim-body"><div class="bsim-col bsim-col-left"><div class="bsim-side"><div class="bsim-side-title">${tk('player')}</div>${fields.map(field).join('')}
     <label class="inv-edit-row">${tk('weapon')}<select id="${ID}-weapon" class="inv-edit-input">${Object.keys(FIRE_WOLF_WEAPONS).map(key => `<option value="${key}">${tk('weapon.' + key)}</option>`).join('')}<option value="custom">${tk('custom')}</option></select></label>${field('weapon_bonus')}${field('staff_bonus')}
     <label class="inv-edit-row">${tk('armour')}<select id="${ID}-armour" class="inv-edit-input">${['none', 'leather', 'chain', 'plate'].map(key => `<option value="${key}">${tk(key)}</option>`).join('')}<option value="20">${tk('dragonskin')}</option></select></label>
     ${toggles.map(toggle).join('')}${button('roll_character')}${button('heal')}</div>
-    <div class="bsim-side"><label class="inv-edit-row">${tk('encounter')}<select id="${ID}-encounter" class="inv-edit-input">${ANCIENT_EVIL_ENCOUNTERS.map(e => `<option value="${e.section}">${tk('section', { section: e.section })}: ${escapeHtml(e.enemies.map(key => ANCIENT_EVIL_ROSTER[key].name).join(', '))}</option>`).join('')}</select></label>
+    <div class="bsim-side"><label class="inv-edit-row">${tk('encounter')}<select id="${ID}-encounter" class="inv-edit-input">${ANCIENT_EVIL_ENCOUNTERS.map(e => `<option value="${e.section}">${escapeHtml(e.enemies.map(key => ANCIENT_EVIL_ROSTER[key].name).join(', '))} (${tk('section', { section: e.section })})</option>`).join('')}</select></label>
     <p>${tk('manual_note')}</p><p>${tk('special_note')}</p>${button('start')}<select id="${ID}-target" class="inv-edit-input" aria-label="${tk('enemy')}"></select><div id="${ID}-foes"></div><div id="${ID}-status" class="bsim-status"></div>${actions.filter(key => key !== 'apply_damage').map(button).join('')}${field('manual_damage')}${button('apply_damage')}</div>
     <div class="bsim-side"><p>${tk('magic_note')}</p><label class="inv-edit-row">${tk('spell')}<select id="${ID}-spell" class="inv-edit-input">${Object.entries(ANCIENT_EVIL_SPELL_COSTS).map(([key, cost]) => `<option value="${key}">${tk('spell.' + key)} (${cost})</option>`).join('')}</select></label>
     <label id="${ID}-destination_row" class="inv-edit-row">${tk('destination')}<input id="${ID}-destination" class="inv-edit-input"></label>${button('cast')}${field('trade_amount')}${button('trade')}${button('meditate')}</div></div>

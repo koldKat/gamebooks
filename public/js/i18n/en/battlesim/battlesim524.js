@@ -11,7 +11,7 @@ export default {
   'battlesim524.potion': 'Drink healing potion (+8)',
   'battlesim524.meal': 'Meal + eight hours rest (+4; once per day)',
   'battlesim524.encounter': 'Encounter',
-  'battlesim524.encounter_label': 'Section {section}: {enemy}',
+  'battlesim524.encounter_label': '{enemy} ({section})',
   'battlesim524.enemy.Red': 'Red Wyvern',
   'battlesim524.enemy.Green': 'Green Wyvern',
   'battlesim524.enemy.Blue': 'Blue Wyvern',

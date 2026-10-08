@@ -11,7 +11,7 @@ export default {
   'battlesim522.potion': 'Drink healing potion (+8)',
   'battlesim522.meal': 'Eat today\'s meal (+4)',
   'battlesim522.encounter': 'Encounter',
-  'battlesim522.encounter_label': 'Section {section}: {enemy}',
+  'battlesim522.encounter_label': '{enemy} ({section})',
   'battlesim522.enemy.Hyena': 'Two Hyenas',
   'battlesim522.enemy.Ogre': 'Ogre',
   'battlesim522.enemy.Giant': 'Giant Hound',

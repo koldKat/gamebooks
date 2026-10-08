@@ -7,6 +7,7 @@ import { ARKHAM_ENCOUNTERS, createArkhamCharacter, createArkhamFight, rollArkham
 
 const ID = 'sim555';
 const tk = (key, params) => t(`battlesim555.${key}`, params);
+const encounterLabel = section => tk('encounter_label', { enemy: tk(`enemy.${section}`), section });
 const el = key => document.getElementById(`${ID}-${key}`);
 const fields = ['willpower', 'intellect', 'combat', 'health', 'sanity', 'clues', 'resources', 'doom'];
 const flags = ['agile', 'rites', 'fear'];
@@ -26,7 +27,7 @@ function update(d) {
   const f = d.fight;
   if (f && f.status !== 'fighting' && !f.recorded) {
     f.recorded = true;
-    d.history.push({ enemy: tk('encounter_label', { section: f.spec.section }), outcome: f.status, ts: Math.max(Date.now(), (d.history.at(-1)?.ts ?? 0) + 1) });
+    d.history.push({ enemy: encounterLabel(f.spec.section), outcome: f.status, ts: Math.max(Date.now(), (d.history.at(-1)?.ts ?? 0) + 1) });
   }
   d.log = d.log.slice(-150); saveState(); renderSim555();
 }
@@ -71,13 +72,13 @@ export function setSim555Visible(value) {
 export function initSim555() {
   if (el('overlay')) return;
   const overlay = document.createElement('div'); overlay.id = `${ID}-overlay`; overlay.className = 'inv-overlay';
-  overlay.innerHTML = `<div class="inv-modal bsim-modal"><div class="inv-modal-hdr"><span class="inv-modal-title">${tk('title')}</span><button id="${ID}-close" class="inv-close-btn" aria-label="${t('btn.close')}">&times;</button></div>
+  overlay.innerHTML = `<div class="inv-modal bsim-modal bsim-compact-form"><div class="inv-modal-hdr"><span class="inv-modal-title">${tk('title')}</span><button id="${ID}-close" class="inv-close-btn" aria-label="${t('btn.close')}">&times;</button></div>
     <div class="bsim-body"><div class="bsim-col bsim-col-left"><div class="bsim-side"><div class="bsim-side-title">${tk('character')}</div>
     <label class="inv-edit-row">${tk('profile')}<select id="${ID}-profile" class="inv-edit-input">${['agnes','nathaniel','rex'].map(k => `<option value="${k}">${tk(k)}</option>`).join('')}</select></label>
     ${fields.map(k => `<label class="inv-edit-row"><span class="inv-edit-label bsim-stat-label">${tk(k)}</span><input id="${ID}-${k}" class="inv-edit-input inv-qty-input" type="number" step="1" ${['clues','resources','doom'].includes(k) ? 'min="0"' : ''}></label>`).join('')}
     ${flags.map(k => `<label class="inv-edit-row"><input id="${ID}-${k}" type="checkbox">${tk(k)}</label>`).join('')}
     <button id="${ID}-new" class="inv-add-btn">${tk('new_character')}</button><p id="${ID}-used"></p></div>
-    <div class="bsim-side"><label class="inv-edit-row">${tk('encounter')}<select id="${ID}-encounter" class="inv-edit-input">${ARKHAM_ENCOUNTERS.map(e => `<option value="${e.section}">${tk('encounter_label', {section:e.section})}</option>`).join('')}</select></label>
+    <div class="bsim-side"><label class="inv-edit-row">${tk('encounter')}<select id="${ID}-encounter" class="inv-edit-input">${ARKHAM_ENCOUNTERS.map(e => `<option value="${e.section}">${escapeHtml(encounterLabel(e.section))}</option>`).join('')}</select></label>
     <p id="${ID}-rules"></p><label class="inv-edit-row"><input id="${ID}-sorcerer" type="checkbox">${tk('sorcerer')}</label><button id="${ID}-start" class="inv-add-btn">${tk('start')}</button>
     <div id="${ID}-status" class="bsim-status"></div>
     <label class="inv-edit-row"><input id="${ID}-resource" type="checkbox">${tk('resource')}</label>

@@ -7,6 +7,7 @@ import { KINGSPORT_FLAGS, KINGSPORT_PROFILES, KINGSPORT_ENCOUNTERS, createKingsp
 
 const ID = 'sim557';
 const tk = (key, params) => t(`battlesim557.${key}`, params);
+const encounterLabel = section => tk('encounter_label', { enemy: tk(`enemy.${section}`), section });
 const el = key => document.getElementById(`${ID}-${key}`);
 const fields = ['willpower', 'intellect', 'combat', 'health', 'sanity', 'clues', 'resources', 'doom'];
 function data() {
@@ -24,7 +25,7 @@ function update(d) {
   const f = d.fight;
   if (f && ['win', 'loss'].includes(f.status) && !f.recorded) {
     f.recorded = true;
-    d.history.push({ enemy: tk('encounter_label', { section: f.spec.section }), outcome: f.status, ts: Math.max(Date.now(), (d.history.at(-1)?.ts ?? 0) + 1) });
+    d.history.push({ enemy: encounterLabel(f.spec.section), outcome: f.status, ts: Math.max(Date.now(), (d.history.at(-1)?.ts ?? 0) + 1) });
   }
   d.log = d.log.slice(-150); saveState(); renderSim557();
 }
@@ -66,7 +67,7 @@ export function initSim557() {
   if (el('overlay')) return;
   const options = keys => keys.map(k => `<option value="${k}">${tk(k)}</option>`).join('');
   const overlay = document.createElement('div'); overlay.id = `${ID}-overlay`; overlay.className = 'inv-overlay';
-  overlay.innerHTML = `<div class="inv-modal bsim-modal"><div class="inv-modal-hdr"><span class="inv-modal-title">${tk('title')}</span><button id="${ID}-close" class="inv-close-btn" aria-label="${t('btn.close')}">&times;</button></div>
+  overlay.innerHTML = `<div class="inv-modal bsim-modal bsim-compact-form"><div class="inv-modal-hdr"><span class="inv-modal-title">${tk('title')}</span><button id="${ID}-close" class="inv-close-btn" aria-label="${t('btn.close')}">&times;</button></div>
     <div class="bsim-body"><div class="bsim-col bsim-col-left"><div class="bsim-side"><div class="bsim-side-title">${tk('character')}</div>
     <label class="inv-edit-row">${tk('profile')}<select id="${ID}-profile" class="inv-edit-input">${options(Object.keys(KINGSPORT_PROFILES))}</select></label>
     ${fields.map(k => `<label class="inv-edit-row"><span class="inv-edit-label bsim-stat-label">${tk(k)}</span><input id="${ID}-${k}" class="inv-edit-input inv-qty-input" type="number" step="1" ${['clues','resources','doom'].includes(k) ? 'min="0"' : ''}></label>`).join('')}
@@ -75,7 +76,7 @@ export function initSim557() {
     <label class="inv-edit-row">${tk('increase')}<select id="${ID}-increase" class="inv-edit-input">${options(fields.slice(0,3))}</select></label>
     <label class="inv-edit-row">${tk('decrease')}<select id="${ID}-decrease" class="inv-edit-input">${options(['combat','intellect','willpower'])}</select></label>
     <button id="${ID}-improvise" class="inv-add-btn">${tk('improvise')}</button></div>
-    <div class="bsim-side"><label class="inv-edit-row">${tk('encounter')}<select id="${ID}-encounter" class="inv-edit-input">${KINGSPORT_ENCOUNTERS.map(e => `<option value="${e.section}">${tk('encounter_label', {section:e.section})}</option>`).join('')}</select></label>
+    <div class="bsim-side"><label class="inv-edit-row">${tk('encounter')}<select id="${ID}-encounter" class="inv-edit-input">${KINGSPORT_ENCOUNTERS.map(e => `<option value="${e.section}">${escapeHtml(encounterLabel(e.section))}</option>`).join('')}</select></label>
     <p id="${ID}-rules"></p><button id="${ID}-start" class="inv-add-btn">${tk('start')}</button><div id="${ID}-status" class="bsim-status"></div>
     <label class="inv-edit-row"><input id="${ID}-resource" type="checkbox">${tk('resource')}</label>
     <label class="inv-edit-row">${tk('card')}<select id="${ID}-card" class="inv-edit-input"><option value="">${tk('none')}</option>${options(KINGSPORT_FLAGS.slice(0,5))}</select></label>

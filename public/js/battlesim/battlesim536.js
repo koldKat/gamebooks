@@ -42,7 +42,7 @@ function record(d) {
   const fight=d.fight;
   if(!fight||fight.recorded||!['win','loss'].includes(fight.outcome))return;
   fight.recorded=true;
-  d.history.push({enemy:tk('section',{section:fight.encounter.section}),outcome:fight.outcome,ts:Math.max(Date.now(),(d.history.at(-1)?.ts??0)+1)});
+  d.history.push({enemy:`${fight.encounter.enemy??fight.encounter.enemies.join(', ')} (${tk('section',{section:fight.encounter.section})})`,outcome:fight.outcome,ts:Math.max(Date.now(),(d.history.at(-1)?.ts??0)+1)});
 }
 function store(d){record(d);saveState();renderSim536();}
 function result(d,value) {
@@ -147,12 +147,12 @@ export function setSim536Visible(value){if(el('btn'))el('btn').style.display=val
 export function initSim536() {
   if(el('overlay'))return;
   const overlay=document.createElement('div');overlay.id=`${ID}-overlay`;overlay.className='inv-overlay';
-  overlay.innerHTML=`<div class="inv-modal bsim-modal"><div class="inv-modal-hdr"><span class="inv-modal-title">${tk('title')}</span><button id="${ID}-close" class="inv-close-btn" aria-label="${t('btn.close')}">&times;</button></div>
+  overlay.innerHTML=`<div class="inv-modal bsim-modal bsim-compact-form"><div class="inv-modal-hdr"><span class="inv-modal-title">${tk('title')}</span><button id="${ID}-close" class="inv-close-btn" aria-label="${t('btn.close')}">&times;</button></div>
   <div class="bsim-body"><div class="bsim-col bsim-col-left"><div class="bsim-side"><div class="bsim-side-title">${tk('player')}</div>${fields.map(field).join('')}
   <label class="inv-edit-row">${tk('weapon')}<select id="${ID}-weapon" class="inv-edit-input">${Object.keys(FIRE_WOLF_WEAPONS).map(key=>`<option value="${key}">${tk(`weapon.${key}`)}</option>`).join('')}</select></label>
   <label class="inv-edit-row">${tk('armour')}<select id="${ID}-armour" class="inv-edit-input">${['none','leather','chain','plate'].map(key=>`<option value="${key}">${tk(key)}</option>`).join('')}</select></label>
   ${toggle('shield')}${toggle('healingTalisman')}${button('roll_character')}${button('transform')}${button('heal')}</div>
-  <div class="bsim-side"><label class="inv-edit-row">${tk('encounter')}<select id="${ID}-encounter" class="inv-edit-input">${DEMONDOOM_ENCOUNTERS.map(entry=>`<option value="${entry.section}">${tk('section',{section:entry.section})}: ${escapeHtml(entry.enemy??entry.enemies.join(', '))}</option>`).join('')}</select></label>
+  <div class="bsim-side"><label class="inv-edit-row">${tk('encounter')}<select id="${ID}-encounter" class="inv-edit-input">${DEMONDOOM_ENCOUNTERS.map(entry=>`<option value="${entry.section}">${escapeHtml(entry.enemy??entry.enemies.join(', '))} (${tk('section',{section:entry.section})})</option>`).join('')}</select></label>
   <label id="${ID}-spawn-row" class="inv-edit-row">${tk('spawnCount')}<input id="${ID}-spawnCount" class="inv-edit-input inv-qty-input" type="number" min="2" max="12" step="1"></label>
   <p>${tk('manual_note')}</p>${button('start')}<p id="${ID}-manual_group" hidden>${tk('manual_group')}</p>
   <select id="${ID}-target" class="inv-edit-input" aria-label="${tk('enemy')}"></select><div id="${ID}-foes"></div><div id="${ID}-status" class="bsim-status"></div>

@@ -11,7 +11,7 @@ export default {
   'battlesim523.potion': 'Drink healing potion (+8)',
   'battlesim523.meal': 'Eat today\'s meal (+4)',
   'battlesim523.encounter': 'Encounter',
-  'battlesim523.encounter_label': 'Section {section}: {enemy}',
+  'battlesim523.encounter_label': '{enemy} ({section})',
   'battlesim523.enemy.Yeti': 'Yeti',
   'battlesim523.enemy.Mountain': 'Mountain Troll',
   'battlesim523.enemy.Timberwolf': 'Timberwolves',

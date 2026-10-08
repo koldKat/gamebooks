@@ -24,3 +24,13 @@ test('standalone simulator actions do not inherit inventory footer flex growth',
   assert.match(css, /\.bsim-col-left\s*>\s*\.inv-add-btn\s*\{\s*flex:\s*0\s+0\s+auto\s*;/);
   assert.match(css, /#sim521-overlay\s+\.bsim-col-left\s*>\s*\*\s*\{\s*flex-shrink:\s*0/);
 });
+
+test('new simulator forms opt into compact labels and rule notes', () => {
+  for (const id of [521, 522, 523, 524, 534, 535, 536, 537, 548, 555, 557]) {
+    assert.match(read(`public/js/battlesim/battlesim${id}.js`), /class="inv-modal bsim-modal bsim-compact-form"/, `sim${id} lacks compact typography`);
+  }
+  assert.match(css, /\.bsim-compact-form \.inv-edit-row\s*\{\s*font-size:\s*0\.7rem;/);
+  assert.match(css, /\.bsim-compact-form \.bsim-col-left p\s*\{\s*font-size:\s*0\.68rem;/);
+  assert.match(css, /\.bsim-compact-form select\.inv-edit-input\s*\{\s*height:\s*22px;/);
+  assert.match(css, /\.bsim-compact-form \.inv-edit-label\s*\{\s*width:\s*9rem;/);
+});
