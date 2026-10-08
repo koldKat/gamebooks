@@ -8,7 +8,7 @@ import { spawnSync } from 'node:child_process';
 const dir = new URL('../../../public/js/', import.meta.url);
 test('reading relocation preserves implementations and exact dependency targets', () => {
   const digests = {
-    liveread: 'cf9a479942b6a8cf486c21192131e77e992b353b5458c36e4c6511047bddfe2a',
+    liveread: 'b1e7b3a854d07bbe15e312c2562ae44c22f0225faba66f56d5d7f088bbf49607',
     'liveread-shared': '7a305b8967fc5494a00f3962a9075a3cdb435122061baadb8fa7aa3e0cbaa1dc',
   };
   for (const [name, digest] of Object.entries(digests)) {
@@ -33,7 +33,7 @@ test('mobile keeps existing dependencies and imports only the shared reading mod
   const mobile = readFileSync(mobileUrl, 'utf8');
   // The access hook is exercised separately; shared reading stays desktop-independent.
   assert.equal(createHash('sha256').update(mobile.replace(/^import[\s\S]*?;$/gm, '')).digest('hex'),
-    'dd4829ee7522c76d21f8024d8bf11fb1b90d49fecfa6ea8af617933079b07ac7');
+    'ffaadd5a3a0e8117a1709a69b64ec38cc53d3df3ab3a2d92a25f22598db0eb31');
   const imports = [...mobile.matchAll(/^import[\s\S]*?from '([^']+)';$/gm)]
     .map(match => new URL(match[1], mobileUrl));
   const desktopImports = imports.filter(url => url.href.startsWith(dir.href));

@@ -61,6 +61,15 @@ describe('discoveredSectionsFor', () => {
 });
 
 describe('mappedCountFor', () => {
+  test('an unnumbered reading entry remains drawable but does not inflate progress', () => {
+    const graph = { prologue: { choices: [20, 140] }, 20: { choices: [] } };
+    const paths = [{ path: ['prologue', 20] }];
+    assert.equal(discoveredSectionsFor(graph, paths, 'prologue').has('prologue'), true);
+    assert.deepEqual([...discoveredSectionsFor(graph, paths, 'prologue', ['prologue'])], [20, 140]);
+    assert.equal(mappedCountFor(graph), 2);
+    assert.equal(mappedCountFor(graph, ['prologue']), 1);
+    assert.equal(graph.prologue.choices.length, 2);
+  });
   test('counts a node as mapped once it has a choice recorded', () => {
     const graph = { 1: { discovered: true, choices: [2] } };
     assert.equal(mappedCountFor(graph), 1);

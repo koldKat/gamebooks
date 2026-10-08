@@ -196,7 +196,10 @@ export async function renderReader(mount, book, onBack, { startAtOne = false } =
       retry.addEventListener('click', resume);
     }
   };
-  const locked = await showReadingGate(gateBody, book.id, { isCurrent, onUnlock: resume });
+  let entrySection = 1;
+  const locked = await showReadingGate(gateBody, book.id, {
+    isCurrent, onUnlock: resume, onStartSection: section => { entrySection = section; },
+  });
   if (!isCurrent() || locked) return;
   _sectionCache.clear();
   mount.innerHTML = `
@@ -279,8 +282,9 @@ export async function renderReader(mount, book, onBack, { startAtOne = false } =
   _seedXpBaseline();
   await loadState(book.id, { strict: true, isCurrent });
   if (!isCurrent()) return;
-  if (!currentPlaythrough() || (startAtOne && currentSection() !== 1)) {
-    const startSec = startAtOne ? 1 : (isValidSecId(state.startSection) ? state.startSection : 1);
+  if (!currentPlaythrough() || (startAtOne && currentSection() !== entrySection)) {
+    const startSec = startAtOne || !isValidSecId(state.startSection) || String(state.startSection) === '1'
+      ? entrySection : state.startSection;
     _startPlaythrough(startSec);
     await saveState();
   } else {

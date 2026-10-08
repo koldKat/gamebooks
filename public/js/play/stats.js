@@ -6,7 +6,8 @@ import { playContext } from './context.js';
 
 export function updateStats() {
   const discovered       = allDiscoveredSections();
-  const normalDiscovered = [...discovered].filter(s => !isTerminal(s)).length;
+  const excluded = new Set((state.uncountedSections || []).map(String));
+  const normalDiscovered = [...discovered].filter(s => !isTerminal(s) && !excluded.has(String(s))).length;
   const rawTotal         = state.totalSections || 0;
   const total            = playContext._discoverableLimit || rawTotal;
   const mapped           = mappedCount();

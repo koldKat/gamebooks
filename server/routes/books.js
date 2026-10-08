@@ -366,8 +366,8 @@ async function handleUpdateBook(req, res, bookId) {
       return send(res, 400, { error: 'discoverable_sections cannot exceed total_sections' });
     const stateObj = db.getBookState(userId, bookId);
     if (stateObj) {
-      const disc = db._discoveredSet(stateObj.graph || {});
-      const vis  = db._visitedSet(stateObj.playthroughs || []);
+      const disc = db._discoveredSet(stateObj.graph || {}, stateObj.uncountedSections);
+      const vis  = db._visitedSet(stateObj.playthroughs || [], stateObj.uncountedSections);
       const minAllowed = Math.max(disc.size, vis.size);
       if (discoverable_sections < minAllowed)
         return send(res, 400, { error: `discoverable_sections cannot be less than ${minAllowed}` });

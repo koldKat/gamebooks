@@ -73,6 +73,33 @@
 }
 #sim524-btn:hover { background: #374151; color: #d1d5db; }
 
+#sim534-overlay [hidden], #sim535-overlay [hidden], #sim536-overlay [hidden], #sim537-overlay [hidden], #sim548-overlay [hidden], #sim555-overlay [hidden], #sim557-overlay [hidden] { display: none !important; }
+#sim534-overlay .inv-edit-row, #sim535-overlay .inv-edit-row, #sim536-overlay .inv-edit-row, #sim537-overlay .inv-edit-row, #sim548-overlay .inv-edit-row, #sim555-overlay .inv-edit-row, #sim557-overlay .inv-edit-row { flex-wrap: wrap; }
+#sim534-overlay select, #sim534-overlay input,
+#sim535-overlay select, #sim535-overlay input,
+#sim536-overlay select, #sim536-overlay input,
+#sim537-overlay select, #sim537-overlay input,
+#sim548-overlay select, #sim548-overlay input,
+#sim555-overlay select, #sim555-overlay input,
+#sim557-overlay select, #sim557-overlay input { max-width: 100%; min-width: 0; }
+#sim534-overlay .bsim-col-left > *, #sim535-overlay .bsim-col-left > *, #sim536-overlay .bsim-col-left > *, #sim537-overlay .bsim-col-left > *, #sim548-overlay .bsim-col-left > *, #sim555-overlay .bsim-col-left > *, #sim557-overlay .bsim-col-left > * { flex-shrink: 0; }
+#sim534-close, #sim535-close, #sim536-close, #sim537-close, #sim548-close, #sim555-close, #sim557-close { margin-left: auto; }
+#sim534-btn, #sim535-btn, #sim536-btn, #sim537-btn, #sim548-btn, #sim555-btn, #sim557-btn {
+  background: rgba(31, 41, 55, 0.88);
+  border: 1px solid #374151;
+  border-radius: 7px;
+  color: #9ca3af;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+  flex-shrink: 0;
+}
+#sim534-btn:hover, #sim535-btn:hover, #sim536-btn:hover, #sim537-btn:hover, #sim548-btn:hover, #sim555-btn:hover, #sim557-btn:hover { background: #374151; color: #d1d5db; }
+
 #bsim-close, #s8-close, #sim286-close, #sim198-close, #sim199-close, #sim200-close, #sim186-close, #sim201-close, #sim202-close, #sim203-close, #sim204-close, #sim205-close, #sim231-close, #sim232-close { margin-left: auto; }
 
 .bsim-body {

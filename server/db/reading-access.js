@@ -15,7 +15,15 @@ function createReadingAccess(db, policy = DEFAULT_POLICY) {
       PRIMARY KEY (user_id, book_id)
     );
     CREATE TABLE IF NOT EXISTS reading_access_migrations (name TEXT PRIMARY KEY);
+    CREATE TABLE IF NOT EXISTS book_reading_entries (
+      book_id INTEGER PRIMARY KEY REFERENCES books(id) ON DELETE CASCADE,
+      section_id TEXT NOT NULL CHECK(length(trim(section_id)) > 0 AND trim(section_id) NOT IN ('0', '-1')),
+      counts_as_section INTEGER NOT NULL DEFAULT 1 CHECK(counts_as_section IN (0, 1))
+    );
   `);
+  if (!db.prepare('PRAGMA table_info(book_reading_entries)').all().some(column => column.name === 'counts_as_section')) {
+    db.exec('ALTER TABLE book_reading_entries ADD COLUMN counts_as_section INTEGER NOT NULL DEFAULT 1 CHECK(counts_as_section IN (0, 1))');
+  }
   db.transaction(() => {
     if (db.prepare('SELECT 1 FROM reading_access_migrations WHERE name = ?').get('historical-runs-v1')) return;
     db.exec(`INSERT OR IGNORE INTO reading_unlocks (user_id, book_id, cost_gc)
@@ -28,8 +36,8 @@ function createReadingAccess(db, policy = DEFAULT_POLICY) {
   })();
 
   function getAccess(userId, bookId, includeFrontmatter = true) {
-    const book = db.prepare(`SELECT b.id, b.name, b.total_sections
-      FROM books b
+    const book = db.prepare(`SELECT b.id, b.name, b.total_sections, e.section_id AS reading_start_section
+      FROM books b LEFT JOIN book_reading_entries e ON e.book_id = b.id
       WHERE b.id = ? AND b.has_live_reading = 1 AND
         (b.is_public = 1 OR b.created_by = ? OR EXISTS
           (SELECT 1 FROM user_books ub WHERE ub.book_id = b.id AND ub.user_id = ?))`).get(bookId, userId, userId);
@@ -43,7 +51,9 @@ function createReadingAccess(db, policy = DEFAULT_POLICY) {
     const balance = user ? coinBalance(user) : null;
     const frontmatter = locked && includeFrontmatter
       ? db.prepare('SELECT intro_text, rules_text FROM book_frontmatter WHERE book_id = ?').get(bookId) : null;
-    return { bookId: book.id, name: book.name, purchased, locked,
+    const rawStart = book.reading_start_section?.trim();
+    const startSection = rawStart && /^\d+$/.test(rawStart) ? Number(rawStart) || 1 : rawStart || 1;
+    return { bookId: book.id, name: book.name, purchased, locked, startSection,
       cost: trial ? 0 : normalCost, purchasingEnabled: gated,
       balance, canAfford: trial || normalCost === 0 || (balance !== null && balance >= normalCost),
       introText: frontmatter?.intro_text || '', rulesText: frontmatter?.rules_text || '' };

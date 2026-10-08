@@ -481,7 +481,7 @@ function _normSec(v) {
   return (!isNaN(n) && n > 0) ? n : (v !== -1 && v !== 0 && v !== '-1' && v !== '0' ? v : null);
 }
 
-function _discoveredSet(graph) {
+function _discoveredSet(graph, excluded = []) {
   const s = new Set();
   for (const [sec, data] of Object.entries(graph)) {
     const id = _normSec(sec);
@@ -491,11 +491,12 @@ function _discoveredSet(graph) {
       if (cid !== null) s.add(cid);
     }
   }
+  for (const sec of excluded) s.delete(_normSec(sec));
   return s;
 }
 
 // Match the client's mapped predicate, including manually added and portal-only nodes.
-function _mappedSet(graph) {
+function _mappedSet(graph, excluded = []) {
   const s = new Set();
   for (const [sec, data] of Object.entries(graph)) {
     if (!data?.discovered || (data.choices || []).length > 0 || (data.portals || []).length > 0) {
@@ -503,24 +504,28 @@ function _mappedSet(graph) {
       if (id !== null) s.add(id);
     }
   }
+  for (const sec of excluded) s.delete(_normSec(sec));
   return s;
 }
 
 // Normalize path IDs before counting visited sections.
-function _visitedSet(playthroughs) {
+function _visitedSet(playthroughs, excluded = []) {
   const s = new Set();
   for (const pt of playthroughs)
     for (const sec of (pt.path || [])) {
       const id = _normSec(sec);
       if (id !== null) s.add(id);
     }
+  for (const sec of excluded) s.delete(_normSec(sec));
   return s;
 }
 
 // Fall back to the permanent visit ledger when live runs fall short after deletion.
 function _permanentVisitedCount(userId, bookId) {
-  return db.prepare(`SELECT COUNT(*) AS n FROM xp_events WHERE user_id = ? AND event = 'visit_node' AND ref LIKE ?`)
-    .get(userId, `${bookId}:%`).n;
+  return db.prepare(`SELECT COUNT(*) AS n FROM xp_events x WHERE user_id = ? AND event = 'visit_node' AND ref LIKE ?
+    AND NOT EXISTS (SELECT 1 FROM book_reading_entries e WHERE e.book_id = ? AND e.counts_as_section = 0
+      AND x.ref = e.book_id || ':' || e.section_id)`)
+    .get(userId, `${bookId}:%`, bookId).n;
 }
 
 // Shared demo graph, positions, and runs; four choice-only nodes remain unvisited.
@@ -753,12 +758,15 @@ function _checkGroupWonAll(userId, seriesId, parentBookId) {
 }
 
 // Keep every simulator history key in this shared list so new simulators receive outcome XP.
-const SIM_HISTORY_KEYS = ['sim829', 'sim8', 'sim286', 'sim198', 'sim199', 'sim200', 'sim186', 'sim201', 'sim202', 'sim203', 'sim83', 'sim86', 'sim114', 'sim115', 'sim123', 'sim130', 'sim92', 'sim108', 'sim216', 'sim193', 'sim217', 'sim526', 'sim322', 'sim323', 'sim324', 'sim325', 'sim122', 'sim80', 'sim82', 'sim118', 'sim218', 'sim430', 'sim204', 'sim205', 'sim206', 'sim207', 'sim208', 'sim209', 'sim210', 'sim211', 'sim212', 'sim213', 'sim214', 'sim215', 'sim219', 'sim220', 'sim221', 'sim222', 'sim224', 'sim370', 'sim375', 'sim376', 'sim377', 'sim378', 'sim78', 'sim107', 'sim135', 'sim223', 'sim317', 'sim318', 'sim319', 'sim320', 'sim397', 'sim321', 'sim398', 'sim399', 'sim414', 'sim415', 'sim416', 'sim225', 'sim431', 'sim432', 'sim226', 'sim227', 'sim228', 'sim229', 'sim230', 'sim231', 'sim232', 'sim233','sim434', 'sim435', 'sim436', 'sim437', 'sim438', 'sim439', 'sim440', 'sim441', 'sim462', 'sim464', 'sim465', 'sim468', 'sim234', 'sim235', 'sim716', 'sim734', 'sim739', 'sim740', 'sim753', 'sim760', 'sim772', 'sim781', 'sim869', 'sim871', 'sim161', 'sim877', 'sim881', 'sim882', 'sim236', 'sim237', 'sim238', 'sim239', 'sim240', 'sim241', 'sim242', 'sim243', 'sim244', 'sim245', 'sim246', 'sim247', 'sim248', 'sim249', 'sim250', 'sim251', 'sim252', 'sim259', 'sim260', 'sim273', 'sim433', 'sim541', 'sim661', 'sim696', 'sim263', 'sim264', 'sim253', 'sim267', 'sim256', 'sim257', 'sim258', 'sim255', 'sim254', 'sim272', 'sim274', 'sim275', 'sim276', 'sim278', 'sim279', 'sim280', 'sim400', 'sim401', 'sim402', 'sim412', 'sim481', 'sim491', 'sim486', 'sim521', 'sim522', 'sim523', 'sim524'];
+const SIM_HISTORY_KEYS = ['sim829', 'sim8', 'sim286', 'sim198', 'sim199', 'sim200', 'sim186', 'sim201', 'sim202', 'sim203', 'sim83', 'sim86', 'sim114', 'sim115', 'sim123', 'sim130', 'sim92', 'sim108', 'sim216', 'sim193', 'sim217', 'sim526', 'sim322', 'sim323', 'sim324', 'sim325', 'sim122', 'sim80', 'sim82', 'sim118', 'sim218', 'sim430', 'sim204', 'sim205', 'sim206', 'sim207', 'sim208', 'sim209', 'sim210', 'sim211', 'sim212', 'sim213', 'sim214', 'sim215', 'sim219', 'sim220', 'sim221', 'sim222', 'sim224', 'sim370', 'sim375', 'sim376', 'sim377', 'sim378', 'sim78', 'sim107', 'sim135', 'sim223', 'sim317', 'sim318', 'sim319', 'sim320', 'sim397', 'sim321', 'sim398', 'sim399', 'sim414', 'sim415', 'sim416', 'sim225', 'sim431', 'sim432', 'sim226', 'sim227', 'sim228', 'sim229', 'sim230', 'sim231', 'sim232', 'sim233','sim434', 'sim435', 'sim436', 'sim437', 'sim438', 'sim439', 'sim440', 'sim441', 'sim462', 'sim464', 'sim465', 'sim468', 'sim234', 'sim235', 'sim716', 'sim734', 'sim739', 'sim740', 'sim753', 'sim760', 'sim772', 'sim781', 'sim869', 'sim871', 'sim161', 'sim877', 'sim881', 'sim882', 'sim236', 'sim237', 'sim238', 'sim239', 'sim240', 'sim241', 'sim242', 'sim243', 'sim244', 'sim245', 'sim246', 'sim247', 'sim248', 'sim249', 'sim250', 'sim251', 'sim252', 'sim259', 'sim260', 'sim273', 'sim433', 'sim541', 'sim661', 'sim696', 'sim263', 'sim264', 'sim253', 'sim267', 'sim256', 'sim257', 'sim258', 'sim255', 'sim254', 'sim272', 'sim274', 'sim275', 'sim276', 'sim278', 'sim279', 'sim280', 'sim400', 'sim401', 'sim402', 'sim412', 'sim481', 'sim491', 'sim486', 'sim521', 'sim522', 'sim523', 'sim524', 'sim534', 'sim535', 'sim536', 'sim537', 'sim548', 'sim555', 'sim557'];
 
 function processStateXp(userId, bookId, oldState, newState, totalSections) {
   if (newState?.isDemoBook) return;
   // Use discoverable_sections as the effective ceiling if set, else fall back to totalSections
-  const bookRow   = db.prepare('SELECT discoverable_sections, series_id, parent_book_id FROM books WHERE id = ?').get(bookId);
+  const bookRow = db.prepare(`SELECT b.discoverable_sections, b.series_id, b.parent_book_id,
+    CASE WHEN e.counts_as_section = 0 THEN e.section_id END AS uncounted_entry
+    FROM books b LEFT JOIN book_reading_entries e ON e.book_id = b.id WHERE b.id = ?`).get(bookId);
+  const excluded = bookRow?.uncounted_entry == null ? [] : [bookRow.uncounted_entry];
   const effective = bookRow?.discoverable_sections ?? totalSections;
 
   // Series-scoped refs deduplicate rewards propagated across books.
@@ -793,8 +801,8 @@ function processStateXp(userId, bookId, oldState, newState, totalSections) {
   }
 
   // Discovered nodes - always per-book (genuinely different work in each book)
-  const oldDisc = _discoveredSet(oldGraph);
-  const newDisc = _discoveredSet(newGraph);
+  const oldDisc = _discoveredSet(oldGraph, excluded);
+  const newDisc = _discoveredSet(newGraph, excluded);
   for (const sec of newDisc)
     if (!oldDisc.has(sec)) awardXp(userId, 'discover_node', `${bookId}:${sec}`);
   if (effective > 0 && newDisc.size >= effective && oldDisc.size < effective) {
@@ -804,13 +812,13 @@ function processStateXp(userId, bookId, oldState, newState, totalSections) {
   }
 
   // Visited nodes - always per-book
-  const oldVis = _visitedSet(oldPts);
-  const newVis = _visitedSet(newPts);
+  const oldVis = _visitedSet(oldPts, excluded);
+  const newVis = _visitedSet(newPts, excluded);
   for (const sec of newVis)
     if (!oldVis.has(sec)) awardXp(userId, 'visit_node', `${bookId}:${sec}`);
   if (effective > 0 && oldVis.size < effective) {
     // Include mapped/manual nodes so they can satisfy completion milestones.
-    const combined = new Set([...newVis, ...(_mappedSet(newGraph))]);
+    const combined = new Set([...newVis, ...(_mappedSet(newGraph, excluded))]);
     const trulyVisited = combined.size >= effective ? combined.size : Math.max(combined.size, _permanentVisitedCount(userId, bookId));
     if (trulyVisited >= effective) {
       awardXp(userId, 'visit_all', bookId);
@@ -990,8 +998,10 @@ function migrateXpForUser(userId) {
   if (user.public_profile) awardXp(userId, 'public_profile', userId);
 
   const books = db.prepare(`
-    SELECT b.id, b.total_sections, b.discoverable_sections, b.isbn, b.issn, b.asin, b.cover_path, b.is_demo, b.is_public, b.created_by, ub.state_data
+    SELECT b.id, b.total_sections, b.discoverable_sections, b.isbn, b.issn, b.asin, b.cover_path, b.is_demo, b.is_public, b.created_by, ub.state_data,
+      CASE WHEN e.counts_as_section = 0 THEN e.section_id END AS uncounted_entry
     FROM user_books ub JOIN books b ON b.id = ub.book_id
+    LEFT JOIN book_reading_entries e ON e.book_id = b.id
     WHERE ub.user_id = ?
   `).all(userId);
 
@@ -1014,13 +1024,14 @@ function migrateXpForUser(userId) {
       (s.charSheetTemplate?.fields ?? []).map(f => f?.id).filter(id => id != null)
     );
 
-    const disc = _discoveredSet(graph);
+    const excluded = book.uncounted_entry == null ? [] : [book.uncounted_entry];
+    const disc = _discoveredSet(graph, excluded);
     for (const sec of disc) awardXp(userId, 'discover_node', `${bid}:${sec}`);
     if (effective > 0 && disc.size >= effective) awardXp(userId, 'discover_all', bid);
 
-    const vis = _visitedSet(pts);
+    const vis = _visitedSet(pts, excluded);
     for (const sec of vis) awardXp(userId, 'visit_node', `${bid}:${sec}`);
-    const visOrMapped = new Set([...vis, ...(_mappedSet(graph))]);
+    const visOrMapped = new Set([...vis, ...(_mappedSet(graph, excluded))]);
     if (effective > 0 && visOrMapped.size >= effective) {
       awardXp(userId, 'visit_all', bid);
       awardCoins(userId, 'book_completed', bid, 1);

@@ -8,11 +8,11 @@ import { spawnSync } from 'node:child_process';
 const dir = new URL('../../../public/js/', import.meta.url);
 test('core relocation preserves implementations without root wrappers or duplicate state', () => {
   const digests = {
-    // Strict reader loading is opt-in and covered by strict-load.test.mjs.
-    state: 'bdbfa3b4f0481f4ab7d0bbc80bcd82f35023b94f023b32378b8e66802bbaa39e',
+    // Reader entries have separate progress accounting; discovered-mapped.test.mjs covers it.
+    state: '2b651aee0766e92c13f60ef446d0b0d1c1f9c5721fd97936678223b4c0fa5c9e',
     constants: 'b67245d28638c7d42c976068c7bc86ac822fff89d47c537d8fd9672ff19826a9',
     sort: 'a37194516dcc6faf776288906e52f3b9e8dc8d30a81df7158108d8b0e3742eb6',
-    util: 'd26a3dceeaf3a225ad596415bf43abc82af10c4b54e62084f7eec92a95751b2a',
+    util: 'cda1fc506d0c7d2a716738e31b5569b1f27e949aef1dfb833e098699073100e6',
   };
   for (const [name, digest] of Object.entries(digests)) {
     assert.equal(existsSync(new URL(name + '.js', dir)), false);

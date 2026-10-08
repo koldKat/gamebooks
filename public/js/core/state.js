@@ -41,6 +41,7 @@ export function resetState() {
   state = {
     bookName:              state.bookName,
     totalSections:         state.totalSections,
+    uncountedSections:     state.uncountedSections,
     graph:                 {},
     playthroughs:          [],
     activePtIndex:         null,
@@ -128,7 +129,7 @@ export function allDiscoveredSections() {
   return discoveredSectionsFor(state.graph, state.playthroughs, state.startSection);
 }
 
-export function discoveredSectionsFor(graph, playthroughs, startSection) {
+export function discoveredSectionsFor(graph, playthroughs, startSection, excluded = []) {
   const startSec = isValidSecId(startSection) ? parseSecId(startSection) : 1;
   const set = new Set([startSec]);
   Object.entries(graph || {}).forEach(([sec, data]) => {
@@ -144,18 +145,20 @@ export function discoveredSectionsFor(graph, playthroughs, startSection) {
     const sid = parseSecId(s);
     if (sid !== null && !isTerminal(sid)) set.add(sid);
   }));
+  for (const sec of excluded) set.delete(parseSecId(sec));
   return set;
 }
 
 export function mappedCount() {
-  return mappedCountFor(state.graph);
+  return mappedCountFor(state.graph, state.uncountedSections);
 }
 
-export function mappedCountFor(graph) {
+export function mappedCountFor(graph, excluded = []) {
+  const ignored = new Set(excluded.map(parseSecId));
   return Object.keys(graph || {})
     .map(parseSecId)
     // Portal-only sections are mapped even without ordinary choices.
-    .filter(s => isValidSecId(s) && (!graph[s]?.discovered || graph[s].choices.length > 0 || graph[s].portals?.length > 0))
+    .filter(s => !ignored.has(s) && isValidSecId(s) && (!graph[s]?.discovered || graph[s].choices.length > 0 || graph[s].portals?.length > 0))
     .length;
 }
 

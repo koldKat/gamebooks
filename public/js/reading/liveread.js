@@ -327,16 +327,23 @@ async function _open() {
   _accessLocked = false;
   const body = document.getElementById('liveread-body');
   body.innerHTML = _loadingHtml();
+  let entrySection = 1;
   const begin = (unlocked = false) => {
     _accessPending = false;
     _accessLocked = false;
     _shownSec = undefined;
-    if (!currentPlaythrough() || (unlocked && currentSection() !== 1)) startPlaythrough(unlocked ? 1 : null);
+    if (!currentPlaythrough() || (unlocked && currentSection() !== entrySection)) {
+      const start = unlocked || (entrySection !== 1 && (state.startSection == null || String(state.startSection) === '1'))
+        ? entrySection : null;
+      startPlaythrough(start);
+    }
     _showSection(currentSection() ?? (state.startSection ?? 1));
     _initMatterMenu();
   };
   try {
-    const locked = await showReadingGate(body, bookId, { isCurrent, onUnlock: () => begin(true) });
+    const locked = await showReadingGate(body, bookId, {
+      isCurrent, onUnlock: () => begin(true), onStartSection: section => { entrySection = section; },
+    });
     if (!isCurrent()) return;
     _accessPending = false;
     _accessLocked = locked;

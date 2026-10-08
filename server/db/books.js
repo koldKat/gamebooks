@@ -29,18 +29,23 @@ function getBooks(userId) {
            b.pages, b.authors, b.description, b.is_demo,
            b.series_id, b.series_number, b.is_container, b.parent_book_id, b.book_order, b.has_battle_sim, b.has_live_reading,
            s.name AS series_name,
+           CASE WHEN e.counts_as_section = 0 THEN e.section_id END AS uncounted_entry,
            ub.state_data, ub.created_at AS ub_created_at, ub.updated_at AS ub_updated_at, ub.rating AS user_rating,
            ub.party_id, ub.bg_hidden, ub.bg_pos_y
     FROM user_books ub
     JOIN books b ON b.id = ub.book_id
     LEFT JOIN series s ON s.id = b.series_id
+    LEFT JOIN book_reading_entries e ON e.book_id = b.id
     WHERE ub.user_id = ?
     ORDER BY ub.created_at ASC
   `).all(userId);
   // Fetch library-wide summaries once rather than scanning visit history per book.
   const permanentVisits = new Map(db.prepare(`
     SELECT substr(ref, 1, instr(ref, ':') - 1) AS book_id, COUNT(*) AS n
-    FROM xp_events WHERE user_id = ? AND event = 'visit_node'
+    FROM xp_events x WHERE user_id = ? AND event = 'visit_node'
+      AND NOT EXISTS (SELECT 1 FROM book_reading_entries e
+        WHERE e.book_id = CAST(substr(x.ref, 1, instr(x.ref, ':') - 1) AS INTEGER) AND e.counts_as_section = 0
+        AND x.ref = e.book_id || ':' || e.section_id)
     GROUP BY book_id
   `).all(userId).map(row => [row.book_id, row.n]));
   const ratings = new Map(db.prepare(`
@@ -55,14 +60,15 @@ function getBooks(userId) {
     (extraAnthologyIds[row.book_id] ??= []).push(row.anthology_id);
     (extraAnthologyOrders[row.book_id] ??= {})[row.anthology_id] = row.book_order;
   }
-  return rows.map(({ state_data, ub_created_at, ub_updated_at, user_rating, bg_hidden, bg_pos_y, has_live_reading, ...b }) => {
+  return rows.map(({ state_data, ub_created_at, ub_updated_at, user_rating, bg_hidden, bg_pos_y, has_live_reading, uncounted_entry, ...b }) => {
     let visited = 0;
     let last_run_at = null;
     try {
       const s = JSON.parse(state_data || '{}');
       const pts = s.playthroughs || [];
       // Use normalized section sets so numeric/string IDs cannot inflate progress.
-      const seen = new Set([..._visitedSet(pts), ..._mappedSet(s.graph || {})]);
+      const excluded = uncounted_entry == null ? [] : [uncounted_entry];
+      const seen = new Set([..._visitedSet(pts, excluded), ..._mappedSet(s.graph || {}, excluded)]);
       for (const pt of pts) {
         const ts = pt.completedAt || pt.lastActionAt || pt.startedAt || null;
         if (ts && (last_run_at === null || ts > last_run_at)) last_run_at = ts;
@@ -817,10 +823,13 @@ function getBookState(userId, bookId) {
   try { s = JSON.parse(ub.state_data); } catch { s = {}; }
   // Always use the authoritative values from the books table so that a stale
   // saveState() call cannot overwrite a newer updateBook() result.
-  const book = db.prepare('SELECT name, total_sections FROM books WHERE id = ?').get(bookId);
+  const book = db.prepare(`SELECT b.name, b.total_sections,
+    CASE WHEN e.counts_as_section = 0 THEN e.section_id END AS uncounted_entry
+    FROM books b LEFT JOIN book_reading_entries e ON e.book_id = b.id WHERE b.id = ?`).get(bookId);
   if (book) {
     s.bookName      = book.name;
     s.totalSections = book.total_sections;
+    s.uncountedSections = book.uncounted_entry == null ? [] : [book.uncounted_entry];
   }
   return s;
 }
@@ -968,11 +977,13 @@ function updateBook(userId, bookId, name, totalSections, isbn, issn, asin, pages
   // Retroactive XP: fire discover_all / visit_all for every user of this book
   // if discoverable_sections was just set or changed to a new value.
   if (discoverableSections != null && discoverableSections !== oldDs) {
+    const entry = db.prepare('SELECT section_id FROM book_reading_entries WHERE book_id = ? AND counts_as_section = 0').get(bookId);
+    const excluded = entry ? [entry.section_id] : [];
     const userRows = db.prepare('SELECT user_id, state_data FROM user_books WHERE book_id = ?').all(bookId);
     for (const row of userRows) {
       let s = {}; try { s = JSON.parse(row.state_data || '{}'); } catch {}
-      const disc = _discoveredSet(s.graph || {});
-      const vis  = new Set([...(_visitedSet(s.playthroughs || [])), ...(_mappedSet(s.graph || {}))]);
+      const disc = _discoveredSet(s.graph || {}, excluded);
+      const vis  = new Set([...(_visitedSet(s.playthroughs || [], excluded)), ...(_mappedSet(s.graph || {}, excluded))]);
       if (disc.size >= discoverableSections) {
         awardXp(row.user_id, 'discover_all', bookId);
         _checkGroupMilestone(row.user_id, seriesId, parentBookId,

@@ -12,12 +12,16 @@ function library() {
     CREATE TABLE series (id INTEGER, name TEXT);
     CREATE TABLE user_books (user_id INTEGER, book_id INTEGER, state_data TEXT, created_at INTEGER, updated_at INTEGER, rating REAL, party_id INTEGER, bg_hidden INTEGER, bg_pos_y INTEGER);
     CREATE TABLE xp_events (user_id INTEGER, event TEXT, ref TEXT);
+    CREATE TABLE book_reading_entries (book_id INTEGER PRIMARY KEY, section_id TEXT, counts_as_section INTEGER DEFAULT 1);
     CREATE TABLE book_anthology_memberships (book_id INTEGER, anthology_id INTEGER, book_order INTEGER);`);
   let queries = 0;
   const db = { prepare(sql) { queries++; return raw.prepare(sql); } };
   const context = vm.createContext({ module: { exports: {} }, require(name) {
     if (name === './connection') return { db, _getPdfSize: () => null, _getEpubSize: () => null };
-    if (name === './xp') return { _visitedSet: pts => new Set(pts.flatMap(pt => pt.path || []).map(String)), _mappedSet: graph => new Set(Object.keys(graph)) };
+    if (name === './xp') return {
+      _visitedSet: (pts, excluded = []) => new Set(pts.flatMap(pt => pt.path || []).map(String).filter(sec => !excluded.includes(sec))),
+      _mappedSet: (graph, excluded = []) => new Set(Object.keys(graph).filter(sec => !excluded.includes(sec))),
+    };
     throw Error(name);
   } });
   const source = fs.readFileSync(require.resolve('../server/db/books'), 'utf8');
@@ -63,5 +67,20 @@ test('large libraries use a constant number of queries and tolerate malformed sa
     assert.equal(books[0].visited, 0);
     assert.equal(h.queries(), 4);
     assert.deepEqual(h.getBooks(99), []);
+  } finally { h.raw.close(); }
+});
+
+test('opening entries are excluded from live and permanent library counts without extra queries', () => {
+  const h = library();
+  try {
+    h.raw.exec(`INSERT INTO books (id,name,total_sections) VALUES (534,'Fire*Wolf',183);
+      INSERT INTO book_reading_entries VALUES (534,'prologue',0);
+      INSERT INTO user_books (user_id,book_id,state_data) VALUES
+        (7,534,'{"playthroughs":[{"path":["prologue",20]}],"graph":{"prologue":{},"20":{}}}');
+      INSERT INTO xp_events VALUES (7,'visit_node','534:prologue'),(7,'visit_node','534:20');`);
+    assert.equal(h.getBooks(7)[0].visited, 1);
+    assert.equal(h.queries(), 4);
+    h.raw.exec("UPDATE user_books SET state_data = '{}'");
+    assert.equal(h.getBooks(7)[0].visited, 1);
   } finally { h.raw.close(); }
 });

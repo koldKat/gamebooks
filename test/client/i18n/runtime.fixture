@@ -6,7 +6,7 @@ import { createContext, SourceTextModule } from 'node:vm';
 
 const root = process.argv[1];
 const baseline = 'dfb01830b7249210ee19f1881e53f3bbe73d9f35c9f9ea7ce399f93a52466276'; // Includes reviewed feedback and simulator text updates.
-const addedSimulatorIds = new Set([521, 522, 523, 524]);
+const addedSimulatorIds = new Set([521, 522, 523, 524, 534, 535, 536, 537, 548, 555, 557]);
 const hash = entries => createHash('sha256').update(JSON.stringify(entries)).digest('hex');
 const sorted = table => Object.keys(table).sort().map(key => [key, table[key]]);
 async function environment(language) {

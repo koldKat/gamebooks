@@ -158,7 +158,7 @@ test('desktop wheel handler scrolls frontmatter pane and retains ordinary reader
   assert.equal(body.scrollTop, 24);
   assert.equal(prevented, 2);
 });
-function desktopSetup({ hasRun = true } = {}) {
+function desktopSetup({ hasRun = true, startSection = 1 } = {}) {
   let gateOptions, resolveGate;
   let section = 25;
   const active = new Set();
@@ -167,7 +167,7 @@ function desktopSetup({ hasRun = true } = {}) {
   const events = [], starts = [];
   const context = vm.createContext({
     document: { getElementById: id => id === 'liveread-panel' ? panel : body, addEventListener() {}, removeEventListener() {} },
-    t: key => key, currentBookId: 263, state: { startSection: 1 },
+    t: key => key, currentBookId: 263, state: { startSection },
     getToken: () => 'account',
     currentPlaythrough: () => hasRun ? ({}) : null, currentSection: () => hasRun ? section : null,
     suppressAutoNav: value => events.push(value), setLightweightRestabilize() {},
@@ -222,6 +222,31 @@ test('desktop close cancels late access results and releases suppression', async
   assert.deepEqual(s.events, [true, false]);
 });
 
+test('desktop book-defined entry applies only to new default runs or an explicit unlock', async () => {
+  for (const hasRun of [false, true]) {
+    const s = desktopSetup({ hasRun });
+    const opened = s.context._open();
+    s.gateOptions.onStartSection('prologue');
+    s.resolve(false);
+    await opened;
+    assert.deepEqual(s.starts, hasRun ? [] : ['prologue']);
+    assert.equal(s.context.lastSection, hasRun ? 25 : 'prologue');
+  }
+  const custom = desktopSetup({ hasRun: false, startSection: 42 });
+  const opened = custom.context._open();
+  custom.gateOptions.onStartSection('prologue');
+  custom.resolve(false);
+  await opened;
+  assert.deepEqual(custom.starts, [null], 'custom run entry remains owned by startPlaythrough');
+  const locked = desktopSetup();
+  const gate = locked.context._open();
+  locked.gateOptions.onStartSection('prologue');
+  locked.resolve(true);
+  await gate;
+  await locked.gateOptions.onUnlock();
+  assert.deepEqual(locked.starts, ['prologue']);
+});
+
 test('switching books closes an old unlock preview rather than retaining its lock', async () => {
   const s = desktopSetup();
   const opened = s.context._open();
@@ -262,6 +287,7 @@ test('mobile locked preview initializes no graph or run; unlock preserves old ru
   context.book = { id: 263 };
   context.isCurrent = () => true;
   context.startAtOne = true;
+  context.entrySection = 1;
   context._updateRunControls = () => {};
   context._showSection = async () => {};
   vm.runInContext(`async function finishReading() { ${finish} }`, context);
@@ -291,4 +317,28 @@ test('failed mobile unlock handoff offers visible retry without another purchase
   assert.equal(typeof nodes.get('#m-access-retry').click, 'function');
   await nodes.get('#m-access-retry').click();
   assert.equal(nodes.get('#m-access-error').textContent, 'auth.network_error');
+});
+
+test('mobile book-defined entry preserves active runs and custom starting sections', async () => {
+  const finish = mobile.slice(mobile.indexOf('  await loadState(book.id, { strict:'), mobile.indexOf('\n}\n\n// Match desktop'));
+  for (const [hasRun, configured, expected] of [[false, 1, 'prologue'], [false, 42, 42], [true, 1, 25]]) {
+    const oldRun = { path: [1, 25], completed: false };
+    const state = { startSection: configured, playthroughs: [oldRun], activePtIndex: hasRun ? 0 : null };
+    const context = vm.createContext({ state, book: { id: 534 }, isCurrent: () => true,
+      entrySection: 'prologue', startAtOne: false, loadState: async () => {}, saveState: async () => {},
+      isValidSecId: value => value !== null && value !== undefined,
+      currentPlaythrough: () => state.playthroughs[state.activePtIndex],
+      currentSection: () => state.playthroughs[state.activePtIndex]?.path.at(-1),
+      _updateRunControls() {}, _showSection: async value => { context.shown = value; },
+      _ensureMVisited() {},
+    });
+    vm.runInContext(mobile, context);
+    context._updateRunControls = () => {};
+    context._showSection = async value => { context.shown = value; };
+    vm.runInContext(`async function finishReading() { ${finish} }`, context);
+    await context.finishReading();
+    assert.equal(context.shown, expected);
+    assert.deepEqual(oldRun.path, [1, 25]);
+    assert.equal(state.playthroughs.length, hasRun ? 1 : 2);
+  }
 });

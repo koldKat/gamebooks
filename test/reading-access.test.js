@@ -86,3 +86,20 @@ test('failed coin update rolls back unlock; initial-node historical runs are ret
   assert.equal(paid.getAccess(1, 263).purchased, false);
   db.close();
 });
+
+test('book-defined reading entries default to one and never modify saved runs', () => {
+  const { db, access } = fixture();
+  const before = db.prepare('SELECT * FROM user_books').all();
+  assert.equal(access.getAccess(1, 202).startSection, 1);
+  db.prepare('INSERT INTO book_reading_entries (book_id, section_id, counts_as_section) VALUES (?, ?, 0)').run(202, 'prologue');
+  assert.equal(access.getAccess(1, 202).startSection, 'prologue');
+  assert.equal(access.getAccess(1, 202, false).startSection, 'prologue');
+  assert.equal(createReadingAccess(db).getAccess(1, 202).startSection, 'prologue');
+  assert.deepEqual(db.prepare('SELECT * FROM user_books').all(), before);
+  for (const invalid of ['', ' ', '0', '-1']) {
+    assert.throws(() => db.prepare('INSERT INTO book_reading_entries (book_id, section_id) VALUES (?, ?)').run(999, invalid), /CHECK/);
+  }
+  db.exec('DELETE FROM user_books WHERE book_id = 202; DELETE FROM reading_unlocks WHERE book_id = 202; DELETE FROM books WHERE id = 202');
+  assert.equal(db.prepare('SELECT count(*) n FROM book_reading_entries').get().n, 0);
+  db.close();
+});

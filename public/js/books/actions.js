@@ -193,8 +193,8 @@ export function _wireRenderedContent(list) {
           const res       = await apiFetch(`/api/books/${bid}/state`);
           const bookState = await res.json();
           min = Math.max(5, booksState._hooks.maxSectionInUse?.(bookState) ?? 5);
-          const mapped = booksState._hooks.mappedCountFor?.(bookState?.graph) || 0;
-          const disc   = booksState._hooks.discoveredSectionsFor?.(bookState?.graph, bookState?.playthroughs, bookState?.startSection) || new Set();
+          const mapped = booksState._hooks.mappedCountFor?.(bookState?.graph, bookState?.uncountedSections) || 0;
+          const disc   = booksState._hooks.discoveredSectionsFor?.(bookState?.graph, bookState?.playthroughs, bookState?.startSection, bookState?.uncountedSections) || new Set();
           const total  = +btn.dataset.sections;
           hitWall   = mapped > 0 && mapped === disc.size && mapped < total;
           discCount = disc.size;
