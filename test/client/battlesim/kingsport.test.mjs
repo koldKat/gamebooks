@@ -8,6 +8,8 @@ test('all eleven encounters and source-backed investigator defaults are present'
   assert.equal(new Set(KINGSPORT_ENCOUNTERS.map(e=>e.section)).size,11);
   const p=createKingsportCharacter('jacqueline');assert.deepEqual([p.willpower,p.intellect,p.combat,p.health,p.sanity,p.clues,p.resources],[5,3,2,6,9,1,1]);
   assert.deepEqual([player().willpower,player().intellect,player().combat,player().health,player().sanity],[2,4,1,8,6]);
+  assert.equal(p.agile,true);assert.equal(p.cautious,false);
+  const lola=createKingsportCharacter('lola');assert.equal(lola.cautious,true);assert.equal(lola.agile,false);
 });
 test('round 21 changes skills between rounds and copies the player',()=>{
   const p=player({combat:2,willpower:5}),f=createKingsportFight(21,p);
@@ -41,17 +43,26 @@ test('Jacqueline doubles fail even with enough points and add Doom',()=>{
 });
 test('Lola pays one resource and checks Crisis once before skill penalties',()=>{
   const f=createKingsportFight(135,player({profile:'lola',resources:2,combat:3,willpower:3,sanity:0}));
-  const r=rollKingsportRound(f,{resource:true},rng(5,6,3));assert.equal(r.crisis,3);assert.equal(f.player.sanity,-1);assert.equal(f.player.resources,1);assert.equal(r.modifier,7);
+  const r=rollKingsportRound(f,{resource:true},rng(5,6,1));assert.equal(r.crisis,1);assert.equal(f.player.sanity,-1);assert.equal(f.player.resources,1);assert.equal(r.modifier,7);
 });
-test('Calling Card grants one missing ability for one round only',()=>{
+test('published Crisis of Identity does not penalize rolls two through six',()=>{
+  for(let die=2;die<=6;die++){
+    const f=createKingsportFight(135,player({profile:'lola',resources:1,sanity:0}));
+    const r=rollKingsportRound(f,{resource:true},rng(5,6,die));
+    assert.equal(r.crisis,die);assert.equal(f.player.sanity,0);assert.equal(f.player.resources,0);
+  }
+});
+test('published Calling Card retains the acquired ability across encounters',()=>{
   const f=createKingsportFight(21,player({profile:'lola'}));
-  assert.equal(rollKingsportRound(f,{card:'agile'},rng(1,2)).modifier,2);assert.equal(f.player.cardUsed,true);assert.equal(f.player.agile,false);
+  assert.equal(rollKingsportRound(f,{card:'agile'},rng(1,2)).modifier,2);assert.equal(f.player.cardUsed,true);assert.equal(f.player.agile,true);
+  const next=createKingsportFight(21,f.player);assert.equal(next.player.agile,true);
+  assert.equal(rollKingsportRound(next,{},rng(1,2)).modifier,2);
   const before=structuredClone(f);assert.equal(rollKingsportRound(f,{card:'fighter'},()=>{throw Error('rolled');}),null);assert.deepEqual(f,before);
 });
 test('Improvisation is free once and subsequent uses pay and check Crisis',()=>{
   const p=player({profile:'lola',resources:1});assert.equal(improviseKingsport(p,'combat','intellect').crisis,null);
   assert.equal(p.resources,1);assert.equal(p.combat,2);assert.equal(p.intellect,3);
-  assert.equal(improviseKingsport(p,'combat','intellect',rng(2)).crisis,2);assert.equal(p.resources,0);assert.equal(p.sanity,5);
+  assert.equal(improviseKingsport(p,'combat','intellect',rng(1)).crisis,1);assert.equal(p.resources,0);assert.equal(p.sanity,5);
   const before={...p};assert.equal(improviseKingsport(p,'combat','intellect'),null);assert.deepEqual(p,before);
 });
 test('section149 retains distinct outcomes for every number of wins',()=>{

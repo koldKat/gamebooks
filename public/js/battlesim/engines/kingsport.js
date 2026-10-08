@@ -36,7 +36,8 @@ export function createKingsportCharacter(profile) {
   if (!Object.hasOwn(KINGSPORT_PROFILES, profile)) throw new RangeError('Invalid investigator');
   return { ...KINGSPORT_PROFILES[profile], profile, clues: profile === 'jacqueline' ? 1 : 0,
     resources: profile === 'jacqueline' ? 1 : 0, doom: 0, cardUsed: false, improvisations: 0,
-    ...Object.fromEntries(KINGSPORT_FLAGS.map(key => [key, false])) };
+    ...Object.fromEntries(KINGSPORT_FLAGS.map(key => [key, false])),
+    agile: profile === 'jacqueline', cautious: profile === 'lola' };
 }
 export function createKingsportFight(section, player) {
   validate(player);
@@ -48,7 +49,7 @@ function spendResource(player, random) {
   player.resources--;
   if (player.profile === 'lola') {
     const crisis = die(random);
-    if (crisis <= 3) player.sanity--;
+    if (crisis === 1) player.sanity--;
     return crisis;
   }
   return null;
@@ -69,7 +70,7 @@ export function rollKingsportRound(fight, { resource = false, card = '' } = {}, 
   if (!rule || resource && (spec.noResources || p.resources < 1) || card && (p.profile !== 'lola' || p.cardUsed || !KINGSPORT_FLAGS.slice(0, 5).includes(card) || p[card])) return null;
   const dice = [die(random), die(random)];
   const next = { ...p }, crisis = resource ? spendResource(next, random) : null;
-  if (card) next.cardUsed = true;
+  if (card) { next.cardUsed = true; next[card] = true; }
   const darkFuture = p.profile === 'jacqueline' && dice[0] === dice[1];
   if (darkFuture) next.doom++;
   let modifier = rule.stats.reduce((n, key) => n + next[key] + (key === 'combat' ? Math.min(0, next.health) : key === 'willpower' ? Math.min(0, next.sanity) : 0), 0);

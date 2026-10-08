@@ -46,10 +46,10 @@ export default {
   'battlesim557.unresolved': "Two wins, two losses: the supplied book gives no outcome. No victory or XP is recorded.",
   'battlesim557.result': "Round {round}: {dice} + {modifier} = {total} / {target} · {outcome}",
   'battlesim557.dark_future': "Dark Future: doubles fail the round and add 1 Doom.",
-  'battlesim557.crisis': "Crisis of Identity: rolled {die}; lose 1 Sanity on 1–3.",
+  'battlesim557.crisis': "Crisis of Identity: rolled {die}; lose 1 Sanity on 1.",
   'battlesim557.invalid': "Check the values and available investigator abilities.",
   'battlesim557.history': "Encounter history",
   'battlesim557.note': "Apply entry effects and outcome injuries manually. Section 37 does not offer resource spending. The 2–2 outcome in section 245 is missing from the source.",
-  'battlesim557.profile_note': "Jacqueline’s Dark Future is automatic. Lucius’s Clue abilities apply to non-combat tests. Lola’s Calling Card lasts one round; Improvisation is free once, then costs 1 resource per use. Resource spending checks Crisis of Identity.",
-  'battlesim557.sheet_note': "Negative Health reduces Combat; negative Sanity reduces Willpower. The sheet’s second Sanity example misprints Intellect; the simulator follows the stated Willpower rule.",
+  'battlesim557.profile_note': "Jacqueline’s Dark Future is automatic. Lucius’s Clue abilities apply to non-combat tests. Lola’s Calling Card grants an ability for the adventure; Improvisation is free once, then costs 1 resource per use. Resource spending checks Crisis of Identity.",
+  'battlesim557.sheet_note': "Negative Health reduces Combat; negative Sanity reduces Willpower. Investigator rules follow the publisher’s current sheets, correcting the supplied draft.",
 };
