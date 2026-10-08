@@ -17,6 +17,7 @@ function harness({ filename = 'shot.png', magic = [0x89, 0x50, 0x4e, 0x47, 1, 2,
   const routes = load('../server/routes/profile', {
     fs: { writeFileSync: (p, b) => { calls.written = { p, len: b.length }; }, existsSync: () => true, mkdirSync() {} },
     path: require('node:path'),
+    '../epub-validation': require('../server/epub-validation'),
     '../db': { createAttachment: (name, original, mimeType, size, userId) => { calls.created = { name, original, mimeType, size, userId }; return 42; } },
     '../paths': { AVATARS_DIR: '/a', COVERS_DIR: '/c', BOOKS_DIR: '/b', ATTACHMENTS_DIR: '/att' },
     '../request-helpers': {

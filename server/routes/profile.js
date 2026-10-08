@@ -4,6 +4,7 @@
 
 const fs   = require('fs');
 const path = require('path');
+const { isEpub } = require('../epub-validation');
 const db   = require('../db');
 const { AVATARS_DIR, COVERS_DIR, BOOKS_DIR, ATTACHMENTS_DIR } = require('../paths');
 const {
@@ -307,8 +308,7 @@ async function handleUploadEpub(req, res, bookId) {
     throw e;
   }
   if (!buf.length) return send(res, 400, { error: 'Empty body' });
-  if (buf[0] !== 0x50 || buf[1] !== 0x4b || buf[2] !== 0x03 || buf[3] !== 0x04 ||
-      !buf.slice(0, 100).includes(Buffer.from('application/epub+zip')))
+  if (!isEpub(buf))
     return send(res, 415, { error: 'File must be an EPUB' });
 
   const isFirstEpub = !db.getBookById(bookId)?.epub_path;
