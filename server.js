@@ -25,6 +25,7 @@ const {
 const { reinitTransporter, sendAdminEmail, sendReplyEmail, getTransporter } = require('./server/email');
 
 
+const { addAnnouncementCovers } = require('./server/announcement-covers');
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 const { ROOT, AVATARS_DIR, COVERS_DIR, BOOKS_DIR, ATTACHMENTS_DIR } = require('./server/paths');
 
@@ -171,7 +172,7 @@ const {
   handleAdminUnlockUser,
   handleAdminUpdateUser,
   handleAdminSetAuthor,
-  handleAdminSetContributor,
+  handleAdminSetContributor, handleAdminSetModerator,
   handleAdminSetPdfAccess,
   handleAdminImpersonate,
   handleImpersonateRedirect,
@@ -386,7 +387,7 @@ const _routeRequest = async (req, res) => {
     if (method === 'GET'    && urlPath === '/api/prefs')   return await handleGetPrefs(req, res);
     if (method === 'PATCH'  && urlPath === '/api/prefs')   return await handleSetPrefs(req, res);
     if (method === 'GET'    && urlPath === '/api/feed') {
-      return send(res, 200, { entries: db.getFeed(), pinned: db.getPinnedAnnouncement() });
+      return send(res, 200, addAnnouncementCovers(db.getFeed(), db.getPinnedAnnouncement()));
     }
     // The feed poll compares a cheap version fingerprint before rebuilding the feed.
     if (method === 'GET'    && urlPath === '/api/feed/version') {
@@ -532,6 +533,7 @@ const _routeRequest = async (req, res) => {
     if ((m = urlPath.match(adminUserGiftGcRe))      && method === 'POST') return await handleAdminGiftGc(req, res, +m[1]);
     if ((m = urlPath.match(/^\/api\/admin\/users\/(\d+)\/edit$/))        && method === 'POST') return await handleAdminUpdateUser(req, res, +m[1]);
     if ((m = urlPath.match(/^\/api\/admin\/users\/(\d+)\/author$/))      && method === 'POST') return await handleAdminSetAuthor(req, res, +m[1]);
+    if ((m = urlPath.match(/^\/api\/admin\/users\/(\d+)\/moderator$/)) && method === 'POST') return await handleAdminSetModerator(req, res, +m[1]);
     if ((m = urlPath.match(/^\/api\/admin\/users\/(\d+)\/contributor$/)) && method === 'POST') return await handleAdminSetContributor(req, res, +m[1]);
     if ((m = urlPath.match(/^\/api\/admin\/users\/(\d+)\/pdf-access$/))  && method === 'POST') return await handleAdminSetPdfAccess(req, res, +m[1]);
     if ((m = urlPath.match(adminUserImpersonateRe)) && method === 'POST') return await handleAdminImpersonate(req, res, +m[1]);

@@ -28,11 +28,15 @@ function generateToken() {
 // ── Users ─────────────────────────────────────────────────────────────────────
 
 function getUserById(userId) {
-  return db.prepare('SELECT id, username, email, is_admin, avatar_path, public_profile, hide_from_feed, is_author, is_contributor, pdf_access, display_name FROM users WHERE id = ?').get(userId) || null;
+  return db.prepare('SELECT id, username, email, is_admin, avatar_path, public_profile, hide_from_feed, is_author, is_contributor, is_moderator, pdf_access, display_name FROM users WHERE id = ?').get(userId) || null;
 }
 
 function getUserByUsername(username) {
   return db.prepare('SELECT id, username, avatar_path FROM users WHERE username = ?').get(username) || null;
+}
+
+function isUserModerator(userId) {
+  return !!db.prepare('SELECT is_moderator FROM users WHERE id = ?').get(userId)?.is_moderator;
 }
 
 function isUserAdmin(userId) {
@@ -287,7 +291,7 @@ function deleteSession(token) {
 
 module.exports = {
   hashPassword, verifyPassword, generateToken,
-  getUserById, getUserByUsername, isUserAdmin, canSeeAppXp, getAdminUsername, getRandomMaintenanceMessage, searchUsers,
+  getUserById, getUserByUsername, isUserAdmin, isUserModerator, canSeeAppXp, getAdminUsername, getRandomMaintenanceMessage, searchUsers,
   adminUpdateUser, updateUsername, updatePassword, updateAvatar, getUserPrefs, setUserPrefs,
   createUser, setUserEmail, getUserEmail,
   createPasswordResetToken, validateResetToken, consumeResetToken,

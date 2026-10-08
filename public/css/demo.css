@@ -433,3 +433,5 @@ body.no-feed-glass-cards .feed-day-card--glass::before { display: none !importan
 #landing-right::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
 #landing-right::-webkit-scrollbar-thumb:hover { background: #4b5563; }
 body.right-collapsed #landing-right { transform: translateX(var(--landing-panel-w)); border-left: none; }
+
+.feed-group-toggle .moderator-badge { color: #c084fc; }

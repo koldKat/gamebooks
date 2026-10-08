@@ -91,8 +91,8 @@ export function renderCoverActivity(bookId, bookName, entries, userRating, bookM
   if (bookMeta?.isPublic && !userLoggedIn) {
     headerHtml += `<button class="add-to-library-btn login-to-add-book-btn">${t('covers.login_to_add_book')}</button>`;
   }
-  if (coversState._hooks.getIsAdmin?.()) {
-    headerHtml += `<button class="add-to-library-btn catalog-admin-edit-btn" data-book-id="${bookId}" style="color:#f5a623;border-color:#92400e">✎ Admin Edit</button>`;
+  if (coversState._hooks.getIsAdmin?.() || (bookMeta?.isPublic && coversState._hooks.getIsModerator?.())) {
+    headerHtml += `<button class="add-to-library-btn catalog-admin-edit-btn" data-book-id="${bookId}" style="color:#f5a623;border-color:#92400e">${coversState._hooks.getIsAdmin?.() ? '✎ Game Master Edit' : '✎ Lorekeeper Edit'}</button>`;
   }
   headerHtml += '</div></div>';
 
@@ -212,13 +212,12 @@ export function renderCoverActivity(bookId, bookName, entries, userRating, bookM
           initialSeriesName:    bookMeta?.seriesName     || '',
           initialSeriesNumber:  bookMeta?.seriesNumber   || '',
           onSave: async (name, isbn, issn, asin, pages, authors, description, isPublic, seriesName, seriesNum) => {
-            try {
-              await apiFetch(`/api/books/${bookId}`, {
-                method: 'PATCH',
-                body: JSON.stringify({ name, total_sections: 0, isbn: isbn || null, issn: issn || null, asin: asin || null, pages: pages || null, authors: authors || null, description: description || null, is_public: isPublic, series_name: seriesName || null, series_number: seriesNum || null, is_container: 1 }),
-              });
-            } catch (_) {}
-            openCoverActivity(bookId, bookName);
+            const res = await apiFetch(`/api/books/${bookId}`, {
+              method: 'PATCH',
+              body: JSON.stringify({ name, total_sections: 0, isbn: isbn || null, issn: issn || null, asin: asin || null, pages: pages || null, authors: authors || null, description: description || null, is_public: isPublic, series_name: seriesName || null, series_number: seriesNum || null, is_container: 1 }),
+            });
+            if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || t('err.save'));
+            await openCoverActivity(bookId, name);
           },
         });
         return;
@@ -345,7 +344,7 @@ export function renderCoverActivity(bookId, bookName, entries, userRating, bookM
   body.querySelectorAll('.cover-act-username').forEach(btn => {
     btn.addEventListener('click', async () => {
       const username = btn.dataset.username;
-      document.getElementById('pub-modal-title').innerHTML = escapeHtml(coversState._hooks.displayFor?.(username) ?? username) + (coversState._hooks.adminBadge?.(username) ?? '') + (coversState._hooks.authorBadge?.(username) ?? '') + (coversState._hooks.contributorBadge?.(username) ?? '');
+      document.getElementById('pub-modal-title').innerHTML = escapeHtml(coversState._hooks.displayFor?.(username) ?? username) + (coversState._hooks.adminBadge?.(username) ?? '') + (coversState._hooks.authorBadge?.(username) ?? '') + (coversState._hooks.contributorBadge?.(username) ?? '') + (coversState._hooks.moderatorBadge?.(username) ?? '');
       document.getElementById('pub-modal-body').innerHTML  = `<p class="pub-loading">${t('covers.loading')}</p>`;
       backBtn.style.display = '';
       backBtn.onclick = () => renderCoverActivity(bookId, bookName, entries, currentMyRating, { ...bookMeta, avgRating: currentAvg, voteCount: currentCount }, userLoggedIn, userOwnsBook, bookCanRate);

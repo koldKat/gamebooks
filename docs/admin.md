@@ -85,8 +85,9 @@ Editing uses consistent modal dialogs for players, books, series, anthologies, i
 | **Lock** | Sets `locked_until` far in future; user cannot log in. Not available for protected accounts. |
 | **Unlock** | Clears the lock; restores login access |
 | **Edit** | Update username, author display name, password, email, public profile, and feed visibility in a dialog. Role toggles remain separate actions in the player detail view. |
-| **Author** | Toggle `is_author` flag and optionally set a display name |
-| **Contributor** | Toggle `is_contributor` flag |
+| **Fateweaver** | Toggle `is_author` flag and optionally set a display name |
+| **Pathmaker** | Toggle `is_contributor` flag |
+| **Lorekeeper** | Toggle `is_moderator`; permits editing public books, anthologies and series |
 | **Grant/Revoke Book Access** | Toggle `pdf_access` flag - allows the user to download a book's PDF and EPUB files via `GET /books/:path`. Button shows "Grant Book Access" when the user does not have access, "Revoke Book Access" when they do. |
 | **Impersonate** | Generate a one-time login URL to log in as the user without their password |
 | **Refund** | Refund a shop item: specify item key such as `xp_boost`, `heartbeat_xp`, `undo`, `fast_travel`, `gc_chance`, or `gc_mint`, and whether to refund all purchases or just the latest |
@@ -318,7 +319,7 @@ The activity feed (`getFeed()`) produces the following event types. The two newe
 | `announcement` | Admin-published announcement within 30-day window | - |
 | `user_joined` | A user registered on the site | Uses the user's permanently assigned `join_template_id` from the `join_templates` table; rendered with an amber left border (`.feed-entry--join`). `feedPush` fires at registration so live-connected clients see it immediately. |
 
-Every event type's query also selects `is_author`/`is_contributor`/`display_name` so Author/Contributor stars show up correctly next to a user's name even when their profile is private (private profiles never get a page view that would otherwise populate the client's badge cache). See `docs/technical.md` for the full audit.
+Every event type's query also selects `is_author`/`is_contributor`/`display_name` so Fateweaver/Pathmaker stars show up correctly next to a user's name even when their profile is private (private profiles never get a page view that would otherwise populate the client's badge cache). See `docs/technical.md` for the full audit.
 
 ---
 
@@ -442,3 +443,7 @@ The API always returns every item - type filter, active filter, search (by name/
 | DELETE | `/api/admin/announcements/:id` | Delete permanently |
 
 The API always returns every announcement - the 30-day cutoff is admin-UI-only (client-side filter in `admin/index.html`'s `loadAnnouncements()`), matching the same 30-day window the public feed already uses for the `announcement` entry type. Published announcements older than 30 days are collapsed behind a "Show N announcements (30+ days)" button at the bottom of the Published list (pinned announcements are always exempt, regardless of age) - same collapse-behind-a-button convention as the Users table's "Show N inactive users (31+ days)", not a hover/toggle affordance.
+
+### Lorekeeper role
+
+Use **Mark as Lorekeeper** or **Remove Lorekeeper** in a player’s detail actions. Lorekeepers receive a purple diamond badge and an assignment notification. The role permits metadata edits for public books, anthologies and series, plus cover edits for public books and anthologies, without library membership. It does not permit private-book edits, unpublishing, book/anthology/series deletion, admin actions or PDF/EPUB uploads. Lorekeeper totals appear in Stats for Nerds.

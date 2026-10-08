@@ -169,11 +169,12 @@ export function _openNotifDropdown(btn, data) {
         iconClass = 'icon-coin'; iconChar = '◉';
         const amt = n.payload.amount;
         const msg = n.payload.message ? ` <span style="color:#9ca3af;font-weight:normal">· ${escapeHtml(n.payload.message)}</span>` : '';
-        text = `You received <strong>${amt} Gold Coin${amt !== 1 ? 's' : ''}</strong> from the admin${msg}`;
+        text = `You received <strong>${amt} Gold Coin${amt !== 1 ? 's' : ''}</strong> from the Game Master${msg}`;
       } else if (n.type === 'role_assigned') {
-        iconClass = n.payload.role === 'contributor' ? 'icon-role-contributor' : 'icon-role-author';
-        iconChar  = n.payload.role === 'contributor' ? '✦' : '★';
-        text = `You have been designated as <strong>${n.payload.label}</strong>`;
+        iconClass = n.payload.role === 'moderator' ? 'icon-role-moderator' : n.payload.role === 'contributor' ? 'icon-role-contributor' : 'icon-role-author';
+        iconChar  = n.payload.role === 'moderator' ? '◆' : n.payload.role === 'contributor' ? '✦' : '★';
+        const roleName = { admin: 'Game Master', moderator: 'Lorekeeper', contributor: 'Pathmaker', author: 'Fateweaver' }[n.payload.role] || n.payload.label || '';
+        text = `You have been designated as <strong>${escapeHtml(roleName)}</strong>`;
       }
       const unseen = !n.seen;
       list.innerHTML += `<div class="notif-item${unseen ? ' notif-unseen' : ''}">

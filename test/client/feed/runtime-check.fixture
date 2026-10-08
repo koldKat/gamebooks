@@ -180,6 +180,14 @@ if (!baseline) {
   await day._applyDayCoverFlows(feed, [['/natural.jpg']]); assert.equal(observers[0].cards.size, 1);
   payload = { entries: [], pinned: null }; await api.loadFeed(); assert.equal(observers[0].cards.size, 0);
 
+  payload = {
+    entries: [{ ...base, type: 'announcement', bookCovers: { '/book/1': '/announcement-cover.jpg' } }],
+    pinned: { title: 'Pinned', body: '[Pinned book](/book/2)', bookCovers: { '/book/2': '/pinned-cover.jpg' } },
+  };
+  await api.loadFeed();
+  assert.ok(feed.innerHTML.includes('href="/book/1" data-cover="/announcement-cover.jpg"'), 'regular announcement links opt into hover covers');
+  assert.ok(feed.innerHTML.includes('href="/book/2" data-cover="/pinned-cover.jpg"'), 'pinned announcement links opt into hover covers');
+
   // Bindings dispatch the same library/profile/run actions and preserve expanded groups.
   const binding = modules.get(resolve(root, 'feed/bindings.js')).namespace;
   const target = new Element(), chevron = new Element(), toggle = new Element({ target: 'group', groupKey: 'saved' });

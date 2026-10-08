@@ -1,5 +1,6 @@
 // English translations: stats.
 export default {
+    'stats.moderators': 'Lorekeepers',
 
     'stats.mapped':       'Mapped',
     'stats.discovered':   'Discovered',
@@ -25,9 +26,9 @@ export default {
     'stats.sec.ow':       'Open World',
 
     'stats.registered':             'Registered',
-    'stats.admins':                 'Admins',
-    'stats.authors':                'Authors',
-    'stats.contributors':           'Contributors',
+    'stats.admins':                 'Game Masters',
+    'stats.authors':                'Fateweavers',
+    'stats.contributors':           'Pathmakers',
     'stats.public_profiles':        'Public profiles',
     'stats.with_avatars':           'With avatars',
     'stats.undos_performed':        'Undos performed',

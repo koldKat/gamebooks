@@ -599,7 +599,7 @@ function getAllAnthologiesAdmin() {
 }
 function adminGetUser(userId) {
   const row = db.prepare(`
-    SELECT u.id, u.username, u.display_name, u.email, u.is_author, u.is_contributor, u.pdf_access, u.created_at, u.last_country, u.last_city,
+    SELECT u.id, u.username, u.display_name, u.email, u.is_author, u.is_contributor, u.is_moderator, u.pdf_access, u.created_at, u.last_country, u.last_city,
            u.active_country, u.active_city, u.last_domain, u.failed_login_attempts, u.locked_until, u.is_protected, u.is_admin,
            u.public_profile, u.hide_from_feed,
            COUNT(DISTINCT s.token) AS session_count
@@ -880,6 +880,7 @@ function getSiteStats() {
   // User breakdown
   const admins         = db.prepare('SELECT COUNT(*) AS n FROM users WHERE is_admin = 1').get().n;
   const authors        = db.prepare('SELECT COUNT(*) AS n FROM users WHERE is_author = 1').get().n;
+  const moderators = db.prepare('SELECT COUNT(*) AS n FROM users WHERE is_moderator = 1').get().n;
   const contributors   = db.prepare('SELECT COUNT(*) AS n FROM users WHERE is_contributor = 1').get().n;
   const { undosTotal, fastTravelsTotal } = db.prepare(`
     SELECT
@@ -1068,7 +1069,7 @@ function getSiteStats() {
 
   return {
     // Users
-    users: base.users, admins, authors, contributors, publicProfiles, avatarUsers, undosTotal, fastTravelsTotal,
+    users: base.users, admins, moderators, authors, contributors, publicProfiles, avatarUsers, undosTotal, fastTravelsTotal,
     // Books
     uniqueBooks, uniqueAuthors, totalUserBooks, publicBooks, privateBooks,
     uniqueSeries, totalUserSeries, publicSeries, privateSeries,
@@ -1151,7 +1152,7 @@ function getAppXpSummary() {
 
 function adminGetUsers() {
   const users = db.prepare(`
-    SELECT u.id, u.username, u.display_name, u.is_author, u.is_contributor, u.created_at, u.last_country, u.last_city,
+    SELECT u.id, u.username, u.display_name, u.is_author, u.is_contributor, u.is_moderator, u.created_at, u.last_country, u.last_city,
            u.active_country, u.active_city, u.last_domain, u.failed_login_attempts, u.locked_until, u.is_protected, u.is_admin,
            COUNT(DISTINCT CASE WHEN b.is_demo = 0 AND b.parent_book_id IS NULL THEN b.id END) AS book_count,
            COUNT(DISTINCT s.token)   AS session_count,

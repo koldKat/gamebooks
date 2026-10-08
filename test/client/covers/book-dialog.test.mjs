@@ -6,7 +6,7 @@ import { runInNewContext } from 'node:vm';
 const source = readFileSync(new URL('../../../public/js/covers/book-dialog.js', import.meta.url), 'utf8')
   .replace(/^import .*;\n/gm, '').replace('export function ', 'function ');
 
-function dialog({ loggedIn = false, owned = false, mobile = true, admin = false, meta = {} } = {}) {
+function dialog({ loggedIn = false, owned = false, mobile = true, admin = false, ok = true, meta = {} } = {}) {
   let editOptions;
   const events = [], requests = [], panels = new Set(['mobile-addbook-open']);
   const buttons = new Map();
@@ -44,12 +44,13 @@ function dialog({ loggedIn = false, owned = false, mobile = true, admin = false,
     coversState: { _hooks: {
       getIsAdmin: () => admin,
       openEditBookModal: options => { editOptions = options; },
+      openEditCompModal: options => { editOptions = options; },
       showLogin: () => events.push('login'),
       navigateToBook: id => events.push(id),
     } },
     apiFetch: async (url, options) => {
       requests.push({ url, options });
-      return { ok: true };
+      return { ok, json: async () => ({ error: "Save rejected" }) };
     },
   };
   runInNewContext(source + '\nrenderCoverActivity(42, "Book", [], null, bookMeta, loggedIn, owned);', {
@@ -111,4 +112,12 @@ test('cover-panel Edit Book reloads and saves the highest section independently 
   const legacy = dialog({ loggedIn: true, admin: true, meta: { totalSections: 420 } });
   legacy.buttons.get('.catalog-admin-edit-btn').click();
   assert.equal(legacy.editOptions.initialMaxSectionNumber, 420, 'legacy blank defaults to total sections');
+});
+
+
+test('catalog anthology save reports a server rejection without refreshing the dialog', async () => {
+  const d = dialog({ loggedIn: true, admin: true, ok: false, meta: { isContainer: true } });
+  d.buttons.get('.catalog-admin-edit-btn').click();
+  await assert.rejects(d.editOptions.onSave('Anthology', '', '', '', null, null, null, true, '', ''), /Save rejected/);
+  assert.deepEqual(d.events, []);
 });

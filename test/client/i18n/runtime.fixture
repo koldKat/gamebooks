@@ -41,7 +41,7 @@ async function environment(language) {
 }
 const en = await environment('en');
 assert.deepEqual(Object.keys(en.api).sort(), ['applyTranslations', 'setTranslationOverride', 't']);
-assert.equal(Object.keys(en.table).length, 697, 'only core and shared simulator strings are eager');
+assert.equal(Object.keys(en.table).length, 699, 'only core and shared simulator strings are eager');
 assert.ok([...en.modules.keys()].every(path => !/battlesim\d+\.js$/.test(path)), 'startup loads no per-simulator tables');
 assert.equal(en.api.t('battlesim214.status.fallen'), 'battlesim214.status.fallen', 'simulator strings start unloaded');
 assert.deepEqual(en.reads, ['gamebook_lang'], 'language read once through the shared runtime');
@@ -90,7 +90,7 @@ const added734 = {
   'battlesim734.btn.switch_target': 'Смени противника',
 };
 for (const [key, value] of Object.entries(added734)) assert.equal(en.api.t(key), value);
-assert.equal(keys.size - addedKeys.length - Object.keys(added734).length - 5, 8089, 'legacy key count remains unchanged');
+assert.equal(keys.size - addedKeys.length - Object.keys(added734).length - 7, 8089, 'legacy key count remains unchanged');
 assert.equal(en.api.t('covers.login_to_add_book'), 'Log in or sign up to add book');
 const added230 = {
   'battlesim230.log.shared_round': '{enemy}: {enemyAS}, against your same Attack Strength of {playerAS}. Only the highest lands a blow.',
@@ -99,6 +99,8 @@ const added230 = {
 };
 for (const [key, value] of Object.entries(added230)) assert.equal(en.api.t(key), value);
 const addedMax = {
+  'covers.edit_series': 'Edit series',
+  'stats.moderators': 'Lorekeepers',
   'modal.book.max_section': 'Highest section (optional):',
   'modal.book.max_section_hint': 'Optional, for numbering with gaps. Leave blank to use total sections.',
   'err.max_section': 'Highest section number must be a whole number of at least {min}.',
@@ -111,10 +113,17 @@ const addedMint = {
 };
 for (const [key, value] of Object.entries(addedMint)) assert.equal(en.api.t(key), value);
 assert.equal(en.api.t('notif.gold_coins', { amount: 2, s: 's' }), '2 Gold Coins');
+const renamedRoleLabels = {
+  'stats.admins': ['Admins', 'Game Masters'],
+  'stats.authors': ['Authors', 'Fateweavers'],
+  'stats.contributors': ['Contributors', 'Pathmakers'],
+  'auth.no_email_on_file': ['This account has no email address on file. Please contact an admin using the feedback form.', 'This account has no email address on file. Please contact a Game Master using the feedback form.'],
+};
+for (const [key, [, label]] of Object.entries(renamedRoleLabels)) assert.equal(en.api.t(key), label);
 const original = sorted(en.table).filter(([key]) => !Object.hasOwn(addedMint, key) && !Object.hasOwn(addedMax, key)).filter(([key]) => !key.startsWith('reading_access.') && !Object.hasOwn(added230, key) && !Object.hasOwn(added734, key)
   && key !== 'covers.login_to_add_book' && !addedSimulatorIds.has(Number(key.match(/^battlesim(\d+)\./)?.[1])));
-assert.equal(hash(original), baseline, 'every original key and exact Unicode/string value matches reviewed baseline');
-assert.equal(hash(original.map(([key]) => [key, en.api.t(key)])), baseline, 'every original lookup is available after its table loads');
+assert.equal(hash(original.map(([key, value]) => [key, renamedRoleLabels[key]?.[0] ?? value])), baseline, 'every original key and exact Unicode/string value matches reviewed baseline');
+assert.equal(hash(original.map(([key]) => [key, renamedRoleLabels[key]?.[0] ?? en.api.t(key)])), baseline, 'every original lookup is available after its table loads');
 assert.equal(en.api.t('reading_access.unlock', { cost: 0 }), 'Unlock book · 0');
 for (const path of ['battlesim/loader.js', '../mobile/js/battlesim-dispatch.js']) {
   const source = readFileSync(resolve(root, path), 'utf8');
@@ -156,7 +165,7 @@ assert.equal(en.document.documentElement.lang, 'en');
 const unknown = await environment('unavailable-language');
 const unknownLazy = await unknown.load('i18n/battlesim.js');
 for (const id of simulatorIds) await unknownLazy.loadBattleSimTranslations(id);
-assert.equal(hash(original.map(([key]) => [key, unknown.api.t(key)])), baseline, 'unknown language falls back to English for every original string');
+assert.equal(hash(original.map(([key]) => [key, renamedRoleLabels[key]?.[0] ?? unknown.api.t(key)])), baseline, 'unknown language falls back to English for every original string');
 for (const key of Object.keys(unknown.table)) assert.equal(unknown.api.t(key), unknown.table[key]);
 unknown.api.applyTranslations();
 assert.equal(unknown.document.documentElement.lang, 'unavailable-language', 'stored language behavior unchanged');

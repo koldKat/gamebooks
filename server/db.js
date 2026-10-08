@@ -23,6 +23,7 @@ db.exec(`
 `);
 
 // Migrations
+try { db.exec('ALTER TABLE users ADD COLUMN is_moderator INTEGER NOT NULL DEFAULT 0'); } catch (_) {}
 try { db.exec(`ALTER TABLE users ADD COLUMN avatar_path    TEXT    DEFAULT NULL`);             } catch (_) {}
 try { db.exec(`ALTER TABLE users ADD COLUMN xp             INTEGER NOT NULL DEFAULT 0`);       } catch (_) {}
 try { db.exec(`ALTER TABLE users ADD COLUMN last_country   TEXT    DEFAULT NULL`);             } catch (_) {}
@@ -798,7 +799,7 @@ if (hasColumn('sessions', 'expires_at')) {
 
 const {
   hashPassword, verifyPassword, generateToken,
-  getUserById, getUserByUsername, isUserAdmin, canSeeAppXp, getAdminUsername, getRandomMaintenanceMessage, searchUsers,
+  getUserById, getUserByUsername, isUserAdmin, isUserModerator, canSeeAppXp, getAdminUsername, getRandomMaintenanceMessage, searchUsers,
   adminUpdateUser, updateUsername, updatePassword, updateAvatar, getUserPrefs, setUserPrefs,
   createUser, setUserEmail, getUserEmail,
   createPasswordResetToken, validateResetToken, consumeResetToken,
@@ -857,7 +858,7 @@ const {
 const {
   getFeed,
   getFeedVersion,
-  setPublicProfile, setHideFromFeed, setAuthor, setContributor, setPdfAccess, setDisplayName,
+  setPublicProfile, setHideFromFeed, setAuthor, setContributor, setModerator, setPdfAccess, setDisplayName,
   getPublicProfile, getProfileStats,
   getPublicCovers, getBooksForSitemap, getAnthologiesForSitemap, getSeriesForSitemap, getPublicProfilesForSitemap,
   getPublicBookMeta, getAllPublicBooks, getPublicBooksInSeries, getAllPublicSeries, getAllPublicAnthologies,
@@ -937,7 +938,7 @@ module.exports = {
   getFeed,
   getFeedVersion,
   createDemoBook, refreshDemoBooks, getDemoBookState,
-  setPublicProfile, setHideFromFeed, setAuthor, setContributor, setPdfAccess, setDisplayName, adminUpdateUser, getPublicProfile, getProfileStats, getPublicRun, getPublicSeriesRun, getPublicCovers, getAllPublicBooks, getAllPublicSeries, getAllPublicAnthologies, getPublicBooksInSeries, getBookActivity, getPublicBookMeta, getPublicSeriesInfo, getBooksForSitemap, getAnthologiesForSitemap, getSeriesForSitemap, getPublicProfilesForSitemap,
+  setPublicProfile, setHideFromFeed, setAuthor, setContributor, setModerator, setPdfAccess, setDisplayName, adminUpdateUser, getPublicProfile, getProfileStats, getPublicRun, getPublicSeriesRun, getPublicCovers, getAllPublicBooks, getAllPublicSeries, getAllPublicAnthologies, getPublicBooksInSeries, getBookActivity, getPublicBookMeta, getPublicSeriesInfo, getBooksForSitemap, getAnthologiesForSitemap, getSeriesForSitemap, getPublicProfilesForSitemap,
   getBookRating, setBookRating, getSeriesRating, setSeriesRating, canUserRateBook, canUserRateSeries, setBookBgPref, getBookBgPref,
   awardXp, awardCoins, awardIdleHeartbeatXp, getUserXpInfo, claimBonusGc, processStateXp, runXpMigration, migratePublicBookXp, migrateEquipmentXp, setXpFeedHook, setAppXpHook,
   getXpAmount, getXpConfig, setXpAmount,
@@ -965,7 +966,7 @@ module.exports = {
   forumDeleteThread, forumDeletePost,
   forumToggleLock, forumTogglePin, forumIsAdmin,
   getAllBooksForExport, getBookForExport,
-  getUserByUsername, isUserAdmin, canSeeAppXp, getAdminUsername, getRandomMaintenanceMessage, searchUsers,
+  getUserByUsername, isUserAdmin, isUserModerator, canSeeAppXp, getAdminUsername, getRandomMaintenanceMessage, searchUsers,
   createParty, inviteToParty, acceptPartyInvite, declinePartyInvite,
   leaveParty, getPartyForBook, getPendingInvites, fanOutState, getPartyMemberIds,
   getAppBirthTimestamp,

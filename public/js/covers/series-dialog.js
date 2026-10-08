@@ -27,6 +27,9 @@ export function renderSeriesActivity(data) {
   if (data.isPublic && userLoggedIn && !userHasSeries) {
     html += `<button class="add-to-library-btn" id="add-series-to-lib-btn" data-series-id="${data.id}">${t('covers.add_to_library')}</button>`;
   }
+  if (userLoggedIn && (coversState._hooks.getIsAdmin?.() || (data.isPublic && coversState._hooks.getIsModerator?.()))) {
+    html += `<button class="add-to-library-btn" id="edit-public-series-btn">✎ ${t('covers.edit_series')}</button>`;
+  }
   html += '</div></div>';
 
   if (data.books.length) {
@@ -74,6 +77,10 @@ export function renderSeriesActivity(data) {
   }
 
   body.innerHTML = html;
+
+  body.querySelector('#edit-public-series-btn')?.addEventListener('click', () => {
+    coversState._hooks.openEditSeriesModal?.(data.id, data.name, data.description, !!data.isPublic, !!data.isOpenWorld);
+  });
 
   const addSeriesBtn = body.querySelector('#add-series-to-lib-btn');
   if (addSeriesBtn) {

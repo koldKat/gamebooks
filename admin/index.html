@@ -300,14 +300,18 @@
     .link:hover { color: #f5a623; text-decoration-color: #f5a623; }
 
     .admin-badge,
-    .author-badge, .contributor-badge {
+    .author-badge, .moderator-badge, .contributor-badge {
       font-size: 0.65em;
       margin-left: 0.2em; vertical-align: super;
       cursor: default; user-select: none;
     }
+    :is(.admin-badge, .author-badge, .contributor-badge, .moderator-badge) +
+    :is(.admin-badge, .author-badge, .contributor-badge, .moderator-badge) { margin-left: 0; }
     .admin-badge { color: #60a5fa; }
     .author-badge { color: #fbbf24; }
     .contributor-badge { color: #34d399; }
+    .moderator-badge { color: #c084fc; }
+    .moderator-badge svg { width: 0.75em; height: 0.75em; vertical-align: -0.02em; }
 
     /* ── Badges ── */
 
@@ -647,7 +651,7 @@
           </div>
         </div>
         <div class="stat-card stat-card-split">
-          <div class="label">Admin coins supply / avail</div>
+          <div class="label">Game Master coins supply / avail</div>
           <div class="split-vals">
             <span class="val-amber" id="s-admin-gc-earned">-</span><svg class="coin-icon" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7.5" fill="#f59e0b" stroke="#92400e" stroke-width="0.75"/><circle cx="8" cy="8" r="5.5" fill="none" stroke="#fde68a" stroke-width="1"/><text x="8" y="8" text-anchor="middle" dominant-baseline="central" font-size="7" font-weight="bold" fill="#78350f" font-family="serif">G</text></svg>
             <span class="val-sep">|</span>

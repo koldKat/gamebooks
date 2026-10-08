@@ -22,6 +22,14 @@ export function _populateParentBookSelect(selectId, selectedId = null, excludeBo
     if (book.id === selectedId) opt.selected = true;
     sel.appendChild(opt);
   });
+  // Keep the existing parent when editing a catalog book outside the library.
+  if (selectedId != null && !books.some(book => book.id === selectedId)) {
+    const opt = document.createElement('option');
+    opt.value = String(selectedId);
+    opt.textContent = `#${selectedId}`;
+    opt.selected = true;
+    sel.appendChild(opt);
+  }
 }
 
 export function _populateSeriesSelect(selectId, selectedName) {

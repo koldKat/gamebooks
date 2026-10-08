@@ -7,6 +7,7 @@ export default {
     'covers.error_retry': 'Error - try again',
     'covers.opening':     'Opening…',
     'covers.loading':      'Loading…',
+    'covers.edit_series': 'Edit series',
     'covers.series_label': '(Series)',
     'covers.add_to_library': '+ Add to my library',
     'covers.login_to_add_book': 'Log in or sign up to add book',

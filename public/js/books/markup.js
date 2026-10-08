@@ -87,6 +87,8 @@ export function _syncEpubBadgeOnCards(bookId, epubPath, epubSize = null) {
 }
 
 export function _bookItemHtml(b, isChild, containerExpanded, childCount, aggrStats, isAdmin, containerId = null) {
+  const isModerator = !!booksState._hooks.getIsModerator?.();
+  const canEdit = isDemoMode || isAdmin || (isModerator ? !!b.is_public : (b.created_by === booksState._currentUserId || b.created_by == null));
   const effectiveSections = b.is_container ? (aggrStats?.totalSections || 0) : (b.discoverable_sections ?? b.total_sections);
   const effectiveVisited  = b.is_container ? (aggrStats?.visited || 0)        : b.visited;
   const pct         = effectiveSections > 0
@@ -176,13 +178,13 @@ export function _bookItemHtml(b, isChild, containerExpanded, childCount, aggrSta
             : `<button class="book-open-btn primary-btn"${commonAttrs} data-creator="${isCreator ? '1' : '0'}">${t('books.open')}</button>`)
         : '') +
       `<div class="book-secondary-actions">` +
-        (!isCreator && !isAdmin
+        (!canEdit
           ? `<span data-tooltip="Only the book creator can edit metadata" style="display:inline-flex">` +
               `<button class="book-edit-btn" disabled${commonAttrs}>✎</button>` +
             `</span>`
-          : `<button class="book-edit-btn${!isCreator && isAdmin ? ' book-edit-btn--admin' : ''}"${commonAttrs}${!isCreator && isAdmin ? ' data-tooltip="Admin edit"' : ''}>✎</button>`
+          : `<button class="book-edit-btn${!isCreator && isAdmin ? ' book-edit-btn--admin' : ''}"${commonAttrs}${!isCreator && isAdmin ? ' data-tooltip="Game Master edit"' : ''}>✎</button>`
         ) +
-        `<button class="book-del-btn" data-id="${b.id}" data-name="${escapeHtml(b.name)}" data-container="${b.is_container ? '1' : '0'}">✕</button>` +
+        `<button class="book-del-btn"${isModerator && !isAdmin ? ' disabled data-tooltip="Lorekeepers cannot delete books"' : ''} data-id="${b.id}" data-name="${escapeHtml(b.name)}" data-container="${b.is_container ? '1' : '0'}">✕</button>` +
       `</div>` +
     `</div>` +
   `</div>`;

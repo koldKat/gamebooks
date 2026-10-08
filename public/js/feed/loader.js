@@ -60,6 +60,8 @@ async function _loadFeedImpl(token, generation) {
     for (const e of entries) {
       _hooks.registerAuthor?.(e.username, !!e.isAuthor, e.displayName);
       _hooks.registerContributor?.(e.username, !!e.isContributor);
+      _hooks.registerModerator?.(e.username, !!e.isModerator);
+      for (const member of (e.usernames || [])) _hooks.registerModerator?.(member.username, !!member.isModerator);
     }
 
     const { blocks, dayCoverLists } = renderFeedContents(entries, pinned, feedHeaderHtml);

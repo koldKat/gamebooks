@@ -9,7 +9,7 @@ const { migrateSeriesNames } = require('../server/db/series-schema');
 function setup() {
   const db = new Database(':memory:');
   db.pragma('foreign_keys = ON');
-  db.exec(`CREATE TABLE users (id INTEGER PRIMARY KEY, username TEXT, avatar_path TEXT, public_profile INTEGER);
+  db.exec(`CREATE TABLE users (id INTEGER PRIMARY KEY, username TEXT, avatar_path TEXT, public_profile INTEGER, is_moderator INTEGER DEFAULT 0);
     INSERT INTO users (id,username) VALUES (1,'Owner'),(2,'Other');
     CREATE TABLE series (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE,
       description TEXT, created_by INTEGER REFERENCES users(id), created_at INTEGER DEFAULT 0,
@@ -176,7 +176,7 @@ test('migration preserves the sequence when the old series table is empty', () =
 
 function editRoutes(db, books, options) {
   let status;
-  const api = { ...books, isUserAdmin: () => !!options.admin,
+  const api = { ...books, isUserAdmin: () => !!options.admin, isUserModerator: () => !!options.moderator,
     getBookCreator: id => db.prepare('SELECT created_by FROM books WHERE id=?').get(id)?.created_by ?? null,
     getBookIdentifiers: () => ({ is_public: 0 }), awardXp() {},
   };
@@ -280,4 +280,47 @@ test('create route accepts a separate maximum and rejects invalid values before 
     assert.equal(created[2], 420);
     assert.equal(created[15], max ?? 420);
   }
+});
+
+test('moderators edit public metadata without tracking it, but cannot edit private books or unpublish', async () => {
+  const { db, books } = setup();
+  try {
+    db.exec(`INSERT INTO books (id,name,created_by,is_public) VALUES (1,'Public',1,1),(2,'Private',1,0),(3,'Orphan public',1,1),(4,'Own private',2,0);
+      INSERT INTO user_books (user_id,book_id,state_data) VALUES (1,1,'{"graph":{"9":{"choices":[10]}}}'),(1,2,'{}'),(2,4,'{}');`);
+    const original = db.prepare('SELECT state_data FROM user_books WHERE user_id=1 AND book_id=1').get().state_data;
+    const options = { userId: 2, moderator: true, body: { name: 'Corrected', total_sections: 10, is_public: true } };
+    const routes = editRoutes(db, books, options);
+    assert.equal(await routes.edit(1), 200);
+    assert.equal(books.getBookById(1).name, 'Corrected');
+    assert.equal(db.prepare('SELECT created_by FROM books WHERE id=1').get().created_by, 1);
+    assert.equal(db.prepare('SELECT state_data FROM user_books WHERE user_id=1 AND book_id=1').get().state_data, original);
+    assert.equal(db.prepare('SELECT count(*) AS n FROM user_books WHERE user_id=2 AND book_id=1').get().n, 0);
+    assert.equal(await routes.edit(3), 200, 'public books with no library rows can still be moderated');
+    assert.equal(await routes.edit(2), 404);
+    assert.equal(await routes.edit(4), 404, 'moderators cannot edit even their own private books');
+    options.body.is_public = false;
+    assert.equal(await routes.edit(1), 403);
+    assert.equal(books.getBookById(1).is_public, 1);
+    options.body.is_public = true; options.moderator = false;
+    assert.equal(await routes.edit(1), 404, 'revoked role loses edit access');
+    options.admin = true;
+    assert.equal(await routes.edit(2), 200, 'admin private-book editing is preserved');
+  } finally { db.close(); }
+});
+
+test('moderator book deletion is refused before any delete or metadata side effect', async () => {
+  let moderator = true, admin = false, status, mutations = 0;
+  const context = vm.createContext({ module: { exports: {} }, require(name) {
+    if (name === '../db') return { isUserAdmin: () => admin, isUserModerator: () => moderator,
+      getBookIdentifiers: () => { mutations++; return {}; }, deleteBook: () => { mutations++; return true; } };
+    if (name === '../request-helpers') return { authenticate: async () => 2, send: (_res, code) => { status = code; } };
+    if (name === '../sse') return { feedPush() {} };
+    return {};
+  }, URL });
+  vm.runInContext(fs.readFileSync(require.resolve('../server/routes/books'), 'utf8'), context);
+  await context.module.exports.handleDeleteBook({ url: '/api/books/1' }, {}, 1);
+  assert.equal(status, 403); assert.equal(mutations, 0);
+  admin = true;
+  await context.module.exports.handleDeleteBook({ url: '/api/books/1' }, {}, 1);
+  assert.equal(status, 200); assert.equal(mutations, 2);
 });

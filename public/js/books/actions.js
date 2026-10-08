@@ -165,19 +165,16 @@ export function _wireRenderedContent(list) {
           initialSeriesNumber: btn.dataset.seriesNum || '',
           initialIsPublic:     btn.dataset.public === '1',
           onSave: async (name, isbn, issn, asin, pages, authors, description, isPublic, seriesName, seriesNum) => {
-            try {
-              await apiFetch(`/api/books/${bid}`, {
-                method: 'PATCH',
-                body:   JSON.stringify({ name, total_sections: 0, isbn: isbn || null, issn: issn || null, asin: asin || null, pages: pages || null, authors: authors || null, description: description || null, is_public: isPublic, series_name: seriesName || null, series_number: seriesNum || null, is_container: 1 }),
-              });
-              if (_booksListDisplayChanged(bid, { name, sections: 0, discoverableSections: null, isPublic, seriesName, seriesNumber: seriesNum, isContainer: true, parentId: null, bookOrder: null })) {
-                await _refreshLibraryUi({ feed: true });
-              } else {
-                _patchCachedBook(bid, { isbn: isbn || null, issn: issn || null, asin: asin || null, pages: pages || null, authors: authors || null, description: description || null });
-                await Promise.allSettled([booksState._hooks.loadFeed?.()]);
-              }
-            } catch (_) {
-              document.getElementById('ecc-error').textContent = t('err.save');
+            const res = await apiFetch(`/api/books/${bid}`, {
+              method: 'PATCH',
+              body:   JSON.stringify({ name, total_sections: 0, isbn: isbn || null, issn: issn || null, asin: asin || null, pages: pages || null, authors: authors || null, description: description || null, is_public: isPublic, series_name: seriesName || null, series_number: seriesNum || null, is_container: 1 }),
+            });
+            if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || t('err.save'));
+            if (_booksListDisplayChanged(bid, { name, sections: 0, discoverableSections: null, isPublic, seriesName, seriesNumber: seriesNum, isContainer: true, parentId: null, bookOrder: null })) {
+              await _refreshLibraryUi({ feed: true });
+            } else {
+              _patchCachedBook(bid, { isbn: isbn || null, issn: issn || null, asin: asin || null, pages: pages || null, authors: authors || null, description: description || null });
+              await Promise.allSettled([booksState._hooks.loadFeed?.()]);
             }
           },
         });

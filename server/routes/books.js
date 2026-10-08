@@ -67,8 +67,11 @@ async function handleUpdateSeries(req, res, seriesId) {
   const series = db.getSeriesById(seriesId);
   if (!series) return send(res, 404, { error: 'not found' });
   const isAdmin = !!db.isUserAdmin(userId);
-  if (series.created_by !== userId && !isAdmin) return send(res, 403, { error: 'only the creator can edit this series' });
+  const isModerator = !isAdmin && db.isUserModerator(userId);
+  if (isModerator && !series.is_public) return send(res, 404, { error: 'not found' });
+  if (series.created_by !== userId && !isAdmin && !isModerator) return send(res, 403, { error: 'only the creator can edit this series' });
   const { name, description, is_public, is_open_world } = await readBody(req);
+  if (isModerator && is_public !== true) return send(res, 403, { error: 'Lorekeepers cannot make series private' });
   const owArg = is_open_world !== undefined ? !!is_open_world : null;
   if (!db.updateSeries(seriesId, name, description, !!is_public, owArg)) return send(res, 400, { error: 'name required' });
   send(res, 200, { ok: true });
@@ -170,6 +173,7 @@ async function handleDeleteSeriesRun(req, res, seriesId, runIndex) {
 async function handleDeleteSeries(req, res, seriesId) {
   const userId = await authenticate(req, res);
   if (userId === null) return;
+  if (!db.isUserAdmin(userId) && db.isUserModerator(userId)) return send(res, 403, { error: 'Lorekeepers cannot delete series' });
   const series = db.getSeriesById(seriesId);
   if (!series) return send(res, 404, { error: 'not found' });
   const cascade = new URL(req.url, 'http://x').searchParams.get('cascade') !== '0';
@@ -297,7 +301,7 @@ async function handleGetAppXpStream(req, res) {
   if (!token) return send(res, 401, { error: 'Unauthorized' });
   const session = db.getSession(token);
   if (!session) return send(res, 401, { error: 'Unauthorized' });
-  if (!db.isUserAdmin(session.user_id)) return send(res, 403, { error: 'Admin only' });
+  if (!db.isUserAdmin(session.user_id)) return send(res, 403, { error: 'Game Master only' });
 
   req.socket?.setNoDelay?.(true);
   res.writeHead(200, {
@@ -377,9 +381,12 @@ async function handleUpdateBook(req, res, bookId) {
   }
   const isAdmin = fromLocalhost || !!db.isUserAdmin(userId);
   // Reject metadata edits before resolving names, which may create a new series.
+  const isModerator = !isAdmin && db.isUserModerator(userId);
   const existingBook = db.getBookById(bookId);
   if (!existingBook) return send(res, 404, { error: 'Not found' });
-  if (!isAdmin) {
+  if (isModerator && !existingBook.is_public) return send(res, 404, { error: 'Not found' });
+  if (isModerator && is_public !== true) return send(res, 403, { error: 'Lorekeepers cannot make books private' });
+  if (!isAdmin && !isModerator) {
     const creatorId = db.getBookCreator(bookId);
     if ((creatorId !== null && creatorId !== userId) || !db.getBookState(userId, bookId))
       return send(res, 404, { error: 'Not found' });
@@ -387,7 +394,7 @@ async function handleUpdateBook(req, res, bookId) {
   const resolvedMax = isContainer ? null : (max_section_number === undefined ? (existingBook.max_section_number ?? total_sections) : (max_section_number ?? total_sections));
   if (resolvedMax != null && (!Number.isSafeInteger(resolvedMax) || resolvedMax < total_sections))
     return send(res, 400, { error: 'max_section_number must be a whole number at least total_sections' });
-  const old = db.getBookIdentifiers(isAdmin ? null : userId, bookId);
+  const old = db.getBookIdentifiers((isAdmin || isModerator) ? null : userId, bookId);
   const cur = db.getBookContainerFields(bookId);
   const currentSeries = cur?.series_id ? db.getSeriesById(cur.series_id) : null;
   // Preserve an unchanged association, including an admin editing another owner's private series.
@@ -402,7 +409,7 @@ async function handleUpdateBook(req, res, bookId) {
   const resolvedBookOrder     = book_order     !== undefined ? (book_order     ?? null)  : (cur?.book_order    ?? null);
   if (!db.updateBook(userId, bookId, name.trim(), resolvedIsContainer ? 0 : (total_sections || 0),
       isbn || null, issn || null, asin || null, pages || null, authors || null, description || null,
-      discoverable_sections ?? null, is_public === true, isAdmin,
+      discoverable_sections ?? null, is_public === true, isAdmin || isModerator,
       seriesId, resolvedSeriesNumber, resolvedIsContainer, resolvedParentBookId, resolvedBookOrder, resolvedMax))
     return send(res, 404, { error: 'Not found' });
   db._pruneRedundantAnthologyMembership(bookId, resolvedParentBookId);
@@ -435,7 +442,10 @@ async function handleAddAnthologyMember(req, res, anthologyId) {
   }
   const isAdmin = fromLocalhost || !!db.isUserAdmin(userId);
   const { book_id, book_order } = await readBody(req);
-  const result = db.addAnthologyMember(userId, anthologyId, book_id, book_order, isAdmin);
+  const isModerator = !isAdmin && db.isUserModerator(userId);
+  if (isModerator && (!db.getBookById(anthologyId)?.is_public || !db.getBookById(book_id)?.is_public))
+    return send(res, 404, { error: 'Not found' });
+  const result = db.addAnthologyMember(userId, anthologyId, book_id, book_order, isAdmin || isModerator);
   if (result?.error) return send(res, result.error === 'forbidden' ? 403 : 400, { error: result.error });
   send(res, 200, { ok: true });
   // Credit the book creator, not the anthology editor; scope secondary attachment refs to both IDs.
@@ -456,7 +466,10 @@ async function handleRemoveAnthologyMember(req, res, anthologyId, bookId) {
     if (userId === null) return;
   }
   const isAdmin = fromLocalhost || !!db.isUserAdmin(userId);
-  const result = db.removeAnthologyMember(userId, anthologyId, bookId, isAdmin);
+  const isModerator = !isAdmin && db.isUserModerator(userId);
+  if (isModerator && (!db.getBookById(anthologyId)?.is_public || !db.getBookById(bookId)?.is_public))
+    return send(res, 404, { error: 'Not found' });
+  const result = db.removeAnthologyMember(userId, anthologyId, bookId, isAdmin || isModerator);
   if (result?.error) return send(res, result.error === 'forbidden' ? 403 : 400, { error: result.error });
   send(res, 200, { ok: true });
   feedPush({ type: 'feed_changed', entity: 'book', action: 'update', id: anthologyId });
@@ -465,6 +478,7 @@ async function handleRemoveAnthologyMember(req, res, anthologyId, bookId) {
 async function handleDeleteBook(req, res, bookId) {
   const userId  = await authenticate(req, res);
   if (userId === null) return;
+  if (!db.isUserAdmin(userId) && db.isUserModerator(userId)) return send(res, 403, { error: 'Lorekeepers cannot delete books' });
   const old = db.getBookIdentifiers(userId, bookId);
   const cascade = new URL(req.url, 'http://x').searchParams.get('cascade') !== '0';
   if (!db.deleteBook(userId, bookId, cascade)) return send(res, 404, { error: 'Not found' });

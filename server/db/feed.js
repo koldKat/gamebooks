@@ -19,7 +19,7 @@ function getFeed() {
     `SELECT us.user_id, us.added_at, s.id AS seriesId, s.name AS seriesName,
             s.description AS seriesDesc, s.created_by, s.is_public, s.published_at,
             u.username, u.public_profile, u.avatar_path, u.hide_from_feed, u.xp,
-            u.is_author, u.is_contributor, u.display_name
+            u.is_author, u.is_contributor, u.is_moderator, u.display_name
      FROM user_series us
      JOIN series s ON s.id = us.series_id
      JOIN users u ON u.id = us.user_id
@@ -42,7 +42,7 @@ function getFeed() {
       completedAt: eventMs,
       userPublicProfile: sr.public_profile === 1,
       isAuthor:      sr.is_author === 1,
-      isContributor: sr.is_contributor === 1,
+      isContributor: sr.is_contributor === 1, isModerator: sr.is_moderator === 1,
       displayName:   sr.display_name || null,
       userLevel:     computeLevel(sr.xp || 0),
       userTitle:     getTitleForLevel(computeLevel(sr.xp || 0)),
@@ -60,7 +60,7 @@ function getFeed() {
             s.name AS seriesName, b.series_number AS seriesNumber, s.is_public AS seriesIsPublic,
             p.id AS parentBookId, p.name AS parentBookName, p.is_public AS parentIsPublic, p.cover_path AS parentCoverPath,
             u.username, u.public_profile, u.avatar_path, u.hide_from_feed, u.xp,
-            u.is_author, u.is_contributor, u.display_name
+            u.is_author, u.is_contributor, u.is_moderator, u.display_name
      FROM xp_events xe
      JOIN books b      ON b.id = CAST(xe.ref AS INTEGER)
      JOIN user_books ub ON ub.user_id = xe.user_id AND ub.book_id = b.id
@@ -78,7 +78,7 @@ function getFeed() {
       type: 'book_rated', username: row.username, bookName: row.bookName, bookId: row.bookId,
       rating: row.rating, completedAt: eventMs, userPublicProfile: row.public_profile === 1, bookIsPublic,
       isContainer: row.bookIsContainer === 1,
-      isAuthor: row.is_author === 1, isContributor: row.is_contributor === 1, displayName: row.display_name || null,
+      isAuthor: row.is_author === 1, isContributor: row.is_contributor === 1, isModerator: row.is_moderator === 1, displayName: row.display_name || null,
       userLevel: computeLevel(row.xp || 0), userTitle: getTitleForLevel(computeLevel(row.xp || 0)),
       seriesId: row.seriesId || null, seriesName: row.seriesName || null, seriesNumber: row.seriesNumber || null,
       seriesIsPublic: row.seriesIsPublic === 1,
@@ -93,7 +93,7 @@ function getFeed() {
   const ratedSeriesRows = db.prepare(
     `SELECT xe.created_at, us.rating, s.id AS seriesId, s.name AS seriesName,
             u.username, u.public_profile, u.avatar_path, u.hide_from_feed, u.xp,
-            u.is_author, u.is_contributor, u.display_name
+            u.is_author, u.is_contributor, u.is_moderator, u.display_name
      FROM xp_events xe
      JOIN series s        ON s.id = CAST(xe.ref AS INTEGER)
      JOIN user_series us  ON us.user_id = xe.user_id AND us.series_id = s.id
@@ -106,7 +106,7 @@ function getFeed() {
     entries.push({
       type: 'series_rated', username: row.username, seriesId: row.seriesId, seriesName: row.seriesName,
       rating: row.rating, seriesIsPublic: true, completedAt: eventMs, userPublicProfile: row.public_profile === 1,
-      isAuthor: row.is_author === 1, isContributor: row.is_contributor === 1, displayName: row.display_name || null,
+      isAuthor: row.is_author === 1, isContributor: row.is_contributor === 1, isModerator: row.is_moderator === 1, displayName: row.display_name || null,
       userLevel: computeLevel(row.xp || 0), userTitle: getTitleForLevel(computeLevel(row.xp || 0)),
       avatarUrl: row.avatar_path ? `/avatars/${row.avatar_path}` : null,
     });
@@ -153,7 +153,7 @@ function getFeed() {
     `SELECT sr.run_index, sr.started_at, sr.completed, sr.result, sr.completed_at, sr.is_public,
             s.id AS seriesId, s.name AS seriesName, s.is_public AS seriesIsPublic,
             u.id AS userId, u.username, u.public_profile, u.avatar_path, u.hide_from_feed, u.xp,
-            u.is_author, u.is_contributor, u.display_name
+            u.is_author, u.is_contributor, u.is_moderator, u.display_name
      FROM series_runs sr
      JOIN series s ON s.id = sr.series_id
      JOIN users  u ON u.id = sr.user_id
@@ -170,7 +170,7 @@ function getFeed() {
       runIndex:          sr.run_index,
       userPublicProfile: pub,
       isAuthor:          sr.is_author === 1,
-      isContributor:     sr.is_contributor === 1,
+      isContributor:     sr.is_contributor === 1, isModerator: sr.is_moderator === 1,
       displayName:       sr.display_name || null,
       userLevel:         computeLevel(sr.xp || 0),
       userTitle:         getTitleForLevel(computeLevel(sr.xp || 0)),
@@ -204,7 +204,7 @@ function getFeed() {
             COALESCE(b.series_number, p.series_number) AS series_number,
             ub.state_data, ub.updated_at, ub.created_at AS ub_created_at, ub.party_id,
             u.id AS userId, u.username, u.public_profile, u.avatar_path, u.hide_from_feed, u.xp,
-            u.is_author, u.is_contributor, u.display_name,
+            u.is_author, u.is_contributor, u.is_moderator, u.display_name,
             p.id AS parentBookId, p.name AS parentBookName, p.is_public AS parentIsPublic,
             p.cover_path AS parentCoverPath,
             COALESCE(s.id,  ps.id)    AS seriesId,
@@ -231,6 +231,7 @@ function getFeed() {
     const pub         = row.public_profile === 1;
     const isAuthor      = row.is_author === 1;
     const isContributor = row.is_contributor === 1;
+    const isModerator = row.is_moderator === 1;
     const displayName   = row.display_name || null;
     const parentBookId   = row.parentBookId   || null;
     const parentBookName = row.parentBookName || null;
@@ -271,7 +272,7 @@ function getFeed() {
       entries.push({ type, username: row.username, bookName: row.bookName,
         bookId: row.bookId, completedAt: eventMs, userPublicProfile: pub, bookIsPublic,
         isContainer: row.bookIsContainer === 1,
-        isAuthor, isContributor, displayName, userLevel: computeLevel(row.xp || 0), userTitle: getTitleForLevel(computeLevel(row.xp || 0)), parentBookId, parentBookName, parentCoverUrl,
+        isAuthor, isContributor, isModerator, displayName, userLevel: computeLevel(row.xp || 0), userTitle: getTitleForLevel(computeLevel(row.xp || 0)), parentBookId, parentBookName, parentCoverUrl,
         seriesId, seriesName, seriesNumber, seriesIsPublic, parentBookIsPublic,
         avatarUrl: row.avatar_path ? `/avatars/${row.avatar_path}` : null,
         coverUrl:  row.cover_path  ? `/covers/${row.cover_path}`  : null });
@@ -288,7 +289,7 @@ function getFeed() {
             entries.push({ type: 'run_started', username: row.username, bookName: row.bookName,
               bookId: row.bookId, runIndex: i, completedAt: pt.startedAt, userPublicProfile: pub, bookIsPublic: false,
               userLevel: computeLevel(row.xp || 0), userTitle: getTitleForLevel(computeLevel(row.xp || 0)),
-              isAuthor, isContributor, displayName, parentBookId, parentBookName, parentCoverUrl,
+              isAuthor, isContributor, isModerator, displayName, parentBookId, parentBookName, parentCoverUrl,
               seriesId, seriesName, seriesNumber, seriesIsPublic, parentBookIsPublic,
               avatarUrl: row.avatar_path ? `/avatars/${row.avatar_path}` : null,
               coverUrl:  row.cover_path  ? `/covers/${row.cover_path}`  : null,
@@ -301,7 +302,7 @@ function getFeed() {
           if (ts < cutoffMs) continue;
           entries.push({ type: 'run_completed', username: row.username, bookName: row.bookName,
             result: pt.result, completedAt: ts, bookId: row.bookId, userId: row.userId, runIndex: i,
-            runIsPublic: !!pt.isPublic, bookIsPublic: false, userPublicProfile: pub, isAuthor, isContributor, displayName, userLevel: computeLevel(row.xp || 0), userTitle: getTitleForLevel(computeLevel(row.xp || 0)),
+            runIsPublic: !!pt.isPublic, bookIsPublic: false, userPublicProfile: pub, isAuthor, isContributor, isModerator, displayName, userLevel: computeLevel(row.xp || 0), userTitle: getTitleForLevel(computeLevel(row.xp || 0)),
             pathLength: (pt.path || []).length, lastSection: pt.path && pt.path.length ? pt.path[pt.path.length - 1] : null,
             parentBookId, parentBookName, parentCoverUrl, seriesId, seriesName, seriesNumber, seriesIsPublic, parentBookIsPublic,
             avatarUrl: row.avatar_path ? `/avatars/${row.avatar_path}` : null,
@@ -323,7 +324,7 @@ function getFeed() {
           entries.push({ type: 'run_completed', username: row.username, bookName: row.bookName,
             result: pt.result, completedAt: ts, bookId: row.bookId, userId: row.userId,
             runIndex: -(preRuns.length - i),
-            runIsPublic: !!pt.isPublic, bookIsPublic: false, userPublicProfile: pub, isAuthor, isContributor, displayName, userLevel: computeLevel(row.xp || 0), userTitle: getTitleForLevel(computeLevel(row.xp || 0)),
+            runIsPublic: !!pt.isPublic, bookIsPublic: false, userPublicProfile: pub, isAuthor, isContributor, isModerator, displayName, userLevel: computeLevel(row.xp || 0), userTitle: getTitleForLevel(computeLevel(row.xp || 0)),
             pathLength: (pt.path || []).length, lastSection: pt.path && pt.path.length ? pt.path[pt.path.length - 1] : null,
             parentBookId, parentBookName, parentCoverUrl, seriesId, seriesName, seriesNumber, seriesIsPublic, parentBookIsPublic,
             avatarUrl: row.avatar_path ? `/avatars/${row.avatar_path}` : null,
@@ -345,7 +346,7 @@ function getFeed() {
         if (!row.hide_from_feed) entries.push({ type: 'run_started', username: row.username, bookName: row.bookName,
           bookId: row.bookId, runIndex: i, completedAt: pt.startedAt, userPublicProfile: pub, bookIsPublic,
           userLevel: computeLevel(row.xp || 0), userTitle: getTitleForLevel(computeLevel(row.xp || 0)),
-          isAuthor, isContributor, displayName, parentBookId, parentBookName, parentCoverUrl, seriesId, seriesName, seriesNumber, seriesIsPublic, parentBookIsPublic,
+          isAuthor, isContributor, isModerator, displayName, parentBookId, parentBookName, parentCoverUrl, seriesId, seriesName, seriesNumber, seriesIsPublic, parentBookIsPublic,
           avatarUrl: row.avatar_path ? `/avatars/${row.avatar_path}` : null,
           coverUrl:  row.cover_path  ? `/covers/${row.cover_path}`  : null,
           partyId: row.party_id || null, userId: row.userId });
@@ -359,7 +360,7 @@ function getFeed() {
       if (ts < cutoffMs) continue;
       if (!row.hide_from_feed || pt.isPublic) entries.push({ type: 'run_completed', username: row.username, bookName: row.bookName,
         result: pt.result, completedAt: ts, bookId: row.bookId, userId: row.userId, runIndex: i,
-        runIsPublic: pt.isPublic || false, bookIsPublic, userPublicProfile: pub, isAuthor, isContributor, displayName, userLevel: computeLevel(row.xp || 0), userTitle: getTitleForLevel(computeLevel(row.xp || 0)),
+        runIsPublic: pt.isPublic || false, bookIsPublic, userPublicProfile: pub, isAuthor, isContributor, isModerator, displayName, userLevel: computeLevel(row.xp || 0), userTitle: getTitleForLevel(computeLevel(row.xp || 0)),
         pathLength: (pt.path || []).length, lastSection: pt.path && pt.path.length ? pt.path[pt.path.length - 1] : null,
         parentBookId, parentBookName, parentCoverUrl, seriesId, seriesName, seriesNumber, seriesIsPublic, parentBookIsPublic,
         avatarUrl: row.avatar_path ? `/avatars/${row.avatar_path}` : null,
@@ -379,7 +380,7 @@ function getFeed() {
         if (!row.hide_from_feed || pt.isPublic) entries.push({ type: 'run_completed', username: row.username, bookName: row.bookName,
           result: pt.result, completedAt: ts, bookId: row.bookId, userId: row.userId,
           runIndex: -(preRuns.length - i),
-          runIsPublic: pt.isPublic || false, bookIsPublic, userPublicProfile: pub, isAuthor, isContributor, displayName, userLevel: computeLevel(row.xp || 0), userTitle: getTitleForLevel(computeLevel(row.xp || 0)),
+          runIsPublic: pt.isPublic || false, bookIsPublic, userPublicProfile: pub, isAuthor, isContributor, isModerator, displayName, userLevel: computeLevel(row.xp || 0), userTitle: getTitleForLevel(computeLevel(row.xp || 0)),
           pathLength: (pt.path || []).length, lastSection: pt.path && pt.path.length ? pt.path[pt.path.length - 1] : null,
           parentBookId, parentBookName, parentCoverUrl, seriesId, seriesName, seriesNumber, seriesIsPublic, parentBookIsPublic,
           avatarUrl: row.avatar_path ? `/avatars/${row.avatar_path}` : null,
@@ -392,7 +393,7 @@ function getFeed() {
   // ── Level-up events ────────────────────────────────────────────────────────
   const lvRows = db.prepare(
     `SELECT e.ref AS level, e.created_at, e.template_id, u.username, u.public_profile, u.avatar_path, u.xp,
-            u.is_author, u.is_contributor, u.display_name
+            u.is_author, u.is_contributor, u.is_moderator, u.display_name
      FROM xp_events e JOIN users u ON e.user_id = u.id
      WHERE e.event = 'level_up' AND e.created_at > ? AND u.hide_from_feed = 0`
   ).all(cutoffSec);
@@ -408,7 +409,7 @@ function getFeed() {
     entries.push({ type: 'level_up', username: row.username, level: lv,
       levelTitle: getTitleForLevel(lv), levelUpTemplate, completedAt: row.created_at * 1000,
       userPublicProfile: row.public_profile === 1,
-      isAuthor: row.is_author === 1, isContributor: row.is_contributor === 1, displayName: row.display_name || null,
+      isAuthor: row.is_author === 1, isContributor: row.is_contributor === 1, isModerator: row.is_moderator === 1, displayName: row.display_name || null,
       userLevel: computeLevel(row.xp || 0),
       userTitle: getTitleForLevel(computeLevel(row.xp || 0)),
       avatarUrl: row.avatar_path ? `/avatars/${row.avatar_path}` : null,
@@ -418,7 +419,7 @@ function getFeed() {
   // ── All-sections-visited milestone ─────────────────────────────────────────
   const visitRows = db.prepare(
     `SELECT e.ref AS bookId, e.created_at, u.username, u.public_profile, u.avatar_path, u.xp,
-            u.is_author, u.is_contributor, u.display_name,
+            u.is_author, u.is_contributor, u.is_moderator, u.display_name,
             b.name AS bookName, b.cover_path, b.is_public, ub.party_id,
             COALESCE(b.series_number, p.series_number) AS series_number,
             p.id AS parentBookId, p.name AS parentBookName, p.cover_path AS parentCoverPath, p.is_public AS parentIsPublic,
@@ -437,7 +438,7 @@ function getFeed() {
     entries.push({ type: 'all_visited', username: row.username, bookName: row.bookName,
       bookId: parseInt(row.bookId, 10), completedAt: row.created_at * 1000,
       bookIsPublic: row.is_public === 1, userPublicProfile: row.public_profile === 1,
-      isAuthor: row.is_author === 1, isContributor: row.is_contributor === 1, displayName: row.display_name || null,
+      isAuthor: row.is_author === 1, isContributor: row.is_contributor === 1, isModerator: row.is_moderator === 1, displayName: row.display_name || null,
       userLevel: computeLevel(row.xp || 0),
       userTitle: getTitleForLevel(computeLevel(row.xp || 0)),
       parentBookId: row.parentBookId || null, parentBookName: row.parentBookName || null,
@@ -452,7 +453,7 @@ function getFeed() {
   // ── All-sections-discovered milestone ─────────────────────────────────────
   const discoverRows = db.prepare(
     `SELECT e.ref AS bookId, e.created_at, u.username, u.public_profile, u.avatar_path, u.xp,
-            u.is_author, u.is_contributor, u.display_name,
+            u.is_author, u.is_contributor, u.is_moderator, u.display_name,
             b.name AS bookName, b.cover_path, b.is_public, ub.party_id,
             COALESCE(b.series_number, p.series_number) AS series_number,
             p.id AS parentBookId, p.name AS parentBookName, p.cover_path AS parentCoverPath, p.is_public AS parentIsPublic,
@@ -471,7 +472,7 @@ function getFeed() {
     entries.push({ type: 'all_discovered', username: row.username, bookName: row.bookName,
       bookId: parseInt(row.bookId, 10), completedAt: row.created_at * 1000,
       bookIsPublic: row.is_public === 1, userPublicProfile: row.public_profile === 1,
-      isAuthor: row.is_author === 1, isContributor: row.is_contributor === 1, displayName: row.display_name || null,
+      isAuthor: row.is_author === 1, isContributor: row.is_contributor === 1, isModerator: row.is_moderator === 1, displayName: row.display_name || null,
       userLevel: computeLevel(row.xp || 0),
       userTitle: getTitleForLevel(computeLevel(row.xp || 0)),
       parentBookId: row.parentBookId || null, parentBookName: row.parentBookName || null,
@@ -537,7 +538,7 @@ function getFeed() {
   // ── First win ─────────────────────────────────────────────────────────────
   const firstWinRows = db.prepare(`
     SELECT e.ref AS bookId, e.created_at, u.id AS userId, u.username, u.public_profile, u.avatar_path, u.xp,
-           u.is_author, u.is_contributor, u.display_name,
+           u.is_author, u.is_contributor, u.is_moderator, u.display_name,
            b.name AS bookName, b.cover_path, b.is_public, ub.party_id, ub.state_data,
            COALESCE(b.series_number, p.series_number) AS series_number,
            p.id AS parentBookId, p.name AS parentBookName, p.cover_path AS parentCoverPath, p.is_public AS parentIsPublic,
@@ -565,7 +566,7 @@ function getFeed() {
       runIndex: winRunIndex, runIsPublic, isSeriesRun: !!winRunRef?.startsWith('series:'),
       pathLength: winPathInfo.pathLength, lastSection: winPathInfo.lastSection,
       bookIsPublic: row.is_public === 1, userPublicProfile: row.public_profile === 1,
-      isAuthor: row.is_author === 1, isContributor: row.is_contributor === 1, displayName: row.display_name || null,
+      isAuthor: row.is_author === 1, isContributor: row.is_contributor === 1, isModerator: row.is_moderator === 1, displayName: row.display_name || null,
       userLevel: computeLevel(row.xp || 0), userTitle: getTitleForLevel(computeLevel(row.xp || 0)),
       parentBookId: row.parentBookId || null, parentBookName: row.parentBookName || null,
       parentCoverUrl: row.parentCoverPath ? `/covers/${row.parentCoverPath}` : null,
@@ -581,7 +582,7 @@ function getFeed() {
     const deathEvent = type === 'first_loss' ? 'death_run' : 'battle_run';
     const rows = db.prepare(`
       SELECT e.created_at, e.ref AS bookId, e.user_id, u.id AS userId, u.username, u.public_profile, u.avatar_path, u.xp,
-             u.is_author, u.is_contributor, u.display_name,
+             u.is_author, u.is_contributor, u.is_moderator, u.display_name,
              b.name AS bookName, b.cover_path, b.is_public,
              p.id AS parentBookId, p.name AS parentBookName, p.cover_path AS parentCoverPath,
              s.id AS seriesId, s.name AS seriesName, s.is_public AS seriesIsPublic,
@@ -618,7 +619,7 @@ function getFeed() {
         pathLength: deathPathInfo.pathLength, lastSection: deathPathInfo.lastSection,
         completedAt: row.created_at * 1000,
         userPublicProfile: row.public_profile === 1,
-        isAuthor: row.is_author === 1, isContributor: row.is_contributor === 1, displayName: row.display_name || null,
+        isAuthor: row.is_author === 1, isContributor: row.is_contributor === 1, isModerator: row.is_moderator === 1, displayName: row.display_name || null,
         userLevel: computeLevel(row.xp || 0), userTitle: getTitleForLevel(computeLevel(row.xp || 0)),
         parentBookId: row.parentBookId || null, parentBookName: row.parentBookName || null,
         parentCoverUrl: row.parentCoverPath ? `/covers/${row.parentCoverPath}` : null,
@@ -632,7 +633,7 @@ function getFeed() {
   // ── Won all books in series ────────────────────────────────────────────────
   const wonAllSeriesRows = db.prepare(`
     SELECT e.ref AS seriesId, e.created_at, u.username, u.public_profile, u.avatar_path, u.xp,
-           u.is_author, u.is_contributor, u.display_name,
+           u.is_author, u.is_contributor, u.is_moderator, u.display_name,
            s.name AS seriesName, s.id AS sid, s.is_public AS seriesIsPublic
     FROM xp_events e
     JOIN users u ON e.user_id = u.id
@@ -644,7 +645,7 @@ function getFeed() {
       seriesId: parseInt(row.seriesId, 10), seriesName: row.seriesName,
       seriesIsPublic: row.seriesIsPublic === 1,
       completedAt: row.created_at * 1000, userPublicProfile: row.public_profile === 1,
-      isAuthor: row.is_author === 1, isContributor: row.is_contributor === 1, displayName: row.display_name || null,
+      isAuthor: row.is_author === 1, isContributor: row.is_contributor === 1, isModerator: row.is_moderator === 1, displayName: row.display_name || null,
       userLevel: computeLevel(row.xp || 0), userTitle: getTitleForLevel(computeLevel(row.xp || 0)),
       avatarUrl: row.avatar_path ? `/avatars/${row.avatar_path}` : null });
   }
@@ -652,7 +653,7 @@ function getFeed() {
   // ── Won all books in anthology ─────────────────────────────────────────────
   const wonAllAnthRows = db.prepare(`
     SELECT e.ref AS anthologyId, e.created_at, u.username, u.public_profile, u.avatar_path, u.xp,
-           u.is_author, u.is_contributor, u.display_name,
+           u.is_author, u.is_contributor, u.is_moderator, u.display_name,
            b.name AS bookName, b.cover_path, b.is_public
     FROM xp_events e
     JOIN users u ON e.user_id = u.id
@@ -664,7 +665,7 @@ function getFeed() {
       bookId: parseInt(row.anthologyId, 10), bookName: row.bookName,
       bookIsPublic: row.is_public === 1, completedAt: row.created_at * 1000,
       userPublicProfile: row.public_profile === 1,
-      isAuthor: row.is_author === 1, isContributor: row.is_contributor === 1, displayName: row.display_name || null,
+      isAuthor: row.is_author === 1, isContributor: row.is_contributor === 1, isModerator: row.is_moderator === 1, displayName: row.display_name || null,
       userLevel: computeLevel(row.xp || 0), userTitle: getTitleForLevel(computeLevel(row.xp || 0)),
       avatarUrl: row.avatar_path ? `/avatars/${row.avatar_path}` : null,
       coverUrl:  row.cover_path  ? `/covers/${row.cover_path}`  : null });
@@ -674,7 +675,7 @@ function getFeed() {
   for (const [event, type] of [['visit_all_series','visit_all_series'],['discover_all_series','discover_all_series']]) {
     const rows = db.prepare(`
       SELECT e.ref AS seriesId, e.created_at, u.username, u.public_profile, u.avatar_path, u.xp,
-             u.is_author, u.is_contributor, u.display_name,
+             u.is_author, u.is_contributor, u.is_moderator, u.display_name,
              s.name AS seriesName, s.is_public AS seriesIsPublic
       FROM xp_events e
       JOIN users u ON e.user_id = u.id
@@ -686,7 +687,7 @@ function getFeed() {
         seriesId: parseInt(row.seriesId, 10), seriesName: row.seriesName,
         seriesIsPublic: row.seriesIsPublic === 1,
         completedAt: row.created_at * 1000, userPublicProfile: row.public_profile === 1,
-        isAuthor: row.is_author === 1, isContributor: row.is_contributor === 1, displayName: row.display_name || null,
+        isAuthor: row.is_author === 1, isContributor: row.is_contributor === 1, isModerator: row.is_moderator === 1, displayName: row.display_name || null,
         userLevel: computeLevel(row.xp || 0), userTitle: getTitleForLevel(computeLevel(row.xp || 0)),
         avatarUrl: row.avatar_path ? `/avatars/${row.avatar_path}` : null });
     }
@@ -694,7 +695,7 @@ function getFeed() {
   for (const [event, type] of [['visit_all_anthology','visit_all_anthology'],['discover_all_anthology','discover_all_anthology']]) {
     const rows = db.prepare(`
       SELECT e.ref AS anthologyId, e.created_at, u.username, u.public_profile, u.avatar_path, u.xp,
-             u.is_author, u.is_contributor, u.display_name,
+             u.is_author, u.is_contributor, u.is_moderator, u.display_name,
              b.name AS bookName, b.cover_path, b.is_public
       FROM xp_events e
       JOIN users u ON e.user_id = u.id
@@ -706,7 +707,7 @@ function getFeed() {
         bookId: parseInt(row.anthologyId, 10), bookName: row.bookName,
         bookIsPublic: row.is_public === 1, completedAt: row.created_at * 1000,
         userPublicProfile: row.public_profile === 1,
-        isAuthor: row.is_author === 1, isContributor: row.is_contributor === 1, displayName: row.display_name || null,
+        isAuthor: row.is_author === 1, isContributor: row.is_contributor === 1, isModerator: row.is_moderator === 1, displayName: row.display_name || null,
         userLevel: computeLevel(row.xp || 0), userTitle: getTitleForLevel(computeLevel(row.xp || 0)),
         avatarUrl: row.avatar_path ? `/avatars/${row.avatar_path}` : null,
         coverUrl:  row.cover_path  ? `/covers/${row.cover_path}`  : null });
@@ -726,7 +727,7 @@ function getFeed() {
     WHERE e.event = 'party_formed' AND e.created_at > ? AND u.hide_from_feed = 0
   `).all(cutoffSec);
   const _getPartyMembers = db.prepare(`
-    SELECT u.username, u.avatar_path, u.public_profile, u.xp, u.is_author, u.is_contributor, u.display_name
+    SELECT u.username, u.avatar_path, u.public_profile, u.xp, u.is_author, u.is_contributor, u.is_moderator, u.display_name
     FROM user_books ub JOIN users u ON u.id = ub.user_id
     WHERE ub.party_id = ? ORDER BY ub.id
   `);
@@ -738,13 +739,13 @@ function getFeed() {
       usernames: members.map(m => ({
         username: m.username, avatarUrl: m.avatar_path ? `/avatars/${m.avatar_path}` : null,
         userPublicProfile: m.public_profile === 1,
-        isAuthor: m.is_author === 1, isContributor: m.is_contributor === 1, displayName: m.display_name || null,
+        isAuthor: m.is_author === 1, isContributor: m.is_contributor === 1, isModerator: m.is_moderator === 1, displayName: m.display_name || null,
         userLevel: computeLevel(m.xp || 0), userTitle: getTitleForLevel(computeLevel(m.xp || 0)),
       })),
       bookId: parseInt(row.bookId, 10), bookName: row.bookName,
       bookIsPublic: row.is_public === 1, completedAt: row.created_at * 1000,
       userPublicProfile: members[0].public_profile === 1,
-      isAuthor: members[0].is_author === 1, isContributor: members[0].is_contributor === 1, displayName: members[0].display_name || null,
+      isAuthor: members[0].is_author === 1, isContributor: members[0].is_contributor === 1, isModerator: members[0].is_moderator === 1, displayName: members[0].display_name || null,
       userLevel: computeLevel(members[0].xp || 0),
       userTitle: getTitleForLevel(computeLevel(members[0].xp || 0)),
       avatarUrl: members[0].avatar_path ? `/avatars/${members[0].avatar_path}` : null,
@@ -755,7 +756,7 @@ function getFeed() {
   // ── User joins ────────────────────────────────────────────────────────────
   const joinRows = db.prepare(`
     SELECT u.id, u.username, u.avatar_path, u.public_profile, u.xp, u.hide_from_feed,
-           u.created_at, u.join_template_id, u.is_author, u.is_contributor, u.display_name
+           u.created_at, u.join_template_id, u.is_author, u.is_contributor, u.is_moderator, u.display_name
     FROM users u
     WHERE u.hide_from_feed = 0 AND u.created_at > ?
     ORDER BY u.created_at ASC
@@ -769,7 +770,7 @@ function getFeed() {
       joinTemplate,
       completedAt: row.created_at * 1000,
       userPublicProfile: row.public_profile === 1,
-      isAuthor: row.is_author === 1, isContributor: row.is_contributor === 1, displayName: row.display_name || null,
+      isAuthor: row.is_author === 1, isContributor: row.is_contributor === 1, isModerator: row.is_moderator === 1, displayName: row.display_name || null,
       userLevel: computeLevel(row.xp || 0),
       userTitle: getTitleForLevel(computeLevel(row.xp || 0)),
       avatarUrl: row.avatar_path ? `/avatars/${row.avatar_path}` : null });
@@ -797,7 +798,7 @@ function getFeed() {
       partyGroups.set(key, e);
       partyExtra.set(key, []);
     } else {
-      partyExtra.get(key).push({ username: e.username, avatarUrl: e.avatarUrl, userPublicProfile: e.userPublicProfile, isAuthor: e.isAuthor, isContributor: e.isContributor, displayName: e.displayName, userLevel: e.userLevel ?? 0, userTitle: e.userTitle || '' });
+      partyExtra.get(key).push({ username: e.username, avatarUrl: e.avatarUrl, userPublicProfile: e.userPublicProfile, isAuthor: e.isAuthor, isContributor: e.isContributor, isModerator: e.isModerator, displayName: e.displayName, userLevel: e.userLevel ?? 0, userTitle: e.userTitle || '' });
       toRemove.add(e);
     }
   }
@@ -805,7 +806,7 @@ function getFeed() {
   for (const [key, base] of partyGroups) {
     const extras = partyExtra.get(key);
     if (extras.length > 0) {
-      base.usernames = [{ username: base.username, avatarUrl: base.avatarUrl, userPublicProfile: base.userPublicProfile, isAuthor: base.isAuthor, isContributor: base.isContributor, displayName: base.displayName, userLevel: base.userLevel ?? 0, userTitle: base.userTitle || '' }, ...extras];
+      base.usernames = [{ username: base.username, avatarUrl: base.avatarUrl, userPublicProfile: base.userPublicProfile, isAuthor: base.isAuthor, isContributor: base.isContributor, isModerator: base.isModerator, displayName: base.displayName, userLevel: base.userLevel ?? 0, userTitle: base.userTitle || '' }, ...extras];
     }
   }
 
@@ -820,9 +821,9 @@ function getFeed() {
     } else {
       const base = achGroups.get(key);
       if (!base.usernames) {
-        base.usernames = [{ username: base.username, avatarUrl: base.avatarUrl, userPublicProfile: base.userPublicProfile, isAuthor: base.isAuthor, isContributor: base.isContributor, displayName: base.displayName, userLevel: base.userLevel ?? 0, userTitle: base.userTitle || '' }];
+        base.usernames = [{ username: base.username, avatarUrl: base.avatarUrl, userPublicProfile: base.userPublicProfile, isAuthor: base.isAuthor, isContributor: base.isContributor, isModerator: base.isModerator, displayName: base.displayName, userLevel: base.userLevel ?? 0, userTitle: base.userTitle || '' }];
       }
-      base.usernames.push({ username: e.username, avatarUrl: e.avatarUrl, userPublicProfile: e.userPublicProfile, isAuthor: e.isAuthor, isContributor: e.isContributor, displayName: e.displayName, userLevel: e.userLevel ?? 0, userTitle: e.userTitle || '' });
+      base.usernames.push({ username: e.username, avatarUrl: e.avatarUrl, userPublicProfile: e.userPublicProfile, isAuthor: e.isAuthor, isContributor: e.isContributor, isModerator: e.isModerator, displayName: e.displayName, userLevel: e.userLevel ?? 0, userTitle: e.userTitle || '' });
       toRemove.add(e);
     }
   }
@@ -906,12 +907,20 @@ function setHideFromFeed(userId, value) {
 
 function setAuthor(userId, value) {
   db.prepare("UPDATE users SET is_author = ? WHERE id = ?").run(value ? 1 : 0, userId);
-  if (value) _insertNotif.run(userId, 'role_assigned', JSON.stringify({ role: 'author', label: 'Author' }));
+  if (value) _insertNotif.run(userId, 'role_assigned', JSON.stringify({ role: 'author', label: 'Fateweaver' }));
+}
+
+function setModerator(userId, value) {
+  const old = db.prepare('SELECT is_moderator FROM users WHERE id = ?').get(userId);
+  if (!old) return false;
+  db.prepare('UPDATE users SET is_moderator = ? WHERE id = ?').run(value ? 1 : 0, userId);
+  if (value && !old.is_moderator) _insertNotif.run(userId, 'role_assigned', JSON.stringify({ role: 'moderator', label: 'Lorekeeper' }));
+  return true;
 }
 
 function setContributor(userId, value) {
   db.prepare("UPDATE users SET is_contributor = ? WHERE id = ?").run(value ? 1 : 0, userId);
-  if (value) _insertNotif.run(userId, 'role_assigned', JSON.stringify({ role: 'contributor', label: 'Contributor' }));
+  if (value) _insertNotif.run(userId, 'role_assigned', JSON.stringify({ role: 'contributor', label: 'Pathmaker' }));
 }
 
 function setPdfAccess(userId, value) {
@@ -923,7 +932,7 @@ function setDisplayName(userId, value) {
 }
 
 function getPublicProfile(username) {
-  const user = db.prepare("SELECT id, username, avatar_path, public_profile, is_author, is_contributor, display_name FROM users WHERE username = ?").get(username);
+  const user = db.prepare("SELECT id, username, avatar_path, public_profile, is_author, is_contributor, is_moderator, display_name FROM users WHERE username = ?").get(username);
   if (!user || !user.public_profile) return null;
 
   const bookRows = db.prepare(`
@@ -982,7 +991,7 @@ function getPublicProfile(username) {
     username:      user.username,
     displayName:   user.display_name || null,
     isAuthor:      user.is_author === 1,
-    isContributor: user.is_contributor === 1,
+    isContributor: user.is_contributor === 1, isModerator: user.is_moderator === 1,
     userId:        user.id,
     avatarUrl:     user.avatar_path ? `/avatars/${user.avatar_path}` : null,
     level:         xpInfo.level,
@@ -1510,7 +1519,7 @@ function getPublicSeriesRun(seriesId, userId, runIndex) {
 module.exports = {
   getFeed,
   getFeedVersion,
-  setPublicProfile, setHideFromFeed, setAuthor, setContributor, setPdfAccess, setDisplayName,
+  setPublicProfile, setHideFromFeed, setAuthor, setContributor, setModerator, setPdfAccess, setDisplayName,
   getPublicProfile, getProfileStats,
   getPublicCovers, getBooksForSitemap, getAnthologiesForSitemap, getSeriesForSitemap, getPublicProfilesForSitemap,
   getPublicBookMeta, getAllPublicBooks, getPublicBooksInSeries, getAllPublicSeries, getAllPublicAnthologies,

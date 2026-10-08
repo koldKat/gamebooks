@@ -1,3 +1,4 @@
+import { resolveIsModerator } from '../account/user.js';
 import { ensureGraphLibrary } from '../core/graph-library.js';
 import { bootState } from './state.js';
 import { state, setViewingPt, loadState, isValidSecId, currentPlaythrough, currentSection, isDemoMode } from '../core/state.js';
@@ -73,9 +74,9 @@ export async function showMain(bookId, isbn = null, issn = null, asin = null, co
     setupOpenWorldForBook(bookId, bootState._currentBook.seriesId, bootState._currentBook.isOpenWorld);
   }
   const editBookBtn = document.getElementById('edit-book-btn');
-  editBookBtn.style.display = (isCreator || bootState._isAdmin) ? '' : 'none';
+  editBookBtn.style.display = (bootState._isAdmin || (resolveIsModerator() ? isPublic : isCreator)) ? '' : 'none';
   editBookBtn.classList.toggle('admin-override', !isCreator && bootState._isAdmin);
-  if (!isCreator && bootState._isAdmin) editBookBtn.dataset.tooltip = 'Admin edit';
+  if (!isCreator && bootState._isAdmin) editBookBtn.dataset.tooltip = 'Game Master edit';
   else delete editBookBtn.dataset.tooltip;
   const pdfDlBtn = document.getElementById('pdf-download-btn');
   if (pdfDlBtn) {

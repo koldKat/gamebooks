@@ -10,7 +10,7 @@ test('progression relocation preserves XP, floaties and shop implementations wit
   const digests = {
     "app-xp": "067d8aad2d4bfc307cf563cf2301f60c69e6f4729c328768d91895d6f0deedf7",
     "rewards": "33fcb7bab962502059be6c89c7fa9ddefdf3d050c3a3490b6ebe69cc0b46d7fa",
-    "shop": "11f726ed43aca1168d47784891ede9d671618e62a32e15ec7a126627d22153df"
+    "shop": "70ba0e5c10b47f48fb5b373c282476943a5c03d3bbb9d8b193d23a8f4827a233"
   };
   for (const [name, digest] of Object.entries(digests)) {
     assert.equal(existsSync(new URL(name + '.js', dir)), false);

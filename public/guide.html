@@ -284,6 +284,8 @@
         <a class="toc-2" href="#demo-mode">Demo mode</a>
         <a class="toc-2" href="#accounts">Accounts</a>
         <a class="toc-2" href="#your-books">Your books</a>
+        <a class="toc-3" href="#player-roles">Player roles</a>
+        <a class="toc-3" href="#lorekeepers">Lorekeepers</a>
         <a class="toc-3" href="#creating-books">Creating books</a>
         <a class="toc-3" href="#stashes">Stashes</a>
         <a class="toc-2" href="#the-tracker-interface">The tracker interface</a>
@@ -378,7 +380,7 @@
 <li>A <strong>tip bar</strong> cycles through helpful hints every 15 seconds (the orange bar counts down)</li>
 <li>Activity is grouped by day (Today / Yesterday / date)</li>
 <li>Players with 5 or more entries on the same day are collapsed into one row - click it to expand</li>
-<li>Pinned announcements from the admin always appear at the top</li>
+<li>Pinned announcements from the Game Master always appear at the top</li>
 </ul>
 <p><strong>What you&#39;ll see in the feed:</strong></p>
 <div class="table-wrap"><table><thead><tr><th>Event</th><th>What it means</th></tr></thead><tbody><tr><td><em>user</em> <strong>created / added book</strong> <em>book</em></td><td>A new book was added to the library</td></tr><tr><td><em>user</em> <strong>created / added series</strong> <em>series</em></td><td>A series was created or added</td></tr><tr><td><em>user</em> <strong>began run N of</strong> <em>book</em></td><td>Someone started a new playthrough</td></tr><tr><td><em>user</em> <strong>won / lost / died in</strong> <em>book</em> run N</td><td>A playthrough ended</td></tr><tr><td><em>user</em> <strong>won</strong> <em>book</em> <strong>run N for the first time</strong></td><td>First ever victory in that book, showing which run achieved it</td></tr><tr><td><em>user</em> <strong>lost in</strong> <em>book</em> <strong>for the first time</strong></td><td>First ever loss (non-battle) in that book</td></tr><tr><td><em>user</em> <strong>fell in battle in</strong> <em>book</em> <strong>for the first time</strong></td><td>First ever battle-death in that book</td></tr><tr><td><em>user</em> <strong>won in all books of</strong> <em>series / anthology</em></td><td>Every book in a collection completed</td></tr><tr><td><em>user</em> <strong>discovered / visited every section of</strong> <em>book</em></td><td>Reached 100% mapping or 100% visiting</td></tr><tr><td><em>user</em> <strong>reached level N</strong></td><td>Someone levelled up</td></tr><tr><td><em>user</em> <strong>joined</strong></td><td>A new player registered</td></tr></tbody></table></div>
@@ -397,7 +399,7 @@
 <hr>
 <h2 id="stats-for-nerds">Stats for Nerds<a class="anchor" href="#stats-for-nerds" aria-label="Link to section">#</a></h2>
 <p>Click <strong>Stats</strong> in the header (visible to everyone) to see live numbers for the whole platform.</p>
-<div class="table-wrap"><table><thead><tr><th>Section</th><th>What&#39;s shown</th></tr></thead><tbody><tr><td><strong>Players</strong></td><td>Registered players, admins, authors, contributors, public profiles, avatars, undos/Fast Travels performed</td></tr><tr><td><strong>Books</strong></td><td>Unique books/series/anthologies, total library copies, public/private split, unique authors, average sections and pages per book, total/mapped/discovered sections, books fully visited or discovered</td></tr><tr><td><strong>Parties</strong></td><td>Play Together parties created and active, players currently in a party, invites sent/accepted/declined</td></tr><tr><td><strong>Gameplay</strong></td><td>Total, active, and finished playthroughs; wins, losses, battle deaths (with percentages); tracked and average play time</td></tr><tr><td><strong>XP &amp; Progression</strong></td><td>Total XP earned; platform level and title; average player level and title; level-ups; XP event types/count</td></tr><tr><td><strong>Gold Coins &amp; Shop</strong></td><td>Coins earned, spent, and in circulation; upgrades purchased by type</td></tr><tr><td><strong>Ratings</strong></td><td>Total ratings given; book, anthology, and series ratings counted separately; average book rating; breakdown by star count</td></tr><tr><td><strong>Forum</strong></td><td>Categories, threads, pinned threads, posts</td></tr><tr><td><strong>Server</strong></td><td>CPU model/cores/age/clock/architecture, total RAM</td></tr><tr><td><strong>The App</strong></td><td>App age, server uptime and uptime %, total downtime, lines of code, code/database size, JS module count, network traffic, live session averages (CPU, heap, RSS)</td></tr><tr><td><strong>Open World</strong></td><td>Open world series (public split), books in them, portal nodes, series runs (completed/public), pre-series runs</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>Section</th><th>What&#39;s shown</th></tr></thead><tbody><tr><td><strong>Players</strong></td><td>Registered players, Game Masters, Lorekeepers, Fateweavers, Pathmakers, public profiles, avatars, undos/Fast Travels performed</td></tr><tr><td><strong>Books</strong></td><td>Unique books/series/anthologies, total library copies, public/private split, unique authors, average sections and pages per book, total/mapped/discovered sections, books fully visited or discovered</td></tr><tr><td><strong>Parties</strong></td><td>Play Together parties created and active, players currently in a party, invites sent/accepted/declined</td></tr><tr><td><strong>Gameplay</strong></td><td>Total, active, and finished playthroughs; wins, losses, battle deaths (with percentages); tracked and average play time</td></tr><tr><td><strong>XP &amp; Progression</strong></td><td>Total XP earned; platform level and title; average player level and title; level-ups; XP event types/count</td></tr><tr><td><strong>Gold Coins &amp; Shop</strong></td><td>Coins earned, spent, and in circulation; upgrades purchased by type</td></tr><tr><td><strong>Ratings</strong></td><td>Total ratings given; book, anthology, and series ratings counted separately; average book rating; breakdown by star count</td></tr><tr><td><strong>Forum</strong></td><td>Categories, threads, pinned threads, posts</td></tr><tr><td><strong>Server</strong></td><td>CPU model/cores/age/clock/architecture, total RAM</td></tr><tr><td><strong>The App</strong></td><td>App age, server uptime and uptime %, total downtime, lines of code, code/database size, JS module count, network traffic, live session averages (CPU, heap, RSS)</td></tr><tr><td><strong>Open World</strong></td><td>Open world series (public split), books in them, portal nodes, series runs (completed/public), pre-series runs</td></tr></tbody></table></div>
 <hr>
 <h2 id="demo-mode">Demo mode<a class="anchor" href="#demo-mode" aria-label="Link to section">#</a></h2>
 <p>Click <strong>Demo</strong> on the landing page to try everything without creating an account.</p>
@@ -420,7 +422,11 @@
 <p>New accounts include a <strong>Demo Book</strong> - a fully mapped 50-section example with completed playthroughs, notes, and priorities. Delete it any time.</p>
 <p>Each book card shows a progress bar for sections you&#39;ve visited across all playthroughs. The fill shows fractional progress, so small gains can move it between whole percentage points. The bar turns green once you&#39;ve visited every section.</p>
 <div class="table-wrap"><table><thead><tr><th>Button</th><th>What it does</th></tr></thead><tbody><tr><td><strong>Open</strong></td><td>Go into the tracker for that book</td></tr><tr><td><strong>✎</strong></td><td>Edit the book details (name, sections, identifiers, cover)</td></tr><tr><td><strong>✕</strong></td><td>Delete the book and your progress (asks for confirmation)</td></tr></tbody></table></div>
-<p>If an admin shared a book with you, <strong>✎</strong> is visible but greyed out - only the creator can change the book&#39;s details.</p>
+<p>If a Game Master shared a book with you, <strong>✎</strong> is visible but greyed out - only the creator can change the book&#39;s details.</p>
+<h3 id="player-roles">Player roles<a class="anchor" href="#player-roles" aria-label="Link to section">#</a></h3>
+<div class="table-wrap"><table><thead><tr><th>Role</th><th>Badge</th></tr></thead><tbody><tr><td>Game Master</td><td>Blue star</td></tr><tr><td>Lorekeeper</td><td>Purple diamond</td></tr><tr><td>Pathmaker</td><td>Green star</td></tr><tr><td>Fateweaver</td><td>Gold star</td></tr></tbody></table></div>
+<h3 id="lorekeepers">Lorekeepers<a class="anchor" href="#lorekeepers" aria-label="Link to section">#</a></h3>
+<p>Lorekeepers have a purple diamond badge and can edit the metadata of any public book, anthology or series, plus covers for public books and anthologies, including titles outside their own library. They cannot edit private books, make a public book private, or delete books, anthologies or series. The role does not grant Game Master access or PDF/EPUB upload access. Lorekeepers can also adjust secondary anthology memberships when both the book and anthology are public. Stats for Nerds lists the number of Lorekeepers under Players.</p>
 <h3 id="creating-books">Creating books<a class="anchor" href="#creating-books" aria-label="Link to section">#</a></h3>
 <p>Click <strong>Create Book</strong> at the top of the books screen. As you type the name, a dropdown suggests public books and books already in your library - selecting a public book fills in its details and changes the button to <strong>Add to library</strong>. A book already in your library shows <strong>Already owned</strong> instead.</p>
 <ul>
@@ -455,7 +461,7 @@
 <p>The Player XP panel shows your level, title, XP bar, and active boosts. On the level row, your <strong>heartbeat XP rate</strong> is shown on the right in aqua - for example <strong>+6.7 heartbeat XP/min</strong> - so you can see at a glance how much passive XP you&#39;re earning while the tracker is open. The same rate appears on the books screen and in your profile.</p>
 <p><strong>Keyboard shortcuts (play area):</strong></p>
 <div class="table-wrap"><table><thead><tr><th>Shortcut</th><th>Action</th></tr></thead><tbody><tr><td><strong>I</strong></td><td>Open / close the Inventory panel (not while typing in a text field)</td></tr><tr><td><strong>C</strong></td><td>Open / close the Character Sheet (not while typing in a text field)</td></tr><tr><td><strong>E</strong></td><td>Open / close the Equipment panel (not while typing in a text field)</td></tr><tr><td><strong>S</strong></td><td>Open / close the Battle Simulator, if one is available for the current book (not while typing in a text field)</td></tr><tr><td><strong>R</strong></td><td>Open / close Live Reading, if the current book has it (not while typing in a text field)</td></tr><tr><td><strong>Ctrl+X</strong></td><td>Hide or restore all play-area side panels at once</td></tr></tbody></table></div>
-<p><strong>PDF access:</strong> if the book has a PDF and you&#39;ve been given access (or you&#39;re an admin), a <strong>PDF</strong> link appears next to the book title at the top of the sidebar.</p>
+<p><strong>PDF access:</strong> if the book has a PDF and you&#39;ve been given access (or you&#39;re a Game Master), a <strong>PDF</strong> link appears next to the book title at the top of the sidebar.</p>
 <p><strong>Sidebar bottom buttons:</strong></p>
 <div class="table-wrap"><table><thead><tr><th>Button</th><th>What it does</th></tr></thead><tbody><tr><td><strong>Center on Current Section</strong></td><td>Scrolls and zooms the graph to show where you are right now</td></tr><tr><td><strong>Find Section</strong></td><td>Type a section number and press Enter to jump to it on the graph</td></tr><tr><td><strong>Export Book</strong></td><td>Download a copy of this book&#39;s data as a ZIP file</td></tr><tr><td><strong>Reset Book</strong></td><td>Wipe all map data and playthrough history for this book</td></tr><tr><td><strong>← Home</strong></td><td>Go back to your books list</td></tr></tbody></table></div>
 <h3 id="graph-background-image">Graph background image<a class="anchor" href="#graph-background-image" aria-label="Link to section">#</a></h3>
@@ -607,7 +613,7 @@
 <p>Click your avatar circle on the Books screen.</p>
 <ul>
 <li><strong>Username</strong> - change your login name</li>
-<li><strong>Display name</strong> - authors only: shown in place of username throughout the site</li>
+<li><strong>Display name</strong> - Fateweavers only: shown in place of username throughout the site</li>
 <li><strong>Public profile</strong> - let anyone view your books and completed playthroughs; your username becomes a clickable link in the feed</li>
 <li><strong>Hide from activity feed</strong> - remove your activity from the feed (playthroughs you&#39;ve explicitly made public will still appear)</li>
 <li><strong>Change Password</strong> - enter your current password, then your new one</li>
@@ -637,7 +643,7 @@
 <p>Coins are spent permanently - no refunds. Boosts only apply to XP earned after you buy them.</p>
 <h3 id="lucky-gold-coin">Lucky gold coin<a class="anchor" href="#lucky-gold-coin" aria-label="Link to section">#</a></h3>
 <p>Every level gives you a small passive chance (0.01% per level) of a lucky gold coin appearing, checked each time you earn XP. Buying <strong>Lucky Coin Chance</strong> in the shop adds more, up to a cap that matches your level&#39;s own free chance.</p>
-<p>When you get lucky, a small coin icon in the books screen header (just left of the <strong>F1</strong> button) lights up with a golden glow - click it to claim the coin. It stays dim and unclickable the rest of the time, and only one can ever be waiting at once, so there&#39;s no rush once it appears.</p>
+<p>When you get lucky, a small coin icon in the books screen header (just left of the <strong>F1</strong> button) lights up with a golden glow - click it to claim the coin. The <strong>bulgarian made</strong> text also animates while a coin is waiting; click the text to claim it too. A gold coin pops out of the clicked control after a successful claim. The coin icon stays dim and unclickable the rest of the time, and only one can ever be waiting at once, so there&#39;s no rush once it appears.</p>
 <hr>
 <h2 id="rating">Rating<a class="anchor" href="#rating" aria-label="Link to section">#</a></h2>
 <p>Rate any book, anthology, or series with 1–5 stars (half-star increments).</p>
@@ -815,17 +821,17 @@
 </ul>
 <h3 id="notifications">Notifications<a class="anchor" href="#notifications" aria-label="Link to section">#</a></h3>
 <p>The <strong>bell 🔔</strong> turns solid green when you have unseen notifications. Click it to see them.</p>
-<div class="table-wrap"><table><thead><tr><th>Notification</th><th>When it appears</th></tr></thead><tbody><tr><td><strong>Level up</strong></td><td>Each time you gain a level</td></tr><tr><td><strong>Gold Coin earned</strong></td><td>XP milestone, level-up reward, 24h playtime, book completed, series/anthology fully completed</td></tr><tr><td><strong>Gold Coin gifted</strong></td><td>When an admin sends you coins directly</td></tr><tr><td><strong>Role assigned</strong></td><td>When an admin gives you the Author or Contributor role</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>Notification</th><th>When it appears</th></tr></thead><tbody><tr><td><strong>Level up</strong></td><td>Each time you gain a level</td></tr><tr><td><strong>Gold Coin earned</strong></td><td>XP milestone, level-up reward, 24h playtime, book completed, series/anthology fully completed</td></tr><tr><td><strong>Gold Coin gifted</strong></td><td>When a Game Master sends you coins directly</td></tr><tr><td><strong>Role assigned</strong></td><td>When a Game Master gives you the Lorekeeper, Pathmaker or Fateweaver role</td></tr></tbody></table></div>
 <h3 id="inbox">Inbox<a class="anchor" href="#inbox" aria-label="Link to section">#</a></h3>
-<p>The <strong>Inbox</strong> button shows a count of unread messages from the admin. Click it to open your conversations.</p>
+<p>The <strong>Inbox</strong> button shows a count of unread messages from the Game Master. Click it to open your conversations.</p>
 <ul>
-<li>Your messages appear on the right in blue; admin messages on the left in grey</li>
+<li>Your messages appear on the right in blue; Game Master messages on the left in grey</li>
 <li>Click any conversation to open it; <strong>← Back</strong> to return to the list</li>
 <li>Opening a conversation marks it as read and clears the badge</li>
 <li>Use <strong>+ Attach</strong> below the reply box to attach files to your reply (same file types and 64 MB limit as feedback)</li>
 <li>Wait for all attachments to finish uploading before sending. Remove failed uploads or upload them again.</li>
 <li>Images are shown inline in the message - click one to open the original at full size; other files appear as download links</li>
-<li>Deleting a conversation removes it from your inbox only; it&#39;s permanently deleted once both you and the admin have deleted it</li>
+<li>Deleting a conversation removes it from your inbox only; it&#39;s permanently deleted once both you and the Game Master have deleted it</li>
 <li>A new reply brings the conversation back to the recipient&#39;s inbox if they previously deleted it.</li>
 </ul>
       <p class="source">Generated from <code>docs/user-guide.md</code>. Do not edit this HTML directly.</p>

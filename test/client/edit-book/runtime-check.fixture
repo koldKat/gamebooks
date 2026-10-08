@@ -353,4 +353,25 @@ for (const status of [401, 503]) {
   await assert.rejects(upload);
 }
 assert.equal(token, null); assert.ok(calls.some(c => c[0] === 'event' && c[1] === 'auth-expired')); assert.ok(calls.some(c => c[0] === 'event' && c[1] === 'maintenance-mode'));
+edit.openEditCompModal({ bookId: 2, initialName: 'Retry anthology', onSave: async () => { throw new Error('Permission changed'); } });
+await el('ecc-save').emit('click');
+assert.ok(el('edit-comp-overlay').classList.contains('active'), 'failed metadata save keeps anthology editor open');
+assert.equal(el('ecc-error').textContent, 'Permission changed');
+assert.equal(el('ecc-save').disabled, false);
+edit.openEditBookModal({ bookId: 1, initialName: 'Outside library', initialSections: 10, initialParentBookId: 999, onSave() {} });
+const retainedParent = el('edit-book-parent-input').children.find(option => option.value === '999');
+assert.ok(retainedParent?.selected, 'catalog editing retains a parent anthology outside the library');
+edit.setEditBookHooks({ resolveIsAdmin: () => false, resolveIsModerator: () => true });
+edit.openEditBookModal({ bookId: 1, initialName: 'Public', initialTotal: 10, initialIsPublic: true });
+assert.equal(el('edit-book-public-toggle').disabled, true);
+edit.openEditCompModal({ bookId: 2, initialName: 'Public anthology', initialIsPublic: true });
+assert.equal(el('ecc-public').disabled, true);
+edit.openEditSeriesModal(10, 'Public series', '', true, true);
+assert.equal(el('esr-public').disabled, true);
+assert.equal(el('esr-open-world').checked, true);
+edit.setEditBookHooks({ resolveIsAdmin: () => true, resolveIsModerator: () => true });
+edit.openEditSeriesModal(10, 'Admin series', '', true, true);
+assert.equal(el('esr-public').disabled, false);
+edit.openEditCompModal({ bookId: 2, initialName: 'Admin anthology', initialIsPublic: true });
+assert.equal(el('ecc-public').disabled, false, 'admin controls remain available');
 console.log('Validation, PDF upload failures/retries/progress/auth, permissions, memberships, dialog saves and stash checks passed.');

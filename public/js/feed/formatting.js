@@ -34,7 +34,7 @@ const ANN_COLORS = {
 };
 
 // Keep in-app links relative to the current origin; external links still open in a new tab.
-export function formatAnnBody(str) {
+export function formatAnnBody(str, bookCovers = {}) {
   return escapeHtml(str)
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.+?)\*/g,     '<em>$1</em>')
@@ -42,8 +42,10 @@ export function formatAnnBody(str) {
     .replace(/~~(.+?)~~/g,     '<s>$1</s>')
     .replace(/\{color:(red|orange|amber|green|teal|blue|purple|pink)\}(.+?)\{\/color\}/g,
       (_, color, text) => `<span style="color:${ANN_COLORS[color]}">${text}</span>`)
-    .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+|\/book\/\d+|\/series\/\d+)\)/g, (_, label, target) =>
-      target.startsWith('/')
-        ? `<a href="${target}">${label}</a>`
-        : `<a href="${target}" target="_blank" rel="noopener noreferrer">${label}</a>`);
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+|\/book\/\d+|\/series\/\d+)\)/g, (_, label, target) => {
+      const cover = bookCovers[target] ? ` data-cover="${escapeHtml(bookCovers[target])}"` : '';
+      return target.startsWith('/')
+        ? `<a href="${target}"${cover}>${label}</a>`
+        : `<a href="${target}" target="_blank" rel="noopener noreferrer"${cover}>${label}</a>`;
+    });
 }

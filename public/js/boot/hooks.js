@@ -25,7 +25,7 @@ import { initDice } from '../play/dice.js';
 import { exportAll } from '../books/export.js';
 import { initFeedback } from '../community/feedback.js';
 import { setDemoHooks, getDemoBooks, setDemoBooks, startDemoMode, exitDemoMode } from '../demo.js';
-import { resolveIsAdmin, adminBadge, adminBadgeForUsername, authorBadge, contributorBadge, displayFor, registerAuthor, registerContributor } from '../account/user.js';
+import { resolveIsAdmin, adminBadge, adminBadgeForUsername, authorBadge, contributorBadge, moderatorBadge, displayFor, registerAuthor, registerContributor, registerModerator, resolveIsModerator } from '../account/user.js';
 import { escapeHtml, fetchPublic as publicFetch } from '../core/util.js';
 import { _toggleShortcutsModal } from './helpers.js';
 import { navigateToBook, showLogin, showBooks, showMain, _lockView, _updateUsernameTooltip } from './screens.js';
@@ -84,8 +84,9 @@ export function initFeatureHooks() {
     onSaveSuccess:         data => {
       registerAuthor(data.username, !!data.isAuthor, data.displayName);
       registerContributor(data.username, !!data.isContributor);
+      registerModerator(data.username, !!data.isModerator);
       const dn = data.displayName || data.username;
-      document.getElementById('books-username').innerHTML = escapeHtml(dn || '') + adminBadge(bootState._isAdmin) + authorBadge(data.username) + contributorBadge(data.username);
+      document.getElementById('books-username').innerHTML = escapeHtml(dn || '') + adminBadge(bootState._isAdmin) + authorBadge(data.username) + contributorBadge(data.username) + moderatorBadge(data.username);
       _updateUsernameTooltip();
     },
     getMousedownOverlay:   () => bootState._mousedownOnOverlay,
@@ -95,10 +96,11 @@ export function initFeatureHooks() {
     publicFetch,
     adminBadge: adminBadgeForUsername,
     authorBadge,
-    contributorBadge,
+    contributorBadge, moderatorBadge,
     displayFor,
     onRegisterAuthor:      registerAuthor,
     onRegisterContributor: registerContributor,
+    onRegisterModerator: registerModerator,
   });
   setCoversHooks({
     savePrefs,
@@ -110,15 +112,17 @@ export function initFeatureHooks() {
     showBooks,
     showLogin,
     getIsAdmin:          () => bootState._isAdmin,
+    getIsModerator: resolveIsModerator,
     refreshBooksListOnly: _refreshBooksListOnly,
     openEditBookModal,
     openEditCompModal,
+    openEditSeriesModal,
     lockView:            _lockView,
     navigateToBook,
     displayFor,
     adminBadge: adminBadgeForUsername,
     authorBadge,
-    contributorBadge,
+    contributorBadge, moderatorBadge,
     onFavoriteToggled:   () => _scheduleRewardProfileRefresh(250),
     refreshDayCovers:    refreshDayCoverFlows,
   });
@@ -128,9 +132,9 @@ export function initFeatureHooks() {
     displayFor,
     adminBadge: adminBadgeForUsername,
     authorBadge,
-    contributorBadge,
+    contributorBadge, moderatorBadge,
     registerAuthor:    registerAuthor,
-    registerContributor: registerContributor,
+    registerContributor, registerModerator,
     starsHtml:         _starsHtml,
   });
   setNotifHooks({
@@ -163,12 +167,14 @@ export function initFeatureHooks() {
     processRewardSnapshot:       _processRewardSnapshot,
     refreshAppXp:                refreshAppXp,
     getIsAdmin:                  () => bootState._isAdmin,
+    getIsModerator: resolveIsModerator,
     onAppXpEvent:                handleAppXpEvent,
     sendHeartbeat:                _sendHeartbeat,
     scheduleRewardProfileRefresh: _scheduleRewardProfileRefresh,
   });
   setAppXpHooks({
     getIsAdmin: () => bootState._isAdmin,
+    getIsModerator: resolveIsModerator,
     getCanSeeAppXp: () => bootState._canSeeAppXp,
   });
   document.getElementById('download-backup-btn').addEventListener('click', exportAll);
@@ -184,6 +190,7 @@ export function initFeatureHooks() {
     openEditStash:                (id)   => _openEditStash(id),
     scheduleRewardProfileRefresh: _scheduleRewardProfileRefresh,
     getIsAdmin:                   () => bootState._isAdmin,
+    getIsModerator: resolveIsModerator,
     getHasPdfAccess:              () => bootState._hasPdfAccess,
     getDemoBooks,
     setDemoBooks,
@@ -200,6 +207,7 @@ export function initFeatureHooks() {
   setPrefsHooks({ refreshDayCovers: refreshDayCoverFlows });
   setEditBookHooks({
     resolveIsAdmin:      () => resolveIsAdmin(),
+    resolveIsModerator,
     setCurrentBookCover,
     scheduleRewardProfileRefresh: _scheduleRewardProfileRefresh,
     // Patch PDF cards and the active play link without rebuilding the library.

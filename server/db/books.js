@@ -694,7 +694,7 @@ function createSeries(name, description, userId, isPublic = false) {
 }
 
 function getPublicSeriesInfo(seriesId, hasPdfAccess = false) {
-  const series = db.prepare('SELECT id, name, description, is_public FROM series WHERE id = ? AND is_public = 1').get(seriesId);
+  const series = db.prepare('SELECT id, name, description, is_public, is_open_world FROM series WHERE id = ? AND is_public = 1').get(seriesId);
   if (!series) return null;
   // Top-level books/anthologies in this series only (no anthology children)
   const books = db.prepare(
@@ -731,6 +731,7 @@ function getPublicSeriesInfo(seriesId, hasPdfAccess = false) {
     name:        series.name,
     description: series.description || null,
     isPublic:    series.is_public === 1,
+    isOpenWorld: !!series.is_open_world,
     avgRating:   agg.avgRating,
     voteCount:   agg.voteCount,
     books: books.map(b => {
@@ -950,6 +951,7 @@ function updateBook(userId, bookId, name, totalSections, isbn, issn, asin, pages
     // Admin may not track the book - use the first available user_books row for state sync
     ub = db.prepare('SELECT state_data FROM user_books WHERE book_id = ? LIMIT 1').get(bookId);
   }
+  if (!ub && isAdmin) ub = { state_data: '{}' };
   if (!ub) return false;
   // Only creator can edit book metadata, unless admin
   const bookMeta = db.prepare('SELECT created_by, max_section_number FROM books WHERE id = ?').get(bookId);

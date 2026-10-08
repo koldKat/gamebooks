@@ -46,7 +46,7 @@ export function closePublicModal() {
 
 export async function openPublicProfile(username) {
   openPublicModal();
-  document.getElementById('pub-modal-title').innerHTML = escapeHtml(_hooks.displayFor?.(username) ?? username) + (_hooks.adminBadge?.(username) ?? '') + (_hooks.authorBadge?.(username) ?? '') + (_hooks.contributorBadge?.(username) ?? '');
+  document.getElementById('pub-modal-title').innerHTML = escapeHtml(_hooks.displayFor?.(username) ?? username) + (_hooks.adminBadge?.(username) ?? '') + (_hooks.authorBadge?.(username) ?? '') + (_hooks.contributorBadge?.(username) ?? '') + (_hooks.moderatorBadge?.(username) ?? '');
   document.getElementById('pub-back-btn').style.display = 'none';
   document.getElementById('pub-modal-body').innerHTML = `<p class="pub-loading">${t('pub.loading')}</p>`;
   try {
@@ -62,10 +62,11 @@ export async function openPublicProfile(username) {
 export function renderPublicProfile(profile) {
   _hooks.onRegisterAuthor?.(profile.username, !!profile.isAuthor, profile.displayName);
   _hooks.onRegisterContributor?.(profile.username, !!profile.isContributor);
+  _hooks.onRegisterModerator?.(profile.username, !!profile.isModerator);
   document.getElementById('pub-back-btn').style.display = 'none';
   document.getElementById('public-modal').classList.remove('pub-modal--run');
   const _dn = profile.displayName || profile.username;
-  document.getElementById('pub-modal-title').innerHTML = escapeHtml(_dn) + (_hooks.adminBadge?.(profile.username) ?? '') + (_hooks.authorBadge?.(profile.username) ?? '') + (_hooks.contributorBadge?.(profile.username) ?? '');
+  document.getElementById('pub-modal-title').innerHTML = escapeHtml(_dn) + (_hooks.adminBadge?.(profile.username) ?? '') + (_hooks.authorBadge?.(profile.username) ?? '') + (_hooks.contributorBadge?.(profile.username) ?? '') + (_hooks.moderatorBadge?.(profile.username) ?? '');
   const body = document.getElementById('pub-modal-body');
   body.style.padding  = '';
   body.style.overflow = '';
@@ -89,7 +90,7 @@ export function renderPublicProfile(profile) {
     <div class="pub-profile-header">
       ${avatarHtml}
       <div class="pub-profile-info">
-        <div class="pub-profile-username">${escapeHtml(_dn)}${_hooks.adminBadge?.(profile.username) ?? ''}${_hooks.authorBadge?.(profile.username) ?? ''}${_hooks.contributorBadge?.(profile.username) ?? ''}${levelSuffix}</div>
+        <div class="pub-profile-username">${escapeHtml(_dn)}${_hooks.adminBadge?.(profile.username) ?? ''}${_hooks.authorBadge?.(profile.username) ?? ''}${_hooks.contributorBadge?.(profile.username) ?? ''}${_hooks.moderatorBadge?.(profile.username) ?? ''}${levelSuffix}</div>
         <div class="pub-profile-stats">
           <span class="pub-stat"><span class="pub-stat-val">${profile.totalBooks}</span> ${t('pub.stat.books_suffix')}${profile.createdBooks > 0 ? ` <span style="color:#6b7280;font-size:0.78em">(<span style="color:#60a5fa;font-weight:700">${profile.createdBooks}</span> ${t('pub.stat.created_suffix')})</span>` : ''}</span>
           <span class="pub-stat"><span class="pub-stat-val">${profile.books.length}</span> ${t('pub.stat.books_played')}</span>

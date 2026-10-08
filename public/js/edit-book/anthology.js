@@ -20,6 +20,7 @@ export function openEditCompModal({ bookId, initialName, initialIsbn = '', initi
   document.getElementById('ecc-description').value = initialDescription || '';
   document.getElementById('ecc-series-num').value  = initialSeriesNumber || '';
   document.getElementById('ecc-public').checked    = !!initialIsPublic;
+  document.getElementById('ecc-public').disabled = !!editState._hooks.resolveIsModerator?.() && !editState._hooks.resolveIsAdmin?.();
   document.getElementById('ecc-error').textContent = '';
   document.getElementById('ecc-id-hint').textContent = '';
   document.getElementById('ecc-pdf-name').textContent = '';
@@ -110,8 +111,15 @@ export function openEditCompModal({ bookId, initialName, initialIsbn = '', initi
     const isPublic    = document.getElementById('ecc-public').checked;
     const seriesName  = document.getElementById('ecc-series').value || null;
     const seriesNum   = document.getElementById('ecc-series-num').value.trim() || null;
-    onSave(name, isbn, issn, asin, pages, authors, description, isPublic, seriesName, seriesNum);
-    document.getElementById('edit-comp-overlay').classList.remove('active');
+    _setButtonsDisabled(['ecc-save', 'ecc-cancel'], true);
+    try {
+      await onSave(name, isbn, issn, asin, pages, authors, description, isPublic, seriesName, seriesNum);
+      if (isCurrent()) document.getElementById('edit-comp-overlay').classList.remove('active');
+    } catch (error) {
+      if (isCurrent()) errEl.textContent = error?.message || t('err.save');
+    } finally {
+      if (session === editState._anthologySession) _setButtonsDisabled(['ecc-save', 'ecc-cancel'], false);
+    }
   });
 
   document.getElementById('edit-comp-overlay').classList.add('active');

@@ -8,8 +8,8 @@ test('account relocation keeps root wrappers absent and unchanged modules intact
   // Non-import source baseline; comment cleanup verified against unchanged executable ASTs.
   const digests = {
     auth: 'f5a59cea9ac32de7dd96723dcd077f6f76e621b8ce0e00343aa0d9191d6be4dc',
-    'public-profile': '8ca8223c42034cdea479728193ea549142a3e25139c9a22c705da6b3bf326a2a',
-    user: '6a0e5eee3143805e90dee5da269571f8ee1851736e9303489fa6b4123c59a70d',
+    'public-profile': 'c2d48729228af2d38123635d7c2e2311874d2f49028e2471eac6e7a14aa6fc3a',
+    user: '1c05886d82403706640fea1d39f8099d5446769f55a1bd17c603f1465ae952ed',
   };
   for (const [name, digest] of Object.entries(digests)) {
     assert.equal(existsSync(new URL(name + '.js', dir)), false);

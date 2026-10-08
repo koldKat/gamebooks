@@ -18,7 +18,7 @@ export function createDayRenderer() {
       const sorted = [...firstEntry.usernames].sort((a, b) => a.username.localeCompare(b.username));
       const parts = sorted.map((u, i) => {
           const dn     = escapeHtml(_hooks.displayFor?.(u.username) ?? u.username);
-          const badges = (_hooks.adminBadge?.(u.username) ?? '') + (_hooks.authorBadge?.(u.username) ?? '') + (_hooks.contributorBadge?.(u.username) ?? '');
+          const badges = (_hooks.adminBadge?.(u.username) ?? '') + (_hooks.authorBadge?.(u.username) ?? '') + (_hooks.contributorBadge?.(u.username) ?? '') + (_hooks.moderatorBadge?.(u.username) ?? '');
           const comma  = i < sorted.length - 1 ? ',' : '';
           const av     = u.avatarUrl ? ` data-avatar="${escapeHtml(u.avatarUrl)}"` : '';
           const level  = Number.isFinite(+u.userLevel) ? ` data-user-level="${+u.userLevel}"` : '';
@@ -29,7 +29,7 @@ export function createDayRenderer() {
       return parts.join(' ');
     }
     const dn     = escapeHtml(_hooks.displayFor?.(k) ?? k);
-    const badges = (_hooks.adminBadge?.(k) ?? '') + (_hooks.authorBadge?.(k) ?? '') + (_hooks.contributorBadge?.(k) ?? '');
+    const badges = (_hooks.adminBadge?.(k) ?? '') + (_hooks.authorBadge?.(k) ?? '') + (_hooks.contributorBadge?.(k) ?? '') + (_hooks.moderatorBadge?.(k) ?? '');
     const av     = firstEntry.avatarUrl ? ` data-avatar="${escapeHtml(firstEntry.avatarUrl)}"` : '';
     const level  = Number.isFinite(+firstEntry.userLevel) ? ` data-user-level="${+firstEntry.userLevel}"` : '';
     const userTitle = firstEntry.userTitle ? ` data-user-title="${escapeHtml(firstEntry.userTitle)}"` : '';

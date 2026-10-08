@@ -128,6 +128,14 @@ async function handleAdminSetAuthor(req, res, userId) {
   send(res, 200, { ok: true });
 }
 
+async function handleAdminSetModerator(req, res, userId) {
+  if (!requireLocalhost(req, res)) return;
+  const { isModerator } = await readBody(req);
+  if (typeof isModerator !== 'boolean') return send(res, 400, { error: 'isModerator must be a boolean' });
+  if (!db.setModerator(userId, isModerator)) return send(res, 404, { error: 'Not found' });
+  send(res, 200, { ok: true });
+}
+
 async function handleAdminSetContributor(req, res, userId) {
   if (!requireLocalhost(req, res)) return;
   const { isContributor } = await readBody(req);
@@ -545,7 +553,7 @@ module.exports = {
   handleAdminUnlockUser,
   handleAdminUpdateUser,
   handleAdminSetAuthor,
-  handleAdminSetContributor,
+  handleAdminSetContributor, handleAdminSetModerator,
   handleAdminSetPdfAccess,
   handleAdminImpersonate,
   handleImpersonateRedirect,

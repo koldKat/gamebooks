@@ -19,8 +19,8 @@ export function renderEntry(e) {
       const level = Number.isFinite(+u.userLevel) ? ` data-user-level="${+u.userLevel}"` : '';
       const userTitle = u.userTitle ? ` data-user-title="${escapeHtml(u.userTitle)}"` : '';
       return u.userPublicProfile
-        ? `<button class="feed-user feed-user-pub" data-username="${escapeHtml(u.username)}"${av}${level}${userTitle}>${dn}</button>${_hooks.adminBadge?.(u.username) ?? ''}${_hooks.authorBadge?.(u.username) ?? ''}${_hooks.contributorBadge?.(u.username) ?? ''}`
-        : `<span class="feed-user"${av}${level}${userTitle}>${dn}</span>${_hooks.adminBadge?.(u.username) ?? ''}${_hooks.authorBadge?.(u.username) ?? ''}${_hooks.contributorBadge?.(u.username) ?? ''}`;
+        ? `<button class="feed-user feed-user-pub" data-username="${escapeHtml(u.username)}"${av}${level}${userTitle}>${dn}</button>${_hooks.adminBadge?.(u.username) ?? ''}${_hooks.authorBadge?.(u.username) ?? ''}${_hooks.contributorBadge?.(u.username) ?? ''}${_hooks.moderatorBadge?.(u.username) ?? ''}`
+        : `<span class="feed-user"${av}${level}${userTitle}>${dn}</span>${_hooks.adminBadge?.(u.username) ?? ''}${_hooks.authorBadge?.(u.username) ?? ''}${_hooks.contributorBadge?.(u.username) ?? ''}${_hooks.moderatorBadge?.(u.username) ?? ''}`;
     }).join('<span class="feed-party-sep">, </span>');
   } else {
     const dn     = escapeHtml(_hooks.displayFor?.(e.username) ?? e.username);
@@ -28,7 +28,7 @@ export function renderEntry(e) {
     const avatar = e.avatarUrl ? ` data-avatar="${escapeHtml(e.avatarUrl)}"` : '';
     const level  = Number.isFinite(+e.userLevel) ? ` data-user-level="${+e.userLevel}"` : '';
     const userTitle = e.userTitle ? ` data-user-title="${escapeHtml(e.userTitle)}"` : '';
-    const badge  = (_hooks.adminBadge?.(e.username) ?? '') + (_hooks.authorBadge?.(e.username) ?? '') + (_hooks.contributorBadge?.(e.username) ?? '');
+    const badge  = (_hooks.adminBadge?.(e.username) ?? '') + (_hooks.authorBadge?.(e.username) ?? '') + (_hooks.contributorBadge?.(e.username) ?? '') + (_hooks.moderatorBadge?.(e.username) ?? '');
     userEl = e.userPublicProfile
       ? `<button class="feed-user feed-user-pub" data-username="${user}"${avatar}${level}${userTitle}>${dn}</button>${badge}`
       : `<span class="feed-user"${avatar}${level}${userTitle}>${dn}</span>${badge}`;
@@ -153,7 +153,7 @@ export function renderEntry(e) {
     html = t('feed.tmpl.rated_series', { user: userEl, series: _seriesTag(e), stars: _hooks.starsHtml?.(e.rating) ?? '' });
     extraClass = 'feed-entry--rated';
   } else if (e.type === 'announcement') {
-    html = `<div class="feed-announcement"><span class="feed-ann-title">${escapeHtml(e.title)}</span><div class="feed-ann-body">${formatAnnBody(e.body)}</div></div>`;
+    html = `<div class="feed-announcement"><span class="feed-ann-title">${escapeHtml(e.title)}</span><div class="feed-ann-body">${formatAnnBody(e.body, e.bookCovers)}</div></div>`;
   }
   if (isParty && html && e.type !== 'party_formed') html += ` <span class="feed-party-badge">${t('feed.party_badge')}</span>`;
   return { html, isParty, extraClass };

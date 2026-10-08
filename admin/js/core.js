@@ -154,13 +154,13 @@ export function _esc(s) {
 
 // Use the DB admin flag so renaming an account does not change its badge.
 export function adminBadge(isAdmin) {
-  return isAdmin ? '<span class="admin-badge" data-tooltip="Admin">★</span>' : '';
+  return isAdmin ? '<span class="admin-badge" data-tooltip="Game Master">★</span>' : '';
 }
 export function authorBadge(isAuthor) {
-  return isAuthor ? '<span class="author-badge" data-tooltip="Author">★</span>' : '';
+  return isAuthor ? '<span class="author-badge" data-tooltip="Fateweaver">★</span>' : '';
 }
 export function contributorBadge(isContributor) {
-  return isContributor ? '<span class="contributor-badge" data-tooltip="Contributor">✦</span>' : '';
+  return isContributor ? '<span class="contributor-badge" data-tooltip="Pathmaker">✦</span>' : '';
 }
 
 // ── DOM builders ──────────────────────────────────────────────────────────────
@@ -409,3 +409,5 @@ function _renderPaginationControls(tableId, page, totalPages, total, onChange) {
   document.getElementById(`${tableId}-page-prev`)?.addEventListener('click', () => { _pageState[tableId].page--; onChange(); });
   document.getElementById(`${tableId}-page-next`)?.addEventListener('click', () => { _pageState[tableId].page++; onChange(); });
 }
+
+export function moderatorBadge(value) { return value ? '<span class="moderator-badge" data-tooltip="Lorekeeper"><svg aria-hidden="true" viewBox="1 1 8 8"><path fill="currentColor" d="M5 1L9 5L5 9L1 5Z"/></svg></span>' : ''; }

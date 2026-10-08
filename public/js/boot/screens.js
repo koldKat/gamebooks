@@ -6,7 +6,7 @@ import { _ensureLiveTabControllerStarted, _connectAppXpSSE } from '../core/livet
 import { refreshAppXp } from '../progression/app-xp.js';
 import { getCachedBooks, setCachedBooks, setCachedAllSeries, setCurrentUserId } from '../books.js';
 import { _processRewardSnapshot } from '../progression/rewards.js';
-import { resolveIsAdmin, registerAuthor, registerContributor } from '../account/user.js';
+import { resolveIsAdmin, registerAuthor, registerContributor, registerModerator, resolveIsModerator } from '../account/user.js';
 import { _cancelForumReveal } from './helpers.js';
 import { showBooks } from './landing.js';
 import { showMain } from './play-screen.js';
@@ -44,6 +44,7 @@ export async function navigateToBook(bookId) {
           setUsername(profile.username);
           registerAuthor(profile.username, !!profile.isAuthor, profile.displayName);
           registerContributor(profile.username, !!profile.isContributor);
+      registerModerator(profile.username, !!profile.isModerator);
         }
         setBonusUndos(profile.bonusUndos || 0);
         setBonusFastTravels(profile.bonusFastTravels || 0);

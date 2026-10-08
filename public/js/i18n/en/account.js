@@ -61,7 +61,7 @@ export default {
     'auth.enter_new_password': 'Please enter a new password.',
     'auth.enter_username_or_email': 'Please enter your username or email.',
     'auth.sending': 'Sending…',
-    'auth.no_email_on_file': 'This account has no email address on file. Please contact an admin using the feedback form.',
+    'auth.no_email_on_file': 'This account has no email address on file. Please contact a Game Master using the feedback form.',
     'auth.reset_link_sent_maybe': 'If that account has an email address on file, a reset link has been sent.',
 
     'profile.load_failed': 'Could not load profile. Please try again.',

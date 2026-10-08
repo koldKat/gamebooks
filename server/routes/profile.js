@@ -27,7 +27,7 @@ async function handleGetProfile(req, res) {
     isAdmin:       user.is_admin === 1,
     displayName:   user.display_name || null,
     isAuthor:      user.is_author === 1,
-    isContributor: user.is_contributor === 1,
+    isContributor: user.is_contributor === 1, isModerator: user.is_moderator === 1,
     pdfAccess:     user.pdf_access === 1,
     avatarUrl:     user.avatar_path ? `/avatars/${user.avatar_path}` : null,
     publicProfile: user.public_profile === 1,
@@ -99,7 +99,7 @@ async function handleUpdateProfile(req, res) {
     isAdmin:       updated.is_admin === 1,
     displayName:   updated.display_name || null,
     isAuthor:      updated.is_author === 1,
-    isContributor: updated.is_contributor === 1,
+    isContributor: updated.is_contributor === 1, isModerator: updated.is_moderator === 1,
     avatarUrl:     updated.avatar_path ? `/avatars/${updated.avatar_path}` : null,
     publicProfile: updated.public_profile === 1,
     hideFeed:      updated.hide_from_feed === 1,
@@ -230,6 +230,13 @@ async function handleUploadCover(req, res, bookId) {
     if (userId === null) return;
   }
 
+  const book = db.getBookById(bookId);
+  const isAdmin = fromLocalhost || db.isUserAdmin(userId);
+  const isModerator = !isAdmin && db.isUserModerator(userId);
+  if (!book || (isModerator && !book.is_public)) return send(res, 404, { error: 'Not found' });
+  if (!isAdmin && !isModerator && ((book.created_by != null && book.created_by !== userId) || !db.getBookState(userId, bookId)))
+    return send(res, 403, { error: 'Only the creator can edit this cover' });
+
   let buf;
   try { buf = await readRawBody(req, AVATAR_UPLOAD_MAX); }
   catch (e) {
@@ -243,10 +250,9 @@ async function handleUploadCover(req, res, bookId) {
   const filepath = path.join(COVERS_DIR, filename);
   fs.writeFileSync(filepath, buf);
 
-  db.setBookCover(userId, bookId, filename, fromLocalhost);
+  db.setBookCover(userId, bookId, filename, isAdmin || isModerator);
   send(res, 200, { coverUrl: `/covers/${filename}` });
   if (!fromLocalhost) db.awardXp(userId, 'upload_cover', bookId);
-  const book = db.getBookById(bookId);
   if (book?.is_public) publicCatalogPush({ type: 'public_catalog_changed', entity: 'book', id: bookId, action: 'update' });
 }
 
@@ -256,7 +262,7 @@ async function handleUploadPdf(req, res, bookId) {
     userId = await authenticate(req, res);
     if (userId === null) return;
     const user = db.getUserById(userId);
-    if (!user?.is_protected && !user?.is_admin) return send(res, 403, { error: 'Admin only' });
+    if (!user?.is_protected && !user?.is_admin) return send(res, 403, { error: 'Game Master only' });
   } else {
     userId = authenticateOptional(req);
   }
@@ -284,7 +290,7 @@ async function handleDeletePdf(req, res, bookId) {
     const userId = await authenticate(req, res);
     if (userId === null) return;
     const user = db.getUserById(userId);
-    if (!user?.is_protected && !user?.is_admin) return send(res, 403, { error: 'Admin only' });
+    if (!user?.is_protected && !user?.is_admin) return send(res, 403, { error: 'Game Master only' });
   }
   db.removeBookPdf(bookId);
   send(res, 200, { ok: true });
@@ -296,7 +302,7 @@ async function handleUploadEpub(req, res, bookId) {
     userId = await authenticate(req, res);
     if (userId === null) return;
     const user = db.getUserById(userId);
-    if (!user?.is_protected && !user?.is_admin) return send(res, 403, { error: 'Admin only' });
+    if (!user?.is_protected && !user?.is_admin) return send(res, 403, { error: 'Game Master only' });
   } else {
     userId = authenticateOptional(req);
   }
@@ -324,7 +330,7 @@ async function handleDeleteEpub(req, res, bookId) {
     const userId = await authenticate(req, res);
     if (userId === null) return;
     const user = db.getUserById(userId);
-    if (!user?.is_protected && !user?.is_admin) return send(res, 403, { error: 'Admin only' });
+    if (!user?.is_protected && !user?.is_admin) return send(res, 403, { error: 'Game Master only' });
   }
   db.removeBookEpub(bookId);
   send(res, 200, { ok: true });

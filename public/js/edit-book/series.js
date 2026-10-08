@@ -9,6 +9,7 @@ export function openEditSeriesModal(seriesId, name, description, isPublic = fals
   document.getElementById('esr-name').value         = name || '';
   document.getElementById('esr-description').value  = description || '';
   document.getElementById('esr-public').checked     = !!isPublic;
+  document.getElementById('esr-public').disabled = !!editState._hooks.resolveIsModerator?.() && !editState._hooks.resolveIsAdmin?.();
   document.getElementById('esr-open-world').checked = !!isOpenWorld;
   document.getElementById('esr-error').textContent  = '';
   document.getElementById('edit-series-overlay').classList.add('active');

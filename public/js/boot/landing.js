@@ -22,7 +22,7 @@ import { _scheduleLiveUiRefresh, resetNotifBadgesForLogout } from '../community/
 import { _resetRewardSnapshotState, _positionRewardLayer, _processRewardSnapshot } from '../progression/rewards.js';
 import { cancelBgMove } from '../play/bg.js';
 import { getDemoBooks, getDemoVisited } from '../demo.js';
-import { resolveIsAdmin, adminBadge, authorBadge, contributorBadge, registerAuthor, registerContributor } from '../account/user.js';
+import { resolveIsAdmin, adminBadge, authorBadge, contributorBadge, moderatorBadge, registerAuthor, registerContributor, registerModerator, resolveIsModerator } from '../account/user.js';
 import { escapeHtml } from '../core/util.js';
 import { _cancelForumReveal, setDiceRollerVisible, setGuideVisible, _isMobile, _revealLanding } from './helpers.js';
 import { _pushNav, _isViewLocked } from './navigation.js';
@@ -220,8 +220,9 @@ export async function showBooks() {
       setUsername(profile.username);
       registerAuthor(profile.username, !!profile.isAuthor, profile.displayName);
       registerContributor(profile.username, !!profile.isContributor);
+      registerModerator(profile.username, !!profile.isModerator);
       const _dn = profile.displayName || profile.username;
-      document.getElementById('books-username').innerHTML = escapeHtml(_dn) + adminBadge(bootState._isAdmin) + authorBadge(profile.username) + contributorBadge(profile.username);
+      document.getElementById('books-username').innerHTML = escapeHtml(_dn) + adminBadge(bootState._isAdmin) + authorBadge(profile.username) + contributorBadge(profile.username) + moderatorBadge(profile.username);
       _updateUsernameTooltip();
     }
     await _prefsReady;
