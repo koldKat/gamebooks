@@ -27,6 +27,7 @@
 #sim521-overlay .inv-edit-row { flex-wrap: wrap; }
 #sim521-overlay select, #sim521-overlay input { max-width: 100%; min-width: 0; }
 #sim521-close { margin-left: auto; }
+#sim521-overlay .bsim-col-left > * { flex-shrink: 0; }
 #sim522-overlay [hidden] { display: none !important; }
 #sim522-overlay .inv-edit-row { flex-wrap: wrap; }
 #sim522-overlay select, #sim522-overlay input { max-width: 100%; min-width: 0; }
@@ -37,7 +38,7 @@
 #sim523-overlay select, #sim523-overlay input { max-width: 100%; min-width: 0; }
 #sim523-close { margin-left: auto; }
 #sim523-overlay .bsim-col-left > * { flex-shrink: 0; }
-#sim523-btn {
+#sim521-btn, #sim523-btn {
   background: rgba(31, 41, 55, 0.88);
   border: 1px solid #374151;
   border-radius: 7px;
@@ -51,7 +52,7 @@
   box-shadow: 0 2px 8px rgba(0,0,0,0.35);
   flex-shrink: 0;
 }
-#sim523-btn:hover { background: #374151; color: #d1d5db; }
+#sim521-btn:hover, #sim523-btn:hover { background: #374151; color: #d1d5db; }
 #sim524-overlay [hidden] { display: none !important; }
 #sim524-overlay .inv-edit-row { flex-wrap: wrap; }
 #sim524-overlay select, #sim524-overlay input { max-width: 100%; min-width: 0; }
@@ -124,6 +125,7 @@
   direction: rtl;
 }
 .bsim-col-left > * { direction: ltr; }
+.bsim-col-left > .inv-add-btn { flex: 0 0 auto; }
 .bsim-col-right {
   flex: 1;
   border-left: 1px solid #1f2937;

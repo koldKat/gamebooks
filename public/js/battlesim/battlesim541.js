@@ -32,6 +32,7 @@ function _data() {
         weaponSta: 2, weaponEnd: 0,
       },
       attribute: 'strength',
+      combatRulesVersion: 2,
       enemy: { name: '', value: 0, sta: 0, staMax: 0, end: 0, endMax: 0, weaponSta: 2, weaponEnd: 0 },
       rolled: false,
       roundsThisBattle: 0,
@@ -69,7 +70,12 @@ function _enemyNameSafe(d) { return escapeHtml(_enemyName(d)); }
 
 function _playerAttr(d) { return d.player[d.attribute]; }
 
-function _enemyDefeated(d) { return (d.enemy.staMax > 0 || d.enemy.endMax > 0) && (d.enemy.sta <= 0 || d.enemy.end <= 0); }
+function _enemyDefeated(d) {
+  if (d.combatRulesVersion === 2) {
+    return (d.enemy.staMax > 0 && d.enemy.sta <= 0) || (d.enemy.endMax > 0 && d.enemy.end <= 0);
+  }
+  return (d.enemy.staMax > 0 || d.enemy.endMax > 0) && (d.enemy.sta <= 0 || d.enemy.end <= 0);
+}
 function _playerDefeated(d) { return d.rolled && (d.player.stamina <= 0 || d.player.endurance <= 0); }
 function _hasEnemy(d) { return d.enemy.staMax > 0 || d.enemy.endMax > 0; }
 function _battleOver(d) { return _notReady(d) || _playerDefeated(d) || (_hasEnemy(d) && _enemyDefeated(d)); }
@@ -149,6 +155,7 @@ function _runRound() {
 function _resetBattle() {
   const d = _data();
   if (!d) return;
+  d.combatRulesVersion = 2;
   d.enemy.sta = d.enemy.staMax;
   d.enemy.end = d.enemy.endMax;
   d.player.stamina = d.player.staminaInitial;
@@ -311,6 +318,7 @@ function _setupEnemyAutocomplete() {
     input.value = enemy.name;
     d.enemy.name = enemy.name;
     if (enemy.attack != null) d.enemy.value = enemy.attack;
+    d.combatRulesVersion = 2;
     d.roundsThisBattle = 0;
     closeDropdown();
     saveState();
