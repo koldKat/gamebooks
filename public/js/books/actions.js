@@ -184,20 +184,24 @@ export function _wireRenderedContent(list) {
         return;
       }
 
-      let min = 20, hitWall = false, discCount = 0;
+      let min = 5, minMax = 1, hitWall = false, discCount = 0;
       if (isDemoMode) {
         const saved = getDemoState(bid);
-        if (saved) min = Math.max(5, booksState._hooks.maxSectionInUse?.(saved) ?? 5);
+        if (saved) {
+          minMax = booksState._hooks.maxSectionInUse?.(saved) ?? 1;
+          min = Math.max(5, booksState._hooks.discoveredSectionsFor?.(saved.graph, saved.playthroughs, saved.startSection, saved.uncountedSections)?.size || 0);
+        }
       } else {
         try {
           const res       = await apiFetch(`/api/books/${bid}/state`);
           const bookState = await res.json();
-          min = Math.max(5, booksState._hooks.maxSectionInUse?.(bookState) ?? 5);
+          minMax = booksState._hooks.maxSectionInUse?.(bookState) ?? 1;
           const mapped = booksState._hooks.mappedCountFor?.(bookState?.graph, bookState?.uncountedSections) || 0;
           const disc   = booksState._hooks.discoveredSectionsFor?.(bookState?.graph, bookState?.playthroughs, bookState?.startSection, bookState?.uncountedSections) || new Set();
           const total  = +btn.dataset.sections;
           hitWall   = mapped > 0 && mapped === disc.size && mapped < total;
           discCount = disc.size;
+          min = Math.max(5, disc.size);
         } catch (_) {}
       }
 
@@ -205,6 +209,8 @@ export function _wireRenderedContent(list) {
         bookId:                     isDemoMode ? bid : +bid,
         initialName:                btn.dataset.name,
         initialSections:            +btn.dataset.sections,
+        initialMaxSectionNumber:    btn.dataset.maxSection ? +btn.dataset.maxSection : null,
+        minMaxSectionNumber:        minMax,
         initialIsbn:                btn.dataset.isbn,
         initialIssn:                btn.dataset.issn,
         initialAsin:                btn.dataset.asin,
@@ -225,29 +231,31 @@ export function _wireRenderedContent(list) {
         initialSeriesNumber:        btn.dataset.seriesNum || '',
         initialParentBookId:        btn.dataset.parentId ? +btn.dataset.parentId : null,
         initialBookOrder:           btn.dataset.bookOrder ? +btn.dataset.bookOrder : null,
-        onSave: async (name, sections, isbn, issn, asin, pages, authors, description, discoverableSections, isPublic, seriesName, seriesNumber, _isContainer, parentId, bookOrder) => {
+        onSave: async (name, sections, isbn, issn, asin, pages, authors, description, discoverableSections, isPublic, seriesName, seriesNumber, _isContainer, parentId, bookOrder, maxSectionNumber) => {
           if (isDemoMode) {
             const demoBooks = booksState._hooks.getDemoBooks?.() || [];
             const book = demoBooks.find(b => b.id === bid);
-            if (book) { book.name = name; book.total_sections = sections; book.isbn = isbn || null; book.issn = issn || null; book.asin = asin || null; book.pages = pages || null; book.authors = authors || null; book.description = description || null; }
+            if (book) { book.name = name; book.total_sections = sections; book.max_section_number = maxSectionNumber; book.isbn = isbn || null; book.issn = issn || null; book.asin = asin || null; book.pages = pages || null; book.authors = authors || null; book.description = description || null; }
             const saved = getDemoState(bid);
-            if (saved) { saved.bookName = name; saved.totalSections = sections; setDemoState(bid, saved); }
+            if (saved) { saved.bookName = name; saved.totalSections = sections; saved.maxSectionNumber = maxSectionNumber; setDemoState(bid, saved); }
             await booksState._hooks.showBooks?.();
             return;
           }
           try {
-            await apiFetch(`/api/books/${bid}`, {
+            const res = await apiFetch(`/api/books/${bid}`, {
               method: 'PATCH',
-              body:   JSON.stringify({ name, total_sections: sections, isbn: isbn || null, issn: issn || null, asin: asin || null, pages: pages || null, authors: authors || null, description: description || null, discoverable_sections: discoverableSections ?? null, is_public: isPublic, series_name: seriesName || null, series_number: seriesNumber || null, is_container: 0, parent_book_id: parentId || null, book_order: bookOrder ?? null }),
+              body:   JSON.stringify({ name, total_sections: sections, max_section_number: maxSectionNumber, isbn: isbn || null, issn: issn || null, asin: asin || null, pages: pages || null, authors: authors || null, description: description || null, discoverable_sections: discoverableSections ?? null, is_public: isPublic, series_name: seriesName || null, series_number: seriesNumber || null, is_container: 0, parent_book_id: parentId || null, book_order: bookOrder ?? null }),
             });
+            if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || t('err.save'));
             if (_booksListDisplayChanged(bid, { name, sections, discoverableSections, isPublic, seriesName, seriesNumber, isContainer: false, parentId, bookOrder })) {
               await _refreshLibraryUi({ feed: true });
             } else {
-              _patchCachedBook(bid, { isbn: isbn || null, issn: issn || null, asin: asin || null, pages: pages || null, authors: authors || null, description: description || null });
+              _patchCachedBook(bid, { max_section_number: maxSectionNumber, isbn: isbn || null, issn: issn || null, asin: asin || null, pages: pages || null, authors: authors || null, description: description || null });
+              btn.dataset.maxSection = maxSectionNumber ?? '';
               await Promise.allSettled([booksState._hooks.loadFeed?.()]);
             }
-          } catch (_) {
-            document.getElementById('edit-book-error').textContent = t('err.save');
+          } catch (error) {
+            throw error;
           }
         },
       });

@@ -24,7 +24,7 @@ function getBookSection(bookId, sectionId) {
 function getBooks(userId) {
   const canLiveRead = _canLiveRead(userId);
   const rows = db.prepare(`
-    SELECT b.id, b.name, b.total_sections, b.discoverable_sections,
+    SELECT b.id, b.name, b.total_sections, b.max_section_number, b.discoverable_sections,
            b.isbn, b.issn, b.asin, b.cover_path, b.pdf_path, b.epub_path, b.created_at, b.created_by, b.is_public,
            b.pages, b.authors, b.description, b.is_demo,
            b.series_id, b.series_number, b.is_container, b.parent_book_id, b.book_order, b.has_battle_sim, b.has_live_reading,
@@ -326,7 +326,7 @@ function _pruneRedundantAnthologyMembership(bookId, parentBookId) {
 // children) - callers combine this with their own primary-children query.
 function getAnthologyExtraMembers(anthologyId, publicOnly = false) {
   return db.prepare(
-    `SELECT b.id, b.name, b.total_sections, m.book_order FROM book_anthology_memberships m
+    `SELECT b.id, b.name, b.total_sections, b.max_section_number, m.book_order FROM book_anthology_memberships m
      JOIN books b ON b.id = m.book_id
      WHERE m.anthology_id = ? AND b.is_demo = 0 AND (? = 0 OR b.is_public = 1)`
   ).all(anthologyId, publicOnly ? 1 : 0);
@@ -698,7 +698,7 @@ function getPublicSeriesInfo(seriesId, hasPdfAccess = false) {
   if (!series) return null;
   // Top-level books/anthologies in this series only (no anthology children)
   const books = db.prepare(
-    `SELECT b.id, b.name, b.total_sections, b.cover_path, b.is_container, b.series_number,
+    `SELECT b.id, b.name, b.total_sections, b.max_section_number, b.cover_path, b.is_container, b.series_number,
             b.isbn, b.issn, b.pages, b.authors, b.has_battle_sim, b.has_live_reading, b.pdf_path, b.epub_path,
             (SELECT COUNT(*) FROM books c WHERE c.parent_book_id = b.id AND c.is_demo = 0 AND c.is_public = 1) AS child_count,
             (SELECT MAX(c.has_battle_sim) FROM books c WHERE c.parent_book_id = b.id AND c.is_demo = 0 AND c.is_public = 1) AS child_has_battle_sim
@@ -711,7 +711,7 @@ function getPublicSeriesInfo(seriesId, hasPdfAccess = false) {
               b.series_number`
   ).all(seriesId);
   const childrenStmt = db.prepare(
-    `SELECT id, name, total_sections, cover_path, isbn, issn, pages, authors, has_battle_sim, has_live_reading, pdf_path, epub_path
+    `SELECT id, name, total_sections, max_section_number, cover_path, isbn, issn, pages, authors, has_battle_sim, has_live_reading, pdf_path, epub_path
      FROM books WHERE parent_book_id = ? AND is_demo = 0 AND is_public = 1
      ORDER BY COALESCE(book_order, id)`
   );
@@ -740,6 +740,7 @@ function getPublicSeriesInfo(seriesId, hasPdfAccess = false) {
             id:            c.id,
             name:          c.name,
             totalSections: c.total_sections,
+            maxSectionNumber: c.max_section_number,
             coverUrl:      c.cover_path ? `/covers/${c.cover_path}` : null,
             isbn:          c.isbn || null,
             issn:          c.issn || null,
@@ -755,6 +756,7 @@ function getPublicSeriesInfo(seriesId, hasPdfAccess = false) {
         id:            b.id,
         name:          b.name,
         totalSections: b.total_sections,
+        maxSectionNumber: b.max_section_number,
         coverUrl:      b.cover_path ? `/covers/${b.cover_path}` : null,
         isContainer,
         seriesNumber:  b.series_number || null,
@@ -781,10 +783,12 @@ function normalizeAuthors(raw) {
   return parts.join(', ');
 }
 
-function createBook(userId, name, totalSections, isbn, issn, asin, pages, authors, description, seriesId, seriesNumber, isContainer, parentBookId, bookOrder, isPublic = false) {
+function createBook(userId, name, totalSections, isbn, issn, asin, pages, authors, description, seriesId, seriesNumber, isContainer, parentBookId, bookOrder, isPublic = false, maxSectionNumber = null) {
+  maxSectionNumber = isContainer ? null : (maxSectionNumber ?? totalSections);
   const initialState = JSON.stringify({
     bookName: name,
     totalSections,
+    maxSectionNumber,
     graph: {},
     playthroughs: [],
     activePtIndex: null,
@@ -792,10 +796,10 @@ function createBook(userId, name, totalSections, isbn, issn, asin, pages, author
   });
   const bookResult = db.prepare(
     `INSERT INTO books (
-      name, total_sections, isbn, issn, asin, pages, authors, description, created_by,
+      name, total_sections, max_section_number, isbn, issn, asin, pages, authors, description, created_by,
       series_id, series_number, is_container, parent_book_id, book_order, is_public, published_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CASE WHEN ? THEN strftime('%s','now') ELSE NULL END)`
-  ).run(name, totalSections, isbn || null, issn || null, asin || null, pages || null, normalizeAuthors(authors), description || null, userId, seriesId || null, seriesNumber || null, isContainer ? 1 : 0, parentBookId || null, bookOrder ?? null, isPublic ? 1 : 0, isPublic ? 1 : 0);
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CASE WHEN ? THEN strftime('%s','now') ELSE NULL END)`
+  ).run(name, totalSections, maxSectionNumber, isbn || null, issn || null, asin || null, pages || null, normalizeAuthors(authors), description || null, userId, seriesId || null, seriesNumber || null, isContainer ? 1 : 0, parentBookId || null, bookOrder ?? null, isPublic ? 1 : 0, isPublic ? 1 : 0);
   const bookId = bookResult.lastInsertRowid;
   db.prepare(
     'INSERT INTO user_books (user_id, book_id, state_data) VALUES (?, ?, ?)'
@@ -804,6 +808,7 @@ function createBook(userId, name, totalSections, isbn, issn, asin, pages, author
     id: bookId,
     name,
     total_sections: totalSections,
+    max_section_number: maxSectionNumber,
     isbn: isbn || null,
     issn: issn || null,
     asin: asin || null,
@@ -823,12 +828,13 @@ function getBookState(userId, bookId) {
   try { s = JSON.parse(ub.state_data); } catch { s = {}; }
   // Always use the authoritative values from the books table so that a stale
   // saveState() call cannot overwrite a newer updateBook() result.
-  const book = db.prepare(`SELECT b.name, b.total_sections,
+  const book = db.prepare(`SELECT b.name, b.total_sections, b.max_section_number,
     CASE WHEN e.counts_as_section = 0 THEN e.section_id END AS uncounted_entry
     FROM books b LEFT JOIN book_reading_entries e ON e.book_id = b.id WHERE b.id = ?`).get(bookId);
   if (book) {
     s.bookName      = book.name;
     s.totalSections = book.total_sections;
+    s.maxSectionNumber = book.max_section_number ?? book.total_sections;
     s.uncountedSections = book.uncounted_entry == null ? [] : [book.uncounted_entry];
   }
   return s;
@@ -851,7 +857,7 @@ function getActiveBookInSeries(userId, seriesId) {
 
 function getBookById(bookId) {
   const book = db.prepare(`
-    SELECT id, name, is_public, is_container, parent_book_id, cover_path, pdf_path, epub_path
+    SELECT id, name, total_sections, max_section_number, is_public, is_container, parent_book_id, cover_path, pdf_path, epub_path
     FROM books
     WHERE id = ?
   `).get(bookId) ?? null;
@@ -903,7 +909,7 @@ const RESETTABLE_PROGRESS_EVENTS = [
 
 function resetBookProgress(userId, bookId) {
   const book = db.prepare(`
-    SELECT name, total_sections
+    SELECT name, total_sections, max_section_number
     FROM books
     WHERE id = ?
   `).get(bookId);
@@ -912,6 +918,7 @@ function resetBookProgress(userId, bookId) {
   const stateObj = {
     bookName: book.name || '',
     totalSections: book.total_sections || 0,
+    maxSectionNumber: book.max_section_number ?? book.total_sections,
     graph: {},
     playthroughs: [],
     activePtIndex: null,
@@ -936,7 +943,7 @@ function resetBookProgress(userId, bookId) {
   return tx() ? stateObj : null;
 }
 
-function updateBook(userId, bookId, name, totalSections, isbn, issn, asin, pages, authors, description, discoverableSections, isPublic, isAdmin = false, seriesId, seriesNumber, isContainer, parentBookId, bookOrder) {
+function updateBook(userId, bookId, name, totalSections, isbn, issn, asin, pages, authors, description, discoverableSections, isPublic, isAdmin = false, seriesId, seriesNumber, isContainer, parentBookId, bookOrder, maxSectionNumber) {
   // Verify user tracks this book (or is admin)
   let ub = db.prepare('SELECT state_data FROM user_books WHERE book_id = ? AND user_id = ?').get(bookId, userId);
   if (!ub && isAdmin) {
@@ -945,12 +952,14 @@ function updateBook(userId, bookId, name, totalSections, isbn, issn, asin, pages
   }
   if (!ub) return false;
   // Only creator can edit book metadata, unless admin
-  const bookMeta = db.prepare('SELECT created_by FROM books WHERE id = ?').get(bookId);
+  const bookMeta = db.prepare('SELECT created_by, max_section_number FROM books WHERE id = ?').get(bookId);
   if (!isAdmin && bookMeta?.created_by !== null && bookMeta?.created_by !== userId) return false;
   let stateObj = {};
   try { stateObj = JSON.parse(ub.state_data); } catch {}
   stateObj.bookName      = name;
   stateObj.totalSections = totalSections;
+  maxSectionNumber = isContainer ? null : (maxSectionNumber === undefined ? (bookMeta.max_section_number ?? totalSections) : (maxSectionNumber ?? totalSections));
+  stateObj.maxSectionNumber = maxSectionNumber;
 
   // Capture old discoverable_sections before overwriting
   const oldBook = db.prepare('SELECT discoverable_sections, is_public, published_at FROM books WHERE id = ?').get(bookId);
@@ -959,13 +968,13 @@ function updateBook(userId, bookId, name, totalSections, isbn, issn, asin, pages
 
   db.prepare(`
     UPDATE books
-    SET name = ?, total_sections = ?, isbn = ?, issn = ?, asin = ?, pages = ?, authors = ?,
+    SET name = ?, total_sections = ?, max_section_number = ?, isbn = ?, issn = ?, asin = ?, pages = ?, authors = ?,
         description = ?, discoverable_sections = ?, is_public = ?,
         published_at = CASE WHEN ? THEN strftime('%s','now') ELSE published_at END,
         series_id = ?, series_number = ?, is_container = ?, parent_book_id = ?, book_order = ?,
         updated_at = strftime('%s','now')
     WHERE id = ?
-  `).run(name, totalSections, isbn || null, issn || null, asin || null, pages || null,
+  `).run(name, totalSections, maxSectionNumber, isbn || null, issn || null, asin || null, pages || null,
          normalizeAuthors(authors), description || null, discoverableSections ?? null, isPublic ? 1 : 0, firstPublish ? 1 : 0,
          seriesId ?? null, seriesNumber || null, isContainer ? 1 : 0, parentBookId ?? null, bookOrder ?? null,
          bookId);
@@ -1053,12 +1062,12 @@ function deleteBook(userId, bookId, cascade = true) {
 }
 
 function addBookToLibrary(userId, bookId) {
-  const book = db.prepare('SELECT id, name, total_sections, is_public, created_by, is_container FROM books WHERE id = ? AND is_demo = 0').get(bookId);
+  const book = db.prepare('SELECT id, name, total_sections, max_section_number, is_public, created_by, is_container FROM books WHERE id = ? AND is_demo = 0').get(bookId);
   if (!book || !book.is_public) return { ok: false, reason: 'not_public' };
   const existing = db.prepare('SELECT book_id FROM user_books WHERE user_id = ? AND book_id = ?').get(userId, bookId);
   if (!existing) {
     const initialState = JSON.stringify({
-      bookName: book.name, totalSections: book.total_sections,
+      bookName: book.name, totalSections: book.total_sections, maxSectionNumber: book.max_section_number ?? book.total_sections,
       graph: {}, playthroughs: [], activePtIndex: null, positions: {},
     });
     db.prepare('INSERT INTO user_books (user_id, book_id, state_data) VALUES (?, ?, ?)').run(userId, bookId, initialState);
@@ -1068,12 +1077,12 @@ function addBookToLibrary(userId, bookId) {
   }
   // Cascade: if this is an anthology container, also add all its public children
   if (book.is_container) {
-    const children = db.prepare('SELECT id, name, total_sections, is_public, created_by FROM books WHERE parent_book_id = ? AND is_demo = 0 AND is_public = 1').all(bookId);
+    const children = db.prepare('SELECT id, name, total_sections, max_section_number, is_public, created_by FROM books WHERE parent_book_id = ? AND is_demo = 0 AND is_public = 1').all(bookId);
     for (const child of children) {
       const childExists = db.prepare('SELECT book_id FROM user_books WHERE user_id = ? AND book_id = ?').get(userId, child.id);
       if (!childExists) {
         const childState = JSON.stringify({
-          bookName: child.name, totalSections: child.total_sections,
+          bookName: child.name, totalSections: child.total_sections, maxSectionNumber: child.max_section_number ?? child.total_sections,
           graph: {}, playthroughs: [], activePtIndex: null, positions: {},
         });
         db.prepare('INSERT INTO user_books (user_id, book_id, state_data) VALUES (?, ?, ?)').run(userId, child.id, childState);

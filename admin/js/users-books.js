@@ -854,6 +854,7 @@ function _populateBookEditForm(d) {
   const generation = ++_bookEditGeneration;
   document.getElementById('bef-name').value           = d.name || '';
   document.getElementById('bef-sections').value       = d.total_sections || '';
+  document.getElementById('bef-max-section').value = d.max_section_number ?? d.total_sections ?? '';
   document.getElementById('bef-discoverable').value   = d.discoverable_sections ?? '';
   document.getElementById('bef-isbn').value           = d.isbn || '';
   document.getElementById('bef-asin').value           = d.asin || '';
@@ -1073,6 +1074,9 @@ document.getElementById('bef-save').addEventListener('click', async () => {
   const isContainer = document.getElementById('bef-container').checked;
   const sections = isContainer ? 0 : parseInt(document.getElementById('bef-sections').value, 10);
   if (!name || (!isContainer && !(sections >= 1))) { errEl.textContent = 'Name and sections are required.'; return; }
+  const maxRaw = document.getElementById('bef-max-section').value.trim();
+  const maxSectionNumber = isContainer || !maxRaw ? null : Number(maxRaw);
+  if (maxSectionNumber != null && (!Number.isSafeInteger(maxSectionNumber) || maxSectionNumber < sections)) { errEl.textContent = 'Highest section number must be a whole number at least total sections.'; return; }
   const discoverableInput = document.getElementById('bef-discoverable').value.trim();
   const discoverable = isContainer || !discoverableInput ? null : Number(discoverableInput);
   if (discoverable != null && (!Number.isInteger(discoverable) || discoverable < 1 || discoverable > sections)) {
@@ -1098,6 +1102,7 @@ document.getElementById('bef-save').addEventListener('click', async () => {
       body: JSON.stringify({
         name,
         total_sections:  sections,
+        max_section_number: maxSectionNumber,
         discoverable_sections: discoverable,
         isbn:            document.getElementById('bef-isbn').value.trim() || null,
         asin:            document.getElementById('bef-asin').value.trim() || null,

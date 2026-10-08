@@ -781,6 +781,11 @@ if (hasColumn('books', 'user_id')) {
   })();
 }
 
+// Section count and highest section label can differ in sparsely numbered books.
+if (!hasColumn('books', 'max_section_number')) {
+  db.exec('ALTER TABLE books ADD COLUMN max_section_number INTEGER DEFAULT NULL');
+}
+
 if (!hasColumn('sessions', 'expires_at')) {
   try { db.exec(`ALTER TABLE sessions ADD COLUMN expires_at INTEGER`); } catch (_) {}
 }

@@ -5,7 +5,7 @@ import { pauseCoversAutoRefresh, resumeCoversAutoRefresh } from '../covers.js';
 import { _setButtonsDisabled, _uploadPdfWithProgress, _uploadEpubWithProgress } from './uploads.js';
 import { validateIsbn, validateIssn, validateAsin } from './validators.js';
 
-export function bindBookActions({ pubTypeEl, minSections, showDiscoverableSections, discoverableHint, initialSections, initialDiscoverableSections, onSave, closeEditBookModal }) {
+export function bindBookActions({ pubTypeEl, minSections, minMaxSectionNumber, showDiscoverableSections, discoverableHint, initialSections, initialDiscoverableSections, onSave, closeEditBookModal }) {
   const session = editState._bookSession;
   const bookId = editState._editBookId;
   const isCurrent = () => session === editState._bookSession && document.getElementById('edit-book-modal-overlay').classList.contains('active');
@@ -45,6 +45,10 @@ export function bindBookActions({ pubTypeEl, minSections, showDiscoverableSectio
     if (!(sections >= 1)) { errEl.textContent = t('err.sections_invalid'); return; }
     if (sections < minSections) { errEl.textContent = t('err.sections_min', { min: minSections }); return; }
 
+    const maxRaw = document.getElementById('edit-book-max-section-input').value.trim();
+    const maxSectionNumber = maxRaw ? Number(maxRaw) : sections;
+    const minMax = Math.max(sections, minMaxSectionNumber);
+    if ((maxRaw && !/^\d+$/.test(maxRaw)) || !Number.isSafeInteger(maxSectionNumber) || maxSectionNumber < minMax) { errEl.textContent = t('err.max_section', { min: minMax }); return; }
     let isbn = '', issn = '', asin = '';
     if (document.getElementById('edit-book-pub-type').value === 'magazine') {
       issn = validateIssn(document.getElementById('edit-book-issn-input').value.trim());
@@ -145,8 +149,16 @@ export function bindBookActions({ pubTypeEl, minSections, showDiscoverableSectio
     const isContainer  = false;
     const parentId     = document.getElementById('edit-book-parent-input').value ? +document.getElementById('edit-book-parent-input').value : null;
     const bookOrder    = parseInt(document.getElementById('edit-book-order-input').value, 10) || null;
-    onSave(name, sections, isbn, issn, asin, pages, authors, description, discoverableSections, isPublic, seriesName, seriesNumber, isContainer, parentId, bookOrder);
-    closeEditBookModal();
+    _setButtonsDisabled(['edit-book-save', 'edit-book-cancel'], true);
+    try {
+      await onSave(name, sections, isbn, issn, asin, pages, authors, description, discoverableSections, isPublic, seriesName, seriesNumber, isContainer, parentId, bookOrder, maxSectionNumber);
+    } catch (error) {
+      if (isCurrent()) errEl.textContent = error?.message || t('err.save');
+      return;
+    } finally {
+      if (isCurrent()) _setButtonsDisabled(['edit-book-save', 'edit-book-cancel'], false);
+    }
+    if (isCurrent()) closeEditBookModal();
   });
 
   document.getElementById('edit-book-name-input').onkeydown = e => {

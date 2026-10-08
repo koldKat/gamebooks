@@ -9,7 +9,7 @@ const dir = new URL('../../../public/js/', import.meta.url);
 test('core relocation preserves implementations without root wrappers or duplicate state', () => {
   const digests = {
     // Reader entries have separate progress accounting; discovered-mapped.test.mjs covers it.
-    state: '2b651aee0766e92c13f60ef446d0b0d1c1f9c5721fd97936678223b4c0fa5c9e',
+    state: 'ded8af1cd75f0f47830a25dd5f1650c23a73ec1ec373b23c3025f13ba3f743f8',
     constants: 'b67245d28638c7d42c976068c7bc86ac822fff89d47c537d8fd9672ff19826a9',
     sort: 'a37194516dcc6faf776288906e52f3b9e8dc8d30a81df7158108d8b0e3742eb6',
     util: 'cda1fc506d0c7d2a716738e31b5569b1f27e949aef1dfb833e098699073100e6',

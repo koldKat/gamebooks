@@ -1,6 +1,7 @@
 export let state = {
   bookName: '',
   totalSections: 0,
+  maxSectionNumber: null,
   graph: {},
   playthroughs: [],
   activePtIndex: null,
@@ -41,6 +42,7 @@ export function resetState() {
   state = {
     bookName:              state.bookName,
     totalSections:         state.totalSections,
+    maxSectionNumber:      state.maxSectionNumber ?? null,
     uncountedSections:     state.uncountedSections,
     graph:                 {},
     playthroughs:          [],
@@ -307,6 +309,7 @@ function _emptyState() {
   return {
     bookName:             '',
     totalSections:        0,
+    maxSectionNumber:     null,
     graph:                {},
     playthroughs:         [],
     activePtIndex:        null,

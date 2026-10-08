@@ -48,7 +48,7 @@ function _syncCbUi() {
 export function openAddBook() {
   if (_creating.has('cb')) return;
   _cbCover = null; _cbPdf = null; _cbEpub = null;
-  ['cb-name','cb-sections','cb-pages','cb-isbn','cb-asin','cb-issn','cb-authors','cb-series','cb-series-num','cb-order'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  ['cb-name','cb-max-section','cb-sections','cb-pages','cb-isbn','cb-asin','cb-issn','cb-authors','cb-series','cb-series-num','cb-order'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   document.getElementById('cb-description').value = '';
   document.getElementById('cb-public').checked = true;
   document.getElementById('cb-error').textContent = '';
@@ -194,6 +194,7 @@ export function initAddBook(mousedownOnOverlayRef) {
     b => !b.isContainer,
     b => {
       document.getElementById('cb-sections').value    = b.totalSections || '';
+      document.getElementById('cb-max-section').value = b.maxSectionNumber ?? '';
       document.getElementById('cb-pages').value       = b.pages || '';
       document.getElementById('cb-authors').value     = b.authors || '';
       document.getElementById('cb-description').value = b.description || '';
@@ -290,6 +291,9 @@ export function initAddBook(mousedownOnOverlayRef) {
     const name     = document.getElementById('cb-name').value.trim();
     const sections = parseInt(document.getElementById('cb-sections').value, 10);
     if (!name || !(sections >= 5)) { errEl.textContent = t('err.name_sections'); return; }
+    const maxRaw = document.getElementById('cb-max-section').value.trim();
+    const maxSectionNumber = maxRaw ? Number(maxRaw) : sections;
+    if ((maxRaw && !/^\d+$/.test(maxRaw)) || !Number.isSafeInteger(maxSectionNumber) || maxSectionNumber < sections) { errEl.textContent = t('err.max_section', { min: sections }); return; }
     let isbn = '', issn = '', asin = '';
     const pubType = document.getElementById('cb-pub-type').value;
     if (pubType === 'magazine') {
@@ -316,7 +320,7 @@ export function initAddBook(mousedownOnOverlayRef) {
     if (_cbEpub) _setModalUploadProgress('cb', 0, 'epub');
     pauseCoversAutoRefresh();
     try {
-      const res  = await apiFetch('/api/books', { method: 'POST', body: JSON.stringify({ name, total_sections: sections, isbn: isbn || null, issn: issn || null, asin: asin || null, pages, authors, description, is_public: isPublic, series_name: seriesName, series_number: seriesNum, parent_book_id: parentId, book_order: bookOrder }) });
+      const res  = await apiFetch('/api/books', { method: 'POST', body: JSON.stringify({ name, total_sections: sections, max_section_number: maxSectionNumber, isbn: isbn || null, issn: issn || null, asin: asin || null, pages, authors, description, is_public: isPublic, series_name: seriesName, series_number: seriesNum, parent_book_id: parentId, book_order: bookOrder }) });
       if (!res.ok) throw new Error();
       const book = await res.json();
       if (_cbCover) {

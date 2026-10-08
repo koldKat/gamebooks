@@ -145,6 +145,9 @@ Click **Create Book** at the top of the books screen. As you type the name, a dr
 
 Leave any optional fields blank and fill them in later using the **✎** button.
 
+
+For books with gaps in their section numbering, enter the actual count in **Total sections** and the largest printed label in **Highest section number** when adding or editing the book. For example, 420 total sections and a highest number of 1003 allow section 1003 during play, while progress uses 420. Leave the optional maximum blank for ordinary sequential numbering.
+
 ### Stashes
 
 A **stash** is a personal folder for tidying up your books list.

@@ -1281,6 +1281,14 @@
               <button class="cs-num-btn" data-target="cb-sections" data-delta="1">+</button>
             </div>
           </div>
+          <div class="sections-pages-col">
+            <label for="cb-max-section" data-i18n="modal.book.max_section" data-tooltip="Optional, for numbering with gaps. Leave blank to use total sections." data-i18n-tooltip="modal.book.max_section_hint">Highest section (optional):</label>
+            <div class="cs-num-wrap">
+              <button class="cs-num-btn" data-target="cb-max-section" data-delta="-1">−</button>
+              <input type="text" inputmode="numeric" id="cb-max-section" autocomplete="off" placeholder="–" data-i18n-placeholder="ph.dash">
+              <button class="cs-num-btn" data-target="cb-max-section" data-delta="1">+</button>
+            </div>
+          </div>
           <div class="sections-pages-col" id="cb-pages-col">
             <label>Pages <span class="optional-hint">(optional)</span>:</label>
             <div class="cs-num-wrap">
@@ -1721,6 +1729,14 @@
               <button class="cs-num-btn" data-target="edit-book-sections-input" data-delta="-1">−</button>
               <input type="text" inputmode="numeric" id="edit-book-sections-input" autocomplete="off">
               <button class="cs-num-btn" data-target="edit-book-sections-input" data-delta="1">+</button>
+            </div>
+          </div>
+          <div class="sections-pages-col">
+            <label for="edit-book-max-section-input" data-i18n="modal.book.max_section" data-tooltip="Optional, for numbering with gaps. Leave blank to use total sections." data-i18n-tooltip="modal.book.max_section_hint">Highest section (optional):</label>
+            <div class="cs-num-wrap">
+              <button class="cs-num-btn" data-target="edit-book-max-section-input" data-delta="-1">−</button>
+              <input type="text" inputmode="numeric" id="edit-book-max-section-input" autocomplete="off" placeholder="–" data-i18n-placeholder="ph.dash">
+              <button class="cs-num-btn" data-target="edit-book-max-section-input" data-delta="1">+</button>
             </div>
           </div>
           <div class="sections-pages-col" id="edit-book-pages-col">

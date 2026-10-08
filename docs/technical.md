@@ -1035,7 +1035,7 @@ Uses `better-sqlite3` (synchronous SQLite). WAL mode enabled. `VACUUM` runs on e
 ```sql
 users (id, username UNIQUE, password_hash, salt, avatar_path, public_profile, xp, last_country, last_city, active_country, active_city, active_loc_at, last_domain, last_active_at, coins_spent, xp_boost_pct, bonus_undos, bonus_fast_travels, failed_login_attempts, locked_until, is_protected, is_admin, is_author, is_contributor, display_name, pdf_access INTEGER DEFAULT 0, join_template_id INTEGER, created_at)
 sessions (token PK, user_id → users, created_at, expires_at)
-books (id, name, total_sections, discoverable_sections, isbn, issn, asin, cover_path, pdf_path, epub_path, is_demo, pages, authors, description, created_by → users, created_at, updated_at, series_id → series SET NULL, series_number TEXT, is_container INTEGER DEFAULT 0, parent_book_id → books SET NULL, book_order INTEGER)
+books (id, name, total_sections, max_section_number, discoverable_sections, isbn, issn, asin, cover_path, pdf_path, epub_path, is_demo, pages, authors, description, created_by → users, created_at, updated_at, series_id → series SET NULL, series_number TEXT, is_container INTEGER DEFAULT 0, parent_book_id → books SET NULL, book_order INTEGER)
   INDEX idx_books_series_id ON books(series_id)
   INDEX idx_books_parent_book_id ON books(parent_book_id)
 book_anthology_memberships (book_id → books CASCADE, anthology_id → books CASCADE, book_order INTEGER, created_at; PRIMARY KEY (book_id, anthology_id))
@@ -1103,6 +1103,8 @@ INDEX idx_attachments_kind_linked ON attachments (kind, linked_id)
 **Admin accounts** (`is_admin = 1`):
 - Separate from `is_protected`. A protected account doesn't automatically have admin privileges.
 - Controls admin API access (`isUserAdmin()`, `forumIsAdmin()`) and the Stats for Nerds admin count.
+
+`max_section_number` is an optional highest numeric section label, available in Add Book, Edit Book, and the admin book editor. It must be a whole number at least `total_sections`; blank/NULL uses the total as the limit. For example, 420 sections with a highest number of 1003 permits entering section 1003 while progress and completion rewards still use 420. Saved state carries `maxSectionNumber`, refreshed from shared metadata on load. PATCH preserves an omitted maximum; explicit NULL or a blank form entry saves the total section count as the maximum. The editor shows the total for legacy unset maxima. Cover-panel Admin Edit also round-trips the maximum. The book editor waits for a successful metadata save before closing and shows failed requests without discarding the form. For numbering with gaps, the missing-section display gives the remaining count without inventing a list of missing IDs. No PDF is required.
 
 **Books are shared entities:** one `books` row holds metadata (name, sections, identifiers, cover) shared by all users tracking that title. Per-user data (graph, playthroughs, char sheet) lives in `user_books`. UNIQUE constraint on `(user_id, book_id)` with cascade on both FKs - deleting a user or book removes join rows. When the last `user_books` row is deleted, the `books` row and cover file are cleaned up.
 

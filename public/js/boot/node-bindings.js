@@ -188,7 +188,7 @@ export function initNodeBindings() {
     if (!isValidSecId(id) || (typeof id === 'number' && id < 1)) { _flashAddNodeInvalid(); return; }
     // Range check only applies to plain numeric ids - an alphanumeric label
     // like "115-L" isn't part of the book's sequential numbered range at all.
-    if (typeof id === 'number' && state.totalSections > 0 && id > state.totalSections) { _flashAddNodeInvalid(); return; }
+    if (typeof id === 'number' && (state.maxSectionNumber ?? state.totalSections) > 0 && id > (state.maxSectionNumber ?? state.totalSections)) { _flashAddNodeInvalid(); return; }
     if (state.graph[id]) { _flashAddNodeInvalid(); return; }
     const pos = _addNodeClickPos || { x: 0, y: 0 };
     if (typeof id === 'string' && !state.alphanumericSections) {

@@ -15,7 +15,7 @@ function setup() {
       description TEXT, created_by INTEGER REFERENCES users(id), created_at INTEGER DEFAULT 0,
       is_public INTEGER DEFAULT 0, published_at INTEGER, is_open_world INTEGER DEFAULT 0);
     CREATE TABLE user_series (user_id INTEGER REFERENCES users(id), series_id INTEGER REFERENCES series(id) ON DELETE CASCADE, added_at INTEGER DEFAULT 0, rating REAL, UNIQUE(user_id,series_id));
-    CREATE TABLE books (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, total_sections INTEGER DEFAULT 10, discoverable_sections INTEGER, updated_at INTEGER,
+    CREATE TABLE books (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, total_sections INTEGER DEFAULT 10, max_section_number INTEGER, discoverable_sections INTEGER, updated_at INTEGER,
       isbn TEXT, issn TEXT, asin TEXT, pages INTEGER, authors TEXT, description TEXT, created_by INTEGER,
       series_id INTEGER REFERENCES series(id) ON DELETE SET NULL, series_number TEXT,
       is_container INTEGER DEFAULT 0, parent_book_id INTEGER, book_order INTEGER, is_public INTEGER DEFAULT 0,
@@ -110,6 +110,7 @@ test('public catalogs and anthology metadata exclude private groups and private 
     assert.equal(anthology.totalSections, 10);
     assert.equal(catalog.find(b => b.id === 7).seriesName, null);
     assert.equal(catalog.find(b => b.id === 7).seriesId, null);
+    assert.equal(feed.getBookActivity(7).book.maxSectionNumber, 10, 'catalog edit metadata exposes the default maximum');
     assert.equal(feed.getBookActivity(7).book.secondaryAnthologies.length, 0, 'private secondary anthology names stay hidden');
     assert.equal(feed.getPublicBookMeta(4), null, 'public parent does not publish a private child');
     assert.equal(feed.getPublicBookMeta(1), null);
@@ -218,4 +219,65 @@ test('admin edits keep an unchanged private series link instead of creating anot
     assert.notEqual(db.prepare('SELECT series_id FROM books WHERE id=1').get().series_id, 1);
     assert.equal(db.prepare('SELECT count(*) AS n FROM series').get().n, 2);
   } finally { db.close(); }
+});
+
+test('sparse section numbering round-trips through creation, shared state, library additions and edits', async () => {
+  const { db, books, feed } = setup();
+  try {
+    db.exec('CREATE TABLE book_reading_entries (book_id INTEGER, section_id TEXT, counts_as_section INTEGER)');
+    const book = books.createBook(1, 'Sparse book', 420, null, null, null, null, null, null, null, null, false, null, null, true, 1003);
+    assert.equal(book.total_sections, 420);
+    assert.equal(book.max_section_number, 1003);
+    assert.equal(feed.getBookActivity(book.id).book.maxSectionNumber, 1003);
+    assert.equal(books.getBookState(1, book.id).maxSectionNumber, 1003);
+    assert.equal(books.addBookToLibrary(2, book.id).ok, true);
+    const progress = { totalSections: 1003, maxSectionNumber: 420, graph: { 1003: { choices: [0] } }, playthroughs: [{ path: [1, 1003] }] };
+    books.saveBookState(2, book.id, progress);
+    const loaded = books.getBookState(2, book.id);
+    assert.equal(loaded.totalSections, 420, 'shared count overrides stale saves');
+    assert.equal(loaded.maxSectionNumber, 1003, 'shared maximum overrides stale saves');
+    assert.equal(loaded.playthroughs[0].path[1], 1003);
+    const options = { userId: 1, body: { name: 'Sparse book', total_sections: 420, is_public: true } };
+    const routes = editRoutes(db, books, options);
+    assert.equal(await routes.edit(book.id), 200);
+    assert.equal(books.getBookById(book.id).max_section_number, 1003, 'omitted maximum is preserved');
+    for (const invalid of [419, 1003.5, '1003', -1, 0, Number.MAX_SAFE_INTEGER + 1]) {
+      options.body.max_section_number = invalid;
+      assert.equal(await routes.edit(book.id), 400, String(invalid));
+      assert.equal(books.getBookById(book.id).max_section_number, 1003);
+    }
+    options.body.max_section_number = 1100;
+    assert.equal(await routes.edit(book.id), 200);
+    assert.equal(books.getBookState(2, book.id).maxSectionNumber, 1100, 'other readers receive metadata changes');
+    options.body.max_section_number = null;
+    options.body.total_sections = 1100;
+    assert.equal(await routes.edit(book.id), 200);
+    assert.equal(books.getBookState(2, book.id).maxSectionNumber, 1100, 'explicit null defaults to the total');
+    assert.equal(books.getBookState(2, book.id).playthroughs[0].path[1], 1003, 'metadata edits preserve progress');
+  } finally { db.close(); }
+});
+
+test('create route accepts a separate maximum and rejects invalid values before creating a series', async () => {
+  let body, status, created, seriesCalls = 0;
+  const context = vm.createContext({ module: { exports: {} }, require(name) {
+    if (name === '../db') return { createBook: (...args) => { created = args; return { id: 1 }; }, awardXp() {}, getOrCreateSeries: () => { seriesCalls++; return 1; } };
+    if (name === '../request-helpers') return { authenticate: async () => 1, readBody: async () => body, send: (_res, code) => { status = code; } };
+    if (name === '../sse') return { feedPush() {}, publicCatalogPush() {} };
+    return {};
+  } });
+  vm.runInContext(fs.readFileSync(require.resolve('../server/routes/books'), 'utf8'), context);
+  for (const max of [419, 1003.5, '1003', 0]) {
+    body = { name: 'Book', total_sections: 420, max_section_number: max, series_name: 'Series' };
+    await context.module.exports.handleCreateBook({}, {});
+    assert.equal(status, 400);
+    assert.equal(seriesCalls, 0);
+    assert.equal(created, undefined);
+  }
+  for (const max of [1003, null, undefined]) {
+    body = { name: 'Book', total_sections: 420, max_section_number: max };
+    await context.module.exports.handleCreateBook({}, {});
+    assert.equal(status, 200);
+    assert.equal(created[2], 420);
+    assert.equal(created[15], max ?? 420);
+  }
 });

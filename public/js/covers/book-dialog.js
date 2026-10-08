@@ -227,6 +227,7 @@ export function renderCoverActivity(bookId, bookName, entries, userRating, bookM
         bookId,
         initialName:          bookMeta?.name          || bookName,
         initialSections:      bookMeta?.totalSections  || 0,
+        initialMaxSectionNumber: bookMeta?.maxSectionNumber ?? bookMeta?.totalSections,
         initialIsbn:          bookMeta?.isbn           || '',
         initialIssn:          bookMeta?.issn           || '',
         initialAsin:          bookMeta?.asin           || '',
@@ -246,14 +247,13 @@ export function renderCoverActivity(bookId, bookName, entries, userRating, bookM
         initialParentBookId:  bookMeta?.parentId       || null,
         initialBookOrder:     bookMeta?.bookOrder      ?? null,
         minSections: 1,
-        onSave: async (name, sections, isbn, issn, asin, pages, authors, description, discoverableSections, isPublic, seriesName, seriesNumber, isContainer, parentId, bookOrder) => {
-          try {
-            await apiFetch(`/api/books/${bookId}`, {
-              method: 'PATCH',
-              body: JSON.stringify({ name, total_sections: sections, isbn: isbn || null, issn: issn || null, asin: asin || null, pages: pages || null, authors: authors || null, description: description || null, discoverable_sections: discoverableSections ?? null, is_public: isPublic, series_name: seriesName || null, series_number: seriesNumber || null, is_container: !!isContainer, parent_book_id: parentId || null, book_order: bookOrder ?? null }),
-            });
-          } catch (_) {}
-          openCoverActivity(bookId, bookName);
+        onSave: async (name, sections, isbn, issn, asin, pages, authors, description, discoverableSections, isPublic, seriesName, seriesNumber, isContainer, parentId, bookOrder, maxSectionNumber) => {
+          const res = await apiFetch(`/api/books/${bookId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ name, total_sections: sections, max_section_number: maxSectionNumber, isbn: isbn || null, issn: issn || null, asin: asin || null, pages: pages || null, authors: authors || null, description: description || null, discoverable_sections: discoverableSections ?? null, is_public: isPublic, series_name: seriesName || null, series_number: seriesNumber || null, is_container: !!isContainer, parent_book_id: parentId || null, book_order: bookOrder ?? null }),
+          });
+          if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || t('err.save'));
+          await openCoverActivity(bookId, name);
         },
       });
     });

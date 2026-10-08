@@ -1063,7 +1063,7 @@ function getPublicProfilesForSitemap() {
 
 function getPublicBookMeta(bookId) {
   const row = db.prepare(
-    `SELECT b.id, b.name, b.description, b.authors, b.cover_path, b.total_sections,
+    `SELECT b.id, b.name, b.description, b.authors, b.cover_path, b.total_sections, b.max_section_number,
             b.isbn, b.issn, b.asin, b.pages, b.is_container,
             p.id AS parentId, p.name AS parentName, p.cover_path AS parentCoverPath
      FROM books b
@@ -1079,6 +1079,7 @@ function getPublicBookMeta(bookId) {
     authors:       row.authors || null,
     coverUrl:      row.cover_path ? `/covers/${row.cover_path}` : null,
     totalSections: row.total_sections,
+    maxSectionNumber: row.max_section_number ?? null,
     isbn:          row.isbn  || null,
     issn:          row.issn  || null,
     asin:          row.asin  || null,
@@ -1109,7 +1110,7 @@ function getPublicBookMeta(bookId) {
 function getAllPublicBooks(hasPdfAccess = false) {
   const rows = db.prepare(
     `SELECT b.id, b.name, b.cover_path, b.created_at, b.published_at, b.authors,
-            b.is_container, b.total_sections, b.description, b.has_battle_sim, b.has_live_reading,
+            b.is_container, b.total_sections, b.max_section_number, b.description, b.has_battle_sim, b.has_live_reading,
             b.isbn, b.issn, b.asin, b.pages, b.pdf_path, b.epub_path,
             s.id AS series_id, CASE WHEN s.id IS NOT NULL THEN b.series_number END AS series_number, s.name AS series_name,
             GROUP_CONCAT(c.name, '|||') AS child_names,
@@ -1133,6 +1134,7 @@ function getAllPublicBooks(hasPdfAccess = false) {
     createdAt: ((r.published_at || r.created_at || 0) * 1000),
     authors: r.authors || null,
     isContainer: r.is_container ? true : false,
+    maxSectionNumber: r.max_section_number ?? null,
     totalSections: r.is_container ? (r.children_total_sections || 0) : (r.total_sections || 0),
     libraryCount: r.library_count || 0,
     description: r.description || null,
@@ -1222,7 +1224,7 @@ function getBookActivity(bookId, userId = null) {
   `).get(bookId, userId, userId);
   if (!visible) return null;
   const book = db.prepare(
-    `SELECT b.id, b.name, b.total_sections, b.isbn, b.issn, b.asin, b.cover_path,
+    `SELECT b.id, b.name, b.total_sections, b.max_section_number, b.isbn, b.issn, b.asin, b.cover_path,
             b.pages, b.authors, b.description, b.is_public, b.is_container, b.book_order,
             b.has_battle_sim, b.has_live_reading,
             COALESCE(b.series_number, p.series_number) AS series_number,
@@ -1312,6 +1314,7 @@ function getBookActivity(bookId, userId = null) {
       id:            book.id,
       name:          book.name,
       totalSections: book.total_sections,
+      maxSectionNumber: book.max_section_number ?? book.total_sections,
       coverUrl:      book.cover_path ? `/covers/${book.cover_path}` : null,
       isbn:          book.isbn        || null,
       issn:          book.issn        || null,

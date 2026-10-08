@@ -9,7 +9,7 @@ import { _renderAlsoAppearsIn } from './memberships.js';
 import { initBookRating } from './book-rating.js';
 import { bindBookActions } from './book-actions.js';
 
-export function openEditBookModal({ bookId, initialName, initialSections, initialIsbn = '', initialIssn = '', initialAsin = '', initialCoverUrl = null, initialPdfPath = null, initialPdfSize = null, initialEpubPath = null, initialEpubSize = null, initialPages = '', initialAuthors = '', initialDescription = '', initialDiscoverableSections = null, showDiscoverableSections = false, discoverableHint = 0, minSections = 1, initialIsPublic = false, initialSeriesName = '', initialSeriesNumber = '', initialIsContainer = false, initialParentBookId = null, initialBookOrder = null, onSave }) {
+export function openEditBookModal({ bookId, initialName, initialSections, initialMaxSectionNumber = null, minMaxSectionNumber = 1, initialIsbn = '', initialIssn = '', initialAsin = '', initialCoverUrl = null, initialPdfPath = null, initialPdfSize = null, initialEpubPath = null, initialEpubSize = null, initialPages = '', initialAuthors = '', initialDescription = '', initialDiscoverableSections = null, showDiscoverableSections = false, discoverableHint = 0, minSections = 1, initialIsPublic = false, initialSeriesName = '', initialSeriesNumber = '', initialIsContainer = false, initialParentBookId = null, initialBookOrder = null, onSave }) {
   ++editState._bookSession;
   // Close the forum before opening an editor so it cannot cover the edit dialog.
   document.getElementById('forum-modal-overlay')?.classList.remove('active');
@@ -23,6 +23,7 @@ export function openEditBookModal({ bookId, initialName, initialSections, initia
 
   document.getElementById('edit-book-name-input').value          = initialName;
   document.getElementById('edit-book-sections-input').value      = initialSections;
+  document.getElementById('edit-book-max-section-input').value = String(initialMaxSectionNumber ?? initialSections);
   document.getElementById('edit-book-isbn-input').value          = initialIsbn || '';
   document.getElementById('edit-book-asin-input').value          = initialAsin || '';
   document.getElementById('edit-book-issn-input').value          = initialIssn || '';
@@ -158,7 +159,7 @@ export function openEditBookModal({ bookId, initialName, initialSections, initia
 
   initBookRating(bookId);
 
-  bindBookActions({ pubTypeEl, minSections, showDiscoverableSections, discoverableHint, initialSections, initialDiscoverableSections, onSave, closeEditBookModal });
+  bindBookActions({ pubTypeEl, minSections, minMaxSectionNumber, showDiscoverableSections, discoverableHint, initialSections, initialDiscoverableSections, onSave, closeEditBookModal });
 
 }
 

@@ -40,6 +40,7 @@ export async function _loadAutocompleteBooks() {
       authors: b.authors || null,
       description: b.description || null,
       totalSections: b.total_sections || 0,
+      maxSectionNumber: b.max_section_number ?? null,
       pages: b.pages || null,
       isbn: b.isbn || null,
       issn: b.issn || null,

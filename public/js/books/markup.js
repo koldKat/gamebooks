@@ -112,7 +112,7 @@ export function _bookItemHtml(b, isChild, containerExpanded, childCount, aggrSta
   const anthologyFlowAttr = flowCoverUrl ? ` data-anthology-cover-url="${escapeHtml(flowCoverUrl)}"` : '';
   const commonAttrs =
     ` data-id="${b.id}" data-name="${escapeHtml(b.name)}"` +
-    ` data-sections="${b.total_sections}" data-isbn="${escapeHtml(b.isbn || '')}" data-issn="${escapeHtml(b.issn || '')}" data-asin="${escapeHtml(b.asin || '')}"` +
+    ` data-sections="${b.total_sections}" data-max-section="${b.max_section_number ?? ''}" data-isbn="${escapeHtml(b.isbn || '')}" data-issn="${escapeHtml(b.issn || '')}" data-asin="${escapeHtml(b.asin || '')}"` +
     ` data-cover="${escapeHtml(b.cover_path ? `/covers/${b.cover_path}` : '')}" data-pdf="${escapeHtml(b.pdf_path || '')}"` +
     ` data-pdf-size="${escapeHtml(String(b.pdf_size ?? ''))}"` +
     ` data-epub="${escapeHtml(b.epub_path || '')}" data-epub-size="${escapeHtml(String(b.epub_size ?? ''))}"` +

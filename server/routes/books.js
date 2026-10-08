@@ -316,16 +316,18 @@ async function handleGetAppXpStream(req, res) {
 async function handleCreateBook(req, res) {
   const userId = await authenticate(req, res);
   if (userId === null) return;
-  const { name, total_sections, isbn, issn, asin, pages, authors, description,
+  const { name, total_sections, max_section_number, isbn, issn, asin, pages, authors, description,
           series_name, series_number, is_container, parent_book_id, book_order, is_public } = await readBody(req);
   const isContainer = !!is_container;
   const isPublic = is_public === true;
   if (!name?.trim() || (!isContainer && !(total_sections >= 5)))
     return send(res, 400, { error: 'name required; total_sections minimum 5 (unless anthology)' });
+  if (!isContainer && max_section_number != null && (!Number.isSafeInteger(max_section_number) || max_section_number < total_sections))
+    return send(res, 400, { error: 'max_section_number must be a whole number at least total_sections' });
   const seriesId = series_name ? db.getOrCreateSeries(series_name, userId, true) : null;
   const book = db.createBook(userId, name.trim(), isContainer ? 0 : (total_sections || 0),
     isbn || null, issn || null, asin || null, pages || null, authors || null, description || null,
-    seriesId, series_number || null, isContainer, parent_book_id || null, book_order ?? null, isPublic);
+    seriesId, series_number || null, isContainer, parent_book_id || null, book_order ?? null, isPublic, isContainer ? null : (max_section_number ?? total_sections));
   send(res, 200, book);
   db.awardXp(userId, 'add_book',        book.id);
   if (isbn)        db.awardXp(userId, 'add_isbn',        book.id);
@@ -354,7 +356,7 @@ async function handleUpdateBook(req, res, bookId) {
     userId = await authenticate(req, res);
     if (userId === null) return;
   }
-  const { name, total_sections, isbn, issn, asin, pages, authors, description, discoverable_sections, is_public,
+  const { name, total_sections, max_section_number, isbn, issn, asin, pages, authors, description, discoverable_sections, is_public,
           series_name, series_number, is_container, parent_book_id, book_order } = await readBody(req);
   const isContainer = !!is_container;
   if (!name?.trim() || (!isContainer && !(total_sections >= (fromLocalhost ? 1 : 5))))
@@ -375,12 +377,16 @@ async function handleUpdateBook(req, res, bookId) {
   }
   const isAdmin = fromLocalhost || !!db.isUserAdmin(userId);
   // Reject metadata edits before resolving names, which may create a new series.
-  if (!db.getBookById(bookId)) return send(res, 404, { error: 'Not found' });
+  const existingBook = db.getBookById(bookId);
+  if (!existingBook) return send(res, 404, { error: 'Not found' });
   if (!isAdmin) {
     const creatorId = db.getBookCreator(bookId);
     if ((creatorId !== null && creatorId !== userId) || !db.getBookState(userId, bookId))
       return send(res, 404, { error: 'Not found' });
   }
+  const resolvedMax = isContainer ? null : (max_section_number === undefined ? (existingBook.max_section_number ?? total_sections) : (max_section_number ?? total_sections));
+  if (resolvedMax != null && (!Number.isSafeInteger(resolvedMax) || resolvedMax < total_sections))
+    return send(res, 400, { error: 'max_section_number must be a whole number at least total_sections' });
   const old = db.getBookIdentifiers(isAdmin ? null : userId, bookId);
   const cur = db.getBookContainerFields(bookId);
   const currentSeries = cur?.series_id ? db.getSeriesById(cur.series_id) : null;
@@ -397,7 +403,7 @@ async function handleUpdateBook(req, res, bookId) {
   if (!db.updateBook(userId, bookId, name.trim(), resolvedIsContainer ? 0 : (total_sections || 0),
       isbn || null, issn || null, asin || null, pages || null, authors || null, description || null,
       discoverable_sections ?? null, is_public === true, isAdmin,
-      seriesId, resolvedSeriesNumber, resolvedIsContainer, resolvedParentBookId, resolvedBookOrder))
+      seriesId, resolvedSeriesNumber, resolvedIsContainer, resolvedParentBookId, resolvedBookOrder, resolvedMax))
     return send(res, 404, { error: 'Not found' });
   db._pruneRedundantAnthologyMembership(bookId, resolvedParentBookId);
   send(res, 200, { ok: true });

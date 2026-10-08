@@ -96,7 +96,7 @@ export function handleRecordChoices(sec, raw, allowEmpty = false) {
 
   const choices = state.alphanumericSections
     ? parsed
-    : parsed.filter(n => typeof n !== 'number' || n <= (state.totalSections || Infinity));
+    : parsed.filter(n => typeof n !== 'number' || n <= ((state.maxSectionNumber ?? state.totalSections) || Infinity));
   if (!choices.length) return;
 
   if (state.alphanumericSections && state.totalSections > 0) {

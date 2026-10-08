@@ -61,15 +61,17 @@ export function updateStats() {
   const notFoundTotal = document.getElementById('not-found-total');
   if (!notFoundRow || !countEl) return;
   if (total > 0 && mapped === normalDiscovered) {
+    const sparse = state.alphanumericSections || (state.maxSectionNumber ?? rawTotal) !== rawTotal;
     const missing = [];
-    for (let i = 1; i <= total; i++) {
+    for (let i = 1; !sparse && i <= total; i++) {
       if (!discovered.has(i)) missing.push(i);
     }
     const labelEl = document.getElementById('missing-label');
-    if (missing.length) {
+    const missingCount = sparse ? Math.max(0, total - normalDiscovered) : missing.length;
+    if (missingCount) {
       notFoundRow.style.display    = '';
-      countEl.textContent          = missing.length;
-      if (notFoundTotal) notFoundTotal.textContent = total + pct(missing.length);
+      countEl.textContent          = missingCount;
+      if (notFoundTotal) notFoundTotal.textContent = total + pct(missingCount);
       if (labelEl) labelEl.dataset.tooltip = missing.join(', ');
     } else {
       notFoundRow.style.display = 'none';

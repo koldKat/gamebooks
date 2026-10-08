@@ -1,3 +1,4 @@
+import { t } from '../i18n.js';
 import { bootState } from './state.js';
 import { state, saveState, clearToken, clearUsername, apiFetch, currentBookId, mappedCountFor, discoveredSectionsFor } from '../core/state.js';
 import { render, setDiscoverableLimit } from '../play.js';
@@ -22,15 +23,18 @@ export function initLibraryBindings() {
   document.getElementById('back-to-books-btn').addEventListener('click', showBooks);
 
   document.getElementById('edit-book-btn').addEventListener('click', () => {
-    const min      = Math.max(5, maxSectionInUse());
+    const minMax   = maxSectionInUse();
     // Compare the HUD's mapped/discovered counts, not graph keys versus run paths.
-    const mapped    = mappedCountFor(state.graph);
-    const discCount = discoveredSectionsFor(state.graph, state.playthroughs, state.startSection).size;
+    const mapped    = mappedCountFor(state.graph, state.uncountedSections);
+    const discCount = discoveredSectionsFor(state.graph, state.playthroughs, state.startSection, state.uncountedSections).size;
+    const min = Math.max(5, discCount);
     const hitWall   = mapped > 0 && mapped === discCount && mapped < state.totalSections;
     openEditBookModal({
       bookId:                      currentBookId,
       initialName:                 state.bookName,
       initialSections:             state.totalSections,
+      initialMaxSectionNumber:     state.maxSectionNumber,
+      minMaxSectionNumber:         minMax,
       initialIsbn:                 bootState._currentBook.isbn        || '',
       initialIssn:                 bootState._currentBook.issn        || '',
       initialAsin:                 bootState._currentBook.asin        || '',
@@ -50,7 +54,12 @@ export function initLibraryBindings() {
       initialIsContainer:          bootState._currentBook.isContainer,
       initialParentBookId:         bootState._currentBook.parentBookId,
       initialBookOrder:            bootState._currentBook.bookOrder,
-      onSave: (name, sections, isbn, issn, asin, pages, authors, description, discoverableSections, isPublic, seriesName, seriesNumber, isContainer, parentId, bookOrder) => {
+      onSave: async (name, sections, isbn, issn, asin, pages, authors, description, discoverableSections, isPublic, seriesName, seriesNumber, isContainer, parentId, bookOrder, maxSectionNumber) => {
+        const res = await apiFetch(`/api/books/${currentBookId}`, {
+          method: 'PATCH',
+          body:   JSON.stringify({ name, total_sections: isContainer ? 0 : sections, max_section_number: maxSectionNumber, isbn: isbn || null, issn: issn || null, asin: asin || null, pages: pages || null, authors: authors || null, description: description || null, discoverable_sections: discoverableSections ?? null, is_public: isPublic, series_name: seriesName || null, series_number: seriesNumber || null, is_container: isContainer ? 1 : 0, parent_book_id: parentId || null, book_order: bookOrder ?? null }),
+        });
+        if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || t('err.save'));
         bootState._currentBook.isbn                 = isbn        || null;
         bootState._currentBook.issn                 = issn        || null;
         bootState._currentBook.asin                 = asin        || null;
@@ -64,15 +73,14 @@ export function initLibraryBindings() {
         bootState._currentBook.isContainer          = !!isContainer;
         bootState._currentBook.parentBookId         = parentId    || null;
         bootState._currentBook.bookOrder            = bookOrder   ?? null;
+        state.maxSectionNumber = maxSectionNumber;
         state.bookName      = name;
         state.totalSections = isContainer ? state.totalSections : sections;
         _updateSidebarBookInfo();
-        apiFetch(`/api/books/${currentBookId}`, {
-          method: 'PATCH',
-          body:   JSON.stringify({ name, total_sections: isContainer ? 0 : sections, isbn: isbn || null, issn: issn || null, asin: asin || null, pages: pages || null, authors: authors || null, description: description || null, discoverable_sections: discoverableSections ?? null, is_public: isPublic, series_name: seriesName || null, series_number: seriesNumber || null, is_container: isContainer ? 1 : 0, parent_book_id: parentId || null, book_order: bookOrder ?? null }),
-        }).then(() => _refreshLibraryUi({ feed: true })).catch(() => {});
-        saveState();
+
+        await saveState();
         render();
+        await _refreshLibraryUi({ feed: true });
       },
     });
   });
