@@ -570,7 +570,7 @@ Coins are spent permanently - no refunds. Boosts only apply to XP earned after y
 
 Every level gives you a small passive chance (0.01% per level) of a lucky gold coin appearing, checked each time you earn XP. Buying **Lucky Coin Chance** in the shop adds more, up to a cap that matches your level's own free chance.
 
-When you get lucky, a small coin icon in the books screen header (just left of the **F1** button) lights up with a golden glow - click it to claim the coin. The **bulgarian made** text also animates while a coin is waiting; click the text to claim it too. A gold coin pops out of the clicked control after a successful claim. The coin icon stays dim and unclickable the rest of the time, and only one can ever be waiting at once, so there's no rush once it appears.
+When you get lucky, a small coin icon in the books screen header (just left of the **F1** button) lights up with a golden glow - click it to claim the coin. It stays dim and unclickable the rest of the time, and only one can ever be waiting at once, so there's no rush once it appears.
 
 ---
 

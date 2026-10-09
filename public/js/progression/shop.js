@@ -125,36 +125,14 @@ export function updateBonusGcIndicator(pending) {
   if (!btn) return;
   btn.classList.toggle('bonus-gc-btn--ready', !!pending);
   btn.disabled = !pending || _claimingBonusGc;
-  const brand = document.getElementById('brand-coin-btn');
-  if (brand) {
-    brand.disabled = btn.disabled;
-    brand.dataset.tooltip = pending ? t('bonus_gc.tooltip_ready') : '';
-    brand.setAttribute('aria-label', pending ? t('bonus_gc.tooltip_ready') : 'bulgarian made');
-  }
   btn.dataset.tooltip = pending
     ? t('bonus_gc.tooltip_ready')
     : t('bonus_gc.tooltip_empty_pct', { pct: _bonusGcChancePct().toFixed(2), claimed: _shopData?.bonusGcClaimed || 0 });
 }
 
-function _popLuckyCoin(rect) {
-  if (!rect) return;
-  const coin = document.createElement('span');
-  coin.className = 'brand-lucky-coin';
-  coin.setAttribute('aria-hidden', 'true');
-  coin.innerHTML = COIN_SVG;
-  coin.style.left = `${rect.left + rect.width / 2}px`;
-  coin.style.top = `${rect.top + rect.height / 2}px`;
-  document.body.appendChild(coin);
-  const timer = setTimeout(() => coin.remove(), 5000);
-  coin.addEventListener('animationend', () => { clearTimeout(timer); coin.remove(); }, { once: true });
-}
-
-async function _claimBonusGc(event) {
+async function _claimBonusGc() {
   if (_claimingBonusGc) return;
   _claimingBonusGc = true;
-  const origin = event?.currentTarget?.getBoundingClientRect?.();
-  const brand = document.getElementById('brand-coin-btn');
-  if (brand) brand.disabled = true;
   const btn = document.getElementById('bonus-gc-btn');
   if (btn) btn.disabled = true;
   try {
@@ -162,7 +140,6 @@ async function _claimBonusGc(event) {
     if (!res.ok) return;
     const data = await res.json();
     _shopData = data;
-    _popLuckyCoin(origin);
     _hooks.onRewardSnapshot?.(data);
     updateCoinsDisplay(data.coinsBalance || 0);
   } catch (_) {}
@@ -280,5 +257,4 @@ export function initShop() {
       e.currentTarget.classList.remove('active');
   });
   document.getElementById('bonus-gc-btn')?.addEventListener('click', _claimBonusGc);
-  document.getElementById('brand-coin-btn')?.addEventListener('click', _claimBonusGc);
 }
