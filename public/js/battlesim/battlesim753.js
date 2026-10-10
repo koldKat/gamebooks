@@ -7,6 +7,7 @@ import { showAlert } from '../ui-helpers/confirm.js';
 import { getPlayBtnRow } from '../play/charsheet.js';
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../core/util.js';
 import { t } from '../i18n.js';
+import { tetivaEncounter, tetivaRound } from './engines/tetiva.js';
 
 const SVG_SKULL  = `<svg class="sim-icon sim-icon-dead"  viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8c0 2.8 1.4 5.3 3.6 6.8V20a1 1 0 0 0 1 1h6.8a1 1 0 0 0 1-1v-2.2C18.6 16.3 20 13.8 20 11a8 8 0 0 0-8-8zm-2.5 13v-1.5a.5.5 0 0 0-.5-.5H8l-.5-1 1-1-1-1 1-1H9a2.5 2.5 0 0 1 5 0h.5l1 1-1 1 1 1-.5 1h-1a.5.5 0 0 0-.5.5V16h-4z"/></svg>`;
 const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v7a6 6 0 0 1-12 0V2zm-2 1H2v4a4 4 0 0 0 4 4v-1a3 3 0 0 1-3-3V3zm16 0h2v4a4 4 0 0 1-4 4v-1a3 3 0 0 0 3-3V3zm-7 13v2H9v2h6v-2h-2v-2a6 6 0 0 0 5-5.92V2H6v8.08A6 6 0 0 0 13 16z"/></svg>`;
@@ -21,6 +22,9 @@ function _data() {
       player: { attack: 0, defense: 0, damage: 0 },
       enemy: { name: '', attack: 0, defense: 0, hitsNeeded: 1, hitsLanded: 0, strikesPerRound: 1 },
       kobaldiMode: false,
+      printedRules: 1,
+      encounterSection: 0,
+      combatEffects: tetivaEncounter(0),
       roundsThisBattle: 0,
       log: [],
       history: [],
@@ -73,6 +77,28 @@ function _recordOutcome(d, outcome) {
 function _runRound() {
   const d = _data();
   if (!d || _battleOver(d) || !d.enemy.hitsNeeded) return;
+  if (d.printedRules === 1) {
+    d.roundsThisBattle++;
+    for (const event of tetivaRound(d, _roll2d6)) {
+      if (event.side === 'player') {
+        _appendLog(d, t(event.hit ? 'battlesim753.log.you_hit' : 'battlesim753.log.you_miss', {
+          round:d.roundsThisBattle, playerAS:event.attack, enemy:_enemyNameSafe(d), n:d.enemy.hitsLanded, needed:d.enemy.hitsNeeded,
+        }));
+      } else {
+        _appendLog(d, t(event.damage ? 'battlesim753.log.enemy_hits' : 'battlesim753.log.enemy_miss', {
+          enemy:_enemyNameSafe(d), enemyAS:event.attack, n:event.damage, damage:event.total, cap:DAMAGE_CAP,
+        }));
+      }
+    }
+    if (_playerLost(d) || _playerWon(d)) {
+      const lost = _playerLost(d);
+      _appendLog(d, t(lost ? 'battlesim753.log.fallen' : 'battlesim753.log.defeated', {skull:SVG_SKULL, trophy:SVG_TROPHY, enemy:_enemyNameSafe(d)}));
+      _recordOutcome(d, lost ? 'loss' : 'win');
+    }
+    saveState();
+    _renderAll();
+    return;
+  }
   d.roundsThisBattle++;
 
   // Троловият удар: binary hit counter, not variable damage.
@@ -123,6 +149,11 @@ function _resetBattle() {
   d.enemy.hitsLanded = 0;
   d.player.damage = 0;
   d.roundsThisBattle = 0;
+  d.printedRules = 1;
+  d.encounterSection = Number(d.enemy.name.match(/§(\d+)/)?.[1]) || d.encounterSection || 0;
+  d.combatEffects = tetivaEncounter(d.encounterSection || 0);
+  delete d.initiativeEnemyFirst;
+  if (d.combatEffects.kobaldi) d.kobaldiMode = true;
   if (d.log.length) _appendLog(d, t('battlesim753.log.reset_sep'));
   _appendLog(d, t('battlesim753.log.reset', { enemy: _enemyNameSafe(d) }));
   saveState();
@@ -177,6 +208,11 @@ function _renderInputs() {
   document.getElementById('sim753-player-attack').value  = d.player.attack;
   document.getElementById('sim753-player-defense').value = d.player.defense;
   document.getElementById('sim753-player-damage').value  = d.player.damage;
+  document.getElementById('sim753-player-speed').value = d.player.speed || 0;
+  document.getElementById('sim753-printed-effects').hidden = d.printedRules !== 1;
+  document.getElementById('sim753-enemy-first').checked = d.combatEffects?.enemyFirst === true;
+  document.getElementById('sim753-initiative-speed').checked = d.combatEffects?.initiativeBySpeed === true;
+  document.getElementById('sim753-variable-defense').checked = d.combatEffects?.variableDefense === true;
 
   document.getElementById('sim753-enemy-pick').value   = d.enemy.name;
   document.getElementById('sim753-enemy-attack').value  = d.enemy.attack;
@@ -325,6 +361,12 @@ export function initSim753() {
             ${_numField(t('battlesim753.ui.attack'), 'sim753-player-attack')}
             ${_numField(t('battlesim753.ui.defense'), 'sim753-player-defense')}
             ${_numField(t('battlesim753.ui.damage'), 'sim753-player-damage')}
+            ${_numField(t('battlesim753.ui.speed'), 'sim753-player-speed')}
+            <div id="sim753-printed-effects">
+              <label class="inv-edit-row"><span class="inv-edit-label bsim-stat-label">${t('battlesim753.ui.enemy_first')}</span><input id="sim753-enemy-first" type="checkbox"></label>
+              <label class="inv-edit-row"><span class="inv-edit-label bsim-stat-label">${t('battlesim753.ui.initiative_speed')}</span><input id="sim753-initiative-speed" type="checkbox"></label>
+              <label class="inv-edit-row"><span class="inv-edit-label bsim-stat-label">${t('battlesim753.ui.variable_defense')}</span><input id="sim753-variable-defense" type="checkbox"></label>
+            </div>
           </div>
           <div class="bsim-side">
             <div class="bsim-side-title">${t('battlesim753.ui.enemy')}</div>
@@ -388,6 +430,14 @@ export function initSim753() {
 
   document.getElementById('sim753-round').addEventListener('click', _runRound);
   document.getElementById('sim753-reset').addEventListener('click', _resetBattle);
+  for (const [id, key] of [['enemy-first','enemyFirst'],['initiative-speed','initiativeBySpeed'],['variable-defense','variableDefense']]) {
+    document.getElementById(`sim753-${id}`).addEventListener('change', e => {
+      const d = _data();
+      if (!d || d.printedRules !== 1) return;
+      d.combatEffects[key] = e.target.checked;
+      saveState();
+    });
+  }
 
   document.getElementById('sim753-enemy-pick').addEventListener('input', e => {
     const d = _data();
@@ -409,6 +459,7 @@ export function initSim753() {
     'sim753-player-attack':     ['player', 'attack'],
     'sim753-player-defense':    ['player', 'defense'],
     'sim753-player-damage':     ['player', 'damage'],
+    'sim753-player-speed':      ['player', 'speed'],
     'sim753-enemy-attack':      ['enemy', 'attack'],
     'sim753-enemy-defense':     ['enemy', 'defense'],
     'sim753-enemy-hitsneeded':  ['enemy', 'hitsNeeded'],
@@ -456,6 +507,11 @@ export function initSim753() {
     d.enemy.hitsLanded = 0;
     d.player.damage = 0;
     d.roundsThisBattle = 0;
+    d.printedRules = 1;
+    d.encounterSection = Number(enemy.name.match(/§(\d+)/)?.[1]) || 0;
+    d.combatEffects = tetivaEncounter(d.encounterSection);
+    delete d.initiativeEnemyFirst;
+    d.kobaldiMode = d.combatEffects.kobaldi;
     saveState();
     _renderAll();
   });

@@ -8,6 +8,7 @@ import { showAlert } from '../ui-helpers/confirm.js';
 import { getPlayBtnRow } from '../play/charsheet.js';
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../core/util.js';
 import { t } from '../i18n.js';
+import { startZorroFight, advanceZorroFight } from './engines/zorro.js';
 
 const SVG_SKULL  = `<svg class="sim-icon sim-icon-dead"  viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8c0 2.8 1.4 5.3 3.6 6.8V20a1 1 0 0 0 1 1h6.8a1 1 0 0 0 1-1v-2.2C18.6 16.3 20 13.8 20 11a8 8 0 0 0-8-8zm-2.5 13v-1.5a.5.5 0 0 0-.5-.5H8l-.5-1 1-1-1-1 1-1H9a2.5 2.5 0 0 1 5 0h.5l1 1-1 1 1 1-.5 1h-1a.5.5 0 0 0-.5.5V16h-4z"/></svg>`;
 const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v7a6 6 0 0 1-12 0V2zm-2 1H2v4a4 4 0 0 0 4 4v-1a3 3 0 0 1-3-3V3zm16 0h2v4a4 4 0 0 1-4 4v-1a3 3 0 0 0 3-3V3zm-7 13v2H9v2h6v-2h-2v-2a6 6 0 0 0 5-5.92V2H6v8.08A6 6 0 0 0 13 16z"/></svg>`;
@@ -33,11 +34,11 @@ const ROSTER = [
       { nameKey: 'battlesim882.enemy.sailor3', zhivot: 8,  rb: 2, sila: 3, izdr: 3 },
       { nameKey: 'battlesim882.enemy.sailor4', zhivot: 7,  rb: 1, sila: 3, izdr: 4 },
     ] },
-  { id: 'idalgo_soldier', nameKey: 'battlesim882.name.idalgo_soldier', type: 'rukopashna',
+  { id: 'idalgo_soldier', nameKey: 'battlesim882.name.idalgo_soldier', type: 'rukopashna', retreatLoss: 15,
     enemies: [{ nameKey: 'battlesim882.enemy.idalgo_soldier', zhivot: 25, rb: 2, sila: 2, izdr: 3 }] },
   { id: 'lola', nameKey: 'battlesim882.name.lola', type: 'rukopashna',
     enemies: [{ nameKey: 'battlesim882.enemy.lola', zhivot: 12, rb: 4, sila: 2, izdr: 1 }] },
-  { id: 'bandits3_knife', nameKey: 'battlesim882.name.bandits3_knife', type: 'rukopashna', extraHitBonus: 3,
+  { id: 'bandits3_knife', nameKey: 'battlesim882.name.bandits3_knife', type: 'rukopashna', extraDamageBonus: 3,
     enemies: [
       { nameKey: 'battlesim882.enemy.bandit1', zhivot: 9,  rb: 3, sila: 3, izdr: 2 },
       { nameKey: 'battlesim882.enemy.bandit2', zhivot: 11, rb: 2, sila: 2, izdr: 3 },
@@ -107,10 +108,25 @@ const ROSTER = [
   { id: 'muerto_duel', nameKey: 'battlesim882.name.muerto_duel', type: 'duel',
     enemy: { nameKey: 'battlesim882.enemy.muerto', zhivot: 30, pronizvasht: 4, sechasht: 4, blok: 5, fint: 5, trikove: 2 } },
   { id: 'galdos_mounted', nameKey: 'battlesim882.name.galdos_mounted', type: 'duel',
-    enemy: { nameKey: 'battlesim882.enemy.galdos', zhivot: 36, pronizvasht: 2, sechasht: 4, blok: 4, fint: 3, trikove: 2 } },
-  { id: 'galdos_dismounted', nameKey: 'battlesim882.name.galdos_dismounted', type: 'duel',
     enemy: { nameKey: 'battlesim882.enemy.galdos', zhivot: 36, pronizvasht: 2, sechasht: 5, blok: 5, fint: 3, trikove: 2 } },
+  { id: 'galdos_dismounted', nameKey: 'battlesim882.name.galdos_dismounted', type: 'duel',
+    enemy: { nameKey: 'battlesim882.enemy.galdos', zhivot: 36, pronizvasht: 2, sechasht: 4, blok: 4, fint: 3, trikove: 2 } },
+  { id: 'gregorio', nameKey: 'battlesim882.name.gregorio', type: 'rukopashna', enemyDamageBonus: 10,
+    enemies: [{ nameKey: 'battlesim882.enemy.gregorio', zhivot: 25, rb: 4, sila: 4, izdr: 3 }] },
+  { id: 'outer_guards', nameKey: 'battlesim882.name.outer_guards', type: 'shpagi',
+    enemies: [
+      { nameKey: 'battlesim882.enemy.soldier1', zhivot: 12, fehtovka: 4, barzina: 3, sila: 3, srachnost: 2, izdr: 2 },
+      { nameKey: 'battlesim882.enemy.soldier2', zhivot: 8, fehtovka: 2, barzina: 3, sila: 2, srachnost: 4, izdr: 5 },
+    ] },
 ];
+const romeroSoldiers = ROSTER.find(e => e.id === 'romero_12').enemies;
+ROSTER.push(
+  { id: 'village_middle', nameKey: 'battlesim882.name.village_middle', type: 'shpagi', enemies: romeroSoldiers.slice(3, 8) },
+  { id: 'village_last', nameKey: 'battlesim882.name.village_last', type: 'shpagi', enemies: romeroSoldiers.slice(8) },
+  { id: 'village_whip', nameKey: 'battlesim882.name.village_whip', type: 'shpagi', enemies: romeroSoldiers.slice(9) },
+);
+const PLAYER_DEFAULTS = { sila: 3, barzina: 5, srachnost: 1, izdr: 2, strast: 4,
+  zhivot: 50, rb: 3, fehtovka: 5, pronizvasht: 0, sechasht: 0, blok: 0, fint: 0, trikove: 0 };
 
 function _encounter(id) { return ROSTER.find(e => e.id === id) || ROSTER[0]; }
 
@@ -120,157 +136,74 @@ function _data() {
   if (!pt.sim882) {
     pt.sim882 = {
       encounterId: 'rosario',
-      player: {
-        sila: 3, barzina: 3, srachnost: 3, izdr: 3, strast: 3,
-        zhivot: 50, rb: 3, fehtovka: 3,
-        pronizvasht: 2, sechasht: 2, blok: 1, fint: 2, trikove: 2,
-      },
+      player: { ...PLAYER_DEFAULTS },
       log: [],
       history: [],
     };
   }
-  const d = pt.sim882;
-  if (!d.encounterId) d.encounterId = 'rosario';
-  const defaults = { sila: 3, barzina: 3, srachnost: 3, izdr: 3, strast: 3, zhivot: 50, rb: 3, fehtovka: 3, pronizvasht: 2, sechasht: 2, blok: 1, fint: 2, trikove: 2 };
-  if (!d.player) d.player = { ...defaults };
-  Object.keys(defaults).forEach(k => { if (typeof d.player[k] !== 'number') d.player[k] = defaults[k]; });
-  if (!d.log) d.log = [];
-  if (!d.history) d.history = [];
-  return d;
+  return pt.sim882;
 }
 
 function _appendLog(d, line) {
+  d.log ||= [];
   d.log.push(line);
   if (d.log.length > 400) d.log.shift();
 }
 
 function _recordOutcome(d, outcome) {
+  d.history ||= [];
   d.history.push({ enemy: t(_encounter(d.encounterId).nameKey), outcome, ts: Date.now() });
 }
 
-// ── Ръкопашна схватка / Схватка с шпаги: shared round-robin resolver ───────
-function _fightRoundRobin(d, enc) {
-  const p = d.player;
-  const extraHit = enc.extraHitBonus || 0;
-  const enemies = enc.enemies.map(e => ({ ...e, curZhivot: e.zhivot }));
-  let playerZhivot = p.zhivot;
-  let rounds = 0;
-  const lines = [];
-  const isShpagi = enc.type === 'shpagi';
-  const playerHitSkill = isShpagi ? p.fehtovka : p.rb;
-  const playerDmgBonus = isShpagi ? (p.srachnost + p.barzina + p.sila) : p.sila;
-
-  while (playerZhivot > 0 && enemies.some(e => e.curZhivot > 0) && rounds < 300) {
-    rounds++;
-    for (const enemy of enemies) {
-      if (enemy.curZhivot <= 0) continue;
-      if (playerZhivot <= 0) break;
-      const rollP = _roll1d6(), rollE = _roll1d6();
-      const enemyHitSkill = isShpagi ? enemy.fehtovka : enemy.rb;
-      const hitP = rollP + playerHitSkill + extraHit;
-      const hitE = rollE + enemyHitSkill;
-      if (hitP > hitE) {
-        const dmg = Math.max(0, (rollP + playerDmgBonus) - enemy.izdr);
-        enemy.curZhivot -= dmg;
-        lines.push(t('battlesim882.log.hit_win', { name: t(enemy.nameKey), dmg, izd: Math.max(0, enemy.curZhivot) }));
-      } else if (hitE > hitP) {
-        const enemyDmgBonus = isShpagi ? (enemy.srachnost + enemy.barzina + enemy.sila) : enemy.sila;
-        const dmg = Math.max(0, (rollE + enemyDmgBonus) - p.izdr);
-        playerZhivot -= dmg;
-        lines.push(t('battlesim882.log.hit_lose', { name: t(enemy.nameKey), dmg, izd: Math.max(0, playerZhivot) }));
-      } else {
-        lines.push(t('battlesim882.log.hit_tie', { name: t(enemy.nameKey) }));
-      }
-    }
-  }
-  const won = playerZhivot > 0;
-  return { won, rounds, lines, finalPlayerZhivot: Math.max(0, playerZhivot) };
-}
-
-// ── Дуел: formal 5-stat duel ────────────────────────────────────────────────
-function _fightDuel(d, enc) {
-  const p = d.player;
-  const e = { ...enc.enemy, curZhivot: enc.enemy.zhivot };
-  let playerZhivot = p.zhivot;
-  const lines = [];
-
-  let playerTurn;
-  if (p.fint !== e.fint) {
-    playerTurn = p.fint > e.fint;
-  } else {
-    playerTurn = _roll1d6() >= _roll1d6();
-  }
-  lines.push(t('battlesim882.log.duel_first', { who: playerTurn ? t('battlesim882.ui.you') : t(e.nameKey) }));
-
-  let interruptsPlayer = Math.max(0, e.trikove - p.trikove);
-  let interruptsEnemy  = Math.max(0, p.trikove - e.trikove);
-
-  function series(attackerIsPlayer) {
-    const atkPronizvasht = attackerIsPlayer ? p.pronizvasht : e.pronizvasht;
-    const atkSechasht     = attackerIsPlayer ? p.sechasht : e.sechasht;
-    const mainSkill  = Math.max(atkPronizvasht, atkSechasht);
-    const weakSkill  = Math.min(atkPronizvasht, atkSechasht);
-    let length = 3;
-    if (attackerIsPlayer && interruptsPlayer > 0) { length = 1; interruptsPlayer--; }
-    else if (!attackerIsPlayer && interruptsEnemy > 0) { length = 1; interruptsEnemy--; }
-    const hits = length === 1 ? [mainSkill] : [mainSkill, mainSkill, weakSkill];
-    for (const skill of hits) {
-      const roll = _roll1d6();
-      const strength = skill + roll;
-      const defenderBlok = attackerIsPlayer ? e.blok : p.blok;
-      const dmg = Math.max(0, strength - defenderBlok);
-      if (attackerIsPlayer) {
-        e.curZhivot -= dmg;
-        lines.push(t('battlesim882.log.duel_hit', { attacker: t('battlesim882.ui.you'), defender: t(e.nameKey), dmg, izd: Math.max(0, e.curZhivot) }));
-        if (e.curZhivot <= 0) return;
-      } else {
-        playerZhivot -= dmg;
-        lines.push(t('battlesim882.log.duel_hit', { attacker: t(e.nameKey), defender: t('battlesim882.ui.you'), dmg, izd: Math.max(0, playerZhivot) }));
-        if (playerZhivot <= 0) return;
-      }
-    }
-  }
-
-  let rounds = 0;
-  while (playerZhivot > 0 && e.curZhivot > 0 && rounds < 200) {
-    rounds++;
-    series(playerTurn);
-    if (playerZhivot <= 0 || e.curZhivot <= 0) break;
-    playerTurn = !playerTurn;
-  }
-
-  const won = playerZhivot > 0 && e.curZhivot <= 0;
-  return { won, rounds, lines, finalPlayerZhivot: Math.max(0, playerZhivot) };
-}
-
-function _fight() {
+function _fight(interrupt = false) {
   const d = _data();
   if (!d) return;
   const enc = _encounter(d.encounterId);
-
-  let result;
-  if (enc.type === 'duel') result = _fightDuel(d, enc);
-  else result = _fightRoundRobin(d, enc);
-
-  _appendLog(d, t('battlesim882.log.header', { name: t(enc.nameKey) }));
-  result.lines.forEach(l => _appendLog(d, l));
-
-  d.player.zhivot = result.finalPlayerZhivot;
-  if (result.won) {
+  const player = { ...PLAYER_DEFAULTS, ...d.player };
+  if (!d.pendingFight && player.zhivot <= 0) return;
+  if (!d.pendingFight && enc.type === 'duel' && ['pronizvasht', 'sechasht', 'blok', 'fint', 'trikove'].some(key => player[key] < 1)) {
+    showAlert(t('battlesim882.ui.training_required'));
+    return;
+  }
+  if (!d.pendingFight) {
+    d.pendingFight = startZorroFight(player, enc, Number(document.getElementById('sim882-removed').value), Number(document.getElementById('sim882-prior-damage').value));
+    _appendLog(d, t('battlesim882.log.header', { name: t(enc.nameKey) }));
+  }
+  const result = advanceZorroFight(d.pendingFight, _roll1d6, interrupt);
+  for (const event of result.events) {
+    const name = t(event.name);
+    _appendLog(d, t(`battlesim882.log.${event.kind}`, {
+      ...event, name, who: event.player ? t('battlesim882.ui.you') : name,
+      attacker: event.player ? t('battlesim882.ui.you') : name,
+      defender: event.player ? name : t('battlesim882.ui.you'),
+    }));
+  }
+  d.player = { ...player, zhivot: result.state.playerLife };
+  d.pendingFight = result.state.outcome ? null : result.state;
+  if (result.state.outcome) {
+    document.getElementById('sim882-removed').value = 0;
+    document.getElementById('sim882-prior-damage').value = 0;
+  }
+  if (result.state.outcome === 'win') {
     _appendLog(d, t('battlesim882.log.win_footer', { trophy: SVG_TROPHY }));
     _recordOutcome(d, 'win');
-  } else {
+  } else if (result.state.outcome === 'loss') {
     _appendLog(d, t('battlesim882.log.loss_footer', { skull: SVG_SKULL }));
     _recordOutcome(d, 'loss');
-  }
+  } else if (result.state.outcome === 'retreat') {
+    _appendLog(d, t('battlesim882.log.retreat'));
+    _recordOutcome(d, 'retreat');
+  } else _appendLog(d, t('battlesim882.log.pending'));
   saveState();
   _renderAll();
 }
 
 function _pickEncounter(id) {
   const d = _data();
-  if (!d) return;
+  if (!d || d.pendingFight) return;
   d.encounterId = id;
+  document.getElementById('sim882-removed').value = 0;
+  document.getElementById('sim882-prior-damage').value = 0;
   saveState();
   _renderAll();
 }
@@ -282,14 +215,15 @@ function _renderHistory() {
   const sumEl  = document.getElementById('sim882-history-summary');
   const listEl = document.getElementById('sim882-history-list');
   if (!d || !sumEl || !listEl) return;
-  sumEl.textContent = t('battlesim882.history.summary', { n: d.history.length });
-  if (!d.history.length) {
+  const history = d.history || [];
+  sumEl.textContent = t('battlesim882.history.summary', { n: history.length });
+  if (!history.length) {
     listEl.innerHTML = `<div class="bsim-history-empty">${t('battlesim882.history.empty')}</div>`;
     return;
   }
-  listEl.innerHTML = d.history.slice().reverse().map(h => {
-    const icon   = h.outcome === 'win' ? SVG_TROPHY : SVG_SKULL;
-    const result = h.outcome === 'win' ? t('battlesim882.history.won') : t('battlesim882.history.lost');
+  listEl.innerHTML = history.slice().reverse().map(h => {
+    const icon   = h.outcome === 'win' ? SVG_TROPHY : h.outcome === 'retreat' ? '' : SVG_SKULL;
+    const result = t(h.outcome === 'win' ? 'battlesim882.history.won' : h.outcome === 'retreat' ? 'battlesim882.history.retreat' : 'battlesim882.history.lost');
     const date   = new Date(h.ts).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
     return `<div class="bsim-history-row">
       <span>${icon} ${escapeHtml(h.enemy)} - ${result}</span>
@@ -302,7 +236,7 @@ function _renderLog() {
   const d  = _data();
   const el = document.getElementById('sim882-log');
   if (!el || !d) return;
-  el.innerHTML = d.log.slice().reverse().join('<br>');
+  el.innerHTML = (d.log || []).slice().reverse().join('<br>');
 }
 
 function _encounterOptions(selectedId) {
@@ -315,8 +249,20 @@ function _renderInputs() {
   document.getElementById('sim882-encounter-pick').innerHTML = _encounterOptions(d.encounterId);
   ['sila', 'barzina', 'srachnost', 'izdr', 'strast', 'zhivot', 'rb', 'fehtovka', 'pronizvasht', 'sechasht', 'blok', 'fint', 'trikove'].forEach(k => {
     const el = document.getElementById(`sim882-player-${k}`);
-    if (el) el.value = d.player[k];
+    if (el) el.value = d.player?.[k] ?? PLAYER_DEFAULTS[k];
   });
+  const enc = _encounter(d.encounterId);
+  const overlay = document.getElementById('sim882-overlay');
+  overlay.querySelectorAll('.inv-qty-btn, .inv-qty-input, #sim882-encounter-pick, #sim882-prior-damage').forEach(el => { el.disabled = Boolean(d.pendingFight); });
+  const removed = document.getElementById('sim882-removed');
+  removed.closest('.inv-edit-row').hidden = !['romero_12', 'gate_4', 'village_whip'].includes(enc.id);
+  document.getElementById('sim882-prior-damage').closest('.inv-edit-row').hidden = enc.id !== 'rosario';
+  const interrupt = document.getElementById('sim882-interrupt');
+  interrupt.hidden = !(d.pendingFight?.type === 'duel' && d.pendingFight.turn === false && d.pendingFight.playerInterrupts > 0);
+  interrupt.textContent = t('battlesim882.btn.interrupt', { n: d.pendingFight?.playerInterrupts || 0 });
+  const fight = document.getElementById('sim882-fight');
+  fight.disabled = !d.pendingFight && (d.player?.zhivot ?? PLAYER_DEFAULTS.zhivot) <= 0;
+  fight.textContent = t(d.pendingFight ? 'battlesim882.btn.continue' : 'battlesim882.btn.fight');
 }
 
 function _renderAll() {
@@ -399,9 +345,19 @@ export function initSim882() {
               <span class="inv-edit-label bsim-stat-label">${t('battlesim882.ui.pick')}</span>
               <select id="sim882-encounter-pick" class="inv-edit-input"></select>
             </div>
+            ${_numField(t('battlesim882.ui.removed'), 'sim882-removed')}
+            <div class="inv-edit-row">
+              <span class="inv-edit-label bsim-stat-label">${t('battlesim882.ui.prior_damage')}</span>
+              <select id="sim882-prior-damage" class="inv-edit-input">
+                <option value="0">${t('battlesim882.ui.none')}</option>
+                <option value="4">${t('battlesim882.ui.bottle')}</option>
+                <option value="6">${t('battlesim882.ui.chair')}</option>
+              </select>
+            </div>
           </div>
           <div class="inv-modal-ftr bsim-action-grid">
             <button id="sim882-fight" class="inv-add-btn bsim-action-primary">${t('battlesim882.btn.fight')}</button>
+            <button id="sim882-interrupt" class="inv-add-btn" hidden>${t('battlesim882.btn.interrupt', { n: 0 })}</button>
           </div>
         </div>
         <div class="bsim-col bsim-col-right">
@@ -435,20 +391,23 @@ export function initSim882() {
   });
 
   document.getElementById('sim882-encounter-pick').addEventListener('change', e => _pickEncounter(e.target.value));
-  document.getElementById('sim882-fight').addEventListener('click', _fight);
+  document.getElementById('sim882-fight').addEventListener('click', () => _fight());
+  document.getElementById('sim882-interrupt').addEventListener('click', () => _fight(true));
+  document.getElementById('sim882-removed').value = 0;
 
   const statKeys = ['sila', 'barzina', 'srachnost', 'izdr', 'strast', 'zhivot', 'rb', 'fehtovka', 'pronizvasht', 'sechasht', 'blok', 'fint', 'trikove'];
   overlay.querySelectorAll('.inv-qty-btn').forEach(btnEl => {
     btnEl.addEventListener('click', () => {
       const d = _data();
-      if (!d) return;
+      if (!d || d.pendingFight) return;
       const id    = btnEl.dataset.id;
       const delta = Number(btnEl.dataset.delta);
       const input = document.getElementById(id);
-      const val   = Math.max(0, (parseInt(input.value, 10) || 0) + delta);
+      const maximum = id.endsWith('-zhivot') ? 50 : id.endsWith('-removed') ? Math.max(0, (_encounter(d.encounterId).enemies?.length || 1) - 1) : 5;
+      const val   = Math.min(maximum, Math.max(0, (parseInt(input.value, 10) || 0) + delta));
       input.value = val;
       const key = statKeys.find(k => id === `sim882-player-${k}`);
-      if (key) d.player[key] = val;
+      if (key) { d.player ||= { ...PLAYER_DEFAULTS }; d.player[key] = val; }
       saveState();
     });
   });
@@ -456,11 +415,12 @@ export function initSim882() {
   overlay.querySelectorAll('.inv-qty-input').forEach(input => {
     input.addEventListener('change', () => {
       const d = _data();
-      if (!d) return;
-      const val = Math.max(0, parseInt(input.value, 10) || 0);
+      if (!d || d.pendingFight) return;
+      const maximum = input.id.endsWith('-zhivot') ? 50 : input.id.endsWith('-removed') ? Math.max(0, (_encounter(d.encounterId).enemies?.length || 1) - 1) : 5;
+      const val = Math.min(maximum, Math.max(0, parseInt(input.value, 10) || 0));
       input.value = val;
       const key = statKeys.find(k => input.id === `sim882-player-${k}`);
-      if (key) d.player[key] = val;
+      if (key) { d.player ||= { ...PLAYER_DEFAULTS }; d.player[key] = val; }
       saveState();
     });
   });

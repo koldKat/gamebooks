@@ -7,6 +7,7 @@ import { showAlert } from '../ui-helpers/confirm.js';
 import { getPlayBtnRow } from '../play/charsheet.js';
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../core/util.js';
 import { t } from '../i18n.js';
+import { mutatedFleshRound, mutatedFleshWon } from './engines/mutated-flesh.js';
 
 const SVG_SKULL  = `<svg class="sim-icon sim-icon-dead"  viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8c0 2.8 1.4 5.3 3.6 6.8V20a1 1 0 0 0 1 1h6.8a1 1 0 0 0 1-1v-2.2C18.6 16.3 20 13.8 20 11a8 8 0 0 0-8-8zm-2.5 13v-1.5a.5.5 0 0 0-.5-.5H8l-.5-1 1-1-1-1 1-1H9a2.5 2.5 0 0 1 5 0h.5l1 1-1 1 1 1-.5 1h-1a.5.5 0 0 0-.5.5V16h-4z"/></svg>`;
 const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v7a6 6 0 0 1-12 0V2zm-2 1H2v4a4 4 0 0 0 4 4v-1a3 3 0 0 1-3-3V3zm16 0h2v4a4 4 0 0 1-4 4v-1a3 3 0 0 0 3-3V3zm-7 13v2H9v2h6v-2h-2v-2a6 6 0 0 0 5-5.92V2H6v8.08A6 6 0 0 0 13 16z"/></svg>`;
@@ -22,6 +23,7 @@ const WEAPONS = [
 const ROSTER = [
   { id: 'doberman', name: 'Мутирал доберман',        dmg: 8,  life: 16 },
   { id: 'stoev',     name: 'Д-р Стоев',               dmg: 6,  life: 22 },
+  { id: 'stoev-punched', name: 'Д-р Стоев (след юмручен удар)', dmg: 6, life: 19 },
   { id: 'lenova',    name: 'Д-р Ленова',              dmg: 19, life: 38 },
   { id: 'nurse',     name: 'Медицинска сестра-мутант', dmg: 8,  life: 16 },
   { id: 'vendor',    name: 'Продавач-мутант',          dmg: 10, life: 22 },
@@ -47,6 +49,7 @@ function _data() {
       enemy: { dmg: 8, life: 16 },
       ammo: _defaultAmmo(),
       started: false,
+      rulesVersion: 1,
       log: [],
       history: [],
     };
@@ -76,7 +79,7 @@ function _appendLog(d, line) {
 
 function _enemyName(d) { return _enemy(d.enemyId).name; }
 
-function _playerWon(d) { return d.enemy.life <= 0; }
+function _playerWon(d) { return mutatedFleshWon(d); }
 function _playerLost(d) { return d.player.life <= 0; }
 function _battleOver(d) { return _playerWon(d) || _playerLost(d); }
 
@@ -96,6 +99,7 @@ function _attack(weaponId) {
   const d = _data();
   if (!d || _battleOver(d)) return;
   const w = _weapon(weaponId);
+  if (d.rulesVersion === 1) { _printedRound(d, w, false); return; }
   if (w.ammoMax != null && d.ammo[w.id] <= 0) return;
   d.started = true;
   d.weaponId = w.id;
@@ -115,6 +119,7 @@ function _attack(weaponId) {
 function _defend() {
   const d = _data();
   if (!d || _battleOver(d)) return;
+  if (d.rulesVersion === 1) { _printedRound(d, _weapon(d.weaponId), true); return; }
   d.started = true;
   const reduction = Math.max(0, d.player.physique);
   const dmg = Math.max(0, d.enemy.dmg - reduction);
@@ -123,9 +128,19 @@ function _defend() {
   _finishRound(d);
 }
 
+function _printedRound(d, weapon, defend) {
+  const events = mutatedFleshRound(d, weapon, defend, _roll1d6);
+  if (!events.length) return;
+  for (const event of events) {
+    const key = event.side === 'player' ? 'battlesim781.log.player_attack' : 'battlesim781.log.enemy_hit';
+    _appendLog(d, t(key, {weapon:event.weapon, roll:event.die, dmg:event.damage, name:_enemyName(d), life:event.life}));
+  }
+  _finishRound(d);
+}
+
 function _finishRound(d) {
   if (_playerWon(d)) {
-    _appendLog(d, t('battlesim781.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyName(d) }));
+    _appendLog(d, t(d.rulesVersion === 1 && d.enemyId === 'lenova' ? 'battlesim781.log.lenova_stop' : 'battlesim781.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyName(d) }));
     _recordOutcome(d, 'win');
   } else if (_playerLost(d)) {
     _appendLog(d, t('battlesim781.log.fallen', { skull: SVG_SKULL, enemy: _enemyName(d) }));
@@ -139,7 +154,8 @@ function _resetBattle() {
   const d = _data();
   if (!d) return;
   d.enemy = { ..._enemy(d.enemyId) };
-  d.ammo = _defaultAmmo();
+  d.rulesVersion = 1;
+  d.openingFreeHit = false;
   d.started = false;
   if (d.log.length) _appendLog(d, t('battlesim781.log.reset_sep'));
   _appendLog(d, t('battlesim781.log.reset', { enemy: _enemyName(d) }));
@@ -164,7 +180,8 @@ function _renderStatus() {
   else if (_playerWon(d))  el.innerHTML = t('battlesim781.status.victory', { trophy: SVG_TROPHY });
   else                     el.innerHTML = '';
   const over = _battleOver(d);
-  document.getElementById('sim781-defend').disabled = over;
+  const selected = _weapon(d.weaponId);
+  document.getElementById('sim781-defend').disabled = over || (d.rulesVersion === 1 && selected.ammoMax != null && d.ammo[selected.id] <= 0);
   WEAPONS.forEach(w => {
     const btn = document.getElementById(`sim781-atk-${w.id}`);
     if (!btn) return;
@@ -220,6 +237,14 @@ function _renderInputs() {
 
   document.getElementById('sim781-enemy-dmg').value  = d.enemy.dmg;
   document.getElementById('sim781-enemy-life').value = d.enemy.life;
+  document.getElementById('sim781-weapon-pick').value = d.weaponId;
+  document.getElementById('sim781-ammo-pistol').value = d.ammo.pistol;
+  document.getElementById('sim781-ammo-shotgun').value = d.ammo.shotgun;
+  for (const key of ['averageDamage','riotArmour','section99Weapons','section20Pistol','openingFreeHit']) {
+    const input = document.getElementById(`sim781-${key}`);
+    input.checked = !!d[key];
+    input.disabled = d.rulesVersion !== 1 || (key === 'openingFreeHit' && d.started);
+  }
 
   _renderStatus();
 }
@@ -287,6 +312,13 @@ export function initSim781() {
             ${_numField(t('battlesim781.ui.life'), 'sim781-player-life')}
             ${_numField(t('battlesim781.ui.physique'), 'sim781-player-physique')}
             ${_numField(t('battlesim781.ui.shooting'), 'sim781-player-shooting')}
+            ${_numField(t('battlesim781.ui.pistol_ammo'), 'sim781-ammo-pistol')}
+            ${_numField(t('battlesim781.ui.shotgun_ammo'), 'sim781-ammo-shotgun')}
+            <div class="inv-edit-row">
+              <span class="inv-edit-label bsim-stat-label">${t('battlesim781.ui.defensive_weapon')}</span>
+              <select id="sim781-weapon-pick" class="inv-edit-input">${WEAPONS.map(w => `<option value="${w.id}">${escapeHtml(w.name)}</option>`).join('')}</select>
+            </div>
+            ${['averageDamage','riotArmour','section99Weapons','section20Pistol','openingFreeHit'].map(key => `<label class="inv-edit-row"><span class="inv-edit-label">${t(`battlesim781.ui.${key}`)}</span><input type="checkbox" id="sim781-${key}"></label>`).join('')}
           </div>
           <div class="bsim-side">
             <div class="bsim-side-title">${t('battlesim781.ui.enemy')}</div>
@@ -342,6 +374,16 @@ export function initSim781() {
   });
   document.getElementById('sim781-defend').addEventListener('click', _defend);
   document.getElementById('sim781-reset').addEventListener('click', _resetBattle);
+  document.getElementById('sim781-weapon-pick').addEventListener('change', e => {
+    const d = _data(); if (!d) return;
+    d.weaponId = e.target.value; saveState(); _renderStatus();
+  });
+  for (const key of ['averageDamage','riotArmour','section99Weapons','section20Pistol','openingFreeHit']) {
+    document.getElementById(`sim781-${key}`).addEventListener('change', e => {
+      const d = _data(); if (!d || d.rulesVersion !== 1) return;
+      d[key] = e.target.checked; saveState();
+    });
+  }
 
   overlay.querySelectorAll('.inv-qty-btn').forEach(btnEl => {
     btnEl.addEventListener('click', () => {
@@ -357,6 +399,8 @@ export function initSim781() {
       else if (id === 'sim781-player-shooting') d.player.shooting = val;
       else if (id === 'sim781-enemy-dmg')       d.enemy.dmg = val;
       else if (id === 'sim781-enemy-life')      d.enemy.life = val;
+      else if (id === 'sim781-ammo-pistol') d.ammo.pistol = val;
+      else if (id === 'sim781-ammo-shotgun') d.ammo.shotgun = val;
       saveState();
       _renderStatus();
     });
@@ -374,6 +418,8 @@ export function initSim781() {
       else if (id === 'sim781-player-shooting') d.player.shooting = val;
       else if (id === 'sim781-enemy-dmg')       d.enemy.dmg = val;
       else if (id === 'sim781-enemy-life')      d.enemy.life = val;
+      else if (id === 'sim781-ammo-pistol') d.ammo.pistol = val;
+      else if (id === 'sim781-ammo-shotgun') d.ammo.shotgun = val;
       saveState();
       _renderStatus();
     });

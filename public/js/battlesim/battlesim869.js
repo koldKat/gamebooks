@@ -7,6 +7,7 @@ import { showAlert } from '../ui-helpers/confirm.js';
 import { getPlayBtnRow } from '../play/charsheet.js';
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../core/util.js';
 import { t } from '../i18n.js';
+import { tigerOptions, tigerResolve } from './engines/tiger-eye.js';
 
 const SVG_SKULL  = `<svg class="sim-icon sim-icon-dead"  viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8c0 2.8 1.4 5.3 3.6 6.8V20a1 1 0 0 0 1 1h6.8a1 1 0 0 0 1-1v-2.2C18.6 16.3 20 13.8 20 11a8 8 0 0 0-8-8zm-2.5 13v-1.5a.5.5 0 0 0-.5-.5H8l-.5-1 1-1-1-1 1-1H9a2.5 2.5 0 0 1 5 0h.5l1 1-1 1 1 1-.5 1h-1a.5.5 0 0 0-.5.5V16h-4z"/></svg>`;
 const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v7a6 6 0 0 1-12 0V2zm-2 1H2v4a4 4 0 0 0 4 4v-1a3 3 0 0 1-3-3V3zm16 0h2v4a4 4 0 0 1-4 4v-1a3 3 0 0 0 3-3V3zm-7 13v2H9v2h6v-2h-2v-2a6 6 0 0 0 5-5.92V2H6v8.08A6 6 0 0 0 13 16z"/></svg>`;
@@ -449,11 +450,8 @@ const SPECIAL2 = ['tejbrun', 'matual'];
 
 // ── Player attack menu (shared across all rivals) ───────────────────────
 
-function _contraCheck(player, opp) {
-  const roll = opp.b + _d6();
-  if (roll >= player.b + 4) {
-    // Opponent counter-attacks - you must defend.
-    const defenses = [
+function _counterDefenses(player, opp) {
+  return [
       { label: t('battlesim869.def.opt1'), run: () => {
         if (player.b > opp.b) { const d = (player.b - opp.b) + _d6(); _loseE(opp, d); return t('battlesim869.def.msg1_win', { d }); }
         const d = (opp.b - player.b) + _d6(); _loseE(player, d); return gt('lose_e_from_counter', { d });
@@ -468,6 +466,12 @@ function _contraCheck(player, opp) {
         return gt('block_good_followup_blocked');
       }},
     ];
+}
+
+function _contraCheck(player, opp) {
+  const roll = opp.b + _d6();
+  if (roll >= player.b + 4) {
+    const defenses = _counterDefenses(player, opp);
     return { needsDefense: true, defenses };
   }
   const d = _dN(2); const d2 = _d6();
@@ -595,7 +599,14 @@ function _checkEnd(d) {
 function _startBattle() {
   const d = _data();
   if (!d) return;
-  d.opp = _freshEntity(_rival(d.rivalId));
+  if (d.player.e <= 0) { showAlert(t('battlesim869.source.unavailable')); return; }
+  d.rivalSetup ||= { ...d.opp, e: d.opp.startE, b: d.opp.startB };
+  d.player = _freshEntity(d.player);
+  d.opp = _freshEntity(d.rivalSetup);
+  d.rulesVersion = 1;
+  d.options ||= { magicSpend: 2, enduranceSpend: 1, skillSpend: 0 };
+  delete d.manualSection;
+  delete d.spared;
   d.phase = 1;
   d.turn = 'opp';
   d.pendingDefense = null;
@@ -619,6 +630,7 @@ function _oppOptions(d) {
 function _pickOppOption(idx) {
   const d = _data();
   if (!d || d.over) return;
+  if (d.rulesVersion === 1) { _pickSourceOption(idx); return; }
   if (d.phase === 2 && SPECIAL2.includes(d.rivalId)) { _pickSpecial(idx); return; }
   const opts = _oppOptions(d);
   const opt = opts[idx];
@@ -666,6 +678,7 @@ function _pickSpecial(idx) {
 function _pickPlayerOption(idx) {
   const d = _data();
   if (!d || d.over || d.turn !== 'player') return;
+  if (d.rulesVersion === 1) { _pickSourceOption(idx); return; }
   const player = d.player, opp = d.opp;
   const allowDirty = d.phase === 1;
   const opts = _playerAttackOptions(player, opp, allowDirty);
@@ -697,9 +710,9 @@ function _pickPlayerOption(idx) {
 function _pickCounterDefense(idx) {
   const d = _data();
   if (!d || d.over || !d.pendingDefense) return;
+  if (d.rulesVersion === 1) { _pickSourceOption(idx); return; }
   const player = d.player, opp = d.opp;
-  const contra = _contraCheck(player, opp); // rebuild same list (stateless)
-  const def = contra.defenses[idx];
+  const def = _counterDefenses(player, opp)[idx];
   if (!def) return;
   const line = def.run();
   _appendLog(d, t('battlesim869.log.line_defense', { label: def.label, line }));
@@ -715,7 +728,29 @@ function _pickRival(id) {
   const d = _data();
   if (!d) return;
   d.rivalId = id;
+  delete d.rivalSetup;
+  d.opp = _freshEntity(_rival(id));
   _startBattle();
+}
+
+function _pickSourceOption(idx) {
+  const d = _data();
+  if (!d || d.rulesVersion !== 1) return;
+  const result = tigerResolve(d, idx, _d6);
+  if (!result.valid) {
+    _appendLog(d, t('battlesim869.source.unavailable'));
+  } else {
+    _appendLog(d, t('battlesim869.source.result', { label: t('battlesim869.' + result.key), ...result }));
+    if (result.manualSection) _appendLog(d, t('battlesim869.source.manual', { section: result.manualSection }));
+    if (result.spared) _appendLog(d, t('battlesim869.source.spared'));
+    if (d.over) {
+      const outcome = d.winner === 'player' ? 'win' : 'loss';
+      _appendLog(d, t('battlesim869.log.' + (outcome === 'win' ? 'defeated' : 'fallen'), { trophy: SVG_TROPHY, skull: SVG_SKULL, name: _rivalName(d) }));
+      _recordOutcome(d, outcome);
+    }
+  }
+  saveState();
+  _renderAll();
 }
 
 // ── Render ───────────────────────────────────────────────────────────────
@@ -752,11 +787,17 @@ function _renderActions() {
   const el = document.getElementById('sim869-actions');
   if (!d || !el) return;
   if (d.over || !d.started) { el.innerHTML = ''; return; }
+  if (d.rulesVersion === 1) {
+    if (d.turn === 'manual') { el.textContent = t('battlesim869.source.manual', { section: d.manualSection }); return; }
+    const kind = d.pendingDefense ? 'counter' : d.turn === 'player' ? 'player' : 'opp';
+    el.innerHTML = `<div class="bsim-turn-label">${t('battlesim869.turn.' + (d.pendingDefense ? 'defend' : d.turn), { name: _rivalName(d) })}</div>` + tigerOptions(d).map((key, i) => `<button class="inv-add-btn bsim-action-primary sim869-opt" data-kind="${kind}" data-idx="${i}">${escapeHtml(t('battlesim869.' + key))}</button>`).join('');
+    return;
+  }
 
   if (d.pendingDefense) {
-    const contra = _contraCheck(d.player, d.opp);
+    const defenses = _counterDefenses(d.player, d.opp);
     el.innerHTML = `<div class="bsim-turn-label">${t('battlesim869.turn.defend')}</div>` +
-      contra.defenses.map((o, i) => `<button class="inv-add-btn bsim-action-primary sim869-opt" data-kind="counter" data-idx="${i}">${escapeHtml(o.label)}</button>`).join('');
+      defenses.map((o, i) => `<button class="inv-add-btn bsim-action-primary sim869-opt" data-kind="counter" data-idx="${i}">${escapeHtml(o.label)}</button>`).join('');
     return;
   }
 
@@ -825,6 +866,11 @@ function _renderInputs() {
   document.getElementById('sim869-opp-s').value = d.opp.s;
   document.getElementById('sim869-opp-sword').value = d.opp.sword;
   document.getElementById('sim869-opp-shield').value = d.opp.shield;
+  const controls = document.getElementById('sim869-source-controls');
+  controls.hidden = d.rulesVersion !== 1;
+  for (const field of ['magicSpend', 'enduranceSpend', 'skillSpend']) {
+    document.getElementById('sim869-' + field).value = d.options?.[field] ?? 0;
+  }
 
   _renderStatus();
 }
@@ -920,6 +966,12 @@ export function initSim869() {
             <div id="sim869-opp-stats" class="bsim-stat-summary"></div>
           </div>
           <div id="sim869-status" class="bsim-status"></div>
+          <div id="sim869-source-controls" hidden>
+            ${_numField(t('battlesim869.source.magic_spend'), 'sim869-magicSpend')}
+            ${_numField(t('battlesim869.source.endurance_spend'), 'sim869-enduranceSpend')}
+            ${_numField(t('battlesim869.source.skill_spend'), 'sim869-skillSpend')}
+            <p class="bsim-stat-summary">${t('battlesim869.source.note')}</p>
+          </div>
           <div id="sim869-actions" class="bsim-action-grid"></div>
           <div class="inv-modal-ftr">
             <button id="sim869-start" class="inv-add-btn">${t('battlesim869.btn.start')}</button>
@@ -969,15 +1021,18 @@ export function initSim869() {
   });
 
   const fieldMap = {
+    'sim869-magicSpend': (d, v) => { d.options.magicSpend = v; },
+    'sim869-enduranceSpend': (d, v) => { d.options.enduranceSpend = v; },
+    'sim869-skillSpend': (d, v) => { d.options.skillSpend = v; },
     'sim869-player-s': (d, v) => { d.player.s = v; },
     'sim869-player-e': (d, v) => { d.player.e = v; d.player.startE = v; d.player.lostE = 0; },
     'sim869-player-m': (d, v) => { d.player.m = v; },
-    'sim869-player-b': (d, v) => { d.player.b = v; d.player.startB = v; d.player.skillLossExtra = 0; d.player.lostE = 0; },
+    'sim869-player-b': (d, v) => { d.player.startB = v; d.player.skillLossExtra = 0; if (d.rulesVersion !== 1) d.player.lostE = 0; _recompute(d.player); },
     'sim869-player-sword': (d, v) => { d.player.sword = v; },
     'sim869-opp-s': (d, v) => { d.opp.s = v; },
     'sim869-opp-e': (d, v) => { d.opp.e = v; d.opp.startE = v; d.opp.lostE = 0; },
     'sim869-opp-m': (d, v) => { d.opp.m = v; },
-    'sim869-opp-b': (d, v) => { d.opp.b = v; d.opp.startB = v; d.opp.skillLossExtra = 0; d.opp.lostE = 0; },
+    'sim869-opp-b': (d, v) => { d.opp.startB = v; d.opp.skillLossExtra = 0; if (d.rulesVersion !== 1) d.opp.lostE = 0; _recompute(d.opp); },
     'sim869-opp-sword': (d, v) => { d.opp.sword = v; },
   };
 
@@ -991,6 +1046,7 @@ export function initSim869() {
       const val = Math.max(0, (parseInt(input.value, 10) || 0) + delta);
       input.value = val;
       if (fieldMap[id]) fieldMap[id](d, val);
+      if (d.rulesVersion === 1 && id.startsWith('sim869-opp-')) d.rivalSetup = { ...d.opp, e: d.opp.startE, b: d.opp.startB };
       saveState();
       _renderStatus();
     });
@@ -1003,11 +1059,12 @@ export function initSim869() {
       const val = Math.max(0, parseInt(input.value, 10) || 0);
       input.value = val;
       if (fieldMap[input.id]) fieldMap[input.id](d, val);
+      if (d.rulesVersion === 1 && input.id.startsWith('sim869-opp-')) d.rivalSetup = { ...d.opp, e: d.opp.startE, b: d.opp.startB };
       saveState();
       _renderStatus();
     });
   });
 
   document.getElementById('sim869-player-shield').addEventListener('change', e => { const d = _data(); if (d) { d.player.shield = e.target.value; saveState(); } });
-  document.getElementById('sim869-opp-shield').addEventListener('change', e => { const d = _data(); if (d) { d.opp.shield = e.target.value; saveState(); } });
+  document.getElementById('sim869-opp-shield').addEventListener('change', e => { const d = _data(); if (d) { d.opp.shield = e.target.value; if (d.rulesVersion === 1 && d.rivalSetup) d.rivalSetup.shield = e.target.value; saveState(); } });
 }

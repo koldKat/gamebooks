@@ -7,6 +7,7 @@ import { showAlert } from '../ui-helpers/confirm.js';
 import { getPlayBtnRow } from '../play/charsheet.js';
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../core/util.js';
 import { t } from '../i18n.js';
+import { resolveGalacticDuel } from './engines/galactic-giant.js';
 
 const SVG_SKULL  = `<svg class="sim-icon sim-icon-dead"  viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8c0 2.8 1.4 5.3 3.6 6.8V20a1 1 0 0 0 1 1h6.8a1 1 0 0 0 1-1v-2.2C18.6 16.3 20 13.8 20 11a8 8 0 0 0-8-8zm-2.5 13v-1.5a.5.5 0 0 0-.5-.5H8l-.5-1 1-1-1-1 1-1H9a2.5 2.5 0 0 1 5 0h.5l1 1-1 1 1 1-.5 1h-1a.5.5 0 0 0-.5.5V16h-4z"/></svg>`;
 const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v7a6 6 0 0 1-12 0V2zm-2 1H2v4a4 4 0 0 0 4 4v-1a3 3 0 0 1-3-3V3zm16 0h2v4a4 4 0 0 1-4 4v-1a3 3 0 0 0 3-3V3zm-7 13v2H9v2h6v-2h-2v-2a6 6 0 0 0 5-5.92V2H6v8.08A6 6 0 0 0 13 16z"/></svg>`;
@@ -23,34 +24,13 @@ const ROSTER = [
     id: 'robotrak', nameKey: 'battlesim877.name.robotrak',
     resolve(p) {
       if (p.sila > 10) return { key: 'robotrak_win', section: 203, outcome: 'win', cost: {} };
-      return { key: 'robotrak_lose', section: 66, outcome: 'loss', cost: { zhivot: 2 } };
+      return { key: 'robotrak_lose', section: 66, outcome: 'draw', cost: { zhivot: 2 } };
     },
   },
   {
     id: 'goraoktopod', nameKey: 'battlesim877.name.goraoktopod',
     resolve(p, d) {
-      let ps = p.sila, pl = p.zhivot, es = 12, el = 18;
-      const rounds = [];
-      let n = 0;
-      while (ps > 0 && pl > 0 && es > 0 && el > 0 && n < 50) {
-        n++;
-        const prS = _roll1d6(), enS = _roll1d6();
-        const prSum = ps + prS, enSum = es + enS;
-        if (prSum >= enSum) es -= (prSum - enSum); else ps -= (enSum - prSum);
-        const prL = _roll1d6(), enL = _roll1d6();
-        const plSum = pl + prL, elSum = el + enL;
-        if (plSum >= elSum) el -= (plSum - elSum); else pl -= (elSum - plSum);
-        rounds.push({ n, ps, pl, es, el });
-      }
-      const won = es <= 0 || el <= 0;
-      const lost = ps <= 0 || pl <= 0;
-      return {
-        key: won && !lost ? 'goraoktopod_win' : 'goraoktopod_lose',
-        section: won && !lost ? 4 : 193,
-        outcome: won && !lost ? 'win' : 'loss',
-        cost: { zhivot: Math.max(0, p.zhivot - Math.max(pl, 0)) },
-        rounds: n,
-      };
+      return resolveGalacticDuel('goraoktopod', p, d.pendingDuel?.state, false, _roll1d6);
     },
   },
   {
@@ -59,6 +39,9 @@ const ROSTER = [
       const strOk = p.sila >= 8, lifeOk = p.zhivot >= 18;
       if (strOk && lifeOk) return { key: 'medusa_win', section: 43, outcome: 'win', cost: {} };
       if (!strOk && !lifeOk) return { key: 'medusa_costly', section: 56, outcome: 'win', cost: {} };
+      if ((p.sila === 8 && !lifeOk) || (p.zhivot === 18 && !strOk)) {
+        return { key: 'manual', outcome: 'manual', cost: {} };
+      }
       return { key: 'medusa_stalemate', section: 197, outcome: 'draw', cost: {} };
     },
   },
@@ -67,7 +50,7 @@ const ROSTER = [
     resolve(p) {
       const enemySum = 15 + 20;
       const diff = enemySum - (p.sila + p.zhivot);
-      if (diff < 0) return { key: 'web_free', section: 74, outcome: 'win', cost: {} };
+      if (diff < 0) return { key: 'web_knife', section: 74, outcome: 'win', cost: {} };
       if (diff <= 6) return { key: 'web_blaster', section: 74, outcome: 'win', cost: { zhivot: 3 } };
       return { key: 'web_gravitoudar', section: 74, outcome: 'win', cost: { zhivot: 5 } };
     },
@@ -77,28 +60,16 @@ const ROSTER = [
     resolve(p) {
       const enemySum = 10 + 20;
       const diff = enemySum - (p.sila + p.zhivot);
-      if (diff < 0) return { key: 'web_free', section: 161, outcome: 'win', cost: {} };
-      if (diff <= 6) return { key: 'web_blaster', section: 161, outcome: 'win', cost: { zhivot: 3 } };
-      return { key: 'web_gravitoudar', section: 161, outcome: 'win', cost: { zhivot: 5 } };
+      if (diff < 0) return { key: 'web2_one', section: 161, outcome: 'win', cost: {} };
+      if (diff <= 6) return { key: 'web2_two', section: 161, outcome: 'win', cost: {} };
+      return { key: 'web2_choice', section: 161, outcome: 'win', cost: {} };
     },
   },
   {
     id: 'invisiblerobot', nameKey: 'battlesim877.name.invisiblerobot',
-    resolve(p) {
-      let ps = p.sila, es = 20;
-      let n = 0;
-      while (ps > 0 && es > 0 && n < 50) {
-        n++;
-        const diceCount = (n % 2 === 0) ? 2 : 1;
-        let prS = 0, enS = 0;
-        for (let i = 0; i < diceCount; i++) { prS += _roll1d6(); enS += _roll1d6(); }
-        const prSum = ps + prS, enSum = es + enS;
-        if (prSum >= enSum) es -= (prSum - enSum); else ps -= (enSum - prSum);
-        if (ps < 10 && ps > 0) break; // can flee once weakened, per the section text
-      }
-      if (es <= 0) return { key: 'invisiblerobot_win', section: 59, outcome: 'win', cost: { zhivot: 0 } };
-      if (ps <= 0) return { key: 'invisiblerobot_lose', section: 65, outcome: 'loss', cost: {} };
-      return { key: 'invisiblerobot_flee', section: 179, outcome: 'draw', cost: {} };
+    resolve(p, d) {
+      return resolveGalacticDuel('invisiblerobot', p, d.pendingDuel?.state,
+        document.getElementById('sim877-flee').checked, _roll1d6);
     },
   },
   {
@@ -124,6 +95,7 @@ const ROSTER = [
       const playerSum = p.sila + p.zhivot;
       if (enemySum > playerSum) return { key: 'twoheaded_lose', section: 106, outcome: 'loss', cost: {} };
       if (enemySum === playerSum) return { key: 'twoheaded_exhausted', section: 137, outcome: 'win', cost: {} };
+      if (playerSum - enemySum > 10) return { key: 'manual', outcome: 'manual', cost: {} };
       return { key: 'twoheaded_win', section: 67, outcome: 'win', cost: {} };
     },
   },
@@ -149,7 +121,7 @@ const ROSTER = [
     resolve(p) {
       const sum = p.sila + p.zhivot;
       if (sum > 30) return { key: 'robotspider_win', section: 72, outcome: 'win', cost: {} };
-      if (sum === 30) return { key: 'robotspider_tie', section: 68, outcome: 'win', cost: {} };
+      if (sum === 30) return { key: 'robotspider_tie', section: 68, outcome: 'draw', cost: {} };
       return { key: 'robotspider_lose', section: 92, outcome: 'loss', cost: {} };
     },
   },
@@ -192,9 +164,14 @@ function _fight() {
   const d = _data();
   if (!d) return;
   const enc = _encounter(d.encounterId);
+  if (d.player.zhivot < 3) { showAlert(t('battlesim877.log.dead')); return; }
   const before = { ...d.player };
   const res = enc.resolve(d.player, d);
   if (res.cost && res.cost.zhivot) d.player.zhivot = Math.max(0, d.player.zhivot - res.cost.zhivot);
+  if (res.cost && res.cost.sila) d.player.sila = Math.max(0, d.player.sila - res.cost.sila);
+  if (d.player.zhivot < 3) res.outcome = 'loss';
+  if (res.pending) d.pendingDuel = { encounterId: d.encounterId, state: res.pending };
+  else delete d.pendingDuel;
 
   _appendLog(d, t('battlesim877.log.header', { name: t(enc.nameKey) }));
   _appendLog(d, t(`battlesim877.log.${res.key}`, {
@@ -204,7 +181,13 @@ function _fight() {
     roll: res.roll || 0,
     section: res.section,
   }));
-  if (res.outcome === 'win') _appendLog(d, t('battlesim877.log.win_footer', { trophy: SVG_TROPHY, section: res.section }));
+  if (res.outcome === 'pending' || res.outcome === 'manual') {
+    saveState();
+    _renderAll();
+    return;
+  }
+  if (d.player.zhivot < 3) _appendLog(d, t('battlesim877.log.dead'));
+  else if (res.outcome === 'win') _appendLog(d, t('battlesim877.log.win_footer', { trophy: SVG_TROPHY, section: res.section }));
   else if (res.outcome === 'loss') _appendLog(d, t('battlesim877.log.loss_footer', { skull: SVG_SKULL, section: res.section }));
   else _appendLog(d, t('battlesim877.log.draw_footer', { section: res.section }));
 
@@ -216,7 +199,8 @@ function _fight() {
 function _rollSila() {
   const d = _data();
   if (!d) return;
-  d.player.sila = _roll2d6();
+  if (d.pendingDuel) return;
+  d.player.sila = _roll2d6() + 6;
   _appendLog(d, t('battlesim877.log.rolled_sila', { value: d.player.sila }));
   saveState();
   _renderAll();
@@ -225,6 +209,7 @@ function _rollSila() {
 function _rollZhivot() {
   const d = _data();
   if (!d) return;
+  if (d.pendingDuel) return;
   d.player.zhivot = _roll1d6() + 12;
   _appendLog(d, t('battlesim877.log.rolled_zhivot', { value: d.player.zhivot }));
   saveState();
@@ -234,6 +219,7 @@ function _rollZhivot() {
 function _rollEsper() {
   const d = _data();
   if (!d) return;
+  if (d.pendingDuel) return;
   d.player.esper = _roll3d6();
   _appendLog(d, t('battlesim877.log.rolled_esper', { value: d.player.esper }));
   saveState();
@@ -243,6 +229,7 @@ function _rollEsper() {
 function _pickEncounter(id) {
   const d = _data();
   if (!d) return;
+  if (d.pendingDuel) return;
   d.encounterId = id;
   saveState();
   _renderAll();
@@ -289,6 +276,10 @@ function _renderInputs() {
   document.getElementById('sim877-player-sila').value   = d.player.sila;
   document.getElementById('sim877-player-zhivot').value = d.player.zhivot;
   document.getElementById('sim877-player-esper').value  = d.player.esper;
+  document.getElementById('sim877-encounter-pick').disabled = !!d.pendingDuel;
+  document.querySelectorAll('#sim877-overlay .inv-qty-input, #sim877-overlay .inv-qty-btn, #sim877-overlay .bsim-roll-btn')
+    .forEach(element => { element.disabled = !!d.pendingDuel; });
+  document.getElementById('sim877-flee-row').hidden = d.encounterId !== 'invisiblerobot';
 }
 
 function _renderAll() {
@@ -362,6 +353,7 @@ export function initSim877() {
               <span class="inv-edit-label bsim-stat-label">${t('battlesim877.ui.pick')}</span>
               <select id="sim877-encounter-pick" class="inv-edit-input"></select>
             </div>
+            <label id="sim877-flee-row" hidden><input id="sim877-flee" type="checkbox"> ${t('battlesim877.ui.flee')}</label>
           </div>
           <div class="inv-modal-ftr bsim-action-grid">
             <button id="sim877-fight" class="inv-add-btn bsim-action-primary">${t('battlesim877.btn.fight')}</button>

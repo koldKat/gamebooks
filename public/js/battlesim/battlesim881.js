@@ -7,6 +7,7 @@ import { showAlert } from '../ui-helpers/confirm.js';
 import { getPlayBtnRow } from '../play/charsheet.js';
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../core/util.js';
 import { t } from '../i18n.js';
+import { resolveCellarDragon } from './engines/cellar-dragon.js';
 
 const SVG_SKULL  = `<svg class="sim-icon sim-icon-dead"  viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8c0 2.8 1.4 5.3 3.6 6.8V20a1 1 0 0 0 1 1h6.8a1 1 0 0 0 1-1v-2.2C18.6 16.3 20 13.8 20 11a8 8 0 0 0-8-8zm-2.5 13v-1.5a.5.5 0 0 0-.5-.5H8l-.5-1 1-1-1-1 1-1H9a2.5 2.5 0 0 1 5 0h.5l1 1-1 1 1 1-.5 1h-1a.5.5 0 0 0-.5.5V16h-4z"/></svg>`;
 const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v7a6 6 0 0 1-12 0V2zm-2 1H2v4a4 4 0 0 0 4 4v-1a3 3 0 0 1-3-3V3zm16 0h2v4a4 4 0 0 1-4 4v-1a3 3 0 0 0 3-3V3zm-7 13v2H9v2h6v-2h-2v-2a6 6 0 0 0 5-5.92V2H6v8.08A6 6 0 0 0 13 16z"/></svg>`;
@@ -19,20 +20,18 @@ const SWORDS = [
   { id: 'istrin',  nameKey: 'battlesim881.sword.istrin' },
 ];
 
-// Each encounter: { id, nameKey, enemies:[{nameKey,sila,izd}], hitAmount (default 2),
-//   tieBoth2 (bool, wolfspider special case), swordBonus: {firfeld,laim,istrin}, section }
 const ROSTER = [
-  { id: 'guard_unarmed', nameKey: 'battlesim881.name.guard_unarmed', hitAmount: 1,
+  { id: 'guard_unarmed', nameKey: 'battlesim881.name.guard_unarmed', hitAmount: 1, tiePlayer: 0, tieEnemy: 0, stopAfterLoss: 10,
     enemies: [{ nameKey: 'battlesim881.enemy.guard', sila: 9, izd: 5 }],
     swordBonus: { firfeld: 0, laim: 0, istrin: 0 } },
-  { id: 'guard_club', nameKey: 'battlesim881.name.guard_club', hitAmount: 1,
+  { id: 'guard_club', nameKey: 'battlesim881.name.guard_club', hitAmount: 1, tiePlayer: 0, tieEnemy: 0, stopAfterLoss: 10,
     enemies: [{ nameKey: 'battlesim881.enemy.guard', sila: 8, izd: 5 }],
     swordBonus: { firfeld: 0, laim: 0, istrin: 0 } },
   { id: 'orgfelt_gang', nameKey: 'battlesim881.name.orgfelt_gang',
     enemies: [
       { nameKey: 'battlesim881.enemy.orgfelt', sila: 10, izd: 6 },
-      { nameKey: 'battlesim881.enemy.robber1', sila: 8, izd: 6 },
       { nameKey: 'battlesim881.enemy.companion', sila: 10, izd: 9 },
+      { nameKey: 'battlesim881.enemy.robber1', sila: 8, izd: 6 },
       { nameKey: 'battlesim881.enemy.robber2', sila: 7, izd: 6 },
       { nameKey: 'battlesim881.enemy.robber3', sila: 6, izd: 8 },
     ],
@@ -52,19 +51,22 @@ const ROSTER = [
       { nameKey: 'battlesim881.enemy.thief2', sila: 8, izd: 6 },
     ],
     swordBonus: { firfeld: 0, laim: 0, istrin: 2 } },
-  { id: 'night_thief1', nameKey: 'battlesim881.name.night_thief1',
+  { id: 'night_thief1', nameKey: 'battlesim881.name.night_thief1', stopAt: 10,
     enemies: [{ nameKey: 'battlesim881.enemy.night_thief', sila: 8, izd: 6 }],
     swordBonus: { firfeld: 0, laim: 0, istrin: 0 } },
   { id: 'night_thieves5', nameKey: 'battlesim881.name.night_thieves5',
     enemies: [
       { nameKey: 'battlesim881.enemy.night_thief_n', sila: 6, izd: 4 },
       { nameKey: 'battlesim881.enemy.night_thief_n', sila: 8, izd: 12 },
-      { nameKey: 'battlesim881.enemy.night_thief_n', sila: 9, izd: 8 },
-      { nameKey: 'battlesim881.enemy.night_thief_n', sila: 6, izd: 6 },
       { nameKey: 'battlesim881.enemy.night_thief_n', sila: 10, izd: 6 },
+      { nameKey: 'battlesim881.enemy.night_thief_n', sila: 6, izd: 6 },
+      { nameKey: 'battlesim881.enemy.night_thief_n', sila: 9, izd: 8 },
     ],
     swordBonus: { firfeld: 0, laim: 2, istrin: 1 } },
-  { id: 'dwarf_unarmed', nameKey: 'battlesim881.name.dwarf_unarmed', hitAmount: 1,
+  { id: 'creature_unarmed', nameKey: 'battlesim881.name.creature_unarmed', hitAmount: 1, tiePlayer: 1, tieEnemy: 0, stopAt: 8,
+    enemies: [{ nameKey: 'battlesim881.enemy.creature', sila: 10, izd: 8 }],
+    swordBonus: { firfeld: 0, laim: 0, istrin: 0 } },
+  { id: 'dwarf_unarmed', nameKey: 'battlesim881.name.dwarf_unarmed', hitAmount: 1, tiePlayer: 0, tieEnemy: 0,
     enemies: [{ nameKey: 'battlesim881.enemy.dwarf_leader', sila: 10, izd: 10 }],
     swordBonus: { firfeld: 0, laim: 0, istrin: 0 } },
   { id: 'dwarf_weapon', nameKey: 'battlesim881.name.dwarf_weapon',
@@ -76,13 +78,13 @@ const ROSTER = [
       { nameKey: 'battlesim881.enemy.urik_guard2', sila: 8, izd: 6 },
     ],
     swordBonus: { firfeld: 0, laim: 0, istrin: 0 } },
-  { id: 'mercenary_unarmed', nameKey: 'battlesim881.name.mercenary_unarmed', hitAmount: 1,
+  { id: 'mercenary_unarmed', nameKey: 'battlesim881.name.mercenary_unarmed', hitAmount: 1, tiePlayer: 0, tieEnemy: 0, stopAfterLoss: 10,
     enemies: [{ nameKey: 'battlesim881.enemy.mercenary_boss', sila: 10, izd: 10 }],
     swordBonus: { firfeld: 0, laim: 0, istrin: 0 } },
   { id: 'mercenary_armed', nameKey: 'battlesim881.name.mercenary_armed',
     enemies: [{ nameKey: 'battlesim881.enemy.mercenary_boss', sila: 10, izd: 10 }],
     swordBonus: { firfeld: 2, laim: 1, istrin: 1 } },
-  { id: 'alkein_thugs', nameKey: 'battlesim881.name.alkein_thugs',
+  { id: 'alkein_thugs', nameKey: 'battlesim881.name.alkein_thugs', chooseTarget: true,
     enemies: [
       { nameKey: 'battlesim881.enemy.thug1', sila: 8, izd: 4 },
       { nameKey: 'battlesim881.enemy.thug2', sila: 9, izd: 6 },
@@ -117,15 +119,7 @@ function _data() {
       history: [],
     };
   }
-  const d = pt.sim881;
-  if (!d.encounterId) d.encounterId = 'guard_unarmed';
-  if (!d.swordId) d.swordId = 'firfeld';
-  if (!d.player) d.player = { sila: 5, izd: 30 };
-  if (typeof d.player.sila !== 'number') d.player.sila = 5;
-  if (typeof d.player.izd !== 'number') d.player.izd = 30;
-  if (!d.log) d.log = [];
-  if (!d.history) d.history = [];
-  return d;
+  return pt.sim881;
 }
 
 function _appendLog(d, line) {
@@ -137,98 +131,50 @@ function _recordOutcome(d, outcome) {
   d.history.push({ enemy: t(_encounter(d.encounterId).nameKey), outcome, ts: Date.now() });
 }
 
-function _effectiveSila(d) {
-  const enc = _encounter(d.encounterId);
-  const bonus = (enc.swordBonus && enc.swordBonus[d.swordId]) || 0;
-  return d.player.sila + bonus;
-}
-
-function _fightRoundRobin(d, enc) {
-  const sila = _effectiveSila(d);
-  const hitAmount = enc.hitAmount || 2;
-  const enemies = enc.enemies.map(e => ({ ...e, curIzd: e.izd }));
-  let playerIzd = d.player.izd;
-  let rounds = 0;
-  const lines = [];
-  while (playerIzd > 0 && enemies.some(e => e.curIzd > 0) && rounds < 200) {
-    rounds++;
-    for (const enemy of enemies) {
-      if (enemy.curIzd <= 0) continue;
-      if (playerIzd <= 0) break;
-      const roll = _roll1d6();
-      const total = sila + roll;
-      if (total > enemy.sila) {
-        enemy.curIzd -= hitAmount;
-        lines.push(t('battlesim881.log.round_win', { name: t(enemy.nameKey), roll, total, esila: enemy.sila, loss: hitAmount, izd: Math.max(0, enemy.curIzd) }));
-      } else if (total < enemy.sila) {
-        playerIzd -= hitAmount;
-        lines.push(t('battlesim881.log.round_lose', { name: t(enemy.nameKey), roll, total, esila: enemy.sila, loss: hitAmount, izd: Math.max(0, playerIzd) }));
-      } else {
-        const tieLoss = enc.tieBoth2 ? 2 : 1;
-        enemy.curIzd -= tieLoss;
-        playerIzd -= tieLoss;
-        lines.push(t('battlesim881.log.round_tie', { name: t(enemy.nameKey), roll, total, esila: enemy.sila, loss: tieLoss, pizd: Math.max(0, playerIzd), eizd: Math.max(0, enemy.curIzd) }));
-      }
-    }
-  }
-  const won = playerIzd > 0;
-  return { won, rounds, lines, finalPlayerIzd: Math.max(0, playerIzd) };
-}
-
-function _fightWolfpack(d, enc) {
-  const sila = _effectiveSila(d);
-  let playerIzd = d.player.izd;
-  let killed = 0;
-  const lines = [];
-  let rounds = 0;
-  while (killed < 3 && playerIzd > 0 && rounds < 100) {
-    rounds++;
-    const roll = _roll1d6();
-    const total = sila + roll;
-    if (total >= 10) {
-      killed++;
-      lines.push(t('battlesim881.log.wolf_hit', { roll, total, killed }));
-    } else {
-      playerIzd -= 3;
-      lines.push(t('battlesim881.log.wolf_miss', { roll, total, izd: Math.max(0, playerIzd) }));
-    }
-  }
-  return { won: killed >= 3, rounds, lines, finalPlayerIzd: Math.max(0, playerIzd) };
-}
-
-function _fightKnifeThrow(d, enc) {
-  const sila = _effectiveSila(d);
-  const roll = _roll1d6();
-  const total = sila + roll;
-  const lines = [];
-  if (total >= 10) {
-    lines.push(t('battlesim881.log.knife_win', { roll, total }));
-    return { won: true, rounds: 1, lines, finalPlayerIzd: d.player.izd };
-  }
-  lines.push(t('battlesim881.log.knife_lose', { roll, total }));
-  return { won: false, rounds: 1, lines, finalPlayerIzd: d.player.izd };
-}
-
 function _fight() {
   const d = _data();
   if (!d) return;
   const enc = _encounter(d.encounterId);
-
-  let result;
-  if (enc.special === 'wolfpack') result = _fightWolfpack(d, enc);
-  else if (enc.special === 'knifeThrow') result = _fightKnifeThrow(d, enc);
-  else result = _fightRoundRobin(d, enc);
-
-  _appendLog(d, t('battlesim881.log.header', { name: t(enc.nameKey) }));
-  result.lines.forEach(l => _appendLog(d, l));
-
+  if (!d.pendingFight && d.player.izd <= 0) return;
+  const aids = ['orgfelt_gang', 'night_thieves5', 'alkein_thugs', 'wolfspiders'].includes(enc.id);
+  const removed = [];
+  for (const kind of ['dagger', 'poison']) {
+    const selected = Number(document.getElementById(`sim881-${kind}`).value);
+    if ((kind === 'dagger' && aids || kind === 'poison' && enc.id === 'wolfspiders') && selected >= 0) removed.push(selected);
+  }
+  if (new Set(removed).size !== removed.length) {
+    showAlert(t('battlesim881.ui.distinct')); return;
+  }
+  const options = {
+    swordId: d.swordId, removed,
+    potion: document.getElementById('sim881-potion').checked,
+    magicKnife: enc.special === 'knifeThrow' && document.getElementById('sim881-knife-magic').checked,
+    target: Number(document.getElementById('sim881-target').value),
+  };
+  const result = resolveCellarDragon(enc, d.player, options, d.pendingFight, _roll1d6);
+  if (!d.pendingFight) _appendLog(d, t('battlesim881.log.header', { name: t(enc.nameKey) }));
+  for (const event of result.events) {
+    const args = event.args;
+    _appendLog(d, t(`battlesim881.log.${event.key}`, { ...args, name: args.nameKey ? t(args.nameKey) : '' }));
+  }
   d.player.izd = result.finalPlayerIzd;
-  if (result.won) {
+  if (result.outcome === 'pending') {
+    d.pendingFight = result.state;
+    _appendLog(d, t('battlesim881.log.paused'));
+  } else if (result.outcome === 'win') {
+    delete d.pendingFight;
     _appendLog(d, t('battlesim881.log.win_footer', { trophy: SVG_TROPHY }));
     _recordOutcome(d, 'win');
   } else {
+    delete d.pendingFight;
     _appendLog(d, t('battlesim881.log.loss_footer', { skull: SVG_SKULL }));
     _recordOutcome(d, 'loss');
+  }
+  if (result.outcome !== 'pending') {
+    document.getElementById('sim881-potion').checked = false;
+    document.getElementById('sim881-knife-magic').checked = false;
+    document.getElementById('sim881-dagger').value = '-1';
+    document.getElementById('sim881-poison').value = '-1';
   }
   saveState();
   _renderAll();
@@ -236,15 +182,19 @@ function _fight() {
 
 function _pickEncounter(id) {
   const d = _data();
-  if (!d) return;
+  if (!d || d.pendingFight) return;
   d.encounterId = id;
+  document.getElementById('sim881-potion').checked = false;
+  document.getElementById('sim881-knife-magic').checked = false;
+  document.getElementById('sim881-dagger').value = '-1';
+  document.getElementById('sim881-poison').value = '-1';
   saveState();
   _renderAll();
 }
 
 function _pickSword(id) {
   const d = _data();
-  if (!d) return;
+  if (!d || d.pendingFight) return;
   d.swordId = id;
   saveState();
   _renderAll();
@@ -295,6 +245,28 @@ function _renderInputs() {
   document.getElementById('sim881-sword-pick').innerHTML = _swordOptions(d.swordId);
   document.getElementById('sim881-player-sila').value = d.player.sila;
   document.getElementById('sim881-player-izd').value = d.player.izd;
+  const enc = _encounter(d.encounterId), pending = !!d.pendingFight;
+  const aids = ['orgfelt_gang', 'night_thieves5', 'alkein_thugs', 'wolfspiders'].includes(enc.id);
+  for (const kind of ['dagger', 'poison', 'target']) {
+    const input = document.getElementById(`sim881-${kind}`), selected = input.value;
+    const enemies = d.pendingFight?.enemies || (enc.enemies || []).map((enemy, index) => ({ ...enemy, index, remaining: enemy.izd }));
+    const available = enemies.filter(enemy => kind !== 'target' || enemy.remaining > 0);
+    const none = kind === 'target' ? '' : `<option value="-1">${t('battlesim881.ui.none')}</option>`;
+    input.innerHTML = none + available.map(enemy => `<option value="${enemy.index}">${escapeHtml(t(enemy.nameKey))} (${enemy.index + 1})</option>`).join('');
+    if (Array.from(input.options).some(option => option.value === selected)) input.value = selected;
+    input.disabled = pending && kind !== 'target';
+    document.getElementById(`sim881-${kind}-row`).style.display = (kind === 'target' ? enc.chooseTarget : kind === 'poison' ? enc.id === 'wolfspiders' : aids) ? '' : 'none';
+  }
+  document.getElementById('sim881-potion').disabled = pending;
+  document.getElementById('sim881-knife-magic-row').style.display = enc.special === 'knifeThrow' ? '' : 'none';
+  document.getElementById('sim881-knife-magic').disabled = pending;
+  for (const id of ['sim881-encounter-pick', 'sim881-sword-pick', 'sim881-player-sila', 'sim881-player-izd']) {
+    document.getElementById(id).disabled = pending;
+  }
+  document.getElementById('sim881-overlay').querySelectorAll('.inv-qty-btn').forEach(button => { button.disabled = pending; });
+  const fight = document.getElementById('sim881-fight');
+  fight.disabled = !pending && d.player.izd <= 0;
+  fight.textContent = t(pending ? 'battlesim881.btn.continue' : 'battlesim881.btn.fight');
 }
 
 function _renderAll() {
@@ -370,6 +342,24 @@ export function initSim881() {
               <span class="inv-edit-label bsim-stat-label">${t('battlesim881.ui.pick')}</span>
               <select id="sim881-encounter-pick" class="inv-edit-input"></select>
             </div>
+            <div id="sim881-potion-row" class="inv-edit-row">
+              <label><input id="sim881-potion" type="checkbox"> ${t('battlesim881.ui.potion')}</label>
+            </div>
+            <div id="sim881-knife-magic-row" class="inv-edit-row">
+              <label><input id="sim881-knife-magic" type="checkbox"> ${t('battlesim881.ui.magic_knife')}</label>
+            </div>
+            <div id="sim881-dagger-row" class="inv-edit-row">
+              <label class="inv-edit-label bsim-stat-label" for="sim881-dagger">${t('battlesim881.ui.dagger')}</label>
+              <select id="sim881-dagger" class="inv-edit-input"></select>
+            </div>
+            <div id="sim881-poison-row" class="inv-edit-row">
+              <label class="inv-edit-label bsim-stat-label" for="sim881-poison">${t('battlesim881.ui.poison')}</label>
+              <select id="sim881-poison" class="inv-edit-input"></select>
+            </div>
+            <div id="sim881-target-row" class="inv-edit-row">
+              <label class="inv-edit-label bsim-stat-label" for="sim881-target">${t('battlesim881.ui.target')}</label>
+              <select id="sim881-target" class="inv-edit-input"></select>
+            </div>
           </div>
           <div class="inv-modal-ftr bsim-action-grid">
             <button id="sim881-fight" class="inv-add-btn bsim-action-primary">${t('battlesim881.btn.fight')}</button>
@@ -412,28 +402,30 @@ export function initSim881() {
   overlay.querySelectorAll('.inv-qty-btn').forEach(btnEl => {
     btnEl.addEventListener('click', () => {
       const d = _data();
-      if (!d) return;
+      if (!d || d.pendingFight) return;
       const id    = btnEl.dataset.id;
       const delta = Number(btnEl.dataset.delta);
       const input = document.getElementById(id);
-      const val   = Math.max(0, (parseInt(input.value, 10) || 0) + delta);
+      const val   = Math.min(id === 'sim881-player-izd' ? 30 : Infinity, Math.max(0, (parseInt(input.value, 10) || 0) + delta));
       input.value = val;
       if (id === 'sim881-player-sila') d.player.sila = val;
       else if (id === 'sim881-player-izd') d.player.izd = val;
       saveState();
+      _renderInputs();
     });
   });
 
   overlay.querySelectorAll('.inv-qty-input').forEach(input => {
     input.addEventListener('change', () => {
       const d = _data();
-      if (!d) return;
-      const val = Math.max(0, parseInt(input.value, 10) || 0);
+      if (!d || d.pendingFight) return;
+      const val = Math.min(input.id === 'sim881-player-izd' ? 30 : Infinity, Math.max(0, parseInt(input.value, 10) || 0));
       input.value = val;
       const id = input.id;
       if (id === 'sim881-player-sila') d.player.sila = val;
       else if (id === 'sim881-player-izd') d.player.izd = val;
       saveState();
+      _renderInputs();
     });
   });
 }

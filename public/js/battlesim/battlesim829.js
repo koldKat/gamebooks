@@ -6,6 +6,7 @@ import { showAlert } from '../ui-helpers/confirm.js';
 import { getPlayBtnRow } from '../play/charsheet.js';
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../core/util.js';
 import { t } from '../i18n.js';
+import { quailStart, quailOver, quailEnemies, quailRound, quailHeal, quailFlee, quailRanged, quailSpell, quailCanCast, quailSpendAction, QUAIL_SPELLS } from './engines/quail.js';
 
 const SVG_SKULL  = `<svg class="sim-icon sim-icon-dead"  viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8c0 2.8 1.4 5.3 3.6 6.8V20a1 1 0 0 0 1 1h6.8a1 1 0 0 0 1-1v-2.2C18.6 16.3 20 13.8 20 11a8 8 0 0 0-8-8zm-2.5 13v-1.5a.5.5 0 0 0-.5-.5H8l-.5-1 1-1-1-1 1-1H9a2.5 2.5 0 0 1 5 0h.5l1 1-1 1 1 1-.5 1h-1a.5.5 0 0 0-.5.5V16h-4z"/></svg>`;
 const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v7a6 6 0 0 1-12 0V2zm-2 1H2v4a4 4 0 0 0 4 4v-1a3 3 0 0 1-3-3V3zm16 0h2v4a4 4 0 0 1-4 4v-1a3 3 0 0 0 3-3V3zm-7 13v2H9v2h6v-2h-2v-2a6 6 0 0 0 5-5.92V2H6v8.08A6 6 0 0 0 13 16z"/></svg>`;
@@ -35,6 +36,7 @@ function _data() {
       log: [],
       history: [],
     };
+    quailStart(pt.sim829);
   }
   if (!pt.sim829.history) pt.sim829.history = [];
   if (pt.sim829.enemy.pb === undefined) pt.sim829.enemy.pb = 0;
@@ -91,7 +93,7 @@ function _equipmentBaseStats(pt) {
 // Recalculate from equipment when skills change or on explicit refresh, replacing manual overrides.
 function _syncStatFromEquipment(d, pt, stat) {
   const { baseA, baseD } = _equipmentBaseStats(pt);
-  if (stat === 'a') d.player.a = baseA + (d.player.skills.weapon || 0);
+  if (stat === 'a') d.player.a = d.rulesVersion === 1 && baseA === 0 ? 0 : baseA + (d.player.skills.weapon || 0);
   if (stat === 'd') d.player.d = baseD + (d.player.skills.parry  || 0);
   if (stat === 'hpMax') {
     d.player.hpMax = BASE_HP_MAX + (d.player.skills.endurance ? ENDURANCE_HP_BONUS : 0);
@@ -136,7 +138,7 @@ function _rangedAccuracy(d, weapon) {
     case 'bow':      return (weapon?.t || 0) + (d.player.skills.archery >= 1 ? 1 : 0);
     case 'musket':   return 4;
     case 'spear':
-    case 'shuriken': return (weapon?.t || 0) + (d.player.skills.throwing ? THROWING_ACCURACY_BONUS : 0);
+    case 'shuriken': return (d.rulesVersion === 1 ? (r.type === 'spear' ? 4 : 3) : (weapon?.t || 0)) + (d.player.skills.throwing ? THROWING_ACCURACY_BONUS : 0);
     case 'magic':    return r.magicT || 0;
     default:         return 0;
   }
@@ -160,7 +162,41 @@ function _rangedDamageDisplay(d, weapon) {
 // Map a stepper's data-group to its target object - 'ranged' lives nested
 // under player.ranged, everything else is a top-level sim829 group.
 function _getGroupObj(d, group) {
-  return group === 'ranged' ? d.player.ranged : d[group];
+  return group === 'sim' ? d : group === 'ranged' ? d.player.ranged : d[group];
+}
+
+function _resolveFuture(events) {
+  const d = _data();
+  for (const event of events) {
+    const values = { ...event, actor: escapeHtml(event.actor || ''), spell: t('battlesim829.spell.' + event.spell) };
+    _appendLog(d, t('battlesim829.event.' + event.kind, values));
+    if (event.kind === 'win' || event.kind === 'loss') _recordOutcome(d, event.kind);
+  }
+  saveState();
+  _renderInputs();
+  _renderLog();
+  _renderHistory();
+}
+
+function _renderRules(d) {
+  const panel = document.getElementById('bsim-rules');
+  if (!panel) return;
+  const enabled = d.rulesVersion === 1;
+  panel.querySelectorAll('input,select,button').forEach(el => { el.disabled = !enabled; });
+  document.getElementById('bsim-rules-note').textContent = t(enabled ? 'battlesim829.rules.note' : 'battlesim829.rules.legacy');
+  if (!enabled) return;
+  for (const input of panel.querySelectorAll('[data-group]')) {
+    const value = _getGroupObj(d, input.dataset.group)[input.dataset.key];
+    if (input.type === 'checkbox') input.checked = Boolean(value);
+    else if (input.tagName !== 'BUTTON') input.value = value ?? 0;
+  }
+  document.getElementById('bsim-enemy-rule').value = d.enemy.rule || 'standard';
+  document.getElementById('bsim-spell').value = d.magic.spell;
+  document.getElementById('bsim-spell-learned').checked = Boolean(d.magic.learned[d.magic.spell]);
+  document.getElementById('bsim-spell-formulas').value = d.magic.formulas[d.magic.spell] || 0;
+  document.getElementById('bsim-ammo').value = d.ammo[d.player.ranged.type] || 0;
+  document.getElementById('bsim-spell-cast').disabled = !quailCanCast(d);
+  document.getElementById('bsim-group').innerHTML = (d.extraEnemies || []).map((e, i) => `<div class="inv-edit-row"><button class="bsim-sync-btn" type="button" data-target="${i}">${escapeHtml(e.name)} · ${e.hp}/${e.hpMax}</button><button class="inv-close-btn" type="button" data-remove="${i}" aria-label="${t('btn.delete')}">×</button></div>`).join('');
 }
 
 // Keep lifetime battle outcomes separate from the current fight's rolling log; never truncate totals.
@@ -211,7 +247,11 @@ function _updateStatus() {
   if (d.player.hp <= 0)      el.innerHTML = `${SVG_SKULL} ${t('battlesim829.status.fallen')}`;
   else if (d.enemy.hp <= 0)  el.innerHTML = `${SVG_TROPHY} ${t('battlesim829.status.victory')}`;
   else                       el.innerHTML = '';
-  const over = d.player.hp <= 0 || d.enemy.hp <= 0;
+  const over = d.rulesVersion === 1 ? quailOver(d) : d.player.hp <= 0 || d.enemy.hp <= 0;
+  if (d.rulesVersion === 1) {
+    el.textContent = d.finished ? t('battlesim829.event.' + d.finished) : quailEnemies(d).every(e => e.hp <= 0) ? t('battlesim829.status.victory') : '';
+  }
+  document.getElementById('bsim-flee').disabled = over || d.rulesVersion === 1 && !d.options.escapeMin;
   document.getElementById('bsim-round').disabled = over;
   document.getElementById('bsim-heal').disabled  = over;
 
@@ -219,7 +259,7 @@ function _updateStatus() {
   const weapons  = _rangedWeaponOptions(pt);
   const weapon   = weapons.find(w => w.key === r.weaponKey);
   const noWeapon = r.type !== 'magic' && !weapon;
-  document.getElementById('bsim-ranged-attack').disabled = over || r.attempts <= 0 || noWeapon;
+  document.getElementById('bsim-ranged-attack').disabled = over || r.attempts <= 0 || noWeapon || d.rulesVersion === 1 && (r.type === 'magic' || !(d.ammo[r.type] > 0));
 }
 
 function _renderRangedPanel(d, pt) {
@@ -279,6 +319,7 @@ function _renderInputs() {
   document.getElementById('bsim-ranged-magic-dmg').value = d.player.ranged.magicDmg;
 
   _renderRangedPanel(d, pt);
+  _renderRules(d);
   _updateStatus();
 }
 
@@ -300,6 +341,7 @@ function _enemyAttack(d) {
 
 function _runRound() {
   const d = _data();
+  if (d?.rulesVersion === 1) return _resolveFuture(quailRound(d, _roll));
   if (!d || d.player.hp <= 0 || d.enemy.hp <= 0) return;
 
   const pRoll  = _roll();
@@ -327,6 +369,7 @@ function _runRound() {
 
 function _heal() {
   const d = _data();
+  if (d?.rulesVersion === 1) return _resolveFuture(quailHeal(d, Number(document.getElementById('bsim-heal-amount').value) || 0, _roll));
   if (!d || d.player.hp <= 0 || d.enemy.hp <= 0) return;
   const amount = Number(document.getElementById('bsim-heal-amount').value) || 0;
   if (amount <= 0) return;
@@ -348,6 +391,7 @@ function _heal() {
 function _rangedAttack() {
   const d  = _data();
   const pt = currentPlaythrough();
+  if (d?.rulesVersion === 1 && pt) return _resolveFuture(quailRanged(d, _rangedWeaponOptions(pt).find(w => w.key === d.player.ranged.weaponKey), _roll));
   if (!d || !pt || d.player.hp <= 0 || d.enemy.hp <= 0) return;
   const r = d.player.ranged;
   if (r.attempts <= 0) return;
@@ -382,6 +426,7 @@ function _rangedAttack() {
 
 function _flee() {
   const d = _data();
+  if (d?.rulesVersion === 1) return _resolveFuture(quailFlee(d, _roll));
   if (!d) return;
   const roll = _roll();
   _appendLog(d, t('battlesim829.log.flee', { roll }));
@@ -392,10 +437,9 @@ function _flee() {
 function _resetBattle() {
   const d = _data();
   if (!d) return;
-  d.enemy.hp  = d.enemy.hpMax;
-  d.player.hp = d.player.hpMax;
+  quailStart(d);
   if (d.log.length) _appendLog(d, t('battlesim829.log.reset_sep'));
-  _appendLog(d, t('battlesim829.log.reset', { enemy: _enemyNameSafe(d) }));
+  _appendLog(d, t('battlesim829.rules.reset', { enemy: _enemyNameSafe(d) }));
   saveState();
   _renderInputs();
   _renderLog();
@@ -523,11 +567,20 @@ function _setupEnemyAutocomplete() {
     const d = _data();
     if (!d || !enemy) return;
     input.value = enemy.name;
-    d.enemy.name = enemy.name;
-    if (enemy.attack  != null) d.enemy.a = enemy.attack;
-    if (enemy.defense != null) d.enemy.d = enemy.defense;
-    if (enemy.hp != null) { d.enemy.hp = enemy.hp; d.enemy.hpMax = enemy.hp; }
-    if (enemy.pb != null) d.enemy.pb = enemy.pb;
+    d.enemy = { name: enemy.name, a: enemy.attack ?? d.enemy.a, d: enemy.defense ?? d.enemy.d,
+      hp: enemy.hp ?? d.enemy.hp, hpMax: enemy.hp ?? d.enemy.hpMax, pb: enemy.pb ?? d.enemy.pb };
+    if (d.rulesVersion !== 1 || d.finished) quailStart(d);
+    d.enemy.rule = /^Огнен бръмбар/.test(enemy.name) ? 'plus3six'
+      : /^(Огромен плъх|Скелет магьосник)$/.test(enemy.name) ? 'sum2'
+      : /^Върховен жрец на огъня$/.test(enemy.name) ? 'max2'
+      : /^Върховен жрец на водата$/.test(enemy.name) ? 'water'
+      : /^Скална усойница$/.test(enemy.name) ? 'extra6'
+      : /^Демон-пъдпъдък$/.test(enemy.name) ? 'explode56'
+      : /^Огнен гущер$/.test(enemy.name) ? 'explode12'
+      : /^Дървеница$/.test(enemy.name) ? 'bedbug' : 'standard';
+    if (/^Инсумо$/.test(enemy.name)) d.enemy.rule = 'extra12';
+    d.enemy.aura = /^(Изгубена душа|Планински призрак)/.test(enemy.name) ? 1 : 0;
+    d.options.lowRoll = /^(Боен тритон|Гигантски плъх)$/.test(enemy.name);
     closeDropdown();
     saveState();
     _renderInputs();
@@ -641,6 +694,30 @@ export function initBattleSim() {
               <button id="bsim-ranged-attack" class="inv-edit-done bsim-ranged-attack-btn">${t('battlesim829.btn.ranged_attack')}</button>
             </div>
           </div>
+          <details id="bsim-rules" class="bsim-side">
+            <summary class="bsim-side-title">${t('battlesim829.rules.title')}</summary>
+            <p id="bsim-rules-note" class="bsim-ranged-info"></p>
+            ${_statField(t('battlesim829.rules.escape_min'), 'bsim-escape-min', 'options', 'escapeMin')}
+            ${_statField(t('battlesim829.rules.companion_a'), 'bsim-companion-a', 'options', 'companionA')}
+            <label class="inv-edit-row"><input type="checkbox" data-group="options" data-key="companion">${t('battlesim829.rules.companion')}</label>
+            <label class="inv-edit-row"><input type="checkbox" data-group="options" data-key="lowRoll">${t('battlesim829.rules.low_roll')}</label>
+            <label class="inv-edit-row"><input type="checkbox" data-group="options" data-key="nonlethal">${t('battlesim829.rules.nonlethal')}</label>
+            ${_selectField(t('battlesim829.rules.enemy_dice'), 'bsim-enemy-rule', ['standard','sum2','max2','plus3six','explode12','explode56','extra6','extra12','bedbug','water'].map(key => [key, t('battlesim829.rule.' + key)]))}
+            ${_statField(t('battlesim829.rules.aura'), 'bsim-enemy-aura', 'enemy', 'aura')}
+            ${_statField(t('battlesim829.rules.free_attacks'), 'bsim-free-attacks', 'sim', 'freeAttacks')}
+            <button id="bsim-group-add" class="bsim-sync-btn" type="button">${t('battlesim829.rules.group_add')}</button>
+            <div id="bsim-group"></div>
+            <label class="inv-edit-row"><span class="inv-edit-label">${t('battlesim829.rules.ammo')}</span><input id="bsim-ammo" class="inv-edit-input inv-qty-input" type="text" inputmode="numeric"></label>
+            <div class="bsim-side-title">${t('battlesim829.rules.magic')}</div>
+            ${_statField(t('battlesim829.rules.magic_value'), 'bsim-magic-value', 'magic', 'value')}
+            ${_selectField(t('battlesim829.rules.spell'), 'bsim-spell', QUAIL_SPELLS.map(key => [key, t('battlesim829.spell.' + key)]))}
+            <label class="inv-edit-row"><input id="bsim-spell-learned" type="checkbox">${t('battlesim829.rules.learned')}</label>
+            <label class="inv-edit-row"><span class="inv-edit-label">${t('battlesim829.rules.formulas')}</span><input id="bsim-spell-formulas" class="inv-edit-input inv-qty-input" type="text" inputmode="numeric"></label>
+            ${_statField(t('battlesim829.rules.summon_a'), 'bsim-summon-a', 'magic', 'summonA')}
+            <label class="inv-edit-row"><input type="checkbox" data-group="magic" data-key="empower">${t('battlesim829.rules.empower')}</label>
+            <label class="inv-edit-row"><input type="checkbox" data-group="magic" data-key="weakenDefense">${t('battlesim829.rules.weaken_defense')}</label>
+            <button id="bsim-spell-cast" class="inv-edit-done" type="button">${t('battlesim829.rules.cast')}</button>
+          </details>
           <div id="bsim-status" class="bsim-status"></div>
           <div class="inv-edit-row bsim-heal-row">
             <span class="inv-edit-label bsim-stat-label">${t('battlesim829.ui.heal')}</span>
@@ -695,6 +772,47 @@ export function initBattleSim() {
   document.getElementById('bsim-flee').addEventListener('click', _flee);
   document.getElementById('bsim-reset').addEventListener('click', _resetBattle);
   document.getElementById('bsim-ranged-attack').addEventListener('click', _rangedAttack);
+  const updateFuture = fn => {
+    const d = _data();
+    if (d?.rulesVersion !== 1) return;
+    fn(d);
+    saveState();
+    _renderInputs();
+  };
+  document.getElementById('bsim-rules').querySelectorAll('input[type="checkbox"][data-group]').forEach(input => {
+    input.addEventListener('change', () => updateFuture(d => { _getGroupObj(d, input.dataset.group)[input.dataset.key] = input.checked; }));
+  });
+  document.getElementById('bsim-enemy-rule').addEventListener('change', e => updateFuture(d => { d.enemy.rule = e.target.value; }));
+  document.getElementById('bsim-spell').addEventListener('change', e => updateFuture(d => { d.magic.spell = e.target.value; }));
+  document.getElementById('bsim-spell-learned').addEventListener('change', e => updateFuture(d => {
+    const others = Object.entries(d.magic.learned).filter(([key, learned]) => key !== d.magic.spell && learned).length;
+    d.magic.learned[d.magic.spell] = e.target.checked && others < d.magic.value;
+  }));
+  for (const id of ['bsim-ammo', 'bsim-spell-formulas']) {
+    document.getElementById(id).addEventListener('input', e => updateFuture(d => {
+      const value = Math.max(0, Math.floor(Number(e.target.value.replace(/[^0-9]/g, '')) || 0));
+      if (id === 'bsim-ammo') d.ammo[d.player.ranged.type] = value;
+      else d.magic.formulas[d.magic.spell] = value;
+    }));
+  }
+  document.getElementById('bsim-spell-cast').addEventListener('click', () => {
+    const d = _data();
+    if (d?.rulesVersion === 1) _resolveFuture(quailSpell(d, _roll));
+  });
+  document.getElementById('bsim-group-add').addEventListener('click', () => updateFuture(d => {
+    if (!d.enemy.name || d.enemy.hp <= 0 || d.extraEnemies.length >= 8) return;
+    d.extraEnemies.push({ ...d.enemy });
+    d.enemy = { name: '', a: 0, d: 0, hp: 0, hpMax: 0, pb: 0 };
+  }));
+  document.getElementById('bsim-group').addEventListener('click', e => updateFuture(d => {
+    const button = e.target.closest('button');
+    if (!button) return;
+    if (button.dataset.remove != null) d.extraEnemies.splice(Number(button.dataset.remove), 1);
+    else if (button.dataset.target != null) {
+      const index = Number(button.dataset.target);
+      [d.enemy, d.extraEnemies[index]] = [d.extraEnemies[index], d.enemy];
+    }
+  }));
 
   // Stat steppers - read group/key off the input itself. player.hp is
   // clamped to player.hpMax; raising/lowering player.hpMax re-clamps hp.
@@ -706,6 +824,8 @@ export function initBattleSim() {
       const d = _data();
       if (!d) return;
       let val = Math.max(0, Number(raw) || 0);
+      if (input.dataset.group === 'magic' && input.dataset.key === 'value') val = Math.min(5, val);
+      if (input.dataset.group === 'options' && input.dataset.key === 'escapeMin') val = Math.min(6, val);
       if (input.dataset.group === 'player' && input.dataset.key === 'hp') {
         val = Math.min(val, d.player.hpMax);
       }
@@ -723,6 +843,8 @@ export function initBattleSim() {
       const d = _data();
       if (!d || !input) return;
       let next = Math.max(0, (Number(input.value) || 0) + Number(btnEl.dataset.delta));
+      if (btnEl.dataset.group === 'magic' && btnEl.dataset.key === 'value') next = Math.min(5, next);
+      if (btnEl.dataset.group === 'options' && btnEl.dataset.key === 'escapeMin') next = Math.min(6, next);
       if (btnEl.dataset.group === 'player' && btnEl.dataset.key === 'hp') {
         next = Math.min(next, d.player.hpMax);
       }
@@ -763,9 +885,11 @@ export function initBattleSim() {
     const d  = _data();
     const pt = currentPlaythrough();
     if (!d || !pt) return;
+    const attack = d.player.a, defense = d.player.d;
     _syncStatFromEquipment(d, pt, 'a');
     _syncStatFromEquipment(d, pt, 'd');
     _syncStatFromEquipment(d, pt, 'hpMax');
+    if (d.rulesVersion === 1 && d.started && !quailOver(d) && (attack !== d.player.a || defense !== d.player.d)) return _resolveFuture(quailSpendAction(d, _roll));
     saveState();
     _renderInputs();
   });

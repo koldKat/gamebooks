@@ -7,6 +7,7 @@ import { showAlert } from '../ui-helpers/confirm.js';
 import { getPlayBtnRow } from '../play/charsheet.js';
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../core/util.js';
 import { t } from '../i18n.js';
+import { startRinglasFight, resumeRinglasFight, ringlasRound } from './engines/ringlas-saga.js';
 
 const SVG_SKULL  = `<svg class="sim-icon sim-icon-dead"  viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8c0 2.8 1.4 5.3 3.6 6.8V20a1 1 0 0 0 1 1h6.8a1 1 0 0 0 1-1v-2.2C18.6 16.3 20 13.8 20 11a8 8 0 0 0-8-8zm-2.5 13v-1.5a.5.5 0 0 0-.5-.5H8l-.5-1 1-1-1-1 1-1H9a2.5 2.5 0 0 1 5 0h.5l1 1-1 1 1 1-.5 1h-1a.5.5 0 0 0-.5.5V16h-4z"/></svg>`;
 const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v7a6 6 0 0 1-12 0V2zm-2 1H2v4a4 4 0 0 0 4 4v-1a3 3 0 0 1-3-3V3zm16 0h2v4a4 4 0 0 1-4 4v-1a3 3 0 0 0 3-3V3zm-7 13v2H9v2h6v-2h-2v-2a6 6 0 0 0 5-5.92V2H6v8.08A6 6 0 0 0 13 16z"/></svg>`;
@@ -85,6 +86,24 @@ function _checkEnd(d) {
 function _round() {
   const d = _data();
   if (!d || d.over) return;
+  if (d.rulesVersion === 1) {
+    if (!d.started || d.pausedSection) return;
+    const events = ringlasRound(d, _d2);
+    const lines = events.map(event => {
+      const key = event.actor === 'horse' ? 'horse_' : event.actor === 'ally' ? 'ally_' : event.actor === 'allyEnemy' ? 'ally_enemy_' : event.actor + '_';
+      return t('battlesim871.log.' + key + (event.hit ? 'hit' : 'miss'), event);
+    });
+    if (lines.length) _appendLog(d, lines.join(' '));
+    if (d.over) {
+      _appendLog(d, d.winner === 'player' ? t('battlesim871.log.defeated', { trophy: SVG_TROPHY, name: _enemyName(d) }) : t('battlesim871.log.fallen', { skull: SVG_SKULL }));
+      _recordOutcome(d, d.winner === 'player' ? 'win' : 'loss');
+    } else if (d.pausedSection) {
+      _appendLog(d, t('battlesim871.status.paused', { section: d.pausedSection }));
+    }
+    saveState();
+    _renderAll();
+    return;
+  }
   d.started = true;
   let msg = '';
 
@@ -124,16 +143,14 @@ function _startBattle() {
   const d = _data();
   if (!d) return;
   const r = _rival(d.enemyId);
-  d.enemyTarget = r.target;
-  d.enemyStamina = r.stamina;
-  d.multi = !!r.multi;
-  if (r.playerBonus) d.playerStamina += r.playerBonus;
-  d.over = false;
-  d.winner = null;
-  d.started = true;
+  if (!startRinglasFight(d, d.enemySetup || r)) {
+    saveState();
+    _renderAll();
+    return;
+  }
   if (d.log.length) _appendLog(d, t('battlesim871.log.reset_sep'));
   _appendLog(d, t('battlesim871.log.start', { name: _enemyName(d) }));
-  if (r.playerBonus) _appendLog(d, t('battlesim871.log.player_bonus', { n: r.playerBonus }));
+  if (d.fightMulti || r.playerBonus && d.simautBonus !== false) _appendLog(d, t('battlesim871.log.player_bonus', { n: 5 }));
   saveState();
   _renderAll();
 }
@@ -146,6 +163,11 @@ function _pickEnemy(id) {
   d.enemyTarget = r.target;
   d.enemyStamina = r.stamina;
   d.multi = !!r.multi;
+  d.enemySetup = { target: r.target, stamina: r.stamina, multi: !!r.multi };
+  d.started = false;
+  d.over = false;
+  d.winner = null;
+  d.pausedSection = null;
   saveState();
   _renderAll();
 }
@@ -160,9 +182,11 @@ function _renderStatus() {
     if (d.winner === 'player') el.innerHTML = t('battlesim871.status.victory', { trophy: SVG_TROPHY });
     else el.innerHTML = t('battlesim871.status.fallen', { skull: SVG_SKULL });
   } else {
-    el.innerHTML = '';
+    el.textContent = d.rulesVersion === 1 && d.pausedSection ? t('battlesim871.status.paused', { section: d.pausedSection }) : '';
   }
-  document.getElementById('sim871-round').disabled = d.over || !d.started;
+  document.getElementById('sim871-round').disabled = d.over || !d.started || d.rulesVersion === 1 && !!d.pausedSection;
+  document.getElementById('sim871-start').disabled = _playerDead(d);
+  document.getElementById('sim871-resume').hidden = !(d.rulesVersion === 1 && d.pausedSection === 130 && !_playerDead(d));
 }
 
 function _enemyOptionsHtml(selectedId) {
@@ -180,6 +204,13 @@ function _renderInputs() {
   document.getElementById('sim871-enemy-stamina').value = d.enemyStamina;
   document.getElementById('sim871-enemy-penalty').value = d.enemyPenalty;
   document.getElementById('sim871-multi-cb').checked = !!d.multi;
+  document.getElementById('sim871-companion-settings').hidden = d.enemyId !== 'armoredknight';
+  document.getElementById('sim871-ally-cb').checked = !!d.allyEnabled;
+  document.getElementById('sim871-ally-stamina').value = d.allyStamina ?? 6;
+  document.getElementById('sim871-ally-target').value = d.allyTarget ?? 4;
+  document.getElementById('sim871-drunk-cb').checked = !!d.drunk;
+  document.getElementById('sim871-simaut-settings').hidden = d.enemyId !== 'simaut';
+  document.getElementById('sim871-simaut-cb').checked = d.simautBonus !== false;
   _renderStatus();
 }
 
@@ -275,12 +306,23 @@ export function initSim871() {
               <input id="sim871-multi-cb" type="checkbox">
             </div>
           </div>
+          <div id="sim871-companion-settings" class="bsim-side" hidden>
+            <div class="bsim-side-title">${t('battlesim871.ui.next_fight')}</div>
+            <label class="inv-edit-row"><span class="inv-edit-label">${t('battlesim871.ui.ally')}</span><input id="sim871-ally-cb" type="checkbox"></label>
+            ${_numField(t('battlesim871.ui.ally_stamina'), 'sim871-ally-stamina')}
+            ${_numField(t('battlesim871.ui.ally_target'), 'sim871-ally-target')}
+            <label class="inv-edit-row"><span class="inv-edit-label">${t('battlesim871.ui.drunk')}</span><input id="sim871-drunk-cb" type="checkbox"></label>
+          </div>
+          <div id="sim871-simaut-settings" class="bsim-side" hidden>
+            <label class="inv-edit-row"><span class="inv-edit-label">${t('battlesim871.ui.simaut_bonus')}</span><input id="sim871-simaut-cb" type="checkbox"></label>
+          </div>
           <div id="sim871-status" class="bsim-status"></div>
           <div class="inv-modal-ftr bsim-action-grid">
             <button id="sim871-round" class="inv-add-btn bsim-action-primary">${t('battlesim871.btn.round')}</button>
           </div>
           <div class="inv-modal-ftr">
             <button id="sim871-start" class="inv-add-btn">${t('battlesim871.btn.start')}</button>
+            <button id="sim871-resume" class="inv-add-btn" hidden>${t('battlesim871.btn.resume')}</button>
           </div>
         </div>
         <div class="bsim-col bsim-col-right">
@@ -316,15 +358,25 @@ export function initSim871() {
   document.getElementById('sim871-enemy-pick').addEventListener('change', e => _pickEnemy(e.target.value));
   document.getElementById('sim871-start').addEventListener('click', _startBattle);
   document.getElementById('sim871-round').addEventListener('click', _round);
-  document.getElementById('sim871-multi-cb').addEventListener('change', e => { const d = _data(); if (d) { d.multi = !!e.target.checked; saveState(); } });
+  document.getElementById('sim871-resume').addEventListener('click', () => {
+    const d = _data();
+    if (d && resumeRinglasFight(d)) { saveState(); _renderAll(); }
+  });
+  const rememberSetup = d => { d.enemySetup = { target: d.enemyTarget, stamina: d.enemyStamina, multi: d.multi }; };
+  document.getElementById('sim871-multi-cb').addEventListener('change', e => { const d = _data(); if (d) { d.multi = !!e.target.checked; rememberSetup(d); saveState(); } });
+  for (const [id, key] of [['sim871-ally-cb', 'allyEnabled'], ['sim871-drunk-cb', 'drunk'], ['sim871-simaut-cb', 'simautBonus']]) {
+    document.getElementById(id).addEventListener('change', e => { const d = _data(); if (d) { d[key] = e.target.checked; saveState(); } });
+  }
 
   const fieldMap = {
     'sim871-player-stamina': (d, v) => { d.playerStamina = v; },
     'sim871-player-target': (d, v) => { d.playerTarget = v; },
     'sim871-player-bonus': (d, v) => { d.playerBonus = v; },
-    'sim871-enemy-target': (d, v) => { d.enemyTarget = v; },
-    'sim871-enemy-stamina': (d, v) => { d.enemyStamina = v; },
+    'sim871-enemy-target': (d, v) => { d.enemyTarget = v; rememberSetup(d); },
+    'sim871-enemy-stamina': (d, v) => { d.enemyStamina = v; rememberSetup(d); },
     'sim871-enemy-penalty': (d, v) => { d.enemyPenalty = v; },
+    'sim871-ally-stamina': (d, v) => { d.allyStamina = v; },
+    'sim871-ally-target': (d, v) => { d.allyTarget = v; },
   };
 
   overlay.querySelectorAll('.inv-qty-btn').forEach(btnEl => {

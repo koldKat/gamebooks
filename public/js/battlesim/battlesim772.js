@@ -8,6 +8,7 @@ import { showAlert } from '../ui-helpers/confirm.js';
 import { getPlayBtnRow } from '../play/charsheet.js';
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../core/util.js';
 import { t } from '../i18n.js';
+import { kungFuEnemy, kungFuAction, advanceKungFuAction, kungFuDefeated } from './engines/kung-fu.js';
 
 const SVG_SKULL  = `<svg class="sim-icon sim-icon-dead"  viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8c0 2.8 1.4 5.3 3.6 6.8V20a1 1 0 0 0 1 1h6.8a1 1 0 0 0 1-1v-2.2C18.6 16.3 20 13.8 20 11a8 8 0 0 0-8-8zm-2.5 13v-1.5a.5.5 0 0 0-.5-.5H8l-.5-1 1-1-1-1 1-1H9a2.5 2.5 0 0 1 5 0h.5l1 1-1 1 1 1-.5 1h-1a.5.5 0 0 0-.5.5V16h-4z"/></svg>`;
 const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v7a6 6 0 0 1-12 0V2zm-2 1H2v4a4 4 0 0 0 4 4v-1a3 3 0 0 1-3-3V3zm16 0h2v4a4 4 0 0 1-4 4v-1a3 3 0 0 0 3-3V3zm-7 13v2H9v2h6v-2h-2v-2a6 6 0 0 0 5-5.92V2H6v8.08A6 6 0 0 0 13 16z"/></svg>`;
@@ -27,6 +28,18 @@ const PLAYER_STAT_KEYS = [
 
 // Select the enemy action from round/history; resolve NPC defense as aggressive, without player-only drain.
 const ROSTER = [
+  {
+    id: 'park_attackers', name: 'Нападатели в парка',
+    defLeg: 13, atkLeg: null, defHand: 16, atkHand: 22, defComb: 22, atkComb: null,
+    dodge: null,
+    pattern() { return { type: 'attack', move: 'hand' }; },
+  },
+  {
+    id: 'kao_lie', name: 'Као Лье',
+    defLeg: 35, atkLeg: 42, defHand: 36, atkHand: 44, defComb: 50, atkComb: 45,
+    dodge: [1, 2, 4],
+    pattern() { return { type: 'defend', move: 'aggressive' }; },
+  },
   {
     id: 'li_xiao', name: 'Ли Сяо',
     defLeg: 19, atkLeg: 22, defHand: 17, atkHand: 22, defComb: 24, atkComb: 24,
@@ -105,9 +118,21 @@ const ROSTER = [
       return { type: 'defend', move: 'passive' };
     },
   },
+  {
+    id: 'arena_rescue_guards', name: 'Охрана при спасяването на Бо Дзи',
+    defLeg: 31, atkLeg: null, defHand: 30, atkHand: null, defComb: 38, atkComb: 40,
+    dodge: null,
+    pattern() { return { type: 'defend', move: 'aggressive' }; },
+  },
+  {
+    id: 'arena_melee_guards', name: 'Охрана в мелето на арената',
+    defLeg: 29, atkLeg: null, defHand: 28, atkHand: 38, defComb: 38, atkComb: 36,
+    dodge: null,
+    pattern() { return { type: 'attack', move: 'hand' }; },
+  },
 ];
 
-function _enemy(id) { return ROSTER.find(e => e.id === id) || ROSTER[0]; }
+function _enemy(id) { return ROSTER.find(e => e.id === id) || ROSTER.find(e => e.id === 'li_xiao'); }
 
 function _defaultPlayerStats() {
   const s = {};
@@ -121,6 +146,7 @@ function _data() {
   if (!pt.sim772) {
     pt.sim772 = {
       enemyId: 'li_xiao',
+      rulesVersion: 2,
       player: _defaultPlayerStats(),
       started: false,
       roundIdx: 0,          // rounds fought so far (for enemy pattern index)
@@ -162,7 +188,7 @@ function _hasWon(results) {
 }
 
 function _playerWon(d) { return _hasWon(d.playerResults); }
-function _playerLost(d) { return _hasWon(d.enemyResults); }
+function _playerLost(d) { return _hasWon(d.enemyResults) || (d.rulesVersion === 2 && kungFuDefeated(d)); }
 function _battleOver(d) { return _playerWon(d) || _playerLost(d); }
 
 function _recordOutcome(d, outcome) {
@@ -190,15 +216,15 @@ function _playerDefenseTotal(d, style) {
   return { roll, total };
 }
 
-function _enemyAttackTotal(e, move) {
-  const roll = _roll1d6();
+function _enemyAttackTotal(e, move, fixed = false) {
+  const roll = fixed ? 0 : _roll1d6();
   const stat = move === 'leg' ? e.atkLeg : move === 'hand' ? e.atkHand : e.atkComb;
   return { roll, total: roll + (stat || 0) };
 }
 
 // NPC defense is aggressive-style, without the player's passive stat-drain effect.
-function _enemyDefenseTotal(e, move) {
-  const roll = _roll1d6();
+function _enemyDefenseTotal(e, move, fixed = false) {
+  const roll = fixed ? 0 : _roll1d6();
   const stat = move === 'leg' ? e.defLeg : move === 'hand' ? e.defHand : e.defComb;
   return { roll, total: roll + (stat || 0) };
 }
@@ -229,9 +255,10 @@ function _runRound(playerAction) {
   if (playerAction.move === 'passive') d.playerPassiveUsed = true;
   const staticEnemy = _enemy(d.enemyId);
   // Keep live opponent stats for the fight so passive penalties persist between rounds.
-  const liveEnemy = d._liveEnemy || (d._liveEnemy = { ...staticEnemy, pattern: undefined });
+  const revised = d.rulesVersion === 2;
+  const liveEnemy = d._liveEnemy || (d._liveEnemy = revised ? kungFuEnemy(staticEnemy) : { ...staticEnemy, pattern: undefined });
 
-  const enemyAction = staticEnemy.pattern(d.roundIdx);
+  const enemyAction = revised ? kungFuAction(d, staticEnemy) : staticEnemy.pattern(d.roundIdx);
 
   let playerOutcome = null; // 'win' | 'loss' | 'draw'
   let enemyOutcome = null;
@@ -243,8 +270,8 @@ function _runRound(playerAction) {
     // Both attack - book rule 6: round is won by whoever has the higher
     // attack score, regardless of move type (no lane matching needed).
     const pa = _playerAttackTotal(d, playerAction.move);
-    const ea = _enemyAttackTotal(liveEnemy, enemyAction.move);
-    _appendLog(d, t('battlesim772.log.both_attack', {
+    const ea = _enemyAttackTotal(liveEnemy, enemyAction.move, revised);
+    _appendLog(d, t(revised ? 'battlesim772.log.both_attack_fixed' : 'battlesim772.log.both_attack', {
       pmove: t(_moveLabelKey(playerAction.move)), proll: pa.roll, ptotal: pa.total,
       ename: _enemyName(d), emove: t(_moveLabelKey(enemyAction.move)), eroll: ea.roll, etotal: ea.total,
     }));
@@ -262,8 +289,8 @@ function _runRound(playerAction) {
     // Player attacks, enemy defends.
     const pa = _playerAttackTotal(d, playerAction.move);
     const defMove = playerAction.move; // matching defense lane
-    const ed = _enemyDefenseTotal(liveEnemy, defMove);
-    _appendLog(d, t('battlesim772.log.player_attacks', {
+    const ed = _enemyDefenseTotal(liveEnemy, defMove, revised);
+    _appendLog(d, t(revised ? 'battlesim772.log.player_attacks_fixed' : 'battlesim772.log.player_attacks', {
       pmove: t(_moveLabelKey(playerAction.move)), proll: pa.roll, ptotal: pa.total,
       ename: _enemyName(d), eroll: ed.roll, etotal: ed.total,
     }));
@@ -281,8 +308,8 @@ function _runRound(playerAction) {
     // Player defends, enemy attacks.
     const defMove = playerAction.move; // 'passive' | 'aggressive'
     const pd = _playerDefenseTotal(d, defMove);
-    const ea = _enemyAttackTotal(liveEnemy, enemyAction.move);
-    _appendLog(d, t('battlesim772.log.player_defends', {
+    const ea = _enemyAttackTotal(liveEnemy, enemyAction.move, revised);
+    _appendLog(d, t(revised ? 'battlesim772.log.player_defends_fixed' : 'battlesim772.log.player_defends', {
       style: t(defMove === 'passive' ? 'battlesim772.move.passive' : 'battlesim772.move.aggressive'),
       proll: pd.roll, ptotal: pd.total,
       ename: _enemyName(d), emove: t(_moveLabelKey(enemyAction.move)), eroll: ea.roll, etotal: ea.total,
@@ -320,6 +347,7 @@ function _runRound(playerAction) {
 
   d.playerResults.push(playerOutcome);
   d.enemyResults.push(enemyOutcome);
+  if (revised) advanceKungFuAction(d, enemyAction, enemyOutcome);
   d.roundIdx += 1;
   // Persist any live-enemy stat mutations (passive-defense penalty) back
   // onto the plain object stored in state.
@@ -341,6 +369,10 @@ function _resetBattle() {
   const d = _data();
   if (!d) return;
   d.started = false;
+  d.rulesVersion = 2;
+  d.enemyAttacks = 0;
+  d.enemyAttackLocked = false;
+  d.enemyLastAction = null;
   d.roundIdx = 0;
   d.playerPassiveUsed = false;
   d.playerResults = [];

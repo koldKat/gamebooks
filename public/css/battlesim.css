@@ -147,6 +147,7 @@
   flex-direction: column;
   gap: 0.3rem;
 }
+#sim871-overlay [hidden] { display: none !important; }
 .bsim-side-title {
   display: flex;
   align-items: center;
