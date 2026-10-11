@@ -1,6 +1,8 @@
 // Shared admin helpers and sortable, searchable, paginated tables.
 // The confirm overlay must exist before these bindings run.
 
+import { renderRoleBadge } from '/js/account/role-badges.js';
+
 let _confirmCb = null;
 
 export function showAlert(message) {
@@ -154,13 +156,13 @@ export function _esc(s) {
 
 // Use the DB admin flag so renaming an account does not change its badge.
 export function adminBadge(isAdmin) {
-  return isAdmin ? '<span class="admin-badge" data-tooltip="Game Master">★</span>' : '';
+  return isAdmin ? renderRoleBadge('admin') : '';
 }
 export function authorBadge(isAuthor) {
-  return isAuthor ? '<span class="author-badge" data-tooltip="Fateweaver">★</span>' : '';
+  return isAuthor ? renderRoleBadge('author') : '';
 }
 export function contributorBadge(isContributor) {
-  return isContributor ? '<span class="contributor-badge" data-tooltip="Pathmaker">✦</span>' : '';
+  return isContributor ? renderRoleBadge('contributor') : '';
 }
 
 // ── DOM builders ──────────────────────────────────────────────────────────────
@@ -410,4 +412,4 @@ function _renderPaginationControls(tableId, page, totalPages, total, onChange) {
   document.getElementById(`${tableId}-page-next`)?.addEventListener('click', () => { _pageState[tableId].page++; onChange(); });
 }
 
-export function moderatorBadge(value) { return value ? '<span class="moderator-badge" data-tooltip="Lorekeeper"><svg aria-hidden="true" viewBox="1 1 8 8"><path fill="currentColor" d="M5 1L9 5L5 9L1 5Z"/></svg></span>' : ''; }
+export function moderatorBadge(value) { return value ? renderRoleBadge('moderator') : ''; }

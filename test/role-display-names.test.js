@@ -8,14 +8,21 @@ function source(file) {
 }
 test('player and admin badges show only the gamebook role names', () => {
   const player = vm.createContext({ getUsername: () => 'Tester' });
+  vm.runInContext(source('public/js/account/role-badges.js'), player);
   vm.runInContext(source('public/js/account/user.js'), player);
   player.registerAuthor('Tester', true); player.registerContributor('Tester', true); player.registerModerator('Tester', true);
-  const admin = vm.createContext({ document: { getElementById: () => ({ addEventListener() {} }), addEventListener() {} } }); vm.runInContext(source('admin/js/core.js'), admin);
+  const admin = vm.createContext({ document: { getElementById: () => ({ addEventListener() {} }), addEventListener() {} } });
+  vm.runInContext(source('public/js/account/role-badges.js'), admin);
+  vm.runInContext(source('admin/js/core.js'), admin);
   for (const [fn, role] of [['adminBadge', 'Game Master'], ['moderatorBadge', 'Lorekeeper'], ['contributorBadge', 'Pathmaker'], ['authorBadge', 'Fateweaver']]) {
     for (const html of [player[fn](fn === 'adminBadge' ? true : 'Tester'), admin[fn](true)]) {
       assert.ok(html.includes(`data-tooltip="${role}"`));
       assert.doesNotMatch(html, /data-tooltip="(?:Admin|Moderator|Contributor|Author)"/);
+      assert.match(html, /<svg aria-hidden="true" viewBox="0 0 20 20">/);
+      assert.match(html, /<path fill="currentColor"/);
+      assert.doesNotMatch(html, /[★✦◆]/);
     }
+    assert.equal(player[fn](fn === 'adminBadge' ? true : 'Tester'), admin[fn](true));
   }
 });
 test('historical role notifications render current names instead of stored legacy labels', () => {

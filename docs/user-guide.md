@@ -141,6 +141,8 @@ If a Game Master shared a book with you, **✎** is visible but greyed out - onl
 | Pathmaker | Green star |
 | Fateweaver | Gold star |
 
+All four role badges use SVG icons with the same size and alignment.
+
 ### Lorekeepers
 
 Lorekeepers have a purple diamond badge and can edit the metadata of any public book, anthology or series, plus covers for public books and anthologies, including titles outside their own library. They cannot edit private books, make a public book private, or delete books, anthologies or series. The role does not grant Game Master access or PDF/EPUB upload access. Lorekeepers can also adjust secondary anthology memberships when both the book and anthology are public. Stats for Nerds lists the number of Lorekeepers under Players.

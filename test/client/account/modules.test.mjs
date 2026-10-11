@@ -9,7 +9,8 @@ test('account relocation keeps root wrappers absent and unchanged modules intact
   const digests = {
     auth: 'f5a59cea9ac32de7dd96723dcd077f6f76e621b8ce0e00343aa0d9191d6be4dc',
     'public-profile': 'c2d48729228af2d38123635d7c2e2311874d2f49028e2471eac6e7a14aa6fc3a',
-    user: '1c05886d82403706640fea1d39f8099d5446769f55a1bd17c603f1465ae952ed',
+    // SVG badge rendering is covered by role-display-names.test.js.
+    user: '2a923204b3c3cfdd362f88e69a86d2561179860740964e4c843fa5ac314bfb09',
   };
   for (const [name, digest] of Object.entries(digests)) {
     assert.equal(existsSync(new URL(name + '.js', dir)), false);

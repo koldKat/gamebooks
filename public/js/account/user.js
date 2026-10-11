@@ -1,6 +1,7 @@
 // user.js - admin/author/contributor state and badge helpers
 
 import { getUsername } from '../core/state.js';
+import { renderRoleBadge } from './role-badges.js';
 
 let _adminUsername  = null;
 const _authorMap    = {};
@@ -22,7 +23,7 @@ export function resolveIsAdmin(profile = null) {
 
 // Use the resolved admin boolean for the current user's badge; avoid a second config-fetch race.
 export function adminBadge(isAdmin) {
-  return isAdmin ? '<span class="admin-badge" data-tooltip="Game Master">★</span>' : '';
+  return isAdmin ? renderRoleBadge('admin') : '';
 }
 
 // Other-player badges use the fetched admin username.
@@ -35,12 +36,12 @@ export function adminBadgeForUsername(username) {
 
 export function authorBadge(username) {
   if (!_authorMap[username]?.isAuthor) return '';
-  return '<span class="author-badge" data-tooltip="Fateweaver">★</span>';
+  return renderRoleBadge('author');
 }
 
 export function contributorBadge(username) {
   if (!_contributorSet.has(username)) return '';
-  return '<span class="contributor-badge" data-tooltip="Pathmaker">✦</span>';
+  return renderRoleBadge('contributor');
 }
 
 export function displayFor(username) {
@@ -58,7 +59,7 @@ export function registerContributor(username, isContributor) {
 }
 
 export function moderatorBadge(username) {
-  return _moderatorSet.has(username) ? '<span class="moderator-badge" data-tooltip="Lorekeeper"><svg aria-hidden="true" viewBox="1 1 8 8"><path fill="currentColor" d="M5 1L9 5L5 9L1 5Z"/></svg></span>' : '';
+  return _moderatorSet.has(username) ? renderRoleBadge('moderator') : '';
 }
 export function registerModerator(username, isModerator) {
   if (isModerator) _moderatorSet.add(username);

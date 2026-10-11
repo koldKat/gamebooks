@@ -301,7 +301,9 @@
 
     .admin-badge,
     .author-badge, .moderator-badge, .contributor-badge {
-      font-size: 0.65em;
+      display: inline-flex;
+      font-size: 0.5em;
+      width: 1em; height: 1em; line-height: 1;
       margin-left: 0.2em; vertical-align: super;
       cursor: default; user-select: none;
     }
@@ -311,7 +313,9 @@
     .author-badge { color: #fbbf24; }
     .contributor-badge { color: #34d399; }
     .moderator-badge { color: #c084fc; }
-    .moderator-badge svg { width: 0.75em; height: 0.75em; vertical-align: -0.02em; }
+    :is(.admin-badge, .author-badge, .contributor-badge, .moderator-badge) svg {
+      display: block; width: 100%; height: 100%;
+    }
 
     /* ── Badges ── */
 
