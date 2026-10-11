@@ -6,7 +6,7 @@ Keep track of every branch, every choice, and every playthrough in your favourit
 
 ## Starting the app
 
-The animated graph logo appears while the app starts, including when opened from your phone's home screen. If loading takes longer than 12 seconds, you can keep waiting or press **Try again** to reload. If you are offline, reconnect first. Reloading does not clear your login or saved progress.
+The animated graph logo appears while the app starts, including when opened from your phone's home screen. Slow loading keeps waiting. If startup fails, the app automatically retries up to three times with increasing delays; while offline, it waits for you to reconnect. If those attempts fail, press **Try again** to reload manually. Reloading does not clear your login or saved progress.
 
 ## Landing page panels
 

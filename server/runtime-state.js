@@ -6,12 +6,23 @@ const fs = require('fs');
 const os = require('os');
 const db = require('./db');
 
+// Optional background bookkeeping must not bring down the request server.
+function _runBackgroundTask(name, task) {
+  try {
+    task();
+    return true;
+  } catch (err) {
+    console.error(`[runtime-state] ${name} failed:`, err);
+    return false;
+  }
+}
+
 // ── Maintenance mode ──────────────────────────────────────────────────────────
 let _maintenanceMode = db.getAdminSetting('maintenance_mode') === '1';
 let _maintenanceMessage = '';
 function _rotateMaintenanceMessage() { _maintenanceMessage = db.getRandomMaintenanceMessage(); }
 _rotateMaintenanceMessage();
-setInterval(_rotateMaintenanceMessage, 60_000);
+setInterval(() => _runBackgroundTask('maintenance message rotation', _rotateMaintenanceMessage), 60_000);
 
 function getMaintenanceMode() { return _maintenanceMode; }
 function setMaintenanceMode(v) { _maintenanceMode = v; }
@@ -103,15 +114,19 @@ let _lastCpuTime  = Date.now();
 let _lastCpuUsage = process.cpuUsage();
 
 function flushTraffic() {
-  db.setAdminSetting('traffic_in',  String(_trafficIn));
-  db.setAdminSetting('traffic_out', String(_trafficOut));
+  const saved = _runBackgroundTask('traffic counters', () => {
+    db.setAdminSetting('traffic_in',  String(_trafficIn));
+    db.setAdminSetting('traffic_out', String(_trafficOut));
+  });
+  if (saved) _trafficDirty = 0;
+  return saved;
 }
 
 // Called once per request (on 'finish') by the main request loop.
 function recordTraffic(bytesIn, bytesOut) {
   _trafficIn  += bytesIn;
   _trafficOut += bytesOut;
-  if (++_trafficDirty >= TRAFFIC_FLUSH_EVERY) { _trafficDirty = 0; flushTraffic(); }
+  if (++_trafficDirty >= TRAFFIC_FLUSH_EVERY) flushTraffic();
 }
 
 function getTrafficStats() { return { trafficIn: _trafficIn, trafficOut: _trafficOut }; }
@@ -189,7 +204,9 @@ const _appBirthAt      = db.getAppBirthTimestamp(); // MIN(created_at) across us
 const _activeTagline   = db.getRandomTagline();
 // Sample every 10s to bound unmeasured gaps, including short crash cycles.
 setInterval(() => {
-  db.setAdminSetting('server_last_heartbeat', String(Math.floor(Date.now() / 1000)));
+  _runBackgroundTask('uptime heartbeat', () => {
+    db.setAdminSetting('server_last_heartbeat', String(Math.floor(Date.now() / 1000)));
+  });
 }, 10_000);
 
 function getUptimeStart()     { return _uptimeStart; }
@@ -205,14 +222,21 @@ function _msUntil0130() {
   return next - now;
 }
 setTimeout(function _nightly() {
-  db.purgeOldNotifications();
-  db.purgeOldHeartbeats();
-  db.walCheckpoint();
+  _runBackgroundTask('notification cleanup', () => db.purgeOldNotifications());
+  _runBackgroundTask('heartbeat cleanup', () => db.purgeOldHeartbeats());
+  _runBackgroundTask('WAL checkpoint', () => db.walCheckpoint());
   setTimeout(_nightly, _msUntil0130());
 }, _msUntil0130());
 
-process.on('SIGINT',  () => { flushTraffic(); db.setAdminSetting('server_stopped_at', String(Math.floor(Date.now() / 1000))); process.exit(); });
-process.on('SIGTERM', () => { flushTraffic(); db.setAdminSetting('server_stopped_at', String(Math.floor(Date.now() / 1000))); process.exit(); });
+function _shutdown() {
+  flushTraffic();
+  _runBackgroundTask('shutdown timestamp', () => {
+    db.setAdminSetting('server_stopped_at', String(Math.floor(Date.now() / 1000)));
+  });
+  process.exit();
+}
+process.on('SIGINT', _shutdown);
+process.on('SIGTERM', _shutdown);
 
 const APP_LAUNCH_EPOCH = Math.floor(new Date('2026-03-26T00:40:05Z').getTime() / 1000);
 

@@ -1010,19 +1010,21 @@ All `/api/admin/*` routes and `GET /admin` are localhost-only (`403` otherwise, 
 
 **App version:** `admin_settings.app_version` is a free-form string (e.g. `v. 0.9.17.0 β`), set manually via the admin Tools tab's version field (`POST /api/admin/settings` with `key: 'app_version'`) and shown in the app footer (`#app-version`, fed by `GET /api/config`'s `handlePublicConfig`). Deliberately never auto-bumped by anything - the admin sets it by hand alongside each changelog. That same save also mirrors the value into a `VERSION` file at the repo root (`server/routes/admin.js`'s `VERSION_FILE`/`_readVersionFileFallback()`), purely so it shows up in git history as a human-curated version log - the file itself is never read except as the fallback `admin_settings.app_version` seeds from on a fresh database. The same save also `feedPush`es a `config_changed` SSE event to every connected tab (`/api/feed/stream`'s handler), which every tab (leader directly, followers via `_broadcastLiveEvent`/BroadcastChannel in `core/livetab.js`) uses only to update `#app-version`'s displayed text live - deliberately not a forced reload, which would risk yanking a page out from under someone mid-run; a real refresh (or the next natural navigation) is what actually gets a tab onto the new JS/CSS bundle.
 
-**Traffic counters:** `_trafficIn` / `_trafficOut` accumulate raw bytes. Persisted to `admin_settings` (`traffic_in`/`traffic_out`) every 50 requests and on SIGINT/SIGTERM.
+**Traffic counters:** `_trafficIn` / `_trafficOut` accumulate raw bytes. Persisted to `admin_settings` (`traffic_in`/`traffic_out`) every 50 requests and on SIGINT/SIGTERM. Failed flushes are logged, keep the in-memory totals, and retry on the next request; the dirty count resets only after both counters save successfully.
 
 **Uptime tracking** (all stored in `admin_settings`):
 
 | Key | Description |
 |-----|-------------|
 | `server_first_tracked_at` | Set once, never overwritten |
-| `server_session_start_at` | Reset on each restart when gap > 5 s |
+| `server_session_start_at` | Reset on each restart when gap > 15 s |
 | `server_total_downtime_s` | Accumulated downtime |
-| `server_last_heartbeat` | Written every 30 s |
+| `server_last_heartbeat` | Written every 10 s; failed writes are logged and retried on the next tick |
 | `server_stopped_at` | Written on clean shutdown, cleared to `0` on next start |
 
 `_sessionStartAt` cached in memory. "Session Uptime" = `now - _sessionStartAt`. "App Age" = `now - getAppBirthTimestamp()` where `getAppBirthTimestamp()` = `MIN(created_at)` across `users` and `books`. Both refresh every second via the live endpoint.
+
+Runtime bookkeeping errors (including SQLite write-lock conflicts) are caught and logged rather than terminating the server. This covers the uptime heartbeat, traffic flushes, maintenance-message rotation, nightly cleanup, and shutdown timestamps. Nightly notification cleanup, heartbeat cleanup, and WAL checkpoint each run independently, and the next nightly run remains scheduled after a failure. Shutdown still exits if bookkeeping cannot be saved. Startup initialization and ordinary application writes retain their normal error handling.
 
 ---
 
@@ -2784,7 +2786,7 @@ Both `sendAdminEmail` and `sendReplyEmail` use the same template: dark amber hea
 
 ## Automated tests (`test/`)
 
-Both installed-app entry points render the existing animated graph logo before the application module graph loads. `public/startup.js` has no imports; its 12-second watchdog offers manual reload on slow/offline startup, and script failures offer recovery immediately. Successful startup removes the overlay, timer and error listener. Mobile reader startup awaits reader initialization before dismissing recovery; failures are caught and expose a return-home action. The graph vendor script is deferred so it does not block parsing the loading UI. This is startup feedback, not offline caching or an automatic retry loop.
+Both installed-app entry points render the existing animated graph logo before the application module graph loads. `public/startup.js` has no imports; its 12-second watchdog reports slow loading without interrupting startup or showing a retry button. Script errors and explicit startup failures schedule full-page recovery after 2, 5, and 10 seconds. A per-entry-path/query retry budget in `sessionStorage` survives reloads, expires after five minutes, and resets on successful startup or manual retry. After three failed automatic retries, **Try again** becomes available; unavailable session storage also falls back to manual recovery to prevent infinite reload loops. Offline failures pause until connectivity returns, without consuming attempts; reconnection alone does not reload an otherwise progressing startup. Successful startup removes the overlay, both timers and the error/connectivity listeners. Mobile reader startup awaits profile, library and reader initialization before dismissing recovery; failed profile/library requests enter the same recovery flow instead of displaying a misleading missing-book screen. Authentication expiry follows the existing login flow. The graph vendor script is deferred so it does not block parsing the loading UI. This recovers startup only; it does not automatically reload an active reading session or add offline caching.
 
 `node --test` (Node's built-in test runner, no external framework/dev dependency) - `npm test` runs it, auto-discovering the whole `test/` tree recursively.
 

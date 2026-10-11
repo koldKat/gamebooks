@@ -73,31 +73,31 @@ async function loadThenShowReader() {
   // Restart heartbeat on login as well as initial load; its timer guard makes this idempotent.
   _startHeartbeat();
   _showLoadingScreen();
+  const authToken = getToken();
   try {
     const res = await apiFetch('/api/profile');
-    if (res.ok) {
-      const profile = await res.json();
-      // Initialize level and purchased bonuses so mobile undo/travel limits match desktop.
-      setCurrentUserLevel(profile.level || 0);
-      setBonusUndos(profile.bonusUndos || 0);
-      setBonusFastTravels(profile.bonusFastTravels || 0);
-    }
-  } catch (_) { /* profile fetch failed - level/bonus stay at module defaults */ }
+    if (authToken !== getToken() || res.status === 401) return;
+    if (!res.ok) throw new Error(`Profile request failed (${res.status})`);
+    const profile = await res.json();
+    if (authToken !== getToken()) return;
+    // Initialize level and purchased bonuses so mobile undo/travel limits match desktop.
+    setCurrentUserLevel(profile.level || 0);
+    setBonusUndos(profile.bonusUndos || 0);
+    setBonusFastTravels(profile.bonusFastTravels || 0);
+    const wantedId = new URLSearchParams(location.search).get('book');
+    if (!wantedId) { showNoBook(); return; }
 
-  const wantedId = new URLSearchParams(location.search).get('book');
-  if (!wantedId) { showNoBook(); return; }
-
-  let books = [];
-  try {
-    const res = await apiFetch('/api/books');
-    if (res.ok) books = await res.json();
-  } catch (_) { /* books stays empty, falls to showNoBook below */ }
-  const book = books.find(b => String(b.id) === wantedId);
-  if (!book) { showNoBook(); return; }
-  if (!book.hasLiveReading) { showNoReading(book); return; }
-  try {
+    const booksRes = await apiFetch('/api/books');
+    if (authToken !== getToken() || booksRes.status === 401) return;
+    if (!booksRes.ok) throw new Error(`Library request failed (${booksRes.status})`);
+    const books = await booksRes.json();
+    if (authToken !== getToken()) return;
+    const book = books.find(b => String(b.id) === wantedId);
+    if (!book) { showNoBook(); return; }
+    if (!book.hasLiveReading) { showNoReading(book); return; }
     await showReader(book);
   } catch (error) {
+    if (authToken !== getToken()) return;
     console.error('Mobile reader startup failed', error);
     window.appStartup?.fail();
     mount.innerHTML = `<div class="m-login"><p class="m-error">${_escapeHtml(t('auth.network_error'))}</p>

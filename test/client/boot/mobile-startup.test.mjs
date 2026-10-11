@@ -5,7 +5,7 @@ import vm from 'node:vm';
 
 const source = readFileSync(new URL('../../../public/mobile/js/app.js', import.meta.url), 'utf8');
 
-function setup() {
+function setup(fetchOverride) {
   let ready = 0, failed = 0, renderCalls = 0, resolveReader, rejectReader;
   const pending = new Promise((resolve, reject) => { resolveReader = resolve; rejectReader = reject; });
   const mount = { innerHTML: '' };
@@ -17,7 +17,7 @@ function setup() {
       getElementById: id => id === 'screen' ? mount : { addEventListener() {} } },
     location: { search: '?book=1' }, URLSearchParams,
     getToken: () => 'account',
-    apiFetch: async path => ({ ok: true, json: async () => path === '/api/profile' ? {} : [{ id: 1, hasLiveReading: true }] }),
+    apiFetch: fetchOverride || (async path => ({ ok: true, json: async () => path === '/api/profile' ? {} : [{ id: 1, hasLiveReading: true }] })),
     renderReader: () => { renderCalls++; return pending; }, renderLogin() {},
     setCurrentUserLevel() {}, setBonusUndos() {}, setBonusFastTravels() {},
     setInterval: () => 1, clearInterval() {}, t: key => key,
@@ -48,4 +48,39 @@ test('mobile reader initialization failure is caught and offers recovery', async
   assert.equal(s.ready, 0);
   assert.equal(s.failed, 1);
   assert.match(s.mount.innerHTML, /m-load-back/);
+});
+
+test('mobile profile and library failures enter startup recovery instead of displaying no book', async () => {
+  for (const failedPath of ['/api/profile', '/api/books']) {
+    for (const networkFailure of [false, true]) {
+      const s = setup(async path => {
+        if (path === failedPath) {
+          if (networkFailure) throw Error('Offline');
+          return { ok: false, status: 503 };
+        }
+        return { ok: true, json: async () => ({}) };
+      });
+      await new Promise(resolve => setImmediate(resolve));
+      assert.equal(s.failed, 1);
+      assert.equal(s.ready, 0);
+      assert.equal(s.renderCalls, 0);
+      assert.match(s.mount.innerHTML, /auth.network_error/);
+    }
+  }
+});
+
+test('mobile missing books finish startup normally without triggering recovery', async () => {
+  const s = setup(async path => ({ ok: true, json: async () => path === '/api/profile' ? {} : [] }));
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(s.failed, 0);
+  assert.equal(s.ready, 1);
+  assert.equal(s.renderCalls, 0);
+  assert.match(s.mount.innerHTML, /mobile.open_from_my_books/);
+});
+
+test('mobile auth errors do not trigger automatic startup reloads', async () => {
+  const s = setup(async () => ({ ok: false, status: 401 }));
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(s.failed, 0);
+  assert.equal(s.renderCalls, 0);
 });
