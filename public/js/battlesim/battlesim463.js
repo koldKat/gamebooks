@@ -51,6 +51,7 @@ function _startFight(d) {
     pStr: d.player.sila + _half(pr),
     eStr: d.enemy.sila + _half(er),
     recorded: false,
+    rulesVersion: 1,
   };
   d.enemy.curEnergy = d.enemy.energy;
   _log(d, tk('log.fight_start', {
@@ -79,7 +80,8 @@ function _blow(d) {
     line = tk('log.blow_taken', { proll: pr, pb, eroll: er, eb, pe: d.player.energy });
   }
   _log(d, line);
-  if (d.enemy.curEnergy <= 0) { _log(d, `${SVG_TROPHY} ${tk('log.win')}`); if (!d.fight.recorded) { _record(d, 'win'); d.fight.recorded = true; } }
+  if (d.player.energy <= 0 && d.fight.rulesVersion >= 1) { _log(d, `${SVG_SKULL} ${tk('log.loss')}`); if (!d.fight.recorded) { _record(d, 'loss'); d.fight.recorded = true; } }
+  else if (d.enemy.curEnergy <= 0) { _log(d, `${SVG_TROPHY} ${tk('log.win')}`); if (!d.fight.recorded) { _record(d, 'win'); d.fight.recorded = true; } }
   else if (d.player.energy <= 0) { _log(d, `${SVG_SKULL} ${tk('log.loss')}`); if (!d.fight.recorded) { _record(d, 'loss'); d.fight.recorded = true; } }
 }
 
