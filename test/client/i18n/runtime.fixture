@@ -6,7 +6,7 @@ import { createContext, SourceTextModule } from 'node:vm';
 
 const root = process.argv[1];
 const baseline = '4f1b1de55771d4d47b9249c961fbd03b86021bec8ce06ffdcd0d1046198d61e3'; // Includes reviewed feedback and simulator updates.
-const addedSimulatorIds = new Set([521, 522, 523, 524, 534, 535, 536, 537, 548, 555, 557]);
+const addedSimulatorIds = new Set([463, 521, 522, 523, 524, 527, 528, 534, 535, 536, 537, 548, 555, 557]);
 const hash = entries => createHash('sha256').update(JSON.stringify(entries)).digest('hex');
 const sorted = table => Object.keys(table).sort().map(key => [key, table[key]]);
 async function environment(language) {
@@ -61,15 +61,29 @@ const simulatorIds = [];
 const keys = new Set();
 for (const path of paths) {
   const source = readFileSync(path, 'utf8');
-  assert.doesNotMatch(source, /^import |\b(?:document|localStorage|fetch)\s*[.(]/m, 'tables have no runtime dependencies');
-  const literals = [...source.matchAll(/^\s*'([^']+)':/gm)].map(match => match[1]);
-  const table = (await en.load(path)).default;
   const simulatorId = path.match(/battlesim(\d+)\.js$/)?.[1];
+  assert.doesNotMatch(source, /\b(?:document|localStorage|fetch)\s*[.(]|\bimport\s*\(/m, 'tables have no browser or dynamic runtime dependencies');
+  if (simulatorId === '528') {
+    const roster = '../../../battlesim/engines/grailquest/gateway-of-doom-roster.js';
+    assert.deepEqual([...source.matchAll(/\bfrom\s+'([^']+)'/g)].map(match => match[1]), [roster], 'Gateway names share only their static encounter roster');
+    assert.doesNotMatch(readFileSync(resolve(dirname(path), roster), 'utf8'), /^import |\b(?:document|localStorage|fetch)\s*[.(]/m, 'shared roster is data-only');
+  } else {
+    assert.doesNotMatch(source, /^import /m, 'literal tables have no dependencies');
+  }
+  const literals = [...source.matchAll(/^\s*(['"])(.*?)\1\s*:/gm)].map(match => match[2]);
+  const table = (await en.load(path)).default;
   if (simulatorId) {
     simulatorIds.push(Number(simulatorId));
     await lazy.loadBattleSimTranslations(simulatorId);
   }
-  assert.equal(literals.length, Object.keys(table).length, 'no overwritten duplicate literals in ' + path);
+  if (simulatorId === '528') {
+    const roster = await en.load('battlesim/engines/grailquest/gateway-of-doom-roster.js');
+    const entries = [...roster.GATEWAY_ENCOUNTERS, ...roster.GATEWAY_WANDERING, ...roster.GATEWAY_DREAMS];
+    assert.equal(new Set(entries.map(entry => entry.section)).size, entries.length, 'generated enemy-name keys are unique');
+    for (const entry of entries) assert.equal(table['battlesim528.enemy_names.' + entry.section], entry.name);
+  } else {
+    assert.equal(literals.length, Object.keys(table).length, 'no overwritten duplicate literals in ' + path);
+  }
   for (const key of Object.keys(table)) {
     assert.equal(keys.has(key), false, 'no duplicate key across tables: ' + key);
     keys.add(key);

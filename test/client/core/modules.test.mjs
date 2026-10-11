@@ -12,7 +12,8 @@ test('core relocation preserves implementations without root wrappers or duplica
     state: 'ded8af1cd75f0f47830a25dd5f1650c23a73ec1ec373b23c3025f13ba3f743f8',
     constants: 'b67245d28638c7d42c976068c7bc86ac822fff89d47c537d8fd9672ff19826a9',
     sort: 'a37194516dcc6faf776288906e52f3b9e8dc8d30a81df7158108d8b0e3742eb6',
-    util: 'cda1fc506d0c7d2a716738e31b5569b1f27e949aef1dfb833e098699073100e6',
+    // Reviewed overlay additions for simulators 463, 527 and 528.
+    util: 'ba7d16d038ea331937e5adc9bae7331304f477932762efed67201e412413dd02',
   };
   for (const [name, digest] of Object.entries(digests)) {
     assert.equal(existsSync(new URL(name + '.js', dir)), false);
