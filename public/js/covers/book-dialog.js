@@ -103,6 +103,7 @@ export function renderCoverActivity(bookId, bookName, entries, userRating, bookM
     headerHtml += bookMeta.children.map(c =>
       `<button class="book-modal-child-row" data-book-id="${c.id}" data-book-name="${escapeHtml(c.name)}">
         <span class="child-row-name">${escapeHtml(c.name)}</span>
+        <span class="child-row-badges">${_seriesRowBadges(c)}</span>
         ${c.total_sections ? `<span class="child-row-sections">${c.total_sections} sections</span>` : ''}
         <span class="child-row-arrow">›</span>
       </button>`

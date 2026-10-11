@@ -41,6 +41,7 @@ function dialog({ loggedIn = false, owned = false, mobile = true, admin = false,
     closePublicModal: () => events.push('close'),
     escapeHtml: value => String(value),
     t: key => key,
+    _seriesRowBadges: book => book.hasLiveReading ? '<span class="reading-badge">Reading</span>' : '',
     coversState: { _hooks: {
       getIsAdmin: () => admin,
       openEditBookModal: options => { editOptions = options; },
@@ -96,6 +97,17 @@ test('private metadata does not offer guests a library action', () => {
   const d = dialog({ meta: { isPublic: false } });
   assert.equal(d.buttons.has('.login-to-add-book-btn'), false);
   assert.equal(d.buttons.has('.add-public-book-btn'), false);
+});
+
+test('anthology children show their own reading availability, even without covers', () => {
+  const d = dialog({ meta: { isContainer: true, hasLiveReading: true, children: [
+    { id: 101, name: 'Readable child', total_sections: 215, hasLiveReading: true },
+    { id: 424, name: 'Unavailable child', hasLiveReading: false },
+  ] } });
+  const rows = [...d.body.html.matchAll(/<button class="book-modal-child-row"[^>]*>([\s\S]*?)<\/button>/g)];
+  assert.equal(rows.length, 2);
+  assert.match(rows[0][1], /reading-badge/);
+  assert.doesNotMatch(rows[1][1], /reading-badge/);
 });
 
 

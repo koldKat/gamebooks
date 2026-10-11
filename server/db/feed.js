@@ -1312,10 +1312,11 @@ function getBookActivity(bookId, userId = null) {
   const isContainer = book.is_container === 1;
   const children = isContainer
     ? (() => {
-        const primary = db.prepare('SELECT id, name, total_sections, book_order FROM books WHERE parent_book_id = ? AND is_demo = 0 AND is_public = 1').all(bookId);
+        const primary = db.prepare('SELECT id, name, total_sections, book_order, has_battle_sim, has_live_reading FROM books WHERE parent_book_id = ? AND is_demo = 0 AND is_public = 1').all(bookId);
         const primaryIds = new Set(primary.map(c => c.id));
         return [...primary, ...getAnthologyExtraMembers(bookId, true).filter(c => !primaryIds.has(c.id))]
-          .sort((a, b) => (a.book_order == null) - (b.book_order == null) || (a.book_order ?? 0) - (b.book_order ?? 0) || a.name.localeCompare(b.name));
+          .sort((a, b) => (a.book_order == null) - (b.book_order == null) || (a.book_order ?? 0) - (b.book_order ?? 0) || a.name.localeCompare(b.name))
+          .map(c => ({ ...c, hasBattleSim: !!c.has_battle_sim, hasLiveReading: !!c.has_live_reading }));
       })()
     : [];
   return {
@@ -1334,7 +1335,7 @@ function getBookActivity(bookId, userId = null) {
       isPublic:      book.is_public === 1,
       isContainer,
       hasBattleSim:  !!book.has_battle_sim || !!book.child_has_battle_sim,
-      hasLiveReading: !!book.has_live_reading,
+      hasLiveReading: !!book.has_live_reading || children.some(c => c.hasLiveReading),
       parentId:      book.parentId    || null,
       parentName:    book.parentName  || null,
       // Show secondary anthology memberships as well as the primary parent.

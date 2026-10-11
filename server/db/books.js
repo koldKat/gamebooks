@@ -326,7 +326,7 @@ function _pruneRedundantAnthologyMembership(bookId, parentBookId) {
 // children) - callers combine this with their own primary-children query.
 function getAnthologyExtraMembers(anthologyId, publicOnly = false) {
   return db.prepare(
-    `SELECT b.id, b.name, b.total_sections, b.max_section_number, m.book_order FROM book_anthology_memberships m
+    `SELECT b.id, b.name, b.total_sections, b.max_section_number, b.has_battle_sim, b.has_live_reading, m.book_order FROM book_anthology_memberships m
      JOIN books b ON b.id = m.book_id
      WHERE m.anthology_id = ? AND b.is_demo = 0 AND (? = 0 OR b.is_public = 1)`
   ).all(anthologyId, publicOnly ? 1 : 0);
