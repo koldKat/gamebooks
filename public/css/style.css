@@ -550,7 +550,7 @@ input[type="email"]:disabled {
 .contributor-badge { color: #34d399; }
 /* Use a drawn diamond so its alignment does not depend on glyph font metrics. */
 .moderator-badge { color: #c084fc; }
-.moderator-badge svg { width: 0.75em; height: 0.75em; vertical-align: -0.02em; }
+.moderator-badge svg { width: 0.6em; height: 0.6em; vertical-align: -0.02em; }
 
 /* ── Responsive: compact sidebar for short viewports (e.g. 1366×768) ── */
 
