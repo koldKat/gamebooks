@@ -27,6 +27,8 @@ try { db.exec('ALTER TABLE users ADD COLUMN is_moderator INTEGER NOT NULL DEFAUL
 try { db.exec(`ALTER TABLE users ADD COLUMN avatar_path    TEXT    DEFAULT NULL`);             } catch (_) {}
 try { db.exec(`ALTER TABLE users ADD COLUMN xp             INTEGER NOT NULL DEFAULT 0`);       } catch (_) {}
 try { db.exec(`ALTER TABLE users ADD COLUMN last_country   TEXT    DEFAULT NULL`);             } catch (_) {}
+// Remove the retired public join-country experiment and its stored signup data.
+if (hasColumn('users', 'signup_country')) db.exec('ALTER TABLE users DROP COLUMN signup_country');
 try { db.exec(`ALTER TABLE users ADD COLUMN last_city      TEXT    DEFAULT NULL`);             } catch (_) {}
 try { db.exec(`ALTER TABLE users ADD COLUMN ui_prefs       TEXT    DEFAULT NULL`);             } catch (_) {}
 try { db.exec(`ALTER TABLE users ADD COLUMN active_country TEXT    DEFAULT NULL`);             } catch (_) {}

@@ -112,6 +112,8 @@ Click **Demo** on the landing page to try everything without creating an account
 - **Log In** - sign in with an existing account
 - **Create Account** - register with a username and password
 
+For password resets, the app sends the link to your saved email address. If you have no email saved but used an email address as your username, it sends the link there instead.
+
 Your session is remembered in the browser. Click **Log out** on the books screen to sign out.
 
 ---

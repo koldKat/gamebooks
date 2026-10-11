@@ -1030,6 +1030,8 @@ Runtime bookkeeping errors (including SQLite write-lock conflicts) are caught an
 
 ## Database (`server/db.js`)
 
+Password resets prefer the account's saved email. If none is saved, a username that is a single valid-looking email address is used as the recipient. Email-shaped usernames also match case-insensitively after the existing exact-username and saved-email lookups. Ordinary usernames without a saved email still return `noEmail`; recipient lists and display-name syntax are not accepted as fallback addresses. This does not copy the username into the profile email field or change reset-token expiry.
+
 Uses `better-sqlite3` (synchronous SQLite). WAL mode enabled. `VACUUM` runs on every server startup (after pragma statements, before migrations) to reclaim freed pages and keep the file compact.
 
 ### Schema
@@ -1723,6 +1725,7 @@ Feed loading is single-flight per authentication token, not across accounts. Log
 - `runIsPublic = true` → verb renders as `<button class="feed-verb-pub">` (opens public run modal).
 - **Verb by result:** `success` → "won", `battle` → "died", `death` → "lost". CSS class matches.
 - **Party entries:** `usernames.length > 1` adds class `feed-entry--party` (teal left border) + `<span class="feed-party-badge">party</span>`.
+- **Join privacy:** `user_joined` entries do not expose country or city and usernames use their normal color. The retired signup-country experiment's column is removed on startup; registration does not record a separate signup location.
 - On public books, run starts respect the player's hide-feed setting, including party runs. Explicitly public completions remain visible. Party entries combine only the members whose events are eligible for the feed.
 
 **Feed entry types** produced by `getFeed()` in `db.js`:

@@ -168,17 +168,23 @@ function getUserEmail(userId) {
 function createPasswordResetToken(identifier) {
   const trimmed = (identifier || '').trim();
   if (!trimmed) return null;
-  // Look up by username first, then by email
-  const user = db.prepare('SELECT id, email FROM users WHERE username = ?').get(trimmed)
-    || db.prepare('SELECT id, email FROM users WHERE lower(email) = ?').get(trimmed.toLowerCase());
+  // Only accept a single mailbox as a username fallback, never an address list.
+  const emailUsername = /^[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+$/i;
+  // Exact usernames keep priority; email-shaped usernames also match without case sensitivity.
+  const user = db.prepare('SELECT id, username, email FROM users WHERE username = ?').get(trimmed)
+    || db.prepare('SELECT id, username, email FROM users WHERE lower(email) = ?').get(trimmed.toLowerCase())
+    || (emailUsername.test(trimmed)
+      ? db.prepare('SELECT id, username, email FROM users WHERE lower(username) = ? ORDER BY id LIMIT 1').get(trimmed.toLowerCase())
+      : null);
   if (!user) return null;
-  if (!user.email) return { noEmail: true };
+  const userEmail = user.email || (emailUsername.test(user.username) ? user.username : null);
+  if (!userEmail) return { noEmail: true };
   // Delete any existing token for this user
   db.prepare('DELETE FROM password_reset_tokens WHERE user_id = ?').run(user.id);
   const token = require('crypto').randomBytes(32).toString('hex');
   const expiresAt = Math.floor(Date.now() / 1000) + 3600;
   db.prepare('INSERT INTO password_reset_tokens (token, user_id, expires_at) VALUES (?, ?, ?)').run(token, user.id, expiresAt);
-  return { token, userEmail: user.email };
+  return { token, userEmail };
 }
 
 function validateResetToken(token) {

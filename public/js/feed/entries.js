@@ -98,7 +98,7 @@ export function renderEntry(e) {
     html = t('feed.tmpl.run_started', { user: userEl, n: _runN(e.runIndex), book: bookBtn(e.bookId, e.bookName) });
   } else if (e.type === 'user_joined') {
     const tmpl = e.joinTemplate || t('feed.join_default');
-    html = tmpl.replace('{name}', userEl);
+    html = tmpl.replace('{name}', () => userEl);
     extraClass = 'feed-entry--join';
   } else if (e.type === 'level_up') {
     extraClass = 'feed-entry--levelup';
