@@ -1723,7 +1723,7 @@ Feed loading is single-flight per authentication token, not across accounts. Log
 - `runIsPublic = true` → verb renders as `<button class="feed-verb-pub">` (opens public run modal).
 - **Verb by result:** `success` → "won", `battle` → "died", `death` → "lost". CSS class matches.
 - **Party entries:** `usernames.length > 1` adds class `feed-entry--party` (teal left border) + `<span class="feed-party-badge">party</span>`.
-- Run starts and completions both honor explicitly public runs even when the player hides their general activity from the feed. Party entries merge the eligible members' matching run events; hidden players' private runs remain excluded.
+- On public books, run starts respect the player's hide-feed setting, including party runs. Explicitly public completions remain visible. Party entries combine only the members whose events are eligible for the feed.
 
 **Feed entry types** produced by `getFeed()` in `db.js`:
 

@@ -343,7 +343,7 @@ function getFeed() {
       // Run started - skip placeholder runs (startedAt null) and open-world books
       // (series run start is recorded once via series_run_started, not per-book)
       if (pt.startedAt && pt.startedAt >= cutoffMs && !seriesIsOpenWorld) {
-        if (!row.hide_from_feed || pt.isPublic) entries.push({ type: 'run_started', username: row.username, bookName: row.bookName,
+        if (!row.hide_from_feed) entries.push({ type: 'run_started', username: row.username, bookName: row.bookName,
           bookId: row.bookId, runIndex: i, completedAt: pt.startedAt, userPublicProfile: pub, bookIsPublic,
           userLevel: computeLevel(row.xp || 0), userTitle: getTitleForLevel(computeLevel(row.xp || 0)),
           isAuthor, isContributor, isModerator, displayName, parentBookId, parentBookName, parentCoverUrl, seriesId, seriesName, seriesNumber, seriesIsPublic, parentBookIsPublic,

@@ -31,16 +31,16 @@ function feedFor({ publicRun = true, publicBook = true, hideFirst = true } = {})
   return context.module.exports.getFeed();
 }
 
-test('explicitly public party runs include hidden players in both starts and completions', () => {
-  for (const publicBook of [true, false]) {
-    const entries = feedFor({ publicBook });
-    for (const type of ['run_started', 'run_completed']) {
-      const matching = entries.filter(e => e.type === type);
-      assert.equal(matching.length, 1, 'one merged entry per party event');
-      assert.equal(matching[0].partyId, 13);
-      assert.equal(matching[0].usernames.map(u => u.username).sort().join(','), 'koldKat,sashii');
-    }
-  }
+test('public-book party starts respect hide-feed settings while shared completions remain visible', () => {
+  const entries = feedFor();
+  const starts = entries.filter(e => e.type === 'run_started');
+  assert.equal(starts.length, 1);
+  assert.equal(starts[0].username, 'sashii');
+  assert.equal(starts[0].usernames, undefined);
+  const completions = entries.filter(e => e.type === 'run_completed');
+  assert.equal(completions.length, 1);
+  assert.equal(completions[0].partyId, 13);
+  assert.equal(completions[0].usernames.map(u => u.username).sort().join(','), 'koldKat,sashii');
 });
 
 test('hiding feed activity still excludes a hidden player from private party runs', () => {
