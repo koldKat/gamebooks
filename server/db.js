@@ -504,6 +504,7 @@ db.exec(`CREATE TABLE IF NOT EXISTS book_frontmatter (
 )`);
 
 const readingAccess = require('./db/reading-access').createReadingAccess(db);
+require('./db/reading-ownership').installReadingOwnershipGuards(db);
 
 // One-time backfill: assign a permanent template to every level_up event that doesn't have one yet
 {
