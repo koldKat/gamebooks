@@ -771,6 +771,8 @@ Unlock confirmation appears in place in the reader's bottom footer, not in a pop
 
 Not every book has this yet - it's rolling out gradually, one book at a time.
 
+In map-driven books, some passages include a marker field and the original map. Follow the map's connections, enter your chosen marker, and press **Go**. Your selected connections are saved; the tracker does not invent map routes or automatically choose your next move. Marker entry is disabled while previewing an earlier passage.
+
 ---
 
 ## Play Together

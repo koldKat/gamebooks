@@ -210,3 +210,51 @@ test('hunting applies strict shooting threshold and animal parity without invent
   const killed = policeHunt({ ...shot, shooting: 7, animalLife: 4 });
   assert.equal(killed.skin, true);
 });
+
+test('each party mage can cast only once and invalid casts leave saved state unchanged', () => {
+  let fight = core.startPoliceFight({ ...player, defence: 99 }, { ...enemy, life: 100 }, { party: true, partySpells: 1 });
+  const spell = { base: 4, minimum: 1, spent: 1 };
+  fight = core.policeStrike(fight, { spell }).fight;
+  assert.equal(fight.remainingSpells, 0);
+  fight = core.resolvePoliceCasualties(fight, { killed: 0, enemyLife: 95 });
+  fight = core.policeStrike(fight).fight;
+  const saved = structuredClone(fight);
+  assert.throws(() => core.policeStrike(fight, { spell }), /once/);
+  assert.deepEqual(fight, saved);
+});
+
+test('dragon opening wins and all six consecutive ship command hits are resolved', () => {
+  const dragon = { attack: 48, defence: 30, damage: 60, life: 20 };
+  const opening = policeDragonOpening(dragon, { kind: 'ground', lines: [
+    { type: 'warrior', count: 1, attack: 40, damage: 30 }, { type: 'mage', count: 2 },
+  ] });
+  assert.equal(opening.status, 'win');
+  assert.equal(opening.enemy.life, 0);
+  let fight = core.startPoliceShip({ attack: 12, shield: 99, life: 60 }, base, { targets: 2, ammunition: 6 });
+  for (let i = 0; i < 6; i++) fight = core.policeShipRound(fight, { weapon: 'antiproton', command: true }, rolls(1)).fight;
+  assert.equal(fight.status, 'win');
+  assert.equal(fight.ammunition, 0);
+  assert.equal(fight.commandHits, 6);
+});
+
+test('shooting another ship target interrupts consecutive command-centre hits', () => {
+  const fight = core.startPoliceShip({ ...ship, shield: 99 }, base, { targets: 2, commandHits: 5, ammunition: 2 });
+  const other = core.policeShipRound(fight, { weapon: 'antiproton' }, rolls(1)).fight;
+  assert.equal(other.commandHits, 0);
+  assert.equal(other.targets, 1);
+  assert.equal(core.policeShipRound(other, { weapon: 'antiproton', command: true }, rolls(1)).fight.status, 'fighting');
+  assert.equal(fight.commandHits, 5);
+});
+
+test('ship weapons keep independent ammunition while legacy saved fights retain their pool', () => {
+  const fight = core.startPoliceShip({ ...ship, shield: 99 }, base, { targets: 3,
+    ammunition: { antiproton: 1, atomic: 2, pa: 0, pb: 4 } });
+  const next = core.policeShipRound(fight, { weapon: 'antiproton' }, rolls(1)).fight;
+  assert.deepEqual(next.ammunition, { antiproton: 0, atomic: 2, pa: 0, pb: 4 });
+  assert.throws(() => core.policeShipRound(next, { weapon: 'antiproton' }), /ammunition/);
+  assert.throws(() => core.policeShipRound(next, { weapon: 'pa' }), /ammunition/);
+  const atomic = core.policeShipRound(next, { weapon: 'atomic' }, rolls(2, 1)).fight;
+  assert.equal(atomic.ammunition.atomic, 1);
+  assert.equal(atomic.ammunition.pb, 4);
+  assert.equal(fight.ammunition.antiproton, 1);
+});

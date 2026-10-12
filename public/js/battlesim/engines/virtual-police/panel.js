@@ -1,5 +1,6 @@
 import * as rules from './core.js';
 import { POLICE_ENCOUNTERS, preparePoliceEnemy } from './roster.js';
+import { policeDragonOpening, policeHunt } from './openings.js';
 
 const ID = 'sim570';
 const stats = ['attack', 'defence', 'damage', 'life'];
@@ -73,13 +74,27 @@ export function createPolicePanel({ document, t, getRun, getBookId, saveState, s
     if (mode === 'ship') {
       d.fight = rules.startPoliceShip({ attack: number('shipAttack'), shield: number('shield'), life: number('shipLife', 1) },
         { attack: number('baseAttack'), defence: number('baseDefence') },
-        { targets: number('targets', 1), ammunition: number('ammunition'), atmosphericShield: el('atmosphericShield').checked });
+        { targets: number('targets', 1), ammunition: { antiproton: number('ammunition'), atomic: number('atomicAmmo'), pa: number('paAmmo'), pb: number('pbAmmo') }, atmosphericShield: el('atmosphericShield').checked });
     } else {
       const prepared = preparePoliceEnemy(row.id, options);
       if (mode === 'dragon') {
         if (!row.dragon) throw new RangeError('Choose a dragon encounter');
         const lines = [1, 2, 3].map(i => ({ ...actor(`line${i}`), count: number(`line${i}_count`, 1), type: el(`line${i}_type`).value }));
         d.fight = rules.startPoliceDragon(lines, prepared.enemy, { heroLine: number('heroLine', 1) });
+        const kind = el('opening').value === 'magicOpening' ? 'magic' : el('opening').value;
+        if (kind !== 'none') {
+          const opening = { kind, lines: lines.slice(0, 2), level: options.level };
+          if (kind === 'arrows') {
+            opening.archers = [1, 2, 3, 4, 5, 6].filter(i => el('archer' + i).value.trim()).map(i => number('archer' + i));
+            if (!opening.archers.length) throw new RangeError('Enter each participating archer');
+          } else if (kind === 'harpoon') opening.shooting = number('shooting');
+          else if (kind === 'magic') Object.assign(opening, { eligibleSpell: el('eligibleSpell').checked,
+            spellStrength: number('spellStrength'), spellProtection: number('spellProtection') });
+          const result = policeDragonOpening(prepared.enemy, opening);
+          d.fight.enemy = result.enemy;
+          d.fight.status = result.status;
+          d.log.push(tk('openingResult', { damage: result.damage, dice: result.dice.join(' + ') || '-' }));
+        }
       } else {
         if (row.dragon || mode === 'party' && !row.party) throw new RangeError('Party unavailable in this scene');
         const player = { ...actor('player'), magic: number('magic') };
@@ -94,6 +109,7 @@ export function createPolicePanel({ document, t, getRun, getBookId, saveState, s
         d.fight = rules.startPoliceFight(player, prepared.enemy, {
           count: prepared.count, level: options.level, tactic: el('tactic').value,
           party: mode === 'party', playerStrikes: strikes, spellsAllowed: !row.arena && !row.unarmed,
+          partySpells: mode === 'party' ? number('partyMages') : 0,
           nonfatal: row.nonfatal ? number('recovery', 1) : false,
         });
       }
@@ -102,6 +118,18 @@ export function createPolicePanel({ document, t, getRun, getBookId, saveState, s
     d.setup = Object.fromEntries([...el('overlay').querySelectorAll('input,select')].map(input => [input.id,
       input.type === 'checkbox' ? input.checked : input.value]));
     d.log.push(tk('started', { enemy: d.encounter }));
+    d.log = d.log.slice(-120);
+  }
+  function hunt(d) {
+    if (busy(d) || !spec()?.hunt) return;
+    const result = policeHunt({ shooting: number('huntShooting'), weaponAttack: number('huntAttack'),
+      speed: number('huntSpeed'), animalSpeed: number('animalSpeed'), damage: number('huntDamage'),
+      animalLife: number('enemy_life', 1), level: number('level', 1) });
+    el('enemy_life').value = result.life;
+    d.hunt = { ...result, encounter: spec().id };
+    d.setup = Object.fromEntries([...el('setup').querySelectorAll('input,select')].map(input => [input.id,
+      input.type === 'checkbox' ? input.checked : input.value]));
+    d.log.push(tk(result.skin ? 'huntSkin' : result.fights ? 'huntFight' : 'huntEscape', { life: result.life }));
     d.log = d.log.slice(-120);
   }
   function step(d, spell = false) {
@@ -159,16 +187,24 @@ export function createPolicePanel({ document, t, getRun, getBookId, saveState, s
       }
       if (f?.ship) {
         el('shipLife').value = f.ship.life;
-        el('ammunition').value = f.ammunition;
+        if (typeof f.ammunition === 'number') el('ammunition').value = f.ammunition;
+        else for (const [key, field] of Object.entries({ antiproton: 'ammunition', atomic: 'atomicAmmo', pa: 'paAmmo', pb: 'pbAmmo' })) el(field).value = f.ammunition[key];
+        el('baseAttack').value = f.base.attack;
+        el('targets').value = f.targets;
       }
     }
     for (const input of el('setup').querySelectorAll('input,select')) input.disabled = active;
     el('start').disabled = active;
     el('cancel').disabled = !active;
     el('attack').disabled = !active || !!f.pending;
-    el('cast').disabled = !active || !!f.pending || d.mode === 'dragon' || d.mode === 'ship' || f.turn !== 'player' || !f.spellsAllowed;
+    el('cast').disabled = !active || !!f.pending || d.mode === 'dragon' || d.mode === 'ship' || f.turn !== 'player' || !f.spellsAllowed || f.party && f.remainingSpells === 0;
     el('resolve').disabled = !active || !f.pending;
     el('dragonSetup').hidden = mode !== 'dragon';
+    el('huntSetup').hidden = mode !== 'solo' || !spec()?.hunt;
+    el('huntShot').disabled = active || !spec()?.hunt;
+    el('openingArrows').hidden = el('opening').value !== 'arrows';
+    el('openingHarpoon').hidden = el('opening').value !== 'harpoon';
+    el('openingMagic').hidden = el('opening').value !== 'magicOpening';
     el('shipSetup').hidden = mode !== 'ship';
     el('heroSetup').hidden = ['dragon', 'ship'].includes(mode);
     el('enemySetup').hidden = mode === 'ship';
@@ -178,7 +214,7 @@ export function createPolicePanel({ document, t, getRun, getBookId, saveState, s
     el('spellControls').hidden = !active || !f.spellsAllowed;
     el('pendingMessage').textContent = f?.pending ? tk(f.pending.kind, { damage: f.pending.damage ?? 0, n: (f.pending.line ?? 0) + 1 }) : '';
     el('status').textContent = f ? tk('status.' + f.status) + ' · ' + (d.mode === 'ship'
-      ? tk('shipHealth', { life: f.ship.life, targets: f.targets, ammunition: f.ammunition })
+      ? tk('shipHealth', { life: f.ship.life, targets: f.targets, ammunition: typeof f.ammunition === 'number' ? f.ammunition : Object.entries(f.ammunition).map(([key, value]) => `${tk(key)}: ${value}`).join(', ') })
       : d.mode === 'dragon' ? tk('dragonHealth', { life: f.enemy.life })
         : tk('health', { player: f.player.life, enemy: f.enemy.life, count: f.remaining, turn: tk(f.turn) })) : tk('pick');
     el('log').innerHTML = d.log.slice(-100).reverse().map(text => `<div>${escape(text)}</div>`).join('');
@@ -197,9 +233,14 @@ export function createPolicePanel({ document, t, getRun, getBookId, saveState, s
       <div class="bsim-body"><div class="bsim-col bsim-col-left"><div id="${ID}-setup"><p>${escape(tk('manualNote'))}</p>
       ${select('mode', ['solo', 'party', 'dragon', 'ship'])}${input('level', 'level', 1, 1)}
       <div id="${ID}-enemySetup"><label class="inv-edit-row">${escape(tk('encounter'))}<select id="${ID}-encounter" class="inv-edit-input">${POLICE_ENCOUNTERS.map(row => `<option value="${row.id}">${escape(label(row))}</option>`).join('')}</select></label>${fields('enemy')}${input('count', 'count', 1, 1)}${check('cannotRun')}</div>
-      <div class="bsim-side" id="${ID}-heroSetup"><div class="bsim-side-title">${escape(tk('player'))}</div>${fields('player', 30)}${input('magic', 'magic', 0)}${select('weapon', ['unarmed', 'axe', 'mace', 'swordDagger', 'otherWeapon'])}${check('steelArmor')}${select('tactic', ['dynamic', 'aggressive', 'defensive', 'cautious'])}${input('recovery', 'recovery', '', 1)}</div>
-      <div id="${ID}-dragonSetup">${input('heroLine', 'heroLine', 1, 1)}${[1, 2, 3].map(i => `<details><summary>${escape(tk('line', { n: i }))}</summary>${select(`line${i}_type`, ['warrior', 'archer', 'mage'])}${input(`line${i}_count`, 'members', i, 1)}${fields(`line${i}`, 1)}</details>`).join('')}</div>
-      <div id="${ID}-shipSetup">${input('shipAttack')}${input('shield')}${input('shipLife', 'life', 60, 1)}${input('baseAttack')}${input('baseDefence')}${input('targets', 'targets', '', 1)}${input('ammunition', 'ammunition', 0)}${check('atmosphericShield')}</div></div>
+      <div class="bsim-side" id="${ID}-heroSetup"><div class="bsim-side-title">${escape(tk('player'))}</div>${fields('player', 30)}${input('magic', 'magic', 0)}${input('partyMages', 'partyMages', 0)}${select('weapon', ['unarmed', 'axe', 'mace', 'swordDagger', 'otherWeapon'])}${check('steelArmor')}${select('tactic', ['dynamic', 'aggressive', 'defensive', 'cautious'])}${input('recovery', 'recovery', '', 1)}</div>
+      <div id="${ID}-huntSetup"><details><summary>${escape(tk('hunt'))}</summary><p>${escape(tk('huntNote'))}</p>${input('huntShooting', 'shooting')}${input('huntAttack', 'weaponAttack')}${input('huntSpeed', 'speed')}${input('animalSpeed')}${input('huntDamage', 'damage')}${button('huntShot')}</details></div>
+      <div id="${ID}-dragonSetup">${input('heroLine', 'heroLine', 1, 1)}${[1, 2, 3].map(i => `<details><summary>${escape(tk('line', { n: i }))}</summary>${select(`line${i}_type`, ['warrior', 'archer', 'mage'])}${input(`line${i}_count`, 'members', i, 1)}${fields(`line${i}`, 1)}</details>`).join('')}
+      ${select('opening', ['none', 'ground', 'arrows', 'harpoon', 'magicOpening'])}
+      <div id="${ID}-openingArrows">${[1, 2, 3, 4, 5, 6].map(i => input('archer' + i, 'archerShooting')).join('')}</div>
+      <div id="${ID}-openingHarpoon">${input('shooting')}</div>
+      <div id="${ID}-openingMagic">${check('eligibleSpell')}${input('spellStrength')}${input('spellProtection')}</div></div>
+      <div id="${ID}-shipSetup">${input('shipAttack')}${input('shield')}${input('shipLife', 'life', 60, 1)}${input('baseAttack')}${input('baseDefence')}${input('targets', 'targets', '', 1)}${input('ammunition', 'antiprotonAmmo', 0)}${input('atomicAmmo', 'atomicAmmo', 0)}${input('paAmmo', 'paAmmo', 0)}${input('pbAmmo', 'pbAmmo', 0)}${check('atmosphericShield')}</div></div>
       <div class="bsim-btn-row">${button('start')}${button('cancel')}</div><div id="${ID}-status" class="bsim-status"></div>
       <details id="${ID}-modifiers"><summary>${escape(tk('manualModifiers'))}</summary>${['playerAttack', 'playerDefence', 'enemyAttack', 'enemyDefence'].map(key => input('modifier_' + key, key, '', -1000000)).join('')}</details>
       <div id="${ID}-shipControls">${select('shipWeapon', ['blaster', 'antiproton', 'atomic', 'pa', 'pb'])}${check('command')}</div>
@@ -216,6 +257,8 @@ export function createPolicePanel({ document, t, getRun, getBookId, saveState, s
     registerShortcut({ button: btn, overlay, open, close });
     el('encounter').addEventListener('change', preset);
     el('mode').addEventListener('change', render);
+    el('opening').addEventListener('change', render);
+    el('huntShot').addEventListener('click', () => action(hunt));
     el('start').addEventListener('click', () => { if (!busy(data())) action(start); });
     el('attack').addEventListener('click', () => action(d => step(d)));
     el('cast').addEventListener('click', () => action(d => step(d, true)));

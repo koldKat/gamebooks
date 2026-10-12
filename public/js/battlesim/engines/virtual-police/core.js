@@ -24,15 +24,18 @@ function finish(fight) {
 export function startPoliceFight(player, enemy, {
   count = 1, level = 1, tactic = 'dynamic', party = false, playerStrikes = 1,
   enemyFirst = undefined, nonfatal = false, spellsAllowed = true,
+  partySpells = 0,
 } = {}, roll = () => Math.floor(Math.random() * 6) + 1) {
   policeInteger(count, 1, 1000); policeInteger(level, 1, 6); policeInteger(playerStrikes, 1, 2);
   if (nonfatal !== false) policeInteger(nonfatal, 1);
+  policeInteger(partySpells, 0, 1000);
   if (!['dynamic', 'aggressive', 'defensive', 'cautious'].includes(tactic)) throw new RangeError('Invalid tactic');
   const dice = [];
   const first = enemyFirst ?? (!party && die(roll, dice) + die(roll, dice) < level * 2);
   return { player: actor(player), enemy: actor(enemy), enemyMaxLife: enemy.life, remaining: count,
     party: !!party, tactic, playerStrikes, strikesLeft: playerStrikes, turn: first ? 'enemy' : 'player',
-    status: 'fighting', nonfatal, spellsAllowed, round: 0, dice, pending: null, magicSpent: 0 };
+    status: 'fighting', nonfatal, spellsAllowed, remainingSpells: party ? partySpells : null,
+    round: 0, dice, pending: null, magicSpent: 0 };
 }
 function nextTurn(fight, acting) {
   if (acting === 'player' && --fight.strikesLeft > 0) return;
@@ -71,10 +74,12 @@ export function policeStrike(fight, { modifiers, spell } = {}, roll = () => Math
   let hit, damage;
   if (spell) {
     if (acting !== 'player' || !next.spellsAllowed) throw new RangeError('Spells unavailable');
+    if (next.party && next.remainingSpells <= 0) throw new RangeError('Each party mage casts once per battle');
     policeInteger(spell.base); policeInteger(spell.minimum, 1); policeInteger(spell.spent, spell.minimum);
     policeInteger(spell.bonus ?? 0); policeInteger(next.player.magic);
     if (spell.spent > next.player.magic) throw new RangeError('Insufficient magic');
     next.player.magic -= spell.spent; next.magicSpent += spell.spent;
+    if (next.party) next.remainingSpells--;
     hit = true; damage = spell.base + spell.spent + (spell.bonus ?? 0);
   } else {
     hit = acting === 'player' ? playerAttack > enemyDefence : enemyAttack > playerDefence;
@@ -161,17 +166,24 @@ export function resolvePoliceDragonCasualty(fight, { heroKilled = false, survivo
 export function startPoliceShip(ship, base, { targets, commandHits = 0, ammunition = 0, atmosphericShield = false } = {}) {
   policeInteger(ship.attack); policeInteger(ship.shield); policeInteger(ship.life, 1);
   policeInteger(base.attack); policeInteger(base.defence); policeInteger(targets, 1, 1000);
-  policeInteger(commandHits, 0, 5); policeInteger(ammunition);
-  return { ship: clone(ship), base: clone(base), targets, commandHits, ammunition,
+  policeInteger(commandHits, 0, 5);
+  if (typeof ammunition === 'number') policeInteger(ammunition);
+  else for (const key of ['antiproton', 'atomic', 'pa', 'pb']) policeInteger(ammunition[key]);
+  return { ship: clone(ship), base: clone(base), targets, commandHits, ammunition: clone(ammunition),
     atmosphericShield, status: 'fighting', pending: null, round: 0, dice: [] };
 }
 export function policeShipRound(fight, { weapon = 'blaster', command = false } = {}, roll = () => Math.floor(Math.random() * 6) + 1) {
   active(fight);
   if (!['blaster', 'antiproton', 'atomic', 'pa', 'pb'].includes(weapon)) throw new RangeError('Unknown ship weapon');
   if (command && weapon === 'blaster') throw new RangeError('Blasters cannot target the command centre');
-  if (weapon !== 'blaster' && fight.ammunition < 1) throw new RangeError('No ammunition');
+  const available = typeof fight.ammunition === 'number' ? fight.ammunition : fight.ammunition[weapon];
+  if (weapon !== 'blaster' && available < 1) throw new RangeError('No ammunition');
   const next = clone(fight), dice = [];
-  if (weapon !== 'blaster') next.ammunition--;
+  if (!command) next.commandHits = 0;
+  if (weapon !== 'blaster') {
+    if (typeof next.ammunition === 'number') next.ammunition--;
+    else next.ammunition[weapon]--;
+  }
   const hit = weapon === 'blaster' ? next.ship.attack + die(roll, dice) + die(roll, dice) > next.base.defence
     : !next.atmosphericShield && (['antiproton', 'pa'].includes(weapon) || die(roll, dice) % 2 === 0);
   if (hit) {
