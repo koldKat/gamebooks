@@ -1,7 +1,7 @@
 import { resolveIsModerator } from '../account/user.js';
 import { ensureGraphLibrary } from '../core/graph-library.js';
 import { bootState } from './state.js';
-import { state, setViewingPt, loadState, isValidSecId, currentPlaythrough, currentSection, isDemoMode } from '../core/state.js';
+import { state, setViewingPt, loadState, isValidSecId, currentPlaythrough, currentSection } from '../core/state.js';
 import { network, initGraph, destroyNetwork, canReach, setGraphOpenWorld } from '../graph.js';
 import { render, maxFastTravels, setDiscoverableLimit } from '../play.js';
 import { t } from '../i18n.js';
@@ -181,5 +181,5 @@ export async function showMain(bookId, isbn = null, issn = null, asin = null, co
   if (state.notesPinned) {
     await loadNotesForBook(bookId);
   }
-  if (!isDemoMode) connectPartySSE(bookId);
+  connectPartySSE(bookId);
 }

@@ -1,6 +1,6 @@
 // prefs.js - Server-side UI pref persistence and panel collapse helpers
 
-import { getToken, getUsername, isDemoMode, apiFetch } from '../core/state.js';
+import { getToken, getUsername, apiFetch } from '../core/state.js';
 import { setTrailCollapsed, setChoicesRecordedCount, CHOICES_PULSE_THRESHOLD } from '../play.js';
 import { setCoversPrefsState, _updateLandingBgDragUi } from '../covers.js';
 import { setExpandedPrefs, renderBooksList, getCachedBooks, getCachedAllSeries, getCachedStashes } from '../books.js';
@@ -76,7 +76,7 @@ export function applyPrefs(p, { renderBooks = true } = {}) {
 
 // Restore account-specific layout before rendering a cached library.
 export function restoreCachedPrefs() {
-  if (!getToken() || isDemoMode) return;
+  if (!getToken()) return;
   try {
     const prefs = JSON.parse(localStorage.getItem(`ui_prefs_v1:${getUsername()}`) || 'null');
     if (prefs && typeof prefs === 'object' && !Array.isArray(prefs)) applyPrefs(prefs, { renderBooks: false });
@@ -85,7 +85,7 @@ export function restoreCachedPrefs() {
 
 export async function syncPrefs(options) {
   const sessionToken = getToken();
-  if (!sessionToken || isDemoMode) return;
+  if (!sessionToken) return;
   const username = getUsername();
   try {
     const snapshotBefore = { ..._localPrefOverrides };

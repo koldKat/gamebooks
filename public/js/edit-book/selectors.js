@@ -1,4 +1,4 @@
-import { isDemoMode, apiFetch } from '../core/state.js';
+import { apiFetch } from '../core/state.js';
 import { t } from '../i18n.js';
 import { naturalCompare, naturalCompareByName } from '../core/sort.js';
 import { getCachedBooks } from '../books.js';
@@ -36,8 +36,7 @@ export function _populateSeriesSelect(selectId, selectedName) {
   const sel = document.getElementById(selectId);
   if (!sel) return;
   sel.innerHTML = `<option value="">${t('editbook.none')}</option>`;
-  // Skip authenticated series requests in demo mode to avoid session-expiry handling.
-  if (isDemoMode) return;
+
   apiFetch('/api/series').then(async r => {
     if (!r.ok) return;
     const list = (await r.json()).sort((a, b) => naturalCompare(a.name, b.name));

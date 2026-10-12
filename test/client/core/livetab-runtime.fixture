@@ -10,7 +10,7 @@ const flush = async () => { for (let i = 0; i < 12; i++) await Promise.resolve()
 
 async function tab() {
   const id = ++sequence;
-  const state = { token: 'token-' + id, demo: false, admin: true, landing: true, version: 'v1', failVersion: false };
+  const state = { token: 'token-' + id, admin: true, landing: true, version: 'v1', failVersion: false };
   const calls = [], streams = [], intervals = new Map(), timeouts = new Map();
   const windowListeners = new Map(), documentListeners = new Map();
   const elements = { 'main-screen': { style: { display: 'none' } }, 'books-screen': { style: { display: '' } }, 'app-version': { textContent: '' } };
@@ -41,7 +41,7 @@ async function tab() {
     return { ok: !state.failVersion, json: async () => ({ version: state.version }) };
   };
   const deps = {
-    './state.js': { getToken: () => state.token, isDemoMode: false, apiFetch: fetchVersion },
+    './state.js': { getToken: () => state.token, apiFetch: fetchVersion },
     '../progression/shop.js': { refreshCoinsDisplay: () => calls.push(['coins']) },
   };
   let stateModule;
@@ -84,7 +84,6 @@ async function tab() {
     },
     event: (name, payload = {}) => { for (const fn of (name === 'visibilitychange' ? documentListeners : windowListeners).get(name) || []) fn(payload); },
     interval: delay => tick(intervals, delay), timeout: delay => tick(timeouts, delay),
-    demo: value => { state.demo = value; stateModule.setExport('isDemoMode', value); },
     listenerCount: () => [...windowListeners.values(), ...documentListeners.values()].reduce((n, list) => n + list.length, 0),
   };
 }
@@ -143,10 +142,7 @@ a.state.token = null; a.api._disconnectUserBadgeSSE(); a.api._disconnectAppXpSSE
 a.api._connectUserBadgeSSE(); a.api._connectAppXpSSE();
 assert.equal(a.active().length, 2, 'logout retains public streams only');
 await a.interval(60000); assert.equal(a.count('heartbeat'), 4);
-a.state.token = 'new-token'; a.demo(true);
-a.api._connectUserBadgeSSE(); a.api._connectAppXpSSE(); await a.interval(60000);
-assert.equal(a.active().length, 2); assert.equal(a.count('heartbeat'), 4, 'demo earns no heartbeat');
-a.demo(false); a.state.admin = false;
+a.state.token = 'new-token'; a.state.admin = false;
 a.api._connectUserBadgeSSE(); a.api._connectAppXpSSE();
 assert.equal(a.active().length, 3, 'non-admin has no app-XP stream');
 assert.ok(a.active().some(s => s.url === '/api/user/stream?token=new-token'));

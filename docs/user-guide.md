@@ -97,17 +97,6 @@ Click **Stats** in the header (visible to everyone) to see live numbers for the 
 
 ---
 
-## Demo mode
-
-Click **Demo** on the landing page to try everything without creating an account.
-
-- It loads a ready-made book with a full map, completed playthroughs, and priority markings so you can explore straight away
-- Everything works just like a real account - create books, start playthroughs, use Fast Travel and Undo
-- **Nothing is saved** - all changes disappear when you close or refresh the page
-- A yellow banner at the top reminds you that you're in demo mode. Click **Exit Demo** to go back to the login screen.
-
----
-
 ## Accounts
 
 - **Log In** - sign in with an existing account
@@ -123,7 +112,7 @@ Your session is remembered in the browser. Click **Log out** on the books screen
 
 After logging in you land on the **Books** screen.
 
-New accounts include a **Demo Book** - a fully mapped 50-section example with completed playthroughs, notes, and priorities. Delete it any time.
+New accounts start with an empty library. Add books from the public catalog or create your own entries.
 
 Each book card shows a progress bar for sections you've visited across all playthroughs. The fill shows fractional progress, so small gains can move it between whole percentage points. The bar turns green once you've visited every section.
 

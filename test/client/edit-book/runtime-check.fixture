@@ -54,7 +54,7 @@ class XHR {
 }
 const escapeHtml = value => String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
 const overrides = {
-  state: {}, getToken: () => token, clearToken: () => { token = null; }, clearUsername: () => calls.push(['clearUsername']), isDemoMode: false,
+  state: {}, getToken: () => token, clearToken: () => { token = null; }, clearUsername: () => calls.push(['clearUsername']),
   t: (key, params) => params?.size ? `${key}:${params.size}` : key,
   naturalCompare: (a, b) => a.localeCompare(b), naturalCompareByName: (a, b) => a.name.localeCompare(b.name),
   foldForSearch: s => s.toLowerCase(), matchesSearch: (name, q) => name.toLowerCase().includes(q), escapeHtml,

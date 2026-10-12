@@ -132,7 +132,7 @@
         "name": "Can I try Gamebook Tracker without creating an account?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Yes. Click the Demo button on the landing page to launch a fully functional demo session with a pre-built mapped graph and completed runs. No sign-up required, and changes aren't saved."
+          "text": "You can browse the public catalog, activity feed, and community without an account. Create a free account to add books and track your playthroughs."
         }
       },
       {
@@ -168,7 +168,7 @@
   <link rel="stylesheet" href="/css/battlesim.css">
   <link rel="stylesheet" href="/css/liveread.css">
   <link rel="stylesheet" href="/css/reading-access.css">
-  <link rel="stylesheet" href="/css/demo.css">
+  <link rel="stylesheet" href="/css/feed.css">
   <link rel="stylesheet" href="/css/profile.css">
   <link rel="stylesheet" href="/css/public-profile.css">
   <link rel="stylesheet" href="/css/login.css">
@@ -200,11 +200,6 @@
   </div>
   <script src="/startup.js"></script>
 
-  <!-- ── Demo banner ─────────────────────────────────────────────── -->
-  <div id="demo-banner">
-    <span>Demo mode - nothing is saved</span>
-    <button id="demo-exit-btn">Exit Demo</button>
-  </div>
 
   <!-- ── Covers panel (fixed left) ────────────────────────────────── -->
   <div id="covers-panel">
@@ -260,8 +255,7 @@
             <button id="bonus-gc-btn" data-tooltip="No lucky coin waiting" data-i18n-tooltip="bonus_gc.tooltip_empty" disabled><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7.5" fill="#f59e0b" stroke="#92400e" stroke-width="0.75"/><circle cx="8" cy="8" r="5.5" fill="none" stroke="#fde68a" stroke-width="1"/><text x="8" y="8" text-anchor="middle" dominant-baseline="central" font-size="7" font-weight="bold" fill="#78350f" font-family="serif">G</text></svg></button>
             <button id="app-banner-f1-btn" data-tooltip="Keyboard shortcuts" data-i18n-tooltip="title.f1_shortcuts">F1</button>
             <a href="/guide.html" target="_blank" id="app-banner-guide-btn">User Guide</a>
-            <button id="demo-btn" style="display:none">Demo</button>
-            <button id="stats-btn">Stats</button>
+              <button id="stats-btn">Stats</button>
             <button id="forum-btn" style="display:none">Forum</button>
             <button id="feedback-btn" data-i18n="btn.feedback" style="display:none">Feedback</button>
             <button id="inbox-btn" data-i18n="btn.inbox" style="display:none">Inbox</button>

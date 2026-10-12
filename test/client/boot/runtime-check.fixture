@@ -72,13 +72,13 @@ const overrides = {
   getCachedBooks: () => cachedBooks, setCachedBooks: books => { cachedBooks = books; }, clearBooksCache: () => { cachedBooks = null; },
   renderBooksList: (...args) => { calls.push(['renderBooksList', ...args]); cachedBooks = args[0]; },
   getCachedAllSeries: () => cachedSeries, setCachedAllSeries: series => { cachedSeries = series; }, getCachedStashes: () => [],
-  currentBookId: null, isDemoMode: false, viewingPt: null,
+  currentBookId: null, viewingPt: null,
   currentSection: () => null, currentPlaythrough: () => null,
-  getVisibleEquippedItems: async () => [], getDemoBooks: () => [], getDemoVisited: () => [],
+  getVisibleEquippedItems: async () => [],
   isValidSecId: value => Number.isInteger(value) && value > 0,
   parseSecId: value => /^\d+$/.test(value) ? Number(value) : null,
   resolveIsAdmin: data => !!data?.isAdmin, isNotifDropdownOpen: () => false,
-  wasInDemoMode: () => !!scenario.savedDemo, hasPendingResetToken: () => !!scenario.reset,
+ hasPendingResetToken: () => !!scenario.reset,
   t: key => key, escapeHtml: text => text,
   adminBadge: () => '', authorBadge: () => '', contributorBadge: () => '',
   fetchPublic: async () => ({ ok: true, json: async () => ({}) }),
@@ -138,7 +138,6 @@ const bootState = modules.get(resolve(root, 'boot/state.js')).namespace.bootStat
 if (scenario.name !== 'integration') {
   if (scenario.screen) assert.equal(el(scenario.screen).style.display, 'flex', scenario.name);
   if (scenario.publicCall) assert.ok(calls.some(c => c[0] === scenario.publicCall && c[1] === scenario.publicId));
-  if (scenario.demo) assert.ok(calls.some(c => c[0] === 'startDemoMode'));
   if (scenario.reset) assert.ok(calls.some(c => c[0] === 'showResetPanel'));
   if (scenario.search) {
     assert.equal(token, 'handoff');

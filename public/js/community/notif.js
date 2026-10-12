@@ -1,6 +1,6 @@
 // notif.js - Notification badge, inbox badge, forum badge, notification dropdown
 
-import { getToken, apiFetch, isDemoMode } from '../core/state.js';
+import { getToken, apiFetch } from '../core/state.js';
 import { t } from '../i18n.js';
 import { escapeHtml } from '../core/util.js';
 
@@ -95,7 +95,7 @@ export function _scheduleLiveUiRefresh({
   if (_badgeRefreshTimer) clearTimeout(_badgeRefreshTimer);
   _badgeRefreshTimer = setTimeout(async () => {
     _badgeRefreshTimer = null;
-    if (!getToken() || isDemoMode) {
+    if (!getToken()) {
       _badgeRefreshInboxPending  = false;
       _badgeRefreshNotifPending  = false;
       _badgeRefreshForumPending  = false;

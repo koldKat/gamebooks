@@ -24,7 +24,6 @@ import { initInbox } from '../community/inbox.js';
 import { initDice } from '../play/dice.js';
 import { exportAll } from '../books/export.js';
 import { initFeedback } from '../community/feedback.js';
-import { setDemoHooks, getDemoBooks, setDemoBooks, startDemoMode, exitDemoMode } from '../demo.js';
 import { resolveIsAdmin, adminBadge, adminBadgeForUsername, authorBadge, contributorBadge, moderatorBadge, displayFor, registerAuthor, registerContributor, registerModerator, resolveIsModerator } from '../account/user.js';
 import { escapeHtml, fetchPublic as publicFetch } from '../core/util.js';
 import { _toggleShortcutsModal } from './helpers.js';
@@ -61,10 +60,6 @@ export function initFeatureHooks() {
   // ── Tips bar ──────────────────────────────────────────────────────
   initTips();
 
-  // ── Demo ─────────────────────────────────────────────────────────
-  setDemoHooks({ showBooks, showLogin });
-  document.getElementById('demo-btn').addEventListener('click', startDemoMode);
-  document.getElementById('demo-exit-btn').addEventListener('click', exitDemoMode);
 
   document.getElementById('app-banner-f1-btn').addEventListener('click', () => _toggleShortcutsModal());
 
@@ -192,8 +187,6 @@ export function initFeatureHooks() {
     getIsAdmin:                   () => bootState._isAdmin,
     getIsModerator: resolveIsModerator,
     getHasPdfAccess:              () => bootState._hasPdfAccess,
-    getDemoBooks,
-    setDemoBooks,
     maxSectionInUse,
     mappedCountFor,
     discoveredSectionsFor,

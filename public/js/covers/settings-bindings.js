@@ -3,7 +3,7 @@ import { _refreshCoversDisplay } from './grid.js';
 import { _persistLandingCoverPos, _applyLandingBgPosition, _canDragLandingBg, _updateLandingBgDragUi } from './background.js';
 import { _applyCoverTooltipTitlePrefs, _persistCoverTooltipPrefs, _applyReduceMotionPref, _persistReduceMotionPref, _applyFeedDayCoversPref, _persistFeedDayCoversPref, _applyFeedGlassCardsPref, _persistFeedGlassCardsPref, _applyLandingBgHiddenPref, _persistLandingBgHiddenPref, _applyLandingCoverSourcePrefs, _persistLandingCoverSourcePref, _toggleCoverTooltipSettings } from './prefs.js';
 import { coversState } from './state.js';
-import { getToken, isDemoMode } from '../core/state.js';
+import { getToken } from '../core/state.js';
 import { t } from '../i18n.js';
 
 export function _initCoverSettings() {
@@ -76,7 +76,7 @@ export function _initCoverSettings() {
   }
   function _hideLandingCtxMenu() { if (_landingCtxMenu) _landingCtxMenu.style.display = 'none'; }
   document.getElementById('landing-wrapper')?.addEventListener('contextmenu', e => {
-    if (!getToken() || isDemoMode) return;
+    if (!getToken()) return;
     if (e.target.closest('button, a, input, textarea, select, label, .cover-thumb, .feed-entry, .feed-user-group, .feed-pinned-card, .feed-day-card, #app-banner, #covers-panel, #feed-panel, #books-xp-summary, .books-container')) return;
     e.preventDefault();
     _showLandingCtxMenu(e.clientX, e.clientY);

@@ -9,11 +9,11 @@ const dir = new URL('../../../public/js/', import.meta.url);
 test('core relocation preserves implementations without root wrappers or duplicate state', () => {
   const digests = {
     // Reader entries have separate progress accounting; discovered-mapped.test.mjs covers it.
-    state: 'ded8af1cd75f0f47830a25dd5f1650c23a73ec1ec373b23c3025f13ba3f743f8',
+    state: '33721a7cb3e182fc216163541f780d90365e4e06fbebeb39a75b60371edf6414',
     constants: 'b67245d28638c7d42c976068c7bc86ac822fff89d47c537d8fd9672ff19826a9',
     sort: 'a37194516dcc6faf776288906e52f3b9e8dc8d30a81df7158108d8b0e3742eb6',
     // Includes the reviewed simulator overlay registry additions.
-    util: '6d75cbec9669b8db0a83c707eba19f13dbbdb0ab6477dbbef8d1e8cc469de5ea',
+    util: '19ebb70ba4e5e659b0f96a66b2f1a83ace4900cf927148fbd35b02e7934793e8',
   };
   for (const [name, digest] of Object.entries(digests)) {
     assert.equal(existsSync(new URL(name + '.js', dir)), false);

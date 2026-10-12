@@ -13,7 +13,7 @@ test('community relocation preserves each module implementation without root wra
   const digests = {
     inbox: '29c252f34e0b8e7fb803705f404130c7e520e01df68c9688c7e2eccbc2102478',
     feedback: 'cb26d728a3b4c4afdf5bbb37c568c0f3f0ebfaed4c7e2b746fcea497e04fde8d',
-    notif: '435a80e52bbe4a7282b5736348cc03455fe66662220ad9ca74567d9d744587de',
+    notif: '58f9a975d294e697adc3d975d12786e0d18e404da55d4115b2038b9b17fbd4fc',
   };
   for (const [name, digest] of Object.entries(digests)) {
     assert.equal(existsSync(resolve(js, name + '.js')), false, 'no old root module: ' + name);

@@ -56,7 +56,7 @@ test('Edit Book saves the optional maximum and keeps the total independent of se
   el('edit-book-pub-type').value = 'book';
   let saved;
   const c = client('edit-book/book-actions.js', { document: { getElementById: el },
-    editState: { _bookSession: 1, _editBookId: 1 }, isDemoMode: false, t: key => key,
+    editState: { _bookSession: 1, _editBookId: 1 }, t: key => key,
     _setButtonsDisabled() {}, pauseCoversAutoRefresh() {}, resumeCoversAutoRefresh() {},
     validateIsbn: () => '', validateIssn: () => '', validateAsin: () => '' });
   c.bindBookActions({ pubTypeEl: el('edit-book-pub-type'), minSections: 5, minMaxSectionNumber: 1003,

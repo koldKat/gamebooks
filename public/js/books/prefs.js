@@ -1,5 +1,5 @@
 import { booksState } from './state.js';
-import { getToken, isDemoMode } from '../core/state.js';
+import { getToken } from '../core/state.js';
 
 export function setExpandedPrefs(bookExp, seriesExp, stashExp) {
   booksState._bookExpandedPrefs   = (bookExp   && typeof bookExp   === 'object' && !Array.isArray(bookExp))   ? bookExp   : {};
@@ -16,7 +16,7 @@ export function _getExpandMap(kind) {
 
 export function _getExpandedPref(kind, key, localKey) {
   const map = _getExpandMap(kind);
-  if (!isDemoMode && getToken() && Object.prototype.hasOwnProperty.call(map, key)) return map[key] !== '0';
+  if (getToken() && Object.prototype.hasOwnProperty.call(map, key)) return map[key] !== '0';
   if (kind === 'series') {
     const [prefix, sid = ''] = String(key || '').split(':');
     // Stash expansion falls back only to stash-specific storage, never main-list state.
@@ -31,7 +31,7 @@ export function _getExpandedPref(kind, key, localKey) {
 export function _saveExpandedPref(kind, key, localKey, expanded) {
   const val = expanded ? '1' : '0';
   localStorage.setItem(localKey, val);
-  if (isDemoMode || !getToken()) return;
+  if (!getToken()) return;
   const map = { ..._getExpandMap(kind), [key]: val };
   if (kind === 'book') {
     booksState._bookExpandedPrefs = map;
@@ -57,7 +57,7 @@ export function _captureExpandedPrefsFromDom(root = document.getElementById('boo
     if (!key) return;
     const val = row.dataset.expanded === '1' ? '1' : '0';
     localStorage.setItem(`bk_expanded_${key}`, val);
-    if (!isDemoMode && getToken() && Object.prototype.hasOwnProperty.call(nextBook, key) && nextBook[key] !== val) {
+    if (getToken() && Object.prototype.hasOwnProperty.call(nextBook, key) && nextBook[key] !== val) {
       if (!bookChanged) nextBook = { ...nextBook };
       nextBook[key] = val;
       bookChanged = true;
@@ -72,7 +72,7 @@ export function _captureExpandedPrefsFromDom(root = document.getElementById('boo
     const localKey = `${stashId ? `stash_${stashId}_sr_` : 'sr_'}expanded_${sid}`;
     const val = row.dataset.expanded === '1' ? '1' : '0';
     localStorage.setItem(localKey, val);
-    if (!isDemoMode && getToken() && Object.prototype.hasOwnProperty.call(nextSeries, mapKey) && nextSeries[mapKey] !== val) {
+    if (getToken() && Object.prototype.hasOwnProperty.call(nextSeries, mapKey) && nextSeries[mapKey] !== val) {
       if (!seriesChanged) nextSeries = { ...nextSeries };
       nextSeries[mapKey] = val;
       seriesChanged = true;
@@ -84,14 +84,14 @@ export function _captureExpandedPrefsFromDom(root = document.getElementById('boo
     if (!key) return;
     const val = row.dataset.expanded === '1' ? '1' : '0';
     localStorage.setItem(`stash_expanded_${key}`, val);
-    if (!isDemoMode && getToken() && Object.prototype.hasOwnProperty.call(nextStash, key) && nextStash[key] !== val) {
+    if (getToken() && Object.prototype.hasOwnProperty.call(nextStash, key) && nextStash[key] !== val) {
       if (!stashChanged) nextStash = { ...nextStash };
       nextStash[key] = val;
       stashChanged = true;
     }
   });
 
-  if (!isDemoMode && getToken() && (bookChanged || seriesChanged || stashChanged)) {
+  if (getToken() && (bookChanged || seriesChanged || stashChanged)) {
     booksState._bookExpandedPrefs   = nextBook;
     booksState._seriesExpandedPrefs = nextSeries;
     booksState._stashExpandedPrefs  = nextStash;
@@ -116,17 +116,17 @@ export function _syncSeriesPrefsToStash(stashId, seriesIds = []) {
     const stashMapKey  = `${stashId}:${sid}`;
     const mainLocalKey = `sr_expanded_${sid}`;
     const stashLocalKey = `stash_${stashId}_sr_expanded_${sid}`;
-    const mainVal = (!isDemoMode && getToken() && Object.prototype.hasOwnProperty.call(nextSeries, mainMapKey))
+    const mainVal = (getToken() && Object.prototype.hasOwnProperty.call(nextSeries, mainMapKey))
       ? nextSeries[mainMapKey]
       : (localStorage.getItem(mainLocalKey) ?? '1');
     localStorage.setItem(stashLocalKey, mainVal);
-    if (!isDemoMode && getToken() && nextSeries[stashMapKey] !== mainVal) {
+    if (getToken() && nextSeries[stashMapKey] !== mainVal) {
       if (!changed) nextSeries = { ...nextSeries };
       nextSeries[stashMapKey] = mainVal;
       changed = true;
     }
   }
-  if (!isDemoMode && getToken() && changed) {
+  if (getToken() && changed) {
     booksState._seriesExpandedPrefs = nextSeries;
     booksState._hooks.savePrefs?.({ seriesExpanded: nextSeries });
   }

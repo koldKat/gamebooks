@@ -34,8 +34,8 @@ The top of the panel shows aggregate stats across all users and books:
 |------|---------------|
 | **Users** | Total registered accounts (active only). Shows admin count separately. |
 | **Sessions** | Current live sessions (logged-in browsers) |
-| **PDFs / EPUBs** | Number of non-demo books with a PDF attached, and the number with an EPUB attached |
-| **Books** | Total non-demo books across all accounts |
+| **PDFs / EPUBs** | Number of books with a PDF attached, and the number with an EPUB attached |
+| **Books** | Total books across all accounts |
 | **Mapped Sections** | Sections where choices have been recorded, summed across all books - shown with percentage of total sections |
 | **Discovered Sections** | All sections ever seen (mapped + referenced but unmapped), summed across all books - shown with percentage of total sections |
 | **Playthroughs** | `active \| finished` - active runs (green), finished runs (aqua). Pipe is orange. |
@@ -97,7 +97,7 @@ Editing uses consistent modal dialogs for players, books, series, anthologies, i
 
 ## Books tab
 
-Lists every non-demo, non-container book across all users (standalone books and anthology children - anthology containers themselves are listed separately in the **Anthologies tab**, since a container has no playthroughs of its own and the Wins/Losses/Battle columns would be meaningless for it). Columns: Book, Owner, Sections, Wins, Losses, Battle, Last Updated, Actions. Paginated at 50 rows/page. The search box filters by book name or owner username live as you type through the shared `getFiltered()`/`getSorted()` pipeline in `admin/js/core.js`.
+Lists every non-container book across all users (standalone books and anthology children - anthology containers themselves are listed separately in the **Anthologies tab**, since a container has no playthroughs of its own and the Wins/Losses/Battle columns would be meaningless for it). Columns: Book, Owner, Sections, Wins, Losses, Battle, Last Updated, Actions. Paginated at 50 rows/page. The search box filters by book name or owner username live as you type through the shared `getFiltered()`/`getSorted()` pipeline in `admin/js/core.js`.
 
 Clicking a book name opens the **book detail view** with three sections:
 
@@ -228,7 +228,7 @@ The admin panel shows two GC figures: **GC Earned** and **GC Available** (`GET /
 | Contribution | Rate |
 |---|---|
 | Users | 1 GC each |
-| Books (non-demo, non-anthology) | 1 GC each |
+| Books (non-anthology) | 1 GC each |
 | Series | 1 GC each |
 | Anthologies | 1 GC each |
 | `visit_all` XP events (any user) | 1 GC each |
@@ -375,7 +375,7 @@ All endpoints require a localhost connection. No auth token.
 
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/api/admin/books` | All non-demo, non-container books across all users (standalone + anthology children only - containers excluded, see Anthologies below) |
+| GET | `/api/admin/books` | All non-container books across all users (standalone + anthology children only - containers excluded, see Anthologies below) |
 | GET | `/api/admin/books/:id/stats` | Per-book stats and full playthroughs list (includes `series_name`, `series_number`, `is_container`, `parent_book_id`, `book_order`) |
 | GET | `/api/admin/series` | All series → `[{id, name, description, is_public}]` - used for datalist autocomplete in book edit form |
 | GET | `/api/admin/books/:id/ratings` | All ratings: `[{ userBookId, username, rating }]` |

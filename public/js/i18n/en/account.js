@@ -67,6 +67,5 @@ export default {
     'profile.load_failed': 'Could not load profile. Please try again.',
     'auth.confirm': 'Confirm',
     'auth.send_reset_link': 'Send reset link',
-    'auth.demo_username': 'Demo',
     'auth.browse_guest': 'Browse without signing in',
 };

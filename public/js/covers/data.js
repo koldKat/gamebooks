@@ -3,7 +3,7 @@ import { _effectiveCoversKindMode, _visibleCoverItems } from './filters.js';
 import { _refreshCoversDisplay, _stopLazy } from './grid.js';
 import { _resetLandingCoverQueue, _startLandingCoverRotation } from './background.js';
 import { coversState } from './state.js';
-import { getToken, isDemoMode } from '../core/state.js';
+import { getToken } from '../core/state.js';
 import { naturalCompare } from '../core/sort.js';
 import { fetchPublic as publicFetch } from '../core/util.js';
 
@@ -133,10 +133,10 @@ export async function loadCovers({ force = true } = {}) {
       kindLabel.textContent = kindLabels[effective] || effective;
       kindMenu.querySelectorAll('li').forEach(li => li.classList.toggle('active', li.dataset.value === effective));
       const favLi = kindMenu.querySelector('li[data-value="favorites"]');
-      if (favLi) favLi.style.display = (getToken() && !isDemoMode) ? '' : 'none';
+      if (favLi) favLi.style.display = (getToken()) ? '' : 'none';
     }
     const notMineEl2 = document.getElementById('covers-filter-notmine');
-    if (notMineEl2) notMineEl2.style.display = (getToken() && !isDemoMode) ? '' : 'none';
+    if (notMineEl2) notMineEl2.style.display = (getToken()) ? '' : 'none';
     panel.classList.add('active');
     document.getElementById('covers-toggle').classList.add('visible');
     _refreshCoversDisplay();

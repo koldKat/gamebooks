@@ -19,7 +19,7 @@ function setup() {
       isbn TEXT, issn TEXT, asin TEXT, pages INTEGER, authors TEXT, description TEXT, created_by INTEGER,
       series_id INTEGER REFERENCES series(id) ON DELETE SET NULL, series_number TEXT,
       is_container INTEGER DEFAULT 0, parent_book_id INTEGER, book_order INTEGER, is_public INTEGER DEFAULT 0,
-      published_at INTEGER, created_at INTEGER DEFAULT 0, is_demo INTEGER DEFAULT 0, cover_path TEXT,
+      published_at INTEGER, created_at INTEGER DEFAULT 0, cover_path TEXT,
       pdf_path TEXT, epub_path TEXT, has_battle_sim INTEGER DEFAULT 0, has_live_reading INTEGER DEFAULT 0);
     CREATE TABLE user_books (user_id INTEGER, book_id INTEGER, state_data TEXT, updated_at INTEGER, rating REAL, UNIQUE(user_id,book_id));
     CREATE TABLE book_anthology_memberships (book_id INTEGER, anthology_id INTEGER, book_order INTEGER);`);

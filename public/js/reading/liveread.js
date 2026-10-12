@@ -11,8 +11,7 @@ import { showReadingGate } from './access.js';
 import { renderReadingMatter } from './content.js';
 import { bindReadingMapEntry, isReadingMapSection, readingChoices } from './map-entry.js';
 
-// Reuses the same .feed-loading-graph/.flg-* markup and CSS (demo.css) as the
-// activity feed's loading indicator, both loaded on index.html.
+// Shares the activity feed's loading indicator and feed.css, loaded on index.html.
 const _loadingHtml = () => `<div class="liveread-loading">
   <svg class="feed-loading-graph" viewBox="0 0 32 32">
     <line x1="16" y1="16" x2="6"  y2="7"  stroke="#4b5563" stroke-width="1.8" stroke-linecap="round"/>

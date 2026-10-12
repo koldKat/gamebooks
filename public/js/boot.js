@@ -1,6 +1,7 @@
 // Application entry point. Feature initialization lives in boot/.
 import { bootState } from './boot/state.js';
 import { initApp } from './boot/init.js';
+import { retireSampleCache } from './boot/retire-sample-cache.js';
 
 window._isMobile = /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
   || (navigator.maxTouchPoints > 1 && window.innerWidth < 1024);
@@ -11,6 +12,7 @@ document.addEventListener('mousedown', e => {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
+  retireSampleCache();
   return initApp().then(() => window.appStartup?.ready()).catch(error => {
     console.error('Application startup failed', error);
     window.appStartup?.fail();

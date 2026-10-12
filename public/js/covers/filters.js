@@ -1,6 +1,6 @@
 import { _sortedByName, _isMobile, _shuffle } from './helpers.js';
 import { coversState } from './state.js';
-import { getToken, isDemoMode } from '../core/state.js';
+import { getToken } from '../core/state.js';
 
 // ── Favorites management ───────────────────────────────────────────────────────
 export function _setCoverFavoritesFromPrefs(p = {}) {
@@ -22,7 +22,7 @@ export function _isFavoriteCoverItem(item) {
 export function _isLazyMode() { return true; }
 
 export function _effectiveCoversKindMode() {
-  if (!getToken() || isDemoMode) return coversState._coversKindMode === 'favorites' ? 'all' : coversState._coversKindMode;
+  if (!getToken()) return coversState._coversKindMode === 'favorites' ? 'all' : coversState._coversKindMode;
   return coversState._coversKindMode;
 }
 
@@ -92,7 +92,7 @@ export function _visibleCoverItems() {
   if (coversState._coversLiveReadingOnly || _isMobile()) items = items.filter(_hasLiveReading);
   // Open world is a series-only concept - non-series items never match.
   if (coversState._coversOpenWorldOnly) items = items.filter(i => !!i.isOpenWorld);
-  if (coversState._coversNotMineOnly && getToken() && !isDemoMode) items = items.filter(_isNotInMyBooks);
+  if (coversState._coversNotMineOnly && getToken()) items = items.filter(_isNotInMyBooks);
   return items;
 }
 

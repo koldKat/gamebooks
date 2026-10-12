@@ -1,5 +1,5 @@
 import { _isFavoriteCoverItem, _hasBattleSim, _hasLiveReading, _hasPdf, _hasEpub, _bottomLeftBadgeCount, _epubBadgeOffset } from './filters.js';
-import { getToken, isDemoMode } from '../core/state.js';
+import { getToken } from '../core/state.js';
 import { escapeHtml } from '../core/util.js';
 import { t } from '../i18n.js';
 
@@ -7,7 +7,7 @@ import { t } from '../i18n.js';
 export function _makeCoverThumbHTML(c) {
   const cls = c.isSeries ? ' cover-thumb--series' : (c.isContainer ? ' cover-thumb--anthology' : '');
   const isFavorite = _isFavoriteCoverItem(c);
-  const favBtn = (getToken() && !isDemoMode)
+  const favBtn = (getToken())
     ? `<button class="cover-fav-btn${isFavorite ? ' is-favorite' : ''}" type="button" data-fav-type="${c.isSeries ? 'series' : 'book'}" data-fav-id="${c.isSeries ? c.entityId : c.id}" data-tooltip="${escapeHtml(isFavorite ? t('covers.remove_from_favorites') : t('covers.add_to_favorites'))}" aria-label="${isFavorite ? t('covers.remove_from_favorites') : t('covers.add_to_favorites')}">${isFavorite ? '★' : '☆'}</button>`
     : '';
   const useSingleSeriesCover = c.isSeries && c.coverSources?.length && c.coverSources.length < 4;

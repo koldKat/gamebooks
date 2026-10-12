@@ -27,7 +27,6 @@ activity feed, forums, and public profiles.
 - **Social features** - a public activity feed, forums, Play Together (live shared party runs),
   public profiles, ratings, and a feedback/inbox system
 - **Export** - download your data per-book or for your whole account
-- **Demo mode** - try the tracker without an account
 - **Multi-platform tracking** - the same account works across every domain this app is deployed
   on; the admin panel records which domain each user last signed in from
 

@@ -14,16 +14,16 @@ test('catalog aggregates public anthology media availability without exposing ch
     authors TEXT, is_container INTEGER DEFAULT 0, total_sections INTEGER DEFAULT 0, max_section_number INTEGER,
     description TEXT, has_battle_sim INTEGER DEFAULT 0, has_live_reading INTEGER DEFAULT 0,
     isbn TEXT, issn TEXT, asin TEXT, pages INTEGER, pdf_path TEXT, epub_path TEXT,
-    series_id INTEGER, series_number TEXT, parent_book_id INTEGER, is_demo INTEGER DEFAULT 0,
+    series_id INTEGER, series_number TEXT, parent_book_id INTEGER,
     is_public INTEGER DEFAULT 1);
     CREATE TABLE series (id INTEGER PRIMARY KEY,name TEXT,is_public INTEGER);
     CREATE TABLE user_books (book_id INTEGER,user_id INTEGER);
     INSERT INTO books (id,name,is_container) VALUES (1,'Public anthology',1),(2,'Private children only',1);
-    INSERT INTO books (id,name,parent_book_id,pdf_path,epub_path,is_public,is_demo) VALUES
-      (11,'Public PDF',1,'public-child.pdf',NULL,1,0),
-      (12,'Public EPUB',1,NULL,'public-child.epub',1,0),
-      (21,'Private PDF',2,'private-child.pdf',NULL,0,0),
-      (22,'Demo EPUB',2,NULL,'demo-child.epub',1,1);
+    INSERT INTO books (id,name,parent_book_id,pdf_path,epub_path,is_public) VALUES
+      (11,'Public PDF',1,'public-child.pdf',NULL,1),
+      (12,'Public EPUB',1,NULL,'public-child.epub',1),
+      (21,'Private PDF',2,'private-child.pdf',NULL,0),
+      (22,'Private EPUB',2,NULL,'private-child.epub',0);
     INSERT INTO books (id,name,pdf_path) VALUES (3,'Direct PDF','direct.pdf');`);
   const context = vm.createContext({ module: { exports: {} }, require: n => n === './connection' ? { db } : {} });
   vm.runInContext(fs.readFileSync(require.resolve('../server/db/feed'), 'utf8'), context);
@@ -37,7 +37,7 @@ test('catalog aggregates public anthology media availability without exposing ch
   assert.equal(allowed.find(b => b.id === 2).hasPdf, false);
   assert.equal(allowed.find(b => b.id === 2).hasEpub, false);
   assert.equal(allowed.find(b => b.id === 3).pdfPath, 'direct.pdf');
-  assert.doesNotMatch(JSON.stringify(allowed), /public-child|private-child|demo-child/);
+  assert.doesNotMatch(JSON.stringify(allowed), /public-child|private-child/);
   for (const b of catalog(false)) {
     assert.equal(b.hasPdf, false);
     assert.equal(b.hasEpub, false);

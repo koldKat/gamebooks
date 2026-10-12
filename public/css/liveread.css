@@ -103,7 +103,7 @@
 .liveread-empty { opacity: 0.7; font-style: italic; margin: 0; }
 
 /* Loading indicator markup/animation is the shared .feed-loading-graph/.flg-*
-   graph icon (demo.css) - this wrapper only supplies the flex layout. */
+   graph icon (feed.css) - this wrapper only supplies the flex layout. */
 .liveread-loading {
   display: flex;
   flex-direction: column;

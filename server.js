@@ -38,8 +38,6 @@ if (!fs.existsSync(ATTACHMENTS_DIR)) fs.mkdirSync(ATTACHMENTS_DIR, { recursive: 
 db.runXpMigration();
 db.migratePublicBookXp();
 db.migrateEquipmentXp();
-// Refresh any stale demo books to the current graph design
-db.refreshDemoBooks();
 // Purge sessions that have passed their 30-day expiry
 db.purgeExpiredSessions();
 // Update geoip data if older than 30 days
@@ -378,7 +376,6 @@ const _routeRequest = async (req, res) => {
     if (method === 'GET' && urlPath === '/auth/impersonate') return handleImpersonateRedirect(req, res);
     if (method === 'GET'    && urlPath === '/api/ping')      { addSecurityHeaders(res); res.writeHead(200, {'Content-Type':'text/plain','Cache-Control':'no-store'}); return res.end('ok'); }
     if (method === 'GET'    && urlPath === '/api/maintenance-message') { addSecurityHeaders(res); res.writeHead(200, {'Content-Type':'application/json','Cache-Control':'no-store'}); return res.end(JSON.stringify({ message: getMaintenanceMessage() })); }
-    if (method === 'GET'    && urlPath === '/api/demo')      return send(res, 200, db.getDemoBookState());
     if (method === 'POST'   && urlPath === '/api/register')         return await handleRegister(req, res);
     if (method === 'POST'   && urlPath === '/api/login')            return await handleLogin(req, res);
     if (method === 'POST'   && urlPath === '/api/logout')           return await handleLogout(req, res);
@@ -633,12 +630,6 @@ const _routeRequest = async (req, res) => {
     if ((m = urlPath.match(apiForumPostRe))        && method === 'PATCH')  return await handleForumEditPost(req, res, +m[1]);
     if ((m = urlPath.match(apiForumPostRe))        && method === 'DELETE') return await handleForumDeletePost(req, res, +m[1]);
 
-    if (method === 'GET' && urlPath === '/demo') {
-      const indexPath = path.join(ROOT, 'index.html');
-      addSecurityHeaders(res);
-      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' });
-      return fs.createReadStream(indexPath).pipe(res);
-    }
     // Serve the mobile shell without authentication so login is reachable; its APIs remain protected.
     if (method === 'GET' && urlPath === '/mobile') {
       const indexPath = path.join(ROOT, 'mobile', 'index.html');

@@ -14,7 +14,7 @@ function activity(primary, secondary = []) {
         if (!sql.includes('WHERE parent_book_id = ?')) return [];
         assert.match(sql, /has_live_reading/);
         assert.match(sql, /has_battle_sim/);
-        assert.match(sql, /is_demo = 0 AND is_public = 1/);
+        assert.match(sql, /is_public = 1/);
         return primary;
       },
     }) } },

@@ -3,7 +3,6 @@ import { state, loadState, getToken, currentBookId } from '../core/state.js';
 import { render } from '../play.js';
 import { openPublicProfile } from '../account/public-profile.js';
 import { openCoverActivity, openSeriesActivity } from '../covers.js';
-import { startDemoMode, wasInDemoMode } from '../demo.js';
 import { navigateToBook, showLogin, showBooks } from './screens.js';
 
 export async function initRouting() {
@@ -37,10 +36,7 @@ export async function initRouting() {
   const _anthologyPageMatch = location.pathname.match(/^\/anthology\/(\d+)$/);
   const _seriesPageMatch    = location.pathname.match(/^\/series\/(\d+)$/);
   const _userPageMatch      = location.pathname.match(/^\/user\/([^/]+)$/);
-  if ((location.pathname === '/demo' || wasInDemoMode()) && !getToken()) {
-    if (location.pathname === '/demo') history.replaceState({}, '', '/');
-    await startDemoMode();
-  } else if (getToken()) {
+  if (getToken()) {
     const m = location.hash.match(/^#book\/(.+)$/);
     if (m) {
       document.getElementById('landing-wrapper').style.display = 'none';

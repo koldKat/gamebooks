@@ -7,10 +7,10 @@ const Database = require('better-sqlite3');
 
 function setup() {
   const raw = new Database(':memory:');
-  raw.exec(`CREATE TABLE books (id INTEGER PRIMARY KEY, cover_path TEXT, parent_book_id INTEGER, is_public INTEGER, is_demo INTEGER DEFAULT 0);
-    INSERT INTO books VALUES (1,'own.jpg',NULL,1,0),(2,'anthology.jpg',NULL,1,0),
-      (3,NULL,2,1,0),(4,'private.jpg',NULL,0,0),(5,NULL,4,1,0),
-      (6,'demo.jpg',NULL,1,1),(7,NULL,NULL,1,0);`);
+  raw.exec(`CREATE TABLE books (id INTEGER PRIMARY KEY, cover_path TEXT, parent_book_id INTEGER, is_public INTEGER);
+    INSERT INTO books VALUES (1,'own.jpg',NULL,1),(2,'anthology.jpg',NULL,1),
+      (3,NULL,2,1),(4,'private.jpg',NULL,0),(5,NULL,4,1),
+      (7,NULL,NULL,1);`);
   let queries = 0;
   const context = vm.createContext({ module: { exports: {} }, URL, require: () => ({ db: {
     prepare(sql) { queries++; return raw.prepare(sql); },
@@ -33,10 +33,10 @@ test('regular and pinned announcement links get public covers in a single batche
   } finally { h.raw.close(); }
 });
 
-test('announcement previews omit private, demo, missing, coverless and external books', () => {
+test('announcement previews omit private, missing, coverless and external books', () => {
   const h = setup();
   try {
-    const entries = [{ type: 'announcement', body: '[Private](/book/4) [Private parent](/book/5) [Demo](/book/6) [No cover](/book/7) [Missing](/book/99) [External](https://example.com/book/1)' }];
+    const entries = [{ type: 'announcement', body: '[Private](/book/4) [Private parent](/book/5) [No cover](/book/7) [Missing](/book/99) [External](https://example.com/book/1)' }];
     h.add(entries, null);
     assert.equal(Object.keys(entries[0].bookCovers).length, 0);
     assert.equal(h.queries(), 1);

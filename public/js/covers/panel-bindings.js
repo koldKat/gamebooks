@@ -3,7 +3,7 @@ import { _syncCoverFavoriteButton } from './markup.js';
 import { _removeFavoriteThumbInPlace } from './grid.js';
 import { openCoverActivity, openSeriesActivity } from './activity.js';
 import { coversState } from './state.js';
-import { getToken, isDemoMode } from '../core/state.js';
+import { getToken } from '../core/state.js';
 
 export function _initCoverNavigation() {
   // Covers panel click (favorites + thumb navigation)
@@ -11,7 +11,7 @@ export function _initCoverNavigation() {
     const favBtn = e.target.closest('.cover-fav-btn');
     if (favBtn) {
       e.stopPropagation();
-      if (!getToken() || isDemoMode) return;
+      if (!getToken()) return;
       const id = Number(favBtn.dataset.favId);
       let isFavorite = false;
       if (favBtn.dataset.favType === 'series') {

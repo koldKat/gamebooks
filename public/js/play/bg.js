@@ -1,6 +1,6 @@
 // bg.js - Graph background preference, bg/node context menus
 
-import { apiFetch, isDemoMode, currentBookId, state } from '../core/state.js';
+import { apiFetch, currentBookId, state } from '../core/state.js';
 import { t } from '../i18n.js';
 
 let _hooks = {};
@@ -47,7 +47,7 @@ function _applyBgPref() {
 }
 
 async function _saveBgPref() {
-  if (!currentBookId || isDemoMode) return;
+  if (!currentBookId) return;
   await apiFetch(`/api/books/${currentBookId}/bg`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },

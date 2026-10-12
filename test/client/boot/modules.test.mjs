@@ -52,8 +52,6 @@ for (const scenario of [
   { name: 'public anthology', pathname: '/anthology/2', publicCall: 'openCoverActivity', publicId: 2, screen: 'login-screen' },
   { name: 'public series', pathname: '/series/3', publicCall: 'openSeriesActivity', publicId: 3, screen: 'login-screen' },
   { name: 'public player', pathname: '/user/Player%20One', publicCall: 'openPublicProfile', publicId: 'Player One', screen: 'login-screen' },
-  { name: 'demo path', pathname: '/demo', demo: true },
-  { name: 'saved demo', savedDemo: true, demo: true },
   { name: 'password reset', reset: true, screen: 'login-screen' },
   { name: 'impersonation handoff', search: '?_imp=handoff', screen: 'books-screen' },
 ]) {

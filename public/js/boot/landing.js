@@ -1,5 +1,5 @@
 import { bootState } from './state.js';
-import { state, setViewingPt, getToken, getUsername, setUsername, apiFetch, setCurrentBookId, setCurrentUserLevel, setBonusUndos, setBonusFastTravels, isDemoMode } from '../core/state.js';
+import { state, setViewingPt, getToken, getUsername, setUsername, apiFetch, setCurrentBookId, setCurrentUserLevel, setBonusUndos, setBonusFastTravels } from '../core/state.js';
 import { destroyNetwork } from '../graph.js';
 import { render, setDiscoverableLimit } from '../play.js';
 import { t } from '../i18n.js';
@@ -21,7 +21,6 @@ import { loadFeed } from '../feed.js';
 import { _scheduleLiveUiRefresh, resetNotifBadgesForLogout } from '../community/notif.js';
 import { _resetRewardSnapshotState, _positionRewardLayer, _processRewardSnapshot } from '../progression/rewards.js';
 import { cancelBgMove } from '../play/bg.js';
-import { getDemoBooks, getDemoVisited } from '../demo.js';
 import { resolveIsAdmin, adminBadge, authorBadge, contributorBadge, moderatorBadge, registerAuthor, registerContributor, registerModerator, resolveIsModerator } from '../account/user.js';
 import { escapeHtml } from '../core/util.js';
 import { _cancelForumReveal, setDiceRollerVisible, setGuideVisible, _isMobile, _revealLanding } from './helpers.js';
@@ -36,8 +35,6 @@ export function showLogin() {
   _disconnectAppXpSSE();
   _resetRewardSnapshotState();
   resetNotifBadgesForLogout();
-  const _demoBtn = document.getElementById('demo-btn');
-  if (_demoBtn) _demoBtn.style.display = '';
   setCharSheetVisible(false);
   setInventoryVisible(false);
   setEquipmentVisible(false);
@@ -140,8 +137,6 @@ export async function showBooks() {
   document.getElementById('forum-btn').style.display    = '';
   document.getElementById('inbox-btn').style.display    = getToken() ? '' : 'none';
   document.getElementById('notif-btn').style.display    = getToken() ? '' : 'none';
-  // Show demo entry only to guests/demo sessions; explicitly hide it after login.
-  document.getElementById('demo-btn').style.display = (!getToken() || isDemoMode) ? '' : 'none';
   _pushNav('home', { view: 'books' });
   if (getToken()) { _scheduleLiveUiRefresh({ inbox: true, notif: true, forum: true, reward: true, party: true }, 40); }
   _connectUserBadgeSSE();
@@ -159,16 +154,7 @@ export async function showBooks() {
   loadCovers();
   _updateLandingBgDragUi();
   try { disconnectPartySSE(); } catch (_) {}
-  if (getToken() && !isDemoMode) { _scheduleLiveUiRefresh({ party: true }, 60); }
-
-  if (isDemoMode) {
-    setBooksDataFresh(true);
-    document.getElementById('books-username').textContent = t('auth.demo_username');
-    renderBooksXpSummary(null);
-    updateAvatarUI(null);
-    renderBooksList(getDemoBooks().map(b => ({ ...b, visited: getDemoVisited(b.id) })), [], []);
-    return;
-  }
+  if (getToken()) { _scheduleLiveUiRefresh({ party: true }, 60); }
 
   // Render immediately to avoid blank/stale flash
   if (getCachedBooks()) {

@@ -36,8 +36,6 @@ export default {
     'confirm.reset_book':        'Reset all progress for this book? The book will remain but all graph data and runs will be cleared.',
     'confirm.reset_series':      'This book is part of an open-world series. Resetting will clear ALL runs and progress for every book in the series. This cannot be undone.',
 
-    'demo.load_failed': 'Could not load demo. Please try again.',
-
     'util.remove_title': 'Remove',
     'util.upload_failed': 'Failed: {name}',
 

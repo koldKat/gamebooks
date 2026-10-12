@@ -59,24 +59,24 @@ const _exportQuery = `
   LEFT JOIN series s ON s.id = b.series_id`;
 
 function getAllBooksForExport(userId) {
-  const rows = db.prepare(`${_exportQuery} WHERE ub.user_id = ? AND b.is_demo = 0`).all(userId);
+  const rows = db.prepare(`${_exportQuery} WHERE ub.user_id = ?`).all(userId);
   return rows.sort(_naturalCompareByName).map(_exportRow);
 }
 
 function getBookForExport(userId, bookId) {
-  const row = db.prepare(`${_exportQuery} WHERE ub.user_id = ? AND ub.book_id = ? AND b.is_demo = 0`).get(userId, bookId);
+  const row = db.prepare(`${_exportQuery} WHERE ub.user_id = ? AND ub.book_id = ?`).get(userId, bookId);
   return row ? _exportRow(row) : null;
 }
 
 function getAdminGcSupply(appBirthAt) {
   const users       = db.prepare('SELECT COUNT(*) AS n FROM users').get().n;
-  const books       = db.prepare("SELECT COUNT(*) AS n FROM books WHERE is_demo=0 AND parent_book_id IS NULL AND is_container=0").get().n;
+  const books       = db.prepare("SELECT COUNT(*) AS n FROM books WHERE parent_book_id IS NULL AND is_container=0").get().n;
   const series      = db.prepare('SELECT COUNT(*) AS n FROM series').get().n;
-  const anthologies = db.prepare("SELECT COUNT(*) AS n FROM books WHERE is_demo=0 AND is_container=1 AND parent_book_id IS NULL").get().n;
+  const anthologies = db.prepare("SELECT COUNT(*) AS n FROM books WHERE is_container=1 AND parent_book_id IS NULL").get().n;
   const visitAlls         = db.prepare("SELECT COUNT(*) AS n FROM xp_events WHERE event='visit_all'").get().n;
   const levelUps          = db.prepare("SELECT COALESCE(SUM(CAST((-1 + SQRT(1 + 8.0 * xp / 1000)) / 2 AS INTEGER)), 0) AS n FROM users WHERE xp > 0").get().n;
-  const authors           = db.prepare("SELECT COUNT(DISTINCT authors) AS n FROM books WHERE is_demo = 0 AND authors IS NOT NULL AND authors != ''").get().n;
-  const pdfs              = db.prepare("SELECT COUNT(*) AS n FROM books WHERE is_demo = 0 AND pdf_path IS NOT NULL").get().n;
+  const authors           = db.prepare("SELECT COUNT(DISTINCT authors) AS n FROM books WHERE authors IS NOT NULL AND authors != ''").get().n;
+  const pdfs              = db.prepare("SELECT COUNT(*) AS n FROM books WHERE pdf_path IS NOT NULL").get().n;
   const days              = Math.floor((Math.floor(Date.now() / 1000) - appBirthAt) / 86400);
   const groupCompletes    = db.prepare("SELECT COALESCE(SUM(amount), 0) AS n FROM coin_events WHERE event IN ('visit_all_series', 'visit_all_anthology')").get().n;
   const earned            = users + books + series + anthologies + visitAlls + levelUps + authors + pdfs + days + groupCompletes;

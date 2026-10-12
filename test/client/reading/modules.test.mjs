@@ -8,7 +8,7 @@ import { spawnSync } from 'node:child_process';
 const dir = new URL('../../../public/js/', import.meta.url);
 test('reading relocation preserves implementations and exact dependency targets', () => {
   const digests = {
-    liveread: '3eea0f6698c454e586a8b12225398891bbd180763819dd13fa2e4e0c2f6ab56b',
+    liveread: 'fd71192662669c6be07a8b80e7fbed0960696f79ae4468ce33cafa9aa303eab1',
     'liveread-shared': '7a305b8967fc5494a00f3962a9075a3cdb435122061baadb8fa7aa3e0cbaa1dc',
   };
   for (const [name, digest] of Object.entries(digests)) {

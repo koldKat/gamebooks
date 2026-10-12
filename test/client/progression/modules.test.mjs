@@ -8,7 +8,7 @@ const dir = new URL('../../../public/js/', import.meta.url);
 test('progression relocation preserves XP, floaties and shop implementations without root wrappers', () => {
   // Non-import source baseline; comment cleanup verified against unchanged executable ASTs.
   const digests = {
-    "app-xp": "067d8aad2d4bfc307cf563cf2301f60c69e6f4729c328768d91895d6f0deedf7",
+    "app-xp": "02b4f4c1c7316f5cb9253bf05c65ed3bda7ad097f7ca857345c8581a3b7806b4",
     "rewards": "33fcb7bab962502059be6c89c7fa9ddefdf3d050c3a3490b6ebe69cc0b46d7fa",
     "shop": "11f726ed43aca1168d47784891ede9d671618e62a32e15ec7a126627d22153df"
   };

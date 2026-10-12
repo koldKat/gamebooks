@@ -1,6 +1,6 @@
 // Profile editing, avatar cropping, and shared XP summaries.
 
-import { apiFetch, setUsername, isDemoMode, getToken, setCurrentUserLevel, getUsername } from '../core/state.js';
+import { apiFetch, setUsername, getToken, setCurrentUserLevel, getUsername } from '../core/state.js';
 import { t } from '../i18n.js';
 import { updateCoinsDisplay } from '../progression/shop.js';
 import { escapeHtml, compressToBlob } from '../core/util.js';
@@ -156,7 +156,7 @@ function _hbRateText(bonusHeartbeatXp, bonusHeartbeatXpFree) {
 function _renderXpSummary(prefix, data) {
   const wrap = document.getElementById(`${prefix}-xp-summary`);
   if (!wrap) return;
-  if (!data || isDemoMode || !getToken()) { wrap.style.display = 'none'; return; }
+  if (!data || !getToken()) { wrap.style.display = 'none'; return; }
   const { level = 0, title = null, bonusHeartbeatXp = 0, bonusHeartbeatXpFree = 0 } = data;
   const levelEl  = document.getElementById(`${prefix}-xp-level`);
   const titleEl  = document.getElementById(`${prefix}-xp-title`);

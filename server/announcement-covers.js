@@ -21,8 +21,8 @@ function addAnnouncementCovers(entries, pinned) {
   }
   if (!targets.size) return { entries, pinned };
   const rows = db.prepare(`SELECT b.id, COALESCE(NULLIF(b.cover_path, ''), NULLIF(p.cover_path, '')) AS cover_path
-    FROM books b LEFT JOIN books p ON p.id = b.parent_book_id AND p.is_public = 1 AND p.is_demo = 0
-    WHERE b.id IN (SELECT value FROM json_each(?)) AND b.is_public = 1 AND b.is_demo = 0`).all(JSON.stringify([...new Set(targets.values())]));
+    FROM books b LEFT JOIN books p ON p.id = b.parent_book_id AND p.is_public = 1
+    WHERE b.id IN (SELECT value FROM json_each(?)) AND b.is_public = 1`).all(JSON.stringify([...new Set(targets.values())]));
   const covers = new Map(rows.filter(row => row.cover_path).map(row => [row.id, `/covers/${row.cover_path}`]));
   for (const announcement of announcements) {
     announcement.bookCovers = Object.fromEntries([...announcementTargets.get(announcement)].filter(target => covers.has(targets.get(target))).map(target => [target, covers.get(targets.get(target))]));

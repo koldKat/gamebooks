@@ -1,6 +1,6 @@
 import { booksState, _BOOKS_LS_KEY } from './state.js';
 import { _captureExpandedPrefsFromDom } from './prefs.js';
-import { getToken, isDemoMode, apiFetch } from '../core/state.js';
+import { getToken, apiFetch } from '../core/state.js';
 import { loadCovers } from '../covers.js';
 
 let _booksStateRefreshTimer = null;
@@ -61,13 +61,13 @@ export function _patchCachedBook(bookId, fields) {
 export async function _refreshLibraryUi({ feed = false, covers = false } = {}) {
   const jobs = [_refreshBooksListOnly()];
   if (feed) jobs.push(booksState._hooks.loadFeed?.());
-  if (!isDemoMode && covers) jobs.push(loadCovers({ force: true }));
+  if (covers) jobs.push(loadCovers({ force: true }));
   await Promise.allSettled(jobs);
   booksState._hooks.scheduleRewardProfileRefresh?.(250);
 }
 
 export async function _refreshBooksListOnly() {
-  if (isDemoMode || !getToken()) return;
+  if (!getToken()) return;
   if (_booksRefreshPromise) return _booksRefreshPromise;
   _booksRefreshPromise = (async () => {
     try {
@@ -109,11 +109,11 @@ export async function _refreshBooksListOnly() {
 }
 
 export function _scheduleBooksListRefresh(delay = 350) {
-  if (isDemoMode || !getToken()) return;
+  if (!getToken()) return;
   if (_booksStateRefreshTimer) clearTimeout(_booksStateRefreshTimer);
   _booksStateRefreshTimer = setTimeout(() => {
     _booksStateRefreshTimer = null;
     _refreshBooksListOnly();
-    if (!isDemoMode) loadCovers({ force: true });
+    loadCovers({ force: true });
   }, delay);
 }

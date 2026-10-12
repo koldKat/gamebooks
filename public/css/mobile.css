@@ -49,7 +49,6 @@
   /* Forced on unconditionally in covers.js's _visibleCoverItems() on mobile -
      showing the chip would imply it can be toggled off, which it can't. */
   #covers-filter-livereading { display: none !important; }
-  #demo-btn                                    { display: none !important; }
   /* Hide desktop-only shortcuts and settings controls on mobile. */
   #app-banner-f1-btn { display: none !important; }
   #main-screen                                 { display: none !important; }

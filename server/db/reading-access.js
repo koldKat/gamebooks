@@ -30,7 +30,7 @@ function createReadingAccess(db, policy = DEFAULT_POLICY) {
       SELECT DISTINCT ub.user_id, ub.book_id, 0 FROM user_books ub
       JOIN books b ON b.id = ub.book_id
       JOIN json_each(CASE WHEN json_valid(ub.state_data) THEN ub.state_data ELSE '{}' END, '$.playthroughs') p
-      WHERE b.has_live_reading = 1 AND COALESCE(b.is_demo, 0) = 0
+      WHERE b.has_live_reading = 1
         AND json_array_length(CASE WHEN p.type = 'object' THEN p.value ELSE '{}' END, '$.path') > 0`);
     db.prepare('INSERT INTO reading_access_migrations (name) VALUES (?)').run('historical-runs-v1');
   })();

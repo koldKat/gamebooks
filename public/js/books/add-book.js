@@ -1,6 +1,6 @@
 // add-book.js - Add Book, Add Anthology, and Add Series modals
 
-import { apiFetch, isDemoMode } from '../core/state.js';
+import { apiFetch } from '../core/state.js';
 import { t } from '../i18n.js';
 import { getCachedAllSeries, _refreshLibraryUi, setInvalidateAutocompleteCaches } from '../books.js';
 import { pauseCoversAutoRefresh, resumeCoversAutoRefresh } from '../covers.js';
@@ -171,8 +171,7 @@ export function openAddSeries() {
   _csrDropdown.classList.remove('open');
   document.getElementById('add-series-overlay').classList.add('active');
   _csrInput.focus();
-  // Skip authenticated series loading in demo mode to avoid session-expiry handling.
-  if (isDemoMode) return;
+
   apiFetch('/api/series/autocomplete').then(r => r.json()).then(list => {
     _csrAllSeries = [...list].sort((a, b) => naturalCompare(a.name, b.name));
     if (_csrInput.value.trim()) _csrRenderDropdown(_csrInput.value.trim());
@@ -279,8 +278,7 @@ export function initAddBook(mousedownOnOverlayRef) {
     if (_creating.has('cb')) return;
     const errEl = document.getElementById('cb-error');
     errEl.textContent = '';
-    // Block demo saves: real API calls would 401 and expire the demo session.
-    if (isDemoMode) { errEl.textContent = t('addbook.demo_not_supported'); return; }
+
     const selectedId = _cbAc.getSelectedId();
     if (_cbAc.isSelectedOwned()) { errEl.textContent = t('addbook.book_already_in_library'); return; }
     if (selectedId) {
@@ -387,7 +385,7 @@ export function initAddBook(mousedownOnOverlayRef) {
     if (_creating.has('cc')) return;
     const errEl = document.getElementById('cc-error');
     errEl.textContent = '';
-    if (isDemoMode) { errEl.textContent = t('addbook.demo_not_supported'); return; }
+
     const selectedId = _ccAc.getSelectedId();
     if (_ccAc.isSelectedOwned()) { errEl.textContent = t('addbook.anthology_already_in_library'); return; }
     if (selectedId) {
@@ -484,7 +482,7 @@ export function initAddBook(mousedownOnOverlayRef) {
     const name  = _csrInput.value.trim();
     const errEl = document.getElementById('csr-error');
     errEl.textContent = '';
-    if (isDemoMode) { errEl.textContent = t('addbook.demo_not_supported'); return; }
+
     if (!name) { errEl.textContent = t('err.name_empty'); return; }
     try {
       if (_csrSelectedOwned) { errEl.textContent = t('addbook.series_already_in_library'); return; }

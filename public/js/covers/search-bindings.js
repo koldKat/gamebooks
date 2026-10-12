@@ -1,7 +1,7 @@
 import { _effectiveCoversKindMode, _visibleCoverItems } from './filters.js';
 import { _startLazy, _refreshCoversDisplay } from './grid.js';
 import { coversState } from './state.js';
-import { getToken, isDemoMode } from '../core/state.js';
+import { getToken } from '../core/state.js';
 import { foldForSearch, matchesSearch, naturalCompare } from '../core/sort.js';
 
 export function _initCoverSearch() {
@@ -76,7 +76,7 @@ export function _initCoverSearch() {
     coversKindLbl.textContent = _kindLabels[effective] || effective;
     coversKindMenu.querySelectorAll('li').forEach(li => li.classList.toggle('active', li.dataset.value === effective));
     const favLi = coversKindMenu.querySelector('li[data-value="favorites"]');
-    if (favLi) favLi.style.display = (getToken() && !isDemoMode) ? '' : 'none';
+    if (favLi) favLi.style.display = (getToken()) ? '' : 'none';
   }
 
   function _closeCoversMenus() {
@@ -177,5 +177,5 @@ export function _initCoverSearch() {
   // Only makes sense with a logged-in library to compare against - same
   // gating as the Favorites kind-mode option elsewhere in this function.
   const notMineEl = document.getElementById('covers-filter-notmine');
-  if (notMineEl) notMineEl.style.display = (getToken() && !isDemoMode) ? '' : 'none';
+  if (notMineEl) notMineEl.style.display = (getToken()) ? '' : 'none';
 }

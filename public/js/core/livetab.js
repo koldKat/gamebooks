@@ -1,6 +1,6 @@
 // One elected tab owns SSE and polling; followers receive BroadcastChannel updates.
 
-import { getToken, isDemoMode, apiFetch } from './state.js';
+import { getToken, apiFetch } from './state.js';
 import { refreshCoinsDisplay } from '../progression/shop.js';
 
 // Callbacks wired in by main.js at boot
@@ -100,11 +100,11 @@ export async function _syncFeedVersionBaseline() {
 function _startLeaderIntervals() {
   if (!_feedPollInterval) {
     // Heartbeat awards come only from this timer, not feed reloads.
-    // Continue in background tabs, but skip anonymous and demo sessions.
+
     _feedPollInterval = setInterval(() => {
       // Check feed versions only on the landing screen; heartbeat continues while playing.
       if (document.getElementById('main-screen')?.style.display === 'none') _refreshFeedIfChanged();
-      if (getToken() && !isDemoMode) _hooks.sendHeartbeat?.();
+      if (getToken()) _hooks.sendHeartbeat?.();
       _refreshAppXpStaggered();
     }, 60_000);
   }
@@ -203,7 +203,7 @@ function _applyFollowerLiveEvent(type, payload = null) {
   }
   if (type === 'badges_changed') {
     _userBadgeDirty = true;
-    if (document.visibilityState === 'visible' && getToken() && !isDemoMode) {
+    if (document.visibilityState === 'visible' && getToken()) {
       _userBadgeDirty = false;
       _hooks.scheduleLiveUiRefresh?.({ inbox: true, notif: true, forum: true, reward: true, party: true, prefs: true }, 80);
     }
@@ -211,20 +211,20 @@ function _applyFollowerLiveEvent(type, payload = null) {
   }
   if (type === 'coins_changed') {
     _coinsDirty = true;
-    if (document.visibilityState === 'visible' && getToken() && !isDemoMode) {
+    if (document.visibilityState === 'visible' && getToken()) {
       _coinsDirty = false;
       refreshCoinsDisplay();
     }
     return;
   }
   if (type === 'reward_snapshot') {
-    if (payload && document.visibilityState === 'visible' && getToken() && !isDemoMode) {
+    if (payload && document.visibilityState === 'visible' && getToken()) {
       _hooks.processRewardSnapshot?.(payload, { broadcast: false });
     }
     return;
   }
   if (type === 'app_xp_event') {
-    if (payload && document.visibilityState === 'visible' && getToken() && !isDemoMode) {
+    if (payload && document.visibilityState === 'visible' && getToken()) {
       _hooks.onAppXpEvent?.(payload);
       _refreshAppXpStaggered();
     }
@@ -279,7 +279,7 @@ export function _disconnectUserBadgeSSE() {
 }
 
 export function _connectUserBadgeSSE() {
-  if (!_isLiveLeader || _userBadgeSource || typeof EventSource === 'undefined' || !getToken() || isDemoMode) return;
+  if (!_isLiveLeader || _userBadgeSource || typeof EventSource === 'undefined' || !getToken()) return;
   try {
     _userBadgeSource = new EventSource(`/api/user/stream?token=${encodeURIComponent(getToken())}`);
     _userBadgeSource.onmessage = () => {
@@ -298,7 +298,7 @@ export function _disconnectAppXpSSE() {
 }
 
 export function _connectAppXpSSE() {
-  if (!_isLiveLeader || _appXpSource || typeof EventSource === 'undefined' || !getToken() || isDemoMode || !_hooks.getIsAdmin?.()) return;
+  if (!_isLiveLeader || _appXpSource || typeof EventSource === 'undefined' || !getToken() || !_hooks.getIsAdmin?.()) return;
   try {
     _appXpSource = new EventSource(`/api/app-xp/stream?token=${encodeURIComponent(getToken())}`);
     _appXpSource.onmessage = e => {
@@ -338,14 +338,14 @@ export function _ensureLiveTabControllerStarted() {
     _takeLiveLeadership();
     // Catch up feed and reward state after a frozen/throttled tab becomes visible.
     _refreshFeedIfChanged();
-    if (getToken() && !isDemoMode) _hooks.scheduleRewardProfileRefresh?.(150);
+    if (getToken()) _hooks.scheduleRewardProfileRefresh?.(150);
     if (_feedDirty && _hooks.isLandingVisible?.())          { _feedDirty = false; _hooks.loadFeed?.(); _syncFeedVersionBaseline(); }
     if (_publicCatalogDirty && _hooks.isLandingVisible?.()) { _publicCatalogDirty = false; _hooks.loadCovers?.({ force: true }); }
-    if (_userBadgeDirty && getToken() && !isDemoMode) {
+    if (_userBadgeDirty && getToken()) {
       _userBadgeDirty = false;
       _hooks.scheduleLiveUiRefresh?.({ inbox: true, notif: true, forum: true, reward: true, party: true, prefs: true }, 80);
     }
-    if (_coinsDirty && getToken() && !isDemoMode) {
+    if (_coinsDirty && getToken()) {
       _coinsDirty = false;
       refreshCoinsDisplay();
     }

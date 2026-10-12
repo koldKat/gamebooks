@@ -19,7 +19,6 @@ export const _sortChildrenMap = map => {
 };
 
 export const _sortBooks = arr => [...arr].sort((a, b) => {
-  if (a.is_demo !== b.is_demo) return (a.is_demo ? 1 : 0) - (b.is_demo ? 1 : 0);
   const aHas = a.last_run_at != null, bHas = b.last_run_at != null;
   if (aHas && bHas) return b.last_run_at - a.last_run_at;
   if (aHas) return -1; if (bHas) return 1;
@@ -41,7 +40,6 @@ export const _compareByRecentOptionalNumberThenName = (a, b, field) => {
 };
 
 export const _sortSeriesBooks = arr => [...arr].sort((a, b) => {
-  if (a.is_demo !== b.is_demo) return (a.is_demo ? 1 : 0) - (b.is_demo ? 1 : 0);
   return _compareByRecentOptionalNumberThenName(a, b, 'series_number');
 });
 

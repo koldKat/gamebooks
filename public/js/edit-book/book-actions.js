@@ -1,5 +1,5 @@
 import { editState } from './state.js';
-import { isDemoMode, apiFetch } from '../core/state.js';
+import { apiFetch } from '../core/state.js';
 import { t } from '../i18n.js';
 import { pauseCoversAutoRefresh, resumeCoversAutoRefresh } from '../covers.js';
 import { _setButtonsDisabled, _uploadPdfWithProgress, _uploadEpubWithProgress } from './uploads.js';
@@ -39,8 +39,6 @@ export function bindBookActions({ pubTypeEl, minSections, minMaxSectionNumber, s
     const idHint   = document.getElementById('edit-book-isbn-hint');
     errEl.textContent = ''; idHint.textContent = '';
 
-    // Block real API saves for demo book IDs.
-    if (isDemoMode) { errEl.textContent = t('addbook.demo_not_supported'); return; }
     if (!name) { errEl.textContent = t('err.name_empty'); return; }
     if (!(sections >= 1)) { errEl.textContent = t('err.sections_invalid'); return; }
     if (sections < minSections) { errEl.textContent = t('err.sections_min', { min: minSections }); return; }

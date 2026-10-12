@@ -5,7 +5,7 @@ import { _saveExpandedPref } from './prefs.js';
 import { _scheduleAnthologyCardCoverFlows, _queueBookCovers } from './covers.js';
 import { _materializeLazyGroup, _maybeReclaimLazyGroup } from './lazy.js';
 import { _starLabelHtml, _flashRatingGate } from './markup.js';
-import { isDemoMode, apiFetch, getDemoState, setDemoState } from '../core/state.js';
+import { apiFetch } from '../core/state.js';
 import { refreshCoinsDisplay } from '../progression/shop.js';
 import { openCoverActivity, openSeriesActivity } from '../covers.js';
 import { t } from '../i18n.js';
@@ -119,9 +119,7 @@ export function _wireRenderedContent(list) {
 
   _findRenderedContent(list, '.book-name-text').forEach(btn =>
     btn.addEventListener('click', () => {
-      // Demo books are client-only fake IDs (e.g. "demo_1") with no server-side
-      // public activity to show - +id would be NaN and 404.
-      if (isDemoMode) return;
+
       if (!btn.closest('.book-item--container')) openCoverActivity(+btn.dataset.id, btn.dataset.name);
     })
   );
@@ -182,13 +180,7 @@ export function _wireRenderedContent(list) {
       }
 
       let min = 5, minMax = 1, hitWall = false, discCount = 0;
-      if (isDemoMode) {
-        const saved = getDemoState(bid);
-        if (saved) {
-          minMax = booksState._hooks.maxSectionInUse?.(saved) ?? 1;
-          min = Math.max(5, booksState._hooks.discoveredSectionsFor?.(saved.graph, saved.playthroughs, saved.startSection, saved.uncountedSections)?.size || 0);
-        }
-      } else {
+      {
         try {
           const res       = await apiFetch(`/api/books/${bid}/state`);
           const bookState = await res.json();
@@ -203,7 +195,7 @@ export function _wireRenderedContent(list) {
       }
 
       booksState._hooks.openEditBookModal?.({
-        bookId:                     isDemoMode ? bid : +bid,
+        bookId:                     +bid,
         initialName:                btn.dataset.name,
         initialSections:            +btn.dataset.sections,
         initialMaxSectionNumber:    btn.dataset.maxSection ? +btn.dataset.maxSection : null,
@@ -229,15 +221,6 @@ export function _wireRenderedContent(list) {
         initialParentBookId:        btn.dataset.parentId ? +btn.dataset.parentId : null,
         initialBookOrder:           btn.dataset.bookOrder ? +btn.dataset.bookOrder : null,
         onSave: async (name, sections, isbn, issn, asin, pages, authors, description, discoverableSections, isPublic, seriesName, seriesNumber, _isContainer, parentId, bookOrder, maxSectionNumber) => {
-          if (isDemoMode) {
-            const demoBooks = booksState._hooks.getDemoBooks?.() || [];
-            const book = demoBooks.find(b => b.id === bid);
-            if (book) { book.name = name; book.total_sections = sections; book.max_section_number = maxSectionNumber; book.isbn = isbn || null; book.issn = issn || null; book.asin = asin || null; book.pages = pages || null; book.authors = authors || null; book.description = description || null; }
-            const saved = getDemoState(bid);
-            if (saved) { saved.bookName = name; saved.totalSections = sections; saved.maxSectionNumber = maxSectionNumber; setDemoState(bid, saved); }
-            await booksState._hooks.showBooks?.();
-            return;
-          }
           try {
             const res = await apiFetch(`/api/books/${bid}`, {
               method: 'PATCH',
@@ -286,12 +269,6 @@ export function _wireRenderedContent(list) {
       };
 
       const doDelete = async (cascade) => {
-        if (isDemoMode) {
-          const demoBooks = booksState._hooks.getDemoBooks?.() || [];
-          booksState._hooks.setDemoBooks?.(demoBooks.filter(b => b.id !== id));
-          await booksState._hooks.showBooks?.();
-          return;
-        }
         try {
           await apiFetch(`/api/books/${id}?cascade=${cascade ? '1' : '0'}`, { method: 'DELETE' });
           await _refreshBooksListOnly();
@@ -310,7 +287,7 @@ export function _wireRenderedContent(list) {
     })
   );
 
-  if (!isDemoMode) {
+  {
     _findRenderedContent(list, '.book-rating-row').forEach(row => {
       const bookId = +row.dataset.bookId;
       const cached = () => booksState._cachedBooks?.find(b => b.id === bookId);

@@ -1,6 +1,6 @@
 // Cooperative parties and live progress.
 
-import { currentBookId, apiFetch, getToken, isDemoMode, loadState } from '../core/state.js';
+import { currentBookId, apiFetch, getToken, loadState } from '../core/state.js';
 import { render, suppressAutoNav, showAlert, showConfirm } from '../play.js';
 import { escapeHtml } from '../core/util.js';
 import { t } from '../i18n.js';

@@ -1,7 +1,6 @@
 import { _isMobile } from './helpers.js';
 import { booksState } from './state.js';
 import { _patchCachedBook } from './data.js';
-import { isDemoMode } from '../core/state.js';
 import { t } from '../i18n.js';
 import { escapeHtml } from '../core/util.js';
 
@@ -88,7 +87,7 @@ export function _syncEpubBadgeOnCards(bookId, epubPath, epubSize = null) {
 
 export function _bookItemHtml(b, isChild, containerExpanded, childCount, aggrStats, isAdmin, containerId = null) {
   const isModerator = !!booksState._hooks.getIsModerator?.();
-  const canEdit = isDemoMode || isAdmin || (isModerator ? !!b.is_public : (b.created_by === booksState._currentUserId || b.created_by == null));
+  const canEdit = isAdmin || (isModerator ? !!b.is_public : (b.created_by === booksState._currentUserId || b.created_by == null));
   const effectiveSections = b.is_container ? (aggrStats?.totalSections || 0) : (b.discoverable_sections ?? b.total_sections);
   const effectiveVisited  = b.is_container ? (aggrStats?.visited || 0)        : b.visited;
   const pct         = effectiveSections > 0
@@ -97,10 +96,10 @@ export function _bookItemHtml(b, isChild, containerExpanded, childCount, aggrSta
   const fullyVisited = effectiveSections > 0 && effectiveVisited >= effectiveSections;
   const barColor    = fullyVisited ? 'rgba(34,197,94,0.25)' : 'rgba(107,114,128,0.28)';
   const bg          = pct > 0 ? `background: linear-gradient(to right, ${barColor} ${pct}%, transparent ${pct}%);` : `background: transparent;`;
-  const isCreator   = isDemoMode || b.created_by === null || b.created_by === booksState._currentUserId;
+  const isCreator   = b.created_by === null || b.created_by === booksState._currentUserId;
   const inParty     = !!b.party_id;
   const extraClass  = (b.is_container ? ' book-item--container' : (isChild ? ' book-item--child' : '')) + (inParty ? ' book-item--party' : '');
-  const experimentalCoverCards = !isDemoMode;
+  const experimentalCoverCards = true;
   const ownCoverUrl   = b.cover_path ? `/covers/${b.cover_path}` : '';
   // Inherit the cover from the rendered anthology, not always the primary parent.
   const effectiveContainerId = containerId ?? b.parent_book_id;

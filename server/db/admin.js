@@ -579,7 +579,7 @@ function getAllSeriesAdmin() {
            COUNT(b.id) AS book_count
     FROM series s
     LEFT JOIN users u ON u.id = s.created_by
-    LEFT JOIN books b ON b.series_id = s.id AND b.is_demo = 0
+    LEFT JOIN books b ON b.series_id = s.id
     GROUP BY s.id
   `).all().sort(_naturalCompareByName);
 }
@@ -591,9 +591,9 @@ function getAllAnthologiesAdmin() {
            COUNT(DISTINCT c.id) + COUNT(DISTINCT m.book_id) AS child_count
     FROM books b
     LEFT JOIN users u ON u.id = b.created_by
-    LEFT JOIN books c ON c.parent_book_id = b.id AND c.is_demo = 0
+    LEFT JOIN books c ON c.parent_book_id = b.id
     LEFT JOIN book_anthology_memberships m ON m.anthology_id = b.id
-    WHERE b.is_demo = 0 AND b.is_container = 1
+    WHERE b.is_container = 1
     GROUP BY b.id
   `).all().sort(_naturalCompareByName);
 }
@@ -616,7 +616,7 @@ function adminGetUserBooks(userId) {
   const rows = db.prepare(`
     SELECT b.id, b.name, b.total_sections, b.created_by, ub.created_at, ub.updated_at, ub.state_data
     FROM user_books ub JOIN books b ON b.id = ub.book_id
-    WHERE ub.user_id = ? AND b.is_demo = 0
+    WHERE ub.user_id = ?
     ORDER BY ub.created_at ASC
   `).all(userId);
   const books = rows.map(b => {
@@ -734,8 +734,8 @@ function adminGetBookStats(bookId) {
 
 function adminGetStats() {
   const users        = db.prepare('SELECT COUNT(*) AS n FROM users').get().n;
-  const books        = db.prepare("SELECT COUNT(*) AS n FROM books WHERE is_demo = 0 AND parent_book_id IS NULL AND is_container = 0").get().n;
-  const anthologies  = db.prepare("SELECT COUNT(*) AS n FROM books WHERE is_demo = 0 AND is_container = 1 AND parent_book_id IS NULL").get().n;
+  const books        = db.prepare("SELECT COUNT(*) AS n FROM books WHERE parent_book_id IS NULL AND is_container = 0").get().n;
+  const anthologies  = db.prepare("SELECT COUNT(*) AS n FROM books WHERE is_container = 1 AND parent_book_id IS NULL").get().n;
   const seriesCount  = db.prepare('SELECT COUNT(*) AS n FROM series').get().n;
   const sessions     = db.prepare('SELECT COUNT(*) AS n FROM sessions').get().n;
 
@@ -767,7 +767,7 @@ function adminGetStats() {
     }
   };
   const childRowsByParent = new Map();
-  for (const child of db.prepare('SELECT id, parent_book_id, total_sections FROM books WHERE is_demo = 0 AND parent_book_id IS NOT NULL').all()) {
+  for (const child of db.prepare('SELECT id, parent_book_id, total_sections FROM books WHERE parent_book_id IS NOT NULL').all()) {
     if (!childRowsByParent.has(child.parent_book_id)) childRowsByParent.set(child.parent_book_id, []);
     childRowsByParent.get(child.parent_book_id).push(child);
   }
@@ -775,12 +775,12 @@ function adminGetStats() {
   for (const ub of db.prepare(`
     SELECT ub.book_id, ub.state_data
     FROM user_books ub JOIN books b ON b.id = ub.book_id
-    WHERE b.is_demo = 0
+
   `).all()) {
     if (!stateRowsByBook.has(ub.book_id)) stateRowsByBook.set(ub.book_id, []);
     stateRowsByBook.get(ub.book_id).push(ub);
   }
-  const bookRows = db.prepare('SELECT id, total_sections, is_container FROM books WHERE is_demo = 0 AND parent_book_id IS NULL').all();
+  const bookRows = db.prepare('SELECT id, total_sections, is_container FROM books WHERE parent_book_id IS NULL').all();
   for (const book of bookRows) {
     if (book.is_container) {
       // Anthology: sections and gameplay live on child books
@@ -865,8 +865,8 @@ function adminGetStats() {
   const totalCoinsEarned    = coinRow?.earned || 0;
   const totalCoinsSpent     = coinRow?.spent  || 0;
   const totalCoinsAvailable = totalCoinsEarned - totalCoinsSpent;
-  const pdfCount = db.prepare("SELECT COUNT(*) AS n FROM books WHERE pdf_path IS NOT NULL AND is_demo = 0").get().n;
-  const epubCount = db.prepare("SELECT COUNT(*) AS n FROM books WHERE epub_path IS NOT NULL AND is_demo = 0").get().n;
+  const pdfCount = db.prepare("SELECT COUNT(*) AS n FROM books WHERE pdf_path IS NOT NULL").get().n;
+  const epubCount = db.prepare("SELECT COUNT(*) AS n FROM books WHERE epub_path IS NOT NULL").get().n;
   const luckyGcGenerated = db.prepare('SELECT COALESCE(SUM(bonus_gc_generated), 0) AS n FROM users').get().n;
   const luckyGcClaimed   = db.prepare("SELECT COALESCE(SUM(amount), 0) AS n FROM coin_events WHERE event = 'bonus_gc_claim'").get().n;
   const battleSims       = db.prepare('SELECT COUNT(*) AS n FROM books WHERE has_battle_sim = 1').get().n;
@@ -892,14 +892,14 @@ function getSiteStats() {
   const avatarUsers    = db.prepare('SELECT COUNT(*) AS n FROM users WHERE avatar_path IS NOT NULL').get().n;
 
   // Books: unique books in DB vs total user-library entries
-  const uniqueBooks  = base.books; // COUNT(*) FROM standalone books WHERE is_demo=0
+  const uniqueBooks  = base.books; // COUNT(*) FROM standalone books
   const playableBooks = db.prepare(
-    'SELECT COUNT(*) AS n FROM books WHERE is_demo = 0 AND is_container = 0'
+    'SELECT COUNT(*) AS n FROM books WHERE is_container = 0'
   ).get().n;
   const totalUserBooks = db.prepare(
-    'SELECT COUNT(*) AS n FROM user_books ub JOIN books b ON b.id = ub.book_id WHERE b.is_demo = 0 AND b.parent_book_id IS NULL AND b.is_container = 0'
+    'SELECT COUNT(*) AS n FROM user_books ub JOIN books b ON b.id = ub.book_id WHERE b.parent_book_id IS NULL AND b.is_container = 0'
   ).get().n;
-  const publicBooks  = db.prepare("SELECT COUNT(*) AS n FROM books WHERE is_demo = 0 AND is_public = 1 AND parent_book_id IS NULL AND is_container = 0").get().n;
+  const publicBooks  = db.prepare("SELECT COUNT(*) AS n FROM books WHERE is_public = 1 AND parent_book_id IS NULL AND is_container = 0").get().n;
   const privateBooks = uniqueBooks - publicBooks;
   const uniqueSeries = db.prepare('SELECT COUNT(*) AS n FROM series').get().n;
   const totalUserSeries = db.prepare(
@@ -908,17 +908,17 @@ function getSiteStats() {
   const publicSeries = db.prepare('SELECT COUNT(*) AS n FROM series WHERE is_public = 1').get().n;
   const privateSeries = uniqueSeries - publicSeries;
   const uniqueAnthologies = db.prepare(
-    'SELECT COUNT(*) AS n FROM books WHERE is_demo = 0 AND parent_book_id IS NULL AND is_container = 1'
+    'SELECT COUNT(*) AS n FROM books WHERE parent_book_id IS NULL AND is_container = 1'
   ).get().n;
   const totalUserAnthologies = db.prepare(
-    'SELECT COUNT(*) AS n FROM user_books ub JOIN books b ON b.id = ub.book_id WHERE b.is_demo = 0 AND b.parent_book_id IS NULL AND b.is_container = 1'
+    'SELECT COUNT(*) AS n FROM user_books ub JOIN books b ON b.id = ub.book_id WHERE b.parent_book_id IS NULL AND b.is_container = 1'
   ).get().n;
   const publicAnthologies = db.prepare(
-    'SELECT COUNT(*) AS n FROM books WHERE is_demo = 0 AND parent_book_id IS NULL AND is_container = 1 AND is_public = 1'
+    'SELECT COUNT(*) AS n FROM books WHERE parent_book_id IS NULL AND is_container = 1 AND is_public = 1'
   ).get().n;
   const privateAnthologies = uniqueAnthologies - publicAnthologies;
   const uniqueAuthors = (() => {
-    const rows = db.prepare("SELECT authors FROM books WHERE is_demo = 0 AND authors IS NOT NULL AND trim(authors) != ''").all();
+    const rows = db.prepare("SELECT authors FROM books WHERE authors IS NOT NULL AND trim(authors) != ''").all();
     const seen = new Set();
     for (const row of rows) {
       for (const raw of String(row.authors || '').split(',')) {
@@ -930,7 +930,7 @@ function getSiteStats() {
   })();
   const avgSections  = playableBooks > 0 ? Math.round(base.totalSections / playableBooks) : 0;
   const pagesRow = db.prepare(
-    'SELECT SUM(pages) AS total, COUNT(*) AS n FROM books WHERE is_demo = 0 AND is_container = 0 AND pages IS NOT NULL AND pages > 0'
+    'SELECT SUM(pages) AS total, COUNT(*) AS n FROM books WHERE is_container = 0 AND pages IS NOT NULL AND pages > 0'
   ).get();
   const totalPages = pagesRow?.total || 0;
   const avgPages   = pagesRow?.n > 0 ? Math.round(totalPages / pagesRow.n) : 0;
@@ -1024,7 +1024,7 @@ function getSiteStats() {
   // Open world
   const owSeries       = db.prepare('SELECT COUNT(*) AS n FROM series WHERE is_open_world = 1').get().n;
   const owPublicSeries = db.prepare('SELECT COUNT(*) AS n FROM series WHERE is_open_world = 1 AND is_public = 1').get().n;
-  const owBooksTotal   = db.prepare('SELECT COUNT(*) AS n FROM books b JOIN series s ON s.id = b.series_id WHERE s.is_open_world = 1 AND b.is_demo = 0').get().n;
+  const owBooksTotal   = db.prepare('SELECT COUNT(*) AS n FROM books b JOIN series s ON s.id = b.series_id WHERE s.is_open_world = 1').get().n;
   const owRunsRow      = db.prepare('SELECT COUNT(*) AS total, SUM(completed) AS completed, SUM(is_public) AS public FROM series_runs').get();
   const owRuns         = owRunsRow?.total    || 0;
   const owRunsCompleted = owRunsRow?.completed || 0;
@@ -1154,9 +1154,9 @@ function adminGetUsers() {
   const users = db.prepare(`
     SELECT u.id, u.username, u.display_name, u.is_author, u.is_contributor, u.is_moderator, u.created_at, u.last_country, u.last_city,
            u.active_country, u.active_city, u.last_domain, u.failed_login_attempts, u.locked_until, u.is_protected, u.is_admin,
-           COUNT(DISTINCT CASE WHEN b.is_demo = 0 AND b.parent_book_id IS NULL THEN b.id END) AS book_count,
+           COUNT(DISTINCT CASE WHEN b.parent_book_id IS NULL THEN b.id END) AS book_count,
            COUNT(DISTINCT s.token)   AS session_count,
-           COALESCE(u.last_active_at, MAX(CASE WHEN b.is_demo = 0 THEN ub.updated_at ELSE NULL END), u.created_at) AS last_active
+           COALESCE(u.last_active_at, MAX(ub.updated_at), u.created_at) AS last_active
     FROM users u
     LEFT JOIN user_books ub ON ub.user_id = u.id
     LEFT JOIN books      b  ON b.id = ub.book_id
@@ -1167,7 +1167,7 @@ function adminGetUsers() {
   // Active runs have no permanent event; count them from current state.
   const allUb = db.prepare(`
     SELECT ub.user_id, ub.state_data FROM user_books ub
-    JOIN books b ON b.id = ub.book_id WHERE b.is_demo = 0
+    JOIN books b ON b.id = ub.book_id
   `).all();
   const activeByUser = {};
   for (const b of allUb) {
@@ -1286,7 +1286,7 @@ function adminGetBooks() {
   // List anthologies separately; containers have no runs of their own.
   const books = db.prepare(`
     SELECT b.id, b.name, b.total_sections, b.created_at, b.updated_at, b.is_container
-    FROM books b WHERE b.is_demo = 0 AND b.is_container = 0
+    FROM books b WHERE b.is_container = 0
     ORDER BY b.created_at ASC
   `).all();
 
@@ -1668,7 +1668,7 @@ function adminRefundShopItem(userId, item, all = false) {
       const grantedByUser = new Map();
       for (const { user_id, ref } of seriesRows) {
         const total = db.prepare(
-          'SELECT COUNT(*) AS n FROM books WHERE series_id = ? AND is_demo = 0 AND is_container = 0'
+          'SELECT COUNT(*) AS n FROM books WHERE series_id = ? AND is_container = 0'
         ).get(Number(ref))?.n || 0;
         if (total > 0 && insert.run(user_id, 'visit_all_series', String(ref), total).changes > 0)
           grantedByUser.set(user_id, (grantedByUser.get(user_id) || 0) + total);
@@ -1676,7 +1676,7 @@ function adminRefundShopItem(userId, item, all = false) {
       const anthologyRows = db.prepare("SELECT DISTINCT user_id, ref FROM xp_events WHERE event = 'visit_all_anthology'").all();
       for (const { user_id, ref } of anthologyRows) {
         const total = db.prepare(
-          'SELECT COUNT(*) AS n FROM books WHERE parent_book_id = ? AND is_demo = 0'
+          'SELECT COUNT(*) AS n FROM books WHERE parent_book_id = ?'
         ).get(Number(ref))?.n || 0;
         if (total > 0 && insert.run(user_id, 'visit_all_anthology', String(ref), total).changes > 0)
           grantedByUser.set(user_id, (grantedByUser.get(user_id) || 0) + total);
@@ -1708,7 +1708,7 @@ function adminRefundShopItem(userId, item, all = false) {
         SELECT ub.user_id, ub.book_id, b.created_by
         FROM user_books ub
         JOIN books b ON b.id = ub.book_id
-        WHERE b.is_demo = 0 AND b.created_by IS NOT NULL AND b.created_by != ub.user_id
+        WHERE b.created_by IS NOT NULL AND b.created_by != ub.user_id
       `).all();
       for (const r of rows) {
         awardXp(r.user_id,    'add_to_library',    String(r.book_id));
@@ -1736,7 +1736,7 @@ function adminRefundShopItem(userId, item, all = false) {
       const anthologyMembers = db.prepare(`
         SELECT id, created_by
         FROM books
-        WHERE is_demo = 0 AND parent_book_id IS NOT NULL AND created_by IS NOT NULL
+        WHERE parent_book_id IS NOT NULL AND created_by IS NOT NULL
       `).all();
       for (const row of anthologyMembers) {
         awardXp(row.created_by, 'add_book_to_anthology', row.id);
@@ -1781,8 +1781,7 @@ function adminRefundShopItem(userId, item, all = false) {
       const seriesNumbered = db.prepare(`
         SELECT id, created_by
         FROM books
-        WHERE is_demo = 0
-          AND created_by IS NOT NULL
+        WHERE created_by IS NOT NULL
           AND series_id IS NOT NULL
           AND series_number IS NOT NULL
           AND TRIM(series_number) != ''
@@ -1794,8 +1793,7 @@ function adminRefundShopItem(userId, item, all = false) {
       const anthologyOrdered = db.prepare(`
         SELECT id, created_by
         FROM books
-        WHERE is_demo = 0
-          AND created_by IS NOT NULL
+        WHERE created_by IS NOT NULL
           AND parent_book_id IS NOT NULL
           AND book_order IS NOT NULL
       `).all();

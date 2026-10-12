@@ -8,7 +8,7 @@ import { spawnSync } from 'node:child_process';
 const dir = new URL('../../../public/js/', import.meta.url);
 test('library feature relocation preserves implementations without root wrappers', () => {
   const digests = {
-    "add-book": "585685f51cb4d53d46e02684f817e2de5f7556a5d49bc944b577f9be6e4ef5d0",
+    "add-book": "e2b5ccba5608dfba2abb7a18281cc2f836e98917f90c6c7e487770663889a015",
     "autocomplete": "dceed462911883487b8161a04a64d9dab1c98b147d0d6d808d3186f48abfe6c3",
     "export": "450820edb2102369edfc517142930d5ca9310db47e4404fc2007b03fc94e22dc"
   };

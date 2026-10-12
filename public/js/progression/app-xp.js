@@ -1,7 +1,7 @@
 // Aggregate app XP and average player level.
 // Other-player reward floaters remain admin-only.
 
-import { apiFetch, getToken, isDemoMode } from '../core/state.js';
+import { apiFetch, getToken } from '../core/state.js';
 import { COIN_SVG } from './shop.js';
 import { escapeHtml } from '../core/util.js';
 import { t } from '../i18n.js';
@@ -140,7 +140,7 @@ const APP_XP_DEBOUNCE_MS = 300;
 export function refreshAppXp() {
   const wrap    = document.getElementById('app-xp-summary');
   const avgWrap = document.getElementById('avg-lvl-summary');
-  if (!getToken() || isDemoMode || !_hooks.getCanSeeAppXp?.()) {
+  if (!getToken() || !_hooks.getCanSeeAppXp?.()) {
     if (wrap) wrap.hidden = true;
     if (avgWrap) avgWrap.hidden = true;
     _animGen++; // hard reset: invalidate any in-flight animation

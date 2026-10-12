@@ -1,7 +1,7 @@
 import { _setCoverFavoritesFromPrefs, _coverTooltipTitlePercent } from './filters.js';
 import { _effectiveLandingCoverSource, _landingCoverPool, _resetLandingCoverQueue, _rotateLandingCover, _startLandingCoverRotation, _stopLandingCoverRotation } from './background.js';
 import { coversState } from './state.js';
-import { getToken, isDemoMode } from '../core/state.js';
+import { getToken } from '../core/state.js';
 import { t } from '../i18n.js';
 
 // ── Cover settings ─────────────────────────────────────────────────────────────
@@ -21,7 +21,7 @@ export function _persistCoverTooltipPrefs() {
   localStorage.setItem('cover-tooltip-title-bold', coversState._coverTooltipTitleBold ? '1' : '0');
   localStorage.setItem('hide-cyrillic-covers', coversState._hideCyrillicCovers ? '1' : '0');
   _applyCoverTooltipTitlePrefs();
-  if (getToken() && !isDemoMode) {
+  if (getToken()) {
     coversState._hooks.savePrefs?.({
       coverTooltipTitlePct: String(coversState._coverTooltipTitlePct),
       coverTooltipTitleBold: coversState._coverTooltipTitleBold ? '1' : '0',
@@ -39,7 +39,7 @@ export function _applyReduceMotionPref() {
 export function _persistReduceMotionPref() {
   localStorage.setItem('reduce-motion', coversState._reduceMotion ? '1' : '0');
   _applyReduceMotionPref();
-  if (getToken() && !isDemoMode) {
+  if (getToken()) {
     coversState._hooks.savePrefs?.({ reduceMotion: coversState._reduceMotion ? '1' : '0' });
   }
 }
@@ -55,7 +55,7 @@ export function _persistFeedDayCoversPref() {
   _applyFeedDayCoversPref();
   // Repopulate cover stacks when re-enabling covers; hidden stacks were never loaded.
   coversState._hooks.refreshDayCovers?.();
-  if (getToken() && !isDemoMode) {
+  if (getToken()) {
     coversState._hooks.savePrefs?.({ feedDayCovers: coversState._feedDayCovers ? '1' : '0' });
   }
 }
@@ -69,7 +69,7 @@ export function _applyFeedGlassCardsPref() {
 export function _persistFeedGlassCardsPref() {
   localStorage.setItem('feed-glass-cards', coversState._feedGlassCards ? '1' : '0');
   _applyFeedGlassCardsPref();
-  if (getToken() && !isDemoMode) {
+  if (getToken()) {
     coversState._hooks.savePrefs?.({ feedGlassCards: coversState._feedGlassCards ? '1' : '0' });
   }
 }
@@ -91,7 +91,7 @@ export function _applyLandingBgHiddenPref() {
 
 export function _persistLandingBgHiddenPref() {
   _applyLandingBgHiddenPref();
-  if (getToken() && !isDemoMode) coversState._hooks.savePrefs?.({ landingBgHidden: coversState._landingBgHidden ? '1' : '0' });
+  if (getToken()) coversState._hooks.savePrefs?.({ landingBgHidden: coversState._landingBgHidden ? '1' : '0' });
 }
 
 export function _applyLandingCoverSourcePrefs() {
@@ -103,14 +103,14 @@ export function _applyLandingCoverSourcePrefs() {
   if (publicRadio) publicRadio.checked = coversState._landingCoverSource === 'public';
   if (mineRadio) {
     mineRadio.checked = coversState._landingCoverSource === 'mine';
-    mineRadio.disabled = !getToken() || isDemoMode;
+    mineRadio.disabled = !getToken();
   }
   if (preview) preview.textContent = effective === 'mine' ? t('covers.my_books_covers') : t('covers.all_public_covers');
 }
 
 export function _persistLandingCoverSourcePref() {
   _applyLandingCoverSourcePrefs();
-  if (getToken() && !isDemoMode) coversState._hooks.savePrefs?.({ landingCoverSource: coversState._landingCoverSource });
+  if (getToken()) coversState._hooks.savePrefs?.({ landingCoverSource: coversState._landingCoverSource });
   // Apply source changes immediately, without waiting for the rotation timer.
   _resetLandingCoverQueue();
   _startLandingCoverRotation();

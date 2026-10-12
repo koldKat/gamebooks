@@ -12,7 +12,7 @@ test('play-area feature relocation preserves implementations and removes root mo
     "charsheet": "1f14bca5fdfc339160598da0794ffda059dd5d632e36021c1d727a9dc208e569",
     "open-world": "81cfec1e03755016cc03e35e918e0fa559a16f76b3acc4f4969051d686dae4ef",
     "party": "13f2a607dfb521f00424f696568e3b10601d8aff696987521e34dc6b4c812f16",
-    "bg": "ffb3a5b4d327041ef9c1e337194935580fb40c4e7224c6658491f8be7c8b4051"
+    "bg": "e39f758b5145d695d89bbbee705545e05c0aacec2f297d14663593b96a6850e8"
   };
   for (const [name, digest] of Object.entries(digests)) {
     assert.equal(existsSync(new URL(name + '.js', dir)), false);

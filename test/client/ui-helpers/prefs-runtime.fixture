@@ -17,10 +17,10 @@ async function harness() {
   const elements = new Map(), storage = new Map(), requests = [], effects = [], frames = [];
   const body = { classList: classList() };
   const el = id => { if (!elements.has(id)) elements.set(id, { classList: classList(), textContent: '', scrollTop: 0 }); return elements.get(id); };
-  const state = { token: 'token', demo: false, books: [], series: [{ id: 2 }], stashes: [{ id: 3 }] };
+  const state = { token: 'token', books: [], series: [{ id: 2 }], stashes: [{ id: 3 }] };
   let response = async () => ({ ok: true, json: async () => ({}) });
   const dependencies = {
-    '../core/state.js': { getToken: () => state.token, getUsername: () => state.username || "Player", isDemoMode: false, apiFetch: (url, options) => {
+    '../core/state.js': { getToken: () => state.token, getUsername: () => state.username || "Player", apiFetch: (url, options) => {
       assert.equal(url, '/api/prefs'); requests.push(options ? plain(options) : null); return response(options);
     } },
     '../play.js': { setTrailCollapsed: value => effects.push(['trail', value]), setChoicesRecordedCount: value => effects.push(['choices', value]), CHOICES_PULSE_THRESHOLD: 50 },
@@ -46,7 +46,7 @@ async function harness() {
   const api = module.namespace;
   api.setPrefsHooks({ refreshDayCovers: () => effects.push(['day-covers']) });
   return { api, state, body, el, storage, requests, effects, frames,
-    respond: fn => { response = fn; }, demo: value => { state.demo = value; stateModule.setExport('isDemoMode', value); },
+    respond: fn => { response = fn; },
     frame: () => { for (const fn of frames.splice(0)) fn(); },
   };
 }
@@ -143,9 +143,7 @@ const count = sync.requests.length;
 sync.state.token = null;
 sync.api.savePrefs({ legendCollapsed: '1' }); await sync.api.syncPrefs();
 assert.equal(sync.requests.length, count, 'logged-out calls do not send requests');
-sync.state.token = 'token'; sync.demo(true); await sync.api.syncPrefs();
-assert.equal(sync.requests.length, count, 'demo skips server sync');
-sync.demo(false);
+sync.state.token = 'token';
 const before = sync.effects.length;
 sync.respond(async () => ({ ok: false })); await sync.api.syncPrefs();
 assert.equal(sync.effects.length, before, 'failed GET leaves UI alone');

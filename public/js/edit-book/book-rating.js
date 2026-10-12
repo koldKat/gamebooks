@@ -1,5 +1,5 @@
 import { editState } from './state.js';
-import { isDemoMode, apiFetch } from '../core/state.js';
+import { apiFetch } from '../core/state.js';
 import { t } from '../i18n.js';
 import { _starLabelHtml } from '../books.js';
 import { refreshCoinsDisplay } from '../progression/shop.js';
@@ -39,8 +39,7 @@ export function initBookRating(bookId) {
         editState._editStarUpdateFn(+star.dataset.pos - (left ? 0.5 : 0));
       });
       star.addEventListener('click', async e => {
-        // Demo sessions cannot rate real books; skip authenticated rating requests.
-        if (isDemoMode) return;
+
         const left      = e.offsetX < star.offsetWidth / 2;
         const newRating = +star.dataset.pos - (left ? 0.5 : 0);
         const toSave    = newRating === editState._editStarCurrentRating ? null : newRating;
@@ -79,10 +78,6 @@ export function initBookRating(bookId) {
     _esw.addEventListener('mouseleave', () => editState._editStarUpdateFn(null));
   }
 
-  // Skip authenticated rating fetches for demo books.
-  if (isDemoMode) {
-    editState._editStarUpdateFn(null);
-  } else {
     apiFetch(`/api/books/${bookId}/rating`).then(async r => {
       if (!isCurrent()) return;
       if (r.ok) {
@@ -95,7 +90,6 @@ export function initBookRating(bookId) {
       }
       editState._editStarUpdateFn(null);
     }).catch(() => { if (isCurrent()) editState._editStarUpdateFn(null); });
-  }
 
 
 }

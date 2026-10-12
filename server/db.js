@@ -114,11 +114,14 @@ try { db.exec(`ALTER TABLE users        ADD COLUMN forum_seen_at  INTEGER NOT NU
   }
 }
 
-// One-time migration: set is_public = 1 for all pre-existing non-demo books (runs once only)
+// Retire legacy samples before publishing or backfilling XP for existing books.
+require('./db/retire-sample-books').retireSampleBooks(db, { coversDir: require('./paths').COVERS_DIR });
+
+// One-time migration: publish pre-existing books (runs once only)
 {
   const done = db.prepare(`SELECT value FROM admin_settings WHERE key = 'is_public_migrated'`).get();
   if (!done) {
-    db.exec(`UPDATE books SET is_public = 1 WHERE is_demo = 0 AND is_public = 0`);
+    db.exec(`UPDATE books SET is_public = 1 WHERE is_public = 0`);
     db.prepare(`INSERT OR REPLACE INTO admin_settings (key, value) VALUES ('is_public_migrated', '1')`).run();
   }
 }
@@ -708,7 +711,6 @@ db.exec(`
     issn           TEXT    DEFAULT NULL,
     asin           TEXT    DEFAULT NULL,
     cover_path     TEXT    DEFAULT NULL,
-    is_demo        INTEGER NOT NULL DEFAULT 0,
     created_at     INTEGER DEFAULT (strftime('%s', 'now')),
     updated_at     INTEGER DEFAULT (strftime('%s', 'now'))
   );
@@ -767,16 +769,14 @@ if (hasColumn('books', 'user_id')) {
       issn           TEXT    DEFAULT NULL,
       asin           TEXT    DEFAULT NULL,
       cover_path     TEXT    DEFAULT NULL,
-      is_demo        INTEGER NOT NULL DEFAULT 0,
       created_at     INTEGER DEFAULT (strftime('%s', 'now')),
       updated_at     INTEGER DEFAULT (strftime('%s', 'now'))
     )`);
     db.exec(`INSERT INTO books_new
-               (id, name, total_sections, isbn, issn, asin, cover_path, is_demo, created_at, updated_at)
+               (id, name, total_sections, isbn, issn, asin, cover_path, created_at, updated_at)
              SELECT id, name, total_sections,
                     NULLIF(isbn, ''), NULLIF(issn, ''), NULLIF(asin, ''),
                     cover_path,
-                    CASE WHEN state_data LIKE '%"isDemoBook":true%' THEN 1 ELSE 0 END,
                     created_at, updated_at
              FROM books`);
     // Drop old books table (cascades would wipe user_books, but it's still empty)
@@ -839,7 +839,6 @@ const {
   awardCoins, awardXp, awardIdleHeartbeatXp, getUserXpInfo, claimBonusGc,
   getBookCreator, getBookIdentifiers,
   _discoveredSet, _visitedSet, _permanentVisitedCount,
-  _buildDemoState, createDemoBook, refreshDemoBooks, getDemoBookState,
   _checkGroupMilestone, _checkGroupWonAll, processStateXp,
   migrateXpForUser, runXpMigration, migratePublicBookXp, migrateEquipmentXp,
 } = require('./db/xp');
@@ -944,7 +943,6 @@ module.exports = {
   getShopItems, setShopItemCost,
   getFeed,
   getFeedVersion,
-  createDemoBook, refreshDemoBooks, getDemoBookState,
   setPublicProfile, setHideFromFeed, setAuthor, setContributor, setModerator, setPdfAccess, setDisplayName, adminUpdateUser, getPublicProfile, getProfileStats, getPublicRun, getPublicSeriesRun, getPublicCovers, getAllPublicBooks, getAllPublicSeries, getAllPublicAnthologies, getPublicBooksInSeries, getBookActivity, getPublicBookMeta, getPublicSeriesInfo, getBooksForSitemap, getAnthologiesForSitemap, getSeriesForSitemap, getPublicProfilesForSitemap,
   getBookRating, setBookRating, getSeriesRating, setSeriesRating, canUserRateBook, canUserRateSeries, setBookBgPref, getBookBgPref,
   awardXp, awardCoins, awardIdleHeartbeatXp, getUserXpInfo, claimBonusGc, processStateXp, runXpMigration, migratePublicBookXp, migrateEquipmentXp, setXpFeedHook, setAppXpHook,

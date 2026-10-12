@@ -1,5 +1,5 @@
 import { editState } from './state.js';
-import { state, isDemoMode, apiFetch } from '../core/state.js';
+import { state, apiFetch } from '../core/state.js';
 import { t } from '../i18n.js';
 import { getCachedBooks, _refreshBooksListOnly } from '../books.js';
 import { showAlert } from '../play.js';
@@ -92,7 +92,7 @@ export function openEditBookModal({ bookId, initialName, initialSections, initia
   }
 
   document.getElementById('edit-book-series-number-input').value = initialSeriesNumber || '';
-  if (!isDemoMode) _populateSeriesSelect('edit-book-series-select', initialSeriesName || null);
+  _populateSeriesSelect('edit-book-series-select', initialSeriesName || null);
 
   const _parentInput = document.getElementById('edit-book-parent-input');
   _populateParentBookSelect('edit-book-parent-input', initialParentBookId, bookId);

@@ -528,165 +528,15 @@ function _permanentVisitedCount(userId, bookId) {
     .get(userId, `${bookId}:%`, bookId).n;
 }
 
-// Shared demo graph, positions, and runs; four choice-only nodes remain unvisited.
-function _buildDemoState(now, day) {
-  return {
-    bookName:      'Demo Book',
-    totalSections: 50,
-    graph: {
-      // START
-      1:  { choices: [2, 3] },
-
-      // LEFT PATH - underground/dungeon
-      2:  { choices: [5, 6],   priority: 'high', note: 'Steps lead to a torchlit guardroom - the guard dozes at his post' },
-      5:  { choices: [9, 10],  note: 'Guardroom: a ring of keys hangs by the door, or try the ventilation shaft' },
-      6:  { choices: [9],      priority: 'low',  note: 'Tight crawl through the shaft - filthy, but the guard never stirs' },
-      // 10 → discovered-only
-      9:  { choices: [14, 15], note: 'The old vault: hinges look weak - force it, or hunt for the combination?' },
-      14: { choices: [22],     priority: 'high', note: 'The signet ring gleams on the shelf - exactly what you came for' },
-      15: { choices: [22, 23], note: 'Storage room - barrels, rope, and two doors' },
-      // 23 → discovered-only
-
-      // RIGHT PATH - upper floors
-      3:  { choices: [7, 8],   note: "Rope ladder creaks - above, candlelight spills from a high window" },
-      7:  { choices: [11, 12], priority: 'high', note: 'A library, undisturbed for years - old map on the desk, or the hidden panel?' },
-      8:  { choices: [12, 13], note: 'The study: a locked bureau or the narrow window ledge?' },
-      11: { choices: [20, 21], note: "The map marks two ways through the east wing - north corridor or servants' passage" },
-      12: { choices: [21],     priority: 'low',  note: 'The hidden passage runs one-way - no turning back from here' },
-      13: { choices: [-1],     priority: 'low',  note: 'The ledge crumbles - you grab for the ivy but it tears away' },
-      // 20 → discovered-only
-      21: { choices: [28, 29], note: "The servants' passage opens onto a wide gallery" },
-
-      // CONVERGENCE - mid-game hub
-      22: { choices: [30, 31], note: 'The undercroft - torches gutter in the draught. Two ways out.' },
-      28: { choices: [30, 32], priority: 'high', note: 'East balcony - courtyard below, battlements above' },
-      29: { choices: [32],     note: "The servants' stair winds up to the battlements" },
-
-      // LATE GAME
-      30: { choices: [36, 37], note: 'The courtyard at night - gatehouse to the west, stables to the east' },
-      31: { choices: [36],     priority: 'low',  note: 'The well shaft surfaces near the gatehouse - you emerge muddy but unseen' },
-      32: { choices: [38, 39], note: 'The battlements: a signal fire ready to light, or the postern gate below?' },
-      36: { choices: [42, 43], note: 'Gatehouse - the portcullis chain, or the narrow side door?' },
-      37: { choices: [43, 44], priority: 'high', note: "A saddled horse waits in the last stall - the groom hasn't noticed you yet" },
-      38: { choices: [44],     note: 'The signal fire blazes - minutes later, a lantern blinks from the river' },
-      39: { choices: [45, 46], note: 'The postern gate groans as you lift the latch - a guard turns at the sound' },
-
-      // ENDINGS
-      42: { choices: [-1],     priority: 'low',  note: "The portcullis drops with a thunderous crash - you're trapped" },
-      43: { choices: [48],     priority: 'high', note: 'Hoofbeats fade into the night as the castle disappears behind you' },
-      44: { choices: [48, 49], note: 'The dock - a skiff tied to the post and a rowboat drifting loose' },
-      45: { choices: [-1],     note: "The guard's shout brings a dozen more - swords flash in the torchlight" },
-      46: { choices: [49],     priority: 'high', note: 'You slip through the gate and melt into the shadows beyond the walls' },
-      48: { choices: [0],      note: 'Riding hard through the night, the signet ring safe in your pocket - a new chapter begins' },
-      49: { choices: [0],      note: 'The current carries you downstream, exhausted but alive - and free' },
-    },
-    playthroughs: [
-      {
-        path: [1, 2, 5, 9, 14, 22, 30, 36, 42],
-        completed: true, result: 'death',
-        startedAt: now - 9 * day, completedAt: now - 7 * day, lastActionAt: now - 7 * day,
-        undosUsed: 0, fastTravelsUsed: 0, charSheet: { fields: [] },
-        diceState: { count: 2, lastRoll: [1, 3] },
-      },
-      {
-        path: [1, 3, 7, 11, 21, 28, 32, 38, 44, 48],
-        completed: true, result: 'success',
-        startedAt: now - 6 * day, completedAt: now - 4 * day, lastActionAt: now - 4 * day,
-        undosUsed: 1, fastTravelsUsed: 0, charSheet: { fields: [] },
-        diceState: { count: 2, lastRoll: [6, 5] },
-      },
-      {
-        path: [1, 3, 8, 12, 21],
-        completed: false, result: null,
-        startedAt: now - 3 * day, lastActionAt: now - 1 * day,
-        undosUsed: 0, fastTravelsUsed: 0, charSheet: { fields: [] },
-        diceState: { count: 2, lastRoll: null },
-      },
-    ],
-    activePtIndex: 2,
-    charSheetTemplate: null,
-    positions: {
-       1: { x:    0, y:    0 },
-       2: { x: -360, y:  180 },
-       3: { x:  360, y:  180 },
-       5: { x: -540, y:  360 },
-       6: { x: -180, y:  360 },
-       7: { x:  180, y:  360 },
-       8: { x:  540, y:  360 },
-       9: { x: -540, y:  540 },
-      10: { x: -180, y:  540 },  // discovered-only
-      11: { x:  180, y:  540 },
-      12: { x:  360, y:  540 },
-      13: { x:  540, y:  540 },
-      14: { x: -720, y:  720 },
-      15: { x: -360, y:  720 },
-      20: { x:  120, y:  720 },  // discovered-only
-      21: { x:  360, y:  720 },
-      22: { x: -540, y:  900 },
-      23: { x: -180, y:  900 },  // discovered-only
-      28: { x:  180, y:  900 },
-      29: { x:  540, y:  900 },
-      30: { x: -180, y: 1080 },
-      31: { x: -540, y: 1080 },
-      32: { x:  360, y: 1080 },
-      36: { x: -360, y: 1260 },
-      37: { x:    0, y: 1260 },
-      38: { x:  360, y: 1260 },
-      39: { x:  540, y: 1260 },
-      42: { x: -540, y: 1440 },
-      43: { x: -180, y: 1440 },
-      44: { x:  180, y: 1440 },
-      45: { x:  540, y: 1440 },
-      46: { x:  360, y: 1440 },
-      48: { x:    0, y: 1620 },
-      49: { x:  360, y: 1620 },
-    },
-    viewport: { x: 0, y: 900, scale: 0.35 },
-  };
-}
-
-function createDemoBook(userId) {
-  const now = Date.now(), day = 24 * 60 * 60 * 1000;
-  const state = { isDemoBook: true, ..._buildDemoState(now, day) };
-  const bookResult = db.prepare(
-    `INSERT INTO books (name, total_sections, is_demo, created_at, updated_at)
-     VALUES (?, ?, 1, strftime('%s','now'), strftime('%s','now'))`
-  ).run('Demo Book', 50);
-  const bookId = bookResult.lastInsertRowid;
-  db.prepare(
-    `INSERT INTO user_books (user_id, book_id, state_data, created_at, updated_at)
-     VALUES (?, ?, ?, strftime('%s','now'), strftime('%s','now'))`
-  ).run(userId, bookId, JSON.stringify(state));
-  return bookId;
-}
-
-function refreshDemoBooks() {
-  const now = Date.now(), day = 24 * 60 * 60 * 1000;
-  const bookIds = db.prepare("SELECT id FROM books WHERE is_demo = 1").all().map(r => r.id);
-  for (const bookId of bookIds) {
-    const state = { isDemoBook: true, ..._buildDemoState(now, day) };
-    db.prepare("UPDATE books SET name = ?, total_sections = ?, updated_at = strftime('%s','now') WHERE id = ?")
-      .run('Demo Book', 50, bookId);
-    db.prepare("UPDATE user_books SET state_data = ?, updated_at = strftime('%s','now') WHERE book_id = ?")
-      .run(JSON.stringify(state), bookId);
-  }
-}
-
-function getDemoBookState() {
-  const now = Date.now(), day = 24 * 60 * 60 * 1000;
-  return _buildDemoState(now, day);
-}
-
-// Award a group milestone once all members qualify; unique inserts prevent repeat awards.
 function _checkGroupMilestone(userId, seriesId, parentBookId, perBookEvent, seriesEvent, anthologyEvent, awardCoinsOnComplete = false) {
   if (seriesId) {
     const total = db.prepare(
-      'SELECT COUNT(*) AS n FROM books WHERE series_id = ? AND is_demo = 0 AND is_container = 0'
+      'SELECT COUNT(*) AS n FROM books WHERE series_id = ? AND is_container = 0'
     ).get(seriesId).n;
     if (total > 0) {
       const missing = db.prepare(`
         SELECT COUNT(*) AS n FROM books b
-        WHERE b.series_id = ? AND b.is_demo = 0 AND b.is_container = 0
+        WHERE b.series_id = ? AND b.is_container = 0
           AND NOT EXISTS (
             SELECT 1 FROM xp_events xe
             WHERE xe.user_id = ? AND xe.event = ? AND xe.ref = CAST(b.id AS TEXT)
@@ -700,12 +550,12 @@ function _checkGroupMilestone(userId, seriesId, parentBookId, perBookEvent, seri
   }
   if (parentBookId) {
     const total = db.prepare(
-      'SELECT COUNT(*) AS n FROM books WHERE parent_book_id = ? AND is_demo = 0'
+      'SELECT COUNT(*) AS n FROM books WHERE parent_book_id = ?'
     ).get(parentBookId).n;
     if (total > 0) {
       const missing = db.prepare(`
         SELECT COUNT(*) AS n FROM books b
-        WHERE b.parent_book_id = ? AND b.is_demo = 0
+        WHERE b.parent_book_id = ?
           AND NOT EXISTS (
             SELECT 1 FROM xp_events xe
             WHERE xe.user_id = ? AND xe.event = ? AND xe.ref = CAST(b.id AS TEXT)
@@ -723,12 +573,12 @@ function _checkGroupMilestone(userId, seriesId, parentBookId, perBookEvent, seri
 function _checkGroupWonAll(userId, seriesId, parentBookId) {
   if (seriesId) {
     const total = db.prepare(
-      'SELECT COUNT(*) AS n FROM books WHERE series_id = ? AND is_demo = 0 AND is_container = 0'
+      'SELECT COUNT(*) AS n FROM books WHERE series_id = ? AND is_container = 0'
     ).get(seriesId).n;
     if (total > 0) {
       const missing = db.prepare(`
         SELECT COUNT(*) AS n FROM books b
-        WHERE b.series_id = ? AND b.is_demo = 0 AND b.is_container = 0
+        WHERE b.series_id = ? AND b.is_container = 0
           AND NOT EXISTS (
             SELECT 1 FROM xp_events xe
             WHERE xe.user_id = ? AND xe.event = 'win_run'
@@ -740,12 +590,12 @@ function _checkGroupWonAll(userId, seriesId, parentBookId) {
   }
   if (parentBookId) {
     const total = db.prepare(
-      'SELECT COUNT(*) AS n FROM books WHERE parent_book_id = ? AND is_demo = 0'
+      'SELECT COUNT(*) AS n FROM books WHERE parent_book_id = ?'
     ).get(parentBookId).n;
     if (total > 0) {
       const missing = db.prepare(`
         SELECT COUNT(*) AS n FROM books b
-        WHERE b.parent_book_id = ? AND b.is_demo = 0
+        WHERE b.parent_book_id = ?
           AND NOT EXISTS (
             SELECT 1 FROM xp_events xe
             WHERE xe.user_id = ? AND xe.event = 'win_run'
@@ -761,7 +611,6 @@ function _checkGroupWonAll(userId, seriesId, parentBookId) {
 const SIM_HISTORY_KEYS = ['sim829', 'sim8', 'sim286', 'sim198', 'sim199', 'sim200', 'sim186', 'sim201', 'sim202', 'sim203', 'sim83', 'sim86', 'sim114', 'sim115', 'sim123', 'sim130', 'sim92', 'sim108', 'sim216', 'sim193', 'sim217', 'sim526', 'sim527', 'sim528', 'sim529', 'sim530', 'sim531', 'sim532', 'sim533', 'sim322', 'sim323', 'sim324', 'sim325', 'sim122', 'sim80', 'sim82', 'sim118', 'sim218', 'sim430', 'sim204', 'sim205', 'sim206', 'sim207', 'sim208', 'sim209', 'sim210', 'sim211', 'sim212', 'sim213', 'sim214', 'sim215', 'sim219', 'sim220', 'sim221', 'sim222', 'sim224', 'sim370', 'sim375', 'sim376', 'sim377', 'sim378', 'sim78', 'sim107', 'sim135', 'sim223', 'sim317', 'sim318', 'sim319', 'sim320', 'sim397', 'sim321', 'sim398', 'sim399', 'sim414', 'sim415', 'sim416', 'sim225', 'sim431', 'sim432', 'sim226', 'sim227', 'sim228', 'sim229', 'sim230', 'sim231', 'sim232', 'sim233','sim434', 'sim435', 'sim436', 'sim437', 'sim438', 'sim439', 'sim440', 'sim441', 'sim462', 'sim463', 'sim464', 'sim465', 'sim468', 'sim234', 'sim235', 'sim716', 'sim734', 'sim739', 'sim740', 'sim753', 'sim760', 'sim772', 'sim781', 'sim869', 'sim871', 'sim161', 'sim877', 'sim881', 'sim882', 'sim236', 'sim237', 'sim238', 'sim239', 'sim240', 'sim241', 'sim242', 'sim243', 'sim244', 'sim245', 'sim246', 'sim247', 'sim248', 'sim249', 'sim250', 'sim251', 'sim252', 'sim259', 'sim260', 'sim273', 'sim433', 'sim541', 'sim661', 'sim696', 'sim263', 'sim264', 'sim253', 'sim267', 'sim256', 'sim257', 'sim258', 'sim255', 'sim254', 'sim272', 'sim274', 'sim275', 'sim276', 'sim278', 'sim279', 'sim280', 'sim400', 'sim401', 'sim402', 'sim412', 'sim481', 'sim491', 'sim486', 'sim521', 'sim522', 'sim523', 'sim524', 'sim534', 'sim535', 'sim536', 'sim537', 'sim539', 'sim550', 'sim548', 'sim555', 'sim557', 'sim570', 'sim636', 'sim644'];
 
 function processStateXp(userId, bookId, oldState, newState, totalSections) {
-  if (newState?.isDemoBook) return;
   // Use discoverable_sections as the effective ceiling if set, else fall back to totalSections
   const bookRow = db.prepare(`SELECT b.discoverable_sections, b.series_id, b.parent_book_id,
     CASE WHEN e.counts_as_section = 0 THEN e.section_id END AS uncounted_entry
@@ -998,7 +847,7 @@ function migrateXpForUser(userId) {
   if (user.public_profile) awardXp(userId, 'public_profile', userId);
 
   const books = db.prepare(`
-    SELECT b.id, b.total_sections, b.discoverable_sections, b.isbn, b.issn, b.asin, b.cover_path, b.is_demo, b.is_public, b.created_by, ub.state_data,
+    SELECT b.id, b.total_sections, b.discoverable_sections, b.isbn, b.issn, b.asin, b.cover_path, b.is_public, b.created_by, ub.state_data,
       CASE WHEN e.counts_as_section = 0 THEN e.section_id END AS uncounted_entry
     FROM user_books ub JOIN books b ON b.id = ub.book_id
     LEFT JOIN book_reading_entries e ON e.book_id = b.id
@@ -1017,7 +866,6 @@ function migrateXpForUser(userId) {
     if (book.is_public && book.created_by === userId) awardXp(userId, 'make_book_public', bid);
 
     let s; try { s = JSON.parse(book.state_data || '{}'); } catch { continue; }
-    if (book.is_demo) continue;
     const graph = s.graph || {};
     const pts   = s.playthroughs || [];
     const templateFieldIds = new Set(
@@ -1074,7 +922,7 @@ function migratePublicBookXp() {
   const done = db.prepare(`SELECT value FROM admin_settings WHERE key = 'public_book_xp_migrated'`).get();
   if (done?.value === '1') return;
   const books = db.prepare(
-    `SELECT id, created_by FROM books WHERE is_public = 1 AND is_demo = 0 AND created_by IS NOT NULL`
+    `SELECT id, created_by FROM books WHERE is_public = 1 AND created_by IS NOT NULL`
   ).all();
   for (const book of books) {
     awardXp(book.created_by, 'make_book_public', book.id);
@@ -1088,11 +936,10 @@ function migrateEquipmentXp() {
   const done = db.prepare(`SELECT value FROM admin_settings WHERE key = 'equipment_xp_migrated'`).get();
   if (done?.value === '1') return;
   const rows = db.prepare(`
-    SELECT ub.user_id, ub.book_id, ub.state_data, b.is_demo
+    SELECT ub.user_id, ub.book_id, ub.state_data
     FROM user_books ub JOIN books b ON b.id = ub.book_id
   `).all();
   for (const row of rows) {
-    if (row.is_demo) continue;
     let s; try { s = JSON.parse(row.state_data || '{}'); } catch { continue; }
     const pts = s.playthroughs || [];
     const itemIds = new Set(
@@ -1114,7 +961,6 @@ module.exports = {
   awardCoins, awardXp, awardIdleHeartbeatXp, getUserXpInfo, claimBonusGc,
   getBookCreator, getBookIdentifiers,
   _discoveredSet, _visitedSet, _mappedSet, _permanentVisitedCount,
-  _buildDemoState, createDemoBook, refreshDemoBooks, getDemoBookState,
   _checkGroupMilestone, _checkGroupWonAll, processStateXp,
   migrateXpForUser, runXpMigration, migratePublicBookXp, migrateEquipmentXp,
   _insertNotif, SIM_HISTORY_KEYS,

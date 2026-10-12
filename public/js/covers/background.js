@@ -1,6 +1,6 @@
 import { _isMobile, _shuffle } from './helpers.js';
 import { coversState } from './state.js';
-import { getToken, isDemoMode } from '../core/state.js';
+import { getToken } from '../core/state.js';
 
 // ── Landing bg ─────────────────────────────────────────────────────────────────
 export function _landingCoverKey(cover) {
@@ -13,7 +13,7 @@ export function _landingCoverPosForKey(key) {
 }
 
 export function _persistLandingCoverPos() {
-  if (!getToken() || isDemoMode || !coversState._landingBgCurrentKey) return;
+  if (!getToken() || !coversState._landingBgCurrentKey) return;
   coversState._landingCoverPosPrefs = {
     ...coversState._landingCoverPosPrefs,
     [coversState._landingBgCurrentKey]: Math.round(coversState._landingBgPosY * 10) / 10,
@@ -22,7 +22,7 @@ export function _persistLandingCoverPos() {
 }
 
 export function _effectiveLandingCoverSource() {
-  return (coversState._landingCoverSource === 'mine' && getToken() && !isDemoMode) ? 'mine' : 'public';
+  return (coversState._landingCoverSource === 'mine' && getToken()) ? 'mine' : 'public';
 }
 
 export function _ownedLandingCoverPool() {

@@ -28,10 +28,10 @@ test('library sorting keeps recent books first, demos last, and leaves input unc
   const books = [
     { name: 'Book 10' }, { name: 'Book 2' },
     { name: 'Recent', last_run_at: 10 },
-    { name: 'Demo', is_demo: true, last_run_at: 100 },
+    { name: 'Most recent', last_run_at: 100 },
   ];
   const original = [...books];
-  assert.deepEqual(_sortBooks(books).map(b => b.name), ['Recent', 'Book 2', 'Book 10', 'Demo']);
+  assert.deepEqual(_sortBooks(books).map(b => b.name), ['Most recent', 'Recent', 'Book 2', 'Book 10']);
   assert.deepEqual(books, original);
 });
 

@@ -26,7 +26,7 @@ function getBooks(userId) {
   const rows = db.prepare(`
     SELECT b.id, b.name, b.total_sections, b.max_section_number, b.discoverable_sections,
            b.isbn, b.issn, b.asin, b.cover_path, b.pdf_path, b.epub_path, b.created_at, b.created_by, b.is_public,
-           b.pages, b.authors, b.description, b.is_demo,
+           b.pages, b.authors, b.description,
            b.series_id, b.series_number, b.is_container, b.parent_book_id, b.book_order, b.has_battle_sim, b.has_live_reading,
            s.name AS series_name,
            CASE WHEN e.counts_as_section = 0 THEN e.section_id END AS uncounted_entry,
@@ -328,7 +328,7 @@ function getAnthologyExtraMembers(anthologyId, publicOnly = false) {
   return db.prepare(
     `SELECT b.id, b.name, b.total_sections, b.max_section_number, b.has_battle_sim, b.has_live_reading, m.book_order FROM book_anthology_memberships m
      JOIN books b ON b.id = m.book_id
-     WHERE m.anthology_id = ? AND b.is_demo = 0 AND (? = 0 OR b.is_public = 1)`
+     WHERE m.anthology_id = ? AND (? = 0 OR b.is_public = 1)`
   ).all(anthologyId, publicOnly ? 1 : 0);
 }
 
@@ -700,10 +700,10 @@ function getPublicSeriesInfo(seriesId, hasPdfAccess = false) {
   const books = db.prepare(
     `SELECT b.id, b.name, b.total_sections, b.max_section_number, b.cover_path, b.is_container, b.series_number,
             b.isbn, b.issn, b.pages, b.authors, b.has_battle_sim, b.has_live_reading, b.pdf_path, b.epub_path,
-            (SELECT COUNT(*) FROM books c WHERE c.parent_book_id = b.id AND c.is_demo = 0 AND c.is_public = 1) AS child_count,
-            (SELECT MAX(c.has_battle_sim) FROM books c WHERE c.parent_book_id = b.id AND c.is_demo = 0 AND c.is_public = 1) AS child_has_battle_sim
+            (SELECT COUNT(*) FROM books c WHERE c.parent_book_id = b.id AND c.is_public = 1) AS child_count,
+            (SELECT MAX(c.has_battle_sim) FROM books c WHERE c.parent_book_id = b.id AND c.is_public = 1) AS child_has_battle_sim
      FROM books b
-     WHERE b.series_id = ? AND b.is_demo = 0
+     WHERE b.series_id = ?
        AND (b.parent_book_id IS NULL OR b.parent_book_id = 0)
        AND b.is_public = 1
      ORDER BY CASE WHEN b.series_number IS NULL OR b.series_number = '' THEN 1 ELSE 0 END,
@@ -712,7 +712,7 @@ function getPublicSeriesInfo(seriesId, hasPdfAccess = false) {
   ).all(seriesId);
   const childrenStmt = db.prepare(
     `SELECT id, name, total_sections, max_section_number, cover_path, isbn, issn, pages, authors, has_battle_sim, has_live_reading, pdf_path, epub_path
-     FROM books WHERE parent_book_id = ? AND is_demo = 0 AND is_public = 1
+     FROM books WHERE parent_book_id = ? AND is_public = 1
      ORDER BY COALESCE(book_order, id)`
   );
   books.sort((a, b) => {
@@ -1064,7 +1064,7 @@ function deleteBook(userId, bookId, cascade = true) {
 }
 
 function addBookToLibrary(userId, bookId) {
-  const book = db.prepare('SELECT id, name, total_sections, max_section_number, is_public, created_by, is_container FROM books WHERE id = ? AND is_demo = 0').get(bookId);
+  const book = db.prepare('SELECT id, name, total_sections, max_section_number, is_public, created_by, is_container FROM books WHERE id = ?').get(bookId);
   if (!book || !book.is_public) return { ok: false, reason: 'not_public' };
   const existing = db.prepare('SELECT book_id FROM user_books WHERE user_id = ? AND book_id = ?').get(userId, bookId);
   if (!existing) {
@@ -1079,7 +1079,7 @@ function addBookToLibrary(userId, bookId) {
   }
   // Cascade: if this is an anthology container, also add all its public children
   if (book.is_container) {
-    const children = db.prepare('SELECT id, name, total_sections, max_section_number, is_public, created_by FROM books WHERE parent_book_id = ? AND is_demo = 0 AND is_public = 1').all(bookId);
+    const children = db.prepare('SELECT id, name, total_sections, max_section_number, is_public, created_by FROM books WHERE parent_book_id = ? AND is_public = 1').all(bookId);
     for (const child of children) {
       const childExists = db.prepare('SELECT book_id FROM user_books WHERE user_id = ? AND book_id = ?').get(userId, child.id);
       if (!childExists) {
@@ -1116,7 +1116,7 @@ function _getAuthorRatings(authorsField) {
   const names = (authorsField || '').split(/\s*,\s*/).map(a => a.trim()).filter(Boolean);
   if (!names.length) return [];
   const allBooks = db.prepare(
-    `SELECT id, authors FROM books WHERE is_public = 1 AND is_demo = 0 AND authors IS NOT NULL`
+    `SELECT id, authors FROM books WHERE is_public = 1 AND authors IS NOT NULL`
   ).all();
   return names.map(name => {
     const matchingIds = allBooks
@@ -1147,7 +1147,7 @@ function canUserRateBook(userId, bookId) {
   if (!book) return false;
   if (!book.is_container) return _userHasRun(userId, bookId);
   // Anthology: every child must have at least one run.
-  const children = db.prepare('SELECT id FROM books WHERE parent_book_id = ? AND is_demo = 0').all(bookId);
+  const children = db.prepare('SELECT id FROM books WHERE parent_book_id = ?').all(bookId);
   if (children.length === 0) return false;
   return children.every(c => _userHasRun(userId, c.id));
 }
@@ -1156,7 +1156,7 @@ function canUserRateBook(userId, bookId) {
 // Each top-level item must satisfy canUserRateBook (handles books and anthologies correctly).
 function canUserRateSeries(userId, seriesId) {
   const items = db.prepare(
-    `SELECT id FROM books WHERE series_id = ? AND is_demo = 0
+    `SELECT id FROM books WHERE series_id = ?
        AND (parent_book_id IS NULL OR parent_book_id = 0)`
   ).all(seriesId);
   if (items.length === 0) return false;

@@ -2,7 +2,7 @@ import { booksState } from './state.js';
 import { _refreshBooksListOnly } from './data.js';
 import { _scheduleAnthologyCardCoverFlows, _queueBookCovers } from './covers.js';
 import { _materializeLazyGroup } from './lazy.js';
-import { getToken, isDemoMode } from '../core/state.js';
+import { getToken } from '../core/state.js';
 import { foldForSearch } from '../core/sort.js';
 import { t } from '../i18n.js';
 
@@ -16,7 +16,7 @@ export function _setBooksSearchOpen(open) {
   document.body.classList.toggle('books-searching', _booksSearchOpen);
   const input = document.getElementById('books-search-input');
   if (_booksSearchOpen) {
-    if (getToken() && !isDemoMode && !booksState._booksDataFresh) _refreshBooksListOnly();
+    if (getToken() && !booksState._booksDataFresh) _refreshBooksListOnly();
     if (input) { input.value = _booksSearchQuery; input.focus(); input.select(); }
   } else {
     _booksSearchQuery = '';
@@ -192,7 +192,7 @@ export function initBooksPanel() {
   document.getElementById('books-search-close').addEventListener('click',  () => _setBooksSearchOpen(false));
   document.getElementById('books-search-input').addEventListener('input', e => {
     _booksSearchQuery = e.target.value || '';
-    if (_booksSearchQuery.trim() && getToken() && !isDemoMode && !booksState._booksDataFresh) _refreshBooksListOnly();
+    if (_booksSearchQuery.trim() && getToken() && !booksState._booksDataFresh) _refreshBooksListOnly();
     _scheduleApplyBooksSearchFilter();
   });
   document.getElementById('books-search-input').addEventListener('keydown', e => {

@@ -171,25 +171,11 @@ export function isSectionMapped(secId) {
   return !!node && (!node.discovered || (node.choices || []).length > 0 || (node.portals || []).length > 0);
 }
 
-// ── Demo mode ─────────────────────────────────────────────────────────────────
-
-export let isDemoMode = false;
-export function setDemoMode(val) { isDemoMode = val; }
-
-let _demoStateStore = {};
-export function setDemoState(id, data) { _demoStateStore[id] = data; }
-export function getDemoState(id)       { return _demoStateStore[id] || null; }
-export function clearDemoStore()       { _demoStateStore = {}; }
-
 // Serialize saves so an older response cannot overwrite newer state.
 let _saveInFlight = null;
 let _saveQueued   = false;
 
 export function saveState() {
-  if (isDemoMode) {
-    if (currentBookId) _demoStateStore[currentBookId] = JSON.parse(JSON.stringify(state));
-    return Promise.resolve();
-  }
   if (!currentBookId) return Promise.resolve();
   if (_saveInFlight) {
     _saveQueued = true;
@@ -216,13 +202,6 @@ export function saveState() {
 
 // Return true only after reset succeeds; callers must check before changing the graph/UI.
 export function resetBookProgress() {
-  if (isDemoMode) {
-    if (!currentBookId) return Promise.resolve(false);
-    state = _emptyState();
-    _demoStateStore[currentBookId] = JSON.parse(JSON.stringify(state));
-    window.dispatchEvent(new CustomEvent('book-state-saved', { detail: { bookId: currentBookId } }));
-    return Promise.resolve(true);
-  }
   if (!currentBookId) return Promise.resolve(false);
   return apiFetch(`/api/books/${currentBookId}/reset`, { method: 'POST' })
     .then(async res => {
@@ -236,12 +215,6 @@ export function resetBookProgress() {
 
 export async function loadState(bookId, { strict = false, isCurrent = () => true } = {}) {
   if (!strict) setCurrentBookId(bookId);
-  if (isDemoMode) {
-    setCurrentBookId(bookId);
-    const saved = _demoStateStore[bookId];
-    state = saved ? JSON.parse(JSON.stringify(saved)) : _emptyState();
-    return;
-  }
   try {
     const res = await apiFetch(`/api/books/${bookId}/state`);
     if (!res.ok) throw new Error('Book state unavailable');
