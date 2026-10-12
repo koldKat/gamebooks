@@ -1127,6 +1127,8 @@ function getAllPublicBooks(hasPdfAccess = false) {
             COALESCE(SUM(c.total_sections), 0) AS children_total_sections,
             COALESCE(MAX(c.has_battle_sim), 0) AS child_has_battle_sim,
             COALESCE(MAX(c.has_live_reading), 0) AS child_has_live_reading,
+            COALESCE(MAX(CASE WHEN c.pdf_path IS NOT NULL AND c.pdf_path != '' THEN 1 ELSE 0 END), 0) AS child_has_pdf,
+            COALESCE(MAX(CASE WHEN c.epub_path IS NOT NULL AND c.epub_path != '' THEN 1 ELSE 0 END), 0) AS child_has_epub,
             COUNT(DISTINCT ub.user_id) AS library_count
      FROM books b
      LEFT JOIN books c ON c.parent_book_id = b.id AND c.is_demo = 0 AND c.is_public = 1
@@ -1162,6 +1164,8 @@ function getAllPublicBooks(hasPdfAccess = false) {
     // pdf_access holders (same gating as getPublicSeriesInfo's pdfPath).
     pdfPath: hasPdfAccess ? (r.pdf_path || null) : null,
     epubPath: hasPdfAccess ? (r.epub_path || null) : null,
+    hasPdf: hasPdfAccess && !!(r.pdf_path || r.child_has_pdf),
+    hasEpub: hasPdfAccess && !!(r.epub_path || r.child_has_epub),
   }));
 }
 

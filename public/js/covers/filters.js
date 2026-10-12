@@ -47,6 +47,15 @@ export function _hasLiveReading(item) {
   return !!item.hasLiveReading;
 }
 
+// Format badges include an anthology's public children; paths stay on their own books.
+export function _hasPdf(item) {
+  return !item.isSeries && !!(item.pdfPath || item.hasPdf);
+}
+
+export function _hasEpub(item) {
+  return !item.isSeries && !!(item.epubPath || item.hasEpub);
+}
+
 // Stack PDF badges after battle-sim and reading badges.
 export function _bottomLeftBadgeCount(item) {
   return (_hasBattleSim(item) ? 1 : 0) + (_hasLiveReading(item) ? 1 : 0);
@@ -54,7 +63,7 @@ export function _bottomLeftBadgeCount(item) {
 
 // Stack EPUB badges after battle-sim, reading, and PDF badges.
 export function _epubBadgeOffset(item) {
-  return _bottomLeftBadgeCount(item) + (!item.isSeries && item.pdfPath ? 1 : 0);
+  return _bottomLeftBadgeCount(item) + (_hasPdf(item) ? 1 : 0);
 }
 
 // Resolve ownership from the hooked library cache; the public catalog has no viewer-specific ownership.
