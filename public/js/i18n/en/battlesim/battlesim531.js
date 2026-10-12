@@ -1,0 +1,53 @@
+import { REALM_ENCOUNTERS, REALM_DREAMS, REALM_EQUIPMENT }
+  from '../../../battlesim/engines/grailquest/realm-of-chaos-roster.js';
+
+const labels = {
+  title:'Battle Simulator - Realm of Chaos',character:'Pip',life:'LIFE',maxLife:'Starting LIFE',
+  hit:'Hit on',bonus:'Damage bonus',armour:'Armour',permanent:'Permanent LIFE',
+  experience:'Book experience',gold:'Book gold',potions:'Potion doses',salves:'Salve applications',
+  madFights:'MAD fights remaining',dragonCalls:'Dragon calls used',pathwalker:'Path moves remaining',
+  supplies:'Supplies and found items',equipment:'Choose up to six starting items',
+  fungoidRot:'Fungoid Rot',dreamDisease:'Dreamtime disease',healingWand:'Healing Wand',
+  horrorgem:'Horrorgem',spookBasher:'Spook Basher',dragonStone:'Green Dragon stone',
+  new_character:'Roll new LIFE',new_confirm:'Reincarnate and reroll LIFE? The vampire penalty applies once. Killed enemies stay dead except on the Astral Plane.',
+  invalid:'Check your values. Missing printed enemy statistics must be supplied explicitly.',
+  encounter:'Encounter',encounter_label:'{enemy} (section {section})',dream_label:'{enemy} (Dreamtime {number})',
+  start:'Start fight',replace_fight:'Replace the unfinished fight? Current wounds and supplies carry over.',
+  settings:'Fight settings',killEnemies:'Fight to the death',openingApplied:'Opening scene damage already applied',
+  stake:'Use your wooden stake against the vampire',oneUseStone:'Use the stone once (section 73 variant)',
+  allyTakesHits:'Companion takes enemy attacks',ghastFullDice:'Ghast: use full dice damage instead of excess',
+  manualLife:'Missing enemy LIFE',manualHit:'Missing enemy hit score',manualBonus:'Missing enemy damage bonus',
+  missing_note:'Albert has no printed statistics; the vampire has no printed damage bonus. Enter your chosen values; the simulator will not invent them.',
+  target:'Opponent',target_label:'{enemy}: {life} LIFE',roll:'Fight round',initiative:'Roll initiative',
+  friendly:'Friendly reaction',bribe:'Offer bribe',spook:'Use Spook Basher',gem:'Use Horrorgem',
+  mastiff:'Mastiff',take_mastiff:'Add mastiff (section 9)',use_mastiff:'Call mastiff',
+  use_lizard:'Call Dreamtime lizard',call_dragon:'Rub dragon stone',
+  companion_life:'Mastiff LIFE',dream_companions:'Dreamtime lizards: {count}',
+  wand:'Use Healing Wand',heal_potion:'Drink potion',heal_salve:'Apply salve',sleep:'Sleep',
+  next_dream:'Next Dreamtime roll',wake_roll:'Try to wake',fight_warthog:'Fight warthog',
+  astral:'Roll Astral travel',walk:'Walk one path',strength:'Kootbraker strength contest',
+  history:'Fight history',pick:'Choose an encounter.',round:'Round {round}',
+  fighting:'Fighting',win:'Victory',loss:'Defeated',knockout:'Knocked out',avoided:'Combat avoided',
+  tie:'Initiative tied: roll again.',dream_result:'Dreamtime {number}: {result}',
+  dream_pending:'Follow the printed dream',dream_wake:'Return to your adventure',
+  dream_again:'Roll another dream',dream_sleep:'Still asleep: roll again to wake',
+  dream_dead:'Death: section 14',dream_combat:'Fight the dream encounter',dream_optional:'Optional warthog fight',
+  travel_result:'Roll {roll}: {result}',path_result:'Two paths available',destination:'Turn to section {section}',
+  strength_win:'Escaped the embrace',strength_loss:'Death: section 14',
+  strength_tie:'The printed rules do not specify a tied result; follow your chosen ruling.',
+  action_result:'{action}: roll {roll}; {damage} damage. {result}',
+  success:'Success',failed:'Failed',event_player:'Pip attacks',event_enemy:'Enemy attacks',
+  event_ally:'Companion attacks',event_poison:'Poison',event_breath:'Mervillion breath',
+  event_paralysed:'Pip misses a paralysed turn',event_allyPoison:'Companion poison',
+  event_allyParalysed:'Companion misses a paralysed turn',event_fall:'Fatal fall',
+  event_spookBasher:'Spook Basher',event_horrorgem:'Horrorgem',event_dragon:'Dragon summoning',
+  event_friendly:'Friendly reaction',event_bribe:'Bribe',
+  note:'Enter only supplies and artifacts you have actually obtained. Potions have six doses; salve jars have five applications.',
+  manual:'Use the reader for maps, puzzles and travel rewards. Book experience is separate from app XP. Astral encounters reset on revisits.',
+};
+const equipmentNames=['Axe','Ant farm','Boots','Cobweb spray','Fishing rod','Glitter powder',
+  'Hammer','Handkerchief','Knife','Mallet','Rope (50 ft)','Rations (one week)','Razor',
+  'Salt (1 lb)','Saw','Slide trombone','Spikes','Wooden stake','Talking brass head','Toothbrush','Twine (200 ft)'];
+for(const [index,id]of REALM_EQUIPMENT.entries())labels[id]=equipmentNames[index];
+for(const entry of [...REALM_ENCOUNTERS,...REALM_DREAMS])labels['enemy_names.'+entry.id]=entry.name;
+export default Object.fromEntries(Object.entries(labels).map(([key,value])=>['battlesim531.'+key,value]));
