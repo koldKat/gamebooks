@@ -6,7 +6,11 @@ import { createContext, SourceTextModule } from 'node:vm';
 
 const root = process.argv[1];
 const baseline = '4f1b1de55771d4d47b9249c961fbd03b86021bec8ce06ffdcd0d1046198d61e3'; // Includes reviewed feedback and simulator updates.
-const addedSimulatorIds = new Set([463, 521, 522, 523, 524, 527, 528, 534, 535, 536, 537, 548, 555, 557]);
+const addedSimulatorIds = new Set([463, 521, 522, 523, 524, 527, 528, 529, 530, 531, 532, 533, 534, 535, 536, 537, 548, 555, 557]);
+const rosterTables = new Map([
+  ['528','gateway-of-doom'], ['529','voyage-of-terror'], ['530','kingdom-of-horror'],
+  ['531','realm-of-chaos'], ['532','tomb-of-nightmares'], ['533','legion-of-the-dead'],
+]);
 const hash = entries => createHash('sha256').update(JSON.stringify(entries)).digest('hex');
 const sorted = table => Object.keys(table).sort().map(key => [key, table[key]]);
 async function environment(language) {
@@ -63,9 +67,9 @@ for (const path of paths) {
   const source = readFileSync(path, 'utf8');
   const simulatorId = path.match(/battlesim(\d+)\.js$/)?.[1];
   assert.doesNotMatch(source, /\b(?:document|localStorage|fetch)\s*[.(]|\bimport\s*\(/m, 'tables have no browser or dynamic runtime dependencies');
-  if (simulatorId === '528') {
-    const roster = '../../../battlesim/engines/grailquest/gateway-of-doom-roster.js';
-    assert.deepEqual([...source.matchAll(/\bfrom\s+'([^']+)'/g)].map(match => match[1]), [roster], 'Gateway names share only their static encounter roster');
+  if (rosterTables.has(simulatorId)) {
+    const roster = '../../../battlesim/engines/grailquest/'+rosterTables.get(simulatorId)+'-roster.js';
+    assert.deepEqual([...source.matchAll(/\bfrom\s+'([^']+)'/g)].map(match => match[1]), [roster], 'names share only their own static encounter roster');
     assert.doesNotMatch(readFileSync(resolve(dirname(path), roster), 'utf8'), /^import |\b(?:document|localStorage|fetch)\s*[.(]/m, 'shared roster is data-only');
   } else {
     assert.doesNotMatch(source, /^import /m, 'literal tables have no dependencies');
@@ -76,11 +80,12 @@ for (const path of paths) {
     simulatorIds.push(Number(simulatorId));
     await lazy.loadBattleSimTranslations(simulatorId);
   }
-  if (simulatorId === '528') {
-    const roster = await en.load('battlesim/engines/grailquest/gateway-of-doom-roster.js');
-    const entries = [...roster.GATEWAY_ENCOUNTERS, ...roster.GATEWAY_WANDERING, ...roster.GATEWAY_DREAMS];
-    assert.equal(new Set(entries.map(entry => entry.section)).size, entries.length, 'generated enemy-name keys are unique');
-    for (const entry of entries) assert.equal(table['battlesim528.enemy_names.' + entry.section], entry.name);
+  if (rosterTables.has(simulatorId)) {
+    const roster = await en.load('battlesim/engines/grailquest/'+rosterTables.get(simulatorId)+'-roster.js');
+    const entries = Object.entries(roster).filter(([key]) => /_(ENCOUNTERS|WANDERING|DREAMS|NAVIGATION)$/.test(key)).flatMap(([,rows]) => rows);
+    const id = entry => entry.id ?? entry.section;
+    assert.equal(new Set(entries.map(id)).size, entries.length, 'generated enemy-name keys are unique');
+    for (const entry of entries) assert.equal(table['battlesim'+simulatorId+'.enemy_names.' + id(entry)], entry.name);
   } else {
     assert.equal(literals.length, Object.keys(table).length, 'no overwritten duplicate literals in ' + path);
   }

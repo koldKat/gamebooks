@@ -1,0 +1,46 @@
+import { LEGION_ENCOUNTERS, LEGION_DREAMS, LEGION_EQUIPMENT }
+  from '../../../battlesim/engines/grailquest/legion-of-the-dead-roster.js';
+
+const labels = {
+  title:'Battle Simulator - Legion of the Dead',character:'Pip',
+  life:'LIFE',maxLife:'Starting LIFE',armour:'Armour',permanent:'Permanent LIFE',
+  experience:'Book experience',gold:'Book gold',weapon:'Weapon',ej:'EJ',unarmed:'Unarmed',leek:'Magic leek',
+  supplies:'Supplies and found items',equipment:'Starting equipment (choose up to six)',
+  bolts:'Firefinger bolts',fireballs:'Fireballs',cubeUses:'Ivory cube uses',waterUses:'Pool water doses',
+  brandyUses:'Brandy doses',amuletUses:'Amulet charges',wandUses:'Wand charges',ringUses:'Ring charges',teaUses:'Tea doses',
+  jadeGarlic:'Jade garlic',monkey:'Clockwork monkey',germ:'Giant germ',deathOde:'Death Ode memorized',
+  sunstone:'Sunstone',collar:'Protection of the Anointed',wandWord:'Wand activation word learned',poisonImmune:'Poison immunity',
+  item:'Newly found item',acquire:'Apply acquisition',cube:'Ivory cube',water:'Pool water',brandy:'Medicinal brandy',
+  amulet:'Amulet of Knar',wand:'Lotus Wand',ring:'Vampire ring',flattened:'Flattened EJ',cold:'Cold exposure',
+  moonshine:'Moonshine blindness',finger:'Severed finger',teaFull:'Tea: one full restore',teaDice:'Tea: three dice restores',
+  skeleton:'Rescued Skeleton',orangutiger:'Orang-utiger',dragon:'Baby Dragon',
+  'ally-skeleton':'Skeleton LIFE','ally-orangutiger':'Orang-utiger LIFE','ally-dragon':'Baby Dragon LIFE',
+  new_character:'Roll LIFE / reincarnate',new_confirm:'Roll a new body? Reincarnation loses collected items and gold; experience and killed-enemy history remain.',
+  invalid:'Check your values, available items and the six-item equipment limit.',
+  encounter:'Encounter',encounter_label:'{enemy} (section {section})',dream_label:'{enemy} (Dreamtime {number})',
+  settings:'Fight settings',killEnemies:'Fight to the death',useSkeleton:'Skeleton joins the fight',
+  useMonkey:'Wind clockwork monkey',useGerm:'Germ affects first opponent',invisibilityAllowed:'Section permits Invisibility',
+  indoors:'Indoors (levitation costs half LIFE)',enemyCount:'Group size (blank: roll)',enemyLife:'Enemy LIFE (not specified in source)',
+  start:'Start fight',replace_fight:'Replace this unfinished fight? Current wounds and supplies carry over.',
+  target:'Opponent',target_label:'{enemy}: {life} LIFE',defender:'Enemy attacks',player:'Pip',enemy:'Enemy',
+  roll:'Fight round',initiative:'Roll initiative',friendly:'Friendly reaction',use_collar:'Invoke protection',bat:'Bat / human',
+  spell:'Spell',cast:'Cast spell',panic:'PANIC - armour',pow:'POW - next blow',pill:'PILL - laughter',pad:'PAD - dart',
+  pip:'PIP - poison immunity',pin:'PIN - object spell',repeater:'Rapid Repeater',invisibility:'Invisibility',
+  firefinger:'Firefinger',fireball:'Fireball',plop:'PLOP - lock picker',pid:'PID - shrink',pals:'PALS - friendly vegetable',pil:'PIL - levitate',
+  use_bolt:'Firefinger bolt',use_fireball:'Throw Fireball',artifacts:'Artifact powers',heal:'Restore 2d6 LIFE',
+  damage:'+2 damage this fight',adjust_roll:'Adjust a roll by one (manual)',extra_friendly:'Extra friendly roll (manual)',
+  knockout:'Knockout threshold 10',use_amulet:'Use Amulet',blue:'Blue: armour 3',red:'Red: +2 damage',
+  green:'Green: friendly reaction',silver:'Silver: beauty (manual)',use_wand:'Use Wand',sunstone_use:'Sunstone choice',
+  sell:'Sell for 100,000,000 gold',permanent_life:'+20 permanent LIFE',destroy:'Destroy current opponents',
+  use_sunstone:'Use Sunstone',sunstone_confirm:'Use up the Sunstone for this choice? It will no longer be available for the ending.',
+  heal_cube:'Use cube',heal_water:'Drink pool water',heal_brandy:'Drink brandy',heal_tea:'Drink tea',sleep:'Sleep',dream:'Resolve Dreamtime',
+  history:'Fight history',pick:'Choose an encounter.',fighting:'Fighting',win:'Victory',loss:'Defeated',bypassed:'Combat avoided',
+  round:'Round {round}',tie:'Initiative tied: roll again.',action:'Action',
+  result:'{action}: roll {roll}; {damage} damage. {outcome}',healing_result:'Restored {amount} LIFE.',
+  success:'Success',failed:'Failed',fatal:'Fatal',manual_result:'Follow the printed instructions.',
+  note:'Apply only items you have found. No healing during combat. Reincarnation rerolls LIFE once, not three times.',
+  manual:'Use the reader for maps, puzzles, utility spells and story rewards. Book experience and gold are separate from app XP and coins.',
+};
+for (const item of LEGION_EQUIPMENT) labels['gear.'+item] = item;
+for (const entry of [...LEGION_ENCOUNTERS,...LEGION_DREAMS]) labels['enemy_names.'+entry.id] = entry.name;
+export default Object.fromEntries(Object.entries(labels).map(([key,value]) => ['battlesim533.'+key,value]));
