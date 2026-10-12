@@ -511,21 +511,45 @@ async function _showExtra(key, readOnly = false) {
   const top = document.getElementById('m-top');
   if (!top) return;
   const token = ++_showToken;
+  const bookId = currentBookId;
+  const authToken = getToken();
+  const run = currentPlaythrough();
+  const sec = currentSection();
   let res;
   try {
-    res = await apiFetch(`/api/books/${currentBookId}/sections/${encodeURIComponent(key)}`);
+    res = await apiFetch(`/api/books/${bookId}/sections/${encodeURIComponent(key)}`);
   } catch (_) {
     return;
   }
   if (token !== _showToken || !res.ok) return;
   const data = await res.json();
-  if (token !== _showToken) return;
+  if (token !== _showToken || bookId !== currentBookId || authToken !== getToken()) return;
   top.innerHTML = `${data.html}<p class="m-back-link"><a href="#" id="m-extra-back">${t('mobile.back')}</a></p>`;
   top.scrollTop = 0;
   _bindMapEntry(top, token, readOnly);
   document.getElementById('m-extra-back')?.addEventListener('click', e => {
     e.preventDefault();
     _returnToCurrent();
+  });
+  top.querySelectorAll('a[href^="#"]').forEach(a => {
+    if (a.id === 'm-extra-back') return;
+    const href = a.getAttribute('href').slice(1);
+    if (!href) return;
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      if (token !== _showToken || bookId !== currentBookId || authToken !== getToken()) return;
+      if (href.startsWith('section-')) {
+        const dest = parseSecId(href.slice('section-'.length));
+        if (dest === null) return;
+        if (readOnly) {
+          if (isSectionMapped(dest)) _onGraphTap(dest);
+        } else if (run && run === currentPlaythrough() && sec === currentSection()) {
+          _navigate(dest);
+        }
+      } else {
+        _showExtra(href, readOnly);
+      }
+    });
   });
 }
 
