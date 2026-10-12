@@ -1,0 +1,28 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {UROWEN_SOURCE} from '../../../../public/js/battlesim/engines/urowen/roster.js';
+import {compileUrowenEncounters,createUrowenSimState,prepareUrowenEncounter} from '../../../../public/js/battlesim/engines/urowen/state.js';
+import {startUrowenEncounter,resolveUrowenEncounterRound} from '../../../../public/js/battlesim/engines/urowen/rounds.js';
+const spec=compileUrowenEncounters(UROWEN_SOURCE).find(row=>row.section===27);
+const dice=(...values)=>()=>{assert.ok(values.length);return values.shift();};
+test('section 83 modifiers apply once to a whole encounter without changing saved attributes or weapons',()=>{
+  const input=createUrowenSimState();
+  input.character.career=null;input.character.attributes.SK=20;input.character.weapon.bonus=0;
+  input.character.nextCombat={attack:-1,damage:1,lifeLoss:3};
+  let state=prepareUrowenEncounter(input,spec);
+  assert.equal(state.fight.player.life,17);assert.equal(state.character.nextCombat,undefined);
+  assert.equal(input.character.nextCombat.attack,-1);assert.equal(input.character.life,20);
+  state=startUrowenEncounter(state);
+  const out=resolveUrowenEncounterRound(state,dice(6,1,2,2));
+  assert.equal(out.result.playerAttack,25);assert.equal(out.result.enemyDamage,3);
+  assert.equal(out.state.character.attributes.SK,20);assert.equal(out.state.character.weapon.bonus,0);
+  out.state.fight.status='loss';
+  const next=prepareUrowenEncounter(out.state,spec);
+  assert.equal(next.fight.sceneAttackBonus,0);assert.equal(next.fight.sceneDamageBonus,0);
+  assert.equal(next.fight.player.life,17);
+});
+test('invalid modifiers are rejected without consuming saved effects',()=>{
+  const input=createUrowenSimState();input.character.nextCombat={attack:2,damage:0,lifeLoss:0};
+  assert.throws(()=>prepareUrowenEncounter(input,spec),/Invalid next-combat/);
+  assert.equal(input.character.nextCombat.attack,2);assert.equal(input.fight,null);
+});
