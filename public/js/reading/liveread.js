@@ -9,6 +9,7 @@ import { shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from '../
 import { TROPHY_SVG, BROKEN_SHIELD_SVG, terminalHeadingKey } from './liveread-shared.js';
 import { showReadingGate } from './access.js';
 import { renderReadingMatter } from './content.js';
+import { bindReadingMapEntry, isReadingMapSection, readingChoices } from './map-entry.js';
 
 // Reuses the same .feed-loading-graph/.flg-* markup and CSS (demo.css) as the
 // activity feed's loading indicator, both loaded on index.html.
@@ -117,7 +118,9 @@ async function _showSection(sec) {
   const data = result.data;
   body.innerHTML = data.html;
   body.scrollTop = 0;
-  if (data.choices?.length) commitChoices(sec, data.choices);
+  if (isReadingMapSection(data)) (state.graph[sec] ||= { choices: [] }).manualNavigation = true;
+  if (data.choices?.length) commitChoices(sec, readingChoices(data, state.graph[sec]?.choices, state.graph[sec]?.manualNavigation));
+  _bindMapEntry(body, token);
   // Hovering an in-text choice link highlights the matching node on the graph,
   // same as the run trail's pills and the choice-list buttons (play.js).
   if (network) {
@@ -146,11 +149,34 @@ async function _showExtra(key) {
   const data = result.data;
   body.innerHTML = `${data.html}<p class="liveread-back"><a href="#" id="liveread-back-link">${t('btn.back')}</a></p>`;
   body.scrollTop = 0;
+  _bindMapEntry(body, token);
   document.getElementById('liveread-back-link')?.addEventListener('click', e => {
     e.preventDefault();
     const sec = _shownSec;
     _shownSec = undefined;
     _showSection(sec);
+  });
+}
+
+function _bindMapEntry(body, token) {
+  const bookId = currentBookId;
+  const authToken = getToken();
+  const run = currentPlaythrough();
+  const sec = currentSection();
+  bindReadingMapEntry(body, {
+    canNavigate: () => token === _showToken && bookId === currentBookId && authToken === getToken()
+      && run != null && run === currentPlaythrough() && sec === currentSection()
+      && _previewSec === null && !_accessPending && !_accessLocked,
+    onNavigate(marker) {
+      if (marker > state.totalSections) return;
+      suppressAutoNav(true);
+      try {
+        (state.graph[sec] ||= { choices: [] }).manualNavigation = true;
+        commitChoices(sec, [...(state.graph[sec]?.choices || []), marker]);
+        navigate(marker);
+      } finally { suppressAutoNav(false); }
+      if (currentSection() === marker) _showSection(marker);
+    },
   });
 }
 
@@ -290,10 +316,12 @@ export async function previewSection(sec) {
     return;
   }
   const data = result.data;
-  if (data.choices?.length) commitChoices(sec, data.choices);
+  if (isReadingMapSection(data)) (state.graph[sec] ||= { choices: [] }).manualNavigation = true;
+  if (data.choices?.length) commitChoices(sec, readingChoices(data, state.graph[sec]?.choices, state.graph[sec]?.manualNavigation));
   _previewSec = sec;
   _updateHeading(sec);
   body.innerHTML = `<p class="liveread-preview-banner">${t('mobile.preview_banner', { sec })}</p>${data.html}<p class="liveread-back"><a href="#" id="liveread-preview-return">${t('mobile.preview_return')}</a></p>`;
+  bindReadingMapEntry(body, { canNavigate: () => false, onNavigate() {} });
   body.scrollTop = 0;
   document.getElementById('liveread-preview-return').addEventListener('click', e => {
     e.preventDefault();

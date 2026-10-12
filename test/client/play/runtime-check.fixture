@@ -201,6 +201,17 @@ api.showTwoChoice('Choose again', 'A', () => { choiceActions++; }, 'B', () => { 
 el('choice-a').click(); assert.equal(choiceActions, 1); assert.equal(el('choice-overlay').classList.contains('active'), false); snapshot('two-choice-reopened');
 console.log(JSON.stringify({ cases: snapshots.length, exports: Object.keys(api).length, digest: createHash('sha256').update(JSON.stringify(snapshots)).digest('hex') }));
 if (!baseline) {
+  reset({ graph: { 1: { choices: [2], manualNavigation: true }, 2: { choices: [] } },
+    playthroughs: [{ path: [1], completed: false }], activePtIndex: 0 });
+  assert.equal(api.wouldAutoNav(1, state.playthroughs[0]), false);
+  api.render(); flush(0);
+  assert.deepEqual(state.playthroughs[0].path, [1], 'recorded map edge is not a forced passage');
+  api.commitChoices(1, [2,3]);
+  assert.equal(state.graph[1].manualNavigation, true, 'choice recording retains manual-map metadata');
+  reset({ graph: { 1: { choices: [2] }, 2: { choices: [3], manualNavigation: true }, 3: { choices: [] } },
+    playthroughs: [{ path: [1,2,3], completed: false, undosUsed: 0 }], activePtIndex: 0 });
+  api.undoRun();
+  assert.deepEqual(state.playthroughs[0].path, [1,2], 'undo stops at an explicit map decision');
   reset({ graph: { 1: { choices: [2] }, 2: { choices: [] }, 8: { choices: [] } },
     playthroughs: [{ path: [1], completed: false }, { path: [8], completed: false }], activePtIndex: 0 });
   api.render(); api.loadRun(1); flush(0);

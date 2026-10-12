@@ -3,7 +3,7 @@
 const path = require('path');
 const fs = require('fs');
 const Database = require('better-sqlite3');
-const { externalizeImages, storeImage, DIRECTORY, MAX_BYTES } = require('./reading-image-storage');
+const { externalizeImages, storeImage, bookImageDirectory, DIRECTORY, MAX_BYTES } = require('./reading-image-storage');
 
 async function main({ normalizePng = false } = {}) {
   const databasePath = path.join(__dirname, '..', 'database.sqlite');
@@ -21,11 +21,20 @@ async function main({ normalizePng = false } = {}) {
     let replacement = externalizeImages(row.html, row.book_id);
     if (normalizePng) replacement = replacement.replace(/\/api\/books\/(\d+)\/reading-images\/([a-f0-9]{64}\.(jpg|gif|webp))/g, (_, bookId, filename, format) => {
       if (Number(bookId) !== row.book_id) throw new Error('Cross-book image reference');
-      if (!converted.has(filename)) {
-        try { converted.set(filename, storeImage(format, fs.readFileSync(path.join(DIRECTORY, filename)).toString('base64'))); }
+      const key = `${bookId}/${filename}`;
+      if (!converted.has(key)) {
+        try {
+          let data;
+          try { data = fs.readFileSync(path.join(bookImageDirectory(bookId), filename)); }
+          catch (error) {
+            if (error.code !== 'ENOENT') throw error;
+            data = fs.readFileSync(path.join(DIRECTORY, filename));
+          }
+          converted.set(key, storeImage(format, data.toString('base64'), bookId));
+        }
         catch (error) { throw new Error(`${filename}: ${error.message}`); }
       }
-      return `/api/books/${bookId}/reading-images/${converted.get(filename)}`;
+      return `/api/books/${bookId}/reading-images/${converted.get(key)}`;
     });
     return { ...row, replacement };
   }).filter(row => row.html !== row.replacement);
@@ -37,7 +46,7 @@ async function main({ normalizePng = false } = {}) {
       }
     }
   })();
-  const files = fs.readdirSync(DIRECTORY);
+  const files = fs.readdirSync(DIRECTORY, { recursive: true }).filter(file => fs.statSync(path.join(DIRECTORY, file)).isFile());
   const sizes = files.map(file => fs.statSync(path.join(DIRECTORY, file)).size);
   if (sizes.some(size => size > MAX_BYTES)) throw new Error('Oversized external image');
   console.log(JSON.stringify({ backup, sections: changes.length, convertedToPng: converted.size, files: files.length,

@@ -9,7 +9,15 @@ const DIRECTORY = path.join(__dirname, '..', 'reading-images');
 const MAX_BYTES = 256 * 1024;
 const DATA_IMAGE = /data:image\/(png|jpeg|jpg|gif|webp);base64,([A-Za-z0-9+/=\r\n]+)/g;
 
-function storeImage(format, base64, directory = DIRECTORY) {
+function bookImageDirectory(bookId, directory = DIRECTORY) {
+  if (!Number.isSafeInteger(Number(bookId)) || Number(bookId) <= 0 || !/^\d+$/.test(String(bookId))) {
+    throw new Error('Invalid reading image book ID');
+  }
+  return path.join(directory, String(Number(bookId)));
+}
+
+function storeImage(format, base64, bookId, directory = DIRECTORY) {
+  directory = bookImageDirectory(bookId, directory);
   let data = Buffer.from(base64, 'base64');
   if (!data.length) throw new Error('Empty reading image');
   if (format !== 'png' || data.length > MAX_BYTES) {
@@ -43,8 +51,9 @@ function storeImage(format, base64, directory = DIRECTORY) {
 }
 
 function externalizeImages(html, bookId, directory) {
+  bookImageDirectory(bookId, directory);
   return html.replace(DATA_IMAGE, (_, format, base64) =>
-    `/api/books/${bookId}/reading-images/${storeImage(format, base64, directory)}`);
+    `/api/books/${Number(bookId)}/reading-images/${storeImage(format, base64, bookId, directory)}`);
 }
 
-module.exports = { DIRECTORY, MAX_BYTES, DATA_IMAGE, storeImage, externalizeImages };
+module.exports = { DIRECTORY, MAX_BYTES, DATA_IMAGE, bookImageDirectory, storeImage, externalizeImages };

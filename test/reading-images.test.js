@@ -15,9 +15,9 @@ test('small JPEG, GIF and WebP imports are stored as actual PNG, not renamed ori
     for (const format of ['jpeg', 'gif', 'webp']) {
       const source = spawnSync('nice', ['-n', '10', 'convert', '-size', '8x8', 'xc:white', `${format}:-`]);
       assert.equal(source.status, 0, source.stderr.toString());
-      const filename = storeImage(format, source.stdout.toString('base64'), directory);
+      const filename = storeImage(format, source.stdout.toString('base64'), 107, directory);
       assert.match(filename, /^[a-f0-9]{64}\.png$/);
-      const data = fs.readFileSync(path.join(directory, filename));
+      const data = fs.readFileSync(path.join(directory, '107', filename));
       assert.equal(data.subarray(0, 8).toString('hex'), '89504e470d0a1a0a');
       assert.ok(data.length <= MAX_BYTES);
     }
@@ -37,12 +37,12 @@ test('oversized images use PNG palette fallback and refuse uncapped output', () 
   } });
   vm.runInContext(fs.readFileSync(require.resolve('../server/reading-image-storage'), 'utf8'), context);
   const oversized = Buffer.alloc(MAX_BYTES + 1).toString('base64');
-  assert.match(context.module.exports.storeImage('png', oversized), /\.png$/);
+  assert.match(context.module.exports.storeImage('png', oversized, 107), /\.png$/);
   assert.equal(calls.length, 2);
   assert.ok(calls.every(call => call.command === 'nice' && call.args.at(-1) === 'png:-'));
   assert.equal(writes[0].bytes, 100);
   fits = false;
-  assert.throws(() => context.module.exports.storeImage('png', oversized), /within 256 KB/);
+  assert.throws(() => context.module.exports.storeImage('png', oversized, 107), /within 256 KB/);
   assert.equal(writes.length, 1);
 });
 
@@ -54,15 +54,22 @@ test('external images preserve surrounding prose, deduplicate, and cap size', ()
     const result = externalizeImages(html, 107, directory);
     assert.match(result, /^<p>Keep this\.<\/p><img src="\/api\/books\/107\/reading-images\/[a-f0-9]{64}\.png"><a href="#section-13">13<\/a>$/);
     externalizeImages(html, 319, directory);
-    assert.equal(fs.readdirSync(directory).length, 1);
-    assert.ok(fs.statSync(path.join(directory, fs.readdirSync(directory)[0])).size <= MAX_BYTES);
+    externalizeImages(html, 107, directory);
+    assert.deepEqual(fs.readdirSync(directory).sort(), ['107', '319']);
+    const files = fs.readdirSync(path.join(directory, '107'));
+    assert.equal(files.length, 1);
+    assert.deepEqual(fs.readdirSync(path.join(directory, '319')), files);
+    assert.ok(fs.statSync(path.join(directory, '107', files[0])).size <= MAX_BYTES);
+    assert.throws(() => externalizeImages(html, '../escape', directory), /Invalid/);
+    assert.throws(() => storeImage('png', image), /Invalid/);
+    assert.throws(() => storeImage('png', image, 0, directory), /Invalid/);
   } finally { fs.rmSync(directory, { recursive: true, force: true }); }
 });
 
 test('image endpoint checks authentication, unlock, and book ownership before reading files', async () => {
   let userId = null, locked = true, referenced = false, reads = 0, status, authorization;
   const context = vm.createContext({ __dirname: '/app/server', module: { exports: {} }, require: name => {
-    if (name === 'fs') return { promises: { readFile: async () => { reads++; return Buffer.from('image'); } } };
+    if (name === 'fs') return { promises: { readFile: async file => { assert.equal(file, `/app/reading-images/107/${'a'.repeat(64)}.png`); reads++; return Buffer.from('image'); } } };
     if (name === 'path') return path;
     if (name === './db/connection') return { db: { prepare: () => ({ get: () => referenced }) } };
     if (name === './db') return { _canLiveRead: () => true, readingAccess: { getAccess: () => ({ locked }) } };
@@ -134,4 +141,34 @@ test('locked books serve only their own frontmatter images; section artwork rema
   await handler(req,res,263,filename);
   assert.equal(status,404);
   assert.equal(reads,2);
+});
+
+test('image endpoint falls back only for missing book files, not other read failures', async () => {
+  const filename = `${'c'.repeat(64)}.png`, calls = [];
+  let failure = 'ENOENT', status;
+  const context = vm.createContext({ __dirname: '/app/server', module: { exports: {} }, require: name => {
+    if (name === 'fs') return { promises: { readFile: async file => {
+      calls.push(file);
+      if (file.includes('/107/')) throw Object.assign(new Error('read failed'), { code: failure });
+      return Buffer.from('image');
+    } } };
+    if (name === 'path') return path;
+    if (name === './db/connection') return { db: { prepare: () => ({ get: () => true }) } };
+    if (name === './db') return {};
+    return { isLocalhostReal: () => true, tokenFromReq: () => 'token', send: (res, code) => { status = code; } };
+  } });
+  vm.runInContext(fs.readFileSync(require.resolve('../server/reading-images'), 'utf8'), context);
+  const handler = context.module.exports.handleReadingImage;
+  const req = { headers: {} }, res = { writeHead(code) { status = code; }, end() {} };
+  await handler(req, res, 107, filename);
+  assert.equal(status, 200);
+  assert.deepEqual(calls, [`/app/reading-images/107/${filename}`, `/app/reading-images/${filename}`]);
+  calls.length = 0; failure = 'EACCES';
+  await handler(req, res, 107, filename);
+  assert.equal(status, 404);
+  assert.equal(calls.length, 1);
+  calls.length = 0;
+  await handler(req, res, '../107', filename);
+  assert.equal(status, 404);
+  assert.equal(calls.length, 0);
 });

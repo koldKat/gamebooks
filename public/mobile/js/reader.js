@@ -19,6 +19,7 @@ import { t } from '../../js/i18n.js';
 import { TROPHY_SVG, BROKEN_SHIELD_SVG, terminalHeadingKey } from '../../js/reading/liveread-shared.js';
 import { showReadingGate } from '../../js/reading/access.js';
 import { renderReadingMatter } from '../../js/reading/content.js';
+import { bindReadingMapEntry, isReadingMapSection, readingChoices } from '../../js/reading/map-entry.js';
 
 // Debounce reward checks by 750ms to allow deferred server awards to land.
 // Merge nearby toast deltas instead of overwriting feedback.
@@ -123,6 +124,7 @@ function _commitChoices(sec, choices) {
   if (existing.color)    state.graph[sec].color    = existing.color;
   if (existing.portals)  state.graph[sec].portals  = existing.portals;
   if (existing.showNote) state.graph[sec].showNote = existing.showNote;
+  if (existing.manualNavigation) state.graph[sec].manualNavigation = true;
 }
 
 // Initialize desktop-compatible run fields; mobile does not instantiate starting-item templates.
@@ -397,10 +399,11 @@ async function _showSection(sec) {
 
   top.innerHTML = data.html;
   top.scrollTop = 0;
+  if (isReadingMapSection(data)) (state.graph[sec] ||= { choices: [] }).manualNavigation = true;
   // Prefetch choice targets while the current section is being read.
   _prefetchChoices(data.choices);
   if (data.choices?.length) {
-    _commitChoices(sec, data.choices);
+    _commitChoices(sec, readingChoices(data, state.graph[sec]?.choices, state.graph[sec]?.manualNavigation));
     // Save again after fetching choices: the earlier navigation save did not contain them.
     saveState();
   }
@@ -409,6 +412,8 @@ async function _showSection(sec) {
   refreshGraph(sec);
   _hideGraphLoading();
   _updateRunControls();
+
+  _bindMapEntry(top, token);
 
   // Show non-section links as bonus prose without changing the graph or run path.
   top.querySelectorAll('a[href^="#"]').forEach(a => {
@@ -502,7 +507,7 @@ function _showEndScreen(result) {
   _updateRunControls();
 }
 
-async function _showExtra(key) {
+async function _showExtra(key, readOnly = false) {
   const top = document.getElementById('m-top');
   if (!top) return;
   const token = ++_showToken;
@@ -517,9 +522,27 @@ async function _showExtra(key) {
   if (token !== _showToken) return;
   top.innerHTML = `${data.html}<p class="m-back-link"><a href="#" id="m-extra-back">${t('mobile.back')}</a></p>`;
   top.scrollTop = 0;
+  _bindMapEntry(top, token, readOnly);
   document.getElementById('m-extra-back')?.addEventListener('click', e => {
     e.preventDefault();
     _returnToCurrent();
+  });
+}
+
+function _bindMapEntry(top, token, readOnly = false) {
+  const bookId = currentBookId;
+  const authToken = getToken();
+  const run = currentPlaythrough();
+  const sec = currentSection();
+  bindReadingMapEntry(top, {
+    canNavigate: () => !readOnly && token === _showToken && bookId === currentBookId && authToken === getToken()
+      && run != null && run === currentPlaythrough() && sec === currentSection(),
+    onNavigate(marker) {
+      if (marker > state.totalSections) return;
+      (state.graph[sec] ||= { choices: [] }).manualNavigation = true;
+      _commitChoices(sec, [...(state.graph[sec]?.choices || []), marker]);
+      _navigate(marker);
+    },
   });
 }
 
@@ -545,12 +568,14 @@ async function _previewSection(sec) {
     _sectionCache.set(cacheKey, data);
   }
 
-  if (data.choices?.length) _commitChoices(sec, data.choices);
+  if (isReadingMapSection(data)) (state.graph[sec] ||= { choices: [] }).manualNavigation = true;
+  if (data.choices?.length) _commitChoices(sec, readingChoices(data, state.graph[sec]?.choices, state.graph[sec]?.manualNavigation));
 
   top.innerHTML = `
     <p class="m-preview-banner">${t('mobile.preview_banner', { sec })}</p>
     ${data.html}
     <p class="m-back-link"><a href="#" id="m-preview-return">${t('mobile.preview_return')}</a></p>`;
+  bindReadingMapEntry(top, { canNavigate: () => false, onNavigate() {} });
   top.scrollTop = 0;
 
   document.getElementById('m-preview-return').addEventListener('click', e => {
@@ -568,7 +593,7 @@ async function _previewSection(sec) {
         // Gate preview links to mapped sections to prevent spoilers.
         if (dest !== null) _onGraphTap(dest);
       } else {
-        _showExtra(href);
+        _showExtra(href, true);
       }
     });
   });

@@ -16,7 +16,7 @@ function setReadingImageCookie(req, res) {
 }
 
 async function handleReadingImage(req, res, bookId, filename) {
-  if (!FILE_PATTERN.test(filename)) return send(res, 404, { error: 'not found' });
+  if (!Number.isSafeInteger(bookId) || bookId <= 0 || !FILE_PATTERN.test(filename)) return send(res, 404, { error: 'not found' });
   const authenticatedRequest = Object.create(req);
   authenticatedRequest.headers = { ...req.headers };
   if (!tokenFromReq(req)) {
@@ -43,7 +43,14 @@ async function handleReadingImage(req, res, bookId, filename) {
     return send(res, 404, { error: 'not found' });
   }
   let data;
-  try { data = await fs.promises.readFile(path.join(DIRECTORY, filename)); }
+  try {
+    try { data = await fs.promises.readFile(path.join(DIRECTORY, String(bookId), filename)); }
+    catch (error) {
+      // Legacy fallback permits a staged migration without changing protected URLs.
+      if (error.code !== 'ENOENT') throw error;
+      data = await fs.promises.readFile(path.join(DIRECTORY, filename));
+    }
+  }
   catch (_) { return send(res, 404, { error: 'not found' }); }
   if (data.length > MAX_BYTES) return send(res, 500, { error: 'image exceeds size limit' });
   const extension = path.extname(filename).slice(1);

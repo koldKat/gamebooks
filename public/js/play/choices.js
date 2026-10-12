@@ -28,6 +28,7 @@ export function commitChoices(sec, choices) {
   const existingColor   = state.graph[sec]?.color;
   const existingPortals = state.graph[sec]?.portals;
   const existingShowNote = state.graph[sec]?.showNote;
+  const manualNavigation = state.graph[sec]?.manualNavigation;
   const oldChoices = state.graph[sec]?.choices || [];
   state.graph[sec] = { choices: deduped };
   if (existingNote)     state.graph[sec].note     = existingNote;
@@ -36,6 +37,7 @@ export function commitChoices(sec, choices) {
   if (existingColor)    state.graph[sec].color    = existingColor;
   if (existingPortals)  state.graph[sec].portals  = existingPortals;
   if (existingShowNote) state.graph[sec].showNote  = existingShowNote;
+  if (manualNavigation) state.graph[sec].manualNavigation = true;
 
   _cleanupOrphanedTargets(sec, oldChoices, deduped);
 

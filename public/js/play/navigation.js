@@ -12,7 +12,7 @@ import { maxUndos } from './limits.js';
 // Skip focus when rendering will immediately auto-navigate, avoiding competing camera animations.
 export function wouldAutoNav(sec, pt) {
   const secData = state.graph[sec];
-  return !(playContext._suppressAutoNavDepth > 0) && secData?.choices.length === 1 && !isTerminal(secData.choices[0]) && !pt?.path.includes(secData.choices[0]) && !(playContext._owIsOpenWorld && secData.portals?.length);
+  return !(playContext._suppressAutoNavDepth > 0) && !secData?.manualNavigation && secData?.choices.length === 1 && !isTerminal(secData.choices[0]) && !pt?.path.includes(secData.choices[0]) && !(playContext._owIsOpenWorld && secData.portals?.length);
 }
 
 export function navigate(sec) {
@@ -45,7 +45,7 @@ export function undoRun() {
   pt.path.pop();
   while (pt.path.length > 1) {
     const node = state.graph[pt.path[pt.path.length - 1]];
-    if (!node || node.choices.length !== 1) break; // real decision point, dead end, or missing node
+    if (!node || node.manualNavigation || node.choices.length !== 1) break; // real decision point, dead end, or missing node
     const hasMetadata = node.note || node.priority || node.battle || node.color || node.portals || node.showNote || node.manual;
     const wouldAutoNavHere = !isTerminal(node.choices[0]) && !pt.path.includes(node.choices[0]) && !(playContext._owIsOpenWorld && node.portals?.length);
     if (hasMetadata && !wouldAutoNavHere) break;

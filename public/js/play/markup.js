@@ -63,7 +63,7 @@ export function renderPanelMarkup(pt, sec) {
             `<button id="record-btn" class="primary-btn">${t('record.btn')}</button>` +
           `</div>` +
         `</div>`;
-    } else if (secData.choices.length === 1 && !isTerminal(secData.choices[0]) && !pt.path.includes(secData.choices[0]) && !(playContext._suppressAutoNavDepth > 0) && !(playContext._owIsOpenWorld && secData.portals?.length)) {
+    } else if (!secData.manualNavigation && secData.choices.length === 1 && !isTerminal(secData.choices[0]) && !pt.path.includes(secData.choices[0]) && !(playContext._suppressAutoNavDepth > 0) && !(playContext._owIsOpenWorld && secData.portals?.length)) {
       const dest = secData.choices[0];
       const previous = playContext._pendingAutoNav;
       if (!previous || previous.state !== state || previous.pt !== pt || previous.sec !== sec || previous.dest !== dest || previous.network !== network) {
