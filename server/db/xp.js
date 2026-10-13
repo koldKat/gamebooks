@@ -325,8 +325,6 @@ const _awardXpTx = db.transaction((userId, event, ref, amount) => {
   const beforeXp    = before?.xp ?? 0;
   const boost       = before?.xp_boost_pct ?? 0;
   const carry       = before?.xp_boost_carry ?? 0;
-  const coinsSpent  = before?.coins_spent ?? 0;
-  const bonusCoins  = before?.bonus_coins ?? 0;
   // At the dynamic cap, XP buffers up to one below the next level and never crosses it: award plain
   // XP (no boost/carry) clamped to the room remaining, so a later signup lifts the cap and the next
   // XP tick levels up. The event insert + Lucky Coin roll below still fire regardless.
@@ -372,7 +370,8 @@ const _awardXpTx = db.transaction((userId, event, ref, amount) => {
     const coinsAfter  = coinsFromXp(after, mintPurchased);
     const coinsGained = coinsAfter - coinsBefore;
     if (coinsGained > 0) {
-      _insertNotif.run(userId, 'coin_gain', JSON.stringify({ amount: coinsGained, balance: coinsAfter + bonusCoins - coinsSpent, reason: 'xp_milestone' }));
+      const current = db.prepare('SELECT xp, coins_spent, bonus_coins, bonus_gc_mint_purchased FROM users WHERE id = ?').get(userId);
+      _insertNotif.run(userId, 'coin_gain', JSON.stringify({ amount: coinsGained, balance: coinBalance(current), reason: 'xp_milestone' }));
     }
   }
   return r.changes > 0;
