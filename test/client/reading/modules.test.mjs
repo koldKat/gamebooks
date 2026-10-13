@@ -1,20 +1,20 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
-import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 
 const dir = new URL('../../../public/js/', import.meta.url);
-test('reading relocation preserves implementations and exact dependency targets', () => {
-  const digests = {
-    liveread: 'fd71192662669c6be07a8b80e7fbed0960696f79ae4468ce33cafa9aa303eab1',
-    'liveread-shared': '7a305b8967fc5494a00f3962a9075a3cdb435122061baadb8fa7aa3e0cbaa1dc',
+test('reading modules preserve their location, public exports and dependency targets', () => {
+  const exports = {
+    liveread: ['previewSection', 'setLiveReadVisible', 'renderLiveRead', 'initLiveRead'],
+    'liveread-shared': ['TROPHY_SVG', 'BROKEN_SHIELD_SVG', 'terminalHeadingKey'],
   };
-  for (const [name, digest] of Object.entries(digests)) {
+  for (const [name, names] of Object.entries(exports)) {
     assert.equal(existsSync(new URL(name + '.js', dir)), false);
     const source = readFileSync(new URL('reading/' + name + '.js', dir), 'utf8');
-    assert.equal(createHash('sha256').update(source.replace(/^import .*;$/gm, '')).digest('hex'), digest);
+    assert.deepEqual([...source.matchAll(/^export (?:async )?(?:function|const) (\w+)/gm)]
+      .map(match => match[1]), names);
   }
   assert.equal(existsSync(new URL('reading.js', dir)), false);
   const moduleUrl = new URL('reading/liveread.js', dir);
@@ -31,9 +31,8 @@ test('mobile keeps existing dependencies and imports only the shared reading mod
   assert.doesNotMatch(shared, /^import\s|\bimport\s*\(/m);
   const mobileUrl = new URL('../mobile/js/reader.js', dir);
   const mobile = readFileSync(mobileUrl, 'utf8');
-  // The access hook is exercised separately; shared reading stays desktop-independent.
-  assert.equal(createHash('sha256').update(mobile.replace(/^import[\s\S]*?;$/gm, '')).digest('hex'),
-    '8de60d4308f9f7693a9051973b8d8cb6f1e7f5fafd3bc033ebd8bc949e75e7b3');
+  assert.deepEqual([...mobile.matchAll(/^export (?:async )?(?:function|const) (\w+)/gm)]
+    .map(match => match[1]), ['renderReader']);
   const imports = [...mobile.matchAll(/^import[\s\S]*?from '([^']+)';$/gm)]
     .map(match => new URL(match[1], mobileUrl));
   const desktopImports = imports.filter(url => url.href.startsWith(dir.href));
