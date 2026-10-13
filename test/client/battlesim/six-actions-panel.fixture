@@ -1,0 +1,84 @@
+import { createSixActionsPanel } from 'REPO/public/js/battlesim/engines/six-actions/panel.js';
+import en from 'REPO/public/js/i18n/en/battlesim/battlesim658.js';
+import bg from 'REPO/public/js/i18n/bg/battlesim/battlesim658.js';
+const checks = [], alerts = [];
+const assert = (value, label) => {
+  if (!value) { document.body.setAttribute('data-failure', label); throw Error(label); }
+  checks.push(label);
+};
+const t = (key, params = {}) => (en[key] ?? ({ 'battlesim.title': 'Simulator', 'btn.close': 'Close',
+  'battlesim.no_active_playthrough': 'Start a run' }[key] ?? key))
+  .replace(/\{(\w+)\}/g, (_, name) => params[name] ?? '');
+let run = { path: [1] }, book = 658, saves = 0, confirmation;
+const panel = createSixActionsPanel({ document, t, getRun: () => run, getBookId: () => book,
+  saveState: () => saves++, showAlert: message => alerts.push(message),
+  showConfirm: (_message, callback) => confirmation = callback,
+  getButtonRow: () => document.getElementById('buttons') });
+const el = key => document.getElementById('sim658-' + key);
+const set = (key, value) => el(key).value = String(value);
+const click = key => el(key).click();
+const change = key => el(key).dispatchEvent(new Event('change', { bubbles: true }));
+Math.random = () => 0;
+panel.init(); panel.init(); panel.setVisible(true); click('btn');
+assert(document.querySelectorAll('#sim658-overlay').length === 1, 'idempotent initialization');
+assert(el('overlay').classList.contains('active'), 'opens');
+assert(!el('overlay').textContent.includes('battlesim658.'), 'visible translations complete');
+assert(JSON.stringify(Object.keys(en).sort()) === JSON.stringify(Object.keys(bg).sort()), 'locale parity');
+assert(el('context').options.length === 52, 'all named source encounters and checks');
+assert([...el('context').options].every(option => !/^Section \d/.test(option.textContent)), 'human encounter names');
+set('wounds', 2); set('bombs', 5); set('grenades', 4); click('apply');
+assert(run.sim658.character.wounds === 2 && run.sim658.character.bombs === 5, 'explicit story adjustment');
+set('context', 106); click('start');
+assert(run.sim658.log.at(-1).includes('67') && run.sim658.history.length === 0, 'check uses wounded stealth and gives no battle reward');
+set('context', 92); change('context');
+assert(!el('secondThreshold-row').hidden, 'unknown second threshold exposed');
+const original = JSON.stringify(run); click('start');
+assert(alerts.length === 1 && JSON.stringify(run) === original, 'blank threshold rejects atomically');
+alerts.length = 0;
+set('secondThreshold', 11); click('start');
+assert(run.sim658.fight.character.wounds === 2 && run.sim658.fight.config.secondThreshold === 11, 'starts with existing wounds and explicit threshold');
+assert(el('apply').disabled && el('start').disabled, 'configuration locked during fight');
+click('cancel'); confirmation();
+assert(run.sim658.fight.status === 'cancelled' && run.sim658.history.length === 0, 'cancel does not award XP');
+set('wounds', 0); click('apply');
+set('context', 9); click('start'); Math.random = () => .999;
+click('step');
+assert(run.sim658.fight.remaining === 1 && el('target').value === '1', 'knife target advances after first casualty');
+click('step');
+assert(run.sim658.fight.status === 'win' && run.sim658.history.length === 1, 'knife victory records once');
+click('step'); assert(run.sim658.history.length === 1, 'disabled step cannot duplicate XP');
+assert(run.sim658.character.bombs === 5 && run.sim658.character.grenades === 4, 'starting fights never replenishes ammo');
+Math.random = () => 0;
+set('context', 114); change('context'); click('start');
+const saved = JSON.stringify(run); click('step');
+assert(alerts.length === 1 && JSON.stringify(run) === saved, 'manual firing count is mandatory');
+alerts.length = 0; set('enemyShots', 0); set('group', 'armour'); click('step');
+assert(run.sim658.fight.round === 2 && el('enemyShots').value === '', 'manual firing count must be confirmed each round');
+const savedRun = JSON.parse(JSON.stringify(run));
+run = { path: [1] }; panel.render();
+assert(run.sim658.character.wounds === 0 && run.sim658.character.bombs === 12, 'different run gets its own defaults');
+assert(el('secondThreshold').value === '' && el('enemyShots').value === '', 'no manual values leak to another run');
+run = JSON.parse(JSON.stringify(savedRun)); panel.render();
+assert(run.sim658.fight.round === 2 && run.sim658.character.bombs === 5, 'saved fight restores without rerolls');
+click('cancel'); const stale = confirmation;
+run = { path: [1] }; stale();
+assert(!run.sim658 && savedRun.sim658.fight.status === 'fighting', 'stale confirmation cannot alter another run');
+panel.render(); set('context', 115); click('start');
+el('grenade').checked = true; Math.random = () => .999; click('step');
+assert(run.sim658.character.grenades === 11 && !el('grenade').checked, 'grenade consumed once and toggle cleared');
+click('cancel'); confirmation();
+const preserved = JSON.stringify(run); book = 659; panel.render(); click('apply');
+assert(JSON.stringify(run) === preserved && !el('overlay').classList.contains('active'), 'book switch isolates saved state');
+book = 658; panel.render(); click('btn');
+for (const details of el('overlay').querySelectorAll('details')) details.open = true;
+const left = document.querySelector('.bsim-col-left'); left.scrollTop = 1e6;
+assert(Math.abs(left.scrollTop - Math.max(0, left.scrollHeight - left.clientHeight)) < 2, 'bottom reachable');
+left.scrollTop = 0; assert(left.scrollTop === 0, 'top reachable');
+assert(left.scrollWidth <= left.clientWidth + 1 && document.documentElement.scrollWidth <= innerWidth, 'no horizontal overflow');
+el('overlay').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+assert(!el('overlay').classList.contains('active'), 'escape closes');
+run = null; click('btn');
+assert(alerts.length === 1 && !el('overlay').classList.contains('active'), 'no run cannot open');
+assert(saves > 0, 'actions persist');
+assert(getComputedStyle(el('btn')).backgroundColor === 'rgba(31, 41, 55, 0.88)', 'existing simulator button theme');
+document.body.setAttribute('data-test', JSON.stringify({ width: innerWidth, checks: checks.length, passed: true }));
