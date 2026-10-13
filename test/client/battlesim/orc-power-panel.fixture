@@ -1,0 +1,81 @@
+import { createOrcPowerPanel } from 'REPO/public/js/battlesim/engines/orc-power/panel.js';
+import en from 'REPO/public/js/i18n/en/battlesim/battlesim654.js';
+import bg from 'REPO/public/js/i18n/bg/battlesim/battlesim654.js';
+const checks = [], alerts = [];
+const assert = (value, label) => {
+  if (!value) { document.body.setAttribute('data-failure', label); throw Error(label); }
+  checks.push(label);
+};
+const t = (key, params = {}) => (en[key] ?? ({ 'battlesim.title':'Simulator', 'btn.close':'Close',
+  'battlesim.no_active_playthrough':'Start a run' }[key] ?? key))
+  .replace(/\{(\w+)\}/g, (_, name) => params[name] ?? '');
+let run = { path:[1] }, book = 654, saves = 0, confirmation;
+const panel = createOrcPowerPanel({ document, t, getRun:() => run, getBookId:() => book,
+  saveState:() => saves++, showAlert:message => alerts.push(message),
+  showConfirm:(_message, callback) => confirmation = callback,
+  getButtonRow:() => document.getElementById('buttons') });
+const el = key => document.getElementById('sim654-' + key);
+const set = (key, value) => el(key).value = String(value);
+const click = key => el(key).click();
+const change = key => el(key).dispatchEvent(new Event('change', { bubbles:true }));
+const check = (key, value) => el(key).checked = value;
+panel.init(); panel.init(); panel.setVisible(true); click('btn');
+assert(document.querySelectorAll('#sim654-overlay').length === 1, 'idempotent initialization');
+assert(el('overlay').classList.contains('active'), 'opens');
+assert(!el('overlay').textContent.includes('battlesim654.'), 'visible translations complete');
+assert([...el('overlay').querySelectorAll('[aria-label]')].every(node =>
+  !node.getAttribute('aria-label').includes('battlesim654.')), 'accessible translations complete');
+assert(JSON.stringify(Object.keys(en).sort()) === JSON.stringify(Object.keys(bg).sort()), 'locale parity');
+assert(el('template').options.length === 25, 'all named source figures');
+set('template', 'soldier'); change('template');
+assert(el('life').value === '', 'unknown source endurance remains blank');
+const original = JSON.stringify(run); click('add');
+assert(alerts.length === 1 && JSON.stringify(run) === original, 'blank source stat rejects without mutation');
+alerts.length = 0;
+set('life', 12); set('attack', 20); set('defence', 20); set('shooting', 20); set('damage', 2);
+set('magicPower', 20); click('add');
+assert(run.sim654.figures.length === 1 && run.sim654.figures[0].maxLife === 12, 'figure initialization');
+set('side', 'enemy'); change('side'); click('add');
+assert(run.sim654.figures.length === 2, 'both armies configured');
+click('start');
+assert(run.sim654.fight.figures[0].life === 12 && el('add').disabled, 'encounter preserves and locks figures');
+set('target', 'figure-2'); click('attackButton');
+assert(alerts.length === 1 && run.sim654.fight.actionsLeft === 2, 'unchecked map eligibility rejects');
+alerts.length = 0; check('legal', true); click('attackButton');
+assert(run.sim654.figures[1].life === 10 && run.sim654.fight.actionsLeft === 1, 'physical equality hits and spends action');
+click('move'); assert(run.sim654.fight.actionsLeft === 0, 'movement spends second action');
+set('next', 'figure-2'); click('nextTurn');
+assert(run.sim654.fight.actorId === 'figure-2' && run.sim654.fight.actionsLeft === 2, 'next actor');
+click('cancel'); confirmation();
+assert(run.sim654.fight.status === 'cancelled' && run.sim654.history.length === 0, 'cancel has no reward');
+click('start'); assert(run.sim654.fight.figures[1].life === 10, 'new encounter carries endurance');
+set('editFigure', 'figure-1'); change('editFigure'); set('edit-life', 4); check('editConfirmed', true); click('applyEdit');
+assert(run.sim654.figures[0].life === 4 && run.sim654.figures[1].life === 10, 'source adjustment isolated');
+check('areaSpell', true); check('spellAvailable', true); set('modifier', 1); set('spellDamage', 2);
+for (const input of el('spellTargets').querySelectorAll('input')) input.checked = true;
+click('magicButton');
+assert(run.sim654.figures[0].life === 2 && run.sim654.figures[1].life === 8, 'area spell includes allied figure');
+assert(run.sim654.fight.actionsLeft === 0, 'spell uses full turn');
+click('cancel'); const stale = confirmation; const savedRun = run; run = { path:[1] }; stale();
+assert(!run.sim654 && savedRun.sim654.fight.status === 'fighting', 'stale confirmation cannot touch another run');
+panel.render(); assert(run.sim654.figures.length === 0 && !el('areaSpell').checked, 'new run resets form selections');
+run = JSON.parse(JSON.stringify(savedRun)); panel.render();
+assert(run.sim654.figures[0].life === 2 && run.sim654.fight.actionsLeft === 0, 'restore saved fight without rerolling');
+const preserved = JSON.stringify(run); book = 655; panel.render(); click('applyEdit');
+assert(JSON.stringify(run) === preserved && !el('overlay').classList.contains('active'), 'book switch closes and isolates');
+book = 654; panel.render(); click('btn');
+set('editFigure', 'figure-2'); change('editFigure'); set('edit-life', 0); check('editConfirmed', true); click('applyEdit');
+assert(run.sim654.history.length === 1 && run.sim654.fight.status === 'win', 'victory records once');
+click('attackButton'); assert(run.sim654.history.length === 1, 'disabled attack cannot duplicate reward');
+for (const details of el('overlay').querySelectorAll('details')) details.open = true;
+const left = document.querySelector('.bsim-col-left'); left.scrollTop = 1e6;
+assert(Math.abs(left.scrollTop - Math.max(0, left.scrollHeight - left.clientHeight)) < 2, 'bottom reachable');
+left.scrollTop = 0; assert(left.scrollTop === 0, 'top reachable');
+assert(left.scrollWidth <= left.clientWidth + 1 && document.documentElement.scrollWidth <= innerWidth, 'no horizontal overflow');
+el('overlay').dispatchEvent(new KeyboardEvent('keydown', { key:'Escape', bubbles:true }));
+assert(!el('overlay').classList.contains('active'), 'escape closes');
+run = null; click('btn');
+assert(alerts.length === 1 && !el('overlay').classList.contains('active'), 'no run cannot open');
+assert(saves > 0, 'actions persist');
+assert(getComputedStyle(el('btn')).backgroundColor === 'rgba(31, 41, 55, 0.88)', 'existing simulator button theme');
+document.body.setAttribute('data-test', JSON.stringify({ width:innerWidth, checks:checks.length, passed:true }));

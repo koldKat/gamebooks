@@ -6,7 +6,7 @@ import { createContext, SourceTextModule } from 'node:vm';
 
 const root = process.argv[1];
 const baseline = 'f6d0e7581cbc2e6231a525bfcfa31abc20f6f979a28841d5a751796c380eb0ef'; // Includes reviewed updates and removal of retired sample strings.
-const addedSimulatorIds = new Set([463, 521, 522, 523, 524, 527, 528, 529, 530, 531, 532, 533, 534, 535, 536, 537, 539, 548, 550, 555, 557, 570, 636, 644, 648]);
+const addedSimulatorIds = new Set([463, 521, 522, 523, 524, 527, 528, 529, 530, 531, 532, 533, 534, 535, 536, 537, 539, 548, 550, 555, 557, 570, 636, 644, 648, 654]);
 const rosterTables = new Map([
   ['528','gateway-of-doom'], ['529','voyage-of-terror'], ['530','kingdom-of-horror'],
   ['531','realm-of-chaos'], ['532','tomb-of-nightmares'], ['533','legion-of-the-dead'],
