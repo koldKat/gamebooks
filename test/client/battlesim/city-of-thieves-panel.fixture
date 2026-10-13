@@ -1,0 +1,94 @@
+import { createThievesPanel } from 'REPO/public/js/battlesim/engines/city-of-thieves/panel.js';
+import en from 'REPO/public/js/i18n/en/battlesim/battlesim665.js';
+import bg from 'REPO/public/js/i18n/bg/battlesim/battlesim665.js';
+const checks = [], alerts = [];
+const assert = (value, label) => {
+  if (!value) { document.body.setAttribute('data-failure', label); throw Error(label); }
+  checks.push(label);
+};
+const t = (key, params = {}) => (en[key] ?? ({ 'battlesim.title': 'Simulator', 'btn.close': 'Close',
+  'battlesim.no_active_playthrough': 'Start a run' }[key] ?? key))
+  .replace(/\{(\w+)\}/g, (_, name) => params[name] ?? '');
+let run = { path: [1], sim201: { preserved: 'English edition' } }, book = 665, saves = 0, confirmation;
+const panel = createThievesPanel({ document, t, getRun: () => run, getBookId: () => book,
+  saveState: () => saves++, showAlert: message => alerts.push(message),
+  showConfirm: (_message, callback) => confirmation = callback,
+  getButtonRow: () => document.getElementById('buttons') });
+const el = key => document.getElementById('sim665-' + key);
+const set = (key, value) => el(key).value = String(value);
+const click = key => el(key).click();
+const change = key => el(key).dispatchEvent(new Event('change', { bubbles: true }));
+Math.random = () => .999;
+panel.init(); panel.init(); panel.setVisible(true); click('btn');
+assert(document.querySelectorAll('#sim665-overlay').length === 1, 'idempotent initialization');
+assert(el('overlay').classList.contains('active'), 'opens');
+assert(document.activeElement === el('close'), 'focus is inside dialog for Escape');
+assert(run.sim665.character === null && el('start').disabled, 'opening never rolls or starts a fight');
+assert(JSON.stringify(Object.keys(en).sort()) === JSON.stringify(Object.keys(bg).sort()), 'locale parity');
+assert(!el('overlay').textContent.includes('battlesim665.'), 'visible translations complete');
+assert(el('context').options.length === 43, 'all named source encounters');
+assert([...el('context').options].every(option => !/^Section \d/.test(option.textContent)), 'human encounter names');
+click('roll');
+assert(run.sim665.character.skill === 12 && run.sim665.character.stamina === 24, 'printed initial rolls');
+assert(run.sim665.character.provisions === 10 && run.sim665.character.potionUses === 1, 'printed starting resources');
+set('skill', 100); set('skillInitial', 100); set('stamina', 10); set('luck', 0); click('apply');
+assert(run.sim665.character.stamina === 10 && el('characterStatus').textContent.includes('10/24'), 'explicit story changes and summary');
+set('context', 201); change('context');
+assert(!el('randomEnemy-row').hidden, 'random encounter selection appears immediately');
+set('context', 79); change('context');
+assert(!el('applyEntry-row').hidden && el('randomEnemy-row').hidden, 'bite choice visible only where applicable');
+set('context', 5); change('context');
+assert(el('applyEntry-row').hidden && !el('contextNote').textContent, 'ordinary fights show no missing rule keys');
+const beforeInvalid = JSON.stringify(run); set('staminaInitial', 0); click('apply');
+assert(alerts.length === 1 && JSON.stringify(run) === beforeInvalid, 'invalid changes rejected atomically');
+alerts.length = 0; set('staminaInitial', 24); click('apply'); click('start');
+assert(el('roll').disabled && el('apply').disabled && el('meal').disabled && el('drink').disabled, 'fight locks edits rerolls and healing');
+for (let i = 0; i < 3; i++) click('step');
+assert(run.sim665.fight.status === 'win' && run.sim665.history.length === 1, 'combat records one complete victory');
+click('step'); assert(run.sim665.history.length === 1, 'disabled step cannot duplicate reward');
+click('meal');
+assert(run.sim665.character.stamina === 14 && run.sim665.character.provisions === 9, 'meal healing not overwritten by ended fight');
+set('context', 326); change('context'); click('start');
+assert(!el('target-row').hidden && el('target').options.length === 2, 'paired target selection');
+set('target', 1); click('step');
+assert(el('target').value === '1' && run.sim665.fight.enemies[0].stamina === 4, 'unchosen dog is blocked not wounded');
+click('step'); assert(run.sim665.fight.status === 'fighting', 'first paired kill is not victory');
+click('step'); click('step');
+assert(run.sim665.fight.status === 'win' && run.sim665.history.length === 2, 'both paired enemies must die');
+set('stamina', 1); set('luck', 12); click('apply');
+set('context', 392); change('context'); click('start'); Math.random = () => 0;
+for (let i = 0; i < 4; i++) {
+  click('step');
+  assert(run.sim665.fight.pending.length === 2 && el('step').disabled && el('cancel').disabled, 'wounds must resolve before next round or cancellation');
+  click('luckNo');
+  assert(run.sim665.fight.status === 'fighting', 'last hit cannot finish before fire');
+  click('luckYes');
+}
+assert(run.sim665.fight.status === 'win' && run.sim665.character.stamina === 1 && run.sim665.history.length === 3, 'Luck prevents lethal fire and finalizes once');
+el('fireRing').checked = true; click('apply'); set('context', 193); change('context'); click('start'); click('bypass');
+assert(run.sim665.fight.status === 'bypassed' && run.sim665.fight.destination === 286 && run.sim665.history.length === 3, 'fire ring bypass gives no battle reward');
+assert(run.sim201.preserved === 'English edition', 'other simulator state unchanged');
+set('context', 5); change('context'); click('start'); click('cancel'); confirmation();
+assert(run.sim665.fight.status === 'cancelled' && run.sim665.history.length === 3, 'cancellation gives no reward');
+click('roll'); const staleRoll = confirmation;
+const oldRun = structuredClone(run); run = { path: [1] }; staleRoll();
+assert(!run.sim665 && oldRun.sim665.character.skill === 100, 'stale reroll cannot alter a new run');
+panel.render();
+assert(run.sim665.character === null, 'new run has isolated character');
+run = structuredClone(oldRun); panel.render();
+assert(run.sim665.character.stamina === oldRun.sim665.character.stamina, 'saved character restores without reroll');
+const preserved = JSON.stringify(run); book = 201; panel.render(); click('apply');
+assert(JSON.stringify(run) === preserved && !el('overlay').classList.contains('active'), 'book switch isolates state');
+book = 665; panel.render(); click('btn');
+for (const details of el('overlay').querySelectorAll('details')) details.open = true;
+const left = document.querySelector('.bsim-col-left'); left.scrollTop = 1e6;
+assert(Math.abs(left.scrollTop - Math.max(0, left.scrollHeight - left.clientHeight)) < 2, 'bottom reachable');
+left.scrollTop = 0; assert(left.scrollTop === 0, 'top reachable');
+assert(left.scrollWidth <= left.clientWidth + 1 && document.documentElement.scrollWidth <= innerWidth, 'no horizontal overflow');
+el('close').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+assert(!el('overlay').classList.contains('active'), 'Escape closes from real focused control');
+run = null; click('btn');
+assert(alerts.length === 1 && !el('overlay').classList.contains('active'), 'no run cannot open');
+assert(saves > 0, 'actions persist');
+assert(getComputedStyle(el('btn')).backgroundColor === 'rgba(31, 41, 55, 0.88)', 'existing simulator button theme');
+document.body.setAttribute('data-test', JSON.stringify({ width: innerWidth, checks: checks.length, passed: true }));
