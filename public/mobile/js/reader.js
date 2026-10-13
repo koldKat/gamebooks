@@ -562,7 +562,7 @@ function _bindMapEntry(top, token, readOnly = false) {
     canNavigate: () => !readOnly && token === _showToken && bookId === currentBookId && authToken === getToken()
       && run != null && run === currentPlaythrough() && sec === currentSection(),
     onNavigate(marker) {
-      if (marker > state.totalSections) return;
+      if (marker > (state.maxSectionNumber ?? state.totalSections)) return;
       (state.graph[sec] ||= { choices: [] }).manualNavigation = true;
       _commitChoices(sec, [...(state.graph[sec]?.choices || []), marker]);
       _navigate(marker);

@@ -167,7 +167,7 @@ function _bindMapEntry(body, token) {
       && run != null && run === currentPlaythrough() && sec === currentSection()
       && _previewSec === null && !_accessPending && !_accessLocked,
     onNavigate(marker) {
-      if (marker > state.totalSections) return;
+      if (marker > (state.maxSectionNumber ?? state.totalSections)) return;
       suppressAutoNav(true);
       try {
         (state.graph[sec] ||= { choices: [] }).manualNavigation = true;
