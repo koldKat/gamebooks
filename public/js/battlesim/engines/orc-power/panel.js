@@ -80,7 +80,8 @@ export function createOrcPowerPanel({ document, t, getRun, getBookId, saveState,
     if (!el('overlay')) return;
     const game = data();
     if (!game) { shownRun = undefined; close(); return; }
-    if (shownRun !== getRun()) {
+    const restoring = shownRun !== getRun();
+    if (restoring) {
       shownRun = getRun();
       for (const field of el('setup').querySelectorAll('input,select')) {
         if (field.type === 'checkbox') field.checked = game.setup[field.id] ?? field.defaultChecked;
@@ -93,7 +94,13 @@ export function createOrcPowerPanel({ document, t, getRun, getBookId, saveState,
     const active = busy(game), fight = game.fight;
     for (const field of el('setup').querySelectorAll('input,select,button')) field.disabled = active;
     const living = game.figures.filter(figure => figure.life > 0);
-    options('first', living.filter(figure => !figure.petrified));
+    const included = new Set(restoring
+      ? living.filter(figure => game.setup[ID + '-participant-' + figure.id]).map(figure => figure.id)
+      : [...el('participants').querySelectorAll('input:checked')].map(field => field.value));
+    el('participants').innerHTML = `<p>${escape(tk('participants'))}</p>` + living.map(figure =>
+      `<label class="bsim-checkbox"><input type="checkbox" id="${ID}-participant-${escape(figure.id)}" value="${escape(figure.id)}"${included.has(figure.id) ? ' checked' : ''}${active ? ' disabled' : ''}>${escape(name(figure))}</label>`).join('');
+    const selected = living.filter(figure => included.has(figure.id));
+    options('first', selected.filter(figure => !figure.petrified));
     options('target', active ? fight.figures.filter(figure => figure.life > 0 && !figure.removed) : []);
     options('next', active ? fight.figures.filter(figure => figure.life > 0 && !figure.removed && !figure.petrified) : []);
     options('editFigure', active ? fight.figures : game.figures);
@@ -103,7 +110,7 @@ export function createOrcPowerPanel({ document, t, getRun, getBookId, saveState,
       .map(figure => `<div class="inv-edit-row"><label class="bsim-checkbox"><input type="checkbox" value="${escape(figure.id)}"${selectedTargets.has(figure.id) ? ' checked' : ''}>${escape(name(figure))}</label><select class="inv-edit-input" data-figure="${escape(figure.id)}" aria-label="${escape(tk('defenderMarker'))}">${markers.map(value => `<option value="${value}"${(targetMarkers.get(figure.id) || 'none') === value ? ' selected' : ''}>${escape(tk('marker.' + value))}</option>`).join('')}</select></div>`).join('');
     fillEditor();
     el('figures').innerHTML = game.figures.map(figure => `<div class="bsim-status">${escape(name(figure))} · ${escape(tk(figure.side))} · ${figure.life}/${figure.maxLife}</div>`).join('');
-    el('start').disabled = active || !living.some(figure => figure.side === 'player') || !living.some(figure => figure.side === 'enemy');
+    el('start').disabled = active || !selected.some(figure => figure.side === 'player') || !selected.some(figure => figure.side === 'enemy');
     const actor = active ? fight.figures.find(figure => figure.id === fight.actorId) : null;
     const canAct = active && fight.actionsLeft > 0 && actor.life > 0 && !actor.removed && !actor.petrified;
     for (const key of ['attackButton', 'magicButton']) el(key).disabled = !canAct;
@@ -128,6 +135,9 @@ export function createOrcPowerPanel({ document, t, getRun, getBookId, saveState,
     overlay.id = ID + '-overlay'; overlay.className = 'inv-overlay';
     overlay.innerHTML = `<div class="inv-modal bsim-modal bsim-compact-form"><div class="inv-modal-hdr"><span class="inv-modal-title">${escape(tk('title'))}</span><button class="inv-close-btn" id="${ID}-close" aria-label="${escape(t('btn.close'))}">&times;</button></div><div class="bsim-body"><div class="bsim-col bsim-col-left"><p>${escape(tk('note'))}</p><div id="${ID}-setup"><details><summary>${escape(tk('addFigure'))}</summary>${select('template', ORC_FIGURES.map(figure => figure.id), 'figure.')}${select('side', ['player','enemy'])}${stats.map(key => input(key)).join('')}${equipment.map(key => input(key, 0)).join('')}${button('add')}</details>${select('mode', ['tactical','strategic'])}${select('first', [])}${button('start')}</div><div id="${ID}-figures"></div><div class="bsim-status" id="${ID}-status"></div>${select('target', [])}${select('kind', ['melee','shoot','throw'])}${select('attackerMarker', markers, 'marker.')}${select('defenderMarker', markers, 'marker.')}${check('legal')}${check('weaponAvailable')}<div class="bsim-btn-row">${button('attackButton')}${button('move')}${button('leave')}</div><details><summary>${escape(tk('magic'))}</summary><p>${escape(tk('magicNote'))}</p>${input('modifier')}${input('spellDamage')}${check('spellAvailable')}${button('magicButton')}</details>${select('next', [])}<div class="bsim-btn-row">${button('nextTurn')}${button('cancel')}</div><details><summary>${escape(tk('adjust'))}</summary><p>${escape(tk('adjustNote'))}</p>${select('editFigure', [])}${editStats.map(key => input('edit-' + key)).join('')}${editNumbers.map(key => input('edit-' + key)).join('')}${select('edit-side', ['player','enemy'])}${check('edit-petrified')}${check('edit-removed')}${check('editConfirmed')}${button('applyEdit')}</details></div><div class="bsim-col bsim-col-right"><details class="bsim-history"><summary>${escape(tk('history'))}</summary><div class="bsim-history-list" id="${ID}-history"></div></details><div class="bsim-log" id="${ID}-log"></div></div></div></div>`;
     document.body.appendChild(overlay);
+    const participants = document.createElement('div');
+    participants.id = ID + '-participants';
+    el('first').before(participants);
     const spellTargets = document.createElement('div');
     spellTargets.id = ID + '-spellTargets';
     spellTargets.innerHTML = '';
@@ -155,7 +165,7 @@ export function createOrcPowerPanel({ document, t, getRun, getBookId, saveState,
       snapshot(next); return next;
     }));
     el('start').addEventListener('click', () => action(game => beginOrcEncounter(game,
-      game.figures.filter(figure => figure.life > 0).map(figure => figure.id),
+      [...el('participants').querySelectorAll('input:checked')].map(field => field.value),
       el('first').value, { mode:el('mode').value })));
     el('attackButton').addEventListener('click', () => action(game => report(game,
       orcAttack(game.fight, el('target').value, { kind:el('kind').value, legal:el('legal').checked,

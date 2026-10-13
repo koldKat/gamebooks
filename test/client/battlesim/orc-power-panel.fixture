@@ -37,7 +37,14 @@ set('magicPower', 20); click('add');
 assert(run.sim654.figures.length === 1 && run.sim654.figures[0].maxLife === 12, 'figure initialization');
 set('side', 'enemy'); change('side'); click('add');
 assert(run.sim654.figures.length === 2, 'both armies configured');
+click('add');
+assert(el('start').disabled, 'participants must be chosen explicitly');
+for (const id of ['figure-1','figure-2']) {
+  const field = document.getElementById('sim654-participant-' + id);
+  field.checked = true; field.dispatchEvent(new Event('change', { bubbles:true }));
+}
 click('start');
+assert(run.sim654.fight.figures.length === 2 && run.sim654.figures[2].life === 12, 'off-map figure excluded');
 assert(run.sim654.fight.figures[0].life === 12 && el('add').disabled, 'encounter preserves and locks figures');
 set('target', 'figure-2'); click('attackButton');
 assert(alerts.length === 1 && run.sim654.fight.actionsLeft === 2, 'unchecked map eligibility rejects');
@@ -61,11 +68,15 @@ assert(!run.sim654 && savedRun.sim654.fight.status === 'fighting', 'stale confir
 panel.render(); assert(run.sim654.figures.length === 0 && !el('areaSpell').checked, 'new run resets form selections');
 run = JSON.parse(JSON.stringify(savedRun)); panel.render();
 assert(run.sim654.figures[0].life === 2 && run.sim654.fight.actionsLeft === 0, 'restore saved fight without rerolling');
+assert(document.getElementById('sim654-participant-figure-1').checked &&
+  document.getElementById('sim654-participant-figure-2').checked &&
+  !document.getElementById('sim654-participant-figure-3').checked, 'map participant selection restored');
 const preserved = JSON.stringify(run); book = 655; panel.render(); click('applyEdit');
 assert(JSON.stringify(run) === preserved && !el('overlay').classList.contains('active'), 'book switch closes and isolates');
 book = 654; panel.render(); click('btn');
 set('editFigure', 'figure-2'); change('editFigure'); set('edit-life', 0); check('editConfirmed', true); click('applyEdit');
 assert(run.sim654.history.length === 1 && run.sim654.fight.status === 'win', 'victory records once');
+assert(run.sim654.figures[2].life === 12, 'victory requires only the selected map opponents');
 click('attackButton'); assert(run.sim654.history.length === 1, 'disabled attack cannot duplicate reward');
 for (const details of el('overlay').querySelectorAll('details')) details.open = true;
 const left = document.querySelector('.bsim-col-left'); left.scrollTop = 1e6;

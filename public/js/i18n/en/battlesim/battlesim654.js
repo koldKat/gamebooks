@@ -1,4 +1,5 @@
 export default {
+  "battlesim654.participants": "Select only the figures taking part on this map.",
   "battlesim654.areaSpell": "Area spell: select every affected figure below",
   "battlesim654.title": "Battle Simulator - The Power of the Orcs",
   "battlesim654.note": "Use the original map and cards. Blank source values need manual entry; stats accept 12+d6, 12+d8 or 12+d10. Damage and endurance roll once per figure. Track food, energy, runes and time in your journal.",
