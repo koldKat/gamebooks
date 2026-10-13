@@ -235,11 +235,14 @@ The admin panel shows two GC figures: **GC Earned** and **GC Available** (`GET /
 | Level-ups across all users (capped at level 100 per user) | 1 GC each |
 | Distinct author names on books | 1 GC each |
 | PDFs attached to books | 1 GC each |
+| EPUBs attached to books | 1 GC each |
 | Days since app birth | 1 GC per day |
 | Series fully-visited completions (`visit_all_series` coin events) | N GC each (N = child book count) |
 | Anthology fully-visited completions (`visit_all_anthology` coin events) | N GC each (N = child book count) |
 
 **Available** = Earned − total GC gifted so far (`admin_gc_gifted` in `admin_settings`).
+
+PDF and EPUB contributions include anthology attachments and all existing files. Each format contributes separately; replacing a file adds nothing extra, and removing it removes its contribution.
 
 Gifting a user GC (`POST /api/admin/users/:id/gift-gc`) increments `users.bonus_coins` and `admin_gifted_coins`, increments `admin_gc_gifted`, and sends a `gc_gift` notification.
 
