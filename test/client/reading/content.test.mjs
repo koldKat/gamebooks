@@ -34,6 +34,28 @@ test('plain text retains legacy rendering without heading or sentence guessing',
   }
 });
 
+test('player spell tables render as inert structured matter with accessible headers', () => {
+  const nodes = [source('TABLE', [source('CAPTION', [textNode('Spells')]),
+    source('THEAD', [source('TR', [source('TH', [textNode('Code')], { scope: 'col' }), source('TH', [textNode('Cost')])])]),
+    source('TBODY', [source('TR', [source('TH', [textNode('ZAP')], { scope: 'row' }), source('TD', [textNode('4')])])])])];
+  const { mount, document } = setup(nodes);
+  assert.equal(renderReadingMatter(mount, 671, '<table>Spells</table>', document), true);
+  const table = mount.children[0];
+  assert.equal(table.tag, 'table');
+  assert.equal(table.children[1].children[0].children[0].attrs.scope, 'col');
+  assert.equal(table.children[2].children[0].children[0].attrs.scope, 'row');
+  assert.equal(table.children[2].children[0].children[1].children[0].textContent, '4');
+});
+
+test('table support never allows script, event, style or arbitrary attributes', () => {
+  for (const bad of [source('TD', [], { onclick: 'bad()' }), source('TABLE', [], { style: 'position:fixed' }),
+    source('TH', [], { scope: 'invalid' }), source('TD', [source('SCRIPT')]), source('TD', [], { colspan: '999' })]) {
+    const { mount, document } = setup([source('P', [textNode('Safe prefix')]), source('TABLE', [bad])]);
+    assert.equal(renderReadingMatter(mount, 671, '<p>Safe prefix</p><table></table>', document), false);
+    assert.equal(mount.children.length, 0);
+  }
+});
+
 test('protected image ownership is generic, with no title or book whitelist', () => {
   const src = `/api/books/999/reading-images/${'a'.repeat(64)}.png`;
   const { mount, document } = setup([source('FIGURE', [source('IMG', [], { src, alt: 'A player map', loading: 'lazy' })])]);

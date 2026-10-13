@@ -1,8 +1,9 @@
-const ELEMENTS = new Set(['P', 'H2', 'H3', 'H4', 'OL', 'UL', 'LI', 'STRONG', 'EM', 'BR', 'FIGURE', 'FIGCAPTION', 'IMG']);
+const ELEMENTS = new Set(['P', 'H2', 'H3', 'H4', 'OL', 'UL', 'LI', 'STRONG', 'EM', 'BR', 'FIGURE', 'FIGCAPTION', 'IMG',
+  'TABLE', 'THEAD', 'TBODY', 'TFOOT', 'TR', 'TH', 'TD', 'CAPTION']);
 
 // Copy only inert prose and this book's protected images into the live DOM.
 export function renderReadingMatter(mount, bookId, text, document) {
-  if (!/^\s*<(?:p|h[2-4]|ol|ul|figure)[\s>]/i.test(text)) return false;
+  if (!/^\s*<(?:p|h[2-4]|ol|ul|figure|table)[\s>]/i.test(text)) return false;
   const template = document.createElement('template');
   template.innerHTML = text;
   const imagePath = new RegExp(`^/api/books/${Number(bookId)}/reading-images/[a-f0-9]{64}\\.png$`);
@@ -12,6 +13,10 @@ export function renderReadingMatter(mount, bookId, text, document) {
     const target = document.createElement(node.tagName.toLowerCase());
     for (const attr of node.attributes) {
       if (node.tagName === 'IMG' && ['src', 'alt', 'loading'].includes(attr.name)) continue;
+      if (node.tagName === 'TH' && attr.name === 'scope' && ['row', 'col'].includes(attr.value)) {
+        target.setAttribute(attr.name, attr.value);
+        continue;
+      }
       if (['OL', 'LI'].includes(node.tagName) && attr.name === (node.tagName === 'OL' ? 'start' : 'value') && /^\d+$/.test(attr.value)) {
         target.setAttribute(attr.name, attr.value);
         continue;
