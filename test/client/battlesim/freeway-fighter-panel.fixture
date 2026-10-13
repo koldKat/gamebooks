@@ -1,0 +1,87 @@
+import { createFreewayPanel } from 'REPO/public/js/battlesim/engines/freeway-fighter/panel.js';
+import en from 'REPO/public/js/i18n/en/battlesim/battlesim663.js';
+import bg from 'REPO/public/js/i18n/bg/battlesim/battlesim663.js';
+const checks = [], alerts = [];
+const assert = (value, label) => {
+  if (!value) { document.body.setAttribute('data-failure', label); throw Error(label); }
+  checks.push(label);
+};
+const t = (key, params = {}) => (en[key] ?? ({ 'battlesim.title': 'Simulator', 'btn.close': 'Close',
+  'battlesim.no_active_playthrough': 'Start a run' }[key] ?? key))
+  .replace(/\{(\w+)\}/g, (_, name) => params[name] ?? '');
+let run = { path: [1] }, book = 663, saves = 0, confirmation;
+const panel = createFreewayPanel({ document, t, getRun: () => run, getBookId: () => book,
+  saveState: () => saves++, showAlert: message => alerts.push(message),
+  showConfirm: (_message, callback) => confirmation = callback,
+  getButtonRow: () => document.getElementById('buttons') });
+const el = key => document.getElementById('sim663-' + key);
+const set = (key, value) => el(key).value = String(value);
+const click = key => el(key).click();
+const change = key => el(key).dispatchEvent(new Event('change', { bubbles: true }));
+Math.random = () => .999;
+panel.init(); panel.init(); panel.setVisible(true); click('btn');
+assert(document.querySelectorAll('#sim663-overlay').length === 1, 'idempotent initialization');
+assert(el('overlay').classList.contains('active'), 'opens');
+assert(run.sim663.character === null && el('start').disabled, 'opening never rolls or starts a fight');
+assert(JSON.stringify(Object.keys(en).sort()) === JSON.stringify(Object.keys(bg).sort()), 'locale parity');
+assert(!el('overlay').textContent.includes('battlesim663.'), 'visible translations complete');
+assert(el('context').options.length === 38, 'all named source fights contests and races');
+assert([...el('context').options].every(option => !/^Section \d/.test(option.textContent)), 'human encounter names');
+click('roll');
+assert(run.sim663.character.skill === 12 && run.sim663.character.stamina === 36, 'printed initial rolls');
+set('stamina', 20); set('armour', 18); set('rockets', 2); click('apply');
+assert(run.sim663.character.stamina === 20 && run.sim663.character.armour === 18, 'explicit story changes');
+assert(el('characterStatus').textContent.includes('20/36'), 'live character summary');
+set('context', 63); change('context');
+assert(!el('rounds-row').hidden, 'missing source duration exposed');
+const before = JSON.stringify(run); click('start');
+assert(alerts.length === 1 && JSON.stringify(run) === before, 'blank duration rejected atomically');
+alerts.length = 0; set('rounds', 1); click('start');
+assert(run.sim663.fight.character.armour === 18 && run.sim663.fight.character.stamina === 20, 'starting preserves both pools');
+assert(el('roll').disabled && el('apply').disabled && el('medkit').disabled, 'combat locks rerolls edits and medkits');
+assert(el('rocket').disabled, 'race ramming forbids rockets');
+click('step');
+assert(run.sim663.fight.status === 'win' && run.sim663.history.length === 1, 'duration finish records once');
+click('step'); assert(run.sim663.history.length === 1, 'disabled step cannot duplicate reward');
+click('medkit');
+assert(run.sim663.character.stamina === 24 && run.sim663.character.medkits === 9, 'healing does not get overwritten by ended fight');
+set('context', 49); change('context'); click('start'); click('rocket');
+assert(run.sim663.character.rockets === 1 && run.sim663.history.length === 2, 'rocket consumes ammunition and records victory');
+assert(run.sim663.character.armour === 18, 'new vehicle fight does not heal');
+set('context', 115); change('context'); click('start');
+assert(!el('target-row').hidden && el('target').options.length === 2, 'simultaneous target choice');
+set('target', 1); click('step');
+assert(el('target').value === '1', 'surviving target selection persists');
+click('cancel'); confirmation();
+assert(run.sim663.fight.status === 'cancelled' && run.sim663.history.length === 2, 'cancellation gives no reward');
+set('context', 35); change('context'); click('start');
+assert(run.sim663.history.length === 2 && run.sim663.log.at(-1).includes('379'), 'contest has destination but no battle reward');
+set('context', 358); change('context'); click('start');
+for (let i = 0; i < 4; i++) click('step');
+assert(run.sim663.race.status === 'loss' && run.sim663.history.length === 3, 'Jaguar wins race ties without extra player roll');
+set('context', 158); change('context'); click('start');
+assert(el('rocket').disabled, 'close-range rocket restriction');
+const savedRun = structuredClone(run);
+run = { path: [1] }; panel.render();
+assert(run.sim663.character === null && el('rounds').value === '', 'run isolation without automatic rerolls');
+run = structuredClone(savedRun); panel.render();
+assert(run.sim663.fight.config.section === 158 && run.sim663.character.armour === savedRun.sim663.character.armour, 'saved fight restores unchanged');
+click('cancel'); const stale = confirmation;
+run = { path: [1] }; stale();
+assert(!run.sim663 && savedRun.sim663.fight.status === 'fighting', 'stale confirmation cannot affect new run');
+panel.render(); click('roll'); set('context', 49); change('context'); click('start');
+const preserved = JSON.stringify(run); book = 665; panel.render(); click('apply');
+assert(JSON.stringify(run) === preserved && !el('overlay').classList.contains('active'), 'book switch isolates state');
+book = 663; panel.render(); click('btn');
+for (const details of el('overlay').querySelectorAll('details')) details.open = true;
+const left = document.querySelector('.bsim-col-left'); left.scrollTop = 1e6;
+assert(Math.abs(left.scrollTop - Math.max(0, left.scrollHeight - left.clientHeight)) < 2, 'bottom reachable');
+left.scrollTop = 0; assert(left.scrollTop === 0, 'top reachable');
+assert(left.scrollWidth <= left.clientWidth + 1 && document.documentElement.scrollWidth <= innerWidth, 'no horizontal overflow');
+el('overlay').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+assert(!el('overlay').classList.contains('active'), 'escape closes');
+run = null; click('btn');
+assert(alerts.length === 1 && !el('overlay').classList.contains('active'), 'no run cannot open');
+assert(saves > 0, 'actions persist');
+assert(getComputedStyle(el('btn')).backgroundColor === 'rgba(31, 41, 55, 0.88)', 'existing simulator button theme');
+document.body.setAttribute('data-test', JSON.stringify({ width: innerWidth, checks: checks.length, passed: true }));
