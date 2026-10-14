@@ -15,12 +15,18 @@ export function fabledDie(roll = () => Math.floor(Math.random() * 6) + 1) {
 
 export function fabledDice(roll) { return fabledDie(roll) + fabledDie(roll); }
 
-export function newFabledCharacter(profession = 'warrior', { rank = 1, stamina = 9 } = {}) {
-  if (!Object.hasOwn(FABLED_PROFESSIONS, profession)) throw new RangeError('Invalid profession');
-  fabledInteger(rank, 1); fabledInteger(stamina, 1);
-  const abilities = Object.fromEntries(FABLED_ABILITIES.map((name, index) => [name, FABLED_PROFESSIONS[profession][index]]));
+export function newFabledCharacter(profession = 'warrior', {
+  rank = 1, stamina = 9, shards = 16, armour = 1, professions = FABLED_PROFESSIONS, abilityCurse,
+} = {}) {
+  if (!Object.hasOwn(FABLED_PROFESSIONS, profession) || !Object.hasOwn(professions, profession)) throw new RangeError('Invalid profession');
+  fabledInteger(rank, 1); fabledInteger(stamina, 1); fabledInteger(shards); fabledInteger(armour);
+  const scores = professions[profession];
+  if (!Array.isArray(scores) || scores.length !== FABLED_ABILITIES.length
+    || abilityCurse !== undefined && typeof abilityCurse !== 'boolean') throw new RangeError('Invalid starting character');
+  const abilities = Object.fromEntries(FABLED_ABILITIES.map((name, index) => [name, fabledInteger(scores[index], 1, 12)]));
   return { ...abilities, profession, rank, stamina, staminaInitial: stamina,
-    shards: 16, armour: 1, ratPoison: 0, combatBlessing: false, luckBlessing: false, stormsBlessing: false };
+    shards, armour, ratPoison: 0, combatBlessing: false, luckBlessing: false, stormsBlessing: false,
+    ...(abilityCurse === undefined ? {} : { abilityCurse }) };
 }
 
 export function validateFabledCharacter(character, alive = false) {
@@ -33,6 +39,7 @@ export function validateFabledCharacter(character, alive = false) {
   for (const name of ['combatBlessing', 'luckBlessing', 'stormsBlessing']) {
     if (typeof character[name] !== 'boolean') throw new RangeError('Invalid blessing');
   }
+  if (character.abilityCurse !== undefined && typeof character.abilityCurse !== 'boolean') throw new RangeError('Invalid ability curse');
   return character;
 }
 
@@ -45,7 +52,7 @@ export function fabledAbilityCheck(character, ability, difficulty, roll) {
   validateFabledCharacter(character, true);
   if (!FABLED_ABILITIES.includes(ability)) throw new RangeError('Invalid ability');
   fabledInteger(difficulty);
-  const total = fabledDice(roll) + character[ability];
+  const total = (character.abilityCurse ? fabledDie(roll) : fabledDice(roll)) + character[ability];
   return { total, success: total > difficulty };
 }
 

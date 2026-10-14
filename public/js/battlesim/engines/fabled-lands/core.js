@@ -82,16 +82,23 @@ export function fabledRound(input, options = {}, roll) {
     fight.events.push({ kind: 'attack', direction, dice, total, defence, damage });
     return damage;
   };
-  enemy.stamina = Math.max(0, enemy.stamina - attack('player', fight.character.combat + fight.attackModifier, enemy.defence));
-  if (enemy.stamina <= (fight.config.threshold ?? 0)) {
+  const playerAttack = () => {
+    enemy.stamina = Math.max(0, enemy.stamina - attack('player', fight.character.combat + fight.attackModifier, enemy.defence));
+    if (enemy.stamina > (fight.config.threshold ?? 0)) return false;
     if (fight.config.threshold !== undefined || fight.target === fight.enemies.length - 1) finish(fight, 'win');
     else fight.target++;
-    return fight;
-  }
-  const damage = attack('enemy', enemy.combat, fight.defence);
-  fight.character.stamina = Math.max(0, fight.character.stamina - damage);
-  if (damage) fight.wounded = true;
-  if (!fight.character.stamina) finish(fight, 'loss');
+    return true;
+  };
+  const enemyAttack = () => {
+    const damage = attack('enemy', enemy.combat, fight.defence);
+    fight.character.stamina = Math.max(0, fight.character.stamina - damage);
+    if (damage) fight.wounded = true;
+    if (!fight.character.stamina) finish(fight, 'loss');
+    return fight.status === 'loss';
+  };
+  if (fight.config.playerFirst === false) {
+    if (!enemyAttack()) playerAttack();
+  } else if (!playerAttack()) enemyAttack();
   return fight;
 }
 

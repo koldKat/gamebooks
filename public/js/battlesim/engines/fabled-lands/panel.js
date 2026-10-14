@@ -12,8 +12,9 @@ const escape = value => String(value).replace(/[&<>"']/g,
 export function createFabledPanel({ document, t, getRun, getBookId, saveState,
   showAlert, showConfirm, getButtonRow, registerShortcut = () => {},
   bookId = 674, fights = WAR_TORN_FIGHTS, seaChecks = FABLED_SEA_CHECKS,
-  seaCheck = fabledSeaCheck, characterDefaults = {} }) {
+  seaCheck = fabledSeaCheck, characterDefaults = {}, extraFlags = [] }) {
   const ID = 'sim' + bookId;
+  const characterFlags = [...flags, ...extraFlags];
   const tk = (key, params) => t('battlesim' + bookId + '.' + key, params);
   const el = key => document.getElementById(ID + '-' + key);
   const active = game => game?.fight?.status === 'fighting';
@@ -104,7 +105,7 @@ export function createFabledPanel({ document, t, getRun, getBookId, saveState,
       if (document.activeElement !== el(key)) el(key).value = character?.[key] ?? '';
       el(key).disabled = blocked || !character;
     }
-    for (const key of flags) { el(key).checked = character?.[key] ?? false; el(key).disabled = blocked || !character; }
+    for (const key of characterFlags) { el(key).checked = character?.[key] ?? false; el(key).disabled = blocked || !character; }
     if (character) el('profession').value = character.profession;
     el('profession').disabled = blocked;
     for (const key of ['create', 'context', 'applyEntry', 'ratPoisonUse', 'attackModifier']) el(key).disabled = blocked;
@@ -142,6 +143,7 @@ export function createFabledPanel({ document, t, getRun, getBookId, saveState,
     el('context').innerHTML = fights.map((spec, index) => `<option value="${index}">${escape(encounterName(spec))} (${spec.section})</option>`).join('');
     el('surrender').insertAdjacentHTML('afterend', button('flee'));
     el('flee').hidden = true;
+    for (const key of extraFlags) el('apply').insertAdjacentHTML('beforebegin', checkbox(key));
     const sea = document.createElement('details');
     sea.innerHTML = `<summary>${escape(tk('sea'))}</summary><label class="inv-edit-row"><span class="inv-edit-label">${escape(tk('seaContext'))}</span><select class="inv-edit-input" id="${ID}-seaContext">${Object.entries(seaChecks).map(([section, spec]) => `<option value="${section}">${escape(tk('seaKind.' + spec.kind))} (${section})</option>`).join('')}</select></label>${select('ship', ['barque', 'brigantine', 'galleon'])}${select('crew', ['poor', 'average', 'good', 'excellent'])}${checkbox('safetyFromStorms')}${button('seaRoll')}`;
     overlay.querySelector('.bsim-col-left').appendChild(sea);
@@ -167,7 +169,7 @@ export function createFabledPanel({ document, t, getRun, getBookId, saveState,
     el('apply').addEventListener('click', () => action(game => {
       if (active(game) || !game.character) return;
       const character = { ...game.character, ...Object.fromEntries(fields.map(key => [key, number(key)])),
-        profession: el('profession').value, ...Object.fromEntries(flags.map(key => [key, el(key).checked])) };
+        profession: el('profession').value, ...Object.fromEntries(characterFlags.map(key => [key, el(key).checked])) };
       validateFabledCharacter(character); game.character = character; game.fight = null; game.log.push(tk('adjusted'));
     }));
     el('start').addEventListener('click', () => action(game => {
@@ -205,9 +207,10 @@ export function createFabledPanel({ document, t, getRun, getBookId, saveState,
       const result = seaCheck(number('seaContext'), game.character, { ship: el('ship').value,
         crew: el('crew').value, safetyFromStorms: el('safetyFromStorms').checked });
       game.fight = null; game.character = result.character;
+      if (result.crew) el('crew').value = result.crew;
       game.log.push(result.usedBlessing ? tk('stormBlessingUsed') : tk('seaResult', { total: result.total, damage: result.damage }));
       game.log.push(tk('destination', { section: result.destination }));
-      if (['win', 'loss'].includes(result.status)) game.history.push({ enemy: tk('seaKind.naval'), outcome: result.status,
+      if (['win', 'loss'].includes(result.status)) game.history.push({ enemy: tk('seaKind.' + (result.kind || 'naval')), outcome: result.status,
         ts: Math.max(Date.now(), (game.history.at(-1)?.ts ?? 0) + 1) });
     }));
   }

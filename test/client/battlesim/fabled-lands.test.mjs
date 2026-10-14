@@ -6,11 +6,74 @@ import { newFabledCharacter, fabledDefence, fabledAbilityCheck, fabledRankCheck 
   from '../../../public/js/battlesim/engines/fabled-lands/character.js';
 import { startFabledFight, fabledRound, fleeFabledFight } from '../../../public/js/battlesim/engines/fabled-lands/core.js';
 import { CITIES_OF_GOLD_FIGHTS, citiesOfGoldSeaCheck } from '../../../public/js/battlesim/engines/fabled-lands/cities-of-gold.js';
+import { BLOOD_DARK_DEFAULTS, BLOOD_DARK_FIGHTS, bloodDarkSeaCheck } from '../../../public/js/battlesim/engines/fabled-lands/blood-dark-sea.js';
 
 const rolls = (...values) => () => { assert.ok(values.length, 'Unexpected die roll'); return values.shift(); };
 const enemy = (changes = {}) => ({ name: 'Wolf', combat: 3, defence: 5, stamina: 7, ...changes });
 const fight = (config = {}, character = {}) => startFabledFight({ enemies: [enemy()], ...config },
   { ...newFabledCharacter(), ...character });
+
+test('book-three presets and ability curse do not change earlier defaults', () => {
+  const c = newFabledCharacter('priest', BLOOD_DARK_DEFAULTS);
+  assert.equal(c.rank, 3); assert.equal(c.stamina, 16); assert.equal(c.staminaInitial, 16);
+  assert.equal(c.shards, 40); assert.equal(c.armour, 3); assert.equal(c.sanctity, 7);
+  assert.equal(newFabledCharacter('warrior', BLOOD_DARK_DEFAULTS).combat, 7);
+  assert.equal(newFabledCharacter().combat, 6); assert.equal(newFabledCharacter().shards, 16);
+  assert.equal(fabledAbilityCheck({ ...c, abilityCurse: true }, 'sanctity', 10, rolls(4)).total, 11);
+  assert.equal(fabledAbilityCheck(c, 'sanctity', 10, rolls(4, 4)).total, 15);
+  assert.equal(c.abilityCurse, false);
+});
+
+test('enemy-first source encounter can kill before the player attacks, without mutating saved inputs', () => {
+  const spec = BLOOD_DARK_FIGHTS.find(row => row.section === 441);
+  const c = { ...newFabledCharacter('warrior', BLOOD_DARK_DEFAULTS), stamina: 1 };
+  const original = startFabledFight(spec, c, { defence: c.combat + c.rank });
+  const lost = fabledRound(original, {}, rolls(6, 6));
+  assert.equal(lost.status, 'loss'); assert.equal(lost.destination, 123);
+  assert.equal(lost.events.length, 1); assert.equal(lost.events[0].direction, 'enemy');
+  assert.equal(original.status, 'fighting'); assert.equal(c.stamina, 1);
+  const won = fabledRound(startFabledFight(spec, { ...c, stamina: 16 }, { defence: 10 }), {}, rolls(1, 1, 6, 6));
+  assert.equal(won.status, 'win'); assert.equal(won.destination, 262);
+  assert.deepEqual(won.events.map(event => event.direction), ['enemy', 'player']);
+});
+
+test('book-three ship checks use printed thresholds, cargo penalty and local death123', () => {
+  const c = newFabledCharacter('mage', BLOOD_DARK_DEFAULTS);
+  assert.equal(bloodDarkSeaCheck(194, c, { crew: 'poor' }, rolls(1, 1)).destination, 214);
+  assert.equal(bloodDarkSeaCheck(194, c, { crew: 'average' }, rolls(1, 1)).destination, 61);
+  assert.equal(bloodDarkSeaCheck(268, { ...c, hasCargo: true }, {}, rolls(1, 2)).destination, 201);
+  assert.equal(bloodDarkSeaCheck(268, c, {}, rolls(1, 2)).destination, 322);
+  const defeated = bloodDarkSeaCheck(201, c, {}, rolls(1, 1, 2, 3));
+  assert.equal(defeated.destination, 435); assert.equal(defeated.damage, 5);
+  assert.equal(defeated.character.stamina, 11); assert.equal(defeated.status, 'loss');
+  const blessed = { ...c, stormsBlessing: true };
+  assert.equal(bloodDarkSeaCheck(139, blessed, { safetyFromStorms: true }).destination, 154);
+  assert.equal(blessed.stormsBlessing, true);
+  const storm = bloodDarkSeaCheck(139, c, { crew: 'poor' }, rolls(6));
+  assert.equal(storm.total, 5); assert.equal(storm.destination, 157);
+  assert.equal(bloodDarkSeaCheck(384, c, {}, rolls(1)).destination, 486);
+  assert.equal(bloodDarkSeaCheck(647, c, { crew: 'poor' }, rolls(1, 1)).destination, 123);
+  assert.equal(c.stamina, 16);
+});
+
+test('book-three survival, lightning and catamaran checks use their own modifiers', () => {
+  const c = newFabledCharacter('mage', BLOOD_DARK_DEFAULTS);
+  assert.equal(bloodDarkSeaCheck(142, c, {}, rolls(4)).destination, 123);
+  assert.equal(bloodDarkSeaCheck(142, c, {}, rolls(5)).destination, 152);
+  const wayfarer = newFabledCharacter('wayfarer', BLOOD_DARK_DEFAULTS);
+  assert.equal(bloodDarkSeaCheck(142, wayfarer, {}, rolls(2, 3)).destination, 152);
+  assert.equal(bloodDarkSeaCheck(168, c, {}, rolls(2, 2)).destination, 212);
+  const copper = bloodDarkSeaCheck(168, { ...c, copperOre: true }, {}, rolls(2, 2));
+  assert.equal(copper.destination, 135); assert.equal(copper.crew, 'poor');
+  assert.equal(bloodDarkSeaCheck(168, c, {}, rolls(5, 6)).character.stamina, 0);
+  const blessed = { ...c, stormsBlessing: true };
+  assert.equal(bloodDarkSeaCheck(168, blessed, { safetyFromStorms: true }).destination, 352);
+  assert.equal(blessed.stormsBlessing, true);
+  assert.equal(bloodDarkSeaCheck(186, c, { crew: 'excellent' }, rolls(4, 5)).destination, 206);
+  const warrior = newFabledCharacter('warrior', BLOOD_DARK_DEFAULTS);
+  assert.equal(bloodDarkSeaCheck(186, warrior, {}, rolls(3, 3, 4)).destination, 352);
+  assert.equal(c.stamina, 16);
+});
 
 test('book-two defaults, escape damage and entry arrows preserve their inputs', () => {
   const c = newFabledCharacter('warrior', { rank: 2, stamina: 13 });

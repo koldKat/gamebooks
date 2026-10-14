@@ -7,5 +7,10 @@ if (process.argv.includes('--cities-of-gold')) {
     .replace('fabled-lands-integration.fixture', 'cities-of-gold-integration.fixture')
     .replace("'roster', 'navigation'", "'roster', 'navigation', 'cities-of-gold'");
 }
+if (process.argv.includes('--blood-dark-sea')) {
+  source = source.replaceAll('674', '676')
+    .replace('fabled-lands-integration.fixture', 'blood-dark-sea-integration.fixture')
+    .replace("'roster', 'navigation'", "'roster', 'navigation', 'blood-dark-sea'");
+}
 const child = new Module(__filename, module);
 child.filename = __filename; child.paths = module.paths; child._compile(source, __filename);
