@@ -282,4 +282,3 @@ export const CROWN_ROSTER = Object.freeze([
   Object.freeze({"section":1193,"name":"7th Pirate","attack":5,"threshold":4,"attackType":"dice","defence":4,"health":10,"automaticDamage":0}),
   Object.freeze({"section":1193,"name":"Pirate Netter","attack":4,"threshold":3,"attackType":"dice","defence":5,"health":14,"automaticDamage":0}),
 ]);
-
