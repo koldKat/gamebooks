@@ -1,6 +1,7 @@
 // English translations: books.
 export default {
-    'modal.book.max_section': 'Highest section (optional):',
+    'modal.book.max_section': 'Highest section',
+    'modal.book.optional': '(optional)',
     'modal.book.max_section_hint': 'Optional, for numbering with gaps. Leave blank to use total sections.',
     'err.max_section': 'Highest section number must be a whole number of at least {min}.',
 

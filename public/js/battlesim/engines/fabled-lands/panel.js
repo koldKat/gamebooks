@@ -4,7 +4,7 @@ import { startFabledFight, fabledRound, surrenderFabledFight, fleeFabledFight } 
 import { WAR_TORN_FIGHTS } from './roster.js';
 import { FABLED_SEA_CHECKS, fabledSeaCheck } from './navigation.js';
 
-const fields = [...FABLED_ABILITIES, 'rank', 'stamina', 'staminaInitial', 'armour', 'shards', 'ratPoison'];
+const defaultFields = [...FABLED_ABILITIES, 'rank', 'stamina', 'staminaInitial', 'armour', 'shards', 'ratPoison'];
 const flags = ['combatBlessing', 'luckBlessing', 'stormsBlessing'];
 const escape = value => String(value).replace(/[&<>"']/g,
   c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -13,9 +13,13 @@ export function createFabledPanel({ document, t, getRun, getBookId, saveState,
   showAlert, showConfirm, getButtonRow, registerShortcut = () => {},
   bookId = 674, fights = WAR_TORN_FIGHTS, seaChecks = FABLED_SEA_CHECKS,
   seaCheck = fabledSeaCheck, characterDefaults = {}, extraFlags = [], encounterOptions = [],
+  extraFields = [], createCharacter = profession => newFabledCharacter(profession, characterDefaults),
+  validateCharacter = validateFabledCharacter, characterDefence = fabledDefence,
+  abilityCheck = fabledAbilityCheck, extendPanel = () => ({}),
   startFight = startFabledFight, roundFight = fabledRound, fleeFight = fleeFabledFight,
   cancelFight = fight => ({ ...fight, status: 'cancelled' }) }) {
   const ID = 'sim' + bookId;
+  const fields = [...defaultFields, ...extraFields.map(field => field.key)];
   const characterFlags = [...flags, ...extraFlags];
   const tk = (key, params) => t('battlesim' + bookId + '.' + key, params);
   const el = key => document.getElementById(ID + '-' + key);
@@ -25,6 +29,7 @@ export function createFabledPanel({ document, t, getRun, getBookId, saveState,
   const encounterName = spec => [...new Set(spec.enemies.map(enemy => enemyName(enemy.name)))].join(' / ')
     + (spec.enemies.length > 1 ? ` (${spec.enemies.length})` : '');
   let shownRun;
+  let extension = {};
   function data() {
     if (Number(getBookId()) !== bookId) return null;
     const run = getRun();
@@ -72,6 +77,10 @@ export function createFabledPanel({ document, t, getRun, getBookId, saveState,
       else if (event.kind === 'permanentWound') game.log.push(tk('permanentWound', event));
       else if (event.kind === 'enemyEntry') game.log.push(tk('enemyEntry', event));
       else if (event.kind === 'diseaseBlessing') game.log.push(tk('diseaseBlessingUsed'));
+      else {
+        const message = extension.eventMessage?.(event);
+        if (message) game.log.push(message);
+      }
     }
     if (fight.status !== 'fighting') {
       game.log.push(tk('status.' + fight.status));
@@ -115,7 +124,7 @@ export function createFabledPanel({ document, t, getRun, getBookId, saveState,
       el('difficulty').value = '10'; el('rankDice').value = '1'; el('rankModifier').value = '0';
     }
     const character = game.character, fight = game.fight, busy = active(game), blocked = busy || !supported(game);
-    el('characterStatus').textContent = !supported(game) ? tk('unsupported') : character ? tk('characterStatus', { ...character, defence: fabledDefence(character) }) : tk('ready');
+    el('characterStatus').textContent = !supported(game) ? tk('unsupported') : character ? tk('characterStatus', { ...character, defence: characterDefence(character) }) : tk('ready');
     for (const key of fields) {
       if (document.activeElement !== el(key)) el(key).value = character?.[key] ?? '';
       el(key).disabled = blocked || !character;
@@ -153,8 +162,12 @@ export function createFabledPanel({ document, t, getRun, getBookId, saveState,
     el('log').innerHTML = game.log.map(line => `<div>${escape(line)}</div>`).join('');
     el('log').scrollTop = el('log').scrollHeight;
     contextChanged();
+    extension.render?.(game, {busy, blocked});
   }
-  const field = (key, min = 0, max = 1000000) => `<label class="inv-edit-row"><span class="inv-edit-label">${escape(tk(key))}</span><input class="inv-edit-input" type="number" min="${min}" max="${max}" step="1" id="${ID}-${key}"></label>`;
+  const field = (key, min = 0, max = 1000000) => {
+    const spec = extraFields.find(field => field.key === key);
+    return `<label class="inv-edit-row"><span class="inv-edit-label">${escape(tk(key))}</span><input class="inv-edit-input" type="number" min="${spec?.min ?? min}" max="${spec?.max ?? max}" step="1" id="${ID}-${key}"></label>`;
+  };
   const checkbox = key => `<label class="bsim-checkbox" id="${ID}-${key}-row"><input type="checkbox" id="${ID}-${key}">${escape(tk(key))}</label>`;
   const button = key => `<button class="bsim-action-btn" type="button" id="${ID}-${key}">${escape(tk(key))}</button>`;
   const select = (key, values) => `<label class="inv-edit-row"><span class="inv-edit-label">${escape(tk(key))}</span><select class="inv-edit-input" id="${ID}-${key}">${values.map(value => `<option value="${escape(value)}">${escape(tk(key + '.' + value))}</option>`).join('')}</select></label>`;
@@ -178,6 +191,7 @@ export function createFabledPanel({ document, t, getRun, getBookId, saveState,
     const sea = document.createElement('details');
     sea.innerHTML = `<summary>${escape(tk('sea'))}</summary><label class="inv-edit-row"><span class="inv-edit-label">${escape(tk('seaContext'))}</span><select class="inv-edit-input" id="${ID}-seaContext">${Object.entries(seaChecks).map(([section, spec]) => `<option value="${section}">${escape(tk('seaKind.' + spec.kind))} (${section})</option>`).join('')}</select></label>${select('ship', ['barque', 'brigantine', 'galleon'])}${select('crew', ['poor', 'average', 'good', 'excellent'])}${checkbox('safetyFromStorms')}${button('seaRoll')}`;
     overlay.querySelector('.bsim-col-left').appendChild(sea);
+    extension = extendPanel({el, tk, button, checkbox, select, field, number, action, report, active, overlay, render});
     const btn = document.createElement('button');
     btn.id = ID + '-btn'; btn.textContent = t('battlesim.title'); btn.style.display = 'none';
     getButtonRow().appendChild(btn); btn.addEventListener('click', open);
@@ -193,7 +207,7 @@ export function createFabledPanel({ document, t, getRun, getBookId, saveState,
       if (!supported(original) || active(original)) return;
       const update = () => {
         if (run !== getRun() || original !== data()) return;
-        action(game => { game.character = newFabledCharacter(profession, characterDefaults); game.fight = null; game.log.push(tk('created')); });
+        action(game => { game.character = createCharacter(profession); game.fight = null; game.log.push(tk('created')); });
       };
       if (original.character) showConfirm(tk('createConfirm'), update); else update();
     });
@@ -201,7 +215,7 @@ export function createFabledPanel({ document, t, getRun, getBookId, saveState,
       if (active(game) || !game.character) return;
       const character = { ...game.character, ...Object.fromEntries(fields.map(key => [key, number(key)])),
         profession: el('profession').value, ...Object.fromEntries(characterFlags.map(key => [key, el(key).checked])) };
-      validateFabledCharacter(character); game.character = character; game.fight = null; game.log.push(tk('adjusted'));
+      validateCharacter(character); game.character = character; game.fight = null; game.log.push(tk('adjusted'));
     }));
     el('start').addEventListener('click', () => action(game => {
       if (active(game) || !game.character) return;
@@ -219,6 +233,7 @@ export function createFabledPanel({ document, t, getRun, getBookId, saveState,
     el('step').addEventListener('click', () => action(game => {
       report(game, roundFight(game.fight, { combatBlessing: el('useCombatBlessing').checked,
         luckReroll: el('luckReroll').value || null,
+        ...extension.roundOptions?.(),
         ...(game.fight.config.simultaneous ? {target:number('target')} : {}) }), game.fight.events.length);
     }));
     el('surrender').addEventListener('click', () => action(game => report(game, surrenderFabledFight(game.fight), game.fight.events.length)));
@@ -233,14 +248,15 @@ export function createFabledPanel({ document, t, getRun, getBookId, saveState,
     });
     for (const kind of ['ability', 'rank']) el(kind + 'Roll').addEventListener('click', () => action(game => {
       if (active(game)) return;
-      const result = kind === 'ability' ? fabledAbilityCheck(game.character, el('ability').value, number('difficulty'))
+      const result = kind === 'ability' ? abilityCheck(game.character, el('ability').value, number('difficulty'), extension.abilityOptions?.())
         : fabledRankCheck(game.character, number('rankDice'), number('rankModifier'));
+      if (result.character) { game.fight = null; game.character = result.character; }
       game.log.push(tk('checkResult', { total: result.total, result: tk(result.success ? 'success' : 'failure') }));
     }));
     el('seaRoll').addEventListener('click', () => action(game => {
       if (active(game)) return;
       const result = seaCheck(number('seaContext'), game.character, { ship: el('ship').value,
-        crew: el('crew').value, safetyFromStorms: el('safetyFromStorms').checked });
+        crew: el('crew').value, safetyFromStorms: el('safetyFromStorms').checked, ...extension.seaOptions?.() });
       game.fight = null; game.character = result.character;
       if (result.crew) el('crew').value = result.crew;
       game.log.push(result.usedBlessing ? tk('stormBlessingUsed') : tk('seaResult', { total: result.total, damage: result.damage }));

@@ -27,5 +27,10 @@ if (process.argv.includes('--rising-sun')) {
     .replace('fabled-lands-integration.fixture', 'rising-sun-integration.fixture')
     .replace("'roster', 'navigation'", "'roster', 'navigation', 'rising-sun'");
 }
+if (process.argv.includes('--serpent-domain')) {
+  source = source.replaceAll('674', '680')
+    .replace('fabled-lands-integration.fixture', 'serpent-domain-panel.fixture')
+    .replace("'roster', 'navigation'", "'roster', 'navigation', 'serpent-domain'");
+}
 const child = new Module(__filename, module);
 child.filename = __filename; child.paths = module.paths; child._compile(source, __filename);

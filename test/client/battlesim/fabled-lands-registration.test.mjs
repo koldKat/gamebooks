@@ -8,6 +8,9 @@ import { WAR_TORN_FIGHTS } from '../../../public/js/battlesim/engines/fabled-lan
 import risingEn from '../../../public/js/i18n/en/battlesim/battlesim679.js';
 import risingBg from '../../../public/js/i18n/bg/battlesim/battlesim679.js';
 import { RISING_FIGHTS } from '../../../public/js/battlesim/engines/fabled-lands/rising-sun.js';
+import serpentEn from '../../../public/js/i18n/en/battlesim/battlesim680.js';
+import serpentBg from '../../../public/js/i18n/bg/battlesim/battlesim680.js';
+import { SERPENT_FIGHTS, SERPENT_SEA_CHECKS } from '../../../public/js/battlesim/engines/fabled-lands/serpent-domain.js';
 
 const read = file => readFileSync(new URL('../../../' + file, import.meta.url), 'utf8');
 test('Fabled Lands locales cover every enemy and share keys and placeholders', () => {
@@ -50,6 +53,22 @@ test('book-six locales, encounters and registrations are complete', () => {
   assert.equal([...read('server/db/xp.js').matchAll(/['"]sim679['"]/g)].length,1);
   assert.equal([...read('public/js/core/util.js').matchAll(/['"]sim679-overlay['"]/g)].length,1);
 });
+test('book-seven locales cover encounters, ship checks and registrations', () => {
+  assert.deepEqual(Object.keys(serpentEn).sort(),Object.keys(serpentBg).sort());
+  const params = value => [...value.matchAll(/\{\w+\}/g)].map(match=>match[0]).sort();
+  for (const key of Object.keys(serpentEn)) assert.deepEqual(params(serpentEn[key]),params(serpentBg[key]),key);
+  for (const fight of SERPENT_FIGHTS) {
+    for (const enemy of fight.enemies) assert.ok(serpentEn['battlesim680.enemy.'+enemy.name]);
+    if (fight.special) assert.ok(serpentEn['battlesim680.effect.'+fight.special]);
+  }
+  for (const spec of Object.values(SERPENT_SEA_CHECKS)) assert.ok(serpentEn['battlesim680.seaKind.'+spec.kind]);
+  for (const file of ['public/js/battlesim/loader.js','public/mobile/js/battlesim-dispatch.js']) {
+    const supported = read(file).match(/SUPPORTED_BATTLE_SIM_BOOKS = new Set\(\[([\s\S]*?)\]\)/)[1];
+    assert.equal([...supported.matchAll(/\b680\b/g)].length,1);
+  }
+  assert.equal([...read('server/db/xp.js').matchAll(/['"]sim680['"]/g)].length,1);
+  assert.equal([...read('public/js/core/util.js').matchAll(/['"]sim680-overlay['"]/g)].length,1);
+});
 test('the actual XP handler awards wins and losses once, not surrender or abandoned fights', () => {
   const source = read('server/db/xp.js');
   const registrations = source.slice(source.indexOf('const SIM_HISTORY_KEYS ='), source.indexOf('function processStateXp('));
@@ -64,11 +83,14 @@ test('the actual XP handler awards wins and losses once, not surrender or abando
     _discoveredSet: () => new Set(), _visitedSet: () => new Set(), _mappedSet: () => new Set(),
     _checkGroupWonAll() {}, SIM_HISTORY_KEYS: keys, _xpRefSeq: 0 };
   runInNewContext(source.slice(source.indexOf('function processStateXp('), source.indexOf('function migrateXpForUser(')), context);
-  const state = history => ({ playthroughs: [{ startedAt: 1, path: [], sim674: { history } }] });
+  const state = (id,history) => ({ playthroughs: [{ startedAt: 1, path: [], ['sim'+id]: { history } }] });
   const history = [{ outcome: 'win', ts: 100 }, { outcome: 'loss', ts: 101 },
     { outcome: 'surrender', ts: 102 }, { outcome: 'cancelled', ts: 103 }];
-  context.processStateXp(1, 674, state([]), state(history), 0);
-  context.processStateXp(1, 674, state(history), state(history), 0);
+  for (const id of [674,680]) {
+    context.processStateXp(1, id, state(id,[]), state(id,history), 0);
+    context.processStateXp(1, id, state(id,history), state(id,history), 0);
+  }
   assert.deepEqual(awards.filter(row => row.event.startsWith('battlesim_')),
-    [{ event: 'battlesim_win', ref: 'sim674:100' }, { event: 'battlesim_loss', ref: 'sim674:101' }]);
+    [{ event: 'battlesim_win', ref: 'sim674:100' }, { event: 'battlesim_loss', ref: 'sim674:101' },
+      { event: 'battlesim_win', ref: 'sim680:100' }, { event: 'battlesim_loss', ref: 'sim680:101' }]);
 });
