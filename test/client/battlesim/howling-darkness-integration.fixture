@@ -1,0 +1,54 @@
+const checks = [], saves = [];
+const assert = (value, label) => { if (!value) throw Error(label); checks.push(label); };
+window.fetch = async (url, options = {}) => {
+  assert(url === '/api/books/677/state' && options.method === 'PUT', 'only simulator state saves');
+  saves.push(JSON.parse(options.body));
+  return new Response('{}', { status: 200, headers: { 'Content-Type': 'application/json' } });
+};
+const app = await import('REPO/public/js/core/state.js');
+const desktop = await import('REPO/public/js/battlesim/loader.js');
+const mobile = await import('REPO/public/mobile/js/battlesim-dispatch.js');
+const { HOWLING_FIGHTS } = await import('REPO/public/js/battlesim/engines/fabled-lands/howling-darkness.js');
+app.setCurrentBookId(677);
+const run = { startedAt: 123, path: [1], sim676: { preserved: true } };
+app.state.playthroughs = [run]; app.state.activePtIndex = 0;
+const mode = 'MODE', el = key => document.getElementById('sim677-' + key);
+const open = async () => {
+  if (mode === 'mobile') await mobile.openSimForBook(677);
+  else { await desktop.showBattleSimForBook(677); el('btn').click(); }
+};
+await open();
+assert(el('overlay').classList.contains('active'), 'real loader opens panel');
+assert(!el('overlay').textContent.includes('battlesim677.'), 'translated visible labels');
+assert(run.sim677.character === null && saves.length === 0, 'opening creates no character');
+assert(el('context').options.length === 31 && el('seaContext').options.length === 13, 'source encounters and ship checks');
+assert(getComputedStyle(el('btn')).borderRadius === '7px', 'themed button');
+el('profession').value = 'warrior'; el('create').click();
+assert(run.sim677.character.rank === 4 && run.sim677.character.stamina === 20
+  && run.sim677.character.shards === 65 && run.sim677.character.armour === 3, 'book-four defaults');
+el('context').value = String(HOWLING_FIGHTS.findIndex(f => f.section === 171));
+el('context').dispatchEvent(new Event('change', { bubbles: true }));
+el('start').click(); Math.random = () => .499; el('flee').click();
+assert(run.sim677.fight.destination === 226 && run.sim677.character.stamina === 17, 'source escape damage and destination');
+el('context').value = String(HOWLING_FIGHTS.findIndex(f => f.section === 238));
+el('context').dispatchEvent(new Event('change', { bubbles: true }));
+el('start').click();
+const dice = [0, 0, .999, .999]; Math.random = () => dice.shift(); el('step').click();
+assert(run.sim677.fight.status === 'loss' && run.sim677.fight.destination === 184
+  && run.sim677.character.stamina === 11, 'first-wound interruption: ' + JSON.stringify(run.sim677.fight));
+assert(run.sim677.history.length === 1 && run.sim676.preserved === true, 'one result and other simulator preserved');
+Math.random = () => .499; el('seaContext').value = '135'; el('seaRoll').click();
+assert(run.sim677.character.stamina === 0 && run.sim677.log.at(-1).includes('7'), 'local shipwreck death');
+await app.saveState(); assert(saves.at(-1).playthroughs[0].sim677.character.stamina === 0, 'actual state persistence');
+for (const node of el('overlay').querySelectorAll('details')) node.open = true;
+const body = el('overlay').querySelector('.bsim-body'); body.scrollTop = Number.MAX_SAFE_INTEGER;
+assert(Math.abs(body.scrollTop - Math.max(0, body.scrollHeight - body.clientHeight)) <= 1, 'scroll reaches bottom');
+assert(document.documentElement.scrollWidth <= innerWidth + 1 && body.scrollWidth <= body.clientWidth + 1, 'no overflow');
+el('close').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+assert(!el('overlay').classList.contains('active'), 'Escape closes');
+const preserved = JSON.stringify(run);
+app.state.playthroughs.push({ startedAt: 456, path: [1] }); app.state.activePtIndex = 1;
+await open();
+assert(app.currentPlaythrough().sim677.character === null && JSON.stringify(run) === preserved, 'run isolation');
+document.body.setAttribute('data-test', JSON.stringify({ mode, width: innerWidth, checks: checks.length,
+  saves: saves.length, encounters: 31, realModules: true, productionWrites: 0 }));

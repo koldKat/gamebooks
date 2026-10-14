@@ -94,6 +94,10 @@ export function fabledRound(input, options = {}, roll) {
     fight.character.stamina = Math.max(0, fight.character.stamina - damage);
     if (damage) fight.wounded = true;
     if (!fight.character.stamina) finish(fight, 'loss');
+    else if (damage && fight.config.woundDestination) {
+      finish(fight, 'loss');
+      fight.destination = fight.config.woundDestination;
+    }
     return fight.status === 'loss';
   };
   if (fight.config.playerFirst === false) {

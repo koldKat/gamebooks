@@ -7,11 +7,50 @@ import { newFabledCharacter, fabledDefence, fabledAbilityCheck, fabledRankCheck 
 import { startFabledFight, fabledRound, fleeFabledFight } from '../../../public/js/battlesim/engines/fabled-lands/core.js';
 import { CITIES_OF_GOLD_FIGHTS, citiesOfGoldSeaCheck } from '../../../public/js/battlesim/engines/fabled-lands/cities-of-gold.js';
 import { BLOOD_DARK_DEFAULTS, BLOOD_DARK_FIGHTS, bloodDarkSeaCheck } from '../../../public/js/battlesim/engines/fabled-lands/blood-dark-sea.js';
+import { HOWLING_DEFAULTS, HOWLING_FIGHTS, howlingSeaCheck } from '../../../public/js/battlesim/engines/fabled-lands/howling-darkness.js';
 
 const rolls = (...values) => () => { assert.ok(values.length, 'Unexpected die roll'); return values.shift(); };
 const enemy = (changes = {}) => ({ name: 'Wolf', combat: 3, defence: 5, stamina: 7, ...changes });
 const fight = (config = {}, character = {}) => startFabledFight({ enemies: [enemy()], ...config },
   { ...newFabledCharacter(), ...character });
+
+test('book-four first-wound interruption and Avar threshold preserve saved inputs', () => {
+  const c = newFabledCharacter('warrior', HOWLING_DEFAULTS);
+  assert.equal(c.rank, 4); assert.equal(c.stamina, 20); assert.equal(c.shards, 65);
+  assert.equal(HOWLING_FIGHTS.length, 31);
+  const cutthroats = HOWLING_FIGHTS.find(f => f.section === 238);
+  const original = startFabledFight(cutthroats, c);
+  const stopped = fabledRound(original, {}, rolls(1, 1, 6, 6));
+  assert.equal(stopped.status, 'loss'); assert.equal(stopped.destination, 184);
+  assert.ok(stopped.character.stamina > 0); assert.equal(original.status, 'fighting');
+  assert.equal(c.stamina, 20);
+  const dead = fabledRound(startFabledFight(cutthroats, { ...c, stamina: 1 }), {}, rolls(1, 1, 6, 6));
+  assert.equal(dead.destination, 7);
+  const avar = HOWLING_FIGHTS.find(f => f.section === 419);
+  const won = fabledRound(startFabledFight(avar, c), {}, rolls(5, 5));
+  assert.equal(won.status, 'win'); assert.equal(won.destination, 392);
+  assert.equal(won.events.length, 1);
+  const lost = fabledRound(startFabledFight(avar, { ...c, stamina: 1 }), {}, rolls(1, 1, 6, 6));
+  assert.equal(lost.destination, 338); assert.equal(lost.character.stamina, 1);
+});
+
+test('book-four storms, naval outcomes and shipwreck checks match printed modifiers', () => {
+  const c = newFabledCharacter('mage', HOWLING_DEFAULTS);
+  assert.equal(howlingSeaCheck(11, c, { crew: 'poor' }, rolls(3)).destination, 135);
+  assert.equal(howlingSeaCheck(11, c, { crew: 'good' }, rolls(3)).destination, 106);
+  assert.equal(howlingSeaCheck(11, c, { crew: 'excellent' }, rolls(4)).destination, 236);
+  const blessed = { ...c, stormsBlessing: true };
+  assert.equal(howlingSeaCheck(512, blessed, { safetyFromStorms: true }).destination, 438);
+  assert.equal(blessed.stormsBlessing, true);
+  assert.equal(howlingSeaCheck(451, c, {}, rolls(3, 3)).destination, 419);
+  assert.equal(howlingSeaCheck(451, c, { crew: 'good' }, rolls(3, 3)).destination, 236);
+  assert.equal(howlingSeaCheck(338, c, { crew: 'good' }, rolls(6, 6)).destination, 240);
+  assert.equal(howlingSeaCheck(392, c, { crew: 'good' }, rolls(6, 6)).destination, 149);
+  const survived = howlingSeaCheck(135, c, {}, rolls(2, 2, 3));
+  assert.equal(survived.destination, 436); assert.equal(survived.character.stamina, 17);
+  assert.equal(howlingSeaCheck(135, c, {}, rolls(2, 3)).destination, 7);
+  assert.equal(c.stamina, 20);
+});
 
 test('book-three presets and ability curse do not change earlier defaults', () => {
   const c = newFabledCharacter('priest', BLOOD_DARK_DEFAULTS);
