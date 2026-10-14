@@ -5,20 +5,30 @@ import { legendaryCanAct, legendaryPlayerAttack, legendarySkipAttack, legendaryP
   legendaryTakeGuardWeapon, legendaryTommulReward } from './combat.js';
 import { activeLegendaryEnemy } from './enemy-actions.js';
 import { legendaryArmyStep, legendaryArmyEffect } from './army.js';
-import { legendaryNavalAttack, legendaryWarpWood } from './naval.js';
-import { LEGENDARY_SPELLS, learnLegendarySpell, forgetLegendarySpell, drainLegendarySpell,
+import { legendaryNavalAttack, legendaryWarpWood, legendaryTilt } from './naval.js';
+import { VALLEY_SPELLS, learnLegendarySpell, forgetLegendarySpell, drainLegendarySpell,
   rechargeLegendarySpells } from './spells.js';
-import { legendaryEscape as escape, legendarySetupHTML, wireLegendarySetup, readLegendarySetup,
+import { legendaryEscape as escape, legendarySetupHTML as defaultSetupHTML, wireLegendarySetup as defaultWireSetup, readLegendarySetup as defaultReadSetup,
   renderLegendaryParty, readLegendaryParty } from './party-form.js';
 
 export function createLegendaryPanel({ document, t, getRun, getBookId, saveState, showAlert, showConfirm,
-  getButtonRow, registerShortcut=()=>{} }) {
-  const ID='sim689',tk=(key,params)=>t('battlesim689.'+key,params);
+  getButtonRow, registerShortcut=()=>{} }, configuration = {}) {
+  const {bookId = 689,stateKey = 'sim'+bookId,i18nPrefix = 'battlesim'+bookId,
+    fights = VALLEY_FIGHTS,armies = VALLEY_ARMIES,naval = VALLEY_NAVAL,
+    startFight = startValleyFight,startArmy = startValleyArmy,startNaval = startValleyNaval,
+    spells = VALLEY_SPELLS,partySetup} = configuration;
+  const ID=stateKey,tk=(key,params)=>t(i18nPrefix+'.'+key,params);
+  const LEGENDARY_SPELLS = spells;
+  const checkBoostSpells = {survival:'wolfSpirit',lore:'wisdom',charisma:'silverTongue',...configuration.checkBoostSpells};
+  const legendarySetupHTML = (id,translate) => defaultSetupHTML(id,translate,partySetup);
+  const wireLegendarySetup = (id,element) => defaultWireSetup(id,element,partySetup);
+  const readLegendarySetup = (element,readNumber) => defaultReadSetup(element,readNumber,partySetup);
   const el=key=>document.getElementById(ID+'-'+key);
   const busy=game=>game?.fight?.status==='active';
   let shownRun;
+  let extension;
   function data() {
-    if (Number(getBookId())!==689) return null;
+    if (Number(getBookId())!==bookId) return null;
     const run=getRun();
     return run ? run[ID] ||= {party:[],silver:0,ship:null,units:[],fight:null,history:[],log:[],setup:{}} : null;
   }
@@ -45,12 +55,14 @@ export function createLegendaryPanel({ document, t, getRun, getBookId, saveState
     if (fight.kind==='personal') game.party=structuredClone(fight.party);
     if (fight.kind==='naval') game.ship=structuredClone(fight.ship);
     if (fight.kind==='army') {
-      for (const unit of [...fight.player.flat(),...fight.routed.player]) {
+      for (const unit of [...fight.player.flat().filter(Boolean),...fight.routed.player]) {
         const index=game.units.findIndex(other=>other.uid===unit.uid);
         if (index>=0) game.units[index]=structuredClone(unit);
       }
     }
     if (!fight.recorded && ['won','lost'].includes(fight.status)) {
+      if (fight.status === 'lost' && fight.rules.halveSilverOnLoss && Number.isSafeInteger(fight.silver))
+        game.silver = fight.silver;
       fight.recorded=true;
       game.history.push({enemy:title(fight),outcome:fight.status==='won'?'win':'loss',
         ts:Math.max(Date.now(),(game.history.at(-1)?.ts??0)+1)});
@@ -62,7 +74,7 @@ export function createLegendaryPanel({ document, t, getRun, getBookId, saveState
     try {
       const next=structuredClone(original);
       update(next);sync(next);
-      if (run!==getRun() || original!==data() || Number(getBookId())!==689) return;
+      if (run!==getRun() || original!==data() || Number(getBookId())!==bookId) return;
       next.log=next.log.slice(-60);run[ID]=next;saveState();render();
     } catch (_) {showAlert(tk('invalid'));}
   }
@@ -87,9 +99,9 @@ export function createLegendaryPanel({ document, t, getRun, getBookId, saveState
   function report(game,fight,kind) {game.fight={...fight,kind};}
   function contextOptions() {
     const mode=el('mode').value;
-    if (mode==='personal') return VALLEY_FIGHTS.map(f=>[f.section,(f.dynamic?tk('enchanted'):f.enemies[0].name)+' ('+f.section+')']);
-    if (mode==='naval') return Object.entries(VALLEY_NAVAL).map(([section,f])=>[section,f.name+' ('+section+')']);
-    return Object.keys(VALLEY_ARMIES).map(section=>[section,tk('army.'+section)+' ('+section+')']);
+    if (mode==='personal') return fights.map(f=>[f.section,(f.dynamic?tk('enchanted'):f.enemies[0].name)+' ('+f.section+')']);
+    if (mode==='naval') return Object.entries(naval).map(([section,f])=>[section,f.name+' ('+section+')']);
+    return Object.keys(armies).map(section=>[section,tk('army.'+section)+' ('+section+')']);
   }
   function contextChanged() {options('context',contextOptions());render();}
   function spellOptions(game) {
@@ -127,9 +139,11 @@ export function createLegendaryPanel({ document, t, getRun, getBookId, saveState
     for (const key of ['mode','context','create','applyParty','applySilver','addUnit','applyShip','codes']) el(key).disabled=active||blocked;
     for (const input of el('setup').querySelectorAll('input,select')) input.disabled=active||blocked;
     const living=game.party.flatMap((hero,index)=>hero.health>0?[[index,hero.name]]:[]);
-    options('recruitSlot',game.party.map((hero,index)=>[index,hero.name]));
-    el('recruitSkullcracker').disabled=active||!game.party.length||game.party.some(hero=>hero.profileId==='skullcracker');
-    el('recruitSlot').disabled=active;
+    if (el('recruitSlot')) {
+      options('recruitSlot',game.party.map((hero,index)=>[index,hero.name]));
+      el('recruitSkullcracker').disabled=active||!game.party.length||game.party.some(hero=>hero.profileId==='skullcracker');
+      el('recruitSlot').disabled=active;
+    }
     const actorRows=fight?.kind==='personal'&&active ? living.filter(([index])=>legendaryCanAct(fight,index)) : living;
     options('actor',actorRows);
     let recipients=fight?.kind==='personal'?living.filter(([index])=>fight.participants.includes(index)):living;
@@ -137,7 +151,7 @@ export function createLegendaryPanel({ document, t, getRun, getBookId, saveState
       recipients=recipients.filter(([index])=>index===fight.pending.forcedMember);
     else if(active&&fight.kind==='personal'&&fight.pending?.distinct&&recipients.length>1)
       recipients=recipients.filter(([index])=>index!==fight.enemyRecipients[fight.pending.enemyIndex]);
-    options('recipient',recipients);
+    options('recipient',configuration.recipientRows?.({game,fight,rows:recipients})??recipients);
     el('members').multiple=true;options('members',living);el('members').size=Math.min(4,Math.max(1,living.length));
     options('checkMember1',living);options('checkMember2',[['',tk('none')],...living]);
     options('cursedMember',living);options('stealthHero',living);
@@ -159,24 +173,30 @@ export function createLegendaryPanel({ document, t, getRun, getBookId, saveState
     const recipientRow=el('recipient').closest('label');
     if(active&&fight.kind==='personal') el('assign').before(recipientRow);
     else if(loot) el('lootActions').prepend(recipientRow);
-    el('enemyRoll').disabled=!active||fight?.kind!=='personal'||fight.phase!=='enemy'||!!fight.pending;
+    el('enemyRoll').disabled=!active||fight?.kind!=='personal'||fight.phase!=='enemy'||!!fight.pending||!!fight.pendingChoice;
     el('assign').disabled=!active||fight?.kind!=='personal'||!fight.pending;
     el('flee').disabled=!active||fight?.kind!=='personal'||fight.phase!=='player'||!!fight.acted.length||!fight.rules.flee;
     el('potion').disabled=!active||fight?.kind!=='personal';
     const selectedCaster=Number(el('caster').value),selectedSpell=game.party[selectedCaster]?.spells?.find(spell=>spell.id===el('spell').value);
     el('cast').disabled ||= !el('caster').value||!selectedSpell?.charged||!legendaryCanAct(fight,selectedCaster);
-    el('spellTarget2').closest('label').hidden=el('spell').value!=='poisonStream';
-    const lastOnly=active&&fight.kind==='personal'&&fight.pending?.distinct&&fight.participants.filter(index=>fight.party[index].health>0).length===1;
+    el('spellTarget2').closest('label').hidden=!['poisonStream','whipsnake'].includes(el('spell').value);
+    const eligibleCount=active&&fight.kind==='personal'?fight.participants.filter(index=>fight.party[index].health>0&&
+      (fight.rules.heroArrivalRounds?.[index]??1)<=fight.round&&
+      !(fight.rules.controlledMember===index&&fight.enemies[fight.rules.controllerIndex].health>0)).length:0;
+    const lastOnly=active&&fight.kind==='personal'&&((fight.pending?.distinct&&eligibleCount===1)||
+      (fight.pending?.distinctGroup&&eligibleCount<fight.pending.requiredRecipients));
     el('sameRecipient-row').hidden=!lastOnly;
     if (!lastOnly) el('sameRecipient').checked=false;
     el('cancel').disabled=!active||blocked;
     el('castStrategy').disabled=!active||fight.kind==='personal'||!el('caster').value;
     el('castAdventure').disabled=active||blocked||!selectedSpell?.charged||
-      !LEGENDARY_SPELLS[selectedSpell?.id]?.scopes.includes('adventure')||['wolfSpirit','wisdom','silverTongue'].includes(selectedSpell?.id);
+      !LEGENDARY_SPELLS[selectedSpell?.id]?.scopes.includes('adventure')||Object.values(checkBoostSpells).includes(selectedSpell?.id);
     if(active&&fight.kind==='army') {
-      options('armyPosition',fight.enemy[number('armyTarget')]?.map((_,index)=>[index,tk(index===0?'front':'support')])??[]);
+      options('armyPosition',fight.enemy[number('armyTarget')]?.flatMap((unit,index)=>unit?[[index,tk(index===0?'front':'support')]]:[])??[]);
     }
     el('castStrategy').disabled ||= !selectedSpell?.charged || (fight?.kind==='army'&&(fight.zone!==0||!el('armyPosition').value));
+    if (configuration.limitArmyCasters && fight?.kind==='army')
+      el('castStrategy').disabled ||= fight.position>0 || fight.armyCasterRounds?.[selectedCaster]===fight.round;
     el('strategyStep').disabled=!active||fight.kind==='personal';
     for (const key of ['learn','forget','recharge','checkRoll','boostCheck']) el(key).disabled=active||blocked||!game.party.length;
     if (document.activeElement!==el('silver')) el('silver').value=game.silver;
@@ -190,7 +210,7 @@ export function createLegendaryPanel({ document, t, getRun, getBookId, saveState
     el('status').textContent=fight?[tk('status.'+fight.status),tk('round',{round:fight.round}),
       ...(fight.kind==='personal'?fight.enemies.map(enemy=>`${enemy.name}: ${enemy.health} ${tk('health')}`):
         fight.kind==='naval'?[`${fight.ship.name}: ${fight.ship.health}`,`${fight.enemy.name}: ${fight.enemy.health}`]:
-        fight.player.map((zone,index)=>tk('zone.'+index)+': '+zone.map(unit=>`${unit.name} (${unit.strength}/${unit.morale})`).join(' / '))),
+        fight.player.map((zone,index)=>tk('zone.'+index)+': '+zone.filter(Boolean).map(unit=>`${unit.name} (${unit.strength}/${unit.morale})`).join(' / '))),
       ...(fight.destination?[tk('destination',{section:fight.destination})]:[])].join('\n'):'';
     el('phase').textContent=active&&fight.kind==='personal'?tk(fight.pending?'assignPrompt':fight.phase==='player'?'playerPrompt':'enemyPrompt'):'';
     el('history').innerHTML=game.history.slice(-30).reverse().map(row=>`<div>${escape(row.enemy)} - ${escape(tk('status.'+(row.outcome==='win'?'won':'lost')))}</div>`).join('');
@@ -205,6 +225,7 @@ export function createLegendaryPanel({ document, t, getRun, getBookId, saveState
       el('editUnitName').value=selectedUnit.name;el('editUnitStrength').value=selectedUnit.strength;el('editUnitMorale').value=selectedUnit.morale;
     }
     el('updateUnit').disabled=active||blocked||!selectedUnit;
+    extension?.render?.(game);
   }
   function eventText(event,game) {
     const hero=game.party[event.memberIndex]?.name??'',enemy=game.fight?.enemies?.[event.enemyIndex??event.targetIndex]?.name??'';
@@ -243,7 +264,7 @@ export function createLegendaryPanel({ document, t, getRun, getBookId, saveState
     overlay.addEventListener('keydown',event=>{if(event.key==='Escape'){event.stopPropagation();close();}});
     registerShortcut({button:btn,overlay,open,close});
     el('mode').addEventListener('change',contextChanged);
-    for (const key of ['caster','spell','armyTarget']) el(key).addEventListener('change',render);
+    for (const key of ['caster','spell','armyTarget','context']) el(key).addEventListener('change',render);
     el('recipient').addEventListener('change',render);
     el('editUnit').addEventListener('change',()=>{
       const unit=data()?.units.find(unit=>unit.uid===el('editUnit').value);
@@ -254,6 +275,7 @@ export function createLegendaryPanel({ document, t, getRun, getBookId, saveState
       const update=game=>{game.party=readLegendarySetup(el,number);game.fight=null;game.check=null;};
       if (data()?.party.length) confirm(update,'replaceConfirm');else action(update);
     });
+    if (configuration.allowSkullcracker !== false) {
     el('applyParty').insertAdjacentHTML('afterend',`<details><summary>${escape(tk('recruitSkullcracker'))}</summary><p>${escape(tk('skullcrackerNote'))}</p>${select('recruitSlot')}${button('recruitSkullcracker')}</details>`);
     el('recruitSkullcracker').addEventListener('click',()=>{
       if(busy(data()))return;
@@ -263,22 +285,32 @@ export function createLegendaryPanel({ document, t, getRun, getBookId, saveState
         game.party[index]=newValleySkullcracker();game.fight=null;game.check=null;
       },'recruitConfirm');
     });
-    el('applyParty').addEventListener('click',()=>action(game=>{if(busy(game))return;game.party=readLegendaryParty(game.party,el,number);game.fight=null;game.check=null;}));
+    }
+    el('applyParty').addEventListener('click',()=>action(game=>{
+      if(busy(game))return;
+      game.party=readLegendaryParty(game.party,el,number).map((hero,index)=>
+        ({...hero,...configuration.heroOptions?.({el,number,index,hero})}));
+      game.fight=null;game.check=null;
+    }));
     el('applySilver').addEventListener('click',()=>action(game=>{if(busy(game))return;const silver=number('silver');if(silver<0)throw Error();game.silver=silver;}));
     el('applyShip').addEventListener('click',()=>action(game=>{if(busy(game))return;
       const ship={name:el('shipName').value.trim(),fighting:number('shipFighting'),health:number('shipHealth')};
-      if(!ship.name||ship.fighting<0||ship.health<0)throw Error();game.ship=ship;game.fight=null;
+      if(!ship.name||ship.fighting<0||ship.health<0)throw Error();
+      game.ship={...ship,...configuration.shipOptions?.({el,number,game})};game.fight=null;
     }));
     el('addUnit').addEventListener('click',()=>action(game=>{if(busy(game))return;
       const name=el('unitName').value.trim(),strength=number('unitStrength'),morale=number('unitMorale');
-      if(!name||strength<0||morale<0)throw Error();game.units.push({uid:String(Date.now())+'-'+game.units.length,name,strength,morale});
+      if(!name||strength<0||morale<0)throw Error();
+      game.units.push({uid:String(Date.now())+'-'+game.units.length,name,strength,morale,
+        ...configuration.unitOptions?.({el,number,editing:false})});
     }));
     el('updateUnit').addEventListener('click',()=>action(game=>{
       if(busy(game))return;
       const index=game.units.findIndex(unit=>unit.uid===el('editUnit').value),name=el('editUnitName').value.trim(),
         strength=number('editUnitStrength'),morale=number('editUnitMorale');
       if(index<0||!name||strength<0||morale<0)throw Error();
-      game.units[index]={...game.units[index],name,strength,morale,routed:el('restoreRouted').checked?false:!!game.units[index].routed};
+      game.units[index]={...game.units[index],name,strength,morale,routed:el('restoreRouted').checked?false:!!game.units[index].routed,
+        ...configuration.unitOptions?.({el,number,editing:true})};
       game.fight=null;el('restoreRouted').checked=false;
     }));
     el('start').addEventListener('click',()=>action(game=>{
@@ -290,42 +322,52 @@ export function createLegendaryPanel({ document, t, getRun, getBookId, saveState
           ...Object.fromEntries(['hygliph','enlightened','shipInMordain','rage','knockout','undercover'].map(key=>[key,el(key).checked]))};
         const members=selectedIndices('members');if(members.length)config.participants=members;
         if(el('stealthOutcome').value)config.stealthOutcome=el('stealthOutcome').value;
-        const fight=startValleyFight(game.party,section,config);fight.rules.escortBeforePotion=el('escortBeforePotion').checked;report(game,fight,mode);
-      } else if(mode==='naval') report(game,startValleyNaval(game.ship,section),mode);
+        const fight=startFight(game.party,section,{...config,...configuration.personalOptions?.({game,el,number,selectedIndices})});
+        fight.rules.escortBeforePotion=el('escortBeforePotion').checked;report(game,fight,mode);
+      } else if(mode==='naval') report(game,startNaval(game.ship,section),mode);
       else {
         const slots=Array.from({length:6},(_,i)=>el('formation-'+i).value);
         const units=slots.map(uid=>uid?game.units.find(unit=>unit.uid===uid&&!unit.routed):null);
-        const formation=Array.from({length:3},(_,i)=>units.slice(i*2,i*2+2).filter(Boolean));
-        report(game,startValleyArmy(formation,section,codes),mode);
+        const formation=Array.from({length:3},(_,i)=>{
+          const row=units.slice(i*2,i*2+2);
+          return armies[section]?.twoFrontLines?row:row.filter(Boolean);
+        });
+        report(game,startArmy(formation,section,codes),mode);
       }
     }));
     const fightAction=update=>action(game=>{if(!busy(game)||game.fight.kind!=='personal')return;report(game,update(game.fight),'personal');});
     el('attack').addEventListener('click',()=>fightAction(fight=>legendaryPlayerAttack(fight,number('actor'),number('target'),{focus:number('focus')})));
     el('skip').addEventListener('click',()=>fightAction(fight=>legendarySkipAttack(fight,number('actor'))));
     el('enemyRoll').addEventListener('click',()=>fightAction(legendaryEnemyAttack));
-    el('assign').addEventListener('click',()=>fightAction(fight=>legendaryAssignDamage(fight,number('recipient'),undefined,{allowSameRecipient:el('sameRecipient').checked})));
+    el('assign').addEventListener('click',()=>fightAction(fight=>legendaryAssignDamage(fight,
+      configuration.readRecipient?.({el,number})??number('recipient'),undefined,
+      {allowSameRecipient:el('sameRecipient').checked,...configuration.assignOptions?.({el,number,fight})})));
     el('flee').addEventListener('click',()=>fightAction(legendaryFlee));
     el('potion').addEventListener('click',()=>fightAction(fight=>legendaryDrinkPotion(fight,number('recipient'),el('potionType').value)));
     el('takeWeapon').addEventListener('click',()=>action(game=>report(game,legendaryTakeGuardWeapon(game.fight,number('recipient')),'personal')));
     el('tommulReward').addEventListener('click',()=>action(game=>report(game,legendaryTommulReward(game.fight),'personal')));
     el('cast').addEventListener('click',()=>fightAction(fight=>{
       const id=el('spell').value,targets=['armourOfHeaven','soothingTouch'].includes(id)?[number('spellTarget')]:
-        ['sandstorm','dazingLights'].includes(id)?[]:id==='poisonStream'?[number('spellTarget'),number('spellTarget2')]:[number('spellTarget')];
+        ['sandstorm','dazingLights','wither','stingtailRune'].includes(id)?[]:['poisonStream','whipsnake'].includes(id)?[number('spellTarget'),number('spellTarget2')]:[number('spellTarget')];
       return legendaryPlayerSpell(fight,number('caster'),id,targets,undefined,{opening:el('opening').checked,precombat:el('precombat').checked});
     }));
     el('strategyStep').addEventListener('click',()=>action(game=>{if(!busy(game))return;report(game,game.fight.kind==='army'?legendaryArmyStep(game.fight):legendaryNavalAttack(game.fight),game.fight.kind);}));
     el('castStrategy').addEventListener('click',()=>action(game=>{
       if(!busy(game)||game.fight.kind==='personal')return;
-      const index=number('caster'),id=game.fight.kind==='army'?'clingingDread':'warpWood';
+      const index=number('caster'),id=configuration.selectStrategySpell?el('spell').value:game.fight.kind==='army'?'clingingDread':'warpWood';
       const hero=drainLegendarySpell(game.party[index],id,game.fight.kind);
-      if(game.fight.kind==='army'&&game.fight.zone!==0)throw Error();
-      const fight=game.fight.kind==='army'?legendaryArmyEffect(game.fight,'enemy',number('armyTarget'),'clingingDread',undefined,{position:number('armyPosition')}):legendaryWarpWood(game.fight);
+      if(game.fight.kind==='army'&&(game.fight.zone!==0||(configuration.limitArmyCasters&&
+        (game.fight.position>0||game.fight.armyCasterRounds?.[index]===game.fight.round))))throw Error();
+      if(game.fight.kind==='naval'&&!['warpWood','tilt'].includes(id))throw Error();
+      const fight=game.fight.kind==='army'?legendaryArmyEffect(game.fight,'enemy',number('armyTarget'),id,undefined,{position:number('armyPosition')}):
+        id==='tilt'?legendaryTilt(game.fight):legendaryWarpWood(game.fight);
+      if(fight.kind==='army'&&configuration.limitArmyCasters) (fight.armyCasterRounds??={})[index]=fight.round;
       game.party[index]=hero;report(game,fight,game.fight.kind);
     }));
     el('castAdventure').addEventListener('click',()=>action(game=>{
       if(busy(game))return;
       const index=number('caster'),id=el('spell').value;
-      if(['wolfSpirit','wisdom','silverTongue'].includes(id))throw Error();
+      if(Object.values(checkBoostSpells).includes(id))throw Error();
       game.party[index]=drainLegendarySpell(game.party[index],id,'adventure');
       if(id==='soothingTouch') {const target=number('spellTarget');game.party[target]=legendaryHeal(game.party[target],5);}
       game.fight=null;game.log.push(tk('adventureCast',{name:game.party[index].name,spell:tk('spell.'+id)}));
@@ -334,7 +376,8 @@ export function createLegendaryPanel({ document, t, getRun, getBookId, saveState
     for(const kind of ['learn','forget','recharge']) el(kind).addEventListener('click',()=>action(game=>{
       if(busy(game))return;
       const index=number('caster'),hero=game.party[index];
-      if(kind==='learn')game.party[index]=learnLegendarySpell(hero,el('learnSpell').value);
+      if(kind==='learn')game.party[index]=configuration.learnSpell?
+        configuration.learnSpell(hero,el('learnSpell').value,{el}):learnLegendarySpell(hero,el('learnSpell').value);
       else if(kind==='forget')game.party[index]=forgetLegendarySpell(hero,el('spell').value);
       else {const result=rechargeLegendarySpells(hero,[el('spell').value],game.silver,{allowed:el('rechargeAllowed').checked,free:el('freeRecharge').checked});game.party[index]=result.character;game.silver=result.silver;}
       game.fight=null;
@@ -348,11 +391,13 @@ export function createLegendaryPanel({ document, t, getRun, getBookId, saveState
     }));
     el('boostCheck').addEventListener('click',()=>action(game=>{
       if(busy(game)||!game.check||game.check.passed)throw Error();
-      const spells={survival:'wolfSpirit',lore:'wisdom',charisma:'silverTongue'},id=spells[game.check.skill],index=number('caster');
+      const id=checkBoostSpells[game.check.skill],index=number('caster');
       if(!id)throw Error();game.party[index]=drainLegendarySpell(game.party[index],id,'adventure');
       game.check.successes+=3;game.check.passed=game.check.successes>=game.check.required;
       game.log.push(tk('checkEvent',{successes:game.check.successes,required:game.check.required}));
     }));
+    extension=configuration.mount?.({document,ID,el,number,tk,button,check,field,select,options,selectedIndices,
+      action,report,data,render,busy});
     render();
   }
   return {init,render,setVisible(visible){const btn=el('btn');if(btn)btn.style.display=visible?'':'none';if(!visible)close();}};

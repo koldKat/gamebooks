@@ -102,6 +102,8 @@ export function validateLegendaryCharacter(character, alive = false) {
   legendaryInteger(character.health, alive ? 1 : 0, character.maxHealth);
   legendaryInteger(character.armour);
   legendaryInteger(character.weaponBonus ?? 0);
+  legendaryInteger(character.attackDieBonus ?? 0);
+  legendaryInteger(character.spellDamageBonus ?? 0);
   legendaryInteger(character.skeletonHealth ?? 0, 0, 6);
   legendaryInteger(character.healingPotions ?? 0);
   legendaryInteger(character.invulnerabilityPotions ?? 0);
@@ -142,14 +144,16 @@ export function legendarySkillCheck(members, skill, threshold, required, { focus
   return { ...result, successes, automatic, passed: successes >= required };
 }
 
-export function legendaryAttack(character, defence, { focus = 0, excludeWeapon = false, unarmed = !character.armed } = {}, roll) {
+export function legendaryAttack(character, defence, { focus = 0, excludeWeapon = false, unarmed = !character.armed, diceDivisor = 1 } = {}, roll) {
   validateLegendaryCharacter(character, true);
   legendaryInteger(defence, 1);
   legendaryInteger(focus);
-  const available = Math.max(0, legendarySkill(character, 'fighting', { excludeWeapon }) - (unarmed ? 1 : 0));
+  legendaryInteger(diceDivisor, 1, 2);
+  const available = Math.floor(Math.max(0, legendarySkill(character, 'fighting', { excludeWeapon }) - (unarmed ? 1 : 0)) / diceDivisor);
   if (focus > Math.floor(available / 5)) throw new RangeError('Insufficient attack dice to focus');
   // The twenty-dice limit applies to skill checks, not combat attacks.
-  return legendaryPool(available - focus * 5, Math.max(1, defence - focus), roll);
+  const dieBonus = character.armed && !excludeWeapon && !unarmed ? character.attackDieBonus ?? 0 : 0;
+  return legendaryPool(available - focus * 5, Math.max(1, defence - focus - dieBonus), roll);
 }
 
 export function legendaryDamage(character, damage, { armour = true, floor = 0 } = {}, roll) {

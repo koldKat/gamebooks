@@ -38,8 +38,9 @@ export function legendaryNavalAttack(input, roll) {
   const own = fight.phase === 'ship';
   const attacker = own ? fight.ship : fight.enemy;
   const target = own ? fight.enemy : fight.ship;
-  const count = Math.max(0, attacker.fighting - (own ? fight.rules.fightingPenalty : 0));
-  const attack = legendaryPool(Math.min(20, count), 4, roll);
+  const count = Math.max(0, attacker.fighting - (own ? fight.rules.fightingPenalty : fight.nextEnemyPenalty ?? 0));
+  const attack = legendaryPool(fight.rules.uncappedAttack ? count : Math.min(20, count), 4, roll);
+  if (!own) delete fight.nextEnemyPenalty;
   const damage = Math.min(target.health, attack.successes);
   target.health -= damage;
   fight.log = [...fight.log.slice(-59), { round: fight.round, type: own ? 'shipAttack' : 'enemyAttack', dice: attack.dice, damage }];
@@ -55,11 +56,33 @@ export function legendaryNavalAttack(input, roll) {
 
 export function legendaryWarpWood(input) {
   const fight = active(input);
-  if (fight.phase !== 'ship' || fight.spellUsed) throw new RangeError('One sea spell before each ship attack');
+  if (fight.phase !== 'ship' || fight.spellUsed || fight.rules.seaSpellsForbidden)
+    throw new RangeError('Sea spells are unavailable now');
   const damage = Math.min(3, fight.enemy.health);
   fight.enemy.health -= damage;
   fight.spellUsed = true;
   fight.log = [...fight.log.slice(-59), { round: fight.round, type: 'warpWood', damage }];
   endFight(fight);
+  return fight;
+}
+
+export function legendaryTilt(input) {
+  const fight = active(input);
+  if (fight.phase !== 'ship' || fight.spellUsed || fight.rules.seaSpellsForbidden)
+    throw new RangeError('Sea spells are unavailable now');
+  fight.nextEnemyPenalty = 2;
+  fight.spellUsed = true;
+  fight.log = [...fight.log.slice(-59),{round:fight.round,type:'tilt'}];
+  return fight;
+}
+
+export function legendarySurrenderCargo(input) {
+  const fight = active(input);
+  const cargo = fight.ship.cargo;
+  if (!fight.rules.cargoSurrender || !(Array.isArray(cargo) ? cargo.length : Number.isSafeInteger(cargo) && cargo > 0))
+    throw new RangeError('This pirate requires cargo to surrender');
+  fight.ship.cargo = Array.isArray(cargo) ? [] : 0;
+  fight.status = 'surrendered';fight.phase = 'ended';fight.destination = fight.rules.cargoSurrender;
+  fight.log = [...fight.log.slice(-59),{round:fight.round,type:'cargoSurrendered'}];
   return fight;
 }

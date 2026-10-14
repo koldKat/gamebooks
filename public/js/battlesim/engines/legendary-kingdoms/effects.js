@@ -1,4 +1,5 @@
 import { protectLegendaryHero } from './protection.js';
+import { legendaryDie } from './character.js';
 
 function injureParty(fight, amount, combat = true) {
   for (const index of fight.participants) {
@@ -7,8 +8,14 @@ function injureParty(fight, amount, combat = true) {
   }
 }
 
-export function applyLegendaryEndRound(fight) {
+export function applyLegendaryEndRound(fight, roll) {
   const special = fight.rules.special;
+  if (fight.rules.grappleEscape) {
+    for (const index of fight.grappled) {
+      const hero = fight.party[index];
+      if (hero.health > 0) fight.party[index] = protectLegendaryHero(hero, 2, {combat:false,attack:false}).character;
+    }
+  }
   if (special === 'skallos') {
     const index = fight.enemies.findIndex(enemy => enemy.name === 'Skallos');
     if (index >= 0 && fight.enemies[index].health > 0 && !fight.roundEnemyDamage[index]) {
@@ -36,6 +43,31 @@ export function applyLegendaryEndRound(fight) {
     fight.pending = null;
     fight.party.forEach(hero => { hero.invulnerable = false; });
     fight.log = [...fight.log.slice(-59), { round: fight.round, type: 'assassinEscaped' }];
+  }
+  if (fight.rules.endRoundPartyDamage) injureParty(fight, fight.rules.endRoundPartyDamage, false);
+  for (const [enemyIndex, enemy] of fight.enemies.entries()) {
+    if (enemy.health > 0 && enemy.endRoundPartyDamage) injureParty(fight, enemy.endRoundPartyDamage, false);
+    if (enemy.health > 0 && enemy.undamagedHeroAura) {
+      for (const index of fight.participants) {
+        const hero = fight.party[index];
+        if (hero.health > 0 && !fight.enemyHeroDamage?.[enemyIndex]?.[index])
+          fight.party[index] = protectLegendaryHero(hero, enemy.undamagedHeroAura,
+            {combat:false,attack:false}).character;
+      }
+      fight.log = [...fight.log.slice(-59), {round:fight.round,type:'decayAura',enemyIndex}];
+    }
+  }
+  if (fight.rules.rechargeSpellsAtRoundEnd) {
+    for (const memberIndex of fight.participants) {
+      const hero = fight.party[memberIndex];
+      if (hero.health <= 0) continue;
+      for (const spell of hero.spells ?? []) if (!spell.charged) {
+        const die = legendaryDie(roll);
+        spell.charged = die >= fight.rules.rechargeSpellsAtRoundEnd;
+        fight.log = [...fight.log.slice(-59), {round:fight.round,type:'spellRecharge',memberIndex,
+          spellId:spell.id,die,charged:spell.charged}];
+      }
+    }
   }
 }
 

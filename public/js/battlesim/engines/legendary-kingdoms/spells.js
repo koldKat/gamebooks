@@ -1,7 +1,7 @@
 import { legendaryInteger, validateLegendaryCharacter } from './character.js';
 
 const spell = (name, scopes, recharge, starting = false) => Object.freeze({ name, scopes: Object.freeze(scopes), recharge, starting });
-export const LEGENDARY_SPELLS = Object.freeze({
+export const VALLEY_SPELLS = Object.freeze({
   animalSpeech: spell('Animal Speech', ['adventure'], 50, true),
   armourOfHeaven: spell('Armour of Heaven', ['combat'], 50, true),
   iceBolt: spell('Ice Bolt', ['combat'], 50, true),
@@ -19,10 +19,28 @@ export const LEGENDARY_SPELLS = Object.freeze({
   warpWood: spell('Warp Wood', ['naval'], 50),
 });
 
+export const LEGENDARY_SPELLS = Object.freeze({
+  ...VALLEY_SPELLS,
+  nightcrawler: spell('Nightcrawler', ['adventure'], 75),
+  teleportCircle: spell('Teleport Circle', ['adventure'], 250),
+  tilt: spell('Tilt', ['naval'], 50),
+  wither: spell('Wither', ['combat'], 50),
+  enfeeblement: spell('Enfeeblement', ['army'], 250),
+  teleport: spell('Teleport', ['adventure'], 1000),
+  orbOfAnnihilation: spell('Orb of Annihilation', ['combat'], 250),
+  stingtailRune: spell('Stingtail Rune', ['combat'], 250),
+  vulnerability: spell('Vulnerability', ['combat'], 250),
+  whipsnake: spell('Whipsnake', ['combat'], 250),
+});
+
 export const CROWN_STARTING_SPELLS = Object.freeze([
   'armourOfHeaven', 'iceBolt', 'poisonStream', 'soothingTouch',
   'unfailingStrike', 'wolfSpirit', 'magicCabinet',
 ]);
+
+export const CROWN_SPELL_IDS = Object.freeze([...CROWN_STARTING_SPELLS, 'nightcrawler',
+  'teleportCircle', 'tilt', 'wither', 'enfeeblement', 'teleport', 'dazingLights',
+  'orbOfAnnihilation', 'stingtailRune', 'vulnerability', 'whipsnake']);
 
 export function legendarySpell(id) {
   if (!Object.hasOwn(LEGENDARY_SPELLS, id)) throw new RangeError('Unknown Legendary Kingdoms spell');

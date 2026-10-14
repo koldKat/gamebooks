@@ -13,53 +13,61 @@ function numeric(id,label,value=0,min=0,max=1000000) {
   return `<label class="inv-edit-row"><span class="inv-edit-label">${legendaryEscape(label)}</span><input class="inv-edit-input" id="${id}" type="number" min="${min}" max="${max}" step="1" value="${value}"></label>`;
 }
 
-export function legendarySetupHTML(ID,tk) {
+export function legendarySetupHTML(ID,tk,settings = {}) {
+  const profiles = settings.profiles ?? VALLEY_PROFILES;
+  const starting = settings.startingSpells ?? starterSpells;
+  const custom = settings.customSkills ?? [5,3,3,3,1];
   return `<details><summary>${legendaryEscape(tk('newParty'))}</summary>`+defaults.map((profile,index)=>{
     const prefix=ID+'-new-'+index;
     return `<fieldset class="legendary-hero"><legend>${legendaryEscape(tk('heroSlot',{number:index+1}))}</legend>`+
-      `<select class="inv-edit-input" id="${prefix}-profile">${Object.entries(VALLEY_PROFILES).map(([id,hero])=>
+      `<select class="inv-edit-input" id="${prefix}-profile">${Object.entries(profiles).map(([id,hero])=>
         `<option value="${id}"${id===profile?' selected':''}>${legendaryEscape(hero.name)}</option>`).join('')}`+
       `<option value="custom">${legendaryEscape(tk('custom'))}</option></select>`+
       `<div id="${prefix}-custom" hidden><label class="inv-edit-row"><span class="inv-edit-label">${legendaryEscape(tk('name'))}</span>`+
       `<input class="inv-edit-input" id="${prefix}-name" maxlength="100"></label>`+
       `<label class="bsim-checkbox"><input type="checkbox" id="${prefix}-caster">${legendaryEscape(tk('spellcaster'))}</label>`+
-      LEGENDARY_SKILLS.map((skill,i)=>numeric(prefix+'-'+skill,tk(skill),[5,3,3,3,1][i],1,5)).join('')+`</div>`+
-      `<div id="${prefix}-spells"${VALLEY_PROFILES[profile].spellcaster?'':' hidden'}><p>${legendaryEscape(tk('chooseThree'))}</p>`+
-      starterSpells.map(id=>`<label class="bsim-checkbox"><input type="checkbox" id="${prefix}-spell-${id}"${defaultSpells.includes(id)?' checked':''}>${legendaryEscape(tk('spell.'+id))}</label>`).join('')+
+      LEGENDARY_SKILLS.map((skill,i)=>numeric(prefix+'-'+skill,tk(skill),custom[i],1,settings.maxSkill ?? 5)).join('')+`</div>`+
+      `<div id="${prefix}-spells"${profiles[profile].spellcaster?'':' hidden'}><p>${legendaryEscape(tk('chooseThree'))}</p>`+
+      starting.map(id=>`<label class="bsim-checkbox"><input type="checkbox" id="${prefix}-spell-${id}"${defaultSpells.includes(id)?' checked':''}>${legendaryEscape(tk('spell.'+id))}</label>`).join('')+
       `</div></fieldset>`;
   }).join('')+'</details>';
 }
 
-export function wireLegendarySetup(ID,el) {
+export function wireLegendarySetup(ID,el,settings = {}) {
+  const profiles = settings.profiles ?? VALLEY_PROFILES;
   for (let index=0;index<4;index++) {
     const prefix='new-'+index;
     const update=()=>{
       const profile=el(prefix+'-profile').value;
       el(prefix+'-custom').hidden=profile!=='custom';
-      el(prefix+'-spells').hidden=profile==='custom'?!el(prefix+'-caster').checked:!VALLEY_PROFILES[profile]?.spellcaster;
+      el(prefix+'-spells').hidden=profile==='custom'?!el(prefix+'-caster').checked:!profiles[profile]?.spellcaster;
     };
     el(prefix+'-profile').addEventListener('change',update);
     el(prefix+'-caster').addEventListener('change',()=>{
-      const values=el(prefix+'-caster').checked?[1,2,5,1,2]:[5,3,3,3,1];
+      const values=el(prefix+'-caster').checked?(settings.casterSkills ?? [1,2,5,1,2]):(settings.customSkills ?? [5,3,3,3,1]);
       LEGENDARY_SKILLS.forEach((skill,i)=>{el(prefix+'-'+skill).value=values[i];});
       update();
     });
   }
 }
 
-export function readLegendarySetup(el,number) {
+export function readLegendarySetup(el,number,settings = {}) {
+  const makeNamed = settings.newCharacter ?? newValleyCharacter;
+  const makeCustom = settings.newCustomCharacter ?? newLegendaryCustomCharacter;
+  const chooseSpells = settings.chooseStartingSpells ?? chooseLegendaryStartingSpells;
+  const starting = settings.startingSpells ?? starterSpells;
   const party=[];
   const named=new Set();
   for (let index=0;index<4;index++) {
     const prefix='new-'+index,profile=el(prefix+'-profile').value;
     let hero;
-    if (profile==='custom') hero=newLegendaryCustomCharacter(el(prefix+'-name').value,
+    if (profile==='custom') hero=makeCustom(el(prefix+'-name').value,
       Object.fromEntries(LEGENDARY_SKILLS.map(skill=>[skill,number(prefix+'-'+skill)])),el(prefix+'-caster').checked);
     else {
       if (named.has(profile)) throw new RangeError('Choose four different named heroes');
-      named.add(profile);hero=newValleyCharacter(profile);
+      named.add(profile);hero=makeNamed(profile);
     }
-    if (hero.spellcaster) hero=chooseLegendaryStartingSpells(hero,starterSpells.filter(id=>el(prefix+'-spell-'+id).checked));
+    if (hero.spellcaster) hero=chooseSpells(hero,starting.filter(id=>el(prefix+'-spell-'+id).checked));
     party.push(hero);
   }
   return party;

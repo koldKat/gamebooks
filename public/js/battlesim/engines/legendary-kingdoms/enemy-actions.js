@@ -1,8 +1,11 @@
 import { legendaryDie } from './character.js';
+import { legendaryAutomaticDamage } from './encounter.js';
+import { legendaryZoneRecipients } from './locations.js';
 
 export function activeLegendaryEnemy(fight, index) {
   const enemy = fight.enemies[index];
-  return enemy.health > 0 && (enemy.arrivalRound ?? 1) <= fight.round;
+  return enemy.health > 0 && (enemy.arrivalRound ?? 1) <= fight.round &&
+    (enemy.partyMember === undefined || fight.enemies[fight.rules.controllerIndex].health > 0);
 }
 
 function event(fight, entry) {
@@ -13,7 +16,34 @@ export function planLegendaryEnemy(fight, enemyIndex, roll) {
   const enemy = fight.enemies[enemyIndex];
   const special = fight.rules.special;
   const attack = (count = enemy.attack, threshold = enemy.threshold, extra = {}) => ({ enemyIndex, count, threshold, ...extra });
-  const heroes = fight.participants.filter(index => fight.party[index].health > 0);
+  const heroes = fight.participants.filter(index => fight.party[index].health > 0 &&
+    (fight.rules.heroArrivalRounds?.[index] ?? 1) <= fight.round);
+  if (enemy.inactive) return [];
+  if (enemy.forcedAttackRound === fight.round) return [attack(enemy.attack,enemy.forcedAttackThreshold,
+    {forcedMember:enemy.forcedAttackMember,automaticDamage:legendaryAutomaticDamage(fight,enemyIndex)})];
+  if (enemy.zone) {
+    const recipients = legendaryZoneRecipients(fight, enemy);
+    if (!recipients.length) return [];
+    if (enemy.attackEveryoneInZone) return recipients.map(forcedMember => attack(enemy.attack,enemy.threshold,{forcedMember}));
+    return [attack(enemy.attack,enemy.threshold,{allowedMembers:recipients})];
+  }
+  if (enemy.forcedDamage) return [{enemyIndex,...enemy.forcedDamage}];
+  if (enemy.spellPlan) {
+    const cast = { enemyIndex, castSpell: true };
+    if (!enemy.spellPlan.afterAttack) return [cast];
+    const automaticDamage = legendaryAutomaticDamage(fight, enemyIndex);
+    return [attack(enemy.attack, enemy.threshold, { ...(automaticDamage ? { automaticDamage } : {}) }), cast];
+  }
+  if (enemy.netWhileOthersAlive && fight.enemies.some((_, index) => index !== enemyIndex && activeLegendaryEnemy(fight, index)))
+    return [attack(1, 3, { stunOnly: true })];
+  if (enemy.undamagedAttack) {
+    if (!fight.roundEnemyDamage[enemyIndex]) {
+      const { hits, recipients = 1, noArmour = false } = enemy.undamagedAttack;
+      return Array.from({ length: recipients }, (_, index) => attack(null, null,
+        { hits, noArmour, ...(index ? { distinct: true } : {}) }));
+    }
+    if (enemy.attack === null) return [];
+  }
   if (special === 'zealotHealer' && enemy.name === 'Zealot Healer' &&
       fight.enemies.some((other,index) => index !== enemyIndex && activeLegendaryEnemy(fight,index))) {
     for (const [index, other] of fight.enemies.entries())
@@ -60,8 +90,13 @@ export function planLegendaryEnemy(fight, enemyIndex, roll) {
     return [attack(null,null,{hits:4})];
   if (enemy.attackType === 'none' || (enemy.attackType === 'special' && special === 'beetles')) return [];
   if (enemy.attackType === 'special') throw new RangeError('This special attack requires its source-specific resolver');
-  if (special === 'doubleAttack' || (special === 'ironKing' && /Malronac/.test(enemy.name)))
-    return [attack(),attack(enemy.attack,enemy.threshold,{distinct:true})];
-  return [attack(enemy.attack,enemy.threshold,{lifeSteal:special === 'unbraaki' && enemy.name === 'Unbraaki',
-    ...(enemy.automaticDamage ? {automaticDamage:enemy.automaticDamage} : {})})];
+  const automaticDamage = legendaryAutomaticDamage(fight, enemyIndex);
+  const ordinary = extra => attack(enemy.attack, enemy.threshold,
+    { ...(automaticDamage ? { automaticDamage } : {}), ...(enemy.ignoreArmour ? { noArmour: true } : {}), ...extra });
+  const before = enemy.beforeAttackDamage;
+  const prefix = before && fight.party[before.forcedMember]?.health > 0 ?
+    [{ enemyIndex, hits: before.hits, forcedMember: before.forcedMember, unpreventable: !!before.unpreventable }] : [];
+  if (enemy.attacksPerTurn === 2 || special === 'doubleAttack' || (special === 'ironKing' && /Malronac/.test(enemy.name)))
+    return [...prefix, ordinary(), ordinary({ distinct: true })];
+  return [...prefix, ordinary({lifeSteal:special === 'unbraaki' && enemy.name === 'Unbraaki'})];
 }

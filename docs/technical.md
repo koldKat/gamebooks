@@ -625,6 +625,8 @@ gamebooks/
 
 The following is a high-level dependency overview; feature subfolders contain additional modules and some documented cycles:
 
+The Legendary Kingdoms family panel accepts a separate configuration object for book identity, catalogs, rule factories, spell lists and party setup. Optional mount/render and form-reading hooks keep encounter controls outside the shared panel. Omitting configuration preserves its original defaults; configuration must not migrate saved fights or equipment. Rule modules remain DOM-free.
+
 ```
 Layer 0 (no project imports):
   core/constants.js  core/state.js  core/sort.js  i18n/en/ feature tables

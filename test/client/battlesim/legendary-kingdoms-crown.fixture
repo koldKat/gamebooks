@@ -1,0 +1,135 @@
+const checks=[],alerts=[],saves=[];
+const assert=(value,label)=>{if(!value)throw Error(label);checks.push(label);};
+const {createCrownPanel}=await import('REPO/public/js/battlesim/engines/legendary-kingdoms/crown-panel.js');
+const {CROWN_FIGHTS}=await import('REPO/public/js/battlesim/engines/legendary-kingdoms/crown.js');
+const dictionary=(await import('REPO/public/js/i18n/LANG/battlesim/battlesim690.js')).default;
+const t=(key,params={})=>{
+  const value=dictionary[key]??{'battlesim.title':'Battle Simulator','btn.close':'Close'}[key];
+  if(value===undefined)throw Error('Missing translation '+key);
+  return value.replace(/\{(\w+)\}/g,(_,name)=>String(params[name]??''));
+};
+let run={startedAt:123,path:[1],sim689:{preserved:true}};
+const panel=createCrownPanel({document,t,getRun:()=>run,getBookId:()=>690,
+  saveState:()=>saves.push(structuredClone(run)),showAlert:message=>alerts.push(message),
+  showConfirm:(_,update)=>update(),getButtonRow:()=>document.getElementById('buttons')});
+const el=key=>document.getElementById('sim690-'+key);
+const change=(key,value)=>{el(key).value=String(value);el(key).dispatchEvent(new Event('change'));};
+panel.init();panel.setVisible(true);el('btn').click();
+assert(el('overlay').classList.contains('active'),'Crown panel opens');
+assert(getComputedStyle(el('btn')).borderRadius==='7px','Crown button uses the established theme');
+assert(!el('recruitSkullcracker'),'Valley-only recruitment absent');
+assert(el('context').options.length===85,'all personal contexts');
+el('create').click();
+assert(run.sim690.party.length===4,'four heroes');
+assert(run.sim690.party[0].skills.fighting===7&&run.sim690.party[0].health===9,'Crown starting values');
+assert(run.sim690.party[1].spells.length===3,'three starting spells');
+assert(!el('new-1-spell-animalSpeech')&&el('new-1-spell-soothingTouch'),'Crown starting spell choices');
+assert(el('heroExtra-0-magicalWeapon'),'equipment extensions present');
+assert(getComputedStyle(el('cursedMember').closest('label')).display==='none','irrelevant Valley controls truly hidden');
+change('context',940);el('start').click();
+assert(run.sim690.fight?.rules.section===940,'Wilmot encounter starts');
+assert(!el('companionAttack').hidden,'ally attack visible');
+Math.random=()=>0;
+el('companionAttack').click();el('skip').click();
+assert(run.sim690.fight.phase==='enemy','hero and ally actions complete turn');
+Math.random=()=>0.999;
+el('enemyRoll').click();
+assert([...el('recipient').options].some(option=>option.value==='companion'),'ally interception option');
+change('recipient','companion');
+assert(el('recipient').value==='companion','ally choice survives render');
+el('assign').click();
+assert(run.sim690.fight.companion.injured,'one-shot interception wired');
+assert(run.sim690.party[0].health===9,'interception preserves hero Health');
+el('cancel').click();
+change('mode','naval');assert(el('context').options.length===5,'five ship encounters');
+assert(!el('fleetManual').hidden&&el('fleetManual').textContent.includes('555'),'fleet encounter explicitly manual');
+change('context',802);el('shipName').value='Test Cog';el('shipHealth').value='20';el('shipCargo').value='2';el('applyShip').click();
+el('start').click();assert(run.sim690.fight?.kind==='naval','ship battle starts');
+el('surrenderCargo').click();
+assert(run.sim690.fight.status==='surrendered'&&run.sim690.ship.cargo===0,'cargo surrender wired');
+assert(run.sim690.history.length===0,'surrender does not earn combat win');
+change('mode','army');assert(el('context').options.length===7,'seven army contexts');
+for(let index=0;index<3;index++){
+  el('unitName').value='Unit '+index;el('unitStrength').value='5';el('unitMorale').value='4';
+  el('addUnit').click();el('formation-'+index*2).value=run.sim690.units[index].uid;
+}
+el('start').click();assert(run.sim690.fight?.kind==='army','typed garrison army starts');
+el('cancel').click();change('mode','personal');change('context',621);
+el('freeHero').value='0';for(let index=0;index<4;index++)el('grappleRoll-'+index).value=String(6-index);
+el('start').click();assert(run.sim690.fight?.rules.section===621,'grapple setup wired');
+run.sim690.fight.enemies[0].health=1;panel.render();el('target').value='0';el('attack').click();
+assert(run.sim690.fight.phase==='release'&&!el('releaseMemberAction').hidden,'release choice appears');
+change('releaseMember',1);el('releaseMemberAction').click();
+assert(!run.sim690.fight.grappled.includes(1),'chosen hero released through UI');
+const fresh=section=>{
+  if(run.sim690.fight?.status==='active')el('cancel').click();
+  change('mode','personal');el('create').click();change('context',section);
+  for(const option of el('members').options)option.selected=false;
+};
+const skipParty=()=>{
+  for(let guard=0;guard<4&&run.sim690.fight.phase==='player';guard++)el('skip').click();
+};
+fresh(94);change('guardApproach','walls');el('start').click();
+assert(run.sim690.fight.rules.section===94&&run.sim690.fight.rules.heroArrivalRounds[3]===4,'wall arrival order read from controls');
+assert(el('actor').options.length===1&&el('target').options.length===1,'only first hero and guard initially available');
+Math.random=()=>0;el('skip').click();el('enemyRoll').click();
+assert(run.sim690.fight.round===2&&el('actor').options.length===2&&el('target').options.length===2,'second hero and guard arrive through real actions');
+fresh(1175);el('hero-0-armour').value='4';el('applyParty').click();
+el('armour-0-body').value='2';el('armour-0-shield').value='1';el('armour-0-magic').value='1';
+el('members').options[0].selected=true;el('start').click();
+assert(run.sim690.fight.rules.section===1175,'Ice Hag Armour breakdown accepted');
+el('skip').click();Math.random=()=>0.999;el('enemyRoll').click();
+assert(el('armourAllocation').querySelectorAll('select').length===4,'one allocation control per actual save die');
+assert(el('armourDie-0').value==='body'&&el('armourDie-2').value==='shield'&&el('armourDie-3').value==='magic','default save allocation respects component capacities');
+el('assign').click();
+assert(run.sim690.party[0].armour===1&&run.sim690.party[0].armourBreakdown.magic===1,'physical erosion updates saved hero without destroying magical Armour');
+el('cancel').click();el('hero-0-armour').value='0';el('applyParty').click();
+assert(!run.sim690.party[0].armourBreakdown&&el('armour-0-magic').value==='0','explicit Armour edit clears stale component metadata');
+fresh(399);Math.random=()=>0;el('start').click();skipParty();el('enemyRoll').click();
+assert(!el('chooseVulnerable').hidden&&el('enemyRoll').disabled,'vulnerability choice blocks further rolls');
+change('vulnerableMember',1);el('chooseVulnerable').click();el('enemyRoll').click();
+assert(run.sim690.fight.pending.forcedMember===1&&el('recipient').options.length===1,'highest-Armour choice forces Valahiem recipient');
+el('assign').click();assert(run.sim690.party[1].health===6,'forced attack applies automatic damage');
+fresh(469);el('start').click();skipParty();
+for(let index=0;index<5;index++)el('enemyRoll').click();
+assert(!el('chooseStunned').hidden,'Abbess stun choice is visible');
+for(const option of el('stunnedMembers').options)option.selected=['0','3'].includes(option.value);
+el('chooseStunned').click();
+assert(run.sim690.fight.round===2&&[...el('actor').options].every(option=>!['0','3'].includes(option.value)),'stunned heroes excluded on next turn');
+fresh(5);change('mode','army');change('context',545);
+for(const unit of [...run.sim690.units]){
+  change('editUnit',unit.uid);change('editUnitGarrison','brightsands');el('updateUnit').click();
+}
+for(let index=0;index<3;index++)el('formation-'+index*2).value=run.sim690.units[index].uid;
+el('start').click();el('strategyStep').click();
+assert(!el('alliedArmySpell').hidden&&run.sim690.fight.pendingArmySpell.effect==='enfeeblement','Walter waits for a target');
+change('armyTarget',2);change('armyPosition',1);el('alliedArmySpell').click();
+assert(run.sim690.fight.enemy[2][1].strength===2&&!run.sim690.fight.pendingArmySpell,'Walter can target a support unit through UI');
+fresh(5);change('caster',1);el('learnSpell').value='tilt';el('learn').click();
+change('mode','naval');change('context',604);el('shipHealth').value='20';el('applyShip').click();el('start').click();
+assert(el('spell').value==='tilt'&&!el('castStrategy').disabled,'Crown sea spell selected rather than legacy Warp Wood');
+el('castStrategy').click();
+assert(run.sim690.fight.nextEnemyPenalty===2&&!run.sim690.party[1].spells.find(spell=>spell.id==='tilt').charged,'Tilt consumes the selected spell and applies its effect');
+for(const encounter of CROWN_FIGHTS){
+  fresh(encounter.section);
+  if(encounter.team||encounter.solo){
+    el('members').options[0].selected=true;
+    if(encounter.team)el('members').options[2].selected=true;
+  }
+  if(encounter.section===94)el('guardApproach').value='ordinary';
+  if(encounter.section===256)el('entryDamageHero').value='0';
+  if(encounter.section===1146)el('trappedHero').value='0';
+  if(encounter.section===762)el('pitVictim').value='0';
+  if(encounter.section===1185)el('boyFreed').value='true';
+  el('start').click();
+  assert(run.sim690.fight?.rules.section===encounter.section&&run.sim690.fight.status==='active',
+    'personal encounter '+encounter.section+' starts through its real setup controls');
+}
+assert(run.sim689.preserved,'other simulator state preserved');
+assert(alerts.length===0,'no validation alerts: '+alerts.join('; '));
+for(const details of el('overlay').querySelectorAll('details'))details.open=true;
+const left=el('overlay').querySelector('.bsim-col-left');left.scrollTop=Number.MAX_SAFE_INTEGER;
+assert(Math.abs(left.scrollTop-(left.scrollHeight-left.clientHeight))<=1,'controls scroll to bottom');
+assert(document.documentElement.scrollWidth<=innerWidth+1&&left.scrollWidth<=left.clientWidth+1,'no horizontal overflow');
+document.body.setAttribute('data-test',JSON.stringify({width:innerWidth,checks:checks.length,saves:saves.length,
+  scope:'CROWN-DIRECT-PANEL-PRELIMINARY-NOT-REGISTRATION-OR-LIVE',productionWrites:0}));
