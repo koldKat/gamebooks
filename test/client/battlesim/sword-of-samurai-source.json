@@ -1,0 +1,701 @@
+{
+  "bookId": 672,
+  "sourceHash": "615239ea3898d0e352bf05f765e45f17d6a051f078cf679e040633189a935337",
+  "provenance": "Printed source roster and reviewed source choices; independent of the simulator implementation.",
+  "rows": [
+    {
+      "section": 13,
+      "name": "Първи КАПА",
+      "skill": 8,
+      "stamina": 14
+    },
+    {
+      "section": 13,
+      "name": "Втори КАПА",
+      "skill": 8,
+      "stamina": 12
+    },
+    {
+      "section": 13,
+      "name": "Трети КАПА",
+      "skill": 7,
+      "stamina": 13
+    },
+    {
+      "section": 15,
+      "name": "РОКУРО-КУБИ",
+      "skill": 7,
+      "stamina": 8
+    },
+    {
+      "section": 26,
+      "name": "ТАЦУ",
+      "skill": 11,
+      "stamina": 13
+    },
+    {
+      "section": 27,
+      "name": "ИКИРУ",
+      "skill": 12,
+      "stamina": 12
+    },
+    {
+      "section": 44,
+      "name": "САМУРАЙ-КОННИК",
+      "skill": 8,
+      "stamina": 9
+    },
+    {
+      "section": 45,
+      "name": "РОКУРО-КУБИ",
+      "skill": 8,
+      "stamina": 8
+    },
+    {
+      "section": 50,
+      "name": "МУКАДЕ",
+      "skill": 7,
+      "stamina": 20
+    },
+    {
+      "section": 51,
+      "name": "ПРИЗРАЧНА СЯНКА",
+      "skill": 9,
+      "stamina": 1,
+      "count": 10
+    },
+    {
+      "section": 79,
+      "name": "ПАЯК-ТАРАНТУЛА",
+      "skill": 10,
+      "stamina": 12
+    },
+    {
+      "section": 79,
+      "name": "ВОДЕН ПАЯК",
+      "skill": 8,
+      "stamina": 10
+    },
+    {
+      "section": 82,
+      "name": "САМУРАЙ-ПРИЗРАК",
+      "skill": 9,
+      "stamina": 11
+    },
+    {
+      "section": 92,
+      "name": "ВОЙН-САМУРАЙ",
+      "skill": 8,
+      "stamina": 9
+    },
+    {
+      "section": 93,
+      "name": "Първи ВЪГЛИЩАР",
+      "skill": 6,
+      "stamina": 10
+    },
+    {
+      "section": 93,
+      "name": "Втори ВЪГЛИЩАР",
+      "skill": 7,
+      "stamina": 9
+    },
+    {
+      "section": 94,
+      "name": "ПРИЗРАЧЕН ДЕМОН",
+      "skill": 9,
+      "stamina": 10
+    },
+    {
+      "section": 97,
+      "name": "Първи КАПА",
+      "skill": 8,
+      "stamina": 14
+    },
+    {
+      "section": 97,
+      "name": "Втори КАПА",
+      "skill": 8,
+      "stamina": 12
+    },
+    {
+      "section": 97,
+      "name": "Трети КАПА",
+      "skill": 7,
+      "stamina": 13
+    },
+    {
+      "section": 116,
+      "name": "Първи САМУРАЙ",
+      "skill": 6,
+      "stamina": 7
+    },
+    {
+      "section": 116,
+      "name": "Втори САМУРАЙ",
+      "skill": 8,
+      "stamina": 8
+    },
+    {
+      "section": 116,
+      "name": "Трети САМУРАЙ",
+      "skill": 7,
+      "stamina": 6
+    },
+    {
+      "section": 128,
+      "name": "Първи САМУРАЙ",
+      "skill": 7,
+      "stamina": 9
+    },
+    {
+      "section": 128,
+      "name": "Втори САМУРАЙ",
+      "skill": 9,
+      "stamina": 8
+    },
+    {
+      "section": 128,
+      "name": "Трети САМУРАЙ",
+      "skill": 7,
+      "stamina": 9
+    },
+    {
+      "section": 132,
+      "name": "СТРАЖ",
+      "skill": 7,
+      "stamina": 9
+    },
+    {
+      "section": 133,
+      "name": "РОКУРО-КУБИ",
+      "skill": 11,
+      "stamina": 17
+    },
+    {
+      "section": 145,
+      "name": "РОКУРО-КУБИ",
+      "skill": 11,
+      "stamina": 17
+    },
+    {
+      "section": 149,
+      "name": "ТОТАТЕ КУМО",
+      "skill": 10,
+      "stamina": 14
+    },
+    {
+      "section": 174,
+      "name": "ПРИЗРАЧЕН ДЕМОН",
+      "skill": 9,
+      "stamina": 10
+    },
+    {
+      "section": 178,
+      "name": "ЛОРД ЦИЕЦИН",
+      "skill": 7,
+      "stamina": 11
+    },
+    {
+      "section": 187,
+      "name": "РОКУРО КУБИ",
+      "skill": 7,
+      "stamina": 8
+    },
+    {
+      "section": 199,
+      "name": "ИКИРУ",
+      "skill": 12,
+      "stamina": 12
+    },
+    {
+      "section": 202,
+      "name": "Първи САМУРАЙ",
+      "skill": 6,
+      "stamina": 7
+    },
+    {
+      "section": 202,
+      "name": "Втори САМУРАЙ",
+      "skill": 8,
+      "stamina": 8
+    },
+    {
+      "section": 202,
+      "name": "Трети САМУРАЙ",
+      "skill": 7,
+      "stamina": 6
+    },
+    {
+      "section": 203,
+      "name": "РОКУРО-КУБИ",
+      "skill": 8,
+      "stamina": 8
+    },
+    {
+      "section": 204,
+      "name": "Първи ШИКОМЕ",
+      "skill": 6,
+      "stamina": 6
+    },
+    {
+      "section": 204,
+      "name": "Втори ШИКОМЕ",
+      "skill": 7,
+      "stamina": 5
+    },
+    {
+      "section": 214,
+      "name": "САБЛЕЗЪБ ТИГЪР",
+      "skill": 10,
+      "stamina": 12
+    },
+    {
+      "section": 224,
+      "name": "САБЛЕЗЪБ ТИГЪР",
+      "skill": 10,
+      "stamina": 12
+    },
+    {
+      "section": 230,
+      "name": "ТЕЛОХРАНИТЕЛ НА ЦИЕЦИН",
+      "skill": 9,
+      "stamina": 8
+    },
+    {
+      "section": 240,
+      "name": "Първи САМУРАЙ",
+      "skill": 6,
+      "stamina": 7
+    },
+    {
+      "section": 240,
+      "name": "Втори САМУРАЙ",
+      "skill": 8,
+      "stamina": 8
+    },
+    {
+      "section": 240,
+      "name": "Трети САМУРАЙ",
+      "skill": 7,
+      "stamina": 6
+    },
+    {
+      "section": 246,
+      "name": "ГОЛЯМА ЗМИЯ",
+      "skill": 10,
+      "stamina": 10
+    },
+    {
+      "section": 252,
+      "name": "СТРАЖ ШИКОМЕ",
+      "skill": 8,
+      "stamina": 7
+    },
+    {
+      "section": 256,
+      "name": "Първи ШИКОМЕ",
+      "skill": 8,
+      "stamina": 9
+    },
+    {
+      "section": 256,
+      "name": "Втори ШИКОМЕ",
+      "skill": 7,
+      "stamina": 8
+    },
+    {
+      "section": 265,
+      "name": "МАРМОТ",
+      "skill": 8,
+      "stamina": 22
+    },
+    {
+      "section": 266,
+      "name": "БОГОМОЛКА-ДЕМОН",
+      "skill": 8,
+      "stamina": 10
+    },
+    {
+      "section": 270,
+      "name": "ШУРА",
+      "skill": 9,
+      "stamina": 8
+    },
+    {
+      "section": 275,
+      "name": "РОНИНЪТ ГИНСЕЙ",
+      "skill": 9,
+      "stamina": 14
+    },
+    {
+      "section": 281,
+      "name": "Първи ВЪГЛИЩАР",
+      "skill": 6,
+      "stamina": 10
+    },
+    {
+      "section": 281,
+      "name": "Втори ВЪГЛИЩАР",
+      "skill": 7,
+      "stamina": 9
+    },
+    {
+      "section": 282,
+      "name": "ТЪМНИЧАР",
+      "skill": 7,
+      "stamina": 7
+    },
+    {
+      "section": 292,
+      "name": "ДАЙ-ОНИ",
+      "skill": 10,
+      "stamina": 10
+    },
+    {
+      "section": 301,
+      "name": "РОНИНЪТ ГИНСЕЙ",
+      "skill": 10,
+      "stamina": 16
+    },
+    {
+      "section": 302,
+      "name": "Първи САМУРАЙ",
+      "skill": 7,
+      "stamina": 9
+    },
+    {
+      "section": 302,
+      "name": "Втори САМУРАЙ",
+      "skill": 8,
+      "stamina": 7
+    },
+    {
+      "section": 307,
+      "name": "Първи ВЪГЛИЩАР",
+      "skill": 6,
+      "stamina": 10
+    },
+    {
+      "section": 307,
+      "name": "Втори ВЪГЛИЩАР",
+      "skill": 7,
+      "stamina": 9
+    },
+    {
+      "section": 321,
+      "name": "СРЕБЪРЕН САМУРАЙ",
+      "skill": 10,
+      "stamina": 12
+    },
+    {
+      "section": 336,
+      "name": "ТЕЛОХРАНИТЕЛ НА ЦИЕЦИН",
+      "skill": 9,
+      "stamina": 8
+    },
+    {
+      "section": 337,
+      "name": "МАРМОТ",
+      "skill": 8,
+      "stamina": 22
+    },
+    {
+      "section": 341,
+      "name": "СРЕБЪРЕН САМУРАЙ",
+      "skill": 10,
+      "stamina": 12
+    },
+    {
+      "section": 344,
+      "name": "СТРАЖ",
+      "skill": 7,
+      "stamina": 9
+    },
+    {
+      "section": 358,
+      "name": "Първи СКЕЛЕТ",
+      "skill": 6,
+      "stamina": 7
+    },
+    {
+      "section": 358,
+      "name": "Втори СКЕЛЕТ",
+      "skill": 7,
+      "stamina": 6
+    },
+    {
+      "section": 358,
+      "name": "Трети СКЕЛЕТ",
+      "skill": 7,
+      "stamina": 7
+    },
+    {
+      "section": 358,
+      "name": "Четвърти СКЕЛЕТ",
+      "skill": 7,
+      "stamina": 6
+    },
+    {
+      "section": 358,
+      "name": "Пети СКЕЛЕТ",
+      "skill": 6,
+      "stamina": 7
+    },
+    {
+      "section": 358,
+      "name": "Шести СКЕЛЕТ",
+      "skill": 8,
+      "stamina": 9
+    },
+    {
+      "section": 363,
+      "name": "ТАЛАСЪМ",
+      "skill": 7,
+      "stamina": 9
+    },
+    {
+      "section": 364,
+      "name": "ГАРГАНТУС",
+      "skill": 9,
+      "stamina": 12
+    },
+    {
+      "section": 365,
+      "name": "ВЪГЛИЩАР С ГЛАВНЯ",
+      "skill": 10,
+      "stamina": 10
+    },
+    {
+      "section": 368,
+      "name": "ПРИЗРАЧЕН САМУРАЙ",
+      "skill": 9,
+      "stamina": 3
+    },
+    {
+      "section": 372,
+      "name": "ФЕНИКС",
+      "skill": 9,
+      "stamina": 7
+    },
+    {
+      "section": 375,
+      "name": "МАРМОТ",
+      "skill": 8,
+      "stamina": 22
+    },
+    {
+      "section": 378,
+      "name": "МУКАДЕ",
+      "skill": 7,
+      "stamina": 20
+    },
+    {
+      "section": 394,
+      "name": "ДАЙ-ОНИ",
+      "skill": 10,
+      "stamina": 10
+    },
+    {
+      "section": 397,
+      "name": "ЧЕРЕН ЛОС",
+      "skill": 9,
+      "stamina": 18
+    }
+  ],
+  "choices": {
+    "13": [
+      31
+    ],
+    "15": [
+      153
+    ],
+    "26": [
+      42
+    ],
+    "27": [
+      109,
+      400
+    ],
+    "32": [
+      58
+    ],
+    "44": [
+      72
+    ],
+    "45": [
+      9
+    ],
+    "50": [
+      62
+    ],
+    "51": [
+      121
+    ],
+    "79": [
+      87
+    ],
+    "82": [
+      32
+    ],
+    "92": [
+      72
+    ],
+    "93": [
+      347,
+      365
+    ],
+    "94": [
+      260
+    ],
+    "97": [
+      31
+    ],
+    "116": [
+      154
+    ],
+    "128": [
+      190
+    ],
+    "132": [
+      142
+    ],
+    "133": [
+      115
+    ],
+    "145": [
+      85
+    ],
+    "149": [
+      143
+    ],
+    "174": [
+      212
+    ],
+    "178": [
+      322
+    ],
+    "187": [
+      153
+    ],
+    "199": [
+      47,
+      235,
+      400
+    ],
+    "202": [
+      154
+    ],
+    "203": [
+      187
+    ],
+    "204": [
+      218,
+      336
+    ],
+    "214": [
+      8
+    ],
+    "224": [
+      8
+    ],
+    "230": [
+      354
+    ],
+    "240": [
+      154
+    ],
+    "246": [
+      272
+    ],
+    "252": [
+      280
+    ],
+    "256": [
+      218,
+      336
+    ],
+    "265": [
+      355
+    ],
+    "266": [
+      346
+    ],
+    "270": [
+      76
+    ],
+    "275": [
+      399
+    ],
+    "281": [
+      347,
+      365
+    ],
+    "282": [
+      308,
+      332
+    ],
+    "292": [
+      74,
+      90,
+      102,
+      118
+    ],
+    "301": [
+      399
+    ],
+    "302": [
+      310
+    ],
+    "307": [
+      347,
+      365
+    ],
+    "321": [
+      291
+    ],
+    "336": [
+      354
+    ],
+    "337": [
+      355
+    ],
+    "341": [
+      291
+    ],
+    "344": [
+      88
+    ],
+    "358": [
+      368
+    ],
+    "363": [
+      345
+    ],
+    "364": [
+      292
+    ],
+    "365": [
+      377,
+      389
+    ],
+    "368": [
+      211
+    ],
+    "372": [
+      36
+    ],
+    "375": [
+      305
+    ],
+    "378": [
+      384
+    ],
+    "394": [
+      54
+    ],
+    "397": [
+      391
+    ]
+  }
+}

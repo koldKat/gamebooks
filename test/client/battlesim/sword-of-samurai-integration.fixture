@@ -1,0 +1,94 @@
+const checks = [], saves = [];
+const assert = (value, label) => { if (!value) throw Error(label); checks.push(label); };
+window.fetch = async (url, options = {}) => {
+  assert(url === '/api/books/672/state' && options.method === 'PUT', 'only intercepted simulator state saves');
+  saves.push(JSON.parse(options.body));
+  return new Response('{}', { status: 200, headers: { 'Content-Type': 'application/json' } });
+};
+const app = await import('REPO/public/js/core/state.js');
+const desktop = await import('REPO/public/js/battlesim/loader.js');
+const mobile = await import('REPO/public/mobile/js/battlesim-dispatch.js');
+const { t } = await import('REPO/public/js/i18n.js');
+assert(!document.getElementById('sim672-overlay'), 'loader import does not mount panel');
+assert(t('battlesim672.title') === 'battlesim672.title', 'translations remain lazy');
+app.setCurrentBookId(672);
+const run = { startedAt: 123, path: [1], sim216: { preserved: 'other edition' } };
+app.state.playthroughs = [run]; app.state.activePtIndex = 0;
+const mode = 'MODE';
+const open = async () => {
+  if (mode === 'mobile') await mobile.openSimForBook(672);
+  else { await desktop.showBattleSimForBook(672); document.getElementById('sim672-btn').click(); }
+};
+const el = key => document.getElementById('sim672-' + key);
+const click = key => el(key).click();
+const key = (target, code, name = code.slice(3), extra = {}) => target.dispatchEvent(new KeyboardEvent('keydown', { code, key: name, bubbles: true, ...extra }));
+const select = section => { el('context').value = String(section); el('context').dispatchEvent(new Event('change', { bubbles: true })); };
+await open();
+assert(el('overlay').classList.contains('active'), 'real loader opens panel');
+assert(el('btn').parentElement.parentElement.id === (mode === 'mobile' ? 'm-sim-btn-row' : 'main-screen'), 'button mounts in correct surface');
+assert(!el('overlay').textContent.includes('battlesim672.'), 'all rendered translations resolved: ' + el('overlay').textContent.match(/battlesim672\.[\w.-]+/g));
+assert(run.sim672.character === null && saves.length === 0, 'opening never rolls or saves');
+assert(document.activeElement === el('close'), 'close receives focus');
+key(el('close'), 'Escape', 'Escape'); assert(!el('overlay').classList.contains('active'), 'Escape closes panel');
+await open(); assert(document.querySelectorAll('#sim672-overlay').length === 1, 'no duplicate panel');
+if (mode === 'desktop') {
+  key(document.body, 'KeyS', 's'); assert(!el('overlay').classList.contains('active'), 'shortcut closes');
+  document.getElementById('inv-overlay').classList.add('active'); key(document.body, 'KeyS', 's');
+  assert(el('overlay').classList.contains('active') && !document.getElementById('inv-overlay').classList.contains('active'), 'shortcut coordinates overlays');
+  key(el('skill'), 'KeyS', 's'); assert(el('overlay').classList.contains('active'), 'typing ignores shortcut');
+}
+Math.random = () => .999;
+el('art').value = 'nito'; el('potion').value = 'luck'; click('roll');
+assert(run.sim672.character.skill === 12 && run.sim672.character.stamina === 24 && run.sim672.character.honour === 3, 'printed initial stats');
+assert(run.sim672.character.provisions === 10 && run.sim672.character.swords === 2 && !run.sim672.character.bow, 'printed starting supplies');
+el('skill').closest('details').open = true;
+for (const [field, value] of Object.entries({ skill: 100, skillInitial: 100, luck: 0 })) el(field).value = String(value);
+click('apply'); select(26); click('start');
+assert(el('meal').disabled && el('drink').disabled && el('apply').disabled && el('roll').disabled, 'combat locks recovery and edits');
+let attempts = 0;
+while (run.sim672.fight.status === 'fighting' && attempts++ < 30) {
+  if (run.sim672.fight.pending) click('no'); else click('step');
+}
+assert(run.sim672.fight.status === 'win' && run.sim672.fight.destination === 42 && run.sim672.history.length === 1, 'named encounter completes once');
+await app.saveState();
+assert(saves.at(-1).playthroughs[0].sim672.history[0].outcome === 'win', 'XP outcome persists through real state module');
+assert(JSON.stringify(run.sim216) === '{"preserved":"other edition"}', 'other edition preserved');
+const history = Array.from({ length: 35 }, (_, index) => ({ enemy: 'Saved ' + index, outcome: 'win', ts: index + 1 }));
+run.sim672.history = history;
+click('close'); await open();
+assert(run.sim672.history.length === 35 && el('history').children.length === 30, 'display limit never truncates saved XP history');
+assert(el('status').textContent.includes('Tatsu') && !el('status').textContent.includes('Section 26'), 'named opponent shown');
+select(82); click('start');
+attempts = 0;
+while (run.sim672.fight.status === 'fighting' && attempts++ < 30) {
+  if (run.sim672.fight.pending) click('no'); else click('step');
+}
+assert(run.sim672.fight.status === 'story' && run.sim672.fight.destination === 32, 'ghost threshold interrupts');
+assert(el('context').value === '32' && el('meal').disabled && el('apply').disabled, 'continuation locks wounds and selects correct fight');
+const ghostStamina = run.sim672.fight.enemies[0].stamina, currentStamina = run.sim672.character.stamina;
+click('start');
+assert(run.sim672.fight.config.section === 32 && run.sim672.fight.enemies[0].stamina === ghostStamina && run.sim672.character.stamina === currentStamina, 'continuation carries both sides wounds');
+click('step');
+assert(run.sim672.fight.status === 'story' && run.sim672.fight.destination === 58, 'continued ghost fight stops after first wound');
+assert(run.sim672.history.length === 35, 'story exits never grant battle XP');
+select(50); assert(!el('arrowCount-row').hidden && el('arrowCount').max === '2', 'opening arrow controls match source');
+select(92); assert(el('arrowType-row').hidden && !el('arrowCount-row').hidden, 'spear encounter restricts arrow type');
+select(372); assert(el('incomingDamage-row').hidden, 'variable Phoenix damage cannot be overwritten accidentally');
+select(358); assert(el('contextNote').textContent.includes('other living opponents'), 'simultaneous combat explained');
+assert(!el('context').textContent.includes('battlesim672.'), 'all sixty encounter names translated');
+for (const node of el('overlay').querySelectorAll('details')) node.open = true;
+const body = el('overlay').querySelector('.bsim-body');
+body.scrollTop = Number.MAX_SAFE_INTEGER;
+assert(Math.abs(body.scrollTop - Math.max(0, body.scrollHeight - body.clientHeight)) <= 1, 'scroll reaches bottom');
+body.scrollTop = 0; assert(body.scrollTop === 0, 'scroll reaches top');
+assert(document.documentElement.scrollWidth <= innerWidth + 1, 'no horizontal overflow');
+const preserved = JSON.stringify(run);
+app.state.playthroughs.push({ startedAt: 456, path: [1] }); app.state.activePtIndex = 1;
+if (mode === 'desktop') desktop.renderActiveBattleSim(); else { click('close'); await open(); }
+assert(app.currentPlaythrough().sim672.character === null && JSON.stringify(run) === preserved, 'runs stay isolated');
+if (mode === 'desktop') {
+  assert(!el('overlay').classList.contains('active'), 'run switch closes old panel');
+  app.setCurrentBookId(999); await desktop.showBattleSimForBook(999);
+  key(document.body, 'KeyS', 's'); assert(el('btn').style.display === 'none' && !el('overlay').classList.contains('active'), 'unsupported book cannot reopen');
+}
+document.body.setAttribute('data-test', JSON.stringify({ mode, width: innerWidth, checks: checks.length, saves: saves.length, realModules: true, productionWrites: 0 }));

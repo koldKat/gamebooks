@@ -1,0 +1,67 @@
+const fs = require('node:fs');
+const { spawn } = require('node:child_process');
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+module.exports = async function checkBrowser({ file, profile, root, width, chromium, timeoutMs = 20000 }) {
+  if (!chromium || !fs.existsSync(chromium)) throw Error('Set CHROMIUM to a headless Chromium executable');
+  const child = spawn('nice', ['-n', '10', chromium, '--no-sandbox', '--disable-gpu',
+    '--allow-file-access-from-files', '--remote-debugging-port=0', '--user-data-dir=' + profile,
+    '--window-size=' + width + ',900', 'about:blank'],
+  { env: { ...process.env, TMPDIR: root }, stdio: ['ignore', 'ignore', 'pipe'] });
+  let diagnostic = '', socket;
+  child.stderr.on('data', bytes => { diagnostic = (diagnostic + bytes).slice(-2000); });
+  const exited = new Promise((resolve, reject) => { child.once('exit', resolve); child.once('error', reject); });
+  // Attach immediately so a failed spawn cannot leave an unhandled rejection.
+  exited.catch(() => {});
+  try {
+    const endpoint = profile + '/DevToolsActivePort';
+    for (let index = 0; index < 200 && !fs.existsSync(endpoint); index++) {
+      if (child.exitCode !== null) throw Error('Browser exited: ' + diagnostic);
+      await delay(25);
+    }
+    if (!fs.existsSync(endpoint)) throw Error('Browser did not start: ' + diagnostic);
+    const [port, route] = fs.readFileSync(endpoint, 'utf8').trim().split('\n');
+    socket = new WebSocket('ws://127.0.0.1:' + port + route);
+    await new Promise((resolve, reject) => {
+      socket.addEventListener('open', resolve, { once: true });
+      socket.addEventListener('error', reject, { once: true });
+    });
+    const pending = new Map();
+    let next = 0;
+    socket.addEventListener('message', event => {
+      const message = JSON.parse(event.data), handler = pending.get(message.id);
+      if (!handler) return;
+      pending.delete(message.id);
+      if (message.error) handler.reject(Error(JSON.stringify(message.error))); else handler.resolve(message.result);
+    });
+    const send = (method, params = {}, sessionId) => new Promise((resolve, reject) => {
+      const id = ++next;
+      pending.set(id, { resolve, reject });
+      socket.send(JSON.stringify({ id, method, params, ...(sessionId ? { sessionId } : {}) }));
+    });
+    const { targetId } = await send('Target.createTarget', { url: 'about:blank' });
+    const { sessionId } = await send('Target.attachToTarget', { targetId, flatten: true });
+    await send('Runtime.enable', {}, sessionId);
+    await send('Page.enable', {}, sessionId);
+    await send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: false }, sessionId);
+    await send('Page.navigate', { url: 'file://' + file }, sessionId);
+    let last;
+    for (let index = 0; index < Math.ceil(timeoutMs / 100); index++) {
+      const { result } = await send('Runtime.evaluate', {
+        expression: '({test:document.body?.getAttribute("data-test"),failure:document.body?.getAttribute("data-failure"),progress:document.body?.getAttribute("data-progress")})',
+        returnByValue: true,
+      }, sessionId);
+      last = result.value;
+      if (last?.failure) throw Error('Browser assertion: ' + last.failure);
+      if (last?.test) return JSON.parse(last.test);
+      await delay(100);
+    }
+    throw Error('Browser did not complete: ' + JSON.stringify(last));
+  } finally {
+    socket?.close();
+    child.kill('SIGTERM');
+    await Promise.race([exited, delay(3000)]);
+    if (child.exitCode === null && child.signalCode === null) { child.kill('SIGKILL'); await exited; }
+    fs.rmSync(profile, { recursive: true, force: true });
+  }
+};
