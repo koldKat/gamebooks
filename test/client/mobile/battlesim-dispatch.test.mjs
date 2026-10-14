@@ -12,6 +12,7 @@ describe('hasSim', () => {
     assert.equal(hasSim(8), true);
     assert.equal(hasSim(829), true);
     assert.equal(hasSim(882), true);
+    assert.equal(hasSim(671), true);
   });
 
   test('false for a book with no battle sim', () => {
@@ -21,6 +22,7 @@ describe('hasSim', () => {
 
   test('accepts a numeric-string bookId the same as a number (object key coercion)', () => {
     assert.equal(hasSim('214'), true);
+    assert.equal(hasSim('671'), true);
     assert.equal(hasSim('1'), false);
   });
 });

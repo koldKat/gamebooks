@@ -1,0 +1,98 @@
+const checks = [], saves = [];
+const assert = (value, label) => {
+  if (!value) throw Error(label);
+  checks.push(label);
+};
+window.fetch = async (url, options = {}) => {
+  assert(url === '/api/books/671/state' && options.method === 'PUT', 'only intercepted simulator state saves');
+  saves.push(JSON.parse(options.body));
+  return new Response('{}', { status: 200, headers: { 'Content-Type': 'application/json' } });
+};
+const app = await import('REPO/public/js/core/state.js');
+const desktop = await import('REPO/public/js/battlesim/loader.js');
+const mobile = await import('REPO/public/mobile/js/battlesim-dispatch.js');
+const { t } = await import('REPO/public/js/i18n.js');
+assert(!document.getElementById('sim671-overlay'), 'importing loaders does not mount simulator');
+assert(t('battlesim671.title') === 'battlesim671.title', 'simulator translations initially lazy');
+app.setCurrentBookId(671);
+const run = { startedAt: 123, path: [1], sim272: { preserved: 'other edition' } };
+app.state.playthroughs = [run];
+app.state.activePtIndex = 0;
+const mode = 'MODE';
+const open = async () => {
+  if (mode === 'mobile') await mobile.openSimForBook(671);
+  else {
+    await desktop.showBattleSimForBook(671);
+    document.getElementById('sim671-btn').click();
+  }
+};
+const el = key => document.getElementById('sim671-' + key);
+const click = key => el(key).click();
+const key = (target, code, name = code.slice(3), extra = {}) => target.dispatchEvent(new KeyboardEvent('keydown', { code, key: name, bubbles: true, ...extra }));
+await open();
+assert(el('overlay').classList.contains('active'), 'real loader opens panel');
+assert(el('btn').parentElement.parentElement.id === (mode === 'mobile' ? 'm-sim-btn-row' : 'main-screen'), 'real action row mounts in correct surface');
+assert(t('battlesim671.title') !== 'battlesim671.title', 'lazy translations loaded before panel construction');
+assert(!el('overlay').textContent.includes('battlesim671.'), 'no missing simulator translations');
+assert(run.sim671.character === null && saves.length === 0, 'opening never rolls character or saves');
+assert(document.activeElement === el('close'), 'real wrapper focuses close control');
+key(el('close'), 'Escape', 'Escape');
+assert(!el('overlay').classList.contains('active'), 'Escape closes panel');
+await open();
+assert(document.querySelectorAll('#sim671-overlay').length === 1, 'reopening does not duplicate panel');
+if (mode === 'desktop') {
+  key(document.body, 'KeyS', 's');
+  assert(!el('overlay').classList.contains('active'), 'shortcut closes panel');
+  document.getElementById('inv-overlay').classList.add('active');
+  key(document.body, 'KeyS', 's');
+  assert(el('overlay').classList.contains('active') && !document.getElementById('inv-overlay').classList.contains('active'), 'shortcut opens and closes other overlay');
+  key(el('skill'), 'KeyS', 's');
+  assert(el('overlay').classList.contains('active'), 'typing field ignores simulator shortcut');
+  key(document.body, 'KeyS', 's', { ctrlKey: true });
+  assert(el('overlay').classList.contains('active'), 'modified shortcut ignored');
+}
+Math.random = () => .999;
+el('role').value = 'wizard';
+click('roll');
+await app.saveState();
+assert(run.sim671.character.skill === 10 && run.sim671.character.stamina === 24, 'real wrapper uses printed wizard rolls');
+assert(saves.at(-1).playthroughs[0].sim671.character.gold === 20, 'real saveState serializes simulator resources');
+const details = el('skill').closest('details');
+details.open = true;
+for (const [field, value] of Object.entries({ skill: 100, skillInitial: 100, luck: 0 })) el(field).value = String(value);
+click('apply');
+el('context').value = '47';
+el('context').dispatchEvent(new Event('change', { bubbles: true }));
+click('start');
+for (let i = 0; i < 3; i++) click('step');
+await app.saveState();
+assert(run.sim671.fight.status === 'win' && run.sim671.history.length === 1, 'real state holds completed fight once');
+assert(saves.at(-1).playthroughs[0].sim671.history[0].outcome === 'win', 'real persistence payload includes XP outcome');
+assert(JSON.stringify(run.sim272) === '{"preserved":"other edition"}', 'unrelated simulator state preserved');
+const character = JSON.stringify(run.sim671.character);
+click('close');
+await open();
+assert(JSON.stringify(run.sim671.character) === character && run.sim671.history.length === 1, 'reopen restores state without reroll/reward');
+const old = JSON.stringify(run);
+app.state.playthroughs.push({ startedAt: 456, path: [1] });
+app.state.activePtIndex = 1;
+if (mode === 'desktop') desktop.renderActiveBattleSim();
+else { click('close'); await open(); }
+assert(app.currentPlaythrough().sim671.character === null, 'new run has isolated simulator character');
+assert(JSON.stringify(run) === old, 'switching runs preserves old fight and character');
+for (const node of el('overlay').querySelectorAll('details')) node.open = true;
+const body = el('overlay').querySelector('.bsim-body');
+const max = Math.max(0, body.scrollHeight - body.clientHeight);
+body.scrollTop = Number.MAX_SAFE_INTEGER;
+assert(Math.abs(body.scrollTop - max) <= 1, 'integrated panel reaches scroll bottom');
+body.scrollTop = 0;
+assert(body.scrollTop === 0, 'integrated panel reaches scroll top');
+assert(document.documentElement.scrollWidth <= innerWidth + 1, 'integrated panel no horizontal overflow');
+if (mode === 'desktop') {
+  app.setCurrentBookId(999);
+  await desktop.showBattleSimForBook(999);
+  assert(el('btn').style.display === 'none' && !el('overlay').classList.contains('active'), 'switching to unsupported book hides panel');
+  key(document.body, 'KeyS', 's');
+  assert(!el('overlay').classList.contains('active'), 'hidden simulator cannot reopen by shortcut');
+}
+document.body.setAttribute('data-test', JSON.stringify({ mode, width: innerWidth, checks: checks.length, saves: saves.length, realModules: true, productionWrites: 0 }));
