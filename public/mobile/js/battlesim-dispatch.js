@@ -18,12 +18,6 @@ const SUPPORTED_BATTLE_SIM_BOOKS = new Set([
 
 const _initialized = new Set();
 
-function _initExportName(bookId) {
-  if (bookId === 829) return 'initBattleSim';
-  if (bookId === 8) return 'initBattleSim8';
-  return `initSim${bookId}`;
-}
-
 function _triggerButtonId(bookId) {
   if (bookId === 829) return 'battlesim-btn';
   if (bookId === 8) return 'sim8-btn';
@@ -42,7 +36,7 @@ export async function openSimForBook(bookId) {
   await loadBattleSimTranslations(id);
   const mod = await import(`../../js/battlesim/battlesim${id}.js`);
   if (!_initialized.has(id)) {
-    const init = mod[_initExportName(id)];
+    const init = mod.init;
     if (typeof init !== 'function') throw new Error(`Battle sim ${id} has no mobile init export`);
     init();
     _initialized.add(id);

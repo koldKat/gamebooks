@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync } from './simulator-source.mjs';
 import { runInNewContext } from 'node:vm';
 import { spaceScoutLoadout, startSpaceScoutDuel, spaceScoutDuelRound,
   spaceScoutDuelMissile, startSpaceScoutFleet, spaceScoutFleetOpening,

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync } from './simulator-source.mjs';
 
 const source = readFileSync(new URL('../../../public/js/battlesim/battlesim716.js', import.meta.url), 'utf8');
 const combat = source.slice(source.indexOf('function _ready('), source.indexOf('function _resetBattle()'));

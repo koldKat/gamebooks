@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { readFileSync } from 'node:fs';
+import { readFileSync } from './simulator-source.mjs';
 import { runInNewContext } from 'node:vm';
 import { VOYAGE_ENCOUNTERS, VOYAGE_DREAMS, VOYAGE_NAVIGATION, VOYAGE_ARGONAUTS,
 } from '../../../public/js/battlesim/engines/grailquest/voyage-of-terror-roster.js';

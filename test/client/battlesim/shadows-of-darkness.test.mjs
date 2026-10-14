@@ -1,10 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, simulatorFunctions } from './simulator-source.mjs';
 import translations from '../../../public/js/i18n/en/battlesim/battlesim661.js';
 
 const source = readFileSync(new URL('../../../public/js/battlesim/battlesim661.js', import.meta.url), 'utf8');
-const resolveSource = source.slice(source.indexOf('function _resolve()'), source.indexOf('function _renderResolution()'));
+const resolveSource = simulatorFunctions(source,['_resolve']);
 const side = formType => ({ formType, sila: 8, lovkost: 7, barzina: 6, umenie: 5, formSila: 4, formLovkost: 3, formBarzina: 2 });
 
 test('matching forms expose components instead of inventing a universal combat total', () => {

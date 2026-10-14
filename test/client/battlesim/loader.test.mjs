@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from './simulator-source.mjs';
+import { readFileSync as readPhysical } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -9,7 +10,7 @@ const dir = new URL('../../../public/js/', import.meta.url);
 test('desktop battle-sim relocation retains the registry and visibility lifecycle', () => {
   assert.equal(existsSync(new URL('battle-sim-loader.js', dir)), false);
   const source = readFileSync(new URL('battlesim/loader.js', dir), 'utf8');
-  // Only _loadBattleSim and its in-flight map changed for the concurrency fix.
+  // Guard the cache/visibility shell independently of the uniform module API.
   const start = source.indexOf('async function _loadBattleSim(');
   const end = source.indexOf('export function hideActiveBattleSim');
   assert.ok(start > 0 && end > start);
@@ -19,7 +20,7 @@ test('desktop battle-sim relocation retains the registry and visibility lifecycl
     .replace('const _loading = new Map();\n', '')
     .replace(/const SUPPORTED_BATTLE_SIM_BOOKS = new Set\(\[[\s\S]*?\]\);/, 'SUPPORTED_SET');
   assert.equal(createHash('sha256').update(unchanged).digest('hex'),
-    'a2070edecb49f7b1938bd8ee0c857d7d2760d6518b35ff58e86dbdd766214c50');
+    'c2ecc98cd90a728ec1373959043876751c0efd0669b2ed41667bf06c64550ba0');
   assert.doesNotMatch(source, /^import\s/m, 'no eager simulator imports');
   assert.match(source, /import\(`\.\/battlesim\$\{numericId\}\.js`\)/);
 });
@@ -31,11 +32,11 @@ test('every desktop-supported simulator exists with the expected dynamic export 
   assert.ok(ids.length > 100);
   assert.equal(new Set(ids).size, ids.length);
   for (const id of ids) {
-    const module = readFileSync(new URL('battlesim/battlesim' + id + '.js', dir), 'utf8');
-    const names = id === 829 ? ['initBattleSim', 'renderBattleSim', 'setBattleSimVisible']
-      : id === 8 ? ['initBattleSim8', 'renderSim8', 'setSim8Visible']
-      : ['initSim' + id, 'renderSim' + id, 'setSim' + id + 'Visible'];
-    for (const name of names) assert.match(module, new RegExp('export\\s+(?:(?:async\\s+)?function\\s+' + name + '\\b|const\\s+' + name + '\\b\\s*=)'), id + ': ' + name);
+    const entry = readPhysical(new URL('battlesim/battlesim' + id + '.js', dir), 'utf8');
+    assert.match(entry,new RegExp("export \\* from './books/"+id+"/panel\\.js'"));
+    const module = readPhysical(new URL('battlesim/books/' + id + '/panel.js', dir), 'utf8');
+    const names = ['init', 'render', 'setVisible'];
+    for (const name of names) assert.match(module, new RegExp('export\\s*\\{[^}]*\\bas\\s+'+name+'\\b'), id + ': ' + name);
   }
 });
 

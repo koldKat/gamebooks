@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync } from './simulator-source.mjs';
 
 const read = path => readFileSync(new URL('../../../' + path, import.meta.url), 'utf8');
 const registered = source => [...source.match(/SUPPORTED_BATTLE_SIM_BOOKS = new Set\(\[([\s\S]*?)\]\)/)[1].matchAll(/\d+/g)].map(match => Number(match[0]));

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync } from './simulator-source.mjs';
 import { runInNewContext } from 'node:vm';
 import { newFreewayCharacter, validateFreewayCharacter, testFreewayLuck, healFreewayCharacter,
   startFreewayFight, freewayRound, freewayContest, startFreewayRace, freewayRaceStep } from '../../../public/js/battlesim/engines/freeway-fighter/core.js';

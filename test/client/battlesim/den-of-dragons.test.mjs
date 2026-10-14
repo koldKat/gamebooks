@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { readFileSync } from 'node:fs';
+import { readFileSync } from './simulator-source.mjs';
 import { runInNewContext } from 'node:vm';
 import { createDenCharacter, initialDenLife, denDamage, createDenFight, rollDenRound, resolveDenPoison,
   castDenSpell, launchDenMagic, useDenLollipop, denFriendlyReaction, denDream, healDenPlayer, rerollDenInitiative, useDenItem } from '../../../public/js/battlesim/engines/grailquest/den-of-dragons.js';

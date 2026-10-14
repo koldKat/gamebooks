@@ -13,7 +13,7 @@ const files=[fixturePath,__filename,
     .map(name=>'public/js/battlesim/engines/legendary-kingdoms/'+name),
   ...['en','bg'].map(language=>'public/js/i18n/'+language+'/battlesim/battlesim689.js'),
   ...['style','charsheet','equipment','battlesim','confirm'].map(name=>'public/css/'+name+'.css')];
-const hashFiles=()=>Object.fromEntries(files.map(file=>[file,crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex')]));
+const hashFiles=()=>Object.fromEntries(require('./browser-sources.cjs')(files).map(file=>[file,crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex')]));
 const hashes=hashFiles();
 (async()=>{
   try {

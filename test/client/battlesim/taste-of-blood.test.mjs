@@ -1,10 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, simulatorFunctions } from './simulator-source.mjs';
 
 const source = readFileSync(new URL('../../../public/js/battlesim/battlesim696.js', import.meta.url), 'utf8');
 const roundSource = source.slice(source.indexOf('function _runRound()'), source.indexOf('function _resetBattle()'));
-const resetSource = source.slice(source.indexOf('function _resetBattle()'), source.indexOf('// ── Render'));
+const resetSource = simulatorFunctions(source,['_resetBattle']);
 const dataSource = source.slice(source.indexOf('function _data()'), source.indexOf('function _appendLog('));
 const attributesSource = source.slice(source.indexOf('const CREATURE_ATTRIBUTES ='), source.indexOf('function _data()'));
 const selectSource = source.slice(source.indexOf('  function select(enemy)'), source.indexOf("  dropdown.addEventListener('mousedown'"));

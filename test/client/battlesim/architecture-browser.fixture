@@ -1,0 +1,38 @@
+const app=await import('REPO/public/js/core/state.js');
+const desktop=await import('REPO/public/js/battlesim/loader.js');
+const mobile=await import('REPO/public/mobile/js/battlesim-dispatch.js');
+const check=(value,label)=>{if(!value)throw Error(label);};
+let writes=0;
+window.fetch=async(url,options={})=>{
+  if(options.method&&options.method!=='GET')writes++;
+  return new Response(JSON.stringify(url.endsWith('/enemies')?[]:{}),{headers:{'Content-Type':'application/json'}});
+};
+const results=[];
+for(const id of BOOK_IDS){
+  app.setCurrentBookId(id);app.state.playthroughs=[{startedAt:1,path:[1]}];app.state.activePtIndex=0;
+  const module=await import('REPO/public/js/battlesim/battlesim'+id+'.js');
+  check(module.definition.id===id,'book identity '+id);
+  check(['init','render','setVisible'].every(key=>typeof module[key]==='function'),'standard lifecycle '+id);
+  if('MODE'==='mobile')await mobile.openSimForBook(id);
+  else await desktop.showBattleSimForBook(id);
+  const button=document.getElementById(id===829?'battlesim-btn':'sim'+id+'-btn');
+  check(button,'trigger '+id);
+  if('MODE'!=='mobile')button.click();
+  const overlay=document.getElementById(id===829?'bsim-overlay':id===8?'s8-overlay':'sim'+id+'-overlay');
+  check(overlay?.classList.contains('active'),'opens '+id);
+  if(id===199){
+    const game=app.currentPlaythrough().sim199;
+    Object.assign(game.player,{skill:10,skillInitial:10,stamina:20,staminaInitial:20,luck:12,luckInitial:12});
+    Object.assign(game.enemy,{name:'Test opponent',skill:0,stamina:20,staminaMax:20});game.rolled=true;
+    module.render();Math.random=()=>0.5;
+    document.getElementById('sim199-round').click();
+    check(game.enemy.stamina===18&&game.pendingLuck==='player-hit','extracted round');
+    document.getElementById('sim199-luck-yes').click();
+    check(game.enemy.stamina===16&&game.player.luck===11&&!game.pendingLuck,'extracted Luck');
+  }
+  const before=JSON.stringify(app.currentPlaythrough());module.render();
+  check(JSON.stringify(app.currentPlaythrough())===before,'repeat render preserves state '+id);
+  module.setVisible(false);overlay.classList.remove('active');
+  results.push(id);
+}
+document.body.dataset.test=JSON.stringify({mode:'MODE',width:innerWidth,books:results,writes,productionWrites:0});

@@ -25,8 +25,7 @@ const module = new SourceTextModule(readFileSync(process.argv[1], 'utf8'), {
     const id = Number(specifier.match(/battlesim(\d+)/)[1]);
     assert.ok(translated.has(id), 'translations ready before mobile module evaluation');
     imports.push(id);
-    const name = id === 8 ? 'initBattleSim8' : id === 829 ? 'initBattleSim' : 'initSim' + id;
-    return stub({ [name]: () => calls.push(['init', id]) });
+    return stub({ init: () => calls.push(['init', id]) });
   },
 });
 await module.link(() => { throw Error('No eager mobile imports'); });

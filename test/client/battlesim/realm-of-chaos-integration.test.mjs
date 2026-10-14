@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync } from './simulator-source.mjs';
 import { runInNewContext } from 'node:vm';
 import translations from '../../../public/js/i18n/en/battlesim/battlesim531.js';
 import { REALM_ENCOUNTERS, REALM_DREAMS, REALM_EQUIPMENT }

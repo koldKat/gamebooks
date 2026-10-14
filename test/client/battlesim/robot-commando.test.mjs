@@ -1,9 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, simulatorFunctions } from './simulator-source.mjs';
 
 const source = readFileSync(new URL('../../../public/js/battlesim/battlesim734.js', import.meta.url), 'utf8');
-const combat = source.slice(source.indexOf('function _notReady('), source.indexOf('// ── Render'));
+const combat = simulatorFunctions(source,null,['_data','_renderAll']);
 const battle = version => ({
   ...(version ? { combatRulesVersion: version } : {}), mode: 'robot', rolled: true,
   player: { skill: 10, stamina: 20, staminaInitial: 20, armour: 20, armourInitial: 20, luck: 12, robotCombatBonus: 0, robotSpeed: 1, attackModifier: 0, winAfterHits: 0, enemyWoundDamage: 2, hitsLandedThisFight: 0 },

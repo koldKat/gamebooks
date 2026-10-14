@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync } from './simulator-source.mjs';
 import { runInNewContext } from 'node:vm';
 import { newSixActionsCharacter, sixActionsBonus, sixActionsCheck, startSixActionsFight,
   sixActionsRound, sixActionsPostCheck } from '../../../public/js/battlesim/engines/six-actions/core.js';

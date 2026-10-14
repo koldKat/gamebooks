@@ -23,7 +23,7 @@ try {
   }
   const paths = ['core','game','fields','roster','panel'].map(name => 'public/js/battlesim/engines/orc-power/' + name + '.js')
     .concat(['public/js/i18n/en/battlesim/battlesim654.js','public/js/i18n/bg/battlesim/battlesim654.js','public/css/battlesim.css']);
-  const hashes = Object.fromEntries(paths.map(file => [file, crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex')]));
+  const hashes = Object.fromEntries(require('./browser-sources.cjs')(paths).map(file => [file, crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex')]));
   if (process.env.RECEIPT) fs.writeFileSync(process.env.RECEIPT, JSON.stringify({ status:'isolated-draft-panel-check', hashes, results }, null, 2));
   console.log(JSON.stringify(results));
 } finally { fs.rmSync(scratch, { recursive:true, force:true }); }

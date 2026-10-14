@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
+import {readFileSync} from './simulator-source.mjs';
 import {runInNewContext} from 'node:vm';
 import { GATEWAY_ENCOUNTERS, GATEWAY_WANDERING } from '../../../public/js/battlesim/engines/grailquest/gateway-of-doom-roster.js';
 import { createGatewayCharacter, initialGatewayStats, createGatewayFight, rollGatewayRound,

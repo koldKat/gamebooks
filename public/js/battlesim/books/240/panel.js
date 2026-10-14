@@ -1,0 +1,626 @@
+import { MAX_PROVISIONS, PROVISIONS_HEAL, WEAPONS, ARMOURS, SIDE_WOUND_DMG, DISARM_MARGIN, MAX_SIDE_ENEMIES } from './definition.js';
+import { createState } from './state.js';
+import { createCombat } from './combat.js';
+import { createEffects } from './effects.js';
+
+// BEGIN SIMULATOR WIRING
+const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, ARMOURS, DISARM_MARGIN, MAX_PROVISIONS, MAX_SIDE_ENEMIES, PROVISIONS_HEAL, SIDE_WOUND_DMG, SVG_SKULL, SVG_TROPHY, WEAPONS, _absorbHit, _addSideEnemy, _appendLog, _data, _eatProvisions, _effectiveSkill, _empowerSpear, _enemyList, _enemyName, _enemyNameSafe, _loadEnemyList, _notReady, _numField, _recordOutcome, _removeSideEnemy, _renderAll, _renderHistory, _renderInputs, _renderLog, _renderSideEnemiesHtml, _renderStatus, _resetBattle, _roll1d6, _roll2d6, _rollForSkull, _rollSpearLifeForce, _runRound, _setupEnemyAutocomplete, _sideEnemyNameSafe, _skipLuck, _testLuck, _useSpearAutoWin, _woundValues, apiFetch, closeSim240, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim240, openSim240, registerPanelShortcut, renderSim240, saveState, setSim240Visible, shortcutLabel, showAlert, t });
+const { _data, _notReady, _appendLog, _recordOutcome } = createState(simulatorContext);
+const { _roll2d6, _roll1d6, _enemyName, _enemyNameSafe, _sideEnemyNameSafe, _effectiveSkill, _woundValues, _absorbHit, _runRound, _testLuck, _skipLuck, _resetBattle, _rollForSkull, _rollSpearLifeForce, _empowerSpear, _addSideEnemy, _removeSideEnemy } = createCombat(simulatorContext);
+const { _useSpearAutoWin, _eatProvisions } = createEffects(simulatorContext);
+// END SIMULATOR WIRING
+// Battle Simulator (Legend of the Shadow Warriors, book 240)
+// Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
+// Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
+// Weapon/armour choices alter damage; armour durability counts hits.
+// Disarming applies only to the chosen target; Luck totals are not reduced again by armour.
+
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../../core/state.js";
+import { showAlert } from "../../../ui-helpers/confirm.js";
+import { getPlayBtnRow } from "../../../play/charsheet.js";
+import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";
+import { t } from "../../../i18n.js";
+
+const SVG_SKULL  = `<svg class="sim-icon sim-icon-dead"  viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8c0 2.8 1.4 5.3 3.6 6.8V20a1 1 0 0 0 1 1h6.8a1 1 0 0 0 1-1v-2.2C18.6 16.3 20 13.8 20 11a8 8 0 0 0-8-8zm-2.5 13v-1.5a.5.5 0 0 0-.5-.5H8l-.5-1 1-1-1-1 1-1H9a2.5 2.5 0 0 1 5 0h.5l1 1-1 1 1 1-.5 1h-1a.5.5 0 0 0-.5.5V16h-4z"/></svg>`;
+const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v7a6 6 0 0 1-12 0V2zm-2 1H2v4a4 4 0 0 0 4 4v-1a3 3 0 0 1-3-3V3zm16 0h2v4a4 4 0 0 1-4 4v-1a3 3 0 0 0 3-3V3zm-7 13v2H9v2h6v-2h-2v-2a6 6 0 0 0 5-5.92V2H6v8.08A6 6 0 0 0 13 16z"/></svg>`;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Uncapped - the admin dashboard aggregates battle counts app-wide from this
+// array, so per-user history needs to be a true lifetime total, not a
+// rolling window.
+
+
+// Reduce incoming damage by armour and consume its remaining hit count.
+
+
+// ── Combat ───────────────────────────────────────────────────────────────────
+
+
+
+// Resolve queued Luck tests individually; only primary exchanges offer Luck here.
+
+
+
+
+
+
+// ── Behemoth "roll for the skull" ───────────────────────────────────────────
+
+
+
+// ── Spear of Doom ────────────────────────────────────────────────────────────
+
+
+
+// General-purpose: spend 1 Life-force to auto-win the current fight instantly.
+
+
+// Voivod-with-spear (sec. 171) specific: 2d6 vs current Life-force each
+// round; success ends the fight outright (sec. 400).
+
+
+// ── Provisions ───────────────────────────────────────────────────────────────
+
+
+
+// ── Side enemies (group fights) ─────────────────────────────────────────────
+
+
+
+
+
+// ── Render ────────────────────────────────────────────────────────────────
+
+function _renderStatus() {
+  const d  = _data();
+  const el = document.getElementById('sim240-status');
+  if (!d || !el) return;
+  const notReady = _notReady(d);
+  const hasEnemy = d.enemy.staminaMax > 0 || d.disarmMode;
+  if (notReady)                                     el.innerHTML = t('battlesim240.status.not_ready');
+  else if (d.player.stamina <= 0)                   el.innerHTML = `${SVG_SKULL} ${t('battlesim240.status.fallen')}`;
+  else if (hasEnemy && d.enemy.stamina <= 0)         el.innerHTML = `${SVG_TROPHY} ${t('battlesim240.status.victory')}`;
+  else                                               el.innerHTML = '';
+  const over = notReady || d.player.stamina <= 0 || (hasEnemy && d.enemy.stamina <= 0);
+  const pending = d.pendingLuckQueue.length > 0;
+  document.getElementById('sim240-round').disabled = over || pending;
+  document.getElementById('sim240-luck-yes').disabled = notReady || !pending || d.player.luck <= 0;
+  document.getElementById('sim240-luck-no').disabled  = notReady || !pending;
+  document.getElementById('sim240-provisions').disabled =
+    notReady || d.player.provisionsLeft <= 0 || d.player.stamina >= d.player.staminaInitial ||
+    (d.roundsThisBattle > 0 && d.player.stamina > 0 && d.enemy.stamina > 0);
+  document.getElementById('sim240-skull-roll').disabled = notReady || over || !d.immuneToWounds || pending;
+  document.getElementById('sim240-spear-autowin').disabled = notReady || over || !d.player.hasSpear || d.player.spearLifeForce <= 0 || pending;
+  document.getElementById('sim240-spear-empower').disabled = notReady || over || !d.voivodDefensive || !d.player.hasSpear || d.player.spearLifeForce <= 0 || pending;
+  document.getElementById('sim240-spear-roll').disabled = d.player.spearRolled;
+}
+
+function _renderSideEnemiesHtml(d) {
+  if (!d.groupFight) return '';
+  return `
+    <div class="bsim-side-title">${t('battlesim240.ui.side_enemies')}</div>
+    ${d.sideEnemies.map((s, i) => `
+      <div class="inv-edit-row bsim-ae-row">
+        <input type="text" class="inv-edit-input bsim-side-name" data-idx="${i}" placeholder="${t('battlesim240.ui.side_default', { n: i + 1 })}" value="${escapeHtml(s.name)}">
+        <input type="text" class="inv-edit-input inv-qty-input bsim-side-skill" data-idx="${i}" inputmode="numeric" value="${s.skill}" style="max-width:4rem">
+        <button class="inv-edit-done bsim-tech-btn" data-idx="${i}" id="sim240-side-remove-${i}">${t('battlesim240.btn.remove')}</button>
+      </div>`).join('')}
+    <button id="sim240-side-add" class="inv-edit-done bsim-ae-roll-btn" type="button" ${d.sideEnemies.length >= MAX_SIDE_ENEMIES ? 'disabled' : ''}>${t('battlesim240.btn.add_side_enemy')}</button>`;
+}
+
+function _renderHistory() {
+  const d      = _data();
+  const sumEl  = document.getElementById('sim240-history-summary');
+  const listEl = document.getElementById('sim240-history-list');
+  if (!d || !sumEl || !listEl) return;
+  sumEl.textContent = t('battlesim240.history.summary', { n: d.history.length });
+  if (!d.history.length) {
+    listEl.innerHTML = `<div class="bsim-history-empty">${t('battlesim240.history.empty')}</div>`;
+    return;
+  }
+  listEl.innerHTML = d.history.slice().reverse().map(h => {
+    const icon   = h.outcome === 'win' ? SVG_TROPHY : SVG_SKULL;
+    const result = h.outcome === 'win' ? t('battlesim240.history.won') : t('battlesim240.history.lost');
+    const date   = new Date(h.ts).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    return `<div class="bsim-history-row">
+      <span>${icon} ${escapeHtml(h.enemy)} - ${result}</span>
+      <span class="bsim-history-meta">STAMINA ${h.playerStamina}/${h.playerStaminaMax} · ${date}</span>
+    </div>`;
+  }).join('');
+}
+
+function _renderLog() {
+  const d  = _data();
+  const el = document.getElementById('sim240-log');
+  if (!el || !d) return;
+  el.innerHTML = d.log.slice().reverse().join('<br>');
+}
+
+function _renderInputs() {
+  const d = _data();
+  if (!d) return;
+
+  document.getElementById('sim240-player-skill').value      = d.player.skill;
+  document.getElementById('sim240-player-skillmax').value   = d.player.skillInitial;
+  document.getElementById('sim240-player-stamina').value    = Math.min(d.player.stamina, d.player.staminaInitial);
+  document.getElementById('sim240-player-staminamax').value = d.player.staminaInitial;
+  document.getElementById('sim240-player-luck').value       = d.player.luck;
+  document.getElementById('sim240-player-luckmax').value    = d.player.luckInitial;
+
+  const rollBtn = document.getElementById('sim240-roll');
+  rollBtn.disabled = d.rolled;
+  rollBtn.textContent = d.rolled ? t('battlesim240.btn.rolled') : t('battlesim240.btn.roll');
+
+  document.getElementById('sim240-weapon').value = d.player.weapon;
+  document.getElementById('sim240-armour').value = d.player.armour;
+  document.getElementById('sim240-armour-hits').textContent =
+    d.player.armour === 'none' ? '' : t('battlesim240.ui.armour_hits_left', { n: d.player.armourHitsLeft, max: ARMOURS[d.player.armour].hitsMax });
+
+  document.getElementById('sim240-provisions-left').textContent = `${d.player.provisionsLeft}/${MAX_PROVISIONS}`;
+
+  document.getElementById('sim240-enemy-pick').value    = d.enemy.name;
+  document.getElementById('sim240-enemy-skill').value   = d.enemy.skill;
+  document.getElementById('sim240-enemy-stamina').value    = Math.min(d.enemy.stamina, d.enemy.staminaMax);
+  document.getElementById('sim240-enemy-staminamax').value = d.enemy.staminaMax;
+
+  document.getElementById('sim240-group-fight').checked = d.groupFight;
+  document.getElementById('sim240-side-list').innerHTML = _renderSideEnemiesHtml(d);
+  document.getElementById('sim240-disarm-mode').checked = d.disarmMode;
+  document.getElementById('sim240-immune').checked = d.immuneToWounds;
+  document.getElementById('sim240-voivod-thrives').checked = d.voivodThrives;
+  document.getElementById('sim240-voivod-defensive').checked = d.voivodDefensive;
+
+  document.getElementById('sim240-spear-lifeforce').textContent =
+    d.player.spearRolled ? String(d.player.spearLifeForce) : t('battlesim240.ui.spear_not_rolled');
+
+  const pendingEl = document.getElementById('sim240-luck-prompt');
+  pendingEl.style.display = d.pendingLuckQueue.length ? '' : 'none';
+
+  _renderStatus();
+}
+
+function _renderAll() {
+  _renderInputs();
+  _renderLog();
+  _renderHistory();
+}
+
+export function renderSim240() {
+  const overlay = document.getElementById('sim240-overlay');
+  if (!overlay || !overlay.classList.contains('active')) return;
+  if (!_data()) { closeSim240(); return; }
+  _renderAll();
+}
+
+function openSim240() {
+  if (!_data()) {
+    showAlert(t('battlesim.no_active_playthrough'));
+    return;
+  }
+  _renderAll();
+  document.getElementById('sim240-overlay').classList.add('active');
+}
+
+function closeSim240() {
+  document.getElementById('sim240-overlay')?.classList.remove('active');
+}
+
+export function setSim240Visible(visible) {
+  const btn = document.getElementById('sim240-btn');
+  if (btn) btn.style.display = visible ? '' : 'none';
+  if (!visible) closeSim240();
+}
+
+// ── Enemy autocomplete (fed by book_enemies, seeded per book_id) ───────────
+
+let _enemyList = null;
+async function _loadEnemyList() {
+  if (_enemyList) return _enemyList;
+  try {
+    const res = await apiFetch(`/api/books/${currentBookId}/enemies`);
+    _enemyList = res.ok ? await res.json() : [];
+  } catch (_) {
+    _enemyList = [];
+  }
+  return _enemyList;
+}
+
+function _setupEnemyAutocomplete() {
+  const input    = document.getElementById('sim240-enemy-pick');
+  const dropdown = document.getElementById('sim240-enemy-pick-dropdown');
+  let matches   = [];
+  let activeIdx = -1;
+
+  function closeDropdown() {
+    dropdown.classList.remove('open');
+    input.setAttribute('aria-expanded', 'false');
+    input.removeAttribute('aria-activedescendant');
+  }
+
+  function render(q) {
+    const list = _enemyList || [];
+    const ql = q.trim().toLowerCase();
+    matches = ql ? list.filter(e => e.name.toLowerCase().includes(ql)) : list;
+    if (!matches.length) { closeDropdown(); return; }
+    dropdown.innerHTML = matches.map((e, i) =>
+      `<li role="option" id="sim240-enemy-pick-opt-${i}" data-idx="${i}">${escapeHtml(e.name)}<span class="ac-sub">SKILL:${e.attack ?? '?'} STAMINA:${e.hp ?? '?'}</span></li>`
+    ).join('');
+    activeIdx = -1;
+    dropdown.classList.add('open');
+    input.setAttribute('aria-expanded', 'true');
+    input.removeAttribute('aria-activedescendant');
+  }
+
+  function select(enemy) {
+    const d = _data();
+    if (!d || !enemy) return;
+    input.value = enemy.name;
+    d.enemy.name = enemy.name;
+    d.correctedCombatRules = true;
+    if (enemy.attack != null) d.enemy.skill = enemy.attack;
+    if (enemy.hp != null)     { d.enemy.stamina = enemy.hp; d.enemy.staminaMax = enemy.hp; }
+    d.roundsThisBattle = 0;
+    d.pendingLuckQueue = [];
+    closeDropdown();
+    saveState();
+    _renderAll();
+  }
+
+  dropdown.addEventListener('mousedown', e => {
+    const li = e.target.closest('li');
+    if (!li) return;
+    select(matches[+li.dataset.idx]);
+    e.preventDefault();
+  });
+
+  input.addEventListener('focus', async () => { input.removeAttribute('readonly'); await _loadEnemyList(); render(input.value); });
+  input.addEventListener('input', async () => { await _loadEnemyList(); render(input.value); });
+  input.addEventListener('blur', () => setTimeout(closeDropdown, 150));
+  input.addEventListener('keydown', e => {
+    const items = dropdown.querySelectorAll('li');
+    if (!items.length) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); activeIdx = Math.min(activeIdx + 1, items.length - 1); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); activeIdx = Math.max(activeIdx - 1, 0); }
+    else if (e.key === 'Enter' && activeIdx >= 0) { e.preventDefault(); select(matches[activeIdx]); return; }
+    else if (e.key === 'Escape') { closeDropdown(); return; }
+    else return;
+    items.forEach((li, i) => { li.classList.toggle('ac-active', i === activeIdx); li.setAttribute('aria-selected', String(i === activeIdx)); });
+    if (activeIdx >= 0) input.setAttribute('aria-activedescendant', items[activeIdx].id);
+    else input.removeAttribute('aria-activedescendant');
+    items[activeIdx]?.scrollIntoView({ block: 'nearest' });
+  });
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+
+
+
+export function initSim240() {
+  const overlay = document.createElement('div');
+  overlay.id        = 'sim240-overlay';
+  overlay.className = 'inv-overlay';
+  overlay.innerHTML = `
+    <div class="inv-modal bsim-modal">
+      <div class="inv-modal-hdr">
+        <span class="inv-modal-title">${t('battlesim.title')}</span>
+        <button id="sim240-close" class="inv-close-btn" aria-label="${t('btn.close')}">✕</button>
+      </div>
+      <div class="bsim-body">
+        <div class="bsim-col bsim-col-left">
+          <div class="bsim-side">
+            <div class="bsim-side-title">${t('battlesim240.ui.you')}</div>
+            <div class="inv-edit-row bsim-life-roll-row">
+              <button id="sim240-roll" class="inv-edit-done bsim-ae-roll-btn" type="button">${t('battlesim240.btn.roll')}</button>
+            </div>
+            ${_numField(t('battlesim240.ui.skill'), 'sim240-player-skill')}
+            ${_numField(t('battlesim240.ui.skill_initial'), 'sim240-player-skillmax')}
+            ${_numField(t('battlesim240.ui.stamina'), 'sim240-player-stamina')}
+            ${_numField(t('battlesim240.ui.stamina_initial'), 'sim240-player-staminamax')}
+            ${_numField(t('battlesim240.ui.luck'), 'sim240-player-luck')}
+            ${_numField(t('battlesim240.ui.luck_initial'), 'sim240-player-luckmax')}
+            <div class="inv-edit-row">
+              <span class="inv-edit-label bsim-stat-label">${t('battlesim240.ui.weapon')}</span>
+              <select id="sim240-weapon" class="inv-edit-input bsim-select">
+                <option value="sword">${t('battlesim240.weapon.sword')}</option>
+                <option value="axe">${t('battlesim240.weapon.axe')}</option>
+              </select>
+            </div>
+            <div class="inv-edit-row">
+              <span class="inv-edit-label bsim-stat-label">${t('battlesim240.ui.armour')}</span>
+              <select id="sim240-armour" class="inv-edit-input bsim-select">
+                <option value="none">${t('battlesim240.armour.none')}</option>
+                <option value="chainmail">${t('battlesim240.armour.chainmail')}</option>
+                <option value="plate">${t('battlesim240.armour.plate')}</option>
+              </select>
+            </div>
+            <div class="inv-edit-row bsim-ae-row">
+              <span id="sim240-armour-hits" class="bsim-ae-display"></span>
+            </div>
+            <div class="inv-edit-row bsim-ae-row">
+              <span class="inv-edit-label bsim-stat-label">${t('battlesim240.ui.provisions')}</span>
+              <span id="sim240-provisions-left" class="bsim-ae-display"></span>
+              <button id="sim240-provisions" class="inv-edit-done bsim-ae-roll-btn" type="button">${t('battlesim240.btn.provisions_eat', { n: PROVISIONS_HEAL })}</button>
+            </div>
+            <div class="inv-edit-row bsim-ae-row">
+              <span class="inv-edit-label bsim-stat-label">${t('battlesim240.ui.spear_lifeforce')}</span>
+              <span id="sim240-spear-lifeforce" class="bsim-ae-display"></span>
+              <button id="sim240-spear-roll" class="inv-edit-done bsim-ae-roll-btn" type="button">${t('battlesim240.btn.spear_roll')}</button>
+            </div>
+            <div class="inv-edit-row bsim-ae-row">
+              <button id="sim240-spear-autowin" class="inv-edit-done bsim-ae-roll-btn" type="button">${t('battlesim240.btn.spear_autowin')}</button>
+            </div>
+          </div>
+          <div class="bsim-side">
+            <div class="bsim-side-title">${t('battlesim240.ui.enemy')}</div>
+            <div class="inv-edit-row">
+              <span class="inv-edit-label bsim-stat-label">${t('battlesim240.ui.pick')}</span>
+              <div class="autocomplete-wrap bsim-enemy-ac">
+                <input id="sim240-enemy-pick" class="inv-edit-input" type="text" autocomplete="off" readonly role="combobox" aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" aria-controls="sim240-enemy-pick-dropdown">
+                <ul id="sim240-enemy-pick-dropdown" class="autocomplete-dropdown" role="listbox"></ul>
+              </div>
+            </div>
+            ${_numField(t('battlesim240.ui.skill'), 'sim240-enemy-skill')}
+            ${_numField(t('battlesim240.ui.stamina'), 'sim240-enemy-stamina')}
+            ${_numField(t('battlesim240.ui.stamina_max'), 'sim240-enemy-staminamax')}
+            <div class="inv-edit-row">
+              <label class="inv-edit-check-label"><input type="checkbox" id="sim240-group-fight" class="inv-edit-check"> ${t('battlesim240.ui.group_fight')}</label>
+            </div>
+            <div id="sim240-side-list"></div>
+            <div class="inv-edit-row">
+              <label class="inv-edit-check-label"><input type="checkbox" id="sim240-disarm-mode" class="inv-edit-check"> ${t('battlesim240.ui.disarm_mode')}</label>
+            </div>
+            <div class="inv-edit-row">
+              <label class="inv-edit-check-label"><input type="checkbox" id="sim240-immune" class="inv-edit-check"> ${t('battlesim240.ui.immune_mode')}</label>
+            </div>
+            <div class="inv-edit-row bsim-ae-row">
+              <button id="sim240-skull-roll" class="inv-edit-done bsim-ae-roll-btn" type="button">${t('battlesim240.btn.skull_roll')}</button>
+            </div>
+            <div class="inv-edit-row">
+              <label class="inv-edit-check-label"><input type="checkbox" id="sim240-voivod-thrives" class="inv-edit-check"> ${t('battlesim240.ui.voivod_thrives')}</label>
+            </div>
+            <div class="inv-edit-row">
+              <label class="inv-edit-check-label"><input type="checkbox" id="sim240-voivod-defensive" class="inv-edit-check"> ${t('battlesim240.ui.voivod_defensive')}</label>
+            </div>
+            <div class="inv-edit-row bsim-ae-row">
+              <button id="sim240-spear-empower" class="inv-edit-done bsim-ae-roll-btn" type="button">${t('battlesim240.btn.spear_empower')}</button>
+            </div>
+          </div>
+          <div id="sim240-status" class="bsim-status"></div>
+          <div id="sim240-luck-prompt" class="inv-edit-row bsim-heal-row" style="display:none">
+            <span class="inv-edit-label bsim-stat-label">${t('battlesim240.btn.luck_prompt')}</span>
+            <button id="sim240-luck-yes" class="inv-edit-done bsim-heal-btn" type="button">${t('battlesim240.btn.luck_yes')}</button>
+            <button id="sim240-luck-no" class="inv-edit-done bsim-heal-btn" type="button">${t('battlesim240.btn.luck_no')}</button>
+          </div>
+          <div class="inv-modal-ftr">
+            <button id="sim240-round" class="inv-add-btn bsim-action-primary">${t('battlesim240.btn.round')}</button>
+            <button id="sim240-reset" class="inv-add-btn">${t('battlesim240.btn.reset')}</button>
+          </div>
+        </div>
+        <div class="bsim-col bsim-col-right">
+          <details class="bsim-history">
+            <summary id="sim240-history-summary">${t('battlesim240.history.summary', { n: 0 })}</summary>
+            <div id="sim240-history-list" class="bsim-history-list"></div>
+          </details>
+          <div id="sim240-log" class="bsim-log"></div>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  const btn = document.createElement('button');
+  btn.id            = 'sim240-btn';
+  btn.innerHTML     = shortcutLabel(t('battlesim.title'));
+  btn.style.display = 'none';
+  getPlayBtnRow().appendChild(btn);
+
+  btn.addEventListener('click', openSim240);
+  document.getElementById('sim240-close').addEventListener('click', closeSim240);
+  let _mdOnOverlay = false;
+  overlay.addEventListener('mousedown', e => { _mdOnOverlay = e.target === overlay; });
+  overlay.addEventListener('click', e => { if (e.target === overlay && _mdOnOverlay) closeSim240(); });
+  registerPanelShortcut('KeyS', {
+    getButton:  () => btn,
+    getOverlay: () => overlay,
+    otherOverlayIds: ALL_PANEL_OVERLAY_IDS.filter(id => id !== 'sim240-overlay'),
+    open:  openSim240,
+    close: closeSim240,
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && overlay.classList.contains('active')) closeSim240();
+  });
+
+  document.getElementById('sim240-round').addEventListener('click', _runRound);
+  document.getElementById('sim240-reset').addEventListener('click', _resetBattle);
+  document.getElementById('sim240-luck-yes').addEventListener('click', _testLuck);
+  document.getElementById('sim240-luck-no').addEventListener('click', _skipLuck);
+  document.getElementById('sim240-provisions').addEventListener('click', _eatProvisions);
+  document.getElementById('sim240-skull-roll').addEventListener('click', _rollForSkull);
+  document.getElementById('sim240-spear-roll').addEventListener('click', _rollSpearLifeForce);
+  document.getElementById('sim240-spear-autowin').addEventListener('click', _useSpearAutoWin);
+  document.getElementById('sim240-spear-empower').addEventListener('click', _empowerSpear);
+
+  document.getElementById('sim240-roll').addEventListener('click', () => {
+    const d = _data();
+    if (!d || d.rolled) return;
+    d.player.skillInitial   = _roll1d6() + 6;
+    d.player.staminaInitial = _roll2d6() + 12;
+    d.player.luckInitial    = _roll1d6() + 6;
+    d.player.skill   = d.player.skillInitial;
+    d.player.stamina = d.player.staminaInitial;
+    d.player.luck    = d.player.luckInitial;
+    d.rolled = true;
+    _appendLog(d, t('battlesim240.log.rolled', { skill: d.player.skillInitial, stamina: d.player.staminaInitial, luck: d.player.luckInitial }));
+    saveState();
+    _renderAll();
+  });
+
+  document.getElementById('sim240-weapon').addEventListener('change', e => {
+    const d = _data();
+    if (!d) return;
+    d.player.weapon = e.target.value;
+    saveState();
+    _renderInputs();
+  });
+
+  document.getElementById('sim240-armour').addEventListener('change', e => {
+    const d = _data();
+    if (!d) return;
+    d.player.armour = e.target.value;
+    d.player.armourHitsLeft = ARMOURS[e.target.value].hitsMax;
+    saveState();
+    _renderInputs();
+  });
+
+  document.getElementById('sim240-group-fight').addEventListener('change', e => {
+    const d = _data();
+    if (!d) return;
+    d.groupFight = e.target.checked;
+    saveState();
+    _renderInputs();
+  });
+
+  document.getElementById('sim240-disarm-mode').addEventListener('change', e => {
+    const d = _data();
+    if (!d) return;
+    d.disarmMode = e.target.checked;
+    saveState();
+  });
+
+  document.getElementById('sim240-immune').addEventListener('change', e => {
+    const d = _data();
+    if (!d) return;
+    d.immuneToWounds = e.target.checked;
+    saveState();
+    _renderInputs();
+  });
+
+  document.getElementById('sim240-voivod-thrives').addEventListener('change', e => {
+    const d = _data();
+    if (!d) return;
+    d.voivodThrives = e.target.checked;
+    saveState();
+  });
+
+  document.getElementById('sim240-voivod-defensive').addEventListener('change', e => {
+    const d = _data();
+    if (!d) return;
+    d.voivodDefensive = e.target.checked;
+    saveState();
+    _renderInputs();
+  });
+
+  document.getElementById('sim240-side-list').addEventListener('click', e => {
+    if (e.target.id === 'sim240-side-add') { _addSideEnemy(); return; }
+    if (e.target.id.startsWith('sim240-side-remove-')) { _removeSideEnemy(+e.target.dataset.idx); return; }
+  });
+  document.getElementById('sim240-side-list').addEventListener('input', e => {
+    const d = _data();
+    if (!d) return;
+    const idx = +e.target.dataset.idx;
+    if (Number.isNaN(idx) || !d.sideEnemies[idx]) return;
+    if (e.target.classList.contains('bsim-side-name')) {
+      d.sideEnemies[idx].name = e.target.value;
+    } else if (e.target.classList.contains('bsim-side-skill')) {
+      const raw = String(e.target.value).replace(/[^0-9]/g, '');
+      if (raw !== e.target.value) e.target.value = raw;
+      d.sideEnemies[idx].skill = Number(raw) || 0;
+    }
+    saveState();
+  });
+
+  document.getElementById('sim240-enemy-pick').addEventListener('input', e => {
+    const d = _data();
+    if (!d) return;
+    d.enemy.name = e.target.value;
+    saveState();
+  });
+
+  // Plain numeric steppers
+  const FIELD_MAP = {
+    'sim240-player-skill':      ['player', 'skill'],
+    'sim240-player-skillmax':   ['player', 'skillInitial'],
+    'sim240-player-stamina':    ['player', 'stamina'],
+    'sim240-player-staminamax': ['player', 'staminaInitial'],
+    'sim240-player-luck':       ['player', 'luck'],
+    'sim240-player-luckmax':    ['player', 'luckInitial'],
+    'sim240-enemy-skill':       ['enemy', 'skill'],
+    'sim240-enemy-stamina':        ['enemy', 'stamina'],
+    'sim240-enemy-staminamax':     ['enemy', 'staminaMax'],
+  };
+  function _applyField(id, val) {
+    const d = _data();
+    if (!d) return;
+    const map = FIELD_MAP[id];
+    if (!map) return;
+    val = Math.max(0, val);
+    if (id === 'sim240-player-skill') val = Math.min(val, d.player.skillInitial);
+    if (id === 'sim240-player-stamina') val = Math.min(val, d.player.staminaInitial);
+    if (id === 'sim240-player-luck') val = Math.min(val, d.player.luckInitial);
+    if (id === 'sim240-enemy-stamina') val = Math.min(val, d.enemy.staminaMax);
+    d[map[0]][map[1]] = val;
+    if (id === 'sim240-player-skillmax') d.player.skill = Math.min(d.player.skill, val);
+    if (id === 'sim240-player-staminamax') d.player.stamina = Math.min(d.player.stamina, val);
+    if (id === 'sim240-player-luckmax') d.player.luck = Math.min(d.player.luck, val);
+    if (id === 'sim240-enemy-staminamax') d.enemy.stamina = Math.min(d.enemy.stamina, val);
+    saveState();
+    _renderInputs();
+  }
+  overlay.querySelectorAll('.inv-qty-input[id^="sim240-"]').forEach(input => {
+    if (!FIELD_MAP[input.id]) return;
+    input.addEventListener('input', () => {
+      const raw = String(input.value).replace(/[^0-9]/g, '');
+      if (raw !== input.value) input.value = raw;
+      _applyField(input.id, Number(raw) || 0);
+    });
+  });
+  overlay.querySelectorAll('.inv-qty-btn[data-id^="sim240-"]').forEach(btnEl => {
+    btnEl.addEventListener('click', () => {
+      const input = document.getElementById(btnEl.dataset.id);
+      if (!input || !FIELD_MAP[btnEl.dataset.id]) return;
+      const next = Math.max(0, (Number(input.value) || 0) + Number(btnEl.dataset.delta));
+      _applyField(btnEl.dataset.id, next);
+    });
+  });
+
+  _setupEnemyAutocomplete();
+}
+
+function _numField(label, id) {
+
+  return `
+    <div class="inv-edit-row">
+      <span class="inv-edit-label bsim-stat-label">${label}</span>
+      <div class="inv-qty-wrap">
+        <button class="inv-qty-btn" data-id="${id}" data-delta="-1">−</button>
+        <input id="${id}" class="inv-edit-input inv-qty-input" type="text" inputmode="numeric">
+        <button class="inv-qty-btn" data-id="${id}" data-delta="1">+</button>
+      </div>
+    </div>`;
+}
+
+export { initSim240 as init, renderSim240 as render, setSim240Visible as setVisible };

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync } from './simulator-source.mjs';
 import { newSamuraiCharacter } from '../../../public/js/battlesim/engines/sword-of-samurai/character.js';
 import { SAMURAI_SOURCE_ROSTERS, SAMURAI_FIGHTS } from '../../../public/js/battlesim/engines/sword-of-samurai/roster.js';
 import { startSamuraiFight, samuraiRound, resolveSamuraiAction, setSamuraiTarget }

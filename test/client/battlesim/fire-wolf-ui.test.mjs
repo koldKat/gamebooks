@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync } from './simulator-source.mjs';
 import { createContext, runInContext } from 'node:vm';
 import * as combat from '../../../public/js/battlesim/engines/demonspawn/fire-wolf.js';
 import * as encounters from '../../../public/js/battlesim/engines/demonspawn/fire-wolf-encounters.js';

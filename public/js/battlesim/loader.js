@@ -26,28 +26,6 @@ function _hideActiveBattleSimOnly() {
   _active = null;
 }
 
-function _exportsFor(id, mod) {
-  if (id === 829) {
-    return {
-      init: mod.initBattleSim,
-      render: mod.renderBattleSim,
-      setVisible: mod.setBattleSimVisible,
-    };
-  }
-  if (id === 8) {
-    return {
-      init: mod.initBattleSim8,
-      render: mod.renderSim8,
-      setVisible: mod.setSim8Visible,
-    };
-  }
-  return {
-    init: mod[`initSim${id}`],
-    render: mod[`renderSim${id}`],
-    setVisible: mod[`setSim${id}Visible`],
-  };
-}
-
 async function _loadBattleSim(id) {
   const numericId = Number(id);
   if (!SUPPORTED_BATTLE_SIM_BOOKS.has(numericId)) return null;
@@ -59,7 +37,7 @@ async function _loadBattleSim(id) {
     const { loadBattleSimTranslations } = await import('../i18n/battlesim.js');
     await loadBattleSimTranslations(numericId);
     const mod = await import(`./battlesim${numericId}.js`);
-    const sim = _exportsFor(numericId, mod);
+    const sim = { init: mod.init, render: mod.render, setVisible: mod.setVisible };
     if (typeof sim.init !== 'function' ||
         typeof sim.render !== 'function' ||
         typeof sim.setVisible !== 'function') {

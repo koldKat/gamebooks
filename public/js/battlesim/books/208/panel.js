@@ -1,0 +1,462 @@
+import { DEITY_WEAPONS, HAND_WOUND_DMG, LASH_DMG, UNARMED_DMG } from './definition.js';
+import { createState } from './state.js';
+import { createCombat } from './combat.js';
+
+// BEGIN SIMULATOR WIRING
+const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, DEITY_WEAPONS, HAND_WOUND_DMG, LASH_DMG, SVG_SKULL, SVG_TROPHY, UNARMED_DMG, _appendLog, _checkBattleEnd, _data, _enemyList, _enemyName, _enemyNameSafe, _loadEnemyList, _notReady, _numField, _recordOutcome, _renderAll, _renderHistory, _renderInputs, _renderLog, _resetBattle, _resolvePlayerHit, _roll1d6, _roll2d6, _runGunfireRound, _runHandToHandRound, _runRound, _setChecked, _setVal, _setupAutocomplete, _weaponDamage, apiFetch, closeSim208, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim208, openSim208, registerPanelShortcut, renderSim208, saveState, setSim208Visible, shortcutLabel, showAlert, t });
+const { _data, _notReady, _appendLog, _recordOutcome } = createState(simulatorContext);
+const { _roll2d6, _roll1d6, _enemyName, _enemyNameSafe, _runHandToHandRound, _weaponDamage, _resolvePlayerHit, _runGunfireRound, _checkBattleEnd, _runRound, _resetBattle } = createCombat(simulatorContext);
+// END SIMULATOR WIRING
+// Battle Simulator (Space Assassin, book 208)
+// Hand-to-hand uses opposed rolls; gunfire uses independent roll-under-SKILL checks.
+// Incoming hits test ARMOUR, which decreases by 1 regardless of success; LUCK is narrative-only.
+
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../../core/state.js";
+import { showAlert } from "../../../ui-helpers/confirm.js";
+import { getPlayBtnRow } from "../../../play/charsheet.js";
+import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";
+import { t } from "../../../i18n.js";
+
+const SVG_SKULL  = `<svg class="sim-icon sim-icon-dead"  viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8c0 2.8 1.4 5.3 3.6 6.8V20a1 1 0 0 0 1 1h6.8a1 1 0 0 0 1-1v-2.2C18.6 16.3 20 13.8 20 11a8 8 0 0 0-8-8zm-2.5 13v-1.5a.5.5 0 0 0-.5-.5H8l-.5-1 1-1-1-1 1-1H9a2.5 2.5 0 0 1 5 0h.5l1 1-1 1 1 1-.5 1h-1a.5.5 0 0 0-.5.5V16h-4z"/></svg>`;
+const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v7a6 6 0 0 1-12 0V2zm-2 1H2v4a4 4 0 0 0 4 4v-1a3 3 0 0 1-3-3V3zm16 0h2v4a4 4 0 0 1-4 4v-1a3 3 0 0 0 3-3V3zm-7 13v2H9v2h6v-2h-2v-2a6 6 0 0 0 5-5.92V2H6v8.08A6 6 0 0 0 13 16z"/></svg>`;
+
+// Deity (§308) weapon table - rolled fresh each round when deityMode is on.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ── Hand-to-hand ─────────────────────────────────────────────────────────────
+
+
+
+// Gunfire rolls under own SKILL; the defender fires only if it survives the opening shot.
+
+
+
+// Incoming hits test 2d6 <= ARMOUR to negate damage; ARMOUR drops by 1 regardless.
+
+
+
+
+
+
+
+
+
+
+// ── Enemy autocomplete (fed by book_enemies, seeded per book_id) ───────────
+
+let _enemyList = null;
+async function _loadEnemyList() {
+  if (_enemyList) return _enemyList;
+  try {
+    const res = await apiFetch(`/api/books/${currentBookId}/enemies`);
+    _enemyList = res.ok ? await res.json() : [];
+  } catch (_) {
+    _enemyList = [];
+  }
+  return _enemyList;
+}
+
+function _setupAutocomplete(inputId, dropdownId, onSelect) {
+  const input    = document.getElementById(inputId);
+  const dropdown = document.getElementById(dropdownId);
+  let matches   = [];
+  let activeIdx = -1;
+
+  function closeDropdown() {
+    dropdown.classList.remove('open');
+    input.setAttribute('aria-expanded', 'false');
+    input.removeAttribute('aria-activedescendant');
+  }
+
+  function render(q) {
+    const list = _enemyList || [];
+    const ql = q.trim().toLowerCase();
+    matches = ql ? list.filter(e => e.name.toLowerCase().includes(ql)) : list;
+    if (!matches.length) { closeDropdown(); return; }
+    dropdown.innerHTML = matches.map((e, i) =>
+      `<li role="option" id="${dropdownId}-opt-${i}" data-idx="${i}">${escapeHtml(e.name)}<span class="ac-sub">${e.attack ?? '?'}/${e.hp ?? '?'}</span></li>`
+    ).join('');
+    activeIdx = -1;
+    dropdown.classList.add('open');
+    input.setAttribute('aria-expanded', 'true');
+    input.removeAttribute('aria-activedescendant');
+  }
+
+  function select(enemy) {
+    if (!enemy) return;
+    input.value = enemy.name;
+    onSelect(enemy);
+    closeDropdown();
+  }
+
+  dropdown.addEventListener('mousedown', e => {
+    const li = e.target.closest('li');
+    if (!li) return;
+    select(matches[+li.dataset.idx]);
+    e.preventDefault();
+  });
+
+  input.addEventListener('focus', async () => { input.removeAttribute('readonly'); await _loadEnemyList(); render(input.value); });
+  input.addEventListener('input', async () => { await _loadEnemyList(); render(input.value); });
+  input.addEventListener('blur', () => setTimeout(closeDropdown, 150));
+  input.addEventListener('keydown', e => {
+    const items = dropdown.querySelectorAll('li');
+    if (!items.length) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); activeIdx = Math.min(activeIdx + 1, items.length - 1); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); activeIdx = Math.max(activeIdx - 1, 0); }
+    else if (e.key === 'Enter' && activeIdx >= 0) { e.preventDefault(); select(matches[activeIdx]); return; }
+    else if (e.key === 'Escape') { closeDropdown(); return; }
+    else return;
+    items.forEach((li, i) => { li.classList.toggle('ac-active', i === activeIdx); li.setAttribute('aria-selected', String(i === activeIdx)); });
+    if (activeIdx >= 0) input.setAttribute('aria-activedescendant', items[activeIdx].id);
+    else input.removeAttribute('aria-activedescendant');
+    items[activeIdx]?.scrollIntoView({ block: 'nearest' });
+  });
+}
+
+// ── Render ───────────────────────────────────────────────────────────────────
+
+function _setVal(id, v) { const el = document.getElementById(id); if (el) el.value = v; }
+function _setChecked(id, v) { const el = document.getElementById(id); if (el) el.checked = v; }
+
+function _renderInputs(skipEnemyPick) {
+  const d = _data();
+  if (!d) return;
+  _setVal('sim208-skill', d.skill);
+  _setVal('sim208-skillmax', d.skillInitial);
+  _setVal('sim208-stamina', d.stamina);
+  _setVal('sim208-staminamax', d.staminaInitial);
+  _setVal('sim208-luck', d.luck);
+  _setVal('sim208-luckmax', d.luckInitial);
+  _setVal('sim208-armour', d.armour);
+  _setVal('sim208-armourmax', d.armourInitial);
+  document.getElementById('sim208-mode').value = d.mode;
+  document.getElementById('sim208-weapon').value = d.weapon;
+  document.getElementById('sim208-enemy-weapon').value = d.enemyWeapon;
+  _setChecked('sim208-enemy-extra', d.enemyExtraAttack);
+  _setChecked('sim208-deity-mode', d.deityMode);
+  _setVal('sim208-enemy-skill', d.enemy.skill);
+  _setVal('sim208-enemy-stamina', d.enemy.stamina);
+  _setVal('sim208-enemy-staminamax', d.enemy.staminaMax);
+  if (!skipEnemyPick) _setVal('sim208-enemy-pick', d.enemy.name);
+
+  document.getElementById('sim208-gunfire-fields').style.display = d.mode === 'gunfire' ? '' : 'none';
+
+  const status = document.getElementById('sim208-status');
+  if (!d.rolled) {
+    status.textContent = t('battlesim208.status.not_ready');
+  } else if (d.stamina <= 0) {
+    status.textContent = t('battlesim208.status.fallen');
+  } else if (d.enemy.stamina <= 0 && d.enemy.staminaMax > 0) {
+    status.textContent = t('battlesim208.status.defeated', { enemy: _enemyName(d) });
+  } else {
+    status.textContent = '';
+  }
+  document.getElementById('sim208-round').disabled = !d.rolled || d.stamina <= 0 || d.enemy.stamina <= 0;
+}
+
+function _renderLog() {
+  const d = _data();
+  const el = document.getElementById('sim208-log');
+  if (!el || !d) return;
+  el.innerHTML = d.log.slice().reverse().join('<br>');
+}
+
+function _renderHistory() {
+  const d      = _data();
+  const sumEl  = document.getElementById('sim208-history-summary');
+  const listEl = document.getElementById('sim208-history-list');
+  if (!d || !sumEl || !listEl) return;
+  sumEl.textContent = t('battlesim208.history.summary', { n: d.history.length });
+  if (!d.history.length) {
+    listEl.innerHTML = `<div class="bsim-history-empty">${t('battlesim208.history.empty')}</div>`;
+    return;
+  }
+  listEl.innerHTML = d.history.slice().reverse().map(h => {
+    const icon   = h.outcome === 'win' ? SVG_TROPHY : SVG_SKULL;
+    const result = h.outcome === 'win' ? t('battlesim208.history.won') : t('battlesim208.history.lost');
+    const date   = new Date(h.ts).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    return `<div class="bsim-history-row">
+      <span>${icon} ${escapeHtml(h.enemy)} - ${result}</span>
+      <span class="bsim-history-meta">${escapeHtml(h.mode === 'gunfire' ? 'gunfire' : 'hand-to-hand')} · ${date}</span>
+    </div>`;
+  }).join('');
+}
+
+function _renderAll() {
+  _renderInputs(true);
+  _renderLog();
+  _renderHistory();
+}
+
+export function renderSim208() {
+  const overlay = document.getElementById('sim208-overlay');
+  if (!overlay || !overlay.classList.contains('active')) return;
+  if (!_data()) { closeSim208(); return; }
+  _renderAll();
+}
+
+function openSim208() {
+  if (!_data()) {
+    showAlert(t('battlesim.no_active_playthrough'));
+    return;
+  }
+  _renderAll();
+  document.getElementById('sim208-overlay').classList.add('active');
+}
+
+function closeSim208() {
+  document.getElementById('sim208-overlay')?.classList.remove('active');
+}
+
+export function setSim208Visible(visible) {
+  const btn = document.getElementById('sim208-btn');
+  if (btn) btn.style.display = visible ? '' : 'none';
+  if (!visible) closeSim208();
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+
+
+
+export function initSim208() {
+  const overlay = document.createElement('div');
+  overlay.id        = 'sim208-overlay';
+  overlay.className = 'inv-overlay';
+  overlay.innerHTML = `
+    <div class="inv-modal bsim-modal">
+      <div class="inv-modal-hdr">
+        <span class="inv-modal-title">${t('battlesim.title')}</span>
+        <button id="sim208-close" class="inv-close-btn" aria-label="${t('btn.close')}">✕</button>
+      </div>
+      <div class="bsim-body">
+        <div class="bsim-col bsim-col-left">
+          <div class="bsim-side">
+            <div class="inv-edit-row bsim-life-roll-row">
+              <button id="sim208-roll" class="inv-edit-done bsim-ae-roll-btn" type="button">${t('battlesim208.btn.roll')}</button>
+            </div>
+            ${_numField(t('battlesim208.ui.skill'), 'sim208-skill')}
+            ${_numField(t('battlesim208.ui.skill_initial'), 'sim208-skillmax')}
+            ${_numField(t('battlesim208.ui.stamina'), 'sim208-stamina')}
+            ${_numField(t('battlesim208.ui.stamina_initial'), 'sim208-staminamax')}
+            ${_numField(t('battlesim208.ui.luck'), 'sim208-luck')}
+            ${_numField(t('battlesim208.ui.luck_initial'), 'sim208-luckmax')}
+            ${_numField(t('battlesim208.ui.armour'), 'sim208-armour')}
+            ${_numField(t('battlesim208.ui.armour_initial'), 'sim208-armourmax')}
+            <div class="inv-edit-row">
+              <span class="inv-edit-label bsim-stat-label">${t('battlesim208.ui.combat_type')}</span>
+              <select id="sim208-mode" class="inv-edit-input bsim-select">
+                <option value="handtohand">${t('battlesim208.ui.mode_handtohand')}</option>
+                <option value="gunfire">${t('battlesim208.ui.mode_gunfire')}</option>
+              </select>
+            </div>
+          </div>
+          <div class="bsim-side">
+            <div class="inv-edit-row">
+              <span class="inv-edit-label bsim-stat-label">${t('battlesim208.ui.your_weapon')}</span>
+              <select id="sim208-weapon" class="inv-edit-input bsim-select">
+                <option value="lash">${t('battlesim208.ui.weapon_lash', { n: LASH_DMG })}</option>
+                <option value="blaster">${t('battlesim208.ui.weapon_blaster')}</option>
+                <option value="unarmed">${t('battlesim208.ui.weapon_unarmed', { n: UNARMED_DMG })}</option>
+              </select>
+            </div>
+            <div class="inv-edit-row">
+              <span class="inv-edit-label bsim-stat-label">${t('battlesim208.ui.enemy_weapon')}</span>
+              <select id="sim208-enemy-weapon" class="inv-edit-input bsim-select">
+                <option value="blaster">${t('battlesim208.ui.weapon_blaster')}</option>
+                <option value="lash">${t('battlesim208.ui.weapon_lash', { n: LASH_DMG })}</option>
+                <option value="unarmed">${t('battlesim208.ui.weapon_unarmed', { n: UNARMED_DMG })}</option>
+              </select>
+            </div>
+            <div class="inv-edit-row bsim-ae-row">
+              <label class="inv-edit-check-label"><input type="checkbox" id="sim208-enemy-extra" class="inv-edit-check"> ${t('battlesim208.ui.enemy_extra_toggle')}</label>
+            </div>
+            <div id="sim208-gunfire-fields">
+              <div class="inv-edit-row bsim-ae-row">
+                <label class="inv-edit-check-label"><input type="checkbox" id="sim208-deity-mode" class="inv-edit-check"> ${t('battlesim208.ui.deity_toggle')}</label>
+              </div>
+              <div class="bsim-tech-desc">${t('battlesim208.ui.armour_desc')}</div>
+            </div>
+            <div class="inv-edit-row">
+              <span class="inv-edit-label bsim-stat-label">${t('battlesim208.ui.pick')}</span>
+              <div class="autocomplete-wrap bsim-enemy-ac">
+                <input id="sim208-enemy-pick" class="inv-edit-input" type="text" autocomplete="off" readonly role="combobox" aria-autocomplete="list" aria-expanded="false" aria-haspopup="listbox" aria-controls="sim208-enemy-pick-dropdown">
+                <ul id="sim208-enemy-pick-dropdown" class="autocomplete-dropdown" role="listbox"></ul>
+              </div>
+            </div>
+            ${_numField(t('battlesim208.ui.enemy_skill'), 'sim208-enemy-skill')}
+            ${_numField(t('battlesim208.ui.enemy_stamina'), 'sim208-enemy-stamina')}
+            ${_numField(t('battlesim208.ui.enemy_stamina_max'), 'sim208-enemy-staminamax')}
+          </div>
+          <div id="sim208-status" class="bsim-status"></div>
+          <div class="inv-modal-ftr">
+            <button id="sim208-round" class="inv-add-btn bsim-action-primary">${t('battlesim208.btn.round')}</button>
+            <button id="sim208-reset" class="inv-add-btn">${t('battlesim208.btn.reset')}</button>
+          </div>
+        </div>
+        <div class="bsim-col bsim-col-right">
+          <details class="bsim-history">
+            <summary id="sim208-history-summary">${t('battlesim208.history.summary', { n: 0 })}</summary>
+            <div id="sim208-history-list" class="bsim-history-list"></div>
+          </details>
+          <div id="sim208-log" class="bsim-log"></div>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  const btn = document.createElement('button');
+  btn.id            = 'sim208-btn';
+  btn.innerHTML     = shortcutLabel(t('battlesim.title'));
+  btn.style.display = 'none';
+  getPlayBtnRow().appendChild(btn);
+
+  btn.addEventListener('click', openSim208);
+  document.getElementById('sim208-close').addEventListener('click', closeSim208);
+  let _mdOnOverlay = false;
+  overlay.addEventListener('mousedown', e => { _mdOnOverlay = e.target === overlay; });
+  overlay.addEventListener('click', e => { if (e.target === overlay && _mdOnOverlay) closeSim208(); });
+  registerPanelShortcut('KeyS', {
+    getButton:  () => btn,
+    getOverlay: () => overlay,
+    otherOverlayIds: ALL_PANEL_OVERLAY_IDS.filter(id => id !== 'sim208-overlay'),
+    open:  openSim208,
+    close: closeSim208,
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && overlay.classList.contains('active')) closeSim208();
+  });
+
+  document.getElementById('sim208-round').addEventListener('click', _runRound);
+  document.getElementById('sim208-reset').addEventListener('click', _resetBattle);
+
+  document.getElementById('sim208-roll').addEventListener('click', () => {
+    const d = _data();
+    if (!d || d.rolled) return;
+    d.skillInitial   = _roll1d6() + 6;
+    d.staminaInitial = _roll2d6() + 12;
+    d.luckInitial    = _roll1d6() + 6;
+    d.armourInitial  = _roll1d6() + 6;
+    d.skill   = d.skillInitial;
+    d.stamina = d.staminaInitial;
+    d.luck    = d.luckInitial;
+    d.armour  = d.armourInitial;
+    d.rolled  = true;
+    _appendLog(d, t('battlesim208.log.rolled'));
+    saveState();
+    _renderAll();
+  });
+
+  document.getElementById('sim208-mode').addEventListener('change', e => {
+    const d = _data();
+    if (!d) return;
+    d.mode = e.target.value;
+    d.roundsThisBattle = 0;
+    saveState();
+    _renderInputs();
+  });
+  document.getElementById('sim208-weapon').addEventListener('change', e => {
+    const d = _data();
+    if (!d) return;
+    d.weapon = e.target.value;
+    saveState();
+  });
+  document.getElementById('sim208-enemy-weapon').addEventListener('change', e => {
+    const d = _data();
+    if (!d) return;
+    d.enemyWeapon = e.target.value;
+    saveState();
+  });
+  document.getElementById('sim208-enemy-extra').addEventListener('change', e => {
+    const d = _data();
+    if (!d) return;
+    d.enemyExtraAttack = e.target.checked;
+    saveState();
+  });
+  document.getElementById('sim208-deity-mode').addEventListener('change', e => {
+    const d = _data();
+    if (!d) return;
+    d.deityMode = e.target.checked;
+    saveState();
+  });
+
+  document.getElementById('sim208-enemy-pick').addEventListener('input', e => {
+    const d = _data();
+    if (!d) return;
+    d.enemy.name = e.target.value;
+    saveState();
+  });
+  _setupAutocomplete('sim208-enemy-pick', 'sim208-enemy-pick-dropdown', enemy => {
+    const d = _data();
+    if (!d) return;
+    d.enemy.name        = enemy.name;
+    d.enemy.skill        = enemy.attack ?? 0;
+    d.enemy.stamina      = enemy.hp ?? 0;
+    d.enemy.staminaMax   = enemy.hp ?? 0;
+    d.roundsThisBattle   = 0;
+    saveState();
+    _renderInputs(true);
+  });
+
+  const fieldMap = {
+    'sim208-skill': ['skill'], 'sim208-skillmax': ['skillInitial'],
+    'sim208-stamina': ['stamina'], 'sim208-staminamax': ['staminaInitial'],
+    'sim208-luck': ['luck'], 'sim208-luckmax': ['luckInitial'],
+    'sim208-armour': ['armour'], 'sim208-armourmax': ['armourInitial'],
+    'sim208-enemy-skill': ['enemy', 'skill'], 'sim208-enemy-stamina': ['enemy', 'stamina'], 'sim208-enemy-staminamax': ['enemy', 'staminaMax'],
+  };
+  for (const [id, path] of Object.entries(fieldMap)) {
+    const input = document.getElementById(id);
+    input.addEventListener('change', () => {
+      const d = _data();
+      if (!d) return;
+      const val = parseInt(input.value, 10) || 0;
+      if (path.length === 1) d[path[0]] = val;
+      else d[path[0]][path[1]] = val;
+      saveState();
+      _renderInputs(true);
+    });
+  }
+  overlay.querySelectorAll('.inv-qty-btn').forEach(btn2 => {
+    btn2.addEventListener('click', () => {
+      const input = document.getElementById(btn2.dataset.id);
+      if (!input) return;
+      const delta = parseInt(btn2.dataset.delta, 10);
+      input.value = (parseInt(input.value, 10) || 0) + delta;
+      input.dispatchEvent(new Event('change'));
+    });
+  });
+}
+
+function _numField(label, id, width) {
+
+  return `
+    <div class="inv-edit-row">
+      <span class="inv-edit-label bsim-stat-label">${label}</span>
+      <div class="inv-qty-wrap">
+        <button class="inv-qty-btn" data-id="${id}" data-delta="-1">−</button>
+        <input id="${id}" class="inv-edit-input inv-qty-input" type="text" inputmode="numeric"${width ? ` style="width:${width}"` : ''}>
+        <button class="inv-qty-btn" data-id="${id}" data-delta="1">+</button>
+      </div>
+    </div>`;
+}
+
+export { initSim208 as init, renderSim208 as render, setSim208Visible as setVisible };

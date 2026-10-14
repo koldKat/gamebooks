@@ -26,9 +26,7 @@ const module = new SourceTextModule(readFileSync(process.argv[1], 'utf8'), {
     imports.push(id);
     if (deferred.has(id)) await deferred.get(id).promise;
     if (id === failingId) throw Error('Simulated load failure');
-    const names = id === 829 ? ['initBattleSim', 'renderBattleSim', 'setBattleSimVisible']
-      : id === 8 ? ['initBattleSim8', 'renderSim8', 'setSim8Visible']
-      : ['initSim' + id, 'renderSim' + id, 'setSim' + id + 'Visible'];
+    const names = ['init', 'render', 'setVisible'];
     const sim = new SyntheticModule(names, function () {
       this.setExport(names[0], () => calls.push([id, 'init']));
       this.setExport(names[1], () => calls.push([id, 'render']));

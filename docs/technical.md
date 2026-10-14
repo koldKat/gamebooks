@@ -190,6 +190,19 @@ gamebooks/
                          dynamically when it isn't (mobile has no such markup). play.js re-exports
                          both names for its own existing callers.
       battlesim/         Battle simulators and their desktop lazy loader
+        AGENTS.md         Simulator structure and preservation rules for future work.
+        books/<id>/       Consistent book boundary for every simulator:
+          definition.js   Identity, family, saved-state key and declarative defaults.
+          panel.js        DOM, lifecycle and application wiring; exports init/render/setVisible.
+          state.js        Saved-state access and compatibility, when book-specific.
+          combat.js       Combat resolution and checks, when book-specific.
+          effects.js      Book-specific spells, items and recovery, when needed.
+        engines/          Reusable family rules and panels. Books delegate shared responsibilities
+                         here rather than creating empty files or copying an engine.
+                         Extracted rule factories receive live application dependencies through
+                         getContext; they neither access the DOM nor build HTML. Root battlesimNNN.js files
+                         retain compatibility exports, not implementations. Saved-state keys,
+                         rule versions, translation keys and element IDs remain unchanged.
         loader.js        Desktop supported-book registry and lazy simulator lifecycle.
                          Boot imports only this loader; per-book simulators are imported
                          only when their book opens. Mobile keeps its separate

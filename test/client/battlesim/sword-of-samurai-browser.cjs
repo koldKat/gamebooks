@@ -11,7 +11,7 @@ const files = [fixturePath, __filename, 'test/client/battlesim/browser-harness.c
   'public/js/battlesim/battlesim672.js', 'public/js/core/state.js', 'public/js/core/util.js',
   ...['panel', 'core', 'character', 'roster'].map(name => 'public/js/battlesim/engines/sword-of-samurai/' + name + '.js'),
   'public/js/i18n/en/battlesim/battlesim672.js', ...styles.map(name => 'public/css/' + name + '.css')];
-const hashes = Object.fromEntries(files.map(file => [file, crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex')]));
+const hashes = Object.fromEntries(require('./browser-sources.cjs')(files).map(file => [file, crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex')]));
 const receipt = root + '/672-integrated-browser-verification.json';
 if (fs.existsSync(receipt) && JSON.stringify(JSON.parse(fs.readFileSync(receipt)).hashes) === JSON.stringify(hashes)) {
   console.log(JSON.stringify({ cached: true, bookId: 672 })); process.exit(0);

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync } from './simulator-source.mjs';
 import { WAR_TORN_FIGHTS } from '../../../public/js/battlesim/engines/fabled-lands/roster.js';
 import { newFabledCharacter, fabledDefence, fabledAbilityCheck, fabledRankCheck }
   from '../../../public/js/battlesim/engines/fabled-lands/character.js';

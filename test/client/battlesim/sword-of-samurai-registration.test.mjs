@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync } from './simulator-source.mjs';
 import { runInNewContext } from 'node:vm';
 import en from '../../../public/js/i18n/en/battlesim/battlesim672.js';
 import bg from '../../../public/js/i18n/bg/battlesim/battlesim672.js';
