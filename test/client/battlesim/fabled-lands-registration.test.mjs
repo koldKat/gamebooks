@@ -5,6 +5,9 @@ import { runInNewContext } from 'node:vm';
 import en from '../../../public/js/i18n/en/battlesim/battlesim674.js';
 import bg from '../../../public/js/i18n/bg/battlesim/battlesim674.js';
 import { WAR_TORN_FIGHTS } from '../../../public/js/battlesim/engines/fabled-lands/roster.js';
+import risingEn from '../../../public/js/i18n/en/battlesim/battlesim679.js';
+import risingBg from '../../../public/js/i18n/bg/battlesim/battlesim679.js';
+import { RISING_FIGHTS } from '../../../public/js/battlesim/engines/fabled-lands/rising-sun.js';
 
 const read = file => readFileSync(new URL('../../../' + file, import.meta.url), 'utf8');
 test('Fabled Lands locales cover every enemy and share keys and placeholders', () => {
@@ -25,8 +28,27 @@ test('both loaders, shortcuts, styling and XP register the new simulator exactly
   }
   assert.equal([...read('server/db/xp.js').matchAll(/['"]sim674['"]/g)].length, 1);
   assert.equal([...read('public/js/core/util.js').matchAll(/['"]sim674-overlay['"]/g)].length, 1);
-  assert.match(read('public/css/battlesim.css'), /#sim674-btn\s*\{/);
+  const selectors = [...read('public/css/battlesim.css').matchAll(/(?:^|\n)([^{}]+)\{/g)]
+    .flatMap(match => match[1].split(',').map(selector => selector.trim()));
+  assert.ok(selectors.includes('#sim674-btn'));
   assert.match(read('public/js/battlesim/engines/fabled-lands/panel.js'), /class="inv-modal bsim-modal bsim-compact-form"/);
+});
+test('book-six locales, encounters and registrations are complete', () => {
+  assert.deepEqual(Object.keys(risingEn).sort(),Object.keys(risingBg).sort());
+  for (const key of Object.keys(risingEn)) {
+    const placeholders = value => [...value.matchAll(/\{\w+\}/g)].map(match=>match[0]).sort();
+    assert.deepEqual(placeholders(risingEn[key]),placeholders(risingBg[key]),key);
+  }
+  for (const fight of RISING_FIGHTS) {
+    for (const enemy of fight.enemies) assert.ok(risingEn['battlesim679.enemy.'+enemy.name]);
+    if (fight.special) assert.ok(risingEn['battlesim679.effect.'+fight.special]);
+  }
+  for (const file of ['public/js/battlesim/loader.js','public/mobile/js/battlesim-dispatch.js']) {
+    const supported = read(file).match(/SUPPORTED_BATTLE_SIM_BOOKS = new Set\(\[([\s\S]*?)\]\)/)[1];
+    assert.equal([...supported.matchAll(/\b679\b/g)].length,1);
+  }
+  assert.equal([...read('server/db/xp.js').matchAll(/['"]sim679['"]/g)].length,1);
+  assert.equal([...read('public/js/core/util.js').matchAll(/['"]sim679-overlay['"]/g)].length,1);
 });
 test('the actual XP handler awards wins and losses once, not surrender or abandoned fights', () => {
   const source = read('server/db/xp.js');

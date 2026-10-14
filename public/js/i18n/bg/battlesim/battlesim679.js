@@ -1,0 +1,45 @@
+import common from './battlesim674.js';
+const labels = Object.fromEntries(Object.entries(common).filter(([key])=>!key.startsWith('battlesim674.enemy.'))
+  .map(([key,value])=>[key.replace('battlesim674.',''),value]));
+Object.assign(labels,{
+  title:'Боен симулатор - Lords of the Rising Sun',
+  created:'Създаден герой: ранг 6, ИЗДРЪЖЛИВОСТ 27, платинена обица, без оръжие и броня.',
+  note:'Въведете действителните умения с екипировката. Раните се запазват между битките. Прилагайте сами наградите и промените в инвентара; специалните бойни правила имат отделни настройки.',
+  simultaneous:'Атакувайте избран противник; след това всички оцелели противници атакуват.',
+  target:'Цел на атаката', light:'Имам източник на светлина', subdue:'Обезвреждане без оръжие',
+  weaponBonus:'Бонус от оръжието, включен в БОЙ', exchangedWeaponBonus:'Бонус на оръжието, дадено на девойката',
+  crimsonArrow:'Използване на алената стрела (три зара щети)',
+  divineWrath:'Благословия „Божествен гняв“', divineWrathUse:'Използване на божествения гняв (един зар щети)',
+  diseaseBlessing:'Благословия срещу болести и отрови', permanentStorms:'Постоянна защита от бури (епизод 159)',
+  enemyDamage:'Нанесени рани на Моритури (автоматично след отстъпление)',
+  permanentWound:'Постоянна рана: загуба на {damage} максимална ИЗДРЪЖЛИВОСТ.',
+  enemyEntry:'Противникът губи {damage} ИЗДРЪЖЛИВОСТ преди боя.',
+  diseaseBlessingUsed:'Благословията срещу болести и отрови е използвана срещу ухапването.',
+  winChoices:'След победа изберете епизод {sections} в четеца.',
+  'effect.thunder':'Всяка вражеска атака нанася с 1 по-малко щети за всеки 1000 носени монети. Жреците могат да избегнат боя в епизод 208.',
+  'effect.meditation':'Без броня. Въображаемият бой възстановява цялата ИЗДРЪЖЛИВОСТ след победа или поражение.',
+  'effect.morituriOutside':'Моритури запазва раните от гробницата; навън има БОЙ 10 и защита 20.',
+  'effect.morituriInside':'Отстъплението позволява една вражеска атака. Раните на Моритури се запазват за боя навън.',
+  'effect.sanctityDefence':'Защитата е равна на СВЯТОСТ, без ранг и броня.',
+  'effect.magicDefence':'Защитата е МАГИЯ плюс ранг, без броня.',
+  'effect.poisonSpider':'Ухапването е смъртоносно без благословия срещу болести и отрови. Благословията се използва само при раняване. Бягството е фатално.',
+  'effect.subdue':'Обезвреждането премахва бонуса от оръжието и добавя -1 към атаката. Не изваждайте бонуса повторно, ако вече е премахнат от БОЙ.',
+  'effect.oneDie':'Вашите атаки използват един зар, а вражеските — два.',
+  'effect.permanentWounds':'Вражеските удари намаляват максималната ИЗДРЪЖЛИВОСТ завинаги. Раните от вратата и хвърления стол се лекуват.',
+  'effect.darkness':'Атаките имат -2, освен ако имате източник на светлина.',
+  'effect.exchangedWeapon':'Бонусът на даденото оръжие се добавя към БОЙ и защитата на девойката. Хартиен меч избягва боя в епизод 723.',
+  'seaKind.passage':'Плаване до Чамбара', 'seaKind.shipwreck':'Оцеляване в морето',
+});
+const enemies = {'Imperial Guard':'Имперски страж','First Vampire':'Първи вампир','Second Vampire':'Втори вампир',
+  'Third Vampire':'Трети вампир','Fourth Vampire':'Четвърти вампир','Fifth Vampire':'Пети вампир',Wacko:'Уако',
+  'Thunder Beast':'Гръмотевичен звяр','First Knight':'Първи рицар','Second Knight':'Втори рицар',
+  'First Spider':'Първи паяк','Second Spider':'Втори паяк','Third Spider':'Трети паяк',
+  'First Flying Head':'Първа летяща глава','Second Flying Head':'Втора летяща глава','Third Flying Head':'Трета летяща глава',
+  'First Shrine Warden':'Първи пазител','Second Shrine Warden':'Втори пазител','Third Shrine Warden':'Трети пазител',
+  'Hairy arms':'Космати ръце','Skeleton Spectre':'Призрак скелет','King Tiger':'Цар тигър',Mujina:'Муджина',
+  'The Enemy':'Врагът','Dawatsu Morituri':'Давацу Моритури','Chimerical Beast':'Химерен звяр',
+  'Spider Creature':'Паякообразно същество','Ridiculous Rogue':'Смешен разбойник',Ghoul:'Таласъм',
+  'Haniwa Warrior':'Воин ханива',Jiro:'Джиро',Nunobiki:'Нунобики',Yoshio:'Йошио',Giant:'Великан',Bear:'Мечка',
+  'Warrior Maid':'Девойка воин',Tadachika:'Тадачика','Big Boy':'Голямото момче',Dragon:'Дракон',Talanexor:'Таланексор'};
+for (const [name,value] of Object.entries(enemies)) labels['enemy.'+name]=value;
+export default Object.fromEntries(Object.entries(labels).map(([key,value])=>['battlesim679.'+key,value]));

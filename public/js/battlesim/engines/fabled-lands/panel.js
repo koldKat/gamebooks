@@ -12,7 +12,7 @@ const escape = value => String(value).replace(/[&<>"']/g,
 export function createFabledPanel({ document, t, getRun, getBookId, saveState,
   showAlert, showConfirm, getButtonRow, registerShortcut = () => {},
   bookId = 674, fights = WAR_TORN_FIGHTS, seaChecks = FABLED_SEA_CHECKS,
-  seaCheck = fabledSeaCheck, characterDefaults = {}, extraFlags = [],
+  seaCheck = fabledSeaCheck, characterDefaults = {}, extraFlags = [], encounterOptions = [],
   startFight = startFabledFight, roundFight = fabledRound, fleeFight = fleeFabledFight,
   cancelFight = fight => ({ ...fight, status: 'cancelled' }) }) {
   const ID = 'sim' + bookId;
@@ -61,7 +61,7 @@ export function createFabledPanel({ document, t, getRun, getBookId, saveState,
   function report(game, fight, previousEvents = 0) {
     game.fight = fight;
     for (const event of fight.events.slice(previousEvents)) {
-      if (event.kind === 'attack') game.log.push(tk('attack', { name: event.direction === 'player' ? tk('you') : enemyName(fight.enemies[fight.target].name),
+      if (event.kind === 'attack') game.log.push(tk('attack', { name: event.direction === 'player' ? tk('you') : enemyName(event.enemy ?? fight.enemies[fight.target].name),
         total: event.total, defence: event.defence, damage: event.damage }));
       else if (event.kind === 'entry') game.log.push(tk('entry', event));
       else if (event.kind === 'reroll') game.log.push(tk('reroll', { previous: event.previous }));
@@ -69,6 +69,9 @@ export function createFabledPanel({ document, t, getRun, getBookId, saveState,
       else if (event.kind === 'abilityCheck') game.log.push(tk('specialCheck', { ...event, ability:tk(event.ability) }));
       else if (event.kind === 'abilityDrain') game.log.push(tk('abilityDrain', { ...event, ability:tk(event.ability) }));
       else if (event.kind === 'defenceBlessing') game.log.push(tk('defenceBlessingUsed'));
+      else if (event.kind === 'permanentWound') game.log.push(tk('permanentWound', event));
+      else if (event.kind === 'enemyEntry') game.log.push(tk('enemyEntry', event));
+      else if (event.kind === 'diseaseBlessing') game.log.push(tk('diseaseBlessingUsed'));
     }
     if (fight.status !== 'fighting') {
       game.log.push(tk('status.' + fight.status));
@@ -81,7 +84,8 @@ export function createFabledPanel({ document, t, getRun, getBookId, saveState,
     if (!game || !spec) return;
     el('applyEntry-row').hidden = !spec.entryDamage && !spec.entryDice && !spec.preCheck;
     el('ratPoisonUse-row').hidden = !spec.ratPoison;
-    const notes = [tk(spec.nonfatal ? 'duel' : 'sequential')];
+    const notes = [tk(spec.nonfatal ? 'duel' : spec.simultaneous ? 'simultaneous' : 'sequential')];
+    for (const option of encounterOptions) el(option.key+'-row').hidden = !option.sections.includes(spec.section);
     if (spec.threshold !== undefined) notes.push(tk('threshold', { stamina: spec.threshold, section: spec.win }));
     if (spec.attackModifier) notes.push(tk('penalty', { amount: spec.attackModifier }));
     if (bookId === 674 && spec.section === 121) notes.push(tk('underwater'));
@@ -104,6 +108,10 @@ export function createFabledPanel({ document, t, getRun, getBookId, saveState,
       el('attackModifier').value = String(game.setup.attackModifier ?? 0);
       el('applyEntry').checked = game.setup.applyEntry ?? true;
       el('ratPoisonUse').checked = false;
+      for (const option of encounterOptions) {
+        if (option.type==='checkbox') el(option.key).checked = game.setup[option.key] ?? false;
+        else el(option.key).value = String(game.setup[option.key] ?? 0);
+      }
       el('difficulty').value = '10'; el('rankDice').value = '1'; el('rankModifier').value = '0';
     }
     const character = game.character, fight = game.fight, busy = active(game), blocked = busy || !supported(game);
@@ -116,6 +124,15 @@ export function createFabledPanel({ document, t, getRun, getBookId, saveState,
     if (character) el('profession').value = character.profession;
     el('profession').disabled = blocked;
     for (const key of ['create', 'context', 'applyEntry', 'ratPoisonUse', 'attackModifier']) el(key).disabled = blocked;
+    for (const option of encounterOptions) el(option.key).disabled = blocked;
+    if (el('target')) {
+      el('target-row').hidden = !busy || !fight.config.simultaneous;
+      const target = Number(el('target').value);
+      el('target').innerHTML = (fight?.enemies ?? []).flatMap((foe,index)=>foe.stamina>0
+        ? [`<option value="${index}">${escape(enemyName(foe.name))}</option>`] : []).join('');
+      el('target').value = String(fight?.enemies[target]?.stamina>0 ? target : fight?.target ?? 0);
+      el('target').disabled = !busy;
+    }
     el('apply').disabled = blocked || !character;
     el('start').disabled = blocked || !character?.stamina;
     el('step').disabled = !supported(game) || !busy;
@@ -127,7 +144,7 @@ export function createFabledPanel({ document, t, getRun, getBookId, saveState,
     el('luckReroll').disabled = !busy || !character?.luckBlessing;
     if (el('luckReroll').disabled) el('luckReroll').value = '';
     for (const key of ['abilityRoll', 'rankRoll', 'seaRoll']) el(key).disabled = !supported(game) || busy || !character?.stamina;
-    el('safetyFromStorms').disabled = !character?.stormsBlessing;
+    el('safetyFromStorms').disabled = !character?.stormsBlessing && !character?.permanentStorms;
     if (el('safetyFromStorms').disabled) el('safetyFromStorms').checked = false;
     el('status').textContent = fight ? [tk('status.' + fight.status), tk('rounds', { count: fight.rounds }),
       ...fight.enemies.map(foe => `${enemyName(foe.name)}: ${tk('combat')} ${foe.combat}, ${tk('defence')} ${foe.defence}, ${tk('stamina')} ${foe.stamina}`),
@@ -151,6 +168,13 @@ export function createFabledPanel({ document, t, getRun, getBookId, saveState,
     el('surrender').insertAdjacentHTML('afterend', button('flee'));
     el('flee').hidden = true;
     for (const key of extraFlags) el('apply').insertAdjacentHTML('beforebegin', checkbox(key));
+    for (const option of encounterOptions) {
+      el('start').insertAdjacentHTML('beforebegin', option.type==='checkbox' ? checkbox(option.key)
+        : field(option.key,option.min??0,option.max??1000000).replace('<label ',`<label id="${ID}-${option.key}-row" `));
+    }
+    if (fights.some(spec=>spec.simultaneous)) {
+      el('step').parentElement.insertAdjacentHTML('beforebegin', `<label class="inv-edit-row" id="${ID}-target-row"><span class="inv-edit-label">${escape(tk('target'))}</span><select class="inv-edit-input" id="${ID}-target"></select></label>`);
+    }
     const sea = document.createElement('details');
     sea.innerHTML = `<summary>${escape(tk('sea'))}</summary><label class="inv-edit-row"><span class="inv-edit-label">${escape(tk('seaContext'))}</span><select class="inv-edit-input" id="${ID}-seaContext">${Object.entries(seaChecks).map(([section, spec]) => `<option value="${section}">${escape(tk('seaKind.' + spec.kind))} (${section})</option>`).join('')}</select></label>${select('ship', ['barque', 'brigantine', 'galleon'])}${select('crew', ['poor', 'average', 'good', 'excellent'])}${checkbox('safetyFromStorms')}${button('seaRoll')}`;
     overlay.querySelector('.bsim-col-left').appendChild(sea);
@@ -184,14 +208,18 @@ export function createFabledPanel({ document, t, getRun, getBookId, saveState,
       const index = number('context'), spec = fights[index];
       if (!spec) throw new RangeError('Invalid encounter');
       game.setup = { context: index, attackModifier: number('attackModifier'), applyEntry: el('applyEntry').checked };
+      const extra = Object.fromEntries(encounterOptions.map(option => [option.key, option.sections.includes(spec.section)
+        ? option.type==='checkbox' ? el(option.key).checked : number(option.key) : option.type==='checkbox' ? false : 0]));
+      Object.assign(game.setup,extra);
       game.log.push(encounterName(spec));
       report(game, startFight(spec, game.character, { applyEntry: el('applyEntry').checked,
         defence: spec.unarmoured ? game.character.combat + game.character.rank + number('attackModifier') : undefined,
-        attackModifier: number('attackModifier'), ratPoison: !!spec.ratPoison && el('ratPoisonUse').checked }));
+        attackModifier: number('attackModifier'), ratPoison: !!spec.ratPoison && el('ratPoisonUse').checked, ...extra }));
     }));
     el('step').addEventListener('click', () => action(game => {
       report(game, roundFight(game.fight, { combatBlessing: el('useCombatBlessing').checked,
-        luckReroll: el('luckReroll').value || null }), game.fight.events.length);
+        luckReroll: el('luckReroll').value || null,
+        ...(game.fight.config.simultaneous ? {target:number('target')} : {}) }), game.fight.events.length);
     }));
     el('surrender').addEventListener('click', () => action(game => report(game, surrenderFabledFight(game.fight), game.fight.events.length)));
     el('flee').addEventListener('click', () => action(game => report(game, fleeFight(game.fight), game.fight.events.length)));

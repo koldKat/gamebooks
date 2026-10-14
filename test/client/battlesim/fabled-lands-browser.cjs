@@ -22,5 +22,10 @@ if (process.argv.includes('--hidden-faces')) {
     .replace('fabled-lands-integration.fixture', 'hidden-faces-integration.fixture')
     .replace("'roster', 'navigation'", "'roster', 'navigation', 'hidden-faces'");
 }
+if (process.argv.includes('--rising-sun')) {
+  source = source.replaceAll('674', '679')
+    .replace('fabled-lands-integration.fixture', 'rising-sun-integration.fixture')
+    .replace("'roster', 'navigation'", "'roster', 'navigation', 'rising-sun'");
+}
 const child = new Module(__filename, module);
 child.filename = __filename; child.paths = module.paths; child._compile(source, __filename);
