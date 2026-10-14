@@ -56,5 +56,7 @@ const enemies = ['Thug', 'Two Ratmen', 'Tomb Guardian', 'Cultist', 'Wolf', 'Gole
   'Man with eyepatch', 'Scorpion Man', 'Black Dragon Knight', 'First bandit', 'Second bandit',
   'Two ratmen', 'First Trickster', 'Second Trickster', 'Third Trickster', 'First Golem', 'Second Golem',
   'Tree Guard', 'Bandit', 'Ghoul', 'Gryphon'];
+labels.flee = 'Flee';
+labels['status.fled'] = 'Escaped';
 for (const name of enemies) labels['enemy.' + name] = name;
 export default Object.fromEntries(Object.entries(labels).map(([key, value]) => ['battlesim674.' + key, value]));

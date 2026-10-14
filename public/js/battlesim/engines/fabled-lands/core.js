@@ -1,4 +1,4 @@
-import { fabledInteger, fabledDice, fabledDefence, validateFabledCharacter } from './character.js';
+import { fabledInteger, fabledDie, fabledDice, fabledDefence, validateFabledCharacter } from './character.js';
 
 function finish(fight, status) {
   fight.status = status;
@@ -22,7 +22,7 @@ function validateFight(fight) {
   }
 }
 
-export function startFabledFight(config, input, options = {}) {
+export function startFabledFight(config, input, options = {}, roll) {
   validateFabledCharacter(input, true);
   if (!config || !Array.isArray(config.enemies) || !config.enemies.length
     || !options || typeof options !== 'object' || Array.isArray(options)) throw new RangeError('Invalid encounter');
@@ -45,10 +45,13 @@ export function startFabledFight(config, input, options = {}) {
   if (config.threshold !== undefined) fabledInteger(config.threshold);
   if (config.lossStamina !== undefined) fabledInteger(config.lossStamina, 1);
   for (const enemy of fight.enemies) if (!enemy.stamina) throw new RangeError('Enemy already defeated');
-  if (applyEntry && config.entryDamage) {
-    fabledInteger(config.entryDamage);
-    fight.character.stamina = Math.max(0, fight.character.stamina - config.entryDamage);
-    fight.events.push({ kind: 'entry', damage: config.entryDamage });
+  if (applyEntry && (config.entryDamage || config.entryDice)) {
+    let damage = fabledInteger(config.entryDamage ?? 0);
+    const count = fabledInteger(config.entryDice ?? 0, 0, 3);
+    for (let index = 0; index < count; index++) damage += fabledDie(roll);
+    if (config.entryArmour) damage = Math.max(0, damage - fight.character.armour);
+    fight.character.stamina = Math.max(0, fight.character.stamina - damage);
+    fight.events.push({ kind: 'entry', damage });
     if (!fight.character.stamina) finish(fight, 'loss');
   }
   return fight;
@@ -98,5 +101,24 @@ export function surrenderFabledFight(input) {
   const fight = structuredClone(input);
   fight.status = 'surrender';
   fight.destination = fight.config.surrender;
+  return fight;
+}
+
+export function fleeFabledFight(input, roll) {
+  validateFight(input);
+  const escape = input.config.flee;
+  if (!escape || typeof escape !== 'object') throw new RangeError('Fleeing unavailable');
+  const count = fabledInteger(escape.dice ?? 0, 0, 3);
+  fabledInteger(escape.destination, 1);
+  const fight = structuredClone(input);
+  let damage = 0;
+  for (let index = 0; index < count; index++) damage += fabledDie(roll);
+  if (escape.armour) damage = Math.max(0, damage - fight.character.armour);
+  fight.character.stamina = Math.max(0, fight.character.stamina - damage);
+  fight.wounded ||= damage > 0;
+  fight.events.push({ kind: 'entry', damage });
+  fight.status = 'fled';
+  fight.destination = escape.destination;
+  if (!fight.character.stamina) finish(fight, 'loss');
   return fight;
 }

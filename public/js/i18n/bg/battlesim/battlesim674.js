@@ -65,5 +65,7 @@ const enemies = {
   'First Golem': 'Първи голем', 'Second Golem': 'Втори голем', 'Tree Guard': 'Дърво пазител',
   Bandit: 'Бандит', Ghoul: 'Гул', Gryphon: 'Грифон',
 };
+labels.flee = 'Бягство';
+labels['status.fled'] = 'Избягахте';
 for (const [name, value] of Object.entries(enemies)) labels['enemy.' + name] = value;
 export default Object.fromEntries(Object.entries(labels).map(([key, value]) => ['battlesim674.' + key, value]));

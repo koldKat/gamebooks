@@ -15,10 +15,11 @@ export function fabledDie(roll = () => Math.floor(Math.random() * 6) + 1) {
 
 export function fabledDice(roll) { return fabledDie(roll) + fabledDie(roll); }
 
-export function newFabledCharacter(profession = 'warrior') {
+export function newFabledCharacter(profession = 'warrior', { rank = 1, stamina = 9 } = {}) {
   if (!Object.hasOwn(FABLED_PROFESSIONS, profession)) throw new RangeError('Invalid profession');
+  fabledInteger(rank, 1); fabledInteger(stamina, 1);
   const abilities = Object.fromEntries(FABLED_ABILITIES.map((name, index) => [name, FABLED_PROFESSIONS[profession][index]]));
-  return { ...abilities, profession, rank: 1, stamina: 9, staminaInitial: 9,
+  return { ...abilities, profession, rank, stamina, staminaInitial: stamina,
     shards: 16, armour: 1, ratPoison: 0, combatBlessing: false, luckBlessing: false, stormsBlessing: false };
 }
 

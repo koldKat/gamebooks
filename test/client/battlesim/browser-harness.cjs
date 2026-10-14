@@ -4,10 +4,13 @@ const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 module.exports = async function checkBrowser({ file, profile, root, width, chromium, timeoutMs = 20000 }) {
   if (!chromium || !fs.existsSync(chromium)) throw Error('Set CHROMIUM to a headless Chromium executable');
-  const child = spawn('nice', ['-n', '10', chromium, '--no-sandbox', '--disable-gpu',
+  const env = { ...process.env, TMPDIR: root };
+  delete env.DISPLAY;
+  delete env.WAYLAND_DISPLAY;
+  const child = spawn('nice', ['-n', '10', chromium, '--headless=new', '--no-sandbox', '--disable-gpu',
     '--allow-file-access-from-files', '--remote-debugging-port=0', '--user-data-dir=' + profile,
     '--window-size=' + width + ',900', 'about:blank'],
-  { env: { ...process.env, TMPDIR: root }, stdio: ['ignore', 'ignore', 'pipe'], detached: true });
+  { env, stdio: ['ignore', 'ignore', 'pipe'], detached: true });
   const signalGroup = signal => {
     if (!child.pid) return;
     try { process.kill(-child.pid, signal); } catch (error) { if (error.code !== 'ESRCH') throw error; }

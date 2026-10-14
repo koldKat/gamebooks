@@ -4,12 +4,50 @@ import { readFileSync } from 'node:fs';
 import { WAR_TORN_FIGHTS } from '../../../public/js/battlesim/engines/fabled-lands/roster.js';
 import { newFabledCharacter, fabledDefence, fabledAbilityCheck, fabledRankCheck }
   from '../../../public/js/battlesim/engines/fabled-lands/character.js';
-import { startFabledFight, fabledRound } from '../../../public/js/battlesim/engines/fabled-lands/core.js';
+import { startFabledFight, fabledRound, fleeFabledFight } from '../../../public/js/battlesim/engines/fabled-lands/core.js';
+import { CITIES_OF_GOLD_FIGHTS, citiesOfGoldSeaCheck } from '../../../public/js/battlesim/engines/fabled-lands/cities-of-gold.js';
 
 const rolls = (...values) => () => { assert.ok(values.length, 'Unexpected die roll'); return values.shift(); };
 const enemy = (changes = {}) => ({ name: 'Wolf', combat: 3, defence: 5, stamina: 7, ...changes });
 const fight = (config = {}, character = {}) => startFabledFight({ enemies: [enemy()], ...config },
   { ...newFabledCharacter(), ...character });
+
+test('book-two defaults, escape damage and entry arrows preserve their inputs', () => {
+  const c = newFabledCharacter('warrior', { rank: 2, stamina: 13 });
+  assert.equal(c.rank, 2); assert.equal(c.staminaInitial, 13); assert.equal(c.stamina, 13);
+  assert.equal(newFabledCharacter().stamina, 9);
+  const find = section => CITIES_OF_GOLD_FIGHTS.find(row => row.section === section);
+  assert.equal(CITIES_OF_GOLD_FIGHTS.flatMap(row => row.enemies).length, 35);
+  const original = startFabledFight(find(207), c);
+  const escaped = fleeFabledFight(original, rolls(4));
+  assert.equal(escaped.status, 'fled'); assert.equal(escaped.destination, 22);
+  assert.equal(escaped.character.stamina, 9); assert.equal(original.character.stamina, 13);
+  assert.equal(original.status, 'fighting'); assert.equal(c.stamina, 13);
+  const shot = startFabledFight(find(726), c, {}, rolls(4));
+  assert.equal(shot.character.stamina, 10);
+  assert.equal(startFabledFight(find(726), c, { applyEntry: false }).character.stamina, 13);
+  const fatal = startFabledFight(find(207), { ...c, stamina: 1 });
+  assert.equal(fleeFabledFight(fatal, rolls(6)).destination, 560);
+  assert.throws(() => fleeFabledFight(startFabledFight(find(469), c)));
+});
+
+test('Golnir sea routes preserve special crew bonuses, escape threshold and storm-blessing destinations', () => {
+  const c = newFabledCharacter('mage', { rank: 2, stamina: 13 });
+  assert.equal(citiesOfGoldSeaCheck(411, c, {}, rolls(2, 3)).destination, 14);
+  assert.equal(citiesOfGoldSeaCheck(411, c, {}, rolls(2, 2)).destination, 461);
+  assert.equal(citiesOfGoldSeaCheck(488, c, {}, rolls(2, 2)).destination, 221);
+  const blessed = { ...c, stormsBlessing: true };
+  const safe = citiesOfGoldSeaCheck(583, blessed, { safetyFromStorms: true });
+  assert.equal(safe.destination, 198); assert.equal(safe.character.stormsBlessing, false);
+  assert.equal(blessed.stormsBlessing, true);
+  const defeated = citiesOfGoldSeaCheck(461, c, {}, rolls(2, 2, 3, 4));
+  assert.equal(defeated.destination, 535); assert.equal(defeated.damage, 7);
+  assert.equal(defeated.character.stamina, 6); assert.equal(c.stamina, 13);
+  const conceded = citiesOfGoldSeaCheck(461, c, {}, rolls(4, 4, 2));
+  assert.equal(conceded.destination, 510); assert.equal(conceded.damage, 2);
+  const won = citiesOfGoldSeaCheck(680, { ...c, rank: 6 }, {}, rolls(6, 6));
+  assert.equal(won.destination, 752); assert.equal(won.status, 'win');
+});
 
 test('all 49 verified source stat rows occur in 39 encounters with named opponents', () => {
   const source = JSON.parse(readFileSync(new URL('./fabled-lands-source.json', import.meta.url)));
