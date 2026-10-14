@@ -208,7 +208,7 @@ async function handleAdminRefundShopItem(req, res, userId) {
   if (result.error === 'invalid_item')     return send(res, 400, { error: 'Invalid item' });
   if (result.error === 'not_found')        return send(res, 404, { error: 'User not found' });
   if (result.error === 'nothing_to_refund') return send(res, 409, { error: 'Nothing to refund' });
-  send(res, 200, { ok: true });
+  send(res, 200, result);
 }
 
 async function handleAdminGiftGc(req, res, userId) {

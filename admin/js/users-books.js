@@ -668,7 +668,7 @@ export async function loadUserDetail(userId, edit = false) {
     metaBar.appendChild(lvlMeta);
 
     const shopXpBoost = user.xpBoostPurchased || 0;
-    if (shopXpBoost || user.bonusUndos || user.bonusFastTravels || user.bonusHeartbeatXp || user.bonusGcChancePurchased) {
+    if (shopXpBoost || user.bonusUndos || user.bonusFastTravels || user.bonusHeartbeatXp || user.bonusGcChancePurchased || user.bonusGcMintPurchased) {
       const boostMeta = el('div', 'meta-item');
       boostMeta.appendChild(el('div', 'label', 'Shop Boosts'));
       const boostVal = el('div', 'value');
@@ -742,6 +742,28 @@ export async function loadUserDetail(userId, edit = false) {
           }));
         }
         boostVal.appendChild(gcRow);
+      }
+      if (user.bonusGcMintPurchased) {
+        const mintCount = user.bonusGcMintPurchased;
+        const mintTotalCost = (mintCount * (mintCount + 1)) / 2;
+        const mintRow = el('div', '', '');
+        mintRow.style.cssText = 'display:flex;align-items:center;gap:0.4rem';
+        mintRow.appendChild(el('span', '', `+${(mintCount * 0.1).toFixed(1)}% Coin Mint (${mintCount} purchases)`));
+        mintRow.appendChild(mkBtn('Refund 1', 'btn-warn', () => {
+          showConfirm(`Refund one Coin Mint upgrade for ${user.username}? Refunds ${mintCount} GC, but removes its bonus on past XP too. The net balance increase may be smaller.`, async () => {
+            await api('POST', `/api/admin/users/${user.id}/refund`, { item: 'gc_mint' });
+            loadUserDetail(user.id);
+          }, { label: 'Refund', variant: 'warn' });
+        }));
+        if (mintCount > 1) {
+          mintRow.appendChild(mkBtn('Refund all', 'btn-danger', () => {
+            showConfirm(`Refund all ${mintCount} Coin Mint upgrades for ${user.username}? Refunds ${mintTotalCost} GC, but removes their bonus on past XP too. The net balance increase may be smaller.`, async () => {
+              await api('POST', `/api/admin/users/${user.id}/refund`, { item: 'gc_mint', all: true });
+              loadUserDetail(user.id);
+            }, { label: 'Refund all', variant: 'danger' });
+          }));
+        }
+        boostVal.appendChild(mintRow);
       }
       boostMeta.appendChild(boostVal);
       metaBar.appendChild(boostMeta);

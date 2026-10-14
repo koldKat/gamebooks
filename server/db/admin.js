@@ -1539,11 +1539,12 @@ function purchaseShopItem(userId, item) {
   return _purchaseShopItemTx(userId, item);
 }
 
-function adminRefundShopItem(userId, item, all = false) {
+const _adminRefundShopItemTx = db.transaction((userId, item, all) => {
   const def = _shopItemsCache.get(item);
   if (!def) return { error: 'invalid_item' };
-  const row = db.prepare(`SELECT coins_spent, ${def.col} FROM users WHERE id = ?`).get(userId);
+  const row = db.prepare(`SELECT xp, coins_spent, bonus_coins, bonus_gc_mint_purchased, ${def.col} FROM users WHERE id = ?`).get(userId);
   if (!row) return { error: 'not_found' };
+  const beforeBalance = coinBalance(row);
   const current = row[def.col] || 0;
   if (item !== 'xp_boost' && item !== 'heartbeat_xp' && item !== 'gc_chance' && item !== 'gc_mint' && current < def.delta) return { error: 'nothing_to_refund' };
   let refund;
@@ -1569,11 +1570,17 @@ function adminRefundShopItem(userId, item, all = false) {
     db.prepare(`UPDATE users SET coins_spent = MAX(0, coins_spent - ?), ${def.col} = ${def.col} - ? WHERE id = ?`)
       .run(refund, def.delta, userId);
   }
-  if (refund > 0) {
-    const balance = getUserXpInfo(userId).coinsBalance;
-    _insertNotif.run(userId, 'coin_gain', JSON.stringify({ amount: refund, balance, reason: 'shop_refund' }));
+  const after = db.prepare('SELECT xp, coins_spent, bonus_coins, bonus_gc_mint_purchased FROM users WHERE id = ?').get(userId);
+  const newBalance = coinBalance(after), netCoins = newBalance - beforeBalance;
+  // Removing Coin Mint also removes its retroactive balance bonus.
+  if (netCoins > 0) {
+    _insertNotif.run(userId, 'coin_gain', JSON.stringify({ amount: netCoins, balance: newBalance, reason: 'shop_refund' }));
   }
-  return { ok: true };
+  return { ok: true, refundedCost: refund, netCoins, newBalance };
+});
+
+function adminRefundShopItem(userId, item, all = false) {
+  return _adminRefundShopItemTx.immediate(userId, item, all);
 }
 
 // One-time back-fill: grant 1% xp_boost_pct per level already earned

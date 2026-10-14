@@ -31,7 +31,7 @@ async function handleAdminUpdateAnnouncement(req, res, id) {
   const row = db.updateAnnouncement(id, t, b);
   if (!row) return send(res, 404, { error: 'Not found' });
   send(res, 200, row);
-  if (row.is_published) feedPush({ type: 'feed_changed', entity: 'announcement', action: 'update' });
+  if (row.is_draft === 0) feedPush({ type: 'feed_changed', entity: 'announcement', action: 'update' });
 }
 
 async function handleAdminPublishAnnouncement(req, res, id) {
