@@ -158,7 +158,7 @@
 #sim550-overlay .bsim-col-left > * { flex-shrink: 0; }
 #sim550-overlay .bsim-btn-row { display: flex; flex-wrap: wrap; gap: 0.35rem; }
 #sim550-close { margin-left: auto; }
-#sim550-btn, #sim570-btn, #sim636-btn, #sim644-btn, #sim648-btn, #sim654-btn, #sim658-btn, #sim663-btn, #sim665-btn, #sim671-btn, #sim672-btn {
+#sim550-btn, #sim570-btn, #sim636-btn, #sim644-btn, #sim648-btn, #sim654-btn, #sim658-btn, #sim663-btn, #sim665-btn, #sim671-btn, #sim672-btn, #sim674-btn {
   background: rgba(31, 41, 55, 0.88);
   border: 1px solid #374151;
   border-radius: 7px;
@@ -172,7 +172,7 @@
   box-shadow: 0 2px 8px rgba(0,0,0,0.35);
   flex-shrink: 0;
 }
-#sim550-btn:hover, #sim570-btn:hover, #sim636-btn:hover, #sim644-btn:hover, #sim648-btn:hover, #sim654-btn:hover, #sim658-btn:hover, #sim663-btn:hover, #sim665-btn:hover, #sim671-btn:hover, #sim672-btn:hover { background: #374151; color: #d1d5db; }
+#sim550-btn:hover, #sim570-btn:hover, #sim636-btn:hover, #sim644-btn:hover, #sim648-btn:hover, #sim654-btn:hover, #sim658-btn:hover, #sim663-btn:hover, #sim665-btn:hover, #sim671-btn:hover, #sim672-btn:hover, #sim674-btn:hover { background: #374151; color: #d1d5db; }
 #sim570-overlay [hidden] { display: none !important; }
 #sim570-overlay .inv-edit-row { flex-wrap: wrap; }
 #sim570-overlay input, #sim570-overlay select { max-width: 100%; min-width: 0; }
@@ -240,6 +240,13 @@
 #sim672-overlay .bsim-btn-row { display: flex; flex-wrap: wrap; gap: 0.35rem; }
 #sim672-overlay .bsim-status { white-space: pre-line; overflow-wrap: anywhere; }
 #sim672-close { margin-left: auto; }
+#sim674-overlay [hidden] { display: none !important; }
+#sim674-overlay .inv-edit-row { flex-wrap: wrap; }
+#sim674-overlay input, #sim674-overlay select { max-width: 100%; min-width: 0; }
+#sim674-overlay .bsim-col-left > * { flex-shrink: 0; }
+#sim674-overlay .bsim-btn-row { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+#sim674-overlay .bsim-status { white-space: pre-line; overflow-wrap: anywhere; }
+#sim674-close { margin-left: auto; }
 
 #bsim-close, #s8-close, #sim286-close, #sim198-close, #sim199-close, #sim200-close, #sim186-close, #sim201-close, #sim202-close, #sim203-close, #sim204-close, #sim205-close, #sim231-close, #sim232-close { margin-left: auto; }
 

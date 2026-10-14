@@ -31,5 +31,5 @@ const scratch = fs.mkdtempSync(path.join(root, '672-integration-'));
       }
     }
     fs.writeFileSync(receipt, JSON.stringify({ bookId: 672, status: 'REAL-MODULE-INTEGRATION-PASSED-STATE-API-INTERCEPTED-NOT-LIVE-API', hashes, results, productionWrites: 0 }, null, 2) + '\n');
-  } finally { fs.rmSync(scratch, { recursive: true, force: true }); }
+  } finally { fs.rmSync(scratch, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

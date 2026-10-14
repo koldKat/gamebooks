@@ -18,11 +18,17 @@ function createReadingAccess(db, policy = DEFAULT_POLICY) {
     CREATE TABLE IF NOT EXISTS book_reading_entries (
       book_id INTEGER PRIMARY KEY REFERENCES books(id) ON DELETE CASCADE,
       section_id TEXT NOT NULL CHECK(length(trim(section_id)) > 0 AND trim(section_id) NOT IN ('0', '-1')),
-      counts_as_section INTEGER NOT NULL DEFAULT 1 CHECK(counts_as_section IN (0, 1))
+      counts_as_section INTEGER NOT NULL DEFAULT 1 CHECK(counts_as_section IN (0, 1)),
+      start_section_id TEXT CHECK(start_section_id IS NULL OR
+        (length(trim(start_section_id)) > 0 AND trim(start_section_id) NOT IN ('0', '-1')))
     );
   `);
   if (!db.prepare('PRAGMA table_info(book_reading_entries)').all().some(column => column.name === 'counts_as_section')) {
     db.exec('ALTER TABLE book_reading_entries ADD COLUMN counts_as_section INTEGER NOT NULL DEFAULT 1 CHECK(counts_as_section IN (0, 1))');
+  }
+  if (!db.prepare('PRAGMA table_info(book_reading_entries)').all().some(column => column.name === 'start_section_id')) {
+    db.exec(`ALTER TABLE book_reading_entries ADD COLUMN start_section_id TEXT CHECK(start_section_id IS NULL OR
+      (length(trim(start_section_id)) > 0 AND trim(start_section_id) NOT IN ('0', '-1')))`);
   }
   db.transaction(() => {
     if (db.prepare('SELECT 1 FROM reading_access_migrations WHERE name = ?').get('historical-runs-v1')) return;
@@ -36,7 +42,8 @@ function createReadingAccess(db, policy = DEFAULT_POLICY) {
   })();
 
   function getAccess(userId, bookId, includeFrontmatter = true) {
-    const book = db.prepare(`SELECT b.id, b.name, b.total_sections, e.section_id AS reading_start_section
+    const book = db.prepare(`SELECT b.id, b.name, b.total_sections,
+      COALESCE(e.start_section_id, e.section_id) AS reading_start_section
       FROM books b LEFT JOIN book_reading_entries e ON e.book_id = b.id
       WHERE b.id = ? AND b.has_live_reading = 1 AND
         (b.is_public = 1 OR b.created_by = ? OR EXISTS

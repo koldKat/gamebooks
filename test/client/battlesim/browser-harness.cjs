@@ -7,7 +7,11 @@ module.exports = async function checkBrowser({ file, profile, root, width, chrom
   const child = spawn('nice', ['-n', '10', chromium, '--no-sandbox', '--disable-gpu',
     '--allow-file-access-from-files', '--remote-debugging-port=0', '--user-data-dir=' + profile,
     '--window-size=' + width + ',900', 'about:blank'],
-  { env: { ...process.env, TMPDIR: root }, stdio: ['ignore', 'ignore', 'pipe'] });
+  { env: { ...process.env, TMPDIR: root }, stdio: ['ignore', 'ignore', 'pipe'], detached: true });
+  const signalGroup = signal => {
+    if (!child.pid) return;
+    try { process.kill(-child.pid, signal); } catch (error) { if (error.code !== 'ESRCH') throw error; }
+  };
   let diagnostic = '', socket;
   child.stderr.on('data', bytes => { diagnostic = (diagnostic + bytes).slice(-2000); });
   const exited = new Promise((resolve, reject) => { child.once('exit', resolve); child.once('error', reject); });
@@ -59,9 +63,10 @@ module.exports = async function checkBrowser({ file, profile, root, width, chrom
     throw Error('Browser did not complete: ' + JSON.stringify(last));
   } finally {
     socket?.close();
-    child.kill('SIGTERM');
+    signalGroup('SIGTERM');
     await Promise.race([exited, delay(3000)]);
-    if (child.exitCode === null && child.signalCode === null) { child.kill('SIGKILL'); await exited; }
-    fs.rmSync(profile, { recursive: true, force: true });
+    signalGroup('SIGKILL');
+    if (child.exitCode === null && child.signalCode === null) await exited;
+    fs.rmSync(profile, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
   }
 };

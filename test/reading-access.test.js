@@ -102,3 +102,35 @@ test('book-defined reading entries default to one and never modify saved runs', 
   assert.equal(db.prepare('SELECT count(*) n FROM book_reading_entries').get().n, 0);
   db.close();
 });
+
+test('an uncounted auxiliary section can keep an independent normal reading start', () => {
+  const { db, access } = fixture();
+  const before = db.prepare('SELECT * FROM user_books').all();
+  db.prepare(`INSERT INTO book_reading_entries (book_id, section_id, counts_as_section, start_section_id)
+    VALUES (?, ?, 0, ?)`).run(202, '680', '1');
+  for (const service of [access, createReadingAccess(db)]) {
+    assert.equal(service.getAccess(1, 202).startSection, 1);
+    assert.equal(service.getAccess(1, 202, false).startSection, 1);
+  }
+  assert.deepEqual(db.prepare('SELECT section_id, counts_as_section FROM book_reading_entries WHERE book_id=202').get(),
+    { section_id: '680', counts_as_section: 0 });
+  assert.deepEqual(db.prepare('SELECT * FROM user_books').all(), before);
+  for (const invalid of ['', ' ', '0', '-1']) {
+    assert.throws(() => db.prepare('UPDATE book_reading_entries SET start_section_id=? WHERE book_id=202').run(invalid), /CHECK/);
+  }
+  db.close();
+});
+
+test('legacy entry migration retains its start, count policy and saved state', () => {
+  const { db } = fixture();
+  db.exec(`DROP TABLE book_reading_entries;
+    CREATE TABLE book_reading_entries (book_id INTEGER PRIMARY KEY, section_id TEXT NOT NULL, counts_as_section INTEGER NOT NULL DEFAULT 1);
+    INSERT INTO book_reading_entries VALUES (202, 'prologue', 0);`);
+  const before = db.prepare('SELECT * FROM user_books').all();
+  const access = createReadingAccess(db);
+  assert.equal(access.getAccess(1, 202).startSection, 'prologue');
+  assert.deepEqual(db.prepare('SELECT * FROM book_reading_entries').all(),
+    [{ book_id: 202, section_id: 'prologue', counts_as_section: 0, start_section_id: null }]);
+  assert.deepEqual(db.prepare('SELECT * FROM user_books').all(), before);
+  db.close();
+});
