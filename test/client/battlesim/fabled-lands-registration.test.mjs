@@ -86,11 +86,12 @@ test('the actual XP handler awards wins and losses once, not surrender or abando
   const state = (id,history) => ({ playthroughs: [{ startedAt: 1, path: [], ['sim'+id]: { history } }] });
   const history = [{ outcome: 'win', ts: 100 }, { outcome: 'loss', ts: 101 },
     { outcome: 'surrender', ts: 102 }, { outcome: 'cancelled', ts: 103 }];
-  for (const id of [674,680]) {
+  for (const id of [674,680,689]) {
     context.processStateXp(1, id, state(id,[]), state(id,history), 0);
     context.processStateXp(1, id, state(id,history), state(id,history), 0);
   }
   assert.deepEqual(awards.filter(row => row.event.startsWith('battlesim_')),
     [{ event: 'battlesim_win', ref: 'sim674:100' }, { event: 'battlesim_loss', ref: 'sim674:101' },
-      { event: 'battlesim_win', ref: 'sim680:100' }, { event: 'battlesim_loss', ref: 'sim680:101' }]);
+      { event: 'battlesim_win', ref: 'sim680:100' }, { event: 'battlesim_loss', ref: 'sim680:101' },
+      { event: 'battlesim_win', ref: 'sim689:100' }, { event: 'battlesim_loss', ref: 'sim689:101' }]);
 });

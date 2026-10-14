@@ -272,6 +272,34 @@
 #sim680-overlay .bsim-status { white-space: pre-line; overflow-wrap: anywhere; }
 #sim680-close { margin-left: auto; }
 
+#sim689-btn {
+  background: rgba(31, 41, 55, 0.88);
+  border: 1px solid #374151;
+  border-radius: 7px;
+  color: #9ca3af;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+  flex-shrink: 0;
+}
+#sim689-btn:hover { background: #374151; color: #d1d5db; }
+#sim689-overlay [hidden] { display: none !important; }
+#sim689-overlay .inv-edit-row { flex-wrap: wrap; }
+#sim689-overlay input, #sim689-overlay select { max-width: 100%; min-width: 0; }
+#sim689-overlay .bsim-col-left > * { flex-shrink: 0; }
+#sim689-overlay .bsim-col-left { gap: 0.4rem; }
+#sim689-overlay .bsim-btn-row { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+#sim689-overlay .bsim-status { white-space: pre-line; overflow-wrap: anywhere; }
+#sim689-overlay .legendary-hero { min-width: 0; margin: 0.35rem 0; padding: 0.35rem; border: 1px solid #374151; }
+#sim689-overlay .legendary-hero legend { color: #9ca3af; font-size: 0.8rem; }
+#sim689-overlay details > summary { cursor: pointer; font-size: 0.85rem; }
+#sim689-overlay #sim689-party details { margin: 0.2rem 0; }
+#sim689-close { margin-left: auto; }
+
 #bsim-close, #s8-close, #sim286-close, #sim198-close, #sim199-close, #sim200-close, #sim186-close, #sim201-close, #sim202-close, #sim203-close, #sim204-close, #sim205-close, #sim231-close, #sim232-close { margin-left: auto; }
 
 .bsim-body {
