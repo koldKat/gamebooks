@@ -17,5 +17,10 @@ if (process.argv.includes('--howling-darkness')) {
     .replace('fabled-lands-integration.fixture', 'howling-darkness-integration.fixture')
     .replace("'roster', 'navigation'", "'roster', 'navigation', 'howling-darkness', 'blood-dark-sea'");
 }
+if (process.argv.includes('--hidden-faces')) {
+  source = source.replaceAll('674', '678')
+    .replace('fabled-lands-integration.fixture', 'hidden-faces-integration.fixture')
+    .replace("'roster', 'navigation'", "'roster', 'navigation', 'hidden-faces'");
+}
 const child = new Module(__filename, module);
 child.filename = __filename; child.paths = module.paths; child._compile(source, __filename);

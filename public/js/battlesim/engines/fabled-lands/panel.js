@@ -12,7 +12,9 @@ const escape = value => String(value).replace(/[&<>"']/g,
 export function createFabledPanel({ document, t, getRun, getBookId, saveState,
   showAlert, showConfirm, getButtonRow, registerShortcut = () => {},
   bookId = 674, fights = WAR_TORN_FIGHTS, seaChecks = FABLED_SEA_CHECKS,
-  seaCheck = fabledSeaCheck, characterDefaults = {}, extraFlags = [] }) {
+  seaCheck = fabledSeaCheck, characterDefaults = {}, extraFlags = [],
+  startFight = startFabledFight, roundFight = fabledRound, fleeFight = fleeFabledFight,
+  cancelFight = fight => ({ ...fight, status: 'cancelled' }) }) {
   const ID = 'sim' + bookId;
   const characterFlags = [...flags, ...extraFlags];
   const tk = (key, params) => t('battlesim' + bookId + '.' + key, params);
@@ -64,6 +66,9 @@ export function createFabledPanel({ document, t, getRun, getBookId, saveState,
       else if (event.kind === 'entry') game.log.push(tk('entry', event));
       else if (event.kind === 'reroll') game.log.push(tk('reroll', { previous: event.previous }));
       else if (event.kind === 'ratPoison') game.log.push(tk('poisonUsed'));
+      else if (event.kind === 'abilityCheck') game.log.push(tk('specialCheck', { ...event, ability:tk(event.ability) }));
+      else if (event.kind === 'abilityDrain') game.log.push(tk('abilityDrain', { ...event, ability:tk(event.ability) }));
+      else if (event.kind === 'defenceBlessing') game.log.push(tk('defenceBlessingUsed'));
     }
     if (fight.status !== 'fighting') {
       game.log.push(tk('status.' + fight.status));
@@ -74,13 +79,15 @@ export function createFabledPanel({ document, t, getRun, getBookId, saveState,
   function contextChanged() {
     const game = data(), spec = fights[Number(el('context').value)];
     if (!game || !spec) return;
-    el('applyEntry-row').hidden = !spec.entryDamage && !spec.entryDice;
+    el('applyEntry-row').hidden = !spec.entryDamage && !spec.entryDice && !spec.preCheck;
     el('ratPoisonUse-row').hidden = !spec.ratPoison;
     const notes = [tk(spec.nonfatal ? 'duel' : 'sequential')];
     if (spec.threshold !== undefined) notes.push(tk('threshold', { stamina: spec.threshold, section: spec.win }));
     if (spec.attackModifier) notes.push(tk('penalty', { amount: spec.attackModifier }));
     if (bookId === 674 && spec.section === 121) notes.push(tk('underwater'));
     if (spec.woundEffect) notes.push(tk('effect.' + spec.woundEffect));
+    if (spec.special) notes.push(tk('effect.' + spec.special));
+    if (spec.winChoices) notes.push(tk('winChoices', { sections: spec.winChoices.join(', ') }));
     if (spec.surrender) notes.push(tk('canSurrender'));
     if (spec.flee) notes.push(tk('canFlee'));
     if (bookId === 674 && spec.section === 43) notes.push(tk('magicWeapon'));
@@ -178,22 +185,22 @@ export function createFabledPanel({ document, t, getRun, getBookId, saveState,
       if (!spec) throw new RangeError('Invalid encounter');
       game.setup = { context: index, attackModifier: number('attackModifier'), applyEntry: el('applyEntry').checked };
       game.log.push(encounterName(spec));
-      report(game, startFabledFight(spec, game.character, { applyEntry: el('applyEntry').checked,
+      report(game, startFight(spec, game.character, { applyEntry: el('applyEntry').checked,
         defence: spec.unarmoured ? game.character.combat + game.character.rank + number('attackModifier') : undefined,
         attackModifier: number('attackModifier'), ratPoison: !!spec.ratPoison && el('ratPoisonUse').checked }));
     }));
     el('step').addEventListener('click', () => action(game => {
-      report(game, fabledRound(game.fight, { combatBlessing: el('useCombatBlessing').checked,
+      report(game, roundFight(game.fight, { combatBlessing: el('useCombatBlessing').checked,
         luckReroll: el('luckReroll').value || null }), game.fight.events.length);
     }));
     el('surrender').addEventListener('click', () => action(game => report(game, surrenderFabledFight(game.fight), game.fight.events.length)));
-    el('flee').addEventListener('click', () => action(game => report(game, fleeFabledFight(game.fight), game.fight.events.length)));
+    el('flee').addEventListener('click', () => action(game => report(game, fleeFight(game.fight), game.fight.events.length)));
     el('cancel').addEventListener('click', () => {
       const run = getRun(), original = data();
       if (!supported(original) || !active(original)) return;
       showConfirm(tk('cancelConfirm'), () => {
         if (run !== getRun() || original !== data()) return;
-        action(game => { game.fight.status = 'cancelled'; game.log.push(tk('status.cancelled')); });
+        action(game => { game.fight = cancelFight(game.fight); game.log.push(tk('status.cancelled')); });
       });
     });
     for (const kind of ['ability', 'rank']) el(kind + 'Roll').addEventListener('click', () => action(game => {
