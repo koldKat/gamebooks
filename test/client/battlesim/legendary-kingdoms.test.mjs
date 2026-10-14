@@ -4,15 +4,18 @@ import { readFileSync } from './simulator-source.mjs';
 import en from '../../../public/js/i18n/en/battlesim/battlesim689.js';
 import bg from '../../../public/js/i18n/bg/battlesim/battlesim689.js';
 import { newValleyCharacter, legendarySkillCheck, legendaryAttack, legendaryDamage,
-  legendaryHeal, legendaryPool, newValleySkullcracker } from '../../../public/js/battlesim/engines/legendary-kingdoms/character.js';
+  legendaryHeal, legendaryPool, newValleySkullcracker, newCrownCharacter,
+  newCrownCustomCharacter, newLegendaryCustomCharacter } from '../../../public/js/battlesim/engines/legendary-kingdoms/character.js';
 import { startLegendaryFight, legendaryPlayerAttack, legendarySkipAttack, legendaryEnemyAttack,
   legendaryAssignDamage, legendaryFlee, legendaryPlayerSpell, legendaryCanAct, legendaryDrinkPotion,
   legendaryTakeGuardWeapon, legendaryTommulReward } from '../../../public/js/battlesim/engines/legendary-kingdoms/combat.js';
 import { startLegendaryNaval, legendaryNavalAttack, legendaryWarpWood } from '../../../public/js/battlesim/engines/legendary-kingdoms/naval.js';
 import { startLegendaryArmy, legendaryArmyStep, legendaryArmyEffect } from '../../../public/js/battlesim/engines/legendary-kingdoms/army.js';
 import { chooseLegendaryStartingSpells, learnLegendarySpell, forgetLegendarySpell, drainLegendarySpell,
-  rechargeLegendarySpells } from '../../../public/js/battlesim/engines/legendary-kingdoms/spells.js';
+  rechargeLegendarySpells, CROWN_STARTING_SPELLS, chooseCrownStartingSpells,
+  learnCrownApprenticeSpell } from '../../../public/js/battlesim/engines/legendary-kingdoms/spells.js';
 import { VALLEY_FIGHTS, startValleyFight, startValleyArmy, startValleyNaval } from '../../../public/js/battlesim/engines/legendary-kingdoms/valley.js';
+import { CROWN_ROSTER } from '../../../public/js/battlesim/engines/legendary-kingdoms/crown-roster.js';
 
 test('Valley locales have matching keys and placeholders and both lazy loaders register once', () => {
   assert.deepEqual(Object.keys(en).sort(),Object.keys(bg).sort());
@@ -41,6 +44,99 @@ test('named profiles match the six printed starting skill and Health rows', () =
   const first = newValleyCharacter('tasha');
   first.skills.stealth = 0;
   assert.equal(newValleyCharacter('tasha').skills.stealth, 5);
+});
+
+test('Crown profiles and custom limits stay separate from Valley defaults', () => {
+  const expected = { jessica: [7,1,4,2,5,9], tiquon: [1,3,7,2,2,7], tasha: [4,7,1,4,3,9],
+    amelia: [4,3,3,4,1,7], akihiro: [5,3,3,7,1,9], brash: [3,5,3,1,7,9] };
+  for (const [id, values] of Object.entries(expected)) {
+    const hero = newCrownCharacter(id);
+    assert.deepEqual([...Object.values(hero.skills), hero.health], values);
+    assert.equal(hero.maxHealth, hero.health);
+    assert.equal(hero.spellcaster, ['tiquon', 'amelia'].includes(id));
+  }
+  const saved = newValleyCharacter('jessica');
+  const before = structuredClone(saved);
+  const crown = newCrownCharacter('jessica');
+  crown.skills.fighting = 0;
+  assert.deepEqual(saved, before);
+  assert.equal(newCrownCharacter('jessica').skills.fighting, 7);
+  const warrior = { fighting: 7, stealth: 3, lore: 3, survival: 3, charisma: 3 };
+  const caster = { fighting: 1, stealth: 3, lore: 7, survival: 2, charisma: 2 };
+  assert.equal(newCrownCustomCharacter('Warrior', warrior).health, 9);
+  assert.equal(newCrownCustomCharacter('Mage', caster, true).health, 7);
+  assert.throws(() => newLegendaryCustomCharacter('Warrior', warrior));
+  assert.throws(() => newCrownCustomCharacter('Mage', caster));
+  assert.throws(() => newCrownCustomCharacter('Warrior', { ...warrior, fighting: 8, charisma: 2 }));
+  assert.throws(() => newCrownCustomCharacter('Mage', { ...caster, fighting: 0, charisma: 3 }, true));
+  assert.throws(() => newCrownCharacter('__proto__'));
+});
+
+test('Crown starting spells and drained apprentice spells preserve Valley spell rules', () => {
+  assert.deepEqual(CROWN_STARTING_SPELLS, ['armourOfHeaven', 'iceBolt', 'poisonStream',
+    'soothingTouch', 'unfailingStrike', 'wolfSpirit', 'magicCabinet']);
+  const hero = newCrownCharacter('tiquon');
+  const spells = ['soothingTouch', 'iceBolt', 'wolfSpirit'];
+  const selected = chooseCrownStartingSpells(hero, spells);
+  assert.ok(selected.spells.every(entry => entry.charged));
+  assert.equal(hero.spells.length, 0);
+  assert.throws(() => chooseCrownStartingSpells(hero, ['animalSpeech', 'iceBolt', 'wolfSpirit']));
+  assert.throws(() => chooseLegendaryStartingSpells(newValleyCharacter('tiquon'), spells));
+  const learned = learnCrownApprenticeSpell(selected, 'magicCabinet');
+  assert.equal(learned.spells.at(-1).charged, false);
+  assert.equal(learnLegendarySpell(selected, 'magicCabinet').spells.at(-1).charged, true);
+  assert.equal(selected.spells.length, 3);
+  assert.throws(() => learnCrownApprenticeSpell(selected, 'animalSpeech'));
+  assert.throws(() => learnCrownApprenticeSpell(selected, 'iceBolt'));
+  const full = learnCrownApprenticeSpell(learnCrownApprenticeSpell(learned, 'poisonStream'), 'unfailingStrike');
+  assert.equal(full.spells.length, 6);
+  assert.throws(() => learnCrownApprenticeSpell(full, 'armourOfHeaven'));
+});
+
+test('Crown roster retains every printed row, nonnumeric attacks and automatic damage', () => {
+  assert.equal(CROWN_ROSTER.length, 281);
+  assert.equal(new Set(CROWN_ROSTER.map(enemy => enemy.section)).size, 85);
+  assert.ok(Object.isFrozen(CROWN_ROSTER));
+  const party = [newCrownCharacter('jessica')];
+  const before = structuredClone(party);
+  for (const enemy of CROWN_ROSTER) {
+    assert.ok(Object.isFrozen(enemy));
+    assert.ok(Number.isSafeInteger(enemy.automaticDamage) && enemy.automaticDamage >= 0);
+    const fight = startLegendaryFight(party, [enemy]);
+    assert.notEqual(fight.enemies[0], enemy);
+    assert.equal(fight.enemies[0].health, enemy.health);
+  }
+  assert.deepEqual(party, before);
+  const hag = CROWN_ROSTER.find(enemy => enemy.section === 1146);
+  assert.equal(hag.health, 22);
+  assert.equal(hag.automaticDamage, 1);
+  const demon = CROWN_ROSTER.find(enemy => enemy.section === 626);
+  assert.equal(demon.defence, 7);
+  assert.equal(demon.automaticDamage, 3);
+  const body = CROWN_ROSTER.find(enemy => enemy.name === 'Chimera Body');
+  assert.equal(body.attack, null);
+  assert.equal(body.attackType, 'none');
+  const skeleton = CROWN_ROSTER.find(enemy => enemy.section === 381 && enemy.name === 'Skeleton');
+  assert.equal(skeleton.attack, null);
+  assert.equal(skeleton.sourceAttack, '- (4+)');
+  assert.equal(skeleton.attackType, 'special');
+});
+
+test('printed automatic damage applies even on misses and allows ordinary armour saves', () => {
+  const party = [newCrownCharacter('jessica')];
+  party[0].armour = 2;
+  const enemy = { name: 'Auto damage', attack: 2, threshold: 4, attackType: 'dice',
+    defence: 4, health: 20, automaticDamage: 2 };
+  const original = startLegendaryFight(party, [enemy], { partyFirst: false });
+  const rolled = legendaryEnemyAttack(original, () => 1);
+  assert.equal(rolled.pending.hits, 2);
+  assert.equal(rolled.log.at(-1).automaticDamage, 2);
+  assert.equal(legendaryAssignDamage(rolled, 0, () => 4).party[0].health, 9);
+  assert.equal(legendaryAssignDamage(rolled, 0, () => 1).party[0].health, 7);
+  assert.equal(original.pending, null);
+  assert.equal(party[0].health, 9);
+  assert.throws(() => startLegendaryFight(party, [{ ...enemy, automaticDamage: -1 }]));
+  assert.throws(() => startLegendaryFight(party, [{ ...enemy, automaticDamage: 0.5 }]));
 });
 
 test('recruited Skullcracker uses section 245 values and his permanent ordinary club', () => {

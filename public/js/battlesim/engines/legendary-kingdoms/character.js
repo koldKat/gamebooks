@@ -9,6 +9,15 @@ export const VALLEY_PROFILES = Object.freeze({
   brash: Object.freeze({ name: 'Brash', skills: Object.freeze([2, 4, 3, 1, 5]), health: 8 }),
 });
 
+export const CROWN_PROFILES = Object.freeze({
+  jessica: Object.freeze({ name: 'Sar Jessica Dayne', skills: Object.freeze([7, 1, 4, 2, 5]), health: 9 }),
+  tiquon: Object.freeze({ name: "Lord Ti'Quon", skills: Object.freeze([1, 3, 7, 2, 2]), health: 7, spellcaster: true }),
+  tasha: Object.freeze({ name: 'Tasha', skills: Object.freeze([4, 7, 1, 4, 3]), health: 9 }),
+  amelia: Object.freeze({ name: 'Amelia Pass-Dayne', skills: Object.freeze([4, 3, 3, 4, 1]), health: 7, spellcaster: true }),
+  akihiro: Object.freeze({ name: 'Akihiro of Chalice', skills: Object.freeze([5, 3, 3, 7, 1]), health: 9 }),
+  brash: Object.freeze({ name: 'Brash', skills: Object.freeze([3, 5, 3, 1, 7]), health: 9 }),
+});
+
 export function legendaryInteger(value, minimum = 0, maximum = Number.MAX_SAFE_INTEGER) {
   if (!Number.isSafeInteger(value) || value < minimum || value > maximum)
     throw new RangeError('Invalid Legendary Kingdoms value');
@@ -35,6 +44,16 @@ export function legendaryPool(count, threshold, roll) {
 export function newValleyCharacter(profileId) {
   const profile = Object.hasOwn(VALLEY_PROFILES, profileId) && VALLEY_PROFILES[profileId];
   if (!profile) throw new RangeError('Unknown Valley of Bones character');
+  return newProfileCharacter(profileId, profile);
+}
+
+export function newCrownCharacter(profileId) {
+  const profile = Object.hasOwn(CROWN_PROFILES, profileId) && CROWN_PROFILES[profileId];
+  if (!profile) throw new RangeError('Unknown Crown & Tower character');
+  return newProfileCharacter(profileId, profile);
+}
+
+function newProfileCharacter(profileId, profile) {
   return {
     profileId, name: profile.name,
     skills: Object.fromEntries(LEGENDARY_SKILLS.map((key, i) => [key, profile.skills[i]])),
@@ -54,6 +73,17 @@ export function newLegendaryCustomCharacter(name, skills, spellcaster = false) {
     throw new RangeError('Custom heroes use fifteen skill points, or eleven for a spellcaster');
   return {...newValleyCharacter('brash'),profileId:null,name:name.trim(),skills:{...skills},
     spellcaster,health:spellcaster?6:8,maxHealth:spellcaster?6:8};
+}
+
+export function newCrownCustomCharacter(name, skills, spellcaster = false) {
+  if (typeof name !== 'string' || !name.trim() || typeof spellcaster !== 'boolean')
+    throw new RangeError('Name the new party member and choose their caster type');
+  const values = LEGENDARY_SKILLS.map(skill => legendaryInteger(skills?.[skill], 1, 7));
+  if (values.reduce((sum, value) => sum + value, 0) !== (spellcaster ? 15 : 19))
+    throw new RangeError('Custom heroes use nineteen skill points, or fifteen for a spellcaster');
+  return { ...newCrownCharacter('brash'), profileId: null, name: name.trim(),
+    skills: Object.fromEntries(LEGENDARY_SKILLS.map((skill, index) => [skill, values[index]])),
+    spellcaster, health: spellcaster ? 7 : 9, maxHealth: spellcaster ? 7 : 9 };
 }
 
 export function newValleySkullcracker() {

@@ -15,6 +15,7 @@ function enemyValid(enemy) {
     throw new RangeError('Nonnumeric attacks must retain their source type');
   legendaryInteger(enemy.defence, 1);
   legendaryInteger(enemy.health);
+  if (enemy.automaticDamage !== undefined) legendaryInteger(enemy.automaticDamage);
   return enemy;
 }
 
@@ -175,7 +176,8 @@ export function startLegendaryFight(party, enemies, rules = {}, participants = p
     const enemy=fight.enemies[enemyIndex];
     fight.phase='enemy';
     fight.openingStrike=true;
-    fight.enemyActions=[{enemyIndex,count:enemy.attack,threshold:enemy.threshold,forcedMember:memberIndex}];
+    fight.enemyActions=[{enemyIndex,count:enemy.attack,threshold:enemy.threshold,forcedMember:memberIndex,
+      ...(enemy.automaticDamage ? {automaticDamage:enemy.automaticDamage} : {})}];
   }
   return fight;
 }
@@ -298,8 +300,11 @@ export function legendaryEnemyAttack(input, roll) {
   const { enemyIndex } = action;
   const attack = action.hits !== undefined ? { dice: [], successes: action.hits } :
     legendaryPool(action.count, action.threshold + (fight.enemyPenalty ?? 0), roll);
-  record(fight, { type: 'enemyAttack', enemyIndex, dice: attack.dice, hits: attack.successes });
-  if (attack.successes > 0) fight.pending = { ...action, hits: attack.successes };
+  const automaticDamage = legendaryInteger(action.automaticDamage ?? 0);
+  const hits = attack.successes + automaticDamage;
+  record(fight, { type: 'enemyAttack', enemyIndex, dice: attack.dice, hits,
+    ...(automaticDamage ? {automaticDamage} : {}) });
+  if (hits > 0) fight.pending = { ...action, hits };
   else finishEnemyActions(fight);
   return fight;
 }
@@ -356,7 +361,8 @@ export function legendaryFlee(input) {
     fight.pendingFlee=fight.rules.flee;
     fight.phase='enemy';
     fight.enemyCursor=fight.enemies.length;
-    fight.enemyActions=[{enemyIndex,count:enemy.attack,threshold:enemy.threshold}];
+    fight.enemyActions=[{enemyIndex,count:enemy.attack,threshold:enemy.threshold,
+      ...(enemy.automaticDamage ? {automaticDamage:enemy.automaticDamage} : {})}];
     fight.enemyRecipients={};
     record(fight,{type:'escapeAttack'});
     return fight;

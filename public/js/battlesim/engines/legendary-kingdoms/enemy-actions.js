@@ -62,5 +62,6 @@ export function planLegendaryEnemy(fight, enemyIndex, roll) {
   if (enemy.attackType === 'special') throw new RangeError('This special attack requires its source-specific resolver');
   if (special === 'doubleAttack' || (special === 'ironKing' && /Malronac/.test(enemy.name)))
     return [attack(),attack(enemy.attack,enemy.threshold,{distinct:true})];
-  return [attack(enemy.attack,enemy.threshold,{lifeSteal:special === 'unbraaki' && enemy.name === 'Unbraaki'})];
+  return [attack(enemy.attack,enemy.threshold,{lifeSteal:special === 'unbraaki' && enemy.name === 'Unbraaki',
+    ...(enemy.automaticDamage ? {automaticDamage:enemy.automaticDamage} : {})})];
 }

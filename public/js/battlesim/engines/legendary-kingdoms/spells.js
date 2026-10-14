@@ -19,6 +19,11 @@ export const LEGENDARY_SPELLS = Object.freeze({
   warpWood: spell('Warp Wood', ['naval'], 50),
 });
 
+export const CROWN_STARTING_SPELLS = Object.freeze([
+  'armourOfHeaven', 'iceBolt', 'poisonStream', 'soothingTouch',
+  'unfailingStrike', 'wolfSpirit', 'magicCabinet',
+]);
+
 export function legendarySpell(id) {
   if (!Object.hasOwn(LEGENDARY_SPELLS, id)) throw new RangeError('Unknown Legendary Kingdoms spell');
   return LEGENDARY_SPELLS[id];
@@ -37,10 +42,24 @@ export function validateLegendarySpellbook(character) {
 }
 
 export function chooseLegendaryStartingSpells(character, ids) {
+  return chooseStartingSpells(character, ids, id => legendarySpell(id).starting);
+}
+
+export function chooseCrownStartingSpells(character, ids) {
+  return chooseStartingSpells(character, ids, id => CROWN_STARTING_SPELLS.includes(id));
+}
+
+function chooseStartingSpells(character, ids, allowed) {
   validateLegendarySpellbook(character);
   if (character.spells.length || !Array.isArray(ids) || ids.length !== 3 || new Set(ids).size !== 3 ||
-      ids.some(id => !legendarySpell(id).starting)) throw new RangeError('Choose three different starting spells');
+      ids.some(id => !allowed(id))) throw new RangeError('Choose three different starting spells');
   return { ...character, spells: ids.map(id => ({ id, charged: true })) };
+}
+
+export function learnCrownApprenticeSpell(character, id) {
+  if (!CROWN_STARTING_SPELLS.includes(id)) throw new RangeError('Choose a Book Two starting spell');
+  const next = learnLegendarySpell(character, id);
+  return { ...next, spells: next.spells.map(entry => entry.id === id ? { ...entry, charged: false } : entry) };
 }
 
 export function learnLegendarySpell(character, id) {
