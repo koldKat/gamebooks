@@ -27,6 +27,7 @@ const imageFiles=new Map(draft.images.map(image=>[image.url,'file://'+image.path
 const check=(condition,label)=>{if(!condition)throw Error(label);};
 const entries=[...Object.values(draft.matter).filter(Boolean).map(html=>({html,matter:true})),...draft.rows];
 let checked=0,images=0,links=0,forms=0,scrollable=0;
+const decodedImages=new Set();
 for(const entry of entries){
   pane.innerHTML='';pane.scrollTop=0;
   if(entry.matter){const content=document.createElement('div');content.className='reading-frontmatter';pane.append(content);check(renderReadingMatter(content,draft.bookId,entry.html,document),'matter render');}
@@ -34,14 +35,14 @@ for(const entry of entries){
   for(const image of pane.querySelectorAll('img')){
     const original=image.getAttribute('src');check(imageFiles.has(original),'untracked image '+original);
     await new Promise((resolve,reject)=>{image.onload=resolve;image.onerror=()=>reject(Error('image decode '+original));image.loading='eager';image.src=imageFiles.get(original);});
-    check(image.naturalWidth>0&&image.naturalHeight>0,'image dimensions');images++;
+    check(image.naturalWidth>0&&image.naturalHeight>0,'image dimensions');images++;decodedImages.add(original);
   }
   check(!pane.querySelector('p>figure,p>form,p>table,p>ul,p>ol'),'invalid paragraph '+entry.section_id);
   check(![...pane.querySelectorAll('p')].some(p=>!p.textContent.trim()&&!p.children.length),'empty paragraph '+entry.section_id);
   if(!entry.matter){
-    const destinations=[...pane.querySelectorAll('a[href^="#section-"]')].map(a=>Number(a.getAttribute('href').slice(9)));
+    const destinations=[...pane.querySelectorAll('a[href^="#section-"]')].map(a=>a.getAttribute('href').slice(9));
     check(new Set(destinations).size===entry.choices.length,'choice count '+entry.section_id);
-    check(destinations.every(id=>entry.choices.includes(id)),'choice mismatch '+entry.section_id);links+=entry.choices.length;
+    check(destinations.every(id=>entry.choices.map(String).includes(id)),'choice mismatch '+entry.section_id);links+=entry.choices.length;
   }
   const mapForms=[...pane.querySelectorAll('form[data-reading-map-entry]')];forms+=mapForms.length;
   if(mapForms.length){
@@ -52,7 +53,8 @@ for(const entry of entries){
       check(input.disabled&&button.disabled,'manual control without run');
       input.value='12';form.dispatchEvent(new Event('submit',{cancelable:true}));check(!selected.length,'disabled navigation');
       allowed=true;input.disabled=button.disabled=false;
-      form.dispatchEvent(new Event('submit',{cancelable:true}));check(selected.pop()===12,'manual return');
+      const expected=(form.dataset.readingMarkerPrefix||'')+'12';
+      form.dispatchEvent(new Event('submit',{cancelable:true}));check(String(selected.pop())===expected,'manual return');
       input.value=String(draft.rows.length+1);form.dispatchEvent(new Event('submit',{cancelable:true}));check(!selected.length,'manual upper bound');
     }
   }
@@ -62,7 +64,7 @@ for(const entry of entries){
   check(pane.scrollWidth<=pane.clientWidth+1&&document.documentElement.scrollWidth<=innerWidth,'horizontal overflow '+entry.section_id);
   checked++;document.body.dataset.progress=String(checked);
 }
-check(checked===entries.length,'incomplete coverage');check(images===draft.images.length,'image coverage');
+check(checked===entries.length,'incomplete coverage');check(decodedImages.size===draft.images.length,'image coverage');
 check(forms===(draft.manualEntrySections?.length||0),'manual section coverage');
 document.body.dataset.test=JSON.stringify({width:innerWidth,checked,images,links,forms,scrollable,productionWrites:0});
 </script>`;

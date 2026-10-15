@@ -153,6 +153,7 @@ test('both install entry points draw startup feedback before loading application
     assert.match(startup, /<svg class="(?:feed-loading-graph|mlg-graph)"/);
     assert.equal((startup.match(/<circle /g) || []).length, 5);
     assert.ok(!startup.includes('startup-spinner'));
+    assert.match(startup, /<button\b[^>]*id="app-startup-retry"[^>]*\bhidden(?:\s|>)/);
     assert.ok(html.indexOf('id="app-startup"') < html.indexOf('<script src="/startup.js">'));
     assert.ok(html.indexOf('<script src="/startup.js">') < html.indexOf('<script type="module"'));
   }

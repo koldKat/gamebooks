@@ -626,6 +626,8 @@ async function handleGetBookEnemies(req, res, bookId) {
 async function handleGetBookSection(req, res, bookId, sectionId) {
   const userId = await authenticate(req, res);
   if (userId === null) return;
+  try { sectionId = decodeURIComponent(sectionId); }
+  catch { return send(res, 400, { error: 'Invalid section ID' }); }
   if (!db._canLiveRead(userId)) return send(res, 403, { error: 'forbidden' });
   const access = db.readingAccess.getAccess(userId, bookId, false);
   if (!access) return send(res, 404, { error: 'not found' });
