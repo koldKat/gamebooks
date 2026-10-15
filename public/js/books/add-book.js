@@ -450,6 +450,7 @@ export function initAddBook(mousedownOnOverlayRef) {
   _csrInput   = document.getElementById('csr-name');
   _csrDropdown = document.getElementById('csr-name-dropdown');
   _csrSaveBtn  = document.getElementById('csr-save');
+  _csrDropdown.addEventListener('autocomplete-dismiss', () => { _csrActiveIdx = -1; });
 
   _csrInput.addEventListener('input', () => {
     _csrSetExisting(null, { preserveDescription: _csrSelectedId == null });
@@ -457,6 +458,7 @@ export function initAddBook(mousedownOnOverlayRef) {
   });
   _csrInput.addEventListener('blur', () => setTimeout(() => _csrDropdown.classList.remove('open'), 150));
   _csrInput.addEventListener('keydown', e => {
+    if (!_csrDropdown.classList.contains('open')) return;
     const items = _csrDropdown.querySelectorAll('li');
     if (!items.length) return;
     if (e.key === 'ArrowDown') { e.preventDefault(); _csrActiveIdx = Math.min(_csrActiveIdx + 1, items.length - 1); }

@@ -732,6 +732,24 @@ rolling averages, uptime/session timestamps) lives in `server/runtime-state.js` 
 getter/setter accessor functions, since raw `let` variables can't be shared across CommonJS
 modules by reference.
 
+**Bounded backend memory:** `server/geoip.js` reads fixed-size records from the
+installed `geoip-lite` data files on demand, with at most 512 cached IP results.
+It preserves country/city tracking without preloading the approximately 185 MiB
+location database. Handles/cache refresh lazily every minute and after the
+existing database updater completes. Missing/updating data yields no location,
+never an authentication failure. No external lookup service is used.
+
+`server/file-transfer.js` streams static assets/downloads (including gzip) and
+PDF, EPUB and attachment uploads. Uploads use exclusive temporary files in the
+destination directory, enforce the declared and actual body-size limits, validate
+before atomic rename, and remove partial/invalid files. EPUB validation reads
+bounded ZIP directory/metadata records rather than the entire archive. Existing
+access controls, upload limits and first-upload rewards remain in their routes.
+Static ETags use file size/modification/change times, including same-size edits;
+the metadata cache is capped at 1024 entries. Admin resource endpoints also
+report `external` and `arrayBuffers` alongside heap/RSS to distinguish buffers
+from JavaScript objects (`arrayBuffers` is a subset of `external`).
+
 **Request-target validation:** `server/request-url.js` validates every incoming request target
 before authentication, impersonation context setup, or route dispatch. Only valid origin-form
 paths are accepted. Authority-form targets, backslashes, control characters, malformed URLs,
@@ -860,7 +878,7 @@ All `/api/*` routes except `/api/register`, `/api/login`, `/api/feed`, `/api/sit
 | POST | `/api/notifications/seen` | Mark the most recent 25 unseen notifications as seen (same window `GET /api/notifications` returns) → `{ ok: true }`. |
 | POST | `/api/attachments` | Upload a file attachment (auth required). Body: raw binary; `Content-Type: application/octet-stream`; original filename in `X-Filename` header (percent-encoded). Max 64 MB. Returns `{ id, filename, original_name }`. The file is written to `public/attachments/` as `att_{userId}_{timestamp}{ext}`. Accepted types: images (JPEG/PNG/GIF/WebP/AVIF), PDF, ZIP/7z/RAR/GZIP by magic bytes; plain text extensions (.txt .md .csv .json .xml) by extension. Client images larger than 512 KB are JPEG-compressed before upload. JPEG magic bytes override extension to `.jpg`. The returned `id` must be included in a subsequent submit call's `attachment_ids` to link the file; unlinked uploads are orphaned. |
 
-`play/notes.js`'s document-level Escape listener checks `#confirm-overlay` (the alert/confirm dialog's overlay) first and yields to it if active, rather than closing whatever modal sits underneath it (e.g. the notebook editor).
+`ui-helpers/dialog-escape.js` is shared by desktop, mobile and admin entry points. Its window-capture handler gives visible autocomplete suggestions priority, then dismisses only the top visible dialog through its existing close/cancel callback (or native dialog cancellation). This prevents legacy input/document listeners from closing underlying dialogs in the same keypress. Repeated keydown events and IME composition do not cascade dismissal; disabled close controls and native editor busy states remain respected. Autocomplete dismissal invalidates pending library/author/invite lookups so late results cannot reopen a dismissed list.
 
 ### Profile API
 
@@ -2676,6 +2694,7 @@ On `PUT /api/books/:id/state` by any party member:
 
 - In-memory `Map<partyId, Set<{userId, res}>>` tracks connections.
 - `GET /api/books/:id/stream` opens a persistent `text/event-stream`. Token via `?token=` (EventSource can't set headers). Cleaned up on `close`. No external pub/sub.
+- All five SSE streams share `server/sse-transport.js`: response close/error removes registrations and ping timers. Writes tolerate normal backpressure but disconnect clients whose queued output would exceed 256 KiB; EventSource reconnects and existing catch-up refreshes restore current state.
 
 ### Client-side
 

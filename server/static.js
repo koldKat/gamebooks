@@ -4,77 +4,32 @@
 
 const fs   = require('fs');
 const path = require('path');
-const zlib = require('zlib');
 const db   = require('./db');
 const { ROOT } = require('./paths');
 const { addSecurityHeaders } = require('./request-helpers');
 const { getEtagCache, MIME } = require('./runtime-state');
+const { serveFile } = require('./file-transfer');
 
 function serveStatic(req, res) {
   const _spath  = req.url.split('?')[0];
   const urlPath = _spath === '/' ? '/index.html' : _spath;
   const filePath = path.join(ROOT, urlPath);
-  if (!filePath.startsWith(ROOT)) {
+  if (!filePath.startsWith(ROOT + path.sep)) {
     res.writeHead(403); return res.end('Forbidden');
   }
-  fs.readFile(filePath, (err, data) => {
-    if (err) {
-      res.writeHead(404, { 'Content-Type': 'text/plain' }); return res.end('Not found');
-    }
-    const ext = path.extname(filePath).toLowerCase();
-    const mime = MIME[ext] || 'application/octet-stream';
-    let cacheControl;
-    if (['.jpg', '.jpeg', '.png', '.gif', '.webp', '.avif', '.svg', '.ico'].includes(ext)) {
-      cacheControl = 'public, max-age=31536000, immutable';
-    } else {
-      // Revalidate JS/CSS with ETags on every load instead of requiring cache-busting version cascades.
-      cacheControl = 'no-cache';
-    }
-    const etagCache = getEtagCache();
-    const cached = etagCache.get(filePath);
-    const etag = (cached && cached.size === data.length)
-      ? cached.etag
-      : (() => { const h = require('crypto').createHash('md5').update(data).digest('hex').slice(0, 8); const e = `"${data.length}-${h}"`; etagCache.set(filePath, { size: data.length, etag: e }); return e; })();
-    if (req.headers['if-none-match'] === etag) {
-      if (ext !== '.pdf') addSecurityHeaders(res);
-      res.writeHead(304, { 'Cache-Control': cacheControl, 'ETag': etag });
-      return res.end();
-    }
-    if (ext !== '.pdf') addSecurityHeaders(res);
-    const headers = {
-      'Content-Type': mime,
-      'Cache-Control': cacheControl,
-      'ETag': etag,
-      'Content-Length': data.length,
-    };
-    if (ext === '.pdf') {
-      headers['Content-Disposition'] = 'inline';
-    } else if (urlPath.startsWith('/attachments/') &&
-               ['.zip', '.7z', '.rar', '.gz', '.tar'].includes(ext)) {
-      headers['Content-Disposition'] = 'attachment';
-    }
-    const gzipExts = new Set(['.html', '.js', '.css', '.json', '.svg', '.xml', '.txt']);
-    const acceptsGzip = /\bgzip\b/.test(req.headers['accept-encoding'] || '');
-    if (acceptsGzip && gzipExts.has(ext) && data.length > 1024) {
-      zlib.gzip(data, (zipErr, zipped) => {
-        if (zipErr) {
-          res.writeHead(200, headers);
-          return res.end(data);
-        }
-        res.writeHead(200, {
-          ...headers,
-          'Content-Encoding': 'gzip',
-          'Content-Length': zipped.length,
-          'Vary': 'Accept-Encoding',
-        });
-        res.end(zipped);
-      });
-      return;
-    }
-    if (gzipExts.has(ext)) headers['Vary'] = 'Accept-Encoding';
-    res.writeHead(200, headers);
-    res.end(data);
-  });
+  const ext = path.extname(filePath).toLowerCase();
+  const mime = MIME[ext] || 'application/octet-stream';
+  const cacheControl = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.avif', '.svg', '.ico'].includes(ext)
+    ? 'public, max-age=31536000, immutable' : 'no-cache';
+  if (ext !== '.pdf') addSecurityHeaders(res);
+  const headers = { 'Content-Type': mime, 'Cache-Control': cacheControl };
+  if (ext === '.pdf') {
+    headers['Content-Disposition'] = 'inline';
+  } else if (urlPath.startsWith('/attachments/') && ['.zip', '.7z', '.rar', '.gz', '.tar'].includes(ext)) {
+    headers['Content-Disposition'] = 'attachment';
+  }
+  const gzipExts = new Set(['.html', '.js', '.css', '.json', '.svg', '.xml', '.txt']);
+  serveFile(req, res, filePath, { headers, gzip: gzipExts.has(ext), etagCache: getEtagCache() });
 }
 
 function serveSitemap(req, res) {

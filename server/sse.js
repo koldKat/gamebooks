@@ -3,6 +3,7 @@
 // Shared SSE registries; wire database reward hooks here so all award paths push updates.
 
 const db = require('./db');
+const { writeEvent } = require('./sse-transport');
 
 // ── SSE party registry: partyId → Set of { userId, res } ─────────────────────
 const _sseClients = new Map();
@@ -30,7 +31,7 @@ function ssePush(partyId, excludeUserId, payload) {
   const data = `data: ${JSON.stringify(payload)}\n\n`;
   for (const entry of set) {
     if (entry.userId === excludeUserId) continue;
-    try { entry.res.write(data); } catch (_) {}
+    writeEvent(entry.res, data);
   }
 }
 
@@ -45,7 +46,7 @@ function publicCatalogUnregister(res) {
 function publicCatalogPush(payload) {
   const data = `data: ${JSON.stringify(payload)}\n\n`;
   for (const res of _publicCatalogClients) {
-    try { res.write(data); } catch (_) {}
+    writeEvent(res, data);
   }
 }
 
@@ -60,7 +61,7 @@ function feedUnregister(res) {
 function feedPush(payload = { type: 'feed_changed' }) {
   const data = `data: ${JSON.stringify(payload)}\n\n`;
   for (const res of _feedClients) {
-    try { res.write(data); } catch (_) {}
+    writeEvent(res, data);
   }
 }
 
@@ -76,7 +77,7 @@ function appXpPush(payload) {
   if (_appXpClients.size === 0) return;
   const data = `data: ${JSON.stringify(payload)}\n\n`;
   for (const res of _appXpClients) {
-    try { res.write(data); } catch (_) {}
+    writeEvent(res, data);
   }
 }
 
@@ -106,7 +107,7 @@ function userBadgePush(userId, payload = { type: 'badge_state_changed' }) {
   if (!set) return;
   const data = `data: ${JSON.stringify(payload)}\n\n`;
   for (const res of set) {
-    try { res.write(data); } catch (_) {}
+    writeEvent(res, data);
   }
 }
 
@@ -114,7 +115,7 @@ function userBadgePushAll(payload = { type: 'badge_state_changed' }) {
   const data = `data: ${JSON.stringify(payload)}\n\n`;
   for (const set of _userBadgeClients.values()) {
     for (const res of set) {
-      try { res.write(data); } catch (_) {}
+      writeEvent(res, data);
     }
   }
 }

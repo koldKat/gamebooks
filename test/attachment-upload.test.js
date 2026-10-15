@@ -15,9 +15,18 @@ function load(file, deps) {
 function harness({ filename = 'shot.png', magic = [0x89, 0x50, 0x4e, 0x47, 1, 2, 3, 4] } = {}) {
   const calls = { created: null, status: null, payload: null, written: null };
   const routes = load('../server/routes/profile', {
-    fs: { writeFileSync: (p, b) => { calls.written = { p, len: b.length }; }, existsSync: () => true, mkdirSync() {} },
+    fs: { promises: { rename: async () => {} }, existsSync: () => true, mkdirSync() {} },
     path: require('node:path'),
     '../epub-validation': require('../server/epub-validation'),
+    '../file-transfer': {
+      readFileHeader: () => Buffer.from(magic),
+      receiveUpload: async (_req, p, options) => {
+        assert.equal(options.maxBytes, 64 * 1024 * 1024);
+        assert.equal(options.validateFile(p), true);
+        calls.written = { p, len: magic.length };
+        return magic.length;
+      },
+    },
     '../db': { createAttachment: (name, original, mimeType, size, userId) => { calls.created = { name, original, mimeType, size, userId }; return 42; } },
     '../paths': { AVATARS_DIR: '/a', COVERS_DIR: '/c', BOOKS_DIR: '/b', ATTACHMENTS_DIR: '/att' },
     '../request-helpers': {

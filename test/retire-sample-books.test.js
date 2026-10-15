@@ -64,7 +64,7 @@ test('legacy state migration tolerates invalid JSON and does not match a real ti
 test('registration creates an account and session without adding any book or cover', async () => {
   const calls = [];
   const deps = {
-    'geoip-lite': {}, '../db': {
+    '../geoip': {}, '../db': {
       createUser: async () => { calls.push('account'); return { id: 1, username: 'Player' }; },
       createSession: () => { calls.push('session'); return 'token'; },
     },

@@ -120,13 +120,19 @@ function _wireInviteAutocomplete(inputId, sendBtnId, onSend) {
   const inp = document.getElementById(inputId);
   if (!inp) return;
   let _ddTimer = null;
+  let _ddVersion = 0;
   const getOrCreateDd = () => {
     let dd = inp.parentElement.querySelector('.party-invite-dropdown');
-    if (!dd) { dd = document.createElement('div'); dd.className = 'party-invite-dropdown'; inp.parentElement.appendChild(dd); }
+    if (!dd) {
+      dd = document.createElement('div'); dd.className = 'party-invite-dropdown';
+      dd.addEventListener('autocomplete-dismiss', () => { clearTimeout(_ddTimer); _ddVersion++; });
+      inp.parentElement.appendChild(dd);
+    }
     return dd;
   };
-  const hideDd = () => { const dd = inp.parentElement?.querySelector('.party-invite-dropdown'); if (dd) dd.remove(); };
+  const hideDd = () => { clearTimeout(_ddTimer); _ddVersion++; const dd = inp.parentElement?.querySelector('.party-invite-dropdown'); if (dd) dd.remove(); };
   inp.addEventListener('input', () => {
+    const version = ++_ddVersion;
     clearTimeout(_ddTimer);
     const q = inp.value.trim();
     if (q.length < 1) { hideDd(); return; }
@@ -134,6 +140,7 @@ function _wireInviteAutocomplete(inputId, sendBtnId, onSend) {
       try {
         const res = await apiFetch(`/api/users/search?q=${encodeURIComponent(q)}`);
         const { users } = await res.json();
+        if (version !== _ddVersion) return;
         if (!users?.length) { hideDd(); return; }
         const dd = getOrCreateDd();
         dd.innerHTML = users.map(u => `<button data-username="${escapeHtml(u.username)}">${escapeHtml(u.username)}</button>`).join('');

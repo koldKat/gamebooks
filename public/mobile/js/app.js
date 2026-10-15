@@ -1,6 +1,7 @@
 // Mobile reader entry and screen routing.
 // Deep-link into a book; reuse the main app's library instead of duplicating it.
 
+import '../../js/ui-helpers/dialog-escape.js';
 import { getToken, apiFetch, setCurrentUserLevel, setBonusUndos, setBonusFastTravels } from '../../js/core/state.js';
 import { renderLogin } from './auth.js';
 import { renderReader } from './reader.js';

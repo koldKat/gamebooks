@@ -2,7 +2,7 @@
 
 // Auth route handlers: register, login, logout, forgot/reset password.
 
-const geoip = require('geoip-lite');
+const geoip = require('../geoip');
 const db    = require('../db');
 const { getClientIp, isRateLimited, recordAuthFailure, send, readBody, tokenFromReq } = require('../request-helpers');
 const { getTransporter } = require('../email');

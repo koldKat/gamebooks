@@ -5,7 +5,7 @@ const https  = require('https');
 const fs     = require('fs');
 const path   = require('path');
 const os     = require('os');
-const geoip  = require('geoip-lite');
+const geoip  = require('./server/geoip');
 const db     = require('./server/db');
 const backup = require('./server/backup');
 const { renderForumIndex, renderForumCategory, renderForumThread } = require('./server/forum');
@@ -546,7 +546,8 @@ const _routeRequest = async (req, res) => {
     }
     if (method === 'GET'  && urlPath === '/api/admin/heap') {
       const m = process.memoryUsage();
-      return send(res, 200, { heapUsed: m.heapUsed, heapTotal: m.heapTotal, rss: m.rss });
+      return send(res, 200, { heapUsed: m.heapUsed, heapTotal: m.heapTotal, rss: m.rss,
+        external: m.external, arrayBuffers: m.arrayBuffers });
     }
     if (method === 'GET'  && urlPath === '/api/admin/live') {
       const m      = process.memoryUsage();
@@ -558,6 +559,7 @@ const _routeRequest = async (req, res) => {
       const { avgCpu, avgHeapUsed, avgHeapTotal, avgRss } = getResourceAverages();
       return send(res, 200, {
         heapUsed: m.heapUsed, heapTotal: m.heapTotal, rss: m.rss, cpuPct, sessionUptime, appAge,
+        external: m.external, arrayBuffers: m.arrayBuffers,
         trafficIn, trafficOut,
         avgCpu, avgHeapUsed, avgHeapTotal, avgRss,
       });

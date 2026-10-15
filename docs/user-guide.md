@@ -75,6 +75,8 @@ This is either the login form or your books list, depending on whether you're si
 | **F1** | Open the Cheat Sheet |
 | **Ctrl+Y** | Landing page settings (cover-title font size/bold/hide Cyrillic, background source, reduce animations, feed day covers, transparent day cards) |
 
+**Escape:** dismisses open autocomplete suggestions first. Press it again to close the top dialog; dialogs underneath stay open. Saving and uploading can temporarily block dismissal.
+
 **Landing background:** the animated background image behind the panels rotates through book covers. While logged in, right-click anywhere on the background (not on a panel) to get a quick menu with **Hide background** / **Show background**. Your choice is saved to your account. Normally the cover is dimmed so it stays legible behind the panels - collapse all three (**Ctrl+X**) and the dimming lifts, showing the cover at full brightness; bring any panel back and it dims again.
 
 ---

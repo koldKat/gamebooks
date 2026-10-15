@@ -100,6 +100,8 @@ export function _setupNameAutocomplete(inputId, dropdownId, saveBtnId, filterFn,
   let _selectedOwned = false;
   let _activeIdx     = -1;
   let _matches       = [];
+  let _renderVersion = 0;
+  dropdown.addEventListener('autocomplete-dismiss', () => { _renderVersion++; _activeIdx = -1; });
 
   function _setSelected(book) {
     _selectedId    = book ? book.id : null;
@@ -138,12 +140,15 @@ export function _setupNameAutocomplete(inputId, dropdownId, saveBtnId, filterFn,
   });
 
   input.addEventListener('input', async () => {
+    const version = ++_renderVersion;
     _setSelected(null);
     if (!_allPublicBooks) _allPublicBooks = await _loadAutocompleteBooks();
+    if (version !== _renderVersion) return;
     _renderDropdown(input.value.trim());
   });
   input.addEventListener('blur', () => setTimeout(() => dropdown.classList.remove('open'), 150));
   input.addEventListener('keydown', e => {
+    if (!dropdown.classList.contains('open')) return;
     const items = dropdown.querySelectorAll('li');
     if (!items.length) return;
     if (e.key === 'ArrowDown') { e.preventDefault(); _activeIdx = Math.min(_activeIdx + 1, items.length - 1); }
@@ -179,8 +184,11 @@ export function _setupPlainAutocomplete(inputId, dropdownId, loadItems, filterFn
   const dropdown = document.getElementById(dropdownId);
   let _matches   = [];
   let _activeIdx = -1;
+  let _renderVersion = 0;
+  dropdown.addEventListener('autocomplete-dismiss', _close);
 
   function _close() {
+    _renderVersion++;
     dropdown.classList.remove('open');
     _activeIdx = -1;
   }
@@ -209,11 +217,14 @@ export function _setupPlainAutocomplete(inputId, dropdownId, loadItems, filterFn
   });
 
   input.addEventListener('input', async () => {
+    const version = ++_renderVersion;
     const items = await loadItems();
+    if (version !== _renderVersion) return;
     _render(items, input.value.trim());
   });
   input.addEventListener('blur', () => setTimeout(_close, 150));
   input.addEventListener('keydown', e => {
+    if (!dropdown.classList.contains('open')) return;
     const items = dropdown.querySelectorAll('li');
     if (!items.length) return;
     if (e.key === 'ArrowDown') {
@@ -247,8 +258,11 @@ export function _setupAuthorsAutocomplete(inputId, dropdownId) {
   const dropdown = document.getElementById(dropdownId);
   let _matches   = [];
   let _activeIdx = -1;
+  let _renderVersion = 0;
+  dropdown.addEventListener('autocomplete-dismiss', _close);
 
   function _close() {
+    _renderVersion++;
     dropdown.classList.remove('open');
     _activeIdx = -1;
   }
@@ -278,9 +292,11 @@ export function _setupAuthorsAutocomplete(inputId, dropdownId) {
   }
 
   async function _render() {
+    const version = ++_renderVersion;
     const { token } = _currentTokenBounds();
     if (!token) { _close(); return; }
     const authors = await _loadAuthorNames();
+    if (version !== _renderVersion) return;
     const used = new Set(
       (input.value || '').split(',').map(s => s.trim()).filter(Boolean)
     );
@@ -304,6 +320,7 @@ export function _setupAuthorsAutocomplete(inputId, dropdownId) {
   input.addEventListener('click', _render);
   input.addEventListener('blur', () => setTimeout(_close, 150));
   input.addEventListener('keydown', e => {
+    if (!dropdown.classList.contains('open')) return;
     const items = dropdown.querySelectorAll('li');
     if (!items.length) {
       if (e.key === 'Escape') _close();

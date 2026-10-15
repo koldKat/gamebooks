@@ -1,0 +1,98 @@
+<!doctype html><meta charset="utf-8">
+<style>
+.modal-overlay,.inv-overlay{display:none;position:fixed;inset:0;z-index:100;background:#222}
+.active{display:block}.autocomplete-dropdown{display:none}.autocomplete-dropdown.open{display:block}
+</style>
+<div id="base-overlay" class="modal-overlay active"><button id="base-close">Close</button></div>
+<div id="edit-overlay" class="modal-overlay active" style="z-index:200">
+<input id="name" value="Keep my draft"><ul id="suggestions" class="autocomplete-dropdown open"><li class="ac-active">One</li></ul>
+<button id="edit-close">Close</button></div>
+<script type="module">
+try {
+  const {installEscapeHandling}=await import('ESCAPE_MODULE');
+  installEscapeHandling();
+  const {openEditor}=await import('EDITOR_MODULE');
+  let checks=0,legacyDialogHandlers=0;
+  const check=(value,message)=>{checks++;if(!value)throw Error(message);};
+  const el=id=>document.getElementById(id),active=node=>node.classList.contains('active');
+  const press=(target=el('name'),repeat=false)=>target.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true,repeat}));
+  let baseClosed=0,editClosed=0;
+  el('base-close').onclick=()=>{baseClosed++;el('base-overlay').classList.remove('active');};
+  el('edit-close').onclick=()=>{editClosed++;el('edit-overlay').classList.remove('active');};
+  document.addEventListener('keydown',event=>{if(event.key==='Escape')legacyDialogHandlers++;});
+  el('name').onkeydown=event=>{if(event.key==='Escape')legacyDialogHandlers++;};
+  el('name').focus();
+  el('name').setAttribute('aria-controls','suggestions');
+  el('name').setAttribute('aria-expanded','true');
+  el('name').setAttribute('aria-activedescendant','suggestion-one');
+  press();
+  check(!active(el('suggestions'))&&!el('suggestions').classList.contains('open'),'dropdown closes');
+  check(active(el('edit-overlay')),'dialog remains after dropdown Escape');
+  check(editClosed===0&&baseClosed===0,'no dialog callback while closing dropdown');
+  check(el('name').value==='Keep my draft','typed draft preserved');
+  check(document.activeElement===el('name'),'input focus preserved');
+  check(el('name').getAttribute('aria-expanded')==='false','combobox state resets');
+  check(!el('name').hasAttribute('aria-activedescendant'),'active option resets');
+  press();
+  check(editClosed===1&&!active(el('edit-overlay')),'next Escape closes dialog once');
+  check(baseClosed===0&&active(el('base-overlay')),'underlying dialog remains');
+  press(el('base-close'),true);
+  check(baseClosed===0,'held key cannot close next dialog');
+  el('edit-overlay').classList.add('active');
+  el('edit-close').disabled=true;
+  press();
+  check(active(el('edit-overlay'))&&baseClosed===0,'busy close stays blocked');
+  el('edit-close').disabled=false;
+  el('edit-overlay').setAttribute('aria-busy','true');press();
+  check(active(el('edit-overlay')),'aria-busy blocks dismissal');
+  el('edit-overlay').removeAttribute('aria-busy');
+  const alert=document.createElement('div');alert.id='confirm-overlay';alert.className='modal-overlay active';alert.style.zIndex='3000';
+  alert.innerHTML='<button id="confirm-cancel" style="display:none">Cancel</button>';
+  document.body.append(alert);let alerts=0;el('confirm-cancel').onclick=()=>{alerts++;alert.remove();};
+  press();check(alerts===1,'alert Escape uses safe cancellation');
+  check(active(el('edit-overlay')),'alert leaves draft dialog intact');
+  const image=document.createElement('div');image.className='img-lightbox active';image.style.cssText='position:fixed;inset:0;z-index:4000';
+  let imageClosed=0;image.onclick=()=>{imageClosed++;image.remove();};document.body.append(image);press();
+  check(imageClosed===1,'image viewer closes through its callback');
+  check(active(el('edit-overlay')),'image viewer leaves underlying editor');
+  const content=document.createElement('div');content.innerHTML='<input value="Native draft">';
+  let nativeClosed=0;const editor=openEditor({title:'Test',content,onClose:()=>nativeClosed++});
+  editor.setBusy(true);press(editor.dialog.querySelector('input'));
+  check(editor.dialog.open&&nativeClosed===0,'busy native dialog stays open');
+  editor.setBusy(false);press(editor.dialog.querySelector('input'));
+  check(nativeClosed===1&&!editor.dialog.isConnected,'native dialog uses cleanup');
+  check(active(el('edit-overlay')),'native dialog leaves underlying overlay');
+  const frame=document.createElement('iframe');
+  frame.srcdoc='<div id="child-overlay" class="active" style="position:fixed;inset:0"><button id="child-close">Close</button></div>';
+  await new Promise(resolve=>{frame.onload=resolve;el('edit-overlay').append(frame);});
+  let childClosed=0;frame.contentDocument.getElementById('child-close').onclick=()=>{childClosed++;frame.contentDocument.getElementById('child-overlay').remove();};
+  frame.contentDocument.body.dispatchEvent(new frame.contentWindow.KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true}));
+  check(childClosed===1&&active(el('edit-overlay')),'iframe dialog owns its first Escape');
+  frame.contentDocument.body.dispatchEvent(new frame.contentWindow.KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true}));
+  check(!active(el('edit-overlay'))&&active(el('base-overlay')),'iframe Escape closes enclosing dialog only');
+  frame.remove();el('edit-overlay').classList.add('active');
+  const mobile=document.createElement('div');mobile.id='mobile-overlay';mobile.className='inv-overlay active';mobile.style.zIndex='4000';
+  mobile.innerHTML='<button id="mobile-close-btn">Close</button>';document.body.append(mobile);
+  let mobileClosed=0;el('mobile-close-btn').onclick=()=>{mobileClosed++;mobile.remove();};press();
+  check(mobileClosed===1,'dynamically created mobile overlay closes');
+  const menu=document.createElement('div');menu.className='inv-ctx-menu';menu.style.cssText='position:fixed;inset:0;z-index:5000';
+  let menuClosed=0;menu.addEventListener('escape-dismiss',()=>{menuClosed++;menu.remove();});document.body.append(menu);press();
+  check(menuClosed===1&&active(el('edit-overlay')),'context menu closes without closing its panel');
+  window.autocompleteDependencies={apiFetch:async()=>({ok:true,json:async()=>[]}),getCachedBooks:()=>[],
+    naturalCompare:(a,b)=>a.localeCompare(b),naturalCompareByName:(a,b)=>a.name.localeCompare(b.name),
+    matchesSearch:(a,b)=>a.includes(b),escapeHtml:s=>String(s),_fetchPublic:async()=>({ok:true,json:async()=>[]}),t:s=>s};
+  const {_setupPlainAutocomplete}=await import('AUTOCOMPLETE_MODULE');
+  let loaded;
+  _setupPlainAutocomplete('name','suggestions',()=>new Promise(resolve=>loaded=resolve),()=>true);
+  el('suggestions').classList.add('open');el('name').dispatchEvent(new Event('input'));
+  press();check(active(el('edit-overlay')),'pending autocomplete still owns first Escape');
+  loaded([{name:'Late result'}]);await new Promise(resolve=>setTimeout(resolve,20));
+  check(!el('suggestions').classList.contains('open'),'late results cannot reopen dismissed suggestions');
+  el('suggestions').classList.add('open');el('suggestions').style.display='none';
+  press();check(!active(el('edit-overlay')),'hidden stale dropdown does not swallow Escape');
+  check(active(el('base-overlay')),'only top overlay dismissed');
+  check(legacyDialogHandlers===0,'legacy handlers never see handled Escape');
+  el('base-overlay').classList.remove('active');
+  document.body.setAttribute('data-test',JSON.stringify({checks,legacyDialogHandlers}));
+} catch(error) {document.body.setAttribute('data-failure',error.stack||String(error));}
+</script>

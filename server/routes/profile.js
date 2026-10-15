@@ -4,7 +4,8 @@
 
 const fs   = require('fs');
 const path = require('path');
-const { isEpub } = require('../epub-validation');
+const { isEpubFile } = require('../epub-validation');
+const { receiveUpload, readFileHeader, isPdfFile } = require('../file-transfer');
 const db   = require('../db');
 const { AVATARS_DIR, COVERS_DIR, BOOKS_DIR, ATTACHMENTS_DIR } = require('../paths');
 const {
@@ -189,14 +190,6 @@ async function handleUploadAttachment(req, res) {
   const userId = await authenticate(req, res);
   if (userId === null) return;
 
-  let buf;
-  try { buf = await readRawBody(req, ATTACHMENT_MAX); }
-  catch (e) {
-    if (e.code === 'PAYLOAD_TOO_LARGE') return send(res, 413, { error: 'File too large' });
-    throw e;
-  }
-  if (!buf.length) return send(res, 400, { error: 'Empty body' });
-
   let rawName = 'file';
   try { if (req.headers['x-filename']) rawName = decodeURIComponent(req.headers['x-filename']); }
   catch { return send(res, 400, { error: 'Invalid filename header' }); }
@@ -204,18 +197,28 @@ async function handleUploadAttachment(req, res) {
   const rawExt = path.extname(originalName).toLowerCase();
   const ext = rawExt.replace(/[^.a-z0-9]/g, '').slice(0, 10);
 
-  if (!isAllowedAttachmentType(buf, originalName))
-    return send(res, 415, { error: 'File type not allowed' });
-
-  // Normalize the extension to the detected image MIME type.
   let fileExt = ext;
-  if (buf.length >= 3 && buf[0] === 0xFF && buf[1] === 0xD8 && buf[2] === 0xFF) fileExt = '.jpg';
+  const base = `att_${userId}_${Date.now()}`;
+  const uploadedPath = path.join(ATTACHMENTS_DIR, base + ext);
+  let bytes;
+  try {
+    bytes = await receiveUpload(req, uploadedPath, { maxBytes: ATTACHMENT_MAX, validateFile: file => {
+      const header = readFileHeader(file);
+      if (header.length >= 3 && header[0] === 0xFF && header[1] === 0xD8 && header[2] === 0xFF) fileExt = '.jpg';
+      return isAllowedAttachmentType(header, originalName);
+    } });
+    if (fileExt !== ext) await fs.promises.rename(uploadedPath, path.join(ATTACHMENTS_DIR, base + fileExt));
+  } catch (e) {
+    if (e.code === 'PAYLOAD_TOO_LARGE') return send(res, 413, { error: 'File too large' });
+    if (e.code === 'EMPTY_BODY') return send(res, 400, { error: 'Empty body' });
+    if (e.code === 'INVALID_FILE') return send(res, 415, { error: 'File type not allowed' });
+    if (e.code === 'UPLOAD_ABORTED') return;
+    throw e;
+  }
 
-  const filename = `att_${userId}_${Date.now()}${fileExt}`;
-  fs.writeFileSync(path.join(ATTACHMENTS_DIR, filename), buf);
-
+  const filename = base + fileExt;
   const mimeType = MIME[fileExt] || 'application/octet-stream';
-  const id = db.createAttachment(filename, originalName, mimeType, buf.length, userId);
+  const id = db.createAttachment(filename, originalName, mimeType, bytes, userId);
   send(res, 200, { id, url: `/attachments/${filename}`, name: originalName });
 }
 
@@ -267,19 +270,17 @@ async function handleUploadPdf(req, res, bookId) {
     userId = authenticateOptional(req);
   }
 
-  let buf;
-  try { buf = await readRawBody(req, 256 * 1024 * 1024); }
+  const filename = `${bookId}_${Date.now()}.pdf`;
+  try { await receiveUpload(req, path.join(BOOKS_DIR, filename), { maxBytes: 256 * 1024 * 1024, validateFile: isPdfFile }); }
   catch (e) {
     if (e.code === 'PAYLOAD_TOO_LARGE') return send(res, 413, { error: 'File too large (max 256 MB)' });
+    if (e.code === 'EMPTY_BODY') return send(res, 400, { error: 'Empty body' });
+    if (e.code === 'INVALID_FILE') return send(res, 415, { error: 'File must be a PDF' });
+    if (e.code === 'UPLOAD_ABORTED') return;
     throw e;
   }
-  if (!buf.length) return send(res, 400, { error: 'Empty body' });
-  if (buf[0] !== 0x25 || buf[1] !== 0x50 || buf[2] !== 0x44 || buf[3] !== 0x46)
-    return send(res, 415, { error: 'File must be a PDF' });
 
   const isFirstPdf = !db.getBookById(bookId)?.pdf_path;
-  const filename = `${bookId}_${Date.now()}.pdf`;
-  fs.writeFileSync(path.join(BOOKS_DIR, filename), buf);
   db.setBookPdf(bookId, filename);
   if (isFirstPdf) db.awardPdfXp(bookId, userId);
   send(res, 200, { pdfUrl: `/books/${filename}` });
@@ -307,19 +308,17 @@ async function handleUploadEpub(req, res, bookId) {
     userId = authenticateOptional(req);
   }
 
-  let buf;
-  try { buf = await readRawBody(req, 256 * 1024 * 1024); }
+  const filename = `${bookId}_${Date.now()}.epub`;
+  try { await receiveUpload(req, path.join(BOOKS_DIR, filename), { maxBytes: 256 * 1024 * 1024, validateFile: isEpubFile }); }
   catch (e) {
     if (e.code === 'PAYLOAD_TOO_LARGE') return send(res, 413, { error: 'File too large (max 256 MB)' });
+    if (e.code === 'EMPTY_BODY') return send(res, 400, { error: 'Empty body' });
+    if (e.code === 'INVALID_FILE') return send(res, 415, { error: 'File must be an EPUB' });
+    if (e.code === 'UPLOAD_ABORTED') return;
     throw e;
   }
-  if (!buf.length) return send(res, 400, { error: 'Empty body' });
-  if (!isEpub(buf))
-    return send(res, 415, { error: 'File must be an EPUB' });
 
   const isFirstEpub = !db.getBookById(bookId)?.epub_path;
-  const filename = `${bookId}_${Date.now()}.epub`;
-  fs.writeFileSync(path.join(BOOKS_DIR, filename), buf);
   db.setBookEpub(bookId, filename);
   if (isFirstEpub) db.awardEpubXp(bookId, userId);
   send(res, 200, { epubUrl: `/books/${filename}` });

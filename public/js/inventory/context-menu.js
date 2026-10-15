@@ -26,6 +26,7 @@ export function _showCtx(idx, x, y) {
 
   const menu = document.createElement('div');
   menu.className = 'inv-ctx-menu';
+  menu.addEventListener('escape-dismiss', _closeCtx);
   menu.innerHTML = `
     <div class="inv-ctx-item" data-action="toggle-visible">◉ ${slot.visible ? t('inv.ctx.hide') : t('inv.ctx.show')}</div>
     <div class="inv-ctx-item" data-action="rename">✎ ${t('inv.ctx.rename')}</div>

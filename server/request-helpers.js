@@ -4,7 +4,7 @@
 
 const path  = require('path');
 const { gzip } = require('zlib');
-const geoip = require('geoip-lite');
+const geoip = require('./geoip');
 const db    = require('./db');
 const { runInImpersonationContext } = require('./impersonation-context');
 const { requestQueryParameter } = require('./request-url');

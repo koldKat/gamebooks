@@ -5,7 +5,8 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
 function load(file, deps) {
-  const context = vm.createContext({ module: { exports: {} }, require: name => name in deps ? deps[name] : require(name), Date, Buffer, __dirname: path.dirname(require.resolve(file)) });
+  const moduleRequire = require('node:module').createRequire(require.resolve(file));
+  const context = vm.createContext({ module: { exports: {} }, require: name => name in deps ? deps[name] : moduleRequire(name), Date, Buffer, __dirname: path.dirname(require.resolve(file)) });
   vm.runInContext(fs.readFileSync(require.resolve(file), 'utf8'), context);
   return context.module.exports;
 }

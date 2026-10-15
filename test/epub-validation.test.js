@@ -2,7 +2,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { deflateRawSync } = require('node:zlib');
-const { isEpub } = require('../server/epub-validation');
+const { isEpub, isEpubFile } = require('../server/epub-validation');
 
 function archive(entries) {
   const files = [], directory = [];
@@ -53,6 +53,20 @@ test('rejects truncated archives, invalid offsets, encryption and oversized meta
   assert.equal(isEpub(archive([['mimetype', 'application/epub+zip' + ' '.repeat(10000), 8], container])), false);
 });
 
+test('disk-backed EPUB validation matches buffer validation, including malformed archives', t => {
+  const fs = require('node:fs'), path = require('node:path'), os = require('node:os');
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'epub-validation-'));
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  const file = path.join(directory, 'book.epub');
+  const good = archive([['cover.jpg', 'x'.repeat(100_000)], ['mimetype', 'application/epub+zip\r\n', 8], container]);
+  const cases = [good, archive([['mimetype', 'application/zip'], container]), Buffer.from('invalid'),
+    good.subarray(0, good.length - 1), archive([['mimetype', 'application/epub+zip'], ['META-INF/container.xml', 'not XML']])];
+  for (const data of cases) {
+    fs.writeFileSync(file, data);
+    assert.equal(isEpubFile(file), isEpub(data));
+  }
+});
+
 test('EPUB upload accepts compressed metadata and rejects invalid files before saving or awarding XP', async () => {
   const fs = require('node:fs'), vm = require('node:vm');
   const routePath = require.resolve('../server/routes/profile');
@@ -63,6 +77,13 @@ test('EPUB upload accepts compressed metadata and rejects invalid files before s
       fs: { writeFileSync: () => calls.push('write') },
       '../db': { getBookById: () => ({}), setBookEpub: () => calls.push('save'), awardEpubXp: () => calls.push('xp') },
       '../paths': { BOOKS_DIR: '/books' },
+      '../file-transfer': { receiveUpload: async (_req, filename, options) => {
+        assert.match(filename, /\.epub$/);
+        assert.equal(options.maxBytes, 256 * 1024 * 1024);
+        assert.equal(options.validateFile, isEpubFile);
+        if (!valid) throw Object.assign(new Error('invalid'), { code: 'INVALID_FILE' });
+        calls.push('write');
+      } },
       '../request-helpers': { isLocalhost: () => false, authenticate: async () => 1,
         readRawBody: async () => valid ? archive([['mimetype', 'application/epub+zip\r\n', 8], container]) : Buffer.from('not an EPUB'),
         send: (_, code) => calls.push(code) },

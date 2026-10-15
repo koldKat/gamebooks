@@ -272,7 +272,7 @@
 #sim680-overlay .bsim-status { white-space: pre-line; overflow-wrap: anywhere; }
 #sim680-close { margin-left: auto; }
 
-#sim689-btn, #sim690-btn, #sim700-btn, #sim706-btn, #sim710-btn, #sim718-btn, #sim722-btn, #sim2116-btn {
+#sim689-btn, #sim690-btn, #sim700-btn, #sim706-btn, #sim710-btn, #sim718-btn, #sim722-btn, #sim723-btn, #sim2116-btn {
   background: rgba(31, 41, 55, 0.88);
   border: 1px solid #374151;
   border-radius: 7px;
@@ -286,22 +286,22 @@
   box-shadow: 0 2px 8px rgba(0,0,0,0.35);
   flex-shrink: 0;
 }
-#sim689-btn:hover, #sim690-btn:hover, #sim700-btn:hover, #sim706-btn:hover, #sim710-btn:hover, #sim718-btn:hover, #sim722-btn:hover, #sim2116-btn:hover { background: #374151; color: #d1d5db; }
-:is(#sim710-overlay, #sim718-overlay, #sim722-overlay) [hidden] { display: none !important; }
-:is(#sim710-overlay, #sim718-overlay, #sim722-overlay) .inv-edit-row { flex-wrap: wrap; }
-:is(#sim710-overlay, #sim718-overlay, #sim722-overlay) :is(input, select) { max-width: 100%; min-width: 0; }
-:is(#sim710-overlay, #sim718-overlay, #sim722-overlay) .inv-edit-row > span { flex: 0 1 9rem; min-width: 0; }
-:is(#sim710-overlay, #sim718-overlay, #sim722-overlay) .bsim-col > * { flex-shrink: 0; }
-:is(#sim710-overlay, #sim718-overlay, #sim722-overlay) .bsim-col-right { overflow-y: auto; }
-:is(#sim710-overlay, #sim718-overlay, #sim722-overlay) .bsim-btn-row { display: flex; flex-wrap: wrap; gap: 0.35rem; }
-:is(#sim710-overlay, #sim718-overlay, #sim722-overlay) .bsim-action-btn { flex: 0 0 auto; margin-top: 0; padding: 3px 8px; font-size: 0.68rem; }
-:is(#sim710-overlay, #sim718-overlay, #sim722-overlay) .bsim-status { white-space: pre-line; overflow-wrap: anywhere; }
-:is(#sim710-overlay, #sim718-overlay, #sim722-overlay) .bsim-checkbox { display: flex; align-items: center; gap: 0.3rem; font-size: 0.7rem; color: #9ca3af; }
-:is(#sim710-overlay, #sim718-overlay, #sim722-overlay) :is(p, summary) { font-size: 0.7rem; color: #9ca3af; line-height: 1.4; }
-:is(#sim710-overlay, #sim718-overlay, #sim722-overlay) summary { cursor: pointer; }
-:is(#sim710-overlay, #sim718-overlay, #sim722-overlay) .bsim-combat-table { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 0.7rem; }
-:is(#sim710-overlay, #sim718-overlay, #sim722-overlay) :is(th, td) { overflow-wrap: anywhere; text-align: left; padding: 0.25rem; border-bottom: 1px solid #374151; }
-:is(#sim710-close, #sim718-close, #sim722-close) { margin-left: auto; }
+#sim689-btn:hover, #sim690-btn:hover, #sim700-btn:hover, #sim706-btn:hover, #sim710-btn:hover, #sim718-btn:hover, #sim722-btn:hover, #sim723-btn:hover, #sim2116-btn:hover { background: #374151; color: #d1d5db; }
+:is(#sim710-overlay, #sim718-overlay, #sim722-overlay, #sim723-overlay) [hidden] { display: none !important; }
+:is(#sim710-overlay, #sim718-overlay, #sim722-overlay, #sim723-overlay) .inv-edit-row { flex-wrap: wrap; }
+:is(#sim710-overlay, #sim718-overlay, #sim722-overlay, #sim723-overlay) :is(input, select) { max-width: 100%; min-width: 0; }
+:is(#sim710-overlay, #sim718-overlay, #sim722-overlay, #sim723-overlay) .inv-edit-row > span { flex: 0 1 9rem; min-width: 0; }
+:is(#sim710-overlay, #sim718-overlay, #sim722-overlay, #sim723-overlay) .bsim-col > * { flex-shrink: 0; }
+:is(#sim710-overlay, #sim718-overlay, #sim722-overlay, #sim723-overlay) .bsim-col-right { overflow-y: auto; }
+:is(#sim710-overlay, #sim718-overlay, #sim722-overlay, #sim723-overlay) .bsim-btn-row { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+:is(#sim710-overlay, #sim718-overlay, #sim722-overlay, #sim723-overlay) .bsim-action-btn { flex: 0 0 auto; margin-top: 0; padding: 3px 8px; font-size: 0.68rem; }
+:is(#sim710-overlay, #sim718-overlay, #sim722-overlay, #sim723-overlay) .bsim-status { white-space: pre-line; overflow-wrap: anywhere; }
+:is(#sim710-overlay, #sim718-overlay, #sim722-overlay, #sim723-overlay) .bsim-checkbox { display: flex; align-items: center; gap: 0.3rem; font-size: 0.7rem; color: #9ca3af; }
+:is(#sim710-overlay, #sim718-overlay, #sim722-overlay, #sim723-overlay) :is(p, summary) { font-size: 0.7rem; color: #9ca3af; line-height: 1.4; }
+:is(#sim710-overlay, #sim718-overlay, #sim722-overlay, #sim723-overlay) summary { cursor: pointer; }
+:is(#sim710-overlay, #sim718-overlay, #sim722-overlay, #sim723-overlay) .bsim-combat-table { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 0.7rem; }
+:is(#sim710-overlay, #sim718-overlay, #sim722-overlay, #sim723-overlay) :is(th, td) { overflow-wrap: anywhere; text-align: left; padding: 0.25rem; border-bottom: 1px solid #374151; }
+:is(#sim710-close, #sim718-close, #sim722-close, #sim723-close) { margin-left: auto; }
 #sim706-overlay [hidden] { display: none !important; }
 #sim706-overlay .inv-edit-row { flex-wrap: wrap; }
 #sim706-overlay :is(input, select) { max-width: 100%; min-width: 0; }

@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const { gunzipSync } = require('node:zlib');
 const context = vm.createContext({ module: { exports: {} }, Buffer, setInterval: () => 0, require(name) {
-  if (['./db', 'geoip-lite', './impersonation-context', './request-url'].includes(name)) return {};
+  if (['./db', './geoip', './impersonation-context', './request-url'].includes(name)) return {};
   return require(name);
 } });
 vm.runInContext(fs.readFileSync(require.resolve('../server/request-helpers'), 'utf8'), context);

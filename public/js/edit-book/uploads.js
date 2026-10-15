@@ -101,6 +101,8 @@ export function _setModalUploadProgress(prefix, pct = null, kind = 'pdf') {
 }
 
 export function _setButtonsDisabled(ids, disabled) {
+  const closeIds = { 'edit-book-cancel': 'edit-book-close', 'ecc-cancel': 'ecc-close' };
+  ids = [...new Set([...ids, ...ids.map(id => closeIds[id]).filter(Boolean)])];
   ids.forEach(id => {
     const el = document.getElementById(id);
     if (el) el.disabled = !!disabled;

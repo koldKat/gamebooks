@@ -65,7 +65,7 @@ test('forgot-password route sends the reset to the fallback mailbox', async t =>
   const { auth } = setup(t, 'reader@example.com');
   const sent = [], responses = [];
   const deps = {
-    'geoip-lite': {}, '../db': { createPasswordResetToken: auth.createPasswordResetToken, getAdminSetting: () => null },
+    '../geoip': {}, '../db': { createPasswordResetToken: auth.createPasswordResetToken, getAdminSetting: () => null },
     '../paths': {}, '../sse': {},
     '../email': { getTransporter: () => ({ sendMail: async message => sent.push(message) }) },
     '../request-helpers': { getClientIp: () => '127.0.0.1', isRateLimited: () => false,

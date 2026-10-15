@@ -14,6 +14,7 @@ const {
   userBadgeRegister, userBadgeUnregister, userBadgePush, userBadgePushAll,
 } = require('../sse');
 const { SSE_PING_MS } = require('../request-helpers');
+const { maintainStream } = require('../sse-transport');
 const { buildFullExportZip, buildBookExportZip, safeFilename } = require('../export');
 
 // ── Book handlers ─────────────────────────────────────────────────────────────
@@ -254,8 +255,7 @@ async function handleGetPublicCatalogStream(req, res) {
   res.write(': connected\n\n');
 
   publicCatalogRegister(res);
-  const ping = setInterval(() => { try { res.write(': ping\n\n'); } catch (_) {} }, SSE_PING_MS);
-  req.on('close', () => { clearInterval(ping); publicCatalogUnregister(res); });
+  maintainStream(res, () => publicCatalogUnregister(res), SSE_PING_MS);
 }
 
 async function handleGetFeedStream(req, res) {
@@ -269,8 +269,7 @@ async function handleGetFeedStream(req, res) {
   res.write(': connected\n\n');
 
   feedRegister(res);
-  const ping = setInterval(() => { try { res.write(': ping\n\n'); } catch (_) {} }, SSE_PING_MS);
-  req.on('close', () => { clearInterval(ping); feedUnregister(res); });
+  maintainStream(res, () => feedUnregister(res), SSE_PING_MS);
 }
 
 async function handleGetUserStream(req, res) {
@@ -291,8 +290,7 @@ async function handleGetUserStream(req, res) {
   res.write(': connected\n\n');
 
   userBadgeRegister(userId, res);
-  const ping = setInterval(() => { try { res.write(': ping\n\n'); } catch (_) {} }, SSE_PING_MS);
-  req.on('close', () => { clearInterval(ping); userBadgeUnregister(userId, res); });
+  maintainStream(res, () => userBadgeUnregister(userId, res), SSE_PING_MS);
 }
 
 async function handleGetAppXpStream(req, res) {
@@ -313,8 +311,7 @@ async function handleGetAppXpStream(req, res) {
   res.write(': connected\n\n');
 
   appXpRegister(res);
-  const ping = setInterval(() => { try { res.write(': ping\n\n'); } catch (_) {} }, SSE_PING_MS);
-  req.on('close', () => { clearInterval(ping); appXpUnregister(res); });
+  maintainStream(res, () => appXpUnregister(res), SSE_PING_MS);
 }
 
 async function handleCreateBook(req, res) {
@@ -740,8 +737,7 @@ async function handleGetBookStream(req, res, bookId) {
   res.write(': connected\n\n');
 
   const entry = sseRegister(party.partyId, userId, res);
-  const ping = setInterval(() => { try { res.write(': ping\n\n'); } catch (_) {} }, SSE_PING_MS);
-  req.on('close', () => { clearInterval(ping); sseUnregister(party.partyId, entry); });
+  maintainStream(res, () => sseUnregister(party.partyId, entry), SSE_PING_MS);
 }
 
 async function handleCreateParty(req, res, bookId) {
