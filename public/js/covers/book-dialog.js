@@ -53,7 +53,7 @@ export function renderCoverActivity(bookId, bookName, entries, userRating, bookM
     const namesHtml = authorNames.map(name => {
       const r = ratingsByName.get(name);
       const ratingHtml = (r?.voteCount > 0)
-        ? ` <span class="book-modal-author-rating" data-tooltip="${escapeHtml(t('covers.author_rating_votes', { n: r.voteCount, s: r.voteCount === 1 ? '' : 's' }))}">★${(Number.isInteger(r.avgRating) ? r.avgRating + '.0' : r.avgRating.toFixed(1))}</span>`
+        ? ` <span class="book-modal-author-rating">★${(Number.isInteger(r.avgRating) ? r.avgRating + '.0' : r.avgRating.toFixed(1))}<span class="star-votes"> (${escapeHtml(t('covers.author_rating_votes', { n: r.voteCount, s: r.voteCount === 1 ? '' : 's' }))})</span></span>`
         : '';
       return `<span class="book-modal-author-name">${escapeHtml(name)}</span>${ratingHtml}`;
     }).join(', ');

@@ -16,6 +16,8 @@ When you first arrive - whether you're logged in or not - the screen is divided 
 
 A public wall showing all the books, anthologies, and series in the tracker. Click any cover to see its details.
 
+An author's rating shows its vote count beside the average. Both are derived from individual ratings of public books crediting that author, not from separate author votes.
+
 - **Sort** - Latest (default), Oldest, A–Z, Z–A, or Random
 - **Filter** - All, Books, Anthologies, Series, or Favorites
 - **Search** - searches titles, authors, series names, and child book names; type `anthology` or `series` to filter by type
@@ -29,7 +31,7 @@ A public wall showing all the books, anthologies, and series in the tracker. Cli
 
 Shows what everyone's been up to over the last 30 days. You don't need an account to read it.
 
-Live updates change the affected day's content without reloading the whole feed. Unchanged day cards stay in place, and expanded groups and your reading position are preserved where possible.
+Live updates change the affected day's content without reloading the whole feed. Unchanged day cards stay in place and your reading position is preserved where possible. Groups you expand stay expanded through live updates, even if temporarily regrouped. Closing a group keeps it closed; reloading the app or switching accounts resets these choices.
 
 Each day's card shows the covers of the public books played that day, faded behind the entries (cycling through more than one if several different books were active). Turn it off via **Show covers in feed** in the Ctrl+Y settings panel if you'd rather keep the feed plain. Days with no cover to show get a faint see-through tint instead, letting the rotating background peek through - toggle that separately with **Transparent background for day cards** if you'd rather those stayed flat too.
 

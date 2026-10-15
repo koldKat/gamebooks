@@ -40,7 +40,7 @@ function dialog({ loggedIn = false, owned = false, mobile = true, admin = false,
     _refreshCoversDisplay() {},
     closePublicModal: () => events.push('close'),
     escapeHtml: value => String(value),
-    t: key => key,
+    t: (key, params) => key === 'covers.author_rating_votes' ? `${params.n} vote${params.s}` : key,
     _seriesRowBadges: book => book.hasLiveReading ? '<span class="reading-badge">Reading</span>' : '',
     coversState: { _hooks: {
       getIsAdmin: () => admin,
@@ -97,6 +97,19 @@ test('private metadata does not offer guests a library action', () => {
   const d = dialog({ meta: { isPublic: false } });
   assert.equal(d.buttons.has('.login-to-add-book-btn'), false);
   assert.equal(d.buttons.has('.add-public-book-btn'), false);
+});
+
+test('authors visibly show pooled book vote counts individually, not only in a tooltip', () => {
+  const d = dialog({ meta: { authors: 'First Author, Second Author, Unrated Author', voteCount: 3,
+    authorRatings: [
+      { name: 'First Author', avgRating: 4, voteCount: 17 },
+      { name: 'Second Author', avgRating: 3.5, voteCount: 1 },
+      { name: 'Unrated Author', avgRating: null, voteCount: 0 },
+    ] } });
+  assert.match(d.body.html, /book-modal-author-rating">★4\.0<span class="star-votes"> \(17 votes\)<\/span>/);
+  assert.match(d.body.html, /book-modal-author-rating">★3\.5<span class="star-votes"> \(1 vote\)<\/span>/);
+  assert.equal((d.body.html.match(/class="book-modal-author-rating"/g) || []).length, 2);
+  assert.doesNotMatch(d.body.html, /\(0 votes\)|NaN|data-tooltip="17 votes"/);
 });
 
 test('anthology children show their own reading availability, even without covers', () => {

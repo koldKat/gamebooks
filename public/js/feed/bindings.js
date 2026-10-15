@@ -15,6 +15,8 @@ export function bindFeedInteractions(el, _expandedKeys) {
       const target = document.getElementById(btn.dataset.target);
       if (!target) return;
       const expanded = btn.getAttribute('aria-expanded') === 'true';
+      if (expanded) _expandedKeys.delete(btn.dataset.groupKey);
+      else _expandedKeys.add(btn.dataset.groupKey);
       btn.setAttribute('aria-expanded', String(!expanded));
       btn.querySelector('.feed-group-chevron').textContent = expanded ? '▶' : '▼';
       target.hidden = expanded;

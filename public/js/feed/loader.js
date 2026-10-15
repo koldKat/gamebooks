@@ -12,6 +12,7 @@ let _loadFeedInFlight = null;
 let _loadFeedToken = null;
 let _loadFeedGeneration = 0;
 let _renderedFeedToken;
+const _expandedGroupKeys = new Set();
 export function loadFeed() {
   const token = getToken();
   if (_loadFeedInFlight && _loadFeedToken === token) return _loadFeedInFlight;
@@ -65,11 +66,8 @@ async function _loadFeedImpl(token, generation) {
     }
 
     const { blocks, dayCoverLists } = renderFeedContents(entries, pinned, feedHeaderHtml);
-    // Snapshot expanded groups before re-rendering
-    const _expandedKeys = new Set(
-      [...el.querySelectorAll('.feed-group-toggle[aria-expanded="true"]')]
-        .map(b => b.dataset.groupKey).filter(Boolean)
-    );
+    // Keep toggle intent through temporary regrouping; never carry it across accounts.
+    if (_renderedFeedToken !== token) _expandedGroupKeys.clear();
 
     const update = updateFeedContents(el, blocks, _renderedFeedToken !== token);
     _renderedFeedToken = token;
@@ -77,7 +75,7 @@ async function _loadFeedImpl(token, generation) {
     replaceDayCoverLists(dayCoverLists);
     _hideFeedPreview();
     for (const root of update.changedRoots) {
-      bindFeedInteractions(root, _expandedKeys);
+      bindFeedInteractions(root, _expandedGroupKeys);
       bindFeedPreviews(root);
     }
     update.restoreScroll();

@@ -198,11 +198,36 @@ if (!baseline) {
     '.feed-book-btn': [new Element({ bookId: '1', bookName: 'Book' })], '.feed-anthology-tag': [new Element({ anthologyId: '2', anthologyName: 'Anthology' })], '.feed-series-tag': [new Element({ seriesId: '3', seriesName: 'Series' })],
   };
   for (const [selector, items] of Object.entries(selectors)) feed.queries.set(selector, items);
-  binding.bindFeedInteractions(feed, new Set(['saved'])); assert.equal(target.hidden, false);
+  const expandedGroups = new Set(['saved']);
+  binding.bindFeedInteractions(feed, expandedGroups); assert.equal(target.hidden, false);
+  await toggle.emit('click', { target: { closest: () => null } }); assert.equal(target.hidden, true);
+  assert.equal(expandedGroups.has('saved'), false, 'manual collapse clears saved intent');
+  await toggle.emit('click', { target: { closest: () => null } }); assert.equal(target.hidden, false);
+  assert.equal(expandedGroups.has('saved'), true, 'manual expansion saves intent for later refreshes');
   await toggle.emit('click', { target: { closest: () => null } }); assert.equal(target.hidden, true);
   await toggle.emit('click', { target: { closest: () => ({}) } }); assert.equal(target.hidden, true);
   for (const [selector, items] of Object.entries(selectors)) if (selector !== '.feed-group-toggle') for (const item of items) await item.emit('click', { preventDefault() {} });
   for (const name of ['openPublicProfile', 'openPublicRun', 'openPublicSeriesRun', 'openCoverActivity', 'openSeriesActivity']) assert.ok(calls.some(c => c[0] === name));
+  const freshGroup = () => {
+    const control = new Element({ target: 'persisted-body', groupKey: 'persisted' });
+    control.setAttribute('aria-expanded', 'false');
+    control.queries.set('.feed-group-chevron', new Element());
+    const content = new Element(); content.hidden = true;
+    elements.set('persisted-body', content);
+    feed.queries.set('.feed-group-toggle', [control]);
+    return { control, content };
+  };
+  let savedGroup = freshGroup(); await api.loadFeed();
+  await savedGroup.control.emit('click', { target: { closest: () => null } });
+  feed.queries.set('.feed-group-toggle', []); await api.loadFeed();
+  savedGroup = freshGroup(); await api.loadFeed();
+  assert.equal(savedGroup.content.hidden, false, 'loader retains expansion when a group temporarily disappears');
+  await savedGroup.control.emit('click', { target: { closest: () => null } });
+  savedGroup = freshGroup(); await api.loadFeed();
+  assert.equal(savedGroup.content.hidden, true, 'loader respects explicit collapse');
+  await savedGroup.control.emit('click', { target: { closest: () => null } });
+  token = 'different-account'; savedGroup = freshGroup(); await api.loadFeed();
+  assert.equal(savedGroup.content.hidden, true, 'another account does not inherit expansion');
   const previews = modules.get(resolve(root, 'feed/previews.js')).namespace;
   const hover = new Element({ cover: '/cover.jpg' }); feed.queries.set('.feed-user, [data-cover]', [hover]);
   previews.bindFeedPreviews(feed); await hover.emit('mouseenter', { clientX: 100, clientY: 100 });
