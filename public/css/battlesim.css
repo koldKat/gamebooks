@@ -272,7 +272,7 @@
 #sim680-overlay .bsim-status { white-space: pre-line; overflow-wrap: anywhere; }
 #sim680-close { margin-left: auto; }
 
-#sim689-btn, #sim690-btn {
+#sim689-btn, #sim690-btn, #sim700-btn {
   background: rgba(31, 41, 55, 0.88);
   border: 1px solid #374151;
   border-radius: 7px;
@@ -286,7 +286,17 @@
   box-shadow: 0 2px 8px rgba(0,0,0,0.35);
   flex-shrink: 0;
 }
-:is(#sim689-btn, #sim690-btn):hover { background: #374151; color: #d1d5db; }
+:is(#sim689-btn, #sim690-btn, #sim700-btn):hover { background: #374151; color: #d1d5db; }
+#sim700-overlay [hidden] { display: none !important; }
+#sim700-overlay .inv-edit-row { flex-wrap: wrap; }
+#sim700-overlay :is(input, select) { max-width: 100%; min-width: 0; }
+#sim700-overlay .bsim-col-left > * { flex-shrink: 0; }
+#sim700-overlay .bsim-col-left { gap: 0.4rem; }
+#sim700-overlay .bsim-btn-row { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+#sim700-overlay .bsim-status { white-space: pre-line; overflow-wrap: anywhere; }
+#sim700-overlay details > summary { cursor: pointer; font-size: 0.75rem; }
+#sim700-overlay .inv-edit-row > span { flex: 0 1 9rem; min-width: 0; }
+#sim700-close { margin-left: auto; }
 :is(#sim689-overlay, #sim690-overlay) [hidden] { display: none !important; }
 :is(#sim689-overlay, #sim690-overlay) .inv-edit-row { flex-wrap: wrap; }
 :is(#sim689-overlay, #sim690-overlay) :is(input, select) { max-width: 100%; min-width: 0; }

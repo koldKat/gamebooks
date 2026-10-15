@@ -208,6 +208,7 @@ gamebooks/
                          only when their book opens. Mobile keeps its separate
                          mobile/js/battlesim-dispatch.js dispatcher.
         battlesim829.js    Battle simulator for book 829.
+        battlesim700.js    Compatibility entry for Money and Gangsters 3; books/700 owns its deterministic melee/shooting rules, advisory raid checks and run-scoped state.
         battlesim8.js      Battle simulator for book 8.
         battlesim286.js    Battle simulator for book 286 - flat weapon min-hit damage model (damage = max(0, 2d6 - minHit)).
         battlesim198.js    Battle simulator for book 198, The Warlock of Firetop Mountain - Fighting Fantasy SKILL/STAMINA/LUCK opposed-roll combat.
