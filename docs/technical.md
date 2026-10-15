@@ -210,6 +210,7 @@ gamebooks/
         battlesim829.js    Battle simulator for book 829.
         battlesim700.js    Compatibility entry for Money and Gangsters 3; books/700 owns its deterministic melee/shooting rules, advisory raid checks and run-scoped state.
         battlesim706.js    Compatibility entry for Son of the Desert; books/706 owns deterministic penalty encounters, naval tactics and run-scoped state.
+        battlesim2116.js   Compatibility entry for Full Moon; books/2116 owns deterministic quality checks, equipment effects and run-scoped combat history.
         battlesim8.js      Battle simulator for book 8.
         battlesim286.js    Battle simulator for book 286 - flat weapon min-hit damage model (damage = max(0, 2d6 - minHit)).
         battlesim198.js    Battle simulator for book 198, The Warlock of Firetop Mountain - Fighting Fantasy SKILL/STAMINA/LUCK opposed-roll combat.
