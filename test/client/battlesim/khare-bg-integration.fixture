@@ -1,0 +1,113 @@
+const checks = [], saves = [];
+const assert = (value, label) => { if (!value) throw Error(label); checks.push(label); };
+window.fetch = async (url, options = {}) => {
+  assert(url === '/api/books/722/state' && options.method === 'PUT', 'only intercepted state saves');
+  saves.push(JSON.parse(options.body)); return new Response('{}', {status: 200});
+};
+const app = await import('REPO/public/js/core/state.js');
+const desktop = await import('REPO/public/js/battlesim/loader.js');
+const mobile = await import('REPO/public/mobile/js/battlesim-dispatch.js');
+const {t} = await import('REPO/public/js/i18n.js');
+const {registerTranslations} = await import('REPO/public/js/i18n/runtime.js');
+const {loadBattleSimTranslations} = await import('REPO/public/js/i18n/battlesim.js');
+const mode = 'MODE', language = 'LANGUAGE', el = key => document.getElementById('sim722-' + key);
+assert(!el('overlay'), 'lazy mount'); assert(mobile.hasSim(722), 'mobile registry');
+await loadBattleSimTranslations(722);
+if (language === 'bg') registerTranslations((await import('REPO/public/js/i18n/bg/battlesim/battlesim722.js')).default);
+app.setCurrentBookId(722);
+const run = {startedAt: 123, path: [1], sim215: {preserved: true}};
+app.state.playthroughs = [run]; app.state.activePtIndex = 0;
+const open = async () => { if (mode === 'mobile') await mobile.openSimForBook(722); else { await desktop.showBattleSimForBook(722); el('btn').click(); } };
+const change = (key, value) => { el(key).value = value; el(key).dispatchEvent(new Event('change')); };
+const key = (target, code, name) => target.dispatchEvent(new KeyboardEvent('keydown', {code, key: name, bubbles: true}));
+await open(); assert(el('overlay').classList.contains('active'), 'actual lazy loader opens');
+assert(!el('overlay').textContent.includes('battlesim722.'), 'translated UI');
+assert(el('title').textContent === t('battlesim722.title'), 'translated title');
+assert(run.sim722.character === null && el('start').disabled, 'manual character required');
+const ids = [...el('overlay').querySelectorAll('[id]')].map(node => node.id);
+assert(new Set(ids).size === ids.length, 'unique controls');
+assert(el('encounter').options.length === 46, 'all named encounters');
+assert([...el('encounter').options].every(option => !/^(Section|Епизод)\s+\d/.test(option.textContent)), 'names before section numbers');
+el('role').value = 'wizard';
+for (const [field, value] of Object.entries({skill: 99, skillInitial: 99, stamina: 20, staminaInitial: 24,
+  luck: 0, luckInitial: 12, gold: 20, provisions: 2, attackModifier: 0, nextFightSkill: 0, mealsToday: 0,
+  goblinTeeth: 2, giantTeeth: 1, pebbles: 3, medicines: 1, silverArrows: 10, explosiveDarts: 2, cakeHalves: 2, predictionBets: 0})) el(field).value = value;
+el('apply').click(); assert(run.sim722.character.stamina === 20, 'manual ratings saved');
+el('eat').click(); assert(run.sim722.character.stamina === 22 && run.sim722.character.provisions === 1, 'first meal restores two');
+el('eat').click(); assert(run.sim722.character.stamina === 23 && run.sim722.character.provisions === 0, 'later meal restores one');
+change('encounter', '77'); el('start').click();
+assert(el('apply').disabled && el('encounter').disabled && el('eat').disabled, 'active fight setup and recovery locked');
+assert(getComputedStyle(el('glove0')).display === 'none' && getComputedStyle(el('limbControls')).display === 'none', 'irrelevant actions hidden');
+Math.random = () => 0.99;
+const skipWounds = () => { while (run.sim722.fight.pending.length) el('skipLuck').click(); };
+for (let i = 0; i < 6; i++) { el('round').click(); skipWounds(); }
+assert(run.sim722.fight.outcome === 'win' && run.sim722.history.length === 1, 'ordinary victory recorded once');
+el('round').click(); assert(run.sim722.history.length === 1, 'completed round cannot duplicate reward');
+change('encounter', '311'); el('start').click(); el('round').click();
+assert(run.sim722.fight.decision.kind === 'target' && !el('target').disabled, 'post-roll wound choice exposed');
+change('target', '1'); el('chooseTarget').click(); skipWounds();
+assert(run.sim722.fight.enemies[1].stamina === 3 && run.sim722.fight.enemies[0].stamina === 6, 'selected opponent wounded');
+for (let i = 0; i < 6 && !run.sim722.fight.outcome; i++) {
+  el('round').click(); if (run.sim722.fight.decision?.kind === 'target') el('chooseTarget').click();
+  skipWounds();
+}
+assert(run.sim722.fight.outcome === 'win' && run.sim722.history.length === 2, 'both opponents surrender');
+change('encounter', '441'); el('start').click();
+assert(!el('pebble').hidden && !el('limbControls').hidden, 'corpse spell controls exposed');
+el('pebble').click();
+assert(run.sim722.fight.enemies[0].stamina === 0 && run.sim722.character.pebbles === 2, 'pebble targets and consumes once');
+change('limbSpell', '373'); el('limbCast').click();
+assert(run.sim722.fight.enemies[0].stamina === 0 && run.sim722.character.stamina === 18, 'returning spell retains disabled limb and pays once');
+change('target', '1'); el('dart').click();
+assert(run.sim722.fight.enemies[1].stamina === 0 && run.sim722.character.explosiveDarts === 1, 'dart selects a different surviving limb');
+el('cancel').click();
+assert(document.getElementById('confirm-overlay').classList.contains('active'), 'abandonment requires confirmation');
+document.getElementById('confirm-ok').click();
+assert(run.sim722.fight.outcome === 'cancelled' && run.sim722.history.length === 2, 'abandonment awards no result');
+el('betFighter').value = 'ogre'; el('stake').value = '3'; el('placeBet').click();
+assert(run.sim722.character.gold === 17 && !run.sim722.ticket.settled, 'book wager deducted once');
+change('encounter', '234'); el('start').click();
+for (let i = 0; i < 4; i++) el('round').click();
+assert(run.sim722.fight.outcome === 'resolved' && run.sim722.history.length === 2, 'spectator fight gives no player result');
+assert(run.sim722.character.gold === 21 && run.sim722.character.stamina === 18 && run.sim722.ticket.settled, 'printed spectator payout preserves player health');
+el('round').click(); assert(run.sim722.character.gold === 21, 'spectator payout cannot repeat');
+Math.random = () => (39 - 0.5) / 212;
+el('wheel').click();
+assert(run.sim722.character.gold === 25 && run.sim722.character.wheelWon, 'Wheel uses original prize page and book gold');
+assert(run.sim722.character.stamina === 18 && run.sim722.history.length === 2, 'Wheel preserves health and battle rewards');
+assert(el('wheel').disabled, 'Wheel stops after first win');
+el('wheel').click(); assert(run.sim722.character.gold === 25, 'Wheel prize cannot repeat');
+Math.random = () => 0.99;
+change('encounter', '365'); el('summonCount').value = '2'; el('start').click();
+assert(run.sim722.fight.allies.length === 3 && el('goblinTargets').querySelectorAll('select').length === 2, 'summoned ally assignments exposed');
+assert(run.sim722.character.goblinTeeth === 0 && run.sim722.character.stamina === 16, 'goblin spell charges teeth and health once');
+const goblinTargets = el('goblinTargets').querySelectorAll('select');
+goblinTargets[1].value = '1'; goblinTargets[1].dispatchEvent(new Event('change', {bubbles: true}));
+assert(el('goblinTargets').querySelectorAll('select')[1].value === '1', 'ally targeting survives render');
+await app.saveState(); assert(saves.at(-1).playthroughs[0].sim722.history.length === 2, 'real persistence payload');
+const original = JSON.stringify(run);
+key(el('close'), 'Escape', 'Escape'); assert(!el('overlay').classList.contains('active'), 'Escape closes');
+await open(); assert(JSON.stringify(run) === original, 'reopening preserves active fight');
+if (mode === 'desktop') {
+  key(document.body, 'KeyS', 's'); assert(!el('overlay').classList.contains('active'), 'shortcut closes');
+  key(document.body, 'KeyS', 's'); assert(el('overlay').classList.contains('active'), 'shortcut opens');
+  key(el('skill'), 'KeyS', 's'); assert(el('overlay').classList.contains('active'), 'typing shortcut safe');
+}
+assert(!el('overlay').textContent.includes('battlesim722.'), 'combat messages translated');
+for (const details of el('overlay').querySelectorAll('details')) details.open = true;
+for (const node of el('overlay').querySelectorAll('.bsim-col')) {
+  node.scrollTop = Number.MAX_SAFE_INTEGER;
+  assert(Math.abs(node.scrollTop - Math.max(0, node.scrollHeight - node.clientHeight)) <= 1, 'column bottom reachable');
+  node.scrollTop = 0; assert(node.scrollTop === 0, 'column top reachable');
+  assert(node.scrollWidth <= node.clientWidth + 1, 'no horizontal column overflow');
+}
+assert(document.documentElement.scrollWidth <= innerWidth + 1, 'no page overflow');
+assert(getComputedStyle(el('start')).fontSize === getComputedStyle(el('round')).fontSize, 'consistent action typography');
+assert(JSON.stringify(run.sim215) === '{"preserved":true}', 'other simulator preserved');
+app.state.playthroughs.push({startedAt: 456, path: [1]}); app.state.activePtIndex = 1;
+const module = await import('REPO/public/js/battlesim/battlesim722.js'); module.render();
+assert(!el('overlay').classList.contains('active'), 'run change closes stale panel');
+el('apply').click(); assert(!app.currentPlaythrough().sim722, 'stale controls cannot edit another run');
+await open(); assert(app.currentPlaythrough().sim722.character === null, 'fresh run isolated');
+assert(JSON.stringify(run) === original, 'previous run unchanged');
+document.body.dataset.test = JSON.stringify({mode, language, width: innerWidth, checks: checks.length, saves: saves.length, realModules: true, productionWrites: 0});
