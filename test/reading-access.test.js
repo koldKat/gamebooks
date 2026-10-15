@@ -8,11 +8,12 @@ const { createReadingAccess } = require('../server/db/reading-access');
 function fixture(policy) {
   const db = new Database(':memory:');
   db.pragma('foreign_keys = ON');
-  db.exec(`CREATE TABLE users (id INTEGER PRIMARY KEY, xp INTEGER, bonus_coins INTEGER, coins_spent INTEGER, bonus_gc_mint_purchased INTEGER NOT NULL DEFAULT 0);
+  db.exec(`CREATE TABLE users (id INTEGER PRIMARY KEY, xp INTEGER, bonus_coins INTEGER, coins_spent INTEGER, bonus_gc_mint_purchased INTEGER NOT NULL DEFAULT 0, is_admin INTEGER NOT NULL DEFAULT 0);
     CREATE TABLE books (id INTEGER PRIMARY KEY, name TEXT, total_sections INTEGER, has_live_reading INTEGER, is_public INTEGER DEFAULT 1, created_by INTEGER);
     CREATE TABLE user_books (user_id INTEGER, book_id INTEGER, state_data TEXT);
     CREATE TABLE book_frontmatter (book_id INTEGER PRIMARY KEY, intro_text TEXT, rules_text TEXT);
     INSERT INTO users (id, xp, bonus_coins, coins_spent) VALUES (1, 5000, 0, 0), (2, 0, 0, 0);
+    UPDATE users SET is_admin = 1 WHERE id = 1;
     INSERT INTO books (id, name, total_sections, has_live_reading) VALUES
       (263, 'Trial', 400, 1), (202, 'Other', 400, 1), (999, 'Free', 99, 1);
     INSERT INTO book_frontmatter VALUES (263, 'Intro <script>', 'Rules');
@@ -21,7 +22,7 @@ function fixture(policy) {
   return { db, access: createReadingAccess(db, policy) };
 }
 
-test('trial gates only 263 at zero cost and preserves historical purchases once', () => {
+test('trial gates only admins on 263 at zero cost and preserves historical purchases once', () => {
   const { db, access } = fixture();
   assert.equal(access.getAccess(1, 202).purchased, true);
   assert.equal(access.getAccess(2, 202).purchased, false);
@@ -35,11 +36,28 @@ test('trial gates only 263 at zero cost and preserves historical purchases once'
   db.prepare('INSERT INTO user_books VALUES (?, ?, ?)').run(2, 263, '{"playthroughs":[{"path":[1]}]}');
   const again = createReadingAccess(db);
   assert.equal(again.getAccess(2, 263).purchased, false, 'later runs never bypass gate');
-  const before = db.prepare('SELECT * FROM users WHERE id = 2').get();
-  assert.equal(access.unlock(2, 263).ok, true);
-  assert.equal(access.unlock(2, 263).alreadyUnlocked, true);
-  assert.deepEqual(db.prepare('SELECT * FROM users WHERE id = 2').get(), before);
-  assert.equal(again.getAccess(2, 263).locked, false, 'unlock persists across service recreation');
+  const before = db.prepare('SELECT * FROM users').all();
+  assert.equal(access.getAccess(2, 263).locked, false, 'ordinary players read freely');
+  assert.equal(access.getAccess(2, 263).purchasingEnabled, false, 'no purchase button for ordinary players');
+  assert.equal(access.getAccess(2, 263).cost, 0);
+  assert.equal(access.unlock(2, 263).error, 'purchasing_disabled', 'direct POST cannot enter the admin trial');
+  assert.equal(access.unlock(1, 263).ok, true);
+  assert.equal(access.unlock(1, 263).alreadyUnlocked, true);
+  assert.deepEqual(db.prepare('SELECT * FROM users').all(), before);
+  assert.equal(again.getAccess(1, 263).locked, false, 'unlock persists across service recreation');
+  assert.equal(again.getAccess(2, 263, false).locked, false, 'section and image checks also allow free reading');
+  db.close();
+});
+
+test('admin-only trial follows the current role without modifying existing unlocks', () => {
+  const { db, access } = fixture();
+  const before = db.prepare('SELECT * FROM reading_unlocks').all();
+  db.exec('UPDATE users SET is_admin = 0 WHERE id = 1');
+  assert.equal(access.getAccess(1, 263).locked, false);
+  assert.equal(access.unlock(1, 263).error, 'purchasing_disabled');
+  db.exec('UPDATE users SET is_admin = 1 WHERE id = 2');
+  assert.equal(access.getAccess(2, 263).locked, true);
+  assert.deepEqual(db.prepare('SELECT * FROM reading_unlocks').all(), before);
   db.close();
 });
 

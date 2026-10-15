@@ -3,7 +3,7 @@
 const { coinBalance } = require('./xp');
 
 // Change this policy to disable the trial; paid access is deliberately off.
-const DEFAULT_POLICY = Object.freeze({ testBookId: 263, paidEnabled: false });
+const DEFAULT_POLICY = Object.freeze({ testBookId: 263, paidEnabled: false, adminOnly: true });
 
 function createReadingAccess(db, policy = DEFAULT_POLICY) {
   db.exec(`
@@ -52,7 +52,8 @@ function createReadingAccess(db, policy = DEFAULT_POLICY) {
     const purchased = !!db.prepare('SELECT 1 FROM reading_unlocks WHERE user_id = ? AND book_id = ?').get(userId, bookId);
     const normalCost = Math.floor(Math.max(0, book.total_sections || 0) / 100);
     const trial = book.id === policy.testBookId;
-    const gated = trial || (policy.paidEnabled && normalCost > 0);
+    const gated = (trial || (policy.paidEnabled && normalCost > 0)) &&
+      (!policy.adminOnly || !!db.prepare('SELECT is_admin FROM users WHERE id = ?').get(userId)?.is_admin);
     const locked = gated && !purchased;
     const user = includeFrontmatter ? db.prepare('SELECT xp, bonus_coins, coins_spent, bonus_gc_mint_purchased FROM users WHERE id = ?').get(userId) : null;
     const balance = user ? coinBalance(user) : null;
@@ -61,8 +62,8 @@ function createReadingAccess(db, policy = DEFAULT_POLICY) {
     const rawStart = book.reading_start_section?.trim();
     const startSection = rawStart && /^\d+$/.test(rawStart) ? Number(rawStart) || 1 : rawStart || 1;
     return { bookId: book.id, name: book.name, purchased, locked, startSection,
-      cost: trial ? 0 : normalCost, purchasingEnabled: gated,
-      balance, canAfford: trial || normalCost === 0 || (balance !== null && balance >= normalCost),
+      cost: !gated || trial ? 0 : normalCost, purchasingEnabled: gated,
+      balance, canAfford: !gated || trial || normalCost === 0 || (balance !== null && balance >= normalCost),
       introText: frontmatter?.intro_text || '', rulesText: frontmatter?.rules_text || '' };
   }
 

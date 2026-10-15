@@ -746,7 +746,7 @@ Clicking a graph section does not open or reopen the reader. Section previews ar
 
 For every readable book, opening the reader automatically starts a new run if none is active, including after deleting all runs or resetting progress. There is no start-a-run warning. If a run is already active, reading resumes it.
 
-**Unlock trial:** *Assassins of Allansia* shows its introduction and rules first, with a centered **Unlock book** button showing a zero price and the gold coin icon. Clicking it asks you to confirm the permanent unlock and its price; cancelling makes no purchase and starts no run. Unlocking costs nothing and permanently opens the book for your account, starting at section 1. Existing runs are preserved. Books you had already played before the trial retain access without needing to unlock them. No other books require purchasing yet; paid purchasing is not enabled.
+**Reading access:** All currently available readable books, including *Assassins of Allansia*, are free for players to read. Only administrators see its experimental zero-cost unlock flow. Existing runs and permanent unlocks are preserved; paid purchasing is not enabled.
 
 If the mobile reader fails to open after unlocking, use the displayed retry button or return home. The unlock stays saved, so retrying does not require another purchase. A failed progress load will not start a run from an empty fallback state.
 
