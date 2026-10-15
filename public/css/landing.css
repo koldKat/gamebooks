@@ -749,7 +749,7 @@ body.cover-tooltip-title-bold #cover-tooltip-settings-preview {
   background-position: center;
   background-repeat: no-repeat;
   opacity: 0;
-  transition: opacity 1.5s ease;
+  transition: opacity 3.3s ease;
   will-change: auto;
 }
 

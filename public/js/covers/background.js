@@ -104,6 +104,22 @@ let _rotationQueued   = false;
 let _rotationGeneration = 0;
 let _rotationFadeTimer = null;
 let _rotationFinishTimer = null;
+let _rotationLoadTimer = null;
+let _rotationImage = null;
+const LANDING_FADE_MS = 3300;
+
+function _clearLandingCoverLoad() {
+  clearTimeout(_rotationLoadTimer);
+  _rotationLoadTimer = null;
+  if (_rotationImage) _rotationImage.onload = _rotationImage.onerror = null;
+  _rotationImage = null;
+}
+
+function _finishLandingRotation(generation) {
+  if (generation !== _rotationGeneration) return;
+  _rotationInFlight = false;
+  if (_rotationQueued) { _rotationQueued = false; _rotateLandingCover(); }
+}
 
 // Always safe to call: silently does nothing (leaves whatever is currently
 // showing untouched) if there's no cover available right now.
@@ -112,6 +128,33 @@ export function _rotateLandingCover() {
   if (_rotationInFlight) { _rotationQueued = true; return; }
   const pick = _nextLandingCover();
   if (!pick) return;
+  const generation = _rotationGeneration;
+  const image = new Image();
+  _rotationImage = image;
+  _rotationInFlight = true;
+  const failed = () => {
+    if (_rotationImage !== image || generation !== _rotationGeneration) return;
+    _clearLandingCoverLoad();
+    _finishLandingRotation(generation);
+  };
+  image.onerror = failed;
+  image.onload = () => {
+    if (!image.naturalWidth) { failed(); return; }
+    Promise.resolve().then(() => image.decode?.()).then(() => {
+      if (_rotationImage !== image || generation !== _rotationGeneration) return;
+      _clearLandingCoverLoad();
+      _paintLandingCover(pick, generation);
+    }, failed);
+  };
+  _rotationLoadTimer = setTimeout(failed, 20_000);
+  image.src = pick.coverUrl;
+}
+
+function _paintLandingCover(pick, generation) {
+  if (coversState._landingBgHidden || document.getElementById('landing-wrapper')?.style.display === 'none') {
+    _finishLandingRotation(generation);
+    return;
+  }
   const key = _landingCoverKey(pick);
   coversState._landingBgCurrentKey = key || null;
   coversState._landingBgPosY = _landingCoverPosForKey(key);
@@ -120,9 +163,7 @@ export function _rotateLandingCover() {
   const next = coversState._landingBgActive === 'a' ? 'b' : 'a';
   const cur = document.getElementById(`landing-bg-${coversState._landingBgActive}`);
   const nxt = document.getElementById(`landing-bg-${next}`);
-  if (!cur || !nxt) return;
-  const generation = _rotationGeneration;
-  _rotationInFlight = true;
+  if (!cur || !nxt) { _finishLandingRotation(generation); return; }
   nxt.style.willChange = 'opacity';
   nxt.style.backgroundImage = url;
   nxt.style.backgroundPosition = `center ${coversState._landingBgPosY}%`;
@@ -154,10 +195,9 @@ export function _rotateLandingCover() {
       if (generation !== _rotationGeneration) return;
       _rotationFinishTimer = null;
       cur.style.willChange = 'auto';
-      _rotationInFlight = false;
-      if (_rotationQueued) { _rotationQueued = false; _rotateLandingCover(); }
-    }, 1600);
-  }, 1500);
+      _finishLandingRotation(generation);
+    }, LANDING_FADE_MS + 100);
+  }, LANDING_FADE_MS);
   coversState._landingBgActive = next;
 }
 
@@ -177,6 +217,7 @@ export function _startLandingCoverRotation() {
 export function _stopLandingCoverRotation() {
   // Invalidate an unfinished crossfade before hiding or restarting the layers.
   _rotationGeneration++;
+  _clearLandingCoverLoad();
   clearTimeout(_rotationFadeTimer);
   clearTimeout(_rotationFinishTimer);
   _rotationFadeTimer = null;

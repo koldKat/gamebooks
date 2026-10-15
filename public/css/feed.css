@@ -51,7 +51,7 @@ body.no-feed-day-covers:not(.no-feed-glass-cards) .feed-day-card::before {
   background-size: cover;
   background-position: var(--landing-cover-pos-prev, center);
   opacity: var(--landing-cover-fade, 0);
-  transition: opacity 1.5s ease;
+  transition: opacity 3.3s ease;
 }
 body:not(.no-feed-day-covers) .feed-day-card--glass::after,
 body.no-feed-day-covers:not(.no-feed-glass-cards) .feed-day-card::after {

@@ -272,7 +272,7 @@
 #sim680-overlay .bsim-status { white-space: pre-line; overflow-wrap: anywhere; }
 #sim680-close { margin-left: auto; }
 
-#sim689-btn, #sim690-btn, #sim700-btn, #sim706-btn {
+#sim689-btn, #sim690-btn, #sim700-btn, #sim706-btn, #sim710-btn, #sim2116-btn {
   background: rgba(31, 41, 55, 0.88);
   border: 1px solid #374151;
   border-radius: 7px;
@@ -286,7 +286,22 @@
   box-shadow: 0 2px 8px rgba(0,0,0,0.35);
   flex-shrink: 0;
 }
-:is(#sim689-btn, #sim690-btn, #sim700-btn, #sim706-btn):hover { background: #374151; color: #d1d5db; }
+:is(#sim689-btn, #sim690-btn, #sim700-btn, #sim706-btn, #sim710-btn, #sim2116-btn):hover { background: #374151; color: #d1d5db; }
+#sim710-overlay [hidden] { display: none !important; }
+#sim710-overlay .inv-edit-row { flex-wrap: wrap; }
+#sim710-overlay :is(input, select) { max-width: 100%; min-width: 0; }
+#sim710-overlay .inv-edit-row > span { flex: 0 1 9rem; min-width: 0; }
+#sim710-overlay .bsim-col > * { flex-shrink: 0; }
+#sim710-overlay .bsim-col-right { overflow-y: auto; }
+#sim710-overlay .bsim-btn-row { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+#sim710-overlay .bsim-action-btn { flex: 0 0 auto; margin-top: 0; padding: 3px 8px; font-size: 0.68rem; }
+#sim710-overlay .bsim-status { white-space: pre-line; overflow-wrap: anywhere; }
+#sim710-overlay .bsim-checkbox { display: flex; align-items: center; gap: 0.3rem; font-size: 0.7rem; color: #9ca3af; }
+#sim710-overlay :is(p, summary) { font-size: 0.7rem; color: #9ca3af; line-height: 1.4; }
+#sim710-overlay summary { cursor: pointer; }
+#sim710-overlay .bsim-combat-table { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 0.7rem; }
+#sim710-overlay :is(th, td) { overflow-wrap: anywhere; text-align: left; padding: 0.25rem; border-bottom: 1px solid #374151; }
+#sim710-close { margin-left: auto; }
 #sim706-overlay [hidden] { display: none !important; }
 #sim706-overlay .inv-edit-row { flex-wrap: wrap; }
 #sim706-overlay :is(input, select) { max-width: 100%; min-width: 0; }
