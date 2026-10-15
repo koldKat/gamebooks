@@ -301,7 +301,7 @@ async function handleGetAppXpStream(req, res) {
   if (!token) return send(res, 401, { error: 'Unauthorized' });
   const session = db.getSession(token);
   if (!session) return send(res, 401, { error: 'Unauthorized' });
-  if (!db.isUserAdmin(session.user_id)) return send(res, 403, { error: 'Game Master only' });
+  if (!db.isUserAdmin(session.user_id)) return send(res, 403, { error: 'Gamemaster only' });
 
   req.socket?.setNoDelay?.(true);
   res.writeHead(200, {
@@ -833,7 +833,6 @@ async function handleSearchUsers(req, res) {
   if (q.length < 1) return send(res, 200, { users: [] });
   send(res, 200, { users: db.searchUsers(q, userId) });
 }
-
 
 module.exports = {
   handleAcceptPartyInvite,

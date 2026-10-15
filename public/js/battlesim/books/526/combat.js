@@ -93,7 +93,6 @@ function _resetBattle() {
   _renderAll();
 }
 
-
 // END EXTRACTED RULES
   return { _roll2d6, _enemyName, _enemyNameSafe, _statusOf, _resolveAttack, _runRound, _checkBattleEnd, _resetBattle };
 }

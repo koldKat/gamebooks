@@ -1,7 +1,6 @@
 import { state, saveState } from '../core/state.js';
 import { network, graphRuntime } from './runtime.js';
 
-
 // Track stabilization until completion to prevent overlapping passes.
 // Recheck pending syncs against current state; use lighter, debounced settling while reading.
 const LIGHTWEIGHT_RESTABILIZE_DEBOUNCE_MS = 600;

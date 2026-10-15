@@ -14,13 +14,9 @@ import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS
 import { t } from "../../../i18n.js";
 import { ARKHAM_ENCOUNTERS, createArkhamCharacter, createArkhamFight, rollArkhamRound } from "../.././engines/arkham-darkness.js";
 
-
 const tk = (key, params) => t(`battlesim555.${key}`, params);
 const encounterLabel = section => tk('encounter_label', { enemy: tk(`enemy.${section}`), section });
 const el = key => document.getElementById(`${ID}-${key}`);
-
-
-
 
 const character = d => d.fight?.player ?? d.player;
 function close() { el('overlay')?.classList.remove('active'); }
@@ -28,7 +24,6 @@ function open() {
   if (!data()) { showAlert(t('battlesim.no_active_playthrough')); return; }
   renderSim555(); el('overlay').classList.add('active');
 }
-
 
 export function renderSim555() {
   if (!el('overlay')) return;

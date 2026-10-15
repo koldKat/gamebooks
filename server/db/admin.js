@@ -1885,7 +1885,6 @@ function giftBook(bookId, sourceUserId, targetUserId) {
   return { ok: true };
 }
 
-
 module.exports = {
   getTips, getAllTipsAdmin, createTip, updateTip, deleteTip,
   getAllLevelUpTemplatesAdmin, createLevelUpTemplate, updateLevelUpTemplate, deleteLevelUpTemplate,

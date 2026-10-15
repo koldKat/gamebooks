@@ -22,43 +22,11 @@ const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" ari
 
 // Deity (§308) weapon table - rolled fresh each round when deityMode is on.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // ── Hand-to-hand ─────────────────────────────────────────────────────────────
-
-
 
 // Gunfire rolls under own SKILL; the defender fires only if it survives the opening shot.
 
-
-
 // Incoming hits test 2d6 <= ARMOUR to negate damage; ARMOUR drops by 1 regardless.
-
-
-
-
-
-
-
-
-
 
 // ── Enemy autocomplete (fed by book_enemies, seeded per book_id) ───────────
 
@@ -234,8 +202,6 @@ export function setSim208Visible(visible) {
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
-
-
 
 export function initSim208() {
   const overlay = document.createElement('div');

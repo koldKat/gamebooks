@@ -95,7 +95,6 @@ function _resetBattle() {
   _renderAll();
 }
 
-
 // END EXTRACTED RULES
   return { _levelCol, _chanceRow, _pick10, _enemyName, _enemyNameSafe, _effectiveSkill, _runRound, _checkBattleEnd, _resetBattle };
 }

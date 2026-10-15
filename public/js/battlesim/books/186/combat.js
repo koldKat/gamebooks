@@ -318,7 +318,6 @@ function _replaceCrewMember(key) {
   _renderAll();
 }
 
-
 // END EXTRACTED RULES
   return { _freshCrewMember, _roll2d6, _roll1d6, _enemyName, _enemyNameSafe, _enemyShipNameSafe, _fighterLabel, _fighter, _isOfficer, _effectiveSkill, _rollDamage, _runHandToHandRound, _playerPhaserShot, _enemyPhaserShot, _runPhaserRound, _shipIsDestroyed, _startShipFight, _playerShipShot, _enemyShipShot, _runShipRound, _runRound, _resetBattle, _replaceCrewMember };
 }

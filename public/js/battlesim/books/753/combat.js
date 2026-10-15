@@ -115,7 +115,6 @@ function _resetBattle() {
   _renderAll();
 }
 
-
 // END EXTRACTED RULES
   return { _roll2d6, _enemyName, _enemyNameSafe, _playerWon, _playerLost, _resetEncounterKnobs, _runRound, _resetBattle };
 }

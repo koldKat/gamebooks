@@ -88,7 +88,6 @@ function _resetBattle() {
   _renderAll();
 }
 
-
 // END EXTRACTED RULES
   return { _pick, _enemyName, _enemyNameSafe, _playerStrike, _enemyStrike, _checkBattleEnd, _runRound, _resetBattle };
 }

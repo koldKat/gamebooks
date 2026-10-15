@@ -420,7 +420,7 @@ function renderLockedTable(users, now) {
     requestAnimationFrame(() => { if (link.scrollWidth > link.clientWidth) link.dataset.tooltip = u.username; });
 
     const isHard = u.locked_until === -1;
-    appendCell(tr, isHard ? 'Game Master lock' : 'Auto (failed attempts)', isHard ? '' : 'muted');
+    appendCell(tr, isHard ? 'Gamemaster lock' : 'Auto (failed attempts)', isHard ? '' : 'muted');
 
     const detailCell = tr.insertCell();
     if (isHard) {
@@ -774,7 +774,7 @@ export async function loadUserDetail(userId, edit = false) {
       const now = Math.floor(Date.now() / 1000);
       let lockLabel;
       if (user.locked_until === -1) {
-        lockLabel = 'Game Master locked';
+        lockLabel = 'Gamemaster locked';
       } else {
         const minsLeft = Math.ceil((user.locked_until - now) / 60);
         lockLabel = `Temp locked (${minsLeft}m left)`;

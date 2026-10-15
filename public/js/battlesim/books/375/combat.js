@@ -232,7 +232,6 @@ function _startEnemyFight(d, enemy) {
   d.allowZeroEnemyDamage = true;
 }
 
-
 // END EXTRACTED RULES
   return { _emptyEnemy, _roll2d6, _roll1d6, _rollNd6, _enemyName, _enemyNameSafe, _techLabel, _busy, _consumeBlockPenalty, _enemyCounter, _applyEnemyDefeat, _applyPlayerFall, _attack, _throwFollowup, _block, _takeHit, _resetBattle, _startEnemyFight };
 }

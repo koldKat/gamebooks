@@ -23,27 +23,7 @@ const SVG_SKULL  = `<svg class="sim-icon sim-icon-dead"  viewBox="0 0 24 24" ari
 const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v7a6 6 0 0 1-12 0V2zm-2 1H2v4a4 4 0 0 0 4 4v-1a3 3 0 0 1-3-3V3zm16 0h2v4a4 4 0 0 1-4 4v-1a3 3 0 0 0 3-3V3zm-7 13v2H9v2h6v-2h-2v-2a6 6 0 0 0 5-5.92V2H6v8.08A6 6 0 0 0 13 16z"/></svg>`;
 const SVG_TARGET = `<svg class="sim-icon sim-icon-target" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="6"  fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="2"  fill="currentColor"/></svg>`;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // Keep lifetime outcomes: admin totals require the full history.
-
 
 function _renderLog() {
   const el = document.getElementById('s8-log');
@@ -134,14 +114,6 @@ function _renderInputs() {
   _updateStatus();
   _updateItemBtns();
 }
-
-
-
-
-
-
-
-
 
 // ── Enemy autocomplete ───────────────────────────────────────────────────────
 let _enemyList = null;
@@ -247,7 +219,6 @@ export function renderSim8() {
 }
 
 // ── Stat stepper row ─────────────────────────────────────────────────────────
-
 
 // ── Init ─────────────────────────────────────────────────────────────────────
 export function initBattleSim8() {

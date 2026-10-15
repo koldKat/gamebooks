@@ -42,17 +42,7 @@ function replaceCharacter(transform=false) {
 function close(){el('overlay')?.classList.remove('active');}
 function open(){if(!data()){showAlert(t('battlesim.no_active_playthrough'));return;}renderSim536();el('overlay').classList.add('active');}
 
-
-
-
-
-
 const target=()=>Number(el('target').value);
-
-
-
-
-
 
 export function renderSim536() {
   if(!el('overlay'))return;

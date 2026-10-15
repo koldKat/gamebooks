@@ -60,7 +60,6 @@ export function initFeatureHooks() {
   // ── Tips bar ──────────────────────────────────────────────────────
   initTips();
 
-
   document.getElementById('app-banner-f1-btn').addEventListener('click', () => _toggleShortcutsModal());
 
   // ── Login screen ─────────────────────────────────────────────────

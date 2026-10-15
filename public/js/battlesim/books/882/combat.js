@@ -8,9 +8,6 @@ function _encounter(id) {
   const { ROSTER } = getContext();
  return ROSTER.find(e => e.id === id) || ROSTER[0]; }
 
-
-
-
 // END EXTRACTED RULES
   return { _roll1d6, _encounter };
 }

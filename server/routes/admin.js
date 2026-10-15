@@ -399,7 +399,6 @@ async function handleAdminVacuum(req, res) {
   send(res, 200, _buildAdminStatsPayload());
 }
 
-
 // ── Admin Tips handlers ───────────────────────────────────────────────────────
 
 async function handleAdminGetTips(req, res) {
@@ -526,7 +525,6 @@ async function handleAdminDeleteSeries(req, res, id) {
   if (series?.is_public) publicCatalogPush({ type: 'public_catalog_changed', entity: 'series', id, action: 'delete' });
   feedPush({ type: 'feed_changed', entity: 'series', action: 'delete', id });
 }
-
 
 module.exports = {
   handleAdminGetTips,

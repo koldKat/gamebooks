@@ -133,5 +133,4 @@ export function initStashBindings(mousedownOnOverlayRef) {
     }
   });
 
-
 }

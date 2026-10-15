@@ -21,7 +21,6 @@ import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";
 import { t } from "../../../i18n.js";
 
-
 const tk = (suffix, params) => t(`${K}.${suffix}`, params);
 const el = id => document.getElementById(`${ID}-${id}`);
 
@@ -32,23 +31,9 @@ const SVG_TROPHY = `<svg class="sim-icon sim-icon-win" viewBox="0 0 24 24" aria-
 const _tableRoll = () => (1 + Math.floor(Math.random() * 6)) + (1 + Math.floor(Math.random() * 6));
 const _half = roll => Math.ceil(roll / 2);
 
-
-
 const _enemyName = d => d.enemy.name.trim() || tk('ui.enemy');
 const _over = d => d.fight.ready && (d.player.energy <= 0 || d.enemy.curEnergy <= 0);
 const _fighting = d => d.fight.ready && !_over(d);
-
-
-
-
-
-
-
-
-
-
-
-
 
 // ── Render ──────────────────────────────────────────────────────────────────
 function _setVal(id, v) { const node = el(id); if (node && document.activeElement !== node) node.value = v; }
@@ -114,7 +99,6 @@ async function _loadEnemyList() {
   return _enemyList;
 }
 
-
 function _setupEnemyAutocomplete() {
   const input = el('enemy-pick'), dropdown = el('enemy-pick-dropdown');
   let matches = [], activeIdx = -1;
@@ -148,7 +132,6 @@ function _setupEnemyAutocomplete() {
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────
-
 
 export function initSim463() {
   if (el('overlay')) return;

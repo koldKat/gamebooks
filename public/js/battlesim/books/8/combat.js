@@ -13,15 +13,11 @@ function _calcDmg(dice) {
   return dice.reduce((s, d) => s + (d === 6 ? 2 : d >= 4 ? 1 : 0), 0);
 }
 
-
-
 function _diceHtml(dice) {
   const { _dieHtml } = getContext();
 
   return '[' + dice.map(_dieHtml).join(' ') + ']';
 }
-
-
 
 function _enemyName(d) {
  return d.enemy.name.trim() || 'врагът'; }
@@ -135,7 +131,6 @@ function _resetBattle() {
   _renderLog();
   _renderHistory();
 }
-
 
 // END EXTRACTED RULES
   return { _rollDice, _calcDmg, _diceHtml, _enemyName, _runRound, _fireBow, _resetBattle };

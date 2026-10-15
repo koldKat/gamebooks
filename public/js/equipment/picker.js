@@ -11,7 +11,6 @@ import { ALL_SLOTS } from './constants.js';
 
 // ── Picker ────────────────────────────────────────────────────────────────────
 
-
 export async function _openPicker(slotKey) {
   if (_isReadOnly()) return;
   const slot = ALL_SLOTS.find(s => s.key === slotKey);

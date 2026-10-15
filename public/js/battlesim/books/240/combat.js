@@ -259,7 +259,6 @@ function _removeSideEnemy(idx) {
   _renderAll();
 }
 
-
 // END EXTRACTED RULES
   return { _roll2d6, _roll1d6, _enemyName, _enemyNameSafe, _sideEnemyNameSafe, _effectiveSkill, _woundValues, _absorbHit, _runRound, _testLuck, _skipLuck, _resetBattle, _rollForSkull, _rollSpearLifeForce, _empowerSpear, _addSideEnemy, _removeSideEnemy };
 }

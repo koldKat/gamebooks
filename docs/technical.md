@@ -703,7 +703,7 @@ Shared application foundations live in `public/js/core/`: `state.js`, `constants
 
 Each JS module's own "how to remove this module" header comment points at its own CSS file.
 
-`server/runtime-state.js`'s `computeCodeStats()` (feeds "Lines of code"/"Code size"/"JS modules" in Stats for Nerds) scans `server/`, `public/js/`, `admin/js/`, `test/`, `public/mobile/js/`, `public/css/`, `public/mobile/css/`, plus `server.js` and the top-level HTML files (`public/index.html`, `public/guide.html`, `public/mobile/index.html`, `admin/*.html`), dynamically rather than from a hardcoded file list. `walkJsFiles()` matches both `.js` and `.mjs` (so `test/*.test.mjs` counts). `test/` and `public/mobile/` each have their own inner `try/catch`, separate from the outer one wrapping the rest of the function.
+Code statistics scan application JavaScript recursively in server/, public/js/, admin/js/ and public/mobile/js/, plus server.js, application CSS and top-level application HTML pages. JavaScript modules include .js and .mjs files. Tests and the HTML user, admin and technical guides are excluded from all code totals. Test directories (test, tests and __tests__) and .test/.spec modules are excluded even inside production trees. The optional mobile tree is scanned independently.
 
 ---
 
@@ -2824,4 +2824,4 @@ Secondary anthology membership routes grant moderators editing access only when 
 
 ### Role display names
 
-The player-facing role names are **Game Master**, **Lorekeeper**, **Pathmaker**, and **Fateweaver**. Badge tooltips, role notifications, editor labels and role totals use those names without legacy-name suffixes. Existing internal flags (`is_admin`, `is_moderator`, `is_contributor`, `is_author`) and API keys remain unchanged. Role notifications resolve labels from their role identifier when rendered, so historical notifications show the current name too. Bibliographic author fields and author statistics retain their ordinary meaning.
+The player-facing role names are **Gamemaster**, **Lorekeeper**, **Pathmaker**, and **Fateweaver**. Badge tooltips, role notifications, editor labels and role totals use those names without legacy-name suffixes. Existing internal flags (`is_admin`, `is_moderator`, `is_contributor`, `is_author`) and API keys remain unchanged. Role notifications resolve labels from their role identifier when rendered, so historical notifications show the current name too. Bibliographic author fields and author statistics retain their ordinary meaning.

@@ -206,10 +206,6 @@ function _resetBattle() {
   _renderAll();
 }
 
-
-
-
-
 function _sideFields(prefix) {
   const { _modeSelect, _numField, t } = getContext();
 

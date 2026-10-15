@@ -24,45 +24,9 @@ const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" ari
 
 // Convenience presets follow the printed solo party table (rank 20).
 
-
 // Roster defense is damage bonus; conditional and variable armour stays manual.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // ── Combat ───────────────────────────────────────────────────────────────────
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // ── Enemy autocomplete (fed by book_enemies, seeded per book_id) ───────────
 
@@ -231,8 +195,6 @@ export function setSim398Visible(visible) {
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
-
-
 
 export function initSim398() {
   const overlay = document.createElement('div');

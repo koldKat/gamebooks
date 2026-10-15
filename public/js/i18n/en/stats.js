@@ -26,7 +26,7 @@ export default {
     'stats.sec.ow':       'Open World',
 
     'stats.registered':             'Registered',
-    'stats.admins':                 'Game Masters',
+    'stats.admins':                 'Gamemasters',
     'stats.authors':                'Fateweavers',
     'stats.contributors':           'Pathmakers',
     'stats.public_profiles':        'Public profiles',

@@ -32,11 +32,9 @@ export function getPlayBtnRow() {
 let _dragId          = null;
 let _dragFromHandle  = false;
 
-
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function genId() { return Math.random().toString(36).slice(2, 10); }
-
 
 function deepCopy(obj) { return JSON.parse(JSON.stringify(obj)); }
 

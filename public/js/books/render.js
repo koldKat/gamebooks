@@ -203,7 +203,7 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
         ((s.is_owner && !isModerator) || (isModerator && s.is_public)
           ? `<button class="series-edit-btn" data-series-id="${s.id}" data-series-name="${escapeHtml(s.name)}" data-series-desc="${escapeHtml(s.description || '')}" data-series-public="${s.is_public ? '1' : '0'}" data-series-open-world="${s.is_open_world ? '1' : '0'}">✎</button>`
           : isAdmin
-            ? `<button class="series-edit-btn series-edit-btn--admin" data-tooltip="Game Master edit" data-series-id="${s.id}" data-series-name="${escapeHtml(s.name)}" data-series-desc="${escapeHtml(s.description || '')}" data-series-public="${s.is_public ? '1' : '0'}" data-series-open-world="${s.is_open_world ? '1' : '0'}">✎</button>`
+            ? `<button class="series-edit-btn series-edit-btn--admin" data-tooltip="Gamemaster edit" data-series-id="${s.id}" data-series-name="${escapeHtml(s.name)}" data-series-desc="${escapeHtml(s.description || '')}" data-series-public="${s.is_public ? '1' : '0'}" data-series-open-world="${s.is_open_world ? '1' : '0'}">✎</button>`
             : `<span data-tooltip="${t('books.only_creator_can_edit')}" style="display:inline-flex"><button class="series-edit-btn" disabled>✎</button></span>`
         ) +
         `<button class="series-del-btn"${isModerator ? ' disabled' : ''} data-series-id="${s.id}" data-series-name="${escapeHtml(s.name)}" data-series-owner="${s.is_owner ? '1' : '0'}" data-tooltip="${s.is_owner ? t('books.delete_series') : t('books.remove_from_library')}">✕</button>` +
@@ -326,8 +326,6 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
   for (const b of _sortBooks(noSeries.filter(b => !b.is_container))) parts.push(_bookItemHtml(b, false, false, 0, null, isAdmin));
 
   list.innerHTML = parts.join('');
-
-
 
   _wireRenderedContent(list);
   lazyState.wireContent = _wireRenderedContent;

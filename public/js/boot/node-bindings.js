@@ -61,7 +61,6 @@ export function initNodeBindings() {
     if (id !== null) openPortalModal(id, null);
   });
 
-
   document.getElementById('ctx-color-grid').addEventListener('click', e => {
     const swatch = e.target.closest('.ctx-color-swatch');
     if (!swatch) return;

@@ -76,7 +76,7 @@ export async function showMain(bookId, isbn = null, issn = null, asin = null, co
   const editBookBtn = document.getElementById('edit-book-btn');
   editBookBtn.style.display = (bootState._isAdmin || (resolveIsModerator() ? isPublic : isCreator)) ? '' : 'none';
   editBookBtn.classList.toggle('admin-override', !isCreator && bootState._isAdmin);
-  if (!isCreator && bootState._isAdmin) editBookBtn.dataset.tooltip = 'Game Master edit';
+  if (!isCreator && bootState._isAdmin) editBookBtn.dataset.tooltip = 'Gamemaster edit';
   else delete editBookBtn.dataset.tooltip;
   const pdfDlBtn = document.getElementById('pdf-download-btn');
   if (pdfDlBtn) {

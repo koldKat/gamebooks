@@ -144,10 +144,10 @@ for (const [key, value] of Object.entries(addedMint)) assert.equal(en.api.t(key)
 assert.equal(en.api.t('notif.gold_coins', { amount: 2, s: 's' }), '2 Gold Coins');
 const renamedRoleLabels = {
   ...simulatorRuleUpdates.changed,
-  'stats.admins': ['Admins', 'Game Masters'],
+  'stats.admins': ['Admins', 'Gamemasters'],
   'stats.authors': ['Authors', 'Fateweavers'],
   'stats.contributors': ['Contributors', 'Pathmakers'],
-  'auth.no_email_on_file': ['This account has no email address on file. Please contact an admin using the feedback form.', 'This account has no email address on file. Please contact a Game Master using the feedback form.'],
+  'auth.no_email_on_file': ['This account has no email address on file. Please contact an admin using the feedback form.', 'This account has no email address on file. Please contact a Gamemaster using the feedback form.'],
 };
 for (const [key, [, label]] of Object.entries(renamedRoleLabels)) assert.equal(en.api.t(key), label);
 const original = sorted(en.table);

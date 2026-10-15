@@ -25,46 +25,19 @@ const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" ari
 
 // restore spells refill by floor(Initial/2), capped at Initial; manual spells only consume/log uses.
 
-
-
-
-
-
-
-
-
-
-
 // Stack Sun-Sword (+4 SKILL, sec 345) and enchanted sword (+2 Attack Strength, sec 353) bonuses.
-
-
-
-
-
-
 
 // Keep lifetime outcomes: admin totals require the full history.
 
-
 // ── Combat ───────────────────────────────────────────────────────────────────
 
-
-
 // Luck costs 1: own hits become 4/1 damage; incoming hits become 1/3 damage (lucky/unlucky).
-
-
-
-
-
 
 // ── Spells ───────────────────────────────────────────────────────────────────
 
 const SPELL_LABELS = Object.fromEntries(SPELLS.map(([key, label]) => [key, label]));
 
-
-
 // Potion of Magik (sec 235) has two doses, each permanently adding one spell cast.
-
 
 // ── Render ────────────────────────────────────────────────────────────────
 
@@ -314,8 +287,6 @@ function _setupEnemyAutocomplete() {
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
-
-
 
 export function initSim199() {
   const overlay = document.createElement('div');

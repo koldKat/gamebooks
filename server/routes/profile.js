@@ -262,7 +262,7 @@ async function handleUploadPdf(req, res, bookId) {
     userId = await authenticate(req, res);
     if (userId === null) return;
     const user = db.getUserById(userId);
-    if (!user?.is_protected && !user?.is_admin) return send(res, 403, { error: 'Game Master only' });
+    if (!user?.is_protected && !user?.is_admin) return send(res, 403, { error: 'Gamemaster only' });
   } else {
     userId = authenticateOptional(req);
   }
@@ -290,7 +290,7 @@ async function handleDeletePdf(req, res, bookId) {
     const userId = await authenticate(req, res);
     if (userId === null) return;
     const user = db.getUserById(userId);
-    if (!user?.is_protected && !user?.is_admin) return send(res, 403, { error: 'Game Master only' });
+    if (!user?.is_protected && !user?.is_admin) return send(res, 403, { error: 'Gamemaster only' });
   }
   db.removeBookPdf(bookId);
   send(res, 200, { ok: true });
@@ -302,7 +302,7 @@ async function handleUploadEpub(req, res, bookId) {
     userId = await authenticate(req, res);
     if (userId === null) return;
     const user = db.getUserById(userId);
-    if (!user?.is_protected && !user?.is_admin) return send(res, 403, { error: 'Game Master only' });
+    if (!user?.is_protected && !user?.is_admin) return send(res, 403, { error: 'Gamemaster only' });
   } else {
     userId = authenticateOptional(req);
   }
@@ -330,7 +330,7 @@ async function handleDeleteEpub(req, res, bookId) {
     const userId = await authenticate(req, res);
     if (userId === null) return;
     const user = db.getUserById(userId);
-    if (!user?.is_protected && !user?.is_admin) return send(res, 403, { error: 'Game Master only' });
+    if (!user?.is_protected && !user?.is_admin) return send(res, 403, { error: 'Gamemaster only' });
   }
   db.removeBookEpub(bookId);
   send(res, 200, { ok: true });

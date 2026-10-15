@@ -785,11 +785,6 @@ function _statLine(ent) {
   });
 }
 
-
-
-
-
-
 // END EXTRACTED RULES
   return { _rival, _rivalNameById, _d6, _dN, _shieldAbsorb, _freshEntity, _recompute, _loseE, _loseB, _magicExchange, _kill, _dalgrenR1, _dalgrenR2, _dalgrenBlockOnly, _tindalinR1, _tindalinR2Real, _uantorR1, _uantorR2, _smajtalR1, _smajtalR2, _lestorR1, _lestorR2, _tejbrunR1, _matualR1, _counterDefenses, _contraCheck, _playerAttackOptions, _rivalName, _playerDead, _oppDead, _checkEnd, _startBattle, _oppOptions, _pickOppOption, _pickSpecial, _pickPlayerOption, _pickCounterDefense, _pickRival, _pickSourceOption, _shieldLabel, _statLine };
 }

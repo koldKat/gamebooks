@@ -242,13 +242,13 @@ const APP_LAUNCH_EPOCH = Math.floor(new Date('2026-03-26T00:40:05Z').getTime() /
 
 let _codeStats = { linesOfCode: 0, codeBytes: 0, jsModules: 0 };
 (function computeCodeStats() {
-  // Include .mjs so test modules count in code statistics.
   function walkJsFiles(dir) {
     let out = [];
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
       const p = `${dir}/${entry.name}`;
-      if (entry.isDirectory()) out = out.concat(walkJsFiles(p));
-      else if (entry.name.endsWith('.js') || entry.name.endsWith('.mjs')) out.push(p);
+      if (entry.isDirectory()) {
+        if (!['test', 'tests', '__tests__'].includes(entry.name)) out = out.concat(walkJsFiles(p));
+      } else if (/\.(?:m?js)$/.test(entry.name) && !/\.(?:test|spec)\.(?:m?js)$/.test(entry.name)) out.push(p);
     }
     return out;
   }
@@ -256,9 +256,6 @@ let _codeStats = { linesOfCode: 0, codeBytes: 0, jsModules: 0 };
     const serverJsFiles = walkJsFiles('server');
     const publicJsFiles = walkJsFiles('public/js');
     const adminJsFiles  = walkJsFiles('admin/js');
-    // Isolate optional test-directory scans so missing tests cannot zero out production code statistics.
-    let testJsFiles = [];
-    try { testJsFiles = walkJsFiles('test'); } catch (_) {}
     // Isolate optional mobile-tree scans from other code statistics.
     let mobileJsFiles = [];
     let mobileCssFiles = [];
@@ -271,14 +268,12 @@ let _codeStats = { linesOfCode: 0, codeBytes: 0, jsModules: 0 };
       ...serverJsFiles,
       ...publicJsFiles,
       ...adminJsFiles,
-      ...testJsFiles,
       ...mobileJsFiles,
       ...fs.readdirSync('public/css').filter(f => f.endsWith('.css')).map(f => `public/css/${f}`),
       ...mobileCssFiles,
       'public/index.html',
-      'public/guide.html',
       'public/mobile/index.html',
-      ...fs.readdirSync('admin').filter(f => f.endsWith('.html')).map(f => `admin/${f}`),
+      ...fs.readdirSync('admin').filter(f => f.endsWith('.html') && !['admin-guide.html', 'technical.html'].includes(f)).map(f => `admin/${f}`),
     ];
     let lines = 0, bytes = 0;
     for (const f of files) {
@@ -286,7 +281,7 @@ let _codeStats = { linesOfCode: 0, codeBytes: 0, jsModules: 0 };
     }
     _codeStats.linesOfCode = lines;
     _codeStats.codeBytes   = bytes;
-    _codeStats.jsModules   = 1 + serverJsFiles.length + publicJsFiles.length + adminJsFiles.length + testJsFiles.length + mobileJsFiles.length;
+    _codeStats.jsModules   = 1 + serverJsFiles.length + publicJsFiles.length + adminJsFiles.length + mobileJsFiles.length;
   } catch (_) {}
 })();
 

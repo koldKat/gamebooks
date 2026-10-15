@@ -82,7 +82,6 @@ function _resetBattle() {
   _renderAll();
 }
 
-
 // END EXTRACTED RULES
   return { _rollChance, _enemyName, _enemyNameSafe, _hasEnemy, _playerDefeated, _enemyDefeated, _runRound, _resetBattle };
 }

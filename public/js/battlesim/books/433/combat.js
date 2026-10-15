@@ -183,7 +183,6 @@ function _resetBattle() {
   _renderAll();
 }
 
-
 // END EXTRACTED RULES
   return { _crCol, _rollRandomNumber, _playerCS, _enemyName, _enemyNameSafe, _playerLost, _playerWon, _captureFightEffects, _setRoute, _recoverCombatLoss, _runRound, _resetBattle };
 }

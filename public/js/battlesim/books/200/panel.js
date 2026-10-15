@@ -25,46 +25,16 @@ const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" ari
 
 // Two-dose potions restore SKILL/STAMINA; Fortune raises Initial LUCK by 1 and refills it.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // Bracelet of Skill (sec 302) is the only fixed combat bonus item found in
 // this book - +1 to every Attack Strength roll while worn.
 
-
 // Keep lifetime outcomes: admin totals require the full history.
-
 
 // ── Combat ───────────────────────────────────────────────────────────────────
 
-
-
-
-
 // Luck costs 1 per queued hit: outgoing damage +2/-1, incoming damage -1/+1 (lucky/unlucky).
 
-
-
-
-
-
 // ── Potions / one-time items ────────────────────────────────────────────────
-
-
 
 // ── Render ────────────────────────────────────────────────────────────────
 
@@ -287,8 +257,6 @@ function _setupEnemyAutocomplete() {
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
-
-
 
 export function initSim200() {
   const overlay = document.createElement('div');

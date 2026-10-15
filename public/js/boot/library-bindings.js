@@ -17,8 +17,6 @@ export function initLibraryBindings() {
     clearToken(); clearUsername(); bootState._isAdmin = false; bootState._canSeeAppXp = false; setCoversPrefsState({}); resetFeedDisplayPrefsForLogout(); showLogin();
   });
 
-
-
   // ── Main screen ───────────────────────────────────────────────────
   document.getElementById('back-to-books-btn').addEventListener('click', showBooks);
 

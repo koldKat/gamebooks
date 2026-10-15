@@ -25,50 +25,15 @@ const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" ari
 // Choose exactly one bottle (sec.10). Each bottle contains one measure, so
 // unlike book 198's two-dose potions these are single-use.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // Item bonuses add to combat SKILL/Attack Strength; one-time pickup rewards remain manual.
-
-
-
 
 // Keep lifetime outcomes: admin totals require the full history.
 
-
 // ── Combat ───────────────────────────────────────────────────────────────────
-
-
 
 // Luck costs 1 per queued hit: outgoing damage +2/-1, incoming damage -1/+1 (lucky/unlucky).
 
-
-
-
-
-
 // ── Provisions / Potions ────────────────────────────────────────────────────
-
-
-
-
 
 // ── Render ────────────────────────────────────────────────────────────────
 
@@ -319,8 +284,6 @@ function _setupEnemyAutocomplete(inputId, dropdownId, onSelect) {
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
-
-
 
 export function initSim201() {
   const overlay = document.createElement('div');

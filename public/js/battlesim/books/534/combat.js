@@ -11,12 +11,6 @@ function store() {
   const { renderSim534, saveState } = getContext();
  saveState(); renderSim534(); }
 
-
-
-
-
-
-
 function label(section) {
   const { tk } = getContext();
  return section === 'prologue' ? tk('prologue') : tk('section', { section }); }

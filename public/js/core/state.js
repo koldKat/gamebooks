@@ -114,7 +114,6 @@ export function isValidSecId(id) {
   return typeof id === 'string' && id.length > 0;
 }
 
-
 export function currentPlaythrough() {
   if (state.activePtIndex === null) return null;
   const pt = state.playthroughs[state.activePtIndex];

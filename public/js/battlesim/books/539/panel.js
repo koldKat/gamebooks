@@ -15,10 +15,8 @@ import { t } from "../../../i18n.js";
 import * as rules from "../.././engines/forbidden-gateway.js";
 import { SHADOWS_CHECKS, resolveShadowsCheck } from "../.././engines/forbidden-gateway-checks.js";
 
-
 const tk = (key, params) => t(`battlesim539.${key}`, params);
 const el = key => document.getElementById(`${ID}-${key}`);
-
 
 const player = data => data.fight?.player ?? data.player;
 const active = data => data?.fight?.status === 'fighting';
@@ -29,10 +27,6 @@ function open() {
   if (!data()) { showAlert(t('battlesim.no_active_playthrough')); return; }
   renderSim539(); el('overlay').classList.add('active');
 }
-
-
-
-
 
 export function renderSim539() {
   if (!el('overlay')) return;

@@ -96,9 +96,6 @@ function _resetBattle() {
   _renderAll();
 }
 
-
-
-
 // END EXTRACTED RULES
   return { _emptyEnemy, _rollTable, _enemyName, _enemyNameSafe, _applyEnemyDefeat, _applyPlayerFall, _exchange, _resetBattle };
 }

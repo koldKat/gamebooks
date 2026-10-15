@@ -48,7 +48,6 @@ export function _closeEqRename(save) {
 
 // ── Edit dialog (qty / note / show-on-screen) ──────────────────────────────────
 
-
 export function _openEqEditAt(key, x, y) {
   if (_isReadOnly()) return;
   const entry = _eq()[key];

@@ -1226,7 +1226,6 @@ function getAllPublicAnthologies() {
   })).sort(_naturalCompareByName);
 }
 
-
 function getBookActivity(bookId, userId = null) {
   const visible = db.prepare(`
     SELECT 1 FROM books b WHERE b.id = ?
@@ -1518,7 +1517,6 @@ function getPublicSeriesRun(seriesId, userId, runIndex) {
     journey,
   };
 }
-
 
 module.exports = {
   getFeed,

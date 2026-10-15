@@ -122,7 +122,6 @@ function _resetBattle() {
   _renderAll();
 }
 
-
 // END EXTRACTED RULES
   return { _conflictTarget, _roll1d6, _roll2d6pair, _enemyName, _enemyNameSafe, _playerAttr, _enemyDefeated, _playerDefeated, _hasEnemy, _applyDamage, _runRound, _resetBattle };
 }

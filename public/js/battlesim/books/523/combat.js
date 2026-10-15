@@ -8,10 +8,6 @@ function saveAndRender() {
   const { renderSim523, saveState } = getContext();
  saveState(); renderSim523(); }
 
-
-
-
-
 function selectedEncounter() {
   const { MINE_ENCOUNTERS, element } = getContext();
  return MINE_ENCOUNTERS.find(e => String(e.section) === element('encounter').value); }

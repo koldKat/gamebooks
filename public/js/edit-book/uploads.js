@@ -24,7 +24,6 @@ const _EPUB_ICON_MARKUP = `
 const _PDF_MAX_BYTES = 256 * 1024 * 1024;
 const _EPUB_MAX_BYTES = 256 * 1024 * 1024;
 
-
 export function formatFileSize(bytes) {
   const value = Number(bytes);
   if (!Number.isFinite(value) || value < 0) return '';

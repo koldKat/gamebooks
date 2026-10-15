@@ -139,9 +139,6 @@ function _pickEnemy(id) {
   _renderAll();
 }
 
-
-
-
 // END EXTRACTED RULES
   return { _rival, _rivalNameById, _d6, _d2, _enemyName, _playerDead, _enemyDead, _checkEnd, _round, _startBattle, _pickEnemy };
 }

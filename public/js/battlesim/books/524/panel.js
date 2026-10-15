@@ -16,28 +16,15 @@ import { initialFortune, recoverVitality } from "../.././engines/skyfall-rules.j
 import { GARDEN_ENCOUNTERS, createGardenFight, rollGardenRound, settleGardenRound,
   escapeGardenFight, finishGardenFight, takeGardenHalberd } from "../.././engines/skyfall/garden-of-madness.js";
 
-
 const tk = (key, params) => t(`battlesim524.${key}`, params);
 const element = key => document.getElementById(`${ID}-${key}`);
 const number = key => Number(element(key).value);
-
-
-
 
 function close() { element('overlay')?.classList.remove('active'); }
 function open() {
   if (!data()) { showAlert(t('battlesim.no_active_playthrough')); return; }
   renderSim524(); element('overlay').classList.add('active');
 }
-
-
-
-
-
-
-
-
-
 
 export function renderSim524() {
   if (!element('overlay')) return;

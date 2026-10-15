@@ -14,11 +14,9 @@ import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS
 import { t } from "../../../i18n.js";
 import { KINGSPORT_FLAGS, KINGSPORT_PROFILES, KINGSPORT_ENCOUNTERS, createKingsportCharacter, createKingsportFight, rollKingsportRound, improviseKingsport } from "../.././engines/kingsport.js";
 
-
 const tk = (key, params) => t(`battlesim557.${key}`, params);
 const encounterLabel = section => tk('encounter_label', { enemy: tk(`enemy.${section}`), section });
 const el = key => document.getElementById(`${ID}-${key}`);
-
 
 const character = d => d.fight?.player ?? d.player;
 function close() { el('overlay')?.classList.remove('active'); }
@@ -26,7 +24,6 @@ function open() {
   if (!data()) { showAlert(t('battlesim.no_active_playthrough')); return; }
   renderSim557(); el('overlay').classList.add('active');
 }
-
 
 export function renderSim557() {
   if (!el('overlay')) return;

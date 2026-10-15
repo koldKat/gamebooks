@@ -25,7 +25,6 @@ const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" ari
 // Player stat keys (typed in by the reader from their own journal).
 // Labels are i18n keys, resolved via t() at render time.
 
-
 // Select the enemy action from round/history; resolve NPC defense as aggressive, without player-only drain.
 const ROSTER = [
   {
@@ -132,50 +131,12 @@ const ROSTER = [
   },
 ];
 
-
-
-
-
-
-
-
-
-
-
-
-
 // Count wins: true if 2 consecutive wins, or 3 total wins (non-consecutive
 // counts fine since 2 consecutive is already covered separately).
 
-
-
-
-
-
-
-
 // ── Combat ───────────────────────────────────────────────────────────────
 
-
-
-
-
-
-
 // NPC defense is aggressive-style, without the player's passive stat-drain effect.
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // ── Render ───────────────────────────────────────────────────────────────
 
@@ -224,8 +185,6 @@ function _renderLog() {
   el.innerHTML = d.log.slice().reverse().join('<br>');
 }
 
-
-
 function _renderInputs() {
   const d = _data();
   if (!d) return;
@@ -273,8 +232,6 @@ export function setSim772Visible(visible) {
 }
 
 // ── Init ─────────────────────────────────────────────────────────────────
-
-
 
 export function initSim772() {
   const overlay = document.createElement('div');

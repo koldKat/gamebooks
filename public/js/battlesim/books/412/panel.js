@@ -22,29 +22,6 @@ const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" ari
 
 // Roster fed from book_enemies; §454 (Черна сянка) has no printed ж.т., defaulted and editable.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // ── Render ───────────────────────────────────────────────────────────────
 
 function _renderStatus() {
@@ -90,8 +67,6 @@ function _renderHistory() {
   }).join('');
 }
 
-
-
 function _renderInputs() {
   const d = _data();
   if (!d) return;
@@ -131,8 +106,6 @@ export function setSim412Visible(visible) {
 }
 
 // ── Init ─────────────────────────────────────────────────────────────────
-
-
 
 export function initSim412() {
   const overlay = document.createElement('div');

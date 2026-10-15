@@ -61,7 +61,6 @@ function _resetBattle() {
   _renderAll();
 }
 
-
 // END EXTRACTED RULES
   return { _roll1d6, _enemyName, _enemyNameSafe, _runRound, _resetBattle };
 }

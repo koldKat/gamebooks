@@ -22,70 +22,19 @@ const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" ari
 
 // [key, label, isOfficer]. isOfficer = takes -3 SKILL when fighting.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // Nerve-stick and armour-deflect vary damage; normal uses flat NORMAL_DMG.
-
 
 // Keep lifetime outcomes: admin totals require the full history.
 
-
 // ── Hand-to-hand ─────────────────────────────────────────────────────────────
-
-
 
 // Phaser combat alternates roll-under-SKILL shots; the first hit ends the fight.
 
-
-
-
-
 // Respect encounter-specific enemy-first firing in both phaser and ship combat.
-
 
 // ── Ship-to-ship ─────────────────────────────────────────────────────────────
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // ── Crew roster ──────────────────────────────────────────────────────────────
-
-
 
 // ── Render ────────────────────────────────────────────────────────────────
 
@@ -364,8 +313,6 @@ function _setupAutocomplete(inputId, dropdownId, onSelect) {
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
-
-
 
 export function initSim186() {
   const overlay = document.createElement('div');

@@ -109,7 +109,6 @@ function _resetBattle() {
   _renderAll();
 }
 
-
 // END EXTRACTED RULES
   return { _roll, _playerAtaka, _playerZashtita, _enemyName, _enemyNameSafe, _ready, _firstBloodLimit, _runRound, _checkBattleEnd, _resetBattle };
 }

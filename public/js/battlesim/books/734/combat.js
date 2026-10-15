@@ -216,9 +216,6 @@ function _resetBattle() {
   _renderAll();
 }
 
-
-
-
 // END EXTRACTED RULES
   return { _isRobot, _activeLife, _activeLifeInitial, _setActiveLife, _roll2d6, _enemyName, _enemyNameSafe, _sideEnemyNameSafe, _speedBonus, _resetEncounterKnobs, _finishCurrentRound, _switchTarget, _runRound, _testLuck, _skipLuck, _resetBattle };
 }

@@ -16,12 +16,8 @@ import { initialFortune, recoverVitality } from "../.././engines/skyfall-rules.j
 import { MARSH_ENCOUNTERS } from "../.././engines/skyfall/monsters-of-the-marsh.js";
 import { createMarshFight, rollMarshRound, settleMarshRound, escapeMarshTree, escapeMarshCanoe } from "../.././engines/skyfall/marsh-combat.js";
 
-
 const tk = (key, params) => t(`battlesim521.${key}`, params);
 const element = key => document.getElementById(`${ID}-${key}`);
-
-
-
 
 function close() { element('overlay')?.classList.remove('active'); }
 function open() {
@@ -29,21 +25,6 @@ function open() {
   renderSim521();
   element('overlay').classList.add('active');
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 export function renderSim521() {
   if (!element('overlay')) return;

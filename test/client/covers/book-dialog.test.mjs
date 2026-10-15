@@ -110,7 +110,6 @@ test('anthology children show their own reading availability, even without cover
   assert.doesNotMatch(rows[1][1], /reading-badge/);
 });
 
-
 test('cover-panel Edit Book reloads and saves the highest section independently of the total', async () => {
   const d = dialog({ loggedIn: true, admin: true, meta: { totalSections: 420, maxSectionNumber: 1003 } });
   d.buttons.get('.catalog-admin-edit-btn').click();
@@ -125,7 +124,6 @@ test('cover-panel Edit Book reloads and saves the highest section independently 
   legacy.buttons.get('.catalog-admin-edit-btn').click();
   assert.equal(legacy.editOptions.initialMaxSectionNumber, 420, 'legacy blank defaults to total sections');
 });
-
 
 test('catalog anthology save reports a server rejection without refreshing the dialog', async () => {
   const d = dialog({ loggedIn: true, admin: true, ok: false, meta: { isContainer: true } });

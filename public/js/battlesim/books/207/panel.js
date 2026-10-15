@@ -26,52 +26,14 @@ const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" ari
 // Choose exactly one bottle (rules p.2). Each bottle contains one measure,
 // same single-use rule as books 201/202/203/205's potions.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // Keep lifetime outcomes: admin totals require the full history.
 
-
 // ── Combat ───────────────────────────────────────────────────────────────────
-
-
-
-
 
 // Test Your Luck after a hit lands: costs 1 LUCK regardless of outcome. Same
 // Lucky/Unlucky table as every other FF sim in this app.
 
-
-
-
-
-
 // ── Provisions / Potions ────────────────────────────────────────────────────
-
-
-
-
 
 // ── Render ────────────────────────────────────────────────────────────────
 
@@ -308,8 +270,6 @@ function _setupEnemyAutocomplete(inputId, dropdownId, onSelect) {
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
-
-
 
 export function initSim207() {
   const overlay = document.createElement('div');

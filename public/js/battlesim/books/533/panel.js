@@ -15,29 +15,17 @@ import { t } from "../../../i18n.js";
 import { LEGION_ENCOUNTERS, LEGION_DREAMS, LEGION_EQUIPMENT } from "../.././engines/grailquest/legion-of-the-dead-roster.js";
 import * as rules from "../.././engines/grailquest/legion-of-the-dead.js";
 
-
 const tk = (key, params) => t(`battlesim533.${key}`, params);
 const el = key => document.getElementById(`${ID}-${key}`);
 
-
-
-
-
-
 const p = d => d.fight?.player ?? d.player;
 const active = d => d?.fight?.status === 'fighting';
-
 
 function close() { el('overlay')?.classList.remove('active'); }
 function open() {
   if (!data()) { showAlert(t('battlesim.no_active_playthrough')); return; }
   renderSim533(); el('overlay').classList.add('active');
 }
-
-
-
-
-
 
 export function renderSim533() {
   if (!el('overlay')) return;

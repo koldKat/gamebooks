@@ -71,9 +71,6 @@ function _recordLoss() {
   _renderAll();
 }
 
-
-
-
 // END EXTRACTED RULES
   return { _beats, _enemyName, _enemyNameSafe, _formStat, _generalStat, _resolve, _recordWin, _recordLoss };
 }

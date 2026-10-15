@@ -220,7 +220,6 @@ function _resetBattle() {
   _renderAll();
 }
 
-
 // END EXTRACTED RULES
   return { _roll2d6, _roll1d6, _enemyName, _enemyNameSafe, _sideEnemyNameSafe, _effectiveSkill, _resetEncounterKnobs, _enemyFloor, _bansheeCheck, _extraRoundEffects, _runRound, _testLuck, _skipLuck, _resetBattle };
 }

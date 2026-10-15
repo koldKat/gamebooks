@@ -17,26 +17,17 @@ import { createDenCharacter, initialDenLife, createDenFight, rollDenRound, rerol
   resolveDenPoison, castDenSpell, launchDenMagic, useDenLollipop, denFriendlyReaction,
   denDream, healDenPlayer, useDenItem } from "../.././engines/grailquest/den-of-dragons.js";
 
-
 const tk = (key, params) => t(`battlesim527.${key}`, params);
 const el = key => document.getElementById(`${ID}-${key}`);
 
-
-
-
 const character = d => d.fight?.player ?? d.player;
 const active = d => d.fight?.status === 'fighting';
-
 
 function close() { el('overlay')?.classList.remove('active'); }
 function open() {
   if (!data()) { showAlert(t('battlesim.no_active_playthrough')); return; }
   renderSim527(); el('overlay').classList.add('active');
 }
-
-
-
-
 
 export function renderSim527() {
   if (!el('overlay')) return;

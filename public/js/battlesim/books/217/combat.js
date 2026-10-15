@@ -129,7 +129,6 @@ function _resetBattle() {
   _renderAll();
 }
 
-
 // END EXTRACTED RULES
   return { _roll2d6, _enemyName, _enemyNameSafe, _effectiveSkill, _resetEncounterKnobs, _runRound, _testLuck, _skipLuck, _resetBattle };
 }

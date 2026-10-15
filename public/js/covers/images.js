@@ -16,9 +16,6 @@ export function _cacheCoverBlobUrl(url, blobUrl) {
   }
 }
 
-
-
-
 // Unload decoded images well outside the viewport and reload through the shared blob cache.
 
 export function _ensureThumbVisibilityObserver() {

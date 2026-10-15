@@ -16,27 +16,15 @@ import { initialFortune, recoverVitality } from "../.././engines/skyfall-rules.j
 import { PYRAMID_ENCOUNTERS, createPyramidFight, rollPyramidRound, settlePyramidRound,
   escapePyramidFight, finishPyramidFight, treatPyramidBites } from "../.././engines/skyfall/black-pyramid.js";
 
-
 const tk = (key, params) => t(`battlesim522.${key}`, params);
 const element = key => document.getElementById(`${ID}-${key}`);
 const number = key => Number(element(key).value);
-
-
 
 function close() { element('overlay')?.classList.remove('active'); }
 function open() {
   if (!data()) { showAlert(t('battlesim.no_active_playthrough')); return; }
   renderSim522(); element('overlay').classList.add('active');
 }
-
-
-
-
-
-
-
-
-
 
 export function renderSim522() {
   if (!element('overlay')) return;

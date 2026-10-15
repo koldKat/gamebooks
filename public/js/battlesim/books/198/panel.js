@@ -24,62 +24,19 @@ const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" ari
 
 // Two-dose potions restore initial stats; Fortune raises Initial LUCK by 1 before refilling.
 
-
-
-
-
-
-
 // Known gap: the Magic Sword description grants +2 LUCK, but the simulator does not apply it.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // Stack independent Magic Sword and river-sword SKILL bonuses.
 
-
 // Keep lifetime outcomes: admin totals require the full history.
-
 
 // ── Combat ───────────────────────────────────────────────────────────────────
 
-
-
 // Luck costs 1: own hits become 4/1 damage; incoming hits become 1/3 damage (lucky/unlucky).
-
-
-
-
-
 
 // ── Provisions / Potions / one-time items ───────────────────────────────────
 
-
-
-
-
 // Single-dose invisibility lasts until this encounter is won.
-
-
-
-
-
 
 // ── Render ────────────────────────────────────────────────────────────────
 
@@ -322,8 +279,6 @@ function _setupEnemyAutocomplete() {
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
-
-
 
 export function initSim198() {
   const overlay = document.createElement('div');

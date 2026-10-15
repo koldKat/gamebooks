@@ -164,9 +164,6 @@ function _pickWeapon(id) {
   _renderAll();
 }
 
-
-
-
 // END EXTRACTED RULES
   return { _weapon, _weaponNameById, _die, _rollDice, _rollWeapon, _playerDead, _hordeCleared, _duelEnemyDead, _checkEnd, _hordeRound, _duelRound, _round, _startBattle, _throwGrenade, _setMode, _pickWeapon };
 }

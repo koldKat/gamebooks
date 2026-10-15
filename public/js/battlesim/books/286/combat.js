@@ -492,11 +492,6 @@ function _dream3Stop() {
   _renderAll();
 }
 
-
-
-
-
-
 // END EXTRACTED RULES
   return { _techName, _techDesc, _loadoutAE, _roll2d6, _roll1d6, _enemyName, _enemyNameSafe, _startGroup, _syncGroup, _allEnemiesDefeated, _advanceTarget, _enemyTurn, _weaponMinHit, _weaponIsGlove, _shieldDef, _totalPlayerDef, _playerAttackOnce, _enemyAttackOnce, _resolveExtraAttackers, _runRound, _heal, _resetBattle, _activateTech, _sleepAttempt, _resolveDream, _dream3Finish, _dream3Roll, _dream3Stop };
 }

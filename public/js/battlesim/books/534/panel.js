@@ -22,36 +22,15 @@ import { createFireWolfManualGroup, rollFireWolfManualAttack, advanceFireWolfMan
 import { FIRE_WOLF_SPELLS, FIRE_WOLF_REGENT_SPELLS, enterFireWolfMagicSection,
   castFireWolfSpell, castFireWolfRegentSpell } from "../.././engines/demonspawn/fire-wolf-magic.js";
 
-
 const tk = (key, params) => t(`battlesim534.${key}`, params);
 const el = key => document.getElementById(`${ID}-${key}`);
 const fields = [...FIRE_WOLF_ATTRIBUTES, 'skill', 'lifePoints', 'maxLife', 'power', 'maxPower', 'healingStone', 'bluePowder'];
-
-
-
-
 
 function close() { el('overlay')?.classList.remove('active'); }
 function open() {
   if (!data()) { showAlert(t('battlesim.no_active_playthrough')); return; }
   renderSim534(); el('overlay').classList.add('active');
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 export function renderSim534() {
   if (!el('overlay')) return;

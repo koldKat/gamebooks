@@ -88,5 +88,4 @@ export function initBookBindings() {
     document.getElementById('edit-book-epub-name').textContent = '';
   });
 
-
 }

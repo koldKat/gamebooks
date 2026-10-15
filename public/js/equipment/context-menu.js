@@ -9,7 +9,6 @@ import { _openEqRename, _openEqEditAt, _closeEqEdit } from './dialogs.js';
 
 // ── Context menu (mirrors inventory's: toggle-visible / rename / edit) ────────
 
-
 export function _closeEqCtx() {
   if (equipmentRuntime._eqCtxMenu) { equipmentRuntime._eqCtxMenu.remove(); equipmentRuntime._eqCtxMenu = null; }
 }

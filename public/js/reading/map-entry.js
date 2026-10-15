@@ -23,9 +23,11 @@ export function bindReadingMapEntry(container, { canNavigate, onNavigate }) {
       const raw = input.value.trim();
       const marker = Number(raw);
       const max = Number(input.max);
+      const prefix = form.dataset?.readingMarkerPrefix ?? '';
       if (!/^\d+$/.test(raw) || !Number.isSafeInteger(marker) || marker < 1
-          || !Number.isSafeInteger(max) || max < 1 || marker > max) return;
-      onNavigate(marker);
+          || !Number.isSafeInteger(max) || max < 1 || marker > max
+          || (prefix !== '' && !/^[a-z\u0400-\u04ff]{1,8}$/i.test(prefix))) return;
+      onNavigate(prefix ? `${prefix}${marker}` : marker);
     });
   }
 }

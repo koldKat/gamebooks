@@ -25,58 +25,18 @@ const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" ari
 // Choose exactly one bottle (sec.10). Each bottle contains one measure, same
 // single-use rule as books 201-203's potions.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // Keep lifetime outcomes: admin totals require the full history.
-
 
 // ── Combat ───────────────────────────────────────────────────────────────────
 
-
-
 // Banshee: fail 2d6 <= SKILL to lose the round without a normal exchange.
 
-
 // Apply extra damage rolls independently after the main exchange, if the player survives.
-
-
-
 
 // Test Your Luck after a hit lands: costs 1 LUCK regardless of outcome. Same
 // Lucky/Unlucky table as every other FF sim in this app.
 
-
-
-
-
-
 // ── Provisions / Potions ────────────────────────────────────────────────────
-
-
-
-
 
 // ── Render ────────────────────────────────────────────────────────────────
 
@@ -323,8 +283,6 @@ function _setupEnemyAutocomplete(inputId, dropdownId, onSelect) {
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
-
-
 
 export function initSim205() {
   const overlay = document.createElement('div');

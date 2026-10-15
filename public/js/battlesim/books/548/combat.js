@@ -2,7 +2,6 @@
 export function createCombat(getContext) {
 // BEGIN EXTRACTED RULES
 
-
 function log(d, text) {
  d.log.push(text); d.log = d.log.slice(-150); }
 

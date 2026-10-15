@@ -180,7 +180,6 @@ function _resetBattle() {
   _renderAll();
 }
 
-
 // END EXTRACTED RULES
   return { _roll2d6, _enemyName, _enemyNameSafe, _sideEnemyNameSafe, _sideEnemy2NameSafe, _effectiveSkill, _resetEncounterKnobs, _enemyFloor, _runRound, _testLuck, _skipLuck, _resetBattle };
 }

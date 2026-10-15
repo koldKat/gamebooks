@@ -72,7 +72,6 @@ function _resetBattle() {
   _renderAll();
 }
 
-
 // END EXTRACTED RULES
   return { _pick, _enemyName, _enemyNameSafe, _runRound, _checkBattleEnd, _resetBattle };
 }

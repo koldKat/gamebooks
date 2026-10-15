@@ -113,7 +113,6 @@ export function initShell() {
     else _toggleAllLandingPanelsCollapsed();
   });
 
-
   // Global +/- button handler for number inputs using data-target
   document.addEventListener('click', e => {
     const btn = e.target.closest('.cs-num-btn[data-target]');

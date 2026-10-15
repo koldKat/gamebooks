@@ -12,5 +12,4 @@ export function setGraphOpenWorld(v, seriesBooks = []) {
   if (portalLegendItem) portalLegendItem.style.display = graphRuntime._graphIsOpenWorld ? '' : 'none';
 }
 
-
 export function setLightweightRestabilize(on) { graphRuntime._lightweightRestabilize = on; }

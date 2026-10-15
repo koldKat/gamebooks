@@ -12,17 +12,11 @@ function number(key) {
   const { element } = getContext();
  return Number(element(key).value); }
 
-
-
-
-
 function selectedEncounter() {
   const { MARSH_ENCOUNTERS, element } = getContext();
 
   return MARSH_ENCOUNTERS.find(e => String(e.section) === element('encounter').value);
 }
-
-
 
 function start() {
   const { character, createMarshFight, data, element, number, saveAndRender, selectedEncounter, showAlert, tk } = getContext();

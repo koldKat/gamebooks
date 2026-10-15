@@ -127,7 +127,6 @@ function _resetBattle() {
   _renderAll();
 }
 
-
 // END EXTRACTED RULES
   return { _roll2d6, _roll1d6, _activeSide, _selfMaxHp, _foeName, _foeNameSafe, _runRound, _checkOutcome, _fireMissile, _resetBattle };
 }

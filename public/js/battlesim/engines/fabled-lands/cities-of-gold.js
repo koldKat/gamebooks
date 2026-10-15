@@ -34,7 +34,6 @@ export const CITIES_OF_GOLD_FIGHTS = Object.freeze([
 ]);
 import { fabledDie, fabledInteger, validateFabledCharacter } from './character.js';
 
-
 export const CITIES_OF_GOLD_SEA_CHECKS = Object.freeze({
   434: { kind: 'storm', destinations: [459, 534, 221], blessingDestination: 335 },
   484: { kind: 'storm', destinations: [459, 534, 198], blessingDestination: 358 },

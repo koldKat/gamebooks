@@ -101,9 +101,6 @@ function _pickEncounter(id) {
   _renderAll();
 }
 
-
-
-
 // END EXTRACTED RULES
   return { _roll1d6, _roll2d6, _roll3d6, _encounter, _fight, _rollSila, _rollZhivot, _rollEsper, _pickEncounter };
 }

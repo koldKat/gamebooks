@@ -129,9 +129,6 @@ function _pickEnemy(id) {
   _resetBattle();
 }
 
-
-
-
 // END EXTRACTED RULES
   return { _fighter, _roll1d6, _playerName, _enemyName, _playerWon, _playerLost, _startBattle, _strike, _runRound, _resetBattle, _pickPlayer, _pickEnemy };
 }

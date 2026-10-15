@@ -453,7 +453,6 @@ function servePublicFeedPage(req, res) {
   res.end(html);
 }
 
-
 module.exports = {
   handlePublicUser, handlePublicRun, handlePublicSeriesRun,
   servePublicBookPage,

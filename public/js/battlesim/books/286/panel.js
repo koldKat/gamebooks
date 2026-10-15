@@ -18,94 +18,46 @@ import { t } from "../../../i18n.js";
 
 // Book rule: initial life roll (2d6×4) plus up to 2 rerolls, 3 throws total per run.
 
-
-
 const SVG_SKULL  = `<svg class="sim-icon sim-icon-dead"  viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8c0 2.8 1.4 5.3 3.6 6.8V20a1 1 0 0 0 1 1h6.8a1 1 0 0 0 1-1v-2.2C18.6 16.3 20 13.8 20 11a8 8 0 0 0-8-8zm-2.5 13v-1.5a.5.5 0 0 0-.5-.5H8l-.5-1 1-1-1-1 1-1H9a2.5 2.5 0 0 1 5 0h.5l1 1-1 1 1 1-.5 1h-1a.5.5 0 0 0-.5.5V16h-4z"/></svg>`;
 const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v7a6 6 0 0 1-12 0V2zm-2 1H2v4a4 4 0 0 0 4 4v-1a3 3 0 0 1-3-3V3zm16 0h2v4a4 4 0 0 1-4 4v-1a3 3 0 0 0 3-3V3zm-7 13v2H9v2h6v-2h-2v-2a6 6 0 0 0 5-5.92V2H6v8.08A6 6 0 0 0 13 16z"/></svg>`;
 
 // Weapons: [key,label,minHit,energyCost]. Glove hits add +5 even at minHit and cost no AE.
 // Custom weapon cost is entered manually.
 
-
 // Shields: [key,negative defense reduction,energyCost]; labels come from translations.
-
 
 // Tech attempts cost 3 HP and require 2d6>=6; failed attempts still consume a use.
 // Revive instead costs 15 HP and rewinds the battle once.
 
-
-
-
 // A troubled-sleep result (2-5 on 2d6) triggers a second roll selecting dreams 2-12.
 // Dream 9 is instant death; dream 11 loses 5 life.
 
-
-
 // Require both starting rolls before combat, healing, sleep, or tech use.
-
 
 // Only weapon and shield count toward AE; glove and tech are separate gifts.
 
-
-
-
-
-
-
-
 // Escape free-text names in HTML logs; store history names raw and escape once when rendered.
 
-
-
-
-
-
-
-
-
-
-
 // Store extra defense as a positive stepper value; negate it when adding shield/armour protection.
-
 
 // Damage is max(0, roll-minHit), plus glove bonus (+5; upgraded boss +10) and pending tech.
 // Consume one-shot tech on the first successful hit.
 
-
 // Extra identical attackers share enemy stats but roll independently; override their log labels.
-
 
 // Each surviving extra attacker strikes independently; only the tracked enemy pool is woundable.
 
-
 // Keep lifetime outcomes: admin totals require the full history.
-
 
 // Player attacks first unless the encounter's enemyFirst flag reverses the order.
 
-
 // Heal only outside combat, once per battle cycle as the simulator's episode proxy.
-
-
-
 
 // ── Tech gadgets ─────────────────────────────────────────────────────────────
 
-
-
 // ── Sleep / dream table ──────────────────────────────────────────────────────
 
-
-
-
-
-
-
-
-
 // ── Render ────────────────────────────────────────────────────────────────
-
-
 
 function _renderHistory() {
   const d = _data();
@@ -336,10 +288,6 @@ function _setupEnemyAutocomplete() {
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
-
-
-
-
 
 export function initSim286() {
   const overlay = document.createElement('div');

@@ -117,9 +117,6 @@ function _pickEnemy(id) {
   _renderAll();
 }
 
-
-
-
 // END EXTRACTED RULES
   return { _enemy, _enemyName, _checkEnd, _startBattle, _strikeOnce, _strike, _autoResolve, _rollLp, _pickEnemy };
 }

@@ -91,5 +91,4 @@ export function initBookRating(bookId) {
       editState._editStarUpdateFn(null);
     }).catch(() => { if (isCurrent()) editState._editStarUpdateFn(null); });
 
-
 }

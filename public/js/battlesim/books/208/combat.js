@@ -148,7 +148,6 @@ function _resetBattle() {
   _renderAll();
 }
 
-
 // END EXTRACTED RULES
   return { _roll2d6, _roll1d6, _enemyName, _enemyNameSafe, _runHandToHandRound, _weaponDamage, _resolvePlayerHit, _runGunfireRound, _checkBattleEnd, _runRound, _resetBattle };
 }

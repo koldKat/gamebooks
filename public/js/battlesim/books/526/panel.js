@@ -23,27 +23,6 @@ const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" ari
  // "score more than 6"
   // "5 or fewer LIFE POINTS, falls unconscious"
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // ── Enemy autocomplete (fed by book_enemies, seeded per book_id) ───────────
 
 let _enemyList = null;
@@ -217,8 +196,6 @@ export function setSim526Visible(visible) {
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
-
-
 
 export function initSim526() {
   const overlay = document.createElement('div');

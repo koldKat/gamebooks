@@ -21,107 +21,22 @@ import { tigerOptions, tigerResolve } from "../.././engines/tiger-eye.js";
 const SVG_SKULL  = `<svg class="sim-icon sim-icon-dead"  viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8c0 2.8 1.4 5.3 3.6 6.8V20a1 1 0 0 0 1 1h6.8a1 1 0 0 0 1-1v-2.2C18.6 16.3 20 13.8 20 11a8 8 0 0 0-8-8zm-2.5 13v-1.5a.5.5 0 0 0-.5-.5H8l-.5-1 1-1-1-1 1-1H9a2.5 2.5 0 0 1 5 0h.5l1 1-1 1 1 1-.5 1h-1a.5.5 0 0 0-.5.5V16h-4z"/></svg>`;
 const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v7a6 6 0 0 1-12 0V2zm-2 1H2v4a4 4 0 0 0 4 4v-1a3 3 0 0 1-3-3V3zm16 0h2v4a4 4 0 0 1-4 4v-1a3 3 0 0 0 3-3V3zm-7 13v2H9v2h6v-2h-2v-2a6 6 0 0 0 5-5.92V2H6v8.08A6 6 0 0 0 13 16z"/></svg>`;
 
-
-
-
-
-
-
-
-
-
-
 // ── Generic shared message helpers ──────────────────────────────────────
 
 const gt = (key, params) => t(`battlesim869.g.${key}`, params);
 
 // Entity fields: s,e,m,b,sword,shield,startE,startB,lostE,skillLossExtra.
 
-
-
-
-
-
-
-
-
-
-
-
-
 // Attack options return {label,run(player,opp)}; player is the reader, opp the rival.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 const ROUND1 = { dalgren: _dalgrenR1, tindalin: _tindalinR1, uantor: _uantorR1, smajtal: _smajtalR1, lestor: _lestorR1, tejbrun: _tejbrunR1, matual: _matualR1 };
 const ROUND2 = { dalgren: _dalgrenR2, tindalin: _tindalinR2Real, uantor: _uantorR2, smajtal: _smajtalR2, lestor: _lestorR2 };
 
-
 // ── Player attack menu (shared across all rivals) ───────────────────────
-
-
-
-
-
-
 
 // ── Simulation state ─────────────────────────────────────────────────────
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // ── Render ───────────────────────────────────────────────────────────────
-
-
-
-
 
 function _renderStatus() {
   const d = _data();
@@ -201,8 +116,6 @@ function _renderLog() {
   el.innerHTML = d.log.filter(Boolean).slice().reverse().join('<br>');
 }
 
-
-
 function _renderInputs() {
   const d = _data();
   if (!d) return;
@@ -259,10 +172,6 @@ export function setSim869Visible(visible) {
 }
 
 // ── Init ─────────────────────────────────────────────────────────────────
-
-
-
-
 
 export function initSim869() {
   const overlay = document.createElement('div');

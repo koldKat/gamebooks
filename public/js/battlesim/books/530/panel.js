@@ -17,12 +17,8 @@ import * as rules from "../.././engines/grailquest/kingdom-of-horror.js";
 import * as travel from "../.././engines/grailquest/kingdom-of-horror-travel.js";
 import * as magic from "../.././engines/grailquest/kingdom-of-horror-magic.js";
 
-
 const tk = (key, params) => t(`battlesim530.${key}`, params);
 const el = key => document.getElementById(`${ID}-${key}`);
-
-
-
 
 const castItems = ['pointingBone', 'deathbell', 'deathMask', 'eyeOfHorus', 'laughingGlobe',
   'lightningWand', 'fireball', 'destructionOrb', 'psionicHelm', 'sanctuaryScroll', 'seekerNeedle', 'sleepGlobe', 'xerox', ...KINGDOM_STORY_MAGIC];
@@ -30,19 +26,11 @@ const magicItems = [...KINGDOM_MAGIC_STOCK.map(item => item.id), ...KINGDOM_STOR
 const character = d => d.fight?.player ?? d.player;
 const active = d => d.fight?.status === 'fighting';
 
-
-
-
 function close() { el('overlay')?.classList.remove('active'); }
 function open() {
   if (!data()) { showAlert(t('battlesim.no_active_playthrough')); return; }
   renderSim530(); el('overlay').classList.add('active');
 }
-
-
-
-
-
 
 export function renderSim530() {
   if (!el('overlay')) return;

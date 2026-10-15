@@ -25,40 +25,7 @@ const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" ari
 // Rank XII (solo Adventurer) starting stats per class, from the book's own
 // character tables - autocomplete-style convenience defaults only.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // ── Combat ───────────────────────────────────────────────────────────────────
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // ── Enemy autocomplete (fed by book_enemies, seeded per book_id) ───────────
 
@@ -227,8 +194,6 @@ export function setSim318Visible(visible) {
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
-
-
 
 export function initSim318() {
   const overlay = document.createElement('div');

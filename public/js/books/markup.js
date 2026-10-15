@@ -181,7 +181,7 @@ export function _bookItemHtml(b, isChild, containerExpanded, childCount, aggrSta
           ? `<span data-tooltip="Only the book creator can edit metadata" style="display:inline-flex">` +
               `<button class="book-edit-btn" disabled${commonAttrs}>✎</button>` +
             `</span>`
-          : `<button class="book-edit-btn${!isCreator && isAdmin ? ' book-edit-btn--admin' : ''}"${commonAttrs}${!isCreator && isAdmin ? ' data-tooltip="Game Master edit"' : ''}>✎</button>`
+          : `<button class="book-edit-btn${!isCreator && isAdmin ? ' book-edit-btn--admin' : ''}"${commonAttrs}${!isCreator && isAdmin ? ' data-tooltip="Gamemaster edit"' : ''}>✎</button>`
         ) +
         `<button class="book-del-btn"${isModerator && !isAdmin ? ' disabled data-tooltip="Lorekeepers cannot delete books"' : ''} data-id="${b.id}" data-name="${escapeHtml(b.name)}" data-container="${b.is_container ? '1' : '0'}">✕</button>` +
       `</div>` +

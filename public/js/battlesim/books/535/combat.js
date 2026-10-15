@@ -77,11 +77,6 @@ function act(action) {
   resultLog(d,result);store(d);
 }
 
-
-
-
-
-
 // END EXTRACTED RULES
   return { character, active, append, record, store, start, target, resultLog, act };
 }

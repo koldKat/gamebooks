@@ -25,48 +25,15 @@ const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" ari
 // Choose exactly one bottle (sec.10). Each bottle contains one measure, same
 // single-use rule as book 201's potions.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // Equipment bonuses apply while worn/wielded; permanent stat gains remain manual.
-
-
-
 
 // Keep lifetime outcomes: admin totals require the full history.
 
-
 // ── Combat ───────────────────────────────────────────────────────────────────
-
-
 
 // Weak-point Luck checks kill on success and deal no damage on failure.
 
-
-
-
-
-
 // ── Provisions / Potions ────────────────────────────────────────────────────
-
-
-
-
 
 // ── Render ────────────────────────────────────────────────────────────────
 
@@ -296,8 +263,6 @@ function _setupEnemyAutocomplete(inputId, dropdownId, onSelect) {
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
-
-
 
 export function initSim202() {
   const overlay = document.createElement('div');

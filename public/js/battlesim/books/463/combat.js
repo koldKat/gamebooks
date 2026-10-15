@@ -84,7 +84,6 @@ function _applyEnemy(d, enemy) {
   if (d.enemy.hasStats) _startFight(d);
 }
 
-
 // END EXTRACTED RULES
   return { _log, _startFight, _record, _blow, _runBlow, _runToEnd, _newFight, _applyEnemy };
 }

@@ -21,9 +21,7 @@ const {
   userBadgeRegister, userBadgeUnregister, userBadgePush, userBadgePushAll,
 } = require('./server/sse');
 
-
 const { reinitTransporter, sendAdminEmail, sendReplyEmail, getTransporter } = require('./server/email');
-
 
 const { addAnnouncementCovers } = require('./server/announcement-covers');
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
@@ -66,7 +64,6 @@ const {
   MIME,
 } = require('./server/runtime-state');
 
-
 const {
   getClientIp,
   addSecurityHeaders, addForumSecurityHeaders, addAdminSecurityHeaders,
@@ -79,11 +76,9 @@ const {
   MAX_JSON_BODY, MAX_PNG_BODY, AVATAR_UPLOAD_MAX, SSE_PING_MS,
 } = require('./server/request-helpers');
 
-
 const {
   handleRegister, handleLogin, handleLogout, handleForgotPassword, handleResetPassword,
 } = require('./server/routes/auth');
-
 
 const {
   handleAcceptPartyInvite,
@@ -140,10 +135,8 @@ const {
   handleUpdateStash,
 } = require('./server/routes/books');
 
-
 const { handleShopPurchase, handleClaimBonusGc } = require('./server/routes/shop');
 const { handleReadingAccess, handleReadingMatter } = require('./server/routes/reading-access');
-
 
 const {
   handleGetProfile,

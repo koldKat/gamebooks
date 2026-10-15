@@ -22,11 +22,6 @@ function _pickSword(id) {
   _renderAll();
 }
 
-
-
-
-
-
 // END EXTRACTED RULES
   return { _roll1d6, _encounter, _sword, _pickSword };
 }

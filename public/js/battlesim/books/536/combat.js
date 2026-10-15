@@ -69,11 +69,6 @@ function act(action) {
   result(d,value);
 }
 
-
-
-
-
-
 // END EXTRACTED RULES
   return { append, record, store, result, start, act };
 }

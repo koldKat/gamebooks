@@ -28,50 +28,13 @@ const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" ari
 // Choose exactly one bottle (sec.9). Each bottle contains one measure, same
 // single-use rule as books 201/202's potions.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // Keep lifetime outcomes: admin totals require the full history.
-
 
 // First-round override returns player, enemy, or null; precedence is defined above.
 
-
-
-
 // Luck costs 1; Sama's Bone Charm floors remaining LUCK at 7 instead of 0.
 
-
-
-
-
-
 // ── Provisions / Potions ────────────────────────────────────────────────────
-
-
-
-
 
 // ── Render ────────────────────────────────────────────────────────────────
 
@@ -309,8 +272,6 @@ function _setupEnemyAutocomplete(inputId, dropdownId, onSelect) {
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
-
-
 
 export function initSim203() {
   const overlay = document.createElement('div');

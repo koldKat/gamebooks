@@ -86,7 +86,6 @@ function _resetBattle() {
   _renderAll();
 }
 
-
 // END EXTRACTED RULES
   return { _levelFromLife, _playerStrength, _pick12, _enemyName, _enemyNameSafe, _ready, _runRound, _checkBattleEnd, _resetBattle };
 }

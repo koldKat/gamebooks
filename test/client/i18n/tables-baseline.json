@@ -4,7 +4,7 @@
   "tables": {
     "account.js": {
       "keys": 62,
-      "sha256": "f47de55343fb8bfa84c163963246dc1f4efa55c8d2d46fa9ca10c77f24363110"
+      "sha256": "136b99b5b730a5853c292e8a8b0d896da44a8c51ad1044c8a0f021931d9b6773"
     },
     "battlesim/battlesim107.js": {
       "keys": 36,
@@ -820,7 +820,7 @@
     },
     "stats.js": {
       "keys": 119,
-      "sha256": "6de5096b377dcf9074eeaaf7cf5390e0ad2a9a3fe05f7535e64e4406db43dcb2"
+      "sha256": "7dfba9e985e04846ded74b2bceb175ae102df0f1b3d6cad3712aeab5214b79e1"
     }
   }
 }

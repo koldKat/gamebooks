@@ -210,7 +210,6 @@ function _resetBattle() {
   _renderAll();
 }
 
-
 // END EXTRACTED RULES
   return { _paired, _allDefeated, _roll2d6, _roll1d6, _enemyName, _enemyNameSafe, _secondName, _secondNameSafe, _resetEncounterKnobs, _finishPairedRound, _runPairedRound, _runRound, _testLuck, _skipLuck, _resetBattle };
 }

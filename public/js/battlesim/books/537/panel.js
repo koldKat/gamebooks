@@ -24,7 +24,6 @@ const ID = 'sim537', tk = (key, params) => t(`battlesim537.${key}`, params);
 const el = key => document.getElementById(`${ID}-${key}`);
 const fields = [...FIRE_WOLF_ATTRIBUTES, 'skill', 'lifePoints', 'maxLife', 'power', 'maxPower'];
 
-
 const number = key => el(key).value.trim() === '' ? undefined : Number(el(key).value);
 
 const character = d => d.fight?.player ?? d.player;
@@ -34,10 +33,6 @@ function open() {
   if (!data()) { showAlert(t('battlesim.no_active_playthrough')); return; }
   renderSim537(); el('overlay').classList.add('active');
 }
-
-
-
-
 
 const field = key => `<label class="inv-edit-row"><span class="inv-edit-label bsim-stat-label">${tk(key)}</span><input id="${ID}-${key}" class="inv-edit-input inv-qty-input" type="number" min="0" step="0.5"></label>`;
 const button = key => `<button id="${ID}-${key}" class="inv-add-btn">${tk(key)}</button>`;

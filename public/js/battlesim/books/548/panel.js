@@ -16,10 +16,8 @@ import { INNSMOUTH_ENCOUNTERS, rollInnsmouthCharacter, createInnsmouthFight, inn
   attackInnsmouth, openingInnsmouthShot, throwInnsmouthKnife, divertInnsmouthEnemy,
   eatInnsmouthRation, innsmouthTest } from "../.././engines/innsmouth.js";
 
-
 const tk = (key, params) => t(`battlesim548.${key}`, params);
 const el = key => document.getElementById(`${ID}-${key}`);
-
 
 const character = d => d.fight?.player ?? d.player;
 const enemyName = e => tk('enemy.' + e.name);
@@ -29,11 +27,6 @@ function open() {
   if (!data()) { showAlert(t('battlesim.no_active_playthrough')); return; }
   renderSim548(); el('overlay').classList.add('active');
 }
-
-
-
-
-
 
 export function renderSim548() {
   if (!el('overlay')) return;

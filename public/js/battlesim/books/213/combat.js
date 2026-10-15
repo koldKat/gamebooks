@@ -172,7 +172,6 @@ function _attemptEnergyBlast() {
   _renderAll();
 }
 
-
 // END EXTRACTED RULES
   return { _roll2d6, _roll1d6, _enemyName, _enemyNameSafe, _resetEncounterKnobs, _runRound, _captureEnemy, _finishEnemy, _continueAttacking, _testLuck, _skipLuck, _resetBattle, _attemptEnergyBlast };
 }

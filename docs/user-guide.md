@@ -36,7 +36,7 @@ Each day's card shows the covers of the public books played that day, faded behi
 - A **tip bar** cycles through helpful hints every 15 seconds (the orange bar counts down)
 - Activity is grouped by day (Today / Yesterday / date)
 - Players with 5 or more entries on the same day are collapsed into one row - click it to expand
-- Pinned announcements from the Game Master always appear at the top
+- Pinned announcements from the Gamemaster always appear at the top
 
 **What you'll see in the feed:**
 
@@ -83,7 +83,7 @@ Click **Stats** in the header (visible to everyone) to see live numbers for the 
 
 | Section | What's shown |
 |---------|-------------|
-| **Players** | Registered players, Game Masters, Lorekeepers, Fateweavers, Pathmakers, public profiles, avatars, undos/Fast Travels performed |
+| **Players** | Registered players, Gamemasters, Lorekeepers, Fateweavers, Pathmakers, public profiles, avatars, undos/Fast Travels performed |
 | **Books** | Unique books/series/anthologies, total library copies, public/private split, unique authors, average sections and pages per book, total/mapped/discovered sections, books fully visited or discovered |
 | **Parties** | Play Together parties created and active, players currently in a party, invites sent/accepted/declined |
 | **Gameplay** | Total, active, and finished playthroughs; wins, losses, battle deaths (with percentages); tracked and average play time |
@@ -122,13 +122,13 @@ Each book card shows a progress bar for sections you've visited across all playt
 | **✎** | Edit the book details (name, sections, identifiers, cover) |
 | **✕** | Delete the book and your progress (asks for confirmation) |
 
-If a Game Master shared a book with you, **✎** is visible but greyed out - only the creator can change the book's details.
+If a Gamemaster shared a book with you, **✎** is visible but greyed out - only the creator can change the book's details.
 
 ### Player roles
 
 | Role | Badge |
 |------|-------|
-| Game Master | Blue star |
+| Gamemaster | Blue star |
 | Lorekeeper | Purple diamond |
 | Pathmaker | Green star |
 | Fateweaver | Gold star |
@@ -137,7 +137,7 @@ All four role badges use SVG icons with the same size and alignment.
 
 ### Lorekeepers
 
-Lorekeepers have a purple diamond badge and can edit the metadata of any public book, anthology or series, plus covers for public books and anthologies, including titles outside their own library. They cannot edit private books, make a public book private, or delete books, anthologies or series. The role does not grant Game Master access or PDF/EPUB upload access. Lorekeepers can also adjust secondary anthology memberships when both the book and anthology are public. Stats for Nerds lists the number of Lorekeepers under Players.
+Lorekeepers have a purple diamond badge and can edit the metadata of any public book, anthology or series, plus covers for public books and anthologies, including titles outside their own library. They cannot edit private books, make a public book private, or delete books, anthologies or series. The role does not grant Gamemaster access or PDF/EPUB upload access. Lorekeepers can also adjust secondary anthology memberships when both the book and anthology are public. Stats for Nerds lists the number of Lorekeepers under Players.
 
 ### Creating books
 
@@ -198,7 +198,7 @@ The Player XP panel shows your level, title, XP bar, and active boosts. On the l
 | **R** | Open / close Live Reading, if the current book has it (not while typing in a text field) |
 | **Ctrl+X** | Hide or restore all play-area side panels at once |
 
-**PDF access:** if the book has a PDF and you've been given access (or you're a Game Master), a **PDF** link appears next to the book title at the top of the sidebar.
+**PDF access:** if the book has a PDF and you've been given access (or you're a Gamemaster), a **PDF** link appears next to the book title at the top of the sidebar.
 
 **Sidebar bottom buttons:**
 
@@ -839,18 +839,18 @@ The **bell 🔔** turns solid green when you have unseen notifications. Click it
 |--------------|----------------|
 | **Level up** | Each time you gain a level |
 | **Gold Coin earned** | XP milestone, level-up reward, 24h playtime, book completed, series/anthology fully completed |
-| **Gold Coin gifted** | When a Game Master sends you coins directly |
-| **Role assigned** | When a Game Master gives you the Lorekeeper, Pathmaker or Fateweaver role |
+| **Gold Coin gifted** | When a Gamemaster sends you coins directly |
+| **Role assigned** | When a Gamemaster gives you the Lorekeeper, Pathmaker or Fateweaver role |
 
 ### Inbox
 
-The **Inbox** button shows a count of unread messages from the Game Master. Click it to open your conversations.
+The **Inbox** button shows a count of unread messages from the Gamemaster. Click it to open your conversations.
 
-- Your messages appear on the right in blue; Game Master messages on the left in grey
+- Your messages appear on the right in blue; Gamemaster messages on the left in grey
 - Click any conversation to open it; **← Back** to return to the list
 - Opening a conversation marks it as read and clears the badge
 - Use **+ Attach** below the reply box to attach files to your reply (same file types and 64 MB limit as feedback)
 - Wait for all attachments to finish uploading before sending. Remove failed uploads or upload them again.
 - Images are shown inline in the message - click one to open the original at full size; other files appear as download links
-- Deleting a conversation removes it from your inbox only; it's permanently deleted once both you and the Game Master have deleted it
+- Deleting a conversation removes it from your inbox only; it's permanently deleted once both you and the Gamemaster have deleted it
 - A new reply brings the conversation back to the recipient's inbox if they previously deleted it.

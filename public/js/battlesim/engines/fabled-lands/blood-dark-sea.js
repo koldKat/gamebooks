@@ -32,7 +32,6 @@ export const BLOOD_DARK_FIGHTS = Object.freeze([
 ]);
 import { fabledDie, fabledInteger, validateFabledCharacter } from './character.js';
 
-
 const storm = (destinations, blessingDestination, bounds = [4, 6]) => ({ kind: 'storm', destinations, blessingDestination, bounds });
 const escape = (caught, safe, bound = 6, cargoPenalty = false) => ({ kind: 'escape', destinations: [caught, safe], bounds: [bound], cargoPenalty });
 const naval = (destinations, bounds = [4, 9, 13, 17]) => ({ kind: 'naval', destinations, bounds, damageDice: [null, 2, 1, 0, 0] });

@@ -213,7 +213,6 @@ function _resetBattle() {
   _renderAll();
 }
 
-
 // END EXTRACTED RULES
   return { _roll2d6, _roll1d6, _enemyName, _enemyNameSafe, _sideEnemyNameSafe, _resetEncounterKnobs, _hasSide, _finishOpponent, _switchTarget, _firstRoundOverride, _runRound, _testLuck, _skipLuck, _resetBattle };
 }

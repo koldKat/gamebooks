@@ -21,23 +21,7 @@ const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" ari
 
 // Ниво на атаката -> { enemy: враг loses this much (or 'dead'), player: играч loses this much (or 'dead') }
 
-
-
-
  // random-number table, 1-12
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // ── Enemy autocomplete (fed by book_enemies, seeded per book_id) ───────────
 
@@ -202,8 +186,6 @@ export function setSim92Visible(visible) {
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
-
-
 
 export function initSim92() {
   const overlay = document.createElement('div');

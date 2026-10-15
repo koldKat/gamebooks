@@ -182,7 +182,6 @@ async function handleForumTogglePin(req, res, threadId) {
   send(res, 200, { pinned: result.pinned });
 }
 
-
 module.exports = {
   handleForumLatest,
   handleForumSeen,

@@ -16,28 +16,15 @@ import { initialFortune, recoverVitality } from "../.././engines/skyfall-rules.j
 import { MINE_ENCOUNTERS, createMineFight, rollMineRound, settleMineRound,
   escapeMineFight, finishMineFight } from "../.././engines/skyfall/mine-of-torments.js";
 
-
 const tk = (key, params) => t(`battlesim523.${key}`, params);
 const element = key => document.getElementById(`${ID}-${key}`);
 const number = key => Number(element(key).value);
-
-
-
 
 function close() { element('overlay')?.classList.remove('active'); }
 function open() {
   if (!data()) { showAlert(t('battlesim.no_active_playthrough')); return; }
   renderSim523(); element('overlay').classList.add('active');
 }
-
-
-
-
-
-
-
-
-
 
 export function renderSim523() {
   if (!element('overlay')) return;

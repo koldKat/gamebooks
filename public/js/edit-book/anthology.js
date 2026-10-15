@@ -220,5 +220,4 @@ export function initAnthologyBindings(mousedownOnOverlayRef) {
     });
   });
 
-
 }

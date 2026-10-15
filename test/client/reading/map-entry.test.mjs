@@ -49,6 +49,36 @@ test('read-only and stale contexts cannot navigate', () => {
   assert.deepEqual(visits, []);
 });
 
+test('lettered map markers retain their prefix and enforce numeric bounds', () => {
+  const f = fixture();
+  f.form.dataset = { readingMarkerPrefix: 'А' };
+  f.input.max = '35';
+  const visits = [];
+  bindReadingMapEntry(f.container, { canNavigate: () => true, onNavigate: n => visits.push(n) });
+  f.input.value = '12';
+  f.submit();
+  f.form.dataset.readingMarkerPrefix = 'Б';
+  f.input.value = '025';
+  f.input.max = '25';
+  f.submit();
+  for (const value of ['26', '0', '-1', 'Б12', '1e1']) {
+    f.input.value = value;
+    f.submit();
+  }
+  assert.deepEqual(visits, ['А12', 'Б25']);
+});
+
+test('invalid map prefixes cannot produce arbitrary section IDs', () => {
+  const f = fixture();
+  const visits = [];
+  bindReadingMapEntry(f.container, { canNavigate: () => true, onNavigate: n => visits.push(n) });
+  for (const prefix of [' ', 'A1', '<script>', '../', 'ABCDEFGHI', 'А-']) {
+    f.form.dataset = { readingMarkerPrefix: prefix };
+    f.submit();
+  }
+  assert.deepEqual(visits, []);
+});
+
 test('native validation and malformed bounds cannot be bypassed', () => {
   const f = fixture();
   const visits = [];

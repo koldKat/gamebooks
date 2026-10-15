@@ -14,7 +14,6 @@ window.addEventListener('book-state-saved', () => {
   booksState._hooks.scheduleRewardProfileRefresh?.();
 });
 
-
 export { getCachedBooks, getCachedAllSeries, getCachedStashes, setCachedBooks, setCachedAllSeries, clearBooksCache, setBooksDataFresh, getBooksDataFresh, setBooksRevealedAt, setCurrentUserId, getCurrentUserId, setInvalidateAutocompleteCaches, _justRevealedBooks, _booksListDisplayChanged, _patchCachedBook, _refreshLibraryUi, _refreshBooksListOnly } from './books/data.js';
 
 export { setExpandedPrefs, _captureExpandedPrefsFromDom } from './books/prefs.js';

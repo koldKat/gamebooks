@@ -15,31 +15,19 @@ import { t } from "../../../i18n.js";
 import { REALM_ENCOUNTERS, REALM_EQUIPMENT, REALM_COMPANION } from "../.././engines/grailquest/realm-of-chaos-roster.js";
 import * as rules from "../.././engines/grailquest/realm-of-chaos.js";
 
-
 const tk=(key,params)=>t(`battlesim531.${key}`,params);
 const el=key=>document.getElementById(`${ID}-${key}`);
-
-
-
 
 const character=d=>d.fight?.player??d.player;
 const active=d=>d?.fight?.status==='fighting';
 const availableLizard=f=>f.player.dreamCompanions.findIndex((ally,index)=>ally.life>5
   && ![f.ally,...(f.extraAllies||[])].some(active=>active?.source==='dream' && active.sourceIndex===index));
 
-
-
 function close(){el('overlay')?.classList.remove('active');}
 function open(){
   if(!data()){showAlert(t('battlesim.no_active_playthrough'));return;}
   renderSim531();el('overlay').classList.add('active');
 }
-
-
-
-
-
-
 
 export function renderSim531(){
   if(!el('overlay'))return;

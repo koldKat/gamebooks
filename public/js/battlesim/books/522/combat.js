@@ -8,10 +8,6 @@ function saveAndRender() {
   const { renderSim522, saveState } = getContext();
  saveState(); renderSim522(); }
 
-
-
-
-
 function selectedEncounter() {
   const { PYRAMID_ENCOUNTERS, element } = getContext();
  return PYRAMID_ENCOUNTERS.find(e => String(e.section) === element('encounter').value); }

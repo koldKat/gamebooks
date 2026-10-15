@@ -257,14 +257,6 @@ function _resetBattle() {
   _renderHistory();
 }
 
-
-
-
-
-
-
-
-
 function _enemyStatLabel(e) {
 
   const v = x => x == null ? '?' : x;
