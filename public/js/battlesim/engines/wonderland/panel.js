@@ -127,6 +127,10 @@ export function createWonderlandPanel({ document, t, getRun, getBookId, saveStat
       }
       preset(true);
       if (d.opponentSetup) opponents.set(d.opponentSetup);
+      else if (spec().enemies) opponents.set(spec().enemies.map((enemy, index) => ({...enemy,
+        combat: d.setup[ID + '-enemy' + index + 'Combat'] ?? enemy.combat,
+        endurance: d.setup[ID + '-enemy' + index + 'Endurance'] ?? enemy.endurance,
+      })));
       for (const field of el('setup').querySelectorAll('input,select')) {
         if (d.setup[field.id] === undefined) continue;
         if (field.type === 'checkbox') field.checked = d.setup[field.id];

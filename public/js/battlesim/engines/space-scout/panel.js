@@ -142,7 +142,10 @@ export function createSpaceScoutPanel({ document, t, getRun, getBookId, saveStat
         else field.value = d.setup[field.id] ?? (field.tagName === 'SELECT' ? field.options[0].value : field.defaultValue);
       }
       for (const i of [0, 1, 2]) el('shot' + i).value = '';
-      opponents.set(d.opponentSetup ?? [{attack: 50, shields: 300}]);
+      opponents.set(d.opponentSetup ?? [{
+        attack: d.setup[ID + '-enemyAttack'] ?? 50,
+        shields: d.setup[ID + '-enemyShields'] ?? 300,
+      }]);
     }
     const active = busy(d), f = d.fight, c = d.character, context = el('context').value;
     opponents.lock(active);

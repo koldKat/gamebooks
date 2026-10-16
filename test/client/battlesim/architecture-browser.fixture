@@ -198,6 +198,23 @@ for(const id of BOOK_IDS){
     const data=app.currentPlaythrough().sim636;
     check(data.fight?.encounter.custom&&data.fight.enemies[0].endurance===.5,'Wonderland custom half-point stats');
     check(name.disabled,'Wonderland setup locked');
+    const legacy=structuredClone(app.currentPlaythrough());
+    delete legacy.sim636.opponentSetup;
+    Object.assign(legacy.sim636.setup,{'sim636-encounter':'78',
+      'sim636-enemy0Combat':'0','sim636-enemy0Endurance':'4.5',
+      'sim636-enemy1Combat':'5','sim636-enemy1Endurance':'9.5'});
+    const saved=JSON.stringify(legacy);
+    app.state.playthroughs=[legacy];module.render();
+    const rows=editor.querySelectorAll('.bsim-opponent-row');
+    check(rows.length===2&&rows[0].querySelector('[data-stat="combat"]').value==='0'
+      &&rows[0].querySelector('[data-stat="endurance"]').value==='4.5'
+      &&rows[1].querySelector('[data-stat="combat"]').value==='5'
+      &&rows[1].querySelector('[data-stat="endurance"]').value==='9.5','legacy Wonderland edited opponents restored');
+    check(JSON.stringify(app.currentPlaythrough())===saved,'legacy Wonderland restoration preserves saved fight');
+    legacy.sim636.fight.status='cancelled';module.render();el('start').click();
+    check(app.currentPlaythrough().sim636.fight.enemies[0].combat===0
+      &&app.currentPlaythrough().sim636.fight.enemies[0].endurance===4.5
+      &&app.currentPlaythrough().sim636.fight.enemies[1].endurance===9.5,'legacy Wonderland settings start the next fight');
   }
   if(id===570){
     const el=key=>document.getElementById('sim570-'+key);
@@ -235,6 +252,17 @@ for(const id of BOOK_IDS){
     const random=Math.random;Math.random=()=>.5;
     try{for(let i=0;i<4;i++)el('attack').click();}finally{Math.random=random;}
     check(app.currentPlaythrough().sim648.fight.status==='win','Space Scout resolves all four custom opponents');
+    const legacy=structuredClone(app.currentPlaythrough());
+    delete legacy.sim648.opponentSetup;
+    Object.assign(legacy.sim648.setup,{'sim648-enemyAttack':'0','sim648-enemyShields':'247'});
+    const saved=JSON.stringify(legacy);
+    app.state.playthroughs=[legacy];module.render();
+    check(editor.querySelector('[data-stat="attack"]').value==='0'
+      &&editor.querySelector('[data-stat="shields"]').value==='247','legacy Space Scout edited opponent restored');
+    check(JSON.stringify(app.currentPlaythrough())===saved,'legacy Space Scout restoration preserves saved fight');
+    el('start').click();
+    check(app.currentPlaythrough().sim648.fight.enemies[0].attack===0
+      &&app.currentPlaythrough().sim648.fight.enemies[0].shields===247,'legacy Space Scout settings start the next fight');
   }
   if(id>=527&&id<=533){
     const el=key=>document.getElementById('sim'+id+'-'+key);
