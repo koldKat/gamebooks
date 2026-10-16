@@ -36,7 +36,8 @@ const scratch = fs.mkdtempSync(path.join(root, 'mobile-banner-'));
           const tools=[...document.querySelectorAll('#app-banner-tools button,#app-banner-tools a')];
           const dock=document.getElementById('app-banner-community');
           const dockBounds=dock.getBoundingClientRect();
-          check(getComputedStyle(dock).position==='fixed'&&dockBounds.left>=10&&Math.abs(dockBounds.bottom-(innerHeight-10))<1,'bottom-left mobile dock');
+          check(getComputedStyle(dock).position==='fixed'&&Math.abs(dockBounds.right-(innerWidth-10))<1&&Math.abs(dockBounds.bottom-(innerHeight-10))<1,'bottom-right mobile dock');
+          check(getComputedStyle(buttons).justifyContent==='flex-start','top buttons left-aligned');
           const first=tools[0].getBoundingClientRect();
           for(const tool of tools){
             const bounds=tool.getBoundingClientRect();

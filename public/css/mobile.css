@@ -199,12 +199,12 @@
     font-size: clamp(0.55rem, 2.3vw, 0.75rem);
     white-space: nowrap;
   }
-  #app-banner-btns  { grid-column: 1 / -1; flex-wrap: nowrap; gap: 0.3rem; justify-content: flex-end; }
+  #app-banner-btns  { grid-column: 1 / -1; flex-wrap: nowrap; gap: 0.3rem; justify-content: flex-start; }
   #app-banner-tools { display: contents; }
   #app-banner-community {
     position: fixed;
     z-index: 20;
-    left: calc(10px + env(safe-area-inset-left));
+    right: calc(10px + env(safe-area-inset-right));
     bottom: calc(10px + env(safe-area-inset-bottom));
     display: flex;
     width: max-content;
@@ -267,8 +267,8 @@
     padding-bottom: calc(4.5rem + env(safe-area-inset-bottom)) !important;
   }
   body:not(.mobile-books-open):not(.mobile-addbook-open):not(.mobile-auth) #center-scroll-top {
-    left: auto !important;
-    right: calc(12px + env(safe-area-inset-right));
+    left: calc(12px + env(safe-area-inset-left)) !important;
+    right: auto;
     transform: none !important;
   }
 
