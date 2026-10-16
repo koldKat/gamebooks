@@ -257,7 +257,7 @@ function recordDeath(fight, foe, index) {
   if (fight.spec.killingForbidden) {
     fight.player.life=0; fight.status='loss'; return;
   }
-  if (!fight.spec.astral && !fight.spec.dream && !foe.summoned) {
+  if (!fight.spec.custom && !fight.spec.astral && !fight.spec.dream && !foe.summoned) {
     (fight.player.ghosts[fight.spec.id] ||= {})[index]=true;
   }
   if (fight.spec.recruitKilled && !foe.recruited) {

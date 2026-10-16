@@ -122,7 +122,8 @@ export function hiddenRound(input, options = {}, roll) {
       dice = fabledDice(roll);
     }
     const total = dice+combat, amount = Math.max(0,total-defence);
-    fight.events.push({kind:'attack',direction,dice,total,defence,damage:amount});
+    fight.events.push({kind:'attack',direction,dice,total,defence,damage:amount,
+      ...(enemy.displayName?{enemyDisplayName:enemy.displayName}:{})});
     return amount;
   }
   enemy.stamina = Math.max(0,enemy.stamina-attack('player',fight.character.combat+fight.attackModifier,enemy.defence));

@@ -6,7 +6,8 @@ const imports = [], calls = [], warnings = [], deferred = new Map();
 const translated = new Set();
 let failingId = null;
 let failingTranslationId = null;
-const context = createContext({ console: { warn: (...args) => warnings.push(args) } });
+const context = createContext({ console: { warn: (...args) => warnings.push(args) },
+  document: {getElementById: () => null} });
 const module = new SourceTextModule(readFileSync(process.argv[1], 'utf8'), {
   context,
   importModuleDynamically: async specifier => {
@@ -37,7 +38,10 @@ const module = new SourceTextModule(readFileSync(process.argv[1], 'utf8'), {
     return sim;
   },
 });
-await module.link(() => { throw Error('Loader must not eagerly import simulators'); });
+await module.link(specifier => {
+  assert.equal(specifier, './layout.js', 'Only the shared layout helper may be eager');
+  return new SourceTextModule(readFileSync(process.argv[1].replace(/loader\.js$/, 'layout.js'), 'utf8'), {context});
+});
 await module.evaluate();
 const loader = module.namespace;
 assert.deepEqual(imports, [], 'landing startup loads no simulators');

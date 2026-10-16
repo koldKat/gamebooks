@@ -17,6 +17,20 @@ const rolls = (...values) => () => {
   return values.shift();
 };
 
+test('custom duels support the editor group limit without changing three-ship fleet rules', () => {
+  const player=character(),before=structuredClone(player);
+  const enemies=Array.from({length:4},(_,index)=>({...enemy(1,0),name:'Custom ship '+index}));
+  let fight=startSpaceScoutEncounter(player,'manual',{enemies});
+  for(let index=0;index<4;index++){
+    assert.equal(fight.target,index);
+    fight=spaceScoutDuelRound(fight,rolls(1)).fight;
+  }
+  assert.equal(fight.status,'win');
+  assert.deepEqual(player,before);
+  assert.equal(startSpaceScoutFleet(player).enemies.length,3);
+  assert.throws(()=>startSpaceScoutDuel(player,Array(101).fill(enemy(1,0))));
+});
+
 test('backend recognizes sim648 outcomes once without touching a real database', () => {
   const events = [];
   const db = { exec() {}, transaction: fn => () => fn(), prepare: () => ({

@@ -224,8 +224,12 @@ gamebooks/
                          22px fields, compact action padding and checkbox states.
         opponents.js     Shared editable opponent setup with roster autocomplete,
                          numeric validation, custom groups and active-fight locking.
+                         Panels can distinguish unavailable printed stats from
+                         editable custom stats via isStatUnavailable.
                          Book-specific panels retain their own combat rules;
                          optional presets do not replace or rewrite saved fights.
+                         Keep rule identities separate from per-opponent display
+                         names, including names recorded in combat events.
         custom-setup.js  Optional custom-fight selector and run-local setup state.
                          Family adapters validate custom combatants without
                          changing printed encounters or migrating saved fights.
@@ -233,6 +237,8 @@ gamebooks/
                          party combat and other engine-specific active states.
                          Restore explicit setup first, then the saved encounter,
                          rather than selecting a stale custom-opponent draft.
+                         Custom encounters must not inherit printed destinations
+                         or add disposable IDs to permanent story-enemy ledgers.
         battlesim829.js    Battle simulator for book 829.
         battlesim700.js    Compatibility entry for Money and Gangsters 3; books/700 owns its deterministic melee/shooting rules, advisory raid checks and run-scoped state.
         battlesim706.js    Compatibility entry for Son of the Desert; books/706 owns naval tactics and run-scoped state.

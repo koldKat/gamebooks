@@ -46,7 +46,7 @@ export function renderSim555() {
   el('sorcerer').disabled = active || p.profile !== 'agnes' || p.sorcererUsed;
   if (el('sorcerer').disabled) el('sorcerer').checked = false;
   el('used').textContent = [p.sorcererUsed ? tk('sorcerer_used') : '', p.weaponUsed ? tk('weapon_used') : ''].filter(Boolean).join(' ');
-  el('status').textContent = active ? tk('round', { round: f.rounds.length + 1, target: f.spec.thresholds[f.rounds.length] }) : f ? tk('finished', { outcome: tk(f.status), section: f.destination }) : tk('pick');
+  el('status').textContent = active ? tk('round', { round: f.rounds.length + 1, target: f.spec.thresholds[f.rounds.length] }) : f ? f.spec.custom ? tk(f.status) : tk('finished', { outcome: tk(f.status), section: f.destination }) : tk('pick');
   const selected = ARKHAM_ENCOUNTERS.find(e => e.section === Number(el('encounter').value));
   el('rules').textContent = selected ? tk('targets', { targets: selected.thresholds.join(' / ') }) : t('battlesim.editor.custom');
   if (f?.spec.custom && !active) el('status').textContent = tk(f.status);

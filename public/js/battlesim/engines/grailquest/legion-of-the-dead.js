@@ -315,7 +315,7 @@ export function settleLegionFight(fight) { settle(fight); }
 
 function settle(fight) {
   if (fight.status !== 'fighting') return;
-  for (const foe of fight.foes) if (foe.life <= 0 && !fight.spec.contest) fight.player.killed[foe.historyKey] = true;
+  for (const foe of fight.foes) if (foe.life <= 0 && !fight.spec.custom && !fight.spec.contest) fight.player.killed[foe.historyKey] = true;
   if (fight.spec.contest === 'wrestle') {
     if (fight.player.life < 10) fight.status = 'loss';
   } else if (fight.spec.contest === 'pseudo') {

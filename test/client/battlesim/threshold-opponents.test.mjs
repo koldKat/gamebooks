@@ -21,3 +21,18 @@ test('custom threshold combat preserves the multi-round system without inventing
     assert.throws(() => start(player, {opponents: [{...setup, winsRequired: 4}]}));
   }
 });
+
+test('autocomplete presets do not give custom Arkham fights printed destinations', () => {
+  const player=createArkhamCharacter('agnes',{willpower:4,intellect:3,combat:2,health:6,sanity:6});
+  for(const threshold of [1,100]){
+    const fight=createArkhamFight(0,player,false,{opponents:[{...setup,presetSection:62,
+      threshold1:threshold,threshold2:threshold,threshold3:threshold}]});
+    for(let i=0;i<3;i++)rollArkhamRound(fight,{},()=>.5);
+    assert.equal(fight.status,threshold===1?'win':'loss');
+    assert.equal(fight.destination,undefined);
+    assert.deepEqual(fight.spec.stats,['combat','willpower']);
+  }
+  const printed=createArkhamFight(62,player);
+  for(let i=0;i<3;i++)rollArkhamRound(printed,{},()=>.99);
+  assert.equal(printed.destination,103);
+});

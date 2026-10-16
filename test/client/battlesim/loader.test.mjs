@@ -18,10 +18,13 @@ test('desktop battle-sim relocation retains the registry and visibility lifecycl
   // so the hash guards the loader logic, not the id list.
   const unchanged = (source.slice(0, start) + source.slice(end))
     .replace('const _loading = new Map();\n', '')
+    .replace("import {prepareBattleSimLayout, simulatorOverlay} from './layout.js';\n\n", '')
     .replace(/const SUPPORTED_BATTLE_SIM_BOOKS = new Set\(\[[\s\S]*?\]\);/, 'SUPPORTED_SET');
   assert.equal(createHash('sha256').update(unchanged).digest('hex'),
     'c2ecc98cd90a728ec1373959043876751c0efd0669b2ed41667bf06c64550ba0');
-  assert.doesNotMatch(source, /^import\s/m, 'no eager simulator imports');
+  assert.deepEqual(source.match(/^import\s.+$/gm),
+    ["import {prepareBattleSimLayout, simulatorOverlay} from './layout.js';"],
+    'only the lightweight layout helper is eager; simulators remain lazy');
   assert.match(source, /import\(`\.\/battlesim\$\{numericId\}\.js`\)/);
 });
 

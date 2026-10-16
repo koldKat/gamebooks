@@ -181,10 +181,10 @@ export function createFreewayPanel({ document, t, getRun, getBookId, saveState,
         game.race = result.race;
         game.log.push(tk('raceProgress', { player: result.race.player, enemy: result.race.enemy }));
         if (result.race.section) game.log.push(tk('destination', { section: result.race.section }));
-      } else fightReport(game, freewayRound(game.fight, { target: number('target', 2) }));
+      } else fightReport(game, freewayRound(game.fight, { target: number('target', game.fight.enemies.length - 1) }));
     }));
     el('rocket').addEventListener('click', () => action(game => fightReport(game,
-      freewayRound(game.fight, { target: number('target', 2), rocket: true }))));
+      freewayRound(game.fight, { target: number('target', game.fight.enemies.length - 1), rocket: true }))));
     el('medkit').addEventListener('click', () => action(game => {
       if (busy(game)) return;
       game.character = healFreewayCharacter(game.character); game.fight = null; game.log.push(tk('healed'));

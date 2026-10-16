@@ -79,7 +79,8 @@ export function fabledRound(input, options = {}, roll) {
       dice = fabledDice(roll);
     }
     const total = dice + combat, damage = Math.max(0, total - defence);
-    fight.events.push({ kind: 'attack', direction, dice, total, defence, damage });
+    fight.events.push({ kind: 'attack', direction, dice, total, defence, damage,
+      ...(enemy.displayName ? {enemyDisplayName: enemy.displayName} : {}) });
     return damage;
   };
   const playerAttack = () => {

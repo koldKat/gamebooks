@@ -158,7 +158,8 @@ export function risingRound(input, options = {}, roll) {
     const total = dice+combat;
     let amount = Math.max(0,total-defence);
     if (direction==='enemy' && fight.config.special==='thunder') amount = Math.max(0,amount-Math.floor(fight.character.shards/1000));
-    fight.events.push({kind:'attack',direction,enemy:foe.name,dice,total,defence,damage:amount});
+    fight.events.push({kind:'attack',direction,enemy:foe.name,dice,total,defence,damage:amount,
+      ...(foe.displayName?{enemyDisplayName:foe.displayName}:{})});
     return amount;
   };
   const foe = fight.enemies[target];
@@ -184,7 +185,8 @@ export function fleeRisingFight(input, roll) {
   else {
     const foe = fight.enemies[fight.target], dice = fabledDice(roll);
     const amount = Math.max(0,dice+foe.combat-fight.defence);
-    fight.events.push({kind:'attack',direction:'enemy',enemy:foe.name,dice,total:dice+foe.combat,defence:fight.defence,damage:amount});
+    fight.events.push({kind:'attack',direction:'enemy',enemy:foe.name,dice,total:dice+foe.combat,defence:fight.defence,damage:amount,
+      ...(foe.displayName?{enemyDisplayName:foe.displayName}:{})});
     damage(fight,amount);
   }
   if (fight.status==='fighting') {

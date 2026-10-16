@@ -26,9 +26,9 @@ export function createFabledPanel({ document, t, getRun, getBookId, saveState,
   const el = key => document.getElementById(ID + '-' + key);
   const active = game => game?.fight?.status === 'fighting';
   const supported = game => game && (!game.fight || game.fight.rulesRevision === 1);
-  const enemyName = name => {
-    const display = data()?.fight?.enemies?.find(enemy => enemy.name === name)?.displayName;
-    if (display) return display;
+  const enemyName = enemy => {
+    if (enemy && typeof enemy === 'object' && enemy.displayName) return enemy.displayName;
+    const name = typeof enemy === 'object' ? enemy?.name : enemy;
     const value = tk('enemy.' + name);
     return value === 'battlesim' + bookId + '.enemy.' + name ? name : value;
   };
@@ -73,7 +73,7 @@ export function createFabledPanel({ document, t, getRun, getBookId, saveState,
   function report(game, fight, previousEvents = 0) {
     game.fight = fight;
     for (const event of fight.events.slice(previousEvents)) {
-      if (event.kind === 'attack') game.log.push(tk('attack', { name: event.direction === 'player' ? tk('you') : enemyName(event.enemy ?? fight.enemies[fight.target].name),
+      if (event.kind === 'attack') game.log.push(tk('attack', { name: event.direction === 'player' ? tk('you') : event.enemyDisplayName || enemyName(event.enemy ?? fight.enemies[fight.target]),
         total: event.total, defence: event.defence, damage: event.damage }));
       else if (event.kind === 'entry') game.log.push(tk('entry', event));
       else if (event.kind === 'reroll') game.log.push(tk('reroll', { previous: event.previous }));
@@ -149,7 +149,7 @@ export function createFabledPanel({ document, t, getRun, getBookId, saveState,
       el('target-row').hidden = !busy || !fight.config.simultaneous;
       const target = Number(el('target').value);
       el('target').innerHTML = (fight?.enemies ?? []).flatMap((foe,index)=>foe.stamina>0
-        ? [`<option value="${index}">${escape(enemyName(foe.name))}</option>`] : []).join('');
+        ? [`<option value="${index}">${escape(enemyName(foe))}</option>`] : []).join('');
       el('target').value = String(fight?.enemies[target]?.stamina>0 ? target : fight?.target ?? 0);
       el('target').disabled = !busy;
     }
@@ -167,7 +167,7 @@ export function createFabledPanel({ document, t, getRun, getBookId, saveState,
     el('safetyFromStorms').disabled = !character?.stormsBlessing && !character?.permanentStorms;
     if (el('safetyFromStorms').disabled) el('safetyFromStorms').checked = false;
     el('status').textContent = fight ? [tk('status.' + fight.status), tk('rounds', { count: fight.rounds }),
-      ...fight.enemies.map(foe => `${enemyName(foe.name)}: ${tk('combat')} ${foe.combat}, ${tk('defence')} ${foe.defence}, ${tk('stamina')} ${foe.stamina}`),
+      ...fight.enemies.map(foe => `${enemyName(foe)}: ${tk('combat')} ${foe.combat}, ${tk('defence')} ${foe.defence}, ${tk('stamina')} ${foe.stamina}`),
       ...(fight.destination ? [tk('destination', { section: fight.destination })] : [])].join('\n') : '';
     el('history').innerHTML = game.history.slice(-30).reverse().map(item => `<div>${escape(item.enemy)} - ${escape(tk('status.' + item.outcome))}</div>`).join('');
     el('log').innerHTML = game.log.map(line => `<div>${escape(line)}</div>`).join('');

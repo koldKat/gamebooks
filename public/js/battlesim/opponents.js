@@ -21,7 +21,7 @@ export function validateOpponents(rows, fields) {
 }
 
 // Presets fill editable fields; they never replace a running fight.
-export function createOpponentEditor({document, id, t, fields, presets = [], language = 'en', onSelect}) {
+export function createOpponentEditor({document, id, t, fields, presets = [], language = 'en', onSelect, isStatUnavailable}) {
   const label = key => t('battlesim.editor.' + (language === 'bg' ? 'bg.' : '') + key);
   const element = document.createElement('details');
   element.className = 'bsim-opponent-editor';
@@ -53,7 +53,9 @@ export function createOpponentEditor({document, id, t, fields, presets = [], lan
       name.value = value.displayName ?? value.name ?? '';
       for (const input of row.querySelectorAll('[data-stat]')) {
         input.value = value[input.dataset.stat] ?? '';
-        input.dataset.unavailable = String(value.unavailableStats?.includes(input.dataset.stat) ?? false);
+        input.dataset.unavailable = String(Boolean(isStatUnavailable
+          ? isStatUnavailable(input.dataset.stat, value)
+          : value.unavailableStats?.includes(input.dataset.stat)));
         input.disabled = locked || input.dataset.unavailable === 'true';
         input.placeholder = input.dataset.unavailable === 'true' ? '-' : '';
       }

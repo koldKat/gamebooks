@@ -267,7 +267,8 @@ function attackSerpent(fight, direction, options, roll) {
     if (fight.config.special==='lightning' && fabledDie(roll)>=3) damage+=3;
     damage=hurtSerpent(fight,damage,{attack:true});
   }
-  fight.events.push({kind:'attack',direction,enemy:foe.name,dice,total,defence,damage});
+  fight.events.push({kind:'attack',direction,enemy:foe.name,dice,total,defence,damage,
+    ...(foe.displayName?{enemyDisplayName:foe.displayName}:{})});
   return player && foe.stamina<=(fight.config.threshold??0);
 }
 

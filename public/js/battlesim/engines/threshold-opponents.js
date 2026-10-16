@@ -12,6 +12,8 @@ export function customThresholdEncounter(entries, section, opponents, kind) {
   const source = entries.find(entry => entry.section === settings.presetSection);
   const spec = {...structuredClone(source ?? {}), section: 0, custom: true, name: settings.displayName || 'Opponent',
     manualModifier: settings.modifier, wins: settings.winsRequired};
+  delete spec.win;
+  delete spec.loss;
   if (kind === 'arkham') {
     spec.thresholds = Array.from({length: settings.roundsCount}, (_, index) => settings['threshold' + (index + 1)]);
     spec.stats ??= ['combat'];

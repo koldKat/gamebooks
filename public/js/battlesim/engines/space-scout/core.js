@@ -143,7 +143,7 @@ function advance(fight) {
 
 export function startSpaceScoutDuel(character, enemies, options = {}) {
   integer(character?.power); integer(character?.maxShields); inventory(character?.inventory);
-  if (!Array.isArray(enemies) || !enemies.length || enemies.length > 3) throw new RangeError('Invalid opponents');
+  if (!Array.isArray(enemies) || !enemies.length || enemies.length > 100) throw new RangeError('Invalid opponents');
   const shields = options.shields === undefined ? character.maxShields : integer(options.shields);
   if (shields > character.maxShields) throw new RangeError('Shields exceed capacity');
   const penalty = integer(options.shieldPenalty ?? 0);

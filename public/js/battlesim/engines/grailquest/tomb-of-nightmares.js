@@ -234,7 +234,7 @@ function settle(fight, random = Math.random) {
   if (fight.status !== 'fighting') return;
   if (fight.ally) fight.player.companion = clone(fight.ally);
   for (const foe of fight.foes) {
-    if (foe.life <= 0) fight.player.killed[foe.historyKey] = true;
+    if (foe.life <= 0 && !fight.spec.custom) fight.player.killed[foe.historyKey] = true;
   }
   if (fight.player.life <= 5) fight.status = 'loss';
   else if (!tombTargets(fight).length) fight.status = 'win';

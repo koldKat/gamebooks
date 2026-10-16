@@ -42,7 +42,7 @@ export function renderSim557() {
   if (el('card').disabled) el('card').value = '';
   el('improvise').disabled = p.profile !== 'lola' || p.improvisations > 0 && p.resources < 1;
   el('used').textContent = p.profile === 'lola' ? tk('used', { card: tk(p.cardUsed ? 'yes' : 'no'), count: p.improvisations }) : '';
-  el('status').textContent = active ? tk('round', { round: f.rounds.length + 1, target: f.spec.rounds[f.rounds.length].target }) : f?.status === 'unresolved' ? tk('unresolved') : f ? tk('finished', { outcome: tk(f.status), section: f.destination }) : tk('pick');
+  el('status').textContent = active ? tk('round', { round: f.rounds.length + 1, target: f.spec.rounds[f.rounds.length].target }) : f?.status === 'unresolved' ? tk('unresolved') : f ? f.spec.custom ? tk(f.status) : tk('finished', { outcome: tk(f.status), section: f.destination }) : tk('pick');
   const selected = KINGSPORT_ENCOUNTERS.find(e => e.section === Number(el('encounter').value));
   el('rules').textContent = selected ? tk('targets', { targets: selected.rounds.map(r => r.target).join(' / ') }) : t('battlesim.editor.custom');
   if (f?.spec.custom && !active) el('status').textContent = tk(f.status);
