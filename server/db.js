@@ -380,6 +380,11 @@ try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 648 AND has_liv
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 654 AND has_live_reading = 1').run(); } catch (_) {}
 try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 658 AND has_live_reading = 1').run(); } catch (_) {}
 
+// These existing simulators predated their catalog availability flags.
+db.prepare(`UPDATE books SET has_battle_sim = 1
+  WHERE id IN (465, 468, 734, 739, 740, 869, 871, 877, 881, 882)
+    AND has_battle_sim = 0`).run();
+
 // Rename legacy battleSim state to sim829 without losing saved fights/history.
 {
   const done = db.prepare(`SELECT value FROM admin_settings WHERE key = 'sim829_key_renamed'`).get();
