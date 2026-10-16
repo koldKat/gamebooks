@@ -30,6 +30,23 @@ for(const id of BOOK_IDS){
   }
   const right=overlay.querySelector('.bsim-col-right');
   check(!right?.querySelector('input,select,textarea'),'report column contains no setup fields '+id);
+  const textSize=parseFloat(getComputedStyle(document.documentElement).fontSize)*0.75;
+  for(const control of overlay.querySelectorAll('.bsim-col :is(label,summary,p,h4,legend,input,select,textarea,button:not(.inv-close-btn),.inv-edit-label,.bsim-tech-desc,.bsim-tech-uses,.bsim-effects)')){
+    const style=getComputedStyle(control);
+    check(Math.abs(parseFloat(style.fontSize)-textSize)<0.1,'consistent readable text '+id+' '+control.className+': '+style.fontSize);
+  }
+  const left=overlay.querySelector('.bsim-col-left');
+  check(parseFloat(getComputedStyle(left).rowGap)<=6,'compact column spacing '+id);
+  for(const button of overlay.querySelectorAll('.bsim-col button:not(.inv-close-btn,.inv-qty-btn)')){
+    const style=getComputedStyle(button);
+    check(parseFloat(style.paddingTop)<=3&&parseFloat(style.paddingBottom)<=3,'compact action padding '+id);
+  }
+  const fields=[...overlay.querySelectorAll('.inv-edit-row > input.inv-edit-input,.inv-edit-row > select.inv-edit-input')].filter(field=>field.getClientRects().length);
+  for(const field of fields){
+    check(Math.abs(field.getBoundingClientRect().height-22)<0.1,'consistent compact field height '+id+' '+field.id);
+    const label=field.parentElement.querySelector(':scope > span:first-child');
+    if(label)check(Math.abs(field.getBoundingClientRect().left-label.getBoundingClientRect().right-5.6)<0.2,'aligned field label '+id+' '+field.id);
+  }
   if([570,644,648,654,658,663,665,671,672,700,706,710,718,722,723,724,728,735,757,758,2116].includes(id)){
     const title=overlay.querySelector('.inv-modal-title')?.textContent||'';
     check(/[А-Яа-я]/.test(title),'Bulgarian book has Bulgarian simulator title '+id+':'+title);

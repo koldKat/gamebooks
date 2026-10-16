@@ -16,6 +16,7 @@ engines/<family>/           Reusable family rules and panels
 - Every entry exports `definition`, `init`, `render` and `setVisible`. Preserve the legacy named exports used by desktop/mobile loaders.
 - Keep DOM access and HTML builders in panels. Extracted state/combat/effects factories receive application dependencies through `getContext`; read live dependencies when an action runs, not when the module loads.
 - Keep all setup and combat controls in the left column; reserve the right column for results/logs/history. Both loaders apply the shared layout boundary. Use the shared button, input and checkbox styles, not native unstyled controls or per-book visual variants.
+- Use the shared `--bsim-text-size` scale and compact row/button spacing in `battlesim.css`. Do not add per-book font-size or density overrides; verify both legacy and new panels through the architecture browser fixture.
 - Bulgarian-source books use Bulgarian simulator tables, independent of the app language. Register them in `i18n/battlesim.js`; verify the real loader without injecting test-only translations.
 - Keep delayed UI confirmations that read live application bindings in panels; do not replace those bindings with captured context snapshots.
 - Put shared rules in the family engine, not in copied book implementations. Keep distinct printed rules and encounter exceptions explicit; do not switch silently on book IDs inside shared combat algorithms.

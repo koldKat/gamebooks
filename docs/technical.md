@@ -220,7 +220,8 @@ gamebooks/
                          mobile/js/battlesim-dispatch.js dispatcher.
         layout.js        Shared desktop/mobile column boundary: setup/combat controls
                          on the left; results, logs and history on the right. Shared
-                         battlesim.css styles buttons, fields and checkbox states.
+                         battlesim.css owns the common text scale, aligned labels,
+                         22px fields, compact action padding and checkbox states.
         battlesim829.js    Battle simulator for book 829.
         battlesim700.js    Compatibility entry for Money and Gangsters 3; books/700 owns its deterministic melee/shooting rules, advisory raid checks and run-scoped state.
         battlesim706.js    Compatibility entry for Son of the Desert; books/706 owns deterministic penalty encounters, naval tactics and run-scoped state.
