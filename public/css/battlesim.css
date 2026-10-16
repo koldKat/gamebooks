@@ -21,7 +21,29 @@
    .inv-edit-row/.inv-qty-* stepper pattern from inventory.js's item-edit
    popover - only sizing/layout that's genuinely new lives here. */
 /* Use a fixed desktop height so controls and logs do not resize the dialog during combat. */
-.bsim-modal { width: min(720px, 95vw); height: min(860px, 90vh); }
+.bsim-modal { width: min(720px, 95vw); height: min(860px, 90vh); color-scheme: dark; }
+:where(.bsim-modal) button:where(:not(.inv-close-btn, .inv-qty-btn, .bsim-sync-btn)) {
+  appearance: none;
+  background: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 6px;
+  color: #9ca3af;
+  padding: 0.25rem 0.65rem;
+  font-family: inherit;
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+:where(.bsim-modal) :is(input, select, textarea):where(:not([type="checkbox"], [type="radio"])) {
+  background: #111827;
+  color: #d1d5db;
+  border: 1px solid #374151;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 0.7rem;
+  max-width: 100%;
+  min-width: 0;
+}
+:where(.bsim-modal) button:disabled { opacity: 0.4; cursor: not-allowed; }
 
 #sim521-overlay [hidden] { display: none !important; }
 #sim521-overlay .inv-edit-row { flex-wrap: wrap; }
@@ -360,6 +382,47 @@
 }
 .bsim-col-left > * { direction: ltr; }
 .bsim-col-left > .inv-add-btn { flex: 0 0 auto; }
+.bsim-modal .bsim-action-btn {
+  appearance: none;
+  background: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 6px;
+  color: #9ca3af;
+  padding: 0.25rem 0.65rem;
+  font: inherit;
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+.bsim-modal .bsim-action-btn:hover:not(:disabled) { background: #374151; color: #d1d5db; }
+.bsim-modal .bsim-action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.bsim-modal .bsim-checkbox { display: flex; align-items: center; gap: 0.3rem; font-size: 0.7rem; color: #9ca3af; }
+.bsim-modal label { font-size: 0.7rem; }
+.bsim-modal details > summary { font-size: 0.7rem; color: #9ca3af; cursor: pointer; }
+.bsim-modal input[type="checkbox"] {
+  appearance: none;
+  display: inline-grid;
+  place-content: center;
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  vertical-align: middle;
+  background: #111827;
+  border: 1px solid #4b5563;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.bsim-modal input[type="checkbox"]:checked { background: #2563eb; border-color: #3b82f6; }
+.bsim-modal input[type="checkbox"]:checked::after {
+  content: '';
+  width: 3px;
+  height: 7px;
+  border: solid #f9fafb;
+  border-width: 0 2px 2px 0;
+  transform: translateY(-1px) rotate(45deg);
+}
+.bsim-modal input[type="checkbox"]:disabled { opacity: 0.4; cursor: not-allowed; }
+.bsim-modal :is(button, input[type="checkbox"]):focus-visible { outline: 2px solid #60a5fa; outline-offset: 2px; }
 .bsim-col-right {
   flex: 1;
   border-left: 1px solid #1f2937;

@@ -1,6 +1,6 @@
 {
   "sourceCommit": "695fc8cf95d1c2393b30b3b6234660494025a35f",
-  "coreKeys": 697,
+  "coreKeys": 702,
   "tables": {
     "account.js": {
       "keys": 62,
@@ -819,8 +819,8 @@
       "sha256": "437b985b88d3db9a18421cc4b7889bbf686e74dee26f5cba41f01e682d2afba2"
     },
     "stats.js": {
-      "keys": 119,
-      "sha256": "7dfba9e985e04846ded74b2bceb175ae102df0f1b3d6cad3712aeab5214b79e1"
+      "keys": 124,
+      "sha256": "743888de2091204b491b2b8a621ccf6b54d33cc3f4311d97270d20970bcb40d5"
     }
   }
 }

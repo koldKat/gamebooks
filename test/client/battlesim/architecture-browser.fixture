@@ -20,6 +20,21 @@ for(const id of BOOK_IDS){
   if('MODE'!=='mobile')button.click();
   const overlay=document.getElementById(id===829?'bsim-overlay':id===8?'s8-overlay':'sim'+id+'-overlay');
   check(overlay?.classList.contains('active'),'opens '+id);
+  for(const control of overlay.querySelectorAll('input[type="checkbox"]')){
+    const style=getComputedStyle(control);
+    check(style.appearance==='none'&&style.backgroundColor!=='rgb(255, 255, 255)','themed checkbox '+id);
+  }
+  for(const button of overlay.querySelectorAll('.bsim-action-btn')){
+    const style=getComputedStyle(button);
+    check(style.backgroundColor==='rgb(31, 41, 55)'&&style.borderTopStyle==='solid','themed action button '+id);
+  }
+  const right=overlay.querySelector('.bsim-col-right');
+  check(!right?.querySelector('input,select,textarea'),'report column contains no setup fields '+id);
+  if([570,644,648,654,658,663,665,671,672,700,706,710,718,722,723,724,728,735,757,758,2116].includes(id)){
+    const title=overlay.querySelector('.inv-modal-title')?.textContent||'';
+    check(/[А-Яа-я]/.test(title),'Bulgarian book has Bulgarian simulator title '+id+':'+title);
+    check(!/\b(?:Character|Encounter|Programs|Save|Full Moon|Alpha versus Omega)\b/.test(overlay.textContent),'no English UI in Bulgarian simulator '+id);
+  }
   if(id===199){
     const game=app.currentPlaythrough().sim199;
     Object.assign(game.player,{skill:10,skillInitial:10,stamina:20,staminaInitial:20,luck:12,luckInitial:12});

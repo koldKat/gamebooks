@@ -101,7 +101,9 @@ for (const path of paths) {
     assert.equal(keys.has(key), false, 'no duplicate key across tables: ' + key);
     keys.add(key);
     assert.equal(typeof table[key], 'string');
-    assert.equal(en.api.t(key), table[key]);
+    const localizedPath = simulatorId && resolve(root, 'i18n/bg/battlesim/battlesim' + simulatorId + '.js');
+    const localized = localizedPath && en.modules.has(localizedPath) ? (await en.load(localizedPath)).default : table;
+    assert.equal(en.api.t(key), localized[key]);
   }
   if (simulatorId) {
     for (const key of Object.keys(table)) {

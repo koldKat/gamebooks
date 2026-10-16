@@ -1,6 +1,8 @@
 // Lazy battle simulator loader. Keep battle sim modules out of the landing
 // bundle; load only the simulator for the book currently opened in play view.
 
+import {prepareBattleSimLayout, simulatorOverlay} from './layout.js';
+
 const SUPPORTED_BATTLE_SIM_BOOKS = new Set([
   8, 78, 80, 82, 83, 86, 92, 107, 108, 114, 115, 118, 122, 123, 130, 135, 161,
   186, 193, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210,
@@ -44,6 +46,7 @@ async function _loadBattleSim(id) {
       throw new Error(`Battle sim ${numericId} has an invalid export shape`);
     }
     sim.init();
+    prepareBattleSimLayout(simulatorOverlay(document, numericId));
     _loaded.set(numericId, sim);
     return sim;
   })();

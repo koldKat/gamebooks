@@ -1074,7 +1074,8 @@ function getPublicBookMeta(bookId) {
   const row = db.prepare(
     `SELECT b.id, b.name, b.description, b.authors, b.cover_path, b.total_sections, b.max_section_number,
             b.isbn, b.issn, b.asin, b.pages, b.is_container,
-            p.id AS parentId, p.name AS parentName, p.cover_path AS parentCoverPath
+            p.id AS parentId, p.name AS parentName, p.cover_path AS parentCoverPath,
+            p.description AS parentDescription
      FROM books b
      LEFT JOIN books p ON p.id = b.parent_book_id AND p.is_public = 1
      WHERE b.id = ?
@@ -1084,9 +1085,9 @@ function getPublicBookMeta(bookId) {
   const result = {
     id:            row.id,
     name:          row.name,
-    description:   row.description || null,
+    description:   row.description || row.parentDescription || null,
     authors:       row.authors || null,
-    coverUrl:      row.cover_path ? `/covers/${row.cover_path}` : null,
+    coverUrl:      row.cover_path || row.parentCoverPath ? `/covers/${row.cover_path || row.parentCoverPath}` : null,
     totalSections: row.total_sections,
     maxSectionNumber: row.max_section_number ?? null,
     isbn:          row.isbn  || null,
@@ -1239,7 +1240,8 @@ function getBookActivity(bookId, userId = null) {
             b.pages, b.authors, b.description, b.is_public, b.is_container, b.book_order,
             b.has_battle_sim, b.has_live_reading,
             COALESCE(b.series_number, p.series_number) AS series_number,
-            p.id AS parentId, p.name AS parentName,
+            p.id AS parentId, p.name AS parentName, p.cover_path AS parentCoverPath,
+            p.description AS parentDescription,
             COALESCE(s.id,  ps.id)   AS seriesId,
             COALESCE(s.name, ps.name) AS seriesName,
             s.id AS ownSeriesId, s.name AS ownSeriesName, b.series_number AS ownSeriesNumber,
@@ -1328,6 +1330,8 @@ function getBookActivity(bookId, userId = null) {
       totalSections: book.total_sections,
       maxSectionNumber: book.max_section_number ?? book.total_sections,
       coverUrl:      book.cover_path ? `/covers/${book.cover_path}` : null,
+      parentCoverUrl: book.parentCoverPath ? `/covers/${book.parentCoverPath}` : null,
+      parentDescription: book.parentDescription || null,
       isbn:          book.isbn        || null,
       issn:          book.issn        || null,
       asin:          book.asin        || null,

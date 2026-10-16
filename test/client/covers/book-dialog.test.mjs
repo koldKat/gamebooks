@@ -99,6 +99,21 @@ test('private metadata does not offer guests a library action', () => {
   assert.equal(d.buttons.has('.add-public-book-btn'), false);
 });
 
+test('anthology child inherits missing display metadata without copying it into edit fields', async () => {
+  const d = dialog({loggedIn: true, admin: true, meta: {parentId: 7, parentName: 'Anthology',
+    parentCoverUrl: '/covers/anthology.jpg', parentDescription: 'Anthology description'}});
+  assert.match(d.body.html, /src="\/covers\/anthology.jpg"/);
+  assert.match(d.body.html, /book-modal-description">Anthology description/);
+  await d.buttons.get('.catalog-admin-edit-btn').click();
+  assert.equal(d.editOptions.initialDescription, '');
+  assert.equal(d.editOptions.initialCoverUrl, null);
+  const own = dialog({meta: {coverUrl: '/covers/own.jpg', description: 'Own description',
+    parentCoverUrl: '/covers/anthology.jpg', parentDescription: 'Anthology description'}});
+  assert.match(own.body.html, /src="\/covers\/own.jpg"/);
+  assert.match(own.body.html, /book-modal-description">Own description/);
+  assert.doesNotMatch(own.body.html, /anthology.jpg|Anthology description/);
+});
+
 test('authors visibly show pooled book vote counts individually, not only in a tooltip', () => {
   const d = dialog({ meta: { authors: 'First Author, Second Author, Unrated Author', voteCount: 3,
     authorRatings: [

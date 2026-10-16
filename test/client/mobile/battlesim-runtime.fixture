@@ -28,7 +28,10 @@ const module = new SourceTextModule(readFileSync(process.argv[1], 'utf8'), {
     return stub({ init: () => calls.push(['init', id]) });
   },
 });
-await module.link(() => { throw Error('No eager mobile imports'); });
+await module.link(specifier => {
+  assert.equal(specifier, '../../js/battlesim/layout.js', 'only the small shared layout helper is eager');
+  return stub({prepareBattleSimLayout() {}, simulatorOverlay() {return null;}});
+});
 await module.evaluate();
 const { openSimForBook: open } = module.namespace;
 assert.deepEqual(imports, []);

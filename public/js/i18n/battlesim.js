@@ -2,6 +2,7 @@ import { registerTranslations } from './runtime.js';
 
 const pending = new Map();
 const failures = new Map();
+const BULGARIAN_BOOKS = new Set([570, 644, 648, 654, 658, 663, 665, 671, 672, 700, 706, 710, 718, 722, 723, 724, 728, 735, 757, 758, 2116]);
 
 export function loadBattleSimTranslations(bookId) {
   const id = Number(bookId);
@@ -10,7 +11,8 @@ export function loadBattleSimTranslations(bookId) {
   // Browsers cache failed module URLs; a retry needs a fresh URL.
   const attempt = failures.get(id) || 0;
   const suffix = attempt ? `?retry=${attempt}` : '';
-  const loading = import(`./en/battlesim/battlesim${id}.js${suffix}`).then(module => {
+  const language = BULGARIAN_BOOKS.has(id) ? 'bg' : 'en';
+  const loading = import(`./${language}/battlesim/battlesim${id}.js${suffix}`).then(module => {
     registerTranslations(module.default);
     failures.delete(id);
   }).catch(error => {

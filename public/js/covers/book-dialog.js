@@ -22,10 +22,12 @@ export function renderCoverActivity(bookId, bookName, entries, userRating, bookM
   body.style.overflow = '';
 
   let headerHtml = '<div class="book-modal-header">';
-  if (bookMeta?.coverUrl) {
+  const displayCover = bookMeta?.coverUrl || bookMeta?.parentCoverUrl;
+  const displayDescription = bookMeta?.description || bookMeta?.parentDescription;
+  if (displayCover) {
     const coverBadges = _seriesRowBadges(bookMeta);
     headerHtml += `<div class="book-modal-cover-col">` +
-      `<img class="book-modal-cover" src="${escapeHtml(bookMeta.coverUrl)}" alt="${escapeHtml(bookName)}">` +
+      `<img class="book-modal-cover" src="${escapeHtml(displayCover)}" alt="${escapeHtml(bookName)}">` +
       (coverBadges ? `<div class="book-modal-cover-badges">${coverBadges}</div>` : '') +
       `</div>`;
   }
@@ -68,8 +70,8 @@ export function renderCoverActivity(bookId, bookName, entries, userRating, bookM
   if (bookMeta?.asin) ids.push(`ASIN ${escapeHtml(bookMeta.asin)}`);
   if (bookMeta?.issn) ids.push(`ISSN ${escapeHtml(bookMeta.issn)}`);
   if (ids.length) headerHtml += `<div class="book-modal-ids">${ids.join(' · ')}</div>`;
-  if (bookMeta?.description) {
-    headerHtml += `<div class="book-modal-description">${escapeHtml(bookMeta.description)}</div>`;
+  if (displayDescription) {
+    headerHtml += `<div class="book-modal-description">${escapeHtml(displayDescription)}</div>`;
   }
   const avgRating  = bookMeta?.avgRating ?? null;
   const voteCount  = bookMeta?.voteCount ?? 0;

@@ -89,7 +89,8 @@ gamebooks/
       i18n.js            Compatibility entry point: t(), applyTranslations(), overrides
       i18n/              Core translation runtime and lazy simulator tables
         runtime.js       Language selection, lookup/interpolation, overrides and DOM application
-        battlesim.js     On-demand simulator translation registration, caching and retries
+        battlesim.js     On-demand simulator translations in the source book's language;
+                         registration, caching and retries
         en/              English tables: common, account, books, covers, community, equipment,
                          mobile, play, progression and stats
           index.js       Static core/shared table imports
@@ -217,6 +218,9 @@ gamebooks/
                          Boot imports only this loader; per-book simulators are imported
                          only when their book opens. Mobile keeps its separate
                          mobile/js/battlesim-dispatch.js dispatcher.
+        layout.js        Shared desktop/mobile column boundary: setup/combat controls
+                         on the left; results, logs and history on the right. Shared
+                         battlesim.css styles buttons, fields and checkbox states.
         battlesim829.js    Battle simulator for book 829.
         battlesim700.js    Compatibility entry for Money and Gangsters 3; books/700 owns its deterministic melee/shooting rules, advisory raid checks and run-scoped state.
         battlesim706.js    Compatibility entry for Son of the Desert; books/706 owns deterministic penalty encounters, naval tactics and run-scoped state.

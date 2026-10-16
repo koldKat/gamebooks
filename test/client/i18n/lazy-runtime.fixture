@@ -11,7 +11,7 @@ const runtime = new SyntheticModule(['registerTranslations'], function () {
 const module = new SourceTextModule(readFileSync(process.argv[1], 'utf8'), {
   context,
   importModuleDynamically: async specifier => {
-    assert.match(specifier, /^\.\/en\/battlesim\/battlesim\d+\.js(?:\?retry=\d+)?$/);
+    assert.match(specifier, /^\.\/(?:en|bg)\/battlesim\/battlesim\d+\.js(?:\?retry=\d+)?$/);
     urls.push(specifier);
     const id = Number(specifier.match(/battlesim(\d+)/)[1]);
     imports.push(id);
@@ -49,3 +49,7 @@ assert.ok(urls.at(-1).endsWith('/battlesim216.js?retry=1'), 'retry bypasses the 
 assert.equal(registered.length, 3);
 for (const id of [0, -1, 1.5, 'not-an-id', '../214', Infinity]) await assert.rejects(load(id), /Invalid simulator ID/);
 assert.equal(imports.length, 4, 'invalid IDs never import');
+for(const id of [570,644,648,654,658,663,665,671,672,700,706,710,718,722,723,724,728,735,757,758,2116]){
+  await load(id);
+  assert.equal(urls.at(-1), './bg/battlesim/battlesim'+id+'.js', 'Bulgarian source books use Bulgarian simulator text');
+}

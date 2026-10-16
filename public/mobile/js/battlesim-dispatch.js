@@ -1,6 +1,8 @@
 // Mobile battle-sim dispatcher. Mirrors desktop's lazy loading: no battle sim
 // module is imported until the reader opens the simulator for the current book.
 
+import {prepareBattleSimLayout, simulatorOverlay} from '../../js/battlesim/layout.js';
+
 const SUPPORTED_BATTLE_SIM_BOOKS = new Set([
   8, 78, 80, 82, 83, 86, 92, 107, 108, 114, 115, 118, 122, 123, 130, 135, 161,
   186, 193, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210,
@@ -39,6 +41,7 @@ export async function openSimForBook(bookId) {
     const init = mod.init;
     if (typeof init !== 'function') throw new Error(`Battle sim ${id} has no mobile init export`);
     init();
+    prepareBattleSimLayout(simulatorOverlay(document, id));
     _initialized.add(id);
   }
   document.getElementById(_triggerButtonId(id))?.click();
