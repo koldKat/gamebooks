@@ -8,6 +8,7 @@ window.fetch=async(url,options={})=>{
   return new Response(JSON.stringify(url.endsWith('/enemies')?[]:{}),{headers:{'Content-Type':'application/json'}});
 };
 const results=[];
+const missingTranslations=new Set();
 for(const id of BOOK_IDS){
   app.setCurrentBookId(id);app.state.playthroughs=[{startedAt:1,path:[1]}];app.state.activePtIndex=0;
   const module=await import('REPO/public/js/battlesim/battlesim'+id+'.js');
@@ -20,6 +21,7 @@ for(const id of BOOK_IDS){
   if('MODE'!=='mobile')button.click();
   const overlay=document.getElementById(id===829?'bsim-overlay':id===8?'s8-overlay':'sim'+id+'-overlay');
   check(overlay?.classList.contains('active'),'opens '+id);
+  for(const key of overlay.textContent.match(/battlesim(?:\d+)?\.[\w.]+/g)??[])missingTranslations.add(key);
   for(const control of overlay.querySelectorAll('input[type="checkbox"]')){
     const style=getComputedStyle(control);
     check(style.appearance==='none'&&style.backgroundColor!=='rgb(255, 255, 255)','themed checkbox '+id);
@@ -306,11 +308,20 @@ for(const id of BOOK_IDS){
       el('start').click();
       const next=app.currentPlaythrough().sim700.fight;
       check(next.mode==='shooting'&&next.custom&&next.opponents[0].displayName==='Custom gunfighter','custom shooting fight');
+      app.currentPlaythrough().sim700=structuredClone({...app.currentPlaythrough().sim700,
+        fight:{...next,pending:{kind:'conversion',reason:'manual-unarmed-stats'}}});module.render();
+      const conversion=[...overlay.querySelectorAll('.bsim-opponent-editor')].find(e=>!e.hidden&&e!==shooting);
+      check(conversion,'manual melee conversion setup');
+      conversion.querySelector('[data-stat="endurance"]').value='15';
+      el('apply').click();
+      check(conversion.querySelector('[data-stat="endurance"]').value==='15','stat edits preserve manual conversion draft');
     }
   }
   const before=JSON.stringify(app.currentPlaythrough());module.render();
+  for(const key of overlay.textContent.match(/battlesim(?:\d+)?\.[\w.]+/g)??[])missingTranslations.add(key);
   check(JSON.stringify(app.currentPlaythrough())===before,'repeat render preserves state '+id);
   module.setVisible(false);overlay.classList.remove('active');
   results.push(id);
 }
+check(!missingTranslations.size,'missing simulator translations: '+[...missingTranslations].join(', '));
 document.body.dataset.test=JSON.stringify({mode:'MODE',width:innerWidth,books:results,writes,productionWrites:0});

@@ -2,7 +2,7 @@ import { validateOpponents } from '../../opponents.js';
 
 export const urowenOpponentFields = [
   {key: 'attributeCode', max: 3}, {key: 'attributeValue', min: -100, max: 100}, {key: 'life', min: 1, max: 10000},
-  {key: 'power', max: 10000}, {key: 'damageDice', max: 100},
+  {key: 'power', max: 10000}, {key: 'damageDice', min: 1, max: 1},
   {key: 'damageBonus', min: -100, max: 100},
   ...Array.from({length: 6}, (_, index) => ({key: 'armor' + index, max: 100})),
 ];

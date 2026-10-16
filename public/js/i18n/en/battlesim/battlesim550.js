@@ -1,7 +1,7 @@
 export default {
   "battlesim550.attributeCode": "Attack attribute (0 STR / 1 SK / 2 MAG / 3 PER)",
   "battlesim550.attributeValue": "Attack modifier",
-  "battlesim550.damageDice": "Damage dice",
+  "battlesim550.damageDice": "Damage dice (1d6 only)",
   "battlesim550.damageBonus": "Damage modifier",
   "battlesim550.armor0": "Leg armour",
   "battlesim550.armor1": "Trunk armour (2)",

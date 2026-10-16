@@ -20,7 +20,7 @@ export function createMoneyPanel({ document, t, getRun, getBookId, saveState, sh
   const tk = (key, params) => t('battlesim700.' + key, params);
   const el = key => document.getElementById(ID + '-' + key);
   const store = createState(() => ({ currentBookId: getBookId(), currentPlaythrough: getRun, saveState }));
-  let shownData, shownRun, editors, editorRun, conversionFight;
+  let shownData, shownRun, editors, editorRun, conversionActive;
   const mode = () => el('mode').value;
   const origin = () => Number(el('encounter').value);
   const input = (id, key = id, value = '', step = 1) => `<label class="inv-edit-row"><span>${escape(tk(key))}</span><input class="inv-edit-input" id="${ID}-${id}" type="number" min="0" max="1000000" step="${step}" value="${value ?? ''}"></label>`;
@@ -211,6 +211,7 @@ export function createMoneyPanel({ document, t, getRun, getBookId, saveState, sh
     const fight = d.fight, busy = active(fight);
     if (editorRun !== getRun()) {
       editorRun=getRun();
+      conversionActive=false;
       for(const key of ['unarmed','shooting']) editors[key].set(d.customOpponents?.[key]??[{}]);
     }
     for(const key of ['unarmed','shooting']) {
@@ -219,7 +220,14 @@ export function createMoneyPanel({ document, t, getRun, getBookId, saveState, sh
     }
     const converting=!!fight?.custom&&fight.mode==='shooting'&&fight.pending?.kind==='conversion'&&busy;
     editors.conversion.element.hidden=!converting;
-    if(converting&&conversionFight!==fight){conversionFight=fight;editors.conversion.set(fight.opponents.filter(e=>!e.defeated).map(e=>({displayName:e.displayName,aggression:e.aggression,skillCode:e.skillCode,strength:e.strength,dexterity:e.dexterity,speed:e.speed,weaponCode:0})));}
+    if(converting&&!conversionActive){
+      conversionActive=true;
+      editors.conversion.set(fight.opponents.filter(e=>!e.defeated).map(e=>({
+        displayName:e.displayName,aggression:e.aggression,skillCode:e.skillCode,
+        strength:e.strength,dexterity:e.dexterity,speed:e.speed,weaponCode:0,
+      })));
+    }
+    if(!converting)conversionActive=false;
     editors.conversion.fixCount(true);
     for (const field of el('setup').querySelectorAll('input,select')) {
       field.disabled = busy && !field.id.startsWith(ID + '-weapon-');

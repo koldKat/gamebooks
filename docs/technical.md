@@ -231,6 +231,8 @@ gamebooks/
                          changing printed encounters or migrating saved fights.
                          Panels can supply an isBusy predicate for prepared fights,
                          party combat and other engine-specific active states.
+                         Restore explicit setup first, then the saved encounter,
+                         rather than selecting a stale custom-opponent draft.
         battlesim829.js    Battle simulator for book 829.
         battlesim700.js    Compatibility entry for Money and Gangsters 3; books/700 owns its deterministic melee/shooting rules, advisory raid checks and run-scoped state.
         battlesim706.js    Compatibility entry for Son of the Desert; books/706 owns naval tactics and run-scoped state.

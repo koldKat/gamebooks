@@ -17,6 +17,7 @@ export default {
   'battlesim534.bluePowder': 'Blue powder flashes',
   'battlesim534.roll_character': 'Roll a new character',
   'battlesim534.armour': 'Armour',
+  'battlesim534.weapon': 'Weapon modifier',
   'battlesim534.shield': 'Shield',
   'battlesim534.lightbringer': 'Lightbringer acquired',
   'battlesim534.openFlame': 'Open flame available',

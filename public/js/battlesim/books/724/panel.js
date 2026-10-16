@@ -146,7 +146,7 @@ export function createCrownPanel({ document, t, getRun, getBookId, saveState, sh
     for (const key of ['roll', 'apply']) el(key).disabled = locked;
     el('cancel').disabled = !locked;
     const pending = Boolean(fight?.pending.length), current = busy ? fight.config : config;
-    el('note').textContent = tk('note.' + current.mode) + (current.descriptiveStrengthOnly || current.success?.descriptiveStrengthOnly ? '\n' + tk('strengthNote') : '');
+    el('note').textContent = tk('note.' + (current.mode ?? 'sequential')) + (current.descriptiveStrengthOnly || current.success?.descriptiveStrengthOnly ? '\n' + tk('strengthNote') : '');
     const indices = busy ? rules.activeEnemies(fight) : [];
     for (const key of ['target', 'secondTarget']) {
       el(key).innerHTML = indices.map(index => `<option value="${index}">${escape(enemyLabel(fight.enemies[index]))}</option>`).join('');

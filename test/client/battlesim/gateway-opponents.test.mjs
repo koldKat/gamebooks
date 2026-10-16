@@ -36,4 +36,6 @@ test('custom Urowen combat preserves its own attributes and six armour locations
   assert.deepEqual(next.fight.enemies[0].armorByLocation, [1,2,3,4,5,6]);
   assert.equal(next.fight.status, 'prepared');
   assert.deepEqual(state, original);
+  assert.throws(()=>customUrowenEncounter([{...spec.enemies[0],attributeCode:1,
+    armor0:0,armor1:0,armor2:0,armor3:0,armor4:0,armor5:0,damageDice:2}]));
 });

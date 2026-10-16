@@ -1,4 +1,5 @@
 const labels = {
+  target: 'Attack target',
   title: 'Battle Simulator - The War-Torn Kingdom',
   note: 'Current wounds carry between fights. Enter effective abilities, including equipment bonuses. Apply story rewards, disease and inventory changes yourself.',
   ready: 'Choose a profession to create your starting character.',

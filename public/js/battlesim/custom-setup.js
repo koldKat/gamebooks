@@ -1,5 +1,13 @@
 import { createOpponentEditor } from './opponents.js';
 
+export function savedOpponentSelection(data, id, selectKey) {
+  const fight = data?.fight;
+  return data?.setup?.[selectKey] ?? data?.setup?.[id + '-' + selectKey]
+    ?? fight?.config?.section ?? fight?.spec?.section ?? fight?.spec?.id
+    ?? fight?.encounter?.section ?? fight?.section ?? data?.prepared?.encounter?.section
+    ?? data?.customOpponentSetup?.section ?? '0';
+}
+
 export function createCustomOpponentSetup({document, id, t, fields, presets, language = 'en', selectKey = 'encounter', fixedCount = false, defaults = {}, getRun, getData, isBusy}) {
   const select = document.getElementById(id + '-' + selectKey);
   const editor = createOpponentEditor({document, id, t, fields, presets, language});
@@ -15,7 +23,9 @@ export function createCustomOpponentSetup({document, id, t, fields, presets, lan
       if (run !== getRun()) {
         run = getRun();
         const saved = getData()?.customOpponentSetup;
-        select.value = getData()?.setup?.[selectKey] ?? getData()?.setup?.[id + '-' + selectKey] ?? saved?.section ?? '0';
+        const selection = String(savedOpponentSelection(getData(), id, selectKey));
+        if ([...select.options].some(option => option.value === selection)) select.value = selection;
+        else if ([...select.options].some(option => option.value === '0')) select.value = '0';
         editor.set(saved?.opponents ?? [defaults]);
       }
       const fight = getData()?.fight;

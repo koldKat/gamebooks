@@ -733,6 +733,8 @@ On mobile, the simulator loads when you tap its button. If a network-error messa
 
 Where a simulator offers **Custom opponents**, type a name to see roster suggestions, then adjust the stats or add another opponent. Printed encounters remain available for their special rules; custom fights do not choose a story destination for you. Opponent setup is locked during an active fight.
 
+Urowen custom opponents use normal 1d6 damage; select the printed encounter for special damage rules.
+
 **Good to know:**
 - Each simulator follows the exact rules for its specific book (dice counts, damage tables, special abilities)
 - Some simulators read your current equipment and character sheet to prefill your stats
