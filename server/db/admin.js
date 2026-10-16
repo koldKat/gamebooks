@@ -5,6 +5,7 @@
 const { db, _naturalCompareByName, _getPdfSize, _getEpubSize } = require('./connection');
 const { computeLevel, getTitleForLevel, getUserXpInfo, awardXp, awardCoins, processStateXp, coinBalance, _insertNotif, SIM_HISTORY_KEYS } = require('./xp');
 const { purgeExpiredSessions } = require('./auth');
+const { getRatingStats } = require('./rating-stats');
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS items (
@@ -996,17 +997,7 @@ function getSiteStats() {
   const totalUpgrades      = upgradeUndos + upgradeFastTravels + upgradeHeartbeatXp + upgradeGcChance + upgradeGcMint + upgradeXpBoosts;
 
   // Ratings
-  const bookRatingRow       = db.prepare('SELECT COUNT(*) AS n, AVG(rating) AS avg FROM user_books ub JOIN books b ON b.id = ub.book_id WHERE ub.rating IS NOT NULL AND b.is_container = 0').get();
-  const anthologyRatingRow  = db.prepare('SELECT COUNT(*) AS n, AVG(rating) AS avg FROM user_books ub JOIN books b ON b.id = ub.book_id WHERE ub.rating IS NOT NULL AND b.is_container = 1 AND b.parent_book_id IS NULL').get();
-  const seriesRatingRow     = db.prepare('SELECT COUNT(*) AS n, AVG(rating) AS avg FROM user_series WHERE rating IS NOT NULL').get();
-  const ratingsTotal        = (bookRatingRow?.n || 0) + (anthologyRatingRow?.n || 0) + (seriesRatingRow?.n || 0);
-  const bookRatingsCount    = bookRatingRow?.n || 0;
-  const bookRatingsAvg      = bookRatingRow?.avg ?? null;
-  const anthologyRatingsCount = anthologyRatingRow?.n || 0;
-  const seriesRatingsCount  = seriesRatingRow?.n || 0;
-  const ratingDist          = db.prepare(
-    `SELECT ROUND(rating) AS star, COUNT(*) AS n FROM user_books WHERE rating IS NOT NULL GROUP BY ROUND(rating) ORDER BY star`
-  ).all();
+  const ratingStats = getRatingStats(db);
 
   // Feedback & misc
   const feedbackThreads = db.prepare('SELECT COUNT(*) AS n FROM feedback WHERE deleted_by_admin = 0').get().n;
@@ -1098,7 +1089,7 @@ function getSiteStats() {
     // Open world
     owSeries, owPublicSeries, owBooksTotal, owRuns, owRunsCompleted, owRunsPublic, owPortals, owPreSeriesRuns,
     // Ratings
-    ratingsTotal, bookRatingsCount, bookRatingsAvg, anthologyRatingsCount, seriesRatingsCount, ratingDist,
+    ...ratingStats,
     // Misc
     feedbackThreads, feedbackUnread: base.feedbackUnread, notifCount, dbSize: base.dbSize,
   };

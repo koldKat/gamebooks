@@ -84,6 +84,28 @@ export async function openStatsModal() {
     };
 
     const na = t('stats.na');
+    const ratingGroups = [
+      ['books', t('stats.sec.books')],
+      ['anthologies', t('stats.anthologies')],
+      ['series', t('stats.series')],
+    ].map(([kind, label]) => ({ label, ...(s.ratingBreakdown?.[kind] || {}) }));
+    const ratingTable = `<table class="stats-rating-table">
+      <thead><tr><th scope="col">${escapeHtml(t('stats.rating'))}</th>${ratingGroups.map(group =>
+        `<th scope="col">${escapeHtml(group.label)}</th>`).join('')}</tr></thead>
+      <tbody>
+        <tr><th scope="row">${escapeHtml(t('stats.votes'))}</th>${ratingGroups.map(group =>
+          `<td>${group.count == null ? na : fmt(group.count)}</td>`).join('')}</tr>
+        <tr class="stats-rating-average"><th scope="row">${escapeHtml(t('stats.average'))}</th>${ratingGroups.map(group =>
+          `<td>${group.average == null ? na : Number(group.average).toFixed(2)}</td>`).join('')}</tr>
+        ${Array.from({ length: 10 }, (_, index) => {
+          const star = 5 - index / 2;
+          return `<tr><th scope="row">${star.toLocaleString()} / 5</th>${ratingGroups.map(group => {
+            const n = group.distribution?.find(row => row.star === star)?.n;
+            const fill = group.count > 0 ? Math.round((n || 0) / group.count * 100) : 0;
+            return `<td style="--rating-fill:${fill}%">${n == null ? na : fmt(n)}</td>`;
+          }).join('')}</tr>`;
+        }).join('')}
+      </tbody></table>`;
 
     const sections = [
       {
@@ -190,12 +212,8 @@ export async function openStatsModal() {
         cls: 'ratings', label: t('stats.sec.ratings'),
         rows: [
           [t('stats.total_ratings_given'), fmt(s.ratingsTotal)],
-          [t('stats.book_ratings'), fmt(s.bookRatingsCount)],
-          [t('stats.anthology_ratings'), fmt(s.anthologyRatingsCount)],
-          [t('stats.series_ratings'), fmt(s.seriesRatingsCount)],
-          [t('stats.avg_book_rating'), s.bookRatingsAvg ? Number(s.bookRatingsAvg).toFixed(1) + ' / 5' : na],
-          ...[...(s.ratingDist || [])].reverse().map(r => [`${'★'.repeat(r.star)}${'☆'.repeat(5 - r.star)}`, fmt(r.n)]),
         ],
+        html: ratingTable,
       },
       {
         cls: 'forum', label: t('stats.sec.forum'),
@@ -254,13 +272,22 @@ export async function openStatsModal() {
       },
     ];
 
-    body.innerHTML = sections.map(sec => `
+    const renderSection = sec => `
       <div class="stats-section stats-section--${sec.cls}">
         <div class="stats-section-label">${escapeHtml(sec.label)}</div>
         <table class="stats-table">
           ${sec.rows.map(([k, v]) => `<tr><td class="stats-key">${escapeHtml(k)}</td><td class="stats-val">${v}</td></tr>`).join('')}
         </table>
-      </div>`).join('');
+        ${sec.html || ''}
+      </div>`;
+    const byClass = new Map(sections.map(sec => [sec.cls, sec]));
+    const columns = [
+      ['players', 'xp-progression', 'the-app', 'server'],
+      ['ratings', 'gameplay', 'open-world', 'forum'],
+      ['books', 'gold-coins-shop', 'parties', 'battle-sims'],
+    ];
+    body.innerHTML = `<div class="stats-layout">${columns.map(column => `<div class="stats-column">${column.map(cls =>
+      renderSection(byClass.get(cls))).join('')}</div>`).join('')}</div>`;
   } catch {
     body.innerHTML = `<p class="stats-loading">${t('stats.load_failed')}</p>`;
   }

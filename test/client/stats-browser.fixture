@@ -1,0 +1,75 @@
+const fs = require('node:fs');
+const path = require('node:path');
+const assert = require('node:assert/strict');
+const vm = require('node:vm');
+const browser = require('./battlesim/browser-harness.cjs');
+const Database = require('better-sqlite3');
+const { getRatingStats } = require('../../server/db/rating-stats');
+
+(async () => {
+  const root = process.env.STATS_SCRATCH;
+  assert.ok(root && root.startsWith('/media/koldKat/MediaDrive/.tmp/'));
+  const source = fs.readFileSync('public/js/stats.js', 'utf8')
+    .replace(/^import .*;$/gm, '').replace(/^export /gm, '');
+  const messages = vm.runInNewContext(fs.readFileSync('public/js/i18n/en/stats.js', 'utf8')
+    .replace('export default', '(').replace(/;\s*$/, ')'));
+  const response = await fetch('http://127.0.0.1:3000/api/site-stats');
+  assert.equal(response.status, 200);
+  const stats = await response.json();
+  const db = new Database('database.sqlite', { readonly: true });
+  Object.assign(stats, getRatingStats(db));
+  db.close();
+  const css = ['style', 'feedback', 'mobile', 'feed'].map(name =>
+    fs.readFileSync(`public/css/${name}.css`, 'utf8')).join('\n');
+  const html = `<!doctype html><meta charset="utf-8"><style>${css}</style>
+    <div id="stats-modal-overlay"><div id="stats-modal"><div id="stats-modal-header">
+    <span id="stats-modal-title">Stats for Nerds</span><button id="stats-modal-close">X</button>
+    </div><div id="stats-modal-body"></div></div></div>
+    <script type="module">
+    const messages = ${JSON.stringify(messages)}, stats = ${JSON.stringify(stats)};
+    const t = key => messages[key] || key;
+    const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g,
+      char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[char]);
+    const fetchPublic = async () => ({ok:true,json:async()=>stats});
+    const check = (value,message) => { if (!value) throw Error(message); };
+    ${source}
+    try {
+      await openStatsModal();
+      await document.fonts.ready;
+      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      const body = document.getElementById('stats-modal-body');
+      check(body.querySelectorAll('.stats-section').length === 12, 'all sections rendered');
+      check(body.querySelectorAll('.stats-rating-table tbody tr').length === 12, 'all rating rows rendered');
+      check(body.scrollWidth <= body.clientWidth + 1, 'no horizontal overflow');
+      for (const section of body.querySelectorAll('.stats-section')) {
+        check(section.scrollWidth <= section.clientWidth + 1, 'card overflow: '+section.className);
+      }
+      let maxGap = 0;
+      if (innerWidth > 980) {
+        check(getComputedStyle(body.querySelector('.stats-layout')).display === 'grid', 'desktop columns');
+        for (const column of body.querySelectorAll('.stats-column')) {
+          const cards = [...column.children];
+          for (let index=1;index<cards.length;index++) {
+            maxGap = Math.max(maxGap,cards[index].getBoundingClientRect().top-cards[index-1].getBoundingClientRect().bottom);
+          }
+        }
+        check(maxGap <= 17, 'columns have no stretched row gaps');
+        check(body.querySelectorAll('.stats-column')[2].firstElementChild.classList.contains('stats-section--books'), 'books stay on right');
+      }
+      document.getElementById('stats-modal').style.maxHeight = '360px';
+      body.scrollTop = body.scrollHeight;
+      check(body.scrollHeight > body.clientHeight && body.scrollTop > 0, 'short screens scroll');
+      document.body.dataset.test = JSON.stringify({width:innerWidth,sections:12,ratingRows:12,noOverflow:true,shortScreenScroll:true,maxGap});
+    } catch (error) { document.body.dataset.failure = error.stack; }
+    </script>`;
+  fs.mkdirSync(root, { recursive: true });
+  const file = path.join(root, 'stats.html');
+  try {
+    fs.writeFileSync(file, html);
+    for (const width of [1100, 800, 390, 320]) {
+      console.log(JSON.stringify(await browser({file,root,width,profile:path.join(root,'profile'),chromium:process.env.CHROMIUM})));
+    }
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+})().catch(error => { console.error(error); process.exitCode = 1; });

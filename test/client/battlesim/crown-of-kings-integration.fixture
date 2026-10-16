@@ -1,0 +1,87 @@
+const checks = [], saves = [];
+const assert = (value, label) => { if (!value) throw Error(label); checks.push(label); };
+window.fetch = async (url, options = {}) => {
+  assert(url === '/api/books/724/state' && options.method === 'PUT', 'only intercepted state saves');
+  saves.push(JSON.parse(options.body)); return new Response('{}', { status: 200 });
+};
+const app = await import('REPO/public/js/core/state.js');
+const desktop = await import('REPO/public/js/battlesim/loader.js');
+const mobile = await import('REPO/public/mobile/js/battlesim-dispatch.js');
+const { registerTranslations } = await import('REPO/public/js/i18n/runtime.js');
+const { loadBattleSimTranslations } = await import('REPO/public/js/i18n/battlesim.js');
+await import('REPO/public/js/ui-helpers/dialog-escape.js');
+const mode = 'MODE', language = 'LANGUAGE', el = key => document.getElementById('sim724-' + key);
+assert(!el('overlay'), 'lazy mount'); assert(mobile.hasSim(724), 'mobile registry');
+await loadBattleSimTranslations(724);
+if (language === 'bg') registerTranslations((await import('REPO/public/js/i18n/bg/battlesim/battlesim724.js')).default);
+app.setCurrentBookId(724);
+const run = { startedAt: 123, path: [1], sim723: { preserved: true } };
+app.state.playthroughs = [run]; app.state.activePtIndex = 0;
+const sim = await import('REPO/public/js/battlesim/battlesim724.js');
+const open = async () => {
+  if (mode === 'mobile') await mobile.openSimForBook(724);
+  else { await desktop.showBattleSimForBook(724); el('btn').click(); }
+};
+const change = (key, value) => { el(key).value = value; el(key).dispatchEvent(new Event('change')); };
+const cancel = () => {
+  el('cancel').click();
+  assert(document.getElementById('confirm-overlay').classList.contains('active'), 'cancellation confirms');
+  document.getElementById('confirm-ok').click();
+};
+const apply = () => {
+  for (const [key, value] of Object.entries({ skill: 99, skillInitial: 99, stamina: 99, staminaInitial: 99, luck: 12, luckInitial: 12, gold: 20, provisions: 2, mealsToday: 0, goblinTeeth: 4, giantTeeth: 1, pebbles: 10, medicines: 1, attackModifier: 0 })) el(key).value = String(value);
+  el('role').value = 'wizard'; el('apply').click();
+};
+await open();
+assert(el('overlay').classList.contains('active'), 'panel opens');
+assert(!el('overlay').textContent.includes('battlesim724.'), 'translated labels: ' + (el('overlay').textContent.match(/battlesim724\.[\w.]+/g) ?? []).join(', '));
+assert(run.sim724.character === null && el('start').disabled, 'opening never rolls character');
+assert(el('encounter').options.length === 126, 'all encounter and spell entries');
+assert([...el('encounter').options].every(option => !/^(Section|Епизод)\s+\d/.test(option.textContent)), 'descriptive encounter names');
+assert(el('dartsGames').max === '2', 'darts count capped at two');
+apply(); assert(run.sim724.character.stamina === 99, 'manual stats save');
+el('start').click(); assert(el('apply').disabled && el('encounter').disabled, 'active fight locks setup');
+for (let n = 0; n < 4; n++) { el('round').click(); el('skipLuck').click(); }
+assert(run.sim724.fight.outcome === 'win' && run.sim724.fight.destination === 209, 'ordinary encounter wins');
+assert(run.sim724.history.length === 1, 'victory recorded once');
+sim.render(); el('round').click(); assert(run.sim724.history.length === 1, 'render does not replay victory');
+change('encounter', '264'); el('start').click(); el('round').click(); el('skipLuck').click();
+assert(run.sim724.fight.outcome === 'continue' && run.sim724.fight.destination === 387, 'timed guard continuation');
+el('continueFight').click();
+assert(run.sim724.fight.config.section === 387 && el('encounter').value === '387', 'handoff starts matching encounter');
+cancel(); assert(run.sim724.history.length === 1, 'handoff and cancellation do not award victory');
+change('encounter', '588'); el('skullcap').checked = true; el('apply').click();
+el('hasComponent').checked = true; el('hasComponent').dispatchEvent(new Event('change')); el('start').click();
+assert(run.sim724.fight.config.mindRead, 'mind-reading setup reaches combat');
+assert(run.sim724.character.stamina === 98, 'spell cost charged once'); cancel();
+el('insideFortress').checked = false; el('apply').click(); el('libraRestore').click();
+assert(run.sim724.character.libraUsed && run.sim724.character.stamina === 99, 'Libra restores once');
+assert(el('libraRestore').disabled, 'Libra is one-use');
+change('encounter', '394'); assert(!el('useHolySpear-row').hidden, 'blessed spear option at correct encounter');
+el('useHolySpear').checked = true; el('start').click();
+assert(run.sim724.fight.outcome === 'win' && run.sim724.fight.destination === 495, 'blessed spear follows printed ending');
+change('encounter', '29'); assert(el('useHolySpear-row').hidden, 'blessed spear not universal');
+el('dartsStart').click(); assert(run.sim724.darts.total === 0, 'darts starts');
+assert(run.sim724.character.gold === 18 && el('start').disabled, 'stake deducted and combat locked');
+el('dartPoints').value = '10'; el('dart').click();
+assert(run.sim724.darts.winner === 0 && run.sim724.character.gold === 26, 'manual board score pays pot once');
+assert(el('dart').disabled, 'finished game cannot pay twice');
+assert(!el('overlay').textContent.includes('battlesim724.'), 'dynamic labels translated');
+const modal = el('overlay').querySelector('.bsim-modal');
+assert(modal.getBoundingClientRect().width <= innerWidth, 'modal fits viewport');
+for (const column of el('overlay').querySelectorAll('.bsim-col')) {
+  for (const detail of column.querySelectorAll('details')) detail.open = true;
+  assert(getComputedStyle(column).overflowY === 'auto', 'scrollable column');
+  const maximum = Math.max(0, column.scrollHeight - column.clientHeight); column.scrollTop = 1e9;
+  assert(Math.abs(column.scrollTop - maximum) < 2, 'expanded column bottom reachable'); column.scrollTop = 0;
+}
+assert(document.documentElement.scrollWidth <= innerWidth, 'no horizontal overflow');
+el('close').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+assert(!el('overlay').classList.contains('active'), 'Escape closes'); await open();
+el('roll').click(); assert(document.getElementById('confirm-overlay').classList.contains('active'), 'reroll confirms');
+const snapshot = JSON.stringify(run); app.state.playthroughs = [{ startedAt: 456, path: [1] }];
+document.getElementById('confirm-ok').click(); sim.render();
+assert(!el('overlay').classList.contains('active'), 'run switch closes stale panel');
+el('roll').click(); assert(JSON.stringify(run) === snapshot && !app.currentPlaythrough().sim724, 'stale actions and confirmation preserve both runs');
+assert(run.sim723.preserved, 'other simulator preserved');
+document.body.dataset.test = JSON.stringify({ mode, language, width: innerWidth, checks: checks.length, saves: saves.length, productionWrites: 0 });

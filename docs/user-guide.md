@@ -93,7 +93,7 @@ Click **Stats** in the header (visible to everyone) to see live numbers for the 
 | **Gameplay** | Total, active, and finished playthroughs; wins, losses, battle deaths (with percentages); tracked and average play time |
 | **XP & Progression** | Total XP earned; platform level and title; average player level and title; level-ups; XP event types/count |
 | **Gold Coins & Shop** | Coins earned, spent, and in circulation; upgrades purchased by type |
-| **Ratings** | Total ratings given; book, anthology, and series ratings counted separately; average book rating; breakdown by star count |
+| **Ratings** | Total votes; separate book, anthology and series vote counts and averages; exact half-star breakdowns from 0.5 to 5, with subtle bars showing each score's share |
 | **Forum** | Categories, threads, pinned threads, posts |
 | **Server** | CPU model/cores/age/clock/architecture, total RAM |
 | **The App** | App age, server uptime and uptime %, total downtime, lines of code, code/database size, JS module count, network traffic, live session averages (CPU, heap, RSS) |

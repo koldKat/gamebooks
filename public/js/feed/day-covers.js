@@ -3,15 +3,26 @@ import { escapeHtml } from '../core/util.js';
 // Cache natural cover dimensions with bounded FIFO eviction.
 const _dayCoverMetaCache = new Map();
 const _DAY_COVER_META_MAX = 200;
+const _DAY_COVER_LOAD_TIMEOUT_MS = 10000;
 function _loadDayCoverMeta(url) {
   if (_dayCoverMetaCache.has(url)) return _dayCoverMetaCache.get(url);
   const pending = new Promise(resolve => {
     const img = new Image();
-    img.onload  = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
-    img.onerror = () => resolve(null);
+    const finish = meta => {
+      clearTimeout(timer);
+      img.onload = img.onerror = null;
+      resolve(meta);
+    };
+    const timer = setTimeout(() => finish(null), _DAY_COVER_LOAD_TIMEOUT_MS);
+    img.onload = () => finish(img.naturalWidth && img.naturalHeight
+      ? { width: img.naturalWidth, height: img.naturalHeight } : null);
+    img.onerror = () => finish(null);
     img.src = url;
   });
   _dayCoverMetaCache.set(url, pending);
+  pending.then(meta => {
+    if (!meta && _dayCoverMetaCache.get(url) === pending) _dayCoverMetaCache.delete(url);
+  });
   while (_dayCoverMetaCache.size > _DAY_COVER_META_MAX) {
     _dayCoverMetaCache.delete(_dayCoverMetaCache.keys().next().value);
   }
@@ -31,21 +42,21 @@ export async function _applyDayCoverFlows(root, dayCoverLists = _lastDayCoverLis
   const generation = _coverGeneration;
   if (document.body.classList.contains('no-feed-day-covers')) return; // toggle off - don't bother loading images just to hide them
   const cards = root.querySelectorAll('.feed-day-card[data-day-index]');
-  for (const card of cards) {
+  const applyCard = async card => {
     if (generation !== _coverGeneration) return;
-    if (card.isConnected === false) continue;
+    if (card.isConnected === false) return;
     _dayCoverResizeObserver?.observe(card); // no-op if already observed
     const covers = dayCoverLists[Number(card.dataset.dayIndex)];
     const stack = card.querySelector('.feed-day-cover-stack');
-    if (!covers?.length || !stack) continue;
-    if (card.offsetWidth <= 0 || card.offsetHeight <= 0) continue;
+    if (!covers?.length || !stack) return;
+    if (card.offsetWidth <= 0 || card.offsetHeight <= 0) return;
     const metas = await Promise.all(covers.map(_loadDayCoverMeta));
     if (generation !== _coverGeneration) return;
-    if (card.isConnected === false || document.body.classList.contains('no-feed-day-covers')) continue;
-    if (metas.every(m => !m?.width || !m?.height)) continue; // every cover failed to load - leave the flat background
+    if (card.isConnected === false || document.body.classList.contains('no-feed-day-covers')) return;
+    if (metas.every(m => !m?.width || !m?.height)) return;
     const cardW   = card.offsetWidth;
     const targetH = card.offsetHeight;
-    if (cardW <= 0 || targetH <= 0) continue;
+    if (cardW <= 0 || targetH <= 0) return;
     const n = covers.length;
 
     // Tile at full card width and natural aspect ratio without cropping.
@@ -91,7 +102,11 @@ export async function _applyDayCoverFlows(root, dayCoverLists = _lastDayCoverLis
       return `<div class="feed-day-cover-tile" style="top:${t.top}px;left:${left}px;width:${t.box.w}px;height:${t.box.h}px;background-image:url('${escapeHtml(t.cover)}')"></div>`;
     }).join('');
     if (stack.innerHTML !== html) stack.innerHTML = html;
-  }
+  };
+  let next = 0;
+  await Promise.all(Array.from({ length: Math.min(4, cards.length) }, async () => {
+    while (next < cards.length) await applyCard(cards[next++]);
+  }));
 }
 
 let _dayCoverResizeRaf = null;

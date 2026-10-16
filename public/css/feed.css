@@ -9,10 +9,10 @@
 }
 
 #feed-header {
-  font-size: 0.85rem;
+  font-size: 0.6rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
   color: #6b7280;
   margin-bottom: 0.4rem;
 }
@@ -20,7 +20,7 @@
   font-weight: 400;
   text-transform: none;
   letter-spacing: 0;
-  font-size: 0.72rem;
+  font-size: 0.6rem;
 }
 
 .feed-day-card {

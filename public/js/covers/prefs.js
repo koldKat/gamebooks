@@ -48,13 +48,12 @@ export function _applyFeedDayCoversPref() {
   document.body.classList.toggle('no-feed-day-covers', !coversState._feedDayCovers);
   const cb = document.getElementById('feed-day-covers-cb');
   if (cb) cb.checked = !!coversState._feedDayCovers;
+  if (coversState._feedDayCovers) coversState._hooks.refreshDayCovers?.();
 }
 
 export function _persistFeedDayCoversPref() {
   localStorage.setItem('feed-day-covers', coversState._feedDayCovers ? '1' : '0');
   _applyFeedDayCoversPref();
-  // Repopulate cover stacks when re-enabling covers; hidden stacks were never loaded.
-  coversState._hooks.refreshDayCovers?.();
   if (getToken()) {
     coversState._hooks.savePrefs?.({ feedDayCovers: coversState._feedDayCovers ? '1' : '0' });
   }
@@ -135,7 +134,6 @@ export function resetFeedDisplayPrefsForLogout() {
   localStorage.setItem('feed-glass-cards', '1');
   _applyFeedDayCoversPref();
   _applyFeedGlassCardsPref();
-  coversState._hooks.refreshDayCovers?.();
 }
 
 // ── Prefs state setter (called from applyPrefs in main.js) ────────────────────

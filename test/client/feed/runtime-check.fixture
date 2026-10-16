@@ -162,6 +162,13 @@ if (!baseline) {
   assert.ok(stack.innerHTML.includes('width:100px;height:150px'));
   assert.ok(stack.innerHTML.includes('top:75px'), 'center cover uses natural aspect ratio');
   await day._applyDayCoverFlows(feed); assert.equal(images.filter(img => img.url === '/natural.jpg').length, 1);
+  const failedLoad = day._applyDayCoverFlows(feed, [['/retry.jpg']]);
+  images.at(-1).onerror(); await failedLoad;
+  const imageCount = images.length;
+  const retryLoad = day._applyDayCoverFlows(feed, [['/retry.jpg']]);
+  assert.equal(images.length, imageCount + 1, 'failed cover metadata must be retried rather than cached forever');
+  images.at(-1).finish(); await retryLoad;
+  assert.ok(stack.innerHTML.includes('/retry.jpg'));
   assert.equal(observers[0].cards.size, 1); day.replaceDayCoverLists([]); assert.equal(observers[0].cards.size, 0);
   body.classList.add('no-feed-day-covers'); const beforeImages = images.length;
   await day._applyDayCoverFlows(feed, [['/hidden.jpg']]); assert.equal(images.length, beforeImages);
@@ -176,6 +183,35 @@ if (!baseline) {
   day.replaceDayCoverLists([]); pendingImage.finish(); await staleApply;
   assert.equal(stack.innerHTML, oldStack, 'stale image completion does not rewrite old cards');
   assert.equal(observers[0].cards.size, 0);
+  const secondCard = new Element({ dayIndex: '1' }), secondStack = new Element();
+  secondCard.queries.set('.feed-day-cover-stack', secondStack);
+  feed.queries.set('.feed-day-card[data-day-index]', [card, secondCard]);
+  day.replaceDayCoverLists([['/stalled.jpg'], ['/natural.jpg']]);
+  const priorTimers = new Set(timers.keys());
+  const stalledFlow = day._applyDayCoverFlows(feed);
+  const stalledImage = images.at(-1);
+  await new Promise(resolve => setImmediate(resolve));
+  assert.ok(secondStack.innerHTML.includes('/natural.jpg'), 'a stalled cover cannot block another day');
+  const timeoutId = [...timers.keys()].find(id => !priorTimers.has(id));
+  assert.ok(timeoutId, 'stalled image loads have a bounded timeout');
+  const expire = timers.get(timeoutId); timers.delete(timeoutId); expire();
+  await stalledFlow;
+  assert.equal(stalledImage.onload, null);
+  assert.equal(stalledImage.onerror, null);
+  const beforeRetry = images.length;
+  const retryStalled = day._applyDayCoverFlows(feed);
+  assert.equal(images.length, beforeRetry + 1, 'timeouts are retryable after a later refresh');
+  images.at(-1).finish(); await retryStalled;
+  assert.equal(timers.size, priorTimers.size, 'completed loads leave no retry timers running');
+  for (let i = 0; i < 5; i++) {
+    body.classList.add('no-feed-day-covers');
+    await day._applyDayCoverFlows(feed);
+    body.classList.remove('no-feed-day-covers');
+    await day._applyDayCoverFlows(feed);
+    assert.ok(stack.innerHTML.includes('/stalled.jpg'), 'repeated off/on retains loaded backgrounds');
+  }
+  feed.queries.set('.feed-day-card[data-day-index]', [card]);
+  day.replaceDayCoverLists([['/natural.jpg']]);
   // Empty results must take the same observer cleanup path as populated results.
   await day._applyDayCoverFlows(feed, [['/natural.jpg']]); assert.equal(observers[0].cards.size, 1);
   payload = { entries: [], pinned: null }; await api.loadFeed(); assert.equal(observers[0].cards.size, 0);
