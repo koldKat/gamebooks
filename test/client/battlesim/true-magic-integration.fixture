@@ -1,0 +1,79 @@
+const checks=[],saves=[];
+const assert=(value,label)=>{if(!value)throw Error(label);checks.push(label);};
+window.fetch=async(url,options={})=>{
+  assert(url==='/api/books/757/state'&&options.method==='PUT','only intercepted state saves');
+  saves.push(JSON.parse(options.body));return new Response('{}',{status:200,headers:{'Content-Type':'application/json'}});
+};
+const app=await import('REPO/public/js/core/state.js');
+const desktop=await import('REPO/public/js/battlesim/loader.js');
+const mobile=await import('REPO/public/mobile/js/battlesim-dispatch.js');
+const {registerTranslations}=await import('REPO/public/js/i18n/runtime.js');
+const {loadBattleSimTranslations}=await import('REPO/public/js/i18n/battlesim.js');
+const mode='MODE',language='LANGUAGE',el=key=>document.getElementById('sim757-'+key);
+assert(!el('overlay')&&mobile.hasSim(757),'lazy mount and mobile registry');
+await loadBattleSimTranslations(757);
+if(language==='bg')registerTranslations((await import('REPO/public/js/i18n/bg/battlesim/battlesim757.js')).default);
+app.setCurrentBookId(757);
+const run={startedAt:123,path:[1],sim706:{preserved:true}};
+app.state.playthroughs=[run];app.state.activePtIndex=0;
+const open=async()=>{if(mode==='mobile')await mobile.openSimForBook(757);else{await desktop.showBattleSimForBook(757);el('btn').click();}};
+const change=(key,value)=>{el(key).value=value;el(key).dispatchEvent(new Event('change'));};
+const choose=section=>{const button=el('actions').querySelector('[data-section="'+section+'"]');assert(button,'available action '+section);button.click();};
+const key=(target,code,name=code.slice(3))=>target.dispatchEvent(new KeyboardEvent('keydown',{code,key:name,bubbles:true}));
+await open();
+assert(el('overlay').classList.contains('active'),'actual lazy loader opens');
+assert(!el('overlay').textContent.includes('battlesim757.'),'translated labels');
+assert(run.sim757.character===null&&el('start').disabled,'explicit character setup required');
+const ids=[...el('overlay').querySelectorAll('[id]')].map(node=>node.id);
+assert(new Set(ids).size===ids.length,'unique controls');
+assert(getComputedStyle(el('btn')).borderTopStyle==='solid','themed simulator button');
+el('apply').click();el('start').click();
+assert(run.sim757.fight.section===55&&el('apply').disabled,'ritual starts and locks character edits');
+choose(20);el('roll-player').value=10;el('roll-enemy').value=0;choose(45);
+assert(run.sim757.fight.section===52&&el('roll-player').value==='','correct comparison and fresh rolls required');
+choose(34);
+assert(run.sim757.fight.outcome==='win'&&run.sim757.history.length===1,'ritual win saved once');
+el('start').click();assert(run.sim757.history.length===1,'completed result cannot repeat rewards');
+el('again').click();el('start').click();choose(78);
+assert(run.sim757.fight.outcome==='draw'&&run.sim757.character.stamina===115,'simultaneous knockdown draw');
+assert(run.sim757.history.length===1,'no draw reward');
+el('again').click();change('encounter','attackers');
+assert(!el('enemy-setup').hidden&&el('enemy-0-stamina').value==='','no invented enemy stamina');
+for(let i=0;i<3;i++){el('enemy-'+i+'-defence').value=0;el('enemy-'+i+'-stamina').value=0;}
+el('start').click();
+for(let i=0;i<3;i++){
+  for(const [field,value]of Object.entries({enemyAttack:0,playerDefence:100,playerAttack:100,enemyDefence:0}))el('roll-'+field).value=value;
+  el('round').click();
+}
+assert(run.sim757.fight.outcome==='win'&&run.sim757.history.length===2,'all three attackers defeated once');
+el('again').click();change('encounter','duel');el('start').click();
+choose(241);choose(254);choose(246);choose(262);
+assert(run.sim757.fight.outcome==='win'&&run.sim757.character.stamina===111,'rain cost applied once');
+el('again').click();el('start').click();choose(257);choose(261);
+assert(run.sim757.fight.outcome==='loss'&&run.sim757.history.length===4,'fatal counterspell is a loss');
+el('again').click();change('spell','249-focused');el('staff').checked=true;el('spend').click();
+assert(run.sim757.character.stamina===106,'staff-dependent spell cost');
+await app.saveState();assert(saves.at(-1).playthroughs[0].sim757.history.length===4,'actual save payload');
+const original=JSON.stringify(run);
+key(document.activeElement,'Escape','Escape');assert(!el('overlay').classList.contains('active'),'Escape closes');
+await open();assert(JSON.stringify(run)===original,'reopen preserves character, fights and history');
+if(mode==='desktop'){
+  key(document.body,'KeyS','s');assert(!el('overlay').classList.contains('active'),'shortcut closes');
+  key(document.body,'KeyS','s');assert(el('overlay').classList.contains('active'),'shortcut opens');
+  key(el('mobility'),'KeyS','s');assert(el('overlay').classList.contains('active'),'typing safe');
+}
+for(const details of el('overlay').querySelectorAll('details'))details.open=true;
+for(const node of el('overlay').querySelectorAll('.bsim-col')){
+  node.scrollTop=Number.MAX_SAFE_INTEGER;
+  assert(Math.abs(node.scrollTop-Math.max(0,node.scrollHeight-node.clientHeight))<=1,'bottom reachable');
+  node.scrollTop=0;assert(node.scrollTop===0,'top reachable');
+}
+assert(document.documentElement.scrollWidth<=innerWidth+1,'no horizontal overflow');
+assert(JSON.stringify(run.sim706)==='{"preserved":true}','other simulator preserved');
+app.state.playthroughs.push({startedAt:456,path:[1]});app.state.activePtIndex=1;
+const module=await import('REPO/public/js/battlesim/battlesim757.js');module.render();
+assert(!el('overlay').classList.contains('active'),'run switch closes stale panel');
+el('apply').click();assert(!app.currentPlaythrough().sim757,'stale controls cannot change new run');
+await open();assert(app.currentPlaythrough().sim757.character===null,'new run isolated');
+assert(JSON.stringify(run)===original,'original run preserved');
+document.body.dataset.test=JSON.stringify({mode,language,width:innerWidth,checks:checks.length,saves:saves.length,realModules:true,productionWrites:0});

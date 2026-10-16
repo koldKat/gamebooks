@@ -36,3 +36,31 @@ test('stats renders all ten half-star bins for all categories in balanced column
   assert.equal((ratingTable.match(/<tr/g) || []).length, 13);
   assert.ok(!body.innerHTML.includes('stats.rating'));
 });
+
+test('rating bars scale to each category peak, not its total votes', async () => {
+  const body = {innerHTML: ''}, overlay = {classList: {add() {}}};
+  const books = group(5, 40);
+  books.count = 70;
+  books.distribution.find(row => row.star === 4).n = 20;
+  books.distribution.find(row => row.star === 3).n = 10;
+  const anthologies = group(5, 2);
+  anthologies.count = 3;
+  anthologies.distribution.find(row => row.star === 4).n = 1;
+  const context = vm.createContext({
+    document: {getElementById: id => id === 'stats-modal-body' ? body : overlay},
+    escapeHtml, t: key => messages[key] || key,
+    fetchPublic: async () => ({ok: true, json: async () => ({
+      ratingBreakdown: {books, anthologies, series: group(5, 0)},
+    })}),
+  });
+  vm.runInContext(source, context);
+  await context.openStatsModal();
+  const fills = star => {
+    const row = body.innerHTML.match(new RegExp(`<tr><th scope="row">${star} / 5</th>(.*?)</tr>`))[1];
+    return [...row.matchAll(/--rating-fill:([\d.]+)%/g)].map(match => Number(match[1]));
+  };
+  assert.deepEqual(fills(5), [100, 100, 0]);
+  assert.deepEqual(fills(4), [50, 50, 0]);
+  assert.deepEqual(fills(3), [25, 0, 0]);
+  assert.ok(!body.innerHTML.includes('NaN%'));
+});

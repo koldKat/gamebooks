@@ -88,7 +88,10 @@ export async function openStatsModal() {
       ['books', t('stats.sec.books')],
       ['anthologies', t('stats.anthologies')],
       ['series', t('stats.series')],
-    ].map(([kind, label]) => ({ label, ...(s.ratingBreakdown?.[kind] || {}) }));
+    ].map(([kind, label]) => {
+      const group = s.ratingBreakdown?.[kind] || {};
+      return { label, ...group, maxVotes: Math.max(0, ...(group.distribution || []).map(row => row.n || 0)) };
+    });
     const ratingTable = `<table class="stats-rating-table">
       <thead><tr><th scope="col">${escapeHtml(t('stats.rating'))}</th>${ratingGroups.map(group =>
         `<th scope="col">${escapeHtml(group.label)}</th>`).join('')}</tr></thead>
@@ -101,7 +104,7 @@ export async function openStatsModal() {
           const star = 5 - index / 2;
           return `<tr><th scope="row">${star.toLocaleString()} / 5</th>${ratingGroups.map(group => {
             const n = group.distribution?.find(row => row.star === star)?.n;
-            const fill = group.count > 0 ? Math.round((n || 0) / group.count * 100) : 0;
+            const fill = group.maxVotes > 0 ? (n || 0) / group.maxVotes * 100 : 0;
             return `<td style="--rating-fill:${fill}%">${n == null ? na : fmt(n)}</td>`;
           }).join('')}</tr>`;
         }).join('')}
