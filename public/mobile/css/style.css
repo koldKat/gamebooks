@@ -147,6 +147,25 @@ button, input {
 }
 .m-top p { margin: 0 0 0.9rem; text-align: justify; hyphens: auto; }
 .m-top p:last-child { margin-bottom: 0; }
+.m-top > * { flex-shrink: 0; min-width: 0; }
+.m-top figure { margin: 0 0 0.9rem; min-width: 0; }
+.m-top img { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+.m-top pre { white-space: pre-wrap; overflow-wrap: anywhere; font-family: inherit; }
+.m-top table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  margin: 0 0 0.9rem;
+  font-size: 0.85rem;
+}
+.m-top :is(th, td) {
+  border: 1px solid #374151;
+  padding: 0.3rem 0.5rem;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.m-top th { background: rgba(56, 189, 248, 0.12); color: #38bdf8; font-weight: 600; }
+.m-top :is(h2, h3, h4) { overflow-wrap: anywhere; }
 .m-top a { color: #38bdf8; text-decoration: underline; }
 .m-top p.choice {
   font-weight: 600;

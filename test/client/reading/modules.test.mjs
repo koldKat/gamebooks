@@ -5,6 +5,14 @@ import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 
 const dir = new URL('../../../public/js/', import.meta.url);
+test('dedicated mobile reader constrains original artwork and tables without shrinking prose', () => {
+  const css = readFileSync(new URL('../mobile/css/style.css', dir), 'utf8');
+  assert.match(css, /\.m-top > \*\s*\{[^}]*flex-shrink:\s*0/);
+  assert.match(css, /\.m-top figure\s*\{[^}]*margin:\s*0 0/);
+  assert.match(css, /\.m-top img\s*\{[^}]*max-width:\s*100%[^}]*height:\s*auto/);
+  assert.match(css, /\.m-top table\s*\{[^}]*width:\s*100%[^}]*table-layout:\s*fixed/);
+});
+
 test('reading modules preserve their location, public exports and dependency targets', () => {
   const exports = {
     liveread: ['previewSection', 'setLiveReadVisible', 'renderLiveRead', 'initLiveRead'],

@@ -10,14 +10,16 @@ const raw = fs.readFileSync(draftPath);
 const draft = JSON.parse(raw);
 const publicRoot = path.resolve('public');
 const sha = data => crypto.createHash('sha256').update(data).digest('hex');
-const sources = ['css/liveread.css', 'css/reading-access.css', 'js/reading/content.js', 'js/reading/map-entry.js'];
+const mobile = process.env.READER_MODE === 'mobile';
+const paneClass = mobile ? 'm-top' : 'liveread-body';
+const sources = [mobile ? 'mobile/css/style.css' : 'css/liveread.css', 'css/reading-access.css', 'js/reading/content.js', 'js/reading/map-entry.js'];
 const hashes = Object.fromEntries(sources.map(file => [file, sha(fs.readFileSync(path.join(publicRoot, file)))]));
 const scratch = fs.mkdtempSync(path.join(root, `${draft.bookId}-reader-`));
 const payload = JSON.stringify(draft).replaceAll('<', '\\u003c');
 const css = sources.slice(0, 2).map(file => fs.readFileSync(path.join(publicRoot, file), 'utf8')).join('\n');
 const html = `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<style>${css}body{margin:0;background:#111;color:#ddd}.liveread-body{width:calc(100% - 24px);height:500px;margin:12px;box-sizing:border-box}</style>
-<div class="liveread-body" id="pane"></div>
+<style>${css}body{margin:0;background:#111;color:#ddd}.${paneClass}{width:calc(100% - 24px);height:500px;margin:12px;box-sizing:border-box}</style>
+<div class="${paneClass}" id="pane"></div>
 <script>addEventListener('error',e=>document.body.dataset.failure=e.message);addEventListener('unhandledrejection',e=>document.body.dataset.failure=String(e.reason));</script>
 <script type="module">
 import {renderReadingMatter} from 'file://${publicRoot}/js/reading/content.js';
@@ -66,7 +68,7 @@ for(const entry of entries){
 }
 check(checked===entries.length,'incomplete coverage');check(decodedImages.size===draft.images.length,'image coverage');
 check(forms===(draft.manualEntrySections?.length||0),'manual section coverage');
-document.body.dataset.test=JSON.stringify({width:innerWidth,checked,images,links,forms,scrollable,productionWrites:0});
+document.body.dataset.test=JSON.stringify({mode:'${mobile ? 'mobile' : 'desktop'}',width:innerWidth,checked,images,links,forms,scrollable,productionWrites:0});
 </script>`;
 
 (async () => {
@@ -83,9 +85,9 @@ document.body.dataset.test=JSON.stringify({width:innerWidth,checked,images,links
       console.log(JSON.stringify(result));
     }
     assert.deepEqual(fs.readFileSync(draftPath), raw, 'Draft changed during checks');
-    fs.writeFileSync(path.join(root, `${draft.bookId}-reader-verification.json`), JSON.stringify({bookId:draft.bookId,
+    fs.writeFileSync(path.join(root, `${draft.bookId}-${mobile ? 'mobile-' : ''}reader-verification.json`), JSON.stringify({bookId:draft.bookId,
       draftHash:sha(raw), runnerHash:sha(fs.readFileSync(__filename)), hashes, results,
-      scope:'PRIVATE-REAL-READING-MODULE-ALL-ROWS-AND-MATTER-NOT-LIVE-API', productionWrites:0}, null, 2));
+      scope:mobile ? 'PRIVATE-SHARED-READING-MODULE-DEDICATED-MOBILE-PANE-CSS-ALL-ROWS-NOT-LIVE-API' : 'PRIVATE-REAL-READING-MODULE-ALL-ROWS-AND-MATTER-NOT-LIVE-API', productionWrites:0}, null, 2));
   } finally {
     fs.rmSync(scratch, {recursive:true, force:true});
   }
