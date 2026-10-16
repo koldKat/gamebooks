@@ -407,6 +407,9 @@
         engines/sorcery/  Pure Sorcery character, Luck, damage and recovery primitives, plus
                          transactional run-scoped persistence. Book modules own encounter
                          exceptions; stale run/book updates are rejected before saving.
+        engines/space-assassin/ Pure roll-under shooting, armour and sequential melee rules,
+                         plus a separate STATUS-driven tank engine. Encounter definitions,
+                         equipment effects, run-scoped state and DOM wiring stay at the book boundary.
         books/728/       Naval combat: declarative ship/artillery tables, pure tactical and
                          boarding resolution, transactional run-scoped state and panel wiring.
                          Manual source rulings are explicit; unfinished/manual battles do not

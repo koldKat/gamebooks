@@ -10,6 +10,10 @@
 
 #feed-header {
   font-size: 0.5rem;
+  width: fit-content;
+  /* Keep the visual reduction effective with browser minimum font sizes. */
+  transform: scale(0.75);
+  transform-origin: left center;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.02em;
