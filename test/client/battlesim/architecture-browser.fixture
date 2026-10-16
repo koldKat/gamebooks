@@ -154,6 +154,26 @@ for(const id of BOOK_IDS){
     el('roll').click();el('settle').click();
     check(data.history.at(-1)?.enemy==='Custom Skyfall foe'&&data.fight.status==='win','Skyfall custom outcome '+id);
     if(id===521){
+      el('encounter').value='201';el('encounter').dispatchEvent(new Event('change'));
+      el('count').value='2';el('count').dispatchEvent(new Event('change'));
+      el('start').click();
+      check(data.fight.encounter.foes.length===2,'Marsh configurable group starts');
+      const saved=JSON.stringify(app.currentPlaythrough());
+      app.state.playthroughs=[JSON.parse(saved)];module.render();
+      check(el('encounter').value==='201'&&el('count').value==='2','Marsh saved group count restored');
+      check(JSON.stringify(app.currentPlaythrough())===saved,'Marsh setup restoration does not mutate saved fight');
+      const restored=app.currentPlaythrough().sim521;
+      delete restored.opponentSetup;
+      const legacy=JSON.stringify(restored);
+      app.state.playthroughs=[{...app.currentPlaythrough(),sim521:JSON.parse(legacy)}];module.render();
+      check(el('encounter').value==='201'&&el('count').value==='2','legacy Marsh fight restores encounter and group count');
+      check(JSON.stringify(app.currentPlaythrough().sim521)===legacy,'legacy Marsh restoration preserves saved state');
+      app.state.playthroughs=[JSON.parse(saved)];module.render();
+      app.currentPlaythrough().sim521.fight.status='win';module.render();
+      el('start').click();
+      check(app.currentPlaythrough().sim521.fight.encounter.foes.length===2&&app.currentPlaythrough().sim521.fight.status==='fighting','restored Marsh group can start again');
+      data.fight.status='win';
+      app.state.playthroughs=[{startedAt:1,path:[1],sim521:data}];module.render();
       el('encounter').value='289';el('encounter').dispatchEvent(new Event('change'));
       const damage=editor.querySelector('[data-stat="damage"]');
       check(!damage.disabled&&damage.value==='','missing Marsh damage requires explicit entry');

@@ -33,9 +33,13 @@ export function createSkyfallOpponentSetup({document, id, t, tk, encounters, get
     render() {
       if (run !== getRun()) {
         run = getRun();
-        const setup = getData()?.opponentSetup;
-        select.value = setup?.section ?? 'custom';
+        const data = getData();
+        const setup = data?.opponentSetup;
+        const section = String(setup?.section ?? data?.fight?.encounter.section ?? 'custom');
+        select.value = [...select.options].some(option => option.value === section) ? section : 'custom';
         configure();
+        const size = setup?.opponents?.length ?? data?.fight?.encounter.foes.length;
+        if (count && [...count.options].some(option => option.value === String(size))) count.value = String(size);
         if (setup?.opponents) editor.set(setup.opponents); else fill();
       }
       const busy = getData()?.fight?.status === 'fighting';

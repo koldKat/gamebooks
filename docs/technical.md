@@ -239,6 +239,8 @@ gamebooks/
                          party combat and other engine-specific active states.
                          Restore explicit setup first, then the saved encounter,
                          rather than selecting a stale custom-opponent draft.
+                         Skyfall also restores configurable group counts from
+                         saved setup or legacy fight rosters without state writes.
                          Custom encounters must not inherit printed destinations
                          or add disposable IDs to permanent story-enemy ledgers.
         battlesim829.js    Battle simulator for book 829.
