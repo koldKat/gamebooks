@@ -1,5 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { runInNewContext } from 'node:vm';
 import * as combat from '../../../public/js/battlesim/books/769/combat.js';
 import * as effects from '../../../public/js/battlesim/books/769/effects.js';
 import { ENCOUNTERS } from '../../../public/js/battlesim/books/769/definition.js';
@@ -126,4 +128,27 @@ test('saved state changes are atomic, run-isolated and never seed on read', () =
   assert.deepEqual(first, snapshot);
   assert.equal(store.change(data => { data.character.stamina = 1; run = second; }), false);
   assert.deepEqual(first, snapshot); assert.deepEqual(second, {}); assert.equal(saves, 1);
+});
+
+test('backend XP accepts new wins/losses exactly once, excluding narrative continuations', () => {
+  const source = readFileSync(new URL('../../../server/db/xp.js', import.meta.url), 'utf8');
+  const registry = source.slice(source.indexOf('const SIM_HISTORY_KEYS ='), source.indexOf('function processStateXp('));
+  const processor = source.slice(source.indexOf('function processStateXp('), source.indexOf('function migrateXpForUser('));
+  const awards = [], ledger = new Set();
+  const context = { db: { prepare: sql => ({ get: () => sql.includes('FROM books') ? {} : { n: 100 } }) },
+    isCleanRun: () => false, awardCoins() {}, getXpAmount: () => 50,
+    _discoveredSet: () => new Set(), _visitedSet: () => new Set(), _mappedSet: () => new Set(),
+    _checkGroupWonAll() {}, _xpRefSeq: 0,
+    awardXp(_user, event, ref) {
+      const key = event + ':' + ref;
+      if (ledger.has(key)) return false;
+      ledger.add(key); awards.push({ event, ref }); return true;
+    } };
+  runInNewContext(registry + '\nglobalThis.registeredKeys = SIM_HISTORY_KEYS;\n' + processor, context);
+  assert.equal(context.registeredKeys.filter(key => key === 'sim769').length, 1);
+  const state = history => ({ playthroughs: [{ startedAt: 1, path: [1], sim769: { history } }] });
+  const before = state([]), after = state(['win', 'loss', 'continue', 'captured', 'cancelled'].map((outcome, i) => ({ outcome, ts: i + 10 })));
+  context.processStateXp(1, 769, before, after, 0);
+  context.processStateXp(1, 769, after, after, 0);
+  assert.deepEqual(awards, [{ event: 'battlesim_win', ref: 'sim769:10' }, { event: 'battlesim_loss', ref: 'sim769:11' }]);
 });
