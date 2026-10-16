@@ -63,6 +63,7 @@ export async function refreshInboxBadge() {
     const unread  = threads.reduce((sum, t) => sum + (t.user_unread || 0), 0);
     const btn = document.getElementById('inbox-btn');
     btn.textContent = unread > 0 ? `${t('btn.inbox')} (${unread})` : t('btn.inbox');
+    btn.dataset.unread = unread > 0 ? String(unread) : '';
     btn.classList.toggle('inbox-btn--active', unread > 0);
   } catch {}
 }
@@ -74,7 +75,7 @@ export function resetNotifBadgesForLogout() {
   const forumBtn = document.getElementById('forum-btn');
   if (forumBtn) forumBtn.classList.remove('forum-btn--active');
   const inboxBtn = document.getElementById('inbox-btn');
-  if (inboxBtn) { inboxBtn.classList.remove('inbox-btn--active'); inboxBtn.textContent = t('btn.inbox'); }
+  if (inboxBtn) { inboxBtn.classList.remove('inbox-btn--active'); inboxBtn.textContent = t('btn.inbox'); delete inboxBtn.dataset.unread; }
 }
 
 // ── Scheduled batch refresh ───────────────────────────────────────────────────

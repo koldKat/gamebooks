@@ -254,13 +254,17 @@
             <button id="mobile-login-btn" style="display:none" data-i18n="auth.login">Log In</button>
             <button id="bonus-gc-btn" data-tooltip="No lucky coin waiting" data-i18n-tooltip="bonus_gc.tooltip_empty" disabled><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7.5" fill="#f59e0b" stroke="#92400e" stroke-width="0.75"/><circle cx="8" cy="8" r="5.5" fill="none" stroke="#fde68a" stroke-width="1"/><text x="8" y="8" text-anchor="middle" dominant-baseline="central" font-size="7" font-weight="bold" fill="#78350f" font-family="serif">G</text></svg></button>
             <button id="app-banner-f1-btn" data-tooltip="Keyboard shortcuts" data-i18n-tooltip="title.f1_shortcuts">F1</button>
-            <a href="/guide.html" target="_blank" id="app-banner-guide-btn">User Guide</a>
-              <button id="stats-btn">Stats</button>
-            <button id="forum-btn" style="display:none">Forum</button>
-            <button id="feedback-btn" data-i18n="btn.feedback" style="display:none">Feedback</button>
-            <button id="inbox-btn" data-i18n="btn.inbox" style="display:none">Inbox</button>
-            <button id="notif-btn" style="display:none"><span class="bell-icon"></span></button>
-            <button id="display-settings-btn" data-tooltip="Display settings" data-i18n-tooltip="title.display_settings"><span class="cog-icon"></span></button>
+            <div id="app-banner-tools">
+              <div id="app-banner-community">
+                <a href="/guide.html" target="_blank" id="app-banner-guide-btn">User Guide</a>
+                <button id="stats-btn">Stats</button>
+                <button id="forum-btn" style="display:none">Forum</button>
+                <button id="feedback-btn" data-i18n="btn.feedback" style="display:none">Feedback</button>
+                <button id="inbox-btn" data-i18n="btn.inbox" style="display:none">Inbox</button>
+              </div>
+              <button id="notif-btn" style="display:none" aria-label="Notifications"><span class="bell-icon" aria-hidden="true"></span></button>
+              <button id="display-settings-btn" aria-label="Display settings" data-tooltip="Display settings" data-i18n-tooltip="title.display_settings"><span class="cog-icon" aria-hidden="true"></span></button>
+            </div>
           </div>
         </div>
       </div>

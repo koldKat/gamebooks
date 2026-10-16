@@ -18,6 +18,8 @@ for(const id of BOOK_IDS){
   else await desktop.showBattleSimForBook(id);
   const button=document.getElementById(id===829?'battlesim-btn':'sim'+id+'-btn');
   check(button,'trigger '+id);
+  const triggerStyle=getComputedStyle(button);
+  check(triggerStyle.backgroundColor==='rgba(31, 41, 55, 0.88)'&&triggerStyle.borderTopStyle==='solid'&&triggerStyle.borderTopColor==='rgb(55, 65, 81)'&&triggerStyle.textTransform==='uppercase','themed simulator launcher '+id);
   if('MODE'!=='mobile')button.click();
   const overlay=document.getElementById(id===829?'bsim-overlay':id===8?'s8-overlay':'sim'+id+'-overlay');
   check(overlay?.classList.contains('active'),'opens '+id);

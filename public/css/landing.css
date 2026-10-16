@@ -887,6 +887,8 @@ body.feed-collapsed #feed-panel {
   justify-content: flex-end;
 }
 
+#app-banner-tools, #app-banner-community { display: contents; }
+
 /* Progressive banner simplification as center narrows */
 @media (max-width: 1100px) {
   #app-banner-sub { display: none; }
