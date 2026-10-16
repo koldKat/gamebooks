@@ -23,7 +23,7 @@ for(const id of BOOK_IDS){
   if('MODE'!=='mobile')button.click();
   const overlay=document.getElementById(id===829?'bsim-overlay':id===8?'s8-overlay':'sim'+id+'-overlay');
   check(overlay?.classList.contains('active'),'opens '+id);
-  if(id===769||id===773){
+  if(id===769||id===773||id===783){
     const {ALL_PANEL_OVERLAY_IDS}=await import('REPO/public/js/core/util.js');
     check(ALL_PANEL_OVERLAY_IDS.includes(overlay.id),'simulator registered for panel mutual exclusion '+id);
   }
@@ -55,7 +55,7 @@ for(const id of BOOK_IDS){
     const label=field.parentElement.querySelector(':scope > span:first-child');
     if(label)check(Math.abs(field.getBoundingClientRect().left-label.getBoundingClientRect().right-5.6)<0.2,'aligned field label '+id+' '+field.id);
   }
-  if([570,644,648,654,658,663,665,671,672,700,706,710,718,722,723,724,728,735,757,768,769,773].includes(id)){
+  if([570,644,648,654,658,663,665,671,672,700,706,710,718,722,723,724,728,735,757,768,769,773,783].includes(id)){
     const title=overlay.querySelector('.inv-modal-title')?.textContent||'';
     check(/[А-Яа-я]/.test(title),'Bulgarian book has Bulgarian simulator title '+id+':'+title);
     check(!/\b(?:Character|Encounter|Programs|Save|Full Moon|Alpha versus Omega)\b/.test(overlay.textContent),'no English UI in Bulgarian simulator '+id);
@@ -491,6 +491,39 @@ for(const id of BOOK_IDS){
       check(state().fight.outcome==='paused'&&state().character.stamina===originalStamina-2,'Champions paused hero edit preserves fight');
       check(el('resume').textContent.includes('108'),'Champions continuation destination');
       check(el('encounter').disabled&&editor.querySelector('input').disabled,'Champions paused setup remains locked');
+    }finally{Math.random=random;}
+  }
+  if(id===783){
+    const el=key=>document.getElementById('sim783-'+key);
+    const state=()=>app.currentPlaythrough().sim783;
+    const editor=overlay.querySelector('.bsim-opponent-editor');
+    const name=editor.querySelector('[role="combobox"]');
+    name.focus();check(editor.querySelector('[role="option"]'),'Samson autocomplete');
+    name.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+    check(overlay.classList.contains('active')&&name.getAttribute('aria-expanded')==='false','Samson autocomplete Escape');
+    el('newCharacter').click();
+    check(state().character.life===30&&state().character.faith===200,'Samson initial character');
+    check(el('start').disabled,'Samson missing damage choice is not silently guessed');
+    el('damageAtThree').value='2';el('damageAtThree').dispatchEvent(new Event('change',{bubbles:true}));
+    editor.querySelector('[role="combobox"]').value='Ръчен противник';
+    editor.querySelector('[data-stat="strength"]').value=0;
+    editor.querySelector('[data-stat="life"]').value=1;
+    el('start').click();
+    check(state().fight.config.section===0&&el('saveCharacter').disabled,'Samson custom fight locks setup');
+    const random=Math.random;Math.random=()=>.5;
+    try{
+      el('round').click();
+      check(state().fight.outcome==='win'&&state().history.length===1,'Samson custom victory history');
+      el('encounter').value='217';el('encounter').dispatchEvent(new Event('change',{bubbles:true}));
+      check(editor.querySelector('[data-stat="life"]').disabled&&editor.querySelector('[data-stat="life"]').value==='','Samson no invented nonlethal LIFE');
+      el('strength').value=20;el('saveCharacter').click();
+      el('start').click();el('round').click();el('round').click();
+      check(state().fight.outcome==='win'&&state().fight.destination===95,'Samson nonlethal victory');
+      check(state().character.life===30&&state().character.strength===20,'Samson nonlethal state preserved');
+      el('encounter').value='187';el('encounter').dispatchEvent(new Event('change',{bubbles:true}));
+      el('start').click();el('round').click();
+      check(state().fight.events[0].playerAttack===48&&state().character.strength===20,'Samson temporary lion bonus');
+      check(el('encounter').disabled&&el('damageAtThree').disabled,'Samson persisted fight rules locked');
     }finally{Math.random=random;}
   }
   const before=JSON.stringify(app.currentPlaythrough());module.render();
