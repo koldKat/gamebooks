@@ -23,6 +23,10 @@ for(const id of BOOK_IDS){
   if('MODE'!=='mobile')button.click();
   const overlay=document.getElementById(id===829?'bsim-overlay':id===8?'s8-overlay':'sim'+id+'-overlay');
   check(overlay?.classList.contains('active'),'opens '+id);
+  if(id===769||id===773){
+    const {ALL_PANEL_OVERLAY_IDS}=await import('REPO/public/js/core/util.js');
+    check(ALL_PANEL_OVERLAY_IDS.includes(overlay.id),'simulator registered for panel mutual exclusion '+id);
+  }
   for(const key of overlay.textContent.match(/battlesim(?:\d+)?\.[\w.]+/g)??[])missingTranslations.add(key);
   for(const control of overlay.querySelectorAll('input[type="checkbox"]')){
     const style=getComputedStyle(control);
@@ -51,7 +55,7 @@ for(const id of BOOK_IDS){
     const label=field.parentElement.querySelector(':scope > span:first-child');
     if(label)check(Math.abs(field.getBoundingClientRect().left-label.getBoundingClientRect().right-5.6)<0.2,'aligned field label '+id+' '+field.id);
   }
-  if([570,644,648,654,658,663,665,671,672,700,706,710,718,722,723,724,728,735,757,768,769].includes(id)){
+  if([570,644,648,654,658,663,665,671,672,700,706,710,718,722,723,724,728,735,757,768,769,773].includes(id)){
     const title=overlay.querySelector('.inv-modal-title')?.textContent||'';
     check(/[А-Яа-я]/.test(title),'Bulgarian book has Bulgarian simulator title '+id+':'+title);
     check(!/\b(?:Character|Encounter|Programs|Save|Full Moon|Alpha versus Omega)\b/.test(overlay.textContent),'no English UI in Bulgarian simulator '+id);
@@ -453,6 +457,40 @@ for(const id of BOOK_IDS){
       el('start').click();el('round').click();el('skipLuck').click();
       check(state().fight.outcome==='win'&&state().fight.enemies[0].displayName==='Ръчен противник','Dungeon custom fight');
       check(state().history.length===2,'Dungeon custom win history');
+    }finally{Math.random=random;}
+  }
+  if(id===773){
+    const el=key=>document.getElementById('sim773-'+key);
+    const state=()=>app.currentPlaythrough().sim773;
+    const editor=overlay.querySelector('.bsim-opponent-editor');
+    const name=editor.querySelector('[role="combobox"]');
+    name.focus();check(editor.querySelector('[role="option"]'),'Champions autocomplete');
+    name.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+    check(overlay.classList.contains('active')&&name.getAttribute('aria-expanded')==='false','Champions autocomplete Escape');
+    el('newCharacter').click();
+    check(!('provisions' in state().character)&&!('potion' in state().character),'Champions no invented starting supplies');
+    el('skillInitial').value=12;el('skill').value=12;el('saveCharacter').click();
+    el('encounter').value='0';el('encounter').dispatchEvent(new Event('change',{bubbles:true}));
+    editor.querySelector('[role="combobox"]').value='Ръчен противник';
+    editor.querySelector('[data-stat="skill"]').value=0;
+    editor.querySelector('[data-stat="stamina"]').value=1;
+    el('start').click();
+    check(state().fight.config.custom&&el('saveCharacter').disabled,'Champions custom fight locks setup');
+    const random=Math.random;Math.random=()=>.5;
+    try{
+      el('round').click();el('skipLuck').click();
+      check(state().fight.outcome==='win'&&state().history.length===1,'Champions custom victory history');
+      el('encounter').value='118';el('encounter').dispatchEvent(new Event('change',{bubbles:true}));
+      editor.querySelector('[data-stat="skill"]').value=12;
+      el('start').click();
+      for(let i=0;i<5;i++)el('round').click();
+      check(state().fight.outcome==='paused'&&state().fight.destination===64,'Champions spider pause');
+      check(!el('resume').hidden&&!el('saveCharacter').disabled&&el('start').disabled,'Champions interrupted fight retains editable hero');
+      const originalStamina=state().character.stamina;
+      el('stamina').value=originalStamina-2;el('saveCharacter').click();
+      check(state().fight.outcome==='paused'&&state().character.stamina===originalStamina-2,'Champions paused hero edit preserves fight');
+      check(el('resume').textContent.includes('108'),'Champions continuation destination');
+      check(el('encounter').disabled&&editor.querySelector('input').disabled,'Champions paused setup remains locked');
     }finally{Math.random=random;}
   }
   const before=JSON.stringify(app.currentPlaythrough());module.render();
