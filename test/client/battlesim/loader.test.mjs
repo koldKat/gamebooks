@@ -36,7 +36,11 @@ test('every desktop-supported simulator exists with the expected dynamic export 
   assert.equal(new Set(ids).size, ids.length);
   for (const id of ids) {
     const entry = readPhysical(new URL('battlesim/battlesim' + id + '.js', dir), 'utf8');
-    assert.match(entry,new RegExp("export \\* from './books/"+id+"/panel\\.js'"));
+    const exports = entry.match(new RegExp("export\\s+(\\*|\\{[^}]+\\})\\s+from './books/"+id+"/panel\\.js'"));
+    assert.ok(exports, id + ': panel exports');
+    if (exports[1] !== '*') {
+      for (const name of ['init', 'render', 'setVisible']) assert.match(exports[1], new RegExp('\\b' + name + '\\b'), id + ': ' + name);
+    }
     const module = readPhysical(new URL('battlesim/books/' + id + '/panel.js', dir), 'utf8');
     const names = ['init', 'render', 'setVisible'];
     for (const name of names) assert.match(module, new RegExp('export\\s*\\{[^}]*\\bas\\s+'+name+'\\b'), id + ': ' + name);
