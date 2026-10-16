@@ -1,39 +1,9 @@
-import { POSITIONS, ENCOUNTERS } from './definition.js';
-
-export function startEncounter(origin) {
-  const rule = ENCOUNTERS[origin];
-  if (!rule) throw new RangeError('Unknown encounter');
-  return { ruleVersion: 1, origin, ...rule, penalties: 0, outcome: null };
-}
-
-export function addPenalty(fight, amount) {
-  integer(amount);
-  if (fight.ruleVersion !== 1 || fight.outcome) throw new RangeError('Encounter is not active');
-  const penalties = fight.penalties + amount;
-  const lost = penalties > 0 && penalties >= fight.level;
-  return { ...fight, penalties, outcome: lost ? 'loss' : null };
-}
-
-export function finishEncounter(fight) {
-  if (fight.ruleVersion !== 1 || fight.outcome) throw new RangeError('Encounter is not active');
-  return { ...fight, outcome: 'win' };
-}
+import { POSITIONS } from './definition.js';
 
 export function enduranceAfter(current, change) {
   if (!Number.isFinite(current) || !Number.isFinite(change)) throw new RangeError('Invalid endurance');
   const endurance = Math.min(40, current + change);
   return { endurance, dead: endurance < 0 };
-}
-
-export function barracksPenalty(strategy, groupSize) {
-  integer(groupSize, 48);
-  if (groupSize < 4) throw new RangeError('Invalid rebel group size');
-  const tactics = { 419: 7, 429: 9, 439: 0, 449: 8, 459: 6 };
-  if (!(strategy in tactics)) throw new RangeError('Unknown barracks approach');
-  if (Number(strategy) === 439) return 0;
-  const sizePenalty = groupSize <= 4 ? 6 : groupSize <= 8 ? 7 : groupSize <= 16 ? 8
-    : groupSize <= 25 ? 9 : groupSize <= 33 ? 10 : 11;
-  return tactics[strategy] + sizePenalty;
 }
 
 function integer(value, maximum = 1000000) {

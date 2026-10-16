@@ -7,6 +7,7 @@ import { getPlayBtnRow } from '../../../play/charsheet.js';
 import { showAlert, showConfirm } from '../../../ui-helpers/confirm.js';
 import { registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../../../core/util.js';
 import { t } from '../../../i18n.js';
+import { createOpponentEditor } from '../../opponents.js';
 
 const ID = definition.stateKey;
 const FIELDS = ['skill', 'skillInitial', 'stamina', 'staminaInitial', 'luck', 'luckInitial', 'provisions', 'gold', 'attackModifier'];
@@ -18,7 +19,8 @@ export function createTemplePanel({ document, t, getRun, getBookId, saveState, s
   const tk = (key, params) => t(definition.i18nPrefix + '.' + key, params);
   const el = key => document.getElementById(ID + '-' + key);
   const store = createState(() => ({ currentBookId: getBookId(), currentPlaythrough: getRun, saveState }));
-  let shownRun, rendered;
+  let shownRun, rendered, opponents, editorRun;
+  const enemyLabel = enemy => enemy.displayName || tk('enemy.' + enemy.key);
   const button = key => `<button type="button" class="inv-add-btn bsim-action-btn" id="${ID}-${key}">${escape(tk(key))}</button>`;
   const input = key => `<label class="inv-edit-row" id="${ID}-${key}-row"><span>${escape(tk(key))}</span><input class="inv-edit-input" id="${ID}-${key}" type="number" min="${key === 'attackModifier' ? -1000 : key.endsWith('Initial') || key === 'manualStamina' ? 1 : 0}" max="${key === 'attackModifier' ? 1000 : 10000}" step="1"></label>`;
   function number(key) {
@@ -31,7 +33,7 @@ export function createTemplePanel({ document, t, getRun, getBookId, saveState, s
   function close() { el('overlay')?.classList.remove('active'); rendered = null; }
   function setup() {
     return { encounter: el('encounter').value, manualStamina: el('manualStamina').value,
-      target: el('target').value, spell: el('spell').value, cost: el('cost').value };
+      target: el('target').value, spell: el('spell').value, cost: el('cost').value, opponents: opponents.snapshot() };
   }
   function change(update) {
     if (getRun() !== shownRun || Number(getBookId()) !== definition.id || !el('overlay')?.classList.contains('active')) { close(); return; }
@@ -54,10 +56,10 @@ export function createTemplePanel({ document, t, getRun, getBookId, saveState, s
     d.fight = fight; d.character = structuredClone(fight.player);
     for (const event of fight.events) {
       const actor = fight.config.ally ? tk('enemy.' + fight.config.ally.key) : tk('you');
-      if (event.kind === 'attack') d.log.push(tk('attack', { actor, ...event, enemy: tk('enemy.' + fight.enemies[event.enemy].key) }));
+      if (event.kind === 'attack') d.log.push(tk('attack', { actor, ...event, enemy: enemyLabel(fight.enemies[event.enemy]) }));
       else if (event.kind === 'luck') d.log.push(tk('luckResult', { ...event, result: tk(event.lucky ? 'lucky' : 'unlucky') }));
       else if (event.damage !== undefined) d.log.push(tk('damage', { damage: event.damage,
-        target: event.kind === 'outgoing' ? tk('enemy.' + fight.enemies[event.enemy].key) : actor }));
+        target: event.kind === 'outgoing' ? enemyLabel(fight.enemies[event.enemy]) : actor }));
       else d.log.push(tk('specialRoll', { rule: tk('rule.' + event.kind), roll: event.roll }));
     }
     if (fight.outcome) {
@@ -79,10 +81,15 @@ export function createTemplePanel({ document, t, getRun, getBookId, saveState, s
     const busy = active(d.fight), hero = d.character, fight = d.fight;
     for (const key of FIELDS) { el(key).value = hero?.[key] ?? ''; el(key).disabled = busy; }
     el('dagger').checked = hero?.dagger ?? false; el('dagger').disabled = busy;
-    el('encounter').value = d.setup.encounter ?? String(ENCOUNTERS[0].section);
-    const selected = ENCOUNTERS.find(e => e.section === Number(el('encounter').value));
+    el('encounter').value = d.setup.encounter ?? '0';
+    const selected = ENCOUNTERS.find(e => e.section === Number(el('encounter').value)) ?? {custom: true, section: 0};
+    if (editorRun !== getRun()) {
+      editorRun = getRun();
+      opponents.set(d.setup.opponents ?? selected.enemies?.map(enemy => ({...enemy, displayName: tk('enemy.' + enemy.key)})));
+    }
+    opponents.lock(busy); opponents.fixCount(!selected.custom);
     el('manualStamina').value = d.setup.manualStamina ?? '';
-    el('manualStamina-row').style.display = selected.manualStamina ? '' : 'none';
+    el('manualStamina-row').style.display = 'none';
     el('unknownStatNote').hidden = !selected.manualStamina;
     el('contextNote').textContent = selected.section === 13 || selected.partialImmunity || selected.paralysis || selected.fireBreath
       || selected.fatalHit || selected.daggerPenalty || selected.simultaneous || selected.ally || selected.lightning
@@ -100,11 +107,11 @@ export function createTemplePanel({ document, t, getRun, getBookId, saveState, s
     el('useLuck').disabled = !busy || !fight.pending.length || !hero.luck || Boolean(fight.config.ally);
     el('skipLuck').disabled = !busy || !fight.pending.length;
     const available = rules.targets(fight);
-    el('target').innerHTML = available.map(index => `<option value="${index}">${escape(tk('enemy.' + fight.enemies[index].key))}</option>`).join('');
+    el('target').innerHTML = available.map(index => `<option value="${index}">${escape(enemyLabel(fight.enemies[index]))}</option>`).join('');
     const target = Number(d.setup.target);
     if (available.includes(target)) el('target').value = String(target);
     el('target').disabled = !busy || Boolean(fight.pending.length) || available.length < 2;
-    el('opponents').innerHTML = fight ? `<table class="bsim-combat-table"><thead><tr><th>${escape(tk('opponents'))}</th><th>${escape(tk('skill'))}</th><th>${escape(tk('stamina'))}</th></tr></thead><tbody>${fight.enemies.map(e => `<tr><td>${escape(tk('enemy.' + e.key))}</td><td>${e.skill}</td><td>${e.stamina}/${e.staminaInitial}</td></tr>`).join('')}</tbody></table>` : '';
+    el('opponents').innerHTML = fight ? `<table class="bsim-combat-table"><thead><tr><th>${escape(tk('opponents'))}</th><th>${escape(tk('skill'))}</th><th>${escape(tk('stamina'))}</th></tr></thead><tbody>${fight.enemies.map(e => `<tr><td>${escape(enemyLabel(e))}</td><td>${e.skill}</td><td>${e.stamina}/${e.staminaInitial}</td></tr>`).join('')}</tbody></table>` : '';
     const status = [];
     if (hero?.dead) status.push(tk('dead'));
     if (fight) {
@@ -137,6 +144,16 @@ export function createTemplePanel({ document, t, getRun, getBookId, saveState, s
       <div class="bsim-col bsim-col-right"><label class="inv-edit-row"><span>${escape(tk('encounter'))}</span><select class="inv-edit-input" id="${ID}-encounter">${ENCOUNTERS.map(e => `<option value="${e.section}">${escape(tk('encounter.' + e.section))} (${e.section})</option>`).join('')}</select></label>${input('manualStamina')}<p id="${ID}-unknownStatNote">${escape(tk('unknownStatNote'))}</p><div class="bsim-btn-row">${button('start')}${button('again')}${button('cancel')}</div>
       <p id="${ID}-contextNote"></p><div id="${ID}-opponents"></div><label class="inv-edit-row"><span>${escape(tk('target'))}</span><select class="inv-edit-input" id="${ID}-target"></select></label><div class="bsim-btn-row">${button('round')}${button('useLuck')}${button('skipLuck')}</div><p class="bsim-status" id="${ID}-status" role="status" aria-live="polite"></p><details open><summary>${escape(tk('log'))}</summary><div class="bsim-status bsim-log" id="${ID}-log"></div></details><details class="bsim-history"><summary>${escape(tk('history'))}</summary><div class="bsim-status bsim-history-list" id="${ID}-history"></div></details></div></div></div>`;
     document.body.appendChild(overlay);
+    el('encounter').insertAdjacentHTML('afterbegin', `<option value="0">${escape(t('battlesim.editor.bg.custom'))}</option>`);
+    opponents = createOpponentEditor({document, id: ID, t, language: 'bg',
+      fields: [{key: 'skill', label: tk('skill')}, {key: 'stamina', label: tk('stamina'), min: 1}],
+      presets: ENCOUNTERS.flatMap(entry => entry.enemies.map(enemy => ({...enemy, displayName: tk('enemy.' + enemy.key)})))});
+    el('encounter').closest('label').after(opponents.element);
+    el('encounter').addEventListener('change', () => {
+      if (active(store.read()?.fight)) return;
+      const preset = ENCOUNTERS.find(entry => entry.section === Number(el('encounter').value));
+      if (preset) opponents.set(preset.enemies.map(enemy => ({...enemy, displayName: tk('enemy.' + enemy.key)})));
+    });
     const trigger = document.createElement('button'); trigger.id = ID + '-btn'; trigger.textContent = t('battlesim.title'); trigger.style.display = 'none';
     getButtonRow().appendChild(trigger); trigger.addEventListener('click', open);
     el('close').addEventListener('click', close);
@@ -155,9 +172,10 @@ export function createTemplePanel({ document, t, getRun, getBookId, saveState, s
     el('start').addEventListener('click', () => change(d => {
       if (!d.character || active(d.fight) || d.character.dead) return;
       d.character = character(d.character.dead);
-      const section = Number(el('encounter').value), config = ENCOUNTERS.find(e => e.section === section);
-      const fight = rules.startFight(section, d.character, { manualStamina: config.manualStamina ? number('manualStamina') : null });
-      fight.name = tk('encounter.' + section); report(d, fight);
+      const section = Number(el('encounter').value), entries = opponents.read();
+      const fight = rules.startFight(section, d.character, {opponents: entries});
+      fight.name = section ? tk('encounter.' + section) : entries.map(enemy => enemy.displayName || t('battlesim.default_enemy')).join(' / ');
+      report(d, fight);
     }));
     el('round').addEventListener('click', () => change(d => report(d, rules.round(d.fight, Number(el('target').value)))));
     el('useLuck').addEventListener('click', () => change(d => report(d, rules.resolveLuck(d.fight, true))));

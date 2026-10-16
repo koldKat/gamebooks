@@ -3,7 +3,7 @@
 // Admin content management, statistics, settings, and shop economy.
 
 const { db, _naturalCompareByName, _getPdfSize, _getEpubSize } = require('./connection');
-const { computeLevel, getTitleForLevel, getUserXpInfo, awardXp, awardCoins, processStateXp, coinBalance, _insertNotif, SIM_HISTORY_KEYS } = require('./xp');
+const { computeLevel, getTitleForLevel, getUserXpInfo, awardXp, awardCoins, processStateXp, coinBalance, _insertNotif, SIM_HISTORY_KEYS, RETIRED_SIM_HISTORY_KEYS = [] } = require('./xp');
 const { purgeExpiredSessions } = require('./auth');
 const { getRatingStats } = require('./rating-stats');
 
@@ -756,7 +756,7 @@ function adminGetStats() {
   // Count simulator histories only in started, non-padding playthroughs.
   const _tallyBattles = pts => {
     for (const pt of pts) {
-      for (const simKey of SIM_HISTORY_KEYS) {
+      for (const simKey of [...SIM_HISTORY_KEYS, ...RETIRED_SIM_HISTORY_KEYS]) {
         const hist = pt[simKey]?.history;
         if (!hist?.length) continue;
         battlesFought += hist.length;

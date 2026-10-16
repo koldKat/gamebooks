@@ -3,6 +3,7 @@ import { FABLED_ABILITIES, FABLED_PROFESSIONS, newFabledCharacter, validateFable
 import { startFabledFight, fabledRound, surrenderFabledFight, fleeFabledFight } from './core.js';
 import { WAR_TORN_FIGHTS } from './roster.js';
 import { FABLED_SEA_CHECKS, fabledSeaCheck } from './navigation.js';
+import { createOpponentEditor } from '../../opponents.js';
 
 const defaultFields = [...FABLED_ABILITIES, 'rank', 'stamina', 'staminaInitial', 'armour', 'shards', 'ratPoison'];
 const flags = ['combatBlessing', 'luckBlessing', 'stormsBlessing'];
@@ -25,10 +26,16 @@ export function createFabledPanel({ document, t, getRun, getBookId, saveState,
   const el = key => document.getElementById(ID + '-' + key);
   const active = game => game?.fight?.status === 'fighting';
   const supported = game => game && (!game.fight || game.fight.rulesRevision === 1);
-  const enemyName = name => tk('enemy.' + name);
-  const encounterName = spec => [...new Set(spec.enemies.map(enemy => enemyName(enemy.name)))].join(' / ')
+  const enemyName = name => {
+    const display = data()?.fight?.enemies?.find(enemy => enemy.name === name)?.displayName;
+    if (display) return display;
+    const value = tk('enemy.' + name);
+    return value === 'battlesim' + bookId + '.enemy.' + name ? name : value;
+  };
+  const encounterName = spec => [...new Set(spec.enemies.map(enemy => enemy.displayName || enemyName(enemy.name)))].join(' / ')
     + (spec.enemies.length > 1 ? ` (${spec.enemies.length})` : '');
   let shownRun;
+  let opponents;
   let extension = {};
   function data() {
     if (Number(getBookId()) !== bookId) return null;
@@ -89,11 +96,12 @@ export function createFabledPanel({ document, t, getRun, getBookId, saveState,
     }
   }
   function contextChanged() {
-    const game = data(), spec = fights[Number(el('context').value)];
+    const game = data(), spec = fights[Number(el('context').value)] ?? {custom: true, section: 0};
     if (!game || !spec) return;
+    opponents.fixCount(!spec.custom);
     el('applyEntry-row').hidden = !spec.entryDamage && !spec.entryDice && !spec.preCheck;
     el('ratPoisonUse-row').hidden = !spec.ratPoison;
-    const notes = [tk(spec.nonfatal ? 'duel' : spec.simultaneous ? 'simultaneous' : 'sequential')];
+    const notes = [spec.custom ? t('battlesim.editor.custom') : tk(spec.nonfatal ? 'duel' : spec.simultaneous ? 'simultaneous' : 'sequential')];
     for (const option of encounterOptions) el(option.key+'-row').hidden = !option.sections.includes(spec.section);
     if (spec.threshold !== undefined) notes.push(tk('threshold', { stamina: spec.threshold, section: spec.win }));
     if (spec.attackModifier) notes.push(tk('penalty', { amount: spec.attackModifier }));
@@ -113,7 +121,9 @@ export function createFabledPanel({ document, t, getRun, getBookId, saveState,
     if (shownRun !== getRun()) {
       if (shownRun) close();
       shownRun = getRun();
-      el('context').value = String(game.setup.context ?? 0);
+      el('context').value = String(game.setup.context ?? -1);
+      const preset = fights[Number(el('context').value)];
+      opponents.set(game.setup.opponents ?? preset?.enemies.map(enemy => ({...enemy, displayName: enemyName(enemy.name)})));
       el('attackModifier').value = String(game.setup.attackModifier ?? 0);
       el('applyEntry').checked = game.setup.applyEntry ?? true;
       el('ratPoisonUse').checked = false;
@@ -124,6 +134,7 @@ export function createFabledPanel({ document, t, getRun, getBookId, saveState,
       el('difficulty').value = '10'; el('rankDice').value = '1'; el('rankModifier').value = '0';
     }
     const character = game.character, fight = game.fight, busy = active(game), blocked = busy || !supported(game);
+    opponents.lock(blocked);
     el('characterStatus').textContent = !supported(game) ? tk('unsupported') : character ? tk('characterStatus', { ...character, defence: characterDefence(character) }) : tk('ready');
     for (const key of fields) {
       if (document.activeElement !== el(key)) el(key).value = character?.[key] ?? '';
@@ -177,7 +188,12 @@ export function createFabledPanel({ document, t, getRun, getBookId, saveState,
     overlay.id = ID + '-overlay'; overlay.className = 'inv-overlay';
     overlay.innerHTML = `<div class="inv-modal bsim-modal bsim-compact-form"><div class="inv-modal-hdr"><span class="inv-modal-title">${escape(tk('title'))}</span><button class="inv-close-btn" type="button" id="${ID}-close" aria-label="${escape(t('btn.close'))}">&times;</button></div><div class="bsim-body"><div class="bsim-col bsim-col-left"><p>${escape(tk('note'))}</p><div class="bsim-status" id="${ID}-characterStatus"></div>${select('profession', Object.keys(FABLED_PROFESSIONS))}${button('create')}<details><summary>${escape(tk('character'))}</summary>${fields.map(key => field(key, FABLED_ABILITIES.includes(key) || ['rank', 'staminaInitial'].includes(key) ? 1 : 0)).join('')}${flags.map(checkbox).join('')}${button('apply')}</details><label class="inv-edit-row"><span class="inv-edit-label">${escape(tk('context'))}</span><select class="inv-edit-input" id="${ID}-context">${WAR_TORN_FIGHTS.map((spec, index) => `<option value="${index}">${escape(encounterName(spec))} (${spec.section})</option>`).join('')}</select></label>${checkbox('applyEntry')}${checkbox('ratPoisonUse')}<details><summary>${escape(tk('overrides'))}</summary>${field('attackModifier', -1000, 1000)}<p>${escape(tk('overrideNote'))}</p></details><p class="bsim-status" id="${ID}-contextNote"></p>${button('start')}<div class="bsim-status" id="${ID}-status"></div>${checkbox('useCombatBlessing')}${select('luckReroll', ['', 'player', 'enemy'])}<div class="bsim-btn-row">${button('step')}${button('surrender')}${button('cancel')}</div><details><summary>${escape(tk('checks'))}</summary>${select('ability', FABLED_ABILITIES)}${field('difficulty', 0, 1000)}${button('abilityRoll')}${field('rankDice', 1, 3)}${field('rankModifier', -1000, 1000)}${button('rankRoll')}</details></div><div class="bsim-col bsim-col-right"><details class="bsim-history"><summary>${escape(tk('history'))}</summary><div class="bsim-history-list" id="${ID}-history"></div></details><div class="bsim-log" id="${ID}-log"></div></div></div></div>`;
     document.body.appendChild(overlay);
-    el('context').innerHTML = fights.map((spec, index) => `<option value="${index}">${escape(encounterName(spec))} (${spec.section})</option>`).join('');
+    el('context').innerHTML = `<option value="-1">${escape(t('battlesim.editor.custom'))}</option>`
+      + fights.map((spec, index) => `<option value="${index}">${escape(encounterName(spec))} (${spec.section})</option>`).join('');
+    opponents = createOpponentEditor({document, id: ID, t,
+      fields: [{key: 'combat', label: tk('combat')}, {key: 'defence', label: tk('defence'), min: 1}, {key: 'stamina', label: tk('stamina'), min: 1}],
+      presets: fights.flatMap(spec => spec.enemies.map(enemy => ({...enemy, displayName: enemyName(enemy.name)})))});
+    el('context').closest('label').after(opponents.element);
     el('surrender').insertAdjacentHTML('afterend', button('flee'));
     el('flee').hidden = true;
     for (const key of extraFlags) el('apply').insertAdjacentHTML('beforebegin', checkbox(key));
@@ -185,7 +201,7 @@ export function createFabledPanel({ document, t, getRun, getBookId, saveState,
       el('start').insertAdjacentHTML('beforebegin', option.type==='checkbox' ? checkbox(option.key)
         : field(option.key,option.min??0,option.max??1000000).replace('<label ',`<label id="${ID}-${option.key}-row" `));
     }
-    if (fights.some(spec=>spec.simultaneous)) {
+    {
       el('step').parentElement.insertAdjacentHTML('beforebegin', `<label class="inv-edit-row" id="${ID}-target-row"><span class="inv-edit-label">${escape(tk('target'))}</span><select class="inv-edit-input" id="${ID}-target"></select></label>`);
     }
     const sea = document.createElement('details');
@@ -201,7 +217,11 @@ export function createFabledPanel({ document, t, getRun, getBookId, saveState,
     overlay.addEventListener('click', event => { if (backdrop && event.target === overlay) close(); });
     overlay.addEventListener('keydown', event => { if (event.key === 'Escape') { event.stopPropagation(); close(); } });
     registerShortcut({ button: btn, overlay, open, close });
-    el('context').addEventListener('change', contextChanged);
+    el('context').addEventListener('change', () => {
+      const preset = fights[Number(el('context').value)];
+      if (preset) opponents.set(preset.enemies.map(enemy => ({...enemy, displayName: enemyName(enemy.name)})));
+      contextChanged();
+    });
     el('create').addEventListener('click', () => {
       const run = getRun(), original = data(), profession = el('profession').value;
       if (!supported(original) || active(original)) return;
@@ -219,9 +239,11 @@ export function createFabledPanel({ document, t, getRun, getBookId, saveState,
     }));
     el('start').addEventListener('click', () => action(game => {
       if (active(game) || !game.character) return;
-      const index = number('context'), spec = fights[index];
-      if (!spec) throw new RangeError('Invalid encounter');
-      game.setup = { context: index, attackModifier: number('attackModifier'), applyEntry: el('applyEntry').checked };
+      const index = number('context'), enemies = opponents.read().map(enemy => ({...enemy,
+        name: enemy.name || enemy.displayName || t('battlesim.default_enemy')}));
+      const preset = fights[index];
+      const spec = {...(preset ?? {custom: true, section: 0}), enemies};
+      game.setup = { context: index, opponents: enemies, attackModifier: number('attackModifier'), applyEntry: el('applyEntry').checked };
       const extra = Object.fromEntries(encounterOptions.map(option => [option.key, option.sections.includes(spec.section)
         ? option.type==='checkbox' ? el(option.key).checked : number(option.key) : option.type==='checkbox' ? false : 0]));
       Object.assign(game.setup,extra);

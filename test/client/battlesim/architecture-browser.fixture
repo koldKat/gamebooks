@@ -47,7 +47,7 @@ for(const id of BOOK_IDS){
     const label=field.parentElement.querySelector(':scope > span:first-child');
     if(label)check(Math.abs(field.getBoundingClientRect().left-label.getBoundingClientRect().right-5.6)<0.2,'aligned field label '+id+' '+field.id);
   }
-  if([570,644,648,654,658,663,665,671,672,700,706,710,718,722,723,724,728,735,757,758,2116].includes(id)){
+  if([570,644,648,654,658,663,665,671,672,700,706,710,718,722,723,724,728,735,757].includes(id)){
     const title=overlay.querySelector('.inv-modal-title')?.textContent||'';
     check(/[А-Яа-я]/.test(title),'Bulgarian book has Bulgarian simulator title '+id+':'+title);
     check(!/\b(?:Character|Encounter|Programs|Save|Full Moon|Alpha versus Omega)\b/.test(overlay.textContent),'no English UI in Bulgarian simulator '+id);
@@ -61,6 +61,118 @@ for(const id of BOOK_IDS){
     check(game.enemy.stamina===18&&game.pendingLuck==='player-hit','extracted round');
     document.getElementById('sim199-luck-yes').click();
     check(game.enemy.stamina===16&&game.player.luck===11&&!game.pendingLuck,'extracted Luck');
+  }
+  if(id>=674&&id<=680||id===710){
+    const el=key=>document.getElementById('sim'+id+'-'+key);
+    const editor=overlay.querySelector('.bsim-opponent-editor');
+    check(editor,'shared opponent editor '+id);
+    const name=editor.querySelector('[role="combobox"]');
+    name.focus();
+    const option=editor.querySelector('[role="option"]');
+    check(option,'autocomplete roster suggestions '+id);
+    name.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+    check(overlay.classList.contains('active')&&name.getAttribute('aria-expanded')==='false','Escape closes suggestions first '+id);
+    name.focus();name.dispatchEvent(new Event('input',{bubbles:true}));
+    editor.querySelector('[role="option"]').dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));
+    check(editor.querySelector('[data-stat="stamina"]').value!=='','preset fills editable stats '+id);
+    name.value='My custom opponent';
+    for(const [key,value] of Object.entries(id===710?{skill:0,stamina:2}:{combat:0,defence:1,stamina:2}))editor.querySelector('[data-stat="'+key+'"]').value=value;
+    el(id===710?'roll':'create').click();
+    el('start').click();
+    const state=app.currentPlaythrough()['sim'+id];
+    check(state.fight?.config.custom&&(state.fight.enemies[0].combat??state.fight.enemies[0].skill)===0,'custom fight starts without roster requirement '+id);
+    check(name.disabled,'setup locked during fight '+id);
+    el(id===710?'round':'step').click();
+    if(id===710&&app.currentPlaythrough().sim710.fight.pending.length)el('skipLuck').click();
+    check(state!==app.currentPlaythrough()['sim'+id],'fight updates atomically '+id);
+    const finished=app.currentPlaythrough()['sim'+id];
+    check(finished.history.at(-1)?.enemy==='My custom opponent','custom name preserved in history '+id);
+  }
+  if(id===412||id===735){
+    const el=key=>document.getElementById('sim'+id+'-'+key);
+    const editor=overlay.querySelector('.bsim-opponent-editor');
+    const name=editor.querySelector('[role="combobox"]');
+    name.value='';name.focus();name.dispatchEvent(new Event('input',{bubbles:true}));
+    check(editor.querySelector('[role="option"]'),'autocomplete '+id);
+    name.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+    check(overlay.classList.contains('active')&&name.getAttribute('aria-expanded')==='false','Escape keeps simulator open '+id);
+    name.value='Custom <opponent>';
+    for(const [key,value]of Object.entries(id===412?{str:0,hp:2}:{skill:0,stamina:2}))editor.querySelector('[data-stat="'+key+'"]').value=value;
+    if(id===735){
+      el('weapon').value='lash';
+      for(const key of ['skill','skillInitial','stamina','staminaInitial','luck','luckInitial','armour','armourInitial'])el(key).value=key.startsWith('stamina')?20:10;
+      el('saveCharacter').click();
+      el('mode').value='melee';
+    }
+    el('start').click();
+    const data=app.currentPlaythrough()['sim'+id];
+    check(id===412?data.enemyName==='Custom <opponent>'&&data.enemy.str===0:data.fight?.encounterSection===0&&data.fight.enemies[0].name==='Custom <opponent>','manual opponent starts '+id);
+    check(name.disabled,'opponent editor locked '+id);
+    if(id===412){el('auto').click();check(data.history.at(-1)?.enemy==='Custom <opponent>','custom outcome name '+id);}
+    check(!overlay.querySelector('opponent'),'custom name is not HTML '+id);
+  }
+  if(id>=521&&id<=524){
+    const el=key=>document.getElementById('sim'+id+'-'+key);
+    const editor=overlay.querySelector('.bsim-opponent-editor');
+    const name=editor.querySelector('[role="combobox"]');
+    name.focus();
+    check(editor.querySelector('[role="option"]'),'Skyfall autocomplete '+id);
+    name.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+    check(overlay.classList.contains('active')&&name.getAttribute('aria-expanded')==='false','Skyfall Escape closes dropdown '+id);
+    name.value='Custom Skyfall foe';
+    for(const [key,value]of Object.entries({expertise:-100,vitality:1,damage:0}))editor.querySelector('[data-stat="'+key+'"]').value=value;
+    el('start').click();
+    const data=app.currentPlaythrough()['sim'+id];
+    check(data.fight?.encounter.custom&&data.fight.encounter.foes[0].name==='Custom Skyfall foe','Skyfall custom fight '+id);
+    check(name.disabled,'Skyfall setup locked '+id);
+    el('roll').click();el('settle').click();
+    check(data.history.at(-1)?.enemy==='Custom Skyfall foe'&&data.fight.status==='win','Skyfall custom outcome '+id);
+    if(id===524){
+      el('encounter').value='141';el('encounter').dispatchEvent(new Event('change'));
+      check(editor.querySelector('[data-stat="vitality"]').disabled&&editor.querySelector('[data-stat="vitality"]').value==='','source-null health is unavailable, not zero');
+    }
+  }
+  if(id===636){
+    const el=key=>document.getElementById('sim636-'+key);
+    const editor=overlay.querySelector('.bsim-opponent-editor');
+    const name=editor.querySelector('[role="combobox"]');
+    name.focus();check(editor.querySelector('[role="option"]'),'Wonderland autocomplete');
+    name.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+    name.value='Custom Wonderland foe';
+    editor.querySelector('[data-stat="combat"]').value=0;
+    editor.querySelector('[data-stat="endurance"]').value=.5;
+    el('initiative').value='player';el('start').click();
+    const data=app.currentPlaythrough().sim636;
+    check(data.fight?.encounter.custom&&data.fight.enemies[0].endurance===.5,'Wonderland custom half-point stats');
+    check(name.disabled,'Wonderland setup locked');
+  }
+  if(id===570){
+    const el=key=>document.getElementById('sim570-'+key);
+    const name=overlay.querySelector('[role="combobox"]');
+    name.focus();check(overlay.querySelector('[role="option"]'),'Virtual Police autocomplete');
+    name.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+    name.value='Ръчно въведен противник';
+    for(const [prefix,values]of Object.entries({player:{attack:10,defence:10,damage:10,life:30},enemy:{attack:1,defence:1,damage:1,life:1}})){
+      for(const[key,value]of Object.entries(values))el(prefix+'_'+key).value=value;
+    }
+    el('start').click();
+    const data=app.currentPlaythrough().sim570;
+    check(data.fight?.status==='fighting'&&data.encounter==='Ръчно въведен противник','Virtual Police custom fight');
+    check(name.disabled,'Virtual Police setup locked');
+  }
+  if(id===648){
+    const el=key=>document.getElementById('sim648-'+key);
+    el('configure').click();
+    const editor=overlay.querySelector('.bsim-opponent-editor');
+    const name=editor.querySelector('[role="combobox"]');
+    name.focus();check(editor.querySelector('[role="option"]'),'Space Scout autocomplete');
+    name.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+    name.value='Тестов кораб';editor.querySelector('[data-stat="attack"]').value=1;
+    editor.querySelector('[data-stat="shields"]').value=10;
+    el('start').click();
+    const data=app.currentPlaythrough().sim648;
+    check(data.fight?.enemies[0].name==='Тестов кораб'&&data.encounter==='Тестов кораб','Space Scout custom name');
+    check(name.disabled,'Space Scout setup locked');
   }
   const before=JSON.stringify(app.currentPlaythrough());module.render();
   check(JSON.stringify(app.currentPlaythrough())===before,'repeat render preserves state '+id);

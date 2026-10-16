@@ -384,6 +384,7 @@ try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 658 AND has_liv
 db.prepare(`UPDATE books SET has_battle_sim = 1
   WHERE id IN (465, 468, 734, 739, 740, 869, 871, 877, 881, 882)
     AND has_battle_sim = 0`).run();
+db.prepare('UPDATE books SET has_battle_sim = 0 WHERE id IN (758, 2116) AND has_battle_sim <> 0').run();
 
 // Rename legacy battleSim state to sim829 without losing saved fights/history.
 {

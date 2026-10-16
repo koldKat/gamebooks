@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
-import { definition, ENCOUNTERS } from '../../../public/js/battlesim/books/706/definition.js';
-import { startEncounter, addPenalty, finishEncounter, enduranceAfter, defendShip, retakeShip, attackShip, barracksPenalty } from '../../../public/js/battlesim/books/706/combat.js';
+import { definition } from '../../../public/js/battlesim/books/706/definition.js';
+import { enduranceAfter, defendShip, retakeShip, attackShip } from '../../../public/js/battlesim/books/706/combat.js';
 import { createState } from '../../../public/js/battlesim/books/706/state.js';
 import en from '../../../public/js/i18n/en/battlesim/battlesim706.js';
 import bg from '../../../public/js/i18n/bg/battlesim/battlesim706.js';
@@ -38,22 +38,11 @@ test('706: the real backend rewards battle outcomes once and ignores retreat', (
   assert.ok(events.every(e => !e[1].startsWith('battlesim_')));
 });
 
-test('706: original encounters, translations and zero-level failure rules', () => {
+test('706: naval simulator translations match; narrative penalty helper is removed', () => {
   assert.equal(definition.id, 706);
-  assert.equal(Object.keys(ENCOUNTERS).length, 18);
   assert.deepEqual(Object.keys(en).sort(), Object.keys(bg).sort());
-  for (const [id, rule] of Object.entries(ENCOUNTERS)) {
-    assert.ok(en['battlesim706.encounter.' + id]);
-    const fight = startEncounter(id);
-    assert.equal(addPenalty(fight, 0).outcome, null);
-    assert.equal(addPenalty(fight, rule.level || 1).outcome, 'loss');
-    assert.equal(fight.penalties, 0);
-    assert.equal(finishEncounter(fight).outcome, 'win');
-  }
-  assert.equal(startEncounter(373).fatal, 483);
-  assert.equal(startEncounter('map-6').level, 16);
-  assert.equal(addPenalty(addPenalty(startEncounter(42), 4), 1).outcome, 'loss');
-  assert.throws(() => addPenalty(finishEncounter(startEncounter(42)), 1));
+  const panel = readFileSync(new URL('../../../public/js/battlesim/books/706/panel.js', import.meta.url), 'utf8');
+  assert.doesNotMatch(panel, /penaltyActions|addPenalty|barracksPenalty|startEncounter/);
 });
 
 test('706: zero Endurance lives, negative dies and recovery cannot exceed 40', () => {
@@ -61,19 +50,6 @@ test('706: zero Endurance lives, negative dies and recovery cannot exceed 40', (
   assert.deepEqual(enduranceAfter(0, -1), { endurance: -1, dead: true });
   assert.equal(enduranceAfter(39, 8).endurance, 40);
   assert.throws(() => enduranceAfter(NaN, 1));
-});
-
-test('706: all barracks approaches and group-size boundaries match the source', () => {
-  for (const [size, expected] of [[4, 6], [5, 7], [8, 7], [9, 8], [16, 8], [17, 9], [25, 9], [26, 10], [33, 10], [34, 11], [48, 11]]) {
-    assert.equal(barracksPenalty(419, size), 7 + expected);
-    assert.equal(barracksPenalty(429, size), 9 + expected);
-    assert.equal(barracksPenalty(449, size), 8 + expected);
-    assert.equal(barracksPenalty(459, size), 6 + expected);
-    assert.equal(barracksPenalty(439, size), 0);
-  }
-  assert.equal(addPenalty(startEncounter('map-6'), barracksPenalty(429, 48)).outcome, 'loss');
-  assert.throws(() => barracksPenalty(419, 3));
-  assert.throws(() => barracksPenalty(419, 49));
 });
 
 test('706: printed hold example, simultaneous clearance and K follows the printed central-mast rule', () => {
@@ -112,16 +88,18 @@ test('706: retaking and final assault do not invent casualty order or force a su
   assert.equal(attackShip({ survivors: 0, pots: 5 }).destination, 58);
 });
 
-test('706: saved outcomes occur once, negotiations and cancellation do not grant battle XP', () => {
+test('706: naval outcomes occur once; legacy narrative state stays untouched', () => {
   let saves = 0;
   const run = { sim700: { preserved: true } };
   const store = createState(() => ({ currentBookId: 706, currentPlaythrough: () => run, saveState: () => saves++ }));
   store.ensure();
-  store.change(d => { d.fight = { ...finishEncounter(startEncounter(42)), name: 'Negotiation' }; });
+  const legacy = { outcome: 'win', name: 'Bodyguard', penalties: 2 };
+  store.change(d => { d.fight = legacy; });
   assert.equal(run.sim706.history.length, 0);
-  store.change(d => { d.fight = { ...finishEncounter(startEncounter(31)), name: 'Bodyguard' }; });
+  store.change(d => { d.naval = { outcome: 'win', name: 'Sea Wolf' }; });
   store.change(() => {});
   assert.equal(run.sim706.history.length, 1);
+  assert.deepEqual(run.sim706.fight, legacy);
   assert.equal(run.sim706.history[0].outcome, 'win');
   store.change(d => { d.naval = { outcome: 'retreat', name: 'Sea Wolf' }; });
   assert.equal(run.sim706.history.length, 1);

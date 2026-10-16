@@ -1,6 +1,9 @@
 import { ROSTER } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
+import { createOpponentEditor } from '../../opponents.js';
+
+let opponents, editorState;
 
 // BEGIN SIMULATOR WIRING
 const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, ROSTER, SVG_SKULL, SVG_TROPHY, _appendLog, _autoResolve, _checkEnd, _data, _enemy, _enemyName, _enemyOptions, _numField, _pickEnemy, _recordOutcome, _renderAll, _renderHistory, _renderInputs, _renderLog, _renderStatus, _rollLp, _startBattle, _strike, _strikeOnce, closeSim412, currentPlaythrough, drawChance, escapeHtml, getPlayBtnRow, initSim412, lifeTier, openSim412, registerPanelShortcut, renderSim412, resolveStrike, saveState, setSim412Visible, shortcutLabel, showAlert, t });
@@ -70,11 +73,15 @@ function _renderHistory() {
 function _renderInputs() {
   const d = _data();
   if (!d) return;
-  document.getElementById('sim412-enemy-pick').innerHTML = _enemyOptions(d.enemyId);
+  if (editorState !== d) {
+    editorState = d;
+    opponents.set([{...d.enemy, hp: d.enemy.startHp, displayName: d.enemyName ?? t(_enemy(d.enemyId).nameKey)}]);
+  }
+  const busy = d.started && !d.over;
+  opponents.lock(busy);
   document.getElementById('sim412-player-lp').value = d.player.lp;
   document.getElementById('sim412-companion').checked = d.nextCompanionBonus === true;
-  document.getElementById('sim412-enemy-str').value = d.enemy.str;
-  document.getElementById('sim412-enemy-hp').value = d.enemy.startHp;
+  document.getElementById('sim412-start').disabled = busy;
   _renderStatus();
 }
 
@@ -127,12 +134,7 @@ export function initSim412() {
           </div>
           <div class="bsim-side">
             <div class="bsim-side-title">${t('battlesim412.ui.enemy')}</div>
-            <div class="inv-edit-row">
-              <span class="inv-edit-label bsim-stat-label">${t('battlesim412.ui.pick')}</span>
-              <select id="sim412-enemy-pick" class="inv-edit-input"></select>
-            </div>
-            ${_numField(t('battlesim412.ui.str'), 'sim412-enemy-str')}
-            ${_numField(t('battlesim412.ui.hp'), 'sim412-enemy-hp')}
+            <div id="sim412-opponent-editor"></div>
             <div id="sim412-enemy-stat" class="bsim-stat-summary"></div>
           </div>
           <div id="sim412-status" class="bsim-status"></div>
@@ -152,6 +154,11 @@ export function initSim412() {
       </div>
     </div>`;
   document.body.appendChild(overlay);
+  opponents = createOpponentEditor({document, id: 'sim412', t, language: 'bg',
+    fields: [{key: 'str', label: t('battlesim412.ui.str')}, {key: 'hp', label: t('battlesim412.ui.hp'), min: 1}],
+    presets: ROSTER.map(enemy => ({...enemy, displayName: t(enemy.nameKey)}))});
+  opponents.fixCount(true);
+  document.getElementById('sim412-opponent-editor').append(opponents.element);
 
   const btn = document.createElement('button');
   btn.id = 'sim412-btn';
@@ -172,8 +179,16 @@ export function initSim412() {
     close: closeSim412,
   });
 
-  document.getElementById('sim412-enemy-pick').addEventListener('change', e => _pickEnemy(e.target.value));
-  document.getElementById('sim412-start').addEventListener('click', _startBattle);
+  document.getElementById('sim412-start').addEventListener('click', () => {
+    const d = _data();
+    if (!d || d.started && !d.over) return;
+    try {
+      const [enemy] = opponents.read();
+      d.enemyName = enemy.displayName || t('battlesim.editor.bg.name');
+      d.enemy = {str: enemy.str, hp: enemy.hp, startHp: enemy.hp};
+      _startBattle();
+    } catch { showAlert(t('battlesim.editor.bg.invalid')); }
+  });
   document.getElementById('sim412-strike').addEventListener('click', _strike);
   document.getElementById('sim412-auto').addEventListener('click', _autoResolve);
   document.getElementById('sim412-roll-lp').addEventListener('click', _rollLp);

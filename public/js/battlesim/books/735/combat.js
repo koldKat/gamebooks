@@ -2,8 +2,9 @@ import { ENCOUNTERS } from './definition.js';
 import { die, integer, startFight, testLuck, validateCharacter } from '../../engines/space-assassin/core.js';
 
 export function prepareEncounter(character, section, options = {}, roll = die) {
-  integer(section, 1, 400);
-  const preset = ENCOUNTERS.find(entry => entry.section === section);
+  integer(section, 0, 400);
+  const preset = section === 0 && options.opponents ? {requiresModeChoice: true, requiresEnemyWeaponChoice: true}
+    : ENCOUNTERS.find(entry => entry.section === section);
   if (!preset) throw new RangeError('Unknown encounter');
   validateCharacter(character, true);
   const mode = preset.mode ?? options.mode;
@@ -18,7 +19,13 @@ export function prepareEncounter(character, section, options = {}, roll = die) {
       || options.openingHit && !preset.optionalOpeningArmourLoss) {
     throw new RangeError('Modifier does not apply to this encounter');
   }
-  const enemies = structuredClone(preset.enemies);
+  const source = preset.enemies ?? options.opponents;
+  if (options.opponents && options.opponents.length !== source.length) throw new RangeError('Invalid opponent count');
+  const enemies = source.map((enemy, index) => {
+    const override = options.opponents?.[index];
+    return override ? {...structuredClone(enemy), name: override.displayName || enemy.name || 'Противник',
+      skill: override.skill, stamina: override.stamina} : structuredClone(enemy);
+  });
   if (preset.requiresEnemyWeaponChoice && mode === 'gunfire') {
     if (!['blaster', 'lash', 'unarmed', 'none'].includes(options.enemyWeapon)) throw new RangeError('Choose the enemy weapon');
     for (const enemy of enemies) {

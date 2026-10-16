@@ -49,7 +49,7 @@ assert.ok(urls.at(-1).endsWith('/battlesim216.js?retry=1'), 'retry bypasses the 
 assert.equal(registered.length, 3);
 for (const id of [0, -1, 1.5, 'not-an-id', '../214', Infinity]) await assert.rejects(load(id), /Invalid simulator ID/);
 assert.equal(imports.length, 4, 'invalid IDs never import');
-for(const id of [570,644,648,654,658,663,665,671,672,700,706,710,718,722,723,724,728,735,757,758,2116]){
+for(const id of [570,644,648,654,658,663,665,671,672,700,706,710,718,722,723,724,728,735,757]){
   await load(id);
   assert.equal(urls.at(-1), './bg/battlesim/battlesim'+id+'.js', 'Bulgarian source books use Bulgarian simulator text');
 }

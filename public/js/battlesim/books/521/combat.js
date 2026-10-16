@@ -15,11 +15,11 @@ function number(key) {
 function selectedEncounter() {
   const { MARSH_ENCOUNTERS, element } = getContext();
 
-  return MARSH_ENCOUNTERS.find(e => String(e.section) === element('encounter').value);
+  return MARSH_ENCOUNTERS.find(e => String(e.section) === element('encounter').value) ?? {section: 'custom', custom: true};
 }
 
 function start() {
-  const { character, createMarshFight, data, element, number, saveAndRender, selectedEncounter, showAlert, tk } = getContext();
+  const { character, createMarshFight, data, element, number, opponentSetup, saveAndRender, selectedEncounter, showAlert, tk } = getContext();
 
   const d = data();
   if (!d || d.fight?.pending) return;
@@ -38,6 +38,7 @@ function start() {
       companions: e.mode === 'ambush' ? damages.map(value => ({ damage: Number(value) })) : [],
       cuttingWeapon: element('cutting').checked,
       poisonProtected: element('poison').checked,
+      opponents: opponentSetup?.read(),
     });
     if (e.carryEnemyVitality && [342, 363].includes(previous?.encounter.section)) {
       fight.encounter.foes[0].vitality = previous.encounter.foes[0].vitality;
@@ -47,6 +48,7 @@ function start() {
       fight.encounter.foes[0].vitality = previous.encounter.foes[0].vitality;
     }
     d.fight = fight;
+    opponentSetup?.save(d);
     d.player = { ...fight.player };
     d.log.push(tk('started', { section: e.sourceSection ?? e.section }));
     d.log = d.log.slice(-150);
@@ -63,8 +65,9 @@ function finish() {
   fight.recorded = true;
   if (!['win', 'loss'].includes(fight.status)) return;
   const last = d.history.at(-1)?.ts ?? 0;
-  d.history.push({ enemy: tk('encounter_label', { section: fight.encounter.sourceSection ?? fight.encounter.section,
-    enemy: fight.encounter.foes[0].name }), outcome: fight.status, ts: Math.max(Date.now(), last + 1) });
+  d.history.push({ enemy: fight.encounter.custom ? fight.encounter.foes.map(enemy => enemy.name).join(' / ')
+    : tk('encounter_label', { section: fight.encounter.sourceSection ?? fight.encounter.section,
+      enemy: fight.encounter.foes[0].name }), outcome: fight.status, ts: Math.max(Date.now(), last + 1) });
 }
 
 function act(action) {

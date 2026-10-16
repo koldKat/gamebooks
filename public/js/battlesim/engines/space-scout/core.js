@@ -88,9 +88,15 @@ export function spaceScoutPersonalEquipment(character, quantities) {
   return { ...gear, volume };
 }
 
+export const SPACE_SCOUT_DUEL_ENEMIES = {
+  22: [{name: 'Torpedo boat', attack: 50, shields: 300}],
+  32: [{name: 'Fighter', attack: 40, shields: 200}],
+  36: [{name: 'First fighter', attack: 50, shields: 120}, {name: 'Second fighter', attack: 30, shields: 150}],
+  42: [{name: 'Escort fighter', attack: 75, shields: 250}],
+};
+
 export function startSpaceScoutEncounter(character, section, options = {}) {
-  const enemy = (name, attack, shields) => ({ name, attack, shields });
-  const torpedoBoat = () => enemy('Torpedo boat', 50, 300);
+  const torpedoBoat = () => copy(SPACE_SCOUT_DUEL_ENEMIES[22][0]);
   switch (section) {
     case 12: return startSpaceScoutDuel(character, [torpedoBoat()], {
       openingDamage: draw(options.roll ?? die) * character.power });
@@ -101,11 +107,11 @@ export function startSpaceScoutEncounter(character, section, options = {}) {
       const damage = options.missiles.reduce((sum, type) => sum + spendMissile(next, type), 0);
       return startSpaceScoutDuel(next, [torpedoBoat()], { openingDamage: damage });
     }
-    case 32: return startSpaceScoutDuel(character, [enemy('Fighter', 40, 200)], {
+    case 32: return startSpaceScoutDuel(character, SPACE_SCOUT_DUEL_ENEMIES[32], {
       openingDamage: integer(options.openingDamage) });
     case 36: return startSpaceScoutDuel(character,
-      [enemy('First fighter', 50, 120), enemy('Second fighter', 30, 150)], { shieldPenalty: 100 });
-    case 42: return startSpaceScoutDuel(character, [enemy('Escort fighter', 75, 250)]);
+      SPACE_SCOUT_DUEL_ENEMIES[36], { shieldPenalty: 100 });
+    case 42: return startSpaceScoutDuel(character, SPACE_SCOUT_DUEL_ENEMIES[42]);
     case 49: case 66: return startSpaceScoutFleet(character);
     case 'manual': return startSpaceScoutDuel(character, options.enemies,
       { shields: options.shields });

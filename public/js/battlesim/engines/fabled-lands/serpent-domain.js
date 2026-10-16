@@ -174,7 +174,7 @@ function validateSerpentFight(fight) {
 
 export function startSerpentFight(config, input, options = {}, roll) {
   validateSerpentCharacter(input,true);
-  if (!config || !SERPENT_FIGHTS.some(spec=>spec.section===config.section)
+  if (!config || !(config.custom === true && config.section === 0) && !SERPENT_FIGHTS.some(spec=>spec.section===config.section)
     || !options || typeof options!=='object' || Array.isArray(options)) throw new RangeError('Invalid encounter');
   const {applyEntry = true,attackModifier = 0,enemyDamage = 0,mentalPenalty = false,
     soldierAmbush = false,obfuscationUse = false,ratPoison = false,flintKnife = false,

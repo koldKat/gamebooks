@@ -10,11 +10,13 @@ function saveAndRender() {
 
 function selectedEncounter() {
   const { GARDEN_ENCOUNTERS, element } = getContext();
- return GARDEN_ENCOUNTERS.find(e => String(e.section) === element('encounter').value); }
+ return GARDEN_ENCOUNTERS.find(e => String(e.section) === element('encounter').value) ?? {section: 'custom', custom: true}; }
 
 function label(e) {
   const { tk } = getContext();
- return tk('encounter_label', { section: e.section, enemy: tk(`enemy.${e.foes[0].name.split(' ')[0]}`) }); }
+  if (e.custom) return e.foes.map(enemy => enemy.name).join(' / ');
+ return tk('encounter_label', { section: e.section, enemy: e.customNames ? e.foes.map(enemy => enemy.name).join(' / ')
+   : tk(`enemy.${e.foes[0].name.split(' ')[0]}`) }); }
 
 function configure() {
   const { element, selectedEncounter, tk } = getContext();
@@ -38,11 +40,12 @@ function record() {
 }
 
 function start() {
-  const { character, createGardenFight, data, element, number, options, record, saveAndRender, selectedEncounter, showAlert, tk } = getContext();
+  const { character, createGardenFight, data, element, number, opponentSetup, options, record, saveAndRender, selectedEncounter, showAlert, tk } = getContext();
 
   const d = data(); if (!d || d.fight?.pending) return;
   try {
-    d.fight = createGardenFight(selectedEncounter().section, character(d), { ...Object.fromEntries(options.map(key => [key, element(key).checked])), surprise: element('surprise').value, companions: number('companions'), previous: d.fight });
+    d.fight = createGardenFight(selectedEncounter().section, character(d), { ...Object.fromEntries(options.map(key => [key, element(key).checked])), surprise: element('surprise').value, companions: number('companions'), previous: d.fight, opponents: opponentSetup?.read() });
+    opponentSetup?.save(d);
     d.player = { ...d.fight.player };
     d.log.push(tk('started', { section: d.fight.encounter.section })); d.log = d.log.slice(-150);
     record(); saveAndRender();

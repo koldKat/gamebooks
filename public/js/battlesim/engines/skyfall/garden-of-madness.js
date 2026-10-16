@@ -1,4 +1,5 @@
 import { rollAttack, tossCoins } from '../skyfall-rules.js';
+import { editableSkyfallEncounter } from './opponents.js';
 
 const foe = (name, expertise, vitality, damage) => ({ name, expertise, vitality, initialVitality: vitality, damage });
 const tripod = (section, extra = {}) => ({ section, foes: [foe('Tripodal Creature', 11, 30, 4)], disease: true, escapeDamage: 0, ...extra });
@@ -33,8 +34,9 @@ export const GARDEN_ENCOUNTERS = [
   tripod(384, { escapeAfter: 3, disease: true, fortuneReward: 0 }),
 ];
 
-export function createGardenFight(section, player, { surprise = 'none', daggerTaken = false, companions = 3, diseased = false, previous = null } = {}) {
-  const source = GARDEN_ENCOUNTERS.find(e => String(e.section) === String(section));
+export function createGardenFight(section, player, { surprise = 'none', daggerTaken = false, companions = 3, diseased = false, previous = null, opponents } = {}) {
+  const source = editableSkyfallEncounter(GARDEN_ENCOUNTERS.find(e => String(e.section) === String(section)),
+    section === 'custom' || GARDEN_ENCOUNTERS.some(e => String(e.section) === String(section)) ? opponents : undefined);
   if (!source || !['none', 'player', 'enemy'].includes(surprise) || ![3, 5, 8].includes(companions)) throw new RangeError('Invalid encounter');
   for (const key of ['expertise', 'vitality', 'fortune', 'weaponDamage']) if (!Number.isInteger(player[key])) throw new RangeError('Invalid character');
   if (player.vitality <= 0 || player.vitality > 20 || player.fortune < 0 || player.weaponDamage < 0) throw new RangeError('Invalid character');

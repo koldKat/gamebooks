@@ -1,6 +1,7 @@
 import { WONDERLAND_ENCOUNTERS } from './roster.js';
 import { createWonderlandCharacter, wonderlandTest, wonderlandInteger } from './random.js';
 import { startWonderlandFight, wonderlandRound, resolveWonderlandInitiative } from './core.js';
+import { createOpponentEditor } from '../../opponents.js';
 
 const ID = 'sim636';
 const attributes = ['agility', 'logic', 'combat', 'endurance', 'insanity'];
@@ -10,10 +11,11 @@ export function createWonderlandPanel({ document, t, getRun, getBookId, saveStat
   showConfirm, getButtonRow, registerShortcut = () => {} }) {
   const tk = (key, params) => t('battlesim636.' + key, params);
   const el = key => document.getElementById(ID + '-' + key);
-  let shownRun, shownData;
+  let shownRun, shownData, opponents;
   const busy = d => d?.fight?.status === 'fighting';
-  const spec = () => WONDERLAND_ENCOUNTERS.find(row => row.section === Number(el('encounter').value));
-  const label = row => tk('encounter_label', { enemy: row.enemies.map(e => e.name).join(' / '), section: row.section });
+  const spec = () => WONDERLAND_ENCOUNTERS.find(row => row.section === Number(el('encounter').value)) ?? {section: 0, custom: true};
+  const label = row => row.custom ? row.enemies.map(e => e.name).join(' / ')
+    : tk('encounter_label', { enemy: row.enemies.map(e => e.name).join(' / '), section: row.section });
   function data() {
     if (Number(getBookId()) !== 636) return null;
     const run = getRun();
@@ -56,8 +58,9 @@ export function createWonderlandPanel({ document, t, getRun, getBookId, saveStat
     showConfirm(tk(key), () => { if (run === getRun() && original === data()) action(update); });
   }
   function snapshot(d) {
-    d.setup = Object.fromEntries([...el('setup').querySelectorAll('input,select')].map(input =>
+    d.setup = Object.fromEntries([...el('setup').querySelectorAll('input,select')].filter(input => !input.closest('.bsim-opponent-editor')).map(input =>
       [input.id, input.type === 'checkbox' ? input.checked : input.value]));
+    d.opponentSetup = opponents.snapshot();
   }
   function saveCharacter(d) {
     if (busy(d)) throw new RangeError('Finish the current fight');
@@ -71,8 +74,10 @@ export function createWonderlandPanel({ document, t, getRun, getBookId, saveStat
     saveCharacter(d);
     const source = spec();
     if (!source) throw new RangeError('Missing encounter');
-    const encounter = { ...source, enemies: source.enemies.map((enemy, i) => ({ ...enemy,
-      combat: number('enemy' + i + 'Combat'), endurance: number('enemy' + i + 'Endurance', .5, true) })) };
+    const edited = opponents.read();
+    if (!source.custom && edited.length !== source.enemies.length) throw new RangeError('Invalid group size');
+    const encounter = {...source, enemies: edited.map((enemy, index) => ({...source.enemies?.[index],
+      name: enemy.displayName || t('battlesim.default_enemy'), combat: enemy.combat, endurance: enemy.endurance}))};
     d.fight = startWonderlandFight(d.character, encounter, {
       initiative: el('initiative').value, mode: el('mode').value, weapon: el('weapon').value,
       protection: el('protection').value, teapotInjury: el('teapotInjury').checked,
@@ -82,7 +87,7 @@ export function createWonderlandPanel({ document, t, getRun, getBookId, saveStat
     d.character.cakeUses -= d.fight.cakeSpent;
     d.character.pepperUses -= d.fight.pepperSpent;
     d.character.endurance = d.fight.player.endurance;
-    d.encounter = label(source);
+    d.encounter = label(encounter);
     snapshot(d);
     d.log.push(tk('started', { enemy: d.encounter }));
   }
@@ -102,7 +107,9 @@ export function createWonderlandPanel({ document, t, getRun, getBookId, saveStat
     if (!force && busy(data())) return;
     const row = spec();
     if (!row) return;
-    el('enemies').innerHTML = row.enemies.map((enemy, i) => `<div class="bsim-side"><div class="bsim-side-title">${escape(enemy.name)}</div>${input('enemy' + i + 'Combat', 'combat', enemy.combat)}${input('enemy' + i + 'Endurance', 'endurance', enemy.endurance, .5, '.5')}</div>`).join('');
+    if (row.enemies) opponents.set(row.enemies);
+    else if (force) opponents.set([{}]);
+    opponents.fixCount(!row.custom);
     el('initiative').value = row.initiative ?? '';
     el('teapotInjury').checked = false;
     el('teapotRow').hidden = row.section !== 271;
@@ -119,6 +126,7 @@ export function createWonderlandPanel({ document, t, getRun, getBookId, saveStat
         else field.value = d.setup[field.id] ?? (field.tagName === 'SELECT' ? field.options[0].value : field.defaultValue);
       }
       preset(true);
+      if (d.opponentSetup) opponents.set(d.opponentSetup);
       for (const field of el('setup').querySelectorAll('input,select')) {
         if (d.setup[field.id] === undefined) continue;
         if (field.type === 'checkbox') field.checked = d.setup[field.id];
@@ -132,6 +140,7 @@ export function createWonderlandPanel({ document, t, getRun, getBookId, saveStat
       for (const key of [...attributes, 'curiouser', 'pen', 'cakeUses', 'pepperUses']) el(key).value = d.character[key] ?? 0;
     }
     const active = busy(d), f = d.fight;
+    opponents.lock(active);
     for (const field of el('setup').querySelectorAll('input,select,button')) field.disabled = active;
     el('start').disabled = active || d.character.endurance <= 0;
     el('attack').disabled = !active || f.pendingInitiative;
@@ -153,6 +162,12 @@ export function createWonderlandPanel({ document, t, getRun, getBookId, saveStat
     overlay.id = ID + '-overlay'; overlay.className = 'inv-overlay';
     overlay.innerHTML = `<div class="inv-modal bsim-modal bsim-compact-form"><div class="inv-modal-hdr"><span class="inv-modal-title">${escape(tk('title'))}</span><button class="inv-close-btn" id="${ID}-close" aria-label="${escape(t('btn.close'))}">&times;</button></div><div class="bsim-body"><div class="bsim-col bsim-col-left"><div id="${ID}-setup"><p>${escape(tk('note'))}</p><div class="bsim-side"><div class="bsim-side-title">${escape(tk('alice'))}</div>${attributes.map(key => input(key, key, key === 'endurance' ? 21 : key === 'insanity' ? 0 : 9, 0, key === 'endurance' ? '.5' : 1)).join('')}<details><summary>${escape(tk('abilities'))}</summary>${input('curiouser', 'curiouser', 3)}${input('pen', 'pen', 3)}${input('cakeUses')}${input('pepperUses')}</details><details><summary>${escape(tk('newCharacter'))}</summary><p>${escape(tk('allocationNote'))}</p>${['agility', 'logic', 'combat', 'endurance'].map(key => input('points_' + key, key, key === 'endurance' ? 1 : 3)).join('')}${button('allocate')}</details></div>${select('mode', ['dice', 'cards'])}${select('weapon', ['unarmed', 'scissors', 'spade', 'knife', 'tusk', 'axe', 'vorpal', 'club', 'mallet'])}${select('protection', ['none', 'shell', 'tray', 'coat'])}<label class="inv-edit-row">${escape(tk('encounter'))}<select class="inv-edit-input" id="${ID}-encounter">${WONDERLAND_ENCOUNTERS.map(row => `<option value="${row.section}">${escape(label(row))}</option>`).join('')}</select></label>${select('initiative', ['', 'player', 'enemy', 'none'])}<div id="${ID}-teapotRow">${check('teapotInjury')}</div>${check('cake')}${check('pepper')}<details><summary>${escape(tk('enemyStats'))}</summary><div id="${ID}-enemies"></div></details></div><div class="bsim-btn-row">${button('start')}${button('cancel')}${button('attack')}</div><div id="${ID}-status" class="bsim-status"></div><div id="${ID}-initiativeDecision"><p>${escape(tk('mixed'))}</p>${select('nextInitiative', ['player', 'enemy', 'none'])}${button('resolve')}</div><details><summary>${escape(tk('tests'))}</summary>${select('attribute', attributes)}${button('test')}</details></div><div class="bsim-col bsim-col-right"><details class="bsim-history"><summary>${escape(tk('history'))}</summary><div class="bsim-history-list" id="${ID}-history"></div></details><div class="bsim-log" id="${ID}-log"></div></div></div></div>`;
     document.body.appendChild(overlay);
+    el('encounter').insertAdjacentHTML('afterbegin', `<option value="0">${escape(t('battlesim.editor.custom'))}</option>`);
+    el('encounter').value = '0';
+    opponents = createOpponentEditor({document, id: ID, t,
+      fields: [{key: 'combat', label: tk('combat')}, {key: 'endurance', label: tk('endurance'), min: .5, step: .5}],
+      presets: WONDERLAND_ENCOUNTERS.flatMap(entry => entry.enemies)});
+    el('enemies').closest('details').replaceWith(opponents.element);
     const btn = document.createElement('button'); btn.id = ID + '-btn'; btn.textContent = t('battlesim.title'); btn.style.display = 'none';
     getButtonRow().appendChild(btn); btn.addEventListener('click', open);
     el('close').addEventListener('click', close);

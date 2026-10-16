@@ -34,11 +34,21 @@ export function targets(fight) {
   return fight.config.simultaneous ? alive : alive.slice(0, 1);
 }
 
-export function startFight(section, character, { manualStamina = null } = {}) {
+export function startFight(section, character, { manualStamina = null, opponents = null } = {}) {
   validateCharacter(character, true);
-  const source = ENCOUNTERS.find(encounter => encounter.section === section);
+  const source = section === 0 && opponents?.length ? {custom: true, section: 0, enemies: opponents}
+    : ENCOUNTERS.find(encounter => encounter.section === section);
   if (!source) throw new RangeError('Unknown encounter');
   const config = clone(source), player = clone(character);
+  if (opponents) {
+    if (!Array.isArray(opponents) || !opponents.length || opponents.length > 100
+        || !config.custom && opponents.length !== config.enemies.length) throw new RangeError('Invalid opponent count');
+    config.enemies = opponents.map((enemy, index) => {
+      integer(enemy.skill); integer(enemy.stamina, 1);
+      if (typeof enemy.displayName !== 'string') throw new RangeError('Invalid opponent name');
+      return {...config.enemies[index], ...enemy, key: config.enemies[index]?.key ?? 'custom' + index};
+    });
+  }
   const enemies = config.enemies.map(enemy => {
     const stamina = enemy.stamina === null ? integer(manualStamina, 1) : enemy.stamina;
     return { ...enemy, stamina, staminaInitial: stamina };

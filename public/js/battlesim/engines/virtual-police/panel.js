@@ -1,18 +1,20 @@
 import * as rules from './core.js';
 import { POLICE_ENCOUNTERS, preparePoliceEnemy } from './roster.js';
 import { policeDragonOpening, policeHunt } from './openings.js';
+import { createOpponentEditor } from '../../opponents.js';
 
 const ID = 'sim570';
 const stats = ['attack', 'defence', 'damage', 'life'];
 const escape = text => String(text).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 export function createPolicePanel({ document, t, getRun, getBookId, saveState, showAlert, showConfirm, getButtonRow, registerShortcut = () => {} }) {
-  let shownRun;
+  let shownRun, opponents;
   let shownFight;
   const tk = (key, params) => t(`battlesim570.${key}`, params);
   const el = key => document.getElementById(`${ID}-${key}`);
   const busy = d => d?.fight?.status === 'fighting';
-  const spec = () => POLICE_ENCOUNTERS.find(row => row.id === el('encounter').value);
+  const spec = () => POLICE_ENCOUNTERS.find(row => row.id === el('encounter').value)
+    ?? {id: 'custom', custom: true, enemy: {}, party: true};
   function data() {
     if (Number(getBookId()) !== 570) return null;
     const run = getRun();
@@ -55,14 +57,18 @@ export function createPolicePanel({ document, t, getRun, getBookId, saveState, s
     render();
     const row = spec();
     if (!row) return;
+    if (!row.custom) opponents.set([{displayName: name(row)}]);
+    opponents.fixCount(true);
     for (const key of stats) el('enemy_' + key).value = row.enemy[key] ?? '';
-    el('count').value = row.count ?? '';
+    el('count').value = row.count ?? (row.custom ? 1 : '');
     el('mode').value = row.dragon ? 'dragon' : 'solo';
     render();
   }
   function start(d) {
     const mode = el('mode').value, row = spec();
-    d.encounter = mode === 'ship' ? tk('ship') : label(row);
+    d.opponentName = opponents.read()[0].displayName || t('battlesim.editor.bg.name');
+    d.encounter = mode === 'ship' ? tk('ship') : row.custom ? d.opponentName
+      : tk('encounter_label', {enemy: d.opponentName, section: row.section});
     const overrides = {};
     for (const key of stats) {
       if (!el('enemy_' + key).value.trim()) continue;
@@ -76,7 +82,7 @@ export function createPolicePanel({ document, t, getRun, getBookId, saveState, s
         { attack: number('baseAttack'), defence: number('baseDefence') },
         { targets: number('targets', 1), ammunition: { antiproton: number('ammunition'), atomic: number('atomicAmmo'), pa: number('paAmmo'), pb: number('pbAmmo') }, atmosphericShield: el('atmosphericShield').checked });
     } else {
-      const prepared = preparePoliceEnemy(row.id, options);
+      const prepared = row.custom ? {enemy: actor('enemy'), count: number('count', 1)} : preparePoliceEnemy(row.id, options);
       if (mode === 'dragon') {
         if (!row.dragon) throw new RangeError('Choose a dragon encounter');
         const lines = [1, 2, 3].map(i => ({ ...actor(`line${i}`), count: number(`line${i}_count`, 1), type: el(`line${i}_type`).value }));
@@ -177,8 +183,10 @@ export function createPolicePanel({ document, t, getRun, getBookId, saveState, s
         if (input.type === 'checkbox') input.checked = saved ?? input.defaultChecked;
         else input.value = saved ?? (input.tagName === 'SELECT' ? input.options[0].value : input.defaultValue);
       }
+      opponents.set([{displayName: d.opponentName ?? (spec().custom ? '' : name(spec()))}]);
     }
     const f = d.fight, active = busy(d), mode = el('mode').value;
+    opponents.lock(active);
     if (shownFight !== f) {
       shownFight = f;
       if (f?.player) {
@@ -248,6 +256,13 @@ export function createPolicePanel({ document, t, getRun, getBookId, saveState, s
       <div class="bsim-btn-row">${button('attack')}${button('cast')}</div><div id="${ID}-pending"><p id="${ID}-pendingMessage"></p>${input('killed')}${input('remainingLife', 'remainingLife', '', 1)}${check('heroKilled')}<details><summary>${escape(tk('survivors'))}</summary>${fields('survivor', 1)}</details>${button('resolve')}</div></div>
       <div class="bsim-col bsim-col-right"><details class="bsim-history"><summary>${escape(tk('history'))}</summary><div id="${ID}-history" class="bsim-history-list"></div></details><div id="${ID}-log" class="bsim-log"></div></div></div></div>`;
     document.body.appendChild(overlay);
+    el('encounter').insertAdjacentHTML('afterbegin', `<option value="custom">${escape(t('battlesim.editor.bg.custom'))}</option>`);
+    el('encounter').value = 'custom';
+    opponents = createOpponentEditor({document, id: ID, t, language: 'bg', fields: [],
+      presets: POLICE_ENCOUNTERS.map(row => ({id: row.id, displayName: name(row)})),
+      onSelect(row) { el('encounter').value = row.id; preset(); }});
+    opponents.fixCount(true);
+    el('encounter').closest('label').after(opponents.element);
     const btn = document.createElement('button'); btn.id = `${ID}-btn`; btn.textContent = t('battlesim.title'); btn.style.display = 'none';
     getButtonRow().appendChild(btn); btn.addEventListener('click', open); el('close').addEventListener('click', close);
     let backdrop = false;

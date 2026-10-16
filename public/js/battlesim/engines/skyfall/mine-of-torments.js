@@ -1,4 +1,5 @@
 import { rollAttack, tossCoins } from '../skyfall-rules.js';
+import { editableSkyfallEncounter } from './opponents.js';
 
 const foe = (name, expertise, vitality, damage) => ({ name, expertise, vitality, initialVitality: vitality, damage });
 const yeti = (section, extra = {}) => ({ section, foes: [foe('Yeti', 12, 14, 2)], fear: 1, fortuneReward: 2, ...extra });
@@ -27,9 +28,9 @@ export const MINE_ENCOUNTERS = [
   wolves(369, 4),
 ];
 
-export function createMineFight(section, player, { underclothes = false, failedLanding = false, ambush = false, fedusar = false } = {}) {
-  const entry = MINE_ENCOUNTERS.find(e => String(e.section) === String(section));
-  if (!entry) throw new RangeError('Unknown encounter');
+export function createMineFight(section, player, { underclothes = false, failedLanding = false, ambush = false, fedusar = false, opponents } = {}) {
+  const entry = editableSkyfallEncounter(MINE_ENCOUNTERS.find(e => String(e.section) === String(section)),
+    section === 'custom' || MINE_ENCOUNTERS.some(e => String(e.section) === String(section)) ? opponents : undefined);
   for (const key of ['expertise', 'vitality', 'fortune', 'weaponDamage']) {
     if (!Number.isInteger(player[key])) throw new RangeError('Invalid character');
   }

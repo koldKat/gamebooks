@@ -1,4 +1,5 @@
 import { rollAttack, tossCoins } from '../skyfall-rules.js';
+import { editableSkyfallEncounter } from './opponents.js';
 
 const foe = (name, expertise, vitality, damage) => ({ name, expertise, vitality, initialVitality: vitality, damage });
 const ogre = (section, expertise, extra = {}) => ({ section, sourceSection: 374, foes: [foe('Ogre', expertise, 16, 4)], fortuneReward: 4, expertiseReward: 1, ...extra });
@@ -22,9 +23,9 @@ export const PYRAMID_ENCOUNTERS = [
   troll(386),
 ];
 
-export function createPyramidFight(section, player, { openingBonus = false, cuttingWeapon = true } = {}) {
-  const entry = PYRAMID_ENCOUNTERS.find(e => String(e.section) === String(section));
-  if (!entry) throw new RangeError('Unknown encounter');
+export function createPyramidFight(section, player, { openingBonus = false, cuttingWeapon = true, opponents } = {}) {
+  const entry = editableSkyfallEncounter(PYRAMID_ENCOUNTERS.find(e => String(e.section) === String(section)),
+    section === 'custom' || PYRAMID_ENCOUNTERS.some(e => String(e.section) === String(section)) ? opponents : undefined);
   for (const key of ['expertise', 'vitality', 'fortune', 'weaponDamage']) {
     if (!Number.isInteger(player[key])) throw new RangeError('Invalid character');
   }

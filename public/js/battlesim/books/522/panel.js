@@ -1,9 +1,11 @@
 import { ID } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
+import { createSkyfallOpponentSetup } from '../../engines/skyfall/setup.js';
+let opponentSetup;
 
 // BEGIN SIMULATOR WIRING
-const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, ID, PYRAMID_ENCOUNTERS, act, character, close, configure, createPyramidFight, currentBookId, currentPlaythrough, data, element, escapeHtml, escapePyramidFight, field, finishPyramidFight, getPlayBtnRow, initSim522, initialFortune, label, number, open, record, recoverVitality, registerPanelShortcut, renderSim522, rollPyramidRound, saveAndRender, saveState, selectedEncounter, setSim522Visible, settlePyramidRound, shortcutLabel, showAlert, start, t, tk, toggle, treatPyramidBites });
+const simulatorContext = () => ({ opponentSetup, ALL_PANEL_OVERLAY_IDS, ID, PYRAMID_ENCOUNTERS, act, character, close, configure, createPyramidFight, currentBookId, currentPlaythrough, data, element, escapeHtml, escapePyramidFight, field, finishPyramidFight, getPlayBtnRow, initSim522, initialFortune, label, number, open, record, recoverVitality, registerPanelShortcut, renderSim522, rollPyramidRound, saveAndRender, saveState, selectedEncounter, setSim522Visible, settlePyramidRound, shortcutLabel, showAlert, start, t, tk, toggle, treatPyramidBites });
 const { data } = createState(simulatorContext);
 const { character, saveAndRender, selectedEncounter, label, configure, record, start, act } = createCombat(simulatorContext);
 // END SIMULATOR WIRING
@@ -29,6 +31,7 @@ function open() {
 export function renderSim522() {
   if (!element('overlay')) return;
   const d = data(); if (!d) { close(); return; }
+  opponentSetup?.render();
   const f = d.fight; const p = character(d); const pending = f?.pending;
   for (const key of ['expertise', 'vitality', 'fortune', 'weaponDamage', 'potions', 'provisions']) {
     if (document.activeElement !== element(key)) element(key).value = key in p ? p[key] : d[key];
@@ -148,6 +151,8 @@ export function initSim522() {
     if (d.fight?.poisoned) d.fight.poisonCured = true;
     saveAndRender();
   });
+  opponentSetup = createSkyfallOpponentSetup({document, id: ID, t, tk, encounters: PYRAMID_ENCOUNTERS,
+    getRun: currentPlaythrough, getData: data, configure});
   configure();
 }
 

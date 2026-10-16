@@ -1,5 +1,5 @@
-import { definition, ENCOUNTERS, POSITIONS } from './definition.js';
-import { startEncounter, addPenalty, finishEncounter, defendShip, retakeShip, attackShip, barracksPenalty } from './combat.js';
+import { definition, POSITIONS } from './definition.js';
+import { defendShip, retakeShip, attackShip } from './combat.js';
 import { createState } from './state.js';
 import { currentBookId, currentPlaythrough, saveState } from '../../../core/state.js';
 import { getPlayBtnRow } from '../../../play/charsheet.js';
@@ -36,11 +36,11 @@ export function createDesertPanel({ document, t, getRun, getBookId, saveState, s
   function close() { el('overlay')?.classList.remove('active'); }
   function cancel() {
     const run = getRun(), before = store.read();
-    if (!active(before?.fight) && !active(before?.naval)) return;
+    if (!active(before?.naval)) return;
     showConfirm(tk('cancelConfirm'), () => {
       if (Number(getBookId()) !== definition.id || getRun() !== run || store.read() !== before) return;
       change(d => {
-        for (const fight of [d.fight, d.naval]) if (active(fight)) fight.outcome = 'cancelled';
+        if (active(d.naval)) d.naval.outcome = 'cancelled';
       });
     });
   }
@@ -52,23 +52,10 @@ export function createDesertPanel({ document, t, getRun, getBookId, saveState, s
     rendered = d;
     el('endurance').value = d.character.endurance;
     el('silver').value = d.character.silver;
-    const busy = active(d.fight) || active(d.naval);
-    el('mode').disabled = busy;
-    el('encounter').disabled = active(d.fight);
-    el('start').disabled = busy || d.character.endurance < 0;
+    const busy = active(d.naval);
     el('cancel').disabled = !busy;
     el('apply').disabled = busy;
     el('endurance').disabled = el('silver').disabled = busy;
-    el('tactical').hidden = el('mode').value !== 'tactical';
-    el('naval').hidden = el('mode').value !== 'naval';
-    const fight = d.fight;
-    el('penalties').textContent = fight ? [fight.name, tk('penaltyStatus', { penalties: fight.penalties, level: fight.level }),
-      fight.outcome ? tk('status.' + fight.outcome) : '',
-      fight.outcome === 'loss' ? fight.fatal ? tk('return', { section: fight.fatal }) : tk('manualReturn') : ''].filter(Boolean).join('\n') : tk('ready');
-    el('penaltyActions').hidden = !active(fight);
-    el('barracks').hidden = !active(fight) || fight.origin !== 'map-6';
-    el('applyApproach').disabled = !active(fight) || Boolean(fight.approachApplied);
-    for (const control of el('penaltyActions').querySelectorAll('button')) control.disabled = !active(fight);
     el('history').textContent = d.history.slice(-40).reverse().map(h => h.enemy + ': ' + tk('status.' + h.outcome)).join('\n');
     for (const key of Object.keys(POSITIONS)) {
       const point = d.deployment[key] ?? {};
@@ -96,10 +83,8 @@ export function createDesertPanel({ document, t, getRun, getBookId, saveState, s
   function open() {
     if (Number(getBookId()) !== definition.id || !getRun()) { showAlert(t('battlesim.no_active_playthrough')); return; }
     try {
-      const d = store.ensure();
+      store.ensure();
       displayedRun = getRun();
-      el('mode').value = active(d.naval) ? 'naval' : active(d.fight) ? 'tactical' : el('mode').value;
-      if (d.fight) el('encounter').value = d.fight.origin;
       el('overlay').classList.add('active'); render(true); el('close').focus();
     } catch { close(); showAlert(tk('invalid')); }
   }
@@ -110,16 +95,8 @@ export function createDesertPanel({ document, t, getRun, getBookId, saveState, s
     const deployments = Object.keys(POSITIONS).map(key => `<details><summary>${escape(tk('position.' + key))} (${key})</summary>`
       + input(key + '-force', 'force', 31, key === 'А' ? 31 : 0) + input(key + '-pots', 'pots', 8) + input(key + '-bows', 'bows', 3)
       + ['whip', 'chestnuts', 'poison'].map(field => check(key + '-' + field, field)).join('') + '</details>').join('');
-    overlay.innerHTML = `<div class="inv-modal bsim-modal bsim-compact-form" role="dialog" aria-modal="true" aria-labelledby="${ID}-title"><div class="inv-modal-hdr"><span class="inv-modal-title" id="${ID}-title">${escape(tk('title'))}</span><button type="button" class="inv-close-btn" id="${ID}-close" aria-label="${escape(t('btn.close'))}">&times;</button></div><div class="bsim-body"><div class="bsim-col bsim-col-left"><p>${escape(tk('note'))}</p><details><summary>${escape(tk('character'))}</summary>${input('endurance', 'endurance', 40, 40, -1000)}${input('silver', 'silver', 1000000, 40)}${button('apply')}</details><label class="inv-edit-row"><span>${escape(tk('mode'))}</span><select class="inv-edit-input" id="${ID}-mode"><option value="tactical">${escape(tk('tactical'))}</option><option value="naval">${escape(tk('naval'))}</option></select></label><div id="${ID}-tactical"><label class="inv-edit-row"><span>${escape(tk('encounter'))}</span><select class="inv-edit-input" id="${ID}-encounter">${Object.keys(ENCOUNTERS).map(key => `<option value="${key}">${escape(tk('encounter.' + key))} (${key === 'map-6' ? tk('map6') : key})</option>`).join('')}</select></label>${button('start')}<p class="bsim-status" id="${ID}-penalties" role="status" aria-live="polite"></p><div class="bsim-btn-row" id="${ID}-penaltyActions">${button('penalty1')}${button('penalty2')}${button('penalty3')}${button('finish')}</div><p>${escape(tk('tacticalNote'))}</p></div><div id="${ID}-naval" hidden><p>${escape(tk('navalNote'))}</p><div id="${ID}-deployment">${['whip', 'chestnuts', 'poison'].map(field => check('owned-' + field, 'own.' + field)).join('')}${deployments}</div>${button('defend')}<p class="bsim-status" id="${ID}-navalStatus" role="status" aria-live="polite"></p><div id="${ID}-retakeFields" hidden><p>${escape(tk('manualEquipment'))}</p>${input('survivors', 'survivors', 31)}${check('whipSurvives', 'whipSurvives')}${input('whipKills', 'whipKills', 3)}${button('retake')}</div><div id="${ID}-attackFields" hidden><p>${escape(tk('manualEquipment'))}</p>${input('attackSurvivors', 'survivors', 31)}${input('availablePots', 'availablePots', 8)}${input('availableBows', 'availableBows', 3)}${check('availablePoison', 'availablePoison')}${button('attack')}</div></div><div class="bsim-btn-row">${button('cancel')}</div></div><div class="bsim-col bsim-col-right"><details class="bsim-history"><summary>${escape(tk('history'))}</summary><div class="bsim-history-list bsim-status" id="${ID}-history"></div></details></div></div></div>`;
+    overlay.innerHTML = `<div class="inv-modal bsim-modal bsim-compact-form" role="dialog" aria-modal="true" aria-labelledby="${ID}-title"><div class="inv-modal-hdr"><span class="inv-modal-title" id="${ID}-title">${escape(tk('title'))}</span><button type="button" class="inv-close-btn" id="${ID}-close" aria-label="${escape(t('btn.close'))}">&times;</button></div><div class="bsim-body"><div class="bsim-col bsim-col-left"><p>${escape(tk('note'))}</p><details><summary>${escape(tk('character'))}</summary>${input('endurance', 'endurance', 40, 40, -1000)}${input('silver', 'silver', 1000000, 40)}${button('apply')}</details><div id="${ID}-naval"><p>${escape(tk('navalNote'))}</p><div id="${ID}-deployment">${['whip', 'chestnuts', 'poison'].map(field => check('owned-' + field, 'own.' + field)).join('')}${deployments}</div>${button('defend')}<p class="bsim-status" id="${ID}-navalStatus" role="status" aria-live="polite"></p><div id="${ID}-retakeFields" hidden><p>${escape(tk('manualEquipment'))}</p>${input('survivors', 'survivors', 31)}${check('whipSurvives', 'whipSurvives')}${input('whipKills', 'whipKills', 3)}${button('retake')}</div><div id="${ID}-attackFields" hidden><p>${escape(tk('manualEquipment'))}</p>${input('attackSurvivors', 'survivors', 31)}${input('availablePots', 'availablePots', 8)}${input('availableBows', 'availableBows', 3)}${check('availablePoison', 'availablePoison')}${button('attack')}</div></div><div class="bsim-btn-row">${button('cancel')}</div></div><div class="bsim-col bsim-col-right"><details class="bsim-history"><summary>${escape(tk('history'))}</summary><div class="bsim-history-list bsim-status" id="${ID}-history"></div></details></div></div></div>`;
     document.body.appendChild(overlay);
-    el('penaltyActions').insertAdjacentHTML('beforeend', input('penaltyAmount', 'penaltyAmount', 1000, 1) + button('addPenalty'));
-    const barracks = document.createElement('div'); barracks.id = ID + '-barracks'; barracks.hidden = true;
-    barracks.innerHTML = '<p>' + escape(tk('barracksNote')) + '</p>'
-      + input('groupSize', 'groupSize', 48, 4, 4)
-      + '<label class="inv-edit-row"><span>' + escape(tk('approach')) + '</span><select class="inv-edit-input" id="' + ID + '-approach">'
-      + [419, 429, 439, 449, 459].map(id => '<option value="' + id + '">' + escape(tk('approach.' + id)) + ' (' + id + ')</option>').join('')
-      + '</select></label>' + button('applyApproach');
-    el('tactical').appendChild(barracks);
     const btn = document.createElement('button'); btn.id = ID + '-btn'; btn.textContent = t('battlesim.title'); btn.style.display = 'none';
     getButtonRow().appendChild(btn); btn.addEventListener('click', open);
     el('close').addEventListener('click', close);
@@ -127,32 +104,13 @@ export function createDesertPanel({ document, t, getRun, getBookId, saveState, s
     overlay.addEventListener('mousedown', e => { backdrop = e.target === overlay; });
     overlay.addEventListener('click', e => { if (backdrop && e.target === overlay) close(); });
     overlay.addEventListener('keydown', e => { if (e.key === 'Escape') { e.stopPropagation(); close(); } });
-    el('mode').addEventListener('change', () => render(true));
     el('apply').addEventListener('click', () => change(d => {
-      if (active(d.fight) || active(d.naval)) return;
+      if (active(d.naval)) return;
       d.character = { endurance: number('endurance'), silver: number('silver') };
     }));
-    el('start').addEventListener('click', () => change(d => {
-      if (active(d.fight) || active(d.naval) || d.character.endurance < 0) return;
-      const origin = el('encounter').value;
-      d.fight = { ...startEncounter(origin), name: tk('encounter.' + origin) };
-    }));
-    for (const amount of [1, 2, 3]) el('penalty' + amount).addEventListener('click', () => change(d => {
-      if (active(d.fight)) d.fight = addPenalty(d.fight, amount);
-    }));
-    el('addPenalty').addEventListener('click', () => change(d => {
-      if (active(d.fight)) d.fight = addPenalty(d.fight, number('penaltyAmount'));
-    }));
-    el('applyApproach').addEventListener('click', () => change(d => {
-      if (active(d.fight) && d.fight.origin === 'map-6' && !d.fight.approachApplied) {
-        d.fight = addPenalty(d.fight, barracksPenalty(el('approach').value, number('groupSize')));
-        d.fight.approachApplied = true;
-      }
-    }));
-    el('finish').addEventListener('click', () => change(d => { if (active(d.fight)) d.fight = finishEncounter(d.fight); }));
     el('cancel').addEventListener('click', cancel);
     el('defend').addEventListener('click', () => change(d => {
-      if (active(d.fight) || active(d.naval) || d.character.endurance < 0) return;
+      if (active(d.naval) || d.character.endurance < 0) return;
       d.deployment = Object.fromEntries(Object.keys(POSITIONS).map(key => [key, {
         ...Object.fromEntries(['force', 'pots', 'bows'].map(field => [field, number(key + '-' + field)])),
         ...Object.fromEntries(['whip', 'chestnuts', 'poison'].map(field => [field, el(key + '-' + field).checked])),

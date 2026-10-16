@@ -423,12 +423,15 @@
                          on the left; results, logs and history on the right. Shared
                          battlesim.css owns the common text scale, aligned labels,
                          22px fields, compact action padding and checkbox states.
+        opponents.js     Shared editable opponent setup with roster autocomplete,
+                         numeric validation, custom groups and active-fight locking.
+                         Book-specific panels retain their own combat rules;
+                         optional presets do not replace or rewrite saved fights.
         battlesim829.js    Battle simulator for book 829.
         battlesim700.js    Compatibility entry for Money and Gangsters 3; books/700 owns its deterministic melee/shooting rules, advisory raid checks and run-scoped state.
-        battlesim706.js    Compatibility entry for Son of the Desert; books/706 owns deterministic penalty encounters, naval tactics and run-scoped state.
+        battlesim706.js    Compatibility entry for Son of the Desert; books/706 owns naval tactics and run-scoped state.
         battlesim710.js    Compatibility entry for Temple of Terror; books/710 separates encounter definitions, pure combat/effects, run-scoped persistence and panel wiring.
         battlesim718.js    Compatibility entry for Demons of the Deep; books/718 keeps encounter rules, effects, run-scoped persistence and panel wiring separate.
-        battlesim2116.js   Compatibility entry for Full Moon; books/2116 owns deterministic quality checks, equipment effects and run-scoped combat history.
         battlesim8.js      Battle simulator for book 8.
         battlesim286.js    Battle simulator for book 286 - flat weapon min-hit damage model (damage = max(0, 2d6 - minHit)).
         battlesim198.js    Battle simulator for book 198, The Warlock of Firetop Mountain - Fighting Fantasy SKILL/STAMINA/LUCK opposed-roll combat.

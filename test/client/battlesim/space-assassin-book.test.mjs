@@ -12,6 +12,19 @@ import bg from '../../../public/js/i18n/bg/battlesim/battlesim735.js';
 
 const player = () => ({ ...newCharacter(() => 1), stamina: 8 });
 
+test('custom opponents and preset overrides use the existing combat rules', () => {
+  const enemies = [{displayName: 'Manual robot', skill: 0, stamina: 3}];
+  const custom = prepareEncounter(player(), 0, {weapon: 'lash', mode: 'melee', opponents: enemies});
+  assert.equal(custom.fight.enemies[0].name, 'Manual robot');
+  assert.equal(custom.fight.enemies[0].skill, 0);
+  assert.equal(custom.fight.encounterSection, 0);
+  const preset = prepareEncounter(player(), 95, {weapon: 'blaster', ballBearings: true, opponents: [{...enemies[0], skill: 5}]});
+  assert.equal(preset.fight.enemies[0].skill, 4);
+  assert.equal(preset.fight.winDestination, 400);
+  assert.throws(() => prepareEncounter(player(), 61, {weapon: 'lash', opponents: enemies}));
+  assert.equal(enemies[0].skill, 0);
+});
+
 test('both locales cover encounters and preserve interpolation parameters', () => {
   assert.deepEqual(Object.keys(en).sort(), Object.keys(bg).sort());
   for (const key of Object.keys(en)) {

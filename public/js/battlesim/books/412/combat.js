@@ -7,10 +7,10 @@ function _enemy(id) {
 
 function _enemyName(d) {
   const { _enemy, t } = getContext();
- return t(_enemy(d.enemyId).nameKey); }
+ return d.enemyName ?? t(_enemy(d.enemyId).nameKey); }
 
 function _checkEnd(d) {
-  const { SVG_SKULL, SVG_TROPHY, _appendLog, _enemyName, _recordOutcome, t } = getContext();
+  const { SVG_SKULL, SVG_TROPHY, _appendLog, _enemyName, _recordOutcome, escapeHtml, t } = getContext();
 
   if (d.printedCombatRules === 1 && d.player.lp <= 0) {
     d.over = true; d.winner = 'enemy';
@@ -20,7 +20,7 @@ function _checkEnd(d) {
   }
   if (d.enemy.hp <= 0) {
     d.over = true; d.winner = 'player';
-    _appendLog(d, t('battlesim412.log.defeated', { trophy: SVG_TROPHY, name: _enemyName(d) }));
+    _appendLog(d, t('battlesim412.log.defeated', { trophy: SVG_TROPHY, name: escapeHtml(_enemyName(d)) }));
     _recordOutcome(d, 'win');
     return true;
   }
@@ -34,17 +34,17 @@ function _checkEnd(d) {
 }
 
 function _startBattle() {
-  const { _appendLog, _checkEnd, _data, _enemy, _enemyName, _renderAll, saveState, t } = getContext();
+  const { _appendLog, _checkEnd, _data, _enemy, _enemyName, _renderAll, escapeHtml, saveState, t } = getContext();
 
   const d = _data();
-  if (!d) return;
+  if (!d || d.started && !d.over) return;
   const base = _enemy(d.enemyId);
-  d.enemy = { str: d.enemy.str || base.str, hp: d.enemy.startHp || base.hp, startHp: d.enemy.startHp || base.hp };
+  d.enemy = { str: d.enemy.str ?? base.str, hp: d.enemy.startHp ?? base.hp, startHp: d.enemy.startHp ?? base.hp };
   d.printedCombatRules = 1;
   d.companionBonus = d.nextCompanionBonus === true ? 5 : 0;
   d.over = false; d.winner = null; d.started = true;
   if (d.log.length) _appendLog(d, t('battlesim412.log.reset_sep'));
-  _appendLog(d, t('battlesim412.log.start', { name: _enemyName(d) }));
+  _appendLog(d, t('battlesim412.log.start', { name: escapeHtml(_enemyName(d)) }));
   if (d.companionBonus) _appendLog(d, t('battlesim412.log.companion'));
   _checkEnd(d);
   saveState();
@@ -52,13 +52,13 @@ function _startBattle() {
 }
 
 function _strikeOnce(d) {
-  const { _appendLog, _checkEnd, _enemyName, drawChance, resolveStrike, t } = getContext();
+  const { _appendLog, _checkEnd, _enemyName, drawChance, resolveStrike, escapeHtml, t } = getContext();
 
   const bonus = d.printedCombatRules === 1 ? (d.companionBonus || 0) : 0;
   const r = resolveStrike(d.player.lp, d.enemy.str, drawChance(), bonus);
   if (r.outcome === 'enemy') {
     d.enemy.hp = Math.max(0, d.enemy.hp - r.enemyLoss);
-    _appendLog(d, t('battlesim412.log.strike_enemy', { chance: r.chance, pstr: r.playerStr, sum: r.sum, estr: d.enemy.str, name: _enemyName(d), hp: d.enemy.hp }));
+    _appendLog(d, t('battlesim412.log.strike_enemy', { chance: r.chance, pstr: r.playerStr, sum: r.sum, estr: d.enemy.str, name: escapeHtml(_enemyName(d)), hp: d.enemy.hp }));
   } else if (r.outcome === 'player') {
     d.player.lp = Math.max(0, d.player.lp - r.playerLoss);
     _appendLog(d, t('battlesim412.log.strike_player', { chance: r.chance, pstr: r.playerStr, sum: r.sum, estr: d.enemy.str, lp: d.player.lp }));

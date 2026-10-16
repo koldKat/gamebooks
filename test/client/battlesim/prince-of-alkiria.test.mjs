@@ -44,6 +44,7 @@ test('Alvian bonus is captured for future fights without changing character valu
   data.nextCompanionBonus = false;
   assert.equal(data.companionBonus, 5);
   assert.equal(sim.resolve(58, 14, 4, data.companionBonus).playerStr, 12);
+  data.over = true;
   sim.start();
   assert.equal(data.companionBonus, 0);
 });

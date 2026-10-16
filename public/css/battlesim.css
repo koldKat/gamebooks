@@ -294,7 +294,7 @@
 #sim680-overlay .bsim-status { white-space: pre-line; overflow-wrap: anywhere; }
 #sim680-close { margin-left: auto; }
 
-#sim689-btn, #sim690-btn, #sim700-btn, #sim706-btn, #sim710-btn, #sim718-btn, #sim722-btn, #sim723-btn, #sim724-btn, #sim728-btn, #sim735-btn, #sim757-btn, #sim758-btn, #sim2116-btn {
+#sim689-btn, #sim690-btn, #sim700-btn, #sim706-btn, #sim710-btn, #sim718-btn, #sim722-btn, #sim723-btn, #sim724-btn, #sim728-btn, #sim735-btn, #sim757-btn {
   background: rgba(31, 41, 55, 0.88);
   border: 1px solid #374151;
   border-radius: 7px;
@@ -308,7 +308,7 @@
   box-shadow: 0 2px 8px rgba(0,0,0,0.35);
   flex-shrink: 0;
 }
-#sim689-btn:hover, #sim690-btn:hover, #sim700-btn:hover, #sim706-btn:hover, #sim710-btn:hover, #sim718-btn:hover, #sim722-btn:hover, #sim723-btn:hover, #sim724-btn:hover, #sim728-btn:hover, #sim735-btn:hover, #sim757-btn:hover, #sim758-btn:hover, #sim2116-btn:hover { background: #374151; color: #d1d5db; }
+#sim689-btn:hover, #sim690-btn:hover, #sim700-btn:hover, #sim706-btn:hover, #sim710-btn:hover, #sim718-btn:hover, #sim722-btn:hover, #sim723-btn:hover, #sim724-btn:hover, #sim728-btn:hover, #sim735-btn:hover, #sim757-btn:hover { background: #374151; color: #d1d5db; }
 :is(#sim710-overlay, #sim718-overlay, #sim722-overlay, #sim723-overlay, #sim724-overlay) [hidden] { display: none !important; }
 :is(#sim710-overlay, #sim718-overlay, #sim722-overlay, #sim723-overlay, #sim724-overlay) .inv-edit-row { flex-wrap: wrap; }
 :is(#sim710-overlay, #sim718-overlay, #sim722-overlay, #sim723-overlay, #sim724-overlay) :is(input, select) { max-width: 100%; min-width: 0; }
@@ -658,17 +658,6 @@
 :is(#sim728-overlay, #sim735-overlay) .bsim-galleon-diagram { display: block; max-width: 100%; height: auto; margin: 0 auto 0.5rem; }
 #sim728-close, #sim735-close, #sim757-close { margin-left: auto; }
 
-#sim758-close { margin-left: auto; }
-#sim758-overlay .inv-edit-row { flex-wrap: wrap; }
-#sim758-overlay :is(input, select) { max-width: 100%; min-width: 0; }
-#sim758-overlay .bsim-col > * { flex-shrink: 0; }
-#sim758-overlay .bsim-col-right { overflow-y: auto; }
-#sim758-overlay .bsim-btn-row { display: flex; flex-wrap: wrap; gap: 0.35rem; }
-#sim758-overlay .bsim-action-btn { flex: 0 0 auto; }
-#sim758-overlay .bsim-status { white-space: pre-line; overflow-wrap: anywhere; }
-#sim758-overlay .bsim-checkbox { display: flex; align-items: center; gap: 0.3rem; color: #9ca3af; }
-#sim758-overlay :is(p, summary, h4) { color: #9ca3af; line-height: 1.4; }
-#sim758-overlay summary { cursor: pointer; }
 
 /* One text scale and density for both legacy and newer simulator panels. */
 .bsim-modal .bsim-col,
@@ -704,3 +693,6 @@
 .bsim-modal .inv-edit-input { padding: 2px 6px; }
 .bsim-modal .inv-modal-hdr { padding: 0.4rem 0.5rem; }
 .bsim-modal .inv-modal-ftr { padding: 0.35rem 0 0; gap: 0.3rem; }
+.bsim-opponent-row { min-width: 0; margin: 0.25rem 0; padding: 0.25rem; border: 1px solid #374151; border-radius: 4px; }
+.bsim-opponent-editor .autocomplete-wrap { flex: 1; min-width: 0; }
+.bsim-opponent-editor > button[hidden], .bsim-opponent-row > button[hidden] { display: none; }

@@ -10,12 +10,14 @@ function saveAndRender() {
 
 function selectedEncounter() {
   const { PYRAMID_ENCOUNTERS, element } = getContext();
- return PYRAMID_ENCOUNTERS.find(e => String(e.section) === element('encounter').value); }
+ return PYRAMID_ENCOUNTERS.find(e => String(e.section) === element('encounter').value) ?? {section: 'custom', custom: true}; }
 
 function label(e) {
   const { tk } = getContext();
+  if (e.custom) return e.foes.map(enemy => enemy.name).join(' / ');
 
-  const enemy = tk(`enemy.${e.mode === 'scorpion' ? 'Scorpion' : e.foes[0].name.split(' ')[0]}`);
+  const enemy = e.customNames ? e.foes.map(enemy => enemy.name).join(' / ')
+    : tk(`enemy.${e.mode === 'scorpion' ? 'Scorpion' : e.foes[0].name.split(' ')[0]}`);
   const base = tk('encounter_label', { section: e.sourceSection ?? e.section, enemy });
   return typeof e.section === 'string' ? `${base} (${tk(e.section.split('-')[1])})` : base;
 }
@@ -40,7 +42,7 @@ function record() {
 }
 
 function start() {
-  const { character, createPyramidFight, data, element, record, saveAndRender, selectedEncounter, showAlert, tk } = getContext();
+  const { character, createPyramidFight, data, element, opponentSetup, record, saveAndRender, selectedEncounter, showAlert, tk } = getContext();
 
   const d = data(); if (!d || d.fight?.pending) return;
   const e = selectedEncounter();
@@ -57,9 +59,11 @@ function start() {
     } else {
       d.fight = createPyramidFight(e.section, character(d), {
         openingBonus: element('opening').checked, cuttingWeapon: element('cutting').checked,
+        opponents: opponentSetup?.read(),
       });
     }
     d.player = { ...d.fight.player };
+    opponentSetup?.save(d);
     d.log.push(tk('started', { section: e.sourceSection ?? e.section })); d.log = d.log.slice(-150);
     record(); saveAndRender();
   } catch { showAlert(tk('invalid_values')); }

@@ -1,5 +1,17 @@
 // Shared simulator labels remain available before a simulator is opened.
 export default {
+    'battlesim.editor.opponents': 'Opponents',
+    'battlesim.editor.name': 'Opponent',
+    'battlesim.editor.add': 'Add opponent',
+    'battlesim.editor.remove': 'Remove',
+    'battlesim.editor.custom': 'Custom fight',
+    'battlesim.editor.invalid': 'Check the opponent names and statistics.',
+    'battlesim.editor.bg.opponents': 'Противници',
+    'battlesim.editor.bg.name': 'Противник',
+    'battlesim.editor.bg.add': 'Добави противник',
+    'battlesim.editor.bg.remove': 'Премахни',
+    'battlesim.editor.bg.custom': 'Свободна битка',
+    'battlesim.editor.bg.invalid': 'Провери имената и показателите на противниците.',
     'battlesim.no_active_playthrough': 'Start a game in this book to use the simulator.',
     'battlesim.title': 'Simulator',
     'battlesim.default_enemy': 'the enemy',

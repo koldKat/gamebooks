@@ -1,6 +1,6 @@
 {
   "sourceCommit": "695fc8cf95d1c2393b30b3b6234660494025a35f",
-  "coreKeys": 702,
+  "coreKeys": 714,
   "tables": {
     "account.js": {
       "keys": 62,
@@ -783,8 +783,8 @@
       "sha256": "8033987f92bd30385a1b0d09e890d294c15e1df7ab4fb5d9b4ff7747a792a7af"
     },
     "battlesim/common.js": {
-      "keys": 8,
-      "sha256": "2307a6aa1503a1c0726bac47c2d01e45db1bde873b4a31f2aa2f64844c931b81"
+      "keys": 20,
+      "sha256": "cec365f50be719ff2cab1c57ab39c59d0e9a9418ff32323eecf4e9001a1d0e90"
     },
     "books.js": {
       "keys": 76,

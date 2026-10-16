@@ -10,6 +10,7 @@ import { getPlayBtnRow } from '../../../play/charsheet.js';
 import { showAlert, showConfirm } from '../../../ui-helpers/confirm.js';
 import { registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../../../core/util.js';
 import { t } from '../../../i18n.js';
+import { createOpponentEditor } from '../../opponents.js';
 
 const ID = definition.stateKey;
 const SCORES = ['skill', 'stamina', 'luck', 'armour'];
@@ -28,7 +29,7 @@ export function createSpaceAssassinPanel({ document, t, getRun, getBookId, saveS
   const input = key => `<label class="inv-edit-row"><span>${escape(tk(key))}</span><input class="inv-edit-input" id="${ID}-${key}" type="number" min="0" max="1000000" step="1" required></label>`;
   const select = (key, options) => `<label class="inv-edit-row"><span>${escape(tk(key))}</span><select class="inv-edit-input" id="${ID}-${key}">${options.map(value => `<option value="${value}">${escape(tk(key + '.' + value))}</option>`).join('')}</select></label>`;
   const check = key => `<label class="bsim-checkbox"><input type="checkbox" id="${ID}-${key}">${escape(tk(key))}</label>`;
-  let shownRun, rendered, imageAccess, imageGeneration = 0;
+  let shownRun, rendered, imageAccess, imageGeneration = 0, opponents, editorRun;
 
   function number(key) {
     const field = el(key), value = Number(field.value);
@@ -45,7 +46,8 @@ export function createSpaceAssassinPanel({ document, t, getRun, getBookId, saveS
     const run = getRun(), original = store.read();
     showConfirm(tk(key), () => { if (getRun() === run && store.read() === original) action(update); });
   }
-  function selected() { return ENCOUNTERS.find(entry => entry.section === Number(el('encounter').value)); }
+  function selected() { return ENCOUNTERS.find(entry => entry.section === Number(el('encounter').value))
+    ?? {custom: true, requiresModeChoice: true, requiresEnemyWeaponChoice: true}; }
   function configure() {
     const preset = selected(), data = store.read(), locked = active(data?.fight) || active(data?.tank);
     el('mode-row').hidden = !preset?.requiresModeChoice;
@@ -74,6 +76,12 @@ export function createSpaceAssassinPanel({ document, t, getRun, getBookId, saveS
     rendered = data;
     const battle = data.battleKind === 'tank' ? data.tank : data.fight;
     const locked = active(data.fight) || active(data.tank), player = data.character;
+    if (editorRun !== getRun()) {
+      editorRun = getRun();
+      el('encounter').value = data.setup?.encounter ?? '0';
+      opponents.set(data.setup?.opponents ?? selected().enemies);
+    }
+    opponents.lock(locked); opponents.fixCount(!selected().custom);
     for (const key of FIELDS) { el(key).value = player?.[key] ?? (ITEMS.includes(key) ? 0 : ''); el(key).disabled = locked; }
     el('weapon').value = player?.weapon ?? 'unarmed';
     for (const key of ['weapon', 'encounter', 'mode', 'enemyWeapon', 'newCharacter', 'saveCharacter', 'replaceSuit']) el(key).disabled = locked;
@@ -147,6 +155,16 @@ export function createSpaceAssassinPanel({ document, t, getRun, getBookId, saveS
     const overlay = document.createElement('div'); overlay.id = ID + '-overlay'; overlay.className = 'inv-overlay';
     overlay.innerHTML = `<div class="inv-modal bsim-modal bsim-compact-form" role="dialog" aria-modal="true" aria-labelledby="${ID}-title"><div class="inv-modal-hdr"><span class="inv-modal-title" id="${ID}-title">${escape(tk('title'))}</span><button type="button" class="inv-close-btn" id="${ID}-close" aria-label="${escape(t('btn.close'))}">&times;</button></div><div class="bsim-body"><div class="bsim-col bsim-col-left"><p>${escape(tk('note'))}</p><div class="bsim-side"><div class="bsim-side-title">${escape(tk('character'))}</div>${SCORES.map(input).join('')}<details><summary>${escape(tk('initialScores'))}</summary>${SCORES.map(key => input(key + 'Initial')).join('')}</details>${ITEMS.map(input).join('')}${select('weapon', ['unarmed', 'lash', 'blaster'])}<div class="bsim-btn-row">${button('newCharacter')}${button('saveCharacter')}</div><div class="bsim-btn-row">${button('pill')}${button('energyBar')}${button('testLuck')}${button('replaceSuit')}</div></div><details id="${ID}-loadout" open><summary>${escape(tk('loadout'))}</summary><p id="${ID}-budget"></p>${select('startingWeapon', ['lash', 'blaster'])}${input('buyGrenades')}${input('buyBombs')}${input('buyArmour')}${button('buyLoadout')}</details></div><div class="bsim-col bsim-col-right"><label class="inv-edit-row"><span>${escape(tk('encounter'))}</span><select class="inv-edit-input" id="${ID}-encounter">${ENCOUNTERS.map(entry => `<option value="${entry.section}">${escape(tk('encounter.' + entry.section))} (${entry.section})</option>`).join('')}</select></label><div id="${ID}-mode-row">${select('mode', ['', 'melee', 'gunfire'])}</div><div id="${ID}-enemyWeapon-row">${select('enemyWeapon', ['', 'none', 'unarmed', 'lash', 'blaster'])}</div><p id="${ID}-modeNote">${escape(tk('modeNote'))}</p>${check('knowledge')}${check('ballBearings')}<div class="bsim-btn-row">${button('start')}${button('startTank')}${button('cancel')}</div><div class="bsim-status" role="status" aria-live="polite" id="${ID}-status"></div><div class="bsim-status" id="${ID}-destination"></div><div class="bsim-status" id="${ID}-opponents"></div><div class="bsim-btn-row" id="${ID}-combatActions">${['opening', 'round', 'grenade', 'gas', 'gravityBomb', 'escapeFight'].map(button).join('')}</div><div id="${ID}-tankActions">${button('resolveTank')}<div class="bsim-btn-row" id="${ID}-tankMoves"></div></div><p id="${ID}-tankStatus"></p><img class="bsim-galleon-diagram" id="${ID}-map" alt="${escape(tk('mapAlt'))}" hidden><details class="bsim-history"><summary>${escape(tk('history'))}</summary><div class="bsim-history-list" id="${ID}-history"></div></details><div class="bsim-log" id="${ID}-log"></div></div></div></div>`;
     document.body.appendChild(overlay);
+    el('encounter').insertAdjacentHTML('afterbegin', `<option value="0">${escape(t('battlesim.editor.bg.custom'))}</option>`);
+    opponents = createOpponentEditor({document, id: ID, t, language: 'bg',
+      fields: [{key: 'skill', label: tk('skill')}, {key: 'stamina', label: tk('stamina'), min: 1}],
+      presets: ENCOUNTERS.flatMap(entry => entry.enemies)});
+    el('encounter').closest('label').after(opponents.element);
+    el('encounter').addEventListener('change', () => {
+      if (active(store.read()?.fight) || active(store.read()?.tank)) return;
+      if (selected().enemies) opponents.set(selected().enemies);
+      opponents.fixCount(!selected().custom);
+    });
     const luckResult = document.createElement('p'); luckResult.id = ID + '-luckResult';
     el('testLuck').parentElement.after(luckResult);
     const openingHit = document.createElement('label'); openingHit.className = 'bsim-checkbox';
@@ -178,9 +196,12 @@ export function createSpaceAssassinPanel({ document, t, getRun, getBookId, saveS
       if (active(data.fight) || active(data.tank) || data.character?.loadoutPurchased === false) throw new RangeError('Not ready');
       const result = prepareEncounter({ ...data.character, weapon: el('weapon').value }, Number(el('encounter').value), {
         mode: selected().mode ?? el('mode').value, weapon: el('weapon').value, enemyWeapon: el('enemyWeapon').value,
-        knowledge: el('knowledge').checked, ballBearings: el('ballBearings').checked, openingHit: el('openingHit').checked });
+        knowledge: el('knowledge').checked, ballBearings: el('ballBearings').checked, openingHit: el('openingHit').checked,
+        opponents: opponents.read() });
+      data.setup = {encounter: el('encounter').value, opponents: opponents.snapshot()};
       Object.assign(data, { character: result.player, fight: result.fight, tank: null, battleKind: 'combat',
-        encounterName: tk('encounter.' + el('encounter').value), notice: result.outcome, events: result.events ?? [] });
+        encounterName: selected().custom ? result.fight.enemies.map(enemy => enemy.name).join(' / ')
+          : tk('encounter.' + el('encounter').value), notice: result.outcome, events: result.events ?? [] });
     }));
     el('startTank').addEventListener('click', () => action(data => {
       if (active(data.fight) || active(data.tank) || data.character?.loadoutPurchased === false) throw new RangeError('Not ready');

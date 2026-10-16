@@ -1,5 +1,6 @@
 import { rollAttack, tossCoins } from '../skyfall-rules.js';
 import { expandMarshEncounter } from './monsters-of-the-marsh.js';
+import { editableSkyfallEncounter } from './opponents.js';
 
 const integer = (value, minimum = 0) => Number.isInteger(value) && value >= minimum;
 const alive = fight => fight.encounter.foes.flatMap((foe, index) => foe.vitality > 0 ? [index] : []);
@@ -7,7 +8,8 @@ const alive = fight => fight.encounter.foes.flatMap((foe, index) => foe.vitality
 export function createMarshFight(section, player, options = {}) {
   if (!integer(player.expertise, -100) || !integer(player.vitality) || !integer(player.fortune)
       || !integer(player.weaponDamage)) throw new RangeError('Invalid character');
-  const encounter = expandMarshEncounter(section, options);
+  const encounter = editableSkyfallEncounter(section === 'custom' ? null : expandMarshEncounter(section,
+    {...options, manualDamage: options.manualDamage ?? options.opponents?.[0]?.damage}), options.opponents);
   const companions = options.companions ?? [];
   if (!Array.isArray(companions) || companions.length > 20
       || companions.some(ally => !integer(ally.damage))) throw new RangeError('Invalid companions');

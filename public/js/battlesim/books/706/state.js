@@ -19,7 +19,7 @@ export function createState(getContext) {
     if (update(next)?.then) throw new TypeError('Updates must be synchronous');
     const live = getContext();
     if (Number(live.currentBookId) !== definition.id || live.currentPlaythrough() !== run || run[definition.stateKey] !== previous) return false;
-    for (const fight of [next.fight, next.naval]) {
+    for (const fight of [next.naval]) {
       if (fight?.outcome && !fight.recorded) {
         fight.recorded = true;
         if (fight.kind !== 'negotiation' && ['win', 'loss'].includes(fight.outcome)) {

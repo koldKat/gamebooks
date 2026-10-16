@@ -1,9 +1,11 @@
 import { ID, options } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
+import { createSkyfallOpponentSetup } from '../../engines/skyfall/setup.js';
+let opponentSetup;
 
 // BEGIN SIMULATOR WIRING
-const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, GARDEN_ENCOUNTERS, ID, act, character, close, configure, createGardenFight, currentBookId, currentPlaythrough, data, element, escapeGardenFight, escapeHtml, field, finishGardenFight, getPlayBtnRow, initSim524, initialFortune, label, number, open, options, record, recoverVitality, registerPanelShortcut, renderSim524, rollGardenRound, saveAndRender, saveState, selectedEncounter, setSim524Visible, settleGardenRound, shortcutLabel, showAlert, start, t, takeGardenHalberd, tk, toggle });
+const simulatorContext = () => ({ opponentSetup, ALL_PANEL_OVERLAY_IDS, GARDEN_ENCOUNTERS, ID, act, character, close, configure, createGardenFight, currentBookId, currentPlaythrough, data, element, escapeGardenFight, escapeHtml, field, finishGardenFight, getPlayBtnRow, initSim524, initialFortune, label, number, open, options, record, recoverVitality, registerPanelShortcut, renderSim524, rollGardenRound, saveAndRender, saveState, selectedEncounter, setSim524Visible, settleGardenRound, shortcutLabel, showAlert, start, t, takeGardenHalberd, tk, toggle });
 const { data } = createState(simulatorContext);
 const { character, saveAndRender, selectedEncounter, label, configure, record, start, act } = createCombat(simulatorContext);
 // END SIMULATOR WIRING
@@ -29,6 +31,7 @@ function open() {
 export function renderSim524() {
   if (!element('overlay')) return;
   const d = data(); if (!d) { close(); return; }
+  opponentSetup?.render();
   const f = d.fight; const p = character(d); const pending = f?.pending;
   for (const key of ['expertise', 'vitality', 'fortune', 'weaponDamage', 'potions', 'provisions']) {
     if (document.activeElement !== element(key)) element(key).value = key in p ? p[key] : d[key];
@@ -147,6 +150,8 @@ export function initSim524() {
     const d = data(); if (!d || d.fight?.status === 'fighting' || d[key] < 1 || character(d).vitality <= 0 || character(d).vitality >= 20) return;
     character(d).vitality = recoverVitality(character(d).vitality, amount); d[key] -= 1; saveAndRender();
   });
+  opponentSetup = createSkyfallOpponentSetup({document, id: ID, t, tk, encounters: GARDEN_ENCOUNTERS,
+    getRun: currentPlaythrough, getData: data, configure});
   configure();
 }
 

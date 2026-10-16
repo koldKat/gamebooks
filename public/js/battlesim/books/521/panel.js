@@ -1,9 +1,11 @@
 import { ID } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
+import { createSkyfallOpponentSetup } from '../../engines/skyfall/setup.js';
+let opponentSetup;
 
 // BEGIN SIMULATOR WIRING
-const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, ID, MARSH_ENCOUNTERS, act, character, close, configure, createMarshFight, currentBookId, currentPlaythrough, data, element, escapeHtml, escapeMarshCanoe, escapeMarshTree, field, finish, getPlayBtnRow, initSim521, initialFortune, number, open, recoverVitality, registerPanelShortcut, renderSim521, rollMarshRound, saveAndRender, saveState, selectedEncounter, setSim521Visible, settleMarshRound, shortcutLabel, showAlert, start, t, tk, toggle });
+const simulatorContext = () => ({ opponentSetup, ALL_PANEL_OVERLAY_IDS, ID, MARSH_ENCOUNTERS, act, character, close, configure, createMarshFight, currentBookId, currentPlaythrough, data, element, escapeHtml, escapeMarshCanoe, escapeMarshTree, field, finish, getPlayBtnRow, initSim521, initialFortune, number, open, recoverVitality, registerPanelShortcut, renderSim521, rollMarshRound, saveAndRender, saveState, selectedEncounter, setSim521Visible, settleMarshRound, shortcutLabel, showAlert, start, t, tk, toggle });
 const { data } = createState(simulatorContext);
 const { character, saveAndRender, number, selectedEncounter, start, finish, act } = createCombat(simulatorContext);
 // END SIMULATOR WIRING
@@ -13,7 +15,7 @@ import { showAlert } from "../../../ui-helpers/confirm.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";
 import { t } from "../../../i18n.js";
 import { initialFortune, recoverVitality } from "../.././engines/skyfall-rules.js";
-import { MARSH_ENCOUNTERS } from "../.././engines/skyfall/monsters-of-the-marsh.js";
+import { MARSH_ENCOUNTERS, expandMarshEncounter } from "../.././engines/skyfall/monsters-of-the-marsh.js";
 import { createMarshFight, rollMarshRound, settleMarshRound, escapeMarshTree, escapeMarshCanoe } from "../.././engines/skyfall/marsh-combat.js";
 
 const tk = (key, params) => t(`battlesim521.${key}`, params);
@@ -31,6 +33,7 @@ export function renderSim521() {
   const d = data();
   if (!d) { close(); return; }
   const fight = d.fight;
+  opponentSetup?.render();
   const p = character(d);
   const pending = fight?.pending;
   for (const key of ['expertise', 'vitality', 'fortune', 'weaponDamage']) {
@@ -173,6 +176,9 @@ export function initSim521() {
     character(d).vitality = recoverVitality(character(d).vitality, 8);
     saveAndRender();
   });
+  opponentSetup = createSkyfallOpponentSetup({document, id: ID, t, tk, encounters: MARSH_ENCOUNTERS,
+    getRun: currentPlaythrough, getData: data, configure,
+    resolve: () => expandMarshEncounter(selectedEncounter().section, {count: selectedEncounter().configurableCount ? Number(element('count').value) : undefined, manualDamage: element('manual').value === '' ? undefined : Number(element('manual').value)})});
   configure();
 }
 
