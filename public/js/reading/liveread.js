@@ -111,7 +111,8 @@ async function _showSection(sec) {
   const result = await _fetchSectionData(sec);
   if (token !== _showToken) return;
   if (!result.ok) {
-    if (!result.networkError) body.innerHTML = `<p class="liveread-empty">${t('liveread.no_section_data')}</p>`;
+    _shownSec = undefined;
+    body.innerHTML = `<p class="liveread-empty">${t(result.networkError ? 'auth.network_error' : 'liveread.no_section_data')}</p>`;
     return;
   }
   const data = result.data;

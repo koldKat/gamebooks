@@ -230,7 +230,7 @@ export async function openStatsModal() {
       {
         cls: 'server', label: t('stats.sec.server'),
         rows: [
-          [t('stats.cpu_model'), escapeHtml(s.cpuModel || na)],
+          [t('stats.cpu_model'), `<span class="stats-cpu-model">${escapeHtml(s.cpuModel || na)}</span>`],
           [t('stats.cpu_cores'), s.cpuCores != null ? fmt(s.cpuCores) : na],
           [t('stats.cpu_age'), s.cpuAgeYears != null ? `${s.cpuAgeYears}y` : na],
           [t('stats.cpu_clock'), s.cpuGhz != null ? `${s.cpuGhz} GHz` : na],
@@ -286,8 +286,8 @@ export async function openStatsModal() {
     const byClass = new Map(sections.map(sec => [sec.cls, sec]));
     const columns = [
       ['players', 'xp-progression', 'the-app', 'server'],
-      ['ratings', 'gameplay', 'open-world', 'forum'],
-      ['books', 'gold-coins-shop', 'parties', 'battle-sims'],
+      ['ratings', 'gameplay', 'battle-sims', 'open-world', 'forum'],
+      ['books', 'gold-coins-shop', 'parties'],
     ];
     body.innerHTML = `<div class="stats-layout">${columns.map(column => `<div class="stats-column">${column.map(cls =>
       renderSection(byClass.get(cls))).join('')}</div>`).join('')}</div>`;

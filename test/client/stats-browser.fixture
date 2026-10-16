@@ -40,6 +40,14 @@ const { getRatingStats } = require('../../server/db/rating-stats');
       const body = document.getElementById('stats-modal-body');
       check(body.querySelectorAll('.stats-section').length === 12, 'all sections rendered');
       check(body.querySelectorAll('.stats-rating-table tbody tr').length === 12, 'all rating rows rendered');
+      const cpu = body.querySelector('.stats-cpu-model');
+      const cpuRange = document.createRange();
+      cpuRange.selectNodeContents(cpu);
+      check(cpuRange.getClientRects().length === 1, 'CPU model stays on one line');
+      const normalRowHeight = body.querySelector('.stats-section--players .stats-table tr:last-child').getBoundingClientRect().height;
+      for (const row of body.querySelectorAll('.stats-rating-table tbody tr:not(.stats-rating-average)')) {
+        check(row.getBoundingClientRect().height <= normalRowHeight + 2, 'rating rows match compact stats spacing');
+      }
       const labelStyle = getComputedStyle(body.querySelector('.stats-key'));
       const valueStyle = getComputedStyle(body.querySelector('.stats-val'));
       for (const cell of body.querySelectorAll('.stats-rating-table th')) {

@@ -210,7 +210,6 @@ async function handleCreateSeries(req, res) {
   if (!result.existed) db.awardXp(userId, 'create_series', result.id);
   if (!result.existed && description?.trim()) db.awardXp(userId, 'add_series_description', result.id);
   if (!result.existed && is_public === true) db.awardXp(userId, 'make_series_public', result.id);
-  if (!result.existed && is_public === true) publicCatalogPush({ type: 'public_catalog_changed', entity: 'series', id: result.id, action: 'create' });
   if (!result.existed) feedPush({ type: 'feed_changed', entity: 'series', action: 'create', id: result.id });
 }
 
@@ -342,7 +341,7 @@ async function handleCreateBook(req, res) {
   if (seriesId && series_number) db.awardXp(userId, 'add_series_number', book.id);
   if (parent_book_id) db.awardXp(userId, 'add_book_to_anthology', book.id);
   if (parent_book_id && book_order != null) db.awardXp(userId, 'add_anthology_order', book.id);
-  if (isPublic) publicCatalogPush({ type: 'public_catalog_changed', entity: 'book', id: book.id, action: 'create' });
+  if (isPublic && !isContainer) publicCatalogPush({ type: 'public_catalog_changed', entity: 'book', id: book.id, action: 'create' });
   feedPush({ type: 'feed_changed', entity: 'book', action: 'create', id: book.id });
 }
 

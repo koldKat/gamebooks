@@ -5,6 +5,7 @@ import { pathToFileURL } from 'node:url';
 
 let section = 1;
 let mapMode = false, coreModule;
+let failedSection = null;
 let run = { path: [1], completed: false };
 const graph = {};
 const requests = [], commits = [], suppression = [], physics = [];
@@ -34,7 +35,9 @@ const context = createContext({ document: { getElementById: id => elements[id], 
 const stubData = {
   '../core/state.js': { state: { startSection: 1, totalSections: 150, graph }, getToken: () => 'account', currentBookId: 42, currentPlaythrough: () => run, currentSection: () => section,
     viewingPt: null, isTerminal: sec => sec === 0 || sec === -1, parseSecId: Number, isSectionMapped: sec => sec === 1,
-    apiFetch: async url => { requests.push(url); const sec = Number(url.split('/').at(-1)); return { ok: true, json: async () => ({ html: '<p>Section ' + sec + '</p>' + (mapMode ? '<form data-reading-map-entry><input name="marker" max="150"><button type="submit">Go</button></form>' : ''), choices: sec === 1 ? [2] : [] }) }; } },
+    apiFetch: async url => { requests.push(url); const sec = Number(url.split('/').at(-1));
+      if (sec === failedSection) { failedSection = null; throw new Error('Temporary connection failure'); }
+      return { ok: true, json: async () => ({ html: '<p>Section ' + sec + '</p>' + (mapMode ? '<form data-reading-map-entry><input name="marker" max="150"><button type="submit">Go</button></form>' : ''), choices: sec === 1 ? [2] : sec === 120 ? [197] : [] }) }; } },
   '../play.js': { navigate(sec) { section = sec; run.path.push(sec); }, startPlaythrough() {}, commitChoices(sec, choices) { commits.push([sec, [...choices]]); graph[sec] = { ...graph[sec], choices: [...choices] }; }, showAlert() {}, suppressAutoNav: value => suppression.push(value) },
   './access.js': { showReadingGate: async () => false },
   './content.js': { renderReadingMatter: () => false },
@@ -128,4 +131,26 @@ run = { path: [12], completed: false };
 staleRunForm.input.value = '15';
 staleRunForm.fire();
 assert.deepEqual(run.path, [12], 'map form cannot navigate a replacement run');
+reader.setLiveReadVisible(false);
+
+mapMode = false;
+coreModule.setExport('currentBookId', 198);
+section = 120;
+run = { path: [120], completed: false };
+failedSection = 120;
+active.add('active');
+reader.renderLiveRead();
+await settle();
+assert.equal(graph[120], undefined, 'failed fetch must not fabricate outgoing choices');
+const attempts = requests.length;
+reader.renderLiveRead();
+await settle();
+assert.ok(requests.length > attempts, 'failed section must be retried on the next render');
+assert.equal(body.innerHTML, '<p>Section 120</p>');
+assert.deepEqual(graph[120].choices, [197], 'successful arrival reveals the unvisited outgoing section');
+assert.deepEqual(run.path, [120], 'revealing an outgoing link must not visit its destination');
+const successfulRequests = requests.length;
+reader.renderLiveRead();
+await settle();
+assert.equal(requests.length, successfulRequests, 'successful section must not start a refetch loop');
 reader.setLiveReadVisible(false);

@@ -112,7 +112,7 @@ export default {
     'stats.cpu_model': 'CPU model',
     'stats.cpu_cores': 'CPU cores',
     'stats.cpu_age':   'CPU age',
-    'stats.cpu_clock': 'CPU clock (advertised)',
+    'stats.cpu_clock': 'CPU clock',
     'stats.cpu_arch':  'CPU arch',
     'stats.total_ram': 'Total RAM',
 

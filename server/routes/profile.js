@@ -256,7 +256,9 @@ async function handleUploadCover(req, res, bookId) {
   db.setBookCover(userId, bookId, filename, isAdmin || isModerator);
   send(res, 200, { coverUrl: `/covers/${filename}` });
   if (!fromLocalhost) db.awardXp(userId, 'upload_cover', bookId);
-  if (book?.is_public) publicCatalogPush({ type: 'public_catalog_changed', entity: 'book', id: bookId, action: 'update' });
+  if (book?.is_public && (!book.is_container || db.getPublicBookMeta(bookId)?.children?.length)) {
+    publicCatalogPush({ type: 'public_catalog_changed', entity: 'book', id: bookId, action: 'update' });
+  }
 }
 
 async function handleUploadPdf(req, res, bookId) {

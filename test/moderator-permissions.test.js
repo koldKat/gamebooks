@@ -28,12 +28,13 @@ test('only the admin interface can grant or revoke moderator, with strict boolea
 });
 test('moderator cover uploads allow public books without library membership and reject private books before reading files', async () => {
   let book = { created_by: 1, is_public: 1 }, moderator = true, admin = false, status, reads = 0, writes = 0, saved;
+  let publicChildren = [], catalogPushes = 0;
   const routes = load('../server/routes/profile', {
     fs: { writeFileSync() { writes++; } },
     '../db': { isUserAdmin: () => admin, isUserModerator: () => moderator, getBookById: () => book,
-      getBookState: () => null, setBookCover: (...args) => { saved = args; }, awardXp() {} },
+      getBookState: () => null, getPublicBookMeta: () => ({children: publicChildren}), setBookCover: (...args) => { saved = args; }, awardXp() {} },
     '../paths': { COVERS_DIR: '/tmp' }, '../epub-validation': {}, '../runtime-state': {},
-    '../sse': { publicCatalogPush() {} },
+    '../sse': { publicCatalogPush() { catalogPushes++; } },
     '../request-helpers': { isLocalhost: () => false, authenticate: async () => 2,
       readRawBody: async () => { reads++; return Buffer.from('image'); }, isAllowedImage: () => true,
       send: (_res, code) => { status = code; } },
@@ -48,6 +49,13 @@ test('moderator cover uploads allow public books without library membership and 
   await routes.handleUploadCover({}, {}, 9); assert.equal(status, 403); assert.equal(reads, 1);
   admin = true; book.is_public = 0;
   await routes.handleUploadCover({}, {}, 9); assert.equal(status, 200);
+  assert.equal(catalogPushes, 1, 'ordinary public book cover still refreshes');
+  book = {created_by: 1, is_public: 1, is_container: 1};
+  await routes.handleUploadCover({}, {}, 9);
+  assert.equal(catalogPushes, 1, 'empty anthology cover does not refresh');
+  publicChildren = [{id: 10}];
+  await routes.handleUploadCover({}, {}, 9);
+  assert.equal(catalogPushes, 2, 'populated anthology cover still refreshes');
 });
 
 test('moderators edit public series outside their library, never private series or deletion', async () => {

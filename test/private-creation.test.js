@@ -257,6 +257,36 @@ test('sparse section numbering round-trips through creation, shared state, libra
   } finally { db.close(); }
 });
 
+test('empty container creation does not publish a covers refresh, but ordinary children still do', async () => {
+  let body, status;
+  const catalog = [], feed = [], rewards = [];
+  const context = vm.createContext({ module: { exports: {} }, require(name) {
+    if (name === '../db') return {
+      createSeries: () => ({ id: 10, name: body.name, existed: false }),
+      createBook: () => ({ id: 11 }),
+      awardXp: (...args) => rewards.push(args),
+    };
+    if (name === '../request-helpers') return { authenticate: async () => 1, readBody: async () => body, send: (_res, code) => { status = code; } };
+    if (name === '../sse') return { feedPush: event => feed.push(event), publicCatalogPush: event => catalog.push(event) };
+    return {};
+  } });
+  vm.runInContext(fs.readFileSync(require.resolve('../server/routes/books'), 'utf8'), context);
+  body = { name: 'Empty series', is_public: true };
+  await context.module.exports.handleCreateSeries({}, {});
+  assert.equal(status, 200);
+  assert.equal(catalog.length, 0);
+  assert.ok(rewards.some(row => row[1] === 'create_series'));
+  body = { name: 'Empty anthology', is_public: true, is_container: 1 };
+  await context.module.exports.handleCreateBook({}, {});
+  assert.equal(status, 200);
+  assert.equal(catalog.length, 0);
+  assert.equal(feed.length, 2, 'library/feed events remain unchanged');
+  body = { name: 'First child', total_sections: 10, is_public: true, parent_book_id: 11 };
+  await context.module.exports.handleCreateBook({}, {});
+  assert.equal(catalog.length, 1, 'adding the first public child publishes the catalog change');
+  assert.equal(catalog[0].action, 'create');
+});
+
 test('create route accepts a separate maximum and rejects invalid values before creating a series', async () => {
   let body, status, created, seriesCalls = 0;
   const context = vm.createContext({ module: { exports: {} }, require(name) {

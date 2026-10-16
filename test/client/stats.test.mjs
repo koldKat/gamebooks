@@ -24,6 +24,9 @@ test('stats renders all ten half-star bins for all categories in balanced column
   await context.openStatsModal();
   assert.ok(!body.innerHTML.includes('Failed to load'));
   assert.equal((body.innerHTML.match(/class="stats-column"/g) || []).length, 3);
+  const columns = body.innerHTML.split('<div class="stats-column">').slice(1);
+  assert.ok(columns[1].includes('stats-section--battle-sims'));
+  assert.ok(!columns[2].includes('stats-section--battle-sims'));
   assert.equal((body.innerHTML.match(/class="stats-section stats-section--/g) || []).length, 12);
   assert.ok(body.innerHTML.includes('4.5 / 5'));
   assert.ok(body.innerHTML.includes('0.5 / 5'));
