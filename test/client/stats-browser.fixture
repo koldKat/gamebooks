@@ -40,6 +40,17 @@ const { getRatingStats } = require('../../server/db/rating-stats');
       const body = document.getElementById('stats-modal-body');
       check(body.querySelectorAll('.stats-section').length === 12, 'all sections rendered');
       check(body.querySelectorAll('.stats-rating-table tbody tr').length === 12, 'all rating rows rendered');
+      const labelStyle = getComputedStyle(body.querySelector('.stats-key'));
+      const valueStyle = getComputedStyle(body.querySelector('.stats-val'));
+      for (const cell of body.querySelectorAll('.stats-rating-table th')) {
+        const style = getComputedStyle(cell);
+        check(style.fontSize === labelStyle.fontSize && style.fontFamily === labelStyle.fontFamily, 'rating label typography');
+      }
+      for (const cell of body.querySelectorAll('.stats-rating-table td')) {
+        const style = getComputedStyle(cell);
+        check(style.fontSize === valueStyle.fontSize && style.fontFamily === valueStyle.fontFamily
+          && style.fontWeight === valueStyle.fontWeight, 'rating value typography');
+      }
       const ratingColors = [...body.querySelectorAll('.stats-rating-table td[style]')].slice(0, 3)
         .map(cell => getComputedStyle(cell).getPropertyValue('--rating-color').trim());
       check(ratingColors.length === 3 && ratingColors.every(Boolean) && new Set(ratingColors).size === 3, 'distinct category bar colors');
@@ -62,7 +73,7 @@ const { getRatingStats } = require('../../server/db/rating-stats');
       document.getElementById('stats-modal').style.maxHeight = '360px';
       body.scrollTop = body.scrollHeight;
       check(body.scrollHeight > body.clientHeight && body.scrollTop > 0, 'short screens scroll');
-      document.body.dataset.test = JSON.stringify({width:innerWidth,sections:12,ratingRows:12,noOverflow:true,shortScreenScroll:true,maxGap});
+      document.body.dataset.test = JSON.stringify({width:innerWidth,sections:12,ratingRows:12,matchingTypography:true,noOverflow:true,shortScreenScroll:true,maxGap});
     } catch (error) { document.body.dataset.failure = error.stack; }
     </script>`;
   fs.mkdirSync(root, { recursive: true });

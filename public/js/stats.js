@@ -86,7 +86,7 @@ export async function openStatsModal() {
     const na = t('stats.na');
     const ratingGroups = [
       ['books', t('stats.sec.books')],
-      ['anthologies', t('stats.anthologies')],
+      ['anthologies', t('stats.rating_anthologies_short')],
       ['series', t('stats.series')],
     ].map(([kind, label]) => {
       const group = s.ratingBreakdown?.[kind] || {};

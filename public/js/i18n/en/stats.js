@@ -98,6 +98,7 @@ export default {
     'stats.series_ratings':      'Series ratings',
     'stats.avg_book_rating':     'Avg book rating',
     'stats.anthologies':         'Anthologies',
+    'stats.rating_anthologies_short': 'Anths',
     'stats.series':              'Series',
     'stats.rating':              'Rating',
     'stats.votes':               'Votes',

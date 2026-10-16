@@ -111,15 +111,19 @@
 }
 .stats-table { border-collapse: collapse; width: 100%; }
 .stats-table tr + tr td { padding-top: 0.15rem; }
+.stats-key,
+.stats-rating-table th { font-size: 0.78rem; }
 .stats-key {
-  font-size: 0.78rem;
   color: #9ca3af;
   padding-right: 0.5rem;
   overflow-wrap: anywhere;
 }
-.stats-val {
+.stats-val,
+.stats-rating-table td {
   font-size: 0.82rem;
   font-weight: 600;
+}
+.stats-val {
   color: #e5e7eb;
   text-align: right;
   white-space: nowrap;
@@ -135,7 +139,6 @@
   width: 100%;
   margin-top: 0.5rem;
   table-layout: fixed;
-  font-size: 0.7rem;
   font-variant-numeric: tabular-nums;
 }
 .stats-rating-table th,
@@ -146,7 +149,7 @@
 }
 .stats-rating-table th { color: #9ca3af; font-weight: 400; }
 .stats-rating-table th:first-child { text-align: left; width: 22%; }
-.stats-rating-table thead th { font-size: 0.62rem; padding-bottom: 0.35rem; }
+.stats-rating-table thead th { padding-bottom: 0.35rem; }
 .stats-rating-table td { color: #e5e7eb; }
 .stats-rating-average th,
 .stats-rating-average td { padding-bottom: 0.45rem; border-bottom: 1px solid #263244; }

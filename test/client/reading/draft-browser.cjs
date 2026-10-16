@@ -57,7 +57,7 @@ for(const entry of entries){
       allowed=true;input.disabled=button.disabled=false;
       const expected=(form.dataset.readingMarkerPrefix||'')+'12';
       form.dispatchEvent(new Event('submit',{cancelable:true}));check(String(selected.pop())===expected,'manual return');
-      input.value=String(draft.rows.length+1);form.dispatchEvent(new Event('submit',{cancelable:true}));check(!selected.length,'manual upper bound');
+      input.value=String(Number(input.max)+1);form.dispatchEvent(new Event('submit',{cancelable:true}));check(!selected.length,'manual upper bound');
     }
   }
   const max=Math.max(0,pane.scrollHeight-pane.clientHeight);pane.scrollTop=Number.MAX_SAFE_INTEGER;

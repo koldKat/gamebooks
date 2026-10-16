@@ -33,6 +33,9 @@ test('stats renders all ten half-star bins for all categories in balanced column
   assert.ok(body.innerHTML.includes('Series'));
   assert.ok(!body.innerHTML.includes('<script>bad'));
   const ratingTable = body.innerHTML.match(/<table class="stats-rating-table">([\s\S]*?)<\/table>/)[1];
+  assert.ok(ratingTable.includes('Anths'));
+  assert.ok(!ratingTable.includes('Anthologies'));
+  assert.ok(body.innerHTML.includes('Anthologies in libraries'));
   assert.equal((ratingTable.match(/<tr/g) || []).length, 13);
   assert.ok(!body.innerHTML.includes('stats.rating'));
 });
