@@ -5,13 +5,13 @@ import { createHash } from 'node:crypto';
 
 const dir = new URL('../../../public/js/', import.meta.url);
 test('play-area feature relocation preserves implementations and removes root modules', () => {
-  // Source baseline excludes imports; comment cleanup verified against unchanged executable ASTs.
+  // Excludes imports; includes whitespace cleanup and invite-autocomplete dismissal fixes.
   const digests = {
     "dice": "fd6b7d336ddfd227e995f60446adf91ec142f4c4748531ea5f26a8bf9b9e4f6e",
     "notes": "68ed0f4e8822186db2f2a3cf77c6c2868e1a09b4687b195b37ed0cf3c55046db",
-    "charsheet": "1f14bca5fdfc339160598da0794ffda059dd5d632e36021c1d727a9dc208e569",
+    "charsheet": "904243f994aee0d22635d5b3aeaca4d00f1834551eac3ccdfbacc80be0fe1219",
     "open-world": "81cfec1e03755016cc03e35e918e0fa559a16f76b3acc4f4969051d686dae4ef",
-    "party": "13f2a607dfb521f00424f696568e3b10601d8aff696987521e34dc6b4c812f16",
+    "party": "3eb3f63a52fb72071b65469caeeb8b9b136f3dcaa38bf8c33c19e99b20cfe32b",
     "bg": "e39f758b5145d695d89bbbee705545e05c0aacec2f297d14663593b96a6850e8"
   };
   for (const [name, digest] of Object.entries(digests)) {

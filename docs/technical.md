@@ -226,6 +226,8 @@ gamebooks/
                          numeric validation, custom groups and active-fight locking.
                          Panels can distinguish unavailable printed stats from
                          editable custom stats via isStatUnavailable.
+                         Missing values required for combat remain editable;
+                         unavailable mechanics stay disabled without assuming zero.
                          Book-specific panels retain their own combat rules;
                          optional presets do not replace or rewrite saved fights.
                          Keep rule identities separate from per-opponent display
@@ -2857,7 +2859,7 @@ Both `sendAdminEmail` and `sendReplyEmail` use the same template: dark amber hea
 
 Both installed-app entry points render the existing animated graph logo before the application module graph loads. `public/startup.js` has no imports; its 12-second watchdog reports slow loading without interrupting startup or showing a retry button. Script errors and explicit startup failures schedule full-page recovery after 2, 5, and 10 seconds. A per-entry-path/query retry budget in `sessionStorage` survives reloads, expires after five minutes, and resets on successful startup or manual retry. After three failed automatic retries, **Try again** becomes available; unavailable session storage also falls back to manual recovery to prevent infinite reload loops. Offline failures pause until connectivity returns, without consuming attempts; reconnection alone does not reload an otherwise progressing startup. Successful startup removes the overlay, both timers and the error/connectivity listeners. Mobile reader startup awaits profile, library and reader initialization before dismissing recovery; failed profile/library requests enter the same recovery flow instead of displaying a misleading missing-book screen. Authentication expiry follows the existing login flow. The graph vendor script is deferred so it does not block parsing the loading UI. This recovers startup only; it does not automatically reload an active reading session or add offline caching.
 
-`node --test` (Node's built-in test runner, no external framework/dev dependency) - `npm test` runs it, auto-discovering the whole `test/` tree recursively.
+`npm test` uses Node's built-in test runner with two workers and recursively selects `test/**/*.test.{js,mjs,cjs}`. Standalone browser launchers and fixtures are run explicitly, not discovered as unit tests. Node 22 is required for the test-path glob and synchronous ESM test-helper loading.
 
 Source-parity hashes include comments.
 

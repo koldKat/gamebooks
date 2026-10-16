@@ -1,6 +1,7 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const fs = require('node:fs');
+const { readFileSync: readSimulatorSource } = require('./client/battlesim/simulator-source.mjs');
 const vm = require('node:vm');
 const read = p => fs.readFileSync(require('node:path').join(__dirname, '..', p), 'utf8');
 const engine = import('data:text/javascript;base64,' + Buffer.from(read('public/js/battlesim/engines/zorro.js')).toString('base64'));
@@ -105,7 +106,7 @@ test('legacy controller opens without modifying saved character or history', asy
   const { startZorroFight, advanceZorroFight } = await engine;
   const saved = { encounterId: 'galdos_mounted', player: { zhivot: 19 }, history: [{ outcome: 'win' }], log: ['old'] };
   const context = vm.createContext({ currentPlaythrough: () => ({ sim882: saved }), startZorroFight, advanceZorroFight });
-  vm.runInContext(read('public/js/battlesim/battlesim882.js').replace(/^import .*;$/gm, '').replace(/^export /gm, '') + '\nglobalThis.audit={data:_data,roster:ROSTER};', context);
+  vm.runInContext(readSimulatorSource(require('node:path').join(__dirname, '../public/js/battlesim/battlesim882.js'), 'utf8').replace(/^import .*;$/gm, '').replace(/^export /gm, '') + '\nglobalThis.audit={data:_data,roster:ROSTER};', context);
   const old = JSON.stringify(saved); context.audit.data(); assert.equal(JSON.stringify(saved), old);
   const roster = context.audit.roster;
   assert.equal(roster.find(e => e.id === 'galdos_mounted').enemy.sechasht, 5);

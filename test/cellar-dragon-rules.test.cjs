@@ -1,6 +1,7 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const fs = require('node:fs');
+const { readFileSync: readSimulatorSource } = require('./client/battlesim/simulator-source.mjs');
 const path = require('node:path');
 const vm = require('node:vm');
 const read = name => fs.readFileSync(path.join(__dirname, '..', name), 'utf8');
@@ -13,7 +14,7 @@ async function subject() {
   const context = vm.createContext({ currentPlaythrough: () => ({ sim881: saved }), saveState: () => {},
     document: { getElementById: id => elements[id] }, t: key => key, showAlert: () => {},
     resolveCellarDragon, Math: Object.create(Math) });
-  const code = read('public/js/battlesim/battlesim881.js').replace(/^import .*;$/gm, '').replace(/^export /gm, '');
+  const code = readSimulatorSource(path.join(__dirname, '../public/js/battlesim/battlesim881.js'), 'utf8').replace(/^import .*;$/gm, '').replace(/^export /gm, '');
   vm.runInContext(code + '\n_renderAll=()=>{};globalThis.subject={data:_data,fight:_fight,roster:ROSTER};', context);
   return { saved, context, elements, ...context.subject, resolve: resolveCellarDragon };
 }

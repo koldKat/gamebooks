@@ -24,7 +24,6 @@ function start() {
   const d = data();
   if (!d || d.fight?.pending) return;
   const e = selectedEncounter();
-  const manualDamage = element('manual').value === '' ? undefined : number('manual');
   const raw = element('companions').value.trim();
   const damages = raw ? raw.split(',').map(value => value.trim()) : [];
   if (e.mode === 'ambush' && damages.some(value => !/^\d+$/.test(value))) {
@@ -34,7 +33,6 @@ function start() {
     const previous = d.fight;
     const fight = createMarshFight(e.section, character(d), {
       count: e.configurableCount ? number('count') : undefined,
-      manualDamage,
       companions: e.mode === 'ambush' ? damages.map(value => ({ damage: Number(value) })) : [],
       cuttingWeapon: element('cutting').checked,
       poisonProtected: element('poison').checked,
@@ -53,7 +51,7 @@ function start() {
     d.log.push(tk('started', { section: e.sourceSection ?? e.section }));
     d.log = d.log.slice(-150);
     saveAndRender();
-  } catch { showAlert(tk(e.manualDamageRequired && manualDamage === undefined ? 'missing_damage' : 'invalid_values')); }
+  } catch { showAlert(tk('invalid_values')); }
 }
 
 function finish() {

@@ -1,6 +1,7 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const fs = require('node:fs');
+const { readFileSync: readSimulatorSource } = require('./client/battlesim/simulator-source.mjs');
 const path = require('node:path');
 const source = fs.readFileSync(path.join(__dirname,'../public/js/battlesim/engines/mutated-flesh.js'),'utf8');
 const engine = import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
@@ -59,7 +60,7 @@ test('dead players and completed fights cannot attack or spend ammunition',async
 test('opening a saved fight leaves it untouched; reset enables corrected rules without refilling ammo',async()=>{
   const vm=require('node:vm');const {mutatedFleshRound,mutatedFleshWon}=await engine;
   const d=state();delete d.rulesVersion;Object.assign(d,{weaponId:'crowbar',started:true,log:[],history:[]});d.ammo.pistol=0;
-  const pt={sim781:d};const controller=fs.readFileSync(path.join(__dirname,'../public/js/battlesim/battlesim781.js'),'utf8').replace(/^import .*;$/gm,'').replaceAll('export function','function');
+  const pt={sim781:d};const controller=readSimulatorSource(path.join(__dirname,'../public/js/battlesim/battlesim781.js'),'utf8').replace(/^import .*;$/gm,'').replaceAll('export function','function');
   const context=vm.createContext({currentPlaythrough:()=>pt,saveState:()=>{},t:key=>key,escapeHtml:x=>x,mutatedFleshRound,mutatedFleshWon});
   vm.runInContext(controller+'\n_renderAll=()=>{};globalThis.subject={data:_data,reset:_resetBattle,defend:_defend};',context);
   const before=JSON.stringify(d);context.subject.data();assert.equal(JSON.stringify(d),before);

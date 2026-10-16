@@ -1,6 +1,7 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const fs = require('node:fs');
+const { readFileSync: readSimulatorSource } = require('./client/battlesim/simulator-source.mjs');
 const source = fs.readFileSync(require('node:path').join(__dirname, '../public/js/battlesim/engines/tetiva.js'), 'utf8');
 const engine = import('data:text/javascript;base64,' + Buffer.from(source).toString('base64'));
 function state(section = 0) {
@@ -58,7 +59,7 @@ test('opening saved fights preserves rules; resetting opts into printed encounte
   const old=state(119);delete old.combatEffects;delete old.section;
   Object.assign(old,{enemy:{...old.enemy,name:'Дуъргар (звяр) §119'},roundsThisBattle:3,log:[],history:[]});
   const pt={sim753:old};
-  const controller=fs.readFileSync(require('node:path').join(__dirname,'../public/js/battlesim/battlesim753.js'),'utf8').replace(/^import .*;$/gm,'').replaceAll('export function','function');
+  const controller=readSimulatorSource(require('node:path').join(__dirname,'../public/js/battlesim/battlesim753.js'),'utf8').replace(/^import .*;$/gm,'').replaceAll('export function','function');
   const context=vm.createContext({currentPlaythrough:()=>pt,saveState:()=>{},t:key=>key,escapeHtml:x=>x,tetivaEncounter,tetivaRound,console});
   vm.runInContext(controller+'\n_renderAll=()=>{}; globalThis.subject={data:_data,reset:_resetBattle,round:_runRound};',context);
   const snapshot=JSON.stringify(old);

@@ -98,7 +98,6 @@ export function initSim521() {
     <div class="bsim-side"><label class="inv-edit-row">${tk('encounter')}<select id="${ID}-encounter" class="inv-edit-input">
     ${MARSH_ENCOUNTERS.map(e => `<option value="${e.section}">${escapeHtml(tk('encounter_label', { section: e.sourceSection ?? e.section, enemy: e.foes[0].name }))}${e.section === '274c' ? ' (5)' : ''}</option>`).join('')}</select></label>
     <label id="${ID}-count-wrap" class="inv-edit-row">${tk('count')}<select id="${ID}-count" class="inv-edit-input"></select></label>
-    <div id="${ID}-manual-wrap">${field('manual')}</div>
     <label id="${ID}-companions-wrap" class="inv-edit-row">${tk('companions')}<input id="${ID}-companions" class="inv-edit-input" placeholder="${tk('companions_hint')}"></label>
     <div id="${ID}-cutting-wrap">${toggle('cutting')}</div><div id="${ID}-poison-wrap">${toggle('poison')}</div>
     <p id="${ID}-source-note"></p><button id="${ID}-start" class="inv-add-btn">${tk('start')}</button>
@@ -178,7 +177,7 @@ export function initSim521() {
   });
   opponentSetup = createSkyfallOpponentSetup({document, id: ID, t, tk, encounters: MARSH_ENCOUNTERS,
     getRun: currentPlaythrough, getData: data, configure,
-    resolve: () => expandMarshEncounter(selectedEncounter().section, {count: selectedEncounter().configurableCount ? Number(element('count').value) : undefined, manualDamage: element('manual').value === '' ? undefined : Number(element('manual').value)})});
+    resolve: () => expandMarshEncounter(selectedEncounter().section, {count: selectedEncounter().configurableCount ? Number(element('count').value) : undefined})});
   configure();
 }
 
@@ -198,7 +197,6 @@ function configure() {
   const e = selectedEncounter();
   element('count-wrap').hidden = !e.configurableCount;
   element('count').innerHTML = (e.configurableCount ?? []).map(count => `<option>${count}</option>`).join('');
-  element('manual-wrap').hidden = !e.manualDamageRequired;
   element('companions-wrap').hidden = e.mode !== 'ambush';
   element('cutting-wrap').hidden = !e.cuttingOnly;
   element('poison-wrap').hidden = !e.poisonFortune;

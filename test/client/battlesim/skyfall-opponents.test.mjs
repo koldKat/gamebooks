@@ -8,6 +8,16 @@ import { createGardenFight } from '../../../public/js/battlesim/engines/skyfall/
 const player = {expertise: 12, vitality: 20, fortune: 10, weaponDamage: 2};
 const opponents = [{displayName: 'Custom foe', expertise: -1, vitality: 8, damage: 0}];
 
+test('Marsh missing printed damage accepts explicit editor values, never a blank default', () => {
+  for (const damage of ['3', '0', 3, 0]) {
+    const fight = createMarshFight(289, player, {opponents: [{...opponents[0], damage}]});
+    assert.equal(fight.encounter.foes[0].damage, Number(damage));
+  }
+  for (const damage of ['', ' ', null, undefined, '-1', '1.5']) {
+    assert.throws(() => createMarshFight(289, player, {opponents: [{...opponents[0], damage}]}));
+  }
+});
+
 test('all Skyfall engines accept independent custom opponents with their existing round rules', () => {
   for (const create of [createMarshFight, createPyramidFight, createMineFight, createGardenFight]) {
     const fight = create('custom', player, {opponents});

@@ -153,6 +153,13 @@ for(const id of BOOK_IDS){
     check(name.disabled,'Skyfall setup locked '+id);
     el('roll').click();el('settle').click();
     check(data.history.at(-1)?.enemy==='Custom Skyfall foe'&&data.fight.status==='win','Skyfall custom outcome '+id);
+    if(id===521){
+      el('encounter').value='289';el('encounter').dispatchEvent(new Event('change'));
+      const damage=editor.querySelector('[data-stat="damage"]');
+      check(!damage.disabled&&damage.value==='','missing Marsh damage requires explicit entry');
+      damage.value='3';el('start').click();
+      check(data.fight.encounter.section===289&&data.fight.encounter.foes[0].damage===3,'Marsh snake starts with manual damage');
+    }
     if(id===524){
       el('encounter').value='141';el('encounter').dispatchEvent(new Event('change'));
       check(editor.querySelector('[data-stat="vitality"]').disabled&&editor.querySelector('[data-stat="vitality"]').value==='','source-null health is unavailable, not zero');

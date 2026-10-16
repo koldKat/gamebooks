@@ -1,6 +1,7 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const fs = require('node:fs');
+const { readFileSync: readSimulatorSource } = require('./client/battlesim/simulator-source.mjs');
 const path = require('node:path');
 const source = fs.readFileSync(path.join(__dirname, '../public/js/battlesim/engines/quail.js'), 'utf8');
 const engine = import('data:text/javascript;base64,' + Buffer.from(source).toString('base64'));
@@ -157,7 +158,7 @@ test('reading a saved legacy fight is inert; explicit reset opts in without heal
   delete d.rulesVersion; delete d.options; delete d.ammo; delete d.magic; delete d.extraEnemies;
   d.player.hp = 5; d.history = []; d.log = [];
   const pt = { sim829: d, equipment: {} };
-  const controller = fs.readFileSync(path.join(__dirname, '../public/js/battlesim/battlesim829.js'), 'utf8').replace(/^import .*;$/gm, '').replace(/^export /gm, '');
+  const controller = readSimulatorSource(path.join(__dirname, '../public/js/battlesim/battlesim829.js'), 'utf8').replace(/^import .*;$/gm, '').replace(/^export /gm, '');
   const context = vm.createContext({ ...api, currentPlaythrough: () => pt, saveState: () => {}, t: key => key, escapeHtml: x => x });
   vm.runInContext(controller + '\n_renderInputs=()=>{};_renderLog=()=>{};_renderHistory=()=>{};globalThis.subject={data:_data,reset:_resetBattle,sync:_syncStatFromEquipment};', context);
   const original = JSON.stringify(d); context.subject.data(); assert.equal(JSON.stringify(d), original);

@@ -8,8 +8,10 @@ const alive = fight => fight.encounter.foes.flatMap((foe, index) => foe.vitality
 export function createMarshFight(section, player, options = {}) {
   if (!integer(player.expertise, -100) || !integer(player.vitality) || !integer(player.fortune)
       || !integer(player.weaponDamage)) throw new RangeError('Invalid character');
+  const manualDamage = options.manualDamage ?? options.opponents?.[0]?.damage;
   const encounter = editableSkyfallEncounter(section === 'custom' ? null : expandMarshEncounter(section,
-    {...options, manualDamage: options.manualDamage ?? options.opponents?.[0]?.damage}), options.opponents);
+    {...options, manualDamage: typeof manualDamage === 'string' && manualDamage.trim() !== ''
+      ? Number(manualDamage) : manualDamage}), options.opponents);
   const companions = options.companions ?? [];
   if (!Array.isArray(companions) || companions.length > 20
       || companions.some(ally => !integer(ally.damage))) throw new RangeError('Invalid companions');

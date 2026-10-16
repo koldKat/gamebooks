@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node --test",
+    "test": "node --test --test-concurrency=2 \"test/**/*.test.{js,mjs,cjs}\"",
     "docs:build": "node scripts/generate-docs.js",
     "docs:check": "node scripts/generate-docs.js --check"
   },

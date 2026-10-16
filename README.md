@@ -86,7 +86,7 @@ The SQLite database (`database.sqlite`) is created automatically on first run.
 | Command                 | Description                                  |
 |--------------------------|-----------------------------------------------|
 | `npm start`              | Start the server                              |
-| `npm test`                | Run the test suite (`node --test`)            |
+| `npm test`                | Run recursive `*.test.*` tests (Node 22, two workers) |
 | `npm run docs:build`      | Regenerate the HTML docs from `docs/*.md`     |
 | `npm run docs:check`      | Fail if the HTML docs are stale relative to their markdown source |
 

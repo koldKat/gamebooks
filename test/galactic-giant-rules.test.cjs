@@ -1,6 +1,7 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const fs = require('node:fs');
+const { readFileSync: readSimulatorSource } = require('./client/battlesim/simulator-source.mjs');
 const path = require('node:path');
 const vm = require('node:vm');
 const source = fs.readFileSync(path.join(__dirname, '../public/js/battlesim/engines/galactic-giant.js'), 'utf8');
@@ -11,7 +12,7 @@ async function controller(stats = player()) {
   const { resolveGalacticDuel } = await engine;
   const saved = { encounterId: 'robotrak', player: stats, log: ['old'], history: [{ outcome: 'win', ts: 1 }] };
   const elements = { 'sim877-flee': { checked: false } };
-  const code = fs.readFileSync(path.join(__dirname, '../public/js/battlesim/battlesim877.js'), 'utf8')
+  const code = readSimulatorSource(path.join(__dirname, '../public/js/battlesim/battlesim877.js'), 'utf8')
     .replace(/^import .*;$/gm, '').replaceAll('export function', 'function');
   const context = vm.createContext({ currentPlaythrough: () => ({ sim877: saved }), saveState: () => {},
     document: { getElementById: id => elements[id] }, t: key => key, showAlert: () => {},

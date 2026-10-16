@@ -4,7 +4,9 @@ import { fields } from './opponents.js';
 export function createSkyfallOpponentSetup({document, id, t, tk, encounters, getRun, getData, resolve, configure}) {
   const select = document.getElementById(id + '-encounter');
   const editor = createOpponentEditor({document, id, t,
-    isStatUnavailable: (key, enemy) => select.value !== 'custom' && enemy.unavailableStats?.includes(key),
+    isStatUnavailable: (key, enemy) => select.value !== 'custom'
+      && !(key === 'damage' && encounters.find(entry => String(entry.section) === select.value)?.manualDamageRequired)
+      && enemy.unavailableStats?.includes(key),
     fields: fields.map(field => ({...field, label: tk(field.key === 'damage' ? 'weaponDamage' : field.key)})),
     presets: encounters.flatMap(entry => entry.foes.map(enemy => ({...enemy,
       unavailableStats: fields.filter(field => enemy[field.key] === null).map(field => field.key)}))),
