@@ -1,3 +1,4 @@
+import { customFreewayEncounter } from './opponents.js';
 import { FREEWAY_FIGHTS, FREEWAY_CONTESTS, FREEWAY_RACES } from './roster.js';
 
 const clone = value => structuredClone(value);
@@ -41,7 +42,7 @@ export function healFreewayCharacter(character, activeFight = null) {
 }
 export function startFreewayFight(character, section, options = {}) {
   validateCharacter(character);
-  const source = FREEWAY_FIGHTS.find(entry => entry.section === section);
+  const source = customFreewayEncounter(section, options) ?? FREEWAY_FIGHTS.find(entry => entry.section === section);
   if (!source) throw new RangeError('Unknown encounter');
   const config = clone(source);
   if (config.manualRounds) config.rounds = integer(options.rounds, 1, 100);
@@ -53,7 +54,7 @@ function validateFight(fight) {
   if (fight?.rulesVersion !== 1 || fight.status !== 'fighting') throw new RangeError('No active encounter');
   validateCharacter(fight.character);
   integer(fight.round); integer(fight.hits); integer(fight.playerLoss);
-  if (!FREEWAY_FIGHTS.some(entry => entry.section === fight.config.section) || !Array.isArray(fight.enemies) || !fight.enemies.length) throw new RangeError('Invalid encounter');
+  if (!(fight.config.custom && fight.config.section === 0 && ['hand','shoot','vehicle'].includes(fight.config.kind)) && !FREEWAY_FIGHTS.some(entry => entry.section === fight.config.section) || !Array.isArray(fight.enemies) || !fight.enemies.length) throw new RangeError('Invalid encounter');
   for (const enemy of fight.enemies) { integer(enemy.attack); integer(enemy.health); integer(enemy.loss); }
 }
 function finish(fight, status, section) {

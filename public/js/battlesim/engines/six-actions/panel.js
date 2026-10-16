@@ -1,3 +1,5 @@
+import { createCustomOpponentSetup } from '../../custom-setup.js';
+import { sixActionsOpponentFields } from './opponents.js';
 import { newSixActionsCharacter, sixActionsCheck, startSixActionsFight,
   sixActionsRound, sixActionsPostCheck } from './core.js';
 import { SIX_ACTIONS_FIGHTS, SIX_ACTIONS_CHECKS, SIX_ACTIONS_WEAPONS } from './roster.js';
@@ -12,7 +14,7 @@ export function createSixActionsPanel({ document, t, getRun, getBookId, saveStat
   const tk = (key, params) => t('battlesim658.' + key, params);
   const el = key => document.getElementById(ID + '-' + key);
   const busy = game => ['fighting', 'post-check'].includes(game?.fight?.status);
-  let shownRun;
+  let shownRun, customSetup;
   function data() {
     if (Number(getBookId()) !== 658) return null;
     const run = getRun();
@@ -44,7 +46,7 @@ export function createSixActionsPanel({ document, t, getRun, getBookId, saveStat
         next.character = structuredClone(next.fight.character);
         if (!next.fight.recorded && ['win', 'loss'].includes(next.fight.status)) {
           next.fight.recorded = true;
-          next.history.push({ enemy: tk('context.' + next.fight.config.section), outcome: next.fight.status,
+          next.history.push({ enemy: next.fight.config.custom ? next.fight.config.name : tk('context.' + next.fight.config.section), outcome: next.fight.status,
             ts: Math.max(Date.now(), (next.history.at(-1)?.ts ?? 0) + 1) });
         }
       }
@@ -94,6 +96,7 @@ export function createSixActionsPanel({ document, t, getRun, getBookId, saveStat
       el('target').value = String(game.fight?.targetAlive?.findIndex(Boolean) ?? 0);
       el('grenade').checked = false;
     }
+    customSetup?.render();
     const fight = game.fight, active = busy(game);
     for (const key of ['wounds', 'bombs', 'grenades', 'weapon']) el(key).value = String(game.character[key]);
     for (const field of el('setup').querySelectorAll('input,select,button')) field.disabled = active;
@@ -126,6 +129,10 @@ export function createSixActionsPanel({ document, t, getRun, getBookId, saveStat
     overlay.id = ID + '-overlay'; overlay.className = 'inv-overlay';
     overlay.innerHTML = `<div class="inv-modal bsim-modal bsim-compact-form"><div class="inv-modal-hdr"><span class="inv-modal-title">${escape(tk('title'))}</span><button class="inv-close-btn" id="${ID}-close" aria-label="${escape(t('btn.close'))}">&times;</button></div><div class="bsim-body"><div class="bsim-col bsim-col-left"><p>${escape(tk('note'))}</p><div id="${ID}-setup">${select('wounds', [0, 1, 2, 3].map(n => [n, 'health.' + n]))}${select('weapon', Object.keys(SIX_ACTIONS_WEAPONS).map(key => [key, 'weapon.' + key]))}${field('bombs', 12)}${field('grenades', 12)}${button('apply')}${select('context', contexts.map(c => [c.section, 'context.' + c.section]))}${field('secondThreshold', '', 12)}${field('remainingEnemies', '', 100)}<p id="${ID}-contextNote"></p>${button('start')}</div><div class="bsim-status" id="${ID}-status"></div>${select('target', [[0, 'firstEnemy'], [1, 'secondEnemy']])}${select('group', [['armour', 'armourGroup'], ['jeep', 'jeepGroup']])}${field('enemyShots', '', 100)}<label class="bsim-checkbox" id="${ID}-grenade-row"><input type="checkbox" id="${ID}-grenade">${escape(tk('grenade'))}</label><div class="bsim-btn-row">${button('step')}${button('postCheck')}${button('cancel')}</div></div><div class="bsim-col bsim-col-right"><details class="bsim-history"><summary>${escape(tk('history'))}</summary><div class="bsim-history-list" id="${ID}-history"></div></details><div class="bsim-log" id="${ID}-log"></div></div></div></div>`;
     document.body.appendChild(overlay);
+    customSetup=createCustomOpponentSetup({document,id:ID,t,getRun,getData:data,selectKey:'context',language:'bg',fixedCount:true,isBusy:busy,
+      fields:sixActionsOpponentFields.map(f=>({...f,label:tk(f.key)})),defaults:{killsPerHit:1,modifier:0},
+      presets:SIX_ACTIONS_FIGHTS.filter(f=>!f.kind&&f.enemies).map(f=>({...f,displayName:tk('context.'+f.section),killsPerHit:f.killsPerHit??1,modifier:0})),
+    });
     const btn = document.createElement('button');
     btn.id = ID + '-btn'; btn.textContent = t('battlesim.title'); btn.style.display = 'none';
     getButtonRow().appendChild(btn); btn.addEventListener('click', open);
@@ -150,13 +157,13 @@ export function createSixActionsPanel({ document, t, getRun, getBookId, saveStat
         const result = sixActionsCheck(game.character, section);
         game.log.push(tk('context.' + section), tk('checkRoll', result));
       } else {
-        game.fight = startSixActionsFight(game.character, section, {
+        game.fight = startSixActionsFight(game.character, section, customSetup.settings(game, {
           secondThreshold: el('secondThreshold').value ? number('secondThreshold', 12) : undefined,
           remainingEnemies: el('remainingEnemies').value ? number('remainingEnemies', 100) : undefined,
-        });
+        }));
         el('enemyShots').value = ''; el('grenade').checked = false;
         el('target').value = '0';
-        game.log.push(tk('context.' + section));
+        game.log.push(section ? tk('context.' + section) : game.fight.config.name);
       }
     }));
     el('step').addEventListener('click', () => action(game => {

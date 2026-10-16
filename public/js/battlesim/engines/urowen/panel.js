@@ -1,3 +1,5 @@
+import { createCustomOpponentSetup } from '../../custom-setup.js';
+import { customUrowenEncounter, urowenOpponentFields } from './opponents.js';
 import {UROWEN_SOURCE} from './roster.js';
 import {createUrowenCharacter,UROWEN_RACES,UROWEN_CAREERS,upgradeUrowenAttribute,
   changeUrowenExperience} from './core.js';
@@ -21,13 +23,14 @@ export function createUrowenPanel({document,t,getRun,getBookId,saveState,showAle
   registerShortcut=()=>{},getButtonRow,roll=()=>Math.floor(Math.random()*6)+1}) {
   const tk=(key,params)=>t(`battlesim550.${key}`,params);
   const el=key=>document.getElementById(`${ID}-${key}`);
+  let customSetup;
   const active=data=>['prepared','fighting'].includes(data?.fight?.status)||data?.contest?.status==='fighting';
   function data() {
     if(Number(getBookId())!==550)return null;
     const run=getRun();return run?run[ID]??=createUrowenSimState():null;
   }
   const player=d=>d.temporary?.player??d.character;
-  const label=spec=>tk('encounter_label',{enemy:spec.enemies.map(enemy=>enemy.name).join(' / '),section:spec.section});
+  const label=spec=>spec?.custom ? spec.enemies.map(e=>e.name).join(' / ') : tk('encounter_label',{enemy:spec.enemies.map(enemy=>enemy.name).join(' / '),section:spec.section});
   function close(){el('overlay')?.classList.remove('active');}
   function open(){if(!data()){showAlert(t('battlesim.no_active_playthrough'));return;}render();el('overlay').classList.add('active');}
   function action(update) {
@@ -36,7 +39,7 @@ export function createUrowenPanel({document,t,getRun,getBookId,saveState,showAle
       const next=update(previous)??previous;
       if(getRun()!==run||Number(getBookId())!==550)return;
       for(const row of next.history.slice(previous.history.length)) {
-        row.enemy=label(specs.find(spec=>spec.section===row.section));
+        row.enemy=row.section===0 ? next.fight.enemies.map(e=>e.name).join(' / ') : label(specs.find(spec=>spec.section===row.section));
         row.outcome=row.status==='retreated'?'win':row.status;
         row.ts=Math.max(Date.now(),(next.history.at(-2)?.ts??0)+1);
       }
@@ -50,6 +53,7 @@ export function createUrowenPanel({document,t,getRun,getBookId,saveState,showAle
   function render() {
     if(!el('overlay'))return;
     const d=data();if(!d){close();return;}
+    customSetup?.render();
     const p=d.fight&&active(d)?d.fight.player:player(d),busy=active(d),f=d.fight;
     for(const key of stats) {
       const value=['experience','coins'].includes(key)?d.character[key]:p.attributes[key]??p[key];
@@ -160,6 +164,12 @@ export function createUrowenPanel({document,t,getRun,getBookId,saveState,showAle
     <details class="bsim-side"><summary>${tk('contests')}</summary>${select('contest',['53','56','72','129','391'])}<label class="inv-edit-row">${tk('animal')}<select id="${ID}-animal" class="inv-edit-input"></select></label>${number('stake')}<div class="bsim-btn-row">${button('bet')}${button('contest_roll')}</div><p id="${ID}-contest_status"></p></details>
     <p>${tk('note')}</p></div><div class="bsim-col bsim-col-right"><details class="bsim-history"><summary>${tk('history')}</summary><div id="${ID}-history" class="bsim-history-list"></div></details><div id="${ID}-log" class="bsim-log"></div></div></div></div>`;
     document.body.appendChild(overlay);
+    customSetup=createCustomOpponentSetup({document,id:ID,t,getRun,getData:data,isBusy:active,
+      fields:urowenOpponentFields.map(f=>({...f,label:tk(f.key)})),
+      defaults:{attributeCode:1,power:0,damageDice:1,damageBonus:0,...Object.fromEntries(Array.from({length:6},(_,i)=>['armor'+i,0]))},
+      presets:specs.flatMap(spec=>spec.enemies.map(enemy=>({...enemy,displayName:enemy.name,attributeCode:['STR','SK','MAG','PER'].indexOf(enemy.attribute),
+        ...Object.fromEntries(enemy.armorByLocation.map((value,i)=>['armor'+i,value]))}))),
+    });
     const btn=document.createElement('button');btn.id=`${ID}-btn`;btn.textContent=t('battlesim.title');btn.style.display='none';
     getButtonRow().appendChild(btn);btn.addEventListener('click',open);el('close').addEventListener('click',close);
     let backdrop=false;
@@ -268,7 +278,7 @@ export function createUrowenPanel({document,t,getRun,getBookId,saveState,showAle
       if(active(previous)||previous.temporary)throw new RangeError('Finish the transformation first');
       const next=structuredClone(previous);next.character=changeUrowenExperience(next.character,1);return next;
     }));
-    el('prepare').addEventListener('click',()=>action(previous=>prepareUrowenEncounter(previous,specs.find(spec=>spec.section===Number(el('encounter').value)),
+    el('prepare').addEventListener('click',()=>action(previous=>prepareUrowenEncounter(previous,el('encounter').value==='0'?customUrowenEncounter(customSetup.settings(previous).opponents):specs.find(spec=>spec.section===Number(el('encounter').value)),
       {missionAttribute:el('attribute').value,unarmedAttribute:el('attribute').value,
         firstAttackPenalty:Number(el('encounter').value)===135&&el('scene112').checked?3:0})));
     el('opening').addEventListener('click',()=>action(previous=>{

@@ -1,3 +1,4 @@
+import { customSixActionsEncounter } from './opponents.js';
 import { SIX_ACTIONS_FIGHTS, SIX_ACTIONS_CHECKS, SIX_ACTIONS_WEAPONS } from './roster.js';
 
 const copy = value => structuredClone(value);
@@ -36,7 +37,7 @@ export function sixActionsCheck(character, section, roll) {
 }
 export function startSixActionsFight(character, section, options = {}) {
   validateCharacter(character);
-  const source = SIX_ACTIONS_FIGHTS.find(entry => entry.section === section);
+  const source = customSixActionsEncounter(section, options.opponents) ?? SIX_ACTIONS_FIGHTS.find(entry => entry.section === section);
   if (!source) throw new RangeError('Unknown source encounter');
   const config = copy(source);
   if (config.manualSecondThreshold) config.secondThreshold = integer(options.secondThreshold, 2, 12);
@@ -108,7 +109,7 @@ function playerPhase(fight, options, roll, result) {
   const rolled = dice(roll), bonus = sixActionsBonus(fight.character,
     grenade ? ['weapon', 'throw'] : config.modifiers,
     grenade ? 'grenade' : config.weapon || fight.character.weapon);
-  const total = rolled.total + bonus, threshold = grenade ? 9 : config.playerThreshold;
+  const total = rolled.total + bonus + (config.modifier || 0), threshold = grenade ? 9 : config.playerThreshold;
   if (grenade) fight.character.grenades--;
   const kills = Math.min(fight.remaining, total >= threshold ? grenade ? 3
     : round === 1 && config.firstKills ? config.firstKills

@@ -595,8 +595,8 @@
       "sha256": "64ad5a4d59c2f7106761d4e65bf97d2ed18fa57ab0cf8aed841a86281fa6671e"
     },
     "battlesim/battlesim539.js": {
-      "keys": 104,
-      "sha256": "e9e6f63e79e6928c84ea6389ef1694265c479cdd1a1b8e917979275e0293e8c4"
+      "keys": 109,
+      "sha256": "bec6cb2f1dc1160d75acec58309a9cf04cea8264f6028e7438af618c595e5eac"
     },
     "battlesim/battlesim541.js": {
       "keys": 36,
@@ -607,8 +607,8 @@
       "sha256": "db6ddfe63bdceb3fc008a780a0b5c36a0eff401f99a23e74931f0618991e7fdd"
     },
     "battlesim/battlesim550.js": {
-      "keys": 146,
-      "sha256": "2b3b2f81a138532d17feb05ac23ed6eb6115f7e31f7ce1adf659cc5688869f91"
+      "keys": 156,
+      "sha256": "e0a907dd02065e9ba625863b87885f31cd80e81483c7df2b4643d98d30bab1ed"
     },
     "battlesim/battlesim555.js": {
       "keys": 61,
@@ -627,8 +627,8 @@
       "sha256": "11a8741fdb5b72b5029e2cb3f647e7db923b15d58d96b9fbe54d2633935d308c"
     },
     "battlesim/battlesim644.js": {
-      "keys": 37,
-      "sha256": "ac51559a8c9dd63c91ece835839b5f6611fd178afef1283078d29c3169ad58dc"
+      "keys": 41,
+      "sha256": "35c909332a83fbb4936a2438fdd53abc29a12767cb013fdb330a3fb07ed2ca9d"
     },
     "battlesim/battlesim648.js": {
       "keys": 97,
@@ -639,16 +639,16 @@
       "sha256": "6465007b9eecd0649012ffd8ff83ae881a05f00ce5654850ed121f96146e8a93"
     },
     "battlesim/battlesim658.js": {
-      "keys": 103,
-      "sha256": "b1a11d54f74e5cad4dc1ebeb5a0a26e7841e15749d39eb48921eafb64565c337"
+      "keys": 108,
+      "sha256": "74571d6a8f06e68a5e2ea527d400c6a54330695491eef487c4ba219ba66c992a"
     },
     "battlesim/battlesim661.js": {
       "keys": 25,
       "sha256": "199706ccfb9185fd9725e58bd99185417a80fd933cb798741ef884ebd7e0793d"
     },
     "battlesim/battlesim663.js": {
-      "keys": 120,
-      "sha256": "3334f713aa257f3314e7739d53f6c2718714357f0ccbc2b0cc3aa85e21c9c3e0"
+      "keys": 126,
+      "sha256": "936c6a5f9579aeb68d41d5872edc7993268e406da32f19ea44459a692f03da1b"
     },
     "battlesim/battlesim665.js": {
       "keys": 167,
@@ -691,8 +691,8 @@
       "sha256": "2013614e958949ad112fdba98f39b6a3048844a3051a1bfd1950fce78ae41466"
     },
     "battlesim/battlesim689.js": {
-      "keys": 196,
-      "sha256": "7b83a86474dbdc4ba99fbe2fc98215d65b849bff882a0171758d30fad8caa77a"
+      "keys": 200,
+      "sha256": "fc2db9444f98343179e40cb42ad5c357bad4c56c8e17946f9ab2d600a942bc20"
     },
     "battlesim/battlesim696.js": {
       "keys": 30,

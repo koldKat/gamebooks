@@ -1,4 +1,10 @@
 const labels = {
+  "terrain": "Terrain",
+  "terrain.1": "Open ground",
+  "terrain.2": "Cover",
+  "terrain.3": "Map combat",
+  "terrain.4": "Distant fire",
+
   'helper.title': 'Quick checks and squad losses',
   'helper.note': 'Advisory only: no saved stats, fights or XP are changed. Character values come from the fields above, including one equipped weapon. Enter primary weapon power for one fighter, or its sum for the surviving squad (one weapon each). Record story losses before entering the surviving force. For split attacks, count only the fighters assigned to those groups. Unspecified half-loss rounding stays manual.',
   'helper.check': 'Situation', 'helper.calculate': 'Calculate',

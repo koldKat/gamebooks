@@ -1,3 +1,6 @@
+import { createCustomOpponentSetup } from '../../custom-setup.js';
+import { shadowsOpponentFields } from '../../engines/gateway-opponents.js';
+let customSetup;
 import { ID, fields, flags } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
@@ -20,7 +23,7 @@ const el = key => document.getElementById(`${ID}-${key}`);
 
 const player = data => data.fight?.player ?? data.player;
 const active = data => data?.fight?.status === 'fighting';
-const label = spec => tk('encounter_label',{ enemy:tk('names.'+spec.name),section:spec.id ?? spec.section });
+const label = spec => spec.custom ? spec.name : tk('encounter_label',{ enemy:tk('names.'+spec.name),section:spec.id ?? spec.section });
 
 function close() { el('overlay')?.classList.remove('active'); }
 function open() {
@@ -31,6 +34,7 @@ function open() {
 export function renderSim539() {
   if (!el('overlay')) return;
   const d=data(); if (!d) { close(); return; }
+  customSetup?.render();
   const p=player(d),f=d.fight,fighting=active(d);
   for (const key of fields) {
     if (document.activeElement!==el(key)) el(key).value=p[key];
@@ -50,13 +54,13 @@ export function renderSim539() {
   el('start').disabled=p.stamina<=0 || p.endurance<=0;
   const selected=el('target').value,targets=f ? rules.shadowsTargets(f) : [];
   el('target').innerHTML=targets.map(({enemy,index}) => `<option value="${index}">${escapeHtml(tk('target_label',{
-    enemy:tk('names.'+enemy.name),health:enemy.stamina ?? enemy.endurance,
+    enemy:enemy.displayName || tk('names.'+enemy.name),health:enemy.stamina ?? enemy.endurance,
     pool:tk(enemy.stamina===undefined ? 'endurance':'stamina') }))}</option>`).join('');
   if (targets.some(row => String(row.index)===selected)) el('target').value=selected;
   el('target').disabled=!fighting;
   el('status').textContent=f ? tk('status.'+f.status)+(f.destination ? ' · '+tk('destination',{section:f.destination}) : '') : tk('pick');
   el('turn').textContent=fighting && f.spec.mode==='ordinary' && !f.opening
-    ? tk('turn',{round:f.round,actor:f.queue[0]===-1 ? tk('you'):tk('names.'+f.enemies[f.queue[0]]?.name)}) : '';
+    ? tk('turn',{round:f.round,actor:f.queue[0]===-1 ? tk('you'):(f.enemies[f.queue[0]]?.displayName || tk('names.'+f.enemies[f.queue[0]]?.name))}) : '';
   el('opening').hidden=!fighting || !f.opening;
   el('flee').hidden=!fighting || !f.opening || f.spec.id!==257;
   el('attack').disabled=!fighting || !!f.opening || !['ordinary','twoStrikes','gunOnly'].includes(f?.spec.mode)
@@ -95,6 +99,15 @@ export function initSim539() {
     <label class="inv-edit-row">${tk('attribute')}<select id="${ID}-attribute" class="inv-edit-input">${['strength','mentality','dexterity'].map(key => `<option value="${key}">${tk(key)}</option>`).join('')}</select></label>${button('roll_attribute')}</details><p>${tk('note')}</p></div>
     <div class="bsim-col bsim-col-right"><details class="bsim-history"><summary>${tk('history')}</summary><div id="${ID}-history" class="bsim-history-list"></div></details><div id="${ID}-log" class="bsim-log"></div></div></div></div>`;
   document.body.appendChild(overlay);
+  customSetup = createCustomOpponentSetup({document, id: ID, t, getRun: currentPlaythrough, getData: data,
+    fields: shadowsOpponentFields.map(f => ({...f, label: tk(f.key)})),
+    defaults: {mentality: 2, mental: 0, disbelief: 0, enduranceDamage: 0},
+    presets: rules.SHADOWS_ENCOUNTERS.filter(e => e.mode === 'ordinary').flatMap(e => e.enemies.filter(enemy => !enemy.copyPlayer).map(enemy => ({
+      displayName: tk('names.' + enemy.name), dexterity: enemy.dexterity ?? 0, mentality: enemy.mentality ?? 2,
+      health: enemy.stamina ?? enemy.endurance, mental: Number(enemy.stamina === undefined), disbelief: Number(!!enemy.disbelief),
+      staminaDamage: enemy.damage.stamina, enduranceDamage: enemy.damage.endurance,
+    }))),
+  });
   const btn=document.createElement('button'); btn.id=`${ID}-btn`; btn.innerHTML=shortcutLabel(t('battlesim.title')); btn.style.display='none';
   getPlayBtnRow().appendChild(btn); btn.addEventListener('click',open); el('close').addEventListener('click',close);
   let backdrop=false;
@@ -133,7 +146,7 @@ export function initSim539() {
   el('start').addEventListener('click',() => {
     const id=Number(el('encounter').value),options={diningRoom:el('diningRoom').checked};
     if (!el('remaining-row').hidden && el('remaining').value.trim()) options.remainingHealth=Number(el('remaining').value);
-    const apply=d => { record(d); d.fight=rules.startShadowsFight(player(d),id,options); };
+    const apply=d => { const fight=rules.startShadowsFight(player(d),id,customSetup.settings(d,options)); record(d); d.fight=fight; };
     if (active(data())) confirm(tk('replace_fight'),apply); else action(apply);
   });
   for (const key of ['opening','flee']) el(key).addEventListener('click',() => action(d => {

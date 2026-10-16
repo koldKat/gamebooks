@@ -62,6 +62,11 @@ for (let index=0;index<4;index++) {
 }
 for (let index=0;index<6;index++) labels['guardArrival-'+index] = 'Guard arrival #'+(index+1);
 export default {
+  "battlesim690.opponent.attack": "Attack dice",
+  "battlesim690.opponent.threshold": "Enemy hit threshold",
+  "battlesim690.opponent.defence": "Defence",
+  "battlesim690.opponent.health": "Health",
+
   ...Object.fromEntries(Object.entries(valley).map(([key,value]) => [key.replace('battlesim689.','battlesim690.'),value])),
   ...Object.fromEntries(Object.entries(labels).map(([key,value]) => ['battlesim690.'+key,value])),
 };

@@ -1,4 +1,15 @@
 export default {
+  "battlesim550.attributeCode": "Attack attribute (0 STR / 1 SK / 2 MAG / 3 PER)",
+  "battlesim550.attributeValue": "Attack modifier",
+  "battlesim550.damageDice": "Damage dice",
+  "battlesim550.damageBonus": "Damage modifier",
+  "battlesim550.armor0": "Leg armour",
+  "battlesim550.armor1": "Trunk armour (2)",
+  "battlesim550.armor2": "Trunk armour (3)",
+  "battlesim550.armor3": "Trunk armour (4)",
+  "battlesim550.armor4": "Arm armour",
+  "battlesim550.armor5": "Armour: head",
+
   "battlesim550.scene_options": "Printed scene conditions",
   "battlesim550.scene112": "Section 112: first attack against the boar is at -3",
   "battlesim550.defeat_penalty": "Defeat consequence",

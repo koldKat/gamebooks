@@ -1,4 +1,9 @@
 const labels={
+  "opponent.attack": "Attack dice",
+  "opponent.threshold": "Enemy hit threshold",
+  "opponent.defence": "Defence",
+  "opponent.health": "Health",
+
   title:'Battle Simulator - The Valley of Bones',
   note:'Choose four heroes and three starting spells per spellcaster. Enter current stats, equipment and silver from your adventure sheets. Story rewards and location restrictions still apply.',
   invalid:'Check the selected heroes, spell targets and values. Solo encounters need one participating hero.',

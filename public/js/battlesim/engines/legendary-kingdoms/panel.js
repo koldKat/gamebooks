@@ -1,3 +1,5 @@
+import { createCustomOpponentSetup } from '../../custom-setup.js';
+import { legendaryOpponentFields, startCustomLegendaryFight } from './opponents.js';
 import { LEGENDARY_SKILLS, legendarySkillCheck, legendaryHeal, newValleySkullcracker } from './character.js';
 import { VALLEY_FIGHTS, VALLEY_ARMIES, VALLEY_NAVAL, startValleyFight, startValleyArmy, startValleyNaval } from './valley.js';
 import { legendaryCanAct, legendaryPlayerAttack, legendarySkipAttack, legendaryPlayerSpell,
@@ -26,7 +28,7 @@ export function createLegendaryPanel({ document, t, getRun, getBookId, saveState
   const el=key=>document.getElementById(ID+'-'+key);
   const busy=game=>game?.fight?.status==='active';
   let shownRun;
-  let extension;
+  let extension, customSetup;
   function data() {
     if (Number(getBookId())!==bookId) return null;
     const run=getRun();
@@ -99,7 +101,7 @@ export function createLegendaryPanel({ document, t, getRun, getBookId, saveState
   function report(game,fight,kind) {game.fight={...fight,kind};}
   function contextOptions() {
     const mode=el('mode').value;
-    if (mode==='personal') return fights.map(f=>[f.section,(f.dynamic?tk('enchanted'):f.enemies[0].name)+' ('+f.section+')']);
+    if (mode==='personal') return [[0,t('battlesim.editor.custom')],...fights.map(f=>[f.section,(f.dynamic?tk('enchanted'):f.enemies[0].name)+' ('+f.section+')'])];
     if (mode==='naval') return Object.entries(naval).map(([section,f])=>[section,f.name+' ('+section+')']);
     return Object.keys(armies).map(section=>[section,tk('army.'+section)+' ('+section+')']);
   }
@@ -133,6 +135,7 @@ export function createLegendaryPanel({ document, t, getRun, getBookId, saveState
       el('mode').value=game.setup.mode??'personal';
       options('context',contextOptions());el('context').value=String(game.setup.context??el('context').value);
     }
+    customSetup?.render();
     const fight=game.fight,active=busy(game),blocked=!supported(game);
     renderLegendaryParty(el('party'),game.party,ID,tk,active||blocked,document);
     el('partyStatus').textContent=game.party.map(hero=>`${hero.name}: ${tk('health')} ${hero.health}/${hero.maxHealth}`).join('\n');
@@ -245,6 +248,10 @@ export function createLegendaryPanel({ document, t, getRun, getBookId, saveState
     const overlay=document.createElement('div');overlay.id=ID+'-overlay';overlay.className='inv-overlay';
     overlay.innerHTML=`<div class="inv-modal bsim-modal bsim-compact-form legendary-panel"><div class="inv-modal-hdr"><span class="inv-modal-title">${escape(tk('title'))}</span><button class="inv-close-btn" type="button" id="${ID}-close" aria-label="${escape(t('btn.close'))}">&times;</button></div><div class="bsim-body"><div class="bsim-col bsim-col-left"><p>${escape(tk('note'))}</p><div id="${ID}-setup">${legendarySetupHTML(ID,tk)}</div>${button('create')}<div class="bsim-status" id="${ID}-partyStatus"></div><div id="${ID}-party"></div>${button('applyParty')}${field('silver')}${button('applySilver')}${select('mode',['personal','naval','army'].map(mode=>[mode,tk('mode.'+mode)]))}${select('context')}<details id="${ID}-personalSetup"><summary>${escape(tk('encounterOptions'))}</summary>${select('members')}${select('cursedMember')}${select('stealthHero')}${select('stealthOutcome',[['',tk('none')],['success',tk('success')],['failure',tk('failure')]])}${field('slaveDamage',1,0,2)}${['hygliph','enlightened','shipInMordain','rage','knockout','undercover','escortBeforePotion'].map(check).join('')}<label class="inv-edit-row"><span class="inv-edit-label">${escape(tk('codes'))}</span><input class="inv-edit-input" id="${ID}-codes" placeholder="A8, A13"></label></details><details id="${ID}-shipSetup"><summary>${escape(tk('ship'))}</summary><label class="inv-edit-row"><span class="inv-edit-label">${escape(tk('name'))}</span><input class="inv-edit-input" id="${ID}-shipName"></label>${field('shipFighting',4)}${field('shipHealth',7,1)}${button('applyShip')}</details><details id="${ID}-armySetup"><summary>${escape(tk('army'))}</summary><label class="inv-edit-row"><span class="inv-edit-label">${escape(tk('name'))}</span><input class="inv-edit-input" id="${ID}-unitName"></label>${field('unitStrength',2)}${field('unitMorale',3)}${button('addUnit')}<div class="bsim-status" id="${ID}-units"></div>${Array.from({length:6},(_,i)=>select('formation-'+i)).join('')}</details>${button('start')}<div class="bsim-status" id="${ID}-status"></div><div class="bsim-status" id="${ID}-phase"></div><div id="${ID}-personalActions">${select('actor')}${select('target')}${field('focus',0,0,100)}<div class="bsim-btn-row">${['attack','skip','enemyRoll','flee'].map(button).join('')}</div>${select('recipient')}${check('sameRecipient')}${button('assign')}${select('potionType',[['healing',tk('healing')],['invulnerability',tk('invulnerability')]])}${button('potion')}${button('takeWeapon')}${button('tommulReward')}</div><details><summary>${escape(tk('spellbook'))}</summary>${select('caster')}${select('spell')}${select('spellTarget')}${select('spellTarget2')}${['opening','precombat','rechargeAllowed','freeRecharge'].map(check).join('')}<div class="bsim-btn-row">${button('cast')}${button('castStrategy')}</div>${select('learnSpell',Object.keys(LEGENDARY_SPELLS).map(id=>[id,tk('spell.'+id)]))}<div class="bsim-btn-row">${['learn','forget','recharge'].map(button).join('')}</div></details><div id="${ID}-strategicActions">${field('armyTarget',0,0,2)}${button('strategyStep')}</div>${button('cancel')}<details><summary>${escape(tk('checks'))}</summary>${select('checkMember1')}${select('checkMember2')}${select('skill',LEGENDARY_SKILLS.map(skill=>[skill,tk(skill)]))}${field('dc',4,1,6)}${field('required',1)}${field('checkFocus',0,0,100)}${button('checkRoll')}${button('boostCheck')}<div class="bsim-status" id="${ID}-checkResult"></div></details></div><div class="bsim-col bsim-col-right"><details class="bsim-history"><summary>${escape(tk('history'))}</summary><div class="bsim-history-list" id="${ID}-history"></div></details><div class="bsim-log" id="${ID}-log"></div></div></div></div>`;
     document.body.appendChild(overlay);wireLegendarySetup(ID,el);
+    customSetup=createCustomOpponentSetup({document,id:ID,t,getRun,getData:data,selectKey:'context',isBusy:busy,
+      fields:legendaryOpponentFields.map(f=>({...f,label:tk('opponent.'+f.key)})),
+      presets:fights.flatMap(f=>f.enemies).filter(e=>Number.isFinite(e.attack)&&Number.isFinite(e.threshold)).map(e=>({...e,displayName:e.name})),
+    });
     el('personalSetup').after(el('codes').closest('label'));
     const lootActions=document.createElement('div');lootActions.id=ID+'-lootActions';lootActions.className='bsim-btn-row';
     el('personalActions').after(lootActions);lootActions.append(el('takeWeapon'),el('tommulReward'));
@@ -322,7 +329,7 @@ export function createLegendaryPanel({ document, t, getRun, getBookId, saveState
           ...Object.fromEntries(['hygliph','enlightened','shipInMordain','rage','knockout','undercover'].map(key=>[key,el(key).checked]))};
         const members=selectedIndices('members');if(members.length)config.participants=members;
         if(el('stealthOutcome').value)config.stealthOutcome=el('stealthOutcome').value;
-        const fight=startFight(game.party,section,{...config,...configuration.personalOptions?.({game,el,number,selectedIndices})});
+        const fight=section===0 ? startCustomLegendaryFight(game.party,customSetup.settings(game,config)) : startFight(game.party,section,{...config,...configuration.personalOptions?.({game,el,number,selectedIndices})});
         fight.rules.escortBeforePotion=el('escortBeforePotion').checked;report(game,fight,mode);
       } else if(mode==='naval') report(game,startNaval(game.ship,section),mode);
       else {

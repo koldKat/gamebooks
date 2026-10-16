@@ -1,3 +1,4 @@
+import { customMoneyOpponents } from './opponents.js';
 import { CHECKS, RULE_VERSION, UNARMED_RETURNS, SHOOTING_RETURNS, unarmedEncounter, shootingEncounter } from './definition.js';
 
 const PHYSICAL = ['strength', 'dexterity', 'speed'];
@@ -96,12 +97,14 @@ export function startUnarmedFight(player, origin, options = {}) {
   validatePlayer(player);
   const multiplier = options.playerMultiplier ?? 1;
   if (!Number.isFinite(multiplier) || multiplier <= 0) throw new RangeError('Invalid player multiplier');
-  const opponents = unarmedEncounter(origin, options);
+  const custom = Number(origin) === 0 && options.opponents;
+  const opponents = custom ? customMoneyOpponents(options.opponents) : unarmedEncounter(origin, options);
   const fight = {
     ruleVersion: RULE_VERSION, mode: 'unarmed', origin: Number(origin),
     player: { ...player }, beforeOpponent: { ...player },
     opponents, enemyIndex: 0, defeated: 0, phase: 'entry', tactics: null,
     playerMultiplier: multiplier, outcome: null, destination: null,
+    ...(custom ? {custom:true,returnRoutes:{}} : {}),
     fatal: false, rounds: 0, steps: 0, events: [],
   };
   prepareOpponent(fight);
@@ -324,12 +327,16 @@ function finiteStat(value, name, minimum = 0) {
 
 export function startShootingFight(player, origin, options = {}) {
   validatePlayer(player);
-  const source = shootingEncounter(origin, options);
-  const opponents = options.opponents ?? source.opponents;
+  const custom = Number(origin) === 0 && options.opponents;
+  if (custom && ![1,2,3,4].includes(options.terrain)) throw new RangeError('Choose a terrain');
+  const source = custom ? {origin:0,terrain:options.terrain,playerCover:options.playerCover,
+    simplifiedMap:false,opponents:customMoneyOpponents(options.opponents,true)} : shootingEncounter(origin, options);
+  const opponents = custom ? source.opponents : options.opponents ?? source.opponents;
   if (opponents.length !== source.opponents.length) throw new RangeError('Incorrect opponent count');
   const weapon = { ...options.weapon };
   for (const key of ['power', 'range', 'weight']) finiteStat(weapon[key], `weapon ${key}`);
   const fight = {
+    ...(custom ? {custom:true} : {}),
     ruleVersion: RULE_VERSION, mode: 'shooting', origin: source.origin, terrain: source.terrain,
     player: { ...player }, weapon, playerCover: options.playerCover ?? source.playerCover,
     simplifiedMap: source.simplifiedMap, opponents: opponents.map(e => ({ ...e, defeated: false })),

@@ -1,4 +1,6 @@
-import { CHECKS, definition, PLAYER_DEFAULTS, UNARMED_RETURNS, SHOOTING_RETURNS, shootingEncounter } from './definition.js';
+import { createOpponentEditor } from '../../opponents.js';
+import { meleeOpponentFields, shootingOpponentFields } from './opponents.js';
+import { CHECKS, definition, PLAYER_DEFAULTS, UNARMED_RETURNS, SHOOTING_RETURNS, shootingEncounter, unarmedEncounter } from './definition.js';
 import { createState } from './state.js';
 import { startUnarmedFight, stepUnarmedFight, unarmedActions, startShootingFight,
   stepShootingFight, shootingActions, convertShootingToUnarmed, evaluateCheck } from './combat.js';
@@ -18,7 +20,7 @@ export function createMoneyPanel({ document, t, getRun, getBookId, saveState, sh
   const tk = (key, params) => t('battlesim700.' + key, params);
   const el = key => document.getElementById(ID + '-' + key);
   const store = createState(() => ({ currentBookId: getBookId(), currentPlaythrough: getRun, saveState }));
-  let shownData, shownRun;
+  let shownData, shownRun, editors, editorRun, conversionFight;
   const mode = () => el('mode').value;
   const origin = () => Number(el('encounter').value);
   const input = (id, key = id, value = '', step = 1) => `<label class="inv-edit-row"><span>${escape(tk(key))}</span><input class="inv-edit-input" id="${ID}-${id}" type="number" min="0" max="1000000" step="${step}" value="${value ?? ''}"></label>`;
@@ -65,11 +67,15 @@ export function createMoneyPanel({ document, t, getRun, getBookId, saveState, sh
     catch (error) { showAlert(error.field ? tk('invalidField', { field: error.field }) : tk('invalid')); }
   }
   function encounterOptions(selected) {
-    const ids = Object.keys(mode() === 'unarmed' ? UNARMED_RETURNS : SHOOTING_RETURNS);
-    el('encounter').innerHTML = ids.map(id => `<option value="${id}">${escape(tk('encounter.' + id))} (${id})</option>`).join('');
+    const ids = ['0', ...Object.keys(mode() === 'unarmed' ? UNARMED_RETURNS : SHOOTING_RETURNS)];
+    el('encounter').innerHTML = ids.map(id => `<option value="${id}">${escape(id === '0' ? t('battlesim.editor.bg.custom') : tk('encounter.' + id) + ' (' + id + ')')}</option>`).join('');
     el('encounter').value = ids.includes(String(selected)) ? String(selected) : ids[0];
   }
   function preset() {
+    if (origin() === 0) {
+      el('options').innerHTML=mode()==='unarmed' ? '' : `<div class="bsim-side">${select('terrain','terrain',[1,2,3,4].map(n=>[n,tk('terrain.'+n)]))}${['power','range','weight'].map(key=>input('weapon-'+key,key)).join('')}${input('setup-playerCover','playerCover')}</div>`;
+      return;
+    }
     if (mode() === 'unarmed') {
       el('options').innerHTML = (origin() === 102 ? select('count', 'count', [[1, '1'], [2, '2']]) : '')
         + (origin() === 193 ? check('wounded') : '') + (origin() === 177 ? check('douglas') : '');
@@ -92,7 +98,7 @@ export function createMoneyPanel({ document, t, getRun, getBookId, saveState, sh
     const draft = Object.fromEntries(STATS.map(key => [key, el(key).value]));
     if (resetEncounter) encounterOptions();
     preset();
-    action(d => { d.setup = snapshot(); });
+    action(d => { d.setup = snapshot(); d.customOpponents=Object.fromEntries(['unarmed','shooting'].map(key=>[key,editors[key].snapshot()])); });
     for (const key of STATS) el(key).value = draft[key];
   }
   function saveCharacter(d) {
@@ -115,7 +121,12 @@ export function createMoneyPanel({ document, t, getRun, getBookId, saveState, sh
   function start(d) {
     if (active(d.fight)) return;
     saveCharacter(d);
-    if (mode() === 'unarmed') {
+    if (origin() === 0) {
+      const opponents=editors[mode()].read();
+      d.customOpponents=Object.fromEntries(['unarmed','shooting'].map(key=>[key,editors[key].snapshot()]));
+      d.fight=mode()==='unarmed' ? startUnarmedFight(d.character,0,{opponents})
+        : startShootingFight(d.character,0,{opponents,terrain:number('terrain'),weapon:weapon(),playerCover:number('setup-playerCover')});
+    } else if (mode() === 'unarmed') {
       d.fight = startUnarmedFight(d.character, origin(), { count: el('count') ? number('count') : 1,
         wounded: el('wounded')?.checked ?? false, playerMultiplier: el('douglas')?.checked ? 2 : 1 });
     } else {
@@ -126,7 +137,7 @@ export function createMoneyPanel({ document, t, getRun, getBookId, saveState, sh
       d.fight = startShootingFight(d.character, origin(), { opponents, weapon: weapon(),
         playerCover: number('setup-playerCover'), simplifiedMap: spec.simplifiedMap });
     }
-    d.encounterName = tk('encounter.' + origin());
+    d.encounterName = origin() === 0 ? d.fight.opponents.map(e=>e.displayName).join(' / ') : tk('encounter.' + origin());
     d.character = { ...d.fight.player };
     d.decision = null;
   }
@@ -135,7 +146,7 @@ export function createMoneyPanel({ document, t, getRun, getBookId, saveState, sh
     if (d.fight.mode === 'unarmed') {
       const response = stepUnarmedFight(d.fight, value);
       d.decision = response.needsDecision ? { ...response.needsDecision, action: value } : null;
-    } else if (value === 'convert') d.fight = convertShootingToUnarmed(d.fight);
+    } else if (value === 'convert') d.fight = convertShootingToUnarmed(d.fight,d.fight.custom ? editors.conversion.read() : undefined);
     else {
       d.fight.weapon = weapon();
       const options = { position: { distance: number('live-distance'), cover: number('live-cover'), playerCover: number('live-playerCover') },
@@ -198,6 +209,18 @@ export function createMoneyPanel({ document, t, getRun, getBookId, saveState, sh
     encounterOptions(d.setup.encounter);
     preset(); restore(d.setup);
     const fight = d.fight, busy = active(fight);
+    if (editorRun !== getRun()) {
+      editorRun=getRun();
+      for(const key of ['unarmed','shooting']) editors[key].set(d.customOpponents?.[key]??[{}]);
+    }
+    for(const key of ['unarmed','shooting']) {
+      editors[key].element.hidden=origin()!==0||mode()!==key;
+      editors[key].lock(busy);
+    }
+    const converting=!!fight?.custom&&fight.mode==='shooting'&&fight.pending?.kind==='conversion'&&busy;
+    editors.conversion.element.hidden=!converting;
+    if(converting&&conversionFight!==fight){conversionFight=fight;editors.conversion.set(fight.opponents.filter(e=>!e.defeated).map(e=>({displayName:e.displayName,aggression:e.aggression,skillCode:e.skillCode,strength:e.strength,dexterity:e.dexterity,speed:e.speed,weaponCode:0})));}
+    editors.conversion.fixCount(true);
     for (const field of el('setup').querySelectorAll('input,select')) {
       field.disabled = busy && !field.id.startsWith(ID + '-weapon-');
     }
@@ -217,6 +240,7 @@ export function createMoneyPanel({ document, t, getRun, getBookId, saveState, sh
           + (fight.tactics ? '\n' + tk('tactics.' + fight.tactics) : '')
           : tk('gunStatus', { number: fight.enemyIndex + 1, count: fight.opponents.length,
             fire: enemy.effectiveFire, distance: enemy.distance, cover: enemy.cover }) + '\n' + tk('source', { section: fight.node }));
+      if(enemy?.displayName) el('status').textContent=enemy.displayName+' · '+el('status').textContent;
       const decision = d.decision ?? fight.pending;
       if (decision) el('pending').textContent = tk('reason.' + decision.reason);
       if (d.decision) {
@@ -278,6 +302,14 @@ export function createMoneyPanel({ document, t, getRun, getBookId, saveState, sh
     overlay.id = ID + '-overlay'; overlay.className = 'inv-overlay';
     overlay.innerHTML = `<div class="inv-modal bsim-modal bsim-compact-form" role="dialog" aria-modal="true" aria-labelledby="${ID}-title"><div class="inv-modal-hdr"><span class="inv-modal-title" id="${ID}-title">${escape(tk('title'))}</span><button type="button" class="inv-close-btn" id="${ID}-close" aria-label="${escape(t('btn.close'))}">&times;</button></div><div class="bsim-body"><div class="bsim-col bsim-col-left"><p>${escape(tk('note'))}</p><div class="bsim-side"><div class="bsim-side-title">${escape(tk('character'))}</div>${STATS.map(key => input(key, key, PLAYER_DEFAULTS[key], key.startsWith('endurance') ? '.5' : 1)).join('')}${button('apply', `id="${ID}-apply"`)}</div><div id="${ID}-setup">${select('mode', 'mode', [['unarmed', tk('unarmed')], ['shooting', tk('shootingMode')]])}${select('encounter', 'encounter', [])}<div id="${ID}-options"></div></div><div class="bsim-btn-row">${button('start', `id="${ID}-start"`)}${button('cancel', `id="${ID}-cancel"`)}</div><div class="bsim-status" id="${ID}-status"></div><p id="${ID}-pending"></p><div id="${ID}-live"></div><div class="bsim-btn-row" id="${ID}-actions"></div></div><div class="bsim-col bsim-col-right"><details class="bsim-history"><summary>${escape(tk('history'))}</summary><div class="bsim-history-list" id="${ID}-history"></div></details><div class="bsim-log" id="${ID}-log"></div></div></div></div>`;
     document.body.appendChild(overlay);
+    const meleePresets=Object.keys(UNARMED_RETURNS).flatMap(id=>unarmedEncounter(id).map(e=>({...e,displayName:tk('encounter.'+id)})));
+    const shootingPresets=Object.keys(SHOOTING_RETURNS).flatMap(id=>shootingEncounter(id).opponents.map(e=>({...e,displayName:tk('encounter.'+id)})));
+    editors=Object.fromEntries(['unarmed','shooting','conversion'].map(key=>{
+      const editor=createOpponentEditor({document,id:ID+'-'+key,t,language:'bg',
+        fields:(key==='shooting'?shootingOpponentFields:meleeOpponentFields).map(f=>({...f,label:tk(f.key)})),
+        presets:key==='shooting'?shootingPresets:meleePresets});
+      el(key==='conversion'?'live':'options').before(editor.element);return [key,editor];
+    }));
     const checks = document.createElement('details');
     checks.className = 'bsim-history';
     checks.innerHTML = `<summary>${escape(tk('helper.title'))}</summary><p>${escape(tk('helper.note'))}</p>`

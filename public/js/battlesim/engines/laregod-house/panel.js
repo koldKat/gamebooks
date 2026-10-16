@@ -1,3 +1,5 @@
+import { createOpponentEditor } from '../../opponents.js';
+
 import { laregodPoints, startLaregodFight, laregodRound } from './core.js';
 
 const ID = 'sim644';
@@ -9,7 +11,7 @@ export function createLaregodHousePanel({ document, t, getRun, getBookId, saveSt
   showConfirm, getButtonRow, registerShortcut = () => {} }) {
   const tk = (key, params) => t('battlesim644.' + key, params);
   const el = key => document.getElementById(ID + '-' + key);
-  let shownRun;
+  let shownRun, opponentEditor;
   const busy = d => d?.fight?.status === 'fighting';
   function data() {
     if (Number(getBookId()) !== 644) return null;
@@ -52,8 +54,10 @@ export function createLaregodHousePanel({ document, t, getRun, getBookId, saveSt
     const equipment = Object.fromEntries(equipmentKeys.map(key => [key, el(key).checked]));
     d.manualRandom = el('manualRandom').checked;
     d.fight = startLaregodFight(context, { equipment, opponent: el('opponent').value,
-      enemyNumber: d.manualRandom ? number('enemyNumber') : undefined });
-    d.encounter = tk(context === 'manual' ? 'opponent.' + d.fight.opponent : 'context.' + context);
+      enemyNumber: d.manualRandom ? number('enemyNumber') : undefined,
+      opponents: context === 'manual' ? opponentEditor.read() : undefined });
+    if (context === 'manual') d.customOpponents=opponentEditor.snapshot();
+    d.encounter = d.fight.custom ? d.fight.displayName || tk('opponent.other') : tk(context === 'manual' ? 'opponent.' + d.fight.opponent : 'context.' + context);
     snapshot(d);
     d.log.push(tk('started', { enemy: d.encounter, player: d.fight.player.points,
       opponent: d.fight.enemy.points, number: d.fight.enemyNumber }));
@@ -75,9 +79,12 @@ export function createLaregodHousePanel({ document, t, getRun, getBookId, saveSt
         if (field.type === 'checkbox') field.checked = d.setup[field.id] ?? field.defaultChecked;
         else field.value = d.setup[field.id] ?? (field.tagName === 'SELECT' ? field.options[0].value : field.defaultValue);
       }
+      opponentEditor.set(d.customOpponents ?? [{points:40,endurance:10,playerPoints:20,playerEndurance:10}]);
       el('number').value = '0';
     }
     const active = busy(d), f = d.fight;
+    opponentEditor.element.hidden = el('context').value !== 'manual';
+    opponentEditor.lock(active);
     for (const field of el('setup').querySelectorAll('input,select')) field.disabled = active;
     el('manualOpponent').hidden = el('context').value !== 'manual';
     el('enemyNumberRow').hidden = !el('manualRandom').checked;
@@ -102,6 +109,11 @@ export function createLaregodHousePanel({ document, t, getRun, getBookId, saveSt
     overlay.id = ID + '-overlay'; overlay.className = 'inv-overlay';
     overlay.innerHTML = `<div class="inv-modal bsim-modal bsim-compact-form"><div class="inv-modal-hdr"><span class="inv-modal-title">${escape(tk('title'))}</span><button class="inv-close-btn" id="${ID}-close" aria-label="${escape(t('btn.close'))}">&times;</button></div><div class="bsim-body"><div class="bsim-col bsim-col-left"><div id="${ID}-setup"><p>${escape(tk('note'))}</p><label class="inv-edit-row">${escape(tk('context'))}<select class="inv-edit-input" id="${ID}-context">${contexts.map(key => `<option value="${key}">${escape(tk('context.' + key))}</option>`).join('')}</select></label><label class="inv-edit-row" id="${ID}-manualOpponent">${escape(tk('opponent'))}<select class="inv-edit-input" id="${ID}-opponent">${['other', 'wingrugur', 'butchersword'].map(key => `<option value="${key}">${escape(tk('opponent.' + key))}</option>`).join('')}</select></label><div class="bsim-side"><div class="bsim-side-title">${escape(tk('equipment'))}</div>${equipmentKeys.map(check).join('')}<div id="${ID}-points"></div></div>${check('manualRandom')}<p>${escape(tk('randomNote'))}</p>${input('enemyNumber')}</div><div class="bsim-btn-row">${button('start')}${button('cancel')}${button('attack')}</div><div id="${ID}-manualRound">${input('number')}</div><div class="bsim-status" id="${ID}-status"></div></div><div class="bsim-col bsim-col-right"><details class="bsim-history"><summary>${escape(tk('history'))}</summary><div class="bsim-history-list" id="${ID}-history"></div></details><div class="bsim-log" id="${ID}-log"></div></div></div></div>`;
     document.body.appendChild(overlay);
+    opponentEditor=createOpponentEditor({document,id:ID,t,language:'bg',
+      fields:[{key:'points',max:10000030},{key:'endurance',min:1,max:10000},{key:'playerPoints',max:10000030},{key:'playerEndurance',min:1,max:10000}].map(f=>({...f,label:tk('manual.'+f.key)})),
+      presets:['wingrugur','butchersword','other'].map(key=>({displayName:tk('opponent.'+key),endurance:10,playerEndurance:10})),
+    });
+    opponentEditor.fixCount(true);el('manualOpponent').after(opponentEditor.element);
     const btn = document.createElement('button');
     btn.id = ID + '-btn'; btn.textContent = t('battlesim.title'); btn.style.display = 'none';
     getButtonRow().appendChild(btn); btn.addEventListener('click', open);

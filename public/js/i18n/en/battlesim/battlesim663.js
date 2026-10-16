@@ -1,4 +1,11 @@
 export default {
+  "battlesim663.kind": "Combat type",
+  "battlesim663.kind.hand": "Hand-to-hand",
+  "battlesim663.kind.shoot": "Gunfight",
+  "battlesim663.kind.vehicle": "Vehicle combat",
+  "battlesim663.opponent.attack": "Opponent attack",
+  "battlesim663.opponent.health": "Opponent health / armour",
+
   'battlesim663.title': 'Battle Simulator - Freeway Fighter',
   'battlesim663.note': 'Damage and ammunition carry between encounters. Apply story changes to your character and car below.',
   'battlesim663.invalid': 'Check the stats, target, ammunition and required duration. Nothing was changed.',

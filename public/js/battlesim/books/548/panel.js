@@ -1,9 +1,12 @@
+import { createCustomOpponentSetup } from '../../custom-setup.js';
+import { innsmouthOpponentFields } from '../../engines/gateway-opponents.js';
+let customSetup;
 import { ID, fields } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
 
 // BEGIN SIMULATOR WIRING
-const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, ID, INNSMOUTH_ENCOUNTERS, action, attackInnsmouth, character, close, createInnsmouthFight, currentBookId, currentPlaythrough, data, divertInnsmouthEnemy, eatInnsmouthRation, el, enemyName, escapeHtml, field, fields, getPlayBtnRow, initSim548, innsmouthTest, innsmouthTurn, label, log, open, openingInnsmouthShot, record, registerPanelShortcut, renderSim548, rollInnsmouthCharacter, saveState, setSim548Visible, shortcutLabel, showAlert, showConfirm, start, t, throwInnsmouthKnife, tk, update });
+const simulatorContext = () => ({ customSetup, ALL_PANEL_OVERLAY_IDS, ID, INNSMOUTH_ENCOUNTERS, action, attackInnsmouth, character, close, createInnsmouthFight, currentBookId, currentPlaythrough, data, divertInnsmouthEnemy, eatInnsmouthRation, el, enemyName, escapeHtml, field, fields, getPlayBtnRow, initSim548, innsmouthTest, innsmouthTurn, label, log, open, openingInnsmouthShot, record, registerPanelShortcut, renderSim548, rollInnsmouthCharacter, saveState, setSim548Visible, shortcutLabel, showAlert, showConfirm, start, t, throwInnsmouthKnife, tk, update });
 const { data } = createState(simulatorContext);
 const { log, record, update, start, action } = createCombat(simulatorContext);
 // END SIMULATOR WIRING
@@ -20,8 +23,8 @@ const tk = (key, params) => t(`battlesim548.${key}`, params);
 const el = key => document.getElementById(`${ID}-${key}`);
 
 const character = d => d.fight?.player ?? d.player;
-const enemyName = e => tk('enemy.' + e.name);
-const label = e => tk('encounter_label', { section: e.section, enemy: e.enemies.map(enemyName).join(', ') });
+const enemyName = e => e.displayName || tk('enemy.' + e.name);
+const label = e => e.custom ? e.enemies.map(enemyName).join(' / ') : tk('encounter_label', { section: e.section, enemy: e.enemies.map(enemyName).join(', ') });
 function close() { el('overlay')?.classList.remove('active'); }
 function open() {
   if (!data()) { showAlert(t('battlesim.no_active_playthrough')); return; }
@@ -31,6 +34,7 @@ function open() {
 export function renderSim548() {
   if (!el('overlay')) return;
   const d = data(); if (!d) { close(); return; }
+  customSetup?.render();
   const p = character(d), f = d.fight, active = f?.status === 'fighting', playerTurn = active && innsmouthTurn(f) === -1;
   for (const key of fields) {
     if (document.activeElement !== el(key)) el(key).value = p[key];
@@ -54,7 +58,7 @@ export function renderSim548() {
   el('opening').disabled = p.bullets < 1;
   el('divert').hidden = !active || !f.encounter.divert;
   el('foes').innerHTML = (f?.enemies ?? []).map(e => `<div class="inv-edit-row"><span>${escapeHtml(enemyName(e))}</span><span>${e.speed} / ${e.accuracy} / ${e.damage} / ${e.health}${e.diverted ? ' (' + tk('status.avoided') + ')' : ''}</span></div>`).join('');
-  const encounter = INNSMOUTH_ENCOUNTERS.find(e => e.section === Number(el('encounter').value));
+  const encounter = INNSMOUTH_ENCOUNTERS.find(e => e.section === Number(el('encounter').value)) ?? {};
   el('mode').textContent = tk(encounter.firstKillEnds ? 'first_kill' : encounter.simultaneous ? 'simultaneous' : 'sequential');
   el('log').innerHTML = d.log.slice(-100).reverse().map(text => `<div>${escapeHtml(text)}</div>`).join('');
   el('history').innerHTML = d.history.slice(-50).reverse().map(e => `<div class="bsim-history-row">${escapeHtml(e.enemy)}: ${tk('status.' + e.outcome)}</div>`).join('');
@@ -80,6 +84,10 @@ export function initSim548() {
     <div class="bsim-side"><label class="inv-edit-row">${tk('test')}<select id="${ID}-test" class="inv-edit-input">${['speed', 'accuracy', 'stealth', 'detection', 'power', 'conspicuousness'].map(k => `<option value="${k}">${tk(k)}</option>`).join('')}</select></label><button id="${ID}-test-roll" class="inv-add-btn">${tk('test_roll')}</button></div>
     <p>${tk('note')}</p></div><div class="bsim-col bsim-col-right"><details class="bsim-history"><summary>${tk('history')}</summary><div id="${ID}-history" class="bsim-history-list"></div></details><div id="${ID}-log" class="bsim-log"></div></div></div></div>`;
   document.body.appendChild(overlay);
+  customSetup = createCustomOpponentSetup({document, id: ID, t, getRun: currentPlaythrough, getData: data,
+    fields: innsmouthOpponentFields.map(f => ({...f, label: tk(f.key === 'damage' ? 'weaponDamage' : f.key)})),
+    presets: INNSMOUTH_ENCOUNTERS.flatMap(e => e.enemies.map(enemy => ({...enemy, displayName: enemyName(enemy)}))),
+  });
   const btn = document.createElement('button'); btn.id = `${ID}-btn`; btn.innerHTML = shortcutLabel(t('battlesim.title')); btn.style.display = 'none';
   getPlayBtnRow().appendChild(btn); btn.addEventListener('click', open); el('close').addEventListener('click', close);
   let backdrop = false;

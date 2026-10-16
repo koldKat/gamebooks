@@ -1,4 +1,9 @@
 const labels={
+  "opponent.attack": "Зарове за атака",
+  "opponent.threshold": "Праг за вражески удар",
+  "opponent.defence": "Защита",
+  "opponent.health": "Здраве",
+
   recruitSkullcracker:'Наеми Skullcracker',recruitSlot:'Място в групата за замяна',
   recruitConfirm:'Да заменим ли този герой със Skullcracker? Другите герои остават непроменени.',
   skullcrackerNote:'Само след наемане в 245. Skullcracker не носи екипировка и не може да бъде обезоръжен. Изключвай го от битки в градове; премахни го при плаване или напускане на тези земи.',

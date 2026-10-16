@@ -19,13 +19,13 @@ function update(d) {
  record(d); saveState(); renderSim548(); }
 
 function start() {
-  const { character, createInnsmouthFight, currentPlaythrough, data, el, log, showAlert, showConfirm, tk, update } = getContext();
+  const { customSetup, character, createInnsmouthFight, currentPlaythrough, data, el, log, showAlert, showConfirm, tk, update } = getContext();
 
   const d = data(); if (!d) return;
   const run = currentPlaythrough(), section = el('encounter').value, prior = d.fight;
   const apply = () => {
     if (data() !== d || currentPlaythrough() !== run || d.fight !== prior) return;
-    try { d.fight = createInnsmouthFight(section, character(d)); log(d, tk('started', { section })); update(d); }
+    try { d.fight = createInnsmouthFight(section, character(d), customSetup?.settings(d)); log(d, section === '0' ? d.fight.enemies.map(e => e.displayName).join(' / ') : tk('started', { section })); update(d); }
     catch { showAlert(tk('invalid')); }
   };
   if (d.fight?.status === 'fighting') showConfirm(tk('replace_fight'), apply);

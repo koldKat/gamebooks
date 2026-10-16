@@ -274,6 +274,40 @@ for(const id of BOOK_IDS){
     check(encounter?.custom&&enemy?.name==='Custom Demonspawn foe','Demonspawn custom fight '+id);
     check(name.disabled,'Demonspawn editor locked '+id);
   }
+  if([539,548,550,644,658,663,689,690,700].includes(id)){
+    const el=key=>document.getElementById('sim'+id+'-'+key);
+    if(id===644){el('context').value='manual';el('context').dispatchEvent(new Event('change',{bubbles:true}));}
+    if(id===663)el('roll').click();
+    if([689,690].includes(id))el('create').click();
+    const editor=[...overlay.querySelectorAll('.bsim-opponent-editor')].find(e=>!e.hidden);
+    check(editor,'custom opponent setup '+id);
+    const name=editor.querySelector('[role="combobox"]');
+    name.focus();check(editor.querySelector('[role="option"]'),'custom opponent autocomplete '+id);
+    name.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+    check(overlay.classList.contains('active'),'autocomplete Escape preserves simulator '+id);
+    name.value='Custom opponent';
+    const values={attributeCode:1,attributeValue:1,mentality:2,mental:0,disbelief:0,
+      dexterity:1,staminaDamage:1,enduranceDamage:0,playerThreshold:1,enemyThreshold:13,
+      modifier:0,killsPerHit:1,attack:0,points:1,playerPoints:100,playerEndurance:10,
+      endurance:1,aggression:1,skillCode:1,damageCode:1,weaponCode:0};
+    for(const field of editor.querySelectorAll('[data-stat]'))field.value=values[field.dataset.stat]??Math.max(1,Number(field.min));
+    el(id===550?'prepare':'start').click();
+    const fight=app.currentPlaythrough()['sim'+id].fight;
+    check(fight,'custom fight starts '+id);
+    const enemy=fight.enemies?.[0]??fight.opponents?.[0]??fight.enemy;
+    check(id===644?fight.displayName==='Custom opponent':id===658?fight.config.name==='Custom opponent':(enemy?.displayName??enemy?.name)==='Custom opponent','custom opponent name '+id);
+    check(name.disabled,'custom editor locks during fight '+id);
+    if(id===700){
+      fight.outcome='cancelled';el('mode').value='shooting';el('mode').dispatchEvent(new Event('change'));
+      const shooting=[...overlay.querySelectorAll('.bsim-opponent-editor')].find(e=>!e.hidden);
+      shooting.querySelector('[role="combobox"]').value='Custom gunfighter';
+      for(const field of shooting.querySelectorAll('[data-stat]'))field.value=1;
+      for(const key of ['weapon-power','weapon-range','weapon-weight','setup-playerCover'])el(key).value=1;
+      el('start').click();
+      const next=app.currentPlaythrough().sim700.fight;
+      check(next.mode==='shooting'&&next.custom&&next.opponents[0].displayName==='Custom gunfighter','custom shooting fight');
+    }
+  }
   const before=JSON.stringify(app.currentPlaythrough());module.render();
   check(JSON.stringify(app.currentPlaythrough())===before,'repeat render preserves state '+id);
   module.setVisible(false);overlay.classList.remove('active');

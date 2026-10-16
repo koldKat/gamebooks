@@ -1,6 +1,6 @@
 import { createOpponentEditor } from './opponents.js';
 
-export function createCustomOpponentSetup({document, id, t, fields, presets, language = 'en', selectKey = 'encounter', fixedCount = false, defaults = {}, getRun, getData}) {
+export function createCustomOpponentSetup({document, id, t, fields, presets, language = 'en', selectKey = 'encounter', fixedCount = false, defaults = {}, getRun, getData, isBusy}) {
   const select = document.getElementById(id + '-' + selectKey);
   const editor = createOpponentEditor({document, id, t, fields, presets, language});
   editor.fixCount(fixedCount);
@@ -19,7 +19,7 @@ export function createCustomOpponentSetup({document, id, t, fields, presets, lan
         editor.set(saved?.opponents ?? [defaults]);
       }
       const fight = getData()?.fight;
-      editor.lock(fight && ('outcome' in fight ? !fight.outcome : fight.status === 'fighting'));
+      editor.lock(isBusy ? isBusy(getData()) : fight && ('outcome' in fight ? !fight.outcome : fight.status === 'fighting'));
       visibility();
     },
     settings(data, options = {}, selection = select.value) {

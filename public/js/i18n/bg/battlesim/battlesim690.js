@@ -62,6 +62,11 @@ for (let index=0;index<4;index++) {
 }
 for (let index=0;index<6;index++) labels['guardArrival-'+index] = 'Пристигане на страж №'+(index+1);
 export default {
+  "battlesim690.opponent.attack": "Зарове за атака",
+  "battlesim690.opponent.threshold": "Праг за вражески удар",
+  "battlesim690.opponent.defence": "Защита",
+  "battlesim690.opponent.health": "Здраве",
+
   ...Object.fromEntries(Object.entries(valley).map(([key,value]) => [key.replace('battlesim689.','battlesim690.'),value])),
   ...Object.fromEntries(Object.entries(labels).map(([key,value]) => ['battlesim690.'+key,value])),
 };

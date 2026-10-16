@@ -1,3 +1,5 @@
+import { validateOpponents } from '../../opponents.js';
+
 const clone = value => structuredClone(value);
 const contexts = new Set(['yard', 'market', 'guard', 'manual']);
 const opponents = new Set(['wingrugur', 'butchersword', 'other']);
@@ -29,10 +31,15 @@ export function startLaregodFight(context, options = {}, roll = die) {
   const opponent = context === 'guard' ? 'other' : context === 'manual' ? options.opponent ?? 'other' : 'wingrugur';
   const points = laregodPoints(options.equipment, opponent, context);
   const enemyNumber = options.enemyNumber === undefined ? draw(roll) : integer(options.enemyNumber);
+  const custom = context === 'manual' && options.opponents ? validateOpponents(options.opponents,
+    [{key:'points',max:10000030},{key:'endurance',min:1,max:10000},{key:'playerPoints',max:10000030},{key:'playerEndurance',min:1,max:10000}]) : null;
+  if (custom && custom.length !== 1) throw new RangeError('Choose one opponent');
+  const row = custom?.[0];
   return {
+    ...(row ? {custom:true,displayName:row.displayName} : {}),
     rulesVersion: 1, context, opponent, equipment: clone(options.equipment ?? {}),
-    player: { points, endurance: 10 },
-    enemy: { points: enemyNumber * 10 + 30, endurance: 10 },
+    player: { points: row?.playerPoints ?? points, endurance: row?.playerEndurance ?? 10 },
+    enemy: { points: row?.points ?? enemyNumber * 10 + 30, endurance: row?.endurance ?? 10 },
     enemyNumber, round: 0, status: 'fighting',
   };
 }
@@ -41,7 +48,7 @@ export function laregodRound(fight, options = {}, roll = die) {
   if (fight.rulesVersion !== 1 || fight.status !== 'fighting') throw new RangeError('No active fight');
   if (!contexts.has(fight.context) || !opponents.has(fight.opponent)) throw new RangeError('Invalid fight');
   integer(fight.player.points, 10000030); integer(fight.enemy.points, 10000030);
-  if (!integer(fight.player.endurance, 10) || !integer(fight.enemy.endurance, 10)) throw new RangeError('Fight already ended');
+  if (!integer(fight.player.endurance, fight.custom ? 10000 : 10) || !integer(fight.enemy.endurance, fight.custom ? 10000 : 10)) throw new RangeError('Fight already ended');
   integer(fight.round);
   const number = options.number === undefined ? draw(roll) : integer(options.number);
   const playerRating = fight.player.points + number, enemyRating = fight.enemy.points;

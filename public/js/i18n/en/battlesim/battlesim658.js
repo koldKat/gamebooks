@@ -1,4 +1,10 @@
 export default {
+  "battlesim658.playerThreshold": "Player hit threshold",
+  "battlesim658.enemyThreshold": "Enemy hit threshold",
+  "battlesim658.enemies": "Number of enemies",
+  "battlesim658.killsPerHit": "Enemies defeated per hit",
+  "battlesim658.modifier": "Additional attack modifier",
+
   "battlesim658.title": "Battle Simulator - Rage in Vietnam",
   "battlesim658.note": "Wounds and ammunition carry between encounters. Apply story equipment changes yourself. Blank enemy-shot overrides use the printed rules; ambiguous firing sequences require a manual count.",
   "battlesim658.invalid": "Check the required values, living target and available ammunition. Nothing was changed.",

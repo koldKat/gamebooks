@@ -1,4 +1,9 @@
 export default {
+  "battlesim539.health": "Health",
+  "battlesim539.mental": "Mental health pool (0 physical / 1 mental)",
+  "battlesim539.disbelief": "Disbelief attack (0 no / 1 yes)",
+  "battlesim539.staminaDamage": "STAMINA damage",
+  "battlesim539.enduranceDamage": "ENDURANCE damage",
   "battlesim539.title": "Battle Simulator - Where the Shadows Stalk",
   "battlesim539.character": "Psychic investigator",
   "battlesim539.strength": "Strength",

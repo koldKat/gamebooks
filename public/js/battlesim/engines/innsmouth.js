@@ -1,3 +1,5 @@
+import { customInnsmouthEncounter } from './gateway-opponents.js';
+
 const enemy = (name, speed, accuracy, damage, health) => Object.freeze({ name, speed, accuracy, damage, health });
 const man = (health = 6) => enemy('man', 6, 8, 2, health);
 const woman = (health = 9) => enemy('woman', 8, 9, 2, health);
@@ -58,9 +60,9 @@ function validatePlayer(p) {
   innsmouthWeightPenalty(p.weight);
 }
 
-export function createInnsmouthFight(section, player) {
+export function createInnsmouthFight(section, player, options = {}) {
   validatePlayer(player);
-  const encounter = INNSMOUTH_ENCOUNTERS.find(e => e.section === Number(section));
+  const encounter = customInnsmouthEncounter(section, options.opponents) ?? INNSMOUTH_ENCOUNTERS.find(e => e.section === Number(section));
   if (!encounter) throw new RangeError('Invalid encounter');
   const fight = { version: 1, encounter: structuredClone(encounter), player: structuredClone(player),
     enemies: encounter.enemies.map(e => ({ ...e, initialHealth: e.health })),

@@ -1,4 +1,9 @@
 export default {
+  "battlesim644.manual.points": "Opponent combat points",
+  "battlesim644.manual.endurance": "Opponent Endurance",
+  "battlesim644.manual.playerPoints": "Your combat points",
+  "battlesim644.manual.playerEndurance": "Your Endurance",
+
   'battlesim644.title': 'Battle Simulator - The House of the Beetle',
   'battlesim644.note': 'Each fighter starts with 10 Endurance. The opponent keeps one score throughout the fight; your score receives a new random number each round. Record story rewards and Ringlas\'s condition in the book.',
   'battlesim644.context': 'Encounter',

@@ -731,6 +731,8 @@ On mobile, the simulator loads when you tap its button. If a network-error messa
 - A running log shows every round so you can see exactly what happened
 - Your combat history is saved per playthrough
 
+Where a simulator offers **Custom opponents**, type a name to see roster suggestions, then adjust the stats or add another opponent. Printed encounters remain available for their special rules; custom fights do not choose a story destination for you. Opponent setup is locked during an active fight.
+
 **Good to know:**
 - Each simulator follows the exact rules for its specific book (dice counts, damage tables, special abilities)
 - Some simulators read your current equipment and character sheet to prefill your stats

@@ -1,3 +1,5 @@
+import { customShadowsEncounter } from './gateway-opponents.js';
+
 const attributes = ['strength', 'mentality', 'dexterity'];
 const die = random => Math.floor(random() * 6) + 1;
 const dice = random => [die(random), die(random)];
@@ -100,7 +102,7 @@ export function settleShadows(fight) {
   if (fight.status !== 'fighting') return;
   if (fight.player.stamina <= 0 || fight.player.endurance <= 0) {
     fight.status = 'loss';
-    fight.destination = fight.player.stamina <= 0 ? fight.spec.death ?? 219 : fight.spec.insanity ?? 233;
+    fight.destination = fight.spec.custom ? null : fight.player.stamina <= 0 ? fight.spec.death ?? 219 : fight.spec.insanity ?? 233;
   } else if (!shadowsTargets(fight).length) {
     fight.status = 'win'; fight.destination = fight.options.diningRoom ? fight.spec.diningWin ?? fight.spec.win : fight.spec.win;
   }
@@ -116,7 +118,7 @@ function nextRound(fight) {
 
 export function startShadowsFight(player, id, options = {}) {
   validate(player);
-  const spec = SHADOWS_ENCOUNTERS.find(row => row.id === Number(id));
+  const spec = customShadowsEncounter(id, options.opponents) ?? SHADOWS_ENCOUNTERS.find(row => row.id === Number(id));
   if (!spec) throw new RangeError('Unknown encounter');
   const fight = { version: 1, player: structuredClone(player), spec: structuredClone(spec),
     options: { diningRoom: !!options.diningRoom }, status: 'fighting', round: 0, queue: [],
