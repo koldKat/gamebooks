@@ -1,0 +1,95 @@
+const checks = [], saves = [];
+let imageAccessGranted = false;
+const assert = (value, label) => { if (!value) throw Error(label); checks.push(label); };
+window.fetch = async (url, options = {}) => {
+  if (url === '/api/books/728/reading-matter' && !options.method) {
+    imageAccessGranted = true; return new Response('{}', { status: 200 });
+  }
+  assert(url === '/api/books/728/state' && options.method === 'PUT', 'only intercepted state saves');
+  saves.push(JSON.parse(options.body)); return new Response('{}', { status: 200 });
+};
+const descriptor = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, 'src');
+Object.defineProperty(HTMLImageElement.prototype, 'src', { ...descriptor, set(value) {
+  const path = String(value).match(/^\/api\/books\/728\/reading-images\/([a-f0-9]{64}\.png)$/);
+  if (path) assert(imageAccessGranted, 'image access granted before diagram load');
+  descriptor.set.call(this, path ? 'file:///media/koldKat/MediaDrive/.tmp/reading-imports-2026-10-11/728-art-draft/' + path[1] : value);
+} });
+const app = await import('REPO/public/js/core/state.js');
+const desktop = await import('REPO/public/js/battlesim/loader.js');
+const mobile = await import('REPO/public/mobile/js/battlesim-dispatch.js');
+const { registerTranslations } = await import('REPO/public/js/i18n/runtime.js');
+const { loadBattleSimTranslations } = await import('REPO/public/js/i18n/battlesim.js');
+const { DIAGRAMS } = await import('REPO/public/js/battlesim/books/728/definition.js');
+const combat = await import('REPO/public/js/battlesim/books/728/combat.js');
+await import('REPO/public/js/ui-helpers/dialog-escape.js');
+const mode = 'MODE', language = 'LANGUAGE', el = key => document.getElementById('sim728-' + key);
+assert(!el('overlay'), 'lazy mount'); assert(mobile.hasSim(728), 'mobile registry');
+await loadBattleSimTranslations(728);
+if (language === 'bg') registerTranslations((await import('REPO/public/js/i18n/bg/battlesim/battlesim728.js')).default);
+app.setCurrentBookId(728);
+const run = { startedAt: 123, path: [1], sim724: { preserved: true } };
+app.state.playthroughs = [run]; app.state.activePtIndex = 0;
+const sim = await import('REPO/public/js/battlesim/battlesim728.js');
+const open = async () => {
+  if (mode === 'mobile') await mobile.openSimForBook(728);
+  else { await desktop.showBattleSimForBook(728); el('btn').click(); }
+};
+const route = section => {
+  const button = el('actions').querySelector('[data-destination="' + section + '"]');
+  assert(button, 'available route ' + section); button.click();
+};
+await open();
+assert(el('overlay').classList.contains('active'), 'panel opens');
+assert(run.sim728.character === null && run.sim728.fight === null, 'opening does not start battle');
+assert(!el('overlay').textContent.includes('battlesim728.'), 'translated initial labels');
+el('size').value = 'large'; el('preset').click(); el('soldiers').value = '100';
+el('start').click();
+assert(el('size').disabled && el('start').disabled && run.sim728.fight.section === 95, 'fight locks setup');
+el('fire').click(); assert(run.sim728.fight.pirates.A.durability === 42, 'opening volley uses broadside');
+assert(run.sim728.fight.player.ammo === 14, 'powder spent once');
+route(66); route(96); route(78); route(88); route(69); route(80); route(99); route(101);
+assert(run.sim728.fight.outcome === 'win' && run.sim728.history.length === 1, 'boarding victory recorded once');
+assert(run.sim728.character.soldiers === 45, 'boarding losses preserved');
+await app.saveState(); await new Promise(resolve => setTimeout(resolve, 0));
+assert(saves.some(value => value.playthroughs?.[0]?.sim728?.history?.length === 1), 'victory history reaches state API');
+const previous = JSON.stringify(run); sim.render(); assert(JSON.stringify(run) === previous, 'render does not mutate fight');
+el('size').value = 'large'; el('preset').click(); el('start').click();
+route(56); route(76); route(57);
+assert(run.sim728.fight.section === 57, 'tactical handoffs preserve position');
+assert(el('notice').textContent.length > 20, 'missing source branch explained');
+route('manual'); assert(run.sim728.history.length === 1, 'manual exit awards no outcome');
+const seed = combat.startFight(combat.newShip('large'));
+for (const section of Object.keys(DIAGRAMS).map(Number)) {
+  run.sim728 = { ...run.sim728, fight: { ...structuredClone(seed), section } }; sim.render();
+  const image = el('diagram');
+  for (let retry = 0; retry < 100 && !image.src.endsWith(DIAGRAMS[section] + '.png'); retry++) await new Promise(resolve => setTimeout(resolve, 1));
+  await image.decode();
+  assert(!image.hidden && image.naturalWidth > 0, 'original diagram decodes ' + section);
+}
+for (const [section, manual] of [[88, 'missing88'], [99, 'overlap99'], [100, 'missing100']]) {
+  run.sim728 = { ...run.sim728, fight: { ...structuredClone(seed), section, attackers: ['A', 'B'],
+    player: { ...seed.player, soldiers: section === 88 ? 40 : 1, weapons: section === 99 ? 'partial' : 'full' } } };
+  if (section === 100) run.sim728.fight.attackers = ['A'];
+  sim.render();
+  assert(el('notice').textContent.length > 20, 'source ambiguity visible ' + manual);
+}
+assert(!el('overlay').textContent.includes('battlesim728.'), 'dynamic labels translated');
+assert((await import('REPO/public/js/core/util.js')).ALL_PANEL_OVERLAY_IDS.includes('sim728-overlay'), 'overlay shortcut registry');
+const modal = el('overlay').querySelector('.bsim-modal');
+assert(modal.getBoundingClientRect().width <= innerWidth, 'modal fits viewport');
+for (const column of el('overlay').querySelectorAll('.bsim-col')) {
+  for (const detail of column.querySelectorAll('details')) detail.open = true;
+  assert(getComputedStyle(column).overflowY === 'auto', 'scrollable column');
+  const maximum = Math.max(0, column.scrollHeight - column.clientHeight); column.scrollTop = 1e9;
+  assert(Math.abs(column.scrollTop - maximum) < 2, 'column bottom reachable'); column.scrollTop = 0;
+}
+assert(document.documentElement.scrollWidth <= innerWidth, 'no horizontal overflow');
+el('close').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+assert(!el('overlay').classList.contains('active'), 'Escape closes'); await open();
+el('cancel').click(); assert(document.getElementById('confirm-overlay').classList.contains('active'), 'cancellation confirms');
+const snapshot = JSON.stringify(run); app.state.playthroughs = [{ startedAt: 456, path: [1] }];
+document.getElementById('confirm-ok').click(); sim.render();
+assert(!el('overlay').classList.contains('active'), 'run switch closes stale panel');
+el('start').click(); assert(JSON.stringify(run) === snapshot && !app.currentPlaythrough().sim728, 'stale actions and confirmation preserve both runs');
+assert(run.sim724.preserved, 'other simulator preserved');
+document.body.dataset.test = JSON.stringify({ mode, language, width: innerWidth, checks: checks.length, saves: saves.length, productionWrites: 0 });

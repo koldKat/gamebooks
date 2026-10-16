@@ -407,6 +407,10 @@
         engines/sorcery/  Pure Sorcery character, Luck, damage and recovery primitives, plus
                          transactional run-scoped persistence. Book modules own encounter
                          exceptions; stale run/book updates are rejected before saving.
+        books/728/       Naval combat: declarative ship/artillery tables, pure tactical and
+                         boarding resolution, transactional run-scoped state and panel wiring.
+                         Manual source rulings are explicit; unfinished/manual battles do not
+                         create victory or defeat history entries.
         loader.js        Desktop supported-book registry and lazy simulator lifecycle.
                          Boot imports only this loader; per-book simulators are imported
                          only when their book opens. Mobile keeps its separate
