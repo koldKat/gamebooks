@@ -1,3 +1,4 @@
+import { createCustomOpponentSetup } from '../../custom-setup.js';
 import { definition, CHARACTER_DEFAULTS, DARTS_BOARD, ENCOUNTERS, SPELL_ENCOUNTERS, SPELL_LABELS, encounterFor } from './definition.js';
 import * as rules from './combat.js';
 import * as effects from './effects.js';
@@ -19,6 +20,8 @@ const escape = value => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', 
 
 export function createCrownPanel({ document, t, getRun, getBookId, saveState, showAlert, showConfirm, getButtonRow, registerShortcut = () => {} }) {
   const tk = (key, params) => t(definition.i18nPrefix + '.' + key, params);
+  let customSetup;
+  const enemyLabel = enemy => enemy.displayName || tk('enemy.' + (enemy.key ?? enemy.name));
   const el = key => document.getElementById(ID + '-' + key);
   const store = createState(() => ({ currentBookId: getBookId(), currentPlaythrough: getRun, saveState }));
   const button = key => `<button type="button" class="inv-add-btn bsim-action-btn" id="${ID}-${key}">${escape(tk(key))}</button>`;
@@ -29,7 +32,7 @@ export function createCrownPanel({ document, t, getRun, getBookId, saveState, sh
     const config = encounterFor(section);
     return tk('encounter.' + config.key) + (config.spell ? ' / ' + tk('spell.' + SPELL_LABELS[section]) : '') + ` (${section})`;
   };
-  const selected = () => encounterFor(Number(el('encounter').value));
+  const selected = () => Number(el('encounter').value) === 0 ? {section: 0, custom: true, enemies: []} : encounterFor(Number(el('encounter').value));
   const canCarry = (fight, config) => fight?.outcome === 'continue' && fight.destination === config.section
     && config.requiresCarryFrom?.includes(fight.config.sourceSection ?? fight.config.section);
   let shownRun, rendered;
@@ -68,7 +71,7 @@ export function createCrownPanel({ document, t, getRun, getBookId, saveState, sh
     const previous = data.fight;
     data.fight = fight; data.character = structuredClone(fight.player);
     for (const event of fight.events) {
-      const enemy = event.enemy == null ? '' : tk('enemy.' + fight.enemies[event.enemy].key);
+      const enemy = event.enemy == null ? '' : enemyLabel(fight.enemies[event.enemy]);
       if (['attack', 'extraAttack', 'allyAttack'].includes(event.kind)) data.log.push(tk(event.kind + 'Line', { ...event, enemy }));
       else if (event.kind === 'hit') data.log.push(tk('hitLine', { target: event.direction === 'outgoing' ? enemy : event.actor === 'ally' ? tk('ally') : tk('you'), damage: event.damage }));
       else if (event.kind === 'luck') data.log.push(tk('luckLine', { roll: event.roll, result: tk(event.lucky ? 'lucky' : 'unlucky') }));
@@ -84,7 +87,7 @@ export function createCrownPanel({ document, t, getRun, getBookId, saveState, sh
   }
   function start(data, section, carry = false) {
     if (active(data.fight) || dartsActive(data.darts) || !data.character || data.character.dead) return;
-    const config = encounterFor(section), options = {
+    const config = section === 0 ? {section: 0, custom: true, enemies: []} : encounterFor(section), options = {
       applyEntry: el('applyEntry').checked, surprise: el('surprise').value,
       enemyIndex: Number(el('enemyIndex').value || 0), helpCopies: el('helpCopies').checked,
       enemyDefender: el('enemyDefender').value, secondWeaponEquipped: el('secondWeaponEquipped').checked,
@@ -98,8 +101,8 @@ export function createCrownPanel({ document, t, getRun, getBookId, saveState, sh
     if (config.success?.volley) options.volleyCount = number('volleyCount');
     if (canCarry(data.fight, config)) options.carryFrom = data.fight;
     else if (config.requiresCarryFrom && !config.carryPlayerOnly) options.remainingStamina = el('remaining').value.split(',').map(value => Number(value.trim()));
-    const fight = rules.startFight(section, data.character, options);
-    fight.name = entryLabel(section); data.setup.encounter = String(section); report(data, fight);
+    const fight = rules.startFight(section, data.character, customSetup.settings(data, section === 0 ? {} : options, section));
+    fight.name = fight.config.custom ? fight.config.name : entryLabel(section); data.setup.encounter = String(section); report(data, fight);
   }
   function render(force = false) {
     if (!el('overlay')?.classList.contains('active')) return;
@@ -114,10 +117,11 @@ export function createCrownPanel({ document, t, getRun, getBookId, saveState, sh
     for (const key of FLAGS) { el(key).checked = hero?.[key] ?? CHARACTER_DEFAULTS[key] ?? false; el(key).disabled = locked; }
     el('fever').checked = hero?.afflictions.includes('fever') ?? false; el('fever').disabled = locked;
     el('role').value = hero?.role ?? 'warrior'; el('role').disabled = locked;
-    const defaults = { encounter: '29', surprise: 'none', enemyDefender: 'copy', summonCount: '1', volleyCount: '1', remaining: '2' };
+    const defaults = { encounter: '0', surprise: 'none', enemyDefender: 'copy', summonCount: '1', volleyCount: '1', remaining: '2' };
     for (const key of Object.keys(defaults)) el(key).value = data.setup[key] ?? defaults[key];
     for (const key of ['applyEntry', 'helpCopies', 'secondWeaponEquipped', 'itemRemovedManually', 'useHolySpear', 'borrow']) el(key).checked = data.setup[key] ?? key === 'applyEntry';
     for (const index of [0, 1, 2]) el('copy' + index).checked = (data.setup.copyEnemies ?? [0]).includes(index);
+    customSetup.render();
     const config = selected(), componentField = ({ coin: 'gold', medicine: 'medicines', giantTooth: 'giantTeeth' })[config.component] ?? config.component;
     el('hasComponent').checked = data.setup.hasComponent ?? Boolean(hero?.[componentField]);
     el('componentName').textContent = config.component ? tk(componentField) : '';
@@ -129,7 +133,7 @@ export function createCrownPanel({ document, t, getRun, getBookId, saveState, sh
       itemRemovedManually: Boolean(config.consumeItem), secondWeaponEquipped: Boolean(hero?.twoWeapons),
       useHolySpear: Boolean(config.holySpearInstantKill && !config.spell) };
     const oldEnemy = data.setup.enemyIndex ?? '0';
-    el('enemyIndex').innerHTML = config.enemies.map((enemy, index) => `<option value="${index}">${escape(tk('enemy.' + enemy.key))}</option>`).join('');
+    el('enemyIndex').innerHTML = config.enemies.map((enemy, index) => `<option value="${index}">${escape(enemyLabel(enemy))}</option>`).join('');
     el('enemyIndex').value = oldEnemy;
     for (const [key, visible] of Object.entries(rows)) { el(key + '-row').hidden = !visible; if (el(key)?.tagName !== 'DIV') el(key).disabled = locked; }
     if (busy && fight.config.mirrorCopies && !fight.pending.length) {
@@ -145,7 +149,7 @@ export function createCrownPanel({ document, t, getRun, getBookId, saveState, sh
     el('note').textContent = tk('note.' + current.mode) + (current.descriptiveStrengthOnly || current.success?.descriptiveStrengthOnly ? '\n' + tk('strengthNote') : '');
     const indices = busy ? rules.activeEnemies(fight) : [];
     for (const key of ['target', 'secondTarget']) {
-      el(key).innerHTML = indices.map(index => `<option value="${index}">${escape(tk('enemy.' + fight.enemies[index].key))}</option>`).join('');
+      el(key).innerHTML = indices.map(index => `<option value="${index}">${escape(enemyLabel(fight.enemies[index]))}</option>`).join('');
       el(key).value = indices.includes(Number(data.setup[key])) ? data.setup[key] : String(indices[0] ?? '');
       el(key).disabled = !busy || pending;
     }
@@ -166,7 +170,7 @@ export function createCrownPanel({ document, t, getRun, getBookId, saveState, sh
     el('dart').disabled = !playingDarts;
     el('dartsStart').disabled ||= hero?.dartsGames >= 2;
     const actors = fight ? [...fight.enemies.map(enemy => ({ ...enemy, ally: false })), ...fight.allies.filter(ally => ally.stamina > 0).slice(0, 20).map(ally => ({ ...ally, ally: true }))] : [];
-    el('opponents').innerHTML = actors.length ? `<table class="bsim-combat-table"><thead><tr><th>${escape(tk('opponents'))}</th><th>${escape(tk('skill'))}</th><th>${escape(tk('stamina'))}</th></tr></thead><tbody>${actors.map(actor => `<tr><td>${escape(tk('enemy.' + actor.key))}${actor.ally ? ' / ' + escape(tk('ally')) : ''}${actor.excluded ? ' / ' + escape(tk('excluded')) : ''}</td><td>${actor.skill}</td><td>${actor.stamina}</td></tr>`).join('')}</tbody></table>` : '';
+    el('opponents').innerHTML = actors.length ? `<table class="bsim-combat-table"><thead><tr><th>${escape(tk('opponents'))}</th><th>${escape(tk('skill'))}</th><th>${escape(tk('stamina'))}</th></tr></thead><tbody>${actors.map(actor => `<tr><td>${escape(enemyLabel(actor))}${actor.ally ? ' / ' + escape(tk('ally')) : ''}${actor.excluded ? ' / ' + escape(tk('excluded')) : ''}</td><td>${actor.skill}</td><td>${actor.stamina}</td></tr>`).join('')}</tbody></table>` : '';
     el('status').textContent = fight ? [tk('rounds', fight), fight.outcome ? tk('status.' + fight.outcome) : pending ? tk('pending') : tk('ready'), fight.destination ? tk('destination', { section: fight.destination }) : ''].filter(Boolean).join('\n') : tk(dead ? 'noCharacter' : 'ready');
     el('dartsStatus').textContent = data.darts?.winner === -1 ? tk('status.cancelled') : data.darts ? tk('dartsScore', { total: data.darts.total, player: data.darts.winner === null ? data.darts.nextPlayer + 1 : data.darts.winner + 1 }) + (data.darts.winner !== null ? '\n' + tk(data.darts.winner === 0 ? 'dartsWon' : 'dartsEnded') : '') : '';
     el('log').textContent = data.log.join('\n');
@@ -183,6 +187,9 @@ export function createCrownPanel({ document, t, getRun, getBookId, saveState, sh
     const overlay = document.createElement('div'); overlay.id = ID + '-overlay'; overlay.className = 'inv-overlay';
     overlay.innerHTML = `<div class="inv-modal bsim-modal bsim-compact-form" role="dialog" aria-modal="true" aria-labelledby="${ID}-title"><div class="inv-modal-hdr"><span class="inv-modal-title" id="${ID}-title">${escape(tk('title'))}</span><button type="button" class="inv-close-btn" id="${ID}-close" aria-label="${escape(t('btn.close'))}">&times;</button></div><div class="bsim-body"><div class="bsim-col bsim-col-left"><details open><summary>${escape(tk('character'))}</summary>${select('role', [['warrior', 'warrior'], ['wizard', 'wizard']])}${STATS.map(key => input(key)).join('')}<div class="bsim-btn-row">${button('roll')}${button('apply')}</div></details><details><summary>${escape(tk('equipment'))}</summary>${NUMBERS.map(key => input(key)).join('')}${FLAGS.map(check).join('')}${check('fever')}</details><details><summary>${escape(tk('recovery'))}</summary><p>${escape(tk('recoveryNote'))}</p><div class="bsim-btn-row">${['eat', 'nextDay', 'fruit', 'medicine', 'coatWeapon', 'luckCheck', 'libraRestore', 'libraCure'].map(button).join('')}</div></details><details><summary>${escape(tk('checks'))}</summary><div class="bsim-btn-row">${['door53', 'door454', 'spearEscape', 'feverChoice', 'mutation', 'timeTravel'].map(button).join('')}</div></details><details><summary>${escape(tk('darts'))}</summary><p>${escape(tk('dartsNote'))}</p><details><summary>${escape(tk('board'))}</summary><img src="${DARTS_BOARD}" alt="${escape(tk('board'))}" width="180" loading="lazy" decoding="async" style="max-width:100%;height:auto"></details>${check('borrow')}<div class="bsim-btn-row">${button('dartsStart')}</div>${input('dartPoints', -1000, 1000)}<div class="bsim-btn-row">${button('dart')}</div><p class="bsim-status" id="${ID}-dartsStatus" role="status"></p></details></div><div class="bsim-col bsim-col-right"><label class="inv-edit-row"><span>${escape(tk('encounter'))}</span><select class="inv-edit-input" id="${ID}-encounter">${ENTRIES.map(entry => `<option value="${entry.section}">${escape(entryLabel(entry.section))}</option>`).join('')}</select></label><p class="bsim-status" id="${ID}-note"></p><details><summary>${escape(tk('fightSetup'))}</summary>${check('applyEntry')}${check('hasComponent')}<p id="${ID}-componentName"></p>${input('summonCount', 1)}${input('volleyCount', 1)}${select('surprise', [['none', 'noSurprise'], ['446', 'doorSurprise'], ['553', 'suddenEntry']])}${select('enemyIndex', [])}<label class="inv-edit-row" id="${ID}-remaining-row"><span>${escape(tk('remaining'))}</span><input class="inv-edit-input" id="${ID}-remaining" value="2"></label><div id="${ID}-copies-row"><div id="${ID}-copies">${[0, 1, 2].map(index => check('copy' + index)).join('')}</div></div>${check('helpCopies')}${select('enemyDefender', [['copy', 'copyDefends'], ['player', 'playerDefends']])}${check('secondWeaponEquipped')}${check('itemRemovedManually')}</details><div class="bsim-btn-row">${button('start')}${button('cancel')}${button('continueFight')}</div><div id="${ID}-opponents"></div>${select('target', [])}${select('secondTarget', [])}<div class="bsim-btn-row">${['round', 'flee', 'spare', 'recast', 'pebble', 'stopVolley', 'useLuck', 'skipLuck'].map(button).join('')}</div><p class="bsim-status" id="${ID}-status" role="status" aria-live="polite"></p><details open><summary>${escape(tk('log'))}</summary><div class="bsim-status bsim-log" id="${ID}-log"></div></details><details><summary>${escape(tk('history'))}</summary><div class="bsim-status bsim-history-list" id="${ID}-history"></div></details></div></div></div>`;
     document.body.appendChild(overlay);
+    customSetup = createCustomOpponentSetup({document, id: ID, t, language: 'bg', selectKey: "encounter", getRun, getData: () => store.read(),
+      fields: [{key: 'skill', label: tk('skill'), max: 10000}, {key: 'stamina', label: tk('stamina'), min: 1, max: 10000}],
+      presets: ENCOUNTERS.flatMap(entry => entry.enemies.map(enemy => ({...enemy, displayName: enemyLabel(enemy)})))});
     el('itemRemovedManually-row').insertAdjacentHTML('afterend', check('useHolySpear'));
     const trigger = document.createElement('button'); trigger.id = ID + '-btn'; trigger.textContent = t('battlesim.title'); trigger.style.display = 'none';
     getButtonRow().appendChild(trigger); trigger.addEventListener('click', open);

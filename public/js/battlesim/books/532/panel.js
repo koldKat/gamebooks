@@ -1,9 +1,11 @@
 import { ID, fields, supplies, flags, settings, spells } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
+import { createGrailOpponentSetup } from '../../engines/grailquest/setup.js';
+let customSetup;
 
 // BEGIN SIMULATOR WIRING
-const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, ID, TOMB_ENCOUNTERS, TOMB_EQUIPMENT, action, active, character, close, confirm, currentBookId, currentPlaythrough, data, dream, el, escapeHtml, fields, flags, getPlayBtnRow, initSim532, label, log, open, record, registerPanelShortcut, renderSim532, rules, saveState, setSim532Visible, settings, shortcutLabel, showAlert, showConfirm, spells, start, supplies, t, tk });
+const simulatorContext = () => ({ customSetup, ALL_PANEL_OVERLAY_IDS, ID, TOMB_ENCOUNTERS, TOMB_EQUIPMENT, action, active, character, close, confirm, currentBookId, currentPlaythrough, data, dream, el, escapeHtml, fields, flags, getPlayBtnRow, initSim532, label, log, open, record, registerPanelShortcut, renderSim532, rules, saveState, setSim532Visible, settings, shortcutLabel, showAlert, showConfirm, spells, start, supplies, t, tk });
 const { data } = createState(simulatorContext);
 const { label, record, log, action, confirm, start, dream } = createCombat(simulatorContext);
 // END SIMULATOR WIRING
@@ -30,6 +32,7 @@ function open() {
 export function renderSim532() {
   if (!el('overlay')) return;
   const d = data(); if (!d) { close(); return; }
+  customSetup?.render();
   const p = character(d), f = d.fight, fighting = active(d);
   for (const key of [...fields, ...supplies]) {
     const effective = fighting ? {
@@ -114,6 +117,8 @@ export function initSim532() {
     <div class="bsim-btn-row">${['heal_potion', 'heal_antidote', 'heal_salve', 'heal_pearl', 'heal_fruit', 'sleep', 'dream', 'retry_dream', 'search', 'bees'].map(button).join('')}</div></div><p>${tk('note')}</p><p>${tk('manual')}</p></div>
     <div class="bsim-col bsim-col-right"><details class="bsim-history"><summary>${tk('history')}</summary><div id="${ID}-history" class="bsim-history-list"></div></details><div id="${ID}-log" class="bsim-log"></div></div></div></div>`;
   document.body.appendChild(overlay);
+  customSetup = createGrailOpponentSetup({document, id: ID, t, tk, encounters: TOMB_ENCOUNTERS,
+    getRun: currentPlaythrough, getData: data});
   const btn = document.createElement('button'); btn.id = `${ID}-btn`; btn.innerHTML = shortcutLabel(t('battlesim.title')); btn.style.display = 'none';
   getPlayBtnRow().appendChild(btn); btn.addEventListener('click', open); el('close').addEventListener('click', close);
   let backdrop = false;

@@ -1,4 +1,5 @@
 const labels = {
+  advancedRules: 'Други правила и сюжетни схватки',
   title: 'True Magic', character: 'Character', encounter: 'Encounter',
   note: 'Enter chance-table results manually. The attached scan does not provide a verified table distribution; this simulator does not invent one. Zero STAMINA is not death: the printed threshold is below zero.',
   attack: 'Attack', defence: 'Defence', mobility: 'Mobility', skill: 'Skill', stamina: 'Stamina', armour: 'Armour', shield: 'Shield',

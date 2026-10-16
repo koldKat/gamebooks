@@ -1,3 +1,4 @@
+import { customGrailEncounter } from './opponents.js';
 import { KINGDOM_ENCOUNTERS, KINGDOM_DREAMS, KINGDOM_MAGIC_STOCK,
   KINGDOM_EQUIPMENT } from './kingdom-of-horror-roster.js';
 
@@ -95,7 +96,7 @@ export function rerollKingdomInitiative(fight, random = Math.random) {
 }
 
 export function startKingdomFight(character, encounterId, options = {}, random = Math.random) {
-  const spec = [...KINGDOM_ENCOUNTERS, ...KINGDOM_DREAMS].find(row => row.id === encounterId);
+  const spec = [...KINGDOM_ENCOUNTERS, ...KINGDOM_DREAMS].find(row => row.id === encounterId) ?? customGrailEncounter(encounterId, options.opponents);
   if (!spec) throw new RangeError('Unknown encounter');
   if (!integer(character.life, 6) || !integer(character.maxLife, 6)) {
     throw new RangeError('A conscious character is required');

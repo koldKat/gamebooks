@@ -29,9 +29,13 @@ export function startFight(kind, input, options = {}) {
     fight.character.defence = 0;
   } else if (kind === 'attackers') {
     fight.character.defence = integer(input.armour ?? 0) + integer(input.shield ?? 0);
-    if (!Array.isArray(options.enemies) || options.enemies.length !== 3) throw new RangeError('Enter all three original enemy values');
-    fight.enemies = ATTACKERS.map((stats, index) => ({...stats,
-      defence: integer(options.enemies[index].defence), stamina: integer(options.enemies[index].stamina)}));
+    if (!Array.isArray(options.enemies) || (options.custom ? !options.enemies.length || options.enemies.length > 100 : options.enemies.length !== 3)) {
+      throw new RangeError(options.custom ? 'Enter valid enemy values' : 'Enter all three original enemy values');
+    }
+    fight.enemies = options.enemies.map((enemy, index) => ({...(options.custom ? {
+      name: String(enemy.displayName ?? '').slice(0, 200), attack: integer(enemy.attack),
+      mobility: integer(enemy.mobility), skill: integer(enemy.skill),
+    } : ATTACKERS[index]), defence: integer(enemy.defence), stamina: integer(enemy.stamina)}));
     Object.assign(fight, {section: 235, enemyIndex: 0, choices: []});
   } else if (kind === 'duel') {
     Object.assign(fight, {section: 263, choices: [...DUEL_CHOICES[263]], wormAloft: options.wormAloft === true});
@@ -94,8 +98,8 @@ export function advanceAttackers(previous, rolls) {
   if (fight.outcome) return fight;
   if (fight.enemies.every(enemy => enemy.stamina < 0)) complete(fight, 'win', 245);
   else {
-    for (let step = 1; step <= 3; step++) {
-      const index = (fight.enemyIndex + step) % 3;
+    for (let step = 1; step <= fight.enemies.length; step++) {
+      const index = (fight.enemyIndex + step) % fight.enemies.length;
       if (fight.enemies[index].stamina >= 0) {fight.enemyIndex = index; break;}
     }
   }

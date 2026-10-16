@@ -1,3 +1,4 @@
+import { createCustomOpponentSetup } from '../../custom-setup.js';
 import { definition, ENCOUNTERS, SPELL_ENCOUNTERS, encounterFor } from './definition.js';
 import * as rules from './combat.js';
 import * as effects from './effects.js';
@@ -18,6 +19,8 @@ const escape = value => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', 
 
 export function createSerpentsPanel({ document, t, getRun, getBookId, saveState, showAlert, showConfirm, getButtonRow, registerShortcut = () => {} }) {
   const tk = (key, params) => t(definition.i18nPrefix + '.' + key, params);
+  let customSetup;
+  const enemyLabel = enemy => enemy.displayName || tk('enemy.' + (enemy.key ?? enemy.name));
   const el = key => document.getElementById(ID + '-' + key);
   const store = createState(() => ({ currentBookId: getBookId(), currentPlaythrough: getRun, saveState }));
   let shownRun, rendered;
@@ -25,7 +28,7 @@ export function createSerpentsPanel({ document, t, getRun, getBookId, saveState,
   const checkbox = key => `<label class="bsim-checkbox" id="${ID}-${key}-row"><input type="checkbox" id="${ID}-${key}">${escape(tk(key))}</label>`;
   const input = (key, min = key === 'attackModifier' ? -1000 : key.endsWith('Initial') ? 1 : 0, max = 10000) => `<label class="inv-edit-row" id="${ID}-${key}-row"><span>${escape(tk(key))}</span><input class="inv-edit-input" id="${ID}-${key}" type="number" min="${min}" max="${max}" step="1" required></label>`;
   const select = (key, values) => `<label class="inv-edit-row" id="${ID}-${key}-row"><span>${escape(tk(key))}</span><select class="inv-edit-input" id="${ID}-${key}">${values.map(([value, label]) => `<option value="${value}">${escape(tk(label))}</option>`).join('')}</select></label>`;
-  const selected = () => encounterFor(Number(el('encounter').value));
+  const selected = () => Number(el('encounter').value) === 0 ? {section: 0, custom: true, enemies: []} : encounterFor(Number(el('encounter').value));
   const setup = () => ({ encounter: el('encounter').value, count: el('count').value, summonCount: el('summonCount').value,
     excludeEnemy: el('excludeEnemy').value, hasComponent: el('hasComponent').checked, testLuck: el('testLuck').checked,
     enemyOrder: el('enemyOrder').value, target: el('target').value, protectedFromDamage: el('protectedFromDamage').checked });
@@ -57,10 +60,10 @@ export function createSerpentsPanel({ document, t, getRun, getBookId, saveState,
     const previous = data.fight;
     data.fight = fight; data.character = structuredClone(fight.player);
     for (const event of fight.events) {
-      const enemy = event.enemy == null ? '' : tk('enemy.' + fight.enemies[event.enemy].key);
+      const enemy = event.enemy == null ? '' : enemyLabel(fight.enemies[event.enemy]);
       if (event.kind === 'damage') data.log.push(tk('damage', { target: event.target === 'player' ? tk('you') : enemy, damage: event.damage }));
       else if (event.kind === 'attack') data.log.push(tk('attack', { ...event, enemy }));
-      else if (event.kind === 'allyAttack') data.log.push(tk('allyAttack', { ...event, enemy, ally: tk('enemy.' + fight.allies[event.ally].key) }));
+      else if (event.kind === 'allyAttack') data.log.push(tk('allyAttack', { ...event, enemy, ally: enemyLabel(fight.allies[event.ally]) }));
       else if (event.kind === 'luck') data.log.push(tk('luckResult', { roll: event.roll, result: tk(event.lucky ? 'lucky' : 'unlucky') }));
       else if (event.kind === 'arrow') data.log.push(tk('arrowResult', { roll: event.roll, result: tk(event.hit ? 'hit' : 'miss') }));
       else if (event.kind === 'escape') data.log.push(tk('escapeResult', { roll: event.roll, result: tk(event.escaped ? 'escaped' : 'trapped') }));
@@ -84,8 +87,9 @@ export function createSerpentsPanel({ document, t, getRun, getBookId, saveState,
     for (const key of [...STATS, ...RESOURCES]) { el(key).value = hero?.[key] ?? ''; el(key).disabled = busy; }
     for (const key of FLAGS) { el(key).checked = hero?.[key] ?? false; el(key).disabled = busy; }
     el('role').value = hero?.role ?? 'warrior'; el('role').disabled = busy;
-    for (const key of ['encounter', 'count', 'summonCount', 'excludeEnemy', 'enemyOrder']) el(key).value = data.setup[key] ?? ({ encounter: '27', count: '1', summonCount: '0', excludeEnemy: '0', enemyOrder: '1,2,3' })[key];
+    for (const key of ['encounter', 'count', 'summonCount', 'excludeEnemy', 'enemyOrder']) el(key).value = data.setup[key] ?? ({ encounter: '0', count: '1', summonCount: '0', excludeEnemy: '0', enemyOrder: '1,2,3' })[key];
     for (const key of ['hasComponent', 'testLuck', 'protectedFromDamage']) el(key).checked = data.setup[key] ?? false;
+    customSetup.render();
     const config = selected();
     for (const [key, shown] of [['count', config.requireManualCount], ['summonCount', config.summonedGoblins],
       ['excludeEnemy', config.excludeEnemy], ['hasComponent', Boolean(config.component)], ['testLuck', config.success?.optionalEntryLuck], ['enemyOrder', config.chooseOrder]]) {
@@ -98,7 +102,7 @@ export function createSerpentsPanel({ document, t, getRun, getBookId, saveState,
     const current = busy ? fight.config : config;
     el('note').textContent = tk('note.' + (current.mode ?? 'standard'));
     const available = rules.targets(fight);
-    el('target').innerHTML = available.map(index => `<option value="${index}">${escape(tk('enemy.' + fight.enemies[index].key))}</option>`).join('');
+    el('target').innerHTML = available.map(index => `<option value="${index}">${escape(enemyLabel(fight.enemies[index]))}</option>`).join('');
     if (available.includes(Number(data.setup.target))) el('target').value = data.setup.target;
     el('target').disabled = !busy || pending || available.length < 2;
     el('round').disabled = !busy || pending || dead;
@@ -117,12 +121,12 @@ export function createSerpentsPanel({ document, t, getRun, getBookId, saveState,
     }
     if (busy && !pending && !dead) for (const key of ['libraRestore', 'libraCure', 'libraRescue']) el(key).disabled = hero.libraUsed || hero.libraRenounced;
     const actors = fight ? [...fight.enemies.map(enemy => ({ ...enemy, ally: false })), ...fight.allies.map(ally => ({ ...ally, ally: true }))] : [];
-    el('opponents').innerHTML = actors.length ? `<table class="bsim-combat-table"><thead><tr><th>${escape(tk('opponents'))}</th><th>${escape(tk('skill'))}</th><th>${escape(tk('stamina'))}</th></tr></thead><tbody>${actors.map(actor => `<tr><td>${escape(tk('enemy.' + actor.key))}${actor.ally ? ' · ' + escape(tk('ally')) : ''}</td><td>${actor.skill}</td><td>${actor.stamina}/${actor.staminaInitial}</td></tr>`).join('')}</tbody></table>` : '';
+    el('opponents').innerHTML = actors.length ? `<table class="bsim-combat-table"><thead><tr><th>${escape(tk('opponents'))}</th><th>${escape(tk('skill'))}</th><th>${escape(tk('stamina'))}</th></tr></thead><tbody>${actors.map(actor => `<tr><td>${escape(enemyLabel(actor))}${actor.ally ? ' · ' + escape(tk('ally')) : ''}</td><td>${actor.skill}</td><td>${actor.stamina}/${actor.staminaInitial}</td></tr>`).join('')}</tbody></table>` : '';
     const status = [dead ? tk('dead') : tk('ready')];
     if (fight) {
       status.length = 0; status.push(tk('rounds', fight));
       if (fight.outcome) { status.push(tk('status.' + fight.outcome)); if (fight.destination) status.push(tk('destination', { section: fight.destination })); }
-      else if (pending) status.push(tk('pending', { target: fight.pending[0].kind === 'player-hit' ? tk('enemy.' + fight.enemies[fight.pending[0].enemy].key) : tk('you'), damage: fight.pending[0].damage }));
+      else if (pending) status.push(tk('pending', { target: fight.pending[0].kind === 'player-hit' ? enemyLabel(fight.enemies[fight.pending[0].enemy]) : tk('you'), damage: fight.pending[0].damage }));
     }
     el('status').textContent = status.join('\n'); el('log').textContent = data.log.join('\n');
     el('history').textContent = data.history.slice(-30).reverse().map(item => item.enemy + ': ' + tk('status.' + item.outcome)).join('\n');
@@ -138,6 +142,9 @@ export function createSerpentsPanel({ document, t, getRun, getBookId, saveState,
     const overlay = document.createElement('div'); overlay.id = ID + '-overlay'; overlay.className = 'inv-overlay';
     overlay.innerHTML = `<div class="inv-modal bsim-modal bsim-compact-form" role="dialog" aria-modal="true" aria-labelledby="${ID}-title"><div class="inv-modal-hdr"><span class="inv-modal-title" id="${ID}-title">${escape(tk('title'))}</span><button type="button" class="inv-close-btn" id="${ID}-close" aria-label="${escape(t('btn.close'))}">&times;</button></div><div class="bsim-body"><div class="bsim-col bsim-col-left"><details open><summary>${escape(tk('character'))}</summary>${select('role', [['warrior','warrior'],['wizard','wizard']])}${STATS.map(key => input(key)).join('')}<div class="bsim-btn-row">${button('roll')}${button('apply')}</div></details><details><summary>${escape(tk('equipment'))}</summary>${RESOURCES.map(key => input(key)).join('')}${FLAGS.map(checkbox).join('')}</details><details><summary>${escape(tk('recovery'))}</summary><p>${escape(tk('recoveryNote'))}</p><div class="bsim-btn-row">${['eat','nextDay','medicine','luckCheck','libraRestore','libraCure','libraRescue'].map(button).join('')}</div></details></div><div class="bsim-col bsim-col-right"><label class="inv-edit-row"><span>${escape(tk('encounter'))}</span><select class="inv-edit-input" id="${ID}-encounter">${ENTRIES.map(item => `<option value="${item.section}">${escape(tk('encounter.' + item.section))} (${item.section})</option>`).join('')}</select></label><p class="bsim-status" id="${ID}-note"></p><details open><summary>${escape(tk('fightSetup'))}</summary>${input('count',1,1000)}${input('summonCount',0,1000)}${select('excludeEnemy', [[0,'enemy.centaur1'],[1,'enemy.centaur2'],[2,'enemy.centaur3']])}<label class="inv-edit-row" id="${ID}-enemyOrder-row"><span>${escape(tk('enemyOrder'))}</span><input class="inv-edit-input" id="${ID}-enemyOrder" value="0,1,2"></label>${checkbox('hasComponent')}<p id="${ID}-componentName"></p>${checkbox('testLuck')}</details><div class="bsim-btn-row">${button('start')}${button('cancel')}</div><div id="${ID}-opponents"></div><label class="inv-edit-row"><span>${escape(tk('target'))}</span><select class="inv-edit-input" id="${ID}-target"></select></label><div class="bsim-btn-row">${['round','escape','spare','flee','useLuck','skipLuck'].map(button).join('')}</div><p class="bsim-status" id="${ID}-status" role="status" aria-live="polite"></p><details open><summary>${escape(tk('log'))}</summary><div class="bsim-status bsim-log" id="${ID}-log"></div></details><details class="bsim-history"><summary>${escape(tk('history'))}</summary><div class="bsim-status bsim-history-list" id="${ID}-history"></div></details></div></div></div>`;
     document.body.appendChild(overlay);
+    customSetup = createCustomOpponentSetup({document, id: ID, t, language: 'bg', selectKey: "encounter", getRun, getData: () => store.read(),
+      fields: [{key: 'skill', label: tk('skill'), max: 10000}, {key: 'stamina', label: tk('stamina'), min: 1, max: 10000}],
+      presets: ENCOUNTERS.flatMap(entry => entry.enemies.map(enemy => ({...enemy, displayName: enemyLabel(enemy)})))});
     el('eat').parentElement.insertAdjacentHTML('beforeend', button('useAntidote') + button('liftEarthSerpent'));
     el('eat').parentElement.insertAdjacentHTML('afterend', checkbox('protectedFromDamage'));
     const trigger = document.createElement('button'); trigger.id = ID + '-btn'; trigger.textContent = t('battlesim.title'); trigger.style.display = 'none';
@@ -164,7 +171,8 @@ export function createSerpentsPanel({ document, t, getRun, getBookId, saveState,
       if (config.summonedGoblins) options.summonCount = number('summonCount');
       if (config.excludeEnemy) options.excludeEnemy = Number(el('excludeEnemy').value);
       if (config.chooseOrder) options.enemyOrder = el('enemyOrder').value.split(',').map(value => Number(value.trim()) - 1);
-      const fight = rules.startFight(config.section, data.character, options); fight.name = tk('encounter.' + config.section); report(data, fight);
+      const fight = rules.startFight(config.section, data.character, customSetup.settings(data, config.custom ? {} : options));
+      fight.name = config.custom ? fight.config.name : tk('encounter.' + config.section); report(data, fight);
     }));
     const action = (key, transform) => el(key).addEventListener('click', () => change(data => report(data, transform(data.fight))));
     action('round', fight => rules.round(fight, rules.targets(fight).length ? Number(el('target').value) : undefined));

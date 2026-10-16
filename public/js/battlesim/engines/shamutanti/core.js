@@ -1,4 +1,5 @@
 import { SHAMUTANTI_FIGHTS, SHAMUTANTI_NIGHT_ENEMIES } from './roster.js';
+import { customFightingEncounter } from '../fighting-fantasy/opponents.js';
 
 const clone = value => structuredClone(value);
 function integer(value, min = 0, max = 10000) {
@@ -36,7 +37,7 @@ export function newShamutantiCharacter(role = 'warrior', roll) {
 
 export function startShamutantiFight(section, character, options = {}, roll) {
   validateShamutantiCharacter(character, true);
-  const spec = SHAMUTANTI_FIGHTS.find(item => item.section === section);
+  const spec = SHAMUTANTI_FIGHTS.find(item => item.section === section) ?? customFightingEncounter(section, options.opponents);
   if (!spec || (spec.spell && (character.role !== 'wizard' || character.janPresent))) throw new RangeError('Invalid encounter');
   const { applyEntry = true, summonCount = spec.summon?.multiple ? 0 : 1,
     previousSection = null, nightModifier = 0, nightResult = null, skillOverride = null, carryFrom = null } = options;

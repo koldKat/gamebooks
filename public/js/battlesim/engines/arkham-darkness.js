@@ -1,3 +1,5 @@
+import { customThresholdEncounter } from './threshold-opponents.js';
+
 const encounter = (section, thresholds, stats, win, loss, extra = {}) =>
   ({ section, thresholds, stats, win, loss, ...extra });
 
@@ -38,8 +40,9 @@ export function createArkhamCharacter(profile, stats) {
     rites: false, agile: false, fear: false, sorcererUsed: false, weaponUsed: false };
 }
 
-export function createArkhamFight(section, player, sorcerer = false) {
-  const spec = ARKHAM_ENCOUNTERS.find(e => e.section === Number(section));
+export function createArkhamFight(section, player, sorcerer = false, options = {}) {
+  const spec = ARKHAM_ENCOUNTERS.find(e => e.section === Number(section))
+    ?? customThresholdEncounter(ARKHAM_ENCOUNTERS, section, options.opponents, 'arkham');
   if (!spec || !player || sorcerer && (player.profile !== 'agnes' || player.sorcererUsed))
     throw new RangeError('Invalid encounter');
   for (const key of ['willpower', 'intellect', 'combat', 'health', 'sanity', 'resources', 'clues', 'doom'])
@@ -67,6 +70,7 @@ export function rollArkhamRound(fight, { resource = false, weapon = false } = {}
   if (p.profile === 'nathaniel' && stats.includes('combat')) modifier += dice.filter(n => n === 6).length;
   if (resource) { p.resources--; modifier += 2; }
   if (weapon) { p.weaponUsed = true; modifier += 3; }
+  modifier += e.manualModifier ?? 0;
   const total = dice[0] + dice[1] + modifier, success = total >= e.thresholds[index];
   if (!success && e.hurtRound === index + 1) p.health--;
   if (p.profile === 'agnes' && stats.includes('willpower') && success) p.resources++;

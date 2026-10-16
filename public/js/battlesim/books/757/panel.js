@@ -6,6 +6,7 @@ import {getPlayBtnRow} from '../../../play/charsheet.js';
 import {showAlert} from '../../../ui-helpers/confirm.js';
 import {registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS} from '../../../core/util.js';
 import {t} from '../../../i18n.js';
+import {createOpponentEditor} from '../../opponents.js';
 
 const ID = definition.stateKey;
 const escape = value => String(value).replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
@@ -16,7 +17,7 @@ export function createTrueMagicPanel({document, t, getRun, getBookId, saveState,
   const tk = (key, params) => t(definition.i18nPrefix + '.' + key, params);
   const el = key => document.getElementById(ID + '-' + key);
   const store = createState(() => ({currentBookId: getBookId(), currentPlaythrough: getRun, saveState}));
-  let rendered, displayedRun;
+  let rendered, displayedRun, editorRun, opponents;
   const button = key => `<button type="button" class="bsim-action-btn" id="${ID}-${key}">${escape(tk(key))}</button>`;
   const field = (key, label = key, value = '', minimum = 0) => `<label class="inv-edit-row"><span>${escape(tk(label))}</span><input class="inv-edit-input" id="${ID}-${key}" type="number" min="${minimum}" max="1000000" step="1" value="${value}"></label>`;
   function number(key) {
@@ -40,6 +41,13 @@ export function createTrueMagicPanel({document, t, getRun, getBookId, saveState,
     if (!data || !force && data === rendered) return;
     rendered = data;
     const fight = data.fight, active = Boolean(fight && !fight.outcome);
+    if (editorRun !== getRun()) {
+      editorRun = getRun();
+      opponents.set(data.opponentSetup ?? ATTACKERS.map((enemy, index) => ({...enemy, displayName: tk('enemy', {enemy: index + 1})})));
+      el('encounter').value = fight?.kind ?? data.setup?.kind ?? 'attackers';
+      el('advancedRules').open = el('encounter').value !== 'attackers';
+    }
+    opponents.lock(active);
     for (const key of FIELDS) {
       el(key).value = data.character?.[key] ?? DEFAULT_CHARACTER[key] ?? 0;
       el(key).disabled = active;
@@ -58,7 +66,7 @@ export function createTrueMagicPanel({document, t, getRun, getBookId, saveState,
       lines.push(fight.name, tk('section', {section: fight.section}), tk('remaining', {amount: fight.character.stamina}));
       if (fight.kind === 'ritual') lines.push(tk('ritualLoss', {player: fight.lost, enemy: fight.enemyLost}));
       if (fight.enemies) {
-        fight.enemies.forEach((enemy, index) => lines.push(tk('enemyRemaining', {enemy: index + 1, amount: enemy.stamina})));
+        fight.enemies.forEach((enemy, index) => lines.push(tk('enemyRemaining', {enemy: enemy.name || index + 1, amount: enemy.stamina})));
         if (active) lines.push(tk('attackerTurn', {enemy: fight.enemyIndex + 1}));
       }
       if (fight.lastComparison) lines.push(Object.entries(fight.lastComparison).map(([key, value]) => tk('comparison.' + key) + ': ' + value).join(' | '));
@@ -93,7 +101,6 @@ export function createTrueMagicPanel({document, t, getRun, getBookId, saveState,
   function init() {
     if (el('overlay')) return;
     const overlay = document.createElement('div'); overlay.id = ID + '-overlay'; overlay.className = 'inv-overlay';
-    const enemies = ATTACKERS.map((stats, index) => `<details><summary>${escape(tk('enemy', {enemy: index + 1}))}</summary><p>${escape(tk('enemyStats', stats))}</p>${field('enemy-' + index + '-defence', 'defence')}${field('enemy-' + index + '-stamina', 'stamina')}</details>`).join('');
     overlay.innerHTML = `<div class="inv-modal bsim-modal bsim-compact-form" role="dialog" aria-modal="true" aria-labelledby="${ID}-title">
       <div class="inv-modal-hdr"><span class="inv-modal-title" id="${ID}-title">${escape(tk('title'))}</span><button type="button" class="inv-close-btn" id="${ID}-close" aria-label="${escape(t('btn.close'))}">&times;</button></div>
       <div class="bsim-body"><div class="bsim-col bsim-col-left"><p>${escape(tk('note'))}</p>
@@ -104,13 +111,21 @@ export function createTrueMagicPanel({document, t, getRun, getBookId, saveState,
       <div class="bsim-col bsim-col-right"><label class="inv-edit-row"><span>${escape(tk('encounter'))}</span><select class="inv-edit-input" id="${ID}-encounter">${['ritual','attackers','duel'].map(kind => `<option value="${kind}">${escape(tk('encounter.' + kind))}</option>`).join('')}</select></label>
       <label class="bsim-checkbox" id="${ID}-lizard-row"><input type="checkbox" id="${ID}-lizard">${escape(tk('lizard'))}</label>
       <label class="bsim-checkbox" id="${ID}-worm-row"><input type="checkbox" id="${ID}-worm">${escape(tk('worm'))}</label>
-      <div id="${ID}-enemy-setup"><p>${escape(tk('unknownEnemies'))}</p>${enemies}</div>
+      <div id="${ID}-enemy-setup"></div>
       <div class="bsim-btn-row">${button('start')}${button('again')}</div>
       <div id="${ID}-ritual-rolls">${field('roll-player', 'roll.player')}${field('roll-enemy', 'roll.enemy')}</div>
       <div id="${ID}-attacker-rolls">${ROLLS.slice(2).map(key => field('roll-' + key, 'roll.' + key)).join('')}${button('round')}</div>
       <div class="bsim-btn-row" id="${ID}-actions"></div><p class="bsim-status" id="${ID}-result" role="status" aria-live="polite"></p>
       <details class="bsim-history"><summary>${escape(tk('history'))}</summary><div class="bsim-history-list bsim-status" id="${ID}-history"></div></details></div></div></div>`;
     document.body.appendChild(overlay);
+    opponents = createOpponentEditor({document, id: ID, t, language: 'bg',
+      fields: ['attack', 'defence', 'mobility', 'skill', 'stamina'].map(key => ({key, label: tk(key)})),
+      presets: ATTACKERS.map((enemy, index) => ({...enemy, displayName: tk('enemy', {enemy: index + 1})}))});
+    el('enemy-setup').replaceChildren(opponents.element);
+    const advanced = document.createElement('details'); advanced.id = ID + '-advancedRules';
+    const summary = document.createElement('summary'); summary.textContent = tk('advancedRules');
+    const encounterLabel = el('encounter').closest('label'); encounterLabel.before(advanced);
+    advanced.append(summary, encounterLabel); el('encounter').value = 'attackers';
     const trigger = document.createElement('button'); trigger.id = ID + '-btn'; trigger.textContent = t('battlesim.title'); trigger.style.display = 'none';
     getButtonRow().appendChild(trigger); trigger.addEventListener('click', open);
     el('close').addEventListener('click', close);
@@ -125,10 +140,10 @@ export function createTrueMagicPanel({document, t, getRun, getBookId, saveState,
       if (!data.character || data.fight) return;
       const kind = el('encounter').value;
       const options = {lizard: el('lizard').checked, wormAloft: el('worm').checked};
-      if (kind === 'attackers') options.enemies = ATTACKERS.map((_, index) => ({
-        defence: number('enemy-' + index + '-defence'), stamina: number('enemy-' + index + '-stamina'),
-      }));
-      data.fight = {...startFight(kind, data.character, options), name: tk('encounter.' + kind)};
+      if (kind === 'attackers') { options.enemies = opponents.read(); options.custom = true; data.opponentSetup = opponents.snapshot(); }
+      data.setup = {kind};
+      data.fight = {...startFight(kind, data.character, options), name: kind === 'attackers'
+        ? options.enemies.map(enemy => enemy.displayName).filter(Boolean).join(' / ') || tk('encounter.' + kind) : tk('encounter.' + kind)};
     }));
     el('again').addEventListener('click', () => change(data => {if (data.fight?.outcome) data.fight = null;}));
     el('round').addEventListener('click', () => advance());

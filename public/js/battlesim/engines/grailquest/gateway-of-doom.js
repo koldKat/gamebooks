@@ -1,3 +1,4 @@
+import { customGrailEncounter } from './opponents.js';
 import { GATEWAY_ENCOUNTERS, GATEWAY_WANDERING, GATEWAY_DREAMS } from './gateway-of-doom-roster.js';
 import { initialDenLife, denDamage, denFriendlyReaction } from './den-of-dragons.js';
 
@@ -80,7 +81,7 @@ function hurtEnemy(fight, foe, damage, hit) {
 
 export function createGatewayFight(section, player, options = {}, random = Math.random) {
   const spec = [...GATEWAY_ENCOUNTERS, ...GATEWAY_WANDERING, ...GATEWAY_DREAMS]
-    .find(entry => String(entry.section) === String(section));
+    .find(entry => String(entry.section) === String(section)) ?? customGrailEncounter(section, options.opponents);
   if (!spec) throw new RangeError('Unknown Gateway encounter');
   if (!valid(player.life, 6) || !valid(player.maxLife, player.life) || !valid(player.hit, 2)
     || player.hit > 12 || !valid(player.bonus) || !valid(player.armour)

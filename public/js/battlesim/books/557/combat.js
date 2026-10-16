@@ -7,19 +7,19 @@ function update(d) {
   const f = d.fight;
   if (f && ['win', 'loss'].includes(f.status) && !f.recorded) {
     f.recorded = true;
-    d.history.push({ enemy: encounterLabel(f.spec.section), outcome: f.status, ts: Math.max(Date.now(), (d.history.at(-1)?.ts ?? 0) + 1) });
+    d.history.push({ enemy: f.spec.custom ? f.spec.name : encounterLabel(f.spec.section), outcome: f.status, ts: Math.max(Date.now(), (d.history.at(-1)?.ts ?? 0) + 1) });
   }
   d.log = d.log.slice(-150); saveState(); renderSim557();
 }
 
 function start() {
-  const { character, createKingsportFight, currentPlaythrough, data, el, showAlert, showConfirm, tk, update } = getContext();
+  const { character, createKingsportFight, customSetup, currentPlaythrough, data, el, showAlert, showConfirm, tk, update } = getContext();
 
   const d = data(), run = currentPlaythrough(); if (!d) return;
   const prior = d.fight, section = el('encounter').value;
   const apply = () => {
     if (data() !== d || currentPlaythrough() !== run || d.fight !== prior) return;
-    try { d.fight = createKingsportFight(section, character(d)); update(d); }
+    try { d.fight = createKingsportFight(section, character(d), customSetup?.settings(d, {}, section)); update(d); }
     catch { showAlert(tk('invalid')); }
   };
   if (prior?.status === 'fighting') showConfirm(tk('replace_fight'), apply); else apply();

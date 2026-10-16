@@ -1,3 +1,4 @@
+import { prepareCustomDemonEncounter } from './opponents.js';
 import { demondoomEnemy } from './demondoom-roster.js';
 
 const encounters = [
@@ -65,6 +66,8 @@ export const DEMONDOOM_ENCOUNTERS = Object.freeze(encounters.map(encounter => {
 }));
 
 export function prepareDemondoomEncounter(section, player, options = {}) {
+  const custom = prepareCustomDemonEncounter(section, player, options.opponents);
+  if (custom) return custom;
   const original = DEMONDOOM_ENCOUNTERS.find(encounter => encounter.section === Number(section));
   if (!original) throw new Error('Unknown Demondoom encounter');
   const encounter = structuredClone(original);

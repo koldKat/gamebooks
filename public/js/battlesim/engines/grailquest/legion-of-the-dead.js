@@ -1,3 +1,4 @@
+import { customGrailEncounter } from './opponents.js';
 import { LEGION_ENCOUNTERS, LEGION_DREAMS, LEGION_COMPANIONS, LEGION_EQUIPMENT } from './legion-of-the-dead-roster.js';
 
 const clone = value => JSON.parse(JSON.stringify(value));
@@ -341,11 +342,11 @@ function settle(fight) {
 }
 
 export function startLegionFight(character, id, options = {}, random = Math.random) {
-  const original = [...LEGION_ENCOUNTERS, ...LEGION_DREAMS].find(row => row.id === id);
+  const original = [...LEGION_ENCOUNTERS, ...LEGION_DREAMS].find(row => row.id === id) ?? customGrailEncounter(id, options.opponents);
   if (!original) throw new RangeError('Unknown encounter');
   if (!alive(character) || character.life <= 5 || !Number.isFinite(character.maxLife)) throw new RangeError('No conscious character');
   const spec = clone(original), player = clone(character);
-  let count = spec.count ?? 1;
+  let count = spec.custom ? spec.enemies.length : spec.count ?? 1;
   if (typeof count === 'string') {
     const ranges = { shapes: [0, 5], twoDice: [2, 12], vampires: [1, 3], oneDie: [1, 6] };
     const kind = count;
@@ -354,7 +355,7 @@ export function startLegionFight(character, id, options = {}, random = Math.rand
     if (!integer(count, ranges[kind][0]) || count > ranges[kind][1]) throw new RangeError('Invalid enemy count');
   }
   const foes = Array.from({ length: count }, (_, index) => {
-    const enemy = clone(spec.enemies[0]);
+    const enemy = clone(spec.enemies[spec.custom ? index : 0]);
     if (spec.manualLife) {
       if (!integer(options.enemyLife, 1)) throw new RangeError('Source does not specify enemy LIFE');
       enemy.life = options.enemyLife;

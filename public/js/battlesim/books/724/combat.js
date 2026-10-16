@@ -1,3 +1,4 @@
+import { customFightingEncounter } from '../../engines/fighting-fantasy/opponents.js';
 import * as core from '../../engines/sorcery/core.js';
 import { CHARACTER_DEFAULTS, RULES_REVISION, encounterFor } from './definition.js';
 
@@ -138,7 +139,8 @@ function carryWounds(fight, previous, options) {
 
 export function startFight(section, character, options = {}, roll) {
   validateCharacter(character, true);
-  const config = encounterFor(section);
+  const config = Number(section) === 0 ? customFightingEncounter(section, options.opponents) : encounterFor(section);
+  if (!config) throw new RangeError('Missing custom opponents');
   if (config.spell && (character.role !== 'wizard' || character.forgottenMagic)) throw new RangeError('Spell unavailable');
   const applyEntry = options.applyEntry ?? true;
   if (typeof applyEntry !== 'boolean') throw new RangeError('Invalid entry option');

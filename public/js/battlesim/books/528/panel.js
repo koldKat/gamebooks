@@ -1,9 +1,11 @@
 import { ID, core, resources, flags, options, spells, wizardSpells, healing } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
+import { createGrailOpponentSetup } from '../../engines/grailquest/setup.js';
+let customSetup;
 
 // BEGIN SIMULATOR WIRING
-const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, GATEWAY_ENCOUNTERS, GATEWAY_WANDERING, ID, action, active, character, close, confirm, core, currentBookId, currentPlaythrough, data, dreamResult, el, escapeHtml, flags, getPlayBtnRow, healing, initSim528, label, logEvents, open, options, record, registerPanelShortcut, renderSim528, resources, rules, saveState, setSim528Visible, shortcutLabel, showAlert, showConfirm, spells, start, t, tk, update, wizardSpells });
+const simulatorContext = () => ({ customSetup, ALL_PANEL_OVERLAY_IDS, GATEWAY_ENCOUNTERS, GATEWAY_WANDERING, ID, action, active, character, close, confirm, core, currentBookId, currentPlaythrough, data, dreamResult, el, escapeHtml, flags, getPlayBtnRow, healing, initSim528, label, logEvents, open, options, record, registerPanelShortcut, renderSim528, resources, rules, saveState, setSim528Visible, shortcutLabel, showAlert, showConfirm, spells, start, t, tk, update, wizardSpells });
 const { data } = createState(simulatorContext);
 const { label, record, update, confirm, start, logEvents, dreamResult, action } = createCombat(simulatorContext);
 // END SIMULATOR WIRING
@@ -30,6 +32,7 @@ function open() {
 export function renderSim528() {
   if (!el('overlay')) return;
   const d = data(); if (!d) { close(); return; }
+  customSetup?.render();
   const p = character(d), f = d.fight, fighting = active(d);
   const display = fighting ? { ...p,
     hit: f.spec.playerHit ?? (p.dark && !f.spec.dream ? 8 : p.hit),
@@ -103,6 +106,8 @@ export function initSim528() {
   const overlay = document.createElement('div'); overlay.id = `${ID}-overlay`; overlay.className = 'inv-overlay';
   overlay.innerHTML = `<div class="inv-modal bsim-modal bsim-compact-form"><div class="inv-modal-hdr"><span class="inv-modal-title">${tk('title')}</span><button id="${ID}-close" class="inv-close-btn" aria-label="${t('btn.close')}">&times;</button></div><div class="bsim-body"><div class="bsim-col bsim-col-left"><div class="bsim-side"><div class="bsim-side-title">${tk('character')}</div>${inputs(core)}${button('new','new_character')}<details><summary>${tk('resources')}</summary>${inputs(resources)}${flags.map(key => `<label class="inv-edit-row"><input id="${ID}-${key}" type="checkbox">${tk(key)}</label>`).join('')}</details></div><div class="bsim-side"><label class="inv-edit-row">${tk('encounter')}<select id="${ID}-encounter" class="inv-edit-input">${[...GATEWAY_ENCOUNTERS,...GATEWAY_WANDERING].map(spec => `<option value="${spec.section}">${escapeHtml(label(spec.section))}</option>`).join('')}</select></label><details><summary>${tk('pre_fight')}</summary>${options.map(key => `<label class="inv-edit-row"><input id="${ID}-option-${key}" type="checkbox">${tk(['polish','lamp','weedkiller'].includes(key) ? key+'_option' : key)}</label>`).join('')}</details>${button('start')}<div id="${ID}-status" class="bsim-status"></div><label class="inv-edit-row">${tk('target')}<select id="${ID}-target" class="inv-edit-input"></select></label><div class="bsim-btn-row">${button('initiative')}${button('roll')}</div><div id="${ID}-wizard-controls">${select('wizard',wizardSpells)}${button('wizard-round','wizard_round')}</div>${select('spell',spells)}<div class="bsim-btn-row">${button('cast')}${button('bolt')}${button('ball')}${button('bribe')}</div><div class="bsim-btn-row">${button('antidote')}${button('aardvark-button','aardvark_button')}${button('djinn')}${button('gnurlbash-button','gnurlbash_button')}${button('resurrect')}${button('leave-zapper','leave_zapper')}</div>${select('healing',healing)}<div class="bsim-btn-row">${button('heal')}${button('exchange')}${button('sleep')}${button('dream-again','dream_again')}</div><div id="${ID}-limerick-controls"><p>${tk('limerick')}</p><div class="bsim-btn-row">${button('limerick-yes','limerick_yes')}${button('limerick-no','limerick_no')}</div></div><label class="inv-edit-row">${tk('level')}<select id="${ID}-level" class="inv-edit-input"><option>1</option><option>2</option><option>3</option></select></label>${button('wandering')}</div><p>${tk('note')}</p><p>${tk('manual')}</p></div><div class="bsim-col bsim-col-right"><details class="bsim-history"><summary>${tk('history')}</summary><div id="${ID}-history" class="bsim-history-list"></div></details><div id="${ID}-log" class="bsim-log"></div></div></div></div>`;
   document.body.appendChild(overlay);
+  customSetup = createGrailOpponentSetup({document, id: ID, t, tk, encounters: GATEWAY_ENCOUNTERS,
+    getRun: currentPlaythrough, getData: data});
   el('start').insertAdjacentHTML('beforebegin', button('friendly'));
   el('new').insertAdjacentHTML('afterend', `<details><summary>${tk('spell_uses')}</summary>${spells.map(spell => `<label class="inv-edit-row"><span>${tk(spell)}</span><input id="${ID}-uses-${spell}" class="inv-edit-input inv-qty-input" type="number" min="0" max="3" step="1"></label>`).join('')}</details>`);
   const btn = document.createElement('button'); btn.id = `${ID}-btn`; btn.innerHTML = shortcutLabel(t('battlesim.title')); btn.style.display = 'none';

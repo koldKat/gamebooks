@@ -1,9 +1,11 @@
 import { ID, fields, flags, items, spells } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
+import { createGrailOpponentSetup } from '../../engines/grailquest/setup.js';
+let customSetup;
 
 // BEGIN SIMULATOR WIRING
-const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, DEN_ENCOUNTERS, ID, active, castDenSpell, character, close, createDenCharacter, createDenFight, currentBookId, currentPlaythrough, data, denDream, denFriendlyReaction, el, escapeHtml, fields, flags, getPlayBtnRow, guardedConfirm, healDenPlayer, initSim527, initialDenLife, items, label, launchDenMagic, open, registerPanelShortcut, renderSim527, rerollDenInitiative, resolveDenPoison, rollDenRound, saveState, setSim527Visible, shortcutLabel, showAlert, showConfirm, sleep, spells, start, t, target, tk, update, useDenItem, useDenLollipop });
+const simulatorContext = () => ({ customSetup, ALL_PANEL_OVERLAY_IDS, DEN_ENCOUNTERS, ID, active, castDenSpell, character, close, createDenCharacter, createDenFight, currentBookId, currentPlaythrough, data, denDream, denFriendlyReaction, el, escapeHtml, fields, flags, getPlayBtnRow, guardedConfirm, healDenPlayer, initSim527, initialDenLife, items, label, launchDenMagic, open, registerPanelShortcut, renderSim527, rerollDenInitiative, resolveDenPoison, rollDenRound, saveState, setSim527Visible, shortcutLabel, showAlert, showConfirm, sleep, spells, start, t, target, tk, update, useDenItem, useDenLollipop });
 const { data } = createState(simulatorContext);
 const { label, update, guardedConfirm, start, target, sleep } = createCombat(simulatorContext);
 // END SIMULATOR WIRING
@@ -32,6 +34,7 @@ function open() {
 export function renderSim527() {
   if (!el('overlay')) return;
   const d = data(); if (!d) { close(); return; }
+  customSetup?.render();
   const p = character(d), f = d.fight, fighting = active(d);
   const display = fighting ? { ...p,
     hit: f.spec.playerHit ?? (f.spec.unarmed || f.spec.dream ? 6 : p.hit),
@@ -48,7 +51,7 @@ export function renderSim527() {
   el('target').innerHTML = (f?.foes ?? []).map((foe, index) => {
     const available = !foe.bypassed && (f.spec.tokenLimit ? fighting : foe.life > (f.spec.shapes ? 0 : 5));
     const text = f.spec.tokenLimit ? tk('token_target', { loss: f.enemyLoss })
-      : tk('target_label', { enemy: tk(`enemy_names.${f.spec.section}`), number: index + 1, life: foe.life });
+      : tk('target_label', { enemy: f.spec.custom ? foe.name : tk(`enemy_names.${f.spec.section}`), number: index + 1, life: foe.life });
     return `<option value="${index}" ${available ? '' : 'disabled'}>${escapeHtml(text)}</option>`;
   }).join('');
   const options = [...el('target').options];
@@ -107,6 +110,8 @@ export function initSim527() {
     <p id="${ID}-disease-note"></p></div><p>${tk('note')}</p><p>${tk('manual')}</p></div>
     <div class="bsim-col bsim-col-right"><details class="bsim-history"><summary>${tk('history')}</summary><div id="${ID}-history" class="bsim-history-list"></div></details><div id="${ID}-log" class="bsim-log"></div></div></div></div>`;
   document.body.appendChild(overlay);
+  customSetup = createGrailOpponentSetup({document, id: ID, t, tk, encounters: DEN_ENCOUNTERS,
+    getRun: currentPlaythrough, getData: data});
   const btn = document.createElement('button'); btn.id = `${ID}-btn`; btn.innerHTML = shortcutLabel(t('battlesim.title')); btn.style.display = 'none';
   getPlayBtnRow().appendChild(btn); btn.addEventListener('click', open); el('close').addEventListener('click', close);
   let backdrop = false;
@@ -149,7 +154,7 @@ export function initSim527() {
     const d = data(); if (!d?.fight) return;
     const result = rollDenRound(d.fight, target()); if (!result) return;
     for (const event of result) d.log.push(event.kind === 'blend' ? tk('blend_result') : event.kind === 'skip'
-      ? tk('skip_result', { enemy: tk(`enemy_names.${d.fight.spec.section}`) })
+      ? tk('skip_result', { enemy: d.fight.spec.custom ? d.fight.foes[event.index ?? 0].name : tk(`enemy_names.${d.fight.spec.section}`) })
       : tk('hit_result', { who: tk(event.kind), roll: event.roll ?? '—', damage: event.damage }));
     update(d);
   });

@@ -1,3 +1,4 @@
+import { customGrailEncounter } from './opponents.js';
 import { TOMB_EQUIPMENT, TOMB_SECRET_DOORS, TOMB_ENCOUNTERS, TOMB_DREAMS, TOMB_COMPANION } from './tomb-of-nightmares-roster.js';
 
 const die = random => 1 + Math.floor(random() * 6);
@@ -264,7 +265,7 @@ export function tombInitiative(fight, random = Math.random) {
 }
 
 export function startTombFight(character, encounterId, options = {}, random = Math.random) {
-  const original = [...TOMB_ENCOUNTERS, ...TOMB_DREAMS].find(row => row.id === encounterId);
+  const original = [...TOMB_ENCOUNTERS, ...TOMB_DREAMS].find(row => row.id === encounterId) ?? customGrailEncounter(encounterId, options.opponents);
   if (!original) throw new RangeError('Unknown encounter');
   if (!alive(character) || character.life <= 5 || !Number.isFinite(character.maxLife)) {
     throw new RangeError('No conscious character');

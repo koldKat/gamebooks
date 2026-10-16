@@ -174,6 +174,106 @@ for(const id of BOOK_IDS){
     check(data.fight?.enemies[0].name==='Тестов кораб'&&data.encounter==='Тестов кораб','Space Scout custom name');
     check(name.disabled,'Space Scout setup locked');
   }
+  if(id>=527&&id<=533){
+    const el=key=>document.getElementById('sim'+id+'-'+key);
+    const state=app.currentPlaythrough()['sim'+id];
+    Object.assign(state.player,{life:40,maxLife:40});module.render();
+    const editor=overlay.querySelector('.bsim-opponent-editor');
+    check(editor&&!editor.hidden,'Grailquest custom setup '+id);
+    const name=editor.querySelector('[role="combobox"]');
+    name.focus();check(editor.querySelector('[role="option"]'),'Grailquest autocomplete '+id);
+    name.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+    name.value='Custom Grailquest foe';
+    for(const[key,value]of Object.entries({life:6,hit:12,bonus:0,armour:0}))editor.querySelector('[data-stat="'+key+'"]').value=value;
+    el('start').click();
+    const fight=app.currentPlaythrough()['sim'+id].fight;
+    check(fight?.spec.custom&&fight.foes[0].name==='Custom Grailquest foe'&&fight.foes[0].life===6,'Grailquest custom fight '+id);
+    check(name.disabled,'Grailquest custom setup locked '+id);
+    check(!el('status').textContent.includes('enemy_names.'),'Grailquest custom labels '+id);
+  }
+  if([665,671,672,718,722,723,724].includes(id)){
+    const el=key=>document.getElementById('sim'+id+'-'+key);
+    el('roll').click();
+    const editor=overlay.querySelector('.bsim-opponent-editor');
+    check(editor&&!editor.hidden,'FF custom setup '+id);
+    const name=editor.querySelector('[role="combobox"]');
+    name.focus();check(editor.querySelector('[role="option"]'),'FF autocomplete '+id);
+    name.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+    name.value='Свободен противник';
+    editor.querySelector('[data-stat="skill"]').value=0;
+    editor.querySelector('[data-stat="stamina"]').value=2;
+    el('start').click();
+    const fight=app.currentPlaythrough()['sim'+id].fight;
+    check(fight?.config.custom&&fight.enemies[0].displayName==='Свободен противник','FF custom fight '+id);
+    check(name.disabled,'FF custom setup locked '+id);
+    check(!el('status').textContent.includes('enemy.custom'),'FF custom labels '+id);
+  }
+  if(id===555||id===557){
+    const el=key=>document.getElementById('sim'+id+'-'+key);
+    const editor=overlay.querySelector('.bsim-opponent-editor');
+    const name=editor.querySelector('[role="combobox"]');
+    name.focus();check(editor.querySelector('[role="option"]'),'threshold autocomplete '+id);
+    name.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+    name.value='Custom threshold fight';
+    editor.querySelector('[data-stat="threshold1"]').value=1;
+    editor.querySelector('[data-stat="threshold2"]').value=1;
+    el('start').click();
+    const data=app.currentPlaythrough()['sim'+id];
+    check(data.fight?.spec.custom&&name.disabled,'threshold custom fight '+id);
+    el('roll').click();el('roll').click();
+    check(data.history.at(-1)?.enemy==='Custom threshold fight','threshold custom result '+id);
+  }
+  if(id===757){
+    const el=key=>document.getElementById('sim757-'+key);
+    check(el('encounter').value==='attackers'&&!el('advancedRules').open,'True Magic defaults to combat, not narrative helpers');
+    el('apply').click();
+    const editor=overlay.querySelector('.bsim-opponent-editor');
+    const names=[...editor.querySelectorAll('[role="combobox"]')];
+    names[0].focus();check(editor.querySelector('[role="option"]'),'True Magic autocomplete');
+    names[0].dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+    for(const input of editor.querySelectorAll('[data-stat="defence"],[data-stat="stamina"]'))input.value=5;
+    el('start').click();
+    const fight=app.currentPlaythrough().sim757.fight;
+    check(fight?.kind==='attackers'&&fight.enemies.length===3&&names[0].disabled,'True Magic editable attacker fight');
+  }
+  if(id===728){
+    const el=key=>document.getElementById('sim728-'+key);
+    const editor=overlay.querySelector('.bsim-opponent-editor');
+    const name=editor.querySelector('[role="combobox"]');
+    name.focus();check(editor.querySelector('[role="option"]'),'Golden Galleon autocomplete');
+    name.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+    name.value='Пиратски кораб';editor.querySelector('[data-stat="durability"]').value=45;
+    el('start').click();
+    const fight=app.currentPlaythrough().sim728.fight;
+    check(fight?.pirates.A.name==='Пиратски кораб'&&fight.pirates.A.durability===45&&name.disabled,'Golden Galleon manual opponents');
+  }
+  if(id===654){
+    const el=key=>document.getElementById('sim654-'+key);
+    for(const details of overlay.querySelectorAll('details'))details.open=true;
+    const name=overlay.querySelector('[role="combobox"]');
+    name.focus();check(overlay.querySelector('[role="option"]'),'Orc Power autocomplete');
+    name.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+    name.value='Ръчно въведена фигура';
+    for(const key of ['attack','defence','shooting','damage','life','magicPower','magicDamage'])el(key).value=key==='life'?10:1;
+    el('add').click();
+    check(app.currentPlaythrough().sim654.figures[0]?.displayName==='Ръчно въведена фигура','Orc Power custom figure');
+  }
+  if(id>=534&&id<=537){
+    const el=key=>document.getElementById('sim'+id+'-'+key);
+    const editor=overlay.querySelector('.bsim-opponent-editor');
+    check(editor&&!editor.hidden,'Demonspawn custom setup '+id);
+    const name=editor.querySelector('[role="combobox"]');
+    name.focus();check(editor.querySelector('[role="option"]'),'Demonspawn autocomplete '+id);
+    name.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+    name.value='Custom Demonspawn foe';
+    for(const field of editor.querySelectorAll('[data-stat]'))field.value=['weapon','armour','shield','power'].includes(field.dataset.stat)?0:40;
+    el('start').click();
+    const data=app.currentPlaythrough()['sim'+id];
+    const encounter=id===534?data.prepared?.encounter:data.fight?.encounter;
+    const enemy=id===534?data.fight?.enemy:data.fight?.enemies[0];
+    check(encounter?.custom&&enemy?.name==='Custom Demonspawn foe','Demonspawn custom fight '+id);
+    check(name.disabled,'Demonspawn editor locked '+id);
+  }
   const before=JSON.stringify(app.currentPlaythrough());module.render();
   check(JSON.stringify(app.currentPlaythrough())===before,'repeat render preserves state '+id);
   module.setVisible(false);overlay.classList.remove('active');

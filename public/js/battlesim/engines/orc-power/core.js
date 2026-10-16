@@ -71,7 +71,8 @@ export function startOrcFight(figures, firstId, { mode = 'tactical' } = {}) {
   const fight = finish({ rulesVersion: 1, mode, figures: fighters, actorId: firstId,
     actionsLeft: mode === 'strategic' ? 1 : 2, status: 'fighting', turn: 1,
     round: 1, actedIds: [], opponentTemplates: fighters.filter(figure => figure.side === 'enemy')
-      .map(figure => figure.template ?? figure.id) });
+      .map(figure => figure.template ?? figure.id),
+    opponentNames: fighters.filter(figure => figure.side === 'enemy').map(figure => figure.displayName ?? '') });
   if (fight.status !== 'fighting') throw new RangeError('Both sides need surviving figures');
   return fight;
 }

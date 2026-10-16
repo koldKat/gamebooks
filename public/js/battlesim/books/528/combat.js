@@ -2,7 +2,8 @@
 export function createCombat(getContext) {
 // BEGIN EXTRACTED RULES
 function label(section) {
-  const { tk } = getContext();
+  const { tk, data, t } = getContext();
+  if (String(section) === '0' || String(section).startsWith('custom:')) return data()?.fight?.spec.name ?? t('battlesim.editor.custom');
 
   const enemy = tk(`enemy_names.${section}`), key = String(section);
   if (key.startsWith('level')) {
@@ -20,7 +21,7 @@ function record(d, force = false) {
   if (!f || !['win', 'loss'].includes(f.status) || f.recorded ||
     !force && f.status === 'loss' && f.player.life === 0 && f.player.resurrection && !f.spec.dream) return;
   f.recorded = true;
-  d.history.push({ enemy: label(f.spec.section), outcome: f.status,
+  d.history.push({ enemy: f.spec.custom ? f.spec.name : label(f.spec.section), outcome: f.status,
     ts: Math.max(Date.now(), (d.history.at(-1)?.ts ?? 0) + 1) });
 }
 
@@ -42,13 +43,13 @@ function confirm(message, apply) {
 }
 
 function start() {
-  const { active, character, confirm, data, el, logEvents, options, record, rules, showAlert, tk, update } = getContext();
+  const { active, character, confirm, customSetup, data, el, logEvents, options, record, rules, showAlert, tk, update } = getContext();
 
   const section = el('encounter').value;
   const selected = Object.fromEntries(options.map(key => [key, el(`option-${key}`).checked]));
   const apply = d => {
     try {
-      const f = rules.createGatewayFight(section, character(d), selected);
+      const f = rules.createGatewayFight(section, character(d), customSetup?.settings(d, selected, section) ?? selected);
       record(d, true); d.fight = f;
       logEvents(d, f.events);
     } catch { showAlert(tk('invalid')); }

@@ -1,9 +1,11 @@
 import { ID, fields, flags, initialStats } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
+import { createThresholdSetup } from '../../engines/threshold-setup.js';
+let customSetup;
 
 // BEGIN SIMULATOR WIRING
-const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, ARKHAM_ENCOUNTERS, ID, character, close, createArkhamCharacter, createArkhamFight, currentBookId, currentPlaythrough, data, el, encounterLabel, escapeHtml, fields, flags, getPlayBtnRow, initSim555, initialStats, open, registerPanelShortcut, renderSim555, rollArkhamRound, saveState, setSim555Visible, shortcutLabel, showAlert, showConfirm, start, t, tk, update });
+const simulatorContext = () => ({ customSetup, ALL_PANEL_OVERLAY_IDS, ARKHAM_ENCOUNTERS, ID, character, close, createArkhamCharacter, createArkhamFight, currentBookId, currentPlaythrough, data, el, encounterLabel, escapeHtml, fields, flags, getPlayBtnRow, initSim555, initialStats, open, registerPanelShortcut, renderSim555, rollArkhamRound, saveState, setSim555Visible, shortcutLabel, showAlert, showConfirm, start, t, tk, update });
 const { data } = createState(simulatorContext);
 const { update, start } = createCombat(simulatorContext);
 // END SIMULATOR WIRING
@@ -29,6 +31,7 @@ export function renderSim555() {
   if (!el('overlay')) return;
   const d = data(); if (!d) { close(); return; }
   const p = character(d), f = d.fight, active = f?.status === 'fighting';
+  customSetup?.render();
   for (const key of fields) {
     if (document.activeElement !== el(key)) el(key).value = p[key];
     el(key).disabled = active;
@@ -45,7 +48,8 @@ export function renderSim555() {
   el('used').textContent = [p.sorcererUsed ? tk('sorcerer_used') : '', p.weaponUsed ? tk('weapon_used') : ''].filter(Boolean).join(' ');
   el('status').textContent = active ? tk('round', { round: f.rounds.length + 1, target: f.spec.thresholds[f.rounds.length] }) : f ? tk('finished', { outcome: tk(f.status), section: f.destination }) : tk('pick');
   const selected = ARKHAM_ENCOUNTERS.find(e => e.section === Number(el('encounter').value));
-  el('rules').textContent = tk('targets', { targets: selected.thresholds.join(' / ') });
+  el('rules').textContent = selected ? tk('targets', { targets: selected.thresholds.join(' / ') }) : t('battlesim.editor.custom');
+  if (f?.spec.custom && !active) el('status').textContent = tk(f.status);
   el('log').innerHTML = d.log.slice(-100).reverse().map(s => `<div>${escapeHtml(s)}</div>`).join('');
   el('history').innerHTML = d.history.slice(-50).reverse().map(h => `<div class="bsim-history-row">${escapeHtml(h.enemy)}: ${tk(h.outcome)}</div>`).join('');
 }
@@ -70,6 +74,7 @@ export function initSim555() {
     <button id="${ID}-roll" class="inv-add-btn">${tk('roll')}</button></div><p>${tk('note')}</p><p>${tk('sheet_note')}</p></div>
     <div class="bsim-col bsim-col-right"><details class="bsim-history"><summary>${tk('history')}</summary><div id="${ID}-history" class="bsim-history-list"></div></details><div id="${ID}-log" class="bsim-log"></div></div></div></div>`;
   document.body.appendChild(overlay);
+  customSetup = createThresholdSetup({document, id: ID, t, tk, encounters: ARKHAM_ENCOUNTERS, getRun: currentPlaythrough, getData: data});
   const btn = document.createElement('button'); btn.id = `${ID}-btn`; btn.innerHTML = shortcutLabel(t('battlesim.title')); btn.style.display = 'none';
   getPlayBtnRow().appendChild(btn); btn.addEventListener('click', open); el('close').addEventListener('click', close);
   let backdrop = false;

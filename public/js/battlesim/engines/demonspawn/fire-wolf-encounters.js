@@ -1,3 +1,4 @@
+import { prepareCustomDemonEncounter } from './opponents.js';
 import { createFireWolfFight, FIRE_WOLF_ATTRIBUTES } from './fire-wolf.js';
 import { fireWolfEnemy } from './fire-wolf-roster.js';
 
@@ -26,6 +27,8 @@ export const FIRE_WOLF_ENCOUNTERS = Object.freeze([
 ].map(encounter => Object.freeze({ ...encounter, enemies: Object.freeze(encounter.enemies) })));
 
 export function prepareFireWolfEncounter(section, player, { illusion = null, lightbringer = false, ...options } = {}) {
+  const custom = prepareCustomDemonEncounter(section, player, options.opponents);
+  if (custom) return custom;
   const encounter = FIRE_WOLF_ENCOUNTERS.find(entry => String(entry.section) === String(section));
   if (!encounter) throw new Error('Unknown Fire*Wolf encounter');
   const p = structuredClone(player);

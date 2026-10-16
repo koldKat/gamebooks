@@ -2,7 +2,8 @@
 export function createCombat(getContext) {
 // BEGIN EXTRACTED RULES
 function label(id) {
-  const { LEGION_DREAMS, LEGION_ENCOUNTERS, tk } = getContext();
+  const { LEGION_DREAMS, LEGION_ENCOUNTERS, tk, data, t } = getContext();
+  if (String(id) === '0' || String(id).startsWith('custom:')) return data()?.fight?.spec.name ?? t('battlesim.editor.custom');
 
   const spec = [...LEGION_ENCOUNTERS,...LEGION_DREAMS].find(row => row.id === id);
   const enemy = tk('enemy_names.'+id);
@@ -16,7 +17,7 @@ function record(d) {
   const f = d.fight;
   if (!f || f.recorded || !['win','loss'].includes(f.status)) return;
   f.recorded = true;
-  d.history.push({enemy:label(f.spec.id),outcome:f.status,
+  d.history.push({enemy:f.spec.custom?f.spec.name:label(f.spec.id),outcome:f.status,
     ts:Math.max(Date.now(),(d.history.at(-1)?.ts ?? 0)+1)});
 }
 
@@ -55,9 +56,9 @@ function confirm(message, apply) {
 }
 
 function start(d,id,options={}) {
-  const { p, record, rules } = getContext();
+  const { customSetup, p, record, rules } = getContext();
 
-  const next = rules.startLegionFight(p(d),id,options);
+  const next = rules.startLegionFight(p(d),id,customSetup?.settings(d,options,id)??options);
   record(d); d.fight = next; d.pendingDream = null;
 }
 

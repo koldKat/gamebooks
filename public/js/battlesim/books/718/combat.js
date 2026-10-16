@@ -1,3 +1,4 @@
+import { customFightingEncounter } from '../../engines/fighting-fantasy/opponents.js';
 import { ENCOUNTERS, RULES_REVISION, SWIFTSTINGER_DAMAGE } from './definition.js';
 
 const clone = value => structuredClone(value);
@@ -39,7 +40,7 @@ export function targets(fight) {
 
 export function startFight(section, character, options = {}) {
   validateCharacter(character, true);
-  const source = ENCOUNTERS.find(encounter => encounter.section === section);
+  const source = ENCOUNTERS.find(encounter => encounter.section === section) ?? customFightingEncounter(section, options.opponents);
   if (!source) throw new RangeError('Unknown encounter');
   const config = clone(source), player = clone(character);
   let enemies = config.enemies.map(enemy => ({ ...enemy, staminaInitial: enemy.stamina }));

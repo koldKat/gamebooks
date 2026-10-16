@@ -64,6 +64,7 @@ export function updateOrcEncounter(game, fight, timestamp = Date.now()) {
     const opponents = game.fight.opponentTemplates ?? game.fight.figures.filter(figure => figure.side === 'enemy')
       .map(figure => figure.template ?? figure.id);
     next.history.push({ enemy: opponents.join(', '), outcome: next.fight.status,
+    ...(game.fight.opponentNames?.some(Boolean) ? {names: game.fight.opponentNames} : {}),
     ts: Math.max(timestamp, (next.history.at(-1)?.ts ?? 0) + 1) });
   }
   return next;

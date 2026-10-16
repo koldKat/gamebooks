@@ -3,6 +3,7 @@ import { newOrcGame, addOrcGameFigure, beginOrcEncounter, updateOrcEncounter,
   cancelOrcEncounter, adjustOrcGameFigure } from './game.js';
 import { orcAttack, orcMagic, orcMove, nextOrcTurn } from './core.js';
 import { parseOrcStat, formatOrcStat, parseOrcInteger } from './fields.js';
+import { createOpponentEditor } from '../../opponents.js';
 
 const ID = 'sim654';
 const stats = ['attack', 'defence', 'shooting', 'damage', 'life', 'magicPower', 'magicDamage'];
@@ -18,7 +19,7 @@ export function createOrcPowerPanel({ document, t, getRun, getBookId, saveState,
   const tk = (key, params) => t('battlesim654.' + key, params);
   const el = key => document.getElementById(ID + '-' + key);
   const busy = game => game?.fight?.status === 'fighting';
-  let shownRun;
+  let shownRun, figureName;
   function data() {
     if (Number(getBookId()) !== 654) return null;
     const run = getRun();
@@ -32,6 +33,7 @@ export function createOrcPowerPanel({ document, t, getRun, getBookId, saveState,
   function snapshot(game) {
     game.setup = Object.fromEntries([...el('setup').querySelectorAll('input,select')]
       .map(field => [field.id, field.type === 'checkbox' ? field.checked : field.value]));
+    game.figureName = figureName.read()[0].displayName;
   }
   function action(update) {
     const run = getRun(), original = data();
@@ -48,7 +50,8 @@ export function createOrcPowerPanel({ document, t, getRun, getBookId, saveState,
   }
   function fillTemplate() {
     const template = ORC_FIGURES.find(figure => figure.id === el('template').value);
-    for (const key of stats) el(key).value = formatOrcStat(template[key]);
+    for (const key of stats) el(key).value = template ? formatOrcStat(template[key]) : '';
+    if (template) figureName.set([{displayName: tk('figure.' + template.id)}]);
     for (const key of equipment) el(key).value = '0';
   }
   function fillEditor() {
@@ -60,7 +63,7 @@ export function createOrcPowerPanel({ document, t, getRun, getBookId, saveState,
     el('edit-side').value = figure.side;
     for (const key of ['petrified', 'removed']) el('edit-' + key).checked = figure[key];
   }
-  const name = figure => tk('figure.' + figure.template) + ' (' + figure.id.split('-').at(-1) + ')';
+  const name = figure => (figure.displayName || tk('figure.' + figure.template)) + ' (' + figure.id.split('-').at(-1) + ')';
   function options(key, figures, selected) {
     const select = el(key), previous = selected ?? select.value;
     select.innerHTML = figures.map(figure => `<option value="${escape(figure.id)}">${escape(name(figure))}</option>`).join('');
@@ -88,10 +91,12 @@ export function createOrcPowerPanel({ document, t, getRun, getBookId, saveState,
         else field.value = game.setup[field.id] ?? (field.tagName === 'SELECT' ? field.options[0]?.value ?? '' : field.defaultValue);
       }
       if (!Object.keys(game.setup).length) fillTemplate();
+      figureName.set([{displayName: game.figureName ?? ''}]);
       for (const key of ['legal', 'weaponAvailable', 'spellAvailable', 'editConfirmed', 'areaSpell']) el(key).checked = false;
       el('spellTargets').innerHTML = '';
     }
     const active = busy(game), fight = game.fight;
+    figureName.lock(active);
     for (const field of el('setup').querySelectorAll('input,select,button')) field.disabled = active;
     const living = game.figures.filter(figure => figure.life > 0);
     const included = new Set(restoring
@@ -123,7 +128,7 @@ export function createOrcPowerPanel({ document, t, getRun, getBookId, saveState,
       actor:name(actor), round:fight.round, actions:fight.actionsLeft,
     }) : fight ? tk('status.' + fight.status) : tk('ready');
     el('log').innerHTML = game.log.slice(-100).reverse().map(line => `<div>${escape(line)}</div>`).join('');
-    el('history').innerHTML = game.history.slice(-30).reverse().map(item => `<div>${escape(item.enemy.split(', ').map(id => tk('figure.' + id)).join(', '))} · ${escape(tk('status.' + item.outcome))}</div>`).join('');
+    el('history').innerHTML = game.history.slice(-30).reverse().map(item => `<div>${escape(item.enemy.split(', ').map((id, index) => item.names?.[index] || tk('figure.' + id)).join(', '))} · ${escape(tk('status.' + item.outcome))}</div>`).join('');
   }
   const input = (key, value = '') => `<label class="inv-edit-row">${escape(tk(key.startsWith('edit-') ? key.slice(5) : key))}<input class="inv-edit-input" id="${ID}-${key}" value="${escape(value)}" autocomplete="off"></label>`;
   const select = (key, values, prefix = '') => `<select class="inv-edit-input" id="${ID}-${key}" aria-label="${escape(tk(key))}">${values.map(value => `<option value="${escape(value)}">${escape(tk(prefix + value))}</option>`).join('')}</select>`;
@@ -135,6 +140,12 @@ export function createOrcPowerPanel({ document, t, getRun, getBookId, saveState,
     overlay.id = ID + '-overlay'; overlay.className = 'inv-overlay';
     overlay.innerHTML = `<div class="inv-modal bsim-modal bsim-compact-form"><div class="inv-modal-hdr"><span class="inv-modal-title">${escape(tk('title'))}</span><button class="inv-close-btn" id="${ID}-close" aria-label="${escape(t('btn.close'))}">&times;</button></div><div class="bsim-body"><div class="bsim-col bsim-col-left"><p>${escape(tk('note'))}</p><div id="${ID}-setup"><details><summary>${escape(tk('addFigure'))}</summary>${select('template', ORC_FIGURES.map(figure => figure.id), 'figure.')}${select('side', ['player','enemy'])}${stats.map(key => input(key)).join('')}${equipment.map(key => input(key, 0)).join('')}${button('add')}</details>${select('mode', ['tactical','strategic'])}${select('first', [])}${button('start')}</div><div id="${ID}-figures"></div><div class="bsim-status" id="${ID}-status"></div>${select('target', [])}${select('kind', ['melee','shoot','throw'])}${select('attackerMarker', markers, 'marker.')}${select('defenderMarker', markers, 'marker.')}${check('legal')}${check('weaponAvailable')}<div class="bsim-btn-row">${button('attackButton')}${button('move')}${button('leave')}</div><details><summary>${escape(tk('magic'))}</summary><p>${escape(tk('magicNote'))}</p>${input('modifier')}${input('spellDamage')}${check('spellAvailable')}${button('magicButton')}</details>${select('next', [])}<div class="bsim-btn-row">${button('nextTurn')}${button('cancel')}</div><details><summary>${escape(tk('adjust'))}</summary><p>${escape(tk('adjustNote'))}</p>${select('editFigure', [])}${editStats.map(key => input('edit-' + key)).join('')}${editNumbers.map(key => input('edit-' + key)).join('')}${select('edit-side', ['player','enemy'])}${check('edit-petrified')}${check('edit-removed')}${check('editConfirmed')}${button('applyEdit')}</details></div><div class="bsim-col bsim-col-right"><details class="bsim-history"><summary>${escape(tk('history'))}</summary><div class="bsim-history-list" id="${ID}-history"></div></details><div class="bsim-log" id="${ID}-log"></div></div></div></div>`;
     document.body.appendChild(overlay);
+    el('template').insertAdjacentHTML('afterbegin', `<option value="custom">${escape(t('battlesim.editor.bg.name'))}</option>`);
+    el('template').value = 'custom';
+    figureName = createOpponentEditor({document, id: ID, t, language: 'bg', fields: [],
+      presets: ORC_FIGURES.map(figure => ({id: figure.id, displayName: tk('figure.' + figure.id)})),
+      onSelect(figure) { el('template').value = figure.id; fillTemplate(); }});
+    figureName.fixCount(true); el('template').before(figureName.element);
     const participants = document.createElement('div');
     participants.id = ID + '-participants';
     el('first').before(participants);
@@ -159,6 +170,7 @@ export function createOrcPowerPanel({ document, t, getRun, getBookId, saveState,
     el('setup').addEventListener('change', () => { if (!busy(data())) action(snapshot); });
     el('add').addEventListener('click', () => action(game => {
       const next = addOrcGameFigure(game, el('template').value, { side:el('side').value,
+        displayName: figureName.read()[0].displayName || t('battlesim.editor.bg.name'),
         stats:Object.fromEntries(stats.map(key => [key, parseOrcStat(el(key).value)])),
         equipment:Object.fromEntries(equipment.map(key => [key, number(key, key !== 'weaponDamage')])),
       });

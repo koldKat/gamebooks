@@ -1,3 +1,4 @@
+import { customGrailEncounter } from './opponents.js';
 import { REALM_EQUIPMENT, REALM_ASTRAL_KEY, REALM_ENCOUNTERS, REALM_DREAMS } from './realm-of-chaos-roster.js';
 
 const integer = (value, minimum = 0) => Number.isSafeInteger(value) && value >= minimum;
@@ -205,7 +206,7 @@ export function rerollRealmInitiative(fight, random = Math.random) {
 }
 
 export function startRealmFight(character, encounterId, options = {}, random = Math.random) {
-  const original = [...REALM_ENCOUNTERS, ...REALM_DREAMS].find(row => row.id === encounterId);
+  const original = [...REALM_ENCOUNTERS, ...REALM_DREAMS].find(row => row.id === encounterId) ?? customGrailEncounter(encounterId, options.opponents);
   if (!original) throw new RangeError('Unknown encounter');
   if (!(Number.isFinite(character.life) && character.life > 5 && Number.isFinite(character.maxLife)
     && character.maxLife > 5)) throw new RangeError('A conscious character is required');

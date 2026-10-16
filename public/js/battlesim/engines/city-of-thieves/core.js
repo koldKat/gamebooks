@@ -1,4 +1,5 @@
 import { THIEVES_FIGHTS, THIEVES_EQUIPMENT } from './roster.js';
+import { customFightingEncounter } from '../fighting-fantasy/opponents.js';
 
 const clone = value => structuredClone(value);
 function integer(value, min = 0, max = 10000) {
@@ -34,9 +35,9 @@ function effectiveSkill(character) {
     + ['magicShield', 'unicornShield', 'magicHelmet', 'elvenBoots'].filter(key => character[key]).length
     - ['cursedShield', 'cursedBrooch'].filter(key => character[key]).length;
 }
-export function startThievesFight(section, character, { applyEntry = true, randomEnemy = 0 } = {}, roll) {
+export function startThievesFight(section, character, { applyEntry = true, randomEnemy = 0, opponents } = {}, roll) {
   validateThievesCharacter(character, true);
-  const config = THIEVES_FIGHTS.find(fight => fight.section === section);
+  const config = THIEVES_FIGHTS.find(fight => fight.section === section) ?? customFightingEncounter(section, opponents);
   if (!config || typeof applyEntry !== 'boolean') throw new RangeError('Invalid encounter');
   const fight = { rulesRevision: 1, config: clone(config), character: clone(character),
     enemies: clone(config.enemies).map(enemy => ({ ...enemy, initialStamina: enemy.stamina })),

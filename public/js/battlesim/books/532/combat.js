@@ -2,7 +2,8 @@
 export function createCombat(getContext) {
 // BEGIN EXTRACTED RULES
 function label(id) {
-  const { tk } = getContext();
+  const { tk, data, t } = getContext();
+  if (String(id) === '0' || String(id).startsWith('custom:')) return data()?.fight?.spec.name ?? t('battlesim.editor.custom');
 
   const enemy = tk(`enemy_names.${id}`);
   return String(id).startsWith('dream') ? tk('dream_label', { enemy, number: String(id).slice(5) })
@@ -15,7 +16,7 @@ function record(d) {
   const f = d.fight;
   if (!f || f.recorded || !['win', 'loss'].includes(f.status)) return;
   f.recorded = true;
-  d.history.push({ enemy: label(f.spec.id), outcome: f.status,
+  d.history.push({ enemy: f.spec.custom ? f.spec.name : label(f.spec.id), outcome: f.status,
     ts: Math.max(Date.now(), (d.history.at(-1)?.ts ?? 0) + 1) });
 }
 
@@ -55,9 +56,9 @@ function confirm(message, apply) {
 }
 
 function start(d, id, options = {}) {
-  const { character, record, rules } = getContext();
+  const { character, customSetup, record, rules } = getContext();
 
-  const next = rules.startTombFight(character(d), id, options);
+  const next = rules.startTombFight(character(d), id, customSetup?.settings(d, options, id) ?? options);
   record(d); d.fight = next;
 }
 

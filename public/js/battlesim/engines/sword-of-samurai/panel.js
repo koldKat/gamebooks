@@ -1,3 +1,4 @@
+import { createCustomOpponentSetup } from '../../custom-setup.js';
 import { newSamuraiCharacter, validateSamuraiCharacter, eatSamuraiMeal, drinkSamuraiPotion,
   SAMURAI_ARTS, SAMURAI_ARROW_DAMAGE } from './character.js';
 import { startSamuraiFight, samuraiRound, resolveSamuraiAction, setSamuraiTarget } from './core.js';
@@ -14,6 +15,8 @@ const escape = value => String(value).replace(/[&<>"']/g,
 export function createSamuraiPanel({ document, t, getRun, getBookId, saveState,
   showAlert, showConfirm, getButtonRow, registerShortcut = () => {} }) {
   const tk = (key, params) => t('battlesim672.' + key, params);
+  let customSetup;
+  const enemyLabel = enemy => enemy.displayName || tk('enemy.' + (enemy.key ?? enemy.name));
   const el = key => document.getElementById(ID + '-' + key);
   const active = game => game?.fight?.status === 'fighting';
   const carried = game => game?.fight?.status === 'story' && game.fight.config.section === 82 && game.fight.destination === 32;
@@ -54,14 +57,14 @@ export function createSamuraiPanel({ document, t, getRun, getBookId, saveState,
     } catch (_) { showAlert(tk('invalid')); }
   }
   function encounterName(spec) {
-    return [...new Set(spec.enemies.map(enemy => tk('enemy.' + enemy.name)))].join(' / ')
+    return [...new Set(spec.enemies.map(enemy => enemyLabel(enemy)))].join(' / ')
       + (spec.copies || spec.enemies.length > 1 ? ` ×${spec.copies || spec.enemies.length}` : '')
       + (spec.continuation ? ' — ' + tk('continuation') : '');
   }
   function report(game, fight) {
     game.fight = fight;
     for (const event of fight.events) {
-      const name = Number.isSafeInteger(event.enemy) ? tk('enemy.' + fight.enemies[event.enemy].name) : '';
+      const name = Number.isSafeInteger(event.enemy) ? enemyLabel(fight.enemies[event.enemy]) : '';
       if (event.kind === 'attack') game.log.push(tk('attackRoll', { name, player: event.playerAttack, opponent: event.enemyAttack }));
       else if (event.kind === 'damage') game.log.push(tk('damage', { name: event.direction === 'outgoing' ? name : tk('you'), amount: event.amount }));
       else if (event.kind === 'luck') game.log.push(tk('luckRoll', { roll: event.total, result: tk(event.lucky ? 'lucky' : 'unlucky') }));
@@ -117,6 +120,7 @@ export function createSamuraiPanel({ document, t, getRun, getBookId, saveState,
       for (const key of setupFields) el(key).value = String(game.setup[key] ?? defaults[key]);
       for (const key of setupFlags) el(key).checked = game.setup[key] ?? key !== 'iaijutsuUsed';
     }
+    customSetup.render();
     const fight = game.fight, character = game.character, busy = active(game), blocked = busy || carried(game) || !supported(game);
     el('characterStatus').textContent = !supported(game) ? tk('unsupported') : character ? tk('characterStatus', character) : tk('ready');
     for (const key of stats) {
@@ -149,10 +153,10 @@ export function createSamuraiPanel({ document, t, getRun, getBookId, saveState,
     const targets = fight?.enemies.map((foe, index) => ({ foe, index })).filter(({ foe, index }) =>
       foe.stamina > 0 && index >= fight.groupStart && index < fight.groupStart + groupSize) || [];
     el('target-row').hidden = !busy || targets.length < 2;
-    el('target').innerHTML = targets.map(({ foe, index }) => `<option value="${index}">${escape(tk('enemy.' + foe.name))} (${index + 1})</option>`).join('');
+    el('target').innerHTML = targets.map(({ foe, index }) => `<option value="${index}">${escape(enemyLabel(foe))} (${index + 1})</option>`).join('');
     el('target').value = String(fight?.target ?? 0); el('target').disabled = !supported(game) || !busy || !!pending;
     el('status').textContent = fight ? [tk('status.' + fight.status), tk('roundCount', { rounds: fight.rounds }),
-      ...fight.enemies.map((foe, index) => `${index + 1}. ${tk('enemy.' + foe.name)}: ${tk('skill')} ${foe.skill}, ${tk('stamina')} ${foe.stamina}/${foe.staminaInitial}`),
+      ...fight.enemies.map((foe, index) => `${index + 1}. ${enemyLabel(foe)}: ${tk('skill')} ${foe.skill}, ${tk('stamina')} ${foe.stamina}/${foe.staminaInitial}`),
       ...(fight.destination ? [tk('destination', { section: fight.destination })] : [])].join('\n') : '';
     el('history').innerHTML = game.history.slice(-30).reverse().map(item => `<div>${escape(item.enemy)} — ${escape(tk('status.' + item.outcome))}</div>`).join('');
     el('log').innerHTML = game.log.map(line => `<div>${escape(line)}</div>`).join('');
@@ -169,6 +173,9 @@ export function createSamuraiPanel({ document, t, getRun, getBookId, saveState,
     overlay.id = ID + '-overlay'; overlay.className = 'inv-overlay';
     overlay.innerHTML = `<div class="inv-modal bsim-modal bsim-compact-form"><div class="inv-modal-hdr"><span class="inv-modal-title">${escape(tk('title'))}</span><button class="inv-close-btn" type="button" id="${ID}-close" aria-label="${escape(t('btn.close'))}">&times;</button></div><div class="bsim-body"><div class="bsim-col bsim-col-left"><p>${escape(tk('note'))}</p><div class="bsim-status" id="${ID}-characterStatus"></div>${select('art', SAMURAI_ARTS)}${select('potion', ['skill', 'stamina', 'luck'])}${button('roll')}<details><summary>${escape(tk('character'))}</summary>${stats.map(key => field(key, key.endsWith('Initial') ? 1 : 0, key === 'swords' ? 2 : 10000)).join('')}${arrows.map(type => field('arrow-' + type, 0, 10000, 'arrowType.' + type)).join('')}${checkbox('bow')}${checkbox('potionUsed')}${button('apply')}</details><div class="bsim-btn-row">${button('meal')}${button('drink')}</div><label class="inv-edit-row"><span class="inv-edit-label">${escape(tk('context'))}</span><select class="inv-edit-input" id="${ID}-context">${[...SAMURAI_FIGHTS].sort((a, b) => a.section - b.section).map(spec => `<option value="${spec.section}">${escape(encounterName(spec))} (${spec.section})</option>`).join('')}</select></label>${checkbox('applyEntry')}${select('arrowType', arrows)}${field('arrowCount', 0, 3)}${field('continuationStamina', 1, 5)}${checkbox('acrobatics')}${checkbox('iaijutsuUsed')}${checkbox('recover')}${select('charcoalTiming', ['firstKill', 'firstWound'])}<details><summary>${escape(tk('overrides'))}</summary>${field('playerModifier', -1000, 1000)}${field('enemyModifier', -1000, 1000)}${field('incomingDamage')}<p>${escape(tk('overrideNote'))}</p></details><p class="bsim-status" id="${ID}-contextNote"></p>${button('start')}<div class="bsim-status" id="${ID}-status"></div><label class="inv-edit-row" id="${ID}-target-row"><span class="inv-edit-label">${escape(tk('target'))}</span><select class="inv-edit-input" id="${ID}-target"></select></label><div class="bsim-btn-row">${button('step')}${button('cancel')}</div><div id="${ID}-pending-row"><p id="${ID}-pending"></p><div class="bsim-btn-row">${button('yes')}${button('no')}</div></div></div><div class="bsim-col bsim-col-right"><details class="bsim-history"><summary>${escape(tk('history'))}</summary><div class="bsim-history-list" id="${ID}-history"></div></details><div class="bsim-log" id="${ID}-log"></div></div></div></div>`;
     document.body.appendChild(overlay);
+    customSetup = createCustomOpponentSetup({document, id: ID, t, language: 'bg', selectKey: "context", getRun, getData: data,
+      fields: [{key: 'skill', label: tk('skill'), max: 10000}, {key: 'stamina', label: tk('stamina'), min: 1, max: 10000}],
+      presets: SAMURAI_FIGHTS.flatMap(entry => entry.enemies.map(enemy => ({...enemy, displayName: enemyLabel(enemy)})))});
     const btn = document.createElement('button');
     btn.id = ID + '-btn'; btn.textContent = t('battlesim.title'); btn.style.display = 'none';
     getButtonRow().appendChild(btn); btn.addEventListener('click', open);
@@ -197,20 +204,20 @@ export function createSamuraiPanel({ document, t, getRun, getBookId, saveState,
     }));
     el('start').addEventListener('click', () => action(game => {
       if (active(game) || !game.character) return;
-      const section = number('context'), spec = SAMURAI_FIGHTS.find(item => item.section === section);
+      const section = number('context'), spec = SAMURAI_FIGHTS.find(item => item.section === section) ?? (section === 0 ? {custom: true, enemies: []} : null);
       if (!spec || carried(game) && section !== 32) throw new RangeError('Finish the continued encounter');
       game.setup = Object.fromEntries(setupFields.map(key => [key, el(key).value]));
       for (const key of setupFlags) game.setup[key] = el(key).checked;
       const arrowCount = spec.preArrowMax ? number('arrowCount') : 0;
       if (arrowCount < 0 || arrowCount > (spec.preArrowMax || 0)) throw new RangeError('Invalid arrow count');
-      game.log.push(encounterName(spec));
-      report(game, startSamuraiFight(section, game.character, { ...Object.fromEntries(setupFlags.map(key => [key, el(key).checked])),
+      if (!spec.custom) game.log.push(encounterName(spec));
+      report(game, startSamuraiFight(section, game.character, customSetup.settings(game, { ...Object.fromEntries(setupFlags.map(key => [key, el(key).checked])),
         playerModifier: number('playerModifier'), enemyModifier: number('enemyModifier'),
         incomingDamage: spec.incoming === 'phoenix' ? null : number('incomingDamage', true),
         charcoalTiming: [93, 307].includes(section) ? el('charcoalTiming').value : 'firstKill',
         preArrows: Array(arrowCount).fill(spec.preArrowType || el('arrowType').value),
         carryFrom: spec.continuation && carried(game) ? game.fight : null,
-        continuationStamina: spec.continuation && !carried(game) ? number('continuationStamina') : null }));
+        continuationStamina: spec.continuation && !carried(game) ? number('continuationStamina') : null })));
     }));
     el('step').addEventListener('click', () => action(game => report(game, samuraiRound(game.fight))));
     el('target').addEventListener('change', () => action(game => { game.fight = setSamuraiTarget(game.fight, number('target')); }));

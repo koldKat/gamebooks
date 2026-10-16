@@ -1,3 +1,4 @@
+import { createCustomOpponentSetup } from '../../custom-setup.js';
 import { definition, ENCOUNTERS } from './definition.js';
 import * as rules from './combat.js';
 import * as effects from './effects.js';
@@ -19,6 +20,8 @@ const escape = value => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', 
 export function createDemonsPanel({ document, t, getRun, getBookId, saveState, showAlert, showConfirm,
   getButtonRow, registerShortcut = () => {} }) {
   const tk = (key, params) => t(definition.i18nPrefix + '.' + key, params);
+  let customSetup;
+  const enemyLabel = enemy => enemy.displayName || tk('enemy.' + (enemy.key ?? enemy.name));
   const el = key => document.getElementById(ID + '-' + key);
   const store = createState(() => ({ currentBookId: getBookId(), currentPlaythrough: getRun, saveState }));
   let shownRun, rendered;
@@ -34,7 +37,7 @@ export function createDemonsPanel({ document, t, getRun, getBookId, saveState, s
     return value;
   }
   function close() { el('overlay')?.classList.remove('active'); rendered = null; }
-  function selected() { return ENCOUNTERS.find(encounter => encounter.section === Number(el('encounter').value)); }
+  function selected() { return ENCOUNTERS.find(encounter => encounter.section === Number(el('encounter').value)) ?? {section: 0, custom: true, enemies: []}; }
   function setup() {
     return { encounter: el('encounter').value, target: el('target').value,
       remainingBatFish: el('remainingBatFish').value, previousOgreStamina: el('previousOgreStamina').value,
@@ -62,7 +65,7 @@ export function createDemonsPanel({ document, t, getRun, getBookId, saveState, s
   function report(data, fight) {
     data.fight = fight; data.character = structuredClone(fight.player);
     for (const event of fight.events) {
-      if (event.kind === 'attack') data.log.push(tk('attack', { ...event, enemy: tk('enemy.' + fight.enemies[event.enemy].key) }));
+      if (event.kind === 'attack') data.log.push(tk('attack', { ...event, enemy: enemyLabel(fight.enemies[event.enemy]) }));
       else if (event.kind === 'allyAttack') data.log.push(tk('allyAttack', {
         ...event, victim: event.victim === 'player' ? tk('you') : tk('enemy.dolphin'),
       }));
@@ -71,7 +74,7 @@ export function createDemonsPanel({ document, t, getRun, getBookId, saveState, s
       }));
       else if (event.kind === 'curse') data.log.push(tk('curseRoll', event));
       else if (event.damage !== undefined) data.log.push(tk('damage', { damage: event.damage,
-        target: event.kind === 'outgoing' ? tk('enemy.' + fight.enemies[event.enemy].key)
+        target: event.kind === 'outgoing' ? enemyLabel(fight.enemies[event.enemy])
           : event.kind === 'allyIncoming' ? tk('enemy.dolphin') : tk('you') }));
     }
     if (fight.outcome) {
@@ -104,7 +107,8 @@ export function createDemonsPanel({ document, t, getRun, getBookId, saveState, s
     const deciding = pending || Boolean(fight?.mercyPending), dead = !hero || hero.dead || !hero.stamina;
     for (const key of FIELDS) { el(key).value = hero?.[key] ?? ''; el(key).disabled = busy; }
     for (const key of EQUIPMENT) { el(key).checked = hero?.[key] ?? false; el(key).disabled = busy; }
-    el('encounter').value = data.setup.encounter ?? String(ENCOUNTERS[0].section);
+    el('encounter').value = data.setup.encounter ?? '0';
+    customSetup.render();
     const config = selected();
     for (const key of ['remainingBatFish', 'previousOgreStamina', 'allyStamina']) el(key).value = data.setup[key] ?? (key === 'remainingBatFish' ? '4' : '');
     for (const key of ['axeFish', 'sawFish', 'preWoundApplied']) el(key).checked = data.setup[key] ?? false;
@@ -113,7 +117,7 @@ export function createDemonsPanel({ document, t, getRun, getBookId, saveState, s
       el(key + '-row').hidden = !visible; el(key).disabled = busy;
     }
     el('contextNote').textContent = ruleNotes(busy ? fight.config : config);
-    el('enemyOverrides').innerHTML = config.enemies.map((enemy, index) => `<label class="inv-edit-row"><span>${escape(tk('enemy.' + enemy.key))}</span><input class="inv-edit-input" type="number" min="1" max="10000" step="1" placeholder="${enemy.stamina}" value="${escape(data.setup.enemyStamina?.[index] ?? '')}"${busy ? ' disabled' : ''}></label>`).join('');
+    el('enemyOverrides').innerHTML = config.enemies.map((enemy, index) => `<label class="inv-edit-row"><span>${escape(enemyLabel(enemy))}</span><input class="inv-edit-input" type="number" min="1" max="10000" step="1" placeholder="${enemy.stamina}" value="${escape(data.setup.enemyStamina?.[index] ?? '')}"${busy ? ' disabled' : ''}></label>`).join('');
     for (const key of ['encounter', 'apply', 'roll']) el(key).disabled = busy;
     el('start').disabled = busy || dead; el('again').disabled = busy || !fight; el('cancel').disabled = !busy;
     const noRecovery = busy || dead || config.noPrecombatRecovery;
@@ -130,10 +134,10 @@ export function createDemonsPanel({ document, t, getRun, getBookId, saveState, s
     el('freeFoot').disabled = !busy || deciding || !fight.trapped;
     for (const key of ['spare', 'continueFight']) el(key).disabled = !busy || !fight.mercyPending;
     const available = rules.targets(fight);
-    el('target').innerHTML = available.map(index => `<option value="${index}">${escape(tk('enemy.' + fight.enemies[index].key))}</option>`).join('');
+    el('target').innerHTML = available.map(index => `<option value="${index}">${escape(enemyLabel(fight.enemies[index]))}</option>`).join('');
     if (available.includes(Number(data.setup.target))) el('target').value = data.setup.target;
     el('target').disabled = !busy || deciding || available.length < 2;
-    el('opponents').innerHTML = fight ? `<table class="bsim-combat-table"><thead><tr><th>${escape(tk('opponents'))}</th><th>${escape(tk('skill'))}</th><th>${escape(tk('stamina'))}</th></tr></thead><tbody>${fight.enemies.map(enemy => `<tr><td>${escape(tk('enemy.' + enemy.key))}</td><td>${enemy.skill}</td><td>${enemy.stamina}/${enemy.staminaInitial}</td></tr>`).join('')}</tbody></table>` : '';
+    el('opponents').innerHTML = fight ? `<table class="bsim-combat-table"><thead><tr><th>${escape(tk('opponents'))}</th><th>${escape(tk('skill'))}</th><th>${escape(tk('stamina'))}</th></tr></thead><tbody>${fight.enemies.map(enemy => `<tr><td>${escape(enemyLabel(enemy))}</td><td>${enemy.skill}</td><td>${enemy.stamina}/${enemy.staminaInitial}</td></tr>`).join('')}</tbody></table>` : '';
     const status = [dead ? tk('dead') : tk('ready')];
     if (fight) {
       status.length = 0;
@@ -162,6 +166,9 @@ export function createDemonsPanel({ document, t, getRun, getBookId, saveState, s
       <div class="bsim-col bsim-col-right"><label class="inv-edit-row"><span>${escape(tk('encounter'))}</span><select class="inv-edit-input" id="${ID}-encounter">${ENCOUNTERS.map(encounter => `<option value="${encounter.section}">${escape(tk('encounter.' + encounter.section))} (${encounter.section})</option>`).join('')}</select></label><p class="bsim-status" id="${ID}-contextNote"></p><details><summary>${escape(tk('fightSetup'))}</summary>${input('remainingBatFish')}${input('previousOgreStamina', true)}${input('allyStamina', true)}${checkbox('axeFish')}${checkbox('sawFish')}${checkbox('preWoundApplied')}<p>${escape(tk('overridesNote'))}</p><div id="${ID}-enemyOverrides"></div></details><div class="bsim-btn-row">${button('start')}${button('again')}${button('cancel')}</div>
       <div id="${ID}-opponents"></div><label class="inv-edit-row"><span>${escape(tk('target'))}</span><select class="inv-edit-input" id="${ID}-target"></select></label><div class="bsim-btn-row">${['round', 'swiftAttack', 'useLuck', 'useTalisman', 'skipLuck', 'freeFoot', 'escape', 'spare', 'continueFight'].map(button).join('')}</div><p class="bsim-status" id="${ID}-status" role="status" aria-live="polite"></p><details open><summary>${escape(tk('log'))}</summary><div class="bsim-status bsim-log" id="${ID}-log"></div></details><details class="bsim-history"><summary>${escape(tk('history'))}</summary><div class="bsim-status bsim-history-list" id="${ID}-history"></div></details></div></div></div>`;
     document.body.appendChild(overlay);
+    customSetup = createCustomOpponentSetup({document, id: ID, t, language: 'bg', selectKey: "encounter", getRun, getData: () => store.read(),
+      fields: [{key: 'skill', label: tk('skill'), max: 10000}, {key: 'stamina', label: tk('stamina'), min: 1, max: 10000}],
+      presets: ENCOUNTERS.flatMap(entry => entry.enemies.map(enemy => ({...enemy, displayName: enemyLabel(enemy)})))});
     const trigger = document.createElement('button'); trigger.id = ID + '-btn'; trigger.textContent = t('battlesim.title'); trigger.style.display = 'none';
     getButtonRow().appendChild(trigger); trigger.addEventListener('click', open);
     el('close').addEventListener('click', close);
@@ -191,11 +198,11 @@ export function createDemonsPanel({ document, t, getRun, getBookId, saveState, s
         if (!Number.isSafeInteger(value) || value < 1 || value > 10000) { field.focus(); throw new RangeError('Invalid enemy health'); }
         return value;
       }).slice(0, remainingBatFish ?? config.enemies.length);
-      const fight = rules.startFight(config.section, data.character, { remainingBatFish, enemyStamina,
+      const fight = rules.startFight(config.section, data.character, customSetup.settings(data, { remainingBatFish, enemyStamina: config.custom ? undefined : enemyStamina,
         previousOgreStamina: config.injuredOgre ? number('previousOgreStamina', true) : undefined,
         allyStamina: config.ally ? number('allyStamina', true) : undefined,
-        axeFish: el('axeFish').checked, sawFish: el('sawFish').checked, preWoundApplied: el('preWoundApplied').checked });
-      fight.name = tk('encounter.' + config.section); report(data, fight);
+        axeFish: el('axeFish').checked, sawFish: el('sawFish').checked, preWoundApplied: el('preWoundApplied').checked }));
+      fight.name = config.custom ? fight.config.name : tk('encounter.' + config.section); report(data, fight);
     }));
     el('round').addEventListener('click', () => change(data => report(data, rules.round(data.fight, Number(el('target').value)))));
     el('swiftAttack').addEventListener('click', () => change(data => report(data, rules.round(data.fight, Number(el('target').value), undefined, { swiftstinger: true }))));

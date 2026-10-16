@@ -23,7 +23,7 @@ function store(d) {
   const fight = d.fight;
   if (fight && !fight.recorded && ['win', 'loss'].includes(fight.outcome)) {
     fight.recorded = true;
-    d.history.push({ enemy: `${fight.encounter.enemies.map(key => ANCIENT_EVIL_ROSTER[key].name).join(', ')} (${tk('section', { section: fight.encounter.section })})`, outcome: fight.outcome,
+    d.history.push({ enemy: fight.encounter.custom ? fight.encounter.name : `${fight.encounter.enemies.map(key => ANCIENT_EVIL_ROSTER[key].name).join(', ')} (${tk('section', { section: fight.encounter.section })})`, outcome: fight.outcome,
       ts: Math.max(Date.now(), (d.history.at(-1)?.ts ?? 0) + 1) });
   }
   saveState(); renderSim537();
@@ -39,13 +39,13 @@ function result(d, value) {
 }
 
 function start() {
-  const { active, character, createAncientEvilFight, data, el, number, prepareAncientEvilEncounter, showAlert, store, tk } = getContext();
+  const { active, character, createAncientEvilFight, customSetup, data, el, number, prepareAncientEvilEncounter, showAlert, store, tk } = getContext();
 
   const d = data(); if (!d || active(d) || character(d).lifePoints <= 0) return;
   try {
-    d.fight = createAncientEvilFight(prepareAncientEvilEncounter(el('encounter').value, character(d), {
+    d.fight = createAncientEvilFight(prepareAncientEvilEncounter(el('encounter').value, character(d), customSetup?.settings(d, {
       playerWeapon: number('weapon_bonus'), staffWeapon: number('staff_bonus'),
-    }));
+    })));
     store(d);
   } catch { showAlert(tk('invalid')); }
 }

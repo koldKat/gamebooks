@@ -1,3 +1,4 @@
+import { customGrailEncounter } from './opponents.js';
 import { VOYAGE_ENCOUNTERS, VOYAGE_DREAMS, VOYAGE_NAVIGATION,
   VOYAGE_ARGONAUTS } from './voyage-of-terror-roster.js';
 
@@ -156,7 +157,7 @@ export function rerollVoyageInitiative(f, random = Math.random) {
 
 export function createVoyageFight(section, player, options = {}, random = Math.random) {
   const spec = [...VOYAGE_ENCOUNTERS, ...VOYAGE_DREAMS, ...VOYAGE_NAVIGATION]
-    .find(entry => String(entry.section) === String(section));
+    .find(entry => String(entry.section) === String(section)) ?? customGrailEncounter(section, options.opponents);
   if (!spec) throw new RangeError('Unknown Voyage encounter');
   if (!integer(player.life, 6) || !integer(player.maxLife, player.life)
     || !integer(player.hit, 2) || player.hit > 12 || !integer(player.bonus)

@@ -1,9 +1,11 @@
 import { ID, core, resources, flags, options, spells } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
+import { createGrailOpponentSetup } from '../../engines/grailquest/setup.js';
+let customSetup;
 
 // BEGIN SIMULATOR WIRING
-const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, ID, VOYAGE_ENCOUNTERS, VOYAGE_NAVIGATION, action, active, character, close, confirm, core, currentBookId, currentPlaythrough, data, el, escapeHtml, flags, getPlayBtnRow, initSim529, label, logEvents, open, options, record, registerPanelShortcut, renderSim529, replaceResult, resources, rules, saveState, setSim529Visible, shortcutLabel, showAlert, showConfirm, spells, t, tk, update });
+const simulatorContext = () => ({ customSetup, ALL_PANEL_OVERLAY_IDS, ID, VOYAGE_ENCOUNTERS, VOYAGE_NAVIGATION, action, active, character, close, confirm, core, currentBookId, currentPlaythrough, data, el, escapeHtml, flags, getPlayBtnRow, initSim529, label, logEvents, open, options, record, registerPanelShortcut, renderSim529, replaceResult, resources, rules, saveState, setSim529Visible, shortcutLabel, showAlert, showConfirm, spells, t, tk, update });
 const { data } = createState(simulatorContext);
 const { label, record, logEvents, update, action, confirm, replaceResult } = createCombat(simulatorContext);
 // END SIMULATOR WIRING
@@ -30,6 +32,7 @@ function open() {
 export function renderSim529() {
   if (!el('overlay')) return;
   const d = data(); if (!d) { close(); return; }
+  customSetup?.render();
   const p = character(d), f = d.fight, fighting = active(d);
   el('combat-stats').hidden = !fighting || f.spec.shadows;
   if (fighting) {
@@ -121,6 +124,8 @@ export function initSim529() {
   const overlay = document.createElement('div'); overlay.id = `${ID}-overlay`; overlay.className = 'inv-overlay';
   overlay.innerHTML = `<div class="inv-modal bsim-modal bsim-compact-form"><div class="inv-modal-hdr"><span class="inv-modal-title">${tk('title')}</span><button id="${ID}-close" class="inv-close-btn" aria-label="${t('btn.close')}">&times;</button></div><div class="bsim-body"><div class="bsim-col bsim-col-left"><div class="bsim-side"><div class="bsim-side-title">${tk('character')}</div>${inputs(core)}${select('weapon', Object.keys(rules.VOYAGE_WEAPONS))}${button('new_character')}<details><summary>${tk('resources')}</summary>${inputs(resources)}${inputs(['sprain', 'limp'])}${flags.map(key => `<label class="inv-edit-row"><input id="${ID}-${key}" type="checkbox">${tk(key)}</label>`).join('')}</details><details><summary>${tk('companions')}</summary>${button('recruit')}<div id="${ID}-crew"></div></details></div><div class="bsim-side"><label class="inv-edit-row">${tk('encounter')}<select id="${ID}-encounter" class="inv-edit-input">${[...VOYAGE_ENCOUNTERS, ...VOYAGE_NAVIGATION].map(spec => `<option value="${spec.section}">${escapeHtml(label(spec.section))}</option>`).join('')}</select></label><details><summary>${tk('pre_fight')}</summary>${options.map(key => `<label class="inv-edit-row"><input id="${ID}-option-${key}" type="checkbox">${tk(key)}</label>`).join('')}${select('enemyWeapon', ['other', 'enemy_sword', 'enemy_spear'])}</details><details id="${ID}-assignments"><summary>${tk('assign')}</summary><div id="${ID}-assignments-list"></div></details>${button('start')}<div id="${ID}-status" class="bsim-status"></div><label class="inv-edit-row">${tk('target')}<select id="${ID}-target" class="inv-edit-input"></select></label><div class="bsim-btn-row">${button('initiative')}${button('roll')}${button('friendly')}${button('bribe')}${button('sleeping_rex')}${button('leave')}</div>${select('spell', spells)}<div class="bsim-btn-row">${button('cast')}${button('weakening')}${button('gnurlbash_button')}</div>${inputs(['tooth_count'])}${button('teeth')}${select('healing', ['potions', 'salves'])}<div class="bsim-btn-row">${button('heal')}${button('exchange')}${button('sleep')}${button('dream_again')}</div>${select('cure_type', ['antidotes', 'eggSpinach', 'quinine', 'malariaSupplies'])}${button('cure')}<div id="${ID}-limerick-controls"><p>${tk('limerick')}</p><div class="bsim-btn-row">${button('limerick_yes')}${button('limerick_no')}</div></div>${inputs(['destination'])}<div class="bsim-btn-row">${button('navigation')}${button('guard_challenge')}${button('escape')}${button('serpent_loss')}</div></div><p>${tk('note')}</p><p>${tk('manual')}</p></div><div class="bsim-col bsim-col-right"><details class="bsim-history"><summary>${tk('history')}</summary><div id="${ID}-history" class="bsim-history-list"></div></details><div id="${ID}-log" class="bsim-log"></div></div></div></div>`;
   document.body.appendChild(overlay);
+  customSetup = createGrailOpponentSetup({document, id: ID, t, tk, encounters: VOYAGE_ENCOUNTERS,
+    getRun: currentPlaythrough, getData: data, labels: {hit: 'companion_hit', bonus: 'companion_bonus'}});
   el('weapon').closest('label').insertAdjacentHTML('afterend', select('shape', ['human', 'beetle', 'pig']));
   el('status').insertAdjacentHTML('afterend', `<div id="${ID}-combat-stats"><div class="bsim-side-title">${tk('combat_stats')}</div>${inputs(['combatHit', 'combatBonus', 'combatArmour'])}<p id="${ID}-protected-blows"></p></div>`);
   for (const key of ['combatHit', 'combatBonus', 'combatArmour']) el(key).readOnly = true;
@@ -137,7 +142,7 @@ export function initSim529() {
     settings.enemyWeapon = el('enemyWeapon').value.replace('enemy_', '');
     if (Number(el('encounter').value) === 113) settings.assignments = Array.from(el('assignments-list').querySelectorAll('select'), input => Number(input.value));
     const section = el('encounter').value;
-    const apply = d => { const next = rules.createVoyageFight(section, character(d), settings);
+    const apply = d => { const next = rules.createVoyageFight(section, character(d), customSetup.settings(d, settings, section));
       record(d); d.fight = next; d.dreamAgain = d.limerick = false; logEvents(d); };
     if (active(data() ?? {})) confirm(tk('replace_fight'), apply); else action(apply);
   });

@@ -1,3 +1,5 @@
+import { customThresholdEncounter } from './threshold-opponents.js';
+
 export const KINGSPORT_FLAGS = ['agile', 'survivor', 'resolved', 'fighter', 'tough', 'cautious', 'arachnophobia'];
 export const KINGSPORT_PROFILES = {
   jacqueline: { willpower: 5, intellect: 3, combat: 2, health: 6, sanity: 9 },
@@ -39,9 +41,10 @@ export function createKingsportCharacter(profile) {
     ...Object.fromEntries(KINGSPORT_FLAGS.map(key => [key, false])),
     agile: profile === 'jacqueline', cautious: profile === 'lola' };
 }
-export function createKingsportFight(section, player) {
+export function createKingsportFight(section, player, options = {}) {
   validate(player);
-  const spec = KINGSPORT_ENCOUNTERS.find(e => e.section === Number(section));
+  const spec = KINGSPORT_ENCOUNTERS.find(e => e.section === Number(section))
+    ?? customThresholdEncounter(KINGSPORT_ENCOUNTERS, section, options.opponents, 'kingsport');
   if (!spec) throw new RangeError('Invalid encounter');
   return { spec: structuredClone(spec), player: structuredClone(player), rounds: [], status: 'fighting', recorded: false };
 }
@@ -78,6 +81,7 @@ export function rollKingsportRound(fight, { resource = false, card = '' } = {}, 
   if (rule.penalty.some(k => next[k])) modifier--;
   if (index && fight.rounds[index - 1].success) modifier += rule.momentum;
   if (resource) modifier += 2;
+  modifier += spec.manualModifier ?? 0;
   const total = dice[0] + dice[1] + modifier, success = !darkFuture && total >= rule.target;
   Object.assign(p, next);
   const result = { round: index + 1, dice, modifier, total, threshold: rule.target, success, darkFuture, crisis, card };
@@ -85,7 +89,8 @@ export function rollKingsportRound(fight, { resource = false, card = '' } = {}, 
   if (fight.rounds.length === spec.rounds.length) {
     const wins = fight.rounds.filter(r => r.success).length;
     fight.destination = spec.outcomes[spec.countWins ? wins : Number(success)];
-    fight.status = fight.destination == null ? 'unresolved' : (spec.countWins ? wins >= Math.ceil(spec.rounds.length / 2) : success) ? 'win' : 'loss';
+    const won = spec.countWins ? wins >= (spec.custom ? spec.wins : Math.ceil(spec.rounds.length / 2)) : success;
+    fight.status = !spec.custom && fight.destination == null ? 'unresolved' : won ? 'win' : 'loss';
   }
   return result;
 }

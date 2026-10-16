@@ -1,3 +1,4 @@
+import { customFightingEncounter } from '../../engines/fighting-fantasy/opponents.js';
 import { ARROW_LIMIT, ENCOUNTERS, INITIAL_GOLD, INITIAL_PROVISIONS, RULES_REVISION } from './definition.js';
 
 const clone = value => structuredClone(value);
@@ -145,7 +146,7 @@ function complete(fight) {
 
 export function startFight(section, character, options = {}, roll) {
   validateCharacter(character, true);
-  const original = ENCOUNTERS.find(item => item.section === section);
+  const original = ENCOUNTERS.find(item => item.section === section) ?? customFightingEncounter(section, options.opponents);
   if (!original) throw new RangeError('Unknown encounter');
   if ((original.entryCost || original.summonGoblins) && character.role !== 'wizard') throw new RangeError('Only a wizard can cast spells');
   const config = clone(original), player = clone(character);

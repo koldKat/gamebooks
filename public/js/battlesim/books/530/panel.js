@@ -1,9 +1,11 @@
 import { ID, fields, supplies, flags, options } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
+import { createGrailOpponentSetup } from '../../engines/grailquest/setup.js';
+let customSetup;
 
 // BEGIN SIMULATOR WIRING
-const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, ID, KINGDOM_ENCOUNTERS, KINGDOM_MAGIC_STOCK, KINGDOM_STORY_MAGIC, action, active, castItems, character, close, confirm, currentBookId, currentPlaythrough, data, el, escapeHtml, fields, flags, getPlayBtnRow, initSim530, label, magic, magicItems, open, options, record, registerPanelShortcut, renderSim530, replace, rules, saveState, setSim530Visible, shortcutLabel, showAlert, showConfirm, supplies, t, tk, travel, update });
+const simulatorContext = () => ({ customSetup, ALL_PANEL_OVERLAY_IDS, ID, KINGDOM_ENCOUNTERS, KINGDOM_MAGIC_STOCK, KINGDOM_STORY_MAGIC, action, active, castItems, character, close, confirm, currentBookId, currentPlaythrough, data, el, escapeHtml, fields, flags, getPlayBtnRow, initSim530, label, magic, magicItems, open, options, record, registerPanelShortcut, renderSim530, replace, rules, saveState, setSim530Visible, shortcutLabel, showAlert, showConfirm, supplies, t, tk, travel, update });
 const { data } = createState(simulatorContext);
 const { label, record, update, action, confirm, replace } = createCombat(simulatorContext);
 // END SIMULATOR WIRING
@@ -35,6 +37,7 @@ function open() {
 export function renderSim530() {
   if (!el('overlay')) return;
   const d = data(); if (!d) { close(); return; }
+  customSetup?.render();
   const p = character(d), f = d.fight, fighting = active(d);
   for (const key of [...fields, ...supplies]) {
     if (document.activeElement !== el(key)) el(key).value = p[key];
@@ -124,6 +127,8 @@ export function initSim530() {
     <details><summary>${tk('city_checks')}</summary><div class="bsim-btn-row">${button('city_patrol')}${button('city_fine')}${button('city_court')}${button('constable_court')}</div><p>${tk('patrol_note')}</p></details></div><p>${tk('note')}</p><p>${tk('manual')}</p></div>
     <div class="bsim-col bsim-col-right"><details class="bsim-history"><summary>${tk('history')}</summary><div id="${ID}-history" class="bsim-history-list"></div></details><div id="${ID}-log" class="bsim-log"></div></div></div></div>`;
   document.body.appendChild(overlay);
+  customSetup = createGrailOpponentSetup({document, id: ID, t, tk, encounters: KINGDOM_ENCOUNTERS,
+    getRun: currentPlaythrough, getData: data, labels: {hit: 'combatHit', bonus: 'combatBonus'}});
   for (const key of ['combatHit', 'combatBonus', 'combatArmour']) el(key).readOnly = true;
   el('magic_targets').value = 1;
   const btn = document.createElement('button'); btn.id = `${ID}-btn`; btn.innerHTML = shortcutLabel(t('battlesim.title')); btn.style.display = 'none';
@@ -161,7 +166,8 @@ export function initSim530() {
   el('start').addEventListener('click', () => {
     const settings = Object.fromEntries(options.map(key => [key, el('option-' + key).checked]));
     settings.invisibility = data()?.invisibility;
-    const apply = d => { record(d); d.fight = rules.startKingdomFight(character(d), Number(el('encounter').value), settings); d.loggedEvents = 0; d.invisibility = null; d.dream = d.merlin = null; };
+    const apply = d => { const next = rules.startKingdomFight(character(d), Number(el('encounter').value), customSetup.settings(d, settings));
+      record(d); d.fight = next; d.loggedEvents = 0; d.invisibility = null; d.dream = d.merlin = null; };
     if (active(data() ?? {})) confirm(tk('replace_fight'), apply); else action(apply);
   });
   const combat = (key, apply) => el(key).addEventListener('click', () => action(d => { if (active(d)) apply(d.fight, Number(el('target').value)); }));

@@ -1,3 +1,4 @@
+import { customGrailEncounter } from './opponents.js';
 import { DEN_ENCOUNTERS, DEN_DREAM_FIGHTS } from './den-of-dragons-roster.js';
 
 const die = random => 1 + Math.floor(random() * 6);
@@ -53,7 +54,8 @@ function settle(fight) {
 }
 
 export function createDenFight(section, player, options = {}, random = Math.random) {
-  const spec = [...DEN_ENCOUNTERS, ...DEN_DREAM_FIGHTS].find(spec => String(spec.section) === String(section));
+  const spec = [...DEN_ENCOUNTERS, ...DEN_DREAM_FIGHTS].find(spec => String(spec.section) === String(section))
+    ?? customGrailEncounter(section, options.opponents);
   if (!spec) throw new RangeError('Unknown encounter');
   if (!integer(player.life, 1) || !integer(player.maxLife, player.life) || !integer(player.hit, 2) || player.hit > 12 || !integer(player.bonus) || !integer(player.armour)) throw new RangeError('Invalid character');
   const p = copy(player);
@@ -61,7 +63,8 @@ export function createDenFight(section, player, options = {}, random = Math.rand
     playerLoss: 0, enemyLoss: 0, nextBonus: spec.dream ? 0 : p.pendingWallop ?? 0,
     magicArmour: spec.dream ? 0 : p.magicArmour ?? 0, repeat: false,
     events: [], poisonPending: false, arrows: spec.arrows ?? 0, openingTargets: 1,
-    foes: Array.from({ length: spec.count }, (_, index) => ({ name: spec.name, life: spec.life, maxLife: spec.life, consecutiveHits: 0, successfulHits: 0, attacks: 0, skip: 0, index })) };
+    foes: (spec.custom ? spec.enemies : Array.from({length: spec.count}, () => ({name: spec.name, life: spec.life})))
+      .map((enemy, index) => ({...copy(enemy), maxLife: enemy.life, consecutiveHits: 0, successfulHits: 0, attacks: 0, skip: 0, index})) };
   if (spec.magicChallenge && ['pad', 'pow'].every(spell => (p.spellUses[spell] ?? 0) >= 3)) p.life = 0;
   if (spec.entryDamage) { p.life = Math.max(0, p.life - spec.entryDamage); fight.playerLoss += spec.entryDamage; }
   if (spec.dreamInitiative) fight.first = dice(random) <= 6 ? 'enemy' : 'player';
@@ -108,10 +111,10 @@ function enemyTurn(fight, random) {
     foe.attacks++;
     const roll = spec.automaticDamage ? null : dice(random);
     const invisible = fight.player.invisible && !spec.dream;
-    const threshold = invisible && spec.invisibleHit ? spec.invisibleHit : spec.hit;
+    const threshold = invisible && spec.invisibleHit ? spec.invisibleHit : foe.hit ?? spec.hit;
     const hit = spec.automaticDamage ? true : roll >= threshold;
     if (hit) foe.successfulHits++;
-    const bonus = hit && spec.fireEvery && foe.successfulHits % spec.fireEvery === 0 ? spec.fireBonus : spec.bonus;
+    const bonus = hit && spec.fireEvery && foe.successfulHits % spec.fireEvery === 0 ? spec.fireBonus : foe.bonus ?? spec.bonus;
     const playerArmour = spec.playerArmour ?? (spec.dream ? 0 : fight.player.armour);
     const damage = spec.automaticDamage ?? denDamage(roll, threshold, bonus, playerArmour + fight.magicArmour);
     foe.consecutiveHits = hit ? foe.consecutiveHits + 1 : 0;
@@ -140,7 +143,7 @@ function playerTurn(fight, target, random) {
       const arrow = spec.arrows && fight.arrows > 0;
       const threshold = arrow ? 7 : spec.playerHit ?? (spec.unarmed || spec.dream ? 6 : fight.player.hit);
       const hit = roll >= threshold;
-      const armour = spec.magicWeaponArmour ?? spec.armour;
+      const armour = spec.magicWeaponArmour ?? foe.armour ?? spec.armour;
       const bonus = spec.playerBonus ?? (spec.unarmed || spec.dream ? 0 : spec.dragon && fight.player.dragonEJ ? 10 : fight.player.bonus);
       const immune = spec.magicOnly || spec.magicWeaponArmour !== undefined && !fight.player.magicalWeapon;
       const damage = immune ? 0 : arrow ? (hit ? 10 : 0) : denDamage(roll, threshold, bonus + fight.nextBonus, armour);

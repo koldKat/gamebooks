@@ -1,4 +1,5 @@
 import { ARCS, SHIPS, PIRATES, RULE_VERSION, TACTICS, SHOT_LIMITS } from './definition.js';
+import { validateOpponents } from '../../opponents.js';
 
 const numeric = value => Number.isFinite(value) && value >= 0 && value <= 1000000;
 const event = (fight, value) => { fight.events.push({ section: fight.section, ...value }); fight.events = fight.events.slice(-120); };
@@ -72,11 +73,17 @@ function casualties(fight, amount) {
   event(fight, { kind: 'casualties', amount: loss });
 }
 
-export function startFight(player) {
+export function startFight(player, options = {}) {
   validateShip(player);
   if (!player.durability) throw new RangeError('A sunk ship cannot fight');
+  const pirates = structuredClone(PIRATES);
+  if (options.opponents) {
+    if (options.opponents.length !== 2) throw new RangeError('Two opposing ships are required');
+    const enemies = validateOpponents(options.opponents, [{key: 'durability', min: 1}]);
+    for (const [index, key] of ['A', 'B'].entries()) pirates[key] = {durability: enemies[index].durability, name: enemies[index].displayName};
+  }
   return enter({ ruleVersion: RULE_VERSION, player: structuredClone(player),
-    pirates: structuredClone(PIRATES), distances: { A: 6, B: 6 }, attackers: [],
+    pirates, distances: { A: 6, B: 6 }, attackers: [],
     ignoreCasualties: false, virtualTroops: null, events: [], outcome: null }, 95);
 }
 

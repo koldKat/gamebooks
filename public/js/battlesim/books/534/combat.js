@@ -34,12 +34,12 @@ function record(d) {
   const f = d.fight;
   if (!f || !['win', 'loss'].includes(f.outcome) || hasNext(d) || f.recorded) return;
   f.recorded = true;
-  d.history.push({ enemy: `${enemyLabel(d.prepared.encounter)} (${label(d.prepared.encounter.section)})`, outcome: f.outcome,
+    d.history.push({ enemy: d.prepared.encounter.custom ? d.prepared.encounter.name : `${enemyLabel(d.prepared.encounter)} (${label(d.prepared.encounter.section)})`, outcome: f.outcome,
     ts: Math.max(Date.now(), (d.history.at(-1)?.ts ?? 0) + 1) });
 }
 
 function start() {
-  const { FIRE_WOLF_ATTRIBUTES, active, append, character, createFireWolfEncounterDuel, createFireWolfManualGroup, data, el, enterFireWolfMagicSection, hasNext, label, prepareFireWolfEncounter, showAlert, store, switches, tk } = getContext();
+  const { FIRE_WOLF_ATTRIBUTES, active, append, character, createFireWolfEncounterDuel, createFireWolfManualGroup, customSetup, data, el, enterFireWolfMagicSection, hasNext, label, prepareFireWolfEncounter, showAlert, store, switches, tk } = getContext();
 
   const d = data(); if (!d || active(d) || hasNext(d)) return;
   try {
@@ -49,9 +49,9 @@ function start() {
     }
     const p = { ...character(d) };
     if (d.magic?.section !== el('encounter').value) p.magicArmour = 0;
-    d.prepared = prepareFireWolfEncounter(el('encounter').value, p, {
+    d.prepared = prepareFireWolfEncounter(el('encounter').value, p, customSetup?.settings(d, {
       illusion, ...Object.fromEntries(switches.map(key => [key, el(key).checked])),
-    });
+    }));
     d.opponent = 0;
     d.fight = d.prepared.encounter.manualGroup ? createFireWolfManualGroup(d.prepared) : createFireWolfEncounterDuel(d.prepared);
     const previousMagic = d.magic;

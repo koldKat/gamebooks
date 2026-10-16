@@ -4,6 +4,7 @@ import { LEGION_ENCOUNTERS, LEGION_DREAMS, LEGION_EQUIPMENT }
 const labels = {
   title:'Battle Simulator - Legion of the Dead',character:'Pip',
   life:'LIFE',maxLife:'Starting LIFE',armour:'Armour',permanent:'Permanent LIFE',
+  hit:'Hit on',bonus:'Damage bonus',
   experience:'Book experience',gold:'Book gold',weapon:'Weapon',ej:'EJ',unarmed:'Unarmed',leek:'Magic leek',
   supplies:'Supplies and found items',equipment:'Starting equipment (choose up to six)',
   bolts:'Firefinger bolts',fireballs:'Fireballs',cubeUses:'Ivory cube uses',waterUses:'Pool water doses',

@@ -1,4 +1,5 @@
 import { SAMURAI_FIGHTS } from './roster.js';
+import { customFightingEncounter } from '../fighting-fantasy/opponents.js';
 import { validateSamuraiCharacter, testSamuraiLuck, fireSamuraiArrow } from './character.js';
 
 const clone = value => structuredClone(value);
@@ -74,7 +75,8 @@ function finishRound(fight) {
 
 export function startSamuraiFight(section, input, options = {}, roll) {
   validateSamuraiCharacter(input, true);
-  const spec = SAMURAI_FIGHTS.find(item => item.section === section);
+  const spec = SAMURAI_FIGHTS.find(item => item.section === section) ?? customFightingEncounter(section, options.opponents);
+  if (spec?.custom) spec.mode = 'sequential';
   if (!spec || !options || typeof options !== 'object' || Array.isArray(options)) throw new RangeError('Invalid encounter');
   const { applyEntry = true, preArrows = [], carryFrom = null, continuationStamina = null,
     playerModifier = 0, enemyModifier = 0, incomingDamage = null, acrobatics = true,

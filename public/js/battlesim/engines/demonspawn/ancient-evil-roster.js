@@ -1,3 +1,4 @@
+import { prepareCustomDemonEncounter } from './opponents.js';
 const keys = ['strength', 'speed', 'stamina', 'courage', 'skill', 'luck', 'charm', 'attraction', 'lifePoints'];
 const profile = (name, values, weapon, armour = 'none') => Object.freeze({ name,
   ...Object.fromEntries(keys.map((key, i) => [key, values[i]])), maxLife: values[8], weapon, armour });
@@ -64,6 +65,8 @@ export const ANCIENT_EVIL_ENCOUNTERS = Object.freeze([
 ]);
 
 export function prepareAncientEvilEncounter(section, player, options = {}) {
+  const custom = prepareCustomDemonEncounter(section, player, options.opponents);
+  if (custom) return custom;
   const encounter = ANCIENT_EVIL_ENCOUNTERS.find(e => e.section === String(section));
   if (!encounter) throw new Error('Unknown Ancient Evil encounter');
   const preparedPlayer = structuredClone(player);

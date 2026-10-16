@@ -1,5 +1,12 @@
 // Shared simulator labels remain available before a simulator is opened.
 export default {
+    'battlesim.threshold.roundsCount': 'Rounds (2-4)',
+    'battlesim.threshold.threshold1': 'Round 1 target',
+    'battlesim.threshold.threshold2': 'Round 2 target',
+    'battlesim.threshold.threshold3': 'Round 3 target',
+    'battlesim.threshold.threshold4': 'Round 4 target',
+    'battlesim.threshold.winsRequired': 'Required wins (0: final round)',
+    'battlesim.threshold.modifier': 'Additional roll modifier',
     'battlesim.editor.opponents': 'Opponents',
     'battlesim.editor.name': 'Opponent',
     'battlesim.editor.add': 'Add opponent',

@@ -1,10 +1,13 @@
+import { createDemonOpponentSetup } from '../../engines/demonspawn/setup.js';
+import { FIRE_WOLF_ROSTER } from '../../engines/demonspawn/fire-wolf-roster.js';
+let customSetup;
 import { ID, switches } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
 import { createEffects } from './effects.js';
 
 // BEGIN SIMULATOR WIRING
-const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, FIRE_WOLF_ATTRIBUTES, FIRE_WOLF_ENCOUNTERS, FIRE_WOLF_REGENT_SPELLS, FIRE_WOLF_SPELLS, ID, act, active, advanceFireWolfManualRound, append, button, cast, castFireWolfRegentSpell, castFireWolfSpell, character, checkFireWolfOutcome, close, createFireWolfEncounterDuel, createFireWolfManualGroup, currentBookId, currentPlaythrough, data, el, enemyLabel, enterFireWolfMagicSection, escapeHtml, field, fields, getPlayBtnRow, hasNext, healFireWolfWithStone, initSim534, label, next, open, prepareFireWolfEncounter, record, regentSpell, registerPanelShortcut, renderSim534, resolveFireWolfDeathLuck, resolveFireWolfInitiative, rollFireWolfAttack, rollFireWolfCharacter, rollFireWolfManualAttack, saveState, setSim534Visible, shortcutLabel, showAlert, showConfirm, start, store, switches, t, throwFireWolfOrb, tk, toggle, tryFireWolfCharm, tryFireWolfLightbringer, useFireWolfBluePowder });
+const simulatorContext = () => ({ customSetup, ALL_PANEL_OVERLAY_IDS, FIRE_WOLF_ATTRIBUTES, FIRE_WOLF_ENCOUNTERS, FIRE_WOLF_REGENT_SPELLS, FIRE_WOLF_SPELLS, ID, act, active, advanceFireWolfManualRound, append, button, cast, castFireWolfRegentSpell, castFireWolfSpell, character, checkFireWolfOutcome, close, createFireWolfEncounterDuel, createFireWolfManualGroup, currentBookId, currentPlaythrough, data, el, enemyLabel, enterFireWolfMagicSection, escapeHtml, field, fields, getPlayBtnRow, hasNext, healFireWolfWithStone, initSim534, label, next, open, prepareFireWolfEncounter, record, regentSpell, registerPanelShortcut, renderSim534, resolveFireWolfDeathLuck, resolveFireWolfInitiative, rollFireWolfAttack, rollFireWolfCharacter, rollFireWolfManualAttack, saveState, setSim534Visible, shortcutLabel, showAlert, showConfirm, start, store, switches, t, throwFireWolfOrb, tk, toggle, tryFireWolfCharm, tryFireWolfLightbringer, useFireWolfBluePowder });
 const { data } = createState(simulatorContext);
 const { character, active, store, label, enemyLabel, append, hasNext, record, start, next, act } = createCombat(simulatorContext);
 const { cast, regentSpell } = createEffects(simulatorContext);
@@ -35,6 +38,7 @@ function open() {
 export function renderSim534() {
   if (!el('overlay')) return;
   const d = data(); if (!d) { close(); return; }
+  customSetup?.render();
   const f = d.fight, p = character(d), pending = Boolean(f?.pending), fighting = Boolean(active(d));
   for (const key of fields) {
     if (document.activeElement !== el(key)) el(key).value = p[key] ?? 0;
@@ -112,6 +116,7 @@ export function initSim534() {
     <div class="bsim-col bsim-col-right"><details class="bsim-history"><summary>${tk('history')}</summary><div id="${ID}-history" class="bsim-history-list"></div></details>
     <div id="${ID}-log" class="bsim-log"></div></div></div></div>`;
   document.body.appendChild(overlay);
+  customSetup = createDemonOpponentSetup({document, id: ID, t, tk, roster: FIRE_WOLF_ROSTER, getRun: currentPlaythrough, getData: data});
   const btn = document.createElement('button'); btn.id = `${ID}-btn`; btn.innerHTML = shortcutLabel(t('battlesim.title')); btn.style.display = 'none';
   getPlayBtnRow().appendChild(btn); btn.addEventListener('click', open); el('close').addEventListener('click', close);
   let backdropDown = false;

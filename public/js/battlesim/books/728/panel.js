@@ -1,4 +1,4 @@
-import { definition, SHIPS, ARCS, DIAGRAMS, TACTICS, SHOT_LIMITS } from './definition.js';
+import { definition, SHIPS, ARCS, DIAGRAMS, TACTICS, SHOT_LIMITS, PIRATES } from './definition.js';
 import * as combat from './combat.js';
 import { createState } from './state.js';
 import { currentBookId, currentPlaythrough, saveState, apiFetch } from '../../../core/state.js';
@@ -6,6 +6,7 @@ import { getPlayBtnRow } from '../../../play/charsheet.js';
 import { showAlert, showConfirm } from '../../../ui-helpers/confirm.js';
 import { registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../../../core/util.js';
 import { t } from '../../../i18n.js';
+import { createOpponentEditor } from '../../opponents.js';
 
 const ID = definition.stateKey;
 const NUMBERS = ['speed', 'manoeuvre', 'durability', 'ammo', 'soldiers'];
@@ -18,7 +19,7 @@ export function createGalleonPanel({ document, t, getRun, getBookId, saveState, 
   const button = (key, attributes = '') => `<button type="button" class="inv-add-btn bsim-action-btn" ${attributes}>${escape(tk(key))}</button>`;
   const input = (key, min = 0, step = 'any') => `<label class="inv-edit-row"><span>${escape(tk(key))}</span><input class="inv-edit-input" id="${ID}-${key}" type="number" min="${min}" max="1000000" step="${step}" required></label>`;
   const select = (key, values) => `<label class="inv-edit-row"><span>${escape(tk(key))}</span><select class="inv-edit-input" id="${ID}-${key}">${values.map(value => `<option value="${escape(value)}">${escape(tk(key + '.' + value))}</option>`).join('')}</select></label>`;
-  let shownRun, rendered, shownSection, imageAccess, imageGeneration = 0;
+  let shownRun, rendered, shownSection, imageAccess, imageGeneration = 0, opponents, editorRun;
   const busy = fight => Boolean(fight && !fight.outcome);
 
   function number(key) {
@@ -60,6 +61,11 @@ export function createGalleonPanel({ document, t, getRun, getBookId, saveState, 
     if (Number(getBookId()) !== definition.id || !getRun() || getRun() !== shownRun) { close(); return; }
     const data = store.read();
     if (!data || !force && data === rendered) return;
+    if (editorRun !== getRun()) {
+      editorRun = getRun();
+      opponents.set(data.opponentSetup ?? Object.entries(PIRATES).map(([key, enemy]) => ({...enemy, displayName: tk('target.' + key)})));
+    }
+    opponents.lock(busy(data.fight));
     rendered = data;
     const fight = data.fight, locked = busy(fight), player = fight?.player ?? data.character ?? combat.newShip();
     for (const key of NUMBERS) { el(key).value = player[key]; el(key).disabled = locked; }
@@ -87,7 +93,7 @@ export function createGalleonPanel({ document, t, getRun, getBookId, saveState, 
       el('diagram').alt = tk('diagramAlt', { section: fight.section });
     }
     el('pirates').textContent = fight ? ['A', 'B'].map(target => tk('pirateLine', {
-      target, durability: fight.pirates[target].durability, distance: fight.distances[target],
+      target: fight.pirates[target].name || target, durability: fight.pirates[target].durability, distance: fight.distances[target],
     })).join('\n') : '';
     el('notice').textContent = '';
     if (locked) {
@@ -123,6 +129,10 @@ export function createGalleonPanel({ document, t, getRun, getBookId, saveState, 
     overlay.id = ID + '-overlay'; overlay.className = 'inv-overlay';
     overlay.innerHTML = `<div class="inv-modal bsim-modal bsim-compact-form" role="dialog" aria-modal="true" aria-labelledby="${ID}-title"><div class="inv-modal-hdr"><span class="inv-modal-title" id="${ID}-title">${escape(tk('title'))}</span><button type="button" class="inv-close-btn" id="${ID}-close" aria-label="${escape(t('btn.close'))}">&times;</button></div><div class="bsim-body"><div class="bsim-col bsim-col-left"><p>${escape(tk('note'))}</p><div class="bsim-side"><div class="bsim-side-title">${escape(tk('ship'))}</div>${select('size', Object.keys(SHIPS))}${button('preset', `id="${ID}-preset"`)}${NUMBERS.map(key => input(key, 0, key === 'ammo' ? '1' : 'any')).join('')}${select('soldierType', ['professional', 'mercenary'])}${select('weapons', ['full', 'partial', 'none'])}<label class="bsim-checkbox"><input type="checkbox" id="${ID}-seaWolves">${escape(tk('seaWolves'))}</label></div><div class="bsim-btn-row">${button('start', `id="${ID}-start"`)}${button('cancel', `id="${ID}-cancel"`)}</div><div class="bsim-status" id="${ID}-status" role="status" aria-live="polite"></div><div class="bsim-status" id="${ID}-pirates"></div><p id="${ID}-notice"></p><div id="${ID}-firing">${select('target', ['A', 'B'])}${select('arc', ['', ...Object.keys(ARCS)])}${button('fire', `id="${ID}-fire"`)}</div><div class="bsim-btn-row" id="${ID}-actions"></div><details id="${ID}-manual"><summary>${escape(tk('manualDistances'))}</summary><p>${escape(tk('manualNote'))}</p>${input('distanceA', 1)}${input('distanceB', 1)}${button('applyDistances', `id="${ID}-applyDistances"`)}</details></div><div class="bsim-col bsim-col-right"><img class="bsim-galleon-diagram" id="${ID}-diagram" alt="" hidden><details class="bsim-history"><summary>${escape(tk('history'))}</summary><div class="bsim-history-list" id="${ID}-history"></div></details><div class="bsim-log" id="${ID}-log"></div></div></div></div>`;
     document.body.appendChild(overlay);
+    opponents = createOpponentEditor({document, id: ID, t, language: 'bg',
+      fields: [{key: 'durability', label: tk('durability'), min: 1}],
+      presets: Object.entries(PIRATES).map(([key, enemy]) => ({...enemy, displayName: tk('target.' + key)}))});
+    opponents.fixCount(true); el('start').parentElement.before(opponents.element);
     const trigger = document.createElement('button'); trigger.id = ID + '-btn'; trigger.style.display = 'none'; trigger.textContent = t('battlesim.title');
     getButtonRow().appendChild(trigger); trigger.addEventListener('click', open);
     el('close').addEventListener('click', close);
@@ -137,7 +147,9 @@ export function createGalleonPanel({ document, t, getRun, getBookId, saveState, 
     });
     el('start').addEventListener('click', () => action(data => {
       if (busy(data.fight)) return;
-      data.encounterName = tk('encounter'); data.fight = combat.startFight(ship());
+      const enemies = opponents.read(); data.opponentSetup = opponents.snapshot();
+      data.encounterName = enemies.map(enemy => enemy.displayName).filter(Boolean).join(' / ') || tk('encounter');
+      data.fight = combat.startFight(ship(), {opponents: enemies});
     }));
     el('cancel').addEventListener('click', () => confirmed('cancelConfirm', data => {
       if (busy(data.fight)) data.fight.outcome = 'cancelled';

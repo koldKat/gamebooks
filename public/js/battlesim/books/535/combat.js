@@ -16,7 +16,7 @@ function record(d) {
   const f=d.fight;
   if (!f||f.recorded||!['win','loss'].includes(f.outcome)) return;
   f.recorded=true;
-  d.history.push({enemy:`${[...new Set(f.encounter.enemies)].join(', ')} (${tk('section',{section:f.encounter.section})})`,outcome:f.outcome,
+  d.history.push({enemy:f.encounter.custom?f.encounter.name:`${[...new Set(f.encounter.enemies)].join(', ')} (${tk('section',{section:f.encounter.section})})`,outcome:f.outcome,
     ts:Math.max(Date.now(),(d.history.at(-1)?.ts??0)+1)});
 }
 
@@ -25,13 +25,13 @@ function store(d) {
 record(d);saveState();renderSim535();}
 
 function start() {
-  const { FIRE_WOLF_ATTRIBUTES, active, append, character, createCryptsFight, createCryptsMagicSection, data, el, prepareCryptsEncounter, showAlert, store, tk } = getContext();
+  const { FIRE_WOLF_ATTRIBUTES, active, append, character, createCryptsFight, createCryptsMagicSection, customSetup, data, el, prepareCryptsEncounter, showAlert, store, tk } = getContext();
 
   const d=data();if (!d||active(d)||character(d).lifePoints<=0) return;
   try {
     const manual=Object.fromEntries([...FIRE_WOLF_ATTRIBUTES,'skill','lifePoints','power'].map(key=>
       [key,el(`manual-${key}`).value===''?null:Number(el(`manual-${key}`).value)]));
-    const prepared=prepareCryptsEncounter(el('encounter').value,character(d),{...d.nextOptions,manual});
+    const prepared=prepareCryptsEncounter(el('encounter').value,character(d),customSetup?.settings(d,{...d.nextOptions,manual})??{...d.nextOptions,manual});
     d.fight=createCryptsFight(prepared);
     if (d.magic?.section!==String(prepared.encounter.section)) {
       d.magic=createCryptsMagicSection(prepared.encounter.section,d.fight.player,d.fight.enemies);

@@ -2,7 +2,8 @@
 export function createCombat(getContext) {
 // BEGIN EXTRACTED RULES
 function label(id) {
-  const { tk } = getContext();
+  const { tk, data, t } = getContext();
+  if (String(id) === '0' || String(id).startsWith('custom:')) return data()?.fight?.spec.name ?? t('battlesim.editor.custom');
 
   const enemy = tk(`enemy_names.${id}`);
   return String(id).startsWith('dream') ? tk('dream_label', { enemy, number: String(id).slice(5) })
@@ -17,7 +18,7 @@ function record(d) {
   if (f.status === 'loss' && f.player.life === 0 && f.player.resurrectionCharged
     && f.player.magic.resurrectionWand > 0 && !f.resurrectionDeclined) return;
   f.recorded = true;
-  d.history.push({ enemy: label(f.spec.id), outcome: f.status === 'win' ? 'win' : 'loss',
+  d.history.push({ enemy: f.spec.custom ? f.spec.name : label(f.spec.id), outcome: f.status === 'win' ? 'win' : 'loss',
     ts: Math.max(Date.now(), (d.history.at(-1)?.ts ?? 0) + 1) });
 }
 

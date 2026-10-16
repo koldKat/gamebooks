@@ -1,10 +1,13 @@
+import { createDemonOpponentSetup } from '../../engines/demonspawn/setup.js';
+import { CRYPTS_ROSTER } from '../../engines/demonspawn/crypts-of-terror-roster.js';
+let customSetup;
 import { ID, options, actions } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
 import { createEffects } from './effects.js';
 
 // BEGIN SIMULATOR WIRING
-const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, CRYPTS_ENCOUNTERS, FIRE_WOLF_ATTRIBUTES, FIRE_WOLF_SPELLS, FIRE_WOLF_WEAPONS, ID, act, actions, active, advanceCryptsRound, append, applyCryptsWightHit, button, cast, castCryptsEnemySpell, castCryptsPlayerSpell, character, checkCryptsOutcome, close, createCryptsFight, createCryptsMagicSection, cryptsEnemyActive, currentBookId, currentPlaythrough, data, el, escapeHtml, field, fields, getPlayBtnRow, initSim535, open, options, prepareCryptsEncounter, record, registerPanelShortcut, renderSim535, resolveCryptsDeathLuck, resolveFireWolfInitiative, resultLog, rollCharacter, rollCryptsAttack, rollCryptsCharacter, saveState, setSim535Visible, shortcutLabel, showAlert, showConfirm, start, store, t, target, tk, toggle, tryCryptsOrb, useCryptsRosewoodBox, useCryptsWand });
+const simulatorContext = () => ({ customSetup, ALL_PANEL_OVERLAY_IDS, CRYPTS_ENCOUNTERS, FIRE_WOLF_ATTRIBUTES, FIRE_WOLF_SPELLS, FIRE_WOLF_WEAPONS, ID, act, actions, active, advanceCryptsRound, append, applyCryptsWightHit, button, cast, castCryptsEnemySpell, castCryptsPlayerSpell, character, checkCryptsOutcome, close, createCryptsFight, createCryptsMagicSection, cryptsEnemyActive, currentBookId, currentPlaythrough, data, el, escapeHtml, field, fields, getPlayBtnRow, initSim535, open, options, prepareCryptsEncounter, record, registerPanelShortcut, renderSim535, resolveCryptsDeathLuck, resolveFireWolfInitiative, resultLog, rollCharacter, rollCryptsAttack, rollCryptsCharacter, saveState, setSim535Visible, shortcutLabel, showAlert, showConfirm, start, store, t, target, tk, toggle, tryCryptsOrb, useCryptsRosewoodBox, useCryptsWand });
 const { data } = createState(simulatorContext);
 const { character, active, append, record, store, start, target, resultLog, act } = createCombat(simulatorContext);
 const { cast } = createEffects(simulatorContext);
@@ -43,6 +46,7 @@ function open() {
 export function renderSim535() {
   if (!el('overlay')) return;
   const d=data();if (!d) {close();return;}
+  customSetup?.render();
   const f=d.fight,p=character(d),pending=Boolean(f?.pending),fighting=active(d);
   for (const key of fields) {
     if (document.activeElement!==el(key)) el(key).value=p[key]??0;
@@ -110,6 +114,7 @@ export function initSim535() {
     ${toggle('useLife')}<label class="inv-edit-row">${tk('destination')}<input id="${ID}-destination" class="inv-edit-input"></label><label class="inv-edit-row">${tk('cryptStart')}<select id="${ID}-cryptStart" class="inv-edit-input"><option value="6">6</option><option value="74">74</option></select></label>
     ${button('cast')}${button('enemy_cast')}</div></div><div class="bsim-col bsim-col-right"><details class="bsim-history"><summary>${tk('history')}</summary><div id="${ID}-history" class="bsim-history-list"></div></details><div id="${ID}-log" class="bsim-log"></div></div></div></div>`;
   document.body.appendChild(overlay);
+  customSetup = createDemonOpponentSetup({document, id: ID, t, tk, roster: CRYPTS_ROSTER, getRun: currentPlaythrough, getData: data});
   const btn=document.createElement('button');btn.id=`${ID}-btn`;btn.innerHTML=shortcutLabel(t('battlesim.title'));btn.style.display='none';
   getPlayBtnRow().appendChild(btn);btn.addEventListener('click',open);el('close').addEventListener('click',close);
   let backdropDown=false;

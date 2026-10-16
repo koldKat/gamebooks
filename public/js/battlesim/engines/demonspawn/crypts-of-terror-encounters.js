@@ -1,3 +1,4 @@
+import { prepareCustomDemonEncounter } from './opponents.js';
 import { FIRE_WOLF_ATTRIBUTES, rollFireWolfCharacter, fireWolfNaturalLife } from './fire-wolf.js';
 import { cryptsEnemy } from './crypts-of-terror-roster.js';
 
@@ -66,6 +67,8 @@ function manualEnemy(name, values) {
 
 export function prepareCryptsEncounter(section, player, { manual = null, haroldWarning = false,
   cursedStone = false, orb = false, clementineUnarmed = false, ...options } = {}) {
+  const custom = prepareCustomDemonEncounter(section, player, options.opponents);
+  if (custom) return custom;
   const encounter = CRYPTS_ENCOUNTERS.find(e => String(e.section) === String(section));
   if (!encounter) throw new Error('Unknown Crypts of Terror encounter');
   const p = structuredClone(player);

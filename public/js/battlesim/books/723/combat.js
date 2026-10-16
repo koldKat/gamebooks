@@ -1,3 +1,4 @@
+import { customFightingEncounter } from '../../engines/fighting-fantasy/opponents.js';
 import { INITIAL_GOLD, INITIAL_PROVISIONS, RULES_REVISION, encounterFor } from './definition.js';
 
 export function integer(value, min = 0, max = 10000) {
@@ -134,7 +135,8 @@ function finish(fight, roll) {
 
 export function startFight(section, character, options = {}, roll) {
   validateCharacter(character, true);
-  const config = encounterFor(section);
+  const config = Number(section) === 0 ? customFightingEncounter(section, options.opponents) : encounterFor(section);
+  if (!config) throw new RangeError('Missing custom opponents');
   if (config.component) {
     const hasComponent = options.hasComponent ?? (config.component === 'wax' ? character.wax : config.component === 'coin' ? character.gold > 0 : undefined);
     if (typeof hasComponent !== 'boolean') throw new RangeError('Specify spell component availability');

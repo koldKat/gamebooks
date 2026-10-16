@@ -23,7 +23,7 @@ function record(d) {
   const fight=d.fight;
   if(!fight||fight.recorded||!['win','loss'].includes(fight.outcome))return;
   fight.recorded=true;
-  d.history.push({enemy:`${fight.encounter.enemy??fight.encounter.enemies.join(', ')} (${tk('section',{section:fight.encounter.section})})`,outcome:fight.outcome,ts:Math.max(Date.now(),(d.history.at(-1)?.ts??0)+1)});
+  d.history.push({enemy:fight.encounter.custom?fight.encounter.name:`${fight.encounter.enemy??fight.encounter.enemies.join(', ')} (${tk('section',{section:fight.encounter.section})})`,outcome:fight.outcome,ts:Math.max(Date.now(),(d.history.at(-1)?.ts??0)+1)});
 }
 
 function store(d){
@@ -39,11 +39,11 @@ function result(d,value) {
 }
 
 function start() {
-  const { active, append, character, createDemondoomFight, data, el, number, prepareDemondoomEncounter, showAlert, store, tk } = getContext();
+  const { active, append, character, createDemondoomFight, customSetup, data, el, number, prepareDemondoomEncounter, showAlert, store, tk } = getContext();
 
   const d=data();if(!d||active(d)||character(d).lifePoints<=0)return;
   try {
-    const prepared=prepareDemondoomEncounter(el('encounter').value,character(d),{spawnCount:number('spawnCount')});
+    const prepared=prepareDemondoomEncounter(el('encounter').value,character(d),customSetup?.settings(d,{spawnCount:number('spawnCount')})??{spawnCount:number('spawnCount')});
     prepared.player.talismanUsedAfterFight=false;
     const section=String(prepared.encounter.section);
     if(prepared.player.magicSection!==section){prepared.player.magicArmour=0;prepared.player.magicSection=section;}

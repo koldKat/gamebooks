@@ -1,10 +1,13 @@
+import { createDemonOpponentSetup } from '../../engines/demonspawn/setup.js';
+import { DEMONDOOM_ROSTER } from '../../engines/demonspawn/demondoom-roster.js';
+let customSetup;
 import { actions } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
 import { createEffects } from './effects.js';
 
 // BEGIN SIMULATOR WIRING
-const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, DEMONDOOM_ENCOUNTERS, DEMONDOOM_SPELLS, FIRE_WOLF_ATTRIBUTES, FIRE_WOLF_WEAPONS, ID, act, actions, active, append, applyDemondoomManualDamage, button, cast, castDemondoomEnemySpell, castDemondoomPlayerSpell, character, checkDemondoomFight, close, createDemondoomFight, currentBookId, currentPlaythrough, data, demondoomCastAvailability, demondoomEnemyActive, determineDemondoomInitiative, el, endDemondoomGroupRound, escapeHtml, field, fields, finishDemondoomFight, getPlayBtnRow, initSim536, number, open, prepareDemondoomEncounter, record, registerPanelShortcut, renderSim536, replaceCharacter, resolveDemondoomDeathLuck, result, rollDemondoomAttack, rollDemondoomCharacter, saveState, setSim536Visible, shortcutLabel, showAlert, showConfirm, start, store, t, target, tk, toggle, tradeDemondoomLifeForPower, transformedDemondoomCharacter, useDemondoomTalisman });
+const simulatorContext = () => ({ customSetup, ALL_PANEL_OVERLAY_IDS, DEMONDOOM_ENCOUNTERS, DEMONDOOM_SPELLS, FIRE_WOLF_ATTRIBUTES, FIRE_WOLF_WEAPONS, ID, act, actions, active, append, applyDemondoomManualDamage, button, cast, castDemondoomEnemySpell, castDemondoomPlayerSpell, character, checkDemondoomFight, close, createDemondoomFight, currentBookId, currentPlaythrough, data, demondoomCastAvailability, demondoomEnemyActive, determineDemondoomInitiative, el, endDemondoomGroupRound, escapeHtml, field, fields, finishDemondoomFight, getPlayBtnRow, initSim536, number, open, prepareDemondoomEncounter, record, registerPanelShortcut, renderSim536, replaceCharacter, resolveDemondoomDeathLuck, result, rollDemondoomAttack, rollDemondoomCharacter, saveState, setSim536Visible, shortcutLabel, showAlert, showConfirm, start, store, t, target, tk, toggle, tradeDemondoomLifeForPower, transformedDemondoomCharacter, useDemondoomTalisman });
 const { data } = createState(simulatorContext);
 const { append, record, store, result, start, act } = createCombat(simulatorContext);
 const { cast } = createEffects(simulatorContext);
@@ -47,6 +50,7 @@ const target=()=>Number(el('target').value);
 export function renderSim536() {
   if(!el('overlay'))return;
   const d=data();if(!d){close();return;}
+  customSetup?.render();
   const fight=d.fight,player=character(d),fighting=active(d),pending=Boolean(fight?.pending);
   for(const key of fields){if(document.activeElement!==el(key))el(key).value=player[key]??0;el(key).disabled=pending;}
   for(const key of ['weapon','armour']){el(key).value=player[key]??'none';el(key).disabled=pending;}
@@ -112,6 +116,7 @@ export function initSim536() {
   <label class="inv-edit-row">${tk('enemy_spell')}<select id="${ID}-enemy_spell" class="inv-edit-input">${['leprosy','blight','crack-of-doom','firebolt'].map(spell=>`<option value="${spell}">${tk(`spell.${spell}`)}</option>`).join('')}</select></label>${button('enemy_cast')}
   ${field('trade_amount')}${button('trade')}</div></div><div class="bsim-col bsim-col-right"><details class="bsim-history"><summary>${tk('history')}</summary><div id="${ID}-history" class="bsim-history-list"></div></details><div id="${ID}-log" class="bsim-log"></div></div></div></div>`;
   document.body.appendChild(overlay);
+  customSetup = createDemonOpponentSetup({document, id: ID, t, tk, roster: DEMONDOOM_ROSTER, getRun: currentPlaythrough, getData: data});
   const btn=document.createElement('button');btn.id=`${ID}-btn`;btn.innerHTML=shortcutLabel(t('battlesim.title'));btn.style.display='none';
   getPlayBtnRow().appendChild(btn);btn.addEventListener('click',open);el('close').addEventListener('click',close);
   let backdropDown=false;overlay.addEventListener('mousedown',event=>{backdropDown=event.target===overlay;});

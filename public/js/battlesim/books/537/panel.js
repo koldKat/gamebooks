@@ -1,9 +1,11 @@
+import { createDemonOpponentSetup } from '../../engines/demonspawn/setup.js';
+let customSetup;
 import { toggles, actions } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
 
 // BEGIN SIMULATOR WIRING
-const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, ANCIENT_EVIL_ENCOUNTERS, ANCIENT_EVIL_ROSTER, ANCIENT_EVIL_SPELL_COSTS, FIRE_WOLF_ATTRIBUTES, FIRE_WOLF_WEAPONS, ID, act, actions, active, ancientEvilCastAvailability, ancientEvilEnemyActive, append, applyAncientEvilDamage, button, castAncientEvilSpell, character, checkAncientEvilFight, checkAncientEvilSerpent, close, createAncientEvilFight, currentBookId, currentPlaythrough, data, determineAncientEvilInitiative, el, endAncientEvilGroupRound, escapeHtml, field, fields, finishAncientEvilFight, getPlayBtnRow, initSim537, number, open, prepareAncientEvilEncounter, registerPanelShortcut, renderSim537, resolveAncientEvilDeathLuck, result, rollAncientEvilAttack, rollAncientEvilCharacter, saveState, setSim537Visible, shortcutLabel, showAlert, showConfirm, start, store, t, tk, toggle, toggles, tradeAncientEvilLifeForPower, useAncientEvilRuby });
+const simulatorContext = () => ({ customSetup, ALL_PANEL_OVERLAY_IDS, ANCIENT_EVIL_ENCOUNTERS, ANCIENT_EVIL_ROSTER, ANCIENT_EVIL_SPELL_COSTS, FIRE_WOLF_ATTRIBUTES, FIRE_WOLF_WEAPONS, ID, act, actions, active, ancientEvilCastAvailability, ancientEvilEnemyActive, append, applyAncientEvilDamage, button, castAncientEvilSpell, character, checkAncientEvilFight, checkAncientEvilSerpent, close, createAncientEvilFight, currentBookId, currentPlaythrough, data, determineAncientEvilInitiative, el, endAncientEvilGroupRound, escapeHtml, field, fields, finishAncientEvilFight, getPlayBtnRow, initSim537, number, open, prepareAncientEvilEncounter, registerPanelShortcut, renderSim537, resolveAncientEvilDeathLuck, result, rollAncientEvilAttack, rollAncientEvilCharacter, saveState, setSim537Visible, shortcutLabel, showAlert, showConfirm, start, store, t, tk, toggle, toggles, tradeAncientEvilLifeForPower, useAncientEvilRuby });
 const { data } = createState(simulatorContext);
 const { append, store, result, start, act } = createCombat(simulatorContext);
 // END SIMULATOR WIRING
@@ -41,6 +43,7 @@ const toggle = key => `<label class="inv-edit-row"><input id="${ID}-${key}" type
 export function renderSim537() {
   if (!el('overlay')) return;
   const d = data(); if (!d) { close(); return; }
+  customSetup?.render();
   const fight = d.fight, p = character(d), fighting = active(d), pending = Boolean(fight?.pending);
   for (const key of fields) { if (document.activeElement !== el(key)) el(key).value = p[key] ?? 0; el(key).disabled = pending; }
   for (const key of toggles) { el(key).checked = Boolean(p[key]); el(key).disabled = pending; }
@@ -90,6 +93,7 @@ export function initSim537() {
     <label id="${ID}-destination_row" class="inv-edit-row">${tk('destination')}<input id="${ID}-destination" class="inv-edit-input"></label>${button('cast')}${field('trade_amount')}${button('trade')}${button('meditate')}</div></div>
     <div class="bsim-col bsim-col-right"><details class="bsim-history"><summary>${tk('history')}</summary><div id="${ID}-history" class="bsim-history-list"></div></details><div id="${ID}-log" class="bsim-log"></div></div></div></div>`;
   document.body.appendChild(overlay);
+  customSetup = createDemonOpponentSetup({document, id: ID, t, tk, roster: Object.values(ANCIENT_EVIL_ROSTER), getRun: currentPlaythrough, getData: data});
   const btn = document.createElement('button'); btn.id = `${ID}-btn`; btn.innerHTML = shortcutLabel(t('battlesim.title')); btn.style.display = 'none';
   getPlayBtnRow().appendChild(btn); btn.addEventListener('click', open); el('close').addEventListener('click', close);
   let backdropDown = false;

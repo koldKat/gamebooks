@@ -2,7 +2,8 @@
 export function createCombat(getContext) {
 // BEGIN EXTRACTED RULES
 function label(section) {
-  const { tk } = getContext();
+  const { tk, data, t } = getContext();
+  if (String(section) === '0' || String(section).startsWith('custom:')) return data()?.fight?.spec.name ?? t('battlesim.editor.custom');
 
   const enemy = tk(`enemy_names.${section}`);
   return String(section).startsWith('dream') ? tk('dream_label', { enemy, number: String(section).slice(5) })
@@ -15,7 +16,7 @@ function update(d) {
   const f = d.fight;
   if (f && f.status !== 'fighting' && !f.recorded) {
     f.recorded = true;
-    d.history.push({ enemy: label(f.spec.section), outcome: f.status,
+    d.history.push({ enemy: f.spec.custom ? f.spec.name : label(f.spec.section), outcome: f.status,
       ts: Math.max(Date.now(), (d.history.at(-1)?.ts ?? 0) + 1) });
   }
   d.log = d.log.slice(-150);
@@ -34,12 +35,12 @@ function guardedConfirm(message, apply) {
 }
 
 function start() {
-  const { active, character, createDenFight, data, el, guardedConfirm, showAlert, tk, update } = getContext();
+  const { active, character, createDenFight, customSetup, data, el, guardedConfirm, showAlert, tk, update } = getContext();
 
   const section = Number(el('encounter').value);
   const apply = d => {
     try {
-      d.fight = createDenFight(section, character(d));
+      d.fight = createDenFight(section, character(d), customSetup?.settings(d, {}, section));
       if (d.fight.spec.entryDamage) d.log.push(tk('entry_damage', { damage: d.fight.spec.entryDamage }));
       for (const event of d.fight.events) if (event.kind === 'evasion') d.log.push(tk('evasion_result', { roll: event.roll }));
     }
