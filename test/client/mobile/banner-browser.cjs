@@ -10,11 +10,12 @@ const start = source.indexOf('<div id="app-banner">');
 const end = source.indexOf('<div id="books-tip-bar"', start);
 if (start < 0 || end < 0) throw Error('Banner markup not found');
 const markup = source.slice(start, end);
+const inboxMarkup = source.slice(source.indexOf('<div id="inbox-modal-overlay"'), source.indexOf('<div id="confirm-overlay"'));
 const scratch = fs.mkdtempSync(path.join(root, 'mobile-banner-'));
 
 (async () => {
   try {
-    const css = ['style', 'landing', 'mobile'].map(name =>
+    const css = ['style', 'landing', 'feedback', 'mobile'].map(name =>
       `<link rel="stylesheet" href="file://${repo}/public/css/${name}.css">`).join('');
     const script = `
       const check=(ok,label)=>{if(!ok)throw Error(label);};
@@ -64,6 +65,8 @@ const scratch = fs.mkdtempSync(path.join(root, 'mobile-banner-'));
         }else check(getComputedStyle(banner).display==='flex','desktop layout unchanged');
         const state=await import('file://${repo}/public/js/core/state.js');
         const notif=await import('file://${repo}/public/js/community/notif.js');
+        const inboxModule=await import('file://${repo}/public/js/community/inbox.js');
+        inboxModule.initInbox(()=>null);
         state.setToken('isolated-banner-test');
         let unread=12;
         window.fetch=async()=>new Response(JSON.stringify([{user_unread:unread}]),{headers:{'Content-Type':'application/json'}});
@@ -71,6 +74,32 @@ const scratch = fs.mkdtempSync(path.join(root, 'mobile-banner-'));
         const inbox=document.getElementById('inbox-btn');
         check(inbox.dataset.unread==='12'&&inbox.textContent.includes('(12)'),'live unread count retained');
         if(mobile)check(getComputedStyle(inbox,'::after').content==='"12"','visible mobile unread badge');
+        const bounds=inbox.getBoundingClientRect();
+        check(document.elementFromPoint(bounds.x+bounds.width/2,bounds.y+bounds.height/2)?.closest('#inbox-btn')===inbox,'inbox tap target unobstructed');
+        const normalFetch=window.fetch;
+        let finishLoad;
+        window.fetch=()=>new Promise(resolve=>{finishLoad=resolve;});
+        inbox.click();
+        const overlay=document.getElementById('inbox-modal-overlay');
+        check(overlay.classList.contains('active')&&document.querySelector('#inbox-list [role="status"]'),'inbox opens immediately while loading');
+        finishLoad(new Response('[]',{headers:{'Content-Type':'application/json'}}));
+        await new Promise(resolve=>setTimeout(resolve,30));
+        check(overlay.classList.contains('active')&&getComputedStyle(overlay).display==='flex','inbox opens from navigation');
+        document.getElementById('inbox-close-btn').click();
+        check(!overlay.classList.contains('active'),'inbox closes');
+        window.fetch=async()=>{throw Error('Offline test');};
+        inbox.click();await new Promise(resolve=>setTimeout(resolve,30));
+        check(document.querySelector('#inbox-list [role="alert"]')&&document.querySelector('.inbox-retry-btn'),'failed inbox has visible retry');
+        window.fetch=normalFetch;
+        document.querySelector('.inbox-retry-btn').click();await new Promise(resolve=>setTimeout(resolve,30));
+        check(!document.querySelector('.inbox-retry-btn')&&document.querySelector('.inbox-item'),'inbox retry recovers');
+        document.getElementById('inbox-close-btn').click();
+        window.fetch=()=>new Promise(resolve=>{finishLoad=resolve;});
+        inbox.click();document.getElementById('inbox-close-btn').click();
+        finishLoad(new Response('[]',{headers:{'Content-Type':'application/json'}}));
+        await new Promise(resolve=>setTimeout(resolve,30));
+        check(!overlay.classList.contains('active'),'late inbox response cannot reopen closed dialog');
+        window.fetch=normalFetch;
         unread=0;await notif.refreshInboxBadge();
         check(inbox.dataset.unread===''&&!inbox.classList.contains('inbox-btn--active'),'read count clears');
         unread=2;await notif.refreshInboxBadge();
@@ -79,7 +108,7 @@ const scratch = fs.mkdtempSync(path.join(root, 'mobile-banner-'));
         document.body.dataset.test=JSON.stringify({width:innerWidth,mobile,sameRow:Math.abs(t.top-b.top)<10});
       }).catch(error=>{document.body.dataset.failure=error.message;});`;
     const file = path.join(scratch, 'banner.html');
-    fs.writeFileSync(file, `<!doctype html><meta charset="utf-8">${css}<body style="padding:0 12px"><script>addEventListener('error',e=>document.body.dataset.failure=e.message)</script>${markup}<script>${script}</script>`);
+    fs.writeFileSync(file, `<!doctype html><meta charset="utf-8">${css}<body style="padding:0 12px"><script>addEventListener('error',e=>document.body.dataset.failure=e.message)</script>${markup}${inboxMarkup}<script>${script}</script>`);
     for (const width of [320, 360, 390, 768, 1100]) {
       console.log(JSON.stringify(await checkBrowser({ file, root, width,
         profile: path.join(scratch, 'profile-' + width), chromium: process.env.CHROMIUM })));

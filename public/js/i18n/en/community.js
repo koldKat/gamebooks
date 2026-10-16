@@ -19,6 +19,9 @@ export default {
     'att.upload_errors': 'Remove failed attachments or upload them again before sending.',
 
     'inbox.empty':          'No messages yet.',
+    'inbox.loading':        'Loading messages...',
+    'inbox.load_failed':    'Messages could not be loaded. Please try again.',
+    'inbox.retry':          'Retry',
     'inbox.confirm_delete': 'Delete this thread from your inbox? Messages and attachments are permanently removed only after both sides delete it.',
     'inbox.delete_failed': 'Failed to delete the thread or its attachments. Please refresh and try again.',
     'inbox.message_one': '{n} message',

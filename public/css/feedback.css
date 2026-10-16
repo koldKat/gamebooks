@@ -239,6 +239,16 @@
   padding: 0.25rem 0.65rem !important;
   font-size: 0.78rem !important;
 }
+.inbox-retry-btn {
+  align-self: center;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid #374151;
+  border-radius: 6px;
+  background: #111827;
+  color: #d1d5db;
+  font: inherit;
+  cursor: pointer;
+}
 #feedback-submit-btn,
 #feedback-cancel-btn {
   flex: none !important;

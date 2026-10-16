@@ -98,16 +98,37 @@ function _showThreadList() {
 }
 
 export function initInbox(mousedownOnOverlayRef) {
-  document.getElementById('inbox-btn').addEventListener('click', async () => {
+  const overlay = document.getElementById('inbox-modal-overlay');
+  const list = document.getElementById('inbox-list');
+  let loadSequence = 0;
+  let loadController = null;
+  const openInbox = async () => {
+    const sequence = ++loadSequence;
+    loadController?.abort();
+    const controller = new AbortController();
+    loadController = controller;
+    _showThreadList();
+    list.innerHTML = `<p class="inbox-empty" role="status">${escapeHtml(t('inbox.loading'))}</p>`;
+    overlay.classList.add('active');
+    const timeout = setTimeout(() => controller.abort(), 15000);
     try {
-      const res = await apiFetch('/api/feedback');
-      if (!res.ok) return;
-      _inboxThreads = await res.json();
-      _showThreadList();
+      const res = await apiFetch('/api/feedback', { signal: controller.signal });
+      if (!res.ok) throw new Error('Inbox request failed');
+      const threads = await res.json();
+      if (sequence !== loadSequence || !overlay.classList.contains('active')) return;
+      if (!Array.isArray(threads)) throw new Error('Invalid inbox response');
+      _inboxThreads = threads;
       _renderInboxList();
-      document.getElementById('inbox-modal-overlay').classList.add('active');
-    } catch {}
-  });
+    } catch {
+      if (sequence !== loadSequence || !overlay.classList.contains('active')) return;
+      list.innerHTML = `<p class="inbox-empty" role="alert">${escapeHtml(t('inbox.load_failed'))}</p><button type="button" class="inbox-retry-btn">${escapeHtml(t('inbox.retry'))}</button>`;
+      list.querySelector('.inbox-retry-btn').addEventListener('click', openInbox);
+    } finally {
+      clearTimeout(timeout);
+      if (loadController === controller) loadController = null;
+    }
+  };
+  document.getElementById('inbox-btn').addEventListener('click', openInbox);
 
   document.getElementById('inbox-back-btn').addEventListener('click', () => {
     _renderInboxList();
@@ -195,7 +216,12 @@ export function initInbox(mousedownOnOverlayRef) {
     }, { confirmLabel: t('btn.delete'), danger: true });
   });
 
-  const _closeInbox = () => document.getElementById('inbox-modal-overlay').classList.remove('active');
+  const _closeInbox = () => {
+    ++loadSequence;
+    loadController?.abort();
+    loadController = null;
+    overlay.classList.remove('active');
+  };
   document.getElementById('inbox-messages').addEventListener('click', e => {
     const img = e.target.closest('.att-image');
     if (img) openImageLightbox(img.getAttribute('src'), img.alt);
