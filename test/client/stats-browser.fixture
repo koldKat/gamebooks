@@ -40,6 +40,9 @@ const { getRatingStats } = require('../../server/db/rating-stats');
       const body = document.getElementById('stats-modal-body');
       check(body.querySelectorAll('.stats-section').length === 12, 'all sections rendered');
       check(body.querySelectorAll('.stats-rating-table tbody tr').length === 12, 'all rating rows rendered');
+      const ratingColors = [...body.querySelectorAll('.stats-rating-table td[style]')].slice(0, 3)
+        .map(cell => getComputedStyle(cell).getPropertyValue('--rating-color').trim());
+      check(ratingColors.length === 3 && ratingColors.every(Boolean) && new Set(ratingColors).size === 3, 'distinct category bar colors');
       check(body.scrollWidth <= body.clientWidth + 1, 'no horizontal overflow');
       for (const section of body.querySelectorAll('.stats-section')) {
         check(section.scrollWidth <= section.clientWidth + 1, 'card overflow: '+section.className);

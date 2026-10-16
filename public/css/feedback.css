@@ -150,8 +150,11 @@
 .stats-rating-table td { color: #e5e7eb; }
 .stats-rating-average th,
 .stats-rating-average td { padding-bottom: 0.45rem; border-bottom: 1px solid #263244; }
+.stats-rating-table td:nth-child(2) { --rating-color: rgba(45, 153, 131, 0.22); }
+.stats-rating-table td:nth-child(3) { --rating-color: rgba(176, 139, 83, 0.22); }
+.stats-rating-table td:nth-child(4) { --rating-color: rgba(101, 133, 173, 0.22); }
 .stats-rating-table td[style] {
-  background: linear-gradient(to left, rgba(45, 153, 131, 0.22) var(--rating-fill), transparent var(--rating-fill));
+  background: linear-gradient(to left, var(--rating-color) var(--rating-fill), transparent var(--rating-fill));
 }
 
 @media (max-width: 980px) {

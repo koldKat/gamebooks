@@ -1,0 +1,23 @@
+const labels = {
+  title: 'Alpha versus Omega', ledger: 'Programs', clan: 'Computer clan', alpha: 'Alpha', omega: 'Omega',
+  note: 'Use the computer appendix for your own clan. Encounter results are fixed by the book, not dice. Remember the story section to return to afterwards.',
+  usesNote: 'Mark only programs you own and enter their remaining activations (0–3). Recharge only after leaving and re-entering cyberspace.',
+  antivirus: 'Antiviruses', key: 'Keys', virus: 'Viruses', uses: 'Remaining activations', safety: 'I have the unused safety device',
+  apply: 'Save programs', recharge: 'Re-enter / recharge', encounter: 'Encounter', program: 'Program',
+  resolve: 'Activate', rescue: 'Use safety device', again: 'Next choice', history: 'Combat history',
+  ready: 'Choose an encounter and an owned, active program.', invalid: 'Check program ownership and activations. A program needs at least one activation to be used.',
+  destination: 'Read {section} in your clan’s computer appendix, then follow its instructions.',
+  escaped: 'Safety device spent. Leave cyberspace as instructed; no program activation was consumed.',
+  'outcome.win': 'Success', 'outcome.loss': 'Game over', 'outcome.blocked': 'Door remains closed — activation spent', 'outcome.escape': 'Escaped',
+  'enemy.1': 'Ivy', 'enemy.2': 'Little Nasty Elf', 'enemy.3': 'Newton', 'enemy.4': 'Lightning Net',
+  'enemy.5': 'Death', 'enemy.6': 'Cloud', 'enemy.7': 'Bad Dog', 'enemy.8': 'Door Cannot Open',
+  'enemy.9': 'Nobody', 'enemy.10': 'Beggar', 'enemy.11': 'Cathedral', 'enemy.12': 'Medusa',
+  'enemy.13': 'Unicorn', 'enemy.14': 'Zmey Goryanin', 'enemy.15': 'Elephant', 'enemy.16': 'Harpy', 'enemy.17': 'Phoenix', 'enemy.18': 'Mummy',
+  'program.A.antivirus.0': 'Lawnmower', 'program.A.antivirus.1': 'Banana Peel', 'program.A.antivirus.2': 'Einstein',
+  'program.A.key.0': 'Eight', 'program.A.key.1': 'Triple Key', 'program.A.key.2': 'Frying Pan',
+  'program.A.virus.0': 'Ivy', 'program.A.virus.1': 'Little Nasty Elf', 'program.A.virus.2': 'Newton',
+  'program.O.antivirus.0': 'Absorbing Sphere', 'program.O.antivirus.1': 'Holy Grail', 'program.O.antivirus.2': 'Elemental',
+  'program.O.key.0': 'Scroll', 'program.O.key.1': 'Key Card', 'program.O.key.2': 'Shield',
+  'program.O.virus.0': 'Lightning Net', 'program.O.virus.1': 'Death', 'program.O.virus.2': 'Cloud',
+};
+export default Object.fromEntries(Object.entries(labels).map(([key, value]) => ['battlesim758.' + key, value]));
