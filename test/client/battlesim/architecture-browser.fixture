@@ -23,7 +23,7 @@ for(const id of BOOK_IDS){
   if('MODE'!=='mobile')button.click();
   const overlay=document.getElementById(id===829?'bsim-overlay':id===8?'s8-overlay':'sim'+id+'-overlay');
   check(overlay?.classList.contains('active'),'opens '+id);
-  if(id===769||id===773||id===783||id===797||id===807||id===808||id===809||id===810||id===812||id===817||id===832){
+  if(id===769||id===773||id===783||id===797||id===807||id===808||id===809||id===810||id===812||id===817||id===832||id===833){
     const {ALL_PANEL_OVERLAY_IDS}=await import('REPO/public/js/core/util.js');
     check(ALL_PANEL_OVERLAY_IDS.includes(overlay.id),'simulator registered for panel mutual exclusion '+id);
   }
@@ -55,7 +55,7 @@ for(const id of BOOK_IDS){
     const label=field.parentElement.querySelector(':scope > span:first-child');
     if(label)check(Math.abs(field.getBoundingClientRect().left-label.getBoundingClientRect().right-5.6)<0.2,'aligned field label '+id+' '+field.id);
   }
-  if([570,644,648,654,658,663,665,671,672,700,706,710,718,722,723,724,728,735,757,768,769,773,783,797,807,808,809,810,812,817,832].includes(id)){
+  if([570,644,648,654,658,663,665,671,672,700,706,710,718,722,723,724,728,735,757,768,769,773,783,797,807,808,809,810,812,817,832,833].includes(id)){
     const title=overlay.querySelector('.inv-modal-title')?.textContent||'';
     check(/[А-Яа-я]/.test(title),'Bulgarian book has Bulgarian simulator title '+id+':'+title);
     check(!/\b(?:Character|Encounter|Programs|Save|Full Moon|Alpha versus Omega)\b/.test(overlay.textContent),'no English UI in Bulgarian simulator '+id);
@@ -755,6 +755,41 @@ for(const id of BOOK_IDS){
     check(modal.getBoundingClientRect().width<=innerWidth&&modal.scrollWidth<=modal.clientWidth+1,'forest modal width');
     const max=modal.scrollHeight-modal.clientHeight;modal.scrollTop=Number.MAX_SAFE_INTEGER;
     check(Math.abs(modal.scrollTop-max)<=1,'forest bottom reachable');modal.scrollTop=0;
+  }
+  if(id===833){
+    const el=key=>document.getElementById('sim833-'+key);
+    const state=()=>app.currentPlaythrough().sim833;
+    const editor=overlay.querySelector('.bsim-opponent-editor');
+    const stat=key=>editor.querySelector('[data-stat="'+key+'"]');
+    const name=editor.querySelector('[role="combobox"]');
+    name.value='';name.focus();check(editor.querySelector('[role="option"]'),'payment autocomplete');
+    name.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+    check(overlay.classList.contains('active')&&name.getAttribute('aria-expanded')==='false','payment autocomplete Escape first');
+    name.value='Ръчен пазач';stat('hp').value='30';stat('multiplier').value='3';stat('bonus').value='0';
+    el('manual').checked=true;el('manual').dispatchEvent(new Event('change',{bubbles:true}));
+    el('start').click();check(state().fight.name==='Ръчен пазач','payment custom fight without preset');
+    const roll=value=>{el('die').value=String(value);el('roll').click();};
+    for(const value of [2,4,5,4])roll(value);el('attack').click();roll(4);
+    check(state().fight.hp===21&&state().character.life===88,'payment first example round');
+    for(const value of [2,3,3])roll(value);el('adrenaline').click();
+    for(const value of [5,6,2])roll(value);el('attack').click();roll(2);
+    check(state().fight.hp===5&&state().character.life===82,'payment adrenaline example round');
+    for(const value of [2,3,4,5,4])roll(value);el('mindhack').click();el('attack').click();
+    check(state().fight.outcome==='win'&&state().character.money===8000000&&state().history.length===1,'payment brutality example');
+    el('codeine').click();check(state().character.life===100&&state().character.money===3000000,'payment outside combat heal');
+    check(el('subcontractor').disabled&&el('premonition').disabled,'payment service affordability after spending');
+    el('encounter').value='13';el('encounter').dispatchEvent(new Event('change',{bubbles:true}));
+    el('start').click();check(editor.querySelector('[role="combobox"]').disabled&&el('life').disabled,'payment setup locked');
+    for(const value of [1,2,3,4,5,1])roll(value);el('attack').click();
+    check(state().fight.outcome==='win'&&state().fight.destination==='4'&&state().fight.hp===75,'payment trikopter threshold');
+    el('encounter').value='20';el('encounter').dispatchEvent(new Event('change',{bubbles:true}));
+    el('start').click();roll(1);roll(1);el('attack').click();roll(1);
+    check(state().fight.phase==='enemy'&&state().character.life===93,'payment repeated razor attack');
+    roll(2);check(state().fight.phase==='rolling'&&state().character.life===85,'payment razor resumes player turn');
+    const modal=overlay.querySelector('.bsim-modal');
+    check(modal.getBoundingClientRect().width<=innerWidth&&modal.scrollWidth<=modal.clientWidth+1,'payment modal width');
+    const max=modal.scrollHeight-modal.clientHeight;modal.scrollTop=Number.MAX_SAFE_INTEGER;
+    check(Math.abs(modal.scrollTop-max)<=1,'payment bottom reachable');modal.scrollTop=0;
   }
   if(id===832){
     const el=key=>document.getElementById('sim832-'+key);

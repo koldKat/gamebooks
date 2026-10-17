@@ -25,6 +25,8 @@ export const ALL_PANEL_OVERLAY_IDS = ['inv-overlay', 'eq-overlay', 'charsheet-mo
 
 ALL_PANEL_OVERLAY_IDS.push('sim665-overlay', 'sim671-overlay', 'sim672-overlay', 'sim674-overlay', 'sim675-overlay', 'sim676-overlay', 'sim677-overlay', 'sim678-overlay', 'sim679-overlay', 'sim680-overlay', 'sim689-overlay', 'sim690-overlay', 'sim700-overlay', 'sim706-overlay', 'sim710-overlay', 'sim718-overlay', 'sim722-overlay', 'sim723-overlay', 'sim724-overlay', 'sim728-overlay', 'sim735-overlay', 'sim757-overlay', 'sim768-overlay', 'sim769-overlay', 'sim773-overlay', 'sim783-overlay', 'sim797-overlay', 'sim807-overlay', 'sim808-overlay', 'sim809-overlay', 'sim810-overlay', 'sim812-overlay', 'sim817-overlay', 'sim832-overlay');
 
+ALL_PANEL_OVERLAY_IDS.push('sim833-overlay');
+
 // Use physical key codes across keyboard layouts.
 // Capture before the graph canvas can stop propagation.
 export function registerPanelShortcut(keyCode, { getButton, getOverlay, otherOverlayIds, open, close, extraGuard, capture = false }) {
