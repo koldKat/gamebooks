@@ -23,7 +23,7 @@ for(const id of BOOK_IDS){
   if('MODE'!=='mobile')button.click();
   const overlay=document.getElementById(id===829?'bsim-overlay':id===8?'s8-overlay':'sim'+id+'-overlay');
   check(overlay?.classList.contains('active'),'opens '+id);
-  if(id===769||id===773||id===783||id===797||id===807){
+  if(id===769||id===773||id===783||id===797||id===807||id===808){
     const {ALL_PANEL_OVERLAY_IDS}=await import('REPO/public/js/core/util.js');
     check(ALL_PANEL_OVERLAY_IDS.includes(overlay.id),'simulator registered for panel mutual exclusion '+id);
   }
@@ -55,7 +55,7 @@ for(const id of BOOK_IDS){
     const label=field.parentElement.querySelector(':scope > span:first-child');
     if(label)check(Math.abs(field.getBoundingClientRect().left-label.getBoundingClientRect().right-5.6)<0.2,'aligned field label '+id+' '+field.id);
   }
-  if([570,644,648,654,658,663,665,671,672,700,706,710,718,722,723,724,728,735,757,768,769,773,783,797,807].includes(id)){
+  if([570,644,648,654,658,663,665,671,672,700,706,710,718,722,723,724,728,735,757,768,769,773,783,797,807,808].includes(id)){
     const title=overlay.querySelector('.inv-modal-title')?.textContent||'';
     check(/[А-Яа-я]/.test(title),'Bulgarian book has Bulgarian simulator title '+id+':'+title);
     check(!/\b(?:Character|Encounter|Programs|Save|Full Moon|Alpha versus Omega)\b/.test(overlay.textContent),'no English UI in Bulgarian simulator '+id);
@@ -589,6 +589,48 @@ for(const id of BOOK_IDS){
     check(modal.getBoundingClientRect().width<=innerWidth&&modal.scrollWidth<=modal.clientWidth+1,'double modal width');
     const max=modal.scrollHeight-modal.clientHeight;modal.scrollTop=Number.MAX_SAFE_INTEGER;
     check(Math.abs(modal.scrollTop-max)<=1,'double modal bottom reachable');modal.scrollTop=0;
+  }
+  if(id===808){
+    const el=key=>document.getElementById('sim808-'+key);
+    const state=()=>app.currentPlaythrough().sim808;
+    const editor=overlay.querySelector('.bsim-opponent-editor');
+    const name=editor.querySelector('[role="combobox"]');
+    el('weapons').value='5';el('armour').value='5';el('mechanic').checked=true;
+    name.value='';name.dispatchEvent(new Event('input',{bubbles:true}));
+    check(editor.querySelector('[role="option"]'),'Zendari opponent autocomplete');
+    check(el('weapons').value==='5'&&el('mechanic').checked,'autocomplete retains unsaved mech setup');
+    name.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+    check(overlay.classList.contains('active')&&name.getAttribute('aria-expanded')==='false','Zendari autocomplete Escape first');
+    name.value='Ръчен противник';name.dispatchEvent(new Event('input',{bubbles:true}));
+    el('start').click();
+    check(state().character.weapons===5&&state().fight.name==='Ръчен противник','Zendari current typed setup used');
+    check(name.disabled&&el('weapons').disabled&&el('encounter').disabled,'Zendari active setup locked');
+    const random=Math.random;
+    try{
+      Math.random=()=>0;el('roll').click();
+      check(state().fight.pendingRoll.first===1&&state().fight.remaining===2,'normal first die awaits choice');
+      Math.random=()=>.99;el('reroll').click();
+      check(state().fight.pendingRoll.second===6&&el('reroll').disabled,'one optional normal reroll');
+      el('acceptFirst').click();
+      check(state().fight.remaining===1&&state().fight.phase==='defence','normal can retain first die');
+      el('roll').click();el('acceptFirst').click();
+      check(state().fight.phase==='damage','failed defence awaits damage choice');
+      el('damageweapons').click();
+      check(state().character.weapons===4&&state().fight.phase==='attack','chosen permanent weapon damage');
+      Math.random=()=>0;el('roll').click();el('acceptFirst').click();
+      check(state().fight.outcome==='win'&&state().history.length===1,'Zendari victory recorded once');
+      el('repairweapons').click();
+      check(state().character.weapons===5&&state().character.repairMinutes===30,'field repair and time retained');
+      el('encounter').value='36';el('encounter').dispatchEvent(new Event('change',{bubbles:true}));
+      el('difficulty').value='hard';el('start').click();
+      check(state().fight.phase==='damage'&&el('roll').disabled,'ambush entry damage before dice');
+      el('damagearmour').click();
+      check(state().character.armour===4&&state().fight.phase==='attack','ambush damage allocated once');
+    }finally{Math.random=random;}
+    const modal=overlay.querySelector('.bsim-modal');
+    check(modal.getBoundingClientRect().width<=innerWidth&&modal.scrollWidth<=modal.clientWidth+1,'Zendari modal width');
+    const max=modal.scrollHeight-modal.clientHeight;modal.scrollTop=Number.MAX_SAFE_INTEGER;
+    check(Math.abs(modal.scrollTop-max)<=1,'Zendari bottom reachable');modal.scrollTop=0;
   }
   const before=JSON.stringify(app.currentPlaythrough());module.render();
   for(const key of overlay.textContent.match(/battlesim(?:\d+)?\.[\w.]+/g)??[])missingTranslations.add(key);
