@@ -23,7 +23,7 @@ for(const id of BOOK_IDS){
   if('MODE'!=='mobile')button.click();
   const overlay=document.getElementById(id===829?'bsim-overlay':id===8?'s8-overlay':'sim'+id+'-overlay');
   check(overlay?.classList.contains('active'),'opens '+id);
-  if(id===769||id===773||id===783||id===797||id===807||id===808||id===809||id===810||id===812){
+  if(id===769||id===773||id===783||id===797||id===807||id===808||id===809||id===810||id===812||id===817){
     const {ALL_PANEL_OVERLAY_IDS}=await import('REPO/public/js/core/util.js');
     check(ALL_PANEL_OVERLAY_IDS.includes(overlay.id),'simulator registered for panel mutual exclusion '+id);
   }
@@ -55,7 +55,7 @@ for(const id of BOOK_IDS){
     const label=field.parentElement.querySelector(':scope > span:first-child');
     if(label)check(Math.abs(field.getBoundingClientRect().left-label.getBoundingClientRect().right-5.6)<0.2,'aligned field label '+id+' '+field.id);
   }
-  if([570,644,648,654,658,663,665,671,672,700,706,710,718,722,723,724,728,735,757,768,769,773,783,797,807,808,809,810,812].includes(id)){
+  if([570,644,648,654,658,663,665,671,672,700,706,710,718,722,723,724,728,735,757,768,769,773,783,797,807,808,809,810,812,817].includes(id)){
     const title=overlay.querySelector('.inv-modal-title')?.textContent||'';
     check(/[А-Яа-я]/.test(title),'Bulgarian book has Bulgarian simulator title '+id+':'+title);
     check(!/\b(?:Character|Encounter|Programs|Save|Full Moon|Alpha versus Omega)\b/.test(overlay.textContent),'no English UI in Bulgarian simulator '+id);
@@ -755,6 +755,46 @@ for(const id of BOOK_IDS){
     check(modal.getBoundingClientRect().width<=innerWidth&&modal.scrollWidth<=modal.clientWidth+1,'forest modal width');
     const max=modal.scrollHeight-modal.clientHeight;modal.scrollTop=Number.MAX_SAFE_INTEGER;
     check(Math.abs(modal.scrollTop-max)<=1,'forest bottom reachable');modal.scrollTop=0;
+  }
+  if(id===817){
+    const el=key=>document.getElementById('sim817-'+key);
+    const state=()=>app.currentPlaythrough().sim817;
+    const editor=overlay.querySelector('.bsim-opponent-editor');
+    const name=()=>editor.querySelector('[role="combobox"]');
+    check(state().character.life===10&&!state().character.blaster,'area starts unarmed');
+    el('blaster').checked=true;el('shots').value='2';
+    name().focus();
+    check(editor.querySelector('[role="option"]'),'area autocomplete');
+    name().dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+    check(overlay.classList.contains('active')&&name().getAttribute('aria-expanded')==='false','area autocomplete Escape first');
+    check(el('shots').value==='2','area preserves unsaved inventory');
+    el('manual').checked=true;el('manual').dispatchEvent(new Event('change',{bubbles:true}));
+    el('start').click();el('die').value='5';el('blasterAttack').click();
+    check(state().character.life===7&&state().character.shots===0&&state().fight.remaining===2,'area ammunition shortfall');
+    check(el('shots').disabled&&name().disabled,'area setup locked');
+    el('die').value='6';el('blasterAttack').click();el('die').value='1';el('melee').click();
+    check(state().fight.outcome==='loss'&&state().history.length===1,'area death overrides last alien victory');
+    el('encounter').value='30';el('encounter').dispatchEvent(new Event('change',{bubbles:true}));
+    el('life').value='10';el('grenades').value='1';el('start').click();
+    el('die').value='2';el('grenade').click();
+    check(state().fight.outcome==='win'&&state().fight.usedExplosives&&state().character.grenades===0,'area hostage grenade fight');
+    check(el('warning').textContent.includes('заложник'),'area hostage consequence visible');
+    el('encounter').value='37';el('encounter').dispatchEvent(new Event('change',{bubbles:true}));
+    el('start').click();check(el('blasterAttack').disabled&&el('grenade').disabled,'area forced melee');
+    el('die').value='4';el('melee').click();
+    check(state().character.life===6&&state().fight.destination==='20','area forced melee loss and continuation');
+    el('medkits').value='1';el('saveCharacter').click();el('heal').click();
+    check(state().character.life===10&&state().character.medkits===0&&!state().fight,'area outside combat medkit');
+    el('encounter').value='55';el('encounter').dispatchEvent(new Event('change',{bubbles:true}));
+    el('difficulty').value='apocalyptic';el('difficulty').dispatchEvent(new Event('change',{bubbles:true}));
+    check(editor.querySelector('[data-stat="count"]').value==='15','area difficulty preset');
+    name().value='Ръчен патрул';editor.querySelector('[data-stat="count"]').value='2';
+    el('bazookas').value='1';el('start').click();el('bazooka').click();
+    check(state().fight.name==='Ръчен патрул'&&state().fight.outcome==='win'&&state().character.bazookas===0,'area manual opponent and bazooka');
+    const modal=overlay.querySelector('.bsim-modal');
+    check(modal.getBoundingClientRect().width<=innerWidth&&modal.scrollWidth<=modal.clientWidth+1,'area modal width');
+    const max=modal.scrollHeight-modal.clientHeight;modal.scrollTop=Number.MAX_SAFE_INTEGER;
+    check(Math.abs(modal.scrollTop-max)<=1,'area bottom reachable');modal.scrollTop=0;
   }
   const before=JSON.stringify(app.currentPlaythrough());module.render();
   for(const key of overlay.textContent.match(/battlesim(?:\d+)?\.[\w.]+/g)??[])missingTranslations.add(key);
