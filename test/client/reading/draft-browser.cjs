@@ -34,6 +34,7 @@ for(const entry of entries){
   pane.innerHTML='';pane.scrollTop=0;
   if(entry.matter){const content=document.createElement('div');content.className='reading-frontmatter';pane.append(content);check(renderReadingMatter(content,draft.bookId,entry.html,document),'matter render');}
   else pane.innerHTML=entry.html;
+  for(const details of pane.querySelectorAll('details'))details.open=true;
   for(const image of pane.querySelectorAll('img')){
     const original=image.getAttribute('src');check(imageFiles.has(original),'untracked image '+original);
     await new Promise((resolve,reject)=>{image.onload=resolve;image.onerror=()=>reject(Error('image decode '+original));image.loading='eager';image.src=imageFiles.get(original);});
