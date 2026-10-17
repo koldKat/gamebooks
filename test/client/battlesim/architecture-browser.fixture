@@ -23,7 +23,7 @@ for(const id of BOOK_IDS){
   if('MODE'!=='mobile')button.click();
   const overlay=document.getElementById(id===829?'bsim-overlay':id===8?'s8-overlay':'sim'+id+'-overlay');
   check(overlay?.classList.contains('active'),'opens '+id);
-  if(id===769||id===773||id===783||id===797||id===807||id===808||id===809||id===810){
+  if(id===769||id===773||id===783||id===797||id===807||id===808||id===809||id===810||id===812){
     const {ALL_PANEL_OVERLAY_IDS}=await import('REPO/public/js/core/util.js');
     check(ALL_PANEL_OVERLAY_IDS.includes(overlay.id),'simulator registered for panel mutual exclusion '+id);
   }
@@ -55,7 +55,7 @@ for(const id of BOOK_IDS){
     const label=field.parentElement.querySelector(':scope > span:first-child');
     if(label)check(Math.abs(field.getBoundingClientRect().left-label.getBoundingClientRect().right-5.6)<0.2,'aligned field label '+id+' '+field.id);
   }
-  if([570,644,648,654,658,663,665,671,672,700,706,710,718,722,723,724,728,735,757,768,769,773,783,797,807,808,809,810].includes(id)){
+  if([570,644,648,654,658,663,665,671,672,700,706,710,718,722,723,724,728,735,757,768,769,773,783,797,807,808,809,810,812].includes(id)){
     const title=overlay.querySelector('.inv-modal-title')?.textContent||'';
     check(/[А-Яа-я]/.test(title),'Bulgarian book has Bulgarian simulator title '+id+':'+title);
     check(!/\b(?:Character|Encounter|Programs|Save|Full Moon|Alpha versus Omega)\b/.test(overlay.textContent),'no English UI in Bulgarian simulator '+id);
@@ -710,6 +710,51 @@ for(const id of BOOK_IDS){
     check(modal.getBoundingClientRect().width<=innerWidth&&modal.scrollWidth<=modal.clientWidth+1,'promo modal width');
     const max=modal.scrollHeight-modal.clientHeight;modal.scrollTop=Number.MAX_SAFE_INTEGER;
     check(Math.abs(modal.scrollTop-max)<=1,'promo bottom reachable');modal.scrollTop=0;
+  }
+  if(id===812){
+    const el=key=>document.getElementById('sim812-'+key);
+    const state=()=>app.currentPlaythrough().sim812;
+    const editor=overlay.querySelector('.bsim-opponent-editor');
+    const name=()=>editor.querySelector('[role="combobox"]');
+    const stat=key=>editor.querySelector('[data-stat="'+key+'"]');
+    el('life').value='6';el('ring').checked=true;
+    name().value='Върколак';name().dispatchEvent(new Event('input',{bubbles:true}));
+    check(editor.querySelector('[role="option"]'),'forest autocomplete');
+    check(el('life').value==='6'&&el('ring').checked,'forest unsaved character fields preserved');
+    name().dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+    check(overlay.classList.contains('active')&&name().getAttribute('aria-expanded')==='false','forest autocomplete Escape first');
+    name().dispatchEvent(new Event('input',{bubbles:true}));editor.querySelector('[role="option"]').dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));
+    check(el('encounter').value==='54'&&stat('defence').value==='0','forest preset includes editable defence');
+    stat('life').value='20';name().value='Ръчен върколак';
+    el('manual').checked=true;el('manual').dispatchEvent(new Event('change',{bubbles:true}));el('start').click();
+    check(state().fight.ratings.attack===3&&state().fight.ratings.defence===2&&state().character.life===6,'forest ring bonuses and current Life');
+    check(name().disabled&&el('ring').disabled&&el('life').disabled,'forest active setup locked');
+    el('attackDie').value='1';el('defenceDie').value='6';el('turn').click();
+    check(state().fight.phase==='enemy'&&state().fight.enemy.life===20,'forest failed attack does not cause retaliation in same turn');
+    el('attackDie').value='6';el('defenceDie').value='1';el('turn').click();
+    check(state().fight.phase==='player'&&state().character.life===2,'forest separate enemy attack');
+    el('attackDie').value='1';el('defenceDie').value='6';el('turn').click();
+    el('attackDie').value='6';el('defenceDie').value='1';el('turn').click();
+    check(state().fight.outcome==='loss'&&state().fight.destination==='19','forest lethal result');
+    el('encounter').value='16';el('encounter').dispatchEvent(new Event('change',{bubbles:true}));
+    el('life').value='4';el('ring').checked=false;el('start').click();
+    check(state().fight.enemy.life===4&&state().fight.ratings.attack===0&&state().fight.ratings.defence===0,'Romir dynamic Life and no axe/shield');
+    el('attackDie').value='1';el('defenceDie').value='6';el('turn').click();
+    el('attackDie').value='6';el('defenceDie').value='1';el('turn').click();
+    check(state().fight.outcome==='loss'&&state().character.life===1&&state().fight.destination===null,'Romir knockout nonfatal with no invented route');
+    el('encounter').value='34';el('encounter').dispatchEvent(new Event('change',{bubbles:true}));el('life').value='10';
+    el('mode').value='reader';el('items').value='2';el('start').click();
+    check(state().character.life===10&&el('turn').disabled&&!el('reader').disabled,'reader mode avoids dice-only entry wound');
+    el('reader').click();
+    check(state().fight.outcome==='win'&&state().character.life===7&&state().fight.destination==='28','reader fixed damage minus items');
+    el('encounter').value='16';el('encounter').dispatchEvent(new Event('change',{bubbles:true}));
+    el('mode').value='player';el('life').value='5';el('matchLife').checked=false;el('matchLife').dispatchEvent(new Event('change',{bubbles:true}));
+    stat('life').value='9';el('start').click();
+    check(state().fight.enemy.life===9,'Romir manual opponent Life override');
+    const modal=overlay.querySelector('.bsim-modal');
+    check(modal.getBoundingClientRect().width<=innerWidth&&modal.scrollWidth<=modal.clientWidth+1,'forest modal width');
+    const max=modal.scrollHeight-modal.clientHeight;modal.scrollTop=Number.MAX_SAFE_INTEGER;
+    check(Math.abs(modal.scrollTop-max)<=1,'forest bottom reachable');modal.scrollTop=0;
   }
   const before=JSON.stringify(app.currentPlaythrough());module.render();
   for(const key of overlay.textContent.match(/battlesim(?:\d+)?\.[\w.]+/g)??[])missingTranslations.add(key);
