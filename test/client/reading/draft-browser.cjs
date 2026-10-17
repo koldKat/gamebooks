@@ -53,6 +53,9 @@ for(const entry of entries){
     bindReadingMapEntry(pane,{canNavigate:()=>allowed,onNavigate:id=>selected.push(id)});
     for(const form of mapForms){
       const input=form.querySelector('input[name="marker"]'),button=form.querySelector('button[type="submit"]');
+      const targets=form.dataset.readingMarkerTargets===undefined?null:JSON.parse(form.dataset.readingMarkerTargets);
+      let unmapped=1;
+      while(targets&&Object.hasOwn(targets,String(unmapped)))unmapped++;
       check(form.noValidate,'native validation must be suppressed');
       check(getComputedStyle(input).appearance==='textfield','native number spinner');
       check(getComputedStyle(button).appearance==='none','native submit button');
@@ -66,9 +69,8 @@ for(const entry of entries){
       const error=form.querySelector('.reading-map-error');
       check(error?.textContent&&error.getAttribute('role')==='alert','themed inline validation');
       check(getComputedStyle(error).color==='rgb(248, 113, 113)','validation theme');
-      input.value='12';input.dispatchEvent(new Event('input'));
+      input.value=targets?String(unmapped):'12';input.dispatchEvent(new Event('input'));
       check(!error.textContent&&!input.hasAttribute('aria-invalid'),'clear inline validation');
-      const targets=form.dataset.readingMarkerTargets===undefined?null:JSON.parse(form.dataset.readingMarkerTargets);
       if(targets){
         form.dispatchEvent(new Event('submit',{cancelable:true}));check(!selected.length,'unmapped source code');
         input.value=Object.keys(targets)[0];input.dispatchEvent(new Event('input'));
