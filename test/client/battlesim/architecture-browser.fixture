@@ -23,7 +23,7 @@ for(const id of BOOK_IDS){
   if('MODE'!=='mobile')button.click();
   const overlay=document.getElementById(id===829?'bsim-overlay':id===8?'s8-overlay':'sim'+id+'-overlay');
   check(overlay?.classList.contains('active'),'opens '+id);
-  if(id===769||id===773||id===783||id===797||id===807||id===808||id===809){
+  if(id===769||id===773||id===783||id===797||id===807||id===808||id===809||id===810){
     const {ALL_PANEL_OVERLAY_IDS}=await import('REPO/public/js/core/util.js');
     check(ALL_PANEL_OVERLAY_IDS.includes(overlay.id),'simulator registered for panel mutual exclusion '+id);
   }
@@ -55,7 +55,7 @@ for(const id of BOOK_IDS){
     const label=field.parentElement.querySelector(':scope > span:first-child');
     if(label)check(Math.abs(field.getBoundingClientRect().left-label.getBoundingClientRect().right-5.6)<0.2,'aligned field label '+id+' '+field.id);
   }
-  if([570,644,648,654,658,663,665,671,672,700,706,710,718,722,723,724,728,735,757,768,769,773,783,797,807,808,809].includes(id)){
+  if([570,644,648,654,658,663,665,671,672,700,706,710,718,722,723,724,728,735,757,768,769,773,783,797,807,808,809,810].includes(id)){
     const title=overlay.querySelector('.inv-modal-title')?.textContent||'';
     check(/[А-Яа-я]/.test(title),'Bulgarian book has Bulgarian simulator title '+id+':'+title);
     check(!/\b(?:Character|Encounter|Programs|Save|Full Moon|Alpha versus Omega)\b/.test(overlay.textContent),'no English UI in Bulgarian simulator '+id);
@@ -673,6 +673,43 @@ for(const id of BOOK_IDS){
     check(modal.getBoundingClientRect().width<=innerWidth&&modal.scrollWidth<=modal.clientWidth+1,'Banedon modal width');
     const max=modal.scrollHeight-modal.clientHeight;modal.scrollTop=Number.MAX_SAFE_INTEGER;
     check(Math.abs(modal.scrollTop-max)<=1,'Banedon bottom reachable');modal.scrollTop=0;
+  }
+  if(id===810){
+    const el=key=>document.getElementById('sim810-'+key);
+    const state=()=>app.currentPlaythrough().sim810;
+    const editor=overlay.querySelector('.bsim-opponent-editor');
+    const name=()=>editor.querySelector('[role="combobox"]');
+    const stat=key=>editor.querySelector('[data-stat="'+key+'"]');
+    check(state().character.attack===1&&state().character.life===10,'promo starting values');
+    el('life').value='4';el('armour').checked=true;el('meat').checked=true;
+    name().value='Гниещ';name().dispatchEvent(new Event('input',{bubbles:true}));
+    check(editor.querySelector('[role="option"]'),'promo autocomplete');
+    check(el('life').value==='4'&&el('armour').checked,'promo autocomplete preserves unsaved setup');
+    name().dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+    check(overlay.classList.contains('active')&&name().getAttribute('aria-expanded')==='false','promo autocomplete Escape first');
+    name().dispatchEvent(new Event('input',{bubbles:true}));
+    editor.querySelector('[role="option"]').dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));
+    check(el('encounter').value==='8'&&stat('attack').value==='1'&&stat('life').value==='4','promo preset rules and stats');
+    el('manual').checked=true;el('manual').dispatchEvent(new Event('change',{bubbles:true}));
+    el('start').click();el('playerDie').value='1';el('escape').click();
+    check(state().character.life===2&&el('escape').disabled&&state().fight.outcome===null,'single failed precombat escape costs two');
+    el('eat').click();
+    check(state().character.life===8&&!state().character.meat&&state().fight.rounds===0,'promo meat allowed in combat without extra attack');
+    el('playerDie').value='1';el('enemyDie').value='6';el('round').click();
+    check(state().character.life===6&&state().fight.enemy.life===4,'promo armour caps incoming damage');
+    el('playerDie').value='6';el('enemyDie').value='1';el('round').click();
+    check(state().fight.outcome==='win'&&state().history.length===1,'promo damage difference victory');
+    el('encounter').value='2';el('encounter').dispatchEvent(new Event('change',{bubbles:true}));
+    name().value='Ръчен пират';stat('attack').value='0';stat('life').value='20';
+    el('axe').checked=true;el('amulet').checked=true;el('start').click();
+    check(state().fight.name==='Ръчен пират'&&state().fight.enemy.life===20&&state().character.attack===1,'promo editable opponent and base attack');
+    el('round').click();
+    check(state().fight.enemy.life===12&&el('escape').disabled,'promo both gear bonuses, no pirate escape');
+    check(name().disabled&&el('armour').disabled&&el('life').disabled,'promo active setup locked');
+    const modal=overlay.querySelector('.bsim-modal');
+    check(modal.getBoundingClientRect().width<=innerWidth&&modal.scrollWidth<=modal.clientWidth+1,'promo modal width');
+    const max=modal.scrollHeight-modal.clientHeight;modal.scrollTop=Number.MAX_SAFE_INTEGER;
+    check(Math.abs(modal.scrollTop-max)<=1,'promo bottom reachable');modal.scrollTop=0;
   }
   const before=JSON.stringify(app.currentPlaythrough());module.render();
   for(const key of overlay.textContent.match(/battlesim(?:\d+)?\.[\w.]+/g)??[])missingTranslations.add(key);
