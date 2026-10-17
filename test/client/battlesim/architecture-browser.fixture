@@ -23,7 +23,7 @@ for(const id of BOOK_IDS){
   if('MODE'!=='mobile')button.click();
   const overlay=document.getElementById(id===829?'bsim-overlay':id===8?'s8-overlay':'sim'+id+'-overlay');
   check(overlay?.classList.contains('active'),'opens '+id);
-  if(id===769||id===773||id===783||id===797||id===807||id===808||id===809||id===810||id===812||id===817){
+  if(id===769||id===773||id===783||id===797||id===807||id===808||id===809||id===810||id===812||id===817||id===832){
     const {ALL_PANEL_OVERLAY_IDS}=await import('REPO/public/js/core/util.js');
     check(ALL_PANEL_OVERLAY_IDS.includes(overlay.id),'simulator registered for panel mutual exclusion '+id);
   }
@@ -55,7 +55,7 @@ for(const id of BOOK_IDS){
     const label=field.parentElement.querySelector(':scope > span:first-child');
     if(label)check(Math.abs(field.getBoundingClientRect().left-label.getBoundingClientRect().right-5.6)<0.2,'aligned field label '+id+' '+field.id);
   }
-  if([570,644,648,654,658,663,665,671,672,700,706,710,718,722,723,724,728,735,757,768,769,773,783,797,807,808,809,810,812,817].includes(id)){
+  if([570,644,648,654,658,663,665,671,672,700,706,710,718,722,723,724,728,735,757,768,769,773,783,797,807,808,809,810,812,817,832].includes(id)){
     const title=overlay.querySelector('.inv-modal-title')?.textContent||'';
     check(/[А-Яа-я]/.test(title),'Bulgarian book has Bulgarian simulator title '+id+':'+title);
     check(!/\b(?:Character|Encounter|Programs|Save|Full Moon|Alpha versus Omega)\b/.test(overlay.textContent),'no English UI in Bulgarian simulator '+id);
@@ -755,6 +755,44 @@ for(const id of BOOK_IDS){
     check(modal.getBoundingClientRect().width<=innerWidth&&modal.scrollWidth<=modal.clientWidth+1,'forest modal width');
     const max=modal.scrollHeight-modal.clientHeight;modal.scrollTop=Number.MAX_SAFE_INTEGER;
     check(Math.abs(modal.scrollTop-max)<=1,'forest bottom reachable');modal.scrollTop=0;
+  }
+  if(id===832){
+    const el=key=>document.getElementById('sim832-'+key);
+    const state=()=>app.currentPlaythrough().sim832;
+    const editor=overlay.querySelector('.bsim-opponent-editor');
+    const stat=key=>editor.querySelector('[data-stat="'+key+'"]');
+    const name=editor.querySelector('[role="combobox"]');
+    name.value='';name.focus();check(editor.querySelector('[role="option"]'),'scarlet autocomplete');
+    name.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+    check(overlay.classList.contains('active')&&name.getAttribute('aria-expanded')==='false','scarlet autocomplete Escape first');
+    el('manual').checked=true;el('manual').dispatchEvent(new Event('change',{bubbles:true}));
+    name.value='Ръчен тигър';stat('attack').value='0';stat('hp').value='1';
+    el('speed').value='8';el('life').value='2';el('darts').value='1';
+    el('start').click();
+    check(state().fight.name==='Ръчен тигър'&&state().fight.health===6,'scarlet custom fight without preset');
+    check(el('life').disabled&&name.disabled,'scarlet locks setup');
+    el('die-player').value='6';el('die-enemy').value='1';el('die-enemyChoice').value='1';el('round').click();
+    check(state().fight.outcome==='win'&&state().character.life===2&&state().history.length===1,'scarlet temporary shield restored');
+    el('encounter').value='3';el('encounter').dispatchEvent(new Event('change',{bubbles:true}));
+    stat('hp').value='1';el('start').click();
+    el('lie').value='small';el('counter').value='small';el('die-player').value='1';el('round').click();
+    check(state().fight.outcome==='win'&&state().fight.destination==='13','scarlet verbal duel');
+    el('encounter').value='77';el('encounter').dispatchEvent(new Event('change',{bubbles:true}));
+    stat('hp').value='1';el('life').value='4';el('start').click();
+    el('die-enemy').value='6';el('die-player').value='1';el('round').click();
+    check(state().fight.outcome==='win'&&state().fight.destination==='61','scarlet emerald countess');
+    el('encounter').value='71';el('encounter').dispatchEvent(new Event('change',{bubbles:true}));
+    el('start').click();el('work').value='sphere';
+    el('die-sphere').value='6';el('die-enemy').value='6';
+    el('round').click();el('round').click();el('round').click();
+    check(state().fight.outcome==='win'&&state().fight.destination==='59'&&state().fight.hours===12,'scarlet exact clock cycle');
+    el('encounter').value='63';el('encounter').dispatchEvent(new Event('change',{bubbles:true}));
+    stat('hp').value='1';el('start').click();el('die-player').value='1';el('die-dodge').value='6';el('round').click();
+    check(state().fight.outcome==='win'&&state().history.length===5,'scarlet normal countess and unique history');
+    const modal=overlay.querySelector('.bsim-modal');
+    check(modal.getBoundingClientRect().width<=innerWidth&&modal.scrollWidth<=modal.clientWidth+1,'scarlet modal width');
+    const max=modal.scrollHeight-modal.clientHeight;modal.scrollTop=Number.MAX_SAFE_INTEGER;
+    check(Math.abs(modal.scrollTop-max)<=1,'scarlet bottom reachable');modal.scrollTop=0;
   }
   if(id===817){
     const el=key=>document.getElementById('sim817-'+key);
