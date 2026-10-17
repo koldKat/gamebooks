@@ -11,7 +11,8 @@ if(scenario&&!/^[a-z-]+$/.test(scenario))throw Error('Invalid simulator scenario
   for(const language of scenario?['en','bg']:['en']){
   for(const mode of ['desktop','mobile']){
     const fixture=fs.readFileSync(__dirname+'/'+(scenario?scenario+'-integration':'architecture-browser')+'.fixture','utf8').replaceAll('REPO','file://'+repo).replaceAll('MODE',mode).replaceAll('LANGUAGE',language).replace('BOOK_IDS',JSON.stringify(ids));
-    const css=['style','charsheet','equipment','battlesim','confirm'].map(n=>`<link rel="stylesheet" href="file://${repo}/public/css/${n}.css">`).join('');
+    const css=['style','charsheet','equipment','battlesim','confirm'].map(n=>`<link rel="stylesheet" href="file://${repo}/public/css/${n}.css">`).join('')
+      + `<link rel="stylesheet" href="file://${repo}/public/${mode === 'mobile' ? 'mobile/css/style' : 'css/play'}.css">`;
     const file=path.join(scratch,mode+'.html');
     fs.writeFileSync(file,`<!doctype html><meta charset="utf-8">${css}<div id="main-screen"></div><div id="m-sim-btn-row"></div><div id="inv-overlay"></div><script>addEventListener('error',e=>document.body.dataset.failure=e.error?.stack||e.message);addEventListener('unhandledrejection',e=>document.body.dataset.failure=e.reason?.stack||String(e.reason));</script><script type="module">${fixture}</script>`);
     for(const width of [320,390,1100]){

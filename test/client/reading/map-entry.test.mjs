@@ -3,7 +3,7 @@ import test from 'node:test';
 import { bindReadingMapEntry, readingChoices } from '../../../public/js/reading/map-entry.js';
 
 function fixture() {
-  const input = { value: '12', max: '150', disabled: false, addEventListener() {}, setCustomValidity() {} };
+  const input = { value: '12', max: '150', disabled: false, addEventListener() {}, setCustomValidity() {}, removeAttribute() {} };
   const button = { disabled: false };
   const handlers = [];
   const form = {

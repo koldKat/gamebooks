@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const { spawn } = require('node:child_process');
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-module.exports = async function checkBrowser({ file, profile, root, width, chromium, timeoutMs = 20000 }) {
+module.exports = async function checkBrowser({ file, profile, root, width, chromium, timeoutMs = 20000, screenshotPath }) {
   if (!chromium || !fs.existsSync(chromium)) throw Error('Set CHROMIUM to a headless Chromium executable');
   const env = { ...process.env, TMPDIR: root };
   delete env.DISPLAY;
@@ -60,7 +60,13 @@ module.exports = async function checkBrowser({ file, profile, root, width, chrom
       }, sessionId);
       last = result.value;
       if (last?.failure) throw Error('Browser assertion: ' + last.failure);
-      if (last?.test) return JSON.parse(last.test);
+      if (last?.test) {
+        if (screenshotPath) {
+          const capture = await send('Page.captureScreenshot', {format:'jpeg',quality:75,captureBeyondViewport:false}, sessionId);
+          fs.writeFileSync(screenshotPath, Buffer.from(capture.data, 'base64'));
+        }
+        return JSON.parse(last.test);
+      }
       await delay(100);
     }
     throw Error('Browser did not complete: ' + JSON.stringify(last));

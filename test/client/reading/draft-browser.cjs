@@ -53,9 +53,21 @@ for(const entry of entries){
     bindReadingMapEntry(pane,{canNavigate:()=>allowed,onNavigate:id=>selected.push(id)});
     for(const form of mapForms){
       const input=form.querySelector('input[name="marker"]'),button=form.querySelector('button[type="submit"]');
+      check(form.noValidate,'native validation must be suppressed');
+      check(getComputedStyle(input).appearance==='textfield','native number spinner');
+      check(getComputedStyle(button).appearance==='none','native submit button');
+      check(getComputedStyle(input).backgroundColor==='rgb(17, 24, 39)','input theme');
+      check(getComputedStyle(button).backgroundColor==='rgb(28, 42, 24)','button theme');
       check(input.disabled&&button.disabled,'manual control without run');
       input.value='12';form.dispatchEvent(new Event('submit',{cancelable:true}));check(!selected.length,'disabled navigation');
       allowed=true;input.disabled=button.disabled=false;
+      input.value='';form.dispatchEvent(new Event('submit',{cancelable:true}));
+      check(!selected.length&&input.getAttribute('aria-invalid')==='true','invalid input must not navigate');
+      const error=form.querySelector('.reading-map-error');
+      check(error?.textContent&&error.getAttribute('role')==='alert','themed inline validation');
+      check(getComputedStyle(error).color==='rgb(248, 113, 113)','validation theme');
+      input.value='12';input.dispatchEvent(new Event('input'));
+      check(!error.textContent&&!input.hasAttribute('aria-invalid'),'clear inline validation');
       const targets=form.dataset.readingMarkerTargets===undefined?null:JSON.parse(form.dataset.readingMarkerTargets);
       if(targets){
         form.dispatchEvent(new Event('submit',{cancelable:true}));check(!selected.length,'unmapped source code');

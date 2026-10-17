@@ -1,4 +1,5 @@
 const MAP_FORM = 'form[data-reading-map-entry]';
+let errorId = 0;
 
 export function isReadingMapSection(data) {
   return /<form\b[^>]*\bdata-reading-map-entry(?:\s|=|>)/i.test(data.html || '');
@@ -16,10 +17,27 @@ export function bindReadingMapEntry(container, { canNavigate, onNavigate }) {
     const input = form.querySelector('input[name="marker"]');
     const button = form.querySelector('button[type="submit"]');
     if (!input || !button) continue;
+    form.noValidate = true;
     input.disabled = button.disabled = !canNavigate();
-    if (form.dataset?.readingMarkerTargets !== undefined) {
-      input.addEventListener('input', () => input.setCustomValidity(''));
-    }
+    let error;
+    input.addEventListener('invalid', event => {
+      event.preventDefault();
+      if (!error) {
+        error = form.ownerDocument.createElement('p');
+        error.className = 'reading-map-error';
+        error.id = `reading-map-error-${++errorId}`;
+        error.setAttribute('role', 'alert');
+        form.append(error);
+        input.setAttribute('aria-errormessage', error.id);
+      }
+      error.textContent = input.validationMessage;
+      input.setAttribute('aria-invalid', 'true');
+    });
+    input.addEventListener('input', () => {
+      input.setCustomValidity('');
+      input.removeAttribute('aria-invalid');
+      if (error) error.textContent = '';
+    });
     form.addEventListener('submit', event => {
       event.preventDefault();
       if (!canNavigate() || !form.reportValidity()) return;

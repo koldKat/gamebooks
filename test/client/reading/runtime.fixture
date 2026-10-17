@@ -19,7 +19,7 @@ Object.defineProperty(body, 'innerHTML', {
     markup = html;
     mapForm = null;
     if (!html.includes('data-reading-map-entry')) return;
-    const input = { value: '', max: '150', disabled: false };
+    const input = { value: '', max: '150', disabled: false, addEventListener() {} };
     const submit = { disabled: false };
     const listeners = [];
     mapForm = { input, submit, querySelector: selector => selector.startsWith('input') ? input : submit,

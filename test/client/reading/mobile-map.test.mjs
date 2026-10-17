@@ -14,7 +14,7 @@ function setup() {
   Object.defineProperty(top, 'innerHTML', { set(html) {
     form = null;
     if (!html.includes('data-reading-map-entry')) return;
-    const input = { value: '', max: '150', disabled: false };
+    const input = { value: '', max: '150', disabled: false, addEventListener() {} };
     const button = { disabled: false };
     form = { input, button, querySelector: selector => selector.startsWith('input') ? input : button,
       reportValidity: () => true, addEventListener: (_type, listener) => { form.fire = () => listener({ preventDefault() {} }); } };
