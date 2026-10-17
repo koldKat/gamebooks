@@ -17,6 +17,9 @@ export function bindReadingMapEntry(container, { canNavigate, onNavigate }) {
     const button = form.querySelector('button[type="submit"]');
     if (!input || !button) continue;
     input.disabled = button.disabled = !canNavigate();
+    if (form.dataset?.readingMarkerTargets !== undefined) {
+      input.addEventListener('input', () => input.setCustomValidity(''));
+    }
     form.addEventListener('submit', event => {
       event.preventDefault();
       if (!canNavigate() || !form.reportValidity()) return;
@@ -27,7 +30,23 @@ export function bindReadingMapEntry(container, { canNavigate, onNavigate }) {
       if (!/^\d+$/.test(raw) || !Number.isSafeInteger(marker) || marker < 1
           || !Number.isSafeInteger(max) || max < 1 || marker > max
           || (prefix !== '' && !/^[a-z\u0400-\u04ff]{1,8}$/i.test(prefix))) return;
-      onNavigate(prefix ? `${prefix}${marker}` : marker);
+      let target = marker;
+      const encodedTargets = form.dataset?.readingMarkerTargets;
+      if (encodedTargets !== undefined) {
+        try {
+          const targets = JSON.parse(encodedTargets);
+          if (!targets || Array.isArray(targets) || !Object.hasOwn(targets, String(marker))) {
+            input.setCustomValidity(form.dataset.readingMarkerError || '');
+            form.reportValidity();
+            return;
+          }
+          target = targets[String(marker)];
+          if (!Number.isSafeInteger(target) || target < 1) return;
+        } catch {
+          return;
+        }
+      }
+      onNavigate(prefix ? `${prefix}${target}` : target);
     });
   }
 }

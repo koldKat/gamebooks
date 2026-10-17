@@ -55,8 +55,18 @@ for(const entry of entries){
       check(input.disabled&&button.disabled,'manual control without run');
       input.value='12';form.dispatchEvent(new Event('submit',{cancelable:true}));check(!selected.length,'disabled navigation');
       allowed=true;input.disabled=button.disabled=false;
-      const expected=(form.dataset.readingMarkerPrefix||'')+'12';
+      const targets=form.dataset.readingMarkerTargets===undefined?null:JSON.parse(form.dataset.readingMarkerTargets);
+      if(targets){
+        form.dispatchEvent(new Event('submit',{cancelable:true}));check(!selected.length,'unmapped source code');
+        input.value=Object.keys(targets)[0];input.dispatchEvent(new Event('input'));
+      }
+      const expected=(form.dataset.readingMarkerPrefix||'')+(targets?targets[input.value]:'12');
       form.dispatchEvent(new Event('submit',{cancelable:true}));check(String(selected.pop())===expected,'manual return');
+      if(targets)for(const [code,target] of Object.entries(targets)){
+        input.value=code;input.dispatchEvent(new Event('input'));
+        form.dispatchEvent(new Event('submit',{cancelable:true}));
+        check(String(selected.pop())===(form.dataset.readingMarkerPrefix||'')+target,'source-code destination');
+      }
       input.value=String(Number(input.max)+1);form.dispatchEvent(new Event('submit',{cancelable:true}));check(!selected.length,'manual upper bound');
     }
   }

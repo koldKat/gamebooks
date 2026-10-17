@@ -3,7 +3,7 @@ import test from 'node:test';
 import { bindReadingMapEntry, readingChoices } from '../../../public/js/reading/map-entry.js';
 
 function fixture() {
-  const input = { value: '12', max: '150', disabled: false };
+  const input = { value: '12', max: '150', disabled: false, addEventListener() {}, setCustomValidity() {} };
   const button = { disabled: false };
   const handlers = [];
   const form = {
@@ -102,4 +102,39 @@ test('manual map edges survive revisits without changing normal choice replaceme
   assert.deepEqual(readingChoices({ html: '<form data-reading-map-entry-extra>', choices: [45] }, existing), [45]);
   assert.deepEqual(readingChoices({ html: '<form data-reading-map-entry>' }, existing), existing);
   assert.deepEqual(readingChoices({ html: '<p>Map aside entry</p>', choices: [45] }, existing, true), [25,35,45]);
+});
+
+test('source codes map only to explicitly configured numeric destinations', () => {
+  const f = fixture();
+  f.input.max = '2359';
+  f.form.dataset = { readingMarkerTargets: '{"1309":10,"1409":11}', readingMarkerError: 'Check the time.' };
+  const visits = [];
+  let validation = '';
+  f.input.setCustomValidity = value => { validation = value; };
+  let clear;
+  f.input.addEventListener = (event, handler) => { if (event === 'input') clear = handler; };
+  bindReadingMapEntry(f.container, { canNavigate: () => true, onNavigate: n => visits.push(n) });
+  for (const value of ['10', '1109', '2359']) {
+    f.input.value = value;
+    f.submit();
+    assert.equal(validation, 'Check the time.');
+    clear();
+    assert.equal(validation, '');
+  }
+  for (const value of ['1309', '01409']) {
+    f.input.value = value;
+    f.submit();
+  }
+  assert.deepEqual(visits, [10, 11]);
+});
+
+test('invalid source-code maps never fall back to ordinary navigation', () => {
+  const f = fixture();
+  const visits = [];
+  bindReadingMapEntry(f.container, { canNavigate: () => true, onNavigate: n => visits.push(n) });
+  for (const map of ['{', 'null', '12', '[]', '{"12":0}', '{"12":-1}', '{"12":"13"}', '{"12":1.5}', '{"12":9007199254740993}']) {
+    f.form.dataset = { readingMarkerTargets: map };
+    f.submit();
+  }
+  assert.deepEqual(visits, []);
 });
