@@ -23,7 +23,7 @@ for(const id of BOOK_IDS){
   if('MODE'!=='mobile')button.click();
   const overlay=document.getElementById(id===829?'bsim-overlay':id===8?'s8-overlay':'sim'+id+'-overlay');
   check(overlay?.classList.contains('active'),'opens '+id);
-  if(id===769||id===773||id===783||id===797||id===807||id===808){
+  if(id===769||id===773||id===783||id===797||id===807||id===808||id===809){
     const {ALL_PANEL_OVERLAY_IDS}=await import('REPO/public/js/core/util.js');
     check(ALL_PANEL_OVERLAY_IDS.includes(overlay.id),'simulator registered for panel mutual exclusion '+id);
   }
@@ -55,7 +55,7 @@ for(const id of BOOK_IDS){
     const label=field.parentElement.querySelector(':scope > span:first-child');
     if(label)check(Math.abs(field.getBoundingClientRect().left-label.getBoundingClientRect().right-5.6)<0.2,'aligned field label '+id+' '+field.id);
   }
-  if([570,644,648,654,658,663,665,671,672,700,706,710,718,722,723,724,728,735,757,768,769,773,783,797,807,808].includes(id)){
+  if([570,644,648,654,658,663,665,671,672,700,706,710,718,722,723,724,728,735,757,768,769,773,783,797,807,808,809].includes(id)){
     const title=overlay.querySelector('.inv-modal-title')?.textContent||'';
     check(/[А-Яа-я]/.test(title),'Bulgarian book has Bulgarian simulator title '+id+':'+title);
     check(!/\b(?:Character|Encounter|Programs|Save|Full Moon|Alpha versus Omega)\b/.test(overlay.textContent),'no English UI in Bulgarian simulator '+id);
@@ -631,6 +631,48 @@ for(const id of BOOK_IDS){
     check(modal.getBoundingClientRect().width<=innerWidth&&modal.scrollWidth<=modal.clientWidth+1,'Zendari modal width');
     const max=modal.scrollHeight-modal.clientHeight;modal.scrollTop=Number.MAX_SAFE_INTEGER;
     check(Math.abs(modal.scrollTop-max)<=1,'Zendari bottom reachable');modal.scrollTop=0;
+  }
+  if(id===809){
+    const el=key=>document.getElementById('sim809-'+key);
+    const state=()=>app.currentPlaythrough().sim809;
+    const editor=overlay.querySelector('.bsim-opponent-editor');
+    const name=()=>editor.querySelector('[role="combobox"]');
+    const stat=key=>editor.querySelector('[data-stat="'+key+'"]');
+    el('skill').value='20';el('stamina').value='20';el('maxStamina').value='30';
+    el('vigour').checked=true;el('restoration').checked=true;el('potions').value='1';
+    name().value='Хелгаст';name().dispatchEvent(new Event('input',{bubbles:true}));
+    check(editor.querySelector('[role="option"]'),'Banedon autocomplete');
+    check(el('skill').value==='20'&&el('vigour').checked,'Banedon unsaved setup survives autocomplete');
+    name().dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+    check(overlay.classList.contains('active')&&name().getAttribute('aria-expanded')==='false','Banedon autocomplete Escape first');
+    name().dispatchEvent(new Event('input',{bubbles:true}));
+    editor.querySelector('[role="option"]').dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));
+    check(el('encounter').value==='64'&&stat('skill').value==='21'&&stat('stamina').value==='28','preset selects matching encounter rules');
+    el('encounter').value='44';el('encounter').dispatchEvent(new Event('change',{bubbles:true}));
+    el('start').click();
+    check(state().fight.ratio===1&&state().character.stamina===17&&state().character.skill===20,'forced unarmed and temporary Vigour');
+    check(name().disabled&&el('vigour').disabled&&el('stamina').disabled,'Banedon active setup locked');
+    el('manual').checked=true;el('manual').dispatchEvent(new Event('change',{bubbles:true}));el('pick').value='0';
+    el('round').click();el('round').click();
+    check(state().fight.outcome==='win'&&state().history.length===1,'Banedon manual zero and victory');
+    el('potion').click();
+    check(state().character.stamina===19&&state().character.potions===0,'two-point healing potion');
+    el('water').checked=true;el('water').dispatchEvent(new Event('change',{bubbles:true}));el('restore').click();
+    check(state().character.stamina===24,'Restoration with location permission');
+    el('encounter').value='50';el('encounter').dispatchEvent(new Event('change',{bubbles:true}));
+    el('skill').value='16';el('stamina').value='100';el('maxStamina').value='100';el('vigour').checked=false;
+    stat('stamina').value='100';name().value='Ръчен противник';el('start').click();
+    check(state().fight.name==='Ръчен противник'&&state().fight.enemy.stamina===100&&el('escape').disabled,'editable opponent stats and escape gate');
+    el('pick').value='1';el('round').click();el('round').click();
+    check(el('escape').disabled,'escape still locked after two rounds');el('round').click();el('escape').click();
+    check(state().fight.outcome==='escape'&&state().fight.destination==='70'&&state().history.length===2,'escape after third round');
+    el('stamina').value='5';stat('stamina').value='1';el('start').click();el('round').click();
+    check(state().fight.outcome==='loss'&&state().fight.enemy.stamina===0&&state().character.stamina===0,'simultaneous death is not victory');
+    check(el('potion').disabled&&el('restore').disabled,'healing never revives a dead Banedon');
+    const modal=overlay.querySelector('.bsim-modal');
+    check(modal.getBoundingClientRect().width<=innerWidth&&modal.scrollWidth<=modal.clientWidth+1,'Banedon modal width');
+    const max=modal.scrollHeight-modal.clientHeight;modal.scrollTop=Number.MAX_SAFE_INTEGER;
+    check(Math.abs(modal.scrollTop-max)<=1,'Banedon bottom reachable');modal.scrollTop=0;
   }
   const before=JSON.stringify(app.currentPlaythrough());module.render();
   for(const key of overlay.textContent.match(/battlesim(?:\d+)?\.[\w.]+/g)??[])missingTranslations.add(key);
