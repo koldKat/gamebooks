@@ -6,6 +6,7 @@ import { replaceDayCoverLists, _applyDayCoverFlows } from './day-covers.js';
 import { bindFeedInteractions } from './bindings.js';
 import { bindFeedPreviews, _hideFeedPreview } from './previews.js';
 import { updateFeedContents } from './update.js';
+import { FEED_FILTERS, filterFeedEntries, feedHeaderHtml, bindFeedFilters } from './filters.js';
 
 // Reuse the in-flight feed refresh to avoid duplicate requests and DOM rebuilds.
 let _loadFeedInFlight = null;
@@ -13,6 +14,63 @@ let _loadFeedToken = null;
 let _loadFeedGeneration = 0;
 let _renderedFeedToken;
 const _expandedGroupKeys = new Set();
+const _disabledFilters = new Set();
+let _filterToken;
+let _cachedFeed = null;
+
+function canFilterFeed() {
+  return !!getToken() && !!(_hooks.getIsAdmin?.() || _hooks.getIsModerator?.());
+}
+
+export function refreshFeedFilters() {
+  if (_cachedFeed && _cachedFeed.token === getToken()) _renderFeed(_cachedFeed);
+}
+
+export function applyFeedFilterPrefs(prefs) {
+  _filterToken = getToken();
+  const disabled = FEED_FILTERS.filter(key => prefs?.[key] === false);
+  if (disabled.length === _disabledFilters.size && disabled.every(key => _disabledFilters.has(key))) return;
+  _disabledFilters.clear();
+  for (const key of disabled) _disabledFilters.add(key);
+  refreshFeedFilters();
+}
+
+function _renderFeed({ entries, pinned, token }) {
+  const el = document.getElementById('feed-content');
+  if (!el || token !== getToken()) return;
+  if (_filterToken !== token) {
+    _disabledFilters.clear();
+    _filterToken = token;
+  }
+  const canFilter = canFilterFeed();
+  const disabled = canFilter ? _disabledFilters : new Set();
+  const visible = filterFeedEntries(entries, disabled);
+  const { blocks, dayCoverLists } = renderFeedContents(visible,
+    disabled.has('news') ? null : pinned, feedHeaderHtml(canFilter, disabled),
+    disabled.size ? t('feed.filter.empty') : undefined);
+  // Keep expansion intent through filtering and live regrouping, but not account changes.
+  if (_renderedFeedToken !== token) _expandedGroupKeys.clear();
+  const update = updateFeedContents(el, blocks, _renderedFeedToken !== token);
+  _renderedFeedToken = token;
+  if (!update.changed) return;
+  replaceDayCoverLists(dayCoverLists);
+  _hideFeedPreview();
+  for (const root of update.changedRoots) {
+    bindFeedInteractions(root, _expandedGroupKeys);
+    bindFeedPreviews(root);
+    bindFeedFilters(root, key => {
+      if (token !== getToken() || !canFilterFeed() || !FEED_FILTERS.includes(key)) return;
+      if (_disabledFilters.has(key)) _disabledFilters.delete(key);
+      else _disabledFilters.add(key);
+      _hooks.savePrefs?.({ feedFilters: { [key]: !_disabledFilters.has(key) } });
+      refreshFeedFilters();
+      el.querySelector(`[data-feed-filter="${key}"]`)?.focus({ preventScroll: true });
+    });
+  }
+  update.restoreScroll();
+  _applyDayCoverFlows(el);
+}
+
 export function loadFeed() {
   const token = getToken();
   if (_loadFeedInFlight && _loadFeedToken === token) return _loadFeedInFlight;
@@ -55,8 +113,6 @@ async function _loadFeedImpl(token, generation) {
     if (!Array.isArray(entries)) throw new Error('Invalid feed response');
     if (token) _hooks.scheduleRewardProfileRefresh?.(150);
 
-    const feedHeaderHtml = `<div id="feed-header">${t('feed.header')} <span class="feed-header-sub">${t('feed.header_sub')}</span></div>`;
-
     // Register author info from entries
     for (const e of entries) {
       _hooks.registerAuthor?.(e.username, !!e.isAuthor, e.displayName);
@@ -65,21 +121,8 @@ async function _loadFeedImpl(token, generation) {
       for (const member of (e.usernames || [])) _hooks.registerModerator?.(member.username, !!member.isModerator);
     }
 
-    const { blocks, dayCoverLists } = renderFeedContents(entries, pinned, feedHeaderHtml);
-    // Keep toggle intent through temporary regrouping; never carry it across accounts.
-    if (_renderedFeedToken !== token) _expandedGroupKeys.clear();
-
-    const update = updateFeedContents(el, blocks, _renderedFeedToken !== token);
-    _renderedFeedToken = token;
-    if (!update.changed) return;
-    replaceDayCoverLists(dayCoverLists);
-    _hideFeedPreview();
-    for (const root of update.changedRoots) {
-      bindFeedInteractions(root, _expandedGroupKeys);
-      bindFeedPreviews(root);
-    }
-    update.restoreScroll();
-    _applyDayCoverFlows(el);
+    _cachedFeed = { entries, pinned, token };
+    _renderFeed(_cachedFeed);
   } catch (_) {
     if (!isCurrent()) return;
     // On failure, remove only a live spinner; never clear previously rendered entries.

@@ -72,6 +72,7 @@ function _renderBoostAmount(prefix, data, boostXp) {
 
 let _displayedXp      = null; // last value rendered into books/play bars (may be mid-animation)
 let _displayedBoostXp = null; // last "XP earned from boost" value rendered (mirrors _displayedXp)
+let _latestXpData = null;
 let _animQueue    = []; // pending {toXp, toBoostXp, data} segments, played back to back
 let _animRunning  = false;
 let _animGen      = 0; // bumped only on a hard reset (see _xpApply's else branch), to invalidate in-flight rAF closures
@@ -96,8 +97,8 @@ function _runAnimQueue(gen) {
   if (fromXp === toXp || durationMs <= 0) {
     _xpRenderPrefix('books', toXp, data);
     _xpRenderPrefix('play',  toXp, data);
-    _renderBoostAmount('books', data, toBoostXp);
-    _renderBoostAmount('play',  data, toBoostXp);
+    _renderBoostAmount('books', _latestXpData, toBoostXp);
+    _renderBoostAmount('play',  _latestXpData, toBoostXp);
     finish();
     return;
   }
@@ -109,8 +110,8 @@ function _runAnimQueue(gen) {
     const currentBoost = fromBoostXp + (toBoostXp - fromBoostXp) * t;
     _xpRenderPrefix('books', current, data);
     _xpRenderPrefix('play',  current, data);
-    _renderBoostAmount('books', data, currentBoost);
-    _renderBoostAmount('play',  data, currentBoost);
+    _renderBoostAmount('books', _latestXpData, currentBoost);
+    _renderBoostAmount('play',  _latestXpData, currentBoost);
     _displayedXp = current;
     _displayedBoostXp = currentBoost;
     if (t < 1) requestAnimationFrame(step);
@@ -126,13 +127,17 @@ function _enqueueXpAnim(toXp, data) {
 }
 
 function _xpApply(xp, data, fromXp = null) {
+  _latestXpData = data;
   _xpRenderPrefix('profile', xp, data); // profile bar/text always snaps instantly
   if (fromXp != null && Number.isFinite(fromXp) && fromXp !== xp) {
     // Seed fromXp only before the first render; queued segments must not overwrite an active tween.
     if (_displayedXp == null) _displayedXp = fromXp;
     _enqueueXpAnim(xp, data);
   } else if (_displayedXp != null && fromXp === xp) {
-    // Ignore unchanged snapshots without resetting the animation generation.
+    // Purchases change the rate without changing XP; retain any active tween.
+    const boostXp = _animRunning ? _displayedBoostXp : Math.floor(Number(data?.xpFromBoost) || 0);
+    _renderBoostAmount('books', data, boostXp);
+    _renderBoostAmount('play', data, boostXp);
     return;
   } else {
     _animGen++; // hard reset (no known prior position): invalidate any in-flight animation
@@ -177,6 +182,10 @@ export function renderBooksXpSummary(data, opts = {}) {
   _xpApply(xp, data || null, opts.fromXp);
   _renderXpSummary('books', data);
   _renderXpSummary('play', data);
+  const profileHeartbeat = document.getElementById('profile-xp-hb-rate');
+  if (profileHeartbeat) profileHeartbeat.textContent = _hbRateText(data?.bonusHeartbeatXp || 0, data?.bonusHeartbeatXpFree || 0);
+  const profileBoost = document.getElementById('profile-xp-boost-earned');
+  if (profileBoost) profileBoost.innerHTML = _xpBoostHtml(Number(data?.xpBoostPct) || 0, Math.floor(Number(data?.xpFromBoost) || 0));
 }
 
 function renderXpBlock(data) {

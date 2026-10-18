@@ -15,7 +15,7 @@ import { setAppXpHooks, refreshAppXp, handleAppXpEvent } from '../progression/ap
 import { setCoversHooks, loadCovers, _refreshPublicCatalogIfVisible, _isLandingBooksViewVisible } from '../covers.js';
 import { setBooksHooks, initBooksPanel, getCachedBooks, getCachedAllSeries, _refreshBooksListOnly, _syncPdfBadgeOnCards, _syncEpubBadgeOnCards, _starsHtml, _starLabelHtml, _flashRatingGate } from '../books.js';
 import { setOpenWorldHooks } from '../play/open-world.js';
-import { setFeedHooks, loadFeed, refreshDayCoverFlows } from '../feed.js';
+import { setFeedHooks, loadFeed, refreshDayCoverFlows, applyFeedFilterPrefs } from '../feed.js';
 import { setNotifHooks, _scheduleLiveUiRefresh } from '../community/notif.js';
 import { _processRewardSnapshot, _scheduleRewardProfileRefresh } from '../progression/rewards.js';
 import { setBgHooks, setCurrentBookCover } from '../play/bg.js';
@@ -121,6 +121,9 @@ export function initFeatureHooks() {
     refreshDayCovers:    refreshDayCoverFlows,
   });
   setFeedHooks({
+    savePrefs,
+    getIsAdmin: () => bootState._isAdmin,
+    getIsModerator: resolveIsModerator,
     publicFetch,
     scheduleRewardProfileRefresh: _scheduleRewardProfileRefresh,
     displayFor,
@@ -196,7 +199,7 @@ export function initFeatureHooks() {
     getCurrentBookSeriesId:   () => bootState._currentBook.seriesId,
     openPublicSeriesRun,
   });
-  setPrefsHooks({ refreshDayCovers: refreshDayCoverFlows });
+  setPrefsHooks({ refreshDayCovers: refreshDayCoverFlows, applyFeedFilterPrefs });
   setEditBookHooks({
     resolveIsAdmin:      () => resolveIsAdmin(),
     resolveIsModerator,

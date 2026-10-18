@@ -161,7 +161,7 @@ export function openEditBookModal({ bookId, initialName, initialSections, initia
 
   initBookRating(bookId);
 
-  bindBookActions({ pubTypeEl, minSections, minMaxSectionNumber, showDiscoverableSections, discoverableHint, initialSections, initialDiscoverableSections, onSave, closeEditBookModal });
+  bindBookActions({ pubTypeEl, minSections, minMaxSectionNumber, showDiscoverableSections, discoverableHint, initialSections, initialMaxSectionNumber, initialDiscoverableSections, onSave, closeEditBookModal });
 
 }
 

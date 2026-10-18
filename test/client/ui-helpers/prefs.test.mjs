@@ -10,7 +10,7 @@ test('shared preference relocation preserves implementation and dependency targe
   const source = readFileSync(sourceUrl, 'utf8');
   assert.equal(existsSync(new URL('../prefs.js', sourceUrl)), false);
   assert.equal(createHash('sha256').update(source.replace(/^import .*;$/gm, '')).digest('hex'),
-    'a9383dbddc84c3e716c8083da2416fa0ec85d9feae6b4442be9921070f69658a');
+    'da76dbfe254b3515609f61db14a1cf38010e2c31c904d8d5691df8495899b5bd');
   const imports = [...source.matchAll(/^import .*from '([^']+)';$/gm)].map(match => new URL(match[1], sourceUrl).href);
   assert.deepEqual(imports, ['core/state.js', 'play.js', 'covers.js', 'books.js'].map(path => new URL('../' + path, sourceUrl).href));
   for (const path of ['books/prefs.js', 'covers/prefs.js']) assert.ok(existsSync(new URL('../' + path, sourceUrl)));

@@ -1,0 +1,89 @@
+const checks = [], saves = [];
+const assert = (value, label) => {if (!value) throw Error(label); checks.push(label);};
+localStorage.setItem('gamebook_lang', 'LANGUAGE');
+window.fetch = async (url, options = {}) => {
+  assert(url === '/api/books/895/state' && options.method === 'PUT', 'only intercepted state saves');
+  saves.push(JSON.parse(options.body)); return new Response('{}', {headers: {'Content-Type': 'application/json'}});
+};
+const app = await import('REPO/public/js/core/state.js');
+const desktop = await import('REPO/public/js/battlesim/loader.js');
+const mobile = await import('REPO/public/mobile/js/battlesim-dispatch.js');
+await import('REPO/public/js/ui-helpers/dialog-escape.js');
+const el = key => document.getElementById('sim895-' + key);
+const run = {startedAt: 123, path: [1], sim891: {preserved: true}};
+app.setCurrentBookId(895); app.state.playthroughs = [run]; app.state.activePtIndex = 0;
+assert(!el('overlay') && mobile.hasSim(895), 'registered and lazy');
+const sim = await import('REPO/public/js/battlesim/battlesim895.js');
+if ('MODE' === 'mobile') await mobile.openSimForBook(895);
+else {await desktop.showBattleSimForBook(895); el('btn').click();}
+assert(el('overlay').classList.contains('active'), 'real loader opens');
+assert(el('title').textContent === 'Планината на смъртта', 'Bulgarian source stays Bulgarian in both app languages');
+const game = () => run.sim895;
+const select = id => {el('encounter').value = id; el('encounter').dispatchEvent(new Event('change'));};
+const field = key => el('opponents').querySelector('[data-stat="' + key + '"]');
+const setCharacter = fields => {for (const [key, value] of Object.entries(fields)) el(key).value = value; el('saveCharacter').click();};
+for (const ability of ['magic', 'healing', 'invisibility']) el('ability-' + ability).checked = true;
+setCharacter({skill: 20});
+let name = el('opponents').querySelector('[role="combobox"]');
+name.value = 'Вампир'; name.focus(); name.dispatchEvent(new Event('input', {bubbles: true}));
+assert(el('opponents').querySelector('[role="option"]'), 'opponent autocomplete has printed roster');
+name.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape', bubbles: true, cancelable: true}));
+assert(el('overlay').classList.contains('active') && name.getAttribute('aria-expanded') === 'false', 'Escape closes suggestions first');
+name.value = 'Ръчен <противник>'; field('skill').value = 1; field('stamina').value = 1;
+el('manual').click(); el('playerRoll').value = 1; el('enemyRoll').value = 6;
+el('start').click();
+assert(field('skill').disabled && el('skill').disabled && el('encounter').disabled, 'active setup locked');
+el('round').click();
+assert(game().fight.outcome === 'win' && game().history.length === 1, 'custom fight records one XP-compatible outcome');
+assert(!el('log').querySelector('противник'), 'opponent names cannot inject markup');
+select('161'); el('start').click(); el('magic').click();
+assert(game().fight.enemies[0].stamina === 15 && game().character.magicUses === 5, 'boss magic deals seven and spends one use');
+const savedFight = JSON.stringify(game().fight);
+el('close').click(); el('btn').click();
+assert(JSON.stringify(game().fight) === savedFight && el('magic').disabled === false, 'reopen preserves fight and spell access');
+el('magic').click(); el('magic').click(); el('magic').click();
+assert(game().fight.outcome === 'win' && game().history.length === 2, 'boss ends only after all endurance is lost');
+setCharacter({stamina: 24}); el('healing').click();
+assert(game().character.stamina === 29 && game().character.healingUses === 4, 'healing spends a use and restores five');
+select('63'); el('start').click(); el('round').click();
+assert(game().fight.finishReason === 'firstWound' && game().fight.enemies[0].stamina === 9, 'first-wound preset leaves assassin alive');
+select('200'); setCharacter({skill: 9}); el('start').click();
+el('playerRoll').value = 1; el('enemyRoll').value = 1;
+for (let index = 0; index < 6; index++) el('round').click();
+assert(game().character.skill === 8 && game().fight.round === 6 && game().fight.skillPenaltyApplied, 'bat stench applies once after six rounds');
+assert(run.sim891.preserved && game().history.length === 3, 'existing simulator and ongoing fight history preserved');
+const before = JSON.stringify(run); sim.render(); sim.render();
+assert(JSON.stringify(run) === before, 'renders do not mutate state');
+assert(!el('overlay').textContent.includes('battlesim895.'), 'all dynamic labels translated');
+assert(!/\b(?:Character|Encounter|Damage|Endurance|Mountain of Death)\b/.test(el('overlay').textContent), 'no English controls in Bulgarian book');
+assert(!el('overlay').querySelector('.bsim-col-right input,.bsim-col-right select'), 'all setup stays left of log');
+for (const details of el('overlay').querySelectorAll('details')) details.open = true;
+await new Promise(resolve => requestAnimationFrame(resolve));
+const trigger = getComputedStyle(el('btn'));
+assert(trigger.backgroundColor === 'rgba(31, 41, 55, 0.88)' && trigger.textTransform === 'uppercase', 'themed launcher');
+for (const control of el('overlay').querySelectorAll('input[type="checkbox"]')) assert(getComputedStyle(control).appearance === 'none', 'themed checkbox');
+for (const control of el('overlay').querySelectorAll('select,input[type="number"],.bsim-action-btn')) {
+  const style = getComputedStyle(control), action = control.matches('.bsim-action-btn');
+  assert(style.backgroundColor === (action ? 'rgb(31, 41, 55)' : 'rgb(17, 24, 39)') && style.borderTopStyle === 'solid', 'themed control ' + control.id);
+  if (action) assert(style.appearance === 'none', 'non-native action');
+  if (control.matches('input')) assert(Math.abs(control.getBoundingClientRect().height - 22) < 0.1 || !control.getClientRects().length, 'compact input ' + control.id + ': ' + control.getBoundingClientRect().height);
+}
+const textSize = parseFloat(getComputedStyle(document.documentElement).fontSize) * 0.75;
+for (const text of el('overlay').querySelectorAll('.bsim-col :is(label,summary,p,input,select,button)')) assert(Math.abs(parseFloat(getComputedStyle(text).fontSize) - textSize) < 0.1, 'consistent text size');
+assert(document.documentElement.scrollWidth <= innerWidth, 'no viewport overflow');
+assert(el('overlay').querySelector('.bsim-modal').getBoundingClientRect().width <= innerWidth, 'dialog fits viewport');
+for (const scroll of el('overlay').querySelectorAll('.bsim-body,.bsim-col-left,.bsim-col-right')) {
+  const max = scroll.scrollHeight - scroll.clientHeight;
+  if (max > 1 && ['auto', 'scroll'].includes(getComputedStyle(scroll).overflowY)) {
+    scroll.scrollTop = max; assert(Math.abs(scroll.scrollTop - max) <= 1, 'bottom accessible'); scroll.scrollTop = 0;
+  }
+}
+el('abandon').click();
+assert(document.getElementById('confirm-overlay').classList.contains('active'), 'abandon confirms');
+const saved = JSON.stringify(run); app.state.playthroughs = [{startedAt: 456, path: [1]}];
+document.getElementById('confirm-ok').click(); sim.render();
+assert(!el('overlay').classList.contains('active'), 'stale panel closes');
+assert(JSON.stringify(run) === saved && !app.currentPlaythrough().sim895, 'stale confirmation cannot alter either run');
+app.state.playthroughs = [run]; el('btn').click();
+await app.saveState(); await new Promise(resolve => setTimeout(resolve, 0));
+document.body.dataset.test = JSON.stringify({mode: 'MODE', language: 'LANGUAGE', width: innerWidth, checks: checks.length, saves: saves.length, productionWrites: 0});

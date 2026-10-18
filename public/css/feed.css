@@ -24,6 +24,43 @@
   font-size: inherit;
 }
 
+#feed-header.feed-header--filters {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.6rem;
+}
+.feed-header-label { white-space: nowrap; }
+.feed-filters {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.25rem;
+  margin-left: auto;
+}
+.feed-filter-btn {
+  appearance: none;
+  font: inherit;
+  font-size: 0.72rem;
+  letter-spacing: 0;
+  text-transform: none;
+  padding: 0.2rem 0.45rem;
+  border: 1px solid #374151;
+  border-radius: 5px;
+  background: rgba(17, 24, 39, 0.8);
+  color: #9ca3af;
+  cursor: pointer;
+}
+.feed-filter-btn[aria-pressed="true"] {
+  border-color: #496952;
+  background: #213b2b;
+  color: #bed6c5;
+}
+.feed-filter-btn:hover { border-color: #9ca3af; }
+.feed-filter-btn:focus-visible { outline: 2px solid #f5a623; outline-offset: 2px; }
+
 .feed-day-card {
   position: relative;
   background-color: #1f2937;

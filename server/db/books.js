@@ -21,6 +21,18 @@ function getBookSection(bookId, sectionId) {
   return { html: row.html, choices };
 }
 
+function getBookNumberingMinimum(book, totalSections) {
+  const extra = Math.max(0, book.total_sections - (book.max_section_number ?? book.total_sections));
+  if (!extra) return totalSections;
+  const rows = db.prepare('SELECT section_id FROM book_sections WHERE book_id = ?').all(book.id);
+  let prefixed = 0, highestNumeric = 0;
+  for (const row of rows) {
+    if (/^\p{L}+\d+$/u.test(row.section_id)) prefixed++;
+    else if (/^\d+$/.test(row.section_id) && Number.isSafeInteger(Number(row.section_id))) highestNumeric = Math.max(highestNumeric, Number(row.section_id));
+  }
+  return Math.max(1, highestNumeric, totalSections - Math.min(extra, prefixed));
+}
+
 function getBooks(userId) {
   const canLiveRead = _canLiveRead(userId);
   const rows = db.prepare(`
@@ -1238,7 +1250,7 @@ module.exports = {
   getBookContainerFields, getOrCreateSeries, getAllSeries, getSeriesAutocomplete, getBookEnemies, addSeriesToLibrary,
   addAnthologyMember, removeAnthologyMember, getAnthologyExtraMembers,
   _pruneRedundantAnthologyMembership,
-  getBookSection, _canLiveRead,
+  getBookSection, getBookNumberingMinimum, _canLiveRead,
   getSeriesById, updateSeries, getSeriesCharacter, saveSeriesCharacter, getSeriesRuns,
   updateSeriesRunPosition, completeSeriesRun, updateSeriesRunPublic, migratePreSeriesRuns,
   reverseSeriesOpenWorld, createSeriesRun, getActiveSeriesRunsForUser, deleteSeriesRun,

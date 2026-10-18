@@ -69,7 +69,7 @@ const entry = moduleAt(resolve(root, 'feed.js'));
 await entry.link((specifier, parent) => moduleAt(resolve(dirname(parent.identifier), specifier)));
 await entry.evaluate();
 const api = entry.namespace;
-assert.deepEqual(Object.keys(api).sort(), ['loadFeed', 'refreshDayCoverFlows', 'setFeedHooks']);
+assert.deepEqual(Object.keys(api).sort(), ['applyFeedFilterPrefs', 'loadFeed', 'refreshDayCoverFlows', 'refreshFeedFilters', 'setFeedHooks']);
 const hooks = {
   publicFetch: async url => { calls.push(['public', url]); return fetchImpl ? fetchImpl() : { ok: true, json: async () => payload }; },
   displayFor: name => `Display ${name}`, adminBadge: () => '[admin]', authorBadge: () => '[author]', contributorBadge: () => '[contributor]', starsHtml: rating => `[stars:${rating}]`,
@@ -278,5 +278,85 @@ if (!baseline) {
   context.window.innerWidth = 768;
   const mobileHover = new Element({ cover: '/cover.jpg' }); feed.queries.set('.feed-user, [data-cover]', [mobileHover]);
   previews.bindFeedPreviews(feed); assert.equal(mobileHover.listeners.size, 0);
+}
+if (!baseline) {
+  const filters = modules.get(resolve(root, 'feed/filters.js')).namespace;
+  const categoryTypes = {
+    catalog: ['book_created', 'series_created'],
+    library: ['book_added', 'series_added'],
+    runs: ['run_started', 'run_completed', 'series_run_started', 'series_run_completed'],
+    achievements: ['level_up', 'all_visited', 'all_discovered', 'first_win', 'first_loss', 'first_battle_death', 'won_all_series', 'won_all_anthology', 'visit_all_series', 'discover_all_series', 'visit_all_anthology', 'discover_all_anthology'],
+    ratings: ['book_rated', 'series_rated'],
+    players: ['user_joined', 'party_formed'],
+    news: ['announcement'],
+  };
+  for (const [category, members] of Object.entries(categoryTypes)) {
+    const visible = filters.filterFeedEntries(types.map(type => ({ type })), new Set([category]));
+    assert.deepEqual(Array.from(visible, e => e.type), types.filter(type => !members.includes(type)), category);
+  }
+  assert.ok(!filters.feedHeaderHtml(false, new Set()).includes('data-feed-filter'));
+  assert.equal((filters.feedHeaderHtml(true, new Set()).match(/aria-pressed="true"/g) || []).length, 7);
+  assert.equal(filters.filterFeedEntries(types.map(type => ({ type })), new Set(filters.FEED_FILTERS)).length, 0);
+  assert.equal(filters.filterFeedEntries([{ type: 'future_event' }], new Set(filters.FEED_FILTERS)).length, 1, 'unknown future events are not silently lost');
+
+  token = 'admin-account';
+  const savedFilters = [];
+  hooks.savePrefs = patch => savedFilters.push(patch);
+  let isAdmin = false;
+  hooks.getIsAdmin = () => isAdmin;
+  payload = { entries: [{ ...base, type: 'book_created' }, { ...base, type: 'run_started' }], pinned: { title: 'Admin news', body: 'Pinned' } };
+  await api.loadFeed();
+  assert.ok(!feed.innerHTML.includes('data-feed-filter'), 'no controls before admin status resolves');
+  isAdmin = true;
+  const filterButton = new Element({ feedFilter: 'catalog' });
+  feed.queries.set('[data-feed-filter]', [filterButton]);
+  const beforeRequests = calls.filter(c => c[0] === 'private').length;
+  api.refreshFeedFilters();
+  assert.ok(feed.innerHTML.includes('data-feed-filter="catalog" aria-pressed="true"'), 'profile resolution enables controls without another fetch');
+  feed.queries.set('[data-feed-filter]', []);
+  await filterButton.emit('click');
+  assert.equal(JSON.stringify(savedFilters.at(-1)), JSON.stringify({ feedFilters: { catalog: false } }));
+  assert.ok(!feed.innerHTML.includes('feed.tmpl.created|'), 'catalog entries hidden');
+  assert.ok(feed.innerHTML.includes('feed.tmpl.run_started'), 'runs retained');
+  assert.equal(calls.filter(c => c[0] === 'private').length, beforeRequests, 'toggle does not fetch');
+  await api.loadFeed();
+  assert.ok(!feed.innerHTML.includes('feed.tmpl.created|'), 'live refresh retains filter');
+  assert.ok(feed.innerHTML.includes('data-feed-filter="catalog" aria-pressed="false"'));
+  const newsButton = new Element({ feedFilter: 'news' });
+  feed.queries.set('[data-feed-filter]', [newsButton]);
+  api.refreshFeedFilters();
+  feed.queries.set('[data-feed-filter]', []);
+  await newsButton.emit('click');
+  assert.ok(!feed.innerHTML.includes('feed-pinned-card'), 'news filter also hides pinned announcements');
+  isAdmin = false;
+  api.refreshFeedFilters();
+  assert.ok(feed.innerHTML.includes('feed.tmpl.created|'), 'non-admin always sees unfiltered feed');
+  assert.ok(!feed.innerHTML.includes('data-feed-filter'));
+  token = 'second-admin'; isAdmin = true;
+  await api.loadFeed();
+  assert.equal((feed.innerHTML.match(/aria-pressed="true"/g) || []).length, 7, 'different account starts with all enabled');
+  api.applyFeedFilterPrefs({ catalog: false, news: false, unknown: false });
+  assert.ok(!feed.innerHTML.includes('feed.tmpl.created|'), 'saved account filters hide catalog entries');
+  assert.ok(!feed.innerHTML.includes('feed-pinned-card'), 'saved account filters hide news');
+  assert.equal((feed.innerHTML.match(/aria-pressed="false"/g) || []).length, 2, 'unknown saved keys ignored');
+  api.applyFeedFilterPrefs({ catalog: true });
+  assert.equal((feed.innerHTML.match(/aria-pressed="true"/g) || []).length, 7, 'remote preference sync restores selected categories');
+  token = 'lorekeeper'; isAdmin = false;
+  hooks.getIsModerator = () => true;
+  const lorekeeperButton = new Element({ feedFilter: 'runs' });
+  feed.queries.set('[data-feed-filter]', [lorekeeperButton]);
+  await api.loadFeed();
+  assert.equal((feed.innerHTML.match(/aria-pressed="true"/g) || []).length, 7, 'lorekeepers also have filters');
+  feed.queries.set('[data-feed-filter]', []);
+  await lorekeeperButton.emit('click');
+  assert.ok(!feed.innerHTML.includes('feed.tmpl.run_started'), 'lorekeepers can toggle categories');
+  hooks.getIsModerator = () => false;
+  api.refreshFeedFilters();
+  assert.ok(!feed.innerHTML.includes('data-feed-filter'), 'removing lorekeeper role removes controls');
+  assert.ok(feed.innerHTML.includes('feed.tmpl.run_started'), 'removing role restores unfiltered feed');
+  hooks.getIsModerator = () => true;
+  token = null;
+  await api.loadFeed();
+  assert.ok(!feed.innerHTML.includes('data-feed-filter'), 'guests cannot access controls even with stale role hooks');
 }
 console.log(JSON.stringify({ digest, cases: snapshots.length - 1 }));

@@ -17,7 +17,7 @@ import { _ensureLiveTabControllerStarted, _connectUserBadgeSSE, _disconnectUserB
 import { refreshAppXp } from '../progression/app-xp.js';
 import { loadCovers, _showCachedCoversPanel, _updateLandingBgDragUi } from '../covers.js';
 import { renderBooksList, getCachedBooks, getCachedAllSeries, getCachedStashes, setBooksDataFresh, setBooksRevealedAt, setCurrentUserId } from '../books.js';
-import { loadFeed } from '../feed.js';
+import { loadFeed, refreshFeedFilters } from '../feed.js';
 import { _scheduleLiveUiRefresh, resetNotifBadgesForLogout } from '../community/notif.js';
 import { _resetRewardSnapshotState, _positionRewardLayer, _processRewardSnapshot } from '../progression/rewards.js';
 import { cancelBgMove } from '../play/bg.js';
@@ -211,6 +211,7 @@ export async function showBooks() {
       document.getElementById('books-username').innerHTML = escapeHtml(_dn) + adminBadge(bootState._isAdmin) + authorBadge(profile.username) + contributorBadge(profile.username) + moderatorBadge(profile.username);
       _updateUsernameTooltip();
     }
+    refreshFeedFilters();
     await _prefsReady;
     if (getToken() !== sessionToken) return;
     renderBooksList(books, allSeries, Array.isArray(stashes) ? stashes : []);

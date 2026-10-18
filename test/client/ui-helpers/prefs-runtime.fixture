@@ -44,7 +44,7 @@ async function harness() {
   });
   await module.evaluate();
   const api = module.namespace;
-  api.setPrefsHooks({ refreshDayCovers: () => effects.push(['day-covers']) });
+  api.setPrefsHooks({ refreshDayCovers: () => effects.push(['day-covers']), applyFeedFilterPrefs: prefs => effects.push(['feed-filters', prefs && plain(prefs)]) });
   return { api, state, body, el, storage, requests, effects, frames,
     respond: fn => { response = fn; },
     frame: () => { for (const fn of frames.splice(0)) fn(); },
@@ -176,3 +176,15 @@ previousSession.resolve({ ok: true, json: async () => ({ 'covers-collapsed': '1'
 await stale;
 assert.equal(switching.effects.length, 0, 'old session preferences cannot overwrite current session');
 assert.equal(switching.storage.size, 0);
+
+const filters = await harness();
+filters.api.savePrefs({ feedFilters: { catalog: false } });
+filters.api.savePrefs({ feedFilters: { news: false } });
+assert.deepEqual(JSON.parse(filters.storage.get('ui_prefs_v1:Player')).feedFilters, { catalog: false, news: false });
+filters.respond(async () => ({ ok: true, json: async () => ({ feedFilters: { runs: false } }) }));
+await filters.api.syncPrefs();
+assert.deepEqual(filters.effects.find(e => e[0] === 'feed-filters')[1], { runs: false, catalog: false, news: false }, 'local toggles merge with other device categories');
+filters.state.username = 'Other'; filters.state.token = 'other';
+filters.effects.length = 0;
+await filters.api.syncPrefs();
+assert.deepEqual(filters.effects.find(e => e[0] === 'feed-filters')[1], { runs: false }, 'another player does not inherit unsynced filters');

@@ -3,7 +3,7 @@ import { t } from '../i18n.js';
 import { formatAnnBody } from './formatting.js';
 import { createDayRenderer } from './groups.js';
 
-export function renderFeedContents(entries, pinned, feedHeaderHtml) {
+export function renderFeedContents(entries, pinned, feedHeaderHtml, emptyMessage = t('feed.empty')) {
   const renderDayItems = createDayRenderer();
   const now       = new Date();
   const todayStr  = now.toDateString();
@@ -73,7 +73,7 @@ export function renderFeedContents(entries, pinned, feedHeaderHtml) {
     blocks.push({ key: 'day:' + g.key, html: html.slice(start), covers });
   }
   if (!entries.length && !pinned) {
-    const empty = `<p class="feed-empty">${t('feed.empty')}</p>`;
+    const empty = `<p class="feed-empty">${escapeHtml(emptyMessage)}</p>`;
     html += empty;
     blocks.push({ key: 'empty', html: empty });
   }

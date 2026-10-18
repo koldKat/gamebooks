@@ -81,4 +81,16 @@ test('Edit Book saves the optional maximum and keeps the total independent of se
   await save();
   assert.equal(closed, false, 'failed saves keep the editor open');
   assert.equal(el('edit-book-error').textContent, 'Save rejected');
+
+  el('edit-book-sections-input').value = '235';
+  el('edit-book-max-section-input').value = '205';
+  c.bindBookActions({ pubTypeEl: el('edit-book-pub-type'), minSections: 5, minMaxSectionNumber: 205,
+    initialSections: 235, initialMaxSectionNumber: 205, onSave: (...args) => { saved = args; }, closeEditBookModal() {} });
+  saved = null; await save();
+  assert.equal(saved[1], 235); assert.equal(saved[15], 205, 'prefixed passages are counted independently');
+  el('edit-book-max-section-input').value = '204'; saved = null; await save();
+  assert.equal(saved, null, 'existing numeric labels remain protected');
+  el('edit-book-max-section-input').value = '205';
+  el('edit-book-sections-input').value = '236'; saved = null; await save();
+  assert.equal(saved, null, 'extra sections still require room in the numeric maximum');
 });

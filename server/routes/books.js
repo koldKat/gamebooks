@@ -388,8 +388,9 @@ async function handleUpdateBook(req, res, bookId) {
       return send(res, 404, { error: 'Not found' });
   }
   const resolvedMax = isContainer ? null : (max_section_number === undefined ? (existingBook.max_section_number ?? total_sections) : (max_section_number ?? total_sections));
-  if (resolvedMax != null && (!Number.isSafeInteger(resolvedMax) || resolvedMax < total_sections))
-    return send(res, 400, { error: 'max_section_number must be a whole number at least total_sections' });
+  const minimumMax = db.getBookNumberingMinimum(existingBook, total_sections);
+  if (resolvedMax != null && (!Number.isSafeInteger(resolvedMax) || resolvedMax < minimumMax))
+    return send(res, 400, { error: `max_section_number must be a whole number at least ${minimumMax}` });
   const old = db.getBookIdentifiers((isAdmin || isModerator) ? null : userId, bookId);
   const cur = db.getBookContainerFields(bookId);
   const currentSeries = cur?.series_id ? db.getSeriesById(cur.series_id) : null;

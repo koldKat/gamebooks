@@ -9,22 +9,32 @@ let _hooks = {};
 export function setPrefsHooks(h) { _hooks = h || {}; }
 
 let _localPrefOverrides   = {};
+let _prefOwner = null;
 let _landingPanelRestoreState = null;
 let _playPanelRestoreState    = null;
 let _feedScrollBeforeCollapse  = null;
 
 export function savePrefs(patch) {
   if (!getToken()) return;
-  Object.assign(_localPrefOverrides, patch);
+  if (_prefOwner !== getUsername()) {
+    _localPrefOverrides = {};
+    _prefOwner = getUsername();
+  }
+  const overrides = { ...patch };
+  if (patch.feedFilters) overrides.feedFilters = { ..._localPrefOverrides.feedFilters, ...patch.feedFilters };
+  Object.assign(_localPrefOverrides, overrides);
   try {
     const key = `ui_prefs_v1:${getUsername()}`;
     const cached = JSON.parse(localStorage.getItem(key) || '{}');
-    localStorage.setItem(key, JSON.stringify({ ...cached, ...patch }));
+    const next = { ...cached, ...patch };
+    if (patch.feedFilters) next.feedFilters = { ...cached.feedFilters, ...patch.feedFilters };
+    localStorage.setItem(key, JSON.stringify(next));
   } catch {}
   apiFetch('/api/prefs', { method: 'PATCH', body: JSON.stringify(patch) }).catch(() => {});
 }
 
 export function applyPrefs(p, { renderBooks = true } = {}) {
+  _hooks.applyFeedFilterPrefs?.(p.feedFilters);
   setCoversPrefsState(p);
   setExpandedPrefs(p.bookExpanded, p.seriesExpanded, p.stashExpanded);
   const boolKeys = {
@@ -87,6 +97,10 @@ export async function syncPrefs(options) {
   const sessionToken = getToken();
   if (!sessionToken) return;
   const username = getUsername();
+  if (_prefOwner !== username) {
+    _localPrefOverrides = {};
+    _prefOwner = username;
+  }
   try {
     const snapshotBefore = { ..._localPrefOverrides };
     const r = await apiFetch('/api/prefs');
@@ -95,6 +109,9 @@ export async function syncPrefs(options) {
     if (getToken() !== sessionToken) return;
     // Merge current overrides after the request, preserving preferences changed while it was in flight.
     const prefs = { ...serverPrefs, ..._localPrefOverrides };
+    if (_localPrefOverrides.feedFilters) {
+      prefs.feedFilters = { ...serverPrefs.feedFilters, ..._localPrefOverrides.feedFilters };
+    }
     applyPrefs(prefs, options);
     try { localStorage.setItem(`ui_prefs_v1:${username}`, JSON.stringify(prefs)); } catch {}
     for (const k of Object.keys(snapshotBefore)) {

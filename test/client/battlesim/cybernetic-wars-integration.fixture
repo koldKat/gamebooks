@@ -1,0 +1,98 @@
+const checks = [], saves = [];
+const assert = (value, label) => {if (!value) throw Error(label); checks.push(label);};
+localStorage.setItem('gamebook_lang', 'LANGUAGE');
+window.fetch = async (url, options = {}) => {
+  assert(url === '/api/books/891/state' && options.method === 'PUT', 'only intercepted state saves');
+  saves.push(JSON.parse(options.body)); return new Response('{}', {headers: {'Content-Type': 'application/json'}});
+};
+const app = await import('REPO/public/js/core/state.js');
+const desktop = await import('REPO/public/js/battlesim/loader.js');
+const mobile = await import('REPO/public/mobile/js/battlesim-dispatch.js');
+await import('REPO/public/js/ui-helpers/dialog-escape.js');
+const el = key => document.getElementById('sim891-' + key);
+const run = {startedAt: 123, path: [1], sim857: {preserved: true}};
+app.setCurrentBookId(891); app.state.playthroughs = [run]; app.state.activePtIndex = 0;
+assert(!el('overlay') && mobile.hasSim(891), 'registered and lazy');
+const sim = await import('REPO/public/js/battlesim/battlesim891.js');
+if ('MODE' === 'mobile') await mobile.openSimForBook(891);
+else {await desktop.showBattleSimForBook(891); el('btn').click();}
+assert(el('overlay').classList.contains('active'), 'real loader opens');
+assert(el('title').textContent === 'Кибернетични войни', 'Bulgarian source stays Bulgarian in both app languages');
+const game = () => run.sim891;
+const stat = (who, key) => el(who).querySelector('[data-stat="' + key + '"]');
+const set = (who, fields) => {for (const [key, value] of Object.entries(fields)) stat(who, key).value = value;};
+let name = el('player').querySelector('[role="combobox"]');
+name.value = 'Изтребител'; name.focus(); name.dispatchEvent(new Event('input', {bubbles: true}));
+assert(el('player').querySelector('[role="option"]'), 'autocomplete offers real unit categories');
+name.dispatchEvent(new KeyboardEvent('keydown', {key: 'ArrowDown', bubbles: true, cancelable: true}));
+name.dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter', bubbles: true, cancelable: true}));
+assert(stat('player', 'hp').value === '1' && stat('player', 'damage').value === '10', 'easy preset fills printed stats');
+name.focus(); name.dispatchEvent(new Event('input', {bubbles: true}));
+name.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape', bubbles: true, cancelable: true}));
+assert(el('overlay').classList.contains('active') && name.getAttribute('aria-expanded') === 'false', 'Escape closes autocomplete before dialog');
+name.value = 'Ръчен робот <име>';
+set('player', {attack: 20, defence: 10, damage: 5, hp: 20});
+set('enemy', {attack: 0, defence: 1, damage: 1, hp: 5});
+el('manual').click(); el('start').click();
+assert(stat('player', 'attack').disabled && el('mode').disabled, 'fight locks setup');
+el('exchange').click();
+assert(game().fight.outcome === 'win' && game().fight.enemy.hp === 0, 'custom easy victory follows winner damage');
+assert(game().history.length === 1, 'one XP-compatible outcome');
+assert(!el('log').querySelector('име'), 'custom names never inject markup');
+const change = (key, value) => {el(key).value = value; el(key).dispatchEvent(new Event('change'));};
+change('mode', 'hard'); change('domain', 'ground');
+assert(stat('player', 'damage').value === '' && stat('player', 'attack').value === '8', 'hard preset retains absent damage');
+assert(getComputedStyle(el('oneHit').closest('label')).display === 'none', 'easy-only controls actually disappear on hard');
+el('playerChance').value = 12; el('enemyChance').value = 1;
+el('start').click(); el('exchange').click();
+assert(game().fight.pendingDamage && !el('pending').hidden && el('exchange').disabled, 'unprinted damage waits without another roll');
+assert(game().fight.player.energy === 45 && game().fight.enemy.hp === 24, 'pending hit charges one shot only');
+el('manualDamage').value = 6; el('resolve').click();
+assert(game().fight.enemy.hp === 18 && game().fight.turn === 'enemy', 'manual damage advances the existing exchange once');
+assert(game().fight.exchanges === 1 && !game().fight.pendingDamage, 'manual resolution never rerolls');
+el('close').click(); el('btn').click();
+assert(el('manual').checked && el('playerChance').value === '12', 'saved controls restore on reopen');
+assert(game().fight.player.energy === 45 && stat('player', 'energy').value === '45', 'reopen preserves energy and fight');
+el('edit').click(); set('player', {energy: 100}); el('apply').click();
+assert(game().fight.player.energy === 100 && game().fight.enemy.hp === 18, 'manual recharge preserves damage');
+assert(game().fight.turn === 'enemy' && game().fight.exchanges === 1, 'correction is not another attack');
+el('exchange').click();
+assert(game().fight.enemy.hp === 14 && game().fight.enemy.energy === 45, 'successful hard defence deals four damage');
+assert(game().fight.player.energy === 100 && game().fight.turn === 'player', 'only firing unit spends energy');
+assert(game().history.length === 1 && run.sim857.preserved, 'ongoing fight and unrelated simulator remain unchanged');
+const before = JSON.stringify(run); sim.render(); sim.render();
+assert(JSON.stringify(run) === before, 'renders do not mutate saved state');
+assert(!el('overlay').textContent.includes('battlesim891.'), 'all dynamic labels translated');
+assert(!/\b(?:Character|Encounter|Attack|Damage|Energy|Cybernetic Wars)\b/.test(el('overlay').textContent), 'no English controls in Bulgarian simulator');
+assert(!el('overlay').querySelector('.bsim-col-right input,.bsim-col-right select'), 'setup stays on the left');
+const trigger = getComputedStyle(el('btn'));
+assert(trigger.backgroundColor === 'rgba(31, 41, 55, 0.88)' && trigger.textTransform === 'uppercase', 'themed launcher');
+for (const control of el('overlay').querySelectorAll('input[type="checkbox"]')) assert(getComputedStyle(control).appearance === 'none', 'themed checkbox');
+for (const control of el('overlay').querySelectorAll('select,input[type="number"],.bsim-action-btn')) {
+  const style = getComputedStyle(control);
+  const action = control.matches('.bsim-action-btn');
+  assert(style.backgroundColor === (action ? 'rgb(31, 41, 55)' : 'rgb(17, 24, 39)') && style.borderTopStyle === 'solid', 'themed control ' + control.id);
+  if (action) assert(style.appearance === 'none', 'no native action button');
+  if (control.matches('input')) assert(Math.abs(control.getBoundingClientRect().height - 22) < 0.1 || !control.getClientRects().length, 'standard compact number field');
+}
+const size = parseFloat(getComputedStyle(document.documentElement).fontSize) * 0.75;
+for (const text of el('overlay').querySelectorAll('.bsim-col :is(label,summary,p,h4,input,select,button)')) {
+  assert(Math.abs(parseFloat(getComputedStyle(text).fontSize) - size) < 0.1, 'consistent readable text size');
+}
+assert(document.documentElement.scrollWidth <= innerWidth, 'no viewport overflow');
+assert(el('overlay').querySelector('.bsim-modal').getBoundingClientRect().width <= innerWidth, 'dialog fits viewport');
+for (const scroll of el('overlay').querySelectorAll('.bsim-body,.bsim-col-left,.bsim-col-right')) {
+  const max = scroll.scrollHeight - scroll.clientHeight;
+  if (max > 1 && ['auto', 'scroll'].includes(getComputedStyle(scroll).overflowY)) {
+    scroll.scrollTop = max; assert(Math.abs(scroll.scrollTop - max) <= 1, 'scroll reaches bottom'); scroll.scrollTop = 0;
+  }
+}
+el('abandon').click();
+assert(document.getElementById('confirm-overlay').classList.contains('active'), 'ending fight confirms');
+const saved = JSON.stringify(run); app.state.playthroughs = [{startedAt: 456, path: [1]}];
+document.getElementById('confirm-ok').click(); sim.render();
+assert(!el('overlay').classList.contains('active'), 'run change closes stale panel');
+assert(JSON.stringify(run) === saved && !app.currentPlaythrough().sim891, 'stale confirmation preserves both runs');
+app.state.playthroughs = [run]; el('btn').click();
+await app.saveState(); await new Promise(resolve => setTimeout(resolve, 0));
+document.body.dataset.test = JSON.stringify({mode: 'MODE', language: 'LANGUAGE', width: innerWidth, checks: checks.length, saves: saves.length, productionWrites: 0});

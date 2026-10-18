@@ -127,7 +127,7 @@ async function handleSetPrefs(req, res) {
   const current = db.getUserPrefs(userId);
   const next = { ...current, ...body };
   // Merge preference maps by key so racing snapshots cannot erase other toggles.
-  for (const key of ['bookExpanded', 'seriesExpanded', 'stashExpanded', 'landingCoverPos']) {
+  for (const key of ['bookExpanded', 'seriesExpanded', 'stashExpanded', 'landingCoverPos', 'feedFilters']) {
     if (body[key] && typeof body[key] === 'object' && !Array.isArray(body[key])) {
       next[key] = { ...(current[key] && typeof current[key] === 'object' ? current[key] : {}), ...body[key] };
     }

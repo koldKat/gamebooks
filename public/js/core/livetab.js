@@ -2,6 +2,7 @@
 
 import { getToken, apiFetch } from './state.js';
 import { refreshCoinsDisplay } from '../progression/shop.js';
+import { connectEventStream } from './event-stream.js';
 
 // Callbacks wired in by main.js at boot
 let _hooks = {};
@@ -240,34 +241,40 @@ function _applyFollowerLiveEvent(type, payload = null) {
 function _connectPublicCatalogSSE() {
   if (!_isLiveLeader || _publicCatalogSource || typeof EventSource === 'undefined') return;
   try {
-    _publicCatalogSource = new EventSource('/api/public/stream');
-    _publicCatalogSource.onmessage = () => {
+    const refresh = () => {
       _hooks.refreshPublicCatalogIfVisible?.();
       _broadcastLiveEvent('covers_changed');
     };
-    _publicCatalogSource.onerror = () => {};
+    _publicCatalogSource = connectEventStream('/api/public/stream', {
+      enabled: () => _isLiveLeader, onMessage: refresh, onReconnect: refresh,
+    });
   } catch (_) {}
 }
 
 function _connectFeedSSE() {
   if (!_isLiveLeader || _feedSource || typeof EventSource === 'undefined') return;
   try {
-    _feedSource = new EventSource('/api/feed/stream');
-    _feedSource.onmessage = e => {
-      let payload; try { payload = JSON.parse(e.data); } catch { payload = {}; }
-      if (payload.type === 'config_changed') {
-        if (payload.version) document.getElementById('app-version').textContent = payload.version;
-        _broadcastLiveEvent('config_changed', { version: payload.version });
-        return;
-      }
-      _feedDirty = true;
-      if (_hooks.isLandingVisible?.()) {
-        clearTimeout(_feedSseDebounce);
-        _feedSseDebounce = setTimeout(() => { _feedDirty = false; _hooks.loadFeed?.(); _syncFeedVersionBaseline(); _refreshAppXpStaggered(); }, 1500);
-      }
-      _broadcastLiveEvent('feed_changed');
-    };
-    _feedSource.onerror = () => {};
+    _feedSource = connectEventStream('/api/feed/stream', {
+      enabled: () => _isLiveLeader,
+      onReconnect: () => {
+        _refreshFeedIfChanged();
+        _broadcastLiveEvent('feed_changed');
+      },
+      onMessage: e => {
+        let payload; try { payload = JSON.parse(e.data); } catch { payload = {}; }
+        if (payload.type === 'config_changed') {
+          if (payload.version) document.getElementById('app-version').textContent = payload.version;
+          _broadcastLiveEvent('config_changed', { version: payload.version });
+          return;
+        }
+        _feedDirty = true;
+        if (_hooks.isLandingVisible?.()) {
+          clearTimeout(_feedSseDebounce);
+          _feedSseDebounce = setTimeout(() => { _feedDirty = false; _hooks.loadFeed?.(); _syncFeedVersionBaseline(); _refreshAppXpStaggered(); }, 1500);
+        }
+        _broadcastLiveEvent('feed_changed');
+      },
+    });
   } catch (_) {}
 }
 
@@ -281,12 +288,13 @@ export function _disconnectUserBadgeSSE() {
 export function _connectUserBadgeSSE() {
   if (!_isLiveLeader || _userBadgeSource || typeof EventSource === 'undefined' || !getToken()) return;
   try {
-    _userBadgeSource = new EventSource(`/api/user/stream?token=${encodeURIComponent(getToken())}`);
-    _userBadgeSource.onmessage = () => {
+    const refresh = () => {
       _hooks.scheduleLiveUiRefresh?.({ inbox: true, notif: true, forum: true, reward: true, party: true, prefs: true }, 120);
       _broadcastLiveEvent('badges_changed');
     };
-    _userBadgeSource.onerror = () => {};
+    _userBadgeSource = connectEventStream(() => `/api/user/stream?token=${encodeURIComponent(getToken())}`, {
+      enabled: () => _isLiveLeader && !!getToken(), onMessage: refresh, onReconnect: refresh,
+    });
   } catch (_) {}
 }
 
@@ -300,15 +308,17 @@ export function _disconnectAppXpSSE() {
 export function _connectAppXpSSE() {
   if (!_isLiveLeader || _appXpSource || typeof EventSource === 'undefined' || !getToken() || !_hooks.getIsAdmin?.()) return;
   try {
-    _appXpSource = new EventSource(`/api/app-xp/stream?token=${encodeURIComponent(getToken())}`);
-    _appXpSource.onmessage = e => {
-      let payload; try { payload = JSON.parse(e.data); } catch { return; }
-      _hooks.onAppXpEvent?.(payload);
-      // Refresh the summary as well as the floater, using the shared stagger.
-      _refreshAppXpStaggered();
-      _broadcastLiveEvent('app_xp_event', payload);
-    };
-    _appXpSource.onerror = () => {};
+    _appXpSource = connectEventStream(() => `/api/app-xp/stream?token=${encodeURIComponent(getToken())}`, {
+      enabled: () => _isLiveLeader && !!getToken() && !!_hooks.getIsAdmin?.(),
+      onReconnect: _refreshAppXpStaggered,
+      onMessage: e => {
+        let payload; try { payload = JSON.parse(e.data); } catch { return; }
+        _hooks.onAppXpEvent?.(payload);
+        // Refresh the summary as well as the floater, using the shared stagger.
+        _refreshAppXpStaggered();
+        _broadcastLiveEvent('app_xp_event', payload);
+      },
+    });
   } catch (_) {}
 }
 
@@ -336,6 +346,7 @@ export function _ensureLiveTabControllerStarted() {
 
   function _onTabBecomeVisible() {
     _takeLiveLeadership();
+    _resumeLiveStreams();
     // Catch up feed and reward state after a frozen/throttled tab becomes visible.
     _refreshFeedIfChanged();
     if (getToken()) _hooks.scheduleRewardProfileRefresh?.(150);
@@ -353,6 +364,7 @@ export function _ensureLiveTabControllerStarted() {
 
   function _onWindowFocus() {
     _takeLiveLeadership();
+    _resumeLiveStreams();
     _refreshFeedIfChanged();
     if (_feedDirty && _hooks.isLandingVisible?.())          { _feedDirty = false; _hooks.loadFeed?.(); _syncFeedVersionBaseline(); }
     if (_publicCatalogDirty && _hooks.isLandingVisible?.()) { _publicCatalogDirty = false; _hooks.loadCovers?.({ force: true }); }
@@ -364,6 +376,11 @@ export function _ensureLiveTabControllerStarted() {
   });
 
   window.addEventListener('focus', _onWindowFocus);
+  window.addEventListener('pageshow', _onTabBecomeVisible);
+  window.addEventListener('online', () => {
+    _claimLiveLeadership();
+    _resumeLiveStreams(true);
+  });
 
   const _releaseLiveLeaderLock = () => {
     const lock = _readLiveLeaderLock();
@@ -375,9 +392,19 @@ export function _ensureLiveTabControllerStarted() {
   window.addEventListener('pagehide',     _releaseLiveLeaderLock);
 
   _liveLeaderHeartbeatInterval = setInterval(() => {
-    if (_isLiveLeader) _writeLiveLeaderLock();
+    if (_isLiveLeader) {
+      _writeLiveLeaderLock();
+      _resumeLiveStreams();
+    }
   }, _LIVE_TAB_HEARTBEAT_MS);
   _liveLeaderCheckInterval = setInterval(_claimLiveLeadership, _LIVE_TAB_HEARTBEAT_MS);
 
   _claimLiveLeadership();
+}
+
+function _resumeLiveStreams(force = false) {
+  if (!_isLiveLeader) return;
+  for (const source of [_feedSource, _publicCatalogSource, _userBadgeSource, _appXpSource]) {
+    source?.resume(force);
+  }
 }

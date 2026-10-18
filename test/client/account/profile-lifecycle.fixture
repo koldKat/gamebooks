@@ -13,7 +13,10 @@ const el = id => {
   return nodes.get(id);
 };
 let token = 'first-session', snapshots = 0;
-const context = createContext({ document: { getElementById: el }, console });
+const frames = [];
+let now = 0;
+const context = createContext({ document: { getElementById: el }, console,
+  performance: { now: () => now }, requestAnimationFrame: callback => frames.push(callback) });
 const stubs = {
   '../core/state.js': { apiFetch: () => new Promise((resolve, reject) => pending.push({ resolve, reject })), getToken: () => token,
     getUsername: () => 'Tester', setUsername() {}, setCurrentUserLevel() {} },
@@ -63,3 +66,25 @@ pending.shift().reject(new Error('late failure')); await failed;
 assert.equal(overlay.classList.contains('active'), false);
 assert.equal(el('profile-error').textContent, '', 'cancelled failure does not paint an error');
 console.log('Profile close, pending-response, delayed-JSON, session-switch and error guards passed.');
+
+const xpData = { xp: 2000, level: 1, nextLevelXp: 3000, xpFromBoost: 100, xpBoostPct: 0.1, bonusHeartbeatXp: 0, bonusHeartbeatXpFree: 0 };
+profile.renderBooksXpSummary(xpData);
+profile.renderBooksXpSummary({ ...xpData, xpBoostPct: 0.2, bonusHeartbeatXp: 1 }, { fromXp: 2000 });
+for (const prefix of ['books', 'play']) {
+  assert.ok(el(prefix + '-xp-boost').innerHTML.includes('+0.2% boost'), 'same-XP purchase immediately updates ' + prefix + ' boost');
+  assert.equal(el(prefix + '-xp-hb-rate').textContent, '+1.1 heartbeat XP/min');
+}
+assert.ok(el('profile-xp-boost-earned').innerHTML.includes('+0.2% boost'));
+assert.equal(el('profile-xp-hb-rate').textContent, '+1.1 heartbeat XP/min');
+assert.equal(frames.length, 0, 'rate-only changes do not start XP animation');
+profile.renderBooksXpSummary({ ...xpData, xp: 2010 }, { fromXp: 2000 });
+assert.equal(frames.length, 1);
+profile.renderBooksXpSummary({ ...xpData, xp: 2010, xpBoostPct: 0.3, bonusHeartbeatXp: 2 }, { fromXp: 2010 });
+assert.equal(frames.length, 1, 'purchase does not cancel or duplicate an active tween');
+now = 50; frames.shift()(now);
+assert.ok(el('books-xp-boost').innerHTML.includes('+0.3% boost'), 'old animation frame cannot restore pre-purchase boost');
+assert.equal(el('play-xp-hb-rate').textContent, '+1.2 heartbeat XP/min');
+now = 100; frames.shift()(now);
+assert.equal(frames.length, 0, 'existing tween still finishes');
+assert.ok(el('play-xp-boost').innerHTML.includes('+0.3% boost'));
+console.log('Immediate boost/heartbeat purchase updates and active-animation preservation passed.');

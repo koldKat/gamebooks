@@ -5,7 +5,7 @@ import { pauseCoversAutoRefresh, resumeCoversAutoRefresh } from '../covers.js';
 import { _setButtonsDisabled, _uploadPdfWithProgress, _uploadEpubWithProgress } from './uploads.js';
 import { validateIsbn, validateIssn, validateAsin } from './validators.js';
 
-export function bindBookActions({ pubTypeEl, minSections, minMaxSectionNumber, showDiscoverableSections, discoverableHint, initialSections, initialDiscoverableSections, onSave, closeEditBookModal }) {
+export function bindBookActions({ pubTypeEl, minSections, minMaxSectionNumber, showDiscoverableSections, discoverableHint, initialSections, initialMaxSectionNumber = null, initialDiscoverableSections, onSave, closeEditBookModal }) {
   const session = editState._bookSession;
   const bookId = editState._editBookId;
   const isCurrent = () => session === editState._bookSession && document.getElementById('edit-book-modal-overlay').classList.contains('active');
@@ -45,7 +45,8 @@ export function bindBookActions({ pubTypeEl, minSections, minMaxSectionNumber, s
 
     const maxRaw = document.getElementById('edit-book-max-section-input').value.trim();
     const maxSectionNumber = maxRaw ? Number(maxRaw) : sections;
-    const minMax = Math.max(sections, minMaxSectionNumber);
+    const prefixedSections = Math.max(0, initialSections - (initialMaxSectionNumber ?? initialSections));
+    const minMax = Math.max(1, sections - prefixedSections, minMaxSectionNumber);
     if ((maxRaw && !/^\d+$/.test(maxRaw)) || !Number.isSafeInteger(maxSectionNumber) || maxSectionNumber < minMax) { errEl.textContent = t('err.max_section', { min: minMax }); return; }
     let isbn = '', issn = '', asin = '';
     if (document.getElementById('edit-book-pub-type').value === 'magazine') {

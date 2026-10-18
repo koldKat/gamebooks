@@ -257,6 +257,28 @@ test('sparse section numbering round-trips through creation, shared state, libra
   } finally { db.close(); }
 });
 
+test('prefixed imported passages preserve their independent numeric maximum on edit', async () => {
+  const { db, books } = setup();
+  try {
+    db.exec('CREATE TABLE book_reading_entries (book_id INTEGER, section_id TEXT, counts_as_section INTEGER); CREATE TABLE book_sections (book_id INTEGER, section_id TEXT)');
+    const book = books.createBook(1, 'Lettered book', 7, null, null, null, null, null, null, null, null, false, null, null, true, 5);
+    db.prepare('UPDATE books SET has_live_reading=1 WHERE id=?').run(book.id);
+    const add = db.prepare('INSERT INTO book_sections VALUES(?,?)');
+    for (const id of ['1', '2', '3', '4', '5', 'у0', 'р1', 'intro']) add.run(book.id, id);
+    const options = { userId: 1, body: { name: 'Lettered book', total_sections: 7, is_public: true, max_section_number: 5 } };
+    const routes = editRoutes(db, books, options);
+    assert.equal(await routes.edit(book.id), 200);
+    assert.equal(books.getBookById(book.id).max_section_number, 5);
+    options.body.max_section_number = 4; assert.equal(await routes.edit(book.id), 400);
+    options.body.total_sections = 6; assert.equal(await routes.edit(book.id), 400, 'imported numeric labels stay protected even if total is reduced');
+    options.body.max_section_number = 5; options.body.total_sections = 8;
+    assert.equal(await routes.edit(book.id), 400, 'lettered allowance cannot grow from client input');
+    options.body.max_section_number = 6; assert.equal(await routes.edit(book.id), 200);
+    db.prepare('DELETE FROM book_sections WHERE section_id=?').run('р1');
+    assert.equal(books.getBookNumberingMinimum(books.getBookById(book.id), 8), 7, 'allowance requires imported prefixed rows');
+  } finally { db.close(); }
+});
+
 test('empty container creation does not publish a covers refresh, but ordinary children still do', async () => {
   let body, status;
   const catalog = [], feed = [], rewards = [];
