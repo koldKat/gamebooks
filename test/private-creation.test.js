@@ -257,6 +257,21 @@ test('sparse section numbering round-trips through creation, shared state, libra
   } finally { db.close(); }
 });
 
+test('database facade exposes the numbering helper used by book updates', () => {
+  const {db, books} = setup();
+  try {
+    const source = fs.readFileSync(require.resolve('../server/db'), 'utf8');
+    const imports = source.match(/const \{([^}]+)\} = require\('\.\/db\/books'\);/);
+    assert.ok(imports, 'book persistence import declaration');
+    const exports = source.slice(source.lastIndexOf('module.exports = {'));
+    assert.match(exports, /\bgetBookNumberingMinimum\b/, 'helper must be public, not just imported');
+    const context = vm.createContext({module: {exports: {}}, require: () => books});
+    vm.runInContext(imports[0] + '\nmodule.exports = {getBookNumberingMinimum};', context);
+    assert.equal(context.module.exports.getBookNumberingMinimum, books.getBookNumberingMinimum);
+    assert.equal(context.module.exports.getBookNumberingMinimum({total_sections: 10}, 12), 12);
+  } finally { db.close(); }
+});
+
 test('prefixed imported passages preserve their independent numeric maximum on edit', async () => {
   const { db, books } = setup();
   try {
