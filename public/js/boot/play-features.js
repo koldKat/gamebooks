@@ -9,9 +9,11 @@ import { renderActiveBattleSim } from '../battlesim/loader.js';
 import { initLiveRead, renderLiveRead } from '../reading/liveread.js';
 import { initTooltip } from '../ui-helpers/tooltip.js';
 import { _refreshInvDisplay } from './helpers.js';
+import { initPlayShortcuts } from './play-shortcuts.js';
 
 export function initPlayFeatures() {
   applyTranslations();
+  initPlayShortcuts();
 
   initCharSheet();
   initInventory();

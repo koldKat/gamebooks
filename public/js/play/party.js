@@ -2,7 +2,7 @@
 
 import { currentBookId, apiFetch, getToken, loadState } from '../core/state.js';
 import { render, suppressAutoNav, showAlert, showConfirm } from '../play.js';
-import { escapeHtml } from '../core/util.js';
+import { escapeHtml, shortcutLabel } from '../core/util.js';
 import { t } from '../i18n.js';
 
 // Hooks into main.js for things that aren't part of this module's scope.
@@ -19,7 +19,7 @@ export function disconnectPartySSE() {
   if (_sseSource) { _sseSource.close(); _sseSource = null; _sseBookId = null; }
   _currentParty = null;
   const btn = document.getElementById('party-btn');
-  if (btn) { btn.classList.remove('party-active'); btn.textContent = t('party.btn'); }
+  if (btn) { btn.classList.remove('party-active'); btn.innerHTML = shortcutLabel(t('party.btn')); }
 }
 
 export async function connectPartySSE(bookId) {
@@ -35,7 +35,7 @@ export async function connectPartySSE(bookId) {
     if (party && btn) {
       btn.classList.add('party-active');
       const others = party.members.filter(m => m.id !== _hooks.getCurrentUserId?.());
-      btn.textContent = others.length ? t('party.btn_with', { names: others.map(m => m.username).join(', ') }) : t('party.btn_partners');
+      btn.innerHTML = shortcutLabel(others.length ? t('party.btn_with', { names: others.map(m => m.username).join(', ') }) : t('party.btn_partners'));
       _sseBookId = bookId;
       _sseSource = new EventSource(`/api/books/${bookId}/stream?token=${encodeURIComponent(getToken())}`);
       _sseSource.onmessage = async (e) => {
@@ -69,7 +69,7 @@ export async function connectPartySSE(bookId) {
       _sseSource.onerror = () => {};
     } else if (btn) {
       btn.classList.remove('party-active');
-      btn.textContent = t('party.btn');
+      btn.innerHTML = shortcutLabel(t('party.btn'));
     }
   } catch (_) {}
 }

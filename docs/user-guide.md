@@ -202,6 +202,9 @@ The Player XP panel shows your level, title, XP bar, and active boosts. On the l
 | **E** | Open / close the Equipment panel (not while typing in a text field) |
 | **S** | Open / close the Battle Simulator, if one is available for the current book (not while typing in a text field) |
 | **R** | Open / close Live Reading, if the current book has it (not while typing in a text field) |
+| **P** | Open / close Party (not while typing in a text field) |
+| **G** | Open / close the Guide (not while typing in a text field) |
+| **N** | Open / close the Notebook (not while typing in a text field) |
 | **Ctrl+X** | Hide or restore all play-area side panels at once |
 
 **PDF access:** if the book has a PDF and you've been given access (or you're a Gamemaster), a **PDF** link appears next to the book title at the top of the sidebar.

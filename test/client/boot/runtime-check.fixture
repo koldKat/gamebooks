@@ -80,6 +80,7 @@ const overrides = {
   resolveIsAdmin: data => !!data?.isAdmin, isNotifDropdownOpen: () => false,
  hasPendingResetToken: () => !!scenario.reset,
   t: key => key, escapeHtml: text => text,
+  shortcutLabel: text => text, ALL_PANEL_OVERLAY_IDS: [],
   adminBadge: () => '', authorBadge: () => '', contributorBadge: () => '',
   fetchPublic: async () => ({ ok: true, json: async () => ({}) }),
   apiFetch: async (url, options) => {

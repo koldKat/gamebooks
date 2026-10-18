@@ -48,6 +48,9 @@ export default {
     'shortcuts.equipment': 'Open / close the Equipment panel (play area only, not while typing)',
     'shortcuts.battlesim': 'Open / close the Battle Simulator, if one is available for the current book (play area only, not while typing)',
     'shortcuts.liveread': 'Open / close Live Reading, if the current book has it (play area only, not while typing)',
+    'shortcuts.party': 'Open / close Party (play area only, not while typing)',
+    'shortcuts.guide': 'Open / close the Guide (play area only, not while typing)',
+    'shortcuts.notebook': 'Open / close the Notebook (play area only, not while typing)',
 
     'ph.search':               'Search…',
     'ph.confirm_password':     'Confirm password',

@@ -35,23 +35,25 @@ ALL_PANEL_OVERLAY_IDS.push('sim873-overlay', 'sim895-overlay', 'sim896-overlay')
 ALL_PANEL_OVERLAY_IDS.push('sim903-overlay');
 ALL_PANEL_OVERLAY_IDS.push('sim904-overlay');
 ALL_PANEL_OVERLAY_IDS.push('sim906-overlay');
+ALL_PANEL_OVERLAY_IDS.push('party-modal-overlay', 'guide-modal-overlay', 'notebook-modal-overlay');
 
 // Use physical key codes across keyboard layouts.
 // Capture before the graph canvas can stop propagation.
 export function registerPanelShortcut(keyCode, { getButton, getOverlay, otherOverlayIds, open, close, extraGuard, capture = false }) {
   document.addEventListener('keydown', e => {
     const tag = e.target.tagName;
-    const typing = tag === 'INPUT' || tag === 'TEXTAREA' || e.target.isContentEditable;
-    if (e.code !== keyCode || typing || e.ctrlKey || e.metaKey) return;
+    const typing = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.target.isContentEditable;
+    if (e.code !== keyCode || typing || e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
     if (extraGuard && !extraGuard()) return;
     const btn = getButton();
     // Reject both hidden and disabled triggers because shortcuts call open() directly.
     if (!btn || btn.style.display === 'none' || btn.disabled) return;
+    e.preventDefault();
     const overlay = getOverlay();
     if (overlay?.classList.contains('active')) { close(); return; }
     (otherOverlayIds || []).forEach(id => document.getElementById(id)?.classList.remove('active'));
     open();
-  });
+  }, capture);
 }
 
 // Best-effort compression: resize, then lower JPEG quality; return the smallest blob at the floor.
