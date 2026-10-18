@@ -1,7 +1,5 @@
-export const definition = Object.freeze({id: 873, title: 'Двоен агент', family: 'standalone', stateKey: 'sim873', i18nPrefix: 'battlesim873'});
-export const RULES_REVISION = 1;
-export const HEALTH_BONUS = Object.freeze([5, 3, 1, 0]);
-export const COVER_BONUS = Object.freeze([4, 2, 0, 0]);
+export const definition = Object.freeze({id: 873, title: 'Двоен агент', family: 'lucas-grey', stateKey: 'sim873', i18nPrefix: 'battlesim873'});
+export {RULES_REVISION, HEALTH_BONUS, COVER_BONUS} from '../../engines/lucas-grey/rules.js';
 
 export const ENCOUNTERS = Object.freeze([
   {id: '27', displayName: 'Петима войници в дима', enemies: 5, playerThreshold: 11, enemyThreshold: 8, win: '131', loss: '103'},

@@ -408,6 +408,9 @@
         engines/sorcery/  Pure Sorcery character, Luck, damage and recovery primitives, plus
                          transactional run-scoped persistence. Book modules own encounter
                          exceptions; stale run/book updates are rejected before saving.
+        engines/lucas-grey/ Shared shooting, health tiers, aircraft damage, run-scoped state
+                         and panel factory. Per-book definitions own encounter thresholds;
+                         saved fights retain their original encounter and rule revision.
         engines/space-assassin/ Pure roll-under shooting, armour and sequential melee rules,
                          plus a separate STATUS-driven tank engine. Encounter definitions,
                          equipment effects, run-scoped state and DOM wiring stay at the book boundary.

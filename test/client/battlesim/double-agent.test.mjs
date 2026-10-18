@@ -5,6 +5,46 @@ import { newCharacter, playerShot, enemyShot, resolveExchange, startFight, resol
 import { createState } from '../../../public/js/battlesim/books/873/state.js';
 import en from '../../../public/js/i18n/en/battlesim/battlesim873.js';
 import bg from '../../../public/js/i18n/bg/battlesim/battlesim873.js';
+import {encounterPreset as missionPreset, ENCOUNTERS as MISSION_ENCOUNTERS} from '../../../public/js/battlesim/books/896/definition.js';
+import {createState as createMissionState} from '../../../public/js/battlesim/books/896/state.js';
+import missionEn from '../../../public/js/i18n/en/battlesim/battlesim896.js';
+import missionBg from '../../../public/js/i18n/bg/battlesim/battlesim896.js';
+
+test('Dangerous Mission keeps its edition-specific exposure threshold', () => {
+  assert.equal(MISSION_ENCOUNTERS.length, 12);
+  const player = newCharacter(), original = encounterPreset(88), mission = missionPreset(88);
+  assert.equal(enemyShot(player, mission, 2, [2, 2]).threshold, 7);
+  assert.equal(enemyShot(player, mission, 3, [2, 2]).hit, false);
+  assert.equal(enemyShot(player, mission, 3, [2, 3]).threshold, 5);
+  assert.equal(enemyShot(player, mission, 3, [2, 3]).hit, true);
+  assert.equal(enemyShot(player, original, 3, [1, 2]).hit, true);
+  const saved = startFight(player, original);
+  mission.exposedThreshold = 12;
+  assert.equal(saved.encounter.exposedThreshold, 3);
+  assert.equal(missionPreset(88).exposedThreshold, 5);
+});
+
+test('edition state writes are isolated and stale updates are rejected', () => {
+  const run = {sim873: {schemaVersion: 1, character: newCharacter(), fight: startFight(newCharacter(), encounterPreset(88)), history: [], log: []}};
+  const before = JSON.stringify(run.sim873);
+  let bookId = 896, saves = 0;
+  const store = createMissionState(() => ({currentBookId: bookId, currentPlaythrough: () => run, saveState: () => saves++}));
+  assert.equal(store.change(data => {data.character = newCharacter();}), true);
+  assert.equal(saves, 1);
+  assert.equal(JSON.stringify(run.sim873), before);
+  const mission = JSON.stringify(run.sim896);
+  assert.equal(store.change(data => {data.character.health = 2; bookId = 873;}), false);
+  assert.equal(JSON.stringify(run.sim896), mission);
+  assert.equal(JSON.stringify(run.sim873), before);
+  assert.equal(store.read(), null);
+});
+
+test('Dangerous Mission translations preserve labels and placeholders', () => {
+  assert.deepEqual(Object.keys(missionEn).sort(), Object.keys(missionBg).sort());
+  const fields = text => [...text.matchAll(/\{(\w+)\}/g)].map(match => match[1]).sort();
+  for (const key of Object.keys(missionEn)) assert.deepEqual(fields(missionEn[key]), fields(missionBg[key]), key);
+  assert.equal(missionBg['battlesim896.title'], 'Опасна мисия');
+});
 
 test('translations have matching keys and placeholders', () => {
   assert.deepEqual(Object.keys(en).sort(), Object.keys(bg).sort());
