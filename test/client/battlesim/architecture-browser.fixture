@@ -60,6 +60,35 @@ for(const id of BOOK_IDS){
     check(/[А-Яа-я]/.test(title),'Bulgarian book has Bulgarian simulator title '+id+':'+title);
     check(!/\b(?:Character|Encounter|Programs|Save|Full Moon|Alpha versus Omega)\b/.test(overlay.textContent),'no English UI in Bulgarian simulator '+id);
   }
+  if(id===906){
+    const el=key=>document.getElementById('sim906-'+key);
+    check(overlay.textContent.includes('Звездолетът Скитник')&&!overlay.textContent.includes('battlesim906.'),'Bulgarian Starship UI');
+    check(el('start').disabled,'no Starship fight without character');
+    const random=Math.random;Math.random=()=>0.99;
+    el('newCharacterQuick').click();
+    let game=app.currentPlaythrough().sim906;
+    check(game.character.crew.captain.skill===12&&game.character.ship.shields===18,'Starship initial rolls');
+    const name=overlay.querySelector('[role="combobox"]');
+    name.value='';name.focus();name.dispatchEvent(new Event('input',{bubbles:true}));
+    check(overlay.querySelectorAll('[role="option"]').length>15,'Starship roster autocomplete');
+    name.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+    check(overlay.classList.contains('active')&&name.getAttribute('aria-expanded')==='false','Starship autocomplete Escape first');
+    name.value='Ръчен противник';overlay.querySelector('[data-stat="skill"]').value='0';
+    overlay.querySelector('[data-stat="stamina"]').value='2';el('start').click();
+    game=app.currentPlaythrough().sim906;
+    check(game.fight.enemies[0].displayName==='Ръчен противник'&&name.disabled,'Starship editable opponent setup locks');
+    el('round').click();game=app.currentPlaythrough().sim906;
+    check(game.fight.outcome==='win'&&game.history.length===1,'Starship custom victory');
+    module.render();module.render();check(game.history.length===1,'Starship outcome recorded once');
+    el('encounter').value='307';el('encounter').dispatchEvent(new Event('change',{bubbles:true}));el('start').click();
+    for(let i=0;i<3;i++)el('round').click();
+    check(app.currentPlaythrough().sim906.fight.outcome==='escaped','Starship three-shot encounter');
+    const oldRun=app.currentPlaythrough(),oldData=JSON.stringify(oldRun.sim906);
+    app.state.playthroughs.push({startedAt:2,path:[1]});app.state.activePtIndex=1;module.render();
+    check(!overlay.classList.contains('active'),'Starship run change closes stale panel');
+    button.click();check(app.currentPlaythrough().sim906.character===null,'Starship independent run state');
+    check(JSON.stringify(oldRun.sim906)===oldData,'Starship previous run preserved');Math.random=random;
+  }
   if(id===904){
     const el=key=>document.getElementById('sim904-'+key);
     check(overlay.textContent.includes('Талисманът на смъртта')&&!overlay.textContent.includes('battlesim904.'),'Bulgarian Talisman UI');
