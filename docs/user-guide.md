@@ -31,6 +31,8 @@ An author's rating shows its vote count beside the average. Both are derived fro
 
 Shows what everyone's been up to over the last 30 days. You don't need an account to read it.
 
+Use the buttons beside **Activity** to show or hide runs, achievements, new catalog entries, news, ratings, library additions and player activity. Filters are available to everyone, including guests. Signed-in players' selections are saved to their account and sync across devices; guest selections last for the current session. Turning off **News** also hides pinned announcements.
+
 Live updates change the affected day's content without reloading the whole feed. Unchanged day cards stay in place and your reading position is preserved where possible. Groups you expand stay expanded through live updates, even if temporarily regrouped. Closing a group keeps it closed; reloading the app or switching accounts resets these choices.
 
 Each day's card shows the covers of the public books played that day, faded behind the entries (cycling through more than one if several different books were active). Turn it off via **Show covers in feed** in the Ctrl+Y settings panel if you'd rather keep the feed plain. Days with no cover to show get a faint see-through tint instead, letting the rotating background peek through - toggle that separately with **Transparent background for day cards** if you'd rather those stayed flat too.
@@ -38,7 +40,7 @@ Each day's card shows the covers of the public books played that day, faded behi
 - A **tip bar** cycles through helpful hints every 15 seconds (the orange bar counts down)
 - Activity is grouped by day (Today / Yesterday / date)
 - Players with 5 or more entries on the same day are collapsed into one row - click it to expand
-- Pinned announcements from the Gamemaster always appear at the top
+- Pinned announcements from the Gamemaster appear at the top when **News** is enabled
 
 **What you'll see in the feed:**
 

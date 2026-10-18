@@ -18,10 +18,6 @@ const _disabledFilters = new Set();
 let _filterToken;
 let _cachedFeed = null;
 
-function canFilterFeed() {
-  return !!getToken() && !!(_hooks.getIsAdmin?.() || _hooks.getIsModerator?.());
-}
-
 export function refreshFeedFilters() {
   if (_cachedFeed && _cachedFeed.token === getToken()) _renderFeed(_cachedFeed);
 }
@@ -42,11 +38,10 @@ function _renderFeed({ entries, pinned, token }) {
     _disabledFilters.clear();
     _filterToken = token;
   }
-  const canFilter = canFilterFeed();
-  const disabled = canFilter ? _disabledFilters : new Set();
+  const disabled = _disabledFilters;
   const visible = filterFeedEntries(entries, disabled);
   const { blocks, dayCoverLists } = renderFeedContents(visible,
-    disabled.has('news') ? null : pinned, feedHeaderHtml(canFilter, disabled),
+    disabled.has('news') ? null : pinned, feedHeaderHtml(true, disabled),
     disabled.size ? t('feed.filter.empty') : undefined);
   // Keep expansion intent through filtering and live regrouping, but not account changes.
   if (_renderedFeedToken !== token) _expandedGroupKeys.clear();
@@ -59,10 +54,10 @@ function _renderFeed({ entries, pinned, token }) {
     bindFeedInteractions(root, _expandedGroupKeys);
     bindFeedPreviews(root);
     bindFeedFilters(root, key => {
-      if (token !== getToken() || !canFilterFeed() || !FEED_FILTERS.includes(key)) return;
+      if (token !== getToken() || !FEED_FILTERS.includes(key)) return;
       if (_disabledFilters.has(key)) _disabledFilters.delete(key);
       else _disabledFilters.add(key);
-      _hooks.savePrefs?.({ feedFilters: { [key]: !_disabledFilters.has(key) } });
+      if (token) _hooks.savePrefs?.({ feedFilters: { [key]: !_disabledFilters.has(key) } });
       refreshFeedFilters();
       el.querySelector(`[data-feed-filter="${key}"]`)?.focus({ preventScroll: true });
     });

@@ -24,7 +24,7 @@ const apiFetch=async()=>{requests++;return{ok:true,json:async()=>payload};};
 ${loader}
 try{
  await loadFeed();
- check(!document.querySelector('[data-feed-filter]'),'non-admin has no filters');
+ check(document.querySelectorAll('[data-feed-filter]').length===7,'ordinary players have filters');
  admin=true;refreshFeedFilters();
  await document.fonts.ready;
  const buttons=()=>[...document.querySelectorAll('[data-feed-filter]')];
@@ -56,14 +56,18 @@ try{
   check(Math.abs((h.top+h.bottom)/2-(g.top+g.bottom)/2)<2,'desktop header shares one row');
   check(Math.abs(g.right-header.getBoundingClientRect().right)<2,'filters align right');
  }
- admin=false;refreshFeedFilters();check(!document.querySelector('[data-feed-filter]'),'admin gate removes controls');
+ admin=false;refreshFeedFilters();check(buttons().length===7,'ordinary players retain controls');
  moderator=true;refreshFeedFilters();check(buttons().length===7,'lorekeeper controls available');
  document.querySelector('[data-feed-filter="runs"]').click();
  check(document.querySelectorAll('.feed-entry').length===2,'lorekeeper can filter runs');
- moderator=false;refreshFeedFilters();check(!document.querySelector('[data-feed-filter]'),'ordinary player has no controls');
+ moderator=false;refreshFeedFilters();check(buttons().length===7,'role changes retain controls');
+ token=null;_hooks.publicFetch=apiFetch;await loadFeed();
+ check(buttons().every(b=>b.getAttribute('aria-pressed')==='true'),'guest filters reset after logout');
+ document.querySelector('[data-feed-filter="runs"]').click();
+ check(document.querySelectorAll('.feed-entry').length===2,'guest can filter runs');
  admin=true;token='other-admin';await loadFeed();
  check(buttons().every(b=>b.getAttribute('aria-pressed')==='true'),'account switch resets filters');
- document.body.dataset.test=JSON.stringify({width:innerWidth,checks:'admin gate, local toggles, focus, live refresh, empty state, responsive header'});
+ document.body.dataset.test=JSON.stringify({width:innerWidth,checks:'all players and guests, local toggles, focus, live refresh, empty state, responsive header'});
 }catch(error){document.body.dataset.failure=error.stack;}
 `;
 

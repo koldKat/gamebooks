@@ -12,6 +12,6 @@ test('feed preserves rendering, loading, interactions, previews and day covers',
   assert.equal(result.status, 0, result.stdout + result.stderr);
   const { digest, cases } = JSON.parse(result.stdout);
   assert.equal(cases, 38);
-  // Same 38 rendering cases; collapse IDs/keys now use stable dates and group identities.
-  assert.equal(digest, 'd4290e145b44f32572838b15f32b17fb5a4e465feb461d4f73273dff25dd0919');
+  // All 38 cases now include the category controls for every viewer.
+  assert.equal(digest, 'ea043eb0754ab8bf90fea8ad04167a561e02c4e9ca61bc3fac560c30f2827636');
 });
