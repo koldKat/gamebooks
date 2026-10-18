@@ -44,6 +44,10 @@ try{
  for(const key of FEED_FILTERS)document.querySelector('[data-feed-filter="'+key+'"]').click();
  check(document.querySelectorAll('.feed-entry').length===3,'all categories restored');
  const header=document.getElementById('feed-header'),heading=header.querySelector('.feed-header-label'),group=header.querySelector('.feed-filters');
+ check((getComputedStyle(heading).display==='none')===(innerWidth<=768),'activity heading hidden only on mobile');
+ check(getComputedStyle(group).display!=='none','mobile retains feed filters');
+ const fallback=document.createElement('div');fallback.id='feed-header';fallback.textContent='Activity (last 30 days)';document.body.append(fallback);
+ check((getComputedStyle(fallback).display==='none')===(innerWidth<=768),'fallback activity heading hidden only on mobile');fallback.remove();
  check(header.scrollWidth<=header.clientWidth+1,'header does not overflow');
  check(document.documentElement.scrollWidth<=innerWidth+1,'page does not overflow');
  for(const b of buttons()){

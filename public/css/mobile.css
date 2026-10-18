@@ -1,6 +1,8 @@
 /* ── Mobile ───────────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .mobile-lite-suffix { display: inline; }
+  #feed-header .feed-header-label,
+  #feed-header:not(.feed-header--filters) { display: none; }
   /* Hide desktop-only panels and toggles */
   #covers-toggle, #right-toggle, #feed-toggle { display: none !important; }
   /* Place detail dialogs above full-screen mobile panels.
