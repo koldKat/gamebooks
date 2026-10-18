@@ -60,6 +60,41 @@ for(const id of BOOK_IDS){
     check(/[А-Яа-я]/.test(title),'Bulgarian book has Bulgarian simulator title '+id+':'+title);
     check(!/\b(?:Character|Encounter|Programs|Save|Full Moon|Alpha versus Omega)\b/.test(overlay.textContent),'no English UI in Bulgarian simulator '+id);
   }
+  if(id===904){
+    const el=key=>document.getElementById('sim904-'+key);
+    check(overlay.textContent.includes('Талисманът на смъртта')&&!overlay.textContent.includes('battlesim904.'),'Bulgarian Talisman UI');
+    check(el('start').disabled,'no fight without character');
+    const random=Math.random;Math.random=()=>0.99;
+    el('newCharacter').click();
+    let game=app.currentPlaythrough().sim904;
+    check(game.character.skill===12&&game.character.stamina===24&&game.character.luck===12,'source initial rolls');
+    el('encounter').value='0';el('encounter').dispatchEvent(new Event('change',{bubbles:true}));
+    const name=overlay.querySelector('[role="combobox"]');
+    name.value='';name.focus();name.dispatchEvent(new Event('input',{bubbles:true}));
+    check(overlay.querySelectorAll('[role="option"]').length>10,'full editable roster autocomplete');
+    name.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+    check(overlay.classList.contains('active')&&name.getAttribute('aria-expanded')==='false','Escape closes autocomplete first');
+    name.value='Ръчен противник';
+    overlay.querySelector('[data-stat="skill"]').value='0';
+    overlay.querySelector('[data-stat="stamina"]').value='2';
+    el('start').click();
+    game=app.currentPlaythrough().sim904;
+    check(game.fight.enemies[0].displayName===name.value&&name.disabled,'editable opponents lock after start');
+    el('round').click();game=app.currentPlaythrough().sim904;
+    check(game.fight.pending.kind==='outgoing'&&el('round').disabled,'pending Luck blocks next round');
+    check(el('luck-options').getClientRects().length>0,'Luck controls visible');
+    el('skipLuck').click();game=app.currentPlaythrough().sim904;
+    check(game.fight.outcome==='win'&&game.history.length===1,'custom combat victory');
+    module.render();module.render();
+    check(app.currentPlaythrough().sim904.history.length===1,'outcome recorded once');
+    el('encounter').value='210';el('encounter').dispatchEvent(new Event('change',{bubbles:true}));el('start').click();
+    check(el('target').options.length===1&&el('target').value==='1','Cassandra targeted first');
+    const finished=app.currentPlaythrough(),saved=JSON.stringify(finished);
+    app.state.playthroughs.push({startedAt:2,path:[1]});app.state.activePtIndex=1;module.render();
+    check(!overlay.classList.contains('active')&&JSON.stringify(finished)===saved,'run switch preserves existing fight');
+    button.click();check(app.currentPlaythrough().sim904.character===null&&app.currentPlaythrough().sim904.history.length===0,'independent new-run state');
+    Math.random=random;
+  }
   if(id===903){
     const el=key=>document.getElementById('sim903-'+key);
     const name=overlay.querySelector('[role="combobox"]');

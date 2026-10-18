@@ -37,7 +37,7 @@ function dialog({ loggedIn = false, owned = false, mobile = true, admin = false,
     _destroyPubNetworks() {},
     openCoverActivity: () => events.push('refresh'),
     _isMobile: () => mobile,
-    _refreshCoversDisplay() {},
+    _syncCoverLibraryMembership: () => events.push('membership'),
     closePublicModal: () => events.push('close'),
     escapeHtml: value => String(value),
     t: (key, params) => key === 'covers.author_rating_votes' ? `${params.n} vote${params.s}` : key,
@@ -76,6 +76,7 @@ test('signed-in players can add a public book and then open it in the mobile rea
   const d = dialog({ loggedIn: true });
   assert.equal(d.buttons.has('.login-to-add-book-btn'), false);
   await d.buttons.get('.add-public-book-btn').click();
+  assert.deepEqual(d.events, ['membership'], 'library additions only reconcile ownership, never rebuild the cover grid');
   assert.equal(d.requests.length, 1);
   assert.equal(d.requests[0].url, '/api/books/42/add');
   assert.equal(d.requests[0].options.method, 'POST');

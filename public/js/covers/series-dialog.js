@@ -1,4 +1,4 @@
-import { _refreshCoversDisplay } from './grid.js';
+import { _syncCoverLibraryMembership } from './grid.js';
 import { openCoverActivity } from './activity.js';
 import { _seriesRowBadges } from './badges.js';
 import { coversState } from './state.js';
@@ -93,7 +93,7 @@ export function renderSeriesActivity(data) {
           addSeriesBtn.textContent = t('covers.added_to_library');
           addSeriesBtn.classList.add('add-to-library-done');
           await coversState._hooks.refreshBooksListOnly?.();
-          _refreshCoversDisplay();
+          _syncCoverLibraryMembership();
           coversState._hooks.showBooks?.();
         } else {
           addSeriesBtn.disabled = false;

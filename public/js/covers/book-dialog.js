@@ -1,5 +1,5 @@
 import { _isMobile } from './helpers.js';
-import { _refreshCoversDisplay } from './grid.js';
+import { _syncCoverLibraryMembership } from './grid.js';
 import { openCoverActivity, openSeriesActivity } from './activity.js';
 import { _seriesRowBadges } from './badges.js';
 import { coversState } from './state.js';
@@ -174,7 +174,7 @@ export function renderCoverActivity(bookId, bookName, entries, userRating, bookM
         const res = await apiFetch(`/api/books/${bookId}/add`, { method: 'POST' });
         if (res.ok) {
           await coversState._hooks.refreshBooksListOnly?.();
-          _refreshCoversDisplay();
+          _syncCoverLibraryMembership();
           renderCoverActivity(
             bookId, bookName, entries, currentMyRating,
             { ...bookMeta, avgRating: currentAvg, voteCount: currentCount },

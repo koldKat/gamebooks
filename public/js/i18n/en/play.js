@@ -53,6 +53,7 @@ export default {
     'ctx.delete':               'Delete node',
 
     'ctrl.reset':  'Reset Book',
+    'ctrl.guide':  'Guide',
 
     'legend.title':      'Legend',
     'legend.current':    'Current section',
@@ -80,7 +81,7 @@ export default {
     'node.battle':   'Battle here',
     'node.section':  'Section {n} \u2014 {parts}',
 
-    'party.btn':              'Play Together',
+    'party.btn':              'Party',
     'party.btn_partners':     'Party',
     'party.btn_with':         'Party: {names}',
     'party.invite_text':      '{inviter} invited you to play {book}',

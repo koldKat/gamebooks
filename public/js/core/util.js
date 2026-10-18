@@ -33,6 +33,7 @@ ALL_PANEL_OVERLAY_IDS.push('sim860-overlay');
 ALL_PANEL_OVERLAY_IDS.push('sim891-overlay');
 ALL_PANEL_OVERLAY_IDS.push('sim873-overlay', 'sim895-overlay', 'sim896-overlay');
 ALL_PANEL_OVERLAY_IDS.push('sim903-overlay');
+ALL_PANEL_OVERLAY_IDS.push('sim904-overlay');
 
 // Use physical key codes across keyboard layouts.
 // Capture before the graph canvas can stop propagation.

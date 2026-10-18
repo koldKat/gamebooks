@@ -45,14 +45,16 @@ body.sidebar-collapsed #play-bottom-stack {
 #party-btn.party-active:hover { background: #064e3b; }
 
 #play-xp-summary {
-  min-width: 300px;
-  /* Let stretch match the button row; a fixed width cap would break alignment. */
+  min-width: 0;
+  /* Size the card from the buttons, not its longest XP label. */
+  contain: inline-size;
+  box-sizing: border-box;
   max-width: 92vw;
   width: 100%;
   background: rgba(31, 41, 55, 0.9);
   border: 1px solid #374151;
   border-radius: 8px;
-  padding: 0.4rem 0.85rem 0.5rem;
+  padding: 0.3rem 0.6rem 0.35rem;
   backdrop-filter: blur(6px);
   box-shadow: 0 4px 16px rgba(0,0,0,0.4);
   display: flex;
@@ -90,7 +92,7 @@ body.sidebar-collapsed #play-bottom-stack {
 .play-xp-collapse-btn:hover { color: #d1d5db; }
 #play-xp-summary.play-xp-collapsed .play-xp-collapse-btn { transform: rotate(-90deg); }
 #play-xp-summary.play-xp-collapsed #play-xp-body { display: none; }
-#play-xp-summary.play-xp-collapsed { padding-bottom: 0.5rem; gap: 0; }
+#play-xp-summary.play-xp-collapsed { padding-bottom: 0.3rem; gap: 0; }
 #play-xp-body {
   display: flex;
   flex-direction: column;
@@ -139,9 +141,10 @@ body.sidebar-collapsed #play-bottom-stack {
 }
 #play-xp-sub-row {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: baseline;
-  gap: 0.6rem;
+  gap: 0.12rem 0.4rem;
 }
 #play-xp-text {
   font-size: 0.76rem;

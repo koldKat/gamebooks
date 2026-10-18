@@ -1,10 +1,33 @@
 import { _ensureThumbVisibilityObserver, _enqueueCoverLoad } from './images.js';
-import { _visibleCoverItems, _sortedAllBooks, _randomizedCoverItems } from './filters.js';
+import { _visibleCoverItems, _sortedAllBooks, _randomizedCoverItems, _isNotInMyBooks } from './filters.js';
 import { _makeCoverThumbHTML } from './markup.js';
 import { _landingCoverPool, _startLandingCoverRotation } from './background.js';
 import { coversState } from './state.js';
 
 const _LAZY_BATCH = 20;
+
+export function _syncCoverLibraryMembership() {
+  if (!coversState._coversNotMineOnly) return;
+  const grid = document.getElementById('covers-grid');
+  if (!grid) return;
+  const key = item => item.isSeries ? `series:${item.entityId}` : `book:${item.id}`;
+  const owned = new Set([...coversState._allBooks, ...coversState._allSeriesCovers]
+    .filter(item => !_isNotInMyBooks(item)).map(key));
+  if (coversState._lazyItems) {
+    const loaded = coversState._lazyItems.slice(0, coversState._lazyOffset);
+    coversState._lazyOffset = loaded.filter(item => !owned.has(key(item))).length;
+    coversState._lazyItems = coversState._lazyItems.filter(item => !owned.has(key(item)));
+  }
+  for (const thumb of grid.querySelectorAll('.cover-thumb')) {
+    const identity = thumb.dataset.seriesId ? `series:${thumb.dataset.seriesId}` : `book:${thumb.dataset.bookId}`;
+    if (!owned.has(identity)) continue;
+    coversState._thumbVisibilityObserver?.unobserve(thumb);
+    thumb.remove();
+  }
+  _updateCoversCount();
+  if (coversState._lazyItems) requestAnimationFrame(_refillLazyIfShort);
+  else _trimCoversToFit();
+}
 
 export function _removeFavoriteThumbInPlace(favBtn) {
   const thumb = favBtn?.closest('.cover-thumb');
