@@ -7,6 +7,7 @@ const Database = require('better-sqlite3');
 const { migrateSeriesNames } = require('../server/db/series-schema');
 
 function setup() {
+  const deletedFiles = [];
   const db = new Database(':memory:');
   db.pragma('foreign_keys = ON');
   db.exec(`CREATE TABLE users (id INTEGER PRIMARY KEY, username TEXT, avatar_path TEXT, public_profile INTEGER, is_moderator INTEGER DEFAULT 0);
@@ -21,22 +22,88 @@ function setup() {
       is_container INTEGER DEFAULT 0, parent_book_id INTEGER, book_order INTEGER, is_public INTEGER DEFAULT 0,
       published_at INTEGER, created_at INTEGER DEFAULT 0, cover_path TEXT,
       pdf_path TEXT, epub_path TEXT, has_battle_sim INTEGER DEFAULT 0, has_live_reading INTEGER DEFAULT 0);
-    CREATE TABLE user_books (user_id INTEGER, book_id INTEGER, state_data TEXT, updated_at INTEGER, rating REAL, UNIQUE(user_id,book_id));
+    CREATE TABLE user_books (user_id INTEGER, book_id INTEGER, state_data TEXT, created_at INTEGER DEFAULT 0, updated_at INTEGER, rating REAL, UNIQUE(user_id,book_id));
     CREATE TABLE book_anthology_memberships (book_id INTEGER, anthology_id INTEGER, book_order INTEGER);`);
   const connection = { db, _foldForSearch: s => s.normalize('NFD').replace(/\p{M}/gu, '').trim().toLowerCase(),
     _naturalCompareByName: (a, b) => a.name.localeCompare(b.name), _naturalCompare: (a, b) => String(a).localeCompare(String(b)),
     _getPdfSize: () => null, _getEpubSize: () => null };
   function load(name, deps) {
-    const context = vm.createContext({ module: { exports: {} }, require: name => deps[name], Date });
+    const context = vm.createContext({ module: { exports: {} }, require: name => deps[name], Date, console,
+      __dirname: require('node:path').resolve(__dirname, '../server/db') });
     let source = fs.readFileSync(require.resolve('../server/db/' + name), 'utf8');
     if (name === 'books') source = source.slice(0, source.indexOf('// One-time cleanup:')) + source.slice(source.indexOf('function getBookRating('));
     vm.runInContext(source, context);
     return context.module.exports;
   }
-  const books = load('books', { './connection': connection, './xp': { awardXp() {} } });
+  const books = load('books', { './connection': connection, './xp': { awardXp() {} },
+    fs: { unlinkSync: filename => deletedFiles.push(filename) }, path: require('node:path') });
   const feed = load('feed', { './connection': connection, './xp': {}, './content': {}, './books': books });
-  return { db, books, feed };
+  return { db, books, feed, deletedFiles };
 }
+
+test('series contents deletion prunes orphan books and attachments but preserves other readers', () => {
+  const { db, books, deletedFiles } = setup();
+  try {
+    db.exec(`INSERT INTO series (id,name,created_by) VALUES (1,'Fantasy Trip',1);
+      INSERT INTO user_series (user_id,series_id) VALUES (1,1);
+      INSERT INTO books (id,name,series_id,created_by,cover_path,pdf_path,epub_path) VALUES
+        (1,'Orphan',1,1,'one.png','one.pdf','one.epub'),
+        (2,'Shared',1,1,'two.png','two.pdf',NULL);
+      INSERT INTO user_books (user_id,book_id,state_data) VALUES (1,1,'owner'),(1,2,'owner'),(2,2,'preserve');`);
+    books.removeSeriesFromLibrary(1, 1);
+    assert.equal(db.prepare('SELECT 1 FROM books WHERE id=1').get(), undefined);
+    assert.equal(db.prepare('SELECT created_by FROM books WHERE id=2').get().created_by, 2);
+    assert.equal(db.prepare('SELECT state_data FROM user_books WHERE user_id=2 AND book_id=2').get().state_data, 'preserve');
+    assert.equal(db.prepare('SELECT count(*) AS n FROM user_books WHERE user_id=1').get().n, 0);
+    assert.deepEqual(deletedFiles.map(p => require('node:path').basename(p)).sort(), ['one.epub', 'one.pdf', 'one.png']);
+  } finally { db.close(); }
+});
+
+test('series contents deletion preserves primary and additional anthology memberships', () => {
+  const { db, books, deletedFiles } = setup();
+  try {
+    db.exec(`INSERT INTO series (id,name) VALUES (1,'Series');
+      INSERT INTO user_series (user_id,series_id) VALUES (1,1);
+      INSERT INTO books (id,name,is_container,series_id,parent_book_id) VALUES
+        (10,'Outside anthology',1,NULL,NULL),(11,'Primary child',0,1,10),(12,'Additional child',0,1,NULL);
+      INSERT INTO book_anthology_memberships (book_id,anthology_id) VALUES (12,10);
+      INSERT INTO user_books (user_id,book_id) VALUES (1,10),(1,11),(1,12);`);
+    books.removeSeriesFromLibrary(1, 1);
+    assert.equal(db.prepare('SELECT count(*) AS n FROM user_books WHERE user_id=1').get().n, 3);
+    assert.equal(db.prepare('SELECT count(*) AS n FROM books').get().n, 3);
+    assert.deepEqual(deletedFiles, []);
+  } finally { db.close(); }
+});
+
+test('anthology contents deletion removes orphan children and their attachments', () => {
+  const { db, books, deletedFiles } = setup();
+  try {
+    db.exec(`INSERT INTO books (id,name,is_container,parent_book_id,created_by,pdf_path) VALUES
+      (1,'Anthology',1,NULL,1,'anthology.pdf'),(2,'Child',0,1,1,'child.pdf'),(3,'Shared child',0,1,1,'shared.pdf');
+      INSERT INTO user_books (user_id,book_id,state_data) VALUES (1,1,'owner'),(1,2,'owner'),(1,3,'owner'),(2,3,'preserve');`);
+    assert.equal(books.deleteBook(1, 1, true), true);
+    assert.equal(db.prepare('SELECT count(*) AS n FROM books').get().n, 1);
+    assert.equal(db.prepare('SELECT parent_book_id FROM books WHERE id=3').get().parent_book_id, null);
+    assert.equal(db.prepare('SELECT state_data FROM user_books WHERE user_id=2 AND book_id=3').get().state_data, 'preserve');
+    assert.deepEqual(deletedFiles.map(p => require('node:path').basename(p)).sort(), ['anthology.pdf', 'child.pdf']);
+  } finally { db.close(); }
+});
+
+test('container-only deletion preserves children and files still referenced by other books', () => {
+  const { db, books, deletedFiles } = setup();
+  try {
+    db.exec(`INSERT INTO books (id,name,is_container,parent_book_id,pdf_path,epub_path,cover_path) VALUES
+      (1,'Anthology',1,NULL,'shared.pdf',NULL,'shared.png'),(2,'Child',0,1,'shared.pdf',NULL,'shared.png'),
+      (3,'Standalone',0,NULL,'other.pdf','other.epub',NULL);
+      INSERT INTO user_books (user_id,book_id) VALUES (1,1),(1,2),(1,3);`);
+    assert.equal(books.deleteBook(1, 1, false), true);
+    assert.equal(db.prepare('SELECT book_id FROM user_books WHERE book_id=2').get().book_id, 2);
+    assert.equal(db.prepare('SELECT parent_book_id FROM books WHERE id=2').get().parent_book_id, null);
+    assert.deepEqual(deletedFiles, []);
+    assert.equal(books.deleteBook(1, 3), true);
+    assert.deepEqual(deletedFiles.map(p => require('node:path').basename(p)).sort(), ['other.epub', 'other.pdf']);
+  } finally { db.close(); }
+});
 
 test('series migration preserves IDs, foreign keys, metadata, indexes, triggers and sequence', () => {
   const { db } = setup();

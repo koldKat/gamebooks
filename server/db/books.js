@@ -652,6 +652,7 @@ function removeSeriesEntryOnly(userId, seriesId) {
 }
 
 function removeSeriesFromLibrary(userId, seriesId) {
+  const deletedBooks = [];
   // Remove user_series row and remove series books from the user's library,
   // but preserve anthology children when their anthology parent remains in the library.
   db.transaction(() => {
@@ -674,15 +675,28 @@ function removeSeriesFromLibrary(userId, seriesId) {
       LIMIT 1
     `);
     const delStmt = db.prepare('DELETE FROM user_books WHERE user_id = ? AND book_id = ?');
+    const extraParentStmt = db.prepare(`
+      SELECT 1 FROM book_anthology_memberships m
+      JOIN user_books ub ON ub.book_id = m.anthology_id AND ub.user_id = ?
+      JOIN books p ON p.id = m.anthology_id
+      WHERE m.book_id = ? AND (p.series_id IS NULL OR p.series_id != ?)
+      LIMIT 1
+    `);
 
     for (const row of candidates) {
       if (row.parent_book_id) {
         const parentStillOwned = parentStillOwnedStmt.get(userId, row.parent_book_id, seriesId);
         if (parentStillOwned) continue;
       }
-      delStmt.run(userId, row.id);
+      const extraParent = extraParentStmt.get(userId, row.id, seriesId);
+      if (extraParent) continue;
+      if (delStmt.run(userId, row.id).changes) {
+        const deleted = _pruneUntrackedBook(row.id, userId);
+        if (deleted) deletedBooks.push(deleted);
+      }
     }
   })();
+  for (const book of deletedBooks) _removeUnreferencedBookFiles(book);
 }
 
 function createSeries(name, description, userId, isPublic = false) {
@@ -1040,39 +1054,63 @@ function setNotebook(userId, bookId, text) {
   return result.changes > 0;
 }
 
+function _pruneUntrackedBook(bookId, userId) {
+  const book = db.prepare('SELECT id, cover_path, pdf_path, epub_path, created_by FROM books WHERE id = ?').get(bookId);
+  if (!book) return null;
+  const next = db.prepare('SELECT user_id FROM user_books WHERE book_id = ? ORDER BY created_at ASC LIMIT 1').get(bookId);
+  if (next) {
+    if (book.created_by === userId) db.prepare('UPDATE books SET created_by = ? WHERE id = ?').run(next.user_id, bookId);
+    return null;
+  }
+  db.prepare('UPDATE books SET parent_book_id = NULL WHERE parent_book_id = ?').run(bookId);
+  db.prepare('DELETE FROM books WHERE id = ?').run(bookId);
+  return book;
+}
+
+function _removeUnreferencedBookFiles(book) {
+  const fs = require('fs'), path = require('path');
+  for (const [column, directory] of [['cover_path', 'covers'], ['pdf_path', 'books'], ['epub_path', 'books']]) {
+    const filename = book[column];
+    if (!filename) continue;
+    const shared = directory === 'books'
+      ? db.prepare('SELECT 1 FROM books WHERE pdf_path = ? OR epub_path = ? LIMIT 1').get(filename, filename)
+      : db.prepare('SELECT 1 FROM books WHERE cover_path = ? LIMIT 1').get(filename);
+    if (shared) continue;
+    const root = path.resolve(__dirname, '..', '..', 'public', directory);
+    const target = path.resolve(root, filename);
+    if (!target.startsWith(root + path.sep)) continue;
+    try { fs.unlinkSync(target); } catch (error) {
+      if (error.code !== 'ENOENT') console.error('Book file cleanup failed:', target, error.message);
+    }
+  }
+}
+
 function deleteBook(userId, bookId, cascade = true) {
-  const isContainer = db.prepare('SELECT is_container FROM books WHERE id = ?').get(bookId)?.is_container;
-  if (isContainer && cascade) {
-    // Remove anthology AND all its children from user's library
-    const childIds = db.prepare('SELECT id FROM books WHERE parent_book_id = ?').all(bookId).map(r => r.id);
-    for (const cid of childIds) db.prepare('DELETE FROM user_books WHERE book_id = ? AND user_id = ?').run(cid, userId);
-  }
-  // Without cascading, keep children as standalone library entries.
-  const result = db.prepare(
-    'DELETE FROM user_books WHERE book_id = ? AND user_id = ?'
-  ).run(bookId, userId);
-  if (result.changes === 0 && !isContainer) return false;
-
-  // Option B: if the deleting user was the creator, transfer ownership to the next user
-  const book = db.prepare('SELECT cover_path, created_by FROM books WHERE id = ?').get(bookId);
-  if (book?.created_by === userId) {
-    const nextUser = db.prepare('SELECT user_id FROM user_books WHERE book_id = ? ORDER BY created_at ASC LIMIT 1').get(bookId);
-    if (nextUser) {
-      db.prepare('UPDATE books SET created_by = ? WHERE id = ?').run(nextUser.user_id, bookId);
+  const deletedBooks = [];
+  const removed = db.transaction(() => {
+    const isContainer = db.prepare('SELECT is_container FROM books WHERE id = ?').get(bookId)?.is_container;
+    if (isContainer && cascade) {
+      // Remove anthology AND all its children from user's library.
+      const childIds = db.prepare('SELECT id FROM books WHERE parent_book_id = ?').all(bookId).map(r => r.id);
+      for (const cid of childIds) {
+        if (db.prepare('DELETE FROM user_books WHERE book_id = ? AND user_id = ?').run(cid, userId).changes) {
+          const deleted = _pruneUntrackedBook(cid, userId);
+          if (deleted) deletedBooks.push(deleted);
+        }
+      }
     }
-  }
+    // Without cascading, keep children as standalone library entries.
+    const result = db.prepare(
+      'DELETE FROM user_books WHERE book_id = ? AND user_id = ?'
+    ).run(bookId, userId);
+    if (result.changes === 0 && !isContainer) return false;
 
-  // Clean up book row if no other users track it
-  const remaining = db.prepare('SELECT COUNT(*) AS n FROM user_books WHERE book_id = ?').get(bookId).n;
-  if (remaining === 0) {
-    if (book?.cover_path) {
-      try { require('fs').unlinkSync(require('path').join(__dirname, '..', '..', 'public', 'covers', book.cover_path)); } catch (_) {}
-    }
-    // Orphan children of this anthology before deleting
-    db.prepare('UPDATE books SET parent_book_id = NULL WHERE parent_book_id = ?').run(bookId);
-    db.prepare('DELETE FROM books WHERE id = ?').run(bookId);
-  }
-  return true;
+    const deleted = _pruneUntrackedBook(bookId, userId);
+    if (deleted) deletedBooks.push(deleted);
+    return true;
+  })();
+  for (const book of deletedBooks) _removeUnreferencedBookFiles(book);
+  return removed;
 }
 
 function addBookToLibrary(userId, bookId) {
