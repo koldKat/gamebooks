@@ -1,0 +1,22 @@
+const labels = {
+  title: 'Сенки от Ада', character: 'Hero', strength: 'Strength',
+  note: 'Start with 5 strength. Enter your current value after injuries outside combat. Track gems and collected aids in your character sheet.',
+  apply: 'Save strength', start: 'Begin', again: 'Next fight',
+  chooseCard: 'Choose an opponent from the suggestions to select its original combat card. You can then edit the name.',
+  cardNote: '{room} · Printed enemy strength: {strength}',
+  codeNote: 'Choose a code from the current row of the original card. Enter it below to consult the combat lookup. Enemy strength is not a pool of hit points.',
+  card: 'Original five-round combat card', code: 'Code', resolve: 'Check code',
+  tables: 'Original lookup and symbols', lookup: 'Combat lookup', legend: 'Result symbols',
+  loading: 'Loading original card...', imagesUnavailable: 'Images could not load. Close and reopen the simulator to retry.',
+  remaining: 'Your strength: {strength}', round: 'Round {round}',
+  ready: 'Choose an opponent and begin when your strength is correct.',
+  destination: 'Continue to section {section}.',
+  lastRow: 'No result on the last row. Check that you entered a code from that row; no extra damage is applied.',
+  invalid: 'Check your strength (0–5), select an original opponent card and enter a code from A1 to J5.',
+  turn: 'Round {round} · {code}: {result}',
+  'result.continue': 'No decision', 'result.win': 'Victory', 'result.wounded': 'Wounded',
+  'outcome.win': 'Victory', 'outcome.wounded': 'Wounded: lose 1 strength.',
+  'outcome.dead': 'Your strength is zero. Your adventure ends.',
+  history: 'Combat history', 'history.win': 'Victory', 'history.loss': 'Defeat',
+};
+export default Object.fromEntries(Object.entries(labels).map(([key, value]) => ['battlesim903.' + key, value]));

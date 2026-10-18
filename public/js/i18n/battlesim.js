@@ -2,7 +2,7 @@ import { registerTranslations } from './runtime.js';
 
 const pending = new Map();
 const failures = new Map();
-const BULGARIAN_BOOKS = new Set([570, 644, 648, 654, 658, 663, 665, 671, 672, 700, 706, 710, 718, 722, 723, 724, 728, 735, 757, 768, 769, 773, 783, 797, 807, 808, 809, 810, 812, 817, 832, 833, 838, 856, 857, 860, 873, 891, 895, 896]);
+const BULGARIAN_BOOKS = new Set([570, 644, 648, 654, 658, 663, 665, 671, 672, 700, 706, 710, 718, 722, 723, 724, 728, 735, 757, 768, 769, 773, 783, 797, 807, 808, 809, 810, 812, 817, 832, 833, 838, 856, 857, 860, 873, 891, 895, 896, 903]);
 
 export function loadBattleSimTranslations(bookId) {
   const id = Number(bookId);

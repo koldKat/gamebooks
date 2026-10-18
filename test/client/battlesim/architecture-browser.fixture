@@ -60,6 +60,40 @@ for(const id of BOOK_IDS){
     check(/[А-Яа-я]/.test(title),'Bulgarian book has Bulgarian simulator title '+id+':'+title);
     check(!/\b(?:Character|Encounter|Programs|Save|Full Moon|Alpha versus Omega)\b/.test(overlay.textContent),'no English UI in Bulgarian simulator '+id);
   }
+  if(id===903){
+    const el=key=>document.getElementById('sim903-'+key);
+    const name=overlay.querySelector('[role="combobox"]');
+    name.value='';name.focus();name.dispatchEvent(new Event('input',{bubbles:true}));
+    check(overlay.querySelectorAll('[role="option"]').length===18,'all original code-card opponents suggested');
+    name.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+    check(overlay.classList.contains('active')&&name.getAttribute('aria-expanded')==='false','Escape closes opponent suggestions first');
+    name.dispatchEvent(new Event('input',{bubbles:true}));
+    overlay.querySelector('[role="option"]').dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));
+    name.value='Ръчно въведен противник';
+    el('start').click();
+    let game=app.currentPlaythrough().sim903;
+    check(game.fight.enemy.id==='3'&&game.fight.enemy.displayName===name.value,'editable name preserves selected original card');
+    check(game.character.strength===5&&el('strength').disabled,'source starting strength and locked active setup');
+    el('code').value='a1';el('resolve').click();
+    game=app.currentPlaythrough().sim903;
+    check(game.fight.round===2&&!game.fight.outcome&&game.character.strength===5,'unresolved code advances without damage');
+    el('code').value='B4';el('code').dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));
+    game=app.currentPlaythrough().sim903;
+    check(game.fight.outcome==='win'&&game.fight.destination===70&&game.history.length===1,'verified victory code and destination');
+    module.render();module.render();
+    check(app.currentPlaythrough().sim903.history.length===1,'render never duplicates outcome history');
+    el('again').click();el('strength').value='1';el('apply').click();el('start').click();
+    el('code').value='A2';el('resolve').click();
+    game=app.currentPlaythrough().sim903;
+    check(game.fight.outcome==='dead'&&game.character.strength===0&&game.fight.destination===null,'one-strength wound ends adventure');
+    check(game.history.length===2&&game.history[1].outcome==='loss','loss recorded without a victory');
+    const finished=app.currentPlaythrough(),saved=JSON.stringify(finished);
+    app.state.playthroughs.push({startedAt:2,path:[1]});app.state.activePtIndex=1;module.render();
+    check(!overlay.classList.contains('active')&&JSON.stringify(finished)===saved,'run switch closes panel without changing old run');
+    button.click();
+    check(app.currentPlaythrough().sim903.character.strength===5&&app.currentPlaythrough().sim903.history.length===0,'new run has independent character and history');
+    check(overlay.textContent.includes('Сенки от Ада')&&!overlay.textContent.includes('battlesim903.'),'Bulgarian simulator translations loaded');
+  }
   if(id===199){
     const game=app.currentPlaythrough().sim199;
     Object.assign(game.player,{skill:10,skillInitial:10,stamina:20,staminaInitial:20,luck:12,luckInitial:12});
