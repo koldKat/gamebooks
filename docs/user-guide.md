@@ -31,7 +31,7 @@ An author's rating shows its vote count beside the average. Both are derived fro
 
 Shows what everyone's been up to over the last 30 days. You don't need an account to read it.
 
-Use the buttons beside **Activity** to show or hide runs, achievements, new catalog entries, rumors, ratings, library additions and player activity. Filters are available to everyone, including guests. Signed-in players' selections are saved to their account and sync across devices; guest selections last for the current session. Turning off **Rumors** also hides pinned announcements.
+Use the buttons beside **Activity** to show or hide runs, achievements, new catalog entries, news, ratings, library additions and player activity. Filters are available to everyone, including guests. Signed-in players' selections are saved to their account and sync across devices; guest selections last for the current session. Turning off **News** also hides pinned announcements.
 
 Live updates change the affected day's content without reloading the whole feed. Unchanged day cards stay in place and your reading position is preserved where possible. Groups you expand stay expanded through live updates, even if temporarily regrouped. Closing a group keeps it closed; reloading the app or switching accounts resets these choices.
 
