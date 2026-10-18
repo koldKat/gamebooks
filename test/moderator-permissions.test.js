@@ -6,7 +6,7 @@ const vm = require('node:vm');
 const path = require('node:path');
 function load(file, deps) {
   const moduleRequire = require('node:module').createRequire(require.resolve(file));
-  const context = vm.createContext({ module: { exports: {} }, require: name => name in deps ? deps[name] : moduleRequire(name), Date, Buffer, __dirname: path.dirname(require.resolve(file)) });
+  const context = vm.createContext({ module: { exports: {} }, require: name => name in deps ? deps[name] : moduleRequire(name), Date, Buffer, URL, __dirname: path.dirname(require.resolve(file)) });
   vm.runInContext(fs.readFileSync(require.resolve(file), 'utf8'), context);
   return context.module.exports;
 }
@@ -86,6 +86,51 @@ test('moderators edit public series outside their library, never private series 
   await routes.handleUpdateSeries({}, {}, 9); assert.equal(status, 403); assert.equal(updates, 1);
   admin = true; series.is_public = 0;
   await routes.handleUpdateSeries({}, {}, 9); assert.equal(status, 200); assert.equal(updates, 2);
+});
+
+test('moderators can delete their own books and anthologies, but not another creator’s', async () => {
+  let userId = 2, admin = false, moderator = true, status, book;
+  const deleted = [], pushed = [];
+  const routes = load('../server/routes/books', {
+    '../db': {
+      isUserAdmin: () => admin, isUserModerator: () => moderator,
+      getBookById: () => book, getBookIdentifiers: () => book,
+      deleteBook: (...args) => { deleted.push(args); return true; },
+    },
+    '../export': {},
+    '../request-helpers': { authenticate: async () => userId, send: (_res, code) => { status = code; } },
+    '../sse': { feedPush: value => pushed.push(value), publicCatalogPush() {} },
+  });
+  for (const is_container of [0, 1]) {
+    for (const is_public of [0, 1]) {
+      book = { id: 9, created_by: 2, is_container, is_public };
+      await routes.handleDeleteBook({ url: '/api/books/9?cascade=0' }, {}, 9);
+      assert.equal(status, 200);
+      assert.deepEqual(deleted.at(-1), [2, 9, false]);
+      const before = deleted.length, events = pushed.length;
+      for (const creator of [1, null]) {
+        book.created_by = creator;
+        await routes.handleDeleteBook({ url: '/api/books/9' }, {}, 9);
+        assert.equal(status, 403);
+        assert.equal(deleted.length, before);
+        assert.equal(pushed.length, events);
+      }
+    }
+  }
+  book = null;
+  await routes.handleDeleteBook({ url: '/api/books/9' }, {}, 9);
+  assert.equal(status, 404);
+  admin = true; book = { created_by: 1, is_public: 1 };
+  await routes.handleDeleteBook({ url: '/api/books/9' }, {}, 9);
+  assert.equal(status, 200);
+  assert.deepEqual(deleted.at(-1), [2, 9, true]);
+  admin = false; moderator = false;
+  await routes.handleDeleteBook({ url: '/api/books/9' }, {}, 9);
+  assert.equal(status, 200, 'ordinary library-removal permissions are unchanged');
+  userId = null;
+  const before = deleted.length;
+  await routes.handleDeleteBook({}, {}, 9);
+  assert.equal(deleted.length, before, 'authentication remains mandatory');
 });
 
 test('moderator secondary anthology edits require both book and anthology to be public', async () => {

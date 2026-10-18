@@ -143,7 +143,7 @@ All four role badges use SVG icons with the same size and alignment.
 
 ### Lorekeepers
 
-Lorekeepers have a purple diamond badge and can edit the metadata of any public book, anthology or series, plus covers for public books and anthologies, including titles outside their own library. They cannot edit private books, make a public book private, or delete books, anthologies or series. The role does not grant Gamemaster access or PDF/EPUB upload access. Lorekeepers can also adjust secondary anthology memberships when both the book and anthology are public. Stats for Nerds lists the number of Lorekeepers under Players.
+Lorekeepers have a purple diamond badge and can edit the metadata of any public book, anthology or series, plus covers for public books and anthologies, including titles outside their own library. They can delete books and anthologies they created, using the usual library-removal rules. They cannot delete other players' books or anthologies, delete series, edit private books, or make a public book private. The role does not grant Gamemaster access or PDF/EPUB upload access. Lorekeepers can also adjust secondary anthology memberships when both the book and anthology are public. Stats for Nerds lists the number of Lorekeepers under Players.
 
 ### Creating books
 
@@ -165,7 +165,7 @@ For books with gaps in their section numbering, enter the actual count in **Tota
 
 A **stash** is a personal folder for tidying up your books list.
 
-- Click **Create Stash**, give it a name, and add any mix of books, anthologies, and series to it
+- Click **Create Stash**, give it a name, and optionally add any mix of books, anthologies, and series to it. Empty stashes remain visible, so you can fill them later.
 - Stashed items move out of the main list into a collapsible stash section
 - Each item can only belong to one stash at a time
 - Stashing a **series** moves its visible books along with it

@@ -449,4 +449,4 @@ The API always returns every announcement - the 30-day cutoff is admin-UI-only (
 
 ### Lorekeeper role
 
-Use **Mark as Lorekeeper** or **Remove Lorekeeper** in a player’s detail actions. Lorekeepers receive a purple diamond badge and an assignment notification. The role permits metadata edits for public books, anthologies and series, plus cover edits for public books and anthologies, without library membership. It does not permit private-book edits, unpublishing, book/anthology/series deletion, admin actions or PDF/EPUB uploads. Lorekeeper totals appear in Stats for Nerds.
+Use **Mark as Lorekeeper** or **Remove Lorekeeper** in a player’s detail actions. Lorekeepers receive a purple diamond badge and an assignment notification. The role permits metadata edits for public books, anthologies and series, plus cover edits for public books and anthologies, without library membership. They can delete books and anthologies they created under the usual library-removal rules, but not other players' books or anthologies. It does not permit private-book edits, unpublishing, series deletion, admin actions or PDF/EPUB uploads. Lorekeeper totals appear in Stats for Nerds.

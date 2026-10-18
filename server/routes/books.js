@@ -475,7 +475,11 @@ async function handleRemoveAnthologyMember(req, res, anthologyId, bookId) {
 async function handleDeleteBook(req, res, bookId) {
   const userId  = await authenticate(req, res);
   if (userId === null) return;
-  if (!db.isUserAdmin(userId) && db.isUserModerator(userId)) return send(res, 403, { error: 'Lorekeepers cannot delete books' });
+  if (!db.isUserAdmin(userId) && db.isUserModerator(userId)) {
+    const book = db.getBookById(bookId);
+    if (!book) return send(res, 404, { error: 'Not found' });
+    if (book.created_by !== userId) return send(res, 403, { error: 'Lorekeepers can only delete books they created' });
+  }
   const old = db.getBookIdentifiers(userId, bookId);
   const cascade = new URL(req.url, 'http://x').searchParams.get('cascade') !== '0';
   if (!db.deleteBook(userId, bookId, cascade)) return send(res, 404, { error: 'Not found' });

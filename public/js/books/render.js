@@ -260,17 +260,10 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
     const stashContainers  = _sortBooks(stashBooksTop.filter(b =>  b.is_container));
     const stashStandalone  = _sortBooks(stashBooksTop.filter(b => !b.is_container));
     const stashExpanded    = _getExpandedPref('stash', String(stash.id), `stash_expanded_${stash.id}`);
-    let stashHasAnyBooks = false;
     const stashSeriesItemCount = stashSeries.reduce((sum, s) => {
-      const { activeBooks, activeChildrenMap, topInSeries } = _getSeriesActiveBooksForContext(s, stash.id);
-      if (_hasRenderableTop(topInSeries, activeChildrenMap)) stashHasAnyBooks = true;
+      const { activeBooks } = _getSeriesActiveBooksForContext(s, stash.id);
       return sum + 1 + activeBooks.length;
     }, 0);
-    // Containers count as visible content only when they have children.
-    if (stashStandalone.length) stashHasAnyBooks = true;
-    if (stashContainers.some(c => (stashChildrenMap[c.id] || []).length)) stashHasAnyBooks = true;
-    // Skip stashes with no visible content even if empty series headers count as items.
-    if (!stashHasAnyBooks) continue;
     const stashItemCount = stashSeriesItemCount + stashBooksRaw.length;
     const stashCountLabel = stashItemCount === 1 ? '1 item' : `${stashItemCount} items`;
     let stashAggrV = 0, stashAggrS = 0;
