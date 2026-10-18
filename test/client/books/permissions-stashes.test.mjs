@@ -39,6 +39,15 @@ test('Lorekeeper delete buttons are enabled only for their own books and antholo
   }
 });
 
+test('Lorekeepers can delete their own series but not other creators’ series', () => {
+  const { context, list } = setup({ moderator: true });
+  for (const is_owner of [true, false]) {
+    context.renderBooksList([], [{ id: 9, name: 'A series', is_public: 1, is_owner }], []);
+    const button = list.innerHTML.match(/<button class="series-del-btn"[^>]*>/)[0];
+    assert.equal(button.includes(' disabled'), !is_owner);
+  }
+});
+
 for (const expanded of [true, false]) {
   test(`empty stashes remain visible and editable, expanded=${expanded}`, () => {
     const { context, list } = setup({ expanded });

@@ -174,9 +174,10 @@ async function handleDeleteSeriesRun(req, res, seriesId, runIndex) {
 async function handleDeleteSeries(req, res, seriesId) {
   const userId = await authenticate(req, res);
   if (userId === null) return;
-  if (!db.isUserAdmin(userId) && db.isUserModerator(userId)) return send(res, 403, { error: 'Lorekeepers cannot delete series' });
   const series = db.getSeriesById(seriesId);
   if (!series) return send(res, 404, { error: 'not found' });
+  if (!db.isUserAdmin(userId) && db.isUserModerator(userId) && series.created_by !== userId)
+    return send(res, 403, { error: 'Lorekeepers can only delete series they created' });
   const cascade = new URL(req.url, 'http://x').searchParams.get('cascade') !== '0';
   if (cascade) {
     db.removeSeriesFromLibrary(userId, seriesId); // removes series + cascade books

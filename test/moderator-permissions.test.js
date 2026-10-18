@@ -58,7 +58,7 @@ test('moderator cover uploads allow public books without library membership and 
   assert.equal(catalogPushes, 2, 'populated anthology cover still refreshes');
 });
 
-test('moderators edit public series outside their library, never private series or deletion', async () => {
+test('moderators edit public series outside their library, never private series or other creators’ deletions', async () => {
   let moderator = true, admin = false, body = { name: 'Updated', description: 'Blurb', is_public: true }, status, updates = 0, removals = 0;
   const series = { id: 9, created_by: 1, is_public: 1, description: 'Old', is_open_world: false };
   const routes = load('../server/routes/books', {
@@ -81,6 +81,7 @@ test('moderators edit public series outside their library, never private series 
   }
   series.is_public = 1; body.is_public = false;
   await routes.handleUpdateSeries({}, {}, 9); assert.equal(status, 403); assert.equal(updates, 1);
+  series.created_by = 1;
   await routes.handleDeleteSeries({ url: '/api/series/9' }, {}, 9); assert.equal(status, 403); assert.equal(removals, 0);
   moderator = false; series.created_by = 1; body.is_public = true;
   await routes.handleUpdateSeries({}, {}, 9); assert.equal(status, 403); assert.equal(updates, 1);
@@ -131,6 +132,53 @@ test('moderators can delete their own books and anthologies, but not another cre
   const before = deleted.length;
   await routes.handleDeleteBook({}, {}, 9);
   assert.equal(deleted.length, before, 'authentication remains mandatory');
+});
+
+test('moderator series deletion preserves cascade options and transfers shared ownership', async () => {
+  let status, series = { id: 9, created_by: 2, is_public: 1 }, next = { user_id: 3 };
+  const effects = [];
+  const routes = load('../server/routes/books', {
+    '../db': {
+      isUserAdmin: () => false, isUserModerator: () => true,
+      getSeriesById: () => series,
+      removeSeriesFromLibrary: (...args) => effects.push(['cascade', ...args]),
+      removeSeriesEntryOnly: (...args) => effects.push(['entry', ...args]),
+      getNextSeriesUser: () => next,
+      transferSeriesOwnership: (...args) => effects.push(['transfer', ...args]),
+      deleteSeries: id => effects.push(['delete', id]),
+    }, '../export': {},
+    '../request-helpers': { authenticate: async () => 2, send: (_res, code) => { status = code; } },
+    '../sse': { feedPush() {}, publicCatalogPush() {} },
+  });
+  await routes.handleDeleteSeries({ url: '/api/series/9' }, {}, 9);
+  assert.equal(status, 200);
+  assert.deepEqual(effects, [['cascade', 2, 9], ['transfer', 9, 3]]);
+  effects.length = 0; next = null; series.is_public = 0;
+  await routes.handleDeleteSeries({ url: '/api/series/9?cascade=0' }, {}, 9);
+  assert.equal(status, 200);
+  assert.deepEqual(effects, [['entry', 2, 9], ['delete', 9]]);
+  for (const created_by of [1, null]) {
+    effects.length = 0; series.created_by = created_by;
+    await routes.handleDeleteSeries({ url: '/api/series/9' }, {}, 9);
+    assert.equal(status, 403); assert.equal(effects.length, 0);
+  }
+  series = null;
+  await routes.handleDeleteSeries({ url: '/api/series/9' }, {}, 9);
+  assert.equal(status, 404);
+});
+
+test('Lorekeeper stash deletion remains scoped to their authenticated account', async () => {
+  let status;
+  const calls = [];
+  const routes = load('../server/routes/books', {
+    '../db': { deleteStash: (userId, id) => { calls.push([userId, id]); return userId === 2 && id === 7; } },
+    '../export': {},
+    '../request-helpers': { authenticate: async () => 2, send: (_res, code) => { status = code; } },
+    '../sse': {},
+  });
+  await routes.handleDeleteStash({}, {}, 7); assert.equal(status, 200);
+  await routes.handleDeleteStash({}, {}, 8); assert.equal(status, 404);
+  assert.deepEqual(calls, [[2, 7], [2, 8]]);
 });
 
 test('moderator secondary anthology edits require both book and anthology to be public', async () => {
