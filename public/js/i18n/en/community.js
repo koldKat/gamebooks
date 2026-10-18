@@ -38,7 +38,7 @@ export default {
     'feed.filter.achievements': 'Achievements',
     'feed.filter.ratings': 'Ratings',
     'feed.filter.players': 'Players',
-    'feed.filter.news': 'News',
+    'feed.filter.news': 'Rumors',
     'feed.filter.empty': 'No activity matches the selected filters.',
     'feed.loading':    'Loading activity…',
     'feed.day_today':     'Today',
