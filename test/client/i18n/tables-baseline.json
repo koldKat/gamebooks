@@ -1,6 +1,6 @@
 {
   "sourceCommit": "695fc8cf95d1c2393b30b3b6234660494025a35f",
-  "coreKeys": 721,
+  "coreKeys": 735,
   "tables": {
     "account.js": {
       "keys": 62,
@@ -795,8 +795,8 @@
       "sha256": "1ed5cea92e7e305969e2122c12cbec06a1d864765c549c130e8e211fceb1cc7c"
     },
     "community.js": {
-      "keys": 65,
-      "sha256": "7b4cbd56779ee5b64aa746f6a6013c5c4c7ab8e2fab881750bb5b0fc8abcad33"
+      "keys": 77,
+      "sha256": "3a7e2636a7e2c1ab19e19e2ece6b104523820312e7b6e823b34f977a431d61fc"
     },
     "covers.js": {
       "keys": 33,
@@ -811,16 +811,16 @@
       "sha256": "059777c07d24f182197b5aeea1c1a5c36e8213d1b86fff27f35f5c752de85b5c"
     },
     "play.js": {
-      "keys": 142,
-      "sha256": "11a03355abcf50ba158eca7ccb3b2d1c2a948570bed3aadf6fabe64532011e8d"
+      "keys": 143,
+      "sha256": "6df6fd57e05d734dce8cf79836fda20b47812581eb815389dd8950d8881e32ac"
     },
     "progression.js": {
       "keys": 33,
       "sha256": "437b985b88d3db9a18421cc4b7889bbf686e74dee26f5cba41f01e682d2afba2"
     },
     "stats.js": {
-      "keys": 124,
-      "sha256": "743888de2091204b491b2b8a621ccf6b54d33cc3f4311d97270d20970bcb40d5"
+      "keys": 125,
+      "sha256": "df1bf4064e1527973b7cfbc28e24a0a273ea4faf9e3b0e354fd60c433633c98d"
     }
   }
 }
