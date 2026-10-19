@@ -23,7 +23,11 @@ function setup() {
       published_at INTEGER, created_at INTEGER DEFAULT 0, cover_path TEXT,
       pdf_path TEXT, epub_path TEXT, has_battle_sim INTEGER DEFAULT 0, has_live_reading INTEGER DEFAULT 0);
     CREATE TABLE user_books (user_id INTEGER, book_id INTEGER, state_data TEXT, created_at INTEGER DEFAULT 0, updated_at INTEGER, rating REAL, UNIQUE(user_id,book_id));
-    CREATE TABLE book_anthology_memberships (book_id INTEGER, anthology_id INTEGER, book_order INTEGER);`);
+    CREATE TABLE book_anthology_memberships (book_id INTEGER, anthology_id INTEGER, book_order INTEGER);
+    CREATE TABLE user_stashes (id INTEGER PRIMARY KEY, user_id INTEGER, name TEXT, created_at INTEGER DEFAULT 0);
+    CREATE TABLE stash_books (stash_id INTEGER REFERENCES user_stashes(id) ON DELETE CASCADE, user_id INTEGER, book_id INTEGER);
+    CREATE TABLE stash_series (stash_id INTEGER REFERENCES user_stashes(id) ON DELETE CASCADE, user_id INTEGER, series_id INTEGER);
+    CREATE TABLE stash_excluded_books (stash_id INTEGER REFERENCES user_stashes(id) ON DELETE CASCADE, user_id INTEGER, book_id INTEGER);`);
   const connection = { db, _foldForSearch: s => s.normalize('NFD').replace(/\p{M}/gu, '').trim().toLowerCase(),
     _naturalCompareByName: (a, b) => a.name.localeCompare(b.name), _naturalCompare: (a, b) => String(a).localeCompare(String(b)),
     _getPdfSize: () => null, _getEpubSize: () => null };
@@ -475,5 +479,67 @@ test('removing another creator’s book affects only the requesting library and 
     assert.deepEqual(db.prepare('SELECT * FROM books ORDER BY id').all(), before);
     assert.deepEqual(deletedFiles, []);
     assert.equal(books.deleteBook(2, 1), false, 'repeat removal does not touch the creator’s account');
+  } finally { db.close(); }
+});
+
+test('OWT stash removal cannot resurrect removed books or retain stale stash memberships', () => {
+  const { db, books } = setup();
+  try {
+    db.exec(`INSERT INTO books(id,name,created_by) VALUES (11,'OWT 1',1),(12,'OWT 2',1),(13,'OWT 3',1);
+      INSERT INTO user_books(user_id,book_id,state_data) VALUES
+      (1,11,'creator1'),(1,12,'creator2'),(1,13,'creator3'),(2,11,'player1'),(2,12,'player2'),(2,13,'player3');`);
+    const creator = books.createStash(1, 'Creator stash', [11, 12, 13]);
+    const player = books.createStash(2, 'OWT', [11, 12, 13], [], [12]);
+    assert.ok(creator.ok && player.ok);
+    assert.equal(books.deleteBook(2, 13), true);
+    assert.equal(books.deleteBook(2, 12), true);
+    assert.deepEqual(Array.from(books.getStashes(2)[0].bookIds), [11]);
+    assert.deepEqual(Array.from(books.getStashes(2)[0].excludedBookIds), []);
+    assert.equal(books.deleteStash(2, player.id), true);
+    assert.deepEqual(db.prepare('SELECT book_id FROM user_books WHERE user_id=2').all(), [{ book_id: 11 }]);
+    assert.equal(books.deleteBook(2, 11), true);
+    assert.equal(db.prepare('SELECT count(*) AS n FROM user_books WHERE user_id=1').get().n, 3);
+    assert.deepEqual(Array.from(books.getStashes(1)[0].bookIds), [11, 12, 13]);
+  } finally { db.close(); }
+});
+
+for (const cascade of [false, true]) {
+  test(`removing a series clears only that player's stash links, cascade=${cascade}`, () => {
+    const { db, books } = setup();
+    try {
+      db.exec(`INSERT INTO series(id,name,created_by) VALUES (7,'OWT',1);
+        INSERT INTO user_series(user_id,series_id) VALUES (1,7),(2,7);
+        INSERT INTO books(id,name,series_id,created_by) VALUES (11,'OWT 1',7,1);
+        INSERT INTO user_books(user_id,book_id,state_data) VALUES (1,11,'creator'),(2,11,'player');`);
+      assert.ok(books.createStash(1, 'Creator stash', [], [7]).ok);
+      assert.ok(books.createStash(2, 'Player stash', [], [7]).ok);
+      if (cascade) books.removeSeriesFromLibrary(2, 7);
+      else books.removeSeriesEntryOnly(2, 7);
+      assert.deepEqual(Array.from(books.getStashes(2)[0].seriesIds), []);
+      assert.deepEqual(Array.from(books.getStashes(1)[0].seriesIds), [7]);
+      assert.equal(db.prepare('SELECT count(*) AS n FROM user_books WHERE user_id=2').get().n, cascade ? 0 : 1);
+      assert.equal(db.prepare('SELECT state_data FROM user_books WHERE user_id=1').get().state_data, 'creator');
+      assert.equal(db.prepare('SELECT series_id FROM books WHERE id=11').get().series_id, 7);
+    } finally { db.close(); }
+  });
+}
+
+test('anthology removal includes secondary members and requires ownership of the library entry', () => {
+  const { db, books, deletedFiles } = setup();
+  try {
+    db.exec(`INSERT INTO books(id,name,created_by,is_container,parent_book_id) VALUES
+      (10,'Anthology',1,1,NULL),(11,'Primary',1,0,10),(12,'Secondary',1,0,NULL);
+      INSERT INTO book_anthology_memberships(book_id,anthology_id) VALUES (12,10);
+      INSERT INTO user_books(user_id,book_id,state_data) VALUES
+      (1,10,'creator'),(1,11,'creator'),(1,12,'creator'),(2,11,'player'),(2,12,'player');`);
+    const before = db.prepare('SELECT * FROM books ORDER BY id').all();
+    assert.equal(books.deleteBook(2, 10, true), false);
+    assert.equal(db.prepare('SELECT count(*) AS n FROM user_books WHERE user_id=2').get().n, 2);
+    db.prepare('INSERT INTO user_books(user_id,book_id) VALUES (2,10)').run();
+    assert.equal(books.deleteBook(2, 10, true), true);
+    assert.equal(db.prepare('SELECT count(*) AS n FROM user_books WHERE user_id=2').get().n, 0);
+    assert.equal(db.prepare('SELECT count(*) AS n FROM user_books WHERE user_id=1').get().n, 3);
+    assert.deepEqual(db.prepare('SELECT * FROM books ORDER BY id').all(), before);
+    assert.deepEqual(deletedFiles, []);
   } finally { db.close(); }
 });

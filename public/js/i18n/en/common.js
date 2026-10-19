@@ -17,7 +17,7 @@ export default {
     'err.username_password':  'Enter a username and password.',
     'err.connect':            'Could not connect to server.',
     'err.create_book':        'Could not create book.',
-    'err.remove_book':        'Could not remove the book from your library.',
+    'err.remove_library_entry': 'Could not remove the item from your library.',
     'err.save':               'Could not save changes.',
     'err.avatar':             'Could not upload avatar.',
     'err.name_empty':         'Name cannot be empty.',

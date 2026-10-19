@@ -648,7 +648,10 @@ function transferSeriesOwnership(seriesId, newOwnerId) {
 
 function removeSeriesEntryOnly(userId, seriesId) {
   // Remove just the user_series row - books stay in library as standalones
-  db.prepare('DELETE FROM user_series WHERE user_id = ? AND series_id = ?').run(userId, seriesId);
+  db.transaction(() => {
+    db.prepare('DELETE FROM user_series WHERE user_id = ? AND series_id = ?').run(userId, seriesId);
+    db.prepare('DELETE FROM stash_series WHERE user_id = ? AND series_id = ?').run(userId, seriesId);
+  })();
 }
 
 function removeSeriesFromLibrary(userId, seriesId) {
@@ -656,7 +659,7 @@ function removeSeriesFromLibrary(userId, seriesId) {
   // Remove user_series row and remove series books from the user's library,
   // but preserve anthology children when their anthology parent remains in the library.
   db.transaction(() => {
-    db.prepare('DELETE FROM user_series WHERE user_id = ? AND series_id = ?').run(userId, seriesId);
+    removeSeriesEntryOnly(userId, seriesId);
 
     const candidates = db.prepare(`
       SELECT b.id, b.parent_book_id
@@ -674,7 +677,6 @@ function removeSeriesFromLibrary(userId, seriesId) {
         AND (p.series_id IS NULL OR p.series_id != ?)
       LIMIT 1
     `);
-    const delStmt = db.prepare('DELETE FROM user_books WHERE user_id = ? AND book_id = ?');
     const extraParentStmt = db.prepare(`
       SELECT 1 FROM book_anthology_memberships m
       JOIN user_books ub ON ub.book_id = m.anthology_id AND ub.user_id = ?
@@ -690,7 +692,7 @@ function removeSeriesFromLibrary(userId, seriesId) {
       }
       const extraParent = extraParentStmt.get(userId, row.id, seriesId);
       if (extraParent) continue;
-      if (delStmt.run(userId, row.id).changes) {
+      if (_removeBookLibraryEntry(userId, row.id)) {
         const deleted = _pruneUntrackedBook(row.id, userId);
         if (deleted) deletedBooks.push(deleted);
       }
@@ -1087,25 +1089,33 @@ function _removeUnreferencedBookFiles(book) {
   }
 }
 
+function _removeBookLibraryEntry(userId, bookId) {
+  const removed = db.prepare('DELETE FROM user_books WHERE user_id = ? AND book_id = ?').run(userId, bookId).changes;
+  if (removed) {
+    db.prepare('DELETE FROM stash_books WHERE user_id = ? AND book_id = ?').run(userId, bookId);
+    db.prepare('DELETE FROM stash_excluded_books WHERE user_id = ? AND book_id = ?').run(userId, bookId);
+  }
+  return removed;
+}
+
 function deleteBook(userId, bookId, cascade = true) {
   const deletedBooks = [];
   const removed = db.transaction(() => {
+    if (!db.prepare('SELECT 1 FROM user_books WHERE user_id = ? AND book_id = ?').get(userId, bookId)) return false;
     const isContainer = db.prepare('SELECT is_container FROM books WHERE id = ?').get(bookId)?.is_container;
     if (isContainer && cascade) {
       // Remove anthology AND all its children from user's library.
-      const childIds = db.prepare('SELECT id FROM books WHERE parent_book_id = ?').all(bookId).map(r => r.id);
+      const childIds = db.prepare(`SELECT id FROM books WHERE parent_book_id = ?
+        UNION SELECT book_id AS id FROM book_anthology_memberships WHERE anthology_id = ?`).all(bookId, bookId).map(r => r.id);
       for (const cid of childIds) {
-        if (db.prepare('DELETE FROM user_books WHERE book_id = ? AND user_id = ?').run(cid, userId).changes) {
+        if (_removeBookLibraryEntry(userId, cid)) {
           const deleted = _pruneUntrackedBook(cid, userId);
           if (deleted) deletedBooks.push(deleted);
         }
       }
     }
     // Without cascading, keep children as standalone library entries.
-    const result = db.prepare(
-      'DELETE FROM user_books WHERE book_id = ? AND user_id = ?'
-    ).run(bookId, userId);
-    if (result.changes === 0 && !isContainer) return false;
+    _removeBookLibraryEntry(userId, bookId);
 
     const deleted = _pruneUntrackedBook(bookId, userId);
     if (deleted) deletedBooks.push(deleted);

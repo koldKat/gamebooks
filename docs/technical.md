@@ -2895,6 +2895,8 @@ Book metadata and cover routes authorize moderators only for existing public boo
 
 Moderator series edits use the authenticated series metadata endpoint, require an existing public series and must keep it public. The role allows editing without library membership. Series library removal preserves the existing contents choice and changes only the authenticated player's memberships; ownership transfer or series pruning applies when the departing player owns the series. Public series responses include `isOpenWorld` so the catalog editor preserves that setting.
 
+Book removal requires an existing membership for the requesting player, including anthology removals. Removing an anthology with contents includes its primary and secondary members. Removed book memberships clear that player's direct stash links and exclusions; removed series memberships clear that player's stash-series links. Other players' stash memberships are preserved. Book, series and stash removal requests show a styled error when the server rejects the request or the connection fails.
+
 Secondary anthology membership routes grant moderators editing access only when both the anthology and the member book are public, including when the moderator created either private title. Anthology editors await metadata saves and retain the open editor on server/network rejection. Catalog book editors preserve their existing parent anthology even when it is absent from the current player’s library.
 
 ### Role display names

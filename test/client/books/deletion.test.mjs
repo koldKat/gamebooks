@@ -46,8 +46,28 @@ function setup({ failure = null } = {}) {
     handler({ stopPropagation() {} });
     return choices[0]();
   }
-  return { owned, requests, confirmations, errors, click, removeSeries, confirm: () => confirm(),
+  function clickStash() {
+    let handler;
+    const button = { dataset: { stashId: '8', stashName: 'OWT' },
+      addEventListener: (_event, callback) => { handler = callback; } };
+    context._wireRenderedContent({ querySelectorAll: selector => selector === '.stash-del-btn' ? [button] : [] });
+    handler({ stopPropagation() {} });
+  }
+  return { owned, requests, confirmations, errors, click, clickStash, removeSeries, confirm: () => confirm(),
     choose: index => choices[index](), refreshes: () => refreshes };
+}
+
+for (const kind of ['stash', 'series']) {
+  for (const failure of [null, 'Permission denied', 'network']) {
+    test(`${kind} removal handles ${failure || 'success'} and preserves the error feedback`, async () => {
+      const app = setup({ failure });
+      if (kind === 'stash') { app.clickStash(); await app.confirm(); }
+      else await app.removeSeries();
+      assert.deepEqual(app.requests, [[kind === 'stash' ? '/api/stashes/8' : '/api/series/7?cascade=0', 'DELETE']]);
+      assert.equal(app.refreshes(), failure ? 0 : 1);
+      assert.deepEqual(app.errors, failure ? [failure === 'network' ? 'err.remove_library_entry' : failure] : []);
+    });
+  }
 }
 
 for (const failure of ['Permission denied', 'network']) {
@@ -56,7 +76,7 @@ for (const failure of ['Permission denied', 'network']) {
     app.click(1);
     await app.confirm();
     assert.deepEqual([...app.owned], ['1', '2', '3']);
-    assert.deepEqual(app.errors, [failure === 'network' ? 'err.remove_book' : failure]);
+    assert.deepEqual(app.errors, [failure === 'network' ? 'err.remove_library_entry' : failure]);
     assert.equal(app.refreshes(), 0);
   });
 }

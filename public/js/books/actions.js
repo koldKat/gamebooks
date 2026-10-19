@@ -16,6 +16,17 @@ function _findRenderedContent(root, selector) {
   return root.matches?.(selector) ? [root, ...descendants] : descendants;
 }
 
+async function _removeLibraryEntry(url) {
+  try {
+    const response = await apiFetch(url, { method: 'DELETE' });
+    if (!response.ok) {
+      showAlert((await response.json().catch(() => ({}))).error || t('err.remove_library_entry'));
+      return;
+    }
+    await _refreshBooksListOnly();
+  } catch (_) { showAlert(t('err.remove_library_entry')); }
+}
+
 export function _wireRenderedContent(list) {
   // Keep hover state across DOM mutations when Chromium temporarily drops :hover.
   _findRenderedContent(list, '.series-header-row, .stash-header-row').forEach(row => {
@@ -37,8 +48,8 @@ export function _wireRenderedContent(list) {
       const name = btn.dataset.seriesName;
       showTwoChoice(
         t('books.remove_series_confirm', { name }),
-        t('books.delete_series'),          async () => { await apiFetch(`/api/series/${id}?cascade=0`, { method: 'DELETE' }); _refreshBooksListOnly(); },
-        t('books.delete_series_contents'), async () => { await apiFetch(`/api/series/${id}?cascade=1`, { method: 'DELETE' }); _refreshBooksListOnly(); }
+        t('books.delete_series'),          () => _removeLibraryEntry(`/api/series/${id}?cascade=0`),
+        t('books.delete_series_contents'), () => _removeLibraryEntry(`/api/series/${id}?cascade=1`)
       );
     });
   });
@@ -50,10 +61,8 @@ export function _wireRenderedContent(list) {
   _findRenderedContent(list, '.stash-del-btn').forEach(btn => {
     btn.addEventListener('click', e => {
       e.stopPropagation();
-      showConfirm(t('books.delete_stash_confirm', { name: btn.dataset.stashName }), async () => {
-        await apiFetch(`/api/stashes/${+btn.dataset.stashId}`, { method: 'DELETE' });
-        await _refreshBooksListOnly();
-      });
+      showConfirm(t('books.delete_stash_confirm', { name: btn.dataset.stashName }),
+        () => _removeLibraryEntry(`/api/stashes/${+btn.dataset.stashId}`));
     });
   });
 
@@ -248,16 +257,7 @@ export function _wireRenderedContent(list) {
       const name        = btn.dataset.name;
       const isContainer = btn.dataset.container === '1';
 
-      const doDelete = async (cascade) => {
-        try {
-          const response = await apiFetch(`/api/books/${id}?cascade=${cascade ? '1' : '0'}`, { method: 'DELETE' });
-          if (!response.ok) {
-            showAlert((await response.json().catch(() => ({}))).error || t('err.remove_book'));
-            return;
-          }
-          await _refreshBooksListOnly();
-        } catch (_) { showAlert(t('err.remove_book')); }
-      };
+      const doDelete = cascade => _removeLibraryEntry(`/api/books/${id}?cascade=${cascade ? '1' : '0'}`);
 
       if (isContainer) {
         showTwoChoice(t('books.remove_anthology_confirm', { name }),
