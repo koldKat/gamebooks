@@ -44,6 +44,11 @@
   border-top: 1px solid #374151;
 }
 .reading-frontmatter--structured p { margin: 0 0 0.85rem; }
+.reading-frontmatter--structured hr {
+  border: 0;
+  border-top: 1px solid #4b5563;
+  margin: 0 0 0.85rem;
+}
 .reading-frontmatter--structured h3 {
   margin: 1.2rem 0 0.45rem;
   font-size: 0.85em;

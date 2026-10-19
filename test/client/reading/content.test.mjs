@@ -46,6 +46,19 @@ test('source-centered matter and underlined headings render with canonical align
   assert.equal(mount.children[1].children[1].tag, 'br');
 });
 
+test('source rules render between matter blocks without accepting attributes', () => {
+  const { mount, document } = setup([
+    source('H2', [textNode('Warning')]), source('HR'), source('P', [textNode('Choose carefully.')]),
+  ]);
+  assert.equal(renderReadingMatter(mount, 1029, '<h2>Warning</h2><hr><p>Choose carefully.</p>', document), true);
+  assert.deepEqual(mount.children.map(n => n.tag), ['h2', 'hr', 'p']);
+  for (const attrs of [{ onclick: 'bad()' }, { style: 'position:fixed' }]) {
+    const { mount, document } = setup([source('H2', [textNode('Warning')]), source('HR', [], attrs)]);
+    assert.equal(renderReadingMatter(mount, 1029, '<h2>Warning</h2><hr>', document), false);
+    assert.equal(mount.children.length, 0);
+  }
+});
+
 test('source left and right alignment override inherited justification without allowing other CSS', () => {
   for (const alignment of ['left', 'right']) {
     const { mount, document } = setup([
