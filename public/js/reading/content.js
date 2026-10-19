@@ -1,4 +1,4 @@
-const ELEMENTS = new Set(['P', 'H2', 'H3', 'H4', 'OL', 'UL', 'LI', 'STRONG', 'EM', 'BR', 'FIGURE', 'FIGCAPTION', 'IMG',
+const ELEMENTS = new Set(['P', 'H2', 'H3', 'H4', 'OL', 'UL', 'LI', 'STRONG', 'EM', 'U', 'BR', 'FIGURE', 'FIGCAPTION', 'IMG',
   'TABLE', 'THEAD', 'TBODY', 'TFOOT', 'TR', 'TH', 'TD', 'CAPTION']);
 
 // Copy only inert prose and this book's protected images into the live DOM.
@@ -13,6 +13,11 @@ export function renderReadingMatter(mount, bookId, text, document) {
     const target = document.createElement(node.tagName.toLowerCase());
     for (const attr of node.attributes) {
       if (node.tagName === 'IMG' && ['src', 'alt', 'loading'].includes(attr.name)) continue;
+      if (['P', 'H2', 'H3', 'H4'].includes(node.tagName) && attr.name === 'style'
+          && /^\s*text-align\s*:\s*center\s*;?\s*$/i.test(attr.value)) {
+        target.setAttribute('style', 'text-align:center');
+        continue;
+      }
       if (node.tagName === 'TH' && attr.name === 'scope' && ['row', 'col'].includes(attr.value)) {
         target.setAttribute(attr.name, attr.value);
         continue;

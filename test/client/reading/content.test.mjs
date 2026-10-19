@@ -34,6 +34,32 @@ test('plain text retains legacy rendering without heading or sentence guessing',
   }
 });
 
+test('source-centered matter and underlined headings render with canonical alignment', () => {
+  const { mount, document } = setup([
+    source('H2', [source('U', [textNode('WARNING!')])], { style: ' text-align : center; ' }),
+    source('P', [textNode('Choose carefully.'), source('BR'), textNode('Your adventure begins.')], { style: 'text-align:center' }),
+  ]);
+  assert.equal(renderReadingMatter(mount, 991, '<h2>WARNING!</h2>', document), true);
+  assert.equal(mount.children[0].attrs.style, 'text-align:center');
+  assert.equal(mount.children[0].children[0].tag, 'u');
+  assert.equal(mount.children[1].attrs.style, 'text-align:center');
+  assert.equal(mount.children[1].children[1].tag, 'br');
+});
+
+test('alignment support rejects other CSS and attributes without inserting a partial result', () => {
+  for (const bad of [
+    source('P', [], { style: 'text-align:center;position:fixed' }),
+    source('P', [], { style: 'background:url(https://example.com)' }),
+    source('P', [], { style: 'text-align:center!important' }),
+    source('IMG', [], { style: 'text-align:center' }),
+    source('U', [], { onclick: 'bad()' }),
+  ]) {
+    const { mount, document } = setup([source('P', [textNode('Safe prefix')]), bad]);
+    assert.equal(renderReadingMatter(mount, 991, '<p>Safe prefix</p>', document), false);
+    assert.equal(mount.children.length, 0);
+  }
+});
+
 test('player spell tables render as inert structured matter with accessible headers', () => {
   const nodes = [source('TABLE', [source('CAPTION', [textNode('Spells')]),
     source('THEAD', [source('TR', [source('TH', [textNode('Code')], { scope: 'col' }), source('TH', [textNode('Cost')])])]),
