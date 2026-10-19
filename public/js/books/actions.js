@@ -1,6 +1,6 @@
 import { _isMobile } from './helpers.js';
 import { booksState } from './state.js';
-import { _justRevealedBooks, _booksListDisplayChanged, _patchCachedBook, _refreshLibraryUi, _refreshBooksListOnly } from './data.js';
+import { _justRevealedBooks, _applySavedBookResponse, _refreshBooksListOnly } from './data.js';
 import { _saveExpandedPref } from './prefs.js';
 import { _scheduleAnthologyCardCoverFlows, _queueBookCovers } from './covers.js';
 import { _materializeLazyGroup, _maybeReclaimLazyGroup } from './lazy.js';
@@ -177,12 +177,8 @@ export function _wireRenderedContent(list) {
               body:   JSON.stringify({ name, total_sections: 0, isbn: isbn || null, issn: issn || null, asin: asin || null, pages: pages || null, authors: authors || null, description: description || null, is_public: isPublic, series_name: seriesName || null, series_number: seriesNum || null, is_container: 1 }),
             });
             if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || t('err.save'));
-            if (_booksListDisplayChanged(bid, { name, sections: 0, discoverableSections: null, isPublic, seriesName, seriesNumber: seriesNum, isContainer: true, parentId: null, bookOrder: null })) {
-              await _refreshLibraryUi({ feed: true });
-            } else {
-              _patchCachedBook(bid, { isbn: isbn || null, issn: issn || null, asin: asin || null, pages: pages || null, authors: authors || null, description: description || null });
-              await Promise.allSettled([booksState._hooks.loadFeed?.()]);
-            }
+            await _applySavedBookResponse(res);
+            await Promise.allSettled([booksState._hooks.loadFeed?.()]);
           },
         });
         return;
@@ -236,13 +232,8 @@ export function _wireRenderedContent(list) {
               body:   JSON.stringify({ name, total_sections: sections, max_section_number: maxSectionNumber, isbn: isbn || null, issn: issn || null, asin: asin || null, pages: pages || null, authors: authors || null, description: description || null, discoverable_sections: discoverableSections ?? null, is_public: isPublic, series_name: seriesName || null, series_number: seriesNumber || null, is_container: 0, parent_book_id: parentId || null, book_order: bookOrder ?? null }),
             });
             if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || t('err.save'));
-            if (_booksListDisplayChanged(bid, { name, sections, discoverableSections, isPublic, seriesName, seriesNumber, isContainer: false, parentId, bookOrder })) {
-              await _refreshLibraryUi({ feed: true });
-            } else {
-              _patchCachedBook(bid, { max_section_number: maxSectionNumber, isbn: isbn || null, issn: issn || null, asin: asin || null, pages: pages || null, authors: authors || null, description: description || null });
-              btn.dataset.maxSection = maxSectionNumber ?? '';
-              await Promise.allSettled([booksState._hooks.loadFeed?.()]);
-            }
+            await _applySavedBookResponse(res);
+            await Promise.allSettled([booksState._hooks.loadFeed?.()]);
           } catch (error) {
             throw error;
           }

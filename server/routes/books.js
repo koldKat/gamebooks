@@ -409,7 +409,13 @@ async function handleUpdateBook(req, res, bookId) {
       seriesId, resolvedSeriesNumber, resolvedIsContainer, resolvedParentBookId, resolvedBookOrder, resolvedMax))
     return send(res, 404, { error: 'Not found' });
   db._pruneRedundantAnthologyMembership(bookId, resolvedParentBookId);
-  send(res, 200, { ok: true });
+  // Return only the saved metadata; clients keep their existing progress and
+  // update the affected library groups without fetching the entire library.
+  send(res, 200, { ok: true,
+    book: { ...db.getBookById(bookId), ...db.getBookIdentifiers(null, bookId),
+      ...db.getBookContainerFields(bookId), series_name: seriesId ? db.getSeriesById(seriesId)?.name ?? null : null },
+    series: seriesId ? db.getAllSeries(userId, seriesId)[0] ?? null : null,
+  });
   // XP always goes to the book's creator, not the requester (admin may edit others' books)
   if (!old.isbn        && isbn)               db.awardXp(userId, 'add_isbn',          bookId);
   if (!old.issn        && issn)               db.awardXp(userId, 'add_issn',          bookId);

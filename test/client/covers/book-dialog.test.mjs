@@ -45,6 +45,7 @@ function dialog({ loggedIn = false, owned = false, mobile = true, admin = false,
     coversState: { _hooks: {
       getIsAdmin: () => admin,
       refreshBooksListOnly: async options => { if (options) assert.equal(options.afterMutation, true); events.push('library'); },
+      applySavedBookResponse: async response => { assert.ok(response.ok); events.push('library'); },
       openEditBookModal: options => { editOptions = options; },
       openEditCompModal: options => { editOptions = options; },
       showLogin: () => events.push('login'),

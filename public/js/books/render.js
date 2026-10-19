@@ -11,12 +11,12 @@ import { naturalCompare } from '../core/sort.js';
 import { _startLandingCoverRotation, _resetLandingCoverQueue, _effectiveLandingCoverSource } from '../covers.js';
 import { t } from '../i18n.js';
 import { escapeHtml } from '../core/util.js';
+import { updateBooksList } from './update.js';
 
 // ── Main render ───────────────────────────────────────────────────────────────
 export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
   if (!Array.isArray(allOwnedBooks)) return;
-  // Any builders from a previous render belong to DOM that's about to be
-  // replaced - reset along with everything else.
+  // Stable keys let preserved groups use builders backed by the latest cache.
   lazyState.builders.clear();
   lazyState.sequence = 0;
   const openWorldSeriesIds = new Set((allSeries || []).filter(s => s.is_open_world).map(s => s.id));
@@ -35,9 +35,12 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
   const isAdmin = booksState._hooks.getIsAdmin?.() ?? false;
   const isModerator = !isAdmin && !!booksState._hooks.getIsModerator?.();
   const list = document.getElementById('books-list');
+  const fingerprint = (...data) => JSON.stringify([isAdmin, isModerator, booksState._currentUserId,
+    booksState._hooks.getHasPdfAccess?.() ?? false, booksState._activeSeriesRuns, ...data]);
 
   if (!books.length && !allSeries.length && !booksState._cachedStashes.length) {
-    list.innerHTML = `<p class="books-empty">${t('books.empty')}</p>`;
+    updateBooksList(list, [{ key: 'empty', html: `<p class="books-empty">${t('books.empty')}</p>` }]);
+    _queueBookCovers(list);
     return;
   }
 
@@ -90,14 +93,14 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
     noSeries.push(b);
   }
 
-  function _renderContainerItem(b, customChildrenMap = childrenMap) {
+  function _renderContainerItem(b, customChildrenMap = childrenMap, context = 'main') {
     const myChildren = customChildrenMap[b.id] || [];
     const expanded   = _getExpandedPref('book', String(b.id), `bk_expanded_${b.id}`);
     const aggrV = myChildren.reduce((s, c) => s + (c.visited || 0), 0);
     const aggrS = myChildren.reduce((s, c) => s + ((c.discoverable_sections ?? c.total_sections) || 0), 0);
     const out = [_bookItemHtml(b, false, expanded, myChildren.length, { visited: aggrV, totalSections: aggrS }, isAdmin)];
     if (myChildren.length) {
-      const childKey = `children:${b.id}:${lazyState.sequence++}`;
+      const childKey = `children:${context}:${b.id}`;
       lazyState.builders.set(childKey, () =>
         myChildren.map(child => _bookItemHtml(child, true, false, 0, null, isAdmin, b.id)));
       if (expanded) {
@@ -112,7 +115,7 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
     return out.join('');
   }
 
-  const parts = [];
+  const parts = [], blocks = [];
 
   function _getSeriesActiveBooksForContext(series, stashId = null) {
     const stash = stashId == null ? null : booksState._cachedStashes.find(x => x.id === stashId);
@@ -213,7 +216,7 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
     const _seriesBodyHtml = () => {
       const inner = [];
       if (booksInSeries.length) {
-        for (const b of topInSeries) inner.push(b.is_container ? _renderContainerItem(b, activeChildrenMap) : _bookItemHtml(b, false, false, 0, null, isAdmin));
+        for (const b of topInSeries) inner.push(b.is_container ? _renderContainerItem(b, activeChildrenMap, `series:${stashId ?? ''}:${s.id}`) : _bookItemHtml(b, false, false, 0, null, isAdmin));
       } else {
         inner.push(`<div class="series-empty-hint">${t('books.series_empty_hint')} <button class="series-browse-btn" data-series-id="${s.id}" data-series-name="${escapeHtml(s.name)}">${t('books.browse_series')}</button></div>`);
       }
@@ -236,6 +239,7 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
 
   // ── Stash sections ──────────────────────────────────────────────────────────
   for (const stash of sortedStashes) {
+    const blockStart = parts.length;
     const excludedBookIds      = new Set(stash.excludedBookIds || []);
     const stashSeries          = _sortedByName(allSeries.filter(s => (stash.seriesIds || []).includes(s.id)));
     const explicitStashBooks   = books.filter(b => !excludedBookIds.has(b.id) && (stash.bookIds || []).includes(b.id) && !(b.series_id && (stash.seriesIds || []).includes(b.series_id)));
@@ -292,7 +296,7 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
     const _stashBodyHtml = () => {
       const inner = [];
       for (const s of stashSeries) { const h = _renderSeriesSection(s, stash.id); if (h) inner.push(h); }
-      for (const b of stashContainers) inner.push(_renderContainerItem(b, stashChildrenMap));
+      for (const b of stashContainers) inner.push(_renderContainerItem(b, stashChildrenMap, `stash:${stash.id}`));
       for (const b of stashStandalone) inner.push(_bookItemHtml(b, false, false, 0, null, isAdmin));
       // Array of item strings, not one blob - see _materializeLazyGroup.
       return inner;
@@ -309,18 +313,19 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
       parts.push(`<div class="stash-items-group" data-stash-id="${stash.id}" data-lazy-group="${stashKey}" style="display:none"></div>`);
     }
     parts.push('</div>');
+    blocks.push({ key: `stash:${stash.id}`, html: parts.slice(blockStart).join(''),
+      fingerprint: fingerprint(stash, stashBooksRaw, stashSeries.map(s => [s, _getSeriesActiveBooksForContext(s, stash.id).activeBooks])) });
   }
 
   // ── Series sections ─────────────────────────────────────────────────────────
-  for (const s of visibleSeries) parts.push(_renderSeriesSection(s));
+  for (const s of visibleSeries) blocks.push({ key: `series:${s.id}`, html: _renderSeriesSection(s),
+    fingerprint: fingerprint(s, _getSeriesActiveBooksForContext(s).activeBooks) });
 
   // ── No-series: containers then standalone ───────────────────────────────────
-  for (const b of _sortBooks(noSeries.filter(b =>  b.is_container))) parts.push(_renderContainerItem(b));
-  for (const b of _sortBooks(noSeries.filter(b => !b.is_container))) parts.push(_bookItemHtml(b, false, false, 0, null, isAdmin));
+  for (const b of _sortBooks(noSeries.filter(b =>  b.is_container))) blocks.push({ key: `book:${b.id}`, html: _renderContainerItem(b), fingerprint: fingerprint(b, childrenMap[b.id] || []) });
+  for (const b of _sortBooks(noSeries.filter(b => !b.is_container))) blocks.push({ key: `book:${b.id}`, html: _bookItemHtml(b, false, false, 0, null, isAdmin), fingerprint: fingerprint(b) });
 
-  list.innerHTML = parts.join('');
-
-  _wireRenderedContent(list);
+  for (const root of updateBooksList(list, blocks)) _wireRenderedContent(root);
   lazyState.wireContent = _wireRenderedContent;
 
   _applyBooksSearchFilter();

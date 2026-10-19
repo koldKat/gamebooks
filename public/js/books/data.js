@@ -2,9 +2,11 @@ import { booksState, _BOOKS_LS_KEY } from './state.js';
 import { _captureExpandedPrefsFromDom } from './prefs.js';
 import { getToken, apiFetch } from '../core/state.js';
 import { loadCovers } from '../covers.js';
+import { naturalCompareByName } from '../core/sort.js';
 
 let _booksStateRefreshTimer = null;
 let _booksRefreshPromise = null;
+let _booksMutationRevision = 0;
 
 export function getCachedBooks()    { return booksState._cachedBooks; }
 export function getCachedAllSeries() { return booksState._cachedAllSeries; }
@@ -58,6 +60,36 @@ export function _patchCachedBook(bookId, fields) {
 }
 
 // ── Refresh helpers ───────────────────────────────────────────────────────────
+export async function _applySavedBookResponse(response) {
+  const token = getToken();
+  ++_booksMutationRevision;
+  const saved = await response.json().catch(() => null);
+  if (token !== getToken()) return;
+  // Older running servers may still return only {ok:true} until restarted.
+  if (!saved?.book) return _refreshBooksListOnly({ afterMutation: true });
+  const books = booksState._cachedBooks;
+  const old = books?.find(book => book.id === saved.book.id);
+  if (!old) return;
+  _captureExpandedPrefsFromDom();
+  const parentId = saved.book.parent_book_id;
+  const extraIds = (old.extra_anthology_ids || []).filter(id => id !== parentId);
+  const extraOrders = { ...old.extra_anthology_orders };
+  if (parentId) delete extraOrders[parentId];
+  const updated = { ...old, ...saved.book, extra_anthology_ids: extraIds, extra_anthology_orders: extraOrders };
+  const series = [...(booksState._cachedAllSeries || [])];
+  if (saved.series) {
+    const index = series.findIndex(item => item.id === saved.series.id);
+    if (index < 0) series.push(saved.series);
+    else series[index] = saved.series;
+    series.sort(naturalCompareByName);
+  }
+  booksState.renderBooksList(books.map(book => book.id === updated.id ? updated : book), series, booksState._cachedStashes || []);
+  booksState._booksListFingerprint = null;
+  booksState._booksDataFresh = true;
+  booksState._invalidateAutocompleteCaches();
+  booksState._hooks.scheduleRewardProfileRefresh?.(250);
+}
+
 export async function _refreshLibraryUi({ feed = false, covers = false } = {}) {
   const jobs = [_refreshBooksListOnly({ afterMutation: true })];
   if (feed) jobs.push(booksState._hooks.loadFeed?.());
@@ -76,6 +108,7 @@ export async function _refreshBooksListOnly({ afterMutation = false } = {}) {
     return _refreshBooksListOnly();
   }
   _booksRefreshPromise = (async () => {
+    const revision = _booksMutationRevision;
     try {
       _captureExpandedPrefsFromDom();
       booksState._booksDataFresh = false;
@@ -91,8 +124,10 @@ export async function _refreshBooksListOnly({ afterMutation = false } = {}) {
       if (!Array.isArray(books)) return;
       const safeStashes = stashesRes.ok ? await stashesRes.json() : (booksState._cachedStashes || []);
       const safeSeries  = seriesRes.ok  ? await seriesRes.json()  : (booksState._cachedAllSeries || []);
+      if (revision !== _booksMutationRevision) return;
       if (activeRunsRes?.ok) {
         const ar = await activeRunsRes.json().catch(() => null);
+        if (revision !== _booksMutationRevision) return;
         booksState._activeSeriesRuns = Array.isArray(ar) ? ar : [];
       }
       const safeSeriesArr  = Array.isArray(safeSeries)  ? safeSeries  : (booksState._cachedAllSeries || []);

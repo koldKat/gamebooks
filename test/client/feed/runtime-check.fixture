@@ -17,6 +17,8 @@ class Element {
     this.classList = { contains: k => classes.has(k), add: k => classes.add(k), remove: k => classes.delete(k), toggle: (k, enabled) => enabled ? classes.add(k) : classes.delete(k) };
   }
   querySelectorAll(q) { return this.queries.get(q) || []; }
+  get firstChild() { return this.innerHTML ? {} : null; }
+  replaceChildren() { this.innerHTML = ''; }
   querySelector(q) {
     if (q === '.feed-entry, #feed-header') return /feed-entry|feed-header/.test(this.innerHTML) ? this : null;
     if (q === '.feed-loading') return this.innerHTML.includes('feed-loading') ? this : null;
@@ -209,6 +211,25 @@ if (!baseline) {
   assert.equal(images.length, imageCount + 1, 'failed cover metadata must be retried rather than cached forever');
   images.at(-1).finish(); await retryLoad;
   assert.ok(stack.innerHTML.includes('/retry.jpg'));
+  card.getBoundingClientRect = () => ({ top: 5000, bottom: 5300 });
+  const beforeOffscreen = images.length;
+  await day._applyDayCoverFlows(feed, [['/offscreen.jpg']]);
+  assert.equal(images.length, beforeOffscreen, 'offscreen days do not fetch or decode covers');
+  assert.equal(stack.innerHTML, '', 'offscreen days release their background tiles');
+  card.getBoundingClientRect = () => ({ top: 0, bottom: 300 });
+  await day._applyDayCoverFlows(feed, [['/natural.jpg']]);
+  assert.ok(stack.innerHTML.includes('/natural.jpg'), 'scrolling a day back into view restores its covers');
+  body.classList.add('no-feed-day-covers');
+  await day._applyDayCoverFlows(feed);
+  assert.equal(stack.innerHTML, '', 'disabled cover preference releases decoded-image DOM references');
+  body.classList.remove('no-feed-day-covers');
+  await day._applyDayCoverFlows(feed, [['/natural.jpg']]);
+  body.classList.add('feed-collapsed');
+  await day._applyDayCoverFlows(feed);
+  assert.equal(stack.innerHTML, '', 'collapsed feed releases background tiles');
+  body.classList.remove('feed-collapsed');
+  await day._applyDayCoverFlows(feed, [['/natural.jpg']]);
+  delete card.getBoundingClientRect;
   assert.equal(observers[0].cards.size, 1); day.replaceDayCoverLists([]); assert.equal(observers[0].cards.size, 0);
   body.classList.add('no-feed-day-covers'); const beforeImages = images.length;
   await day._applyDayCoverFlows(feed, [['/hidden.jpg']]); assert.equal(images.length, beforeImages);

@@ -1,12 +1,13 @@
 import { t } from '../i18n.js';
 import { bootState } from './state.js';
-import { state, saveState, clearToken, clearUsername, apiFetch, currentBookId, mappedCountFor, discoveredSectionsFor } from '../core/state.js';
+import { state, clearToken, clearUsername, apiFetch, currentBookId, mappedCountFor, discoveredSectionsFor } from '../core/state.js';
 import { render, setDiscoverableLimit } from '../play.js';
 import { openEditBookModal, closeEditBookModal, maxSectionInUse } from '../edit-book.js';
 import { setCoversPrefsState, resetFeedDisplayPrefsForLogout } from '../covers.js';
-import { clearBooksCache, _refreshLibraryUi } from '../books.js';
+import { clearBooksCache, _applySavedBookResponse } from '../books.js';
 import { getCurrentBookCover, _updateSidebarBookInfo } from '../play/bg.js';
 import { showLogin, showBooks } from './screens.js';
+import { loadFeed } from '../feed.js';
 
 export function initLibraryBindings() {
   // ── Books screen ──────────────────────────────────────────────────
@@ -58,6 +59,7 @@ export function initLibraryBindings() {
           body:   JSON.stringify({ name, total_sections: isContainer ? 0 : sections, max_section_number: maxSectionNumber, isbn: isbn || null, issn: issn || null, asin: asin || null, pages: pages || null, authors: authors || null, description: description || null, discoverable_sections: discoverableSections ?? null, is_public: isPublic, series_name: seriesName || null, series_number: seriesNumber || null, is_container: isContainer ? 1 : 0, parent_book_id: parentId || null, book_order: bookOrder ?? null }),
         });
         if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || t('err.save'));
+        await _applySavedBookResponse(res);
         bootState._currentBook.isbn                 = isbn        || null;
         bootState._currentBook.issn                 = issn        || null;
         bootState._currentBook.asin                 = asin        || null;
@@ -77,9 +79,8 @@ export function initLibraryBindings() {
         state.totalSections = isContainer ? state.totalSections : sections;
         _updateSidebarBookInfo();
 
-        await saveState();
         render();
-        await _refreshLibraryUi({ feed: true });
+        await loadFeed();
       },
     });
   });

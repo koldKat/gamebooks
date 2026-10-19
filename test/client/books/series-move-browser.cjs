@@ -7,23 +7,23 @@ const scratch = fs.mkdtempSync(path.join(root, 'series-move-'));
 const repo = process.cwd();
 const script = `
 import {renderBooksList} from 'file://${repo}/public/js/books/render.js';
-import {_refreshBooksListOnly} from 'file://${repo}/public/js/books/data.js';
+import {_refreshBooksListOnly,_applySavedBookResponse} from 'file://${repo}/public/js/books/data.js';
 import {booksState} from 'file://${repo}/public/js/books/state.js';
 import {coversState} from 'file://${repo}/public/js/covers/state.js';
 import {renderCoverActivity} from 'file://${repo}/public/js/covers/book-dialog.js';
 const check=(value,label)=>{if(!value)throw Error(label);};
 try {
  localStorage.setItem('gamebook_auth_token','fixture-only');
- let rows,edit,meta,checks=0;
- const series=[{id:1,name:'Old series',is_owner:true},{id:2,name:'New series',is_owner:true}];
+ let rows,edit,meta,checks=0,libraryRequests=0;
+ const series=[{id:1,name:'Old series',is_owner:true},{id:2,name:'New series',is_owner:true},{id:3,name:'Unrelated series',is_owner:true}];
  window.fetch=async (url,options={})=>{
   let result=[];
   if(options.method==='PATCH') {
    const saved=JSON.parse(options.body);
    rows=rows.map(b=>b.id===42?{...b,...saved,series_id:saved.series_name==='New series'?2:null}:b);
    meta={...meta,seriesId:rows[0].series_id,seriesName:saved.series_name,ownSeriesName:saved.series_name};
-   result={ok:true};
-  }else if(url.startsWith('/api/books?')) result=structuredClone(rows);
+   result={ok:true,book:rows[0],series:series.find(s=>s.id===rows[0].series_id)};
+  }else if(url.startsWith('/api/books?')) {libraryRequests++;result=structuredClone(rows);}
   else if(url.startsWith('/api/series?')) result=series;
   else if(url==='/api/public/book/42/activity') result={book:meta,entries:[]};
   else if(url==='/api/books/42/state') result={graph:{}};
@@ -33,11 +33,12 @@ try {
  booksState._currentUserId=1;
  booksState.renderBooksList=renderBooksList;
  booksState._hooks={openEditBookModal:options=>edit=options,openEditCompModal:options=>edit=options};
- coversState._hooks={getIsAdmin:()=>true,refreshBooksListOnly:_refreshBooksListOnly,...booksState._hooks};
+ coversState._hooks={getIsAdmin:()=>true,refreshBooksListOnly:_refreshBooksListOnly,applySavedBookResponse:_applySavedBookResponse,...booksState._hooks};
  coversState.renderCoverActivity=renderCoverActivity;
  for(const expanded of [false,true]) for(const anthology of [false,true]) for(const viaInfo of [false,true]) {
   rows=[{id:42,name:'Moved item',total_sections:100,is_public:0,created_by:1,is_container:anthology?1:0,series_id:1,series_name:'Old series'}];
   if(anthology) rows.push({id:43,name:'Child',total_sections:100,parent_book_id:42,is_public:0,created_by:1});
+  rows.push({id:99,name:'Untouched book',total_sections:100,series_id:3,is_public:0,created_by:1});
   meta={name:'Moved item',totalSections:100,isContainer:anthology,isPublic:false,seriesId:1,seriesName:'Old series',ownSeriesName:'Old series'};
   for(const id of [1,2]) localStorage.setItem('sr_expanded_'+id,expanded?'1':'0');
   localStorage.setItem('bk_expanded_42','1');
@@ -45,6 +46,9 @@ try {
   booksState._seriesExpandedPrefs={};
   booksState._bookExpandedPrefs={};
   renderBooksList(structuredClone(rows),series,[]);
+  const untouched=document.querySelector('.series-header-row[data-series-id="3"]');
+  const untouchedBody=untouched.nextElementSibling;
+  untouched.click();
   if(viaInfo) {renderCoverActivity(42,'Moved item',[],null,meta,true,true);document.querySelector('.catalog-admin-edit-btn').click();}
   else {
    if(!expanded) document.querySelector('.series-header-row[data-series-id="1"]').click();
@@ -61,9 +65,27 @@ try {
   check(destination.querySelector('.book-edit-btn[data-id="42"]'),'destination contains moved item without reloading');
   if(anthology) check(destination.querySelector('.book-edit-btn[data-id="43"]'),'anthology children move with it');
   check(booksState._cachedBooks[0].series_id===2,'cache has saved membership');
+  check(document.querySelector('.series-header-row[data-series-id="3"]')===untouched&&untouched.nextElementSibling===untouchedBody,'unrelated group DOM is preserved');
+  check(libraryRequests===0,'saving never fetches the full library');
   if(viaInfo) check(document.querySelector('.book-modal-series-btn')?.textContent==='New series','open info dialog has saved series');
   edit=null;checks++;
  }
+ const big={id:500,name:'Large anthology',is_container:1,is_public:0,created_by:1};
+ rows=[big,...Array.from({length:250},(_,i)=>({id:1000+i,name:'Large child '+i,total_sections:100,parent_book_id:500,is_public:0,created_by:1})),{id:99,name:'Untouched book',total_sections:100,series_id:3,is_public:0,created_by:1}];
+ localStorage.setItem('bk_expanded_500','0');
+ renderBooksList(structuredClone(rows),series,[]);
+ const bigRow=document.querySelector('[data-container-id="500"]');
+ const bigGroup=bigRow.nextElementSibling;
+ bigRow.click();
+ await _applySavedBookResponse({json:async()=>({book:{id:99,name:'Edited other book'},series:series[2]})});
+ check(document.querySelector('[data-container-id="500"]')===bigRow,'active lazy materialization survives an unrelated save');
+ for(let n=0;bigGroup.querySelectorAll('.book-item--child').length<250&&n<100;n++)await new Promise(resolve=>setTimeout(resolve,20));
+ check(bigGroup.querySelectorAll('.book-item--child').length===250,'chunked group finishes after cache update');
+ bigRow.click();check(bigGroup.children.length===0&&bigGroup.dataset.lazyGroup,'large collapsed group reclaims DOM');
+ bigRow.click();
+ for(let n=0;bigGroup.querySelectorAll('.book-item--child').length<250&&n<100;n++)await new Promise(resolve=>setTimeout(resolve,20));
+ check(bigGroup.querySelectorAll('.book-item--child').length===250,'reclaimed group uses current stable builder');
+ check(!document.getElementById('books-list').textContent.includes('=>'),'no lazy source text leaks into DOM');
  document.body.dataset.test=JSON.stringify({width:innerWidth,checks});
 }catch(error){document.body.dataset.failure=error.stack;}
 `;

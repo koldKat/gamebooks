@@ -424,6 +424,7 @@ gamebooks/
         data.js          Cache APIs and deduplicated library refreshes
         prefs.js         Expansion preference capture and persistence
         render.js        Library rendering orchestration
+        update.js        Keyed DOM updates that preserve unchanged library groups
         groups.js        Membership, sorting, and aggregate progress helpers
         markup.js        Book card markup, rating helpers, and PDF/EPUB badge updates
         actions.js       Rendered card/group action wiring
@@ -1760,6 +1761,8 @@ Each `.book-item` card has a progress bar background: `rgba(107,114,128,0.18)` f
 
 **Sorting within series (`_sortSeriesBooks`):** recently played (non-null `last_run_at`, descending) → `series_number` parsed as float (ascending, NaN/null sorts last) → alphabetical. **Sorting anthology children:** same priority order using `book_order` instead of `series_number`. Both sorts ensure that a user's active reading bubbles up while unnumbered books fall to alphabetical at the bottom.
 
+Book metadata saves return `{ok, book, series}` with normalized shared metadata and the destination series when it belongs to the account. The client merges that metadata into its existing library cache, retaining progress and ratings, and updates keyed stash, series and standalone-book groups. Unchanged groups retain their DOM, listeners, cover state and expansion state. Stable anthology builder keys support preserved or reclaimed lazy groups. A mutation revision prevents an older library poll from overwriting a completed save.
+
 **Series header rows:** amber collapsible rows. Each shows series name, book count, aggregate sections, and a progress bar. Clicking the name collapses/expands the group. State persisted in `localStorage` as `sr_expanded_<seriesId>`. Header has ✎ (owner/admin only, disabled for non-owners) and ✕ buttons. Series with no books show "no books yet" + **Browse series** button. Books whose series isn't in `user_series` render as standalone (not hidden).
 
 **Container expand/collapse:** the entire `.book-item--container` row is clickable (except the ✎/✕ buttons on the right). A CSS `::before` chevron on the `.book-name-text` element rotates from `▶` to `▼` via `data-expanded="0|1"` attribute and a CSS transition. Expanded state is persisted in `localStorage` under `bk_expanded_<bookId>`.
@@ -1878,7 +1881,7 @@ Mobile mirrors this pattern in `public/mobile/js/battlesim-dispatch.js`: `reader
 
 `adminBadge()` (`account/user.js`) takes the already-resolved `isAdmin` boolean directly, matching `authorBadge`/`contributorBadge`'s own calling convention. All 3 callers (`boot/landing.js` and `boot/hooks.js`, rendering `#books-username` - the currently logged-in user's own header) read `bootState._isAdmin` (`resolveIsAdmin()`'s result), driven by `profile.isAdmin` the moment `/api/profile` resolves - a single source of truth for admin status, not re-derived per call site from a separate `adminUsername` comparison.
 
-**Day-card cover backgrounds:** each `.feed-day-card` gets a stack of tiles cycling through every distinct public book played that day, purely client-side in `feed/day-covers.js`. `_dayCovers(items)` (`feed/render.js`) tallies entries with `bookId && bookIsPublic` and a resolvable cover per book, returning all distinct qualifying books' covers sorted by entry count descending. Each qualifying day's cover list is pushed onto `_lastDayCoverLists` (reset per `loadFeed()` call); the card gets `data-day-index` plus an empty `.feed-day-cover-stack` first child, with entries/header wrapped in a sibling `.feed-day-content`.
+**Day-card cover backgrounds:** each `.feed-day-card` gets a stack of tiles cycling through every distinct public book played that day, purely client-side in `feed/day-covers.js`. `_dayCovers(items)` (`feed/render.js`) tallies entries with `bookId && bookIsPublic` and a resolvable cover per book, returning all distinct qualifying books' covers sorted by entry count descending. Each qualifying day's cover list is pushed onto `_lastDayCoverLists` (reset per `loadFeed()` call); the card gets `data-day-index` plus an empty `.feed-day-cover-stack` first child, with entries/header wrapped in a sibling `.feed-day-content`. Covers load only within 300 pixels of the viewport. Scrolling releases offscreen tiles and restores nearby ones; disabling day covers or collapsing the feed clears its tiles while keeping the bounded dimension cache.
 
 `_applyDayCoverFlows(root)` builds real DOM tiles per `.feed-day-card[data-day-index]` (not a repeating CSS background, since each tile is a distinct image) - the most-prominent book centered at true aspect ratio, with the day's other books tiled outward above/below to fill the card. A flat overlay (`.feed-day-cover-stack::after`, `rgba(31,41,55,0.9)`) sits on top for legibility; `.feed-day-content` is `position: relative; z-index: 1` so header/entries paint above it. Days with no qualifying book get a `feed-day-card--glass` class instead.
 

@@ -10,6 +10,7 @@ function setup({ moderator = false, expanded = false } = {}) {
     ...groups,
     booksState: { _currentUserId: 2, _cachedBooks: [], _activeSeriesRuns: [], _hooks: { getIsModerator: () => moderator } },
     lazyState: { builders: new Map(), sequence: 0 },
+    updateBooksList: (root, blocks) => { root.innerHTML = blocks.map(block => block.html).join(''); return [root]; },
     document: { getElementById: () => list },
     localStorage: { setItem() {} },
     _BOOKS_LS_KEY: 'books', _SERIES_LS_KEY: 'series', _STASHES_LS_KEY: 'stashes',

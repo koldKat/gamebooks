@@ -16,6 +16,7 @@ import { setCoversHooks, loadCovers, _refreshPublicCatalogIfVisible, _isLandingB
 import { setBooksHooks, initBooksPanel, getCachedBooks, getCachedAllSeries, _refreshBooksListOnly, _syncPdfBadgeOnCards, _syncEpubBadgeOnCards, _starsHtml, _starLabelHtml, _flashRatingGate } from '../books.js';
 import { setOpenWorldHooks } from '../play/open-world.js';
 import { setFeedHooks, loadFeed, refreshDayCoverFlows, applyFeedFilterPrefs } from '../feed.js';
+import { _applySavedBookResponse } from '../books.js';
 import { setNotifHooks, _scheduleLiveUiRefresh } from '../community/notif.js';
 import { _processRewardSnapshot, _scheduleRewardProfileRefresh } from '../progression/rewards.js';
 import { setBgHooks, setCurrentBookCover } from '../play/bg.js';
@@ -97,6 +98,7 @@ export function initFeatureHooks() {
     onRegisterModerator: registerModerator,
   });
   setCoversHooks({
+    applySavedBookResponse: _applySavedBookResponse,
     savePrefs,
     getCachedBooks,
     getCachedAllSeries,

@@ -38,14 +38,30 @@ const _dayCoverResizeObserver = (typeof ResizeObserver !== 'undefined')
   ? new ResizeObserver(() => _scheduleDayCoverRecompute())
   : null;
 
+function _nearViewport(card) {
+  if (!card.getBoundingClientRect) return true;
+  const rect = card.getBoundingClientRect();
+  return rect.bottom >= -300 && rect.top <= window.innerHeight + 300;
+}
+
+function _clearCoverTiles(card) {
+  const stack = card.querySelector('.feed-day-cover-stack');
+  if (stack?.firstChild) stack.replaceChildren();
+}
+
 export async function _applyDayCoverFlows(root, dayCoverLists = _lastDayCoverLists) {
   const generation = _coverGeneration;
-  if (document.body.classList.contains('no-feed-day-covers')) return; // toggle off - don't bother loading images just to hide them
   const cards = root.querySelectorAll('.feed-day-card[data-day-index]');
+  if (document.body.classList.contains('no-feed-day-covers') || document.body.classList.contains('feed-collapsed')) {
+    for (const card of cards) _clearCoverTiles(card);
+    _dayCoverResizeObserver?.disconnect();
+    return;
+  }
   const applyCard = async card => {
     if (generation !== _coverGeneration) return;
     if (card.isConnected === false) return;
     _dayCoverResizeObserver?.observe(card); // no-op if already observed
+    if (!_nearViewport(card)) { _clearCoverTiles(card); return; }
     const covers = dayCoverLists[Number(card.dataset.dayIndex)];
     const stack = card.querySelector('.feed-day-cover-stack');
     if (!covers?.length || !stack) return;
@@ -53,6 +69,7 @@ export async function _applyDayCoverFlows(root, dayCoverLists = _lastDayCoverLis
     const metas = await Promise.all(covers.map(_loadDayCoverMeta));
     if (generation !== _coverGeneration) return;
     if (card.isConnected === false || document.body.classList.contains('no-feed-day-covers')) return;
+    if (!_nearViewport(card)) { _clearCoverTiles(card); return; }
     if (metas.every(m => !m?.width || !m?.height)) return;
     const cardW   = card.offsetWidth;
     const targetH = card.offsetHeight;
@@ -128,6 +145,9 @@ function _scheduleDayCoverRecompute() {
 }
 window.addEventListener('resize', _scheduleDayCoverRecompute);
 document.addEventListener('fullscreenchange', _scheduleDayCoverRecompute);
+document.addEventListener('scroll', event => {
+  if (event.target === document || event.target === document.getElementById('landing-wrapper')) _scheduleDayCoverRecompute();
+}, true);
 
 // Panel collapse changes feed width without a window resize; preferences must nudge the layout.
 export function refreshDayCoverFlows() {

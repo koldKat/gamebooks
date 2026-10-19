@@ -246,7 +246,7 @@ test('migration preserves the sequence when the old series table is empty', () =
 });
 
 function editRoutes(db, books, options) {
-  let status;
+  let status, response;
   const api = { ...books, isUserAdmin: () => !!options.admin, isUserModerator: () => !!options.moderator,
     getBookCreator: id => db.prepare('SELECT created_by FROM books WHERE id=?').get(id)?.created_by ?? null,
     getBookIdentifiers: () => ({ is_public: 0 }), awardXp() {},
@@ -254,13 +254,35 @@ function editRoutes(db, books, options) {
   const context = vm.createContext({ module: { exports: {} }, require(name) {
     if (name === '../db') return api;
     if (name === '../request-helpers') return { isLocalhost: () => false, authenticate: async () => options.userId,
-      readBody: async () => options.body, send: (_res, code) => { status = code; } };
+      readBody: async () => options.body, send: (_res, code, body) => { status = code; response = body; } };
     if (name === '../sse') return { feedPush() {}, publicCatalogPush() {} };
     return {};
   } });
   vm.runInContext(fs.readFileSync(require.resolve('../server/routes/books'), 'utf8'), context);
-  return { edit: async id => { await context.module.exports.handleUpdateBook({}, {}, id); return status; } };
+  return { edit: async id => { await context.module.exports.handleUpdateBook({}, {}, id); return status; }, get response() { return response; } };
 }
+
+test('metadata save returns the saved book and only its owned destination series', async () => {
+  const { db, books } = setup();
+  try {
+    db.exec('CREATE TABLE book_reading_entries (book_id INTEGER, section_id TEXT, counts_as_section INTEGER)');
+    const bid = books.createBook(1, 'Original', 100).id;
+    const target = books.getOrCreateSeries('Destination', 1, true);
+    books.getOrCreateSeries('Unrelated', 1, true);
+    const routes = editRoutes(db, books, { userId: 1, body: { name: 'Saved', total_sections: 100,
+      is_public: false, series_name: 'Destination', series_number: '2' } });
+    assert.equal(await routes.edit(bid), 200);
+    assert.equal(routes.response.book.id, bid);
+    assert.equal(routes.response.book.name, 'Saved');
+    assert.equal(routes.response.book.series_id, target);
+    assert.equal(routes.response.book.series_name, 'Destination');
+    assert.equal(routes.response.book.series_number, '2');
+    assert.equal(routes.response.series.id, target);
+    assert.equal(routes.response.series.is_owner, true);
+    assert.equal(books.getAllSeries(1, target).length, 1);
+    assert.equal(books.getAllSeries(2, target).length, 0, 'private unrelated memberships are not returned');
+  } finally { db.close(); }
+});
 
 test('rejected metadata edits cannot create series or library memberships', async () => {
   const { db, books } = setup();

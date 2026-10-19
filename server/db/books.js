@@ -373,21 +373,23 @@ function getSeriesAutocomplete(userId = null) {
   `).all(userId, userId, userId, userId).map(row => ({ ...row, is_open_world: !!row.is_open_world }));
 }
 
-function getAllSeries(userId) {
+function getAllSeries(userId, seriesId = null) {
   if (userId) {
     return db.prepare(`
       SELECT s.id, s.name, s.description, s.is_public, s.is_open_world,
              CASE WHEN s.created_by = ? THEN 1 ELSE 0 END AS is_owner
       FROM series s
       JOIN user_series us ON us.series_id = s.id AND us.user_id = ?
-    `).all(userId, userId)
+      WHERE (? IS NULL OR s.id = ?)
+    `).all(userId, userId, seriesId, seriesId)
       .map(r => ({ ...r, is_owner: !!r.is_owner, is_open_world: !!r.is_open_world }))
       .sort(_naturalCompareByName);
   }
   return db.prepare(`
     SELECT s.id, s.name, s.description, s.is_public, s.is_open_world, u.username AS created_by_username
     FROM series s LEFT JOIN users u ON u.id = s.created_by
-  `).all().sort(_naturalCompareByName).map(r => ({ ...r, is_open_world: !!r.is_open_world }));
+    WHERE (? IS NULL OR s.id = ?)
+  `).all(seriesId, seriesId).sort(_naturalCompareByName).map(r => ({ ...r, is_open_world: !!r.is_open_world }));
 }
 
 function getBookEnemies(bookId) {
