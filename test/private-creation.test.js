@@ -262,6 +262,17 @@ function editRoutes(db, books, options) {
   return { edit: async id => { await context.module.exports.handleUpdateBook({}, {}, id); return status; }, get response() { return response; } };
 }
 
+test('author suffixes stay attached to their name before alphabetical sorting', () => {
+  const { db, books } = setup();
+  try {
+    assert.equal(books.normalizeAuthors('Mario D. Macari, Jr., Beverly Charette'), 'Beverly Charette, Mario D. Macari Jr.');
+    assert.equal(books.normalizeAuthors('John Doe, Sr., Alice Roe'), 'Alice Roe, John Doe Sr.');
+    assert.equal(books.normalizeAuthors('John Doe, III, Alice Roe'), 'Alice Roe, John Doe III');
+    assert.equal(books.normalizeAuthors('John Doe Jr., Alice Roe'), 'Alice Roe, John Doe Jr.');
+    assert.equal(books.normalizeAuthors('Beverly Charette, Mario D. Macari'), 'Beverly Charette, Mario D. Macari');
+  } finally { db.close(); }
+});
+
 test('metadata save returns the saved book and only its owned destination series', async () => {
   const { db, books } = setup();
   try {

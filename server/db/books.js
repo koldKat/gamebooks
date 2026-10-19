@@ -808,7 +808,8 @@ function getPublicSeriesInfo(seriesId, hasPdfAccess = false) {
 
 function normalizeAuthors(raw) {
   if (!raw) return null;
-  const parts = raw.split(/\s*,\s*/).map(a => a.trim()).filter(Boolean);
+  const parts = raw.replace(/,\s*(Jr\.?|Sr\.?|II|III|IV)(?=\s*(?:,|$))/gi, ' $1')
+    .split(/\s*,\s*/).map(a => a.trim()).filter(Boolean);
   if (!parts.length) return null;
   parts.sort((a, b) => a.localeCompare(b));
   return parts.join(', ');
