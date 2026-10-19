@@ -247,26 +247,6 @@ export function _wireRenderedContent(list) {
       const id          = btn.dataset.id;
       const name        = btn.dataset.name;
       const isContainer = btn.dataset.container === '1';
-      const inSeries    = !!btn.closest('.series-books-group');
-      const cachedBook  = (booksState._cachedBooks || []).find(b => String(b.id) === String(id));
-
-      const doRemoveFromSeries = async () => {
-        if (!cachedBook) return;
-        try {
-          await apiFetch(`/api/books/${id}`, {
-            method: 'PATCH',
-            body: JSON.stringify({
-              name: cachedBook.name, total_sections: cachedBook.is_container ? 0 : cachedBook.total_sections,
-              isbn: cachedBook.isbn || null, issn: cachedBook.issn || null, asin: cachedBook.asin || null,
-              pages: cachedBook.pages || null, authors: cachedBook.authors || null, description: cachedBook.description || null,
-              discoverable_sections: cachedBook.discoverable_sections ?? null, is_public: !!cachedBook.is_public,
-              series_name: null, series_number: null, is_container: cachedBook.is_container ? 1 : 0,
-              parent_book_id: cachedBook.parent_book_id || null, book_order: cachedBook.book_order ?? null,
-            }),
-          });
-          await _refreshLibraryUi({ feed: true });
-        } catch (_) {}
-      };
 
       const doDelete = async (cascade) => {
         try {
@@ -275,7 +255,6 @@ export function _wireRenderedContent(list) {
         } catch (_) {}
       };
 
-      if (inSeries && cachedBook?.series_id) { showConfirm(t('books.remove_from_series_confirm', { name }), doRemoveFromSeries); return; }
       if (isContainer) {
         showTwoChoice(t('books.remove_anthology_confirm', { name }),
           t('books.delete_anthology'),          () => doDelete(false),
