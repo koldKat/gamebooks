@@ -7,6 +7,7 @@ if (!root?.startsWith('/media/koldKat/MediaDrive/.tmp/')) throw Error('Use Media
 const repo = process.cwd();
 const scratch = fs.mkdtempSync(path.join(root, 'feed-filters-'));
 const loader = fs.readFileSync('public/js/feed/loader.js', 'utf8').replace(/^import .*;$/gm, '').replace(/^export /gm, '');
+const creationBindings = fs.readFileSync('public/js/feed/bindings.js', 'utf8').replace(/^import .*;$/gm, '').replace('export function bindFeedInteractions', 'function bindCreationInteractions');
 const script = `
 import {renderFeedContents} from 'file://${repo}/public/js/feed/render.js';
 import {updateFeedContents} from 'file://${repo}/public/js/feed/update.js';
@@ -22,7 +23,33 @@ const base={username:'Player',bookId:1,bookName:'Book',completedAt:Date.now()};
 const payload={entries:[{...base,type:'book_created'},{...base,type:'run_started'},{...base,type:'level_up',level:2}],pinned:{title:'News',body:'Pinned announcement'}};
 const apiFetch=async()=>{requests++;return{ok:true,json:async()=>payload};};
 ${loader}
+${creationBindings}
 try{
+ const host=document.getElementById('feed-content'),expanded=new Set();
+ const recent={...base,type:'book_created',bookName:'New volume',bookIsPublic:true,seriesId:3,seriesName:'Older series',seriesIsPublic:true};
+ const yesterday=Date.now()-86400000;
+ const old={...recent,bookId:2,bookName:'Older volume',completedAt:yesterday};
+ for(const anthology of [false,true]){
+  const child=anthology?{...recent,parentBookId:9,parentBookName:'Older anthology',parentBookIsPublic:true}:recent;
+  const parent=anthology?{...child,type:'book_created',isContainer:true,bookId:9,bookName:'Older anthology',completedAt:yesterday}:{...recent,type:'series_created',completedAt:yesterday};
+  const olderChild=anthology?{...old,parentBookId:9,parentBookName:'Older anthology',parentBookIsPublic:true}:old;
+  host.innerHTML=renderFeedContents([child,olderChild,parent],null,'').html;
+  bindCreationInteractions(host,expanded);
+  const cards=host.querySelectorAll('.feed-day-card');
+  check(cards.length===2,'creation dates retain separate day cards');
+  const toggle=cards[0].querySelector('.feed-group-toggle'),group=document.getElementById(toggle.dataset.target);
+  check(group.hidden&&toggle.getAttribute('aria-expanded')==='false','today’s new book starts folded');
+  check(group.querySelectorAll('.feed-book-btn').length===1&&group.querySelector('.feed-book-btn').dataset.bookId==='1','today contains only the new book');
+  check(!cards[1].querySelector('[data-book-id="1"]'),'new book never moves to older day');
+  toggle.click();check(!group.hidden&&toggle.getAttribute('aria-expanded')==='true','creation group expands');
+  host.innerHTML=renderFeedContents([{...child,bookId:4,bookName:'Another new volume'},child,olderChild,parent],null,'').html;
+  bindCreationInteractions(host,expanded);
+  const fresh=host.querySelector('.feed-group-toggle');
+  check(fresh.getAttribute('aria-expanded')==='true'&&!document.getElementById(fresh.dataset.target).hidden,'live addition retains expansion');
+  check(document.documentElement.scrollWidth<=innerWidth,'container heading fits viewport');
+  expanded.clear();
+ }
+ host.innerHTML='';
  await loadFeed();
  check(document.querySelectorAll('[data-feed-filter]').length===7,'ordinary players have filters');
  admin=true;refreshFeedFilters();

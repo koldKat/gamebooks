@@ -64,6 +64,7 @@ export function initLibraryBindings() {
         bootState._currentBook.pages                = pages       || null;
         bootState._currentBook.authors              = authors     || null;
         bootState._currentBook.description          = description || null;
+        bootState._currentBook.isPublic             = !!isPublic;
         bootState._currentBook.discoverableSections = discoverableSections ?? null;
         setDiscoverableLimit(discoverableSections ?? null);
         bootState._currentBook.seriesName           = seriesName  || null;

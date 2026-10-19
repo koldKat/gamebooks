@@ -74,8 +74,8 @@ export function createDayRenderer() {
       }
     }
 
-    // Group additions to existing containers under the first book; count only the remaining books as more.
-    const looseKeyOf = e => e.seriesId != null ? `s:${e.seriesId}` : (e.parentBookId != null ? `a:${e.parentBookId}` : null);
+    // Today's additions to older containers get their own container heading.
+    const looseKeyOf = e => e.parentBookId != null ? `a:${e.parentBookId}` : (e.seriesId != null ? `s:${e.seriesId}` : null);
     const looseGroups = new Map();
     for (const e of items) {
       if (e.type !== 'book_created' || e.isContainer || batchConsumedChildren.has(e)) continue;
@@ -85,13 +85,12 @@ export function createDayRenderer() {
       if (!looseGroups.has(gk)) looseGroups.set(gk, []);
       looseGroups.get(gk).push(e);
     }
-    const looseBatchHeads = new Set();
+    const looseBatchHeads = new Map();
     for (const group of looseGroups.values()) {
-      if (group.length < 2) continue;
       const [head, ...rest] = group;
-      batchChildrenByContainer.set(head, rest);
+      looseBatchHeads.set(head, { ...head, type: head.parentBookId != null ? 'anthology_books_created' : 'series_books_created', creationBookCount: group.length });
+      batchChildrenByContainer.set(head, group);
       rest.forEach(c => batchConsumedChildren.add(c));
-      looseBatchHeads.add(head);
     }
 
     const rendered = new Set();
@@ -100,7 +99,7 @@ export function createDayRenderer() {
       if (batchConsumedChildren.has(e)) continue;
       if (skipTypes.has(e.type) && e.type !== 'user_joined') {
         // Ratings always remain standalone, outside same-user action groups.
-        const { html: body, isParty, extraClass } = renderEntry(e);
+        const { html: body, isParty, extraClass } = renderEntry(looseBatchHeads.get(e) || e);
         if (!body) continue;
         const children = batchChildrenByContainer.get(e);
         if (children) {
@@ -112,7 +111,7 @@ export function createDayRenderer() {
           const rest    = children.slice(2).map(_makeEntryHtml).join('');
           out += `<div class="feed-entry${isParty ? ' feed-entry--party' : ''}${extraClass ? ' ' + extraClass : ''}">${body} `;
           out += `<button class="feed-group-toggle feed-group-toggle--inline" data-target="${id}" data-group-key="${escapeHtml(thisDayIndex + ':' + batchKey)}" aria-expanded="false">`;
-          const countKey = looseBatchHeads.has(e) ? 'feed.more_books_in_batch' : 'feed.books_in_batch';
+          const countKey = children.length === 1 ? 'feed.book_in_batch' : 'feed.books_in_batch';
           out += `<span class="feed-group-chevron">▶</span><span class="feed-group-count">${t(countKey, { n: children.length })}</span>`;
           out += `</button></div>`;
           out += `<div class="feed-group-body" id="${id}" hidden>${preview}${rest}</div>`;

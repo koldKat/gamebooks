@@ -39,6 +39,7 @@ Each day's card shows the covers of the public books played that day, faded behi
 
 - A **tip bar** cycles through helpful hints every 15 seconds (the orange bar counts down)
 - Activity is grouped by day (Today / Yesterday / date)
+- New books in a series or anthology fold under its heading on the day those books were created. Expand it to see only that day’s new books; older announcements keep their original dates.
 - Players with 5 or more entries on the same day are collapsed into one row - click it to expand
 - Pinned announcements from the Gamemaster appear at the top when **News** is enabled
 

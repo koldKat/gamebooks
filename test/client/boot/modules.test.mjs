@@ -37,6 +37,17 @@ test('boot startup and event integrations execute against isolated feature stubs
   checkRuntime({ name: 'integration' });
 });
 
+for (const role of ['player', 'lorekeeper', 'admin']) {
+  for (const own of [false, true]) {
+    for (const isPublic of [false, true]) {
+      test(`play edit: ${role}, ${own ? 'own' : 'other'} ${isPublic ? 'public' : 'private'} book`, () => checkRuntime({
+        name: 'play edit permissions', token: 'token', hash: '#book/1', screen: 'main-screen', checkEdit: true,
+        moderator: role === 'lorekeeper', admin: role === 'admin', creatorId: own ? 9 : 10, public: isPublic,
+      }));
+    }
+  }
+}
+
 for (const scenario of [
   { name: 'cached library reveals before refresh', token: 'token', cached: true, delayedLibrary: true, screen: 'books-screen' },
   { name: 'uncached library waits for refresh', token: 'token', delayedLibrary: true, screen: 'books-screen' },

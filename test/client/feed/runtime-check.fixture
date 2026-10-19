@@ -95,7 +95,7 @@ assert.ok(feed.innerHTML.includes('feed.joined_today|n=5'));
 await snapshot([{ ...base, type: 'series_created' }, ...Array.from({ length: 3 }, (_, i) => ({ ...base, type: 'book_created', bookId: 10 + i }))]);
 assert.ok(feed.innerHTML.includes('feed.books_in_batch|n=3'));
 await snapshot(Array.from({ length: 3 }, (_, i) => ({ ...base, type: 'book_created', bookId: 10 + i })));
-assert.ok(feed.innerHTML.includes('feed.more_books_in_batch|n=2'));
+assert.ok(feed.innerHTML.includes('feed.books_in_batch|n=3'));
 await snapshot([{ ...base, type: 'book_created', completedAt: '2026-10-01T10:00:00Z' }, { ...base, type: 'run_started', completedAt: '2026-09-20T10:00:00Z' }], { title: '<Pinned>', body: '*italic* __underline__ ~~strike~~ {color:orange}Warm{/color} [Series](/series/3) [External](https://example.org/)' });
 await snapshot([]);
 await snapshot([], { title: 'Pinned only', body: 'Text' });
@@ -111,6 +111,46 @@ if (!baseline) {
   const batch = Array.from({ length: 3 }, (_, i) => ({ ...base, type: 'book_created', bookId: 10 + i }));
   assert.deepEqual(groupAttrs(render([{ ...base, type: 'book_created', bookId: 20 }, ...batch], null, '').html),
     groupAttrs(render(batch, null, '').html), 'new batch head must retain the container expansion key');
+  const seriesCreated = { ...base, type: 'series_created', completedAt: '2026-10-01T09:00:00Z' };
+  const oldBook = { ...base, type: 'book_created', bookId: 40, bookName: 'Older volume', completedAt: '2026-10-01T10:00:00Z' };
+  const newBook = { ...base, type: 'book_created', bookId: 41, bookName: 'New volume', parentBookId: null, parentBookName: null };
+  const entries = [newBook, oldBook, seriesCreated];
+  const untouched = JSON.stringify(entries);
+  const crossDay = render(entries, null, '');
+  const today = crossDay.blocks.find(b => b.key === 'day:Fri Oct 02 2026').html;
+  const yesterday = crossDay.blocks.find(b => b.key === 'day:Thu Oct 01 2026').html;
+  assert.ok(today.includes('feed.tmpl.created_in_series') && today.includes('feed.book_in_batch|n=1'));
+  assert.ok(today.includes('data-book-id="41"') && !today.includes('data-book-id="40"'));
+  assert.ok(!today.includes('feed.tmpl.created_series'), 'new volume does not announce another series creation');
+  assert.ok(yesterday.includes('feed.tmpl.created_series') && yesterday.includes('data-book-id="40"'));
+  assert.ok(!yesterday.includes('data-book-id="41"'), 'today’s new volume never moves to the older day');
+  assert.equal(JSON.stringify(entries), untouched, 'grouping preserves actual event dates and payloads');
+  const alone = render([newBook], null, '').html;
+  assert.ok(alone.includes('feed.tmpl.created_in_series') && alone.includes('feed.book_in_batch|n=1'), 'older series need no creation event in the current feed window');
+  const second = { ...newBook, bookId: 42, bookName: 'Another new volume' };
+  const two = render([second, newBook], null, '').html;
+  assert.equal((two.match(/feed.tmpl.created_in_series/g) || []).length, 1);
+  assert.ok(two.includes('feed.books_in_batch|n=2'));
+  assert.deepEqual(groupAttrs(two), groupAttrs(alone), 'new same-day books retain the series expansion key');
+  const otherUser = render([newBook, { ...second, username: 'Other creator' }], null, '').html;
+  assert.equal((otherUser.match(/feed.tmpl.created_in_series/g) || []).length, 2, 'different creators retain separate announcements');
+  const standalone = render([{ ...newBook, seriesId: null, parentBookId: null }], null, '').html;
+  assert.ok(!standalone.includes('feed-group-toggle'), 'books without containers remain standalone');
+  const anthologyChild = { ...newBook, parentBookId: 2, parentBookName: 'Anthology' };
+  const anthology = render([{ ...base, type: 'book_created', isContainer: true, bookId: 2 }, anthologyChild], null, '').html;
+  assert.ok(!anthology.includes('feed.tmpl.created_in_series'), 'same-day anthology claims its child only once');
+  assert.equal((anthology.match(/data-book-id="41"/g) || []).length, 1);
+  const oldAnthology = { ...base, type: 'book_created', isContainer: true, bookId: 2, completedAt: '2026-10-01T09:00:00Z' };
+  const anthologyDays = render([anthologyChild, { ...oldBook, parentBookId: 2 }, oldAnthology], null, '');
+  const anthologyToday = anthologyDays.blocks.find(b => b.key === 'day:Fri Oct 02 2026').html;
+  const anthologyYesterday = anthologyDays.blocks.find(b => b.key === 'day:Thu Oct 01 2026').html;
+  assert.ok(anthologyToday.includes('feed.tmpl.created_in_anthology') && anthologyToday.includes('feed.book_in_batch|n=1'));
+  assert.ok(!anthologyToday.includes('data-book-id="40"') && !anthologyYesterday.includes('data-book-id="41"'));
+  assert.ok(!anthologyToday.includes('feed.tmpl.created_in_series'), 'the immediate anthology takes priority over its outer series');
+  const onlyAnthology = render([{ ...anthologyChild, seriesId: null }], null, '').html;
+  assert.ok(onlyAnthology.includes('feed.tmpl.created_in_anthology'), 'an older anthology needs no creation event in the window');
+  const privateAnthology = render([{ ...anthologyChild, parentBookIsPublic: false }], null, '').html;
+  assert.ok(!privateAnthology.includes('href="/anthology/2"'), 'private anthology headings remain unlinked');
 }
 
 // Auth routing, single-flight and failure recovery are exercised through the facade.

@@ -12,6 +12,6 @@ test('feed preserves rendering, loading, interactions, previews and day covers',
   assert.equal(result.status, 0, result.stdout + result.stderr);
   const { digest, cases } = JSON.parse(result.stdout);
   assert.equal(cases, 38);
-  // All 38 cases now include the category controls for every viewer.
-  assert.equal(digest, 'ea043eb0754ab8bf90fea8ad04167a561e02c4e9ca61bc3fac560c30f2827636');
+  // Creation rows include same-day container headings and singular book counts.
+  assert.equal(digest, 'b4613bcf595db5839b71dac35ed5416e6fa920a9eb3a17014b2de8c604506745');
 });

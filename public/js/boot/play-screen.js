@@ -74,7 +74,7 @@ export async function showMain(bookId, isbn = null, issn = null, asin = null, co
     setupOpenWorldForBook(bookId, bootState._currentBook.seriesId, bootState._currentBook.isOpenWorld);
   }
   const editBookBtn = document.getElementById('edit-book-btn');
-  editBookBtn.style.display = (bootState._isAdmin || (resolveIsModerator() ? isPublic : isCreator)) ? '' : 'none';
+  editBookBtn.style.display = (bootState._isAdmin || isCreator || (resolveIsModerator() && isPublic)) ? '' : 'none';
   editBookBtn.classList.toggle('admin-override', !isCreator && bootState._isAdmin);
   if (!isCreator && bootState._isAdmin) editBookBtn.dataset.tooltip = 'Gamemaster edit';
   else delete editBookBtn.dataset.tooltip;
