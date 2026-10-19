@@ -9,7 +9,7 @@ const dir = new URL('../../../public/js/', import.meta.url);
 test('core relocation preserves implementations without root wrappers or duplicate state', () => {
   const digests = {
     // Includes separate reader progress accounting and removal of guest demo state.
-    state: 'e831ebbd2b4e9b8aea9fcb7ef23768aa36a1e386d687c1c4246a4adcbbe2a5bf',
+    state: 'b10bfaa7832ca88f834ab30c12dda37019167ee5344bdd6861ccd1dcf4d6ee5c',
     constants: 'b67245d28638c7d42c976068c7bc86ac822fff89d47c537d8fd9672ff19826a9',
     sort: 'a37194516dcc6faf776288906e52f3b9e8dc8d30a81df7158108d8b0e3742eb6',
     // Includes the reviewed simulator overlay registry additions.

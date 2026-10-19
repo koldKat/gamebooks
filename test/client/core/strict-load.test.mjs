@@ -21,9 +21,27 @@ test('strict reader loads preserve existing progress on HTTP, network and invali
   assert.equal(vm.runInContext('currentBookId === 263 && state !== original', context), true);
 });
 
-test('legacy default load failure retains its existing empty-state fallback', async () => {
+test('default desktop loads fail without clearing progress or changing the active book', async () => {
   const context = vm.createContext({ localStorage: { getItem: () => 'token' }, fetch: async () => ({ ok: false }) });
   vm.runInContext(source, context);
-  await context.loadState(263);
-  assert.equal(vm.runInContext('currentBookId === 263 && state.playthroughs.length === 0', context), true);
+  vm.runInContext('state.playthroughs = [{path:[1,25]}]; setCurrentBookId(14); globalThis.original = state', context);
+  await assert.rejects(context.loadState(263));
+  assert.equal(vm.runInContext('state === original && currentBookId === 14 && state.playthroughs[0].path.length === 2', context), true);
+  assert.equal(await context.loadState(263, { strict: false }), false);
+  assert.equal(vm.runInContext('state === original && currentBookId === 14', context), true);
+});
+
+test('rejected saves never announce that progress was saved', async () => {
+  let ok = false;
+  const events = [];
+  const context = vm.createContext({ localStorage: { getItem: () => 'token' },
+    fetch: async () => ({ ok, status: ok ? 200 : 409 }),
+    window: { dispatchEvent: event => events.push(event) }, CustomEvent: class {} });
+  vm.runInContext(source, context);
+  context.setCurrentBookId(1);
+  await context.saveState();
+  assert.equal(events.length, 0);
+  ok = true;
+  await context.saveState();
+  assert.equal(events.length, 1);
 });

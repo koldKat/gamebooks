@@ -646,6 +646,12 @@ async function handleSaveState(req, res, bookId) {
   const stateObj = await readBody(req);
   if (!stateObj || typeof stateObj !== 'object' || Array.isArray(stateObj)) return send(res, 400, { error: 'Invalid state' });
   const oldState = db.getBookState(userId, bookId);
+  // An ordinary canvas save must never clear all progress. Explicit resets use
+  // POST /reset; failed loads and stale party tabs can otherwise erase every member.
+  if ((oldState?.playthroughs?.length || Object.keys(oldState?.graph || {}).length)
+      && !(stateObj.playthroughs?.length) && !Object.keys(stateObj.graph || {}).length) {
+    return send(res, 409, { error: 'Progress cannot be cleared by an ordinary save. Reload the book.' });
+  }
   if (!db.saveBookState(userId, bookId, stateObj, { skipTimestamp: impersonating })) return send(res, 404, { error: 'Not found' });
   send(res, 200, { ok: true });
   // Scan all runs: completion clears activePtIndex before state is saved.

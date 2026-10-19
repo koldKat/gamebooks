@@ -3,13 +3,13 @@ import { ensureGraphLibrary } from '../core/graph-library.js';
 import { bootState } from './state.js';
 import { state, setViewingPt, loadState, isValidSecId, currentPlaythrough, currentSection } from '../core/state.js';
 import { network, initGraph, destroyNetwork, canReach, setGraphOpenWorld } from '../graph.js';
-import { render, maxFastTravels, setDiscoverableLimit } from '../play.js';
+import { render, maxFastTravels, setDiscoverableLimit, showAlert } from '../play.js';
 import { t } from '../i18n.js';
 import { setCharSheetVisible } from '../play/charsheet.js';
 import { setInventoryVisible } from '../inventory.js';
 import { setEquipmentVisible } from '../equipment.js';
 import { loadNotesForBook } from '../play/notes.js';
-import { connectPartySSE } from '../play/party.js';
+import { connectPartySSE, disconnectPartySSE } from '../play/party.js';
 import { _adminPdfHref } from '../edit-book.js';
 import { showBattleSimForBook } from '../battlesim/loader.js';
 import { setLiveReadVisible, previewSection } from '../reading/liveread.js';
@@ -100,7 +100,17 @@ export async function showMain(bookId, isbn = null, issn = null, asin = null, co
   if (_sidebarEl) {
     _sidebarEl.insertAdjacentHTML('beforeend', `<div class="sidebar-loading">${_loadingGraphSvg()}<span>${t('graph.loading')}</span></div>`);
   }
-  await Promise.all([loadState(bookId), ensureGraphLibrary()]);
+  // Stop old graph timers/streams before replacing the singleton. Never initialize
+  // a writable empty canvas when loading saved progress fails.
+  disconnectPartySSE();
+  destroyNetwork();
+  try {
+    await Promise.all([loadState(bookId, { strict: true }), ensureGraphLibrary()]);
+  } catch (_) {
+    await showBooks();
+    showAlert('Could not load saved progress. Please reopen the book.');
+    return;
+  }
   if (bootState._currentBook.isOpenWorld && bootState._currentBook.seriesId) {
     const seriesRuns = await _syncSeriesRuns(bootState._currentBook.seriesId);
     await _computeCrossBookReachability(seriesRuns, bookId);

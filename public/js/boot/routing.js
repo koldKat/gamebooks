@@ -26,8 +26,10 @@ export async function initRouting() {
     if (!e.persisted) return;
     const bid = currentBookId;
     if (bid && getToken()) {
-      await loadState(bid);
-      render();
+      try {
+        await loadState(bid, { isCurrent: () => currentBookId === bid });
+        if (currentBookId === bid) render();
+      } catch (_) { /* Keep the saved canvas intact while offline/restarting. */ }
     }
   });
 

@@ -185,7 +185,8 @@ export function saveState() {
     method: 'PUT',
     body:   JSON.stringify(state),
   })
-    .then(() => {
+    .then(res => {
+      if (!res.ok) throw new Error('Book state was not saved');
       window.dispatchEvent(new CustomEvent('book-state-saved', { detail: { bookId } }));
     })
     .catch(() => {})
@@ -198,7 +199,6 @@ export function saveState() {
     });
   return _saveInFlight;
 }
-
 // Return true only after reset succeeds; callers must check before changing the graph/UI.
 export function resetBookProgress() {
   if (!currentBookId) return Promise.resolve(false);
@@ -212,20 +212,18 @@ export function resetBookProgress() {
     .catch(() => false);
 }
 
-export async function loadState(bookId, { strict = false, isCurrent = () => true } = {}) {
-  if (!strict) setCurrentBookId(bookId);
+export async function loadState(bookId, { strict = true, isCurrent = () => true } = {}) {
   try {
     const res = await apiFetch(`/api/books/${bookId}/state`);
     if (!res.ok) throw new Error('Book state unavailable');
     const loaded = await res.json();
-    if (strict && (!loaded || typeof loaded !== 'object' || Array.isArray(loaded))) throw new Error('Invalid book state');
-    if (strict && !isCurrent()) return;
-    if (strict) setCurrentBookId(bookId);
+    if (!loaded || typeof loaded !== 'object' || Array.isArray(loaded)) throw new Error('Invalid book state');
+    if (!isCurrent()) return;
+    setCurrentBookId(bookId);
     state = loaded;
   } catch (error) {
     if (strict) throw error;
-    state = _emptyState();
-    return;
+    return false;
   }
 
   // Ensure fields added after initial release
@@ -275,22 +273,4 @@ export async function loadState(bookId, { strict = false, isCurrent = () => true
   // Remove tag data from older saves
   if (state.tagDefs) delete state.tagDefs;
   Object.values(state.graph).forEach(data => { if (data.tags) delete data.tags; });
-}
-
-function _emptyState() {
-  return {
-    bookName:             '',
-    totalSections:        0,
-    maxSectionNumber:     null,
-    graph:                {},
-    playthroughs:         [],
-    activePtIndex:        null,
-    positions:            {},
-    gridLayout:           false,
-    viewport:             undefined,
-    charSheetTemplate:    null,
-    inventoryTemplate:    null,
-    dicePrefs:            null,
-    alphanumericSections: false,
-  };
 }
