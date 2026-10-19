@@ -58,7 +58,7 @@ test('moderator cover uploads allow public books without library membership and 
   assert.equal(catalogPushes, 2, 'populated anthology cover still refreshes');
 });
 
-test('moderators edit public series outside their library, never private series or other creators’ deletions', async () => {
+test('moderators edit public series and may remove another creator’s series from their library', async () => {
   let moderator = true, admin = false, body = { name: 'Updated', description: 'Blurb', is_public: true }, status, updates = 0, removals = 0;
   const series = { id: 9, created_by: 1, is_public: 1, description: 'Old', is_open_world: false };
   const routes = load('../server/routes/books', {
@@ -82,21 +82,21 @@ test('moderators edit public series outside their library, never private series 
   series.is_public = 1; body.is_public = false;
   await routes.handleUpdateSeries({}, {}, 9); assert.equal(status, 403); assert.equal(updates, 1);
   series.created_by = 1;
-  await routes.handleDeleteSeries({ url: '/api/series/9' }, {}, 9); assert.equal(status, 403); assert.equal(removals, 0);
+  await routes.handleDeleteSeries({ url: '/api/series/9' }, {}, 9); assert.equal(status, 200); assert.equal(removals, 1);
   moderator = false; series.created_by = 1; body.is_public = true;
   await routes.handleUpdateSeries({}, {}, 9); assert.equal(status, 403); assert.equal(updates, 1);
   admin = true; series.is_public = 0;
   await routes.handleUpdateSeries({}, {}, 9); assert.equal(status, 200); assert.equal(updates, 2);
 });
 
-test('moderators can delete their own books and anthologies, but not another creator’s', async () => {
+test('library book and anthology removal is authenticated and independent of creator or role', async () => {
   let userId = 2, admin = false, moderator = true, status, book;
   const deleted = [], pushed = [];
   const routes = load('../server/routes/books', {
     '../db': {
       isUserAdmin: () => admin, isUserModerator: () => moderator,
       getBookById: () => book, getBookIdentifiers: () => book,
-      deleteBook: (...args) => { deleted.push(args); return true; },
+      deleteBook: (...args) => { deleted.push(args); return !!book; },
     },
     '../export': {},
     '../request-helpers': { authenticate: async () => userId, send: (_res, code) => { status = code; } },
@@ -108,13 +108,11 @@ test('moderators can delete their own books and anthologies, but not another cre
       await routes.handleDeleteBook({ url: '/api/books/9?cascade=0' }, {}, 9);
       assert.equal(status, 200);
       assert.deepEqual(deleted.at(-1), [2, 9, false]);
-      const before = deleted.length, events = pushed.length;
       for (const creator of [1, null]) {
         book.created_by = creator;
         await routes.handleDeleteBook({ url: '/api/books/9' }, {}, 9);
-        assert.equal(status, 403);
-        assert.equal(deleted.length, before);
-        assert.equal(pushed.length, events);
+        assert.equal(status, 200);
+        assert.deepEqual(deleted.at(-1), [2, 9, true]);
       }
     }
   }
@@ -160,7 +158,7 @@ test('moderator series deletion preserves cascade options and transfers shared o
   for (const created_by of [1, null]) {
     effects.length = 0; series.created_by = created_by;
     await routes.handleDeleteSeries({ url: '/api/series/9' }, {}, 9);
-    assert.equal(status, 403); assert.equal(effects.length, 0);
+    assert.equal(status, 200); assert.deepEqual(effects, [['cascade', 2, 9]]);
   }
   series = null;
   await routes.handleDeleteSeries({ url: '/api/series/9' }, {}, 9);

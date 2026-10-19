@@ -143,7 +143,7 @@ All four role badges use SVG icons with the same size and alignment.
 
 ### Lorekeepers
 
-Lorekeepers have a purple diamond badge and can edit the metadata of any public book, anthology or series, plus covers for public books and anthologies, including titles outside their own library. They can delete their own stashes and books, anthologies and series they created, using the usual library-removal rules. They cannot delete other players' entries, edit private books, or make a public book private. The role does not grant Gamemaster access or PDF/EPUB upload access. Lorekeepers can also adjust secondary anthology memberships when both the book and anthology are public. Stats for Nerds lists the number of Lorekeepers under Players.
+Lorekeepers have a purple diamond badge and can edit the metadata of any public book, anthology or series, plus covers for public books and anthologies, including titles outside their own library. Like every player, they can remove any book, anthology or series from their own library, regardless of its creator, and delete their own stashes. Removing a library entry preserves other players’ copies and progress. They cannot delete other players' entries, edit private books, or make a public book private. The role does not grant Gamemaster access or PDF/EPUB upload access. Lorekeepers can also adjust secondary anthology memberships when both the book and anthology are public. Stats for Nerds lists the number of Lorekeepers under Players.
 
 ### Creating books
 

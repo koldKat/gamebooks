@@ -9,7 +9,7 @@ import { apiFetch } from '../core/state.js';
 import { refreshCoinsDisplay } from '../progression/shop.js';
 import { openCoverActivity, openSeriesActivity } from '../covers.js';
 import { t } from '../i18n.js';
-import { showConfirm, showTwoChoice } from '../play.js';
+import { showConfirm, showTwoChoice, showAlert } from '../play.js';
 
 function _findRenderedContent(root, selector) {
   const descendants = [...root.querySelectorAll(selector)];
@@ -250,9 +250,13 @@ export function _wireRenderedContent(list) {
 
       const doDelete = async (cascade) => {
         try {
-          await apiFetch(`/api/books/${id}?cascade=${cascade ? '1' : '0'}`, { method: 'DELETE' });
+          const response = await apiFetch(`/api/books/${id}?cascade=${cascade ? '1' : '0'}`, { method: 'DELETE' });
+          if (!response.ok) {
+            showAlert((await response.json().catch(() => ({}))).error || t('err.remove_book'));
+            return;
+          }
           await _refreshBooksListOnly();
-        } catch (_) {}
+        } catch (_) { showAlert(t('err.remove_book')); }
       };
 
       if (isContainer) {

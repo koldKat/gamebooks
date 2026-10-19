@@ -1057,6 +1057,8 @@ function setNotebook(userId, bookId, text) {
 function _pruneUntrackedBook(bookId, userId) {
   const book = db.prepare('SELECT id, cover_path, pdf_path, epub_path, created_by FROM books WHERE id = ?').get(bookId);
   if (!book) return null;
+  // Removing a library entry must not prune another creator's catalog book.
+  if (book.created_by != null && book.created_by !== userId) return null;
   const next = db.prepare('SELECT user_id FROM user_books WHERE book_id = ? ORDER BY created_at ASC LIMIT 1').get(bookId);
   if (next) {
     if (book.created_by === userId) db.prepare('UPDATE books SET created_by = ? WHERE id = ?').run(next.user_id, bookId);

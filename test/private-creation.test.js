@@ -442,7 +442,7 @@ test('moderators edit public metadata without tracking it, but cannot edit priva
   } finally { db.close(); }
 });
 
-test('moderator book deletion is refused before any delete or metadata side effect', async () => {
+test('library removal permits moderators and admins without metadata edit checks', async () => {
   let moderator = true, admin = false, status, mutations = 0;
   const context = vm.createContext({ module: { exports: {} }, require(name) {
     if (name === '../db') return { isUserAdmin: () => admin, isUserModerator: () => moderator,
@@ -453,8 +453,27 @@ test('moderator book deletion is refused before any delete or metadata side effe
   }, URL });
   vm.runInContext(fs.readFileSync(require.resolve('../server/routes/books'), 'utf8'), context);
   await context.module.exports.handleDeleteBook({ url: '/api/books/1' }, {}, 1);
-  assert.equal(status, 403); assert.equal(mutations, 0);
+  assert.equal(status, 200); assert.equal(mutations, 2);
   admin = true;
   await context.module.exports.handleDeleteBook({ url: '/api/books/1' }, {}, 1);
-  assert.equal(status, 200); assert.equal(mutations, 2);
+  assert.equal(status, 200); assert.equal(mutations, 4);
+});
+
+test('removing another creator’s book affects only the requesting library and keeps creator files', () => {
+  const { db, books, deletedFiles } = setup();
+  try {
+    db.exec(`INSERT INTO books (id,name,created_by,is_public,pdf_path,cover_path) VALUES
+      (1,'OWT 1',1,1,'one.pdf','one.png'),(2,'The Legion of Shadow',1,1,'two.pdf','two.png');
+      INSERT INTO user_books(user_id,book_id,state_data) VALUES
+      (1,1,'creator progress'),(2,1,'player progress'),(2,2,'last reader');`);
+    const before = db.prepare('SELECT * FROM books ORDER BY id').all();
+    assert.equal(books.deleteBook(2, 1), true);
+    assert.equal(db.prepare('SELECT state_data FROM user_books WHERE user_id=1 AND book_id=1').get().state_data, 'creator progress');
+    assert.equal(db.prepare('SELECT 1 FROM user_books WHERE user_id=2 AND book_id=1').get(), undefined);
+    assert.equal(books.deleteBook(2, 2), true, 'last reader can remove another creator’s book');
+    assert.equal(db.prepare('SELECT count(*) AS n FROM user_books WHERE user_id=2').get().n, 0);
+    assert.deepEqual(db.prepare('SELECT * FROM books ORDER BY id').all(), before);
+    assert.deepEqual(deletedFiles, []);
+    assert.equal(books.deleteBook(2, 1), false, 'repeat removal does not touch the creator’s account');
+  } finally { db.close(); }
 });

@@ -26,26 +26,34 @@ function setup({ moderator = false, expanded = false } = {}) {
   return { context, list };
 }
 
-test('Lorekeeper delete buttons are enabled only for their own books and anthologies', () => {
+test('Lorekeepers can remove any owned book or anthology without metadata edit permission', () => {
   const { context } = setup({ moderator: true });
   for (const is_container of [0, 1]) {
     for (const created_by of [2, 1, null]) {
       const book = { id: 9, name: 'Example', total_sections: 10, visited: 0, is_public: 1, is_container, created_by };
       const html = context._bookItemHtml(book, false, false, 0, null, false);
       const button = html.match(/<button class="book-del-btn"[^>]*>/)[0];
-      assert.equal(button.includes(' disabled'), created_by !== 2);
+      assert.equal(button.includes(' disabled'), false);
       assert.ok(!context._bookItemHtml(book, false, false, 0, null, true).match(/<button class="book-del-btn"[^>]*>/)[0].includes(' disabled'));
     }
   }
 });
 
-test('Lorekeepers can delete their own series but not other creators’ series', () => {
+test('Lorekeepers can remove their library series regardless of creator', () => {
   const { context, list } = setup({ moderator: true });
   for (const is_owner of [true, false]) {
     context.renderBooksList([], [{ id: 9, name: 'A series', is_public: 1, is_owner }], []);
     const button = list.innerHTML.match(/<button class="series-del-btn"[^>]*>/)[0];
-    assert.equal(button.includes(' disabled'), !is_owner);
+    assert.equal(button.includes(' disabled'), false);
   }
+});
+
+test('a player without metadata edit permission can still remove a book from their library', () => {
+  const { context } = setup();
+  const html = context._bookItemHtml({ id: 9, name: 'Shared book', created_by: 1,
+    is_public: 1, total_sections: 199, visited: 0 }, false, false, 0, null, false);
+  assert.ok(html.match(/<button class="book-edit-btn"[^>]*>/)[0].includes(' disabled'));
+  assert.ok(!html.match(/<button class="book-del-btn"[^>]*>/)[0].includes(' disabled'));
 });
 
 for (const expanded of [true, false]) {

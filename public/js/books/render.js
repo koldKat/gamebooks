@@ -206,7 +206,7 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
             ? `<button class="series-edit-btn series-edit-btn--admin" data-tooltip="Gamemaster edit" data-series-id="${s.id}" data-series-name="${escapeHtml(s.name)}" data-series-desc="${escapeHtml(s.description || '')}" data-series-public="${s.is_public ? '1' : '0'}" data-series-open-world="${s.is_open_world ? '1' : '0'}">✎</button>`
             : `<span data-tooltip="${t('books.only_creator_can_edit')}" style="display:inline-flex"><button class="series-edit-btn" disabled>✎</button></span>`
         ) +
-        `<button class="series-del-btn"${isModerator && !s.is_owner ? ' disabled' : ''} data-series-id="${s.id}" data-series-name="${escapeHtml(s.name)}" data-series-owner="${s.is_owner ? '1' : '0'}" data-tooltip="${s.is_owner ? t('books.delete_series') : t('books.remove_from_library')}">✕</button>` +
+        `<button class="series-del-btn" data-series-id="${s.id}" data-series-name="${escapeHtml(s.name)}" data-series-owner="${s.is_owner ? '1' : '0'}" data-tooltip="${s.is_owner ? t('books.delete_series') : t('books.remove_from_library')}">✕</button>` +
         `<div class="series-header-bar" style="width:${pct}%;background:${barColor}"></div>` +
       `</div>`
     );

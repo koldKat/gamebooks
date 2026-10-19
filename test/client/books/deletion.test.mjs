@@ -6,19 +6,22 @@ import { runInNewContext } from 'node:vm';
 const source = readFileSync(new URL('../../../public/js/books/actions.js', import.meta.url), 'utf8')
   .replace(/^import .*;\n/gm, '').replace(/^export /gm, '');
 
-function setup() {
+function setup({ failure = null } = {}) {
   const owned = new Set(['1', '2', '3']);
-  const requests = [], confirmations = [];
+  const requests = [], confirmations = [], errors = [];
   let refreshes = 0;
   let confirm;
   let choices;
   const context = {
     booksState: { _cachedBooks: [1, 2, 3].map(id => ({ id, series_id: 7 })), _hooks: {} },
     t: key => key,
+    showAlert: message => errors.push(message),
     showConfirm: (message, callback) => { confirmations.push(message); confirm = callback; },
     showTwoChoice: (_message, _label1, first, _label2, second) => { choices = [first, second]; },
     apiFetch: async (url, options) => {
       requests.push([url, options.method]);
+      if (failure === 'network') throw new Error('Disconnected');
+      if (failure) return { ok: false, json: async () => ({ error: failure }) };
       const match = url.match(/^\/api\/books\/(\d+)\?cascade=[01]$/);
       assert.equal(options.method, 'DELETE', 'removing a library book must not edit shared metadata');
       if (match) owned.delete(match[1]);
@@ -43,8 +46,19 @@ function setup() {
     handler({ stopPropagation() {} });
     return choices[0]();
   }
-  return { owned, requests, confirmations, click, removeSeries, confirm: () => confirm(),
+  return { owned, requests, confirmations, errors, click, removeSeries, confirm: () => confirm(),
     choose: index => choices[index](), refreshes: () => refreshes };
+}
+
+for (const failure of ['Permission denied', 'network']) {
+  test(`failed library deletion shows an error instead of silently refreshing: ${failure}`, async () => {
+    const app = setup({ failure });
+    app.click(1);
+    await app.confirm();
+    assert.deepEqual([...app.owned], ['1', '2', '3']);
+    assert.deepEqual(app.errors, [failure === 'network' ? 'err.remove_book' : failure]);
+    assert.equal(app.refreshes(), 0);
+  });
 }
 
 test('OWT deletions survive removing the series; the remaining standalone book can be deleted', async () => {
