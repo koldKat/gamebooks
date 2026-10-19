@@ -1,0 +1,11 @@
+/* Keep native controls, autofill and saved-value previews in the app's theme. */
+:root { color-scheme: dark; }
+
+input:is(:autofill, :-webkit-autofill),
+textarea:is(:autofill, :-webkit-autofill),
+select:is(:autofill, :-webkit-autofill) {
+  /* Browsers protect the autofill background; an inset covers that paint. */
+  box-shadow: 0 0 0 1000px var(--autofill-background, #111827) inset;
+  -webkit-text-fill-color: var(--autofill-color, #d1d5db);
+  caret-color: var(--autofill-color, #d1d5db);
+}

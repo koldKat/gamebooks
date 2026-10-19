@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin - Gamebook Tracker</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="/css/form-theme.css">
   <style>
     .admin-editor { margin: auto; padding: 0; width: min(720px, 94vw); max-height: 90vh; max-height: 90dvh; border: 1px solid #374151; border-radius: 10px; background: #111827; color: #d1d5db; box-shadow: 0 20px 60px #0009; }
     .admin-editor[open] { display: flex; flex-direction: column; }
@@ -16,7 +17,7 @@
     .admin-editor-body > #user-edit-form, .admin-editor-body > #book-edit-form { background: none !important; border: 0 !important; padding: 0 !important; margin: 0 !important; }
     .admin-editor-fields { display: flex; flex-direction: column; gap: 0.8rem; }
     .admin-editor-field { display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.82rem; }
-    .admin-editor-field input, .admin-editor-field textarea, .admin-editor-field select { width: 100%; background: #1f2937; color: #e5e7eb; border: 1px solid #374151; border-radius: 6px; padding: 0.5rem 0.65rem; font: inherit; }
+    .admin-editor-field input, .admin-editor-field textarea, .admin-editor-field select { --autofill-background: #1f2937; --autofill-color: #e5e7eb; width: 100%; background: #1f2937; color: #e5e7eb; border: 1px solid #374151; border-radius: 6px; padding: 0.5rem 0.65rem; font: inherit; }
     .admin-editor-field textarea { resize: vertical; }
     .admin-editor-field .admin-editor-code { font-family: monospace; min-height: 160px; }
     .admin-editor-toggle { display: flex; flex-direction: row-reverse; justify-content: flex-end; align-items: center; gap: 0.5rem; font-size: 0.82rem; }
