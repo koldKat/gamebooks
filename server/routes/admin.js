@@ -17,6 +17,7 @@ const {
 
 // This module lives at server/routes/admin.js - the project root is two levels up.
 const PROJECT_ROOT = path.join(__dirname, '..', '..');
+const readAppSize = require('../directory-size').createDirectorySizeReader(PROJECT_ROOT);
 
 // Mirror explicit admin version changes to the version file; use it only as a missing-setting seed.
 const VERSION_FILE = path.join(PROJECT_ROOT, 'VERSION');
@@ -249,22 +250,6 @@ function globMatch(name, pattern) {
   return new RegExp(`^${rx}$`).test(name);
 }
 
-function calcDirSize(dir, patterns) {
-  let total = 0;
-  let entries;
-  try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return 0; }
-  for (const entry of entries) {
-    if (patterns.some(p => globMatch(entry.name, p))) continue;
-    const fullPath = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      total += calcDirSize(fullPath, patterns);
-    } else if (entry.isFile()) {
-      try { total += fs.statSync(fullPath).size; } catch {}
-    }
-  }
-  return total;
-}
-
 async function handleAdminGetSettings(req, res) {
   if (!requireLocalhost(req, res)) return;
   const settings = db.getAllAdminSettings();
@@ -288,7 +273,7 @@ async function handleAdminAppSize(req, res) {
   if (!requireLocalhost(req, res)) return;
   const raw      = db.getAdminSetting('size_ignore_patterns') ?? SIZE_IGNORE_DEFAULTS;
   const patterns = raw.split('\n').map(l => l.trim()).filter(Boolean);
-  const bytes    = calcDirSize(PROJECT_ROOT, patterns);
+  const bytes    = await readAppSize(patterns);
   send(res, 200, { bytes });
 }
 

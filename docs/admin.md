@@ -49,6 +49,8 @@ The top of the panel shows aggregate stats across all users and books:
 | **Uptime %** | Percentage of total app lifetime that the server has been up. |
 | **App Age** | Total time since the app was first started (persisted across restarts). |
 
+Dashboard polling pauses while the browser tab is hidden and refreshes when it becomes visible. Application Size uses an asynchronous directory scan with a shared five-minute cache; changed ignore patterns trigger a fresh calculation.
+
 **Stats for Nerds** (expandable section):
 - Users: total accounts, admin count, undos performed, fast travels performed
 - Books / Series / Anthologies: separate unique-count and library-count totals, plus unique authors and average sections per playable book

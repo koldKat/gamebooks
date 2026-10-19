@@ -6,6 +6,7 @@ const { db, _naturalCompareByName, _getPdfSize, _getEpubSize } = require('./conn
 const { computeLevel, getTitleForLevel, getUserXpInfo, awardXp, awardCoins, processStateXp, coinBalance, _insertNotif, SIM_HISTORY_KEYS, RETIRED_SIM_HISTORY_KEYS = [] } = require('./xp');
 const { purgeExpiredSessions } = require('./auth');
 const { getRatingStats } = require('./rating-stats');
+const adminSimHistoryKeys = new Set([...SIM_HISTORY_KEYS, ...RETIRED_SIM_HISTORY_KEYS]);
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS items (
@@ -756,7 +757,8 @@ function adminGetStats() {
   // Count simulator histories only in started, non-padding playthroughs.
   const _tallyBattles = pts => {
     for (const pt of pts) {
-      for (const simKey of [...SIM_HISTORY_KEYS, ...RETIRED_SIM_HISTORY_KEYS]) {
+      for (const simKey of Object.keys(pt)) {
+        if (!adminSimHistoryKeys.has(simKey)) continue;
         const hist = pt[simKey]?.history;
         if (!hist?.length) continue;
         battlesFought += hist.length;

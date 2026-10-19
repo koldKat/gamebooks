@@ -47,7 +47,15 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 
 loadAll();
 loadLive();
-setInterval(loadLive,    1000);
-setInterval(loadStats,  60000);
-setInterval(loadAdminGc, 60000);
-setInterval(loadAppSize, 60000);
+const pollVisible = callback => () => { if (!document.hidden) callback(); };
+setInterval(pollVisible(loadLive),    1000);
+setInterval(pollVisible(loadStats),  60000);
+setInterval(pollVisible(loadAdminGc), 60000);
+setInterval(pollVisible(loadAppSize), 60000);
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) return;
+  loadLive();
+  loadStats();
+  loadAdminGc();
+  loadAppSize();
+});
