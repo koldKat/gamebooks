@@ -7,6 +7,7 @@ export function setVisNodes(value) { visNodes = value; }
 export function setVisEdges(value) { visEdges = value; }
 
 export const graphRuntime = {
+  _dragNodeIds: new Set(),
   _stabilizeHandler: null,
   _restabilizeTimer: null,
   _dragSaveTimer: null,

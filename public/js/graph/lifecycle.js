@@ -1,10 +1,11 @@
-import { state, saveState } from '../core/state.js';
+import { state, saveState, savePositions } from '../core/state.js';
 import { network, visNodes, visEdges, setNetwork, setVisNodes, setVisEdges, graphRuntime } from './runtime.js';
 import { clampViewportScale, enforceSnapZoomFloor, minSnapScale, GRID_SIZE } from './viewport.js';
 import { drawGrid, drawOverlays } from './overlays.js';
 import { _smoothOption } from './connectors.js';
 
 export function destroyNetwork() {
+  graphRuntime._dragNodeIds.clear();
   if (network) { network.stopSimulation(); network.destroy(); setNetwork(null); }
   setVisNodes(null);
   setVisEdges(null);
@@ -105,7 +106,6 @@ export function initGraph() {
     network.setOptions({ physics: { enabled: false } });
     network.stopSimulation();
     Object.assign(state.positions, network.getPositions());
-    saveState();
   };
 
   const saveViewport = () => {
@@ -131,6 +131,7 @@ export function initGraph() {
 
   network.on('dragStart', params => {
     if (!params.nodes.length) return;
+    graphRuntime._dragNodeIds = new Set(params.nodes);
     clearTimeout(graphRuntime._restabilizeTimer);
     graphRuntime._restabilizeTimer = null;
     graphRuntime._stabilizing = false;
@@ -164,15 +165,13 @@ export function initGraph() {
         visNodes.update(params.nodes.map(id => ({ id, physics: false })));
       }
       Object.assign(state.positions, positions);
-      clearTimeout(graphRuntime._dragSaveTimer);
-      graphRuntime._dragSaveTimer = setTimeout(() => {
-        graphRuntime._dragSaveTimer = null;
-        saveState();
-      }, 1000);
+      graphRuntime._dragNodeIds.clear();
+      savePositions(positions);
       graphRuntime._overlayDraggingActive = false;
       graphRuntime._overlayPosDirty = true;
       graphRuntime._fogDraggingActive = false;
       graphRuntime._fogPosDirty = true;
     }
+    graphRuntime._dragNodeIds.clear();
   });
 }

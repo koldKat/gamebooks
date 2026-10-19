@@ -199,6 +199,14 @@ export function saveState() {
     });
   return _saveInFlight;
 }
+
+// Canvas drags carry coordinates only; never send an old snapshot of shared runs.
+export function savePositions(positions) {
+  if (!currentBookId) return Promise.resolve();
+  return apiFetch(`/api/books/${currentBookId}/state`, {
+    method: 'PATCH', body: JSON.stringify({ positions }),
+  }).catch(() => {});
+}
 // Return true only after reset succeeds; callers must check before changing the graph/UI.
 export function resetBookProgress() {
   if (!currentBookId) return Promise.resolve(false);
@@ -212,13 +220,16 @@ export function resetBookProgress() {
     .catch(() => false);
 }
 
-export async function loadState(bookId, { strict = true, isCurrent = () => true } = {}) {
+export async function loadState(bookId, { strict = true, isCurrent = () => true, preservePositions = false } = {}) {
   try {
     const res = await apiFetch(`/api/books/${bookId}/state`);
     if (!res.ok) throw new Error('Book state unavailable');
     const loaded = await res.json();
     if (!loaded || typeof loaded !== 'object' || Array.isArray(loaded)) throw new Error('Invalid book state');
     if (!isCurrent()) return;
+    if (preservePositions && currentBookId === bookId) {
+      loaded.positions = { ...(loaded.positions || {}), ...(state.positions || {}) };
+    }
     setCurrentBookId(bookId);
     state = loaded;
   } catch (error) {

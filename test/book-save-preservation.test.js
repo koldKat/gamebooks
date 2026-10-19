@@ -7,13 +7,13 @@ const source = fs.readFileSync(require('node:path').join(__dirname, '../server/r
 const handler = source.slice(source.indexOf('async function handleSaveState('), source.indexOf('async function handleResetBookProgress('));
 const existing = { graph: { 1: { choices: [2] } }, playthroughs: [{ startedAt: 1, path: [1, 2] }], activePtIndex: 0 };
 async function save(oldState, incoming) {
-  let response, writes = 0, fanouts = 0;
+  let response, writes = 0, fanouts = 0, saved;
   const context = vm.createContext({
     authenticate: async () => 1, isRequestImpersonating: () => false,
     readBody: async () => incoming, send: (_res, status, body) => { response = { status, body }; },
     db: {
       getBookState: () => oldState,
-      saveBookState: () => { writes++; return true; },
+      saveBookState: (_user, _book, value) => { writes++; saved = value; return true; },
       getBookContainerFields: () => null, processStateXp() {},
       getPartyForBook: () => ({ partyId: 13 }), getPartyMemberIds: () => [],
       fanOutState: () => { fanouts++; return [17]; },
@@ -22,7 +22,7 @@ async function save(oldState, incoming) {
   });
   vm.runInContext(handler, context);
   await context.handleSaveState({}, {}, 868);
-  return { response, writes, fanouts };
+  return { response, writes, fanouts, saved };
 }
 
 test('failed-load empty saves cannot erase existing runs or fan out to a partner', async () => {
@@ -48,4 +48,12 @@ test('ordinary moves and deleting the final run while keeping the map remain val
 test('new untouched books may save their initial empty layout', async () => {
   const empty = { graph: {}, playthroughs: [] };
   assert.equal((await save(empty, empty)).response.status, 200);
+});
+
+test('stale party saves preserve moved coordinates while accepting new node positions', async () => {
+  const old = { ...existing, positions: { 1: { x: 500, y: 400 } } };
+  const incoming = { ...existing, positions: { 1: { x: 0, y: 0 }, 2: { x: 30, y: 40 } } };
+  const r = await save(old, incoming);
+  assert.equal(r.response.status, 200);
+  assert.deepEqual(JSON.parse(JSON.stringify(r.saved.positions)), { 1: { x: 500, y: 400 }, 2: { x: 30, y: 40 } });
 });

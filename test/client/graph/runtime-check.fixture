@@ -52,7 +52,8 @@ const context = createContext({ console, vis: { DataSet, Network }, window: { vi
   document: { getElementById: () => container, querySelector: () => legend, createTextNode: text => ({ text }), createElement: tag => tag === 'canvas' ? { getContext: () => ctx } : new Element(tag) },
   setTimeout: (fn, ms) => { const id = ++nextTimer; timers.set(id, { fn, ms }); return id; }, clearTimeout: id => timers.delete(id),
 });
-const stateExports = { state, viewingPt: null, isTerminal, parseSecId, isValidSecId, currentPlaythrough, allDiscoveredSections, saveState: () => saves.push(JSON.stringify(state)) };
+const positionSaves = [];
+const stateExports = { state, viewingPt: null, isTerminal, parseSecId, isValidSecId, currentPlaythrough, allDiscoveredSections, saveState: () => saves.push(JSON.stringify(state)), savePositions: positions => positionSaves.push(JSON.parse(JSON.stringify(positions))) };
 modules.set(resolve(root, 'core/state.js'), new SyntheticModule(Object.keys(stateExports), function () { for (const [k, v] of Object.entries(stateExports)) this.setExport(k, v); }, { context }));
 modules.set(resolve(root, 'i18n.js'), new SyntheticModule(['t'], function () { this.setExport('t', (key, p = {}) => key + JSON.stringify(p)); }, { context }));
 function moduleAt(path) {
@@ -96,7 +97,10 @@ api.network.scale = 0.5; api.network.position = { x: 100, y: 100 }; api.enforceS
 assert.equal(api.clampViewportScale(0.1), 0.3); assert.equal(api.clampViewportScale(9), 3);
 reset({ graph: { 1: { choices: [2] }, 2: { choices: [3] }, 3: { choices: [0] } }, positions: { 1: { x: 12, y: 15 }, 2: { x: 57, y: 65 }, 3: { x: 90, y: 100 } }, snapToGrid: true });
 api.initGraph(); api.syncGraph(); const beforeDrag = { ...state.positions[1] };
+const savesBeforeDrag = saves.length;
 api.network.emit('dragStart', { nodes: [2] }); api.network.emit('dragEnd', { nodes: [2] });
+assert.equal(saves.length, savesBeforeDrag, 'dragging must not save a snapshot of shared runs');
+assert.deepEqual(positionSaves.at(-1), { 2: { x: 40, y: 80 } }, 'dragged coordinates save immediately');
 assert.deepEqual(state.positions[1], beforeDrag); assert.equal(state.positions[2].x, 40); assert.equal(state.positions[2].y, 80); snapshot('snapped-drag');
 reset({ graph: { 1: { choices: [2, 3] }, 2: { choices: [-1] }, 3: { choices: [4] }, 4: { choices: [-1] }, 5: { choices: [0] }, 6: { choices: [6] } } });
 snapshots.push({ outcomes: api.computeOutcomes(), inevitable: [api.inevitableOutcome(1), api.inevitableOutcome(5), api.inevitableOutcome(6)] });
@@ -159,7 +163,8 @@ if (!baseline) {
   reset({ graph: { 1: { choices: [2] }, 2: { choices: [0] } }, positions: { 1: { x: 0, y: 0 }, 2: { x: 130, y: 0 } } });
   api.initGraph(); api.syncGraph();
   api.network.emit('zoom'); api.network.emit('dragEnd', { nodes: [2] });
-  assert.equal(timers.size, 2); api.destroyNetwork(); assert.equal(timers.size, 0, 'network destruction cancels drag and viewport saves');
+  assert.equal(timers.size, 1, 'only viewport saving is delayed; node positions save immediately');
+  api.destroyNetwork(); assert.equal(timers.size, 0, 'network destruction cancels viewport saves');
   reset({ graph: { 1: { choices: [] }, 99: { choices: [] } }, positions: { 1: { x: 0, y: 0 } } });
   api.initGraph(); api.syncGraph();
   const pending = [...timers.values()][0]; timers.clear(); pending.fn();

@@ -3,6 +3,7 @@
 // Book/library, run, stream, rating, export, notebook, and party HTTP handlers.
 
 const db = require('../db');
+const { patchBookPositions } = require('../db/book-positions');
 const {
   authenticate, authenticateOptional, send, readBody, getClientIp, tokenFromReq, isLocalhost, isRequestImpersonating,
 } = require('../request-helpers');
@@ -652,6 +653,11 @@ async function handleSaveState(req, res, bookId) {
       && !(stateObj.playthroughs?.length) && !Object.keys(stateObj.graph || {}).length) {
     return send(res, 409, { error: 'Progress cannot be cleared by an ordinary save. Reload the book.' });
   }
+  // Existing party coordinates are authoritative; only coordinate patches move
+  // existing nodes. A stale viewport/run save must not undo a partner's drag.
+  if (oldState && db.getPartyForBook(userId, bookId)) {
+    stateObj.positions = { ...(stateObj.positions || {}), ...(oldState.positions || {}) };
+  }
   if (!db.saveBookState(userId, bookId, stateObj, { skipTimestamp: impersonating })) return send(res, 404, { error: 'Not found' });
   send(res, 200, { ok: true });
   // Scan all runs: completion clears activePtIndex before state is saved.
@@ -706,6 +712,23 @@ async function handleSaveState(req, res, bookId) {
         || (pt.isPublic && !op?.isPublic && pt.completed);
   });
   if (feedRelevant) feedPush({ type: 'feed_changed', entity: 'book', action: 'state_save', id: bookId });
+}
+
+async function handleSavePositions(req, res, bookId) {
+  const userId = await authenticate(req, res);
+  if (userId === null) return;
+  const body = await readBody(req);
+  const positions = body?.positions;
+  if (!positions || typeof positions !== 'object' || Array.isArray(positions)
+      || Object.entries(positions).some(([id, pos]) => !id.trim() || ['__proto__', 'constructor', 'prototype'].includes(id)
+        || !pos || !Number.isFinite(pos.x) || !Number.isFinite(pos.y))) {
+    return send(res, 400, { error: 'Invalid positions' });
+  }
+  const clean = Object.fromEntries(Object.entries(positions).map(([id, pos]) => [id, { x: pos.x, y: pos.y }]));
+  const result = patchBookPositions(userId, bookId, clean);
+  if (!result) return send(res, 404, { error: 'Not in your library' });
+  send(res, 200, { ok: true });
+  if (result.partyId) ssePush(result.partyId, userId, { type: 'positions_updated', bookId, positions: clean });
 }
 
 async function handleResetBookProgress(req, res, bookId) {
@@ -843,6 +866,7 @@ async function handleSearchUsers(req, res) {
 }
 
 module.exports = {
+  handleSavePositions,
   handleAcceptPartyInvite,
   handleAddBookToLibrary,
   handleAddSeriesToLibrary,

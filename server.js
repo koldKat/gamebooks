@@ -124,6 +124,7 @@ const {
   handleResetSeriesForUser,
   handleSaveSeriesCharacter,
   handleSaveState,
+  handleSavePositions,
   handleSearchUsers,
   handleSetBookBgPref,
   handleSetBookRating,
@@ -465,6 +466,7 @@ const _routeRequest = async (req, res) => {
     if ((m = urlPath.match(readingMatterRe)) && method === 'GET') return await handleReadingMatter(req, res, +m[1]);
     if ((m = urlPath.match(bookStateRe)) && method === 'GET')    return await handleGetState(req, res, +m[1]);
     if ((m = urlPath.match(bookStateRe)) && method === 'PUT')    return await handleSaveState(req, res, +m[1]);
+    if ((m = urlPath.match(bookStateRe)) && method === 'PATCH')  return await handleSavePositions(req, res, +m[1]);
     if ((m = urlPath.match(bookResetRe)) && method === 'POST')   return await handleResetBookProgress(req, res, +m[1]);
     if ((m = urlPath.match(bookCoverRe))       && method === 'POST')   return await handleUploadCover(req, res, +m[1]);
     if ((m = urlPath.match(bookCoverDeleteRe)) && method === 'POST')   { if (!requireLocalhost(req, res)) return; db.removeBookCover(+m[1]); return send(res, 200, { ok: true }); }

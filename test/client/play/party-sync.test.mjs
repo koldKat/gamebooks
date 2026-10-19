@@ -46,6 +46,7 @@ function setup() {
       render: () => frames.push(JSON.parse(vm.runInContext('JSON.stringify({ state, viewingPt })', context))),
       suppressAutoNav: enabled => { depth += enabled ? 1 : -1; },
       network: { redraw() { redraws++; } }, shortcutLabel: x => x, t: x => x,
+      visNodes: { get: () => null }, graphRuntime: { _dragNodeIds: new Set() },
     });
     vm.runInContext(source('core/state.js') + source('core/event-stream.js') + source('play/party.js'), context);
     const c = { context, streams, frames, timers,

@@ -12,7 +12,7 @@ test('play-area feature relocation preserves implementations and removes root mo
     "charsheet": "904243f994aee0d22635d5b3aeaca4d00f1834551eac3ccdfbacc80be0fe1219",
     "open-world": "81cfec1e03755016cc03e35e918e0fa559a16f76b3acc4f4969051d686dae4ef",
     // Party sync now catches up on reconnect and refreshes the viewed run reference.
-    "party": "2b0348a27e18d81b42094e55e548a332a173c7e2bfffb2fa8bd68b91409a8bc2",
+    "party": "fd0fd3faeabdf6b3d187ef3e69935148bfd0f00f4bf69833572e455eb1305d63",
     "bg": "e39f758b5145d695d89bbbee705545e05c0aacec2f297d14663593b96a6850e8"
   };
   for (const [name, digest] of Object.entries(digests)) {
@@ -30,7 +30,7 @@ test('relocated play features retain their original dependency identities and or
     notes: ['core/state.js', 'play.js', 'i18n.js'],
     charsheet: ['core/state.js', 'i18n.js', 'core/util.js'],
     'open-world': ['core/state.js', 'graph.js', 'play.js', 'i18n.js', 'play/charsheet.js', 'equipment.js', 'books.js'],
-    party: ['core/state.js', 'core/event-stream.js', 'graph.js', 'play.js', 'core/util.js', 'i18n.js'],
+    party: ['core/state.js', 'core/event-stream.js', 'graph.js', 'graph/runtime.js', 'play.js', 'core/util.js', 'i18n.js'],
     bg: ['core/state.js', 'i18n.js'],
   };
   for (const [name, dependencies] of Object.entries(expected)) {

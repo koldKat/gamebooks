@@ -2,7 +2,8 @@
 
 import { state, viewingPt, currentBookId, apiFetch, getToken, loadState, setViewingPt } from '../core/state.js';
 import { connectEventStream } from '../core/event-stream.js';
-import { network } from '../graph.js';
+import { network, visNodes } from '../graph.js';
+import { graphRuntime } from '../graph/runtime.js';
 import { render, suppressAutoNav, showAlert, showConfirm } from '../play.js';
 import { escapeHtml, shortcutLabel } from '../core/util.js';
 import { t } from '../i18n.js';
@@ -42,20 +43,27 @@ export async function connectPartySSE(bookId) {
       _sseBookId = bookId;
       const isCurrent = () => gen === _connectGen && currentBookId === bookId;
       // Drain hints sequentially: a slow older GET must never replace a newer save.
-      let refreshing = false, refreshAgain = false;
-      const refreshState = async () => {
+      let refreshing = false, refreshAgain = false, keepPositions = true;
+      const refreshState = async (preservePositions = true) => {
         if (!isCurrent()) return;
         refreshAgain = true;
+        keepPositions = keepPositions && preservePositions;
         if (refreshing) return;
         refreshing = true;
         try {
           while (refreshAgain && isCurrent()) {
             refreshAgain = false;
+            const preserve = keepPositions;
+            keepPositions = true;
             const displayedRun = viewingPt || state.playthroughs[state.activePtIndex];
             suppressAutoNav(true);
             try {
-              await loadState(bookId, { strict: true, isCurrent });
+              await loadState(bookId, { strict: true, isCurrent, preservePositions: preserve });
               if (!isCurrent()) return;
+              // Receiving progress must not move a node out from under a local drag.
+              if (graphRuntime._dragNodeIds.size && network) {
+                Object.assign(state.positions, network.getPositions([...graphRuntime._dragNodeIds]));
+              }
               // loadState replaces run objects, including the one a completed-run view holds.
               const updatedRun = displayedRun?.startedAt == null ? null
                 : state.playthroughs.find(pt => pt.startedAt === displayedRun.startedAt);
@@ -72,12 +80,26 @@ export async function connectPartySSE(bookId) {
       _sseSource = connectEventStream(() => `/api/books/${bookId}/stream?token=${encodeURIComponent(getToken())}`, {
         enabled: isCurrent,
         // Catch up after disconnection and close the initial GET/subscription gap.
-        onOpen: refreshState,
+        onOpen: () => refreshState(false),
         onMessage: async (e) => {
           if (!isCurrent()) return;
           try {
             const data = JSON.parse(e.data);
-            if (data.type === 'state_updated' && data.bookId === bookId) {
+            if (data.type === 'positions_updated' && String(data.bookId) === String(bookId)) {
+              for (const [id, pos] of Object.entries(data.positions || {})) {
+                if (!pos || !Number.isFinite(pos.x) || !Number.isFinite(pos.y)) continue;
+                state.positions[id] = { x: pos.x, y: pos.y };
+                const nodeId = /^\d+$/.test(id) ? Number(id) : id;
+                if (graphRuntime._dragNodeIds.has(nodeId)) continue;
+                if (visNodes?.get(nodeId)) {
+                  visNodes.update({ id: nodeId, x: pos.x, y: pos.y, physics: false });
+                  network?.moveNode(nodeId, pos.x, pos.y);
+                }
+              }
+              graphRuntime._overlayPosDirty = true;
+              graphRuntime._fogPosDirty = true;
+              network?.redraw();
+            } else if (data.type === 'state_updated' && String(data.bookId) === String(bookId)) {
               await refreshState();
             } else if (data.type === 'party_changed') {
               // Someone else accepted an invite or left - refresh membership (and
