@@ -1,4 +1,4 @@
-export function connectEventStream(url, { onMessage, onReconnect, enabled = () => true } = {}) {
+export function connectEventStream(url, { onMessage, onOpen, onReconnect, enabled = () => true } = {}) {
   let source = null;
   let timer = null;
   let stopped = false;
@@ -42,6 +42,7 @@ export function connectEventStream(url, { onMessage, onReconnect, enabled = () =
         failures = 0;
         const catchUp = missedEvents;
         missedEvents = false;
+        onOpen?.();
         if (catchUp) onReconnect?.();
       };
       current.onmessage = event => {

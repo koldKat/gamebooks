@@ -1,6 +1,8 @@
 // Cooperative parties and live progress.
 
-import { currentBookId, apiFetch, getToken, loadState } from '../core/state.js';
+import { state, viewingPt, currentBookId, apiFetch, getToken, loadState, setViewingPt } from '../core/state.js';
+import { connectEventStream } from '../core/event-stream.js';
+import { network } from '../graph.js';
 import { render, suppressAutoNav, showAlert, showConfirm } from '../play.js';
 import { escapeHtml, shortcutLabel } from '../core/util.js';
 import { t } from '../i18n.js';
@@ -17,6 +19,7 @@ let _connectGen   = 0;
 export function disconnectPartySSE() {
   _connectGen++; // discard any in-flight connectPartySSE() call for a book we've since navigated away from
   if (_sseSource) { _sseSource.close(); _sseSource = null; _sseBookId = null; }
+  _sseBookId = null;
   _currentParty = null;
   const btn = document.getElementById('party-btn');
   if (btn) { btn.classList.remove('party-active'); btn.innerHTML = shortcutLabel(t('party.btn')); }
@@ -32,41 +35,70 @@ export async function connectPartySSE(bookId) {
     if (gen !== _connectGen) return; // superseded by a newer connectPartySSE()/disconnectPartySSE() call
     _currentParty = party;
     const btn = document.getElementById('party-btn');
-    if (party && btn) {
-      btn.classList.add('party-active');
+    if (party) {
+      btn?.classList.add('party-active');
       const others = party.members.filter(m => m.id !== _hooks.getCurrentUserId?.());
-      btn.innerHTML = shortcutLabel(others.length ? t('party.btn_with', { names: others.map(m => m.username).join(', ') }) : t('party.btn_partners'));
+      if (btn) btn.innerHTML = shortcutLabel(others.length ? t('party.btn_with', { names: others.map(m => m.username).join(', ') }) : t('party.btn_partners'));
       _sseBookId = bookId;
-      _sseSource = new EventSource(`/api/books/${bookId}/stream?token=${encodeURIComponent(getToken())}`);
-      _sseSource.onmessage = async (e) => {
+      const isCurrent = () => gen === _connectGen && currentBookId === bookId;
+      // Drain hints sequentially: a slow older GET must never replace a newer save.
+      let refreshing = false, refreshAgain = false;
+      const refreshState = async () => {
+        if (!isCurrent()) return;
+        refreshAgain = true;
+        if (refreshing) return;
+        refreshing = true;
         try {
-          const data = JSON.parse(e.data);
-          if (data.type === 'state_updated' && currentBookId === _sseBookId) {
+          while (refreshAgain && isCurrent()) {
+            refreshAgain = false;
+            const displayedRun = viewingPt || state.playthroughs[state.activePtIndex];
             suppressAutoNav(true);
-            try { await loadState(_sseBookId); render(); }
-            finally { suppressAutoNav(false); }
-            _hooks.scheduleRewardProfileRefresh?.();
-          } else if (data.type === 'party_changed') {
-            // Someone else accepted an invite or left - refresh membership (and
-            // reconnect, since accepting/leaving may add/drop us from this party).
-            const wasOpen = document.getElementById('party-modal-overlay')?.classList.contains('active');
-            const refreshedBookId = _sseBookId;
-            const genBefore = _connectGen;
-            await connectPartySSE(refreshedBookId);
-            // Our disconnect increments the generation once; any additional change means navigation superseded us.
-            if (wasOpen && _connectGen === genBefore + 1) {
-              // Preserve whatever the user was mid-typing in the invite box - a live
-              // membership update shouldn't wipe out an in-progress invite.
-              const draftInvite = document.getElementById('party-invite-input')?.value || '';
-              _renderPartyModal(refreshedBookId, _currentParty);
-              const newInput = document.getElementById('party-invite-input');
-              if (newInput && draftInvite) newInput.value = draftInvite;
-            }
+            try {
+              await loadState(bookId, { strict: true, isCurrent });
+              if (!isCurrent()) return;
+              // loadState replaces run objects, including the one a completed-run view holds.
+              const updatedRun = displayedRun?.startedAt == null ? null
+                : state.playthroughs.find(pt => pt.startedAt === displayedRun.startedAt);
+              setViewingPt(updatedRun?.completed ? updatedRun : null);
+              render();
+              network?.redraw();
+              _hooks.scheduleRewardProfileRefresh?.();
+            } finally { suppressAutoNav(false); }
           }
-        } catch (_) {}
+        } catch (_) {
+          // A later hint or reconnect retries without replacing the canvas with an empty state.
+        } finally { refreshing = false; }
       };
-      // Don't close on error - let EventSource auto-reconnect (browser retries with backoff)
-      _sseSource.onerror = () => {};
+      _sseSource = connectEventStream(() => `/api/books/${bookId}/stream?token=${encodeURIComponent(getToken())}`, {
+        enabled: isCurrent,
+        // Catch up after disconnection and close the initial GET/subscription gap.
+        onOpen: refreshState,
+        onMessage: async (e) => {
+          if (!isCurrent()) return;
+          try {
+            const data = JSON.parse(e.data);
+            if (data.type === 'state_updated' && data.bookId === bookId) {
+              await refreshState();
+            } else if (data.type === 'party_changed') {
+              // Someone else accepted an invite or left - refresh membership (and
+              // reconnect, since accepting/leaving may add/drop us from this party).
+              const wasOpen = document.getElementById('party-modal-overlay')?.classList.contains('active');
+              const refreshedBookId = _sseBookId;
+              const genBefore = _connectGen;
+              await connectPartySSE(refreshedBookId);
+              // Our disconnect increments the generation once; any additional change means navigation superseded us.
+              if (wasOpen && _connectGen === genBefore + 1) {
+                // Preserve whatever the user was mid-typing in the invite box - a live
+                // membership update shouldn't wipe out an in-progress invite.
+                const draftInvite = document.getElementById('party-invite-input')?.value || '';
+                _renderPartyModal(refreshedBookId, _currentParty);
+                const newInput = document.getElementById('party-invite-input');
+                if (newInput && draftInvite) newInput.value = draftInvite;
+              }
+            }
+          } catch (_) {}
+        },
+      });
     } else if (btn) {
       btn.classList.remove('party-active');
       btn.innerHTML = shortcutLabel(t('party.btn'));
