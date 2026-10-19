@@ -34,7 +34,7 @@ export function openEditBookModal({ bookId, initialName, initialSections, initia
   document.getElementById('edit-book-description-input').value   = initialDescription || '';
   document.getElementById('edit-book-public-toggle').checked     = !!initialIsPublic;
 
-  document.getElementById('edit-book-public-toggle').disabled = !!editState._hooks.resolveIsModerator?.() && !editState._hooks.resolveIsAdmin?.();
+  document.getElementById('edit-book-public-toggle').disabled = !!editState._hooks.resolveIsModerator?.() && !editState._hooks.resolveIsAdmin?.() && !editState._hooks.isBookCreator?.(bookId);
 
   const discRow   = document.getElementById('edit-book-discoverable-row');
   const discInput = document.getElementById('edit-book-discoverable-input');

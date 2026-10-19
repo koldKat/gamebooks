@@ -160,3 +160,22 @@ test('catalog anthology save reports a server rejection without refreshing the d
   await assert.rejects(d.editOptions.onSave('Anthology', '', '', '', null, null, null, true, '', ''), /Save rejected/);
   assert.deepEqual(d.events, []);
 });
+
+test('public anthology info refreshes immediately after saving metadata', async () => {
+  const d = dialog({ loggedIn: true, admin: true, meta: { isContainer: true } });
+  d.buttons.get('.catalog-admin-edit-btn').click();
+  await d.editOptions.onSave('Renamed anthology', '', '', '', null, null, null, true, '', '');
+  assert.deepEqual(d.events, ['refresh']);
+  assert.equal(JSON.parse(d.requests[0].options.body).name, 'Renamed anthology');
+});
+
+test('a completed book or anthology save cannot replace another open public dialog', async () => {
+  for (const isContainer of [false, true]) {
+    const d = dialog({ loggedIn: true, admin: true, meta: { isContainer } });
+    d.buttons.get('.catalog-admin-edit-btn').click();
+    d.buttons.clear();
+    if (isContainer) await d.editOptions.onSave('Renamed anthology', '', '', '', null, null, null, true, '', '');
+    else await d.editOptions.onSave('Renamed book', 100, '', '', '', null, null, null, null, true, null, null, false, null, null, 100);
+    assert.deepEqual(d.events, []);
+  }
+});

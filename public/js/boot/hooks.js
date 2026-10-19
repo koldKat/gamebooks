@@ -203,6 +203,11 @@ export function initFeatureHooks() {
   setEditBookHooks({
     resolveIsAdmin:      () => resolveIsAdmin(),
     resolveIsModerator,
+    isBookCreator: bookId => {
+      const book = getCachedBooks()?.find(book => String(book.id) === String(bookId));
+      return !!book && (book.created_by == null || book.created_by === bootState._currentUserId);
+    },
+    isSeriesCreator: seriesId => getCachedAllSeries()?.some(series => String(series.id) === String(seriesId) && series.is_owner),
     setCurrentBookCover,
     scheduleRewardProfileRefresh: _scheduleRewardProfileRefresh,
     // Patch PDF cards and the active play link without rebuilding the library.

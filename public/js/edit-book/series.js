@@ -3,13 +3,14 @@ import { apiFetch } from '../core/state.js';
 import { t } from '../i18n.js';
 import { _refreshLibraryUi } from '../books.js';
 
-export function openEditSeriesModal(seriesId, name, description, isPublic = false, isOpenWorld = false) {
+export function openEditSeriesModal(seriesId, name, description, isPublic = false, isOpenWorld = false, onSaved = null) {
   ++editState._seriesSession;
   editState._esrSeriesId = seriesId;
+  editState._esrOnSaved = onSaved;
   document.getElementById('esr-name').value         = name || '';
   document.getElementById('esr-description').value  = description || '';
   document.getElementById('esr-public').checked     = !!isPublic;
-  document.getElementById('esr-public').disabled = !!editState._hooks.resolveIsModerator?.() && !editState._hooks.resolveIsAdmin?.();
+  document.getElementById('esr-public').disabled = !!editState._hooks.resolveIsModerator?.() && !editState._hooks.resolveIsAdmin?.() && !editState._hooks.isSeriesCreator?.(seriesId);
   document.getElementById('esr-open-world').checked = !!isOpenWorld;
   document.getElementById('esr-error').textContent  = '';
   document.getElementById('edit-series-overlay').classList.add('active');
@@ -33,11 +34,15 @@ export function initSeriesBindings(mousedownOnOverlayRef) {
     errEl.textContent = '';
     if (!name) { errEl.textContent = t('err.name_empty'); return; }
     const session = editState._seriesSession;
+    const onSaved = editState._esrOnSaved;
     const isCurrent = () => session === editState._seriesSession && document.getElementById('edit-series-overlay').classList.contains('active');
     try {
       const r = await apiFetch(`/api/series/${editState._esrSeriesId}`, { method: 'PATCH', body: JSON.stringify({ name, description, is_public: isPublic, is_open_world: isOpenWorld }) });
       if (!r.ok) { const j = await r.json().catch(() => ({})); if (isCurrent()) errEl.textContent = j.error || t('editbook.failed'); return; }
-      if (isCurrent()) _closeEsr();
+      if (isCurrent()) {
+        _closeEsr();
+        await onSaved?.(name);
+      }
       await _refreshLibraryUi({ feed: true });
     } catch (_) { if (isCurrent()) errEl.textContent = t('editbook.failed'); }
   });

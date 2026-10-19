@@ -1,5 +1,5 @@
 import { _syncCoverLibraryMembership } from './grid.js';
-import { openCoverActivity } from './activity.js';
+import { openCoverActivity, openSeriesActivity } from './activity.js';
 import { _seriesRowBadges } from './badges.js';
 import { coversState } from './state.js';
 import { getToken, apiFetch } from '../core/state.js';
@@ -78,8 +78,11 @@ export function renderSeriesActivity(data) {
 
   body.innerHTML = html;
 
-  body.querySelector('#edit-public-series-btn')?.addEventListener('click', () => {
-    coversState._hooks.openEditSeriesModal?.(data.id, data.name, data.description, !!data.isPublic, !!data.isOpenWorld);
+  const editSeriesBtn = body.querySelector('#edit-public-series-btn');
+  editSeriesBtn?.addEventListener('click', () => {
+    coversState._hooks.openEditSeriesModal?.(data.id, data.name, data.description, !!data.isPublic, !!data.isOpenWorld, async name => {
+      if (body.querySelector('#edit-public-series-btn') === editSeriesBtn) await openSeriesActivity(data.id, name);
+    });
   });
 
   const addSeriesBtn = body.querySelector('#add-series-to-lib-btn');
@@ -117,7 +120,7 @@ export function renderSeriesActivity(data) {
   body.querySelectorAll('.book-modal-child-row').forEach(btn => {
     btn.addEventListener('click', () => {
       backBtn.style.display = '';
-      backBtn.onclick = () => renderSeriesActivity(data);
+      backBtn.onclick = () => openSeriesActivity(data.id, data.name);
       openCoverActivity(+btn.dataset.bookId, btn.dataset.bookName);
     });
   });

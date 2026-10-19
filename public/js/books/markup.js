@@ -87,7 +87,7 @@ export function _syncEpubBadgeOnCards(bookId, epubPath, epubSize = null) {
 
 export function _bookItemHtml(b, isChild, containerExpanded, childCount, aggrStats, isAdmin, containerId = null) {
   const isModerator = !!booksState._hooks.getIsModerator?.();
-  const canEdit = isAdmin || (isModerator ? !!b.is_public : (b.created_by === booksState._currentUserId || b.created_by == null));
+  const canEdit = isAdmin || b.created_by === booksState._currentUserId || b.created_by == null || (isModerator && !!b.is_public);
   const effectiveSections = b.is_container ? (aggrStats?.totalSections || 0) : (b.discoverable_sections ?? b.total_sections);
   const effectiveVisited  = b.is_container ? (aggrStats?.visited || 0)        : b.visited;
   const pct         = effectiveSections > 0

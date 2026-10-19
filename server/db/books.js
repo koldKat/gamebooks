@@ -886,7 +886,7 @@ function getActiveBookInSeries(userId, seriesId) {
 
 function getBookById(bookId) {
   const book = db.prepare(`
-    SELECT id, name, total_sections, max_section_number, is_public, is_container, parent_book_id, cover_path, pdf_path, epub_path
+    SELECT id, name, total_sections, max_section_number, created_by, is_public, is_container, parent_book_id, cover_path, pdf_path, epub_path
     FROM books
     WHERE id = ?
   `).get(bookId) ?? null;

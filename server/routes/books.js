@@ -68,7 +68,7 @@ async function handleUpdateSeries(req, res, seriesId) {
   const series = db.getSeriesById(seriesId);
   if (!series) return send(res, 404, { error: 'not found' });
   const isAdmin = !!db.isUserAdmin(userId);
-  const isModerator = !isAdmin && db.isUserModerator(userId);
+  const isModerator = !isAdmin && series.created_by !== userId && db.isUserModerator(userId);
   if (isModerator && !series.is_public) return send(res, 404, { error: 'not found' });
   if (series.created_by !== userId && !isAdmin && !isModerator) return send(res, 403, { error: 'only the creator can edit this series' });
   const { name, description, is_public, is_open_world } = await readBody(req);
@@ -376,9 +376,9 @@ async function handleUpdateBook(req, res, bookId) {
   }
   const isAdmin = fromLocalhost || !!db.isUserAdmin(userId);
   // Reject metadata edits before resolving names, which may create a new series.
-  const isModerator = !isAdmin && db.isUserModerator(userId);
   const existingBook = db.getBookById(bookId);
   if (!existingBook) return send(res, 404, { error: 'Not found' });
+  const isModerator = !isAdmin && existingBook.created_by != null && existingBook.created_by !== userId && db.isUserModerator(userId);
   if (isModerator && !existingBook.is_public) return send(res, 404, { error: 'Not found' });
   if (isModerator && is_public !== true) return send(res, 403, { error: 'Lorekeepers cannot make books private' });
   if (!isAdmin && !isModerator) {
@@ -439,7 +439,7 @@ async function handleAddAnthologyMember(req, res, anthologyId) {
   const isAdmin = fromLocalhost || !!db.isUserAdmin(userId);
   const { book_id, book_order } = await readBody(req);
   const isModerator = !isAdmin && db.isUserModerator(userId);
-  if (isModerator && (!db.getBookById(anthologyId)?.is_public || !db.getBookById(book_id)?.is_public))
+  if (isModerator && [db.getBookById(anthologyId), db.getBookById(book_id)].some(book => !book || (!book.is_public && book.created_by !== userId)))
     return send(res, 404, { error: 'Not found' });
   const result = db.addAnthologyMember(userId, anthologyId, book_id, book_order, isAdmin || isModerator);
   if (result?.error) return send(res, result.error === 'forbidden' ? 403 : 400, { error: result.error });
@@ -463,7 +463,7 @@ async function handleRemoveAnthologyMember(req, res, anthologyId, bookId) {
   }
   const isAdmin = fromLocalhost || !!db.isUserAdmin(userId);
   const isModerator = !isAdmin && db.isUserModerator(userId);
-  if (isModerator && (!db.getBookById(anthologyId)?.is_public || !db.getBookById(bookId)?.is_public))
+  if (isModerator && [db.getBookById(anthologyId), db.getBookById(bookId)].some(book => !book || (!book.is_public && book.created_by !== userId)))
     return send(res, 404, { error: 'Not found' });
   const result = db.removeAnthologyMember(userId, anthologyId, bookId, isAdmin || isModerator);
   if (result?.error) return send(res, result.error === 'forbidden' ? 403 : 400, { error: result.error });

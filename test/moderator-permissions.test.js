@@ -26,7 +26,7 @@ test('only the admin interface can grant or revoke moderator, with strict boolea
   }
   await routes.handleAdminSetModerator({}, {}, 8); assert.equal(status, 404);
 });
-test('moderator cover uploads allow public books without library membership and reject private books before reading files', async () => {
+test('moderator cover uploads preserve creator access while rejecting other private books before reading files', async () => {
   let book = { created_by: 1, is_public: 1 }, moderator = true, admin = false, status, reads = 0, writes = 0, saved;
   let publicChildren = [], catalogPushes = 0;
   const routes = load('../server/routes/profile', {
@@ -41,12 +41,12 @@ test('moderator cover uploads allow public books without library membership and 
   });
   await routes.handleUploadCover({}, {}, 9);
   assert.equal(status, 200); assert.equal(writes, 1); assert.equal(saved[0], 2); assert.equal(saved[1], 9); assert.equal(saved[3], true);
-  for (const created_by of [1, 2]) {
-    book = { created_by, is_public: 0 }; await routes.handleUploadCover({}, {}, 9);
-    assert.equal(status, 404); assert.equal(reads, 1); assert.equal(writes, 1);
-  }
+  book = { created_by: 1, is_public: 0 }; await routes.handleUploadCover({}, {}, 9);
+  assert.equal(status, 404); assert.equal(reads, 1); assert.equal(writes, 1);
+  book = { created_by: 2, is_public: 0 }; await routes.handleUploadCover({}, {}, 9);
+  assert.equal(status, 200); assert.equal(reads, 2); assert.equal(writes, 2);
   book = { created_by: 1, is_public: 1 }; moderator = false;
-  await routes.handleUploadCover({}, {}, 9); assert.equal(status, 403); assert.equal(reads, 1);
+  await routes.handleUploadCover({}, {}, 9); assert.equal(status, 403); assert.equal(reads, 2);
   admin = true; book.is_public = 0;
   await routes.handleUploadCover({}, {}, 9); assert.equal(status, 200);
   assert.equal(catalogPushes, 1, 'ordinary public book cover still refreshes');
@@ -64,7 +64,7 @@ test('moderators edit public series and may remove another creator’s series fr
   const routes = load('../server/routes/books', {
     '../db': { isUserAdmin: () => admin, isUserModerator: () => moderator, getSeriesById: () => series,
       updateSeries: (id, name, description, isPublic, ow) => {
-        assert.equal(id, 9); assert.equal(isPublic, true); assert.equal(ow, null);
+        assert.equal(id, 9); assert.equal(isPublic, body.is_public); assert.equal(ow, null);
         series.name = name; series.description = description; updates++; return true;
       },
       removeSeriesFromLibrary() { removals++; }, awardXp() {},
@@ -75,18 +75,19 @@ test('moderators edit public series and may remove another creator’s series fr
   });
   await routes.handleUpdateSeries({}, {}, 9);
   assert.equal(status, 200); assert.equal(series.name, 'Updated'); assert.equal(series.created_by, 1);
-  for (const owner of [1, 2]) {
-    series.created_by = owner; series.is_public = 0;
-    await routes.handleUpdateSeries({}, {}, 9); assert.equal(status, 404); assert.equal(updates, 1);
-  }
+  series.is_public = 0;
+  await routes.handleUpdateSeries({}, {}, 9); assert.equal(status, 404); assert.equal(updates, 1);
+  series.created_by = 2; body.is_public = false;
+  await routes.handleUpdateSeries({}, {}, 9); assert.equal(status, 200); assert.equal(updates, 2);
+  series.created_by = 1;
   series.is_public = 1; body.is_public = false;
-  await routes.handleUpdateSeries({}, {}, 9); assert.equal(status, 403); assert.equal(updates, 1);
+  await routes.handleUpdateSeries({}, {}, 9); assert.equal(status, 403); assert.equal(updates, 2);
   series.created_by = 1;
   await routes.handleDeleteSeries({ url: '/api/series/9' }, {}, 9); assert.equal(status, 200); assert.equal(removals, 1);
   moderator = false; series.created_by = 1; body.is_public = true;
-  await routes.handleUpdateSeries({}, {}, 9); assert.equal(status, 403); assert.equal(updates, 1);
+  await routes.handleUpdateSeries({}, {}, 9); assert.equal(status, 403); assert.equal(updates, 2);
   admin = true; series.is_public = 0;
-  await routes.handleUpdateSeries({}, {}, 9); assert.equal(status, 200); assert.equal(updates, 2);
+  await routes.handleUpdateSeries({}, {}, 9); assert.equal(status, 200); assert.equal(updates, 3);
 });
 
 test('library book and anthology removal is authenticated and independent of creator or role', async () => {
@@ -179,11 +180,11 @@ test('Lorekeeper stash deletion remains scoped to their authenticated account', 
   assert.deepEqual(calls, [[2, 7], [2, 8]]);
 });
 
-test('moderator secondary anthology edits require both book and anthology to be public', async () => {
-  let publicBook = true, publicAnthology = true, status, body = { book_id: 7, book_order: 2 }, mutations = 0;
+test('moderator secondary anthology edits allow public titles and the creator’s private titles', async () => {
+  let publicBook = true, publicAnthology = true, creator = 1, status, body = { book_id: 7, book_order: 2 }, mutations = 0;
   const routes = load('../server/routes/books', {
     '../db': { isUserAdmin: () => false, isUserModerator: () => true,
-      getBookById: id => ({ is_public: id === 3 ? publicAnthology : publicBook }),
+      getBookById: id => ({ is_public: id === 3 ? publicAnthology : publicBook, created_by: creator }),
       addAnthologyMember: (user, anthology, book, order, authorized) => {
         assert.equal(authorized, true); mutations++; return { ok: true };
       }, removeAnthologyMember: (user, anthology, book, authorized) => {
@@ -203,4 +204,8 @@ test('moderator secondary anthology edits require both book and anthology to be 
     await routes.handleRemoveAnthologyMember({}, {}, 3, 7); assert.equal(status, 404);
     assert.equal(mutations, 2, 'private membership remains unchanged');
   }
+  creator = 2;
+  await routes.handleAddAnthologyMember({}, {}, 3); assert.equal(status, 200);
+  await routes.handleRemoveAnthologyMember({}, {}, 3, 7); assert.equal(status, 200);
+  assert.equal(mutations, 4, 'creator rights apply to private secondary memberships');
 });

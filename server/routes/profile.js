@@ -236,7 +236,7 @@ async function handleUploadCover(req, res, bookId) {
   const book = db.getBookById(bookId);
   const isAdmin = fromLocalhost || db.isUserAdmin(userId);
   const isModerator = !isAdmin && db.isUserModerator(userId);
-  if (!book || (isModerator && !book.is_public)) return send(res, 404, { error: 'Not found' });
+  if (!book || (isModerator && !book.is_public && book.created_by !== userId)) return send(res, 404, { error: 'Not found' });
   if (!isAdmin && !isModerator && ((book.created_by != null && book.created_by !== userId) || !db.getBookState(userId, bookId)))
     return send(res, 403, { error: 'Only the creator can edit this cover' });
 

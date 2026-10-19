@@ -420,9 +420,10 @@ test('create route accepts a separate maximum and rejects invalid values before 
   }
 });
 
-test('moderators edit public metadata without tracking it, but cannot edit private books or unpublish', async () => {
+test('moderators can edit their own private books, and moderate only other public books', async () => {
   const { db, books } = setup();
   try {
+    db.exec('CREATE TABLE book_reading_entries (book_id INTEGER, section_id TEXT, counts_as_section INTEGER)');
     db.exec(`INSERT INTO books (id,name,created_by,is_public) VALUES (1,'Public',1,1),(2,'Private',1,0),(3,'Orphan public',1,1),(4,'Own private',2,0);
       INSERT INTO user_books (user_id,book_id,state_data) VALUES (1,1,'{"graph":{"9":{"choices":[10]}}}'),(1,2,'{}'),(2,4,'{}');`);
     const original = db.prepare('SELECT state_data FROM user_books WHERE user_id=1 AND book_id=1').get().state_data;
@@ -435,7 +436,9 @@ test('moderators edit public metadata without tracking it, but cannot edit priva
     assert.equal(db.prepare('SELECT count(*) AS n FROM user_books WHERE user_id=2 AND book_id=1').get().n, 0);
     assert.equal(await routes.edit(3), 200, 'public books with no library rows can still be moderated');
     assert.equal(await routes.edit(2), 404);
-    assert.equal(await routes.edit(4), 404, 'moderators cannot edit even their own private books');
+    options.body.is_public = false;
+    assert.equal(await routes.edit(4), 200, 'creator rights are preserved for a Lorekeeper’s own private book');
+    assert.equal(books.getBookById(4).is_public, 0, 'metadata edit keeps the book private');
     options.body.is_public = false;
     assert.equal(await routes.edit(1), 403);
     assert.equal(books.getBookById(1).is_public, 1);
@@ -461,6 +464,29 @@ test('library removal permits moderators and admins without metadata edit checks
   admin = true;
   await context.module.exports.handleDeleteBook({ url: '/api/books/1' }, {}, 1);
   assert.equal(status, 200); assert.equal(mutations, 4);
+});
+
+test('book and anthology metadata permissions cover role, creator and visibility combinations', async () => {
+  const { db, books } = setup();
+  try {
+    db.exec('CREATE TABLE book_reading_entries (book_id INTEGER, section_id TEXT, counts_as_section INTEGER)');
+    let id = 100;
+    for (const role of ['player', 'moderator', 'admin']) {
+      for (const owner of [1, 2]) for (const isPublic of [false, true]) for (const isContainer of [false, true]) {
+        const bookId = id++, count = isContainer ? 0 : 199;
+        db.prepare('INSERT INTO books(id,name,created_by,is_public,is_container,total_sections) VALUES(?,?,?,?,?,?)')
+          .run(bookId, 'Original', owner, Number(isPublic), Number(isContainer), count);
+        db.prepare('INSERT INTO user_books(user_id,book_id,state_data) VALUES(2,?,?)').run(bookId, '{}');
+        const options = { userId: 2, moderator: role === 'moderator', admin: role === 'admin',
+          body: { name: 'Edited', total_sections: count, is_container: isContainer, is_public: isPublic } };
+        const routes = editRoutes(db, books, options);
+        const allowed = role === 'admin' || owner === 2 || (role === 'moderator' && isPublic);
+        assert.equal(await routes.edit(bookId), allowed ? 200 : 404, `${role} creator=${owner} public=${isPublic} anthology=${isContainer}`);
+        assert.equal(books.getBookById(bookId).name, allowed ? 'Edited' : 'Original');
+        assert.equal(books.getBookById(bookId).is_public, Number(isPublic), 'saving metadata retains the chosen visibility');
+      }
+    }
+  } finally { db.close(); }
 });
 
 test('removing another creator’s book affects only the requesting library and keeps creator files', () => {

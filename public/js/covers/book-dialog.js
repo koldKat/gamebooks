@@ -220,7 +220,7 @@ export function renderCoverActivity(bookId, bookName, entries, userRating, bookM
               body: JSON.stringify({ name, total_sections: 0, isbn: isbn || null, issn: issn || null, asin: asin || null, pages: pages || null, authors: authors || null, description: description || null, is_public: isPublic, series_name: seriesName || null, series_number: seriesNum || null, is_container: 1 }),
             });
             if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || t('err.save'));
-            await openCoverActivity(bookId, name);
+            if (body.querySelector('.catalog-admin-edit-btn') === adminEditBtn) await openCoverActivity(bookId, name);
           },
         });
         return;
@@ -255,7 +255,7 @@ export function renderCoverActivity(bookId, bookName, entries, userRating, bookM
             body: JSON.stringify({ name, total_sections: sections, max_section_number: maxSectionNumber, isbn: isbn || null, issn: issn || null, asin: asin || null, pages: pages || null, authors: authors || null, description: description || null, discoverable_sections: discoverableSections ?? null, is_public: isPublic, series_name: seriesName || null, series_number: seriesNumber || null, is_container: !!isContainer, parent_book_id: parentId || null, book_order: bookOrder ?? null }),
           });
           if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || t('err.save'));
-          await openCoverActivity(bookId, name);
+          if (body.querySelector('.catalog-admin-edit-btn') === adminEditBtn) await openCoverActivity(bookId, name);
         },
       });
     });

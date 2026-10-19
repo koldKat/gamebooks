@@ -56,6 +56,22 @@ test('a player without metadata edit permission can still remove a book from the
   assert.ok(!html.match(/<button class="book-del-btn"[^>]*>/)[0].includes(' disabled'));
 });
 
+test('a Lorekeeper can edit their own private books and anthologies beside public ones', () => {
+  const { context, list } = setup({ moderator: true });
+  for (const is_container of [0, 1]) {
+    for (const is_public of [0, 1]) {
+      const own = context._bookItemHtml({ id: 9, created_by: 2, name: 'Own', total_sections: 123, visited: 0,
+        is_public, is_container }, false, false, 0, null, false);
+      assert.ok(!own.match(/<button class="book-edit-btn[^>]*>/)[0].includes(' disabled'));
+      const other = context._bookItemHtml({ id: 10, created_by: 1, name: 'Other', total_sections: 123, visited: 0,
+        is_public, is_container }, false, false, 0, null, false);
+      assert.equal(other.match(/<button class="book-edit-btn[^>]*>/)[0].includes(' disabled'), !is_public);
+    }
+  }
+  context.renderBooksList([], [{ id: 9, name: 'Own private series', is_public: 0, is_owner: true }]);
+  assert.ok(list.innerHTML.includes('series-edit-btn" data-series-id="9"'));
+});
+
 for (const expanded of [true, false]) {
   test(`empty stashes remain visible and editable, expanded=${expanded}`, () => {
     const { context, list } = setup({ expanded });

@@ -28,6 +28,7 @@ export const editState = {
   _eccPdf: null,
   _eccEpub: null,
   _esrSeriesId: null,
+  _esrOnSaved: null,
 };
 
 export function setEditBookHooks(h) { editState._hooks = h || {}; }
