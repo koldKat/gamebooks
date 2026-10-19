@@ -46,6 +46,21 @@ test('source-centered matter and underlined headings render with canonical align
   assert.equal(mount.children[1].children[1].tag, 'br');
 });
 
+test('source left and right alignment override inherited justification without allowing other CSS', () => {
+  for (const alignment of ['left', 'right']) {
+    const { mount, document } = setup([
+      source('P', [textNode('Original layout.')], { style: ` TEXT-ALIGN : ${alignment.toUpperCase()}; ` }),
+    ]);
+    assert.equal(renderReadingMatter(mount, 1025, '<p>Original layout.</p>', document), true);
+    assert.equal(mount.children[0].attrs.style, `text-align:${alignment}`);
+  }
+  for (const value of ['text-align:left;position:fixed', 'text-align:right!important', 'text-align:inherit']) {
+    const { mount, document } = setup([source('P', [], { style: value })]);
+    assert.equal(renderReadingMatter(mount, 1025, '<p>Original layout.</p>', document), false);
+    assert.equal(mount.children.length, 0);
+  }
+});
+
 test('alignment support rejects other CSS and attributes without inserting a partial result', () => {
   for (const bad of [
     source('P', [], { style: 'text-align:center;position:fixed' }),
