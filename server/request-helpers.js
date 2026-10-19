@@ -6,6 +6,7 @@ const path  = require('path');
 const { gzip } = require('zlib');
 const geoip = require('./geoip');
 const db    = require('./db');
+const { tryBookkeepingWrite } = require('./db/bookkeeping');
 const { runInImpersonationContext } = require('./impersonation-context');
 const { requestQueryParameter } = require('./request-url');
 
@@ -242,10 +243,12 @@ async function authenticate(req, res) {
   if (!session) { send(res, 401, { error: 'Unauthorized' }); return null; }
   db.refreshSession(token);
   if (!session.is_impersonation) {
-    db.updateUserLastActive(session.user_id);
-    const geo = geoip.lookup(getClientIp(req));
-    db.updateUserActiveGeo(session.user_id, geo?.country || null, geo?.city || null);
-    db.updateUserLastDomain(session.user_id, req.headers.host || null);
+    tryBookkeepingWrite(() => {
+      db.updateUserLastActive(session.user_id);
+      const geo = geoip.lookup(getClientIp(req));
+      db.updateUserActiveGeo(session.user_id, geo?.country || null, geo?.city || null);
+      db.updateUserLastDomain(session.user_id, req.headers.host || null);
+    });
   }
   return session.user_id;
 }
@@ -257,10 +260,12 @@ function authenticateOptional(req) {
   if (!session) return null;
   db.refreshSession(token);
   if (!session.is_impersonation) {
-    db.updateUserLastActive(session.user_id);
-    const geo = geoip.lookup(getClientIp(req));
-    db.updateUserActiveGeo(session.user_id, geo?.country || null, geo?.city || null);
-    db.updateUserLastDomain(session.user_id, req.headers.host || null);
+    tryBookkeepingWrite(() => {
+      db.updateUserLastActive(session.user_id);
+      const geo = geoip.lookup(getClientIp(req));
+      db.updateUserActiveGeo(session.user_id, geo?.country || null, geo?.city || null);
+      db.updateUserLastDomain(session.user_id, req.headers.host || null);
+    });
   }
   return session.user_id;
 }

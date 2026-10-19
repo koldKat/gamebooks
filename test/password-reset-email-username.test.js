@@ -12,7 +12,8 @@ function setup(t, username, email = null) {
     CREATE TABLE password_reset_tokens (token TEXT PRIMARY KEY, user_id INTEGER, expires_at INTEGER);`);
   db.prepare('INSERT INTO users VALUES (1, ?, ?)').run(username, email);
   const context = vm.createContext({ module: { exports: {} }, Date,
-    require: name => name === './connection' ? { db } : require(name),
+    require: name => name === './connection' ? { db }
+      : name === './bookkeeping' ? { tryBookkeepingWrite: write => write() } : require(name),
   });
   vm.runInContext(fs.readFileSync(require.resolve('../server/db/auth'), 'utf8'), context);
   return { auth: context.module.exports, db };

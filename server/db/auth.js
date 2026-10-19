@@ -7,6 +7,7 @@ const util   = require('util');
 const scrypt = util.promisify(crypto.scrypt);
 
 const { db, _foldForSearch, _naturalCompare } = require('./connection');
+const { tryBookkeepingWrite } = require('./bookkeeping');
 
 // ── Auth helpers ──────────────────────────────────────────────────────────────
 
@@ -260,7 +261,13 @@ function getSession(token) {
 }
 
 function refreshSession(token) {
-  db.prepare('UPDATE sessions SET expires_at = strftime(\'%s\',\'now\') + 1209600 WHERE token = ?').run(token);
+  const now = Math.floor(Date.now() / 1000);
+  const session = db.prepare('SELECT expires_at FROM sessions WHERE token = ?').get(token);
+  if (!session || session.expires_at <= now || session.expires_at > now + 1209600 - 60) return;
+  tryBookkeepingWrite(() => {
+    db.prepare('UPDATE sessions SET expires_at = ? WHERE token = ? AND expires_at > ?')
+      .run(now + 1209600, token, now);
+  });
 }
 
 function purgeExpiredSessions() {

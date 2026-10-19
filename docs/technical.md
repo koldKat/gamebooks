@@ -1523,7 +1523,9 @@ The floater layer's horizontal position is computed at runtime from measured ele
 
 Random 32-byte hex token stored in the `sessions` table. Sent to the client on login/register; client stores it in `localStorage` under `gamebook_auth_token`.
 
-Sessions expire 7 days after creation (`expires_at = created_at + 604800`). `getSession` rejects any token whose `expires_at` is in the past - the client receives a 401 and is redirected to the login screen. `expires_at` is added via an `ALTER TABLE` migration on startup; existing rows receive a default of `created_at + 7 days`. Expired rows are deleted on server startup and whenever the admin runs a Vacuum.
+Sessions last 14 days and renew during authenticated activity, at most once per minute. `getSession` rejects expired tokens; renewal cannot revive expired or deleted sessions. The client receives a 401 for an invalid session and returns to the login screen. Expired rows are deleted on server startup and whenever the admin runs a Vacuum.
+
+Session renewal and authentication presence updates are optional synchronous bookkeeping. They use a zero SQLite busy timeout and defer on `SQLITE_BUSY` or `SQLITE_LOCKED`, retrying on subsequent requests. The connection's original timeout is restored immediately afterward. Other database errors propagate, and gameplay writes retain their normal error handling.
 
 **Impersonation sessions stay invisible to activity tracking and rewards.** Sessions carry an `is_impersonation` flag (`createSession(userId, { impersonation: true })`, set from the admin panel's impersonate link). `authenticate()`/`authenticateOptional()` (`request-helpers.js`) skip `updateUserLastActive()` for these sessions. `adminGetUsers()`'s `last_active` column falls back to `MAX(user_books.updated_at)` for users with no `last_active_at` yet; `handleSaveState` checks `isRequestImpersonating(req)` and passes `{ skipTimestamp: true }` to `saveBookState()` so an impersonated state save doesn't bump that timestamp either.
 
