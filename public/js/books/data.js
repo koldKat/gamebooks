@@ -59,16 +59,22 @@ export function _patchCachedBook(bookId, fields) {
 
 // ── Refresh helpers ───────────────────────────────────────────────────────────
 export async function _refreshLibraryUi({ feed = false, covers = false } = {}) {
-  const jobs = [_refreshBooksListOnly()];
+  const jobs = [_refreshBooksListOnly({ afterMutation: true })];
   if (feed) jobs.push(booksState._hooks.loadFeed?.());
   if (covers) jobs.push(loadCovers({ force: true }));
   await Promise.allSettled(jobs);
   booksState._hooks.scheduleRewardProfileRefresh?.(250);
 }
 
-export async function _refreshBooksListOnly() {
+export async function _refreshBooksListOnly({ afterMutation = false } = {}) {
   if (!getToken()) return;
-  if (_booksRefreshPromise) return _booksRefreshPromise;
+  if (_booksRefreshPromise) {
+    await _booksRefreshPromise;
+    // A request started before a save may contain the old membership. Fetch
+    // again after it settles; ordinary background callers can still share it.
+    if (!afterMutation) return;
+    return _refreshBooksListOnly();
+  }
   _booksRefreshPromise = (async () => {
     try {
       _captureExpandedPrefsFromDom();

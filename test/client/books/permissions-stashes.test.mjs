@@ -26,6 +26,27 @@ function setup({ moderator = false, expanded = false } = {}) {
   return { context, list };
 }
 
+for (const expanded of [true, false]) {
+  for (const anthology of [false, true]) {
+    test(`series moves rebuild both groups immediately, expanded=${expanded}, anthology=${anthology}`, () => {
+      const { context } = setup({ expanded });
+      const series = [{ id: 1, name: 'Old series' }, { id: 2, name: 'New series' }];
+      const book = { id: 42, name: 'Moved item', total_sections: anthology ? 0 : 100,
+        series_id: 1, series_name: 'Old series', is_container: anthology ? 1 : 0 };
+      const children = anthology ? [{ id: 43, name: 'Child', total_sections: 100, parent_book_id: 42 }] : [];
+      const group = id => context.lazyState.builders.get(`series::${id}`)().join('');
+      context.renderBooksList([book, ...children], series);
+      assert.match(group(1), /Moved item/);
+      assert.doesNotMatch(group(2), /Moved item/);
+      context.renderBooksList([{ ...book, series_id: 2, series_name: 'New series' }, ...children], series);
+      assert.doesNotMatch(group(1), /Moved item|Child/);
+      assert.match(group(2), /Moved item/);
+      if (anthology && expanded) assert.match(group(2), /Child/);
+      assert.equal(context.booksState._cachedBooks[0].series_id, 2);
+    });
+  }
+}
+
 test('Lorekeepers can remove any owned book or anthology without metadata edit permission', () => {
   const { context } = setup({ moderator: true });
   for (const is_container of [0, 1]) {

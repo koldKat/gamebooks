@@ -1,7 +1,7 @@
 import { escapeHtml } from '../core/util.js';
 import { t } from '../i18n.js';
 
-export const FEED_FILTERS = ['runs', 'achievements', 'catalog', 'news', 'ratings', 'library', 'players'];
+export const FEED_FILTERS = ['players', 'runs', 'achievements', 'catalog', 'library', 'ratings', 'news'];
 
 const categories = new Map([
   ...['book_created', 'series_created'].map(type => [type, 'catalog']),

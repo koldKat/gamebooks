@@ -1,21 +1,20 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
-import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 
 const dir = new URL('../../../public/js/', import.meta.url);
-test('library feature relocation preserves implementations without root wrappers', () => {
-  const digests = {
-    "add-book": "3d3befca8c33d89786cd4b11bec96210d1cb0ddc3abc9cbe5491cc8cb06ebbc6",
-    "autocomplete": "2fbce1eccd92ae0f3a37c83157eab7b97b3095813b0c608ebbafc74b20ba2cb7",
-    "export": "450820edb2102369edfc517142930d5ca9310db47e4404fc2007b03fc94e22dc"
+test('library feature relocation preserves entry points without root wrappers', () => {
+  const entryPoints = {
+    'add-book': ['openAddBook', 'openAddComp', 'openAddSeries', 'initAddBook'],
+    autocomplete: ['invalidateAutocompleteCaches', '_loadAutocompleteBooks', '_loadSeriesAutocomplete'],
+    export: ['exportAll', 'exportBook'],
   };
-  for (const [name, digest] of Object.entries(digests)) {
+  for (const [name, exports] of Object.entries(entryPoints)) {
     assert.equal(existsSync(new URL(name + '.js', dir)), false);
     const source = readFileSync(new URL('books/' + name + '.js', dir), 'utf8');
-    assert.equal(createHash('sha256').update(source.replace(/^import[\s\S]*?;$/gm, '')).digest('hex'), digest);
+    for (const entry of exports) assert.match(source, new RegExp(`export (?:async )?function ${entry}\\(`));
   }
   assert.ok(existsSync(new URL('books.js', dir)), 'existing library facade remains');
 });

@@ -44,6 +44,7 @@ function dialog({ loggedIn = false, owned = false, mobile = true, admin = false,
     _seriesRowBadges: book => book.hasLiveReading ? '<span class="reading-badge">Reading</span>' : '',
     coversState: { _hooks: {
       getIsAdmin: () => admin,
+      refreshBooksListOnly: async options => { if (options) assert.equal(options.afterMutation, true); events.push('library'); },
       openEditBookModal: options => { editOptions = options; },
       openEditCompModal: options => { editOptions = options; },
       showLogin: () => events.push('login'),
@@ -76,7 +77,7 @@ test('signed-in players can add a public book and then open it in the mobile rea
   const d = dialog({ loggedIn: true });
   assert.equal(d.buttons.has('.login-to-add-book-btn'), false);
   await d.buttons.get('.add-public-book-btn').click();
-  assert.deepEqual(d.events, ['membership'], 'library additions only reconcile ownership, never rebuild the cover grid');
+  assert.deepEqual(d.events, ['library', 'membership'], 'library additions only reconcile ownership, never rebuild the cover grid');
   assert.equal(d.requests.length, 1);
   assert.equal(d.requests[0].url, '/api/books/42/add');
   assert.equal(d.requests[0].options.method, 'POST');
@@ -148,7 +149,7 @@ test('cover-panel Edit Book reloads and saves the highest section independently 
   const payload = JSON.parse(d.requests[0].options.body);
   assert.equal(payload.total_sections, 420);
   assert.equal(payload.max_section_number, 1100);
-  assert.deepEqual(d.events, ['refresh']);
+  assert.deepEqual(d.events, ['library', 'refresh']);
   const legacy = dialog({ loggedIn: true, admin: true, meta: { totalSections: 420 } });
   legacy.buttons.get('.catalog-admin-edit-btn').click();
   assert.equal(legacy.editOptions.initialMaxSectionNumber, 420, 'legacy blank defaults to total sections');
@@ -165,7 +166,7 @@ test('public anthology info refreshes immediately after saving metadata', async 
   const d = dialog({ loggedIn: true, admin: true, meta: { isContainer: true } });
   d.buttons.get('.catalog-admin-edit-btn').click();
   await d.editOptions.onSave('Renamed anthology', '', '', '', null, null, null, true, '', '');
-  assert.deepEqual(d.events, ['refresh']);
+  assert.deepEqual(d.events, ['library', 'refresh']);
   assert.equal(JSON.parse(d.requests[0].options.body).name, 'Renamed anthology');
 });
 
@@ -176,6 +177,6 @@ test('a completed book or anthology save cannot replace another open public dial
     d.buttons.clear();
     if (isContainer) await d.editOptions.onSave('Renamed anthology', '', '', '', null, null, null, true, '', '');
     else await d.editOptions.onSave('Renamed book', 100, '', '', '', null, null, null, null, true, null, null, false, null, null, 100);
-    assert.deepEqual(d.events, []);
+    assert.deepEqual(d.events, ['library'], 'refresh the library even when the original info dialog has closed');
   }
 });

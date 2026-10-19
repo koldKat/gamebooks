@@ -12,6 +12,6 @@ test('feed preserves rendering, loading, interactions, previews and day covers',
   assert.equal(result.status, 0, result.stdout + result.stderr);
   const { digest, cases } = JSON.parse(result.stdout);
   assert.equal(cases, 38);
-  // Creation rows include same-day container headings and singular book counts.
-  assert.equal(digest, 'b4613bcf595db5839b71dac35ed5416e6fa920a9eb3a17014b2de8c604506745');
+  // Includes the player, book and news filter ordering in the rendered header.
+  assert.equal(digest, '5615821549a4529aab1f5fd4538d4752a8e123be8b77dfc438e8ed8595aa6dfe');
 });

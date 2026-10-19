@@ -336,6 +336,7 @@ if (!baseline) {
   }
   assert.ok(!filters.feedHeaderHtml(false, new Set()).includes('data-feed-filter'));
   assert.equal((filters.feedHeaderHtml(true, new Set()).match(/aria-pressed="true"/g) || []).length, 7);
+  assert.deepEqual([...filters.FEED_FILTERS], ['players', 'runs', 'achievements', 'catalog', 'library', 'ratings', 'news']);
   assert.equal(filters.filterFeedEntries(types.map(type => ({ type })), new Set(filters.FEED_FILTERS)).length, 0);
   assert.equal(filters.filterFeedEntries([{ type: 'future_event' }], new Set(filters.FEED_FILTERS)).length, 1, 'unknown future events are not silently lost');
 
