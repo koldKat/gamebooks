@@ -13,8 +13,8 @@ export function renderReadingMatter(mount, bookId, text, document) {
     const target = document.createElement(node.tagName.toLowerCase());
     for (const attr of node.attributes) {
       if (node.tagName === 'IMG' && ['src', 'alt', 'loading'].includes(attr.name)) continue;
-      if (node.tagName === 'P' && attr.name === 'class' && attr.value === 'reading-hanging') {
-        target.setAttribute('class', 'reading-hanging');
+      if (node.tagName === 'P' && attr.name === 'class' && ['reading-hanging', 'reading-indented'].includes(attr.value)) {
+        target.setAttribute('class', attr.value);
         continue;
       }
       if (node.tagName === 'FIGURE' && attr.name === 'class' && attr.value === 'reading-art-parts') {

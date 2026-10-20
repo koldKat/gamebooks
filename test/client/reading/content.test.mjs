@@ -78,6 +78,25 @@ test('source hanging paragraphs retain their layout without allowing arbitrary c
   }
 });
 
+test('indented glossary entries retain source italics and reject unrelated attributes', () => {
+  const { mount, document } = setup([
+    source('P', [source('EM', [textNode('Grind')]), textNode('—skating on the '), source('EM', [textNode('trucks')])], { class: 'reading-indented' }),
+  ]);
+  assert.equal(renderReadingMatter(mount, 1050, '<p class="reading-indented">Grind</p>', document), true);
+  assert.equal(mount.children[0].attrs.class, 'reading-indented');
+  assert.deepEqual(mount.children[0].children.filter(n => n.tag === 'em').map(n => n.children[0].textContent), ['Grind', 'trucks']);
+  for (const bad of [
+    source('P', [], { class: 'reading-indented hidden' }),
+    source('P', [], { class: 'reading-indented', style: 'position:fixed' }),
+    source('P', [], { class: 'reading-indented', onclick: 'bad()' }),
+    source('IMG', [], { class: 'reading-indented' }),
+  ]) {
+    const { mount, document } = setup([source('P', [textNode('Safe prefix')]), bad]);
+    assert.equal(renderReadingMatter(mount, 1050, '<p>Safe prefix</p>', document), false);
+    assert.equal(mount.children.length, 0);
+  }
+});
+
 test('original image pieces retain their figure layout while foreign classes and attributes are rejected', () => {
   const src = '/api/books/1032/reading-images/' + 'a'.repeat(64) + '.png';
   const { mount, document } = setup([
