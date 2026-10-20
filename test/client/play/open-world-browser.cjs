@@ -9,7 +9,7 @@ const script = String.raw`
 import * as core from 'file://${repo}/public/js/core/state.js';
 import {booksState} from 'file://${repo}/public/js/books/state.js';
 import {setOpenWorldHooks,setupOpenWorldForBook,_syncSeriesRuns,_handlePortalTravel,_computeCrossBookReachability,doJumpCrossBook} from 'file://${repo}/public/js/play/open-world.js';
-import {initNotes,loadNotesForBook} from 'file://${repo}/public/js/play/notes.js';
+import {initNotes,hideNotesUI,loadNotesForBook} from 'file://${repo}/public/js/play/notes.js';
 import {initCharSheet} from 'file://${repo}/public/js/play/charsheet.js';
 import {showBattleSimForBook,renderActiveBattleSim} from 'file://${repo}/public/js/battlesim/loader.js';
 import {newFabledCharacter} from 'file://${repo}/public/js/battlesim/engines/fabled-lands/character.js';
@@ -73,10 +73,12 @@ try {
      return false;
    }
    if(finishDuringLoad){seriesRun.completed=1;seriesRun.result='success';}
+   hideNotesUI();
    await core.loadState(id);
    setupOpenWorldForBook(id,77,true);
    await _syncSeriesRuns(77);
    await showBattleSimForBook(id);
+   if(core.state.notesPinned)await loadNotesForBook(id);
    return true;
  }
  setOpenWorldHooks({showMain:show,getCurrentBookSeriesId:()=>77,getCurrentUserId:()=>7});
@@ -109,10 +111,16 @@ try {
    await show(99002);notes='Started in book 2';
  }
 
+ // A pinned source and unpinned destination match the reported one-way route.
+ core.state.notesPinned=true;
+ await loadNotesForBook(99002);await save();
+ check(document.getElementById('notes-display').classList.contains('visible'),'source notebook is pinned');
  const showBefore=showCalls;
  await Promise.all([travel(99001),travel(99001)]);
  check(showCalls===showBefore+1,'double portal clicks perform only one transfer');
  check(core.currentBookId===99001,'portal reaches first book');
+ check(!document.getElementById('notes-display').classList.contains('visible'),'unpinned destination never shows stale source notes');
+ check(!document.getElementById('notebook-modal-overlay').classList.contains('active'),'source notebook modal closes during book switch');
  equal(active().inventory,original[99002].playthroughs[0].inventory,'book 2 inventory arrives');
  equal(active().equipment,original[99002].playthroughs[0].equipment,'book 2 equipment arrives');
  check(await readNotes()==='Started in book 2','notebook arrives in book 1');
@@ -130,6 +138,7 @@ try {
  equal(active().inventory,[],'removed items stay removed on return');
  equal(active().equipment,{},'unequipped items do not return from stale book state');
  check(await readNotes()==='Third book update','third book notes return to book 2');
+ check(document.getElementById('notes-display-text').textContent==='Third book update','pinned destination reloads updated shared notes');
  await core.loadState(99002);await _syncSeriesRuns(77);
  equal(active().inventory,[],'reload retains current traveling inventory');
  for(const id of ids){

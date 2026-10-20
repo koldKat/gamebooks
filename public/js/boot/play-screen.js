@@ -8,7 +8,7 @@ import { t } from '../i18n.js';
 import { setCharSheetVisible } from '../play/charsheet.js';
 import { setInventoryVisible } from '../inventory.js';
 import { setEquipmentVisible } from '../equipment.js';
-import { loadNotesForBook } from '../play/notes.js';
+import { hideNotesUI, loadNotesForBook } from '../play/notes.js';
 import { connectPartySSE, disconnectPartySSE } from '../play/party.js';
 import { _adminPdfHref } from '../edit-book.js';
 import { showBattleSimForBook } from '../battlesim/loader.js';
@@ -24,6 +24,9 @@ import { showBooks } from './landing.js';
 
 export async function showMain(bookId, isbn = null, issn = null, asin = null, cover = null, pdfPath = null, pages = null, authors = null, description = null, discoverableSections = null, isPublic = false, isCreator = true, seriesName = null, seriesNumber = null, isContainer = false, parentBookId = null, bookOrder = null, epubPath = null) {
   if (_isMobile()) { showBooks(); return false; }
+  // Portals switch books directly, without hiding the play screen first.
+  // Invalidate the old notebook even when the destination has notes unpinned.
+  hideNotesUI();
   _lockView('book', 1500);
   document.body.classList.remove('promo-active');
   const _pvi2 = document.getElementById('login-promo-video-iframe');
