@@ -1056,16 +1056,11 @@ function updateBook(userId, bookId, name, totalSections, isbn, issn, asin, pages
 }
 
 function getNotebook(userId, bookId) {
-  const row = db.prepare('SELECT notebook FROM user_books WHERE book_id = ? AND user_id = ?').get(bookId, userId);
-  if (!row) return null;
-  return row.notebook ?? '';
+  return require('./series-notebooks').getNotebook(db, userId, bookId);
 }
 
 function setNotebook(userId, bookId, text) {
-  const result = db.prepare(
-    'UPDATE user_books SET notebook = ? WHERE book_id = ? AND user_id = ?'
-  ).run(text || null, bookId, userId);
-  return result.changes > 0;
+  return require('./series-notebooks').setNotebook(db, userId, bookId, text);
 }
 
 function _pruneUntrackedBook(bookId, userId) {

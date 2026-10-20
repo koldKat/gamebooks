@@ -200,6 +200,11 @@ export function saveState() {
   return _saveInFlight;
 }
 
+// Navigation waits for every queued save before replacing the current book.
+export async function flushStateSaves() {
+  while (_saveInFlight) await _saveInFlight;
+}
+
 // Canvas drags carry coordinates only; never send an old snapshot of shared runs.
 export function savePositions(positions) {
   if (!currentBookId) return Promise.resolve();

@@ -911,6 +911,7 @@ const {
 } = require('./db/misc');
 
 require('./db/query-indexes').installQueryIndexes(db);
+require('./db/series-notebooks').installSeriesNotebooks(db);
 
 // Backfill sim213/sim214 history using live award refs; unique constraints keep repeats harmless.
 {

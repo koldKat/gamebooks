@@ -111,6 +111,7 @@ export default {
     'party.leave_failed':     'Could not leave party',
 
     'notes.save_failed': 'Could not save notebook.',
+    'notes.load_failed': 'Could not load notebook. Close and reopen it to try again.',
     'notes.notebook_title': 'Notebook',
     'notes.notebook_saved_xp': 'Notebook saved - XP earned!',
 
@@ -148,6 +149,8 @@ export default {
     'play.reached_section_limit': "You've reached the section limit ({limit}). To add more sections, increase the total in the book settings, or edit existing nodes to make room.",
 
     'openworld.target_not_in_library': 'Target book (id {id}) not in your library.',
+    'openworld.travel_failed': 'Could not save your character for portal travel. Please try again.',
+    'openworld.run_finished': 'This series run has already ended. Reopen it to view the latest progress.',
 
     'bg.show_background': 'Show background',
     'bg.hide_background': 'Hide background',

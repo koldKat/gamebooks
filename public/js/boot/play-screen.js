@@ -23,7 +23,7 @@ import { _pushNav, _lockView } from './navigation.js';
 import { showBooks } from './landing.js';
 
 export async function showMain(bookId, isbn = null, issn = null, asin = null, cover = null, pdfPath = null, pages = null, authors = null, description = null, discoverableSections = null, isPublic = false, isCreator = true, seriesName = null, seriesNumber = null, isContainer = false, parentBookId = null, bookOrder = null, epubPath = null) {
-  if (_isMobile()) { showBooks(); return; }
+  if (_isMobile()) { showBooks(); return false; }
   _lockView('book', 1500);
   document.body.classList.remove('promo-active');
   const _pvi2 = document.getElementById('login-promo-video-iframe');
@@ -109,7 +109,7 @@ export async function showMain(bookId, isbn = null, issn = null, asin = null, co
   } catch (_) {
     await showBooks();
     showAlert('Could not load saved progress. Please reopen the book.');
-    return;
+    return false;
   }
   if (bootState._currentBook.isOpenWorld && bootState._currentBook.seriesId) {
     const seriesRuns = await _syncSeriesRuns(bootState._currentBook.seriesId);
@@ -192,4 +192,5 @@ export async function showMain(bookId, isbn = null, issn = null, asin = null, co
     await loadNotesForBook(bookId);
   }
   connectPartySSE(bookId);
+  return true;
 }

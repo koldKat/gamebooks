@@ -656,12 +656,16 @@ Private anthologies stay hidden from other users, even when one of their stories
 
 ## Open World series
 
-An open world series is a continuous adventure that spans multiple books. All books share the same playthrough numbering, and your character sheet carries over between them.
+An open world series is a continuous adventure that spans multiple books. All books share the same playthrough numbering. Your character sheet, inventory, and equipped items travel with the current playthrough through portals, in either direction and across any number of books. This also applies to private books.
+
+The series has a shared notebook, so notes saved in any book are available in every other book in that open world. Existing distinct notes are retained when you first use the shared notebook.
+
+Simulator character stats travel between compatible rules systems, including reduced health, skills, and spent character resources. Enemies, ongoing fights, combat settings, logs, and history stay with their own book. Different rules systems keep separate simulator characters.
 
 | Normal series | Open World series |
 |---------------|------------------|
 | Each book has its own independent playthroughs | All books share the same playthrough numbers |
-| Character sheet stays within each book | Character sheet travels between books |
+| Character sheet and possessions stay within each book | Character sheet and possessions travel between books |
 | A playthrough ends within its book | A playthrough ends wherever it ends, in any book |
 | No connections between books | Portal sections link books together |
 
@@ -670,7 +674,7 @@ An open world series is a continuous adventure that spans multiple books. All bo
 Teal diamond shapes on the graph mark portal sections - they connect a section in one book to a section in another. When your playthrough reaches one, a **Portal destinations** panel appears in the sidebar.
 
 Travelling through a portal:
-1. Saves your character sheet to the series playthrough
+1. Saves your character sheet and carries your current possessions and compatible simulator character stats
 2. Marks your playthrough as paused at this portal
 3. Opens the target book at the destination section
 

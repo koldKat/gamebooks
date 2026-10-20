@@ -8,12 +8,29 @@ let _notesText  = '';
 let _nbFraction = 0;   // 0–1 scroll position, shared by both notebook views
 let _nbSelStart = 0;
 let _nbSelEnd   = 0;
+let _notesBookId = null;
+let _notesRequest = 0;
 
 let _onXpAwarded = null;
 export function setOnXpAwarded(fn) { _onXpAwarded = fn || null; }
 
 // DOM refs, populated by initNotes()
 let notebookOverlay, notebookInput, notebookPinCb, notesDisplay, notesDisplayInput, notesDisplayBody;
+
+function notebookReady(bookId) {
+  _notesBookId = bookId;
+  for (const input of [notebookInput, notesDisplayInput]) if (input) input.disabled = bookId == null;
+  for (const id of ['notebook-modal-save', 'notes-display-save']) {
+    const button = document.getElementById(id);
+    if (button) button.disabled = bookId == null;
+  }
+}
+
+function acceptNotebook(bookId, text) {
+  notebookReady(bookId);
+  setNotesDisplayText(text);
+  if (notebookInput) notebookInput.value = text;
+}
 
 function _nbApply(el) {
   const max = el.scrollHeight - el.clientHeight;
@@ -70,6 +87,8 @@ export function setNotesPinned(pinned) {
 
 // Called when the play view is hidden (setGuideVisible(false) in main.js)
 export function hideNotesUI() {
+  _notesRequest++;
+  notebookReady(null);
   document.getElementById('notebook-modal-overlay').classList.remove('active');
   document.getElementById('notes-display').classList.remove('visible');
   const pinCb = document.getElementById('notebook-pin-cb');
@@ -78,15 +97,19 @@ export function hideNotesUI() {
 
 // Called on book load when state.notesPinned is true
 export async function loadNotesForBook(bookId) {
+  const request = ++_notesRequest;
+  notebookReady(null);
   _nbLoad(bookId);
   setNotesPinned(true);
   try {
     const res = await apiFetch(`/api/books/${bookId}/notebook`);
-    if (!res.ok) return; // leave whatever's currently shown rather than blanking real notes
+    if (!res.ok) throw new Error('Notebook unavailable');
     const data = await res.json();
-    setNotesDisplayText(data.text ?? '');
-    notebookInput.value = _notesText;
-  } catch (_) {}
+    if (currentBookId !== bookId || request !== _notesRequest) return;
+    acceptNotebook(bookId, data.text ?? '');
+  } catch (_) {
+    if (currentBookId === bookId && request === _notesRequest) showAlert(t('notes.load_failed'));
+  }
 }
 
 export function initNotes() {
@@ -107,25 +130,32 @@ export function initNotes() {
   async function openNotebook() {
     const bookId = currentBookId;
     if (!bookId) return;
+    const request = ++_notesRequest;
+    notebookReady(null);
     _nbLoad(bookId);
     const prevValue = notebookInput.value;
     notebookInput.value = '';
     notebookOverlay.classList.add('active');
     try {
       const res = await apiFetch(`/api/books/${bookId}/notebook`);
-      if (!res.ok) { notebookInput.value = prevValue; return; } // don't leave/save over real notes with a blank fetch failure
+      if (!res.ok) throw new Error('Notebook unavailable');
       const data = await res.json();
+      if (currentBookId !== bookId || request !== _notesRequest) return;
       const text = data.text ?? '';
       const selS = Math.min(_nbSelStart, text.length);
       const selE = Math.min(_nbSelEnd,   text.length);
-      notebookInput.value = text;
-      setNotesDisplayText(text);
+      acceptNotebook(bookId, text);
       requestAnimationFrame(() => {
+        if (currentBookId !== bookId || request !== _notesRequest) return;
         notebookInput.setSelectionRange(selS, selE);
         _nbApply(notebookInput);
         notebookInput.focus({ preventScroll: true });
       });
-    } catch (_) { notebookInput.value = prevValue; }
+    } catch (_) {
+      if (currentBookId !== bookId || request !== _notesRequest) return;
+      notebookInput.value = prevValue;
+      showAlert(t('notes.load_failed'));
+    }
   }
 
   function _saveNotebookPos() {
@@ -136,15 +166,18 @@ export function initNotes() {
   }
 
   function closeNotebook() {
+    _notesRequest++;
     _saveNotebookPos();
     notebookOverlay.classList.remove('active');
   }
 
   async function saveNotebook() {
     const bookId = currentBookId;
-    if (!bookId) return;
+    if (!bookId || _notesBookId !== bookId || notebookInput.disabled) return;
+    const request = ++_notesRequest;
     const text  = notebookInput.value;
     const ptIdx = state.activePtIndex;
+    notebookReady(null);
     try {
       const res = await apiFetch(`/api/books/${bookId}/notebook`, {
         method: 'PUT',
@@ -153,21 +186,29 @@ export function initNotes() {
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
         showAlert(j.error || t('notes.save_failed'));
+        if (currentBookId === bookId && request === _notesRequest) notebookReady(bookId);
         return; // leave the modal open with the unsaved text still in it
       }
       const d = await res.json();
       if (d.xpAwarded) _onXpAwarded?.();
+      if (currentBookId !== bookId || request !== _notesRequest) return;
+      notebookReady(bookId);
       setNotesDisplayText(text);
-    } catch (_) { showAlert(t('notes.save_failed')); return; }
+    } catch (_) {
+      if (currentBookId === bookId && request === _notesRequest) { notebookReady(bookId); showAlert(t('notes.save_failed')); }
+      return;
+    }
     _saveNotebookPos();
     notebookOverlay.classList.remove('active');
   }
 
   async function saveNotesDisplay() {
     const bookId = currentBookId;
-    if (!bookId) return;
+    if (!bookId || _notesBookId !== bookId || notesDisplayInput.disabled) return;
+    const request = ++_notesRequest;
     const text  = notesDisplayInput.value;
     const ptIdx = state.activePtIndex;
+    notebookReady(null);
     try {
       const res = await apiFetch(`/api/books/${bookId}/notebook`, {
         method: 'PUT',
@@ -176,13 +217,19 @@ export function initNotes() {
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
         showAlert(j.error || t('notes.save_failed'));
+        if (currentBookId === bookId && request === _notesRequest) notebookReady(bookId);
         return; // stay in edit mode with the unsaved text still in it
       }
       const d = await res.json();
       if (d.xpAwarded) _onXpAwarded?.();
+      if (currentBookId !== bookId || request !== _notesRequest) return;
+      notebookReady(bookId);
       setNotesDisplayText(text);
       notebookInput.value = text;
-    } catch (_) { showAlert(t('notes.save_failed')); return; }
+    } catch (_) {
+      if (currentBookId === bookId && request === _notesRequest) { notebookReady(bookId); showAlert(t('notes.save_failed')); }
+      return;
+    }
     notesDisplay.classList.remove('hovering');
   }
 
@@ -236,16 +283,10 @@ export function initNotes() {
     if (willPin) {
       const bookId = currentBookId;
       if (bookId) {
-        if (notebookOverlay.classList.contains('active')) {
+        if (notebookOverlay.classList.contains('active') && _notesBookId === bookId) {
           setNotesDisplayText(notebookInput.value);
         } else {
-          try {
-            const res = await apiFetch(`/api/books/${bookId}/notebook`);
-            if (!res.ok) return; // leave whatever's currently shown rather than blanking real notes
-            const data = await res.json();
-            setNotesDisplayText(data.text ?? '');
-            notebookInput.value = _notesText;
-          } catch (_) {}
+          await loadNotesForBook(bookId);
         }
       }
     }

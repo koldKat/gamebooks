@@ -8,6 +8,7 @@ import { showConfirm } from '../ui-helpers/confirm.js';
 import { playContext } from './context.js';
 import { render } from './render.js';
 import { wouldAutoNav } from './navigation.js';
+import { applyTraveler } from './traveler.js';
 
 export function startPlaythrough(entrySection = null) {
   const sheet = state.charSheetTemplate
@@ -34,7 +35,7 @@ export function startPlaythrough(entrySection = null) {
 }
 
 // runIndex: the series-level run index being resumed. charSheet: the shared charsheet to apply.
-export function startPortalRun(entrySection, runIndex, charSheet = null) {
+export function startPortalRun(entrySection, runIndex, charSheet = null, traveler = null) {
   const entrySec = isValidSecId(entrySection) ? entrySection : (isValidSecId(state.startSection) ? state.startSection : 1);
 
   // Activate the specific run index (guaranteed to exist after series sync)
@@ -56,6 +57,7 @@ export function startPortalRun(entrySection, runIndex, charSheet = null) {
       if (!pt.equipment) { pt.equipment = eqTmpl; pt.equipmentVisible = eqVisTmpl; }
     }
     if (charSheet) pt.charSheet = JSON.parse(JSON.stringify(charSheet));
+    applyTraveler(pt, traveler);
     // Notify after activating the run so display callbacks read current state.
     setViewingPt(null, true);
     saveState();
@@ -71,6 +73,7 @@ export function startPortalRun(entrySection, runIndex, charSheet = null) {
   }
   pt = state.playthroughs[runIndex];
   pt.charSheet = JSON.parse(JSON.stringify(charSheet || state.charSheetTemplate || { fields: [] }));
+  applyTraveler(pt, traveler);
   state.activePtIndex = runIndex;
   if (!state.graph[entrySec]) state.graph[entrySec] = { choices: [], discovered: true };
   pt.portalEntry = true;

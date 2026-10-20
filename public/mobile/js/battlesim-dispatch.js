@@ -46,4 +46,14 @@ export async function openSimForBook(bookId) {
     _initialized.add(id);
   }
   document.getElementById(_triggerButtonId(id))?.click();
+  // A journey may have arrived on desktop before this panel was ever opened.
+  const core = await import('../../js/core/state.js');
+  const run = core.currentPlaythrough();
+  if (run?.openWorldPendingCharacter?.bookId === id) {
+    const { applyPendingSimulatorCharacter } = await import('../../js/battlesim/travel-character.js');
+    if (core.currentBookId === id && core.currentPlaythrough() === run && applyPendingSimulatorCharacter(run, id)) {
+      mod.render?.();
+      await core.saveState();
+    }
+  }
 }

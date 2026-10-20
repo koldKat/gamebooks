@@ -1,7 +1,7 @@
 // Open-world run synchronization, portal travel, and cross-book reachability.
 
 import {
-  state, saveState, apiFetch, isValidSecId, setViewingPt, currentPlaythrough, currentBookId, currentSection,
+  state, saveState, flushStateSaves, apiFetch, isValidSecId, setViewingPt, currentPlaythrough, currentBookId, currentSection,
 } from '../core/state.js';
 import {
   network, visNodes, setGraphCrossBookRoute,
@@ -15,6 +15,9 @@ import { t } from '../i18n.js';
 import { setOnCharSheetSaved } from './charsheet.js';
 import { instantiateLoadout } from '../equipment.js';
 import { getCachedBooks } from '../books.js';
+import { captureTraveler, applyTraveler } from './traveler.js';
+import { addSimulatorTraveler, applyPendingSimulatorCharacter } from '../battlesim/travel-character.js';
+import { supportsBattleSim, setBattleSimCharacterTransferHook } from '../battlesim/loader.js';
 
 let _hooks = {};
 export function setOpenWorldHooks(h) { _hooks = h || {}; }
@@ -25,10 +28,17 @@ let _owSrcSection   = null; // current section in that source book
 let _owSrcBookState = null; // full state object of the source book (fetched async)
 let _owCrossBookRoute = null; // Map<targetSection, {srcPortalSection, portal, entrySection}>
 let _cachedSeriesRuns = null; // last result of _syncSeriesRuns, reused by onRunActivated
+let _portalTravelPromise = null;
 
 export function getOwSrcBookId()      { return _owSrcBookId; }
 export function getOwSrcSection()     { return _owSrcSection; }
 export function getOwCrossBookRoute() { return _owCrossBookRoute; }
+
+function seriesForBook(bookId) {
+  const books = getCachedBooks() || [];
+  const book = books.find(item => item.id === bookId);
+  return book?.series_id ?? books.find(item => item.id === book?.parent_book_id)?.series_id;
+}
 
 export function clearOpenWorldState() {
   _owSrcBookId      = null;
@@ -222,33 +232,80 @@ export async function _computeCrossBookReachability(seriesRuns, bookId) {
 
 // ── Portal travel handler ─────────────────────────────────────────────────────
 export async function _handlePortalTravel(portal) {
+  if (_portalTravelPromise) return _portalTravelPromise;
+  _portalTravelPromise = travelThroughPortal(portal).finally(() => { _portalTravelPromise = null; });
+  return _portalTravelPromise;
+}
+
+async function restoreFailedPortalSource(bookId, startedAt, targetBookId) {
+  // A partner/tab may have changed this book while the destination was loading.
+  // Restore only this run's pause flags in a freshly fetched state.
+  try {
+    const response = await apiFetch(`/api/books/${bookId}/state`);
+    if (!response.ok) return null;
+    const latest = await response.json();
+    const run = latest.playthroughs?.find(p => p.startedAt != null && String(p.startedAt) === String(startedAt));
+    if (!run || run.result !== 'portal' || run.portalTarget?.bookId !== targetBookId) return latest;
+    run.completed = false;
+    run.result = null;
+    delete run.portalTarget;
+    const saved = await apiFetch(`/api/books/${bookId}/state`, {method:'PUT',body:JSON.stringify(latest)});
+    return saved.ok ? latest : null;
+  } catch { return null; }
+}
+
+async function travelThroughPortal(portal) {
   const { targetBookId, targetSection } = portal;
   if (!targetBookId || !targetSection) return;
 
   const pt = currentPlaythrough();
   const activeRunIndex = state.activePtIndex;
-  if (activeRunIndex === null || activeRunIndex === undefined) return;
-
-  const charSheet = pt ? JSON.parse(JSON.stringify(pt.charSheet || { fields: [] })) : null;
-  const seriesId = _hooks.getCurrentBookSeriesId?.();
-  if (pt && seriesId) {
-    await apiFetch(`/api/series/${seriesId}/runs/${activeRunIndex}`, {
-      method: 'PUT',
-      body: JSON.stringify({ char_data: charSheet }),
-    }).catch(() => {});
-  }
-
-  if (pt) {
-    pt.completed    = true;
-    pt.result       = 'portal';
-    pt.portalTarget = { bookId: targetBookId, section: targetSection };
-    await saveState();
-  }
+  if (!pt || activeRunIndex === null || activeRunIndex === undefined) return;
 
   const targetBook = (getCachedBooks() || []).find(b => b.id === targetBookId);
   if (!targetBook) { showAlert(t('openworld.target_not_in_library', { id: targetBookId })); return; }
+  const sourceBookId = currentBookId, sourceState = state;
+  const seriesId = _hooks.getCurrentBookSeriesId?.();
+  const targetSeriesId = targetBook.series_id ?? (getCachedBooks() || []).find(b => b.id === targetBook.parent_book_id)?.series_id;
+  if (!seriesId || seriesForBook(sourceBookId) !== seriesId || targetSeriesId !== seriesId) {
+    showAlert(t('openworld.travel_failed')); return;
+  }
 
-  await _hooks.showMain?.(
+  let charSheet;
+  let traveler;
+  try {
+    traveler = await addSimulatorTraveler(captureTraveler(pt), pt, currentBookId, targetBookId, supportsBattleSim);
+  } catch {
+    showAlert(t('openworld.travel_failed'));
+    return;
+  }
+  if (pt) {
+    await flushStateSaves();
+    if (state !== sourceState || currentBookId !== sourceBookId || currentPlaythrough() !== pt) return;
+    traveler = await addSimulatorTraveler(captureTraveler(pt), pt, sourceBookId, targetBookId, supportsBattleSim);
+    if (state !== sourceState || currentBookId !== sourceBookId || currentPlaythrough() !== pt) return;
+    charSheet = structuredClone(pt.charSheet || { fields: [] });
+    const previous = { completed: pt.completed, result: pt.result, portalTarget: pt.portalTarget };
+    pt.completed    = true;
+    pt.result       = 'portal';
+    pt.portalTarget = { bookId: targetBookId, section: targetSection };
+    try {
+      const characterResponse = await apiFetch(`/api/series/${seriesId}/runs/${activeRunIndex}`, {
+        method: 'PUT', body: JSON.stringify({ char_data: charSheet }),
+      });
+      if (!characterResponse.ok) throw new Error('Character save failed');
+      const response = await apiFetch(`/api/books/${sourceBookId}/state`, { method: 'PUT', body: JSON.stringify(sourceState) });
+      if (!response.ok) throw new Error('Source save failed');
+    } catch {
+      Object.assign(pt, previous);
+      showAlert(t('openworld.travel_failed'));
+      return;
+    }
+  }
+
+  let loaded;
+  try {
+    loaded = await _hooks.showMain?.(
     targetBook.id,
     targetBook.isbn || null, targetBook.issn || null, targetBook.asin || null,
     targetBook.cover_path ? `/covers/${targetBook.cover_path}` : null,
@@ -258,7 +315,25 @@ export async function _handlePortalTravel(portal) {
     targetBook.created_by === null || targetBook.created_by === _hooks.getCurrentUserId?.(),
     targetBook.series_name || null, targetBook.series_number || null,
     !!targetBook.is_container, targetBook.parent_book_id ?? null, targetBook.book_order ?? null,
-  );
+    );
+  } catch { loaded = false; }
+  if (loaded === false || currentBookId !== targetBookId || !state.playthroughs[activeRunIndex]) {
+    pt.completed = false;
+    pt.result = null;
+    delete pt.portalTarget;
+    const restored = await restoreFailedPortalSource(sourceBookId, pt.startedAt, targetBookId);
+    if (restored && state === sourceState && currentBookId === sourceBookId) {
+      Object.assign(sourceState, restored);
+      render();
+    }
+    showAlert(t('openworld.travel_failed'));
+    return;
+  }
+  const latestRun = _cachedSeriesRuns?.[activeRunIndex];
+  if (latestRun?.completed && latestRun.result !== 'portal') {
+    showAlert(t('openworld.run_finished'));
+    return;
+  }
 
   // Clear cross-book context BEFORE startPortalRun so the render doesn't draw
   // stale dashed borders on cross-book reachable nodes.
@@ -273,7 +348,8 @@ export async function _handlePortalTravel(portal) {
     _cachedSeriesRuns[activeRunIndex].last_book_id = targetBookId;
     _cachedSeriesRuns[activeRunIndex].last_section = String(targetSection);
   }
-  startPortalRun(targetSection, activeRunIndex, charSheet);
+  startPortalRun(targetSection, activeRunIndex, charSheet, traveler);
+  await flushStateSaves();
   _focusNodeAfterLoad(targetSection);
 }
 
@@ -361,22 +437,39 @@ function _findPathInGraph(graph, from, to, mode) {
 export async function doJumpCrossBook(targetSection, mode) {
   const route = _owCrossBookRoute?.get(targetSection);
   if (!route || !_owSrcBookId) { showAlert(t('ctx.fasttravel.no_path')); return; }
+  const sourceBookId = _owSrcBookId, sourceSection = _owSrcSection;
+  const targetState = state, targetBookId = currentBookId;
+  const seriesId = _hooks.getCurrentBookSeriesId?.();
+  if (!seriesId || seriesForBook(sourceBookId) !== seriesId || seriesForBook(targetBookId) !== seriesId) {
+    showAlert(t('openworld.travel_failed')); return;
+  }
 
   // Always re-fetch source book state to avoid overwriting concurrent changes.
-  const freshR = await apiFetch(`/api/books/${_owSrcBookId}/state`).catch(() => null);
+  const freshR = await apiFetch(`/api/books/${sourceBookId}/state`).catch(() => null);
   if (!freshR?.ok) { showAlert(t('ctx.fasttravel.no_path')); return; }
-  _owSrcBookState = await freshR.json().catch(() => null);
-  if (!_owSrcBookState?.graph || !_owSrcBookState?.playthroughs) { showAlert(t('ctx.fasttravel.no_path')); return; }
+  const sourceState = await freshR.json().catch(() => null);
+  if (state !== targetState || currentBookId !== targetBookId) return;
+  if (!sourceState?.graph || !sourceState?.playthroughs) { showAlert(t('ctx.fasttravel.no_path')); return; }
+  _owSrcBookState = sourceState;
 
   const { srcPortalSection, portal, entrySection } = route;
   const activeIdx = state.activePtIndex;
-  const srcPt = _owSrcBookState.playthroughs?.[activeIdx];
-  if (!srcPt?.path) { showAlert(t('ctx.fasttravel.no_path')); return; }
+  const srcPt = sourceState.playthroughs?.[activeIdx];
+  const pt = state.playthroughs[activeIdx];
+  if (!srcPt?.path || !pt) { showAlert(t('ctx.fasttravel.no_path')); return; }
+  if (srcPt.completed && srcPt.result !== 'portal' || pt.completed && pt.result !== 'portal') {
+    showAlert(t('openworld.run_finished'));
+    return;
+  }
+  let traveler;
+  try { traveler = await addSimulatorTraveler(captureTraveler(srcPt), srcPt, sourceBookId, targetBookId, supportsBattleSim); }
+  catch { showAlert(t('openworld.travel_failed')); return; }
+  if (state !== targetState || currentBookId !== targetBookId) return;
 
   // Step 1: Build path in source book to the portal section
-  const srcFrom = _owSrcSection;
+  const srcFrom = sourceSection;
   if (srcFrom !== srcPortalSection) {
-    const srcPath = _findPathInGraph(_owSrcBookState.graph, srcFrom, srcPortalSection, mode);
+    const srcPath = _findPathInGraph(sourceState.graph, srcFrom, srcPortalSection, mode);
     if (!srcPath || srcPath.length < 2) { showAlert(t('ctx.fasttravel.no_path')); return; }
     for (let i = 1; i < srcPath.length; i++) srcPt.path.push(srcPath[i]);
   }
@@ -387,14 +480,26 @@ export async function doJumpCrossBook(targetSection, mode) {
   srcPt.portalTarget = { bookId: currentBookId, section: entrySection };
 
   // Step 3: Save source book's state
-  await apiFetch(`/api/books/${_owSrcBookId}/state`, {
-    method: 'PUT',
-    body: JSON.stringify(_owSrcBookState),
-  }).catch(() => {});
+  try {
+    if (srcPt.charSheet && seriesId) {
+      const response = await apiFetch(`/api/series/${seriesId}/runs/${activeIdx}`, {
+        method: 'PUT', body: JSON.stringify({ char_data: srcPt.charSheet }),
+      });
+      if (!response.ok) throw new Error('Character save failed');
+    }
+    const response = await apiFetch(`/api/books/${sourceBookId}/state`, {
+      method: 'PUT', body: JSON.stringify(sourceState),
+    });
+    if (!response.ok) throw new Error('Source save failed');
+  } catch { showAlert(t('openworld.travel_failed')); return; }
+  if (state !== targetState || currentBookId !== targetBookId) {
+    await restoreFailedPortalSource(sourceBookId, srcPt.startedAt, targetBookId);
+    return;
+  }
 
   // Step 4: Activate current book's run at the portal entry section
-  const pt = state.playthroughs[activeIdx];
-  if (!pt) return;
+  if (srcPt.charSheet) pt.charSheet = structuredClone(srcPt.charSheet);
+  applyTraveler(pt, traveler);
   pt.completed = false;
   pt.result    = null;
   delete pt.portalTarget;
@@ -432,6 +537,11 @@ export async function doJumpCrossBook(targetSection, mode) {
 
 // Wire open-world callbacks after book and series context is known.
 export function setupOpenWorldForBook(bookId, seriesId, isOpenWorld) {
+  setBattleSimCharacterTransferHook(isOpenWorld ? (simBookId) => {
+    if (simBookId !== currentBookId || !applyPendingSimulatorCharacter(currentPlaythrough(), simBookId)) return false;
+    saveState();
+    return true;
+  } : null);
   setOpenWorldContext({
     isOpenWorld,
     seriesId,

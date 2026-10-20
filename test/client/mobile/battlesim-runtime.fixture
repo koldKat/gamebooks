@@ -4,7 +4,11 @@ import { createContext, SourceTextModule, SyntheticModule } from 'node:vm';
 
 const translated = new Set(), calls = [], imports = [];
 let failing = null;
-const context = createContext({ document: { getElementById: id => ({ click: () => calls.push(['click', id]) }) } });
+let mobileRun = null;
+const context = createContext({ structuredClone, document: { getElementById: id => ({ click: () => {
+  calls.push(['click', id]);
+  if (id === 'sim214-btn' && mobileRun && !mobileRun.sim214) mobileRun.sim214 = {player:{stamina:20},history:[],log:[]};
+} }) } });
 async function stub(exports) {
   const module = new SyntheticModule(Object.keys(exports), function () {
     for (const [name, value] of Object.entries(exports)) this.setExport(name, value);
@@ -15,6 +19,12 @@ async function stub(exports) {
 const module = new SourceTextModule(readFileSync(process.argv[1], 'utf8'), {
   context,
   importModuleDynamically: async specifier => {
+    if (specifier === '../../js/core/state.js') return stub({currentBookId:214,currentPlaythrough:()=>mobileRun,
+      saveState:async()=>calls.push(['saved'])});
+    if (specifier === '../../js/battlesim/travel-character.js') {
+      const helper = new SourceTextModule(readFileSync(process.argv[1].replace(/mobile\/js\/battlesim-dispatch\.js$/, 'js/battlesim/travel-character.js'),'utf8'), {context});
+      await helper.link(()=>{});await helper.evaluate();return helper;
+    }
     if (specifier === '../../js/i18n/battlesim.js') return stub({
       loadBattleSimTranslations: async id => {
         if (id === failing) throw Error('Translation failure');
@@ -25,7 +35,7 @@ const module = new SourceTextModule(readFileSync(process.argv[1], 'utf8'), {
     const id = Number(specifier.match(/battlesim(\d+)/)[1]);
     assert.ok(translated.has(id), 'translations ready before mobile module evaluation');
     imports.push(id);
-    return stub({ init: () => calls.push(['init', id]) });
+    return stub({ init: () => calls.push(['init', id]),render:()=>calls.push(['render',id]) });
   },
 });
 await module.link(specifier => {
@@ -48,3 +58,10 @@ failing = null; await open(215);
 assert.equal(calls.filter(call => call[0] === 'init' && call[1] === 215).length, 1);
 const count = imports.length; await open(999);
 assert.equal(imports.length, count);
+mobileRun = {openWorldCharacters:{'fighting-fantasy':{player:{stamina:2}}},
+  openWorldPendingCharacter:{bookId:214,stateKey:'sim214',family:'fighting-fantasy'}};
+await open(214);
+assert.equal(mobileRun.sim214.player.stamina,2,'mobile first-open consumes the saved traveling character');
+assert.equal(mobileRun.openWorldPendingCharacter,undefined);
+assert.deepEqual(mobileRun.sim214.history,[]);
+assert.ok(calls.some(call=>call[0]==='saved'));

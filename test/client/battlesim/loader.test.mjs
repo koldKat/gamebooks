@@ -21,7 +21,7 @@ test('desktop battle-sim relocation retains the registry and visibility lifecycl
     .replace("import {prepareBattleSimLayout, simulatorOverlay} from './layout.js';\n\n", '')
     .replace(/const SUPPORTED_BATTLE_SIM_BOOKS = new Set\(\[[\s\S]*?\]\);/, 'SUPPORTED_SET');
   assert.equal(createHash('sha256').update(unchanged).digest('hex'),
-    'c2ecc98cd90a728ec1373959043876751c0efd0669b2ed41667bf06c64550ba0');
+    '3cce23bb8c59cf73e60f839520bfa24a895c9062049d4f4ac8efc9599ac32069');
   assert.deepEqual(source.match(/^import\s.+$/gm),
     ["import {prepareBattleSimLayout, simulatorOverlay} from './layout.js';"],
     'only the lightweight layout helper is eager; simulators remain lazy');

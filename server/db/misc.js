@@ -52,11 +52,13 @@ const _exportRow = ({ state_data, notebook, user_rating, series_name, series_ope
 const _exportQuery = `
   SELECT b.id, b.name, b.total_sections, b.discoverable_sections, b.isbn, b.issn, b.asin,
          b.pages, b.authors, b.description, b.created_at, b.cover_path, b.is_public,
-         ub.state_data, ub.notebook, ub.rating AS user_rating,
+         ub.state_data, COALESCE(sn.notebook, ub.notebook) AS notebook, ub.rating AS user_rating,
          s.name AS series_name, s.is_open_world AS series_open_world
   FROM user_books ub
   JOIN books b ON b.id = ub.book_id
-  LEFT JOIN series s ON s.id = b.series_id`;
+  LEFT JOIN books p ON p.id = b.parent_book_id
+  LEFT JOIN series s ON s.id = COALESCE(b.series_id, p.series_id)
+  LEFT JOIN series_notebooks sn ON sn.user_id = ub.user_id AND sn.series_id = s.id AND s.is_open_world = 1`;
 
 function getAllBooksForExport(userId) {
   const rows = db.prepare(`${_exportQuery} WHERE ub.user_id = ?`).all(userId);

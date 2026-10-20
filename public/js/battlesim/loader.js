@@ -23,6 +23,34 @@ const _loaded = new Map();
 const _loading = new Map();
 let _active = null;
 let _showSeq = 0;
+let _characterTransferHook = null;
+
+export const supportsBattleSim = bookId => SUPPORTED_BATTLE_SIM_BOOKS.has(Number(bookId));
+export function setBattleSimCharacterTransferHook(hook) { _characterTransferHook = hook; }
+
+function renderSimulator(sim) {
+  sim.render();
+  if (_characterTransferHook?.(sim.id)) sim.render();
+}
+
+// Legacy panels initialize saved state only when opened. Refresh after their
+// click/shortcut handlers have run, before the browser paints the character.
+let _characterRefreshQueued = false;
+function refreshOpenedCharacter(event) {
+  const sim = _active;
+  if (!sim || !_characterTransferHook || _characterRefreshQueued) return;
+  if (event.type === 'click') {
+    const button = document.getElementById(sim.id === 829 ? 'battlesim-btn' : `sim${sim.id}-btn`);
+    if (!button?.contains(event.target)) return;
+  } else if (event.code !== 'KeyS') return;
+  _characterRefreshQueued = true;
+  queueMicrotask(() => {
+    _characterRefreshQueued = false;
+    if (_active === sim) renderSimulator(sim);
+  });
+}
+document.addEventListener?.('click', refreshOpenedCharacter, true);
+document.addEventListener?.('keydown', refreshOpenedCharacter, true);
 
 function _hideActiveBattleSimOnly() {
   _active?.setVisible(false);
@@ -80,9 +108,9 @@ export async function showBattleSimForBook(bookId) {
   sim.id = numericId;
   _active = sim;
   sim.setVisible(true);
-  sim.render();
+  renderSimulator(sim);
 }
 
 export function renderActiveBattleSim() {
-  _active?.render();
+  if (_active) renderSimulator(_active);
 }

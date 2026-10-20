@@ -98,3 +98,24 @@ failingTranslationId = null;
 await loader.showBattleSimForBook(220);
 assert.equal(imports.filter(id => id === 220).length, 1, 'translation failure can be retried');
 assert.equal(calls.filter(call => call[0] === 220 && call[1] === 'init').length, 1);
+assert.equal(loader.supportsBattleSim(674), true);
+assert.equal(loader.supportsBattleSim('198'), true);
+assert.equal(loader.supportsBattleSim(99000), false);
+let transferPending = true, transferCalls = 0;
+loader.setBattleSimCharacterTransferHook(id => {
+  assert.equal(id, 220);
+  transferCalls++;
+  if (!transferPending) return false;
+  transferPending = false;
+  return true;
+});
+const rendersBeforeTransfer = calls.filter(call => call[0] === 220 && call[1] === 'render').length;
+loader.renderActiveBattleSim();
+assert.equal(calls.filter(call => call[0] === 220 && call[1] === 'render').length, rendersBeforeTransfer + 2,
+  'initialize local defaults, apply arriving stats once, then redraw them');
+loader.renderActiveBattleSim();
+assert.equal(calls.filter(call => call[0] === 220 && call[1] === 'render').length, rendersBeforeTransfer + 3);
+assert.equal(transferCalls, 2);
+loader.setBattleSimCharacterTransferHook(null);
+loader.renderActiveBattleSim();
+assert.equal(transferCalls, 2, 'ordinary series leave no open-world transfer callback');
