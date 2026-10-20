@@ -185,6 +185,7 @@ try {
      const game=active()['sim'+id];
      check(game,'real simulator initializes '+id);
      game.history=[{enemy:'Existing '+id,outcome:'win',ts:123}];
+     game.log=['Local battle log '+id];
      await save();
    }
    if(family==='Fighting Fantasy')for(const id of simIds.slice(1))delete store.get(id).playthroughs[0]['sim'+id];
@@ -210,12 +211,20 @@ try {
      check(Number(input.value)===3-index,'simulator UI displays arriving reduced stamina '+id);
      equal(game.history,family==='Fighting Fantasy'&&id!==simIds[0]?[]:[{enemy:'Existing '+id,outcome:'win',ts:123}],
        'local simulator history remains unchanged '+id);
+     const expectedLog=family==='Fighting Fantasy'&&id!==simIds[0]?[]:['Local battle log '+id];
+     equal(game.log,expectedLog,'battle logs stay with their own book '+id);
+     const logText=document.getElementById('sim'+id+'-log').textContent;
+     for(const other of simIds.filter(other=>other!==id)) {
+       check(!logText.includes('Local battle log '+other),'another book log is never displayed '+id);
+     }
+     if(expectedLog.length)check(logText.includes(expectedLog[0]),'returning displays this book saved log '+id);
      check(!game.fight,'source simulator fight never follows to '+id);
      hero.stamina--;renderActiveBattleSim();await save();
    }
    await core.loadState(simIds[0]);await _syncSeriesRuns(77);await showBattleSimForBook(simIds[0]);
    const game=active()['sim'+simIds[0]];
    check((game.character||game.player).stamina===0,'zero simulator stamina survives reload '+family);
+   equal(game.log,['Local battle log '+simIds[0]],'reload preserves the source book own log '+family);
  }
  finishDuringLoad=true;await travel(199);finishDuringLoad=false;
  check(seriesRun.completed===1&&!core.currentPlaythrough(),'a run completed during travel is never revived');
@@ -223,7 +232,7 @@ try {
    roundTrip:true,reload:true,metadata:true,clearedItems:true,clearedNotes:true,notebookLoadGuards:true,staleNotebookResponses:true,nativeMobileNotebook:true,
    legacyDataPreserved:true,otherRunsPreserved:true,preSeriesRunsPreserved:true,characterSaveFailure:true,sourceSaveFailure:true,targetLoadFailure:true,
    invalidDestinations:true,doubleClick:true,crossBookFastTravel:true,completedRunsNeverRevived:true,
-   realFabledSimulatorUi:true,realFightingFantasyUi:true,zeroStaminaReload:true});
+   realFabledSimulatorUi:true,realFightingFantasyUi:true,localBattleLogsAndHistory:true,zeroStaminaReload:true});
 }catch(error){document.body.dataset.failure=error.stack;}
 `;
 (async () => {
