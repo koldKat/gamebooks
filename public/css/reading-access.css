@@ -44,6 +44,12 @@
   border-top: 1px solid #374151;
 }
 .reading-frontmatter--structured p { margin: 0 0 0.85rem; }
+.reading-frontmatter--structured p.reading-hanging {
+  margin: 0;
+  padding-left: 1.1em;
+  text-indent: -1.1em;
+  text-align: left;
+}
 .reading-frontmatter--structured hr {
   border: 0;
   border-top: 1px solid #4b5563;
