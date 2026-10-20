@@ -530,7 +530,7 @@ export function renderUserBooksTable(data, userId) {
     actCell.style.cssText = 'white-space:nowrap';
     actCell.appendChild(mkEditBtn(() => editAdminBook(b.id)));
     actCell.appendChild(document.createTextNode('\u00a0'));
-    actCell.appendChild(mkBtn('Watch', 'btn-info', () => window.open(`/admin/watch?userId=${userId}&bookId=${b.id}`, '_blank')));
+    actCell.appendChild(mkBtn('Watch', 'btn-watch', () => window.open(`/admin/watch?userId=${userId}&bookId=${b.id}`, '_blank')));
     actCell.appendChild(document.createTextNode('\u00a0'));
     actCell.appendChild(mkBtn('Gift', 'btn-info', () => showGiftModal(b.id, b.name, userId)));
     actCell.appendChild(document.createTextNode('\u00a0'));
