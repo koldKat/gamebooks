@@ -16,9 +16,12 @@ let _sseSource    = null;
 let _sseBookId    = null;
 let _currentParty = null;
 let _connectGen   = 0;
+let _stateRetryTimer = null;
 
 export function disconnectPartySSE() {
   _connectGen++; // discard any in-flight connectPartySSE() call for a book we've since navigated away from
+  clearTimeout(_stateRetryTimer);
+  _stateRetryTimer = null;
   if (_sseSource) { _sseSource.close(); _sseSource = null; _sseBookId = null; }
   _sseBookId = null;
   _currentParty = null;
@@ -43,9 +46,11 @@ export async function connectPartySSE(bookId) {
       _sseBookId = bookId;
       const isCurrent = () => gen === _connectGen && currentBookId === bookId;
       // Drain hints sequentially: a slow older GET must never replace a newer save.
-      let refreshing = false, refreshAgain = false, keepPositions = true;
+      let refreshing = false, refreshAgain = false, keepPositions = true, failures = 0;
       const refreshState = async (preservePositions = true) => {
         if (!isCurrent()) return;
+        clearTimeout(_stateRetryTimer);
+        _stateRetryTimer = null;
         refreshAgain = true;
         keepPositions = keepPositions && preservePositions;
         if (refreshing) return;
@@ -70,11 +75,23 @@ export async function connectPartySSE(bookId) {
               setViewingPt(updatedRun?.completed ? updatedRun : null);
               render();
               network?.redraw();
+              failures = 0;
               _hooks.scheduleRewardProfileRefresh?.();
+            } catch (error) {
+              keepPositions = keepPositions && preserve;
+              throw error;
             } finally { suppressAutoNav(false); }
           }
         } catch (_) {
-          // A later hint or reconnect retries without replacing the canvas with an empty state.
+          // A transient failed GET must recover even if this was the party's last move.
+          // Back off only while failing; healthy connections do not poll the state.
+          if (isCurrent()) {
+            const delay = Math.min(1000 * 2 ** Math.min(failures++, 5), 30000);
+            _stateRetryTimer = setTimeout(() => {
+              _stateRetryTimer = null;
+              refreshState(keepPositions);
+            }, delay);
+          }
         } finally { refreshing = false; }
       };
       _sseSource = connectEventStream(() => `/api/books/${bookId}/stream?token=${encodeURIComponent(getToken())}`, {

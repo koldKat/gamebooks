@@ -87,6 +87,47 @@ test('opening/reconnecting catches moves missed while the stream was disconnecte
   assert.deepEqual(b.frames.at(-1).state.playthroughs[0].path, [1, 3]);
 });
 
+test('a failed progress refresh retries the last move without another hint, for every party member', async () => {
+  const s = setup(), a = s.client(), b = s.client(), c = s.client();
+  await a.open(); await b.open(); await c.open();
+  b.fail = true;
+  await a.run('state.playthroughs[0].path.push(43); state.graph[43] = { choices: [44, 45] }; saveState()');
+  await tick();
+  assert.equal(b.run('currentSection()'), 1);
+  assert.equal(c.run('currentSection()'), 43);
+  const retry = [...b.timers.values()].find(t => t.ms === 1000);
+  assert.ok(retry, 'the failed GET schedules recovery even without a new party event');
+  b.fail = false;
+  retry.fn(); await tick();
+  assert.equal(b.run('currentSection()'), 43);
+  assert.deepEqual(b.frames.at(-1).state.graph[43].choices, [44, 45]);
+  assert.equal(b.depth, 0);
+});
+
+test('failed refresh retries back off and are cancelled when leaving the party canvas', async () => {
+  const s = setup(), a = s.client();
+  await a.open();
+  a.fail = true;
+  a.emit(); await tick();
+  const [firstId, first] = [...a.timers.entries()].find(([,t]) => t.ms === 1000);
+  a.timers.delete(firstId); first.fn(); await tick();
+  assert.ok([...a.timers.values()].some(t => t.ms === 2000));
+  a.run('disconnectPartySSE()');
+  assert.equal(a.timers.size, 0, 'leaving cancels both stream and refresh timers');
+});
+
+test('a failed reconnect retries the full position catch-up as well as progress', async () => {
+  const s = setup(), a = s.client();
+  await a.open();
+  a.run('state.positions[1] = { x: 10, y: 20 }');
+  s.saved = { ...initial(), positions: { 1: { x: 300, y: 400 } } };
+  a.fail = true;
+  a.streams.at(-1).onopen(); await tick();
+  a.fail = false;
+  [...a.timers.values()].find(t => t.ms === 1000).fn(); await tick();
+  assert.equal(a.run('state.positions[1].x'), 300);
+});
+
 test('completion keeps the finished shared path visible and rebinds viewed run objects', async () => {
   const s = setup(), a = s.client(), b = s.client();
   await a.open(); await b.open();

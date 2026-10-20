@@ -84,8 +84,13 @@ for (let id = 0; id < 2; id++) {
  a.play.render(); await a.data.saveState(); await wait(150);
  await drag(b,['12-L'],-250,450);
  check(a.graph.network.getPositions(['12-L'])['12-L'].x === -250,'Alphanumeric node position reaches partner');
+ b.failLoad = true;
  a.play.navigate(2); await wait(150);
+ check(b.data.currentSection() === 1, 'Failed state GET preserves previous progress');
+ b.failLoad = false;
+ await wait(1100);
  check(b.data.currentSection() === 2, 'Remote active section');
+ check(b.graph.network.body.container.ownerDocument.querySelector('#playthrough-panel .section-display').textContent.trim() === '2', 'Section panel recovers without another move');
  check(b.graph.visNodes.get(2).color.background === a.graph.visNodes.get(2).color.background, 'Remote current-node canvas color');
  check(b.graph.visEdges.get('1>2').width === 2.5, 'Remote path highlighted');
  b.play.navigate(4); await wait(150);
@@ -103,7 +108,7 @@ for (let id = 0; id < 2; id++) {
  check(b.data.state.graph[4].note === 'Changed while disconnected', 'Reconnect catches missed save');
  check(b.graph.network.getPositions([2])[2].x === 900,'Reconnect restores missed coordinate patch');
  for (const c of clients) {c.party.disconnectPartySSE();c.graph.destroyNetwork()}
- document.body.dataset.test = JSON.stringify({snappedGroupDragging:true,alphanumericDragging:true,reconnectPositions:true,bidirectionalNodeDragging:true,failedLoadPreservesBothPlayers:true,twoRealCanvases:true,bidirectionalMoves:true,currentNodeColor:true,pathHighlight:true,completion:true,reconnect:true,productionWrites:0});
+ document.body.dataset.test = JSON.stringify({failedProgressRefreshRecovery:true,sectionPanelRecovery:true,snappedGroupDragging:true,alphanumericDragging:true,reconnectPositions:true,bidirectionalNodeDragging:true,failedLoadPreservesBothPlayers:true,twoRealCanvases:true,bidirectionalMoves:true,currentNodeColor:true,pathHighlight:true,completion:true,reconnect:true,productionWrites:0});
 })().catch(e=>fail(e.stack));
 </script>`;
 (async()=>{fs.writeFileSync(file,html); try {
