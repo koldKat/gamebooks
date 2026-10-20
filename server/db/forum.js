@@ -5,7 +5,7 @@
 
 const { db } = require('./connection');
 const { awardXp } = require('./xp');
-const { getAttachments } = require('./feedback');
+const { getAttachments, getAttachmentsForLinks } = require('./feedback');
 
 function forumGetLatestPostAt() {
   const row = db.prepare('SELECT MAX(last_post_at) AS t FROM forum_threads').get();
@@ -67,7 +67,9 @@ function forumGetThread(id) {
     LEFT JOIN users u ON u.id = p.user_id
     WHERE p.thread_id = ?
     ORDER BY p.created_at ASC
-  `).all(id).map(p => ({ ...p, attachments: getAttachments('forum_post', p.id) }));
+  `).all(id);
+  const attachments = getAttachmentsForLinks('forum_post', posts.map(p => p.id));
+  for (const post of posts) post.attachments = attachments.get(post.id) || [];
   return { thread, posts };
 }
 

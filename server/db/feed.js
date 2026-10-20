@@ -67,8 +67,9 @@ function getFeed() {
      JOIN users u       ON u.id = xe.user_id
      LEFT JOIN series s ON s.id = b.series_id
      LEFT JOIN books p  ON p.id = b.parent_book_id
-     WHERE xe.event = 'rate_book'`
-  ).all();
+     WHERE xe.event = 'rate_book' AND xe.created_at >= ?
+       AND b.is_public = 1 AND COALESCE(u.hide_from_feed, 0) = 0 AND ub.rating IS NOT NULL`
+  ).all(cutoffSec);
   for (const row of ratedBookRows) {
     const eventMs = (row.created_at || 0) * 1000;
     const bookIsPublic = row.is_public === 1;
@@ -98,8 +99,9 @@ function getFeed() {
      JOIN series s        ON s.id = CAST(xe.ref AS INTEGER)
      JOIN user_series us  ON us.user_id = xe.user_id AND us.series_id = s.id
      JOIN users u         ON u.id = xe.user_id
-     WHERE xe.event = 'rate_series' AND s.is_public = 1`
-  ).all();
+     WHERE xe.event = 'rate_series' AND xe.created_at >= ? AND s.is_public = 1
+       AND COALESCE(u.hide_from_feed, 0) = 0 AND us.rating IS NOT NULL`
+  ).all(cutoffSec);
   for (const row of ratedSeriesRows) {
     const eventMs = (row.created_at || 0) * 1000;
     if (eventMs < cutoffMs || row.hide_from_feed || row.rating == null) continue;
@@ -484,11 +486,20 @@ function getFeed() {
       partyId: row.party_id || null });
   }
 
+  // First-outcome helpers share one parsed state, scoped to this feed request.
+  let lastStateJson, lastParsedState;
+  function _parseRunState(json) {
+    if (json !== lastStateJson) {
+      lastStateJson = json;
+      try { lastParsedState = JSON.parse(json); } catch { lastParsedState = null; }
+    }
+    return lastParsedState;
+  }
+
   // Resolve timestamp-based refs by startedAt; fall back to array indices for legacy refs.
   function _resolveRunIndex(stateDataJson, runKey) {
     if (runKey == null || !stateDataJson) return null;
-    let parsed;
-    try { parsed = JSON.parse(stateDataJson); } catch { return null; }
+    const parsed = _parseRunState(stateDataJson);
     const pts = parsed?.playthroughs;
     if (Array.isArray(pts)) {
       const idx = pts.findIndex(p => p && String(p.startedAt) === String(runKey));
@@ -511,7 +522,7 @@ function getFeed() {
   function _runPathInfo(stateDataJson, runIndex) {
     if (runIndex == null || !stateDataJson) return { pathLength: null, lastSection: null };
     try {
-      const parsed = JSON.parse(stateDataJson);
+      const parsed = _parseRunState(stateDataJson);
       const preRuns = parsed?.preSeriesRuns || [];
       const pt = runIndex < 0 ? preRuns[preRuns.length + runIndex] : parsed?.playthroughs?.[runIndex];
       const path = pt?.path || [];
@@ -605,7 +616,7 @@ function getFeed() {
       let runIsPublic = false;
       if (runIndex != null && row.state_data) {
         try {
-          const st = JSON.parse(row.state_data);
+          const st = _parseRunState(row.state_data);
           const stPreRuns = st.preSeriesRuns || [];
           const stPt = runIndex < 0 ? stPreRuns[stPreRuns.length + runIndex] : st.playthroughs?.[runIndex];
           runIsPublic = !!stPt?.isPublic;
@@ -1119,25 +1130,33 @@ function getPublicBookMeta(bookId) {
 
 function getAllPublicBooks(hasPdfAccess = false) {
   const rows = db.prepare(
-    `SELECT b.id, b.name, b.cover_path, b.created_at, b.published_at, b.authors,
+    `WITH child_stats AS (
+       SELECT parent_book_id, GROUP_CONCAT(name, '|||') AS child_names,
+              GROUP_CONCAT(id) AS child_ids, SUM(total_sections) AS total_sections,
+              MAX(has_battle_sim) AS has_battle_sim, MAX(has_live_reading) AS has_live_reading,
+              MAX(CASE WHEN pdf_path IS NOT NULL AND pdf_path != '' THEN 1 ELSE 0 END) AS has_pdf,
+              MAX(CASE WHEN epub_path IS NOT NULL AND epub_path != '' THEN 1 ELSE 0 END) AS has_epub
+       FROM books WHERE is_public = 1 AND parent_book_id IS NOT NULL GROUP BY parent_book_id
+     ), library_stats AS (
+       SELECT book_id, COUNT(DISTINCT user_id) AS library_count FROM user_books GROUP BY book_id
+     )
+     SELECT b.id, b.name, b.cover_path, b.created_at, b.published_at, b.authors,
             b.is_container, b.total_sections, b.max_section_number, b.description, b.has_battle_sim, b.has_live_reading,
             b.isbn, b.issn, b.asin, b.pages, b.pdf_path, b.epub_path,
             s.id AS series_id, CASE WHEN s.id IS NOT NULL THEN b.series_number END AS series_number, s.name AS series_name,
-            GROUP_CONCAT(c.name, '|||') AS child_names,
-            GROUP_CONCAT(c.id) AS child_ids,
-            COALESCE(SUM(c.total_sections), 0) AS children_total_sections,
-            COALESCE(MAX(c.has_battle_sim), 0) AS child_has_battle_sim,
-            COALESCE(MAX(c.has_live_reading), 0) AS child_has_live_reading,
-            COALESCE(MAX(CASE WHEN c.pdf_path IS NOT NULL AND c.pdf_path != '' THEN 1 ELSE 0 END), 0) AS child_has_pdf,
-            COALESCE(MAX(CASE WHEN c.epub_path IS NOT NULL AND c.epub_path != '' THEN 1 ELSE 0 END), 0) AS child_has_epub,
-            COUNT(DISTINCT ub.user_id) AS library_count
+            c.child_names, c.child_ids,
+            COALESCE(c.total_sections, 0) AS children_total_sections,
+            COALESCE(c.has_battle_sim, 0) AS child_has_battle_sim,
+            COALESCE(c.has_live_reading, 0) AS child_has_live_reading,
+            COALESCE(c.has_pdf, 0) AS child_has_pdf,
+            COALESCE(c.has_epub, 0) AS child_has_epub,
+            COALESCE(ub.library_count, 0) AS library_count
      FROM books b
-     LEFT JOIN books c ON c.parent_book_id = b.id AND c.is_public = 1
+     LEFT JOIN child_stats c ON c.parent_book_id = b.id
      LEFT JOIN series s ON s.id = b.series_id AND s.is_public = 1
-     LEFT JOIN user_books ub ON ub.book_id = b.id
+     LEFT JOIN library_stats ub ON ub.book_id = b.id
      WHERE (b.parent_book_id IS NULL OR b.parent_book_id = 0)
-       AND b.is_public = 1
-     GROUP BY b.id`
+       AND b.is_public = 1`
   ).all();
   return rows.map(r => ({
     id: r.id, name: r.name,
@@ -1186,21 +1205,25 @@ function getPublicBooksInSeries(seriesId) {
 
 function getAllPublicSeries() {
   return db.prepare(`
+    WITH child_stats AS (
+      SELECT parent_book_id, SUM(total_sections) AS total_sections FROM books
+      WHERE is_public = 1 AND parent_book_id IS NOT NULL GROUP BY parent_book_id
+    ), book_stats AS (
+      SELECT b.series_id, COUNT(*) AS book_count,
+        SUM(CASE WHEN b.is_container = 1 THEN COALESCE(c.total_sections, 0)
+                 ELSE b.total_sections END) AS total_sections
+      FROM books b LEFT JOIN child_stats c ON c.parent_book_id = b.id
+      WHERE b.is_public = 1 GROUP BY b.series_id
+    ), library_stats AS (
+      SELECT series_id, COUNT(DISTINCT user_id) AS library_count FROM user_series GROUP BY series_id
+    )
     SELECT s.id, s.name, s.description, s.is_open_world, s.created_at, s.published_at,
-           COUNT(DISTINCT b.id) AS book_count,
-           COALESCE(SUM(
-             CASE WHEN b.is_container = 1
-               THEN (SELECT COALESCE(SUM(c.total_sections), 0) FROM books c WHERE c.parent_book_id = b.id AND c.is_public = 1)
-               ELSE b.total_sections
-             END
-           ), 0) AS total_sections,
-           COUNT(DISTINCT us.user_id) AS library_count
+           b.book_count, COALESCE(b.total_sections, 0) AS total_sections,
+           COALESCE(us.library_count, 0) AS library_count
     FROM series s
-    LEFT JOIN books b ON b.series_id = s.id AND b.is_public = 1
-    LEFT JOIN user_series us ON us.series_id = s.id
-    WHERE s.is_public = 1
-    GROUP BY s.id
-    HAVING COUNT(DISTINCT b.id) > 0
+    JOIN book_stats b ON b.series_id = s.id
+    LEFT JOIN library_stats us ON us.series_id = s.id
+    WHERE s.is_public = 1 AND b.book_count > 0
   `).all().map(r => ({
     ...r,
     is_open_world: !!r.is_open_world,

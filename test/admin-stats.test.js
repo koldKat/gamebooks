@@ -27,8 +27,9 @@ function fixture(t) {
   const source = fs.readFileSync(require.resolve('../server/db/admin'), 'utf8');
   const xp = fs.readFileSync(require.resolve('../server/db/xp'), 'utf8');
   const keys = vm.runInNewContext(xp.slice(xp.indexOf('const SIM_HISTORY_KEYS ='), xp.indexOf('function processStateXp(')) + '\n({SIM_HISTORY_KEYS,RETIRED_SIM_HISTORY_KEYS})');
-  const stats = vm.runInNewContext(source.slice(source.indexOf('function adminGetStats()'), source.indexOf('function getSiteStats()')) + '\nadminGetStats;', {
+  const stats = vm.runInNewContext(source.slice(source.indexOf('function adminGetStats('), source.indexOf('function getSiteStats()')) + '\nadminGetStats;', {
     db, ...keys, adminSimHistoryKeys: new Set([...keys.SIM_HISTORY_KEYS, ...keys.RETIRED_SIM_HISTORY_KEYS]),
+    collectDashboardStats: require('../server/db/gameplay-stats').collectDashboardStats,
   });
   const put = (book, state) => db.prepare('INSERT INTO user_books VALUES (?,?)').run(book, JSON.stringify(state));
   put(1, { graph: { 1: { choices: [2, 0, -1] }, 2: { choices: [3] } }, playthroughs: [
@@ -42,7 +43,7 @@ function fixture(t) {
     { startedAt: 1, result: 'death' }, { startedAt: 2, result: 'battle', sim2116: { history: [{ outcome: 'loss' }] } },
   ] });
   db.prepare('INSERT INTO user_books VALUES (1,?)').run('invalid JSON');
-  return { db, stats: () => JSON.parse(JSON.stringify(stats())) };
+  return { db, stats: extras => JSON.parse(JSON.stringify(stats(extras))) };
 }
 
 test('stats preserve anthology, graph, started-run and registered/retired battle counts', t => {
@@ -96,4 +97,17 @@ test('admin timers skip hidden tabs and refresh metrics upon return', () => {
   assert.deepEqual(counts, { live: 1, stats: 1, gc: 1, size: 1 });
   callbacks.forEach(fn => fn());
   assert.deepEqual(counts, { live: 2, stats: 2, gc: 2, size: 2 });
+});
+
+test('site extras include containers and padding without adding them to dashboard run totals', t => {
+  const { db, stats } = fixture(t);
+  db.prepare('UPDATE user_books SET state_data=? WHERE book_id=2').run(JSON.stringify({
+    playthroughs: [{ startedAt: null, undosUsed: 4, fastTravelsUsed: 3 }],
+    graph: { 1: { portals: [{ bookId: 1 }] } },
+  }));
+  const extras = { undosTotal: 0, fastTravelsTotal: 0, owPortals: 0 };
+  const before = stats();
+  const after = stats(extras);
+  assert.deepEqual(after, before);
+  assert.deepEqual(extras, { undosTotal: 4, fastTravelsTotal: 3, owPortals: 1 });
 });

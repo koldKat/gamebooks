@@ -910,6 +910,8 @@ const {
   backupDb,
 } = require('./db/misc');
 
+require('./db/query-indexes').installQueryIndexes(db);
+
 // Backfill sim213/sim214 history using live award refs; unique constraints keep repeats harmless.
 {
   const done = db.prepare(`SELECT value FROM admin_settings WHERE key = 'sim213_214_xp_backfilled'`).get();

@@ -9,11 +9,24 @@ db.exec(`CREATE TABLE IF NOT EXISTS feedback_attachment_deletions (
   created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
 )`);
 
-const _getThreadMsgs     = db.prepare('SELECT * FROM feedback_messages WHERE thread_id = ? ORDER BY created_at ASC');
 const _getMsgAttachments = db.prepare('SELECT id, filename, original_name, mime_type, size FROM attachments WHERE kind = ? AND linked_id = ? ORDER BY created_at ASC');
 
 function getAttachments(kind, linkedId) {
   return _getMsgAttachments.all(kind, linkedId);
+}
+
+function getAttachmentsForLinks(kind, linkedIds) {
+  const byLink = new Map();
+  if (!linkedIds.length) return byLink;
+  for (const { linked_id, ...attachment } of db.prepare(`
+    SELECT id, filename, original_name, mime_type, size, linked_id FROM attachments
+    WHERE kind = ? AND linked_id IN (SELECT value FROM json_each(?))
+    ORDER BY created_at ASC, id ASC
+  `).all(kind, JSON.stringify(linkedIds))) {
+    if (!byLink.has(linked_id)) byLink.set(linked_id, []);
+    byLink.get(linked_id).push(attachment);
+  }
+  return byLink;
 }
 
 function createAttachment(filename, originalName, mimeType, size, uploadedBy) {
@@ -31,13 +44,17 @@ function linkAttachments(ids, kind, linkedId, uploadedBy) {
 }
 
 function _attachMessages(threads) {
-  return threads.map(t => ({
-    ...t,
-    messages: _getThreadMsgs.all(t.id).map(m => ({
-      ...m,
-      attachments: getAttachments('feedback_message', m.id),
-    })),
-  }));
+  if (!threads.length) return [];
+  const messages = db.prepare(`SELECT * FROM feedback_messages
+    WHERE thread_id IN (SELECT value FROM json_each(?)) ORDER BY created_at ASC, id ASC
+  `).all(JSON.stringify(threads.map(t => t.id)));
+  const attachments = getAttachmentsForLinks('feedback_message', messages.map(m => m.id));
+  const byThread = new Map();
+  for (const message of messages) {
+    if (!byThread.has(message.thread_id)) byThread.set(message.thread_id, []);
+    byThread.get(message.thread_id).push({ ...message, attachments: attachments.get(message.id) || [] });
+  }
+  return threads.map(t => ({ ...t, messages: byThread.get(t.id) || [] }));
 }
 
 function createFeedbackThread(userId, username, email, body) {
@@ -153,7 +170,7 @@ function purgeDeletedFeedbackThreads() {
 }
 
 module.exports = {
-  getAttachments, createAttachment, linkAttachments,
+  getAttachments, getAttachmentsForLinks, createAttachment, linkAttachments,
   createFeedbackThread, addFeedbackMessage, getThreadsForUser, getAllThreads,
   getFeedbackThreadById, markThreadReadByUser, markThreadReadByAdmin, markThreadUnreadByUser,
   deleteFeedbackThread, deleteFeedbackForUser, deleteFeedbackForAdmin, purgeDeletedFeedbackThreads,

@@ -68,7 +68,8 @@ function getBooks(userId) {
   `).all(userId).map(row => [row.book_id, row]));
   const extraAnthologyIds = {};
   const extraAnthologyOrders = {};
-  for (const row of db.prepare('SELECT book_id, anthology_id, book_order FROM book_anthology_memberships').all()) {
+  for (const row of db.prepare(`SELECT book_id, anthology_id, book_order FROM book_anthology_memberships
+    WHERE book_id IN (SELECT book_id FROM user_books WHERE user_id = ?)`).all(userId)) {
     (extraAnthologyIds[row.book_id] ??= []).push(row.anthology_id);
     (extraAnthologyOrders[row.book_id] ??= {})[row.anthology_id] = row.book_order;
   }
@@ -1188,20 +1189,22 @@ function _getAggregateRating(bookId) {
 function _getAuthorRatings(authorsField) {
   const names = (authorsField || '').split(/\s*,\s*/).map(a => a.trim()).filter(Boolean);
   if (!names.length) return [];
-  const allBooks = db.prepare(
-    `SELECT id, authors FROM books WHERE is_public = 1 AND authors IS NOT NULL`
+  const ratedBooks = db.prepare(
+    `SELECT b.authors, SUM(ub.rating) AS rating_sum, COUNT(ub.rating) AS vote_count
+     FROM books b JOIN user_books ub ON ub.book_id = b.id
+     WHERE b.is_public = 1 AND b.authors IS NOT NULL AND ub.rating IS NOT NULL
+     GROUP BY b.id`
   ).all();
+  const totals = new Map(names.map(name => [name, { sum: 0, count: 0 }]));
+  for (const book of ratedBooks) {
+    for (const name of new Set(book.authors.split(/\s*,\s*/).map(a => a.trim()))) {
+      const total = totals.get(name);
+      if (total) { total.sum += book.rating_sum; total.count += book.vote_count; }
+    }
+  }
   return names.map(name => {
-    const matchingIds = allBooks
-      .filter(b => b.authors.split(/\s*,\s*/).map(a => a.trim()).includes(name))
-      .map(b => b.id);
-    if (!matchingIds.length) return { name, avgRating: null, voteCount: 0 };
-    const placeholders = matchingIds.map(() => '?').join(',');
-    const row = db.prepare(
-      `SELECT AVG(rating) AS avg_rating, COUNT(rating) AS vote_count
-       FROM user_books WHERE book_id IN (${placeholders}) AND rating IS NOT NULL`
-    ).get(...matchingIds);
-    return { name, avgRating: row?.avg_rating ?? null, voteCount: row?.vote_count || 0 };
+    const total = totals.get(name);
+    return { name, avgRating: total.count ? total.sum / total.count : null, voteCount: total.count };
   });
 }
 

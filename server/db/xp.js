@@ -427,6 +427,20 @@ function awardIdleHeartbeatXp(userId) {
 function getUserXpInfo(userId) {
   const row  = db.prepare('SELECT xp, coins_spent, xp_boost_pct, bonus_undos, bonus_fast_travels, bonus_heartbeat_xp, bonus_coins, admin_gifted_coins, xp_from_boost, bonus_gc_chance_purchased, bonus_gc_mint_purchased, pending_bonus_gc FROM users WHERE id = ?').get(userId);
   const bonusGcClaimed = db.prepare("SELECT COALESCE(SUM(amount), 0) AS n FROM coin_events WHERE user_id = ? AND event = 'bonus_gc_claim'").get(userId).n;
+  return userXpInfoFromRow(row, bonusGcClaimed);
+}
+
+// Admin lists use the same calculations with two queries for the whole user set.
+function getAllUsersXpInfo() {
+  const claims = new Map(db.prepare(`SELECT user_id, SUM(amount) AS n FROM coin_events
+    WHERE event = 'bonus_gc_claim' GROUP BY user_id`).all().map(row => [row.user_id, row.n]));
+  return new Map(db.prepare(`SELECT id, xp, coins_spent, xp_boost_pct, bonus_undos,
+    bonus_fast_travels, bonus_heartbeat_xp, bonus_coins, admin_gifted_coins,
+    xp_from_boost, bonus_gc_chance_purchased, bonus_gc_mint_purchased, pending_bonus_gc
+    FROM users`).all().map(row => [row.id, userXpInfoFromRow(row, claims.get(row.id) || 0)]));
+}
+
+function userXpInfoFromRow(row, bonusGcClaimed) {
   const xp   = row?.xp || 0;
   const level = computeLevel(xp);
   const coinsEarned  = coinsFromXp(xp, row?.bonus_gc_mint_purchased) + (row?.bonus_coins || 0);
@@ -972,7 +986,7 @@ module.exports = {
   TITLES, computeLevel, xpForLevel, getTitleForLevel,
   coinMintPct, coinsFromXp, coinBalance,
   setXpFeedHook, setAppXpHook,
-  awardCoins, awardXp, awardIdleHeartbeatXp, getUserXpInfo, claimBonusGc,
+  awardCoins, awardXp, awardIdleHeartbeatXp, getUserXpInfo, getAllUsersXpInfo, claimBonusGc,
   getBookCreator, getBookIdentifiers,
   _discoveredSet, _visitedSet, _mappedSet, _permanentVisitedCount,
   _checkGroupMilestone, _checkGroupWonAll, processStateXp,

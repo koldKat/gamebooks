@@ -3,9 +3,10 @@
 // Admin content management, statistics, settings, and shop economy.
 
 const { db, _naturalCompareByName, _getPdfSize, _getEpubSize } = require('./connection');
-const { computeLevel, getTitleForLevel, getUserXpInfo, awardXp, awardCoins, processStateXp, coinBalance, _insertNotif, SIM_HISTORY_KEYS, RETIRED_SIM_HISTORY_KEYS = [] } = require('./xp');
+const { computeLevel, getTitleForLevel, getUserXpInfo, getAllUsersXpInfo, awardXp, awardCoins, processStateXp, coinBalance, _insertNotif, SIM_HISTORY_KEYS, RETIRED_SIM_HISTORY_KEYS = [] } = require('./xp');
 const { purgeExpiredSessions } = require('./auth');
 const { getRatingStats } = require('./rating-stats');
+const { collectDashboardStats } = require('./gameplay-stats');
 const adminSimHistoryKeys = new Set([...SIM_HISTORY_KEYS, ...RETIRED_SIM_HISTORY_KEYS]);
 
 db.exec(`
@@ -734,125 +735,16 @@ function adminGetBookStats(bookId) {
            mapped, discovered, totalPts, inProgress, deaths, victories, playthroughs };
 }
 
-function adminGetStats() {
+function adminGetStats(gameplayExtras) {
   const users        = db.prepare('SELECT COUNT(*) AS n FROM users').get().n;
   const books        = db.prepare("SELECT COUNT(*) AS n FROM books WHERE parent_book_id IS NULL AND is_container = 0").get().n;
   const anthologies  = db.prepare("SELECT COUNT(*) AS n FROM books WHERE is_container = 1 AND parent_book_id IS NULL").get().n;
   const seriesCount  = db.prepare('SELECT COUNT(*) AS n FROM series').get().n;
   const sessions     = db.prepare('SELECT COUNT(*) AS n FROM sessions').get().n;
 
-  let totalSections      = 0;
-  let mappedSections     = 0;
-  let discoveredSections = 0;
-  let playthroughs       = 0;
-  let activePlaythroughs = 0;
-  let finishedPlaythroughs = 0;
-  let wins               = 0;
-  let deaths             = 0;
-  let battleCount        = 0;
-  let publicRuns         = 0;
-  let battlesFought      = 0;
-  let battlesWon         = 0;
-  let battlesLost        = 0;
-  // Count simulator histories only in started, non-padding playthroughs.
-  const _tallyBattles = pts => {
-    for (const pt of pts) {
-      for (const simKey of Object.keys(pt)) {
-        if (!adminSimHistoryKeys.has(simKey)) continue;
-        const hist = pt[simKey]?.history;
-        if (!hist?.length) continue;
-        battlesFought += hist.length;
-        for (const entry of hist) {
-          if (entry?.outcome === 'win') battlesWon++;
-          else if (entry?.outcome === 'loss') battlesLost++;
-        }
-      }
-    }
-  };
-  const childRowsByParent = new Map();
-  for (const child of db.prepare('SELECT id, parent_book_id, total_sections FROM books WHERE parent_book_id IS NOT NULL').all()) {
-    if (!childRowsByParent.has(child.parent_book_id)) childRowsByParent.set(child.parent_book_id, []);
-    childRowsByParent.get(child.parent_book_id).push(child);
-  }
-  const stateRowsByBook = new Map();
-  for (const ub of db.prepare(`
-    SELECT ub.book_id, ub.state_data
-    FROM user_books ub JOIN books b ON b.id = ub.book_id
-
-  `).all()) {
-    if (!stateRowsByBook.has(ub.book_id)) stateRowsByBook.set(ub.book_id, []);
-    stateRowsByBook.get(ub.book_id).push(ub);
-  }
-  const bookRows = db.prepare('SELECT id, total_sections, is_container FROM books WHERE parent_book_id IS NULL').all();
-  for (const book of bookRows) {
-    if (book.is_container) {
-      // Anthology: sections and gameplay live on child books
-      const childRows = childRowsByParent.get(book.id) || [];
-      for (const child of childRows) {
-        totalSections += child.total_sections || 0;
-        const ubRows = stateRowsByBook.get(child.id) || [];
-        let bestMapped = 0, bestDiscovered = 0;
-        for (const ub of ubRows) {
-          try {
-            const s = JSON.parse(ub.state_data);
-            const m = Object.keys(s.graph || {}).filter(k => !s.graph[k]?.discovered).length;
-            if (m > bestMapped) {
-              bestMapped = m;
-              const seen = new Set(Object.keys(s.graph || {}).map(Number));
-              for (const d of Object.values(s.graph || {}))
-                for (const c of (d.choices || []))
-                  if (c !== -1 && c !== 0) seen.add(c);
-              bestDiscovered = seen.size;
-            }
-            // Untouched open-world padding slots are not real book runs.
-            const pts = (s.playthroughs || []).filter(p => p.startedAt != null);
-            playthroughs         += pts.length;
-            activePlaythroughs   += pts.filter(p => !p.result).length;
-            finishedPlaythroughs += pts.filter(p => !!p.result).length;
-            wins   += pts.filter(p => p.result === 'success').length;
-            deaths += pts.filter(p => p.result === 'death').length;
-            battleCount += pts.filter(p => p.result === 'battle').length;
-            publicRuns += pts.filter(p => p.isPublic).length;
-            _tallyBattles(pts);
-          } catch {}
-        }
-        mappedSections     += bestMapped;
-        discoveredSections += bestDiscovered;
-      }
-      continue;
-    }
-    totalSections += book.total_sections || 0;
-    const ubRows = stateRowsByBook.get(book.id) || [];
-    // Graph stats: use the most complete graph among all users tracking this book
-    let bestMapped = 0, bestDiscovered = 0;
-    for (const ub of ubRows) {
-      try {
-        const s = JSON.parse(ub.state_data);
-        const m = Object.keys(s.graph || {}).filter(k => !s.graph[k]?.discovered).length;
-        if (m > bestMapped) {
-          bestMapped = m;
-          const seen = new Set(Object.keys(s.graph || {}).map(Number));
-          for (const d of Object.values(s.graph || {}))
-            for (const c of (d.choices || []))
-              if (c !== -1 && c !== 0) seen.add(c);
-          bestDiscovered = seen.size;
-        }
-        // Excludes untouched open-world series-run placeholders (startedAt: null) - see
-        // the anthology branch above for why.
-        const pts = (s.playthroughs || []).filter(p => p.startedAt != null);
-        playthroughs         += pts.length;
-        activePlaythroughs   += pts.filter(p => !p.result).length;
-        finishedPlaythroughs += pts.filter(p => !!p.result).length;
-        wins   += pts.filter(p => p.result === 'success').length;
-        deaths += pts.filter(p => p.result === 'death').length;
-        battleCount += pts.filter(p => p.result === 'battle').length;
-        publicRuns += pts.filter(p => p.isPublic).length;
-        _tallyBattles(pts);
-      } catch {}
-    }
-    mappedSections     += bestMapped;
-    discoveredSections += bestDiscovered;
-  }
+  const { totalSections, mappedSections, discoveredSections, playthroughs,
+    activePlaythroughs, finishedPlaythroughs, wins, deaths, battleCount, publicRuns,
+    battlesFought, battlesWon, battlesLost } = collectDashboardStats(db, adminSimHistoryKeys, gameplayExtras);
 
   const pageCount = db.prepare('PRAGMA page_count').get().page_count;
   const pageSize  = db.prepare('PRAGMA page_size').get().page_size;
@@ -878,19 +770,15 @@ function adminGetStats() {
 }
 
 function getSiteStats() {
-  const base = adminGetStats();
+  const gameplayExtras = { undosTotal: 0, fastTravelsTotal: 0, owPortals: 0 };
+  const base = adminGetStats(gameplayExtras);
 
   // User breakdown
   const admins         = db.prepare('SELECT COUNT(*) AS n FROM users WHERE is_admin = 1').get().n;
   const authors        = db.prepare('SELECT COUNT(*) AS n FROM users WHERE is_author = 1').get().n;
   const moderators = db.prepare('SELECT COUNT(*) AS n FROM users WHERE is_moderator = 1').get().n;
   const contributors   = db.prepare('SELECT COUNT(*) AS n FROM users WHERE is_contributor = 1').get().n;
-  const { undosTotal, fastTravelsTotal } = db.prepare(`
-    SELECT
-      COALESCE(SUM(CAST(json_extract(pt.value, '$.undosUsed')        AS INTEGER)), 0) AS undosTotal,
-      COALESCE(SUM(CAST(json_extract(pt.value, '$.fastTravelsUsed')  AS INTEGER)), 0) AS fastTravelsTotal
-    FROM user_books, json_each(json_extract(state_data, '$.playthroughs')) AS pt
-  `).get();
+  const { undosTotal, fastTravelsTotal } = gameplayExtras;
   const publicProfiles = db.prepare('SELECT COUNT(*) AS n FROM users WHERE public_profile = 1').get().n;
   const avatarUsers    = db.prepare('SELECT COUNT(*) AS n FROM users WHERE avatar_path IS NOT NULL').get().n;
 
@@ -1022,13 +910,7 @@ function getSiteStats() {
   const owRuns         = owRunsRow?.total    || 0;
   const owRunsCompleted = owRunsRow?.completed || 0;
   const owRunsPublic   = owRunsRow?.public   || 0;
-  const owPortalsRow   = db.prepare(`
-    SELECT COUNT(*) AS n
-    FROM user_books ub, json_each(json_extract(ub.state_data, '$.graph')) AS node,
-         json_each(json_extract(node.value, '$.portals')) AS portal
-    WHERE json_extract(node.value, '$.portals') IS NOT NULL
-  `).get();
-  const owPortals      = owPortalsRow?.n || 0;
+  const owPortals = gameplayExtras.owPortals;
   // Use series.created_at as the open-world cutoff.
   // Check both preSeriesRuns and unmigrated playthroughs; client migration timing is not the cutoff.
   const owSeriesCreatedTs = new Map();
@@ -1188,8 +1070,9 @@ function adminGetUsers() {
     if (event === 'death_run')  runsByUser[user_id].deaths  = n;
     if (event === 'battle_run') runsByUser[user_id].battles = n;
   }
+  const xpByUser = getAllUsersXpInfo();
   return users.map(u => {
-    const xpInfo = getUserXpInfo(u.id);
+    const xpInfo = xpByUser.get(u.id);
     return {
       ...u,
       ...(runsByUser[u.id] || { runs: 0, wins: 0, deaths: 0, battles: 0 }),
@@ -1283,12 +1166,18 @@ function adminGetBooks() {
     ORDER BY b.created_at ASC
   `).all();
 
+  const statesByBook = new Map();
+  for (const row of db.prepare(`
+    SELECT ub.book_id, ub.state_data, u.username
+    FROM user_books ub JOIN users u ON u.id = ub.user_id
+    JOIN books b ON b.id = ub.book_id WHERE b.is_container = 0
+    ORDER BY ub.id
+  `).all()) {
+    if (!statesByBook.has(row.book_id)) statesByBook.set(row.book_id, []);
+    statesByBook.get(row.book_id).push(row);
+  }
   return books.map(book => {
-    const ubRows = db.prepare(`
-      SELECT ub.state_data, u.username
-      FROM user_books ub JOIN users u ON u.id = ub.user_id
-      WHERE ub.book_id = ?
-    `).all(book.id);
+    const ubRows = statesByBook.get(book.id) || [];
     let wins = 0, deaths = 0, battles = 0;
     const owner = ubRows.length > 0 ? ubRows[0].username : '-';
     for (const ub of ubRows) {
