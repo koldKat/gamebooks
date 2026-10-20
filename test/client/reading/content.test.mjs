@@ -60,21 +60,23 @@ test('source rules render between matter blocks without accepting attributes', (
 });
 
 test('source hanging paragraphs retain their layout without allowing arbitrary classes', () => {
-  const { mount, document } = setup([
-    source('P', [textNode('Abbot—A man who is head of a monastery.')], { class: 'reading-hanging' }),
-  ]);
-  assert.equal(renderReadingMatter(mount, 1031, '<p class="reading-hanging">Abbot</p>', document), true);
-  assert.equal(mount.children[0].attrs.class, 'reading-hanging');
-  for (const bad of [
-    source('P', [], { class: 'reading-hanging hidden' }),
-    source('P', [], { class: 'hidden' }),
-    source('P', [], { class: 'reading-hanging', style: 'position:fixed' }),
-    source('P', [], { class: 'reading-hanging', onclick: 'bad()' }),
-    source('IMG', [], { class: 'reading-hanging' }),
-  ]) {
-    const { mount, document } = setup([source('P', [textNode('Safe prefix')]), bad]);
-    assert.equal(renderReadingMatter(mount, 1031, '<p>Safe prefix</p>', document), false);
-    assert.equal(mount.children.length, 0);
+  for (const className of ['reading-hanging', 'reading-hanging-wide']) {
+    const { mount, document } = setup([
+      source('P', [textNode('Abbot—A man who is head of a monastery.')], { class: className }),
+    ]);
+    assert.equal(renderReadingMatter(mount, 1031, `<p class="${className}">Abbot</p>`, document), true);
+    assert.equal(mount.children[0].attrs.class, className);
+    for (const bad of [
+      source('P', [], { class: `${className} hidden` }),
+      source('P', [], { class: 'hidden' }),
+      source('P', [], { class: className, style: 'position:fixed' }),
+      source('P', [], { class: className, onclick: 'bad()' }),
+      source('IMG', [], { class: className }),
+    ]) {
+      const { mount, document } = setup([source('P', [textNode('Safe prefix')]), bad]);
+      assert.equal(renderReadingMatter(mount, 1031, '<p>Safe prefix</p>', document), false);
+      assert.equal(mount.children.length, 0);
+    }
   }
 });
 

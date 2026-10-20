@@ -58,6 +58,12 @@
   text-indent: -1.1em;
   text-align: left;
 }
+.reading-frontmatter--structured p.reading-hanging-wide {
+  margin: 0;
+  padding-left: 4.4em;
+  text-indent: -4.4em;
+  text-align: left;
+}
 .reading-frontmatter--structured hr {
   border: 0;
   border-top: 1px solid #4b5563;
