@@ -555,7 +555,7 @@ function createSeriesRun(userId, seriesId) {
 
 function getActiveSeriesRunsForUser(userId) {
   // Return active series runs with a current book for library activity badges.
-  return db.prepare(`
+  const runs = db.prepare(`
     SELECT sr.series_id, sr.run_index, sr.last_book_id, sr.last_section, s.name AS series_name
     FROM series_runs sr
     JOIN series s ON s.id = sr.series_id
@@ -565,6 +565,22 @@ function getActiveSeriesRunsForUser(userId) {
       AND sr.last_book_id IS NOT NULL
       AND s.is_open_world = 1
   `).all(userId);
+  if (!runs.length) return runs;
+  // Parse each parked book once, even when it holds several series runs.
+  const ids = [...new Set(runs.map(run => run.last_book_id))];
+  const states = new Map(db.prepare(`SELECT book_id, state_data FROM user_books
+    WHERE user_id = ? AND book_id IN (${ids.map(() => '?').join(',')})`).all(userId, ...ids)
+    .map(row => {
+      let state = {};
+      try { state = JSON.parse(row.state_data || '{}') || {}; } catch {}
+      return [row.book_id, state];
+    }));
+  const current = run => states.get(run.last_book_id)?.activePtIndex === run.run_index ? 1 : 0;
+  const recent = run => {
+    const pt = states.get(run.last_book_id)?.playthroughs?.[run.run_index];
+    return Number(pt?.lastActionAt || pt?.startedAt) || 0;
+  };
+  return runs.sort((a, b) => current(b) - current(a) || recent(b) - recent(a) || b.run_index - a.run_index);
 }
 
 function deleteSeriesRun(userId, seriesId, runIndex) {

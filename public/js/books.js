@@ -24,3 +24,4 @@ export { _starsHtml, _starLabelHtml, _flashRatingGate, _syncPdfBadgeOnCards, _sy
 
 export { renderBooksList } from './books/render.js';
 export { _applySavedBookResponse } from './books/data.js';
+export { setActiveSeriesRuns } from './books/data.js';

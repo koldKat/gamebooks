@@ -87,7 +87,7 @@ const overrides = {
   fetchPublic: async () => ({ ok: true, json: async () => ({}) }),
   apiFetch: async (url, options) => {
     calls.push(['apiFetch', url, options]);
-    const response = { ok: true, json: async () => url === '/api/profile' ? profile : url === '/api/books' ? [book] : url === '/api/heartbeat' ? heartbeatResult : [] };
+    const response = { ok: true, json: async () => url === '/api/profile' ? profile : url === '/api/books' ? [book] : url === '/api/series/active-runs' ? (scenario.activeRuns || []) : url === '/api/heartbeat' ? heartbeatResult : [] };
     if (url === '/api/books' && scenario.delayedLibrary) return new Promise(resolve => { releaseLibrary = () => resolve(response); });
     return response;
   },
@@ -139,6 +139,12 @@ if (scenario.delayedLibrary) assert.equal(calls.filter(c => c[0] === 'renderBook
 const screens = modules.get(resolve(root, 'boot/screens.js')).namespace;
 const bootState = modules.get(resolve(root, 'boot/state.js')).namespace.bootState;
 if (scenario.name !== 'integration') {
+  if (scenario.activeRuns) {
+    const loaded = calls.findIndex(c => c[0] === 'setActiveSeriesRuns');
+    const rendered = calls.findLastIndex(c => c[0] === 'renderBooksList');
+    assert.ok(loaded >= 0 && rendered > loaded, 'initial library loads run tags before rendering');
+    assert.deepEqual(calls[loaded][1], scenario.activeRuns);
+  }
   if (scenario.screen) assert.equal(el(scenario.screen).style.display, 'flex', scenario.name);
   if (scenario.publicCall) assert.ok(calls.some(c => c[0] === scenario.publicCall && c[1] === scenario.publicId));
   if (scenario.reset) assert.ok(calls.some(c => c[0] === 'showResetPanel'));

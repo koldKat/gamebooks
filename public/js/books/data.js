@@ -13,7 +13,8 @@ export function getCachedAllSeries() { return booksState._cachedAllSeries; }
 export function getCachedStashes()  { return booksState._cachedStashes; }
 export function setCachedBooks(b)   { booksState._cachedBooks = b; }
 export function setCachedAllSeries(s) { booksState._cachedAllSeries = s; }
-export function clearBooksCache()   { booksState._cachedBooks = null; booksState._cachedAllSeries = null; booksState._cachedStashes = null; booksState._booksDataFresh = false; booksState._booksListFingerprint = null; }
+export function setActiveSeriesRuns(runs) { booksState._activeSeriesRuns = Array.isArray(runs) ? runs : []; }
+export function clearBooksCache()   { booksState._cachedBooks = null; booksState._cachedAllSeries = null; booksState._cachedStashes = null; booksState._activeSeriesRuns = []; booksState._booksDataFresh = false; booksState._booksListFingerprint = null; }
 export function setBooksDataFresh(v) { booksState._booksDataFresh = !!v; }
 export function getBooksDataFresh()  { return booksState._booksDataFresh; }
 export function setBooksRevealedAt(ts) { booksState._booksRevealedAt = ts; }

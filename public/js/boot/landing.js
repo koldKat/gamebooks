@@ -16,7 +16,7 @@ import { updateAvatarUI, renderBooksXpSummary, closeProfileModal } from '../acco
 import { _ensureLiveTabControllerStarted, _connectUserBadgeSSE, _disconnectUserBadgeSSE, _connectAppXpSSE, _disconnectAppXpSSE, _syncFeedVersionBaseline } from '../core/livetab.js';
 import { refreshAppXp } from '../progression/app-xp.js';
 import { loadCovers, _showCachedCoversPanel, _updateLandingBgDragUi } from '../covers.js';
-import { renderBooksList, getCachedBooks, getCachedAllSeries, getCachedStashes, setBooksDataFresh, setBooksRevealedAt, setCurrentUserId } from '../books.js';
+import { renderBooksList, getCachedBooks, getCachedAllSeries, getCachedStashes, setBooksDataFresh, setBooksRevealedAt, setCurrentUserId, setActiveSeriesRuns } from '../books.js';
 import { loadFeed, refreshFeedFilters } from '../feed.js';
 import { _scheduleLiveUiRefresh, resetNotifBadgesForLogout } from '../community/notif.js';
 import { _resetRewardSnapshotState, _positionRewardLayer, _processRewardSnapshot } from '../progression/rewards.js';
@@ -178,18 +178,21 @@ export async function showBooks() {
   if (getCachedBooks()) window.appStartup?.ready();
 
   try {
-    const [booksRes, profileRes, stashesRes, seriesRes] = await Promise.all([
+    const [booksRes, profileRes, stashesRes, seriesRes, activeRunsRes] = await Promise.all([
       apiFetch('/api/books'),
       apiFetch('/api/profile'),
       apiFetch('/api/stashes'),
       apiFetch('/api/series'),
+      apiFetch('/api/series/active-runs').catch(() => null),
     ]);
     if (getToken() !== sessionToken) return;
     const books   = await booksRes.json();
     const profile = await profileRes.json();
     const stashes = stashesRes.ok ? await stashesRes.json() : [];
     const allSeries = seriesRes.ok ? await seriesRes.json() : [];
+    const activeRuns = activeRunsRes?.ok ? await activeRunsRes.json().catch(() => null) : null;
     if (getToken() !== sessionToken) return;
+    if (Array.isArray(activeRuns)) setActiveSeriesRuns(activeRuns);
     _processRewardSnapshot(profile);
     if (profile.id) { bootState._currentUserId = profile.id; setCurrentUserId(bootState._currentUserId); }
     bootState._isAdmin = resolveIsAdmin(profile);
