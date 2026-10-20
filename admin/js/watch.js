@@ -483,7 +483,8 @@ function renderNotes(state, notebook) {
   const el = document.getElementById('watch-notes');
   // Show pinned notes even when empty, matching the player's view.
   el.classList.toggle('visible', !!state.notesPinned);
-  el.textContent = notebook || '';
+  const text = notebook || '';
+  if (el.textContent !== text) el.textContent = text;
 }
 
 // Imported section HTML is read-only here; CSS disables its choice links.
