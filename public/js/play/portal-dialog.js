@@ -1,6 +1,7 @@
 // portal-dialog.js - Internal play-screen module; use ../play.js externally.
 
 import { state, saveState } from '../core/state.js';
+import { escapeHtml } from '../core/util.js';
 import { t } from '../i18n.js';
 import { playContext } from './context.js';
 import { render } from './render.js';
@@ -18,7 +19,10 @@ export function openPortalModal(sectionId, editIdx = null) {
 
   sel.innerHTML = playContext._owSeriesBooks.length === 0
     ? '<option value="">- No other books in series -</option>'
-    : playContext._owSeriesBooks.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
+    : playContext._owSeriesBooks.map(b => {
+        const number = String(b.series_number ?? '').trim();
+        return `<option value="${escapeHtml(b.id)}">${escapeHtml(number ? `${number}. ${b.name}` : b.name)}</option>`;
+      }).join('');
 
   const existing = editIdx !== null ? (state.graph[sectionId]?.portals?.[editIdx] || null) : null;
   if (existing) {

@@ -9,6 +9,7 @@ const script = String.raw`
 import * as core from 'file://${repo}/public/js/core/state.js';
 import {booksState} from 'file://${repo}/public/js/books/state.js';
 import {setOpenWorldHooks,setupOpenWorldForBook,_syncSeriesRuns,_handlePortalTravel,_computeCrossBookReachability,doJumpCrossBook} from 'file://${repo}/public/js/play/open-world.js';
+import {openPortalModal} from 'file://${repo}/public/js/play/portal-dialog.js';
 import {initNotes,hideNotesUI,loadNotesForBook} from 'file://${repo}/public/js/play/notes.js';
 import {initCharSheet} from 'file://${repo}/public/js/play/charsheet.js';
 import {showBattleSimForBook,renderActiveBattleSim} from 'file://${repo}/public/js/battlesim/loader.js';
@@ -26,7 +27,7 @@ try {
    char_data:{fields:[{name:'Health',value:'3',visible:true}]}};
  const finishedRun={run_index:1,started_at:2,last_book_id:null,last_section:null,completed:1,result:'success',
    is_public:false,char_data:{fields:[{name:'Health',value:'8',visible:true}]}};
- const rows=ids.map((id,i)=>({id,name:'OWT '+(i+1),series_id:77,is_public:0,total_sections:20,created_by:7}));
+ const rows=ids.map((id,i)=>({id,name:'OWT '+(i+1),series_id:77,series_number:i+1,is_public:0,total_sections:20,created_by:7}));
  rows.push({id:99004,name:'Different world',series_id:88,is_public:0,created_by:7});
  booksState._cachedBooks=rows;
  booksState._cachedAllSeries=[{id:77,name:'Open world',is_open_world:1},{id:88,name:'Other',is_open_world:1}];
@@ -89,6 +90,10 @@ try {
  async function saveNotes(text){await readNotes();document.getElementById('notebook-modal-input').value=text;document.getElementById('notebook-modal-save').click();await tick();}
  const travel=id=>_handlePortalTravel({targetBookId:id,targetSection:1});
  await show(99002);
+ openPortalModal(1);
+ equal([...document.getElementById('portal-book-select').options].map(option=>[option.value,option.textContent]),
+   [['99001','1. OWT 1'],['99003','3. OWT 3']],'portal targets keep actual series numbers with the current book excluded');
+ document.getElementById('portal-modal-cancel').click();
  await saveNotes('Started in book 2');
  const mobileNotes=await import('file://${repo}/public/mobile/js/notebook.js');
  for(const mobile of [false,true]){
@@ -234,6 +239,17 @@ try {
    const game=active()['sim'+simIds[0]];
    check((game.character||game.player).stamina===0,'zero simulator stamina survives reload '+family);
    equal(game.log,['Local battle log '+simIds[0]],'reload preserves the source book own log '+family);
+   for(const id of [simIds[1],simIds[0]]){
+     await travel(id);
+     document.getElementById('sim'+id+'-btn').click();await tick();
+     const local=active()['sim'+id];
+     const expectedLog=family==='Fighting Fantasy'&&id!==simIds[0]?[]:['Local battle log '+id];
+     equal(local.log,expectedLog,'direct book 1 to 2 to 1 keeps local simulator log '+id);
+     equal(local.history,family==='Fighting Fantasy'&&id!==simIds[0]?[]:[{enemy:'Existing '+id,outcome:'win',ts:123}],
+       'direct return never imports the other book history '+id);
+     const logText=document.getElementById('sim'+id+'-log').textContent;
+     for(const other of simIds.filter(other=>other!==id))check(!logText.includes('Local battle log '+other),'direct return UI never shows another book log '+id);
+   }
  }
  finishDuringLoad=true;await travel(199);finishDuringLoad=false;
  check(seriesRun.completed===1&&!core.currentPlaythrough(),'a run completed during travel is never revived');
