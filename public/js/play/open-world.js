@@ -547,7 +547,7 @@ export function setupOpenWorldForBook(bookId, seriesId, isOpenWorld) {
     seriesId,
     seriesBooks: isOpenWorld && seriesId
       ? (getCachedBooks() || []).filter(b => b.series_id === seriesId && b.id !== bookId)
-          .map(b => ({ id: b.id, name: b.name }))
+          .map(b => ({ id: b.id, name: b.name, series_number: b.series_number }))
       : [],
     onPortalTravel:   isOpenWorld ? _handlePortalTravel : null,
     onNewSeriesRun:   isOpenWorld ? _handleNewSeriesRun : null,

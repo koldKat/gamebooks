@@ -159,6 +159,16 @@ reset({ graph: { 1: { choices: [2] } } });
 api.openEditModal(1); el('edit-choices-input').value = ''; el('edit-modal-save').click(); assert.deepEqual(plain(state.graph[1].choices), []); assert.equal(el('edit-modal-overlay').classList.contains('active'), false); snapshot('edit-clear');
 api.openNoteModal(7); el('note-modal-input').value = 'Pinned note'; el('note-pin-cb').checked = true; el('note-modal-save').click(); assert.equal(state.graph[7].showNote, true); snapshot('note-save');
 state.graph[7].portals = [{ targetBookId: 9, targetSection: 8 }]; api.openNoteModal(7); el('note-modal-input').value = ''; el('note-modal-save').click(); assert.ok(state.graph[7].portals); snapshot('note-clear-preserves-portal');
+api.setOpenWorldContext({ isOpenWorld: true, seriesId: 77, seriesBooks: [
+  { id: 9, name: 'First & foremost', series_number: 1 },
+  { id: 11, name: '<Third book>', series_number: 3 },
+  { id: 12, name: 'Side story', series_number: '3.5' },
+  { id: 13, name: 'Unnumbered book', series_number: null },
+  { id: 14, name: 'Prequel', series_number: 0 },
+] });
+api.openPortalModal(7, 0);
+assert.equal(el('portal-book-select').innerHTML, '<option value="9">1. First &amp; foremost</option><option value="11">3. &lt;Third book&gt;</option><option value="12">3.5. Side story</option><option value="13">Unnumbered book</option><option value="14">0. Prequel</option>');
+assert.equal(el('portal-book-select').value, '9', 'editing still selects the target by book ID');
 api.setOpenWorldContext({ isOpenWorld: true, seriesId: 77, seriesBooks: [{ id: 9, name: 'Other book' }] });
 api.openPortalModal(7); el('portal-book-select').value = '9'; el('portal-section-input').value = '12'; el('portal-label-input').value = 'Exit'; el('portal-modal-save').click(); assert.equal(state.graph[7].portals.length, 2); snapshot('portal-add');
 api.openPortalModal(7, 1); el('portal-section-input').value = '13'; el('portal-modal-save').click(); assert.equal(state.graph[7].portals[1].targetSection, 13); snapshot('portal-edit');
