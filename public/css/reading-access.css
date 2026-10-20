@@ -31,6 +31,9 @@
 .reading-frontmatter--structured { white-space: normal; }
 .reading-frontmatter--structured figure { margin: 0 0 1rem; }
 .reading-frontmatter--structured figure img { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+.reading-art-parts { display: flex; align-items: flex-start; gap: 0; width: 100%; max-width: 100%; margin: 1em 0; padding: 0; border: 0; }
+.reading-art-parts > img,
+.reading-frontmatter--structured figure.reading-art-parts > img { display: block; flex: 0 1 auto; min-width: 0; max-width: none; height: auto; margin: 0; padding: 0; border: 0; }
 .reading-gate-prose > h2 {
   margin: 0 0 0.7rem;
   font-size: 1.1em;

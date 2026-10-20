@@ -78,6 +78,28 @@ test('source hanging paragraphs retain their layout without allowing arbitrary c
   }
 });
 
+test('original image pieces retain their figure layout while foreign classes and attributes are rejected', () => {
+  const src = '/api/books/1032/reading-images/' + 'a'.repeat(64) + '.png';
+  const { mount, document } = setup([
+    source('FIGURE', [source('IMG', [], { src, alt: 'Original illustration' })], { class: 'reading-art-parts' }),
+  ]);
+  assert.equal(renderReadingMatter(mount, 1032, '<figure>Picture</figure>', document), true);
+  assert.equal(mount.children[0].attrs.class, 'reading-art-parts');
+  assert.equal(mount.children[0].children[0].src, src);
+  for (const bad of [
+    source('FIGURE', [], { class: 'reading-art-parts hidden' }),
+    source('FIGURE', [], { class: 'hidden' }),
+    source('FIGURE', [], { class: 'reading-art-parts', style: 'position:fixed' }),
+    source('FIGURE', [], { class: 'reading-art-parts', onclick: 'bad()' }),
+    source('P', [], { class: 'reading-art-parts' }),
+    source('FIGURE', [source('IMG', [], { src: '/public/picture.png' })], { class: 'reading-art-parts' }),
+  ]) {
+    const { mount, document } = setup([source('P', [textNode('Safe prefix')]), bad]);
+    assert.equal(renderReadingMatter(mount, 1032, '<p>Safe prefix</p>', document), false);
+    assert.equal(mount.children.length, 0);
+  }
+});
+
 test('source left and right alignment override inherited justification without allowing other CSS', () => {
   for (const alignment of ['left', 'right']) {
     const { mount, document } = setup([

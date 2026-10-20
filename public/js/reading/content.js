@@ -17,6 +17,10 @@ export function renderReadingMatter(mount, bookId, text, document) {
         target.setAttribute('class', 'reading-hanging');
         continue;
       }
+      if (node.tagName === 'FIGURE' && attr.name === 'class' && attr.value === 'reading-art-parts') {
+        target.setAttribute('class', 'reading-art-parts');
+        continue;
+      }
       if (['P', 'H2', 'H3', 'H4'].includes(node.tagName) && attr.name === 'style'
           && /^\s*text-align\s*:\s*(?:left|center|right)\s*;?\s*$/i.test(attr.value)) {
         target.setAttribute('style', 'text-align:' + attr.value.match(/:\s*(left|center|right)/i)[1].toLowerCase());
