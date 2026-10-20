@@ -71,8 +71,16 @@ test('catalog refresh preserves pause, queued-request, auth, and fingerprint beh
     wrapper.style.display = '';
     await refresh([{ id: 1, name: 'Alpha', authors: 'Changed while hidden' }]);
     assert.equal(coversState._allBooks[0].authors, 'Changed while hidden', 'hidden fetch does not mark unapplied data current');
+    const preferenceKeys = ['_coversSortMode', '_coversKindMode', '_coversBattleSimOnly',
+      '_coversLiveReadingOnly', '_coversOpenWorldOnly', '_coversNotMineOnly'];
+    Object.assign(coversState, { _coversSortMode: 'za', _coversKindMode: 'favorites',
+      _coversBattleSimOnly: true, _coversLiveReadingOnly: true,
+      _coversOpenWorldOnly: true, _coversNotMineOnly: true });
+    const preferences = preferenceKeys.map(key => coversState[key]);
     await refresh([{ id: 1, name: 'Alpha', authors: 'Changed while hidden', hasLiveReading: true }]);
     assert.equal(coversState._allBooks[0].hasLiveReading, true);
+    assert.deepEqual(preferenceKeys.map(key => coversState[key]), preferences,
+      'import availability refresh preserves every selected catalog filter and sort order');
     await refresh([{ id: 1, name: 'Alpha' }], [{ id: 1, name: 'Alpha', coverUrl: '/a.jpg' }]);
     await refresh([], [], 502);
     assert.equal(coversState._allBooks.length, 1, 'failed refresh preserves successful catalog');
