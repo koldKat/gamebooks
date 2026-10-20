@@ -872,19 +872,27 @@ function getBookState(userId, bookId) {
   return s;
 }
 
-// Resolve the actively played book from activePtIndex, not the watch view's original book.
+// Portal-paused books retain activePtIndex; follow the latest unfinished run instead.
 function getActiveBookInSeries(userId, seriesId) {
   const rows = db.prepare(
     `SELECT ub.book_id, ub.state_data FROM user_books ub
      JOIN books b ON b.id = ub.book_id
      WHERE ub.user_id = ? AND b.series_id = ?`
   ).all(userId, seriesId);
+  let activeBookId = null;
+  let latestAction = -Infinity;
   for (const row of rows) {
     let s;
     try { s = JSON.parse(row.state_data); } catch { continue; }
-    if (s.activePtIndex != null) return row.book_id;
+    const pt = s.activePtIndex != null ? s.playthroughs?.[s.activePtIndex] : null;
+    if (!pt || pt.completed || pt.result === 'portal') continue;
+    const actionAt = Number(pt.lastActionAt || pt.startedAt) || 0;
+    if (actionAt > latestAction) {
+      activeBookId = row.book_id;
+      latestAction = actionAt;
+    }
   }
-  return null;
+  return activeBookId;
 }
 
 function getBookById(bookId) {

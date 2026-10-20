@@ -315,6 +315,19 @@ function drawOverlays(ctx) {
   }
 }
 
+// Use text nodes so player-entered portal labels cannot become tooltip markup.
+function portalTitle(secId, portals) {
+  if (!portals.length) return '';
+  const title = document.createElement('div');
+  title.appendChild(document.createTextNode(`Section ${secId} — Portal destinations:`));
+  for (const portal of portals) {
+    title.appendChild(document.createElement('br'));
+    const destination = `⇒ Book #${portal.targetBookId}, section ${portal.targetSection}`;
+    title.appendChild(document.createTextNode(portal.label ? `${portal.label} (${destination})` : destination));
+  }
+  return title;
+}
+
 function render(state, isOpenWorld) {
   ensureNetwork();
   gridState.showGrid  = !!state.showGrid;
@@ -350,6 +363,7 @@ function render(state, isOpenWorld) {
     const update = {
       id: secId,
       label: isPortal ? `${secId}\n⇒` : String(secId),
+      title: portalTitle(secId, portals),
       color: isPortal ? { ...color, border: '#facc15', highlight: { ...(color.highlight || {}), border: '#fde047' } } : color,
       shape: isPortal ? 'diamond' : 'dot',
       size: isPortal ? 16 : 14,
@@ -514,7 +528,7 @@ async function poll() {
       currentBookId = data.bookId;
       resetForNewBook();
     }
-    const json = JSON.stringify(data.state);
+    const json = JSON.stringify([!!data.isOpenWorld, data.state]);
     if (json !== lastStateJson) {
       lastStateJson = json;
       render(data.state, !!data.isOpenWorld);
