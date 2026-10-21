@@ -105,13 +105,21 @@
   background: #1f2937; border: 1px solid #374151; border-radius: 8px;
   padding: 0.4rem 1rem;
 }
-.shop-item-info { flex: 1; }
+.shop-item-info { flex: 1; min-width: 0; }
 .shop-item-label { font-size: 0.88rem; font-weight: 600; color: #f3f4f6; }
 .shop-item-desc  { font-size: 0.78rem; color: #6b7280; margin-top: 0.15rem; }
 .shop-item-owned { font-size: 0.75rem; color: #86efac; margin-top: 0.2rem; }
 .shop-item-effect { color: #f5a623; font-weight: 600; }
-.shop-item-buy   { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; }
-.shop-item-cost  { font-size: 0.75rem; font-weight: 700; color: #86efac; }
+.shop-item-buy {
+  display: flex; flex: 0 0 4.25rem; width: 4.25rem;
+  flex-direction: column; align-items: stretch; gap: 0.3rem;
+}
+.shop-item-cost {
+  display: grid; grid-template-columns: 14px 4ch; align-items: center;
+  align-self: center; gap: 0.25rem; text-align: right; white-space: nowrap;
+  font-size: 0.75rem; font-weight: 700; font-variant-numeric: tabular-nums; color: #86efac;
+}
+.shop-item-buy .shop-buy-btn { box-sizing: border-box; width: 100%; }
 .shop-buy-btn {
   background: #1c2a18; border: 1px solid #2d5a1b; border-radius: 6px;
   color: #86efac; font-size: 0.78rem; font-weight: 600;

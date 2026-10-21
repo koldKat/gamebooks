@@ -230,7 +230,7 @@ function renderShopItems() {
         <div class="shop-item-owned">${escapeHtml(item.totalLabel(_shopData))}${effect ? ` <span class="shop-item-effect">${effect}</span>` : ''}</div>
       </div>
       <div class="shop-item-buy">
-        <div class="shop-item-cost">${COIN_SVG} ${cost}</div>
+        <div class="shop-item-cost">${COIN_SVG}<span>${cost}</span></div>
         <button class="shop-buy-btn${canBuy ? '' : ' shop-buy-btn--disabled'}" data-item="${item.id}"${canBuy ? '' : ' disabled'}>${btnLabel}</button>
       </div>
     </div>`;
