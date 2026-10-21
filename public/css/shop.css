@@ -138,6 +138,8 @@
 #exchange-shop-modal .shop-modal-header { flex-wrap: wrap; }
 #exchange-shop-title { min-width: 100px; }
 .exchange-shop-body label { display: block; color: #d1d5db; margin-bottom: 0.35rem; }
+.exchange-shop-quantity-label { display: flex; align-items: baseline; gap: 0.35rem; flex-wrap: wrap; margin-bottom: 0.35rem; }
+.exchange-shop-quantity-label label, .exchange-shop-quantity-label .exchange-shop-tip { margin: 0; }
 .exchange-shop-amount-row { display: flex; gap: 0.5rem; align-items: center; }
 .exchange-shop-amount-row .cs-num-wrap { flex: 1; min-width: 0; align-items: stretch; }
 .exchange-shop-amount-row .cs-num-btn { box-sizing: border-box; width: 28px; height: 28px; padding: 0; }

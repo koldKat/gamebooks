@@ -23,7 +23,7 @@ function render() {
   const stock = Math.max(0, _profile?.diamondPurchaseStock || 0);
   const maximum = buying ? (rate > 0 ? Math.min(stock, Math.max(0, Math.floor((_profile?.coinsBalance || 0) / rate))) : 0) : balance;
   el('stock').hidden = !buying;
-  el('stock').textContent = `Diamonds available for purchase: ${stock.toLocaleString()}`;
+  el('stock').textContent = `(Diamonds available for purchase: ${stock.toLocaleString()})`;
   el('balance').innerHTML = `${DIAMOND_SVG} ${balance.toLocaleString()} · ${COIN_SVG} ${Number(_profile?.coinsBalance || 0).toLocaleString()}`;
   const sold = Number(_profile?.diamondsExchanged || 0), bought = Number(_profile?.diamondsBought || 0);
   el('total').textContent = `${(sold + bought).toLocaleString()} exchanged`;

@@ -113,7 +113,7 @@ test('buying and selling require a separate confirmation and cancel never sends 
 
 test('buying displays shared stock and limits Max by both stock and available gold',async()=>{
  const h=setup();await open(h,{...profile,diamondPurchaseStock:2});h.get('buy').handlers.click();
- assert.equal(h.get('stock').textContent,'Diamonds available for purchase: 2');assert.equal(h.get('stock').hidden,false);
+ assert.equal(h.get('stock').textContent,'(Diamonds available for purchase: 2)');assert.equal(h.get('stock').hidden,false);
  h.get('max').handlers.click();assert.equal(h.get('amount').value,'2');
  await open(h,{...profile,diamondPurchaseStock:0});h.get('buy').handlers.click();assert.equal(h.get('submit').disabled,true);
  await submit(h);assert.equal(h.requests.length,0);h.get('sell').handlers.click();assert.equal(h.get('stock').hidden,true);
