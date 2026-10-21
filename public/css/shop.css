@@ -35,6 +35,7 @@
   cursor: pointer;
 }
 .diamonds-display:hover { background: #16404c; border-color: #22d3ee; }
+.exchange-shop-stock-value { color: #67e8f9; }
 .diamond-icon { width: 14px; height: 14px; vertical-align: -2px; display: inline-block; }
 .minor-coins-display { font-size: 0.75rem; font-weight: 700; padding: 0.2rem 0.4rem; border: 1px solid #374151; border-radius: 6px; white-space: nowrap; cursor: default; }
 .books-header-right :is(.minor-coins-display, .shop-btn, .diamonds-display) { font-family: inherit; font-size: 0.75rem; font-weight: 700; line-height: 1.2; letter-spacing: 0.03em; padding: 0.2rem 0.45rem; }
