@@ -14,13 +14,14 @@ export function _populateParentBookSelect(selectId, selectedId = null, excludeBo
   const books = _sortedByName((getCachedBooks() || []).filter(b => b.is_container && b.id !== excludeBookId));
   const counts = new Map();
   books.forEach(book => counts.set(book.name, (counts.get(book.name) || 0) + 1));
+  const options = document.createDocumentFragment();
   books.forEach(book => {
     const label = counts.get(book.name) > 1 ? `${book.name} (#${book.id})` : book.name;
     const opt = document.createElement('option');
     opt.value = String(book.id);
     opt.textContent = label;
     if (book.id === selectedId) opt.selected = true;
-    sel.appendChild(opt);
+    options.appendChild(opt);
   });
   // Keep the existing parent when editing a catalog book outside the library.
   if (selectedId != null && !books.some(book => book.id === selectedId)) {
@@ -28,8 +29,9 @@ export function _populateParentBookSelect(selectId, selectedId = null, excludeBo
     opt.value = String(selectedId);
     opt.textContent = `#${selectedId}`;
     opt.selected = true;
-    sel.appendChild(opt);
+    options.appendChild(opt);
   }
+  sel.appendChild(options);
 }
 
 export function _populateSeriesSelect(selectId, selectedName) {
@@ -42,19 +44,21 @@ export function _populateSeriesSelect(selectId, selectedName) {
     const list = (await r.json()).sort((a, b) => naturalCompare(a.name, b.name));
     const counts = new Map();
     list.forEach(series => counts.set(series.name, (counts.get(series.name) || 0) + 1));
+    const options = document.createDocumentFragment();
     list.forEach(s => {
       const o = document.createElement('option');
       o.value = s.name;
       o.textContent = counts.get(s.name) > 1 ? `${s.name} (#${s.id})` : s.name;
       if (s.name === selectedName) o.selected = true;
-      sel.appendChild(o);
+      options.appendChild(o);
     });
     if (selectedName && !list.find(s => s.name === selectedName)) {
       const o = document.createElement('option');
       o.value = selectedName;
       o.textContent = selectedName;
       o.selected = true;
-      sel.appendChild(o);
+      options.appendChild(o);
     }
+    sel.appendChild(options);
   }).catch(() => {});
 }

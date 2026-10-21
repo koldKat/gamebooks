@@ -33,6 +33,11 @@
   border-bottom: 1px solid #374151;
 }
 .autocomplete-dropdown li:last-child { border-bottom: none; }
+.autocomplete-dropdown[id$="-authors-dropdown"] li {
+  padding: 0.15rem 0.5rem;
+  line-height: 1.35;
+  border-bottom: none;
+}
 .autocomplete-dropdown li:hover,
 .autocomplete-dropdown li.ac-active { background: #374151; color: #f9fafb; }
 .autocomplete-dropdown li .ac-sub {
