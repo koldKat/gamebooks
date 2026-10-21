@@ -240,7 +240,7 @@ function renderShopItems() {
     btn.addEventListener('click', async () => {
       const sessionToken = getToken();
       btn.disabled = true;
-      btn.textContent = '…';
+      // Keep the label's width while the purchase is pending.
       try {
         const res  = await apiFetch('/api/shop/purchase', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ item: btn.dataset.item }) });
         const data = await res.json();
