@@ -1,6 +1,6 @@
 import { _sortedByName } from './helpers.js';
 import { booksState, _BOOKS_LS_KEY, _SERIES_LS_KEY, _STASHES_LS_KEY } from './state.js';
-import { _getExpandedPref } from './prefs.js';
+import { _getExpandedPref, _syncMovedSeriesPrefs } from './prefs.js';
 import { _scheduleAnthologyCardCoverFlows, _queueBookCovers } from './covers.js';
 import { lazyState } from './lazy.js';
 import { _applyBooksSearchFilter } from './search.js';
@@ -21,6 +21,7 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
   lazyState.sequence = 0;
   const openWorldSeriesIds = new Set((allSeries || []).filter(s => s.is_open_world).map(s => s.id));
   for (const b of allOwnedBooks) b.isOpenWorld = b.series_id != null && openWorldSeriesIds.has(b.series_id);
+  _syncMovedSeriesPrefs(Array.isArray(stashes) ? stashes : []);
   // Cache the full owned library before applying mobile reading filters.
   booksState._cachedBooks     = allOwnedBooks;
   booksState._cachedAllSeries = allSeries;

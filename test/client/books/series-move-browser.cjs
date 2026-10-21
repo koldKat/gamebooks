@@ -70,6 +70,35 @@ try {
   if(viaInfo) check(document.querySelector('.book-modal-series-btn')?.textContent==='New series','open info dialog has saved series');
   edit=null;checks++;
  }
+ // A newly created group keeps its collapsed state when assigned to a stash,
+ // including a closed destination whose contents are built only after opening.
+ for(const anthology of [false,true]) for(const closedStash of [false,true]) {
+  document.getElementById('books-list').replaceChildren();
+  booksState._cachedStashes=null;
+  booksState._seriesExpandedPrefs={}; booksState._bookExpandedPrefs={}; booksState._stashExpandedPrefs={};
+  localStorage.setItem('sr_expanded_700','1');localStorage.setItem('bk_expanded_700','1');
+  localStorage.setItem('stash_expanded_70',closedStash?'0':'1');
+  const newSeries=anthology?[]:[{id:700,name:'New series',is_owner:true}];
+  rows=anthology?[{id:700,name:'New anthology',is_container:1,created_by:1},{id:701,name:'Child',parent_book_id:700,total_sections:100,created_by:1}]
+   :[{id:701,name:'Series book',series_id:700,total_sections:100,created_by:1}];
+  renderBooksList(structuredClone(rows),newSeries,[]);
+  const selector=anthology?'[data-container-id="700"]':'.series-header-row[data-series-id="700"]';
+  document.querySelector(selector).click();
+  check(document.querySelector(selector).dataset.expanded==='0','new group starts collapsed before moving');
+  const stashes=[{id:70,name:'Destination',bookIds:anthology?[700]:[],seriesIds:anthology?[]:[700]}];
+  renderBooksList(structuredClone(rows),newSeries,stashes);
+  if(closedStash) document.querySelector('.stash-header-row[data-stash-id="70"]').click();
+  const moved=document.querySelector(selector);
+  check(moved?.dataset.expanded==='0','moved group stays collapsed inside stash');
+  check(moved.nextElementSibling.style.display==='none','moved child body remains hidden');
+  check(moved.nextElementSibling.children.length===0,'collapsed destination children remain lazy');
+  moved.click();
+  check(moved.dataset.expanded==='1'&&moved.nextElementSibling.querySelector('.book-item'),'moved group still expands normally');
+  moved.click();
+  renderBooksList(structuredClone(rows),newSeries,[]);
+  check(document.querySelector(selector)?.dataset.expanded==='0','moving out also preserves collapse');
+  checks++;
+ }
  const big={id:500,name:'Large anthology',is_container:1,is_public:0,created_by:1};
  rows=[big,...Array.from({length:250},(_,i)=>({id:1000+i,name:'Large child '+i,total_sections:100,parent_book_id:500,is_public:0,created_by:1})),{id:99,name:'Untouched book',total_sections:100,series_id:3,is_public:0,created_by:1}];
  localStorage.setItem('bk_expanded_500','0');

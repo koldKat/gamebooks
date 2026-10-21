@@ -103,31 +103,40 @@ export function _captureExpandedPrefsFromDom(root = document.getElementById('boo
   }
 }
 
-// Copies the main-list expand state for a series into any stash-specific key
-// so newly-stashed series open in the same state as before.
-export function _syncSeriesPrefsToStash(stashId, seriesIds = []) {
-  if (!stashId) return;
-  const sidList = [...new Set((seriesIds || []).map(Number).filter(Number.isInteger))];
-  if (!sidList.length) return;
-  let nextSeries = booksState._seriesExpandedPrefs;
-  let changed    = false;
-  for (const sid of sidList) {
-    const mainMapKey   = `main:${sid}`;
-    const stashMapKey  = `${stashId}:${sid}`;
-    const mainLocalKey = `sr_expanded_${sid}`;
-    const stashLocalKey = `stash_${stashId}_sr_expanded_${sid}`;
-    const mainVal = (getToken() && Object.prototype.hasOwnProperty.call(nextSeries, mainMapKey))
-      ? nextSeries[mainMapKey]
-      : (localStorage.getItem(mainLocalKey) ?? '1');
-    localStorage.setItem(stashLocalKey, mainVal);
-    if (getToken() && nextSeries[stashMapKey] !== mainVal) {
-      if (!changed) nextSeries = { ...nextSeries };
-      nextSeries[stashMapKey] = mainVal;
-      changed = true;
+// A series keeps its current state when its library location changes. Existing
+// copies in other stashes retain their own preferences.
+export function _syncMovedSeriesPrefs(stashes) {
+  if (!Array.isArray(booksState._cachedStashes)) return;
+  const contexts = items => {
+    const result = new Map();
+    for (const stash of items) for (const id of stash.seriesIds || []) {
+      const sid = String(id);
+      if (!result.has(sid)) result.set(sid, new Set());
+      result.get(sid).add(String(stash.id));
+    }
+    return result;
+  };
+  const before = contexts(booksState._cachedStashes), after = contexts(stashes);
+  const updates = [];
+  const localKey = (place, sid) => `${place === 'main' ? '' : `stash_${place}_`}sr_expanded_${sid}`;
+  for (const sid of new Set([...before.keys(), ...after.keys()])) {
+    const oldPlaces = before.get(sid) || new Set(['main']);
+    const newPlaces = after.get(sid) || new Set(['main']);
+    const source = [...oldPlaces][0];
+    for (const place of newPlaces) {
+      if (oldPlaces.has(place)) continue;
+      const val = _getExpandedPref('series', `${source}:${sid}`, localKey(source, sid)) ? '1' : '0';
+      updates.push([`${place}:${sid}`, localKey(place, sid), val]);
     }
   }
-  if (getToken() && changed) {
-    booksState._seriesExpandedPrefs = nextSeries;
-    booksState._hooks.savePrefs?.({ seriesExpanded: nextSeries });
+  if (!updates.length) return;
+  const map = { ...booksState._seriesExpandedPrefs };
+  for (const [key, storageKey, val] of updates) {
+    localStorage.setItem(storageKey, val);
+    map[key] = val;
+  }
+  if (getToken()) {
+    booksState._seriesExpandedPrefs = map;
+    booksState._hooks.savePrefs?.({ seriesExpanded: map });
   }
 }
