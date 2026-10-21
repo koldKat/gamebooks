@@ -25,7 +25,7 @@ function setup() {
   const strings = createContext({});
   runInContext(readFileSync(new URL('../../../public/js/i18n/en/progression.js', import.meta.url), 'utf8').replace('export default', 'globalThis.strings='), strings);
   const context = createContext({ document: { getElementById: get }, window: { dispatchEvent() {} }, CustomEvent: class {},
-    getToken: () => token, COIN_SVG: '<svg></svg>', escapeHtml: String,
+    getToken: () => token, COIN_SVG: '<svg class="coin-icon"></svg>', DIAMOND_SVG: '<svg class="diamond-icon"></svg>', escapeHtml: String,
     t: (key, values = {}) => (strings.strings[key] || key).replace(/\{(\w+)\}/g, (_, k) => values[k] ?? `{${k}}`),
     apiFetch(url, options) { return new Promise(resolve => requests.push({ url, options, resolve })); },
     setTimeout, clearTimeout,
@@ -47,6 +47,8 @@ test('private diamond upgrades sit after Coin Mint and before Extra Undo with es
   assert.match(html, /Diamond Digging/); assert.match(html, /future XP events/);
   assert.match(html, /Current: \+1.2% digging speed \(1.0 base \+ 0.2 bought\)/);
   assert.match(html, /1 diamond = 13 GC \(10 base \+ 3 bought\)/);
+  assert.match(html, /shop-item-effect">1 <span role="img" aria-label="Gold coin"><svg class="coin-icon"><\/svg><\/span> per/);
+  assert.match(html, /shop-item-effect">1 <span role="img" aria-label="Diamond"><svg class="diamond-icon"><\/svg><\/span> per/);
   assert.equal(runInContext('SHOP_ITEMS.find(x=>x.id===\'diamond_dig\').costFn(_shopData)', h.context), 3);
   assert.equal(runInContext('SHOP_ITEMS.find(x=>x.id===\'diamond_exchange\').costFn(_shopData)', h.context), 4);
   const capped = h.render({ level: 10, coinsBalance: 55, diamondsBalance: 2, diamondDigPurchased: 10, diamondExchangePurchased: 10 });

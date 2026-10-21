@@ -4,6 +4,7 @@ import { apiFetch, getToken } from '../core/state.js';
 import { escapeHtml } from '../core/util.js';
 import { t } from '../i18n.js';
 import { COIN_SVG } from '../ui-helpers/coin-icon.js';
+import { DIAMOND_SVG } from './diamonds.js';
 export { COIN_SVG };
 
 // Callbacks wired in by main.js at boot
@@ -56,7 +57,9 @@ const SHOP_ITEMS = [
     desc:      () => { const cap = _shopData?.level || 0; return t('shop.item.gc_mint.desc', { cap: (cap * 0.1).toFixed(1) }); },
     statKey:   'bonusGcMintPurchased',
     totalLabel: d => t('shop.item.gc_mint.total', { total: (((d.level || 0) + (d.bonusGcMintPurchased || 0)) * 0.1).toFixed(1), base: ((d.level || 0) * 0.1).toFixed(1), bought: ((d.bonusGcMintPurchased || 0) * 0.1).toFixed(1) }),
-    effect:    d => { const pts = (d.level || 0) + (d.bonusGcMintPurchased || 0); return t('shop.item.gc_mint.effect', { xpPerCoin: Math.round(1000 / (1 + pts * 0.001)).toLocaleString() }); },
+    effectIcon: COIN_SVG,
+    effectCurrency: 'Gold coin',
+    effect:    d => { const pts = (d.level || 0) + (d.bonusGcMintPurchased || 0); return t('shop.item.gc_mint.effect', { currency: '{currency}', xpPerCoin: Math.round(1000 / (1 + pts * 0.001)).toLocaleString() }); },
     atCap:     d => (d.bonusGcMintPurchased || 0) >= (d.level || 0),
   },
   {
@@ -67,7 +70,9 @@ const SHOP_ITEMS = [
     desc:      () => t('shop.item.diamond_dig.desc', { cap: ((_shopData?.level || 0) * 0.1).toFixed(1) }),
     statKey:   'diamondDigPurchased',
     totalLabel: d => t('shop.item.diamond_dig.total', { total: (d.diamondDigPct || 0).toFixed(1), base: ((d.level || 0) * 0.1).toFixed(1), bought: ((d.diamondDigPurchased || 0) * 0.1).toFixed(1) }),
-    effect:    d => t('shop.item.diamond_dig.effect', { events: Math.ceil(d.diamondEventsPerDiamond || 1000).toLocaleString() }),
+    effectIcon: DIAMOND_SVG,
+    effectCurrency: 'Diamond',
+    effect:    d => t('shop.item.diamond_dig.effect', { currency: '{currency}', events: Math.ceil(d.diamondEventsPerDiamond || 1000).toLocaleString() }),
     atCap:     d => (d.diamondDigPurchased || 0) >= (d.level || 0),
   },
   {
@@ -215,11 +220,13 @@ function renderShopItems() {
     const cost      = item.costFn(_shopData);
     const canBuy    = !cappedOut && balance >= cost;
     const btnLabel  = cappedOut ? t('shop.btn.max') : t('shop.btn.buy');
+    const effect = item.effect ? escapeHtml(item.effect(_shopData)).replace('{currency}',
+      `<span role="img" aria-label="${escapeHtml(item.effectCurrency)}">${item.effectIcon}</span>`) : '';
     return `<div class="shop-item">
       <div class="shop-item-info">
         <div class="shop-item-label">${escapeHtml(item.label())}</div>
         <div class="shop-item-desc">${escapeHtml(typeof item.desc === 'function' ? item.desc() : item.desc)}</div>
-        <div class="shop-item-owned">${escapeHtml(item.totalLabel(_shopData))}${item.effect ? ` <span class="shop-item-effect">${escapeHtml(item.effect(_shopData))}</span>` : ''}</div>
+        <div class="shop-item-owned">${escapeHtml(item.totalLabel(_shopData))}${effect ? ` <span class="shop-item-effect">${effect}</span>` : ''}</div>
       </div>
       <div class="shop-item-buy">
         <div class="shop-item-cost">${COIN_SVG} ${cost}</div>
