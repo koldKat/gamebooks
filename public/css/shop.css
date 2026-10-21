@@ -120,20 +120,26 @@
 .shop-loading { font-size: 0.85rem; color: #6b7280; padding: 1rem 0; text-align: center; }
 
 .exchange-shop-balance { color: #67e8f9; background: #102a33; border-color: #155e75; white-space: nowrap; }
-.exchange-shop-body { padding: 0.85rem 1rem; overflow-y: auto; font-size: 0.85rem; }
+#exchange-shop-modal { width: 400px; max-width: min(92vw, 400px); }
+.exchange-shop-body { padding: 0.65rem 0.85rem 0.5rem; overflow-y: auto; font-size: 0.85rem; }
 .exchange-shop-direction { display: flex; gap: 0.5rem; margin-bottom: 0.8rem; }
 .exchange-shop-direction [aria-pressed="true"] { background: #16404c; border-color: #22d3ee; color: #67e8f9; }
 #exchange-shop-modal .shop-modal-header { flex-wrap: wrap; }
 #exchange-shop-title { min-width: 100px; }
 .exchange-shop-body label { display: block; color: #d1d5db; margin-bottom: 0.35rem; }
-.exchange-shop-amount-row { display: flex; gap: 0.5rem; }
-#exchange-shop-amount { flex: 1; min-width: 0; width: 100%; background: #1f2937; color: #f3f4f6; border: 1px solid #4b5563; border-radius: 6px; padding: 0.4rem 0.55rem; font: inherit; color-scheme: dark; }
+.exchange-shop-amount-row { display: flex; gap: 0.5rem; align-items: center; }
+.exchange-shop-amount-row .cs-num-wrap { flex: 1; min-width: 0; }
+.exchange-shop-amount-row .cs-num-btn:disabled { opacity: 0.4; cursor: default; }
+#exchange-shop-amount { font: inherit; color-scheme: dark; }
 #exchange-shop-amount:focus { outline: 1px solid #22d3ee; border-color: #22d3ee; }
 .exchange-shop-rate { color: #9ca3af; margin-top: 0.65rem; }
 .exchange-shop-receive { color: #86efac; font-weight: 700; margin: 0.45rem 0 0.65rem; }
 .exchange-shop-tip { color: #9ca3af; font-size: 0.78rem; margin: 0.3rem 0; }
 #exchange-shop-submit { margin-top: 0.65rem; }
-.exchange-shop-message { min-height: 1.2em; margin-top: 0.5rem; color: #86efac; }
+.exchange-shop-confirmation { margin-top: 0.55rem; padding: 0.5rem 0.6rem; background: #102a33; border: 1px solid #155e75; border-radius: 6px; }
+.exchange-shop-confirmation p { margin: 0 0 0.4rem; color: #e5e7eb; }
+.exchange-shop-message { margin-top: 0.4rem; color: #86efac; }
+.exchange-shop-message:empty { display: none; }
 .exchange-shop-message--error { color: #f87171; }
 
 @media (max-width: 640px) {

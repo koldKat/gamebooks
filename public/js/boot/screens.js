@@ -79,6 +79,6 @@ export async function navigateToBook(bookId) {
   }
 }
 
-export { showLogin, showBooks, _updateUsernameTooltip } from './landing.js';
+export { showLogin, showBooks } from './landing.js';
 export { showMain } from './play-screen.js';
 export { _lockView, _openMobilePanel } from './navigation.js';

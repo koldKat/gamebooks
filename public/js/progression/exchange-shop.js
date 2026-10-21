@@ -2,7 +2,7 @@ import { apiFetch, getToken } from '../core/state.js';
 import { COIN_SVG } from '../ui-helpers/coin-icon.js';
 import { DIAMOND_SVG } from './diamonds.js';
 
-let _profile = null, _generation = 0, _busy = false, _pending = null, _hooks = {}, _direction = 'sell';
+let _profile = null, _generation = 0, _busy = false, _pending = null, _hooks = {}, _direction = 'sell', _confirming = false;
 const el = name => document.getElementById('exchange-shop-' + name);
 
 function amount() {
@@ -31,6 +31,8 @@ function render() {
   el('amount').max = String(maximum);
   el('amount').disabled = !ready || _busy || maximum < 1;
   el('max').disabled = !ready || _busy || maximum < 1;
+  el('dec').disabled = !ready || _busy || maximum < 1 || amount() <= 1;
+  el('inc').disabled = !ready || _busy || maximum < 1 || amount() >= maximum;
   el('rate').innerHTML = `1 ${DIAMOND_SVG} = ${rate.toLocaleString()} ${COIN_SVG}`;
   const quantity = amount(), gold = quantity * rate;
   const valid = ready && quantity > 0 && quantity <= maximum && rate > 0 && Number.isSafeInteger(gold);
@@ -38,20 +40,28 @@ function render() {
     ? `You’ll receive ${DIAMOND_SVG} ${(valid ? quantity : 0).toLocaleString()} for ${COIN_SVG} ${(valid ? gold : 0).toLocaleString()}`
     : `You’ll receive ${COIN_SVG} ${(valid ? gold : 0).toLocaleString()}`;
   el('submit').disabled = _busy || !valid;
-  el('submit').textContent = _busy ? 'Exchanging…' : buying ? 'Buy diamonds' : 'Sell diamonds';
+  el('confirmation').hidden = !_confirming;
+  el('confirm-details').textContent = _confirming ? (buying
+    ? `Spend ${gold.toLocaleString()} GC to buy ${quantity.toLocaleString()} diamonds?`
+    : `Sell ${quantity.toLocaleString()} diamonds for ${gold.toLocaleString()} GC?`) : '';
+  el('submit').hidden = _confirming;
+  el('confirm').disabled = _busy || !valid;
+  el('confirm').textContent = buying ? 'Confirm Buy' : 'Confirm Sell';
+  el('submit').textContent = _busy ? 'Exchanging…' : 'Review exchange';
 }
 
 export function closeDiamondExchangeShop() {
   _generation++;
   _profile = null;
   _pending = null;
+  _confirming = false;
   el('modal-overlay')?.classList.remove('active');
 }
 
 export async function openDiamondExchangeShop() {
   const token = getToken(), generation = ++_generation;
   if (!token) return;
-  _profile = null; _pending = null; _direction = 'sell';
+  _profile = null; _pending = null; _direction = 'sell'; _confirming = false;
   el('modal-overlay').classList.add('active');
   el('amount').value = '';
   message('Loading…'); render();
@@ -78,6 +88,8 @@ async function submit(event) {
   const rate = _direction === 'buy' ? _profile.diamondBuyRate : _profile.diamondExchangeRate;
   const maximum = _direction === 'buy' ? Math.floor(_profile.coinsBalance / rate) : _profile.diamondsBalance;
   if (!quantity || quantity > maximum || !rate) return;
+  if (!_confirming) { _confirming = true; render(); return; }
+  _confirming = false;
   if (!_pending || _pending.amount !== quantity || _pending.expectedRate !== rate || _pending.direction !== _direction) {
     const requestId = crypto.randomUUID?.() || Array.from(crypto.getRandomValues(new Uint8Array(16)), n => n.toString(16).padStart(2, '0')).join('');
     _pending = { amount: quantity, expectedRate: rate, requestId, direction: _direction };
@@ -116,10 +128,18 @@ export function initDiamondExchangeShop(hooks = {}) {
   document.getElementById('diamonds-display')?.addEventListener('click', openDiamondExchangeShop);
   el('close')?.addEventListener('click', closeDiamondExchangeShop);
   el('form')?.addEventListener('submit', submit);
-  el('amount')?.addEventListener('input', () => { message(''); render(); });
-  el('max')?.addEventListener('click', () => { if (_profile && !_busy) { el('amount').value = el('amount').max; message(''); render(); } });
+  el('confirm')?.addEventListener('click', event => { if (_confirming) return submit(event); });
+  el('amount')?.addEventListener('input', () => { _confirming = false; message(''); render(); });
+  el('max')?.addEventListener('click', () => { if (_profile && !_busy) { _confirming = false; el('amount').value = el('amount').max; message(''); render(); } });
+  for (const [name, delta] of [['dec', -1], ['inc', 1]]) el(name)?.addEventListener('click', () => {
+    if (!_profile || _busy || el(name).disabled) return;
+    _confirming = false;
+    el('amount').value = String(Math.max(1, Math.min(Number(el('amount').max), (amount() || 0) + delta)));
+    message(''); render();
+  });
+  el('cancel')?.addEventListener('click', () => { _confirming = false; render(); });
   for (const direction of ['sell', 'buy']) el(direction)?.addEventListener('click', () => {
-    if (!_busy && _profile) { _direction = direction; _pending = null; el('amount').value = '1'; message(''); render(); }
+    if (!_busy && _profile) { _direction = direction; _pending = null; _confirming = false; el('amount').value = '1'; message(''); render(); }
   });
   el('modal-overlay')?.addEventListener('click', event => {
     if (event.target === event.currentTarget && _hooks.getMousedownOverlay?.() === event.currentTarget) closeDiamondExchangeShop();

@@ -1,5 +1,5 @@
 import { bootState } from './state.js';
-import { state, setViewingPt, getToken, getUsername, setUsername, apiFetch, setCurrentBookId, setCurrentUserLevel, setBonusUndos, setBonusFastTravels } from '../core/state.js';
+import { state, setViewingPt, getToken, setUsername, apiFetch, setCurrentBookId, setCurrentUserLevel, setBonusUndos, setBonusFastTravels } from '../core/state.js';
 import { destroyNetwork } from '../graph.js';
 import { render, setDiscoverableLimit } from '../play.js';
 import { t } from '../i18n.js';
@@ -21,8 +21,7 @@ import { loadFeed, refreshFeedFilters } from '../feed.js';
 import { _scheduleLiveUiRefresh, resetNotifBadgesForLogout } from '../community/notif.js';
 import { _resetRewardSnapshotState, _positionRewardLayer, _processRewardSnapshot } from '../progression/rewards.js';
 import { cancelBgMove } from '../play/bg.js';
-import { resolveIsAdmin, adminBadge, authorBadge, contributorBadge, moderatorBadge, registerAuthor, registerContributor, registerModerator, resolveIsModerator } from '../account/user.js';
-import { escapeHtml } from '../core/util.js';
+import { resolveIsAdmin, registerAuthor, registerContributor, registerModerator, resolveIsModerator } from '../account/user.js';
 import { _cancelForumReveal, setDiceRollerVisible, setGuideVisible, _isMobile, _revealLanding } from './helpers.js';
 import { _pushNav, _isViewLocked } from './navigation.js';
 import { APP_XP_EXTRA_USER_ID } from './state.js';
@@ -84,16 +83,6 @@ export function showLogin() {
   _updateLandingBgDragUi();
 }
 
-export function _updateUsernameTooltip() {
-  const el = document.getElementById('books-username');
-  if (!el) return;
-  if (el.scrollWidth > el.clientWidth) {
-    el.dataset.tooltip = el.textContent.trim();
-  } else {
-    delete el.dataset.tooltip;
-  }
-}
-
 export async function showBooks() {
   if (_isViewLocked('book')) return;
   const sessionToken = getToken();
@@ -131,8 +120,6 @@ export async function showBooks() {
   _positionRewardLayer();
   document.getElementById('right-toggle').classList.add('visible');
   document.getElementById('sidebar-toggle').classList.remove('visible');
-  document.getElementById('books-username').innerHTML = escapeHtml(getUsername() || '') + adminBadge(bootState._isAdmin);
-  _updateUsernameTooltip();
   document.getElementById('feedback-btn').style.display = '';
   document.getElementById('forum-btn').style.display    = '';
   document.getElementById('inbox-btn').style.display    = getToken() ? '' : 'none';
@@ -210,9 +197,6 @@ export async function showBooks() {
       registerAuthor(profile.username, !!profile.isAuthor, profile.displayName);
       registerContributor(profile.username, !!profile.isContributor);
       registerModerator(profile.username, !!profile.isModerator);
-      const _dn = profile.displayName || profile.username;
-      document.getElementById('books-username').innerHTML = escapeHtml(_dn) + adminBadge(bootState._isAdmin) + authorBadge(profile.username) + contributorBadge(profile.username) + moderatorBadge(profile.username);
-      _updateUsernameTooltip();
     }
     refreshFeedFilters();
     await _prefsReady;

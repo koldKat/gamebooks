@@ -611,7 +611,6 @@
             <div class="books-header-right">
               <button id="shop-btn" class="shop-btn" data-tooltip="Gold Coins Shop"><span id="coins-display">GC 0</span></button>
               <button id="diamonds-display" class="diamonds-display" type="button" data-tooltip="Diamond Exchange Shop" hidden></button>
-              <span id="books-username" class="books-username"></span>
               <button id="profile-btn" class="profile-btn" data-tooltip="Edit profile">
                 <span id="profile-avatar" class="avatar-circle"></span>
               </button>
@@ -1180,14 +1179,23 @@
         </div>
         <label for="exchange-shop-amount" id="exchange-shop-amount-label">Diamonds to sell</label>
         <div class="exchange-shop-amount-row">
-          <input id="exchange-shop-amount" type="number" min="1" step="1" inputmode="numeric" autocomplete="off" required>
+          <div class="cs-num-wrap">
+            <button id="exchange-shop-dec" class="cs-num-btn" type="button" aria-label="Fewer diamonds">−</button>
+            <input id="exchange-shop-amount" class="cs-val cs-val-num" type="number" min="1" step="1" inputmode="numeric" autocomplete="off" required>
+            <button id="exchange-shop-inc" class="cs-num-btn" type="button" aria-label="More diamonds">+</button>
+          </div>
           <button id="exchange-shop-max" type="button" class="secondary-btn">Max</button>
         </div>
         <div id="exchange-shop-rate" class="exchange-shop-rate"></div>
         <div id="exchange-shop-receive" class="exchange-shop-receive" aria-live="polite"></div>
         <p class="exchange-shop-tip" id="exchange-shop-tip">Gold coins are added to your balance immediately.</p>
         <p class="exchange-shop-tip">Buy price: twice your level. Sell rate: your level + upgrades.</p>
-        <button id="exchange-shop-submit" class="shop-buy-btn" type="submit" disabled>Exchange</button>
+        <div id="exchange-shop-confirmation" class="exchange-shop-confirmation" hidden>
+          <p id="exchange-shop-confirm-details" aria-live="polite"></p>
+          <button id="exchange-shop-cancel" type="button" class="secondary-btn">Cancel</button>
+          <button id="exchange-shop-confirm" type="button" class="shop-buy-btn">Confirm Sell</button>
+        </div>
+        <button id="exchange-shop-submit" class="shop-buy-btn" type="submit" disabled>Review exchange</button>
         <div id="exchange-shop-message" class="exchange-shop-message" role="status"></div>
       </form>
     </div>

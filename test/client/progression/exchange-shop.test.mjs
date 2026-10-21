@@ -22,7 +22,11 @@ function setup() {
 }
 const profile={diamondsBalance:5,diamondsExchanged:2,diamondsBought:1,coinsBalance:60,diamondExchangeRate:13,diamondBuyRate:20};
 async function open(h,data=profile){const p=h.context.openDiamondExchangeShop();h.requests.shift().resolve({ok:true,json:async()=>data});await p;}
-const submit=h=>h.get('form').handlers.submit({preventDefault(){}});
+const submit=h=>{
+  const event={preventDefault(){}};
+  h.get('form').handlers.submit(event);
+  if(!h.get('confirmation').hidden)return h.get('confirm').handlers.click(event);
+};
 
 test('exchange dialog shows current rate, both balances, total history, quantity previews and Max for each direction',async()=>{
   const h=setup();await open(h);
@@ -73,4 +77,33 @@ test('network retries reuse one request ID and refreshed quotes require a new de
   pending=submit(h);request=h.requests.shift();assert.notEqual(JSON.parse(request.options.body).requestId,JSON.parse(body).requestId);
   assert.equal(JSON.parse(request.options.body).expectedRate,14);
   request.resolve({ok:true,json:async()=>({...profile,diamondExchangeRate:14,diamondsBalance:4,diamondsExchanged:3,direction:'sell',exchanged:1,goldReceived:14})});await pending;
+});
+
+test('quantity buttons respect each direction’s available balance and cancel any pending confirmation',async()=>{
+  const h=setup();await open(h);
+  assert.equal(h.get('dec').disabled,true);
+  h.get('inc').handlers.click();assert.equal(h.get('amount').value,'2');
+  h.get('form').handlers.submit({preventDefault(){}});
+  assert.equal(h.requests.length,0);assert.equal(h.get('confirmation').hidden,false);
+  assert.equal(h.get('confirm-details').textContent,'Sell 2 diamonds for 26 GC?');
+  h.get('inc').handlers.click();assert.equal(h.get('confirmation').hidden,true);
+  h.get('max').handlers.click();assert.equal(h.get('inc').disabled,true);
+  h.get('inc').handlers.click();assert.equal(h.get('amount').value,'5');
+  h.get('buy').handlers.click();h.get('max').handlers.click();
+  assert.equal(h.get('amount').value,'3');assert.equal(h.get('inc').disabled,true);
+  h.get('dec').handlers.click();assert.equal(h.get('amount').value,'2');
+});
+
+test('buying and selling require a separate confirmation and cancel never sends a transaction',async()=>{
+  const h=setup();await open(h);const event={preventDefault(){}};
+  h.get('form').handlers.submit(event);assert.equal(h.requests.length,0);
+  assert.equal(h.get('submit').hidden,true);assert.equal(h.get('confirm').textContent,'Confirm Sell');
+  h.get('cancel').handlers.click();assert.equal(h.get('confirmation').hidden,true);assert.equal(h.requests.length,0);
+  h.get('buy').handlers.click();h.get('amount').value='2';h.get('amount').handlers.input();
+  h.get('form').handlers.submit(event);assert.equal(h.requests.length,0);
+  assert.equal(h.get('confirm-details').textContent,'Spend 40 GC to buy 2 diamonds?');
+  assert.equal(h.get('confirm').textContent,'Confirm Buy');
+  const pending=h.get('confirm').handlers.click(event);assert.equal(h.requests.length,1);
+  h.requests.shift().resolve({ok:true,json:async()=>({...profile,direction:'buy',exchanged:2,goldSpent:40})});
+  await pending;
 });
