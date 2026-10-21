@@ -41,7 +41,7 @@ function _renderFeed({ entries, pinned, token }) {
   const disabled = _disabledFilters;
   const visible = filterFeedEntries(entries, disabled);
   const { blocks, dayCoverLists } = renderFeedContents(visible,
-    disabled.has('news') ? null : pinned, feedHeaderHtml(true, disabled),
+    pinned, feedHeaderHtml(true, disabled),
     disabled.size ? t('feed.filter.empty') : undefined);
   // Keep expansion intent through filtering and live regrouping, but not account changes.
   if (_renderedFeedToken !== token) _expandedGroupKeys.clear();
