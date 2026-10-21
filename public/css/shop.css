@@ -151,8 +151,15 @@
 .exchange-shop-rate { color: #9ca3af; margin-top: 0.65rem; }
 .exchange-shop-receive { color: #86efac; font-weight: 700; margin: 0.45rem 0 0.65rem; }
 .exchange-shop-tip { color: #9ca3af; font-size: 0.78rem; margin: 0.3rem 0; }
-#exchange-shop-submit { margin-top: 0.65rem; }
-.exchange-shop-message { margin-top: 0.4rem; color: #86efac; }
+.exchange-shop-actions {
+  display: grid; grid-template-columns: 7.25rem minmax(0, 1fr); align-items: center;
+  gap: 0.5rem; height: 2.25rem; margin-top: 0.65rem;
+}
+#exchange-shop-submit { margin: 0; width: 100%; }
+.exchange-shop-message {
+  min-width: 0; max-height: 100%; overflow-y: auto; overflow-wrap: anywhere;
+  color: #86efac; font-size: 0.78rem; line-height: 1.2;
+}
 .exchange-shop-message:empty { display: none; }
 .exchange-shop-message--error { color: #f87171; }
 
