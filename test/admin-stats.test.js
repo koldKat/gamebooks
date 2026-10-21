@@ -11,7 +11,11 @@ function fixture(t) {
   t.after(() => db.close());
   db.exec(`
     CREATE TABLE users (xp INTEGER DEFAULT 0, bonus_gc_mint_purchased INTEGER DEFAULT 0,
-      bonus_coins INTEGER DEFAULT 0, coins_spent INTEGER DEFAULT 0, bonus_gc_generated INTEGER DEFAULT 0);
+      bonus_coins INTEGER DEFAULT 0, coins_spent INTEGER DEFAULT 0, bonus_gc_generated INTEGER DEFAULT 0,
+      xp_boost_pct INTEGER DEFAULT 0, bonus_heartbeat_xp INTEGER DEFAULT 0,
+      bonus_gc_chance_purchased INTEGER DEFAULT 0, bonus_diamond_dig_purchased INTEGER DEFAULT 0,
+      bonus_diamond_exchange_purchased INTEGER DEFAULT 0, bonus_undos INTEGER DEFAULT 0,
+      bonus_fast_travels INTEGER DEFAULT 0);
     CREATE TABLE books (id INTEGER PRIMARY KEY, parent_book_id INTEGER, is_container INTEGER DEFAULT 0,
       total_sections INTEGER, pdf_path TEXT, epub_path TEXT, has_battle_sim INTEGER DEFAULT 0);
     CREATE TABLE user_books (book_id INTEGER, state_data TEXT);
@@ -30,6 +34,8 @@ function fixture(t) {
   const stats = vm.runInNewContext(source.slice(source.indexOf('function adminGetStats('), source.indexOf('function getSiteStats()')) + '\nadminGetStats;', {
     db, ...keys, adminSimHistoryKeys: new Set([...keys.SIM_HISTORY_KEYS, ...keys.RETIRED_SIM_HISTORY_KEYS]),
     collectDashboardStats: require('../server/db/gameplay-stats').collectDashboardStats,
+    getShopPurchaseTotals: require('../server/db/shop-purchases').getShopPurchaseTotals,
+    computeLevel: vm.runInNewContext(xp.slice(xp.indexOf('function computeLevel('), xp.indexOf('// Dynamic level cap')) + '\ncomputeLevel;'),
   });
   const put = (book, state) => db.prepare('INSERT INTO user_books VALUES (?,?)').run(book, JSON.stringify(state));
   put(1, { graph: { 1: { choices: [2, 0, -1] }, 2: { choices: [3] } }, playthroughs: [

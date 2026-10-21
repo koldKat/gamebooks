@@ -22,16 +22,40 @@
 
 .coin-icon { width: 14px; height: 14px; vertical-align: -2px; display: inline-block; }
 
+.diamonds-display {
+  background: #102a33;
+  border: 1px solid #155e75;
+  border-radius: 6px;
+  color: #67e8f9;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  white-space: nowrap;
+  font-family: inherit;
+  cursor: pointer;
+}
+.diamonds-display:hover { background: #16404c; border-color: #22d3ee; }
+.exchange-shop-stock-value { color: #67e8f9; }
+.diamond-icon { width: 14px; height: 14px; vertical-align: -2px; display: inline-block; }
+.minor-coins-display { font-size: 0.75rem; font-weight: 700; padding: 0.2rem 0.4rem; border: 1px solid #374151; border-radius: 6px; white-space: nowrap; cursor: default; }
+.books-header-right :is(.minor-coins-display, .shop-btn, .diamonds-display) { font-family: inherit; font-size: 0.75rem; font-weight: 700; line-height: 1.2; letter-spacing: 0.03em; padding: 0.2rem 0.45rem; }
+.bronze-display { color: #e8b582; background: #2c2119; }
+.silver-display { color: #cbd5e1; background: #202936; }
+@media (max-width: 520px) {
+  .books-header { flex-wrap: wrap; }
+  .books-header-right { width: 100%; justify-content: flex-end; gap: 0.25rem; }
+}
+
 /* ── Shop modal ─────────────────────────────────────────────────── */
-#shop-modal-overlay {
+#shop-modal-overlay, #exchange-shop-modal-overlay {
   display: none; position: fixed; inset: 0;
   background: rgba(0,0,0,0.6); z-index: 2000;
   align-items: flex-start; justify-content: center;
   padding: 1rem;
   overflow-y: auto;
 }
-#shop-modal-overlay.active { display: flex; }
-#shop-modal {
+#shop-modal-overlay.active, #exchange-shop-modal-overlay.active { display: flex; }
+#shop-modal, #exchange-shop-modal {
   background: #111827; border: 1px solid #374151; border-radius: 12px;
   width: 548px; max-width: min(92vw, 548px); max-height: calc(100vh - 2rem);
   margin: auto 0;
@@ -81,13 +105,21 @@
   background: #1f2937; border: 1px solid #374151; border-radius: 8px;
   padding: 0.4rem 1rem;
 }
-.shop-item-info { flex: 1; }
+.shop-item-info { flex: 1; min-width: 0; }
 .shop-item-label { font-size: 0.88rem; font-weight: 600; color: #f3f4f6; }
 .shop-item-desc  { font-size: 0.78rem; color: #6b7280; margin-top: 0.15rem; }
 .shop-item-owned { font-size: 0.75rem; color: #86efac; margin-top: 0.2rem; }
 .shop-item-effect { color: #f5a623; font-weight: 600; }
-.shop-item-buy   { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; }
-.shop-item-cost  { font-size: 0.75rem; font-weight: 700; color: #86efac; }
+.shop-item-buy {
+  display: flex; flex: 0 0 4.25rem; width: 4.25rem;
+  flex-direction: column; align-items: stretch; gap: 0.3rem;
+}
+.shop-item-cost {
+  display: grid; grid-template-columns: 14px 4ch; align-items: center;
+  align-self: center; gap: 0.25rem; text-align: right; white-space: nowrap;
+  font-size: 0.75rem; font-weight: 700; font-variant-numeric: tabular-nums; color: #86efac;
+}
+.shop-item-buy .shop-buy-btn { box-sizing: border-box; width: 100%; }
 .shop-buy-btn {
   background: #1c2a18; border: 1px solid #2d5a1b; border-radius: 6px;
   color: #86efac; font-size: 0.78rem; font-weight: 600;
@@ -104,11 +136,50 @@
 .shop-error   { font-size: 0.8rem; color: #f87171; min-height: 1.2em; padding: 0 1.25rem 0.75rem; }
 .shop-loading { font-size: 0.85rem; color: #6b7280; padding: 1rem 0; text-align: center; }
 
+.exchange-shop-balance { color: #67e8f9; background: #102a33; border-color: #155e75; white-space: nowrap; }
+#exchange-shop-modal { width: 400px; max-width: min(92vw, 400px); }
+.exchange-shop-body { padding: 0.65rem 0.85rem 0.5rem; overflow-y: auto; font-size: 0.85rem; }
+.exchange-shop-body .secondary-btn, .exchange-shop-body .shop-buy-btn {
+  box-sizing: border-box; height: 28px; padding: 0 0.65rem;
+  font-family: inherit; font-size: 0.78rem; line-height: 1; border-radius: 5px;
+}
+.exchange-shop-direction { display: flex; gap: 0.5rem; margin-bottom: 0.8rem; }
+.exchange-shop-direction [aria-pressed="true"] { background: #16404c; border-color: #22d3ee; color: #67e8f9; }
+#exchange-shop-modal .shop-modal-header { flex-wrap: wrap; }
+#exchange-shop-title { min-width: 100px; }
+.exchange-shop-body label { display: block; color: #d1d5db; margin-bottom: 0.35rem; }
+.exchange-shop-quantity-label { display: flex; align-items: baseline; gap: 0.35rem; flex-wrap: wrap; margin-bottom: 0.35rem; }
+.exchange-shop-quantity-label label, .exchange-shop-quantity-label .exchange-shop-tip { margin: 0; }
+.exchange-shop-amount-row { display: flex; gap: 0.5rem; align-items: center; }
+.exchange-shop-amount-row .cs-num-wrap { flex: 1; min-width: 0; align-items: stretch; }
+.exchange-shop-amount-row .cs-num-btn { box-sizing: border-box; width: 28px; height: 28px; padding: 0; }
+.exchange-shop-amount-row .cs-num-btn:disabled { opacity: 0.4; cursor: default; }
+#exchange-shop-amount { box-sizing: border-box; height: 28px; padding: 0 0.4rem; border-radius: 0; border-left: 0; border-right: 0; font: inherit; font-size: 0.78rem; line-height: 26px; color-scheme: dark; }
+#exchange-shop-amount:focus { outline: 1px solid #22d3ee; border-color: #22d3ee; }
+.exchange-shop-quote {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+  margin: 0.65rem 0; white-space: nowrap; overflow-x: auto;
+}
+.exchange-shop-rate { flex: 0 0 auto; color: #9ca3af; }
+.exchange-shop-receive { flex: 0 0 auto; color: #86efac; font-weight: 700; }
+.exchange-shop-tip { color: #9ca3af; font-size: 0.78rem; margin: 0.3rem 0; }
+.exchange-shop-actions {
+  display: grid; grid-template-columns: 7.25rem minmax(0, 1fr); align-items: center;
+  gap: 0.5rem; height: 2.25rem; margin-top: 0.65rem;
+}
+#exchange-shop-submit { margin: 0; width: 100%; }
+.exchange-shop-message {
+  min-width: 0; max-height: 100%; overflow-y: auto; overflow-wrap: anywhere;
+  color: #86efac; font-size: 0.78rem; line-height: 1.2;
+}
+.exchange-shop-message:empty { display: none; }
+.exchange-shop-message--error { color: #f87171; }
+
 @media (max-width: 640px) {
-  #shop-modal-overlay {
+  #shop-modal-overlay, #exchange-shop-modal-overlay {
     padding: 0.5rem;
   }
-  #shop-modal {
+  #shop-modal, #exchange-shop-modal {
     max-height: calc(100vh - 1rem);
   }
   .shop-item {

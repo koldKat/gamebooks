@@ -91,6 +91,8 @@ export default {
     'stats.upgrade_xp_boost_pct':      '- XP boost %',
     'stats.upgrade_gc_chance':         '- Lucky coin chance %',
     'stats.upgrade_gc_mint':           '- Coin Mint %',
+    'stats.upgrade_diamond_dig':       '- Diamond Digging %',
+    'stats.upgrade_diamond_exchange':  '- Diamond Exchange Rate',
 
     'stats.total_ratings_given': 'Total ratings given',
     'stats.book_ratings':        'Book ratings',

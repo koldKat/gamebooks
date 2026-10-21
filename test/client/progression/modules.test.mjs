@@ -5,27 +5,31 @@ import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const dir = new URL('../../../public/js/', import.meta.url);
-test('progression relocation preserves XP, floaties and shop implementations without root wrappers', () => {
+test('progression relocation preserves unchanged implementations without root wrappers', () => {
   // Non-import source baseline; comment cleanup verified against unchanged executable ASTs.
   const digests = {
-    "app-xp": "02b4f4c1c7316f5cb9253bf05c65ed3bda7ad097f7ca857345c8581a3b7806b4",
-    "rewards": "33fcb7bab962502059be6c89c7fa9ddefdf3d050c3a3490b6ebe69cc0b46d7fa",
-    "shop": "11f726ed43aca1168d47784891ede9d671618e62a32e15ec7a126627d22153df"
+    "app-xp": "0fbe242f2f575d954b83248ab8728cf1ca6825567d4a0cac6ad182b67e01a28a",
   };
   for (const [name, digest] of Object.entries(digests)) {
     assert.equal(existsSync(new URL(name + '.js', dir)), false);
     const source = readFileSync(new URL('progression/' + name + '.js', dir), 'utf8');
     assert.equal(createHash('sha256').update(source.replace(/^import .*;$/gm, '')).digest('hex'), digest);
   }
+  // Rewards now also clear the private diamond display when the account changes.
+  assert.equal(existsSync(new URL('rewards.js', dir)), false);
+  assert.ok(existsSync(new URL('progression/rewards.js', dir)));
+  // Shop now includes the separately tested private diamond upgrades.
+  assert.equal(existsSync(new URL('shop.js', dir)), false);
+  assert.ok(existsSync(new URL('progression/shop.js', dir)));
   assert.equal(existsSync(new URL('progression.js', dir)), false);
   assert.ok(existsSync(new URL('../mobile/js/toast.js', dir)));
 });
 
 test('progression imports retain their original dependency identities', () => {
   const expected = {
-    'app-xp': ['core/state.js', 'progression/shop.js', 'core/util.js', 'i18n.js'],
-    rewards: ['core/state.js', 'progression/shop.js', 'account/profile.js', 'core/livetab.js', 'community/notif.js', 'core/util.js'],
-    shop: ['core/state.js', 'core/util.js', 'i18n.js', 'ui-helpers/coin-icon.js'],
+    'app-xp': ['core/state.js', 'progression/shop.js', 'progression/diamonds.js', 'core/util.js', 'i18n.js'],
+    rewards: ['core/state.js', 'progression/shop.js', 'account/profile.js', 'progression/diamonds.js', 'progression/exchange-shop.js', 'progression/heartbeat-coins.js', 'progression/snapshot-cache.js', 'core/livetab.js', 'community/notif.js', 'core/util.js'],
+    shop: ['core/state.js', 'core/util.js', 'i18n.js', 'ui-helpers/coin-icon.js', 'progression/diamonds.js', 'progression/exchange-shop.js'],
   };
   for (const [name, dependencies] of Object.entries(expected)) {
     const moduleUrl = new URL('progression/' + name + '.js', dir);

@@ -3,43 +3,38 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 
-const source = readFileSync(new URL('../../../admin/js/users-books.js', import.meta.url), 'utf8');
-const block = source.slice(source.indexOf('    const shopXpBoost ='), source.indexOf('    // Lock status in meta bar'));
-
-function render(count) {
-  const requests = [], confirmations = [], reloads = [];
-  const el = (tag, className, text = '') => ({ tag, className, text, style: {}, children: [],
-    appendChild(child) { this.children.push(child); } });
-  const metaBar = el('div', '');
-  vm.runInNewContext(block, {
-    user: { id: 42, username: 'Player', bonusGcMintPurchased: count }, metaBar, el,
-    mkBtn: (text, className, click) => ({ text, className, click }),
-    showConfirm: (text, confirm, options) => confirmations.push({ text, confirm, options }),
-    api: async (method, url, body) => requests.push({ method, url, body: JSON.parse(JSON.stringify(body)) }),
-    loadUserDetail: id => reloads.push(id),
-  });
-  const row = metaBar.children[0]?.children[1]?.children[0];
-  return { metaBar, row, requests, confirmations, reloads };
+const source=readFileSync(new URL('../../../admin/js/users-books.js',import.meta.url),'utf8');
+const block=source.slice(source.indexOf('    const purchases = user.shopPurchases'),source.indexOf('    // Lock status in meta bar'));
+function render(purchases){
+ const requests=[],confirmations=[],reloads=[];let statsRefreshes=0;
+ const el=(tag,className,text='')=>({tag,className,text,children:[],appendChild(child){this.children.push(child);},querySelector(){return this.tbody??=el('tbody','');}});
+ const metaBar=el('div','');
+ vm.runInNewContext(block,{user:{id:42,username:'Player',shopPurchases:purchases},metaBar,el,
+  appendCell(row,text){row.appendChild(el('td','',text));},mkBtn:(text,className,click)=>({text,className,click}),
+  showConfirm:(text,confirm,options)=>confirmations.push({text,confirm,options}),
+  api:async(method,url,body)=>requests.push({method,url,body:JSON.parse(JSON.stringify(body))}),
+  loadUserDetail:id=>reloads.push(id),loadStats:()=>statsRefreshes++,
+ });
+ const rows=metaBar.children[0]?.children[1].children[0].tbody.children??[];
+ return{metaBar,rows,requests,confirmations,reloads,statsRefreshes:()=>statsRefreshes};
 }
 
-test('Coin Mint alone displays latest and cumulative refunds with the correct API item', async () => {
-  const f = render(5);
-  assert.equal(f.metaBar.children.length, 1);
-  assert.equal(f.row.children[0].text, '+0.5% Coin Mint (5 purchases)');
-  f.row.children[1].click();
-  assert.match(f.confirmations[0].text, /Refunds 5 GC/);
-  assert.equal(f.requests.length, 0);
-  await f.confirmations[0].confirm();
-  assert.deepEqual(f.requests[0], { method: 'POST', url: '/api/admin/users/42/refund', body: { item: 'gc_mint' } });
-  f.row.children[2].click();
-  assert.match(f.confirmations[1].text, /Refunds 15 GC/);
-  await f.confirmations[1].confirm();
-  assert.deepEqual(f.requests[1].body, { item: 'gc_mint', all: true });
-  assert.deepEqual(f.reloads, [42, 42]);
+test('refund table displays latest and cumulative prices and waits for confirmation',async()=>{
+ const f=render([{id:'gc_mint',count:5,refundOne:5,refundAll:15}]);
+ assert.equal(f.rows[0].children[0].text,'Coin Mint');assert.equal(f.rows[0].children[1].text,'5');
+ const buttons=f.rows[0].children[3].children[0].children;
+ assert.equal(buttons[0].text,'Refund 1 (5 GC)');assert.equal(buttons[1].text,'Refund all (15 GC)');
+ buttons[0].click();assert.equal(f.requests.length,0);assert.match(f.confirmations[0].text,/bonus on past XP/);
+ await f.confirmations[0].confirm();assert.deepEqual(f.requests[0].body,{item:'gc_mint'});
+ buttons[1].click();await f.confirmations[1].confirm();assert.deepEqual(f.requests[1].body,{item:'gc_mint',all:true});
+ assert.deepEqual(f.reloads,[42,42]);assert.equal(f.statsRefreshes(),2);
 });
 
-test('one Coin Mint purchase has only Refund 1; zero purchases has no refund row', () => {
-  const one = render(1);
-  assert.deepEqual(one.row.children.map(child => child.text), ['+0.1% Coin Mint (1 purchases)', 'Refund 1']);
-  assert.equal(render(0).metaBar.children.length, 0);
+test('diamond purchases have separate refund rows and the correct API keys',async()=>{
+ const f=render([{id:'diamond_dig',count:1,refundOne:1,refundAll:1},{id:'diamond_exchange',count:3,refundOne:3,refundAll:6}]);
+ assert.equal(f.rows.length,2);assert.equal(f.rows[0].children[0].text,'Diamond Digging');
+ assert.equal(f.rows[0].children[3].children[0].children.length,1);
+ f.rows[1].children[3].children[0].children[1].click();await f.confirmations[0].confirm();
+ assert.deepEqual(f.requests[0],{method:'POST',url:'/api/admin/users/42/refund',body:{item:'diamond_exchange',all:true}});
+ assert.equal(render([]).metaBar.children.length,0);
 });

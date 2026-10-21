@@ -7,7 +7,7 @@ import {
   storeData, getSorted, getFiltered, foldForSearch, naturalCompare, naturalCompareByName, _tableData,
   setSearchFields, wireTableSearch, initSortHeaders, renderPaged, setRowFilter,
 } from './core.js';
-import { loadAll, loadTools } from './dashboard.js';
+import { loadAll, loadTools, loadStats } from './dashboard.js';
 import { openEditor } from './editor.js';
 
 let _userEditor = null;
@@ -667,106 +667,44 @@ export async function loadUserDetail(userId, edit = false) {
     lvlMeta.appendChild(lvlVal);
     metaBar.appendChild(lvlMeta);
 
-    const shopXpBoost = user.xpBoostPurchased || 0;
-    if (shopXpBoost || user.bonusUndos || user.bonusFastTravels || user.bonusHeartbeatXp || user.bonusGcChancePurchased || user.bonusGcMintPurchased) {
-      const boostMeta = el('div', 'meta-item');
-      boostMeta.appendChild(el('div', 'label', 'Shop Boosts'));
-      const boostVal = el('div', 'value');
-      boostVal.style.cssText = 'display:flex;flex-direction:column;gap:4px;font-size:0.8rem';
-      const addBoostRow = (text, item, count, costEach) => {
-        const row = el('div', '', '');
-        row.style.cssText = 'display:flex;align-items:center;gap:0.4rem';
-        row.appendChild(el('span', '', text));
-        row.appendChild(mkBtn('Refund 1', 'btn-warn', () => {
-          showConfirm(`Refund one ${text} for ${user.username}? Restores ${costEach} GC.`, async () => {
-            await api('POST', `/api/admin/users/${user.id}/refund`, { item });
-            loadUserDetail(user.id);
-          }, { label: 'Refund', variant: 'warn' });
-        }));
-        if (count > 1) {
-          row.appendChild(mkBtn('Refund all', 'btn-danger', () => {
-            showConfirm(`Refund all ${count} × ${text} for ${user.username}? Restores ${count * costEach} GC.`, async () => {
-              await api('POST', `/api/admin/users/${user.id}/refund`, { item, all: true });
-              loadUserDetail(user.id);
-            }, { label: 'Refund all', variant: 'danger' });
-          }));
-        }
-        boostVal.appendChild(row);
+    const purchases = user.shopPurchases || [];
+    if (purchases.length) {
+      const shopMeta = el('div', 'meta-item user-shop-purchases');
+      shopMeta.appendChild(el('div', 'label', 'Coin Shop Purchases'));
+      const wrap = el('div', 'table-wrap');
+      const table = el('table', '');
+      table.innerHTML = '<thead><tr><th>Upgrade</th><th>Bought</th><th>Purchased bonus</th><th>Refund</th></tr></thead><tbody></tbody>';
+      const labels = {
+        xp_boost: ['XP Boost', n => `+${(n * 0.1).toFixed(1)}% XP`],
+        heartbeat_xp: ['Heartbeat XP', n => `+${(n * 0.1).toFixed(1)} XP`],
+        gc_chance: ['Lucky Coin Chance', n => `+${(n * 0.01).toFixed(2)}%`],
+        gc_mint: ['Coin Mint', n => `+${(n * 0.1).toFixed(1)}%`],
+        diamond_dig: ['Diamond Digging', n => `+${(n * 0.1).toFixed(1)}%`],
+        diamond_exchange: ['Diamond Exchange Rate', n => `+${n} GC per diamond`],
+        undo: ['Extra Undo', n => `+${n} undo slots`],
+        fast_travel: ['Fast Travel', n => `+${n} fast travel slots`],
       };
-      if (shopXpBoost)              addBoostRow(`+${(shopXpBoost * 0.1).toFixed(1)}% XP boost (${shopXpBoost} purchases)`, 'xp_boost', shopXpBoost, 1);
-      if (user.bonusUndos)          addBoostRow(`+${user.bonusUndos} undo${user.bonusUndos !== 1 ? 's' : ''}`, 'undo', user.bonusUndos, 5);
-      if (user.bonusFastTravels)    addBoostRow(`+${user.bonusFastTravels} fast travel${user.bonusFastTravels !== 1 ? 's' : ''}`, 'fast_travel', user.bonusFastTravels, 10);
-      if (user.bonusHeartbeatXp) {
-        const hbCount = user.bonusHeartbeatXp;
-        const hbLastCost = hbCount;
-        const hbTotalCost = (hbCount * (hbCount + 1)) / 2;
-        const hbRow = el('div', '', '');
-        hbRow.style.cssText = 'display:flex;align-items:center;gap:0.4rem';
-        hbRow.appendChild(el('span', '', `+${(hbCount * 0.1).toFixed(1)} heartbeat XP (${hbCount} purchases)`));
-        hbRow.appendChild(mkBtn('Refund 1', 'btn-warn', () => {
-          showConfirm(`Refund one heartbeat XP upgrade for ${user.username}? Restores ${hbLastCost} GC.`, async () => {
-            await api('POST', `/api/admin/users/${user.id}/refund`, { item: 'heartbeat_xp' });
-            loadUserDetail(user.id);
-          }, { label: 'Refund', variant: 'warn' });
-        }));
-        if (hbCount > 1) {
-          hbRow.appendChild(mkBtn('Refund all', 'btn-danger', () => {
-            showConfirm(`Refund all ${hbCount} heartbeat XP upgrades for ${user.username}? Restores ${hbTotalCost} GC.`, async () => {
-              await api('POST', `/api/admin/users/${user.id}/refund`, { item: 'heartbeat_xp', all: true });
-              loadUserDetail(user.id);
-            }, { label: 'Refund all', variant: 'danger' });
-          }));
-        }
-        boostVal.appendChild(hbRow);
+      for (const purchase of purchases) {
+        const { id, count, refundOne, refundAll } = purchase;
+        if (!labels[id]) continue;
+        const [label, effect] = labels[id];
+        const row = el('tr', '');
+        appendCell(row, label); appendCell(row, String(count)); appendCell(row, effect(count));
+        const actions = el('div', 'btn-group');
+        const refund = (all, value) => showConfirm(
+          `Refund ${all ? 'all ' + count : 'one'} ${label} ${all ? 'purchases' : 'purchase'} for ${user.username}? Refunds ${value} GC.`
+            + (id === 'gc_mint' ? ' Its bonus on past XP is removed too, so the net balance change may be smaller.' : ''),
+          async () => {
+            await api('POST', `/api/admin/users/${user.id}/refund`, { item: id, ...(all ? { all: true } : {}) });
+            await loadUserDetail(user.id);
+            loadStats();
+          }, { label: all ? 'Refund all' : 'Refund', variant: all ? 'danger' : 'warn' });
+        actions.appendChild(mkBtn(`Refund 1 (${refundOne} GC)`, 'btn-warn', () => refund(false, refundOne)));
+        if (count > 1) actions.appendChild(mkBtn(`Refund all (${refundAll} GC)`, 'btn-danger', () => refund(true, refundAll)));
+        const cell = el('td', ''); cell.appendChild(actions); row.appendChild(cell);
+        table.querySelector('tbody').appendChild(row);
       }
-      if (user.bonusGcChancePurchased) {
-        // Refund escalating purchases using their cumulative cost, not count * unit cost.
-        const gcCount = user.bonusGcChancePurchased;
-        const gcLastCost = gcCount;
-        const gcTotalCost = (gcCount * (gcCount + 1)) / 2;
-        const gcRow = el('div', '', '');
-        gcRow.style.cssText = 'display:flex;align-items:center;gap:0.4rem';
-        gcRow.appendChild(el('span', '', `+${(gcCount * 0.01).toFixed(2)}% bonus GC chance (${gcCount} purchases)`));
-        gcRow.appendChild(mkBtn('Refund 1', 'btn-warn', () => {
-          showConfirm(`Refund one bonus GC chance upgrade for ${user.username}? Restores ${gcLastCost} GC.`, async () => {
-            await api('POST', `/api/admin/users/${user.id}/refund`, { item: 'gc_chance' });
-            loadUserDetail(user.id);
-          }, { label: 'Refund', variant: 'warn' });
-        }));
-        if (gcCount > 1) {
-          gcRow.appendChild(mkBtn('Refund all', 'btn-danger', () => {
-            showConfirm(`Refund all ${gcCount} bonus GC chance upgrades for ${user.username}? Restores ${gcTotalCost} GC.`, async () => {
-              await api('POST', `/api/admin/users/${user.id}/refund`, { item: 'gc_chance', all: true });
-              loadUserDetail(user.id);
-            }, { label: 'Refund all', variant: 'danger' });
-          }));
-        }
-        boostVal.appendChild(gcRow);
-      }
-      if (user.bonusGcMintPurchased) {
-        const mintCount = user.bonusGcMintPurchased;
-        const mintTotalCost = (mintCount * (mintCount + 1)) / 2;
-        const mintRow = el('div', '', '');
-        mintRow.style.cssText = 'display:flex;align-items:center;gap:0.4rem';
-        mintRow.appendChild(el('span', '', `+${(mintCount * 0.1).toFixed(1)}% Coin Mint (${mintCount} purchases)`));
-        mintRow.appendChild(mkBtn('Refund 1', 'btn-warn', () => {
-          showConfirm(`Refund one Coin Mint upgrade for ${user.username}? Refunds ${mintCount} GC, but removes its bonus on past XP too. The net balance increase may be smaller.`, async () => {
-            await api('POST', `/api/admin/users/${user.id}/refund`, { item: 'gc_mint' });
-            loadUserDetail(user.id);
-          }, { label: 'Refund', variant: 'warn' });
-        }));
-        if (mintCount > 1) {
-          mintRow.appendChild(mkBtn('Refund all', 'btn-danger', () => {
-            showConfirm(`Refund all ${mintCount} Coin Mint upgrades for ${user.username}? Refunds ${mintTotalCost} GC, but removes their bonus on past XP too. The net balance increase may be smaller.`, async () => {
-              await api('POST', `/api/admin/users/${user.id}/refund`, { item: 'gc_mint', all: true });
-              loadUserDetail(user.id);
-            }, { label: 'Refund all', variant: 'danger' });
-          }));
-        }
-        boostVal.appendChild(mintRow);
-      }
-      boostMeta.appendChild(boostVal);
-      metaBar.appendChild(boostMeta);
+      wrap.appendChild(table); shopMeta.appendChild(wrap); metaBar.appendChild(shopMeta);
     }
 
     // Lock status in meta bar

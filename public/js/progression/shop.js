@@ -4,6 +4,8 @@ import { apiFetch, getToken } from '../core/state.js';
 import { escapeHtml } from '../core/util.js';
 import { t } from '../i18n.js';
 import { COIN_SVG } from '../ui-helpers/coin-icon.js';
+import { DIAMOND_SVG } from './diamonds.js';
+import { initDiamondExchangeShop } from './exchange-shop.js';
 export { COIN_SVG };
 
 // Callbacks wired in by main.js at boot
@@ -56,8 +58,33 @@ const SHOP_ITEMS = [
     desc:      () => { const cap = _shopData?.level || 0; return t('shop.item.gc_mint.desc', { cap: (cap * 0.1).toFixed(1) }); },
     statKey:   'bonusGcMintPurchased',
     totalLabel: d => t('shop.item.gc_mint.total', { total: (((d.level || 0) + (d.bonusGcMintPurchased || 0)) * 0.1).toFixed(1), base: ((d.level || 0) * 0.1).toFixed(1), bought: ((d.bonusGcMintPurchased || 0) * 0.1).toFixed(1) }),
-    effect:    d => { const pts = (d.level || 0) + (d.bonusGcMintPurchased || 0); return t('shop.item.gc_mint.effect', { xpPerCoin: Math.round(1000 / (1 + pts * 0.001)).toLocaleString() }); },
+    effectIcon: COIN_SVG,
+    effectCurrency: 'Gold coin',
+    effect:    d => { const pts = (d.level || 0) + (d.bonusGcMintPurchased || 0); return t('shop.item.gc_mint.effect', { currency: '{currency}', xpPerCoin: Math.round(1000 / (1 + pts * 0.001)).toLocaleString() }); },
     atCap:     d => (d.bonusGcMintPurchased || 0) >= (d.level || 0),
+  },
+  {
+    id:        'diamond_dig',
+    requiresDiamondBalance: true,
+    label:     () => t('shop.item.diamond_dig.label'),
+    costFn:    d => (d.diamondDigPurchased || 0) + 1,
+    desc:      () => t('shop.item.diamond_dig.desc', { cap: ((_shopData?.level || 0) * 0.1).toFixed(1) }),
+    statKey:   'diamondDigPurchased',
+    totalLabel: d => t('shop.item.diamond_dig.total', { total: (d.diamondDigPct || 0).toFixed(1), base: ((d.level || 0) * 0.1).toFixed(1), bought: ((d.diamondDigPurchased || 0) * 0.1).toFixed(1) }),
+    effectIcon: DIAMOND_SVG,
+    effectCurrency: 'Diamond',
+    effect:    d => t('shop.item.diamond_dig.effect', { currency: '{currency}', events: Math.ceil(d.diamondEventsPerDiamond || 1000).toLocaleString() }),
+    atCap:     d => (d.diamondDigPurchased || 0) >= (d.level || 0),
+  },
+  {
+    id:        'diamond_exchange',
+    requiresDiamondBalance: true,
+    label:     () => t('shop.item.diamond_exchange.label'),
+    costFn:    d => (d.diamondExchangePurchased || 0) + 1,
+    desc:      () => t('shop.item.diamond_exchange.desc', { cap: _shopData?.level || 0 }),
+    statKey:   'diamondExchangePurchased',
+    totalLabel: d => t('shop.item.diamond_exchange.total', { total: d.diamondExchangeRate || 0, base: d.level || 0, bought: d.diamondExchangePurchased || 0 }),
+    atCap:     d => (d.diamondExchangePurchased || 0) >= (d.level || 0),
   },
   {
     id:        'undo',
@@ -86,9 +113,13 @@ let _rewardProfilePendingResolvers = [];
 // Trailing-debounce profile refreshes across all callers to avoid duplicate fetches and choppy XP updates.
 const REWARD_PROFILE_DEBOUNCE_MS = 300;
 
+function _visibleShopItems() {
+  return SHOP_ITEMS.filter(item => !item.requiresDiamondBalance || Number.isFinite(_shopData?.diamondsBalance));
+}
+
 function _shopHasAffordable(balance) {
   if (!_shopData || balance <= 0) return false;
-  return SHOP_ITEMS.some(item => {
+  return _visibleShopItems().some(item => {
     if (item.atCap(_shopData)) return false;
     const cost = item.costFn(_shopData);
     return balance >= cost;
@@ -151,6 +182,7 @@ async function _claimBonusGc() {
 
 export function refreshCoinsDisplay() {
   if (!getToken()) return Promise.resolve();
+  const sessionToken = getToken();
   if (_rewardProfileFetchPromise) return _rewardProfileFetchPromise; // a merged fetch is already in flight - join it
   return new Promise(resolve => {
     _rewardProfilePendingResolvers.push(resolve);
@@ -164,11 +196,12 @@ export function refreshCoinsDisplay() {
           const res = await apiFetch('/api/profile');
           if (!res.ok) return;
           const data = await res.json();
+          if (getToken() !== sessionToken) return;
           _hooks.onRewardSnapshot?.(data);
-          if (!_shopData) _shopData = data;
-          else _shopData.pendingBonusGc = data.pendingBonusGc;
+          _shopData = data;
           updateCoinsDisplay(data.coinsBalance || 0);
           updateBonusGcIndicator(data.pendingBonusGc);
+          if (document.getElementById('shop-modal-overlay')?.classList.contains('active')) renderShopItems();
         } catch {}
         finally {
           _rewardProfileFetchPromise = null;
@@ -182,20 +215,22 @@ export function refreshCoinsDisplay() {
 function renderShopItems() {
   const list = document.getElementById('shop-items');
   if (!list || !_shopData) return;
-  list.innerHTML = SHOP_ITEMS.map(item => {
+  list.innerHTML = _visibleShopItems().map(item => {
     const balance   = _shopData.coinsBalance || 0;
     const cappedOut = item.atCap(_shopData);
     const cost      = item.costFn(_shopData);
     const canBuy    = !cappedOut && balance >= cost;
     const btnLabel  = cappedOut ? t('shop.btn.max') : t('shop.btn.buy');
+    const effect = item.effect ? escapeHtml(item.effect(_shopData)).replace('{currency}',
+      `<span role="img" aria-label="${escapeHtml(item.effectCurrency)}">${item.effectIcon}</span>`) : '';
     return `<div class="shop-item">
       <div class="shop-item-info">
         <div class="shop-item-label">${escapeHtml(item.label())}</div>
         <div class="shop-item-desc">${escapeHtml(typeof item.desc === 'function' ? item.desc() : item.desc)}</div>
-        <div class="shop-item-owned">${escapeHtml(item.totalLabel(_shopData))}${item.effect ? ` <span class="shop-item-effect">${escapeHtml(item.effect(_shopData))}</span>` : ''}</div>
+        <div class="shop-item-owned">${escapeHtml(item.totalLabel(_shopData))}${effect ? ` <span class="shop-item-effect">${effect}</span>` : ''}</div>
       </div>
       <div class="shop-item-buy">
-        <div class="shop-item-cost">${COIN_SVG} ${cost}</div>
+        <div class="shop-item-cost">${COIN_SVG}<span>${cost}</span></div>
         <button class="shop-buy-btn${canBuy ? '' : ' shop-buy-btn--disabled'}" data-item="${item.id}"${canBuy ? '' : ' disabled'}>${btnLabel}</button>
       </div>
     </div>`;
@@ -203,11 +238,13 @@ function renderShopItems() {
 
   list.querySelectorAll('.shop-buy-btn:not([disabled])').forEach(btn => {
     btn.addEventListener('click', async () => {
+      const sessionToken = getToken();
       btn.disabled = true;
-      btn.textContent = '…';
+      // Keep the label's width while the purchase is pending.
       try {
         const res  = await apiFetch('/api/shop/purchase', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ item: btn.dataset.item }) });
         const data = await res.json();
+        if (getToken() !== sessionToken) return;
         if (!res.ok) {
           if (data.error?.includes('cap') || res.status === 403) { renderShopItems(); return; }
           btn.disabled = false; btn.textContent = t('shop.btn.buy'); showShopError(data.error || t('msg.error')); return;
@@ -233,13 +270,16 @@ function showShopError(msg) {
 }
 
 export async function openShopModal() {
+  const sessionToken = getToken();
   document.getElementById('shop-modal-overlay').classList.add('active');
   document.getElementById('shop-error').textContent = '';
   document.getElementById('shop-items').innerHTML = `<div class="shop-loading">${t('shop.loading')}</div>`;
   try {
     const res = await apiFetch('/api/profile');
     if (!res.ok) throw new Error();
-    _shopData = await res.json();
+    const data = await res.json();
+    if (getToken() !== sessionToken) return;
+    _shopData = data;
     _hooks.onRewardSnapshot?.(_shopData);
     updateCoinsDisplay(_shopData.coinsBalance || 0);
     updateSpentDisplay(_shopData.coinsSpent || 0);
@@ -249,6 +289,16 @@ export async function openShopModal() {
 }
 
 export function initShop() {
+  initDiamondExchangeShop({
+    onRewardSnapshot: data => {
+      _shopData = data;
+      _hooks.onRewardSnapshot?.(data);
+      updateCoinsDisplay(data.coinsBalance || 0);
+      updateSpentDisplay(data.coinsSpent || 0);
+      if (document.getElementById('shop-modal-overlay')?.classList.contains('active')) renderShopItems();
+    },
+    getMousedownOverlay: () => _hooks.getMousedownOverlay?.(),
+  });
   document.getElementById('shop-btn')?.addEventListener('click', openShopModal);
   document.getElementById('shop-close-btn')?.addEventListener('click', () =>
     document.getElementById('shop-modal-overlay').classList.remove('active'));

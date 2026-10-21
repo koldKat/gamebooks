@@ -48,11 +48,13 @@ export function showConfirm(message, onConfirm, { confirmLabel = null, danger = 
   _els.cancelEl = newCancel;
 
   const close = () => {
+    if (_els.okEl !== newOk) return;
     overlay.classList.remove('active');
     newCancel.style.display = ''; // restore for next use
   };
   newOk.addEventListener('click',     () => { close(); onConfirm(); });
   newCancel.addEventListener('click', close);
+  return close;
 }
 
 export function showAlert(message) {

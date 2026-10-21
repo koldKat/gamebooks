@@ -1,5 +1,5 @@
 import { bootState } from './state.js';
-import { state, setViewingPt, getToken, getUsername, setUsername, apiFetch, setCurrentBookId, setCurrentUserLevel, setBonusUndos, setBonusFastTravels } from '../core/state.js';
+import { state, setViewingPt, getToken, setUsername, apiFetch, setCurrentBookId, setCurrentUserLevel, setBonusUndos, setBonusFastTravels } from '../core/state.js';
 import { destroyNetwork } from '../graph.js';
 import { render, setDiscoverableLimit } from '../play.js';
 import { t } from '../i18n.js';
@@ -19,10 +19,9 @@ import { loadCovers, _showCachedCoversPanel, _updateLandingBgDragUi } from '../c
 import { renderBooksList, getCachedBooks, getCachedAllSeries, getCachedStashes, setBooksDataFresh, setBooksRevealedAt, setCurrentUserId, setActiveSeriesRuns } from '../books.js';
 import { loadFeed, refreshFeedFilters } from '../feed.js';
 import { _scheduleLiveUiRefresh, resetNotifBadgesForLogout } from '../community/notif.js';
-import { _resetRewardSnapshotState, _positionRewardLayer, _processRewardSnapshot } from '../progression/rewards.js';
+import { _resetRewardSnapshotState, _positionRewardLayer, _processRewardSnapshot, _restoreRewardSnapshot } from '../progression/rewards.js';
 import { cancelBgMove } from '../play/bg.js';
-import { resolveIsAdmin, adminBadge, authorBadge, contributorBadge, moderatorBadge, registerAuthor, registerContributor, registerModerator, resolveIsModerator } from '../account/user.js';
-import { escapeHtml } from '../core/util.js';
+import { resolveIsAdmin, registerAuthor, registerContributor, registerModerator, resolveIsModerator } from '../account/user.js';
 import { _cancelForumReveal, setDiceRollerVisible, setGuideVisible, _isMobile, _revealLanding } from './helpers.js';
 import { _pushNav, _isViewLocked } from './navigation.js';
 import { APP_XP_EXTRA_USER_ID } from './state.js';
@@ -84,19 +83,40 @@ export function showLogin() {
   _updateLandingBgDragUi();
 }
 
-export function _updateUsernameTooltip() {
-  const el = document.getElementById('books-username');
-  if (!el) return;
-  if (el.scrollWidth > el.clientWidth) {
-    el.dataset.tooltip = el.textContent.trim();
-  } else {
-    delete el.dataset.tooltip;
-  }
+export async function loadSessionProfile(sessionToken = getToken()) {
+  try {
+    const response = await apiFetch('/api/profile');
+    if (!response.ok) return null;
+    const profile = await response.json();
+    if (getToken() !== sessionToken) return null;
+    _processRewardSnapshot(profile);
+    if (profile.id) { bootState._currentUserId = profile.id; setCurrentUserId(bootState._currentUserId); }
+    bootState._isAdmin = resolveIsAdmin(profile);
+    bootState._canSeeAppXp = bootState._isAdmin || profile.id === APP_XP_EXTRA_USER_ID;
+    bootState._hasPdfAccess = !!profile.pdfAccess || bootState._isAdmin;
+    refreshAppXp({ immediate: true });
+    _connectAppXpSSE();
+    updateAvatarUI(profile.avatarUrl || null);
+    setCurrentUserLevel(profile.level || 0);
+    setBonusUndos(profile.bonusUndos || 0);
+    setBonusFastTravels(profile.bonusFastTravels || 0);
+    updateCoinsDisplay(profile.coinsBalance || 0);
+    if (profile.username) {
+      setUsername(profile.username);
+      registerAuthor(profile.username, !!profile.isAuthor, profile.displayName);
+      registerContributor(profile.username, !!profile.isContributor);
+      registerModerator(profile.username, !!profile.isModerator);
+    }
+    refreshFeedFilters();
+    return profile;
+  } catch (_) { return null; }
 }
 
 export async function showBooks() {
   if (_isViewLocked('book')) return;
   const sessionToken = getToken();
+  _restoreRewardSnapshot();
+  const profileReady = loadSessionProfile(sessionToken);
   // Close the forum on library navigation, regardless of the initiating dialog.
   document.getElementById('forum-modal-overlay')?.classList.remove('active');
   _cancelForumReveal();
@@ -131,8 +151,6 @@ export async function showBooks() {
   _positionRewardLayer();
   document.getElementById('right-toggle').classList.add('visible');
   document.getElementById('sidebar-toggle').classList.remove('visible');
-  document.getElementById('books-username').innerHTML = escapeHtml(getUsername() || '') + adminBadge(bootState._isAdmin);
-  _updateUsernameTooltip();
   document.getElementById('feedback-btn').style.display = '';
   document.getElementById('forum-btn').style.display    = '';
   document.getElementById('inbox-btn').style.display    = getToken() ? '' : 'none';
@@ -178,43 +196,20 @@ export async function showBooks() {
   if (getCachedBooks()) window.appStartup?.ready();
 
   try {
-    const [booksRes, profileRes, stashesRes, seriesRes, activeRunsRes] = await Promise.all([
+    const [booksRes, , stashesRes, seriesRes, activeRunsRes] = await Promise.all([
       apiFetch('/api/books'),
-      apiFetch('/api/profile'),
+      profileReady,
       apiFetch('/api/stashes'),
       apiFetch('/api/series'),
       apiFetch('/api/series/active-runs').catch(() => null),
     ]);
     if (getToken() !== sessionToken) return;
     const books   = await booksRes.json();
-    const profile = await profileRes.json();
     const stashes = stashesRes.ok ? await stashesRes.json() : [];
     const allSeries = seriesRes.ok ? await seriesRes.json() : [];
     const activeRuns = activeRunsRes?.ok ? await activeRunsRes.json().catch(() => null) : null;
     if (getToken() !== sessionToken) return;
     if (Array.isArray(activeRuns)) setActiveSeriesRuns(activeRuns);
-    _processRewardSnapshot(profile);
-    if (profile.id) { bootState._currentUserId = profile.id; setCurrentUserId(bootState._currentUserId); }
-    bootState._isAdmin = resolveIsAdmin(profile);
-    bootState._canSeeAppXp = bootState._isAdmin || profile.id === APP_XP_EXTRA_USER_ID;
-    bootState._hasPdfAccess = !!profile.pdfAccess || bootState._isAdmin;
-    refreshAppXp();
-    _connectAppXpSSE();
-    updateAvatarUI(profile.avatarUrl || null);
-    setCurrentUserLevel(profile.level || 0);
-    setBonusUndos(profile.bonusUndos || 0);
-    setBonusFastTravels(profile.bonusFastTravels || 0);
-    updateCoinsDisplay(profile.coinsBalance || 0);
-    if (profile.username) {
-      setUsername(profile.username);
-      registerAuthor(profile.username, !!profile.isAuthor, profile.displayName);
-      registerContributor(profile.username, !!profile.isContributor);
-      registerModerator(profile.username, !!profile.isModerator);
-      const _dn = profile.displayName || profile.username;
-      document.getElementById('books-username').innerHTML = escapeHtml(_dn) + adminBadge(bootState._isAdmin) + authorBadge(profile.username) + contributorBadge(profile.username) + moderatorBadge(profile.username);
-      _updateUsernameTooltip();
-    }
-    refreshFeedFilters();
     await _prefsReady;
     if (getToken() !== sessionToken) return;
     renderBooksList(books, allSeries, Array.isArray(stashes) ? stashes : []);

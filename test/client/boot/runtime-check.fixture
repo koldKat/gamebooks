@@ -129,6 +129,9 @@ const startup = document.emit('DOMContentLoaded');
 if (scenario.delayedLibrary) {
   for (let i = 0; i < 10 && !releaseLibrary; i++) await Promise.resolve();
   assert.ok(releaseLibrary, 'library refresh starts in the background');
+  await new Promise(resolve => setImmediate(resolve));
+  assert.ok(calls.some(c => c[0] === '_processRewardSnapshot' && c[1] === profile), 'XP and currency profile renders before the slow library response');
+  assert.ok(calls.some(c => c[0] === 'refreshAppXp' && c[1]?.immediate), 'aggregate XP loads immediately after the profile');
   assert.equal(calls.some(c => c[0] === 'startupReady'), !!scenario.cached, 'cached library releases overlay before refresh');
   assert.equal(calls.filter(c => c[0] === 'renderBooksList').length, scenario.cached ? 1 : 0);
   assert.equal(calls.find(c => c[0] === 'syncPrefs')[1].renderBooks, false);
