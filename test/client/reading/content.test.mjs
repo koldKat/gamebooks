@@ -46,6 +46,42 @@ test('source-centered matter and underlined headings render with canonical align
   assert.equal(mount.children[1].children[1].tag, 'br');
 });
 
+test('imported paragraph spacing, indentation and type sizes render without raw HTML fallback', () => {
+  const { mount, document } = setup([
+    source('H2', [textNode('BEWARE and WARNING!')], { style: 'text-align:center;margin-bottom:0' }),
+    source('HR', [], { style: 'border:0;border-top:1px solid currentColor;margin:0 0 1em' }),
+    source('P', [textNode('This book is different from other books.')], {
+      style: 'text-align:justify;text-indent:0;margin:0;font-size:0.8em',
+    }),
+    source('P', [textNode('Your adventure begins.')], {
+      style: 'text-align:justify;text-indent:1.25em;margin:0;margin-top:1em',
+    }),
+    source('P', [textNode('A hanging entry.')], {
+      style: 'text-align:justify;text-indent:-1.25em;margin:0 0 0 1.25em',
+    }),
+  ]);
+  assert.equal(renderReadingMatter(mount, 1143, '<h2>BEWARE and WARNING!</h2>', document), true);
+  assert.equal(mount.children[1].attrs.style, 'border:0;border-top:1px solid currentColor;margin:0 0 1em');
+  assert.equal(mount.children[2].attrs.style, 'text-align:justify;text-indent:0;margin:0;font-size:0.8em');
+  assert.equal(mount.children[3].attrs.style, 'text-align:justify;text-indent:1.25em;margin:0;margin-top:1em');
+  assert.equal(mount.children[4].attrs.style, 'text-align:justify;text-indent:-1.25em;margin:0 0 0 1.25em');
+});
+
+test('import formatting rejects unsafe, ambiguous and unbounded CSS atomically', () => {
+  for (const style of [
+    'font-size:99em', 'font-size:0', 'font-size:1em!important', 'margin:-1em',
+    'margin:999em', 'margin:calc(1em + 1px)', 'margin:var(--external)', 'text-indent:-999em',
+    'text-align:justify;position:fixed', 'text-align:center;text-align:right',
+    'background:url(https://example.com)', 'font-family:external', 'color:transparent',
+    'text-align:/**/center', 'margin:0;display:none', 'border-top:1px solid red',
+  ]) {
+    const { mount, document } = setup([source('P', [textNode('Safe prefix')]), source('P', [], { style })]);
+    assert.equal(renderReadingMatter(mount, 1143, '<p>Original text.</p>', document), false, style);
+    assert.equal(mount.children.length, 0, style);
+    assert.equal(mount.className, 'reading-frontmatter');
+  }
+});
+
 test('source rules render between matter blocks without accepting attributes', () => {
   const { mount, document } = setup([
     source('H2', [textNode('Warning')]), source('HR'), source('P', [textNode('Choose carefully.')]),
