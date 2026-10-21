@@ -14,7 +14,7 @@ function setup({ moderator = false, expanded = false } = {}) {
     document: { getElementById: () => list },
     localStorage: { setItem() {} },
     _BOOKS_LS_KEY: 'books', _SERIES_LS_KEY: 'series', _STASHES_LS_KEY: 'stashes',
-    _getExpandedPref: () => expanded, _effectiveLandingCoverSource: () => 'all',
+    _syncMovedSeriesPrefs() {}, _getExpandedPref: () => expanded, _effectiveLandingCoverSource: () => 'all',
     _isMobile: () => false, t: key => key, escapeHtml: value => String(value ?? ''),
     naturalCompare: (a, b) => a.localeCompare(b), _sortedByName: items => items,
     _wireRenderedContent() {}, _applyBooksSearchFilter() {},
