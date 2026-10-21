@@ -32,6 +32,21 @@ function initializeDiamondBalances(db) {
         DROP TRIGGER IF EXISTS count_diamond_xp_event;
       `);
     }
+    if (!columns.has('diamonds_spent')) db.exec('ALTER TABLE user_diamonds ADD COLUMN diamonds_spent INTEGER NOT NULL DEFAULT 0');
+    if (!columns.has('diamonds_bought')) db.exec('ALTER TABLE user_diamonds ADD COLUMN diamonds_bought INTEGER NOT NULL DEFAULT 0');
+    db.exec(`CREATE TABLE IF NOT EXISTS diamond_exchanges (
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      request_id TEXT NOT NULL,
+      diamonds INTEGER NOT NULL CHECK (diamonds > 0),
+      rate INTEGER NOT NULL CHECK (rate > 0),
+      gold_coins INTEGER NOT NULL CHECK (gold_coins > 0),
+      direction TEXT NOT NULL DEFAULT 'sell' CHECK (direction IN ('sell','buy')),
+      created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+      PRIMARY KEY (user_id, request_id)
+    )`);
+    if (!db.prepare('PRAGMA table_info(diamond_exchanges)').all().some(column => column.name === 'direction')) {
+      db.exec("ALTER TABLE diamond_exchanges ADD COLUMN direction TEXT NOT NULL DEFAULT 'sell'");
+    }
     db.exec(`CREATE TRIGGER IF NOT EXISTS count_diamond_xp_event AFTER INSERT ON xp_events
         WHEN NEW.event != 'idle_heartbeat'
         BEGIN
@@ -53,12 +68,15 @@ function diamondInfoForUser(userId, row, level) {
   const dig = Math.min(row?.bonus_diamond_dig_purchased || 0, level);
   const exchange = Math.min(row?.bonus_diamond_exchange_purchased || 0, level);
   return {
-    diamondsBalance: row?.diamonds_earned || 0,
+    diamondsBalance: (row?.diamonds_earned || 0) + (row?.diamonds_bought || 0) - (row?.diamonds_spent || 0),
+    diamondsExchanged: row?.diamonds_spent || 0,
+    diamondsBought: row?.diamonds_bought || 0,
     diamondDigPurchased: row?.bonus_diamond_dig_purchased || 0,
     diamondExchangePurchased: row?.bonus_diamond_exchange_purchased || 0,
     diamondDigPct: (level + dig) * 0.1,
     diamondEventsPerDiamond: 1000000 / (1000 + level + dig),
     diamondExchangeRate: level + exchange,
+    diamondBuyRate: 2 * level,
   };
 }
 

@@ -17,6 +17,7 @@ function setup() {
     document: { getElementById: get },
     window: { dispatchEvent() {} }, CustomEvent: class {}, getToken: () => 'token',
     t: key => key, COIN_SVG: '<svg></svg>', DIAMOND_SVG: '<svg></svg>',
+    initDiamondExchangeShop() {},
     apiFetch(url, options) { return new Promise(resolve => requests.push({ url, options, resolve })); },
   });
   const source = readFileSync(new URL('../../../public/js/progression/shop.js', import.meta.url), 'utf8')

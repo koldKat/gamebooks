@@ -156,6 +156,7 @@ export function _openNotifDropdown(btn, data) {
           visit_all_series:    'Series fully completed',
           visit_all_anthology: 'Anthology fully completed',
           shop_refund:         'Shop purchase refunded',
+          diamond_exchange:    'Diamond exchange',
           runs_milestone:      'Completed runs milestone',
         };
         if (n.payload.reason === 'coin_mint_bonus') {

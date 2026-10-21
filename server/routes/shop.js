@@ -3,6 +3,7 @@
 // Shop route handler: XP-boost/undo/fast-travel/heartbeat-XP purchases.
 
 const db = require('../db');
+const { exchangeDiamonds } = require('../db/diamond-exchange');
 const { userBadgePush } = require('../sse');
 const { authenticate, send, readBody } = require('../request-helpers');
 
@@ -40,4 +41,26 @@ async function handleClaimBonusGc(req, res) {
   send(res, 200, { ok: true, ...db.getUserXpInfo(userId) });
 }
 
-module.exports = { handleShopPurchase, handleClaimBonusGc };
+async function handleDiamondExchange(req, res) {
+  const userId = await authenticate(req, res);
+  if (userId === null) return;
+  const { amount, requestId, expectedRate, direction } = await readBody(req);
+  const result = exchangeDiamonds(userId, amount, requestId, expectedRate, direction);
+  if (result.error) {
+    const messages = {
+      unavailable: 'Not available', invalid_amount: 'Enter a whole number of diamonds.',
+      invalid_request: 'Invalid exchange request.', not_found: 'Not found',
+      insufficient_diamonds: 'Not enough diamonds. Your balance has been refreshed.',
+      insufficient_coins: 'Not enough gold coins. Your balance has been refreshed.',
+      rate_changed: 'Your exchange rate changed. Check the updated amount and try again.',
+    };
+    return send(res, result.error === 'unavailable' ? 403 : 400, {
+      error: messages[result.error],
+      ...(['rate_changed','insufficient_diamonds','insufficient_coins'].includes(result.error) ? { profile: db.getUserXpInfo(userId) } : {}),
+    });
+  }
+  send(res, 200, { ...result, ...db.getUserXpInfo(userId) });
+  userBadgePush(userId);
+}
+
+module.exports = { handleShopPurchase, handleClaimBonusGc, handleDiamondExchange };

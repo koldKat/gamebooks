@@ -8,13 +8,13 @@ export function updateDiamondsDisplay(balance, data) {
   if (!visible) {
     el.textContent = '';
     el.removeAttribute('aria-label');
-    el.dataset.tooltip = 'Diamonds';
+    el.dataset.tooltip = 'Diamond Exchange Shop';
     return;
   }
   const formatted = balance.toLocaleString();
   el.innerHTML = `${DIAMOND_SVG} ${formatted}`;
-  el.setAttribute('aria-label', `${formatted} diamonds`);
+  el.setAttribute('aria-label', `Diamond Exchange Shop, ${formatted} diamonds`);
   el.dataset.tooltip = Number.isSafeInteger(data?.diamondExchangeRate)
-    ? `Diamonds: 1 diamond = ${data.diamondExchangeRate.toLocaleString()} GC`
-    : 'Diamonds';
+    ? `Diamond Exchange Shop: 1 diamond = ${data.diamondExchangeRate.toLocaleString()} GC`
+    : 'Diamond Exchange Shop';
 }

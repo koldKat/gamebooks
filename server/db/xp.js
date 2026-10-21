@@ -430,7 +430,9 @@ function getUserXpInfo(userId) {
     bonus_heartbeat_xp, bonus_coins, admin_gifted_coins, xp_from_boost,
     bonus_gc_chance_purchased, bonus_gc_mint_purchased, pending_bonus_gc,
     bonus_diamond_dig_purchased, bonus_diamond_exchange_purchased,
-    COALESCE((SELECT diamonds_earned FROM user_diamonds WHERE user_id = users.id), 0) AS diamonds_earned
+    COALESCE((SELECT diamonds_earned FROM user_diamonds WHERE user_id = users.id), 0) AS diamonds_earned,
+    COALESCE((SELECT diamonds_spent FROM user_diamonds WHERE user_id = users.id), 0) AS diamonds_spent,
+    COALESCE((SELECT diamonds_bought FROM user_diamonds WHERE user_id = users.id), 0) AS diamonds_bought
     FROM users WHERE id = ?`).get(userId);
   const bonusGcClaimed = db.prepare("SELECT COALESCE(SUM(amount), 0) AS n FROM coin_events WHERE user_id = ? AND event = 'bonus_gc_claim'").get(userId).n;
   const info = userXpInfoFromRow(row, bonusGcClaimed);

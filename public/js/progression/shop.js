@@ -5,6 +5,7 @@ import { escapeHtml } from '../core/util.js';
 import { t } from '../i18n.js';
 import { COIN_SVG } from '../ui-helpers/coin-icon.js';
 import { DIAMOND_SVG } from './diamonds.js';
+import { initDiamondExchangeShop } from './exchange-shop.js';
 export { COIN_SVG };
 
 // Callbacks wired in by main.js at boot
@@ -288,6 +289,16 @@ export async function openShopModal() {
 }
 
 export function initShop() {
+  initDiamondExchangeShop({
+    onRewardSnapshot: data => {
+      _shopData = data;
+      _hooks.onRewardSnapshot?.(data);
+      updateCoinsDisplay(data.coinsBalance || 0);
+      updateSpentDisplay(data.coinsSpent || 0);
+      if (document.getElementById('shop-modal-overlay')?.classList.contains('active')) renderShopItems();
+    },
+    getMousedownOverlay: () => _hooks.getMousedownOverlay?.(),
+  });
   document.getElementById('shop-btn')?.addEventListener('click', openShopModal);
   document.getElementById('shop-close-btn')?.addEventListener('click', () =>
     document.getElementById('shop-modal-overlay').classList.remove('active'));

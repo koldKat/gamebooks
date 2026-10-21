@@ -31,19 +31,22 @@
   font-weight: 700;
   padding: 0.2rem 0.55rem;
   white-space: nowrap;
+  font-family: inherit;
+  cursor: pointer;
 }
+.diamonds-display:hover { background: #16404c; border-color: #22d3ee; }
 .diamond-icon { width: 14px; height: 14px; vertical-align: -2px; display: inline-block; }
 
 /* ── Shop modal ─────────────────────────────────────────────────── */
-#shop-modal-overlay {
+#shop-modal-overlay, #exchange-shop-modal-overlay {
   display: none; position: fixed; inset: 0;
   background: rgba(0,0,0,0.6); z-index: 2000;
   align-items: flex-start; justify-content: center;
   padding: 1rem;
   overflow-y: auto;
 }
-#shop-modal-overlay.active { display: flex; }
-#shop-modal {
+#shop-modal-overlay.active, #exchange-shop-modal-overlay.active { display: flex; }
+#shop-modal, #exchange-shop-modal {
   background: #111827; border: 1px solid #374151; border-radius: 12px;
   width: 548px; max-width: min(92vw, 548px); max-height: calc(100vh - 2rem);
   margin: auto 0;
@@ -116,11 +119,28 @@
 .shop-error   { font-size: 0.8rem; color: #f87171; min-height: 1.2em; padding: 0 1.25rem 0.75rem; }
 .shop-loading { font-size: 0.85rem; color: #6b7280; padding: 1rem 0; text-align: center; }
 
+.exchange-shop-balance { color: #67e8f9; background: #102a33; border-color: #155e75; white-space: nowrap; }
+.exchange-shop-body { padding: 0.85rem 1rem; overflow-y: auto; font-size: 0.85rem; }
+.exchange-shop-direction { display: flex; gap: 0.5rem; margin-bottom: 0.8rem; }
+.exchange-shop-direction [aria-pressed="true"] { background: #16404c; border-color: #22d3ee; color: #67e8f9; }
+#exchange-shop-modal .shop-modal-header { flex-wrap: wrap; }
+#exchange-shop-title { min-width: 100px; }
+.exchange-shop-body label { display: block; color: #d1d5db; margin-bottom: 0.35rem; }
+.exchange-shop-amount-row { display: flex; gap: 0.5rem; }
+#exchange-shop-amount { flex: 1; min-width: 0; width: 100%; background: #1f2937; color: #f3f4f6; border: 1px solid #4b5563; border-radius: 6px; padding: 0.4rem 0.55rem; font: inherit; color-scheme: dark; }
+#exchange-shop-amount:focus { outline: 1px solid #22d3ee; border-color: #22d3ee; }
+.exchange-shop-rate { color: #9ca3af; margin-top: 0.65rem; }
+.exchange-shop-receive { color: #86efac; font-weight: 700; margin: 0.45rem 0 0.65rem; }
+.exchange-shop-tip { color: #9ca3af; font-size: 0.78rem; margin: 0.3rem 0; }
+#exchange-shop-submit { margin-top: 0.65rem; }
+.exchange-shop-message { min-height: 1.2em; margin-top: 0.5rem; color: #86efac; }
+.exchange-shop-message--error { color: #f87171; }
+
 @media (max-width: 640px) {
-  #shop-modal-overlay {
+  #shop-modal-overlay, #exchange-shop-modal-overlay {
     padding: 0.5rem;
   }
-  #shop-modal {
+  #shop-modal, #exchange-shop-modal {
     max-height: calc(100vh - 1rem);
   }
   .shop-item {

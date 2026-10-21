@@ -26,6 +26,7 @@ function setup() {
   runInContext(readFileSync(new URL('../../../public/js/i18n/en/progression.js', import.meta.url), 'utf8').replace('export default', 'globalThis.strings='), strings);
   const context = createContext({ document: { getElementById: get }, window: { dispatchEvent() {} }, CustomEvent: class {},
     getToken: () => token, COIN_SVG: '<svg class="coin-icon"></svg>', DIAMOND_SVG: '<svg class="diamond-icon"></svg>', escapeHtml: String,
+    initDiamondExchangeShop() {},
     t: (key, values = {}) => (strings.strings[key] || key).replace(/\{(\w+)\}/g, (_, k) => values[k] ?? `{${k}}`),
     apiFetch(url, options) { return new Promise(resolve => requests.push({ url, options, resolve })); },
     setTimeout, clearTimeout,

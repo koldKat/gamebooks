@@ -1,0 +1,130 @@
+import { apiFetch, getToken } from '../core/state.js';
+import { COIN_SVG } from '../ui-helpers/coin-icon.js';
+import { DIAMOND_SVG } from './diamonds.js';
+
+let _profile = null, _generation = 0, _busy = false, _pending = null, _hooks = {}, _direction = 'sell';
+const el = name => document.getElementById('exchange-shop-' + name);
+
+function amount() {
+  const value = el('amount').value;
+  return /^[1-9]\d*$/.test(value) && Number.isSafeInteger(Number(value)) ? Number(value) : 0;
+}
+
+function message(text, error = false) {
+  el('message').textContent = text;
+  el('message').classList.toggle('exchange-shop-message--error', error);
+}
+
+function render() {
+  const ready = Number.isSafeInteger(_profile?.diamondsBalance);
+  const balance = ready ? _profile.diamondsBalance : 0, buying = _direction === 'buy';
+  const rate = (buying ? _profile?.diamondBuyRate : _profile?.diamondExchangeRate) || 0;
+  const maximum = buying ? (rate > 0 ? Math.max(0, Math.floor((_profile?.coinsBalance || 0) / rate)) : 0) : balance;
+  el('balance').innerHTML = `${DIAMOND_SVG} ${balance.toLocaleString()} · ${COIN_SVG} ${Number(_profile?.coinsBalance || 0).toLocaleString()}`;
+  const sold = Number(_profile?.diamondsExchanged || 0), bought = Number(_profile?.diamondsBought || 0);
+  el('total').textContent = `${(sold + bought).toLocaleString()} exchanged`;
+  el('total').dataset.tooltip = `${sold.toLocaleString()} sold · ${bought.toLocaleString()} bought`;
+  el('amount-label').textContent = buying ? 'Diamonds to buy' : 'Diamonds to sell';
+  el('tip').textContent = buying ? 'Diamonds are added to your balance immediately.' : 'Gold coins are added to your balance immediately.';
+  el('sell').setAttribute('aria-pressed', String(!buying)); el('buy').setAttribute('aria-pressed', String(buying));
+  el('sell').disabled = _busy; el('buy').disabled = _busy;
+  el('amount').max = String(maximum);
+  el('amount').disabled = !ready || _busy || maximum < 1;
+  el('max').disabled = !ready || _busy || maximum < 1;
+  el('rate').innerHTML = `1 ${DIAMOND_SVG} = ${rate.toLocaleString()} ${COIN_SVG}`;
+  const quantity = amount(), gold = quantity * rate;
+  const valid = ready && quantity > 0 && quantity <= maximum && rate > 0 && Number.isSafeInteger(gold);
+  el('receive').innerHTML = buying
+    ? `You’ll receive ${DIAMOND_SVG} ${(valid ? quantity : 0).toLocaleString()} for ${COIN_SVG} ${(valid ? gold : 0).toLocaleString()}`
+    : `You’ll receive ${COIN_SVG} ${(valid ? gold : 0).toLocaleString()}`;
+  el('submit').disabled = _busy || !valid;
+  el('submit').textContent = _busy ? 'Exchanging…' : buying ? 'Buy diamonds' : 'Sell diamonds';
+}
+
+export function closeDiamondExchangeShop() {
+  _generation++;
+  _profile = null;
+  _pending = null;
+  el('modal-overlay')?.classList.remove('active');
+}
+
+export async function openDiamondExchangeShop() {
+  const token = getToken(), generation = ++_generation;
+  if (!token) return;
+  _profile = null; _pending = null; _direction = 'sell';
+  el('modal-overlay').classList.add('active');
+  el('amount').value = '';
+  message('Loading…'); render();
+  try {
+    const response = await apiFetch('/api/profile');
+    if (!response.ok) throw Error('Unable to load Exchange Shop.');
+    const data = await response.json();
+    if (getToken() !== token || generation !== _generation) return;
+    if (!Number.isSafeInteger(data.diamondsBalance)) { closeDiamondExchangeShop(); return; }
+    _profile = data;
+    _hooks.onRewardSnapshot?.(data);
+    el('amount').value = data.diamondsBalance > 0 ? '1' : '';
+    message(data.diamondsBalance > 0 ? '' : 'No diamonds available to exchange.'); render();
+    if (data.diamondsBalance > 0) el('amount').focus();
+  } catch (_) {
+    if (getToken() === token && generation === _generation) message('Unable to load Exchange Shop.', true);
+  }
+}
+
+async function submit(event) {
+  event.preventDefault();
+  if (_busy || !_profile || el('submit').disabled) return;
+  const quantity = amount(), token = getToken(), generation = _generation;
+  const rate = _direction === 'buy' ? _profile.diamondBuyRate : _profile.diamondExchangeRate;
+  const maximum = _direction === 'buy' ? Math.floor(_profile.coinsBalance / rate) : _profile.diamondsBalance;
+  if (!quantity || quantity > maximum || !rate) return;
+  if (!_pending || _pending.amount !== quantity || _pending.expectedRate !== rate || _pending.direction !== _direction) {
+    const requestId = crypto.randomUUID?.() || Array.from(crypto.getRandomValues(new Uint8Array(16)), n => n.toString(16).padStart(2, '0')).join('');
+    _pending = { amount: quantity, expectedRate: rate, requestId, direction: _direction };
+  }
+  const request = _pending;
+  _busy = true; message(''); render();
+  try {
+    const response = await apiFetch('/api/shop/exchange-diamonds', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(request),
+    });
+    const data = await response.json();
+    if (getToken() !== token) return;
+    if (response.ok) _hooks.onRewardSnapshot?.(data);
+    else if (data.profile) _hooks.onRewardSnapshot?.(data.profile);
+    if (generation !== _generation) return;
+    if (!response.ok) {
+      if (data.profile) { _profile = data.profile; _pending = null; }
+      message(data.error || 'Exchange failed. Please try again.', true);
+      return;
+    }
+    _profile = data; _pending = null;
+    el('amount').value = '1';
+    message(data.direction === 'buy'
+      ? `Bought ${data.exchanged.toLocaleString()} diamonds for ${data.goldSpent.toLocaleString()} GC.`
+      : `Sold ${data.exchanged.toLocaleString()} diamonds for ${data.goldReceived.toLocaleString()} GC.`);
+  } catch (_) {
+    if (getToken() === token && generation === _generation) message('Connection interrupted. Retry to check this exchange.', true);
+  } finally {
+    _busy = false;
+    if (generation === _generation) render();
+  }
+}
+
+export function initDiamondExchangeShop(hooks = {}) {
+  _hooks = hooks;
+  document.getElementById('diamonds-display')?.addEventListener('click', openDiamondExchangeShop);
+  el('close')?.addEventListener('click', closeDiamondExchangeShop);
+  el('form')?.addEventListener('submit', submit);
+  el('amount')?.addEventListener('input', () => { message(''); render(); });
+  el('max')?.addEventListener('click', () => { if (_profile && !_busy) { el('amount').value = el('amount').max; message(''); render(); } });
+  for (const direction of ['sell', 'buy']) el(direction)?.addEventListener('click', () => {
+    if (!_busy && _profile) { _direction = direction; _pending = null; el('amount').value = '1'; message(''); render(); }
+  });
+  el('modal-overlay')?.addEventListener('click', event => {
+    if (event.target === event.currentTarget && _hooks.getMousedownOverlay?.() === event.currentTarget) closeDiamondExchangeShop();
+  });
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && el('modal-overlay')?.classList.contains('active')) closeDiamondExchangeShop();
+  });
+}

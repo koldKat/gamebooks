@@ -4,6 +4,7 @@ import { getToken, getUsername } from '../core/state.js';
 import { updateCoinsDisplay, refreshCoinsDisplay, COIN_SVG } from './shop.js';
 import { renderBooksXpSummary } from '../account/profile.js';
 import { updateDiamondsDisplay } from './diamonds.js';
+import { closeDiamondExchangeShop } from './exchange-shop.js';
 import { _broadcastLiveEvent } from '../core/livetab.js';
 import { _scheduleLiveUiRefresh } from '../community/notif.js';
 import { escapeHtml } from '../core/util.js';
@@ -96,6 +97,7 @@ function _queueRewardFloater(xpDelta = 0, coinDelta = 0) {
 
 // ── Snapshot processing ───────────────────────────────────────────────────────
 export function _resetRewardSnapshotState() {
+  closeDiamondExchangeShop();
   updateDiamondsDisplay(null);
   _lastRewardXp = null; _lastRewardCoins = null; _lastRewardLevel = null;
   _lastRewardUserKey = null; _rewardAccumXp = 0; _rewardAccumCoins = 0;
