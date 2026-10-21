@@ -423,7 +423,7 @@ body.sidebar-collapsed #play-btns-bar   { left: 50vw; }
     color: #d1d5db;
     border: 0;
     border-radius: 0;
-    padding: 0 0.5rem;
+    padding: 0.15rem 0.5rem;
     min-block-size: 0;
     font: inherit;
     line-height: 1.35;
