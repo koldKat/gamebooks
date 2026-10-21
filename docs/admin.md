@@ -28,26 +28,18 @@ All `/api/admin/*` routes and the panel itself reject any connection that is not
 
 ## Stats cards
 
-The top of the panel shows aggregate stats across all users and books:
+The top of the panel groups aggregate metrics into six compact panels:
 
-| Card | What it shows |
-|------|---------------|
-| **Users** | Total registered accounts (active only). Shows admin count separately. |
-| **Sessions** | Current live sessions (logged-in browsers) |
-| **PDFs / EPUBs** | Number of books with a PDF attached, and the number with an EPUB attached |
-| **Books** | Total books across all accounts |
-| **Mapped Sections** | Sections where choices have been recorded, summed across all books - shown with percentage of total sections |
-| **Discovered Sections** | All sections ever seen (mapped + referenced but unmapped), summed across all books - shown with percentage of total sections |
-| **Playthroughs** | `active \| finished` - active runs (green), finished runs (aqua). Pipe is orange. |
-| **Wins / Losses** | Split card; wins green, losses red. Battle deaths are counted separately in the users/books tables. |
-| **Heap Used / Total** | Node.js process heap memory in use and total heap allocated. |
-| **RSS / CPU** | Resident set size (total process memory). |
-| **Traffic In / Out** | Cumulative bytes received/sent since tracking was enabled. Flushed to DB every 50 requests and on clean shutdown. Sits in the same column as Heap/RSS. |
-| **Database Size** | Size of the SQLite database file. Vacuum button below - purges expired sessions then rewrites the file. |
-| **Application Size** | Total on-disk size of the app directory. Excludes entries matching `size_ignore_patterns`. |
-| **Session Uptime** | How long the current server process has been running. |
-| **Uptime %** | Percentage of total app lifetime that the server has been up. |
-| **App Age** | Total time since the app was first started (persisted across restarts). |
+| Group | What it shows |
+|-------|---------------|
+| **Players** | Registered accounts, players active in the last five minutes and 24 hours, accounts created in seven days, and unexpired sign-in sessions excluding impersonation. A player can have several sessions. |
+| **Catalog** | Standalone and all playable books (including anthology children), anthologies, series, attached PDFs/EPUBs, books with live reading, catalog sections and battle simulators. |
+| **Activity** | Mapped/discovered nodes, active/total runs, finished/shared runs, run wins/losses, simulator battles won/lost, total simulator battles and win rate. Node totals use the most-mapped player copy of each book; runs and simulator battles count started runs across players. |
+| **Gold & coins** | Lifetime gold earned, available and spent, shop upgrades, Gamemaster supply/remaining coins, Lucky Coins generated/claimed, and current bronze/silver balances. |
+| **Diamonds** | Lifetime earned diamonds, player balances, sold/bought totals, diamonds earned from Lucky Coin claims, shared market stock and lifetime app-mined diamonds. Mining and Lucky Coin rewards count as earned; purchases count separately. |
+| **Server** | Application/database sizes, used/allocated heap, process memory, CPU, incoming/outgoing traffic, current process uptime, lifetime uptime/downtime and app age. The Vacuum button retains its confirmation. |
+
+Labels and numeric columns align within each group, with tabular digits and currency colors. Wide screens place server metrics in a full-width strip; narrower screens use fewer columns. Statistics refresh in place without replacing the panels.
 
 Dashboard polling pauses while the browser tab is hidden and refreshes when it becomes visible. Application Size uses an asynchronous directory scan with a shared five-minute cache; changed ignore patterns trigger a fresh calculation.
 

@@ -10,17 +10,20 @@ function fixture(t) {
   const db = new Database(':memory:');
   t.after(() => db.close());
   db.exec(`
-    CREATE TABLE users (xp INTEGER DEFAULT 0, bonus_gc_mint_purchased INTEGER DEFAULT 0,
+    CREATE TABLE users (last_active_at INTEGER, created_at INTEGER, xp INTEGER DEFAULT 0, bonus_gc_mint_purchased INTEGER DEFAULT 0,
       bonus_coins INTEGER DEFAULT 0, coins_spent INTEGER DEFAULT 0, bonus_gc_generated INTEGER DEFAULT 0,
       xp_boost_pct INTEGER DEFAULT 0, bonus_heartbeat_xp INTEGER DEFAULT 0,
       bonus_gc_chance_purchased INTEGER DEFAULT 0, bonus_diamond_dig_purchased INTEGER DEFAULT 0,
       bonus_diamond_exchange_purchased INTEGER DEFAULT 0, bonus_undos INTEGER DEFAULT 0,
       bonus_fast_travels INTEGER DEFAULT 0);
     CREATE TABLE books (id INTEGER PRIMARY KEY, parent_book_id INTEGER, is_container INTEGER DEFAULT 0,
-      total_sections INTEGER, pdf_path TEXT, epub_path TEXT, has_battle_sim INTEGER DEFAULT 0);
+      total_sections INTEGER, pdf_path TEXT, epub_path TEXT, has_battle_sim INTEGER DEFAULT 0, has_live_reading INTEGER DEFAULT 0);
     CREATE TABLE user_books (book_id INTEGER, state_data TEXT);
     CREATE TABLE series (id INTEGER);
-    CREATE TABLE sessions (token TEXT);
+    CREATE TABLE sessions (token TEXT, expires_at INTEGER, is_impersonation INTEGER DEFAULT 0);
+    CREATE TABLE user_diamonds(user_id INTEGER PRIMARY KEY,diamonds_earned INTEGER,diamonds_bought INTEGER,diamonds_spent INTEGER,lucky_diamonds_earned INTEGER);
+    CREATE TABLE user_heartbeat_coins(user_id INTEGER PRIMARY KEY,heartbeat_count INTEGER);
+    CREATE TABLE diamond_market(id INTEGER PRIMARY KEY,diamonds INTEGER,diamonds_mined INTEGER);
     CREATE TABLE feedback (admin_unread INTEGER, deleted_by_admin INTEGER);
     CREATE TABLE coin_events (event TEXT, amount INTEGER);
     INSERT INTO users DEFAULT VALUES;
@@ -116,4 +119,38 @@ test('site extras include containers and padding without adding them to dashboar
   const after = stats(extras);
   assert.deepEqual(after, before);
   assert.deepEqual(extras, { undosTotal: 4, fastTravelsTotal: 3, owPortals: 1 });
+});
+
+
+test('dashboard activity windows and sign-in sessions use real activity and expiry', t => {
+  const { db, stats } = fixture(t), now = Math.floor(Date.now() / 1000);
+  db.prepare('UPDATE users SET last_active_at=?,created_at=?').run(now-120,now-800000);
+  db.prepare('INSERT INTO users(last_active_at,created_at) VALUES(?,?),(?,?)').run(now-600,now-100,now-90000,now-800000);
+  db.prepare('INSERT INTO sessions VALUES(?,?,?),(?,?,?),(?,?,?)').run('valid',now+3600,0,'expired',now-1,0,'impersonation',now+3600,1);
+  const s=stats();
+  assert.equal(s.users,3);assert.equal(s.onlineUsers,1);assert.equal(s.activeUsers24h,2);assert.equal(s.newUsers7d,1);assert.equal(s.sessions,1);
+});
+
+test('dashboard catalog and currency totals retain child books, rewards, trades and metal remainders', t => {
+  const { db, stats } = fixture(t);
+  db.exec(`UPDATE books SET has_live_reading=1,has_battle_sim=1 WHERE id=3;
+    UPDATE books SET pdf_path='book.pdf' WHERE id=1;
+    UPDATE books SET pdf_path='',epub_path='book.epub' WHERE id=3;
+    INSERT INTO user_diamonds VALUES(1,12,3,8,2),(2,4,2,1,1);
+    INSERT INTO user_heartbeat_coins VALUES(1,10123),(2,456);
+    INSERT INTO diamond_market VALUES(1,7,9);`);
+  const changes=db.prepare('SELECT total_changes() n').get().n,s=stats();
+  assert.equal(s.playableBooks,2);assert.equal(s.readingBooks,1);assert.equal(s.battleSims,1);
+  assert.equal(s.pdfCount,1);assert.equal(s.epubCount,1);
+  assert.equal(s.diamondsEarned,16);assert.equal(s.diamondsAvailable,12);
+  assert.equal(s.diamondsSold,9);assert.equal(s.diamondsBought,5);assert.equal(s.luckyDiamondsEarned,3);
+  assert.equal(s.bronzeAvailable,79);assert.equal(s.silverAvailable,5);
+  assert.equal(s.marketDiamonds,7);assert.equal(s.marketDiamondsMined,9);
+  assert.equal(db.prepare('SELECT total_changes() n').get().n,changes,'statistics never write data');
+});
+
+test('empty dashboard aggregates return numeric zeros', t => {
+  const {db,stats}=fixture(t);db.exec('DELETE FROM user_books;DELETE FROM books;DELETE FROM users');
+  const s=stats();
+  for(const key of ['users','books','playableBooks','readingBooks','onlineUsers','activeUsers24h','newUsers7d','sessions','diamondsEarned','diamondsAvailable','diamondsSold','diamondsBought','luckyDiamondsEarned','bronzeAvailable','silverAvailable','marketDiamonds','marketDiamondsMined'])assert.equal(s[key],0,key);
 });
