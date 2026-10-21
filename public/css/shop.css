@@ -22,6 +22,18 @@
 
 .coin-icon { width: 14px; height: 14px; vertical-align: -2px; display: inline-block; }
 
+.diamonds-display {
+  background: #102a33;
+  border: 1px solid #155e75;
+  border-radius: 6px;
+  color: #67e8f9;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  white-space: nowrap;
+}
+.diamond-icon { width: 14px; height: 14px; vertical-align: -2px; display: inline-block; }
+
 /* ── Shop modal ─────────────────────────────────────────────────── */
 #shop-modal-overlay {
   display: none; position: fixed; inset: 0;

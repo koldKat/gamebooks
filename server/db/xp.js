@@ -425,9 +425,17 @@ function awardIdleHeartbeatXp(userId) {
 }
 
 function getUserXpInfo(userId) {
-  const row  = db.prepare('SELECT xp, coins_spent, xp_boost_pct, bonus_undos, bonus_fast_travels, bonus_heartbeat_xp, bonus_coins, admin_gifted_coins, xp_from_boost, bonus_gc_chance_purchased, bonus_gc_mint_purchased, pending_bonus_gc FROM users WHERE id = ?').get(userId);
+  const row  = db.prepare(`SELECT xp, coins_spent, xp_boost_pct, bonus_undos, bonus_fast_travels,
+    bonus_heartbeat_xp, bonus_coins, admin_gifted_coins, xp_from_boost,
+    bonus_gc_chance_purchased, bonus_gc_mint_purchased, pending_bonus_gc,
+    COALESCE((SELECT qualifying_events FROM user_diamonds WHERE user_id = users.id), 0) AS diamond_events
+    FROM users WHERE id = ?`).get(userId);
   const bonusGcClaimed = db.prepare("SELECT COALESCE(SUM(amount), 0) AS n FROM coin_events WHERE user_id = ? AND event = 'bonus_gc_claim'").get(userId).n;
-  return userXpInfoFromRow(row, bonusGcClaimed);
+  return {
+    ...userXpInfoFromRow(row, bonusGcClaimed),
+    // Private preview for the owner's stable account ID, including after a rename.
+    ...(Number(userId) === 1 ? { diamondsBalance: Math.floor((row?.diamond_events || 0) / 1000) } : {}),
+  };
 }
 
 // Admin lists use the same calculations with two queries for the whole user set.

@@ -157,6 +157,8 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_xp_events_event_created ON xp_events(event, created_at);
 `);
 
+require('./db/diamonds').initializeDiamondBalances(db);
+
 db.exec(`
   CREATE TABLE IF NOT EXISTS coin_events (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
