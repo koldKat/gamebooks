@@ -433,8 +433,8 @@ function getUserXpInfo(userId) {
   const bonusGcClaimed = db.prepare("SELECT COALESCE(SUM(amount), 0) AS n FROM coin_events WHERE user_id = ? AND event = 'bonus_gc_claim'").get(userId).n;
   return {
     ...userXpInfoFromRow(row, bonusGcClaimed),
-    // Private preview for the owner's stable account ID, including after a rename.
-    ...(Number(userId) === 1 ? { diamondsBalance: Math.floor((row?.diamond_events || 0) / 1000) } : {}),
+    // Private preview for koldKat and sashii, using stable IDs across renames.
+    ...([1, 17].includes(Number(userId)) ? { diamondsBalance: Math.floor((row?.diamond_events || 0) / 1000) } : {}),
   };
 }
 

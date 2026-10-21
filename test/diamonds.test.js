@@ -61,7 +61,7 @@ test('diamond progress is atomic, works for new players and survives book-log cl
   assert.equal(h.count(3), 0, 'account deletion removes its balance');
 });
 
-test('reward snapshots expose diamonds only for the owner and use a primary-key lookup', t => {
+test('reward snapshots expose diamonds only for koldKat and sashii and use a primary-key lookup', t => {
   const h = fixture(t);
   for (const column of ['xp', 'coins_spent', 'xp_boost_pct', 'bonus_undos', 'bonus_fast_travels',
     'bonus_heartbeat_xp', 'bonus_coins', 'admin_gifted_coins', 'xp_from_boost',
@@ -69,7 +69,8 @@ test('reward snapshots expose diamonds only for the owner and use a primary-key 
     h.db.exec(`ALTER TABLE users ADD COLUMN ${column} INTEGER DEFAULT 0`);
   }
   h.db.exec('CREATE TABLE coin_events (user_id INTEGER, event TEXT, amount INTEGER)');
-  h.add(1, 'visit_node', 36963); h.add(2, 'visit_node', 6040);
+  h.db.prepare('INSERT INTO users(id) VALUES (17)').run();
+  h.add(1, 'visit_node', 36963); h.add(2, 'visit_node', 6040); h.add(17, 'visit_node', 1402);
   initializeDiamondBalances(h.db);
   const queries = [];
   const context = vm.createContext({
@@ -79,6 +80,8 @@ test('reward snapshots expose diamonds only for the owner and use a primary-key 
   const source = fs.readFileSync(require.resolve('../server/db/xp'), 'utf8');
   vm.runInContext(source.slice(source.indexOf('function getUserXpInfo('), source.indexOf('// Admin lists use')), context);
   assert.equal(context.getUserXpInfo(1).diamondsBalance, 36);
+  assert.equal(context.getUserXpInfo(17).diamondsBalance, 1);
+  assert.equal(context.getUserXpInfo('17').diamondsBalance, 1);
   assert.equal(context.getUserXpInfo(2).coinsBalance, 7);
   assert.equal('diamondsBalance' in context.getUserXpInfo(2), false);
   const plan = h.db.prepare('EXPLAIN QUERY PLAN ' + queries[0]).all(1);
