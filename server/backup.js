@@ -7,10 +7,24 @@ const { purgeDeletedFeedbackThreads } = require('./db/feedback');
 const { cleanupFeedbackAttachments } = require('./feedback-cleanup');
 
 const BACKUP_DIR  = path.join(__dirname, '..', 'backups');
-const KEEP_HOURS  = 15 * 24; // keep 15 days of hourly backups
+const KEEP_HOURS  = 7 * 24; // keep 7 days of hourly backups
 const INTERVAL_MS = 60 * 60 * 1000; // 1 hour
 
 function pad(n) { return String(n).padStart(2, '0'); }
+
+function pruneBackups() {
+  const cutoff = Date.now() - KEEP_HOURS * 60 * 60 * 1000;
+  for (const file of fs.readdirSync(BACKUP_DIR)) {
+    if (!file.startsWith('backup-') || !file.endsWith('.zip')) continue;
+    const full = path.join(BACKUP_DIR, file);
+    try {
+      if (fs.statSync(full).mtimeMs < cutoff) {
+        fs.unlinkSync(full);
+        console.log(`\x1b[33m[backup] deleted ${full}\x1b[0m`);
+      }
+    } catch (_) {}
+  }
+}
 
 async function runBackup() {
   purgeDeletedFeedbackThreads();
@@ -23,7 +37,10 @@ async function runBackup() {
   const snap  = path.join(BACKUP_DIR, `backup-${stamp}.sqlite`);
   const zip   = path.join(BACKUP_DIR, `backup-${stamp}.zip`);
 
-  if (fs.existsSync(zip)) return; // already done this hour
+  if (fs.existsSync(zip)) {
+    pruneBackups();
+    return; // already done this hour
+  }
 
   await db.backupDb(snap);
 
@@ -39,19 +56,7 @@ async function runBackup() {
     try { fs.unlinkSync(snap); } catch (_) {}
   }
 
-  // Prune backups older than KEEP_HOURS
-  const cutoff = Date.now() - KEEP_HOURS * 60 * 60 * 1000;
-  for (const file of fs.readdirSync(BACKUP_DIR)) {
-    if (!file.startsWith('backup-') || !file.endsWith('.zip')) continue;
-    const full = path.join(BACKUP_DIR, file);
-    try {
-      if (fs.statSync(full).mtimeMs < cutoff) {
-        fs.unlinkSync(full);
-        console.log(`\x1b[33m[backup] deleted ${full}\x1b[0m`);
-      }
-    } catch (_) {}
-  }
-
+  pruneBackups();
   console.log(`[backup] created ${zip}`);
 }
 

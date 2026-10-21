@@ -63,12 +63,39 @@ test('hourly backups contain only SQLite and restarts skip an existing hourly ar
 
 test('failed compression removes partial output and allows a same-hour retry', async () => {
   const h = harness({ zipFails: true });
+  const old = '/app/backups/backup-old.zip';
+  h.files.set(old, new Date(2026, 8, 1).getTime());
   h.start();
   await settle();
   assert.equal(h.files.has('/app/backups/backup-2026-10-07_11h.zip'), false);
   assert.equal(h.files.has('/app/backups/backup-2026-10-07_11h.sqlite'), false);
   assert.equal(h.errors.length, 1);
+  assert.equal(h.files.has(old), true, 'retain recovery archive when creating a replacement fails');
   h.start();
   await settle();
   assert.equal(h.snapshots.length, 2);
+});
+
+test('retention keeps seven days and prunes even when this hour already exists', async () => {
+  const h = harness();
+  const now = new Date(2026, 9, 7, 11).getTime();
+  const cutoff = now - 7 * 24 * 60 * 60 * 1000;
+  const old = '/app/backups/backup-old.zip';
+  const boundary = '/app/backups/backup-boundary.zip';
+  const recent = '/app/backups/backup-recent.zip';
+  const manual = '/app/backups/manual.zip';
+  const snapshot = '/app/backups/backup-manual.sqlite';
+  const current = '/app/backups/backup-2026-10-07_11h.zip';
+  for (const [file, mtime] of [[old, cutoff - 1], [boundary, cutoff],
+    [recent, cutoff + 1], [manual, cutoff - 1], [snapshot, cutoff - 1], [current, now]]) {
+    h.files.set(file, mtime);
+  }
+  h.start();
+  await settle();
+  assert.equal(h.files.has(old), false);
+  for (const file of [boundary, recent, manual, snapshot, current]) {
+    assert.equal(h.files.has(file), true, file);
+  }
+  assert.equal(h.snapshots.length, 0);
+  assert.equal(h.commands.length, 0);
 });

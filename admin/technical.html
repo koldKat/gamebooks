@@ -1916,9 +1916,10 @@ snapToGrid?: boolean,            // if true, dragging a node snaps its dropped p
 <p>Each run:</p>
 <ol>
 <li>Creates <code>backups/</code> at the project root if it does not exist.</li>
-<li>Skips if this hour&#39;s ZIP (<code>backup-YYYY-MM-DD_HHh.zip</code>) already exists.</li>
+<li>If this hour&#39;s ZIP (<code>backup-YYYY-MM-DD_HHh.zip</code>) already exists, prunes expired automatic archives and skips creating another snapshot.</li>
+<li>Otherwise creates a consistent SQLite snapshot.</li>
 <li>Zips only the database snapshot with <code>zip -j</code> (no <code>reading-images/</code> or other asset directories), then deletes the raw <code>.sqlite</code> temp file in a <code>finally</code> - so a failed/hung zip (disk pressure, missing <code>zip</code> binary, etc.) can&#39;t leave the temp file behind. The error still propagates to the caller&#39;s <code>console.error</code> either way.</li>
-<li>Deletes any <code>backup-*.zip</code> files in <code>backups/</code> whose <code>mtime</code> is older than 15 days.</li>
+<li>After successful compression, deletes automatic <code>backup-*.zip</code> archives whose <code>mtime</code> is older than seven days. Failed backup creation preserves existing recovery archives.</li>
 </ol>
 <p>Files are named <code>backup-YYYY-MM-DD_HHh.zip</code> so they match the <code>*backup*</code> glob used by the admin Backups tab - rolling backups appear there alongside any manual backups.</p>
 <h2 id="open-world">Open World<a class="anchor" href="#open-world" aria-label="Link to section">#</a></h2>
