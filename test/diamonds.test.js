@@ -73,6 +73,7 @@ test('reward snapshots expose diamonds only for koldKat and sashii and use a pri
   h.add(1, 'visit_node', 36963); h.add(2, 'visit_node', 6040); h.add(17, 'visit_node', 1402);
   initializeDiamondBalances(h.db);
   const queries = [];
+  require('../server/db/heartbeat-coins').initializeHeartbeatCoins(h.db);
   const context = vm.createContext({
     db: { prepare(sql) { queries.push(sql); return h.db.prepare(sql); } },
     userXpInfoFromRow: () => ({ coinsBalance: 7, level: 0 }), diamondInfoForUser,

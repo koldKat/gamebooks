@@ -21,6 +21,8 @@ const exchange = db.transaction((userId, amount, requestId, expectedRate, direct
   if (!Number.isSafeInteger(gold)) return { error: 'invalid_amount' };
   if (direction === 'buy') {
     if (coinBalance(user) < gold) return { error: 'insufficient_coins' };
+    if (!db.prepare('UPDATE diamond_market SET diamonds=diamonds-? WHERE id=1 AND diamonds>=?').run(amount, amount).changes)
+      return { error: 'insufficient_stock' };
     db.prepare('UPDATE users SET coins_spent=coins_spent+? WHERE id=?').run(gold, userId);
     db.prepare(`INSERT INTO user_diamonds(user_id,diamonds_bought) VALUES(?,?)
       ON CONFLICT(user_id) DO UPDATE SET diamonds_bought=diamonds_bought+excluded.diamonds_bought`).run(userId, amount);
@@ -28,6 +30,7 @@ const exchange = db.transaction((userId, amount, requestId, expectedRate, direct
     const spent = db.prepare(`UPDATE user_diamonds SET diamonds_spent=diamonds_spent+?
       WHERE user_id=? AND diamonds_earned+diamonds_bought-diamonds_spent>=?`).run(amount, userId, amount);
     if (!spent.changes) return { error: 'insufficient_diamonds' };
+    db.prepare('UPDATE diamond_market SET diamonds=diamonds+? WHERE id=1').run(amount);
   }
   db.prepare('INSERT INTO diamond_exchanges(user_id,request_id,diamonds,rate,gold_coins,direction) VALUES(?,?,?,?,?,?)')
     .run(userId, requestId, amount, rate, gold, direction);

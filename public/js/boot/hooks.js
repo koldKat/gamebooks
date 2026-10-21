@@ -148,7 +148,7 @@ export function initFeatureHooks() {
       .then(async res => {
         if (!res?.ok) return;
         const data = await res.json().catch(() => null);
-        if (data?.awarded || data?.coinRolled) _scheduleRewardProfileRefresh(150);
+        if (data?.awarded || data?.coinRolled || data?.heartbeatCoinsAwarded) _scheduleRewardProfileRefresh(150);
       })
       .catch(() => {});
   };

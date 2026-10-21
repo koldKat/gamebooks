@@ -5,6 +5,7 @@ import { updateCoinsDisplay, refreshCoinsDisplay, COIN_SVG } from './shop.js';
 import { renderBooksXpSummary } from '../account/profile.js';
 import { updateDiamondsDisplay } from './diamonds.js';
 import { closeDiamondExchangeShop } from './exchange-shop.js';
+import { updateHeartbeatCoinsDisplay } from './heartbeat-coins.js';
 import { _broadcastLiveEvent } from '../core/livetab.js';
 import { _scheduleLiveUiRefresh } from '../community/notif.js';
 import { escapeHtml } from '../core/util.js';
@@ -13,6 +14,7 @@ import { escapeHtml } from '../core/util.js';
 let _lastRewardXp        = null;
 let _lastRewardCoins     = null;
 let _lastRewardLevel     = null;
+let _lastHeartbeatGold   = null;
 let _lastRewardUserKey   = null;
 let _rewardAccumXp       = 0;
 let _rewardAccumCoins    = 0;
@@ -99,6 +101,8 @@ function _queueRewardFloater(xpDelta = 0, coinDelta = 0) {
 export function _resetRewardSnapshotState() {
   closeDiamondExchangeShop();
   updateDiamondsDisplay(null);
+  updateHeartbeatCoinsDisplay(null);
+  _lastHeartbeatGold = null;
   _lastRewardXp = null; _lastRewardCoins = null; _lastRewardLevel = null;
   _lastRewardUserKey = null; _rewardAccumXp = 0; _rewardAccumCoins = 0;
   if (_rewardFlushTimer) { clearTimeout(_rewardFlushTimer); _rewardFlushTimer = null; }
@@ -117,6 +121,10 @@ export function _processRewardSnapshot(data, opts = {}) {
     _resetRewardSnapshotState();
   }
   updateCoinsDisplay(coins);
+  updateHeartbeatCoinsDisplay(data);
+  const heartbeatGold = Number(data.heartbeatGoldEarned) || 0;
+  const silentGold = _lastHeartbeatGold === null ? 0 : Math.max(0, heartbeatGold - _lastHeartbeatGold);
+  _lastHeartbeatGold = heartbeatGold;
   const prevXp = _lastRewardXp;
   if (_lastRewardXp === null || _lastRewardCoins === null || _lastRewardLevel === null) {
     _lastRewardUserKey = rewardUserKey; _lastRewardXp = xp; _lastRewardCoins = coins;
@@ -130,7 +138,7 @@ export function _processRewardSnapshot(data, opts = {}) {
   _lastRewardUserKey = rewardUserKey; _lastRewardXp = xp; _lastRewardCoins = coins; _lastRewardLevel = level;
   renderBooksXpSummary(data, { fromXp: prevXp });
   if (broadcast) _broadcastLiveEvent('reward_snapshot', data);
-  if (xpDelta > 0 || coinDelta > 0) _queueRewardFloater(Math.max(0, xpDelta), Math.max(0, coinDelta));
+  if (xpDelta > 0 || coinDelta > silentGold) _queueRewardFloater(Math.max(0, xpDelta), Math.max(0, coinDelta - silentGold));
   if (coinDelta > 0 || levelDelta > 0) _scheduleLiveUiRefresh({ notif: true }, 60);
   if (levelDelta > 0) {
     for (let i = 0; i < levelDelta; i++) {

@@ -1,6 +1,7 @@
 'use strict';
 
 // Admin content management, statistics, settings, and shop economy.
+const { getShopPurchaseTotals, getShopRefundRows } = require('./shop-purchases');
 
 const { db, _naturalCompareByName, _getPdfSize, _getEpubSize } = require('./connection');
 const { computeLevel, getTitleForLevel, getUserXpInfo, getAllUsersXpInfo, awardXp, awardCoins, processStateXp, coinBalance, _insertNotif, SIM_HISTORY_KEYS, RETIRED_SIM_HISTORY_KEYS = [] } = require('./xp');
@@ -605,7 +606,10 @@ function adminGetUser(userId) {
   const row = db.prepare(`
     SELECT u.id, u.username, u.display_name, u.email, u.is_author, u.is_contributor, u.is_moderator, u.pdf_access, u.created_at, u.last_country, u.last_city,
            u.active_country, u.active_city, u.last_domain, u.failed_login_attempts, u.locked_until, u.is_protected, u.is_admin,
-           u.public_profile, u.hide_from_feed,
+           u.public_profile, u.hide_from_feed, u.xp, u.xp_boost_pct,
+           u.bonus_undos, u.bonus_fast_travels, u.bonus_heartbeat_xp,
+           u.bonus_gc_chance_purchased, u.bonus_gc_mint_purchased,
+           u.bonus_diamond_dig_purchased, u.bonus_diamond_exchange_purchased,
            COUNT(DISTINCT s.token) AS session_count
     FROM users u
     LEFT JOIN sessions s ON s.user_id = u.id
@@ -613,7 +617,7 @@ function adminGetUser(userId) {
     GROUP BY u.id
   `).get(userId);
   if (!row) return null;
-  return { ...row, ...getUserXpInfo(userId) };
+  return { ...row, ...getUserXpInfo(userId), shopPurchases: getShopRefundRows(row, getShopItems(), computeLevel) };
 }
 
 function adminGetUserBooks(userId) {
@@ -767,7 +771,7 @@ function adminGetStats(gameplayExtras) {
   const luckyGcClaimed   = db.prepare("SELECT COALESCE(SUM(amount), 0) AS n FROM coin_events WHERE event = 'bonus_gc_claim'").get().n;
   const battleSims       = db.prepare('SELECT COUNT(*) AS n FROM books WHERE has_battle_sim = 1').get().n;
   const battleWinRate    = battlesFought > 0 ? Math.round((battlesWon / battlesFought) * 100) : 0;
-  return { users, books, anthologies, series: seriesCount, sessions, totalSections, mappedSections, discoveredSections, playthroughs, activePlaythroughs, finishedPlaythroughs, wins, deaths, battleCount, publicRuns, dbSize, feedbackUnread, totalCoinsEarned, totalCoinsSpent, totalCoinsAvailable, pdfCount, epubCount, luckyGcGenerated, luckyGcClaimed, battleSims, battlesFought, battlesWon, battlesLost, battleWinRate };
+  return { users, books, anthologies, series: seriesCount, sessions, totalSections, mappedSections, discoveredSections, playthroughs, activePlaythroughs, finishedPlaythroughs, wins, deaths, battleCount, publicRuns, dbSize, feedbackUnread, totalCoinsEarned, totalCoinsSpent, totalCoinsAvailable, pdfCount, epubCount, luckyGcGenerated, luckyGcClaimed, battleSims, battlesFought, battlesWon, battlesLost, battleWinRate, ...getShopPurchaseTotals(db, computeLevel) };
 }
 
 function getSiteStats() {
@@ -871,21 +875,8 @@ function getSiteStats() {
   const forumPosts         = db.prepare('SELECT COUNT(*) AS n FROM forum_posts WHERE is_deleted = 0').get().n;
   const forumPinnedThreads = db.prepare('SELECT COUNT(*) AS n FROM forum_threads WHERE is_pinned = 1').get().n;
 
-  // Purchased boost tenths = total xp_boost_pct minus free per-level tenths.
-  const upgradeRow = db.prepare(
-    'SELECT SUM(bonus_undos) AS undos, SUM(bonus_fast_travels) AS fts, SUM(bonus_heartbeat_xp) AS heartbeats, SUM(bonus_gc_chance_purchased) AS gcChances, SUM(bonus_gc_mint_purchased) AS gcMints, SUM(coins_spent) AS spent FROM users'
-  ).get();
-  const upgradeUndos       = upgradeRow?.undos  || 0;
-  const upgradeFastTravels = upgradeRow?.fts    || 0;
-  const upgradeHeartbeatXp = upgradeRow?.heartbeats || 0;
-  const upgradeGcChance    = upgradeRow?.gcChances || 0;
-  const upgradeGcMint      = upgradeRow?.gcMints || 0;
-  const upgradeXpBoosts = db.prepare('SELECT xp, xp_boost_pct FROM users').all().reduce((sum, row) => {
-    const level = computeLevel(row?.xp || 0);
-    const bought = Math.max(0, (row?.xp_boost_pct || 0) - level);
-    return sum + bought;
-  }, 0);
-  const totalUpgrades      = upgradeUndos + upgradeFastTravels + upgradeHeartbeatXp + upgradeGcChance + upgradeGcMint + upgradeXpBoosts;
+  const { totalUpgrades, upgradeUndos, upgradeFastTravels, upgradeHeartbeatXp,
+    upgradeGcChance, upgradeGcMint, upgradeXpBoosts, upgradeDiamondDig, upgradeDiamondExchange } = base;
 
   // Ratings
   const ratingStats = getRatingStats(db);
@@ -966,7 +957,7 @@ function getSiteStats() {
     totalXp, appLevel, appTitle, avgLevel, avgTitle, levelUps, xpEvents, xpEventTypes, booksFullyVisited, booksFullyDiscovered,
     // Coins & shop
     totalCoinsEarned: base.totalCoinsEarned, totalCoinsSpent: base.totalCoinsSpent, totalCoinsAvailable: base.totalCoinsAvailable,
-    totalUpgrades, upgradeUndos, upgradeFastTravels, upgradeHeartbeatXp, upgradeGcChance, upgradeGcMint, upgradeXpBoosts,
+    totalUpgrades, upgradeUndos, upgradeFastTravels, upgradeHeartbeatXp, upgradeGcChance, upgradeGcMint, upgradeXpBoosts, upgradeDiamondDig, upgradeDiamondExchange,
     // Parties
     partyTotal, partyActive, partyInvites, partyInvitesAccepted, partyInvitesDeclined, partyUsersTotal,
     // Forum

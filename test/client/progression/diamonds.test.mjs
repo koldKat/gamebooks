@@ -34,6 +34,7 @@ test('resetting rewards on logout or an account switch clears the private diamon
   const context = createContext({
     updateDiamondsDisplay: value => balances.push(value),
     closeDiamondExchangeShop() {},
+    updateHeartbeatCoinsDisplay() {},
     clearTimeout() {},
   });
   const source = readFileSync(new URL('../../../public/js/progression/rewards.js', import.meta.url), 'utf8');

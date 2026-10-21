@@ -31,6 +31,7 @@ function applyStats(d) {
   document.getElementById('s-coins-earned').textContent = fmtN(d.totalCoinsEarned);
   document.getElementById('s-coins-avail').textContent  = fmtN(d.totalCoinsAvailable);
   document.getElementById('s-coins-spent').textContent   = fmtN(d.totalCoinsSpent);
+  document.getElementById('s-shop-purchases').textContent = fmtN(d.totalUpgrades);
   document.getElementById('s-lucky-gc-generated').textContent = fmtN(d.luckyGcGenerated);
   document.getElementById('s-lucky-gc-claimed').textContent   = fmtN(d.luckyGcClaimed);
   document.getElementById('s-uptime-pct').textContent    = d.uptimePct != null ? d.uptimePct.toFixed(2) + '%' : '-';

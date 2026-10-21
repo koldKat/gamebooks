@@ -7,6 +7,7 @@ const { generateToken } = require('./auth');
 const { isImpersonatingContext } = require('../impersonation-context');
 const { isCleanRun } = require('../clean-run');
 const { diamondInfoForUser } = require('./diamonds');
+const { advanceHeartbeatCoins } = require('./heartbeat-coins');
 
 // ── Impersonation tokens ──────────────────────────────────────────────────────
 
@@ -388,6 +389,8 @@ function awardXp(userId, event, ref, amountOverride = null) {
 function awardIdleHeartbeatXp(userId) {
   const base = getXpAmount('idle_heartbeat');
   const row  = db.prepare('SELECT xp, bonus_heartbeat_xp, heartbeat_carry, pending_bonus_gc, bonus_gc_chance_purchased FROM users WHERE id = ?').get(userId);
+  const heartbeatCoinsAwarded = !!row && !isImpersonatingContext()
+    && advanceHeartbeatCoins(db, userId, Math.floor(Date.now() / 60000));
   // At the dynamic cap, buffer idle XP toward the next level WITHOUT an idle_heartbeat event (so
   // playtime coins/carry stay frozen and can't dump on unfreeze), clamped so it never crosses the
   // level, and keep the Lucky Coin roll ticking.
@@ -400,7 +403,7 @@ function awardIdleHeartbeatXp(userId) {
     if (add > 0) db.prepare('UPDATE users SET xp = xp + ? WHERE id = ?').run(add, userId);
     _rollBonusGc(userId, curXp, row?.pending_bonus_gc, row?.bonus_gc_chance_purchased);
     const pendingAfter = db.prepare('SELECT pending_bonus_gc FROM users WHERE id = ?').get(userId)?.pending_bonus_gc;
-    return { awarded: add > 0, coinRolled: !row?.pending_bonus_gc && !!pendingAfter };
+    return { awarded: add > 0, coinRolled: !row?.pending_bonus_gc && !!pendingAfter, heartbeatCoinsAwarded };
   }
   const purchased  = row?.bonus_heartbeat_xp ?? 0;
   const freeBoosts = Math.max(0, computeLevel(row?.xp || 0) - 10);
@@ -422,7 +425,7 @@ function awardIdleHeartbeatXp(userId) {
     const pendingAfter = db.prepare('SELECT pending_bonus_gc FROM users WHERE id = ?').get(userId)?.pending_bonus_gc;
     coinRolled = !row?.pending_bonus_gc && !!pendingAfter;
   }
-  return { awarded: !!awarded, coinRolled };
+  return { awarded: !!awarded, coinRolled, heartbeatCoinsAwarded };
 }
 
 function getUserXpInfo(userId) {
@@ -432,11 +435,15 @@ function getUserXpInfo(userId) {
     bonus_diamond_dig_purchased, bonus_diamond_exchange_purchased,
     COALESCE((SELECT diamonds_earned FROM user_diamonds WHERE user_id = users.id), 0) AS diamonds_earned,
     COALESCE((SELECT diamonds_spent FROM user_diamonds WHERE user_id = users.id), 0) AS diamonds_spent,
-    COALESCE((SELECT diamonds_bought FROM user_diamonds WHERE user_id = users.id), 0) AS diamonds_bought
+    COALESCE((SELECT diamonds_bought FROM user_diamonds WHERE user_id = users.id), 0) AS diamonds_bought,
+    COALESCE((SELECT diamonds FROM diamond_market WHERE id=1),0) AS diamond_purchase_stock,
+    COALESCE((SELECT heartbeat_count FROM user_heartbeat_coins WHERE user_id=users.id),0) AS heartbeat_count
     FROM users WHERE id = ?`).get(userId);
   const bonusGcClaimed = db.prepare("SELECT COALESCE(SUM(amount), 0) AS n FROM coin_events WHERE user_id = ? AND event = 'bonus_gc_claim'").get(userId).n;
   const info = userXpInfoFromRow(row, bonusGcClaimed);
-  return { ...info, ...diamondInfoForUser(userId, row, info.level) };
+  const heartbeats = row?.heartbeat_count || 0;
+  return { ...info, bronzeBalance: heartbeats % 100, silverBalance: Math.floor(heartbeats / 100) % 100,
+    heartbeatGoldEarned: Math.floor(heartbeats / 10000), ...diamondInfoForUser(userId, row, info.level) };
 }
 
 // Admin lists use the same calculations with two queries for the whole user set.

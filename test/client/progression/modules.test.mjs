@@ -28,7 +28,7 @@ test('progression relocation preserves unchanged implementations without root wr
 test('progression imports retain their original dependency identities', () => {
   const expected = {
     'app-xp': ['core/state.js', 'progression/shop.js', 'core/util.js', 'i18n.js'],
-    rewards: ['core/state.js', 'progression/shop.js', 'account/profile.js', 'progression/diamonds.js', 'progression/exchange-shop.js', 'core/livetab.js', 'community/notif.js', 'core/util.js'],
+    rewards: ['core/state.js', 'progression/shop.js', 'account/profile.js', 'progression/diamonds.js', 'progression/exchange-shop.js', 'progression/heartbeat-coins.js', 'core/livetab.js', 'community/notif.js', 'core/util.js'],
     shop: ['core/state.js', 'core/util.js', 'i18n.js', 'ui-helpers/coin-icon.js', 'progression/diamonds.js', 'progression/exchange-shop.js'],
   };
   for (const [name, dependencies] of Object.entries(expected)) {

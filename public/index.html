@@ -609,6 +609,8 @@
               <button id="books-search-close" type="button" aria-label="Clear search">✕</button>
             </div>
             <div class="books-header-right">
+              <span id="bronze-display" class="minor-coins-display bronze-display" data-tooltip="Bronze coins: 1 per heartbeat. 100 bronze becomes 1 silver." hidden></span>
+              <span id="silver-display" class="minor-coins-display silver-display" data-tooltip="Silver coins: 100 silver becomes 1 gold coin." hidden></span>
               <button id="shop-btn" class="shop-btn" data-tooltip="Gold Coins Shop"><span id="coins-display">GC 0</span></button>
               <button id="diamonds-display" class="diamonds-display" type="button" data-tooltip="Diamond Exchange Shop" hidden></button>
               <button id="profile-btn" class="profile-btn" data-tooltip="Edit profile">
@@ -1178,6 +1180,7 @@
           <button id="exchange-shop-buy" type="button" class="secondary-btn" aria-pressed="false">Buy diamonds</button>
         </div>
         <label for="exchange-shop-amount" id="exchange-shop-amount-label">Diamonds to sell</label>
+        <p id="exchange-shop-stock" class="exchange-shop-tip" hidden></p>
         <div class="exchange-shop-amount-row">
           <div class="cs-num-wrap">
             <button id="exchange-shop-dec" class="cs-num-btn" type="button" aria-label="Fewer diamonds">−</button>
@@ -1190,12 +1193,7 @@
         <div id="exchange-shop-receive" class="exchange-shop-receive" aria-live="polite"></div>
         <p class="exchange-shop-tip" id="exchange-shop-tip">Gold coins are added to your balance immediately.</p>
         <p class="exchange-shop-tip">Buy price: twice your level. Sell rate: your level + upgrades.</p>
-        <div id="exchange-shop-confirmation" class="exchange-shop-confirmation" hidden>
-          <p id="exchange-shop-confirm-details" aria-live="polite"></p>
-          <button id="exchange-shop-cancel" type="button" class="secondary-btn">Cancel</button>
-          <button id="exchange-shop-confirm" type="button" class="shop-buy-btn">Confirm Sell</button>
-        </div>
-        <button id="exchange-shop-submit" class="shop-buy-btn" type="submit" disabled>Review exchange</button>
+        <button id="exchange-shop-submit" class="shop-buy-btn" type="submit" disabled>Sell diamonds</button>
         <div id="exchange-shop-message" class="exchange-shop-message" role="status"></div>
       </form>
     </div>

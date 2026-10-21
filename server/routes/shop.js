@@ -52,11 +52,12 @@ async function handleDiamondExchange(req, res) {
       invalid_request: 'Invalid exchange request.', not_found: 'Not found',
       insufficient_diamonds: 'Not enough diamonds. Your balance has been refreshed.',
       insufficient_coins: 'Not enough gold coins. Your balance has been refreshed.',
+      insufficient_stock: 'Not enough diamonds available to buy. The available stock has been refreshed.',
       rate_changed: 'Your exchange rate changed. Check the updated amount and try again.',
     };
     return send(res, result.error === 'unavailable' ? 403 : 400, {
       error: messages[result.error],
-      ...(['rate_changed','insufficient_diamonds','insufficient_coins'].includes(result.error) ? { profile: db.getUserXpInfo(userId) } : {}),
+      ...(['rate_changed','insufficient_diamonds','insufficient_coins','insufficient_stock'].includes(result.error) ? { profile: db.getUserXpInfo(userId) } : {}),
     });
   }
   send(res, 200, { ...result, ...db.getUserXpInfo(userId) });

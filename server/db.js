@@ -171,6 +171,7 @@ db.exec(`
   );
   CREATE UNIQUE INDEX IF NOT EXISTS ux_coin_events ON coin_events(user_id, event, ref);
 `);
+require('./db/heartbeat-coins').initializeHeartbeatCoins(db);
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS feedback (

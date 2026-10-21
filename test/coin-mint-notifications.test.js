@@ -5,6 +5,7 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const Database = require('better-sqlite3');
 const { initializeDiamondBalances, isDiamondPreviewUser } = require('../server/db/diamonds');
+const { getShopPurchaseTotals, getShopRefundRows } = require('../server/db/shop-purchases');
 
 function fixture({ xp = 1890993, purchased = 24, balance = 25 } = {}) {
   const db = new Database(':memory:');
@@ -22,8 +23,31 @@ function fixture({ xp = 1890993, purchased = 24, balance = 25 } = {}) {
   vm.runInContext(admin.slice(admin.indexOf('function undoFastTravelCap('), admin.indexOf('function adminRefundShopItem(')), context);
   db.prepare('INSERT INTO users (id,xp,bonus_gc_mint_purchased,coins_spent) VALUES (1,?,?,?)')
     .run(xp, purchased, context.coinsFromXp(xp, purchased) - balance);
-  return { db, refund: vm.runInContext('_adminRefundShopItemTx', context), purchase: (item, id = 1) => context.purchaseShopItem(id, item), balance: () => context.coinBalance(db.prepare('SELECT * FROM users WHERE id=1').get()), notifications: () => db.prepare('SELECT * FROM notifications').all() };
+  return { db, refund: vm.runInContext('_adminRefundShopItemTx', context), purchase: (item, id = 1) => context.purchaseShopItem(id, item), balance: () => context.coinBalance(db.prepare('SELECT * FROM users WHERE id=1').get()), notifications: () => db.prepare('SELECT * FROM notifications').all(),
+    totals: () => getShopPurchaseTotals(db, context.computeLevel),
+    quotes: () => getShopRefundRows(db.prepare('SELECT * FROM users WHERE id=1').get(), context.getShopItems(), context.computeLevel),
+    setCost: (...args) => context.setShopItemCost(...args) };
 }
+
+test('all eight purchase totals exclude free bonuses and refund quotes match actual latest/all refunds', t => {
+  const f=fixture();t.after(()=>f.db.close());
+  f.db.exec(`UPDATE users SET xp=55000,xp_boost_pct=13,bonus_heartbeat_xp=2,
+    bonus_gc_chance_purchased=4,bonus_gc_mint_purchased=3,bonus_diamond_dig_purchased=2,
+    bonus_diamond_exchange_purchased=2,bonus_undos=2,bonus_fast_travels=3 WHERE id=1`);
+  f.setCost('undo',7,7);f.setCost('fast_travel',11,11);
+  assert.equal(f.totals().totalUpgrades,21);assert.equal(f.totals().upgradeXpBoosts,3);
+  assert.equal(f.totals().upgradeDiamondDig,2);assert.equal(f.totals().upgradeDiamondExchange,2);
+  const quotes=f.quotes();assert.equal(quotes.length,8);
+  assert.equal(quotes.find(row=>row.id==='undo').refundOne,14);
+  assert.equal(quotes.find(row=>row.id==='fast_travel').refundAll,66);
+  for(const quote of quotes)for(const all of [false,true]){
+    f.db.exec('SAVEPOINT check_refund');
+    try{const result=f.refund(1,quote.id,all);assert.equal(result.refundedCost,all?quote.refundAll:quote.refundOne,quote.id);
+      assert.equal(f.totals().totalUpgrades,21-(all?quote.count:1));
+    }finally{f.db.exec('ROLLBACK TO check_refund; RELEASE check_refund');}
+  }
+  assert.equal(f.totals().totalUpgrades,21);
+});
 
 test('Coin Mint purchase explains the two coins minted from existing XP without awarding them twice', t => {
   const f = fixture(); t.after(() => f.db.close());

@@ -47,6 +47,11 @@ function initializeDiamondBalances(db) {
     if (!db.prepare('PRAGMA table_info(diamond_exchanges)').all().some(column => column.name === 'direction')) {
       db.exec("ALTER TABLE diamond_exchanges ADD COLUMN direction TEXT NOT NULL DEFAULT 'sell'");
     }
+    db.exec(`CREATE TABLE IF NOT EXISTS diamond_market (
+      id INTEGER PRIMARY KEY CHECK(id=1), diamonds INTEGER NOT NULL CHECK(diamonds>=0));
+      INSERT OR IGNORE INTO diamond_market(id,diamonds)
+        SELECT 1,MAX(0,COALESCE(SUM(CASE WHEN direction='sell' THEN diamonds ELSE -diamonds END),0))
+        FROM diamond_exchanges;`);
     db.exec(`CREATE TRIGGER IF NOT EXISTS count_diamond_xp_event AFTER INSERT ON xp_events
         WHEN NEW.event != 'idle_heartbeat'
         BEGIN
@@ -77,6 +82,7 @@ function diamondInfoForUser(userId, row, level) {
     diamondEventsPerDiamond: 1000000 / (1000 + level + dig),
     diamondExchangeRate: level + exchange,
     diamondBuyRate: 2 * level,
+    diamondPurchaseStock: row?.diamond_purchase_stock || 0,
   };
 }
 

@@ -207,6 +207,8 @@ export async function openStatsModal() {
           [t('stats.upgrade_heartbeat_xp'), fmt(s.upgradeHeartbeatXp)],
           [t('stats.upgrade_gc_chance'), fmt(s.upgradeGcChance)],
           [t('stats.upgrade_gc_mint'), fmt(s.upgradeGcMint)],
+          [t('stats.upgrade_diamond_dig'), fmt(s.upgradeDiamondDig)],
+          [t('stats.upgrade_diamond_exchange'), fmt(s.upgradeDiamondExchange)],
           [t('stats.upgrade_undo_slots'), fmt(s.upgradeUndos)],
           [t('stats.upgrade_fast_travel_slots'), fmt(s.upgradeFastTravels)],
         ],

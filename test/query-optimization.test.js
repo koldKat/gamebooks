@@ -179,6 +179,8 @@ test('bulk XP summaries match individual calculations without one query pair per
   raw.exec(`CREATE TABLE users (id INTEGER PRIMARY KEY, ${fields.map(f => f + ' INTEGER DEFAULT 0').join(',')});
     CREATE TABLE coin_events (user_id, event, amount);
     CREATE TABLE user_diamonds (user_id INTEGER PRIMARY KEY, diamonds_earned INTEGER, diamonds_spent INTEGER DEFAULT 0, diamonds_bought INTEGER DEFAULT 0);
+    CREATE TABLE diamond_market (id INTEGER PRIMARY KEY, diamonds INTEGER);
+    CREATE TABLE user_heartbeat_coins (user_id INTEGER PRIMARY KEY, heartbeat_count INTEGER);
     INSERT INTO user_diamonds(user_id,diamonds_earned) VALUES (1,36),(2,6);
     INSERT INTO users (id,xp,coins_spent,bonus_coins,bonus_gc_mint_purchased) VALUES (1,6000,2,3,2),(2,0,0,0,0);
     INSERT INTO coin_events VALUES (1,'bonus_gc_claim',7),(1,'bonus_gc_claim',4),(1,'other',99),(2,'bonus_gc_claim',2);`);
@@ -190,6 +192,7 @@ test('bulk XP summaries match individual calculations without one query pair per
   const expected = [plain(api.getUserXpInfo(1)), plain(api.getUserXpInfo(2))];
   assert.equal(expected[0].diamondsBalance, 36);
   for (const key of Object.keys(expected[0])) if (key.startsWith('diamond')) delete expected[0][key]; // Private preview is absent from admin lists.
+  for (const row of expected) for (const key of ['bronzeBalance','silverBalance','heartbeatGoldEarned']) delete row[key];
   queries = 0;
   const results = api.getAllUsersXpInfo();
   assert.equal(queries, 2);

@@ -90,6 +90,7 @@ test('notification failure rolls back diamond spending, exchange history, gold a
 
 test('buying uses twice the level, debits gold once, preserves digging and allows selling purchased diamonds',t=>{
   const f=fixture(t),before=f.wallet(1),gold=f.gold();
+  f.db.exec('UPDATE diamond_market SET diamonds=5');
   const r=f.exchange(1,2,'buy-request-000001',20,'buy');
   assert.equal(r.ok,true);assert.equal(r.goldSpent,40);assert.equal(f.gold(),gold-40);
   assert.equal(f.wallet(1).diamonds_bought,2);assert.equal(f.wallet(1).dig_progress,before.dig_progress);
@@ -106,9 +107,25 @@ test('buying uses twice the level, debits gold once, preserves digging and allow
 
 test('buy history failure rolls back gold spending and purchased diamonds, and no free level-zero purchases exist',t=>{
   const f=fixture(t),before=f.wallet(1),gold=f.gold();
+  f.db.exec('UPDATE diamond_market SET diamonds=5');
   f.db.exec("CREATE TRIGGER reject_exchange BEFORE INSERT ON diamond_exchanges BEGIN SELECT RAISE(ABORT,'failed ledger'); END");
   assert.throws(()=>f.exchange(1,1,'buy-request-000001',20,'buy'),/failed ledger/);
   assert.deepEqual(f.wallet(1),before);assert.equal(f.gold(),gold);
   f.db.exec('DROP TRIGGER reject_exchange; UPDATE users SET xp=0 WHERE id=1');
   assert.equal(f.exchange(1,1,'buy-request-000001',1,'buy').error,'rate_changed');
+});
+
+test('one shared diamond pool is filled by sales and cannot oversell or duplicate stock on retries',t=>{
+ const f=fixture(t),stock=()=>f.db.prepare('SELECT diamonds FROM diamond_market WHERE id=1').get().diamonds;
+ f.db.exec('UPDATE users SET bonus_coins=100 WHERE id=17');
+ const before=f.wallet(1),gold=f.gold();
+ assert.equal(f.exchange(1,1,'empty-pool-buy-0001',20,'buy').error,'insufficient_stock');
+ assert.deepEqual(f.wallet(1),before);assert.equal(f.gold(),gold);
+ assert(f.exchange(1,2,'pool-sell-00000001',13,'sell').ok);assert.equal(stock(),2);
+ assert(f.exchange(1,2,'pool-sell-00000001',13,'sell').repeated);assert.equal(stock(),2);
+ assert(f.exchange(17,1,'pool-buy-other-001',6,'buy').ok);assert.equal(stock(),1);
+ assert.equal(f.exchange(1,2,'oversell-pool-0001',20,'buy').error,'insufficient_stock');assert.equal(stock(),1);
+ assert(f.exchange(1,1,'pool-buy-last-0001',20,'buy').ok);assert.equal(stock(),0);
+ assert(f.exchange(1,1,'pool-buy-last-0001',20,'buy').repeated);assert.equal(stock(),0);
+ assert.equal(f.exchange(17,1,'pool-empty-again01',6,'buy').error,'insufficient_stock');
 });
