@@ -156,8 +156,12 @@
 .exchange-shop-amount-row .cs-num-btn:disabled { opacity: 0.4; cursor: default; }
 #exchange-shop-amount { box-sizing: border-box; height: 28px; padding: 0 0.4rem; border-radius: 0; border-left: 0; border-right: 0; font: inherit; font-size: 0.78rem; line-height: 26px; color-scheme: dark; }
 #exchange-shop-amount:focus { outline: 1px solid #22d3ee; border-color: #22d3ee; }
-.exchange-shop-rate { color: #9ca3af; margin-top: 0.65rem; }
-.exchange-shop-receive { color: #86efac; font-weight: 700; margin: 0.45rem 0 0.65rem; }
+.exchange-shop-quote {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+  margin: 0.65rem 0; white-space: nowrap; overflow-x: auto;
+}
+.exchange-shop-rate { flex: 0 0 auto; color: #9ca3af; }
+.exchange-shop-receive { flex: 0 0 auto; color: #86efac; font-weight: 700; }
 .exchange-shop-tip { color: #9ca3af; font-size: 0.78rem; margin: 0.3rem 0; }
 .exchange-shop-actions {
   display: grid; grid-template-columns: 7.25rem minmax(0, 1fr); align-items: center;
