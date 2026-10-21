@@ -280,7 +280,23 @@ export function renderUsersTable(data) {
   tbody.innerHTML = '';
   if (!data.length) { emptyRow(tbody, colCount, searching ? 'No users found.' : 'No users yet.'); return; }
 
-  for (const user of data) renderUserRow(tbody, user);
+  const visible = searching ? data : data.filter(u => daysInactiveClass(u.days_inactive) !== 'act-stale');
+  const hidden  = searching ? [] : data.filter(u => daysInactiveClass(u.days_inactive) === 'act-stale');
+
+  for (const u of visible) renderUserRow(tbody, u);
+
+  if (hidden.length) {
+    const moreTr = tbody.insertRow();
+    const moreTd = moreTr.insertCell();
+    moreTd.colSpan = colCount;
+    moreTd.style.textAlign = 'center';
+    moreTd.style.padding = '10px';
+    const moreBtn = mkBtn(`Show ${hidden.length} inactive user${hidden.length !== 1 ? 's' : ''} (31+ days)`, 'btn-info', () => {
+      moreTr.remove();
+      for (const u of hidden) renderUserRow(tbody, u);
+    });
+    moreTd.appendChild(moreBtn);
+  }
 }
 
 function renderUserRow(tbody, u) {
@@ -443,7 +459,7 @@ export async function loadUsers() {
     }
     meta.textContent = `${users.length} user${users.length !== 1 ? 's' : ''}`;
     storeData('users', users);
-    renderPaged('users', getFiltered('users'), renderUsersTable);
+    renderUsersTable(getFiltered('users'));
     renderLockedTable(users, now);
   } catch (e) { meta.textContent = 'Error loading users.'; console.error(e); }
 }
@@ -766,6 +782,29 @@ export async function loadUserDetail(userId, edit = false) {
     if (user.failed_login_attempts > 0) {
       addMetaItem(metaBar, 'Failed logins', user.failed_login_attempts);
     }
+
+    // Keep account facts and purchases in separate, aligned tables.
+    const overview = el('div', 'account-overview');
+    overview.appendChild(el('div', 'label', 'Account details'));
+    const overviewWrap = el('div', 'table-wrap');
+    const overviewTable = el('table', 'account-summary-table');
+    const overviewBody = el('tbody', '');
+    for (const item of [...metaBar.children]) {
+      if (item.classList.contains('user-shop-purchases')) continue;
+      const row = el('tr', '');
+      const heading = el('th', '');
+      heading.scope = 'row';
+      heading.appendChild(item.firstElementChild);
+      const value = el('td', '');
+      while (item.firstChild) value.appendChild(item.firstChild);
+      row.append(heading, value);
+      overviewBody.appendChild(row);
+      item.remove();
+    }
+    overviewTable.appendChild(overviewBody);
+    overviewWrap.appendChild(overviewTable);
+    overview.appendChild(overviewWrap);
+    metaBar.prepend(overview);
 
     const actionBar = document.getElementById('user-action-bar');
     actionBar.appendChild(mkEditBtn(openUserEditor));
@@ -1349,7 +1388,7 @@ export function confirmDeleteBook(id, name, returnUserId) {
 
 // ── Self-wiring (sort headers + Books search) ─────────────────────────────────
 
-initSortHeaders('users', renderUsersTable);
+initSortHeaders('users', renderUsersTable, { paginate: false });
 initSortHeaders('books',  renderBooksTable);
 document.querySelectorAll('th[data-table="ubooks"][data-col]').forEach(th => {
   th.classList.add('sortable');
@@ -1366,7 +1405,7 @@ applySortIndicator('ubooks');
 initSortHeaders('pts',    renderPtsTable);
 
 setSearchFields('users', ['username', 'display_name']);
-wireTableSearch('users', 'users-search', 'users-search-clear', renderUsersTable);
+wireTableSearch('users', 'users-search', 'users-search-clear', renderUsersTable, { paginate: false });
 
 setSearchFields('books', ['name', 'owner']);
 wireTableSearch('books', 'books-search', 'books-search-clear', renderBooksTable);
@@ -1381,10 +1420,3 @@ _booksPdfFilterSel?.addEventListener('change', () => {
 
 setSearchFields('pts', ['username', 'lastSection']);
 wireTableSearch('pts', 'pts-search', 'pts-search-clear', renderPtsTable);
-
-const userActivityFilter = document.getElementById('users-activity-filter');
-setRowFilter('users', user => !userActivityFilter.value || (daysInactiveClass(user.days_inactive) === 'act-stale') === (userActivityFilter.value === 'inactive'));
-userActivityFilter.addEventListener('change', () => {
-  _pageState.users = { page: 0 };
-  renderPaged('users',getFiltered('users'),renderUsersTable);
-});

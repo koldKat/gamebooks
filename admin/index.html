@@ -627,7 +627,7 @@
     #maintenance-toggle::after { content:''; position:absolute; top:2px; left:2px; width:13px; height:13px; background:#9ca3af; border-radius:50%; transition:transform 0.15s, background 0.15s; }
     #maintenance-toggle:checked::after { transform:translateX(13px); background:#fff; }
   </style>
-  <link rel="stylesheet" href="/css/admin.css">
+  <link rel="stylesheet" href="/css/admin.css?v=20261022-compact-2">
 </head>
 <body>
 
@@ -753,7 +753,6 @@
           <input type="text" id="users-search" class="admin-search-input" placeholder="Search users…" autocomplete="off" spellcheck="false">
           <button type="button" id="users-search-clear" class="admin-search-clear" aria-label="Clear search">✕</button>
         </div>
-        <select id="users-activity-filter" aria-label="User activity"><option value="">All activity</option><option value="recent">Active within 30 days</option><option value="inactive">Inactive 31+ days</option></select>
         <div class="section-meta" id="users-meta" style="margin:0"></div>
       </div>
       <div class="table-wrap">
@@ -782,7 +781,6 @@
           <tbody id="users-body"></tbody>
         </table>
       </div>
-    <div class="pagination" id="users-pagination" aria-label="Pagination"></div>
     </div>
 
     <div id="tab-books" class="tab-panel">
@@ -1130,7 +1128,7 @@
       <span style="font-size:0.82rem;color:#9ca3af">Gift GC <span id="gift-gc-supply" style="color:#f59e0b"></span>:</span>
       <input type="text" inputmode="numeric" id="gift-gc-amount" placeholder="Amount" style="width:80px;background:#111827;border:1px solid #374151;border-radius:6px;color:#d1d5db;padding:0.3rem 0.5rem;font-size:0.85rem;font-family:inherit">
       <input type="text" id="gift-gc-message" placeholder="Message (optional)" style="flex:1;min-width:140px;background:#111827;border:1px solid #374151;border-radius:6px;color:#d1d5db;padding:0.3rem 0.5rem;font-size:0.85rem;font-family:inherit">
-      <button id="gift-gc-btn" class="btn-info" style="padding:0.3rem 0.75rem;font-size:0.82rem">Gift</button>
+      <button id="gift-gc-btn" class="btn btn-info">Gift</button>
       <span id="gift-gc-status" style="font-size:0.82rem"></span>
     </div>
 

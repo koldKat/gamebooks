@@ -13,8 +13,8 @@ const calls=[], errors=[];
 window.addEventListener('error',event=>errors.push(event.message));
 window.addEventListener('unhandledrejection',event=>errors.push(String(event.reason)));
 const books = Array.from({length:3048},(_,i)=>({id:i+1,name:'Book '+(i+1),total_sections:100,created_by:1,updated_at:i+1,mapped:1,discovered:2,playthroughs:1,wins:0,deaths:0,battles:0}));
-const user = {id:1,username:'Administrator',created_at:1,session_count:1,xp:1000,level:1,is_admin:1,shopPurchases:[]};
-const users=Array.from({length:123},(_,i)=>({...user,id:i+1,username:'Player '+(i+1),last_active:100+i,book_count:3048,days_inactive:0}));
+const user = {id:1,username:'Administrator',created_at:1,session_count:1,xp:1000,level:1,is_admin:1,shopPurchases:['xp_boost','heartbeat_xp','gc_chance','gc_mint','diamond_dig','diamond_exchange','undo','fast_travel'].map(id=>({id,count:50,refundOne:50,refundAll:1275}))};
+const users=Array.from({length:123},(_,i)=>({...user,id:i+1,username:'Player '+(i+1),last_active:Math.floor(Date.now()/1000)-(i<80?i:32*86400),book_count:3048,days_inactive:0}));
 const series=Array.from({length:123},(_,i)=>({id:i+1,name:'Series '+(i+1),created_by_username:'Player',book_count:3,is_public:1,is_open_world:1,created_at:1}));
 const announcements=Array.from({length:66},(_,i)=>({id:i+1,title:'Notice '+(i+1),body:'{color:teal}Message{/color}',is_draft:i<13?1:0,pinned:i===13?1:0,created_at:i+1,published_at:i+1}));
 const tips=Array.from({length:123},(_,i)=>({id:i+1,text:'Tip '+(i+1),type:'real',active:1}));
@@ -69,14 +69,30 @@ try {
   const views=await import(BASE+'/admin/js/users-books.js');
   const tab=async name=>{document.querySelector('[data-tab="'+name+'"]').click();await wait(35);};
   const search=async (id,value)=>{const input=document.getElementById(id);input.value=value;input.dispatchEvent(new Event('input'));await wait(260);};
-  check(document.querySelectorAll('#users-body tr').length===50,'users are paginated');
+  check(document.querySelectorAll('#users-body tr .link').length===80,'all 80 recent users remain visible without pagination');
+  check(!document.getElementById('users-pagination'),'Users list has no pagination');
   check(!calls.some(p=>p==='/api/admin/books'),'hidden books tab does not load at startup');
-  document.getElementById('users-page-next').click();check(document.querySelectorAll('#users-body tr').length===50,'users next page');
+  document.querySelector('#users-body tr:last-child button').click();check(document.querySelectorAll('#users-body tr .link').length===123,'inactive user reveal preserves the original list');
   await search('users-search','Player 123');check(document.querySelectorAll('#users-body tr').length===1,'user search applies to all pages');
   document.getElementById('users-search-clear').click();
   await views.loadUserDetail(1);
   check(document.querySelectorAll('#user-books-body tr').length===50,'large account creates only 50 rows');
   check(document.getElementById('user-books-meta').textContent.includes('3048'),'account total remains complete');
+  check(document.documentElement.scrollWidth<=innerWidth+1,'account view stays within viewport');
+  for(const button of document.querySelectorAll('#user-action-bar button,#user-gift-gc-row button'))check(button.getBoundingClientRect().height<=26,'compact account action '+button.textContent);
+  const purchases=document.querySelector('.user-shop-purchases'), table=purchases.querySelector('table'), wrap=purchases.querySelector('.table-wrap');
+  check(table.rows.length===9,'all eight refund upgrade rows rendered');
+  const account=document.querySelector('.account-summary-table');
+  check(account.rows.length===7,'all account facts remain present in a semantic table');
+  if(innerWidth>=1200)check(account.getBoundingClientRect().right<purchases.getBoundingClientRect().left,'account and upgrade tables align side by side');
+  if(innerWidth>=900) check(Math.abs(wrap.getBoundingClientRect().width-table.getBoundingClientRect().width)<=3,'refund frame fits actual table');
+  for(const row of table.tBodies[0].rows) {
+    const headings=table.tHead.rows[0].cells;
+    [...row.cells].forEach((cell,index)=>check(Math.abs(cell.getBoundingClientRect().left-headings[index].getBoundingClientRect().left)<1,'refund header/cell columns align'));
+    check(row.lastElementChild.scrollWidth<=row.lastElementChild.clientWidth+1,'refund actions fit their cell');
+    for(const button of row.querySelectorAll('button'))check(button.getBoundingClientRect().height<=25,'refund actions remain compact');
+  }
+
   document.getElementById('ubooks-page-next').click();await wait(40);
   check(document.getElementById('ubooks-pagination').textContent.includes('Page 2'),'server account next page');
   document.querySelector('th[data-table="ubooks"][data-col="name"]').click();await wait(40);
@@ -121,6 +137,11 @@ try {
   for(const name of ['users','books','series','anthologies','tips','inventory','feedback','announcements','tools']) {
     await tab(name);
     check(document.documentElement.scrollWidth<=innerWidth+1,'page overflow '+name+' at '+innerWidth);
+    for(const button of document.querySelectorAll('button')) {
+      if(!button.getClientRects().length)continue;
+      check(button.getBoundingClientRect().height<=26,'compact button across '+name+': '+(button.id||button.textContent));
+    }
+
   }
   let confirmed=0;
   core.showConfirm('Test action',()=>confirmed++);
@@ -135,7 +156,8 @@ try {
   check(!document.getElementById('confirm-overlay').classList.contains('active'),'Escape closes confirmation');
   check(new Set([...document.querySelectorAll('[id]')].map(el=>el.id)).size===document.querySelectorAll('[id]').length,'no duplicate element ids');
   check(!errors.length,'runtime errors: '+errors.join(';'));
-  document.body.dataset.test=JSON.stringify({width:innerWidth,tabs:9,largeAccount:3048,pagination:true,search:true,staleResponseGuard:true,editors:true,feedbackReadScope:true,replyPreservation:true,consistentControls:true,noPageOverflow:true,noPlayerRequests:true});
+  if (REVIEW) await views.loadUserDetail(1);
+  document.body.dataset.test=JSON.stringify({width:innerWidth,tabs:9,largeAccount:3048,pagination:true,recentUsersUnpaginated:true,inactiveReveal:true,populatedRefundTable:true,compactButtons:true,search:true,staleResponseGuard:true,editors:true,feedbackReadScope:true,replyPreservation:true,consistentControls:true,noPageOverflow:true,noPlayerRequests:true});
 } catch(error) { document.body.dataset.failure=error.stack; }
 `;
 (async()=>{
@@ -147,9 +169,9 @@ try {
     fs.writeFileSync(path.join(scratch,'admin/js',file),source);
   }
   let html=fs.readFileSync(path.join(repo,'admin/index.html'),'utf8').replace(/<script\b[^>]*>[\s\S]*?<\/script>/g,'').replace(/(href|src)="\//g,'$1="file://'+repo+'/public/');
-  html=html.replace('</body>','<script type="module">const BASE='+JSON.stringify(base)+';'+fixture+'</script></body>');
+  html=html.replace('</body>','<script type="module">const BASE='+JSON.stringify(base)+';const REVIEW='+JSON.stringify(Boolean(process.env.ADMIN_SCREENSHOT))+';'+fixture+'</script></body>');
   const file=path.join(scratch,'fixture.html');fs.writeFileSync(file,html);
   const results=[];
-  for(const width of [390,900,1440]) results.push(await checkBrowser({file,profile:path.join(scratch,'profile-'+width),root,width,chromium:process.env.CHROMIUM||'/home/koldKat/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome',timeoutMs:30000}));
+  for(const width of [390,900,1440]) results.push(await checkBrowser({file,profile:path.join(scratch,'profile-'+width),root,width,chromium:process.env.CHROMIUM||'/home/koldKat/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome',timeoutMs:30000,...(process.env.ADMIN_SCREENSHOT&&width===1440?{screenshotPath:process.env.ADMIN_SCREENSHOT}:{})}));
   console.log(JSON.stringify(results));
 })().catch(error=>{console.error(error);process.exitCode=1;}).finally(()=>{fs.rmSync(scratch,{recursive:true,force:true});});
