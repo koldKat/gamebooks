@@ -2538,9 +2538,10 @@ Create a matching core language directory (for example `i18n/fr/`), import its i
 
 Each run:
 1. Creates `backups/` at the project root if it does not exist.
-2. Skips if this hour's ZIP (`backup-YYYY-MM-DD_HHh.zip`) already exists.
+2. If this hour's ZIP (`backup-YYYY-MM-DD_HHh.zip`) already exists, prunes expired automatic archives and skips creating another snapshot.
+3. Otherwise creates a consistent SQLite snapshot.
 4. Zips only the database snapshot with `zip -j` (no `reading-images/` or other asset directories), then deletes the raw `.sqlite` temp file in a `finally` - so a failed/hung zip (disk pressure, missing `zip` binary, etc.) can't leave the temp file behind. The error still propagates to the caller's `console.error` either way.
-5. Deletes any `backup-*.zip` files in `backups/` whose `mtime` is older than 15 days.
+5. After successful compression, deletes automatic `backup-*.zip` archives whose `mtime` is older than seven days. Failed backup creation preserves existing recovery archives.
 
 Files are named `backup-YYYY-MM-DD_HHh.zip` so they match the `*backup*` glob used by the admin Backups tab - rolling backups appear there alongside any manual backups.
 
