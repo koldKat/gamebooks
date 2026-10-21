@@ -179,7 +179,7 @@ function _renderXpSummary(prefix, data) {
 }
 
 export function renderBooksXpSummary(data, opts = {}) {
-  updateDiamondsDisplay(getToken() ? data?.diamondsBalance : null);
+  updateDiamondsDisplay(getToken() ? data?.diamondsBalance : null, data);
   const xp = Math.floor(Number(data?.xp) || 0);
   _xpApply(xp, data || null, opts.fromXp);
   _renderXpSummary('books', data);

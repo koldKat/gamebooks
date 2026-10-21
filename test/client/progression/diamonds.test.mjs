@@ -5,7 +5,7 @@ import { createContext, runInContext } from 'node:vm';
 
 test('diamonds stay hidden without a private balance, update at zero, and clear on account changes', () => {
   const attrs = new Map();
-  const el = { hidden: true, textContent: '', innerHTML: '',
+  const el = { hidden: true, textContent: '', innerHTML: '', dataset: {},
     setAttribute: (key, value) => attrs.set(key, value), removeAttribute: key => attrs.delete(key) };
   const context = createContext({ document: { getElementById: () => el } });
   const source = readFileSync(new URL('../../../public/js/progression/diamonds.js', import.meta.url), 'utf8');

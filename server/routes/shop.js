@@ -21,6 +21,8 @@ async function handleShopPurchase(req, res) {
       heartbeat_xp: `Heartbeat XP cap reached (${result.cap} at level ${result.level})`,
       gc_chance: `Lucky coin chance cap reached (${result.cap} at level ${result.level})`,
       gc_mint: `Coin Mint cap reached (${result.cap} at level ${result.level})`,
+      diamond_dig: `Diamond Digging cap reached (${result.cap} at level ${result.level})`,
+      diamond_exchange: `Diamond Exchange Rate cap reached (${result.cap} at level ${result.level})`,
     };
     return send(res, 403, { error: (labels[result.item] || 'Cap reached') + '. Level up to increase the cap.' });
   }

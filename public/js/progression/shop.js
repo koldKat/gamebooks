@@ -60,6 +60,27 @@ const SHOP_ITEMS = [
     atCap:     d => (d.bonusGcMintPurchased || 0) >= (d.level || 0),
   },
   {
+    id:        'diamond_dig',
+    previewOnly: true,
+    label:     () => t('shop.item.diamond_dig.label'),
+    costFn:    d => (d.diamondDigPurchased || 0) + 1,
+    desc:      () => t('shop.item.diamond_dig.desc', { cap: ((_shopData?.level || 0) * 0.1).toFixed(1) }),
+    statKey:   'diamondDigPurchased',
+    totalLabel: d => t('shop.item.diamond_dig.total', { total: (d.diamondDigPct || 0).toFixed(1), base: ((d.level || 0) * 0.1).toFixed(1), bought: ((d.diamondDigPurchased || 0) * 0.1).toFixed(1) }),
+    effect:    d => t('shop.item.diamond_dig.effect', { events: Math.ceil(d.diamondEventsPerDiamond || 1000).toLocaleString() }),
+    atCap:     d => (d.diamondDigPurchased || 0) >= (d.level || 0),
+  },
+  {
+    id:        'diamond_exchange',
+    previewOnly: true,
+    label:     () => t('shop.item.diamond_exchange.label'),
+    costFn:    d => (d.diamondExchangePurchased || 0) + 1,
+    desc:      () => t('shop.item.diamond_exchange.desc', { cap: _shopData?.level || 0 }),
+    statKey:   'diamondExchangePurchased',
+    totalLabel: d => t('shop.item.diamond_exchange.total', { total: d.diamondExchangeRate || 0, base: d.level || 0, bought: d.diamondExchangePurchased || 0 }),
+    atCap:     d => (d.diamondExchangePurchased || 0) >= (d.level || 0),
+  },
+  {
     id:        'undo',
     label:     () => t('shop.item.undo.label'),
     costFn:    d => ((d.bonusUndos       || 0) + 1) * 3,
@@ -86,9 +107,13 @@ let _rewardProfilePendingResolvers = [];
 // Trailing-debounce profile refreshes across all callers to avoid duplicate fetches and choppy XP updates.
 const REWARD_PROFILE_DEBOUNCE_MS = 300;
 
+function _visibleShopItems() {
+  return SHOP_ITEMS.filter(item => !item.previewOnly || Number.isFinite(_shopData?.diamondsBalance));
+}
+
 function _shopHasAffordable(balance) {
   if (!_shopData || balance <= 0) return false;
-  return SHOP_ITEMS.some(item => {
+  return _visibleShopItems().some(item => {
     if (item.atCap(_shopData)) return false;
     const cost = item.costFn(_shopData);
     return balance >= cost;
@@ -151,6 +176,7 @@ async function _claimBonusGc() {
 
 export function refreshCoinsDisplay() {
   if (!getToken()) return Promise.resolve();
+  const sessionToken = getToken();
   if (_rewardProfileFetchPromise) return _rewardProfileFetchPromise; // a merged fetch is already in flight - join it
   return new Promise(resolve => {
     _rewardProfilePendingResolvers.push(resolve);
@@ -164,11 +190,12 @@ export function refreshCoinsDisplay() {
           const res = await apiFetch('/api/profile');
           if (!res.ok) return;
           const data = await res.json();
+          if (getToken() !== sessionToken) return;
           _hooks.onRewardSnapshot?.(data);
-          if (!_shopData) _shopData = data;
-          else _shopData.pendingBonusGc = data.pendingBonusGc;
+          _shopData = data;
           updateCoinsDisplay(data.coinsBalance || 0);
           updateBonusGcIndicator(data.pendingBonusGc);
+          if (document.getElementById('shop-modal-overlay')?.classList.contains('active')) renderShopItems();
         } catch {}
         finally {
           _rewardProfileFetchPromise = null;
@@ -182,7 +209,7 @@ export function refreshCoinsDisplay() {
 function renderShopItems() {
   const list = document.getElementById('shop-items');
   if (!list || !_shopData) return;
-  list.innerHTML = SHOP_ITEMS.map(item => {
+  list.innerHTML = _visibleShopItems().map(item => {
     const balance   = _shopData.coinsBalance || 0;
     const cappedOut = item.atCap(_shopData);
     const cost      = item.costFn(_shopData);
@@ -203,11 +230,13 @@ function renderShopItems() {
 
   list.querySelectorAll('.shop-buy-btn:not([disabled])').forEach(btn => {
     btn.addEventListener('click', async () => {
+      const sessionToken = getToken();
       btn.disabled = true;
       btn.textContent = '…';
       try {
         const res  = await apiFetch('/api/shop/purchase', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ item: btn.dataset.item }) });
         const data = await res.json();
+        if (getToken() !== sessionToken) return;
         if (!res.ok) {
           if (data.error?.includes('cap') || res.status === 403) { renderShopItems(); return; }
           btn.disabled = false; btn.textContent = t('shop.btn.buy'); showShopError(data.error || t('msg.error')); return;
@@ -233,13 +262,16 @@ function showShopError(msg) {
 }
 
 export async function openShopModal() {
+  const sessionToken = getToken();
   document.getElementById('shop-modal-overlay').classList.add('active');
   document.getElementById('shop-error').textContent = '';
   document.getElementById('shop-items').innerHTML = `<div class="shop-loading">${t('shop.loading')}</div>`;
   try {
     const res = await apiFetch('/api/profile');
     if (!res.ok) throw new Error();
-    _shopData = await res.json();
+    const data = await res.json();
+    if (getToken() !== sessionToken) return;
+    _shopData = data;
     _hooks.onRewardSnapshot?.(_shopData);
     updateCoinsDisplay(_shopData.coinsBalance || 0);
     updateSpentDisplay(_shopData.coinsSpent || 0);

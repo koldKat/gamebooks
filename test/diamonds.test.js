@@ -5,16 +5,16 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 const Database = require('better-sqlite3');
-const { initializeDiamondBalances } = require('../server/db/diamonds');
+const { initializeDiamondBalances, diamondInfoForUser } = require('../server/db/diamonds');
 
 function fixture(t) {
   const db = new Database(':memory:');
   t.after(() => db.close());
   db.pragma('foreign_keys = ON');
-  db.exec(`CREATE TABLE users (id INTEGER PRIMARY KEY);
+  db.exec(`CREATE TABLE users (id INTEGER PRIMARY KEY, xp INTEGER NOT NULL DEFAULT 0);
     CREATE TABLE xp_events (user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
       event TEXT, ref TEXT, UNIQUE(user_id, event, ref));
-    INSERT INTO users VALUES (1), (2);`);
+    INSERT INTO users(id) VALUES (1), (2);`);
   const insert = db.prepare('INSERT OR IGNORE INTO xp_events VALUES (?, ?, ?)');
   const add = (id, event, n, prefix = '') => db.transaction(() => {
     for (let i = 0; i < n; i++) insert.run(id, event, prefix + i);
@@ -45,7 +45,7 @@ test('diamond history backfill excludes heartbeats and repeats without double co
 test('diamond progress is atomic, works for new players and survives book-log cleanup', t => {
   const h = fixture(t);
   initializeDiamondBalances(h.db);
-  h.db.prepare('INSERT INTO users VALUES (3)').run();
+  h.db.prepare('INSERT INTO users(id) VALUES (3)').run();
   assert.throws(() => h.db.transaction(() => {
     h.add(3, 'visit_node', 1000);
     throw Error('failed save');
@@ -63,7 +63,7 @@ test('diamond progress is atomic, works for new players and survives book-log cl
 
 test('reward snapshots expose diamonds only for koldKat and sashii and use a primary-key lookup', t => {
   const h = fixture(t);
-  for (const column of ['xp', 'coins_spent', 'xp_boost_pct', 'bonus_undos', 'bonus_fast_travels',
+  for (const column of ['coins_spent', 'xp_boost_pct', 'bonus_undos', 'bonus_fast_travels',
     'bonus_heartbeat_xp', 'bonus_coins', 'admin_gifted_coins', 'xp_from_boost',
     'bonus_gc_chance_purchased', 'bonus_gc_mint_purchased', 'pending_bonus_gc']) {
     h.db.exec(`ALTER TABLE users ADD COLUMN ${column} INTEGER DEFAULT 0`);
@@ -75,7 +75,7 @@ test('reward snapshots expose diamonds only for koldKat and sashii and use a pri
   const queries = [];
   const context = vm.createContext({
     db: { prepare(sql) { queries.push(sql); return h.db.prepare(sql); } },
-    userXpInfoFromRow: () => ({ coinsBalance: 7 }),
+    userXpInfoFromRow: () => ({ coinsBalance: 7, level: 0 }), diamondInfoForUser,
   });
   const source = fs.readFileSync(require.resolve('../server/db/xp'), 'utf8');
   vm.runInContext(source.slice(source.indexOf('function getUserXpInfo('), source.indexOf('// Admin lists use')), context);
@@ -87,4 +87,59 @@ test('reward snapshots expose diamonds only for koldKat and sashii and use a pri
   const plan = h.db.prepare('EXPLAIN QUERY PLAN ' + queries[0]).all(1);
   assert.ok(plan.some(row => /user_diamonds USING INTEGER PRIMARY KEY/.test(row.detail)));
   assert.ok(!plan.some(row => /xp_events/.test(row.detail)), 'refreshing a profile never scans XP events');
+});
+
+test('digging bonuses apply only to future events and carry exact fractional progress across level changes', t => {
+  const h = fixture(t);
+  h.add(1, 'visit_node', 1500);
+  h.db.exec('UPDATE users SET xp=55000 WHERE id=1'); // Level 10.
+  initializeDiamondBalances(h.db);
+  const wallet = () => h.db.prepare('SELECT * FROM user_diamonds WHERE user_id=1').get();
+  assert.equal(wallet().diamonds_earned, 1);
+  assert.equal(wallet().dig_progress, 500000, 'historical events receive no retroactive level bonus');
+  h.add(1, 'add_note', 1, 'base-');
+  assert.equal(wallet().dig_progress, 501010, 'level 10 adds 1% to a future event');
+  h.db.exec('UPDATE users SET bonus_diamond_dig_purchased=10 WHERE id=1');
+  assert.equal(wallet().dig_progress, 501010, 'purchases do not recalculate any past progress');
+  h.add(1, 'add_note', 1, 'bought-');
+  assert.equal(wallet().dig_progress, 502030, 'ten purchases add another 1%');
+  h.db.exec('UPDATE users SET xp=66000 WHERE id=1');
+  h.add(1, 'add_note', 1, 'level11-');
+  assert.equal(wallet().dig_progress, 503051);
+  h.db.exec('UPDATE users SET xp=3000 WHERE id=1');
+  h.add(1, 'add_note', 1, 'level2-');
+  assert.equal(wallet().dig_progress, 504055, 'purchased contribution cannot exceed the current level');
+  const before = wallet();
+  h.add(1, 'idle_heartbeat', 2000);
+  h.add(1, 'add_note', 1, 'level2-');
+  initializeDiamondBalances(h.db);
+  assert.deepEqual(wallet(), before, 'heartbeats, duplicates and another startup preserve progress exactly');
+});
+
+test('legacy counters migrate without losing earned diamonds, deleted history or near-complete progress', t => {
+  const h = fixture(t);
+  h.db.exec(`CREATE TABLE user_diamonds (user_id INTEGER PRIMARY KEY, qualifying_events INTEGER DEFAULT 0);
+    INSERT INTO user_diamonds VALUES (1,1999);
+    UPDATE users SET xp=55000 WHERE id=1;`);
+  initializeDiamondBalances(h.db);
+  const wallet = () => h.db.prepare('SELECT * FROM user_diamonds WHERE user_id=1').get();
+  assert.equal(wallet().diamonds_earned, 1);
+  assert.equal(wallet().dig_progress, 999000);
+  h.db.exec('UPDATE users SET bonus_diamond_dig_purchased=10 WHERE id=1');
+  h.add(1, 'add_note', 1);
+  assert.equal(wallet().diamonds_earned, 2);
+  assert.equal(wallet().dig_progress, 20, 'overshoot carries into the next diamond');
+  assert.equal(wallet().qualifying_events, 2000);
+  const before = wallet();
+  initializeDiamondBalances(h.db);
+  assert.deepEqual(wallet(), before);
+});
+
+test('exchange rate gets a free GC per level and caps its purchased bonus at that level', () => {
+  assert.equal(diamondInfoForUser(1, {}, 0).diamondExchangeRate, 0);
+  assert.equal(diamondInfoForUser(1, {}, 1).diamondExchangeRate, 1);
+  assert.equal(diamondInfoForUser(17, {}, 10).diamondExchangeRate, 10);
+  assert.equal(diamondInfoForUser(17, { bonus_diamond_exchange_purchased: 10 }, 10).diamondExchangeRate, 20);
+  assert.equal(diamondInfoForUser(17, { bonus_diamond_exchange_purchased: 99 }, 10).diamondExchangeRate, 20);
+  assert.deepEqual(diamondInfoForUser(2, { diamonds_earned: 99 }, 10), {});
 });

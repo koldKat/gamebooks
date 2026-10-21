@@ -175,21 +175,21 @@ test('forum attachment queries stay constant for large threads and separate thre
 test('bulk XP summaries match individual calculations without one query pair per user', t => {
   const raw = new Database(':memory:');
   t.after(() => raw.close());
-  const fields = 'xp coins_spent xp_boost_pct bonus_undos bonus_fast_travels bonus_heartbeat_xp bonus_coins admin_gifted_coins xp_from_boost bonus_gc_chance_purchased bonus_gc_mint_purchased pending_bonus_gc'.split(' ');
+  const fields = 'xp coins_spent xp_boost_pct bonus_undos bonus_fast_travels bonus_heartbeat_xp bonus_coins admin_gifted_coins xp_from_boost bonus_gc_chance_purchased bonus_gc_mint_purchased pending_bonus_gc bonus_diamond_dig_purchased bonus_diamond_exchange_purchased'.split(' ');
   raw.exec(`CREATE TABLE users (id INTEGER PRIMARY KEY, ${fields.map(f => f + ' INTEGER DEFAULT 0').join(',')});
     CREATE TABLE coin_events (user_id, event, amount);
-    CREATE TABLE user_diamonds (user_id INTEGER PRIMARY KEY, qualifying_events INTEGER);
-    INSERT INTO user_diamonds VALUES (1,36963),(2,6040);
+    CREATE TABLE user_diamonds (user_id INTEGER PRIMARY KEY, diamonds_earned INTEGER);
+    INSERT INTO user_diamonds VALUES (1,36),(2,6);
     INSERT INTO users (id,xp,coins_spent,bonus_coins,bonus_gc_mint_purchased) VALUES (1,6000,2,3,2),(2,0,0,0,0);
     INSERT INTO coin_events VALUES (1,'bonus_gc_claim',7),(1,'bonus_gc_claim',4),(1,'other',99),(2,'bonus_gc_claim',2);`);
   let queries = 0;
   const source = fs.readFileSync(require.resolve('../server/db/xp'), 'utf8');
   const api = vm.runInNewContext(source.slice(source.indexOf('const TITLES ='), source.indexOf('const _insertNotif =')) +
     source.slice(source.indexOf('function getUserXpInfo('), source.indexOf('function getBookCreator(')) +
-    '\n({getUserXpInfo,getAllUsersXpInfo})', { db: { prepare(sql) { queries++; return raw.prepare(sql); } } });
+    '\n({getUserXpInfo,getAllUsersXpInfo})', { db: { prepare(sql) { queries++; return raw.prepare(sql); } }, diamondInfoForUser: require('../server/db/diamonds').diamondInfoForUser });
   const expected = [plain(api.getUserXpInfo(1)), plain(api.getUserXpInfo(2))];
   assert.equal(expected[0].diamondsBalance, 36);
-  delete expected[0].diamondsBalance; // Private preview is absent from admin lists.
+  for (const key of Object.keys(expected[0])) if (key.startsWith('diamond')) delete expected[0][key]; // Private preview is absent from admin lists.
   queries = 0;
   const results = api.getAllUsersXpInfo();
   assert.equal(queries, 2);

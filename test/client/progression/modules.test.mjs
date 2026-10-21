@@ -9,7 +9,6 @@ test('progression relocation preserves unchanged implementations without root wr
   // Non-import source baseline; comment cleanup verified against unchanged executable ASTs.
   const digests = {
     "app-xp": "02b4f4c1c7316f5cb9253bf05c65ed3bda7ad097f7ca857345c8581a3b7806b4",
-    "shop": "11f726ed43aca1168d47784891ede9d671618e62a32e15ec7a126627d22153df"
   };
   for (const [name, digest] of Object.entries(digests)) {
     assert.equal(existsSync(new URL(name + '.js', dir)), false);
@@ -19,6 +18,9 @@ test('progression relocation preserves unchanged implementations without root wr
   // Rewards now also clear the private diamond display when the account changes.
   assert.equal(existsSync(new URL('rewards.js', dir)), false);
   assert.ok(existsSync(new URL('progression/rewards.js', dir)));
+  // Shop now includes the separately tested private diamond upgrades.
+  assert.equal(existsSync(new URL('shop.js', dir)), false);
+  assert.ok(existsSync(new URL('progression/shop.js', dir)));
   assert.equal(existsSync(new URL('progression.js', dir)), false);
   assert.ok(existsSync(new URL('../mobile/js/toast.js', dir)));
 });

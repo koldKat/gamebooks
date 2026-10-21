@@ -6,6 +6,7 @@ const { db } = require('./connection');
 const { generateToken } = require('./auth');
 const { isImpersonatingContext } = require('../impersonation-context');
 const { isCleanRun } = require('../clean-run');
+const { diamondInfoForUser } = require('./diamonds');
 
 // ── Impersonation tokens ──────────────────────────────────────────────────────
 
@@ -428,14 +429,12 @@ function getUserXpInfo(userId) {
   const row  = db.prepare(`SELECT xp, coins_spent, xp_boost_pct, bonus_undos, bonus_fast_travels,
     bonus_heartbeat_xp, bonus_coins, admin_gifted_coins, xp_from_boost,
     bonus_gc_chance_purchased, bonus_gc_mint_purchased, pending_bonus_gc,
-    COALESCE((SELECT qualifying_events FROM user_diamonds WHERE user_id = users.id), 0) AS diamond_events
+    bonus_diamond_dig_purchased, bonus_diamond_exchange_purchased,
+    COALESCE((SELECT diamonds_earned FROM user_diamonds WHERE user_id = users.id), 0) AS diamonds_earned
     FROM users WHERE id = ?`).get(userId);
   const bonusGcClaimed = db.prepare("SELECT COALESCE(SUM(amount), 0) AS n FROM coin_events WHERE user_id = ? AND event = 'bonus_gc_claim'").get(userId).n;
-  return {
-    ...userXpInfoFromRow(row, bonusGcClaimed),
-    // Private preview for koldKat and sashii, using stable IDs across renames.
-    ...([1, 17].includes(Number(userId)) ? { diamondsBalance: Math.floor((row?.diamond_events || 0) / 1000) } : {}),
-  };
+  const info = userXpInfoFromRow(row, bonusGcClaimed);
+  return { ...info, ...diamondInfoForUser(userId, row, info.level) };
 }
 
 // Admin lists use the same calculations with two queries for the whole user set.

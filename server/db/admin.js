@@ -5,6 +5,7 @@
 const { db, _naturalCompareByName, _getPdfSize, _getEpubSize } = require('./connection');
 const { computeLevel, getTitleForLevel, getUserXpInfo, getAllUsersXpInfo, awardXp, awardCoins, processStateXp, coinBalance, _insertNotif, SIM_HISTORY_KEYS, RETIRED_SIM_HISTORY_KEYS = [] } = require('./xp');
 const { purgeExpiredSessions } = require('./auth');
+const { isDiamondPreviewUser } = require('./diamonds');
 const { getRatingStats } = require('./rating-stats');
 const { collectDashboardStats } = require('./gameplay-stats');
 const adminSimHistoryKeys = new Set([...SIM_HISTORY_KEYS, ...RETIRED_SIM_HISTORY_KEYS]);
@@ -1335,6 +1336,8 @@ const _shopItemDefaults = {
   heartbeat_xp: { cost: 0, col: 'bonus_heartbeat_xp',         delta: 1, stepCost: null },
   gc_chance:    { cost: 0, col: 'bonus_gc_chance_purchased',  delta: 1, stepCost: null },
   gc_mint:      { cost: 0, col: 'bonus_gc_mint_purchased',    delta: 1, stepCost: null },
+  diamond_dig:  { cost: 0, col: 'bonus_diamond_dig_purchased', delta: 1, stepCost: null },
+  diamond_exchange: { cost: 0, col: 'bonus_diamond_exchange_purchased', delta: 1, stepCost: null },
 };
 db.transaction(() => {
   const ins = db.prepare('INSERT OR IGNORE INTO shop_items (id, cost, step_cost, col, delta) VALUES (?, ?, ?, ?, ?)');
@@ -1359,7 +1362,8 @@ function setShopItemCost(id, cost, stepCost) {
 const _purchaseShopItemTx = db.transaction((userId, item) => {
   const def = _shopItemsCache.get(item);
   if (!def) return { error: 'invalid_item' };
-  const row = db.prepare('SELECT xp, coins_spent, xp_boost_pct, bonus_undos, bonus_fast_travels, bonus_heartbeat_xp, bonus_gc_chance_purchased, bonus_gc_mint_purchased, bonus_coins FROM users WHERE id = ?').get(userId);
+  if ((item === 'diamond_dig' || item === 'diamond_exchange') && !isDiamondPreviewUser(userId)) return { error: 'invalid_item' };
+  const row = db.prepare('SELECT xp, coins_spent, xp_boost_pct, bonus_undos, bonus_fast_travels, bonus_heartbeat_xp, bonus_gc_chance_purchased, bonus_gc_mint_purchased, bonus_diamond_dig_purchased, bonus_diamond_exchange_purchased, bonus_coins FROM users WHERE id = ?').get(userId);
   if (!row) return { error: 'not_found' };
   const level = computeLevel(row.xp);
   let cost = def.cost;
@@ -1403,6 +1407,11 @@ const _purchaseShopItemTx = db.transaction((userId, item) => {
     if (purchased >= cap) return { error: 'cap_reached', cap, level, item };
     cost = purchased + 1;
   }
+  if (item === 'diamond_dig' || item === 'diamond_exchange') {
+    const purchased = row[def.col] || 0;
+    if (purchased >= level) return { error: 'cap_reached', cap: level, level, item };
+    cost = purchased + 1;
+  }
   const balance = coinBalance(row);
   if (balance < cost) return { error: 'insufficient_coins' };
   db.prepare(`UPDATE users SET coins_spent = coins_spent + ?, ${def.col} = ${def.col} + ? WHERE id = ?`)
@@ -1428,9 +1437,9 @@ const _adminRefundShopItemTx = db.transaction((userId, item, all) => {
   if (!row) return { error: 'not_found' };
   const beforeBalance = coinBalance(row);
   const current = row[def.col] || 0;
-  if (item !== 'xp_boost' && item !== 'heartbeat_xp' && item !== 'gc_chance' && item !== 'gc_mint' && current < def.delta) return { error: 'nothing_to_refund' };
+  if (item !== 'xp_boost' && item !== 'heartbeat_xp' && item !== 'gc_chance' && item !== 'gc_mint' && item !== 'diamond_dig' && item !== 'diamond_exchange' && current < def.delta) return { error: 'nothing_to_refund' };
   let refund;
-  if (item === 'heartbeat_xp' || item === 'xp_boost' || item === 'gc_chance' || item === 'gc_mint') {
+  if (item === 'heartbeat_xp' || item === 'xp_boost' || item === 'gc_chance' || item === 'gc_mint' || item === 'diamond_dig' || item === 'diamond_exchange') {
     // Escalate costs by purchase count; exclude free level boosts when pricing xp_boost.
     const freeBoosts = item === 'xp_boost' ? computeLevel(db.prepare('SELECT xp FROM users WHERE id = ?').get(userId)?.xp || 0) : 0;
     const purchased = Math.max(0, current - freeBoosts);
