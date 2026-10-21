@@ -397,6 +397,49 @@ body.sidebar-collapsed #play-btns-bar   { left: 50vw; }
   min-width: 0;
 }
 
+/* Membership pickers share the autocomplete lists' option colors and spacing. */
+.series-row .app-select option {
+  background: #1f2937;
+  color: #d1d5db;
+}
+.series-row .app-select option:checked {
+  background: #374151;
+  color: #f9fafb;
+}
+@supports (appearance: base-select) {
+  .series-row .app-select,
+  .series-row .app-select::picker(select) {
+    appearance: base-select;
+  }
+  .series-row .app-select::picker-icon,
+  .series-row .app-select option::checkmark {
+    display: none;
+  }
+  .series-row .app-select::picker(select) {
+    background: #1f2937;
+    border: 1px solid #374151;
+    border-radius: 6px;
+    color: #d1d5db;
+    font: inherit;
+    margin: 0;
+    padding: 0;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  .series-row .app-select option {
+    padding: 0.45rem 0.75rem;
+    border-bottom: 1px solid #374151;
+    border-radius: 0;
+    font-size: 0.82rem;
+    cursor: pointer;
+  }
+  .series-row .app-select option:last-child { border-bottom: none; }
+  .series-row .app-select option:is(:hover, :focus, :checked) {
+    background: #374151;
+    color: #f9fafb;
+  }
+}
+
 .pub-id-fields {
   flex: 1;
   display: flex;
