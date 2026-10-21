@@ -3,7 +3,16 @@
 import { api, fmtBytes, fmtDuration, esc, showAlert, showConfirm, flashSaved } from './core.js';
 import { loadUsers, loadBooks } from './users-books.js';
 
-export function loadAll() { loadStats(); loadAdminGc(); loadUsers(); loadBooks(); loadAppSize(); }
+const tabLoaders = { users: loadUsers, books: loadBooks };
+const tabRequests = new Map();
+export function registerTabLoaders(loaders) { Object.assign(tabLoaders, loaders); }
+export function loadActiveTab() {
+  const tab = document.querySelector('.tab-btn.active')?.dataset.tab || 'users';
+  if (!tabLoaders[tab]) return Promise.resolve();
+  if (!tabRequests.has(tab)) tabRequests.set(tab, Promise.resolve().then(tabLoaders[tab]).finally(() => tabRequests.delete(tab)));
+  return tabRequests.get(tab);
+}
+export function loadAll() { return Promise.all([loadStats(), loadAdminGc(), loadActiveTab(), loadAppSize()]); }
 
 // ── Main view - Stats ─────────────────────────────────────────────────────────
 
@@ -114,8 +123,7 @@ export async function loadTools() {
     statusEl.style.background = s.smtp_active ? '#064e3b' : '#1f2937';
     _applyMaintenanceToggle(!!s.maintenance_mode);
   } catch (e) { console.error('Tools:', e); }
-  await loadXpConfig();
-  await loadBackups();
+  await Promise.all([loadXpConfig(), loadBackups()]);
 }
 
 let _xpConfigData = [];

@@ -72,12 +72,16 @@ async function handleAdminGetUser(req, res, userId) {
   if (!requireLocalhost(req, res)) return;
   const user = db.adminGetUser(userId);
   if (!user) return send(res, 404, { error: 'Not found' });
-  send(res, 200, { user, ...db.adminGetUserBooks(userId) });
+  const params = new URL(req.url, 'http://localhost').searchParams;
+  if (params.get('metadata') === '1') return send(res, 200, { user });
+  const options = params.has('page') ? Object.fromEntries(['page','pageSize','query','sort','dir'].map(k => [k, params.get(k)])) : undefined;
+  send(res, 200, { user, ...db.adminGetUserBooks(userId, options) });
 }
 
 async function handleAdminGetBookStats(req, res, bookId) {
   if (!requireLocalhost(req, res)) return;
-  const stats = db.adminGetBookStats(bookId);
+  const metadataOnly = new URL(req.url, 'http://localhost').searchParams.get('metadata') === '1';
+  const stats = db.adminGetBookStats(bookId, { metadataOnly });
   if (!stats) return send(res, 404, { error: 'Not found' });
   send(res, 200, stats);
 }

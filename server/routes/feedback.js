@@ -91,7 +91,8 @@ async function handleMarkThreadRead(req, res, id) {
 
 async function handleAdminGetFeedback(req, res) {
   if (!requireLocalhost(req, res)) return;
-  send(res, 200, db.getAllThreads());
+  const params = new URL(req.url, 'http://localhost').searchParams;
+  send(res, 200, db.getAllThreads(params.has('page') ? Object.fromEntries(params) : undefined));
 }
 
 async function handleAdminReply(req, res, id) {

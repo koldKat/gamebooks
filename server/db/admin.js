@@ -579,7 +579,7 @@ function deleteItem(id) {
 
 function getAllSeriesAdmin() {
   return db.prepare(`
-    SELECT s.id, s.name, s.description, s.is_public, s.created_at,
+    SELECT s.id, s.name, s.description, s.is_public, s.is_open_world, s.created_at,
            u.username AS created_by_username,
            COUNT(b.id) AS book_count
     FROM series s
@@ -593,11 +593,15 @@ function getAllAnthologiesAdmin() {
   return db.prepare(`
     SELECT b.id, b.name, b.description, b.is_public, b.created_at,
            u.username AS created_by_username,
-           COUNT(DISTINCT c.id) + COUNT(DISTINCT m.book_id) AS child_count
+           COALESCE(children.child_count, 0) AS child_count
     FROM books b
     LEFT JOIN users u ON u.id = b.created_by
-    LEFT JOIN books c ON c.parent_book_id = b.id
-    LEFT JOIN book_anthology_memberships m ON m.anthology_id = b.id
+    LEFT JOIN (
+      SELECT anthology_id, COUNT(*) AS child_count FROM (
+        SELECT parent_book_id AS anthology_id, id AS book_id FROM books WHERE parent_book_id IS NOT NULL
+        UNION SELECT anthology_id, book_id FROM book_anthology_memberships
+      ) GROUP BY anthology_id
+    ) children ON children.anthology_id = b.id
     WHERE b.is_container = 1
     GROUP BY b.id
   `).all().sort(_naturalCompareByName);
@@ -620,57 +624,11 @@ function adminGetUser(userId) {
   return { ...row, ...getUserXpInfo(userId), shopPurchases: getShopRefundRows(row, getShopItems(), computeLevel) };
 }
 
-function adminGetUserBooks(userId) {
-  const rows = db.prepare(`
-    SELECT b.id, b.name, b.total_sections, b.created_by, ub.created_at, ub.updated_at, ub.state_data
-    FROM user_books ub JOIN books b ON b.id = ub.book_id
-    WHERE ub.user_id = ?
-    ORDER BY ub.created_at ASC
-  `).all(userId);
-  const books = rows.map(b => {
-    let mapped = 0, discovered = 0, playthroughs = 0, wins = 0, deaths = 0, battles = 0, last_run_at = null;
-    try {
-      const s = JSON.parse(b.state_data);
-      mapped = Object.keys(s.graph || {}).filter(k => !s.graph[k]?.discovered).length;
-      const seen = new Set(Object.keys(s.graph || {}).map(Number));
-      for (const d of Object.values(s.graph || {}))
-        for (const c of (d.choices || []))
-          if (c !== -1 && c !== 0) seen.add(c);
-      discovered   = seen.size;
-      // Exclude untouched open-world padding slots (startedAt:null).
-      const pts    = (s.playthroughs || []).filter(p => p.startedAt != null);
-      playthroughs = pts.length;
-      wins         = pts.filter(p => p.result === 'success').length;
-      deaths       = pts.filter(p => p.result === 'death').length;
-      battles      = pts.filter(p => p.result === 'battle').length;
-      for (const pt of pts) {
-        const ts = pt.completedAt || pt.lastActionAt || pt.startedAt || null;
-        if (ts && (last_run_at === null || ts > last_run_at)) last_run_at = ts;
-      }
-    } catch {}
-    return { id: b.id, name: b.name, total_sections: b.total_sections, created_by: b.created_by,
-             created_at: b.created_at, updated_at: b.updated_at,
-             mapped, discovered, playthroughs, wins, deaths, battles, last_run_at };
-  });
-
-  // Use the permanent reward ledger for overall run totals; live book state can be deleted or reset.
-  const runRows = db.prepare(`
-    SELECT event, COUNT(*) AS n FROM xp_events
-    WHERE user_id = ? AND event IN ('win_run','death_run','battle_run')
-    GROUP BY event
-  `).all(userId);
-  const totals = { runs: 0, wins: 0, deaths: 0, battles: 0 };
-  for (const { event, n } of runRows) {
-    totals.runs += n;
-    if (event === 'win_run')    totals.wins    = n;
-    if (event === 'death_run')  totals.deaths  = n;
-    if (event === 'battle_run') totals.battles = n;
-  }
-
-  return { books, totals };
+function adminGetUserBooks(userId, options) {
+  return require('./admin-user-books').getUserBooks(db, userId, options);
 }
 
-function adminGetBookStats(bookId) {
+function adminGetBookStats(bookId, options = {}) {
   const book = db.prepare(
     `SELECT b.id, b.name, b.total_sections, b.max_section_number, b.discoverable_sections, b.isbn, b.issn, b.asin, b.pages, b.authors, b.description,
             b.is_public, b.cover_path, b.pdf_path, b.epub_path, b.created_at, b.updated_at,
@@ -679,6 +637,7 @@ function adminGetBookStats(bookId) {
      FROM books b LEFT JOIN series s ON s.id = b.series_id WHERE b.id = ?`
   ).get(bookId);
   if (!book) return null;
+  if (options.metadataOnly) return { ...book, pdf_size: _getPdfSize(book.pdf_path), epub_size: _getEpubSize(book.epub_path) };
 
   const ubRows = db.prepare(`
     SELECT ub.state_data, u.id AS owner_id, u.username AS owner
@@ -1040,14 +999,16 @@ function adminGetUsers() {
   const users = db.prepare(`
     SELECT u.id, u.username, u.display_name, u.is_author, u.is_contributor, u.is_moderator, u.created_at, u.last_country, u.last_city,
            u.active_country, u.active_city, u.last_domain, u.failed_login_attempts, u.locked_until, u.is_protected, u.is_admin,
-           COUNT(DISTINCT CASE WHEN b.parent_book_id IS NULL THEN b.id END) AS book_count,
-           COUNT(DISTINCT s.token)   AS session_count,
-           COALESCE(u.last_active_at, MAX(ub.updated_at), u.created_at) AS last_active
+           COALESCE(library.book_count, 0) AS book_count,
+           COALESCE(s.session_count, 0) AS session_count,
+           COALESCE(u.last_active_at, library.updated_at, u.created_at) AS last_active
     FROM users u
-    LEFT JOIN user_books ub ON ub.user_id = u.id
-    LEFT JOIN books      b  ON b.id = ub.book_id
-    LEFT JOIN sessions   s  ON s.user_id = u.id
-    GROUP BY u.id
+    LEFT JOIN (
+      SELECT ub.user_id, MAX(ub.updated_at) AS updated_at,
+        COUNT(DISTINCT CASE WHEN b.parent_book_id IS NULL THEN b.id END) AS book_count
+      FROM user_books ub LEFT JOIN books b ON b.id=ub.book_id GROUP BY ub.user_id
+    ) library ON library.user_id=u.id
+    LEFT JOIN (SELECT user_id, COUNT(DISTINCT token) AS session_count FROM sessions GROUP BY user_id) s ON s.user_id=u.id
     ORDER BY last_active DESC, u.created_at DESC
   `).all();
   // Active runs have no permanent event; count them from current state.

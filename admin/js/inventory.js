@@ -1,6 +1,6 @@
 // Inventory catalog, responsive row-based pagination, and item editing.
 
-import { api, el, mkBtn, mkEditBtn, _esc, showConfirm, matchesQuery, renderPaged, _pageState } from './core.js';
+import { api, el, mkBtn, mkEditBtn, _esc, showConfirm, showAlert, matchesQuery, renderPaged, _pageState } from './core.js';
 import { editFields } from './editor.js';
 
 let _allItems = [];
@@ -70,9 +70,13 @@ function renderInventoryGrid(items) {
     cb.checked = it.active === 1;
     cb.dataset.id = it.id;
     cb.addEventListener('change', async () => {
-      await api('PATCH', `/api/admin/items/${it.id}`, { active: cb.checked });
-      it.active = cb.checked ? 1 : 0;
-      card.classList.toggle('inactive', !cb.checked);
+      cb.disabled = true;
+      try {
+        await api('PATCH', `/api/admin/items/${it.id}`, { active: cb.checked });
+        it.active = cb.checked ? 1 : 0;
+        _renderInventory(false);
+      } catch (error) { cb.checked = !cb.checked; showAlert('Could not update item.'); }
+      finally { cb.disabled = false; }
     });
     toggleLabel.appendChild(cb);
     toggleLabel.appendChild(document.createTextNode('Active'));

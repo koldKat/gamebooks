@@ -57,9 +57,11 @@ Dashboard polling pauses while the browser tab is hidden and refreshes when it b
 
 ## Users tab
 
-Users, Books, Series, and Anthologies share a left-aligned search toolbar with a clear button and a total count. Search is case-insensitive, ignores surrounding spaces, and filters as you type. The count shows all loaded items, before filtering. Users remain an unpaginated list when searching or sorting; the other three tabs keep their existing pagination.
+Admin uses the app’s dark surfaces, amber focus, compact controls, themed scrollbars, and consistent dialogs. Only the selected tab loads its data; Refresh reloads that tab and the dashboard.
 
-Lists all registered accounts. Columns: Username, Joined, Last Active, Inactive (days), Books, Runs, Active, Wins, Loss, Battle, Lvl, Earned, Spent, Gifted, Lucky (bonus GC lottery claims), Sess, Location, Domain, Actions. The search box filters by username or display name live as you type; matching inactive accounts are shown directly instead of remaining behind the collapsed inactive-accounts row.
+Users, Books, Series, and Anthologies share a left-aligned search toolbar with a clear button and a total count. Search is case-insensitive, ignores surrounding spaces, and filters as you type. The count shows all loaded items, before filtering. All four tables use 50 rows per page. Search and sorting apply to the complete list before pagination. An activity dropdown shows all users, recently active users, or accounts inactive for 31+ days.
+
+Lists all registered accounts. Columns: Username, Joined, Last Active, Inactive (days), Books, Runs, Active, Wins, Loss, Battle, Lvl, Earned, Spent, Gifted, Lucky (bonus GC lottery claims), Sess, Location, Domain, Actions. The search box filters by username or display name live as you type; the activity filter composes with search and sorting.
 
 Username badges: **ADMIN**, **PROTECTED**, **AUTHOR**, **CONTRIBUTOR**, **LOCKED**.
 
@@ -67,7 +69,7 @@ Username badges: **ADMIN**, **PROTECTED**, **AUTHOR**, **CONTRIBUTOR**, **LOCKED
 - **Domain** - which of the app's domains (e.g. koldkat.net / pathmap.net / bookplay.net) the user was last seen on, read from the `Host` header on their most recent authenticated request (`last_domain` column, `-` until their first request after this was added). Unlike Location, this isn't throttled - it just no-ops when the domain hasn't changed since the last write.
 - **Level** - shown with XP progress bar.
 
-Clicking a username opens a **user detail** view: meta bar (Joined, Books, Sessions, Last Location, Domain, Level) and a table of all their books with per-book stats.
+Clicking a username opens a **user detail** view: meta bar (Joined, Books, Sessions, Last Location, Domain, Level) and a searchable, sortable library with 50 books per page. Only the current page loads saved gameplay. Books initially sort by latest update; choosing a gameplay column sorts the complete matching library. Header book counts and permanent run totals remain account-wide. Editing an account or book directly loads metadata without scanning its gameplay.
 
 Editing uses consistent modal dialogs for players, books, series, anthologies, inventory items, tips, and announcements. Every editable table groups **Edit** with its other buttons in the right-hand **Actions** column; cards put the same blue **Edit** button first. Editing opens over the current list without navigating into details, including books in a player's library. Detail views also use the same **Edit** button. Dialogs provide a title and close button, scroll within smaller viewports, keep keyboard focus inside, and support Cancel or Escape. Escape dismisses autocomplete suggestions before the editor, and never closes another dialog underneath it. Controls and dismissal are disabled while saving; failures stay in the dialog with an error message. Saving refreshes the current list or detail view.
 
@@ -132,7 +134,7 @@ The **Edit** dialog, available from the Books table or book detail view, include
 
 ## Series tab
 
-Lists all series across all users. Columns: Name, Creator, Books (count), Public, Created, Description, Actions. Open World is available in the editor. Paginated at 50 rows/page. The search box filters by series name or creator username live as you type through the shared `storeData`/`getFiltered` pipeline; there is no column sorting here, only search.
+Lists all series across all users. Columns: Name, Creator, Books (count), Public, Created, Description, Actions. Open World is available in the editor. Paginated at 50 rows/page. The search box filters by series name or creator username live as you type through the shared `storeData`/`getFiltered` pipeline; column headers sort the full list before pagination.
 
 - **Edit** - opens a dialog to update name, description, public flag, and the **Open world series** checkbox.
 - **Delete** - removes the series entirely, unlinks all books (`series_id = NULL`), and removes all `user_series` rows. Requires confirmation.
@@ -173,7 +175,7 @@ Tip counts (real vs. silly) are shown in the tab. The app alternates real and si
 
 ## Feedback tab
 
-Shows all user feedback threads. Unread threads (new user messages) are highlighted; the tab shows a red count badge.
+Shows 20 feedback threads per page, with search across usernames, email addresses, and message text. Unread threads are highlighted and the tab shows a red count badge. Only opening a thread marks it read. Unsent replies survive page changes and refreshes within the open admin page.
 
 Feedback also appears in **koldKat's inbox** in the main app: koldKat's inbox loads all threads (not just his own), with `admin_unread` mapped to `user_unread` so the inbox badge lights up for new submissions. Replying from koldKat's inbox sends as 'admin' and triggers an email if the thread has an email address. Threads with email addresses can also be handled from this tab.
 
@@ -187,7 +189,7 @@ Users can attach files to their initial feedback submission and to inbox replies
 
 ## Announcements tab
 
-Announcements are notices shown to all users in the app. Workflow: draft → published → pinned.
+Announcements are notices shown to all users in the app. Workflow: draft → published → pinned. Drafts and published notices each show 10 per page, with a shared title/body search. Pinned notices sort first; older notices remain searchable.
 
 | Action | Description |
 |--------|-------------|

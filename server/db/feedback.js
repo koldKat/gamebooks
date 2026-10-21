@@ -90,7 +90,20 @@ function getThreadsForUser(userId) {
   return _attachMessages(threads);
 }
 
-function getAllThreads() {
+function getAllThreads(options) {
+  if (options) {
+    const pageSize = Math.max(1,Math.min(50,parseInt(options.pageSize,10)||20));
+    const query = String(options.query || '').trim().toLowerCase();
+    const where = `f.deleted_by_admin=0 AND (?='' OR instr(lower(f.username),?)>0 OR instr(lower(COALESCE(f.email,'')),?)>0
+      OR EXISTS (SELECT 1 FROM feedback_messages m WHERE m.thread_id=f.id AND instr(lower(m.body),?)>0))`;
+    const total = db.prepare(`SELECT COUNT(*) AS n FROM feedback f WHERE ${where}`).get(query,query,query,query).n;
+    const page = Math.min(Math.max(0,parseInt(options.page,10)||0),Math.max(0,Math.ceil(total/pageSize)-1));
+    const threads = db.prepare(`SELECT f.* FROM feedback f WHERE ${where}
+      ORDER BY COALESCE((SELECT MAX(m.created_at) FROM feedback_messages m WHERE m.thread_id=f.id),f.created_at) DESC,f.id DESC
+      LIMIT ? OFFSET ?`).all(query,query,query,query,pageSize,page*pageSize);
+    const unread = db.prepare('SELECT COUNT(*) AS n FROM feedback WHERE deleted_by_admin=0 AND admin_unread>0').get().n;
+    return { threads: _attachMessages(threads), unread, pagination: { page,pageSize,total } };
+  }
   const threads = db.prepare(
     `SELECT f.*
      FROM feedback f

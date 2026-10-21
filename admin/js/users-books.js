@@ -5,9 +5,9 @@ import {
   fmtDate, fmtDateTime, fmtBytes, pdfUrl, esc, adminBadge, authorBadge, contributorBadge, moderatorBadge,
   daysInactiveClass, fmtDaysInactive, flashSaved, showAlert, showConfirm,
   storeData, getSorted, getFiltered, foldForSearch, naturalCompare, naturalCompareByName, _tableData,
-  setSearchFields, wireTableSearch, initSortHeaders, renderPaged, setRowFilter,
+  setSearchFields, wireTableSearch, initSortHeaders, renderPaged, setRowFilter, renderPaginationControls, _sortState, applySortIndicator, _pageState,
 } from './core.js';
-import { loadAll, loadTools, loadStats } from './dashboard.js';
+import { loadAll, loadStats } from './dashboard.js';
 import { openEditor } from './editor.js';
 
 let _userEditor = null;
@@ -35,7 +35,7 @@ async function editAdminUser(userId) {
   if (_openingUserEditor || _userEditor?.dialog.open) return;
   _openingUserEditor = true;
   try {
-    const { user } = await api('GET', `/api/admin/users/${userId}`);
+    const { user } = await api('GET', `/api/admin/users/${userId}?metadata=1`);
     _currentUserId = userId;
     populateUserEditForm(user);
     openUserEditor();
@@ -79,7 +79,7 @@ export async function editAdminBook(bookId) {
   if (_openingBookEditor || _bookEditor?.dialog.open) return;
   _openingBookEditor = true;
   try {
-    const data = await api('GET', `/api/admin/books/${bookId}/stats`);
+    const data = await api('GET', `/api/admin/books/${bookId}/stats?metadata=1`);
     _currentBookId = bookId;
     _bookDetailData = data;
     openBookEditor();
@@ -202,8 +202,13 @@ document.getElementById('gift-cancel').addEventListener('click', () => {
 let _backCtx       = null;
 let _currentUserId = null;
 let _currentBookId = null;
+let _detailGeneration = 0;
 
 export function showView(name) {
+  ++_detailGeneration;
+  ++_userBooksRequest;
+  clearTimeout(_userBooksSearchTimer);
+  document.getElementById('user-books-body').removeAttribute('aria-busy');
   document.getElementById('view-main').style.display = name === 'main' ? '' : 'none';
   document.getElementById('view-user').style.display = name === 'user' ? '' : 'none';
   document.getElementById('view-book').style.display = name === 'book' ? '' : 'none';
@@ -262,7 +267,6 @@ document.getElementById('refresh-btn').addEventListener('click', () => {
     loadUserDetail(_currentUserId);
   else {
     loadAll();
-    if (document.querySelector('.tab-btn.active')?.dataset.tab === 'tools') loadTools();
   }
 });
 
@@ -276,23 +280,7 @@ export function renderUsersTable(data) {
   tbody.innerHTML = '';
   if (!data.length) { emptyRow(tbody, colCount, searching ? 'No users found.' : 'No users yet.'); return; }
 
-  const visible = searching ? data : data.filter(u => daysInactiveClass(u.days_inactive) !== 'act-stale');
-  const hidden  = searching ? [] : data.filter(u => daysInactiveClass(u.days_inactive) === 'act-stale');
-
-  for (const u of visible) renderUserRow(tbody, u);
-
-  if (hidden.length) {
-    const moreTr = tbody.insertRow();
-    const moreTd = moreTr.insertCell();
-    moreTd.colSpan = colCount;
-    moreTd.style.textAlign = 'center';
-    moreTd.style.padding = '10px';
-    const moreBtn = mkBtn(`Show ${hidden.length} inactive user${hidden.length !== 1 ? 's' : ''} (31+ days)`, 'btn-info', () => {
-      moreTr.remove();
-      for (const u of hidden) renderUserRow(tbody, u);
-    });
-    moreTd.appendChild(moreBtn);
-  }
+  for (const user of data) renderUserRow(tbody, user);
 }
 
 function renderUserRow(tbody, u) {
@@ -455,7 +443,7 @@ export async function loadUsers() {
     }
     meta.textContent = `${users.length} user${users.length !== 1 ? 's' : ''}`;
     storeData('users', users);
-    renderUsersTable(getFiltered('users'));
+    renderPaged('users', getFiltered('users'), renderUsersTable);
     renderLockedTable(users, now);
   } catch (e) { meta.textContent = 'Error loading users.'; console.error(e); }
 }
@@ -538,12 +526,67 @@ export function renderUserBooksTable(data, userId) {
   }
 }
 
+let _userBooksPage = 0;
+let _userBooksRequest = 0;
+_sortState.ubooks = { col: 'updated_at', dir: -1 };
+function fetchUserBooks(userId) {
+  const sort = _sortState.ubooks;
+  const params = new URLSearchParams({ page: _userBooksPage, pageSize: 50,
+    query: document.getElementById('ubooks-search').value.trim(), sort: sort.col,
+    dir: sort.dir === 1 ? 'asc' : 'desc' });
+  return api('GET', `/api/admin/users/${userId}?${params}`);
+}
+function renderUserBooksPage(books, pagination, userId) {
+  _userBooksPage = pagination.page;
+  renderUserBooksTable(books, userId);
+  renderPaginationControls('ubooks', pagination.page, Math.max(1, Math.ceil(pagination.total / pagination.pageSize)),
+    pagination.total, page => { _userBooksPage = page; loadUserBooksPage(); });
+}
+async function loadUserBooksPage() {
+  const generation = ++_userBooksRequest;
+  const userId = _currentUserId;
+  const body = document.getElementById('user-books-body');
+  body.setAttribute('aria-busy', 'true');
+  try {
+    const result = await fetchUserBooks(userId);
+    if (generation !== _userBooksRequest || userId !== _currentUserId) return;
+    renderUserBooksPage(result.books, result.pagination, userId);
+  } catch (error) {
+    if (generation === _userBooksRequest) showAlert('Could not load books. Use Refresh to retry.');
+  } finally { if (generation === _userBooksRequest) body.removeAttribute('aria-busy'); }
+}
+let _userBooksSearchTimer;
+const userBooksSearch = document.getElementById('ubooks-search');
+userBooksSearch.addEventListener('input', () => {
+  clearTimeout(_userBooksSearchTimer);
+  ++_userBooksRequest;
+  document.getElementById('ubooks-search-clear').style.display = userBooksSearch.value ? 'inline-block' : 'none';
+  _userBooksSearchTimer = setTimeout(() => { _userBooksPage = 0; loadUserBooksPage(); }, 200);
+});
+document.getElementById('ubooks-search-clear').addEventListener('click', () => {
+  clearTimeout(_userBooksSearchTimer);
+  userBooksSearch.value = '';
+  document.getElementById('ubooks-search-clear').style.display = 'none';
+  _userBooksPage = 0;
+  loadUserBooksPage();
+  userBooksSearch.focus();
+});
+
 export async function loadUserDetail(userId, edit = false) {
   if (edit && (_openingUserEditor || _userEditor?.dialog.open)) return;
   if (edit) _openingUserEditor = true;
+  if (_currentUserId !== userId) {
+    _userBooksPage = 0;
+    document.getElementById('ubooks-search').value = '';
+    document.getElementById('ubooks-search-clear').style.display = 'none';
+  }
+  ++_userBooksRequest;
   _currentUserId = userId;
   _backCtx = { view: 'main' };
   showView('user');
+  const detailRequest = _detailGeneration;
+  const libraryRequest = _userBooksRequest;
+  document.getElementById('ubooks-pagination').replaceChildren();
 
   document.getElementById('user-crumb').textContent     = '…';
   document.getElementById('user-meta-bar').innerHTML    = '';
@@ -584,8 +627,8 @@ export async function loadUserDetail(userId, edit = false) {
   document.getElementById('user-books-meta').textContent = '';
 
   try {
-    const { user, books, totals } = await api('GET', `/api/admin/users/${userId}`);
-    if (userId !== _currentUserId) return;
+    const { user, books, totals, bookCount, createdCount, pagination } = await fetchUserBooks(userId);
+    if (userId !== _currentUserId || detailRequest !== _detailGeneration) return;
 
     document.getElementById('user-crumb').innerHTML = esc(user.username) + adminBadge(user.is_admin) + authorBadge(user.is_author) + contributorBadge(user.is_contributor) + moderatorBadge(user.is_moderator)
       + (user.display_name ? ` <span style="color:#6b7280;font-size:0.82rem;font-weight:400">(${esc(user.display_name)})</span>` : '');
@@ -598,7 +641,6 @@ export async function loadUserDetail(userId, edit = false) {
     const totalWins    = totals.wins;
     const totalDeaths  = totals.deaths;
     const totalBattles = totals.battles;
-    const createdCount = books.filter(b => b.created_by === user.id).length;
 
     addMetaItem(metaBar, 'Joined', fmtDate(user.created_at));
     const booksMeta = el('div', 'meta-item');
@@ -606,7 +648,7 @@ export async function loadUserDetail(userId, edit = false) {
     const booksVal = document.createElement('div');
     booksVal.className = 'value';
     booksVal.style.cssText = 'display:flex;align-items:baseline;gap:0.35rem';
-    const booksN = el('span', '', String(books.length));
+    const booksN = el('span', '', String(bookCount));
     booksVal.appendChild(booksN);
     if (createdCount > 0) {
       const createdSpan = el('span', '', `(${createdCount} created)`);
@@ -769,12 +811,10 @@ export async function loadUserDetail(userId, edit = false) {
     }
 
     document.getElementById('user-books-meta').textContent =
-      `${books.length} book${books.length !== 1 ? 's' : ''}`;
-
-    storeData('ubooks', books);
-    renderUserBooksTable(getSorted('ubooks'), user.id);
+      `${bookCount} book${bookCount !== 1 ? 's' : ''}`;
+    if (libraryRequest === _userBooksRequest) renderUserBooksPage(books, pagination, user.id);
     if (edit) openUserEditor();
-  } catch (e) { console.error('User detail:', e); }
+  } catch (e) { document.getElementById('user-books-meta').textContent = 'Could not load account. Use Refresh to retry.'; console.error('User detail:', e); }
   finally { if (edit) _openingUserEditor = false; }
 }
 
@@ -1120,10 +1160,6 @@ document.getElementById('bef-save').addEventListener('click', async () => {
       await loadUserDetail(_currentUserId);
     } else {
       await loadAll();
-      if (document.querySelector('.tab-btn.active')?.dataset.tab === 'anthologies') {
-        const { loadAdminAnthologies } = await import('./anthologies.js');
-        await loadAdminAnthologies();
-      }
     }
   } catch (e) { errEl.textContent = 'Error: ' + e.message; }
   finally { editor.setBusy(false); }
@@ -1133,6 +1169,7 @@ export async function loadBookDetail(bookId, backCtx, edit = false) {
   _currentBookId = bookId;
   _backCtx = backCtx;
   showView('book');
+  const detailRequest = _detailGeneration;
 
   document.getElementById('book-back-btn').textContent    = '←';
   document.getElementById('book-crumb').innerHTML          = '';
@@ -1149,7 +1186,7 @@ export async function loadBookDetail(bookId, backCtx, edit = false) {
 
   try {
     const d = await api('GET', `/api/admin/books/${bookId}/stats`);
-    if (bookId !== _currentBookId) return;
+    if (bookId !== _currentBookId || detailRequest !== _detailGeneration) return;
 
     document.getElementById('book-back-btn').textContent =
       backCtx && backCtx.view === 'user' ? `← ${d.owner}` : '← Books';
@@ -1221,7 +1258,7 @@ export async function loadBookDetail(bookId, backCtx, edit = false) {
     }
 
     storeData('pts', d.playthroughs);
-    renderPtsTable(getSorted('pts'));
+    renderPaged('pts', getFiltered('pts'), renderPtsTable);
 
     loadBookRatings(bookId);
     if (edit) openBookEditor();
@@ -1229,10 +1266,12 @@ export async function loadBookDetail(bookId, backCtx, edit = false) {
 }
 
 export async function loadBookRatings(bookId) {
+  const generation = _detailGeneration;
   const tbody = document.getElementById('book-ratings-body');
   const meta  = document.getElementById('book-ratings-meta');
   try {
     const ratings = await api('GET', `/api/admin/books/${bookId}/ratings`);
+    if (generation !== _detailGeneration || bookId !== _currentBookId) return;
     meta.textContent = `${ratings.length} vote${ratings.length !== 1 ? 's' : ''}`;
     tbody.innerHTML = '';
     if (!ratings.length) { emptyRow(tbody, 4, 'No ratings yet.'); return; }
@@ -1310,13 +1349,24 @@ export function confirmDeleteBook(id, name, returnUserId) {
 
 // ── Self-wiring (sort headers + Books search) ─────────────────────────────────
 
-initSortHeaders('users',  renderUsersTable, { paginate: false });
+initSortHeaders('users', renderUsersTable);
 initSortHeaders('books',  renderBooksTable);
-initSortHeaders('ubooks', data => renderUserBooksTable(data, _currentUserId));
+document.querySelectorAll('th[data-table="ubooks"][data-col]').forEach(th => {
+  th.classList.add('sortable');
+  th.addEventListener('click', () => {
+    const sort = _sortState.ubooks;
+    sort.dir = sort.col === th.dataset.col ? -sort.dir : 1;
+    sort.col = th.dataset.col;
+    applySortIndicator('ubooks');
+    _userBooksPage = 0;
+    loadUserBooksPage();
+  });
+});
+applySortIndicator('ubooks');
 initSortHeaders('pts',    renderPtsTable);
 
 setSearchFields('users', ['username', 'display_name']);
-wireTableSearch('users', 'users-search', 'users-search-clear', renderUsersTable, { paginate: false });
+wireTableSearch('users', 'users-search', 'users-search-clear', renderUsersTable);
 
 setSearchFields('books', ['name', 'owner']);
 wireTableSearch('books', 'books-search', 'books-search-clear', renderBooksTable);
@@ -1325,5 +1375,16 @@ wireTableSearch('books', 'books-search', 'books-search-clear', renderBooksTable)
 const _booksPdfFilterSel = document.getElementById('books-pdf-filter');
 setRowFilter('books', b => _booksPdfFilterSel?.value !== 'missing' || !b.pdf_path);
 _booksPdfFilterSel?.addEventListener('change', () => {
+  if (_pageState.books) _pageState.books.page = 0;
   renderPaged('books', getFiltered('books'), renderBooksTable);
+});
+
+setSearchFields('pts', ['username', 'lastSection']);
+wireTableSearch('pts', 'pts-search', 'pts-search-clear', renderPtsTable);
+
+const userActivityFilter = document.getElementById('users-activity-filter');
+setRowFilter('users', user => !userActivityFilter.value || (daysInactiveClass(user.days_inactive) === 'act-stale') === (userActivityFilter.value === 'inactive'));
+userActivityFilter.addEventListener('change', () => {
+  _pageState.users = { page: 0 };
+  renderPaged('users',getFiltered('users'),renderUsersTable);
 });

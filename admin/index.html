@@ -627,6 +627,7 @@
     #maintenance-toggle::after { content:''; position:absolute; top:2px; left:2px; width:13px; height:13px; background:#9ca3af; border-radius:50%; transition:transform 0.15s, background 0.15s; }
     #maintenance-toggle:checked::after { transform:translateX(13px); background:#fff; }
   </style>
+  <link rel="stylesheet" href="/css/admin.css">
 </head>
 <body>
 
@@ -752,6 +753,7 @@
           <input type="text" id="users-search" class="admin-search-input" placeholder="Search users…" autocomplete="off" spellcheck="false">
           <button type="button" id="users-search-clear" class="admin-search-clear" aria-label="Clear search">✕</button>
         </div>
+        <select id="users-activity-filter" aria-label="User activity"><option value="">All activity</option><option value="recent">Active within 30 days</option><option value="inactive">Inactive 31+ days</option></select>
         <div class="section-meta" id="users-meta" style="margin:0"></div>
       </div>
       <div class="table-wrap">
@@ -780,6 +782,7 @@
           <tbody id="users-body"></tbody>
         </table>
       </div>
+    <div class="pagination" id="users-pagination" aria-label="Pagination"></div>
     </div>
 
     <div id="tab-books" class="tab-panel">
@@ -826,12 +829,12 @@
       <div class="table-wrap">
         <table>
           <thead><tr>
-            <th>Name</th>
-            <th>Creator</th>
-            <th>Books</th>
-            <th>Public</th>
-            <th>Created</th>
-            <th>Description</th>
+            <th data-table="series" data-col="name">Name</th>
+            <th data-table="series" data-col="created_by_username">Creator</th>
+            <th data-table="series" data-col="book_count">Books</th>
+            <th data-table="series" data-col="is_public">Public</th>
+            <th data-table="series" data-col="created_at">Created</th>
+            <th data-table="series" data-col="description">Description</th>
             <th>Actions</th>
           </tr></thead>
           <tbody id="series-body"></tbody>
@@ -853,12 +856,12 @@
       <div class="table-wrap">
         <table>
           <thead><tr>
-            <th>Name</th>
-            <th>Creator</th>
-            <th>Books</th>
-            <th>Public</th>
-            <th>Created</th>
-            <th>Description</th>
+            <th data-table="anthologies" data-col="name">Name</th>
+            <th data-table="anthologies" data-col="created_by_username">Creator</th>
+            <th data-table="anthologies" data-col="child_count">Books</th>
+            <th data-table="anthologies" data-col="is_public">Public</th>
+            <th data-table="anthologies" data-col="created_at">Created</th>
+            <th data-table="anthologies" data-col="description">Description</th>
             <th>Actions</th>
           </tr></thead>
           <tbody id="anthologies-body"></tbody>
@@ -869,8 +872,7 @@
 
     <!-- ── Tips tab ─────────────────────────────────────────────────────── -->
     <div id="tab-tips" class="tab-panel">
-      <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem;flex-wrap:wrap">
-        <div class="section-title" style="margin:0">Tips</div>
+      <div class="admin-toolbar"><div class="admin-search-wrap"><input type="search" id="tips-search" class="admin-search-input" placeholder="Search tips…" aria-label="Search tips…" autocomplete="off" spellcheck="false"><button type="button" id="tips-search-clear" class="admin-search-clear" aria-label="Clear search">✕</button></div>
         <select id="tips-type-filter" style="background:#1f2937;border:1px solid #374151;border-radius:5px;color:#d1d5db;padding:0.25rem 0.5rem;font-size:0.8rem;font-family:inherit">
           <option value="">All types</option>
           <option value="real">Real</option>
@@ -894,6 +896,7 @@
           <tbody id="tips-body"></tbody>
         </table>
       </div>
+    <div class="pagination" id="tips-pagination" aria-label="Pagination"></div>
       <div style="margin-top:1.25rem;background:#1a2235;border:1px solid #374151;border-radius:8px;padding:1rem">
         <div class="section-title" style="margin-bottom:0.6rem">Add New Tip</div>
         <div style="display:flex;gap:0.6rem;flex-wrap:wrap;align-items:flex-end">
@@ -959,8 +962,8 @@
     </div>
 
     <div id="tab-feedback" class="tab-panel">
-      <div class="section-meta" id="feedback-meta"></div>
-      <div id="feedback-list"></div>
+      <div class="admin-toolbar"><div class="admin-search-wrap"><input type="search" id="feedback-search" class="admin-search-input" placeholder="Search feedback…" aria-label="Search feedback…" autocomplete="off" spellcheck="false"><button type="button" id="feedback-search-clear" class="admin-search-clear" aria-label="Clear search">✕</button></div><div class="section-meta" id="feedback-meta"></div></div>
+      <div id="feedback-list"></div><div class="pagination" id="feedback-pagination"></div>
     </div>
 
     <div id="tab-announcements" class="tab-panel">
@@ -982,15 +985,17 @@
         <div id="ann-compose-error" class="ann-error"></div>
       </div>
 
-      <div id="ann-drafts-section">
+      <div class="admin-toolbar"><div class="admin-search-wrap"><input type="search" id="announcements-search" class="admin-search-input" placeholder="Search announcements…" aria-label="Search announcements…" autocomplete="off" spellcheck="false"><button type="button" id="announcements-search-clear" class="admin-search-clear" aria-label="Clear search">✕</button></div><div class="section-meta" id="announcements-meta"></div></div><div id="ann-drafts-section">
         <div class="ann-section-heading">Drafts</div>
         <div id="ann-drafts-list"><span class="ann-empty">No drafts.</span></div>
       </div>
 
+      <div class="pagination" id="ann-drafts-pagination"></div>
       <div id="ann-published-section">
         <div class="ann-section-heading">Published</div>
         <div id="ann-published-list"><span class="ann-empty">No published announcements.</span></div>
       </div>
+      <div class="pagination" id="ann-published-pagination"></div>
     </div>
 
     <div id="tab-tools" class="tab-panel">
@@ -1172,7 +1177,7 @@
     </div>
 
     <div class="section-title">Books</div>
-    <div class="section-meta" id="user-books-meta"></div>
+    <div class="admin-toolbar"><div class="admin-search-wrap"><input type="search" id="ubooks-search" class="admin-search-input" placeholder="Search account books…" aria-label="Search account books…" autocomplete="off" spellcheck="false"><button type="button" id="ubooks-search-clear" class="admin-search-clear" aria-label="Clear search">✕</button></div><div class="section-meta" id="user-books-meta"></div></div>
     <div class="table-wrap">
       <table>
         <thead><tr>
@@ -1190,6 +1195,7 @@
         <tbody id="user-books-body"></tbody>
       </table>
     </div>
+    <div class="pagination" id="ubooks-pagination" aria-label="Pagination"></div>
 
   </div>
 
@@ -1350,7 +1356,7 @@
     </div>
 
     <div class="section-title">Playthroughs</div>
-    <div class="section-meta" id="book-pts-meta"></div>
+    <div class="admin-toolbar"><div class="admin-search-wrap"><input type="search" id="pts-search" class="admin-search-input" placeholder="Search runs by player or section…" aria-label="Search runs by player or section…" autocomplete="off" spellcheck="false"><button type="button" id="pts-search-clear" class="admin-search-clear" aria-label="Clear search">✕</button></div><div class="section-meta" id="book-pts-meta"></div></div>
     <div class="table-wrap">
       <table>
         <thead><tr>
@@ -1364,6 +1370,7 @@
         <tbody id="book-pts-body"></tbody>
       </table>
     </div>
+    <div class="pagination" id="pts-pagination" aria-label="Pagination"></div>
 
   </div>
 
@@ -1371,7 +1378,7 @@
 
   <!-- ── Confirm dialog ───────────────────────────────────────────────────── -->
   <div id="confirm-overlay">
-    <div id="confirm-dialog">
+    <div id="confirm-dialog" role="alertdialog" aria-modal="true" aria-describedby="confirm-message" tabindex="-1">
       <p id="confirm-message"></p>
       <div class="confirm-actions">
         <button id="confirm-ok">Confirm</button>
@@ -1381,7 +1388,7 @@
   </div>
 
   <div id="gift-overlay">
-    <div id="gift-dialog">
+    <div id="gift-dialog" role="dialog" aria-modal="true" aria-labelledby="gift-title">
       <div>
         <div id="gift-title">Gift book to user</div>
         <div id="gift-book-name"></div>

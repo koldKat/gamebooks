@@ -812,7 +812,11 @@ Dashboard polling runs only while the admin document is visible and refreshes me
 
 Dialog cleanup runs synchronously before post-save refreshes and is idempotent when the native close event arrives later. Editors capture the record ID when opened. Book catalog responses are guarded by an editor generation and preserve the current anthology selection. The stats payload and book editor also round-trip `discoverable_sections` so metadata edits cannot silently reset completion limits.
 
-The Users, Books, Series, and Anthologies tabs share the search toolbar styling and filtering helpers in `admin/js/core.js`. `wireTableSearch()` trims queries and applies case-insensitive matching through `getFiltered()`. Both `wireTableSearch()` and `initSortHeaders()` accept `{ paginate: false }` for the Users table, so searching or sorting cannot truncate its unpaginated list to 50 rows. Users search matches `username` and `display_name` and reveals inactive matches immediately; Series and Anthologies search matches the item name and creator username.
+Admin lists share controls and pagination in `admin/js/core.js`, with the app's dark visual styling in `/css/admin.css` (loaded only by admin). Users, Books, Series, Anthologies, Tips and book runs render at most 50 rows per page; announcements use separate 10-item draft/published pages. Search and sorting operate on the full matching set before paging. The Users activity filter composes with search and sort. `loadAll()` refreshes dashboard metrics and only the selected tab; shared in-flight tab requests prevent duplicate loads.
+
+Account-library requests use `GET /api/admin/users/:id?page=0&pageSize=50&query=...&sort=updated_at&dir=desc`. `server/db/admin-user-books.js` searches/sorts lightweight metadata, then reads saved state only for the selected page. Explicit gameplay-column sorts compute the full matching summaries. `bookCount`, `createdCount` and permanent ledger totals are account-wide; `pagination.total` counts the filtered set. Omitting `page` preserves the legacy response. `?metadata=1` skips library scans for account and book editors. Request generations prevent stale searches or drilldown responses from replacing newer views.
+
+`GET /api/admin/feedback?page=0` loads messages/attachments only for 20 matching threads. Omitting `page` retains the existing all-thread response used by player/admin inboxes. Feedback only marks an opened thread read, and retains reply drafts locally while paging. Player endpoints, saved state, currencies and permissions are unchanged.
 
 `admin/index.html` loads `admin/js/boot.js` as a module entrypoint; per-domain logic is split
 into modules under `admin/js/` (see project structure above).
@@ -828,7 +832,7 @@ maintenance mode too, same as the rest of the admin panel.
 same pattern as `main.js`. `users-books.js` (Users tab, Books tab, both detail views,
 Gift modal) is deliberately not split further: the user-detail and book-detail views call
 back into each other constantly, so they stay one module rather than being forced into
-`users.js`/`books.js`. It imports `loadAll`/`loadTools` from `dashboard.js`, which itself
+`users.js`/`books.js`. It imports `loadAll`/`loadStats` from `dashboard.js`, which itself
 imports `loadUsers`/`loadBooks` back from `users-books.js` - a circular import, safe in ES
 modules as long as the imported bindings are only read inside function bodies that run
 later, never at module-evaluation time.

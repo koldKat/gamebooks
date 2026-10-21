@@ -2,7 +2,7 @@
 
 import {
   api, el, badge, mkBtn, mkEditBtn, appendCell, _esc, showAlert, showConfirm,
-  storeData, getFiltered, renderPaged, setSearchFields, wireTableSearch,
+  storeData, getFiltered, renderPaged, setSearchFields, wireTableSearch, initSortHeaders,
 } from './core.js';
 import { editAdminBook } from './users-books.js';
 
@@ -61,3 +61,5 @@ function _confirmDeleteAnthology(id, name) {
 
 setSearchFields('anthologies', ['name', 'created_by_username']);
 wireTableSearch('anthologies', 'anthologies-search', 'anthologies-search-clear', renderAnthologiesTable);
+
+initSortHeaders('anthologies', renderAnthologiesTable);
