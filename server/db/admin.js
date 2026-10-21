@@ -1418,7 +1418,7 @@ const _purchaseShopItemTx = db.transaction((userId, item) => {
 });
 
 function purchaseShopItem(userId, item) {
-  return _purchaseShopItemTx(userId, item);
+  return _purchaseShopItemTx.immediate(userId, item);
 }
 
 const _adminRefundShopItemTx = db.transaction((userId, item, all) => {

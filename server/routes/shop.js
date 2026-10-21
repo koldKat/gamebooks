@@ -11,7 +11,14 @@ async function handleShopPurchase(req, res) {
   const userId = await authenticate(req, res);
   if (userId === null) return;
   const { item } = await readBody(req);
-  const result = db.purchaseShopItem(userId, item);
+  let result;
+  try {
+    result = db.purchaseShopItem(userId, item);
+  } catch (error) {
+    if (!/^SQLITE_BUSY(?:_|$)/.test(error.code || '')) throw error;
+    res.setHeader('Retry-After', '2');
+    return send(res, 503, { error: 'The shop is busy. Please try again in a moment.' });
+  }
   if (result.error === 'invalid_item')        return send(res, 400, { error: 'Invalid item' });
   if (result.error === 'insufficient_coins')  return send(res, 402, { error: 'Not enough gold coins' });
   if (result.error === 'cap_reached') {
