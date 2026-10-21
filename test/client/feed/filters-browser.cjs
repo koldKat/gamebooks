@@ -66,8 +66,9 @@ try{
  await loadFeed();
  check(document.querySelector('[data-feed-filter="catalog"]').getAttribute('aria-pressed')==='false','SSE refresh preserves selection');
  for(const key of FEED_FILTERS.filter(key=>key!=='catalog'))document.querySelector('[data-feed-filter="'+key+'"]').click();
- check(!document.querySelector('.feed-day-card,.feed-pinned-card'),'all categories off hides all activity and pinned news');
- check(document.querySelector('.feed-empty').textContent===t('feed.filter.empty'),'filtered empty state');
+ check(!document.querySelector('.feed-day-card'),'all categories off hides ordinary activity');
+ check(document.querySelector('.feed-pinned-card'),'pinned announcement remains visible with all categories off');
+ check(!document.querySelector('.feed-empty'),'visible pinned announcement prevents empty state');
  for(const key of FEED_FILTERS)document.querySelector('[data-feed-filter="'+key+'"]').click();
  check(document.querySelectorAll('.feed-entry').length===3,'all categories restored');
  const header=document.getElementById('feed-header'),heading=header.querySelector('.feed-header-label'),group=header.querySelector('.feed-filters');

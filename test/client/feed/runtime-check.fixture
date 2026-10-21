@@ -366,7 +366,7 @@ if (!baseline) {
   hooks.savePrefs = patch => savedFilters.push(patch);
   hooks.getIsAdmin = () => false;
   hooks.getIsModerator = () => false;
-  payload = { entries: [{ ...base, type: 'book_created' }, { ...base, type: 'run_started' }], pinned: { title: 'Admin news', body: 'Pinned' } };
+  payload = { entries: [{ ...base, type: 'book_created' }, { ...base, type: 'run_started' }, { ...base, type: 'announcement', body: 'Regular news body' }], pinned: { title: 'Admin news', body: 'Pinned' } };
   const filterButton = new Element({ feedFilter: 'catalog' });
   feed.queries.set('[data-feed-filter]', [filterButton]);
   await api.loadFeed();
@@ -386,7 +386,8 @@ if (!baseline) {
   api.refreshFeedFilters();
   feed.queries.set('[data-feed-filter]', []);
   await newsButton.emit('click');
-  assert.ok(!feed.innerHTML.includes('feed-pinned-card'), 'news filter also hides pinned announcements');
+  assert.ok(feed.innerHTML.includes('feed-pinned-card'), 'pinned announcements stay visible with news disabled');
+  assert.ok(!feed.innerHTML.includes('Regular news body'), 'news filter still hides regular announcements');
   api.refreshFeedFilters();
   assert.ok(!feed.innerHTML.includes('feed.tmpl.created|'), 'ordinary-player filters survive refresh');
   assert.ok(feed.innerHTML.includes('data-feed-filter'));
@@ -395,8 +396,14 @@ if (!baseline) {
   assert.equal((feed.innerHTML.match(/aria-pressed="true"/g) || []).length, 7, 'different account starts with all enabled');
   api.applyFeedFilterPrefs({ catalog: false, news: false, unknown: false });
   assert.ok(!feed.innerHTML.includes('feed.tmpl.created|'), 'saved account filters hide catalog entries');
-  assert.ok(!feed.innerHTML.includes('feed-pinned-card'), 'saved account filters hide news');
+  assert.ok(feed.innerHTML.includes('feed-pinned-card'), 'saved news preferences keep pinned announcements visible');
   assert.equal((feed.innerHTML.match(/aria-pressed="false"/g) || []).length, 2, 'unknown saved keys ignored');
+  api.applyFeedFilterPrefs(Object.fromEntries(filters.FEED_FILTERS.map(key => [key, false])));
+  assert.ok(feed.innerHTML.startsWith('<div class="feed-pinned-card">'), 'pinned announcement stays first with all filters disabled');
+  assert.ok(!feed.innerHTML.includes('feed-day-card'), 'all filters disabled hides ordinary activity');
+  assert.ok(!feed.innerHTML.includes('feed-empty'), 'visible pinned announcement prevents empty state');
+  await api.loadFeed();
+  assert.ok(feed.innerHTML.startsWith('<div class="feed-pinned-card">'), 'live refresh retains pinned announcement with all filters disabled');
   api.applyFeedFilterPrefs({ catalog: true });
   assert.equal((feed.innerHTML.match(/aria-pressed="true"/g) || []).length, 7, 'remote preference sync restores selected categories');
   token = 'lorekeeper';
