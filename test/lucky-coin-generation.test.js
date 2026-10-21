@@ -12,7 +12,7 @@ function setup() {
     INSERT INTO users(id) VALUES (1);`);
   let random = 0;
   const math = Object.create(Math); math.random = () => random;
-  const context = vm.createContext({ db, Math: math, isImpersonatingContext: () => false,
+  const context = vm.createContext({ db, Math: math, _appXpHook: null, isImpersonatingContext: () => false,
     awardCoins: (id, event, ref, amount) => {
       assert.equal(event, 'bonus_gc_claim');
       db.prepare('UPDATE users SET bonus_coins = bonus_coins + ? WHERE id = ?').run(amount, id);

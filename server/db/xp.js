@@ -311,15 +311,23 @@ function _rollBonusGc(userId, xp, pending, gcChancePurchased) {
 const _claimBonusGcTx = db.transaction((userId) => {
   const row = db.prepare('SELECT pending_bonus_gc FROM users WHERE id = ?').get(userId);
   if (!row?.pending_bonus_gc) return { error: 'nothing_to_claim' };
+  const beforeDiamonds = _appXpHook
+    ? db.prepare('SELECT diamonds_earned FROM user_diamonds WHERE user_id=?').get(userId)?.diamonds_earned || 0 : null;
   db.prepare('UPDATE users SET pending_bonus_gc = 0 WHERE id = ?').run(userId);
   awardCoins(userId, 'bonus_gc_claim', Date.now(), 1);
-  return { ok: true };
+  const afterDiamonds = beforeDiamonds === null ? 0
+    : db.prepare('SELECT diamonds_earned FROM user_diamonds WHERE user_id=?').get(userId)?.diamonds_earned || 0;
+  return { ok: true, diamondDelta: beforeDiamonds === null ? 0 : afterDiamonds - beforeDiamonds };
 });
 
 // Same central safety net as awardCoins/awardXp above.
 function claimBonusGc(userId) {
   if (isImpersonatingContext()) return { error: 'impersonating' };
-  return _claimBonusGcTx(userId);
+  const result = _claimBonusGcTx.immediate(userId);
+  if (result.diamondDelta > 0) {
+    try { _appXpHook?.({ userId, diamondDelta: result.diamondDelta }); } catch (_) {}
+  }
+  return result;
 }
 
 const _awardXpTx = db.transaction((userId, event, ref, amount) => {
