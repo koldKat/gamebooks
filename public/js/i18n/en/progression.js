@@ -23,7 +23,7 @@ export default {
     'shop.item.diamond_dig.label':    'Diamond Digging',
     'shop.item.diamond_dig.desc':     '+0.1% digging speed on future XP events (cap: {cap}% bought at your lvl).',
     'shop.item.diamond_dig.total':    'Current: +{total}% digging speed ({base} base + {bought} bought)',
-    'shop.item.diamond_dig.effect':   '1 diamond per ~{events} XP events, excluding heartbeats',
+    'shop.item.diamond_dig.effect':   '1 diamond per ~{events} XP events',
     'shop.item.diamond_exchange.label': 'Diamond Exchange Rate',
     'shop.item.diamond_exchange.desc': '+1 GC per diamond (cap: {cap} purchases at your lvl).',
     'shop.item.diamond_exchange.total': 'Current: 1 diamond = {total} GC ({base} base + {bought} bought)',
