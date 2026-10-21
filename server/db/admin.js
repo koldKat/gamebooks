@@ -6,7 +6,7 @@ const { getShopPurchaseTotals, getShopRefundRows } = require('./shop-purchases')
 const { db, _naturalCompareByName, _getPdfSize, _getEpubSize } = require('./connection');
 const { computeLevel, getTitleForLevel, getUserXpInfo, getAllUsersXpInfo, awardXp, awardCoins, processStateXp, coinBalance, _insertNotif, SIM_HISTORY_KEYS, RETIRED_SIM_HISTORY_KEYS = [] } = require('./xp');
 const { purgeExpiredSessions } = require('./auth');
-const { isDiamondPreviewUser } = require('./diamonds');
+const { hasDiamondAccess } = require('./diamonds');
 const { getRatingStats } = require('./rating-stats');
 const { collectDashboardStats } = require('./gameplay-stats');
 const adminSimHistoryKeys = new Set([...SIM_HISTORY_KEYS, ...RETIRED_SIM_HISTORY_KEYS]);
@@ -1353,7 +1353,7 @@ function setShopItemCost(id, cost, stepCost) {
 const _purchaseShopItemTx = db.transaction((userId, item) => {
   const def = _shopItemsCache.get(item);
   if (!def) return { error: 'invalid_item' };
-  if ((item === 'diamond_dig' || item === 'diamond_exchange') && !isDiamondPreviewUser(userId)) return { error: 'invalid_item' };
+  if ((item === 'diamond_dig' || item === 'diamond_exchange') && !hasDiamondAccess(userId)) return { error: 'invalid_item' };
   const row = db.prepare('SELECT xp, coins_spent, xp_boost_pct, bonus_undos, bonus_fast_travels, bonus_heartbeat_xp, bonus_gc_chance_purchased, bonus_gc_mint_purchased, bonus_diamond_dig_purchased, bonus_diamond_exchange_purchased, bonus_coins FROM users WHERE id = ?').get(userId);
   if (!row) return { error: 'not_found' };
   const level = computeLevel(row.xp);

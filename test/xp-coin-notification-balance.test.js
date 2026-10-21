@@ -28,7 +28,7 @@ function fixture({ xp = 495999, purchased = 16, bonus = 393, spent = 899 } = {})
     + '\n_liveUserCount = () => 1000;', context);
   vm.runInContext(source.slice(source.indexOf('const _awardCoinsTx'), source.indexOf('// Same central safety net as awardCoins above.'))
     + '\nglobalThis.award = _awardXpTx;', context);
-  return { db, award: (amount, ref = 'test') => context.award(1, 'idle_heartbeat', ref, amount),
+  return { db, context, award: (amount, ref = 'test') => context.award(1, 'idle_heartbeat', ref, amount),
     balance: () => context.coinBalance(db.prepare('SELECT * FROM users WHERE id=1').get()),
     coins: () => db.prepare("SELECT payload FROM notifications WHERE type='coin_gain' ORDER BY id").all().map(row => JSON.parse(row.payload)) };
 }
@@ -82,4 +82,14 @@ test('notification failure rolls back XP and all same-tick level rewards', t => 
   assert.equal(f.db.prepare('SELECT count(*) n FROM xp_events').get().n, 0);
   assert.equal(f.db.prepare('SELECT count(*) n FROM coin_events').get().n, 0);
   assert.deepEqual(f.coins(), []);
+});
+
+test('admin diamond hook reports only committed new mining rewards, never duplicate or failed awards',t=>{
+ const f=fixture();t.after(()=>f.db.close());require('../server/db/diamonds').initializeDiamondBalances(f.db);
+ f.db.exec('INSERT INTO user_diamonds(user_id,dig_progress) VALUES(1,999999)');const events=[];f.context._appXpHook=event=>events.push(JSON.parse(JSON.stringify(event)));
+ const code=fs.readFileSync(require.resolve('../server/db/xp'),'utf8');vm.runInContext(code.slice(code.indexOf('function awardXp('),code.indexOf('function awardIdleHeartbeatXp(')),f.context);
+ assert.equal(f.context.awardXp(1,'visit_node','diamond-test',0),true);assert.deepEqual(events,[{userId:1,diamondDelta:1}]);
+ assert.equal(f.context.awardXp(1,'visit_node','diamond-test',0),false);assert.equal(events.length,1);
+ f.db.exec("CREATE TRIGGER reject_xp BEFORE INSERT ON xp_events BEGIN SELECT RAISE(ABORT,'fail xp');END");
+ assert.throws(()=>f.context.awardXp(1,'visit_node','diamond-fail',0),/fail xp/);assert.equal(events.length,1);
 });

@@ -61,7 +61,7 @@ test('diamond progress is atomic, works for new players and survives book-log cl
   assert.equal(h.count(3), 0, 'account deletion removes its balance');
 });
 
-test('reward snapshots expose diamonds only for koldKat and sashii and use a primary-key lookup', t => {
+test('reward snapshots expose diamonds to every player using primary-key lookups', t => {
   const h = fixture(t);
   for (const column of ['coins_spent', 'xp_boost_pct', 'bonus_undos', 'bonus_fast_travels',
     'bonus_heartbeat_xp', 'bonus_coins', 'admin_gifted_coins', 'xp_from_boost',
@@ -84,7 +84,7 @@ test('reward snapshots expose diamonds only for koldKat and sashii and use a pri
   assert.equal(context.getUserXpInfo(17).diamondsBalance, 1);
   assert.equal(context.getUserXpInfo('17').diamondsBalance, 1);
   assert.equal(context.getUserXpInfo(2).coinsBalance, 7);
-  assert.equal('diamondsBalance' in context.getUserXpInfo(2), false);
+  assert.equal(context.getUserXpInfo(2).diamondsBalance, 6);
   const plan = h.db.prepare('EXPLAIN QUERY PLAN ' + queries[0]).all(1);
   assert.ok(plan.some(row => /user_diamonds USING INTEGER PRIMARY KEY/.test(row.detail)));
   assert.ok(!plan.some(row => /xp_events/.test(row.detail)), 'refreshing a profile never scans XP events');
@@ -142,5 +142,17 @@ test('exchange rate gets a free GC per level and caps its purchased bonus at tha
   assert.equal(diamondInfoForUser(17, {}, 10).diamondExchangeRate, 10);
   assert.equal(diamondInfoForUser(17, { bonus_diamond_exchange_purchased: 10 }, 10).diamondExchangeRate, 20);
   assert.equal(diamondInfoForUser(17, { bonus_diamond_exchange_purchased: 99 }, 10).diamondExchangeRate, 20);
-  assert.deepEqual(diamondInfoForUser(2, { diamonds_earned: 99 }, 10), {});
+  assert.equal(diamondInfoForUser(2, { diamonds_earned: 99 }, 10).diamondsBalance, 99);
+  assert.deepEqual(diamondInfoForUser(0, { diamonds_earned: 99 }, 10), {});
+});
+
+test('app digging backfills history once and adds shared stock every 10000 new non-heartbeat events',t=>{
+ const h=fixture(t);h.add(1,'visit_node',68000);h.add(1,'idle_heartbeat',25);initializeDiamondBalances(h.db);
+ const market=()=>h.db.prepare('SELECT * FROM diamond_market WHERE id=1').get();
+ assert.equal(market().diamonds,6);assert.equal(market().diamonds_mined,6);assert.equal(market().dig_events,68000);
+ initializeDiamondBalances(h.db);assert.equal(market().diamonds,6);
+ h.add(1,'visit_node',2000,'new');assert.equal(market().diamonds,7);assert.equal(market().diamonds_mined,7);
+ h.add(1,'idle_heartbeat',1000,'later');assert.equal(market().dig_events,70000);
+ const before=market();assert.throws(()=>h.db.transaction(()=>{h.add(1,'visit_node',10000,'rollback');throw Error('rollback');})(),/rollback/);assert.deepEqual(market(),before);
+ h.db.exec('DELETE FROM xp_events');initializeDiamondBalances(h.db);assert.deepEqual(market(),before);
 });

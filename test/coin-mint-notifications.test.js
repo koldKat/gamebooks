@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 const Database = require('better-sqlite3');
-const { initializeDiamondBalances, isDiamondPreviewUser } = require('../server/db/diamonds');
+const { initializeDiamondBalances, hasDiamondAccess } = require('../server/db/diamonds');
 const { getShopPurchaseTotals, getShopRefundRows } = require('../server/db/shop-purchases');
 
 function fixture({ xp = 1890993, purchased = 24, balance = 25 } = {}) {
@@ -16,7 +16,7 @@ function fixture({ xp = 1890993, purchased = 24, balance = 25 } = {}) {
     CREATE TABLE notifications (id INTEGER PRIMARY KEY, user_id INTEGER, type TEXT, payload TEXT);
     CREATE TABLE xp_events (user_id INTEGER, event TEXT, ref TEXT, UNIQUE(user_id,event,ref));`);
   initializeDiamondBalances(db);
-  const context = vm.createContext({ db, isDiamondPreviewUser, _insertNotif: db.prepare('INSERT INTO notifications (user_id,type,payload) VALUES (?,?,?)') });
+  const context = vm.createContext({ db, hasDiamondAccess, _insertNotif: db.prepare('INSERT INTO notifications (user_id,type,payload) VALUES (?,?,?)') });
   const xpSource = fs.readFileSync(require.resolve('../server/db/xp'), 'utf8');
   vm.runInContext(xpSource.slice(xpSource.indexOf('function computeLevel('), xpSource.indexOf('function toRoman(')), context);
   const admin = fs.readFileSync(require.resolve('../server/db/admin'), 'utf8');
@@ -106,10 +106,10 @@ test('diamond upgrades cost 1 through level, cap independently and never change 
   assert.equal(f.notifications().length, 0, 'buying upgrades cannot mint retrospective gold or diamonds');
 });
 
-test('diamond upgrade purchases reject level zero and non-preview users and refund escalating costs correctly', t => {
+test('diamond upgrades work for every player, reject level zero and refund escalating costs correctly', t => {
   const f = fixture({ xp: 1000, purchased: 0, balance: 1 }); t.after(() => f.db.close());
   f.db.exec('INSERT INTO users(id,xp,bonus_coins) VALUES(2,55000,100),(17,55000,100)');
-  for (const item of ['diamond_dig', 'diamond_exchange']) assert.equal(f.purchase(item, 2).error, 'invalid_item');
+  for (const item of ['diamond_dig', 'diamond_exchange']) assert.equal(f.purchase(item, 2).ok, true);
   assert.equal(f.purchase('diamond_dig', 17).ok, true);
   f.db.exec('UPDATE users SET xp=0 WHERE id=1');
   assert.equal(f.purchase('diamond_dig').error, 'cap_reached');

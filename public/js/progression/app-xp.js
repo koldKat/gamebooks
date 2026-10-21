@@ -3,6 +3,7 @@
 
 import { apiFetch, getToken } from '../core/state.js';
 import { COIN_SVG } from './shop.js';
+import { DIAMOND_SVG } from './diamonds.js';
 import { escapeHtml } from '../core/util.js';
 import { t } from '../i18n.js';
 
@@ -137,7 +138,8 @@ let _appXpPendingResolvers = [];
 // Debounce reward-refresh bursts with a trailing update.
 const APP_XP_DEBOUNCE_MS = 300;
 
-export function refreshAppXp() {
+export function refreshAppXp({ immediate = false } = {}) {
+  const sessionToken = getToken();
   const wrap    = document.getElementById('app-xp-summary');
   const avgWrap = document.getElementById('avg-lvl-summary');
   if (!getToken() || !_hooks.getCanSeeAppXp?.()) {
@@ -161,15 +163,17 @@ export function refreshAppXp() {
           const res = await apiFetch('/api/app-xp');
           if (!res.ok) { if (wrap) wrap.hidden = true; if (avgWrap) avgWrap.hidden = true; return; }
           const data = await res.json();
+          if (getToken() !== sessionToken || !_hooks.getCanSeeAppXp?.()) return;
           _render(data);
           _renderAvgLevel(data);
         } catch {}
         finally {
           _appXpFetchPromise = null;
           resolvers.forEach(r => r());
+          if (getToken() && getToken() !== sessionToken && _hooks.getCanSeeAppXp?.()) refreshAppXp({ immediate: true });
         }
       })();
-    }, APP_XP_DEBOUNCE_MS);
+    }, immediate ? 0 : APP_XP_DEBOUNCE_MS);
   });
 }
 
@@ -251,17 +255,19 @@ export function handleAppXpEvent(payload) {
   const username = escapeHtml(rawUsername);
   const xpDelta    = Math.max(0, Math.round(Number(payload.xpDelta) || 0));
   const coinDelta  = Math.max(0, Math.round(Number(payload.coinDelta) || 0));
-  if (xpDelta <= 0 && coinDelta <= 0) return;
+  const diamondDelta = Math.max(0, Math.round(Number(payload.diamondDelta) || 0));
+  if (xpDelta <= 0 && coinDelta <= 0 && diamondDelta <= 0) return;
 
-  const accum = _appRewardAccum.get(rawUsername) || { xp: 0, coins: 0 };
+  const accum = _appRewardAccum.get(rawUsername) || { xp: 0, coins: 0, diamonds: 0 };
   accum.xp    += xpDelta;
   accum.coins += coinDelta;
+  accum.diamonds += diamondDelta;
   _appRewardAccum.set(rawUsername, accum);
 
   if (_appRewardFlushTimers.has(rawUsername)) return;
   _appRewardFlushTimers.set(rawUsername, setTimeout(() => {
     _appRewardFlushTimers.delete(rawUsername);
-    const { xp, coins } = _appRewardAccum.get(rawUsername) || { xp: 0, coins: 0 };
+    const { xp, coins, diamonds } = _appRewardAccum.get(rawUsername) || { xp: 0, coins: 0, diamonds: 0 };
     _appRewardAccum.delete(rawUsername);
     // Recheck visibility and permissions when the delayed floater spawns.
     if (!_hooks.getIsAdmin?.() || !(_isBooksScreenVisible() || _isMainScreenVisible())) return;
@@ -270,6 +276,9 @@ export function handleAppXpEvent(payload) {
     }
     if (coins > 0) {
       _spawnAppRewardFloater('coins', `${COIN_SVG}<span>+${coins.toLocaleString()}</span><span class="app-reward-float-sep">-</span><span class="app-reward-float-user">${username}</span>`);
+    }
+    if (diamonds > 0) {
+      _spawnAppRewardFloater('diamonds', `${DIAMOND_SVG}<span>+${diamonds.toLocaleString()}</span><span class="app-reward-float-sep">-</span><span class="app-reward-float-user">${username}</span>`);
     }
   }, 750));
 }

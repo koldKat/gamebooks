@@ -8,7 +8,7 @@ const dir = new URL('../../../public/js/', import.meta.url);
 test('progression relocation preserves unchanged implementations without root wrappers', () => {
   // Non-import source baseline; comment cleanup verified against unchanged executable ASTs.
   const digests = {
-    "app-xp": "02b4f4c1c7316f5cb9253bf05c65ed3bda7ad097f7ca857345c8581a3b7806b4",
+    "app-xp": "0fbe242f2f575d954b83248ab8728cf1ca6825567d4a0cac6ad182b67e01a28a",
   };
   for (const [name, digest] of Object.entries(digests)) {
     assert.equal(existsSync(new URL(name + '.js', dir)), false);
@@ -27,8 +27,8 @@ test('progression relocation preserves unchanged implementations without root wr
 
 test('progression imports retain their original dependency identities', () => {
   const expected = {
-    'app-xp': ['core/state.js', 'progression/shop.js', 'core/util.js', 'i18n.js'],
-    rewards: ['core/state.js', 'progression/shop.js', 'account/profile.js', 'progression/diamonds.js', 'progression/exchange-shop.js', 'progression/heartbeat-coins.js', 'core/livetab.js', 'community/notif.js', 'core/util.js'],
+    'app-xp': ['core/state.js', 'progression/shop.js', 'progression/diamonds.js', 'core/util.js', 'i18n.js'],
+    rewards: ['core/state.js', 'progression/shop.js', 'account/profile.js', 'progression/diamonds.js', 'progression/exchange-shop.js', 'progression/heartbeat-coins.js', 'progression/snapshot-cache.js', 'core/livetab.js', 'community/notif.js', 'core/util.js'],
     shop: ['core/state.js', 'core/util.js', 'i18n.js', 'ui-helpers/coin-icon.js', 'progression/diamonds.js', 'progression/exchange-shop.js'],
   };
   for (const [name, dependencies] of Object.entries(expected)) {

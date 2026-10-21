@@ -1,7 +1,7 @@
 import {test} from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';import vm from 'node:vm';
 test('heartbeat gold is silent while other coin and XP gains still float',()=>{
  const source=fs.readFileSync('public/js/progression/rewards.js','utf8'),queued=[];
- const context=vm.createContext({getUsername:()=> 'Player',getToken:()=> 'token',updateCoinsDisplay(){},updateHeartbeatCoinsDisplay(){},renderBooksXpSummary(){},_broadcastLiveEvent(){},_queueRewardFloater:(...args)=>queued.push(args),_scheduleLiveUiRefresh(){}});
+ const context=vm.createContext({getUsername:()=> 'Player',getToken:()=> 'token',saveRewardCache(){},updateCoinsDisplay(){},updateHeartbeatCoinsDisplay(){},renderBooksXpSummary(){},_broadcastLiveEvent(){},_queueRewardFloater:(...args)=>queued.push(args),_scheduleLiveUiRefresh(){}});
  vm.runInContext(source.slice(source.indexOf('let _lastRewardXp'),source.indexOf('// ── Floater queue'))+source.slice(source.indexOf('export function _processRewardSnapshot'),source.indexOf('export function _scheduleRewardProfileRefresh')).replace(/^export /gm,''),context);
  const base={xp:100,level:1,coinsBalance:10,heartbeatGoldEarned:0};context._processRewardSnapshot(base);context._processRewardSnapshot({...base,coinsBalance:11,heartbeatGoldEarned:1});assert.equal(queued.length,0);
  context._processRewardSnapshot({...base,xp:103,coinsBalance:13,heartbeatGoldEarned:1});assert.deepEqual(queued,[[3,2]]);

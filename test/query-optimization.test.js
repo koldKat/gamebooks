@@ -191,7 +191,7 @@ test('bulk XP summaries match individual calculations without one query pair per
     '\n({getUserXpInfo,getAllUsersXpInfo})', { db: { prepare(sql) { queries++; return raw.prepare(sql); } }, diamondInfoForUser: require('../server/db/diamonds').diamondInfoForUser });
   const expected = [plain(api.getUserXpInfo(1)), plain(api.getUserXpInfo(2))];
   assert.equal(expected[0].diamondsBalance, 36);
-  for (const key of Object.keys(expected[0])) if (key.startsWith('diamond')) delete expected[0][key]; // Private preview is absent from admin lists.
+  for (const row of expected) for (const key of Object.keys(row)) if (key.startsWith('diamond')) delete row[key]; // Bulk admin summaries omit wallet details.
   for (const row of expected) for (const key of ['bronzeBalance','silverBalance','heartbeatGoldEarned']) delete row[key];
   queries = 0;
   const results = api.getAllUsersXpInfo();

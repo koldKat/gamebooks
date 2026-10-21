@@ -71,7 +71,8 @@ test('invalid amounts, insufficient balance and stale quotes cannot spend either
   assert.equal(f.exchange(1,6,'exchange-request-0002',13).error,'insufficient_diamonds');
   assert.equal(f.exchange(1,1,'exchange-request-0003',12).error,'rate_changed');
   assert.equal(f.exchange(1,1,'short',13).error,'invalid_request');
-  assert.equal(f.exchange(2,1,'exchange-request-0001',13).error,'unavailable');
+  assert.equal(f.exchange(2,1,'exchange-request-0001',10).error,'insufficient_diamonds');
+  assert.equal(f.exchange(0,1,'exchange-request-0001',13).error,'unavailable');
   f.impersonate(true);assert.equal(f.exchange(1,1,'exchange-request-0001',13).error,'unavailable');
   assert.deepEqual(f.wallet(1),before);assert.equal(f.gold(),gold);
   assert.equal(f.db.prepare('SELECT COUNT(*) n FROM diamond_exchanges').get().n,0);

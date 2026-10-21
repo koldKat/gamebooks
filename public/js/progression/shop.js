@@ -65,7 +65,7 @@ const SHOP_ITEMS = [
   },
   {
     id:        'diamond_dig',
-    previewOnly: true,
+    requiresDiamondBalance: true,
     label:     () => t('shop.item.diamond_dig.label'),
     costFn:    d => (d.diamondDigPurchased || 0) + 1,
     desc:      () => t('shop.item.diamond_dig.desc', { cap: ((_shopData?.level || 0) * 0.1).toFixed(1) }),
@@ -78,7 +78,7 @@ const SHOP_ITEMS = [
   },
   {
     id:        'diamond_exchange',
-    previewOnly: true,
+    requiresDiamondBalance: true,
     label:     () => t('shop.item.diamond_exchange.label'),
     costFn:    d => (d.diamondExchangePurchased || 0) + 1,
     desc:      () => t('shop.item.diamond_exchange.desc', { cap: _shopData?.level || 0 }),
@@ -114,7 +114,7 @@ let _rewardProfilePendingResolvers = [];
 const REWARD_PROFILE_DEBOUNCE_MS = 300;
 
 function _visibleShopItems() {
-  return SHOP_ITEMS.filter(item => !item.previewOnly || Number.isFinite(_shopData?.diamondsBalance));
+  return SHOP_ITEMS.filter(item => !item.requiresDiamondBalance || Number.isFinite(_shopData?.diamondsBalance));
 }
 
 function _shopHasAffordable(balance) {

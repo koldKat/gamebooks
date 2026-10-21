@@ -3,9 +3,10 @@
 import { getToken, getUsername } from '../core/state.js';
 import { updateCoinsDisplay, refreshCoinsDisplay, COIN_SVG } from './shop.js';
 import { renderBooksXpSummary } from '../account/profile.js';
-import { updateDiamondsDisplay } from './diamonds.js';
+import { updateDiamondsDisplay, DIAMOND_SVG } from './diamonds.js';
 import { closeDiamondExchangeShop } from './exchange-shop.js';
 import { updateHeartbeatCoinsDisplay } from './heartbeat-coins.js';
+import { readRewardCache, saveRewardCache, clearRewardCache } from './snapshot-cache.js';
 import { _broadcastLiveEvent } from '../core/livetab.js';
 import { _scheduleLiveUiRefresh } from '../community/notif.js';
 import { escapeHtml } from '../core/util.js';
@@ -15,6 +16,7 @@ let _lastRewardXp        = null;
 let _lastRewardCoins     = null;
 let _lastRewardLevel     = null;
 let _lastHeartbeatGold   = null;
+let _lastDiamondsEarned  = null;
 let _lastRewardUserKey   = null;
 let _rewardAccumXp       = 0;
 let _rewardAccumCoins    = 0;
@@ -99,10 +101,12 @@ function _queueRewardFloater(xpDelta = 0, coinDelta = 0) {
 
 // ── Snapshot processing ───────────────────────────────────────────────────────
 export function _resetRewardSnapshotState() {
+  clearRewardCache();
   closeDiamondExchangeShop();
   updateDiamondsDisplay(null);
   updateHeartbeatCoinsDisplay(null);
   _lastHeartbeatGold = null;
+  _lastDiamondsEarned = null;
   _lastRewardXp = null; _lastRewardCoins = null; _lastRewardLevel = null;
   _lastRewardUserKey = null; _rewardAccumXp = 0; _rewardAccumCoins = 0;
   if (_rewardFlushTimer) { clearTimeout(_rewardFlushTimer); _rewardFlushTimer = null; }
@@ -110,8 +114,14 @@ export function _resetRewardSnapshotState() {
 }
 
 // Return XP, coin, and level deltas; the first snapshot establishes a baseline.
+export async function _restoreRewardSnapshot() {
+  const token = getToken();
+  const cached = await readRewardCache();
+  if (getToken() === token && _lastRewardXp === null && cached) _processRewardSnapshot(cached, { broadcast: false, cache: false });
+}
+
 export function _processRewardSnapshot(data, opts = {}) {
-  const { broadcast = true } = opts;
+  const { broadcast = true, cache = true } = opts;
   if (!data || typeof data !== 'object') return null;
   const xp    = Number(data.xp); const coins = Number(data.coinsBalance);
   const level = Number(data.level); const title = data.title || '';
@@ -125,6 +135,11 @@ export function _processRewardSnapshot(data, opts = {}) {
   const heartbeatGold = Number(data.heartbeatGoldEarned) || 0;
   const silentGold = _lastHeartbeatGold === null ? 0 : Math.max(0, heartbeatGold - _lastHeartbeatGold);
   _lastHeartbeatGold = heartbeatGold;
+  const diamondsEarned = data.diamondsEarned;
+  const diamondDelta = Number.isSafeInteger(diamondsEarned) && _lastDiamondsEarned !== null
+    ? Math.max(0, diamondsEarned - _lastDiamondsEarned) : 0;
+  if (Number.isSafeInteger(diamondsEarned)) _lastDiamondsEarned = diamondsEarned;
+  if (cache) saveRewardCache(data);
   const prevXp = _lastRewardXp;
   if (_lastRewardXp === null || _lastRewardCoins === null || _lastRewardLevel === null) {
     _lastRewardUserKey = rewardUserKey; _lastRewardXp = xp; _lastRewardCoins = coins;
@@ -139,6 +154,7 @@ export function _processRewardSnapshot(data, opts = {}) {
   renderBooksXpSummary(data, { fromXp: prevXp });
   if (broadcast) _broadcastLiveEvent('reward_snapshot', data);
   if (xpDelta > 0 || coinDelta > silentGold) _queueRewardFloater(Math.max(0, xpDelta), Math.max(0, coinDelta - silentGold));
+  if (diamondDelta > 0) _spawnRewardFloater('diamonds', `${DIAMOND_SVG}<span>+${diamondDelta.toLocaleString()}</span>`);
   if (coinDelta > 0 || levelDelta > 0) _scheduleLiveUiRefresh({ notif: true }, 60);
   if (levelDelta > 0) {
     for (let i = 0; i < levelDelta; i++) {

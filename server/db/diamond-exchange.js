@@ -2,7 +2,7 @@
 
 const { db } = require('./connection');
 const { computeLevel, awardCoins, coinBalance } = require('./xp');
-const { isDiamondPreviewUser } = require('./diamonds');
+const { hasDiamondAccess } = require('./diamonds');
 const { isImpersonatingContext } = require('../impersonation-context');
 
 const exchange = db.transaction((userId, amount, requestId, expectedRate, direction) => {
@@ -40,7 +40,7 @@ const exchange = db.transaction((userId, amount, requestId, expectedRate, direct
 });
 
 function exchangeDiamonds(userId, amount, requestId, expectedRate, direction = 'sell') {
-  if (!isDiamondPreviewUser(userId) || isImpersonatingContext()) return { error: 'unavailable' };
+  if (!hasDiamondAccess(userId) || isImpersonatingContext()) return { error: 'unavailable' };
   if (!Number.isSafeInteger(amount) || amount < 1) return { error: 'invalid_amount' };
   if (typeof requestId !== 'string' || !/^[A-Za-z0-9_-]{16,80}$/.test(requestId)) return { error: 'invalid_request' };
   if (!Number.isSafeInteger(expectedRate) || expectedRate < 1) return { error: 'invalid_request' };

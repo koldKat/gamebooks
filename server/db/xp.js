@@ -383,7 +383,16 @@ const _awardXpTx = db.transaction((userId, event, ref, amount) => {
 function awardXp(userId, event, ref, amountOverride = null) {
   if (isImpersonatingContext()) return false;
   const amount = amountOverride ?? getXpAmount(event);
-  return _awardXpTx(userId, event, String(ref), amount);
+  const beforeDiamonds = _appXpHook && event !== 'idle_heartbeat'
+    ? db.prepare('SELECT diamonds_earned FROM user_diamonds WHERE user_id=?').get(userId)?.diamonds_earned || 0 : null;
+  const awarded = _awardXpTx(userId, event, String(ref), amount);
+  if (awarded && beforeDiamonds !== null) {
+    const afterDiamonds = db.prepare('SELECT diamonds_earned FROM user_diamonds WHERE user_id=?').get(userId)?.diamonds_earned || 0;
+    if (afterDiamonds > beforeDiamonds) {
+      try { _appXpHook?.({ userId, diamondDelta: afterDiamonds - beforeDiamonds }); } catch (_) {}
+    }
+  }
+  return awarded;
 }
 
 function awardIdleHeartbeatXp(userId) {
