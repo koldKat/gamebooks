@@ -1,6 +1,42 @@
 const ELEMENTS = new Set(['P', 'H2', 'H3', 'H4', 'OL', 'UL', 'LI', 'STRONG', 'EM', 'U', 'BR', 'HR', 'FIGURE', 'FIGCAPTION', 'IMG',
   'TABLE', 'THEAD', 'TBODY', 'TFOOT', 'TR', 'TH', 'TD', 'CAPTION']);
 
+function proseStyle(tag, input) {
+  if (!['P', 'H2', 'H3', 'H4', 'HR'].includes(tag)) throw new Error('Unsupported reading style');
+  const length = (value, negative = false) => {
+    const match = /^(-?(?:\d+(?:\.\d+)?|\.\d+))(em)?$/.exec(value);
+    if (!match) return false;
+    const number = Number(match[1]);
+    return (match[2] || number === 0) && number >= (negative ? -8 : 0) && number <= 8;
+  };
+  const seen = new Set();
+  const result = input.split(';').map(part => part.trim()).filter(Boolean).map(part => {
+    const colon = part.indexOf(':');
+    const property = part.slice(0, colon).trim().toLowerCase();
+    let value = part.slice(colon + 1).trim().replace(/\s+/g, ' ').toLowerCase();
+    if (colon < 1 || seen.has(property)) throw new Error('Invalid reading style');
+    seen.add(property);
+    if (property === 'margin' && value.split(' ').length <= 4 && value.split(' ').every(v => length(v))) {
+      return `${property}:${value}`;
+    }
+    if (tag === 'HR') {
+      if (property === 'border' && value === '0') return 'border:0';
+      if (property === 'border-top' && value === '1px solid currentcolor') return 'border-top:1px solid currentColor';
+    } else {
+      if (property === 'text-align' && /^(left|center|right|justify)$/.test(value)) return `${property}:${value}`;
+      if (property === 'text-indent' && length(value, true)) return `${property}:${value}`;
+      if (/^margin-(top|bottom|left|right)$/.test(property) && length(value)) return `${property}:${value}`;
+      if (property === 'font-size' && /^(?:\d+(?:\.\d+)?|\.\d+)em$/.test(value)) {
+        const size = Number(value.slice(0, -2));
+        if (size >= 0.8 && size <= 1.1) return `${property}:${value}`;
+      }
+    }
+    throw new Error('Unsupported reading style');
+  });
+  if (!result.length) throw new Error('Empty reading style');
+  return result.join(';');
+}
+
 // Copy only inert prose and this book's protected images into the live DOM.
 export function renderReadingMatter(mount, bookId, text, document) {
   if (!/^\s*<(?:p|h[2-4]|ol|ul|figure|table)[\s>]/i.test(text)) return false;
@@ -21,9 +57,8 @@ export function renderReadingMatter(mount, bookId, text, document) {
         target.setAttribute('class', 'reading-art-parts');
         continue;
       }
-      if (['P', 'H2', 'H3', 'H4'].includes(node.tagName) && attr.name === 'style'
-          && /^\s*text-align\s*:\s*(?:left|center|right)\s*;?\s*$/i.test(attr.value)) {
-        target.setAttribute('style', 'text-align:' + attr.value.match(/:\s*(left|center|right)/i)[1].toLowerCase());
+      if (attr.name === 'style') {
+        target.setAttribute('style', proseStyle(node.tagName, attr.value));
         continue;
       }
       if (node.tagName === 'TH' && attr.name === 'scope' && ['row', 'col'].includes(attr.value)) {
