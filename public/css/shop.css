@@ -42,7 +42,7 @@
 .silver-display { color: #cbd5e1; background: #202936; }
 @media (max-width: 520px) {
   .books-header { flex-wrap: wrap; }
-  .books-header-right { width: 100%; justify-content: flex-end; gap: 0.35rem; }
+  .books-header-right { width: 100%; justify-content: flex-end; gap: 0.25rem; }
 }
 
 /* ── Shop modal ─────────────────────────────────────────────────── */

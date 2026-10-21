@@ -148,7 +148,7 @@ body.books-searching #books-search-close {
 .books-header-right {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.25rem;
   flex-wrap: nowrap;
   flex-shrink: 0;
 }
