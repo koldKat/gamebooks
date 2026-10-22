@@ -12,7 +12,7 @@ function fixture(t) {
     bonus_coins INTEGER DEFAULT 100,coins_spent INTEGER DEFAULT 0,bonus_gc_mint_purchased INTEGER DEFAULT 0);
     INSERT INTO users(id,username,is_admin) VALUES(1,'Admin',1),(17,'Sashii',0),(2,'Player',0);
     CREATE TABLE books(id INTEGER PRIMARY KEY,name TEXT,is_container INTEGER DEFAULT 0,parent_book_id INTEGER,
-      total_sections INTEGER DEFAULT 100,discoverable_sections INTEGER,max_section_number INTEGER);
+      total_sections INTEGER DEFAULT 100,discoverable_sections INTEGER,max_section_number INTEGER,is_public INTEGER NOT NULL DEFAULT 1);
     CREATE TABLE user_books(user_id INTEGER,book_id INTEGER,state_data TEXT,PRIMARY KEY(user_id,book_id));
     CREATE TABLE book_sections(book_id INTEGER,section_id TEXT);
     CREATE TABLE book_reading_entries(book_id INTEGER,section_id TEXT,counts_as_section INTEGER);
@@ -40,6 +40,42 @@ function fixture(t) {
     impersonate:()=>{impersonating=true;},gold:id=>xp.coinBalance(db.prepare('SELECT * FROM users WHERE id=?').get(id))};
 }
 const range=(start,end)=>Array.from({length:end-start+1},(_,i)=>start+i);
+
+test('private books cannot earn rubies; publishing permits one reward and unpublishing preserves it',t=>{
+  const f=fixture(t);f.addBook(10);f.save(2,10,[range(1,100)]);
+  f.db.exec('UPDATE books SET is_public=0 WHERE id=10');
+  assert.equal(f.check(2,10),0);assert.equal(f.wallet(2),undefined);
+  ruby.backfillRubies(f.db);assert.equal(f.wallet(2),undefined);
+  assert.equal(f.db.prepare('SELECT completions FROM ruby_market').get().completions,0);
+  f.db.exec('UPDATE books SET is_public=1 WHERE id=10');
+  assert.equal(f.check(2,10),1);
+  const market=f.db.prepare('SELECT * FROM ruby_market').get();
+  f.db.exec('UPDATE books SET is_public=0 WHERE id=10');
+  assert.equal(f.check(2,10),0);assert.equal(f.wallet(2).rubies_earned,1);
+  assert.deepEqual(f.db.prepare('SELECT * FROM ruby_market').get(),market);
+});
+
+test('an anthology and all primary and secondary members must be public for its reward',t=>{
+  const f=fixture(t);f.addBook(20,0,null,1);f.addBook(21,60,20);f.addBook(22,40);
+  f.db.exec('INSERT INTO book_anthology_memberships VALUES(22,20)');
+  f.save(2,21,[range(1,60)]);f.save(2,22,[range(1,40)]);
+  for(const id of [20,21,22]){
+    f.db.prepare('UPDATE books SET is_public=0 WHERE id=?').run(id);
+    assert.equal(f.check(2,20),0);assert.equal(f.check(2,21),0);assert.equal(f.check(2,22),0);
+    f.db.prepare('UPDATE books SET is_public=1 WHERE id=?').run(id);
+  }
+  assert.equal(f.wallet(2),undefined);
+  assert.equal(f.check(2,22),1);assert.equal(f.check(2,20),0);
+});
+
+test('a public child book can earn independently inside a private anthology',t=>{
+  const f=fixture(t);f.addBook(20,0,null,1);f.addBook(21,100,20);
+  f.db.exec('UPDATE books SET is_public=0 WHERE id=20');f.save(2,21,[range(1,100)]);
+  assert.equal(f.check(2,21),1);
+  assert.deepEqual(f.db.prepare('SELECT book_id,kind FROM ruby_rewards').all(),[{book_id:21,kind:'book'}]);
+  f.db.exec('UPDATE books SET is_public=1 WHERE id=20');
+  assert.equal(f.check(2,21),1);assert.equal(f.wallet(2).rubies_earned,2);
+});
 
 test('rewards require every visited section, combine runs, ignore mapped-only nodes, and never repeat after reset',t=>{
   const f=fixture(t);f.addBook(10);

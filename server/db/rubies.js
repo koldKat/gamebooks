@@ -79,14 +79,15 @@ function createRubyCompletionChecker(db) {
     const row = book.get(bookId);
     if (!row) return 0;
     let earned = 0;
-    if (!row.is_container && row.total_sections >= 100 && !rewarded.get(userId, row.id, 'book')) {
+    if (row.is_public && !row.is_container && row.total_sections >= 100 && !rewarded.get(userId, row.id, 'book')) {
       if (completion(userId, row).complete) earned += award.run(userId, row.id, 'book').changes;
     }
     const anthologyIds = row.is_container ? [{ id: row.id }] : parents.all(bookId, bookId);
     for (const { id } of anthologyIds) {
-      if (rewarded.get(userId, id, 'anthology') || !book.get(id)?.is_container) continue;
+      const anthology = book.get(id);
+      if (rewarded.get(userId, id, 'anthology') || !anthology?.is_container || !anthology.is_public) continue;
       const members = children.all(id,id).map(child => book.get(child.id));
-      if (!members.length || members.reduce((n, child) => n+child.total_sections,0) < 100) continue;
+      if (!members.length || members.some(child => !child.is_public) || members.reduce((n, child) => n+child.total_sections,0) < 100) continue;
       if (members.every(child => completion(userId,child).complete)) earned += award.run(userId,id,'anthology').changes;
     }
     return earned;
