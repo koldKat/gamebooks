@@ -39,6 +39,7 @@ function initializeRubies(db) {
 }
 
 function createRubyCompletionChecker(db) {
+  const user = db.prepare('SELECT is_squire FROM users WHERE id=?');
   const book = db.prepare(`SELECT b.*, e.section_id AS uncounted_entry FROM books b
     LEFT JOIN book_reading_entries e ON e.book_id=b.id AND e.counts_as_section=0 WHERE b.id=?`);
   const sections = db.prepare('SELECT section_id FROM book_sections WHERE book_id=?');
@@ -76,10 +77,13 @@ function createRubyCompletionChecker(db) {
   }
 
   const check = db.transaction((userId, bookId) => {
+    const account = user.get(userId);
+    if (!account) return 0;
+    const minimumSections = account.is_squire ? 25 : 100;
     const row = book.get(bookId);
     if (!row) return 0;
     let earned = 0;
-    if (row.is_public && !row.is_container && row.total_sections >= 100 && !rewarded.get(userId, row.id, 'book')) {
+    if (row.is_public && !row.is_container && row.total_sections >= minimumSections && !rewarded.get(userId, row.id, 'book')) {
       if (completion(userId, row).complete) earned += award.run(userId, row.id, 'book').changes;
     }
     const anthologyIds = row.is_container ? [{ id: row.id }] : parents.all(bookId, bookId);
@@ -87,7 +91,7 @@ function createRubyCompletionChecker(db) {
       const anthology = book.get(id);
       if (rewarded.get(userId, id, 'anthology') || !anthology?.is_container || !anthology.is_public) continue;
       const members = children.all(id,id).map(child => book.get(child.id));
-      if (!members.length || members.some(child => !child.is_public) || members.reduce((n, child) => n+child.total_sections,0) < 100) continue;
+      if (!members.length || members.some(child => !child.is_public) || members.reduce((n, child) => n+child.total_sections,0) < minimumSections) continue;
       if (members.every(child => completion(userId,child).complete)) earned += award.run(userId,id,'anthology').changes;
     }
     return earned;
@@ -95,15 +99,32 @@ function createRubyCompletionChecker(db) {
   return (userId, bookId) => check.immediate(userId,bookId);
 }
 
+function backfillRubiesForUser(db, userId) {
+  return db.transaction(() => {
+    const check = createRubyCompletionChecker(db);
+    const candidates = db.prepare(`SELECT book_id FROM user_books WHERE user_id=? UNION
+      SELECT CAST(substr(ref,1,instr(ref,':')-1) AS INTEGER) FROM xp_events
+      WHERE user_id=? AND event='visit_node'`).all(userId,userId);
+    let earned = 0;
+    for (const { book_id } of candidates) earned += check(userId,book_id);
+    return earned;
+  }).immediate();
+}
+
 function backfillRubies(db) {
   db.transaction(() => {
-    if (db.prepare("SELECT 1 FROM ruby_migrations WHERE name='completion-v1'").get()) return;
-    const check = createRubyCompletionChecker(db);
-    // Include deleted-library progress preserved in the permanent visits ledger.
-    const candidates = db.prepare(`SELECT user_id,book_id FROM user_books UNION
-      SELECT user_id,CAST(substr(ref,1,instr(ref,':')-1) AS INTEGER) FROM xp_events WHERE event='visit_node'`).all();
-    for (const { user_id,book_id } of candidates) check(user_id,book_id);
-    db.prepare("INSERT INTO ruby_migrations(name) VALUES('completion-v1')").run();
+    if (!db.prepare("SELECT 1 FROM ruby_migrations WHERE name='completion-v1'").get()) {
+      const check = createRubyCompletionChecker(db);
+      // Include deleted-library progress preserved in the permanent visits ledger.
+      const candidates = db.prepare(`SELECT user_id,book_id FROM user_books UNION
+        SELECT user_id,CAST(substr(ref,1,instr(ref,':')-1) AS INTEGER) FROM xp_events WHERE event='visit_node'`).all();
+      for (const { user_id,book_id } of candidates) check(user_id,book_id);
+      db.prepare("INSERT INTO ruby_migrations(name) VALUES('completion-v1')").run();
+    }
+    if (!db.prepare("SELECT 1 FROM ruby_migrations WHERE name='squire-completion-25-v1'").get()) {
+      for (const { id } of db.prepare('SELECT id FROM users WHERE is_squire=1').all()) backfillRubiesForUser(db,id);
+      db.prepare("INSERT INTO ruby_migrations(name) VALUES('squire-completion-25-v1')").run();
+    }
   }).immediate();
 }
 
@@ -121,4 +142,4 @@ function rubyInfoForUser(db, userId) {
   };
 }
 
-module.exports = { initializeRubies, createRubyCompletionChecker, backfillRubies, rubyInfoForUser, hasRubyAccess };
+module.exports = { initializeRubies, createRubyCompletionChecker, backfillRubiesForUser, backfillRubies, rubyInfoForUser, hasRubyAccess };

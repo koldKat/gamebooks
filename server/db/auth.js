@@ -29,7 +29,7 @@ function generateToken() {
 // ── Users ─────────────────────────────────────────────────────────────────────
 
 function getUserById(userId) {
-  return db.prepare('SELECT id, username, email, is_admin, avatar_path, public_profile, hide_from_feed, is_author, is_contributor, is_moderator, pdf_access, display_name FROM users WHERE id = ?').get(userId) || null;
+  return db.prepare('SELECT id, username, email, is_admin, avatar_path, public_profile, hide_from_feed, is_author, is_contributor, is_moderator, is_squire, pdf_access, display_name FROM users WHERE id = ?').get(userId) || null;
 }
 
 function getUserByUsername(username) {

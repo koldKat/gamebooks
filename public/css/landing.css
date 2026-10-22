@@ -1045,6 +1045,11 @@ body.feed-collapsed #feed-panel {
 }
 .notif-item-icon.icon-level { background: #1e3a5f; color: #60a5fa; }
 .notif-item-icon.icon-coin  { background: #3b2a0a; color: #f5a623; }
+.notif-item-icon.icon-diamond { background: #0d3535; color: #5eead4; }
+.notif-item-icon.icon-ruby { background: #421b2a; color: #fb7185; }
+.notif-item-icon.icon-diamond svg, .notif-item-icon.icon-ruby svg { width: 0.9rem; height: 0.9rem; }
+.notif-item-icon.icon-diamond + .notif-item-body strong { color: #5eead4; }
+.notif-item-icon.icon-ruby + .notif-item-body strong { color: #fb7185; }
 .notif-item-icon.icon-role-author      { background: #3b2a0a; color: #f5a623; }
 .notif-item-icon.icon-role-moderator { background: #2e163d; color: #c084fc; }
 .notif-item-icon.icon-role-contributor { background: #0a2a1a; color: #34d399; }

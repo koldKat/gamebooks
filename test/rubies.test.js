@@ -9,7 +9,7 @@ const ruby = require('../server/db/rubies');
 function fixture(t) {
   const db = new Database(':memory:');t.after(()=>db.close());db.pragma('foreign_keys=ON');
   db.exec(`CREATE TABLE users(id INTEGER PRIMARY KEY,username TEXT,is_admin INTEGER DEFAULT 0,xp INTEGER DEFAULT 0,
-    bonus_coins INTEGER DEFAULT 100,coins_spent INTEGER DEFAULT 0,bonus_gc_mint_purchased INTEGER DEFAULT 0);
+    bonus_coins INTEGER DEFAULT 100,coins_spent INTEGER DEFAULT 0,bonus_gc_mint_purchased INTEGER DEFAULT 0,is_squire INTEGER NOT NULL DEFAULT 0);
     INSERT INTO users(id,username,is_admin) VALUES(1,'Admin',1),(17,'Sashii',0),(2,'Player',0);
     CREATE TABLE books(id INTEGER PRIMARY KEY,name TEXT,is_container INTEGER DEFAULT 0,parent_book_id INTEGER,
       total_sections INTEGER DEFAULT 100,discoverable_sections INTEGER,max_section_number INTEGER,is_public INTEGER NOT NULL DEFAULT 1);
@@ -40,6 +40,109 @@ function fixture(t) {
     impersonate:()=>{impersonating=true;},gold:id=>xp.coinBalance(db.prepare('SELECT * FROM users WHERE id=?').get(id))};
 }
 const range=(start,end)=>Array.from({length:end-start+1},(_,i)=>start+i);
+
+test('Squires qualify at 25 sections; other players still need 100 and current role is read on every check',t=>{
+  const f=fixture(t);
+  for(const total of [24,25,99,100]){
+    f.addBook(total,total);
+    for(const user of [2,17]) f.save(user,total,[range(1,total)]);
+  }
+  f.db.exec('UPDATE users SET is_squire=1 WHERE id=17');
+  for(const total of [24,25,99,100]){
+    assert.equal(f.check(17,total),total>=25?1:0);
+    assert.equal(f.check(2,total),total>=100?1:0);
+  }
+  f.db.exec('UPDATE users SET is_squire=1 WHERE id=2');
+  assert.equal(f.check(2,25),1);
+  f.db.exec('UPDATE users SET is_squire=0 WHERE id=2');
+  assert.equal(f.check(2,99),0);assert.equal(f.check(2,25),0);
+  assert.equal(f.wallet(2).rubies_earned,2);
+  assert.equal(f.check(999,100),0);
+});
+
+test('Squire anthologies need 25 combined sections, every member visited and public, with independent child rewards',t=>{
+  const f=fixture(t);f.db.exec('UPDATE users SET is_squire=1 WHERE id=17');
+  f.addBook(20,0,null,1);f.addBook(21,12,20);f.addBook(22,13);
+  f.db.exec('INSERT INTO book_anthology_memberships VALUES(21,20),(22,20)');
+  f.save(17,21,[range(1,12)]);f.save(17,22,[range(1,12)]);
+  assert.equal(f.check(17,20),0);
+  f.save(17,22,[range(1,13)]);
+  for(const id of [20,21,22]){
+    f.db.prepare('UPDATE books SET is_public=0 WHERE id=?').run(id);
+    assert.equal(f.check(17,20),0);
+    f.db.prepare('UPDATE books SET is_public=1 WHERE id=?').run(id);
+  }
+  assert.equal(f.check(17,22),1);assert.equal(f.check(17,20),0);
+  f.addBook(30,0,null,1);f.addBook(31,24,30);f.save(17,31,[range(1,24)]);
+  assert.equal(f.check(17,30),0);
+  f.addBook(40,0,null,1);f.addBook(41,25,40);f.save(17,41,[range(1,25)]);
+  assert.equal(f.check(17,41),2);
+  assert.equal(f.wallet(17).rubies_earned,3);
+});
+
+test('Squire migration backfills existing accounts once, preserves sold rewards and player data, and counts shared stock',t=>{
+  const f=fixture(t);
+  f.db.exec("INSERT INTO ruby_migrations VALUES('completion-v1'); UPDATE users SET is_squire=1 WHERE id=17");
+  f.addBook(100);f.save(17,100,[range(1,100)]);assert.equal(f.check(17,100),1);
+  f.exchange(17,1,'existing-ruby-sale',3);
+  const visits=f.db.prepare("INSERT INTO xp_events VALUES(17,'visit_node',?)");
+  for(let book=1;book<=9;book++){
+    f.addBook(book,25);
+    // Include both saved progress and permanent visits after a library removal.
+    if(book%2) f.save(17,book,[range(1,12),range(13,25)],{notes:'keep',inventory:[{id:'original'}]});
+    else for(const n of range(1,25)) visits.run(`${book}:${n}`);
+    f.save(2,book,[range(1,25)]);
+  }
+  f.addBook(200,25);f.save(17,200,[range(1,25)]);f.db.exec('UPDATE books SET is_public=0 WHERE id=200');
+  const snapshot=table=>f.db.prepare('SELECT * FROM '+table+' ORDER BY rowid').all();
+  const preserved=Object.fromEntries(['users','user_books','xp_events','coin_events','ruby_exchanges','notifications'].map(table=>[table,snapshot(table)]));
+  ruby.backfillRubies(f.db);ruby.backfillRubies(f.db);
+  assert.equal(f.wallet(17).rubies_earned,10);assert.equal(f.wallet(17).rubies_spent,1);
+  assert.equal(f.wallet(2),undefined);
+  assert.deepEqual(f.db.prepare('SELECT * FROM ruby_market').get(),{id:1,rubies:2,completions:10,rubies_generated:1});
+  for(const [table,rows] of Object.entries(preserved)) assert.deepEqual(snapshot(table),rows,table);
+  assert.equal(ruby.backfillRubiesForUser(f.db,17),0);
+  f.db.exec('UPDATE books SET is_public=1 WHERE id=200');
+  assert.equal(ruby.backfillRubiesForUser(f.db,17),1);
+  assert.equal(ruby.backfillRubiesForUser(f.db,17),0);
+});
+
+test('Squire small-book rewards still require the canonical visited IDs and a failed backfill rolls back entirely',t=>{
+  const f=fixture(t);f.db.exec('UPDATE users SET is_squire=1 WHERE id=17');
+  f.addBook(1,25);f.db.exec('UPDATE books SET max_section_number=50 WHERE id=1');
+  const insert=f.db.prepare('INSERT INTO book_sections VALUES(1,?)');
+  for(const n of range(1,25)) insert.run(String(n*2));
+  f.save(17,1,[range(1,25)]);assert.equal(f.check(17,1),0);
+  f.save(17,1,[range(1,25).map(n=>n*2)]);
+  f.db.exec("CREATE TRIGGER fail_stock BEFORE UPDATE ON ruby_market BEGIN SELECT RAISE(ABORT,'stock failed'); END");
+  assert.throws(()=>ruby.backfillRubies(f.db),/stock failed/);
+  assert.equal(f.wallet(17),undefined);assert.equal(f.db.prepare('SELECT COUNT(*) n FROM ruby_migrations').get().n,0);
+  f.db.exec('DROP TRIGGER fail_stock');ruby.backfillRubies(f.db);assert.equal(f.wallet(17).rubies_earned,1);
+});
+
+test('admin Squire assignment retroactively rewards past completions atomically, once, without revoking on removal',t=>{
+  const f=fixture(t);f.addBook(25,25);f.save(17,25,[range(1,25)]);
+  const context=vm.createContext({module:{exports:{}},require(name){
+    if(name==='./connection')return {db:f.db};
+    if(name==='./xp')return {_insertNotif:f.db.prepare('INSERT INTO notifications VALUES(?,?,?)')};
+    if(name==='./squires')return require('../server/db/squires');
+    if(name==='./rubies')return ruby;
+    return {};
+  }});
+  vm.runInContext(fs.readFileSync(require.resolve('../server/db/feed'),'utf8'),context);
+  f.db.exec("CREATE TRIGGER fail_reward BEFORE INSERT ON ruby_rewards BEGIN SELECT RAISE(ABORT,'reward failed'); END");
+  assert.throws(()=>context.module.exports.setSquire(17,true),/reward failed/);
+  assert.equal(f.db.prepare('SELECT is_squire FROM users WHERE id=17').get().is_squire,0);
+  assert.equal(f.db.prepare('SELECT COUNT(*) n FROM notifications').get().n,0);
+  f.db.exec('DROP TRIGGER fail_reward');
+  assert.equal(context.module.exports.setSquire(17,true),true);
+  assert.equal(f.wallet(17).rubies_earned,1);
+  assert.equal(context.module.exports.setSquire(17,true),true);
+  assert.equal(f.wallet(17).rubies_earned,1);
+  assert.equal(f.db.prepare('SELECT COUNT(*) n FROM notifications').get().n,1);
+  assert.equal(context.module.exports.setSquire(17,false),true);
+  assert.equal(f.wallet(17).rubies_earned,1);
+});
 
 test('private books cannot earn rubies; publishing permits one reward and unpublishing preserves it',t=>{
   const f=fixture(t);f.addBook(10);f.save(2,10,[range(1,100)]);

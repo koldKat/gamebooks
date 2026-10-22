@@ -23,6 +23,7 @@ db.exec(`
 `);
 
 // Migrations
+require('./db/squires').initializeSquireRole(db);
 try { db.exec('ALTER TABLE users ADD COLUMN is_moderator INTEGER NOT NULL DEFAULT 0'); } catch (_) {}
 try { db.exec(`ALTER TABLE users ADD COLUMN avatar_path    TEXT    DEFAULT NULL`);             } catch (_) {}
 try { db.exec(`ALTER TABLE users ADD COLUMN xp             INTEGER NOT NULL DEFAULT 0`);       } catch (_) {}
@@ -877,7 +878,7 @@ const {
 const {
   getFeed,
   getFeedVersion,
-  setPublicProfile, setHideFromFeed, setAuthor, setContributor, setModerator, setPdfAccess, setDisplayName,
+  setPublicProfile, setHideFromFeed, setAuthor, setContributor, setModerator, setSquire, setPdfAccess, setDisplayName,
   getPublicProfile, getProfileStats,
   getPublicCovers, getBooksForSitemap, getAnthologiesForSitemap, getSeriesForSitemap, getPublicProfilesForSitemap,
   getPublicBookMeta, getAllPublicBooks, getPublicBooksInSeries, getAllPublicSeries, getAllPublicAnthologies,
@@ -959,7 +960,7 @@ module.exports = {
   getShopItems, setShopItemCost,
   getFeed,
   getFeedVersion,
-  setPublicProfile, setHideFromFeed, setAuthor, setContributor, setModerator, setPdfAccess, setDisplayName, adminUpdateUser, getPublicProfile, getProfileStats, getPublicRun, getPublicSeriesRun, getPublicCovers, getAllPublicBooks, getAllPublicSeries, getAllPublicAnthologies, getPublicBooksInSeries, getBookActivity, getPublicBookMeta, getPublicSeriesInfo, getBooksForSitemap, getAnthologiesForSitemap, getSeriesForSitemap, getPublicProfilesForSitemap,
+  setPublicProfile, setHideFromFeed, setAuthor, setContributor, setModerator, setSquire, setPdfAccess, setDisplayName, adminUpdateUser, getPublicProfile, getProfileStats, getPublicRun, getPublicSeriesRun, getPublicCovers, getAllPublicBooks, getAllPublicSeries, getAllPublicAnthologies, getPublicBooksInSeries, getBookActivity, getPublicBookMeta, getPublicSeriesInfo, getBooksForSitemap, getAnthologiesForSitemap, getSeriesForSitemap, getPublicProfilesForSitemap,
   getBookRating, setBookRating, getSeriesRating, setSeriesRating, canUserRateBook, canUserRateSeries, setBookBgPref, getBookBgPref,
   awardXp, awardCoins, awardIdleHeartbeatXp, getUserXpInfo, claimBonusGc, processStateXp, runXpMigration, migratePublicBookXp, migrateEquipmentXp, setXpFeedHook, setAppXpHook,
   getXpAmount, getXpConfig, setXpAmount,
@@ -998,4 +999,5 @@ module.exports = {
 
 // Run after catalog, reading and XP migrations. The backfill is transactional and runs once.
 require('./db/rubies').initializeRubies(db);
+require('./db/gem-notifications').initializeGemNotifications(db);
 require('./db/rubies').backfillRubies(db);

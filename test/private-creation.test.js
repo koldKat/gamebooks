@@ -10,7 +10,7 @@ function setup() {
   const deletedFiles = [];
   const db = new Database(':memory:');
   db.pragma('foreign_keys = ON');
-  db.exec(`CREATE TABLE users (id INTEGER PRIMARY KEY, username TEXT, avatar_path TEXT, public_profile INTEGER, is_moderator INTEGER DEFAULT 0);
+  db.exec(`CREATE TABLE users (id INTEGER PRIMARY KEY, username TEXT, avatar_path TEXT, public_profile INTEGER, is_moderator INTEGER DEFAULT 0, is_squire INTEGER DEFAULT 0);
     INSERT INTO users (id,username) VALUES (1,'Owner'),(2,'Other');
     CREATE TABLE series (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE,
       description TEXT, created_by INTEGER REFERENCES users(id), created_at INTEGER DEFAULT 0,

@@ -7,6 +7,7 @@ let _adminUsername  = null;
 const _authorMap    = {};
 const _contributorSet = new Set();
 const _moderatorSet = new Set();
+const _squireSet = new Set();
 
 export function setAdminUsername(name) {
   _adminUsername = name || null;
@@ -66,3 +67,12 @@ export function registerModerator(username, isModerator) {
   else _moderatorSet.delete(username);
 }
 export function resolveIsModerator() { return _moderatorSet.has(getUsername()); }
+
+export function squireBadge(username) {
+  return _squireSet.has(username) ? renderRoleBadge('squire') : '';
+}
+export function registerSquire(username, isSquire) {
+  if (isSquire) _squireSet.add(username);
+  else _squireSet.delete(username);
+}
+export function resolveIsSquire() { return _squireSet.has(getUsername()); }

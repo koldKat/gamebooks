@@ -165,7 +165,7 @@ const {
   handleAdminUnlockUser,
   handleAdminUpdateUser,
   handleAdminSetAuthor,
-  handleAdminSetContributor, handleAdminSetModerator,
+  handleAdminSetContributor, handleAdminSetModerator, handleAdminSetSquire,
   handleAdminSetPdfAccess,
   handleAdminImpersonate,
   handleImpersonateRedirect,
@@ -530,6 +530,7 @@ const _routeRequest = async (req, res) => {
     if ((m = urlPath.match(/^\/api\/admin\/users\/(\d+)\/edit$/))        && method === 'POST') return await handleAdminUpdateUser(req, res, +m[1]);
     if ((m = urlPath.match(/^\/api\/admin\/users\/(\d+)\/author$/))      && method === 'POST') return await handleAdminSetAuthor(req, res, +m[1]);
     if ((m = urlPath.match(/^\/api\/admin\/users\/(\d+)\/moderator$/)) && method === 'POST') return await handleAdminSetModerator(req, res, +m[1]);
+    if ((m = urlPath.match(/^\/api\/admin\/users\/(\d+)\/squire$/)) && method === 'POST') return await handleAdminSetSquire(req, res, +m[1]);
     if ((m = urlPath.match(/^\/api\/admin\/users\/(\d+)\/contributor$/)) && method === 'POST') return await handleAdminSetContributor(req, res, +m[1]);
     if ((m = urlPath.match(/^\/api\/admin\/users\/(\d+)\/pdf-access$/))  && method === 'POST') return await handleAdminSetPdfAccess(req, res, +m[1]);
     if ((m = urlPath.match(adminUserImpersonateRe)) && method === 'POST') return await handleAdminImpersonate(req, res, +m[1]);

@@ -133,6 +133,16 @@ async function handleAdminSetAuthor(req, res, userId) {
   send(res, 200, { ok: true });
 }
 
+async function handleAdminSetSquire(req, res, userId) {
+  if (!requireLocalhost(req, res)) return;
+  const { isSquire } = await readBody(req);
+  if (typeof isSquire !== 'boolean') return send(res, 400, { error: 'isSquire must be a boolean' });
+  if (!db.setSquire(userId, isSquire)) return send(res, 404, { error: 'Not found' });
+  userBadgePush(userId);
+  feedPush({ type: 'feed_changed', entity: 'user', action: 'role', id: userId });
+  send(res, 200, { ok: true });
+}
+
 async function handleAdminSetModerator(req, res, userId) {
   if (!requireLocalhost(req, res)) return;
   const { isModerator } = await readBody(req);
@@ -540,7 +550,7 @@ module.exports = {
   handleAdminUnlockUser,
   handleAdminUpdateUser,
   handleAdminSetAuthor,
-  handleAdminSetContributor, handleAdminSetModerator,
+  handleAdminSetContributor, handleAdminSetModerator, handleAdminSetSquire,
   handleAdminSetPdfAccess,
   handleAdminImpersonate,
   handleImpersonateRedirect,

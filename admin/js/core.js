@@ -425,3 +425,5 @@ export function renderPaginationControls(tableId, page, totalPages, total, onCha
 }
 
 export function moderatorBadge(value) { return value ? renderRoleBadge('moderator') : ''; }
+
+export function squireBadge(value) { return value ? renderRoleBadge('squire') : ''; }

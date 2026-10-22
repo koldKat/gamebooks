@@ -5,6 +5,7 @@ const roles = {
   author: { label: 'Fateweaver', path: star },
   contributor: { label: 'Pathmaker', path: 'M10 0C11.5 7 13 8.5 20 10C13 11.5 11.5 13 10 20C8.5 13 7 11.5 0 10C7 8.5 8.5 7 10 0Z' },
   moderator: { label: 'Lorekeeper', path: 'M10 0L20 10L10 20L0 10Z' },
+  squire: { label: 'Squire', path: 'M10 0L18 3V9C18 14 14 18 10 20C6 18 2 14 2 9V3Z' },
 };
 
 export function renderRoleBadge(role) {

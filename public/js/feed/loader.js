@@ -113,7 +113,11 @@ async function _loadFeedImpl(token, generation) {
       _hooks.registerAuthor?.(e.username, !!e.isAuthor, e.displayName);
       _hooks.registerContributor?.(e.username, !!e.isContributor);
       _hooks.registerModerator?.(e.username, !!e.isModerator);
-      for (const member of (e.usernames || [])) _hooks.registerModerator?.(member.username, !!member.isModerator);
+      _hooks.registerSquire?.(e.username, !!e.isSquire);
+      for (const member of (e.usernames || [])) {
+        _hooks.registerModerator?.(member.username, !!member.isModerator);
+        _hooks.registerSquire?.(member.username, !!member.isSquire);
+      }
     }
 
     _cachedFeed = { entries, pinned, token };

@@ -3,6 +3,8 @@
 import { getToken, apiFetch } from '../core/state.js';
 import { t } from '../i18n.js';
 import { escapeHtml } from '../core/util.js';
+import { DIAMOND_SVG } from '../progression/diamonds.js';
+import { RUBY_SVG } from '../progression/rubies.js';
 
 let _hooks = {};
 export function setNotifHooks(h) { _hooks = h || {}; }
@@ -168,6 +170,12 @@ export function _openNotifDropdown(btn, data) {
           const reasonLabel = coinReasonMap[n.payload.reason] || '';
           text = `Earned <strong>${amt} Gold Coin${amt !== 1 ? 's' : ''}</strong>${reasonLabel ? ` <span style="color:#9ca3af;font-weight:normal">· ${reasonLabel}</span>` : ''}`;
         }
+      } else if (n.type === 'diamond_gain' || n.type === 'ruby_gain') {
+        const ruby = n.type === 'ruby_gain';
+        const amount = n.payload.amount;
+        iconClass = ruby ? 'icon-ruby' : 'icon-diamond';
+        iconChar = ruby ? RUBY_SVG : DIAMOND_SVG;
+        text = `Earned <strong>${escapeHtml(String(amount))} ${ruby ? (amount === 1 ? 'Ruby' : 'Rubies') : (amount === 1 ? 'Diamond' : 'Diamonds')}</strong>`;
       } else if (n.type === 'gc_gift') {
         iconClass = 'icon-coin'; iconChar = '◉';
         const amt = n.payload.amount;
@@ -176,7 +184,7 @@ export function _openNotifDropdown(btn, data) {
       } else if (n.type === 'role_assigned') {
         iconClass = n.payload.role === 'moderator' ? 'icon-role-moderator' : n.payload.role === 'contributor' ? 'icon-role-contributor' : 'icon-role-author';
         iconChar  = n.payload.role === 'moderator' ? '◆' : n.payload.role === 'contributor' ? '✦' : '★';
-        const roleName = { admin: 'Gamemaster', moderator: 'Lorekeeper', contributor: 'Pathmaker', author: 'Fateweaver' }[n.payload.role] || n.payload.label || '';
+        const roleName = { admin: 'Gamemaster', moderator: 'Lorekeeper', squire: 'Squire', contributor: 'Pathmaker', author: 'Fateweaver' }[n.payload.role] || n.payload.label || '';
         text = `You have been designated as <strong>${escapeHtml(roleName)}</strong>`;
       }
       const unseen = !n.seen;
