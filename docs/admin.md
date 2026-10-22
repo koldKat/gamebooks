@@ -32,7 +32,7 @@ The top of the panel groups aggregate metrics into six compact panels:
 
 | Group | What it shows |
 |-------|---------------|
-| **Players** | Registered accounts, players active in the last five minutes and 24 hours, accounts created in seven days, and unexpired sign-in sessions excluding impersonation. A player can have several sessions. |
+| **Players** | Registered accounts, players active in the last five minutes, one hour and 24 hours, accounts created in seven days, and unexpired sign-in sessions excluding impersonation. A player can have several sessions. |
 | **Catalog** | Standalone and all playable books (including anthology children), anthologies, series, attached PDFs/EPUBs, books with live reading, catalog sections and battle simulators. |
 | **Activity** | Mapped/discovered nodes, active/total runs, finished/shared runs, run wins/losses, simulator battles won/lost, total simulator battles and win rate. Node totals use the most-mapped player copy of each book; runs and simulator battles count started runs across players. |
 | **Gold & coins** | Lifetime gold earned, available and spent, shop upgrades, Gamemaster supply/remaining coins, Lucky Coins generated/claimed, and current bronze/silver balances. |

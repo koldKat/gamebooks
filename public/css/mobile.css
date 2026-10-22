@@ -201,7 +201,7 @@
     font-size: clamp(0.55rem, 2.3vw, 0.75rem);
     white-space: nowrap;
   }
-  #app-banner-btns  { grid-column: 1 / -1; flex-wrap: nowrap; gap: 0.3rem; justify-content: flex-start; }
+  #app-banner-btns  { grid-column: 1 / -1; flex-wrap: nowrap; gap: 0.2rem; justify-content: flex-start; }
   #app-banner-tools { display: contents; }
   #app-banner-community {
     position: fixed;
@@ -229,6 +229,24 @@
     border-radius: 6px;
   }
   #app-banner-tools > button { flex-basis: 30px; height: 30px; }
+  #app-banner-btns :is(#bonus-gc-btn, #notif-btn, #display-settings-btn, #profile-btn) {
+    flex: 0 0 30px;
+    width: 30px;
+    min-width: 30px;
+    height: 30px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+  }
+  #app-banner-btns #profile-btn { background: #111827; border: 1px solid #374151; }
+  #app-banner-btns #bonus-gc-btn { margin-left: auto; }
+  #app-banner-btns #bonus-gc-btn svg { width: 18px; height: 18px; }
+  #app-banner-btns #profile-avatar { width: 22px; height: 22px; border-width: 1px; }
+  body.mobile-auth #app-banner-btns #profile-btn,
+  body.guest-browsing #app-banner-btns #profile-btn { display: none; }
+  #app-banner-btns :is(#mobile-addbook-btn, #mobile-books-btn) { padding-inline: 0.2rem; }
   #app-banner-community > :is(button, a) { width: 36px; flex-shrink: 0; }
   #app-banner-tools :is(button, a):focus-visible {
     outline: 2px solid #c8894a;
