@@ -28,7 +28,7 @@ test('player and admin badges show only the gamebook role names', () => {
 test('historical role notifications render current names instead of stored legacy labels', () => {
   const elements = new Map();
   const getElementById = id => {
-    if (!elements.has(id)) elements.set(id, { style: {}, innerHTML: '', classList: { remove() {} } });
+    if (!elements.has(id)) elements.set(id, { style: {}, innerHTML: '', classList: { remove() {} }, getBoundingClientRect: () => ({ width: 340 }) });
     return elements.get(id);
   };
   const context = vm.createContext({ document: { getElementById }, window: { innerWidth: 1000 },

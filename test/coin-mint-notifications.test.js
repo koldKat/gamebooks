@@ -134,7 +134,7 @@ test('notification names the Coin Mint bonus and handles singular and plural coi
   const strings = vm.createContext({});
   vm.runInContext(fs.readFileSync('public/js/i18n/en/community.js', 'utf8').replace('export default', 'globalThis.table ='), strings);
   for (const amount of [1, 2]) {
-    const elements = new Map(['notif-dropdown', 'notif-list', 'notif-empty'].map(id => [id, { style: {}, innerHTML: '' }]));
+    const elements = new Map(['notif-dropdown', 'notif-list', 'notif-empty'].map(id => [id, { style: {}, innerHTML: '', getBoundingClientRect: () => ({ width: 340 }) }]));
     const context = vm.createContext({ document: { getElementById: id => elements.get(id) }, window: { innerWidth: 1000 },
       escapeHtml: s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'),
       t: (key, params = {}) => strings.table[key].replace(/\{(\w+)\}/g, (_, k) => params[k] ?? `{${k}}`) });
