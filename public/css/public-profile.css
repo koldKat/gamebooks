@@ -339,6 +339,19 @@
   flex-shrink: 0;
 }
 
+.series-modal-covers {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.series-modal-covers .book-modal-cover {
+  width: min(105px, calc((100% - 1.5rem) / 4));
+  aspect-ratio: 2 / 3;
+  object-fit: contain;
+}
+
 .book-modal-cover-badges {
   display: flex;
   align-items: center;

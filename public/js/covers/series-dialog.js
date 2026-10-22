@@ -17,7 +17,16 @@ export function renderSeriesActivity(data) {
   const userLoggedIn  = !!getToken();
   const userHasSeries = userLoggedIn && coversState._hooks.getCachedAllSeries?.()?.some(s => s.id === data.id);
 
-  let html = '<div class="book-modal-header"><div class="book-modal-meta">';
+  const coverBooks = data.books.filter(book => book.coverUrl);
+  const coverCount = Math.min(4, coverBooks.length);
+  for (let i = 0; i < coverCount; i++) {
+    const pick = i + Math.floor(Math.random() * (coverBooks.length - i));
+    [coverBooks[i], coverBooks[pick]] = [coverBooks[pick], coverBooks[i]];
+  }
+  let html = coverCount ? '<div class="series-modal-covers">' + coverBooks.slice(0, coverCount).map(book =>
+    `<img class="book-modal-cover" src="${escapeHtml(book.coverUrl)}" alt="${escapeHtml(book.name)}" decoding="async">`
+  ).join('') + '</div>' : '';
+  html += '<div class="book-modal-header"><div class="book-modal-meta">';
   if (data.description) html += `<div class="book-modal-description">${escapeHtml(data.description)}</div>`;
   html += `<div class="book-modal-sections">${data.books.length} ${data.books.length === 1 ? 'book' : 'books'} in series</div>`;
   html += `<div class="star-rating" id="series-star-widget" data-series-id="${data.id}">`;
