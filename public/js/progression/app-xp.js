@@ -3,6 +3,7 @@
 
 import { apiFetch, getToken } from '../core/state.js';
 import { COIN_SVG } from './shop.js';
+import { RUBY_SVG } from './rubies.js';
 import { DIAMOND_SVG } from './diamonds.js';
 import { escapeHtml } from '../core/util.js';
 import { t } from '../i18n.js';
@@ -256,18 +257,20 @@ export function handleAppXpEvent(payload) {
   const xpDelta    = Math.max(0, Math.round(Number(payload.xpDelta) || 0));
   const coinDelta  = Math.max(0, Math.round(Number(payload.coinDelta) || 0));
   const diamondDelta = Math.max(0, Math.round(Number(payload.diamondDelta) || 0));
-  if (xpDelta <= 0 && coinDelta <= 0 && diamondDelta <= 0) return;
+  const rubyDelta = Math.max(0, Math.round(Number(payload.rubyDelta) || 0));
+  if (xpDelta <= 0 && coinDelta <= 0 && diamondDelta <= 0 && rubyDelta <= 0) return;
 
-  const accum = _appRewardAccum.get(rawUsername) || { xp: 0, coins: 0, diamonds: 0 };
+  const accum = _appRewardAccum.get(rawUsername) || { xp: 0, coins: 0, diamonds: 0, rubies: 0 };
   accum.xp    += xpDelta;
   accum.coins += coinDelta;
   accum.diamonds += diamondDelta;
+  accum.rubies += rubyDelta;
   _appRewardAccum.set(rawUsername, accum);
 
   if (_appRewardFlushTimers.has(rawUsername)) return;
   _appRewardFlushTimers.set(rawUsername, setTimeout(() => {
     _appRewardFlushTimers.delete(rawUsername);
-    const { xp, coins, diamonds } = _appRewardAccum.get(rawUsername) || { xp: 0, coins: 0, diamonds: 0 };
+    const { xp, coins, diamonds, rubies } = _appRewardAccum.get(rawUsername) || { xp: 0, coins: 0, diamonds: 0, rubies: 0 };
     _appRewardAccum.delete(rawUsername);
     // Recheck visibility and permissions when the delayed floater spawns.
     if (!_hooks.getIsAdmin?.() || !(_isBooksScreenVisible() || _isMainScreenVisible())) return;
@@ -276,6 +279,9 @@ export function handleAppXpEvent(payload) {
     }
     if (coins > 0) {
       _spawnAppRewardFloater('coins', `${COIN_SVG}<span>+${coins.toLocaleString()}</span><span class="app-reward-float-sep">-</span><span class="app-reward-float-user">${username}</span>`);
+    }
+    if (rubies > 0) {
+      _spawnAppRewardFloater('rubies', `${RUBY_SVG}<span>+${rubies.toLocaleString()}</span><span class="app-reward-float-sep">-</span><span class="app-reward-float-user">${username}</span>`);
     }
     if (diamonds > 0) {
       _spawnAppRewardFloater('diamonds', `${DIAMOND_SVG}<span>+${diamonds.toLocaleString()}</span><span class="app-reward-float-sep">-</span><span class="app-reward-float-user">${username}</span>`);

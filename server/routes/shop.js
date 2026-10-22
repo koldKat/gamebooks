@@ -3,6 +3,7 @@
 // Shop route handler: XP-boost/undo/fast-travel/heartbeat-XP purchases.
 
 const db = require('../db');
+const { exchangeRubies } = require('../db/ruby-exchange');
 const { exchangeDiamonds } = require('../db/diamond-exchange');
 const { userBadgePush } = require('../sse');
 const { authenticate, send, readBody } = require('../request-helpers');
@@ -71,4 +72,34 @@ async function handleDiamondExchange(req, res) {
   userBadgePush(userId);
 }
 
-module.exports = { handleShopPurchase, handleClaimBonusGc, handleDiamondExchange };
+async function handleRubyExchange(req, res) {
+  const userId = await authenticate(req, res);
+  if (userId === null) return;
+  const { amount, requestId, expectedRate, direction } = await readBody(req);
+  let result;
+  try {
+    result = exchangeRubies(userId, amount, requestId, expectedRate, direction);
+  } catch (error) {
+    if (!/^SQLITE_BUSY(?:_|$)/.test(error.code || '')) throw error;
+    res.setHeader('Retry-After', '2');
+    return send(res, 503, { error: 'The exchange is busy. Please try again in a moment.' });
+  }
+  if (result.error) {
+    const messages = {
+      unavailable: 'Not available', invalid_amount: 'Enter a whole number of rubies.',
+      invalid_request: 'Invalid exchange request.', not_found: 'Not found',
+      insufficient_rubies: 'Not enough rubies. Your balance has been refreshed.',
+      insufficient_coins: 'Not enough gold coins. Your balance has been refreshed.',
+      insufficient_stock: 'Not enough rubies available to buy. The available stock has been refreshed.',
+      rate_changed: 'Your exchange rate changed. Check the updated amount and try again.',
+    };
+    return send(res, result.error === 'unavailable' ? 403 : 400, {
+      error: messages[result.error],
+      ...(['rate_changed','insufficient_rubies','insufficient_coins','insufficient_stock'].includes(result.error) ? { profile: db.getUserXpInfo(userId) } : {}),
+    });
+  }
+  send(res, 200, { ...result, ...db.getUserXpInfo(userId) });
+  userBadgePush(userId);
+}
+
+module.exports = { handleShopPurchase, handleClaimBonusGc, handleDiamondExchange, handleRubyExchange };

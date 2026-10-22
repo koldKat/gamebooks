@@ -76,7 +76,7 @@ test('reward snapshots expose diamonds to every player using primary-key lookups
   require('../server/db/heartbeat-coins').initializeHeartbeatCoins(h.db);
   const context = vm.createContext({
     db: { prepare(sql) { queries.push(sql); return h.db.prepare(sql); } },
-    userXpInfoFromRow: () => ({ coinsBalance: 7, level: 0 }), diamondInfoForUser,
+    userXpInfoFromRow: () => ({ coinsBalance: 7, level: 0 }), diamondInfoForUser, rubyInfoForUser: () => ({}),
   });
   const source = fs.readFileSync(require.resolve('../server/db/xp'), 'utf8');
   vm.runInContext(source.slice(source.indexOf('function getUserXpInfo('), source.indexOf('// Admin lists use')), context);

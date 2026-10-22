@@ -87,7 +87,7 @@ tbody tr:hover { background: rgba(31,41,55,0.65); }
 .admin-editor-header { padding: 0.6rem 0.75rem; }
 .admin-editor-body { padding: 0.75rem; }
 .admin-editor-actions { background: #1f2937; bottom: -0.75rem; padding: 0.5rem 0; }
-#admin-tooltip { max-width: min(360px, calc(100vw - 24px)); white-space: normal; overflow-wrap: anywhere; }
+#admin-tooltip { width: max-content; max-width: min(360px, calc(100vw - 24px)); white-space: normal; overflow-wrap: anywhere; }
 .xp-config-stepper input { border-radius: 0 !important; padding: 0.2rem !important; }
 .xp-config-stepper .btn { min-height: var(--admin-control-height); }
 /* Joined stepper buttons keep square inner edges beside their input. */

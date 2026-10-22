@@ -31,6 +31,7 @@ function fixture(t) {
     INSERT INTO books (id,total_sections,is_container) VALUES (2,999,1);
     INSERT INTO books (id,total_sections,parent_book_id) VALUES (3,200,2);
   `);
+  db.exec('CREATE TABLE user_rubies(rubies_earned INTEGER,rubies_bought INTEGER,rubies_spent INTEGER); CREATE TABLE ruby_market(id INTEGER,rubies INTEGER,rubies_generated INTEGER,completions INTEGER); INSERT INTO ruby_market VALUES(1,0,0,0)');
   const source = fs.readFileSync(require.resolve('../server/db/admin'), 'utf8');
   const xp = fs.readFileSync(require.resolve('../server/db/xp'), 'utf8');
   const keys = vm.runInNewContext(xp.slice(xp.indexOf('const SIM_HISTORY_KEYS ='), xp.indexOf('function processStateXp(')) + '\n({SIM_HISTORY_KEYS,RETIRED_SIM_HISTORY_KEYS})');

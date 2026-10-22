@@ -37,6 +37,7 @@ The top of the panel groups aggregate metrics into six compact panels:
 | **Activity** | Mapped/discovered nodes, active/total runs, finished/shared runs, run wins/losses, simulator battles won/lost, total simulator battles and win rate. Node totals use the most-mapped player copy of each book; runs and simulator battles count started runs across players. |
 | **Gold & coins** | Lifetime gold earned, available and spent, shop upgrades, Gamemaster supply/remaining coins, Lucky Coins generated/claimed, and current bronze/silver balances. |
 | **Diamonds** | Lifetime earned diamonds, player balances, sold/bought totals, diamonds earned from Lucky Coin claims, shared market stock and lifetime app-mined diamonds. Mining and Lucky Coin rewards count as earned; purchases count separately. |
+| **Rubies** | Completion rewards and player balances, sold/bought totals, shared stock, app-generated supply and the current GC exchange rate. Account details show the latest 20 completion rewards and trades. |
 | **Server** | Application/database sizes, used/allocated heap, process memory, CPU, incoming/outgoing traffic, current process uptime, lifetime uptime/downtime and app age. The Vacuum button retains its confirmation. |
 
 Labels and numeric columns align within each group, with tabular digits and currency colors. Wide screens place server metrics in a full-width strip; narrower screens use fewer columns. Statistics refresh in place without replacing the panels.

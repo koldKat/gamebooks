@@ -31,7 +31,7 @@ export async function saveRewardCache(data) {
   try {
     const auth = await digest(token);
     if (getToken() !== token) return;
-    const value = Object.fromEntries(Object.entries(data).filter(([key]) => fields.has(key) || key.startsWith('diamond')));
+    const value = Object.fromEntries(Object.entries(data).filter(([key]) => fields.has(key) || key.startsWith('diamond') || key.startsWith('rub')));
     sessionStorage.setItem(KEY, JSON.stringify({ auth, value }));
   } catch (_) {}
 }

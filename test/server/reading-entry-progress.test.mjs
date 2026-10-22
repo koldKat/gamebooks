@@ -25,6 +25,7 @@ test('unnumbered entry cannot award node XP or trigger an early completion miles
     awardCoins: (_user, event, ref) => coins.push([event, ref]),
     _checkGroupMilestone() {}, SIM_HISTORY_KEYS: [], _xpRefSeq: 0,
     _permanentVisitedCount: () => 0,
+    isImpersonatingContext: () => false, createRubyCompletionChecker: () => () => 0, _rubyCompletionChecker: null,
   };
   runInNewContext(helpers, context);
   runInNewContext(source.slice(source.indexOf('function processStateXp('), source.indexOf('function migrateXpForUser(')), context);

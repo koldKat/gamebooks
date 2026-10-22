@@ -7,6 +7,8 @@ const { generateToken } = require('./auth');
 const { isImpersonatingContext } = require('../impersonation-context');
 const { isCleanRun } = require('../clean-run');
 const { diamondInfoForUser } = require('./diamonds');
+const { rubyInfoForUser, createRubyCompletionChecker } = require('./rubies');
+let _rubyCompletionChecker;
 const { advanceHeartbeatCoins } = require('./heartbeat-coins');
 
 // ── Impersonation tokens ──────────────────────────────────────────────────────
@@ -460,7 +462,7 @@ function getUserXpInfo(userId) {
   const info = userXpInfoFromRow(row, bonusGcClaimed);
   const heartbeats = row?.heartbeat_count || 0;
   return { ...info, bronzeBalance: heartbeats % 100, silverBalance: Math.floor(heartbeats / 100) % 100,
-    heartbeatGoldEarned: Math.floor(heartbeats / 10000), ...diamondInfoForUser(userId, row, info.level) };
+    heartbeatGoldEarned: Math.floor(heartbeats / 10000), ...diamondInfoForUser(userId, row, info.level), ...rubyInfoForUser(db, userId) };
 }
 
 // Admin lists use the same calculations with two queries for the whole user set.
@@ -673,7 +675,7 @@ const RETIRED_SIM_HISTORY_KEYS = ['sim758', 'sim2116'];
 
 function processStateXp(userId, bookId, oldState, newState, totalSections) {
   // Use discoverable_sections as the effective ceiling if set, else fall back to totalSections
-  const bookRow = db.prepare(`SELECT b.discoverable_sections, b.series_id, b.parent_book_id,
+  const bookRow = db.prepare(`SELECT b.total_sections, b.discoverable_sections, b.series_id, b.parent_book_id,
     CASE WHEN e.counts_as_section = 0 THEN e.section_id END AS uncounted_entry
     FROM books b LEFT JOIN book_reading_entries e ON e.book_id = b.id WHERE b.id = ?`).get(bookId);
   const excluded = bookRow?.uncounted_entry == null ? [] : [bookRow.uncounted_entry];
@@ -897,6 +899,17 @@ function processStateXp(userId, bookId, oldState, newState, totalSections) {
       for (const itemId of newEquip)
         if (!oldEquip.has(itemId)) awardXp(userId, 'equip_item', `${bookId}:${itemId}`);
     })();
+  }
+  // Retry certification on a complete path too, including a previously failed award
+  // or a catalog correction. Already granted rewards are cheap ledger lookups.
+  const rubyCandidate = [...newVis].some(section => !oldVis.has(section))
+    || (bookRow?.total_sections > 0 && newVis.size >= bookRow.total_sections);
+  if (rubyCandidate && !isImpersonatingContext()) {
+    _rubyCompletionChecker ||= createRubyCompletionChecker(db);
+    const rubyDelta = _rubyCompletionChecker(userId, bookId);
+    if (rubyDelta > 0) {
+      try { _appXpHook?.({ userId, rubyDelta }); } catch (_) {}
+    }
   }
 }
 

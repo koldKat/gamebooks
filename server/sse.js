@@ -81,13 +81,13 @@ function appXpPush(payload) {
   }
 }
 
-db.setAppXpHook(({ userId, xpDelta, coinDelta, diamondDelta }) => {
+db.setAppXpHook(({ userId, xpDelta, coinDelta, diamondDelta, rubyDelta }) => {
   if (_appXpClients.size === 0) return; // nobody watching - skip the lookups entirely
   const adminUserId = db.getUserByUsername(db.getAdminUsername())?.id ?? null;
   if (userId === adminUserId) return; // admin's own gains already show in their personal bar
   const user = db.getUserById(userId);
   if (!user) return;
-  appXpPush({ username: user.display_name || user.username, xpDelta, coinDelta, diamondDelta });
+  appXpPush({ username: user.display_name || user.username, xpDelta, coinDelta, diamondDelta, rubyDelta });
 });
 
 function userBadgeRegister(userId, res) {

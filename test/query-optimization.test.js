@@ -188,7 +188,7 @@ test('bulk XP summaries match individual calculations without one query pair per
   const source = fs.readFileSync(require.resolve('../server/db/xp'), 'utf8');
   const api = vm.runInNewContext(source.slice(source.indexOf('const TITLES ='), source.indexOf('const _insertNotif =')) +
     source.slice(source.indexOf('function getUserXpInfo('), source.indexOf('function getBookCreator(')) +
-    '\n({getUserXpInfo,getAllUsersXpInfo})', { db: { prepare(sql) { queries++; return raw.prepare(sql); } }, diamondInfoForUser: require('../server/db/diamonds').diamondInfoForUser });
+    '\n({getUserXpInfo,getAllUsersXpInfo})', { db: { prepare(sql) { queries++; return raw.prepare(sql); } }, rubyInfoForUser: () => ({}), diamondInfoForUser: require('../server/db/diamonds').diamondInfoForUser });
   const expected = [plain(api.getUserXpInfo(1)), plain(api.getUserXpInfo(2))];
   assert.equal(expected[0].diamondsBalance, 36);
   for (const row of expected) for (const key of Object.keys(row)) if (key.startsWith('diamond')) delete row[key]; // Bulk admin summaries omit wallet details.

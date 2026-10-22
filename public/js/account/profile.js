@@ -3,6 +3,7 @@
 import { apiFetch, setUsername, getToken, setCurrentUserLevel, getUsername } from '../core/state.js';
 import { t } from '../i18n.js';
 import { updateCoinsDisplay } from '../progression/shop.js';
+import { updateRubiesDisplay } from '../progression/rubies.js';
 import { updateDiamondsDisplay } from '../progression/diamonds.js';
 import { escapeHtml, compressToBlob } from '../core/util.js';
 
@@ -180,6 +181,7 @@ function _renderXpSummary(prefix, data) {
 
 export function renderBooksXpSummary(data, opts = {}) {
   updateDiamondsDisplay(getToken() ? data?.diamondsBalance : null, data);
+  updateRubiesDisplay(getToken() ? data?.rubiesBalance : null, data);
   const xp = Math.floor(Number(data?.xp) || 0);
   _xpApply(xp, data || null, opts.fromXp);
   _renderXpSummary('books', data);

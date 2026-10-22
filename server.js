@@ -137,7 +137,7 @@ const {
   handleUpdateStash,
 } = require('./server/routes/books');
 
-const { handleShopPurchase, handleClaimBonusGc, handleDiamondExchange } = require('./server/routes/shop');
+const { handleShopPurchase, handleClaimBonusGc, handleDiamondExchange, handleRubyExchange } = require('./server/routes/shop');
 const { handleReadingAccess, handleReadingMatter } = require('./server/routes/reading-access');
 
 const {
@@ -453,6 +453,7 @@ const _routeRequest = async (req, res) => {
     if (method === 'PATCH'  && urlPath === '/api/profile')        return await handleUpdateProfile(req, res);
     if (method === 'POST'   && urlPath === '/api/shop/purchase')  return await handleShopPurchase(req, res);
     if (method === 'POST'   && urlPath === '/api/shop/exchange-diamonds') return await handleDiamondExchange(req, res);
+    if (method === 'POST'   && urlPath === '/api/shop/exchange-rubies') return await handleRubyExchange(req, res);
     if (method === 'POST'   && urlPath === '/api/shop/claim-gc')  return await handleClaimBonusGc(req, res);
     if (method === 'POST'   && urlPath === '/api/profile/avatar')  return await handleUploadAvatar(req, res);
     if (method === 'POST'   && urlPath === '/api/attachments')     return await handleUploadAttachment(req, res);

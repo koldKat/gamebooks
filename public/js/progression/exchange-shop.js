@@ -70,7 +70,7 @@ export async function openDiamondExchangeShop() {
   message('Loading…'); render();
   try {
     const response = await apiFetch('/api/profile');
-    if (!response.ok) throw Error('Unable to load Exchange Shop.');
+    if (!response.ok) throw Error('Unable to load Diamond Exchange.');
     const data = await response.json();
     if (getToken() !== token || generation !== _generation) return;
     if (!Number.isSafeInteger(data.diamondsBalance)) { closeDiamondExchangeShop(); return; }
@@ -80,7 +80,7 @@ export async function openDiamondExchangeShop() {
     message(data.diamondsBalance > 0 ? '' : 'No diamonds available to exchange.'); render();
     if (data.diamondsBalance > 0) el('amount').focus();
   } catch (_) {
-    if (getToken() === token && generation === _generation) message('Unable to load Exchange Shop.', true);
+    if (getToken() === token && generation === _generation) message('Unable to load Diamond Exchange.', true);
   }
 }
 
