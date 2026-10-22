@@ -113,7 +113,7 @@ try {
   check(document.querySelector('dialog[open]'),'book editor opens');
   for(const button of document.querySelectorAll('dialog[open] .btn')) {
     check(button.getBoundingClientRect().height<=23,'compact editor action '+button.textContent);
-    check(getComputedStyle(button).paddingLeft==='7px','editor actions share standard padding');
+    check(getComputedStyle(button).paddingLeft==='6px','editor actions share standard padding');
   }
   document.querySelector('.admin-editor-close').click();await wait(20);
   await tab('series');check(document.querySelectorAll('#series-body tr').length===50,'series pagination');
@@ -140,7 +140,7 @@ try {
   const stepper=document.querySelector('.xp-config-stepper');
   check(getComputedStyle(stepper.firstElementChild).borderTopRightRadius==='0px','stepper minus joins input');
   check(getComputedStyle(stepper.lastElementChild).borderTopLeftRadius==='0px','stepper plus joins input');
-  for(const control of stepper.children)check(Math.abs(control.getBoundingClientRect().height-22)<1,'stepper control heights align');
+  for(const control of stepper.children)check(Math.abs(control.getBoundingClientRect().height-20)<1,'stepper control heights align');
   const expected=getComputedStyle(document.getElementById('users-search')).borderRadius;
   for(const id of ['books-search','tips-type-filter','new-tip-text','tools-version-input','smtp-host'])check(getComputedStyle(document.getElementById(id)).borderRadius===expected,'consistent field style '+id);
   for(const name of ['users','books','series','anthologies','tips','inventory','feedback','announcements','tools']) {
@@ -151,7 +151,8 @@ try {
       check(button.getBoundingClientRect().height<=23,'compact button across '+name+': '+(button.id||button.textContent));
       if(button.matches('.btn,.tools-save-btn,.refresh-btn,.ann-btn-draft,.ann-btn-publish,.vacuum-btn')) {
         const style=getComputedStyle(button);
-        check(style.paddingLeft==='7px'&&style.paddingTop==='2px','shared action padding across '+name+': '+button.id);
+        check(style.paddingLeft==='6px'&&style.paddingTop==='1px','shared action padding across '+name+': '+button.id);
+        check(button.getBoundingClientRect().height===20,'shared action height across '+name+': '+button.id);
         if(!button.closest('.xp-config-stepper'))check(style.borderRadius==='4px','shared action corners across '+name+': '+button.id);
       }
     }
