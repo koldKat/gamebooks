@@ -56,6 +56,8 @@ export async function openStatsModal() {
       const days = Math.floor(total / 1440);
       const hours = Math.floor((total % 1440) / 60);
       const minutes = total % 60;
+      const years = Math.floor(days / 365);
+      if (years) return `${years}y ${days % 365}d ${hours}h`;
       const parts = [];
       if (days) parts.push(`${days}d`);
       if (days || hours) parts.push(`${hours}h`);
