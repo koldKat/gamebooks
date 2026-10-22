@@ -155,3 +155,21 @@ test('empty dashboard aggregates return numeric zeros', t => {
   const s=stats();
   for(const key of ['users','books','playableBooks','readingBooks','onlineUsers','activeUsers1h','activeUsers24h','newUsers7d','newUsers30d','sessions','diamondsEarned','diamondsAvailable','diamondsSold','diamondsBought','luckyDiamondsEarned','bronzeAvailable','silverAvailable','marketDiamonds','marketDiamondsMined'])assert.equal(s[key],0,key);
 });
+
+test('dashboard distinguishes missing metrics from a real zero', () => {
+  const source = fs.readFileSync('admin/js/dashboard.js', 'utf8');
+  const elements = new Map();
+  const applyStats = vm.runInNewContext(
+    source.slice(source.indexOf('function fmtN('), source.indexOf('export async function loadStats(')) + '\napplyStats;',
+    { document: { getElementById(id) {
+      if (!elements.has(id)) elements.set(id, { textContent: '', style: {} });
+      return elements.get(id);
+    } }, fmtBytes: () => '', fmtDuration: () => '' },
+  );
+  applyStats({ newUsers30d: 24 });
+  assert.equal(elements.get('s-new-30d').textContent, '24');
+  applyStats({});
+  assert.equal(elements.get('s-new-30d').textContent, '-');
+  applyStats({ newUsers30d: 0 });
+  assert.equal(elements.get('s-new-30d').textContent, '0');
+});

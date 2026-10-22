@@ -54,7 +54,7 @@ function applyStats(d) {
     's-ruby-stock': d.marketRubies, 's-rubies-generated': d.marketRubiesGenerated, 's-ruby-rate': d.rubyRate,
     's-market-diamonds-mined': d.marketDiamondsMined,
   };
-  for (const [id, value] of Object.entries(extraMetrics)) document.getElementById(id).textContent = fmtN(value);
+  for (const [id, value] of Object.entries(extraMetrics)) document.getElementById(id).textContent = value == null ? '-' : fmtN(value);
   document.getElementById('s-battle-win-rate').textContent = fmtN(d.battleWinRate) + '%';
   document.getElementById('s-uptime-pct').textContent    = d.uptimePct != null ? d.uptimePct.toFixed(2) + '%' : '-';
   document.getElementById('s-downtime').textContent      = fmtDuration(d.totalDowntimeS);
