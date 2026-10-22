@@ -30,22 +30,29 @@ try {
     check(document.querySelectorAll('[role="dialog"]').length===1,'one exchange dialog');
     check(get(currency+'-tab').getAttribute('aria-selected')==='true','My Books opens matching tab');
     check(get('form').getAttribute('aria-labelledby')===get(currency+'-tab').id,'panel label');
-    get('buy').click();get('max').click();
-    check(get('amount').value===(currency==='diamond'?'3':'2'),'currency-specific stock/funds');
-    check(get('stock').hidden===false,'buy stock visible');
+    get('buy-max').click();
+    check(get('buy-amount').value===(currency==='diamond'?'3':'2'),'currency-specific stock/funds');
+    check(get('sell-amount').value==='1','buy amount does not change sell amount');
     const rect=get('modal').getBoundingClientRect();
     check(rect.left>=0 && rect.right<=innerWidth+1,'dialog within viewport');
     check(get('modal').scrollWidth<=get('modal').clientWidth+1,'no dialog overflow');
-    const form=get('form');check(form.scrollWidth<=form.clientWidth+1,'no form overflow');
-    const quote=get('rate'), range=document.createRange();range.selectNodeContents(quote);
-    check(range.getBoundingClientRect().height<=quote.getBoundingClientRect().height+1,'rate stays on one line');
-    for(const id of ['dec','inc','amount','max','submit'])check(Math.abs(get(id).getBoundingClientRect().height-28)<1,'aligned controls '+id);
+    const panel=get('form');check(panel.scrollWidth<=panel.clientWidth+1,'no panel overflow');
+    const buy=get('buy-form').getBoundingClientRect(),sell=get('sell-form').getBoundingClientRect();
+    check(Math.abs(buy.top-sell.top)<1 && buy.right<=sell.left,'buy and sell stay side by side');
+    for(const direction of ['buy','sell']) {
+      const quote=get(direction+'-rate'),range=document.createRange();range.selectNodeContents(quote);
+      check(range.getBoundingClientRect().height<=quote.getBoundingClientRect().height+1,'rate stays on one line');
+      for(const name of ['dec','inc','amount','submit'])check(Math.abs(get(direction+'-'+name).getBoundingClientRect().height-28)<1,'aligned trade controls');
+      const input=get(direction+'-amount').getBoundingClientRect(),button=get(direction+'-submit').getBoundingClientRect();
+      check(button.left>=input.right && Math.abs(button.top-input.top)<1,'trade button right of amount');
+      check(get(direction+'-submit').textContent===(direction==='buy'?'Buy':'Sell'),'short trade label');
+    }
     const other=currency==='diamond'?'ruby':'diamond', count=calls.length;
     get(other+'-tab').click();check(calls.length===count,'tab switch reuses loaded wallet');
     check(get(other+'-tab').getAttribute('aria-selected')==='true','tab switched');
     get(other+'-tab').dispatchEvent(new KeyboardEvent('keydown',{key:'Home',bubbles:true}));
     check(get('ruby-tab').getAttribute('aria-selected')==='true','keyboard tab selection');
-    get('form').requestSubmit();check(confirmations.length>0,'separate confirmation');
+    get('sell-form').requestSubmit();check(confirmations.length>0,'separate confirmation');
     check(!calls.some(c=>c.options),'confirmation sends no trade');
     get('ruby-tab').click();check(confirmations.at(-1).closed,'tab switch cancels confirmation');
     get('close').click();check(!get('modal-overlay').classList.contains('active'),'close works');

@@ -1179,34 +1179,45 @@
         <button id="exchange-shop-ruby-tab" type="button" role="tab" aria-selected="false" aria-controls="exchange-shop-form" tabindex="-1">Rubies</button>
         <button id="exchange-shop-diamond-tab" type="button" role="tab" aria-selected="true" aria-controls="exchange-shop-form">Diamonds</button>
       </div>
-      <form id="exchange-shop-form" class="exchange-shop-body" role="tabpanel" aria-labelledby="exchange-shop-diamond-tab">
-        <div class="exchange-shop-direction" role="group" aria-label="Exchange direction">
-          <button id="exchange-shop-sell" type="button" class="secondary-btn" aria-pressed="true">Sell diamonds</button>
-          <button id="exchange-shop-buy" type="button" class="secondary-btn" aria-pressed="false">Buy diamonds</button>
+      <div id="exchange-shop-form" class="exchange-shop-body" role="tabpanel" aria-labelledby="exchange-shop-diamond-tab">
+        <div class="exchange-shop-trades">
+          <form id="exchange-shop-buy-form" class="exchange-shop-trade">
+            <div class="exchange-shop-quantity-label">
+              <label for="exchange-shop-buy-amount">To buy</label>
+              <button id="exchange-shop-buy-max" type="button" class="exchange-shop-max">Max</button>
+            </div>
+            <div class="exchange-shop-amount-row">
+              <div class="cs-num-wrap">
+                <button id="exchange-shop-buy-dec" class="cs-num-btn" type="button" aria-label="Buy fewer">−</button>
+                <input id="exchange-shop-buy-amount" class="cs-val cs-val-num" type="number" min="1" step="1" inputmode="numeric" autocomplete="off" required>
+                <button id="exchange-shop-buy-inc" class="cs-num-btn" type="button" aria-label="Buy more">+</button>
+              </div>
+              <button id="exchange-shop-buy-submit" class="shop-buy-btn" type="submit" disabled>Buy</button>
+            </div>
+            <div id="exchange-shop-buy-rate" class="exchange-shop-rate"></div>
+            <div id="exchange-shop-buy-receive" class="exchange-shop-receive" aria-live="polite"></div>
+          </form>
+          <form id="exchange-shop-sell-form" class="exchange-shop-trade">
+            <div class="exchange-shop-quantity-label">
+              <label for="exchange-shop-sell-amount">To sell</label>
+              <button id="exchange-shop-sell-max" type="button" class="exchange-shop-max">Max</button>
+            </div>
+            <div class="exchange-shop-amount-row">
+              <div class="cs-num-wrap">
+                <button id="exchange-shop-sell-dec" class="cs-num-btn" type="button" aria-label="Sell fewer">−</button>
+                <input id="exchange-shop-sell-amount" class="cs-val cs-val-num" type="number" min="1" step="1" inputmode="numeric" autocomplete="off" required>
+                <button id="exchange-shop-sell-inc" class="cs-num-btn" type="button" aria-label="Sell more">+</button>
+              </div>
+              <button id="exchange-shop-sell-submit" class="shop-buy-btn" type="submit" disabled>Sell</button>
+            </div>
+            <div id="exchange-shop-sell-rate" class="exchange-shop-rate"></div>
+            <div id="exchange-shop-sell-receive" class="exchange-shop-receive" aria-live="polite"></div>
+          </form>
         </div>
-        <div class="exchange-shop-quantity-label">
-          <label for="exchange-shop-amount" id="exchange-shop-amount-label">Diamonds to sell</label>
-          <span id="exchange-shop-stock" class="exchange-shop-tip" hidden></span>
-        </div>
-        <div class="exchange-shop-amount-row">
-          <div class="cs-num-wrap">
-            <button id="exchange-shop-dec" class="cs-num-btn" type="button" aria-label="Fewer diamonds">−</button>
-            <input id="exchange-shop-amount" class="cs-val cs-val-num" type="number" min="1" step="1" inputmode="numeric" autocomplete="off" required>
-            <button id="exchange-shop-inc" class="cs-num-btn" type="button" aria-label="More diamonds">+</button>
-          </div>
-          <button id="exchange-shop-max" type="button" class="secondary-btn">Max</button>
-        </div>
-        <div class="exchange-shop-quote">
-          <div id="exchange-shop-rate" class="exchange-shop-rate"></div>
-          <div id="exchange-shop-receive" class="exchange-shop-receive" aria-live="polite"></div>
-        </div>
-        <p class="exchange-shop-tip" id="exchange-shop-tip">Gold coins are added to your balance immediately.</p>
+        <p id="exchange-shop-stock" class="exchange-shop-tip"></p>
         <p class="exchange-shop-tip" id="exchange-shop-note">Buy price: twice your level. Sell rate: your level + upgrades.</p>
-        <div class="exchange-shop-actions">
-          <button id="exchange-shop-submit" class="shop-buy-btn" type="submit" disabled>Sell diamonds</button>
-          <div id="exchange-shop-message" class="exchange-shop-message" role="status"></div>
-        </div>
-      </form>
+        <div id="exchange-shop-message" class="exchange-shop-message" role="status"></div>
+      </div>
     </div>
   </div>
 
