@@ -85,6 +85,7 @@ Editing uses consistent modal dialogs for players, books, series, anthologies, i
 | **Fateweaver** | Toggle `is_author` flag and optionally set a display name |
 | **Pathmaker** | Toggle `is_contributor` flag |
 | **Lorekeeper** | Toggle `is_moderator`; permits editing public books, anthologies and series |
+| **Squire** | Toggle the independent `is_squire` role and bronze-orange shield badge; adds no permissions |
 | **Grant/Revoke Book Access** | Toggle `pdf_access` flag - allows the user to download a book's PDF and EPUB files via `GET /books/:path`. Button shows "Grant Book Access" when the user does not have access, "Revoke Book Access" when they do. |
 | **Impersonate** | Generate a one-time login URL to log in as the user without their password |
 | **Refund** | Refund a shop item: specify item key such as `xp_boost`, `heartbeat_xp`, `undo`, `fast_travel`, `gc_chance`, or `gc_mint`, and whether to refund all purchases or just the latest |
@@ -447,3 +448,7 @@ The API always returns every announcement - the 30-day cutoff is admin-UI-only (
 ### Lorekeeper role
 
 Use **Mark as Lorekeeper** or **Remove Lorekeeper** in a player’s detail actions. Lorekeepers receive a purple diamond badge and an assignment notification. The role permits metadata edits for public books, anthologies and series, plus cover edits for public books and anthologies, without library membership. They can remove any book, anthology or series from their own library regardless of its creator, and delete their own stashes. Other players’ library entries and progress are preserved. Creator permissions still apply to their own private books, anthologies and series. The role does not permit editing other players’ private titles, unpublishing another creator’s public title, admin actions or PDF/EPUB uploads. Lorekeeper totals appear in Stats for Nerds.
+
+### Squire role
+
+Use **Mark as Squire** or **Remove Squire** in a player’s detail actions. Squire is assigned manually and defaults off for every account. Its bronze-orange shield appears beside the other role badges in admin, public profiles and feed entries, including party members. First assignment sends a role notification; repeating the assignment does not duplicate it. Squire adds no permissions or restrictions and does not change existing roles. The **Squires** total appears in Stats for Nerds.

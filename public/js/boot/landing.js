@@ -21,7 +21,7 @@ import { loadFeed, refreshFeedFilters } from '../feed.js';
 import { _scheduleLiveUiRefresh, resetNotifBadgesForLogout } from '../community/notif.js';
 import { _resetRewardSnapshotState, _positionRewardLayer, _processRewardSnapshot, _restoreRewardSnapshot } from '../progression/rewards.js';
 import { cancelBgMove } from '../play/bg.js';
-import { resolveIsAdmin, registerAuthor, registerContributor, registerModerator, resolveIsModerator } from '../account/user.js';
+import { resolveIsAdmin, registerAuthor, registerContributor, registerModerator, registerSquire, resolveIsModerator } from '../account/user.js';
 import { _cancelForumReveal, setDiceRollerVisible, setGuideVisible, _isMobile, _revealLanding } from './helpers.js';
 import { _pushNav, _isViewLocked } from './navigation.js';
 import { APP_XP_EXTRA_USER_ID } from './state.js';
@@ -106,6 +106,7 @@ export async function loadSessionProfile(sessionToken = getToken()) {
       registerAuthor(profile.username, !!profile.isAuthor, profile.displayName);
       registerContributor(profile.username, !!profile.isContributor);
       registerModerator(profile.username, !!profile.isModerator);
+      registerSquire(profile.username, !!profile.isSquire);
     }
     refreshFeedFilters();
     return profile;

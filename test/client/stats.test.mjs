@@ -16,7 +16,7 @@ test('stats renders all ten half-star bins for all categories in balanced column
   const body = { innerHTML: '' }, overlay = { classList: { add() {} } };
   const context = vm.createContext({ document: { getElementById: id => id === 'stats-modal-body' ? body : overlay },
     escapeHtml, t: key => messages[key] || key,
-    fetchPublic: async () => ({ ok: true, json: async () => ({ ratingsTotal: 10,
+    fetchPublic: async () => ({ ok: true, json: async () => ({ ratingsTotal: 10, squires: 7,
       ratingBreakdown: { books: group(4.5, 5), anthologies: group(3.5, 2), series: group(2, 3) },
       cpuModel: '<script>bad</script>', appTitle: 'Title', avgTitle: 'Title' }) }),
   });
@@ -39,6 +39,7 @@ test('stats renders all ten half-star bins for all categories in balanced column
   assert.ok(ratingTable.includes('Anths'));
   assert.ok(!ratingTable.includes('Anthologies'));
   assert.ok(body.innerHTML.includes('Anthologies in libraries'));
+  assert.match(body.innerHTML, /Squires<\/td><td class="stats-val">7<\/td>/);
   assert.equal((ratingTable.match(/<tr/g) || []).length, 13);
   assert.ok(!body.innerHTML.includes('stats.rating'));
 });

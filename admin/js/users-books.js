@@ -2,7 +2,7 @@
 
 import {
   api, el, badge, mkBtn, mkEditBtn, appendCell, emptyRow, mkLevelCell, mkGeoCell, addMetaItem, addStatCard,
-  fmtDate, fmtDateTime, fmtBytes, pdfUrl, esc, adminBadge, authorBadge, contributorBadge, moderatorBadge,
+  fmtDate, fmtDateTime, fmtBytes, pdfUrl, esc, adminBadge, authorBadge, contributorBadge, moderatorBadge, squireBadge,
   daysInactiveClass, fmtDaysInactive, flashSaved, showAlert, showConfirm,
   storeData, getSorted, getFiltered, foldForSearch, naturalCompare, naturalCompareByName, _tableData,
   setSearchFields, wireTableSearch, initSortHeaders, renderPaged, setRowFilter, renderPaginationControls, _sortState, applySortIndicator, _pageState,
@@ -311,6 +311,7 @@ function renderUserRow(tbody, u) {
     if (u.is_author) nameCell.insertAdjacentHTML('beforeend', authorBadge(true));
     if (u.is_contributor) nameCell.insertAdjacentHTML('beforeend', contributorBadge(true));
     if (u.is_moderator) nameCell.insertAdjacentHTML('beforeend', moderatorBadge(true));
+    if (u.is_squire) nameCell.insertAdjacentHTML('beforeend', squireBadge(true));
 
     appendCell(tr, fmtDate(u.created_at), 'muted');
     appendCell(tr, fmtDate(u.last_active), 'muted');
@@ -646,7 +647,7 @@ export async function loadUserDetail(userId, edit = false) {
     const { user, books, totals, bookCount, createdCount, pagination } = await fetchUserBooks(userId);
     if (userId !== _currentUserId || detailRequest !== _detailGeneration) return;
 
-    document.getElementById('user-crumb').innerHTML = esc(user.username) + adminBadge(user.is_admin) + authorBadge(user.is_author) + contributorBadge(user.is_contributor) + moderatorBadge(user.is_moderator)
+    document.getElementById('user-crumb').innerHTML = esc(user.username) + adminBadge(user.is_admin) + authorBadge(user.is_author) + contributorBadge(user.is_contributor) + moderatorBadge(user.is_moderator) + squireBadge(user.is_squire)
       + (user.display_name ? ` <span style="color:#6b7280;font-size:0.82rem;font-weight:400">(${esc(user.display_name)})</span>` : '');
 
     populateUserEditForm(user);
@@ -848,6 +849,12 @@ export async function loadUserDetail(userId, edit = false) {
         await api('POST', `/api/admin/users/${user.id}/moderator`, { isModerator: !user.is_moderator });
         loadUserDetail(user.id);
       }));
+      if (Object.hasOwn(user, 'is_squire')) {
+        actionBar.appendChild(mkBtn(user.is_squire ? 'Remove Squire' : 'Mark as Squire', user.is_squire ? 'btn-warn' : 'btn-info', async () => {
+          await api('POST', `/api/admin/users/${user.id}/squire`, { isSquire: !user.is_squire });
+          loadUserDetail(user.id);
+        }));
+      }
       const pdfLabel = user.pdf_access ? 'Revoke Book Access' : 'Grant Book Access';
       actionBar.appendChild(mkBtn(pdfLabel, user.pdf_access ? 'btn-warn' : 'btn-info', async () => {
         await api('POST', `/api/admin/users/${user.id}/pdf-access`, { pdfAccess: !user.pdf_access });

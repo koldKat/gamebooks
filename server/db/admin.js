@@ -609,7 +609,7 @@ function getAllAnthologiesAdmin() {
 }
 function adminGetUser(userId) {
   const row = db.prepare(`
-    SELECT u.id, u.username, u.display_name, u.email, u.is_author, u.is_contributor, u.is_moderator, u.pdf_access, u.created_at, u.last_country, u.last_city,
+    SELECT u.id, u.username, u.display_name, u.email, u.is_author, u.is_contributor, u.is_moderator, u.is_squire, u.pdf_access, u.created_at, u.last_country, u.last_city,
            u.active_country, u.active_city, u.last_domain, u.failed_login_attempts, u.locked_until, u.is_protected, u.is_admin,
            u.public_profile, u.hide_from_feed, u.xp, u.xp_boost_pct,
            u.bonus_undos, u.bonus_fast_travels, u.bonus_heartbeat_xp,
@@ -771,6 +771,7 @@ function getSiteStats() {
   const admins         = db.prepare('SELECT COUNT(*) AS n FROM users WHERE is_admin = 1').get().n;
   const authors        = db.prepare('SELECT COUNT(*) AS n FROM users WHERE is_author = 1').get().n;
   const moderators = db.prepare('SELECT COUNT(*) AS n FROM users WHERE is_moderator = 1').get().n;
+  const squires = db.prepare('SELECT COUNT(*) AS n FROM users WHERE is_squire = 1').get().n;
   const contributors   = db.prepare('SELECT COUNT(*) AS n FROM users WHERE is_contributor = 1').get().n;
   const { undosTotal, fastTravelsTotal } = gameplayExtras;
   const publicProfiles = db.prepare('SELECT COUNT(*) AS n FROM users WHERE public_profile = 1').get().n;
@@ -925,7 +926,7 @@ function getSiteStats() {
 
   return {
     // Users
-    users: base.users, admins, moderators, authors, contributors, publicProfiles, avatarUsers, undosTotal, fastTravelsTotal,
+    users: base.users, admins, moderators, squires, authors, contributors, publicProfiles, avatarUsers, undosTotal, fastTravelsTotal,
     // Books
     uniqueBooks, uniqueAuthors, totalUserBooks, publicBooks, privateBooks,
     uniqueSeries, totalUserSeries, publicSeries, privateSeries,
@@ -1008,7 +1009,7 @@ function getAppXpSummary() {
 
 function adminGetUsers() {
   const users = db.prepare(`
-    SELECT u.id, u.username, u.display_name, u.is_author, u.is_contributor, u.is_moderator, u.created_at, u.last_country, u.last_city,
+    SELECT u.id, u.username, u.display_name, u.is_author, u.is_contributor, u.is_moderator, u.is_squire, u.created_at, u.last_country, u.last_city,
            u.active_country, u.active_city, u.last_domain, u.failed_login_attempts, u.locked_until, u.is_protected, u.is_admin,
            COALESCE(library.book_count, 0) AS book_count,
            COALESCE(s.session_count, 0) AS session_count,

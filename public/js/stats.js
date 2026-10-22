@@ -117,6 +117,7 @@ export async function openStatsModal() {
           [t('stats.registered'), fmt(s.users)],
           [t('stats.admins'), fmt(s.admins)],
           [t('stats.moderators'), fmt(s.moderators)],
+          [t('stats.squires'), fmt(s.squires)],
           [t('stats.authors'), fmt(s.authors)],
           [t('stats.contributors'), fmt(s.contributors)],
           [t('stats.public_profiles'), fmt(s.publicProfiles)],

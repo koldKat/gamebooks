@@ -14,13 +14,14 @@ test('join events exclude stored location data and respect hide-from-feed', t =>
     avatar_path TEXT, public_profile INTEGER DEFAULT 0, xp INTEGER DEFAULT 0,
     hide_from_feed INTEGER DEFAULT 0, created_at INTEGER DEFAULT (strftime('%s','now')),
     join_template_id INTEGER, is_author INTEGER DEFAULT 0, is_contributor INTEGER DEFAULT 0,
-    is_moderator INTEGER DEFAULT 0, display_name TEXT);
+    is_moderator INTEGER DEFAULT 0, is_squire INTEGER DEFAULT 0, display_name TEXT);
     CREATE TABLE join_templates (id INTEGER PRIMARY KEY, template TEXT);
     INSERT INTO join_templates VALUES (1, '{name} joins.');
     INSERT INTO users (id,username,signup_country,last_country,last_city,join_template_id)
       VALUES (1,'Reader','PL','BG','Sofia',1);
     INSERT INTO users (id,username,signup_country,hide_from_feed,join_template_id)
-      VALUES (2,'HiddenReader','CA',1,1);`);
+      VALUES (2,'HiddenReader','CA',1,1);
+    UPDATE users SET is_squire=1 WHERE id=1;`);
   const deps = {
     './connection': { db: { prepare: sql => (sql.includes('FROM users u') && sql.includes('u.join_template_id')) || sql.includes('SELECT template FROM join_templates')
       ? db.prepare(sql) : { all: () => [], get: () => undefined } } },
@@ -32,6 +33,8 @@ test('join events exclude stored location data and respect hide-from-feed', t =>
   const entries = context.module.exports.getFeed().filter(e => e.type === 'user_joined');
   assert.equal(entries.length, 1);
   assert.equal(entries[0].username, 'Reader');
+  assert.equal(entries[0].isSquire, true);
+  assert.equal(entries[0].isModerator, false);
   assert.doesNotMatch(JSON.stringify(entries), /country|city|Sofia|"PL"|"BG"/);
 });
 

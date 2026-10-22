@@ -25,7 +25,7 @@ import { initInbox } from '../community/inbox.js';
 import { initDice } from '../play/dice.js';
 import { exportAll } from '../books/export.js';
 import { initFeedback } from '../community/feedback.js';
-import { resolveIsAdmin, adminBadgeForUsername, authorBadge, contributorBadge, moderatorBadge, displayFor, registerAuthor, registerContributor, registerModerator, resolveIsModerator } from '../account/user.js';
+import { resolveIsAdmin, adminBadgeForUsername, authorBadge, contributorBadge, moderatorBadge, squireBadge, displayFor, registerAuthor, registerContributor, registerModerator, registerSquire, resolveIsModerator } from '../account/user.js';
 import { fetchPublic as publicFetch } from '../core/util.js';
 import { _toggleShortcutsModal } from './helpers.js';
 import { navigateToBook, showLogin, showBooks, showMain, _lockView } from './screens.js';
@@ -80,6 +80,7 @@ export function initFeatureHooks() {
       registerAuthor(data.username, !!data.isAuthor, data.displayName);
       registerContributor(data.username, !!data.isContributor);
       registerModerator(data.username, !!data.isModerator);
+      registerSquire(data.username, !!data.isSquire);
     },
     getMousedownOverlay:   () => bootState._mousedownOnOverlay,
   });
@@ -88,11 +89,12 @@ export function initFeatureHooks() {
     publicFetch,
     adminBadge: adminBadgeForUsername,
     authorBadge,
-    contributorBadge, moderatorBadge,
+    contributorBadge, moderatorBadge, squireBadge,
     displayFor,
     onRegisterAuthor:      registerAuthor,
     onRegisterContributor: registerContributor,
     onRegisterModerator: registerModerator,
+    onRegisterSquire: registerSquire,
   });
   setCoversHooks({
     applySavedBookResponse: _applySavedBookResponse,
@@ -115,7 +117,7 @@ export function initFeatureHooks() {
     displayFor,
     adminBadge: adminBadgeForUsername,
     authorBadge,
-    contributorBadge, moderatorBadge,
+    contributorBadge, moderatorBadge, squireBadge,
     onFavoriteToggled:   () => _scheduleRewardProfileRefresh(250),
     refreshDayCovers:    refreshDayCoverFlows,
   });
@@ -128,9 +130,9 @@ export function initFeatureHooks() {
     displayFor,
     adminBadge: adminBadgeForUsername,
     authorBadge,
-    contributorBadge, moderatorBadge,
+    contributorBadge, moderatorBadge, squireBadge,
     registerAuthor:    registerAuthor,
-    registerContributor, registerModerator,
+    registerContributor, registerModerator, registerSquire,
     starsHtml:         _starsHtml,
   });
   setNotifHooks({

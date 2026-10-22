@@ -1,6 +1,7 @@
 // English translations: stats.
 export default {
     'stats.moderators': 'Lorekeepers',
+    'stats.squires': 'Squires',
 
     'stats.mapped':       'Mapped',
     'stats.discovered':   'Discovered',

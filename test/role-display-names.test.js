@@ -10,11 +10,11 @@ test('player and admin badges show only the gamebook role names', () => {
   const player = vm.createContext({ getUsername: () => 'Tester' });
   vm.runInContext(source('public/js/account/role-badges.js'), player);
   vm.runInContext(source('public/js/account/user.js'), player);
-  player.registerAuthor('Tester', true); player.registerContributor('Tester', true); player.registerModerator('Tester', true);
+  player.registerAuthor('Tester', true); player.registerContributor('Tester', true); player.registerModerator('Tester', true); player.registerSquire('Tester', true);
   const admin = vm.createContext({ document: { getElementById: () => ({ addEventListener() {} }), addEventListener() {} } });
   vm.runInContext(source('public/js/account/role-badges.js'), admin);
   vm.runInContext(source('admin/js/core.js'), admin);
-  for (const [fn, role] of [['adminBadge', 'Gamemaster'], ['moderatorBadge', 'Lorekeeper'], ['contributorBadge', 'Pathmaker'], ['authorBadge', 'Fateweaver']]) {
+  for (const [fn, role] of [['adminBadge', 'Gamemaster'], ['moderatorBadge', 'Lorekeeper'], ['squireBadge', 'Squire'], ['contributorBadge', 'Pathmaker'], ['authorBadge', 'Fateweaver']]) {
     for (const html of [player[fn](fn === 'adminBadge' ? true : 'Tester'), admin[fn](true)]) {
       assert.ok(html.includes(`data-tooltip="${role}"`));
       assert.doesNotMatch(html, /data-tooltip="(?:Admin|Moderator|Contributor|Author)"/);
@@ -35,11 +35,28 @@ test('historical role notifications render current names instead of stored legac
     escapeHtml: value => String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'),
   });
   vm.runInContext(source('public/js/community/notif.js'), context);
-  const roles = [['admin', 'Gamemaster'], ['moderator', 'Lorekeeper'], ['contributor', 'Pathmaker'], ['author', 'Fateweaver']];
+  const roles = [['admin', 'Gamemaster'], ['moderator', 'Lorekeeper'], ['squire', 'Squire'], ['contributor', 'Pathmaker'], ['author', 'Fateweaver']];
   context._openNotifDropdown({ getBoundingClientRect: () => ({ bottom: 10, right: 20 }) }, {
     unseen: 0, items: roles.map(([role]) => ({ type: 'role_assigned', seen: true, createdAt: Date.now(), payload: { role, label: role[0].toUpperCase() + role.slice(1) } })),
   });
   const html = getElementById('notif-list').innerHTML;
   for (const [, label] of roles) assert.ok(html.includes(`<strong>${label}</strong>`));
   assert.doesNotMatch(html, /<strong>(Admin|Moderator|Contributor|Author)<\/strong>/);
+});
+
+test('Squire badge registration and revocation remain independent of permission-bearing roles', () => {
+  const player = vm.createContext({ getUsername: () => 'Tester' });
+  vm.runInContext(source('public/js/account/role-badges.js'), player);
+  vm.runInContext(source('public/js/account/user.js'), player);
+  player.registerSquire('Tester', true);
+  assert.equal(player.resolveIsSquire(), true);
+  assert.equal(player.resolveIsModerator(), false);
+  assert.equal(player.resolveIsAdmin(), false);
+  assert.equal(player.authorBadge('Tester'), '');
+  assert.equal(player.contributorBadge('Tester'), '');
+  assert.equal(player.squireBadge('Other'), '');
+  assert.match(player.squireBadge('Tester'), /data-tooltip="Squire"/);
+  player.registerSquire('Tester', false);
+  assert.equal(player.resolveIsSquire(), false);
+  assert.equal(player.squireBadge('Tester'), '');
 });

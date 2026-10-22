@@ -176,7 +176,7 @@ export function _openNotifDropdown(btn, data) {
       } else if (n.type === 'role_assigned') {
         iconClass = n.payload.role === 'moderator' ? 'icon-role-moderator' : n.payload.role === 'contributor' ? 'icon-role-contributor' : 'icon-role-author';
         iconChar  = n.payload.role === 'moderator' ? '◆' : n.payload.role === 'contributor' ? '✦' : '★';
-        const roleName = { admin: 'Gamemaster', moderator: 'Lorekeeper', contributor: 'Pathmaker', author: 'Fateweaver' }[n.payload.role] || n.payload.label || '';
+        const roleName = { admin: 'Gamemaster', moderator: 'Lorekeeper', squire: 'Squire', contributor: 'Pathmaker', author: 'Fateweaver' }[n.payload.role] || n.payload.label || '';
         text = `You have been designated as <strong>${escapeHtml(roleName)}</strong>`;
       }
       const unseen = !n.seen;
