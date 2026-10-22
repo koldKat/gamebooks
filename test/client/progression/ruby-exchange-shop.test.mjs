@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { createContext, runInContext } from 'node:vm';
 
 function setup() {
-  const nodes=new Map(),requests=[],snapshots=[],confirmations=[]; let token='owner',sequence=0;
+  const nodes=new Map(),requests=[],snapshots=[],confirmations=[]; let token='owner',sequence=0,direction='sell';
   const get=id=>{
     if(!nodes.has(id)){const classes=new Set(),attrs=new Map();nodes.set(id,{value:'',disabled:false,innerHTML:'',textContent:'',dataset:{},handlers:{},attrs,
       classList:{add:k=>classes.add(k),remove:k=>classes.delete(k),contains:k=>classes.has(k),toggle:(k,on)=>on?classes.add(k):classes.delete(k)},
@@ -12,14 +12,14 @@ function setup() {
     return nodes.get(id);
   };
   const context=createContext({document:{getElementById:get,addEventListener(){}},getToken:()=>token,
-    COIN_SVG:'<svg class="coin-icon"></svg>',RUBY_SVG:'<svg class="ruby-icon"></svg>',
+    COIN_SVG:'<svg class="coin-icon"></svg>',RUBY_SVG:'<svg class="ruby-icon"></svg>',DIAMOND_SVG:'<svg class="diamond-icon"></svg>',
     crypto:{randomUUID:()=>`exchange-request-${++sequence}`},
     showConfirm(message,confirm,options){const dialog={message,confirm,options,closed:false};confirmations.push(dialog);return()=>{dialog.closed=true;};},
     apiFetch(url,options){return new Promise((resolve,reject)=>requests.push({url,options,resolve,reject}));},
   });
-  runInContext(readFileSync(new URL('../../../public/js/progression/ruby-exchange-shop.js',import.meta.url),'utf8').replace(/^import .*;$/gm,'').replace(/^export /gm,''),context);
-  context.initRubyExchangeShop({onRewardSnapshot:data=>snapshots.push(data)});
-  return{context,requests,snapshots,confirmations,get:name=>get('ruby-exchange-shop-'+name),switchAccount(){token='other';}};
+  runInContext(readFileSync(new URL('../../../public/js/progression/exchange-shop.js',import.meta.url),'utf8').replace(/^import .*;$/gm,'').replace(/^export /gm,''),context);
+  context.initBlackMarket({onRewardSnapshot:data=>snapshots.push(data)});
+  return{context,requests,snapshots,confirmations,use(side){direction=side;},get:name=>get('exchange-shop-'+(name==='panel'?'form':['amount','max','dec','inc','submit','rate','receive','form'].includes(name)?direction+'-'+name:name)),switchAccount(){token='other';}};
 }
 const profile={rubiesBalance:5,rubiesExchanged:2,rubiesBought:1,coinsBalance:150,rubyExchangeRate:70,rubyBuyRate:70,rubyPurchaseStock:5};
 async function open(h,data=profile){const p=h.context.openRubyExchangeShop();h.requests.shift().resolve({ok:true,json:async()=>data});await p;}
@@ -29,10 +29,10 @@ test('ruby shop uses equal current rates, separate pills and limits buying by go
   assert.match(h.get('balance').innerHTML,/exchange-shop-rubies/);
   assert.equal((h.get('balance').innerHTML.match(/class="shop-modal-balance/g)||[]).length,2);
   assert.equal(h.get('amount').max,'5');assert.match(h.get('rate').innerHTML,/70/);
-  h.get('buy').handlers.click();assert.equal(h.get('amount').max,'2');assert.match(h.get('rate').innerHTML,/70/);
-  h.get('max').handlers.click();assert.match(h.get('receive').innerHTML,/2.*140/);
-  await open(h,{...profile,rubyPurchaseStock:1});h.get('buy').handlers.click();assert.equal(h.get('amount').max,'1');
-  await open(h,{...profile,rubyPurchaseStock:0});h.get('buy').handlers.click();assert.equal(h.get('submit').disabled,true);
+  h.use('buy');assert.equal(h.get('amount').max,'2');assert.match(h.get('rate').innerHTML,/70/);
+  h.get('max').handlers.click();assert.match(h.get('receive').innerHTML,/140/);
+  await open(h,{...profile,rubyPurchaseStock:1});h.use('buy');assert.equal(h.get('amount').max,'1');
+  await open(h,{...profile,rubyPurchaseStock:0});h.use('buy');assert.equal(h.get('submit').disabled,true);
 });
 
 test('trades need confirmation, cannot double submit and apply the authoritative wallet snapshot',async()=>{

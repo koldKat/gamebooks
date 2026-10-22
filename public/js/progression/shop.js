@@ -5,8 +5,7 @@ import { escapeHtml } from '../core/util.js';
 import { t } from '../i18n.js';
 import { COIN_SVG } from '../ui-helpers/coin-icon.js';
 import { DIAMOND_SVG } from './diamonds.js';
-import { initRubyExchangeShop } from './ruby-exchange-shop.js';
-import { initDiamondExchangeShop } from './exchange-shop.js';
+import { initBlackMarket } from './exchange-shop.js';
 export { COIN_SVG };
 
 // Callbacks wired in by main.js at boot
@@ -290,17 +289,7 @@ export async function openShopModal() {
 }
 
 export function initShop() {
-  initDiamondExchangeShop({
-    onRewardSnapshot: data => {
-      _shopData = data;
-      _hooks.onRewardSnapshot?.(data);
-      updateCoinsDisplay(data.coinsBalance || 0);
-      updateSpentDisplay(data.coinsSpent || 0);
-      if (document.getElementById('shop-modal-overlay')?.classList.contains('active')) renderShopItems();
-    },
-    getMousedownOverlay: () => _hooks.getMousedownOverlay?.(),
-  });
-  initRubyExchangeShop({
+  initBlackMarket({
     onRewardSnapshot: data => {
       _shopData = data;
       _hooks.onRewardSnapshot?.(data);

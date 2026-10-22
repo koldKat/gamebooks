@@ -612,8 +612,8 @@
               <span id="bronze-display" class="minor-coins-display bronze-display" data-tooltip="Bronze coins: 1 per heartbeat. 100 bronze becomes 1 silver." hidden></span>
               <span id="silver-display" class="minor-coins-display silver-display" data-tooltip="Silver coins: 100 silver becomes 1 gold coin." hidden></span>
               <button id="shop-btn" class="shop-btn" data-tooltip="Gold Coins Shop"><span id="coins-display">…</span></button>
-              <button id="rubies-display" class="rubies-display" type="button" data-tooltip="Ruby Exchange" hidden></button>
-              <button id="diamonds-display" class="diamonds-display" type="button" data-tooltip="Diamond Exchange" hidden></button>
+              <button id="rubies-display" class="rubies-display" type="button" data-tooltip="Black Market: Rubies" hidden></button>
+              <button id="diamonds-display" class="diamonds-display" type="button" data-tooltip="Black Market: Diamonds" hidden></button>
               <button id="profile-btn" class="profile-btn" data-tooltip="Edit profile" aria-label="Edit profile">
                 <span id="profile-avatar" class="avatar-circle"></span>
               </button>
@@ -1170,78 +1170,53 @@
   <div id="exchange-shop-modal-overlay" class="modal-overlay">
     <div id="exchange-shop-modal" role="dialog" aria-modal="true" aria-labelledby="exchange-shop-title">
       <div class="shop-modal-header">
-        <div class="shop-modal-title" id="exchange-shop-title">Diamond Exchange</div>
+        <div class="shop-modal-title" id="exchange-shop-title">Black Market</div>
         <div class="shop-modal-spent" id="exchange-shop-total">0 exchanged</div>
         <div class="exchange-shop-balance" id="exchange-shop-balance"></div>
-        <button id="exchange-shop-close" class="shop-close-btn" type="button" aria-label="Close Diamond Exchange">✕</button>
+        <button id="exchange-shop-close" class="shop-close-btn" type="button" aria-label="Close Black Market">✕</button>
       </div>
-      <form id="exchange-shop-form" class="exchange-shop-body">
-        <div class="exchange-shop-direction" role="group" aria-label="Exchange direction">
-          <button id="exchange-shop-sell" type="button" class="secondary-btn" aria-pressed="true">Sell diamonds</button>
-          <button id="exchange-shop-buy" type="button" class="secondary-btn" aria-pressed="false">Buy diamonds</button>
-        </div>
-        <div class="exchange-shop-quantity-label">
-          <label for="exchange-shop-amount" id="exchange-shop-amount-label">Diamonds to sell</label>
-          <span id="exchange-shop-stock" class="exchange-shop-tip" hidden></span>
-        </div>
-        <div class="exchange-shop-amount-row">
-          <div class="cs-num-wrap">
-            <button id="exchange-shop-dec" class="cs-num-btn" type="button" aria-label="Fewer diamonds">−</button>
-            <input id="exchange-shop-amount" class="cs-val cs-val-num" type="number" min="1" step="1" inputmode="numeric" autocomplete="off" required>
-            <button id="exchange-shop-inc" class="cs-num-btn" type="button" aria-label="More diamonds">+</button>
-          </div>
-          <button id="exchange-shop-max" type="button" class="secondary-btn">Max</button>
-        </div>
-        <div class="exchange-shop-quote">
-          <div id="exchange-shop-rate" class="exchange-shop-rate"></div>
-          <div id="exchange-shop-receive" class="exchange-shop-receive" aria-live="polite"></div>
-        </div>
-        <p class="exchange-shop-tip" id="exchange-shop-tip">Gold coins are added to your balance immediately.</p>
-        <p class="exchange-shop-tip">Buy price: twice your level. Sell rate: your level + upgrades.</p>
-        <div class="exchange-shop-actions">
-          <button id="exchange-shop-submit" class="shop-buy-btn" type="submit" disabled>Sell diamonds</button>
-          <div id="exchange-shop-message" class="exchange-shop-message" role="status"></div>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <div id="ruby-exchange-shop-modal-overlay" class="modal-overlay">
-    <div id="ruby-exchange-shop-modal" role="dialog" aria-modal="true" aria-labelledby="ruby-exchange-shop-title">
-      <div class="shop-modal-header">
-        <div class="shop-modal-title" id="ruby-exchange-shop-title">Ruby Exchange</div>
-        <div class="shop-modal-spent" id="ruby-exchange-shop-total">0 exchanged</div>
-        <div class="exchange-shop-balance" id="ruby-exchange-shop-balance"></div>
-        <button id="ruby-exchange-shop-close" class="shop-close-btn" type="button" aria-label="Close Ruby Exchange">✕</button>
+      <div class="black-market-tabs" role="tablist" aria-label="Currency">
+        <button id="exchange-shop-ruby-tab" type="button" role="tab" aria-selected="false" aria-controls="exchange-shop-form" tabindex="-1">Rubies</button>
+        <button id="exchange-shop-diamond-tab" type="button" role="tab" aria-selected="true" aria-controls="exchange-shop-form">Diamonds</button>
       </div>
-      <form id="ruby-exchange-shop-form" class="exchange-shop-body">
-        <div class="exchange-shop-direction" role="group" aria-label="Exchange direction">
-          <button id="ruby-exchange-shop-sell" type="button" class="secondary-btn" aria-pressed="true">Sell rubies</button>
-          <button id="ruby-exchange-shop-buy" type="button" class="secondary-btn" aria-pressed="false">Buy rubies</button>
+      <div id="exchange-shop-form" class="exchange-shop-body" role="tabpanel" aria-labelledby="exchange-shop-diamond-tab">
+        <div class="exchange-shop-trades">
+          <form id="exchange-shop-sell-form" class="exchange-shop-trade">
+            <div class="exchange-shop-quantity-label">
+              <label for="exchange-shop-sell-amount">To sell</label>
+              <button id="exchange-shop-sell-max" type="button" class="exchange-shop-max">Max</button>
+            </div>
+            <div class="exchange-shop-amount-row">
+              <div class="cs-num-wrap">
+                <button id="exchange-shop-sell-dec" class="cs-num-btn" type="button" aria-label="Sell fewer">−</button>
+                <input id="exchange-shop-sell-amount" class="cs-val cs-val-num" type="number" min="1" step="1" inputmode="numeric" autocomplete="off" required>
+                <button id="exchange-shop-sell-inc" class="cs-num-btn" type="button" aria-label="Sell more">+</button>
+              </div>
+              <button id="exchange-shop-sell-submit" class="shop-buy-btn" type="submit" disabled>Sell</button>
+            </div>
+            <div id="exchange-shop-sell-rate" class="exchange-shop-rate"></div>
+            <div id="exchange-shop-sell-receive" class="exchange-shop-receive" aria-live="polite"></div>
+          </form>
+          <form id="exchange-shop-buy-form" class="exchange-shop-trade">
+            <div class="exchange-shop-quantity-label">
+              <label for="exchange-shop-buy-amount">To buy</label>
+              <button id="exchange-shop-buy-max" type="button" class="exchange-shop-max">Max</button>
+            </div>
+            <div class="exchange-shop-amount-row">
+              <div class="cs-num-wrap">
+                <button id="exchange-shop-buy-dec" class="cs-num-btn" type="button" aria-label="Buy fewer">−</button>
+                <input id="exchange-shop-buy-amount" class="cs-val cs-val-num" type="number" min="1" step="1" inputmode="numeric" autocomplete="off" required>
+                <button id="exchange-shop-buy-inc" class="cs-num-btn" type="button" aria-label="Buy more">+</button>
+              </div>
+              <button id="exchange-shop-buy-submit" class="shop-buy-btn" type="submit" disabled>Buy</button>
+            </div>
+            <div id="exchange-shop-buy-rate" class="exchange-shop-rate"></div>
+            <div id="exchange-shop-buy-receive" class="exchange-shop-receive" aria-live="polite"></div>
+          </form>
         </div>
-        <div class="exchange-shop-quantity-label">
-          <label for="ruby-exchange-shop-amount" id="ruby-exchange-shop-amount-label">Rubies to sell</label>
-          <span id="ruby-exchange-shop-stock" class="exchange-shop-tip" hidden></span>
-        </div>
-        <div class="exchange-shop-amount-row">
-          <div class="cs-num-wrap">
-            <button id="ruby-exchange-shop-dec" class="cs-num-btn" type="button" aria-label="Fewer rubies">−</button>
-            <input id="ruby-exchange-shop-amount" class="cs-val cs-val-num" type="number" min="1" step="1" inputmode="numeric" autocomplete="off" required>
-            <button id="ruby-exchange-shop-inc" class="cs-num-btn" type="button" aria-label="More rubies">+</button>
-          </div>
-          <button id="ruby-exchange-shop-max" type="button" class="secondary-btn">Max</button>
-        </div>
-        <div class="exchange-shop-quote">
-          <div id="ruby-exchange-shop-rate" class="exchange-shop-rate"></div>
-          <div id="ruby-exchange-shop-receive" class="exchange-shop-receive" aria-live="polite"></div>
-        </div>
-        <p class="exchange-shop-tip" id="ruby-exchange-shop-tip">Gold coins are added to your balance immediately.</p>
-        <p class="exchange-shop-tip">1 ruby = the registered user count in GC, buying or selling. Visit every section of a book or anthology (100+ sections) to earn a ruby, once per account. Every ten rewards add one ruby to shared stock.</p>
-        <div class="exchange-shop-actions">
-          <button id="ruby-exchange-shop-submit" class="shop-buy-btn" type="submit" disabled>Sell rubies</button>
-          <div id="ruby-exchange-shop-message" class="exchange-shop-message" role="status"></div>
-        </div>
-      </form>
+        <p id="exchange-shop-stock" class="exchange-shop-tip"></p>
+        <div id="exchange-shop-message" class="exchange-shop-message" role="status"></div>
+      </div>
     </div>
   </div>
 

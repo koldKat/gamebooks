@@ -5,8 +5,7 @@ import { updateCoinsDisplay, refreshCoinsDisplay, COIN_SVG } from './shop.js';
 import { renderBooksXpSummary } from '../account/profile.js';
 import { updateDiamondsDisplay, DIAMOND_SVG } from './diamonds.js';
 import { updateRubiesDisplay, RUBY_SVG } from './rubies.js';
-import { closeRubyExchangeShop } from './ruby-exchange-shop.js';
-import { closeDiamondExchangeShop } from './exchange-shop.js';
+import { closeBlackMarket } from './exchange-shop.js';
 import { updateHeartbeatCoinsDisplay } from './heartbeat-coins.js';
 import { readRewardCache, saveRewardCache, clearRewardCache } from './snapshot-cache.js';
 import { _broadcastLiveEvent } from '../core/livetab.js';
@@ -105,8 +104,7 @@ function _queueRewardFloater(xpDelta = 0, coinDelta = 0) {
 // ── Snapshot processing ───────────────────────────────────────────────────────
 export function _resetRewardSnapshotState() {
   clearRewardCache();
-  closeDiamondExchangeShop();
-  closeRubyExchangeShop();
+  closeBlackMarket();
   updateRubiesDisplay(null);
   _lastRubiesEarned = null;
   updateDiamondsDisplay(null);
