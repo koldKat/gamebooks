@@ -174,7 +174,7 @@ export function initBlackMarket(hooks = {}) {
     tab?.addEventListener('click', () => selectCurrency(currency));
     tab?.addEventListener('keydown', event => {
       if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key) || _busy || !_profile) return;
-      const target = event.key === 'Home' ? 'diamond' : event.key === 'End' ? 'ruby' : currency === 'diamond' ? 'ruby' : 'diamond';
+      const target = event.key === 'Home' ? 'ruby' : event.key === 'End' ? 'diamond' : currency === 'diamond' ? 'ruby' : 'diamond';
       if (el(target + '-tab').hidden || el(target + '-tab').disabled) return;
       event.preventDefault(); selectCurrency(target); el(target + '-tab').focus();
     });
