@@ -475,8 +475,9 @@
 
 .black-market-tabs { display: flex; gap: 0.35rem; padding: 0.55rem 0.85rem 0; }
 .black-market-tabs button {
-  flex: 1; padding: 0.35rem 0.6rem; border: 1px solid #374151; border-radius: 5px;
-  background: #1f2937; color: #9ca3af; font: inherit; font-size: 0.8rem; cursor: pointer;
+  flex: 0 0 auto; box-sizing: border-box; height: 26px; padding: 0 0.55rem;
+  border: 1px solid #374151; border-radius: 5px;
+  background: #1f2937; color: #9ca3af; font: inherit; font-size: 0.78rem; line-height: 1; cursor: pointer;
 }
 .black-market-tabs button[aria-selected="true"] { color: #67e8f9; border-color: #22d3ee; background: #102a33; }
 .black-market-tabs #exchange-shop-ruby-tab[aria-selected="true"] { color: #fda4af; border-color: #fb7185; background: #351922; }

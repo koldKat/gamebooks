@@ -6,7 +6,7 @@ import { showConfirm } from '../ui-helpers/confirm.js';
 
 const currencies = {
   diamond: { plural: 'diamonds', label: 'Diamonds', icon: DIAMOND_SVG, balance: 'diamondsBalance', sold: 'diamondsExchanged', bought: 'diamondsBought', note: 'Buy price: twice your level. Sell rate: your level + upgrades.' },
-  ruby: { plural: 'rubies', label: 'Rubies', icon: RUBY_SVG, balance: 'rubiesBalance', sold: 'rubiesExchanged', bought: 'rubiesBought', note: 'Buy and sell rubies at the same rate, based on the current number of players.' },
+  ruby: { plural: 'rubies', label: 'Rubies', icon: RUBY_SVG, balance: 'rubiesBalance', sold: 'rubiesExchanged', bought: 'rubiesBought', note: 'Buy and sell rubies at the same rate.' },
 };
 let _profile = null, _generation = 0, _busy = false, _hooks = {}, _direction = 'sell', _currency = 'diamond', _closeConfirmation = null;
 // Keep an interrupted trade's request ID when visiting the other currency tab.
