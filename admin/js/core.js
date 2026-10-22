@@ -4,31 +4,43 @@
 import { renderRoleBadge } from '/js/account/role-badges.js';
 
 let _confirmCb = null;
-
+let _confirmOpener = null;
+function closeConfirm() {
+  document.getElementById('confirm-overlay').classList.remove('active');
+  _confirmCb = null;
+  _confirmOpener?.focus();
+}
 export function showAlert(message) {
   showConfirm(message, () => {}, { label: 'OK', variant: '' });
-  document.getElementById('confirm-cancel').style.display = 'none';
-  const restore = () => { document.getElementById('confirm-cancel').style.display = ''; };
-  document.getElementById('confirm-ok').addEventListener('click', restore, { once: true });
-  document.getElementById('confirm-cancel').addEventListener('click', restore, { once: true });
+  document.getElementById('confirm-cancel').hidden = true;
+  document.getElementById('confirm-ok').focus();
 }
-
 export function showConfirm(message, onOk, { label = 'Confirm', variant = 'danger' } = {}) {
+  _confirmOpener = document.activeElement;
   document.getElementById('confirm-message').textContent = message;
   const ok = document.getElementById('confirm-ok');
   ok.className = variant;
   ok.textContent = label;
+  document.getElementById('confirm-cancel').hidden = false;
   _confirmCb = onOk;
   document.getElementById('confirm-overlay').classList.add('active');
+  document.getElementById('confirm-cancel').hidden ? ok.focus() : document.getElementById('confirm-cancel').focus();
 }
-
-document.getElementById('confirm-ok').addEventListener('click', () => {
-  document.getElementById('confirm-overlay').classList.remove('active');
-  if (_confirmCb) { _confirmCb(); _confirmCb = null; }
+document.getElementById('confirm-ok').addEventListener('click', async () => {
+  const action = _confirmCb;
+  closeConfirm();
+  try { await action?.(); }
+  catch (error) { showAlert(error.message || 'The action failed. Please retry.'); }
 });
-document.getElementById('confirm-cancel').addEventListener('click', () => {
-  document.getElementById('confirm-overlay').classList.remove('active');
-  _confirmCb = null;
+document.getElementById('confirm-cancel').addEventListener('click', closeConfirm);
+document.getElementById('confirm-overlay').addEventListener('keydown', event => {
+  if (event.key === 'Escape') { event.preventDefault(); event.stopImmediatePropagation(); closeConfirm(); }
+  if (event.key === 'Tab') {
+    const buttons = [...document.querySelectorAll('#confirm-dialog button')].filter(button => !button.hidden);
+    const index = buttons.indexOf(document.activeElement);
+    const next = (index + (event.shiftKey ? -1 : 1) + buttons.length) % buttons.length;
+    event.preventDefault(); buttons[next].focus();
+  }
 });
 
 export async function api(method, path, body) {
@@ -397,19 +409,19 @@ export function renderPaged(tableId, fullData, renderFn, pageSize = PAGE_SIZE) {
   if (state.page < 0) state.page = 0;
   const start = state.page * pageSize;
   renderFn(fullData.slice(start, start + pageSize));
-  _renderPaginationControls(tableId, state.page, totalPages, fullData.length, () => renderPaged(tableId, fullData, renderFn, pageSize));
+  renderPaginationControls(tableId, state.page, totalPages, fullData.length, () => renderPaged(tableId, fullData, renderFn, pageSize));
 }
 
-function _renderPaginationControls(tableId, page, totalPages, total, onChange) {
+export function renderPaginationControls(tableId, page, totalPages, total, onChange) {
   const el = document.getElementById(`${tableId}-pagination`);
   if (!el) return;
   if (totalPages <= 1) { el.innerHTML = ''; return; }
   el.innerHTML =
     `<button class="btn" id="${tableId}-page-prev"${page === 0 ? ' disabled' : ''}>&larr; Prev</button>` +
-    `<span>Page ${page + 1} of ${totalPages} (${total.toLocaleString()} total)</span>` +
+    `<span aria-live="polite">Page ${page + 1} of ${totalPages} (${total.toLocaleString()} total)</span>` +
     `<button class="btn" id="${tableId}-page-next"${page >= totalPages - 1 ? ' disabled' : ''}>Next &rarr;</button>`;
-  document.getElementById(`${tableId}-page-prev`)?.addEventListener('click', () => { _pageState[tableId].page--; onChange(); });
-  document.getElementById(`${tableId}-page-next`)?.addEventListener('click', () => { _pageState[tableId].page++; onChange(); });
+  document.getElementById(`${tableId}-page-prev`)?.addEventListener('click', () => { if (_pageState[tableId]) _pageState[tableId].page = page - 1; onChange(page - 1); });
+  document.getElementById(`${tableId}-page-next`)?.addEventListener('click', () => { if (_pageState[tableId]) _pageState[tableId].page = page + 1; onChange(page + 1); });
 }
 
 export function moderatorBadge(value) { return value ? renderRoleBadge('moderator') : ''; }

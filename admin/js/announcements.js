@@ -1,6 +1,6 @@
 // Announcements: draft, publish, pin, and edit controls.
 
-import { mkBtn, showConfirm } from './core.js';
+import { api, mkBtn, showConfirm, showAlert, matchesQuery, renderPaged, _pageState } from './core.js';
 import { openEditor } from './editor.js';
 
 let _annEditId = null;
@@ -69,12 +69,12 @@ function renderAnnCard(row) {
     ? `Created ${annFmt(row.created_at)}`
     : `Published ${annFmt(row.published_at)}`;
   const publishBtn = isDraft
-    ? `<button class="ann-card-btn publish" data-id="${row.id}" data-action="publish">Publish</button>`
-    : `<button class="ann-card-btn unpublish" data-id="${row.id}" data-action="unpublish">Unpublish</button>`;
+    ? `<button class="btn btn-watch" data-id="${row.id}" data-action="publish">Publish</button>`
+    : `<button class="btn btn-warn" data-id="${row.id}" data-action="unpublish">Unpublish</button>`;
   const pinBtn = !isDraft
     ? (row.pinned
-        ? `<button class="ann-card-btn unpin" data-id="${row.id}" data-action="unpin">Unpin</button>`
-        : `<button class="ann-card-btn pin" data-id="${row.id}" data-action="pin">Pin</button>`)
+        ? `<button class="btn btn-warn" data-id="${row.id}" data-action="unpin">Unpin</button>`
+        : `<button class="btn btn-info" data-id="${row.id}" data-action="pin">Pin</button>`)
     : '';
   const pinnedBadge = row.pinned ? `<span class="ann-pinned-badge">Pinned</span>` : '';
   return `<div class="ann-card${row.pinned ? ' ann-card-pinned' : ''}" data-id="${row.id}">
@@ -93,68 +93,65 @@ function renderAnnCard(row) {
 function wireAnnActionButtons(container, rows) {
   container.querySelectorAll('[data-action]').forEach(btn => {
     btn.addEventListener('click', async () => {
+      try {
       const id  = +btn.dataset.id;
       const action = btn.dataset.action;
       if (action === 'edit') {
         const row = rows.find(r => r.id === id);
         if (row) annStartEdit(row);
       } else if (action === 'publish') {
-        await fetch(`/api/admin/announcements/${id}/publish`, { method: 'POST' });
+        await api('POST', `/api/admin/announcements/${id}/publish`);
         annResetCompose();
         loadAnnouncements();
       } else if (action === 'unpublish') {
-        await fetch(`/api/admin/announcements/${id}/unpublish`, { method: 'POST' });
+        await api('POST', `/api/admin/announcements/${id}/unpublish`);
         loadAnnouncements();
       } else if (action === 'pin') {
-        await fetch(`/api/admin/announcements/${id}/pin`, { method: 'POST' });
+        await api('POST', `/api/admin/announcements/${id}/pin`);
         loadAnnouncements();
       } else if (action === 'unpin') {
-        await fetch(`/api/admin/announcements/${id}/unpin`, { method: 'POST' });
+        await api('POST', `/api/admin/announcements/${id}/unpin`);
         loadAnnouncements();
       } else if (action === 'delete') {
         showConfirm('Delete this announcement? This cannot be undone.', async () => {
-          await fetch(`/api/admin/announcements/${id}`, { method: 'DELETE' });
+          await api('DELETE', `/api/admin/announcements/${id}`);
           if (_annEditId === id) annResetCompose();
           loadAnnouncements();
         }, { label: 'Delete', variant: 'danger' });
       }
+      } catch (error) { showAlert('Could not update announcement. Please retry.'); }
     });
   });
 }
 
+let announcementRows = [];
 export async function loadAnnouncements() {
-  const rows = await fetch('/api/admin/announcements').then(r => r.json());
-  const drafts = rows.filter(r => r.is_draft === 1);
-  const publishedAll = rows.filter(r => r.is_draft === 0);
-
-  // Show pinned announcements; collapse older entries behind a bottom button.
-  const thirtyDaysAgo = Math.floor(Date.now() / 1000) - 30 * 24 * 60 * 60;
-  const visible = publishedAll.filter(r => r.pinned || r.published_at >= thirtyDaysAgo);
-  const hidden  = publishedAll.filter(r => !r.pinned && r.published_at < thirtyDaysAgo);
-
-  const draftEl = document.getElementById('ann-drafts-list');
-  const pubEl   = document.getElementById('ann-published-list');
-
-  draftEl.innerHTML = drafts.length ? drafts.map(renderAnnCard).join('') : '<span class="ann-empty">No drafts.</span>';
-  pubEl.innerHTML   = visible.length ? visible.map(renderAnnCard).join('')
-                    : (hidden.length ? '' : '<span class="ann-empty">No published announcements.</span>');
-
-  wireAnnActionButtons(draftEl, rows);
-  wireAnnActionButtons(pubEl, rows);
-
-  if (hidden.length) {
-    const row = document.createElement('div');
-    row.className = 'ann-show-older-row';
-    row.appendChild(mkBtn(`Show ${hidden.length} announcement${hidden.length !== 1 ? 's' : ''} (30+ days)`, 'btn-info', () => {
-      row.remove();
-      const hiddenWrap = document.createElement('div');
-      hiddenWrap.innerHTML = hidden.map(renderAnnCard).join('');
-      wireAnnActionButtons(hiddenWrap, rows); // wire while still isolated, before moving into pubEl
-      while (hiddenWrap.firstChild) pubEl.appendChild(hiddenWrap.firstChild);
-    }));
-    pubEl.appendChild(row);
+  try {
+    announcementRows = await api('GET', '/api/admin/announcements');
+    renderAnnouncements();
+  } catch (error) { document.getElementById('announcements-meta').textContent = 'Could not load announcements. Use Refresh to retry.'; }
+}
+function renderAnnouncements() {
+  const query = document.getElementById('announcements-search').value.trim();
+  const rows = announcementRows.filter(row => !query || matchesQuery(row.title,query) || matchesQuery(row.body,query));
+  document.getElementById('announcements-meta').textContent = `${rows.length} of ${announcementRows.length} announcements`;
+  for (const [key, draft, target] of [['ann-drafts',1,'ann-drafts-list'],['ann-published',0,'ann-published-list']]) {
+    const list = document.getElementById(target);
+    renderPaged(key, rows.filter(row => row.is_draft === draft).sort((a,b) => (b.pinned||0)-(a.pinned||0) || (b.published_at||b.created_at)-(a.published_at||a.created_at) || b.id-a.id), page => {
+      list.innerHTML = page.map(renderAnnCard).join('') || '<div class="admin-empty">No matching announcements.</div>';
+      wireAnnActionButtons(list, page);
+    },10);
   }
 }
+document.getElementById('announcements-search').addEventListener('input', () => {
+  document.getElementById('announcements-search-clear').style.display = document.getElementById('announcements-search').value ? 'inline-block' : 'none';
+  _pageState['ann-drafts'] = { page: 0 }; _pageState['ann-published'] = { page: 0 };
+  renderAnnouncements();
+});
+document.getElementById('announcements-search-clear').addEventListener('click', () => {
+  const input = document.getElementById('announcements-search');
+  input.value = ''; input.dispatchEvent(new Event('input')); input.focus();
+});
 
 function annTrim(s) {
   return s.split('\n').map(l => l.trim()).join('\n').replace(/\n{3,}/g, '\n\n').trim();

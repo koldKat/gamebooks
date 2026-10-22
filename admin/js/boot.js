@@ -6,7 +6,7 @@ import { loadAdminSeries } from './series.js';
 import { loadFeedback } from './feedback.js';
 import { loadAnnouncements } from './announcements.js';
 import { loadInventory } from './inventory.js';
-import { loadTools, loadAll, loadLive, loadStats, loadAdminGc, loadAppSize } from './dashboard.js';
+import { loadTools, loadAll, loadActiveTab, registerTabLoaders, loadLive, loadStats, loadAdminGc, loadAppSize } from './dashboard.js';
 // dashboard.js imports users-books.js for its top-level event bindings.
 
 (function () {
@@ -33,18 +33,13 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
-    if (btn.dataset.tab === 'feedback')      loadFeedback();
-    if (btn.dataset.tab === 'tools')         loadTools();
-    if (btn.dataset.tab === 'announcements') loadAnnouncements();
-    if (btn.dataset.tab === 'series')        loadAdminSeries();
-    if (btn.dataset.tab === 'anthologies')   loadAdminAnthologies();
-    if (btn.dataset.tab === 'tips')          loadTips();
-    if (btn.dataset.tab === 'inventory')     loadInventory();
+    loadActiveTab();
   });
 });
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
 
+registerTabLoaders({ series: loadAdminSeries, anthologies: loadAdminAnthologies, tips: loadTips, inventory: loadInventory, feedback: loadFeedback, announcements: loadAnnouncements, tools: loadTools });
 loadAll();
 loadLive();
 const pollVisible = callback => () => { if (!document.hidden) callback(); };

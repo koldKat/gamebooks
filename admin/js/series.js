@@ -2,7 +2,7 @@
 
 import {
   api, el, badge, mkBtn, mkEditBtn, appendCell, _esc, showConfirm,
-  storeData, getFiltered, renderPaged, setSearchFields, wireTableSearch,
+  storeData, getFiltered, renderPaged, setSearchFields, wireTableSearch, initSortHeaders,
 } from './core.js';
 import { editFields } from './editor.js';
 
@@ -66,3 +66,5 @@ function _openSeriesEdit(s) {
 
 setSearchFields('series', ['name', 'created_by_username']);
 wireTableSearch('series', 'series-search', 'series-search-clear', renderSeriesTable);
+
+initSortHeaders('series', renderSeriesTable);

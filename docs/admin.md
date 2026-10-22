@@ -28,26 +28,18 @@ All `/api/admin/*` routes and the panel itself reject any connection that is not
 
 ## Stats cards
 
-The top of the panel shows aggregate stats across all users and books:
+The top of the panel groups aggregate metrics into six compact panels:
 
-| Card | What it shows |
-|------|---------------|
-| **Users** | Total registered accounts (active only). Shows admin count separately. |
-| **Sessions** | Current live sessions (logged-in browsers) |
-| **PDFs / EPUBs** | Number of books with a PDF attached, and the number with an EPUB attached |
-| **Books** | Total books across all accounts |
-| **Mapped Sections** | Sections where choices have been recorded, summed across all books - shown with percentage of total sections |
-| **Discovered Sections** | All sections ever seen (mapped + referenced but unmapped), summed across all books - shown with percentage of total sections |
-| **Playthroughs** | `active \| finished` - active runs (green), finished runs (aqua). Pipe is orange. |
-| **Wins / Losses** | Split card; wins green, losses red. Battle deaths are counted separately in the users/books tables. |
-| **Heap Used / Total** | Node.js process heap memory in use and total heap allocated. |
-| **RSS / CPU** | Resident set size (total process memory). |
-| **Traffic In / Out** | Cumulative bytes received/sent since tracking was enabled. Flushed to DB every 50 requests and on clean shutdown. Sits in the same column as Heap/RSS. |
-| **Database Size** | Size of the SQLite database file. Vacuum button below - purges expired sessions then rewrites the file. |
-| **Application Size** | Total on-disk size of the app directory. Excludes entries matching `size_ignore_patterns`. |
-| **Session Uptime** | How long the current server process has been running. |
-| **Uptime %** | Percentage of total app lifetime that the server has been up. |
-| **App Age** | Total time since the app was first started (persisted across restarts). |
+| Group | What it shows |
+|-------|---------------|
+| **Players** | Registered accounts, players active in the last five minutes and 24 hours, accounts created in seven days, and unexpired sign-in sessions excluding impersonation. A player can have several sessions. |
+| **Catalog** | Standalone and all playable books (including anthology children), anthologies, series, attached PDFs/EPUBs, books with live reading, catalog sections and battle simulators. |
+| **Activity** | Mapped/discovered nodes, active/total runs, finished/shared runs, run wins/losses, simulator battles won/lost, total simulator battles and win rate. Node totals use the most-mapped player copy of each book; runs and simulator battles count started runs across players. |
+| **Gold & coins** | Lifetime gold earned, available and spent, shop upgrades, Gamemaster supply/remaining coins, Lucky Coins generated/claimed, and current bronze/silver balances. |
+| **Diamonds** | Lifetime earned diamonds, player balances, sold/bought totals, diamonds earned from Lucky Coin claims, shared market stock and lifetime app-mined diamonds. Mining and Lucky Coin rewards count as earned; purchases count separately. |
+| **Server** | Application/database sizes, used/allocated heap, process memory, CPU, incoming/outgoing traffic, current process uptime, lifetime uptime/downtime and app age. The Vacuum button retains its confirmation. |
+
+Labels and numeric columns align within each group, with tabular digits and currency colors. Wide screens place server metrics in a full-width strip; narrower screens use fewer columns. Statistics refresh in place without replacing the panels.
 
 Dashboard polling pauses while the browser tab is hidden and refreshes when it becomes visible. Application Size uses an asynchronous directory scan with a shared five-minute cache; changed ignore patterns trigger a fresh calculation.
 
@@ -65,9 +57,11 @@ Dashboard polling pauses while the browser tab is hidden and refreshes when it b
 
 ## Users tab
 
-Users, Books, Series, and Anthologies share a left-aligned search toolbar with a clear button and a total count. Search is case-insensitive, ignores surrounding spaces, and filters as you type. The count shows all loaded items, before filtering. Users remain an unpaginated list when searching or sorting; the other three tabs keep their existing pagination.
+Admin uses the app’s dark surfaces, amber focus, compact controls, themed scrollbars, and consistent dialogs. Only the selected tab loads its data; Refresh reloads that tab and the dashboard.
 
-Lists all registered accounts. Columns: Username, Joined, Last Active, Inactive (days), Books, Runs, Active, Wins, Loss, Battle, Lvl, Earned, Spent, Gifted, Lucky (bonus GC lottery claims), Sess, Location, Domain, Actions. The search box filters by username or display name live as you type; matching inactive accounts are shown directly instead of remaining behind the collapsed inactive-accounts row.
+Users, Books, Series, and Anthologies share a left-aligned search toolbar with a clear button and a total count. Search is case-insensitive, ignores surrounding spaces, and filters as you type. The count shows all loaded items, before filtering. Users keep their original view: every user active within the last 30 days is visible without pagination, with a separate button to reveal inactive accounts. Search includes inactive users and sorting never truncates the list. Books, Series and Anthologies use 50 rows per page.
+
+Lists all registered accounts. Columns: Username, Joined, Last Active, Inactive (days), Books, Runs, Active, Wins, Loss, Battle, Lvl, Earned, Spent, Gifted, Lucky (bonus GC lottery claims), Sess, Location, Domain, Actions. The search box filters by username or display name live as you type; inactive matches appear directly while searching.
 
 Username badges: **ADMIN**, **PROTECTED**, **AUTHOR**, **CONTRIBUTOR**, **LOCKED**.
 
@@ -75,7 +69,7 @@ Username badges: **ADMIN**, **PROTECTED**, **AUTHOR**, **CONTRIBUTOR**, **LOCKED
 - **Domain** - which of the app's domains (e.g. koldkat.net / pathmap.net / bookplay.net) the user was last seen on, read from the `Host` header on their most recent authenticated request (`last_domain` column, `-` until their first request after this was added). Unlike Location, this isn't throttled - it just no-ops when the domain hasn't changed since the last write.
 - **Level** - shown with XP progress bar.
 
-Clicking a username opens a **user detail** view: meta bar (Joined, Books, Sessions, Last Location, Domain, Level) and a table of all their books with per-book stats.
+Clicking a username opens a **user detail** view: compact account-details table (Joined, Books, Sessions, Runs, Last Location, Domain, Level) beside a separate refund table and a searchable, sortable library with 50 books per page. Only the current page loads saved gameplay. Books initially sort by latest update; choosing a gameplay column sorts the complete matching library. Header book counts and permanent run totals remain account-wide. Editing an account or book directly loads metadata without scanning its gameplay.
 
 Editing uses consistent modal dialogs for players, books, series, anthologies, inventory items, tips, and announcements. Every editable table groups **Edit** with its other buttons in the right-hand **Actions** column; cards put the same blue **Edit** button first. Editing opens over the current list without navigating into details, including books in a player's library. Detail views also use the same **Edit** button. Dialogs provide a title and close button, scroll within smaller viewports, keep keyboard focus inside, and support Cancel or Escape. Escape dismisses autocomplete suggestions before the editor, and never closes another dialog underneath it. Controls and dismissal are disabled while saving; failures stay in the dialog with an error message. Saving refreshes the current list or detail view.
 
@@ -140,7 +134,7 @@ The **Edit** dialog, available from the Books table or book detail view, include
 
 ## Series tab
 
-Lists all series across all users. Columns: Name, Creator, Books (count), Public, Created, Description, Actions. Open World is available in the editor. Paginated at 50 rows/page. The search box filters by series name or creator username live as you type through the shared `storeData`/`getFiltered` pipeline; there is no column sorting here, only search.
+Lists all series across all users. Columns: Name, Creator, Books (count), Public, Created, Description, Actions. Open World is available in the editor. Paginated at 50 rows/page. The search box filters by series name or creator username live as you type through the shared `storeData`/`getFiltered` pipeline; column headers sort the full list before pagination.
 
 - **Edit** - opens a dialog to update name, description, public flag, and the **Open world series** checkbox.
 - **Delete** - removes the series entirely, unlinks all books (`series_id = NULL`), and removes all `user_series` rows. Requires confirmation.
@@ -181,7 +175,7 @@ Tip counts (real vs. silly) are shown in the tab. The app alternates real and si
 
 ## Feedback tab
 
-Shows all user feedback threads. Unread threads (new user messages) are highlighted; the tab shows a red count badge.
+Shows 20 feedback threads per page, with search across usernames, email addresses, and message text. Unread threads are highlighted and the tab shows a red count badge. Only opening a thread marks it read. Unsent replies survive page changes and refreshes within the open admin page.
 
 Feedback also appears in **koldKat's inbox** in the main app: koldKat's inbox loads all threads (not just his own), with `admin_unread` mapped to `user_unread` so the inbox badge lights up for new submissions. Replying from koldKat's inbox sends as 'admin' and triggers an email if the thread has an email address. Threads with email addresses can also be handled from this tab.
 
@@ -195,7 +189,7 @@ Users can attach files to their initial feedback submission and to inbox replies
 
 ## Announcements tab
 
-Announcements are notices shown to all users in the app. Workflow: draft → published → pinned.
+Announcements are notices shown to all users in the app. Workflow: draft → published → pinned. Drafts and published notices each show 10 per page, with a shared title/body search. Pinned notices sort first; older notices remain searchable.
 
 | Action | Description |
 |--------|-------------|

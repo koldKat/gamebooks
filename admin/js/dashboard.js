@@ -3,17 +3,22 @@
 import { api, fmtBytes, fmtDuration, esc, showAlert, showConfirm, flashSaved } from './core.js';
 import { loadUsers, loadBooks } from './users-books.js';
 
-export function loadAll() { loadStats(); loadAdminGc(); loadUsers(); loadBooks(); loadAppSize(); }
+const tabLoaders = { users: loadUsers, books: loadBooks };
+const tabRequests = new Map();
+export function registerTabLoaders(loaders) { Object.assign(tabLoaders, loaders); }
+export function loadActiveTab() {
+  const tab = document.querySelector('.tab-btn.active')?.dataset.tab || 'users';
+  if (!tabLoaders[tab]) return Promise.resolve();
+  if (!tabRequests.has(tab)) tabRequests.set(tab, Promise.resolve().then(tabLoaders[tab]).finally(() => tabRequests.delete(tab)));
+  return tabRequests.get(tab);
+}
+export function loadAll() { return Promise.all([loadStats(), loadAdminGc(), loadActiveTab(), loadAppSize()]); }
 
 // ── Main view - Stats ─────────────────────────────────────────────────────────
 
 function fmtN(n) { return (n ?? 0).toLocaleString(); }
 
 function applyStats(d) {
-  function withTotal(n) {
-    if (!d.totalSections) return fmtN(n);
-    return `${fmtN(n)} <span class="pct">/ ${fmtN(d.totalSections)}</span> <span class="pct" style="color:#f5a623">(${Math.round(n / d.totalSections * 100)}%)</span>`;
-  }
   document.getElementById('s-users').textContent      = fmtN(d.users);
   document.getElementById('s-books').textContent       = fmtN(d.books);
   document.getElementById('s-anthologies').textContent = fmtN(d.anthologies);
@@ -21,8 +26,8 @@ function applyStats(d) {
   document.getElementById('s-pdfs').textContent        = fmtN(d.pdfCount);
   document.getElementById('s-epubs').textContent       = fmtN(d.epubCount);
   document.getElementById('s-sessions').textContent   = fmtN(d.sessions);
-  document.getElementById('s-mapped').innerHTML       = withTotal(d.mappedSections);
-  document.getElementById('s-discovered').innerHTML   = withTotal(d.discoveredSections);
+  document.getElementById('s-mapped').textContent     = fmtN(d.mappedSections);
+  document.getElementById('s-discovered').textContent = fmtN(d.discoveredSections);
   document.getElementById('s-pts-active').textContent = fmtN(d.activePlaythroughs);
   document.getElementById('s-pts-total').textContent  = fmtN(d.playthroughs);
   document.getElementById('s-wins').textContent         = fmtN(d.wins);
@@ -34,6 +39,20 @@ function applyStats(d) {
   document.getElementById('s-shop-purchases').textContent = fmtN(d.totalUpgrades);
   document.getElementById('s-lucky-gc-generated').textContent = fmtN(d.luckyGcGenerated);
   document.getElementById('s-lucky-gc-claimed').textContent   = fmtN(d.luckyGcClaimed);
+  const extraMetrics = {
+    's-online': d.onlineUsers, 's-active-24h': d.activeUsers24h, 's-new-7d': d.newUsers7d,
+    's-playable-books': d.playableBooks, 's-reading-books': d.readingBooks,
+    's-total-sections': d.totalSections, 's-battle-sims': d.battleSims,
+    's-pts-finished': d.finishedPlaythroughs, 's-public-runs': d.publicRuns,
+    's-battles-fought': d.battlesFought, 's-battles-won': d.battlesWon, 's-battles-lost': d.battlesLost,
+    's-bronze-avail': d.bronzeAvailable, 's-silver-avail': d.silverAvailable,
+    's-diamonds-earned': d.diamondsEarned, 's-diamonds-avail': d.diamondsAvailable,
+    's-diamonds-sold': d.diamondsSold, 's-diamonds-bought': d.diamondsBought,
+    's-lucky-diamonds': d.luckyDiamondsEarned, 's-diamond-stock': d.marketDiamonds,
+    's-market-diamonds-mined': d.marketDiamondsMined,
+  };
+  for (const [id, value] of Object.entries(extraMetrics)) document.getElementById(id).textContent = fmtN(value);
+  document.getElementById('s-battle-win-rate').textContent = fmtN(d.battleWinRate) + '%';
   document.getElementById('s-uptime-pct').textContent    = d.uptimePct != null ? d.uptimePct.toFixed(2) + '%' : '-';
   document.getElementById('s-downtime').textContent      = fmtDuration(d.totalDowntimeS);
   const badge = document.getElementById('feedback-unread-badge');
@@ -104,8 +123,7 @@ export async function loadTools() {
     statusEl.style.background = s.smtp_active ? '#064e3b' : '#1f2937';
     _applyMaintenanceToggle(!!s.maintenance_mode);
   } catch (e) { console.error('Tools:', e); }
-  await loadXpConfig();
-  await loadBackups();
+  await Promise.all([loadXpConfig(), loadBackups()]);
 }
 
 let _xpConfigData = [];

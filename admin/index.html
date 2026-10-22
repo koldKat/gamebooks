@@ -127,12 +127,36 @@
     .val-sep   { color: #f5a623; font-weight: 700; font-size: 0.8rem; line-height: 1; }
     .coin-icon { width: 13px; height: 13px; vertical-align: -1px; display: inline-block; }
 
-    .stat-card-stack {
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-      flex: 0 0 auto;
+    /* The overview has fixed columns; live numbers never resize its panels. */
+    .dashboard-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.65rem; align-items: start; }
+    .stat-section { min-width: 0; padding: 0.65rem 0.75rem; background: #1f2937; border: 1px solid #374151; border-radius: 7px; }
+    .stat-section h2 { margin: 0 0 0.4rem; color: var(--stat-accent, #9ca3af); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+    .stat-section--players { --stat-accent: #4ade80; }
+    .stat-section--catalog { --stat-accent: #60a5fa; }
+    .stat-section--activity { --stat-accent: #a78bfa; }
+    .stat-section--gold { --stat-accent: #f5a623; }
+    .stat-section--diamonds { --stat-accent: #2dd4bf; }
+    .stat-metric { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 0.65rem; padding: 0.22rem 0; font-size: 0.74rem; line-height: 1.35; }
+    .stat-metric dt { min-width: 0; color: #9ca3af; overflow-wrap: anywhere; }
+    .stat-metric dd { font-size: 0.78rem; margin: 0; text-align: right; color: #e5e7eb; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .stat-metric dd span { font: inherit; }
+    .stat-metric .stat-pair { display: inline-flex; align-items: baseline; gap: 0.3rem; }
+    .stat-pair > span + span::before { content: '/'; margin-right: 0.3rem; color: #6b7280; font-weight: 400; }
+    .val-blue { color: #60a5fa; }
+    .val-purple { color: #a78bfa; }
+    .val-teal { color: #2dd4bf; }
+    .val-bronze { color: #cd905f; }
+    .val-silver { color: #cbd5e1; }
+    .stat-section .vacuum-btn { margin-top: 0.5rem; padding: 0.3rem 0.5rem; font-size: 0.72rem; }
+    @media (min-width: 1400px) {
+      .dashboard-stats { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+      .stat-section--server { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.3rem 1rem; }
+      .stat-section--server h2 { align-self: center; margin: 0; }
+      .stat-section--server dl { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 1.5rem; }
+      .stat-section--server .vacuum-btn { grid-column: 2; grid-row: 1; width: auto; margin: 0; }
     }
+    @media (max-width: 959px) { .dashboard-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 599px) { .dashboard-stats { grid-template-columns: minmax(0, 1fr); } }
 
     .vacuum-btn {
       background: #1f2937;
@@ -603,6 +627,7 @@
     #maintenance-toggle::after { content:''; position:absolute; top:2px; left:2px; width:13px; height:13px; background:#9ca3af; border-radius:50%; transition:transform 0.15s, background 0.15s; }
     #maintenance-toggle:checked::after { transform:translateX(13px); background:#fff; }
   </style>
+  <link rel="stylesheet" href="/css/admin.css?v=20261022-compact-4">
 </head>
 <body>
 
@@ -620,113 +645,78 @@
   <!-- ── View: Main ───────────────────────────────────────────────────────── -->
   <div id="view-main">
 
-    <div class="stats-grid">
-      <div class="stat-card-stack">
-        <div class="stat-card"><div class="label">Users</div><div class="value" id="s-users">-</div></div>
-        <div class="stat-card"><div class="label">Sessions</div><div class="value" id="s-sessions">-</div></div>
-        <div class="stat-card stat-card-split">
-          <div class="label">PDFs / EPUBs</div>
-          <div class="split-vals"><span style="font-size:1rem;font-weight:700;color:#60a5fa;font-variant-numeric:tabular-nums;line-height:1" id="s-pdfs">-</span><span class="val-sep">|</span><span style="font-size:1rem;font-weight:700;color:#a78bfa;font-variant-numeric:tabular-nums;line-height:1" id="s-epubs">-</span></div>
-        </div>
-      </div>
-      <div class="stat-card-stack">
-        <div class="stat-card"><div class="label">Books</div><div class="value" id="s-books">-</div></div>
-        <div class="stat-card"><div class="label">Anthologies</div><div class="value" id="s-anthologies">-</div></div>
-        <div class="stat-card"><div class="label">Series</div><div class="value" id="s-series">-</div></div>
-      </div>
-      <div class="stat-card-stack">
-        <div class="stat-card"><div class="label">Mapped Sections</div><div class="value" id="s-mapped">-</div></div>
-        <div class="stat-card"><div class="label">Discovered Sections</div><div class="value" id="s-discovered">-</div></div>
-      </div>
-      <div class="stat-card-stack">
-        <div class="stat-card stat-card-split">
-          <div class="label">Plays active / total</div>
-          <div class="split-vals"><span class="val-green" id="s-pts-active">-</span><span class="val-sep">|</span><span style="font-size:1rem;font-weight:700;color:#22d3ee;font-variant-numeric:tabular-nums;line-height:1" id="s-pts-total">-</span></div>
-        </div>
-        <div class="stat-card stat-card-split">
-          <div class="label">Wins / Losses</div>
-          <div class="split-vals">
-            <span class="val-green" id="s-wins">-</span>
-            <span class="val-sep">|</span>
-            <span class="val-red" id="s-deaths">-</span>
-          </div>
-        </div>
-      </div>
-      <div class="stat-card-stack">
-        <div class="stat-card stat-card-split">
-          <div class="label">Coins earned / avail / spent</div>
-          <div class="split-vals">
-            <span class="val-amber" id="s-coins-earned">-</span><svg class="coin-icon" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7.5" fill="#f59e0b" stroke="#92400e" stroke-width="0.75"/><circle cx="8" cy="8" r="5.5" fill="none" stroke="#fde68a" stroke-width="1"/><text x="8" y="8" text-anchor="middle" dominant-baseline="central" font-size="7" font-weight="bold" fill="#78350f" font-family="serif">G</text></svg>
-            <span class="val-sep">|</span>
-            <span class="val-green" id="s-coins-avail">-</span><svg class="coin-icon" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7.5" fill="#f59e0b" stroke="#92400e" stroke-width="0.75"/><circle cx="8" cy="8" r="5.5" fill="none" stroke="#fde68a" stroke-width="1"/><text x="8" y="8" text-anchor="middle" dominant-baseline="central" font-size="7" font-weight="bold" fill="#78350f" font-family="serif">G</text></svg>
-            <span class="val-sep">|</span>
-            <span class="val-red" id="s-coins-spent">-</span><svg class="coin-icon" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7.5" fill="#f59e0b" stroke="#92400e" stroke-width="0.75"/><circle cx="8" cy="8" r="5.5" fill="none" stroke="#fde68a" stroke-width="1"/><text x="8" y="8" text-anchor="middle" dominant-baseline="central" font-size="7" font-weight="bold" fill="#78350f" font-family="serif">G</text></svg>
-          </div>
-        </div>
-        <div class="stat-card">
-          <div class="label">Coin shop purchases</div>
-          <div class="value val-amber" id="s-shop-purchases">-</div>
-        </div>
-        <div class="stat-card stat-card-split">
-          <div class="label">Gamemaster coins supply / avail</div>
-          <div class="split-vals">
-            <span class="val-amber" id="s-admin-gc-earned">-</span><svg class="coin-icon" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7.5" fill="#f59e0b" stroke="#92400e" stroke-width="0.75"/><circle cx="8" cy="8" r="5.5" fill="none" stroke="#fde68a" stroke-width="1"/><text x="8" y="8" text-anchor="middle" dominant-baseline="central" font-size="7" font-weight="bold" fill="#78350f" font-family="serif">G</text></svg>
-            <span class="val-sep">|</span>
-            <span class="val-green" id="s-admin-gc-avail">-</span><svg class="coin-icon" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7.5" fill="#f59e0b" stroke="#92400e" stroke-width="0.75"/><circle cx="8" cy="8" r="5.5" fill="none" stroke="#fde68a" stroke-width="1"/><text x="8" y="8" text-anchor="middle" dominant-baseline="central" font-size="7" font-weight="bold" fill="#78350f" font-family="serif">G</text></svg>
-          </div>
-        </div>
-        <div class="stat-card stat-card-split">
-          <div class="label">Lucky coins generated / claimed</div>
-          <div class="split-vals">
-            <span class="val-amber" id="s-lucky-gc-generated">-</span><svg class="coin-icon" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7.5" fill="#f59e0b" stroke="#92400e" stroke-width="0.75"/><circle cx="8" cy="8" r="5.5" fill="none" stroke="#fde68a" stroke-width="1"/><text x="8" y="8" text-anchor="middle" dominant-baseline="central" font-size="7" font-weight="bold" fill="#78350f" font-family="serif">G</text></svg>
-            <span class="val-sep">|</span>
-            <span class="val-green" id="s-lucky-gc-claimed">-</span><svg class="coin-icon" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7.5" fill="#f59e0b" stroke="#92400e" stroke-width="0.75"/><circle cx="8" cy="8" r="5.5" fill="none" stroke="#fde68a" stroke-width="1"/><text x="8" y="8" text-anchor="middle" dominant-baseline="central" font-size="7" font-weight="bold" fill="#78350f" font-family="serif">G</text></svg>
-          </div>
-        </div>
-      </div>
-      <div class="stat-card-stack">
-        <div class="stat-card"><div class="label">Application Size</div><div class="value" id="s-appsize">-</div></div>
-        <div class="stat-card"><div class="label">Database Size</div><div class="value" id="s-dbsize">-</div></div>
+    <div class="stats-grid dashboard-stats" aria-label="Dashboard overview">
+      <section class="stat-section stat-section--players" aria-label="Players statistics">
+        <h2>Players</h2>
+        <dl>
+          <div class="stat-metric"><dt>Registered</dt><dd><span id="s-users">-</span></dd></div>
+          <div class="stat-metric" data-tooltip="Players active within the last five minutes."><dt>Online · 5 min</dt><dd><span class="val-green" id="s-online">-</span></dd></div>
+          <div class="stat-metric"><dt>Active · 24 hours</dt><dd><span id="s-active-24h">-</span></dd></div>
+          <div class="stat-metric"><dt>Joined · 7 days</dt><dd><span id="s-new-7d">-</span></dd></div>
+          <div class="stat-metric" data-tooltip="Unexpired sign-in sessions, excluding impersonation. One player can have several sessions."><dt>Signed-in sessions</dt><dd><span id="s-sessions">-</span></dd></div>
+        </dl>
+      </section>
+      <section class="stat-section stat-section--catalog" aria-label="Catalog statistics">
+        <h2>Catalog</h2>
+        <dl>
+          <div class="stat-metric"><dt>Standalone books</dt><dd><span id="s-books">-</span></dd></div>
+          <div class="stat-metric" data-tooltip="Includes anthology children; excludes anthology containers."><dt>All playable books</dt><dd><span id="s-playable-books">-</span></dd></div>
+          <div class="stat-metric"><dt>Anthologies / series</dt><dd class="stat-pair"><span id="s-anthologies">-</span><span id="s-series">-</span></dd></div>
+          <div class="stat-metric"><dt>PDFs / EPUBs</dt><dd class="stat-pair"><span class="val-blue" id="s-pdfs">-</span><span class="val-purple" id="s-epubs">-</span></dd></div>
+          <div class="stat-metric"><dt>Live reading</dt><dd><span class="val-green" id="s-reading-books">-</span></dd></div>
+          <div class="stat-metric"><dt>Catalog sections</dt><dd><span id="s-total-sections">-</span></dd></div>
+          <div class="stat-metric"><dt>Battle simulators</dt><dd><span id="s-battle-sims">-</span></dd></div>
+        </dl>
+      </section>
+      <section class="stat-section stat-section--activity" aria-label="Activity statistics">
+        <h2>Activity</h2>
+        <dl>
+          <div class="stat-metric" data-tooltip="Mapped nodes from the most-mapped player copy of each book, totaled across the catalog."><dt>Mapped nodes</dt><dd><span id="s-mapped">-</span></dd></div>
+          <div class="stat-metric" data-tooltip="Discovered nodes from the most-mapped player copy of each book, totaled across the catalog."><dt>Discovered nodes</dt><dd><span id="s-discovered">-</span></dd></div>
+          <div class="stat-metric"><dt>Runs · active / total</dt><dd class="stat-pair"><span class="val-green" id="s-pts-active">-</span><span class="val-blue" id="s-pts-total">-</span></dd></div>
+          <div class="stat-metric"><dt>Finished / shared runs</dt><dd class="stat-pair"><span id="s-pts-finished">-</span><span id="s-public-runs">-</span></dd></div>
+          <div class="stat-metric"><dt>Runs · wins / losses</dt><dd class="stat-pair"><span class="val-green" id="s-wins">-</span><span class="val-red" id="s-deaths">-</span></dd></div>
+          <div class="stat-metric"><dt>Sim battles · won / lost</dt><dd class="stat-pair"><span class="val-green" id="s-battles-won">-</span><span class="val-red" id="s-battles-lost">-</span></dd></div>
+          <div class="stat-metric"><dt>Sim battles / win rate</dt><dd class="stat-pair"><span id="s-battles-fought">-</span><span id="s-battle-win-rate">-</span></dd></div>
+        </dl>
+      </section>
+      <section class="stat-section stat-section--gold" aria-label="Gold & coins statistics">
+        <h2>Gold & coins</h2>
+        <dl>
+          <div class="stat-metric"><dt>Gold earned</dt><dd><span class="val-amber" id="s-coins-earned">-</span></dd></div>
+          <div class="stat-metric"><dt>Gold available</dt><dd><span class="val-green" id="s-coins-avail">-</span></dd></div>
+          <div class="stat-metric"><dt>Gold spent</dt><dd><span id="s-coins-spent">-</span></dd></div>
+          <div class="stat-metric"><dt>Shop upgrades</dt><dd><span id="s-shop-purchases">-</span></dd></div>
+          <div class="stat-metric"><dt>Gamemaster · supply / left</dt><dd class="stat-pair"><span class="val-amber" id="s-admin-gc-earned">-</span><span class="val-green" id="s-admin-gc-avail">-</span></dd></div>
+          <div class="stat-metric"><dt>Lucky · generated / claimed</dt><dd class="stat-pair"><span class="val-amber" id="s-lucky-gc-generated">-</span><span class="val-green" id="s-lucky-gc-claimed">-</span></dd></div>
+          <div class="stat-metric"><dt>Bronze / silver held</dt><dd class="stat-pair"><span class="val-bronze" id="s-bronze-avail">-</span><span class="val-silver" id="s-silver-avail">-</span></dd></div>
+        </dl>
+      </section>
+      <section class="stat-section stat-section--diamonds" aria-label="Diamonds statistics">
+        <h2>Diamonds</h2>
+        <dl>
+          <div class="stat-metric"><dt>Earned</dt><dd><span class="val-teal" id="s-diamonds-earned">-</span></dd></div>
+          <div class="stat-metric" data-tooltip="Earned plus purchased diamonds, minus diamonds sold."><dt>Available to players</dt><dd><span class="val-teal" id="s-diamonds-avail">-</span></dd></div>
+          <div class="stat-metric"><dt>Sold / bought</dt><dd class="stat-pair"><span id="s-diamonds-sold">-</span><span id="s-diamonds-bought">-</span></dd></div>
+          <div class="stat-metric" data-tooltip="Diamonds earned by players for every 100 Lucky Coins claimed, including past claims."><dt>From Lucky Coins</dt><dd><span class="val-teal" id="s-lucky-diamonds">-</span></dd></div>
+          <div class="stat-metric"><dt>Market stock</dt><dd><span class="val-teal" id="s-diamond-stock">-</span></dd></div>
+          <div class="stat-metric" data-tooltip="Lifetime diamonds added to shared stock by app mining, not the current stock."><dt>Mined by the app</dt><dd><span id="s-market-diamonds-mined">-</span></dd></div>
+        </dl>
+      </section>
+      <section class="stat-section stat-section--server" aria-label="Server statistics">
+        <h2>Server</h2>
+        <dl>
+          <div class="stat-metric"><dt>App / database</dt><dd class="stat-pair"><span id="s-appsize">-</span><span id="s-dbsize">-</span></dd></div>
+          <div class="stat-metric"><dt>Heap · used / allocated</dt><dd class="stat-pair"><span class="val-green" id="s-heap-used">-</span><span class="val-blue" id="s-heap-total">-</span></dd></div>
+          <div class="stat-metric"><dt>Process memory</dt><dd><span class="val-purple" id="s-rss">-</span></dd></div>
+          <div class="stat-metric"><dt>CPU</dt><dd><span id="s-cpu">-</span></dd></div>
+          <div class="stat-metric"><dt>Traffic · in / out</dt><dd class="stat-pair"><span class="val-green" id="s-traffic-in">-</span><span class="val-blue" id="s-traffic-out">-</span></dd></div>
+          <div class="stat-metric"><dt>This session</dt><dd><span id="s-session-uptime">-</span></dd></div>
+          <div class="stat-metric"><dt>Uptime / downtime</dt><dd class="stat-pair"><span class="val-green" id="s-uptime-pct">-</span><span id="s-downtime">-</span></dd></div>
+          <div class="stat-metric"><dt>App age</dt><dd><span id="s-app-age">-</span></dd></div>
+        </dl>
         <button id="vacuum-btn" class="vacuum-btn">Vacuum Database</button>
-      </div>
-      <div class="stat-card-stack">
-        <div class="stat-card stat-card-split">
-          <div class="label">Heap used / total</div>
-          <div class="split-vals">
-            <span class="val-green" id="s-heap-used">-</span>
-            <span class="val-sep">|</span>
-            <span style="font-size:1rem;font-weight:700;color:#22d3ee;font-variant-numeric:tabular-nums;line-height:1" id="s-heap-total">-</span>
-          </div>
-        </div>
-        <div class="stat-card stat-card-split">
-          <div class="label">RSS / CPU</div>
-          <div class="split-vals">
-            <span style="font-size:1rem;font-weight:700;color:#a78bfa;font-variant-numeric:tabular-nums;line-height:1" id="s-rss">-</span>
-            <span class="val-sep">|</span>
-            <span style="font-size:1rem;font-weight:700;color:#f59e0b;font-variant-numeric:tabular-nums;line-height:1" id="s-cpu">-</span>
-          </div>
-        </div>
-        <div class="stat-card stat-card-split">
-          <div class="label">Traffic In / Out</div>
-          <div class="split-vals">
-            <span class="val-green" id="s-traffic-in">-</span>
-            <span class="val-sep">|</span>
-            <span class="val-red" id="s-traffic-out">-</span>
-          </div>
-        </div>
-      </div>
-      <div class="stat-card-stack">
-        <div class="stat-card"><div class="label">Session Uptime</div><div class="value" id="s-session-uptime">-</div></div>
-        <div class="stat-card stat-card-split">
-          <div class="label">Uptime % / downtime</div>
-          <div class="split-vals">
-            <span class="val-green" id="s-uptime-pct">-</span>
-            <span class="val-sep">|</span>
-            <span class="val-red" id="s-downtime">-</span>
-          </div>
-        </div>
-        <div class="stat-card"><div class="label">App Age</div><div class="value" id="s-app-age">-</div></div>
-      </div>
+      </section>
     </div>
 
     <div class="tabs">
@@ -837,12 +827,12 @@
       <div class="table-wrap">
         <table>
           <thead><tr>
-            <th>Name</th>
-            <th>Creator</th>
-            <th>Books</th>
-            <th>Public</th>
-            <th>Created</th>
-            <th>Description</th>
+            <th data-table="series" data-col="name">Name</th>
+            <th data-table="series" data-col="created_by_username">Creator</th>
+            <th data-table="series" data-col="book_count">Books</th>
+            <th data-table="series" data-col="is_public">Public</th>
+            <th data-table="series" data-col="created_at">Created</th>
+            <th data-table="series" data-col="description">Description</th>
             <th>Actions</th>
           </tr></thead>
           <tbody id="series-body"></tbody>
@@ -864,12 +854,12 @@
       <div class="table-wrap">
         <table>
           <thead><tr>
-            <th>Name</th>
-            <th>Creator</th>
-            <th>Books</th>
-            <th>Public</th>
-            <th>Created</th>
-            <th>Description</th>
+            <th data-table="anthologies" data-col="name">Name</th>
+            <th data-table="anthologies" data-col="created_by_username">Creator</th>
+            <th data-table="anthologies" data-col="child_count">Books</th>
+            <th data-table="anthologies" data-col="is_public">Public</th>
+            <th data-table="anthologies" data-col="created_at">Created</th>
+            <th data-table="anthologies" data-col="description">Description</th>
             <th>Actions</th>
           </tr></thead>
           <tbody id="anthologies-body"></tbody>
@@ -880,8 +870,7 @@
 
     <!-- ── Tips tab ─────────────────────────────────────────────────────── -->
     <div id="tab-tips" class="tab-panel">
-      <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem;flex-wrap:wrap">
-        <div class="section-title" style="margin:0">Tips</div>
+      <div class="admin-toolbar"><div class="admin-search-wrap"><input type="search" id="tips-search" class="admin-search-input" placeholder="Search tips…" aria-label="Search tips…" autocomplete="off" spellcheck="false"><button type="button" id="tips-search-clear" class="admin-search-clear" aria-label="Clear search">✕</button></div>
         <select id="tips-type-filter" style="background:#1f2937;border:1px solid #374151;border-radius:5px;color:#d1d5db;padding:0.25rem 0.5rem;font-size:0.8rem;font-family:inherit">
           <option value="">All types</option>
           <option value="real">Real</option>
@@ -905,6 +894,7 @@
           <tbody id="tips-body"></tbody>
         </table>
       </div>
+    <div class="pagination" id="tips-pagination" aria-label="Pagination"></div>
       <div style="margin-top:1.25rem;background:#1a2235;border:1px solid #374151;border-radius:8px;padding:1rem">
         <div class="section-title" style="margin-bottom:0.6rem">Add New Tip</div>
         <div style="display:flex;gap:0.6rem;flex-wrap:wrap;align-items:flex-end">
@@ -970,8 +960,8 @@
     </div>
 
     <div id="tab-feedback" class="tab-panel">
-      <div class="section-meta" id="feedback-meta"></div>
-      <div id="feedback-list"></div>
+      <div class="admin-toolbar"><div class="admin-search-wrap"><input type="search" id="feedback-search" class="admin-search-input" placeholder="Search feedback…" aria-label="Search feedback…" autocomplete="off" spellcheck="false"><button type="button" id="feedback-search-clear" class="admin-search-clear" aria-label="Clear search">✕</button></div><div class="section-meta" id="feedback-meta"></div></div>
+      <div id="feedback-list"></div><div class="pagination" id="feedback-pagination"></div>
     </div>
 
     <div id="tab-announcements" class="tab-panel">
@@ -993,15 +983,17 @@
         <div id="ann-compose-error" class="ann-error"></div>
       </div>
 
-      <div id="ann-drafts-section">
+      <div class="admin-toolbar"><div class="admin-search-wrap"><input type="search" id="announcements-search" class="admin-search-input" placeholder="Search announcements…" aria-label="Search announcements…" autocomplete="off" spellcheck="false"><button type="button" id="announcements-search-clear" class="admin-search-clear" aria-label="Clear search">✕</button></div><div class="section-meta" id="announcements-meta"></div></div><div id="ann-drafts-section">
         <div class="ann-section-heading">Drafts</div>
         <div id="ann-drafts-list"><span class="ann-empty">No drafts.</span></div>
       </div>
 
+      <div class="pagination" id="ann-drafts-pagination"></div>
       <div id="ann-published-section">
         <div class="ann-section-heading">Published</div>
         <div id="ann-published-list"><span class="ann-empty">No published announcements.</span></div>
       </div>
+      <div class="pagination" id="ann-published-pagination"></div>
     </div>
 
     <div id="tab-tools" class="tab-panel">
@@ -1136,7 +1128,7 @@
       <span style="font-size:0.82rem;color:#9ca3af">Gift GC <span id="gift-gc-supply" style="color:#f59e0b"></span>:</span>
       <input type="text" inputmode="numeric" id="gift-gc-amount" placeholder="Amount" style="width:80px;background:#111827;border:1px solid #374151;border-radius:6px;color:#d1d5db;padding:0.3rem 0.5rem;font-size:0.85rem;font-family:inherit">
       <input type="text" id="gift-gc-message" placeholder="Message (optional)" style="flex:1;min-width:140px;background:#111827;border:1px solid #374151;border-radius:6px;color:#d1d5db;padding:0.3rem 0.5rem;font-size:0.85rem;font-family:inherit">
-      <button id="gift-gc-btn" class="btn-info" style="padding:0.3rem 0.75rem;font-size:0.82rem">Gift</button>
+      <button id="gift-gc-btn" class="btn btn-info">Gift</button>
       <span id="gift-gc-status" style="font-size:0.82rem"></span>
     </div>
 
@@ -1183,7 +1175,7 @@
     </div>
 
     <div class="section-title">Books</div>
-    <div class="section-meta" id="user-books-meta"></div>
+    <div class="admin-toolbar"><div class="admin-search-wrap"><input type="search" id="ubooks-search" class="admin-search-input" placeholder="Search account books…" aria-label="Search account books…" autocomplete="off" spellcheck="false"><button type="button" id="ubooks-search-clear" class="admin-search-clear" aria-label="Clear search">✕</button></div><div class="section-meta" id="user-books-meta"></div></div>
     <div class="table-wrap">
       <table>
         <thead><tr>
@@ -1201,6 +1193,7 @@
         <tbody id="user-books-body"></tbody>
       </table>
     </div>
+    <div class="pagination" id="ubooks-pagination" aria-label="Pagination"></div>
 
   </div>
 
@@ -1227,9 +1220,9 @@
             <img id="bef-cover-img" src="" alt="Cover" style="width:100%;height:100%;object-fit:cover;display:none">
             <span id="bef-cover-ph" style="font-size:0.72rem;color:#4b5563;text-align:center;padding:0.5rem">No cover</span>
           </div>
-          <button type="button" id="bef-cover-btn" class="btn btn-info" style="width:120px;font-size:0.75rem">Upload Cover</button>
+          <button type="button" id="bef-cover-btn" class="btn btn-info">Upload Cover</button>
           <input type="file" id="bef-cover-file" style="display:none" accept="image/*">
-          <button type="button" id="bef-cover-remove" class="btn btn-danger" style="width:120px;font-size:0.75rem;display:none">Remove Cover</button>
+          <button type="button" id="bef-cover-remove" class="btn btn-danger" style="display:none">Remove Cover</button>
         </div>
 
         <!-- Fields column -->
@@ -1282,8 +1275,8 @@
           <div style="background:#111827;border:1px solid #374151;border-radius:6px;padding:0.6rem 0.75rem;display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap">
             <span class="section-title" style="margin:0;flex-shrink:0">PDF</span>
             <a id="bef-pdf-link" href="" target="_blank" style="color:#60a5fa;font-size:0.82rem;display:none">Current PDF</a>
-            <button type="button" id="bef-pdf-remove" class="btn btn-danger" style="font-size:0.72rem;display:none">Remove</button>
-            <button type="button" id="bef-pdf-btn" class="btn btn-info" style="font-size:0.78rem">Upload PDF</button>
+            <button type="button" id="bef-pdf-remove" class="btn btn-danger" style="display:none">Remove</button>
+            <button type="button" id="bef-pdf-btn" class="btn btn-info">Upload PDF</button>
             <input type="file" id="bef-pdf-file" style="display:none" accept="application/pdf">
             <span id="bef-pdf-name" style="font-size:0.75rem;color:#9ca3af"></span>
           </div>
@@ -1292,8 +1285,8 @@
           <div style="background:#111827;border:1px solid #374151;border-radius:6px;padding:0.6rem 0.75rem;display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap">
             <span class="section-title" style="margin:0;flex-shrink:0">EPUB</span>
             <a id="bef-epub-link" href="" target="_blank" style="color:#60a5fa;font-size:0.82rem;display:none">Current EPUB</a>
-            <button type="button" id="bef-epub-remove" class="btn btn-danger" style="font-size:0.72rem;display:none">Remove</button>
-            <button type="button" id="bef-epub-btn" class="btn btn-info" style="font-size:0.78rem">Upload EPUB</button>
+            <button type="button" id="bef-epub-remove" class="btn btn-danger" style="display:none">Remove</button>
+            <button type="button" id="bef-epub-btn" class="btn btn-info">Upload EPUB</button>
             <input type="file" id="bef-epub-file" style="display:none" accept="application/epub+zip,.epub">
             <span id="bef-epub-name" style="font-size:0.75rem;color:#9ca3af"></span>
           </div>
@@ -1361,7 +1354,7 @@
     </div>
 
     <div class="section-title">Playthroughs</div>
-    <div class="section-meta" id="book-pts-meta"></div>
+    <div class="admin-toolbar"><div class="admin-search-wrap"><input type="search" id="pts-search" class="admin-search-input" placeholder="Search runs by player or section…" aria-label="Search runs by player or section…" autocomplete="off" spellcheck="false"><button type="button" id="pts-search-clear" class="admin-search-clear" aria-label="Clear search">✕</button></div><div class="section-meta" id="book-pts-meta"></div></div>
     <div class="table-wrap">
       <table>
         <thead><tr>
@@ -1375,6 +1368,7 @@
         <tbody id="book-pts-body"></tbody>
       </table>
     </div>
+    <div class="pagination" id="pts-pagination" aria-label="Pagination"></div>
 
   </div>
 
@@ -1382,7 +1376,7 @@
 
   <!-- ── Confirm dialog ───────────────────────────────────────────────────── -->
   <div id="confirm-overlay">
-    <div id="confirm-dialog">
+    <div id="confirm-dialog" role="alertdialog" aria-modal="true" aria-describedby="confirm-message" tabindex="-1">
       <p id="confirm-message"></p>
       <div class="confirm-actions">
         <button id="confirm-ok">Confirm</button>
@@ -1392,7 +1386,7 @@
   </div>
 
   <div id="gift-overlay">
-    <div id="gift-dialog">
+    <div id="gift-dialog" role="dialog" aria-modal="true" aria-labelledby="gift-title">
       <div>
         <div id="gift-title">Gift book to user</div>
         <div id="gift-book-name"></div>

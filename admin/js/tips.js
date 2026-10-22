@@ -1,6 +1,6 @@
 // Tip management and creation.
 
-import { api, el, badge, mkBtn, mkEditBtn, appendCell, _esc, showConfirm } from './core.js';
+import { api, el, badge, mkBtn, mkEditBtn, appendCell, _esc, showConfirm, showAlert, renderPaged, _pageState, matchesQuery } from './core.js';
 import { editFields } from './editor.js';
 
 let _allTips = [];
@@ -16,10 +16,15 @@ function _renderTips() {
   const typeF   = document.getElementById('tips-type-filter').value;
   const activeF = document.getElementById('tips-active-filter').value;
   const tips = _allTips.filter(t =>
+    (!document.getElementById('tips-search').value.trim() || matchesQuery(t.text, document.getElementById('tips-search').value.trim())) &&
     (!typeF   || t.type === typeF) &&
     (activeF === '' || String(t.active) === activeF)
   );
   document.getElementById('tips-count').textContent = `${tips.length} of ${_allTips.length} tips`;
+  renderPaged('tips', tips, renderTipsPage);
+}
+
+function renderTipsPage(tips) {
   const tbody = document.getElementById('tips-body');
   tbody.innerHTML = '';
   for (const t of tips) {
@@ -55,9 +60,14 @@ function _renderTips() {
   // Active toggles
   tbody.querySelectorAll('.tip-active-cb').forEach(cb => {
     cb.addEventListener('change', async () => {
-      await api('PATCH', `/api/admin/tips/${+cb.dataset.id}`, { active: cb.checked });
-      const tip = _allTips.find(t => t.id === +cb.dataset.id);
-      if (tip) tip.active = cb.checked ? 1 : 0;
+      cb.disabled = true;
+      try {
+        await api('PATCH', `/api/admin/tips/${+cb.dataset.id}`, { active: cb.checked });
+        const tip = _allTips.find(t => t.id === +cb.dataset.id);
+        if (tip) tip.active = cb.checked ? 1 : 0;
+        _renderTips();
+      } catch (error) { cb.checked = !cb.checked; showAlert('Could not update tip.'); }
+      finally { cb.disabled = false; }
     });
   });
 }
@@ -78,8 +88,18 @@ function editTip(tip) {
   });
 }
 
-document.getElementById('tips-type-filter').addEventListener('change', _renderTips);
-document.getElementById('tips-active-filter').addEventListener('change', _renderTips);
+function filterTips() { _pageState.tips = { page: 0 }; _renderTips(); }
+for (const id of ['tips-type-filter', 'tips-active-filter']) document.getElementById(id).addEventListener('change', filterTips);
+document.getElementById('tips-search').addEventListener('input', () => {
+  document.getElementById('tips-search-clear').style.display = document.getElementById('tips-search').value ? 'inline-block' : 'none';
+  filterTips();
+});
+document.getElementById('tips-search-clear').addEventListener('click', () => {
+  document.getElementById('tips-search').value = '';
+  document.getElementById('tips-search-clear').style.display = 'none';
+  filterTips();
+  document.getElementById('tips-search').focus();
+});
 
 document.getElementById('new-tip-save').addEventListener('click', async () => {
   const text = document.getElementById('new-tip-text').value.trim();

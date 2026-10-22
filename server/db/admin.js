@@ -579,7 +579,7 @@ function deleteItem(id) {
 
 function getAllSeriesAdmin() {
   return db.prepare(`
-    SELECT s.id, s.name, s.description, s.is_public, s.created_at,
+    SELECT s.id, s.name, s.description, s.is_public, s.is_open_world, s.created_at,
            u.username AS created_by_username,
            COUNT(b.id) AS book_count
     FROM series s
@@ -593,11 +593,15 @@ function getAllAnthologiesAdmin() {
   return db.prepare(`
     SELECT b.id, b.name, b.description, b.is_public, b.created_at,
            u.username AS created_by_username,
-           COUNT(DISTINCT c.id) + COUNT(DISTINCT m.book_id) AS child_count
+           COALESCE(children.child_count, 0) AS child_count
     FROM books b
     LEFT JOIN users u ON u.id = b.created_by
-    LEFT JOIN books c ON c.parent_book_id = b.id
-    LEFT JOIN book_anthology_memberships m ON m.anthology_id = b.id
+    LEFT JOIN (
+      SELECT anthology_id, COUNT(*) AS child_count FROM (
+        SELECT parent_book_id AS anthology_id, id AS book_id FROM books WHERE parent_book_id IS NOT NULL
+        UNION SELECT anthology_id, book_id FROM book_anthology_memberships
+      ) GROUP BY anthology_id
+    ) children ON children.anthology_id = b.id
     WHERE b.is_container = 1
     GROUP BY b.id
   `).all().sort(_naturalCompareByName);
@@ -620,57 +624,11 @@ function adminGetUser(userId) {
   return { ...row, ...getUserXpInfo(userId), shopPurchases: getShopRefundRows(row, getShopItems(), computeLevel) };
 }
 
-function adminGetUserBooks(userId) {
-  const rows = db.prepare(`
-    SELECT b.id, b.name, b.total_sections, b.created_by, ub.created_at, ub.updated_at, ub.state_data
-    FROM user_books ub JOIN books b ON b.id = ub.book_id
-    WHERE ub.user_id = ?
-    ORDER BY ub.created_at ASC
-  `).all(userId);
-  const books = rows.map(b => {
-    let mapped = 0, discovered = 0, playthroughs = 0, wins = 0, deaths = 0, battles = 0, last_run_at = null;
-    try {
-      const s = JSON.parse(b.state_data);
-      mapped = Object.keys(s.graph || {}).filter(k => !s.graph[k]?.discovered).length;
-      const seen = new Set(Object.keys(s.graph || {}).map(Number));
-      for (const d of Object.values(s.graph || {}))
-        for (const c of (d.choices || []))
-          if (c !== -1 && c !== 0) seen.add(c);
-      discovered   = seen.size;
-      // Exclude untouched open-world padding slots (startedAt:null).
-      const pts    = (s.playthroughs || []).filter(p => p.startedAt != null);
-      playthroughs = pts.length;
-      wins         = pts.filter(p => p.result === 'success').length;
-      deaths       = pts.filter(p => p.result === 'death').length;
-      battles      = pts.filter(p => p.result === 'battle').length;
-      for (const pt of pts) {
-        const ts = pt.completedAt || pt.lastActionAt || pt.startedAt || null;
-        if (ts && (last_run_at === null || ts > last_run_at)) last_run_at = ts;
-      }
-    } catch {}
-    return { id: b.id, name: b.name, total_sections: b.total_sections, created_by: b.created_by,
-             created_at: b.created_at, updated_at: b.updated_at,
-             mapped, discovered, playthroughs, wins, deaths, battles, last_run_at };
-  });
-
-  // Use the permanent reward ledger for overall run totals; live book state can be deleted or reset.
-  const runRows = db.prepare(`
-    SELECT event, COUNT(*) AS n FROM xp_events
-    WHERE user_id = ? AND event IN ('win_run','death_run','battle_run')
-    GROUP BY event
-  `).all(userId);
-  const totals = { runs: 0, wins: 0, deaths: 0, battles: 0 };
-  for (const { event, n } of runRows) {
-    totals.runs += n;
-    if (event === 'win_run')    totals.wins    = n;
-    if (event === 'death_run')  totals.deaths  = n;
-    if (event === 'battle_run') totals.battles = n;
-  }
-
-  return { books, totals };
+function adminGetUserBooks(userId, options) {
+  return require('./admin-user-books').getUserBooks(db, userId, options);
 }
 
-function adminGetBookStats(bookId) {
+function adminGetBookStats(bookId, options = {}) {
   const book = db.prepare(
     `SELECT b.id, b.name, b.total_sections, b.max_section_number, b.discoverable_sections, b.isbn, b.issn, b.asin, b.pages, b.authors, b.description,
             b.is_public, b.cover_path, b.pdf_path, b.epub_path, b.created_at, b.updated_at,
@@ -679,6 +637,7 @@ function adminGetBookStats(bookId) {
      FROM books b LEFT JOIN series s ON s.id = b.series_id WHERE b.id = ?`
   ).get(bookId);
   if (!book) return null;
+  if (options.metadataOnly) return { ...book, pdf_size: _getPdfSize(book.pdf_path), epub_size: _getEpubSize(book.epub_path) };
 
   const ubRows = db.prepare(`
     SELECT ub.state_data, u.id AS owner_id, u.username AS owner
@@ -741,11 +700,26 @@ function adminGetBookStats(bookId) {
 }
 
 function adminGetStats(gameplayExtras) {
-  const users        = db.prepare('SELECT COUNT(*) AS n FROM users').get().n;
-  const books        = db.prepare("SELECT COUNT(*) AS n FROM books WHERE parent_book_id IS NULL AND is_container = 0").get().n;
-  const anthologies  = db.prepare("SELECT COUNT(*) AS n FROM books WHERE is_container = 1 AND parent_book_id IS NULL").get().n;
-  const seriesCount  = db.prepare('SELECT COUNT(*) AS n FROM series').get().n;
-  const sessions     = db.prepare('SELECT COUNT(*) AS n FROM sessions').get().n;
+  const now = Math.floor(Date.now() / 1000);
+  // Keep dashboard aggregates small: one users scan and one catalog scan.
+  const _lvl = 'CAST(floor((-1 + sqrt(1 + 8.0 * xp / 1000.0)) / 2) AS INTEGER)';
+  const userTotals = db.prepare(`SELECT COUNT(*) AS users,
+    SUM(last_active_at >= ?) AS onlineUsers, SUM(last_active_at >= ?) AS activeUsers24h,
+    SUM(created_at >= ?) AS newUsers7d, SUM(bonus_gc_generated) AS luckyGcGenerated,
+    SUM(CAST(floor((xp / 1000.0) * (1 + (${_lvl} + MIN(bonus_gc_mint_purchased, ${_lvl})) * 0.001)) AS INTEGER)
+      + bonus_coins) AS earned, SUM(coins_spent) AS spent FROM users`).get(now - 300, now - 86400, now - 604800);
+  const catalog = db.prepare(`SELECT
+    SUM(parent_book_id IS NULL AND is_container=0) AS books,
+    SUM(parent_book_id IS NULL AND is_container=1) AS anthologies,
+    SUM(is_container=0) AS playableBooks,
+    SUM(is_container=0 AND has_live_reading=1) AS readingBooks,
+    SUM(pdf_path IS NOT NULL AND trim(pdf_path)!='') AS pdfCount,
+    SUM(epub_path IS NOT NULL AND trim(epub_path)!='') AS epubCount,
+    SUM(has_battle_sim=1) AS battleSims FROM books`).get();
+  const users = userTotals.users;
+  const books = catalog.books || 0, anthologies = catalog.anthologies || 0;
+  const seriesCount = db.prepare('SELECT COUNT(*) AS n FROM series').get().n;
+  const sessions = db.prepare('SELECT COUNT(*) AS n FROM sessions WHERE expires_at>? AND is_impersonation=0').get(now).n;
 
   const { totalSections, mappedSections, discoveredSections, playthroughs,
     activePlaythroughs, finishedPlaythroughs, wins, deaths, battleCount, publicRuns,
@@ -756,22 +730,26 @@ function adminGetStats(gameplayExtras) {
   const dbSize    = pageCount * pageSize;
 
   const feedbackUnread = db.prepare('SELECT COALESCE(SUM(admin_unread), 0) AS n FROM feedback WHERE deleted_by_admin = 0').get()?.n ?? 0;
-  // Mirror coinsFromXp per user: floor((xp/1000) * (1 + (level + min(mint,level))*0.1%)) + bonus_coins.
-  const _lvl = 'CAST(floor((-1 + sqrt(1 + 8.0 * xp / 1000.0)) / 2) AS INTEGER)';
-  const coinRow = db.prepare(`SELECT SUM(
-      CAST(floor((xp / 1000.0) * (1 + (${_lvl} + MIN(bonus_gc_mint_purchased, ${_lvl})) * 0.001)) AS INTEGER)
-      + bonus_coins) AS earned,
-    SUM(coins_spent) AS spent FROM users`).get();
-  const totalCoinsEarned    = coinRow?.earned || 0;
-  const totalCoinsSpent     = coinRow?.spent  || 0;
+  const totalCoinsEarned = userTotals.earned || 0;
+  const totalCoinsSpent = userTotals.spent || 0;
   const totalCoinsAvailable = totalCoinsEarned - totalCoinsSpent;
-  const pdfCount = db.prepare("SELECT COUNT(*) AS n FROM books WHERE pdf_path IS NOT NULL").get().n;
-  const epubCount = db.prepare("SELECT COUNT(*) AS n FROM books WHERE epub_path IS NOT NULL").get().n;
-  const luckyGcGenerated = db.prepare('SELECT COALESCE(SUM(bonus_gc_generated), 0) AS n FROM users').get().n;
+  const pdfCount = catalog.pdfCount || 0, epubCount = catalog.epubCount || 0;
+  const luckyGcGenerated = userTotals.luckyGcGenerated || 0;
   const luckyGcClaimed   = db.prepare("SELECT COALESCE(SUM(amount), 0) AS n FROM coin_events WHERE event = 'bonus_gc_claim'").get().n;
-  const battleSims       = db.prepare('SELECT COUNT(*) AS n FROM books WHERE has_battle_sim = 1').get().n;
+  const battleSims = catalog.battleSims || 0;
+  const diamonds = db.prepare(`SELECT COALESCE(SUM(diamonds_earned),0) AS diamondsEarned,
+    COALESCE(SUM(diamonds_earned+diamonds_bought-diamonds_spent),0) AS diamondsAvailable,
+    COALESCE(SUM(diamonds_spent),0) AS diamondsSold, COALESCE(SUM(diamonds_bought),0) AS diamondsBought,
+    COALESCE(SUM(lucky_diamonds_earned),0) AS luckyDiamondsEarned FROM user_diamonds`).get();
+  const metals = db.prepare(`SELECT COALESCE(SUM(heartbeat_count%100),0) AS bronzeAvailable,
+    COALESCE(SUM((heartbeat_count/100)%100),0) AS silverAvailable FROM user_heartbeat_coins`).get();
+  const market = db.prepare('SELECT diamonds,diamonds_mined FROM diamond_market WHERE id=1').get();
   const battleWinRate    = battlesFought > 0 ? Math.round((battlesWon / battlesFought) * 100) : 0;
-  return { users, books, anthologies, series: seriesCount, sessions, totalSections, mappedSections, discoveredSections, playthroughs, activePlaythroughs, finishedPlaythroughs, wins, deaths, battleCount, publicRuns, dbSize, feedbackUnread, totalCoinsEarned, totalCoinsSpent, totalCoinsAvailable, pdfCount, epubCount, luckyGcGenerated, luckyGcClaimed, battleSims, battlesFought, battlesWon, battlesLost, battleWinRate, ...getShopPurchaseTotals(db, computeLevel) };
+  return { onlineUsers: userTotals.onlineUsers || 0, activeUsers24h: userTotals.activeUsers24h || 0,
+    newUsers7d: userTotals.newUsers7d || 0, playableBooks: catalog.playableBooks || 0,
+    readingBooks: catalog.readingBooks || 0, ...diamonds, ...metals,
+    marketDiamonds: market?.diamonds || 0, marketDiamondsMined: market?.diamonds_mined || 0,
+    users, books, anthologies, series: seriesCount, sessions, totalSections, mappedSections, discoveredSections, playthroughs, activePlaythroughs, finishedPlaythroughs, wins, deaths, battleCount, publicRuns, dbSize, feedbackUnread, totalCoinsEarned, totalCoinsSpent, totalCoinsAvailable, pdfCount, epubCount, luckyGcGenerated, luckyGcClaimed, battleSims, battlesFought, battlesWon, battlesLost, battleWinRate, ...getShopPurchaseTotals(db, computeLevel) };
 }
 
 function getSiteStats() {
@@ -1021,14 +999,16 @@ function adminGetUsers() {
   const users = db.prepare(`
     SELECT u.id, u.username, u.display_name, u.is_author, u.is_contributor, u.is_moderator, u.created_at, u.last_country, u.last_city,
            u.active_country, u.active_city, u.last_domain, u.failed_login_attempts, u.locked_until, u.is_protected, u.is_admin,
-           COUNT(DISTINCT CASE WHEN b.parent_book_id IS NULL THEN b.id END) AS book_count,
-           COUNT(DISTINCT s.token)   AS session_count,
-           COALESCE(u.last_active_at, MAX(ub.updated_at), u.created_at) AS last_active
+           COALESCE(library.book_count, 0) AS book_count,
+           COALESCE(s.session_count, 0) AS session_count,
+           COALESCE(u.last_active_at, library.updated_at, u.created_at) AS last_active
     FROM users u
-    LEFT JOIN user_books ub ON ub.user_id = u.id
-    LEFT JOIN books      b  ON b.id = ub.book_id
-    LEFT JOIN sessions   s  ON s.user_id = u.id
-    GROUP BY u.id
+    LEFT JOIN (
+      SELECT ub.user_id, MAX(ub.updated_at) AS updated_at,
+        COUNT(DISTINCT CASE WHEN b.parent_book_id IS NULL THEN b.id END) AS book_count
+      FROM user_books ub LEFT JOIN books b ON b.id=ub.book_id GROUP BY ub.user_id
+    ) library ON library.user_id=u.id
+    LEFT JOIN (SELECT user_id, COUNT(DISTINCT token) AS session_count FROM sessions GROUP BY user_id) s ON s.user_id=u.id
     ORDER BY last_active DESC, u.created_at DESC
   `).all();
   // Active runs have no permanent event; count them from current state.
