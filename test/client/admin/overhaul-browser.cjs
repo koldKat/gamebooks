@@ -79,7 +79,7 @@ try {
   check(document.querySelectorAll('#user-books-body tr').length===50,'large account creates only 50 rows');
   check(document.getElementById('user-books-meta').textContent.includes('3048'),'account total remains complete');
   check(document.documentElement.scrollWidth<=innerWidth+1,'account view stays within viewport');
-  for(const button of document.querySelectorAll('#user-action-bar button,#user-gift-gc-row button'))check(button.getBoundingClientRect().height<=26,'compact account action '+button.textContent);
+  for(const button of document.querySelectorAll('#user-action-bar button,#user-gift-gc-row button'))check(button.getBoundingClientRect().height<=23,'compact account action '+button.textContent);
   const purchases=document.querySelector('.user-shop-purchases'), table=purchases.querySelector('table'), wrap=purchases.querySelector('.table-wrap');
   check(table.rows.length===9,'all eight refund upgrade rows rendered');
   const account=document.querySelector('.account-summary-table');
@@ -90,7 +90,7 @@ try {
     const headings=table.tHead.rows[0].cells;
     [...row.cells].forEach((cell,index)=>check(Math.abs(cell.getBoundingClientRect().left-headings[index].getBoundingClientRect().left)<1,'refund header/cell columns align'));
     check(row.lastElementChild.scrollWidth<=row.lastElementChild.clientWidth+1,'refund actions fit their cell');
-    for(const button of row.querySelectorAll('button'))check(button.getBoundingClientRect().height<=25,'refund actions remain compact');
+    for(const button of row.querySelectorAll('button'))check(button.getBoundingClientRect().height<=23,'refund actions remain compact');
   }
 
   document.getElementById('ubooks-page-next').click();await wait(40);
@@ -110,7 +110,12 @@ try {
   await tab('books');check(document.querySelectorAll('#books-body tr').length===50,'catalog pagination');
   await views.editAdminBook(1);await wait(40);
   check(calls.includes('/api/admin/books/1/stats?metadata=1'),'book editor skips gameplay statistics');
-  check(document.querySelector('dialog[open]'),'book editor opens');document.querySelector('.admin-editor-close').click();await wait(20);
+  check(document.querySelector('dialog[open]'),'book editor opens');
+  for(const button of document.querySelectorAll('dialog[open] .btn')) {
+    check(button.getBoundingClientRect().height<=23,'compact editor action '+button.textContent);
+    check(getComputedStyle(button).paddingLeft==='7px','editor actions share standard padding');
+  }
+  document.querySelector('.admin-editor-close').click();await wait(20);
   await tab('series');check(document.querySelectorAll('#series-body tr').length===50,'series pagination');
   document.querySelector('#series-body .admin-edit-btn').click();await wait(20);
   check(document.querySelector('.admin-editor-toggle input')?.checked,'open world flag preserved');
@@ -132,6 +137,10 @@ try {
   check(document.querySelector('#ann-published-list .ann-card-pinned'),'pinned notice remains first');
   await search('announcements-search','Notice 66');check(document.querySelectorAll('#ann-published-list .ann-card').length===1,'announcement search includes old notices');
   await tab('tools');check(document.querySelectorAll('.xp-config-row').length===1,'tools load');
+  const stepper=document.querySelector('.xp-config-stepper');
+  check(getComputedStyle(stepper.firstElementChild).borderTopRightRadius==='0px','stepper minus joins input');
+  check(getComputedStyle(stepper.lastElementChild).borderTopLeftRadius==='0px','stepper plus joins input');
+  for(const control of stepper.children)check(Math.abs(control.getBoundingClientRect().height-22)<1,'stepper control heights align');
   const expected=getComputedStyle(document.getElementById('users-search')).borderRadius;
   for(const id of ['books-search','tips-type-filter','new-tip-text','tools-version-input','smtp-host'])check(getComputedStyle(document.getElementById(id)).borderRadius===expected,'consistent field style '+id);
   for(const name of ['users','books','series','anthologies','tips','inventory','feedback','announcements','tools']) {
@@ -139,12 +148,18 @@ try {
     check(document.documentElement.scrollWidth<=innerWidth+1,'page overflow '+name+' at '+innerWidth);
     for(const button of document.querySelectorAll('button')) {
       if(!button.getClientRects().length)continue;
-      check(button.getBoundingClientRect().height<=26,'compact button across '+name+': '+(button.id||button.textContent));
+      check(button.getBoundingClientRect().height<=23,'compact button across '+name+': '+(button.id||button.textContent));
+      if(button.matches('.btn,.tools-save-btn,.refresh-btn,.ann-btn-draft,.ann-btn-publish,.vacuum-btn')) {
+        const style=getComputedStyle(button);
+        check(style.paddingLeft==='7px'&&style.paddingTop==='2px','shared action padding across '+name+': '+button.id);
+        if(!button.closest('.xp-config-stepper'))check(style.borderRadius==='4px','shared action corners across '+name+': '+button.id);
+      }
     }
 
   }
   let confirmed=0;
   core.showConfirm('Test action',()=>confirmed++);
+  for(const id of ['confirm-ok','confirm-cancel'])check(document.getElementById(id).getBoundingClientRect().height<=23,'compact confirmation '+id);
   document.getElementById('confirm-cancel').click();check(confirmed===0,'cancel never executes action');
   core.showConfirm('Test action',()=>confirmed++);
   document.getElementById('confirm-ok').click();await wait(10);check(confirmed===1,'confirm executes once');

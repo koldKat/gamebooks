@@ -627,7 +627,7 @@
     #maintenance-toggle::after { content:''; position:absolute; top:2px; left:2px; width:13px; height:13px; background:#9ca3af; border-radius:50%; transition:transform 0.15s, background 0.15s; }
     #maintenance-toggle:checked::after { transform:translateX(13px); background:#fff; }
   </style>
-  <link rel="stylesheet" href="/css/admin.css?v=20261022-compact-2">
+  <link rel="stylesheet" href="/css/admin.css?v=20261022-compact-3">
 </head>
 <body>
 
@@ -1220,9 +1220,9 @@
             <img id="bef-cover-img" src="" alt="Cover" style="width:100%;height:100%;object-fit:cover;display:none">
             <span id="bef-cover-ph" style="font-size:0.72rem;color:#4b5563;text-align:center;padding:0.5rem">No cover</span>
           </div>
-          <button type="button" id="bef-cover-btn" class="btn btn-info" style="width:120px;font-size:0.75rem">Upload Cover</button>
+          <button type="button" id="bef-cover-btn" class="btn btn-info">Upload Cover</button>
           <input type="file" id="bef-cover-file" style="display:none" accept="image/*">
-          <button type="button" id="bef-cover-remove" class="btn btn-danger" style="width:120px;font-size:0.75rem;display:none">Remove Cover</button>
+          <button type="button" id="bef-cover-remove" class="btn btn-danger" style="display:none">Remove Cover</button>
         </div>
 
         <!-- Fields column -->
@@ -1275,8 +1275,8 @@
           <div style="background:#111827;border:1px solid #374151;border-radius:6px;padding:0.6rem 0.75rem;display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap">
             <span class="section-title" style="margin:0;flex-shrink:0">PDF</span>
             <a id="bef-pdf-link" href="" target="_blank" style="color:#60a5fa;font-size:0.82rem;display:none">Current PDF</a>
-            <button type="button" id="bef-pdf-remove" class="btn btn-danger" style="font-size:0.72rem;display:none">Remove</button>
-            <button type="button" id="bef-pdf-btn" class="btn btn-info" style="font-size:0.78rem">Upload PDF</button>
+            <button type="button" id="bef-pdf-remove" class="btn btn-danger" style="display:none">Remove</button>
+            <button type="button" id="bef-pdf-btn" class="btn btn-info">Upload PDF</button>
             <input type="file" id="bef-pdf-file" style="display:none" accept="application/pdf">
             <span id="bef-pdf-name" style="font-size:0.75rem;color:#9ca3af"></span>
           </div>
@@ -1285,8 +1285,8 @@
           <div style="background:#111827;border:1px solid #374151;border-radius:6px;padding:0.6rem 0.75rem;display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap">
             <span class="section-title" style="margin:0;flex-shrink:0">EPUB</span>
             <a id="bef-epub-link" href="" target="_blank" style="color:#60a5fa;font-size:0.82rem;display:none">Current EPUB</a>
-            <button type="button" id="bef-epub-remove" class="btn btn-danger" style="font-size:0.72rem;display:none">Remove</button>
-            <button type="button" id="bef-epub-btn" class="btn btn-info" style="font-size:0.78rem">Upload EPUB</button>
+            <button type="button" id="bef-epub-remove" class="btn btn-danger" style="display:none">Remove</button>
+            <button type="button" id="bef-epub-btn" class="btn btn-info">Upload EPUB</button>
             <input type="file" id="bef-epub-file" style="display:none" accept="application/epub+zip,.epub">
             <span id="bef-epub-name" style="font-size:0.75rem;color:#9ca3af"></span>
           </div>
