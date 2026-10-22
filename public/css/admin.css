@@ -147,4 +147,10 @@ input, select, textarea { min-width: 0; max-width: 100%; }
 .admin-edit-btn { min-width: 0; }
 #gift-gc-message { max-width: 480px; }
 .user-shop-purchases .table-wrap th:nth-child(2) { text-align: right; }
-.stat-section .vacuum-btn { align-self: center; width: auto; }
+.stat-section #vacuum-btn {
+  display: flex;
+  width: max-content;
+  max-width: 100%;
+  margin: 0.5rem 0 0 auto;
+  font-size: 0.8rem;
+}
