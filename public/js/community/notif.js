@@ -200,10 +200,11 @@ export function _openNotifDropdown(btn, data) {
   }
 
   const rect = btn.getBoundingClientRect();
-  dd.style.top   = `${rect.bottom + 6}px`;
-  dd.style.right = `${window.innerWidth - rect.right}px`;
-  dd.style.left  = 'auto';
   dd.style.display = '';
+  const width = dd.getBoundingClientRect().width;
+  dd.style.top   = `${rect.bottom + 6}px`;
+  dd.style.right = `${Math.max(8, Math.min(window.innerWidth - rect.right, window.innerWidth - width - 8))}px`;
+  dd.style.left  = 'auto';
   dd.scrollTop = 0;
   _notifDropdownOpen = true;
 

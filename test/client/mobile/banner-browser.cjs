@@ -10,18 +10,22 @@ const start = source.indexOf('<div id="app-banner">');
 const end = source.indexOf('<div id="books-tip-bar"', start);
 if (start < 0 || end < 0) throw Error('Banner markup not found');
 const markup = source.slice(start, end);
+const profileStart = source.indexOf('<button id="profile-btn"');
+const profileMarkup = source.slice(profileStart, source.indexOf('</button>', profileStart) + 9);
 const inboxMarkup = source.slice(source.indexOf('<div id="inbox-modal-overlay"'), source.indexOf('<div id="confirm-overlay"'));
 const scratch = fs.mkdtempSync(path.join(root, 'mobile-banner-'));
 
 (async () => {
   try {
-    const css = ['style', 'landing', 'feedback', 'mobile'].map(name =>
+    const css = ['style', 'landing', 'feedback', 'profile', 'mobile'].map(name =>
       `<link rel="stylesheet" href="file://${repo}/public/css/${name}.css">`).join('');
     const script = `
       const check=(ok,label)=>{if(!ok)throw Error(label);};
       document.getElementById('app-version').textContent='v. 1.0.13.0';
       for(const node of document.querySelectorAll('#app-banner-btns [style]'))node.style.display='';
       document.fonts.ready.then(async()=>{
+        const profile=await import('file://${repo}/public/js/account/profile.js');
+        profile.initProfile();
         const banner=document.getElementById('app-banner');
         const title=document.getElementById('app-banner-title');
         const brand=document.getElementById('app-banner-brand');
@@ -29,7 +33,7 @@ const scratch = fs.mkdtempSync(path.join(root, 'mobile-banner-'));
         const t=title.getBoundingClientRect(),b=brand.getBoundingClientRect();
         const mobile=innerWidth<=768;
         check(title.scrollWidth<=title.clientWidth+1,'title overflow');
-        check(banner.scrollWidth<=banner.clientWidth+1,'banner overflow');
+        check(banner.scrollWidth<=banner.clientWidth+1,'banner overflow '+JSON.stringify({width:innerWidth,banner:banner.clientWidth,scroll:banner.scrollWidth,buttons:[...buttons.querySelectorAll('button')].filter(b=>b.getBoundingClientRect().width).map(b=>({id:b.id,w:b.getBoundingClientRect().width}))}));
         if(mobile){
           check(Math.abs((t.top+t.bottom)/2-(b.top+b.bottom)/2)<2,'brand and title must share row');
           check(t.right<=b.left+1,'brand overlaps title');
@@ -49,7 +53,7 @@ const scratch = fs.mkdtempSync(path.join(root, 'mobile-banner-'));
               check(bounds.left>=dockBounds.left&&bounds.right<=dockBounds.right,'dock encloses every button');
             }
             check(tool.textContent.trim()||tool.getAttribute('aria-label'),'accessible utility name');
-            if(tool.id!=='notif-btn'&&tool.id!=='display-settings-btn'){
+            if(!['notif-btn','display-settings-btn','profile-btn'].includes(tool.id)){
               const icon=getComputedStyle(tool,'::before');
               check(icon.width==='18px'&&icon.maskImage.includes('svg'),'SVG utility icon');
             }
@@ -59,12 +63,29 @@ const scratch = fs.mkdtempSync(path.join(root, 'mobile-banner-'));
             check(Math.abs(parseFloat(style.height)-27.2)<.1&&parseFloat(style.fontSize)>13,'primary button styling retained');
             check(style.animationName!=='none','primary navigation pulse retained');
           }
-          const topIds=['mobile-addbook-btn','mobile-books-btn','bonus-gc-btn','notif-btn','display-settings-btn'];
+          const topIds=['mobile-addbook-btn','mobile-books-btn','bonus-gc-btn','notif-btn','display-settings-btn','profile-btn'];
           const centers=topIds.map(id=>{const r=document.getElementById(id).getBoundingClientRect();return (r.top+r.bottom)/2;});
           check(Math.max(...centers)-Math.min(...centers)<1,'single top button row');
-        }else check(getComputedStyle(banner).display==='flex','desktop layout unchanged');
+          const iconIds=['bonus-gc-btn','notif-btn','display-settings-btn','profile-btn'];
+          const bounds=iconIds.map(id=>document.getElementById(id).getBoundingClientRect());
+          check(bounds.every(r=>r.width===30&&r.height===30),'four matching utility buttons');
+          check(bounds.every((r,i)=>!i||r.left>bounds[i-1].right),'utility button order');
+          check(Math.abs(bounds.at(-1).right-buttons.getBoundingClientRect().right)<1,'utilities aligned right '+JSON.stringify({width:innerWidth,last:bounds.at(-1).right,row:buttons.getBoundingClientRect().right}));
+          check(document.getElementById('profile-btn').previousElementSibling.id==='display-settings-btn','profile follows settings');
+          document.body.classList.add('guest-browsing');
+          check(getComputedStyle(document.getElementById('profile-btn')).display==='none','guest profile hidden');
+          document.body.classList.remove('guest-browsing');
+        }else{
+          check(document.getElementById('profile-btn').parentElement.id==='desktop-profile','desktop profile location retained');
+          check(getComputedStyle(banner).display==='flex','desktop layout unchanged');
+        }
         const state=await import('file://${repo}/public/js/core/state.js');
         const notif=await import('file://${repo}/public/js/community/notif.js');
+        const notificationButton=document.getElementById('notif-btn');
+        notif._openNotifDropdown(notificationButton,{unseen:0,items:[]});
+        const notificationBounds=document.getElementById('notif-dropdown').getBoundingClientRect();
+        check(notificationBounds.left>=7.9&&notificationBounds.right<=innerWidth-7.9,'notification dropdown contained horizontally');
+        notif._closeNotifDropdown();
         const inboxModule=await import('file://${repo}/public/js/community/inbox.js');
         inboxModule.initInbox(()=>null);
         state.setToken('isolated-banner-test');
@@ -108,7 +129,7 @@ const scratch = fs.mkdtempSync(path.join(root, 'mobile-banner-'));
         document.body.dataset.test=JSON.stringify({width:innerWidth,mobile,sameRow:Math.abs(t.top-b.top)<10});
       }).catch(error=>{document.body.dataset.failure=error.message;});`;
     const file = path.join(scratch, 'banner.html');
-    fs.writeFileSync(file, `<!doctype html><meta charset="utf-8">${css}<body style="padding:0 12px"><script>addEventListener('error',e=>document.body.dataset.failure=e.message)</script>${markup}${inboxMarkup}<script>${script}</script>`);
+    fs.writeFileSync(file, `<!doctype html><meta charset="utf-8">${css}<body style="padding:0 12px"><script>addEventListener('error',e=>document.body.dataset.failure=e.message)</script>${markup}<div id="desktop-profile">${profileMarkup}</div><div id="notif-dropdown" style="display:none"><div id="notif-list"></div><div id="notif-empty"></div></div>${inboxMarkup}<script>${script}</script>`);
     for (const width of [320, 360, 390, 768, 1100]) {
       console.log(JSON.stringify(await checkBrowser({ file, root, width,
         profile: path.join(scratch, 'profile-' + width), chromium: process.env.CHROMIUM })));

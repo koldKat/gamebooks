@@ -1004,6 +1004,8 @@ body.feed-collapsed #feed-panel {
   top: 0;
   right: 0;
   width: 340px;
+  max-width: calc(100vw - 16px);
+  box-sizing: border-box;
   max-height: 380px;
   overflow-y: auto;
   background: #1a2235;

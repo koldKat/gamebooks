@@ -387,6 +387,19 @@ async function saveProfile() {
 // ── Init ──────────────────────────────────────────────────────────────────────
 
 export function initProfile() {
+  const profileButton = document.getElementById('profile-btn');
+  const bannerTools = document.getElementById('app-banner-tools');
+  if (profileButton && bannerTools && window.matchMedia) {
+    const desktopParent = profileButton.parentNode;
+    const desktopNext = profileButton.nextSibling;
+    const mobile = window.matchMedia('(max-width: 768px)');
+    const placeProfileButton = () => {
+      if (mobile.matches) bannerTools.appendChild(profileButton);
+      else desktopParent.insertBefore(profileButton, desktopNext);
+    };
+    mobile.addEventListener('change', placeProfileButton);
+    placeProfileButton();
+  }
   document.getElementById('profile-btn')?.addEventListener('click', openProfileModal);
   document.getElementById('profile-cancel-btn')?.addEventListener('click', closeProfileModal);
   document.getElementById('profile-modal-close')?.addEventListener('click', closeProfileModal);
