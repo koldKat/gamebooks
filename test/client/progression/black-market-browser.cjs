@@ -38,7 +38,7 @@ try {
     check(get('modal').scrollWidth<=get('modal').clientWidth+1,'no dialog overflow');
     const panel=get('form');check(panel.scrollWidth<=panel.clientWidth+1,'no panel overflow');
     const buy=get('buy-form').getBoundingClientRect(),sell=get('sell-form').getBoundingClientRect();
-    check(Math.abs(buy.top-sell.top)<1 && buy.right<=sell.left,'buy and sell stay side by side');
+    check(Math.abs(buy.top-sell.top)<1 && sell.right<=buy.left,'buy and sell stay side by side');
     for(const direction of ['buy','sell']) {
       const quote=get(direction+'-rate'),range=document.createRange();range.selectNodeContents(quote);
       check(range.getBoundingClientRect().height<=quote.getBoundingClientRect().height+1,'rate stays on one line');

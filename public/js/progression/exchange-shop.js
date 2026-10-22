@@ -5,10 +5,10 @@ import { RUBY_SVG } from './rubies.js';
 import { showConfirm } from '../ui-helpers/confirm.js';
 
 const currencies = {
-  diamond: { plural: 'diamonds', label: 'Diamonds', icon: DIAMOND_SVG, balance: 'diamondsBalance', sold: 'diamondsExchanged', bought: 'diamondsBought', note: 'Buy price: twice your level. Sell rate: your level + upgrades.' },
-  ruby: { plural: 'rubies', label: 'Rubies', icon: RUBY_SVG, balance: 'rubiesBalance', sold: 'rubiesExchanged', bought: 'rubiesBought', note: 'Buy and sell rubies at the same rate.' },
+  diamond: { plural: 'diamonds', label: 'Diamonds', icon: DIAMOND_SVG, balance: 'diamondsBalance', sold: 'diamondsExchanged', bought: 'diamondsBought' },
+  ruby: { plural: 'rubies', label: 'Rubies', icon: RUBY_SVG, balance: 'rubiesBalance', sold: 'rubiesExchanged', bought: 'rubiesBought' },
 };
-const directions = ['buy', 'sell'];
+const directions = ['sell', 'buy'];
 let _profile = null, _generation = 0, _confirmation = 0, _busy = false, _hooks = {}, _currency = 'diamond', _closeConfirmation = null;
 // Keep each interrupted trade's request ID across direction and currency changes.
 const _pending = new Map();
@@ -50,7 +50,6 @@ function render() {
   const sold = Number(_profile?.[c.sold] || 0), bought = Number(_profile?.[c.bought] || 0);
   el('total').textContent = `${(sold + bought).toLocaleString()} exchanged`;
   el('total').dataset.tooltip = `${sold.toLocaleString()} sold · ${bought.toLocaleString()} bought`;
-  el('note').textContent = c.note;
   for (const direction of directions) {
     const rate = rateFor(_currency, direction), maximum = maximumFor(direction), quantity = amount(direction), gold = quantity * rate;
     const valid = ready && quantity > 0 && quantity <= maximum && rate > 0 && Number.isSafeInteger(gold);
@@ -101,7 +100,7 @@ export async function openBlackMarket(currency = 'diamond') {
     if (!Number.isSafeInteger(data[current().balance])) { closeBlackMarket(); return; }
     _profile = data; _hooks.onRewardSnapshot?.(data);
     resetAmounts(); message(''); render();
-    const focus = maximumFor('buy') > 0 ? 'buy' : maximumFor('sell') > 0 ? 'sell' : null;
+    const focus = maximumFor('sell') > 0 ? 'sell' : maximumFor('buy') > 0 ? 'buy' : null;
     if (focus) field(focus, 'amount').focus();
   } catch (_) {
     if (getToken() === token && generation === _generation) message('Unable to load Black Market.', true);

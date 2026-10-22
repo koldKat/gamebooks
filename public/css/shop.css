@@ -166,10 +166,15 @@
 .exchange-shop-rate { color: #9ca3af; font-size: 0.78rem; white-space: nowrap; overflow-x: auto; }
 .exchange-shop-receive { color: #86efac; font-size: 0.78rem; font-weight: 600; white-space: nowrap; overflow-x: auto; margin-top: 0.2rem; }
 .exchange-shop-tip { color: #9ca3af; font-size: 0.78rem; margin: 0.3rem 0; }
+#exchange-shop-stock { margin-bottom: 0; }
 .exchange-shop-message {
-  min-width: 0; height: 2.4em; margin-top: 0.35rem; overflow-y: auto; overflow-wrap: anywhere;
-  color: #86efac; font-size: 0.78rem; line-height: 1.2;
+  position: fixed; bottom: 1rem; left: 50%; transform: translateX(-50%);
+  box-sizing: border-box; width: max-content; max-width: min(92vw, 520px); max-height: 20vh;
+  padding: 0.4rem 0.65rem; border: 1px solid #374151; border-radius: 6px;
+  background: #111827; box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+  overflow-y: auto; overflow-wrap: anywhere; color: #86efac; font-size: 0.78rem; line-height: 1.2;
 }
+.exchange-shop-message:empty { display: none; }
 .exchange-shop-message--error { color: #f87171; }
 
 @media (max-width: 640px) {
