@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 
-const source = readFileSync(new URL('../../public/js/stats.js', import.meta.url), 'utf8')
+const countSource = readFileSync(new URL('../../public/js/core/format-stat-count.js', import.meta.url), 'utf8').replace(/^export /gm, '');
+const source = countSource + '\n' + readFileSync(new URL('../../public/js/stats.js', import.meta.url), 'utf8')
   .replace(/^import .*;$/gm, '').replace(/^export /gm, '');
 const messages = vm.runInNewContext(readFileSync(new URL('../../public/js/i18n/en/stats.js', import.meta.url), 'utf8')
   .replace('export default', '(').replace(/;\s*$/, ')'));
@@ -17,6 +18,8 @@ test('stats renders all ten half-star bins for all categories in balanced column
   const context = vm.createContext({ document: { getElementById: id => id === 'stats-modal-body' ? body : overlay },
     escapeHtml, t: key => messages[key] || key,
     fetchPublic: async () => ({ ok: true, json: async () => ({ ratingsTotal: 10, squires: 7,
+      heartbeatMinutes: (365 + 2) * 1440 + 3 * 60 + 27,
+      avgPlayMinutesPerPlayer: 2 * 1440 + 3 * 60 + 27,
       ratingBreakdown: { books: group(4.5, 5), anthologies: group(3.5, 2), series: group(2, 3) },
       cpuModel: '<script>bad</script>', appTitle: 'Title', avgTitle: 'Title' }) }),
   });
@@ -42,6 +45,8 @@ test('stats renders all ten half-star bins for all categories in balanced column
   assert.match(body.innerHTML, /Squires<\/td><td class="stats-val">7<\/td>/);
   assert.equal((ratingTable.match(/<tr/g) || []).length, 13);
   assert.ok(!body.innerHTML.includes('stats.rating'));
+  assert.match(body.innerHTML, /Tracked play time<\/td><td class="stats-val">1y 2d 3h<\/td>/);
+  assert.match(body.innerHTML, /Avg play time \/ player<\/td><td class="stats-val">2d 3h 27m<\/td>/);
 });
 
 test('rating bars scale to each category peak, not its total votes', async () => {

@@ -126,10 +126,10 @@ test('site extras include containers and padding without adding them to dashboar
 test('dashboard activity windows and sign-in sessions use real activity and expiry', t => {
   const { db, stats } = fixture(t), now = Math.floor(Date.now() / 1000);
   db.prepare('UPDATE users SET last_active_at=?,created_at=?').run(now-120,now-800000);
-  db.prepare('INSERT INTO users(last_active_at,created_at) VALUES(?,?),(?,?),(?,?)').run(now-600,now-100,now-90000,now-800000,now-7200,now-800000);
+  db.prepare('INSERT INTO users(last_active_at,created_at) VALUES(?,?),(?,?),(?,?)').run(now-600,now-100,now-90000,now-800000,now-7200,now-2592001);
   db.prepare('INSERT INTO sessions VALUES(?,?,?),(?,?,?),(?,?,?)').run('valid',now+3600,0,'expired',now-1,0,'impersonation',now+3600,1);
   const s=stats();
-  assert.equal(s.users,4);assert.equal(s.onlineUsers,1);assert.equal(s.activeUsers1h,2);assert.equal(s.activeUsers24h,3);assert.equal(s.newUsers7d,1);assert.equal(s.sessions,1);
+  assert.equal(s.users,4);assert.equal(s.onlineUsers,1);assert.equal(s.activeUsers1h,2);assert.equal(s.activeUsers24h,3);assert.equal(s.newUsers7d,1);assert.equal(s.newUsers30d,3);assert.equal(s.sessions,1);
 });
 
 test('dashboard catalog and currency totals retain child books, rewards, trades and metal remainders', t => {
@@ -153,5 +153,23 @@ test('dashboard catalog and currency totals retain child books, rewards, trades 
 test('empty dashboard aggregates return numeric zeros', t => {
   const {db,stats}=fixture(t);db.exec('DELETE FROM user_books;DELETE FROM books;DELETE FROM users');
   const s=stats();
-  for(const key of ['users','books','playableBooks','readingBooks','onlineUsers','activeUsers1h','activeUsers24h','newUsers7d','sessions','diamondsEarned','diamondsAvailable','diamondsSold','diamondsBought','luckyDiamondsEarned','bronzeAvailable','silverAvailable','marketDiamonds','marketDiamondsMined'])assert.equal(s[key],0,key);
+  for(const key of ['users','books','playableBooks','readingBooks','onlineUsers','activeUsers1h','activeUsers24h','newUsers7d','newUsers30d','sessions','diamondsEarned','diamondsAvailable','diamondsSold','diamondsBought','luckyDiamondsEarned','bronzeAvailable','silverAvailable','marketDiamonds','marketDiamondsMined'])assert.equal(s[key],0,key);
+});
+
+test('dashboard distinguishes missing metrics from a real zero', () => {
+  const source = fs.readFileSync('admin/js/dashboard.js', 'utf8');
+  const elements = new Map();
+  const applyStats = vm.runInNewContext(
+    source.slice(source.indexOf('function fmtN('), source.indexOf('export async function loadStats(')) + '\napplyStats;',
+    { document: { getElementById(id) {
+      if (!elements.has(id)) elements.set(id, { textContent: '', style: {} });
+      return elements.get(id);
+    } }, fmtBytes: () => '', fmtDuration: () => '' },
+  );
+  applyStats({ newUsers30d: 24 });
+  assert.equal(elements.get('s-new-30d').textContent, '24');
+  applyStats({});
+  assert.equal(elements.get('s-new-30d').textContent, '-');
+  applyStats({ newUsers30d: 0 });
+  assert.equal(elements.get('s-new-30d').textContent, '0');
 });

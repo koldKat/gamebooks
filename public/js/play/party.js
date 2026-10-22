@@ -41,8 +41,7 @@ export async function connectPartySSE(bookId) {
     const btn = document.getElementById('party-btn');
     if (party) {
       btn?.classList.add('party-active');
-      const others = party.members.filter(m => m.id !== _hooks.getCurrentUserId?.());
-      if (btn) btn.innerHTML = shortcutLabel(others.length ? t('party.btn_with', { names: others.map(m => m.username).join(', ') }) : t('party.btn_partners'));
+      if (btn) btn.innerHTML = shortcutLabel(t('party.btn'));
       _sseBookId = bookId;
       const isCurrent = () => gen === _connectGen && currentBookId === bookId;
       // Drain hints sequentially: a slow older GET must never replace a newer save.

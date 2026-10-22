@@ -712,9 +712,9 @@ function adminGetStats(gameplayExtras) {
   const userTotals = db.prepare(`SELECT COUNT(*) AS users,
     SUM(last_active_at >= ?) AS onlineUsers, SUM(last_active_at >= ?) AS activeUsers1h,
     SUM(last_active_at >= ?) AS activeUsers24h,
-    SUM(created_at >= ?) AS newUsers7d, SUM(bonus_gc_generated) AS luckyGcGenerated,
+    SUM(created_at >= ?) AS newUsers7d, SUM(created_at >= ?) AS newUsers30d, SUM(bonus_gc_generated) AS luckyGcGenerated,
     SUM(CAST(floor((xp / 1000.0) * (1 + (${_lvl} + MIN(bonus_gc_mint_purchased, ${_lvl})) * 0.001)) AS INTEGER)
-      + bonus_coins) AS earned, SUM(coins_spent) AS spent FROM users`).get(now - 300, now - 3600, now - 86400, now - 604800);
+      + bonus_coins) AS earned, SUM(coins_spent) AS spent FROM users`).get(now - 300, now - 3600, now - 86400, now - 604800, now - 2592000);
   const catalog = db.prepare(`SELECT
     SUM(parent_book_id IS NULL AND is_container=0) AS books,
     SUM(parent_book_id IS NULL AND is_container=1) AS anthologies,
@@ -757,7 +757,7 @@ function adminGetStats(gameplayExtras) {
   const market = db.prepare('SELECT diamonds,diamonds_mined FROM diamond_market WHERE id=1').get();
   const battleWinRate    = battlesFought > 0 ? Math.round((battlesWon / battlesFought) * 100) : 0;
   return { onlineUsers: userTotals.onlineUsers || 0, activeUsers1h: userTotals.activeUsers1h || 0, activeUsers24h: userTotals.activeUsers24h || 0,
-    newUsers7d: userTotals.newUsers7d || 0, playableBooks: catalog.playableBooks || 0,
+    newUsers7d: userTotals.newUsers7d || 0, newUsers30d: userTotals.newUsers30d || 0, playableBooks: catalog.playableBooks || 0,
     readingBooks: catalog.readingBooks || 0, ...diamonds, ...metals, ...rubies,
     rubyRate: users, marketRubies: rubyMarket.rubies, marketRubiesGenerated: rubyMarket.rubies_generated, rubyCompletions: rubyMarket.completions,
     marketDiamonds: market?.diamonds || 0, marketDiamondsMined: market?.diamonds_mined || 0,

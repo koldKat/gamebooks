@@ -2,6 +2,7 @@
 
 import { api, fmtBytes, fmtDuration, esc, showAlert, showConfirm, flashSaved } from './core.js';
 import { loadUsers, loadBooks } from './users-books.js';
+import { formatStatCount } from '/js/core/format-stat-count.js';
 
 const tabLoaders = { users: loadUsers, books: loadBooks };
 const tabRequests = new Map();
@@ -16,7 +17,7 @@ export function loadAll() { return Promise.all([loadStats(), loadAdminGc(), load
 
 // ── Main view - Stats ─────────────────────────────────────────────────────────
 
-function fmtN(n) { return (n ?? 0).toLocaleString(); }
+const fmtN = formatStatCount;
 
 function applyStats(d) {
   document.getElementById('s-users').textContent      = fmtN(d.users);
@@ -40,7 +41,7 @@ function applyStats(d) {
   document.getElementById('s-lucky-gc-generated').textContent = fmtN(d.luckyGcGenerated);
   document.getElementById('s-lucky-gc-claimed').textContent   = fmtN(d.luckyGcClaimed);
   const extraMetrics = {
-    's-online': d.onlineUsers, 's-active-1h': d.activeUsers1h, 's-active-24h': d.activeUsers24h, 's-new-7d': d.newUsers7d,
+    's-online': d.onlineUsers, 's-active-1h': d.activeUsers1h, 's-active-24h': d.activeUsers24h, 's-new-7d': d.newUsers7d, 's-new-30d': d.newUsers30d,
     's-playable-books': d.playableBooks, 's-reading-books': d.readingBooks,
     's-total-sections': d.totalSections, 's-battle-sims': d.battleSims,
     's-pts-finished': d.finishedPlaythroughs, 's-public-runs': d.publicRuns,
@@ -54,7 +55,7 @@ function applyStats(d) {
     's-ruby-stock': d.marketRubies, 's-rubies-generated': d.marketRubiesGenerated, 's-ruby-rate': d.rubyRate,
     's-market-diamonds-mined': d.marketDiamondsMined,
   };
-  for (const [id, value] of Object.entries(extraMetrics)) document.getElementById(id).textContent = fmtN(value);
+  for (const [id, value] of Object.entries(extraMetrics)) document.getElementById(id).textContent = value == null ? '-' : fmtN(value);
   document.getElementById('s-battle-win-rate').textContent = fmtN(d.battleWinRate) + '%';
   document.getElementById('s-uptime-pct').textContent    = d.uptimePct != null ? d.uptimePct.toFixed(2) + '%' : '-';
   document.getElementById('s-downtime').textContent      = fmtDuration(d.totalDowntimeS);
