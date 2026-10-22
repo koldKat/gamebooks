@@ -70,7 +70,7 @@ export async function openRubyExchangeShop() {
   message('Loading…'); render();
   try {
     const response = await apiFetch('/api/profile');
-    if (!response.ok) throw Error('Unable to load Exchange Shop.');
+    if (!response.ok) throw Error('Unable to load Ruby Exchange.');
     const data = await response.json();
     if (getToken() !== token || generation !== _generation) return;
     if (!Number.isSafeInteger(data.rubiesBalance)) { closeRubyExchangeShop(); return; }
@@ -80,7 +80,7 @@ export async function openRubyExchangeShop() {
     message(data.rubiesBalance > 0 ? '' : 'No rubies available to exchange.'); render();
     if (data.rubiesBalance > 0) el('amount').focus();
   } catch (_) {
-    if (getToken() === token && generation === _generation) message('Unable to load Exchange Shop.', true);
+    if (getToken() === token && generation === _generation) message('Unable to load Ruby Exchange.', true);
   }
 }
 
