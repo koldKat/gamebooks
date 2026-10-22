@@ -926,8 +926,10 @@ function setAuthor(userId, value) {
 }
 
 function setSquire(userId, value) {
-  _changeSquire ||= require('./squires').createSquireSetter(db, (id, payload) =>
-    _insertNotif.run(id, 'role_assigned', JSON.stringify(payload)));
+  _changeSquire ||= require('./squires').createSquireSetter(db, (id, payload) => {
+    _insertNotif.run(id, 'role_assigned', JSON.stringify(payload));
+    require('./rubies').backfillRubiesForUser(db, id);
+  });
   const result = _changeSquire(userId, value);
   if (result.changed) _squireRevision++;
   return result.found;

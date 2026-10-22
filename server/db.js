@@ -999,4 +999,5 @@ module.exports = {
 
 // Run after catalog, reading and XP migrations. The backfill is transactional and runs once.
 require('./db/rubies').initializeRubies(db);
+require('./db/gem-notifications').initializeGemNotifications(db);
 require('./db/rubies').backfillRubies(db);
