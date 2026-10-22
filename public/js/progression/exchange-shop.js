@@ -24,7 +24,7 @@ function render() {
   const maximum = buying ? (rate > 0 ? Math.min(stock, Math.max(0, Math.floor((_profile?.coinsBalance || 0) / rate))) : 0) : balance;
   el('stock').hidden = !buying;
   el('stock').innerHTML = `(Diamonds available for purchase: <span class="exchange-shop-stock-value">${stock.toLocaleString()}</span>)`;
-  el('balance').innerHTML = `${DIAMOND_SVG} ${balance.toLocaleString()} · ${COIN_SVG} ${Number(_profile?.coinsBalance || 0).toLocaleString()}`;
+  el('balance').innerHTML = `<span class="shop-modal-balance exchange-shop-diamonds">${DIAMOND_SVG} ${balance.toLocaleString()}</span><span class="shop-modal-balance">${COIN_SVG} ${Number(_profile?.coinsBalance || 0).toLocaleString()}</span>`;
   const sold = Number(_profile?.diamondsExchanged || 0), bought = Number(_profile?.diamondsBought || 0);
   el('total').textContent = `${(sold + bought).toLocaleString()} exchanged`;
   el('total').dataset.tooltip = `${sold.toLocaleString()} sold · ${bought.toLocaleString()} bought`;
