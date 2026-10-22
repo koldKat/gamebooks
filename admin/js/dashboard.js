@@ -40,7 +40,7 @@ function applyStats(d) {
   document.getElementById('s-lucky-gc-generated').textContent = fmtN(d.luckyGcGenerated);
   document.getElementById('s-lucky-gc-claimed').textContent   = fmtN(d.luckyGcClaimed);
   const extraMetrics = {
-    's-online': d.onlineUsers, 's-active-1h': d.activeUsers1h, 's-active-24h': d.activeUsers24h, 's-new-7d': d.newUsers7d,
+    's-online': d.onlineUsers, 's-active-1h': d.activeUsers1h, 's-active-24h': d.activeUsers24h, 's-new-7d': d.newUsers7d, 's-new-30d': d.newUsers30d,
     's-playable-books': d.playableBooks, 's-reading-books': d.readingBooks,
     's-total-sections': d.totalSections, 's-battle-sims': d.battleSims,
     's-pts-finished': d.finishedPlaythroughs, 's-public-runs': d.publicRuns,
