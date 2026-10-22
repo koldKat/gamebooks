@@ -9,6 +9,7 @@ function fixture(purchase) {
   let badges = 0;
   const context = vm.createContext({ module: { exports: {} }, require(name) {
     if (name === '../db') return { purchaseShopItem: purchase };
+    if (name === '../db/ruby-exchange') return {};
     if (name === '../db/diamond-exchange') return {};
     if (name === '../sse') return { userBadgePush() { badges++; } };
     if (name === '../request-helpers') return {

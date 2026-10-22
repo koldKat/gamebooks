@@ -6,6 +6,7 @@ const { getShopPurchaseTotals, getShopRefundRows } = require('./shop-purchases')
 const { db, _naturalCompareByName, _getPdfSize, _getEpubSize } = require('./connection');
 const { computeLevel, getTitleForLevel, getUserXpInfo, getAllUsersXpInfo, awardXp, awardCoins, processStateXp, coinBalance, _insertNotif, SIM_HISTORY_KEYS, RETIRED_SIM_HISTORY_KEYS = [] } = require('./xp');
 const { purgeExpiredSessions } = require('./auth');
+const { rubyInfoForUser } = require('./rubies');
 const { hasDiamondAccess } = require('./diamonds');
 const { getRatingStats } = require('./rating-stats');
 const { collectDashboardStats } = require('./gameplay-stats');
@@ -621,7 +622,12 @@ function adminGetUser(userId) {
     GROUP BY u.id
   `).get(userId);
   if (!row) return null;
-  return { ...row, ...getUserXpInfo(userId), shopPurchases: getShopRefundRows(row, getShopItems(), computeLevel) };
+  return { ...row, ...getUserXpInfo(userId), ...rubyInfoForUser(db,userId,true),
+    rubyRewards: db.prepare(`SELECT r.book_id,r.kind,r.created_at,b.name FROM ruby_rewards r
+      LEFT JOIN books b ON b.id=r.book_id WHERE r.user_id=? ORDER BY r.created_at DESC,r.book_id DESC LIMIT 20`).all(userId),
+    rubyTrades: db.prepare(`SELECT rubies,rate,gold_coins,direction,created_at FROM ruby_exchanges
+      WHERE user_id=? ORDER BY created_at DESC,rowid DESC LIMIT 20`).all(userId),
+    shopPurchases: getShopRefundRows(row, getShopItems(), computeLevel) };
 }
 
 function adminGetUserBooks(userId, options) {
@@ -741,13 +747,18 @@ function adminGetStats(gameplayExtras) {
     COALESCE(SUM(diamonds_earned+diamonds_bought-diamonds_spent),0) AS diamondsAvailable,
     COALESCE(SUM(diamonds_spent),0) AS diamondsSold, COALESCE(SUM(diamonds_bought),0) AS diamondsBought,
     COALESCE(SUM(lucky_diamonds_earned),0) AS luckyDiamondsEarned FROM user_diamonds`).get();
+  const rubies = db.prepare(`SELECT COALESCE(SUM(rubies_earned),0) AS rubiesEarned,
+    COALESCE(SUM(rubies_earned+rubies_bought-rubies_spent),0) AS rubiesAvailable,
+    COALESCE(SUM(rubies_spent),0) AS rubiesSold,COALESCE(SUM(rubies_bought),0) AS rubiesBought FROM user_rubies`).get();
+  const rubyMarket = db.prepare('SELECT rubies,rubies_generated,completions FROM ruby_market WHERE id=1').get();
   const metals = db.prepare(`SELECT COALESCE(SUM(heartbeat_count%100),0) AS bronzeAvailable,
     COALESCE(SUM((heartbeat_count/100)%100),0) AS silverAvailable FROM user_heartbeat_coins`).get();
   const market = db.prepare('SELECT diamonds,diamonds_mined FROM diamond_market WHERE id=1').get();
   const battleWinRate    = battlesFought > 0 ? Math.round((battlesWon / battlesFought) * 100) : 0;
   return { onlineUsers: userTotals.onlineUsers || 0, activeUsers24h: userTotals.activeUsers24h || 0,
     newUsers7d: userTotals.newUsers7d || 0, playableBooks: catalog.playableBooks || 0,
-    readingBooks: catalog.readingBooks || 0, ...diamonds, ...metals,
+    readingBooks: catalog.readingBooks || 0, ...diamonds, ...metals, ...rubies,
+    rubyRate: users, marketRubies: rubyMarket.rubies, marketRubiesGenerated: rubyMarket.rubies_generated, rubyCompletions: rubyMarket.completions,
     marketDiamonds: market?.diamonds || 0, marketDiamondsMined: market?.diamonds_mined || 0,
     users, books, anthologies, series: seriesCount, sessions, totalSections, mappedSections, discoveredSections, playthroughs, activePlaythroughs, finishedPlaythroughs, wins, deaths, battleCount, publicRuns, dbSize, feedbackUnread, totalCoinsEarned, totalCoinsSpent, totalCoinsAvailable, pdfCount, epubCount, luckyGcGenerated, luckyGcClaimed, battleSims, battlesFought, battlesWon, battlesLost, battleWinRate, ...getShopPurchaseTotals(db, computeLevel) };
 }

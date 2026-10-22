@@ -26,7 +26,7 @@ test('diamonds stay hidden without a private balance, update at zero, and clear 
     assert.equal(attrs.has('aria-label'), false);
   }
   const html = readFileSync(new URL('../../../public/index.html', import.meta.url), 'utf8');
-  assert.match(html, /id="shop-btn"[^\n]+\n\s*<button id="diamonds-display"[^>]* hidden>/);
+  assert.match(html, /id="rubies-display"[^\n]+\n\s*<button id="diamonds-display"[^>]* hidden>/);
 });
 
 test('resetting rewards on logout or an account switch clears the private diamond balance', () => {
@@ -34,6 +34,7 @@ test('resetting rewards on logout or an account switch clears the private diamon
   const context = createContext({
     updateDiamondsDisplay: value => balances.push(value),
     closeDiamondExchangeShop() {},
+    closeRubyExchangeShop() {}, updateRubiesDisplay() {},
     updateHeartbeatCoinsDisplay() {},
     clearRewardCache() {},
     clearTimeout() {},

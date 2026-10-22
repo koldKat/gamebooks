@@ -22,6 +22,7 @@ const stubs = {
     getUsername: () => 'Tester', setUsername() {}, setCurrentUserLevel() {} },
   '../i18n.js': { t: key => key },
   '../progression/shop.js': { updateCoinsDisplay() {} },
+  '../progression/rubies.js': { updateRubiesDisplay() {} },
   '../progression/diamonds.js': { updateDiamondsDisplay() {} },
   '../core/util.js': { escapeHtml: value => String(value), compressToBlob() {} },
 };

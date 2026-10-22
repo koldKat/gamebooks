@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="no-chrome">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -98,13 +98,6 @@
   </style>
 </head>
 <body>
-  <header>
-    <div>
-      <div class="page-title">Gamebook Tracker</div>
-      <div class="page-sub">Technical Reference</div>
-    </div>
-    <nav><a href="/admin" class="doc-back">← Back to admin</a><a href="/admin/admin-guide.html">Admin Guide</a></nav>
-  </header>
   <div class="layout">
     <aside class="toc">
       <b>Contents</b>
@@ -201,6 +194,7 @@
         <a class="toc-2" href="#automated-tests-test">Automated tests (test/)</a>
         <a class="toc-3" href="#moderator-permissions">Moderator permissions</a>
         <a class="toc-3" href="#role-display-names">Role display names</a>
+        <a class="toc-3" href="#ruby-completion-rewards-and-exchange">Ruby completion rewards and exchange</a>
     </aside>
     <article class="content">
 <h1 id="gamebook-tracker-technical-reference">Gamebook Tracker - Technical Reference<a class="anchor" href="#gamebook-tracker-technical-reference" aria-label="Link to section">#</a></h1>
@@ -2156,6 +2150,9 @@ series_runs (
 <h3 id="role-display-names">Role display names<a class="anchor" href="#role-display-names" aria-label="Link to section">#</a></h3>
 <p>The player-facing role names are <strong>Gamemaster</strong>, <strong>Lorekeeper</strong>, <strong>Pathmaker</strong>, and <strong>Fateweaver</strong>. Badge tooltips, role notifications, editor labels and role totals use those names without legacy-name suffixes. Existing internal flags (<code>is_admin</code>, <code>is_moderator</code>, <code>is_contributor</code>, <code>is_author</code>) and API keys remain unchanged. Role notifications resolve labels from their role identifier when rendered, so historical notifications show the current name too. Bibliographic author fields and author statistics retain their ordinary meaning.</p>
 <p>Public book and anthology info dialogs reload their metadata after successful edits. Public series info does the same through the series editor’s save callback. Late saves do not replace a newer or closed public dialog; returning from a child book to series info reloads current series data.</p>
+<h3 id="ruby-completion-rewards-and-exchange">Ruby completion rewards and exchange<a class="anchor" href="#ruby-completion-rewards-and-exchange" aria-label="Link to section">#</a></h3>
+<p><code>server/db/rubies.js</code> maintains <code>ruby_rewards</code> (one reward per account/book or anthology), <code>user_rubies</code>, <code>ruby_market</code> and an idempotent retroactive migration. Actual visits combine saved runs, pre-series runs and permanent <code>visit_node</code> events; mapped-only nodes do not qualify. Imported books require all canonical counted section IDs, including sparse and prefixed IDs. Without imported sections, ordinary catalog numbering must be complete. Books require at least 100 sections; anthologies require at least 100 in total across primary and secondary members, deduplicated. Eligible child books and their anthology earn independently. Existing player data and prior currencies are not modified. Every ten completion rewards add one ruby to shared stock.</p>
+<p><code>POST /api/shop/exchange-rubies</code> uses the current registered user count in GC for both buying and selling. The transaction checks access, quote, stock and funds and preserves the original result on a retried request ID. Purchases debit GC, sales credit through <code>coin_events</code>; purchases never count as earned rewards. Access is restricted to admin accounts and Sashii&#39;s stable account ID 17. Personal reward snapshots and the admin reward SSE stream carry earned-ruby floaties; initial historical balances and purchases produce none. Admin stats show supply and balances, and account details show bounded recent rewards and trades.</p>
       <p class="source">Generated from <code>docs/technical.md</code>. Do not edit this HTML directly.</p>
     </article>
   </div>

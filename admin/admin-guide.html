@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="no-chrome">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -98,13 +98,6 @@
   </style>
 </head>
 <body>
-  <header>
-    <div>
-      <div class="page-title">Gamebook Tracker</div>
-      <div class="page-sub">Admin Panel Guide</div>
-    </div>
-    <nav><a href="/admin" class="doc-back">← Back to admin</a><a href="/admin/technical.html">Technical</a></nav>
-  </header>
   <div class="layout">
     <aside class="toc">
       <b>Contents</b>
@@ -157,7 +150,7 @@
 <hr>
 <h2 id="stats-cards">Stats cards<a class="anchor" href="#stats-cards" aria-label="Link to section">#</a></h2>
 <p>The top of the panel groups aggregate metrics into six compact panels:</p>
-<div class="table-wrap"><table><thead><tr><th>Group</th><th>What it shows</th></tr></thead><tbody><tr><td><strong>Players</strong></td><td>Registered accounts, players active in the last five minutes and 24 hours, accounts created in seven days, and unexpired sign-in sessions excluding impersonation. A player can have several sessions.</td></tr><tr><td><strong>Catalog</strong></td><td>Standalone and all playable books (including anthology children), anthologies, series, attached PDFs/EPUBs, books with live reading, catalog sections and battle simulators.</td></tr><tr><td><strong>Activity</strong></td><td>Mapped/discovered nodes, active/total runs, finished/shared runs, run wins/losses, simulator battles won/lost, total simulator battles and win rate. Node totals use the most-mapped player copy of each book; runs and simulator battles count started runs across players.</td></tr><tr><td><strong>Gold &amp; coins</strong></td><td>Lifetime gold earned, available and spent, shop upgrades, Gamemaster supply/remaining coins, Lucky Coins generated/claimed, and current bronze/silver balances.</td></tr><tr><td><strong>Diamonds</strong></td><td>Lifetime earned diamonds, player balances, sold/bought totals, diamonds earned from Lucky Coin claims, shared market stock and lifetime app-mined diamonds. Mining and Lucky Coin rewards count as earned; purchases count separately.</td></tr><tr><td><strong>Server</strong></td><td>Application/database sizes, used/allocated heap, process memory, CPU, incoming/outgoing traffic, current process uptime, lifetime uptime/downtime and app age. The Vacuum button retains its confirmation.</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>Group</th><th>What it shows</th></tr></thead><tbody><tr><td><strong>Players</strong></td><td>Registered accounts, players active in the last five minutes and 24 hours, accounts created in seven days, and unexpired sign-in sessions excluding impersonation. A player can have several sessions.</td></tr><tr><td><strong>Catalog</strong></td><td>Standalone and all playable books (including anthology children), anthologies, series, attached PDFs/EPUBs, books with live reading, catalog sections and battle simulators.</td></tr><tr><td><strong>Activity</strong></td><td>Mapped/discovered nodes, active/total runs, finished/shared runs, run wins/losses, simulator battles won/lost, total simulator battles and win rate. Node totals use the most-mapped player copy of each book; runs and simulator battles count started runs across players.</td></tr><tr><td><strong>Gold &amp; coins</strong></td><td>Lifetime gold earned, available and spent, shop upgrades, Gamemaster supply/remaining coins, Lucky Coins generated/claimed, and current bronze/silver balances.</td></tr><tr><td><strong>Diamonds</strong></td><td>Lifetime earned diamonds, player balances, sold/bought totals, diamonds earned from Lucky Coin claims, shared market stock and lifetime app-mined diamonds. Mining and Lucky Coin rewards count as earned; purchases count separately.</td></tr><tr><td><strong>Rubies</strong></td><td>Completion rewards and player balances, sold/bought totals, shared stock, app-generated supply and the current GC exchange rate. Account details show the latest 20 completion rewards and trades. Controls are currently restricted to admin and Sashii.</td></tr><tr><td><strong>Server</strong></td><td>Application/database sizes, used/allocated heap, process memory, CPU, incoming/outgoing traffic, current process uptime, lifetime uptime/downtime and app age. The Vacuum button retains its confirmation.</td></tr></tbody></table></div>
 <p>Labels and numeric columns align within each group, with tabular digits and currency colors. Wide screens place server metrics in a full-width strip; narrower screens use fewer columns. Statistics refresh in place without replacing the panels.</p>
 <p>Dashboard polling pauses while the browser tab is hidden and refreshes when it becomes visible. Application Size uses an asynchronous directory scan with a shared five-minute cache; changed ignore patterns trigger a fresh calculation.</p>
 <p><strong>Stats for Nerds</strong> (expandable section):</p>

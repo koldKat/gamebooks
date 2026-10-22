@@ -4,6 +4,8 @@ import { getToken, getUsername } from '../core/state.js';
 import { updateCoinsDisplay, refreshCoinsDisplay, COIN_SVG } from './shop.js';
 import { renderBooksXpSummary } from '../account/profile.js';
 import { updateDiamondsDisplay, DIAMOND_SVG } from './diamonds.js';
+import { updateRubiesDisplay, RUBY_SVG } from './rubies.js';
+import { closeRubyExchangeShop } from './ruby-exchange-shop.js';
 import { closeDiamondExchangeShop } from './exchange-shop.js';
 import { updateHeartbeatCoinsDisplay } from './heartbeat-coins.js';
 import { readRewardCache, saveRewardCache, clearRewardCache } from './snapshot-cache.js';
@@ -17,6 +19,7 @@ let _lastRewardCoins     = null;
 let _lastRewardLevel     = null;
 let _lastHeartbeatGold   = null;
 let _lastDiamondsEarned  = null;
+let _lastRubiesEarned = null;
 let _lastRewardUserKey   = null;
 let _rewardAccumXp       = 0;
 let _rewardAccumCoins    = 0;
@@ -103,6 +106,9 @@ function _queueRewardFloater(xpDelta = 0, coinDelta = 0) {
 export function _resetRewardSnapshotState() {
   clearRewardCache();
   closeDiamondExchangeShop();
+  closeRubyExchangeShop();
+  updateRubiesDisplay(null);
+  _lastRubiesEarned = null;
   updateDiamondsDisplay(null);
   updateHeartbeatCoinsDisplay(null);
   _lastHeartbeatGold = null;
@@ -135,6 +141,10 @@ export function _processRewardSnapshot(data, opts = {}) {
   const heartbeatGold = Number(data.heartbeatGoldEarned) || 0;
   const silentGold = _lastHeartbeatGold === null ? 0 : Math.max(0, heartbeatGold - _lastHeartbeatGold);
   _lastHeartbeatGold = heartbeatGold;
+  const rubiesEarned = data.rubiesEarned;
+  const rubyDelta = Number.isSafeInteger(rubiesEarned) && _lastRubiesEarned !== null
+    ? Math.max(0, rubiesEarned - _lastRubiesEarned) : 0;
+  _lastRubiesEarned = Number.isSafeInteger(rubiesEarned) ? rubiesEarned : null;
   const diamondsEarned = data.diamondsEarned;
   const diamondDelta = Number.isSafeInteger(diamondsEarned) && _lastDiamondsEarned !== null
     ? Math.max(0, diamondsEarned - _lastDiamondsEarned) : 0;
@@ -154,6 +164,7 @@ export function _processRewardSnapshot(data, opts = {}) {
   renderBooksXpSummary(data, { fromXp: prevXp });
   if (broadcast) _broadcastLiveEvent('reward_snapshot', data);
   if (xpDelta > 0 || coinDelta > silentGold) _queueRewardFloater(Math.max(0, xpDelta), Math.max(0, coinDelta - silentGold));
+  if (rubyDelta > 0) _spawnRewardFloater('rubies', `${RUBY_SVG}<span>+${rubyDelta.toLocaleString()}</span>`);
   if (diamondDelta > 0) _spawnRewardFloater('diamonds', `${DIAMOND_SVG}<span>+${diamondDelta.toLocaleString()}</span>`);
   if (coinDelta > 0 || levelDelta > 0) _scheduleLiveUiRefresh({ notif: true }, 60);
   if (levelDelta > 0) {

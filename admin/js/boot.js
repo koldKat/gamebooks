@@ -11,15 +11,18 @@ import { loadTools, loadAll, loadActiveTab, registerTabLoaders, loadLive, loadSt
 
 (function () {
   const tip = document.getElementById('admin-tooltip');
+  const position = e => {
+    tip.style.left = `${Math.max(12, Math.min(e.clientX + 14, window.innerWidth - tip.offsetWidth - 12))}px`;
+    tip.style.top = `${Math.max(12, Math.min(e.clientY + 18, window.innerHeight - tip.offsetHeight - 12))}px`;
+  };
   document.addEventListener('mouseover', e => {
     const el = e.target.closest('[data-tooltip]');
     tip.style.display = el ? 'block' : 'none';
-    if (el) tip.textContent = el.dataset.tooltip;
+    if (el) { tip.textContent = el.dataset.tooltip; position(e); }
   });
   document.addEventListener('mousemove', e => {
     if (tip.style.display === 'block') {
-      tip.style.left = `${e.clientX + 14}px`;
-      tip.style.top  = `${e.clientY + 18}px`;
+      position(e);
     }
   });
   document.addEventListener('mouseleave', () => { tip.style.display = 'none'; });

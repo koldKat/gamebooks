@@ -1,0 +1,175 @@
+  <meta name="description" content="Complete guide to Gamebook Tracker - learn how to map branching sections, track playthroughs, record choices, use fast travel, manage character sheets, and visualise decision trees for Fighting Fantasy, Choose Your Own Adventure, Lone Wolf, and other gamebooks.">
+  <meta name="keywords" content="gamebook tracker guide, fighting fantasy section tracker, choose your own adventure tracker, lone wolf tracker, gamebook section map, playthrough tracker tutorial, interactive fiction tools, gamebook decision tree, how to track gamebook, gamebook mapper tutorial">
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+  <meta name="theme-color" content="#111827">
+  <link rel="canonical" href="https://pathmap.net/guide.html">
+  <link rel="manifest" href="/manifest.json">
+
+  <!-- Open Graph -->
+  <meta property="og:type"        content="article">
+  <meta property="og:url"         content="https://pathmap.net/guide.html">
+  <meta property="og:title"       content="Gamebook Tracker - User Guide">
+  <meta property="og:description" content="Complete guide to Gamebook Tracker - map branching sections, track playthroughs, record choices, and visualise decision trees for Fighting Fantasy and other gamebooks.">
+  <meta property="og:image"       content="https://pathmap.net/og-image.png">
+  <meta property="og:image:type"  content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:alt"   content="Gamebook Tracker - Map every choice. Track every run.">
+  <meta property="og:site_name"   content="Gamebook Tracker">
+  <meta property="og:locale"      content="en_US">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card"        content="summary_large_image">
+  <meta name="twitter:url"         content="https://pathmap.net/guide.html">
+  <meta name="twitter:title"       content="Gamebook Tracker - User Guide">
+  <meta name="twitter:description" content="Complete guide to Gamebook Tracker - map branching sections, track playthroughs, record choices, and visualise decision trees for Fighting Fantasy and other gamebooks.">
+  <meta name="twitter:image"       content="https://pathmap.net/og-image.png">
+
+  <!-- Structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "Gamebook Tracker - User Guide",
+    "name": "Gamebook Tracker - User Guide",
+    "url": "https://pathmap.net/guide.html",
+    "inLanguage": "en",
+    "description": "Complete guide to Gamebook Tracker - map branching sections, track playthroughs, record choices, and visualise decision trees for Fighting Fantasy, Choose Your Own Adventure, Lone Wolf, and other gamebooks.",
+    "dateModified": "2026-07-11",
+    "author": { "@type": "Organization", "name": "Gamebook Tracker", "url": "https://pathmap.net/" },
+    "publisher": { "@type": "Organization", "name": "Gamebook Tracker", "url": "https://pathmap.net/", "logo": { "@type": "ImageObject", "url": "https://pathmap.net/favicon.svg" } },
+    "about": { "@type": "WebApplication", "name": "Gamebook Tracker", "url": "https://pathmap.net/" },
+    "isPartOf": { "@type": "WebSite", "name": "Gamebook Tracker", "url": "https://pathmap.net/" }
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://pathmap.net/" },
+      { "@type": "ListItem", "position": 2, "name": "User Guide", "item": "https://pathmap.net/guide.html" }
+    ]
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is Gamebook Tracker?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Gamebook Tracker is a free browser-based tool for mapping and tracking playthroughs of gamebooks such as Fighting Fantasy, Choose Your Own Adventure, Lone Wolf, and Fabled Lands. It builds a live force-directed graph of every section you visit, showing choices, outcomes, and connections."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I record my choices in a gamebook?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "When you reach a new section, enter the section numbers the book offers as choices, comma-separated (e.g. 34, 67, 112). Use -1 for a death outcome and 0 for a victory outcome. Press Record &amp; Choose, then press the button for the path you actually took."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I track multiple playthroughs of the same gamebook?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. Each book can have unlimited runs - all in-progress and completed. You can load any completed run to highlight its path on the graph, and resume any in-progress run at any time."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What is fast travel?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Fast Travel lets you jump to any already-mapped section during an active run. Right-click a mapped node on the graph and choose Fast Travel, or click the Fast Travel button in the sidebar. Enter the target section number and click a routing mode - High priority, Shortest, Normal, or Low priority - to execute immediately. The intermediate steps are added to your run trail automatically."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Does Gamebook Tracker support Fighting Fantasy books?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. Gamebook Tracker works with any section-numbered gamebook series including Fighting Fantasy, Choose Your Own Adventure, Lone Wolf, Fabled Lands, and Tunnels &amp; Trolls solo adventures. You can set the total section count to match your book and optionally add an ISBN, ASIN, or ISSN for easy identification."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is there a demo I can try without creating an account?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. Click the Demo button on the landing page to launch a fully functional demo session with a pre-built mapped graph, completed runs, and priority markings. No sign-up required. Changes are not saved."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is Gamebook Tracker free to use?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes, Gamebook Tracker is completely free. There are no subscriptions, no ads, and no premium tiers. Create an account and start mapping your gamebooks right away."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I undo steps during a playthrough?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. An Undo button appears during an active run. Each press removes the last step and returns you to the previous branch point. The number of undos per run increases as you level up - starting at 3 and going up to 10 at the highest levels."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I track character stats, inventory, and attributes for a gamebook?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Click the Character Sheet button in the bottom-right corner of the tracker. You can add fields of five types - Number (e.g. SKILL, STAMINA), Boolean (yes/no items), Text, List (inventory), and Enum (character class). Each playthrough has its own independent sheet. You can save a template so new playthroughs start with the same fields pre-filled."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I share a completed gamebook run with other players?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "First, make your profile public in your profile settings. Then, on a completed run in the Runs panel, click the Private button to toggle it to Public. The run will appear in the public activity feed and anyone can click through to view a graph showing your path highlighted."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I export my gamebook data?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. There are two options. In your profile (click your avatar), under the Export section, click Export Everything (.zip) to download a ZIP archive of all your books - it contains a backup.json with all your data and a readable HTML file for each book. From within any open book, the sidebar also has an Export Book button that downloads a ZIP for just that book."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What gamebook series does Gamebook Tracker support?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Gamebook Tracker works with any section-numbered gamebook - there is no fixed list of supported titles. Popular series include Fighting Fantasy, Choose Your Own Adventure, Lone Wolf, Fabled Lands, Tunnels &amp; Trolls, Sorcery!, GrailQuest, and Blood Sword. Section IDs can be numeric (34, 112) or alphanumeric (101-A, 101-B). You create a book entry with the total section count and start mapping."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I record a death or a winning ending?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "When recording choices for a section, enter -1 as a destination to mark a dead end (death outcome), or 0 to mark a winning ending. Choosing either completes the current playthrough and marks it as a death or win in your Runs panel."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Does Gamebook Tracker work on mobile?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. The app includes a lighter mobile interface for smaller screens. The graph can still be panned and zoomed by touch, but larger screens remain more comfortable for mapping complex books."
+        }
+      }
+    ]
+  }
+  </script>
+
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">

@@ -49,6 +49,9 @@ function applyStats(d) {
     's-diamonds-earned': d.diamondsEarned, 's-diamonds-avail': d.diamondsAvailable,
     's-diamonds-sold': d.diamondsSold, 's-diamonds-bought': d.diamondsBought,
     's-lucky-diamonds': d.luckyDiamondsEarned, 's-diamond-stock': d.marketDiamonds,
+    's-rubies-earned': d.rubiesEarned, 's-rubies-avail': d.rubiesAvailable,
+    's-rubies-sold': d.rubiesSold, 's-rubies-bought': d.rubiesBought,
+    's-ruby-stock': d.marketRubies, 's-rubies-generated': d.marketRubiesGenerated, 's-ruby-rate': d.rubyRate,
     's-market-diamonds-mined': d.marketDiamondsMined,
   };
   for (const [id, value] of Object.entries(extraMetrics)) document.getElementById(id).textContent = fmtN(value);
