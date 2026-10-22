@@ -9,6 +9,7 @@ const source = (tagName, children = [], attrs = {}) => ({ nodeType: 1, tagName,
 function setup(nodes) {
   const element = tag => ({ tag, children: [], attrs: {},
     append(...children) { this.children.push(...children); },
+    getAttribute(name) { return this.attrs[name] ?? null; },
     setAttribute(name, value) { this.attrs[name] = value; } });
   const document = { createTextNode: textNode, createElement: tag => tag === 'template' ? { content: { childNodes: nodes } } : element(tag) };
   return { mount: { ...element('div'), className: 'reading-frontmatter' }, document };
@@ -224,5 +225,39 @@ test('unsafe markup falls back atomically without inserting images or executable
     assert.equal(renderReadingMatter(mount, 1, '<p>Safe prefix</p>', document), false);
     assert.equal(mount.children.length, 0);
     assert.equal(mount.className, 'reading-frontmatter');
+  }
+});
+
+function framedMatter(overrides = {}, imageOverrides = {}, captionChildren = null) {
+  return source('FIGURE', [
+    source('IMG', [], { src: '/api/books/1209/reading-images/' + 'a'.repeat(64) + '.png', alt: 'Original frame', ...imageOverrides }),
+    source('FIGCAPTION', captionChildren || [source('H3', [textNode('READ THIS FIRST!!!')]), source('P', [textNode('Choose your adventure.')])]),
+  ], { class: 'reading-source-frame', 'data-source-width': '412', 'data-source-height': '641',
+    'data-heading-box': '45,155,305,179', 'data-body-box': '35,207,315,495', 'data-font-size': '14', 'data-line-height': '18', ...overrides });
+}
+test('source-framed instructions retain protected art and prose in validated source coordinates', () => {
+  const {mount, document} = setup([framedMatter()]);
+  assert.equal(renderReadingMatter(mount, 1209, '<figure class="reading-source-frame"></figure>', document), true);
+  const canvas = mount.children[0].children[0];
+  assert.match(canvas.attrs.style, /width:412px;height:641px/);
+  assert.deepEqual(canvas.children.map(n => n.tag), ['img', 'h3', 'div']);
+  assert.match(canvas.children[1].attrs.style, /left:45px;top:155px;width:260px/);
+  assert.match(canvas.children[2].attrs.style, /left:35px;top:207px;width:280px/);
+  assert.equal(canvas.children[2].children[0].children[0].textContent, 'Choose your adventure.');
+});
+test('framed instructions reject invalid geometry and unsafe or cross-book content atomically', () => {
+  const rejected = [
+    framedMatter({'data-source-width': '4001'}), framedMatter({'data-body-box': '0,0,500,900'}),
+    framedMatter({'data-heading-box': '-1,0,100,20'}), framedMatter({'data-font-size': '999'}),
+    framedMatter({'data-line-height': '1'}), framedMatter({'data-body-box': '0,0,100,100;position:fixed'}),
+    framedMatter({onclick: 'alert(1)'}), framedMatter({style: 'position:fixed'}),
+    framedMatter({}, {src: '/api/books/1208/reading-images/' + 'a'.repeat(64) + '.png'}),
+    framedMatter({}, {onload: 'alert(1)'}),
+    framedMatter({}, {}, [source('H3', [textNode('Title')]), source('SCRIPT', [textNode('alert(1)')])]),
+  ];
+  for (const frame of rejected) {
+    const {mount, document} = setup([source('P', [textNode('Safe prefix')]), frame]);
+    assert.equal(renderReadingMatter(mount, 1209, '<p>Safe prefix</p><figure></figure>', document), false);
+    assert.equal(mount.children.length, 0);
   }
 });
