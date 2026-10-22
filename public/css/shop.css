@@ -47,15 +47,15 @@
 }
 
 /* ── Shop modal ─────────────────────────────────────────────────── */
-#shop-modal-overlay, #exchange-shop-modal-overlay, #ruby-exchange-shop-modal-overlay {
+#shop-modal-overlay, #exchange-shop-modal-overlay {
   display: none; position: fixed; inset: 0;
   background: rgba(0,0,0,0.6); z-index: 2000;
   align-items: flex-start; justify-content: center;
   padding: 1rem;
   overflow-y: auto;
 }
-#shop-modal-overlay.active, #exchange-shop-modal-overlay.active, #ruby-exchange-shop-modal-overlay.active { display: flex; }
-#shop-modal, #exchange-shop-modal, #ruby-exchange-shop-modal {
+#shop-modal-overlay.active, #exchange-shop-modal-overlay.active { display: flex; }
+#shop-modal, #exchange-shop-modal {
   background: #111827; border: 1px solid #374151; border-radius: 12px;
   width: 548px; max-width: min(92vw, 548px); max-height: calc(100vh - 2rem);
   margin: auto 0;
@@ -140,7 +140,7 @@
 .exchange-shop-balance { display: inline-flex; align-items: center; gap: 0.25rem; }
 .exchange-shop-balance .shop-modal-balance { white-space: nowrap; }
 .exchange-shop-diamonds { color: #67e8f9; background: #102a33; border-color: #155e75; }
-#exchange-shop-modal, #ruby-exchange-shop-modal { width: 440px; max-width: min(92vw, 440px); }
+#exchange-shop-modal { width: 440px; max-width: min(92vw, 440px); }
 .exchange-shop-body { padding: 0.65rem 0.85rem 0.5rem; overflow-y: auto; font-size: 0.85rem; }
 .exchange-shop-body .secondary-btn, .exchange-shop-body .shop-buy-btn {
   box-sizing: border-box; height: 28px; padding: 0 0.65rem;
@@ -148,8 +148,8 @@
 }
 .exchange-shop-direction { display: flex; gap: 0.5rem; margin-bottom: 0.8rem; }
 .exchange-shop-direction [aria-pressed="true"] { background: #16404c; border-color: #22d3ee; color: #67e8f9; }
-#exchange-shop-modal .shop-modal-header, #ruby-exchange-shop-modal .shop-modal-header { flex-wrap: wrap; }
-#exchange-shop-title, #ruby-exchange-shop-title { min-width: 100px; }
+#exchange-shop-modal .shop-modal-header { flex-wrap: wrap; }
+#exchange-shop-title { min-width: 100px; }
 .exchange-shop-body label { display: block; color: #d1d5db; margin-bottom: 0.35rem; }
 .exchange-shop-quantity-label { display: flex; align-items: baseline; gap: 0.35rem; flex-wrap: wrap; margin-bottom: 0.35rem; }
 .exchange-shop-quantity-label label, .exchange-shop-quantity-label .exchange-shop-tip { margin: 0; }
@@ -157,8 +157,8 @@
 .exchange-shop-amount-row .cs-num-wrap { flex: 1; min-width: 0; align-items: stretch; }
 .exchange-shop-amount-row .cs-num-btn { box-sizing: border-box; width: 28px; height: 28px; padding: 0; }
 .exchange-shop-amount-row .cs-num-btn:disabled { opacity: 0.4; cursor: default; }
-#exchange-shop-amount, #ruby-exchange-shop-amount { box-sizing: border-box; height: 28px; padding: 0 0.4rem; border-radius: 0; border-left: 0; border-right: 0; font: inherit; font-size: 0.78rem; line-height: 26px; color-scheme: dark; }
-#exchange-shop-amount:focus, #ruby-exchange-shop-amount:focus { outline: 1px solid #22d3ee; border-color: #22d3ee; }
+#exchange-shop-amount { box-sizing: border-box; height: 28px; padding: 0 0.4rem; border-radius: 0; border-left: 0; border-right: 0; font: inherit; font-size: 0.78rem; line-height: 26px; color-scheme: dark; }
+#exchange-shop-amount:focus { outline: 1px solid #22d3ee; border-color: #22d3ee; }
 .exchange-shop-quote {
   display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
   margin: 0.65rem 0; white-space: nowrap; overflow-x: auto;
@@ -170,7 +170,7 @@
   display: grid; grid-template-columns: 7.25rem minmax(0, 1fr); align-items: center;
   gap: 0.5rem; height: 2.25rem; margin-top: 0.65rem;
 }
-#exchange-shop-submit, #ruby-exchange-shop-submit { margin: 0; width: 100%; }
+#exchange-shop-submit { margin: 0; width: 100%; }
 .exchange-shop-message {
   min-width: 0; max-height: 100%; overflow-y: auto; overflow-wrap: anywhere;
   color: #86efac; font-size: 0.78rem; line-height: 1.2;
@@ -179,10 +179,10 @@
 .exchange-shop-message--error { color: #f87171; }
 
 @media (max-width: 640px) {
-  #shop-modal-overlay, #exchange-shop-modal-overlay, #ruby-exchange-shop-modal-overlay {
+  #shop-modal-overlay, #exchange-shop-modal-overlay {
     padding: 0.5rem;
   }
-  #shop-modal, #exchange-shop-modal, #ruby-exchange-shop-modal {
+  #shop-modal, #exchange-shop-modal {
     max-height: calc(100vh - 1rem);
   }
   .shop-item {
@@ -468,7 +468,17 @@
 /* Rubies share the compact currency/shop layout, with their own red accent. */
 .rubies-display, .exchange-shop-rubies { color: #fda4af; background: #351922; border-color: #9f1239; }
 .rubies-display:hover { background: #4c1d2e; border-color: #fb7185; }
-#ruby-exchange-shop-modal .exchange-shop-stock-value { color: #fda4af; }
-#ruby-exchange-shop-modal .exchange-shop-direction [aria-pressed="true"] { color: #fda4af; background: #351922; border-color: #fb7185; }
-#ruby-exchange-shop-amount:focus { outline-color: #fb7185; border-color: #fb7185; }
+#exchange-shop-modal[data-currency="ruby"] .exchange-shop-stock-value { color: #fda4af; }
+#exchange-shop-modal[data-currency="ruby"] .exchange-shop-direction [aria-pressed="true"] { color: #fda4af; background: #351922; border-color: #fb7185; }
+#exchange-shop-modal[data-currency="ruby"] #exchange-shop-amount:focus { outline-color: #fb7185; border-color: #fb7185; }
 .reward-float--rubies, .app-reward-float.app-reward-float--rubies { color: #fda4af; border-color: #be123c; background: #351922; }
+
+.black-market-tabs { display: flex; gap: 0.35rem; padding: 0.55rem 0.85rem 0; }
+.black-market-tabs button {
+  flex: 1; padding: 0.35rem 0.6rem; border: 1px solid #374151; border-radius: 5px;
+  background: #1f2937; color: #9ca3af; font: inherit; font-size: 0.8rem; cursor: pointer;
+}
+.black-market-tabs button[aria-selected="true"] { color: #67e8f9; border-color: #22d3ee; background: #102a33; }
+.black-market-tabs #exchange-shop-ruby-tab[aria-selected="true"] { color: #fda4af; border-color: #fb7185; background: #351922; }
+.black-market-tabs button:disabled { cursor: default; opacity: 0.5; }
+.black-market-tabs button:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }

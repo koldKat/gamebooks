@@ -12,14 +12,14 @@ function setup() {
     return nodes.get(id);
   };
   const context=createContext({document:{getElementById:get,addEventListener(){}},getToken:()=>token,
-    COIN_SVG:'<svg class="coin-icon"></svg>',RUBY_SVG:'<svg class="ruby-icon"></svg>',
+    COIN_SVG:'<svg class="coin-icon"></svg>',RUBY_SVG:'<svg class="ruby-icon"></svg>',DIAMOND_SVG:'<svg class="diamond-icon"></svg>',
     crypto:{randomUUID:()=>`exchange-request-${++sequence}`},
     showConfirm(message,confirm,options){const dialog={message,confirm,options,closed:false};confirmations.push(dialog);return()=>{dialog.closed=true;};},
     apiFetch(url,options){return new Promise((resolve,reject)=>requests.push({url,options,resolve,reject}));},
   });
-  runInContext(readFileSync(new URL('../../../public/js/progression/ruby-exchange-shop.js',import.meta.url),'utf8').replace(/^import .*;$/gm,'').replace(/^export /gm,''),context);
-  context.initRubyExchangeShop({onRewardSnapshot:data=>snapshots.push(data)});
-  return{context,requests,snapshots,confirmations,get:name=>get('ruby-exchange-shop-'+name),switchAccount(){token='other';}};
+  runInContext(readFileSync(new URL('../../../public/js/progression/exchange-shop.js',import.meta.url),'utf8').replace(/^import .*;$/gm,'').replace(/^export /gm,''),context);
+  context.initBlackMarket({onRewardSnapshot:data=>snapshots.push(data)});
+  return{context,requests,snapshots,confirmations,get:name=>get('exchange-shop-'+name),switchAccount(){token='other';}};
 }
 const profile={rubiesBalance:5,rubiesExchanged:2,rubiesBought:1,coinsBalance:150,rubyExchangeRate:70,rubyBuyRate:70,rubyPurchaseStock:5};
 async function open(h,data=profile){const p=h.context.openRubyExchangeShop();h.requests.shift().resolve({ok:true,json:async()=>data});await p;}

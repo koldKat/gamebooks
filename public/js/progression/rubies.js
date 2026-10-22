@@ -8,13 +8,13 @@ export function updateRubiesDisplay(balance, data) {
   if (!visible) {
     el.textContent = '';
     el.removeAttribute('aria-label');
-    el.dataset.tooltip = 'Ruby Exchange';
+    el.dataset.tooltip = 'Black Market: Rubies';
     return;
   }
   const formatted = balance.toLocaleString();
   el.innerHTML = `${RUBY_SVG} ${formatted}`;
-  el.setAttribute('aria-label', `Ruby Exchange, ${formatted} rubies`);
+  el.setAttribute('aria-label', `Black Market, ${formatted} rubies`);
   el.dataset.tooltip = Number.isSafeInteger(data?.rubyExchangeRate)
-    ? `Ruby Exchange: 1 ruby = ${data.rubyExchangeRate.toLocaleString()} GC`
-    : 'Ruby Exchange';
+    ? `Black Market: 1 ruby = ${data.rubyExchangeRate.toLocaleString()} GC`
+    : 'Black Market: Rubies';
 }

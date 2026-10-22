@@ -9,7 +9,8 @@ const { getRatingStats } = require('../../server/db/rating-stats');
 (async () => {
   const root = process.env.STATS_SCRATCH;
   assert.ok(root && root.startsWith('/media/koldKat/MediaDrive/.tmp/'));
-  const source = fs.readFileSync('public/js/stats.js', 'utf8')
+  const countSource = fs.readFileSync('public/js/core/format-stat-count.js', 'utf8').replace(/^export /gm, '');
+  const source = countSource + '\n' + fs.readFileSync('public/js/stats.js', 'utf8')
     .replace(/^import .*;$/gm, '').replace(/^export /gm, '');
   const messages = vm.runInNewContext(fs.readFileSync('public/js/i18n/en/stats.js', 'utf8')
     .replace('export default', '(').replace(/;\s*$/, ')'));
