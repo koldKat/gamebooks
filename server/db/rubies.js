@@ -1,10 +1,8 @@
 'use strict';
 
 // Completion rewards are permanent, independent of the mutable runs and catalog.
-// Sashii's existing account ID is stable even when a username changes.
-const RUBY_EXTRA_USER_ID = 17;
 function hasRubyAccess(db, userId) {
-  return !!db.prepare('SELECT 1 FROM users WHERE id=? AND (is_admin=1 OR id=?)').get(userId,RUBY_EXTRA_USER_ID);
+  return !!db.prepare('SELECT 1 FROM users WHERE id=?').get(userId);
 }
 
 function initializeRubies(db) {
@@ -108,11 +106,11 @@ function backfillRubies(db) {
   }).immediate();
 }
 
-function rubyInfoForUser(db, userId, admin = false) {
-  const row = db.prepare(`SELECT u.id AS account_id,u.is_admin,r.*,
+function rubyInfoForUser(db, userId) {
+  const row = db.prepare(`SELECT r.*,
     (SELECT COUNT(*) FROM users) AS rate,(SELECT rubies FROM ruby_market WHERE id=1) AS stock
     FROM users u LEFT JOIN user_rubies r ON r.user_id=u.id WHERE u.id=?`).get(userId);
-  if (!row || (!admin && !row.is_admin && row.account_id !== RUBY_EXTRA_USER_ID)) return {};
+  if (!row) return {};
   return {
     rubiesEarned: row?.rubies_earned || 0,
     rubiesBalance: (row?.rubies_earned || 0)+(row?.rubies_bought || 0)-(row?.rubies_spent || 0),

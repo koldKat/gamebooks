@@ -139,7 +139,7 @@
 .exchange-shop-balance { display: inline-flex; align-items: center; gap: 0.25rem; }
 .exchange-shop-balance .shop-modal-balance { white-space: nowrap; }
 .exchange-shop-diamonds { color: #67e8f9; background: #102a33; border-color: #155e75; }
-#exchange-shop-modal, #ruby-exchange-shop-modal { width: 400px; max-width: min(92vw, 400px); }
+#exchange-shop-modal, #ruby-exchange-shop-modal { width: 440px; max-width: min(92vw, 440px); }
 .exchange-shop-body { padding: 0.65rem 0.85rem 0.5rem; overflow-y: auto; font-size: 0.85rem; }
 .exchange-shop-body .secondary-btn, .exchange-shop-body .shop-buy-btn {
   box-sizing: border-box; height: 28px; padding: 0 0.65rem;

@@ -622,7 +622,7 @@ function adminGetUser(userId) {
     GROUP BY u.id
   `).get(userId);
   if (!row) return null;
-  return { ...row, ...getUserXpInfo(userId), ...rubyInfoForUser(db,userId,true),
+  return { ...row, ...getUserXpInfo(userId), ...rubyInfoForUser(db,userId),
     rubyRewards: db.prepare(`SELECT r.book_id,r.kind,r.created_at,b.name FROM ruby_rewards r
       LEFT JOIN books b ON b.id=r.book_id WHERE r.user_id=? ORDER BY r.created_at DESC,r.book_id DESC LIMIT 20`).all(userId),
     rubyTrades: db.prepare(`SELECT rubies,rate,gold_coins,direction,created_at FROM ruby_exchanges

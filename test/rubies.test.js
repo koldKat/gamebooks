@@ -48,7 +48,7 @@ test('rewards require every visited section, combine runs, ignore mapped-only no
   f.save(2,10,[range(1,50),range(51,100)]);
   assert.equal(f.check(2,10),1);assert.equal(f.check(2,10),0);
   f.save(2,10,[]);assert.equal(f.check(2,10),0);assert.equal(f.wallet(2).rubies_earned,1);
-  assert.deepEqual(ruby.rubyInfoForUser(f.db,2),{});
+  assert.equal(ruby.rubyInfoForUser(f.db,2).rubiesBalance,1);
   assert.equal(ruby.rubyInfoForUser(f.db,2,true).rubiesBalance,1);
 });
 
@@ -110,10 +110,10 @@ test('same user-count rate both ways, stock conservation, idempotency and change
   const profile=ruby.rubyInfoForUser(f.db,17);assert.equal(profile.rubyBuyRate,4);assert.equal(profile.rubyExchangeRate,4);
 });
 
-test('invalid, hidden-account, insufficient-funds and impersonated trades leave every ledger untouched',t=>{
+test('invalid, nonexistent-account, insufficient-funds and impersonated trades leave every ledger untouched',t=>{
   const f=fixture(t);
   for(const value of [0,-1,1.5,Infinity,'1',Number.MAX_SAFE_INTEGER+1])assert.equal(f.exchange(1,value,'ruby-request-0001',3).error,'invalid_amount');
-  assert.equal(f.exchange(2,1,'ruby-request-0001',3).error,'unavailable');
+  assert.equal(f.exchange(999,1,'ruby-request-0001',3).error,'unavailable');
   assert.equal(f.exchange(1,1,'short',3).error,'invalid_request');
   assert.equal(f.exchange(1,1,'ruby-request-0001',3,'gift').error,'invalid_request');
   assert.equal(f.exchange(1,1,'ruby-request-0001',3).error,'insufficient_rubies');
@@ -124,11 +124,13 @@ test('invalid, hidden-account, insufficient-funds and impersonated trades leave 
   assert.equal(f.db.prepare('SELECT COUNT(*) n FROM coin_events').get().n,0);
 });
 
-test('access follows the original account when names change, and a shortened discoverable count cannot certify missing visits',t=>{
+test('every registered account has access, and a shortened discoverable count cannot certify missing visits',t=>{
   const f=fixture(t);
   f.db.exec("UPDATE users SET username='Sashii-old' WHERE id=17; UPDATE users SET username='Sashii' WHERE id=2");
-  assert.equal(ruby.hasRubyAccess(f.db,17),true);assert.equal(ruby.hasRubyAccess(f.db,2),false);
-  assert.equal(ruby.rubyInfoForUser(f.db,17).rubiesBalance,0);assert.deepEqual(ruby.rubyInfoForUser(f.db,2),{});
+  assert.equal(ruby.hasRubyAccess(f.db,17),true);assert.equal(ruby.hasRubyAccess(f.db,2),true);
+  assert.equal(ruby.rubyInfoForUser(f.db,17).rubiesBalance,0);assert.equal(ruby.rubyInfoForUser(f.db,2).rubiesBalance,0);
+  assert.deepEqual(ruby.rubyInfoForUser(f.db,999),{});
+  assert.equal(f.exchange(2,1,'ordinary-ruby-0001',3,'buy').error,'insufficient_stock');
   f.addBook(1);f.db.exec('UPDATE books SET discoverable_sections=99 WHERE id=1');
   f.save(17,1,[range(1,99)]);assert.equal(f.check(17,1),0);
   f.save(17,1,[range(1,100)]);assert.equal(f.check(17,1),1);

@@ -150,11 +150,9 @@
     .val-silver { color: #cbd5e1; }
     .stat-section .vacuum-btn { margin-top: 0.5rem; padding: 0.3rem 0.5rem; font-size: 0.72rem; }
     @media (min-width: 1400px) {
-      .dashboard-stats { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-      .stat-section--server { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.3rem 1rem; }
-      .stat-section--server h2 { align-self: center; margin: 0; }
-      .stat-section--server dl { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 1.5rem; }
-      .stat-section--server .vacuum-btn { grid-column: 2; grid-row: 1; width: auto; margin: 0; }
+      .dashboard-stats { grid-template-columns: repeat(6, minmax(0, 1fr)) minmax(0, 1.35fr); gap: 0.45rem; }
+      .stat-section { padding: 0.5rem 0.55rem; }
+      .stat-metric { gap: 0.35rem; }
     }
     @media (max-width: 959px) { .dashboard-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
     @media (max-width: 599px) { .dashboard-stats { grid-template-columns: minmax(0, 1fr); } }
