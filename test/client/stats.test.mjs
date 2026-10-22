@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 
-const source = readFileSync(new URL('../../public/js/stats.js', import.meta.url), 'utf8')
+const countSource = readFileSync(new URL('../../public/js/core/format-stat-count.js', import.meta.url), 'utf8').replace(/^export /gm, '');
+const source = countSource + '\n' + readFileSync(new URL('../../public/js/stats.js', import.meta.url), 'utf8')
   .replace(/^import .*;$/gm, '').replace(/^export /gm, '');
 const messages = vm.runInNewContext(readFileSync(new URL('../../public/js/i18n/en/stats.js', import.meta.url), 'utf8')
   .replace('export default', '(').replace(/;\s*$/, ')'));

@@ -2,6 +2,7 @@
 
 import { api, fmtBytes, fmtDuration, esc, showAlert, showConfirm, flashSaved } from './core.js';
 import { loadUsers, loadBooks } from './users-books.js';
+import { formatStatCount } from '/js/core/format-stat-count.js';
 
 const tabLoaders = { users: loadUsers, books: loadBooks };
 const tabRequests = new Map();
@@ -16,7 +17,7 @@ export function loadAll() { return Promise.all([loadStats(), loadAdminGc(), load
 
 // ── Main view - Stats ─────────────────────────────────────────────────────────
 
-function fmtN(n) { return (n ?? 0).toLocaleString(); }
+const fmtN = formatStatCount;
 
 function applyStats(d) {
   document.getElementById('s-users').textContent      = fmtN(d.users);
