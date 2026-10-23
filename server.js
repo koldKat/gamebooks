@@ -30,6 +30,7 @@ const { ROOT, AVATARS_DIR, COVERS_DIR, BOOKS_DIR, ATTACHMENTS_DIR } = require('.
 if (!fs.existsSync(AVATARS_DIR))     fs.mkdirSync(AVATARS_DIR,     { recursive: true });
 if (!fs.existsSync(COVERS_DIR))      fs.mkdirSync(COVERS_DIR,      { recursive: true });
 if (!fs.existsSync(BOOKS_DIR))       fs.mkdirSync(BOOKS_DIR,       { recursive: true });
+for (const folder of ['pdfs', 'epubs']) fs.mkdirSync(path.join(BOOKS_DIR, folder), { recursive: true });
 if (!fs.existsSync(ATTACHMENTS_DIR)) fs.mkdirSync(ATTACHMENTS_DIR, { recursive: true });
 
 // One-time XP migration for existing users

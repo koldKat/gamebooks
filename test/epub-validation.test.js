@@ -78,7 +78,7 @@ test('EPUB upload accepts compressed metadata and rejects invalid files before s
       '../db': { getBookById: () => ({}), setBookEpub: () => calls.push('save'), awardEpubXp: () => calls.push('xp') },
       '../paths': { BOOKS_DIR: '/books' },
       '../file-transfer': { receiveUpload: async (_req, filename, options) => {
-        assert.match(filename, /\.epub$/);
+        assert.match(filename, /\/books\/epubs\/42_\d+\.epub$/);
         assert.equal(options.maxBytes, 256 * 1024 * 1024);
         assert.equal(options.validateFile, isEpubFile);
         if (!valid) throw Object.assign(new Error('invalid'), { code: 'INVALID_FILE' });

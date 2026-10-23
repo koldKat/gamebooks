@@ -30,7 +30,7 @@ class Element {
     });
     return this.stars;
   }
-  appendChild(child) { this.children.push(child); }
+  appendChild(child) { this.children.push(...(child.isFragment ? child.children.splice(0) : [child])); }
   cloneNode() { const neo = new Element(this.id); neo.value = this.value; return neo; }
   closest() { return this; }
   focus() {}
@@ -71,7 +71,7 @@ const overrides = {
     return { ok: apiOk, json: async () => url === '/api/books' && options?.method === 'POST' ? { id: 99 } : url === '/api/series' ? series : url.endsWith('/rating') ? { rating: 4, avgRating: 4, voteCount: 1 } : { error: 'failed' } };
   },
 };
-const context = createContext({ document: { getElementById: el, createElement: () => new Element() }, window: { dispatchEvent: event => calls.push(['event', event.type]) }, Event: class { constructor(type) { this.type = type; } }, XMLHttpRequest: XHR, setTimeout: fn => timers.push(fn), console });
+const context = createContext({ document: { getElementById: el, createElement: () => new Element(), createDocumentFragment: () => Object.assign(new Element(), { isFragment: true }) }, window: { dispatchEvent: event => calls.push(['event', event.type]) }, Event: class { constructor(type) { this.type = type; } }, XMLHttpRequest: XHR, setTimeout: fn => timers.push(fn), console });
 sources.set(resolve(root, 'edit-book.js'), readFileSync(resolve(root, 'edit-book.js'), 'utf8'));
 sources.set(resolve(root, 'books/add-book.js'), readFileSync(resolve(root, 'books/add-book.js'), 'utf8'));
 if (existsSync(resolve(root, 'edit-book'))) for (const name of readdirSync(resolve(root, 'edit-book')).filter(n => n.endsWith('.js'))) sources.set(resolve(root, 'edit-book', name), readFileSync(resolve(root, 'edit-book', name), 'utf8'));
