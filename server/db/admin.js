@@ -627,6 +627,8 @@ function adminGetUser(userId) {
       LEFT JOIN books b ON b.id=r.book_id WHERE r.user_id=? ORDER BY r.created_at DESC,r.book_id DESC LIMIT 20`).all(userId),
     rubyTrades: db.prepare(`SELECT rubies,rate,gold_coins,direction,created_at FROM ruby_exchanges
       WHERE user_id=? ORDER BY created_at DESC,rowid DESC LIMIT 20`).all(userId),
+    diamondTrades: db.prepare(`SELECT diamonds,rate,gold_coins,direction,created_at FROM diamond_exchanges
+      WHERE user_id=? ORDER BY created_at DESC,rowid DESC LIMIT 20`).all(userId),
     shopPurchases: getShopRefundRows(row, getShopItems(), computeLevel) };
 }
 

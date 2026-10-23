@@ -738,7 +738,6 @@ export async function loadUserDetail(userId, edit = false) {
     rubySummary.appendChild(rubyTable); rubyWrap.appendChild(rubySummary);
     for (const [label,items,headers,values] of [
       ['Recent completion rewards (up to 20)',user.rubyRewards || [],['Book / anthology','Type','Date'],r=>[r.name || `Deleted book #${r.book_id}`,r.kind,new Date(r.created_at*1000).toLocaleString()]],
-      ['Recent ruby trades (up to 20)',user.rubyTrades || [],['Trade','Rubies','GC per ruby','GC','Date'],r=>[r.direction,r.rubies,r.rate,r.gold_coins,new Date(r.created_at*1000).toLocaleString()]],
     ]) {
       if (!items.length) continue;
       const history = el('div', 'user-ruby-history');
@@ -836,6 +835,40 @@ export async function loadUserDetail(userId, edit = false) {
     overview.appendChild(overviewWrap);
     metaBar.prepend(overview);
     metaBar.appendChild(rubyMeta);
+
+    const trades = el('div', 'user-shop-purchases user-currency-trades');
+    for (const [currency, label, items] of [
+      ['rubies', 'Ruby trades', user.rubyTrades || []],
+      ['diamonds', 'Diamond trades', user.diamondTrades || []],
+    ]) {
+      const history = el('details', `user-trade-history user-trade-history--${currency}`);
+      history.appendChild(el('summary', '', label));
+      if (items.length) {
+        history.appendChild(el('div', 'user-trade-limit', 'Latest 20 trades'));
+        const table = el('table', 'data-table');
+        const head = el('thead', ''), heading = el('tr', '');
+        const singular = currency === 'rubies' ? 'ruby' : 'diamond';
+        for (const text of ['Trade', currency === 'rubies' ? 'Rubies' : 'Diamonds', `GC per ${singular}`, 'GC', 'Date']) {
+          heading.appendChild(el('th', '', text));
+        }
+        head.appendChild(heading); table.appendChild(head);
+        const body = el('tbody', '');
+        for (const item of items) {
+          const row = el('tr', '');
+          for (const value of [item.direction === 'buy' ? 'Buy' : 'Sell',
+            item[currency].toLocaleString(), item.rate.toLocaleString(), item.gold_coins.toLocaleString(),
+            new Date(item.created_at * 1000).toLocaleString()]) appendCell(row, value);
+          body.appendChild(row);
+        }
+        table.appendChild(body);
+        const wrap = el('div', 'table-wrap');
+        wrap.appendChild(table); history.appendChild(wrap);
+      } else {
+        history.appendChild(el('p', 'user-trade-empty', 'No trades yet.'));
+      }
+      trades.appendChild(history);
+    }
+    metaBar.appendChild(trades);
 
     const actionBar = document.getElementById('user-action-bar');
     actionBar.appendChild(mkEditBtn(openUserEditor));
