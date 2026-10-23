@@ -182,9 +182,9 @@ export async function openStatsModal() {
       {
         cls: 'gold-coins-shop', label: t('stats.sec.coins'),
         rows: [
-          [t('stats.earned'), fmt(s.totalCoinsEarned)],
-          [t('stats.spent'), fmt(s.totalCoinsSpent)],
-          [t('stats.in_circulation'), fmt(s.totalCoinsAvailable)],
+          [t('stats.earned'), fmt(s.totalCoinsEarned), 'gold'],
+          [t('stats.spent'), fmt(s.totalCoinsSpent), 'gold'],
+          [t('stats.in_circulation'), fmt(s.totalCoinsAvailable), 'gold'],
           [t('stats.upgrades_purchased'), fmt(s.totalUpgrades)],
           [t('stats.upgrade_xp_boost_pct'), fmt(s.upgradeXpBoosts)],
           [t('stats.upgrade_heartbeat_xp'), fmt(s.upgradeHeartbeatXp)],
