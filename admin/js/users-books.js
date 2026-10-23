@@ -726,33 +726,38 @@ export async function loadUserDetail(userId, edit = false) {
     lvlMeta.appendChild(lvlVal);
     metaBar.appendChild(lvlMeta);
 
-    const rubyMeta = el('div', 'meta-item user-shop-purchases');
+    const rubyMeta = el('div', 'meta-item user-shop-purchases user-ruby-details');
     rubyMeta.appendChild(el('div','label','Rubies'));
-    const rubyWrap = el('div','table-wrap');
+    const rubyWrap = el('div','user-ruby-grid');
     const rubyTable = el('table','data-table');
     rubyTable.innerHTML = '<thead><tr><th>Balance</th><th>Earned</th><th>Sold</th><th>Bought</th><th>GC per ruby</th></tr></thead><tbody></tbody>';
     const rubyRow = el('tr','');
     for (const value of [user.rubiesBalance,user.rubiesEarned,user.rubiesExchanged,user.rubiesBought,user.rubyExchangeRate]) appendCell(rubyRow,Number(value || 0).toLocaleString());
-    rubyTable.querySelector('tbody').appendChild(rubyRow); rubyWrap.appendChild(rubyTable);
+    rubyTable.querySelector('tbody').appendChild(rubyRow);
+    const rubySummary = el('div', 'table-wrap user-ruby-summary');
+    rubySummary.appendChild(rubyTable); rubyWrap.appendChild(rubySummary);
     for (const [label,items,headers,values] of [
       ['Recent completion rewards (up to 20)',user.rubyRewards || [],['Book / anthology','Type','Date'],r=>[r.name || `Deleted book #${r.book_id}`,r.kind,new Date(r.created_at*1000).toLocaleString()]],
       ['Recent ruby trades (up to 20)',user.rubyTrades || [],['Trade','Rubies','GC per ruby','GC','Date'],r=>[r.direction,r.rubies,r.rate,r.gold_coins,new Date(r.created_at*1000).toLocaleString()]],
     ]) {
       if (!items.length) continue;
-      rubyWrap.appendChild(el('div','label',label));
+      const history = el('div', 'user-ruby-history');
+      history.appendChild(el('div','label',label));
       const table=el('table','data-table');
       const head=el('thead',''), heading=el('tr','');
       for (const text of headers) heading.appendChild(el('th','',text));
       head.appendChild(heading);table.appendChild(head);
       const body=el('tbody','');
       for (const item of items) { const row=el('tr',''); for (const value of values(item)) appendCell(row,String(value)); body.appendChild(row); }
-      table.appendChild(body);rubyWrap.appendChild(table);
+      table.appendChild(body);
+      const historyWrap = el('div', 'table-wrap');
+      historyWrap.appendChild(table); history.appendChild(historyWrap); rubyWrap.appendChild(history);
     }
     rubyMeta.appendChild(rubyWrap);metaBar.appendChild(rubyMeta);
 
     const purchases = user.shopPurchases || [];
     if (purchases.length) {
-      const shopMeta = el('div', 'meta-item user-shop-purchases');
+      const shopMeta = el('div', 'meta-item user-shop-purchases user-refund-details');
       shopMeta.appendChild(el('div', 'label', 'Coin Shop Purchases'));
       const wrap = el('div', 'table-wrap');
       const table = el('table', '');
@@ -830,6 +835,7 @@ export async function loadUserDetail(userId, edit = false) {
     overviewWrap.appendChild(overviewTable);
     overview.appendChild(overviewWrap);
     metaBar.prepend(overview);
+    metaBar.appendChild(rubyMeta);
 
     const actionBar = document.getElementById('user-action-bar');
     actionBar.appendChild(mkEditBtn(openUserEditor));
