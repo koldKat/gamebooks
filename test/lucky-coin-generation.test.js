@@ -50,3 +50,30 @@ test('lucky coin rolls use level and purchased chance, capped at the level', t =
   h.context._rollBonusGc(1, 465000, 0, 1000);
   assert.equal(h.row().pending_bonus_gc, 0, 'excess purchases cannot raise chance beyond the cap');
 });
+
+test('generating and claiming a lucky coin affect only the account receiving that roll', t => {
+  const h = setup(); t.after(() => h.db.close());
+  h.db.exec('INSERT INTO users(id) VALUES(2); INSERT INTO users(id,pending_bonus_gc,bonus_gc_generated) VALUES(3,1,1)');
+  const row = id => h.db.prepare('SELECT * FROM users WHERE id=?').get(id);
+  const second = row(2), third = row(3);
+  h.context._rollBonusGc(1, 465000, 0, 0);
+  assert.equal(row(1).pending_bonus_gc, 1);
+  assert.deepEqual(row(2), second);
+  assert.deepEqual(row(3), third);
+  assert.equal(h.context.claimBonusGc(1).ok, true);
+  assert.equal(row(1).bonus_coins, 1);
+  assert.deepEqual(row(2), second);
+  assert.deepEqual(row(3), third);
+  assert.equal(h.context.claimBonusGc(2).error, 'nothing_to_claim');
+  const first = row(1);
+  h.random(0.5);
+  h.context._rollBonusGc(2, 465000, 0, 0);
+  assert.deepEqual(row(2), second);
+  h.random(0);
+  h.context._rollBonusGc(2, 465000, 0, 0);
+  assert.equal(row(2).pending_bonus_gc, 1);
+  assert.equal(h.context.claimBonusGc(2).ok, true);
+  assert.equal(row(2).bonus_coins, 1);
+  assert.deepEqual(row(1), first);
+  assert.deepEqual(row(3), third);
+});
