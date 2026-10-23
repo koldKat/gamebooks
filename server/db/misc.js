@@ -3,7 +3,8 @@
 // Notifications, exports, GC supply, and app-birth helpers.
 
 const { db, _naturalCompareByName } = require('./connection');
-const { _insertNotif, coinBalance } = require('./xp');
+const { _insertNotif, coinBalance, computeLevel } = require('./xp');
+const { createBulkGcGifts } = require('./bulk-gifts');
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS notifications (
@@ -106,10 +107,13 @@ function getAppBirthTimestamp() {
   return vals.length ? Math.min(...vals) : Math.floor(Date.now() / 1000);
 }
 
+const bulkGcGifts = createBulkGcGifts({ db, getSupply: getAdminGcSupply, computeLevel, gift: adminGiftGc });
+
 module.exports = {
   getNotifications, markNotificationsSeen,
   getAllBooksForExport, getBookForExport,
   getAdminGcSupply, adminGiftGc,
+  adminPreviewBulkGc: bulkGcGifts.preview, adminGiftBulkGc: bulkGcGifts.send,
   getAppBirthTimestamp,
   backupDb: dest => db.backup(dest),
 };

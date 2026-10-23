@@ -158,10 +158,12 @@ test('empty dashboard aggregates return numeric zeros', t => {
 
 test('dashboard distinguishes missing metrics from a real zero', () => {
   const source = fs.readFileSync('admin/js/dashboard.js', 'utf8');
+  const formatStatCount = vm.runInNewContext(fs.readFileSync('public/js/core/format-stat-count.js', 'utf8')
+    .replace(/^export /gm, '') + '\nformatStatCount;');
   const elements = new Map();
   const applyStats = vm.runInNewContext(
-    source.slice(source.indexOf('function fmtN('), source.indexOf('export async function loadStats(')) + '\napplyStats;',
-    { document: { getElementById(id) {
+    source.slice(source.indexOf('const fmtN ='), source.indexOf('export async function loadStats(')) + '\napplyStats;',
+    { formatStatCount, document: { getElementById(id) {
       if (!elements.has(id)) elements.set(id, { textContent: '', style: {} });
       return elements.get(id);
     } }, fmtBytes: () => '', fmtDuration: () => '' },

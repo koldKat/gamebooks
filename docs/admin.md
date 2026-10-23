@@ -248,6 +248,10 @@ Gifting a user GC (`POST /api/admin/users/:id/gift-gc`) increments `users.bonus_
 
 ## Tools tab
 
+**Gift gold coins to everyone** appears first. Enter whole GC per level and an optional message, then review the recipients, total cost and available admin pool before confirming. At 3 GC per level, a level 10 account receives 30 GC. All accounts are included; level 0 receives nothing. Each recipient gets the usual gift notification and message. The entire gift and pool debit are atomic, retries cannot duplicate a completed request, and changed levels or recipients require a fresh preview.
+
+The preview uses `GET /api/admin/gift-gc-all?coinsPerLevel=3`; confirmation posts `coinsPerLevel`, `message`, `previewHash` and a unique `requestId` to the same endpoint. Completed request receipts are stored under `gc_bulk_gift:<requestId>` in `admin_settings`.
+
 The **Clean run** XP event (`clean_run`) defaults to 50 base XP, once per player/book for a completed win or loss without Undo or Fast Travel. It is editable in XP Configuration like other event amounts.
 
 **XP Configuration** uses a compact three-column grid, falling back to two columns and then one on smaller screens. Each event shows only its readable label (with "ow" expanded to "open world") and minus/plus buttons that change the amount by 1 XP; decimal amounts can still be typed directly. Internal event keys are unchanged. Save validates every amount, submits only changed events, and disables the inputs while saving. Changes apply immediately. If a request fails midway, retrying sends only the remaining changes.

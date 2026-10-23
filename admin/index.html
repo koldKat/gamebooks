@@ -1009,6 +1009,22 @@
 
     <div id="tab-tools" class="tab-panel">
 
+      <div class="tools-section" id="bulk-gc-gift">
+        <div class="tools-section-title">Gift gold coins to everyone</div>
+        <div class="bulk-gift-controls">
+          <label for="bulk-gc-rate">GC per level</label>
+          <div class="bulk-gift-stepper">
+            <button type="button" class="btn" id="bulk-gc-minus" aria-label="Fewer coins per level">−</button>
+            <input id="bulk-gc-rate" type="number" min="1" step="1" value="1" inputmode="numeric">
+            <button type="button" class="btn" id="bulk-gc-plus" aria-label="More coins per level">+</button>
+          </div>
+          <input id="bulk-gc-message" type="text" maxlength="1000" placeholder="A message for everyone" aria-label="Gift message">
+          <button type="button" class="tools-save-btn" id="bulk-gc-review">Review gift</button>
+        </div>
+        <p class="bulk-gift-hint">Each account receives its level × GC per level from the admin pool. Level 0 receives 0 GC.</p>
+        <p id="bulk-gc-preview" class="bulk-gift-hint" role="status"></p>
+      </div>
+
       <div class="tools-section" style="border:1px solid #7f1d1d;background:#1c0a0a;border-radius:8px;padding:0.75rem 1rem">
         <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
           <div class="tools-section-title" style="margin-bottom:0;color:#f87171">Maintenance Mode</div>

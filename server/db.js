@@ -910,7 +910,7 @@ const {
 const {
   getNotifications, markNotificationsSeen,
   getAllBooksForExport, getBookForExport,
-  getAdminGcSupply, adminGiftGc,
+  getAdminGcSupply, adminGiftGc, adminPreviewBulkGc, adminGiftBulkGc,
   getAppBirthTimestamp,
   backupDb,
 } = require('./db/misc');
@@ -992,7 +992,7 @@ module.exports = {
   createParty, inviteToParty, acceptPartyInvite, declinePartyInvite,
   leaveParty, getPartyForBook, getPendingInvites, fanOutState, getPartyMemberIds,
   getAppBirthTimestamp,
-  getAdminGcSupply, adminGiftGc,
+  getAdminGcSupply, adminGiftGc, adminPreviewBulkGc, adminGiftBulkGc,
   readingAccess,
   backupDb,
 };

@@ -129,6 +129,12 @@
   white-space: nowrap;
 }
 .stats-section--server .stats-val { white-space: normal; overflow-wrap: anywhere; }
+.stats-diamonds { color: #67e8f9; }
+.stats-rubies { color: #fda4af; }
+.stats-section--gold-coins-shop .stats-val { color: #fbbf24; }
+.stats-section--xp-progression .stats-val { color: #c084fc; }
+.stats-val--players { color: #fdba74; }
+.stats-val--library { color: #f3dfb3; }
 .stats-cpu-model { white-space: nowrap; overflow-wrap: normal; }
 .stats-pct {
   font-size: 0.72rem;

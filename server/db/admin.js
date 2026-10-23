@@ -623,9 +623,13 @@ function adminGetUser(userId) {
   `).get(userId);
   if (!row) return null;
   return { ...row, ...getUserXpInfo(userId), ...rubyInfoForUser(db,userId),
+    diamondRewards: db.prepare(`SELECT payload,created_at FROM notifications
+      WHERE user_id=? AND type='diamond_gain' ORDER BY created_at DESC,id DESC LIMIT 20`).all(userId),
     rubyRewards: db.prepare(`SELECT r.book_id,r.kind,r.created_at,b.name FROM ruby_rewards r
       LEFT JOIN books b ON b.id=r.book_id WHERE r.user_id=? ORDER BY r.created_at DESC,r.book_id DESC LIMIT 20`).all(userId),
     rubyTrades: db.prepare(`SELECT rubies,rate,gold_coins,direction,created_at FROM ruby_exchanges
+      WHERE user_id=? ORDER BY created_at DESC,rowid DESC LIMIT 20`).all(userId),
+    diamondTrades: db.prepare(`SELECT diamonds,rate,gold_coins,direction,created_at FROM diamond_exchanges
       WHERE user_id=? ORDER BY created_at DESC,rowid DESC LIMIT 20`).all(userId),
     shopPurchases: getShopRefundRows(row, getShopItems(), computeLevel) };
 }
@@ -949,6 +953,9 @@ function getSiteStats() {
     // Coins & shop
     totalCoinsEarned: base.totalCoinsEarned, totalCoinsSpent: base.totalCoinsSpent, totalCoinsAvailable: base.totalCoinsAvailable,
     totalUpgrades, upgradeUndos, upgradeFastTravels, upgradeHeartbeatXp, upgradeGcChance, upgradeGcMint, upgradeXpBoosts, upgradeDiamondDig, upgradeDiamondExchange,
+    // Newly generated crystals only; exchanging existing stock does not mine more.
+    diamondsMined: base.diamondsEarned + base.marketDiamondsMined,
+    rubiesMined: base.rubiesEarned + base.marketRubiesGenerated,
     // Parties
     partyTotal, partyActive, partyInvites, partyInvitesAccepted, partyInvitesDeclined, partyUsersTotal,
     // Forum

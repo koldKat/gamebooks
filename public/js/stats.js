@@ -96,7 +96,7 @@ export async function openStatsModal() {
       {
         cls: 'players', label: t('stats.sec.players'),
         rows: [
-          [t('stats.registered'), fmt(s.users)],
+          [t('stats.registered'), fmt(s.users), 'players'],
           [t('stats.admins'), fmt(s.admins)],
           [t('stats.moderators'), fmt(s.moderators)],
           [t('stats.squires'), fmt(s.squires)],
@@ -111,22 +111,22 @@ export async function openStatsModal() {
       {
         cls: 'books', label: t('stats.sec.books'),
         rows: [
-          [t('stats.unique_books'), fmt(s.uniqueBooks)],
-          [t('stats.unique_authors'), fmt(s.uniqueAuthors)],
+          [t('stats.unique_books'), fmt(s.uniqueBooks), 'library'],
+          [t('stats.unique_authors'), fmt(s.uniqueAuthors), 'library'],
           [t('stats.total_in_libraries'), fmt(s.totalUserBooks)],
           [t('stats.public'), fmt(s.publicBooks)],
           [t('stats.private'), fmt(s.privateBooks)],
-          [t('stats.unique_series'), fmt(s.uniqueSeries)],
+          [t('stats.unique_series'), fmt(s.uniqueSeries), 'library'],
           [t('stats.series_in_libraries'), fmt(s.totalUserSeries)],
           [t('stats.public_series'), fmt(s.publicSeries)],
           [t('stats.private_series'), fmt(s.privateSeries)],
-          [t('stats.unique_anthologies'), fmt(s.uniqueAnthologies)],
+          [t('stats.unique_anthologies'), fmt(s.uniqueAnthologies), 'library'],
           [t('stats.anthologies_in_libraries'), fmt(s.totalUserAnthologies)],
           [t('stats.public_anthologies'), fmt(s.publicAnthologies)],
           [t('stats.private_anthologies'), fmt(s.privateAnthologies)],
-          [t('stats.total_sections'), fmt(s.totalSections)],
+          [t('stats.total_sections'), fmt(s.totalSections), 'library'],
           [t('stats.avg_sections_per_book'), fmt(s.avgSections)],
-          [t('stats.total_pages'), fmt(s.totalPages)],
+          [t('stats.total_pages'), fmt(s.totalPages), 'library'],
           [t('stats.avg_pages_per_book'), fmt(s.avgPages)],
           [t('stats.mapped_sections'), fmt(s.mappedSections) + pct(s.mappedSections, s.totalSections)],
           [t('stats.discovered_sections'), fmt(s.discoveredSections) + pct(s.discoveredSections, s.totalSections)],
@@ -260,17 +260,25 @@ export async function openStatsModal() {
       },
     ];
 
+    sections.push({
+      cls: 'crystals', label: t('stats.sec.crystals'),
+      rows: [
+        [t('stats.diamonds_mined'), `<span class="stats-diamonds">${fmt(s.diamondsMined)}</span>`],
+        [t('stats.rubies_mined'), `<span class="stats-rubies">${fmt(s.rubiesMined)}</span>`],
+      ],
+    });
+
     const renderSection = sec => `
       <div class="stats-section stats-section--${sec.cls}">
         <div class="stats-section-label">${escapeHtml(sec.label)}</div>
         <table class="stats-table">
-          ${sec.rows.map(([k, v]) => `<tr><td class="stats-key">${escapeHtml(k)}</td><td class="stats-val">${v}</td></tr>`).join('')}
+          ${sec.rows.map(([k, v, tone]) => `<tr><td class="stats-key">${escapeHtml(k)}</td><td class="stats-val${tone ? ` stats-val--${tone}` : ''}">${v}</td></tr>`).join('')}
         </table>
         ${sec.html || ''}
       </div>`;
     const byClass = new Map(sections.map(sec => [sec.cls, sec]));
     const columns = [
-      ['players', 'xp-progression', 'the-app', 'server'],
+      ['players', 'xp-progression', 'the-app', 'server', 'crystals'],
       ['ratings', 'gameplay', 'battle-sims', 'open-world', 'forum'],
       ['books', 'gold-coins-shop', 'parties'],
     ];
