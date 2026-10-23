@@ -57,9 +57,10 @@ export function createDayRenderer() {
     const collapseJoins = joinItems.length >= JOIN_COLLAPSE_THRESHOLD;
     let joinGroupRendered = false;
 
-    // Count actual creations before existing series/anthology batches claim children.
+    // Member books keep their existing series/anthology containers.
     const creationKind = e => e.type === 'series_created' ? 'series'
-      : e.type === 'book_created' ? (e.isContainer ? 'anthologies' : 'books') : null;
+      : e.type === 'book_created' ? (e.isContainer ? 'anthologies'
+        : e.parentBookId == null && e.seriesId == null ? 'books' : null) : null;
     const creationGroups = new Map();
     for (const e of items) {
       const kind = creationKind(e);
