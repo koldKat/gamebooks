@@ -105,6 +105,75 @@ const digest = createHash('sha256').update(JSON.stringify(snapshots)).digest('he
 
 if (!baseline) {
   const render = modules.get(resolve(root, 'feed/render.js')).namespace.renderFeedContents;
+  const renderDay = modules.get(resolve(root, 'feed/groups.js')).namespace.createDayRenderer();
+  const creations = (kind, count, overrides = {}) => Array.from({ length: count }, (_, i) => ({
+    ...base, username: 'Creator', parentBookId: null, parentBookName: null,
+    seriesId: kind === 'series' ? 3000 + i : null, seriesName: kind === 'series' ? `Series ${i}` : null,
+    bookId: (kind === 'anthologies' ? 2000 : 1000) + i, bookName: `${kind} ${i}`,
+    type: kind === 'series' ? 'series_created' : 'book_created', isContainer: kind === 'anthologies', ...overrides,
+  }));
+  const creationGroupCount = html => (html.match(/feed-user-group--created/g) || []).length;
+  const oncePerBook = (html, entries) => {
+    for (const e of entries.filter(e => e.type === 'book_created')) {
+      assert.equal((html.match(new RegExp(`data-book-id="${e.bookId}"`, 'g')) || []).length, 1, `book ${e.bookId} appears once`);
+    }
+  };
+  for (const kind of ['books', 'anthologies', 'series']) {
+    assert.equal(creationGroupCount(renderDay(creations(kind, 5), 'today')), 0, `${kind}: five creations stay outside daily groups`);
+    const six = renderDay(creations(kind, 6), 'today');
+    assert.equal(creationGroupCount(six), 1, `${kind}: six creations collapse`);
+    assert.ok(six.includes(`feed.${kind}_created_today|n=6`));
+    assert.ok(/aria-expanded="false"/.test(six) && /class="feed-group-body"[^>]* hidden/.test(six));
+    assert.equal(creationGroupCount(renderDay([...creations(kind, 3), ...creations(kind, 3, { username: 'Other' })], 'today')), 0, 'counts never combine users');
+    const splitDays = [...creations(kind, 3), ...creations(kind, 3, { completedAt: '2026-10-01T10:00:00Z' })];
+    assert.equal(creationGroupCount(render(splitDays, null, '').html), 0, 'counts never combine dates');
+  }
+  const separateTypes = ['books', 'anthologies', 'series'].flatMap(kind => creations(kind, 6));
+  const separateOriginal = JSON.stringify(separateTypes);
+  const separated = renderDay(separateTypes, 'today');
+  assert.equal(creationGroupCount(separated), 3, 'each type gets its own daily container');
+  oncePerBook(separated, separateTypes);
+  assert.equal(JSON.stringify(separateTypes), separateOriginal, 'grouping never mutates feed payloads');
+  assert.equal(creationGroupCount(renderDay(['books', 'anthologies', 'series'].flatMap(kind => creations(kind, 3)), 'today')), 0, 'different types do not contribute to each other’s threshold');
+  const sixSeries = creations('series', 6);
+  const seriesBooks = creations('books', 6).map((e, i) => ({ ...e, seriesId: sixSeries[i].seriesId, seriesName: sixSeries[i].seriesName }));
+  const separatedSeries = renderDay([...sixSeries, ...seriesBooks], 'today');
+  assert.equal(creationGroupCount(separatedSeries), 1, 'only series creations get a daily group; their books stay inside each series');
+  oncePerBook(separatedSeries, seriesBooks);
+  assert.equal((separatedSeries.match(/feed.book_in_batch\|n=1/g) || []).length, 6, 'each series retains its member book');
+  assert.ok(!separatedSeries.includes('feed.books_created_today'), 'series members never become standalone daily book creations');
+  const sixAnthologies = creations('anthologies', 6);
+  const anthologyBooks = creations('books', 5).map((e, i) => ({ ...e, parentBookId: sixAnthologies[i].bookId, parentBookName: sixAnthologies[i].bookName }));
+  const nestedAnthologies = renderDay([...sixAnthologies, ...anthologyBooks], 'today');
+  assert.equal(creationGroupCount(nestedAnthologies), 1, 'five books do not create a daily book group');
+  assert.equal((nestedAnthologies.match(/feed.book_in_batch\|n=1/g) || []).length, 5, 'smaller child batches remain expandable inside grouped anthologies');
+  oncePerBook(nestedAnthologies, [...sixAnthologies, ...anthologyBooks]);
+  const enoughAnthologyBooks = [...anthologyBooks, { ...creations('books', 6)[5], parentBookId: sixAnthologies[5].bookId, parentBookName: sixAnthologies[5].bookName }];
+  const bothAnthologyGroups = renderDay([...sixAnthologies, ...enoughAnthologyBooks], 'today');
+  assert.equal(creationGroupCount(bothAnthologyGroups), 1, 'anthology members remain beneath their anthology even at six books');
+  assert.equal((bothAnthologyGroups.match(/feed.book_in_batch\|n=1/g) || []).length, 6);
+  oncePerBook(bothAnthologyGroups, [...sixAnthologies, ...enoughAnthologyBooks]);
+  const oneSeriesManyBooks = creations('books', 8, { seriesId: 44, seriesName: 'Existing series' }).map((e, i) => ({ ...e, bookId: 4000 + i }));
+  const keptSeries = renderDay(oneSeriesManyBooks, 'today');
+  assert.equal(creationGroupCount(keptSeries), 0, 'books in an existing series keep that series heading');
+  assert.ok(keptSeries.includes('feed.tmpl.created_in_series') && keptSeries.includes('feed.books_in_batch|n=8'));
+  oncePerBook(keptSeries, oneSeriesManyBooks);
+  const oneAnthologyManyBooks = creations('books', 8, { parentBookId: 45, parentBookName: 'Existing anthology' }).map((e, i) => ({ ...e, bookId: 5000 + i }));
+  const keptAnthology = renderDay(oneAnthologyManyBooks, 'today');
+  assert.equal(creationGroupCount(keptAnthology), 0, 'books in an existing anthology keep that anthology heading');
+  assert.ok(keptAnthology.includes('feed.tmpl.created_in_anthology') && keptAnthology.includes('feed.books_in_batch|n=8'));
+  oncePerBook(keptAnthology, oneAnthologyManyBooks);
+  const fiveStandaloneAndMembers = renderDay([...creations('books', 5), ...oneSeriesManyBooks, ...oneAnthologyManyBooks], 'today');
+  assert.equal(creationGroupCount(fiveStandaloneAndMembers), 0, 'member books never push five standalone books over the threshold');
+  const sixStandaloneAndMembers = renderDay([...creations('books', 6), ...oneSeriesManyBooks, ...oneAnthologyManyBooks], 'today');
+  assert.equal(creationGroupCount(sixStandaloneAndMembers), 1, 'only the six standalone books fold together');
+  assert.ok(sixStandaloneAndMembers.includes('feed.books_created_today|n=6'));
+  assert.ok(sixStandaloneAndMembers.includes('feed.tmpl.created_in_series') && sixStandaloneAndMembers.includes('feed.tmpl.created_in_anthology'));
+  oncePerBook(sixStandaloneAndMembers, [...creations('books', 6), ...oneSeriesManyBooks, ...oneAnthologyManyBooks]);
+  const creationAttrs = html => html.match(/data-target="[^"]+" data-group-key="[^"]+"/g);
+  assert.deepEqual(creationAttrs(renderDay(creations('books', 7), 'same-day')), creationAttrs(renderDay(creations('books', 6), 'same-day')), 'new creations retain expansion keys');
+  const olderCreations = creations('books', 6, { completedAt: '2026-10-01T10:00:00Z' });
+  assert.deepEqual(creationAttrs(render([{ ...base, type: 'user_joined' }, ...olderCreations], null, '').html), creationAttrs(render(olderCreations, null, '').html), 'new day does not shift creation container IDs');
   const older = Array.from({ length: 6 }, () => ({ ...base, type: 'run_started', completedAt: '2026-10-01T10:00:00Z' }));
   const before = render(older, null, '').html;
   const after = render([{ ...base, type: 'user_joined' }, ...older], null, '').html;

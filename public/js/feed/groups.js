@@ -57,6 +57,28 @@ export function createDayRenderer() {
     const collapseJoins = joinItems.length >= JOIN_COLLAPSE_THRESHOLD;
     let joinGroupRendered = false;
 
+    // Member books keep their existing series/anthology containers.
+    const creationKind = e => e.type === 'series_created' ? 'series'
+      : e.type === 'book_created' ? (e.isContainer ? 'anthologies'
+        : e.parentBookId == null && e.seriesId == null ? 'books' : null) : null;
+    const creationGroups = new Map();
+    for (const e of items) {
+      const kind = creationKind(e);
+      if (!kind) continue;
+      const key = JSON.stringify([e.username, kind]);
+      if (!creationGroups.has(key)) creationGroups.set(key, { key, kind, items: [] });
+      creationGroups.get(key).items.push(e);
+    }
+    const creationGroupFor = new Map();
+    const groupedBooks = new Set();
+    for (const group of creationGroups.values()) {
+      if (group.items.length < COLLAPSE_THRESHOLD) continue;
+      for (const e of group.items) {
+        creationGroupFor.set(e, group);
+        if (group.kind === 'books') groupedBooks.add(e);
+      }
+    }
+
     // Group same-day member creation events beneath a newly created container when a batch exists.
     const batchChildrenByContainer = new Map();
     const batchConsumedChildren = new Set();
@@ -64,9 +86,9 @@ export function createDayRenderer() {
       let children = null;
       // Claim each child once if it matches both a fresh series and anthology.
       if (e.type === 'series_created') {
-        children = items.filter(x => x.type === 'book_created' && !x.isContainer && !batchConsumedChildren.has(x) && x.username === e.username && x.seriesId === e.seriesId);
+        children = items.filter(x => x.type === 'book_created' && !x.isContainer && !groupedBooks.has(x) && !batchConsumedChildren.has(x) && x.username === e.username && x.seriesId === e.seriesId);
       } else if (e.type === 'book_created' && e.isContainer) {
-        children = items.filter(x => x.type === 'book_created' && !x.isContainer && !batchConsumedChildren.has(x) && x.username === e.username && x.parentBookId === e.bookId);
+        children = items.filter(x => x.type === 'book_created' && !x.isContainer && !groupedBooks.has(x) && !batchConsumedChildren.has(x) && x.username === e.username && x.parentBookId === e.bookId);
       }
       if (children && children.length) {
         batchChildrenByContainer.set(e, children);
@@ -78,7 +100,7 @@ export function createDayRenderer() {
     const looseKeyOf = e => e.parentBookId != null ? `a:${e.parentBookId}` : (e.seriesId != null ? `s:${e.seriesId}` : null);
     const looseGroups = new Map();
     for (const e of items) {
-      if (e.type !== 'book_created' || e.isContainer || batchConsumedChildren.has(e)) continue;
+      if (e.type !== 'book_created' || e.isContainer || groupedBooks.has(e) || batchConsumedChildren.has(e)) continue;
       const key = looseKeyOf(e);
       if (!key) continue;
       const gk = `${e.username}|${key}`;
@@ -93,31 +115,51 @@ export function createDayRenderer() {
       rest.forEach(c => batchConsumedChildren.add(c));
     }
 
+    function renderCatalogEntry(e) {
+      const { html: body, isParty, extraClass } = renderEntry(looseBatchHeads.get(e) || e);
+      if (!body) return '';
+      let out = '';
+      const children = batchChildrenByContainer.get(e);
+      if (children) {
+        const containerKey = e.type === 'series_created' ? `s:${e.seriesId}`
+          : e.isContainer ? `a:${e.bookId}` : looseKeyOf(e);
+        const batchKey = 'batch:' + JSON.stringify([e.username, containerKey]);
+        const id = groupId(batchKey);
+        const preview = children.slice(0, 2).map(_makeEntryHtml).join('');
+        const rest    = children.slice(2).map(_makeEntryHtml).join('');
+        out += `<div class="feed-entry${isParty ? ' feed-entry--party' : ''}${extraClass ? ' ' + extraClass : ''}">${body} `;
+        out += `<button class="feed-group-toggle feed-group-toggle--inline" data-target="${id}" data-group-key="${escapeHtml(thisDayIndex + ':' + batchKey)}" aria-expanded="false">`;
+        const countKey = children.length === 1 ? 'feed.book_in_batch' : 'feed.books_in_batch';
+        out += `<span class="feed-group-chevron">▶</span><span class="feed-group-count">${t(countKey, { n: children.length })}</span>`;
+        out += `</button></div>`;
+        out += `<div class="feed-group-body" id="${id}" hidden>${preview}${rest}</div>`;
+      } else {
+        out += `<div class="feed-entry${isParty ? ' feed-entry--party' : ''}${extraClass ? ' ' + extraClass : ''}">${body}</div>`;
+      }
+      return out;
+    }
+
     const rendered = new Set();
+    const renderedCreations = new Set();
     let out = '';
     for (const e of items) {
       if (batchConsumedChildren.has(e)) continue;
+      const creationGroup = creationGroupFor.get(e);
+      if (creationGroup) {
+        if (renderedCreations.has(creationGroup.key)) continue;
+        renderedCreations.add(creationGroup.key);
+        const key = 'creations:' + creationGroup.key;
+        const id = groupId(key);
+        out += '<div class="feed-user-group feed-user-group--created">';
+        out += `<button class="feed-group-toggle" data-target="${id}" data-group-key="${escapeHtml(thisDayIndex + ':' + key)}" aria-expanded="false">`;
+        out += `<span class="feed-group-chevron">▶</span>${renderGroupLabel(e, e.username)}<span class="feed-group-count">${t('feed.' + creationGroup.kind + '_created_today', { n: creationGroup.items.length })}</span>`;
+        out += '</button>';
+        out += `<div class="feed-group-body" id="${id}" hidden>${creationGroup.items.map(renderCatalogEntry).join('')}</div></div>`;
+        continue;
+      }
       if (skipTypes.has(e.type) && e.type !== 'user_joined') {
-        // Ratings always remain standalone, outside same-user action groups.
-        const { html: body, isParty, extraClass } = renderEntry(looseBatchHeads.get(e) || e);
-        if (!body) continue;
-        const children = batchChildrenByContainer.get(e);
-        if (children) {
-          const containerKey = e.type === 'series_created' ? `s:${e.seriesId}`
-            : e.isContainer ? `a:${e.bookId}` : looseKeyOf(e);
-          const batchKey = 'batch:' + JSON.stringify([e.username, containerKey]);
-          const id = groupId(batchKey);
-          const preview = children.slice(0, 2).map(_makeEntryHtml).join('');
-          const rest    = children.slice(2).map(_makeEntryHtml).join('');
-          out += `<div class="feed-entry${isParty ? ' feed-entry--party' : ''}${extraClass ? ' ' + extraClass : ''}">${body} `;
-          out += `<button class="feed-group-toggle feed-group-toggle--inline" data-target="${id}" data-group-key="${escapeHtml(thisDayIndex + ':' + batchKey)}" aria-expanded="false">`;
-          const countKey = children.length === 1 ? 'feed.book_in_batch' : 'feed.books_in_batch';
-          out += `<span class="feed-group-chevron">▶</span><span class="feed-group-count">${t(countKey, { n: children.length })}</span>`;
-          out += `</button></div>`;
-          out += `<div class="feed-group-body" id="${id}" hidden>${preview}${rest}</div>`;
-        } else {
-          out += `<div class="feed-entry${isParty ? ' feed-entry--party' : ''}${extraClass ? ' ' + extraClass : ''}">${body}</div>`;
-        }
+        // Ratings and other one-time events stay outside ordinary action groups.
+        out += renderCatalogEntry(e);
         continue;
       }
       if (e.type === 'user_joined') {
