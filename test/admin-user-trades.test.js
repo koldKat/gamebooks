@@ -16,6 +16,7 @@ test('account trade histories stay private, newest first, bounded and read-only'
     CREATE TABLE sessions (user_id INTEGER, token TEXT);
     CREATE TABLE books (id INTEGER, name TEXT);
     CREATE TABLE ruby_rewards (user_id INTEGER, book_id INTEGER, kind TEXT, created_at INTEGER);
+    CREATE TABLE notifications (id INTEGER PRIMARY KEY,user_id INTEGER,type TEXT,payload TEXT,created_at INTEGER);
     CREATE TABLE ruby_exchanges (user_id INTEGER, rubies INTEGER, rate INTEGER, gold_coins INTEGER, direction TEXT, created_at INTEGER);
     CREATE TABLE diamond_exchanges (user_id INTEGER, diamonds INTEGER, rate INTEGER, gold_coins INTEGER, direction TEXT, created_at INTEGER);
     INSERT INTO users(id,username) VALUES(1,'one'),(2,'two'),(3,'empty');`);
@@ -24,11 +25,19 @@ test('account trade histories stay private, newest first, bounded and read-only'
     for (let n = 1; n <= 23; n++) insert.run(1, n, n * 2);
     insert.run(2, 999, 1998);
   }
+  const reward = db.prepare("INSERT INTO notifications(user_id,type,payload,created_at) VALUES(?,'diamond_gain',?,100)");
+  for (let n = 1; n <= 23; n++) reward.run(1, JSON.stringify({ amount: 1, balance: n }));
+  reward.run(2, JSON.stringify({ amount: 2, balance: 99 }));
+  db.exec("INSERT INTO notifications(user_id,type,payload,created_at) VALUES(1,'ruby_gain','{}',101)");
   const get = vm.runInNewContext(fn + '\nadminGetUser;', { db,
     getUserXpInfo: () => ({}), rubyInfoForUser: () => ({}),
     getShopRefundRows: () => [], getShopItems: () => [], computeLevel: () => 0 });
   const before = db.prepare('SELECT total_changes() n').get().n;
   const user = get(1);
+  assert.equal(user.diamondRewards.length, 20);
+  assert.deepEqual(Array.from(user.diamondRewards, row => JSON.parse(row.payload).balance), Array.from({ length: 20 }, (_, i) => 23 - i));
+  assert.equal(JSON.parse(get(2).diamondRewards[0].payload).balance, 99);
+  assert.equal(get(3).diamondRewards.length, 0);
   for (const [key, amount] of [['rubyTrades', 'rubies'], ['diamondTrades', 'diamonds']]) {
     assert.equal(user[key].length, 20);
     assert.deepEqual(Array.from(user[key], row => row[amount]), Array.from({ length: 20 }, (_, i) => 23 - i));

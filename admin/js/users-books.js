@@ -726,33 +726,53 @@ export async function loadUserDetail(userId, edit = false) {
     lvlMeta.appendChild(lvlVal);
     metaBar.appendChild(lvlMeta);
 
-    const rubyMeta = el('div', 'meta-item user-shop-purchases user-ruby-details');
-    rubyMeta.appendChild(el('div','label','Rubies'));
-    const rubyWrap = el('div','user-ruby-grid');
-    const rubyTable = el('table','data-table');
-    rubyTable.innerHTML = '<thead><tr><th>Balance</th><th>Earned</th><th>Sold</th><th>Bought</th><th>GC per ruby</th></tr></thead><tbody></tbody>';
-    const rubyRow = el('tr','');
-    for (const value of [user.rubiesBalance,user.rubiesEarned,user.rubiesExchanged,user.rubiesBought,user.rubyExchangeRate]) appendCell(rubyRow,Number(value || 0).toLocaleString());
-    rubyTable.querySelector('tbody').appendChild(rubyRow);
-    const rubySummary = el('div', 'table-wrap user-ruby-summary');
-    rubySummary.appendChild(rubyTable); rubyWrap.appendChild(rubySummary);
-    for (const [label,items,headers,values] of [
-      ['Recent completion rewards (up to 20)',user.rubyRewards || [],['Book / anthology','Type','Date'],r=>[r.name || `Deleted book #${r.book_id}`,r.kind,new Date(r.created_at*1000).toLocaleString()]],
-    ]) {
-      if (!items.length) continue;
-      const history = el('div', 'user-ruby-history');
-      history.appendChild(el('div','label',label));
-      const table=el('table','data-table');
-      const head=el('thead',''), heading=el('tr','');
-      for (const text of headers) heading.appendChild(el('th','',text));
-      head.appendChild(heading);table.appendChild(head);
-      const body=el('tbody','');
-      for (const item of items) { const row=el('tr',''); for (const value of values(item)) appendCell(row,String(value)); body.appendChild(row); }
+    const currencies = el('div', 'user-shop-purchases user-currency-grid');
+    const currencyColumns = new Map();
+    function currencyTable(headers, rows) {
+      const table = el('table', 'data-table');
+      const head = el('thead', ''), heading = el('tr', '');
+      for (const text of headers) heading.appendChild(el('th', '', text));
+      head.appendChild(heading); table.appendChild(head);
+      const body = el('tbody', '');
+      for (const values of rows) {
+        const row = el('tr', '');
+        for (const value of values) appendCell(row, String(value));
+        body.appendChild(row);
+      }
       table.appendChild(body);
-      const historyWrap = el('div', 'table-wrap');
-      historyWrap.appendChild(table); history.appendChild(historyWrap); rubyWrap.appendChild(history);
+      const wrap = el('div', 'table-wrap');
+      wrap.appendChild(table);
+      return wrap;
     }
-    rubyMeta.appendChild(rubyWrap);metaBar.appendChild(rubyMeta);
+    for (const [currency, title, prefix, rewards] of [
+      ['diamonds', 'Diamonds', 'diamond', user.diamondRewards || []],
+      ['rubies', 'Rubies', 'ruby', user.rubyRewards || []],
+    ]) {
+      const column = el('div', `user-currency-column user-currency-column--${currency}`);
+      column.appendChild(el('div', 'label', title));
+      column.appendChild(currencyTable(['Balance', 'Earned', 'Sold', 'Bought', `GC per ${prefix}`], [
+        ['Balance', 'Earned', 'Exchanged', 'Bought', 'ExchangeRate'].map(key =>
+          Number(user[`${key === 'ExchangeRate' ? prefix : currency}${key}`] || 0).toLocaleString()),
+      ]));
+      const history = el('div', 'user-currency-rewards');
+      history.appendChild(el('div', 'label', currency === 'rubies' ? 'Recent completion rewards' : 'Recent rewards'));
+      if (rewards.length) {
+        const rows = rewards.map(reward => {
+          const date = new Date(reward.created_at * 1000).toLocaleString();
+          if (currency === 'rubies') return [reward.name || `Deleted book #${reward.book_id}`, reward.kind, date];
+          let gain = {};
+          try { gain = JSON.parse(reward.payload); } catch (_) {}
+          return [Number(gain.amount || 0).toLocaleString(), Number(gain.balance || 0).toLocaleString(), date];
+        });
+        history.appendChild(currencyTable(currency === 'rubies' ? ['Book / anthology', 'Type', 'Date'] : ['Earned', 'Balance after', 'Date'], rows));
+      } else {
+        history.appendChild(el('p', 'user-trade-empty', 'No recorded rewards yet.'));
+      }
+      column.appendChild(history);
+      currencies.appendChild(column);
+      currencyColumns.set(currency, column);
+    }
+    metaBar.appendChild(currencies);
 
     const purchases = user.shopPurchases || [];
     if (purchases.length) {
@@ -834,9 +854,6 @@ export async function loadUserDetail(userId, edit = false) {
     overviewWrap.appendChild(overviewTable);
     overview.appendChild(overviewWrap);
     metaBar.prepend(overview);
-    metaBar.appendChild(rubyMeta);
-
-    const trades = el('div', 'user-shop-purchases user-currency-trades');
     for (const [currency, label, items] of [
       ['rubies', 'Ruby trades', user.rubyTrades || []],
       ['diamonds', 'Diamond trades', user.diamondTrades || []],
@@ -866,9 +883,9 @@ export async function loadUserDetail(userId, edit = false) {
       } else {
         history.appendChild(el('p', 'user-trade-empty', 'No trades yet.'));
       }
-      trades.appendChild(history);
+      currencyColumns.get(currency).appendChild(history);
     }
-    metaBar.appendChild(trades);
+    metaBar.appendChild(currencies);
 
     const actionBar = document.getElementById('user-action-bar');
     actionBar.appendChild(mkEditBtn(openUserEditor));
