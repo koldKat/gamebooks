@@ -272,7 +272,7 @@ async function handleUploadPdf(req, res, bookId) {
     userId = authenticateOptional(req);
   }
 
-  const filename = `${bookId}_${Date.now()}.pdf`;
+  const filename = `pdfs/${bookId}_${Date.now()}.pdf`;
   try { await receiveUpload(req, path.join(BOOKS_DIR, filename), { maxBytes: 256 * 1024 * 1024, validateFile: isPdfFile }); }
   catch (e) {
     if (e.code === 'PAYLOAD_TOO_LARGE') return send(res, 413, { error: 'File too large (max 256 MB)' });
@@ -310,7 +310,7 @@ async function handleUploadEpub(req, res, bookId) {
     userId = authenticateOptional(req);
   }
 
-  const filename = `${bookId}_${Date.now()}.epub`;
+  const filename = `epubs/${bookId}_${Date.now()}.epub`;
   try { await receiveUpload(req, path.join(BOOKS_DIR, filename), { maxBytes: 256 * 1024 * 1024, validateFile: isEpubFile }); }
   catch (e) {
     if (e.code === 'PAYLOAD_TOO_LARGE') return send(res, 413, { error: 'File too large (max 256 MB)' });

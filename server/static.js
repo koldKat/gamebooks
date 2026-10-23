@@ -9,14 +9,16 @@ const { ROOT } = require('./paths');
 const { addSecurityHeaders } = require('./request-helpers');
 const { getEtagCache, MIME } = require('./runtime-state');
 const { serveFile } = require('./file-transfer');
+const { legacyBookDownload } = require('./book-files');
 
 function serveStatic(req, res) {
   const _spath  = req.url.split('?')[0];
   const urlPath = _spath === '/' ? '/index.html' : _spath;
-  const filePath = path.join(ROOT, urlPath);
+  let filePath = path.join(ROOT, urlPath);
   if (!filePath.startsWith(ROOT + path.sep)) {
     res.writeHead(403); return res.end('Forbidden');
   }
+  filePath = legacyBookDownload(urlPath) || filePath;
   const ext = path.extname(filePath).toLowerCase();
   const mime = MIME[ext] || 'application/octet-stream';
   const cacheControl = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.avif', '.svg', '.ico'].includes(ext)
