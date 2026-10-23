@@ -949,6 +949,9 @@ function getSiteStats() {
     // Coins & shop
     totalCoinsEarned: base.totalCoinsEarned, totalCoinsSpent: base.totalCoinsSpent, totalCoinsAvailable: base.totalCoinsAvailable,
     totalUpgrades, upgradeUndos, upgradeFastTravels, upgradeHeartbeatXp, upgradeGcChance, upgradeGcMint, upgradeXpBoosts, upgradeDiamondDig, upgradeDiamondExchange,
+    // Newly generated crystals only; exchanging existing stock does not mine more.
+    diamondsMined: base.diamondsEarned + base.marketDiamondsMined,
+    rubiesMined: base.rubiesEarned + base.marketRubiesGenerated,
     // Parties
     partyTotal, partyActive, partyInvites, partyInvitesAccepted, partyInvitesDeclined, partyUsersTotal,
     // Forum

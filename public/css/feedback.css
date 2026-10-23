@@ -129,6 +129,8 @@
   white-space: nowrap;
 }
 .stats-section--server .stats-val { white-space: normal; overflow-wrap: anywhere; }
+.stats-diamonds { color: #67e8f9; }
+.stats-rubies { color: #fda4af; }
 .stats-cpu-model { white-space: nowrap; overflow-wrap: normal; }
 .stats-pct {
   font-size: 0.72rem;

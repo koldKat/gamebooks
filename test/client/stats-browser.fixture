@@ -39,7 +39,7 @@ const { getRatingStats } = require('../../server/db/rating-stats');
       await document.fonts.ready;
       await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
       const body = document.getElementById('stats-modal-body');
-      check(body.querySelectorAll('.stats-section').length === 12, 'all sections rendered');
+      check(body.querySelectorAll('.stats-section').length === 13, 'all sections rendered');
       check(body.querySelectorAll('.stats-rating-table tbody tr').length === 12, 'all rating rows rendered');
       const cpu = body.querySelector('.stats-cpu-model');
       const cpuRange = document.createRange();

@@ -260,6 +260,14 @@ export async function openStatsModal() {
       },
     ];
 
+    sections.push({
+      cls: 'crystals', label: t('stats.sec.crystals'),
+      rows: [
+        [t('stats.diamonds_mined'), `<span class="stats-diamonds">${fmt(s.diamondsMined)}</span>`],
+        [t('stats.rubies_mined'), `<span class="stats-rubies">${fmt(s.rubiesMined)}</span>`],
+      ],
+    });
+
     const renderSection = sec => `
       <div class="stats-section stats-section--${sec.cls}">
         <div class="stats-section-label">${escapeHtml(sec.label)}</div>
@@ -270,7 +278,7 @@ export async function openStatsModal() {
       </div>`;
     const byClass = new Map(sections.map(sec => [sec.cls, sec]));
     const columns = [
-      ['players', 'xp-progression', 'the-app', 'server'],
+      ['players', 'xp-progression', 'the-app', 'server', 'crystals'],
       ['ratings', 'gameplay', 'battle-sims', 'open-world', 'forum'],
       ['books', 'gold-coins-shop', 'parties'],
     ];
