@@ -169,7 +169,14 @@ input, select, textarea { min-width: 0; max-width: 100%; }
 
 .admin-edit-btn { min-width: 0; }
 #gift-gc-message { max-width: 480px; }
+.bulk-gift-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 0.45rem; font-size: 0.8rem; }
+.bulk-gift-stepper { display: inline-flex; align-items: center; gap: 0.2rem; }
+.bulk-gift-stepper input { width: 4rem; text-align: center; appearance: textfield; }
+.bulk-gift-stepper input::-webkit-inner-spin-button, .bulk-gift-stepper input::-webkit-outer-spin-button { appearance: none; margin: 0; }
+#bulk-gc-message { flex: 1 1 220px; max-width: 480px; }
+.bulk-gift-hint { margin-top: 0.4rem; font-size: 0.75rem; color: #9ca3af; }
 .user-shop-purchases .table-wrap th:nth-child(2) { text-align: right; }
+.user-currency-column .table-wrap th:nth-child(n), .user-currency-column .table-wrap td:nth-child(2) { text-align: left; }
 .stat-section #vacuum-btn {
   display: flex;
   width: max-content;

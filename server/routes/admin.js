@@ -238,6 +238,30 @@ async function handleAdminGiftGc(req, res, userId) {
   send(res, 200, result);
 }
 
+async function handleAdminBulkGc(req, res) {
+  if (!requireLocalhost(req, res)) return;
+  if (req.method === 'GET') {
+    const rate = Number(new URL(req.url, 'http://localhost').searchParams.get('coinsPerLevel'));
+    const result = db.adminPreviewBulkGc(rate, getAppBirthAt());
+    if (result.error) return send(res, 400, { error: 'Coins per level must be a positive whole number.' });
+    const { users, ...preview } = result;
+    return send(res, 200, preview);
+  }
+  const result = db.adminGiftBulkGc(await readBody(req), getAppBirthAt());
+  if (result.error) {
+    const messages = { invalid_rate: 'Coins per level must be a positive whole number.',
+      invalid_request: 'Invalid gift request or message (maximum 1,000 characters).',
+      request_conflict: 'This gift request was already used with different details.',
+      preview_changed: 'Players or levels changed. Review the gift again before sending.',
+      no_recipients: 'There are no players above level 0 to receive this gift.',
+      insufficient_supply: 'Insufficient admin GC supply.' };
+    return send(res, result.error.startsWith('invalid_') ? 400 : 409, { error: messages[result.error], available: result.available });
+  }
+  for (const id of result.userIds) userBadgePush(id);
+  const { userIds, ...response } = result;
+  send(res, 200, response);
+}
+
 async function handleAdminGiftBook(req, res, bookId) {
   if (!requireLocalhost(req, res)) return;
   const { sourceUserId, targetUserId } = await readBody(req);
@@ -560,6 +584,7 @@ module.exports = {
   handleAdminDeleteRating,
   handleAdminRefundShopItem,
   handleAdminGiftGc,
+  handleAdminBulkGc,
   handleAdminGiftBook,
   handleAdminGetSettings,
   handleAdminAppSize,

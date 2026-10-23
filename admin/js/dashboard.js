@@ -127,8 +127,73 @@ export async function loadTools() {
     statusEl.style.background = s.smtp_active ? '#064e3b' : '#1f2937';
     _applyMaintenanceToggle(!!s.maintenance_mode);
   } catch (e) { console.error('Tools:', e); }
-  await Promise.all([loadXpConfig(), loadBackups()]);
+  await Promise.all([loadXpConfig(), loadBackups(), loadBulkGiftPreview()]);
 }
+
+let _bulkGiftGeneration = 0;
+let _bulkGiftPending = null;
+async function bulkGiftApi(method, path, body) {
+  const response = await fetch(path, { method, ...(body ? {
+    headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+  } : {}) });
+  const data = await response.json();
+  if (!response.ok) throw Error(data.error || 'Could not process the gift.');
+  return data;
+}
+async function loadBulkGiftPreview() {
+  const generation = ++_bulkGiftGeneration;
+  const rate = Number(document.getElementById('bulk-gc-rate').value);
+  const status = document.getElementById('bulk-gc-preview');
+  if (!Number.isSafeInteger(rate) || rate < 1) {
+    status.textContent = 'Enter a positive whole number of GC per level.';
+    return null;
+  }
+  try {
+    const plan = await bulkGiftApi('GET', `/api/admin/gift-gc-all?coinsPerLevel=${rate}`);
+    if (generation !== _bulkGiftGeneration) return null;
+    status.textContent = `${plan.recipients.toLocaleString()} recipients · ${plan.total.toLocaleString()} GC total · ${plan.available.toLocaleString()} GC in the admin pool`;
+    return plan;
+  } catch (error) { if (generation === _bulkGiftGeneration) status.textContent = error.message; return null; }
+}
+document.getElementById('bulk-gc-rate').addEventListener('input', () => {
+  ++_bulkGiftGeneration;
+  document.getElementById('bulk-gc-preview').textContent = 'Review the gift to update the total.';
+});
+for (const [id, delta] of [['bulk-gc-minus', -1], ['bulk-gc-plus', 1]]) {
+  document.getElementById(id).addEventListener('click', () => {
+    const input = document.getElementById('bulk-gc-rate');
+    input.value = Math.max(1, (Number(input.value) || 1) + delta);
+    loadBulkGiftPreview();
+  });
+}
+document.getElementById('bulk-gc-review').addEventListener('click', async () => {
+  const button = document.getElementById('bulk-gc-review');
+  if (button.disabled) return;
+  button.disabled = true;
+  try {
+    const plan = await loadBulkGiftPreview();
+    if (!plan) return;
+    if (!plan.recipients) return showAlert('There are no players above level 0 to receive this gift.');
+    if (plan.total > plan.available) return showAlert(`This gift needs ${plan.total.toLocaleString()} GC; the admin pool has ${plan.available.toLocaleString()} GC.`);
+    const message = document.getElementById('bulk-gc-message').value.trim();
+    const details = { coinsPerLevel: plan.coinsPerLevel, previewHash: plan.previewHash, message };
+    const signature = JSON.stringify(details);
+    if (_bulkGiftPending?.signature !== signature) _bulkGiftPending = { signature, ...details, requestId: crypto.randomUUID() };
+    const { signature: ignored, ...payload } = _bulkGiftPending;
+    showConfirm(`Gift ${plan.total.toLocaleString()} GC from the admin pool to ${plan.recipients.toLocaleString()} accounts (${plan.coinsPerLevel} GC per level)?${message ? '\n\nMessage: ' + message : ''}`, async () => {
+      button.disabled = true;
+      try {
+        const result = await bulkGiftApi('POST', '/api/admin/gift-gc-all', payload);
+        _bulkGiftPending = null;
+        document.getElementById('bulk-gc-message').value = '';
+        await loadBulkGiftPreview();
+        document.getElementById('bulk-gc-preview').textContent = `Gifted ${result.total.toLocaleString()} GC to ${result.recipients.toLocaleString()} accounts. ${result.available.toLocaleString()} GC remains in the admin pool.`;
+        loadAdminGc();
+      } catch (error) { showAlert(error.message); }
+      finally { button.disabled = false; }
+    }, { label: 'Gift everyone', variant: '' });
+  } finally { button.disabled = false; }
+});
 
 let _xpConfigData = [];
 async function loadXpConfig() {

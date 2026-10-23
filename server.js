@@ -175,6 +175,7 @@ const {
   handleAdminDeleteRating,
   handleAdminRefundShopItem,
   handleAdminGiftGc,
+  handleAdminBulkGc,
   handleAdminGiftBook,
   handleAdminGetSettings,
   handleAdminAppSize,
@@ -527,6 +528,7 @@ const _routeRequest = async (req, res) => {
     if ((m = urlPath.match(adminUserLockRe))        && method === 'POST') return await handleAdminLockUser(req, res, +m[1]);
     if ((m = urlPath.match(adminUserUnlockRe))      && method === 'POST') return await handleAdminUnlockUser(req, res, +m[1]);
     if ((m = urlPath.match(adminUserGiftGcRe))      && method === 'POST') return await handleAdminGiftGc(req, res, +m[1]);
+    if (urlPath === '/api/admin/gift-gc-all' && (method === 'GET' || method === 'POST')) return await handleAdminBulkGc(req, res);
     if ((m = urlPath.match(/^\/api\/admin\/users\/(\d+)\/edit$/))        && method === 'POST') return await handleAdminUpdateUser(req, res, +m[1]);
     if ((m = urlPath.match(/^\/api\/admin\/users\/(\d+)\/author$/))      && method === 'POST') return await handleAdminSetAuthor(req, res, +m[1]);
     if ((m = urlPath.match(/^\/api\/admin\/users\/(\d+)\/moderator$/)) && method === 'POST') return await handleAdminSetModerator(req, res, +m[1]);
