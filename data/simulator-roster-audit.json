@@ -1942,12 +1942,26 @@
     {
       "bookId": 675,
       "databaseEnemyRows": 35,
-      "apiConsumers": [],
-      "inlineDataFiles": [
-        "public/js/battlesim/engines/fabled-lands/cities-of-gold.js",
-        "public/js/battlesim/engines/fabled-lands/roster.js"
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
       ],
-      "runtimeRosterReviewPending": true
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/675.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true,
+        "liveApiVerified": true,
+        "legacyRowsAdopted": 35,
+        "legacyFieldChanges": 0,
+        "catalogs": "26 full encounter presets, including multi-opponent fights, wounds, entry damage, escape and surrender destinations",
+        "allPresetEncountersCompleted": true
+      }
     },
     {
       "bookId": 676,
@@ -2635,6 +2649,7 @@
       671,
       672,
       674,
+      675,
       781,
       807,
       808,

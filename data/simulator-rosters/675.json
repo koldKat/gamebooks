@@ -1,0 +1,1742 @@
+{
+  "schemaVersion": 1,
+  "bookId": 675,
+  "family": "fabled-lands",
+  "source": "Original Cities of Gold and Glory encounter profiles and conditions. All 35 legacy enemy rows matched exactly; encounter order, wounds, escape and surrender destinations retained.",
+  "enemies": [
+    {
+      "key": "70:0:0",
+      "name": "Wereboar (70)",
+      "attack": 6,
+      "defense": 11,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Wereboar (70)",
+        "attack": 6,
+        "defense": 11,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 70,
+          "win": 323,
+          "loss": 560,
+          "enemies": [
+            {
+              "name": "Wereboar",
+              "combat": 6,
+              "defence": 11,
+              "stamina": 8
+            }
+          ]
+        },
+        "part": {
+          "name": "Wereboar",
+          "combat": 6,
+          "defence": 11,
+          "stamina": 8
+        }
+      }
+    },
+    {
+      "key": "128:0:1",
+      "name": "1st Assassin (128)",
+      "attack": 6,
+      "defense": 8,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "1st Assassin (128)",
+        "attack": 6,
+        "defense": 8,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": 128,
+          "win": 174,
+          "loss": 560,
+          "enemies": [
+            {
+              "name": "1st Assassin",
+              "combat": 6,
+              "defence": 8,
+              "stamina": 7
+            },
+            {
+              "name": "2nd Assassin",
+              "combat": 7,
+              "defence": 8,
+              "stamina": 7
+            }
+          ]
+        },
+        "part": {
+          "name": "1st Assassin",
+          "combat": 6,
+          "defence": 8,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "128:1:1",
+      "name": "2nd Assassin (128)",
+      "attack": 7,
+      "defense": 8,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "2nd Assassin (128)",
+        "attack": 7,
+        "defense": 8,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 1,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": 128,
+          "win": 174,
+          "loss": 560,
+          "enemies": [
+            {
+              "name": "1st Assassin",
+              "combat": 6,
+              "defence": 8,
+              "stamina": 7
+            },
+            {
+              "name": "2nd Assassin",
+              "combat": 7,
+              "defence": 8,
+              "stamina": 7
+            }
+          ]
+        },
+        "part": {
+          "name": "2nd Assassin",
+          "combat": 7,
+          "defence": 8,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "152:0:2",
+      "name": "Hydra (152)",
+      "attack": 6,
+      "defense": 7,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Hydra (152)",
+        "attack": 6,
+        "defense": 7,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 152,
+          "win": 361,
+          "loss": 560,
+          "enemies": [
+            {
+              "name": "Hydra",
+              "combat": 6,
+              "defence": 7,
+              "stamina": 9
+            }
+          ],
+          "woundEffect": "hydra"
+        },
+        "part": {
+          "name": "Hydra",
+          "combat": 6,
+          "defence": 7,
+          "stamina": 9
+        }
+      }
+    },
+    {
+      "key": "207:0:3",
+      "name": "Faery Wolf (207)",
+      "attack": 5,
+      "defense": 7,
+      "hp": 10,
+      "pb": null,
+      "adopt": {
+        "name": "Faery Wolf (207)",
+        "attack": 5,
+        "defense": 7,
+        "hp": 10,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 207,
+          "win": 184,
+          "loss": 560,
+          "enemies": [
+            {
+              "name": "Faery Wolf",
+              "combat": 5,
+              "defence": 7,
+              "stamina": 10
+            }
+          ],
+          "flee": {
+            "destination": 22,
+            "dice": 1
+          }
+        },
+        "part": {
+          "name": "Faery Wolf",
+          "combat": 5,
+          "defence": 7,
+          "stamina": 10
+        }
+      }
+    },
+    {
+      "key": "208:0:4",
+      "name": "Giant Spider (208)",
+      "attack": 4,
+      "defense": 7,
+      "hp": 5,
+      "pb": null,
+      "adopt": {
+        "name": "Giant Spider (208)",
+        "attack": 4,
+        "defense": 7,
+        "hp": 5,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 208,
+          "win": 277,
+          "loss": 560,
+          "enemies": [
+            {
+              "name": "Giant Spider",
+              "combat": 4,
+              "defence": 7,
+              "stamina": 5
+            }
+          ],
+          "woundEffect": "spider"
+        },
+        "part": {
+          "name": "Giant Spider",
+          "combat": 4,
+          "defence": 7,
+          "stamina": 5
+        }
+      }
+    },
+    {
+      "key": "297:0:5",
+      "name": "Silent Knight (297)",
+      "attack": 7,
+      "defense": 12,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Silent Knight (297)",
+        "attack": 7,
+        "defense": 12,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 297,
+          "win": 320,
+          "loss": 560,
+          "enemies": [
+            {
+              "name": "Silent Knight",
+              "combat": 7,
+              "defence": 12,
+              "stamina": 7
+            }
+          ],
+          "flee": {
+            "destination": 23,
+            "dice": 1
+          }
+        },
+        "part": {
+          "name": "Silent Knight",
+          "combat": 7,
+          "defence": 12,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "313:0:6",
+      "name": "Hydra (313)",
+      "attack": 6,
+      "defense": 11,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Hydra (313)",
+        "attack": 6,
+        "defense": 11,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 6,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 313,
+          "win": 361,
+          "loss": 560,
+          "enemies": [
+            {
+              "name": "Hydra",
+              "combat": 6,
+              "defence": 11,
+              "stamina": 9
+            }
+          ],
+          "woundEffect": "hydra"
+        },
+        "part": {
+          "name": "Hydra",
+          "combat": 6,
+          "defence": 11,
+          "stamina": 9
+        }
+      }
+    },
+    {
+      "key": "392:0:7",
+      "name": "Sir Fontesque (392)",
+      "attack": 7,
+      "defense": 13,
+      "hp": 11,
+      "pb": null,
+      "adopt": {
+        "name": "Sir Fontesque (392)",
+        "attack": 7,
+        "defense": 13,
+        "hp": 11,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 7,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 392,
+          "win": 467,
+          "loss": 560,
+          "enemies": [
+            {
+              "name": "Sir Fontesque",
+              "combat": 7,
+              "defence": 13,
+              "stamina": 11
+            }
+          ],
+          "surrender": 319
+        },
+        "part": {
+          "name": "Sir Fontesque",
+          "combat": 7,
+          "defence": 13,
+          "stamina": 11
+        }
+      }
+    },
+    {
+      "key": "413:0:8",
+      "name": "Evil Knight (413)",
+      "attack": 4,
+      "defense": 5,
+      "hp": 4,
+      "pb": null,
+      "adopt": {
+        "name": "Evil Knight (413)",
+        "attack": 4,
+        "defense": 5,
+        "hp": 4,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 8,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 413,
+          "win": 200,
+          "loss": 560,
+          "enemies": [
+            {
+              "name": "Evil Knight",
+              "combat": 4,
+              "defence": 5,
+              "stamina": 4
+            }
+          ]
+        },
+        "part": {
+          "name": "Evil Knight",
+          "combat": 4,
+          "defence": 5,
+          "stamina": 4
+        }
+      }
+    },
+    {
+      "key": "442:0:9",
+      "name": "Assassin (442)",
+      "attack": 5,
+      "defense": 6,
+      "hp": 5,
+      "pb": null,
+      "adopt": {
+        "name": "Assassin (442)",
+        "attack": 5,
+        "defense": 6,
+        "hp": 5,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 9,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 442,
+          "win": 517,
+          "loss": 560,
+          "enemies": [
+            {
+              "name": "Assassin",
+              "combat": 5,
+              "defence": 6,
+              "stamina": 5
+            }
+          ],
+          "flee": {
+            "destination": 118,
+            "dice": 0
+          },
+          "woundEffect": "paladin"
+        },
+        "part": {
+          "name": "Assassin",
+          "combat": 5,
+          "defence": 6,
+          "stamina": 5
+        }
+      }
+    },
+    {
+      "key": "462:0:10",
+      "name": "Vampire (462)",
+      "attack": 7,
+      "defense": 9,
+      "hp": 14,
+      "pb": null,
+      "adopt": {
+        "name": "Vampire (462)",
+        "attack": 7,
+        "defense": 9,
+        "hp": 14,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 10,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 462,
+          "win": 385,
+          "loss": 560,
+          "enemies": [
+            {
+              "name": "Vampire",
+              "combat": 7,
+              "defence": 9,
+              "stamina": 14
+            }
+          ],
+          "unarmoured": true,
+          "woundEffect": "unarmed"
+        },
+        "part": {
+          "name": "Vampire",
+          "combat": 7,
+          "defence": 9,
+          "stamina": 14
+        }
+      }
+    },
+    {
+      "key": "464:0:11",
+      "name": "Warthog (464)",
+      "attack": 5,
+      "defense": 6,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Warthog (464)",
+        "attack": 5,
+        "defense": 6,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 11,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 464,
+          "win": 338,
+          "loss": 560,
+          "enemies": [
+            {
+              "name": "Warthog",
+              "combat": 5,
+              "defence": 6,
+              "stamina": 7
+            }
+          ]
+        },
+        "part": {
+          "name": "Warthog",
+          "combat": 5,
+          "defence": 6,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "469:0:12",
+      "name": "Dragon (469)",
+      "attack": 9,
+      "defense": 11,
+      "hp": 20,
+      "pb": null,
+      "adopt": {
+        "name": "Dragon (469)",
+        "attack": 9,
+        "defense": 11,
+        "hp": 20,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 12,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 469,
+          "win": 172,
+          "loss": 560,
+          "enemies": [
+            {
+              "name": "Dragon",
+              "combat": 9,
+              "defence": 11,
+              "stamina": 20
+            }
+          ]
+        },
+        "part": {
+          "name": "Dragon",
+          "combat": 9,
+          "defence": 11,
+          "stamina": 20
+        }
+      }
+    },
+    {
+      "key": "476:0:13",
+      "name": "Angry Knight (476)",
+      "attack": 5,
+      "defense": 9,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Angry Knight (476)",
+        "attack": 5,
+        "defense": 9,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 13,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 476,
+          "win": 31,
+          "loss": 560,
+          "enemies": [
+            {
+              "name": "Angry Knight",
+              "combat": 5,
+              "defence": 9,
+              "stamina": 6
+            }
+          ]
+        },
+        "part": {
+          "name": "Angry Knight",
+          "combat": 5,
+          "defence": 9,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "514:0:14",
+      "name": "Samurai (514)",
+      "attack": 6,
+      "defense": 12,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Samurai (514)",
+        "attack": 6,
+        "defense": 12,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 14,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 514,
+          "win": 338,
+          "loss": 560,
+          "enemies": [
+            {
+              "name": "Samurai",
+              "combat": 6,
+              "defence": 12,
+              "stamina": 7
+            }
+          ]
+        },
+        "part": {
+          "name": "Samurai",
+          "combat": 6,
+          "defence": 12,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "581:0:15",
+      "name": "Elf Lady (581)",
+      "attack": 7,
+      "defense": 10,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Elf Lady (581)",
+        "attack": 7,
+        "defense": 10,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 15,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 581,
+          "win": 605,
+          "loss": 560,
+          "enemies": [
+            {
+              "name": "Elf Lady",
+              "combat": 7,
+              "defence": 10,
+              "stamina": 7
+            }
+          ],
+          "flee": {
+            "destination": 22,
+            "dice": 1
+          }
+        },
+        "part": {
+          "name": "Elf Lady",
+          "combat": 7,
+          "defence": 10,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "582:0:16",
+      "name": "First Brigand (582)",
+      "attack": 4,
+      "defense": 6,
+      "hp": 4,
+      "pb": null,
+      "adopt": {
+        "name": "First Brigand (582)",
+        "attack": 4,
+        "defense": 6,
+        "hp": 4,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 16,
+        "slot": 0,
+        "partCount": 5,
+        "entry": {
+          "section": 582,
+          "win": 654,
+          "loss": 560,
+          "enemies": [
+            {
+              "name": "First Brigand",
+              "combat": 4,
+              "defence": 6,
+              "stamina": 4
+            },
+            {
+              "name": "Second Brigand",
+              "combat": 4,
+              "defence": 6,
+              "stamina": 3
+            },
+            {
+              "name": "Third Brigand",
+              "combat": 4,
+              "defence": 6,
+              "stamina": 4
+            },
+            {
+              "name": "Fourth Brigand",
+              "combat": 4,
+              "defence": 6,
+              "stamina": 3
+            },
+            {
+              "name": "Fifth Brigand",
+              "combat": 4,
+              "defence": 7,
+              "stamina": 5
+            }
+          ],
+          "surrender": 678
+        },
+        "part": {
+          "name": "First Brigand",
+          "combat": 4,
+          "defence": 6,
+          "stamina": 4
+        }
+      }
+    },
+    {
+      "key": "582:1:16",
+      "name": "Second Brigand (582)",
+      "attack": 4,
+      "defense": 6,
+      "hp": 3,
+      "pb": null,
+      "adopt": {
+        "name": "Second Brigand (582)",
+        "attack": 4,
+        "defense": 6,
+        "hp": 3,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 16,
+        "slot": 1,
+        "partCount": 5,
+        "entry": {
+          "section": 582,
+          "win": 654,
+          "loss": 560,
+          "enemies": [
+            {
+              "name": "First Brigand",
+              "combat": 4,
+              "defence": 6,
+              "stamina": 4
+            },
+            {
+              "name": "Second Brigand",
+              "combat": 4,
+              "defence": 6,
+              "stamina": 3
+            },
+            {
+              "name": "Third Brigand",
+              "combat": 4,
+              "defence": 6,
+              "stamina": 4
+            },
+            {
+              "name": "Fourth Brigand",
+              "combat": 4,
+              "defence": 6,
+              "stamina": 3
+            },
+            {
+              "name": "Fifth Brigand",
+              "combat": 4,
+              "defence": 7,
+              "stamina": 5
+            }
+          ],
+          "surrender": 678
+        },
+        "part": {
+          "name": "Second Brigand",
+          "combat": 4,
+          "defence": 6,
+          "stamina": 3
+        }
+      }
+    },
+    {
+      "key": "582:2:16",
+      "name": "Third Brigand (582)",
+      "attack": 4,
+      "defense": 6,
+      "hp": 4,
+      "pb": null,
+      "adopt": {
+        "name": "Third Brigand (582)",
+        "attack": 4,
+        "defense": 6,
+        "hp": 4,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 16,
+        "slot": 2,
+        "partCount": 5,
+        "entry": {
+          "section": 582,
+          "win": 654,
+          "loss": 560,
+          "enemies": [
+            {
+              "name": "First Brigand",
+              "combat": 4,
+              "defence": 6,
+              "stamina": 4
+            },
+            {
+              "name": "Second Brigand",
+              "combat": 4,
+              "defence": 6,
+              "stamina": 3
+            },
+            {
+              "name": "Third Brigand",
+              "combat": 4,
+              "defence": 6,
+              "stamina": 4
+            },
+            {
+              "name": "Fourth Brigand",
+              "combat": 4,
+              "defence": 6,
+              "stamina": 3
+            },
+            {
+              "name": "Fifth Brigand",
+              "combat": 4,
+              "defence": 7,
+              "stamina": 5
+            }
+          ],
+          "surrender": 678
+        },
+        "part": {
+          "name": "Third Brigand",
+          "combat": 4,
+          "defence": 6,
+          "stamina": 4
+        }
+      }
+    },
+    {
+      "key": "582:3:16",
+      "name": "Fourth Brigand (582)",
+      "attack": 4,
+      "defense": 6,
+      "hp": 3,
+      "pb": null,
+      "adopt": {
+        "name": "Fourth Brigand (582)",
+        "attack": 4,
+        "defense": 6,
+        "hp": 3,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 16,
+        "slot": 3,
+        "partCount": 5,
+        "entry": {
+          "section": 582,
+          "win": 654,
+          "loss": 560,
+          "enemies": [
+            {
+              "name": "First Brigand",
+              "combat": 4,
+              "defence": 6,
+              "stamina": 4
+            },
+            {
+              "name": "Second Brigand",
+              "combat": 4,
+              "defence": 6,
+              "stamina": 3
+            },
+            {
+              "name": "Third Brigand",
+              "combat": 4,
+              "defence": 6,
+              "stamina": 4
+            },
+            {
+              "name": "Fourth Brigand",
+              "combat": 4,
+              "defence": 6,
+              "stamina": 3
+            },
+            {
+              "name": "Fifth Brigand",
+              "combat": 4,
+              "defence": 7,
+              "stamina": 5
+            }
+          ],
+          "surrender": 678
+        },
+        "part": {
+          "name": "Fourth Brigand",
+          "combat": 4,
+          "defence": 6,
+          "stamina": 3
+        }
+      }
+    },
+    {
+      "key": "582:4:16",
+      "name": "Fifth Brigand (582)",
+      "attack": 4,
+      "defense": 7,
+      "hp": 5,
+      "pb": null,
+      "adopt": {
+        "name": "Fifth Brigand (582)",
+        "attack": 4,
+        "defense": 7,
+        "hp": 5,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 16,
+        "slot": 4,
+        "partCount": 5,
+        "entry": {
+          "section": 582,
+          "win": 654,
+          "loss": 560,
+          "enemies": [
+            {
+              "name": "First Brigand",
+              "combat": 4,
+              "defence": 6,
+              "stamina": 4
+            },
+            {
+              "name": "Second Brigand",
+              "combat": 4,
+              "defence": 6,
+              "stamina": 3
+            },
+            {
+              "name": "Third Brigand",
+              "combat": 4,
+              "defence": 6,
+              "stamina": 4
+            },
+            {
+              "name": "Fourth Brigand",
+              "combat": 4,
+              "defence": 6,
+              "stamina": 3
+            },
+            {
+              "name": "Fifth Brigand",
+              "combat": 4,
+              "defence": 7,
+              "stamina": 5
+            }
+          ],
+          "surrender": 678
+        },
+        "part": {
+          "name": "Fifth Brigand",
+          "combat": 4,
+          "defence": 7,
+          "stamina": 5
+        }
+      }
+    },
+    {
+      "key": "595:0:17",
+      "name": "Ogre (595)",
+      "attack": 5,
+      "defense": 8,
+      "hp": 10,
+      "pb": null,
+      "adopt": {
+        "name": "Ogre (595)",
+        "attack": 5,
+        "defense": 8,
+        "hp": 10,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 17,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 595,
+          "win": 496,
+          "loss": 560,
+          "enemies": [
+            {
+              "name": "Ogre",
+              "combat": 5,
+              "defence": 8,
+              "stamina": 10
+            }
+          ],
+          "flee": {
+            "destination": 124,
+            "dice": 1
+          }
+        },
+        "part": {
+          "name": "Ogre",
+          "combat": 5,
+          "defence": 8,
+          "stamina": 10
+        }
+      }
+    },
+    {
+      "key": "601:0:18",
+      "name": "Brigand (601)",
+      "attack": 4,
+      "defense": 5,
+      "hp": 2,
+      "pb": null,
+      "adopt": {
+        "name": "Brigand (601)",
+        "attack": 4,
+        "defense": 5,
+        "hp": 2,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 18,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 601,
+          "win": 189,
+          "loss": 560,
+          "enemies": [
+            {
+              "name": "Brigand",
+              "combat": 4,
+              "defence": 5,
+              "stamina": 2
+            }
+          ]
+        },
+        "part": {
+          "name": "Brigand",
+          "combat": 4,
+          "defence": 5,
+          "stamina": 2
+        }
+      }
+    },
+    {
+      "key": "604:0:19",
+      "name": "Jeweled Serpent (604)",
+      "attack": 7,
+      "defense": 8,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Jeweled Serpent (604)",
+        "attack": 7,
+        "defense": 8,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 19,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 604,
+          "win": 628,
+          "loss": 560,
+          "enemies": [
+            {
+              "name": "Jeweled Serpent",
+              "combat": 7,
+              "defence": 8,
+              "stamina": 9
+            }
+          ]
+        },
+        "part": {
+          "name": "Jeweled Serpent",
+          "combat": 7,
+          "defence": 8,
+          "stamina": 9
+        }
+      }
+    },
+    {
+      "key": "626:0:20",
+      "name": "Barrow Wight (626)",
+      "attack": 5,
+      "defense": 9,
+      "hp": 18,
+      "pb": null,
+      "adopt": {
+        "name": "Barrow Wight (626)",
+        "attack": 5,
+        "defense": 9,
+        "hp": 18,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 20,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 626,
+          "win": 698,
+          "loss": 560,
+          "enemies": [
+            {
+              "name": "Barrow Wight",
+              "combat": 5,
+              "defence": 9,
+              "stamina": 18
+            }
+          ]
+        },
+        "part": {
+          "name": "Barrow Wight",
+          "combat": 5,
+          "defence": 9,
+          "stamina": 18
+        }
+      }
+    },
+    {
+      "key": "647:0:21",
+      "name": "Troll (647)",
+      "attack": 8,
+      "defense": 12,
+      "hp": 12,
+      "pb": null,
+      "adopt": {
+        "name": "Troll (647)",
+        "attack": 8,
+        "defense": 12,
+        "hp": 12,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 21,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 647,
+          "win": 246,
+          "loss": 560,
+          "enemies": [
+            {
+              "name": "Troll",
+              "combat": 8,
+              "defence": 12,
+              "stamina": 12
+            }
+          ]
+        },
+        "part": {
+          "name": "Troll",
+          "combat": 8,
+          "defence": 12,
+          "stamina": 12
+        }
+      }
+    },
+    {
+      "key": "649:0:22",
+      "name": "Enraged Bull (649)",
+      "attack": 10,
+      "defense": 11,
+      "hp": 40,
+      "pb": null,
+      "adopt": {
+        "name": "Enraged Bull (649)",
+        "attack": 10,
+        "defense": 11,
+        "hp": 40,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 22,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 649,
+          "win": 673,
+          "loss": 560,
+          "enemies": [
+            {
+              "name": "Enraged Bull",
+              "combat": 10,
+              "defence": 11,
+              "stamina": 40
+            }
+          ],
+          "flee": {
+            "destination": 697,
+            "dice": 0
+          }
+        },
+        "part": {
+          "name": "Enraged Bull",
+          "combat": 10,
+          "defence": 11,
+          "stamina": 40
+        }
+      }
+    },
+    {
+      "key": "657:0:23",
+      "name": "Ekushka (657)",
+      "attack": 6,
+      "defense": 7,
+      "hp": 10,
+      "pb": null,
+      "adopt": {
+        "name": "Ekushka (657)",
+        "attack": 6,
+        "defense": 7,
+        "hp": 10,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 23,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 657,
+          "win": 705,
+          "loss": 560,
+          "enemies": [
+            {
+              "name": "Ekushka",
+              "combat": 6,
+              "defence": 7,
+              "stamina": 10
+            }
+          ]
+        },
+        "part": {
+          "name": "Ekushka",
+          "combat": 6,
+          "defence": 7,
+          "stamina": 10
+        }
+      }
+    },
+    {
+      "key": "726:0:24",
+      "name": "First Brigand (726)",
+      "attack": 5,
+      "defense": 6,
+      "hp": 4,
+      "pb": null,
+      "adopt": {
+        "name": "First Brigand (726)",
+        "attack": 5,
+        "defense": 6,
+        "hp": 4,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 24,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "section": 726,
+          "win": 353,
+          "loss": 560,
+          "enemies": [
+            {
+              "name": "First Brigand",
+              "combat": 5,
+              "defence": 6,
+              "stamina": 4
+            },
+            {
+              "name": "Second Brigand",
+              "combat": 4,
+              "defence": 5,
+              "stamina": 4
+            },
+            {
+              "name": "Third Brigand",
+              "combat": 3,
+              "defence": 4,
+              "stamina": 3
+            }
+          ],
+          "entryDice": 1,
+          "entryArmour": true,
+          "surrender": 384
+        },
+        "part": {
+          "name": "First Brigand",
+          "combat": 5,
+          "defence": 6,
+          "stamina": 4
+        }
+      }
+    },
+    {
+      "key": "726:1:24",
+      "name": "Second Brigand (726)",
+      "attack": 4,
+      "defense": 5,
+      "hp": 4,
+      "pb": null,
+      "adopt": {
+        "name": "Second Brigand (726)",
+        "attack": 4,
+        "defense": 5,
+        "hp": 4,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 24,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "section": 726,
+          "win": 353,
+          "loss": 560,
+          "enemies": [
+            {
+              "name": "First Brigand",
+              "combat": 5,
+              "defence": 6,
+              "stamina": 4
+            },
+            {
+              "name": "Second Brigand",
+              "combat": 4,
+              "defence": 5,
+              "stamina": 4
+            },
+            {
+              "name": "Third Brigand",
+              "combat": 3,
+              "defence": 4,
+              "stamina": 3
+            }
+          ],
+          "entryDice": 1,
+          "entryArmour": true,
+          "surrender": 384
+        },
+        "part": {
+          "name": "Second Brigand",
+          "combat": 4,
+          "defence": 5,
+          "stamina": 4
+        }
+      }
+    },
+    {
+      "key": "726:2:24",
+      "name": "Third Brigand (726)",
+      "attack": 3,
+      "defense": 4,
+      "hp": 3,
+      "pb": null,
+      "adopt": {
+        "name": "Third Brigand (726)",
+        "attack": 3,
+        "defense": 4,
+        "hp": 3,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 24,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "section": 726,
+          "win": 353,
+          "loss": 560,
+          "enemies": [
+            {
+              "name": "First Brigand",
+              "combat": 5,
+              "defence": 6,
+              "stamina": 4
+            },
+            {
+              "name": "Second Brigand",
+              "combat": 4,
+              "defence": 5,
+              "stamina": 4
+            },
+            {
+              "name": "Third Brigand",
+              "combat": 3,
+              "defence": 4,
+              "stamina": 3
+            }
+          ],
+          "entryDice": 1,
+          "entryArmour": true,
+          "surrender": 384
+        },
+        "part": {
+          "name": "Third Brigand",
+          "combat": 3,
+          "defence": 4,
+          "stamina": 3
+        }
+      }
+    },
+    {
+      "key": "770:0:25",
+      "name": "1st Highwayman (770)",
+      "attack": 5,
+      "defense": 7,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "1st Highwayman (770)",
+        "attack": 5,
+        "defense": 7,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 25,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "section": 770,
+          "win": 404,
+          "loss": 560,
+          "enemies": [
+            {
+              "name": "1st Highwayman",
+              "combat": 5,
+              "defence": 7,
+              "stamina": 7
+            },
+            {
+              "name": "2nd Highwayman",
+              "combat": 5,
+              "defence": 7,
+              "stamina": 7
+            },
+            {
+              "name": "3rd Highwayman",
+              "combat": 4,
+              "defence": 5,
+              "stamina": 4
+            }
+          ],
+          "flee": {
+            "destination": 55,
+            "dice": 2,
+            "armour": true
+          }
+        },
+        "part": {
+          "name": "1st Highwayman",
+          "combat": 5,
+          "defence": 7,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "770:1:25",
+      "name": "2nd Highwayman (770)",
+      "attack": 5,
+      "defense": 7,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "2nd Highwayman (770)",
+        "attack": 5,
+        "defense": 7,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 25,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "section": 770,
+          "win": 404,
+          "loss": 560,
+          "enemies": [
+            {
+              "name": "1st Highwayman",
+              "combat": 5,
+              "defence": 7,
+              "stamina": 7
+            },
+            {
+              "name": "2nd Highwayman",
+              "combat": 5,
+              "defence": 7,
+              "stamina": 7
+            },
+            {
+              "name": "3rd Highwayman",
+              "combat": 4,
+              "defence": 5,
+              "stamina": 4
+            }
+          ],
+          "flee": {
+            "destination": 55,
+            "dice": 2,
+            "armour": true
+          }
+        },
+        "part": {
+          "name": "2nd Highwayman",
+          "combat": 5,
+          "defence": 7,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "770:2:25",
+      "name": "3rd Highwayman (770)",
+      "attack": 4,
+      "defense": 5,
+      "hp": 4,
+      "pb": null,
+      "adopt": {
+        "name": "3rd Highwayman (770)",
+        "attack": 4,
+        "defense": 5,
+        "hp": 4,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 25,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "section": 770,
+          "win": 404,
+          "loss": 560,
+          "enemies": [
+            {
+              "name": "1st Highwayman",
+              "combat": 5,
+              "defence": 7,
+              "stamina": 7
+            },
+            {
+              "name": "2nd Highwayman",
+              "combat": 5,
+              "defence": 7,
+              "stamina": 7
+            },
+            {
+              "name": "3rd Highwayman",
+              "combat": 4,
+              "defence": 5,
+              "stamina": 4
+            }
+          ],
+          "flee": {
+            "destination": 55,
+            "dice": 2,
+            "armour": true
+          }
+        },
+        "part": {
+          "name": "3rd Highwayman",
+          "combat": 4,
+          "defence": 5,
+          "stamina": 4
+        }
+      }
+    }
+  ]
+}
