@@ -40,7 +40,7 @@ export function createRosterLoader(bookId, dataset, install) {
 }
 
 export async function prepareRosterData(bookId) {
-  if (![412, 521, 522, 523, 524, 527, 528, 529, 530, 531, 532, 533, 534, 535, 536, 537, 539, 548, 550, 555, 557, 807, 808, 860, 869, 877, 881, 882].includes(bookId)) return;
+  if (![412, 521, 522, 523, 524, 527, 528, 529, 530, 531, 532, 533, 534, 535, 536, 537, 539, 548, 550, 555, 557, 570, 807, 808, 860, 869, 877, 881, 882].includes(bookId)) return;
   const [{ apiFetch }, { loadRoster }] = await Promise.all([
     import('../core/state.js'), import(`./books/${bookId}/definition.js`),
   ]);

@@ -1673,11 +1673,27 @@
     {
       "bookId": 570,
       "databaseEnemyRows": 24,
-      "apiConsumers": [],
-      "inlineDataFiles": [
-        "public/js/battlesim/engines/virtual-police/roster.js"
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
       ],
-      "runtimeRosterReviewPending": true
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/570.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true,
+        "liveApiVerified": true,
+        "legacyRowsAdopted": 24,
+        "legacyFieldChanges": 0,
+        "catalogs": "All enemy profiles, fixed groups and level/die-based generation formulas",
+        "sourceNullsPreserved": true,
+        "generationValidation": "Database formulas honored; printed base stats, explicit overrides and independent dice consumption preserved."
+      }
     },
     {
       "bookId": 636,
@@ -2455,6 +2471,7 @@
       550,
       555,
       557,
+      570,
       781,
       807,
       808,
