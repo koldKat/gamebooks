@@ -1,0 +1,574 @@
+{
+  "schemaVersion": 1,
+  "bookId": 648,
+  "family": "space-scout",
+  "source": "Original duel profiles, encounter routes and fleet/survivor templates with original scripted damage and destinations. Survivor shields remain unprinted/null; existing damage carries through.",
+  "enemies": [
+    {
+      "key": "duel:22:0",
+      "name": "Торпедоносец",
+      "attack": 50,
+      "defense": null,
+      "hp": 300,
+      "pb": null,
+      "adopt": {
+        "name": "Торпедоносец",
+        "attack": 50,
+        "defense": null,
+        "hp": 300,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-scout",
+        "dataset": "CATALOG",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "duel",
+          "section": 22,
+          "enemies": [
+            {
+              "name": "Torpedo boat",
+              "attack": 50,
+              "shields": 300
+            }
+          ],
+          "routes": [
+            {
+              "section": 12,
+              "template": 22,
+              "opening": "beam"
+            },
+            {
+              "section": 22,
+              "template": 22
+            },
+            {
+              "section": 30,
+              "template": 22,
+              "opening": "missiles"
+            },
+            {
+              "section": 32,
+              "template": 32,
+              "opening": "manual"
+            },
+            {
+              "section": 36,
+              "template": 36,
+              "shieldPenalty": 100
+            },
+            {
+              "section": 42,
+              "template": 42
+            },
+            {
+              "section": 49,
+              "fleet": true
+            },
+            {
+              "section": 66,
+              "fleet": true
+            }
+          ]
+        },
+        "part": {
+          "name": "Torpedo boat",
+          "attack": 50,
+          "shields": 300
+        }
+      }
+    },
+    {
+      "key": "duel:32:0",
+      "name": "Повреден изтребител",
+      "attack": 40,
+      "defense": null,
+      "hp": 200,
+      "pb": null,
+      "adopt": {
+        "name": "Повреден изтребител",
+        "attack": 40,
+        "defense": null,
+        "hp": 200,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-scout",
+        "dataset": "CATALOG",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "duel",
+          "section": 32,
+          "enemies": [
+            {
+              "name": "Fighter",
+              "attack": 40,
+              "shields": 200
+            }
+          ]
+        },
+        "part": {
+          "name": "Fighter",
+          "attack": 40,
+          "shields": 200
+        }
+      }
+    },
+    {
+      "key": "duel:36:0",
+      "name": "Първият изтребител в мелето",
+      "attack": 50,
+      "defense": null,
+      "hp": 120,
+      "pb": null,
+      "adopt": {
+        "name": "Първият изтребител в мелето",
+        "attack": 50,
+        "defense": null,
+        "hp": 120,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-scout",
+        "dataset": "CATALOG",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "kind": "duel",
+          "section": 36,
+          "enemies": [
+            {
+              "name": "First fighter",
+              "attack": 50,
+              "shields": 120
+            },
+            {
+              "name": "Second fighter",
+              "attack": 30,
+              "shields": 150
+            }
+          ]
+        },
+        "part": {
+          "name": "First fighter",
+          "attack": 50,
+          "shields": 120
+        }
+      }
+    },
+    {
+      "key": "duel:36:1",
+      "name": "Вторият изтребител в мелето",
+      "attack": 30,
+      "defense": null,
+      "hp": 150,
+      "pb": null,
+      "adopt": {
+        "name": "Вторият изтребител в мелето",
+        "attack": 30,
+        "defense": null,
+        "hp": 150,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-scout",
+        "dataset": "CATALOG",
+        "entryIndex": 2,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "kind": "duel",
+          "section": 36,
+          "enemies": [
+            {
+              "name": "First fighter",
+              "attack": 50,
+              "shields": 120
+            },
+            {
+              "name": "Second fighter",
+              "attack": 30,
+              "shields": 150
+            }
+          ]
+        },
+        "part": {
+          "name": "Second fighter",
+          "attack": 30,
+          "shields": 150
+        }
+      }
+    },
+    {
+      "key": "duel:42:0",
+      "name": "Последният прикриващ изтребител",
+      "attack": 75,
+      "defense": null,
+      "hp": 250,
+      "pb": null,
+      "adopt": {
+        "name": "Последният прикриващ изтребител",
+        "attack": 75,
+        "defense": null,
+        "hp": 250,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-scout",
+        "dataset": "CATALOG",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "duel",
+          "section": 42,
+          "enemies": [
+            {
+              "name": "Escort fighter",
+              "attack": 75,
+              "shields": 250
+            }
+          ]
+        },
+        "part": {
+          "name": "Escort fighter",
+          "attack": 75,
+          "shields": 250
+        }
+      }
+    },
+    {
+      "key": "fleet:fleet:0",
+      "name": "Килартиански кораб 1",
+      "attack": 60,
+      "defense": null,
+      "hp": 300,
+      "pb": null,
+      "adopt": {
+        "name": "Килартиански кораб 1",
+        "attack": 60,
+        "defense": null,
+        "hp": 300,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-scout",
+        "dataset": "CATALOG",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 4,
+        "entry": {
+          "kind": "fleet",
+          "fleet": {
+            "enemies": [
+              {
+                "name": "Kilarti fighter 1",
+                "attack": 60,
+                "shields": 300
+              },
+              {
+                "name": "Kilarti fighter 2",
+                "attack": 60,
+                "shields": 300
+              },
+              {
+                "name": "Kilarti fighter 3",
+                "attack": 60,
+                "shields": 300
+              }
+            ],
+            "survivor": {
+              "attack": 50,
+              "shields": null
+            },
+            "destinations": {
+              "duel": 46,
+              "maneuver": 56,
+              "loss": 87,
+              "openingThree": 60,
+              "openingTwo": 80,
+              "afterManeuver": 50
+            },
+            "maxMissiles": 3,
+            "maneuvers": {
+              "110": {
+                "beams": 1,
+                "missiles": 2,
+                "incoming": 120
+              },
+              "121": {
+                "beams": 2,
+                "missiles": 1,
+                "incoming": 90,
+                "halfSecond": true
+              },
+              "132": {
+                "beams": 2,
+                "missiles": 1,
+                "incoming": 60
+              }
+            }
+          }
+        },
+        "part": {
+          "name": "Kilarti fighter 1",
+          "attack": 60,
+          "shields": 300
+        }
+      }
+    },
+    {
+      "key": "fleet:fleet:1",
+      "name": "Килартиански кораб 2",
+      "attack": 60,
+      "defense": null,
+      "hp": 300,
+      "pb": null,
+      "adopt": {
+        "name": "Килартиански кораб 2",
+        "attack": 60,
+        "defense": null,
+        "hp": 300,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-scout",
+        "dataset": "CATALOG",
+        "entryIndex": 4,
+        "slot": 1,
+        "partCount": 4,
+        "entry": {
+          "kind": "fleet",
+          "fleet": {
+            "enemies": [
+              {
+                "name": "Kilarti fighter 1",
+                "attack": 60,
+                "shields": 300
+              },
+              {
+                "name": "Kilarti fighter 2",
+                "attack": 60,
+                "shields": 300
+              },
+              {
+                "name": "Kilarti fighter 3",
+                "attack": 60,
+                "shields": 300
+              }
+            ],
+            "survivor": {
+              "attack": 50,
+              "shields": null
+            },
+            "destinations": {
+              "duel": 46,
+              "maneuver": 56,
+              "loss": 87,
+              "openingThree": 60,
+              "openingTwo": 80,
+              "afterManeuver": 50
+            },
+            "maxMissiles": 3,
+            "maneuvers": {
+              "110": {
+                "beams": 1,
+                "missiles": 2,
+                "incoming": 120
+              },
+              "121": {
+                "beams": 2,
+                "missiles": 1,
+                "incoming": 90,
+                "halfSecond": true
+              },
+              "132": {
+                "beams": 2,
+                "missiles": 1,
+                "incoming": 60
+              }
+            }
+          }
+        },
+        "part": {
+          "name": "Kilarti fighter 2",
+          "attack": 60,
+          "shields": 300
+        }
+      }
+    },
+    {
+      "key": "fleet:fleet:2",
+      "name": "Килартиански кораб 3",
+      "attack": 60,
+      "defense": null,
+      "hp": 300,
+      "pb": null,
+      "adopt": {
+        "name": "Килартиански кораб 3",
+        "attack": 60,
+        "defense": null,
+        "hp": 300,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-scout",
+        "dataset": "CATALOG",
+        "entryIndex": 4,
+        "slot": 2,
+        "partCount": 4,
+        "entry": {
+          "kind": "fleet",
+          "fleet": {
+            "enemies": [
+              {
+                "name": "Kilarti fighter 1",
+                "attack": 60,
+                "shields": 300
+              },
+              {
+                "name": "Kilarti fighter 2",
+                "attack": 60,
+                "shields": 300
+              },
+              {
+                "name": "Kilarti fighter 3",
+                "attack": 60,
+                "shields": 300
+              }
+            ],
+            "survivor": {
+              "attack": 50,
+              "shields": null
+            },
+            "destinations": {
+              "duel": 46,
+              "maneuver": 56,
+              "loss": 87,
+              "openingThree": 60,
+              "openingTwo": 80,
+              "afterManeuver": 50
+            },
+            "maxMissiles": 3,
+            "maneuvers": {
+              "110": {
+                "beams": 1,
+                "missiles": 2,
+                "incoming": 120
+              },
+              "121": {
+                "beams": 2,
+                "missiles": 1,
+                "incoming": 90,
+                "halfSecond": true
+              },
+              "132": {
+                "beams": 2,
+                "missiles": 1,
+                "incoming": 60
+              }
+            }
+          }
+        },
+        "part": {
+          "name": "Kilarti fighter 3",
+          "attack": 60,
+          "shields": 300
+        }
+      }
+    },
+    {
+      "key": "fleet:fleet:3",
+      "name": "Последният Килартиански противник",
+      "attack": 50,
+      "defense": null,
+      "hp": null,
+      "pb": null,
+      "adopt": {
+        "name": "Последният Килартиански противник",
+        "attack": 50,
+        "defense": null,
+        "hp": null,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-scout",
+        "dataset": "CATALOG",
+        "entryIndex": 4,
+        "slot": 3,
+        "partCount": 4,
+        "entry": {
+          "kind": "fleet",
+          "fleet": {
+            "enemies": [
+              {
+                "name": "Kilarti fighter 1",
+                "attack": 60,
+                "shields": 300
+              },
+              {
+                "name": "Kilarti fighter 2",
+                "attack": 60,
+                "shields": 300
+              },
+              {
+                "name": "Kilarti fighter 3",
+                "attack": 60,
+                "shields": 300
+              }
+            ],
+            "survivor": {
+              "attack": 50,
+              "shields": null
+            },
+            "destinations": {
+              "duel": 46,
+              "maneuver": 56,
+              "loss": 87,
+              "openingThree": 60,
+              "openingTwo": 80,
+              "afterManeuver": 50
+            },
+            "maxMissiles": 3,
+            "maneuvers": {
+              "110": {
+                "beams": 1,
+                "missiles": 2,
+                "incoming": 120
+              },
+              "121": {
+                "beams": 2,
+                "missiles": 1,
+                "incoming": 90,
+                "halfSecond": true
+              },
+              "132": {
+                "beams": 2,
+                "missiles": 1,
+                "incoming": 60
+              }
+            }
+          }
+        },
+        "part": {
+          "attack": 50,
+          "shields": null
+        }
+      }
+    }
+  ]
+}

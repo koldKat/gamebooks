@@ -1746,9 +1746,26 @@
     {
       "bookId": 648,
       "databaseEnemyRows": 9,
-      "apiConsumers": [],
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
+      ],
       "inlineDataFiles": [],
-      "runtimeRosterReviewPending": true
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/648.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true,
+        "liveApiVerified": true,
+        "legacyRowsAdopted": 9,
+        "legacyFieldChanges": 0,
+        "catalogs": "Duel profiles and routes, fleet templates, survivor attack and tactical rules",
+        "legacySavedFights": "Captured or legacy survivor attack applied without changing damaged shields, player shields or unknown saved fields; no metadata added to legacy saves."
+      }
     },
     {
       "bookId": 654,
@@ -2506,6 +2523,7 @@
       570,
       636,
       644,
+      648,
       781,
       807,
       808,
