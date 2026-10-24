@@ -2038,12 +2038,26 @@
     {
       "bookId": 679,
       "databaseEnemyRows": 42,
-      "apiConsumers": [],
-      "inlineDataFiles": [
-        "public/js/battlesim/engines/fabled-lands/rising-sun.js",
-        "public/js/battlesim/engines/fabled-lands/roster.js"
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
       ],
-      "runtimeRosterReviewPending": true
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/679.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true,
+        "liveApiVerified": true,
+        "legacyRowsAdopted": 42,
+        "legacyFieldChanges": 0,
+        "catalogs": "29 full encounter presets, including simultaneous targets, custom rule keys, weapon modifiers, surrender and escape rules and win choices",
+        "allPresetEncountersCompleted": true
+      }
     },
     {
       "bookId": 680,
@@ -2694,6 +2708,7 @@
       676,
       677,
       678,
+      679,
       781,
       807,
       808,

@@ -1,3 +1,4 @@
+import { createRosterLoader } from '../../roster-data.js';
 import { fabledDie, fabledDice, fabledInteger, validateFabledCharacter } from './character.js';
 import { startFabledFight, fleeFabledFight } from './core.js';
 
@@ -5,40 +6,8 @@ export const RISING_PROFESSIONS = Object.freeze({ priest: [6,4,5,8,6,2], troubad
   mage: [4,4,8,1,7,5], wayfarer: [4,7,4,4,8,6], warrior: [5,8,3,6,5,3], rogue: [7,6,6,2,4,8] });
 export const RISING_DEFAULTS = Object.freeze({ rank: 6, stamina: 27, shards: 0, armour: 0,
   professions: RISING_PROFESSIONS });
-const enemy = (name, combat, defence, stamina) => ({ name, combat, defence, stamina });
-const encounter = (section, win, name, combat, defence, stamina, extra = {}) => ({ section, win, loss: 140,
-  enemies: [enemy(name,combat,defence,stamina)], ...extra });
-export const RISING_FIGHTS = Object.freeze([
-  encounter(55,79,'Imperial Guard',7,11,14),
-  { section:116,win:91,loss:140,enemies:['First','Second','Third','Fourth','Fifth'].map(n=>enemy(n+' Vampire',6,10,14)) },
-  encounter(145,218,'Wacko',12,22,29,{surrender:52}),
-  encounter(183,551,'Thunder Beast',15,20,20,{special:'thunder'}),
-  { section:186,win:243,loss:140,enemies:[enemy('First Knight',7,13,14),enemy('Second Knight',8,14,17)] },
-  { section:192,win:280,loss:140,simultaneous:true,enemies:[enemy('First Spider',8,12,17),enemy('Second Spider',8,12,13),enemy('Third Spider',12,12,12)] },
-  { section:273,win:661,loss:140,simultaneous:true,unarmoured:true,enemies:['First','Second','Third'].map(n=>enemy(n+' Flying Head',8,18,5)) },
-  { section:291,win:499,loss:140,simultaneous:true,flee:{destination:745},enemies:[enemy('First Shrine Warden',9,15,22),enemy('Second Shrine Warden',9,15,21),enemy('Third Shrine Warden',9,15,20)] },
-  encounter(305,326,'Hairy arms',9,18,12,{flee:{destination:181,dice:1}}),
-  encounter(306,86,'Skeleton Spectre',13,20,21,{flee:{destination:416,dice:2,armour:true}}),
-  encounter(348,275,'King Tiger',12,22,44),
-  encounter(374,277,'Mujina',8,13,15),
-  encounter(411,430,'The Enemy',12,22,35,{special:'meditation',unarmoured:true,loss:479,flee:{destination:371}}),
-  encounter(460,489,'Dawatsu Morituri',10,20,38,{special:'morituriOutside'}),
-  encounter(473,423,'Chimerical Beast',8,9,20,{special:'sanctityDefence'}),
-  encounter(481,331,'Spider Creature',10,20,33,{special:'poisonSpider',preCheck:true,flee:{destination:140,fatal:true}}),
-  encounter(490,316,'Ridiculous Rogue',4,16,30,{special:'subdue'}),
-  encounter(527,544,'Ghoul',7,12,15,{flee:{destination:506,freeAttack:true}}),
-  encounter(563,null,'Haniwa Warrior',8,20,21,{special:'oneDie',winChoices:[583,604]}),
-  { section:618,win:738,loss:140,simultaneous:true,surrender:452,enemies:[enemy('Jiro',10,13,10),enemy('Nunobiki',9,13,14),enemy('Yoshio',9,13,13)] },
-  encounter(623,458,'Giant',15,22,51,{special:'permanentWounds',entryDice:1}),
-  encounter(624,529,'Bear',7,11,17,{special:'darkness'}),
-  encounter(656,746,'Warrior Maid',8,16,18,{special:'exchangedWeapon',surrender:36}),
-  encounter(680,728,'Tadachika',11,17,21,{flee:{destination:696,dice:3,armour:true}}),
-  encounter(712,458,'Big Boy',15,22,51,{special:'permanentWounds',flee:{destination:642,dice:2}}),
-  encounter(716,null,'Dragon',9,19,27,{winChoices:[461,488]}),
-  encounter(718,312,'Talanexor',11,17,17,{special:'magicDefence'}),
-  encounter(742,489,'Dawatsu Morituri',15,25,38,{special:'morituriInside',flee:{destination:460,freeAttack:true}}),
-  encounter(743,null,'Dragon',13,25,27,{winChoices:[461,488]}),
-]);
+export let RISING_FIGHTS = [];
+export const loadRoster = createRosterLoader(679, 'FIGHTS', rows => { RISING_FIGHTS = rows; });
 
 function end(fight, status) {
   fight.status = status;
