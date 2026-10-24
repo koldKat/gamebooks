@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { loadRosterDataset } from '../../../public/js/battlesim/roster-data.js';
+import { createState as createMutatedState } from '../../../public/js/battlesim/books/781/state.js';
 const seed=JSON.parse(readFileSync(new URL('../../../data/simulator-rosters/781.json',import.meta.url),'utf8'));
 const groupSeed=JSON.parse(readFileSync(new URL('../../../data/simulator-rosters/881.json',import.meta.url),'utf8'));
 
@@ -44,4 +45,12 @@ test('failed loading remains retryable without replacing a saved roster with par
   await assert.rejects(module.loadRoster(async()=>({ok:true,json:async()=>seed.enemies.slice(1)})),/Incomplete book/);
   await module.loadRoster(async()=>({ok:true,json:async()=>seed.enemies}));
   assert.equal(module.ROSTER.length,6);
+});
+
+test('new character state takes enemy defaults from the loaded roster and leaves existing fights alone',()=>{
+  const run={};let currentEnemy={dmg:99,life:123};
+  const store=createMutatedState(()=>({WEAPONS:[],_defaultAmmo:()=>({}),_enemy:()=>currentEnemy,currentPlaythrough:()=>run}));
+  const data=store._data();assert.deepEqual(data.enemy,{dmg:99,life:123});
+  const snapshot=structuredClone(data);currentEnemy={dmg:1,life:1};
+  store._data();assert.deepEqual(data,snapshot);
 });

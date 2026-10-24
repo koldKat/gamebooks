@@ -60,4 +60,7 @@ export default {
     'battlesim412.name.e21': 'Пазач - втори (§430)',
     'battlesim412.name.e22': 'Пазач - трети (§430)',
     'battlesim412.name.e23': 'Черна сянка - Звярът (§454)',
+    'battlesim412.log.continue': 'Оцеля след петте удара. Продължи на §{section}.',
+    'battlesim412.log.timed_strike': 'Удар {strike}/{total}. Оставащи жизнени точки: {lp}.',
+    'battlesim412.stat.timed': 'Сила: {str}. Удари: {strike}/{total}. Жизнени точки на противника не се използват.',
 };

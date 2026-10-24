@@ -219,7 +219,9 @@ gamebooks/
                          attack proxies supply the actual opponent rolls without inventing stats.
                          Enemy rosters load from the book enemy API. Optional stats_json metadata
                          preserves typed attributes, source groups and printed nulls alongside legacy
-                         columns. Repair seeds update only their owned rows and retain enemy IDs.
+                         columns. Repair seeds retain enemy IDs; adopting a legacy row requires
+                         an unambiguous exact match for its name and all legacy stats. Enemy API
+                         filtering and ordering use the book/name index.
                          A simulator may export loadData; both lazy loaders await it before init.
                          Character transitions copy supplied profiles and deduplicate completed
                          fight IDs; equipment losses require an explicit choice before the next fight.

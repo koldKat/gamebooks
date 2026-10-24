@@ -12,10 +12,18 @@ function _enemyName(d) {
 function _checkEnd(d) {
   const { SVG_SKULL, SVG_TROPHY, _appendLog, _enemyName, _recordOutcome, escapeHtml, t } = getContext();
 
+  if (d.over) return true;
   if (d.printedCombatRules === 1 && d.player.lp <= 0) {
     d.over = true; d.winner = 'enemy';
     _appendLog(d, t('battlesim412.log.fallen', { skull: SVG_SKULL }));
     _recordOutcome(d, 'loss');
+    return true;
+  }
+  if (d.timedEncounter) {
+    if (d.timedEncounter.strikes < d.timedEncounter.minStrikes) return false;
+    d.over = true; d.winner = 'player';
+    _appendLog(d, t('battlesim412.log.continue', {section:d.timedEncounter.destination}));
+    _recordOutcome(d, 'win');
     return true;
   }
   if (d.enemy.hp <= 0) {
@@ -40,6 +48,10 @@ function _startBattle() {
   if (!d || d.started && !d.over) return;
   const base = _enemy(d.enemyId);
   d.enemy = { str: d.enemy.str ?? base.str, hp: d.enemy.startHp ?? base.hp, startHp: d.enemy.startHp ?? base.hp };
+  if (d.timedEncounter) {
+    d.enemy.hp = null; d.enemy.startHp = null;
+    d.timedEncounter.strikes = 0;
+  }
   d.printedCombatRules = 1;
   d.companionBonus = d.nextCompanionBonus === true ? 5 : 0;
   d.over = false; d.winner = null; d.started = true;
@@ -56,6 +68,12 @@ function _strikeOnce(d) {
 
   const bonus = d.printedCombatRules === 1 ? (d.companionBonus || 0) : 0;
   const r = resolveStrike(d.player.lp, d.enemy.str, drawChance(), bonus);
+  if (d.timedEncounter) {
+    d.timedEncounter.strikes++;
+    d.player.lp = Math.max(0, d.player.lp - r.playerLoss);
+    _appendLog(d, t('battlesim412.log.timed_strike', {strike:d.timedEncounter.strikes,total:d.timedEncounter.minStrikes,lp:d.player.lp}));
+    return _checkEnd(d);
+  }
   if (r.outcome === 'enemy') {
     d.enemy.hp = Math.max(0, d.enemy.hp - r.enemyLoss);
     _appendLog(d, t('battlesim412.log.strike_enemy', { chance: r.chance, pstr: r.playerStr, sum: r.sum, estr: d.enemy.str, name: escapeHtml(_enemyName(d)), hp: d.enemy.hp }));
@@ -112,6 +130,8 @@ function _pickEnemy(id) {
   d.enemyId = id;
   const base = _enemy(id);
   d.enemy = { str: base.str, hp: base.hp, startHp: base.hp };
+  if (base.minStrikes) d.timedEncounter = {minStrikes:base.minStrikes,destination:base.destination,strikes:0};
+  else delete d.timedEncounter;
   d.started = false; d.over = false; d.winner = null;
   saveState();
   _renderAll();

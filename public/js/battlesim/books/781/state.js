@@ -7,11 +7,12 @@ function _data() {
   const pt = currentPlaythrough();
   if (!pt) return null;
   if (!pt.sim781) {
+    const first = _enemy('doberman');
     pt.sim781 = {
       enemyId: 'doberman',
       weaponId: 'crowbar',
       player: { life: 40, physique: 1, shooting: 1 },
-      enemy: { dmg: 8, life: 16 },
+      enemy: { dmg: first.dmg, life: first.life },
       ammo: _defaultAmmo(),
       started: false,
       rulesVersion: 1,

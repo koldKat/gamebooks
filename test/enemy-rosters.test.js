@@ -28,6 +28,9 @@ test('schema migration and legacy API results preserve old enemy rows and player
   assert.deepEqual(getBookEnemyRows(db, 246), [{id:1,name:'Existing enemy',attack:5,defense:null,hp:12,pb:null}]);
   assert.deepEqual(db.prepare('SELECT * FROM players').all(), before);
   assert.equal(db.prepare('SELECT created_at FROM book_enemies WHERE id=1').get().created_at, 123);
+  const plan=db.prepare('EXPLAIN QUERY PLAN SELECT id,name,attack,defense,hp,pb,stats_json FROM book_enemies WHERE book_id=? ORDER BY name COLLATE NOCASE').all(246);
+  assert.ok(plan.some(row=>row.detail.includes('idx_book_enemies_book_name')));
+  assert.equal(plan.some(row=>row.detail.includes('TEMP B-TREE')),false);
 });
 
 test('full source seed round-trips all 218 typed parts and is idempotent without replacing IDs', t => {
@@ -68,13 +71,39 @@ test('invalid or duplicate seed keys fail before schema or content changes', t =
   assert.equal(db.prepare('SELECT COUNT(*) n FROM book_enemies').get().n,2);
 });
 
+test('adopting a verified legacy row keeps its ID and every existing field without creating a duplicate',t=>{
+  const db=fixture(t);
+  const document={schemaVersion:1,bookId:246,family:'test-family',enemies:[{key:'source-1',name:'Existing enemy',attack:5,hp:12,
+    adopt:{name:'Existing enemy',attack:5,defense:null,hp:12,pb:null},stats:{schemaVersion:1,source:'verified'}}]};
+  assert.deepEqual(seedEnemyRoster(db,document),{inserted:0,updated:1});
+  assert.equal(db.prepare('SELECT COUNT(*) n FROM book_enemies WHERE book_id=246').get().n,1);
+  assert.deepEqual(getBookEnemyRows(db,246).map(({stats,...row})=>row),[{id:1,name:'Existing enemy',attack:5,defense:null,hp:12,pb:null}]);
+  assert.equal(db.prepare('SELECT created_at FROM book_enemies WHERE id=1').get().created_at,123);
+  assert.deepEqual(seedEnemyRoster(db,document),{inserted:0,updated:0});
+});
+
+test('ambiguous or changed legacy rows abort the entire repair transaction',t=>{
+  const db=fixture(t);
+  db.exec("INSERT INTO book_enemies(id,book_id,name,attack,hp) VALUES(3,246,'Existing enemy',5,12)");
+  const document={schemaVersion:1,bookId:246,family:'test-family',enemies:[{key:'new',name:'Another',attack:1,hp:1,stats:{}},
+    {key:'source-1',name:'Existing enemy',attack:5,hp:12,adopt:{name:'Existing enemy',attack:5,defense:null,hp:12,pb:null},stats:{}}]};
+  assert.throws(()=>seedEnemyRoster(db,document),/unambiguous/);
+  assert.equal(db.prepare("SELECT COUNT(*) n FROM book_enemies WHERE name='Another'").get().n,0);
+  assert.equal(db.prepare('PRAGMA table_info(book_enemies)').all().some(c=>c.name==='stats_json'),false);
+  document.enemies[1].adopt.hp=99;
+  assert.throws(()=>seedEnemyRoster(db,document),/preserve every/);
+});
+
 test('every staged repair seed is valid and retains all structured source data', t => {
   const db = fixture(t);
   for (const name of fs.readdirSync(path.join(__dirname,'../data/simulator-rosters'))) {
     const document=JSON.parse(fs.readFileSync(path.join(__dirname,'../data/simulator-rosters',name),'utf8'));
     db.prepare('INSERT OR IGNORE INTO books(id) VALUES (?)').run(document.bookId);
+    for(const enemy of document.enemies)if(enemy.adopt)db.prepare('INSERT INTO book_enemies(book_id,name,attack,defense,hp,pb) VALUES(?,?,?,?,?,?)')
+      .run(document.bookId,enemy.adopt.name,enemy.adopt.attack,enemy.adopt.defense,enemy.adopt.hp,enemy.adopt.pb);
     const result=seedEnemyRoster(db,document);
-    assert.equal(result.inserted,document.enemies.length,name);
+    assert.equal(result.inserted,document.enemies.filter(enemy=>!enemy.adopt).length,name);
+    assert.equal(result.updated,document.enemies.filter(enemy=>enemy.adopt).length,name);
     assert.deepEqual(seedEnemyRoster(db,document),{inserted:0,updated:0},name);
   }
 });

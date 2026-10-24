@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-10-24T15:41:21.528365+00:00",
+  "checkedAt": "2026-10-24T16:08:37.278235+00:00",
   "scope": "All simulator entry modules; static import graph and current DB coverage. Runtime review remains required.",
   "simulators": [
     {
@@ -970,11 +970,25 @@
     {
       "bookId": 412,
       "databaseEnemyRows": 23,
-      "apiConsumers": [],
-      "inlineDataFiles": [
-        "public/js/battlesim/books/412/definition.js"
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
       ],
-      "runtimeRosterReviewPending": true
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/412.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true,
+        "liveApiVerified": true,
+        "legacyRowsAdopted": 23,
+        "legacyFieldChanges": 0,
+        "sourceCorrection": "Section454: no enemy HP; five strikes then section250. Existing saved fights retain their previous behavior."
+      }
     },
     {
       "bookId": 414,
@@ -2036,12 +2050,23 @@
     },
     {
       "bookId": 877,
-      "databaseEnemyRows": 0,
-      "apiConsumers": [],
-      "inlineDataFiles": [
-        "public/js/battlesim/books/877/panel.js"
+      "databaseEnemyRows": 12,
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
       ],
-      "runtimeRosterReviewPending": true
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/877.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true,
+        "liveApiVerified": true
+      }
     },
     {
       "bookId": 881,
@@ -2151,6 +2176,7 @@
     "port": 3000,
     "commit": "fb551a4",
     "liveTypedApiBooks": [
+      412,
       555,
       557,
       781,
@@ -2158,6 +2184,7 @@
       808,
       860,
       869,
+      877,
       881,
       882,
       1285

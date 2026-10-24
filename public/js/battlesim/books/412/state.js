@@ -7,10 +7,11 @@ function _data() {
   const pt = currentPlaythrough();
   if (!pt) return null;
   if (!pt.sim412) {
+    const first = _enemy('e1');
     pt.sim412 = {
       enemyId: 'e1',
       player: { lp: 58, startLp: 58 },
-      enemy: { str: 14, hp: 12, startHp: 12 },
+      enemy: { str: first.str, hp: first.hp, startHp: first.hp },
       over: false, winner: null, started: false,
       log: [], history: [],
     };

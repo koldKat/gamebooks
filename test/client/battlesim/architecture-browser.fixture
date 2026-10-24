@@ -62,6 +62,16 @@ for(const id of BOOK_IDS){
     check(/[А-Яа-я]/.test(title),'Bulgarian book has Bulgarian simulator title '+id+':'+title);
     check(!/\b(?:Character|Encounter|Programs|Save|Full Moon|Alpha versus Omega)\b/.test(overlay.textContent),'no English UI in Bulgarian simulator '+id);
   }
+  if(id===877){
+    const el=key=>document.getElementById('sim877-'+key);
+    check(el('encounter-pick').options.length===12,'Galactic Giant database catalog');
+    el('player-sila').value='10';el('player-sila').dispatchEvent(new Event('change',{bubbles:true}));
+    el('player-zhivot').value='18';el('player-zhivot').dispatchEvent(new Event('change',{bubbles:true}));
+    el('encounter-pick').value='robotrak';el('encounter-pick').dispatchEvent(new Event('change',{bubbles:true}));
+    el('fight').click();
+    const game=app.currentPlaythrough().sim877;
+    check(game.player.zhivot===16&&game.history.at(-1).outcome==='draw','Galactic Giant source crab retreat');
+  }
   if(id===906){
     const el=key=>document.getElementById('sim906-'+key);
     check(overlay.textContent.includes('Звездолетът Скитник')&&!overlay.textContent.includes('battlesim906.'),'Bulgarian Starship UI');
@@ -234,7 +244,17 @@ for(const id of BOOK_IDS){
     const data=app.currentPlaythrough()['sim'+id];
     check(id===412?data.enemyName==='Custom <opponent>'&&data.enemy.str===0:data.fight?.encounterSection===0&&data.fight.enemies[0].name==='Custom <opponent>','manual opponent starts '+id);
     check(name.disabled,'opponent editor locked '+id);
-    if(id===412){el('auto').click();check(data.history.at(-1)?.enemy==='Custom <opponent>','custom outcome name '+id);}
+    if(id===412){
+      el('auto').click();check(data.history.at(-1)?.enemy==='Custom <opponent>','custom outcome name '+id);
+      name.value='Черна сянка';name.dispatchEvent(new Event('input',{bubbles:true}));
+      const option=editor.querySelector('[role="option"]');check(option,'source five-strike preset');
+      option.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));
+      check(editor.querySelector('[data-stat="hp"]').disabled,'source creature has no HP field');
+      el('start').click();check(data.enemy.hp===null&&data.timedEncounter.minStrikes===5,'source timed fight captured');
+      const random=Math.random;Math.random=()=>23.5/60;
+      try{el('auto').click();}finally{Math.random=random;}
+      check(data.timedEncounter.strikes===5&&data.winner==='player'&&el('status').textContent.includes('250'),'five-strike continuation');
+    }
     check(!overlay.querySelector('opponent'),'custom name is not HTML '+id);
   }
   if(id>=521&&id<=524){

@@ -1,0 +1,916 @@
+{
+  "schemaVersion": 1,
+  "bookId": 877,
+  "family": "galactic-giant",
+  "source": "public/js/battlesim/books/877/panel.js and engines/galactic-giant.js",
+  "enemies": [
+    {
+      "key": "robotrak",
+      "name": "Робот-рак",
+      "attack": null,
+      "hp": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "galactic-giant",
+        "dataset": "ROSTER",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "robotrak",
+          "kind": "attribute-test",
+          "attribute": "sila",
+          "threshold": 10,
+          "results": {
+            "success": {
+              "key": "robotrak_win",
+              "section": 203,
+              "outcome": "win",
+              "cost": {}
+            },
+            "failure": {
+              "key": "robotrak_lose",
+              "section": 66,
+              "outcome": "draw",
+              "cost": {
+                "zhivot": 2
+              }
+            }
+          },
+          "nameKey": "battlesim877.name.robotrak"
+        },
+        "part": {
+          "id": "robotrak",
+          "kind": "attribute-test",
+          "attribute": "sila",
+          "threshold": 10,
+          "results": {
+            "success": {
+              "key": "robotrak_win",
+              "section": 203,
+              "outcome": "win",
+              "cost": {}
+            },
+            "failure": {
+              "key": "robotrak_lose",
+              "section": 66,
+              "outcome": "draw",
+              "cost": {
+                "zhivot": 2
+              }
+            }
+          },
+          "nameKey": "battlesim877.name.robotrak"
+        }
+      }
+    },
+    {
+      "key": "goraoktopod",
+      "name": "Гора-октопод",
+      "attack": 12,
+      "hp": 18,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "galactic-giant",
+        "dataset": "ROSTER",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "goraoktopod",
+          "kind": "duel",
+          "enemyStrength": 12,
+          "enemyLife": 18,
+          "lifePhase": true,
+          "alternatingDice": false,
+          "results": {
+            "win": {
+              "key": "goraoktopod_win",
+              "section": 4,
+              "outcome": "win",
+              "cost": {}
+            },
+            "lose": {
+              "key": "goraoktopod_lose",
+              "section": 193,
+              "outcome": "loss",
+              "cost": {}
+            },
+            "paused": {
+              "key": "goraoktopod_paused",
+              "section": null,
+              "outcome": "pending",
+              "cost": {}
+            }
+          },
+          "nameKey": "battlesim877.name.goraoktopod"
+        },
+        "part": {
+          "id": "goraoktopod",
+          "kind": "duel",
+          "enemyStrength": 12,
+          "enemyLife": 18,
+          "lifePhase": true,
+          "alternatingDice": false,
+          "results": {
+            "win": {
+              "key": "goraoktopod_win",
+              "section": 4,
+              "outcome": "win",
+              "cost": {}
+            },
+            "lose": {
+              "key": "goraoktopod_lose",
+              "section": 193,
+              "outcome": "loss",
+              "cost": {}
+            },
+            "paused": {
+              "key": "goraoktopod_paused",
+              "section": null,
+              "outcome": "pending",
+              "cost": {}
+            }
+          },
+          "nameKey": "battlesim877.name.goraoktopod"
+        }
+      }
+    },
+    {
+      "key": "medusa",
+      "name": "Галактическа медуза",
+      "attack": null,
+      "hp": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "galactic-giant",
+        "dataset": "ROSTER",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "medusa",
+          "kind": "paired-test",
+          "attributes": [
+            "sila",
+            "zhivot"
+          ],
+          "thresholds": [
+            8,
+            18
+          ],
+          "results": {
+            "success": {
+              "key": "medusa_win",
+              "section": 43,
+              "outcome": "win",
+              "cost": {}
+            },
+            "failure": {
+              "key": "medusa_costly",
+              "section": 56,
+              "outcome": "win",
+              "cost": {}
+            },
+            "boundary": {
+              "key": "manual",
+              "section": null,
+              "outcome": "manual",
+              "cost": {}
+            },
+            "mixed": {
+              "key": "medusa_stalemate",
+              "section": 197,
+              "outcome": "draw",
+              "cost": {}
+            }
+          },
+          "nameKey": "battlesim877.name.medusa"
+        },
+        "part": {
+          "id": "medusa",
+          "kind": "paired-test",
+          "attributes": [
+            "sila",
+            "zhivot"
+          ],
+          "thresholds": [
+            8,
+            18
+          ],
+          "results": {
+            "success": {
+              "key": "medusa_win",
+              "section": 43,
+              "outcome": "win",
+              "cost": {}
+            },
+            "failure": {
+              "key": "medusa_costly",
+              "section": 56,
+              "outcome": "win",
+              "cost": {}
+            },
+            "boundary": {
+              "key": "manual",
+              "section": null,
+              "outcome": "manual",
+              "cost": {}
+            },
+            "mixed": {
+              "key": "medusa_stalemate",
+              "section": 197,
+              "outcome": "draw",
+              "cost": {}
+            }
+          },
+          "nameKey": "battlesim877.name.medusa"
+        }
+      }
+    },
+    {
+      "key": "web1",
+      "name": "Хищна паяжина",
+      "attack": null,
+      "hp": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "galactic-giant",
+        "dataset": "ROSTER",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "web1",
+          "kind": "difference-bands",
+          "attributes": [
+            "sila",
+            "zhivot"
+          ],
+          "enemyBases": [
+            15,
+            20
+          ],
+          "middleLimit": 6,
+          "results": {
+            "below": {
+              "key": "web_knife",
+              "section": 74,
+              "outcome": "win",
+              "cost": {}
+            },
+            "middle": {
+              "key": "web_blaster",
+              "section": 74,
+              "outcome": "win",
+              "cost": {
+                "zhivot": 3
+              }
+            },
+            "above": {
+              "key": "web_gravitoudar",
+              "section": 74,
+              "outcome": "win",
+              "cost": {
+                "zhivot": 5
+              }
+            }
+          },
+          "nameKey": "battlesim877.name.web1"
+        },
+        "part": {
+          "id": "web1",
+          "kind": "difference-bands",
+          "attributes": [
+            "sila",
+            "zhivot"
+          ],
+          "enemyBases": [
+            15,
+            20
+          ],
+          "middleLimit": 6,
+          "results": {
+            "below": {
+              "key": "web_knife",
+              "section": 74,
+              "outcome": "win",
+              "cost": {}
+            },
+            "middle": {
+              "key": "web_blaster",
+              "section": 74,
+              "outcome": "win",
+              "cost": {
+                "zhivot": 3
+              }
+            },
+            "above": {
+              "key": "web_gravitoudar",
+              "section": 74,
+              "outcome": "win",
+              "cost": {
+                "zhivot": 5
+              }
+            }
+          },
+          "nameKey": "battlesim877.name.web1"
+        }
+      }
+    },
+    {
+      "key": "web2",
+      "name": "Хищна паяжина (2)",
+      "attack": null,
+      "hp": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "galactic-giant",
+        "dataset": "ROSTER",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "web2",
+          "kind": "difference-bands",
+          "attributes": [
+            "sila",
+            "zhivot"
+          ],
+          "enemyBases": [
+            10,
+            20
+          ],
+          "middleLimit": 6,
+          "results": {
+            "below": {
+              "key": "web2_one",
+              "section": 161,
+              "outcome": "win",
+              "cost": {}
+            },
+            "middle": {
+              "key": "web2_two",
+              "section": 161,
+              "outcome": "win",
+              "cost": {}
+            },
+            "above": {
+              "key": "web2_choice",
+              "section": 161,
+              "outcome": "win",
+              "cost": {}
+            }
+          },
+          "nameKey": "battlesim877.name.web2"
+        },
+        "part": {
+          "id": "web2",
+          "kind": "difference-bands",
+          "attributes": [
+            "sila",
+            "zhivot"
+          ],
+          "enemyBases": [
+            10,
+            20
+          ],
+          "middleLimit": 6,
+          "results": {
+            "below": {
+              "key": "web2_one",
+              "section": 161,
+              "outcome": "win",
+              "cost": {}
+            },
+            "middle": {
+              "key": "web2_two",
+              "section": 161,
+              "outcome": "win",
+              "cost": {}
+            },
+            "above": {
+              "key": "web2_choice",
+              "section": 161,
+              "outcome": "win",
+              "cost": {}
+            }
+          },
+          "nameKey": "battlesim877.name.web2"
+        }
+      }
+    },
+    {
+      "key": "invisiblerobot",
+      "name": "Невидим робот",
+      "attack": 20,
+      "hp": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "galactic-giant",
+        "dataset": "ROSTER",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "invisiblerobot",
+          "kind": "duel",
+          "enemyStrength": 20,
+          "enemyLife": null,
+          "lifePhase": false,
+          "alternatingDice": true,
+          "fleeBelowStrength": 10,
+          "results": {
+            "win": {
+              "key": "invisiblerobot_win",
+              "section": 59,
+              "outcome": "win",
+              "cost": {}
+            },
+            "lose": {
+              "key": "invisiblerobot_lose",
+              "section": 65,
+              "outcome": "loss",
+              "cost": {}
+            },
+            "flee": {
+              "key": "invisiblerobot_flee",
+              "section": 179,
+              "outcome": "draw",
+              "cost": {}
+            },
+            "paused": {
+              "key": "invisiblerobot_paused",
+              "section": null,
+              "outcome": "pending",
+              "cost": {}
+            }
+          },
+          "nameKey": "battlesim877.name.invisiblerobot"
+        },
+        "part": {
+          "id": "invisiblerobot",
+          "kind": "duel",
+          "enemyStrength": 20,
+          "enemyLife": null,
+          "lifePhase": false,
+          "alternatingDice": true,
+          "fleeBelowStrength": 10,
+          "results": {
+            "win": {
+              "key": "invisiblerobot_win",
+              "section": 59,
+              "outcome": "win",
+              "cost": {}
+            },
+            "lose": {
+              "key": "invisiblerobot_lose",
+              "section": 65,
+              "outcome": "loss",
+              "cost": {}
+            },
+            "flee": {
+              "key": "invisiblerobot_flee",
+              "section": 179,
+              "outcome": "draw",
+              "cost": {}
+            },
+            "paused": {
+              "key": "invisiblerobot_paused",
+              "section": null,
+              "outcome": "pending",
+              "cost": {}
+            }
+          },
+          "nameKey": "battlesim877.name.invisiblerobot"
+        }
+      }
+    },
+    {
+      "key": "snakewall1",
+      "name": "Стена от змии (есперна сила 25)",
+      "attack": null,
+      "hp": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "galactic-giant",
+        "dataset": "ROSTER",
+        "entryIndex": 6,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "snakewall1",
+          "kind": "attribute-test",
+          "attributes": [
+            "esper",
+            "zhivot"
+          ],
+          "threshold": 25,
+          "results": {
+            "success": {
+              "key": "snakewall_win",
+              "section": 34,
+              "outcome": "win",
+              "cost": {}
+            },
+            "failure": {
+              "key": "snakewall_lose",
+              "section": 214,
+              "outcome": "loss",
+              "cost": {}
+            }
+          },
+          "nameKey": "battlesim877.name.snakewall1"
+        },
+        "part": {
+          "id": "snakewall1",
+          "kind": "attribute-test",
+          "attributes": [
+            "esper",
+            "zhivot"
+          ],
+          "threshold": 25,
+          "results": {
+            "success": {
+              "key": "snakewall_win",
+              "section": 34,
+              "outcome": "win",
+              "cost": {}
+            },
+            "failure": {
+              "key": "snakewall_lose",
+              "section": 214,
+              "outcome": "loss",
+              "cost": {}
+            }
+          },
+          "nameKey": "battlesim877.name.snakewall1"
+        }
+      }
+    },
+    {
+      "key": "snakewall2",
+      "name": "Стена от змии (есперна сила 12)",
+      "attack": null,
+      "hp": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "galactic-giant",
+        "dataset": "ROSTER",
+        "entryIndex": 7,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "snakewall2",
+          "kind": "attribute-test",
+          "attribute": "esper",
+          "threshold": 12,
+          "results": {
+            "success": {
+              "key": "snakewall2_win",
+              "section": 34,
+              "outcome": "win",
+              "cost": {
+                "zhivot": 5
+              }
+            },
+            "failure": {
+              "key": "snakewall_lose",
+              "section": 214,
+              "outcome": "loss",
+              "cost": {}
+            }
+          },
+          "nameKey": "battlesim877.name.snakewall2"
+        },
+        "part": {
+          "id": "snakewall2",
+          "kind": "attribute-test",
+          "attribute": "esper",
+          "threshold": 12,
+          "results": {
+            "success": {
+              "key": "snakewall2_win",
+              "section": 34,
+              "outcome": "win",
+              "cost": {
+                "zhivot": 5
+              }
+            },
+            "failure": {
+              "key": "snakewall_lose",
+              "section": 214,
+              "outcome": "loss",
+              "cost": {}
+            }
+          },
+          "nameKey": "battlesim877.name.snakewall2"
+        }
+      }
+    },
+    {
+      "key": "twoheaded",
+      "name": "Двуглаво чудовище",
+      "attack": null,
+      "hp": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "galactic-giant",
+        "dataset": "ROSTER",
+        "entryIndex": 8,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "twoheaded",
+          "kind": "sum-comparison",
+          "attributes": [
+            "sila",
+            "zhivot"
+          ],
+          "enemyBases": [
+            4,
+            6
+          ],
+          "enemyDice": 2,
+          "manualAdvantage": 10,
+          "results": {
+            "success": {
+              "key": "twoheaded_win",
+              "section": 67,
+              "outcome": "win",
+              "cost": {}
+            },
+            "failure": {
+              "key": "twoheaded_lose",
+              "section": 106,
+              "outcome": "loss",
+              "cost": {}
+            },
+            "equal": {
+              "key": "twoheaded_exhausted",
+              "section": 137,
+              "outcome": "win",
+              "cost": {}
+            },
+            "manual": {
+              "key": "manual",
+              "section": null,
+              "outcome": "manual",
+              "cost": {}
+            }
+          },
+          "nameKey": "battlesim877.name.twoheaded"
+        },
+        "part": {
+          "id": "twoheaded",
+          "kind": "sum-comparison",
+          "attributes": [
+            "sila",
+            "zhivot"
+          ],
+          "enemyBases": [
+            4,
+            6
+          ],
+          "enemyDice": 2,
+          "manualAdvantage": 10,
+          "results": {
+            "success": {
+              "key": "twoheaded_win",
+              "section": 67,
+              "outcome": "win",
+              "cost": {}
+            },
+            "failure": {
+              "key": "twoheaded_lose",
+              "section": 106,
+              "outcome": "loss",
+              "cost": {}
+            },
+            "equal": {
+              "key": "twoheaded_exhausted",
+              "section": 137,
+              "outcome": "win",
+              "cost": {}
+            },
+            "manual": {
+              "key": "manual",
+              "section": null,
+              "outcome": "manual",
+              "cost": {}
+            }
+          },
+          "nameKey": "battlesim877.name.twoheaded"
+        }
+      }
+    },
+    {
+      "key": "bigtwoheaded",
+      "name": "Голямо двуглаво чудовище",
+      "attack": null,
+      "hp": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "galactic-giant",
+        "dataset": "ROSTER",
+        "entryIndex": 9,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "bigtwoheaded",
+          "kind": "sum-comparison",
+          "attributes": [
+            "sila",
+            "zhivot"
+          ],
+          "enemyBases": [
+            8,
+            12
+          ],
+          "enemyDice": 0,
+          "results": {
+            "success": {
+              "key": "bigtwoheaded_win",
+              "section": 64,
+              "outcome": "win",
+              "cost": {}
+            },
+            "failure": {
+              "key": "bigtwoheaded_lose",
+              "section": 106,
+              "outcome": "loss",
+              "cost": {}
+            }
+          },
+          "nameKey": "battlesim877.name.bigtwoheaded"
+        },
+        "part": {
+          "id": "bigtwoheaded",
+          "kind": "sum-comparison",
+          "attributes": [
+            "sila",
+            "zhivot"
+          ],
+          "enemyBases": [
+            8,
+            12
+          ],
+          "enemyDice": 0,
+          "results": {
+            "success": {
+              "key": "bigtwoheaded_win",
+              "section": 64,
+              "outcome": "win",
+              "cost": {}
+            },
+            "failure": {
+              "key": "bigtwoheaded_lose",
+              "section": 106,
+              "outcome": "loss",
+              "cost": {}
+            }
+          },
+          "nameKey": "battlesim877.name.bigtwoheaded"
+        }
+      }
+    },
+    {
+      "key": "robottank",
+      "name": "Робот-танк",
+      "attack": null,
+      "hp": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "galactic-giant",
+        "dataset": "ROSTER",
+        "entryIndex": 10,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "robottank",
+          "kind": "attribute-test",
+          "attribute": "sila",
+          "dice": 2,
+          "threshold": 20,
+          "results": {
+            "success": {
+              "key": "robottank_win",
+              "section": 133,
+              "outcome": "win",
+              "cost": {}
+            },
+            "failure": {
+              "key": "robottank_continue",
+              "section": 119,
+              "outcome": "draw",
+              "cost": {}
+            }
+          },
+          "nameKey": "battlesim877.name.robottank"
+        },
+        "part": {
+          "id": "robottank",
+          "kind": "attribute-test",
+          "attribute": "sila",
+          "dice": 2,
+          "threshold": 20,
+          "results": {
+            "success": {
+              "key": "robottank_win",
+              "section": 133,
+              "outcome": "win",
+              "cost": {}
+            },
+            "failure": {
+              "key": "robottank_continue",
+              "section": 119,
+              "outcome": "draw",
+              "cost": {}
+            }
+          },
+          "nameKey": "battlesim877.name.robottank"
+        }
+      }
+    },
+    {
+      "key": "robotspider",
+      "name": "Робот-паяк",
+      "attack": null,
+      "hp": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "galactic-giant",
+        "dataset": "ROSTER",
+        "entryIndex": 11,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "robotspider",
+          "kind": "sum-comparison",
+          "attributes": [
+            "sila",
+            "zhivot"
+          ],
+          "enemyBases": [
+            30
+          ],
+          "enemyDice": 0,
+          "results": {
+            "success": {
+              "key": "robotspider_win",
+              "section": 72,
+              "outcome": "win",
+              "cost": {}
+            },
+            "failure": {
+              "key": "robotspider_lose",
+              "section": 92,
+              "outcome": "loss",
+              "cost": {}
+            },
+            "equal": {
+              "key": "robotspider_tie",
+              "section": 68,
+              "outcome": "draw",
+              "cost": {}
+            }
+          },
+          "nameKey": "battlesim877.name.robotspider"
+        },
+        "part": {
+          "id": "robotspider",
+          "kind": "sum-comparison",
+          "attributes": [
+            "sila",
+            "zhivot"
+          ],
+          "enemyBases": [
+            30
+          ],
+          "enemyDice": 0,
+          "results": {
+            "success": {
+              "key": "robotspider_win",
+              "section": 72,
+              "outcome": "win",
+              "cost": {}
+            },
+            "failure": {
+              "key": "robotspider_lose",
+              "section": 92,
+              "outcome": "loss",
+              "cost": {}
+            },
+            "equal": {
+              "key": "robotspider_tie",
+              "section": 68,
+              "outcome": "draw",
+              "cost": {}
+            }
+          },
+          "nameKey": "battlesim877.name.robotspider"
+        }
+      }
+    }
+  ]
+}

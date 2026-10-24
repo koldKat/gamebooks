@@ -1,0 +1,817 @@
+{
+  "schemaVersion": 1,
+  "bookId": 412,
+  "family": "alkiria",
+  "source": "Existing STR/HP rows verified against each source section; section 454 provides STR17 and five strikes, no HP; continue to250.",
+  "enemies": [
+    {
+      "key": "e1",
+      "name": "Пещерен звяр §12",
+      "attack": 14,
+      "defense": null,
+      "hp": 12,
+      "pb": null,
+      "adopt": {
+        "name": "Пещерен звяр §12",
+        "attack": 14,
+        "defense": null,
+        "hp": 12,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "alkiria",
+        "dataset": "ROSTER",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "e1",
+          "nameKey": "battlesim412.name.e1",
+          "str": 14,
+          "hp": 12
+        },
+        "part": {
+          "id": "e1",
+          "nameKey": "battlesim412.name.e1",
+          "str": 14,
+          "hp": 12
+        }
+      }
+    },
+    {
+      "key": "e2",
+      "name": "Скална мечка (пещерен звяр) §29",
+      "attack": 15,
+      "defense": null,
+      "hp": 14,
+      "pb": null,
+      "adopt": {
+        "name": "Скална мечка (пещерен звяр) §29",
+        "attack": 15,
+        "defense": null,
+        "hp": 14,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "alkiria",
+        "dataset": "ROSTER",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "e2",
+          "nameKey": "battlesim412.name.e2",
+          "str": 15,
+          "hp": 14
+        },
+        "part": {
+          "id": "e2",
+          "nameKey": "battlesim412.name.e2",
+          "str": 15,
+          "hp": 14
+        }
+      }
+    },
+    {
+      "key": "e3",
+      "name": "Зордин Касапина §56",
+      "attack": 17,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Зордин Касапина §56",
+        "attack": 17,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "alkiria",
+        "dataset": "ROSTER",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "e3",
+          "nameKey": "battlesim412.name.e3",
+          "str": 17,
+          "hp": 6
+        },
+        "part": {
+          "id": "e3",
+          "nameKey": "battlesim412.name.e3",
+          "str": 17,
+          "hp": 6
+        }
+      }
+    },
+    {
+      "key": "e4",
+      "name": "Кожена маска (Син на Гуор) §98",
+      "attack": 13,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Кожена маска (Син на Гуор) §98",
+        "attack": 13,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "alkiria",
+        "dataset": "ROSTER",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "e4",
+          "nameKey": "battlesim412.name.e4",
+          "str": 13,
+          "hp": 8
+        },
+        "part": {
+          "id": "e4",
+          "nameKey": "battlesim412.name.e4",
+          "str": 13,
+          "hp": 8
+        }
+      }
+    },
+    {
+      "key": "e5",
+      "name": "Снежна змия §129",
+      "attack": 9,
+      "defense": null,
+      "hp": 5,
+      "pb": null,
+      "adopt": {
+        "name": "Снежна змия §129",
+        "attack": 9,
+        "defense": null,
+        "hp": 5,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "alkiria",
+        "dataset": "ROSTER",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "e5",
+          "nameKey": "battlesim412.name.e5",
+          "str": 9,
+          "hp": 5
+        },
+        "part": {
+          "id": "e5",
+          "nameKey": "battlesim412.name.e5",
+          "str": 9,
+          "hp": 5
+        }
+      }
+    },
+    {
+      "key": "e6",
+      "name": "Боеспособен войник (двама) §138",
+      "attack": 10,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Боеспособен войник (двама) §138",
+        "attack": 10,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "alkiria",
+        "dataset": "ROSTER",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "e6",
+          "nameKey": "battlesim412.name.e6",
+          "str": 10,
+          "hp": 6
+        },
+        "part": {
+          "id": "e6",
+          "nameKey": "battlesim412.name.e6",
+          "str": 10,
+          "hp": 6
+        }
+      }
+    },
+    {
+      "key": "e7",
+      "name": "Главатарят §142",
+      "attack": 14,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Главатарят §142",
+        "attack": 14,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "alkiria",
+        "dataset": "ROSTER",
+        "entryIndex": 6,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "e7",
+          "nameKey": "battlesim412.name.e7",
+          "str": 14,
+          "hp": 6
+        },
+        "part": {
+          "id": "e7",
+          "nameKey": "battlesim412.name.e7",
+          "str": 14,
+          "hp": 6
+        }
+      }
+    },
+    {
+      "key": "e8",
+      "name": "Маскиран страж (в лодката) §192",
+      "attack": 13,
+      "defense": null,
+      "hp": 10,
+      "pb": null,
+      "adopt": {
+        "name": "Маскиран страж (в лодката) §192",
+        "attack": 13,
+        "defense": null,
+        "hp": 10,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "alkiria",
+        "dataset": "ROSTER",
+        "entryIndex": 7,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "e8",
+          "nameKey": "battlesim412.name.e8",
+          "str": 13,
+          "hp": 10
+        },
+        "part": {
+          "id": "e8",
+          "nameKey": "battlesim412.name.e8",
+          "str": 13,
+          "hp": 10
+        }
+      }
+    },
+    {
+      "key": "e9",
+      "name": "Разбойник от Бунището (първи) §212",
+      "attack": 14,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "adopt": {
+        "name": "Разбойник от Бунището (първи) §212",
+        "attack": 14,
+        "defense": null,
+        "hp": 1,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "alkiria",
+        "dataset": "ROSTER",
+        "entryIndex": 8,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "e9",
+          "nameKey": "battlesim412.name.e9",
+          "str": 14,
+          "hp": 1
+        },
+        "part": {
+          "id": "e9",
+          "nameKey": "battlesim412.name.e9",
+          "str": 14,
+          "hp": 1
+        }
+      }
+    },
+    {
+      "key": "e10",
+      "name": "Разбойник от Бунището (втори) §212",
+      "attack": 15,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "adopt": {
+        "name": "Разбойник от Бунището (втори) §212",
+        "attack": 15,
+        "defense": null,
+        "hp": 1,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "alkiria",
+        "dataset": "ROSTER",
+        "entryIndex": 9,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "e10",
+          "nameKey": "battlesim412.name.e10",
+          "str": 15,
+          "hp": 1
+        },
+        "part": {
+          "id": "e10",
+          "nameKey": "battlesim412.name.e10",
+          "str": 15,
+          "hp": 1
+        }
+      }
+    },
+    {
+      "key": "e11",
+      "name": "Разбойник от Бунището (трети) §212",
+      "attack": 12,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "adopt": {
+        "name": "Разбойник от Бунището (трети) §212",
+        "attack": 12,
+        "defense": null,
+        "hp": 1,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "alkiria",
+        "dataset": "ROSTER",
+        "entryIndex": 10,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "e11",
+          "nameKey": "battlesim412.name.e11",
+          "str": 12,
+          "hp": 1
+        },
+        "part": {
+          "id": "e11",
+          "nameKey": "battlesim412.name.e11",
+          "str": 12,
+          "hp": 1
+        }
+      }
+    },
+    {
+      "key": "e12",
+      "name": "Страж (тримата) §261",
+      "attack": 11,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Страж (тримата) §261",
+        "attack": 11,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "alkiria",
+        "dataset": "ROSTER",
+        "entryIndex": 11,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "e12",
+          "nameKey": "battlesim412.name.e12",
+          "str": 11,
+          "hp": 6
+        },
+        "part": {
+          "id": "e12",
+          "nameKey": "battlesim412.name.e12",
+          "str": 11,
+          "hp": 6
+        }
+      }
+    },
+    {
+      "key": "e13",
+      "name": "Подземен дракон §312",
+      "attack": 17,
+      "defense": null,
+      "hp": 5,
+      "pb": null,
+      "adopt": {
+        "name": "Подземен дракон §312",
+        "attack": 17,
+        "defense": null,
+        "hp": 5,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "alkiria",
+        "dataset": "ROSTER",
+        "entryIndex": 12,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "e13",
+          "nameKey": "battlesim412.name.e13",
+          "str": 17,
+          "hp": 5
+        },
+        "part": {
+          "id": "e13",
+          "nameKey": "battlesim412.name.e13",
+          "str": 17,
+          "hp": 5
+        }
+      }
+    },
+    {
+      "key": "e14",
+      "name": "Крилато създание (с кинжал) §314",
+      "attack": 14,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Крилато създание (с кинжал) §314",
+        "attack": 14,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "alkiria",
+        "dataset": "ROSTER",
+        "entryIndex": 13,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "e14",
+          "nameKey": "battlesim412.name.e14",
+          "str": 14,
+          "hp": 6
+        },
+        "part": {
+          "id": "e14",
+          "nameKey": "battlesim412.name.e14",
+          "str": 14,
+          "hp": 6
+        }
+      }
+    },
+    {
+      "key": "e15",
+      "name": "Маскиран мъж в черно §316",
+      "attack": 15,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Маскиран мъж в черно §316",
+        "attack": 15,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "alkiria",
+        "dataset": "ROSTER",
+        "entryIndex": 14,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "e15",
+          "nameKey": "battlesim412.name.e15",
+          "str": 15,
+          "hp": 8
+        },
+        "part": {
+          "id": "e15",
+          "nameKey": "battlesim412.name.e15",
+          "str": 15,
+          "hp": 8
+        }
+      }
+    },
+    {
+      "key": "e16",
+      "name": "Мъж в черно §324",
+      "attack": 15,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Мъж в черно §324",
+        "attack": 15,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "alkiria",
+        "dataset": "ROSTER",
+        "entryIndex": 15,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "e16",
+          "nameKey": "battlesim412.name.e16",
+          "str": 15,
+          "hp": 8
+        },
+        "part": {
+          "id": "e16",
+          "nameKey": "battlesim412.name.e16",
+          "str": 15,
+          "hp": 8
+        }
+      }
+    },
+    {
+      "key": "e17",
+      "name": "Маскиран главорез §325",
+      "attack": 16,
+      "defense": null,
+      "hp": 3,
+      "pb": null,
+      "adopt": {
+        "name": "Маскиран главорез §325",
+        "attack": 16,
+        "defense": null,
+        "hp": 3,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "alkiria",
+        "dataset": "ROSTER",
+        "entryIndex": 16,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "e17",
+          "nameKey": "battlesim412.name.e17",
+          "str": 16,
+          "hp": 3
+        },
+        "part": {
+          "id": "e17",
+          "nameKey": "battlesim412.name.e17",
+          "str": 16,
+          "hp": 3
+        }
+      }
+    },
+    {
+      "key": "e18",
+      "name": "Маскиран мъж §361",
+      "attack": 14,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Маскиран мъж §361",
+        "attack": 14,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "alkiria",
+        "dataset": "ROSTER",
+        "entryIndex": 17,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "e18",
+          "nameKey": "battlesim412.name.e18",
+          "str": 14,
+          "hp": 9
+        },
+        "part": {
+          "id": "e18",
+          "nameKey": "battlesim412.name.e18",
+          "str": 14,
+          "hp": 9
+        }
+      }
+    },
+    {
+      "key": "e19",
+      "name": "Висок мъж с черна маска §369",
+      "attack": 13,
+      "defense": null,
+      "hp": 4,
+      "pb": null,
+      "adopt": {
+        "name": "Висок мъж с черна маска §369",
+        "attack": 13,
+        "defense": null,
+        "hp": 4,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "alkiria",
+        "dataset": "ROSTER",
+        "entryIndex": 18,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "e19",
+          "nameKey": "battlesim412.name.e19",
+          "str": 13,
+          "hp": 4
+        },
+        "part": {
+          "id": "e19",
+          "nameKey": "battlesim412.name.e19",
+          "str": 13,
+          "hp": 4
+        }
+      }
+    },
+    {
+      "key": "e20",
+      "name": "Пазач (първи) §430",
+      "attack": 13,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "adopt": {
+        "name": "Пазач (първи) §430",
+        "attack": 13,
+        "defense": null,
+        "hp": 1,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "alkiria",
+        "dataset": "ROSTER",
+        "entryIndex": 19,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "e20",
+          "nameKey": "battlesim412.name.e20",
+          "str": 13,
+          "hp": 1
+        },
+        "part": {
+          "id": "e20",
+          "nameKey": "battlesim412.name.e20",
+          "str": 13,
+          "hp": 1
+        }
+      }
+    },
+    {
+      "key": "e21",
+      "name": "Пазач (втори) §430",
+      "attack": 11,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "adopt": {
+        "name": "Пазач (втори) §430",
+        "attack": 11,
+        "defense": null,
+        "hp": 1,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "alkiria",
+        "dataset": "ROSTER",
+        "entryIndex": 20,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "e21",
+          "nameKey": "battlesim412.name.e21",
+          "str": 11,
+          "hp": 1
+        },
+        "part": {
+          "id": "e21",
+          "nameKey": "battlesim412.name.e21",
+          "str": 11,
+          "hp": 1
+        }
+      }
+    },
+    {
+      "key": "e22",
+      "name": "Пазач (трети) §430",
+      "attack": 14,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "adopt": {
+        "name": "Пазач (трети) §430",
+        "attack": 14,
+        "defense": null,
+        "hp": 1,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "alkiria",
+        "dataset": "ROSTER",
+        "entryIndex": 21,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "e22",
+          "nameKey": "battlesim412.name.e22",
+          "str": 14,
+          "hp": 1
+        },
+        "part": {
+          "id": "e22",
+          "nameKey": "battlesim412.name.e22",
+          "str": 14,
+          "hp": 1
+        }
+      }
+    },
+    {
+      "key": "e23",
+      "name": "Черна сянка (Звярът) §454",
+      "attack": 17,
+      "defense": null,
+      "hp": null,
+      "pb": null,
+      "adopt": {
+        "name": "Черна сянка (Звярът) §454",
+        "attack": 17,
+        "defense": null,
+        "hp": null,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "alkiria",
+        "dataset": "ROSTER",
+        "entryIndex": 22,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "e23",
+          "nameKey": "battlesim412.name.e23",
+          "str": 17,
+          "hp": null,
+          "minStrikes": 5,
+          "destination": 250
+        },
+        "part": {
+          "id": "e23",
+          "nameKey": "battlesim412.name.e23",
+          "str": 17,
+          "hp": null,
+          "minStrikes": 5,
+          "destination": 250
+        }
+      }
+    }
+  ]
+}
