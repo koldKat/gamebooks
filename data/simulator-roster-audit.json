@@ -1698,18 +1698,50 @@
     {
       "bookId": 636,
       "databaseEnemyRows": 71,
-      "apiConsumers": [],
-      "inlineDataFiles": [
-        "public/js/battlesim/engines/wonderland/roster.js"
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
       ],
-      "runtimeRosterReviewPending": true
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/636.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true,
+        "liveApiVerified": true,
+        "legacyRowsAdopted": 71,
+        "legacyFieldChanges": 0,
+        "catalogs": "Full encounter variants and special damage/streak/recovery rules",
+        "legacySavedFights": "Captured rules honored; old saved specs, wounds and unknown fields retained without adding metadata."
+      }
     },
     {
       "bookId": 644,
       "databaseEnemyRows": 3,
-      "apiConsumers": [],
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
+      ],
       "inlineDataFiles": [],
-      "runtimeRosterReviewPending": true
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/644.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true,
+        "liveApiVerified": true,
+        "legacyRowsAdopted": 3,
+        "legacyFieldChanges": 0,
+        "catalogs": "Three context profiles with generated point formulas, endurance and damage",
+        "legacySavedFights": "Captured rules honored; old saved specs, wounds and unknown fields retained without adding metadata."
+      }
     },
     {
       "bookId": 648,
@@ -2472,6 +2504,8 @@
       555,
       557,
       570,
+      636,
+      644,
       781,
       807,
       808,

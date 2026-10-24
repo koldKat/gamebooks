@@ -1,0 +1,138 @@
+{
+  "schemaVersion": 1,
+  "bookId": 644,
+  "family": "laregod-house",
+  "source": "Original three encounter contexts, generated enemy points (30 plus ten times chosen/rolled number), endurance and damage. All legacy rows preserved.",
+  "enemies": [
+    {
+      "key": "yard",
+      "name": "Вингругър - дворът на странноприемницата",
+      "attack": null,
+      "defense": null,
+      "hp": 10,
+      "pb": 2,
+      "adopt": {
+        "name": "Вингругър - дворът на странноприемницата",
+        "attack": null,
+        "defense": null,
+        "hp": 10,
+        "pb": 2
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "laregod-house",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "context": "yard",
+          "opponent": "wingrugur",
+          "enemy": {
+            "points": {
+              "base": 30,
+              "perNumber": 10
+            },
+            "endurance": 10,
+            "damage": 2
+          }
+        },
+        "part": {
+          "points": {
+            "base": 30,
+            "perNumber": 10
+          },
+          "endurance": 10,
+          "damage": 2
+        }
+      }
+    },
+    {
+      "key": "market",
+      "name": "Вингругър - Нощният пазар",
+      "attack": null,
+      "defense": null,
+      "hp": 10,
+      "pb": 2,
+      "adopt": {
+        "name": "Вингругър - Нощният пазар",
+        "attack": null,
+        "defense": null,
+        "hp": 10,
+        "pb": 2
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "laregod-house",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "context": "market",
+          "opponent": "wingrugur",
+          "enemy": {
+            "points": {
+              "base": 30,
+              "perNumber": 10
+            },
+            "endurance": 10,
+            "damage": 2
+          }
+        },
+        "part": {
+          "points": {
+            "base": 30,
+            "perNumber": 10
+          },
+          "endurance": 10,
+          "damage": 2
+        }
+      }
+    },
+    {
+      "key": "guard",
+      "name": "Пазачът в задната алея",
+      "attack": null,
+      "defense": null,
+      "hp": 10,
+      "pb": 2,
+      "adopt": {
+        "name": "Пазачът в задната алея",
+        "attack": null,
+        "defense": null,
+        "hp": 10,
+        "pb": 2
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "laregod-house",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "context": "guard",
+          "opponent": "other",
+          "enemy": {
+            "points": {
+              "base": 30,
+              "perNumber": 10
+            },
+            "endurance": 10,
+            "damage": 2
+          },
+          "manualDefault": true
+        },
+        "part": {
+          "points": {
+            "base": 30,
+            "perNumber": 10
+          },
+          "endurance": 10,
+          "damage": 2
+        }
+      }
+    }
+  ]
+}

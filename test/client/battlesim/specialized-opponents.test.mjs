@@ -1,3 +1,5 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
+await loadFixtureRoster(644);
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { startLaregodFight, laregodRound } from '../../../public/js/battlesim/engines/laregod-house/core.js';

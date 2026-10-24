@@ -1,4 +1,13 @@
 import { validateOpponents } from '../../opponents.js';
+import { createRosterLoader } from '../../roster-data.js';
+
+export let LAREGOD_ENCOUNTERS = {};
+export const loadRoster = createRosterLoader(644, 'ENCOUNTERS', rows => {
+  const entries = Object.fromEntries(rows.map(row => [row.context, row]));
+  if (!['yard', 'market', 'guard'].every(key => entries[key])) throw new Error('Incomplete Laregod catalog');
+  LAREGOD_ENCOUNTERS = entries;
+});
+const sourceEncounter = context => LAREGOD_ENCOUNTERS[context] ?? Object.values(LAREGOD_ENCOUNTERS).find(row => row.manualDefault);
 
 const clone = value => structuredClone(value);
 const contexts = new Set(['yard', 'market', 'guard', 'manual']);
@@ -28,7 +37,8 @@ export function laregodPoints(equipment = {}, opponent = 'other', context = 'man
 
 export function startLaregodFight(context, options = {}, roll = die) {
   if (!contexts.has(context)) throw new RangeError('Invalid fight context');
-  const opponent = context === 'guard' ? 'other' : context === 'manual' ? options.opponent ?? 'other' : 'wingrugur';
+  const encounter = sourceEncounter(context);
+  const opponent = context === 'manual' ? options.opponent ?? 'other' : encounter.opponent;
   const points = laregodPoints(options.equipment, opponent, context);
   const enemyNumber = options.enemyNumber === undefined ? draw(roll) : integer(options.enemyNumber);
   const custom = context === 'manual' && options.opponents ? validateOpponents(options.opponents,
@@ -37,9 +47,9 @@ export function startLaregodFight(context, options = {}, roll = die) {
   const row = custom?.[0];
   return {
     ...(row ? {custom:true,displayName:row.displayName} : {}),
-    rulesVersion: 1, context, opponent, equipment: clone(options.equipment ?? {}),
+    rulesVersion: 1, context, opponent, encounter: clone(encounter), equipment: clone(options.equipment ?? {}),
     player: { points: row?.playerPoints ?? points, endurance: row?.playerEndurance ?? 10 },
-    enemy: { points: row?.points ?? enemyNumber * 10 + 30, endurance: row?.endurance ?? 10 },
+    enemy: { points: row?.points ?? enemyNumber * encounter.enemy.points.perNumber + encounter.enemy.points.base, endurance: row?.endurance ?? encounter.enemy.endurance },
     enemyNumber, round: 0, status: 'fighting',
   };
 }
@@ -47,13 +57,14 @@ export function startLaregodFight(context, options = {}, roll = die) {
 export function laregodRound(fight, options = {}, roll = die) {
   if (fight.rulesVersion !== 1 || fight.status !== 'fighting') throw new RangeError('No active fight');
   if (!contexts.has(fight.context) || !opponents.has(fight.opponent)) throw new RangeError('Invalid fight');
+  const encounter = fight.encounter ?? sourceEncounter(fight.context);
   integer(fight.player.points, 10000030); integer(fight.enemy.points, 10000030);
-  if (!integer(fight.player.endurance, fight.custom ? 10000 : 10) || !integer(fight.enemy.endurance, fight.custom ? 10000 : 10)) throw new RangeError('Fight already ended');
+  if (!integer(fight.player.endurance, fight.custom ? 10000 : 10) || !integer(fight.enemy.endurance, fight.custom ? 10000 : encounter.enemy.endurance)) throw new RangeError('Fight already ended');
   integer(fight.round);
   const number = options.number === undefined ? draw(roll) : integer(options.number);
   const playerRating = fight.player.points + number, enemyRating = fight.enemy.points;
   const outcome = playerRating > enemyRating ? 'player' : playerRating < enemyRating ? 'enemy' : 'tie';
-  const playerLoss = outcome === 'player' ? 0 : outcome === 'enemy' ? 2 : 1;
+  const playerLoss = outcome === 'player' ? 0 : outcome === 'enemy' ? encounter.enemy.damage : 1;
   const enemyLoss = outcome === 'enemy' ? 0 : outcome === 'player' ? 2 : 1;
   const next = clone(fight);
   next.player.endurance = Math.max(0, next.player.endurance - playerLoss);
