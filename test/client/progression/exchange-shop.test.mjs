@@ -49,16 +49,16 @@ test('successful sell updates balance and history once while duplicate clicks ca
   const data={...profile,diamondsBalance:3,diamondsExchanged:4,coinsBalance:86,direction:'sell',exchanged:2,goldReceived:26};
   request.resolve({ok:true,json:async()=>data});await pending;
   assert.equal(h.get('total').textContent,'5 exchanged');assert.equal(h.snapshots.at(-1),data);
-  assert.match(h.get('message').textContent,/Sold 2 diamonds for 26 GC/);
+  assert.match(h.get('message').textContent,/Sold 2 rubies for 26 GC/);
 });
 
-test('buy direction uses the maximum possible level rate and refreshes the received diamonds and lifetime total',async()=>{
+test('buy direction uses the maximum possible level rate and refreshes the received rubies and lifetime total',async()=>{
   const h=setup();await open(h);h.use('buy');h.get('amount').value='2';h.get('amount').handlers.input();
   const pending=submit(h),request=h.requests.shift();
   assert.equal(JSON.parse(request.options.body).expectedRate,20);assert.equal(JSON.parse(request.options.body).direction,'buy');
   request.resolve({ok:true,json:async()=>({...profile,diamondsBalance:7,diamondsBought:3,coinsBalance:20,direction:'buy',exchanged:2,goldSpent:40})});
   await pending;assert.equal(h.get('total').textContent,'5 exchanged');assert.equal(h.get('amount').max,'1');
-  assert.match(h.get('message').textContent,/Bought 2 diamonds for 40 GC/);
+  assert.match(h.get('message').textContent,/Bought 2 rubies for 40 GC/);
 });
 
 test('invalid amounts, zero balance and late account responses cannot exchange currencies',async()=>{
@@ -87,7 +87,7 @@ test('quantity buttons respect each direction’s available balance and cancel a
   h.get('inc').handlers.click();assert.equal(h.get('amount').value,'2');
   h.get('form').handlers.submit({preventDefault(){}});
   assert.equal(h.requests.length,0);assert.equal(h.confirmations.at(-1).closed,false);
-  assert.equal(h.confirmations.at(-1).message,'Sell 2 diamonds for 26 GC?');
+  assert.equal(h.confirmations.at(-1).message,'Sell 2 rubies for 26 GC?');
   h.get('inc').handlers.click();assert.equal(h.confirmations.at(-1).closed,true);
   h.get('max').handlers.click();assert.equal(h.get('inc').disabled,true);
   h.get('inc').handlers.click();assert.equal(h.get('amount').value,'5');
@@ -100,11 +100,11 @@ test('buying and selling require a separate confirmation and cancel never sends 
   const h=setup();await open(h);const event={preventDefault(){}};
   h.get('form').handlers.submit(event);assert.equal(h.requests.length,0);
   assert.equal(h.get('submit').textContent,'Sell');assert.equal(h.confirmations.at(-1).options.confirmLabel,'Confirm Sell');
-  assert.equal(h.confirmations.at(-1).message,'Sell 1 diamond for 13 GC?');
+  assert.equal(h.confirmations.at(-1).message,'Sell 1 ruby for 13 GC?');
   h.confirmations.at(-1).closed=true;assert.equal(h.requests.length,0);
   h.use('buy');h.get('amount').value='2';h.get('amount').handlers.input();
   h.get('form').handlers.submit(event);assert.equal(h.requests.length,0);
-  assert.equal(h.confirmations.at(-1).message,'Spend 40 GC to buy 2 diamonds?');
+  assert.equal(h.confirmations.at(-1).message,'Spend 40 GC to buy 2 rubies?');
   assert.equal(h.confirmations.at(-1).options.confirmLabel,'Confirm Buy');
   const pending=h.confirmations.at(-1).confirm();assert.equal(h.requests.length,1);
   h.requests.shift().resolve({ok:true,json:async()=>({...profile,direction:'buy',exchanged:2,goldSpent:40})});
@@ -113,7 +113,7 @@ test('buying and selling require a separate confirmation and cancel never sends 
 
 test('buying displays shared stock and limits Max by both stock and available gold',async()=>{
  const h=setup();await open(h,{...profile,diamondPurchaseStock:2});h.use('buy');
- assert.equal(h.get('stock').innerHTML,'(Diamonds available for purchase: <span class="exchange-shop-stock-value">2</span>)');
+ assert.equal(h.get('stock').innerHTML,'(Rubies available for purchase: <span class="exchange-shop-stock-value">2</span>)');
  h.get('max').handlers.click();assert.equal(h.get('amount').value,'2');
  await open(h,{...profile,diamondPurchaseStock:0});h.use('buy');assert.equal(h.get('submit').disabled,true);
  await submit(h);assert.equal(h.requests.length,0);h.use('sell');assert.match(h.get('stock').innerHTML,/available for purchase/);
@@ -171,7 +171,7 @@ test('buy and sell amounts stay independent and editing either cancels a pending
   assert.equal(h.get('buy-amount').value,'3');assert.equal(h.get('sell-amount').value,'1');
   h.get('sell-inc').handlers.click();assert.equal(h.get('sell-amount').value,'2');
   h.get('buy-form').handlers.submit({preventDefault(){}});const old=h.confirmations.at(-1);
-  assert.equal(old.message,'Spend 60 GC to buy 3 diamonds?');
+  assert.equal(old.message,'Spend 60 GC to buy 3 rubies?');
   h.get('sell-inc').handlers.click();assert.equal(old.closed,true);await old.confirm();assert.equal(h.requests.length,0);
   h.get('sell-form').handlers.submit({preventDefault(){}});const pending=h.confirmations.at(-1).confirm();
   assert.equal(h.requests.length,1);assert.equal(h.get('buy-submit').disabled,true);assert.equal(h.get('sell-submit').disabled,true);

@@ -158,8 +158,8 @@ export function _openNotifDropdown(btn, data) {
           visit_all_series:    'Series fully completed',
           visit_all_anthology: 'Anthology fully completed',
           shop_refund:         'Shop purchase refunded',
-          diamond_exchange:    'Diamond exchange',
-          ruby_exchange:       'Ruby exchange',
+          diamond_exchange:    'Ruby exchange',
+          ruby_exchange:       'Diamond exchange',
           runs_milestone:      'Completed runs milestone',
         };
         if (n.payload.reason === 'coin_mint_bonus') {
@@ -170,12 +170,16 @@ export function _openNotifDropdown(btn, data) {
           const reasonLabel = coinReasonMap[n.payload.reason] || '';
           text = `Earned <strong>${amt} Gold Coin${amt !== 1 ? 's' : ''}</strong>${reasonLabel ? ` <span style="color:#9ca3af;font-weight:normal">· ${reasonLabel}</span>` : ''}`;
         }
+      } else if (n.type === 'gem_rate_adjustment') {
+        iconClass = 'icon-coin';
+        iconChar = '◉';
+        text = `Ruby rate update: ${escapeHtml(String(n.payload.refund))} GC upgrade refund, ${escapeHtml(String(n.payload.correction))} GC past-sale adjustment (${n.payload.amount >= 0 ? '+' : ''}${escapeHtml(String(n.payload.amount))} GC)`;
       } else if (n.type === 'diamond_gain' || n.type === 'ruby_gain') {
         const ruby = n.type === 'ruby_gain';
         const amount = n.payload.amount;
         iconClass = ruby ? 'icon-ruby' : 'icon-diamond';
         iconChar = ruby ? RUBY_SVG : DIAMOND_SVG;
-        text = `Earned <strong>${escapeHtml(String(amount))} ${ruby ? (amount === 1 ? 'Ruby' : 'Rubies') : (amount === 1 ? 'Diamond' : 'Diamonds')}</strong>`;
+        text = `Earned <strong>${escapeHtml(String(amount))} ${ruby ? (amount === 1 ? 'Diamond' : 'Diamonds') : (amount === 1 ? 'Ruby' : 'Rubies')}</strong>`;
       } else if (n.type === 'gc_gift') {
         iconClass = 'icon-coin'; iconChar = '◉';
         const amt = n.payload.amount;

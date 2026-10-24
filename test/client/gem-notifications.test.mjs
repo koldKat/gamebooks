@@ -19,7 +19,7 @@ test('notification dropdown renders earned gem counts, plurals and the correct c
     {type:'ruby_gain',payload:{amount:3},createdAt:Date.now(),seen:true},
   ]});
   const html=elements.get('notif-list').innerHTML;
-  for(const text of ['1 Diamond','2 Diamonds','1 Ruby','3 Rubies','icon-diamond','icon-ruby','diamond-test','ruby-test']) assert.ok(html.includes(text),text);
+  for(const text of ['1 Ruby','2 Rubies','1 Diamond','3 Diamonds','icon-diamond','icon-ruby','diamond-test','ruby-test']) assert.ok(html.includes(text),text);
   for(const [viewport,buttonRight,width] of [[320,60,304],[390,380,340],[1000,200,340],[1000,995,340]]){
     context.window.innerWidth=viewport;
     elements.get('notif-dropdown').getBoundingClientRect=()=>({width});

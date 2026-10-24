@@ -30,11 +30,10 @@ test('refund table displays latest and cumulative prices and waits for confirmat
  assert.deepEqual(f.reloads,[42,42]);assert.equal(f.statsRefreshes(),2);
 });
 
-test('diamond purchases have separate refund rows and the correct API keys',async()=>{
+test('ruby digging retains refunds while the retired exchange upgrade is absent',async()=>{
  const f=render([{id:'diamond_dig',count:1,refundOne:1,refundAll:1},{id:'diamond_exchange',count:3,refundOne:3,refundAll:6}]);
- assert.equal(f.rows.length,2);assert.equal(f.rows[0].children[0].text,'Diamond Digging');
- assert.equal(f.rows[0].children[3].children[0].children.length,1);
- f.rows[1].children[3].children[0].children[1].click();await f.confirmations[0].confirm();
- assert.deepEqual(f.requests[0],{method:'POST',url:'/api/admin/users/42/refund',body:{item:'diamond_exchange',all:true}});
+ assert.equal(f.rows.length,1);assert.equal(f.rows[0].children[0].text,'Ruby Digging');
+ f.rows[0].children[3].children[0].children[0].click();await f.confirmations[0].confirm();
+ assert.deepEqual(f.requests[0],{method:'POST',url:'/api/admin/users/42/refund',body:{item:'diamond_dig'}});
  assert.equal(render([]).metaBar.children.length,0);
 });

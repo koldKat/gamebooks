@@ -38,7 +38,7 @@ test('ruby shop uses equal current rates, separate pills and limits buying by go
 test('trades need confirmation, cannot double submit and apply the authoritative wallet snapshot',async()=>{
   const h=setup();await open(h);h.get('amount').value='2';h.get('amount').handlers.input();
   h.get('form').handlers.submit({preventDefault(){}});
-  assert.equal(h.requests.length,0);assert.equal(h.confirmations.at(-1).message,'Sell 2 rubies for 140 GC?');
+  assert.equal(h.requests.length,0);assert.equal(h.confirmations.at(-1).message,'Sell 2 diamonds for 140 GC?');
   const pending=h.confirmations.at(-1).confirm();h.confirmations.at(-1).confirm();
   assert.equal(h.requests.length,1);const request=h.requests.shift();
   assert.equal(request.url,'/api/shop/exchange-rubies');
@@ -46,7 +46,7 @@ test('trades need confirmation, cannot double submit and apply the authoritative
   const updated={...profile,rubiesBalance:3,rubiesExchanged:4,coinsBalance:290,direction:'sell',exchanged:2,goldReceived:140};
   request.resolve({ok:true,json:async()=>updated});await pending;
   assert.equal(h.snapshots.at(-1),updated);assert.equal(h.get('total').textContent,'5 exchanged');
-  assert.equal(h.get('message').textContent,'Sold 2 rubies for 140 GC.');
+  assert.equal(h.get('message').textContent,'Sold 2 diamonds for 140 GC.');
 });
 
 test('retry preserves request ID, a changed rate requires reconfirmation, and logout discards late results',async()=>{

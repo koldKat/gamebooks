@@ -23,10 +23,10 @@
 .coin-icon { width: 14px; height: 14px; vertical-align: -2px; display: inline-block; }
 
 .diamonds-display, .rubies-display {
-  background: #102a33;
-  border: 1px solid #155e75;
+  background: #351922;
+  border: 1px solid #9f1239;
   border-radius: 6px;
-  color: #67e8f9;
+  color: #fda4af;
   font-size: 0.75rem;
   font-weight: 700;
   padding: 0.2rem 0.55rem;
@@ -34,8 +34,8 @@
   font-family: inherit;
   cursor: pointer;
 }
-.diamonds-display:hover { background: #16404c; border-color: #22d3ee; }
-.exchange-shop-stock-value { color: #67e8f9; }
+.diamonds-display:hover { background: #4c1d2e; border-color: #fb7185; }
+.exchange-shop-stock-value { color: #fda4af; }
 .diamond-icon, .ruby-icon { width: 14px; height: 14px; vertical-align: -2px; display: inline-block; }
 .minor-coins-display { font-size: 0.75rem; font-weight: 700; padding: 0.2rem 0.4rem; border: 1px solid #374151; border-radius: 6px; white-space: nowrap; cursor: default; }
 .books-header-right :is(.minor-coins-display, .shop-btn, .diamonds-display, .rubies-display) { font-family: inherit; font-size: 0.75rem; font-weight: 700; line-height: 1.2; letter-spacing: 0.03em; padding: 0.2rem 0.45rem; }
@@ -139,7 +139,7 @@
 
 .exchange-shop-balance { display: inline-flex; align-items: center; gap: 0.25rem; }
 .exchange-shop-balance .shop-modal-balance { white-space: nowrap; }
-.exchange-shop-diamonds { color: #67e8f9; background: #102a33; border-color: #155e75; }
+.exchange-shop-diamonds { color: #fda4af; background: #351922; border-color: #9f1239; }
 #exchange-shop-modal { width: 520px; max-width: min(92vw, 520px); }
 .exchange-shop-body { padding: 0.65rem 0.85rem 0.5rem; overflow-y: auto; font-size: 0.85rem; }
 .exchange-shop-body .secondary-btn, .exchange-shop-body .shop-buy-btn {
@@ -465,11 +465,11 @@
 }
 
 /* Rubies share the compact currency/shop layout, with their own red accent. */
-.rubies-display, .exchange-shop-rubies { color: #fda4af; background: #351922; border-color: #9f1239; }
-.rubies-display:hover { background: #4c1d2e; border-color: #fb7185; }
+.rubies-display, .exchange-shop-rubies { color: #67e8f9; background: #102a33; border-color: #155e75; }
+.rubies-display:hover { background: #16404c; border-color: #22d3ee; }
 #exchange-shop-modal[data-currency="ruby"] .exchange-shop-stock-value { color: #fda4af; }
-#exchange-shop-modal[data-currency="ruby"] .exchange-shop-amount-row .cs-val-num:focus { outline-color: #fb7185; border-color: #fb7185; }
-.reward-float--rubies, .app-reward-float.app-reward-float--rubies { color: #fda4af; border-color: #be123c; background: #351922; }
+#exchange-shop-modal[data-currency="ruby"] .exchange-shop-amount-row .cs-val-num:focus { outline-color: #22d3ee; border-color: #22d3ee; }
+.reward-float--rubies, .app-reward-float.app-reward-float--rubies { color: #67e8f9; border-color: #0891b2; background: #102a33; }
 
 .black-market-tabs { display: flex; gap: 0.35rem; padding: 0.55rem 0.85rem 0; }
 .black-market-tabs button {
@@ -477,7 +477,7 @@
   border: 1px solid #374151; border-radius: 5px;
   background: #1f2937; color: #9ca3af; font: inherit; font-size: 0.78rem; line-height: 1; cursor: pointer;
 }
-.black-market-tabs button[aria-selected="true"] { color: #67e8f9; border-color: #22d3ee; background: #102a33; }
-.black-market-tabs #exchange-shop-ruby-tab[aria-selected="true"] { color: #fda4af; border-color: #fb7185; background: #351922; }
+.black-market-tabs button[aria-selected="true"] { color: #fda4af; border-color: #fb7185; background: #351922; }
+.black-market-tabs #exchange-shop-ruby-tab[aria-selected="true"] { color: #67e8f9; border-color: #22d3ee; background: #102a33; }
 .black-market-tabs button:disabled { cursor: default; opacity: 0.5; }
 .black-market-tabs button:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }

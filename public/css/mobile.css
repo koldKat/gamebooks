@@ -393,7 +393,7 @@ body.sidebar-collapsed #reward-float-layer {
   animation: reward-float-rise 4.6s ease-out forwards;
 }
 
-.reward-float--xp, .reward-float--diamonds, .app-reward-float.app-reward-float--diamonds {
+.reward-float--xp {
   border-color: rgba(103, 232, 249, 0.55);
   background: rgba(8, 47, 73, 0.94);
   color: #67e8f9;
@@ -511,3 +511,6 @@ body.sidebar-collapsed #reward-float-layer {
   height: 0.95rem;
   flex-shrink: 0;
 }
+
+/* Legacy diamond wallet is displayed as rubies after the currency rebrand. */
+.reward-float--diamonds, .app-reward-float.app-reward-float--diamonds { color: #fda4af; border-color: #be123c; background: #351922; }

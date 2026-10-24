@@ -51,7 +51,7 @@ try {
     get(other+'-tab').click();check(calls.length===count,'tab switch reuses loaded wallet');
     check(get(other+'-tab').getAttribute('aria-selected')==='true','tab switched');
     get(other+'-tab').dispatchEvent(new KeyboardEvent('keydown',{key:'Home',bubbles:true}));
-    check(get('ruby-tab').getAttribute('aria-selected')==='true','keyboard tab selection');
+    check(get('diamond-tab').getAttribute('aria-selected')==='true','keyboard tab selection');
     get('sell-form').requestSubmit();check(confirmations.length>0,'separate confirmation');
     check(!calls.some(c=>c.options),'confirmation sends no trade');
     get('ruby-tab').click();check(confirmations.at(-1).closed,'tab switch cancels confirmation');

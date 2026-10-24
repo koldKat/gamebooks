@@ -1328,12 +1328,14 @@ const _shopItemDefaults = {
   gc_chance:    { cost: 0, col: 'bonus_gc_chance_purchased',  delta: 1, stepCost: null },
   gc_mint:      { cost: 0, col: 'bonus_gc_mint_purchased',    delta: 1, stepCost: null },
   diamond_dig:  { cost: 0, col: 'bonus_diamond_dig_purchased', delta: 1, stepCost: null },
-  diamond_exchange: { cost: 0, col: 'bonus_diamond_exchange_purchased', delta: 1, stepCost: null },
 };
 db.transaction(() => {
   const ins = db.prepare('INSERT OR IGNORE INTO shop_items (id, cost, step_cost, col, delta) VALUES (?, ?, ?, ?, ?)');
   for (const [id, d] of Object.entries(_shopItemDefaults)) ins.run(id, d.cost, d.stepCost, d.col, d.delta);
 })();
+
+// Retired upgrade must also reject stale clients and old admin forms.
+db.prepare("DELETE FROM shop_items WHERE id='diamond_exchange'").run();
 
 function _loadShopItemsCache() {
   return new Map(db.prepare('SELECT id, cost, step_cost, col, delta FROM shop_items').all()
