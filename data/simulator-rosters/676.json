@@ -1,0 +1,1092 @@
+{
+  "schemaVersion": 1,
+  "bookId": 676,
+  "family": "fabled-lands",
+  "source": "Original Over the Blood-Dark Sea encounter profiles and conditions. Every legacy enemy row matched exactly; encounter order, entry damage, wounds, escape and surrender destinations retained.",
+  "enemies": [
+    {
+      "key": "7:0:0",
+      "name": "Assassin (7)",
+      "attack": 8,
+      "defense": 10,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Assassin (7)",
+        "attack": 8,
+        "defense": 10,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 7,
+          "win": 78,
+          "loss": 123,
+          "enemies": [
+            {
+              "name": "Assassin",
+              "combat": 8,
+              "defence": 10,
+              "stamina": 8
+            }
+          ]
+        },
+        "part": {
+          "name": "Assassin",
+          "combat": 8,
+          "defence": 10,
+          "stamina": 8
+        }
+      }
+    },
+    {
+      "key": "73:0:1",
+      "name": "First Mutineer (73)",
+      "attack": 6,
+      "defense": 9,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "First Mutineer (73)",
+        "attack": 6,
+        "defense": 9,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "section": 73,
+          "win": 16,
+          "loss": 123,
+          "enemies": [
+            {
+              "name": "First Mutineer",
+              "combat": 6,
+              "defence": 9,
+              "stamina": 9
+            },
+            {
+              "name": "Second Mutineer",
+              "combat": 5,
+              "defence": 7,
+              "stamina": 5
+            },
+            {
+              "name": "Third Mutineer",
+              "combat": 5,
+              "defence": 7,
+              "stamina": 6
+            }
+          ],
+          "flee": {
+            "destination": 44,
+            "dice": 2
+          }
+        },
+        "part": {
+          "name": "First Mutineer",
+          "combat": 6,
+          "defence": 9,
+          "stamina": 9
+        }
+      }
+    },
+    {
+      "key": "73:1:1",
+      "name": "Second Mutineer (73)",
+      "attack": 5,
+      "defense": 7,
+      "hp": 5,
+      "pb": null,
+      "adopt": {
+        "name": "Second Mutineer (73)",
+        "attack": 5,
+        "defense": 7,
+        "hp": 5,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 1,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "section": 73,
+          "win": 16,
+          "loss": 123,
+          "enemies": [
+            {
+              "name": "First Mutineer",
+              "combat": 6,
+              "defence": 9,
+              "stamina": 9
+            },
+            {
+              "name": "Second Mutineer",
+              "combat": 5,
+              "defence": 7,
+              "stamina": 5
+            },
+            {
+              "name": "Third Mutineer",
+              "combat": 5,
+              "defence": 7,
+              "stamina": 6
+            }
+          ],
+          "flee": {
+            "destination": 44,
+            "dice": 2
+          }
+        },
+        "part": {
+          "name": "Second Mutineer",
+          "combat": 5,
+          "defence": 7,
+          "stamina": 5
+        }
+      }
+    },
+    {
+      "key": "73:2:1",
+      "name": "Third Mutineer (73)",
+      "attack": 5,
+      "defense": 7,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Third Mutineer (73)",
+        "attack": 5,
+        "defense": 7,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 1,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "section": 73,
+          "win": 16,
+          "loss": 123,
+          "enemies": [
+            {
+              "name": "First Mutineer",
+              "combat": 6,
+              "defence": 9,
+              "stamina": 9
+            },
+            {
+              "name": "Second Mutineer",
+              "combat": 5,
+              "defence": 7,
+              "stamina": 5
+            },
+            {
+              "name": "Third Mutineer",
+              "combat": 5,
+              "defence": 7,
+              "stamina": 6
+            }
+          ],
+          "flee": {
+            "destination": 44,
+            "dice": 2
+          }
+        },
+        "part": {
+          "name": "Third Mutineer",
+          "combat": 5,
+          "defence": 7,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "85:0:2",
+      "name": "Vampire (85)",
+      "attack": 15,
+      "defense": 18,
+      "hp": 18,
+      "pb": null,
+      "adopt": {
+        "name": "Vampire (85)",
+        "attack": 15,
+        "defense": 18,
+        "hp": 18,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 85,
+          "win": 195,
+          "loss": 123,
+          "enemies": [
+            {
+              "name": "Vampire",
+              "combat": 15,
+              "defence": 18,
+              "stamina": 18
+            }
+          ],
+          "flee": {
+            "destination": 41,
+            "dice": 1
+          }
+        },
+        "part": {
+          "name": "Vampire",
+          "combat": 15,
+          "defence": 18,
+          "stamina": 18
+        }
+      }
+    },
+    {
+      "key": "211:0:3",
+      "name": "Serpent (211)",
+      "attack": 7,
+      "defense": 8,
+      "hp": 10,
+      "pb": null,
+      "adopt": {
+        "name": "Serpent (211)",
+        "attack": 7,
+        "defense": 8,
+        "hp": 10,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 211,
+          "win": 12,
+          "loss": 123,
+          "enemies": [
+            {
+              "name": "Serpent",
+              "combat": 7,
+              "defence": 8,
+              "stamina": 10
+            }
+          ],
+          "flee": {
+            "destination": 125,
+            "dice": 0
+          }
+        },
+        "part": {
+          "name": "Serpent",
+          "combat": 7,
+          "defence": 8,
+          "stamina": 10
+        }
+      }
+    },
+    {
+      "key": "326:0:4",
+      "name": "Violet Man (326)",
+      "attack": 9,
+      "defense": 12,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Violet Man (326)",
+        "attack": 9,
+        "defense": 12,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 326,
+          "win": 339,
+          "loss": 123,
+          "enemies": [
+            {
+              "name": "Violet Man",
+              "combat": 9,
+              "defence": 12,
+              "stamina": 9
+            }
+          ],
+          "entryDamage": 3,
+          "woundEffect": "calcium",
+          "flee": {
+            "destination": 308,
+            "dice": 1
+          }
+        },
+        "part": {
+          "name": "Violet Man",
+          "combat": 9,
+          "defence": 12,
+          "stamina": 9
+        }
+      }
+    },
+    {
+      "key": "356:0:5",
+      "name": "Gorgon (356)",
+      "attack": 4,
+      "defense": 5,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Gorgon (356)",
+        "attack": 4,
+        "defense": 5,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 356,
+          "win": 393,
+          "loss": 123,
+          "enemies": [
+            {
+              "name": "Gorgon",
+              "combat": 4,
+              "defence": 5,
+              "stamina": 8
+            }
+          ]
+        },
+        "part": {
+          "name": "Gorgon",
+          "combat": 4,
+          "defence": 5,
+          "stamina": 8
+        }
+      }
+    },
+    {
+      "key": "441:0:6",
+      "name": "Resentful Sailor (441)",
+      "attack": 5,
+      "defense": 6,
+      "hp": 3,
+      "pb": null,
+      "adopt": {
+        "name": "Resentful Sailor (441)",
+        "attack": 5,
+        "defense": 6,
+        "hp": 3,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 6,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 441,
+          "win": 262,
+          "loss": 123,
+          "enemies": [
+            {
+              "name": "Resentful Sailor",
+              "combat": 5,
+              "defence": 6,
+              "stamina": 3
+            }
+          ],
+          "playerFirst": false,
+          "unarmoured": true,
+          "woundEffect": "unarmed"
+        },
+        "part": {
+          "name": "Resentful Sailor",
+          "combat": 5,
+          "defence": 6,
+          "stamina": 3
+        }
+      }
+    },
+    {
+      "key": "500:0:7",
+      "name": "Head (500)",
+      "attack": 7,
+      "defense": 14,
+      "hp": 5,
+      "pb": null,
+      "adopt": {
+        "name": "Head (500)",
+        "attack": 7,
+        "defense": 14,
+        "hp": 5,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 7,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 500,
+          "win": 482,
+          "loss": 123,
+          "enemies": [
+            {
+              "name": "Head",
+              "combat": 7,
+              "defence": 14,
+              "stamina": 5
+            }
+          ]
+        },
+        "part": {
+          "name": "Head",
+          "combat": 7,
+          "defence": 14,
+          "stamina": 5
+        }
+      }
+    },
+    {
+      "key": "501:0:8",
+      "name": "Flying shark (501)",
+      "attack": 9,
+      "defense": 10,
+      "hp": 27,
+      "pb": null,
+      "adopt": {
+        "name": "Flying shark (501)",
+        "attack": 9,
+        "defense": 10,
+        "hp": 27,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 8,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 501,
+          "win": 320,
+          "loss": 123,
+          "enemies": [
+            {
+              "name": "Flying shark",
+              "combat": 9,
+              "defence": 10,
+              "stamina": 27
+            }
+          ]
+        },
+        "part": {
+          "name": "Flying shark",
+          "combat": 9,
+          "defence": 10,
+          "stamina": 27
+        }
+      }
+    },
+    {
+      "key": "579:0:9",
+      "name": "Man (579)",
+      "attack": 4,
+      "defense": 5,
+      "hp": 5,
+      "pb": null,
+      "adopt": {
+        "name": "Man (579)",
+        "attack": 4,
+        "defense": 5,
+        "hp": 5,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 9,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 579,
+          "win": 615,
+          "loss": 123,
+          "enemies": [
+            {
+              "name": "Man",
+              "combat": 4,
+              "defence": 5,
+              "stamina": 5
+            }
+          ],
+          "flee": {
+            "destination": 25,
+            "dice": 0
+          }
+        },
+        "part": {
+          "name": "Man",
+          "combat": 4,
+          "defence": 5,
+          "stamina": 5
+        }
+      }
+    },
+    {
+      "key": "587:0:10",
+      "name": "First Fury (587)",
+      "attack": 12,
+      "defense": 25,
+      "hp": 19,
+      "pb": null,
+      "adopt": {
+        "name": "First Fury (587)",
+        "attack": 12,
+        "defense": 25,
+        "hp": 19,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 10,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "section": 587,
+          "win": 321,
+          "loss": 123,
+          "enemies": [
+            {
+              "name": "First Fury",
+              "combat": 12,
+              "defence": 25,
+              "stamina": 19
+            },
+            {
+              "name": "Second Fury",
+              "combat": 12,
+              "defence": 25,
+              "stamina": 19
+            },
+            {
+              "name": "Third Fury",
+              "combat": 12,
+              "defence": 25,
+              "stamina": 19
+            }
+          ]
+        },
+        "part": {
+          "name": "First Fury",
+          "combat": 12,
+          "defence": 25,
+          "stamina": 19
+        }
+      }
+    },
+    {
+      "key": "587:1:10",
+      "name": "Second Fury (587)",
+      "attack": 12,
+      "defense": 25,
+      "hp": 19,
+      "pb": null,
+      "adopt": {
+        "name": "Second Fury (587)",
+        "attack": 12,
+        "defense": 25,
+        "hp": 19,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 10,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "section": 587,
+          "win": 321,
+          "loss": 123,
+          "enemies": [
+            {
+              "name": "First Fury",
+              "combat": 12,
+              "defence": 25,
+              "stamina": 19
+            },
+            {
+              "name": "Second Fury",
+              "combat": 12,
+              "defence": 25,
+              "stamina": 19
+            },
+            {
+              "name": "Third Fury",
+              "combat": 12,
+              "defence": 25,
+              "stamina": 19
+            }
+          ]
+        },
+        "part": {
+          "name": "Second Fury",
+          "combat": 12,
+          "defence": 25,
+          "stamina": 19
+        }
+      }
+    },
+    {
+      "key": "587:2:10",
+      "name": "Third Fury (587)",
+      "attack": 12,
+      "defense": 25,
+      "hp": 19,
+      "pb": null,
+      "adopt": {
+        "name": "Third Fury (587)",
+        "attack": 12,
+        "defense": 25,
+        "hp": 19,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 10,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "section": 587,
+          "win": 321,
+          "loss": 123,
+          "enemies": [
+            {
+              "name": "First Fury",
+              "combat": 12,
+              "defence": 25,
+              "stamina": 19
+            },
+            {
+              "name": "Second Fury",
+              "combat": 12,
+              "defence": 25,
+              "stamina": 19
+            },
+            {
+              "name": "Third Fury",
+              "combat": 12,
+              "defence": 25,
+              "stamina": 19
+            }
+          ]
+        },
+        "part": {
+          "name": "Third Fury",
+          "combat": 12,
+          "defence": 25,
+          "stamina": 19
+        }
+      }
+    },
+    {
+      "key": "662:0:11",
+      "name": "Ghost (662)",
+      "attack": 8,
+      "defense": 17,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Ghost (662)",
+        "attack": 8,
+        "defense": 17,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 11,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 662,
+          "win": 626,
+          "loss": 123,
+          "enemies": [
+            {
+              "name": "Ghost",
+              "combat": 8,
+              "defence": 17,
+              "stamina": 7
+            }
+          ],
+          "flee": {
+            "destination": 407,
+            "dice": 1
+          }
+        },
+        "part": {
+          "name": "Ghost",
+          "combat": 8,
+          "defence": 17,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "675:0:12",
+      "name": "First Scholar (675)",
+      "attack": 3,
+      "defense": 4,
+      "hp": 3,
+      "pb": null,
+      "adopt": {
+        "name": "First Scholar (675)",
+        "attack": 3,
+        "defense": 4,
+        "hp": 3,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 12,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "section": 675,
+          "win": 571,
+          "loss": 123,
+          "enemies": [
+            {
+              "name": "First Scholar",
+              "combat": 3,
+              "defence": 4,
+              "stamina": 3
+            },
+            {
+              "name": "Second Scholar",
+              "combat": 4,
+              "defence": 5,
+              "stamina": 4
+            },
+            {
+              "name": "Third Scholar",
+              "combat": 3,
+              "defence": 4,
+              "stamina": 4
+            }
+          ],
+          "surrender": 640
+        },
+        "part": {
+          "name": "First Scholar",
+          "combat": 3,
+          "defence": 4,
+          "stamina": 3
+        }
+      }
+    },
+    {
+      "key": "675:1:12",
+      "name": "Second Scholar (675)",
+      "attack": 4,
+      "defense": 5,
+      "hp": 4,
+      "pb": null,
+      "adopt": {
+        "name": "Second Scholar (675)",
+        "attack": 4,
+        "defense": 5,
+        "hp": 4,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 12,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "section": 675,
+          "win": 571,
+          "loss": 123,
+          "enemies": [
+            {
+              "name": "First Scholar",
+              "combat": 3,
+              "defence": 4,
+              "stamina": 3
+            },
+            {
+              "name": "Second Scholar",
+              "combat": 4,
+              "defence": 5,
+              "stamina": 4
+            },
+            {
+              "name": "Third Scholar",
+              "combat": 3,
+              "defence": 4,
+              "stamina": 4
+            }
+          ],
+          "surrender": 640
+        },
+        "part": {
+          "name": "Second Scholar",
+          "combat": 4,
+          "defence": 5,
+          "stamina": 4
+        }
+      }
+    },
+    {
+      "key": "675:2:12",
+      "name": "Third Scholar (675)",
+      "attack": 3,
+      "defense": 4,
+      "hp": 4,
+      "pb": null,
+      "adopt": {
+        "name": "Third Scholar (675)",
+        "attack": 3,
+        "defense": 4,
+        "hp": 4,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 12,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "section": 675,
+          "win": 571,
+          "loss": 123,
+          "enemies": [
+            {
+              "name": "First Scholar",
+              "combat": 3,
+              "defence": 4,
+              "stamina": 3
+            },
+            {
+              "name": "Second Scholar",
+              "combat": 4,
+              "defence": 5,
+              "stamina": 4
+            },
+            {
+              "name": "Third Scholar",
+              "combat": 3,
+              "defence": 4,
+              "stamina": 4
+            }
+          ],
+          "surrender": 640
+        },
+        "part": {
+          "name": "Third Scholar",
+          "combat": 3,
+          "defence": 4,
+          "stamina": 4
+        }
+      }
+    },
+    {
+      "key": "685:0:13",
+      "name": "First Gorgon (685)",
+      "attack": 4,
+      "defense": 5,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "First Gorgon (685)",
+        "attack": 4,
+        "defense": 5,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 13,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": 685,
+          "win": 393,
+          "loss": 123,
+          "enemies": [
+            {
+              "name": "First Gorgon",
+              "combat": 4,
+              "defence": 5,
+              "stamina": 8
+            },
+            {
+              "name": "Second Gorgon",
+              "combat": 5,
+              "defence": 6,
+              "stamina": 11
+            }
+          ]
+        },
+        "part": {
+          "name": "First Gorgon",
+          "combat": 4,
+          "defence": 5,
+          "stamina": 8
+        }
+      }
+    },
+    {
+      "key": "685:1:13",
+      "name": "Second Gorgon (685)",
+      "attack": 5,
+      "defense": 6,
+      "hp": 11,
+      "pb": null,
+      "adopt": {
+        "name": "Second Gorgon (685)",
+        "attack": 5,
+        "defense": 6,
+        "hp": 11,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 13,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": 685,
+          "win": 393,
+          "loss": 123,
+          "enemies": [
+            {
+              "name": "First Gorgon",
+              "combat": 4,
+              "defence": 5,
+              "stamina": 8
+            },
+            {
+              "name": "Second Gorgon",
+              "combat": 5,
+              "defence": 6,
+              "stamina": 11
+            }
+          ]
+        },
+        "part": {
+          "name": "Second Gorgon",
+          "combat": 5,
+          "defence": 6,
+          "stamina": 11
+        }
+      }
+    },
+    {
+      "key": "686:0:14",
+      "name": "Trau Miner (686)",
+      "attack": 8,
+      "defense": 10,
+      "hp": 10,
+      "pb": null,
+      "adopt": {
+        "name": "Trau Miner (686)",
+        "attack": 8,
+        "defense": 10,
+        "hp": 10,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 14,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 686,
+          "win": 376,
+          "loss": 123,
+          "enemies": [
+            {
+              "name": "Trau Miner",
+              "combat": 8,
+              "defence": 10,
+              "stamina": 10
+            }
+          ]
+        },
+        "part": {
+          "name": "Trau Miner",
+          "combat": 8,
+          "defence": 10,
+          "stamina": 10
+        }
+      }
+    }
+  ]
+}

@@ -1,3 +1,5 @@
+import { createRosterLoader } from '../../roster-data.js';
+
 export const BLOOD_DARK_PROFESSIONS = Object.freeze({
   priest: [5, 3, 4, 7, 5, 2], mage: [3, 3, 7, 1, 6, 4], rogue: [6, 5, 5, 2, 3, 7],
   warrior: [4, 7, 2, 5, 4, 3], troubadour: [7, 4, 5, 4, 3, 5], wayfarer: [3, 6, 3, 4, 7, 5],
@@ -6,30 +8,8 @@ export const BLOOD_DARK_PROFESSIONS = Object.freeze({
 export const BLOOD_DARK_DEFAULTS = Object.freeze({ rank: 3, stamina: 16, shards: 40, armour: 3,
   professions: BLOOD_DARK_PROFESSIONS, abilityCurse: false });
 
-const encounter = (section, win, rows, extra = {}) => ({ section, win, loss: 123,
-  enemies: rows.map(([name, combat, defence, stamina]) => ({ name, combat, defence, stamina })), ...extra });
-
-export const BLOOD_DARK_FIGHTS = Object.freeze([
-  encounter(7, 78, [['Assassin', 8, 10, 8]]),
-  encounter(73, 16, [['First Mutineer', 6, 9, 9], ['Second Mutineer', 5, 7, 5],
-    ['Third Mutineer', 5, 7, 6]], { flee: { destination: 44, dice: 2 } }),
-  encounter(85, 195, [['Vampire', 15, 18, 18]], { flee: { destination: 41, dice: 1 } }),
-  encounter(211, 12, [['Serpent', 7, 8, 10]], { flee: { destination: 125, dice: 0 } }),
-  encounter(326, 339, [['Violet Man', 9, 12, 9]], { entryDamage: 3, woundEffect: 'calcium',
-    flee: { destination: 308, dice: 1 } }),
-  encounter(356, 393, [['Gorgon', 4, 5, 8]]),
-  encounter(441, 262, [['Resentful Sailor', 5, 6, 3]], { playerFirst: false, unarmoured: true,
-    woundEffect: 'unarmed' }),
-  encounter(500, 482, [['Head', 7, 14, 5]]),
-  encounter(501, 320, [['Flying shark', 9, 10, 27]]),
-  encounter(579, 615, [['Man', 4, 5, 5]], { flee: { destination: 25, dice: 0 } }),
-  encounter(587, 321, [['First Fury', 12, 25, 19], ['Second Fury', 12, 25, 19], ['Third Fury', 12, 25, 19]]),
-  encounter(662, 626, [['Ghost', 8, 17, 7]], { flee: { destination: 407, dice: 1 } }),
-  encounter(675, 571, [['First Scholar', 3, 4, 3], ['Second Scholar', 4, 5, 4], ['Third Scholar', 3, 4, 4]],
-    { surrender: 640 }),
-  encounter(685, 393, [['First Gorgon', 4, 5, 8], ['Second Gorgon', 5, 6, 11]]),
-  encounter(686, 376, [['Trau Miner', 8, 10, 10]]),
-]);
+export let BLOOD_DARK_FIGHTS = [];
+export const loadRoster = createRosterLoader(676, 'FIGHTS', rows => { BLOOD_DARK_FIGHTS = rows; });
 import { fabledDie, fabledInteger, validateFabledCharacter } from './character.js';
 
 const storm = (destinations, blessingDestination, bounds = [4, 6]) => ({ kind: 'storm', destinations, blessingDestination, bounds });

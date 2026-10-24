@@ -65,7 +65,7 @@ async function _loadBattleSim(id) {
 
   // Concurrent requests must share initialization, not just the module import.
   const pending = (async () => {
-    if ([412, 521, 522, 523, 524, 527, 528, 529, 530, 531, 532, 533, 534, 535, 536, 537, 539, 548, 550, 555, 557, 570, 636, 644, 648, 654, 658, 663, 665, 671, 672, 674, 675, 807, 808, 860, 869, 877, 881, 882].includes(numericId)) {
+    if ([412, 521, 522, 523, 524, 527, 528, 529, 530, 531, 532, 533, 534, 535, 536, 537, 539, 548, 550, 555, 557, 570, 636, 644, 648, 654, 658, 663, 665, 671, 672, 674, 675, 676, 807, 808, 860, 869, 877, 881, 882].includes(numericId)) {
       const { prepareRosterData } = await import('./roster-data.js');
       await prepareRosterData(numericId);
     }
