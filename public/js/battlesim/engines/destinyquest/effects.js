@@ -1,5 +1,5 @@
 // Serializable, round-scoped effects shared by combat and ability actions.
-export const hasDestinyAbility = (fight, name) => (fight.abilities?.[name] || 0) > 0;
+export const hasDestinyAbility = (fight, name) => !fight.encounter?.disableHeroAbilities && (fight.abilities?.[name] || 0) > 0;
 
 export function destinyStat(fight, target, attribute) {
   const actor = target === 'hero' ? fight.hero : fight.opponents[target];
@@ -8,6 +8,8 @@ export function destinyStat(fight, target, attribute) {
   for (const effect of fight.effects) {
     if (effect.kind !== 'stat' || effect.target !== target || effect.attribute !== attribute ||
         fight.round < effect.from || fight.round > effect.until) continue;
+    if (attribute === 'armour' && fight.encounter?.armourReductionImmune?.includes(target) &&
+        effect.source !== 'encounter-health' && (effect.amount < 0 || effect.set !== undefined && effect.set < value)) continue;
     if (target === 'hero' && attribute === 'armour' && hasDestinyAbility(fight, 'ice-mantle') &&
         (effect.amount < 0 || effect.set !== undefined && effect.set < value)) continue;
     if (effect.set !== undefined) value = effect.set;
@@ -38,6 +40,12 @@ export function healDestinyHero(fight, amount) {
 
 export function observeDestinyHealth(fight) {
   if (fight.hero.health < 10 && fight.character?.penalties.includes('chronic-convulsions')) fight.chronicTriggered = true;
+  for (const rule of fight.encounter?.healthThresholdStats || []) {
+    const opponent = fight.opponents[rule.target];
+    if (rule.triggered || !opponent || opponent.health > rule.health) continue;
+    rule.triggered = true;
+    for (const [attribute, amount] of Object.entries(rule.changes)) addDestinyStatEffect(fight, rule.target, attribute, amount, null, 'encounter-health');
+  }
 }
 
 export function destinyDamageScore(fight) {
@@ -56,12 +64,13 @@ export function destinyDamageScore(fight) {
     effect.from <= fight.round && effect.until >= fight.round).reduce((total, effect) => total + effect.amount, 0);
   const encounter = hero ? 0 : -(fight.encounter?.scoreReductionByTarget?.[fight.target] || 0) +
     (fight.encounter?.mirrorBonusTarget === fight.target ? fight.opponents.filter((opponent, index) => index !== fight.target && opponent.health > 0).length : 0);
-  return dice + power + bonus + (fight.turn.damageScoreBonus || 0) + encounter;
+  return dice + power + bonus + (fight.turn.damageScoreBonus || 0) + encounter + (hero ? fight.encounter?.heroScoreBonus || 0 : 0);
 }
 
 export function destinyOnHeroHit(fight, target, damage, kind = 'score') {
   if (damage <= 0 || !['score', 'dice', 'first-strike'].includes(kind)) return;
   for (const [ability, amount, delay] of [['bleed', 1, 0], ['disease', 2, 1], ['venom', 2, 0]]) {
+    if (fight.encounter?.passiveImmunityByTarget?.[target]?.includes(ability)) continue;
     if (!hasDestinyAbility(fight, ability) || fight.effects.some(effect => effect.kind === ability && effect.target === target)) continue;
     fight.effects.push({ kind: ability, target, amount, from: fight.round + delay, until: Number.MAX_SAFE_INTEGER });
   }
@@ -75,6 +84,7 @@ export function destinyStrike(fight, target, amount, source, kind = 'dice') {
   if (!opponent || opponent.health <= 0) throw new RangeError('Choose a living opponent');
   const lost = Math.min(opponent.health, amount);
   opponent.health -= lost;
+  observeDestinyHealth(fight);
   destinyOnHeroHit(fight, target, lost, kind);
   fight.turn.lastHeroDamage ??= {};
   fight.turn.lastHeroDamage[target] = (fight.turn.lastHeroDamage[target] || 0) + lost;
@@ -157,6 +167,7 @@ export function destinyPassiveEffects(fight, roll) {
     const count = fight.opponents.filter(opponent => opponent.health > 0).length;
     if (count > 1) result.push({ target: 'hero', amount: count, ignoreArmour: true, source: 'outnumbered' });
   }
+  for (const [name, amount] of Object.entries(fight.encounter?.heroStatuses || {})) result.push({ target: 'hero', amount, ignoreArmour: true, source: name });
   for (const effect of fight.encounter?.endEffects || []) {
     if (effect.requiresAlive?.some(target => fight.opponents[target]?.health <= 0)) continue;
     result.push({ ...effect, ignoreArmour: true, source: 'encounter' });
@@ -164,7 +175,7 @@ export function destinyPassiveEffects(fight, roll) {
   for (const name of ['barbs', 'decay', 'thorns']) {
     if (!hasDestinyAbility(fight, name)) continue;
     fight.opponents.forEach((opponent, target) => {
-      if (opponent.health > 0) result.push({ target, amount: 1, ignoreArmour: true, source: name });
+      if (opponent.health > 0 && !fight.encounter?.passiveImmunityByTarget?.[target]?.includes(name)) result.push({ target, amount: 1, ignoreArmour: true, source: name });
     });
   }
   if (fight.crystalArmour) fight.opponents.forEach((opponent, target) => {
@@ -174,6 +185,7 @@ export function destinyPassiveEffects(fight, roll) {
     if (opponent.health > 0) result.push({ target, amount: 1, ignoreArmour: true, source: 'power-totem' });
   });
   for (const effect of fight.effects) {
+    if (fight.encounter?.passiveImmunityByTarget?.[effect.target]?.includes(effect.status || effect.kind)) continue;
     if (!['bleed', 'disease', 'venom', 'ongoing-damage', 'delayed-dice'].includes(effect.kind) ||
         fight.round < effect.from || fight.round > effect.until || fight.opponents[effect.target]?.health <= 0) continue;
     let amount = effect.amount;

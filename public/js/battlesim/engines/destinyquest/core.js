@@ -1,8 +1,9 @@
 // Shared DestinyQuest combat sequence. Book abilities and encounter exceptions
 // are applied between these explicit stages, rather than hidden inside a roll.
 import { destinyStat, destinyDamageScore, destinyOnHeroHit, destinyPassiveEffects,
-  destinyPassiveProtection, hasDestinyAbility, healDestinyHero, recordDestinyDefeat, destinyStrike, observeDestinyHealth, destinyRollOpponentDice } from './effects.js';
+  destinyPassiveProtection, hasDestinyAbility, healDestinyHero, recordDestinyDefeat, destinyStrike, observeDestinyHealth, destinyRollOpponentDice, addDestinyStatEffect } from './effects.js';
 import { applyDestinyRoundEvents } from './round-events.js';
+import { queueDestinyEncounterEvent, prepareDestinyEndEvents } from './encounter-events.js';
 const attributes = ['speed', 'brawn', 'magic', 'armour'];
 const clone = value => structuredClone(value);
 
@@ -55,8 +56,9 @@ function stage(fight, expected) {
 
 export function settleDestinyFight(fight) {
   observeDestinyHealth(fight);
-  if (fight.hero.health <= 0) fight.status = 'loss';
-  else if (fight.opponents.every((opponent, index) => opponent.health <= (fight.encounter?.fleeAtHealth?.[index] || 0))) fight.status = 'win';
+  if (fight.hero.health <= 0 || fight.encounter?.forcedLoss) fight.status = 'loss';
+  else if (fight.encounter?.forcedVictory || (fight.encounter?.victoryTargets || fight.opponents.map((_, index) => index))
+    .every(index => fight.opponents[index].health <= (fight.encounter?.fleeAtHealth?.[index] || 0))) fight.status = 'win';
   if (fight.status !== 'active') {
     fight.phase = 'finished';
     if (fight.status === 'win' && fight.restoreOnVictory) {
@@ -96,6 +98,11 @@ export function startDestinyRound(fight, target, roll = randomDie, options = {})
   };
   if (next.autoWinRound === next.round) next.turn.autoWin = true;
   applyDestinyRoundEvents(next, options, roll);
+  for (const event of next.encounter?.startTests || []) {
+    if (event.every && next.round % event.every !== 0) continue;
+    if (event.maxHealth !== undefined && next.opponents[event.target || 0].health > event.maxHealth) continue;
+    queueDestinyEncounterEvent(next, event, 'speed', roll);
+  }
   settleDestinyFight(next);
   return next;
 }
@@ -130,7 +137,7 @@ export function retargetDestinyRound(fight, target) {
   return next;
 }
 
-export function resolveDestinySpeed(fight) {
+export function resolveDestinySpeed(fight, roll = randomDie) {
   const next = stage(fight, ['speed-rolled']);
   const hero = sum(next.turn.heroSpeedDice) + destinyStat(next, 'hero', 'speed');
   const opponent = sum(next.turn.opponentSpeedDice) + destinyStat(next, next.target, 'speed');
@@ -139,6 +146,14 @@ export function resolveDestinySpeed(fight) {
   next.history.push({ type: 'speed', round: next.round, target: next.target,
     heroDice: [...next.turn.heroSpeedDice], opponentDice: [...next.turn.opponentSpeedDice],
     hero, opponent, winner: next.turn.winner });
+  if (next.encounter?.heroDamageWithoutSpeedAbility && !next.turn.playedSpeedAbility) {
+    const damage = Math.min(next.hero.health, next.encounter.heroDamageWithoutSpeedAbility);
+    next.hero.health -= damage;
+    next.history.push({ type: 'encounter-damage', name: 'Head rush', round: next.round, damage });
+    if (settleDestinyFight(next)) return next;
+  }
+  const event = next.turn.winner === 'hero' ? next.encounter?.heroWinTest : next.turn.winner === 'opponent' ? next.encounter?.enemyWinTest : null;
+  if (event) queueDestinyEncounterEvent(next, event, 'damage', roll);
   return next;
 }
 
@@ -199,6 +214,10 @@ export function resolveDestinyDamage(fight, roll = randomDie) {
   if (heroWon && healthLost) {
     next.turn.lastHeroDamage = { [next.target]: healthLost };
     if (next.turn.used.co) next.turn.combatAbilityDamage = true;
+    for (const change of next.encounter?.onHeroScoreHealthHit || []) {
+      addDestinyStatEffect(next, change.target, change.attribute, change.amount ?? 0, change.duration, 'encounter-hit', change.delay || 0);
+      if (change.set !== undefined) next.effects[next.effects.length - 1].set = change.set;
+    }
   }
   if (!settleDestinyFight(next)) {
     if (heroWon && defender.health === 0) {
@@ -209,6 +228,14 @@ export function resolveDestinyDamage(fight, roll = randomDie) {
     if (!heroWon && next.crystalArmour && !next.turn.avoidDamage) {
       next.turn.pendingAbility = { type: 'test', name: 'crystal-armour', dice: dice(roll, 1), returnPhase: next.phase };
       next.phase = 'ability-rolled';
+    }
+    if (!heroWon && healthLost) {
+      for (const change of next.encounter?.onEnemyScoreHealthHit || []) addDestinyStatEffect(next, change.target, change.attribute, change.amount, change.duration, 'encounter-hit', change.delay || 0);
+      if (next.encounter?.heroStatusOnHit) (next.encounter.heroStatuses ??= {})[next.encounter.heroStatusOnHit.name] = next.encounter.heroStatusOnHit.amount;
+      if (next.encounter?.blockCategoriesOnHit) next.encounter.blockedRounds = {
+        from: next.round + 1, until: next.round + 1, categories: [...next.encounter.blockCategoriesOnHit],
+      };
+      if (next.encounter?.healthDamageTest && !next.encounter.heroStatuses?.venom) queueDestinyEncounterEvent(next, next.encounter.healthDamageTest, 'end', roll);
     }
   }
   return next;
@@ -227,9 +254,10 @@ export function skipDestinyDeathMove(fight) {
 export function endDestinyRound(fight, effects = [], roll = randomDie) {
   const next = stage(fight, ['end']);
   if (!Array.isArray(effects)) throw new RangeError('Invalid end-of-round effects');
+  if (prepareDestinyEndEvents(next, roll)) return next;
   const alive = next.opponents.map(opponent => opponent.health > 0);
   const pending = new Map();
-  for (const effect of [...destinyPassiveEffects(next, roll), ...effects]) {
+  for (const effect of [...destinyPassiveEffects(next, roll), ...(next.turn.encounterEndEffects || []), ...effects]) {
     const target = effect?.target;
     if (target !== 'hero' && (!Number.isInteger(target) || target < 0 || !next.opponents[target])) {
       throw new RangeError('Invalid effect target');
@@ -262,7 +290,7 @@ export function endDestinyRound(fight, effects = [], roll = randomDie) {
   }
   const healing = next.effects.filter(effect => effect.kind === 'end-heal' &&
     effect.from <= next.round && effect.until >= next.round).reduce((total, effect) => total + effect.amount, 0);
-  if (healing) healDestinyHero(next, healing);
+  if (healing || next.turn.encounterEndHealing) healDestinyHero(next, healing + (next.turn.encounterEndHealing || 0));
   for (const effect of next.encounter?.regeneration || []) {
     const opponent = next.opponents[effect.target];
     if (opponent?.health > 0 && !effect.requiresAlive?.some(target => next.opponents[target]?.health <= 0)) {
@@ -273,6 +301,10 @@ export function endDestinyRound(fight, effects = [], roll = randomDie) {
     const opponent = next.opponents[effect.target];
     if (opponent?.health > 0 && opponent.armour < effect.maximum) opponent.armour = Math.min(effect.maximum, opponent.armour + effect.amount);
   }
+  for (const effect of next.encounter?.endStats || []) {
+    if (effect.round === next.round) for (const [attribute, amount] of Object.entries(effect.changes)) addDestinyStatEffect(next, effect.target, attribute, amount, null, 'encounter-end');
+  }
+  if (next.encounter?.lossAfterRound && next.round >= next.encounter.lossAfterRound && next.opponents.some(opponent => opponent.health > 0)) next.encounter.forcedLoss = true;
   if (!settleDestinyFight(next)) {
     if (next.turn.deaths.length > next.turn.deathMoveDeathsSeen && !next.turn.used.dm) {
       next.phase = 'death-move';

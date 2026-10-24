@@ -45,7 +45,7 @@ const definitions = {
   evade: rule('co', heroDamage, { enemyWon: true, avoidDamage: true }),
   sidestep: rule('co', heroDamage, { enemyWon: true, avoidDamage: true }),
   vanish: rule('co', heroDamage, { enemyWon: true, avoidDamage: true }),
-  command: rule('co', ['damage'], { enemyWon: true, reverse: true }),
+  command: rule('co', ['damage', 'ability-rolled'], { enemyWon: true, reverse: true, attackInterruption: true }),
   fear: rule('mo', anytime, { scoreEffect: -2, scoreHero: false }),
   freeze: rule('mo', anytime, { freeze: true }),
   'pain-sink': rule('pa', anytime, { freeze: true }),
@@ -55,8 +55,8 @@ const definitions = {
   'gut-ripper': rule('mo', ['damage-rolled', 'ability-rolled'], { heroWon: true, dieAction: 'critical', requiresDamageRoll: true }),
   dominate: rule('mo', ['damage-rolled', 'ability-rolled'], { heroWon: true, dieAction: 'dominate', requiresDamageRoll: true }),
   protection: rule('mo', ['damage-rolled'], { enemyWon: true, dieAction: 'protection' }),
-  watchful: rule('mo', ['speed-rolled', 'damage-rolled'], { dieAction: 'watchful' }),
-  'sixth-sense': rule('mo', ['speed-rolled', 'damage-rolled'], { dieAction: 'watchful' }),
+  watchful: rule('mo', ['speed-rolled', 'damage-rolled', 'ability-rolled'], { dieAction: 'watchful' }),
+  'sixth-sense': rule('mo', ['speed-rolled', 'damage-rolled', 'ability-rolled'], { dieAction: 'watchful' }),
   feint: rule('mo', ['speed-rolled'], { reroll: 'hero-speed' }),
   distraction: rule('mo', ['speed-rolled'], { reroll: 'hero-speed' }),
   'dogged-determination': rule('mo', ['speed-rolled'], { reroll: 'hero-speed' }),
@@ -105,7 +105,7 @@ const definitions = {
   overpower: rule('co', ['damage'], { enemyWon: true, replacement: true, hit: 'one', dice: 2, currentTarget: true }),
   deflect: rule('co', ['damage'], { enemyWon: true, replacement: true, hit: 'one', dice: 2, currentTarget: true }),
   slam: rule('co', ['damage'], { enemyWon: true, replacement: true, advanced: true }),
-  unstoppable: rule('mo', ['damage'], { enemyWon: true, reverse: true, sacrifice: 5 }),
+  unstoppable: rule('mo', ['damage', 'ability-rolled'], { enemyWon: true, reverse: true, sacrifice: 5, attackInterruption: true }),
   'roll-with-it': rule('mo', ['damage'], { heroWon: true, advanced: true }),
   'shoulder-charge': rule('co', ['damage'], { heroWon: true, advanced: true }),
   'twin-blade': rule('co', ['damage'], { heroWon: true, replacement: true, advanced: true }),
@@ -218,15 +218,19 @@ export function useDestinyAbility(fight, name, options = {}, roll = () => Math.f
     throw new RangeError('Ability unavailable at this combat stage');
   }
   if (fight.turn.used[spec.category]) throw new RangeError('Only one ability of this category per round');
+  if (spec.fewerOpponentDice && fight.encounter?.speedDiceReductionImmune?.includes(fight.target)) throw new RangeError('This opponent is immune to reducing speed dice');
+  const blocked = fight.encounter?.blockedRounds;
+  if (blocked && fight.round >= blocked.from && fight.round <= blocked.until && blocked.categories.includes(spec.category)) throw new RangeError('This ability type is blocked this round');
   if (fight.encounter?.blockAbilitiesWhileAlive?.some(rule => rule.categories.includes(spec.category) && fight.opponents[rule.target]?.health > 0)) throw new RangeError('Defeat the opponent blocking this ability type');
   if (spec.firstRound && fight.round !== 1) throw new RangeError('Ability requires the first combat round');
   if (spec.heroWon && fight.turn.winner !== 'hero' && !(fight.phase === 'ability-rolled' && fight.turn.pendingAbility.type === 'damage')) throw new RangeError('Win the round first');
   if (spec.enemyWon && fight.turn.winner !== 'opponent') throw new RangeError('Opponent must win the round');
+  if (spec.attackInterruption && fight.phase === 'ability-rolled' && !fight.turn.pendingAbility.event?.attackChoice) throw new RangeError('The attack choice has already resolved');
   if (spec.afterHit && (fight.turn.winner !== 'hero' || !fight.turn.healthDamage)) throw new RangeError('Cause health damage with a damage score first');
   if (spec.afterEnemyHit && (fight.turn.winner !== 'opponent' || !fight.turn.healthDamage)) throw new RangeError('Take health damage from the opponent first');
   if (fight.bearForm && spec.category === 'co') throw new RangeError('Combat abilities are unavailable in bear form');
   if (spec.requires && ![fight.equipment?.leftHand?.id, fight.equipment?.leftHand?.type].includes(spec.requires)) throw new RangeError('Required left-hand equipment is missing');
-  if (spec.requiresDamageRoll && fight.phase === 'ability-rolled' && fight.turn.pendingAbility.type !== 'damage') throw new RangeError('Requires damage dice');
+  if (spec.requiresDamageRoll && fight.phase === 'ability-rolled' && fight.turn.pendingAbility.type !== 'damage' && !fight.turn.pendingAbility.event?.damageDice) throw new RangeError('Requires damage dice');
   if (spec.priorBait && !(fight.takeBaitSucceededRound > 0 && fight.takeBaitSucceededRound < fight.round)) throw new RangeError('Grapple successfully in an earlier round first');
   if (spec.backpack && fight.turn.used.backpack) throw new RangeError('Only one backpack item per round');
   if (spec.abilityRoll && fight.phase === 'ability-rolled') throw new RangeError('Resolve the pending roll first');
@@ -247,6 +251,7 @@ export function useDestinyAbility(fight, name, options = {}, roll = () => Math.f
   }
   const next = structuredClone(fight);
   if (spec.category === 'sp') {
+    next.turn.playedSpeedAbility = true;
     if (next.turn.passedSpeedOptions) options = next.turn.passedSpeedOptions;
     delete next.turn.passedSpeedAbility;
     delete next.turn.passedSpeedOptions;
@@ -277,7 +282,10 @@ export function useDestinyAbility(fight, name, options = {}, roll = () => Math.f
   if (spec.ignoreArmour) next.turn.ignoreArmour = true;
   if (spec.halfArmour) next.turn.halfArmour = true;
   if (spec.avoidDamage) next.turn.avoidDamage = true;
-  if (spec.reverse) next.turn.winner = 'hero';
+  if (spec.reverse) {
+    next.turn.winner = 'hero';
+    if (next.phase === 'ability-rolled') { delete next.turn.pendingAbility; next.phase = 'damage'; }
+  }
   if (spec.freeze) next.effects.push({ kind: 'freeze', from: next.round, until: next.round + 1, source: name });
   const action = spec.dieAction;
   let pendingGroup;
@@ -286,6 +294,9 @@ export function useDestinyAbility(fight, name, options = {}, roll = () => Math.f
     dieIndex(next.turn.pendingAbility.groups, groupIndex);
     pendingGroup = next.turn.pendingAbility.groups[groupIndex];
   }
+  if (next.phase === 'ability-rolled' && next.turn.pendingAbility.event?.damageDice) {
+    pendingGroup = { dice: next.turn.pendingAbility.dice, bonuses: next.turn.pendingAbility.bonuses };
+  }
   if (action) {
     if (action === 'critical') {
       const values = pendingGroup?.dice || next.turn.damageDice;
@@ -293,6 +304,7 @@ export function useDestinyAbility(fight, name, options = {}, roll = () => Math.f
       values.forEach((_, index) => { if (pendingGroup || !destinyDieLocked(next, 'hero', 'damage', index)) values[index] = 6; });
     }
     else {
+      if (action === 'watchful' && next.phase === 'ability-rolled' && next.turn.pendingAbility.event?.owner !== 'opponent') throw new RangeError('Choose an opponent die');
       const heroSpeed = action === 'agility';
       const enemySpeed = action === 'sneak' || action === 'watchful' && next.phase === 'speed-rolled';
       const values = heroSpeed ? next.turn.heroSpeedDice : enemySpeed ? next.turn.opponentSpeedDice : pendingGroup?.dice || next.turn.damageDice;
@@ -324,6 +336,7 @@ export function useDestinyAbility(fight, name, options = {}, roll = () => Math.f
       }
     }
     if (mode === 'hero-die' || mode === 'damage-plus-two') {
+      if (mode === 'hero-die' && next.phase === 'ability-rolled' && next.turn.pendingAbility.event?.owner === 'opponent') throw new RangeError('Choose a hero die');
       if (mode === 'hero-die' && next.phase === 'damage-rolled' && next.turn.winner !== 'hero') throw new RangeError('Choose a hero die');
       const values = next.phase === 'speed-rolled' ? next.turn.heroSpeedDice : next.phase === 'ability-rolled' ?
         pendingGroup?.dice || next.turn.pendingAbility.dice : next.turn.damageDice;

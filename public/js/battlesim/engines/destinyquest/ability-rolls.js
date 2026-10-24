@@ -1,6 +1,7 @@
 import { destinyStat, destinyStrike, addDestinyStatEffect } from './effects.js';
 import { destinyDie, prepareDestinyDamage, applyDestinyDamage } from './damage.js';
 import { settleDestinyFight } from './core.js';
+import { resolveDestinyEncounterEvent, resumeDestinyEncounterQueue } from './encounter-events.js';
 
 export function prepareDestinyAbilityRoll(fight, name, options, roll) {
   const target = options.target ?? fight.target;
@@ -11,7 +12,7 @@ export function prepareDestinyAbilityRoll(fight, name, options, roll) {
   fight.phase = 'ability-rolled';
 }
 
-export function finishDestinyAbilityAction(fight) {
+export function finishDestinyAbilityAction(fight, roll = () => Math.floor(Math.random() * 6) + 1) {
   if (['speed-rolled', 'damage', 'damage-rolled'].includes(fight.phase) && fight.opponents[fight.target].health <= 0) fight.phase = 'end';
   if (fight.phase === 'end' && !fight.turn.pendingPassiveDeath && !fight.turn.used.dm &&
       fight.turn.deaths.length > fight.turn.deathMoveDeathsSeen) {
@@ -19,6 +20,7 @@ export function finishDestinyAbilityAction(fight) {
     fight.turn.afterDeathMove = 'end';
   }
   settleDestinyFight(fight);
+  resumeDestinyEncounterQueue(fight, roll);
   return fight;
 }
 
@@ -27,7 +29,8 @@ export function resolveDestinyAbilityRoll(fight, roll = () => Math.floor(Math.ra
   const next = structuredClone(fight);
   const pending = next.turn.pendingAbility;
   delete next.turn.pendingAbility;
-  if (pending.type === 'resource') {
+  if (pending.type === 'encounter') resolveDestinyEncounterEvent(next, pending, roll);
+  else if (pending.type === 'resource') {
     const before = next.encounter.resources[pending.resource];
     next.encounter.resources[pending.resource] = Math.max(0, before - pending.dice.reduce((sum, value) => sum + value, 0));
     if (before > 0 && next.encounter.resources[pending.resource] === 0) {
@@ -97,5 +100,5 @@ export function resolveDestinyAbilityRoll(fight, roll = () => Math.floor(Math.ra
       next.phase = pending.returnPhase;
     } else throw new RangeError('Unknown ability roll');
   }
-  return finishDestinyAbilityAction(next);
+  return finishDestinyAbilityAction(next, roll);
 }

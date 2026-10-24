@@ -51,7 +51,7 @@ export function recordDestinyOutcome(character, fight, outcomeId, roll = () => M
   if (next.outcomeIds.includes(outcomeId)) return { character: next, recorded: false, escaped: false, penalty: null };
   const receipt = { character: next, recorded: true, escaped: false, penalty: null };
   if (fight.status === 'loss') {
-    if ((fight.abilities?.getaway || 0) > 0) {
+    if (!fight.encounter?.disableHeroAbilities && (fight.abilities?.getaway || 0) > 0) {
       receipt.getawayDie = destinyDie(roll);
       receipt.escaped = receipt.getawayDie >= 5;
     }

@@ -191,7 +191,10 @@ test('all three printed frost hounds receive their insulated death explosion rul
   const enemies = parts.map(part => ({ name: part.name, speed: part.speed, magic: part.magic, armour: part.armour, health: part.health }));
   assert.equal(enemies.length, 4);
   let fight = configureWinterEncounter(configureDestinyAbilities(createDestinyFight(hero({ brawn: 30 }), enemies), { insulated: 1 }), 292);
-  for (const index of [1, 2, 3]) fight = end(hit(win(startDestinyRound(fight, index))));
-  assert.equal(fight.hero.health, 14);
+  for (const index of [1, 2, 3]) {
+    fight = endDestinyRound(skipDestinyDeathMove(hit(win(startDestinyRound(fight, index)))), [], rolls(1));
+    fight = end(resolve(fight));
+  }
+  assert.equal(fight.hero.health, 11); // Three insulated explosions plus two, then one living hound.
   assert.equal(fight.opponents[0].health, 80);
 });
