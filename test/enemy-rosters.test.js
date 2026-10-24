@@ -107,3 +107,39 @@ test('every staged repair seed is valid and retains all structured source data',
     assert.deepEqual(seedEnemyRoster(db,document),{inserted:0,updated:0},name);
   }
 });
+
+test('explicit identical groups preserve both IDs, remain idempotent and resume partial metadata adoption',t=>{
+  const db=fixture(t);
+  db.exec("INSERT INTO book_enemies(id,book_id,name,attack,hp,created_at) VALUES(3,246,'Existing enemy',5,12,789)");
+  const document={schemaVersion:1,bookId:246,family:'identical-test',enemies:[0,1].map(index=>({
+    key:'pair-'+index,name:'Existing enemy',attack:5,hp:12,
+    adopt:{name:'Existing enemy',attack:5,defense:null,hp:12,pb:null,matchCount:2,matchIndex:index},
+    stats:{part:{skill:5,hp:12},slot:index},
+  }))};
+  const before=db.prepare('SELECT id,name,attack,defense,hp,pb,created_at FROM book_enemies WHERE book_id=246 ORDER BY id').all();
+  assert.deepEqual(seedEnemyRoster(db,document),{inserted:0,updated:2});
+  assert.deepEqual(getBookEnemyRows(db,246).map(row=>[row.id,row.stats.roster.key]),[[1,'pair-0'],[3,'pair-1']]);
+  assert.deepEqual(seedEnemyRoster(db,document),{inserted:0,updated:0});
+  db.prepare('UPDATE book_enemies SET stats_json=NULL WHERE id=3').run();
+  assert.deepEqual(seedEnemyRoster(db,document),{inserted:0,updated:1});
+  assert.deepEqual(db.prepare('SELECT id,name,attack,defense,hp,pb,created_at FROM book_enemies WHERE book_id=246 ORDER BY id').all(),before);
+  assert.deepEqual(db.prepare('SELECT * FROM players').all(),[{id:1,coins:900,state_data:'{"run":3,"sim1285":{"unrelated":true}}'}]);
+  assert.deepEqual(seedEnemyRoster(db,document),{inserted:0,updated:0});
+});
+
+test('counted adoption rejects unexpected duplicates and nonidentical source parts atomically',t=>{
+  const db=fixture(t);
+  db.exec("INSERT INTO book_enemies(id,book_id,name,attack,hp) VALUES(3,246,'Existing enemy',5,12),(4,246,'Existing enemy',5,12)");
+  const document={schemaVersion:1,bookId:246,family:'identical-test',enemies:[
+    {key:'new',name:'Another',attack:1,hp:1,stats:{}},
+    ...[0,1].map(index=>({key:'pair-'+index,name:'Existing enemy',attack:5,hp:12,
+      adopt:{name:'Existing enemy',attack:5,defense:null,hp:12,pb:null,matchCount:2,matchIndex:index},stats:{part:{skill:5,hp:12}}})),
+  ]};
+  assert.throws(()=>seedEnemyRoster(db,document),/Exact identical/);
+  assert.equal(db.prepare("SELECT COUNT(*) n FROM book_enemies WHERE name='Another'").get().n,0);
+  assert.equal(db.prepare('PRAGMA table_info(book_enemies)').all().some(c=>c.name==='stats_json'),false);
+  document.enemies[2].stats.part.hp=13;
+  assert.throws(()=>seedEnemyRoster(db,document),/Invalid identical/);
+  document.enemies[2].stats.part.hp=12;document.enemies[2].adopt.matchIndex=0;
+  assert.throws(()=>seedEnemyRoster(db,document),/Invalid identical/);
+});

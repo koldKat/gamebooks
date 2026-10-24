@@ -38,6 +38,18 @@ function seedEnemyRoster(db, document) {
         !Object.hasOwn(enemy.adopt,key) || enemy.adopt[key] !== values[index]))) throw new TypeError('Adoption must preserve every legacy field');
     return { name: enemy.name, values, metadata: JSON.stringify(stats), key: enemy.key, adopt: enemy.adopt };
   });
+  const sameLegacy = (left, right) => left.name === right.name && left.values.every((value,index) => value === right.values[index]);
+  for (const entry of entries) {
+    if (!entry.adopt || entry.adopt.matchCount === undefined && entry.adopt.matchIndex === undefined) continue;
+    const {matchCount, matchIndex} = entry.adopt;
+    const group = entries.filter(other => sameLegacy(entry, other));
+    const part = JSON.stringify(JSON.parse(entry.metadata).part);
+    if (!Number.isSafeInteger(matchCount) || matchCount < 2 || !Number.isSafeInteger(matchIndex) || matchIndex < 0 || matchIndex >= matchCount ||
+        group.length !== matchCount || new Set(group.map(other => other.adopt?.matchIndex)).size !== matchCount || part === undefined ||
+        group.some(other => other.adopt?.matchCount !== matchCount || !Number.isSafeInteger(other.adopt.matchIndex) || other.adopt.matchIndex < 0 || other.adopt.matchIndex >= matchCount || JSON.stringify(JSON.parse(other.metadata).part) !== part)) {
+      throw new Error('Invalid identical legacy roster group');
+    }
+  }
   if (!db.prepare('SELECT id FROM books WHERE id = ?').get(document.bookId)) throw new RangeError('Roster book does not exist');
   return db.transaction(() => {
     ensureEnemyRosterSchema(db);
@@ -58,10 +70,26 @@ function seedEnemyRoster(db, document) {
     for (const entry of entries) {
       let row = managed.get(entry.key);
       if (!row && entry.adopt) {
-        const candidates=existing.filter(row=>row.stats_json===null && !used.has(row.id) && row.name===entry.adopt.name &&
-          ['attack','defense','hp','pb'].every(key=>row[key]===entry.adopt[key]));
-        if(candidates.length!==1)throw new Error('Exact unambiguous legacy roster match required');
-        row=candidates[0];
+        const matches = candidate => candidate.name === entry.adopt.name && ['attack','defense','hp','pb'].every(key => candidate[key] === entry.adopt[key]);
+        if (entry.adopt.matchCount !== undefined) {
+          const groupKeys = new Set(entries.filter(other => sameLegacy(entry, other)).map(other => other.key));
+          const candidates = existing.filter(candidate => {
+            if (!matches(candidate)) return false;
+            if (candidate.stats_json === null) return true;
+            let owner;
+            try { owner = JSON.parse(candidate.stats_json)?.roster; } catch {}
+            return owner?.schemaVersion === 1 && owner.family === document.family && groupKeys.has(owner.key);
+          }).sort((a,b) => a.id-b.id);
+          if (candidates.length !== entry.adopt.matchCount) throw new Error('Exact identical legacy roster group required');
+          row = candidates[entry.adopt.matchIndex];
+          let owner;
+          try { owner = JSON.parse(row.stats_json)?.roster; } catch {}
+          if (used.has(row.id) || owner && owner.key !== entry.key) throw new Error('Conflicting identical legacy roster ownership');
+        } else {
+          const candidates = existing.filter(candidate => candidate.stats_json === null && !used.has(candidate.id) && matches(candidate));
+          if (candidates.length !== 1) throw new Error('Exact unambiguous legacy roster match required');
+          row = candidates[0];
+        }
       }
       if(row)used.add(row.id);
       if (!row) { insert.run(document.bookId, entry.name, ...entry.values, entry.metadata); inserted++; }

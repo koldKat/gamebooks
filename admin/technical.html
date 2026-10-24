@@ -417,7 +417,9 @@
                          Enemy rosters load from the book enemy API. Optional stats_json metadata
                          preserves typed attributes, source groups and printed nulls alongside legacy
                          columns. Repair seeds retain enemy IDs; adopting a legacy row requires
-                         an unambiguous exact match for its name and all legacy stats. Enemy API
+                         an unambiguous exact match for its name and all legacy stats. Explicit
+                         counted identical groups require identical source parts, the exact row
+                         count and distinct indices; existing IDs determine stable assignment. Enemy API
                          filtering and ordering use the book/name index.
                          A simulator may export loadData; both lazy loaders await it before init.
                          Character transitions copy supplied profiles and deduplicate completed

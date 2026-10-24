@@ -120,7 +120,9 @@ export function thievesRound(input, target, roll) {
   if (fight.config.fireBreath) {
     const fire = die(roll);
     fight.events.push({ kind: 'fireRoll', roll: fire });
-    if (fire <= 3) fight.pending.push({ kind: 'fire', damage: 1 });
+    const rule = typeof fight.config.fireBreath === 'object' ? fight.config.fireBreath
+      : THIEVES_FIGHTS.find(row => row.section === fight.config.section).fireBreath;
+    if (fire <= rule.maxRoll) fight.pending.push({ kind: 'fire', damage: rule.damage });
   }
   if (!fight.character.luck) {
     while (fight.pending.length && fight.status === 'fighting') applyHit(fight, fight.pending.shift());

@@ -1848,20 +1848,50 @@
     {
       "bookId": 665,
       "databaseEnemyRows": 72,
-      "apiConsumers": [],
-      "inlineDataFiles": [
-        "public/js/battlesim/engines/city-of-thieves/roster.js"
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
       ],
-      "runtimeRosterReviewPending": true
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/665.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true,
+        "liveApiVerified": true,
+        "legacyRowsAdopted": 72,
+        "legacyFieldChanges": 0,
+        "catalogs": "43 complete encounter groups and source damage/escape/entry rules",
+        "legacySavedFights": "Captured fire rules honored; legacy boolean fire-breath rules, current wounds and unknown saved fields retained."
+      }
     },
     {
       "bookId": 671,
       "databaseEnemyRows": 44,
-      "apiConsumers": [],
-      "inlineDataFiles": [
-        "public/js/battlesim/engines/shamutanti/roster.js"
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
       ],
-      "runtimeRosterReviewPending": true
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/671.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true,
+        "liveApiVerified": true,
+        "legacyRowsAdopted": 44,
+        "legacyFieldChanges": 0,
+        "catalogs": "32 complete encounter groups including summoned allies, duplicate Bandits and the original six-outcome night table",
+        "identicalLegacyRows": "Two indistinguishable Bandit rows adopted only with explicit exact matchCount and unique matchIndex; both IDs preserved."
+      }
     },
     {
       "bookId": 672,
@@ -2571,6 +2601,8 @@
       654,
       658,
       663,
+      665,
+      671,
       781,
       807,
       808,

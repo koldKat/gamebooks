@@ -1,3 +1,5 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
+await loadFixtureRoster(665);
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from './simulator-source.mjs';
@@ -29,6 +31,9 @@ test('backend registers wins and losses once, without awarding escape, bypass or
     if (name === './auth') return { generateToken: () => 'test-only' };
     if (name === '../impersonation-context') return { isImpersonatingContext: () => false };
     if (name === '../clean-run') return { isCleanRun: () => false };
+    if (name === './diamonds') return { diamondInfoForUser: () => ({}) };
+    if (name === './rubies') return { rubyInfoForUser: () => ({}), createRubyCompletionChecker: () => () => 0 };
+    if (name === './heartbeat-coins') return { advanceHeartbeatCoins: () => 0 };
     throw new Error('Unexpected dependency: ' + name);
   } };
   runInNewContext(readFileSync(new URL('../../../server/db/xp.js', import.meta.url), 'utf8')
@@ -260,4 +265,18 @@ test('random encounter roll, standalone Luck and invalid input preserve caller s
   assert.throws(() => thievesRound(fight, 0, constant(1)), RangeError);
   assert.throws(() => startThievesFight(201, original, { randomEnemy: 7 }), RangeError);
   assert.equal(fight.rounds, 0);
+});
+
+
+test('captured fire-breath rules and legacy boolean saves preserve wounds and source state', () => {
+  for (const legacy of [false,true]) {
+    const original=JSON.parse(JSON.stringify(startThievesFight(392,character({stamina:5,luck:0}))));
+    original.config.fireBreath=legacy?true:{maxRoll:6,damage:3};
+    original.legacyExtension={retained:true};
+    const next=thievesRound(original,0,rolls(6,6,1,1,1));
+    assert.equal(next.character.stamina,legacy?4:2);
+    assert.equal(original.character.stamina,5);
+    assert.deepEqual(next.legacyExtension,{retained:true});
+    if (legacy) assert.equal(next.config.fireBreath,true);
+  }
 });
