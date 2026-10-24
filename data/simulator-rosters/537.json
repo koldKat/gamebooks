@@ -1,0 +1,1650 @@
+{
+  "schemaVersion": 1,
+  "bookId": 537,
+  "family": "demonspawn",
+  "source": "Original complete printed attribute blocks and encounter presets, including equipment, source nulls and manually supplied opponents. Every existing database row matched exactly.",
+  "enemies": [
+    {
+      "key": "largeMan",
+      "name": "Large Man",
+      "attack": 61,
+      "defense": null,
+      "hp": 367,
+      "pb": null,
+      "adopt": {
+        "name": "Large Man",
+        "attack": 61,
+        "defense": null,
+        "hp": 367,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "demonspawn",
+        "dataset": "BOOK_DATA",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fixed",
+          "key": "largeMan",
+          "enemy": {
+            "name": "Large Man",
+            "strength": 50,
+            "speed": 48,
+            "stamina": 48,
+            "courage": 70,
+            "skill": 61,
+            "luck": 30,
+            "charm": 25,
+            "attraction": 35,
+            "lifePoints": 367,
+            "maxLife": 367,
+            "weapon": null,
+            "armour": "none"
+          },
+          "encounters": [
+            {
+              "index": 0,
+              "spec": {
+                "section": "7",
+                "enemies": [
+                  "largeMan"
+                ],
+                "rule": "plank",
+                "playerWeapon": null,
+                "noMagic": true
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "Large Man",
+          "strength": 50,
+          "speed": 48,
+          "stamina": 48,
+          "courage": 70,
+          "skill": 61,
+          "luck": 30,
+          "charm": 25,
+          "attraction": 35,
+          "lifePoints": 367,
+          "maxLife": 367,
+          "weapon": null,
+          "armour": "none"
+        }
+      }
+    },
+    {
+      "key": "slimefiend",
+      "name": "Slimefiend",
+      "attack": 50,
+      "defense": null,
+      "hp": 540,
+      "pb": null,
+      "adopt": {
+        "name": "Slimefiend",
+        "attack": 50,
+        "defense": null,
+        "hp": 540,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "demonspawn",
+        "dataset": "BOOK_DATA",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fixed",
+          "key": "slimefiend",
+          "enemy": {
+            "name": "Slimefiend",
+            "strength": 125,
+            "speed": 75,
+            "stamina": 100,
+            "courage": 120,
+            "skill": 50,
+            "luck": 70,
+            "charm": 0,
+            "attraction": 0,
+            "lifePoints": 540,
+            "maxLife": 540,
+            "weapon": 10,
+            "armour": "none"
+          },
+          "encounters": [
+            {
+              "index": 1,
+              "spec": {
+                "section": "10",
+                "enemies": [
+                  "slimefiend"
+                ],
+                "rule": "slime-poison"
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "Slimefiend",
+          "strength": 125,
+          "speed": 75,
+          "stamina": 100,
+          "courage": 120,
+          "skill": 50,
+          "luck": 70,
+          "charm": 0,
+          "attraction": 0,
+          "lifePoints": 540,
+          "maxLife": 540,
+          "weapon": 10,
+          "armour": "none"
+        }
+      }
+    },
+    {
+      "key": "nazar",
+      "name": "Lord Nazar",
+      "attack": 16,
+      "defense": null,
+      "hp": 314,
+      "pb": null,
+      "adopt": {
+        "name": "Lord Nazar",
+        "attack": 16,
+        "defense": null,
+        "hp": 314,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "demonspawn",
+        "dataset": "BOOK_DATA",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fixed",
+          "key": "nazar",
+          "enemy": {
+            "name": "Lord Nazar",
+            "strength": 60,
+            "speed": 50,
+            "stamina": 48,
+            "courage": 55,
+            "skill": 16,
+            "luck": 40,
+            "charm": 20,
+            "attraction": 25,
+            "lifePoints": 314,
+            "maxLife": 314,
+            "weapon": 5,
+            "armour": "none"
+          },
+          "encounters": [
+            {
+              "index": 2,
+              "spec": {
+                "section": "12",
+                "enemies": [
+                  "nazar"
+                ],
+                "playerWeapon": 5
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "Lord Nazar",
+          "strength": 60,
+          "speed": 50,
+          "stamina": 48,
+          "courage": 55,
+          "skill": 16,
+          "luck": 40,
+          "charm": 20,
+          "attraction": 25,
+          "lifePoints": 314,
+          "maxLife": 314,
+          "weapon": 5,
+          "armour": "none"
+        }
+      }
+    },
+    {
+      "key": "serpent",
+      "name": "Serpent",
+      "attack": 25,
+      "defense": null,
+      "hp": 303,
+      "pb": null,
+      "adopt": {
+        "name": "Serpent",
+        "attack": 25,
+        "defense": null,
+        "hp": 303,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "demonspawn",
+        "dataset": "BOOK_DATA",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fixed",
+          "key": "serpent",
+          "enemy": {
+            "name": "Serpent",
+            "strength": 75,
+            "speed": 50,
+            "stamina": 55,
+            "courage": 80,
+            "skill": 25,
+            "luck": 16,
+            "charm": 2,
+            "attraction": 0,
+            "lifePoints": 303,
+            "maxLife": 303,
+            "weapon": 0,
+            "armour": "none"
+          },
+          "encounters": [
+            {
+              "index": 3,
+              "spec": {
+                "section": "52",
+                "enemies": [
+                  "serpent"
+                ],
+                "rule": "serpent",
+                "openingCheck": true
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "Serpent",
+          "strength": 75,
+          "speed": 50,
+          "stamina": 55,
+          "courage": 80,
+          "skill": 25,
+          "luck": 16,
+          "charm": 2,
+          "attraction": 0,
+          "lifePoints": 303,
+          "maxLife": 303,
+          "weapon": 0,
+          "armour": "none"
+        }
+      }
+    },
+    {
+      "key": "guardian",
+      "name": "Police Guardian",
+      "attack": 40,
+      "defense": null,
+      "hp": 313,
+      "pb": null,
+      "adopt": {
+        "name": "Police Guardian",
+        "attack": 40,
+        "defense": null,
+        "hp": 313,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "demonspawn",
+        "dataset": "BOOK_DATA",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fixed",
+          "key": "guardian",
+          "enemy": {
+            "name": "Police Guardian",
+            "strength": 60,
+            "speed": 55,
+            "stamina": 50,
+            "courage": 40,
+            "skill": 40,
+            "luck": 30,
+            "charm": 8,
+            "attraction": 30,
+            "lifePoints": 313,
+            "maxLife": 313,
+            "weapon": 10,
+            "armour": "leather"
+          },
+          "encounters": [
+            {
+              "index": 4,
+              "spec": {
+                "section": "61",
+                "enemies": [
+                  "guardian",
+                  "guardian",
+                  "guardian"
+                ]
+              }
+            },
+            {
+              "index": 6,
+              "spec": {
+                "section": "95",
+                "enemies": [
+                  "guardian"
+                ],
+                "enemyArmour": "none"
+              }
+            },
+            {
+              "index": 7,
+              "spec": {
+                "section": "97",
+                "enemies": [
+                  "guardian",
+                  "guardian",
+                  "guardian"
+                ]
+              }
+            },
+            {
+              "index": 14,
+              "spec": {
+                "section": "145",
+                "enemies": [
+                  "guardian",
+                  "guardian",
+                  "guardian"
+                ]
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "Police Guardian",
+          "strength": 60,
+          "speed": 55,
+          "stamina": 50,
+          "courage": 40,
+          "skill": 40,
+          "luck": 30,
+          "charm": 8,
+          "attraction": 30,
+          "lifePoints": 313,
+          "maxLife": 313,
+          "weapon": 10,
+          "armour": "leather"
+        }
+      }
+    },
+    {
+      "key": "giant",
+      "name": "Giant",
+      "attack": 75,
+      "defense": null,
+      "hp": 530,
+      "pb": null,
+      "adopt": {
+        "name": "Giant",
+        "attack": 75,
+        "defense": null,
+        "hp": 530,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "demonspawn",
+        "dataset": "BOOK_DATA",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fixed",
+          "key": "giant",
+          "enemy": {
+            "name": "Giant",
+            "strength": 100,
+            "speed": 50,
+            "stamina": 90,
+            "courage": 95,
+            "skill": 75,
+            "luck": 50,
+            "charm": 40,
+            "attraction": 30,
+            "lifePoints": 530,
+            "maxLife": 530,
+            "weapon": 25,
+            "armour": "none"
+          },
+          "encounters": [
+            {
+              "index": 5,
+              "spec": {
+                "section": "70",
+                "enemies": [
+                  "giant"
+                ],
+                "rule": "club"
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "Giant",
+          "strength": 100,
+          "speed": 50,
+          "stamina": 90,
+          "courage": 95,
+          "skill": 75,
+          "luck": 50,
+          "charm": 40,
+          "attraction": 30,
+          "lifePoints": 530,
+          "maxLife": 530,
+          "weapon": 25,
+          "armour": "none"
+        }
+      }
+    },
+    {
+      "key": "assassin",
+      "name": "Assassin",
+      "attack": 70,
+      "defense": null,
+      "hp": 485,
+      "pb": null,
+      "adopt": {
+        "name": "Assassin",
+        "attack": 70,
+        "defense": null,
+        "hp": 485,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "demonspawn",
+        "dataset": "BOOK_DATA",
+        "entryIndex": 6,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fixed",
+          "key": "assassin",
+          "enemy": {
+            "name": "Assassin",
+            "strength": 60,
+            "speed": 95,
+            "stamina": 65,
+            "courage": 80,
+            "skill": 70,
+            "luck": 50,
+            "charm": 25,
+            "attraction": 40,
+            "lifePoints": 485,
+            "maxLife": 485,
+            "weapon": 7,
+            "armour": "none"
+          },
+          "encounters": [
+            {
+              "index": 8,
+              "spec": {
+                "section": "100",
+                "enemies": [
+                  "assassin",
+                  "assassin"
+                ],
+                "rule": "lethal",
+                "canAvoid": true
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "Assassin",
+          "strength": 60,
+          "speed": 95,
+          "stamina": 65,
+          "courage": 80,
+          "skill": 70,
+          "luck": 50,
+          "charm": 25,
+          "attraction": 40,
+          "lifePoints": 485,
+          "maxLife": 485,
+          "weapon": 7,
+          "armour": "none"
+        }
+      }
+    },
+    {
+      "key": "ferryman",
+      "name": "Ferryman",
+      "attack": 20,
+      "defense": null,
+      "hp": 370,
+      "pb": null,
+      "adopt": {
+        "name": "Ferryman",
+        "attack": 20,
+        "defense": null,
+        "hp": 370,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "demonspawn",
+        "dataset": "BOOK_DATA",
+        "entryIndex": 7,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fixed",
+          "key": "ferryman",
+          "enemy": {
+            "name": "Ferryman",
+            "strength": 55,
+            "speed": 65,
+            "stamina": 35,
+            "courage": 85,
+            "skill": 20,
+            "luck": 55,
+            "charm": 55,
+            "attraction": 0,
+            "lifePoints": 370,
+            "maxLife": 370,
+            "weapon": 15,
+            "armour": "none"
+          },
+          "encounters": [
+            {
+              "index": 9,
+              "spec": {
+                "section": "102",
+                "enemies": [
+                  "ferryman"
+                ]
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "Ferryman",
+          "strength": 55,
+          "speed": 65,
+          "stamina": 35,
+          "courage": 85,
+          "skill": 20,
+          "luck": 55,
+          "charm": 55,
+          "attraction": 0,
+          "lifePoints": 370,
+          "maxLife": 370,
+          "weapon": 15,
+          "armour": "none"
+        }
+      }
+    },
+    {
+      "key": "bandit",
+      "name": "Bandit",
+      "attack": 20,
+      "defense": null,
+      "hp": 272,
+      "pb": null,
+      "adopt": {
+        "name": "Bandit",
+        "attack": 20,
+        "defense": null,
+        "hp": 272,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "demonspawn",
+        "dataset": "BOOK_DATA",
+        "entryIndex": 8,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fixed",
+          "key": "bandit",
+          "enemy": {
+            "name": "Bandit",
+            "strength": 50,
+            "speed": 48,
+            "stamina": 48,
+            "courage": 40,
+            "skill": 20,
+            "luck": 30,
+            "charm": 16,
+            "attraction": 20,
+            "lifePoints": 272,
+            "maxLife": 272,
+            "weapon": 10,
+            "armour": "none"
+          },
+          "encounters": [
+            {
+              "index": 10,
+              "spec": {
+                "section": "119",
+                "enemies": [
+                  "bandit",
+                  "bandit",
+                  "bandit"
+                ]
+              }
+            },
+            {
+              "index": 16,
+              "spec": {
+                "section": "165",
+                "enemies": [
+                  "bandit",
+                  "bandit"
+                ],
+                "openingPlayerEach": true
+              }
+            },
+            {
+              "index": 19,
+              "spec": {
+                "section": "179",
+                "enemies": [
+                  "bandit",
+                  "bandit"
+                ]
+              }
+            },
+            {
+              "index": 20,
+              "spec": {
+                "section": "183",
+                "enemies": [
+                  "bandit",
+                  "bandit",
+                  "bandit",
+                  "bandit",
+                  "bandit",
+                  "bandit"
+                ]
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "Bandit",
+          "strength": 50,
+          "speed": 48,
+          "stamina": 48,
+          "courage": 40,
+          "skill": 20,
+          "luck": 30,
+          "charm": 16,
+          "attraction": 20,
+          "lifePoints": 272,
+          "maxLife": 272,
+          "weapon": 10,
+          "armour": "none"
+        }
+      }
+    },
+    {
+      "key": "thug",
+      "name": "Young Thug",
+      "attack": 20,
+      "defense": null,
+      "hp": 320,
+      "pb": null,
+      "adopt": {
+        "name": "Young Thug",
+        "attack": 20,
+        "defense": null,
+        "hp": 320,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "demonspawn",
+        "dataset": "BOOK_DATA",
+        "entryIndex": 9,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fixed",
+          "key": "thug",
+          "enemy": {
+            "name": "Young Thug",
+            "strength": 60,
+            "speed": 55,
+            "stamina": 65,
+            "courage": 70,
+            "skill": 20,
+            "luck": 15,
+            "charm": 10,
+            "attraction": 25,
+            "lifePoints": 320,
+            "maxLife": 320,
+            "weapon": 10,
+            "armour": "none"
+          },
+          "encounters": [
+            {
+              "index": 11,
+              "spec": {
+                "section": "127",
+                "enemies": [
+                  "thug",
+                  "thug"
+                ]
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "Young Thug",
+          "strength": 60,
+          "speed": 55,
+          "stamina": 65,
+          "courage": 70,
+          "skill": 20,
+          "luck": 15,
+          "charm": 10,
+          "attraction": 25,
+          "lifePoints": 320,
+          "maxLife": 320,
+          "weapon": 10,
+          "armour": "none"
+        }
+      }
+    },
+    {
+      "key": "thief",
+      "name": "Thief",
+      "attack": 60,
+      "defense": null,
+      "hp": 433,
+      "pb": null,
+      "adopt": {
+        "name": "Thief",
+        "attack": 60,
+        "defense": null,
+        "hp": 433,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "demonspawn",
+        "dataset": "BOOK_DATA",
+        "entryIndex": 10,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fixed",
+          "key": "thief",
+          "enemy": {
+            "name": "Thief",
+            "strength": 48,
+            "speed": 95,
+            "stamina": 60,
+            "courage": 25,
+            "skill": 60,
+            "luck": 55,
+            "charm": 50,
+            "attraction": 40,
+            "lifePoints": 433,
+            "maxLife": 433,
+            "weapon": 7,
+            "armour": "leather"
+          },
+          "encounters": [
+            {
+              "index": 12,
+              "spec": {
+                "section": "137",
+                "enemies": [
+                  "thief"
+                ]
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "Thief",
+          "strength": 48,
+          "speed": 95,
+          "stamina": 60,
+          "courage": 25,
+          "skill": 60,
+          "luck": 55,
+          "charm": 50,
+          "attraction": 40,
+          "lifePoints": 433,
+          "maxLife": 433,
+          "weapon": 7,
+          "armour": "leather"
+        }
+      }
+    },
+    {
+      "key": "berserker",
+      "name": "Berserker",
+      "attack": 50,
+      "defense": null,
+      "hp": 515,
+      "pb": null,
+      "adopt": {
+        "name": "Berserker",
+        "attack": 50,
+        "defense": null,
+        "hp": 515,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "demonspawn",
+        "dataset": "BOOK_DATA",
+        "entryIndex": 11,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fixed",
+          "key": "berserker",
+          "enemy": {
+            "name": "Berserker",
+            "strength": 90,
+            "speed": 80,
+            "stamina": 95,
+            "courage": 100,
+            "skill": 50,
+            "luck": 30,
+            "charm": 30,
+            "attraction": 40,
+            "lifePoints": 515,
+            "maxLife": 515,
+            "weapon": 10,
+            "armour": "none"
+          },
+          "encounters": [
+            {
+              "index": 13,
+              "spec": {
+                "section": "140",
+                "enemies": [
+                  "berserker",
+                  "berserker",
+                  "berserker"
+                ]
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "Berserker",
+          "strength": 90,
+          "speed": 80,
+          "stamina": 95,
+          "courage": 100,
+          "skill": 50,
+          "luck": 30,
+          "charm": 30,
+          "attraction": 40,
+          "lifePoints": 515,
+          "maxLife": 515,
+          "weapon": 10,
+          "armour": "none"
+        }
+      }
+    },
+    {
+      "key": "troll",
+      "name": "Troll",
+      "attack": 45,
+      "defense": null,
+      "hp": 380,
+      "pb": null,
+      "adopt": {
+        "name": "Troll",
+        "attack": 45,
+        "defense": null,
+        "hp": 380,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "demonspawn",
+        "dataset": "BOOK_DATA",
+        "entryIndex": 12,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fixed",
+          "key": "troll",
+          "enemy": {
+            "name": "Troll",
+            "strength": 96,
+            "speed": 59,
+            "stamina": 80,
+            "courage": 60,
+            "skill": 45,
+            "luck": 25,
+            "charm": 10,
+            "attraction": 5,
+            "lifePoints": 380,
+            "maxLife": 380,
+            "weapon": 8,
+            "armour": "none"
+          },
+          "encounters": [
+            {
+              "index": 15,
+              "spec": {
+                "section": "159",
+                "enemies": [
+                  "troll",
+                  "troll"
+                ]
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "Troll",
+          "strength": 96,
+          "speed": 59,
+          "stamina": 80,
+          "courage": 60,
+          "skill": 45,
+          "luck": 25,
+          "charm": 10,
+          "attraction": 5,
+          "lifePoints": 380,
+          "maxLife": 380,
+          "weapon": 8,
+          "armour": "none"
+        }
+      }
+    },
+    {
+      "key": "fieryDragon",
+      "name": "Fiery Dragon",
+      "attack": 100,
+      "defense": null,
+      "hp": 800,
+      "pb": null,
+      "adopt": {
+        "name": "Fiery Dragon",
+        "attack": 100,
+        "defense": null,
+        "hp": 800,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "demonspawn",
+        "dataset": "BOOK_DATA",
+        "entryIndex": 13,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fixed",
+          "key": "fieryDragon",
+          "enemy": {
+            "name": "Fiery Dragon",
+            "strength": 100,
+            "speed": 100,
+            "stamina": 100,
+            "courage": 100,
+            "skill": 100,
+            "luck": 100,
+            "charm": 100,
+            "attraction": 100,
+            "lifePoints": 800,
+            "maxLife": 800,
+            "weapon": 10,
+            "armour": "none"
+          },
+          "encounters": [
+            {
+              "index": 17,
+              "spec": {
+                "section": "174",
+                "enemies": [
+                  "fieryDragon"
+                ],
+                "rule": "fiery-dragon",
+                "attackMagicImmune": true
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "Fiery Dragon",
+          "strength": 100,
+          "speed": 100,
+          "stamina": 100,
+          "courage": 100,
+          "skill": 100,
+          "luck": 100,
+          "charm": 100,
+          "attraction": 100,
+          "lifePoints": 800,
+          "maxLife": 800,
+          "weapon": 10,
+          "armour": "none"
+        }
+      }
+    },
+    {
+      "key": "freya",
+      "name": "Freya",
+      "attack": 20,
+      "defense": null,
+      "hp": 469,
+      "pb": null,
+      "adopt": {
+        "name": "Freya",
+        "attack": 20,
+        "defense": null,
+        "hp": 469,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "demonspawn",
+        "dataset": "BOOK_DATA",
+        "entryIndex": 14,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fixed",
+          "key": "freya",
+          "enemy": {
+            "name": "Freya",
+            "strength": 60,
+            "speed": 80,
+            "stamina": 40,
+            "courage": 70,
+            "skill": 20,
+            "luck": 20,
+            "charm": 80,
+            "attraction": 99,
+            "lifePoints": 469,
+            "maxLife": 469,
+            "weapon": 3,
+            "armour": "none"
+          },
+          "encounters": [
+            {
+              "index": 18,
+              "spec": {
+                "section": "176",
+                "enemies": [
+                  "freya"
+                ],
+                "rule": "freya"
+              }
+            },
+            {
+              "index": 27,
+              "spec": {
+                "section": "229",
+                "enemies": [
+                  "freya"
+                ],
+                "rule": "freya",
+                "passiveAttempts": 3
+              }
+            },
+            {
+              "index": 28,
+              "spec": {
+                "section": "233",
+                "enemies": [
+                  "freya"
+                ],
+                "rule": "freya",
+                "passiveAttempts": 6
+              }
+            },
+            {
+              "index": 29,
+              "spec": {
+                "section": "235",
+                "enemies": [
+                  "freya"
+                ],
+                "rule": "freya",
+                "passiveAttempts": 9
+              }
+            },
+            {
+              "index": 30,
+              "spec": {
+                "section": "237",
+                "enemies": [
+                  "freya"
+                ],
+                "rule": "freya",
+                "passiveAttempts": 12
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "Freya",
+          "strength": 60,
+          "speed": 80,
+          "stamina": 40,
+          "courage": 70,
+          "skill": 20,
+          "luck": 20,
+          "charm": 80,
+          "attraction": 99,
+          "lifePoints": 469,
+          "maxLife": 469,
+          "weapon": 3,
+          "armour": "none"
+        }
+      }
+    },
+    {
+      "key": "demon",
+      "name": "Minor Demon",
+      "attack": 70,
+      "defense": null,
+      "hp": 640,
+      "pb": null,
+      "adopt": {
+        "name": "Minor Demon",
+        "attack": 70,
+        "defense": null,
+        "hp": 640,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "demonspawn",
+        "dataset": "BOOK_DATA",
+        "entryIndex": 15,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fixed",
+          "key": "demon",
+          "enemy": {
+            "name": "Minor Demon",
+            "strength": 150,
+            "speed": 100,
+            "stamina": 100,
+            "courage": 120,
+            "skill": 70,
+            "luck": 100,
+            "charm": 0,
+            "attraction": 0,
+            "lifePoints": 640,
+            "maxLife": 640,
+            "weapon": 10,
+            "armour": "none"
+          },
+          "encounters": [
+            {
+              "index": 21,
+              "spec": {
+                "section": "188",
+                "enemies": [
+                  "demon"
+                ],
+                "rule": "demon",
+                "attackMagicImmune": true
+              }
+            },
+            {
+              "index": 31,
+              "spec": {
+                "section": "245",
+                "enemies": [
+                  "demon"
+                ],
+                "rule": "demon",
+                "attackMagicImmune": true
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "Minor Demon",
+          "strength": 150,
+          "speed": 100,
+          "stamina": 100,
+          "courage": 120,
+          "skill": 70,
+          "luck": 100,
+          "charm": 0,
+          "attraction": 0,
+          "lifePoints": 640,
+          "maxLife": 640,
+          "weapon": 10,
+          "armour": "none"
+        }
+      }
+    },
+    {
+      "key": "figure",
+      "name": "Animated Figure",
+      "attack": 15,
+      "defense": null,
+      "hp": 311,
+      "pb": null,
+      "adopt": {
+        "name": "Animated Figure",
+        "attack": 15,
+        "defense": null,
+        "hp": 311,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "demonspawn",
+        "dataset": "BOOK_DATA",
+        "entryIndex": 16,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fixed",
+          "key": "figure",
+          "enemy": {
+            "name": "Animated Figure",
+            "strength": 64,
+            "speed": 48,
+            "stamina": 56,
+            "courage": 56,
+            "skill": 15,
+            "luck": 48,
+            "charm": 24,
+            "attraction": 0,
+            "lifePoints": 311,
+            "maxLife": 311,
+            "weapon": 15,
+            "armour": "none"
+          },
+          "encounters": [
+            {
+              "index": 22,
+              "spec": {
+                "section": "197",
+                "enemies": [
+                  "figure",
+                  "sword"
+                ],
+                "sequential": true
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "Animated Figure",
+          "strength": 64,
+          "speed": 48,
+          "stamina": 56,
+          "courage": 56,
+          "skill": 15,
+          "luck": 48,
+          "charm": 24,
+          "attraction": 0,
+          "lifePoints": 311,
+          "maxLife": 311,
+          "weapon": 15,
+          "armour": "none"
+        }
+      }
+    },
+    {
+      "key": "sword",
+      "name": "Animated Sword",
+      "attack": 25,
+      "defense": null,
+      "hp": 337,
+      "pb": null,
+      "adopt": {
+        "name": "Animated Sword",
+        "attack": 25,
+        "defense": null,
+        "hp": 337,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "demonspawn",
+        "dataset": "BOOK_DATA",
+        "entryIndex": 17,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fixed",
+          "key": "sword",
+          "enemy": {
+            "name": "Animated Sword",
+            "strength": 48,
+            "speed": 56,
+            "stamina": 56,
+            "courage": 56,
+            "skill": 25,
+            "luck": 48,
+            "charm": 48,
+            "attraction": 0,
+            "lifePoints": 337,
+            "maxLife": 337,
+            "weapon": 15,
+            "armour": "none"
+          },
+          "encounters": []
+        },
+        "part": {
+          "name": "Animated Sword",
+          "strength": 48,
+          "speed": 56,
+          "stamina": 56,
+          "courage": 56,
+          "skill": 25,
+          "luck": 48,
+          "charm": 48,
+          "attraction": 0,
+          "lifePoints": 337,
+          "maxLife": 337,
+          "weapon": 15,
+          "armour": "none"
+        }
+      }
+    },
+    {
+      "key": "sorcerer",
+      "name": "Ancient Sorcerer",
+      "attack": 99,
+      "defense": null,
+      "hp": 693,
+      "pb": null,
+      "adopt": {
+        "name": "Ancient Sorcerer",
+        "attack": 99,
+        "defense": null,
+        "hp": 693,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "demonspawn",
+        "dataset": "BOOK_DATA",
+        "entryIndex": 18,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fixed",
+          "key": "sorcerer",
+          "enemy": {
+            "name": "Ancient Sorcerer",
+            "strength": 99,
+            "speed": 99,
+            "stamina": 99,
+            "courage": 99,
+            "skill": 99,
+            "luck": 99,
+            "charm": 99,
+            "attraction": 0,
+            "lifePoints": 693,
+            "maxLife": 693,
+            "weapon": 0,
+            "armour": "none"
+          },
+          "encounters": [
+            {
+              "index": 23,
+              "spec": {
+                "section": "208",
+                "enemies": [
+                  "sorcerer",
+                  "sorcerer",
+                  "sorcerer"
+                ],
+                "rule": "sorcerers",
+                "sequential": true,
+                "attackMagicImmune": true
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "Ancient Sorcerer",
+          "strength": 99,
+          "speed": 99,
+          "stamina": 99,
+          "courage": 99,
+          "skill": 99,
+          "luck": 99,
+          "charm": 99,
+          "attraction": 0,
+          "lifePoints": 693,
+          "maxLife": 693,
+          "weapon": 0,
+          "armour": "none"
+        }
+      }
+    },
+    {
+      "key": "dragon",
+      "name": "Dragon",
+      "attack": 60,
+      "defense": null,
+      "hp": 630,
+      "pb": null,
+      "adopt": {
+        "name": "Dragon",
+        "attack": 60,
+        "defense": null,
+        "hp": 630,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "demonspawn",
+        "dataset": "BOOK_DATA",
+        "entryIndex": 19,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fixed",
+          "key": "dragon",
+          "enemy": {
+            "name": "Dragon",
+            "strength": 150,
+            "speed": 50,
+            "stamina": 100,
+            "courage": 90,
+            "skill": 60,
+            "luck": 80,
+            "charm": 90,
+            "attraction": 10,
+            "lifePoints": 630,
+            "maxLife": 630,
+            "weapon": 15,
+            "armour": "none"
+          },
+          "encounters": [
+            {
+              "index": 24,
+              "spec": {
+                "section": "209",
+                "enemies": [
+                  "dragon"
+                ],
+                "rule": "dragon-fumes"
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "Dragon",
+          "strength": 150,
+          "speed": 50,
+          "stamina": 100,
+          "courage": 90,
+          "skill": 60,
+          "luck": 80,
+          "charm": 90,
+          "attraction": 10,
+          "lifePoints": 630,
+          "maxLife": 630,
+          "weapon": 15,
+          "armour": "none"
+        }
+      }
+    },
+    {
+      "key": "stalker",
+      "name": "Night Stalker",
+      "attack": 50,
+      "defense": null,
+      "hp": 400,
+      "pb": null,
+      "adopt": {
+        "name": "Night Stalker",
+        "attack": 50,
+        "defense": null,
+        "hp": 400,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "demonspawn",
+        "dataset": "BOOK_DATA",
+        "entryIndex": 20,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fixed",
+          "key": "stalker",
+          "enemy": {
+            "name": "Night Stalker",
+            "strength": 50,
+            "speed": 50,
+            "stamina": 50,
+            "courage": 50,
+            "skill": 50,
+            "luck": 50,
+            "charm": 50,
+            "attraction": 50,
+            "lifePoints": 400,
+            "maxLife": 400,
+            "weapon": 5,
+            "armour": "none"
+          },
+          "encounters": [
+            {
+              "index": 25,
+              "spec": {
+                "section": "215",
+                "enemies": [
+                  "stalker"
+                ],
+                "rule": "stalker"
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "Night Stalker",
+          "strength": 50,
+          "speed": 50,
+          "stamina": 50,
+          "courage": 50,
+          "skill": 50,
+          "luck": 50,
+          "charm": 50,
+          "attraction": 50,
+          "lifePoints": 400,
+          "maxLife": 400,
+          "weapon": 5,
+          "armour": "none"
+        }
+      }
+    },
+    {
+      "key": "guard",
+      "name": "Freya's Guard",
+      "attack": 44,
+      "defense": null,
+      "hp": 432,
+      "pb": null,
+      "adopt": {
+        "name": "Freya's Guard",
+        "attack": 44,
+        "defense": null,
+        "hp": 432,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "demonspawn",
+        "dataset": "BOOK_DATA",
+        "entryIndex": 21,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fixed",
+          "key": "guard",
+          "enemy": {
+            "name": "Freya's Guard",
+            "strength": 58,
+            "speed": 36,
+            "stamina": 90,
+            "courage": 90,
+            "skill": 44,
+            "luck": 48,
+            "charm": 40,
+            "attraction": 26,
+            "lifePoints": 432,
+            "maxLife": 432,
+            "weapon": 10,
+            "armour": "plate"
+          },
+          "encounters": [
+            {
+              "index": 26,
+              "spec": {
+                "section": "225",
+                "enemies": [
+                  "guard"
+                ],
+                "rule": "lethal"
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "Freya's Guard",
+          "strength": 58,
+          "speed": 36,
+          "stamina": 90,
+          "courage": 90,
+          "skill": 44,
+          "luck": 48,
+          "charm": 40,
+          "attraction": 26,
+          "lifePoints": 432,
+          "maxLife": 432,
+          "weapon": 10,
+          "armour": "plate"
+        }
+      }
+    }
+  ]
+}

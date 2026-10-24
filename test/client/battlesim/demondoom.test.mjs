@@ -1,3 +1,5 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
+await loadFixtureRoster(536);
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { DEMONDOOM_ROSTER, demondoomEnemy } from '../../../public/js/battlesim/engines/demonspawn/demondoom-roster.js';

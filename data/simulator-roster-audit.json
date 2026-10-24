@@ -1486,27 +1486,72 @@
     {
       "bookId": 535,
       "databaseEnemyRows": 20,
-      "apiConsumers": [],
-      "inlineDataFiles": [
-        "public/js/battlesim/engines/demonspawn/crypts-of-terror-encounters.js"
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
       ],
-      "runtimeRosterReviewPending": true
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/535.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true,
+        "liveApiVerified": true,
+        "legacyRowsAdopted": 20,
+        "legacyFieldChanges": 0,
+        "catalogs": "Full printed attribute blocks and all encounter presets, source nulls and manual-stat requirements",
+        "equipmentAndVariants": "Enemy equipment, Clementine alternate weapon, Wight fixed LIFE/manual combat stats and guard-chase values loaded from database."
+      }
     },
     {
       "bookId": 536,
       "databaseEnemyRows": 26,
-      "apiConsumers": [],
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
+      ],
       "inlineDataFiles": [],
-      "runtimeRosterReviewPending": true
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/536.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true,
+        "liveApiVerified": true,
+        "legacyRowsAdopted": 26,
+        "legacyFieldChanges": 0,
+        "catalogs": "Full printed attribute blocks and all encounter presets, source nulls and manual-stat requirements"
+      }
     },
     {
       "bookId": 537,
       "databaseEnemyRows": 22,
-      "apiConsumers": [],
-      "inlineDataFiles": [
-        "public/js/battlesim/engines/demonspawn/ancient-evil-roster.js"
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
       ],
-      "runtimeRosterReviewPending": true
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/537.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true,
+        "liveApiVerified": true,
+        "legacyRowsAdopted": 22,
+        "legacyFieldChanges": 0,
+        "catalogs": "Full printed attribute blocks and all encounter presets, source nulls and manual-stat requirements"
+      }
     },
     {
       "bookId": 539,
@@ -2357,6 +2402,9 @@
       532,
       533,
       534,
+      535,
+      536,
+      537,
       555,
       557,
       781,

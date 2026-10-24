@@ -1,3 +1,5 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
+await loadFixtureRoster(535);
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { CRYPTS_ROSTER, cryptsEnemy } from '../../../public/js/battlesim/engines/demonspawn/crypts-of-terror-roster.js';

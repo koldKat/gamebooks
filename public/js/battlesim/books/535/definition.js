@@ -1,3 +1,4 @@
+export { loadRoster } from '../../engines/demonspawn/crypts-of-terror-encounters.js';
 // Book identity and declarative defaults; no DOM or saved-state access.
 export const definition = Object.freeze({
   "id": 535,
