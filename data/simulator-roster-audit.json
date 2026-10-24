@@ -1825,11 +1825,25 @@
     {
       "bookId": 663,
       "databaseEnemyRows": 40,
-      "apiConsumers": [],
-      "inlineDataFiles": [
-        "public/js/battlesim/engines/freeway-fighter/roster.js"
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
       ],
-      "runtimeRosterReviewPending": true
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/663.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true,
+        "liveApiVerified": true,
+        "legacyRowsAdopted": 40,
+        "legacyFieldChanges": 0,
+        "catalogs": "32 melee/shooting/vehicle fight presets, four contests and two races; group order, timed rounds, damage, wound modifiers and resource restrictions preserved."
+      }
     },
     {
       "bookId": 665,
@@ -2556,6 +2570,7 @@
       648,
       654,
       658,
+      663,
       781,
       807,
       808,
