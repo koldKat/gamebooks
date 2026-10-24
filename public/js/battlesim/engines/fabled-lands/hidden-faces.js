@@ -1,3 +1,4 @@
+import { createRosterLoader } from '../../roster-data.js';
 import { fabledDie, fabledDice, fabledInteger, validateFabledCharacter } from './character.js';
 import { startFabledFight, fleeFabledFight } from './core.js';
 
@@ -5,38 +6,8 @@ export const HIDDEN_PROFESSIONS = Object.freeze({ priest: [6,4,5,8,6,2], troubad
   mage: [4,4,8,1,7,5], wayfarer: [4,7,4,4,8,6], warrior: [5,8,3,6,5,3], rogue: [7,6,6,2,4,8] });
 export const HIDDEN_DEFAULTS = Object.freeze({ rank: 5, stamina: 23, shards: 65, armour: 3,
   professions: HIDDEN_PROFESSIONS });
-const encounter = (section, win, name, combat, defence, stamina, extra = {}) => ({ section, win, loss: 7,
-  enemies: [{ name, combat, defence, stamina }], ...extra });
-export const HIDDEN_FIGHTS = Object.freeze([
-  encounter(24,471,'Hangman',13,15,25,{ special: 'choking' }),
-  { section:80,win:123,loss:7,enemies:[{name:'Priest',combat:8,defence:9,stamina:12},
-    {name:'Warrior',combat:11,defence:11,stamina:15},{name:'Bylewyn Buskle',combat:10,defence:10,stamina:18}] },
-  encounter(162,358,'Bandit',6,10,13),
-  encounter(173,53,'Troll',6,11,20,{entryDamage:3}),
-  encounter(198,null,'The Champion',8,15,12,{special:'champion',preCheck:true,winChoices:[223,635,471]}),
-  encounter(203,412,'Three Vampires',10,12,25,{special:'vampires',loss:684}),
-  encounter(207,53,'Winged Predator',3,13,3),
-  encounter(218,307,'Troll',6,11,15,{special:'strangling',preCheck:true}),
-  encounter(238,118,'Wight',12,15,13),
-  encounter(263,97,'Troll',9,12,20,{threshold:8,loss:66,lossStamina:1}),
-  encounter(270,490,'Toad-demon',7,9,15),
-  encounter(345,307,'Tripling',4,8,12,{special:'tripling',threshold:3}),
-  encounter(356,null,'The Hangman',10,12,25,{special:'abilityDrain'}),
-  encounter(368,68,'Giant Chameleon',10,10,19),
-  encounter(383,407,'Storm Demon',8,11,15,{special:'lightning',entryDice:1}),
-  encounter(406,490,'Toad-demon',7,9,15),
-  encounter(409,277,'Grindel the Ripper',12,12,18),
-  encounter(437,240,'Black Wolves',8,7,11),
-  encounter(477,null,'Water Drake',7,10,40,{entryDice:1,entryArmour:true,winChoices:[580,307]}),
-  encounter(489,565,"Irmak's Spectre",8,8,10,{special:'spectre',flee:{destination:45,dice:0}}),
-  encounter(565,631,"Irmak's Spectre",10,10,12,{special:'spectre',flee:{destination:45,dice:0}}),
-  encounter(631,697,"Irmak's Spectre",12,12,14,{special:'spectre',flee:{destination:45,dice:0}}),
-  encounter(633,47,'Snow Wolves',6,6,9),
-  encounter(657,220,'Unseen enemy',12,22,15,{flee:{destination:77,dice:1}}),
-  encounter(685,68,'Giant Chameleon',8,10,19),
-  encounter(689,436,'Water Drake',9,12,40,{special:'underwater',preCheck:true,unarmoured:true}),
-  encounter(713,307,'Troll',5,10,8),
-]);
+export let HIDDEN_FIGHTS = [];
+export const loadRoster = createRosterLoader(678, 'FIGHTS', rows => { HIDDEN_FIGHTS = rows; });
 
 function check(fight, ability, difficulty, roll, modifier = 0) {
   const total = fabledDice(roll) + fight.character[ability] + modifier;

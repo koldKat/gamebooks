@@ -1,3 +1,5 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
+await loadFixtureRoster(678);
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { newFabledCharacter } from '../../../public/js/battlesim/engines/fabled-lands/character.js';

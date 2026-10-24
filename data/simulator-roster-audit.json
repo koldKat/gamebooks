@@ -2014,12 +2014,26 @@
     {
       "bookId": 678,
       "databaseEnemyRows": 29,
-      "apiConsumers": [],
-      "inlineDataFiles": [
-        "public/js/battlesim/engines/fabled-lands/hidden-faces.js",
-        "public/js/battlesim/engines/fabled-lands/roster.js"
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
       ],
-      "runtimeRosterReviewPending": true
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/678.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true,
+        "liveApiVerified": true,
+        "legacyRowsAdopted": 29,
+        "legacyFieldChanges": 0,
+        "catalogs": "27 complete presets with special rule keys, prechecks, thresholds, multiple destinations and temporary attribute drains retained",
+        "allPresetEncountersCompleted": true
+      }
     },
     {
       "bookId": 679,
@@ -2679,6 +2693,7 @@
       675,
       676,
       677,
+      678,
       781,
       807,
       808,
