@@ -1,8 +1,9 @@
-import { addDestinyStatEffect, healDestinyHero, hasDestinyAbility, destinyStrike } from './effects.js';
+import { addDestinyStatEffect, healDestinyHero, hasDestinyAbility, destinyStrike, destinyOnOpponentRoll, destinyDieLocked } from './effects.js';
 import { settleDestinyFight } from './core.js';
 import { applyDestinyAdvancedAbility } from './advanced.js';
 import { prepareDestinyDamage } from './damage.js';
 import { prepareDestinyAbilityRoll } from './ability-rolls.js';
+import { useDestinyOpening } from './openings.js';
 
 const rule = (category, phases, extra = {}) => Object.freeze({ category, phases, ...extra });
 const anytime = ['speed', 'speed-rolled', 'damage', 'damage-rolled', 'ability-rolled', 'end', 'death-move'];
@@ -148,12 +149,23 @@ const definitions = {
   'sound-the-charge': rule('sp', ['speed'], { speedDie: true, requires: 'horn', advanced: true }),
   'upper-hand': rule('dm', ['death-move'], { advanced: true }),
   gouge: rule('co', anytime, { advanced: true }),
+  vortex: rule('co', ['damage'], { heroWon: true, replacement: true, advanced: true }),
+  'dry-ice': rule('co', ['damage'], { heroWon: true, replacement: true, advanced: true }),
+  'crystal-armour': rule('mo', ['damage'], { heroWon: true, replacement: true, requires: 'syns-heart', advanced: true }),
+  hooked: rule('mo', ['speed-rolled'], { advanced: true }),
+  'silver-frost': rule('mo', ['speed-rolled'], { advanced: true }),
+  torrent: rule('mo', anytime, { advanced: true }),
+  'veiled-strike': rule('pa', anytime, { advanced: true, limit: null }),
 };
+for (const name of ['first-blood', 'first-cut', 'best-laid-plans', 'sweet-spot', 'armour-plating', 'ice-mantle']) {
+  definitions[name] = rule('pa', ['start'], { opening: true });
+}
 for (const name of ['blind', 'curse', 'immobilise', 'knockdown', 'shackles', 'webbed', 'windblast']) {
   definitions[name] = rule('sp', ['speed'], { fewerOpponentDice: true });
 }
 for (const name of ['barbs', 'decay', 'thorns', 'bleed', 'disease', 'blood-frenzy', 'mangle',
-  'ice-edge', 'lightning', 'siphon', 'salvation', 'heart-steal', 'anguish', 'weaver', 'wind-chill']) definitions[name] = rule('pa', []);
+  'ice-edge', 'lightning', 'siphon', 'salvation', 'heart-steal', 'anguish', 'weaver', 'wind-chill',
+  'venom', 'brittle-edge', 'exploit', 'malefic-runes']) definitions[name] = rule('pa', []);
 export const DESTINY_ABILITIES = Object.freeze(definitions);
 
 function draw(roll) {
@@ -163,7 +175,7 @@ function draw(roll) {
 }
 
 export function configureDestinyAbilities(fight, inventory, equipment = {}) {
-  if (fight?.status !== 'active' || fight.round !== 0 || fight.phase !== 'start' ||
+  if (fight?.status !== 'active' || fight.round !== 0 || fight.phase !== 'start' || Object.keys(fight.used).length ||
       !inventory || typeof inventory !== 'object' || Array.isArray(inventory)) throw new RangeError('Configure abilities before combat');
   const next = structuredClone(fight);
   if (!equipment || typeof equipment !== 'object' || Array.isArray(equipment)) throw new RangeError('Invalid equipment');
@@ -196,6 +208,7 @@ function dieIndex(values, index) {
 
 export function useDestinyAbility(fight, name, options = {}, roll = () => Math.floor(Math.random() * 6) + 1) {
   const spec = DESTINY_ABILITIES[name];
+  if (spec?.opening) return useDestinyOpening(fight, name, options, roll);
   if (!spec || fight?.status !== 'active' || !fight.turn || !hasDestinyAbility(fight, name) || !spec.phases.includes(fight.phase)) {
     throw new RangeError('Ability unavailable at this combat stage');
   }
@@ -248,12 +261,19 @@ export function useDestinyAbility(fight, name, options = {}, roll = () => Math.f
     pendingGroup = next.turn.pendingAbility.groups[groupIndex];
   }
   if (action) {
-    if (action === 'critical') (pendingGroup?.dice || next.turn.damageDice).fill(6);
+    if (action === 'critical') {
+      const values = pendingGroup?.dice || next.turn.damageDice;
+      if (!pendingGroup && values.every((_, index) => destinyDieLocked(next, 'hero', 'damage', index))) throw new RangeError('Saved dice cannot be changed');
+      values.forEach((_, index) => { if (pendingGroup || !destinyDieLocked(next, 'hero', 'damage', index)) values[index] = 6; });
+    }
     else {
       const heroSpeed = action === 'agility';
       const enemySpeed = action === 'sneak' || action === 'watchful' && next.phase === 'speed-rolled';
       const values = heroSpeed ? next.turn.heroSpeedDice : enemySpeed ? next.turn.opponentSpeedDice : pendingGroup?.dice || next.turn.damageDice;
       const index = dieIndex(values, options.die);
+      const owner = enemySpeed || ['protection', 'watchful'].includes(action) ? 'opponent' : 'hero';
+      const kind = heroSpeed || enemySpeed ? 'speed' : 'damage';
+      if (!pendingGroup && destinyDieLocked(next, owner, kind, index)) throw new RangeError('Saved dice cannot be changed');
       if (action === 'agility' && values[index] !== 1) throw new RangeError('Choose a one');
       if (['protection', 'watchful'].includes(action) && values[index] !== 6) throw new RangeError('Choose a six');
       if (action === 'watchful' && next.phase === 'damage-rolled' && next.turn.winner !== 'opponent') throw new RangeError('Choose an opponent die');
@@ -263,18 +283,28 @@ export function useDestinyAbility(fight, name, options = {}, roll = () => Math.f
   if (spec.reroll) {
     const mode = spec.reroll;
     if (mode === 'both-speed' || mode === 'opponent-speed') {
-      next.turn.opponentSpeedDice = next.turn.opponentSpeedDice.map(() => draw(roll));
+      if (next.turn.lockedOpponentDice && mode === 'opponent-speed') throw new RangeError('Frozen dice cannot be rerolled');
+      if (!next.turn.lockedOpponentDice) {
+        next.turn.opponentSpeedDice = next.turn.opponentSpeedDice.map(() => draw(roll));
+        destinyOnOpponentRoll(next, next.turn.opponentSpeedDice, 'speed');
+      }
     }
-    if (mode === 'both-speed') next.turn.heroSpeedDice = next.turn.heroSpeedDice.map(() => draw(roll));
+    if (mode === 'both-speed') next.turn.heroSpeedDice = next.turn.heroSpeedDice.map((value, index) => destinyDieLocked(next, 'hero', 'speed', index) ? value : draw(roll));
     if (mode === 'hero-speed') {
       if (!Array.isArray(options.dice) || !options.dice.length || new Set(options.dice).size !== options.dice.length) throw new RangeError('Choose dice to reroll');
-      for (const index of options.dice) next.turn.heroSpeedDice[dieIndex(next.turn.heroSpeedDice, index)] = draw(roll);
+      for (const index of options.dice) {
+        dieIndex(next.turn.heroSpeedDice, index);
+        if (destinyDieLocked(next, 'hero', 'speed', index)) throw new RangeError('Saved dice cannot be rerolled');
+        next.turn.heroSpeedDice[index] = draw(roll);
+      }
     }
     if (mode === 'hero-die' || mode === 'damage-plus-two') {
       if (mode === 'hero-die' && next.phase === 'damage-rolled' && next.turn.winner !== 'hero') throw new RangeError('Choose a hero die');
       const values = next.phase === 'speed-rolled' ? next.turn.heroSpeedDice : next.phase === 'ability-rolled' ?
         pendingGroup?.dice || next.turn.pendingAbility.dice : next.turn.damageDice;
       const index = dieIndex(values, options.die);
+      if (next.phase !== 'ability-rolled' && destinyDieLocked(next, next.turn.winner === 'opponent' && next.phase === 'damage-rolled' ? 'opponent' : 'hero',
+        next.phase === 'speed-rolled' ? 'speed' : 'damage', index)) throw new RangeError('Saved dice cannot be rerolled');
       values[index] = draw(roll);
       if (mode === 'damage-plus-two') {
         const bonuses = pendingGroup ? pendingGroup.bonuses : (next.turn.damageDieBonuses ??= {});
@@ -340,6 +370,7 @@ export function useDestinyAbility(fight, name, options = {}, roll = () => Math.f
   next.used[name] = (next.used[name] || 0) + 1;
   if (['sp', 'co', 'dm'].includes(spec.category)) next.turn.used[spec.category] = true;
   if (spec.fewerOpponentDice) next.turn.controlledOpponent = next.target;
+  if (['evade', 'sidestep', 'vanish'].includes(name) && hasDestinyAbility(next, 'veiled-strike')) next.turn.veiledStrikeAvailable = true;
   if (spec.category === 'co' && hasDestinyAbility(next, 'weaver')) healDestinyHero(next, 2);
   if (spec.category === 'sp' && hasDestinyAbility(next, 'wind-chill')) {
     for (const index of alive()) destinyStrike(next, index, 2, 'wind-chill', 'passive');

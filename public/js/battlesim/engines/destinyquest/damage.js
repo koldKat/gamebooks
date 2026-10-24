@@ -27,7 +27,8 @@ export function prepareDestinyDamage(fight, name, spec, options, roll) {
   } else targets = [target(fight, chosen)];
   if (spec.hit === 'dragon') target(fight, chosen);
   const group = (count, affected) => ({ dice: Array.from({ length: count }, () => destinyDie(roll)), targets: [...affected], bonuses: {} });
-  const groups = spec.shared ? [group(spec.dice, targets)] : targets.map((index, order) => {
+  const countBonus = fight.turn.torrentFor === name ? 1 : 0;
+  const groups = spec.shared ? [group(spec.dice + countBonus, targets)] : targets.map((index, order) => {
     let count = spec.dice;
     if (spec.hit === 'dragon' && index !== chosen) count = 1;
     if (spec.hit === 'below') count = Math.max(1, 3 - order);
@@ -49,6 +50,7 @@ export function applyDestinyDamage(fight, pending) {
     const damage = group.dice.reduce((sum, face, index) => sum + face + bonus + (group.bonuses[index] || 0), 0);
     for (const index of group.targets) {
       const lost = destinyStrike(fight, index, damage, name);
+      if (spec.passive && fight.opponents[index].health === 0) fight.turn.pendingPassiveDeath = true;
       if (spec.category === 'co' && lost) fight.turn.combatAbilityDamage = true;
       if (spec.drain && lost) healDestinyHero(fight, 2);
       if (spec.recoil && lost) fight.hero.health = Math.max(0, fight.hero.health - 1);

@@ -8,6 +8,8 @@ export function destinyStat(fight, target, attribute) {
   for (const effect of fight.effects) {
     if (effect.kind !== 'stat' || effect.target !== target || effect.attribute !== attribute ||
         fight.round < effect.from || fight.round > effect.until) continue;
+    if (target === 'hero' && attribute === 'armour' && hasDestinyAbility(fight, 'ice-mantle') &&
+        (effect.amount < 0 || effect.set !== undefined && effect.set < value)) continue;
     if (effect.set !== undefined) value = effect.set;
     else value += effect.amount;
   }
@@ -48,7 +50,7 @@ export function destinyDamageScore(fight) {
 
 export function destinyOnHeroHit(fight, target, damage, kind = 'score') {
   if (damage <= 0 || !['score', 'dice', 'first-strike'].includes(kind)) return;
-  for (const [ability, amount, delay] of [['bleed', 1, 0], ['disease', 2, 1]]) {
+  for (const [ability, amount, delay] of [['bleed', 1, 0], ['disease', 2, 1], ['venom', 2, 0]]) {
     if (!hasDestinyAbility(fight, ability) || fight.effects.some(effect => effect.kind === ability && effect.target === target)) continue;
     fight.effects.push({ kind: ability, target, amount, from: fight.round + delay, until: Number.MAX_SAFE_INTEGER });
   }
@@ -66,11 +68,34 @@ export function destinyStrike(fight, target, amount, source, kind = 'dice') {
   fight.turn.lastHeroDamage ??= {};
   fight.turn.lastHeroDamage[target] = (fight.turn.lastHeroDamage[target] || 0) + lost;
   if (opponent.health === 0) {
+    recordDestinyDefeat(fight, target);
     fight.turn.deaths.push(target);
     if (kind === 'passive') fight.turn.pendingPassiveDeath = true;
   }
   fight.history.push({ type: 'ability-damage', round: fight.round, target, damage: lost, source });
   return lost;
+}
+
+export function recordDestinyDefeat(fight, target) {
+  fight.defeated ??= [];
+  if (fight.defeated.includes(target)) return;
+  fight.defeated.push(target);
+  if (hasDestinyAbility(fight, 'malefic-runes')) addDestinyStatEffect(fight, 'hero', 'magic', 1, null, 'malefic-runes');
+}
+
+export function destinyOnOpponentRoll(fight, values, kind) {
+  if (fight.opponents[fight.target].health <= 0) return;
+  const sweet = fight.sweetSpot ? values.filter(value => value === fight.sweetSpot).length * 2 : 0;
+  const exploit = kind === 'speed' && hasDestinyAbility(fight, 'exploit') ? values.filter(value => value === 1).length : 0;
+  if (sweet + exploit) {
+    fight.history.push({ type: 'passive-roll', kind, dice: [...values], target: fight.target, sweet, exploit });
+    destinyStrike(fight, fight.target, sweet + exploit, 'opponent-dice', 'passive');
+  }
+}
+
+export function destinyDieLocked(fight, owner, kind, index) {
+  if (kind === 'speed') return owner === 'hero' ? (fight.turn.lockedHeroDice || []).includes(index) : Boolean(fight.turn.lockedOpponentDice);
+  return owner === 'hero' && (fight.turn.lockedDamageDice || []).includes(index);
 }
 
 export function rollDestinyDamageDice(fight, count, roll, unmodified = false) {
@@ -93,11 +118,14 @@ export function destinyPassiveEffects(fight, roll) {
       if (opponent.health > 0) result.push({ target, amount: 1, ignoreArmour: true, source: name });
     });
   }
+  if (fight.crystalArmour) fight.opponents.forEach((opponent, target) => {
+    if (opponent.health > 0) result.push({ target, amount: 1, ignoreArmour: true, source: 'crystal-armour' });
+  });
   if (fight.powerTotemActive) fight.opponents.forEach((opponent, target) => {
     if (opponent.health > 0) result.push({ target, amount: 1, ignoreArmour: true, source: 'power-totem' });
   });
   for (const effect of fight.effects) {
-    if (!['bleed', 'disease', 'ongoing-damage', 'delayed-dice'].includes(effect.kind) ||
+    if (!['bleed', 'disease', 'venom', 'ongoing-damage', 'delayed-dice'].includes(effect.kind) ||
         fight.round < effect.from || fight.round > effect.until || fight.opponents[effect.target]?.health <= 0) continue;
     let amount = effect.amount;
     if (effect.kind === 'bleed') amount += fight.bleedBonus || 0;

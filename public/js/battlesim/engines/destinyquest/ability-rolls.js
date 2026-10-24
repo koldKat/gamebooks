@@ -61,6 +61,13 @@ export function resolveDestinyAbilityRoll(fight, roll = () => Math.floor(Math.ra
         if (options.deferDamage) { next.turn.pendingAbility = damage; next.phase = 'ability-rolled'; }
         else applyDestinyDamage(next, damage);
       }
+    } else if (name === 'crystal-armour') {
+      if (result <= 4) {
+        next.crystalArmour = false;
+        next.effects = next.effects.filter(effect => effect.source !== 'crystal-armour');
+        if (result <= 2) next.hero.health = Math.max(0, next.hero.health - 4);
+      }
+      next.phase = pending.returnPhase;
     } else if (name === 'pick-n-mix') {
       if (next.hero.health > 0) next.hero.health = Math.min(next.hero.maxHealth, next.hero.health + Math.ceil(result / 2) * 2);
       next.phase = pending.returnPhase;

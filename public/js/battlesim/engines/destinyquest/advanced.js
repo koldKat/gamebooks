@@ -1,4 +1,4 @@
-import { destinyStat, addDestinyStatEffect, healDestinyHero, destinyStrike } from './effects.js';
+import { destinyStat, addDestinyStatEffect, healDestinyHero, destinyStrike, destinyDieLocked, hasDestinyAbility } from './effects.js';
 import { prepareDestinyDamage } from './damage.js';
 
 const sum = values => values.reduce((total, value) => total + value, 0);
@@ -47,6 +47,7 @@ export function applyDestinyAdvancedAbility(fight, name, options, roll) {
     case 'trickster': case 'deceive': {
       const h = index(fight.turn.heroSpeedDice, options.heroDie);
       const e = index(fight.turn.opponentSpeedDice, options.opponentDie);
+      if (destinyDieLocked(fight, 'hero', 'speed', h) || destinyDieLocked(fight, 'opponent', 'speed', e)) throw new RangeError('Saved dice cannot be swapped');
       [fight.turn.heroSpeedDice[h], fight.turn.opponentSpeedDice[e]] =
         [fight.turn.opponentSpeedDice[e], fight.turn.heroSpeedDice[h]];
       break;
@@ -60,6 +61,7 @@ export function applyDestinyAdvancedAbility(fight, name, options, roll) {
       const value = fight.turn.heroSpeedDice[index(fight.turn.heroSpeedDice, options.die)];
       fight.turn.damageDice = [value];
       fight.turn.damageUsesBrawn = name === 'roll-with-it';
+      if (destinyDieLocked(fight, 'hero', 'speed', options.die)) fight.turn.lockedDamageDice = [0];
       fight.phase = 'damage-rolled';
       break;
     }
@@ -171,6 +173,37 @@ export function applyDestinyAdvancedAbility(fight, name, options, roll) {
     case 'sound-the-charge': fight.turn.soundCharge = true; break;
     case 'upper-hand': fight.autoWinRound = fight.round + 1; break;
     case 'gouge': fight.bleedBonus = (fight.bleedBonus || 0) + 1; break;
+    case 'vortex': case 'dry-ice':
+      fight.effects.push({ kind: name, from: fight.round + 1, source: name });
+      break;
+    case 'crystal-armour':
+      stat('hero', 'armour', 3, null);
+      fight.crystalArmour = true;
+      break;
+    case 'hooked': {
+      const die = index(fight.turn.heroSpeedDice, options.die);
+      fight.savedHeroDie = { round: fight.round + 1, value: fight.turn.heroSpeedDice[die] };
+      fight.turn.lockedHeroDice = [...new Set([...(fight.turn.lockedHeroDice || []), die])];
+      break;
+    }
+    case 'silver-frost':
+      fight.savedOpponentDice = { target: fight.target, round: fight.round + 1, dice: [...fight.turn.opponentSpeedDice] };
+      fight.turn.lockedOpponentDice = true;
+      break;
+    case 'torrent': {
+      const pending = fight.turn.pendingAbility;
+      const ability = pending?.type === 'damage' ? pending.name : options.ability;
+      if (!['cleave', 'lash', 'shadow-thorns'].includes(ability) || !hasDestinyAbility(fight, ability)) throw new RangeError('Choose cleave, lash or shadow thorns');
+      if (pending?.type === 'damage') pending.groups[0].dice.push(draw(roll));
+      else fight.turn.torrentFor = ability;
+      break;
+    }
+    case 'veiled-strike':
+      if (!fight.turn.veiledStrikeAvailable) throw new RangeError('Use evade, sidestep or vanish first');
+      requireLiving(chosen);
+      fight.turn.veiledStrikeAvailable = false;
+      prepareDestinyDamage(fight, name, { category: 'pa', hit: 'one', dice: 1, passive: true }, options, roll);
+      break;
     default: throw new RangeError('Unknown advanced ability');
   }
 }
