@@ -1,6 +1,7 @@
 const checks = [], saves = [];
 const assert = (value, label) => { if (!value) throw Error(label); checks.push(label); };
 window.fetch = async (url, options = {}) => {
+  if(url==='/api/books/677/enemies' && !options.method) return new Response(JSON.stringify(ROSTER_SEED),{status:200,headers:{'Content-Type':'application/json'}});
   assert(url === '/api/books/677/state' && options.method === 'PUT', 'only simulator state saves');
   saves.push(JSON.parse(options.body));
   return new Response('{}', { status: 200, headers: { 'Content-Type': 'application/json' } });
@@ -8,7 +9,7 @@ window.fetch = async (url, options = {}) => {
 const app = await import('REPO/public/js/core/state.js');
 const desktop = await import('REPO/public/js/battlesim/loader.js');
 const mobile = await import('REPO/public/mobile/js/battlesim-dispatch.js');
-const { HOWLING_FIGHTS } = await import('REPO/public/js/battlesim/engines/fabled-lands/howling-darkness.js');
+import { HOWLING_FIGHTS } from 'REPO/public/js/battlesim/engines/fabled-lands/howling-darkness.js';
 app.setCurrentBookId(677);
 const run = { startedAt: 123, path: [1], sim676: { preserved: true } };
 app.state.playthroughs = [run]; app.state.activePtIndex = 0;
@@ -21,7 +22,7 @@ await open();
 assert(el('overlay').classList.contains('active'), 'real loader opens panel');
 assert(!el('overlay').textContent.includes('battlesim677.'), 'translated visible labels');
 assert(run.sim677.character === null && saves.length === 0, 'opening creates no character');
-assert(el('context').options.length === 31 && el('seaContext').options.length === 13, 'source encounters and ship checks');
+assert(el('context').options.length === 32 && el('context').options[0].value === '-1' && el('seaContext').options.length === 13, 'source encounters and ship checks');
 assert(getComputedStyle(el('btn')).borderRadius === '7px', 'themed button');
 el('profession').value = 'warrior'; el('create').click();
 assert(run.sim677.character.rank === 4 && run.sim677.character.stamina === 20
@@ -40,6 +41,23 @@ assert(run.sim677.history.length === 1 && run.sim676.preserved === true, 'one re
 Math.random = () => .499; el('seaContext').value = '135'; el('seaRoll').click();
 assert(run.sim677.character.stamina === 0 && run.sim677.log.at(-1).includes('7'), 'local shipwreck death');
 await app.saveState(); assert(saves.at(-1).playthroughs[0].sim677.character.stamina === 0, 'actual state persistence');
+el('combat').closest('details').open = true;
+for (const [field, value] of Object.entries({ combat: 100, stamina: 1000, staminaInitial: 1000 })) el(field).value = String(value);
+el('apply').click();
+Math.random = () => .999;
+const initialHistory = run.sim677.history.length;
+for (let index = 0; index < HOWLING_FIGHTS.length; index++) {
+  el('context').value = String(index);
+  el('context').dispatchEvent(new Event('change', { bubbles: true }));
+  el('start').click();
+  assert(el('apply').disabled && el('context').disabled, 'active encounter locks setup ' + index);
+  let rounds = 0;
+  while (run.sim677.fight.status === 'fighting' && rounds++ < 10) el('step').click();
+  assert(run.sim677.fight.status === 'win' && run.sim677.fight.destination === HOWLING_FIGHTS[index].win, 'complete named encounter ' + index);
+  assert(run.sim677.history.length === initialHistory + index + 1, 'one history result per encounter ' + index);
+}
+await app.saveState();
+assert(saves.at(-1).playthroughs[0].sim677.history.length === initialHistory + 31, 'all encounter results persist');
 for (const node of el('overlay').querySelectorAll('details')) node.open = true;
 const body = el('overlay').querySelector('.bsim-body'); body.scrollTop = Number.MAX_SAFE_INTEGER;
 assert(Math.abs(body.scrollTop - Math.max(0, body.scrollHeight - body.clientHeight)) <= 1, 'scroll reaches bottom');

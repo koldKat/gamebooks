@@ -1990,13 +1990,26 @@
     {
       "bookId": 677,
       "databaseEnemyRows": 31,
-      "apiConsumers": [],
-      "inlineDataFiles": [
-        "public/js/battlesim/engines/fabled-lands/howling-darkness.js",
-        "public/js/battlesim/engines/fabled-lands/blood-dark-sea.js",
-        "public/js/battlesim/engines/fabled-lands/roster.js"
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
       ],
-      "runtimeRosterReviewPending": true
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/677.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true,
+        "liveApiVerified": true,
+        "legacyRowsAdopted": 31,
+        "legacyFieldChanges": 0,
+        "catalogs": "31 full encounter presets, with first-wound interruption, nonfatal losses, stamina threshold, entry and escape conditions retained",
+        "allPresetEncountersCompleted": true
+      }
     },
     {
       "bookId": 678,
@@ -2665,6 +2678,7 @@
       674,
       675,
       676,
+      677,
       781,
       807,
       808,

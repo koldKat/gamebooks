@@ -1,45 +1,12 @@
+import { createRosterLoader } from '../../roster-data.js';
 import { BLOOD_DARK_PROFESSIONS } from './blood-dark-sea.js';
 import { fabledDie, validateFabledCharacter } from './character.js';
 
 export const HOWLING_DEFAULTS = Object.freeze({ rank: 4, stamina: 20, shards: 65, armour: 3,
   professions: BLOOD_DARK_PROFESSIONS });
 
-const encounter = (section, win, name, combat, defence, stamina, extra = {}) => ({ section, win, loss: 7,
-  enemies: [{ name, combat, defence, stamina }], ...extra });
-
-export const HOWLING_FIGHTS = Object.freeze([
-  encounter(62, 108, 'Faery Hound', 7, 10, 12),
-  encounter(76, 157, 'Vampire', 8, 12, 18),
-  encounter(83, 124, 'Manbeast', 8, 5, 10),
-  encounter(87, 304, 'Kaschuf', 8, 8, 20, { woundEffect: 'immortal' }),
-  encounter(109, 197, 'Nomad', 7, 6, 11, { loss: 169, lossStamina: 1 }),
-  encounter(147, 147, 'Wolfpack', 9, 8, 18, { woundEffect: 'wolfpack' }),
-  encounter(149, 114, 'Avar Hordeth', 7, 8, 3),
-  encounter(167, 603, 'Redcaps', 8, 10, 16),
-  encounter(171, 429, 'Grey Worm', 8, 23, 8, { flee: { destination: 226, dice: 1 } }),
-  encounter(209, 391, 'Luroc Bans', 7, 6, 11),
-  encounter(238, 150, 'Three Cutthroats', 8, 7, 17, { woundDestination: 184, woundEffect: 'daggers' }),
-  encounter(265, 330, 'Sea Spider', 7, 6, 13),
-  encounter(311, 430, 'Three Thugs', 10, 7, 19, { loss: 169, lossStamina: 1 }),
-  encounter(352, 170, 'She-devil', 8, 6, 10),
-  encounter(367, 158, 'Kaschuf', 8, 8, 20),
-  encounter(371, 99, 'Hooded Men', 7, 7, 15),
-  encounter(406, 197, 'Luroc Bans', 7, 6, 11),
-  encounter(410, 678, 'Young Rukh', 6, 5, 21),
-  encounter(419, 392, 'Avar Hordeth', 8, 8, 12, { threshold: 3, loss: 338, lossStamina: 1 }),
-  encounter(446, 571, 'Sir Leo', 8, 20, 35, { entryDice: 2, flee: { destination: 191, dice: 0 } }),
-  encounter(469, 215, 'Snake Demon', 7, 7, 10, { woundEffect: 'snake' }),
-  encounter(532, 158, 'Kaschuf', 8, 8, 20),
-  encounter(536, 262, 'Storm Demon', 8, 10, 15),
-  encounter(538, 571, 'Sir Leo', 8, 20, 6, { flee: { destination: 191, dice: 0 } }),
-  encounter(555, 625, 'Kelpie', 6, 8, 12),
-  encounter(561, 658, 'Wrecker', 6, 6, 15),
-  encounter(562, 248, 'Blue Cap', 8, 6, 22),
-  encounter(566, 215, 'Snake Demon', 9, 9, 18, { woundEffect: 'snake' }),
-  encounter(591, 322, 'Mugger', 5, 6, 10, { loss: 169, lossStamina: 1 }),
-  encounter(604, 666, 'Rabid Wolf', 7, 5, 6),
-  encounter(659, 78, 'Undead Warriors', 8, 7, 16, { woundEffect: 'blight' }),
-]);
+export let HOWLING_FIGHTS = [];
+export const loadRoster = createRosterLoader(677, 'FIGHTS', rows => { HOWLING_FIGHTS = rows; });
 
 const storm = (destinations, blessingDestination) => ({ kind: 'storm', destinations, blessingDestination });
 const wreck = destination => ({ kind: 'shipwreck', destinations: [7, destination] });
