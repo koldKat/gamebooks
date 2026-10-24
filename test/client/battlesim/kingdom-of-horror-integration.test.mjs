@@ -1,8 +1,10 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
+await loadFixtureRoster(530);
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from './simulator-source.mjs';
 import { runInNewContext } from 'node:vm';
-import translations from '../../../public/js/i18n/en/battlesim/battlesim530.js';
+const {default: translations} = await import('../../../public/js/i18n/en/battlesim/battlesim530.js');
 import { KINGDOM_ENCOUNTERS, KINGDOM_DREAMS, KINGDOM_MAGIC_STOCK,
   KINGDOM_STORY_MAGIC, KINGDOM_EQUIPMENT } from '../../../public/js/battlesim/engines/grailquest/kingdom-of-horror-roster.js';
 

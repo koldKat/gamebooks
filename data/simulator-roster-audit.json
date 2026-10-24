@@ -1369,38 +1369,95 @@
     {
       "bookId": 530,
       "databaseEnemyRows": 39,
-      "apiConsumers": [],
-      "inlineDataFiles": [
-        "public/js/battlesim/engines/grailquest/kingdom-of-horror-roster.js"
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
       ],
-      "runtimeRosterReviewPending": true
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/530.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true,
+        "liveApiVerified": true,
+        "legacyRowsAdopted": 39,
+        "legacyFieldChanges": 0,
+        "catalogs": "Normal and Dreamtime encounters with original group/reinforcement rules and support templates",
+        "restoredReinforcements": "Use the captured source LIFE for current/max LIFE; preserve existing enemy/player wounds and unknown saved fields."
+      }
     },
     {
       "bookId": 531,
       "databaseEnemyRows": 37,
-      "apiConsumers": [],
-      "inlineDataFiles": [
-        "public/js/battlesim/engines/grailquest/realm-of-chaos-roster.js"
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
       ],
-      "runtimeRosterReviewPending": true
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/531.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true,
+        "liveApiVerified": true,
+        "legacyRowsAdopted": 37,
+        "legacyFieldChanges": 0,
+        "catalogs": "Normal and Dreamtime encounters with original group/reinforcement rules and support templates"
+      }
     },
     {
       "bookId": 532,
       "databaseEnemyRows": 28,
-      "apiConsumers": [],
-      "inlineDataFiles": [
-        "public/js/battlesim/engines/grailquest/tomb-of-nightmares-roster.js"
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
       ],
-      "runtimeRosterReviewPending": true
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/532.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true,
+        "liveApiVerified": true,
+        "legacyRowsAdopted": 28,
+        "legacyFieldChanges": 0,
+        "catalogs": "Normal and Dreamtime encounters with original group/reinforcement rules and support templates"
+      }
     },
     {
       "bookId": 533,
       "databaseEnemyRows": 28,
-      "apiConsumers": [],
-      "inlineDataFiles": [
-        "public/js/battlesim/engines/grailquest/legion-of-the-dead-roster.js"
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
       ],
-      "runtimeRosterReviewPending": true
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/533.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true,
+        "liveApiVerified": true,
+        "legacyRowsAdopted": 28,
+        "legacyFieldChanges": 0,
+        "catalogs": "Normal and Dreamtime encounters with original group/reinforcement rules and support templates"
+      }
     },
     {
       "bookId": 534,
@@ -2280,6 +2337,10 @@
       527,
       528,
       529,
+      530,
+      531,
+      532,
+      533,
       555,
       557,
       781,

@@ -1,0 +1,1394 @@
+{
+  "schemaVersion": 1,
+  "bookId": 533,
+  "family": "grailquest",
+  "source": "Original normal and Dreamtime encounters, preserved group/reinforcement rules and supporting companion templates. Every legacy enemy row matched exactly.",
+  "enemies": [
+    {
+      "key": "4:0",
+      "name": "Thing (4)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 20,
+      "pb": 3,
+      "adopt": {
+        "name": "Thing (4)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 20,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "LEGION_ENCOUNTERS",
+          "spec": {
+            "id": 4,
+            "name": "The Thing Outside Merlin's Door",
+            "enemies": [
+              {
+                "name": "Thing",
+                "life": 20,
+                "hit": 6,
+                "bonus": 3,
+                "armour": 0
+              }
+            ]
+          },
+          "support": {
+            "companions": {
+              "skeleton": {
+                "name": "Rescued Skeleton",
+                "life": 30,
+                "hit": 5,
+                "bonus": 2,
+                "armour": 0
+              },
+              "orangutiger": {
+                "name": "Orang-utiger",
+                "life": 30,
+                "hit": 4,
+                "bonus": 3,
+                "armour": 0,
+                "evade": 1,
+                "voluntary": true
+              },
+              "dragon": {
+                "name": "Golden-eyed Baby Dragon",
+                "life": 7000,
+                "hit": 6,
+                "bonus": 0,
+                "armour": 0,
+                "remainingFights": 7
+              }
+            }
+          }
+        },
+        "part": {
+          "name": "Thing",
+          "life": 20,
+          "hit": 6,
+          "bonus": 3,
+          "armour": 0
+        }
+      }
+    },
+    {
+      "key": "9:0",
+      "name": "Leathery Demon (9)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 25,
+      "pb": 0,
+      "adopt": {
+        "name": "Leathery Demon (9)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 25,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "LEGION_ENCOUNTERS",
+          "spec": {
+            "id": 9,
+            "name": "The Beautiful Young Woman",
+            "enemies": [
+              {
+                "name": "Leathery Demon",
+                "life": 25,
+                "hit": 6,
+                "bonus": 0,
+                "armour": 0,
+                "doubleFrom": 11
+              }
+            ]
+          }
+        },
+        "part": {
+          "name": "Leathery Demon",
+          "life": 25,
+          "hit": 6,
+          "bonus": 0,
+          "armour": 0,
+          "doubleFrom": 11
+        }
+      }
+    },
+    {
+      "key": "13:0",
+      "name": "Rock Dwarf (13)",
+      "attack": 5,
+      "defense": 2,
+      "hp": 30,
+      "pb": 2,
+      "adopt": {
+        "name": "Rock Dwarf (13)",
+        "attack": 5,
+        "defense": 2,
+        "hp": 30,
+        "pb": 2
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "LEGION_ENCOUNTERS",
+          "spec": {
+            "id": 13,
+            "name": "The Rock Dwarf",
+            "enemies": [
+              {
+                "name": "Rock Dwarf",
+                "life": 30,
+                "hit": 5,
+                "bonus": 2,
+                "armour": 2,
+                "thirdTurnHit": 8
+              }
+            ],
+            "playerFirst": true
+          }
+        },
+        "part": {
+          "name": "Rock Dwarf",
+          "life": 30,
+          "hit": 5,
+          "bonus": 2,
+          "armour": 2,
+          "thirdTurnHit": 8
+        }
+      }
+    },
+    {
+      "key": "19:0",
+      "name": "Chasm Kraken (19)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 25,
+      "pb": 0,
+      "adopt": {
+        "name": "Chasm Kraken (19)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 25,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "LEGION_ENCOUNTERS",
+          "spec": {
+            "id": 19,
+            "name": "Chasm Kraken",
+            "enemies": [
+              {
+                "name": "Chasm Kraken",
+                "life": 25,
+                "hit": 6,
+                "bonus": 0,
+                "armour": 0,
+                "fatalFrom": 11
+              }
+            ]
+          }
+        },
+        "part": {
+          "name": "Chasm Kraken",
+          "life": 25,
+          "hit": 6,
+          "bonus": 0,
+          "armour": 0,
+          "fatalFrom": 11
+        }
+      }
+    },
+    {
+      "key": "24:0",
+      "name": "Rock Shape (24)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 10,
+      "pb": 0,
+      "adopt": {
+        "name": "Rock Shape (24)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 10,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "LEGION_ENCOUNTERS",
+          "spec": {
+            "id": 24,
+            "name": "Contorted Rock Shapes",
+            "enemies": [
+              {
+                "name": "Rock Shape",
+                "life": 10,
+                "hit": 6,
+                "bonus": 0,
+                "armour": 0,
+                "fatalFrom": 11
+              }
+            ],
+            "count": "shapes"
+          }
+        },
+        "part": {
+          "name": "Rock Shape",
+          "life": 10,
+          "hit": 6,
+          "bonus": 0,
+          "armour": 0,
+          "fatalFrom": 11
+        }
+      }
+    },
+    {
+      "key": "31:0",
+      "name": "Drawn Dragon (31)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 25,
+      "pb": 3,
+      "adopt": {
+        "name": "Drawn Dragon (31)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 25,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "LEGION_ENCOUNTERS",
+          "spec": {
+            "id": 31,
+            "name": "The Drawn Dragon",
+            "enemies": [
+              {
+                "name": "Drawn Dragon",
+                "life": 25,
+                "hit": 6,
+                "bonus": 3,
+                "armour": 0
+              }
+            ]
+          }
+        },
+        "part": {
+          "name": "Drawn Dragon",
+          "life": 25,
+          "hit": 6,
+          "bonus": 3,
+          "armour": 0
+        }
+      }
+    },
+    {
+      "key": "32:0",
+      "name": "Rock Shape (32)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 10,
+      "pb": 0,
+      "adopt": {
+        "name": "Rock Shape (32)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 10,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 6,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "LEGION_ENCOUNTERS",
+          "spec": {
+            "id": 32,
+            "name": "Rock Shapes at the Exit",
+            "enemies": [
+              {
+                "name": "Rock Shape",
+                "life": 10,
+                "hit": 6,
+                "bonus": 0,
+                "armour": 0,
+                "fatalFrom": 11
+              }
+            ],
+            "count": "shapes"
+          }
+        },
+        "part": {
+          "name": "Rock Shape",
+          "life": 10,
+          "hit": 6,
+          "bonus": 0,
+          "armour": 0,
+          "fatalFrom": 11
+        }
+      }
+    },
+    {
+      "key": "49:0",
+      "name": "Wolf (49)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 20,
+      "pb": 2,
+      "adopt": {
+        "name": "Wolf (49)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 20,
+        "pb": 2
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 7,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "LEGION_ENCOUNTERS",
+          "spec": {
+            "id": 49,
+            "name": "Wolves at the Pool",
+            "enemies": [
+              {
+                "name": "Wolf",
+                "life": 20,
+                "hit": 6,
+                "bonus": 2,
+                "armour": 0
+              }
+            ],
+            "count": "twoDice"
+          }
+        },
+        "part": {
+          "name": "Wolf",
+          "life": 20,
+          "hit": 6,
+          "bonus": 2,
+          "armour": 0
+        }
+      }
+    },
+    {
+      "key": "53:0",
+      "name": "Wildcat (53)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 20,
+      "pb": 1,
+      "adopt": {
+        "name": "Wildcat (53)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 20,
+        "pb": 1
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 8,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "LEGION_ENCOUNTERS",
+          "spec": {
+            "id": 53,
+            "name": "Wildcat in the Crawlspace",
+            "enemies": [
+              {
+                "name": "Wildcat",
+                "life": 20,
+                "hit": 6,
+                "bonus": 1,
+                "armour": 0
+              }
+            ],
+            "unarmed": true
+          }
+        },
+        "part": {
+          "name": "Wildcat",
+          "life": 20,
+          "hit": 6,
+          "bonus": 1,
+          "armour": 0
+        }
+      }
+    },
+    {
+      "key": "66:0",
+      "name": "MacHoot (66)",
+      "attack": 5,
+      "defense": 0,
+      "hp": 35,
+      "pb": 0,
+      "adopt": {
+        "name": "MacHoot (66)",
+        "attack": 5,
+        "defense": 0,
+        "hp": 35,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 9,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "LEGION_ENCOUNTERS",
+          "spec": {
+            "id": 66,
+            "name": "Wrestling the MacHoot",
+            "enemies": [
+              {
+                "name": "MacHoot",
+                "life": 35,
+                "hit": 5,
+                "bonus": 0,
+                "armour": 0
+              }
+            ],
+            "unarmed": true,
+            "contest": "wrestle",
+            "playerPin": 12
+          }
+        },
+        "part": {
+          "name": "MacHoot",
+          "life": 35,
+          "hit": 5,
+          "bonus": 0,
+          "armour": 0
+        }
+      }
+    },
+    {
+      "key": "71:0",
+      "name": "Skeleton Guard (71)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 30,
+      "pb": 2,
+      "adopt": {
+        "name": "Skeleton Guard (71)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 30,
+        "pb": 2
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 10,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "LEGION_ENCOUNTERS",
+          "spec": {
+            "id": 71,
+            "name": "Roman Skeleton Guards",
+            "enemies": [
+              {
+                "name": "Skeleton Guard",
+                "life": 30,
+                "hit": 6,
+                "bonus": 2,
+                "armour": 0
+              }
+            ],
+            "count": 2
+          }
+        },
+        "part": {
+          "name": "Skeleton Guard",
+          "life": 30,
+          "hit": 6,
+          "bonus": 2,
+          "armour": 0
+        }
+      }
+    },
+    {
+      "key": "81:0",
+      "name": "Knar (81)",
+      "attack": 5,
+      "defense": 0,
+      "hp": 50,
+      "pb": 4,
+      "adopt": {
+        "name": "Knar (81)",
+        "attack": 5,
+        "defense": 0,
+        "hp": 50,
+        "pb": 4
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 11,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "LEGION_ENCOUNTERS",
+          "spec": {
+            "id": 81,
+            "name": "Knar and His Amulet",
+            "enemies": [
+              {
+                "name": "Knar",
+                "life": 50,
+                "hit": 5,
+                "bonus": 4,
+                "armour": 0
+              }
+            ],
+            "unarmed": true
+          }
+        },
+        "part": {
+          "name": "Knar",
+          "life": 50,
+          "hit": 5,
+          "bonus": 4,
+          "armour": 0
+        }
+      }
+    },
+    {
+      "key": "109:0",
+      "name": "Nessie (109)",
+      "attack": 4,
+      "defense": 0,
+      "hp": 50,
+      "pb": 3,
+      "adopt": {
+        "name": "Nessie (109)",
+        "attack": 4,
+        "defense": 0,
+        "hp": 50,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 12,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "LEGION_ENCOUNTERS",
+          "spec": {
+            "id": 109,
+            "name": "The Loch Ness Monster",
+            "enemies": [
+              {
+                "name": "Nessie",
+                "life": 50,
+                "hit": 4,
+                "bonus": 3,
+                "armour": 0
+              }
+            ],
+            "playerFirst": true
+          }
+        },
+        "part": {
+          "name": "Nessie",
+          "life": 50,
+          "hit": 4,
+          "bonus": 3,
+          "armour": 0
+        }
+      }
+    },
+    {
+      "key": "110:0",
+      "name": "Jade Vampire (110)",
+      "attack": 5,
+      "defense": 0,
+      "hp": 30,
+      "pb": 1,
+      "adopt": {
+        "name": "Jade Vampire (110)",
+        "attack": 5,
+        "defense": 0,
+        "hp": 30,
+        "pb": 1
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 13,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "LEGION_ENCOUNTERS",
+          "spec": {
+            "id": 110,
+            "name": "Jade Cannibal Vampire",
+            "enemies": [
+              {
+                "name": "Jade Vampire",
+                "life": 30,
+                "hit": 5,
+                "bonus": 1,
+                "armour": 0,
+                "consecutiveDrain": 3
+              }
+            ],
+            "jadeGarlic": true
+          }
+        },
+        "part": {
+          "name": "Jade Vampire",
+          "life": 30,
+          "hit": 5,
+          "bonus": 1,
+          "armour": 0,
+          "consecutiveDrain": 3
+        }
+      }
+    },
+    {
+      "key": "122:0",
+      "name": "Ghost (122)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 10,
+      "pb": 0,
+      "adopt": {
+        "name": "Ghost (122)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 10,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 14,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "LEGION_ENCOUNTERS",
+          "spec": {
+            "id": 122,
+            "name": "Ghosts of the Torture Chamber",
+            "enemies": [
+              {
+                "name": "Ghost",
+                "life": 10,
+                "hit": 6,
+                "bonus": 0,
+                "armour": 0,
+                "fixedDamage": 0,
+                "fatalFrom": 11
+              }
+            ],
+            "count": "twoDice"
+          }
+        },
+        "part": {
+          "name": "Ghost",
+          "life": 10,
+          "hit": 6,
+          "bonus": 0,
+          "armour": 0,
+          "fixedDamage": 0,
+          "fatalFrom": 11
+        }
+      }
+    },
+    {
+      "key": "144-vine:0",
+      "name": "Strangler Vine (144-vine)",
+      "attack": 2,
+      "defense": 0,
+      "hp": 25,
+      "pb": 0,
+      "adopt": {
+        "name": "Strangler Vine (144-vine)",
+        "attack": 2,
+        "defense": 0,
+        "hp": 25,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 15,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "LEGION_ENCOUNTERS",
+          "spec": {
+            "id": "144-vine",
+            "name": "Strangler Vine",
+            "enemies": [
+              {
+                "name": "Strangler Vine",
+                "life": 25,
+                "hit": 2,
+                "bonus": 0,
+                "armour": 0,
+                "fixedDamage": 5,
+                "fatalFrom": 12
+              }
+            ],
+            "section": 144
+          }
+        },
+        "part": {
+          "name": "Strangler Vine",
+          "life": 25,
+          "hit": 2,
+          "bonus": 0,
+          "armour": 0,
+          "fixedDamage": 5,
+          "fatalFrom": 12
+        }
+      }
+    },
+    {
+      "key": "144-creeper:0",
+      "name": "Crawling Creeper (144-creeper)",
+      "attack": 2,
+      "defense": 0,
+      "hp": 20,
+      "pb": 0,
+      "adopt": {
+        "name": "Crawling Creeper (144-creeper)",
+        "attack": 2,
+        "defense": 0,
+        "hp": 20,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 16,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "LEGION_ENCOUNTERS",
+          "spec": {
+            "id": "144-creeper",
+            "name": "Crawling Creeper",
+            "enemies": [
+              {
+                "name": "Crawling Creeper",
+                "life": 20,
+                "hit": 2,
+                "bonus": 0,
+                "armour": 0,
+                "fixedDamage": 0
+              }
+            ],
+            "section": 144,
+            "creeper": true
+          }
+        },
+        "part": {
+          "name": "Crawling Creeper",
+          "life": 20,
+          "hit": 2,
+          "bonus": 0,
+          "armour": 0,
+          "fixedDamage": 0
+        }
+      }
+    },
+    {
+      "key": "146:0",
+      "name": "Smith (146)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 45,
+      "pb": 0,
+      "adopt": {
+        "name": "Smith (146)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 45,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 17,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "LEGION_ENCOUNTERS",
+          "spec": {
+            "id": 146,
+            "name": "Smith the Smith: Test of Strength",
+            "enemies": [
+              {
+                "name": "Smith",
+                "life": 45,
+                "hit": 6,
+                "bonus": 0,
+                "armour": 0
+              }
+            ],
+            "unarmed": true,
+            "contest": "pseudo",
+            "openingLoss": 5
+          }
+        },
+        "part": {
+          "name": "Smith",
+          "life": 45,
+          "hit": 6,
+          "bonus": 0,
+          "armour": 0
+        }
+      }
+    },
+    {
+      "key": "150:0",
+      "name": "Sergeant-at-Arms (150)",
+      "attack": 5,
+      "defense": 2,
+      "hp": 20,
+      "pb": 3,
+      "adopt": {
+        "name": "Sergeant-at-Arms (150)",
+        "attack": 5,
+        "defense": 2,
+        "hp": 20,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 18,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "LEGION_ENCOUNTERS",
+          "spec": {
+            "id": 150,
+            "name": "The Castle Sergeants-at-Arms",
+            "enemies": [
+              {
+                "name": "Sergeant-at-Arms",
+                "life": 20,
+                "hit": 5,
+                "bonus": 3,
+                "armour": 2
+              }
+            ],
+            "count": 2,
+            "contest": "half"
+          }
+        },
+        "part": {
+          "name": "Sergeant-at-Arms",
+          "life": 20,
+          "hit": 5,
+          "bonus": 3,
+          "armour": 2
+        }
+      }
+    },
+    {
+      "key": "154:0",
+      "name": "Nerd (154)",
+      "attack": 5,
+      "defense": 0,
+      "hp": 25,
+      "pb": 0,
+      "adopt": {
+        "name": "Nerd (154)",
+        "attack": 5,
+        "defense": 0,
+        "hp": 25,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 19,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "LEGION_ENCOUNTERS",
+          "spec": {
+            "id": 154,
+            "name": "The Palace Nerd",
+            "enemies": [
+              {
+                "name": "Nerd",
+                "life": 25,
+                "hit": 5,
+                "bonus": 0,
+                "armour": 0,
+                "blindRoll": 7,
+                "blindTurns": 3
+              }
+            ],
+            "noFriendly": true
+          }
+        },
+        "part": {
+          "name": "Nerd",
+          "life": 25,
+          "hit": 5,
+          "bonus": 0,
+          "armour": 0,
+          "blindRoll": 7,
+          "blindTurns": 3
+        }
+      }
+    },
+    {
+      "key": "166:0",
+      "name": "Orang-utiger (166)",
+      "attack": 4,
+      "defense": 0,
+      "hp": 30,
+      "pb": 3,
+      "adopt": {
+        "name": "Orang-utiger (166)",
+        "attack": 4,
+        "defense": 0,
+        "hp": 30,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 20,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "LEGION_ENCOUNTERS",
+          "spec": {
+            "id": 166,
+            "name": "The Orang-utiger",
+            "enemies": [
+              {
+                "name": "Orang-utiger",
+                "life": 30,
+                "hit": 4,
+                "bonus": 3,
+                "armour": 0,
+                "evade": 1
+              }
+            ]
+          }
+        },
+        "part": {
+          "name": "Orang-utiger",
+          "life": 30,
+          "hit": 4,
+          "bonus": 3,
+          "armour": 0,
+          "evade": 1
+        }
+      }
+    },
+    {
+      "key": "169:0",
+      "name": "Widow Wobbly (169)",
+      "attack": 4,
+      "defense": 0,
+      "hp": 25,
+      "pb": 2,
+      "adopt": {
+        "name": "Widow Wobbly (169)",
+        "attack": 4,
+        "defense": 0,
+        "hp": 25,
+        "pb": 2
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 21,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "LEGION_ENCOUNTERS",
+          "spec": {
+            "id": 169,
+            "name": "Widow Wobbly",
+            "enemies": [
+              {
+                "name": "Widow Wobbly",
+                "life": 25,
+                "hit": 4,
+                "bonus": 2,
+                "armour": 0
+              }
+            ]
+          }
+        },
+        "part": {
+          "name": "Widow Wobbly",
+          "life": 25,
+          "hit": 4,
+          "bonus": 2,
+          "armour": 0
+        }
+      }
+    },
+    {
+      "key": "182:0",
+      "name": "Vampire Verger (182)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 20,
+      "pb": 0,
+      "adopt": {
+        "name": "Vampire Verger (182)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 20,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 22,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "LEGION_ENCOUNTERS",
+          "spec": {
+            "id": 182,
+            "name": "The Vampire Verger",
+            "enemies": [
+              {
+                "name": "Vampire Verger",
+                "life": 20,
+                "hit": 6,
+                "bonus": 0,
+                "armour": 0,
+                "consecutiveFatal": 3,
+                "excludeSurprise": true
+              }
+            ],
+            "enemyFirst": true
+          }
+        },
+        "part": {
+          "name": "Vampire Verger",
+          "life": 20,
+          "hit": 6,
+          "bonus": 0,
+          "armour": 0,
+          "consecutiveFatal": 3,
+          "excludeSurprise": true
+        }
+      }
+    },
+    {
+      "key": "204:0",
+      "name": "Vampire (204)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 25,
+      "pb": 0,
+      "adopt": {
+        "name": "Vampire (204)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 25,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 23,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "LEGION_ENCOUNTERS",
+          "spec": {
+            "id": 204,
+            "name": "Vampires in the Dark Tower",
+            "enemies": [
+              {
+                "name": "Vampire",
+                "life": 25,
+                "hit": 6,
+                "bonus": 0,
+                "armour": 0,
+                "fatalFrom": 12
+              }
+            ],
+            "count": "vampires"
+          }
+        },
+        "part": {
+          "name": "Vampire",
+          "life": 25,
+          "hit": 6,
+          "bonus": 0,
+          "armour": 0,
+          "fatalFrom": 12
+        }
+      }
+    },
+    {
+      "key": "208:0",
+      "name": "Haggis (208)",
+      "attack": 5,
+      "defense": 0,
+      "hp": 40,
+      "pb": 6,
+      "adopt": {
+        "name": "Haggis (208)",
+        "attack": 5,
+        "defense": 0,
+        "hp": 40,
+        "pb": 6
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 24,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "LEGION_ENCOUNTERS",
+          "spec": {
+            "id": 208,
+            "name": "The Escaped Haggis",
+            "enemies": [
+              {
+                "name": "Haggis",
+                "life": 40,
+                "hit": 5,
+                "bonus": 6,
+                "armour": 0,
+                "fatalFrom": 12
+              }
+            ],
+            "playerAttacks": 2
+          }
+        },
+        "part": {
+          "name": "Haggis",
+          "life": 40,
+          "hit": 5,
+          "bonus": 6,
+          "armour": 0,
+          "fatalFrom": 12
+        }
+      }
+    },
+    {
+      "key": "213:0",
+      "name": "Haggis Farmer (213)",
+      "attack": 9,
+      "defense": 0,
+      "hp": null,
+      "pb": 0,
+      "adopt": {
+        "name": "Haggis Farmer (213)",
+        "attack": 9,
+        "defense": 0,
+        "hp": null,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 25,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "LEGION_ENCOUNTERS",
+          "spec": {
+            "id": 213,
+            "name": "The Welsh Haggis Farmer",
+            "enemies": [
+              {
+                "name": "Haggis Farmer",
+                "life": null,
+                "hit": 9,
+                "bonus": 0,
+                "armour": 0,
+                "tripleDice": true,
+                "stunTurns": 2
+              }
+            ],
+            "manualLife": true
+          }
+        },
+        "part": {
+          "name": "Haggis Farmer",
+          "life": null,
+          "hit": 9,
+          "bonus": 0,
+          "armour": 0,
+          "tripleDice": true,
+          "stunTurns": 2
+        }
+      }
+    },
+    {
+      "key": "225:0",
+      "name": "Watchman (225)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 25,
+      "pb": 2,
+      "adopt": {
+        "name": "Watchman (225)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 25,
+        "pb": 2
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 26,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "LEGION_ENCOUNTERS",
+          "spec": {
+            "id": 225,
+            "name": "The Distillery Watchman",
+            "enemies": [
+              {
+                "name": "Watchman",
+                "life": 25,
+                "hit": 6,
+                "bonus": 2,
+                "armour": 0
+              }
+            ],
+            "drunk": true
+          }
+        },
+        "part": {
+          "name": "Watchman",
+          "life": 25,
+          "hit": 6,
+          "bonus": 2,
+          "armour": 0
+        }
+      }
+    },
+    {
+      "key": "dream7:0",
+      "name": "Astral Ninja (dream7)",
+      "attack": 4,
+      "defense": 0,
+      "hp": 15,
+      "pb": 3,
+      "adopt": {
+        "name": "Astral Ninja (dream7)",
+        "attack": 4,
+        "defense": 0,
+        "hp": 15,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 27,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "LEGION_DREAMS",
+          "spec": {
+            "id": "dream7",
+            "name": "Dreamtime: Astral Ninjas",
+            "enemies": [
+              {
+                "name": "Astral Ninja",
+                "life": 15,
+                "hit": 4,
+                "bonus": 3,
+                "armour": 0
+              }
+            ],
+            "count": "oneDie",
+            "dream": true,
+            "healPerFoe": 5
+          }
+        },
+        "part": {
+          "name": "Astral Ninja",
+          "life": 15,
+          "hit": 4,
+          "bonus": 3,
+          "armour": 0
+        }
+      }
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 import { customGrailEncounter } from './opponents.js';
 import { KINGDOM_ENCOUNTERS, KINGDOM_DREAMS, KINGDOM_MAGIC_STOCK,
-  KINGDOM_EQUIPMENT } from './kingdom-of-horror-roster.js';
+  KINGDOM_EQUIPMENT, KINGDOM_SUPPORT } from './kingdom-of-horror-roster.js';
 
 const die = random => 1 + Math.floor(random() * 6);
 const dice = random => die(random) + die(random);
@@ -326,7 +326,7 @@ export function kingdomEnemyAttack(f, random = Math.random) {
   if (f.spec.reinforcements && !f.whistleBlown) {
     const count = die(random);
     f.whistleBlown = true;
-    for (let i = 0; i < count; i++) f.foes.push({ ...clone(f.spec.enemies[0]), maxLife: 15,
+    for (let i = 0; i < count; i++) f.foes.push({ ...clone(f.spec.enemies[0]), maxLife: f.spec.enemies[0].life,
       hitCount: 0, bypassed: false, spellsUsed: 0, sleepRounds: 0 });
     event = { kind: 'reinforcements', count };
   } else if (foe.sleepRounds > 0) {
@@ -497,8 +497,7 @@ export function kingdomCallGnurlbash(f, index = f.target) {
   if (f.status !== 'fighting' || f.spec.dream || !f.player.gnurlbash || f.ally
     || !kingdomTargets(f).some(row => row.index === index)) return false;
   f.player.gnurlbash = false;
-  f.ally = { name: 'Gnurlbash Monster', life: 30, maxLife: 30, hit: 6, bonus: 2,
-    expiresOnEnemy: true, target: index };
+  f.ally = { ...clone(KINGDOM_SUPPORT.gnurlbash), target: index };
   return true;
 }
 

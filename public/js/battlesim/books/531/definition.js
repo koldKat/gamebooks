@@ -1,3 +1,4 @@
+export { loadRoster } from '../../engines/grailquest/realm-of-chaos-roster.js';
 // Book identity and declarative defaults; no DOM or saved-state access.
 export const definition = Object.freeze({
   "id": 531,

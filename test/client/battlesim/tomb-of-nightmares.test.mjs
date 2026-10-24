@@ -1,3 +1,5 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
+await loadFixtureRoster(532);
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
