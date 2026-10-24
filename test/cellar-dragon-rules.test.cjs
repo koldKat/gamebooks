@@ -9,11 +9,15 @@ const engine = import('data:text/javascript;base64,' + Buffer.from(read('public/
 const dice = values => () => { assert.ok(values.length, 'unexpected roll'); return values.shift(); };
 async function subject() {
   const { resolveCellarDragon } = await engine;
+  const definition = await import('../public/js/battlesim/books/881/definition.js');
+  await definition.loadRoster(async()=>({ok:true,json:async()=>JSON.parse(read('data/simulator-rosters/881.json')).enemies}));
   const saved = { encounterId: 'guard_unarmed', swordId: 'firfeld', player: { sila: 5, izd: 30 }, log: ['old'], history: [{ outcome: 'win', ts: 1 }] };
   const elements = Object.fromEntries(['dagger', 'poison', 'target', 'potion', 'knife-magic'].map(name => ['sim881-' + name, { value: name === 'target' ? '0' : '-1', checked: false }]));
   const context = vm.createContext({ currentPlaythrough: () => ({ sim881: saved }), saveState: () => {},
     document: { getElementById: id => elements[id] }, t: key => key, showAlert: () => {},
-    resolveCellarDragon, Math: Object.create(Math) });
+    resolveCellarDragon, Math: Object.create(Math), createRosterLoader: (_id,_dataset,install)=>{
+      install(structuredClone(definition.ROSTER)); return async()=>{};
+    } });
   const code = readSimulatorSource(path.join(__dirname, '../public/js/battlesim/battlesim881.js'), 'utf8').replace(/^import .*;$/gm, '').replace(/^export /gm, '');
   vm.runInContext(code + '\n_renderAll=()=>{};globalThis.subject={data:_data,fight:_fight,roster:ROSTER};', context);
   return { saved, context, elements, ...context.subject, resolve: resolveCellarDragon };

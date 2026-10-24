@@ -1,3 +1,5 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
+await loadFixtureRoster(539);
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as rules from '../../../public/js/battlesim/engines/forbidden-gateway.js';
@@ -226,4 +228,36 @@ test('salt misses do not deal damage or consume damage dice', () => {
   rules.shadowsLurker(f,'slime',roll(6,6,6,6));
   const result=rules.shadowsLurker(f,'salt',roll(6,6));
   assert.equal(result.destination,4); assert.equal(f.enemies[0].stamina,20);
+});
+
+
+test('legacy saved opening encounters keep their outcomes without adding new rule metadata', () => {
+  for (const [id,destination,status] of [[61,8,'win'],[257,291,'escaped']]) {
+    const f=JSON.parse(JSON.stringify(rules.startShadowsFight(player(),id)));
+    delete f.spec.openingRules;
+    f.legacyExtension={retained:true};
+    rules.resolveShadowsOpening(f,roll(1,1),true);
+    assert.equal(f.status,status);assert.equal(f.destination,destination);
+    assert.equal('openingRules' in f.spec,false);
+    assert.deepEqual(f.legacyExtension,{retained:true});
+  }
+});
+
+test('Lurker actions respect captured rules and retain legacy fights without rewriting saved specs', () => {
+  const fresh=rules.startShadowsFight(player(),15);
+  fresh.spec.lurkerRules.streamCount=1;
+  fresh.spec.lurkerRules.streamDamage=3;
+  const restored=JSON.parse(JSON.stringify(fresh));
+  rules.shadowsLurker(restored,'slime',roll(2,2));
+  assert.equal(restored.player.stamina,15);
+  assert.equal(restored.phase,'held');
+  const legacy=JSON.parse(JSON.stringify(rules.startShadowsFight(player(),15)));
+  delete legacy.spec.lurkerRules;
+  legacy.player.stamina=13;
+  legacy.legacyExtension={retained:true};
+  rules.shadowsLurker(legacy,'slime',roll(2,2,6,6));
+  assert.equal(legacy.player.stamina,9);
+  assert.equal(legacy.phase,'held');
+  assert.equal('lurkerRules' in legacy.spec,false);
+  assert.deepEqual(legacy.legacyExtension,{retained:true});
 });

@@ -1,0 +1,2088 @@
+{
+  "schemaVersion": 1,
+  "bookId": 530,
+  "family": "grailquest",
+  "source": "Original normal and Dreamtime encounters, preserved group/reinforcement rules and supporting companion templates. Every legacy enemy row matched exactly.",
+  "enemies": [
+    {
+      "key": "16:0",
+      "name": "Black Druid (16)",
+      "attack": 5,
+      "defense": 0,
+      "hp": 20,
+      "pb": 3,
+      "adopt": {
+        "name": "Black Druid (16)",
+        "attack": 5,
+        "defense": 0,
+        "hp": 20,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "KINGDOM_ENCOUNTERS",
+          "spec": {
+            "id": 16,
+            "name": "Black Druids",
+            "enemies": [
+              {
+                "name": "Black Druid",
+                "life": 20,
+                "hit": 5,
+                "bonus": 3,
+                "armour": 0,
+                "humanoid": true
+              }
+            ],
+            "count": 3,
+            "friendly": true,
+            "bribe": 500
+          },
+          "support": {
+            "gnurlbash": {
+              "name": "Gnurlbash Monster",
+              "life": 30,
+              "maxLife": 30,
+              "hit": 6,
+              "bonus": 2,
+              "expiresOnEnemy": true
+            }
+          }
+        },
+        "part": {
+          "name": "Black Druid",
+          "life": 20,
+          "hit": 5,
+          "bonus": 3,
+          "armour": 0,
+          "humanoid": true
+        }
+      }
+    },
+    {
+      "key": "17:0",
+      "name": "Sand Dragon (17)",
+      "attack": 7,
+      "defense": 4,
+      "hp": 55,
+      "pb": 5,
+      "adopt": {
+        "name": "Sand Dragon (17)",
+        "attack": 7,
+        "defense": 4,
+        "hp": 55,
+        "pb": 5
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "KINGDOM_ENCOUNTERS",
+          "spec": {
+            "id": 17,
+            "name": "Sand Dragon",
+            "enemies": [
+              {
+                "name": "Sand Dragon",
+                "life": 55,
+                "hit": 7,
+                "bonus": 5,
+                "armour": 4,
+                "animal": true
+              }
+            ],
+            "friendly": true,
+            "running": true
+          }
+        },
+        "part": {
+          "name": "Sand Dragon",
+          "life": 55,
+          "hit": 7,
+          "bonus": 5,
+          "armour": 4,
+          "animal": true
+        }
+      }
+    },
+    {
+      "key": "19:0",
+      "name": "Barbarian (19)",
+      "attack": 5,
+      "defense": 0,
+      "hp": 12,
+      "pb": 3,
+      "adopt": {
+        "name": "Barbarian (19)",
+        "attack": 5,
+        "defense": 0,
+        "hp": 12,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "KINGDOM_ENCOUNTERS",
+          "spec": {
+            "id": 19,
+            "name": "Mounted Barbarians",
+            "enemies": [
+              {
+                "name": "Barbarian",
+                "life": 12,
+                "hit": 5,
+                "bonus": 3,
+                "armour": 0,
+                "humanoid": true
+              }
+            ],
+            "count": 3,
+            "friendly": true,
+            "bribe": 300,
+            "bribeRations": true,
+            "surrender": true,
+            "running": true
+          }
+        },
+        "part": {
+          "name": "Barbarian",
+          "life": 12,
+          "hit": 5,
+          "bonus": 3,
+          "armour": 0,
+          "humanoid": true
+        }
+      }
+    },
+    {
+      "key": "32:0",
+      "name": "Wolf (32)",
+      "attack": 5,
+      "defense": 0,
+      "hp": 25,
+      "pb": 2,
+      "adopt": {
+        "name": "Wolf (32)",
+        "attack": 5,
+        "defense": 0,
+        "hp": 25,
+        "pb": 2
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "KINGDOM_ENCOUNTERS",
+          "spec": {
+            "id": 32,
+            "name": "Wolf in the Shrub",
+            "enemies": [
+              {
+                "name": "Wolf",
+                "life": 25,
+                "hit": 5,
+                "bonus": 2,
+                "armour": 0,
+                "animal": true,
+                "attacks": 2
+              }
+            ],
+            "friendly": true
+          }
+        },
+        "part": {
+          "name": "Wolf",
+          "life": 25,
+          "hit": 5,
+          "bonus": 2,
+          "armour": 0,
+          "animal": true,
+          "attacks": 2
+        }
+      }
+    },
+    {
+      "key": "36:0",
+      "name": "Borfax (36)",
+      "attack": 5,
+      "defense": 0,
+      "hp": 70,
+      "pb": 4,
+      "adopt": {
+        "name": "Borfax (36)",
+        "attack": 5,
+        "defense": 0,
+        "hp": 70,
+        "pb": 4
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "catalog": "KINGDOM_ENCOUNTERS",
+          "spec": {
+            "id": 36,
+            "name": "Borfax and Ben",
+            "enemies": [
+              {
+                "name": "Borfax",
+                "life": 70,
+                "hit": 5,
+                "bonus": 4,
+                "armour": 0,
+                "animal": true,
+                "alternatingHitBonus": [
+                  4,
+                  5
+                ]
+              },
+              {
+                "name": "Ben the Warrior Dwarf",
+                "life": 30,
+                "hit": 5,
+                "bonus": 3,
+                "armour": 0,
+                "humanoid": true,
+                "phase": 1
+              }
+            ],
+            "captureBorfax": true
+          }
+        },
+        "part": {
+          "name": "Borfax",
+          "life": 70,
+          "hit": 5,
+          "bonus": 4,
+          "armour": 0,
+          "animal": true,
+          "alternatingHitBonus": [
+            4,
+            5
+          ]
+        }
+      }
+    },
+    {
+      "key": "36:1",
+      "name": "Ben the Warrior Dwarf (36)",
+      "attack": 5,
+      "defense": 0,
+      "hp": 30,
+      "pb": 3,
+      "adopt": {
+        "name": "Ben the Warrior Dwarf (36)",
+        "attack": 5,
+        "defense": 0,
+        "hp": 30,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 4,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "catalog": "KINGDOM_ENCOUNTERS",
+          "spec": {
+            "id": 36,
+            "name": "Borfax and Ben",
+            "enemies": [
+              {
+                "name": "Borfax",
+                "life": 70,
+                "hit": 5,
+                "bonus": 4,
+                "armour": 0,
+                "animal": true,
+                "alternatingHitBonus": [
+                  4,
+                  5
+                ]
+              },
+              {
+                "name": "Ben the Warrior Dwarf",
+                "life": 30,
+                "hit": 5,
+                "bonus": 3,
+                "armour": 0,
+                "humanoid": true,
+                "phase": 1
+              }
+            ],
+            "captureBorfax": true
+          }
+        },
+        "part": {
+          "name": "Ben the Warrior Dwarf",
+          "life": 30,
+          "hit": 5,
+          "bonus": 3,
+          "armour": 0,
+          "humanoid": true,
+          "phase": 1
+        }
+      }
+    },
+    {
+      "key": "41:0",
+      "name": "Brigand (41)",
+      "attack": 5,
+      "defense": 0,
+      "hp": 15,
+      "pb": 2,
+      "adopt": {
+        "name": "Brigand (41)",
+        "attack": 5,
+        "defense": 0,
+        "hp": 15,
+        "pb": 2
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "KINGDOM_ENCOUNTERS",
+          "spec": {
+            "id": 41,
+            "name": "Roadside Brigands",
+            "enemies": [
+              {
+                "name": "Brigand",
+                "life": 15,
+                "hit": 5,
+                "bonus": 2,
+                "armour": 0,
+                "humanoid": true
+              }
+            ],
+            "count": 3,
+            "deathRequired": true,
+            "friendlyForbidden": true,
+            "foolingForbidden": true,
+            "freeRetreat": true
+          }
+        },
+        "part": {
+          "name": "Brigand",
+          "life": 15,
+          "hit": 5,
+          "bonus": 2,
+          "armour": 0,
+          "humanoid": true
+        }
+      }
+    },
+    {
+      "key": "46:0",
+      "name": "Peasant (46)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 15,
+      "pb": 3,
+      "adopt": {
+        "name": "Peasant (46)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 15,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 6,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "KINGDOM_ENCOUNTERS",
+          "spec": {
+            "id": 46,
+            "name": "Peasant with a Club",
+            "enemies": [
+              {
+                "name": "Peasant",
+                "life": 15,
+                "hit": 6,
+                "bonus": 3,
+                "armour": 0,
+                "humanoid": true
+              }
+            ],
+            "first": "player",
+            "unarmed": true,
+            "fullDice": true
+          }
+        },
+        "part": {
+          "name": "Peasant",
+          "life": 15,
+          "hit": 6,
+          "bonus": 3,
+          "armour": 0,
+          "humanoid": true
+        }
+      }
+    },
+    {
+      "key": "47:0",
+      "name": "Hunting Vron (47)",
+      "attack": 5,
+      "defense": 0,
+      "hp": 20,
+      "pb": 3,
+      "adopt": {
+        "name": "Hunting Vron (47)",
+        "attack": 5,
+        "defense": 0,
+        "hp": 20,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 7,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "KINGDOM_ENCOUNTERS",
+          "spec": {
+            "id": 47,
+            "name": "Hunting Vron",
+            "enemies": [
+              {
+                "name": "Hunting Vron",
+                "life": 20,
+                "hit": 5,
+                "bonus": 3,
+                "armour": 0,
+                "animal": true
+              }
+            ],
+            "countRoll": "pack",
+            "vronTooth": true
+          }
+        },
+        "part": {
+          "name": "Hunting Vron",
+          "life": 20,
+          "hit": 5,
+          "bonus": 3,
+          "armour": 0,
+          "animal": true
+        }
+      }
+    },
+    {
+      "key": "54:0",
+      "name": "Dwarven Man at Arms (54)",
+      "attack": 5,
+      "defense": 2,
+      "hp": 25,
+      "pb": 3,
+      "adopt": {
+        "name": "Dwarven Man at Arms (54)",
+        "attack": 5,
+        "defense": 2,
+        "hp": 25,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 8,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "KINGDOM_ENCOUNTERS",
+          "spec": {
+            "id": 54,
+            "name": "Bridge Men at Arms",
+            "enemies": [
+              {
+                "name": "Dwarven Man at Arms",
+                "life": 25,
+                "hit": 5,
+                "bonus": 3,
+                "armour": 2,
+                "humanoid": true
+              }
+            ],
+            "count": 2,
+            "toll": 500
+          }
+        },
+        "part": {
+          "name": "Dwarven Man at Arms",
+          "life": 25,
+          "hit": 5,
+          "bonus": 3,
+          "armour": 2,
+          "humanoid": true
+        }
+      }
+    },
+    {
+      "key": "56:0",
+      "name": "Gateway Giant (56)",
+      "attack": 3,
+      "defense": 0,
+      "hp": 499,
+      "pb": 15,
+      "adopt": {
+        "name": "Gateway Giant (56)",
+        "attack": 3,
+        "defense": 0,
+        "hp": 499,
+        "pb": 15
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 9,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "KINGDOM_ENCOUNTERS",
+          "spec": {
+            "id": 56,
+            "name": "Guardian of the Gateway",
+            "enemies": [
+              {
+                "name": "Gateway Giant",
+                "life": 499,
+                "hit": 3,
+                "bonus": 15,
+                "armour": 0,
+                "humanoid": true
+              }
+            ],
+            "immortal": true,
+            "cherryBlossom": true
+          }
+        },
+        "part": {
+          "name": "Gateway Giant",
+          "life": 499,
+          "hit": 3,
+          "bonus": 15,
+          "armour": 0,
+          "humanoid": true
+        }
+      }
+    },
+    {
+      "key": "66:0",
+      "name": "Peasant (66)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 26,
+      "pb": 4,
+      "adopt": {
+        "name": "Peasant (66)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 26,
+        "pb": 4
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 10,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "KINGDOM_ENCOUNTERS",
+          "spec": {
+            "id": 66,
+            "name": "Peasant Outside Merlin's House",
+            "enemies": [
+              {
+                "name": "Peasant",
+                "life": 26,
+                "hit": 6,
+                "bonus": 4,
+                "armour": 0,
+                "humanoid": true
+              }
+            ],
+            "first": "enemy",
+            "surprised": true
+          }
+        },
+        "part": {
+          "name": "Peasant",
+          "life": 26,
+          "hit": 6,
+          "bonus": 4,
+          "armour": 0,
+          "humanoid": true
+        }
+      }
+    },
+    {
+      "key": "70:0",
+      "name": "Peasant (70)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 30,
+      "pb": 2,
+      "adopt": {
+        "name": "Peasant (70)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 30,
+        "pb": 2
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 11,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "KINGDOM_ENCOUNTERS",
+          "spec": {
+            "id": 70,
+            "name": "Rebellious Peasants",
+            "enemies": [
+              {
+                "name": "Peasant",
+                "life": 30,
+                "hit": 6,
+                "bonus": 2,
+                "armour": 0,
+                "humanoid": true
+              }
+            ],
+            "count": 25,
+            "passageToken": true
+          }
+        },
+        "part": {
+          "name": "Peasant",
+          "life": 30,
+          "hit": 6,
+          "bonus": 2,
+          "armour": 0,
+          "humanoid": true
+        }
+      }
+    },
+    {
+      "key": "73:0",
+      "name": "Scorpion (73)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 8,
+      "pb": 0,
+      "adopt": {
+        "name": "Scorpion (73)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 8,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 12,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "KINGDOM_ENCOUNTERS",
+          "spec": {
+            "id": 73,
+            "name": "Scorpion",
+            "enemies": [
+              {
+                "name": "Scorpion",
+                "life": 8,
+                "hit": 6,
+                "bonus": 0,
+                "armour": 0,
+                "fixedDamage": 3,
+                "sectionPoison": 2,
+                "animal": true
+              }
+            ],
+            "first": "enemy",
+            "surprised": true,
+            "deathRequired": true
+          }
+        },
+        "part": {
+          "name": "Scorpion",
+          "life": 8,
+          "hit": 6,
+          "bonus": 0,
+          "armour": 0,
+          "fixedDamage": 3,
+          "sectionPoison": 2,
+          "animal": true
+        }
+      }
+    },
+    {
+      "key": "75:0",
+      "name": "Peasant (75)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 15,
+      "pb": 0,
+      "adopt": {
+        "name": "Peasant (75)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 15,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 13,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "KINGDOM_ENCOUNTERS",
+          "spec": {
+            "id": 75,
+            "name": "Bare-Handed Peasant",
+            "enemies": [
+              {
+                "name": "Peasant",
+                "life": 15,
+                "hit": 6,
+                "bonus": 0,
+                "armour": 0,
+                "fullDice": true,
+                "humanoid": true
+              }
+            ],
+            "first": "player",
+            "unarmed": true,
+            "fullDice": true,
+            "nonlethal": true,
+            "knockoutReturn": 3
+          }
+        },
+        "part": {
+          "name": "Peasant",
+          "life": 15,
+          "hit": 6,
+          "bonus": 0,
+          "armour": 0,
+          "fullDice": true,
+          "humanoid": true
+        }
+      }
+    },
+    {
+      "key": "78:0",
+      "name": "Minnie (78)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 20,
+      "pb": 0,
+      "adopt": {
+        "name": "Minnie (78)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 20,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 14,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "catalog": "KINGDOM_ENCOUNTERS",
+          "spec": {
+            "id": 78,
+            "name": "Witches of Witchwood",
+            "enemies": [
+              {
+                "name": "Minnie",
+                "life": 20,
+                "hit": 6,
+                "bonus": 0,
+                "armour": 0,
+                "humanoid": true,
+                "magic": "thunderbolt"
+              },
+              {
+                "name": "Aggie",
+                "life": 20,
+                "hit": 6,
+                "bonus": 0,
+                "armour": 0,
+                "humanoid": true,
+                "magic": "kangling"
+              },
+              {
+                "name": "Scrog",
+                "life": 20,
+                "hit": 6,
+                "bonus": 0,
+                "armour": 0,
+                "humanoid": true,
+                "magic": "dragonfire",
+                "pills": 6
+              }
+            ],
+            "friendly": true,
+            "friendlyLimit": 1
+          }
+        },
+        "part": {
+          "name": "Minnie",
+          "life": 20,
+          "hit": 6,
+          "bonus": 0,
+          "armour": 0,
+          "humanoid": true,
+          "magic": "thunderbolt"
+        }
+      }
+    },
+    {
+      "key": "78:1",
+      "name": "Aggie (78)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 20,
+      "pb": 0,
+      "adopt": {
+        "name": "Aggie (78)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 20,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 14,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "catalog": "KINGDOM_ENCOUNTERS",
+          "spec": {
+            "id": 78,
+            "name": "Witches of Witchwood",
+            "enemies": [
+              {
+                "name": "Minnie",
+                "life": 20,
+                "hit": 6,
+                "bonus": 0,
+                "armour": 0,
+                "humanoid": true,
+                "magic": "thunderbolt"
+              },
+              {
+                "name": "Aggie",
+                "life": 20,
+                "hit": 6,
+                "bonus": 0,
+                "armour": 0,
+                "humanoid": true,
+                "magic": "kangling"
+              },
+              {
+                "name": "Scrog",
+                "life": 20,
+                "hit": 6,
+                "bonus": 0,
+                "armour": 0,
+                "humanoid": true,
+                "magic": "dragonfire",
+                "pills": 6
+              }
+            ],
+            "friendly": true,
+            "friendlyLimit": 1
+          }
+        },
+        "part": {
+          "name": "Aggie",
+          "life": 20,
+          "hit": 6,
+          "bonus": 0,
+          "armour": 0,
+          "humanoid": true,
+          "magic": "kangling"
+        }
+      }
+    },
+    {
+      "key": "78:2",
+      "name": "Scrog (78)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 20,
+      "pb": 0,
+      "adopt": {
+        "name": "Scrog (78)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 20,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 14,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "catalog": "KINGDOM_ENCOUNTERS",
+          "spec": {
+            "id": 78,
+            "name": "Witches of Witchwood",
+            "enemies": [
+              {
+                "name": "Minnie",
+                "life": 20,
+                "hit": 6,
+                "bonus": 0,
+                "armour": 0,
+                "humanoid": true,
+                "magic": "thunderbolt"
+              },
+              {
+                "name": "Aggie",
+                "life": 20,
+                "hit": 6,
+                "bonus": 0,
+                "armour": 0,
+                "humanoid": true,
+                "magic": "kangling"
+              },
+              {
+                "name": "Scrog",
+                "life": 20,
+                "hit": 6,
+                "bonus": 0,
+                "armour": 0,
+                "humanoid": true,
+                "magic": "dragonfire",
+                "pills": 6
+              }
+            ],
+            "friendly": true,
+            "friendlyLimit": 1
+          }
+        },
+        "part": {
+          "name": "Scrog",
+          "life": 20,
+          "hit": 6,
+          "bonus": 0,
+          "armour": 0,
+          "humanoid": true,
+          "magic": "dragonfire",
+          "pills": 6
+        }
+      }
+    },
+    {
+      "key": "82:0",
+      "name": "Invisible Bear (82)",
+      "attack": 5,
+      "defense": 0,
+      "hp": 45,
+      "pb": 6,
+      "adopt": {
+        "name": "Invisible Bear (82)",
+        "attack": 5,
+        "defense": 0,
+        "hp": 45,
+        "pb": 6
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 15,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "KINGDOM_ENCOUNTERS",
+          "spec": {
+            "id": 82,
+            "name": "Invisible Bear",
+            "enemies": [
+              {
+                "name": "Invisible Bear",
+                "life": 45,
+                "hit": 5,
+                "bonus": 6,
+                "armour": 0,
+                "animal": true
+              }
+            ],
+            "first": "enemy",
+            "surprised": true,
+            "bearGrip": true,
+            "playerMissEvery": 2
+          }
+        },
+        "part": {
+          "name": "Invisible Bear",
+          "life": 45,
+          "hit": 5,
+          "bonus": 6,
+          "armour": 0,
+          "animal": true
+        }
+      }
+    },
+    {
+      "key": "83:0",
+      "name": "Peasant Kidnapper (83)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 20,
+      "pb": 3,
+      "adopt": {
+        "name": "Peasant Kidnapper (83)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 20,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 16,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "KINGDOM_ENCOUNTERS",
+          "spec": {
+            "id": 83,
+            "name": "Merlin's Kidnappers",
+            "enemies": [
+              {
+                "name": "Peasant Kidnapper",
+                "life": 20,
+                "hit": 6,
+                "bonus": 3,
+                "armour": 0,
+                "humanoid": true
+              }
+            ],
+            "count": 3
+          }
+        },
+        "part": {
+          "name": "Peasant Kidnapper",
+          "life": 20,
+          "hit": 6,
+          "bonus": 3,
+          "armour": 0,
+          "humanoid": true
+        }
+      }
+    },
+    {
+      "key": "86:0",
+      "name": "Demonspawn (86)",
+      "attack": 3,
+      "defense": 0,
+      "hp": 80,
+      "pb": 2,
+      "adopt": {
+        "name": "Demonspawn (86)",
+        "attack": 3,
+        "defense": 0,
+        "hp": 80,
+        "pb": 2
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 17,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "KINGDOM_ENCOUNTERS",
+          "spec": {
+            "id": 86,
+            "name": "Imprisoned Demonspawn",
+            "enemies": [
+              {
+                "name": "Demonspawn",
+                "life": 80,
+                "hit": 3,
+                "bonus": 2,
+                "armour": 0
+              }
+            ],
+            "bribe": 20000000
+          }
+        },
+        "part": {
+          "name": "Demonspawn",
+          "life": 80,
+          "hit": 3,
+          "bonus": 2,
+          "armour": 0
+        }
+      }
+    },
+    {
+      "key": "92:0",
+      "name": "Hunting Vron (92)",
+      "attack": 5,
+      "defense": 0,
+      "hp": 20,
+      "pb": 3,
+      "adopt": {
+        "name": "Hunting Vron (92)",
+        "attack": 5,
+        "defense": 0,
+        "hp": 20,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 18,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "KINGDOM_ENCOUNTERS",
+          "spec": {
+            "id": 92,
+            "name": "Hunting Vron",
+            "enemies": [
+              {
+                "name": "Hunting Vron",
+                "life": 20,
+                "hit": 5,
+                "bonus": 3,
+                "armour": 0,
+                "animal": true
+              }
+            ],
+            "countRoll": "pack",
+            "vronTooth": true
+          }
+        },
+        "part": {
+          "name": "Hunting Vron",
+          "life": 20,
+          "hit": 5,
+          "bonus": 3,
+          "armour": 0,
+          "animal": true
+        }
+      }
+    },
+    {
+      "key": "110:0",
+      "name": "Dwarven Priest (110)",
+      "attack": 4,
+      "defense": 0,
+      "hp": 25,
+      "pb": 3,
+      "adopt": {
+        "name": "Dwarven Priest (110)",
+        "attack": 4,
+        "defense": 0,
+        "hp": 25,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 19,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "KINGDOM_ENCOUNTERS",
+          "spec": {
+            "id": 110,
+            "name": "Priests of Dackworth",
+            "enemies": [
+              {
+                "name": "Dwarven Priest",
+                "life": 25,
+                "hit": 4,
+                "bonus": 3,
+                "armour": 0,
+                "humanoid": true
+              }
+            ],
+            "count": 2
+          }
+        },
+        "part": {
+          "name": "Dwarven Priest",
+          "life": 25,
+          "hit": 4,
+          "bonus": 3,
+          "armour": 0,
+          "humanoid": true
+        }
+      }
+    },
+    {
+      "key": "116:0",
+      "name": "Hunting Vron (116)",
+      "attack": 5,
+      "defense": 0,
+      "hp": 20,
+      "pb": 3,
+      "adopt": {
+        "name": "Hunting Vron (116)",
+        "attack": 5,
+        "defense": 0,
+        "hp": 20,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 20,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "KINGDOM_ENCOUNTERS",
+          "spec": {
+            "id": 116,
+            "name": "Hunting Vron",
+            "enemies": [
+              {
+                "name": "Hunting Vron",
+                "life": 20,
+                "hit": 5,
+                "bonus": 3,
+                "armour": 0,
+                "animal": true
+              }
+            ],
+            "countRoll": "pack",
+            "vronTooth": true
+          }
+        },
+        "part": {
+          "name": "Hunting Vron",
+          "life": 20,
+          "hit": 5,
+          "bonus": 3,
+          "armour": 0,
+          "animal": true
+        }
+      }
+    },
+    {
+      "key": "119:0",
+      "name": "Dwarven Guard (119)",
+      "attack": 5,
+      "defense": 0,
+      "hp": 15,
+      "pb": 3,
+      "adopt": {
+        "name": "Dwarven Guard (119)",
+        "attack": 5,
+        "defense": 0,
+        "hp": 15,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 21,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "KINGDOM_ENCOUNTERS",
+          "spec": {
+            "id": 119,
+            "name": "Blagwort's Guards",
+            "enemies": [
+              {
+                "name": "Dwarven Guard",
+                "life": 15,
+                "hit": 5,
+                "bonus": 3,
+                "armour": 0
+              }
+            ],
+            "countRoll": "guards",
+            "first": "enemy",
+            "surprised": true
+          }
+        },
+        "part": {
+          "name": "Dwarven Guard",
+          "life": 15,
+          "hit": 5,
+          "bonus": 3,
+          "armour": 0
+        }
+      }
+    },
+    {
+      "key": "126:0",
+      "name": "Dwarven Guard (126)",
+      "attack": 5,
+      "defense": 0,
+      "hp": 15,
+      "pb": 3,
+      "adopt": {
+        "name": "Dwarven Guard (126)",
+        "attack": 5,
+        "defense": 0,
+        "hp": 15,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 22,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "KINGDOM_ENCOUNTERS",
+          "spec": {
+            "id": 126,
+            "name": "Blogwort's Guards",
+            "enemies": [
+              {
+                "name": "Dwarven Guard",
+                "life": 15,
+                "hit": 5,
+                "bonus": 3,
+                "armour": 0
+              }
+            ],
+            "countRoll": "guards",
+            "first": "enemy",
+            "surprised": true
+          }
+        },
+        "part": {
+          "name": "Dwarven Guard",
+          "life": 15,
+          "hit": 5,
+          "bonus": 3,
+          "armour": 0
+        }
+      }
+    },
+    {
+      "key": "129:0",
+      "name": "Slippery Sam (129)",
+      "attack": 5,
+      "defense": 0,
+      "hp": 25,
+      "pb": 2,
+      "adopt": {
+        "name": "Slippery Sam (129)",
+        "attack": 5,
+        "defense": 0,
+        "hp": 25,
+        "pb": 2
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 23,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "KINGDOM_ENCOUNTERS",
+          "spec": {
+            "id": 129,
+            "name": "Slippery Sam",
+            "enemies": [
+              {
+                "name": "Slippery Sam",
+                "life": 25,
+                "hit": 5,
+                "bonus": 2,
+                "armour": 0,
+                "humanoid": true
+              }
+            ]
+          }
+        },
+        "part": {
+          "name": "Slippery Sam",
+          "life": 25,
+          "hit": 5,
+          "bonus": 2,
+          "armour": 0,
+          "humanoid": true
+        }
+      }
+    },
+    {
+      "key": "131:0",
+      "name": "Alf (131)",
+      "attack": 6,
+      "defense": 0,
+      "hp": null,
+      "pb": 10,
+      "adopt": {
+        "name": "Alf (131)",
+        "attack": 6,
+        "defense": 0,
+        "hp": null,
+        "pb": 10
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 24,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "KINGDOM_ENCOUNTERS",
+          "spec": {
+            "id": 131,
+            "name": "Alf's Applicant Trial",
+            "enemies": [
+              {
+                "name": "Alf",
+                "life": null,
+                "hit": 6,
+                "bonus": 10,
+                "armour": 0,
+                "humanoid": true
+              }
+            ],
+            "trial": true,
+            "unarmed": true,
+            "fullDice": true,
+            "nonlethal": true
+          }
+        },
+        "part": {
+          "name": "Alf",
+          "life": null,
+          "hit": 6,
+          "bonus": 10,
+          "armour": 0,
+          "humanoid": true
+        }
+      }
+    },
+    {
+      "key": "135:0",
+      "name": "Ghastly Guardian Ghoul (135)",
+      "attack": 4,
+      "defense": 0,
+      "hp": null,
+      "pb": 5,
+      "adopt": {
+        "name": "Ghastly Guardian Ghoul (135)",
+        "attack": 4,
+        "defense": 0,
+        "hp": null,
+        "pb": 5
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 25,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "KINGDOM_ENCOUNTERS",
+          "spec": {
+            "id": 135,
+            "name": "Ghastly Guardian Ghoul",
+            "enemies": [
+              {
+                "name": "Ghastly Guardian Ghoul",
+                "life": null,
+                "hit": 4,
+                "bonus": 5,
+                "armour": 0,
+                "combatPoison": 3
+              }
+            ],
+            "matchPlayerLife": true,
+            "deathRequired": true
+          }
+        },
+        "part": {
+          "name": "Ghastly Guardian Ghoul",
+          "life": null,
+          "hit": 4,
+          "bonus": 5,
+          "armour": 0,
+          "combatPoison": 3
+        }
+      }
+    },
+    {
+      "key": "146:0",
+      "name": "Alf (146)",
+      "attack": 6,
+      "defense": 0,
+      "hp": null,
+      "pb": 10,
+      "adopt": {
+        "name": "Alf (146)",
+        "attack": 6,
+        "defense": 0,
+        "hp": null,
+        "pb": 10
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 26,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "KINGDOM_ENCOUNTERS",
+          "spec": {
+            "id": 146,
+            "name": "Comrade Alf's Loyalty Trial",
+            "enemies": [
+              {
+                "name": "Alf",
+                "life": null,
+                "hit": 6,
+                "bonus": 10,
+                "armour": 0,
+                "humanoid": true
+              }
+            ],
+            "trial": true,
+            "unarmed": true,
+            "fullDice": true,
+            "nonlethal": true
+          }
+        },
+        "part": {
+          "name": "Alf",
+          "life": null,
+          "hit": 6,
+          "bonus": 10,
+          "armour": 0,
+          "humanoid": true
+        }
+      }
+    },
+    {
+      "key": "154:0",
+      "name": "Dwarven Constable (154)",
+      "attack": 5,
+      "defense": 0,
+      "hp": 15,
+      "pb": 2,
+      "adopt": {
+        "name": "Dwarven Constable (154)",
+        "attack": 5,
+        "defense": 0,
+        "hp": 15,
+        "pb": 2
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 27,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "KINGDOM_ENCOUNTERS",
+          "spec": {
+            "id": 154,
+            "name": "Dwarven Constabulary",
+            "enemies": [
+              {
+                "name": "Dwarven Constable",
+                "life": 15,
+                "hit": 5,
+                "bonus": 2,
+                "armour": 0,
+                "humanoid": true
+              }
+            ],
+            "reinforcements": true
+          }
+        },
+        "part": {
+          "name": "Dwarven Constable",
+          "life": 15,
+          "hit": 5,
+          "bonus": 2,
+          "armour": 0,
+          "humanoid": true
+        }
+      }
+    },
+    {
+      "key": "172:0",
+      "name": "Giant Berkwaddle (172)",
+      "attack": 4,
+      "defense": 4,
+      "hp": 100,
+      "pb": 5,
+      "adopt": {
+        "name": "Giant Berkwaddle (172)",
+        "attack": 4,
+        "defense": 4,
+        "hp": 100,
+        "pb": 5
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 28,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "KINGDOM_ENCOUNTERS",
+          "spec": {
+            "id": 172,
+            "name": "Giant Berkwaddle: Tom",
+            "enemies": [
+              {
+                "name": "Giant Berkwaddle",
+                "life": 100,
+                "hit": 4,
+                "bonus": 5,
+                "armour": 4,
+                "magicResistance": 7
+              }
+            ],
+            "deathRequired": true,
+            "playerMissEvery": 3,
+            "ebonyRod": true
+          }
+        },
+        "part": {
+          "name": "Giant Berkwaddle",
+          "life": 100,
+          "hit": 4,
+          "bonus": 5,
+          "armour": 4,
+          "magicResistance": 7
+        }
+      }
+    },
+    {
+      "key": "176:0",
+      "name": "Giant Berkwaddle (176)",
+      "attack": 4,
+      "defense": 4,
+      "hp": 100,
+      "pb": 5,
+      "adopt": {
+        "name": "Giant Berkwaddle (176)",
+        "attack": 4,
+        "defense": 4,
+        "hp": 100,
+        "pb": 5
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 29,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "KINGDOM_ENCOUNTERS",
+          "spec": {
+            "id": 176,
+            "name": "Giant Berkwaddle: Dick",
+            "enemies": [
+              {
+                "name": "Giant Berkwaddle",
+                "life": 100,
+                "hit": 4,
+                "bonus": 5,
+                "armour": 4,
+                "magicResistance": 7
+              }
+            ],
+            "deathRequired": true,
+            "playerMissEvery": 3,
+            "ebonyRod": true
+          }
+        },
+        "part": {
+          "name": "Giant Berkwaddle",
+          "life": 100,
+          "hit": 4,
+          "bonus": 5,
+          "armour": 4,
+          "magicResistance": 7
+        }
+      }
+    },
+    {
+      "key": "178:0",
+      "name": "Giant Berkwaddle (178)",
+      "attack": 4,
+      "defense": 4,
+      "hp": 100,
+      "pb": 5,
+      "adopt": {
+        "name": "Giant Berkwaddle (178)",
+        "attack": 4,
+        "defense": 4,
+        "hp": 100,
+        "pb": 5
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 30,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "KINGDOM_ENCOUNTERS",
+          "spec": {
+            "id": 178,
+            "name": "Giant Berkwaddle: Harry",
+            "enemies": [
+              {
+                "name": "Giant Berkwaddle",
+                "life": 100,
+                "hit": 4,
+                "bonus": 5,
+                "armour": 4,
+                "magicResistance": 7
+              }
+            ],
+            "deathRequired": true,
+            "ebonyRod": true
+          }
+        },
+        "part": {
+          "name": "Giant Berkwaddle",
+          "life": 100,
+          "hit": 4,
+          "bonus": 5,
+          "armour": 4,
+          "magicResistance": 7
+        }
+      }
+    },
+    {
+      "key": "181:0",
+      "name": "Giant Berkwaddle (181)",
+      "attack": 4,
+      "defense": 4,
+      "hp": 100,
+      "pb": 5,
+      "adopt": {
+        "name": "Giant Berkwaddle (181)",
+        "attack": 4,
+        "defense": 4,
+        "hp": 100,
+        "pb": 5
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 31,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "KINGDOM_ENCOUNTERS",
+          "spec": {
+            "id": 181,
+            "name": "Giant Berkwaddle: Reverend O'Rourke",
+            "enemies": [
+              {
+                "name": "Giant Berkwaddle",
+                "life": 100,
+                "hit": 4,
+                "bonus": 5,
+                "armour": 4,
+                "magicResistance": 7
+              }
+            ],
+            "deathRequired": true,
+            "playerMissEvery": 3,
+            "ebonyRod": true
+          }
+        },
+        "part": {
+          "name": "Giant Berkwaddle",
+          "life": 100,
+          "hit": 4,
+          "bonus": 5,
+          "armour": 4,
+          "magicResistance": 7
+        }
+      }
+    },
+    {
+      "key": "dream3:0",
+      "name": "Ragged Rogue (dream3)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 12,
+      "pb": 1,
+      "adopt": {
+        "name": "Ragged Rogue (dream3)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 12,
+        "pb": 1
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 32,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "KINGDOM_DREAMS",
+          "spec": {
+            "id": "dream3",
+            "name": "Dreamtime: Ragged Rogue",
+            "enemies": [
+              {
+                "name": "Ragged Rogue",
+                "life": 12,
+                "hit": 6,
+                "bonus": 1,
+                "armour": 0,
+                "humanoid": true
+              }
+            ],
+            "dream": true,
+            "first": "player",
+            "unarmed": true,
+            "deathRequired": true,
+            "strikeLimit": 3
+          }
+        },
+        "part": {
+          "name": "Ragged Rogue",
+          "life": 12,
+          "hit": 6,
+          "bonus": 1,
+          "armour": 0,
+          "humanoid": true
+        }
+      }
+    },
+    {
+      "key": "dream4:0",
+      "name": "Large Man (dream4)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 25,
+      "pb": 3,
+      "adopt": {
+        "name": "Large Man (dream4)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 25,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 33,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "KINGDOM_DREAMS",
+          "spec": {
+            "id": "dream4",
+            "name": "Dreamtime: Drunken Brawl",
+            "enemies": [
+              {
+                "name": "Large Man",
+                "life": 25,
+                "hit": 6,
+                "bonus": 3,
+                "armour": 0,
+                "humanoid": true,
+                "attacks": 2
+              }
+            ],
+            "dream": true,
+            "first": "enemy",
+            "dreamEJ": true,
+            "deathRequired": true
+          }
+        },
+        "part": {
+          "name": "Large Man",
+          "life": 25,
+          "hit": 6,
+          "bonus": 3,
+          "armour": 0,
+          "humanoid": true,
+          "attacks": 2
+        }
+      }
+    },
+    {
+      "key": "dream7:0",
+      "name": "Gnurlbash Monster (dream7)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 30,
+      "pb": 2,
+      "adopt": {
+        "name": "Gnurlbash Monster (dream7)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 30,
+        "pb": 2
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 34,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "KINGDOM_DREAMS",
+          "spec": {
+            "id": "dream7",
+            "name": "Dreamtime: Gnurlbash",
+            "enemies": [
+              {
+                "name": "Gnurlbash Monster",
+                "life": 30,
+                "hit": 6,
+                "bonus": 2,
+                "armour": 0
+              }
+            ],
+            "dream": true,
+            "first": "enemy",
+            "unarmed": true,
+            "deathRequired": true
+          }
+        },
+        "part": {
+          "name": "Gnurlbash Monster",
+          "life": 30,
+          "hit": 6,
+          "bonus": 2,
+          "armour": 0
+        }
+      }
+    },
+    {
+      "key": "dream8:0",
+      "name": "Shark (dream8)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 20,
+      "pb": 4,
+      "adopt": {
+        "name": "Shark (dream8)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 20,
+        "pb": 4
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 35,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "KINGDOM_DREAMS",
+          "spec": {
+            "id": "dream8",
+            "name": "Dreamtime: Shark",
+            "enemies": [
+              {
+                "name": "Shark",
+                "life": 20,
+                "hit": 6,
+                "bonus": 4,
+                "armour": 0,
+                "animal": true
+              }
+            ],
+            "dream": true,
+            "unarmed": true,
+            "deathRequired": true
+          }
+        },
+        "part": {
+          "name": "Shark",
+          "life": 20,
+          "hit": 6,
+          "bonus": 4,
+          "armour": 0,
+          "animal": true
+        }
+      }
+    }
+  ]
+}

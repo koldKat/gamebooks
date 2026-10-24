@@ -35,9 +35,14 @@ export async function openSimForBook(bookId) {
   const id = Number(bookId);
   if (!SUPPORTED_BATTLE_SIM_BOOKS.has(id)) return;
 
+  if ([412, 521, 522, 523, 524, 527, 528, 529, 530, 531, 532, 533, 534, 535, 536, 537, 539, 548, 550, 555, 557, 570, 636, 644, 648, 654, 658, 663, 665, 671, 672, 674, 807, 808, 860, 869, 877, 881, 882].includes(id)) {
+    const { prepareRosterData } = await import('../../js/battlesim/roster-data.js');
+    await prepareRosterData(id);
+  }
   const { loadBattleSimTranslations } = await import('../../js/i18n/battlesim.js');
   await loadBattleSimTranslations(id);
   const mod = await import(`../../js/battlesim/battlesim${id}.js`);
+  await mod.loadData?.();
   if (!_initialized.has(id)) {
     const init = mod.init;
     if (typeof init !== 'function') throw new Error(`Battle sim ${id} has no mobile init export`);

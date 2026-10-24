@@ -1,0 +1,1453 @@
+{
+  "schemaVersion": 1,
+  "bookId": 532,
+  "family": "grailquest",
+  "source": "Original normal and Dreamtime encounters, preserved group/reinforcement rules and supporting companion templates. Every legacy enemy row matched exactly.",
+  "enemies": [
+    {
+      "key": "29:0",
+      "name": "Zombie (29)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 25,
+      "pb": 2,
+      "adopt": {
+        "name": "Zombie (29)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 25,
+        "pb": 2
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "TOMB_ENCOUNTERS",
+          "spec": {
+            "id": 29,
+            "name": "Rotting Zombie Guards",
+            "enemies": [
+              {
+                "name": "Zombie",
+                "life": 25,
+                "hit": 6,
+                "bonus": 2,
+                "armour": 0,
+                "poisonRoll": 12,
+                "poison": 3,
+                "poisonKind": "rot"
+              }
+            ],
+            "count": 2
+          },
+          "support": {
+            "companion": {
+              "name": "Golden Vampire",
+              "life": 50,
+              "hit": 4,
+              "bonus": 3,
+              "armour": 0,
+              "fatalRolls": [
+                12
+              ]
+            }
+          }
+        },
+        "part": {
+          "name": "Zombie",
+          "life": 25,
+          "hit": 6,
+          "bonus": 2,
+          "armour": 0,
+          "poisonRoll": 12,
+          "poison": 3,
+          "poisonKind": "rot"
+        }
+      }
+    },
+    {
+      "key": "31:0",
+      "name": "Lizard Man (31)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 15,
+      "pb": 3,
+      "adopt": {
+        "name": "Lizard Man (31)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 15,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "TOMB_ENCOUNTERS",
+          "spec": {
+            "id": 31,
+            "name": "Lizard Men in Doomglug Swamp",
+            "enemies": [
+              {
+                "name": "Lizard Man",
+                "life": 15,
+                "hit": 6,
+                "bonus": 3,
+                "armour": 0,
+                "poisonRoll": 12,
+                "poison": 3,
+                "poisonKind": "combat"
+              }
+            ],
+            "countDice": 1,
+            "countExtra": 1
+          }
+        },
+        "part": {
+          "name": "Lizard Man",
+          "life": 15,
+          "hit": 6,
+          "bonus": 3,
+          "armour": 0,
+          "poisonRoll": 12,
+          "poison": 3,
+          "poisonKind": "combat"
+        }
+      }
+    },
+    {
+      "key": "41:0",
+      "name": "Vampire (41)",
+      "attack": 5,
+      "defense": 0,
+      "hp": 22,
+      "pb": 3,
+      "adopt": {
+        "name": "Vampire (41)",
+        "attack": 5,
+        "defense": 0,
+        "hp": 22,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "TOMB_ENCOUNTERS",
+          "spec": {
+            "id": 41,
+            "name": "Saturnine Vampires",
+            "enemies": [
+              {
+                "name": "Vampire",
+                "life": 22,
+                "hit": 5,
+                "bonus": 3,
+                "armour": 0,
+                "selfBiteRoll": 12,
+                "selfBiteDamage": 5
+              }
+            ],
+            "count": 2
+          }
+        },
+        "part": {
+          "name": "Vampire",
+          "life": 22,
+          "hit": 5,
+          "bonus": 3,
+          "armour": 0,
+          "selfBiteRoll": 12,
+          "selfBiteDamage": 5
+        }
+      }
+    },
+    {
+      "key": "49:0",
+      "name": "Green Mummy (49)",
+      "attack": 5,
+      "defense": 0,
+      "hp": 25,
+      "pb": 0,
+      "adopt": {
+        "name": "Green Mummy (49)",
+        "attack": 5,
+        "defense": 0,
+        "hp": 25,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "TOMB_ENCOUNTERS",
+          "spec": {
+            "id": 49,
+            "name": "Screaming Green Mummies",
+            "enemies": [
+              {
+                "name": "Green Mummy",
+                "life": 25,
+                "hit": 5,
+                "bonus": 0,
+                "armour": 0,
+                "fatalRolls": [
+                  12
+                ]
+              }
+            ],
+            "count": 2
+          }
+        },
+        "part": {
+          "name": "Green Mummy",
+          "life": 25,
+          "hit": 5,
+          "bonus": 0,
+          "armour": 0,
+          "fatalRolls": [
+            12
+          ]
+        }
+      }
+    },
+    {
+      "key": "55:0",
+      "name": "Dragon (55)",
+      "attack": 4,
+      "defense": 0,
+      "hp": 45,
+      "pb": 3,
+      "adopt": {
+        "name": "Dragon (55)",
+        "attack": 4,
+        "defense": 0,
+        "hp": 45,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "TOMB_ENCOUNTERS",
+          "spec": {
+            "id": 55,
+            "name": "Treasure-Room Dragon",
+            "enemies": [
+              {
+                "name": "Dragon",
+                "life": 45,
+                "hit": 4,
+                "bonus": 3,
+                "armour": 0,
+                "fireFrom": 10,
+                "fireBonus": 10
+              }
+            ]
+          }
+        },
+        "part": {
+          "name": "Dragon",
+          "life": 45,
+          "hit": 4,
+          "bonus": 3,
+          "armour": 0,
+          "fireFrom": 10,
+          "fireBonus": 10
+        }
+      }
+    },
+    {
+      "key": "63:0",
+      "name": "Giant Lizard (63)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 35,
+      "pb": 2,
+      "adopt": {
+        "name": "Giant Lizard (63)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 35,
+        "pb": 2
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "TOMB_ENCOUNTERS",
+          "spec": {
+            "id": 63,
+            "name": "Giant Corridor Lizard",
+            "enemies": [
+              {
+                "name": "Giant Lizard",
+                "life": 35,
+                "hit": 6,
+                "bonus": 2,
+                "armour": 0,
+                "paralyseRolls": [
+                  3,
+                  6,
+                  9,
+                  12
+                ],
+                "paralyseRounds": 1
+              }
+            ]
+          }
+        },
+        "part": {
+          "name": "Giant Lizard",
+          "life": 35,
+          "hit": 6,
+          "bonus": 2,
+          "armour": 0,
+          "paralyseRolls": [
+            3,
+            6,
+            9,
+            12
+          ],
+          "paralyseRounds": 1
+        }
+      }
+    },
+    {
+      "key": "78:0",
+      "name": "Giant Lizard (78)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 35,
+      "pb": 2,
+      "adopt": {
+        "name": "Giant Lizard (78)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 35,
+        "pb": 2
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 6,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "TOMB_ENCOUNTERS",
+          "spec": {
+            "id": 78,
+            "name": "Four Giant Lizards",
+            "enemies": [
+              {
+                "name": "Giant Lizard",
+                "life": 35,
+                "hit": 6,
+                "bonus": 2,
+                "armour": 0,
+                "paralyseRolls": [
+                  3,
+                  6,
+                  9,
+                  12
+                ],
+                "paralyseRounds": 1
+              }
+            ],
+            "count": 4
+          }
+        },
+        "part": {
+          "name": "Giant Lizard",
+          "life": 35,
+          "hit": 6,
+          "bonus": 2,
+          "armour": 0,
+          "paralyseRolls": [
+            3,
+            6,
+            9,
+            12
+          ],
+          "paralyseRounds": 1
+        }
+      }
+    },
+    {
+      "key": "94:0",
+      "name": "Granite Demon (94)",
+      "attack": 4,
+      "defense": 3,
+      "hp": 35,
+      "pb": 4,
+      "adopt": {
+        "name": "Granite Demon (94)",
+        "attack": 4,
+        "defense": 3,
+        "hp": 35,
+        "pb": 4
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 7,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "TOMB_ENCOUNTERS",
+          "spec": {
+            "id": 94,
+            "name": "Animated Granite Demon",
+            "enemies": [
+              {
+                "name": "Granite Demon",
+                "life": 35,
+                "hit": 4,
+                "bonus": 4,
+                "armour": 3
+              }
+            ]
+          }
+        },
+        "part": {
+          "name": "Granite Demon",
+          "life": 35,
+          "hit": 4,
+          "bonus": 4,
+          "armour": 3
+        }
+      }
+    },
+    {
+      "key": "103:0",
+      "name": "Giant Spider (103)",
+      "attack": 5,
+      "defense": 0,
+      "hp": 55,
+      "pb": 3,
+      "adopt": {
+        "name": "Giant Spider (103)",
+        "attack": 5,
+        "defense": 0,
+        "hp": 55,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 8,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "TOMB_ENCOUNTERS",
+          "spec": {
+            "id": 103,
+            "name": "Spider: Trapped in the Web",
+            "enemies": [
+              {
+                "name": "Giant Spider",
+                "life": 55,
+                "hit": 5,
+                "bonus": 3,
+                "armour": 0,
+                "fatalRolls": [
+                  12
+                ],
+                "poisonFatal": true
+              }
+            ],
+            "playerHit": 6,
+            "playerBonus": 1
+          }
+        },
+        "part": {
+          "name": "Giant Spider",
+          "life": 55,
+          "hit": 5,
+          "bonus": 3,
+          "armour": 0,
+          "fatalRolls": [
+            12
+          ],
+          "poisonFatal": true
+        }
+      }
+    },
+    {
+      "key": "111:0",
+      "name": "Crab (111)",
+      "attack": 5,
+      "defense": 4,
+      "hp": 33,
+      "pb": 1,
+      "adopt": {
+        "name": "Crab (111)",
+        "attack": 5,
+        "defense": 4,
+        "hp": 33,
+        "pb": 1
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 9,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "TOMB_ENCOUNTERS",
+          "spec": {
+            "id": 111,
+            "name": "Poisonous Treasure Crab",
+            "enemies": [
+              {
+                "name": "Crab",
+                "life": 33,
+                "hit": 5,
+                "bonus": 1,
+                "armour": 4,
+                "poisonFrom": 10,
+                "poison": 3,
+                "poisonKind": "crab"
+              }
+            ]
+          }
+        },
+        "part": {
+          "name": "Crab",
+          "life": 33,
+          "hit": 5,
+          "bonus": 1,
+          "armour": 4,
+          "poisonFrom": 10,
+          "poison": 3,
+          "poisonKind": "crab"
+        }
+      }
+    },
+    {
+      "key": "118:0",
+      "name": "Fishface (118)",
+      "attack": 5,
+      "defense": 0,
+      "hp": 50,
+      "pb": 0,
+      "adopt": {
+        "name": "Fishface (118)",
+        "attack": 5,
+        "defense": 0,
+        "hp": 50,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 10,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "TOMB_ENCOUNTERS",
+          "spec": {
+            "id": 118,
+            "name": "Fin Squandrago, God of Cod",
+            "enemies": [
+              {
+                "name": "Fishface",
+                "life": 50,
+                "hit": 5,
+                "bonus": 0,
+                "armour": 0,
+                "drowningFrom": 9,
+                "drowningRounds": 3
+              }
+            ]
+          }
+        },
+        "part": {
+          "name": "Fishface",
+          "life": 50,
+          "hit": 5,
+          "bonus": 0,
+          "armour": 0,
+          "drowningFrom": 9,
+          "drowningRounds": 3
+        }
+      }
+    },
+    {
+      "key": "130:0",
+      "name": "Giant Spider (130)",
+      "attack": 5,
+      "defense": 0,
+      "hp": 55,
+      "pb": 3,
+      "adopt": {
+        "name": "Giant Spider (130)",
+        "attack": 5,
+        "defense": 0,
+        "hp": 55,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 11,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "TOMB_ENCOUNTERS",
+          "spec": {
+            "id": 130,
+            "name": "Spider: EJ Stuck in the Web",
+            "enemies": [
+              {
+                "name": "Giant Spider",
+                "life": 55,
+                "hit": 5,
+                "bonus": 3,
+                "armour": 0,
+                "fatalRolls": [
+                  12
+                ],
+                "poisonFatal": true
+              }
+            ],
+            "playerHit": 6,
+            "playerBonus": 0
+          }
+        },
+        "part": {
+          "name": "Giant Spider",
+          "life": 55,
+          "hit": 5,
+          "bonus": 3,
+          "armour": 0,
+          "fatalRolls": [
+            12
+          ],
+          "poisonFatal": true
+        }
+      }
+    },
+    {
+      "key": "141:0",
+      "name": "Werewolf (141)",
+      "attack": 6,
+      "defense": 2,
+      "hp": 25,
+      "pb": 3,
+      "adopt": {
+        "name": "Werewolf (141)",
+        "attack": 6,
+        "defense": 2,
+        "hp": 25,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 12,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "TOMB_ENCOUNTERS",
+          "spec": {
+            "id": 141,
+            "name": "Werewolf in the Garlic Store",
+            "enemies": [
+              {
+                "name": "Werewolf",
+                "life": 25,
+                "hit": 6,
+                "bonus": 3,
+                "armour": 2,
+                "silverVulnerable": true
+              }
+            ]
+          }
+        },
+        "part": {
+          "name": "Werewolf",
+          "life": 25,
+          "hit": 6,
+          "bonus": 3,
+          "armour": 2,
+          "silverVulnerable": true
+        }
+      }
+    },
+    {
+      "key": "144:0",
+      "name": "Vampire (144)",
+      "attack": 5,
+      "defense": 0,
+      "hp": 20,
+      "pb": 2,
+      "adopt": {
+        "name": "Vampire (144)",
+        "attack": 5,
+        "defense": 0,
+        "hp": 20,
+        "pb": 2
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 13,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "TOMB_ENCOUNTERS",
+          "spec": {
+            "id": 144,
+            "name": "Wandering Vampires",
+            "enemies": [
+              {
+                "name": "Vampire",
+                "life": 20,
+                "hit": 5,
+                "bonus": 2,
+                "armour": 0,
+                "paralyseRolls": [
+                  12
+                ],
+                "paralyseRounds": 3
+              }
+            ],
+            "countDice": 1,
+            "garlicBypass": true
+          }
+        },
+        "part": {
+          "name": "Vampire",
+          "life": 20,
+          "hit": 5,
+          "bonus": 2,
+          "armour": 0,
+          "paralyseRolls": [
+            12
+          ],
+          "paralyseRounds": 3
+        }
+      }
+    },
+    {
+      "key": "148:0",
+      "name": "Draculina (148)",
+      "attack": 4,
+      "defense": 0,
+      "hp": 40,
+      "pb": 0,
+      "adopt": {
+        "name": "Draculina (148)",
+        "attack": 4,
+        "defense": 0,
+        "hp": 40,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 14,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "TOMB_ENCOUNTERS",
+          "spec": {
+            "id": 148,
+            "name": "Draculina",
+            "enemies": [
+              {
+                "name": "Draculina",
+                "life": 40,
+                "hit": 4,
+                "bonus": 0,
+                "armour": 0,
+                "persistentDrain": 3
+              }
+            ]
+          }
+        },
+        "part": {
+          "name": "Draculina",
+          "life": 40,
+          "hit": 4,
+          "bonus": 0,
+          "armour": 0,
+          "persistentDrain": 3
+        }
+      }
+    },
+    {
+      "key": "150:0",
+      "name": "Vampire Bat (150)",
+      "attack": 4,
+      "defense": 0,
+      "hp": 5,
+      "pb": 0,
+      "adopt": {
+        "name": "Vampire Bat (150)",
+        "attack": 4,
+        "defense": 0,
+        "hp": 5,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 15,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "TOMB_ENCOUNTERS",
+          "spec": {
+            "id": 150,
+            "name": "Vampire Bats",
+            "enemies": [
+              {
+                "name": "Vampire Bat",
+                "life": 5,
+                "hit": 4,
+                "bonus": 0,
+                "armour": 0,
+                "fixedDamage": 3,
+                "attachedDrain": 3
+              }
+            ],
+            "countDice": 2,
+            "deathRequired": true
+          }
+        },
+        "part": {
+          "name": "Vampire Bat",
+          "life": 5,
+          "hit": 4,
+          "bonus": 0,
+          "armour": 0,
+          "fixedDamage": 3,
+          "attachedDrain": 3
+        }
+      }
+    },
+    {
+      "key": "151:0",
+      "name": "Hairy Thug (151)",
+      "attack": 6,
+      "defense": 2,
+      "hp": 25,
+      "pb": 3,
+      "adopt": {
+        "name": "Hairy Thug (151)",
+        "attack": 6,
+        "defense": 2,
+        "hp": 25,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 16,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "TOMB_ENCOUNTERS",
+          "spec": {
+            "id": 151,
+            "name": "Werewolf: Human Form",
+            "enemies": [
+              {
+                "name": "Hairy Thug",
+                "life": 25,
+                "hit": 6,
+                "bonus": 3,
+                "armour": 2,
+                "silverVulnerable": true
+              }
+            ]
+          }
+        },
+        "part": {
+          "name": "Hairy Thug",
+          "life": 25,
+          "hit": 6,
+          "bonus": 3,
+          "armour": 2,
+          "silverVulnerable": true
+        }
+      }
+    },
+    {
+      "key": "168:0",
+      "name": "Demon (168)",
+      "attack": 5,
+      "defense": 2,
+      "hp": 30,
+      "pb": 3,
+      "adopt": {
+        "name": "Demon (168)",
+        "attack": 5,
+        "defense": 2,
+        "hp": 30,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 17,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "TOMB_ENCOUNTERS",
+          "spec": {
+            "id": 168,
+            "name": "Lava-Pit Demon",
+            "enemies": [
+              {
+                "name": "Demon",
+                "life": 30,
+                "hit": 5,
+                "bonus": 3,
+                "armour": 2
+              }
+            ]
+          }
+        },
+        "part": {
+          "name": "Demon",
+          "life": 30,
+          "hit": 5,
+          "bonus": 3,
+          "armour": 2
+        }
+      }
+    },
+    {
+      "key": "169:0",
+      "name": "Fido (169)",
+      "attack": 4,
+      "defense": 0,
+      "hp": 30,
+      "pb": 1,
+      "adopt": {
+        "name": "Fido (169)",
+        "attack": 4,
+        "defense": 0,
+        "hp": 30,
+        "pb": 1
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 18,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "TOMB_ENCOUNTERS",
+          "spec": {
+            "id": 169,
+            "name": "Fido, the Hairy Octopus",
+            "enemies": [
+              {
+                "name": "Fido",
+                "life": 30,
+                "hit": 4,
+                "bonus": 1,
+                "armour": 0,
+                "attacks": 2
+              }
+            ]
+          }
+        },
+        "part": {
+          "name": "Fido",
+          "life": 30,
+          "hit": 4,
+          "bonus": 1,
+          "armour": 0,
+          "attacks": 2
+        }
+      }
+    },
+    {
+      "key": "172:0",
+      "name": "Troll (172)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 12,
+      "pb": 0,
+      "adopt": {
+        "name": "Troll (172)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 12,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 19,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "TOMB_ENCOUNTERS",
+          "spec": {
+            "id": 172,
+            "name": "Troll with a Crystal Dagger",
+            "enemies": [
+              {
+                "name": "Troll",
+                "life": 12,
+                "hit": 6,
+                "bonus": 0,
+                "armour": 0,
+                "fatalOnHit": true
+              }
+            ]
+          }
+        },
+        "part": {
+          "name": "Troll",
+          "life": 12,
+          "hit": 6,
+          "bonus": 0,
+          "armour": 0,
+          "fatalOnHit": true
+        }
+      }
+    },
+    {
+      "key": "189:0",
+      "name": "Lounge Lizard (189)",
+      "attack": 4,
+      "defense": 0,
+      "hp": 40,
+      "pb": 3,
+      "adopt": {
+        "name": "Lounge Lizard (189)",
+        "attack": 4,
+        "defense": 0,
+        "hp": 40,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 20,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "TOMB_ENCOUNTERS",
+          "spec": {
+            "id": 189,
+            "name": "The Lounge Lizard",
+            "enemies": [
+              {
+                "name": "Lounge Lizard",
+                "life": 40,
+                "hit": 4,
+                "bonus": 3,
+                "armour": 0
+              }
+            ]
+          }
+        },
+        "part": {
+          "name": "Lounge Lizard",
+          "life": 40,
+          "hit": 4,
+          "bonus": 3,
+          "armour": 0
+        }
+      }
+    },
+    {
+      "key": "204:0",
+      "name": "Flying Wyrm (204)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 15,
+      "pb": 2,
+      "adopt": {
+        "name": "Flying Wyrm (204)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 15,
+        "pb": 2
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 21,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "TOMB_ENCOUNTERS",
+          "spec": {
+            "id": 204,
+            "name": "Grott's Flying Wyrms",
+            "enemies": [
+              {
+                "name": "Flying Wyrm",
+                "life": 15,
+                "hit": 6,
+                "bonus": 2,
+                "armour": 0
+              }
+            ],
+            "count": 2,
+            "playerHit": 7,
+            "nextStage": "204-grott"
+          }
+        },
+        "part": {
+          "name": "Flying Wyrm",
+          "life": 15,
+          "hit": 6,
+          "bonus": 2,
+          "armour": 0
+        }
+      }
+    },
+    {
+      "key": "204-grott:0",
+      "name": "Grott (204-grott)",
+      "attack": 5,
+      "defense": 0,
+      "hp": 25,
+      "pb": 3,
+      "adopt": {
+        "name": "Grott (204-grott)",
+        "attack": 5,
+        "defense": 0,
+        "hp": 25,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 22,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "TOMB_ENCOUNTERS",
+          "spec": {
+            "id": "204-grott",
+            "name": "Grott the Hoddle",
+            "enemies": [
+              {
+                "name": "Grott",
+                "life": 25,
+                "hit": 5,
+                "bonus": 3,
+                "armour": 0
+              }
+            ],
+            "section": 204,
+            "grott": true,
+            "enemyMagic": true,
+            "nextStage": 222,
+            "deathRequired": true
+          }
+        },
+        "part": {
+          "name": "Grott",
+          "life": 25,
+          "hit": 5,
+          "bonus": 3,
+          "armour": 0
+        }
+      }
+    },
+    {
+      "key": "209:0",
+      "name": "Grott (209)",
+      "attack": 5,
+      "defense": 0,
+      "hp": 25,
+      "pb": 3,
+      "adopt": {
+        "name": "Grott (209)",
+        "attack": 5,
+        "defense": 0,
+        "hp": 25,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 23,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "TOMB_ENCOUNTERS",
+          "spec": {
+            "id": 209,
+            "name": "Grott: Final Resurrection",
+            "enemies": [
+              {
+                "name": "Grott",
+                "life": 25,
+                "hit": 5,
+                "bonus": 3,
+                "armour": 0
+              }
+            ],
+            "grott": true,
+            "enemyMagic": false,
+            "deathRequired": true
+          }
+        },
+        "part": {
+          "name": "Grott",
+          "life": 25,
+          "hit": 5,
+          "bonus": 3,
+          "armour": 0
+        }
+      }
+    },
+    {
+      "key": "218:0",
+      "name": "Golden Vampire (218)",
+      "attack": 4,
+      "defense": 0,
+      "hp": 50,
+      "pb": 3,
+      "adopt": {
+        "name": "Golden Vampire (218)",
+        "attack": 4,
+        "defense": 0,
+        "hp": 50,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 24,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "TOMB_ENCOUNTERS",
+          "spec": {
+            "id": 218,
+            "name": "Golden Vampire",
+            "enemies": [
+              {
+                "name": "Golden Vampire",
+                "life": 50,
+                "hit": 4,
+                "bonus": 3,
+                "armour": 0,
+                "fatalRolls": [
+                  12
+                ]
+              }
+            ],
+            "playerFirst": true
+          }
+        },
+        "part": {
+          "name": "Golden Vampire",
+          "life": 50,
+          "hit": 4,
+          "bonus": 3,
+          "armour": 0,
+          "fatalRolls": [
+            12
+          ]
+        }
+      }
+    },
+    {
+      "key": "219:0",
+      "name": "Ghastly Skull (219)",
+      "attack": 2,
+      "defense": 0,
+      "hp": 18,
+      "pb": 0,
+      "adopt": {
+        "name": "Ghastly Skull (219)",
+        "attack": 2,
+        "defense": 0,
+        "hp": 18,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 25,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "TOMB_ENCOUNTERS",
+          "spec": {
+            "id": 219,
+            "name": "Firefinger Skull",
+            "enemies": [
+              {
+                "name": "Ghastly Skull",
+                "life": 18,
+                "hit": 2,
+                "bonus": 0,
+                "armour": 0,
+                "fixedDamage": 10,
+                "automatic": true
+              }
+            ]
+          }
+        },
+        "part": {
+          "name": "Ghastly Skull",
+          "life": 18,
+          "hit": 2,
+          "bonus": 0,
+          "armour": 0,
+          "fixedDamage": 10,
+          "automatic": true
+        }
+      }
+    },
+    {
+      "key": "222:0",
+      "name": "Grott (222)",
+      "attack": 5,
+      "defense": 0,
+      "hp": 25,
+      "pb": 3,
+      "adopt": {
+        "name": "Grott (222)",
+        "attack": 5,
+        "defense": 0,
+        "hp": 25,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 26,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "TOMB_ENCOUNTERS",
+          "spec": {
+            "id": 222,
+            "name": "Grott: First Resurrection",
+            "enemies": [
+              {
+                "name": "Grott",
+                "life": 25,
+                "hit": 5,
+                "bonus": 3,
+                "armour": 0
+              }
+            ],
+            "grott": true,
+            "enemyMagic": true,
+            "nextStage": 209,
+            "deathRequired": true
+          }
+        },
+        "part": {
+          "name": "Grott",
+          "life": 25,
+          "hit": 5,
+          "bonus": 3,
+          "armour": 0
+        }
+      }
+    },
+    {
+      "key": "dream5:0",
+      "name": "Rubic Cube (dream5)",
+      "attack": 5,
+      "defense": 0,
+      "hp": 25,
+      "pb": 2,
+      "adopt": {
+        "name": "Rubic Cube (dream5)",
+        "attack": 5,
+        "defense": 0,
+        "hp": 25,
+        "pb": 2
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 27,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "TOMB_DREAMS",
+          "spec": {
+            "id": "dream5",
+            "name": "Dreamtime: Enraged Rubic Cube",
+            "enemies": [
+              {
+                "name": "Rubic Cube",
+                "life": 25,
+                "hit": 5,
+                "bonus": 2,
+                "armour": 0
+              }
+            ],
+            "dream": true,
+            "playerHit": 6,
+            "playerBonus": 0
+          }
+        },
+        "part": {
+          "name": "Rubic Cube",
+          "life": 25,
+          "hit": 5,
+          "bonus": 2,
+          "armour": 0
+        }
+      }
+    }
+  ]
+}

@@ -1,3 +1,8 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
+await loadFixtureRoster(521);
+await loadFixtureRoster(522);
+await loadFixtureRoster(523);
+await loadFixtureRoster(524);
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createMarshFight } from '../../../public/js/battlesim/engines/skyfall/marsh-combat.js';

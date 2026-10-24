@@ -1,3 +1,5 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
+await loadFixtureRoster(537);
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { ANCIENT_EVIL_ENCOUNTERS, ANCIENT_EVIL_ROSTER, prepareAncientEvilEncounter } from '../../../public/js/battlesim/engines/demonspawn/ancient-evil-roster.js';

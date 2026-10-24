@@ -1,3 +1,5 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
+await loadFixtureRoster(529);
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFileSync } from './simulator-source.mjs';
@@ -816,4 +818,22 @@ test('saving unchanged Voyage history cannot award simulator XP twice', () => {
   assert.deepEqual(processHistory(history, [...history, { ts: 102, outcome: 'win' }]), [
     [123, 'battlesim_win', 'sim529:102'],
   ]);
+});
+
+
+test('legacy saved Shadow fights continue without resetting wounds or adding new saved metadata', () => {
+  const f = JSON.parse(JSON.stringify(createVoyageFight(109, character(), {}, rolls(1,1,1,6,6))));
+  delete f.spec.shadowRules;
+  f.player.life = 31;
+  f.shadows[0].gripped = true;
+  f.rounds = 3;
+  f.legacyExtension = {retained: true};
+  voyageShadowRound(f,0,rolls());
+  assert.equal(f.player.life,25);
+  assert.equal(f.rounds,4);
+  assert.equal(f.shadows.length,1);
+  assert.equal(f.shadows[0].gripped,true);
+  assert.equal(f.status,'fighting');
+  assert.equal('shadowRules' in f.spec,false);
+  assert.deepEqual(f.legacyExtension,{retained:true});
 });

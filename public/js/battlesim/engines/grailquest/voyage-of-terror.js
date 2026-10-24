@@ -1,6 +1,6 @@
 import { customGrailEncounter } from './opponents.js';
 import { VOYAGE_ENCOUNTERS, VOYAGE_DREAMS, VOYAGE_NAVIGATION,
-  VOYAGE_ARGONAUTS } from './voyage-of-terror-roster.js';
+  VOYAGE_ARGONAUTS, VOYAGE_SUPPORT } from './voyage-of-terror-roster.js';
 
 const die = random => 1 + Math.floor(random() * 6);
 const dice = random => die(random) + die(random);
@@ -185,7 +185,7 @@ export function createVoyageFight(section, player, options = {}, random = Math.r
     if (!jason || !alive(jason)) throw new RangeError('Jason is required');
     f.allies = [clone(jason)];
   }
-  if (spec.shadows) f.shadows = Array.from({ length: die(random) }, () => ({ gripped: false, banished: false }));
+  if (spec.shadows) f.shadows = Array.from({ length: Array.from({length: spec.shadowRules.countDice}, () => die(random)).reduce((sum, value) => sum + value, 0) }, () => ({ gripped: false, banished: false }));
   if (!spec.dream && p.mongoose && f.foes.length && f.foes.every(foe => foe.serpent)) {
     for (const foe of f.foes) foe.bypassed = true;
   }
@@ -427,19 +427,20 @@ export function recruitVoyageArgonauts(player) {
 
 export function voyageShadowRound(f, target, random = Math.random) {
   if (f.status !== 'fighting' || !f.spec.shadows) return null;
+  const rules = f.spec.shadowRules ?? VOYAGE_ENCOUNTERS.find(entry => entry.shadows).shadowRules;
   const shadow = f.shadows[target];
   if (!shadow || shadow.banished) throw new RangeError('Invalid shadow');
   f.events = []; f.rounds++;
   if (f.player.light) {
     const roll = dice(random);
-    if (roll >= 4) shadow.banished = true;
+    if (roll >= rules.banish) shadow.banished = true;
     f.events.push({ kind: 'light', roll, success: shadow.banished });
   }
   for (const enemy of f.shadows.filter(s => !s.banished)) {
     const roll = enemy.gripped ? null : dice(random);
-    if (roll !== null && roll >= 6) enemy.gripped = true;
-    if (enemy.gripped) damagePlayer(f, 6);
-    f.events.push({ kind: 'shadow', roll, damage: enemy.gripped ? 6 : 0 });
+    if (roll !== null && roll >= rules.grip) enemy.gripped = true;
+    if (enemy.gripped) damagePlayer(f, rules.damage);
+    f.events.push({ kind: 'shadow', roll, damage: enemy.gripped ? rules.damage : 0 });
   }
   if (f.player.life <= 5) f.status = 'loss';
   else if (f.shadows.every(s => s.banished)) {
@@ -467,8 +468,7 @@ export function voyageSowTeeth(f, count, random = Math.random) {
   enemyTurn(f, voyageTargets(f)[0].index, random);
   if (f.status !== 'fighting') return { success: false, roll: null };
   const roll = dice(random), success = roll >= 6;
-  if (success) f.allies.push(...Array.from({ length: count }, () => ({ name: 'Dragon-Tooth Warrior',
-    life: 30, hit: 6, bonus: 3, armour: 3, temporary: true })));
+  if (success) f.allies.push(...Array.from({ length: count }, () => clone(VOYAGE_SUPPORT.dragonTooth)));
   f.events.push({ kind: 'teeth', count, roll, success });
   return { roll, success };
 }
@@ -683,7 +683,6 @@ export function callVoyageGnurlbash(f) {
   if (f.status !== 'fighting' || f.spec.dream || !f.player.gnurlbash || f.spec.shadows
     || f.allies.some(ally => ally.gnurlbash)) return false;
   f.player.gnurlbash = false;
-  f.allies.push({ name: 'Gnurlbash Monster', life: 30, hit: 6, bonus: 2, armour: 0,
-    temporary: true, gnurlbash: true, expiresOnEnemy: voyageTargets(f)[0].index });
+  f.allies.push({ ...clone(VOYAGE_SUPPORT.gnurlbash), expiresOnEnemy: voyageTargets(f)[0].index });
   return true;
 }

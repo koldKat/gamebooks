@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { KINGSPORT_ENCOUNTERS, createKingsportCharacter, createKingsportFight, rollKingsportRound, improviseKingsport } from '../../../public/js/battlesim/engines/kingsport.js';
+import { loadFixtureRoster } from './roster-fixtures.mjs';
+await loadFixtureRoster(557);
 const player = (values = {}) => ({ ...createKingsportCharacter('lucius'), ...values });
 const rng = (...dice) => { let i = 0; return () => ((dice[i++] ?? 1) - .5) / 6; };
 test('all eleven encounters and source-backed investigator defaults are present', () => {

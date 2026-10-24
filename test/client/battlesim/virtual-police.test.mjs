@@ -1,3 +1,5 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
+await loadFixtureRoster(570);
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as core from '../../../public/js/battlesim/engines/virtual-police/core.js';
@@ -257,4 +259,29 @@ test('ship weapons keep independent ammunition while legacy saved fights retain 
   assert.equal(atomic.ammunition.atomic, 1);
   assert.equal(atomic.ammunition.pb, 4);
   assert.equal(fight.ammunition.antiproton, 1);
+});
+
+
+test('enemy and group generation honor database formulas without changing the printed base stats', () => {
+  const brawler=POLICE_ENCOUNTERS.find(row=>row.id==='brawler');
+  const bandits=POLICE_ENCOUNTERS.find(row=>row.id==='bandits');
+  const originalEnemyGeneration=structuredClone(brawler.enemyGeneration);
+  const originalCountFormula=structuredClone(bandits.countFormula);
+  const printed=structuredClone(brawler.enemy);
+  try {
+    brawler.enemyGeneration={attack:{base:9,die:true},defence:{base:4,perLevel:3}};
+    bandits.countFormula={base:100,perLevel:5};
+    const result=preparePoliceEnemy('brawler',{level:2},rolls(5));
+    assert.equal(result.enemy.attack,14);
+    assert.equal(result.enemy.defence,10);
+    assert.deepEqual(result.dice,[5]);
+    assert.equal(preparePoliceEnemy('bandits',{level:6}).count,130);
+    assert.deepEqual(brawler.enemy,printed);
+    const overridden=preparePoliceEnemy('brawler',{level:2,enemy:{attack:7}},rolls(3));
+    assert.equal(overridden.enemy.attack,7);
+    assert.deepEqual(overridden.dice,[3]);
+  } finally {
+    brawler.enemyGeneration=originalEnemyGeneration;
+    bandits.countFormula=originalCountFormula;
+  }
 });

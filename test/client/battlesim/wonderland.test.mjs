@@ -1,3 +1,5 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
+await loadFixtureRoster(636);
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { wonderlandDraw, wonderlandTest, createWonderlandCharacter } from '../../../public/js/battlesim/engines/wonderland/random.js';
@@ -216,4 +218,22 @@ test('roster includes all 52 encounter variants and 71 printed enemies', () => {
     assert.equal(f.enemies.length, spec.enemies.length);
     assert.ok(f.active.length > 0);
   }
+});
+
+
+test('captured encounter rules control damage while old saved specs retain their original outcomes', () => {
+  const spec=structuredClone(WONDERLAND_ENCOUNTERS.find(row=>row.section===192));
+  spec.specialRules.enemyDamage=7;
+  const saved=JSON.parse(JSON.stringify(startWonderlandFight({combat:0,endurance:20},spec)));
+  const result=wonderlandRound(saved,{roll:rolls(1,1,6,6)}).fight;
+  assert.equal(result.player.endurance,13);
+  assert.equal(saved.player.endurance,20);
+  const legacy=JSON.parse(JSON.stringify(startWonderlandFight({combat:0,endurance:20},spec)));
+  delete legacy.encounter.specialRules;
+  legacy.player.endurance=6;
+  legacy.legacyExtension={retained:true};
+  const restored=wonderlandRound(legacy,{roll:rolls(1,1,6,6)}).fight;
+  assert.equal(restored.player.endurance,3);
+  assert.equal('specialRules' in restored.encounter,false);
+  assert.deepEqual(restored.legacyExtension,{retained:true});
 });

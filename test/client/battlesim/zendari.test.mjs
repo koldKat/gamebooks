@@ -4,6 +4,8 @@ import * as combat from '../../../public/js/battlesim/books/808/combat.js';
 import { createState } from '../../../public/js/battlesim/books/808/state.js';
 import bg from '../../../public/js/i18n/bg/battlesim/battlesim808.js';
 import en from '../../../public/js/i18n/en/battlesim/battlesim808.js';
+import { loadFixtureRoster } from './roster-fixtures.mjs';
+await loadFixtureRoster(808);
 
 test('mech defaults and difficulty preserve printed choices', () => {
   assert.equal(combat.newCharacter('sparta').weapons, 5);

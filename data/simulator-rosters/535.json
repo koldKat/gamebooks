@@ -1,0 +1,1483 @@
+{
+  "schemaVersion": 1,
+  "bookId": 535,
+  "family": "demonspawn",
+  "source": "Original complete printed attribute blocks and encounter presets, including equipment, source nulls and manually supplied opponents. Every existing database row matched exactly.",
+  "enemies": [
+    {
+      "key": "Panther",
+      "name": "Panther",
+      "attack": 20,
+      "defense": null,
+      "hp": 300,
+      "pb": null,
+      "adopt": {
+        "name": "Panther",
+        "attack": 20,
+        "defense": null,
+        "hp": 300,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "demonspawn",
+        "dataset": "BOOK_DATA",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fixed",
+          "key": "Panther",
+          "enemy": {
+            "name": "Panther",
+            "strength": 72,
+            "speed": 80,
+            "stamina": 48,
+            "courage": 64,
+            "skill": 20,
+            "luck": 16,
+            "charm": null,
+            "attraction": null,
+            "power": null,
+            "lifePoints": 300
+          },
+          "encounters": [
+            {
+              "index": 13,
+              "spec": {
+                "section": 100,
+                "enemies": [
+                  "Panther"
+                ],
+                "win": 10
+              }
+            }
+          ],
+          "equipment": {
+            "weapon": 15
+          }
+        },
+        "part": {
+          "name": "Panther",
+          "strength": 72,
+          "speed": 80,
+          "stamina": 48,
+          "courage": 64,
+          "skill": 20,
+          "luck": 16,
+          "charm": null,
+          "attraction": null,
+          "power": null,
+          "lifePoints": 300
+        }
+      }
+    },
+    {
+      "key": "King's Guard",
+      "name": "King's Guard",
+      "attack": 15,
+      "defense": null,
+      "hp": 343,
+      "pb": null,
+      "adopt": {
+        "name": "King's Guard",
+        "attack": 15,
+        "defense": null,
+        "hp": 343,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "demonspawn",
+        "dataset": "BOOK_DATA",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fixed",
+          "key": "King's Guard",
+          "enemy": {
+            "name": "King's Guard",
+            "strength": 64,
+            "speed": 48,
+            "stamina": 56,
+            "courage": 56,
+            "skill": 15,
+            "luck": 48,
+            "charm": 24,
+            "attraction": 32,
+            "power": null,
+            "lifePoints": 343
+          },
+          "encounters": [
+            {
+              "index": 0,
+              "spec": {
+                "section": 14,
+                "enemies": [
+                  "King's Guard",
+                  "King's Guard",
+                  "King's Guard",
+                  "King's Guard",
+                  "King's Guard",
+                  "King's Guard",
+                  "King's Guard",
+                  "King's Guard",
+                  "King's Guard",
+                  "King's Guard",
+                  "King's Guard",
+                  "King's Guard"
+                ],
+                "rule": "chase",
+                "win": 45,
+                "defeat": 3,
+                "chaseRules": {
+                  "equalDamagePerGuard": 50
+                }
+              }
+            },
+            {
+              "index": 9,
+              "spec": {
+                "section": 84,
+                "enemies": [
+                  "King's Guard",
+                  "King's Guard",
+                  "King's Guard"
+                ],
+                "win": 95
+              }
+            }
+          ],
+          "equipment": {
+            "weapon": "sword",
+            "armour": "leather"
+          }
+        },
+        "part": {
+          "name": "King's Guard",
+          "strength": 64,
+          "speed": 48,
+          "stamina": 56,
+          "courage": 56,
+          "skill": 15,
+          "luck": 48,
+          "charm": 24,
+          "attraction": 32,
+          "power": null,
+          "lifePoints": 343
+        }
+      }
+    },
+    {
+      "key": "Tanith",
+      "name": "Tanith",
+      "attack": 60,
+      "defense": null,
+      "hp": 596,
+      "pb": null,
+      "adopt": {
+        "name": "Tanith",
+        "attack": 60,
+        "defense": null,
+        "hp": 596,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "demonspawn",
+        "dataset": "BOOK_DATA",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fixed",
+          "key": "Tanith",
+          "enemy": {
+            "name": "Tanith",
+            "strength": 56,
+            "speed": 88,
+            "stamina": 88,
+            "courage": 88,
+            "skill": 60,
+            "luck": 64,
+            "charm": 64,
+            "attraction": 88,
+            "power": null,
+            "lifePoints": 596
+          },
+          "encounters": [
+            {
+              "index": 4,
+              "spec": {
+                "section": 61,
+                "enemies": [
+                  "Tanith"
+                ],
+                "weapon": "sword",
+                "rule": "first-blood",
+                "noMagic": true,
+                "win": 44,
+                "defeat": 4
+              }
+            }
+          ],
+          "equipment": {
+            "weapon": "sword"
+          }
+        },
+        "part": {
+          "name": "Tanith",
+          "strength": 56,
+          "speed": 88,
+          "stamina": 88,
+          "courage": 88,
+          "skill": 60,
+          "luck": 64,
+          "charm": 64,
+          "attraction": 88,
+          "power": null,
+          "lifePoints": 596
+        }
+      }
+    },
+    {
+      "key": "Giant Rat",
+      "name": "Giant Rat",
+      "attack": 10,
+      "defense": null,
+      "hp": 266,
+      "pb": null,
+      "adopt": {
+        "name": "Giant Rat",
+        "attack": 10,
+        "defense": null,
+        "hp": 266,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "demonspawn",
+        "dataset": "BOOK_DATA",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fixed",
+          "key": "Giant Rat",
+          "enemy": {
+            "name": "Giant Rat",
+            "strength": 96,
+            "speed": 64,
+            "stamina": 48,
+            "courage": 48,
+            "skill": 10,
+            "luck": null,
+            "charm": null,
+            "attraction": null,
+            "power": null,
+            "lifePoints": 266
+          },
+          "encounters": [
+            {
+              "index": 11,
+              "spec": {
+                "section": 91,
+                "enemies": [
+                  "Giant Rat"
+                ],
+                "rule": "rat",
+                "win": 42
+              }
+            }
+          ],
+          "equipment": {
+            "weapon": 5
+          }
+        },
+        "part": {
+          "name": "Giant Rat",
+          "strength": 96,
+          "speed": 64,
+          "stamina": 48,
+          "courage": 48,
+          "skill": 10,
+          "luck": null,
+          "charm": null,
+          "attraction": null,
+          "power": null,
+          "lifePoints": 266
+        }
+      }
+    },
+    {
+      "key": "Vampire",
+      "name": "Vampire",
+      "attack": 48,
+      "defense": null,
+      "hp": 384,
+      "pb": null,
+      "adopt": {
+        "name": "Vampire",
+        "attack": 48,
+        "defense": null,
+        "hp": 384,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "demonspawn",
+        "dataset": "BOOK_DATA",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fixed",
+          "key": "Vampire",
+          "enemy": {
+            "name": "Vampire",
+            "strength": 48,
+            "speed": 48,
+            "stamina": 48,
+            "courage": 48,
+            "skill": 48,
+            "luck": 48,
+            "charm": 48,
+            "attraction": 48,
+            "power": null,
+            "lifePoints": 384
+          },
+          "encounters": [
+            {
+              "index": 3,
+              "spec": {
+                "section": 47,
+                "enemies": [
+                  "Vampire"
+                ],
+                "crypt": true,
+                "rule": "vampire",
+                "win": [
+                  8,
+                  62
+                ],
+                "powerReward": 20
+              }
+            }
+          ],
+          "equipment": {
+            "weapon": 5
+          }
+        },
+        "part": {
+          "name": "Vampire",
+          "strength": 48,
+          "speed": 48,
+          "stamina": 48,
+          "courage": 48,
+          "skill": 48,
+          "luck": 48,
+          "charm": 48,
+          "attraction": 48,
+          "power": null,
+          "lifePoints": 384
+        }
+      }
+    },
+    {
+      "key": "Worm",
+      "name": "Worm",
+      "attack": 15,
+      "defense": null,
+      "hp": 311,
+      "pb": null,
+      "adopt": {
+        "name": "Worm",
+        "attack": 15,
+        "defense": null,
+        "hp": 311,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "demonspawn",
+        "dataset": "BOOK_DATA",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fixed",
+          "key": "Worm",
+          "enemy": {
+            "name": "Worm",
+            "strength": 96,
+            "speed": 8,
+            "stamina": 96,
+            "courage": 96,
+            "skill": 15,
+            "luck": null,
+            "charm": null,
+            "attraction": null,
+            "power": null,
+            "lifePoints": 311
+          },
+          "encounters": [
+            {
+              "index": 1,
+              "spec": {
+                "section": 16,
+                "enemies": [
+                  "Worm"
+                ],
+                "crypt": true,
+                "first": "player",
+                "win": 35,
+                "powerReward": 10
+              }
+            }
+          ],
+          "equipment": {
+            "weapon": 12,
+            "armour": 8
+          }
+        },
+        "part": {
+          "name": "Worm",
+          "strength": 96,
+          "speed": 8,
+          "stamina": 96,
+          "courage": 96,
+          "skill": 15,
+          "luck": null,
+          "charm": null,
+          "attraction": null,
+          "power": null,
+          "lifePoints": 311
+        }
+      }
+    },
+    {
+      "key": "Statue",
+      "name": "Statue",
+      "attack": 30,
+      "defense": null,
+      "hp": 428,
+      "pb": null,
+      "adopt": {
+        "name": "Statue",
+        "attack": 30,
+        "defense": null,
+        "hp": 428,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "demonspawn",
+        "dataset": "BOOK_DATA",
+        "entryIndex": 6,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fixed",
+          "key": "Statue",
+          "enemy": {
+            "name": "Statue",
+            "strength": 150,
+            "speed": 48,
+            "stamina": 100,
+            "courage": 100,
+            "skill": 30,
+            "luck": null,
+            "charm": null,
+            "attraction": null,
+            "power": null,
+            "lifePoints": 428
+          },
+          "encounters": [
+            {
+              "index": 2,
+              "spec": {
+                "section": 34,
+                "enemies": [
+                  "Statue",
+                  "Statue"
+                ],
+                "crypt": true,
+                "win": 19
+              }
+            }
+          ],
+          "equipment": {
+            "weapon": "sword",
+            "armour": 10
+          }
+        },
+        "part": {
+          "name": "Statue",
+          "strength": 150,
+          "speed": 48,
+          "stamina": 100,
+          "courage": 100,
+          "skill": 30,
+          "luck": null,
+          "charm": null,
+          "attraction": null,
+          "power": null,
+          "lifePoints": 428
+        }
+      }
+    },
+    {
+      "key": "Alchiller",
+      "name": "Alchiller",
+      "attack": 50,
+      "defense": null,
+      "hp": 562,
+      "pb": null,
+      "adopt": {
+        "name": "Alchiller",
+        "attack": 50,
+        "defense": null,
+        "hp": 562,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "demonspawn",
+        "dataset": "BOOK_DATA",
+        "entryIndex": 7,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fixed",
+          "key": "Alchiller",
+          "enemy": {
+            "name": "Alchiller",
+            "strength": 80,
+            "speed": 96,
+            "stamina": 80,
+            "courage": 88,
+            "skill": 50,
+            "luck": 64,
+            "charm": 48,
+            "attraction": 56,
+            "power": 100,
+            "lifePoints": 562
+          },
+          "encounters": [
+            {
+              "index": 5,
+              "spec": {
+                "section": 71,
+                "enemies": [
+                  "Alchiller"
+                ],
+                "crypt": true,
+                "first": "enemy",
+                "win": 25
+              }
+            },
+            {
+              "index": 7,
+              "spec": {
+                "section": 77,
+                "enemies": [
+                  "Alchiller",
+                  "Alchiller"
+                ],
+                "crypt": true,
+                "enemyOpening": 2,
+                "win": [
+                  23,
+                  32,
+                  38
+                ]
+              }
+            },
+            {
+              "index": 8,
+              "spec": {
+                "section": 83,
+                "enemies": [
+                  "Alchiller",
+                  "Alchiller",
+                  "Alchiller",
+                  "Alchiller"
+                ],
+                "crypt": true,
+                "enemyOpening": 2,
+                "win": 88
+              }
+            },
+            {
+              "index": 10,
+              "spec": {
+                "section": 85,
+                "enemies": [
+                  "Alchiller",
+                  "Alchiller"
+                ],
+                "crypt": true,
+                "enemyOpening": 2,
+                "win": [
+                  23,
+                  32,
+                  38
+                ]
+              }
+            },
+            {
+              "index": 12,
+              "spec": {
+                "section": 94,
+                "enemies": [
+                  "Alchiller",
+                  "Alchiller",
+                  "Alchiller",
+                  "Alchiller"
+                ],
+                "crypt": true,
+                "win": 88
+              }
+            },
+            {
+              "index": 14,
+              "spec": {
+                "section": 103,
+                "enemies": [
+                  "Alchiller",
+                  "Alchiller",
+                  "Alchiller",
+                  "Alchiller"
+                ],
+                "crypt": true,
+                "win": 88
+              }
+            }
+          ],
+          "equipment": {
+            "weapon": 8,
+            "spells": [
+              "poisonNeedle",
+              "fireball"
+            ]
+          }
+        },
+        "part": {
+          "name": "Alchiller",
+          "strength": 80,
+          "speed": 96,
+          "stamina": 80,
+          "courage": 88,
+          "skill": 50,
+          "luck": 64,
+          "charm": 48,
+          "attraction": 56,
+          "power": 100,
+          "lifePoints": 562
+        }
+      }
+    },
+    {
+      "key": "Horn Monster",
+      "name": "Horn Monster",
+      "attack": 50,
+      "defense": null,
+      "hp": 530,
+      "pb": null,
+      "adopt": {
+        "name": "Horn Monster",
+        "attack": 50,
+        "defense": null,
+        "hp": 530,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "demonspawn",
+        "dataset": "BOOK_DATA",
+        "entryIndex": 8,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fixed",
+          "key": "Horn Monster",
+          "enemy": {
+            "name": "Horn Monster",
+            "strength": 150,
+            "speed": 50,
+            "stamina": 80,
+            "courage": 120,
+            "skill": 50,
+            "luck": 80,
+            "charm": null,
+            "attraction": null,
+            "power": 150,
+            "lifePoints": 530
+          },
+          "encounters": [
+            {
+              "index": 24,
+              "spec": {
+                "section": "horn",
+                "enemies": [
+                  "Horn Monster"
+                ],
+                "rule": "horn-reversal",
+                "win": null
+              }
+            }
+          ],
+          "equipment": {
+            "weapon": 10,
+            "armour": 13,
+            "spells": [
+              "fireball"
+            ]
+          }
+        },
+        "part": {
+          "name": "Horn Monster",
+          "strength": 150,
+          "speed": 50,
+          "stamina": 80,
+          "courage": 120,
+          "skill": 50,
+          "luck": 80,
+          "charm": null,
+          "attraction": null,
+          "power": 150,
+          "lifePoints": 530
+        }
+      }
+    },
+    {
+      "key": "Palace Guard",
+      "name": "Palace Guard",
+      "attack": 35,
+      "defense": null,
+      "hp": 411,
+      "pb": null,
+      "adopt": {
+        "name": "Palace Guard",
+        "attack": 35,
+        "defense": null,
+        "hp": 411,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "demonspawn",
+        "dataset": "BOOK_DATA",
+        "entryIndex": 9,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fixed",
+          "key": "Palace Guard",
+          "enemy": {
+            "name": "Palace Guard",
+            "strength": 64,
+            "speed": 48,
+            "stamina": 56,
+            "courage": 64,
+            "skill": 35,
+            "luck": 48,
+            "charm": 40,
+            "attraction": 56,
+            "power": null,
+            "lifePoints": 411
+          },
+          "encounters": [
+            {
+              "index": 18,
+              "spec": {
+                "section": 119,
+                "enemies": [
+                  "Palace Guard",
+                  "Palace Guard"
+                ],
+                "rule": "flee-20",
+                "win": 104
+              }
+            }
+          ],
+          "equipment": {
+            "weapon": null,
+            "manualWeapon": true
+          }
+        },
+        "part": {
+          "name": "Palace Guard",
+          "strength": 64,
+          "speed": 48,
+          "stamina": 56,
+          "courage": 64,
+          "skill": 35,
+          "luck": 48,
+          "charm": 40,
+          "attraction": 56,
+          "power": null,
+          "lifePoints": 411
+        }
+      }
+    },
+    {
+      "key": "Manticore",
+      "name": "Manticore",
+      "attack": 25,
+      "defense": null,
+      "hp": 429,
+      "pb": null,
+      "adopt": {
+        "name": "Manticore",
+        "attack": 25,
+        "defense": null,
+        "hp": 429,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "demonspawn",
+        "dataset": "BOOK_DATA",
+        "entryIndex": 10,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fixed",
+          "key": "Manticore",
+          "enemy": {
+            "name": "Manticore",
+            "strength": 120,
+            "speed": 50,
+            "stamina": 80,
+            "courage": 90,
+            "skill": 25,
+            "luck": 64,
+            "charm": null,
+            "attraction": null,
+            "power": 88,
+            "lifePoints": 429
+          },
+          "encounters": [
+            {
+              "index": 15,
+              "spec": {
+                "section": 108,
+                "enemies": [
+                  "Manticore"
+                ],
+                "rule": "manticore",
+                "win": 120
+              }
+            }
+          ],
+          "equipment": {
+            "weapon": 10,
+            "spells": [
+              "paralysis"
+            ]
+          }
+        },
+        "part": {
+          "name": "Manticore",
+          "strength": 120,
+          "speed": 50,
+          "stamina": 80,
+          "courage": 90,
+          "skill": 25,
+          "luck": 64,
+          "charm": null,
+          "attraction": null,
+          "power": 88,
+          "lifePoints": 429
+        }
+      }
+    },
+    {
+      "key": "Pseudo-Spawn",
+      "name": "Pseudo-Spawn",
+      "attack": 48,
+      "defense": null,
+      "hp": 288,
+      "pb": null,
+      "adopt": {
+        "name": "Pseudo-Spawn",
+        "attack": 48,
+        "defense": null,
+        "hp": 288,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "demonspawn",
+        "dataset": "BOOK_DATA",
+        "entryIndex": 11,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fixed",
+          "key": "Pseudo-Spawn",
+          "enemy": {
+            "name": "Pseudo-Spawn",
+            "strength": 48,
+            "speed": 48,
+            "stamina": 48,
+            "courage": 48,
+            "skill": 48,
+            "luck": 48,
+            "charm": null,
+            "attraction": null,
+            "power": 100,
+            "lifePoints": 288
+          },
+          "encounters": [
+            {
+              "index": 20,
+              "spec": {
+                "section": 144,
+                "enemies": [
+                  "Pseudo-Spawn",
+                  "Pseudo-Spawn",
+                  "Pseudo-Spawn"
+                ],
+                "rule": "magic-only",
+                "win": 129
+              }
+            }
+          ],
+          "equipment": {
+            "weapon": 5,
+            "spells": [
+              "xenophobia"
+            ],
+            "magicOnly": true
+          }
+        },
+        "part": {
+          "name": "Pseudo-Spawn",
+          "strength": 48,
+          "speed": 48,
+          "stamina": 48,
+          "courage": 48,
+          "skill": 48,
+          "luck": 48,
+          "charm": null,
+          "attraction": null,
+          "power": 100,
+          "lifePoints": 288
+        }
+      }
+    },
+    {
+      "key": "Elemental",
+      "name": "Elemental",
+      "attack": 50,
+      "defense": null,
+      "hp": 450,
+      "pb": null,
+      "adopt": {
+        "name": "Elemental",
+        "attack": 50,
+        "defense": null,
+        "hp": 450,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "demonspawn",
+        "dataset": "BOOK_DATA",
+        "entryIndex": 12,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fixed",
+          "key": "Elemental",
+          "enemy": {
+            "name": "Elemental",
+            "strength": 100,
+            "speed": 50,
+            "stamina": 50,
+            "courage": 100,
+            "skill": 50,
+            "luck": 100,
+            "charm": null,
+            "attraction": null,
+            "power": null,
+            "lifePoints": 450
+          },
+          "encounters": [],
+          "equipment": {
+            "weapon": 10,
+            "magicOnly": true
+          }
+        },
+        "part": {
+          "name": "Elemental",
+          "strength": 100,
+          "speed": 50,
+          "stamina": 50,
+          "courage": 100,
+          "skill": 50,
+          "luck": 100,
+          "charm": null,
+          "attraction": null,
+          "power": null,
+          "lifePoints": 450
+        }
+      }
+    },
+    {
+      "key": "Clementine",
+      "name": "Clementine",
+      "attack": 30,
+      "defense": null,
+      "hp": 454,
+      "pb": null,
+      "adopt": {
+        "name": "Clementine",
+        "attack": 30,
+        "defense": null,
+        "hp": 454,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "demonspawn",
+        "dataset": "BOOK_DATA",
+        "entryIndex": 13,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fixed",
+          "key": "Clementine",
+          "enemy": {
+            "name": "Clementine",
+            "strength": 64,
+            "speed": 88,
+            "stamina": 72,
+            "courage": 64,
+            "skill": 30,
+            "luck": 48,
+            "charm": 48,
+            "attraction": 40,
+            "power": null,
+            "lifePoints": 454
+          },
+          "encounters": [
+            {
+              "index": 21,
+              "spec": {
+                "section": 145,
+                "enemies": [
+                  "Clementine",
+                  "Clementine",
+                  "Clementine"
+                ],
+                "rule": "knockout-10",
+                "win": 131
+              }
+            }
+          ],
+          "equipment": {
+            "weapon": 6
+          },
+          "variantEquipment": {
+            "unarmed": {
+              "weapon": 5
+            }
+          }
+        },
+        "part": {
+          "name": "Clementine",
+          "strength": 64,
+          "speed": 88,
+          "stamina": 72,
+          "courage": 64,
+          "skill": 30,
+          "luck": 48,
+          "charm": 48,
+          "attraction": 40,
+          "power": null,
+          "lifePoints": 454
+        }
+      }
+    },
+    {
+      "key": "Demonspawn",
+      "name": "Demonspawn",
+      "attack": 100,
+      "defense": null,
+      "hp": 650,
+      "pb": null,
+      "adopt": {
+        "name": "Demonspawn",
+        "attack": 100,
+        "defense": null,
+        "hp": 650,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "demonspawn",
+        "dataset": "BOOK_DATA",
+        "entryIndex": 14,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fixed",
+          "key": "Demonspawn",
+          "enemy": {
+            "name": "Demonspawn",
+            "strength": 100,
+            "speed": 100,
+            "stamina": 100,
+            "courage": 100,
+            "skill": 100,
+            "luck": 100,
+            "charm": null,
+            "attraction": null,
+            "power": 50,
+            "lifePoints": 650
+          },
+          "encounters": [
+            {
+              "index": 22,
+              "spec": {
+                "section": 149,
+                "enemies": [
+                  "Demonspawn",
+                  "Demonspawn",
+                  "Demonspawn",
+                  "Demonspawn",
+                  "Demonspawn"
+                ],
+                "win": "map"
+              }
+            },
+            {
+              "index": 23,
+              "spec": {
+                "section": 157,
+                "enemies": [
+                  "Demonspawn",
+                  "Demonspawn",
+                  "Demonspawn",
+                  "Demonspawn",
+                  "Harkaan Prince"
+                ],
+                "rule": "prince-joins",
+                "win": 158
+              }
+            }
+          ],
+          "equipment": {
+            "weapon": 15,
+            "spawn": true
+          }
+        },
+        "part": {
+          "name": "Demonspawn",
+          "strength": 100,
+          "speed": 100,
+          "stamina": 100,
+          "courage": 100,
+          "skill": 100,
+          "luck": 100,
+          "charm": null,
+          "attraction": null,
+          "power": 50,
+          "lifePoints": 650
+        }
+      }
+    },
+    {
+      "key": "Fortress Guard",
+      "name": "Fortress Guard",
+      "attack": 25,
+      "defense": null,
+      "hp": 385,
+      "pb": null,
+      "adopt": {
+        "name": "Fortress Guard",
+        "attack": 25,
+        "defense": null,
+        "hp": 385,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "demonspawn",
+        "dataset": "BOOK_DATA",
+        "entryIndex": 15,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fixed",
+          "key": "Fortress Guard",
+          "enemy": {
+            "name": "Fortress Guard",
+            "strength": 48,
+            "speed": 56,
+            "stamina": 56,
+            "courage": 56,
+            "skill": 25,
+            "luck": 48,
+            "charm": 48,
+            "attraction": 48,
+            "power": null,
+            "lifePoints": 385
+          },
+          "encounters": [
+            {
+              "index": 19,
+              "spec": {
+                "section": 136,
+                "enemies": [
+                  "Fortress Guard",
+                  "Fortress Guard"
+                ],
+                "rule": "reinforcements",
+                "win": 157
+              }
+            }
+          ],
+          "equipment": {
+            "weapon": "sword",
+            "armour": "plate"
+          }
+        },
+        "part": {
+          "name": "Fortress Guard",
+          "strength": 48,
+          "speed": 56,
+          "stamina": 56,
+          "courage": 56,
+          "skill": 25,
+          "luck": 48,
+          "charm": 48,
+          "attraction": 48,
+          "power": null,
+          "lifePoints": 385
+        }
+      }
+    },
+    {
+      "key": "Harkaan Prince",
+      "name": "Harkaan Prince",
+      "attack": 50,
+      "defense": null,
+      "hp": 458,
+      "pb": null,
+      "adopt": {
+        "name": "Harkaan Prince",
+        "attack": 50,
+        "defense": null,
+        "hp": 458,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "demonspawn",
+        "dataset": "BOOK_DATA",
+        "entryIndex": 16,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fixed",
+          "key": "Harkaan Prince",
+          "enemy": {
+            "name": "Harkaan Prince",
+            "strength": 56,
+            "speed": 64,
+            "stamina": 56,
+            "courage": 64,
+            "skill": 50,
+            "luck": 48,
+            "charm": 56,
+            "attraction": 64,
+            "power": 250,
+            "lifePoints": 458
+          },
+          "encounters": [],
+          "equipment": {
+            "weapon": null,
+            "manualWeapon": true,
+            "spells": "all"
+          }
+        },
+        "part": {
+          "name": "Harkaan Prince",
+          "strength": 56,
+          "speed": 64,
+          "stamina": 56,
+          "courage": 64,
+          "skill": 50,
+          "luck": 48,
+          "charm": 56,
+          "attraction": 64,
+          "power": 250,
+          "lifePoints": 458
+        }
+      }
+    },
+    {
+      "key": "Wight",
+      "name": "Wight (manual combat statistics)",
+      "attack": null,
+      "defense": null,
+      "hp": 400,
+      "pb": null,
+      "adopt": {
+        "name": "Wight (manual combat statistics)",
+        "attack": null,
+        "defense": null,
+        "hp": 400,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "demonspawn",
+        "dataset": "BOOK_DATA",
+        "entryIndex": 17,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fixed-life",
+          "key": "Wight",
+          "enemy": {
+            "name": "Wight",
+            "lifePoints": 400,
+            "maxLife": 400,
+            "manualStats": true,
+            "magicOnly": true,
+            "weapon": null
+          },
+          "encounters": [
+            {
+              "index": 6,
+              "spec": {
+                "section": 76,
+                "enemies": [
+                  "Wight",
+                  "Wight"
+                ],
+                "crypt": true,
+                "rule": "wights",
+                "win": 37
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "Wight",
+          "lifePoints": 400,
+          "maxLife": 400,
+          "manualStats": true,
+          "magicOnly": true,
+          "weapon": null
+        }
+      }
+    },
+    {
+      "key": "Young Officer",
+      "name": "Young Officer (manual statistics)",
+      "attack": null,
+      "defense": null,
+      "hp": null,
+      "pb": null,
+      "adopt": {
+        "name": "Young Officer (manual statistics)",
+        "attack": null,
+        "defense": null,
+        "hp": null,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "demonspawn",
+        "dataset": "BOOK_DATA",
+        "entryIndex": 18,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "supplied",
+          "key": "Young Officer",
+          "enemy": {
+            "name": "Young Officer"
+          },
+          "encounters": [
+            {
+              "index": 17,
+              "spec": {
+                "section": 113,
+                "enemies": [
+                  "Young Officer"
+                ],
+                "weapon": "unarmed",
+                "rule": "nonfatal-50",
+                "win": 121,
+                "defeat": 110
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "Young Officer"
+        }
+      }
+    },
+    {
+      "key": "Shaman Wizard",
+      "name": "Shaman Wizard (manual statistics)",
+      "attack": null,
+      "defense": null,
+      "hp": null,
+      "pb": null,
+      "adopt": {
+        "name": "Shaman Wizard (manual statistics)",
+        "attack": null,
+        "defense": null,
+        "hp": null,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "demonspawn",
+        "dataset": "BOOK_DATA",
+        "entryIndex": 19,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "supplied",
+          "key": "Shaman Wizard",
+          "enemy": {
+            "name": "Shaman Wizard"
+          },
+          "encounters": [
+            {
+              "index": 16,
+              "spec": {
+                "section": 111,
+                "enemies": [
+                  "Shaman Wizard"
+                ],
+                "rule": "wizard-duel",
+                "noPoisonNeedle": true,
+                "noArtifacts": true,
+                "win": 125,
+                "defeat": [
+                  6,
+                  74
+                ]
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "Shaman Wizard"
+        }
+      }
+    }
+  ]
+}

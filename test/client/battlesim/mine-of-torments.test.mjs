@@ -1,3 +1,5 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
+await loadFixtureRoster(523);
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { MINE_ENCOUNTERS, createMineFight, rollMineRound, settleMineRound, escapeMineFight, finishMineFight } from '../../../public/js/battlesim/engines/skyfall/mine-of-torments.js';

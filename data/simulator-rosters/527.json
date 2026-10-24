@@ -1,0 +1,1158 @@
+{
+  "schemaVersion": 1,
+  "bookId": 527,
+  "family": "grailquest",
+  "source": "Existing normal and Dreamtime encounter definitions matched to exact legacy enemy rows; group sizes and source exceptions preserved.",
+  "enemies": [
+    {
+      "key": "6",
+      "name": "White Rabbit (section 6)",
+      "attack": 5,
+      "defense": 0,
+      "hp": 25,
+      "pb": 3,
+      "adopt": {
+        "name": "White Rabbit (section 6)",
+        "attack": 5,
+        "defense": 0,
+        "hp": 25,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "DEN_ENCOUNTERS",
+          "spec": {
+            "section": 6,
+            "name": "White Rabbit",
+            "life": 25,
+            "hit": 5,
+            "bonus": 3,
+            "armour": 0,
+            "count": 1,
+            "playerRollModifier": -2,
+            "poisonHits": 3
+          }
+        },
+        "part": {
+          "section": 6,
+          "name": "White Rabbit",
+          "life": 25,
+          "hit": 5,
+          "bonus": 3,
+          "armour": 0,
+          "count": 1,
+          "playerRollModifier": -2,
+          "poisonHits": 3
+        }
+      }
+    },
+    {
+      "key": "23",
+      "name": "Stone Man (section 23)",
+      "attack": 8,
+      "defense": 0,
+      "hp": 28,
+      "pb": 4,
+      "adopt": {
+        "name": "Stone Man (section 23)",
+        "attack": 8,
+        "defense": 0,
+        "hp": 28,
+        "pb": 4
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "DEN_ENCOUNTERS",
+          "spec": {
+            "section": 23,
+            "name": "Stone Man",
+            "life": 28,
+            "hit": 8,
+            "bonus": 4,
+            "armour": 0,
+            "count": 1,
+            "magicWeaponArmour": 4
+          }
+        },
+        "part": {
+          "section": 23,
+          "name": "Stone Man",
+          "life": 28,
+          "hit": 8,
+          "bonus": 4,
+          "armour": 0,
+          "count": 1,
+          "magicWeaponArmour": 4
+        }
+      }
+    },
+    {
+      "key": "24",
+      "name": "Phantom of the Village Church (section 24)",
+      "attack": 5,
+      "defense": 0,
+      "hp": 30,
+      "pb": 3,
+      "adopt": {
+        "name": "Phantom of the Village Church (section 24)",
+        "attack": 5,
+        "defense": 0,
+        "hp": 30,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "DEN_ENCOUNTERS",
+          "spec": {
+            "section": 24,
+            "name": "Phantom of the Village Church",
+            "life": 30,
+            "hit": 5,
+            "bonus": 3,
+            "armour": 0,
+            "count": 1
+          }
+        },
+        "part": {
+          "section": 24,
+          "name": "Phantom of the Village Church",
+          "life": 30,
+          "hit": 5,
+          "bonus": 3,
+          "armour": 0,
+          "count": 1
+        }
+      }
+    },
+    {
+      "key": "41",
+      "name": "Green Creature (section 41)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 15,
+      "pb": 0,
+      "adopt": {
+        "name": "Green Creature (section 41)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 15,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "DEN_ENCOUNTERS",
+          "spec": {
+            "section": 41,
+            "name": "Green Creature",
+            "life": 15,
+            "hit": 6,
+            "bonus": 0,
+            "armour": 0,
+            "count": 1
+          }
+        },
+        "part": {
+          "section": 41,
+          "name": "Green Creature",
+          "life": 15,
+          "hit": 6,
+          "bonus": 0,
+          "armour": 0,
+          "count": 1
+        }
+      }
+    },
+    {
+      "key": "50",
+      "name": "Wolf (section 50)",
+      "attack": 6,
+      "defense": 1,
+      "hp": 31,
+      "pb": 3,
+      "adopt": {
+        "name": "Wolf (section 50)",
+        "attack": 6,
+        "defense": 1,
+        "hp": 31,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "DEN_ENCOUNTERS",
+          "spec": {
+            "section": 50,
+            "name": "Wolf",
+            "life": 31,
+            "hit": 6,
+            "bonus": 3,
+            "armour": 1,
+            "count": 1,
+            "first": "enemy"
+          }
+        },
+        "part": {
+          "section": 50,
+          "name": "Wolf",
+          "life": 31,
+          "hit": 6,
+          "bonus": 3,
+          "armour": 1,
+          "count": 1,
+          "first": "enemy"
+        }
+      }
+    },
+    {
+      "key": "57",
+      "name": "Martial Monks (section 57; 4 opponents)",
+      "attack": 4,
+      "defense": 0,
+      "hp": 25,
+      "pb": 3,
+      "adopt": {
+        "name": "Martial Monks (section 57; 4 opponents)",
+        "attack": 4,
+        "defense": 0,
+        "hp": 25,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "DEN_ENCOUNTERS",
+          "spec": {
+            "section": 57,
+            "name": "Martial Monks",
+            "life": 25,
+            "hit": 4,
+            "bonus": 3,
+            "armour": 0,
+            "count": 4,
+            "first": "enemy"
+          }
+        },
+        "part": {
+          "section": 57,
+          "name": "Martial Monks",
+          "life": 25,
+          "hit": 4,
+          "bonus": 3,
+          "armour": 0,
+          "count": 4,
+          "first": "enemy"
+        }
+      }
+    },
+    {
+      "key": "60",
+      "name": "Water Weird (section 60)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 10,
+      "pb": 0,
+      "adopt": {
+        "name": "Water Weird (section 60)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 10,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 6,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "DEN_ENCOUNTERS",
+          "spec": {
+            "section": 60,
+            "name": "Water Weird",
+            "life": 10,
+            "hit": 6,
+            "bonus": 0,
+            "armour": 0,
+            "count": 1,
+            "magicChallenge": true,
+            "magicOnly": true,
+            "first": "player"
+          }
+        },
+        "part": {
+          "section": 60,
+          "name": "Water Weird",
+          "life": 10,
+          "hit": 6,
+          "bonus": 0,
+          "armour": 0,
+          "count": 1,
+          "magicChallenge": true,
+          "magicOnly": true,
+          "first": "player"
+        }
+      }
+    },
+    {
+      "key": "67",
+      "name": "Stone Monster (section 67)",
+      "attack": 7,
+      "defense": 1,
+      "hp": 18,
+      "pb": 0,
+      "adopt": {
+        "name": "Stone Monster (section 67)",
+        "attack": 7,
+        "defense": 1,
+        "hp": 18,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 7,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "DEN_ENCOUNTERS",
+          "spec": {
+            "section": 67,
+            "name": "Stone Monster",
+            "life": 18,
+            "hit": 7,
+            "bonus": 0,
+            "armour": 1,
+            "count": 1,
+            "playerHit": 8,
+            "first": "player"
+          }
+        },
+        "part": {
+          "section": 67,
+          "name": "Stone Monster",
+          "life": 18,
+          "hit": 7,
+          "bonus": 0,
+          "armour": 1,
+          "count": 1,
+          "playerHit": 8,
+          "first": "player"
+        }
+      }
+    },
+    {
+      "key": "82",
+      "name": "Whistling Wolf (section 82)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 15,
+      "pb": 0,
+      "adopt": {
+        "name": "Whistling Wolf (section 82)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 15,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 8,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "DEN_ENCOUNTERS",
+          "spec": {
+            "section": 82,
+            "name": "Whistling Wolf",
+            "life": 15,
+            "hit": 6,
+            "bonus": 0,
+            "armour": 0,
+            "count": 1,
+            "friendly": true
+          }
+        },
+        "part": {
+          "section": 82,
+          "name": "Whistling Wolf",
+          "life": 15,
+          "hit": 6,
+          "bonus": 0,
+          "armour": 0,
+          "count": 1,
+          "friendly": true
+        }
+      }
+    },
+    {
+      "key": "98",
+      "name": "Rock Trolls (section 98; 6 opponents)",
+      "attack": 6,
+      "defense": 1,
+      "hp": 10,
+      "pb": 2,
+      "adopt": {
+        "name": "Rock Trolls (section 98; 6 opponents)",
+        "attack": 6,
+        "defense": 1,
+        "hp": 10,
+        "pb": 2
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 9,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "DEN_ENCOUNTERS",
+          "spec": {
+            "section": 98,
+            "name": "Rock Trolls",
+            "life": 10,
+            "hit": 6,
+            "bonus": 2,
+            "armour": 1,
+            "count": 6,
+            "first": "player"
+          }
+        },
+        "part": {
+          "section": 98,
+          "name": "Rock Trolls",
+          "life": 10,
+          "hit": 6,
+          "bonus": 2,
+          "armour": 1,
+          "count": 6,
+          "first": "player"
+        }
+      }
+    },
+    {
+      "key": "102",
+      "name": "Wraith (section 102)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 25,
+      "pb": 3,
+      "adopt": {
+        "name": "Wraith (section 102)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 25,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 10,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "DEN_ENCOUNTERS",
+          "spec": {
+            "section": 102,
+            "name": "Wraith",
+            "life": 25,
+            "hit": 6,
+            "bonus": 3,
+            "armour": 0,
+            "count": 1,
+            "magicOnly": true,
+            "entryDamage": 10
+          }
+        },
+        "part": {
+          "section": 102,
+          "name": "Wraith",
+          "life": 25,
+          "hit": 6,
+          "bonus": 3,
+          "armour": 0,
+          "count": 1,
+          "magicOnly": true,
+          "entryDamage": 10
+        }
+      }
+    },
+    {
+      "key": "104",
+      "name": "Irish Wolfrat (section 104)",
+      "attack": 5,
+      "defense": 0,
+      "hp": 25,
+      "pb": 2,
+      "adopt": {
+        "name": "Irish Wolfrat (section 104)",
+        "attack": 5,
+        "defense": 0,
+        "hp": 25,
+        "pb": 2
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 11,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "DEN_ENCOUNTERS",
+          "spec": {
+            "section": 104,
+            "name": "Irish Wolfrat",
+            "life": 25,
+            "hit": 5,
+            "bonus": 2,
+            "armour": 0,
+            "count": 1,
+            "disease": true
+          }
+        },
+        "part": {
+          "section": 104,
+          "name": "Irish Wolfrat",
+          "life": 25,
+          "hit": 5,
+          "bonus": 2,
+          "armour": 0,
+          "count": 1,
+          "disease": true
+        }
+      }
+    },
+    {
+      "key": "120",
+      "name": "Minotaur (section 120)",
+      "attack": 6,
+      "defense": 0,
+      "hp": null,
+      "pb": 0,
+      "adopt": {
+        "name": "Minotaur (section 120)",
+        "attack": 6,
+        "defense": 0,
+        "hp": null,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 12,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "DEN_ENCOUNTERS",
+          "spec": {
+            "section": 120,
+            "name": "Minotaur",
+            "life": null,
+            "hit": 6,
+            "bonus": 0,
+            "armour": 0,
+            "count": 1,
+            "tokenLimit": 10,
+            "unarmed": true
+          }
+        },
+        "part": {
+          "section": 120,
+          "name": "Minotaur",
+          "life": null,
+          "hit": 6,
+          "bonus": 0,
+          "armour": 0,
+          "count": 1,
+          "tokenLimit": 10,
+          "unarmed": true
+        }
+      }
+    },
+    {
+      "key": "123",
+      "name": "Fish (section 123)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 10,
+      "pb": 0,
+      "adopt": {
+        "name": "Fish (section 123)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 10,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 13,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "DEN_ENCOUNTERS",
+          "spec": {
+            "section": 123,
+            "name": "Fish",
+            "life": 10,
+            "hit": 6,
+            "bonus": 0,
+            "armour": 0,
+            "count": 1,
+            "unarmed": true,
+            "playerArmour": 0,
+            "roundLimit": 3
+          }
+        },
+        "part": {
+          "section": 123,
+          "name": "Fish",
+          "life": 10,
+          "hit": 6,
+          "bonus": 0,
+          "armour": 0,
+          "count": 1,
+          "unarmed": true,
+          "playerArmour": 0,
+          "roundLimit": 3
+        }
+      }
+    },
+    {
+      "key": "131",
+      "name": "Hunchbacked Dwarves (section 131; 12 opponents)",
+      "attack": 8,
+      "defense": 0,
+      "hp": 10,
+      "pb": 3,
+      "adopt": {
+        "name": "Hunchbacked Dwarves (section 131; 12 opponents)",
+        "attack": 8,
+        "defense": 0,
+        "hp": 10,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 14,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "DEN_ENCOUNTERS",
+          "spec": {
+            "section": 131,
+            "name": "Hunchbacked Dwarves",
+            "life": 10,
+            "hit": 8,
+            "bonus": 3,
+            "armour": 0,
+            "count": 12,
+            "openingTargets": true,
+            "fleeAfter": 10
+          }
+        },
+        "part": {
+          "section": 131,
+          "name": "Hunchbacked Dwarves",
+          "life": 10,
+          "hit": 8,
+          "bonus": 3,
+          "armour": 0,
+          "count": 12,
+          "openingTargets": true,
+          "fleeAfter": 10
+        }
+      }
+    },
+    {
+      "key": "136",
+      "name": "Medusa (section 136)",
+      "attack": 8,
+      "defense": 0,
+      "hp": 100,
+      "pb": 0,
+      "adopt": {
+        "name": "Medusa (section 136)",
+        "attack": 8,
+        "defense": 0,
+        "hp": 100,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 15,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "DEN_ENCOUNTERS",
+          "spec": {
+            "section": 136,
+            "name": "Medusa",
+            "life": 100,
+            "hit": 8,
+            "bonus": 0,
+            "armour": 0,
+            "count": 1,
+            "petrifyHits": 2
+          }
+        },
+        "part": {
+          "section": 136,
+          "name": "Medusa",
+          "life": 100,
+          "hit": 8,
+          "bonus": 0,
+          "armour": 0,
+          "count": 1,
+          "petrifyHits": 2
+        }
+      }
+    },
+    {
+      "key": "141",
+      "name": "Darkness Monster (section 141)",
+      "attack": 5,
+      "defense": 0,
+      "hp": 80,
+      "pb": 2,
+      "adopt": {
+        "name": "Darkness Monster (section 141)",
+        "attack": 5,
+        "defense": 0,
+        "hp": 80,
+        "pb": 2
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 16,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "DEN_ENCOUNTERS",
+          "spec": {
+            "section": 141,
+            "name": "Darkness Monster",
+            "life": 80,
+            "hit": 5,
+            "bonus": 2,
+            "armour": 0,
+            "count": 1,
+            "first": "enemy"
+          }
+        },
+        "part": {
+          "section": 141,
+          "name": "Darkness Monster",
+          "life": 80,
+          "hit": 5,
+          "bonus": 2,
+          "armour": 0,
+          "count": 1,
+          "first": "enemy"
+        }
+      }
+    },
+    {
+      "key": "153",
+      "name": "Slither (section 153)",
+      "attack": 8,
+      "defense": 0,
+      "hp": 20,
+      "pb": 0,
+      "adopt": {
+        "name": "Slither (section 153)",
+        "attack": 8,
+        "defense": 0,
+        "hp": 20,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 17,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "DEN_ENCOUNTERS",
+          "spec": {
+            "section": 153,
+            "name": "Slither",
+            "life": 20,
+            "hit": 8,
+            "bonus": 0,
+            "armour": 0,
+            "count": 1,
+            "lethalHit": true,
+            "openingEvasion": true
+          }
+        },
+        "part": {
+          "section": 153,
+          "name": "Slither",
+          "life": 20,
+          "hit": 8,
+          "bonus": 0,
+          "armour": 0,
+          "count": 1,
+          "lethalHit": true,
+          "openingEvasion": true
+        }
+      }
+    },
+    {
+      "key": "157",
+      "name": "Shapes (section 157; 6 opponents)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 4,
+      "pb": 0,
+      "adopt": {
+        "name": "Shapes (section 157; 6 opponents)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 4,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 18,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "DEN_ENCOUNTERS",
+          "spec": {
+            "section": 157,
+            "name": "Shapes",
+            "life": 4,
+            "hit": 6,
+            "bonus": 0,
+            "armour": 0,
+            "count": 6,
+            "shapes": true,
+            "first": "player"
+          }
+        },
+        "part": {
+          "section": 157,
+          "name": "Shapes",
+          "life": 4,
+          "hit": 6,
+          "bonus": 0,
+          "armour": 0,
+          "count": 6,
+          "shapes": true,
+          "first": "player"
+        }
+      }
+    },
+    {
+      "key": "168",
+      "name": "Remaining Shapes (section 168; 5 opponents)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 4,
+      "pb": 0,
+      "adopt": {
+        "name": "Remaining Shapes (section 168; 5 opponents)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 4,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 19,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "DEN_ENCOUNTERS",
+          "spec": {
+            "section": 168,
+            "name": "Remaining Shapes",
+            "life": 4,
+            "hit": 6,
+            "bonus": 0,
+            "armour": 0,
+            "count": 5,
+            "shapes": true,
+            "entryDamage": 15,
+            "first": "player"
+          }
+        },
+        "part": {
+          "section": 168,
+          "name": "Remaining Shapes",
+          "life": 4,
+          "hit": 6,
+          "bonus": 0,
+          "armour": 0,
+          "count": 5,
+          "shapes": true,
+          "entryDamage": 15,
+          "first": "player"
+        }
+      }
+    },
+    {
+      "key": "172",
+      "name": "Brass Dragon (section 172)",
+      "attack": 5,
+      "defense": 0,
+      "hp": 150,
+      "pb": 5,
+      "adopt": {
+        "name": "Brass Dragon (section 172)",
+        "attack": 5,
+        "defense": 0,
+        "hp": 150,
+        "pb": 5
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 20,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "DEN_ENCOUNTERS",
+          "spec": {
+            "section": 172,
+            "name": "Brass Dragon",
+            "life": 150,
+            "hit": 5,
+            "bonus": 5,
+            "armour": 0,
+            "count": 1,
+            "fireEvery": 3,
+            "fireBonus": 10,
+            "invisibleHit": 8,
+            "dragon": true
+          }
+        },
+        "part": {
+          "section": 172,
+          "name": "Brass Dragon",
+          "life": 150,
+          "hit": 5,
+          "bonus": 5,
+          "armour": 0,
+          "count": 1,
+          "fireEvery": 3,
+          "fireBonus": 10,
+          "invisibleHit": 8,
+          "dragon": true
+        }
+      }
+    },
+    {
+      "key": "dream2",
+      "name": "Brain Teaser (Dreamtime 2)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 15,
+      "pb": 0,
+      "adopt": {
+        "name": "Brain Teaser (Dreamtime 2)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 15,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 21,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "DEN_DREAM_FIGHTS",
+          "spec": {
+            "section": "dream2",
+            "name": "Brain Teaser",
+            "life": 15,
+            "hit": 6,
+            "bonus": 0,
+            "armour": 0,
+            "count": 1,
+            "automaticDamage": 5,
+            "first": "enemy",
+            "dream": true,
+            "unarmed": true
+          }
+        },
+        "part": {
+          "section": "dream2",
+          "name": "Brain Teaser",
+          "life": 15,
+          "hit": 6,
+          "bonus": 0,
+          "armour": 0,
+          "count": 1,
+          "automaticDamage": 5,
+          "first": "enemy",
+          "dream": true,
+          "unarmed": true
+        }
+      }
+    },
+    {
+      "key": "dream8",
+      "name": "Black Knight (Dreamtime 8)",
+      "attack": 6,
+      "defense": 6,
+      "hp": 25,
+      "pb": 10,
+      "adopt": {
+        "name": "Black Knight (Dreamtime 8)",
+        "attack": 6,
+        "defense": 6,
+        "hp": 25,
+        "pb": 10
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 22,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "DEN_DREAM_FIGHTS",
+          "spec": {
+            "section": "dream8",
+            "name": "Black Knight",
+            "life": 25,
+            "hit": 6,
+            "bonus": 10,
+            "armour": 6,
+            "count": 1,
+            "playerArmour": 5,
+            "playerBonus": 12,
+            "dream": true,
+            "dreamInitiative": true
+          }
+        },
+        "part": {
+          "section": "dream8",
+          "name": "Black Knight",
+          "life": 25,
+          "hit": 6,
+          "bonus": 10,
+          "armour": 6,
+          "count": 1,
+          "playerArmour": 5,
+          "playerBonus": 12,
+          "dream": true,
+          "dreamInitiative": true
+        }
+      }
+    },
+    {
+      "key": "dream10",
+      "name": "Ogre (Dreamtime 10)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 40,
+      "pb": 15,
+      "adopt": {
+        "name": "Ogre (Dreamtime 10)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 40,
+        "pb": 15
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 23,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "DEN_DREAM_FIGHTS",
+          "spec": {
+            "section": "dream10",
+            "name": "Ogre",
+            "life": 40,
+            "hit": 6,
+            "bonus": 15,
+            "armour": 0,
+            "count": 1,
+            "dream": true,
+            "unarmed": true,
+            "arrows": 7,
+            "first": "player"
+          }
+        },
+        "part": {
+          "section": "dream10",
+          "name": "Ogre",
+          "life": 40,
+          "hit": 6,
+          "bonus": 15,
+          "armour": 0,
+          "count": 1,
+          "dream": true,
+          "unarmed": true,
+          "arrows": 7,
+          "first": "player"
+        }
+      }
+    }
+  ]
+}

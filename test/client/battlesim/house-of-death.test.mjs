@@ -5,6 +5,8 @@ import {ENCOUNTERS,encounterPreset} from '../../../public/js/battlesim/books/860
 import {createState} from '../../../public/js/battlesim/books/860/state.js';
 import bg from '../../../public/js/i18n/bg/battlesim/battlesim860.js';
 import en from '../../../public/js/i18n/en/battlesim/battlesim860.js';
+import { loadFixtureRoster } from './roster-fixtures.mjs';
+await loadFixtureRoster(860);
 
 test('locale keys and placeholders match', () => {
   assert.deepEqual(Object.keys(bg).sort(),Object.keys(en).sort());

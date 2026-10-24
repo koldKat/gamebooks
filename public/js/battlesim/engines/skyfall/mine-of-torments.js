@@ -1,32 +1,10 @@
 import { rollAttack, tossCoins } from '../skyfall-rules.js';
 import { editableSkyfallEncounter } from './opponents.js';
 
-const foe = (name, expertise, vitality, damage) => ({ name, expertise, vitality, initialVitality: vitality, damage });
-const yeti = (section, extra = {}) => ({ section, foes: [foe('Yeti', 12, 14, 2)], fear: 1, fortuneReward: 2, ...extra });
-const bear = (section, extra = {}) => ({ section, foes: [foe('Great White Bear', 10, 14, 4)], fortuneReward: 2, ...extra });
-const phantom = (section, expertise, extra = {}) => ({ section, foes: [foe('Lake Phantom', expertise, 8, 2)], mode: 'phantom', fortuneReward: 4, expertiseReward: 1, ...extra });
-const spectre = (section, extra = {}) => ({ section, foes: [foe('Spectral Dwarf', 12, 20, 5)], weaponDamage: 1, ...extra });
-const wolves = (section, count) => ({ section, foes: Array.from({ length: count }, (_, i) => foe(`Timberwolf ${i + 1}`, 11, 7, 2)), mode: 'all', fortuneReward: count, expertiseReward: 1 });
+import { createRosterLoader } from '../../roster-data.js';
 
-export const MINE_ENCOUNTERS = [
-  yeti(17, { clothing: true }),
-  { section: 36, foes: [foe('Mountain Troll', 11, 12, 1)], mode: 'troll', fortuneReward: 2 },
-  wolves(41, 5), yeti(43, { cold: true }),
-  bear(53, { sourceSection: 72, unarmed: 2 }), phantom(69, 14), bear(72),
-  phantom(101, 10, { weaponDamage: 4 }),
-  { section: 116, foes: [foe('Giant Goat', 20, 20, 3)], mode: 'goat' },
-  yeti(123, { landing: true }), yeti(167, { clothing: true }),
-  bear(189, { sourceSection: 72, ambush: true }),
-  { section: 196, foes: [foe('Timberling', 16, 60, 2)], escapeDamage: 2 },
-  yeti(207, { surprise: 2, clothing: true }),
-  spectre(270, { fortuneReward: 2 }),
-  spectre(293, { mode: 'immune', escapeFortune: 4, escapeAfter: 2 }),
-  { section: 294, foes: [foe('Vretch 1', 13, 8, 2), foe('Vretch 2', 13, 8, 2)], mode: 'vretch', fortuneReward: 4, expertiseReward: 1 },
-  spectre(324, { mode: 'immune', escapeFortune: 4, reverseFortune: 1, escapeAfter: 2 }),
-  spectre(349, { fortuneReward: 3 }),
-  { section: 361, foes: [foe('Timberling', 16, 60, 2)], fatalMargin: 8, escapeDamage: 2, escapeAfter: 1 },
-  wolves(369, 4),
-];
+export let MINE_ENCOUNTERS = [];
+export const loadRoster = createRosterLoader(523, 'MINE_ENCOUNTERS', rows => { MINE_ENCOUNTERS = rows; });
 
 export function createMineFight(section, player, { underclothes = false, failedLanding = false, ambush = false, fedusar = false, opponents } = {}) {
   const entry = editableSkyfallEncounter(MINE_ENCOUNTERS.find(e => String(e.section) === String(section)),

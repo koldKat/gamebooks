@@ -28,10 +28,12 @@ const module = new SourceTextModule(readFileSync(process.argv[1], 'utf8'), {
     if (deferred.has(id)) await deferred.get(id).promise;
     if (id === failingId) throw Error('Simulated load failure');
     const names = ['init', 'render', 'setVisible'];
+    if(id===781)names.push('loadData');
     const sim = new SyntheticModule(names, function () {
       this.setExport(names[0], () => calls.push([id, 'init']));
       this.setExport(names[1], () => calls.push([id, 'render']));
       this.setExport(names[2], visible => calls.push([id, 'visible', visible]));
+      if(id===781)this.setExport('loadData',async()=>{calls.push([id,'data']);});
     }, { context });
     await sim.link(() => { throw Error('Unexpected stub import'); });
     await sim.evaluate();
@@ -119,3 +121,5 @@ assert.equal(transferCalls, 2);
 loader.setBattleSimCharacterTransferHook(null);
 loader.renderActiveBattleSim();
 assert.equal(transferCalls, 2, 'ordinary series leave no open-world transfer callback');
+await loader.showBattleSimForBook(781);
+assert.ok(calls.findIndex(row=>row[0]===781&&row[1]==='data')<calls.findIndex(row=>row[0]===781&&row[1]==='init'),'database roster loads before desktop initialization');

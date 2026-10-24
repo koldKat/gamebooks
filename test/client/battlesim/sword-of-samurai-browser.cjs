@@ -7,7 +7,9 @@ const checkBrowser = require('./browser-harness.cjs');
 const repo = process.cwd();
 const fixturePath = 'test/client/battlesim/sword-of-samurai-integration.fixture';
 const styles = ['style', 'charsheet', 'equipment', 'battlesim', 'confirm'];
-const files = [fixturePath, __filename, 'test/client/battlesim/browser-harness.cjs', 'public/js/battlesim/loader.js', 'public/mobile/js/battlesim-dispatch.js',
+const rosterSeedFile = 'data/simulator-rosters/672.json';
+const rosterSeed = fs.existsSync(rosterSeedFile) ? JSON.parse(fs.readFileSync(rosterSeedFile, 'utf8')).enemies : [];
+const files = [...(fs.existsSync(rosterSeedFile) ? [rosterSeedFile] : []), fixturePath, __filename, 'test/client/battlesim/browser-harness.cjs', 'public/js/battlesim/loader.js', 'public/mobile/js/battlesim-dispatch.js',
   'public/js/battlesim/battlesim672.js', 'public/js/core/state.js', 'public/js/core/util.js',
   ...['panel', 'core', 'character', 'roster'].map(name => 'public/js/battlesim/engines/sword-of-samurai/' + name + '.js'),
   'public/js/i18n/en/battlesim/battlesim672.js', ...styles.map(name => 'public/css/' + name + '.css')];
@@ -22,7 +24,7 @@ const scratch = fs.mkdtempSync(path.join(root, '672-integration-'));
     const results = [];
     for (const mode of ['desktop', 'mobile']) {
       const file = path.join(scratch, mode + '.html');
-      const fixture = fs.readFileSync(fixturePath, 'utf8').replaceAll('REPO', 'file://' + repo).replaceAll('MODE', mode);
+      const fixture = fs.readFileSync(fixturePath, 'utf8').replaceAll('REPO', 'file://' + repo).replaceAll('MODE', mode).replace('ROSTER_SEED', JSON.stringify(rosterSeed));
       const links = styles.map(name => `<link rel="stylesheet" href="file://${repo}/public/css/${name}.css">`).join('');
       fs.writeFileSync(file, `<!doctype html><meta charset="utf-8">${links}<div id="${mode === 'mobile' ? 'm-sim-btn-row' : 'main-screen'}"></div><div id="inv-overlay"></div><script>addEventListener('error',e=>document.body.setAttribute('data-failure',e.message));addEventListener('unhandledrejection',e=>document.body.setAttribute('data-failure',String(e.reason)));</script><script type="module">${fixture}</script>`);
       for (const width of [320, 390, 1100]) {

@@ -1,3 +1,5 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
+await loadFixtureRoster(530);
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createKingdomCharacter } from '../../../public/js/battlesim/engines/grailquest/kingdom-of-horror.js';

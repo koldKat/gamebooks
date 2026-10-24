@@ -1,3 +1,5 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
+await loadFixtureRoster(671);
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from './simulator-source.mjs';
@@ -36,6 +38,9 @@ test('backend awards each win/loss once and excludes noncombat outcomes', () => 
     if (name === './auth') return { generateToken: () => 'test-only' };
     if (name === '../impersonation-context') return { isImpersonatingContext: () => false };
     if (name === '../clean-run') return { isCleanRun: () => false };
+    if (name === './diamonds') return { diamondInfoForUser: () => ({}) };
+    if (name === './rubies') return { rubyInfoForUser: () => ({}), createRubyCompletionChecker: () => () => 0 };
+    if (name === './heartbeat-coins') return { advanceHeartbeatCoins: () => 0 };
     throw new Error('Unexpected dependency: ' + name);
   } };
   runInNewContext(readFileSync(new URL('../../../server/db/xp.js', import.meta.url), 'utf8')

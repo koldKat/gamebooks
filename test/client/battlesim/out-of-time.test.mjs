@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as combat from '../../../public/js/battlesim/books/807/combat.js';
 import { createState } from '../../../public/js/battlesim/books/807/state.js';
+import { loadFixtureRoster } from './roster-fixtures.mjs';
+await loadFixtureRoster(807);
 
 const roll = (...values) => () => { assert.ok(values.length); return values.shift(); };
 const start = (determination = 1, pills = false) => combat.startFight({ determination, pills }, 'Двойник');

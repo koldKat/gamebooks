@@ -1,3 +1,5 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
+await loadFixtureRoster(530);
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createKingdomCharacter, initialKingdomLife, kingdomStrike,
@@ -443,4 +445,20 @@ test('Healing respects starting LIFE, consumes one dose and never resurrects', (
   assert.equal(healed.player.sectionPoison, 2);
   assert.equal(p.potions, 1);
   assert.equal(kingdomHeal(character({ life: 0, potions: 1 }), 'potion', rolls()).reason, 'dead');
+});
+
+
+test('restored constable fights use captured reinforcement LIFE and preserve current wounds', () => {
+  for (const templateLife of [15,23]) {
+    const f = JSON.parse(JSON.stringify(startKingdomFight(character(),154,{},rolls(1,1,6,6))));
+    f.spec.enemies[0].life=templateLife;
+    f.foes[0].life=7;
+    f.player.life=19;
+    f.legacyExtension={retained:true};
+    assert.deepEqual(kingdomEnemyAttack(f,rolls(2)),{kind:'reinforcements',count:2});
+    assert.equal(f.foes[0].life,7);
+    assert.equal(f.player.life,19);
+    assert.deepEqual(f.foes.slice(1).map(foe=>[foe.life,foe.maxLife]),[[templateLife,templateLife],[templateLife,templateLife]]);
+    assert.deepEqual(f.legacyExtension,{retained:true});
+  }
 });

@@ -1,8 +1,10 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
+await loadFixtureRoster(533);
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from './simulator-source.mjs';
 import { runInNewContext } from 'node:vm';
-import translations from '../../../public/js/i18n/en/battlesim/battlesim533.js';
+const {default: translations} = await import('../../../public/js/i18n/en/battlesim/battlesim533.js');
 import { LEGION_ENCOUNTERS, LEGION_DREAMS, LEGION_EQUIPMENT }
   from '../../../public/js/battlesim/engines/grailquest/legion-of-the-dead-roster.js';
 

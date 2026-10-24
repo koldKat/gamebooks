@@ -7,7 +7,7 @@ module.exports = async function checkBrowser({ file, profile, root, width, chrom
   const env = { ...process.env, TMPDIR: root };
   delete env.DISPLAY;
   delete env.WAYLAND_DISPLAY;
-  const child = spawn('nice', ['-n', '10', chromium, '--headless=new', '--no-sandbox', '--disable-gpu',
+  const child = spawn('nice', ['-n', '15', chromium, '--headless=new', '--no-sandbox', '--disable-gpu',
     '--allow-file-access-from-files', '--remote-debugging-port=0', '--user-data-dir=' + profile,
     '--window-size=' + width + ',900', 'about:blank'],
   { env, stdio: ['ignore', 'ignore', 'pipe'], detached: true });

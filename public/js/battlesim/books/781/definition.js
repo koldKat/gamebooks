@@ -1,4 +1,5 @@
 // Book identity and declarative defaults; no DOM or saved-state access.
+import { loadRosterDataset } from '../../roster-data.js';
 export const definition = Object.freeze({
   "id": 781,
   "title": "Мутирала плът",
@@ -15,11 +16,26 @@ export const WEAPONS = [
   { id: 'shotgun',  name: 'Пушка помпа',    bonus: 14, stat: 'shooting', ammoMax: 5 },
 ];
 
-export const ROSTER = [
-  { id: 'doberman', name: 'Мутирал доберман',        dmg: 8,  life: 16 },
-  { id: 'stoev',     name: 'Д-р Стоев',               dmg: 6,  life: 22 },
-  { id: 'stoev-punched', name: 'Д-р Стоев (след юмручен удар)', dmg: 6, life: 19 },
-  { id: 'lenova',    name: 'Д-р Ленова',              dmg: 19, life: 38 },
-  { id: 'nurse',     name: 'Медицинска сестра-мутант', dmg: 8,  life: 16 },
-  { id: 'vendor',    name: 'Продавач-мутант',          dmg: 10, life: 22 },
-];
+export const ROSTER = [];
+// Preserve saved encounter IDs during the legacy API transition. All numeric
+// enemy stats come from the database in both response formats.
+const legacyIds = new Map([
+  ['Мутирал доберман', 'doberman'], ['Д-р Стоев', 'stoev'], ['Д-р Стоев (след юмручен удар)', 'stoev-punched'],
+  ['Д-р Ленова', 'lenova'], ['Медицинска сестра-мутант', 'nurse'], ['Продавач-мутант', 'vendor'],
+]);
+let loading;
+export function loadRoster(fetcher) {
+  if (ROSTER.length) return Promise.resolve();
+  if (!loading) loading = loadRosterDataset(781, 'ROSTER', fetcher, row => {
+    const id = legacyIds.get(row.name);
+    if (!id) return null;
+    if (!Number.isFinite(row.attack) || row.attack < 0 || !Number.isFinite(row.hp) || row.hp < 1) throw new TypeError('Invalid enemy stats');
+    return { id, name: row.name, dmg: row.attack, life: row.hp };
+  }).then(rows => {
+    const order = [...legacyIds.values()];
+    if (order.some(id => !rows.some(row => row.id === id))) throw new Error('Incomplete book roster');
+    rows.sort((a,b)=>order.indexOf(a.id)-order.indexOf(b.id));
+    ROSTER.splice(0, ROSTER.length, ...rows);
+  }).finally(() => { loading = null; });
+  return loading;
+}

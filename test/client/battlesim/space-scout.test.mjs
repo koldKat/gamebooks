@@ -1,3 +1,5 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
+await loadFixtureRoster(648);
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from './simulator-source.mjs';
@@ -41,6 +43,9 @@ test('backend recognizes sim648 outcomes once without touching a real database',
     if (name === './auth') return { generateToken: () => 'test-only' };
     if (name === '../impersonation-context') return { isImpersonatingContext: () => false };
     if (name === '../clean-run') return { isCleanRun: () => false };
+    if (name === './diamonds') return { diamondInfoForUser: () => ({}) };
+    if (name === './rubies') return { rubyInfoForUser: () => ({}), createRubyCompletionChecker: () => () => 0 };
+    if (name === './heartbeat-coins') return { advanceHeartbeatCoins: () => 0 };
     throw new Error('Unexpected real dependency: ' + name);
   } };
   const source = readFileSync(new URL('../../../server/db/xp.js', import.meta.url), 'utf8');
@@ -304,4 +309,25 @@ test('torpedoes consume one only in printed narrative branches, with no fabricat
   assert.throws(() => spaceScoutTorpedo(c,22),RangeError);
   assert.throws(() => spaceScoutTorpedo({ ...c,inventory:{...c.inventory,torpedoes:0} },24),RangeError);
   assert.deepEqual(c,before);
+});
+
+
+test('saved fleet survivors retain damaged shields and captured attack rules, including legacy saves', () => {
+  for (const legacy of [false,true]) {
+    const f=JSON.parse(JSON.stringify(startSpaceScoutFleet(character())));
+    f.enemies[0].shields=0;f.enemies[1].shields=0;f.enemies[2].shields=71;
+    f.shields=123;f.stage='missiles-two';
+    f.legacyExtension={retained:true};
+    if (legacy) delete f.fleetRules;
+    else f.fleetRules.survivor.attack=77;
+    const next=spaceScoutFleetMissiles(f,[]).fight;
+    assert.equal(next.stage,'duel');
+    assert.equal(next.target,2);
+    assert.equal(next.enemies[2].attack,legacy?50:77);
+    assert.equal(next.enemies[2].shields,71);
+    assert.equal(next.shields,123);
+    assert.equal('fleetRules' in next,!legacy);
+    assert.deepEqual(next.legacyExtension,{retained:true});
+    assert.equal(f.enemies[2].attack,60);
+  }
 });

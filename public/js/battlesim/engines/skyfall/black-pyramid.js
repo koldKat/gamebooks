@@ -1,27 +1,10 @@
 import { rollAttack, tossCoins } from '../skyfall-rules.js';
 import { editableSkyfallEncounter } from './opponents.js';
 
-const foe = (name, expertise, vitality, damage) => ({ name, expertise, vitality, initialVitality: vitality, damage });
-const ogre = (section, expertise, extra = {}) => ({ section, sourceSection: 374, foes: [foe('Ogre', expertise, 16, 4)], fortuneReward: 4, expertiseReward: 1, ...extra });
-const troll = section => ({ section, foes: [foe('Troll', 15, 14, 3)], mode: 'troll', fortuneReward: 5 });
+import { createRosterLoader } from '../../roster-data.js';
 
-export const PYRAMID_ENCOUNTERS = [
-  { section: 88, foes: [foe('Hyena 1', 10, 7, 1), foe('Hyena 2', 10, 7, 1)], mode: 'all', rabies: true, fortuneReward: 2 },
-  ogre('374-night', 14), ogre('374-dawn', 13), ogre('374-day', 12),
-  ogre(150, 13, { openingHit: true, surprise: 'until-miss' }),
-  ogre(214, 12, { openingHit: true, surprise: 2 }),
-  { section: 172, foes: [foe('Giant Hound', 13, 9, 2)], fortuneReward: 2 },
-  { section: 183, foes: [foe('Cheetah', 12, 9, 3)], fortuneReward: 4, escapeDamage: 3, escapeFortune: 2 },
-  { section: 241, foes: [foe('Giant Scorpion', 13, 12, 2)], mode: 'scorpion', fortuneReward: 4 },
-  { section: 250, foes: Array.from({ length: 10 }, (_, i) => foe(`Tendril ${i + 1}`, 11, 1, 1)), mode: 'tendrils', fortuneReward: 4 },
-  { section: 272, foes: [foe('First Hound', 12, 8, 2)], chainBonusAfter: 1, fortuneReward: 2, escapeDamage: 0, escapeFortune: 0 },
-  troll(281),
-  { section: 284, foes: [foe('Second Hound', 12, 8, 2)], fortuneReward: 2, expertiseReward: 1 },
-  { section: 304, foes: [foe('Second Hound', 13, 9, 2)], chainBonusAfter: 0, fortuneReward: 3, expertiseReward: 1, escapeDamage: 0, escapeFortune: 0 },
-  { ...troll(306), stunning: true, carryTroll: true },
-  { section: 310, foes: [foe('Mountain Lion', 12, 10, 1)], mode: 'lion', fortuneReward: 3, expertiseReward: 1 },
-  troll(386),
-];
+export let PYRAMID_ENCOUNTERS = [];
+export const loadRoster = createRosterLoader(522, 'PYRAMID_ENCOUNTERS', rows => { PYRAMID_ENCOUNTERS = rows; });
 
 export function createPyramidFight(section, player, { openingBonus = false, cuttingWeapon = true, opponents } = {}) {
   const entry = editableSkyfallEncounter(PYRAMID_ENCOUNTERS.find(e => String(e.section) === String(section)),

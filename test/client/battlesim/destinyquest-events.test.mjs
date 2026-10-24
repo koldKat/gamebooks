@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createWinterFight, useWinterAction } from '../../../public/js/battlesim/engines/destinyquest/winters-fury.js';
+import { createWinterFight } from './destinyquest-fixtures.mjs';
+import { useWinterAction } from '../../../public/js/battlesim/engines/destinyquest/winters-fury.js';
 import { startDestinyRound, rollDestinySpeed, resolveDestinySpeed, rollDestinyDamage,
   resolveDestinyDamage, endDestinyRound, skipDestinyDeathMove } from '../../../public/js/battlesim/engines/destinyquest/core.js';
 import { useDestinyAbility as use } from '../../../public/js/battlesim/engines/destinyquest/abilities.js';

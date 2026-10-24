@@ -1,0 +1,5557 @@
+{
+  "schemaVersion": 1,
+  "bookId": 672,
+  "family": "sword-of-samurai",
+  "source": "Original complete source roster and encounter variants, cross-matched to the independent printed-source fixture and every legacy row. Reused continuation rosters retain their original identity and rules.",
+  "enemies": [
+    {
+      "key": "13:0",
+      "name": "Първи КАПА (13)",
+      "attack": 8,
+      "defense": null,
+      "hp": 14,
+      "pb": null,
+      "adopt": {
+        "name": "Първи КАПА (13)",
+        "attack": 8,
+        "defense": null,
+        "hp": 14,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "section": 13,
+          "roster": [
+            {
+              "name": "kappa",
+              "skill": 8,
+              "stamina": 14
+            },
+            {
+              "name": "kappa",
+              "skill": 8,
+              "stamina": 12
+            },
+            {
+              "name": "kappa",
+              "skill": 7,
+              "stamina": 13
+            }
+          ],
+          "fights": [
+            {
+              "index": 0,
+              "spec": {
+                "section": 13,
+                "win": null,
+                "enemies": [
+                  {
+                    "name": "kappa",
+                    "skill": 8,
+                    "stamina": 14
+                  },
+                  {
+                    "name": "kappa",
+                    "skill": 8,
+                    "stamina": 12
+                  },
+                  {
+                    "name": "kappa",
+                    "skill": 7,
+                    "stamina": 13
+                  }
+                ],
+                "mode": "simultaneous",
+                "threshold": {
+                  "stamina": 4,
+                  "section": 31
+                }
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "kappa",
+          "skill": 8,
+          "stamina": 14
+        }
+      }
+    },
+    {
+      "key": "13:1",
+      "name": "Втори КАПА (13)",
+      "attack": 8,
+      "defense": null,
+      "hp": 12,
+      "pb": null,
+      "adopt": {
+        "name": "Втори КАПА (13)",
+        "attack": 8,
+        "defense": null,
+        "hp": 12,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 0,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "section": 13,
+          "roster": [
+            {
+              "name": "kappa",
+              "skill": 8,
+              "stamina": 14
+            },
+            {
+              "name": "kappa",
+              "skill": 8,
+              "stamina": 12
+            },
+            {
+              "name": "kappa",
+              "skill": 7,
+              "stamina": 13
+            }
+          ],
+          "fights": [
+            {
+              "index": 0,
+              "spec": {
+                "section": 13,
+                "win": null,
+                "enemies": [
+                  {
+                    "name": "kappa",
+                    "skill": 8,
+                    "stamina": 14
+                  },
+                  {
+                    "name": "kappa",
+                    "skill": 8,
+                    "stamina": 12
+                  },
+                  {
+                    "name": "kappa",
+                    "skill": 7,
+                    "stamina": 13
+                  }
+                ],
+                "mode": "simultaneous",
+                "threshold": {
+                  "stamina": 4,
+                  "section": 31
+                }
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "kappa",
+          "skill": 8,
+          "stamina": 12
+        }
+      }
+    },
+    {
+      "key": "13:2",
+      "name": "Трети КАПА (13)",
+      "attack": 7,
+      "defense": null,
+      "hp": 13,
+      "pb": null,
+      "adopt": {
+        "name": "Трети КАПА (13)",
+        "attack": 7,
+        "defense": null,
+        "hp": 13,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 0,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "section": 13,
+          "roster": [
+            {
+              "name": "kappa",
+              "skill": 8,
+              "stamina": 14
+            },
+            {
+              "name": "kappa",
+              "skill": 8,
+              "stamina": 12
+            },
+            {
+              "name": "kappa",
+              "skill": 7,
+              "stamina": 13
+            }
+          ],
+          "fights": [
+            {
+              "index": 0,
+              "spec": {
+                "section": 13,
+                "win": null,
+                "enemies": [
+                  {
+                    "name": "kappa",
+                    "skill": 8,
+                    "stamina": 14
+                  },
+                  {
+                    "name": "kappa",
+                    "skill": 8,
+                    "stamina": 12
+                  },
+                  {
+                    "name": "kappa",
+                    "skill": 7,
+                    "stamina": 13
+                  }
+                ],
+                "mode": "simultaneous",
+                "threshold": {
+                  "stamina": 4,
+                  "section": 31
+                }
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "kappa",
+          "skill": 7,
+          "stamina": 13
+        }
+      }
+    },
+    {
+      "key": "15:0",
+      "name": "РОКУРО-КУБИ (15)",
+      "attack": 7,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "РОКУРО-КУБИ (15)",
+        "attack": 7,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 15,
+          "roster": [
+            {
+              "name": "rokuroKubi",
+              "skill": 7,
+              "stamina": 8
+            }
+          ],
+          "fights": [
+            {
+              "index": 1,
+              "spec": {
+                "section": 15,
+                "win": 153,
+                "enemies": [
+                  {
+                    "name": "rokuroKubi",
+                    "skill": 7,
+                    "stamina": 8
+                  }
+                ],
+                "mode": "sequential",
+                "entry": {
+                  "stamina": -2
+                }
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "rokuroKubi",
+          "skill": 7,
+          "stamina": 8
+        }
+      }
+    },
+    {
+      "key": "26:0",
+      "name": "ТАЦУ (26)",
+      "attack": 11,
+      "defense": null,
+      "hp": 13,
+      "pb": null,
+      "adopt": {
+        "name": "ТАЦУ (26)",
+        "attack": 11,
+        "defense": null,
+        "hp": 13,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 26,
+          "roster": [
+            {
+              "name": "tatsu",
+              "skill": 11,
+              "stamina": 13
+            }
+          ],
+          "fights": [
+            {
+              "index": 2,
+              "spec": {
+                "section": 26,
+                "win": 42,
+                "enemies": [
+                  {
+                    "name": "tatsu",
+                    "skill": 11,
+                    "stamina": 13
+                  }
+                ],
+                "mode": "sequential"
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "tatsu",
+          "skill": 11,
+          "stamina": 13
+        }
+      }
+    },
+    {
+      "key": "27:0",
+      "name": "ИКИРУ (27)",
+      "attack": 12,
+      "defense": null,
+      "hp": 12,
+      "pb": null,
+      "adopt": {
+        "name": "ИКИРУ (27)",
+        "attack": 12,
+        "defense": null,
+        "hp": 12,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 27,
+          "roster": [
+            {
+              "name": "ikiru",
+              "skill": 12,
+              "stamina": 12
+            }
+          ],
+          "fights": [
+            {
+              "index": 3,
+              "spec": {
+                "section": 27,
+                "win": 400,
+                "enemies": [
+                  {
+                    "name": "ikiru",
+                    "skill": 12,
+                    "stamina": 12
+                  }
+                ],
+                "mode": "sequential",
+                "entry": {
+                  "stamina": -4,
+                  "skill": -2,
+                  "luck": -2
+                },
+                "curse": 109
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "ikiru",
+          "skill": 12,
+          "stamina": 12
+        }
+      }
+    },
+    {
+      "key": "44:0",
+      "name": "САМУРАЙ-КОННИК (44)",
+      "attack": 8,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "САМУРАЙ-КОННИК (44)",
+        "attack": 8,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 44,
+          "roster": [
+            {
+              "name": "mountedSamurai",
+              "skill": 8,
+              "stamina": 9
+            }
+          ],
+          "fights": [
+            {
+              "index": 4,
+              "spec": {
+                "section": 44,
+                "win": 72,
+                "enemies": [
+                  {
+                    "name": "mountedSamurai",
+                    "skill": 8,
+                    "stamina": 9
+                  }
+                ],
+                "mode": "sequential",
+                "entry": {
+                  "stamina": -3
+                }
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "mountedSamurai",
+          "skill": 8,
+          "stamina": 9
+        }
+      }
+    },
+    {
+      "key": "45:0",
+      "name": "РОКУРО-КУБИ (45)",
+      "attack": 8,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "РОКУРО-КУБИ (45)",
+        "attack": 8,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 45,
+          "roster": [
+            {
+              "name": "rokuroKubi",
+              "skill": 8,
+              "stamina": 8
+            }
+          ],
+          "fights": [
+            {
+              "index": 5,
+              "spec": {
+                "section": 45,
+                "win": 9,
+                "enemies": [
+                  {
+                    "name": "rokuroKubi",
+                    "skill": 8,
+                    "stamina": 8
+                  }
+                ],
+                "mode": "sequential"
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "rokuroKubi",
+          "skill": 8,
+          "stamina": 8
+        }
+      }
+    },
+    {
+      "key": "50:0",
+      "name": "МУКАДЕ (50)",
+      "attack": 7,
+      "defense": null,
+      "hp": 20,
+      "pb": null,
+      "adopt": {
+        "name": "МУКАДЕ (50)",
+        "attack": 7,
+        "defense": null,
+        "hp": 20,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 6,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 50,
+          "roster": [
+            {
+              "name": "mukade",
+              "skill": 7,
+              "stamina": 20
+            }
+          ],
+          "fights": [
+            {
+              "index": 6,
+              "spec": {
+                "section": 50,
+                "win": 62,
+                "enemies": [
+                  {
+                    "name": "mukade",
+                    "skill": 7,
+                    "stamina": 20
+                  }
+                ],
+                "mode": "sequential",
+                "preArrowMax": 2
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "mukade",
+          "skill": 7,
+          "stamina": 20
+        }
+      }
+    },
+    {
+      "key": "51:0",
+      "name": "ПРИЗРАЧНА СЯНКА (51)",
+      "attack": 9,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "adopt": {
+        "name": "ПРИЗРАЧНА СЯНКА (51)",
+        "attack": 9,
+        "defense": null,
+        "hp": 1,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 7,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 51,
+          "roster": [
+            {
+              "name": "shadow",
+              "skill": 9,
+              "stamina": 1
+            }
+          ],
+          "fights": [
+            {
+              "index": 7,
+              "spec": {
+                "section": 51,
+                "win": 121,
+                "enemies": [
+                  {
+                    "name": "shadow",
+                    "skill": 9,
+                    "stamina": 1
+                  }
+                ],
+                "mode": "sequential",
+                "copies": 10
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "shadow",
+          "skill": 9,
+          "stamina": 1
+        }
+      }
+    },
+    {
+      "key": "79:0",
+      "name": "ПАЯК-ТАРАНТУЛА (79)",
+      "attack": 10,
+      "defense": null,
+      "hp": 12,
+      "pb": null,
+      "adopt": {
+        "name": "ПАЯК-ТАРАНТУЛА (79)",
+        "attack": 10,
+        "defense": null,
+        "hp": 12,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 8,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": 79,
+          "roster": [
+            {
+              "name": "tarantula",
+              "skill": 10,
+              "stamina": 12
+            },
+            {
+              "name": "waterSpider",
+              "skill": 8,
+              "stamina": 10
+            }
+          ],
+          "fights": [
+            {
+              "index": 8,
+              "spec": {
+                "section": 79,
+                "win": 87,
+                "enemies": [
+                  {
+                    "name": "tarantula",
+                    "skill": 10,
+                    "stamina": 12
+                  },
+                  {
+                    "name": "waterSpider",
+                    "skill": 8,
+                    "stamina": 10
+                  }
+                ],
+                "mode": "simultaneous"
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "tarantula",
+          "skill": 10,
+          "stamina": 12
+        }
+      }
+    },
+    {
+      "key": "79:1",
+      "name": "ВОДЕН ПАЯК (79)",
+      "attack": 8,
+      "defense": null,
+      "hp": 10,
+      "pb": null,
+      "adopt": {
+        "name": "ВОДЕН ПАЯК (79)",
+        "attack": 8,
+        "defense": null,
+        "hp": 10,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 8,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": 79,
+          "roster": [
+            {
+              "name": "tarantula",
+              "skill": 10,
+              "stamina": 12
+            },
+            {
+              "name": "waterSpider",
+              "skill": 8,
+              "stamina": 10
+            }
+          ],
+          "fights": [
+            {
+              "index": 8,
+              "spec": {
+                "section": 79,
+                "win": 87,
+                "enemies": [
+                  {
+                    "name": "tarantula",
+                    "skill": 10,
+                    "stamina": 12
+                  },
+                  {
+                    "name": "waterSpider",
+                    "skill": 8,
+                    "stamina": 10
+                  }
+                ],
+                "mode": "simultaneous"
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "waterSpider",
+          "skill": 8,
+          "stamina": 10
+        }
+      }
+    },
+    {
+      "key": "82:0",
+      "name": "САМУРАЙ-ПРИЗРАК (82)",
+      "attack": 9,
+      "defense": null,
+      "hp": 11,
+      "pb": null,
+      "adopt": {
+        "name": "САМУРАЙ-ПРИЗРАК (82)",
+        "attack": 9,
+        "defense": null,
+        "hp": 11,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 9,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 82,
+          "roster": [
+            {
+              "name": "ghostSamurai",
+              "skill": 9,
+              "stamina": 11
+            }
+          ],
+          "fights": [
+            {
+              "index": 9,
+              "spec": {
+                "section": 82,
+                "win": null,
+                "enemies": [
+                  {
+                    "name": "ghostSamurai",
+                    "skill": 9,
+                    "stamina": 11
+                  }
+                ],
+                "mode": "sequential",
+                "threshold": {
+                  "stamina": 5,
+                  "section": 32
+                }
+              }
+            },
+            {
+              "index": 59,
+              "spec": {
+                "section": 32,
+                "win": null,
+                "enemies": [
+                  {
+                    "name": "ghostSamurai",
+                    "skill": 9,
+                    "stamina": 11
+                  }
+                ],
+                "mode": "sequential",
+                "continuation": 82,
+                "skillModifier": -2,
+                "iaijutsuUsed": true,
+                "hitExit": {
+                  "hits": 1,
+                  "section": 58
+                }
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "ghostSamurai",
+          "skill": 9,
+          "stamina": 11
+        }
+      }
+    },
+    {
+      "key": "92:0",
+      "name": "ВОЙН-САМУРАЙ (92)",
+      "attack": 8,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "ВОЙН-САМУРАЙ (92)",
+        "attack": 8,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 10,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 92,
+          "roster": [
+            {
+              "name": "mountedSamurai",
+              "skill": 8,
+              "stamina": 9
+            }
+          ],
+          "fights": [
+            {
+              "index": 10,
+              "spec": {
+                "section": 92,
+                "win": 72,
+                "enemies": [
+                  {
+                    "name": "mountedSamurai",
+                    "skill": 8,
+                    "stamina": 9
+                  }
+                ],
+                "mode": "sequential",
+                "entryDefence": true,
+                "preArrowMax": 2,
+                "preArrowType": "piercing"
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "mountedSamurai",
+          "skill": 8,
+          "stamina": 9
+        }
+      }
+    },
+    {
+      "key": "93:0",
+      "name": "Първи ВЪГЛИЩАР (93)",
+      "attack": 6,
+      "defense": null,
+      "hp": 10,
+      "pb": null,
+      "adopt": {
+        "name": "Първи ВЪГЛИЩАР (93)",
+        "attack": 6,
+        "defense": null,
+        "hp": 10,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 11,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": 93,
+          "roster": [
+            {
+              "name": "charcoalBurner",
+              "skill": 6,
+              "stamina": 10
+            },
+            {
+              "name": "charcoalBurner",
+              "skill": 7,
+              "stamina": 9
+            }
+          ],
+          "fights": [
+            {
+              "index": 11,
+              "spec": {
+                "section": 93,
+                "win": null,
+                "enemies": [
+                  {
+                    "name": "charcoalBurner",
+                    "skill": 6,
+                    "stamina": 10
+                  },
+                  {
+                    "name": "charcoalBurner",
+                    "skill": 7,
+                    "stamina": 9
+                  }
+                ],
+                "mode": "simultaneous",
+                "firstKill": {
+                  "unhurt": 347,
+                  "wounded": 365
+                }
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "charcoalBurner",
+          "skill": 6,
+          "stamina": 10
+        }
+      }
+    },
+    {
+      "key": "93:1",
+      "name": "Втори ВЪГЛИЩАР (93)",
+      "attack": 7,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Втори ВЪГЛИЩАР (93)",
+        "attack": 7,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 11,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": 93,
+          "roster": [
+            {
+              "name": "charcoalBurner",
+              "skill": 6,
+              "stamina": 10
+            },
+            {
+              "name": "charcoalBurner",
+              "skill": 7,
+              "stamina": 9
+            }
+          ],
+          "fights": [
+            {
+              "index": 11,
+              "spec": {
+                "section": 93,
+                "win": null,
+                "enemies": [
+                  {
+                    "name": "charcoalBurner",
+                    "skill": 6,
+                    "stamina": 10
+                  },
+                  {
+                    "name": "charcoalBurner",
+                    "skill": 7,
+                    "stamina": 9
+                  }
+                ],
+                "mode": "simultaneous",
+                "firstKill": {
+                  "unhurt": 347,
+                  "wounded": 365
+                }
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "charcoalBurner",
+          "skill": 7,
+          "stamina": 9
+        }
+      }
+    },
+    {
+      "key": "94:0",
+      "name": "ПРИЗРАЧЕН ДЕМОН (94)",
+      "attack": 9,
+      "defense": null,
+      "hp": 10,
+      "pb": null,
+      "adopt": {
+        "name": "ПРИЗРАЧЕН ДЕМОН (94)",
+        "attack": 9,
+        "defense": null,
+        "hp": 10,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 12,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 94,
+          "roster": [
+            {
+              "name": "ghostDemon",
+              "skill": 9,
+              "stamina": 10
+            }
+          ],
+          "fights": [
+            {
+              "index": 12,
+              "spec": {
+                "section": 94,
+                "win": 260,
+                "enemies": [
+                  {
+                    "name": "ghostDemon",
+                    "skill": 9,
+                    "stamina": 10
+                  }
+                ],
+                "mode": "sequential",
+                "outgoing": "phantom"
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "ghostDemon",
+          "skill": 9,
+          "stamina": 10
+        }
+      }
+    },
+    {
+      "key": "97:0",
+      "name": "Първи КАПА (97)",
+      "attack": 8,
+      "defense": null,
+      "hp": 14,
+      "pb": null,
+      "adopt": {
+        "name": "Първи КАПА (97)",
+        "attack": 8,
+        "defense": null,
+        "hp": 14,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 13,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "section": 97,
+          "roster": [
+            {
+              "name": "kappa",
+              "skill": 8,
+              "stamina": 14
+            },
+            {
+              "name": "kappa",
+              "skill": 8,
+              "stamina": 12
+            },
+            {
+              "name": "kappa",
+              "skill": 7,
+              "stamina": 13
+            }
+          ],
+          "fights": [
+            {
+              "index": 13,
+              "spec": {
+                "section": 97,
+                "win": null,
+                "enemies": [
+                  {
+                    "name": "kappa",
+                    "skill": 8,
+                    "stamina": 14
+                  },
+                  {
+                    "name": "kappa",
+                    "skill": 8,
+                    "stamina": 12
+                  },
+                  {
+                    "name": "kappa",
+                    "skill": 7,
+                    "stamina": 13
+                  }
+                ],
+                "mode": "simultaneous",
+                "incoming": 3,
+                "threshold": {
+                  "stamina": 4,
+                  "section": 31
+                }
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "kappa",
+          "skill": 8,
+          "stamina": 14
+        }
+      }
+    },
+    {
+      "key": "97:1",
+      "name": "Втори КАПА (97)",
+      "attack": 8,
+      "defense": null,
+      "hp": 12,
+      "pb": null,
+      "adopt": {
+        "name": "Втори КАПА (97)",
+        "attack": 8,
+        "defense": null,
+        "hp": 12,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 13,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "section": 97,
+          "roster": [
+            {
+              "name": "kappa",
+              "skill": 8,
+              "stamina": 14
+            },
+            {
+              "name": "kappa",
+              "skill": 8,
+              "stamina": 12
+            },
+            {
+              "name": "kappa",
+              "skill": 7,
+              "stamina": 13
+            }
+          ],
+          "fights": [
+            {
+              "index": 13,
+              "spec": {
+                "section": 97,
+                "win": null,
+                "enemies": [
+                  {
+                    "name": "kappa",
+                    "skill": 8,
+                    "stamina": 14
+                  },
+                  {
+                    "name": "kappa",
+                    "skill": 8,
+                    "stamina": 12
+                  },
+                  {
+                    "name": "kappa",
+                    "skill": 7,
+                    "stamina": 13
+                  }
+                ],
+                "mode": "simultaneous",
+                "incoming": 3,
+                "threshold": {
+                  "stamina": 4,
+                  "section": 31
+                }
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "kappa",
+          "skill": 8,
+          "stamina": 12
+        }
+      }
+    },
+    {
+      "key": "97:2",
+      "name": "Трети КАПА (97)",
+      "attack": 7,
+      "defense": null,
+      "hp": 13,
+      "pb": null,
+      "adopt": {
+        "name": "Трети КАПА (97)",
+        "attack": 7,
+        "defense": null,
+        "hp": 13,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 13,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "section": 97,
+          "roster": [
+            {
+              "name": "kappa",
+              "skill": 8,
+              "stamina": 14
+            },
+            {
+              "name": "kappa",
+              "skill": 8,
+              "stamina": 12
+            },
+            {
+              "name": "kappa",
+              "skill": 7,
+              "stamina": 13
+            }
+          ],
+          "fights": [
+            {
+              "index": 13,
+              "spec": {
+                "section": 97,
+                "win": null,
+                "enemies": [
+                  {
+                    "name": "kappa",
+                    "skill": 8,
+                    "stamina": 14
+                  },
+                  {
+                    "name": "kappa",
+                    "skill": 8,
+                    "stamina": 12
+                  },
+                  {
+                    "name": "kappa",
+                    "skill": 7,
+                    "stamina": 13
+                  }
+                ],
+                "mode": "simultaneous",
+                "incoming": 3,
+                "threshold": {
+                  "stamina": 4,
+                  "section": 31
+                }
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "kappa",
+          "skill": 7,
+          "stamina": 13
+        }
+      }
+    },
+    {
+      "key": "116:0",
+      "name": "Първи САМУРАЙ (116)",
+      "attack": 6,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Първи САМУРАЙ (116)",
+        "attack": 6,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 14,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "section": 116,
+          "roster": [
+            {
+              "name": "samurai",
+              "skill": 6,
+              "stamina": 7
+            },
+            {
+              "name": "samurai",
+              "skill": 8,
+              "stamina": 8
+            },
+            {
+              "name": "samurai",
+              "skill": 7,
+              "stamina": 6
+            }
+          ],
+          "fights": [
+            {
+              "index": 14,
+              "spec": {
+                "section": 116,
+                "win": 154,
+                "enemies": [
+                  {
+                    "name": "samurai",
+                    "skill": 6,
+                    "stamina": 7
+                  },
+                  {
+                    "name": "samurai",
+                    "skill": 8,
+                    "stamina": 8
+                  },
+                  {
+                    "name": "samurai",
+                    "skill": 7,
+                    "stamina": 6
+                  }
+                ],
+                "mode": "simultaneous",
+                "acrobatics": true
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "samurai",
+          "skill": 6,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "116:1",
+      "name": "Втори САМУРАЙ (116)",
+      "attack": 8,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Втори САМУРАЙ (116)",
+        "attack": 8,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 14,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "section": 116,
+          "roster": [
+            {
+              "name": "samurai",
+              "skill": 6,
+              "stamina": 7
+            },
+            {
+              "name": "samurai",
+              "skill": 8,
+              "stamina": 8
+            },
+            {
+              "name": "samurai",
+              "skill": 7,
+              "stamina": 6
+            }
+          ],
+          "fights": [
+            {
+              "index": 14,
+              "spec": {
+                "section": 116,
+                "win": 154,
+                "enemies": [
+                  {
+                    "name": "samurai",
+                    "skill": 6,
+                    "stamina": 7
+                  },
+                  {
+                    "name": "samurai",
+                    "skill": 8,
+                    "stamina": 8
+                  },
+                  {
+                    "name": "samurai",
+                    "skill": 7,
+                    "stamina": 6
+                  }
+                ],
+                "mode": "simultaneous",
+                "acrobatics": true
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "samurai",
+          "skill": 8,
+          "stamina": 8
+        }
+      }
+    },
+    {
+      "key": "116:2",
+      "name": "Трети САМУРАЙ (116)",
+      "attack": 7,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Трети САМУРАЙ (116)",
+        "attack": 7,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 14,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "section": 116,
+          "roster": [
+            {
+              "name": "samurai",
+              "skill": 6,
+              "stamina": 7
+            },
+            {
+              "name": "samurai",
+              "skill": 8,
+              "stamina": 8
+            },
+            {
+              "name": "samurai",
+              "skill": 7,
+              "stamina": 6
+            }
+          ],
+          "fights": [
+            {
+              "index": 14,
+              "spec": {
+                "section": 116,
+                "win": 154,
+                "enemies": [
+                  {
+                    "name": "samurai",
+                    "skill": 6,
+                    "stamina": 7
+                  },
+                  {
+                    "name": "samurai",
+                    "skill": 8,
+                    "stamina": 8
+                  },
+                  {
+                    "name": "samurai",
+                    "skill": 7,
+                    "stamina": 6
+                  }
+                ],
+                "mode": "simultaneous",
+                "acrobatics": true
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "samurai",
+          "skill": 7,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "128:0",
+      "name": "Първи САМУРАЙ (128)",
+      "attack": 7,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Първи САМУРАЙ (128)",
+        "attack": 7,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 15,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "section": 128,
+          "roster": [
+            {
+              "name": "samurai",
+              "skill": 7,
+              "stamina": 9
+            },
+            {
+              "name": "samurai",
+              "skill": 9,
+              "stamina": 8
+            },
+            {
+              "name": "samurai",
+              "skill": 7,
+              "stamina": 9
+            }
+          ],
+          "fights": [
+            {
+              "index": 15,
+              "spec": {
+                "section": 128,
+                "win": 190,
+                "enemies": [
+                  {
+                    "name": "samurai",
+                    "skill": 7,
+                    "stamina": 9
+                  },
+                  {
+                    "name": "samurai",
+                    "skill": 9,
+                    "stamina": 8
+                  },
+                  {
+                    "name": "samurai",
+                    "skill": 7,
+                    "stamina": 9
+                  }
+                ],
+                "mode": "sequential"
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "samurai",
+          "skill": 7,
+          "stamina": 9
+        }
+      }
+    },
+    {
+      "key": "128:1",
+      "name": "Втори САМУРАЙ (128)",
+      "attack": 9,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Втори САМУРАЙ (128)",
+        "attack": 9,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 15,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "section": 128,
+          "roster": [
+            {
+              "name": "samurai",
+              "skill": 7,
+              "stamina": 9
+            },
+            {
+              "name": "samurai",
+              "skill": 9,
+              "stamina": 8
+            },
+            {
+              "name": "samurai",
+              "skill": 7,
+              "stamina": 9
+            }
+          ],
+          "fights": [
+            {
+              "index": 15,
+              "spec": {
+                "section": 128,
+                "win": 190,
+                "enemies": [
+                  {
+                    "name": "samurai",
+                    "skill": 7,
+                    "stamina": 9
+                  },
+                  {
+                    "name": "samurai",
+                    "skill": 9,
+                    "stamina": 8
+                  },
+                  {
+                    "name": "samurai",
+                    "skill": 7,
+                    "stamina": 9
+                  }
+                ],
+                "mode": "sequential"
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "samurai",
+          "skill": 9,
+          "stamina": 8
+        }
+      }
+    },
+    {
+      "key": "128:2",
+      "name": "Трети САМУРАЙ (128)",
+      "attack": 7,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Трети САМУРАЙ (128)",
+        "attack": 7,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 15,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "section": 128,
+          "roster": [
+            {
+              "name": "samurai",
+              "skill": 7,
+              "stamina": 9
+            },
+            {
+              "name": "samurai",
+              "skill": 9,
+              "stamina": 8
+            },
+            {
+              "name": "samurai",
+              "skill": 7,
+              "stamina": 9
+            }
+          ],
+          "fights": [
+            {
+              "index": 15,
+              "spec": {
+                "section": 128,
+                "win": 190,
+                "enemies": [
+                  {
+                    "name": "samurai",
+                    "skill": 7,
+                    "stamina": 9
+                  },
+                  {
+                    "name": "samurai",
+                    "skill": 9,
+                    "stamina": 8
+                  },
+                  {
+                    "name": "samurai",
+                    "skill": 7,
+                    "stamina": 9
+                  }
+                ],
+                "mode": "sequential"
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "samurai",
+          "skill": 7,
+          "stamina": 9
+        }
+      }
+    },
+    {
+      "key": "132:0",
+      "name": "СТРАЖ (132)",
+      "attack": 7,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "СТРАЖ (132)",
+        "attack": 7,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 16,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 132,
+          "roster": [
+            {
+              "name": "guard",
+              "skill": 7,
+              "stamina": 9
+            }
+          ],
+          "fights": [
+            {
+              "index": 16,
+              "spec": {
+                "section": 132,
+                "win": 142,
+                "enemies": [
+                  {
+                    "name": "guard",
+                    "skill": 7,
+                    "stamina": 9
+                  }
+                ],
+                "mode": "sequential"
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "guard",
+          "skill": 7,
+          "stamina": 9
+        }
+      }
+    },
+    {
+      "key": "133:0",
+      "name": "РОКУРО-КУБИ (133)",
+      "attack": 11,
+      "defense": null,
+      "hp": 17,
+      "pb": null,
+      "adopt": {
+        "name": "РОКУРО-КУБИ (133)",
+        "attack": 11,
+        "defense": null,
+        "hp": 17,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 17,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 133,
+          "roster": [
+            {
+              "name": "rokuroKubi",
+              "skill": 11,
+              "stamina": 17
+            }
+          ],
+          "fights": [
+            {
+              "index": 17,
+              "spec": {
+                "section": 133,
+                "win": 115,
+                "enemies": [
+                  {
+                    "name": "rokuroKubi",
+                    "skill": 11,
+                    "stamina": 17
+                  }
+                ],
+                "mode": "sequential"
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "rokuroKubi",
+          "skill": 11,
+          "stamina": 17
+        }
+      }
+    },
+    {
+      "key": "145:0",
+      "name": "РОКУРО-КУБИ (145)",
+      "attack": 11,
+      "defense": null,
+      "hp": 17,
+      "pb": null,
+      "adopt": {
+        "name": "РОКУРО-КУБИ (145)",
+        "attack": 11,
+        "defense": null,
+        "hp": 17,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 18,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 145,
+          "roster": [
+            {
+              "name": "rokuroKubi",
+              "skill": 11,
+              "stamina": 17
+            }
+          ],
+          "fights": [
+            {
+              "index": 18,
+              "spec": {
+                "section": 145,
+                "win": 85,
+                "enemies": [
+                  {
+                    "name": "rokuroKubi",
+                    "skill": 11,
+                    "stamina": 17
+                  }
+                ],
+                "mode": "sequential"
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "rokuroKubi",
+          "skill": 11,
+          "stamina": 17
+        }
+      }
+    },
+    {
+      "key": "149:0",
+      "name": "ТОТАТЕ КУМО (149)",
+      "attack": 10,
+      "defense": null,
+      "hp": 14,
+      "pb": null,
+      "adopt": {
+        "name": "ТОТАТЕ КУМО (149)",
+        "attack": 10,
+        "defense": null,
+        "hp": 14,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 19,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 149,
+          "roster": [
+            {
+              "name": "totateKumo",
+              "skill": 10,
+              "stamina": 14
+            }
+          ],
+          "fights": [
+            {
+              "index": 19,
+              "spec": {
+                "section": 149,
+                "win": 143,
+                "enemies": [
+                  {
+                    "name": "totateKumo",
+                    "skill": 10,
+                    "stamina": 14
+                  }
+                ],
+                "mode": "sequential"
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "totateKumo",
+          "skill": 10,
+          "stamina": 14
+        }
+      }
+    },
+    {
+      "key": "174:0",
+      "name": "ПРИЗРАЧЕН ДЕМОН (174)",
+      "attack": 9,
+      "defense": null,
+      "hp": 10,
+      "pb": null,
+      "adopt": {
+        "name": "ПРИЗРАЧЕН ДЕМОН (174)",
+        "attack": 9,
+        "defense": null,
+        "hp": 10,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 20,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 174,
+          "roster": [
+            {
+              "name": "ghostDemon",
+              "skill": 9,
+              "stamina": 10
+            }
+          ],
+          "fights": [
+            {
+              "index": 20,
+              "spec": {
+                "section": 174,
+                "win": 212,
+                "enemies": [
+                  {
+                    "name": "ghostDemon",
+                    "skill": 9,
+                    "stamina": 10
+                  }
+                ],
+                "mode": "sequential"
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "ghostDemon",
+          "skill": 9,
+          "stamina": 10
+        }
+      }
+    },
+    {
+      "key": "178:0",
+      "name": "ЛОРД ЦИЕЦИН (178)",
+      "attack": 7,
+      "defense": null,
+      "hp": 11,
+      "pb": null,
+      "adopt": {
+        "name": "ЛОРД ЦИЕЦИН (178)",
+        "attack": 7,
+        "defense": null,
+        "hp": 11,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 21,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 178,
+          "roster": [
+            {
+              "name": "tsietsin",
+              "skill": 7,
+              "stamina": 11
+            }
+          ],
+          "fights": [
+            {
+              "index": 21,
+              "spec": {
+                "section": 178,
+                "win": 322,
+                "enemies": [
+                  {
+                    "name": "tsietsin",
+                    "skill": 7,
+                    "stamina": 11
+                  }
+                ],
+                "mode": "sequential",
+                "entry": {
+                  "stamina": -3
+                }
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "tsietsin",
+          "skill": 7,
+          "stamina": 11
+        }
+      }
+    },
+    {
+      "key": "187:0",
+      "name": "РОКУРО КУБИ (187)",
+      "attack": 7,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "РОКУРО КУБИ (187)",
+        "attack": 7,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 22,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 187,
+          "roster": [
+            {
+              "name": "rokuroKubi",
+              "skill": 7,
+              "stamina": 8
+            }
+          ],
+          "fights": [
+            {
+              "index": 22,
+              "spec": {
+                "section": 187,
+                "win": 153,
+                "enemies": [
+                  {
+                    "name": "rokuroKubi",
+                    "skill": 7,
+                    "stamina": 8
+                  }
+                ],
+                "mode": "sequential",
+                "entry": {
+                  "stamina": -2
+                }
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "rokuroKubi",
+          "skill": 7,
+          "stamina": 8
+        }
+      }
+    },
+    {
+      "key": "199:0",
+      "name": "ИКИРУ (199)",
+      "attack": 12,
+      "defense": null,
+      "hp": 12,
+      "pb": null,
+      "adopt": {
+        "name": "ИКИРУ (199)",
+        "attack": 12,
+        "defense": null,
+        "hp": 12,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 23,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 199,
+          "roster": [
+            {
+              "name": "ikiru",
+              "skill": 12,
+              "stamina": 12
+            }
+          ],
+          "fights": [
+            {
+              "index": 23,
+              "spec": {
+                "section": 199,
+                "win": 400,
+                "enemies": [
+                  {
+                    "name": "ikiru",
+                    "skill": 12,
+                    "stamina": 12
+                  }
+                ],
+                "mode": "sequential",
+                "critical": 235,
+                "swordRunes": 47
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "ikiru",
+          "skill": 12,
+          "stamina": 12
+        }
+      }
+    },
+    {
+      "key": "202:0",
+      "name": "Първи САМУРАЙ (202)",
+      "attack": 6,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Първи САМУРАЙ (202)",
+        "attack": 6,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 24,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "section": 202,
+          "roster": [
+            {
+              "name": "samurai",
+              "skill": 6,
+              "stamina": 7
+            },
+            {
+              "name": "samurai",
+              "skill": 8,
+              "stamina": 8
+            },
+            {
+              "name": "samurai",
+              "skill": 7,
+              "stamina": 6
+            }
+          ],
+          "fights": [
+            {
+              "index": 24,
+              "spec": {
+                "section": 202,
+                "win": 154,
+                "enemies": [
+                  {
+                    "name": "samurai",
+                    "skill": 6,
+                    "stamina": 7
+                  },
+                  {
+                    "name": "samurai",
+                    "skill": 8,
+                    "stamina": 8
+                  },
+                  {
+                    "name": "samurai",
+                    "skill": 7,
+                    "stamina": 6
+                  }
+                ],
+                "mode": "simultaneous",
+                "acrobatics": true
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "samurai",
+          "skill": 6,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "202:1",
+      "name": "Втори САМУРАЙ (202)",
+      "attack": 8,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Втори САМУРАЙ (202)",
+        "attack": 8,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 24,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "section": 202,
+          "roster": [
+            {
+              "name": "samurai",
+              "skill": 6,
+              "stamina": 7
+            },
+            {
+              "name": "samurai",
+              "skill": 8,
+              "stamina": 8
+            },
+            {
+              "name": "samurai",
+              "skill": 7,
+              "stamina": 6
+            }
+          ],
+          "fights": [
+            {
+              "index": 24,
+              "spec": {
+                "section": 202,
+                "win": 154,
+                "enemies": [
+                  {
+                    "name": "samurai",
+                    "skill": 6,
+                    "stamina": 7
+                  },
+                  {
+                    "name": "samurai",
+                    "skill": 8,
+                    "stamina": 8
+                  },
+                  {
+                    "name": "samurai",
+                    "skill": 7,
+                    "stamina": 6
+                  }
+                ],
+                "mode": "simultaneous",
+                "acrobatics": true
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "samurai",
+          "skill": 8,
+          "stamina": 8
+        }
+      }
+    },
+    {
+      "key": "202:2",
+      "name": "Трети САМУРАЙ (202)",
+      "attack": 7,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Трети САМУРАЙ (202)",
+        "attack": 7,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 24,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "section": 202,
+          "roster": [
+            {
+              "name": "samurai",
+              "skill": 6,
+              "stamina": 7
+            },
+            {
+              "name": "samurai",
+              "skill": 8,
+              "stamina": 8
+            },
+            {
+              "name": "samurai",
+              "skill": 7,
+              "stamina": 6
+            }
+          ],
+          "fights": [
+            {
+              "index": 24,
+              "spec": {
+                "section": 202,
+                "win": 154,
+                "enemies": [
+                  {
+                    "name": "samurai",
+                    "skill": 6,
+                    "stamina": 7
+                  },
+                  {
+                    "name": "samurai",
+                    "skill": 8,
+                    "stamina": 8
+                  },
+                  {
+                    "name": "samurai",
+                    "skill": 7,
+                    "stamina": 6
+                  }
+                ],
+                "mode": "simultaneous",
+                "acrobatics": true
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "samurai",
+          "skill": 7,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "203:0",
+      "name": "РОКУРО-КУБИ (203)",
+      "attack": 8,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "РОКУРО-КУБИ (203)",
+        "attack": 8,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 25,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 203,
+          "roster": [
+            {
+              "name": "rokuroKubi",
+              "skill": 8,
+              "stamina": 8
+            }
+          ],
+          "fights": [
+            {
+              "index": 25,
+              "spec": {
+                "section": 203,
+                "win": 187,
+                "enemies": [
+                  {
+                    "name": "rokuroKubi",
+                    "skill": 8,
+                    "stamina": 8
+                  }
+                ],
+                "mode": "sequential",
+                "entry": {
+                  "stamina": -3
+                }
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "rokuroKubi",
+          "skill": 8,
+          "stamina": 8
+        }
+      }
+    },
+    {
+      "key": "204:0",
+      "name": "Първи ШИКОМЕ (204)",
+      "attack": 6,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Първи ШИКОМЕ (204)",
+        "attack": 6,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 26,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": 204,
+          "roster": [
+            {
+              "name": "shikome",
+              "skill": 6,
+              "stamina": 6
+            },
+            {
+              "name": "shikome",
+              "skill": 7,
+              "stamina": 5
+            }
+          ],
+          "fights": [
+            {
+              "index": 26,
+              "spec": {
+                "section": 204,
+                "win": 336,
+                "enemies": [
+                  {
+                    "name": "shikome",
+                    "skill": 6,
+                    "stamina": 6
+                  },
+                  {
+                    "name": "shikome",
+                    "skill": 7,
+                    "stamina": 5
+                  }
+                ],
+                "mode": "simultaneous",
+                "noCounterRounds": 2,
+                "deadline": {
+                  "rounds": 6,
+                  "section": 218,
+                  "result": "loss"
+                }
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "shikome",
+          "skill": 6,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "204:1",
+      "name": "Втори ШИКОМЕ (204)",
+      "attack": 7,
+      "defense": null,
+      "hp": 5,
+      "pb": null,
+      "adopt": {
+        "name": "Втори ШИКОМЕ (204)",
+        "attack": 7,
+        "defense": null,
+        "hp": 5,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 26,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": 204,
+          "roster": [
+            {
+              "name": "shikome",
+              "skill": 6,
+              "stamina": 6
+            },
+            {
+              "name": "shikome",
+              "skill": 7,
+              "stamina": 5
+            }
+          ],
+          "fights": [
+            {
+              "index": 26,
+              "spec": {
+                "section": 204,
+                "win": 336,
+                "enemies": [
+                  {
+                    "name": "shikome",
+                    "skill": 6,
+                    "stamina": 6
+                  },
+                  {
+                    "name": "shikome",
+                    "skill": 7,
+                    "stamina": 5
+                  }
+                ],
+                "mode": "simultaneous",
+                "noCounterRounds": 2,
+                "deadline": {
+                  "rounds": 6,
+                  "section": 218,
+                  "result": "loss"
+                }
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "shikome",
+          "skill": 7,
+          "stamina": 5
+        }
+      }
+    },
+    {
+      "key": "214:0",
+      "name": "САБЛЕЗЪБ ТИГЪР (214)",
+      "attack": 10,
+      "defense": null,
+      "hp": 12,
+      "pb": null,
+      "adopt": {
+        "name": "САБЛЕЗЪБ ТИГЪР (214)",
+        "attack": 10,
+        "defense": null,
+        "hp": 12,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 27,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 214,
+          "roster": [
+            {
+              "name": "tiger",
+              "skill": 10,
+              "stamina": 12
+            }
+          ],
+          "fights": [
+            {
+              "index": 27,
+              "spec": {
+                "section": 214,
+                "win": 8,
+                "enemies": [
+                  {
+                    "name": "tiger",
+                    "skill": 10,
+                    "stamina": 12
+                  }
+                ],
+                "mode": "sequential"
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "tiger",
+          "skill": 10,
+          "stamina": 12
+        }
+      }
+    },
+    {
+      "key": "224:0",
+      "name": "САБЛЕЗЪБ ТИГЪР (224)",
+      "attack": 10,
+      "defense": null,
+      "hp": 12,
+      "pb": null,
+      "adopt": {
+        "name": "САБЛЕЗЪБ ТИГЪР (224)",
+        "attack": 10,
+        "defense": null,
+        "hp": 12,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 28,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 224,
+          "roster": [
+            {
+              "name": "tiger",
+              "skill": 10,
+              "stamina": 12
+            }
+          ],
+          "fights": [
+            {
+              "index": 28,
+              "spec": {
+                "section": 224,
+                "win": 8,
+                "enemies": [
+                  {
+                    "name": "tiger",
+                    "skill": 10,
+                    "stamina": 12
+                  }
+                ],
+                "mode": "sequential",
+                "preArrowMax": 3
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "tiger",
+          "skill": 10,
+          "stamina": 12
+        }
+      }
+    },
+    {
+      "key": "230:0",
+      "name": "ТЕЛОХРАНИТЕЛ НА ЦИЕЦИН (230)",
+      "attack": 9,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "ТЕЛОХРАНИТЕЛ НА ЦИЕЦИН (230)",
+        "attack": 9,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 29,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 230,
+          "roster": [
+            {
+              "name": "bodyguard",
+              "skill": 9,
+              "stamina": 8
+            }
+          ],
+          "fights": [
+            {
+              "index": 29,
+              "spec": {
+                "section": 230,
+                "win": 354,
+                "enemies": [
+                  {
+                    "name": "bodyguard",
+                    "skill": 9,
+                    "stamina": 8
+                  }
+                ],
+                "mode": "sequential"
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "bodyguard",
+          "skill": 9,
+          "stamina": 8
+        }
+      }
+    },
+    {
+      "key": "240:0",
+      "name": "Първи САМУРАЙ (240)",
+      "attack": 6,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Първи САМУРАЙ (240)",
+        "attack": 6,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 30,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "section": 240,
+          "roster": [
+            {
+              "name": "samurai",
+              "skill": 6,
+              "stamina": 7
+            },
+            {
+              "name": "samurai",
+              "skill": 8,
+              "stamina": 8
+            },
+            {
+              "name": "samurai",
+              "skill": 7,
+              "stamina": 6
+            }
+          ],
+          "fights": [
+            {
+              "index": 30,
+              "spec": {
+                "section": 240,
+                "win": 154,
+                "enemies": [
+                  {
+                    "name": "samurai",
+                    "skill": 6,
+                    "stamina": 7
+                  },
+                  {
+                    "name": "samurai",
+                    "skill": 8,
+                    "stamina": 8
+                  },
+                  {
+                    "name": "samurai",
+                    "skill": 7,
+                    "stamina": 6
+                  }
+                ],
+                "mode": "simultaneous",
+                "acrobatics": true
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "samurai",
+          "skill": 6,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "240:1",
+      "name": "Втори САМУРАЙ (240)",
+      "attack": 8,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Втори САМУРАЙ (240)",
+        "attack": 8,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 30,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "section": 240,
+          "roster": [
+            {
+              "name": "samurai",
+              "skill": 6,
+              "stamina": 7
+            },
+            {
+              "name": "samurai",
+              "skill": 8,
+              "stamina": 8
+            },
+            {
+              "name": "samurai",
+              "skill": 7,
+              "stamina": 6
+            }
+          ],
+          "fights": [
+            {
+              "index": 30,
+              "spec": {
+                "section": 240,
+                "win": 154,
+                "enemies": [
+                  {
+                    "name": "samurai",
+                    "skill": 6,
+                    "stamina": 7
+                  },
+                  {
+                    "name": "samurai",
+                    "skill": 8,
+                    "stamina": 8
+                  },
+                  {
+                    "name": "samurai",
+                    "skill": 7,
+                    "stamina": 6
+                  }
+                ],
+                "mode": "simultaneous",
+                "acrobatics": true
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "samurai",
+          "skill": 8,
+          "stamina": 8
+        }
+      }
+    },
+    {
+      "key": "240:2",
+      "name": "Трети САМУРАЙ (240)",
+      "attack": 7,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Трети САМУРАЙ (240)",
+        "attack": 7,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 30,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "section": 240,
+          "roster": [
+            {
+              "name": "samurai",
+              "skill": 6,
+              "stamina": 7
+            },
+            {
+              "name": "samurai",
+              "skill": 8,
+              "stamina": 8
+            },
+            {
+              "name": "samurai",
+              "skill": 7,
+              "stamina": 6
+            }
+          ],
+          "fights": [
+            {
+              "index": 30,
+              "spec": {
+                "section": 240,
+                "win": 154,
+                "enemies": [
+                  {
+                    "name": "samurai",
+                    "skill": 6,
+                    "stamina": 7
+                  },
+                  {
+                    "name": "samurai",
+                    "skill": 8,
+                    "stamina": 8
+                  },
+                  {
+                    "name": "samurai",
+                    "skill": 7,
+                    "stamina": 6
+                  }
+                ],
+                "mode": "simultaneous",
+                "acrobatics": true
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "samurai",
+          "skill": 7,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "246:0",
+      "name": "ГОЛЯМА ЗМИЯ (246)",
+      "attack": 10,
+      "defense": null,
+      "hp": 10,
+      "pb": null,
+      "adopt": {
+        "name": "ГОЛЯМА ЗМИЯ (246)",
+        "attack": 10,
+        "defense": null,
+        "hp": 10,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 31,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 246,
+          "roster": [
+            {
+              "name": "greatSnake",
+              "skill": 10,
+              "stamina": 10
+            }
+          ],
+          "fights": [
+            {
+              "index": 31,
+              "spec": {
+                "section": 246,
+                "win": 272,
+                "enemies": [
+                  {
+                    "name": "greatSnake",
+                    "skill": 10,
+                    "stamina": 10
+                  }
+                ],
+                "mode": "sequential"
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "greatSnake",
+          "skill": 10,
+          "stamina": 10
+        }
+      }
+    },
+    {
+      "key": "252:0",
+      "name": "СТРАЖ ШИКОМЕ (252)",
+      "attack": 8,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "СТРАЖ ШИКОМЕ (252)",
+        "attack": 8,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 32,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 252,
+          "roster": [
+            {
+              "name": "shikomeGuard",
+              "skill": 8,
+              "stamina": 7
+            }
+          ],
+          "fights": [
+            {
+              "index": 32,
+              "spec": {
+                "section": 252,
+                "win": 280,
+                "enemies": [
+                  {
+                    "name": "shikomeGuard",
+                    "skill": 8,
+                    "stamina": 7
+                  }
+                ],
+                "mode": "sequential",
+                "iaijutsuUsed": true
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "shikomeGuard",
+          "skill": 8,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "256:0",
+      "name": "Първи ШИКОМЕ (256)",
+      "attack": 8,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Първи ШИКОМЕ (256)",
+        "attack": 8,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 33,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": 256,
+          "roster": [
+            {
+              "name": "shikome",
+              "skill": 8,
+              "stamina": 9
+            },
+            {
+              "name": "shikome",
+              "skill": 7,
+              "stamina": 8
+            }
+          ],
+          "fights": [
+            {
+              "index": 33,
+              "spec": {
+                "section": 256,
+                "win": 336,
+                "enemies": [
+                  {
+                    "name": "shikome",
+                    "skill": 8,
+                    "stamina": 9
+                  },
+                  {
+                    "name": "shikome",
+                    "skill": 7,
+                    "stamina": 8
+                  }
+                ],
+                "mode": "simultaneous",
+                "deadline": {
+                  "rounds": 9,
+                  "section": 218,
+                  "result": "loss"
+                }
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "shikome",
+          "skill": 8,
+          "stamina": 9
+        }
+      }
+    },
+    {
+      "key": "256:1",
+      "name": "Втори ШИКОМЕ (256)",
+      "attack": 7,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Втори ШИКОМЕ (256)",
+        "attack": 7,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 33,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": 256,
+          "roster": [
+            {
+              "name": "shikome",
+              "skill": 8,
+              "stamina": 9
+            },
+            {
+              "name": "shikome",
+              "skill": 7,
+              "stamina": 8
+            }
+          ],
+          "fights": [
+            {
+              "index": 33,
+              "spec": {
+                "section": 256,
+                "win": 336,
+                "enemies": [
+                  {
+                    "name": "shikome",
+                    "skill": 8,
+                    "stamina": 9
+                  },
+                  {
+                    "name": "shikome",
+                    "skill": 7,
+                    "stamina": 8
+                  }
+                ],
+                "mode": "simultaneous",
+                "deadline": {
+                  "rounds": 9,
+                  "section": 218,
+                  "result": "loss"
+                }
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "shikome",
+          "skill": 7,
+          "stamina": 8
+        }
+      }
+    },
+    {
+      "key": "265:0",
+      "name": "МАРМОТ (265)",
+      "attack": 8,
+      "defense": null,
+      "hp": 22,
+      "pb": null,
+      "adopt": {
+        "name": "МАРМОТ (265)",
+        "attack": 8,
+        "defense": null,
+        "hp": 22,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 34,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 265,
+          "roster": [
+            {
+              "name": "marmot",
+              "skill": 8,
+              "stamina": 22
+            }
+          ],
+          "fights": [
+            {
+              "index": 34,
+              "spec": {
+                "section": 265,
+                "win": 355,
+                "enemies": [
+                  {
+                    "name": "marmot",
+                    "skill": 8,
+                    "stamina": 22
+                  }
+                ],
+                "mode": "sequential"
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "marmot",
+          "skill": 8,
+          "stamina": 22
+        }
+      }
+    },
+    {
+      "key": "266:0",
+      "name": "БОГОМОЛКА-ДЕМОН (266)",
+      "attack": 8,
+      "defense": null,
+      "hp": 10,
+      "pb": null,
+      "adopt": {
+        "name": "БОГОМОЛКА-ДЕМОН (266)",
+        "attack": 8,
+        "defense": null,
+        "hp": 10,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 35,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 266,
+          "roster": [
+            {
+              "name": "mantis",
+              "skill": 8,
+              "stamina": 10
+            }
+          ],
+          "fights": [
+            {
+              "index": 35,
+              "spec": {
+                "section": 266,
+                "win": 346,
+                "enemies": [
+                  {
+                    "name": "mantis",
+                    "skill": 8,
+                    "stamina": 10
+                  }
+                ],
+                "mode": "sequential",
+                "outgoing": "armour"
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "mantis",
+          "skill": 8,
+          "stamina": 10
+        }
+      }
+    },
+    {
+      "key": "270:0",
+      "name": "ШУРА (270)",
+      "attack": 9,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "ШУРА (270)",
+        "attack": 9,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 36,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 270,
+          "roster": [
+            {
+              "name": "shura",
+              "skill": 9,
+              "stamina": 8
+            }
+          ],
+          "fights": [
+            {
+              "index": 36,
+              "spec": {
+                "section": 270,
+                "win": 76,
+                "enemies": [
+                  {
+                    "name": "shura",
+                    "skill": 9,
+                    "stamina": 8
+                  }
+                ],
+                "mode": "sequential"
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "shura",
+          "skill": 9,
+          "stamina": 8
+        }
+      }
+    },
+    {
+      "key": "275:0",
+      "name": "РОНИНЪТ ГИНСЕЙ (275)",
+      "attack": 9,
+      "defense": null,
+      "hp": 14,
+      "pb": null,
+      "adopt": {
+        "name": "РОНИНЪТ ГИНСЕЙ (275)",
+        "attack": 9,
+        "defense": null,
+        "hp": 14,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 37,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 275,
+          "roster": [
+            {
+              "name": "ginsei",
+              "skill": 9,
+              "stamina": 14
+            }
+          ],
+          "fights": [
+            {
+              "index": 37,
+              "spec": {
+                "section": 275,
+                "win": 399,
+                "enemies": [
+                  {
+                    "name": "ginsei",
+                    "skill": 9,
+                    "stamina": 14
+                  }
+                ],
+                "mode": "sequential",
+                "iaijutsuUsed": true
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "ginsei",
+          "skill": 9,
+          "stamina": 14
+        }
+      }
+    },
+    {
+      "key": "281:0",
+      "name": "Първи ВЪГЛИЩАР (281)",
+      "attack": 6,
+      "defense": null,
+      "hp": 10,
+      "pb": null,
+      "adopt": {
+        "name": "Първи ВЪГЛИЩАР (281)",
+        "attack": 6,
+        "defense": null,
+        "hp": 10,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 38,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": 281,
+          "roster": [
+            {
+              "name": "charcoalBurner",
+              "skill": 6,
+              "stamina": 10
+            },
+            {
+              "name": "charcoalBurner",
+              "skill": 7,
+              "stamina": 9
+            }
+          ],
+          "fights": [
+            {
+              "index": 38,
+              "spec": {
+                "section": 281,
+                "win": null,
+                "enemies": [
+                  {
+                    "name": "charcoalBurner",
+                    "skill": 6,
+                    "stamina": 10
+                  },
+                  {
+                    "name": "charcoalBurner",
+                    "skill": 7,
+                    "stamina": 9
+                  }
+                ],
+                "mode": "simultaneous",
+                "firstKill": {
+                  "unhurt": 347,
+                  "wounded": 365
+                },
+                "defenceAttacks": 2
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "charcoalBurner",
+          "skill": 6,
+          "stamina": 10
+        }
+      }
+    },
+    {
+      "key": "281:1",
+      "name": "Втори ВЪГЛИЩАР (281)",
+      "attack": 7,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Втори ВЪГЛИЩАР (281)",
+        "attack": 7,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 38,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": 281,
+          "roster": [
+            {
+              "name": "charcoalBurner",
+              "skill": 6,
+              "stamina": 10
+            },
+            {
+              "name": "charcoalBurner",
+              "skill": 7,
+              "stamina": 9
+            }
+          ],
+          "fights": [
+            {
+              "index": 38,
+              "spec": {
+                "section": 281,
+                "win": null,
+                "enemies": [
+                  {
+                    "name": "charcoalBurner",
+                    "skill": 6,
+                    "stamina": 10
+                  },
+                  {
+                    "name": "charcoalBurner",
+                    "skill": 7,
+                    "stamina": 9
+                  }
+                ],
+                "mode": "simultaneous",
+                "firstKill": {
+                  "unhurt": 347,
+                  "wounded": 365
+                },
+                "defenceAttacks": 2
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "charcoalBurner",
+          "skill": 7,
+          "stamina": 9
+        }
+      }
+    },
+    {
+      "key": "282:0",
+      "name": "ТЪМНИЧАР (282)",
+      "attack": 7,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "ТЪМНИЧАР (282)",
+        "attack": 7,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 39,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 282,
+          "roster": [
+            {
+              "name": "jailer",
+              "skill": 7,
+              "stamina": 7
+            }
+          ],
+          "fights": [
+            {
+              "index": 39,
+              "spec": {
+                "section": 282,
+                "win": 308,
+                "enemies": [
+                  {
+                    "name": "jailer",
+                    "skill": 7,
+                    "stamina": 7
+                  }
+                ],
+                "mode": "sequential",
+                "skillModifier": -2,
+                "unarmed": true,
+                "deadline": {
+                  "rounds": 4,
+                  "section": 332,
+                  "result": "loss",
+                  "fatal": true
+                }
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "jailer",
+          "skill": 7,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "292:0",
+      "name": "ДАЙ-ОНИ (292)",
+      "attack": 10,
+      "defense": null,
+      "hp": 10,
+      "pb": null,
+      "adopt": {
+        "name": "ДАЙ-ОНИ (292)",
+        "attack": 10,
+        "defense": null,
+        "hp": 10,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 40,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 292,
+          "roster": [
+            {
+              "name": "daiOni",
+              "skill": 10,
+              "stamina": 10
+            }
+          ],
+          "fights": [
+            {
+              "index": 40,
+              "spec": {
+                "section": 292,
+                "win": 74,
+                "enemies": [
+                  {
+                    "name": "daiOni",
+                    "skill": 10,
+                    "stamina": 10
+                  }
+                ],
+                "mode": "sequential",
+                "enemySpells": true
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "daiOni",
+          "skill": 10,
+          "stamina": 10
+        }
+      }
+    },
+    {
+      "key": "301:0",
+      "name": "РОНИНЪТ ГИНСЕЙ (301)",
+      "attack": 10,
+      "defense": null,
+      "hp": 16,
+      "pb": null,
+      "adopt": {
+        "name": "РОНИНЪТ ГИНСЕЙ (301)",
+        "attack": 10,
+        "defense": null,
+        "hp": 16,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 41,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 301,
+          "roster": [
+            {
+              "name": "ginsei",
+              "skill": 10,
+              "stamina": 16
+            }
+          ],
+          "fights": [
+            {
+              "index": 41,
+              "spec": {
+                "section": 301,
+                "win": 399,
+                "enemies": [
+                  {
+                    "name": "ginsei",
+                    "skill": 10,
+                    "stamina": 16
+                  }
+                ],
+                "mode": "sequential"
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "ginsei",
+          "skill": 10,
+          "stamina": 16
+        }
+      }
+    },
+    {
+      "key": "302:0",
+      "name": "Първи САМУРАЙ (302)",
+      "attack": 7,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Първи САМУРАЙ (302)",
+        "attack": 7,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 42,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": 302,
+          "roster": [
+            {
+              "name": "samurai",
+              "skill": 7,
+              "stamina": 9
+            },
+            {
+              "name": "samurai",
+              "skill": 8,
+              "stamina": 7
+            }
+          ],
+          "fights": [
+            {
+              "index": 42,
+              "spec": {
+                "section": 302,
+                "win": 310,
+                "enemies": [
+                  {
+                    "name": "samurai",
+                    "skill": 7,
+                    "stamina": 9
+                  },
+                  {
+                    "name": "samurai",
+                    "skill": 8,
+                    "stamina": 7
+                  }
+                ],
+                "mode": "simultaneous"
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "samurai",
+          "skill": 7,
+          "stamina": 9
+        }
+      }
+    },
+    {
+      "key": "302:1",
+      "name": "Втори САМУРАЙ (302)",
+      "attack": 8,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Втори САМУРАЙ (302)",
+        "attack": 8,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 42,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": 302,
+          "roster": [
+            {
+              "name": "samurai",
+              "skill": 7,
+              "stamina": 9
+            },
+            {
+              "name": "samurai",
+              "skill": 8,
+              "stamina": 7
+            }
+          ],
+          "fights": [
+            {
+              "index": 42,
+              "spec": {
+                "section": 302,
+                "win": 310,
+                "enemies": [
+                  {
+                    "name": "samurai",
+                    "skill": 7,
+                    "stamina": 9
+                  },
+                  {
+                    "name": "samurai",
+                    "skill": 8,
+                    "stamina": 7
+                  }
+                ],
+                "mode": "simultaneous"
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "samurai",
+          "skill": 8,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "307:0",
+      "name": "Първи ВЪГЛИЩАР (307)",
+      "attack": 6,
+      "defense": null,
+      "hp": 10,
+      "pb": null,
+      "adopt": {
+        "name": "Първи ВЪГЛИЩАР (307)",
+        "attack": 6,
+        "defense": null,
+        "hp": 10,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 43,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": 307,
+          "roster": [
+            {
+              "name": "charcoalBurner",
+              "skill": 6,
+              "stamina": 10
+            },
+            {
+              "name": "charcoalBurner",
+              "skill": 7,
+              "stamina": 9
+            }
+          ],
+          "fights": [
+            {
+              "index": 43,
+              "spec": {
+                "section": 307,
+                "win": null,
+                "enemies": [
+                  {
+                    "name": "charcoalBurner",
+                    "skill": 6,
+                    "stamina": 10
+                  },
+                  {
+                    "name": "charcoalBurner",
+                    "skill": 7,
+                    "stamina": 9
+                  }
+                ],
+                "mode": "simultaneous",
+                "firstKill": {
+                  "unhurt": 347,
+                  "wounded": 365
+                }
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "charcoalBurner",
+          "skill": 6,
+          "stamina": 10
+        }
+      }
+    },
+    {
+      "key": "307:1",
+      "name": "Втори ВЪГЛИЩАР (307)",
+      "attack": 7,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Втори ВЪГЛИЩАР (307)",
+        "attack": 7,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 43,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": 307,
+          "roster": [
+            {
+              "name": "charcoalBurner",
+              "skill": 6,
+              "stamina": 10
+            },
+            {
+              "name": "charcoalBurner",
+              "skill": 7,
+              "stamina": 9
+            }
+          ],
+          "fights": [
+            {
+              "index": 43,
+              "spec": {
+                "section": 307,
+                "win": null,
+                "enemies": [
+                  {
+                    "name": "charcoalBurner",
+                    "skill": 6,
+                    "stamina": 10
+                  },
+                  {
+                    "name": "charcoalBurner",
+                    "skill": 7,
+                    "stamina": 9
+                  }
+                ],
+                "mode": "simultaneous",
+                "firstKill": {
+                  "unhurt": 347,
+                  "wounded": 365
+                }
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "charcoalBurner",
+          "skill": 7,
+          "stamina": 9
+        }
+      }
+    },
+    {
+      "key": "321:0",
+      "name": "СРЕБЪРЕН САМУРАЙ (321)",
+      "attack": 10,
+      "defense": null,
+      "hp": 12,
+      "pb": null,
+      "adopt": {
+        "name": "СРЕБЪРЕН САМУРАЙ (321)",
+        "attack": 10,
+        "defense": null,
+        "hp": 12,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 44,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 321,
+          "roster": [
+            {
+              "name": "silverSamurai",
+              "skill": 10,
+              "stamina": 12
+            }
+          ],
+          "fights": [
+            {
+              "index": 44,
+              "spec": {
+                "section": 321,
+                "win": null,
+                "enemies": [
+                  {
+                    "name": "silverSamurai",
+                    "skill": 10,
+                    "stamina": 12
+                  }
+                ],
+                "mode": "sequential",
+                "entry": {
+                  "honour": -2
+                },
+                "hitExit": {
+                  "hits": 3,
+                  "section": 291
+                }
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "silverSamurai",
+          "skill": 10,
+          "stamina": 12
+        }
+      }
+    },
+    {
+      "key": "336:0",
+      "name": "ТЕЛОХРАНИТЕЛ НА ЦИЕЦИН (336)",
+      "attack": 9,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "ТЕЛОХРАНИТЕЛ НА ЦИЕЦИН (336)",
+        "attack": 9,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 45,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 336,
+          "roster": [
+            {
+              "name": "bodyguard",
+              "skill": 9,
+              "stamina": 8
+            }
+          ],
+          "fights": [
+            {
+              "index": 45,
+              "spec": {
+                "section": 336,
+                "win": 354,
+                "enemies": [
+                  {
+                    "name": "bodyguard",
+                    "skill": 9,
+                    "stamina": 8
+                  }
+                ],
+                "mode": "sequential"
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "bodyguard",
+          "skill": 9,
+          "stamina": 8
+        }
+      }
+    },
+    {
+      "key": "337:0",
+      "name": "МАРМОТ (337)",
+      "attack": 8,
+      "defense": null,
+      "hp": 22,
+      "pb": null,
+      "adopt": {
+        "name": "МАРМОТ (337)",
+        "attack": 8,
+        "defense": null,
+        "hp": 22,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 46,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 337,
+          "roster": [
+            {
+              "name": "marmot",
+              "skill": 8,
+              "stamina": 22
+            }
+          ],
+          "fights": [
+            {
+              "index": 46,
+              "spec": {
+                "section": 337,
+                "win": 355,
+                "enemies": [
+                  {
+                    "name": "marmot",
+                    "skill": 8,
+                    "stamina": 22
+                  }
+                ],
+                "mode": "sequential",
+                "skillModifier": -1
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "marmot",
+          "skill": 8,
+          "stamina": 22
+        }
+      }
+    },
+    {
+      "key": "341:0",
+      "name": "СРЕБЪРЕН САМУРАЙ (341)",
+      "attack": 10,
+      "defense": null,
+      "hp": 12,
+      "pb": null,
+      "adopt": {
+        "name": "СРЕБЪРЕН САМУРАЙ (341)",
+        "attack": 10,
+        "defense": null,
+        "hp": 12,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 47,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 341,
+          "roster": [
+            {
+              "name": "silverSamurai",
+              "skill": 10,
+              "stamina": 12
+            }
+          ],
+          "fights": [
+            {
+              "index": 47,
+              "spec": {
+                "section": 341,
+                "win": null,
+                "enemies": [
+                  {
+                    "name": "silverSamurai",
+                    "skill": 10,
+                    "stamina": 12
+                  }
+                ],
+                "mode": "sequential",
+                "hitExit": {
+                  "hits": 3,
+                  "section": 291
+                }
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "silverSamurai",
+          "skill": 10,
+          "stamina": 12
+        }
+      }
+    },
+    {
+      "key": "344:0",
+      "name": "СТРАЖ (344)",
+      "attack": 7,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "СТРАЖ (344)",
+        "attack": 7,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 48,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 344,
+          "roster": [
+            {
+              "name": "guard",
+              "skill": 7,
+              "stamina": 9
+            }
+          ],
+          "fights": [
+            {
+              "index": 48,
+              "spec": {
+                "section": 344,
+                "win": 88,
+                "enemies": [
+                  {
+                    "name": "guard",
+                    "skill": 7,
+                    "stamina": 9
+                  }
+                ],
+                "mode": "sequential",
+                "skillModifier": -2,
+                "unarmed": true
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "guard",
+          "skill": 7,
+          "stamina": 9
+        }
+      }
+    },
+    {
+      "key": "358:0",
+      "name": "Първи СКЕЛЕТ (358)",
+      "attack": 6,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Първи СКЕЛЕТ (358)",
+        "attack": 6,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 49,
+        "slot": 0,
+        "partCount": 6,
+        "entry": {
+          "section": 358,
+          "roster": [
+            {
+              "name": "skeleton",
+              "skill": 6,
+              "stamina": 7
+            },
+            {
+              "name": "skeleton",
+              "skill": 7,
+              "stamina": 6
+            },
+            {
+              "name": "skeleton",
+              "skill": 7,
+              "stamina": 7
+            },
+            {
+              "name": "skeleton",
+              "skill": 7,
+              "stamina": 6
+            },
+            {
+              "name": "skeleton",
+              "skill": 6,
+              "stamina": 7
+            },
+            {
+              "name": "skeleton",
+              "skill": 8,
+              "stamina": 9
+            }
+          ],
+          "fights": [
+            {
+              "index": 49,
+              "spec": {
+                "section": 358,
+                "win": 368,
+                "enemies": [
+                  {
+                    "name": "skeleton",
+                    "skill": 6,
+                    "stamina": 7
+                  },
+                  {
+                    "name": "skeleton",
+                    "skill": 7,
+                    "stamina": 6
+                  },
+                  {
+                    "name": "skeleton",
+                    "skill": 7,
+                    "stamina": 7
+                  },
+                  {
+                    "name": "skeleton",
+                    "skill": 7,
+                    "stamina": 6
+                  },
+                  {
+                    "name": "skeleton",
+                    "skill": 6,
+                    "stamina": 7
+                  },
+                  {
+                    "name": "skeleton",
+                    "skill": 8,
+                    "stamina": 9
+                  }
+                ],
+                "mode": "simultaneous",
+                "groupSize": 3
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "skeleton",
+          "skill": 6,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "358:1",
+      "name": "Втори СКЕЛЕТ (358)",
+      "attack": 7,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Втори СКЕЛЕТ (358)",
+        "attack": 7,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 49,
+        "slot": 1,
+        "partCount": 6,
+        "entry": {
+          "section": 358,
+          "roster": [
+            {
+              "name": "skeleton",
+              "skill": 6,
+              "stamina": 7
+            },
+            {
+              "name": "skeleton",
+              "skill": 7,
+              "stamina": 6
+            },
+            {
+              "name": "skeleton",
+              "skill": 7,
+              "stamina": 7
+            },
+            {
+              "name": "skeleton",
+              "skill": 7,
+              "stamina": 6
+            },
+            {
+              "name": "skeleton",
+              "skill": 6,
+              "stamina": 7
+            },
+            {
+              "name": "skeleton",
+              "skill": 8,
+              "stamina": 9
+            }
+          ],
+          "fights": [
+            {
+              "index": 49,
+              "spec": {
+                "section": 358,
+                "win": 368,
+                "enemies": [
+                  {
+                    "name": "skeleton",
+                    "skill": 6,
+                    "stamina": 7
+                  },
+                  {
+                    "name": "skeleton",
+                    "skill": 7,
+                    "stamina": 6
+                  },
+                  {
+                    "name": "skeleton",
+                    "skill": 7,
+                    "stamina": 7
+                  },
+                  {
+                    "name": "skeleton",
+                    "skill": 7,
+                    "stamina": 6
+                  },
+                  {
+                    "name": "skeleton",
+                    "skill": 6,
+                    "stamina": 7
+                  },
+                  {
+                    "name": "skeleton",
+                    "skill": 8,
+                    "stamina": 9
+                  }
+                ],
+                "mode": "simultaneous",
+                "groupSize": 3
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "skeleton",
+          "skill": 7,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "358:2",
+      "name": "Трети СКЕЛЕТ (358)",
+      "attack": 7,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Трети СКЕЛЕТ (358)",
+        "attack": 7,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 49,
+        "slot": 2,
+        "partCount": 6,
+        "entry": {
+          "section": 358,
+          "roster": [
+            {
+              "name": "skeleton",
+              "skill": 6,
+              "stamina": 7
+            },
+            {
+              "name": "skeleton",
+              "skill": 7,
+              "stamina": 6
+            },
+            {
+              "name": "skeleton",
+              "skill": 7,
+              "stamina": 7
+            },
+            {
+              "name": "skeleton",
+              "skill": 7,
+              "stamina": 6
+            },
+            {
+              "name": "skeleton",
+              "skill": 6,
+              "stamina": 7
+            },
+            {
+              "name": "skeleton",
+              "skill": 8,
+              "stamina": 9
+            }
+          ],
+          "fights": [
+            {
+              "index": 49,
+              "spec": {
+                "section": 358,
+                "win": 368,
+                "enemies": [
+                  {
+                    "name": "skeleton",
+                    "skill": 6,
+                    "stamina": 7
+                  },
+                  {
+                    "name": "skeleton",
+                    "skill": 7,
+                    "stamina": 6
+                  },
+                  {
+                    "name": "skeleton",
+                    "skill": 7,
+                    "stamina": 7
+                  },
+                  {
+                    "name": "skeleton",
+                    "skill": 7,
+                    "stamina": 6
+                  },
+                  {
+                    "name": "skeleton",
+                    "skill": 6,
+                    "stamina": 7
+                  },
+                  {
+                    "name": "skeleton",
+                    "skill": 8,
+                    "stamina": 9
+                  }
+                ],
+                "mode": "simultaneous",
+                "groupSize": 3
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "skeleton",
+          "skill": 7,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "358:3",
+      "name": "Четвърти СКЕЛЕТ (358)",
+      "attack": 7,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Четвърти СКЕЛЕТ (358)",
+        "attack": 7,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 49,
+        "slot": 3,
+        "partCount": 6,
+        "entry": {
+          "section": 358,
+          "roster": [
+            {
+              "name": "skeleton",
+              "skill": 6,
+              "stamina": 7
+            },
+            {
+              "name": "skeleton",
+              "skill": 7,
+              "stamina": 6
+            },
+            {
+              "name": "skeleton",
+              "skill": 7,
+              "stamina": 7
+            },
+            {
+              "name": "skeleton",
+              "skill": 7,
+              "stamina": 6
+            },
+            {
+              "name": "skeleton",
+              "skill": 6,
+              "stamina": 7
+            },
+            {
+              "name": "skeleton",
+              "skill": 8,
+              "stamina": 9
+            }
+          ],
+          "fights": [
+            {
+              "index": 49,
+              "spec": {
+                "section": 358,
+                "win": 368,
+                "enemies": [
+                  {
+                    "name": "skeleton",
+                    "skill": 6,
+                    "stamina": 7
+                  },
+                  {
+                    "name": "skeleton",
+                    "skill": 7,
+                    "stamina": 6
+                  },
+                  {
+                    "name": "skeleton",
+                    "skill": 7,
+                    "stamina": 7
+                  },
+                  {
+                    "name": "skeleton",
+                    "skill": 7,
+                    "stamina": 6
+                  },
+                  {
+                    "name": "skeleton",
+                    "skill": 6,
+                    "stamina": 7
+                  },
+                  {
+                    "name": "skeleton",
+                    "skill": 8,
+                    "stamina": 9
+                  }
+                ],
+                "mode": "simultaneous",
+                "groupSize": 3
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "skeleton",
+          "skill": 7,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "358:4",
+      "name": "Пети СКЕЛЕТ (358)",
+      "attack": 6,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Пети СКЕЛЕТ (358)",
+        "attack": 6,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 49,
+        "slot": 4,
+        "partCount": 6,
+        "entry": {
+          "section": 358,
+          "roster": [
+            {
+              "name": "skeleton",
+              "skill": 6,
+              "stamina": 7
+            },
+            {
+              "name": "skeleton",
+              "skill": 7,
+              "stamina": 6
+            },
+            {
+              "name": "skeleton",
+              "skill": 7,
+              "stamina": 7
+            },
+            {
+              "name": "skeleton",
+              "skill": 7,
+              "stamina": 6
+            },
+            {
+              "name": "skeleton",
+              "skill": 6,
+              "stamina": 7
+            },
+            {
+              "name": "skeleton",
+              "skill": 8,
+              "stamina": 9
+            }
+          ],
+          "fights": [
+            {
+              "index": 49,
+              "spec": {
+                "section": 358,
+                "win": 368,
+                "enemies": [
+                  {
+                    "name": "skeleton",
+                    "skill": 6,
+                    "stamina": 7
+                  },
+                  {
+                    "name": "skeleton",
+                    "skill": 7,
+                    "stamina": 6
+                  },
+                  {
+                    "name": "skeleton",
+                    "skill": 7,
+                    "stamina": 7
+                  },
+                  {
+                    "name": "skeleton",
+                    "skill": 7,
+                    "stamina": 6
+                  },
+                  {
+                    "name": "skeleton",
+                    "skill": 6,
+                    "stamina": 7
+                  },
+                  {
+                    "name": "skeleton",
+                    "skill": 8,
+                    "stamina": 9
+                  }
+                ],
+                "mode": "simultaneous",
+                "groupSize": 3
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "skeleton",
+          "skill": 6,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "358:5",
+      "name": "Шести СКЕЛЕТ (358)",
+      "attack": 8,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Шести СКЕЛЕТ (358)",
+        "attack": 8,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 49,
+        "slot": 5,
+        "partCount": 6,
+        "entry": {
+          "section": 358,
+          "roster": [
+            {
+              "name": "skeleton",
+              "skill": 6,
+              "stamina": 7
+            },
+            {
+              "name": "skeleton",
+              "skill": 7,
+              "stamina": 6
+            },
+            {
+              "name": "skeleton",
+              "skill": 7,
+              "stamina": 7
+            },
+            {
+              "name": "skeleton",
+              "skill": 7,
+              "stamina": 6
+            },
+            {
+              "name": "skeleton",
+              "skill": 6,
+              "stamina": 7
+            },
+            {
+              "name": "skeleton",
+              "skill": 8,
+              "stamina": 9
+            }
+          ],
+          "fights": [
+            {
+              "index": 49,
+              "spec": {
+                "section": 358,
+                "win": 368,
+                "enemies": [
+                  {
+                    "name": "skeleton",
+                    "skill": 6,
+                    "stamina": 7
+                  },
+                  {
+                    "name": "skeleton",
+                    "skill": 7,
+                    "stamina": 6
+                  },
+                  {
+                    "name": "skeleton",
+                    "skill": 7,
+                    "stamina": 7
+                  },
+                  {
+                    "name": "skeleton",
+                    "skill": 7,
+                    "stamina": 6
+                  },
+                  {
+                    "name": "skeleton",
+                    "skill": 6,
+                    "stamina": 7
+                  },
+                  {
+                    "name": "skeleton",
+                    "skill": 8,
+                    "stamina": 9
+                  }
+                ],
+                "mode": "simultaneous",
+                "groupSize": 3
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "skeleton",
+          "skill": 8,
+          "stamina": 9
+        }
+      }
+    },
+    {
+      "key": "363:0",
+      "name": "ТАЛАСЪМ (363)",
+      "attack": 7,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "ТАЛАСЪМ (363)",
+        "attack": 7,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 50,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 363,
+          "roster": [
+            {
+              "name": "talasam",
+              "skill": 7,
+              "stamina": 9
+            }
+          ],
+          "fights": [
+            {
+              "index": 50,
+              "spec": {
+                "section": 363,
+                "win": 345,
+                "enemies": [
+                  {
+                    "name": "talasam",
+                    "skill": 7,
+                    "stamina": 9
+                  }
+                ],
+                "mode": "sequential",
+                "entry": {
+                  "stamina": -3
+                },
+                "skillModifier": -2
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "talasam",
+          "skill": 7,
+          "stamina": 9
+        }
+      }
+    },
+    {
+      "key": "364:0",
+      "name": "ГАРГАНТУС (364)",
+      "attack": 9,
+      "defense": null,
+      "hp": 12,
+      "pb": null,
+      "adopt": {
+        "name": "ГАРГАНТУС (364)",
+        "attack": 9,
+        "defense": null,
+        "hp": 12,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 51,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 364,
+          "roster": [
+            {
+              "name": "gargantus",
+              "skill": 9,
+              "stamina": 12
+            }
+          ],
+          "fights": [
+            {
+              "index": 51,
+              "spec": {
+                "section": 364,
+                "win": 292,
+                "enemies": [
+                  {
+                    "name": "gargantus",
+                    "skill": 9,
+                    "stamina": 12
+                  }
+                ],
+                "mode": "sequential",
+                "periodicBeam": true
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "gargantus",
+          "skill": 9,
+          "stamina": 12
+        }
+      }
+    },
+    {
+      "key": "365:0",
+      "name": "ВЪГЛИЩАР С ГЛАВНЯ (365)",
+      "attack": 10,
+      "defense": null,
+      "hp": 10,
+      "pb": null,
+      "adopt": {
+        "name": "ВЪГЛИЩАР С ГЛАВНЯ (365)",
+        "attack": 10,
+        "defense": null,
+        "hp": 10,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 52,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 365,
+          "roster": [
+            {
+              "name": "torchBurner",
+              "skill": 10,
+              "stamina": 10
+            }
+          ],
+          "fights": [
+            {
+              "index": 52,
+              "spec": {
+                "section": 365,
+                "win": 389,
+                "enemies": [
+                  {
+                    "name": "torchBurner",
+                    "skill": 10,
+                    "stamina": 10
+                  }
+                ],
+                "mode": "sequential",
+                "deadline": {
+                  "rounds": 5,
+                  "section": 377
+                }
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "torchBurner",
+          "skill": 10,
+          "stamina": 10
+        }
+      }
+    },
+    {
+      "key": "368:0",
+      "name": "ПРИЗРАЧЕН САМУРАЙ (368)",
+      "attack": 9,
+      "defense": null,
+      "hp": 3,
+      "pb": null,
+      "adopt": {
+        "name": "ПРИЗРАЧЕН САМУРАЙ (368)",
+        "attack": 9,
+        "defense": null,
+        "hp": 3,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 53,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 368,
+          "roster": [
+            {
+              "name": "ghostSamurai",
+              "skill": 9,
+              "stamina": 3
+            }
+          ],
+          "fights": [
+            {
+              "index": 53,
+              "spec": {
+                "section": 368,
+                "win": 211,
+                "enemies": [
+                  {
+                    "name": "ghostSamurai",
+                    "skill": 9,
+                    "stamina": 3
+                  }
+                ],
+                "mode": "sequential"
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "ghostSamurai",
+          "skill": 9,
+          "stamina": 3
+        }
+      }
+    },
+    {
+      "key": "372:0",
+      "name": "ФЕНИКС (372)",
+      "attack": 9,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "ФЕНИКС (372)",
+        "attack": 9,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 54,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 372,
+          "roster": [
+            {
+              "name": "phoenix",
+              "skill": 9,
+              "stamina": 7
+            }
+          ],
+          "fights": [
+            {
+              "index": 54,
+              "spec": {
+                "section": 372,
+                "win": 36,
+                "enemies": [
+                  {
+                    "name": "phoenix",
+                    "skill": 9,
+                    "stamina": 7
+                  }
+                ],
+                "mode": "sequential",
+                "incoming": "phoenix"
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "phoenix",
+          "skill": 9,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "375:0",
+      "name": "МАРМОТ (375)",
+      "attack": 8,
+      "defense": null,
+      "hp": 22,
+      "pb": null,
+      "adopt": {
+        "name": "МАРМОТ (375)",
+        "attack": 8,
+        "defense": null,
+        "hp": 22,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 55,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 375,
+          "roster": [
+            {
+              "name": "marmot",
+              "skill": 8,
+              "stamina": 22
+            }
+          ],
+          "fights": [
+            {
+              "index": 55,
+              "spec": {
+                "section": 375,
+                "win": 305,
+                "enemies": [
+                  {
+                    "name": "marmot",
+                    "skill": 8,
+                    "stamina": 22
+                  }
+                ],
+                "mode": "sequential"
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "marmot",
+          "skill": 8,
+          "stamina": 22
+        }
+      }
+    },
+    {
+      "key": "378:0",
+      "name": "МУКАДЕ (378)",
+      "attack": 7,
+      "defense": null,
+      "hp": 20,
+      "pb": null,
+      "adopt": {
+        "name": "МУКАДЕ (378)",
+        "attack": 7,
+        "defense": null,
+        "hp": 20,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 56,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 378,
+          "roster": [
+            {
+              "name": "mukade",
+              "skill": 7,
+              "stamina": 20
+            }
+          ],
+          "fights": [
+            {
+              "index": 56,
+              "spec": {
+                "section": 378,
+                "win": 384,
+                "enemies": [
+                  {
+                    "name": "mukade",
+                    "skill": 7,
+                    "stamina": 20
+                  }
+                ],
+                "mode": "sequential",
+                "preArrowMax": 2
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "mukade",
+          "skill": 7,
+          "stamina": 20
+        }
+      }
+    },
+    {
+      "key": "394:0",
+      "name": "ДАЙ-ОНИ (394)",
+      "attack": 10,
+      "defense": null,
+      "hp": 10,
+      "pb": null,
+      "adopt": {
+        "name": "ДАЙ-ОНИ (394)",
+        "attack": 10,
+        "defense": null,
+        "hp": 10,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 57,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 394,
+          "roster": [
+            {
+              "name": "daiOni",
+              "skill": 10,
+              "stamina": 10
+            }
+          ],
+          "fights": [
+            {
+              "index": 57,
+              "spec": {
+                "section": 394,
+                "win": 54,
+                "enemies": [
+                  {
+                    "name": "daiOni",
+                    "skill": 10,
+                    "stamina": 10
+                  }
+                ],
+                "mode": "sequential"
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "daiOni",
+          "skill": 10,
+          "stamina": 10
+        }
+      }
+    },
+    {
+      "key": "397:0",
+      "name": "ЧЕРЕН ЛОС (397)",
+      "attack": 9,
+      "defense": null,
+      "hp": 18,
+      "pb": null,
+      "adopt": {
+        "name": "ЧЕРЕН ЛОС (397)",
+        "attack": 9,
+        "defense": null,
+        "hp": 18,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sword-of-samurai",
+        "dataset": "CATALOG",
+        "entryIndex": 58,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 397,
+          "roster": [
+            {
+              "name": "blackElk",
+              "skill": 9,
+              "stamina": 18
+            }
+          ],
+          "fights": [
+            {
+              "index": 58,
+              "spec": {
+                "section": 397,
+                "win": 391,
+                "enemies": [
+                  {
+                    "name": "blackElk",
+                    "skill": 9,
+                    "stamina": 18
+                  }
+                ],
+                "mode": "sequential",
+                "entryRecovery": 4
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "blackElk",
+          "skill": 9,
+          "stamina": 18
+        }
+      }
+    }
+  ]
+}

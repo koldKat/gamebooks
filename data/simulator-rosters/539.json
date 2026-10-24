@@ -1,0 +1,614 @@
+{
+  "schemaVersion": 1,
+  "bookId": 539,
+  "family": "forbidden-gateway",
+  "source": "Existing encounter profiles and original opening/Lurker rules, matched to every legacy row. Preserve mental/physical pools, missing attributes and copied-player statistics.",
+  "enemies": [
+    {
+      "key": "34:0",
+      "name": "First spirit hunter (34; endurance; dexterity)",
+      "attack": 5,
+      "defense": null,
+      "hp": 10,
+      "pb": null,
+      "adopt": {
+        "name": "First spirit hunter (34; endurance; dexterity)",
+        "attack": 5,
+        "defense": null,
+        "hp": 10,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "forbidden-gateway",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "id": 34,
+          "name": "hunters",
+          "mode": "ordinary",
+          "win": 117,
+          "death": 57,
+          "insanity": 84,
+          "enemies": [
+            {
+              "name": "hunter1",
+              "endurance": 10,
+              "dexterity": 5,
+              "damage": {
+                "stamina": 1,
+                "endurance": 2
+              }
+            },
+            {
+              "name": "hunter2",
+              "endurance": 7,
+              "dexterity": 8,
+              "damage": {
+                "stamina": 1,
+                "endurance": 2
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "hunter1",
+          "endurance": 10,
+          "dexterity": 5,
+          "damage": {
+            "stamina": 1,
+            "endurance": 2
+          }
+        }
+      }
+    },
+    {
+      "key": "34:1",
+      "name": "Second spirit hunter (34; endurance; dexterity)",
+      "attack": 8,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Second spirit hunter (34; endurance; dexterity)",
+        "attack": 8,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "forbidden-gateway",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 0,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "id": 34,
+          "name": "hunters",
+          "mode": "ordinary",
+          "win": 117,
+          "death": 57,
+          "insanity": 84,
+          "enemies": [
+            {
+              "name": "hunter1",
+              "endurance": 10,
+              "dexterity": 5,
+              "damage": {
+                "stamina": 1,
+                "endurance": 2
+              }
+            },
+            {
+              "name": "hunter2",
+              "endurance": 7,
+              "dexterity": 8,
+              "damage": {
+                "stamina": 1,
+                "endurance": 2
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "hunter2",
+          "endurance": 7,
+          "dexterity": 8,
+          "damage": {
+            "stamina": 1,
+            "endurance": 2
+          }
+        }
+      }
+    },
+    {
+      "key": "61:0",
+      "name": "Knife-wielding madman (61; stamina; dexterity)",
+      "attack": 7,
+      "defense": null,
+      "hp": 5,
+      "pb": null,
+      "adopt": {
+        "name": "Knife-wielding madman (61; stamina; dexterity)",
+        "attack": 7,
+        "defense": null,
+        "hp": 5,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "forbidden-gateway",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": 61,
+          "name": "madman",
+          "mode": "ordinary",
+          "opening": true,
+          "enemyFirst": true,
+          "win": 8,
+          "enemies": [
+            {
+              "name": "madman",
+              "strength": 7,
+              "stamina": 5,
+              "dexterity": 7,
+              "damage": {
+                "stamina": 4,
+                "endurance": 0
+              }
+            }
+          ],
+          "openingRules": {
+            "winOnSuccess": true
+          }
+        },
+        "part": {
+          "name": "madman",
+          "strength": 7,
+          "stamina": 5,
+          "dexterity": 7,
+          "damage": {
+            "stamina": 4,
+            "endurance": 0
+          }
+        }
+      }
+    },
+    {
+      "key": "197:0",
+      "name": "Hobgoblin (197; endurance; mentality)",
+      "attack": 9,
+      "defense": null,
+      "hp": 18,
+      "pb": null,
+      "adopt": {
+        "name": "Hobgoblin (197; endurance; mentality)",
+        "attack": 9,
+        "defense": null,
+        "hp": 18,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "forbidden-gateway",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": 197,
+          "name": "hobgoblin",
+          "mode": "ordinary",
+          "enemyFirst": true,
+          "win": 214,
+          "death": 370,
+          "insanity": 370,
+          "enemies": [
+            {
+              "name": "hobgoblin",
+              "mentality": 9,
+              "endurance": 18,
+              "disbelief": true,
+              "damage": {
+                "stamina": 2,
+                "endurance": 0
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "hobgoblin",
+          "mentality": 9,
+          "endurance": 18,
+          "disbelief": true,
+          "damage": {
+            "stamina": 2,
+            "endurance": 0
+          }
+        }
+      }
+    },
+    {
+      "key": "257:0",
+      "name": "Changeling (257; copies player)",
+      "attack": null,
+      "defense": null,
+      "hp": null,
+      "pb": null,
+      "adopt": {
+        "name": "Changeling (257; copies player)",
+        "attack": null,
+        "defense": null,
+        "hp": null,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "forbidden-gateway",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": 257,
+          "name": "changeling",
+          "mode": "ordinary",
+          "opening": true,
+          "win": 340,
+          "death": 275,
+          "enemies": [
+            {
+              "name": "changeling",
+              "copyPlayer": true,
+              "damage": {
+                "stamina": 2,
+                "endurance": 0
+              }
+            }
+          ],
+          "openingRules": {
+            "escapeOnSuccess": true,
+            "escape": 291,
+            "weaponOnSuccess": "knobkerrie",
+            "weaponOnFailure": "fists"
+          }
+        },
+        "part": {
+          "name": "changeling",
+          "copyPlayer": true,
+          "damage": {
+            "stamina": 2,
+            "endurance": 0
+          }
+        }
+      }
+    },
+    {
+      "key": "337:0",
+      "name": "House mutant (337; stamina; dexterity)",
+      "attack": 7,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "House mutant (337; stamina; dexterity)",
+        "attack": 7,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "forbidden-gateway",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": 337,
+          "name": "mutant",
+          "mode": "ordinary",
+          "unarmed": true,
+          "win": 276,
+          "diningWin": 313,
+          "enemies": [
+            {
+              "name": "mutant",
+              "strength": 7,
+              "stamina": 8,
+              "dexterity": 7,
+              "damage": {
+                "stamina": 2,
+                "endurance": 0
+              }
+            }
+          ]
+        },
+        "part": {
+          "name": "mutant",
+          "strength": 7,
+          "stamina": 8,
+          "dexterity": 7,
+          "damage": {
+            "stamina": 2,
+            "endurance": 0
+          }
+        }
+      }
+    },
+    {
+      "key": "24:0",
+      "name": "Quarry ambush: two opening blows (24; stamina)",
+      "attack": null,
+      "defense": null,
+      "hp": 12,
+      "pb": null,
+      "adopt": {
+        "name": "Quarry ambush: two opening blows (24; stamina)",
+        "attack": null,
+        "defense": null,
+        "hp": 12,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "forbidden-gateway",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": 24,
+          "name": "quarryMutant",
+          "mode": "twoStrikes",
+          "win": 63,
+          "continuation": 2,
+          "enemies": [
+            {
+              "name": "quarryMutant",
+              "stamina": 12
+            }
+          ]
+        },
+        "part": {
+          "name": "quarryMutant",
+          "stamina": 12
+        }
+      }
+    },
+    {
+      "key": "106:0",
+      "name": "Quarry ambush: revolver (106; stamina)",
+      "attack": null,
+      "defense": null,
+      "hp": 10,
+      "pb": null,
+      "adopt": {
+        "name": "Quarry ambush: revolver (106; stamina)",
+        "attack": null,
+        "defense": null,
+        "hp": 10,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "forbidden-gateway",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 6,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": 106,
+          "name": "ambushMutant",
+          "mode": "gunOnly",
+          "win": 74,
+          "continuation": 95,
+          "enemies": [
+            {
+              "name": "ambushMutant",
+              "stamina": 10
+            }
+          ]
+        },
+        "part": {
+          "name": "ambushMutant",
+          "stamina": 10
+        }
+      }
+    },
+    {
+      "key": "15:0",
+      "name": "Dark Lurker (15; stamina; dexterity)",
+      "attack": 8,
+      "defense": null,
+      "hp": 20,
+      "pb": null,
+      "adopt": {
+        "name": "Dark Lurker (15; stamina; dexterity)",
+        "attack": 8,
+        "defense": null,
+        "hp": 20,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "forbidden-gateway",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 7,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": 15,
+          "name": "lurker",
+          "mode": "lurker",
+          "win": 111,
+          "enemies": [
+            {
+              "name": "lurker",
+              "stamina": 20,
+              "dexterity": 8,
+              "damage": {
+                "stamina": 4,
+                "endurance": 0
+              }
+            }
+          ],
+          "lurkerRules": {
+            "streamCount": 2,
+            "streamDamage": 4,
+            "breakStrength": 12,
+            "resistStrength": 10,
+            "gunMultiplier": 0.25,
+            "destinations": {
+              "held": 32,
+              "freed": 53,
+              "failed": 159,
+              "killed": 170,
+              "resisted": 32,
+              "escape": 79,
+              "escapeFail": 99,
+              "saltHit": 41,
+              "saltMiss": 4,
+              "afterShots": 15
+            }
+          }
+        },
+        "part": {
+          "name": "lurker",
+          "stamina": 20,
+          "dexterity": 8,
+          "damage": {
+            "stamina": 4,
+            "endurance": 0
+          }
+        }
+      }
+    },
+    {
+      "key": "146:0",
+      "name": "Quarry alien (146; stamina)",
+      "attack": null,
+      "defense": null,
+      "hp": 12,
+      "pb": null,
+      "adopt": {
+        "name": "Quarry alien (146; stamina)",
+        "attack": null,
+        "defense": null,
+        "hp": 12,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "forbidden-gateway",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 8,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": 146,
+          "name": "quarryAlien",
+          "mode": "gunOnly",
+          "win": 256,
+          "continuation": 119,
+          "enemies": [
+            {
+              "name": "quarryAlien",
+              "stamina": 12
+            }
+          ]
+        },
+        "part": {
+          "name": "quarryAlien",
+          "stamina": 12
+        }
+      }
+    },
+    {
+      "key": "270:0",
+      "name": "Mind-flail alien (270; stamina)",
+      "attack": null,
+      "defense": null,
+      "hp": 12,
+      "pb": null,
+      "adopt": {
+        "name": "Mind-flail alien (270; stamina)",
+        "attack": null,
+        "defense": null,
+        "hp": 12,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "forbidden-gateway",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 9,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": 270,
+          "name": "mineAlien",
+          "mode": "gunOnly",
+          "win": 127,
+          "continuation": 352,
+          "enemies": [
+            {
+              "name": "mineAlien",
+              "stamina": 12
+            }
+          ]
+        },
+        "part": {
+          "name": "mineAlien",
+          "stamina": 12
+        }
+      }
+    },
+    {
+      "key": "331:0",
+      "name": "Reservoir creature (331; stamina)",
+      "attack": null,
+      "defense": null,
+      "hp": 12,
+      "pb": null,
+      "adopt": {
+        "name": "Reservoir creature (331; stamina)",
+        "attack": null,
+        "defense": null,
+        "hp": 12,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "forbidden-gateway",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 10,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": 331,
+          "name": "reservoirCreature",
+          "mode": "gunOnly",
+          "win": 290,
+          "continuation": 312,
+          "enemies": [
+            {
+              "name": "reservoirCreature",
+              "stamina": 12
+            }
+          ]
+        },
+        "part": {
+          "name": "reservoirCreature",
+          "stamina": 12
+        }
+      }
+    }
+  ]
+}

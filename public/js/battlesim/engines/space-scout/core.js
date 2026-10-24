@@ -88,35 +88,35 @@ export function spaceScoutPersonalEquipment(character, quantities) {
   return { ...gear, volume };
 }
 
-export const SPACE_SCOUT_DUEL_ENEMIES = {
-  22: [{name: 'Torpedo boat', attack: 50, shields: 300}],
-  32: [{name: 'Fighter', attack: 40, shields: 200}],
-  36: [{name: 'First fighter', attack: 50, shields: 120}, {name: 'Second fighter', attack: 30, shields: 150}],
-  42: [{name: 'Escort fighter', attack: 75, shields: 250}],
-};
+import { createRosterLoader } from '../../roster-data.js';
+
+export let SPACE_SCOUT_DUEL_ENEMIES = {};
+export let SPACE_SCOUT_ENCOUNTERS = [];
+export let SPACE_SCOUT_FLEET;
+export const loadRoster = createRosterLoader(648, 'CATALOG', rows => {
+  const duels = rows.filter(row => row.kind === 'duel');
+  const fleet = rows.find(row => row.kind === 'fleet')?.fleet;
+  const routes = rows.flatMap(row => row.routes ?? []);
+  if (!duels.length || !fleet?.enemies?.length || !routes.length) throw new Error('Incomplete Cosmic Scout catalog');
+  SPACE_SCOUT_DUEL_ENEMIES = Object.fromEntries(duels.map(row => [row.section, row.enemies]));
+  SPACE_SCOUT_ENCOUNTERS = routes;
+  SPACE_SCOUT_FLEET = fleet;
+});
+const fleetRules = fight => fight.fleetRules ?? SPACE_SCOUT_FLEET;
 
 export function startSpaceScoutEncounter(character, section, options = {}) {
-  const torpedoBoat = () => copy(SPACE_SCOUT_DUEL_ENEMIES[22][0]);
-  switch (section) {
-    case 12: return startSpaceScoutDuel(character, [torpedoBoat()], {
-      openingDamage: draw(options.roll ?? die) * character.power });
-    case 22: return startSpaceScoutDuel(character, [torpedoBoat()]);
-    case 30: {
-      if (!Array.isArray(options.missiles) || options.missiles.length > 12) throw new RangeError('Opening missiles required');
-      const next = copy(character);
-      const damage = options.missiles.reduce((sum, type) => sum + spendMissile(next, type), 0);
-      return startSpaceScoutDuel(next, [torpedoBoat()], { openingDamage: damage });
-    }
-    case 32: return startSpaceScoutDuel(character, SPACE_SCOUT_DUEL_ENEMIES[32], {
-      openingDamage: integer(options.openingDamage) });
-    case 36: return startSpaceScoutDuel(character,
-      SPACE_SCOUT_DUEL_ENEMIES[36], { shieldPenalty: 100 });
-    case 42: return startSpaceScoutDuel(character, SPACE_SCOUT_DUEL_ENEMIES[42]);
-    case 49: case 66: return startSpaceScoutFleet(character);
-    case 'manual': return startSpaceScoutDuel(character, options.enemies,
-      { shields: options.shields });
-    default: throw new RangeError('Unknown encounter');
-  }
+  if (section === 'manual') return startSpaceScoutDuel(character, options.enemies, {shields: options.shields});
+  const encounter = SPACE_SCOUT_ENCOUNTERS.find(row => row.section === section);
+  if (!encounter) throw new RangeError('Unknown encounter');
+  if (encounter.fleet) return startSpaceScoutFleet(character);
+  let player = character, openingDamage = 0;
+  if (encounter.opening === 'beam') openingDamage = draw(options.roll ?? die) * character.power;
+  else if (encounter.opening === 'missiles') {
+    if (!Array.isArray(options.missiles) || options.missiles.length > 12) throw new RangeError('Opening missiles required');
+    player = copy(character);
+    openingDamage = options.missiles.reduce((sum, type) => sum + spendMissile(player, type), 0);
+  } else if (encounter.opening === 'manual') openingDamage = integer(options.openingDamage);
+  return startSpaceScoutDuel(player, SPACE_SCOUT_DUEL_ENEMIES[encounter.template], {openingDamage, shieldPenalty: encounter.shieldPenalty});
 }
 
 function opponent(value) {
@@ -187,8 +187,8 @@ export function spaceScoutDuelMissile(fight, type, quantity = 1) {
 }
 
 export function startSpaceScoutFleet(character) {
-  const fight = startSpaceScoutDuel(character, Array.from({ length: 3 }, (_, i) =>
-    ({ name: `Kilarti fighter ${i + 1}`, attack: 60, shields: 300 })));
+  const fight = startSpaceScoutDuel(character, SPACE_SCOUT_FLEET.enemies);
+  fight.fleetRules = copy(SPACE_SCOUT_FLEET);
   fight.stage = 'headon';
   fight.speed = integer(character.speed);
   fight.manoeuvre = integer(character.manoeuvre);
@@ -197,7 +197,7 @@ export function startSpaceScoutFleet(character) {
 
 function fleetCheck(fight, stages) {
   if (fight?.rulesVersion !== 1 || fight.status !== 'fighting' || !stages.includes(fight.stage)
-      || !Array.isArray(fight.enemies) || fight.enemies.length !== 3 || !fight.shields) {
+      || !Array.isArray(fight.enemies) || fight.enemies.length !== fleetRules(fight).enemies.length || !fight.shields) {
     throw new RangeError('Invalid fleet stage');
   }
   integer(fight.shields); integer(fight.power); inventory(fight.inventory);
@@ -211,11 +211,11 @@ function fleetRoute(fight) {
   if (alive.length === 1) {
     fight.stage = 'duel'; fight.target = alive[0];
     // Sections 46 and 50 explicitly change the survivor's attack to 50.
-    fight.enemies[fight.target].attack = 50;
-    return 46;
+    fight.enemies[fight.target].attack = fleetRules(fight).survivor.attack;
+    return fleetRules(fight).destinations.duel;
   }
-  if (alive.length === 2) { fight.stage = 'maneuver'; return 56; }
-  fight.status = 'loss'; return 87;
+  if (alive.length === 2) { fight.stage = 'maneuver'; return fleetRules(fight).destinations.maneuver; }
+  fight.status = 'loss'; return fleetRules(fight).destinations.loss;
 }
 
 export function spaceScoutFleetOpening(fight, roll = die) {
@@ -226,14 +226,14 @@ export function spaceScoutFleetOpening(fight, roll = die) {
   next.shields = Math.max(0, next.shields - enemyRoll * next.enemies[0].attack);
   if (!next.shields) next.status = 'loss';
   next.stage = next.enemies[0].shields ? 'missiles-three' : 'missiles-two';
-  return { fight: next, playerRoll, enemyRoll, section: next.shields ? (next.enemies[0].shields ? 60 : 80) : null };
+  return { fight: next, playerRoll, enemyRoll, section: next.shields ? (next.enemies[0].shields ? fleetRules(next).destinations.openingThree : fleetRules(next).destinations.openingTwo) : null };
 }
 
 function fleetMissiles(fight, selections, maximum) {
   if (!Array.isArray(selections) || selections.length > maximum) throw new RangeError('Missile limit exceeded');
   for (const shot of selections) {
     const power = Object.hasOwn(missilePower, shot?.type) ? missilePower[shot.type] : null;
-    const target = integer(shot?.target, 2);
+    const target = integer(shot?.target, fight.enemies.length - 1);
     if (!power || !fight.enemies[target].shields || !fight.inventory[shot.type]) {
       throw new RangeError('Missile or target unavailable');
     }
@@ -246,28 +246,29 @@ function fleetMissiles(fight, selections, maximum) {
 export function spaceScoutFleetMissiles(fight, selections = []) {
   fleetCheck(fight, ['missiles-three', 'missiles-two']);
   const next = copy(fight);
-  fleetMissiles(next, selections, 3);
+  fleetMissiles(next, selections, fleetRules(next).maxMissiles);
   return { fight: next, section: fleetRoute(next) };
 }
 
 export function spaceScoutFleetManeuver(fight, targets, selections = [], roll = die) {
   fleetCheck(fight, ['maneuver']);
   const product = integer(fight.speed) * integer(fight.manoeuvre);
-  if (![110, 121, 132].includes(product)) throw new RangeError('Unknown ship maneuver');
-  const count = product === 110 ? 1 : 2;
+  const maneuver = fleetRules(fight).maneuvers[product];
+  if (!maneuver) throw new RangeError('Unknown ship maneuver');
+  const count = maneuver.beams;
   if (!Array.isArray(targets) || targets.length !== count
-      || targets.some(target => !Number.isInteger(target) || target < 0 || target > 2 || !fight.enemies[target].shields)) {
+      || targets.some(target => !Number.isInteger(target) || target < 0 || target >= fight.enemies.length || !fight.enemies[target].shields)) {
     throw new RangeError('Invalid beam allocation');
   }
   const next = copy(fight), rolls = Array.from({ length: count }, () => draw(roll));
-  const damage = rolls.map((value, i) => (product === 121 && i === 1 ? Math.ceil(value / 2) : value) * next.power);
+  const damage = rolls.map((value, i) => (maneuver.halfSecond && i === 1 ? Math.ceil(value / 2) : value) * next.power);
   for (let i = 0; i < targets.length; i++) {
     const enemy = next.enemies[targets[i]];
     enemy.shields = Math.max(0, enemy.shields - damage[i]);
   }
-  fleetMissiles(next, selections, product === 110 ? 2 : 1);
-  next.shields = Math.max(0, next.shields - (product === 110 ? 120 : product === 121 ? 90 : 60));
-  let section = 50;
+  fleetMissiles(next, selections, maneuver.missiles);
+  next.shields = Math.max(0, next.shields - maneuver.incoming);
+  let section = fleetRules(next).destinations.afterManeuver;
   if (!next.shields) { next.status = 'loss'; section = null; }
   else {
     const survivors = next.enemies.filter(enemy => enemy.shields).length;

@@ -5,6 +5,7 @@ import { prepareDestinyDamage } from './damage.js';
 import { prepareDestinyAbilityRoll } from './ability-rolls.js';
 import { useDestinyOpening } from './openings.js';
 import { cureDestinyCharacter } from './character.js';
+import { onDestinyHeroSpeedRoll } from './roll-events.js';
 
 const rule = (category, phases, extra = {}) => Object.freeze({ category, phases, ...extra });
 const anytime = ['speed', 'speed-rolled', 'damage', 'damage-rolled', 'ability-rolled', 'end', 'death-move'];
@@ -218,6 +219,7 @@ export function useDestinyAbility(fight, name, options = {}, roll = () => Math.f
     throw new RangeError('Ability unavailable at this combat stage');
   }
   if (fight.turn.used[spec.category]) throw new RangeError('Only one ability of this category per round');
+  if (fight.turn.rerollsLocked && fight.phase === 'speed-rolled' && spec.reroll) throw new RangeError('Rerolls cannot alter this round');
   if (spec.fewerOpponentDice && fight.encounter?.speedDiceReductionImmune?.includes(destinyAttackerTarget(fight))) throw new RangeError('This opponent is immune to reducing speed dice');
   const blocked = fight.encounter?.blockedRounds;
   if (blocked && fight.round >= blocked.from && fight.round <= blocked.until && blocked.categories.includes(spec.category)) throw new RangeError('This ability type is blocked this round');
@@ -250,6 +252,7 @@ export function useDestinyAbility(fight, name, options = {}, roll = () => Math.f
     }
   }
   const next = structuredClone(fight);
+  const heroSpeedRolls = [];
   if (spec.category === 'sp') {
     next.turn.playedSpeedAbility = true;
     if (next.turn.passedSpeedOptions) options = next.turn.passedSpeedOptions;
@@ -326,13 +329,18 @@ export function useDestinyAbility(fight, name, options = {}, roll = () => Math.f
         next.turn.opponentSpeedDice = destinyRollOpponentDice(next, next.turn.opponentSpeedDice.length, roll, 'speed');
       }
     }
-    if (mode === 'both-speed') next.turn.heroSpeedDice = next.turn.heroSpeedDice.map((value, index) => destinyDieLocked(next, 'hero', 'speed', index) ? value : draw(roll));
+    if (mode === 'both-speed') next.turn.heroSpeedDice = next.turn.heroSpeedDice.map((value, index) => {
+      if (destinyDieLocked(next, 'hero', 'speed', index)) return value;
+      heroSpeedRolls.push(index);
+      return draw(roll);
+    });
     if (mode === 'hero-speed') {
       if (!Array.isArray(options.dice) || !options.dice.length || new Set(options.dice).size !== options.dice.length) throw new RangeError('Choose dice to reroll');
       for (const index of options.dice) {
         dieIndex(next.turn.heroSpeedDice, index);
         if (destinyDieLocked(next, 'hero', 'speed', index)) throw new RangeError('Saved dice cannot be rerolled');
         next.turn.heroSpeedDice[index] = draw(roll);
+        heroSpeedRolls.push(index);
       }
     }
     if (mode === 'hero-die' || mode === 'damage-plus-two') {
@@ -344,6 +352,7 @@ export function useDestinyAbility(fight, name, options = {}, roll = () => Math.f
       if (next.phase !== 'ability-rolled' && destinyDieLocked(next, next.turn.winner === 'opponent' && next.phase === 'damage-rolled' ? 'opponent' : 'hero',
         next.phase === 'speed-rolled' ? 'speed' : 'damage', index)) throw new RangeError('Saved dice cannot be rerolled');
       values[index] = draw(roll);
+      if (next.phase === 'speed-rolled') heroSpeedRolls.push(index);
       if (mode === 'damage-plus-two') {
         const bonuses = pendingGroup ? pendingGroup.bonuses : (next.turn.damageDieBonuses ??= {});
         bonuses[index] = (bonuses[index] || 0) + 2;
@@ -418,6 +427,8 @@ export function useDestinyAbility(fight, name, options = {}, roll = () => Math.f
     else next.turn.extraDamageDice = (next.turn.extraDamageDice || 0) + 1;
   }
   next.history.push({ type: 'ability', round: next.round, name, target });
+  if (name === 'ice-slick') heroSpeedRolls.push(next.turn.heroSpeedDice.length - 1);
+  onDestinyHeroSpeedRoll(next, heroSpeedRolls, roll);
   if (['speed-rolled', 'damage', 'damage-rolled'].includes(next.phase) && !isDestinyOpponentActive(next, next.target)) next.phase = 'end';
   if (spec.category === 'dm' && next.phase !== 'ability-rolled') next.phase = next.turn.afterDeathMove;
   else if (next.phase === 'end' && !next.turn.pendingPassiveDeath && next.turn.deaths.length > next.turn.deathMoveDeathsSeen) {

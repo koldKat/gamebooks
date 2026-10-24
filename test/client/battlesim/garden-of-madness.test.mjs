@@ -1,3 +1,5 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
+await loadFixtureRoster(524);
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { GARDEN_ENCOUNTERS, createGardenFight, rollGardenRound, settleGardenRound,
@@ -118,6 +120,23 @@ test('third Hobgoblin joins after two rounds with its source weapon', () => {
     rollGardenRound(f, 0, heads); settleGardenRound(f);
     assert.equal(f.encounter.foes.length, 3); assert.equal(f.encounter.foes[2].expertise, daggerTaken ? 9 : 11);
     rollGardenRound(f, 2, heads); settleGardenRound(f); assert.equal(f.status, 'win');
+  }
+});
+
+test('legacy pending Hobgoblin fights resolve database reinforcements without resetting saved values', () => {
+  for (const daggerTaken of [false, true]) {
+    const f = createGardenFight(176, player({expertise: 30, weaponDamage: 2}), {daggerTaken});
+    rollGardenRound(f, 0, heads); settleGardenRound(f);
+    delete f.encounter.reinforcements;
+    rollGardenRound(f, 0, heads);
+    const restored = JSON.parse(JSON.stringify(f));
+    const before = structuredClone(restored.encounter.foes);
+    settleGardenRound(restored);
+    assert.equal(restored.encounter.foes.length, 3);
+    assert.deepEqual(restored.encounter.foes[2], {name: 'Hobgoblin 3', expertise: daggerTaken ? 9 : 11, vitality: 7, initialVitality: 7, damage: 1});
+    assert.equal(restored.encounter.foes[0].vitality, before[0].vitality - 2);
+    assert.equal(restored.encounter.foes[1].vitality, before[1].vitality - 2);
+    assert.equal(restored.round, 2);
   }
 });
 

@@ -14,3 +14,5 @@ export const fields = ['willpower', 'intellect', 'combat', 'health', 'sanity', '
 export const flags = ['agile', 'rites', 'fear'];
 
 export const initialStats = { willpower: 5, intellect: 2, combat: 2, health: 6, sanity: 8 };
+
+export { loadRoster } from '../../engines/arkham-darkness.js';

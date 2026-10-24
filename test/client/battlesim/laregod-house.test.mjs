@@ -1,3 +1,5 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
+await loadFixtureRoster(644);
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { laregodPoints, startLaregodFight, laregodRound } from '../../../public/js/battlesim/engines/laregod-house/core.js';
@@ -82,4 +84,23 @@ test('invalid random results, contexts, saved states and manual numbers are reje
   assert.throws(() => laregodRound({ ...f, round: .5 }), RangeError);
   assert.throws(() => laregodRound({ ...f, player: { ...f.player, endurance: 0 } }), RangeError);
   for (const value of [-1, NaN, Infinity, .5, 1000001]) assert.throws(() => laregodRound(f, { number: value }), RangeError);
+});
+
+
+test('restored fights preserve wounds and use captured enemy rules without adding metadata to legacy saves', () => {
+  const captured=startLaregodFight('guard',{enemyNumber:1});
+  captured.encounter.enemy.damage=4;
+  captured.player.endurance=6;
+  assert.equal(laregodRound(captured,{number:1}).fight.player.endurance,2);
+  const legacy=JSON.parse(JSON.stringify(startLaregodFight('guard',{enemyNumber:1})));
+  delete legacy.encounter;
+  legacy.player.endurance=6;
+  legacy.enemy.endurance=7;
+  legacy.legacyExtension={retained:true};
+  const restored=laregodRound(legacy,{number:1}).fight;
+  assert.equal(restored.player.endurance,4);
+  assert.equal(restored.enemy.endurance,7);
+  assert.equal('encounter' in restored,false);
+  assert.deepEqual(restored.legacyExtension,{retained:true});
+  assert.equal(legacy.player.endurance,6);
 });

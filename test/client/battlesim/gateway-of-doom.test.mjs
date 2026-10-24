@@ -1,3 +1,5 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
+await loadFixtureRoster(528);
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from './simulator-source.mjs';
@@ -364,4 +366,43 @@ test('leaving Zapper doubles future spell costs without destroying remaining mag
   assert.equal(f.player.magicCost,2); assert.equal(f.player.magicLost,false);
   const g=createGatewayFight(32,f.player,{},high);
   assert.equal(castGatewaySpell(g,'pow',0,high).cost,6);
+});
+
+
+test('database generation recipes preserve counts, rolled LIFE, mirrored stats and final-battle exclusions', () => {
+  const low = () => 0;
+  for (const [random, antCount, djinnCount, vampireCount, vampireLife] of [[low,20,1,2,4],[high,120,6,12,24]]) {
+    assert.equal(createGatewayFight(90,player(),{},random).foes.length,antCount);
+    assert.equal(createGatewayFight(154,player(),{},random).foes.length,djinnCount);
+    const vampires=createGatewayFight(156,player(),{},random).foes;
+    assert.equal(vampires.length,vampireCount);
+    assert.ok(vampires.every(foe=>foe.life===vampireLife && foe.fixedDamage===5));
+  }
+  const mirror=createGatewayFight(130,player({life:51,hit:7,bonus:8,armour:3}),{},high).foes[0];
+  assert.deepEqual([mirror.life,mirror.hit,mirror.bonus,mirror.armour],[25,7,8,3]);
+  for (const djinnGone of [false,true]) for (const dwarvesGone of [false,true]) {
+    const finale=createGatewayFight(200,player(),{djinnGone,dwarvesGone},high).foes;
+    assert.equal(finale.length,8+(djinnGone?0:7)+(dwarvesGone?0:7));
+    assert.equal(finale.at(-1).name,'Black Knight');
+    assert.equal(finale.at(-1).armour,12);
+  }
+});
+
+test('new generated fights use database templates while legacy saved fights keep their captured stats', () => {
+  const spec=GATEWAY_ENCOUNTERS.find(entry=>entry.section===154);
+  const saved=createGatewayFight(154,player(),{},high);
+  delete saved.spec.spawnGroups;
+  saved.foes[0].life=17;
+  const legacy=JSON.parse(JSON.stringify(saved));
+  const original=structuredClone(spec.spawnGroups[0].foe);
+  try {
+    Object.assign(spec.spawnGroups[0].foe,{name:'Database Djinn',life:43,hit:8,bonus:9,armour:2});
+    const fresh=createGatewayFight(154,player(),{},high);
+    assert.deepEqual([fresh.foes[0].name,fresh.foes[0].life,fresh.foes[0].hit,fresh.foes[0].bonus,fresh.foes[0].armour],['Database Djinn',43,8,9,2]);
+    assert.equal(legacy.foes[0].life,17);
+    rollGatewayRound(legacy,0,high);rollGatewayRound(saved,0,high);
+    assert.deepEqual(legacy,saved);
+    assert.equal(legacy.foes[0].name,'Djinn');
+    assert.equal('spawnGroups' in legacy.spec,false);
+  } finally { spec.spawnGroups[0].foe=original; }
 });

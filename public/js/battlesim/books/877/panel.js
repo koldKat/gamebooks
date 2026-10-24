@@ -1,8 +1,9 @@
+import { ROSTER } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
 
 // BEGIN SIMULATOR WIRING
-const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, ROSTER, SVG_SKULL, SVG_TROPHY, _appendLog, _data, _encounter, _encounterOptions, _fight, _numField, _pickEncounter, _recordOutcome, _renderAll, _renderHistory, _renderInputs, _renderLog, _roll1d6, _roll2d6, _roll3d6, _rollEsper, _rollSila, _rollZhivot, closeSim877, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim877, openSim877, registerPanelShortcut, renderSim877, resolveGalacticDuel, saveState, setSim877Visible, shortcutLabel, showAlert, t });
+const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, ROSTER, SVG_SKULL, SVG_TROPHY, _appendLog, _data, _encounter, _encounterOptions, _fight, _numField, _pickEncounter, _recordOutcome, _renderAll, _renderHistory, _renderInputs, _renderLog, _roll1d6, _roll2d6, _roll3d6, _rollEsper, _rollSila, _rollZhivot, closeSim877, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim877, openSim877, registerPanelShortcut, renderSim877, resolveGalacticEncounter, saveState, setSim877Visible, shortcutLabel, showAlert, t });
 const { _data, _appendLog, _recordOutcome } = createState(simulatorContext);
 const { _roll1d6, _roll2d6, _roll3d6, _encounter, _fight, _rollSila, _rollZhivot, _rollEsper, _pickEncounter } = createCombat(simulatorContext);
 // END SIMULATOR WIRING
@@ -15,121 +16,15 @@ import { showAlert } from "../../../ui-helpers/confirm.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";
 import { t } from "../../../i18n.js";
-import { resolveGalacticDuel } from "../.././engines/galactic-giant.js";
+import { resolveGalacticEncounter } from "../.././engines/galactic-giant.js";
 
 const SVG_SKULL  = `<svg class="sim-icon sim-icon-dead"  viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8c0 2.8 1.4 5.3 3.6 6.8V20a1 1 0 0 0 1 1h6.8a1 1 0 0 0 1-1v-2.2C18.6 16.3 20 13.8 20 11a8 8 0 0 0-8-8zm-2.5 13v-1.5a.5.5 0 0 0-.5-.5H8l-.5-1 1-1-1-1 1-1H9a2.5 2.5 0 0 1 5 0h.5l1 1-1 1 1 1-.5 1h-1a.5.5 0 0 0-.5.5V16h-4z"/></svg>`;
 const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v7a6 6 0 0 1-12 0V2zm-2 1H2v4a4 4 0 0 0 4 4v-1a3 3 0 0 1-3-3V3zm16 0h2v4a4 4 0 0 1-4 4v-1a3 3 0 0 0 3-3V3zm-7 13v2H9v2h6v-2h-2v-2a6 6 0 0 0 5-5.92V2H6v8.08A6 6 0 0 0 13 16z"/></svg>`;
 
-// Each resolver receives the player's current {sila, zhivot, esper} and
-// returns { logKey, logParams, cost: {zhivot}, outcome: 'win'|'loss'|'draw', section }.
+// The database supplies each encounter's rules; the pure engine resolves them
+// against current character values and any saved pending duel.
 
-const ROSTER = [
-  {
-    id: 'robotrak', nameKey: 'battlesim877.name.robotrak',
-    resolve(p) {
-      if (p.sila > 10) return { key: 'robotrak_win', section: 203, outcome: 'win', cost: {} };
-      return { key: 'robotrak_lose', section: 66, outcome: 'draw', cost: { zhivot: 2 } };
-    },
-  },
-  {
-    id: 'goraoktopod', nameKey: 'battlesim877.name.goraoktopod',
-    resolve(p, d) {
-      return resolveGalacticDuel('goraoktopod', p, d.pendingDuel?.state, false, _roll1d6);
-    },
-  },
-  {
-    id: 'medusa', nameKey: 'battlesim877.name.medusa',
-    resolve(p) {
-      const strOk = p.sila >= 8, lifeOk = p.zhivot >= 18;
-      if (strOk && lifeOk) return { key: 'medusa_win', section: 43, outcome: 'win', cost: {} };
-      if (!strOk && !lifeOk) return { key: 'medusa_costly', section: 56, outcome: 'win', cost: {} };
-      if ((p.sila === 8 && !lifeOk) || (p.zhivot === 18 && !strOk)) {
-        return { key: 'manual', outcome: 'manual', cost: {} };
-      }
-      return { key: 'medusa_stalemate', section: 197, outcome: 'draw', cost: {} };
-    },
-  },
-  {
-    id: 'web1', nameKey: 'battlesim877.name.web1',
-    resolve(p) {
-      const enemySum = 15 + 20;
-      const diff = enemySum - (p.sila + p.zhivot);
-      if (diff < 0) return { key: 'web_knife', section: 74, outcome: 'win', cost: {} };
-      if (diff <= 6) return { key: 'web_blaster', section: 74, outcome: 'win', cost: { zhivot: 3 } };
-      return { key: 'web_gravitoudar', section: 74, outcome: 'win', cost: { zhivot: 5 } };
-    },
-  },
-  {
-    id: 'web2', nameKey: 'battlesim877.name.web2',
-    resolve(p) {
-      const enemySum = 10 + 20;
-      const diff = enemySum - (p.sila + p.zhivot);
-      if (diff < 0) return { key: 'web2_one', section: 161, outcome: 'win', cost: {} };
-      if (diff <= 6) return { key: 'web2_two', section: 161, outcome: 'win', cost: {} };
-      return { key: 'web2_choice', section: 161, outcome: 'win', cost: {} };
-    },
-  },
-  {
-    id: 'invisiblerobot', nameKey: 'battlesim877.name.invisiblerobot',
-    resolve(p, d) {
-      return resolveGalacticDuel('invisiblerobot', p, d.pendingDuel?.state,
-        document.getElementById('sim877-flee').checked, _roll1d6);
-    },
-  },
-  {
-    id: 'snakewall1', nameKey: 'battlesim877.name.snakewall1',
-    resolve(p) {
-      const sum = p.esper + p.zhivot;
-      if (sum > 25) return { key: 'snakewall_win', section: 34, outcome: 'win', cost: {} };
-      return { key: 'snakewall_lose', section: 214, outcome: 'loss', cost: {} };
-    },
-  },
-  {
-    id: 'snakewall2', nameKey: 'battlesim877.name.snakewall2',
-    resolve(p) {
-      if (p.esper > 12) return { key: 'snakewall2_win', section: 34, outcome: 'win', cost: { zhivot: 5 } };
-      return { key: 'snakewall_lose', section: 214, outcome: 'loss', cost: {} };
-    },
-  },
-  {
-    id: 'twoheaded', nameKey: 'battlesim877.name.twoheaded',
-    resolve(p) {
-      const d1 = _roll1d6(), d2 = _roll1d6();
-      const enemySum = (4 + d1) + (6 + d2);
-      const playerSum = p.sila + p.zhivot;
-      if (enemySum > playerSum) return { key: 'twoheaded_lose', section: 106, outcome: 'loss', cost: {} };
-      if (enemySum === playerSum) return { key: 'twoheaded_exhausted', section: 137, outcome: 'win', cost: {} };
-      if (playerSum - enemySum > 10) return { key: 'manual', outcome: 'manual', cost: {} };
-      return { key: 'twoheaded_win', section: 67, outcome: 'win', cost: {} };
-    },
-  },
-  {
-    id: 'bigtwoheaded', nameKey: 'battlesim877.name.bigtwoheaded',
-    resolve(p) {
-      const enemySum = 8 + 12;
-      if (enemySum >= p.sila + p.zhivot) return { key: 'bigtwoheaded_lose', section: 106, outcome: 'loss', cost: {} };
-      return { key: 'bigtwoheaded_win', section: 64, outcome: 'win', cost: {} };
-    },
-  },
-  {
-    id: 'robottank', nameKey: 'battlesim877.name.robottank',
-    resolve(p) {
-      const roll = _roll2d6();
-      const total = p.sila + roll;
-      if (total > 20) return { key: 'robottank_win', section: 133, outcome: 'win', cost: {}, roll };
-      return { key: 'robottank_continue', section: 119, outcome: 'draw', cost: {}, roll };
-    },
-  },
-  {
-    id: 'robotspider', nameKey: 'battlesim877.name.robotspider',
-    resolve(p) {
-      const sum = p.sila + p.zhivot;
-      if (sum > 30) return { key: 'robotspider_win', section: 72, outcome: 'win', cost: {} };
-      if (sum === 30) return { key: 'robotspider_tie', section: 68, outcome: 'draw', cost: {} };
-      return { key: 'robotspider_lose', section: 92, outcome: 'loss', cost: {} };
-    },
-  },
-];
+
 
 // ── Render ───────────────────────────────────────────────────────────────
 

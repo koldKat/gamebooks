@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { ARKHAM_ENCOUNTERS, createArkhamCharacter, createArkhamFight, rollArkhamRound } from '../../../public/js/battlesim/engines/arkham-darkness.js';
+import { loadFixtureRoster } from './roster-fixtures.mjs';
+await loadFixtureRoster(555);
 const player = (values = {}) => ({ ...createArkhamCharacter('nathaniel', { willpower: 3, intellect: 2, combat: 5, health: 9, sanity: 6 }), ...values });
 const rng = (...dice) => { let i = 0; return () => ((dice[i++] ?? 1) - .5) / 6; };
 

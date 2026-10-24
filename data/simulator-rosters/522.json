@@ -1,0 +1,1859 @@
+{
+  "schemaVersion": 1,
+  "bookId": 522,
+  "family": "skyfall",
+  "source": "Existing simulator encounter catalog, matched exactly to existing section/name/expertise/vitality database rows. Preserve source exceptions and manual missing damage.",
+  "enemies": [
+    {
+      "key": "88:0",
+      "name": "Hyena 1 (section 88; damage 1)",
+      "attack": 10,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Hyena 1 (section 88; damage 1)",
+        "attack": 10,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "PYRAMID_ENCOUNTERS",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": 88,
+          "foes": [
+            {
+              "name": "Hyena 1",
+              "expertise": 10,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 1
+            },
+            {
+              "name": "Hyena 2",
+              "expertise": 10,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 1
+            }
+          ],
+          "mode": "all",
+          "rabies": true,
+          "fortuneReward": 2
+        },
+        "part": {
+          "name": "Hyena 1",
+          "expertise": 10,
+          "vitality": 7,
+          "initialVitality": 7,
+          "damage": 1
+        }
+      }
+    },
+    {
+      "key": "88:1",
+      "name": "Hyena 2 (section 88; damage 1)",
+      "attack": 10,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Hyena 2 (section 88; damage 1)",
+        "attack": 10,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "PYRAMID_ENCOUNTERS",
+        "entryIndex": 0,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": 88,
+          "foes": [
+            {
+              "name": "Hyena 1",
+              "expertise": 10,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 1
+            },
+            {
+              "name": "Hyena 2",
+              "expertise": 10,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 1
+            }
+          ],
+          "mode": "all",
+          "rabies": true,
+          "fortuneReward": 2
+        },
+        "part": {
+          "name": "Hyena 2",
+          "expertise": 10,
+          "vitality": 7,
+          "initialVitality": 7,
+          "damage": 1
+        }
+      }
+    },
+    {
+      "key": "374-night:0",
+      "name": "Ogre (section 374-night; damage 4)",
+      "attack": 14,
+      "defense": null,
+      "hp": 16,
+      "pb": null,
+      "adopt": {
+        "name": "Ogre (section 374-night; damage 4)",
+        "attack": 14,
+        "defense": null,
+        "hp": 16,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "PYRAMID_ENCOUNTERS",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "374-night",
+          "sourceSection": 374,
+          "foes": [
+            {
+              "name": "Ogre",
+              "expertise": 14,
+              "vitality": 16,
+              "initialVitality": 16,
+              "damage": 4
+            }
+          ],
+          "fortuneReward": 4,
+          "expertiseReward": 1
+        },
+        "part": {
+          "name": "Ogre",
+          "expertise": 14,
+          "vitality": 16,
+          "initialVitality": 16,
+          "damage": 4
+        }
+      }
+    },
+    {
+      "key": "374-dawn:0",
+      "name": "Ogre (section 374-dawn; damage 4)",
+      "attack": 13,
+      "defense": null,
+      "hp": 16,
+      "pb": null,
+      "adopt": {
+        "name": "Ogre (section 374-dawn; damage 4)",
+        "attack": 13,
+        "defense": null,
+        "hp": 16,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "PYRAMID_ENCOUNTERS",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "374-dawn",
+          "sourceSection": 374,
+          "foes": [
+            {
+              "name": "Ogre",
+              "expertise": 13,
+              "vitality": 16,
+              "initialVitality": 16,
+              "damage": 4
+            }
+          ],
+          "fortuneReward": 4,
+          "expertiseReward": 1
+        },
+        "part": {
+          "name": "Ogre",
+          "expertise": 13,
+          "vitality": 16,
+          "initialVitality": 16,
+          "damage": 4
+        }
+      }
+    },
+    {
+      "key": "374-day:0",
+      "name": "Ogre (section 374-day; damage 4)",
+      "attack": 12,
+      "defense": null,
+      "hp": 16,
+      "pb": null,
+      "adopt": {
+        "name": "Ogre (section 374-day; damage 4)",
+        "attack": 12,
+        "defense": null,
+        "hp": 16,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "PYRAMID_ENCOUNTERS",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "374-day",
+          "sourceSection": 374,
+          "foes": [
+            {
+              "name": "Ogre",
+              "expertise": 12,
+              "vitality": 16,
+              "initialVitality": 16,
+              "damage": 4
+            }
+          ],
+          "fortuneReward": 4,
+          "expertiseReward": 1
+        },
+        "part": {
+          "name": "Ogre",
+          "expertise": 12,
+          "vitality": 16,
+          "initialVitality": 16,
+          "damage": 4
+        }
+      }
+    },
+    {
+      "key": "150:0",
+      "name": "Ogre (section 150; damage 4)",
+      "attack": 13,
+      "defense": null,
+      "hp": 16,
+      "pb": null,
+      "adopt": {
+        "name": "Ogre (section 150; damage 4)",
+        "attack": 13,
+        "defense": null,
+        "hp": 16,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "PYRAMID_ENCOUNTERS",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 150,
+          "sourceSection": 374,
+          "foes": [
+            {
+              "name": "Ogre",
+              "expertise": 13,
+              "vitality": 16,
+              "initialVitality": 16,
+              "damage": 4
+            }
+          ],
+          "fortuneReward": 4,
+          "expertiseReward": 1,
+          "openingHit": true,
+          "surprise": "until-miss"
+        },
+        "part": {
+          "name": "Ogre",
+          "expertise": 13,
+          "vitality": 16,
+          "initialVitality": 16,
+          "damage": 4
+        }
+      }
+    },
+    {
+      "key": "214:0",
+      "name": "Ogre (section 214; damage 4)",
+      "attack": 12,
+      "defense": null,
+      "hp": 16,
+      "pb": null,
+      "adopt": {
+        "name": "Ogre (section 214; damage 4)",
+        "attack": 12,
+        "defense": null,
+        "hp": 16,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "PYRAMID_ENCOUNTERS",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 214,
+          "sourceSection": 374,
+          "foes": [
+            {
+              "name": "Ogre",
+              "expertise": 12,
+              "vitality": 16,
+              "initialVitality": 16,
+              "damage": 4
+            }
+          ],
+          "fortuneReward": 4,
+          "expertiseReward": 1,
+          "openingHit": true,
+          "surprise": 2
+        },
+        "part": {
+          "name": "Ogre",
+          "expertise": 12,
+          "vitality": 16,
+          "initialVitality": 16,
+          "damage": 4
+        }
+      }
+    },
+    {
+      "key": "172:0",
+      "name": "Giant Hound (section 172; damage 2)",
+      "attack": 13,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Giant Hound (section 172; damage 2)",
+        "attack": 13,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "PYRAMID_ENCOUNTERS",
+        "entryIndex": 6,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 172,
+          "foes": [
+            {
+              "name": "Giant Hound",
+              "expertise": 13,
+              "vitality": 9,
+              "initialVitality": 9,
+              "damage": 2
+            }
+          ],
+          "fortuneReward": 2
+        },
+        "part": {
+          "name": "Giant Hound",
+          "expertise": 13,
+          "vitality": 9,
+          "initialVitality": 9,
+          "damage": 2
+        }
+      }
+    },
+    {
+      "key": "183:0",
+      "name": "Cheetah (section 183; damage 3)",
+      "attack": 12,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Cheetah (section 183; damage 3)",
+        "attack": 12,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "PYRAMID_ENCOUNTERS",
+        "entryIndex": 7,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 183,
+          "foes": [
+            {
+              "name": "Cheetah",
+              "expertise": 12,
+              "vitality": 9,
+              "initialVitality": 9,
+              "damage": 3
+            }
+          ],
+          "fortuneReward": 4,
+          "escapeDamage": 3,
+          "escapeFortune": 2
+        },
+        "part": {
+          "name": "Cheetah",
+          "expertise": 12,
+          "vitality": 9,
+          "initialVitality": 9,
+          "damage": 3
+        }
+      }
+    },
+    {
+      "key": "241:0",
+      "name": "Giant Scorpion (section 241; damage 2)",
+      "attack": 13,
+      "defense": null,
+      "hp": 12,
+      "pb": null,
+      "adopt": {
+        "name": "Giant Scorpion (section 241; damage 2)",
+        "attack": 13,
+        "defense": null,
+        "hp": 12,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "PYRAMID_ENCOUNTERS",
+        "entryIndex": 8,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 241,
+          "foes": [
+            {
+              "name": "Giant Scorpion",
+              "expertise": 13,
+              "vitality": 12,
+              "initialVitality": 12,
+              "damage": 2
+            }
+          ],
+          "mode": "scorpion",
+          "fortuneReward": 4
+        },
+        "part": {
+          "name": "Giant Scorpion",
+          "expertise": 13,
+          "vitality": 12,
+          "initialVitality": 12,
+          "damage": 2
+        }
+      }
+    },
+    {
+      "key": "250:0",
+      "name": "Tendril 1 (section 250; damage 1)",
+      "attack": 11,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "adopt": {
+        "name": "Tendril 1 (section 250; damage 1)",
+        "attack": 11,
+        "defense": null,
+        "hp": 1,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "PYRAMID_ENCOUNTERS",
+        "entryIndex": 9,
+        "slot": 0,
+        "partCount": 10,
+        "entry": {
+          "section": 250,
+          "foes": [
+            {
+              "name": "Tendril 1",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 2",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 3",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 4",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 5",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 6",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 7",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 8",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 9",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 10",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            }
+          ],
+          "mode": "tendrils",
+          "fortuneReward": 4
+        },
+        "part": {
+          "name": "Tendril 1",
+          "expertise": 11,
+          "vitality": 1,
+          "initialVitality": 1,
+          "damage": 1
+        }
+      }
+    },
+    {
+      "key": "250:1",
+      "name": "Tendril 2 (section 250; damage 1)",
+      "attack": 11,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "adopt": {
+        "name": "Tendril 2 (section 250; damage 1)",
+        "attack": 11,
+        "defense": null,
+        "hp": 1,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "PYRAMID_ENCOUNTERS",
+        "entryIndex": 9,
+        "slot": 1,
+        "partCount": 10,
+        "entry": {
+          "section": 250,
+          "foes": [
+            {
+              "name": "Tendril 1",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 2",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 3",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 4",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 5",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 6",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 7",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 8",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 9",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 10",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            }
+          ],
+          "mode": "tendrils",
+          "fortuneReward": 4
+        },
+        "part": {
+          "name": "Tendril 2",
+          "expertise": 11,
+          "vitality": 1,
+          "initialVitality": 1,
+          "damage": 1
+        }
+      }
+    },
+    {
+      "key": "250:2",
+      "name": "Tendril 3 (section 250; damage 1)",
+      "attack": 11,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "adopt": {
+        "name": "Tendril 3 (section 250; damage 1)",
+        "attack": 11,
+        "defense": null,
+        "hp": 1,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "PYRAMID_ENCOUNTERS",
+        "entryIndex": 9,
+        "slot": 2,
+        "partCount": 10,
+        "entry": {
+          "section": 250,
+          "foes": [
+            {
+              "name": "Tendril 1",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 2",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 3",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 4",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 5",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 6",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 7",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 8",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 9",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 10",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            }
+          ],
+          "mode": "tendrils",
+          "fortuneReward": 4
+        },
+        "part": {
+          "name": "Tendril 3",
+          "expertise": 11,
+          "vitality": 1,
+          "initialVitality": 1,
+          "damage": 1
+        }
+      }
+    },
+    {
+      "key": "250:3",
+      "name": "Tendril 4 (section 250; damage 1)",
+      "attack": 11,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "adopt": {
+        "name": "Tendril 4 (section 250; damage 1)",
+        "attack": 11,
+        "defense": null,
+        "hp": 1,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "PYRAMID_ENCOUNTERS",
+        "entryIndex": 9,
+        "slot": 3,
+        "partCount": 10,
+        "entry": {
+          "section": 250,
+          "foes": [
+            {
+              "name": "Tendril 1",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 2",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 3",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 4",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 5",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 6",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 7",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 8",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 9",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 10",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            }
+          ],
+          "mode": "tendrils",
+          "fortuneReward": 4
+        },
+        "part": {
+          "name": "Tendril 4",
+          "expertise": 11,
+          "vitality": 1,
+          "initialVitality": 1,
+          "damage": 1
+        }
+      }
+    },
+    {
+      "key": "250:4",
+      "name": "Tendril 5 (section 250; damage 1)",
+      "attack": 11,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "adopt": {
+        "name": "Tendril 5 (section 250; damage 1)",
+        "attack": 11,
+        "defense": null,
+        "hp": 1,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "PYRAMID_ENCOUNTERS",
+        "entryIndex": 9,
+        "slot": 4,
+        "partCount": 10,
+        "entry": {
+          "section": 250,
+          "foes": [
+            {
+              "name": "Tendril 1",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 2",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 3",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 4",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 5",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 6",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 7",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 8",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 9",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 10",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            }
+          ],
+          "mode": "tendrils",
+          "fortuneReward": 4
+        },
+        "part": {
+          "name": "Tendril 5",
+          "expertise": 11,
+          "vitality": 1,
+          "initialVitality": 1,
+          "damage": 1
+        }
+      }
+    },
+    {
+      "key": "250:5",
+      "name": "Tendril 6 (section 250; damage 1)",
+      "attack": 11,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "adopt": {
+        "name": "Tendril 6 (section 250; damage 1)",
+        "attack": 11,
+        "defense": null,
+        "hp": 1,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "PYRAMID_ENCOUNTERS",
+        "entryIndex": 9,
+        "slot": 5,
+        "partCount": 10,
+        "entry": {
+          "section": 250,
+          "foes": [
+            {
+              "name": "Tendril 1",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 2",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 3",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 4",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 5",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 6",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 7",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 8",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 9",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 10",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            }
+          ],
+          "mode": "tendrils",
+          "fortuneReward": 4
+        },
+        "part": {
+          "name": "Tendril 6",
+          "expertise": 11,
+          "vitality": 1,
+          "initialVitality": 1,
+          "damage": 1
+        }
+      }
+    },
+    {
+      "key": "250:6",
+      "name": "Tendril 7 (section 250; damage 1)",
+      "attack": 11,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "adopt": {
+        "name": "Tendril 7 (section 250; damage 1)",
+        "attack": 11,
+        "defense": null,
+        "hp": 1,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "PYRAMID_ENCOUNTERS",
+        "entryIndex": 9,
+        "slot": 6,
+        "partCount": 10,
+        "entry": {
+          "section": 250,
+          "foes": [
+            {
+              "name": "Tendril 1",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 2",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 3",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 4",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 5",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 6",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 7",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 8",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 9",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 10",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            }
+          ],
+          "mode": "tendrils",
+          "fortuneReward": 4
+        },
+        "part": {
+          "name": "Tendril 7",
+          "expertise": 11,
+          "vitality": 1,
+          "initialVitality": 1,
+          "damage": 1
+        }
+      }
+    },
+    {
+      "key": "250:7",
+      "name": "Tendril 8 (section 250; damage 1)",
+      "attack": 11,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "adopt": {
+        "name": "Tendril 8 (section 250; damage 1)",
+        "attack": 11,
+        "defense": null,
+        "hp": 1,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "PYRAMID_ENCOUNTERS",
+        "entryIndex": 9,
+        "slot": 7,
+        "partCount": 10,
+        "entry": {
+          "section": 250,
+          "foes": [
+            {
+              "name": "Tendril 1",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 2",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 3",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 4",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 5",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 6",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 7",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 8",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 9",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 10",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            }
+          ],
+          "mode": "tendrils",
+          "fortuneReward": 4
+        },
+        "part": {
+          "name": "Tendril 8",
+          "expertise": 11,
+          "vitality": 1,
+          "initialVitality": 1,
+          "damage": 1
+        }
+      }
+    },
+    {
+      "key": "250:8",
+      "name": "Tendril 9 (section 250; damage 1)",
+      "attack": 11,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "adopt": {
+        "name": "Tendril 9 (section 250; damage 1)",
+        "attack": 11,
+        "defense": null,
+        "hp": 1,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "PYRAMID_ENCOUNTERS",
+        "entryIndex": 9,
+        "slot": 8,
+        "partCount": 10,
+        "entry": {
+          "section": 250,
+          "foes": [
+            {
+              "name": "Tendril 1",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 2",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 3",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 4",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 5",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 6",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 7",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 8",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 9",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 10",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            }
+          ],
+          "mode": "tendrils",
+          "fortuneReward": 4
+        },
+        "part": {
+          "name": "Tendril 9",
+          "expertise": 11,
+          "vitality": 1,
+          "initialVitality": 1,
+          "damage": 1
+        }
+      }
+    },
+    {
+      "key": "250:9",
+      "name": "Tendril 10 (section 250; damage 1)",
+      "attack": 11,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "adopt": {
+        "name": "Tendril 10 (section 250; damage 1)",
+        "attack": 11,
+        "defense": null,
+        "hp": 1,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "PYRAMID_ENCOUNTERS",
+        "entryIndex": 9,
+        "slot": 9,
+        "partCount": 10,
+        "entry": {
+          "section": 250,
+          "foes": [
+            {
+              "name": "Tendril 1",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 2",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 3",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 4",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 5",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 6",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 7",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 8",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 9",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            },
+            {
+              "name": "Tendril 10",
+              "expertise": 11,
+              "vitality": 1,
+              "initialVitality": 1,
+              "damage": 1
+            }
+          ],
+          "mode": "tendrils",
+          "fortuneReward": 4
+        },
+        "part": {
+          "name": "Tendril 10",
+          "expertise": 11,
+          "vitality": 1,
+          "initialVitality": 1,
+          "damage": 1
+        }
+      }
+    },
+    {
+      "key": "272:0",
+      "name": "First Hound (section 272; damage 2)",
+      "attack": 12,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "First Hound (section 272; damage 2)",
+        "attack": 12,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "PYRAMID_ENCOUNTERS",
+        "entryIndex": 10,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 272,
+          "foes": [
+            {
+              "name": "First Hound",
+              "expertise": 12,
+              "vitality": 8,
+              "initialVitality": 8,
+              "damage": 2
+            }
+          ],
+          "chainBonusAfter": 1,
+          "fortuneReward": 2,
+          "escapeDamage": 0,
+          "escapeFortune": 0
+        },
+        "part": {
+          "name": "First Hound",
+          "expertise": 12,
+          "vitality": 8,
+          "initialVitality": 8,
+          "damage": 2
+        }
+      }
+    },
+    {
+      "key": "281:0",
+      "name": "Troll (section 281; damage 3)",
+      "attack": 15,
+      "defense": null,
+      "hp": 14,
+      "pb": null,
+      "adopt": {
+        "name": "Troll (section 281; damage 3)",
+        "attack": 15,
+        "defense": null,
+        "hp": 14,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "PYRAMID_ENCOUNTERS",
+        "entryIndex": 11,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 281,
+          "foes": [
+            {
+              "name": "Troll",
+              "expertise": 15,
+              "vitality": 14,
+              "initialVitality": 14,
+              "damage": 3
+            }
+          ],
+          "mode": "troll",
+          "fortuneReward": 5
+        },
+        "part": {
+          "name": "Troll",
+          "expertise": 15,
+          "vitality": 14,
+          "initialVitality": 14,
+          "damage": 3
+        }
+      }
+    },
+    {
+      "key": "284:0",
+      "name": "Second Hound (section 284; damage 2)",
+      "attack": 12,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Second Hound (section 284; damage 2)",
+        "attack": 12,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "PYRAMID_ENCOUNTERS",
+        "entryIndex": 12,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 284,
+          "foes": [
+            {
+              "name": "Second Hound",
+              "expertise": 12,
+              "vitality": 8,
+              "initialVitality": 8,
+              "damage": 2
+            }
+          ],
+          "fortuneReward": 2,
+          "expertiseReward": 1
+        },
+        "part": {
+          "name": "Second Hound",
+          "expertise": 12,
+          "vitality": 8,
+          "initialVitality": 8,
+          "damage": 2
+        }
+      }
+    },
+    {
+      "key": "304:0",
+      "name": "Second Hound (section 304; damage 2)",
+      "attack": 13,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Second Hound (section 304; damage 2)",
+        "attack": 13,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "PYRAMID_ENCOUNTERS",
+        "entryIndex": 13,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 304,
+          "foes": [
+            {
+              "name": "Second Hound",
+              "expertise": 13,
+              "vitality": 9,
+              "initialVitality": 9,
+              "damage": 2
+            }
+          ],
+          "chainBonusAfter": 0,
+          "fortuneReward": 3,
+          "expertiseReward": 1,
+          "escapeDamage": 0,
+          "escapeFortune": 0
+        },
+        "part": {
+          "name": "Second Hound",
+          "expertise": 13,
+          "vitality": 9,
+          "initialVitality": 9,
+          "damage": 2
+        }
+      }
+    },
+    {
+      "key": "306:0",
+      "name": "Troll (section 306; damage 3)",
+      "attack": 15,
+      "defense": null,
+      "hp": 14,
+      "pb": null,
+      "adopt": {
+        "name": "Troll (section 306; damage 3)",
+        "attack": 15,
+        "defense": null,
+        "hp": 14,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "PYRAMID_ENCOUNTERS",
+        "entryIndex": 14,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 306,
+          "foes": [
+            {
+              "name": "Troll",
+              "expertise": 15,
+              "vitality": 14,
+              "initialVitality": 14,
+              "damage": 3
+            }
+          ],
+          "mode": "troll",
+          "fortuneReward": 5,
+          "stunning": true,
+          "carryTroll": true
+        },
+        "part": {
+          "name": "Troll",
+          "expertise": 15,
+          "vitality": 14,
+          "initialVitality": 14,
+          "damage": 3
+        }
+      }
+    },
+    {
+      "key": "310:0",
+      "name": "Mountain Lion (section 310; damage 1)",
+      "attack": 12,
+      "defense": null,
+      "hp": 10,
+      "pb": null,
+      "adopt": {
+        "name": "Mountain Lion (section 310; damage 1)",
+        "attack": 12,
+        "defense": null,
+        "hp": 10,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "PYRAMID_ENCOUNTERS",
+        "entryIndex": 15,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 310,
+          "foes": [
+            {
+              "name": "Mountain Lion",
+              "expertise": 12,
+              "vitality": 10,
+              "initialVitality": 10,
+              "damage": 1
+            }
+          ],
+          "mode": "lion",
+          "fortuneReward": 3,
+          "expertiseReward": 1
+        },
+        "part": {
+          "name": "Mountain Lion",
+          "expertise": 12,
+          "vitality": 10,
+          "initialVitality": 10,
+          "damage": 1
+        }
+      }
+    },
+    {
+      "key": "386:0",
+      "name": "Troll (section 386; damage 3)",
+      "attack": 15,
+      "defense": null,
+      "hp": 14,
+      "pb": null,
+      "adopt": {
+        "name": "Troll (section 386; damage 3)",
+        "attack": 15,
+        "defense": null,
+        "hp": 14,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "PYRAMID_ENCOUNTERS",
+        "entryIndex": 16,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 386,
+          "foes": [
+            {
+              "name": "Troll",
+              "expertise": 15,
+              "vitality": 14,
+              "initialVitality": 14,
+              "damage": 3
+            }
+          ],
+          "mode": "troll",
+          "fortuneReward": 5
+        },
+        "part": {
+          "name": "Troll",
+          "expertise": 15,
+          "vitality": 14,
+          "initialVitality": 14,
+          "damage": 3
+        }
+      }
+    }
+  ]
+}

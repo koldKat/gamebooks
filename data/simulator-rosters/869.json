@@ -1,0 +1,232 @@
+{
+  "schemaVersion": 1,
+  "bookId": 869,
+  "family": "tiger-eye",
+  "source": "public/js/battlesim/books/869/definition.js",
+  "enemies": [
+    {
+      "key": "dalgren-0",
+      "name": "Далгрен",
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tiger-eye",
+        "dataset": "RIVALS",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "dalgren",
+          "nameKey": "battlesim869.name.dalgren",
+          "s": 11,
+          "e": 16,
+          "m": 0,
+          "b": 13,
+          "sword": 4,
+          "shield": "none"
+        },
+        "part": {
+          "id": "dalgren",
+          "nameKey": "battlesim869.name.dalgren",
+          "s": 11,
+          "e": 16,
+          "m": 0,
+          "b": 13,
+          "sword": 4,
+          "shield": "none"
+        }
+      }
+    },
+    {
+      "key": "tindalin-0",
+      "name": "Тиндълин",
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tiger-eye",
+        "dataset": "RIVALS",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "tindalin",
+          "nameKey": "battlesim869.name.tindalin",
+          "s": 12,
+          "e": 18,
+          "m": 3,
+          "b": 7,
+          "sword": 5,
+          "shield": "magic"
+        },
+        "part": {
+          "id": "tindalin",
+          "nameKey": "battlesim869.name.tindalin",
+          "s": 12,
+          "e": 18,
+          "m": 3,
+          "b": 7,
+          "sword": 5,
+          "shield": "magic"
+        }
+      }
+    },
+    {
+      "key": "matual-0",
+      "name": "Матуал",
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tiger-eye",
+        "dataset": "RIVALS",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "matual",
+          "nameKey": "battlesim869.name.matual",
+          "s": 10,
+          "e": 10,
+          "m": 5,
+          "b": 15,
+          "sword": 4,
+          "shield": "holy"
+        },
+        "part": {
+          "id": "matual",
+          "nameKey": "battlesim869.name.matual",
+          "s": 10,
+          "e": 10,
+          "m": 5,
+          "b": 15,
+          "sword": 4,
+          "shield": "holy"
+        }
+      }
+    },
+    {
+      "key": "smajtal-0",
+      "name": "Смайтъл",
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tiger-eye",
+        "dataset": "RIVALS",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "smajtal",
+          "nameKey": "battlesim869.name.smajtal",
+          "s": 8,
+          "e": 6,
+          "m": 12,
+          "b": 14,
+          "sword": 5,
+          "shield": "holy"
+        },
+        "part": {
+          "id": "smajtal",
+          "nameKey": "battlesim869.name.smajtal",
+          "s": 8,
+          "e": 6,
+          "m": 12,
+          "b": 14,
+          "sword": 5,
+          "shield": "holy"
+        }
+      }
+    },
+    {
+      "key": "uantor-0",
+      "name": "Уантор",
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tiger-eye",
+        "dataset": "RIVALS",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "uantor",
+          "nameKey": "battlesim869.name.uantor",
+          "s": 12,
+          "e": 12,
+          "m": 3,
+          "b": 13,
+          "sword": 5,
+          "shield": "holy"
+        },
+        "part": {
+          "id": "uantor",
+          "nameKey": "battlesim869.name.uantor",
+          "s": 12,
+          "e": 12,
+          "m": 3,
+          "b": 13,
+          "sword": 5,
+          "shield": "holy"
+        }
+      }
+    },
+    {
+      "key": "lestor-0",
+      "name": "Лестор",
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tiger-eye",
+        "dataset": "RIVALS",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "lestor",
+          "nameKey": "battlesim869.name.lestor",
+          "s": 8,
+          "e": 12,
+          "m": 0,
+          "b": 20,
+          "sword": 6,
+          "shield": "none"
+        },
+        "part": {
+          "id": "lestor",
+          "nameKey": "battlesim869.name.lestor",
+          "s": 8,
+          "e": 12,
+          "m": 0,
+          "b": 20,
+          "sword": 6,
+          "shield": "none"
+        }
+      }
+    },
+    {
+      "key": "tejbrun-0",
+      "name": "Тейбрун",
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tiger-eye",
+        "dataset": "RIVALS",
+        "entryIndex": 6,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "tejbrun",
+          "nameKey": "battlesim869.name.tejbrun",
+          "s": 14,
+          "e": 12,
+          "m": 2,
+          "b": 12,
+          "sword": 4,
+          "shield": "none"
+        },
+        "part": {
+          "id": "tejbrun",
+          "nameKey": "battlesim869.name.tejbrun",
+          "s": 14,
+          "e": 12,
+          "m": 2,
+          "b": 12,
+          "sword": 4,
+          "shield": "none"
+        }
+      }
+    }
+  ]
+}

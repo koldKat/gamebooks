@@ -1,3 +1,5 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
+await loadFixtureRoster(548);
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { INNSMOUTH_ENCOUNTERS, rollInnsmouthCharacter, innsmouthWeightPenalty, innsmouthTest,

@@ -1,0 +1,812 @@
+{
+  "schemaVersion": 1,
+  "bookId": 555,
+  "family": "arkham-darkness",
+  "source": "public/js/battlesim/engines/arkham-darkness.js",
+  "enemies": [
+    {
+      "key": "15",
+      "name": "Trylogogs at the house",
+      "stats": {
+        "schemaVersion": 1,
+        "family": "arkham-darkness",
+        "dataset": "ARKHAM_ENCOUNTERS",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 15,
+          "thresholds": [
+            15,
+            15,
+            13
+          ],
+          "stats": [
+            "combat"
+          ],
+          "win": 74,
+          "loss": 20,
+          "fear": true
+        },
+        "part": {
+          "section": 15,
+          "thresholds": [
+            15,
+            15,
+            13
+          ],
+          "stats": [
+            "combat"
+          ],
+          "win": 74,
+          "loss": 20,
+          "fear": true
+        }
+      }
+    },
+    {
+      "key": "62",
+      "name": "Hunting Nightgaunt",
+      "stats": {
+        "schemaVersion": 1,
+        "family": "arkham-darkness",
+        "dataset": "ARKHAM_ENCOUNTERS",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 62,
+          "thresholds": [
+            15,
+            16,
+            17
+          ],
+          "stats": [
+            "combat",
+            "willpower"
+          ],
+          "win": 103,
+          "loss": 83,
+          "wins": 2
+        },
+        "part": {
+          "section": 62,
+          "thresholds": [
+            15,
+            16,
+            17
+          ],
+          "stats": [
+            "combat",
+            "willpower"
+          ],
+          "win": 103,
+          "loss": 83,
+          "wins": 2
+        }
+      }
+    },
+    {
+      "key": "64",
+      "name": "Wraithlike creatures",
+      "stats": {
+        "schemaVersion": 1,
+        "family": "arkham-darkness",
+        "dataset": "ARKHAM_ENCOUNTERS",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 64,
+          "thresholds": [
+            15,
+            16
+          ],
+          "stats": [
+            "combat",
+            "willpower"
+          ],
+          "win": 113,
+          "loss": 133,
+          "rites": true
+        },
+        "part": {
+          "section": 64,
+          "thresholds": [
+            15,
+            16
+          ],
+          "stats": [
+            "combat",
+            "willpower"
+          ],
+          "win": 113,
+          "loss": 133,
+          "rites": true
+        }
+      }
+    },
+    {
+      "key": "102",
+      "name": "Nightgaunt on the roof",
+      "stats": {
+        "schemaVersion": 1,
+        "family": "arkham-darkness",
+        "dataset": "ARKHAM_ENCOUNTERS",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 102,
+          "thresholds": [
+            12,
+            13
+          ],
+          "stats": [
+            "combat",
+            "willpower"
+          ],
+          "win": 132,
+          "loss": 235,
+          "rites": true
+        },
+        "part": {
+          "section": 102,
+          "thresholds": [
+            12,
+            13
+          ],
+          "stats": [
+            "combat",
+            "willpower"
+          ],
+          "win": 132,
+          "loss": 235,
+          "rites": true
+        }
+      }
+    },
+    {
+      "key": "138",
+      "name": "Disciples of the Swarm: hostage rescue",
+      "stats": {
+        "schemaVersion": 1,
+        "family": "arkham-darkness",
+        "dataset": "ARKHAM_ENCOUNTERS",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 138,
+          "thresholds": [
+            17,
+            18
+          ],
+          "stats": [
+            "combat"
+          ],
+          "win": 269,
+          "loss": 257,
+          "hurtRound": 2
+        },
+        "part": {
+          "section": 138,
+          "thresholds": [
+            17,
+            18
+          ],
+          "stats": [
+            "combat"
+          ],
+          "win": 269,
+          "loss": 257,
+          "hurtRound": 2
+        }
+      }
+    },
+    {
+      "key": "157",
+      "name": "Swarm guarding Professor Nidus",
+      "stats": {
+        "schemaVersion": 1,
+        "family": "arkham-darkness",
+        "dataset": "ARKHAM_ENCOUNTERS",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 157,
+          "thresholds": [
+            15,
+            16,
+            16
+          ],
+          "stats": [
+            "combat"
+          ],
+          "win": 238,
+          "loss": 272,
+          "doom": true,
+          "agile": true,
+          "rites": true,
+          "fear": true
+        },
+        "part": {
+          "section": 157,
+          "thresholds": [
+            15,
+            16,
+            16
+          ],
+          "stats": [
+            "combat"
+          ],
+          "win": 238,
+          "loss": 272,
+          "doom": true,
+          "agile": true,
+          "rites": true,
+          "fear": true
+        }
+      }
+    },
+    {
+      "key": "160",
+      "name": "Cult of the Empty Sky",
+      "stats": {
+        "schemaVersion": 1,
+        "family": "arkham-darkness",
+        "dataset": "ARKHAM_ENCOUNTERS",
+        "entryIndex": 6,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 160,
+          "thresholds": [
+            15,
+            16
+          ],
+          "stats": [
+            "combat"
+          ],
+          "win": 201,
+          "loss": 184,
+          "agile": true
+        },
+        "part": {
+          "section": 160,
+          "thresholds": [
+            15,
+            16
+          ],
+          "stats": [
+            "combat"
+          ],
+          "win": 201,
+          "loss": 184,
+          "agile": true
+        }
+      }
+    },
+    {
+      "key": "183",
+      "name": "Wraithlike creatures: Black Talon",
+      "stats": {
+        "schemaVersion": 1,
+        "family": "arkham-darkness",
+        "dataset": "ARKHAM_ENCOUNTERS",
+        "entryIndex": 7,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 183,
+          "thresholds": [
+            14,
+            15
+          ],
+          "stats": [
+            "combat",
+            "willpower"
+          ],
+          "win": 113,
+          "loss": 133,
+          "rites": true
+        },
+        "part": {
+          "section": 183,
+          "thresholds": [
+            14,
+            15
+          ],
+          "stats": [
+            "combat",
+            "willpower"
+          ],
+          "win": 113,
+          "loss": 133,
+          "rites": true
+        }
+      }
+    },
+    {
+      "key": "203",
+      "name": "Wraithlike creatures: Brass Telescope",
+      "stats": {
+        "schemaVersion": 1,
+        "family": "arkham-darkness",
+        "dataset": "ARKHAM_ENCOUNTERS",
+        "entryIndex": 8,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 203,
+          "thresholds": [
+            16,
+            17
+          ],
+          "stats": [
+            "combat",
+            "willpower"
+          ],
+          "win": 113,
+          "loss": 133,
+          "rites": true
+        },
+        "part": {
+          "section": 203,
+          "thresholds": [
+            16,
+            17
+          ],
+          "stats": [
+            "combat",
+            "willpower"
+          ],
+          "win": 113,
+          "loss": 133,
+          "rites": true
+        }
+      }
+    },
+    {
+      "key": "205",
+      "name": "Beetle-like wasps",
+      "stats": {
+        "schemaVersion": 1,
+        "family": "arkham-darkness",
+        "dataset": "ARKHAM_ENCOUNTERS",
+        "entryIndex": 9,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 205,
+          "thresholds": [
+            13,
+            14
+          ],
+          "stats": [
+            "combat"
+          ],
+          "win": 245,
+          "loss": 225,
+          "fear": true,
+          "hurtRound": 1
+        },
+        "part": {
+          "section": 205,
+          "thresholds": [
+            13,
+            14
+          ],
+          "stats": [
+            "combat"
+          ],
+          "win": 245,
+          "loss": 225,
+          "fear": true,
+          "hurtRound": 1
+        }
+      }
+    },
+    {
+      "key": "214",
+      "name": "Insect swarm: blocked door",
+      "stats": {
+        "schemaVersion": 1,
+        "family": "arkham-darkness",
+        "dataset": "ARKHAM_ENCOUNTERS",
+        "entryIndex": 10,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 214,
+          "thresholds": [
+            10,
+            11
+          ],
+          "stats": [
+            "combat",
+            "intellect"
+          ],
+          "win": 290,
+          "loss": 274
+        },
+        "part": {
+          "section": 214,
+          "thresholds": [
+            10,
+            11
+          ],
+          "stats": [
+            "combat",
+            "intellect"
+          ],
+          "win": 290,
+          "loss": 274
+        }
+      }
+    },
+    {
+      "key": "220",
+      "name": "Insect swarm",
+      "stats": {
+        "schemaVersion": 1,
+        "family": "arkham-darkness",
+        "dataset": "ARKHAM_ENCOUNTERS",
+        "entryIndex": 11,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 220,
+          "thresholds": [
+            10,
+            11
+          ],
+          "stats": [
+            "combat",
+            "intellect"
+          ],
+          "win": 233,
+          "loss": 193
+        },
+        "part": {
+          "section": 220,
+          "thresholds": [
+            10,
+            11
+          ],
+          "stats": [
+            "combat",
+            "intellect"
+          ],
+          "win": 233,
+          "loss": 193
+        }
+      }
+    },
+    {
+      "key": "221",
+      "name": "Disciples of the Swarm: surprise attack",
+      "stats": {
+        "schemaVersion": 1,
+        "family": "arkham-darkness",
+        "dataset": "ARKHAM_ENCOUNTERS",
+        "entryIndex": 12,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 221,
+          "thresholds": [
+            15,
+            16
+          ],
+          "stats": [
+            "combat"
+          ],
+          "win": 269,
+          "loss": 257,
+          "agile": true
+        },
+        "part": {
+          "section": 221,
+          "thresholds": [
+            15,
+            16
+          ],
+          "stats": [
+            "combat"
+          ],
+          "win": 269,
+          "loss": 257,
+          "agile": true
+        }
+      }
+    },
+    {
+      "key": "239",
+      "name": "Wraithlike creatures at Crane Hill",
+      "stats": {
+        "schemaVersion": 1,
+        "family": "arkham-darkness",
+        "dataset": "ARKHAM_ENCOUNTERS",
+        "entryIndex": 13,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 239,
+          "thresholds": [
+            14,
+            15
+          ],
+          "stats": [
+            "combat",
+            "willpower"
+          ],
+          "win": 17,
+          "loss": 46,
+          "rites": true,
+          "wins": 2
+        },
+        "part": {
+          "section": 239,
+          "thresholds": [
+            14,
+            15
+          ],
+          "stats": [
+            "combat",
+            "willpower"
+          ],
+          "win": 17,
+          "loss": 46,
+          "rites": true,
+          "wins": 2
+        }
+      }
+    },
+    {
+      "key": "248",
+      "name": "Giant wasp",
+      "stats": {
+        "schemaVersion": 1,
+        "family": "arkham-darkness",
+        "dataset": "ARKHAM_ENCOUNTERS",
+        "entryIndex": 14,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 248,
+          "thresholds": [
+            12,
+            13
+          ],
+          "stats": [
+            "combat"
+          ],
+          "win": 288,
+          "loss": 268,
+          "fear": true
+        },
+        "part": {
+          "section": 248,
+          "thresholds": [
+            12,
+            13
+          ],
+          "stats": [
+            "combat"
+          ],
+          "win": 288,
+          "loss": 268,
+          "fear": true
+        }
+      }
+    },
+    {
+      "key": "258",
+      "name": "Dr Waugh's monstrous steed",
+      "stats": {
+        "schemaVersion": 1,
+        "family": "arkham-darkness",
+        "dataset": "ARKHAM_ENCOUNTERS",
+        "entryIndex": 15,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 258,
+          "thresholds": [
+            18,
+            19,
+            20
+          ],
+          "stats": [
+            "combat",
+            "willpower"
+          ],
+          "win": 146,
+          "loss": 284,
+          "doom": true,
+          "rites": true
+        },
+        "part": {
+          "section": 258,
+          "thresholds": [
+            18,
+            19,
+            20
+          ],
+          "stats": [
+            "combat",
+            "willpower"
+          ],
+          "win": 146,
+          "loss": 284,
+          "doom": true,
+          "rites": true
+        }
+      }
+    },
+    {
+      "key": "270",
+      "name": "Insect swarm",
+      "stats": {
+        "schemaVersion": 1,
+        "family": "arkham-darkness",
+        "dataset": "ARKHAM_ENCOUNTERS",
+        "entryIndex": 16,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 270,
+          "thresholds": [
+            10,
+            11
+          ],
+          "stats": [
+            "combat",
+            "intellect"
+          ],
+          "win": 290,
+          "loss": 274
+        },
+        "part": {
+          "section": 270,
+          "thresholds": [
+            10,
+            11
+          ],
+          "stats": [
+            "combat",
+            "intellect"
+          ],
+          "win": 290,
+          "loss": 274
+        }
+      }
+    },
+    {
+      "key": "275",
+      "name": "Disciples of the Swarm: direct assault",
+      "stats": {
+        "schemaVersion": 1,
+        "family": "arkham-darkness",
+        "dataset": "ARKHAM_ENCOUNTERS",
+        "entryIndex": 17,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 275,
+          "thresholds": [
+            17,
+            18
+          ],
+          "stats": [
+            "combat"
+          ],
+          "win": 269,
+          "loss": 257,
+          "doom": true,
+          "agile": true
+        },
+        "part": {
+          "section": 275,
+          "thresholds": [
+            17,
+            18
+          ],
+          "stats": [
+            "combat"
+          ],
+          "win": 269,
+          "loss": 257,
+          "doom": true,
+          "agile": true
+        }
+      }
+    },
+    {
+      "key": "281",
+      "name": "Disciples of the Swarm: cult battle",
+      "stats": {
+        "schemaVersion": 1,
+        "family": "arkham-darkness",
+        "dataset": "ARKHAM_ENCOUNTERS",
+        "entryIndex": 18,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 281,
+          "thresholds": [
+            16,
+            16
+          ],
+          "stats": [
+            "combat"
+          ],
+          "win": 181,
+          "loss": 92,
+          "doom": true,
+          "agile": true
+        },
+        "part": {
+          "section": 281,
+          "thresholds": [
+            16,
+            16
+          ],
+          "stats": [
+            "combat"
+          ],
+          "win": 181,
+          "loss": 92,
+          "doom": true,
+          "agile": true
+        }
+      }
+    },
+    {
+      "key": "294",
+      "name": "Disciples of the Swarm: reinforcements",
+      "stats": {
+        "schemaVersion": 1,
+        "family": "arkham-darkness",
+        "dataset": "ARKHAM_ENCOUNTERS",
+        "entryIndex": 19,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 294,
+          "thresholds": [
+            14,
+            15,
+            14
+          ],
+          "stats": [
+            "combat"
+          ],
+          "win": 13,
+          "loss": 106,
+          "agileFirst": true,
+          "finalMomentum": true,
+          "hurtRound": 3
+        },
+        "part": {
+          "section": 294,
+          "thresholds": [
+            14,
+            15,
+            14
+          ],
+          "stats": [
+            "combat"
+          ],
+          "win": 13,
+          "loss": 106,
+          "agileFirst": true,
+          "finalMomentum": true,
+          "hurtRound": 3
+        }
+      }
+    }
+  ]
+}

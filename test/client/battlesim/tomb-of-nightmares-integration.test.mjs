@@ -1,8 +1,10 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
+await loadFixtureRoster(532);
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from './simulator-source.mjs';
 import { runInNewContext } from 'node:vm';
-import translations from '../../../public/js/i18n/en/battlesim/battlesim532.js';
+const {default: translations} = await import('../../../public/js/i18n/en/battlesim/battlesim532.js');
 import { TOMB_ENCOUNTERS, TOMB_DREAMS, TOMB_EQUIPMENT }
   from '../../../public/js/battlesim/engines/grailquest/tomb-of-nightmares-roster.js';
 

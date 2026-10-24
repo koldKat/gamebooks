@@ -1,0 +1,1140 @@
+{
+  "schemaVersion": 1,
+  "bookId": 557,
+  "family": "kingsport",
+  "source": "public/js/battlesim/engines/kingsport.js",
+  "enemies": [
+    {
+      "key": "21",
+      "name": "Doctor with a syringe",
+      "stats": {
+        "schemaVersion": 1,
+        "family": "kingsport",
+        "dataset": "KINGSPORT_ENCOUNTERS",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 21,
+          "rounds": [
+            {
+              "target": 14,
+              "stats": [
+                "combat"
+              ],
+              "bonus": [
+                "agile",
+                "survivor"
+              ],
+              "penalty": [
+                "cautious"
+              ],
+              "momentum": 0
+            },
+            {
+              "target": 15,
+              "stats": [
+                "combat",
+                "willpower"
+              ],
+              "bonus": [
+                "fighter",
+                "tough"
+              ],
+              "penalty": [],
+              "momentum": 2
+            }
+          ],
+          "outcomes": [
+            56,
+            36
+          ]
+        },
+        "part": {
+          "section": 21,
+          "rounds": [
+            {
+              "target": 14,
+              "stats": [
+                "combat"
+              ],
+              "bonus": [
+                "agile",
+                "survivor"
+              ],
+              "penalty": [
+                "cautious"
+              ],
+              "momentum": 0
+            },
+            {
+              "target": 15,
+              "stats": [
+                "combat",
+                "willpower"
+              ],
+              "bonus": [
+                "fighter",
+                "tough"
+              ],
+              "penalty": [],
+              "momentum": 2
+            }
+          ],
+          "outcomes": [
+            56,
+            36
+          ]
+        }
+      }
+    },
+    {
+      "key": "37",
+      "name": "Spider swarm",
+      "stats": {
+        "schemaVersion": 1,
+        "family": "kingsport",
+        "dataset": "KINGSPORT_ENCOUNTERS",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 37,
+          "rounds": [
+            {
+              "target": 14,
+              "stats": [
+                "combat"
+              ],
+              "bonus": [
+                "agile",
+                "resolved",
+                "survivor"
+              ],
+              "penalty": [
+                "cautious"
+              ],
+              "momentum": 0
+            },
+            {
+              "target": 15,
+              "stats": [
+                "combat",
+                "willpower"
+              ],
+              "bonus": [
+                "fighter",
+                "tough"
+              ],
+              "penalty": [],
+              "momentum": 2
+            }
+          ],
+          "outcomes": [
+            49,
+            78
+          ],
+          "noResources": true
+        },
+        "part": {
+          "section": 37,
+          "rounds": [
+            {
+              "target": 14,
+              "stats": [
+                "combat"
+              ],
+              "bonus": [
+                "agile",
+                "resolved",
+                "survivor"
+              ],
+              "penalty": [
+                "cautious"
+              ],
+              "momentum": 0
+            },
+            {
+              "target": 15,
+              "stats": [
+                "combat",
+                "willpower"
+              ],
+              "bonus": [
+                "fighter",
+                "tough"
+              ],
+              "penalty": [],
+              "momentum": 2
+            }
+          ],
+          "outcomes": [
+            49,
+            78
+          ],
+          "noResources": true
+        }
+      }
+    },
+    {
+      "key": "103",
+      "name": "Transformed Harcourt: finishing the fight",
+      "stats": {
+        "schemaVersion": 1,
+        "family": "kingsport",
+        "dataset": "KINGSPORT_ENCOUNTERS",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 103,
+          "rounds": [
+            {
+              "target": 10,
+              "stats": [
+                "combat"
+              ],
+              "bonus": [
+                "fighter",
+                "resolved"
+              ],
+              "penalty": [
+                "arachnophobia",
+                "cautious"
+              ],
+              "momentum": 0
+            },
+            {
+              "target": 11,
+              "stats": [
+                "combat"
+              ],
+              "bonus": [
+                "tough"
+              ],
+              "penalty": [
+                "arachnophobia"
+              ],
+              "momentum": 1
+            },
+            {
+              "target": 12,
+              "stats": [
+                "combat"
+              ],
+              "bonus": [
+                "survivor"
+              ],
+              "penalty": [
+                "arachnophobia"
+              ],
+              "momentum": 2
+            }
+          ],
+          "outcomes": [
+            86,
+            86,
+            71,
+            71
+          ],
+          "countWins": true
+        },
+        "part": {
+          "section": 103,
+          "rounds": [
+            {
+              "target": 10,
+              "stats": [
+                "combat"
+              ],
+              "bonus": [
+                "fighter",
+                "resolved"
+              ],
+              "penalty": [
+                "arachnophobia",
+                "cautious"
+              ],
+              "momentum": 0
+            },
+            {
+              "target": 11,
+              "stats": [
+                "combat"
+              ],
+              "bonus": [
+                "tough"
+              ],
+              "penalty": [
+                "arachnophobia"
+              ],
+              "momentum": 1
+            },
+            {
+              "target": 12,
+              "stats": [
+                "combat"
+              ],
+              "bonus": [
+                "survivor"
+              ],
+              "penalty": [
+                "arachnophobia"
+              ],
+              "momentum": 2
+            }
+          ],
+          "outcomes": [
+            86,
+            86,
+            71,
+            71
+          ],
+          "countWins": true
+        }
+      }
+    },
+    {
+      "key": "135",
+      "name": "Transformed Harcourt with Isabel",
+      "stats": {
+        "schemaVersion": 1,
+        "family": "kingsport",
+        "dataset": "KINGSPORT_ENCOUNTERS",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 135,
+          "rounds": [
+            {
+              "target": 14,
+              "stats": [
+                "combat",
+                "willpower"
+              ],
+              "bonus": [
+                "agile",
+                "resolved",
+                "survivor"
+              ],
+              "penalty": [
+                "cautious"
+              ],
+              "momentum": 0
+            },
+            {
+              "target": 15,
+              "stats": [
+                "combat",
+                "willpower"
+              ],
+              "bonus": [
+                "fighter",
+                "tough"
+              ],
+              "penalty": [],
+              "momentum": 2
+            }
+          ],
+          "outcomes": [
+            153,
+            113
+          ]
+        },
+        "part": {
+          "section": 135,
+          "rounds": [
+            {
+              "target": 14,
+              "stats": [
+                "combat",
+                "willpower"
+              ],
+              "bonus": [
+                "agile",
+                "resolved",
+                "survivor"
+              ],
+              "penalty": [
+                "cautious"
+              ],
+              "momentum": 0
+            },
+            {
+              "target": 15,
+              "stats": [
+                "combat",
+                "willpower"
+              ],
+              "bonus": [
+                "fighter",
+                "tough"
+              ],
+              "penalty": [],
+              "momentum": 2
+            }
+          ],
+          "outcomes": [
+            153,
+            113
+          ]
+        }
+      }
+    },
+    {
+      "key": "149",
+      "name": "Knott and the housemaids",
+      "stats": {
+        "schemaVersion": 1,
+        "family": "kingsport",
+        "dataset": "KINGSPORT_ENCOUNTERS",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 149,
+          "rounds": [
+            {
+              "target": 12,
+              "stats": [
+                "combat"
+              ],
+              "bonus": [
+                "fighter"
+              ],
+              "penalty": [
+                "cautious"
+              ],
+              "momentum": 0
+            },
+            {
+              "target": 16,
+              "stats": [
+                "combat"
+              ],
+              "bonus": [
+                "tough"
+              ],
+              "penalty": [],
+              "momentum": 1
+            },
+            {
+              "target": 17,
+              "stats": [
+                "combat"
+              ],
+              "bonus": [
+                "survivor"
+              ],
+              "penalty": [],
+              "momentum": 2
+            }
+          ],
+          "outcomes": [
+            168,
+            185,
+            205,
+            221
+          ],
+          "countWins": true
+        },
+        "part": {
+          "section": 149,
+          "rounds": [
+            {
+              "target": 12,
+              "stats": [
+                "combat"
+              ],
+              "bonus": [
+                "fighter"
+              ],
+              "penalty": [
+                "cautious"
+              ],
+              "momentum": 0
+            },
+            {
+              "target": 16,
+              "stats": [
+                "combat"
+              ],
+              "bonus": [
+                "tough"
+              ],
+              "penalty": [],
+              "momentum": 1
+            },
+            {
+              "target": 17,
+              "stats": [
+                "combat"
+              ],
+              "bonus": [
+                "survivor"
+              ],
+              "penalty": [],
+              "momentum": 2
+            }
+          ],
+          "outcomes": [
+            168,
+            185,
+            205,
+            221
+          ],
+          "countWins": true
+        }
+      }
+    },
+    {
+      "key": "218",
+      "name": "Monstrous arachnids",
+      "stats": {
+        "schemaVersion": 1,
+        "family": "kingsport",
+        "dataset": "KINGSPORT_ENCOUNTERS",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 218,
+          "rounds": [
+            {
+              "target": 10,
+              "stats": [
+                "combat"
+              ],
+              "bonus": [
+                "fighter",
+                "resolved"
+              ],
+              "penalty": [
+                "arachnophobia",
+                "cautious"
+              ],
+              "momentum": 0
+            },
+            {
+              "target": 11,
+              "stats": [
+                "combat"
+              ],
+              "bonus": [
+                "tough"
+              ],
+              "penalty": [
+                "arachnophobia"
+              ],
+              "momentum": 1
+            },
+            {
+              "target": 12,
+              "stats": [
+                "combat"
+              ],
+              "bonus": [
+                "survivor"
+              ],
+              "penalty": [
+                "arachnophobia"
+              ],
+              "momentum": 2
+            }
+          ],
+          "outcomes": [
+            64,
+            64,
+            44,
+            27
+          ],
+          "countWins": true
+        },
+        "part": {
+          "section": 218,
+          "rounds": [
+            {
+              "target": 10,
+              "stats": [
+                "combat"
+              ],
+              "bonus": [
+                "fighter",
+                "resolved"
+              ],
+              "penalty": [
+                "arachnophobia",
+                "cautious"
+              ],
+              "momentum": 0
+            },
+            {
+              "target": 11,
+              "stats": [
+                "combat"
+              ],
+              "bonus": [
+                "tough"
+              ],
+              "penalty": [
+                "arachnophobia"
+              ],
+              "momentum": 1
+            },
+            {
+              "target": 12,
+              "stats": [
+                "combat"
+              ],
+              "bonus": [
+                "survivor"
+              ],
+              "penalty": [
+                "arachnophobia"
+              ],
+              "momentum": 2
+            }
+          ],
+          "outcomes": [
+            64,
+            64,
+            44,
+            27
+          ],
+          "countWins": true
+        }
+      }
+    },
+    {
+      "key": "223",
+      "name": "Transformed Harcourt after gunshots",
+      "stats": {
+        "schemaVersion": 1,
+        "family": "kingsport",
+        "dataset": "KINGSPORT_ENCOUNTERS",
+        "entryIndex": 6,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 223,
+          "rounds": [
+            {
+              "target": 15,
+              "stats": [
+                "combat"
+              ],
+              "bonus": [
+                "fighter",
+                "resolved"
+              ],
+              "penalty": [
+                "arachnophobia",
+                "cautious"
+              ],
+              "momentum": 0
+            },
+            {
+              "target": 16,
+              "stats": [
+                "combat"
+              ],
+              "bonus": [
+                "tough"
+              ],
+              "penalty": [
+                "arachnophobia"
+              ],
+              "momentum": 1
+            },
+            {
+              "target": 17,
+              "stats": [
+                "combat"
+              ],
+              "bonus": [
+                "survivor"
+              ],
+              "penalty": [
+                "arachnophobia"
+              ],
+              "momentum": 2
+            }
+          ],
+          "outcomes": [
+            86,
+            86,
+            71,
+            71
+          ],
+          "countWins": true
+        },
+        "part": {
+          "section": 223,
+          "rounds": [
+            {
+              "target": 15,
+              "stats": [
+                "combat"
+              ],
+              "bonus": [
+                "fighter",
+                "resolved"
+              ],
+              "penalty": [
+                "arachnophobia",
+                "cautious"
+              ],
+              "momentum": 0
+            },
+            {
+              "target": 16,
+              "stats": [
+                "combat"
+              ],
+              "bonus": [
+                "tough"
+              ],
+              "penalty": [
+                "arachnophobia"
+              ],
+              "momentum": 1
+            },
+            {
+              "target": 17,
+              "stats": [
+                "combat"
+              ],
+              "bonus": [
+                "survivor"
+              ],
+              "penalty": [
+                "arachnophobia"
+              ],
+              "momentum": 2
+            }
+          ],
+          "outcomes": [
+            86,
+            86,
+            71,
+            71
+          ],
+          "countWins": true
+        }
+      }
+    },
+    {
+      "key": "245",
+      "name": "Transformed Harcourt in his lair",
+      "stats": {
+        "schemaVersion": 1,
+        "family": "kingsport",
+        "dataset": "KINGSPORT_ENCOUNTERS",
+        "entryIndex": 7,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 245,
+          "rounds": [
+            {
+              "target": 12,
+              "stats": [
+                "combat",
+                "willpower"
+              ],
+              "bonus": [
+                "agile",
+                "survivor"
+              ],
+              "penalty": [
+                "arachnophobia",
+                "cautious"
+              ],
+              "momentum": 0
+            },
+            {
+              "target": 13,
+              "stats": [
+                "combat",
+                "willpower"
+              ],
+              "bonus": [
+                "fighter"
+              ],
+              "penalty": [
+                "arachnophobia"
+              ],
+              "momentum": 2
+            },
+            {
+              "target": 14,
+              "stats": [
+                "combat",
+                "willpower"
+              ],
+              "bonus": [
+                "tough"
+              ],
+              "penalty": [
+                "arachnophobia"
+              ],
+              "momentum": 2
+            },
+            {
+              "target": 15,
+              "stats": [
+                "combat",
+                "willpower"
+              ],
+              "bonus": [
+                "survivor"
+              ],
+              "penalty": [
+                "arachnophobia"
+              ],
+              "momentum": 3
+            }
+          ],
+          "outcomes": [
+            86,
+            86,
+            null,
+            71,
+            71
+          ],
+          "countWins": true
+        },
+        "part": {
+          "section": 245,
+          "rounds": [
+            {
+              "target": 12,
+              "stats": [
+                "combat",
+                "willpower"
+              ],
+              "bonus": [
+                "agile",
+                "survivor"
+              ],
+              "penalty": [
+                "arachnophobia",
+                "cautious"
+              ],
+              "momentum": 0
+            },
+            {
+              "target": 13,
+              "stats": [
+                "combat",
+                "willpower"
+              ],
+              "bonus": [
+                "fighter"
+              ],
+              "penalty": [
+                "arachnophobia"
+              ],
+              "momentum": 2
+            },
+            {
+              "target": 14,
+              "stats": [
+                "combat",
+                "willpower"
+              ],
+              "bonus": [
+                "tough"
+              ],
+              "penalty": [
+                "arachnophobia"
+              ],
+              "momentum": 2
+            },
+            {
+              "target": 15,
+              "stats": [
+                "combat",
+                "willpower"
+              ],
+              "bonus": [
+                "survivor"
+              ],
+              "penalty": [
+                "arachnophobia"
+              ],
+              "momentum": 3
+            }
+          ],
+          "outcomes": [
+            86,
+            86,
+            null,
+            71,
+            71
+          ],
+          "countWins": true
+        }
+      }
+    },
+    {
+      "key": "286",
+      "name": "Spider-infested corpse",
+      "stats": {
+        "schemaVersion": 1,
+        "family": "kingsport",
+        "dataset": "KINGSPORT_ENCOUNTERS",
+        "entryIndex": 8,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 286,
+          "rounds": [
+            {
+              "target": 14,
+              "stats": [
+                "combat",
+                "willpower"
+              ],
+              "bonus": [
+                "survivor"
+              ],
+              "penalty": [
+                "arachnophobia",
+                "cautious"
+              ],
+              "momentum": 0
+            },
+            {
+              "target": 15,
+              "stats": [
+                "combat",
+                "willpower"
+              ],
+              "bonus": [
+                "tough"
+              ],
+              "penalty": [
+                "arachnophobia"
+              ],
+              "momentum": 2
+            }
+          ],
+          "outcomes": [
+            141,
+            59
+          ]
+        },
+        "part": {
+          "section": 286,
+          "rounds": [
+            {
+              "target": 14,
+              "stats": [
+                "combat",
+                "willpower"
+              ],
+              "bonus": [
+                "survivor"
+              ],
+              "penalty": [
+                "arachnophobia",
+                "cautious"
+              ],
+              "momentum": 0
+            },
+            {
+              "target": 15,
+              "stats": [
+                "combat",
+                "willpower"
+              ],
+              "bonus": [
+                "tough"
+              ],
+              "penalty": [
+                "arachnophobia"
+              ],
+              "momentum": 2
+            }
+          ],
+          "outcomes": [
+            141,
+            59
+          ]
+        }
+      }
+    },
+    {
+      "key": "292",
+      "name": "Housemaids after stabbing Knott",
+      "stats": {
+        "schemaVersion": 1,
+        "family": "kingsport",
+        "dataset": "KINGSPORT_ENCOUNTERS",
+        "entryIndex": 9,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 292,
+          "rounds": [
+            {
+              "target": 14,
+              "stats": [
+                "combat",
+                "willpower"
+              ],
+              "bonus": [
+                "fighter"
+              ],
+              "penalty": [
+                "cautious"
+              ],
+              "momentum": 0
+            },
+            {
+              "target": 15,
+              "stats": [
+                "combat",
+                "willpower"
+              ],
+              "bonus": [
+                "tough"
+              ],
+              "penalty": [],
+              "momentum": 2
+            }
+          ],
+          "outcomes": [
+            84,
+            238
+          ]
+        },
+        "part": {
+          "section": 292,
+          "rounds": [
+            {
+              "target": 14,
+              "stats": [
+                "combat",
+                "willpower"
+              ],
+              "bonus": [
+                "fighter"
+              ],
+              "penalty": [
+                "cautious"
+              ],
+              "momentum": 0
+            },
+            {
+              "target": 15,
+              "stats": [
+                "combat",
+                "willpower"
+              ],
+              "bonus": [
+                "tough"
+              ],
+              "penalty": [],
+              "momentum": 2
+            }
+          ],
+          "outcomes": [
+            84,
+            238
+          ]
+        }
+      }
+    },
+    {
+      "key": "299",
+      "name": "Transformed Harcourt after injection",
+      "stats": {
+        "schemaVersion": 1,
+        "family": "kingsport",
+        "dataset": "KINGSPORT_ENCOUNTERS",
+        "entryIndex": 10,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 299,
+          "rounds": [
+            {
+              "target": 14,
+              "stats": [
+                "combat",
+                "willpower"
+              ],
+              "bonus": [
+                "agile",
+                "resolved",
+                "survivor"
+              ],
+              "penalty": [
+                "cautious"
+              ],
+              "momentum": 0
+            },
+            {
+              "target": 15,
+              "stats": [
+                "combat",
+                "willpower"
+              ],
+              "bonus": [
+                "fighter",
+                "tough"
+              ],
+              "penalty": [],
+              "momentum": 2
+            }
+          ],
+          "outcomes": [
+            153,
+            71
+          ]
+        },
+        "part": {
+          "section": 299,
+          "rounds": [
+            {
+              "target": 14,
+              "stats": [
+                "combat",
+                "willpower"
+              ],
+              "bonus": [
+                "agile",
+                "resolved",
+                "survivor"
+              ],
+              "penalty": [
+                "cautious"
+              ],
+              "momentum": 0
+            },
+            {
+              "target": 15,
+              "stats": [
+                "combat",
+                "willpower"
+              ],
+              "bonus": [
+                "fighter",
+                "tough"
+              ],
+              "penalty": [],
+              "momentum": 2
+            }
+          ],
+          "outcomes": [
+            153,
+            71
+          ]
+        }
+      }
+    }
+  ]
+}

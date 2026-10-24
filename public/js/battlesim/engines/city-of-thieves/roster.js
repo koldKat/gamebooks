@@ -1,60 +1,7 @@
-const foe = (name, skill, stamina) => ({ name, skill, stamina });
-const fight = (section, enemies, win, options = {}) => ({
-  section, enemies, groups: enemies.map((_, index) => [index]), win, ...options,
-});
+import { createRosterLoader } from '../../roster-data.js';
 
-export const THIEVES_FIGHTS = [
-  fight(5, [foe('orc', 8, 5)], 371),
-  fight(10, [foe('guard', 8, 7)], 212, { timedWin: { rounds: 6, late: 130 } }),
-  fight(22, [foe('goblin', 4, 5), foe('goblin', 5, 5)], 198),
-  fight(23, [foe('silversmith', 4, 8)], 146),
-  fight(57, [foe('wolfhound', 7, 7), foe('wolfhound', 7, 5)], 360),
-  fight(72, [foe('goblin', 5, 4)], 208),
-  fight(73, [foe('sourbelly', 10, 11), foe('fatnose', 9, 10)], 110,
-    { escape: { section: 239, afterGroup: 1, discardShield: true, skillLoss: 1 } }),
-  fight(79, [foe('snakeQueen', 9, 7)], 295, { entry: { stamina: 4, skill: 1 } }),
-  fight(88, [foe('snakeQueen', 9, 7)], 295,
-    { entry: { stamina: 4, skill: 1 }, escape: { section: 333, rounds: 3 } }),
-  fight(99, [foe('guard', 7, 4), foe('guard', 6, 6)], 285),
-  fight(130, [foe('guard', 6, 6), foe('guard', 7, 5)], 74),
-  fight(140, [foe('ogre', 8, 9)], 71, { escape: { section: 282, rounds: 3 } }),
-  fight(144, [foe('witch', 7, 7)], 303),
-  fight(152, [foe('pirate', 7, 5)], 20, { attackModifier: -2 }),
-  fight(157, [foe('guard', 6, 6), foe('guard', 7, 5)], 54, { attackModifier: -3 }),
-  fight(166, [foe('centipede', 10, 5)], 272),
-  fight(170, [foe('jeweller', 9, 8)], 114, { escape: { section: 196 } }),
-  fight(177, [foe('robber', 7, 8), foe('robber', 8, 6)], 51),
-  fight(191, [foe('leafBeasts', 6, 6)], 133),
-  fight(193, [foe('mummy', 7, 12)], 163, { bypass: { item: 'fireRing', section: 286 } }),
-  fight(201, [foe('orc', 5, 4), foe('snake', 6, 6), foe('wolf', 5, 5),
-    foe('pygmy', 4, 4), foe('ape', 7, 6), foe('caveTroll', 8, 7)], 138, { randomEnemy: true }),
-  fight(207, [foe('deathHawk', 4, 5), foe('deathHawk', 4, 4)], 314),
-  fight(217, [foe('moonDog', 9, 10), foe('moonDog', 11, 9)], 259),
-  fight(225, [foe('vagabond', 7, 5), foe('vagabond', 6, 7), foe('vagabond', 5, 6)], 397),
-  fight(226, [foe('pirate', 6, 6), foe('pirate', 5, 4), foe('pirate', 7, 4)], 111,
-    { escape: { section: 78 } }),
-  fight(230, [foe('guard', 6, 6), foe('guard', 7, 5)], 54),
-  fight(249, [foe('snakeQueen', 9, 7)], 295),
-  fight(253, [foe('snakes', 5, 5)], 75, { enemyDamage: 4 }),
-  fight(270, [foe('troll', 8, 8)], 26),
-  fight(296, [foe('thief', 7, 7), foe('thief', 8, 6)], 147),
-  fight(309, [foe('wolf', 5, 5)], 97),
-  fight(311, [foe('guard', 8, 7), foe('guard', 6, 6), foe('guard', 7, 5)], 74,
-    { groups: [[0], [1, 2]] }),
-  fight(323, [foe('blacksmith', 9, 9)], 395, { enemyDamage: 3 }),
-  fight(326, [foe('rabidDog', 4, 4), foe('rabidDog', 4, 3)], 184,
-    { groups: [[0, 1]], escape: { section: 180 } }),
-  fight(331, [foe('lunatic', 5, 5)], 86),
-  fight(349, [foe('fireImp', 9, 4)], 258, { escape: { section: 192 } }),
-  fight(351, [foe('guard', 6, 6), foe('guard', 7, 5)], 54),
-  fight(356, [foe('rat', 4, 4), foe('rat', 5, 4), foe('rat', 5, 5)], 28),
-  fight(357, [foe('ogre', 8, 9)], 71, { escape: { section: 282, rounds: 3 } }),
-  fight(361, [foe('zombie', 6, 6), foe('zombie', 6, 7)], 297),
-  fight(385, [foe('skeleton', 6, 7), foe('skeleton', 8, 6), foe('skeleton', 7, 7)], 203),
-  fight(386, [foe('pirate', 7, 5)], 20),
-  fight(392, [foe('lizardine', 8, 8)], 186,
-    { fireBreath: true, escape: { section: 334 } }),
-];
+export let THIEVES_FIGHTS = [];
+export const loadRoster = createRosterLoader(665, 'CATALOG', rows => { THIEVES_FIGHTS = rows.map(row => row.spec); });
 
 export const THIEVES_EQUIPMENT = [
   'chainmail', 'magicShield', 'unicornShield', 'magicHelmet', 'elvenBoots',

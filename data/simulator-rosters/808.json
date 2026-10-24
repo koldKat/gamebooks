@@ -1,0 +1,204 @@
+{
+  "schemaVersion": 1,
+  "bookId": 808,
+  "family": "mech-combat",
+  "source": "public/js/battlesim/books/808/definition.js",
+  "enemies": [
+    {
+      "key": "2-0",
+      "name": "Двойна засада (2)",
+      "stats": {
+        "schemaVersion": 1,
+        "family": "mech-combat",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 2,
+          "kind": "mech",
+          "count": 2,
+          "range": 1,
+          "escape": true,
+          "destination": "47"
+        },
+        "part": {
+          "section": 2,
+          "kind": "mech",
+          "count": 2,
+          "range": 1,
+          "escape": true,
+          "destination": "47"
+        }
+      }
+    },
+    {
+      "key": "27-0",
+      "name": "Оцелелият боен костюм (27)",
+      "stats": {
+        "schemaVersion": 1,
+        "family": "mech-combat",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 27,
+          "kind": "mech",
+          "count": 1,
+          "range": 1,
+          "escape": true,
+          "destination": "47"
+        },
+        "part": {
+          "section": 27,
+          "kind": "mech",
+          "count": 1,
+          "range": 1,
+          "escape": true,
+          "destination": "47"
+        }
+      }
+    },
+    {
+      "key": "36-0",
+      "name": "Засада във въздуха (36)",
+      "stats": {
+        "schemaVersion": 1,
+        "family": "mech-combat",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 36,
+          "kind": "mech",
+          "count": 2,
+          "range": 0,
+          "escape": true,
+          "entryDamage": 1,
+          "destination": "50"
+        },
+        "part": {
+          "section": 36,
+          "kind": "mech",
+          "count": 2,
+          "range": 0,
+          "escape": true,
+          "entryDamage": 1,
+          "destination": "50"
+        }
+      }
+    },
+    {
+      "key": "69-0",
+      "name": "Самотният ловец (69)",
+      "stats": {
+        "schemaVersion": 1,
+        "family": "mech-combat",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 69,
+          "kind": "mech",
+          "count": 1,
+          "range": 3,
+          "escape": true,
+          "destination": "50"
+        },
+        "part": {
+          "section": 69,
+          "kind": "mech",
+          "count": 1,
+          "range": 3,
+          "escape": true,
+          "destination": "50"
+        }
+      }
+    },
+    {
+      "key": "92-0",
+      "name": "Защитата на Мина (92)",
+      "stats": {
+        "schemaVersion": 1,
+        "family": "mech-combat",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 92,
+          "kind": "mech",
+          "count": 3,
+          "range": 2,
+          "escape": false,
+          "destination": "70"
+        },
+        "part": {
+          "section": 92,
+          "kind": "mech",
+          "count": 3,
+          "range": 2,
+          "escape": false,
+          "destination": "70"
+        }
+      }
+    },
+    {
+      "key": "71-0",
+      "name": "Разорители в коридора (71)",
+      "stats": {
+        "schemaVersion": 1,
+        "family": "mech-combat",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 71,
+          "kind": "ravagers",
+          "count": 1,
+          "range": 0,
+          "escape": false
+        },
+        "part": {
+          "section": 71,
+          "kind": "ravagers",
+          "count": 1,
+          "range": 0,
+          "escape": false
+        }
+      }
+    },
+    {
+      "key": "96-0",
+      "name": "Разорителят в руините (96)",
+      "stats": {
+        "schemaVersion": 1,
+        "family": "mech-combat",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 6,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 96,
+          "kind": "personal",
+          "count": 1,
+          "range": 0,
+          "escape": false,
+          "destination": "50"
+        },
+        "part": {
+          "section": 96,
+          "kind": "personal",
+          "count": 1,
+          "range": 0,
+          "escape": false,
+          "destination": "50"
+        }
+      }
+    }
+  ]
+}

@@ -217,6 +217,14 @@ gamebooks/
                          Active-opponent checks distinguish surrender and reserves from death.
                          Resource and indestructible components retain missing printed attributes;
                          attack proxies supply the actual opponent rolls without inventing stats.
+                         Enemy rosters load from the book enemy API. Optional stats_json metadata
+                         preserves typed attributes, source groups and printed nulls alongside legacy
+                         columns. Repair seeds retain enemy IDs; adopting a legacy row requires
+                         an unambiguous exact match for its name and all legacy stats. Explicit
+                         counted identical groups require identical source parts, the exact row
+                         count and distinct indices; existing IDs determine stable assignment. Enemy API
+                         filtering and ordering use the book/name index.
+                         A simulator may export loadData; both lazy loaders await it before init.
                          Character transitions copy supplied profiles and deduplicate completed
                          fight IDs; equipment losses require an explicit choice before the next fight.
         engines/lucas-grey/ Shared shooting, health tiers, aircraft damage, run-scoped state
@@ -235,6 +243,8 @@ gamebooks/
                          Boot imports only this loader; per-book simulators are imported
                          only when their book opens. Mobile keeps its separate
                          mobile/js/battlesim-dispatch.js dispatcher.
+                         Database-backed encounter catalogs load before translations
+                         derived from their names, then before panel evaluation/init.
         layout.js        Shared desktop/mobile column boundary: setup/combat controls
                          on the left; results, logs and history on the right. Shared
                          battlesim.css owns the common text scale, aligned labels,

@@ -1,3 +1,5 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
+await loadFixtureRoster(522);
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { PYRAMID_ENCOUNTERS, createPyramidFight, rollPyramidRound, settlePyramidRound, escapePyramidFight, treatPyramidBites } from '../../../public/js/battlesim/engines/skyfall/black-pyramid.js';

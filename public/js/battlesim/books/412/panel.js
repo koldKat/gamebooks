@@ -1,7 +1,7 @@
 import { ROSTER } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
-import { createOpponentEditor } from '../../opponents.js';
+import { createOpponentEditor, validateOpponents } from '../../opponents.js';
 
 let opponents, editorState;
 
@@ -32,7 +32,7 @@ function _renderStatus() {
   const el = document.getElementById('sim412-status');
   if (!d || !el) return;
   if (d.over) {
-    el.innerHTML = d.winner === 'player'
+    el.innerHTML = d.winner === 'player' && d.timedEncounter ? t('battlesim412.log.continue',{section:d.timedEncounter.destination}) : d.winner === 'player'
       ? t('battlesim412.status.victory', { trophy: SVG_TROPHY })
       : t('battlesim412.status.defeat', { skull: SVG_SKULL });
   } else {
@@ -42,7 +42,8 @@ function _renderStatus() {
   document.getElementById('sim412-player-stat').textContent =
     t('battlesim412.stat.player', { lp: Math.max(0, d.player.lp), level: tier.level, str: tier.str + (d.printedCombatRules === 1 ? (d.companionBonus || 0) : 0) });
   document.getElementById('sim412-enemy-stat').textContent =
-    t('battlesim412.stat.enemy', { name: _enemyName(d), str: d.enemy.str, hp: Math.max(0, d.enemy.hp) });
+    d.timedEncounter ? t('battlesim412.stat.timed',{str:d.enemy.str,strike:d.timedEncounter.strikes,total:d.timedEncounter.minStrikes}) :
+      t('battlesim412.stat.enemy', { name: _enemyName(d), str: d.enemy.str, hp: Math.max(0, d.enemy.hp) });
 }
 
 function _renderLog() {
@@ -75,7 +76,8 @@ function _renderInputs() {
   if (!d) return;
   if (editorState !== d) {
     editorState = d;
-    opponents.set([{...d.enemy, hp: d.enemy.startHp, displayName: d.enemyName ?? t(_enemy(d.enemyId).nameKey)}]);
+    opponents.set([{...d.enemy, hp: d.enemy.startHp, displayName: d.enemyName ?? t(_enemy(d.enemyId).nameKey),
+      ...(d.timedEncounter?{minStrikes:d.timedEncounter.minStrikes,destination:d.timedEncounter.destination}:{})}]);
   }
   const busy = d.started && !d.over;
   opponents.lock(busy);
@@ -156,7 +158,8 @@ export function initSim412() {
   document.body.appendChild(overlay);
   opponents = createOpponentEditor({document, id: 'sim412', t, language: 'bg',
     fields: [{key: 'str', label: t('battlesim412.ui.str')}, {key: 'hp', label: t('battlesim412.ui.hp'), min: 1}],
-    presets: ROSTER.map(enemy => ({...enemy, displayName: t(enemy.nameKey)}))});
+    presets: ROSTER.map(enemy => ({...enemy, displayName: t(enemy.nameKey)})),
+    isStatUnavailable:(key,enemy)=>key==='hp'&&Boolean(enemy.minStrikes)});
   opponents.fixCount(true);
   document.getElementById('sim412-opponent-editor').append(opponents.element);
 
@@ -183,7 +186,13 @@ export function initSim412() {
     const d = _data();
     if (!d || d.started && !d.over) return;
     try {
-      const [enemy] = opponents.read();
+      const raw=opponents.snapshot();
+      const [enemy] = raw[0]?.minStrikes ? validateOpponents(raw,[{key:'str'}]) : opponents.read();
+      if(enemy.minStrikes){
+        if(!Number.isSafeInteger(enemy.minStrikes)||enemy.minStrikes<1||!Number.isSafeInteger(enemy.destination))throw new RangeError('Invalid timed encounter');
+        d.timedEncounter={minStrikes:enemy.minStrikes,destination:enemy.destination,strikes:0};
+      }else delete d.timedEncounter;
+      if(ROSTER.some(row=>row.id===enemy.id))d.enemyId=enemy.id;
       d.enemyName = enemy.displayName || t('battlesim.editor.bg.name');
       d.enemy = {str: enemy.str, hp: enemy.hp, startHp: enemy.hp};
       _startBattle();

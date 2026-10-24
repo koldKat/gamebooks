@@ -1,0 +1,4165 @@
+{
+  "schemaVersion": 1,
+  "bookId": 665,
+  "family": "city-of-thieves",
+  "source": "Original encounter groups, variants and source-specific rules, with summoned allies and night-result tables retained where applicable. All legacy rows preserved, including explicit counted identical groups.",
+  "enemies": [
+    {
+      "key": "fight:5:0",
+      "name": "Оркът билкар / Орк",
+      "attack": 8,
+      "defense": null,
+      "hp": 5,
+      "pb": null,
+      "adopt": {
+        "name": "Оркът билкар / Орк",
+        "attack": 8,
+        "defense": null,
+        "hp": 5,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 5,
+            "enemies": [
+              {
+                "name": "orc",
+                "skill": 8,
+                "stamina": 5
+              }
+            ],
+            "groups": [
+              [
+                0
+              ]
+            ],
+            "win": 371
+          }
+        },
+        "part": {
+          "name": "orc",
+          "skill": 8,
+          "stamina": 5
+        }
+      }
+    },
+    {
+      "key": "fight:10:0",
+      "name": "Стражът на портата - бърза победа / Градски страж",
+      "attack": 8,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Стражът на портата - бърза победа / Градски страж",
+        "attack": 8,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 10,
+            "enemies": [
+              {
+                "name": "guard",
+                "skill": 8,
+                "stamina": 7
+              }
+            ],
+            "groups": [
+              [
+                0
+              ]
+            ],
+            "win": 212,
+            "timedWin": {
+              "rounds": 6,
+              "late": 130
+            }
+          }
+        },
+        "part": {
+          "name": "guard",
+          "skill": 8,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "fight:22:0",
+      "name": "Двата таласъма в кръчмата / Таласъм",
+      "attack": 4,
+      "defense": null,
+      "hp": 5,
+      "pb": null,
+      "adopt": {
+        "name": "Двата таласъма в кръчмата / Таласъм",
+        "attack": 4,
+        "defense": null,
+        "hp": 5,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 22,
+            "enemies": [
+              {
+                "name": "goblin",
+                "skill": 4,
+                "stamina": 5
+              },
+              {
+                "name": "goblin",
+                "skill": 5,
+                "stamina": 5
+              }
+            ],
+            "groups": [
+              [
+                0
+              ],
+              [
+                1
+              ]
+            ],
+            "win": 198
+          }
+        },
+        "part": {
+          "name": "goblin",
+          "skill": 4,
+          "stamina": 5
+        }
+      }
+    },
+    {
+      "key": "fight:22:1",
+      "name": "Двата таласъма в кръчмата / Таласъм",
+      "attack": 5,
+      "defense": null,
+      "hp": 5,
+      "pb": null,
+      "adopt": {
+        "name": "Двата таласъма в кръчмата / Таласъм",
+        "attack": 5,
+        "defense": null,
+        "hp": 5,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 2,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 22,
+            "enemies": [
+              {
+                "name": "goblin",
+                "skill": 4,
+                "stamina": 5
+              },
+              {
+                "name": "goblin",
+                "skill": 5,
+                "stamina": 5
+              }
+            ],
+            "groups": [
+              [
+                0
+              ],
+              [
+                1
+              ]
+            ],
+            "win": 198
+          }
+        },
+        "part": {
+          "name": "goblin",
+          "skill": 5,
+          "stamina": 5
+        }
+      }
+    },
+    {
+      "key": "fight:23:0",
+      "name": "Майсторът сребрар / Майстор сребрар",
+      "attack": 4,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Майсторът сребрар / Майстор сребрар",
+        "attack": 4,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 23,
+            "enemies": [
+              {
+                "name": "silversmith",
+                "skill": 4,
+                "stamina": 8
+              }
+            ],
+            "groups": [
+              [
+                0
+              ]
+            ],
+            "win": 146
+          }
+        },
+        "part": {
+          "name": "silversmith",
+          "skill": 4,
+          "stamina": 8
+        }
+      }
+    },
+    {
+      "key": "fight:57:0",
+      "name": "Регинс и вълкодавите / Вълкодав",
+      "attack": 7,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Регинс и вълкодавите / Вълкодав",
+        "attack": 7,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 57,
+            "enemies": [
+              {
+                "name": "wolfhound",
+                "skill": 7,
+                "stamina": 7
+              },
+              {
+                "name": "wolfhound",
+                "skill": 7,
+                "stamina": 5
+              }
+            ],
+            "groups": [
+              [
+                0
+              ],
+              [
+                1
+              ]
+            ],
+            "win": 360
+          }
+        },
+        "part": {
+          "name": "wolfhound",
+          "skill": 7,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "fight:57:1",
+      "name": "Регинс и вълкодавите / Вълкодав",
+      "attack": 7,
+      "defense": null,
+      "hp": 5,
+      "pb": null,
+      "adopt": {
+        "name": "Регинс и вълкодавите / Вълкодав",
+        "attack": 7,
+        "defense": null,
+        "hp": 5,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 4,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 57,
+            "enemies": [
+              {
+                "name": "wolfhound",
+                "skill": 7,
+                "stamina": 7
+              },
+              {
+                "name": "wolfhound",
+                "skill": 7,
+                "stamina": 5
+              }
+            ],
+            "groups": [
+              [
+                0
+              ],
+              [
+                1
+              ]
+            ],
+            "win": 360
+          }
+        },
+        "part": {
+          "name": "wolfhound",
+          "skill": 7,
+          "stamina": 5
+        }
+      }
+    },
+    {
+      "key": "fight:72:0",
+      "name": "Засадата на таласъма / Таласъм",
+      "attack": 5,
+      "defense": null,
+      "hp": 4,
+      "pb": null,
+      "adopt": {
+        "name": "Засадата на таласъма / Таласъм",
+        "attack": 5,
+        "defense": null,
+        "hp": 4,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 72,
+            "enemies": [
+              {
+                "name": "goblin",
+                "skill": 5,
+                "stamina": 4
+              }
+            ],
+            "groups": [
+              [
+                0
+              ]
+            ],
+            "win": 208
+          }
+        },
+        "part": {
+          "name": "goblin",
+          "skill": 5,
+          "stamina": 4
+        }
+      }
+    },
+    {
+      "key": "fight:73:0",
+      "name": "Сауърбели и Фетноуз / Сауърбели",
+      "attack": 10,
+      "defense": null,
+      "hp": 11,
+      "pb": null,
+      "adopt": {
+        "name": "Сауърбели и Фетноуз / Сауърбели",
+        "attack": 10,
+        "defense": null,
+        "hp": 11,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 6,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 73,
+            "enemies": [
+              {
+                "name": "sourbelly",
+                "skill": 10,
+                "stamina": 11
+              },
+              {
+                "name": "fatnose",
+                "skill": 9,
+                "stamina": 10
+              }
+            ],
+            "groups": [
+              [
+                0
+              ],
+              [
+                1
+              ]
+            ],
+            "win": 110,
+            "escape": {
+              "section": 239,
+              "afterGroup": 1,
+              "discardShield": true,
+              "skillLoss": 1
+            }
+          }
+        },
+        "part": {
+          "name": "sourbelly",
+          "skill": 10,
+          "stamina": 11
+        }
+      }
+    },
+    {
+      "key": "fight:73:1",
+      "name": "Сауърбели и Фетноуз / Фетноуз",
+      "attack": 9,
+      "defense": null,
+      "hp": 10,
+      "pb": null,
+      "adopt": {
+        "name": "Сауърбели и Фетноуз / Фетноуз",
+        "attack": 9,
+        "defense": null,
+        "hp": 10,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 6,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 73,
+            "enemies": [
+              {
+                "name": "sourbelly",
+                "skill": 10,
+                "stamina": 11
+              },
+              {
+                "name": "fatnose",
+                "skill": 9,
+                "stamina": 10
+              }
+            ],
+            "groups": [
+              [
+                0
+              ],
+              [
+                1
+              ]
+            ],
+            "win": 110,
+            "escape": {
+              "section": 239,
+              "afterGroup": 1,
+              "discardShield": true,
+              "skillLoss": 1
+            }
+          }
+        },
+        "part": {
+          "name": "fatnose",
+          "skill": 9,
+          "stamina": 10
+        }
+      }
+    },
+    {
+      "key": "fight:79:0",
+      "name": "Змийската Кралица - обвинение / Змийска Кралица",
+      "attack": 9,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Змийската Кралица - обвинение / Змийска Кралица",
+        "attack": 9,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 7,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 79,
+            "enemies": [
+              {
+                "name": "snakeQueen",
+                "skill": 9,
+                "stamina": 7
+              }
+            ],
+            "groups": [
+              [
+                0
+              ]
+            ],
+            "win": 295,
+            "entry": {
+              "stamina": 4,
+              "skill": 1
+            }
+          }
+        },
+        "part": {
+          "name": "snakeQueen",
+          "skill": 9,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "fight:88:0",
+      "name": "Змийската Кралица - изненадващо ухапване / Змийска Кралица",
+      "attack": 9,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Змийската Кралица - изненадващо ухапване / Змийска Кралица",
+        "attack": 9,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 8,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 88,
+            "enemies": [
+              {
+                "name": "snakeQueen",
+                "skill": 9,
+                "stamina": 7
+              }
+            ],
+            "groups": [
+              [
+                0
+              ]
+            ],
+            "win": 295,
+            "entry": {
+              "stamina": 4,
+              "skill": 1
+            },
+            "escape": {
+              "section": 333,
+              "rounds": 3
+            }
+          }
+        },
+        "part": {
+          "name": "snakeQueen",
+          "skill": 9,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "fight:99:0",
+      "name": "Градските стражи - арест / Градски страж",
+      "attack": 7,
+      "defense": null,
+      "hp": 4,
+      "pb": null,
+      "adopt": {
+        "name": "Градските стражи - арест / Градски страж",
+        "attack": 7,
+        "defense": null,
+        "hp": 4,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 9,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 99,
+            "enemies": [
+              {
+                "name": "guard",
+                "skill": 7,
+                "stamina": 4
+              },
+              {
+                "name": "guard",
+                "skill": 6,
+                "stamina": 6
+              }
+            ],
+            "groups": [
+              [
+                0
+              ],
+              [
+                1
+              ]
+            ],
+            "win": 285
+          }
+        },
+        "part": {
+          "name": "guard",
+          "skill": 7,
+          "stamina": 4
+        }
+      }
+    },
+    {
+      "key": "fight:99:1",
+      "name": "Градските стражи - арест / Градски страж",
+      "attack": 6,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Градските стражи - арест / Градски страж",
+        "attack": 6,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 9,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 99,
+            "enemies": [
+              {
+                "name": "guard",
+                "skill": 7,
+                "stamina": 4
+              },
+              {
+                "name": "guard",
+                "skill": 6,
+                "stamina": 6
+              }
+            ],
+            "groups": [
+              [
+                0
+              ],
+              [
+                1
+              ]
+            ],
+            "win": 285
+          }
+        },
+        "part": {
+          "name": "guard",
+          "skill": 6,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "fight:130:0",
+      "name": "Подкрепленията на портата / Градски страж",
+      "attack": 6,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Подкрепленията на портата / Градски страж",
+        "attack": 6,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 10,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 130,
+            "enemies": [
+              {
+                "name": "guard",
+                "skill": 6,
+                "stamina": 6
+              },
+              {
+                "name": "guard",
+                "skill": 7,
+                "stamina": 5
+              }
+            ],
+            "groups": [
+              [
+                0
+              ],
+              [
+                1
+              ]
+            ],
+            "win": 74
+          }
+        },
+        "part": {
+          "name": "guard",
+          "skill": 6,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "fight:130:1",
+      "name": "Подкрепленията на портата / Градски страж",
+      "attack": 7,
+      "defense": null,
+      "hp": 5,
+      "pb": null,
+      "adopt": {
+        "name": "Подкрепленията на портата / Градски страж",
+        "attack": 7,
+        "defense": null,
+        "hp": 5,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 10,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 130,
+            "enemies": [
+              {
+                "name": "guard",
+                "skill": 6,
+                "stamina": 6
+              },
+              {
+                "name": "guard",
+                "skill": 7,
+                "stamina": 5
+              }
+            ],
+            "groups": [
+              [
+                0
+              ],
+              [
+                1
+              ]
+            ],
+            "win": 74
+          }
+        },
+        "part": {
+          "name": "guard",
+          "skill": 7,
+          "stamina": 5
+        }
+      }
+    },
+    {
+      "key": "fight:140:0",
+      "name": "Човекоядецът - нападение / Човекоядец",
+      "attack": 8,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Човекоядецът - нападение / Човекоядец",
+        "attack": 8,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 11,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 140,
+            "enemies": [
+              {
+                "name": "ogre",
+                "skill": 8,
+                "stamina": 9
+              }
+            ],
+            "groups": [
+              [
+                0
+              ]
+            ],
+            "win": 71,
+            "escape": {
+              "section": 282,
+              "rounds": 3
+            }
+          }
+        },
+        "part": {
+          "name": "ogre",
+          "skill": 8,
+          "stamina": 9
+        }
+      }
+    },
+    {
+      "key": "fight:144:0",
+      "name": "Вещицата в канала / Вещица",
+      "attack": 7,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Вещицата в канала / Вещица",
+        "attack": 7,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 12,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 144,
+            "enemies": [
+              {
+                "name": "witch",
+                "skill": 7,
+                "stamina": 7
+              }
+            ],
+            "groups": [
+              [
+                0
+              ]
+            ],
+            "win": 303
+          }
+        },
+        "part": {
+          "name": "witch",
+          "skill": 7,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "fight:152:0",
+      "name": "Пиратът - бой с тояга / Пират",
+      "attack": 7,
+      "defense": null,
+      "hp": 5,
+      "pb": null,
+      "adopt": {
+        "name": "Пиратът - бой с тояга / Пират",
+        "attack": 7,
+        "defense": null,
+        "hp": 5,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 13,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 152,
+            "enemies": [
+              {
+                "name": "pirate",
+                "skill": 7,
+                "stamina": 5
+              }
+            ],
+            "groups": [
+              [
+                0
+              ]
+            ],
+            "win": 20,
+            "attackModifier": -2
+          }
+        },
+        "part": {
+          "name": "pirate",
+          "skill": 7,
+          "stamina": 5
+        }
+      }
+    },
+    {
+      "key": "fight:157:0",
+      "name": "Стражите в тъмницата - без оръжие / Градски страж",
+      "attack": 6,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Стражите в тъмницата - без оръжие / Градски страж",
+        "attack": 6,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 14,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 157,
+            "enemies": [
+              {
+                "name": "guard",
+                "skill": 6,
+                "stamina": 6
+              },
+              {
+                "name": "guard",
+                "skill": 7,
+                "stamina": 5
+              }
+            ],
+            "groups": [
+              [
+                0
+              ],
+              [
+                1
+              ]
+            ],
+            "win": 54,
+            "attackModifier": -3
+          }
+        },
+        "part": {
+          "name": "guard",
+          "skill": 6,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "fight:157:1",
+      "name": "Стражите в тъмницата - без оръжие / Градски страж",
+      "attack": 7,
+      "defense": null,
+      "hp": 5,
+      "pb": null,
+      "adopt": {
+        "name": "Стражите в тъмницата - без оръжие / Градски страж",
+        "attack": 7,
+        "defense": null,
+        "hp": 5,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 14,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 157,
+            "enemies": [
+              {
+                "name": "guard",
+                "skill": 6,
+                "stamina": 6
+              },
+              {
+                "name": "guard",
+                "skill": 7,
+                "stamina": 5
+              }
+            ],
+            "groups": [
+              [
+                0
+              ],
+              [
+                1
+              ]
+            ],
+            "win": 54,
+            "attackModifier": -3
+          }
+        },
+        "part": {
+          "name": "guard",
+          "skill": 7,
+          "stamina": 5
+        }
+      }
+    },
+    {
+      "key": "fight:166:0",
+      "name": "Гигантската Стоножка / Гигантска Стоножка",
+      "attack": 10,
+      "defense": null,
+      "hp": 5,
+      "pb": null,
+      "adopt": {
+        "name": "Гигантската Стоножка / Гигантска Стоножка",
+        "attack": 10,
+        "defense": null,
+        "hp": 5,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 15,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 166,
+            "enemies": [
+              {
+                "name": "centipede",
+                "skill": 10,
+                "stamina": 5
+              }
+            ],
+            "groups": [
+              [
+                0
+              ]
+            ],
+            "win": 272
+          }
+        },
+        "part": {
+          "name": "centipede",
+          "skill": 10,
+          "stamina": 5
+        }
+      }
+    },
+    {
+      "key": "fight:170:0",
+      "name": "Бижутерът с бойната брадва / Бижутер",
+      "attack": 9,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Бижутерът с бойната брадва / Бижутер",
+        "attack": 9,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 16,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 170,
+            "enemies": [
+              {
+                "name": "jeweller",
+                "skill": 9,
+                "stamina": 8
+              }
+            ],
+            "groups": [
+              [
+                0
+              ]
+            ],
+            "win": 114,
+            "escape": {
+              "section": 196
+            }
+          }
+        },
+        "part": {
+          "name": "jeweller",
+          "skill": 9,
+          "stamina": 8
+        }
+      }
+    },
+    {
+      "key": "fight:177:0",
+      "name": "Двамата разбойници / Разбойник",
+      "attack": 7,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Двамата разбойници / Разбойник",
+        "attack": 7,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 17,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 177,
+            "enemies": [
+              {
+                "name": "robber",
+                "skill": 7,
+                "stamina": 8
+              },
+              {
+                "name": "robber",
+                "skill": 8,
+                "stamina": 6
+              }
+            ],
+            "groups": [
+              [
+                0
+              ],
+              [
+                1
+              ]
+            ],
+            "win": 51
+          }
+        },
+        "part": {
+          "name": "robber",
+          "skill": 7,
+          "stamina": 8
+        }
+      }
+    },
+    {
+      "key": "fight:177:1",
+      "name": "Двамата разбойници / Разбойник",
+      "attack": 8,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Двамата разбойници / Разбойник",
+        "attack": 8,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 17,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 177,
+            "enemies": [
+              {
+                "name": "robber",
+                "skill": 7,
+                "stamina": 8
+              },
+              {
+                "name": "robber",
+                "skill": 8,
+                "stamina": 6
+              }
+            ],
+            "groups": [
+              [
+                0
+              ],
+              [
+                1
+              ]
+            ],
+            "win": 51
+          }
+        },
+        "part": {
+          "name": "robber",
+          "skill": 8,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "fight:191:0",
+      "name": "Хищните Листаци / Хищни Листаци",
+      "attack": 6,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Хищните Листаци / Хищни Листаци",
+        "attack": 6,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 18,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 191,
+            "enemies": [
+              {
+                "name": "leafBeasts",
+                "skill": 6,
+                "stamina": 6
+              }
+            ],
+            "groups": [
+              [
+                0
+              ]
+            ],
+            "win": 133
+          }
+        },
+        "part": {
+          "name": "leafBeasts",
+          "skill": 6,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "fight:193:0",
+      "name": "Мумията в саркофага / Мумия",
+      "attack": 7,
+      "defense": null,
+      "hp": 12,
+      "pb": null,
+      "adopt": {
+        "name": "Мумията в саркофага / Мумия",
+        "attack": 7,
+        "defense": null,
+        "hp": 12,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 19,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 193,
+            "enemies": [
+              {
+                "name": "mummy",
+                "skill": 7,
+                "stamina": 12
+              }
+            ],
+            "groups": [
+              [
+                0
+              ]
+            ],
+            "win": 163,
+            "bypass": {
+              "item": "fireRing",
+              "section": 286
+            }
+          }
+        },
+        "part": {
+          "name": "mummy",
+          "skill": 7,
+          "stamina": 12
+        }
+      }
+    },
+    {
+      "key": "fight:201:0",
+      "name": "Скитащо чудовище / Орк",
+      "attack": 5,
+      "defense": null,
+      "hp": 4,
+      "pb": null,
+      "adopt": {
+        "name": "Скитащо чудовище / Орк",
+        "attack": 5,
+        "defense": null,
+        "hp": 4,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 20,
+        "slot": 0,
+        "partCount": 6,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 201,
+            "enemies": [
+              {
+                "name": "orc",
+                "skill": 5,
+                "stamina": 4
+              },
+              {
+                "name": "snake",
+                "skill": 6,
+                "stamina": 6
+              },
+              {
+                "name": "wolf",
+                "skill": 5,
+                "stamina": 5
+              },
+              {
+                "name": "pygmy",
+                "skill": 4,
+                "stamina": 4
+              },
+              {
+                "name": "ape",
+                "skill": 7,
+                "stamina": 6
+              },
+              {
+                "name": "caveTroll",
+                "skill": 8,
+                "stamina": 7
+              }
+            ],
+            "groups": [
+              [
+                0
+              ],
+              [
+                1
+              ],
+              [
+                2
+              ],
+              [
+                3
+              ],
+              [
+                4
+              ],
+              [
+                5
+              ]
+            ],
+            "win": 138,
+            "randomEnemy": true
+          }
+        },
+        "part": {
+          "name": "orc",
+          "skill": 5,
+          "stamina": 4
+        }
+      }
+    },
+    {
+      "key": "fight:201:1",
+      "name": "Скитащо чудовище / Гигантска Змия",
+      "attack": 6,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Скитащо чудовище / Гигантска Змия",
+        "attack": 6,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 20,
+        "slot": 1,
+        "partCount": 6,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 201,
+            "enemies": [
+              {
+                "name": "orc",
+                "skill": 5,
+                "stamina": 4
+              },
+              {
+                "name": "snake",
+                "skill": 6,
+                "stamina": 6
+              },
+              {
+                "name": "wolf",
+                "skill": 5,
+                "stamina": 5
+              },
+              {
+                "name": "pygmy",
+                "skill": 4,
+                "stamina": 4
+              },
+              {
+                "name": "ape",
+                "skill": 7,
+                "stamina": 6
+              },
+              {
+                "name": "caveTroll",
+                "skill": 8,
+                "stamina": 7
+              }
+            ],
+            "groups": [
+              [
+                0
+              ],
+              [
+                1
+              ],
+              [
+                2
+              ],
+              [
+                3
+              ],
+              [
+                4
+              ],
+              [
+                5
+              ]
+            ],
+            "win": 138,
+            "randomEnemy": true
+          }
+        },
+        "part": {
+          "name": "snake",
+          "skill": 6,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "fight:201:2",
+      "name": "Скитащо чудовище / Вълк",
+      "attack": 5,
+      "defense": null,
+      "hp": 5,
+      "pb": null,
+      "adopt": {
+        "name": "Скитащо чудовище / Вълк",
+        "attack": 5,
+        "defense": null,
+        "hp": 5,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 20,
+        "slot": 2,
+        "partCount": 6,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 201,
+            "enemies": [
+              {
+                "name": "orc",
+                "skill": 5,
+                "stamina": 4
+              },
+              {
+                "name": "snake",
+                "skill": 6,
+                "stamina": 6
+              },
+              {
+                "name": "wolf",
+                "skill": 5,
+                "stamina": 5
+              },
+              {
+                "name": "pygmy",
+                "skill": 4,
+                "stamina": 4
+              },
+              {
+                "name": "ape",
+                "skill": 7,
+                "stamina": 6
+              },
+              {
+                "name": "caveTroll",
+                "skill": 8,
+                "stamina": 7
+              }
+            ],
+            "groups": [
+              [
+                0
+              ],
+              [
+                1
+              ],
+              [
+                2
+              ],
+              [
+                3
+              ],
+              [
+                4
+              ],
+              [
+                5
+              ]
+            ],
+            "win": 138,
+            "randomEnemy": true
+          }
+        },
+        "part": {
+          "name": "wolf",
+          "skill": 5,
+          "stamina": 5
+        }
+      }
+    },
+    {
+      "key": "fight:201:3",
+      "name": "Скитащо чудовище / Пигмей",
+      "attack": 4,
+      "defense": null,
+      "hp": 4,
+      "pb": null,
+      "adopt": {
+        "name": "Скитащо чудовище / Пигмей",
+        "attack": 4,
+        "defense": null,
+        "hp": 4,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 20,
+        "slot": 3,
+        "partCount": 6,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 201,
+            "enemies": [
+              {
+                "name": "orc",
+                "skill": 5,
+                "stamina": 4
+              },
+              {
+                "name": "snake",
+                "skill": 6,
+                "stamina": 6
+              },
+              {
+                "name": "wolf",
+                "skill": 5,
+                "stamina": 5
+              },
+              {
+                "name": "pygmy",
+                "skill": 4,
+                "stamina": 4
+              },
+              {
+                "name": "ape",
+                "skill": 7,
+                "stamina": 6
+              },
+              {
+                "name": "caveTroll",
+                "skill": 8,
+                "stamina": 7
+              }
+            ],
+            "groups": [
+              [
+                0
+              ],
+              [
+                1
+              ],
+              [
+                2
+              ],
+              [
+                3
+              ],
+              [
+                4
+              ],
+              [
+                5
+              ]
+            ],
+            "win": 138,
+            "randomEnemy": true
+          }
+        },
+        "part": {
+          "name": "pygmy",
+          "skill": 4,
+          "stamina": 4
+        }
+      }
+    },
+    {
+      "key": "fight:201:4",
+      "name": "Скитащо чудовище / Човекоподобна Маймуна",
+      "attack": 7,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Скитащо чудовище / Човекоподобна Маймуна",
+        "attack": 7,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 20,
+        "slot": 4,
+        "partCount": 6,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 201,
+            "enemies": [
+              {
+                "name": "orc",
+                "skill": 5,
+                "stamina": 4
+              },
+              {
+                "name": "snake",
+                "skill": 6,
+                "stamina": 6
+              },
+              {
+                "name": "wolf",
+                "skill": 5,
+                "stamina": 5
+              },
+              {
+                "name": "pygmy",
+                "skill": 4,
+                "stamina": 4
+              },
+              {
+                "name": "ape",
+                "skill": 7,
+                "stamina": 6
+              },
+              {
+                "name": "caveTroll",
+                "skill": 8,
+                "stamina": 7
+              }
+            ],
+            "groups": [
+              [
+                0
+              ],
+              [
+                1
+              ],
+              [
+                2
+              ],
+              [
+                3
+              ],
+              [
+                4
+              ],
+              [
+                5
+              ]
+            ],
+            "win": 138,
+            "randomEnemy": true
+          }
+        },
+        "part": {
+          "name": "ape",
+          "skill": 7,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "fight:201:5",
+      "name": "Скитащо чудовище / Пещерен Трол",
+      "attack": 8,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Скитащо чудовище / Пещерен Трол",
+        "attack": 8,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 20,
+        "slot": 5,
+        "partCount": 6,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 201,
+            "enemies": [
+              {
+                "name": "orc",
+                "skill": 5,
+                "stamina": 4
+              },
+              {
+                "name": "snake",
+                "skill": 6,
+                "stamina": 6
+              },
+              {
+                "name": "wolf",
+                "skill": 5,
+                "stamina": 5
+              },
+              {
+                "name": "pygmy",
+                "skill": 4,
+                "stamina": 4
+              },
+              {
+                "name": "ape",
+                "skill": 7,
+                "stamina": 6
+              },
+              {
+                "name": "caveTroll",
+                "skill": 8,
+                "stamina": 7
+              }
+            ],
+            "groups": [
+              [
+                0
+              ],
+              [
+                1
+              ],
+              [
+                2
+              ],
+              [
+                3
+              ],
+              [
+                4
+              ],
+              [
+                5
+              ]
+            ],
+            "win": 138,
+            "randomEnemy": true
+          }
+        },
+        "part": {
+          "name": "caveTroll",
+          "skill": 8,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "fight:207:0",
+      "name": "Ястребите на Смъртта на покрива / Ястреб на Смъртта",
+      "attack": 4,
+      "defense": null,
+      "hp": 5,
+      "pb": null,
+      "adopt": {
+        "name": "Ястребите на Смъртта на покрива / Ястреб на Смъртта",
+        "attack": 4,
+        "defense": null,
+        "hp": 5,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 21,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 207,
+            "enemies": [
+              {
+                "name": "deathHawk",
+                "skill": 4,
+                "stamina": 5
+              },
+              {
+                "name": "deathHawk",
+                "skill": 4,
+                "stamina": 4
+              }
+            ],
+            "groups": [
+              [
+                0
+              ],
+              [
+                1
+              ]
+            ],
+            "win": 314
+          }
+        },
+        "part": {
+          "name": "deathHawk",
+          "skill": 4,
+          "stamina": 5
+        }
+      }
+    },
+    {
+      "key": "fight:207:1",
+      "name": "Ястребите на Смъртта на покрива / Ястреб на Смъртта",
+      "attack": 4,
+      "defense": null,
+      "hp": 4,
+      "pb": null,
+      "adopt": {
+        "name": "Ястребите на Смъртта на покрива / Ястреб на Смъртта",
+        "attack": 4,
+        "defense": null,
+        "hp": 4,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 21,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 207,
+            "enemies": [
+              {
+                "name": "deathHawk",
+                "skill": 4,
+                "stamina": 5
+              },
+              {
+                "name": "deathHawk",
+                "skill": 4,
+                "stamina": 4
+              }
+            ],
+            "groups": [
+              [
+                0
+              ],
+              [
+                1
+              ]
+            ],
+            "win": 314
+          }
+        },
+        "part": {
+          "name": "deathHawk",
+          "skill": 4,
+          "stamina": 4
+        }
+      }
+    },
+    {
+      "key": "fight:217:0",
+      "name": "Лунните Псета / Лунно Псе",
+      "attack": 9,
+      "defense": null,
+      "hp": 10,
+      "pb": null,
+      "adopt": {
+        "name": "Лунните Псета / Лунно Псе",
+        "attack": 9,
+        "defense": null,
+        "hp": 10,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 22,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 217,
+            "enemies": [
+              {
+                "name": "moonDog",
+                "skill": 9,
+                "stamina": 10
+              },
+              {
+                "name": "moonDog",
+                "skill": 11,
+                "stamina": 9
+              }
+            ],
+            "groups": [
+              [
+                0
+              ],
+              [
+                1
+              ]
+            ],
+            "win": 259
+          }
+        },
+        "part": {
+          "name": "moonDog",
+          "skill": 9,
+          "stamina": 10
+        }
+      }
+    },
+    {
+      "key": "fight:217:1",
+      "name": "Лунните Псета / Лунно Псе",
+      "attack": 11,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Лунните Псета / Лунно Псе",
+        "attack": 11,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 22,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 217,
+            "enemies": [
+              {
+                "name": "moonDog",
+                "skill": 9,
+                "stamina": 10
+              },
+              {
+                "name": "moonDog",
+                "skill": 11,
+                "stamina": 9
+              }
+            ],
+            "groups": [
+              [
+                0
+              ],
+              [
+                1
+              ]
+            ],
+            "win": 259
+          }
+        },
+        "part": {
+          "name": "moonDog",
+          "skill": 11,
+          "stamina": 9
+        }
+      }
+    },
+    {
+      "key": "fight:225:0",
+      "name": "Тримата скитници / Скитник",
+      "attack": 7,
+      "defense": null,
+      "hp": 5,
+      "pb": null,
+      "adopt": {
+        "name": "Тримата скитници / Скитник",
+        "attack": 7,
+        "defense": null,
+        "hp": 5,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 23,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 225,
+            "enemies": [
+              {
+                "name": "vagabond",
+                "skill": 7,
+                "stamina": 5
+              },
+              {
+                "name": "vagabond",
+                "skill": 6,
+                "stamina": 7
+              },
+              {
+                "name": "vagabond",
+                "skill": 5,
+                "stamina": 6
+              }
+            ],
+            "groups": [
+              [
+                0
+              ],
+              [
+                1
+              ],
+              [
+                2
+              ]
+            ],
+            "win": 397
+          }
+        },
+        "part": {
+          "name": "vagabond",
+          "skill": 7,
+          "stamina": 5
+        }
+      }
+    },
+    {
+      "key": "fight:225:1",
+      "name": "Тримата скитници / Скитник",
+      "attack": 6,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Тримата скитници / Скитник",
+        "attack": 6,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 23,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 225,
+            "enemies": [
+              {
+                "name": "vagabond",
+                "skill": 7,
+                "stamina": 5
+              },
+              {
+                "name": "vagabond",
+                "skill": 6,
+                "stamina": 7
+              },
+              {
+                "name": "vagabond",
+                "skill": 5,
+                "stamina": 6
+              }
+            ],
+            "groups": [
+              [
+                0
+              ],
+              [
+                1
+              ],
+              [
+                2
+              ]
+            ],
+            "win": 397
+          }
+        },
+        "part": {
+          "name": "vagabond",
+          "skill": 6,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "fight:225:2",
+      "name": "Тримата скитници / Скитник",
+      "attack": 5,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Тримата скитници / Скитник",
+        "attack": 5,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 23,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 225,
+            "enemies": [
+              {
+                "name": "vagabond",
+                "skill": 7,
+                "stamina": 5
+              },
+              {
+                "name": "vagabond",
+                "skill": 6,
+                "stamina": 7
+              },
+              {
+                "name": "vagabond",
+                "skill": 5,
+                "stamina": 6
+              }
+            ],
+            "groups": [
+              [
+                0
+              ],
+              [
+                1
+              ],
+              [
+                2
+              ]
+            ],
+            "win": 397
+          }
+        },
+        "part": {
+          "name": "vagabond",
+          "skill": 5,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "fight:226:0",
+      "name": "Пиратите в каютата / Пират",
+      "attack": 6,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Пиратите в каютата / Пират",
+        "attack": 6,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 24,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 226,
+            "enemies": [
+              {
+                "name": "pirate",
+                "skill": 6,
+                "stamina": 6
+              },
+              {
+                "name": "pirate",
+                "skill": 5,
+                "stamina": 4
+              },
+              {
+                "name": "pirate",
+                "skill": 7,
+                "stamina": 4
+              }
+            ],
+            "groups": [
+              [
+                0
+              ],
+              [
+                1
+              ],
+              [
+                2
+              ]
+            ],
+            "win": 111,
+            "escape": {
+              "section": 78
+            }
+          }
+        },
+        "part": {
+          "name": "pirate",
+          "skill": 6,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "fight:226:1",
+      "name": "Пиратите в каютата / Пират",
+      "attack": 5,
+      "defense": null,
+      "hp": 4,
+      "pb": null,
+      "adopt": {
+        "name": "Пиратите в каютата / Пират",
+        "attack": 5,
+        "defense": null,
+        "hp": 4,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 24,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 226,
+            "enemies": [
+              {
+                "name": "pirate",
+                "skill": 6,
+                "stamina": 6
+              },
+              {
+                "name": "pirate",
+                "skill": 5,
+                "stamina": 4
+              },
+              {
+                "name": "pirate",
+                "skill": 7,
+                "stamina": 4
+              }
+            ],
+            "groups": [
+              [
+                0
+              ],
+              [
+                1
+              ],
+              [
+                2
+              ]
+            ],
+            "win": 111,
+            "escape": {
+              "section": 78
+            }
+          }
+        },
+        "part": {
+          "name": "pirate",
+          "skill": 5,
+          "stamina": 4
+        }
+      }
+    },
+    {
+      "key": "fight:226:2",
+      "name": "Пиратите в каютата / Пират",
+      "attack": 7,
+      "defense": null,
+      "hp": 4,
+      "pb": null,
+      "adopt": {
+        "name": "Пиратите в каютата / Пират",
+        "attack": 7,
+        "defense": null,
+        "hp": 4,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 24,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 226,
+            "enemies": [
+              {
+                "name": "pirate",
+                "skill": 6,
+                "stamina": 6
+              },
+              {
+                "name": "pirate",
+                "skill": 5,
+                "stamina": 4
+              },
+              {
+                "name": "pirate",
+                "skill": 7,
+                "stamina": 4
+              }
+            ],
+            "groups": [
+              [
+                0
+              ],
+              [
+                1
+              ],
+              [
+                2
+              ]
+            ],
+            "win": 111,
+            "escape": {
+              "section": 78
+            }
+          }
+        },
+        "part": {
+          "name": "pirate",
+          "skill": 7,
+          "stamina": 4
+        }
+      }
+    },
+    {
+      "key": "fight:230:0",
+      "name": "Стражите в тъмницата - върнат меч / Градски страж",
+      "attack": 6,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Стражите в тъмницата - върнат меч / Градски страж",
+        "attack": 6,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 25,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 230,
+            "enemies": [
+              {
+                "name": "guard",
+                "skill": 6,
+                "stamina": 6
+              },
+              {
+                "name": "guard",
+                "skill": 7,
+                "stamina": 5
+              }
+            ],
+            "groups": [
+              [
+                0
+              ],
+              [
+                1
+              ]
+            ],
+            "win": 54
+          }
+        },
+        "part": {
+          "name": "guard",
+          "skill": 6,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "fight:230:1",
+      "name": "Стражите в тъмницата - върнат меч / Градски страж",
+      "attack": 7,
+      "defense": null,
+      "hp": 5,
+      "pb": null,
+      "adopt": {
+        "name": "Стражите в тъмницата - върнат меч / Градски страж",
+        "attack": 7,
+        "defense": null,
+        "hp": 5,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 25,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 230,
+            "enemies": [
+              {
+                "name": "guard",
+                "skill": 6,
+                "stamina": 6
+              },
+              {
+                "name": "guard",
+                "skill": 7,
+                "stamina": 5
+              }
+            ],
+            "groups": [
+              [
+                0
+              ],
+              [
+                1
+              ]
+            ],
+            "win": 54
+          }
+        },
+        "part": {
+          "name": "guard",
+          "skill": 7,
+          "stamina": 5
+        }
+      }
+    },
+    {
+      "key": "fight:249:0",
+      "name": "Змийската Кралица - с изтеглен меч / Змийска Кралица",
+      "attack": 9,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Змийската Кралица - с изтеглен меч / Змийска Кралица",
+        "attack": 9,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 26,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 249,
+            "enemies": [
+              {
+                "name": "snakeQueen",
+                "skill": 9,
+                "stamina": 7
+              }
+            ],
+            "groups": [
+              [
+                0
+              ]
+            ],
+            "win": 295
+          }
+        },
+        "part": {
+          "name": "snakeQueen",
+          "skill": 9,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "fight:253:0",
+      "name": "Отровните змии / Змии",
+      "attack": 5,
+      "defense": null,
+      "hp": 5,
+      "pb": null,
+      "adopt": {
+        "name": "Отровните змии / Змии",
+        "attack": 5,
+        "defense": null,
+        "hp": 5,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 27,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 253,
+            "enemies": [
+              {
+                "name": "snakes",
+                "skill": 5,
+                "stamina": 5
+              }
+            ],
+            "groups": [
+              [
+                0
+              ]
+            ],
+            "win": 75,
+            "enemyDamage": 4
+          }
+        },
+        "part": {
+          "name": "snakes",
+          "skill": 5,
+          "stamina": 5
+        }
+      }
+    },
+    {
+      "key": "fight:270:0",
+      "name": "Тролът в кръчмата / Трол",
+      "attack": 8,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Тролът в кръчмата / Трол",
+        "attack": 8,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 28,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 270,
+            "enemies": [
+              {
+                "name": "troll",
+                "skill": 8,
+                "stamina": 8
+              }
+            ],
+            "groups": [
+              [
+                0
+              ]
+            ],
+            "win": 26
+          }
+        },
+        "part": {
+          "name": "troll",
+          "skill": 8,
+          "stamina": 8
+        }
+      }
+    },
+    {
+      "key": "fight:296:0",
+      "name": "Двамата крадци / Крадец",
+      "attack": 7,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Двамата крадци / Крадец",
+        "attack": 7,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 29,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 296,
+            "enemies": [
+              {
+                "name": "thief",
+                "skill": 7,
+                "stamina": 7
+              },
+              {
+                "name": "thief",
+                "skill": 8,
+                "stamina": 6
+              }
+            ],
+            "groups": [
+              [
+                0
+              ],
+              [
+                1
+              ]
+            ],
+            "win": 147
+          }
+        },
+        "part": {
+          "name": "thief",
+          "skill": 7,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "fight:296:1",
+      "name": "Двамата крадци / Крадец",
+      "attack": 8,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Двамата крадци / Крадец",
+        "attack": 8,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 29,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 296,
+            "enemies": [
+              {
+                "name": "thief",
+                "skill": 7,
+                "stamina": 7
+              },
+              {
+                "name": "thief",
+                "skill": 8,
+                "stamina": 6
+              }
+            ],
+            "groups": [
+              [
+                0
+              ],
+              [
+                1
+              ]
+            ],
+            "win": 147
+          }
+        },
+        "part": {
+          "name": "thief",
+          "skill": 8,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "fight:309:0",
+      "name": "Вълкът / Вълк",
+      "attack": 5,
+      "defense": null,
+      "hp": 5,
+      "pb": null,
+      "adopt": {
+        "name": "Вълкът / Вълк",
+        "attack": 5,
+        "defense": null,
+        "hp": 5,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 30,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 309,
+            "enemies": [
+              {
+                "name": "wolf",
+                "skill": 5,
+                "stamina": 5
+              }
+            ],
+            "groups": [
+              [
+                0
+              ]
+            ],
+            "win": 97
+          }
+        },
+        "part": {
+          "name": "wolf",
+          "skill": 5,
+          "stamina": 5
+        }
+      }
+    },
+    {
+      "key": "fight:311:0",
+      "name": "Стражът, после двамата нападатели / Градски страж",
+      "attack": 8,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Стражът, после двамата нападатели / Градски страж",
+        "attack": 8,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 31,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 311,
+            "enemies": [
+              {
+                "name": "guard",
+                "skill": 8,
+                "stamina": 7
+              },
+              {
+                "name": "guard",
+                "skill": 6,
+                "stamina": 6
+              },
+              {
+                "name": "guard",
+                "skill": 7,
+                "stamina": 5
+              }
+            ],
+            "groups": [
+              [
+                0
+              ],
+              [
+                1,
+                2
+              ]
+            ],
+            "win": 74
+          }
+        },
+        "part": {
+          "name": "guard",
+          "skill": 8,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "fight:311:1",
+      "name": "Стражът, после двамата нападатели / Градски страж",
+      "attack": 6,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Стражът, после двамата нападатели / Градски страж",
+        "attack": 6,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 31,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 311,
+            "enemies": [
+              {
+                "name": "guard",
+                "skill": 8,
+                "stamina": 7
+              },
+              {
+                "name": "guard",
+                "skill": 6,
+                "stamina": 6
+              },
+              {
+                "name": "guard",
+                "skill": 7,
+                "stamina": 5
+              }
+            ],
+            "groups": [
+              [
+                0
+              ],
+              [
+                1,
+                2
+              ]
+            ],
+            "win": 74
+          }
+        },
+        "part": {
+          "name": "guard",
+          "skill": 6,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "fight:311:2",
+      "name": "Стражът, после двамата нападатели / Градски страж",
+      "attack": 7,
+      "defense": null,
+      "hp": 5,
+      "pb": null,
+      "adopt": {
+        "name": "Стражът, после двамата нападатели / Градски страж",
+        "attack": 7,
+        "defense": null,
+        "hp": 5,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 31,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 311,
+            "enemies": [
+              {
+                "name": "guard",
+                "skill": 8,
+                "stamina": 7
+              },
+              {
+                "name": "guard",
+                "skill": 6,
+                "stamina": 6
+              },
+              {
+                "name": "guard",
+                "skill": 7,
+                "stamina": 5
+              }
+            ],
+            "groups": [
+              [
+                0
+              ],
+              [
+                1,
+                2
+              ]
+            ],
+            "win": 74
+          }
+        },
+        "part": {
+          "name": "guard",
+          "skill": 7,
+          "stamina": 5
+        }
+      }
+    },
+    {
+      "key": "fight:323:0",
+      "name": "Ковачът с нажежената подкова / Ковач",
+      "attack": 9,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Ковачът с нажежената подкова / Ковач",
+        "attack": 9,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 32,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 323,
+            "enemies": [
+              {
+                "name": "blacksmith",
+                "skill": 9,
+                "stamina": 9
+              }
+            ],
+            "groups": [
+              [
+                0
+              ]
+            ],
+            "win": 395,
+            "enemyDamage": 3
+          }
+        },
+        "part": {
+          "name": "blacksmith",
+          "skill": 9,
+          "stamina": 9
+        }
+      }
+    },
+    {
+      "key": "fight:326:0",
+      "name": "Двете бесни кучета / Бясно Куче",
+      "attack": 4,
+      "defense": null,
+      "hp": 4,
+      "pb": null,
+      "adopt": {
+        "name": "Двете бесни кучета / Бясно Куче",
+        "attack": 4,
+        "defense": null,
+        "hp": 4,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 33,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 326,
+            "enemies": [
+              {
+                "name": "rabidDog",
+                "skill": 4,
+                "stamina": 4
+              },
+              {
+                "name": "rabidDog",
+                "skill": 4,
+                "stamina": 3
+              }
+            ],
+            "groups": [
+              [
+                0,
+                1
+              ]
+            ],
+            "win": 184,
+            "escape": {
+              "section": 180
+            }
+          }
+        },
+        "part": {
+          "name": "rabidDog",
+          "skill": 4,
+          "stamina": 4
+        }
+      }
+    },
+    {
+      "key": "fight:326:1",
+      "name": "Двете бесни кучета / Бясно Куче",
+      "attack": 4,
+      "defense": null,
+      "hp": 3,
+      "pb": null,
+      "adopt": {
+        "name": "Двете бесни кучета / Бясно Куче",
+        "attack": 4,
+        "defense": null,
+        "hp": 3,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 33,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 326,
+            "enemies": [
+              {
+                "name": "rabidDog",
+                "skill": 4,
+                "stamina": 4
+              },
+              {
+                "name": "rabidDog",
+                "skill": 4,
+                "stamina": 3
+              }
+            ],
+            "groups": [
+              [
+                0,
+                1
+              ]
+            ],
+            "win": 184,
+            "escape": {
+              "section": 180
+            }
+          }
+        },
+        "part": {
+          "name": "rabidDog",
+          "skill": 4,
+          "stamina": 3
+        }
+      }
+    },
+    {
+      "key": "fight:331:0",
+      "name": "Безумецът в уличката / Безумец",
+      "attack": 5,
+      "defense": null,
+      "hp": 5,
+      "pb": null,
+      "adopt": {
+        "name": "Безумецът в уличката / Безумец",
+        "attack": 5,
+        "defense": null,
+        "hp": 5,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 34,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 331,
+            "enemies": [
+              {
+                "name": "lunatic",
+                "skill": 5,
+                "stamina": 5
+              }
+            ],
+            "groups": [
+              [
+                0
+              ]
+            ],
+            "win": 86
+          }
+        },
+        "part": {
+          "name": "lunatic",
+          "skill": 5,
+          "stamina": 5
+        }
+      }
+    },
+    {
+      "key": "fight:349:0",
+      "name": "Огненото Дяволче / Огнено Дяволче",
+      "attack": 9,
+      "defense": null,
+      "hp": 4,
+      "pb": null,
+      "adopt": {
+        "name": "Огненото Дяволче / Огнено Дяволче",
+        "attack": 9,
+        "defense": null,
+        "hp": 4,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 35,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 349,
+            "enemies": [
+              {
+                "name": "fireImp",
+                "skill": 9,
+                "stamina": 4
+              }
+            ],
+            "groups": [
+              [
+                0
+              ]
+            ],
+            "win": 258,
+            "escape": {
+              "section": 192
+            }
+          }
+        },
+        "part": {
+          "name": "fireImp",
+          "skill": 9,
+          "stamina": 4
+        }
+      }
+    },
+    {
+      "key": "fight:351:0",
+      "name": "Стражите играят карти / Градски страж",
+      "attack": 6,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Стражите играят карти / Градски страж",
+        "attack": 6,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 36,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 351,
+            "enemies": [
+              {
+                "name": "guard",
+                "skill": 6,
+                "stamina": 6
+              },
+              {
+                "name": "guard",
+                "skill": 7,
+                "stamina": 5
+              }
+            ],
+            "groups": [
+              [
+                0
+              ],
+              [
+                1
+              ]
+            ],
+            "win": 54
+          }
+        },
+        "part": {
+          "name": "guard",
+          "skill": 6,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "fight:351:1",
+      "name": "Стражите играят карти / Градски страж",
+      "attack": 7,
+      "defense": null,
+      "hp": 5,
+      "pb": null,
+      "adopt": {
+        "name": "Стражите играят карти / Градски страж",
+        "attack": 7,
+        "defense": null,
+        "hp": 5,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 36,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 351,
+            "enemies": [
+              {
+                "name": "guard",
+                "skill": 6,
+                "stamina": 6
+              },
+              {
+                "name": "guard",
+                "skill": 7,
+                "stamina": 5
+              }
+            ],
+            "groups": [
+              [
+                0
+              ],
+              [
+                1
+              ]
+            ],
+            "win": 54
+          }
+        },
+        "part": {
+          "name": "guard",
+          "skill": 7,
+          "stamina": 5
+        }
+      }
+    },
+    {
+      "key": "fight:356:0",
+      "name": "Трите плъха в канала / Плъх-великан",
+      "attack": 4,
+      "defense": null,
+      "hp": 4,
+      "pb": null,
+      "adopt": {
+        "name": "Трите плъха в канала / Плъх-великан",
+        "attack": 4,
+        "defense": null,
+        "hp": 4,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 37,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 356,
+            "enemies": [
+              {
+                "name": "rat",
+                "skill": 4,
+                "stamina": 4
+              },
+              {
+                "name": "rat",
+                "skill": 5,
+                "stamina": 4
+              },
+              {
+                "name": "rat",
+                "skill": 5,
+                "stamina": 5
+              }
+            ],
+            "groups": [
+              [
+                0
+              ],
+              [
+                1
+              ],
+              [
+                2
+              ]
+            ],
+            "win": 28
+          }
+        },
+        "part": {
+          "name": "rat",
+          "skill": 4,
+          "stamina": 4
+        }
+      }
+    },
+    {
+      "key": "fight:356:1",
+      "name": "Трите плъха в канала / Плъх-великан",
+      "attack": 5,
+      "defense": null,
+      "hp": 4,
+      "pb": null,
+      "adopt": {
+        "name": "Трите плъха в канала / Плъх-великан",
+        "attack": 5,
+        "defense": null,
+        "hp": 4,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 37,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 356,
+            "enemies": [
+              {
+                "name": "rat",
+                "skill": 4,
+                "stamina": 4
+              },
+              {
+                "name": "rat",
+                "skill": 5,
+                "stamina": 4
+              },
+              {
+                "name": "rat",
+                "skill": 5,
+                "stamina": 5
+              }
+            ],
+            "groups": [
+              [
+                0
+              ],
+              [
+                1
+              ],
+              [
+                2
+              ]
+            ],
+            "win": 28
+          }
+        },
+        "part": {
+          "name": "rat",
+          "skill": 5,
+          "stamina": 4
+        }
+      }
+    },
+    {
+      "key": "fight:356:2",
+      "name": "Трите плъха в канала / Плъх-великан",
+      "attack": 5,
+      "defense": null,
+      "hp": 5,
+      "pb": null,
+      "adopt": {
+        "name": "Трите плъха в канала / Плъх-великан",
+        "attack": 5,
+        "defense": null,
+        "hp": 5,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 37,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 356,
+            "enemies": [
+              {
+                "name": "rat",
+                "skill": 4,
+                "stamina": 4
+              },
+              {
+                "name": "rat",
+                "skill": 5,
+                "stamina": 4
+              },
+              {
+                "name": "rat",
+                "skill": 5,
+                "stamina": 5
+              }
+            ],
+            "groups": [
+              [
+                0
+              ],
+              [
+                1
+              ],
+              [
+                2
+              ]
+            ],
+            "win": 28
+          }
+        },
+        "part": {
+          "name": "rat",
+          "skill": 5,
+          "stamina": 5
+        }
+      }
+    },
+    {
+      "key": "fight:357:0",
+      "name": "Човекоядецът - гладен / Човекоядец",
+      "attack": 8,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Човекоядецът - гладен / Човекоядец",
+        "attack": 8,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 38,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 357,
+            "enemies": [
+              {
+                "name": "ogre",
+                "skill": 8,
+                "stamina": 9
+              }
+            ],
+            "groups": [
+              [
+                0
+              ]
+            ],
+            "win": 71,
+            "escape": {
+              "section": 282,
+              "rounds": 3
+            }
+          }
+        },
+        "part": {
+          "name": "ogre",
+          "skill": 8,
+          "stamina": 9
+        }
+      }
+    },
+    {
+      "key": "fight:361:0",
+      "name": "Двете зомбита / Зомби",
+      "attack": 6,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Двете зомбита / Зомби",
+        "attack": 6,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 39,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 361,
+            "enemies": [
+              {
+                "name": "zombie",
+                "skill": 6,
+                "stamina": 6
+              },
+              {
+                "name": "zombie",
+                "skill": 6,
+                "stamina": 7
+              }
+            ],
+            "groups": [
+              [
+                0
+              ],
+              [
+                1
+              ]
+            ],
+            "win": 297
+          }
+        },
+        "part": {
+          "name": "zombie",
+          "skill": 6,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "fight:361:1",
+      "name": "Двете зомбита / Зомби",
+      "attack": 6,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Двете зомбита / Зомби",
+        "attack": 6,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 39,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 361,
+            "enemies": [
+              {
+                "name": "zombie",
+                "skill": 6,
+                "stamina": 6
+              },
+              {
+                "name": "zombie",
+                "skill": 6,
+                "stamina": 7
+              }
+            ],
+            "groups": [
+              [
+                0
+              ],
+              [
+                1
+              ]
+            ],
+            "win": 297
+          }
+        },
+        "part": {
+          "name": "zombie",
+          "skill": 6,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "fight:385:0",
+      "name": "Скелетите на Занбар Боун / Скелет",
+      "attack": 6,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Скелетите на Занбар Боун / Скелет",
+        "attack": 6,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 40,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 385,
+            "enemies": [
+              {
+                "name": "skeleton",
+                "skill": 6,
+                "stamina": 7
+              },
+              {
+                "name": "skeleton",
+                "skill": 8,
+                "stamina": 6
+              },
+              {
+                "name": "skeleton",
+                "skill": 7,
+                "stamina": 7
+              }
+            ],
+            "groups": [
+              [
+                0
+              ],
+              [
+                1
+              ],
+              [
+                2
+              ]
+            ],
+            "win": 203
+          }
+        },
+        "part": {
+          "name": "skeleton",
+          "skill": 6,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "fight:385:1",
+      "name": "Скелетите на Занбар Боун / Скелет",
+      "attack": 8,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Скелетите на Занбар Боун / Скелет",
+        "attack": 8,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 40,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 385,
+            "enemies": [
+              {
+                "name": "skeleton",
+                "skill": 6,
+                "stamina": 7
+              },
+              {
+                "name": "skeleton",
+                "skill": 8,
+                "stamina": 6
+              },
+              {
+                "name": "skeleton",
+                "skill": 7,
+                "stamina": 7
+              }
+            ],
+            "groups": [
+              [
+                0
+              ],
+              [
+                1
+              ],
+              [
+                2
+              ]
+            ],
+            "win": 203
+          }
+        },
+        "part": {
+          "name": "skeleton",
+          "skill": 8,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "fight:385:2",
+      "name": "Скелетите на Занбар Боун / Скелет",
+      "attack": 7,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Скелетите на Занбар Боун / Скелет",
+        "attack": 7,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 40,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 385,
+            "enemies": [
+              {
+                "name": "skeleton",
+                "skill": 6,
+                "stamina": 7
+              },
+              {
+                "name": "skeleton",
+                "skill": 8,
+                "stamina": 6
+              },
+              {
+                "name": "skeleton",
+                "skill": 7,
+                "stamina": 7
+              }
+            ],
+            "groups": [
+              [
+                0
+              ],
+              [
+                1
+              ],
+              [
+                2
+              ]
+            ],
+            "win": 203
+          }
+        },
+        "part": {
+          "name": "skeleton",
+          "skill": 7,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "fight:386:0",
+      "name": "Пиратът - дуел с мечове / Пират",
+      "attack": 7,
+      "defense": null,
+      "hp": 5,
+      "pb": null,
+      "adopt": {
+        "name": "Пиратът - дуел с мечове / Пират",
+        "attack": 7,
+        "defense": null,
+        "hp": 5,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 41,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 386,
+            "enemies": [
+              {
+                "name": "pirate",
+                "skill": 7,
+                "stamina": 5
+              }
+            ],
+            "groups": [
+              [
+                0
+              ]
+            ],
+            "win": 20
+          }
+        },
+        "part": {
+          "name": "pirate",
+          "skill": 7,
+          "stamina": 5
+        }
+      }
+    },
+    {
+      "key": "fight:392:0",
+      "name": "Гущерицата - огнен дъх / Гущерица",
+      "attack": 8,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Гущерицата - огнен дъх / Гущерица",
+        "attack": 8,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "city-of-thieves",
+        "dataset": "CATALOG",
+        "entryIndex": 42,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 392,
+            "enemies": [
+              {
+                "name": "lizardine",
+                "skill": 8,
+                "stamina": 8
+              }
+            ],
+            "groups": [
+              [
+                0
+              ]
+            ],
+            "win": 186,
+            "fireBreath": {
+              "maxRoll": 3,
+              "damage": 1
+            },
+            "escape": {
+              "section": 334
+            }
+          }
+        },
+        "part": {
+          "name": "lizardine",
+          "skill": 8,
+          "stamina": 8
+        }
+      }
+    }
+  ]
+}

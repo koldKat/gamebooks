@@ -5,6 +5,7 @@ import { destinyStat, destinyDamageScore, destinyOnHeroHit, destinyPassiveEffect
   isDestinyOpponentActive, isDestinyOpponentDead, destinyDamageAllowed, destinyAttackerTarget, reflectDestinyDamage } from './effects.js';
 import { applyDestinyRoundEvents } from './round-events.js';
 import { queueDestinyEncounterEvent, prepareDestinyEndEvents } from './encounter-events.js';
+import { onDestinyHeroSpeedRoll } from './roll-events.js';
 const attributes = ['speed', 'brawn', 'magic', 'armour'];
 const clone = value => structuredClone(value);
 
@@ -71,10 +72,17 @@ function stage(fight, expected) {
 export function settleDestinyFight(fight) {
   observeDestinyHealth(fight);
   if (fight.hero.health <= 0 || fight.encounter?.forcedLoss) fight.status = 'loss';
+  else if (fight.phase === 'ability-rolled' && fight.turn?.pendingAbility?.type === 'encounter') return false;
   else if (fight.encounter?.forcedVictory || (fight.encounter?.victoryTargets || fight.opponents.map((_, index) => index))
     .every(index => !isDestinyOpponentActive(fight, index) || fight.opponents[index].health <= (fight.encounter?.fleeAtHealth?.[index] || 0))) fight.status = 'win';
   if (fight.status !== 'active') {
     fight.phase = 'finished';
+    if (fight.status === 'win' && fight.encounter?.defeatRemainingOnVictory) fight.opponents.forEach((opponent, target) => {
+      if (isDestinyOpponentActive(fight, target)) {
+        opponent.health = 0;
+        recordDestinyDefeat(fight, target);
+      }
+    });
     if (fight.status === 'win' && fight.restoreOnVictory) {
       fight.hero.health = fight.hero.maxHealth;
       Object.assign(fight.hero, fight.hero.normal);
@@ -143,7 +151,8 @@ export function rollDestinySpeed(fight, roll = randomDie) {
   next.turn.opponentSpeedDice = savedOpponent ? [...next.savedOpponentDice.dice] : destinyRollOpponentDice(next, controlled ? next.turn.opponentSpeedCount || 2 : 2, roll, 'speed');
   if (savedOpponent) next.turn.lockedOpponentDice = true;
   next.phase = 'speed-rolled';
-  if (!isDestinyOpponentActive(next, next.target)) next.phase = 'end';
+  onDestinyHeroSpeedRoll(next, next.turn.heroSpeedDice.map((_, index) => index).filter(index => !savedHero || index !== 0), roll);
+  if (!isDestinyOpponentActive(next, next.target) && next.phase !== 'ability-rolled') next.phase = 'end';
   settleDestinyFight(next);
   return next;
 }
@@ -163,7 +172,7 @@ export function resolveDestinySpeed(fight, roll = randomDie) {
   const next = stage(fight, ['speed-rolled']);
   const hero = sum(next.turn.heroSpeedDice) + destinyStat(next, 'hero', 'speed');
   const opponent = sum(next.turn.opponentSpeedDice) + destinyStat(next, destinyAttackerTarget(next), 'speed');
-  next.turn.winner = next.turn.autoWin ? 'hero' : hero === opponent ? 'standoff' : hero > opponent ? 'hero' : 'opponent';
+  next.turn.winner = next.turn.forcedOpponentWin ? 'opponent' : next.turn.autoWin ? 'hero' : hero === opponent ? 'standoff' : hero > opponent ? 'hero' : 'opponent';
   if (next.turn.winner === 'hero' && !next.turn.autoWin && next.encounter?.automaticHitsAfterWin) next.encounter.automaticHitsRemaining = next.encounter.automaticHitsAfterWin;
   next.phase = next.turn.winner === 'standoff' ? 'end' : 'damage';
   next.history.push({ type: 'speed', round: next.round, target: next.target,
@@ -329,7 +338,8 @@ export function endDestinyRound(fight, effects = [], roll = randomDie) {
     if (isDestinyOpponentActive(next, effect.target) && opponent.armour < effect.maximum) opponent.armour = Math.min(effect.maximum, opponent.armour + effect.amount);
   }
   for (const effect of next.encounter?.endStats || []) {
-    if (effect.round === next.round) for (const [attribute, amount] of Object.entries(effect.changes)) addDestinyStatEffect(next, effect.target, attribute, amount, null, 'encounter-end');
+    if (effect.round !== undefined && effect.round !== next.round || effect.requiresAlive?.some(target => !isDestinyOpponentActive(next, target))) continue;
+    for (const [attribute, amount] of Object.entries(effect.changes)) addDestinyStatEffect(next, effect.target, attribute, amount, null, 'encounter-end');
   }
   if (next.encounter?.lossAfterRound && next.round >= next.encounter.lossAfterRound && next.opponents.some(opponent => opponent.health > 0)) next.encounter.forcedLoss = true;
   if (next.encounter?.automaticHitsRemaining > 0) next.encounter.automaticHitsRemaining--;

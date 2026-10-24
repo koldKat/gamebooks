@@ -1,5 +1,7 @@
+import { WONDERLAND_ENCOUNTERS } from './roster.js';
 import { wonderlandDraw, wonderlandInteger } from './random.js';
 
+const rulesFor = encounter => encounter.specialRules ?? WONDERLAND_ENCOUNTERS.find(row => row.section === encounter.section)?.specialRules ?? {};
 const clone = value => structuredClone(value);
 const weapons = new Set(['unarmed', 'scissors', 'spade', 'knife', 'tusk', 'axe', 'vorpal', 'club', 'mallet']);
 const protections = new Set(['none', 'shell', 'tray', 'coat']);
@@ -34,7 +36,7 @@ export function startWonderlandFight(player, encounter, options = {}) {
     if (enemies.length !== 1) throw new RangeError('Choose the pepper target explicitly for a group');
     enemies[0].combat = Math.max(0, enemies[0].combat - 1);
   }
-  const teapotInjury = encounter.section === 271 && !!options.teapotInjury;
+  const teapotInjury = !!rulesFor(encounter).teapotInjury && !!options.teapotInjury;
   const first = initiative(options.initiative ?? (teapotInjury ? 'enemy' : encounter.initiative));
   const activeCount = encounter.gardeners ? 2 : encounter.sequential ? 1 : encounter.stages?.[0] ?? enemies.length;
   return { player: p, enemies, initialEndurance: p.endurance, weapon, protection, mode,
@@ -49,8 +51,9 @@ export function startWonderlandFight(player, encounter, options = {}) {
 function complete(fight, status) {
   fight.status = status;
   fight.pendingInitiative = false;
-  if (fight.section === 492) fight.player.endurance = fight.initialEndurance;
-  if (fight.section === 199) {
+  const rules = rulesFor(fight.encounter);
+  if (rules.restoreEndurance === 'always') fight.player.endurance = fight.initialEndurance;
+  if (rules.restoreEndurance === 'winOrHalfLoss') {
     fight.player.endurance = status === 'win' ? fight.initialEndurance
       : fight.player.endurance + (fight.initialEndurance - fight.player.endurance) / 2;
   }
@@ -85,7 +88,7 @@ export function resolveWonderlandInitiative(fight, side) {
 
 export function wonderlandRound(fight, { roll, random } = {}) {
   if (fight.status !== 'fighting' || fight.pendingInitiative) throw new RangeError('Fight is not ready');
-  const next = clone(fight), draws = [];
+  const next = clone(fight), draws = [], rules = rulesFor(fight.encounter);
   const draw = (count = 2) => {
     const result = wonderlandDraw(next.mode, roll, random, count);
     draws.push(result);
@@ -105,9 +108,9 @@ export function wonderlandRound(fight, { roll, random } = {}) {
     if (result.outcome === 'player') {
       damage = next.weapon === 'unarmed' ? 2 : next.weapon === 'vorpal'
         ? next.encounter.ironScales ? 3 : 4 : 3;
-      if (next.section === 195) damage = 1;
-      if (next.section === 492 && next.weapon === 'scissors') {
-        damage = 2; enemy.combat = Math.max(0, enemy.combat - 1);
+      if (rules.playerDamage !== undefined) damage = rules.playerDamage;
+      if (rules.scissors && next.weapon === 'scissors') {
+        damage = rules.scissors.damage; enemy.combat = Math.max(0, enemy.combat - rules.scissors.combatDrain);
       }
       if (next.weapon === 'club' || next.weapon === 'mallet') {
         const hit = draw();
@@ -115,21 +118,20 @@ export function wonderlandRound(fight, { roll, random } = {}) {
         if (knockout) { damage = enemy.endurance; result.knockout = true; }
       }
     } else if (result.outcome === 'enemy') {
-      loss = next.section === 192 ? 3 : 2;
-      if (next.section === 27 || next.section === 171) {
+      loss = rules.enemyDamage ?? 2;
+      if (rules.dieDamage) {
         const hit = draw(1);
-        loss = next.mode === 'cards' ? hit.cards[0].red ? 2 : 3 : hit.value % 2 ? 2 : 3;
+        loss = (next.mode === 'cards' ? hit.cards[0].red : hit.value % 2) ? rules.dieDamage.redOrOdd : rules.dieDamage.blackOrEven;
       }
-      if (next.section === 372) {
+      if (rules.steam) {
         const hit = draw();
-        const steam = next.mode === 'cards' ? hit.cards[0].rank >= 11 : hit.value >= 10;
-        if (steam) loss += 2;
+        const steam = next.mode === 'cards' ? hit.cards[0].rank >= rules.steam.cardRank : hit.value >= rules.steam.dice;
+        if (steam) loss += rules.steam.bonus;
       }
-      if (next.section === 279 && next.enemyStreaks[result.index] >= 2) {
-        loss = 4; bypassProtection = true;
-      }
-      if (next.section === 496 && next.enemyStreaks[result.index] >= 3) {
-        loss += 2; combatDrain++;
+      if (rules.streak && next.enemyStreaks[result.index] >= rules.streak.hits) {
+        loss = (rules.streak.damage ?? loss) + (rules.streak.bonus ?? 0);
+        bypassProtection = !!rules.streak.bypassProtection;
+        combatDrain += rules.streak.combatDrain ?? 0;
       }
       if (next.protection !== 'none' && !bypassProtection) loss = Math.max(0, loss - 1);
     } else {

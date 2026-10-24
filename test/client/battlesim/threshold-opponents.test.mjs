@@ -2,6 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createArkhamCharacter, createArkhamFight, rollArkhamRound } from '../../../public/js/battlesim/engines/arkham-darkness.js';
 import { createKingsportCharacter, createKingsportFight, rollKingsportRound } from '../../../public/js/battlesim/engines/kingsport.js';
+import { loadFixtureRoster } from './roster-fixtures.mjs';
+await loadFixtureRoster(555);
+await loadFixtureRoster(557);
 
 const setup = {displayName: 'Manual encounter', roundsCount: 3, threshold1: 1, threshold2: 1,
   threshold3: 1, threshold4: 1, winsRequired: 2, modifier: 1};
