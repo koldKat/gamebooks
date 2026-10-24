@@ -438,6 +438,8 @@
                          Boot imports only this loader; per-book simulators are imported
                          only when their book opens. Mobile keeps its separate
                          mobile/js/battlesim-dispatch.js dispatcher.
+                         Database-backed encounter catalogs load before translations
+                         derived from their names, then before panel evaluation/init.
         layout.js        Shared desktop/mobile column boundary: setup/combat controls
                          on the left; results, logs and history on the right. Shared
                          battlesim.css owns the common text scale, aligned labels,

@@ -65,12 +65,12 @@ async function _loadBattleSim(id) {
 
   // Concurrent requests must share initialization, not just the module import.
   const pending = (async () => {
-    const { loadBattleSimTranslations } = await import('../i18n/battlesim.js');
-    await loadBattleSimTranslations(numericId);
-    if ([412, 521, 522, 523, 524, 555, 557, 807, 808, 860, 869, 877, 881, 882].includes(numericId)) {
+    if ([412, 521, 522, 523, 524, 527, 528, 555, 557, 807, 808, 860, 869, 877, 881, 882].includes(numericId)) {
       const { prepareRosterData } = await import('./roster-data.js');
       await prepareRosterData(numericId);
     }
+    const { loadBattleSimTranslations } = await import('../i18n/battlesim.js');
+    await loadBattleSimTranslations(numericId);
     const mod = await import(`./battlesim${numericId}.js`);
     await mod.loadData?.();
     const sim = { init: mod.init, render: mod.render, setVisible: mod.setVisible };

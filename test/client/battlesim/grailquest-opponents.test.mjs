@@ -1,3 +1,6 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
+await loadFixtureRoster(527);
+await loadFixtureRoster(528);
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createDenCharacter, createDenFight } from '../../../public/js/battlesim/engines/grailquest/den-of-dragons.js';

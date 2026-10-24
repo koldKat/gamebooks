@@ -1,3 +1,5 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
+await loadFixtureRoster(527);
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { readFileSync } from './simulator-source.mjs';

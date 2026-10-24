@@ -1298,21 +1298,49 @@
     {
       "bookId": 527,
       "databaseEnemyRows": 24,
-      "apiConsumers": [],
-      "inlineDataFiles": [
-        "public/js/battlesim/engines/grailquest/den-of-dragons-roster.js"
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
       ],
-      "runtimeRosterReviewPending": true
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/527.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true,
+        "liveApiVerified": true,
+        "legacyRowsAdopted": 24,
+        "legacyFieldChanges": 0,
+        "catalogs": "Normal and Dreamtime encounters"
+      }
     },
     {
       "bookId": 528,
       "databaseEnemyRows": 61,
-      "apiConsumers": [],
-      "inlineDataFiles": [
-        "public/js/battlesim/engines/grailquest/den-of-dragons-roster.js",
-        "public/js/battlesim/engines/grailquest/gateway-of-doom-roster.js"
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
       ],
-      "runtimeRosterReviewPending": true
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/528.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true,
+        "liveApiVerified": true,
+        "legacyRowsAdopted": 61,
+        "legacyFieldChanges": 0,
+        "catalogs": "Normal and Dreamtime encounters, wandering and generated-enemy recipes",
+        "generatedFights": "Ant/Djinn/Vampire counts and LIFE rolls, copied-player mirror and final-battle groups; old saved fights retain captured stats."
+      }
     },
     {
       "bookId": 529,
@@ -2234,6 +2262,8 @@
       522,
       523,
       524,
+      527,
+      528,
       555,
       557,
       781,

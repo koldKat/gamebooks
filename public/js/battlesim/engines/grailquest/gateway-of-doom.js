@@ -94,21 +94,16 @@ export function createGatewayFight(section, player, options = {}, random = Math.
     poisoned: spec.dream ? false : p.poisoned, weedkiller: false,
     polish: false, lamp: false, companion: null, carrotHits: 0 };
   let foes = clone(spec.foes);
-  if (spec.ants) foes = Array.from({ length: dice(random) * 10 }, () =>
-    ({ name: 'Ant', life: 1, hit: 6, bonus: 0, armour: 0, fixedDamage: 1 }));
-  if (spec.djinn) foes = Array.from({ length: die(random) }, () =>
-    ({ name: 'Djinn', life: 30, hit: 5, bonus: 2, armour: 0 }));
-  if (spec.vampires) foes = Array.from({ length: dice(random) }, () =>
-    ({ name: 'Vampire', life: dice(random) * 2, hit: 5, bonus: 0, armour: 0, fixedDamage: 5 }));
-  if (spec.mirror) foes = [{ name: 'Distorted Pip', life: Math.floor(p.life / 2),
-    hit: p.hit, bonus: p.bonus, armour: p.armour }];
-  if (spec.finale) {
-    const group = (count, name, life, hit, bonus, extra = {}) => Array.from({ length: count }, () =>
-      ({ name, life, hit, bonus, armour: 0, ...extra }));
-    foes = [...group(options.djinnGone ? 0 : 7, 'Djinn', 30, 5, 2, { ringHalfDamage: true }),
-      ...group(7, 'Slime Monster', 10, 6, 0, { slime: true }),
-      ...group(options.dwarvesGone ? 0 : 7, 'Military Dwarf', 20, 5, 3),
-      { name: 'Black Knight', life: 80, hit: 4, bonus: 4, armour: 12, knight: true }];
+  if (spec.spawnGroups) {
+    const roll = recipe => typeof recipe === 'number' ? recipe
+      : Array.from({length: recipe.dice}, () => die(random)).reduce((sum, value) => sum + value, 0) * (recipe.multiplier ?? 1);
+    foes = spec.spawnGroups.flatMap(group => Array.from({length: options[group.omitOption] ? 0 : roll(group.count)}, () => {
+      const foe = clone(group.foe);
+      if (group.lifeRoll) foe.life = roll(group.lifeRoll);
+      if (group.lifeScale !== undefined) foe.life = Math.floor(p.life * group.lifeScale);
+      for (const key of group.copyPlayer ?? []) foe[key] = p[key];
+      return foe;
+    }));
   }
   fight.foes = foes.map(foe => ({ ...foe, maxLife: foe.life, hitsTaken: 0, successfulHits: 0,
     unanswered: 0, attacksMade: 0, skip: 0 }));
