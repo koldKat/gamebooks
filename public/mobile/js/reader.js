@@ -150,6 +150,7 @@ function _ensureMVisited(pt) {
 
 // Check the request generation after each await so stale results cannot replace newer content.
 let _showToken = 0;
+let _readingViewReadOnly = false;
 let _readerSession = 0;
 
 // Cache section responses and prefetch choice targets; reset the cache on each book open.
@@ -398,6 +399,7 @@ async function _showSection(sec) {
   }
 
   top.innerHTML = data.html;
+  _readingViewReadOnly = false;
   top.scrollTop = 0;
   if (isReadingMapSection(data)) (state.graph[sec] ||= { choices: [] }).manualNavigation = true;
   // Prefetch choice targets while the current section is being read.
@@ -525,6 +527,7 @@ async function _showExtra(key, readOnly = false) {
   const data = await res.json();
   if (token !== _showToken || bookId !== currentBookId || authToken !== getToken()) return;
   top.innerHTML = `${data.html}<p class="m-back-link"><a href="#" id="m-extra-back">${t('mobile.back')}</a></p>`;
+  _readingViewReadOnly = readOnly;
   top.scrollTop = 0;
   _bindMapEntry(top, token, readOnly);
   document.getElementById('m-extra-back')?.addEventListener('click', e => {
@@ -599,6 +602,7 @@ async function _previewSection(sec) {
     <p class="m-preview-banner">${t('mobile.preview_banner', { sec })}</p>
     ${data.html}
     <p class="m-back-link"><a href="#" id="m-preview-return">${t('mobile.preview_return')}</a></p>`;
+  _readingViewReadOnly = true;
   bindReadingMapEntry(top, { canNavigate: () => false, onNavigate() {} });
   top.scrollTop = 0;
 
@@ -679,7 +683,10 @@ function _showMatter(which) {
   const text = _mMatter[which];
   if (!text) return;
   if (_paneMode === 'graph') _setPaneMode('both'); // see _showSection's own comment
-  ++_showToken;
+  const token = ++_showToken;
+  const bookId = currentBookId, authToken = getToken();
+  const run = currentPlaythrough(), sec = currentSection();
+  const readOnly = _readingViewReadOnly;
   const content = document.createElement('div');
   content.className = 'reading-frontmatter';
   if (!renderReadingMatter(content, currentBookId, text, document)) content.textContent = text;
@@ -691,5 +698,18 @@ function _showMatter(which) {
   back.append(link);
   top.replaceChildren(content, back);
   top.scrollTop = 0;
+  content.querySelectorAll('a[href^="#section-"]').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      if (token !== _showToken || bookId !== currentBookId || authToken !== getToken()) return;
+      const dest = parseSecId(a.getAttribute('href').slice('#section-'.length));
+      if (dest === null) return;
+      if (readOnly) {
+        if (isSectionMapped(dest)) _onGraphTap(dest);
+      } else if (run && run === currentPlaythrough() && sec === currentSection()) {
+        _navigate(dest);
+      }
+    });
+  });
   link.addEventListener('click', e => { e.preventDefault(); _returnToCurrent(); });
 }
