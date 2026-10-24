@@ -1,4 +1,4 @@
-import { addDestinyStatEffect, healDestinyHero, hasDestinyAbility, destinyStrike, destinyOnOpponentRoll, destinyDieLocked } from './effects.js';
+import { addDestinyStatEffect, healDestinyHero, hasDestinyAbility, destinyStrike, destinyRollOpponentDice, destinyDieLocked } from './effects.js';
 import { settleDestinyFight } from './core.js';
 import { applyDestinyAdvancedAbility } from './advanced.js';
 import { prepareDestinyDamage } from './damage.js';
@@ -218,6 +218,7 @@ export function useDestinyAbility(fight, name, options = {}, roll = () => Math.f
     throw new RangeError('Ability unavailable at this combat stage');
   }
   if (fight.turn.used[spec.category]) throw new RangeError('Only one ability of this category per round');
+  if (fight.encounter?.blockAbilitiesWhileAlive?.some(rule => rule.categories.includes(spec.category) && fight.opponents[rule.target]?.health > 0)) throw new RangeError('Defeat the opponent blocking this ability type');
   if (spec.firstRound && fight.round !== 1) throw new RangeError('Ability requires the first combat round');
   if (spec.heroWon && fight.turn.winner !== 'hero' && !(fight.phase === 'ability-rolled' && fight.turn.pendingAbility.type === 'damage')) throw new RangeError('Win the round first');
   if (spec.enemyWon && fight.turn.winner !== 'opponent') throw new RangeError('Opponent must win the round');
@@ -310,8 +311,7 @@ export function useDestinyAbility(fight, name, options = {}, roll = () => Math.f
     if (mode === 'both-speed' || mode === 'opponent-speed') {
       if (next.turn.lockedOpponentDice && mode === 'opponent-speed') throw new RangeError('Frozen dice cannot be rerolled');
       if (!next.turn.lockedOpponentDice) {
-        next.turn.opponentSpeedDice = next.turn.opponentSpeedDice.map(() => draw(roll));
-        destinyOnOpponentRoll(next, next.turn.opponentSpeedDice, 'speed');
+        next.turn.opponentSpeedDice = destinyRollOpponentDice(next, next.turn.opponentSpeedDice.length, roll, 'speed');
       }
     }
     if (mode === 'both-speed') next.turn.heroSpeedDice = next.turn.heroSpeedDice.map((value, index) => destinyDieLocked(next, 'hero', 'speed', index) ? value : draw(roll));

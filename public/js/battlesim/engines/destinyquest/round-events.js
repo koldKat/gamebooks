@@ -2,6 +2,10 @@ import { destinyStrike, addDestinyStatEffect } from './effects.js';
 import { destinyDie, applyDestinyDamage } from './damage.js';
 
 export function applyDestinyRoundEvents(fight, options, roll) {
+  for (const effect of fight.encounter?.startStats || []) {
+    if (effect.round !== fight.round) continue;
+    for (const [attribute, amount] of Object.entries(effect.changes)) addDestinyStatEffect(fight, effect.target, attribute, amount, null, 'encounter-start');
+  }
   let trapTargets = null;
   if (fight.trap && !fight.trap.fired && fight.trap.trigger === fight.round) {
     trapTargets = options.trapTargets;

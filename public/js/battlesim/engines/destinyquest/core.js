@@ -1,7 +1,7 @@
 // Shared DestinyQuest combat sequence. Book abilities and encounter exceptions
 // are applied between these explicit stages, rather than hidden inside a roll.
 import { destinyStat, destinyDamageScore, destinyOnHeroHit, destinyPassiveEffects,
-  destinyPassiveProtection, hasDestinyAbility, healDestinyHero, recordDestinyDefeat, destinyOnOpponentRoll, destinyStrike, observeDestinyHealth } from './effects.js';
+  destinyPassiveProtection, hasDestinyAbility, healDestinyHero, recordDestinyDefeat, destinyStrike, observeDestinyHealth, destinyRollOpponentDice } from './effects.js';
 import { applyDestinyRoundEvents } from './round-events.js';
 const attributes = ['speed', 'brawn', 'magic', 'armour'];
 const clone = value => structuredClone(value);
@@ -56,7 +56,7 @@ function stage(fight, expected) {
 export function settleDestinyFight(fight) {
   observeDestinyHealth(fight);
   if (fight.hero.health <= 0) fight.status = 'loss';
-  else if (fight.opponents.every(opponent => opponent.health <= 0)) fight.status = 'win';
+  else if (fight.opponents.every((opponent, index) => opponent.health <= (fight.encounter?.fleeAtHealth?.[index] || 0))) fight.status = 'win';
   if (fight.status !== 'active') {
     fight.phase = 'finished';
     if (fight.status === 'win' && fight.restoreOnVictory) {
@@ -114,9 +114,8 @@ export function rollDestinySpeed(fight, roll = randomDie) {
   if (savedHero) next.turn.lockedHeroDice = [0];
   const controlled = next.turn.controlledOpponent === undefined || next.turn.controlledOpponent === next.target;
   const savedOpponent = next.savedOpponentDice?.round === next.round && next.savedOpponentDice.target === next.target;
-  next.turn.opponentSpeedDice = savedOpponent ? [...next.savedOpponentDice.dice] : dice(roll, controlled ? next.turn.opponentSpeedCount || 2 : 2);
+  next.turn.opponentSpeedDice = savedOpponent ? [...next.savedOpponentDice.dice] : destinyRollOpponentDice(next, controlled ? next.turn.opponentSpeedCount || 2 : 2, roll, 'speed');
   if (savedOpponent) next.turn.lockedOpponentDice = true;
-  else destinyOnOpponentRoll(next, next.turn.opponentSpeedDice, 'speed');
   next.phase = 'speed-rolled';
   if (next.opponents[next.target].health === 0) next.phase = 'end';
   settleDestinyFight(next);
@@ -152,10 +151,9 @@ export function rollDestinyDamage(fight, roll = randomDie, { soundCharge = true 
     if (hasDestinyAbility(next, 'weaver')) healDestinyHero(next, 2);
   }
   const extra = next.turn.extraDamageDice || 0;
-  next.turn.damageDice = dice(roll, 1 + extra +
-    (next.turn.winner === 'opponent' && next.turn.reckless ? 1 : 0));
+  const count = 1 + extra + (next.turn.winner === 'opponent' && next.turn.reckless ? 1 : 0);
+  next.turn.damageDice = next.turn.winner === 'hero' ? dice(roll, count) : destinyRollOpponentDice(next, count, roll, 'damage');
   if (next.turn.winner === 'opponent') {
-    destinyOnOpponentRoll(next, next.turn.damageDice, 'damage');
     if (hasDestinyAbility(next, 'brittle-edge') && next.opponents[next.target].health > 0) destinyStrike(next, next.target, 2, 'brittle-edge', 'passive');
   }
   if (next.turn.winner === 'opponent' && hasDestinyAbility(next, 'siphon')) {
@@ -265,6 +263,16 @@ export function endDestinyRound(fight, effects = [], roll = randomDie) {
   const healing = next.effects.filter(effect => effect.kind === 'end-heal' &&
     effect.from <= next.round && effect.until >= next.round).reduce((total, effect) => total + effect.amount, 0);
   if (healing) healDestinyHero(next, healing);
+  for (const effect of next.encounter?.regeneration || []) {
+    const opponent = next.opponents[effect.target];
+    if (opponent?.health > 0 && !effect.requiresAlive?.some(target => next.opponents[target]?.health <= 0)) {
+      opponent.health = Math.min(effect.uncapped ? Number.MAX_SAFE_INTEGER : opponent.maxHealth, opponent.health + effect.amount);
+    }
+  }
+  for (const effect of next.encounter?.endArmourGrowth || []) {
+    const opponent = next.opponents[effect.target];
+    if (opponent?.health > 0 && opponent.armour < effect.maximum) opponent.armour = Math.min(effect.maximum, opponent.armour + effect.amount);
+  }
   if (!settleDestinyFight(next)) {
     if (next.turn.deaths.length > next.turn.deathMoveDeathsSeen && !next.turn.used.dm) {
       next.phase = 'death-move';

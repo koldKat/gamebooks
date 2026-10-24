@@ -13,6 +13,9 @@ export function destinyStat(fight, target, attribute) {
     if (effect.set !== undefined) value = effect.set;
     else value += effect.amount;
   }
+  for (const effect of fight.encounter?.statWhileAlive || []) {
+    if (effect.target === target && effect.attribute === attribute && fight.opponents[effect.alive]?.health > 0) value += effect.amount;
+  }
   if (target === 'hero' && attribute === 'speed' && hasDestinyAbility(fight, 'blood-frenzy') &&
       fight.effects.some(effect => effect.kind === 'bleed' && fight.opponents[effect.target]?.health > 0)) value++;
   if (target === 'hero' && attribute === 'speed' && fight.chronicTriggered) value--;
@@ -84,6 +87,22 @@ export function destinyStrike(fight, target, amount, source, kind = 'dice') {
   return lost;
 }
 
+export function destinyRollOpponentDice(fight, count, roll, kind) {
+  const draw = () => {
+    const value = roll();
+    if (!Number.isInteger(value) || value < 1 || value > 6) throw new RangeError('A die must roll 1-6');
+    return value;
+  };
+  const values = Array.from({ length: count }, draw);
+  destinyOnOpponentRoll(fight, values, kind);
+  if (fight.encounter?.rerollOnesByTarget?.includes(fight.target) && fight.opponents[fight.target].health > 0) {
+    const rerolled = [];
+    values.forEach((value, index) => { if (value === 1) { values[index] = draw(); rerolled.push(values[index]); } });
+    if (rerolled.length) destinyOnOpponentRoll(fight, rerolled, kind);
+  }
+  return values;
+}
+
 export function recordDestinyDefeat(fight, target) {
   fight.defeated ??= [];
   if (fight.defeated.includes(target)) return;
@@ -91,6 +110,13 @@ export function recordDestinyDefeat(fight, target) {
   if (hasDestinyAbility(fight, 'malefic-runes')) addDestinyStatEffect(fight, 'hero', 'magic', 1, null, 'malefic-runes');
   const explosion = fight.encounter?.deathDamageByTarget?.[target] || 0;
   if (explosion) { fight.hero.health = Math.max(0, fight.hero.health - explosion); observeDestinyHealth(fight); }
+  for (const effect of fight.encounter?.onDeathStatChanges || []) {
+    if (effect.dead !== target || fight.opponents[effect.target]?.health <= 0) continue;
+    for (const [attribute, amount] of Object.entries(effect.changes)) addDestinyStatEffect(fight, effect.target, attribute, amount, null, 'encounter-death');
+  }
+  for (const effect of fight.encounter?.onDeathSetStats || []) {
+    if (effect.dead === target && fight.opponents[effect.target]?.health > 0) fight.opponents[effect.target][effect.attribute] = effect.value;
+  }
 }
 
 export function destinyOnOpponentRoll(fight, values, kind) {
@@ -123,9 +149,18 @@ export function rollDestinyDamageDice(fight, count, roll, unmodified = false) {
 export function destinyPassiveEffects(fight, roll) {
   const result = [];
   if (fight.character?.penalties.includes('weeping-wounds')) result.push({ target: 'hero', amount: 1, ignoreArmour: true, source: 'weeping-wounds' });
-  if (fight.encounter?.roundDamagePerLivingOpponent) result.push({ target: 'hero',
+  if (fight.encounter?.roundDamagePerLivingOpponent && (!fight.encounter.roundDamageResource ||
+      fight.encounter.resources?.[fight.encounter.roundDamageResource] > 0)) result.push({ target: 'hero',
     amount: fight.encounter.roundDamagePerLivingOpponent * fight.opponents.filter(opponent => opponent.health > 0).length,
     ignoreArmour: true, source: 'encounter' });
+  if (fight.encounter?.outnumbered) {
+    const count = fight.opponents.filter(opponent => opponent.health > 0).length;
+    if (count > 1) result.push({ target: 'hero', amount: count, ignoreArmour: true, source: 'outnumbered' });
+  }
+  for (const effect of fight.encounter?.endEffects || []) {
+    if (effect.requiresAlive?.some(target => fight.opponents[target]?.health <= 0)) continue;
+    result.push({ ...effect, ignoreArmour: true, source: 'encounter' });
+  }
   for (const name of ['barbs', 'decay', 'thorns']) {
     if (!hasDestinyAbility(fight, name)) continue;
     fight.opponents.forEach((opponent, target) => {

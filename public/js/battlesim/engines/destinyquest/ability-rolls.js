@@ -27,7 +27,16 @@ export function resolveDestinyAbilityRoll(fight, roll = () => Math.floor(Math.ra
   const next = structuredClone(fight);
   const pending = next.turn.pendingAbility;
   delete next.turn.pendingAbility;
-  if (pending.type === 'damage') {
+  if (pending.type === 'resource') {
+    const before = next.encounter.resources[pending.resource];
+    next.encounter.resources[pending.resource] = Math.max(0, before - pending.dice.reduce((sum, value) => sum + value, 0));
+    if (before > 0 && next.encounter.resources[pending.resource] === 0) {
+      for (const change of pending.onZeroStats) for (const [attribute, amount] of Object.entries(change.changes)) {
+        addDestinyStatEffect(next, change.target, attribute, amount, null, pending.name);
+      }
+    }
+    next.phase = pending.returnPhase;
+  } else if (pending.type === 'damage') {
     applyDestinyDamage(next, pending);
     next.phase = pending.spec.replacement ? 'end' : pending.returnPhase;
     if (pending.spec.category === 'dm') next.phase = next.turn.afterDeathMove;
