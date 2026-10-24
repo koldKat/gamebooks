@@ -112,7 +112,7 @@ export function _persistLandingCoverSourcePref() {
   if (getToken()) coversState._hooks.savePrefs?.({ landingCoverSource: coversState._landingCoverSource });
   // Apply source changes immediately, without waiting for the rotation timer.
   _resetLandingCoverQueue();
-  _startLandingCoverRotation();
+  _startLandingCoverRotation({ paintInitial: false });
   _rotateLandingCover();
 }
 

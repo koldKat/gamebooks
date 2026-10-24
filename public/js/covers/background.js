@@ -98,6 +98,12 @@ export function _nextLandingCover() {
   return coversState._landingBgQueue[coversState._landingBgQueueIdx++] || null;
 }
 
+const editingDialogs = ['add-book-overlay', 'add-comp-overlay', 'add-series-overlay',
+  'edit-book-modal-overlay', 'edit-comp-overlay', 'edit-series-overlay'];
+function _coverEditDialogOpen() {
+  return editingDialogs.some(id => document.getElementById(id)?.classList.contains('active'));
+}
+
 // Queue rotations during crossfade so overlapping transitions cannot blank both layers.
 let _rotationInFlight = false;
 let _rotationQueued   = false;
@@ -124,7 +130,7 @@ function _finishLandingRotation(generation) {
 // Always safe to call: silently does nothing (leaves whatever is currently
 // showing untouched) if there's no cover available right now.
 export function _rotateLandingCover() {
-  if (coversState._landingBgHidden || document.getElementById('landing-wrapper')?.style.display === 'none') return;
+  if (coversState._landingBgHidden || document.getElementById('landing-wrapper')?.style.display === 'none' || _coverEditDialogOpen()) return;
   if (_rotationInFlight) { _rotationQueued = true; return; }
   const pick = _nextLandingCover();
   if (!pick) return;
@@ -151,7 +157,7 @@ export function _rotateLandingCover() {
 }
 
 function _paintLandingCover(pick, generation) {
-  if (coversState._landingBgHidden || document.getElementById('landing-wrapper')?.style.display === 'none') {
+  if (coversState._landingBgHidden || document.getElementById('landing-wrapper')?.style.display === 'none' || _coverEditDialogOpen()) {
     _finishLandingRotation(generation);
     return;
   }
@@ -164,9 +170,14 @@ function _paintLandingCover(pick, generation) {
   const cur = document.getElementById(`landing-bg-${coversState._landingBgActive}`);
   const nxt = document.getElementById(`landing-bg-${next}`);
   if (!cur || !nxt) { _finishLandingRotation(generation); return; }
+  // Both layers share a stacking level. Keep the incoming cover above the
+  // outgoing one so the wallpaper fades with the glass cards in either direction.
+  cur.after(nxt);
   nxt.style.willChange = 'opacity';
   nxt.style.backgroundImage = url;
   nxt.style.backgroundPosition = `center ${coversState._landingBgPosY}%`;
+  // Moving the layer resets its rendered style; commit opacity zero before fading.
+  void nxt.offsetHeight;
   nxt.style.opacity = '1';
   // Copy raw covers into glass cards to bypass the landing dim layer.
   // Commit the outgoing frame before fading; skip crossfade when no previous image exists.
@@ -203,14 +214,14 @@ function _paintLandingCover(pick, generation) {
 
 // Start one interval; paint immediately only if no layer is visible.
 // Reduce-motion changes the transition, not the rotation cadence.
-export function _startLandingCoverRotation() {
-  if (coversState._landingBgHidden || document.getElementById('landing-wrapper')?.style.display === 'none') return;
+export function _startLandingCoverRotation({ paintInitial = true } = {}) {
+  if (coversState._landingBgHidden || document.getElementById('landing-wrapper')?.style.display === 'none' || _coverEditDialogOpen()) return;
   _applyLandingBgPosition();
   if (window._landingCoverInterval) return;
   window._landingCoverInterval = setInterval(_rotateLandingCover, 60_000);
   const a = document.getElementById('landing-bg-a');
   const b = document.getElementById('landing-bg-b');
-  if (a?.style.opacity !== '1' && b?.style.opacity !== '1') _rotateLandingCover();
+  if (paintInitial && a?.style.opacity !== '1' && b?.style.opacity !== '1') _rotateLandingCover();
 }
 
 // Clear copied cover variables too, so restarting cannot crossfade from a stale frame.

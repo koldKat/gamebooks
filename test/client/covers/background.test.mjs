@@ -8,7 +8,7 @@ test('hide and restart cancel crossfades without resurrecting or blanking a back
   const timers = new Map(), intervals = new Map(), frames = [];
   const images = [];
   let nextId = 1;
-  globalThis.localStorage = { getItem: () => null };
+  globalThis.localStorage = { getItem: () => null, setItem() {} };
   globalThis.window = { innerWidth: 1280, matchMedia: () => ({ matches: false }) };
   globalThis.setTimeout = (fn, ms) => { const id = nextId++; timers.set(id, {fn, ms}); return id; };
   globalThis.clearTimeout = id => timers.delete(id);
@@ -28,9 +28,15 @@ test('hide and restart cancel crossfades without resurrecting or blanking a back
   };
   const vars = new Map();
   const root = { style: { setProperty: (key, value) => vars.set(key, value), getPropertyValue: key => vars.get(key) || '' } };
-  const a = { style: { opacity: '0' } }, b = { style: { opacity: '0' } };
+  const layers = [];
+  const layer = () => ({ style: { opacity: '0' }, after(incoming) {
+    const index = layers.indexOf(incoming); if (index >= 0) layers.splice(index, 1);
+    layers.splice(layers.indexOf(this) + 1, 0, incoming);
+  } });
+  const a = layer(), b = layer(); layers.push(a, b);
   const wrapper = { style: {} };
-  globalThis.document = { documentElement: root, getElementById: id => ({ 'landing-bg-a': a, 'landing-bg-b': b, 'landing-wrapper': wrapper })[id] || null };
+  const dialogs = {};
+  globalThis.document = { documentElement: root, getElementById: id => ({ 'landing-bg-a': a, 'landing-bg-b': b, 'landing-wrapper': wrapper })[id] || dialogs[id] || null };
   try {
     const { coversState } = await import('../../../public/js/covers/state.js');
     const { _startLandingCoverRotation, _stopLandingCoverRotation, _rotateLandingCover } = await import('../../../public/js/covers/background.js');
@@ -46,6 +52,7 @@ test('hide and restart cancel crossfades without resurrecting or blanking a back
     assert.equal(vars.get('--landing-cover-url'), undefined);
     images[0].onload(); await settle();
     assert.equal(b.style.opacity, '1');
+    assert.equal(layers.at(-1), b, 'first incoming wallpaper is above the outgoing layer');
     _startLandingCoverRotation();
     assert.equal(window._landingCoverInterval, firstInterval);
     _rotateLandingCover();
@@ -65,6 +72,7 @@ test('hide and restart cancel crossfades without resurrecting or blanking a back
     assert.equal(coversState._landingBgCurrentKey, '1', 'decode must finish before changing position or glass cards');
     decoded(); await settle();
     assert.equal(a.style.opacity, '1');
+    assert.equal(layers.at(-1), a, 'reverse fade also puts the incoming wallpaper on top immediately');
     assert.equal(coversState._landingBgCurrentKey, '3');
     assert.equal(coversState._landingBgPosY, 80);
     const staleCallback = [...timers.values()].find(timer => timer.ms === 3300).fn;
@@ -106,6 +114,32 @@ test('hide and restart cancel crossfades without resurrecting or blanking a back
     _rotateLandingCover();
     assert.equal(intervals.size, 0);
     assert.equal(a.style.opacity, '0');
+    wrapper.style.display = '';
+    const imageCount = images.length;
+    for (const id of ['add-book-overlay','add-comp-overlay','add-series-overlay','edit-book-modal-overlay','edit-comp-overlay','edit-series-overlay']) {
+      dialogs[id] = {classList: {contains: () => true}};
+      _startLandingCoverRotation(); _rotateLandingCover();
+      assert.equal(images.length, imageCount, 'editing does not request another cover');
+      assert.equal(intervals.size, 0, 'editing does not start rotation');
+      delete dialogs[id];
+    }
+    _rotateLandingCover();
+    dialogs['edit-book-modal-overlay'] = {classList: {contains: () => true}};
+    _rotateLandingCover(); images.at(-1).onload(); await settle();
+    assert.equal(vars.get('--landing-cover-url'), '', 'an image loaded during editing stays unpainted');
+    delete dialogs['edit-book-modal-overlay'];
+    _rotateLandingCover(); images.at(-1).onload(); await settle();
+    const loaded = images.length;
+    fire(3300); fire(3400);
+    assert.equal(images.length, loaded, 'editing never queues a second cover after saving');
+    _stopLandingCoverRotation();
+    const { _persistLandingCoverSourcePref } = await import('../../../public/js/covers/prefs.js');
+    const beforeSourceChange = images.length;
+    _persistLandingCoverSourcePref();
+    assert.equal(images.length, beforeSourceChange + 1, 'source change starts one cover request');
+    images.at(-1).onload(); await settle(); fire(3300); fire(3400);
+    assert.equal(images.length, beforeSourceChange + 1, 'starting rotation does not queue a second source-change cover');
+    _stopLandingCoverRotation();
   } finally {
     for (const [key, value] of Object.entries(saved)) {
       if (value === undefined) delete globalThis[key];
