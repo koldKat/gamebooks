@@ -1,3 +1,5 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
+await loadFixtureRoster(521);
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { initialFortune, rollExchange, spendFortune, recoverVitality } from '../../../public/js/battlesim/engines/skyfall-rules.js';

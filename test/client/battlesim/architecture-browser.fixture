@@ -261,7 +261,7 @@ for(const id of BOOK_IDS){
     const el=key=>document.getElementById('sim'+id+'-'+key);
     const editor=overlay.querySelector('.bsim-opponent-editor');
     const name=editor.querySelector('[role="combobox"]');
-    name.focus();
+    name.focus();name.dispatchEvent(new Event('input',{bubbles:true}));
     check(editor.querySelector('[role="option"]'),'Skyfall autocomplete '+id);
     name.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
     check(overlay.classList.contains('active')&&name.getAttribute('aria-expanded')==='false','Skyfall Escape closes dropdown '+id);

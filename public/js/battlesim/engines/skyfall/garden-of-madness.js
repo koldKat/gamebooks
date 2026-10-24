@@ -1,38 +1,10 @@
 import { rollAttack, tossCoins } from '../skyfall-rules.js';
 import { editableSkyfallEncounter } from './opponents.js';
 
-const foe = (name, expertise, vitality, damage) => ({ name, expertise, vitality, initialVitality: vitality, damage });
-const tripod = (section, extra = {}) => ({ section, foes: [foe('Tripodal Creature', 11, 30, 4)], disease: true, escapeDamage: 0, ...extra });
-const flowers = section => ({ section, foes: [foe('Snapdragons', 12, null, 1)], mode: 'flowers', rounds: 4 });
-const wyvern = (section, name, expertise, vitality, damage, breath, extra = {}) => ({ section,
-  foes: [foe(name + ' Wyvern', expertise, vitality, damage)], mode: 'wyvern', breath,
-  fortuneReward: expertise === 14 ? 5 : expertise === 13 ? 3 : 4, expertiseReward: 1, ...extra });
+import { createRosterLoader } from '../../roster-data.js';
 
-export const GARDEN_ENCOUNTERS = [
-  wyvern(8, 'Red', 14, 15, 3, 5), wyvern(10, 'Green', 13, 9, 4, 1),
-  wyvern(15, 'Blue', 11, 13, 5, 3, { lightning: true }),
-  tripod(41, { enemySurprise: true, rounds: 1 }),
-  { section: 60, foes: [foe('Pit Flower', 12, 2, 3)], mode: 'sequential', count: 4, penalty: 2, fortuneReward: 2, escapeDamage: 0 },
-  tripod(105, { fortuneReward: 3 }),
-  { section: 124, foes: [foe('Pit Flower', 12, 2, 3)], mode: 'edge', rounds: 1 },
-  flowers(141), flowers(173), tripod(174, { disease: false, escapeDamage: undefined, fortuneReward: 2 }),
-  { section: 160, foes: [foe('Hobgoblin', 9, 7, 1)], playerSurprise: true, fortuneReward: 1 },
-  { section: 176, foes: [foe('Hobgoblin 1', 11, 7, 2), foe('Hobgoblin 2', 11, 7, 2)], mode: 'reinforcement' },
-  { section: 177, foes: [foe('Spectral Guardian', 24, null, 2)], mode: 'gaps', rounds: 3, escapeDamage: 2 },
-  { section: 180, foes: [foe('Spectral Guardian', 12, null, 2)], mode: 'armour', rounds: 3, escapeDamage: 2 },
-  tripod(190, { unarmed: 2, rounds: 2 }),
-  { section: 191, foes: Array.from({ length: 5 }, (_, i) => foe(`Guard ${i + 1}`, 10, 9, 2)), mode: 'all', penalty: 1, fortuneReward: 5, expertiseReward: 1 },
-  wyvern(276, 'Red', 14, 15, 3, 5),
-  { section: 287, foes: [foe('Giant Slug', null, 40, 4)], mode: 'slug', escapeDamage: 4, fortuneReward: 4 },
-  { section: 291, foes: [foe('Greater Hobgoblin 1', 13, 11, 3), foe('Greater Hobgoblin 2', 13, 11, 3)], mode: 'random', fortuneReward: 4, expertiseReward: 1 },
-  { section: 297, foes: [foe('Bodyguard 1', 14, 13, 4), foe('Bodyguard 2', 14, 13, 4)], mode: 'all', rounds: 10, reinforcementsFatal: true },
-  { section: 325, foes: [foe('Faceless Warrior', 12, 10, 3)], fortuneReward: 2 },
-  { section: 348, foes: [foe('Hobgoblin', 9, 7, 1)], mode: 'crossbow', playerSurprise: true },
-  { section: 361, foes: [foe('Princess Wanda', 11, null, null)], mode: 'princess', enemySurprise: true },
-  tripod(374, { rounds: 1, escapeAfter: 1, fortuneReward: 0 }),
-  { section: 382, foes: [foe('Tentacle 1', 11, 5, null), foe('Tentacle 2', 11, 5, null)], mode: 'tentacles', count: 3 },
-  tripod(384, { escapeAfter: 3, disease: true, fortuneReward: 0 }),
-];
+export let GARDEN_ENCOUNTERS = [];
+export const loadRoster = createRosterLoader(524, 'GARDEN_ENCOUNTERS', rows => { GARDEN_ENCOUNTERS = rows; });
 
 export function createGardenFight(section, player, { surprise = 'none', daggerTaken = false, companions = 3, diseased = false, previous = null, opponents } = {}) {
   const source = editableSkyfallEncounter(GARDEN_ENCOUNTERS.find(e => String(e.section) === String(section)),
@@ -134,7 +106,8 @@ export function settleGardenRound(fight, { attackBonus = false, bonusHit = 0, de
   if (fatal) { fight.player.vitality = 0; fight.status = 'loss'; }
   if (e.mode === 'reinforcement' && fight.round >= 2 && !fight.reinforced) {
     fight.reinforced = true;
-    e.foes.push(foe('Hobgoblin 3', fight.daggerTaken ? 9 : 11, 7, 1));
+    const reinforcements = e.reinforcements ?? GARDEN_ENCOUNTERS.find(entry => entry.section === e.section)?.reinforcements;
+    e.foes.push(structuredClone(reinforcements[fight.daggerTaken ? 'disarmed' : 'armed']));
   }
   finishGardenFight(fight);
   if (fight.status === 'fighting') {

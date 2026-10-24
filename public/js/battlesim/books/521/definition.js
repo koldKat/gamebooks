@@ -1,3 +1,4 @@
+export { loadRoster } from '../../engines/skyfall/monsters-of-the-marsh.js';
 // Book identity and declarative defaults; no DOM or saved-state access.
 export const definition = Object.freeze({
   "id": 521,

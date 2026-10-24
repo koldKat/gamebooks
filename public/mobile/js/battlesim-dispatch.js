@@ -37,7 +37,7 @@ export async function openSimForBook(bookId) {
 
   const { loadBattleSimTranslations } = await import('../../js/i18n/battlesim.js');
   await loadBattleSimTranslations(id);
-  if ([412, 555, 557, 807, 808, 860, 869, 877, 881, 882].includes(id)) {
+  if ([412, 521, 522, 523, 524, 555, 557, 807, 808, 860, 869, 877, 881, 882].includes(id)) {
     const { prepareRosterData } = await import('../../js/battlesim/roster-data.js');
     await prepareRosterData(id);
   }

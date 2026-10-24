@@ -1200,38 +1200,91 @@
     {
       "bookId": 521,
       "databaseEnemyRows": 53,
-      "apiConsumers": [],
-      "inlineDataFiles": [
-        "public/js/battlesim/engines/skyfall/monsters-of-the-marsh.js"
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
       ],
-      "runtimeRosterReviewPending": true
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/521.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true,
+        "liveApiVerified": true,
+        "legacyRowsAdopted": 53,
+        "legacyFieldChanges": 0
+      }
     },
     {
       "bookId": 522,
       "databaseEnemyRows": 27,
-      "apiConsumers": [],
-      "inlineDataFiles": [
-        "public/js/battlesim/engines/skyfall/black-pyramid.js"
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
       ],
-      "runtimeRosterReviewPending": true
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/522.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true,
+        "liveApiVerified": true,
+        "legacyRowsAdopted": 27,
+        "legacyFieldChanges": 0
+      }
     },
     {
       "bookId": 523,
       "databaseEnemyRows": 29,
-      "apiConsumers": [],
-      "inlineDataFiles": [
-        "public/js/battlesim/engines/skyfall/mine-of-torments.js"
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
       ],
-      "runtimeRosterReviewPending": true
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/523.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true,
+        "liveApiVerified": true,
+        "legacyRowsAdopted": 29,
+        "legacyFieldChanges": 0
+      }
     },
     {
       "bookId": 524,
       "databaseEnemyRows": 36,
-      "apiConsumers": [],
-      "inlineDataFiles": [
-        "public/js/battlesim/engines/skyfall/garden-of-madness.js"
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
       ],
-      "runtimeRosterReviewPending": true
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/524.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true,
+        "liveApiVerified": true,
+        "legacyRowsAdopted": 36,
+        "legacyFieldChanges": 0,
+        "lateReinforcements": "Both dagger variants loaded from database; old pending fights retain their combat values and resolve without reset."
+      }
     },
     {
       "bookId": 526,
@@ -2177,6 +2230,10 @@
     "commit": "fb551a4",
     "liveTypedApiBooks": [
       412,
+      521,
+      522,
+      523,
+      524,
       555,
       557,
       781,

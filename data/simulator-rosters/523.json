@@ -1,0 +1,1547 @@
+{
+  "schemaVersion": 1,
+  "bookId": 523,
+  "family": "skyfall",
+  "source": "Existing simulator encounter catalog, matched exactly to existing section/name/expertise/vitality database rows. Preserve source exceptions and manual missing stats.",
+  "enemies": [
+    {
+      "key": "17:0",
+      "name": "Yeti (section 17; damage 2)",
+      "attack": 12,
+      "defense": null,
+      "hp": 14,
+      "pb": null,
+      "adopt": {
+        "name": "Yeti (section 17; damage 2)",
+        "attack": 12,
+        "defense": null,
+        "hp": 14,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "MINE_ENCOUNTERS",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 17,
+          "foes": [
+            {
+              "name": "Yeti",
+              "expertise": 12,
+              "vitality": 14,
+              "initialVitality": 14,
+              "damage": 2
+            }
+          ],
+          "fear": 1,
+          "fortuneReward": 2,
+          "clothing": true
+        },
+        "part": {
+          "name": "Yeti",
+          "expertise": 12,
+          "vitality": 14,
+          "initialVitality": 14,
+          "damage": 2
+        }
+      }
+    },
+    {
+      "key": "36:0",
+      "name": "Mountain Troll (section 36; damage 1)",
+      "attack": 11,
+      "defense": null,
+      "hp": 12,
+      "pb": null,
+      "adopt": {
+        "name": "Mountain Troll (section 36; damage 1)",
+        "attack": 11,
+        "defense": null,
+        "hp": 12,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "MINE_ENCOUNTERS",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 36,
+          "foes": [
+            {
+              "name": "Mountain Troll",
+              "expertise": 11,
+              "vitality": 12,
+              "initialVitality": 12,
+              "damage": 1
+            }
+          ],
+          "mode": "troll",
+          "fortuneReward": 2
+        },
+        "part": {
+          "name": "Mountain Troll",
+          "expertise": 11,
+          "vitality": 12,
+          "initialVitality": 12,
+          "damage": 1
+        }
+      }
+    },
+    {
+      "key": "41:0",
+      "name": "Timberwolf 1 (section 41; damage 2)",
+      "attack": 11,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Timberwolf 1 (section 41; damage 2)",
+        "attack": 11,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "MINE_ENCOUNTERS",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 5,
+        "entry": {
+          "section": 41,
+          "foes": [
+            {
+              "name": "Timberwolf 1",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            },
+            {
+              "name": "Timberwolf 2",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            },
+            {
+              "name": "Timberwolf 3",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            },
+            {
+              "name": "Timberwolf 4",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            },
+            {
+              "name": "Timberwolf 5",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            }
+          ],
+          "mode": "all",
+          "fortuneReward": 5,
+          "expertiseReward": 1
+        },
+        "part": {
+          "name": "Timberwolf 1",
+          "expertise": 11,
+          "vitality": 7,
+          "initialVitality": 7,
+          "damage": 2
+        }
+      }
+    },
+    {
+      "key": "41:1",
+      "name": "Timberwolf 2 (section 41; damage 2)",
+      "attack": 11,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Timberwolf 2 (section 41; damage 2)",
+        "attack": 11,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "MINE_ENCOUNTERS",
+        "entryIndex": 2,
+        "slot": 1,
+        "partCount": 5,
+        "entry": {
+          "section": 41,
+          "foes": [
+            {
+              "name": "Timberwolf 1",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            },
+            {
+              "name": "Timberwolf 2",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            },
+            {
+              "name": "Timberwolf 3",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            },
+            {
+              "name": "Timberwolf 4",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            },
+            {
+              "name": "Timberwolf 5",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            }
+          ],
+          "mode": "all",
+          "fortuneReward": 5,
+          "expertiseReward": 1
+        },
+        "part": {
+          "name": "Timberwolf 2",
+          "expertise": 11,
+          "vitality": 7,
+          "initialVitality": 7,
+          "damage": 2
+        }
+      }
+    },
+    {
+      "key": "41:2",
+      "name": "Timberwolf 3 (section 41; damage 2)",
+      "attack": 11,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Timberwolf 3 (section 41; damage 2)",
+        "attack": 11,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "MINE_ENCOUNTERS",
+        "entryIndex": 2,
+        "slot": 2,
+        "partCount": 5,
+        "entry": {
+          "section": 41,
+          "foes": [
+            {
+              "name": "Timberwolf 1",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            },
+            {
+              "name": "Timberwolf 2",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            },
+            {
+              "name": "Timberwolf 3",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            },
+            {
+              "name": "Timberwolf 4",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            },
+            {
+              "name": "Timberwolf 5",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            }
+          ],
+          "mode": "all",
+          "fortuneReward": 5,
+          "expertiseReward": 1
+        },
+        "part": {
+          "name": "Timberwolf 3",
+          "expertise": 11,
+          "vitality": 7,
+          "initialVitality": 7,
+          "damage": 2
+        }
+      }
+    },
+    {
+      "key": "41:3",
+      "name": "Timberwolf 4 (section 41; damage 2)",
+      "attack": 11,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Timberwolf 4 (section 41; damage 2)",
+        "attack": 11,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "MINE_ENCOUNTERS",
+        "entryIndex": 2,
+        "slot": 3,
+        "partCount": 5,
+        "entry": {
+          "section": 41,
+          "foes": [
+            {
+              "name": "Timberwolf 1",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            },
+            {
+              "name": "Timberwolf 2",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            },
+            {
+              "name": "Timberwolf 3",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            },
+            {
+              "name": "Timberwolf 4",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            },
+            {
+              "name": "Timberwolf 5",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            }
+          ],
+          "mode": "all",
+          "fortuneReward": 5,
+          "expertiseReward": 1
+        },
+        "part": {
+          "name": "Timberwolf 4",
+          "expertise": 11,
+          "vitality": 7,
+          "initialVitality": 7,
+          "damage": 2
+        }
+      }
+    },
+    {
+      "key": "41:4",
+      "name": "Timberwolf 5 (section 41; damage 2)",
+      "attack": 11,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Timberwolf 5 (section 41; damage 2)",
+        "attack": 11,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "MINE_ENCOUNTERS",
+        "entryIndex": 2,
+        "slot": 4,
+        "partCount": 5,
+        "entry": {
+          "section": 41,
+          "foes": [
+            {
+              "name": "Timberwolf 1",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            },
+            {
+              "name": "Timberwolf 2",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            },
+            {
+              "name": "Timberwolf 3",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            },
+            {
+              "name": "Timberwolf 4",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            },
+            {
+              "name": "Timberwolf 5",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            }
+          ],
+          "mode": "all",
+          "fortuneReward": 5,
+          "expertiseReward": 1
+        },
+        "part": {
+          "name": "Timberwolf 5",
+          "expertise": 11,
+          "vitality": 7,
+          "initialVitality": 7,
+          "damage": 2
+        }
+      }
+    },
+    {
+      "key": "43:0",
+      "name": "Yeti (section 43; damage 2)",
+      "attack": 12,
+      "defense": null,
+      "hp": 14,
+      "pb": null,
+      "adopt": {
+        "name": "Yeti (section 43; damage 2)",
+        "attack": 12,
+        "defense": null,
+        "hp": 14,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "MINE_ENCOUNTERS",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 43,
+          "foes": [
+            {
+              "name": "Yeti",
+              "expertise": 12,
+              "vitality": 14,
+              "initialVitality": 14,
+              "damage": 2
+            }
+          ],
+          "fear": 1,
+          "fortuneReward": 2,
+          "cold": true
+        },
+        "part": {
+          "name": "Yeti",
+          "expertise": 12,
+          "vitality": 14,
+          "initialVitality": 14,
+          "damage": 2
+        }
+      }
+    },
+    {
+      "key": "53:0",
+      "name": "Great White Bear (section 53; damage 4)",
+      "attack": 10,
+      "defense": null,
+      "hp": 14,
+      "pb": null,
+      "adopt": {
+        "name": "Great White Bear (section 53; damage 4)",
+        "attack": 10,
+        "defense": null,
+        "hp": 14,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "MINE_ENCOUNTERS",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 53,
+          "foes": [
+            {
+              "name": "Great White Bear",
+              "expertise": 10,
+              "vitality": 14,
+              "initialVitality": 14,
+              "damage": 4
+            }
+          ],
+          "fortuneReward": 2,
+          "sourceSection": 72,
+          "unarmed": 2
+        },
+        "part": {
+          "name": "Great White Bear",
+          "expertise": 10,
+          "vitality": 14,
+          "initialVitality": 14,
+          "damage": 4
+        }
+      }
+    },
+    {
+      "key": "69:0",
+      "name": "Lake Phantom (section 69; damage 2)",
+      "attack": 14,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Lake Phantom (section 69; damage 2)",
+        "attack": 14,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "MINE_ENCOUNTERS",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 69,
+          "foes": [
+            {
+              "name": "Lake Phantom",
+              "expertise": 14,
+              "vitality": 8,
+              "initialVitality": 8,
+              "damage": 2
+            }
+          ],
+          "mode": "phantom",
+          "fortuneReward": 4,
+          "expertiseReward": 1
+        },
+        "part": {
+          "name": "Lake Phantom",
+          "expertise": 14,
+          "vitality": 8,
+          "initialVitality": 8,
+          "damage": 2
+        }
+      }
+    },
+    {
+      "key": "72:0",
+      "name": "Great White Bear (section 72; damage 4)",
+      "attack": 10,
+      "defense": null,
+      "hp": 14,
+      "pb": null,
+      "adopt": {
+        "name": "Great White Bear (section 72; damage 4)",
+        "attack": 10,
+        "defense": null,
+        "hp": 14,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "MINE_ENCOUNTERS",
+        "entryIndex": 6,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 72,
+          "foes": [
+            {
+              "name": "Great White Bear",
+              "expertise": 10,
+              "vitality": 14,
+              "initialVitality": 14,
+              "damage": 4
+            }
+          ],
+          "fortuneReward": 2
+        },
+        "part": {
+          "name": "Great White Bear",
+          "expertise": 10,
+          "vitality": 14,
+          "initialVitality": 14,
+          "damage": 4
+        }
+      }
+    },
+    {
+      "key": "101:0",
+      "name": "Lake Phantom (section 101; damage 2)",
+      "attack": 10,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Lake Phantom (section 101; damage 2)",
+        "attack": 10,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "MINE_ENCOUNTERS",
+        "entryIndex": 7,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 101,
+          "foes": [
+            {
+              "name": "Lake Phantom",
+              "expertise": 10,
+              "vitality": 8,
+              "initialVitality": 8,
+              "damage": 2
+            }
+          ],
+          "mode": "phantom",
+          "fortuneReward": 4,
+          "expertiseReward": 1,
+          "weaponDamage": 4
+        },
+        "part": {
+          "name": "Lake Phantom",
+          "expertise": 10,
+          "vitality": 8,
+          "initialVitality": 8,
+          "damage": 2
+        }
+      }
+    },
+    {
+      "key": "116:0",
+      "name": "Giant Goat (section 116; damage 3)",
+      "attack": 20,
+      "defense": null,
+      "hp": 20,
+      "pb": null,
+      "adopt": {
+        "name": "Giant Goat (section 116; damage 3)",
+        "attack": 20,
+        "defense": null,
+        "hp": 20,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "MINE_ENCOUNTERS",
+        "entryIndex": 8,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 116,
+          "foes": [
+            {
+              "name": "Giant Goat",
+              "expertise": 20,
+              "vitality": 20,
+              "initialVitality": 20,
+              "damage": 3
+            }
+          ],
+          "mode": "goat"
+        },
+        "part": {
+          "name": "Giant Goat",
+          "expertise": 20,
+          "vitality": 20,
+          "initialVitality": 20,
+          "damage": 3
+        }
+      }
+    },
+    {
+      "key": "123:0",
+      "name": "Yeti (section 123; damage 2)",
+      "attack": 12,
+      "defense": null,
+      "hp": 14,
+      "pb": null,
+      "adopt": {
+        "name": "Yeti (section 123; damage 2)",
+        "attack": 12,
+        "defense": null,
+        "hp": 14,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "MINE_ENCOUNTERS",
+        "entryIndex": 9,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 123,
+          "foes": [
+            {
+              "name": "Yeti",
+              "expertise": 12,
+              "vitality": 14,
+              "initialVitality": 14,
+              "damage": 2
+            }
+          ],
+          "fear": 1,
+          "fortuneReward": 2,
+          "landing": true
+        },
+        "part": {
+          "name": "Yeti",
+          "expertise": 12,
+          "vitality": 14,
+          "initialVitality": 14,
+          "damage": 2
+        }
+      }
+    },
+    {
+      "key": "167:0",
+      "name": "Yeti (section 167; damage 2)",
+      "attack": 12,
+      "defense": null,
+      "hp": 14,
+      "pb": null,
+      "adopt": {
+        "name": "Yeti (section 167; damage 2)",
+        "attack": 12,
+        "defense": null,
+        "hp": 14,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "MINE_ENCOUNTERS",
+        "entryIndex": 10,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 167,
+          "foes": [
+            {
+              "name": "Yeti",
+              "expertise": 12,
+              "vitality": 14,
+              "initialVitality": 14,
+              "damage": 2
+            }
+          ],
+          "fear": 1,
+          "fortuneReward": 2,
+          "clothing": true
+        },
+        "part": {
+          "name": "Yeti",
+          "expertise": 12,
+          "vitality": 14,
+          "initialVitality": 14,
+          "damage": 2
+        }
+      }
+    },
+    {
+      "key": "189:0",
+      "name": "Great White Bear (section 189; damage 4)",
+      "attack": 10,
+      "defense": null,
+      "hp": 14,
+      "pb": null,
+      "adopt": {
+        "name": "Great White Bear (section 189; damage 4)",
+        "attack": 10,
+        "defense": null,
+        "hp": 14,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "MINE_ENCOUNTERS",
+        "entryIndex": 11,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 189,
+          "foes": [
+            {
+              "name": "Great White Bear",
+              "expertise": 10,
+              "vitality": 14,
+              "initialVitality": 14,
+              "damage": 4
+            }
+          ],
+          "fortuneReward": 2,
+          "sourceSection": 72,
+          "ambush": true
+        },
+        "part": {
+          "name": "Great White Bear",
+          "expertise": 10,
+          "vitality": 14,
+          "initialVitality": 14,
+          "damage": 4
+        }
+      }
+    },
+    {
+      "key": "196:0",
+      "name": "Timberling (section 196; damage 2)",
+      "attack": 16,
+      "defense": null,
+      "hp": 60,
+      "pb": null,
+      "adopt": {
+        "name": "Timberling (section 196; damage 2)",
+        "attack": 16,
+        "defense": null,
+        "hp": 60,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "MINE_ENCOUNTERS",
+        "entryIndex": 12,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 196,
+          "foes": [
+            {
+              "name": "Timberling",
+              "expertise": 16,
+              "vitality": 60,
+              "initialVitality": 60,
+              "damage": 2
+            }
+          ],
+          "escapeDamage": 2
+        },
+        "part": {
+          "name": "Timberling",
+          "expertise": 16,
+          "vitality": 60,
+          "initialVitality": 60,
+          "damage": 2
+        }
+      }
+    },
+    {
+      "key": "207:0",
+      "name": "Yeti (section 207; damage 2)",
+      "attack": 12,
+      "defense": null,
+      "hp": 14,
+      "pb": null,
+      "adopt": {
+        "name": "Yeti (section 207; damage 2)",
+        "attack": 12,
+        "defense": null,
+        "hp": 14,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "MINE_ENCOUNTERS",
+        "entryIndex": 13,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 207,
+          "foes": [
+            {
+              "name": "Yeti",
+              "expertise": 12,
+              "vitality": 14,
+              "initialVitality": 14,
+              "damage": 2
+            }
+          ],
+          "fear": 1,
+          "fortuneReward": 2,
+          "surprise": 2,
+          "clothing": true
+        },
+        "part": {
+          "name": "Yeti",
+          "expertise": 12,
+          "vitality": 14,
+          "initialVitality": 14,
+          "damage": 2
+        }
+      }
+    },
+    {
+      "key": "270:0",
+      "name": "Spectral Dwarf (section 270; damage 5)",
+      "attack": 12,
+      "defense": null,
+      "hp": 20,
+      "pb": null,
+      "adopt": {
+        "name": "Spectral Dwarf (section 270; damage 5)",
+        "attack": 12,
+        "defense": null,
+        "hp": 20,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "MINE_ENCOUNTERS",
+        "entryIndex": 14,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 270,
+          "foes": [
+            {
+              "name": "Spectral Dwarf",
+              "expertise": 12,
+              "vitality": 20,
+              "initialVitality": 20,
+              "damage": 5
+            }
+          ],
+          "weaponDamage": 1,
+          "fortuneReward": 2
+        },
+        "part": {
+          "name": "Spectral Dwarf",
+          "expertise": 12,
+          "vitality": 20,
+          "initialVitality": 20,
+          "damage": 5
+        }
+      }
+    },
+    {
+      "key": "293:0",
+      "name": "Spectral Dwarf (section 293; damage 5)",
+      "attack": 12,
+      "defense": null,
+      "hp": 20,
+      "pb": null,
+      "adopt": {
+        "name": "Spectral Dwarf (section 293; damage 5)",
+        "attack": 12,
+        "defense": null,
+        "hp": 20,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "MINE_ENCOUNTERS",
+        "entryIndex": 15,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 293,
+          "foes": [
+            {
+              "name": "Spectral Dwarf",
+              "expertise": 12,
+              "vitality": 20,
+              "initialVitality": 20,
+              "damage": 5
+            }
+          ],
+          "weaponDamage": 1,
+          "mode": "immune",
+          "escapeFortune": 4,
+          "escapeAfter": 2
+        },
+        "part": {
+          "name": "Spectral Dwarf",
+          "expertise": 12,
+          "vitality": 20,
+          "initialVitality": 20,
+          "damage": 5
+        }
+      }
+    },
+    {
+      "key": "294:0",
+      "name": "Vretch 1 (section 294; damage 2)",
+      "attack": 13,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Vretch 1 (section 294; damage 2)",
+        "attack": 13,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "MINE_ENCOUNTERS",
+        "entryIndex": 16,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": 294,
+          "foes": [
+            {
+              "name": "Vretch 1",
+              "expertise": 13,
+              "vitality": 8,
+              "initialVitality": 8,
+              "damage": 2
+            },
+            {
+              "name": "Vretch 2",
+              "expertise": 13,
+              "vitality": 8,
+              "initialVitality": 8,
+              "damage": 2
+            }
+          ],
+          "mode": "vretch",
+          "fortuneReward": 4,
+          "expertiseReward": 1
+        },
+        "part": {
+          "name": "Vretch 1",
+          "expertise": 13,
+          "vitality": 8,
+          "initialVitality": 8,
+          "damage": 2
+        }
+      }
+    },
+    {
+      "key": "294:1",
+      "name": "Vretch 2 (section 294; damage 2)",
+      "attack": 13,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Vretch 2 (section 294; damage 2)",
+        "attack": 13,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "MINE_ENCOUNTERS",
+        "entryIndex": 16,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": 294,
+          "foes": [
+            {
+              "name": "Vretch 1",
+              "expertise": 13,
+              "vitality": 8,
+              "initialVitality": 8,
+              "damage": 2
+            },
+            {
+              "name": "Vretch 2",
+              "expertise": 13,
+              "vitality": 8,
+              "initialVitality": 8,
+              "damage": 2
+            }
+          ],
+          "mode": "vretch",
+          "fortuneReward": 4,
+          "expertiseReward": 1
+        },
+        "part": {
+          "name": "Vretch 2",
+          "expertise": 13,
+          "vitality": 8,
+          "initialVitality": 8,
+          "damage": 2
+        }
+      }
+    },
+    {
+      "key": "324:0",
+      "name": "Spectral Dwarf (section 324; damage 5)",
+      "attack": 12,
+      "defense": null,
+      "hp": 20,
+      "pb": null,
+      "adopt": {
+        "name": "Spectral Dwarf (section 324; damage 5)",
+        "attack": 12,
+        "defense": null,
+        "hp": 20,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "MINE_ENCOUNTERS",
+        "entryIndex": 17,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 324,
+          "foes": [
+            {
+              "name": "Spectral Dwarf",
+              "expertise": 12,
+              "vitality": 20,
+              "initialVitality": 20,
+              "damage": 5
+            }
+          ],
+          "weaponDamage": 1,
+          "mode": "immune",
+          "escapeFortune": 4,
+          "reverseFortune": 1,
+          "escapeAfter": 2
+        },
+        "part": {
+          "name": "Spectral Dwarf",
+          "expertise": 12,
+          "vitality": 20,
+          "initialVitality": 20,
+          "damage": 5
+        }
+      }
+    },
+    {
+      "key": "349:0",
+      "name": "Spectral Dwarf (section 349; damage 5)",
+      "attack": 12,
+      "defense": null,
+      "hp": 20,
+      "pb": null,
+      "adopt": {
+        "name": "Spectral Dwarf (section 349; damage 5)",
+        "attack": 12,
+        "defense": null,
+        "hp": 20,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "MINE_ENCOUNTERS",
+        "entryIndex": 18,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 349,
+          "foes": [
+            {
+              "name": "Spectral Dwarf",
+              "expertise": 12,
+              "vitality": 20,
+              "initialVitality": 20,
+              "damage": 5
+            }
+          ],
+          "weaponDamage": 1,
+          "fortuneReward": 3
+        },
+        "part": {
+          "name": "Spectral Dwarf",
+          "expertise": 12,
+          "vitality": 20,
+          "initialVitality": 20,
+          "damage": 5
+        }
+      }
+    },
+    {
+      "key": "361:0",
+      "name": "Timberling (section 361; damage 2)",
+      "attack": 16,
+      "defense": null,
+      "hp": 60,
+      "pb": null,
+      "adopt": {
+        "name": "Timberling (section 361; damage 2)",
+        "attack": 16,
+        "defense": null,
+        "hp": 60,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "MINE_ENCOUNTERS",
+        "entryIndex": 19,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 361,
+          "foes": [
+            {
+              "name": "Timberling",
+              "expertise": 16,
+              "vitality": 60,
+              "initialVitality": 60,
+              "damage": 2
+            }
+          ],
+          "fatalMargin": 8,
+          "escapeDamage": 2,
+          "escapeAfter": 1
+        },
+        "part": {
+          "name": "Timberling",
+          "expertise": 16,
+          "vitality": 60,
+          "initialVitality": 60,
+          "damage": 2
+        }
+      }
+    },
+    {
+      "key": "369:0",
+      "name": "Timberwolf 1 (section 369; damage 2)",
+      "attack": 11,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Timberwolf 1 (section 369; damage 2)",
+        "attack": 11,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "MINE_ENCOUNTERS",
+        "entryIndex": 20,
+        "slot": 0,
+        "partCount": 4,
+        "entry": {
+          "section": 369,
+          "foes": [
+            {
+              "name": "Timberwolf 1",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            },
+            {
+              "name": "Timberwolf 2",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            },
+            {
+              "name": "Timberwolf 3",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            },
+            {
+              "name": "Timberwolf 4",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            }
+          ],
+          "mode": "all",
+          "fortuneReward": 4,
+          "expertiseReward": 1
+        },
+        "part": {
+          "name": "Timberwolf 1",
+          "expertise": 11,
+          "vitality": 7,
+          "initialVitality": 7,
+          "damage": 2
+        }
+      }
+    },
+    {
+      "key": "369:1",
+      "name": "Timberwolf 2 (section 369; damage 2)",
+      "attack": 11,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Timberwolf 2 (section 369; damage 2)",
+        "attack": 11,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "MINE_ENCOUNTERS",
+        "entryIndex": 20,
+        "slot": 1,
+        "partCount": 4,
+        "entry": {
+          "section": 369,
+          "foes": [
+            {
+              "name": "Timberwolf 1",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            },
+            {
+              "name": "Timberwolf 2",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            },
+            {
+              "name": "Timberwolf 3",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            },
+            {
+              "name": "Timberwolf 4",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            }
+          ],
+          "mode": "all",
+          "fortuneReward": 4,
+          "expertiseReward": 1
+        },
+        "part": {
+          "name": "Timberwolf 2",
+          "expertise": 11,
+          "vitality": 7,
+          "initialVitality": 7,
+          "damage": 2
+        }
+      }
+    },
+    {
+      "key": "369:2",
+      "name": "Timberwolf 3 (section 369; damage 2)",
+      "attack": 11,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Timberwolf 3 (section 369; damage 2)",
+        "attack": 11,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "MINE_ENCOUNTERS",
+        "entryIndex": 20,
+        "slot": 2,
+        "partCount": 4,
+        "entry": {
+          "section": 369,
+          "foes": [
+            {
+              "name": "Timberwolf 1",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            },
+            {
+              "name": "Timberwolf 2",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            },
+            {
+              "name": "Timberwolf 3",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            },
+            {
+              "name": "Timberwolf 4",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            }
+          ],
+          "mode": "all",
+          "fortuneReward": 4,
+          "expertiseReward": 1
+        },
+        "part": {
+          "name": "Timberwolf 3",
+          "expertise": 11,
+          "vitality": 7,
+          "initialVitality": 7,
+          "damage": 2
+        }
+      }
+    },
+    {
+      "key": "369:3",
+      "name": "Timberwolf 4 (section 369; damage 2)",
+      "attack": 11,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Timberwolf 4 (section 369; damage 2)",
+        "attack": 11,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "MINE_ENCOUNTERS",
+        "entryIndex": 20,
+        "slot": 3,
+        "partCount": 4,
+        "entry": {
+          "section": 369,
+          "foes": [
+            {
+              "name": "Timberwolf 1",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            },
+            {
+              "name": "Timberwolf 2",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            },
+            {
+              "name": "Timberwolf 3",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            },
+            {
+              "name": "Timberwolf 4",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            }
+          ],
+          "mode": "all",
+          "fortuneReward": 4,
+          "expertiseReward": 1
+        },
+        "part": {
+          "name": "Timberwolf 4",
+          "expertise": 11,
+          "vitality": 7,
+          "initialVitality": 7,
+          "damage": 2
+        }
+      }
+    }
+  ]
+}

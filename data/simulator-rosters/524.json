@@ -1,0 +1,1900 @@
+{
+  "schemaVersion": 1,
+  "bookId": 524,
+  "family": "skyfall",
+  "source": "Existing simulator catalog matched to all legacy rows, including both third-Hobgoblin reinforcement variants. Preserve unknown stats and saved fight behavior.",
+  "enemies": [
+    {
+      "key": "8:0",
+      "name": "Red Wyvern (section 8; damage 3)",
+      "attack": 14,
+      "defense": null,
+      "hp": 15,
+      "pb": null,
+      "adopt": {
+        "name": "Red Wyvern (section 8; damage 3)",
+        "attack": 14,
+        "defense": null,
+        "hp": 15,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "GARDEN_ENCOUNTERS",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 8,
+          "foes": [
+            {
+              "name": "Red Wyvern",
+              "expertise": 14,
+              "vitality": 15,
+              "initialVitality": 15,
+              "damage": 3
+            }
+          ],
+          "mode": "wyvern",
+          "breath": 5,
+          "fortuneReward": 5,
+          "expertiseReward": 1
+        },
+        "part": {
+          "name": "Red Wyvern",
+          "expertise": 14,
+          "vitality": 15,
+          "initialVitality": 15,
+          "damage": 3
+        }
+      }
+    },
+    {
+      "key": "10:0",
+      "name": "Green Wyvern (section 10; damage 4)",
+      "attack": 13,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Green Wyvern (section 10; damage 4)",
+        "attack": 13,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "GARDEN_ENCOUNTERS",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 10,
+          "foes": [
+            {
+              "name": "Green Wyvern",
+              "expertise": 13,
+              "vitality": 9,
+              "initialVitality": 9,
+              "damage": 4
+            }
+          ],
+          "mode": "wyvern",
+          "breath": 1,
+          "fortuneReward": 3,
+          "expertiseReward": 1
+        },
+        "part": {
+          "name": "Green Wyvern",
+          "expertise": 13,
+          "vitality": 9,
+          "initialVitality": 9,
+          "damage": 4
+        }
+      }
+    },
+    {
+      "key": "15:0",
+      "name": "Blue Wyvern (section 15; damage 5)",
+      "attack": 11,
+      "defense": null,
+      "hp": 13,
+      "pb": null,
+      "adopt": {
+        "name": "Blue Wyvern (section 15; damage 5)",
+        "attack": 11,
+        "defense": null,
+        "hp": 13,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "GARDEN_ENCOUNTERS",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 15,
+          "foes": [
+            {
+              "name": "Blue Wyvern",
+              "expertise": 11,
+              "vitality": 13,
+              "initialVitality": 13,
+              "damage": 5
+            }
+          ],
+          "mode": "wyvern",
+          "breath": 3,
+          "fortuneReward": 4,
+          "expertiseReward": 1,
+          "lightning": true
+        },
+        "part": {
+          "name": "Blue Wyvern",
+          "expertise": 11,
+          "vitality": 13,
+          "initialVitality": 13,
+          "damage": 5
+        }
+      }
+    },
+    {
+      "key": "41:0",
+      "name": "Tripodal Creature (section 41; damage 4)",
+      "attack": 11,
+      "defense": null,
+      "hp": 30,
+      "pb": null,
+      "adopt": {
+        "name": "Tripodal Creature (section 41; damage 4)",
+        "attack": 11,
+        "defense": null,
+        "hp": 30,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "GARDEN_ENCOUNTERS",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 41,
+          "foes": [
+            {
+              "name": "Tripodal Creature",
+              "expertise": 11,
+              "vitality": 30,
+              "initialVitality": 30,
+              "damage": 4
+            }
+          ],
+          "disease": true,
+          "escapeDamage": 0,
+          "enemySurprise": true,
+          "rounds": 1
+        },
+        "part": {
+          "name": "Tripodal Creature",
+          "expertise": 11,
+          "vitality": 30,
+          "initialVitality": 30,
+          "damage": 4
+        }
+      }
+    },
+    {
+      "key": "60:0",
+      "name": "Pit Flower (section 60; damage 3)",
+      "attack": 12,
+      "defense": null,
+      "hp": 2,
+      "pb": null,
+      "adopt": {
+        "name": "Pit Flower (section 60; damage 3)",
+        "attack": 12,
+        "defense": null,
+        "hp": 2,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "GARDEN_ENCOUNTERS",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 60,
+          "foes": [
+            {
+              "name": "Pit Flower",
+              "expertise": 12,
+              "vitality": 2,
+              "initialVitality": 2,
+              "damage": 3
+            }
+          ],
+          "mode": "sequential",
+          "count": 4,
+          "penalty": 2,
+          "fortuneReward": 2,
+          "escapeDamage": 0
+        },
+        "part": {
+          "name": "Pit Flower",
+          "expertise": 12,
+          "vitality": 2,
+          "initialVitality": 2,
+          "damage": 3
+        }
+      }
+    },
+    {
+      "key": "105:0",
+      "name": "Tripodal Creature (section 105; damage 4)",
+      "attack": 11,
+      "defense": null,
+      "hp": 30,
+      "pb": null,
+      "adopt": {
+        "name": "Tripodal Creature (section 105; damage 4)",
+        "attack": 11,
+        "defense": null,
+        "hp": 30,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "GARDEN_ENCOUNTERS",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 105,
+          "foes": [
+            {
+              "name": "Tripodal Creature",
+              "expertise": 11,
+              "vitality": 30,
+              "initialVitality": 30,
+              "damage": 4
+            }
+          ],
+          "disease": true,
+          "escapeDamage": 0,
+          "fortuneReward": 3
+        },
+        "part": {
+          "name": "Tripodal Creature",
+          "expertise": 11,
+          "vitality": 30,
+          "initialVitality": 30,
+          "damage": 4
+        }
+      }
+    },
+    {
+      "key": "124:0",
+      "name": "Pit Flower (section 124; damage 3)",
+      "attack": 12,
+      "defense": null,
+      "hp": 2,
+      "pb": null,
+      "adopt": {
+        "name": "Pit Flower (section 124; damage 3)",
+        "attack": 12,
+        "defense": null,
+        "hp": 2,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "GARDEN_ENCOUNTERS",
+        "entryIndex": 6,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 124,
+          "foes": [
+            {
+              "name": "Pit Flower",
+              "expertise": 12,
+              "vitality": 2,
+              "initialVitality": 2,
+              "damage": 3
+            }
+          ],
+          "mode": "edge",
+          "rounds": 1
+        },
+        "part": {
+          "name": "Pit Flower",
+          "expertise": 12,
+          "vitality": 2,
+          "initialVitality": 2,
+          "damage": 3
+        }
+      }
+    },
+    {
+      "key": "141:0",
+      "name": "Snapdragons (section 141; damage 1)",
+      "attack": 12,
+      "defense": null,
+      "hp": null,
+      "pb": null,
+      "adopt": {
+        "name": "Snapdragons (section 141; damage 1)",
+        "attack": 12,
+        "defense": null,
+        "hp": null,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "GARDEN_ENCOUNTERS",
+        "entryIndex": 7,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 141,
+          "foes": [
+            {
+              "name": "Snapdragons",
+              "expertise": 12,
+              "vitality": null,
+              "initialVitality": null,
+              "damage": 1
+            }
+          ],
+          "mode": "flowers",
+          "rounds": 4
+        },
+        "part": {
+          "name": "Snapdragons",
+          "expertise": 12,
+          "vitality": null,
+          "initialVitality": null,
+          "damage": 1
+        }
+      }
+    },
+    {
+      "key": "173:0",
+      "name": "Snapdragons (section 173; damage 1)",
+      "attack": 12,
+      "defense": null,
+      "hp": null,
+      "pb": null,
+      "adopt": {
+        "name": "Snapdragons (section 173; damage 1)",
+        "attack": 12,
+        "defense": null,
+        "hp": null,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "GARDEN_ENCOUNTERS",
+        "entryIndex": 8,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 173,
+          "foes": [
+            {
+              "name": "Snapdragons",
+              "expertise": 12,
+              "vitality": null,
+              "initialVitality": null,
+              "damage": 1
+            }
+          ],
+          "mode": "flowers",
+          "rounds": 4
+        },
+        "part": {
+          "name": "Snapdragons",
+          "expertise": 12,
+          "vitality": null,
+          "initialVitality": null,
+          "damage": 1
+        }
+      }
+    },
+    {
+      "key": "174:0",
+      "name": "Tripodal Creature (section 174; damage 4)",
+      "attack": 11,
+      "defense": null,
+      "hp": 30,
+      "pb": null,
+      "adopt": {
+        "name": "Tripodal Creature (section 174; damage 4)",
+        "attack": 11,
+        "defense": null,
+        "hp": 30,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "GARDEN_ENCOUNTERS",
+        "entryIndex": 9,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 174,
+          "foes": [
+            {
+              "name": "Tripodal Creature",
+              "expertise": 11,
+              "vitality": 30,
+              "initialVitality": 30,
+              "damage": 4
+            }
+          ],
+          "disease": false,
+          "fortuneReward": 2
+        },
+        "part": {
+          "name": "Tripodal Creature",
+          "expertise": 11,
+          "vitality": 30,
+          "initialVitality": 30,
+          "damage": 4
+        }
+      }
+    },
+    {
+      "key": "160:0",
+      "name": "Hobgoblin (section 160; damage 1)",
+      "attack": 9,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Hobgoblin (section 160; damage 1)",
+        "attack": 9,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "GARDEN_ENCOUNTERS",
+        "entryIndex": 10,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 160,
+          "foes": [
+            {
+              "name": "Hobgoblin",
+              "expertise": 9,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 1
+            }
+          ],
+          "playerSurprise": true,
+          "fortuneReward": 1
+        },
+        "part": {
+          "name": "Hobgoblin",
+          "expertise": 9,
+          "vitality": 7,
+          "initialVitality": 7,
+          "damage": 1
+        }
+      }
+    },
+    {
+      "key": "176:0",
+      "name": "Hobgoblin 1 (section 176; damage 2)",
+      "attack": 11,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Hobgoblin 1 (section 176; damage 2)",
+        "attack": 11,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "GARDEN_ENCOUNTERS",
+        "entryIndex": 11,
+        "slot": 0,
+        "partCount": 4,
+        "entry": {
+          "section": 176,
+          "foes": [
+            {
+              "name": "Hobgoblin 1",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            },
+            {
+              "name": "Hobgoblin 2",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            }
+          ],
+          "mode": "reinforcement",
+          "reinforcements": {
+            "armed": {
+              "name": "Hobgoblin 3",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 1
+            },
+            "disarmed": {
+              "name": "Hobgoblin 3",
+              "expertise": 9,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 1
+            }
+          }
+        },
+        "part": {
+          "name": "Hobgoblin 1",
+          "expertise": 11,
+          "vitality": 7,
+          "initialVitality": 7,
+          "damage": 2
+        }
+      }
+    },
+    {
+      "key": "176:1",
+      "name": "Hobgoblin 2 (section 176; damage 2)",
+      "attack": 11,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Hobgoblin 2 (section 176; damage 2)",
+        "attack": 11,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "GARDEN_ENCOUNTERS",
+        "entryIndex": 11,
+        "slot": 1,
+        "partCount": 4,
+        "entry": {
+          "section": 176,
+          "foes": [
+            {
+              "name": "Hobgoblin 1",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            },
+            {
+              "name": "Hobgoblin 2",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            }
+          ],
+          "mode": "reinforcement",
+          "reinforcements": {
+            "armed": {
+              "name": "Hobgoblin 3",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 1
+            },
+            "disarmed": {
+              "name": "Hobgoblin 3",
+              "expertise": 9,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 1
+            }
+          }
+        },
+        "part": {
+          "name": "Hobgoblin 2",
+          "expertise": 11,
+          "vitality": 7,
+          "initialVitality": 7,
+          "damage": 2
+        }
+      }
+    },
+    {
+      "key": "176:2",
+      "name": "Third Hobgoblin with dagger (section 176; damage 1)",
+      "attack": 11,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Third Hobgoblin with dagger (section 176; damage 1)",
+        "attack": 11,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "GARDEN_ENCOUNTERS",
+        "entryIndex": 11,
+        "slot": 2,
+        "partCount": 4,
+        "entry": {
+          "section": 176,
+          "foes": [
+            {
+              "name": "Hobgoblin 1",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            },
+            {
+              "name": "Hobgoblin 2",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            }
+          ],
+          "mode": "reinforcement",
+          "reinforcements": {
+            "armed": {
+              "name": "Hobgoblin 3",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 1
+            },
+            "disarmed": {
+              "name": "Hobgoblin 3",
+              "expertise": 9,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 1
+            }
+          }
+        },
+        "part": {
+          "name": "Hobgoblin 3",
+          "expertise": 11,
+          "vitality": 7,
+          "initialVitality": 7,
+          "damage": 1
+        }
+      }
+    },
+    {
+      "key": "176:3",
+      "name": "Third Hobgoblin without dagger (section 176; damage 1)",
+      "attack": 9,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Third Hobgoblin without dagger (section 176; damage 1)",
+        "attack": 9,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "GARDEN_ENCOUNTERS",
+        "entryIndex": 11,
+        "slot": 3,
+        "partCount": 4,
+        "entry": {
+          "section": 176,
+          "foes": [
+            {
+              "name": "Hobgoblin 1",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            },
+            {
+              "name": "Hobgoblin 2",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 2
+            }
+          ],
+          "mode": "reinforcement",
+          "reinforcements": {
+            "armed": {
+              "name": "Hobgoblin 3",
+              "expertise": 11,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 1
+            },
+            "disarmed": {
+              "name": "Hobgoblin 3",
+              "expertise": 9,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 1
+            }
+          }
+        },
+        "part": {
+          "name": "Hobgoblin 3",
+          "expertise": 9,
+          "vitality": 7,
+          "initialVitality": 7,
+          "damage": 1
+        }
+      }
+    },
+    {
+      "key": "177:0",
+      "name": "Spectral Guardian (section 177; damage 2)",
+      "attack": 24,
+      "defense": null,
+      "hp": null,
+      "pb": null,
+      "adopt": {
+        "name": "Spectral Guardian (section 177; damage 2)",
+        "attack": 24,
+        "defense": null,
+        "hp": null,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "GARDEN_ENCOUNTERS",
+        "entryIndex": 12,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 177,
+          "foes": [
+            {
+              "name": "Spectral Guardian",
+              "expertise": 24,
+              "vitality": null,
+              "initialVitality": null,
+              "damage": 2
+            }
+          ],
+          "mode": "gaps",
+          "rounds": 3,
+          "escapeDamage": 2
+        },
+        "part": {
+          "name": "Spectral Guardian",
+          "expertise": 24,
+          "vitality": null,
+          "initialVitality": null,
+          "damage": 2
+        }
+      }
+    },
+    {
+      "key": "180:0",
+      "name": "Spectral Guardian (section 180; damage 2)",
+      "attack": 12,
+      "defense": null,
+      "hp": null,
+      "pb": null,
+      "adopt": {
+        "name": "Spectral Guardian (section 180; damage 2)",
+        "attack": 12,
+        "defense": null,
+        "hp": null,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "GARDEN_ENCOUNTERS",
+        "entryIndex": 13,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 180,
+          "foes": [
+            {
+              "name": "Spectral Guardian",
+              "expertise": 12,
+              "vitality": null,
+              "initialVitality": null,
+              "damage": 2
+            }
+          ],
+          "mode": "armour",
+          "rounds": 3,
+          "escapeDamage": 2
+        },
+        "part": {
+          "name": "Spectral Guardian",
+          "expertise": 12,
+          "vitality": null,
+          "initialVitality": null,
+          "damage": 2
+        }
+      }
+    },
+    {
+      "key": "190:0",
+      "name": "Tripodal Creature (section 190; damage 4)",
+      "attack": 11,
+      "defense": null,
+      "hp": 30,
+      "pb": null,
+      "adopt": {
+        "name": "Tripodal Creature (section 190; damage 4)",
+        "attack": 11,
+        "defense": null,
+        "hp": 30,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "GARDEN_ENCOUNTERS",
+        "entryIndex": 14,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 190,
+          "foes": [
+            {
+              "name": "Tripodal Creature",
+              "expertise": 11,
+              "vitality": 30,
+              "initialVitality": 30,
+              "damage": 4
+            }
+          ],
+          "disease": true,
+          "escapeDamage": 0,
+          "unarmed": 2,
+          "rounds": 2
+        },
+        "part": {
+          "name": "Tripodal Creature",
+          "expertise": 11,
+          "vitality": 30,
+          "initialVitality": 30,
+          "damage": 4
+        }
+      }
+    },
+    {
+      "key": "191:0",
+      "name": "Guard 1 (section 191; damage 2)",
+      "attack": 10,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Guard 1 (section 191; damage 2)",
+        "attack": 10,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "GARDEN_ENCOUNTERS",
+        "entryIndex": 15,
+        "slot": 0,
+        "partCount": 5,
+        "entry": {
+          "section": 191,
+          "foes": [
+            {
+              "name": "Guard 1",
+              "expertise": 10,
+              "vitality": 9,
+              "initialVitality": 9,
+              "damage": 2
+            },
+            {
+              "name": "Guard 2",
+              "expertise": 10,
+              "vitality": 9,
+              "initialVitality": 9,
+              "damage": 2
+            },
+            {
+              "name": "Guard 3",
+              "expertise": 10,
+              "vitality": 9,
+              "initialVitality": 9,
+              "damage": 2
+            },
+            {
+              "name": "Guard 4",
+              "expertise": 10,
+              "vitality": 9,
+              "initialVitality": 9,
+              "damage": 2
+            },
+            {
+              "name": "Guard 5",
+              "expertise": 10,
+              "vitality": 9,
+              "initialVitality": 9,
+              "damage": 2
+            }
+          ],
+          "mode": "all",
+          "penalty": 1,
+          "fortuneReward": 5,
+          "expertiseReward": 1
+        },
+        "part": {
+          "name": "Guard 1",
+          "expertise": 10,
+          "vitality": 9,
+          "initialVitality": 9,
+          "damage": 2
+        }
+      }
+    },
+    {
+      "key": "191:1",
+      "name": "Guard 2 (section 191; damage 2)",
+      "attack": 10,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Guard 2 (section 191; damage 2)",
+        "attack": 10,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "GARDEN_ENCOUNTERS",
+        "entryIndex": 15,
+        "slot": 1,
+        "partCount": 5,
+        "entry": {
+          "section": 191,
+          "foes": [
+            {
+              "name": "Guard 1",
+              "expertise": 10,
+              "vitality": 9,
+              "initialVitality": 9,
+              "damage": 2
+            },
+            {
+              "name": "Guard 2",
+              "expertise": 10,
+              "vitality": 9,
+              "initialVitality": 9,
+              "damage": 2
+            },
+            {
+              "name": "Guard 3",
+              "expertise": 10,
+              "vitality": 9,
+              "initialVitality": 9,
+              "damage": 2
+            },
+            {
+              "name": "Guard 4",
+              "expertise": 10,
+              "vitality": 9,
+              "initialVitality": 9,
+              "damage": 2
+            },
+            {
+              "name": "Guard 5",
+              "expertise": 10,
+              "vitality": 9,
+              "initialVitality": 9,
+              "damage": 2
+            }
+          ],
+          "mode": "all",
+          "penalty": 1,
+          "fortuneReward": 5,
+          "expertiseReward": 1
+        },
+        "part": {
+          "name": "Guard 2",
+          "expertise": 10,
+          "vitality": 9,
+          "initialVitality": 9,
+          "damage": 2
+        }
+      }
+    },
+    {
+      "key": "191:2",
+      "name": "Guard 3 (section 191; damage 2)",
+      "attack": 10,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Guard 3 (section 191; damage 2)",
+        "attack": 10,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "GARDEN_ENCOUNTERS",
+        "entryIndex": 15,
+        "slot": 2,
+        "partCount": 5,
+        "entry": {
+          "section": 191,
+          "foes": [
+            {
+              "name": "Guard 1",
+              "expertise": 10,
+              "vitality": 9,
+              "initialVitality": 9,
+              "damage": 2
+            },
+            {
+              "name": "Guard 2",
+              "expertise": 10,
+              "vitality": 9,
+              "initialVitality": 9,
+              "damage": 2
+            },
+            {
+              "name": "Guard 3",
+              "expertise": 10,
+              "vitality": 9,
+              "initialVitality": 9,
+              "damage": 2
+            },
+            {
+              "name": "Guard 4",
+              "expertise": 10,
+              "vitality": 9,
+              "initialVitality": 9,
+              "damage": 2
+            },
+            {
+              "name": "Guard 5",
+              "expertise": 10,
+              "vitality": 9,
+              "initialVitality": 9,
+              "damage": 2
+            }
+          ],
+          "mode": "all",
+          "penalty": 1,
+          "fortuneReward": 5,
+          "expertiseReward": 1
+        },
+        "part": {
+          "name": "Guard 3",
+          "expertise": 10,
+          "vitality": 9,
+          "initialVitality": 9,
+          "damage": 2
+        }
+      }
+    },
+    {
+      "key": "191:3",
+      "name": "Guard 4 (section 191; damage 2)",
+      "attack": 10,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Guard 4 (section 191; damage 2)",
+        "attack": 10,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "GARDEN_ENCOUNTERS",
+        "entryIndex": 15,
+        "slot": 3,
+        "partCount": 5,
+        "entry": {
+          "section": 191,
+          "foes": [
+            {
+              "name": "Guard 1",
+              "expertise": 10,
+              "vitality": 9,
+              "initialVitality": 9,
+              "damage": 2
+            },
+            {
+              "name": "Guard 2",
+              "expertise": 10,
+              "vitality": 9,
+              "initialVitality": 9,
+              "damage": 2
+            },
+            {
+              "name": "Guard 3",
+              "expertise": 10,
+              "vitality": 9,
+              "initialVitality": 9,
+              "damage": 2
+            },
+            {
+              "name": "Guard 4",
+              "expertise": 10,
+              "vitality": 9,
+              "initialVitality": 9,
+              "damage": 2
+            },
+            {
+              "name": "Guard 5",
+              "expertise": 10,
+              "vitality": 9,
+              "initialVitality": 9,
+              "damage": 2
+            }
+          ],
+          "mode": "all",
+          "penalty": 1,
+          "fortuneReward": 5,
+          "expertiseReward": 1
+        },
+        "part": {
+          "name": "Guard 4",
+          "expertise": 10,
+          "vitality": 9,
+          "initialVitality": 9,
+          "damage": 2
+        }
+      }
+    },
+    {
+      "key": "191:4",
+      "name": "Guard 5 (section 191; damage 2)",
+      "attack": 10,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Guard 5 (section 191; damage 2)",
+        "attack": 10,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "GARDEN_ENCOUNTERS",
+        "entryIndex": 15,
+        "slot": 4,
+        "partCount": 5,
+        "entry": {
+          "section": 191,
+          "foes": [
+            {
+              "name": "Guard 1",
+              "expertise": 10,
+              "vitality": 9,
+              "initialVitality": 9,
+              "damage": 2
+            },
+            {
+              "name": "Guard 2",
+              "expertise": 10,
+              "vitality": 9,
+              "initialVitality": 9,
+              "damage": 2
+            },
+            {
+              "name": "Guard 3",
+              "expertise": 10,
+              "vitality": 9,
+              "initialVitality": 9,
+              "damage": 2
+            },
+            {
+              "name": "Guard 4",
+              "expertise": 10,
+              "vitality": 9,
+              "initialVitality": 9,
+              "damage": 2
+            },
+            {
+              "name": "Guard 5",
+              "expertise": 10,
+              "vitality": 9,
+              "initialVitality": 9,
+              "damage": 2
+            }
+          ],
+          "mode": "all",
+          "penalty": 1,
+          "fortuneReward": 5,
+          "expertiseReward": 1
+        },
+        "part": {
+          "name": "Guard 5",
+          "expertise": 10,
+          "vitality": 9,
+          "initialVitality": 9,
+          "damage": 2
+        }
+      }
+    },
+    {
+      "key": "276:0",
+      "name": "Red Wyvern (section 276; damage 3)",
+      "attack": 14,
+      "defense": null,
+      "hp": 15,
+      "pb": null,
+      "adopt": {
+        "name": "Red Wyvern (section 276; damage 3)",
+        "attack": 14,
+        "defense": null,
+        "hp": 15,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "GARDEN_ENCOUNTERS",
+        "entryIndex": 16,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 276,
+          "foes": [
+            {
+              "name": "Red Wyvern",
+              "expertise": 14,
+              "vitality": 15,
+              "initialVitality": 15,
+              "damage": 3
+            }
+          ],
+          "mode": "wyvern",
+          "breath": 5,
+          "fortuneReward": 5,
+          "expertiseReward": 1
+        },
+        "part": {
+          "name": "Red Wyvern",
+          "expertise": 14,
+          "vitality": 15,
+          "initialVitality": 15,
+          "damage": 3
+        }
+      }
+    },
+    {
+      "key": "287:0",
+      "name": "Giant Slug (section 287; damage 4)",
+      "attack": null,
+      "defense": null,
+      "hp": 40,
+      "pb": null,
+      "adopt": {
+        "name": "Giant Slug (section 287; damage 4)",
+        "attack": null,
+        "defense": null,
+        "hp": 40,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "GARDEN_ENCOUNTERS",
+        "entryIndex": 17,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 287,
+          "foes": [
+            {
+              "name": "Giant Slug",
+              "expertise": null,
+              "vitality": 40,
+              "initialVitality": 40,
+              "damage": 4
+            }
+          ],
+          "mode": "slug",
+          "escapeDamage": 4,
+          "fortuneReward": 4
+        },
+        "part": {
+          "name": "Giant Slug",
+          "expertise": null,
+          "vitality": 40,
+          "initialVitality": 40,
+          "damage": 4
+        }
+      }
+    },
+    {
+      "key": "291:0",
+      "name": "Greater Hobgoblin 1 (section 291; damage 3)",
+      "attack": 13,
+      "defense": null,
+      "hp": 11,
+      "pb": null,
+      "adopt": {
+        "name": "Greater Hobgoblin 1 (section 291; damage 3)",
+        "attack": 13,
+        "defense": null,
+        "hp": 11,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "GARDEN_ENCOUNTERS",
+        "entryIndex": 18,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": 291,
+          "foes": [
+            {
+              "name": "Greater Hobgoblin 1",
+              "expertise": 13,
+              "vitality": 11,
+              "initialVitality": 11,
+              "damage": 3
+            },
+            {
+              "name": "Greater Hobgoblin 2",
+              "expertise": 13,
+              "vitality": 11,
+              "initialVitality": 11,
+              "damage": 3
+            }
+          ],
+          "mode": "random",
+          "fortuneReward": 4,
+          "expertiseReward": 1
+        },
+        "part": {
+          "name": "Greater Hobgoblin 1",
+          "expertise": 13,
+          "vitality": 11,
+          "initialVitality": 11,
+          "damage": 3
+        }
+      }
+    },
+    {
+      "key": "291:1",
+      "name": "Greater Hobgoblin 2 (section 291; damage 3)",
+      "attack": 13,
+      "defense": null,
+      "hp": 11,
+      "pb": null,
+      "adopt": {
+        "name": "Greater Hobgoblin 2 (section 291; damage 3)",
+        "attack": 13,
+        "defense": null,
+        "hp": 11,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "GARDEN_ENCOUNTERS",
+        "entryIndex": 18,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": 291,
+          "foes": [
+            {
+              "name": "Greater Hobgoblin 1",
+              "expertise": 13,
+              "vitality": 11,
+              "initialVitality": 11,
+              "damage": 3
+            },
+            {
+              "name": "Greater Hobgoblin 2",
+              "expertise": 13,
+              "vitality": 11,
+              "initialVitality": 11,
+              "damage": 3
+            }
+          ],
+          "mode": "random",
+          "fortuneReward": 4,
+          "expertiseReward": 1
+        },
+        "part": {
+          "name": "Greater Hobgoblin 2",
+          "expertise": 13,
+          "vitality": 11,
+          "initialVitality": 11,
+          "damage": 3
+        }
+      }
+    },
+    {
+      "key": "297:0",
+      "name": "Bodyguard 1 (section 297; damage 4)",
+      "attack": 14,
+      "defense": null,
+      "hp": 13,
+      "pb": null,
+      "adopt": {
+        "name": "Bodyguard 1 (section 297; damage 4)",
+        "attack": 14,
+        "defense": null,
+        "hp": 13,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "GARDEN_ENCOUNTERS",
+        "entryIndex": 19,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": 297,
+          "foes": [
+            {
+              "name": "Bodyguard 1",
+              "expertise": 14,
+              "vitality": 13,
+              "initialVitality": 13,
+              "damage": 4
+            },
+            {
+              "name": "Bodyguard 2",
+              "expertise": 14,
+              "vitality": 13,
+              "initialVitality": 13,
+              "damage": 4
+            }
+          ],
+          "mode": "all",
+          "rounds": 10,
+          "reinforcementsFatal": true
+        },
+        "part": {
+          "name": "Bodyguard 1",
+          "expertise": 14,
+          "vitality": 13,
+          "initialVitality": 13,
+          "damage": 4
+        }
+      }
+    },
+    {
+      "key": "297:1",
+      "name": "Bodyguard 2 (section 297; damage 4)",
+      "attack": 14,
+      "defense": null,
+      "hp": 13,
+      "pb": null,
+      "adopt": {
+        "name": "Bodyguard 2 (section 297; damage 4)",
+        "attack": 14,
+        "defense": null,
+        "hp": 13,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "GARDEN_ENCOUNTERS",
+        "entryIndex": 19,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": 297,
+          "foes": [
+            {
+              "name": "Bodyguard 1",
+              "expertise": 14,
+              "vitality": 13,
+              "initialVitality": 13,
+              "damage": 4
+            },
+            {
+              "name": "Bodyguard 2",
+              "expertise": 14,
+              "vitality": 13,
+              "initialVitality": 13,
+              "damage": 4
+            }
+          ],
+          "mode": "all",
+          "rounds": 10,
+          "reinforcementsFatal": true
+        },
+        "part": {
+          "name": "Bodyguard 2",
+          "expertise": 14,
+          "vitality": 13,
+          "initialVitality": 13,
+          "damage": 4
+        }
+      }
+    },
+    {
+      "key": "325:0",
+      "name": "Faceless Warrior (section 325; damage 3)",
+      "attack": 12,
+      "defense": null,
+      "hp": 10,
+      "pb": null,
+      "adopt": {
+        "name": "Faceless Warrior (section 325; damage 3)",
+        "attack": 12,
+        "defense": null,
+        "hp": 10,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "GARDEN_ENCOUNTERS",
+        "entryIndex": 20,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 325,
+          "foes": [
+            {
+              "name": "Faceless Warrior",
+              "expertise": 12,
+              "vitality": 10,
+              "initialVitality": 10,
+              "damage": 3
+            }
+          ],
+          "fortuneReward": 2
+        },
+        "part": {
+          "name": "Faceless Warrior",
+          "expertise": 12,
+          "vitality": 10,
+          "initialVitality": 10,
+          "damage": 3
+        }
+      }
+    },
+    {
+      "key": "348:0",
+      "name": "Hobgoblin (section 348; damage 1)",
+      "attack": 9,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Hobgoblin (section 348; damage 1)",
+        "attack": 9,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "GARDEN_ENCOUNTERS",
+        "entryIndex": 21,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 348,
+          "foes": [
+            {
+              "name": "Hobgoblin",
+              "expertise": 9,
+              "vitality": 7,
+              "initialVitality": 7,
+              "damage": 1
+            }
+          ],
+          "mode": "crossbow",
+          "playerSurprise": true
+        },
+        "part": {
+          "name": "Hobgoblin",
+          "expertise": 9,
+          "vitality": 7,
+          "initialVitality": 7,
+          "damage": 1
+        }
+      }
+    },
+    {
+      "key": "361:0",
+      "name": "Princess Wanda (section 361; damage not stated)",
+      "attack": 11,
+      "defense": null,
+      "hp": null,
+      "pb": null,
+      "adopt": {
+        "name": "Princess Wanda (section 361; damage not stated)",
+        "attack": 11,
+        "defense": null,
+        "hp": null,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "GARDEN_ENCOUNTERS",
+        "entryIndex": 22,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 361,
+          "foes": [
+            {
+              "name": "Princess Wanda",
+              "expertise": 11,
+              "vitality": null,
+              "initialVitality": null,
+              "damage": null
+            }
+          ],
+          "mode": "princess",
+          "enemySurprise": true
+        },
+        "part": {
+          "name": "Princess Wanda",
+          "expertise": 11,
+          "vitality": null,
+          "initialVitality": null,
+          "damage": null
+        }
+      }
+    },
+    {
+      "key": "374:0",
+      "name": "Tripodal Creature (section 374; damage 4)",
+      "attack": 11,
+      "defense": null,
+      "hp": 30,
+      "pb": null,
+      "adopt": {
+        "name": "Tripodal Creature (section 374; damage 4)",
+        "attack": 11,
+        "defense": null,
+        "hp": 30,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "GARDEN_ENCOUNTERS",
+        "entryIndex": 23,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 374,
+          "foes": [
+            {
+              "name": "Tripodal Creature",
+              "expertise": 11,
+              "vitality": 30,
+              "initialVitality": 30,
+              "damage": 4
+            }
+          ],
+          "disease": true,
+          "escapeDamage": 0,
+          "rounds": 1,
+          "escapeAfter": 1,
+          "fortuneReward": 0
+        },
+        "part": {
+          "name": "Tripodal Creature",
+          "expertise": 11,
+          "vitality": 30,
+          "initialVitality": 30,
+          "damage": 4
+        }
+      }
+    },
+    {
+      "key": "382:0",
+      "name": "Tentacle 1 (section 382; damage not stated)",
+      "attack": 11,
+      "defense": null,
+      "hp": 5,
+      "pb": null,
+      "adopt": {
+        "name": "Tentacle 1 (section 382; damage not stated)",
+        "attack": 11,
+        "defense": null,
+        "hp": 5,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "GARDEN_ENCOUNTERS",
+        "entryIndex": 24,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": 382,
+          "foes": [
+            {
+              "name": "Tentacle 1",
+              "expertise": 11,
+              "vitality": 5,
+              "initialVitality": 5,
+              "damage": null
+            },
+            {
+              "name": "Tentacle 2",
+              "expertise": 11,
+              "vitality": 5,
+              "initialVitality": 5,
+              "damage": null
+            }
+          ],
+          "mode": "tentacles",
+          "count": 3
+        },
+        "part": {
+          "name": "Tentacle 1",
+          "expertise": 11,
+          "vitality": 5,
+          "initialVitality": 5,
+          "damage": null
+        }
+      }
+    },
+    {
+      "key": "382:1",
+      "name": "Tentacle 2 (section 382; damage not stated)",
+      "attack": 11,
+      "defense": null,
+      "hp": 5,
+      "pb": null,
+      "adopt": {
+        "name": "Tentacle 2 (section 382; damage not stated)",
+        "attack": 11,
+        "defense": null,
+        "hp": 5,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "GARDEN_ENCOUNTERS",
+        "entryIndex": 24,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": 382,
+          "foes": [
+            {
+              "name": "Tentacle 1",
+              "expertise": 11,
+              "vitality": 5,
+              "initialVitality": 5,
+              "damage": null
+            },
+            {
+              "name": "Tentacle 2",
+              "expertise": 11,
+              "vitality": 5,
+              "initialVitality": 5,
+              "damage": null
+            }
+          ],
+          "mode": "tentacles",
+          "count": 3
+        },
+        "part": {
+          "name": "Tentacle 2",
+          "expertise": 11,
+          "vitality": 5,
+          "initialVitality": 5,
+          "damage": null
+        }
+      }
+    },
+    {
+      "key": "384:0",
+      "name": "Tripodal Creature (section 384; damage 4)",
+      "attack": 11,
+      "defense": null,
+      "hp": 30,
+      "pb": null,
+      "adopt": {
+        "name": "Tripodal Creature (section 384; damage 4)",
+        "attack": 11,
+        "defense": null,
+        "hp": 30,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "skyfall",
+        "dataset": "GARDEN_ENCOUNTERS",
+        "entryIndex": 25,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 384,
+          "foes": [
+            {
+              "name": "Tripodal Creature",
+              "expertise": 11,
+              "vitality": 30,
+              "initialVitality": 30,
+              "damage": 4
+            }
+          ],
+          "disease": true,
+          "escapeDamage": 0,
+          "escapeAfter": 3,
+          "fortuneReward": 0
+        },
+        "part": {
+          "name": "Tripodal Creature",
+          "expertise": 11,
+          "vitality": 30,
+          "initialVitality": 30,
+          "damage": 4
+        }
+      }
+    }
+  ]
+}
