@@ -1,33 +1,13 @@
 import { customInnsmouthEncounter } from './gateway-opponents.js';
 
-const enemy = (name, speed, accuracy, damage, health) => Object.freeze({ name, speed, accuracy, damage, health });
-const man = (health = 6) => enemy('man', 6, 8, 2, health);
-const woman = (health = 9) => enemy('woman', 8, 9, 2, health);
-const pair = section => ({ section, enemies: [woman(), man()], simultaneous: true });
-export const INNSMOUTH_ENCOUNTERS = Object.freeze([
-  { section: 45, enemies: [man(), woman()] },
-  { section: 64, enemies: [enemy('man', 5, 8, 3, 5)] }, pair(74),
-  { section: 78, enemies: [enemy('man', 11, 11, 3, 15)], divert: true },
-  { section: 131, enemies: [enemy('humanoid', 7, 7, 2, 9)] }, pair(147),
-  { section: 169, enemies: [woman()] }, pair(180),
-  { section: 213, enemies: [enemy('woman', 5, 9, 2, 8)] },
-  { section: 225, enemies: [enemy('first_woman', 10, 9, 3, 8), enemy('man', 9, 8, 3, 8), enemy('second_woman', 8, 8, 2, 9)], divert: true },
-  { ...pair(253), enemies: [woman(6), man()] },
-  { section: 260, enemies: [enemy('creature', 3, 4, 1, 3)] },
-  { section: 267, enemies: [enemy('first_man', 6, 8, 2, 7), enemy('second_man', 7, 7, 2, 7), enemy('third_man', 9, 9, 2, 8)], divert: true },
-  { ...pair(294), enemies: [woman(), man(4)] }, pair(324),
-  { section: 352, enemies: [man()] },
-  { section: 354, enemies: [enemy('man', 9, 8, 3, 8), enemy('woman', 8, 8, 2, 9)], divert: true },
-  { section: 367, enemies: [enemy('old_man', 8, 9, 2, 9), enemy('young_man', 7, 8, 3, 7)] },
-  { section: 387, enemies: [enemy('first_man', 6, 8, 2, 7), enemy('second_man', 7, 7, 2, 7)], divert: true },
-  { section: 397, enemies: [enemy('figure_one', 5, 8, 3, 5), enemy('figure_two', 5, 9, 3, 6), enemy('figure_three', 4, 8, 3, 4)], firstKillEnds: true },
-  { section: 460, enemies: [enemy('man', 10, 11, 3, 10), enemy('woman', 11, 10, 3, 9)], divert: true },
-  pair(479), pair(510),
-  { section: 543, enemies: [enemy('old_man', 8, 9, 2, 9), enemy('young_man', 7, 8, 3, 7)], simultaneous: true },
-  { section: 554, enemies: [woman()] },
-  { section: 560, enemies: [enemy('woman', 5, 8, 2, 8)], openingShot: true },
-  { section: 595, enemies: [man(4)] },
-].map(e => Object.freeze({ ...e, enemies: Object.freeze(e.enemies) })));
+import { createRosterLoader } from '../roster-data.js';
+
+export let INNSMOUTH_ENCOUNTERS = Object.freeze([]);
+export const loadRoster = createRosterLoader(548, 'BOOK_DATA', rows => {
+  const encounters = rows.flatMap(row => row.encounters).sort((a,b) => a.index-b.index);
+  if (!encounters.length || new Set(encounters.map(row => row.index)).size !== encounters.length) throw new Error('Incomplete Innsmouth catalog');
+  INNSMOUTH_ENCOUNTERS = Object.freeze(encounters.map(({spec}) => Object.freeze({...spec, enemies: Object.freeze(spec.enemies.map(Object.freeze))})));
+});
 
 const attributes = ['speed', 'accuracy', 'stealth', 'detection', 'power'];
 const die = random => Math.floor(random() * 6) + 1;

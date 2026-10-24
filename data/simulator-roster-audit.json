@@ -1589,18 +1589,48 @@
     {
       "bookId": 548,
       "databaseEnemyRows": 24,
-      "apiConsumers": [],
-      "inlineDataFiles": [
-        "public/js/battlesim/engines/innsmouth.js"
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
       ],
-      "runtimeRosterReviewPending": true
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/548.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true,
+        "liveApiVerified": true,
+        "legacyRowsAdopted": 24,
+        "legacyFieldChanges": 0,
+        "catalogs": "27 encounters with reused profiles and original group rules"
+      }
     },
     {
       "bookId": 550,
       "databaseEnemyRows": 100,
-      "apiConsumers": [],
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
+      ],
       "inlineDataFiles": [],
-      "runtimeRosterReviewPending": true
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/550.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true,
+        "liveApiVerified": true,
+        "legacyRowsAdopted": 100,
+        "legacyFieldChanges": 0,
+        "catalogs": "82 complete encounter specifications, 96 source combatants and four animal profiles, including per-location armor and enemy/encounter rules"
+      }
     },
     {
       "bookId": 555,
@@ -2421,6 +2451,8 @@
       536,
       537,
       539,
+      548,
+      550,
       555,
       557,
       781,

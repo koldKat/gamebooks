@@ -35,7 +35,7 @@ export async function openSimForBook(bookId) {
   const id = Number(bookId);
   if (!SUPPORTED_BATTLE_SIM_BOOKS.has(id)) return;
 
-  if ([412, 521, 522, 523, 524, 527, 528, 529, 530, 531, 532, 533, 534, 535, 536, 537, 539, 555, 557, 807, 808, 860, 869, 877, 881, 882].includes(id)) {
+  if ([412, 521, 522, 523, 524, 527, 528, 529, 530, 531, 532, 533, 534, 535, 536, 537, 539, 548, 550, 555, 557, 807, 808, 860, 869, 877, 881, 882].includes(id)) {
     const { prepareRosterData } = await import('../../js/battlesim/roster-data.js');
     await prepareRosterData(id);
   }
