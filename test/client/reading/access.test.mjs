@@ -7,7 +7,7 @@ const source = readFileSync(new URL('../../../public/js/reading/access.js', impo
   .replace(/^import .*;$/gm, '').replace('export async function', 'async function');
 function setup({ locked = true, cost = 0, balance = 5 } = {}) {
   let token = 'player-one', connected = true, unlocked = 0, fail = false;
-  const requests = [];
+  const requests = [], matterOptions = [];
   const events = {};
   const element = tag => ({ tag, style: {}, disabled: false, listeners: {}, children: [],
     focus() {},
@@ -18,7 +18,7 @@ function setup({ locked = true, cost = 0, balance = 5 } = {}) {
   const context = vm.createContext({ document: { createElement: element, querySelectorAll: () => [mount], addEventListener() {} },
     window: { addEventListener: (type, fn) => { events[type] = fn; } },
     COIN_SVG: '<svg class="coin-icon"></svg>',
-    renderReadingMatter: () => false,
+    renderReadingMatter: (_mount, _book, _text, _document, options) => { matterOptions.push(options); return false; },
     getToken: () => token, t: (key, params) => params ? `${key}:${params.cost}` : key,
     apiFetch: async (url, options) => {
       requests.push([url, options?.method || 'GET']);
@@ -26,7 +26,7 @@ function setup({ locked = true, cost = 0, balance = 5 } = {}) {
       return { ok: true, json: async () => ({ name: 'Trial book', locked, introText: '<script>alert(1)</script>', rulesText: 'Rules', cost, balance, canAfford: cost === 0 || balance >= cost }) };
     } });
   vm.runInContext(source, context);
-  return { mount, requests, context,
+  return { mount, requests, matterOptions, context,
     set balance(value) { balance = value; },
     emitBalance: value => events['coins-balance-changed']({ detail: { token, balance: value } }),
     show: () => context.showReadingGate(mount, 263, { isCurrent: () => connected, onUnlock: () => unlocked++ }),
@@ -75,6 +75,8 @@ test('server insufficient-coins rejection disables stale paid controls; free tri
 test('frontmatter renders safely; zero-cost unlock is single-flight', async () => {
   const s = setup();
   assert.equal(await s.show(), true);
+  assert.equal(s.matterOptions.length, 2);
+  assert.ok(s.matterOptions.every(options => options.sectionLinks === false), 'locked previews must not contain run navigation links');
   assert.equal(s.mount.children[0].children[1].textContent, '<script>alert(1)</script>');
   assert.equal(s.mount.children[0].children[1].innerHTML, undefined, 'imported prose is never injected as HTML');
   const button = s.mount.children[1].children[0];

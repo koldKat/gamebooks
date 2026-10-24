@@ -43,7 +43,7 @@ export async function showReadingGate(mount, bookId, { isCurrent, onUnlock, onEr
     title.textContent = heading;
     const content = document.createElement('div');
     content.className = 'reading-frontmatter';
-    if (!renderReadingMatter(content, bookId, text, document)) content.textContent = text;
+    if (!renderReadingMatter(content, bookId, text, document, { sectionLinks: false })) content.textContent = text;
     prose.append(title, content);
   }
   const button = document.createElement('button');

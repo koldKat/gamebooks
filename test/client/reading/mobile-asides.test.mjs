@@ -9,7 +9,12 @@ const source = readFileSync(new URL('../../../public/mobile/js/reader.js', impor
 function setup() {
   let links = [], run = { path: [94] }, auth = 'one', deferred;
   const requests = [], navigated = [], previewed = [];
-  const top = { scrollTop: 4, querySelectorAll: () => links };
+  const makeLink = href => ({ id: '', getAttribute: () => href,
+    addEventListener(_type, listener) { this.click = () => listener({ preventDefault() {} }); } });
+  const element = () => ({ children: [], links: [], append(...children) { this.children.push(...children); },
+    querySelectorAll() { return this.links; }, addEventListener() {} });
+  const top = { scrollTop: 4, querySelectorAll: () => links,
+    replaceChildren(content) { links = content.links; } };
   Object.defineProperty(top, 'innerHTML', { set() {
     links = ['#section-100', '#section-81', '#other-aside'].map(href => ({
       id: '', getAttribute: () => href,
@@ -17,11 +22,13 @@ function setup() {
     }));
   } });
   const context = vm.createContext({
-    console, t: key => key, document: { getElementById: id => id === 'm-top' ? top : { addEventListener() {} } },
+    console, t: key => key, document: { createElement: element,
+      getElementById: id => id === 'm-top' ? top : { addEventListener() {} } },
     currentBookId: 650, getToken: () => auth, currentPlaythrough: () => run,
     currentSection: () => run?.path.at(-1), parseSecId: raw => Number(raw),
     isSectionMapped: sec => sec === 100, navigated, previewed,
     bindReadingMapEntry() {},
+    renderReadingMatter(mount) { mount.links = ['#section-100', '#section-81'].map(makeLink); return true; },
     apiFetch: async url => {
       requests.push(url);
       if (deferred) await deferred;
@@ -30,7 +37,9 @@ function setup() {
   });
   vm.runInContext(source, context);
   vm.runInContext('_navigate = sec => navigated.push(sec); _onGraphTap = sec => previewed.push(sec)', context);
+  vm.runInContext('_mMatter = { bookId: 650, front: "<p>Rules</p>", back: "<p>Glossary</p>" }', context);
   return { context, requests, navigated, previewed, show: readOnly => context._showExtra('original-aside', readOnly),
+    matter: which => context._showMatter(which),
     get links() { return links; }, set run(value) { run = value; }, set auth(value) { auth = value; },
     set deferred(value) { deferred = value; } };
 }
@@ -77,4 +86,27 @@ test('mobile aside responses do not replace content after switching accounts', a
   const request = s.show(false);
   s.auth = 'two'; resolve(); await request;
   assert.deepEqual(s.links, []);
+});
+
+test('mobile matter references navigate the active run and reject stale run, account and detached links', () => {
+  const s = setup();
+  s.matter('front');
+  s.links[0].click();
+  assert.deepEqual(s.navigated, [100]);
+  const old = s.links[1];
+  s.matter('back'); old.click();
+  assert.deepEqual(s.navigated, [100]);
+  s.run = { path: [94] }; s.links[0].click();
+  assert.deepEqual(s.navigated, [100]);
+  s.matter('front'); s.auth = 'two'; s.links[0].click();
+  assert.deepEqual(s.navigated, [100]);
+});
+
+test('matter opened from a preview or nested read-only aside stays read-only', async () => {
+  const s = setup();
+  await s.show(true);
+  s.matter('front');
+  s.links[0].click(); s.links[1].click();
+  assert.deepEqual(s.previewed, [100]);
+  assert.deepEqual(s.navigated, []);
 });
