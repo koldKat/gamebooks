@@ -1,4 +1,4 @@
-import { destinyStat, addDestinyStatEffect, healDestinyHero, destinyStrike, destinyDieLocked, hasDestinyAbility } from './effects.js';
+import { destinyStat, addDestinyStatEffect, healDestinyHero, destinyStrike, destinyDieLocked, hasDestinyAbility, isDestinyOpponentActive, destinyAttackerTarget } from './effects.js';
 import { prepareDestinyDamage } from './damage.js';
 
 const sum = values => values.reduce((total, value) => total + value, 0);
@@ -16,9 +16,9 @@ function index(values, value) {
 // saved fight. The ability dispatcher owns charges, category slots and outcomes.
 export function applyDestinyAdvancedAbility(fight, name, options, roll) {
   const chosen = options.target ?? fight.target;
-  const living = () => fight.opponents.map((opponent, target) => opponent.health > 0 ? target : -1).filter(target => target >= 0);
+  const living = () => fight.opponents.map((opponent, target) => isDestinyOpponentActive(fight, target) ? target : -1).filter(target => target >= 0);
   const requireLiving = target => {
-    if (!Number.isInteger(target) || !fight.opponents[target] || fight.opponents[target].health <= 0) throw new RangeError('Choose a living opponent');
+    if (!Number.isInteger(target) || !isDestinyOpponentActive(fight, target)) throw new RangeError('Choose a living opponent');
     return target;
   };
   const stat = (target, attribute, amount, duration = 1, delay = 0) =>
@@ -78,7 +78,7 @@ export function applyDestinyAdvancedAbility(fight, name, options, roll) {
       const allocations = options.allocations;
       if (!Array.isArray(allocations) || allocations.length !== fight.opponents.length ||
           allocations.some((amount, target) => !Number.isInteger(amount) || amount < 0 || amount > Math.ceil(maximum / 2) ||
-            amount > 0 && fight.opponents[target].health <= 0) || sum(allocations) > maximum || sum(allocations) === 0) {
+            amount > 0 && !isDestinyOpponentActive(fight, target)) || sum(allocations) > maximum || sum(allocations) === 0) {
         throw new RangeError('Distribute magic damage within the per-opponent limit');
       }
       allocations.forEach((amount, target) => { if (amount) destinyStrike(fight, target, amount, name, 'fixed'); });
@@ -187,7 +187,7 @@ export function applyDestinyAdvancedAbility(fight, name, options, roll) {
       break;
     }
     case 'silver-frost':
-      fight.savedOpponentDice = { target: fight.target, round: fight.round + 1, dice: [...fight.turn.opponentSpeedDice] };
+      fight.savedOpponentDice = { target: destinyAttackerTarget(fight), round: fight.round + 1, dice: [...fight.turn.opponentSpeedDice] };
       fight.turn.lockedOpponentDice = true;
       break;
     case 'torrent': {

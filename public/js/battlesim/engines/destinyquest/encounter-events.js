@@ -1,5 +1,5 @@
 import { destinyDie } from './damage.js';
-import { destinyStat, addDestinyStatEffect, observeDestinyHealth, hasDestinyAbility, destinyStrike } from './effects.js';
+import { destinyStat, addDestinyStatEffect, observeDestinyHealth, hasDestinyAbility, destinyStrike, isDestinyOpponentActive, destinyAttackerTarget } from './effects.js';
 
 export function queueDestinyEncounterEvent(fight, event, returnPhase, roll) {
   if (['ability-rolled', 'ability-choice'].includes(fight.phase)) {
@@ -21,8 +21,9 @@ function heroDamage(fight, amount, enemyDice = false) {
   const lost = Math.min(fight.hero.health, amount);
   fight.hero.health -= lost;
   observeDestinyHealth(fight);
-  if (enemyDice && lost && hasDestinyAbility(fight, 'lightning') && fight.opponents[fight.target].health > 0) {
-    destinyStrike(fight, fight.target, 2, 'lightning', 'passive');
+  const attacker = destinyAttackerTarget(fight);
+  if (enemyDice && lost && hasDestinyAbility(fight, 'lightning') && isDestinyOpponentActive(fight, attacker)) {
+    destinyStrike(fight, attacker, 2, 'lightning', 'passive');
   }
 }
 
@@ -45,9 +46,24 @@ export function resolveDestinyEncounterEvent(fight, pending, roll) {
     case 'faces-damage':
       stageDamage(dice.filter(value => event.faces.includes(value)).reduce((sum, value) => sum + value, 0));
       break;
+    case 'transport-damage': {
+      stageDamage(total);
+      const transport = fight.equipment?.transport;
+      if (!transport) throw new RangeError('Choose the transport used in this encounter');
+      for (const attribute of ['stability', 'toughness']) transport[attribute] = Math.max(0, transport[attribute] - 2);
+      for (const effect of fight.effects) if (effect.source === 'armour-plating') effect.amount = Math.floor(transport.toughness / 2);
+      break;
+    }
     case 'stat-if-low':
       if (total <= event.limit) addDestinyStatEffect(fight, 'hero', event.attribute, event.amount, 1, event.name, event.delay || 0);
       break;
+    case 'spirit-link':
+      if (total <= 3) {
+        stageDamage(4);
+        (fight.turn.encounterEndOpponentHealing ??= []).push({ target: 0, amount: 4 });
+      }
+      break;
+    case 'distracted': if (total <= 3) fight.phase = 'end'; break;
     case 'weak-venom':
       if (total === 1) (fight.encounter.heroStatuses ??= {}).venom = 2;
       break;
@@ -111,8 +127,10 @@ export function prepareDestinyEndEvents(fight, roll) {
   if (fight.turn.encounterEndPrepared) return false;
   fight.turn.encounterEndPrepared = true;
   for (const event of fight.encounter?.endTests || []) {
+    if (event.every && fight.round % event.every !== 0) continue;
+    if (event.requiresAnyAlive && !event.requiresAnyAlive.some(target => isDestinyOpponentActive(fight, target))) continue;
     if (event.kind === 'ice-prison' && fight.encounter.skollFreed) continue;
-    if (event.requiresAlive?.some(target => fight.opponents[target]?.health <= 0)) continue;
+    if (event.requiresAlive?.some(target => !isDestinyOpponentActive(fight, target))) continue;
     queueDestinyEncounterEvent(fight, { ...event, atEnd: true }, 'end', roll);
   }
   return fight.phase === 'ability-rolled';

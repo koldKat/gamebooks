@@ -212,7 +212,7 @@ test('Insulated ignores mirror bonuses and the snow-joke end damage only where s
     assert.equal(fight.turn.damageScore, insulated ? 5 : 8);
     fight = configureWinterEncounter(setup(insulated ? { insulated: 1 } : {}, {}, foes(3)), 578);
     fight = endDestinyRound(resolveDestinySpeed(rollDestinySpeed(startDestinyRound(fight, 0), rolls(3, 3, 3, 3))));
-    assert.equal(fight.hero.health, insulated ? 20 : 17);
+    assert.equal(fight.hero.health, insulated ? 20 : 19); // Only the boss is in play before snowmen spawn.
   }
 });
 

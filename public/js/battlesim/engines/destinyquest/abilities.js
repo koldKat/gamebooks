@@ -1,4 +1,4 @@
-import { addDestinyStatEffect, healDestinyHero, hasDestinyAbility, destinyStrike, destinyRollOpponentDice, destinyDieLocked } from './effects.js';
+import { addDestinyStatEffect, healDestinyHero, hasDestinyAbility, destinyStrike, destinyRollOpponentDice, destinyDieLocked, isDestinyOpponentActive, destinyAttackerTarget } from './effects.js';
 import { settleDestinyFight } from './core.js';
 import { applyDestinyAdvancedAbility } from './advanced.js';
 import { prepareDestinyDamage } from './damage.js';
@@ -218,10 +218,10 @@ export function useDestinyAbility(fight, name, options = {}, roll = () => Math.f
     throw new RangeError('Ability unavailable at this combat stage');
   }
   if (fight.turn.used[spec.category]) throw new RangeError('Only one ability of this category per round');
-  if (spec.fewerOpponentDice && fight.encounter?.speedDiceReductionImmune?.includes(fight.target)) throw new RangeError('This opponent is immune to reducing speed dice');
+  if (spec.fewerOpponentDice && fight.encounter?.speedDiceReductionImmune?.includes(destinyAttackerTarget(fight))) throw new RangeError('This opponent is immune to reducing speed dice');
   const blocked = fight.encounter?.blockedRounds;
   if (blocked && fight.round >= blocked.from && fight.round <= blocked.until && blocked.categories.includes(spec.category)) throw new RangeError('This ability type is blocked this round');
-  if (fight.encounter?.blockAbilitiesWhileAlive?.some(rule => rule.categories.includes(spec.category) && fight.opponents[rule.target]?.health > 0)) throw new RangeError('Defeat the opponent blocking this ability type');
+  if (fight.encounter?.blockAbilitiesWhileAlive?.some(rule => rule.categories.includes(spec.category) && isDestinyOpponentActive(fight, rule.target))) throw new RangeError('Defeat the opponent blocking this ability type');
   if (spec.firstRound && fight.round !== 1) throw new RangeError('Ability requires the first combat round');
   if (spec.heroWon && fight.turn.winner !== 'hero' && !(fight.phase === 'ability-rolled' && fight.turn.pendingAbility.type === 'damage')) throw new RangeError('Win the round first');
   if (spec.enemyWon && fight.turn.winner !== 'opponent') throw new RangeError('Opponent must win the round');
@@ -256,8 +256,8 @@ export function useDestinyAbility(fight, name, options = {}, roll = () => Math.f
     delete next.turn.passedSpeedAbility;
     delete next.turn.passedSpeedOptions;
   }
-  const target = spec.enemy ? options.target ?? next.target : 'hero';
-  if (spec.enemy && (!Number.isInteger(target) || target < 0 || !next.opponents[target] || next.opponents[target].health <= 0)) throw new RangeError('Choose a living opponent');
+  const target = spec.enemy ? options.target ?? (spec.category === 'sp' ? destinyAttackerTarget(next) : next.target) : 'hero';
+  if (spec.enemy && (!Number.isInteger(target) || target < 0 || !isDestinyOpponentActive(next, target))) throw new RangeError('Choose a living opponent');
   if (spec.sacrifice) next.hero.health -= spec.sacrifice;
   if (name === 'cure') {
     if (!next.character) throw new RangeError('Attach the character before using Cure');
@@ -350,11 +350,11 @@ export function useDestinyAbility(fight, name, options = {}, roll = () => Math.f
       }
     }
   }
-  const alive = () => next.opponents.map((opponent, index) => opponent.health > 0 ? index : -1).filter(index => index >= 0);
+  const alive = () => next.opponents.map((opponent, index) => isDestinyOpponentActive(next, index) ? index : -1).filter(index => index >= 0);
   const chosen = options.target ?? next.target;
   if (spec.currentTarget && chosen !== next.target) throw new RangeError('This ability affects the current opponent');
   const requireLiving = index => {
-    if (!Number.isInteger(index) || !next.opponents[index] || next.opponents[index].health <= 0) throw new RangeError('Choose a living opponent');
+    if (!Number.isInteger(index) || !isDestinyOpponentActive(next, index)) throw new RangeError('Choose a living opponent');
     return index;
   };
   if (spec.advanced) applyDestinyAdvancedAbility(next, name, options, roll);
@@ -407,7 +407,7 @@ export function useDestinyAbility(fight, name, options = {}, roll = () => Math.f
   }
   next.used[name] = (next.used[name] || 0) + 1;
   if (['sp', 'co', 'dm'].includes(spec.category)) next.turn.used[spec.category] = true;
-  if (spec.fewerOpponentDice) next.turn.controlledOpponent = next.target;
+  if (spec.fewerOpponentDice) next.turn.controlledOpponent = destinyAttackerTarget(next);
   if (['evade', 'sidestep', 'vanish'].includes(name) && hasDestinyAbility(next, 'veiled-strike')) next.turn.veiledStrikeAvailable = true;
   if (spec.category === 'co' && hasDestinyAbility(next, 'weaver')) healDestinyHero(next, 2);
   if (spec.category === 'sp' && hasDestinyAbility(next, 'wind-chill')) {
@@ -418,7 +418,7 @@ export function useDestinyAbility(fight, name, options = {}, roll = () => Math.f
     else next.turn.extraDamageDice = (next.turn.extraDamageDice || 0) + 1;
   }
   next.history.push({ type: 'ability', round: next.round, name, target });
-  if (['speed-rolled', 'damage', 'damage-rolled'].includes(next.phase) && next.opponents[next.target].health <= 0) next.phase = 'end';
+  if (['speed-rolled', 'damage', 'damage-rolled'].includes(next.phase) && !isDestinyOpponentActive(next, next.target)) next.phase = 'end';
   if (spec.category === 'dm' && next.phase !== 'ability-rolled') next.phase = next.turn.afterDeathMove;
   else if (next.phase === 'end' && !next.turn.pendingPassiveDeath && next.turn.deaths.length > next.turn.deathMoveDeathsSeen) {
     next.phase = 'death-move';

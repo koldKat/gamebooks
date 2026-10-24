@@ -1,4 +1,4 @@
-import { hasDestinyAbility, destinyStrike, addDestinyStatEffect } from './effects.js';
+import { hasDestinyAbility, destinyStrike, addDestinyStatEffect, isDestinyOpponentActive } from './effects.js';
 import { destinyDie } from './damage.js';
 import { settleDestinyFight } from './core.js';
 
@@ -9,7 +9,7 @@ export function useDestinyOpening(fight, name, options, roll) {
   next.turn ??= { used: { sp: false, co: false, dm: false, backpack: false }, deaths: [], deathMoveDeathsSeen: 0 };
   if (name === 'first-blood' || name === 'first-cut') {
     const target = options.target;
-    if (!Number.isInteger(target) || !next.opponents[target] || next.opponents[target].health <= 0) throw new RangeError('Choose a living opponent');
+    if (!Number.isInteger(target) || !isDestinyOpponentActive(next, target)) throw new RangeError('Choose a living opponent');
     destinyStrike(next, target, name === 'first-blood' ? 4 : 1, name, 'first-strike');
   } else if (name === 'best-laid-plans') {
     if (!['snap-jack', 'cluster-mine'].includes(options.trap)) throw new RangeError('Choose a trap');

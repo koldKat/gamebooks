@@ -24,7 +24,7 @@ test('the roster preserves all 99 encounters, 218 printed parts and explicit non
   assert.equal(winterRosterFor(118).parts[3].role, 'resource');
   assert.equal(winterRosterFor(468).parts[0].health, null);
   assert.equal(winterRosterFor(468).parts[0].role, 'indestructible');
-  assert.throws(() => preset(468), /complete rules adapter/);
+  assert.equal(preset(468).opponents[0].health, null);
 });
 
 test('roster copies cannot alter future presets, and alternate stats retain their source values', () => {
@@ -44,8 +44,8 @@ test('every currently automated preset creates the exact printed combat group wi
   const player = hero();
   const before = structuredClone(player);
   for (const section of WINTER_IMPLEMENTED_ENCOUNTERS) {
-    const fight = createWinterFight(player, section);
-    const expected = winterRosterFor(section).parts.filter(part => part.role === 'opponent');
+    const fight = createWinterFight(player, section, { equipment: { transport: { stability: 10, toughness: 10 } } });
+    const expected = winterRosterFor(section).parts.filter(part => part.role === 'opponent' || ['468', '565'].includes(section));
     assert.equal(fight.opponents.length, expected.length, section);
     assert.deepEqual(fight.opponents.map(e => e.name), expected.map(e => e.name), section);
   }

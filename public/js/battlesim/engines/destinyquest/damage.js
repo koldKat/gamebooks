@@ -1,8 +1,8 @@
-import { destinyStat, destinyStrike, addDestinyStatEffect, healDestinyHero } from './effects.js';
+import { destinyStat, destinyStrike, addDestinyStatEffect, healDestinyHero, isDestinyOpponentActive, isDestinyOpponentDead } from './effects.js';
 
-const living = fight => fight.opponents.map((opponent, index) => opponent.health > 0 ? index : -1).filter(index => index >= 0);
+const living = fight => fight.opponents.map((opponent, index) => isDestinyOpponentActive(fight, index) ? index : -1).filter(index => index >= 0);
 function target(fight, index) {
-  if (!Number.isInteger(index) || !fight.opponents[index] || fight.opponents[index].health <= 0) throw new RangeError('Choose a living opponent');
+  if (!Number.isInteger(index) || !isDestinyOpponentActive(fight, index)) throw new RangeError('Choose a living opponent');
   return index;
 }
 export function destinyDie(roll) {
@@ -50,7 +50,7 @@ export function applyDestinyDamage(fight, pending) {
     const damage = group.dice.reduce((sum, face, index) => sum + face + bonus + (group.bonuses[index] || 0), 0);
     for (const index of group.targets) {
       const lost = destinyStrike(fight, index, damage, name);
-      if (spec.passive && fight.opponents[index].health === 0) fight.turn.pendingPassiveDeath = true;
+      if (spec.passive && isDestinyOpponentDead(fight, index)) fight.turn.pendingPassiveDeath = true;
       if (spec.category === 'co' && lost) fight.turn.combatAbilityDamage = true;
       if (spec.drain && lost) healDestinyHero(fight, 2);
       if (spec.recoil && lost) fight.hero.health = Math.max(0, fight.hero.health - 1);

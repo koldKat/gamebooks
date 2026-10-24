@@ -9,7 +9,7 @@ import { attachDestinyCharacter } from './character.js';
 import { destinyStrike, addDestinyStatEffect } from './effects.js';
 import { destinyDie } from './damage.js';
 
-export const WINTER_IMPLEMENTED_ENCOUNTERS = Object.freeze(['30', '34', '37', '41', '49', '54', '70', '76', '83', '91', '100', '101', '107', '118', '135', '141', '152', '154', '159', '166', '167', '174', '175', '184', '187', '194', '202', '211', '216', '236', '271', '272', '275', '292', '293', '300', '311', '316', '325', '333', '337', '340', '348', '371', '375', '379', '402', '407', '436', '447', '467', '475', '485', '516', '533', '567']);
+export const WINTER_IMPLEMENTED_ENCOUNTERS = Object.freeze(['30', '34', '37', '41', '48', '49', '54', '70', '76', '83', '91', '100', '101', '107', '118', '135', '141', '152', '154', '159', '166', '167', '174', '175', '184', '187', '194', '202', '211', '216', '236', '271', '272', '275', '292', '293', '300', '311', '316', '318', '325', '333', '337', '340', '348', '371', '375', '379', '402', '407', '436', '447', '467', '468', '475', '485', '516', '533', '542', '565', '567', '578', '580', '590', '599', '603', '615', '619', '626', '635', '666', '668', '672', '698']);
 
 export function winterChallenge(fight, section, { leif = false } = {}) {
   const hooks = hasDestinyAbility(fight, 'ice-hooks');
@@ -18,10 +18,11 @@ export function winterChallenge(fight, section, { leif = false } = {}) {
   throw new RangeError('Unknown climbing challenge');
 }
 
-export function configureWinterEncounter(fight, section, { fimbulwinter = false } = {}) {
+export function configureWinterEncounter(fight, section, { fimbulwinter = false, bannerLit = false } = {}) {
   if (fight?.status !== 'active' || fight.round !== 0 || fight.phase !== 'start') throw new RangeError('Choose the encounter before combat');
   if (Object.keys(fight.used).length) throw new RangeError('Choose the encounter before opening abilities');
   if (typeof fimbulwinter !== 'boolean') throw new RangeError('Specify whether the Titan shield is present');
+  if (typeof bannerLit !== 'boolean') throw new RangeError('Specify whether the tower banner was lit');
   const next = structuredClone(fight);
   const insulated = hasDestinyAbility(next, 'insulated');
   const rules = { sourceSection: String(section) };
@@ -34,6 +35,12 @@ export function configureWinterEncounter(fight, section, { fimbulwinter = false 
     case '37': case '54':
       rules.rerollOnesByTarget = [0];
       rules.endEffects = [{ target: 0, amount: 1 }];
+      break;
+    case '48':
+      if (!next.equipment?.transport) throw new RangeError('Choose the transport used in this encounter');
+      rules.damageShieldWhileAlive = [{ target: 0, protectors: [1, 2, 3, 4] }];
+      rules.restrictProtectedTargets = true;
+      rules.endTests = [{ name: 'Under pressure', kind: 'transport-damage', dice: 4, every: 4, requiresAnyAlive: [1, 2, 3, 4], owner: 'opponent', damageDice: true }];
       break;
     case '49': rules.outnumbered = true; break;
     case '70': rules.fleeAtHealth = { 0: 10 }; break;
@@ -128,6 +135,11 @@ export function configureWinterEncounter(fight, section, { fimbulwinter = false 
       rules.endEffects = next.opponents.slice(1).map((_, index) => ({ target: 'hero', amount: 1, requiresAlive: [index + 1] }));
       rules.startStats = [{ round: 4, target: 0, changes: { speed: 2 } }];
       break;
+    case '318':
+      rules.surrenderAt = Object.fromEntries(next.opponents.map((_, target) => [target, 10]));
+      rules.statWhileAlive = ['speed', 'brawn', 'magic'].map(attribute => ({ alive: 0, target: 'hero', attribute, amount: attribute === 'speed' ? -1 : -4 }));
+      rules.outnumbered = true;
+      break;
     case '325': rules.onHeroScoreHealthHit = [{ target: 'hero', attribute: 'speed', set: 0, duration: 1, delay: 1 }]; break;
     case '333': rules.heroWinTest = { name: 'Spitting feathers', kind: 'birdman-attack', dice: 1 }; break;
     case '337': rules.enemyWinTest = { name: 'Swat back', kind: 'sasquatch-attack', dice: 1, attackChoice: true }; break;
@@ -147,15 +159,77 @@ export function configureWinterEncounter(fight, section, { fimbulwinter = false 
       rules.roundDamagePerLivingOpponent = 1;
       rules.heroScoreBonus = 2;
       break;
+    case '468':
+      rules.attackProxy = { 1: 0 };
+      rules.unselectableTargets = [0];
+      rules.victoryTargets = [1];
+      rules.passiveImmuneTargets = [1];
+      rules.automaticHitsAfterWin = 2;
+      rules.endEffects = [{ target: 'hero', amount: 2 }];
+      break;
     case '475': rules.heroDamageWithoutSpeedAbility = 4; break;
     case '516':
       rules.outnumbered = true;
       rules.regeneration = next.opponents.map((_, target) => ({ target, amount: 2 }));
       break;
-    case '565': if (!insulated) rules.mirrorBonusTarget = 0; break;
-    case '578': rules.roundDamagePerLivingOpponent = insulated ? 0 : 1; break;
-    case '599': if (insulated) rules.scoreReductionByTarget = { 0: 2 }; break;
+    case '542':
+      if (!next.equipment?.transport) throw new RangeError('Choose the transport used in this encounter');
+      rules.startTests = [{ name: 'Poison spray', kind: 'transport-damage', dice: 1, owner: 'opponent', damageDice: true }];
+      break;
+    case '565':
+      if (!insulated) rules.mirrorBonusTarget = 0;
+      rules.attackProxy = { 1: 0, 2: 0, 3: 0 };
+      rules.damageShieldWhileAlive = [{ target: 0, protectors: [1, 2, 3] }];
+      rules.passiveImmunityByTarget = { 1: ['bleed', 'decay'], 2: ['bleed', 'decay'], 3: ['bleed', 'decay'] };
+      rules.heroScoreWhenDefeated = [{ targets: [1, 2, 3], amount: 2 }];
+      break;
+    case '578':
+      rules.roundDamagePerLivingOpponent = insulated ? 0 : 1;
+      rules.heroScoreBonus = 2;
+      rules.inactiveTargets = [1, 2, 3];
+      rules.healthThresholdStats = [50, 30, 10].map((health, index) => ({ target: 0, health, activateTargets: [index + 1] }));
+      rules.passiveImmunityByTarget = Object.fromEntries(next.opponents.map((_, target) => [target, ['bleed', 'decay', 'venom']]));
+      break;
+    case '580':
+      rules.damageShieldWhileAlive = [{ target: 0, protectors: [1] }];
+      rules.restrictProtectedTargets = true;
+      rules.automaticHitTargets = [1];
+      rules.passiveImmuneTargets = [1];
+      rules.regeneration = [{ target: 0, amount: 5, uncapped: true, requiresAlive: [1] }];
+      if (bannerLit) rules.heroScoreWhenDefeated = [{ target: 1, amount: 2 }];
+      break;
+    case '590':
+      rules.endEffects = [{ target: 'hero', actor: 0, actorAttribute: 'magic', requiresAlive: [0] }];
+      rules.heroScoreBonus = 2;
+      break;
+    case '599':
+      if (insulated) rules.scoreReductionByTarget = { 0: 2 };
+      rules.endEffects = [{ target: 'hero', actor: 0, healthDivisor: 10, requiresAlive: [0] }];
+      rules.passiveImmunityByTarget = { 0: ['bleed', 'decay', 'disease', 'venom'] };
+      break;
+    case '603': rules.growingStatusOnHit = { name: 'infestation', increment: 2 }; break;
     case '615': rules.roundDamagePerLivingOpponent = insulated ? 1 : 2; break;
+    case '619':
+      rules.onEnemyScoreHealthHit = [{ attacker: 0, target: 'hero', attribute: 'speed', amount: -1, duration: 1, delay: 1 }];
+      rules.roundDamagePerLivingOpponent = 1;
+      rules.heroScoreBonus = 2;
+      break;
+    case '626': rules.damageWithoutAttackAbility = 5; rules.endEffects = [{ target: 'hero', amount: 1 }]; break;
+    case '635':
+      rules.blockAbilitiesWhileAlive = [{ target: 0, categories: ['sp'] }];
+      rules.startStats = [{ round: 5, target: 0, changes: { speed: 1, magic: 3 } }];
+      break;
+    case '666': rules.reflectDamage = [{ target: 0, divisor: 2 }]; rules.endEffects = [{ target: 'hero', amount: 2 }]; break;
+    case '668':
+      rules.damageDiceByTarget = { 0: 2 };
+      rules.endTests = [{ name: 'Spirit link', kind: 'spirit-link', dice: 1 }];
+      break;
+    case '672': rules.roundDamagePerLivingOpponent = 1; rules.heroScoreBonus = 2; break;
+    case '698':
+      rules.onEnemyScoreHealthHit = ['brawn', 'magic'].map(attribute => ({ attacker: 0, target: 'hero', attribute, amount: -1, duration: null }));
+      rules.endEffects = [{ target: 'hero', amount: 4, requiresAlive: [1] }];
+      rules.enemyWinTest = { name: 'Baiting the beast', kind: 'distracted', dice: 1, attackChoice: true };
+      break;
     default: throw new RangeError('Unsupported encounter exception');
   }
   next.encounter = rules;
@@ -164,19 +238,20 @@ export function configureWinterEncounter(fight, section, { fimbulwinter = false 
   return next;
 }
 
-export function createWinterFight(hero, section, { abilities = {}, equipment = {}, character = null, fimbulwinter = false } = {}) {
+export function createWinterFight(hero, section, { abilities = {}, equipment = {}, character = null, fimbulwinter = false, bannerLit = false } = {}) {
   if (!WINTER_IMPLEMENTED_ENCOUNTERS.includes(String(section))) throw new RangeError('This encounter still needs its complete rules adapter');
   const preset = winterRosterFor(section);
   const parts = preset.parts.filter(part => String(section) === '118' ? part.role === 'opponent' : true);
-  if (parts.some(part => part.role !== 'opponent')) throw new RangeError('This encounter requires its dedicated component adapter');
+  if (parts.some(part => part.role !== 'opponent') && !['468', '565'].includes(String(section))) throw new RangeError('This encounter requires its dedicated component adapter');
   const opponents = parts.map(part => {
     const enemy = { name: part.name, speed: part.speed, armour: part.armour, health: part.health, damageStat: part.damageStat };
+    if (part.role !== 'opponent') enemy.role = part.role;
     for (const key of ['brawn', 'magic']) if (part[key] !== undefined) enemy[key] = part[key];
     return enemy;
   });
   let fight = configureDestinyAbilities(createDestinyFight(hero, opponents), abilities, equipment);
   if (character) fight = attachDestinyCharacter(fight, character);
-  fight = configureWinterEncounter(fight, section, { fimbulwinter });
+  fight = configureWinterEncounter(fight, section, { fimbulwinter, bannerLit });
   return fight;
 }
 

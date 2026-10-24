@@ -1,4 +1,4 @@
-import { destinyStrike, addDestinyStatEffect } from './effects.js';
+import { destinyStrike, addDestinyStatEffect, isDestinyOpponentActive } from './effects.js';
 import { destinyDie, applyDestinyDamage } from './damage.js';
 
 export function applyDestinyRoundEvents(fight, options, roll) {
@@ -12,7 +12,7 @@ export function applyDestinyRoundEvents(fight, options, roll) {
     const maximum = fight.trap.kind === 'snap-jack' ? 1 : fight.trap.trigger;
     if (!Array.isArray(trapTargets) || !trapTargets.length || trapTargets.length > maximum ||
         new Set(trapTargets).size !== trapTargets.length || trapTargets.some(target =>
-          !Number.isInteger(target) || !fight.opponents[target] || fight.opponents[target].health <= 0)) {
+          !Number.isInteger(target) || !isDestinyOpponentActive(fight, target))) {
       throw new RangeError('Choose the opponents affected by the triggered trap');
     }
   }
@@ -23,17 +23,17 @@ export function applyDestinyRoundEvents(fight, options, roll) {
     if (effect.kind === 'vortex') {
       if (result <= 2) fight.hero.health = Math.max(0, fight.hero.health - 2);
       else fight.opponents.forEach((opponent, target) => {
-        if (opponent.health > 0) destinyStrike(fight, target, 2, 'vortex', 'passive');
+        if (isDestinyOpponentActive(fight, target)) destinyStrike(fight, target, 2, 'vortex', 'passive');
       });
     } else if (result <= 2) addDestinyStatEffect(fight, 'hero', 'speed', -1, 1, 'dry-ice');
     else if (result >= 5) fight.opponents.forEach((opponent, target) => {
-      if (opponent.health > 0) addDestinyStatEffect(fight, target, 'speed', -2, 1, 'dry-ice');
+      if (isDestinyOpponentActive(fight, target)) addDestinyStatEffect(fight, target, 'speed', -2, 1, 'dry-ice');
     });
   }
   if (trapTargets) {
     fight.trap.fired = true;
     // Another round-start event may already have defeated a selected victim.
-    const targets = trapTargets.filter(target => fight.opponents[target].health > 0);
+    const targets = trapTargets.filter(target => isDestinyOpponentActive(fight, target));
     if (fight.trap.kind === 'snap-jack') {
       targets.forEach(target => destinyStrike(fight, target, 10, 'snap-jack', 'passive'));
     } else if (targets.length) {

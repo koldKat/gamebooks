@@ -1,11 +1,11 @@
-import { destinyStat, destinyStrike, addDestinyStatEffect } from './effects.js';
+import { destinyStat, destinyStrike, addDestinyStatEffect, isDestinyOpponentActive } from './effects.js';
 import { destinyDie, prepareDestinyDamage, applyDestinyDamage } from './damage.js';
 import { settleDestinyFight } from './core.js';
 import { resolveDestinyEncounterEvent, resumeDestinyEncounterQueue } from './encounter-events.js';
 
 export function prepareDestinyAbilityRoll(fight, name, options, roll) {
   const target = options.target ?? fight.target;
-  if (!Number.isInteger(target) || !fight.opponents[target] || fight.opponents[target].health <= 0) throw new RangeError('Choose a living opponent');
+  if (!Number.isInteger(target) || !isDestinyOpponentActive(fight, target)) throw new RangeError('Choose a living opponent');
   const count = name === 'take-the-bait' ? 3 : 1;
   fight.turn.pendingAbility = { type: 'test', name, target, options: structuredClone(options),
     dice: Array.from({ length: count }, () => destinyDie(roll)) };
@@ -13,7 +13,7 @@ export function prepareDestinyAbilityRoll(fight, name, options, roll) {
 }
 
 export function finishDestinyAbilityAction(fight, roll = () => Math.floor(Math.random() * 6) + 1) {
-  if (['speed-rolled', 'damage', 'damage-rolled'].includes(fight.phase) && fight.opponents[fight.target].health <= 0) fight.phase = 'end';
+  if (['speed-rolled', 'damage', 'damage-rolled'].includes(fight.phase) && !isDestinyOpponentActive(fight, fight.target)) fight.phase = 'end';
   if (fight.phase === 'end' && !fight.turn.pendingPassiveDeath && !fight.turn.used.dm &&
       fight.turn.deaths.length > fight.turn.deathMoveDeathsSeen) {
     fight.phase = 'death-move';
@@ -66,7 +66,7 @@ export function resolveDestinyAbilityRoll(fight, roll = () => Math.floor(Math.ra
       else {
         const groups = [];
         for (const index of [target - 1, target, target + 1]) {
-          if (!next.opponents[index] || next.opponents[index].health <= 0) continue;
+          if (!isDestinyOpponentActive(next, index)) continue;
           groups.push({ targets: [index], dice: Array.from({ length: index === target ? 4 : 1 }, () => destinyDie(roll)), bonuses: {} });
         }
         const damage = { type: 'damage', name, spec: { category: 'co', replacement: true }, options, groups, returnPhase: 'end' };
