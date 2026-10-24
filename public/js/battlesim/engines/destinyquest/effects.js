@@ -33,7 +33,7 @@ export function destinyDamageScore(fight) {
   const hero = fight.turn.winner === 'hero';
   const target = hero ? 'hero' : fight.target;
   const attacker = hero ? fight.hero : fight.opponents[target];
-  const power = hero ? Math.max(destinyStat(fight, target, 'brawn'), destinyStat(fight, target, 'magic'))
+  const power = hero ? fight.turn.damageUsesBrawn ? destinyStat(fight, target, 'brawn') : Math.max(destinyStat(fight, target, 'brawn'), destinyStat(fight, target, 'magic'))
     : destinyStat(fight, target, attacker.damageStat);
   const perDie = (fight.turn.damagePerDie || 0) + (hero ?
     fight.effects.filter(effect => ['score-per-die', 'damage-per-die'].includes(effect.kind) && effect.from <= fight.round && effect.until >= fight.round)
@@ -73,6 +73,18 @@ export function destinyStrike(fight, target, amount, source, kind = 'dice') {
   return lost;
 }
 
+export function rollDestinyDamageDice(fight, count, roll, unmodified = false) {
+  const bonus = unmodified ? 0 : fight.effects.filter(effect => effect.kind === 'damage-per-die' &&
+    effect.from <= fight.round && effect.until >= fight.round).reduce((total, effect) => total + effect.amount, 0);
+  let total = 0;
+  for (let i = 0; i < count; i++) {
+    const value = roll();
+    if (!Number.isInteger(value) || value < 1 || value > 6) throw new RangeError('A die must roll 1-6');
+    total += value + bonus;
+  }
+  return total;
+}
+
 export function destinyPassiveEffects(fight, roll) {
   const result = [];
   for (const name of ['barbs', 'decay', 'thorns']) {
@@ -86,8 +98,7 @@ export function destinyPassiveEffects(fight, roll) {
         fight.round < effect.from || fight.round > effect.until || fight.opponents[effect.target]?.health <= 0) continue;
     let amount = effect.amount;
     if (effect.kind === 'delayed-dice') {
-      amount = roll();
-      if (!Number.isInteger(amount) || amount < 1 || amount > 6) throw new RangeError('A die must roll 1-6');
+      amount = rollDestinyDamageDice(fight, 1, roll);
     }
     result.push({ target: effect.target, amount, ignoreArmour: true, source: effect.source || effect.kind });
   }

@@ -1,5 +1,6 @@
-import { destinyStat, addDestinyStatEffect, healDestinyHero, hasDestinyAbility, destinyStrike } from './effects.js';
+import { destinyStat, addDestinyStatEffect, healDestinyHero, hasDestinyAbility, destinyStrike, rollDestinyDamageDice } from './effects.js';
 import { settleDestinyFight } from './core.js';
+import { applyDestinyAdvancedAbility } from './advanced.js';
 
 const rule = (category, phases, extra = {}) => Object.freeze({ category, phases, ...extra });
 const anytime = ['speed', 'speed-rolled', 'damage', 'damage-rolled', 'end', 'death-move'];
@@ -88,6 +89,52 @@ const definitions = {
   shatter: rule('co', ['end'], { afterHit: true, shatter: true }),
   corruption: rule('co', ['end'], { afterHit: true, weaken: 2 }),
   frostbite: rule('co', ['end'], { afterHit: true, frostbite: true }),
+  'dark-pact': rule('co', heroDamage, { heroWon: true, sacrifice: 4, scoreBonus: 4 }),
+  impale: rule('co', heroDamage, { heroWon: true, scoreBonus: 3, advanced: true }),
+  'frost-guard': rule('mo', anytime, { attribute: 'armour', amount: 3, advanced: true }),
+  'deadly-dance': rule('sp', ['speed'], { enemy: true, limit: 2, advanced: true }),
+  'cruel-twist': rule('mo', ['damage-rolled'], { heroWon: true, advanced: true }),
+  'ice-slick': rule('mo', ['speed-rolled'], { advanced: true }),
+  trickster: rule('mo', ['speed-rolled'], { advanced: true }),
+  deceive: rule('mo', ['speed-rolled'], { advanced: true }),
+  counter: rule('co', heroDamage, { enemyWon: true, scoreBonus: -2, advanced: true }),
+  overpower: rule('co', ['damage'], { enemyWon: true, replacement: true, hit: 'one', dice: 2, currentTarget: true }),
+  deflect: rule('co', ['damage'], { enemyWon: true, replacement: true, hit: 'one', dice: 2, currentTarget: true }),
+  slam: rule('co', ['damage'], { enemyWon: true, replacement: true, advanced: true }),
+  unstoppable: rule('mo', ['damage'], { enemyWon: true, reverse: true, sacrifice: 5 }),
+  'roll-with-it': rule('mo', ['damage'], { heroWon: true, advanced: true }),
+  'shoulder-charge': rule('co', ['damage'], { heroWon: true, advanced: true }),
+  'twin-blade': rule('co', ['damage'], { heroWon: true, replacement: true, advanced: true }),
+  wave: rule('co', ['damage'], { heroWon: true, replacement: true, advanced: true }),
+  'scarlet-strikes': rule('dm', ['death-move'], { advanced: true }),
+  retaliation: rule('co', ['end'], { afterEnemyHit: true, hit: 'one', dice: 1, currentTarget: true }),
+  sideswipe: rule('co', ['end'], { afterEnemyHit: true, hit: 'one', dice: 1, currentTarget: true }),
+  revenge: rule('co', ['end'], { afterEnemyHit: true, hit: 'all', dice: 1, shared: true }),
+  'shock-blast': rule('co', ['end'], { afterEnemyHit: true, hit: 'all', dice: 1, shared: true }),
+  'punch-drunk': rule('co', ['end'], { afterEnemyHit: true, advanced: true }),
+  rebound: rule('co', ['end'], { afterEnemyHit: true, advanced: true }),
+  'thorn-armour': rule('co', anytime, { attribute: 'armour', amount: 3, hit: 'all', dice: 1, shared: true }),
+  parasite: rule('mo', anytime, { advanced: true }),
+  reaper: rule('mo', ['end', 'death-move'], { afterHit: true, advanced: true }),
+  'pain-barrier': rule('mo', ['start', 'death-move'], { advanced: true }),
+  'choke-hold': rule('mo', ['end', 'death-move'], { advanced: true }),
+  'coup-de-grace': rule('pa', anytime, { advanced: true }),
+  recall: rule('mo', anytime, { regain: ['mo'] }),
+  recharge: rule('dm', ['death-move'], { regain: ['sp', 'mo'] }),
+  recovery: rule('dm', ['death-move'], { regain: ['mo'] }),
+  'tormented-soul': rule('mo', anytime, { sacrifice: 4, regain: ['sp', 'co'] }),
+  windfall: rule('co', ['end'], { afterEnemyHit: true, regain: ['sp'] }),
+  murder: rule('dm', ['death-move'], { advanced: true }),
+  petrify: rule('dm', ['death-move'], { advanced: true }),
+  'frost-hound': rule('dm', ['death-move'], { advanced: true, requires: 'syns-heart' }),
+  recuperation: rule('dm', ['death-move'], { advanced: true }),
+  'spirit-call': rule('co', ['damage'], { heroWon: true, replacement: true, advanced: true }),
+  'poison-cloud': rule('co', ['damage'], { heroWon: true, replacement: true, advanced: true }),
+  'rallying-call': rule('co', ['damage'], { heroWon: true, replacement: true, requires: 'horn', advanced: true }),
+  'shape-shift': rule('co', ['damage'], { heroWon: true, replacement: true, advanced: true }),
+  'sure-edge': rule('mo', anytime, { advanced: true }),
+  'tactical-manoeuvres': rule('co', heroDamage, { enemyWon: true, avoidDamage: true, advanced: true }),
+  'blind-strike': rule('co', ['speed', 'speed-rolled', 'damage', 'end'], { hit: 'one', dice: 2, advanced: true, currentTarget: true }),
 };
 for (const name of ['blind', 'curse', 'immobilise', 'knockdown', 'shackles', 'webbed', 'windblast']) {
   definitions[name] = rule('sp', ['speed'], { fewerOpponentDice: true });
@@ -102,10 +149,23 @@ function draw(roll) {
   return value;
 }
 
-export function configureDestinyAbilities(fight, inventory) {
+export function configureDestinyAbilities(fight, inventory, equipment = {}) {
   if (fight?.status !== 'active' || fight.round !== 0 || fight.phase !== 'start' ||
       !inventory || typeof inventory !== 'object' || Array.isArray(inventory)) throw new RangeError('Configure abilities before combat');
   const next = structuredClone(fight);
+  if (!equipment || typeof equipment !== 'object' || Array.isArray(equipment)) throw new RangeError('Invalid equipment');
+  next.equipment = {};
+  for (const slot of ['mainHand', 'leftHand', 'transport']) {
+    if (!equipment[slot]) continue;
+    const item = equipment[slot];
+    if (typeof item !== 'object' || Array.isArray(item)) throw new RangeError('Invalid equipment');
+    next.equipment[slot] = { type: String(item.type || ''), id: String(item.id || '') };
+    for (const stat of ['brawn', 'speed', 'toughness', 'stability']) {
+      const value = item[stat] ?? 0;
+      if (!Number.isSafeInteger(value) || value < 0 || value > 1000000) throw new RangeError('Invalid equipment attribute');
+      next.equipment[slot][stat] = value;
+    }
+  }
   next.abilities = {};
   for (const [name, count] of Object.entries(inventory)) {
     if (!Object.hasOwn(DESTINY_ABILITIES, name) || !Number.isInteger(count) || count < 1 || count > 100) {
@@ -123,7 +183,7 @@ function dieIndex(values, index) {
 
 export function useDestinyAbility(fight, name, options = {}, roll = () => Math.floor(Math.random() * 6) + 1) {
   const spec = DESTINY_ABILITIES[name];
-  if (!spec || fight?.status !== 'active' || !hasDestinyAbility(fight, name) || !spec.phases.includes(fight.phase)) {
+  if (!spec || fight?.status !== 'active' || !fight.turn || !hasDestinyAbility(fight, name) || !spec.phases.includes(fight.phase)) {
     throw new RangeError('Ability unavailable at this combat stage');
   }
   if (fight.turn.used[spec.category]) throw new RangeError('Only one ability of this category per round');
@@ -131,14 +191,17 @@ export function useDestinyAbility(fight, name, options = {}, roll = () => Math.f
   if (spec.heroWon && fight.turn.winner !== 'hero') throw new RangeError('Win the round first');
   if (spec.enemyWon && fight.turn.winner !== 'opponent') throw new RangeError('Opponent must win the round');
   if (spec.afterHit && (fight.turn.winner !== 'hero' || !fight.turn.healthDamage)) throw new RangeError('Cause health damage with a damage score first');
+  if (spec.afterEnemyHit && (fight.turn.winner !== 'opponent' || !fight.turn.healthDamage)) throw new RangeError('Take health damage from the opponent first');
+  if (fight.bearForm && spec.category === 'co') throw new RangeError('Combat abilities are unavailable in bear form');
+  if (spec.requires && ![fight.equipment?.leftHand?.id, fight.equipment?.leftHand?.type].includes(spec.requires)) throw new RangeError('Required left-hand equipment is missing');
   const limit = spec.perItem ? fight.abilities[name] : spec.limit === null ? Infinity :
-    (name === 'curse' || name === 'fear') && hasDestinyAbility(fight, 'anguish') ? 2 : 1;
+    spec.limit || ((name === 'curse' || name === 'fear') && hasDestinyAbility(fight, 'anguish') ? 2 : 1);
   if ((fight.used[name] || 0) >= limit) throw new RangeError('Ability has no uses left');
   // Sacrifices are paid while alive. They cannot be used to heal back from zero.
   if (spec.sacrifice && fight.hero.health < spec.sacrifice) throw new RangeError('Not enough health to sacrifice');
   const next = structuredClone(fight);
   const target = spec.enemy ? options.target ?? next.target : 'hero';
-  if (spec.enemy && (!next.opponents[target] || next.opponents[target].health <= 0)) throw new RangeError('Choose a living opponent');
+  if (spec.enemy && (!Number.isInteger(target) || target < 0 || !next.opponents[target] || next.opponents[target].health <= 0)) throw new RangeError('Choose a living opponent');
   if (spec.sacrifice) next.hero.health -= spec.sacrifice;
   if (spec.attribute) addDestinyStatEffect(next, target, spec.attribute, spec.amount, spec.duration || 1, name);
   if (spec.heal) healDestinyHero(next, spec.heal + (hasDestinyAbility(next, 'salvation') ? 1 : 0));
@@ -197,10 +260,20 @@ export function useDestinyAbility(fight, name, options = {}, roll = () => Math.f
   }
   const alive = () => next.opponents.map((opponent, index) => opponent.health > 0 ? index : -1).filter(index => index >= 0);
   const chosen = options.target ?? next.target;
+  if (spec.currentTarget && chosen !== next.target) throw new RangeError('This ability affects the current opponent');
   const requireLiving = index => {
     if (!Number.isInteger(index) || !next.opponents[index] || next.opponents[index].health <= 0) throw new RangeError('Choose a living opponent');
     return index;
   };
+  if (spec.advanced) applyDestinyAdvancedAbility(next, name, options, roll);
+  if (spec.regain) {
+    const restored = options.restore;
+    if (!Object.hasOwn(definitions, restored) || !hasDestinyAbility(next, restored) ||
+        !spec.regain.includes(definitions[restored].category) || !(next.used[restored] > 0)) {
+      throw new RangeError('Choose an already used ability of the required type');
+    }
+    next.used[restored]--;
+  }
   if (spec.hit) {
     let targets;
     if (spec.hit === 'all' || spec.hit === 'dragon') targets = alive();
@@ -212,11 +285,7 @@ export function useDestinyAbility(fight, name, options = {}, roll = () => Math.f
       if (spec.hit === 'adjacent' && Math.abs(targets[0] - targets[1]) !== 1) throw new RangeError('Choose adjacent opponents');
     } else targets = [requireLiving(chosen)];
     if (spec.hit === 'dragon') requireLiving(chosen);
-    const damageDice = count => {
-      const bonus = spec.unmodified ? 0 : next.effects.filter(effect => effect.kind === 'damage-per-die' &&
-        effect.from <= next.round && effect.until >= next.round).reduce((total, effect) => total + effect.amount, 0);
-      return Array.from({ length: count }, () => draw(roll) + bonus).reduce((total, value) => total + value, 0);
-    };
+    const damageDice = count => rollDestinyDamageDice(next, count, roll, spec.unmodified);
     const shared = spec.shared ? damageDice(spec.dice) : null;
     targets.forEach((index, order) => {
       let count = spec.dice;
@@ -224,10 +293,15 @@ export function useDestinyAbility(fight, name, options = {}, roll = () => Math.f
       if (spec.hit === 'below') count = Math.max(1, 3 - order);
       if (spec.speedDifference) count += Math.max(0, destinyStat(next, 'hero', 'speed') - destinyStat(next, index, 'speed'));
       const lost = destinyStrike(next, index, shared ?? damageDice(count), name);
+      if (spec.category === 'co' && lost) next.turn.combatAbilityDamage = true;
       if (spec.drain && lost) healDestinyHero(next, 2);
       if (spec.recoil && lost) next.hero.health = Math.max(0, next.hero.health - 1);
       if (spec.armourLoss) addDestinyStatEffect(next, index, 'armour', -spec.armourLoss, null, name);
-      if (spec.weaken) addDestinyStatEffect(next, index, next.opponents[index].damageStat, -1, null, name);
+      if (spec.weaken) {
+        const attribute = options.attribute ?? next.opponents[index].damageStat;
+        if (!['brawn', 'magic'].includes(attribute)) throw new RangeError('Choose brawn or magic');
+        addDestinyStatEffect(next, index, attribute, -1, null, name);
+      }
       if (spec.slowTargets) addDestinyStatEffect(next, index, 'speed', -1, 1, name, 1);
       if (spec.ongoing) next.effects.push({ kind: 'ongoing-damage', target: index, amount: spec.ongoing,
         from: next.round, until: Number.MAX_SAFE_INTEGER, source: name });
@@ -242,7 +316,11 @@ export function useDestinyAbility(fight, name, options = {}, roll = () => Math.f
   if (spec.afterHit) {
     const index = requireLiving(next.target);
     if (spec.armourLoss) addDestinyStatEffect(next, index, 'armour', -spec.armourLoss, null, name);
-    if (spec.weaken) addDestinyStatEffect(next, index, next.opponents[index].damageStat, -spec.weaken, null, name);
+    if (spec.weaken) {
+      const attribute = options.attribute ?? next.opponents[index].damageStat;
+      if (!['brawn', 'magic'].includes(attribute)) throw new RangeError('Choose brawn or magic');
+      addDestinyStatEffect(next, index, attribute, -spec.weaken, null, name);
+    }
     if (spec.frostbite) addDestinyStatEffect(next, index, 'speed', -1, 2, name, 1);
     if (spec.shatter) {
       if (!['armour-minus-two', 'armour-zero-next-round'].includes(options.variant)) throw new RangeError('Choose the printed Shatter variant');
@@ -264,6 +342,7 @@ export function useDestinyAbility(fight, name, options = {}, roll = () => Math.f
   }
   next.used[name] = (next.used[name] || 0) + 1;
   if (['sp', 'co', 'dm'].includes(spec.category)) next.turn.used[spec.category] = true;
+  if (spec.fewerOpponentDice) next.turn.controlledOpponent = next.target;
   if (spec.category === 'co' && hasDestinyAbility(next, 'weaver')) healDestinyHero(next, 2);
   if (spec.category === 'sp' && hasDestinyAbility(next, 'wind-chill')) {
     for (const index of alive()) destinyStrike(next, index, 2, 'wind-chill', 'passive');
@@ -273,8 +352,9 @@ export function useDestinyAbility(fight, name, options = {}, roll = () => Math.f
     else next.turn.extraDamageDice = (next.turn.extraDamageDice || 0) + 1;
   }
   next.history.push({ type: 'ability', round: next.round, name, target });
+  if (['speed-rolled', 'damage', 'damage-rolled'].includes(next.phase) && next.opponents[next.target].health <= 0) next.phase = 'end';
   if (spec.category === 'dm') next.phase = next.turn.afterDeathMove;
-  else if (next.phase === 'end' && !next.turn.pendingPassiveDeath && next.turn.deaths.length > next.turn.deathMoveDeathsSeen && spec.hit) {
+  else if (next.phase === 'end' && !next.turn.pendingPassiveDeath && next.turn.deaths.length > next.turn.deathMoveDeathsSeen) {
     next.phase = 'death-move';
     next.turn.afterDeathMove = 'end';
   }

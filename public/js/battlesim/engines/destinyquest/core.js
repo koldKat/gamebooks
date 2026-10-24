@@ -1,7 +1,7 @@
 // Shared DestinyQuest combat sequence. Book abilities and encounter exceptions
 // are applied between these explicit stages, rather than hidden inside a roll.
 import { destinyStat, destinyDamageScore, destinyOnHeroHit, destinyPassiveEffects,
-  destinyPassiveProtection, hasDestinyAbility } from './effects.js';
+  destinyPassiveProtection, hasDestinyAbility, healDestinyHero } from './effects.js';
 const attributes = ['speed', 'brawn', 'magic', 'armour'];
 const clone = value => structuredClone(value);
 
@@ -99,7 +99,8 @@ export function rollDestinySpeed(fight, roll = randomDie) {
   const next = stage(fight, ['speed']);
   if (next.opponents[next.target].health <= 0) throw new RangeError('Choose a living opponent');
   next.turn.heroSpeedDice = dice(roll, next.turn.heroSpeedCount || 2);
-  next.turn.opponentSpeedDice = dice(roll, next.turn.opponentSpeedCount || 2);
+  const controlled = next.turn.controlledOpponent === undefined || next.turn.controlledOpponent === next.target;
+  next.turn.opponentSpeedDice = dice(roll, controlled ? next.turn.opponentSpeedCount || 2 : 2);
   next.phase = 'speed-rolled';
   return next;
 }
@@ -161,7 +162,10 @@ export function resolveDestinyDamage(fight) {
       next.turn.pendingPassiveDeath = true;
     }
   }
-  if (heroWon && healthLost) next.turn.lastHeroDamage = { [next.target]: healthLost };
+  if (heroWon && healthLost) {
+    next.turn.lastHeroDamage = { [next.target]: healthLost };
+    if (next.turn.used.co) next.turn.combatAbilityDamage = true;
+  }
   if (!settleDestinyFight(next)) {
     if (heroWon && defender.health === 0) {
       next.turn.deaths.push(next.target);
@@ -209,9 +213,15 @@ export function endDestinyRound(fight, effects = [], roll = randomDie) {
       next.phantomHealth -= absorbed;
       applied -= absorbed;
     }
+    const actual = Math.min(defender.health, applied);
+    next.turn.passiveDamageByTarget ??= {};
+    next.turn.passiveDamageByTarget[target] = actual;
     defender.health = Math.max(0, defender.health - applied);
     if (target !== 'hero' && defender.health === 0) next.turn.deaths.push(target);
   }
+  const healing = next.effects.filter(effect => effect.kind === 'end-heal' &&
+    effect.from <= next.round && effect.until >= next.round).reduce((total, effect) => total + effect.amount, 0);
+  if (healing) healDestinyHero(next, healing);
   if (!settleDestinyFight(next)) {
     if (next.turn.deaths.length > next.turn.deathMoveDeathsSeen && !next.turn.used.dm) {
       next.phase = 'death-move';
