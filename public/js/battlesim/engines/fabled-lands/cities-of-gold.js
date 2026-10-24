@@ -1,37 +1,8 @@
-const encounter = (section, win, rows, extra = {}) => ({ section, win, loss: 560,
-  enemies: rows.map(([name, combat, defence, stamina]) => ({ name, combat, defence, stamina })), ...extra });
+import { createRosterLoader } from '../../roster-data.js';
 
-export const CITIES_OF_GOLD_FIGHTS = Object.freeze([
-  encounter(70, 323, [['Wereboar', 6, 11, 8]]),
-  encounter(128, 174, [['1st Assassin', 6, 8, 7], ['2nd Assassin', 7, 8, 7]]),
-  encounter(152, 361, [['Hydra', 6, 7, 9]], { woundEffect: 'hydra' }),
-  encounter(207, 184, [['Faery Wolf', 5, 7, 10]], { flee: { destination: 22, dice: 1 } }),
-  encounter(208, 277, [['Giant Spider', 4, 7, 5]], { woundEffect: 'spider' }),
-  encounter(297, 320, [['Silent Knight', 7, 12, 7]], { flee: { destination: 23, dice: 1 } }),
-  encounter(313, 361, [['Hydra', 6, 11, 9]], { woundEffect: 'hydra' }),
-  encounter(392, 467, [['Sir Fontesque', 7, 13, 11]], { surrender: 319 }),
-  encounter(413, 200, [['Evil Knight', 4, 5, 4]]),
-  encounter(442, 517, [['Assassin', 5, 6, 5]], { flee: { destination: 118, dice: 0 }, woundEffect: 'paladin' }),
-  encounter(462, 385, [['Vampire', 7, 9, 14]], { unarmoured: true, woundEffect: 'unarmed' }),
-  encounter(464, 338, [['Warthog', 5, 6, 7]]),
-  encounter(469, 172, [['Dragon', 9, 11, 20]]),
-  encounter(476, 31, [['Angry Knight', 5, 9, 6]]),
-  encounter(514, 338, [['Samurai', 6, 12, 7]]),
-  encounter(581, 605, [['Elf Lady', 7, 10, 7]], { flee: { destination: 22, dice: 1 } }),
-  encounter(582, 654, [['First Brigand', 4, 6, 4], ['Second Brigand', 4, 6, 3],
-    ['Third Brigand', 4, 6, 4], ['Fourth Brigand', 4, 6, 3], ['Fifth Brigand', 4, 7, 5]], { surrender: 678 }),
-  encounter(595, 496, [['Ogre', 5, 8, 10]], { flee: { destination: 124, dice: 1 } }),
-  encounter(601, 189, [['Brigand', 4, 5, 2]]),
-  encounter(604, 628, [['Jeweled Serpent', 7, 8, 9]]),
-  encounter(626, 698, [['Barrow Wight', 5, 9, 18]]),
-  encounter(647, 246, [['Troll', 8, 12, 12]]),
-  encounter(649, 673, [['Enraged Bull', 10, 11, 40]], { flee: { destination: 697, dice: 0 } }),
-  encounter(657, 705, [['Ekushka', 6, 7, 10]]),
-  encounter(726, 353, [['First Brigand', 5, 6, 4], ['Second Brigand', 4, 5, 4],
-    ['Third Brigand', 3, 4, 3]], { entryDice: 1, entryArmour: true, surrender: 384 }),
-  encounter(770, 404, [['1st Highwayman', 5, 7, 7], ['2nd Highwayman', 5, 7, 7],
-    ['3rd Highwayman', 4, 5, 4]], { flee: { destination: 55, dice: 2, armour: true } }),
-]);
+export let CITIES_OF_GOLD_FIGHTS = [];
+export const loadRoster = createRosterLoader(675, 'FIGHTS', rows => { CITIES_OF_GOLD_FIGHTS = rows; });
+
 import { fabledDie, fabledInteger, validateFabledCharacter } from './character.js';
 
 export const CITIES_OF_GOLD_SEA_CHECKS = Object.freeze({

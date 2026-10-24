@@ -1,6 +1,7 @@
 const checks = [], saves = [];
 const assert = (value, label) => { if (!value) throw Error(label); checks.push(label); };
 window.fetch = async (url, options = {}) => {
+  if(url==='/api/books/675/enemies' && !options.method) return new Response(JSON.stringify(ROSTER_SEED),{status:200,headers:{'Content-Type':'application/json'}});
   assert(url === '/api/books/675/state' && options.method === 'PUT', 'only simulator state saves');
   saves.push(JSON.parse(options.body));
   return new Response('{}', { status: 200, headers: { 'Content-Type': 'application/json' } });
@@ -9,7 +10,7 @@ const app = await import('REPO/public/js/core/state.js');
 const desktop = await import('REPO/public/js/battlesim/loader.js');
 const mobile = await import('REPO/public/mobile/js/battlesim-dispatch.js');
 const { t } = await import('REPO/public/js/i18n.js');
-const { CITIES_OF_GOLD_FIGHTS } = await import('REPO/public/js/battlesim/engines/fabled-lands/cities-of-gold.js');
+import { CITIES_OF_GOLD_FIGHTS } from 'REPO/public/js/battlesim/engines/fabled-lands/cities-of-gold.js';
 assert(!document.getElementById('sim675-overlay'), 'lazy panel');
 app.setCurrentBookId(675);
 const run = { startedAt: 123, path: [1], sim674: { preserved: true } };
@@ -24,7 +25,7 @@ await open();
 assert(el('overlay').classList.contains('active'), 'real loader opens panel');
 assert(!el('overlay').textContent.includes('battlesim675.'), 'translated visible labels');
 assert(run.sim675.character === null && saves.length === 0, 'opening creates no character');
-assert(el('context').options.length === 26, 'book-specific roster');
+assert(el('context').options.length === 27 && el('context').options[0].value === '-1', '26 presets plus custom opponents');
 assert(getComputedStyle(el('btn')).borderRadius === '7px', 'themed button');
 el('create').click();
 assert(run.sim675.character.rank === 2 && run.sim675.character.stamina === 13, 'book-two defaults');
@@ -46,6 +47,21 @@ assert(run.sim675.fight.status === 'win' && run.sim675.history.length === 1, 'on
 assert(run.sim674.preserved === true, 'other simulator preserved');
 await app.saveState();
 assert(saves.at(-1).playthroughs[0].sim675.history.length === 1, 'actual state persistence');
+el('combat').closest('details').open = true;
+for (const [field, value] of Object.entries({ combat: 100, stamina: 1000, staminaInitial: 1000 })) el(field).value = String(value);
+el('apply').click();
+for (let index = 0; index < CITIES_OF_GOLD_FIGHTS.length; index++) {
+  el('context').value = String(index);
+  el('context').dispatchEvent(new Event('change', { bubbles: true }));
+  el('start').click();
+  assert(el('apply').disabled && el('context').disabled, 'active encounter locks setup ' + index);
+  let rounds = 0;
+  while (run.sim675.fight.status === 'fighting' && rounds++ < 10) el('step').click();
+  assert(run.sim675.fight.status === 'win' && run.sim675.fight.destination === CITIES_OF_GOLD_FIGHTS[index].win, 'complete named encounter ' + index);
+  assert(run.sim675.history.length === index + 2, 'one history result per encounter ' + index);
+}
+await app.saveState();
+assert(saves.at(-1).playthroughs[0].sim675.history.length === 27, 'all encounter results persist');
 for (const node of el('overlay').querySelectorAll('details')) node.open = true;
 const body = el('overlay').querySelector('.bsim-body');
 body.scrollTop = Number.MAX_SAFE_INTEGER;

@@ -136,12 +136,12 @@ test('legacy counters migrate without losing earned diamonds, deleted history or
   assert.deepEqual(wallet(), before);
 });
 
-test('exchange rate gets a free GC per level and caps its purchased bonus at that level', () => {
+test('ruby exchange rate equals level and ignores the retired upgrade', () => {
   assert.equal(diamondInfoForUser(1, {}, 0).diamondExchangeRate, 0);
   assert.equal(diamondInfoForUser(1, {}, 1).diamondExchangeRate, 1);
   assert.equal(diamondInfoForUser(17, {}, 10).diamondExchangeRate, 10);
-  assert.equal(diamondInfoForUser(17, { bonus_diamond_exchange_purchased: 10 }, 10).diamondExchangeRate, 20);
-  assert.equal(diamondInfoForUser(17, { bonus_diamond_exchange_purchased: 99 }, 10).diamondExchangeRate, 20);
+  assert.equal(diamondInfoForUser(17, { bonus_diamond_exchange_purchased: 10 }, 10).diamondExchangeRate, 10);
+  assert.equal(diamondInfoForUser(17, { bonus_diamond_exchange_purchased: 99 }, 10).diamondExchangeRate, 10);
   assert.equal(diamondInfoForUser(2, { diamonds_earned: 99 }, 10).diamondsBalance, 99);
   assert.deepEqual(diamondInfoForUser(0, { diamonds_earned: 99 }, 10), {});
 });

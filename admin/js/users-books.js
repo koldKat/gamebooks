@@ -745,12 +745,12 @@ export async function loadUserDetail(userId, edit = false) {
       return wrap;
     }
     for (const [currency, title, prefix, rewards] of [
-      ['diamonds', 'Diamonds', 'diamond', user.diamondRewards || []],
-      ['rubies', 'Rubies', 'ruby', user.rubyRewards || []],
+      ['rubies', 'Diamonds', 'ruby', user.rubyRewards || []],
+      ['diamonds', 'Rubies', 'diamond', user.diamondRewards || []],
     ]) {
       const column = el('div', `user-currency-column user-currency-column--${currency}`);
       column.appendChild(el('div', 'label', title));
-      column.appendChild(currencyTable(['Balance', 'Earned', 'Sold', 'Bought', `GC per ${prefix}`], [
+      column.appendChild(currencyTable(['Balance', 'Earned', 'Sold', 'Bought', `GC per ${prefix === 'diamond' ? 'ruby' : 'diamond'}`], [
         ['Balance', 'Earned', 'Exchanged', 'Bought', 'ExchangeRate'].map(key =>
           Number(user[`${key === 'ExchangeRate' ? prefix : currency}${key}`] || 0).toLocaleString()),
       ]));
@@ -786,8 +786,7 @@ export async function loadUserDetail(userId, edit = false) {
         heartbeat_xp: ['Heartbeat XP', n => `+${(n * 0.1).toFixed(1)} XP`],
         gc_chance: ['Lucky Coin Chance', n => `+${(n * 0.01).toFixed(2)}%`],
         gc_mint: ['Coin Mint', n => `+${(n * 0.1).toFixed(1)}%`],
-        diamond_dig: ['Diamond Digging', n => `+${(n * 0.1).toFixed(1)}%`],
-        diamond_exchange: ['Diamond Exchange Rate', n => `+${n} GC per diamond`],
+        diamond_dig: ['Ruby Digging', n => `+${(n * 0.1).toFixed(1)}%`],
         undo: ['Extra Undo', n => `+${n} undo slots`],
         fast_travel: ['Fast Travel', n => `+${n} fast travel slots`],
       };
@@ -855,8 +854,8 @@ export async function loadUserDetail(userId, edit = false) {
     overview.appendChild(overviewWrap);
     metaBar.prepend(overview);
     for (const [currency, label, items] of [
-      ['rubies', 'Ruby trades', user.rubyTrades || []],
-      ['diamonds', 'Diamond trades', user.diamondTrades || []],
+      ['rubies', 'Diamond trades', user.rubyTrades || []],
+      ['diamonds', 'Ruby trades', user.diamondTrades || []],
     ]) {
       const history = el('details', `user-trade-history user-trade-history--${currency}`);
       history.appendChild(el('summary', '', label));
@@ -864,8 +863,8 @@ export async function loadUserDetail(userId, edit = false) {
         history.appendChild(el('div', 'user-trade-limit', 'Latest 20 trades'));
         const table = el('table', 'data-table');
         const head = el('thead', ''), heading = el('tr', '');
-        const singular = currency === 'rubies' ? 'ruby' : 'diamond';
-        for (const text of ['Trade', currency === 'rubies' ? 'Rubies' : 'Diamonds', `GC per ${singular}`, 'GC', 'Date']) {
+        const singular = currency === 'rubies' ? 'diamond' : 'ruby';
+        for (const text of ['Trade', currency === 'rubies' ? 'Diamonds' : 'Rubies', `GC per ${singular}`, 'GC', 'Date']) {
           heading.appendChild(el('th', '', text));
         }
         head.appendChild(heading); table.appendChild(head);

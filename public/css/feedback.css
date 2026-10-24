@@ -129,8 +129,8 @@
   white-space: nowrap;
 }
 .stats-section--server .stats-val { white-space: normal; overflow-wrap: anywhere; }
-.stats-diamonds { color: #67e8f9; }
-.stats-rubies { color: #fda4af; }
+.stats-diamonds { color: #fda4af; }
+.stats-rubies { color: #67e8f9; }
 .stats-val--gold { color: #fbbf24; }
 .stats-section--xp-progression .stats-val { color: #c084fc; }
 .stats-val--players { color: #fdba74; }

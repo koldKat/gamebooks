@@ -44,17 +44,15 @@ test('private diamond upgrades sit after Coin Mint and before Extra Undo with es
     diamondDigPurchased: 2, diamondExchangePurchased: 3, diamondDigPct: 1.2,
     diamondEventsPerDiamond: 1000 / 1.012, diamondExchangeRate: 13 });
   assert.deepEqual([...html.matchAll(/data-item="([^"]+)"/g)].map(match => match[1]),
-    ['xp_boost', 'heartbeat_xp', 'gc_chance', 'gc_mint', 'diamond_dig', 'diamond_exchange', 'undo', 'fast_travel']);
-  assert.match(html, /Diamond Digging/); assert.match(html, /future XP events/);
+    ['xp_boost', 'heartbeat_xp', 'gc_chance', 'gc_mint', 'diamond_dig', 'undo', 'fast_travel']);
+  assert.match(html, /Ruby Digging/); assert.match(html, /future XP events/);
   assert.match(html, /Current: \+1.2% digging speed \(1.0 base \+ 0.2 bought\)/);
-  assert.match(html, /1 diamond = 13 GC \(10 base \+ 3 bought\)/);
   assert.match(html, /shop-item-effect">1 <span role="img" aria-label="Gold coin"><svg class="coin-icon"><\/svg><\/span> per/);
-  assert.match(html, /shop-item-effect">1 <span role="img" aria-label="Diamond"><svg class="diamond-icon"><\/svg><\/span> per/);
+  assert.match(html, /shop-item-effect">1 <span role="img" aria-label="Ruby"><svg class="diamond-icon"><\/svg><\/span> per/);
   assert.equal(runInContext('SHOP_ITEMS.find(x=>x.id===\'diamond_dig\').costFn(_shopData)', h.context), 3);
-  assert.equal(runInContext('SHOP_ITEMS.find(x=>x.id===\'diamond_exchange\').costFn(_shopData)', h.context), 4);
+  assert.doesNotMatch(html, /data-item="diamond_exchange"/);
   const capped = h.render({ level: 10, coinsBalance: 55, diamondsBalance: 2, diamondDigPurchased: 10, diamondExchangePurchased: 10 });
   assert.match(capped, /data-item="diamond_dig" disabled/);
-  assert.match(capped, /data-item="diamond_exchange" disabled/);
   assert.doesNotMatch(h.render({ level: 10, coinsBalance: 55 }), /data-item="diamond_/);
 });
 

@@ -5,8 +5,8 @@ import { RUBY_SVG } from './rubies.js';
 import { showConfirm } from '../ui-helpers/confirm.js';
 
 const currencies = {
-  diamond: { plural: 'diamonds', label: 'Diamonds', icon: DIAMOND_SVG, balance: 'diamondsBalance', sold: 'diamondsExchanged', bought: 'diamondsBought' },
-  ruby: { plural: 'rubies', label: 'Rubies', icon: RUBY_SVG, balance: 'rubiesBalance', sold: 'rubiesExchanged', bought: 'rubiesBought' },
+  diamond: { plural: 'diamonds', label: 'Rubies', icon: DIAMOND_SVG, balance: 'diamondsBalance', sold: 'diamondsExchanged', bought: 'diamondsBought' },
+  ruby: { plural: 'rubies', label: 'Diamonds', icon: RUBY_SVG, balance: 'rubiesBalance', sold: 'rubiesExchanged', bought: 'rubiesBought' },
 };
 const directions = ['sell', 'buy'];
 let _profile = null, _generation = 0, _confirmation = 0, _busy = false, _hooks = {}, _currency = 'diamond', _closeConfirmation = null;
@@ -59,8 +59,8 @@ function render() {
     field(direction, 'max').disabled = !ready || _busy || maximum < 1;
     field(direction, 'dec').disabled = !ready || _busy || maximum < 1 || quantity <= 1;
     field(direction, 'inc').disabled = !ready || _busy || maximum < 1 || quantity >= maximum;
-    field(direction, 'dec').setAttribute('aria-label', `${direction === 'buy' ? 'Buy' : 'Sell'} fewer ${c.plural}`);
-    field(direction, 'inc').setAttribute('aria-label', `${direction === 'buy' ? 'Buy' : 'Sell'} more ${c.plural}`);
+    field(direction, 'dec').setAttribute('aria-label', `${direction === 'buy' ? 'Buy' : 'Sell'} fewer ${c.label.toLowerCase()}`);
+    field(direction, 'inc').setAttribute('aria-label', `${direction === 'buy' ? 'Buy' : 'Sell'} more ${c.label.toLowerCase()}`);
     field(direction, 'rate').innerHTML = `1 ${c.icon} = ${rate.toLocaleString()} ${COIN_SVG}`;
     field(direction, 'receive').innerHTML = `${direction === 'buy' ? 'Costs' : 'Receive'} ${COIN_SVG} ${(valid ? gold : 0).toLocaleString()}`;
     field(direction, 'submit').disabled = _busy || !valid;
@@ -114,7 +114,7 @@ function submit(event, direction) {
   const currency = _currency, c = current(), quantity = amount(direction), token = getToken(), generation = _generation;
   const rate = rateFor(currency, direction), gold = quantity * rate;
   if (!quantity || quantity > maximumFor(direction) || !rate || !Number.isSafeInteger(gold)) return;
-  const unit = quantity === 1 ? currency : c.plural;
+  const unit = quantity === 1 ? (currency === 'diamond' ? 'ruby' : 'diamond') : c.label.toLowerCase();
   closeConfirmation();
   const confirmation = _confirmation;
   _closeConfirmation = showConfirm(direction === 'buy'
@@ -149,7 +149,7 @@ async function performExchange(quantity, rate, token, generation, direction, cur
     }
     _profile = data; _pending.delete(key);
     field(direction, 'amount').value = maximumFor(direction) > 0 ? '1' : '';
-    const unit = data.exchanged === 1 ? currency : currencies[currency].plural;
+    const unit = data.exchanged === 1 ? (currency === 'diamond' ? 'ruby' : 'diamond') : currencies[currency].label.toLowerCase();
     message(data.direction === 'buy'
       ? `Bought ${data.exchanged.toLocaleString()} ${unit} for ${data.goldSpent.toLocaleString()} GC.`
       : `Sold ${data.exchanged.toLocaleString()} ${unit} for ${data.goldReceived.toLocaleString()} GC.`);
@@ -169,7 +169,7 @@ export function initBlackMarket(hooks = {}) {
     tab?.addEventListener('click', () => selectCurrency(currency));
     tab?.addEventListener('keydown', event => {
       if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key) || _busy || !_profile) return;
-      const target = event.key === 'Home' ? 'ruby' : event.key === 'End' ? 'diamond' : currency === 'diamond' ? 'ruby' : 'diamond';
+      const target = event.key === 'Home' ? 'diamond' : event.key === 'End' ? 'ruby' : currency === 'diamond' ? 'ruby' : 'diamond';
       if (el(target + '-tab').hidden || el(target + '-tab').disabled) return;
       event.preventDefault(); selectCurrency(target); el(target + '-tab').focus();
     });

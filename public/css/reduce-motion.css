@@ -153,6 +153,13 @@ body.books-searching #books-search-close {
   flex-shrink: 0;
 }
 
+/* Keep the full-width currency row below the title and its search button.
+   This must follow the shared header's nowrap rule. */
+@media (max-width: 520px) {
+  .books-header { flex-wrap: wrap; }
+  .books-header-right { width: 100%; justify-content: flex-end; gap: 0.25rem; }
+}
+
 .logout-btn {
   background: none;
   border: 1px solid #374151;

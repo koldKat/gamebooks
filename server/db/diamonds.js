@@ -83,7 +83,6 @@ function initializeDiamondBalances(db) {
 function diamondInfoForUser(userId, row, level) {
   if (!hasDiamondAccess(userId)) return {};
   const dig = Math.min(row?.bonus_diamond_dig_purchased || 0, level);
-  const exchange = Math.min(row?.bonus_diamond_exchange_purchased || 0, level);
   return {
     diamondsEarned: row?.diamonds_earned || 0,
     diamondsBalance: (row?.diamonds_earned || 0) + (row?.diamonds_bought || 0) - (row?.diamonds_spent || 0),
@@ -93,8 +92,8 @@ function diamondInfoForUser(userId, row, level) {
     diamondExchangePurchased: row?.bonus_diamond_exchange_purchased || 0,
     diamondDigPct: (level + dig) * 0.1,
     diamondEventsPerDiamond: 1000000 / (1000 + level + dig),
-    diamondExchangeRate: level + exchange,
-    diamondBuyRate: 2 * level,
+    diamondExchangeRate: level,
+    diamondBuyRate: level,
     diamondPurchaseStock: row?.diamond_purchase_stock || 0,
   };
 }

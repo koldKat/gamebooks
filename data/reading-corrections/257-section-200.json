@@ -1,0 +1,13 @@
+{
+  "bookId": 257,
+  "title": "Eye of the Dragon",
+  "sectionId": "200",
+  "correction": {
+    "fromDestination": 165,
+    "toDestination": 265,
+    "choicesBefore": [393, 165],
+    "choicesAfter": [393, 265]
+  },
+  "source": "Player report confirmed against the physical Fighting Fantasy Book 61. The walk-on choice leads to 265.",
+  "scope": "Shared imported section HTML and choices only. Player graphs, paths and progress are unchanged."
+}

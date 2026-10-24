@@ -15,7 +15,7 @@ const exchange = db.transaction((userId, amount, requestId, expectedRate, direct
   const user = db.prepare('SELECT xp,bonus_diamond_exchange_purchased,bonus_coins,coins_spent,bonus_gc_mint_purchased FROM users WHERE id=?').get(userId);
   if (!user) return { error: 'not_found' };
   const level = computeLevel(user.xp);
-  const rate = direction === 'buy' ? 2 * level : level + Math.min(user.bonus_diamond_exchange_purchased, level);
+  const rate = level;
   if (rate < 1 || expectedRate !== rate) return { error: 'rate_changed' };
   const gold = amount * rate;
   if (!Number.isSafeInteger(gold)) return { error: 'invalid_amount' };

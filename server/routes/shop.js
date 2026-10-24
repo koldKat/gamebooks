@@ -30,8 +30,7 @@ async function handleShopPurchase(req, res) {
       heartbeat_xp: `Heartbeat XP cap reached (${result.cap} at level ${result.level})`,
       gc_chance: `Lucky coin chance cap reached (${result.cap} at level ${result.level})`,
       gc_mint: `Coin Mint cap reached (${result.cap} at level ${result.level})`,
-      diamond_dig: `Diamond Digging cap reached (${result.cap} at level ${result.level})`,
-      diamond_exchange: `Diamond Exchange Rate cap reached (${result.cap} at level ${result.level})`,
+      diamond_dig: `Ruby Digging cap reached (${result.cap} at level ${result.level})`,
     };
     return send(res, 403, { error: (labels[result.item] || 'Cap reached') + '. Level up to increase the cap.' });
   }
@@ -56,11 +55,11 @@ async function handleDiamondExchange(req, res) {
   const result = exchangeDiamonds(userId, amount, requestId, expectedRate, direction);
   if (result.error) {
     const messages = {
-      unavailable: 'Not available', invalid_amount: 'Enter a whole number of diamonds.',
+      unavailable: 'Not available', invalid_amount: 'Enter a whole number of rubies.',
       invalid_request: 'Invalid exchange request.', not_found: 'Not found',
-      insufficient_diamonds: 'Not enough diamonds. Your balance has been refreshed.',
+      insufficient_diamonds: 'Not enough rubies. Your balance has been refreshed.',
       insufficient_coins: 'Not enough gold coins. Your balance has been refreshed.',
-      insufficient_stock: 'Not enough diamonds available to buy. The available stock has been refreshed.',
+      insufficient_stock: 'Not enough rubies available to buy. The available stock has been refreshed.',
       rate_changed: 'Your exchange rate changed. Check the updated amount and try again.',
     };
     return send(res, result.error === 'unavailable' ? 403 : 400, {
@@ -86,11 +85,11 @@ async function handleRubyExchange(req, res) {
   }
   if (result.error) {
     const messages = {
-      unavailable: 'Not available', invalid_amount: 'Enter a whole number of rubies.',
+      unavailable: 'Not available', invalid_amount: 'Enter a whole number of diamonds.',
       invalid_request: 'Invalid exchange request.', not_found: 'Not found',
-      insufficient_rubies: 'Not enough rubies. Your balance has been refreshed.',
+      insufficient_rubies: 'Not enough diamonds. Your balance has been refreshed.',
       insufficient_coins: 'Not enough gold coins. Your balance has been refreshed.',
-      insufficient_stock: 'Not enough rubies available to buy. The available stock has been refreshed.',
+      insufficient_stock: 'Not enough diamonds available to buy. The available stock has been refreshed.',
       rate_changed: 'Your exchange rate changed. Check the updated amount and try again.',
     };
     return send(res, result.error === 'unavailable' ? 403 : 400, {
