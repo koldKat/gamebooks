@@ -45,7 +45,7 @@
 .liveread-body img.reading-inline-symbol,
 .m-top img.reading-inline-symbol,
 .reading-frontmatter--structured img.reading-inline-symbol {
-  display: inline-block; width: 0.85em; max-width: 0.85em; height: auto;
+  display: inline-block; width: auto; max-width: 0.85em; height: auto; max-height: 1.15em;
   vertical-align: baseline; margin: 0 0.12em; padding: 0; border: 0;
 }
 .reading-gate-prose > h2 {
