@@ -15,3 +15,13 @@ test('freeform opponent values are validated without mutating presets or saved o
   assert.throws(() => validateOpponents([], fields), RangeError);
   assert.throws(() => validateOpponents(Array(101).fill(preset), fields), RangeError);
 });
+
+test('explicitly derived stats stay unavailable without relaxing validation of fixed opponents', () => {
+  const derived = {name: 'Living rage', dynamic: 'mirror', skill: null, stamina: '', damage: null};
+  const unavailable = (_key, row) => row.dynamic === 'mirror';
+  assert.deepEqual(validateOpponents([derived], fields, unavailable),
+    [{...derived, skill: null, stamina: null, damage: null, displayName: 'Living rage'}]);
+  assert.throws(() => validateOpponents([derived], fields), RangeError);
+  assert.throws(() => validateOpponents([derived, {name: 'Fixed foe', skill: '', stamina: 12, damage: 1}], fields, unavailable), RangeError);
+  assert.equal(derived.stamina, '', 'Preserve supplied setup');
+});

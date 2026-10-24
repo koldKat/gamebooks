@@ -2061,13 +2061,29 @@
     },
     {
       "bookId": 680,
-      "databaseEnemyRows": 40,
-      "apiConsumers": [],
-      "inlineDataFiles": [
-        "public/js/battlesim/engines/fabled-lands/serpent-domain.js",
-        "public/js/battlesim/engines/fabled-lands/roster.js"
+      "databaseEnemyRows": 41,
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
       ],
-      "runtimeRosterReviewPending": true
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/680.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true,
+        "liveApiVerified": true,
+        "legacyRowsAdopted": 40,
+        "legacyFieldChanges": 0,
+        "addedDynamicRows": 1,
+        "catalogs": "40 complete physical/spiritual encounters; Living rage retains its dynamic mirror marker with null fixed stats",
+        "allPresetEncountersCompleted": true,
+        "dynamicEditorRegression": "Derived fields remain unavailable; actual character stats are resolved by the combat engine. Switching to custom opponents restores editable fields."
+      }
     },
     {
       "bookId": 689,
@@ -2709,6 +2725,7 @@
       677,
       678,
       679,
+      680,
       781,
       807,
       808,

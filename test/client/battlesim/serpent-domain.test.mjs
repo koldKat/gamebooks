@@ -1,3 +1,5 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
+await loadFixtureRoster(680);
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { newSerpentCharacter, SERPENT_FIGHTS, serpentDefence, startSerpentFight,

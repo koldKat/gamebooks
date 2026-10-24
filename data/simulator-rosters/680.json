@@ -1,0 +1,1786 @@
+{
+  "schemaVersion": 1,
+  "bookId": 680,
+  "family": "fabled-lands",
+  "source": "Original Serpent King’s Domain encounter profiles and conditions. All 40 fixed legacy enemy rows matched exactly. Living rage has no fixed source stats and retains only its dynamic mirror rule. All physical/spiritual variants and special rule keys retained.",
+  "enemies": [
+    {
+      "key": "3:0:0",
+      "name": "Soldiers (3)",
+      "attack": 7,
+      "defense": 12,
+      "hp": 22,
+      "pb": null,
+      "adopt": {
+        "name": "Soldiers (3)",
+        "attack": 7,
+        "defense": 12,
+        "hp": 22,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": 3,
+          "win": 845,
+          "loss": 99,
+          "special": "soldiers",
+          "enemies": [
+            {
+              "name": "Soldiers",
+              "combat": 7,
+              "defence": 12,
+              "stamina": 22
+            },
+            {
+              "name": "Administrator",
+              "combat": 2,
+              "defence": 5,
+              "stamina": 7
+            }
+          ]
+        },
+        "part": {
+          "name": "Soldiers",
+          "combat": 7,
+          "defence": 12,
+          "stamina": 22
+        }
+      }
+    },
+    {
+      "key": "3:1:0",
+      "name": "Administrator (3)",
+      "attack": 2,
+      "defense": 5,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Administrator (3)",
+        "attack": 2,
+        "defense": 5,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 0,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": 3,
+          "win": 845,
+          "loss": 99,
+          "special": "soldiers",
+          "enemies": [
+            {
+              "name": "Soldiers",
+              "combat": 7,
+              "defence": 12,
+              "stamina": 22
+            },
+            {
+              "name": "Administrator",
+              "combat": 2,
+              "defence": 5,
+              "stamina": 7
+            }
+          ]
+        },
+        "part": {
+          "name": "Administrator",
+          "combat": 2,
+          "defence": 5,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "15:0:1",
+      "name": "Tribal scout (15)",
+      "attack": 9,
+      "defense": 13,
+      "hp": 17,
+      "pb": null,
+      "adopt": {
+        "name": "Tribal scout (15)",
+        "attack": 9,
+        "defense": 13,
+        "hp": 17,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 15,
+          "win": 380,
+          "loss": 99,
+          "enemies": [
+            {
+              "name": "Tribal scout",
+              "combat": 9,
+              "defence": 13,
+              "stamina": 17
+            }
+          ]
+        },
+        "part": {
+          "name": "Tribal scout",
+          "combat": 9,
+          "defence": 13,
+          "stamina": 17
+        }
+      }
+    },
+    {
+      "key": "16:0:2",
+      "name": "Watchman Idol (16)",
+      "attack": 11,
+      "defense": 17,
+      "hp": 30,
+      "pb": null,
+      "adopt": {
+        "name": "Watchman Idol (16)",
+        "attack": 11,
+        "defense": 17,
+        "hp": 30,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 16,
+          "win": 1166,
+          "loss": 99,
+          "enemies": [
+            {
+              "name": "Watchman Idol",
+              "combat": 11,
+              "defence": 17,
+              "stamina": 30
+            }
+          ],
+          "heat": true
+        },
+        "part": {
+          "name": "Watchman Idol",
+          "combat": 11,
+          "defence": 17,
+          "stamina": 30
+        }
+      }
+    },
+    {
+      "key": "29:0:3",
+      "name": "Marsh ghouls (29)",
+      "attack": 8,
+      "defense": 13,
+      "hp": 58,
+      "pb": null,
+      "adopt": {
+        "name": "Marsh ghouls (29)",
+        "attack": 8,
+        "defense": 13,
+        "hp": 58,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 29,
+          "win": 165,
+          "loss": 99,
+          "enemies": [
+            {
+              "name": "Marsh ghouls",
+              "combat": 8,
+              "defence": 13,
+              "stamina": 58
+            }
+          ],
+          "special": "ghouls",
+          "preCheck": true
+        },
+        "part": {
+          "name": "Marsh ghouls",
+          "combat": 8,
+          "defence": 13,
+          "stamina": 58
+        }
+      }
+    },
+    {
+      "key": "30:0:4",
+      "name": "The Grim (30)",
+      "attack": 16,
+      "defense": 24,
+      "hp": 40,
+      "pb": null,
+      "adopt": {
+        "name": "The Grim (30)",
+        "attack": 16,
+        "defense": 24,
+        "hp": 40,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 30,
+          "win": 680,
+          "loss": 99,
+          "enemies": [
+            {
+              "name": "The Grim",
+              "combat": 16,
+              "defence": 24,
+              "stamina": 40
+            }
+          ]
+        },
+        "part": {
+          "name": "The Grim",
+          "combat": 16,
+          "defence": 24,
+          "stamina": 40
+        }
+      }
+    },
+    {
+      "key": "166:0:5",
+      "name": "Cannibal (166)",
+      "attack": 7,
+      "defense": 9,
+      "hp": 12,
+      "pb": null,
+      "adopt": {
+        "name": "Cannibal (166)",
+        "attack": 7,
+        "defense": 9,
+        "hp": 12,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 166,
+          "win": 1133,
+          "loss": 99,
+          "enemies": [
+            {
+              "name": "Cannibal",
+              "combat": 7,
+              "defence": 9,
+              "stamina": 12
+            }
+          ],
+          "heat": true
+        },
+        "part": {
+          "name": "Cannibal",
+          "combat": 7,
+          "defence": 9,
+          "stamina": 12
+        }
+      }
+    },
+    {
+      "key": "195:0:6",
+      "name": "Men of Smogmaw (195)",
+      "attack": 13,
+      "defense": 16,
+      "hp": 32,
+      "pb": null,
+      "adopt": {
+        "name": "Men of Smogmaw (195)",
+        "attack": 13,
+        "defense": 16,
+        "hp": 32,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 6,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 195,
+          "win": 1043,
+          "loss": 99,
+          "enemies": [
+            {
+              "name": "Men of Smogmaw",
+              "combat": 13,
+              "defence": 16,
+              "stamina": 32
+            }
+          ]
+        },
+        "part": {
+          "name": "Men of Smogmaw",
+          "combat": 13,
+          "defence": 16,
+          "stamina": 32
+        }
+      }
+    },
+    {
+      "key": "396:0:7",
+      "name": "The Grim (396)",
+      "attack": 16,
+      "defense": 24,
+      "hp": 40,
+      "pb": null,
+      "adopt": {
+        "name": "The Grim (396)",
+        "attack": 16,
+        "defense": 24,
+        "hp": 40,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 7,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 396,
+          "win": 298,
+          "loss": 99,
+          "enemies": [
+            {
+              "name": "The Grim",
+              "combat": 16,
+              "defence": 24,
+              "stamina": 40
+            }
+          ]
+        },
+        "part": {
+          "name": "The Grim",
+          "combat": 16,
+          "defence": 24,
+          "stamina": 40
+        }
+      }
+    },
+    {
+      "key": "455:0:8",
+      "name": "Tribal warriors (455)",
+      "attack": 12,
+      "defense": 15,
+      "hp": 27,
+      "pb": null,
+      "adopt": {
+        "name": "Tribal warriors (455)",
+        "attack": 12,
+        "defense": 15,
+        "hp": 27,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 8,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 455,
+          "win": 160,
+          "loss": 99,
+          "enemies": [
+            {
+              "name": "Tribal warriors",
+              "combat": 12,
+              "defence": 15,
+              "stamina": 27
+            }
+          ],
+          "mildHeat": true
+        },
+        "part": {
+          "name": "Tribal warriors",
+          "combat": 12,
+          "defence": 15,
+          "stamina": 27
+        }
+      }
+    },
+    {
+      "key": "457:0:9",
+      "name": "Living rage (457)",
+      "attack": null,
+      "defense": null,
+      "hp": null,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 9,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 457,
+          "win": 362,
+          "loss": 1146,
+          "spiritual": true,
+          "special": "mirror",
+          "enemies": [
+            {
+              "name": "Living rage",
+              "dynamic": "mirror"
+            }
+          ]
+        },
+        "part": {
+          "name": "Living rage",
+          "dynamic": "mirror"
+        }
+      }
+    },
+    {
+      "key": "459:0:10",
+      "name": "Astral Demon (459)",
+      "attack": 14,
+      "defense": 20,
+      "hp": 35,
+      "pb": null,
+      "adopt": {
+        "name": "Astral Demon (459)",
+        "attack": 14,
+        "defense": 20,
+        "hp": 35,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 10,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 459,
+          "win": 797,
+          "loss": 99,
+          "enemies": [
+            {
+              "name": "Astral Demon",
+              "combat": 14,
+              "defence": 20,
+              "stamina": 35
+            }
+          ],
+          "heat": true
+        },
+        "part": {
+          "name": "Astral Demon",
+          "combat": 14,
+          "defence": 20,
+          "stamina": 35
+        }
+      }
+    },
+    {
+      "key": "501:0:11",
+      "name": "Constable (501)",
+      "attack": 10,
+      "defense": 16,
+      "hp": 19,
+      "pb": null,
+      "adopt": {
+        "name": "Constable (501)",
+        "attack": 10,
+        "defense": 16,
+        "hp": 19,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 11,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 501,
+          "win": 210,
+          "loss": 99,
+          "enemies": [
+            {
+              "name": "Constable",
+              "combat": 10,
+              "defence": 16,
+              "stamina": 19
+            }
+          ],
+          "entryDamage": 3,
+          "threshold": 5
+        },
+        "part": {
+          "name": "Constable",
+          "combat": 10,
+          "defence": 16,
+          "stamina": 19
+        }
+      }
+    },
+    {
+      "key": "513:0:12",
+      "name": "Wisp-spider (513)",
+      "attack": 14,
+      "defense": 21,
+      "hp": 24,
+      "pb": null,
+      "adopt": {
+        "name": "Wisp-spider (513)",
+        "attack": 14,
+        "defense": 21,
+        "hp": 24,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 12,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 513,
+          "win": 502,
+          "loss": 99,
+          "enemies": [
+            {
+              "name": "Wisp-spider",
+              "combat": 14,
+              "defence": 21,
+              "stamina": 24
+            }
+          ],
+          "heat": true,
+          "flee": {
+            "destination": 787
+          }
+        },
+        "part": {
+          "name": "Wisp-spider",
+          "combat": 14,
+          "defence": 21,
+          "stamina": 24
+        }
+      }
+    },
+    {
+      "key": "539:0:13",
+      "name": "One-armed man (539)",
+      "attack": 5,
+      "defense": 8,
+      "hp": 14,
+      "pb": null,
+      "adopt": {
+        "name": "One-armed man (539)",
+        "attack": 5,
+        "defense": 8,
+        "hp": 14,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 13,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 539,
+          "win": 658,
+          "loss": 99,
+          "enemies": [
+            {
+              "name": "One-armed man",
+              "combat": 5,
+              "defence": 8,
+              "stamina": 14
+            }
+          ]
+        },
+        "part": {
+          "name": "One-armed man",
+          "combat": 5,
+          "defence": 8,
+          "stamina": 14
+        }
+      }
+    },
+    {
+      "key": "541:0:14",
+      "name": "Baron Moonshine (541)",
+      "attack": 14,
+      "defense": 22,
+      "hp": 42,
+      "pb": null,
+      "adopt": {
+        "name": "Baron Moonshine (541)",
+        "attack": 14,
+        "defense": 22,
+        "hp": 42,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 14,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 541,
+          "win": 820,
+          "loss": 99,
+          "enemies": [
+            {
+              "name": "Baron Moonshine",
+              "combat": 14,
+              "defence": 22,
+              "stamina": 42
+            }
+          ],
+          "special": "baronReturned"
+        },
+        "part": {
+          "name": "Baron Moonshine",
+          "combat": 14,
+          "defence": 22,
+          "stamina": 42
+        }
+      }
+    },
+    {
+      "key": "580:0:15",
+      "name": "Kaimren (580)",
+      "attack": 11,
+      "defense": 15,
+      "hp": 17,
+      "pb": null,
+      "adopt": {
+        "name": "Kaimren (580)",
+        "attack": 11,
+        "defense": 15,
+        "hp": 17,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 15,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 580,
+          "win": 115,
+          "loss": 99,
+          "enemies": [
+            {
+              "name": "Kaimren",
+              "combat": 11,
+              "defence": 15,
+              "stamina": 17
+            }
+          ],
+          "unarmed": true
+        },
+        "part": {
+          "name": "Kaimren",
+          "combat": 11,
+          "defence": 15,
+          "stamina": 17
+        }
+      }
+    },
+    {
+      "key": "612:0:16",
+      "name": "Spectral warrior (612)",
+      "attack": 14,
+      "defense": 19,
+      "hp": 23,
+      "pb": null,
+      "adopt": {
+        "name": "Spectral warrior (612)",
+        "attack": 14,
+        "defense": 19,
+        "hp": 23,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 16,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 612,
+          "win": 911,
+          "loss": 99,
+          "enemies": [
+            {
+              "name": "Spectral warrior",
+              "combat": 14,
+              "defence": 19,
+              "stamina": 23
+            }
+          ],
+          "special": "goldenWeapon",
+          "flee": {
+            "destination": 785
+          }
+        },
+        "part": {
+          "name": "Spectral warrior",
+          "combat": 14,
+          "defence": 19,
+          "stamina": 23
+        }
+      }
+    },
+    {
+      "key": "642:0:17",
+      "name": "Nyar warrior (642)",
+      "attack": 11,
+      "defense": 16,
+      "hp": 20,
+      "pb": null,
+      "adopt": {
+        "name": "Nyar warrior (642)",
+        "attack": 11,
+        "defense": 16,
+        "hp": 20,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 17,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 642,
+          "win": 520,
+          "loss": 99,
+          "enemies": [
+            {
+              "name": "Nyar warrior",
+              "combat": 11,
+              "defence": 16,
+              "stamina": 20
+            }
+          ],
+          "heat": true,
+          "special": "nyarWarrior"
+        },
+        "part": {
+          "name": "Nyar warrior",
+          "combat": 11,
+          "defence": 16,
+          "stamina": 20
+        }
+      }
+    },
+    {
+      "key": "668:0:18",
+      "name": "Cannibal Hunters (668)",
+      "attack": 11,
+      "defense": 14,
+      "hp": 26,
+      "pb": null,
+      "adopt": {
+        "name": "Cannibal Hunters (668)",
+        "attack": 11,
+        "defense": 14,
+        "hp": 26,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 18,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 668,
+          "win": 941,
+          "loss": 99,
+          "enemies": [
+            {
+              "name": "Cannibal Hunters",
+              "combat": 11,
+              "defence": 14,
+              "stamina": 26
+            }
+          ],
+          "heat": true,
+          "special": "blowgun"
+        },
+        "part": {
+          "name": "Cannibal Hunters",
+          "combat": 11,
+          "defence": 14,
+          "stamina": 26
+        }
+      }
+    },
+    {
+      "key": "688:0:19",
+      "name": "The Patasola (688)",
+      "attack": 12,
+      "defense": 23,
+      "hp": 25,
+      "pb": null,
+      "adopt": {
+        "name": "The Patasola (688)",
+        "attack": 12,
+        "defense": 23,
+        "hp": 25,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 19,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 688,
+          "win": 987,
+          "loss": 99,
+          "enemies": [
+            {
+              "name": "The Patasola",
+              "combat": 12,
+              "defence": 23,
+              "stamina": 25
+            }
+          ],
+          "special": "brokenFingers",
+          "preCheck": true
+        },
+        "part": {
+          "name": "The Patasola",
+          "combat": 12,
+          "defence": 23,
+          "stamina": 25
+        }
+      }
+    },
+    {
+      "key": "705:0:20",
+      "name": "Namagal (705)",
+      "attack": 18,
+      "defense": 11,
+      "hp": 50,
+      "pb": null,
+      "adopt": {
+        "name": "Namagal (705)",
+        "attack": 18,
+        "defense": 11,
+        "hp": 50,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 20,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 705,
+          "win": 1200,
+          "loss": 99,
+          "enemies": [
+            {
+              "name": "Namagal",
+              "combat": 18,
+              "defence": 11,
+              "stamina": 50
+            }
+          ],
+          "spiritual": true
+        },
+        "part": {
+          "name": "Namagal",
+          "combat": 18,
+          "defence": 11,
+          "stamina": 50
+        }
+      }
+    },
+    {
+      "key": "779:0:21",
+      "name": "The Grim (779)",
+      "attack": 14,
+      "defense": 6,
+      "hp": 40,
+      "pb": null,
+      "adopt": {
+        "name": "The Grim (779)",
+        "attack": 14,
+        "defense": 6,
+        "hp": 40,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 21,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 779,
+          "win": 814,
+          "loss": 1146,
+          "enemies": [
+            {
+              "name": "The Grim",
+              "combat": 14,
+              "defence": 6,
+              "stamina": 40
+            }
+          ],
+          "spiritual": true,
+          "special": "grimEscape",
+          "preCheck": true
+        },
+        "part": {
+          "name": "The Grim",
+          "combat": 14,
+          "defence": 6,
+          "stamina": 40
+        }
+      }
+    },
+    {
+      "key": "802:0:22",
+      "name": "Lightning Birds (802)",
+      "attack": 13,
+      "defense": 16,
+      "hp": 20,
+      "pb": null,
+      "adopt": {
+        "name": "Lightning Birds (802)",
+        "attack": 13,
+        "defense": 16,
+        "hp": 20,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 22,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 802,
+          "win": 978,
+          "loss": 99,
+          "enemies": [
+            {
+              "name": "Lightning Birds",
+              "combat": 13,
+              "defence": 16,
+              "stamina": 20
+            }
+          ],
+          "special": "lightning"
+        },
+        "part": {
+          "name": "Lightning Birds",
+          "combat": 13,
+          "defence": 16,
+          "stamina": 20
+        }
+      }
+    },
+    {
+      "key": "831:0:23",
+      "name": "Wisp-spider (831)",
+      "attack": 11,
+      "defense": 6,
+      "hp": 24,
+      "pb": null,
+      "adopt": {
+        "name": "Wisp-spider (831)",
+        "attack": 11,
+        "defense": 6,
+        "hp": 24,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 23,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 831,
+          "win": 502,
+          "loss": 99,
+          "enemies": [
+            {
+              "name": "Wisp-spider",
+              "combat": 11,
+              "defence": 6,
+              "stamina": 24
+            }
+          ],
+          "spiritual": true,
+          "flee": {
+            "destination": 787,
+            "special": "spider"
+          }
+        },
+        "part": {
+          "name": "Wisp-spider",
+          "combat": 11,
+          "defence": 6,
+          "stamina": 24
+        }
+      }
+    },
+    {
+      "key": "864:0:24",
+      "name": "Cannibal Hunters (864)",
+      "attack": 11,
+      "defense": 14,
+      "hp": 26,
+      "pb": null,
+      "adopt": {
+        "name": "Cannibal Hunters (864)",
+        "attack": 11,
+        "defense": 14,
+        "hp": 26,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 24,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 864,
+          "win": 941,
+          "loss": 99,
+          "enemies": [
+            {
+              "name": "Cannibal Hunters",
+              "combat": 11,
+              "defence": 14,
+              "stamina": 26
+            }
+          ],
+          "heat": true
+        },
+        "part": {
+          "name": "Cannibal Hunters",
+          "combat": 11,
+          "defence": 14,
+          "stamina": 26
+        }
+      }
+    },
+    {
+      "key": "870:0:25",
+      "name": "Young Cannibal (870)",
+      "attack": 8,
+      "defense": 10,
+      "hp": 14,
+      "pb": null,
+      "adopt": {
+        "name": "Young Cannibal (870)",
+        "attack": 8,
+        "defense": 10,
+        "hp": 14,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 25,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 870,
+          "win": 272,
+          "loss": 99,
+          "enemies": [
+            {
+              "name": "Young Cannibal",
+              "combat": 8,
+              "defence": 10,
+              "stamina": 14
+            }
+          ],
+          "heat": true
+        },
+        "part": {
+          "name": "Young Cannibal",
+          "combat": 8,
+          "defence": 10,
+          "stamina": 14
+        }
+      }
+    },
+    {
+      "key": "876:0:26",
+      "name": "Kerep Tlotor (876)",
+      "attack": 7,
+      "defense": 7,
+      "hp": 20,
+      "pb": null,
+      "adopt": {
+        "name": "Kerep Tlotor (876)",
+        "attack": 7,
+        "defense": 7,
+        "hp": 20,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 26,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 876,
+          "win": 309,
+          "loss": 99,
+          "enemies": [
+            {
+              "name": "Kerep Tlotor",
+              "combat": 7,
+              "defence": 7,
+              "stamina": 20
+            }
+          ],
+          "spiritual": true
+        },
+        "part": {
+          "name": "Kerep Tlotor",
+          "combat": 7,
+          "defence": 7,
+          "stamina": 20
+        }
+      }
+    },
+    {
+      "key": "906:0:27",
+      "name": "The Grim (906)",
+      "attack": 14,
+      "defense": 6,
+      "hp": 40,
+      "pb": null,
+      "adopt": {
+        "name": "The Grim (906)",
+        "attack": 14,
+        "defense": 6,
+        "hp": 40,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 27,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 906,
+          "win": 494,
+          "loss": 1146,
+          "enemies": [
+            {
+              "name": "The Grim",
+              "combat": 14,
+              "defence": 6,
+              "stamina": 40
+            }
+          ],
+          "spiritual": true
+        },
+        "part": {
+          "name": "The Grim",
+          "combat": 14,
+          "defence": 6,
+          "stamina": 40
+        }
+      }
+    },
+    {
+      "key": "909:0:28",
+      "name": "Nobou the Musician (909)",
+      "attack": 14,
+      "defense": 14,
+      "hp": 16,
+      "pb": null,
+      "adopt": {
+        "name": "Nobou the Musician (909)",
+        "attack": 14,
+        "defense": 14,
+        "hp": 16,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 28,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 909,
+          "win": 743,
+          "loss": 99,
+          "enemies": [
+            {
+              "name": "Nobou the Musician",
+              "combat": 14,
+              "defence": 14,
+              "stamina": 16
+            }
+          ]
+        },
+        "part": {
+          "name": "Nobou the Musician",
+          "combat": 14,
+          "defence": 14,
+          "stamina": 16
+        }
+      }
+    },
+    {
+      "key": "919:0:29",
+      "name": "Pair of crocodiles (919)",
+      "attack": 10,
+      "defense": 15,
+      "hp": 31,
+      "pb": null,
+      "adopt": {
+        "name": "Pair of crocodiles (919)",
+        "attack": 10,
+        "defense": 15,
+        "hp": 31,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 29,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 919,
+          "win": 274,
+          "loss": 99,
+          "enemies": [
+            {
+              "name": "Pair of crocodiles",
+              "combat": 10,
+              "defence": 15,
+              "stamina": 31
+            }
+          ],
+          "attackModifier": -2
+        },
+        "part": {
+          "name": "Pair of crocodiles",
+          "combat": 10,
+          "defence": 15,
+          "stamina": 31
+        }
+      }
+    },
+    {
+      "key": "959:0:30",
+      "name": "The Grim (959)",
+      "attack": 14,
+      "defense": 6,
+      "hp": 40,
+      "pb": null,
+      "adopt": {
+        "name": "The Grim (959)",
+        "attack": 14,
+        "defense": 6,
+        "hp": 40,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 30,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 959,
+          "win": 819,
+          "loss": 1146,
+          "enemies": [
+            {
+              "name": "The Grim",
+              "combat": 14,
+              "defence": 6,
+              "stamina": 40
+            }
+          ],
+          "spiritual": true
+        },
+        "part": {
+          "name": "The Grim",
+          "combat": 14,
+          "defence": 6,
+          "stamina": 40
+        }
+      }
+    },
+    {
+      "key": "966:0:31",
+      "name": "Namagal (966)",
+      "attack": 18,
+      "defense": 26,
+      "hp": 50,
+      "pb": null,
+      "adopt": {
+        "name": "Namagal (966)",
+        "attack": 18,
+        "defense": 26,
+        "hp": 50,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 31,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 966,
+          "win": 301,
+          "loss": 99,
+          "enemies": [
+            {
+              "name": "Namagal",
+              "combat": 18,
+              "defence": 26,
+              "stamina": 50
+            }
+          ],
+          "heat": true,
+          "playerFirst": false
+        },
+        "part": {
+          "name": "Namagal",
+          "combat": 18,
+          "defence": 26,
+          "stamina": 50
+        }
+      }
+    },
+    {
+      "key": "988:0:32",
+      "name": "Nyar warrior (988)",
+      "attack": 11,
+      "defense": 16,
+      "hp": 20,
+      "pb": null,
+      "adopt": {
+        "name": "Nyar warrior (988)",
+        "attack": 11,
+        "defense": 16,
+        "hp": 20,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 32,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 988,
+          "win": 520,
+          "loss": 99,
+          "enemies": [
+            {
+              "name": "Nyar warrior",
+              "combat": 11,
+              "defence": 16,
+              "stamina": 20
+            }
+          ],
+          "heat": true,
+          "special": "nyarContinuation"
+        },
+        "part": {
+          "name": "Nyar warrior",
+          "combat": 11,
+          "defence": 16,
+          "stamina": 20
+        }
+      }
+    },
+    {
+      "key": "991:0:33",
+      "name": "Scarred murderer (991)",
+      "attack": 9,
+      "defense": 15,
+      "hp": 15,
+      "pb": null,
+      "adopt": {
+        "name": "Scarred murderer (991)",
+        "attack": 9,
+        "defense": 15,
+        "hp": 15,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 33,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 991,
+          "win": 42,
+          "loss": 99,
+          "enemies": [
+            {
+              "name": "Scarred murderer",
+              "combat": 9,
+              "defence": 15,
+              "stamina": 15
+            }
+          ],
+          "special": "constables"
+        },
+        "part": {
+          "name": "Scarred murderer",
+          "combat": 9,
+          "defence": 15,
+          "stamina": 15
+        }
+      }
+    },
+    {
+      "key": "1014:0:34",
+      "name": "King Skabb (1014)",
+      "attack": 6,
+      "defense": 7,
+      "hp": 15,
+      "pb": null,
+      "adopt": {
+        "name": "King Skabb (1014)",
+        "attack": 6,
+        "defense": 7,
+        "hp": 15,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 34,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 1014,
+          "win": 545,
+          "loss": 1146,
+          "enemies": [
+            {
+              "name": "King Skabb",
+              "combat": 6,
+              "defence": 7,
+              "stamina": 15
+            }
+          ],
+          "spiritual": true,
+          "ratPoison": true
+        },
+        "part": {
+          "name": "King Skabb",
+          "combat": 6,
+          "defence": 7,
+          "stamina": 15
+        }
+      }
+    },
+    {
+      "key": "1105:0:35",
+      "name": "Men of Smogmaw (1105)",
+      "attack": 13,
+      "defense": 16,
+      "hp": 32,
+      "pb": null,
+      "adopt": {
+        "name": "Men of Smogmaw (1105)",
+        "attack": 13,
+        "defense": 16,
+        "hp": 32,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 35,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 1105,
+          "win": 562,
+          "loss": 99,
+          "enemies": [
+            {
+              "name": "Men of Smogmaw",
+              "combat": 13,
+              "defence": 16,
+              "stamina": 32
+            }
+          ]
+        },
+        "part": {
+          "name": "Men of Smogmaw",
+          "combat": 13,
+          "defence": 16,
+          "stamina": 32
+        }
+      }
+    },
+    {
+      "key": "1128:0:36",
+      "name": "Baron Moonshine (1128)",
+      "attack": 14,
+      "defense": 22,
+      "hp": 42,
+      "pb": null,
+      "adopt": {
+        "name": "Baron Moonshine (1128)",
+        "attack": 14,
+        "defense": 22,
+        "hp": 42,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 36,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 1128,
+          "win": 820,
+          "loss": 99,
+          "enemies": [
+            {
+              "name": "Baron Moonshine",
+              "combat": 14,
+              "defence": 22,
+              "stamina": 42
+            }
+          ],
+          "special": "baron"
+        },
+        "part": {
+          "name": "Baron Moonshine",
+          "combat": 14,
+          "defence": 22,
+          "stamina": 42
+        }
+      }
+    },
+    {
+      "key": "1194:0:37",
+      "name": "Kerep Tlotor (1194)",
+      "attack": 12,
+      "defense": 17,
+      "hp": 26,
+      "pb": null,
+      "adopt": {
+        "name": "Kerep Tlotor (1194)",
+        "attack": 12,
+        "defense": 17,
+        "hp": 26,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 37,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 1194,
+          "win": 41,
+          "loss": 577,
+          "enemies": [
+            {
+              "name": "Kerep Tlotor",
+              "combat": 12,
+              "defence": 17,
+              "stamina": 26
+            }
+          ],
+          "lossStamina": 1
+        },
+        "part": {
+          "name": "Kerep Tlotor",
+          "combat": 12,
+          "defence": 17,
+          "stamina": 26
+        }
+      }
+    },
+    {
+      "key": "1195:0:38",
+      "name": "Kaschuf (1195)",
+      "attack": 16,
+      "defense": 9,
+      "hp": 20,
+      "pb": null,
+      "adopt": {
+        "name": "Kaschuf (1195)",
+        "attack": 16,
+        "defense": 9,
+        "hp": 20,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 38,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 1195,
+          "win": 773,
+          "loss": 99,
+          "enemies": [
+            {
+              "name": "Kaschuf",
+              "combat": 16,
+              "defence": 9,
+              "stamina": 20
+            }
+          ],
+          "spiritual": true
+        },
+        "part": {
+          "name": "Kaschuf",
+          "combat": 16,
+          "defence": 9,
+          "stamina": 20
+        }
+      }
+    },
+    {
+      "key": "1196:0:39",
+      "name": "Nyar trackers (1196)",
+      "attack": 13,
+      "defense": 18,
+      "hp": 28,
+      "pb": null,
+      "adopt": {
+        "name": "Nyar trackers (1196)",
+        "attack": 13,
+        "defense": 18,
+        "hp": 28,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 39,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 1196,
+          "win": 411,
+          "loss": 99,
+          "enemies": [
+            {
+              "name": "Nyar trackers",
+              "combat": 13,
+              "defence": 18,
+              "stamina": 28
+            }
+          ],
+          "special": "nyarTrackers"
+        },
+        "part": {
+          "name": "Nyar trackers",
+          "combat": 13,
+          "defence": 18,
+          "stamina": 28
+        }
+      }
+    }
+  ]
+}

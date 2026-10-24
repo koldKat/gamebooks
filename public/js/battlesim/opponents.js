@@ -1,11 +1,13 @@
 const escape = value => String(value).replace(/[&<>"']/g, character =>
   ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[character]));
 
-export function validateOpponents(rows, fields) {
+export function validateOpponents(rows, fields, isStatUnavailable) {
   if (!Array.isArray(rows) || !rows.length || rows.length > 100) throw new RangeError('Invalid opponent count');
   return rows.map(row => {
     const result = {...row};
     for (const field of fields) {
+      // Derived encounters explicitly opt out of fixed numeric inputs.
+      if (isStatUnavailable?.(field.key, row)) { result[field.key] = null; continue; }
       const raw = row[field.key];
       const value = Number(raw);
       if (raw === '' || raw == null || !Number.isFinite(value)
@@ -126,7 +128,7 @@ export function createOpponentEditor({document, id, t, fields, presets = [], lan
       rows = []; container.replaceChildren();
       for (const opponent of opponents?.length ? opponents : [{}]) append(opponent);
     },
-    read() { return validateOpponents(rows.map(row => row.read()), fields); },
+    read() { return validateOpponents(rows.map(row => row.read()), fields, isStatUnavailable); },
     snapshot() { return rows.map(row => row.read()); },
     lock(value) { locked = Boolean(value); refresh(); },
     fixCount(value) { fixedCount = Boolean(value); refresh(); },

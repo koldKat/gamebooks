@@ -198,6 +198,7 @@
         <a class="toc-3" href="#squire-role-and-badge">Squire role and badge</a>
         <a class="toc-3" href="#ruby-and-diamond-gain-notifications">Ruby and diamond gain notifications</a>
         <a class="toc-3" href="#gem-names-and-retired-exchange-upgrades">Gem names and retired exchange upgrades</a>
+        <a class="toc-3" href="#derived-opponent-values">Derived opponent values</a>
     </aside>
     <article class="content">
 <h1 id="gamebook-tracker-technical-reference">Gamebook Tracker - Technical Reference<a class="anchor" href="#gamebook-tracker-technical-reference" aria-label="Link to section">#</a></h1>
@@ -2187,6 +2188,8 @@ series_runs (
 <h3 id="gem-names-and-retired-exchange-upgrades">Gem names and retired exchange upgrades<a class="anchor" href="#gem-names-and-retired-exchange-upgrades" aria-label="Link to section">#</a></h3>
 <p>The XP mining and Lucky Coin system is displayed as <strong>Rubies</strong>, with red icons. Its storage, API routes, profile keys, notification types and JavaScript exports retain their legacy <code>diamond</code> identifiers for compatibility. Completion rewards are displayed as <strong>Diamonds</strong>, with teal icons, while retaining legacy <code>ruby</code> identifiers. Balances, shared supply, rewards and request IDs stay with their systems. User-facing labels, icons, floaties, notifications and admin statistics resolve to the new names.</p>
 <p>Rubies now buy and sell for the player’s current level in GC. The digging upgrade remains; the sell-rate upgrade is retired and rejected by the server. <code>server/db/gem-rebrand.js</code> runs one atomic, idempotent settlement: refund the triangular cost of remaining exchange upgrades, verify each historical XP-gem sale against the last recorded level-up at that time, and deduct its old upgrade premium. Original exchange records and request retry results are preserved; <code>currency_sale_adjustments</code> records the per-sale correction and <code>coin_events</code> records refunds and deductions separately. Missing or inconsistent historical evidence aborts the entire migration. Both affected players receive an explanatory notification. Completion-gem trades need no rate adjustment.</p>
+<h3 id="derived-opponent-values">Derived opponent values<a class="anchor" href="#derived-opponent-values" aria-label="Link to section">#</a></h3>
+<p>The shared opponent editor accepts an optional <code>isStatUnavailable(field, opponent)</code> predicate. The same predicate disables the corresponding inputs and explicitly permits null values during setup validation. Ordinary opponents retain strict numeric validation. A book-specific combat engine must resolve derived values from the current character before combat validation; setup never substitutes invented fixed stats. Fabled Lands panels pass this capability through <code>opponentStatUnavailable</code>. Leaving a dynamic preset for custom setup removes its dynamic marker so numeric inputs become editable again. Existing saved fights and histories are not rewritten.</p>
       <p class="source">Generated from <code>docs/technical.md</code>. Do not edit this HTML directly.</p>
     </article>
   </div>

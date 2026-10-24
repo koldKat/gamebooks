@@ -1,3 +1,4 @@
+import { createRosterLoader } from '../../roster-data.js';
 import { FABLED_ABILITIES, newFabledCharacter, validateFabledCharacter,
   fabledInteger, fabledDie, fabledDice } from './character.js';
 
@@ -8,55 +9,8 @@ export const SERPENT_PROFESSIONS = Object.freeze({
 export const SERPENT_DEFAULTS = Object.freeze({
   rank: 7, stamina: 30, shards: 0, armour: 0, professions: SERPENT_PROFESSIONS,
 });
-const enemy = (name, combat, defence, stamina) => ({name,combat,defence,stamina});
-const encounter = (section, win, name, combat, defence, stamina, extra = {}) => ({
-  section, win, loss:99, enemies:[enemy(name,combat,defence,stamina)], ...extra,
-});
-const spirit = (section, win, name, nahual, defence, stamina, extra = {}) =>
-  encounter(section,win,name,nahual,defence,stamina,{spiritual:true,loss:1146,...extra});
-
-export const SERPENT_FIGHTS = Object.freeze([
-  {section:3,win:845,loss:99,special:'soldiers',enemies:[enemy('Soldiers',7,12,22),enemy('Administrator',2,5,7)]},
-  encounter(15,380,'Tribal scout',9,13,17),
-  encounter(16,1166,'Watchman Idol',11,17,30,{heat:true}),
-  encounter(29,165,'Marsh ghouls',8,13,58,{special:'ghouls',preCheck:true}),
-  encounter(30,680,'The Grim',16,24,40),
-  encounter(166,1133,'Cannibal',7,9,12,{heat:true}),
-  encounter(195,1043,'Men of Smogmaw',13,16,32),
-  encounter(396,298,'The Grim',16,24,40),
-  encounter(455,160,'Tribal warriors',12,15,27,{mildHeat:true}),
-  {section:457,win:362,loss:1146,spiritual:true,special:'mirror',enemies:[{name:'Living rage',dynamic:'mirror'}]},
-  encounter(459,797,'Astral Demon',14,20,35,{heat:true}),
-  encounter(501,210,'Constable',10,16,19,{entryDamage:3,threshold:5}),
-  encounter(513,502,'Wisp-spider',14,21,24,{heat:true,flee:{destination:787}}),
-  encounter(539,658,'One-armed man',5,8,14),
-  encounter(541,820,'Baron Moonshine',14,22,42,{special:'baronReturned'}),
-  encounter(580,115,'Kaimren',11,15,17,{unarmed:true}),
-  encounter(612,911,'Spectral warrior',14,19,23,{special:'goldenWeapon',flee:{destination:785}}),
-  encounter(642,520,'Nyar warrior',11,16,20,{heat:true,special:'nyarWarrior'}),
-  encounter(668,941,'Cannibal Hunters',11,14,26,{heat:true,special:'blowgun'}),
-  encounter(688,987,'The Patasola',12,23,25,{special:'brokenFingers',preCheck:true}),
-  spirit(705,1200,'Namagal',18,11,50,{loss:99}),
-  spirit(779,814,'The Grim',14,6,40,{special:'grimEscape',preCheck:true}),
-  encounter(802,978,'Lightning Birds',13,16,20,{special:'lightning'}),
-  spirit(831,502,'Wisp-spider',11,6,24,{loss:99,flee:{destination:787,special:'spider'}}),
-  encounter(864,941,'Cannibal Hunters',11,14,26,{heat:true}),
-  encounter(870,272,'Young Cannibal',8,10,14,{heat:true}),
-  spirit(876,309,'Kerep Tlotor',7,7,20,{loss:99}),
-  spirit(906,494,'The Grim',14,6,40),
-  encounter(909,743,'Nobou the Musician',14,14,16),
-  encounter(919,274,'Pair of crocodiles',10,15,31,{attackModifier:-2}),
-  spirit(959,819,'The Grim',14,6,40),
-  encounter(966,301,'Namagal',18,26,50,{heat:true,playerFirst:false}),
-  encounter(988,520,'Nyar warrior',11,16,20,{heat:true,special:'nyarContinuation'}),
-  encounter(991,42,'Scarred murderer',9,15,15,{special:'constables'}),
-  spirit(1014,545,'King Skabb',6,7,15,{ratPoison:true}),
-  encounter(1105,562,'Men of Smogmaw',13,16,32),
-  encounter(1128,820,'Baron Moonshine',14,22,42,{special:'baron'}),
-  encounter(1194,41,'Kerep Tlotor',12,17,26,{loss:577,lossStamina:1}),
-  spirit(1195,773,'Kaschuf',16,9,20,{loss:99}),
-  encounter(1196,411,'Nyar trackers',13,18,28,{special:'nyarTrackers'}),
-]);
+export let SERPENT_FIGHTS = [];
+export const loadRoster = createRosterLoader(680, 'FIGHTS', rows => { SERPENT_FIGHTS = rows; });
 
 export function newSerpentCharacter(profession = 'warrior') {
   const character = newFabledCharacter(profession,SERPENT_DEFAULTS);
