@@ -1556,11 +1556,26 @@
     {
       "bookId": 539,
       "databaseEnemyRows": 12,
-      "apiConsumers": [],
-      "inlineDataFiles": [
-        "public/js/battlesim/engines/forbidden-gateway.js"
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
       ],
-      "runtimeRosterReviewPending": true
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/539.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true,
+        "liveApiVerified": true,
+        "legacyRowsAdopted": 12,
+        "legacyFieldChanges": 0,
+        "catalogs": "11 encounter groups, physical/mental pools, copied-player opponent and opening/Lurker rules",
+        "legacySavedFights": "Opening and Lurker actions preserve old specs, captured stats and unknown saved fields without adding metadata."
+      }
     },
     {
       "bookId": 541,
@@ -2405,6 +2420,7 @@
       535,
       536,
       537,
+      539,
       555,
       557,
       781,

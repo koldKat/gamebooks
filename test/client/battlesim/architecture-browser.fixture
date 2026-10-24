@@ -315,7 +315,7 @@ for(const id of BOOK_IDS){
     const el=key=>document.getElementById('sim636-'+key);
     const editor=overlay.querySelector('.bsim-opponent-editor');
     const name=editor.querySelector('[role="combobox"]');
-    name.focus();check(editor.querySelector('[role="option"]'),'Wonderland autocomplete');
+    name.focus();name.dispatchEvent(new Event('input',{bubbles:true}));check(editor.querySelector('[role="option"]'),'Wonderland autocomplete');
     name.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
     name.value='Custom Wonderland foe';
     editor.querySelector('[data-stat="combat"]').value=0;
@@ -345,7 +345,7 @@ for(const id of BOOK_IDS){
   if(id===570){
     const el=key=>document.getElementById('sim570-'+key);
     const name=overlay.querySelector('[role="combobox"]');
-    name.focus();check(overlay.querySelector('[role="option"]'),'Virtual Police autocomplete');
+    name.focus();name.dispatchEvent(new Event('input',{bubbles:true}));check(overlay.querySelector('[role="option"]'),'Virtual Police autocomplete');
     name.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
     name.value='Ръчно въведен противник';
     for(const [prefix,values]of Object.entries({player:{attack:10,defence:10,damage:10,life:30},enemy:{attack:1,defence:1,damage:1,life:1}})){
@@ -361,7 +361,7 @@ for(const id of BOOK_IDS){
     el('configure').click();
     const editor=overlay.querySelector('.bsim-opponent-editor');
     const name=editor.querySelector('[role="combobox"]');
-    name.focus();check(editor.querySelector('[role="option"]'),'Space Scout autocomplete');
+    name.focus();name.dispatchEvent(new Event('input',{bubbles:true}));check(editor.querySelector('[role="option"]'),'Space Scout autocomplete');
     name.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
     name.value='Тестов кораб';editor.querySelector('[data-stat="attack"]').value=1;
     editor.querySelector('[data-stat="shields"]').value=10;
@@ -413,7 +413,7 @@ for(const id of BOOK_IDS){
     const editor=overlay.querySelector('.bsim-opponent-editor');
     check(editor&&!editor.hidden,'FF custom setup '+id);
     const name=editor.querySelector('[role="combobox"]');
-    name.focus();check(editor.querySelector('[role="option"]'),'FF autocomplete '+id);
+    name.focus();name.dispatchEvent(new Event('input',{bubbles:true}));check(editor.querySelector('[role="option"]'),'FF autocomplete '+id);
     name.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
     name.value='Свободен противник';
     editor.querySelector('[data-stat="skill"]').value=0;
@@ -446,7 +446,7 @@ for(const id of BOOK_IDS){
     el('apply').click();
     const editor=overlay.querySelector('.bsim-opponent-editor');
     const names=[...editor.querySelectorAll('[role="combobox"]')];
-    names[0].focus();check(editor.querySelector('[role="option"]'),'True Magic autocomplete');
+    names[0].focus();names[0].dispatchEvent(new Event('input',{bubbles:true}));check(editor.querySelector('[role="option"]'),'True Magic autocomplete');
     names[0].dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
     for(const input of editor.querySelectorAll('[data-stat="defence"],[data-stat="stamina"]'))input.value=5;
     el('start').click();
@@ -457,7 +457,7 @@ for(const id of BOOK_IDS){
     const el=key=>document.getElementById('sim728-'+key);
     const editor=overlay.querySelector('.bsim-opponent-editor');
     const name=editor.querySelector('[role="combobox"]');
-    name.focus();check(editor.querySelector('[role="option"]'),'Golden Galleon autocomplete');
+    name.focus();name.dispatchEvent(new Event('input',{bubbles:true}));check(editor.querySelector('[role="option"]'),'Golden Galleon autocomplete');
     name.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
     name.value='Пиратски кораб';editor.querySelector('[data-stat="durability"]').value=45;
     el('start').click();
@@ -468,7 +468,7 @@ for(const id of BOOK_IDS){
     const el=key=>document.getElementById('sim654-'+key);
     for(const details of overlay.querySelectorAll('details'))details.open=true;
     const name=overlay.querySelector('[role="combobox"]');
-    name.focus();check(overlay.querySelector('[role="option"]'),'Orc Power autocomplete');
+    name.focus();name.dispatchEvent(new Event('input',{bubbles:true}));check(overlay.querySelector('[role="option"]'),'Orc Power autocomplete');
     name.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
     name.value='Ръчно въведена фигура';
     for(const key of ['attack','defence','shooting','damage','life','magicPower','magicDamage'])el(key).value=key==='life'?10:1;
@@ -499,7 +499,7 @@ for(const id of BOOK_IDS){
     const editor=[...overlay.querySelectorAll('.bsim-opponent-editor')].find(e=>!e.hidden);
     check(editor,'custom opponent setup '+id);
     const name=editor.querySelector('[role="combobox"]');
-    name.focus();check(editor.querySelector('[role="option"]'),'custom opponent autocomplete '+id);
+    name.focus();name.dispatchEvent(new Event('input',{bubbles:true}));check(editor.querySelector('[role="option"]'),'custom opponent autocomplete '+id);
     name.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
     check(overlay.classList.contains('active'),'autocomplete Escape preserves simulator '+id);
     if(id===663)for(let i=0;i<3;i++)editor.querySelector(':scope > button').click();
@@ -546,7 +546,7 @@ for(const id of BOOK_IDS){
     const state=()=>app.currentPlaythrough().sim769;
     const editor=overlay.querySelector('.bsim-opponent-editor');
     const name=editor.querySelector('[role="combobox"]');
-    name.focus();check(editor.querySelector('[role="option"]'),'Dungeon autocomplete');
+    name.focus();name.dispatchEvent(new Event('input',{bubbles:true}));check(editor.querySelector('[role="option"]'),'Dungeon autocomplete');
     name.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
     check(overlay.classList.contains('active')&&name.getAttribute('aria-expanded')==='false','Dungeon autocomplete Escape');
     el('newCharacter').click();
@@ -584,7 +584,7 @@ for(const id of BOOK_IDS){
     const state=()=>app.currentPlaythrough().sim773;
     const editor=overlay.querySelector('.bsim-opponent-editor');
     const name=editor.querySelector('[role="combobox"]');
-    name.focus();check(editor.querySelector('[role="option"]'),'Champions autocomplete');
+    name.focus();name.dispatchEvent(new Event('input',{bubbles:true}));check(editor.querySelector('[role="option"]'),'Champions autocomplete');
     name.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
     check(overlay.classList.contains('active')&&name.getAttribute('aria-expanded')==='false','Champions autocomplete Escape');
     el('newCharacter').click();
@@ -618,7 +618,7 @@ for(const id of BOOK_IDS){
     const state=()=>app.currentPlaythrough().sim783;
     const editor=overlay.querySelector('.bsim-opponent-editor');
     const name=editor.querySelector('[role="combobox"]');
-    name.focus();check(editor.querySelector('[role="option"]'),'Samson autocomplete');
+    name.focus();name.dispatchEvent(new Event('input',{bubbles:true}));check(editor.querySelector('[role="option"]'),'Samson autocomplete');
     name.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
     check(overlay.classList.contains('active')&&name.getAttribute('aria-expanded')==='false','Samson autocomplete Escape');
     el('newCharacter').click();
@@ -651,7 +651,7 @@ for(const id of BOOK_IDS){
     const state=()=>app.currentPlaythrough().sim797;
     const editor=overlay.querySelector('.bsim-opponent-editor');
     const name=editor.querySelector('[role="combobox"]');
-    name.focus();check(editor.querySelector('[role="option"]'),'pirate autocomplete');
+    name.focus();name.dispatchEvent(new Event('input',{bubbles:true}));check(editor.querySelector('[role="option"]'),'pirate autocomplete');
     name.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
     check(overlay.classList.contains('active')&&name.getAttribute('aria-expanded')==='false','pirate autocomplete Escape');
     const random=Math.random;Math.random=()=>.5;
@@ -882,7 +882,7 @@ for(const id of BOOK_IDS){
     const editor=overlay.querySelector('.bsim-opponent-editor');
     const stat=key=>editor.querySelector('[data-stat="'+key+'"]');
     const name=editor.querySelector('[role="combobox"]');
-    name.value='';name.focus();check(editor.querySelector('[role="option"]'),'payment autocomplete');
+    name.value='';name.focus();name.dispatchEvent(new Event('input',{bubbles:true}));check(editor.querySelector('[role="option"]'),'payment autocomplete');
     name.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
     check(overlay.classList.contains('active')&&name.getAttribute('aria-expanded')==='false','payment autocomplete Escape first');
     name.value='Ръчен пазач';stat('hp').value='30';stat('multiplier').value='3';stat('bonus').value='0';
@@ -954,7 +954,7 @@ for(const id of BOOK_IDS){
     const editor=overlay.querySelector('.bsim-opponent-editor');
     const stat=key=>editor.querySelector('[data-stat="'+key+'"]');
     const name=editor.querySelector('[role="combobox"]');
-    name.value='';name.focus();check(editor.querySelector('[role="option"]'),'scarlet autocomplete');
+    name.value='';name.focus();name.dispatchEvent(new Event('input',{bubbles:true}));check(editor.querySelector('[role="option"]'),'scarlet autocomplete');
     name.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
     check(overlay.classList.contains('active')&&name.getAttribute('aria-expanded')==='false','scarlet autocomplete Escape first');
     el('manual').checked=true;el('manual').dispatchEvent(new Event('change',{bubbles:true}));

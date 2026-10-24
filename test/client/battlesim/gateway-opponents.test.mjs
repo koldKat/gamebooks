@@ -1,3 +1,5 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
+await loadFixtureRoster(539);
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createShadowsCharacter, startShadowsFight, shadowsAttack } from '../../../public/js/battlesim/engines/forbidden-gateway.js';

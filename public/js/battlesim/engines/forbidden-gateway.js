@@ -14,33 +14,12 @@ export const SHADOWS_WEAPONS = Object.freeze({
   revolver: { stamina: '2d6', endurance: 0 },
 });
 
-export const SHADOWS_ENCOUNTERS = Object.freeze([
-  { id: 34, name: 'hunters', mode: 'ordinary', win: 117, death: 57, insanity: 84,
-    enemies: [
-      { name: 'hunter1', endurance: 10, dexterity: 5, damage: { stamina: 1, endurance: 2 } },
-      { name: 'hunter2', endurance: 7, dexterity: 8, damage: { stamina: 1, endurance: 2 } },
-    ] },
-  { id: 61, name: 'madman', mode: 'ordinary', opening: true, enemyFirst: true, win: 8,
-    enemies: [{ name: 'madman', strength: 7, stamina: 5, dexterity: 7, damage: { stamina: 4, endurance: 0 } }] },
-  { id: 197, name: 'hobgoblin', mode: 'ordinary', enemyFirst: true, win: 214, death: 370, insanity: 370,
-    enemies: [{ name: 'hobgoblin', mentality: 9, endurance: 18, disbelief: true, damage: { stamina: 2, endurance: 0 } }] },
-  { id: 257, name: 'changeling', mode: 'ordinary', opening: true, win: 340, death: 275,
-    enemies: [{ name: 'changeling', copyPlayer: true, damage: { stamina: 2, endurance: 0 } }] },
-  { id: 337, name: 'mutant', mode: 'ordinary', unarmed: true, win: 276, diningWin: 313,
-    enemies: [{ name: 'mutant', strength: 7, stamina: 8, dexterity: 7, damage: { stamina: 2, endurance: 0 } }] },
-  { id: 24, name: 'quarryMutant', mode: 'twoStrikes', win: 63, continuation: 2,
-    enemies: [{ name: 'quarryMutant', stamina: 12 }] },
-  { id: 106, name: 'ambushMutant', mode: 'gunOnly', win: 74, continuation: 95,
-    enemies: [{ name: 'ambushMutant', stamina: 10 }] },
-  { id: 15, name: 'lurker', mode: 'lurker', win: 111,
-    enemies: [{ name: 'lurker', stamina: 20, dexterity: 8, damage: { stamina: 4, endurance: 0 } }] },
-  { id: 146, name: 'quarryAlien', mode: 'gunOnly', win: 256, continuation: 119,
-    enemies: [{ name: 'quarryAlien', stamina: 12 }] },
-  { id: 270, name: 'mineAlien', mode: 'gunOnly', win: 127, continuation: 352,
-    enemies: [{ name: 'mineAlien', stamina: 12 }] },
-  { id: 331, name: 'reservoirCreature', mode: 'gunOnly', win: 290, continuation: 312,
-    enemies: [{ name: 'reservoirCreature', stamina: 12 }] },
-].map(spec => Object.freeze({ ...spec, enemies: Object.freeze(spec.enemies.map(enemy => Object.freeze(enemy))) })));
+import { createRosterLoader } from '../roster-data.js';
+
+export let SHADOWS_ENCOUNTERS = Object.freeze([]);
+export const loadRoster = createRosterLoader(539, 'ENCOUNTERS', rows => {
+  SHADOWS_ENCOUNTERS = Object.freeze(rows.map(spec => Object.freeze({...spec, enemies: Object.freeze(spec.enemies.map(Object.freeze))})));
+});
 
 export function createShadowsCharacter(random = Math.random) {
   const player = { bullets: 0, revolver: false, spiritSpear: false, hunterSpear: false,
@@ -142,13 +121,11 @@ export function resolveShadowsOpening(fight, random = Math.random, flee = false)
   if (fight.status !== 'fighting' || !fight.opening) return null;
   const result = shadowsTest(fight.player, 'dexterity', random);
   fight.opening = false;
-  if (fight.spec.id === 61 && result.success) { fight.status = 'win'; fight.destination = 8; }
-  else if (fight.spec.id === 257 && result.success && flee) { fight.status = 'escaped'; fight.destination = 291; }
+  const rules = fight.spec.openingRules ?? SHADOWS_ENCOUNTERS.find(row => row.id === fight.spec.id)?.openingRules;
+  if (rules?.winOnSuccess && result.success) { fight.status = 'win'; fight.destination = fight.spec.win; }
+  else if (rules?.escapeOnSuccess && result.success && flee) { fight.status = 'escaped'; fight.destination = rules.escape; }
   else {
-    if (fight.spec.id === 257) {
-      if (!result.success) fight.player.weapon = 'fists';
-      else fight.player.weapon = 'knobkerrie';
-    }
+    if (rules?.weaponOnFailure) fight.player.weapon = result.success ? rules.weaponOnSuccess : rules.weaponOnFailure;
     nextRound(fight);
   }
   return result;
@@ -228,43 +205,45 @@ export function finishShadowsShots(fight) {
 export function shadowsLurker(fight, action, random = Math.random) {
   if (fight.status !== 'fighting' || fight.spec.mode !== 'lurker') return null;
   const enemy = fight.enemies[0], player = fight.player;
+  const rules = fight.spec.lurkerRules ?? SHADOWS_ENCOUNTERS.find(row => row.mode === 'lurker').lurkerRules;
+  const destinations = rules.destinations;
   let result;
   if (action === 'slime' && fight.phase === 'slime') {
-    const streams = [shadowsTest(enemy, 'dexterity', random), shadowsTest(enemy, 'dexterity', random)];
-    const hits = streams.filter(stream => stream.success).length, damage = { stamina: hits * 4, endurance: 0 };
+    const streams = Array.from({length: rules.streamCount}, () => shadowsTest(enemy, 'dexterity', random));
+    const hits = streams.filter(stream => stream.success).length, damage = { stamina: hits * rules.streamDamage, endurance: 0 };
     applyDamage(player, damage); fight.phase = hits ? 'held' : 'choice';
-    result = { streams, damage, destination: hits ? 32 : null };
+    result = { streams, damage, destination: hits ? destinations.held : null };
   } else if (action === 'breakFree' && fight.phase === 'held') {
-    result = shadowsConflict(player.strength, 12, random);
+    result = shadowsConflict(player.strength, rules.breakStrength, random);
     fight.phase = result.success ? 'escape' : 'knockdown';
-    result.destination = result.success ? 53 : 159;
+    result.destination = result.success ? destinations.freed : destinations.failed;
   } else if (action === 'resist' && fight.phase === 'knockdown') {
-    const attack = shadowsConflict(10, player.strength, random);
-    result = { ...attack, success: !attack.success, destination: attack.success ? 170 : 32 };
-    if (attack.success) { player.stamina = 0; fight.status = 'loss'; fight.destination = 170; }
+    const attack = shadowsConflict(rules.resistStrength, player.strength, random);
+    result = { ...attack, success: !attack.success, destination: attack.success ? destinations.killed : destinations.resisted };
+    if (attack.success) { player.stamina = 0; fight.status = 'loss'; fight.destination = destinations.killed; }
     else fight.phase = 'lastBreakFree';
   } else if (action === 'breakFree' && fight.phase === 'lastBreakFree') {
-    result = shadowsConflict(player.strength, 12, random);
-    fight.status = 'continue'; fight.destination = result.success ? 53 : 159;
+    result = shadowsConflict(player.strength, rules.breakStrength, random);
+    fight.status = 'continue'; fight.destination = result.success ? destinations.freed : destinations.failed;
     result.destination = fight.destination;
   } else if (action === 'escape' && ['choice', 'escape'].includes(fight.phase)) {
     result = shadowsTest(player, 'dexterity', random);
-    fight.status = 'continue'; fight.destination = result.success ? 79 : 99;
+    fight.status = 'continue'; fight.destination = result.success ? destinations.escape : destinations.escapeFail;
     result.destination = fight.destination;
   } else if (action === 'salt' && fight.phase === 'choice') {
     const test = shadowsTest(player, 'dexterity', random);
     const rolls = test.success ? dice(random) : [], damage = { stamina: total(rolls), endurance: 0 };
     applyDamage(enemy, damage); fight.phase = 'slime';
-    result = { ...test, damageRolls: rolls, damage, destination: test.success ? 41 : 4, manualInventory: true };
+    result = { ...test, damageRolls: rolls, damage, destination: test.success ? destinations.saltHit : destinations.saltMiss, manualInventory: true };
   } else if (action === 'gun' && fight.phase === 'choice' && player.weapon === 'revolver') {
-    result = playerStrike(fight, 0, random, 0.25);
+    result = playerStrike(fight, 0, random, rules.gunMultiplier);
     if (!result) return null;
     fight.phase = 'gun';
   } else if (action === 'gun' && fight.phase === 'gun' && player.weapon === 'revolver') {
-    result = playerStrike(fight, 0, random, 0.25);
+    result = playerStrike(fight, 0, random, rules.gunMultiplier);
     if (!result) return null;
   } else if (action === 'finishShots' && fight.phase === 'gun') {
-    fight.phase = 'slime'; result = { destination: 15 };
+    fight.phase = 'slime'; result = { destination: destinations.afterShots };
   } else return null;
   settleShadows(fight);
   return result;
