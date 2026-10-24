@@ -1,7 +1,7 @@
 // Shared DestinyQuest combat sequence. Book abilities and encounter exceptions
 // are applied between these explicit stages, rather than hidden inside a roll.
 import { destinyStat, destinyDamageScore, destinyOnHeroHit, destinyPassiveEffects,
-  destinyPassiveProtection, hasDestinyAbility, healDestinyHero, recordDestinyDefeat, destinyOnOpponentRoll, destinyStrike } from './effects.js';
+  destinyPassiveProtection, hasDestinyAbility, healDestinyHero, recordDestinyDefeat, destinyOnOpponentRoll, destinyStrike, observeDestinyHealth } from './effects.js';
 import { applyDestinyRoundEvents } from './round-events.js';
 const attributes = ['speed', 'brawn', 'magic', 'armour'];
 const clone = value => structuredClone(value);
@@ -54,6 +54,7 @@ function stage(fight, expected) {
 }
 
 export function settleDestinyFight(fight) {
+  observeDestinyHealth(fight);
   if (fight.hero.health <= 0) fight.status = 'loss';
   else if (fight.opponents.every(opponent => opponent.health <= 0)) fight.status = 'win';
   if (fight.status !== 'active') {

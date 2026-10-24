@@ -4,6 +4,7 @@ import { applyDestinyAdvancedAbility } from './advanced.js';
 import { prepareDestinyDamage } from './damage.js';
 import { prepareDestinyAbilityRoll } from './ability-rolls.js';
 import { useDestinyOpening } from './openings.js';
+import { cureDestinyCharacter } from './character.js';
 
 const rule = (category, phases, extra = {}) => Object.freeze({ category, phases, ...extra });
 const anytime = ['speed', 'speed-rolled', 'damage', 'damage-rolled', 'ability-rolled', 'end', 'death-move'];
@@ -156,6 +157,7 @@ const definitions = {
   'silver-frost': rule('mo', ['speed-rolled'], { advanced: true }),
   torrent: rule('mo', anytime, { advanced: true }),
   'veiled-strike': rule('pa', anytime, { advanced: true, limit: null }),
+  cure: rule('-', anytime, { backpack: true, perItem: true }),
 };
 for (const name of ['first-blood', 'first-cut', 'best-laid-plans', 'sweet-spot', 'armour-plating', 'ice-mantle']) {
   definitions[name] = rule('pa', ['start'], { opening: true });
@@ -165,7 +167,8 @@ for (const name of ['blind', 'curse', 'immobilise', 'knockdown', 'shackles', 'we
 }
 for (const name of ['barbs', 'decay', 'thorns', 'bleed', 'disease', 'blood-frenzy', 'mangle',
   'ice-edge', 'lightning', 'siphon', 'salvation', 'heart-steal', 'anguish', 'weaver', 'wind-chill',
-  'venom', 'brittle-edge', 'exploit', 'malefic-runes']) definitions[name] = rule('pa', []);
+  'venom', 'brittle-edge', 'exploit', 'malefic-runes', 'gambit', 'getaway', 'necrosis',
+  'ice-hooks', 'insulated', 'persuade']) definitions[name] = rule('pa', []);
 export const DESTINY_ABILITIES = Object.freeze(definitions);
 
 function draw(roll) {
@@ -175,17 +178,19 @@ function draw(roll) {
 }
 
 export function configureDestinyAbilities(fight, inventory, equipment = {}) {
-  if (fight?.status !== 'active' || fight.round !== 0 || fight.phase !== 'start' || Object.keys(fight.used).length ||
+  if (fight?.status !== 'active' || fight.round !== 0 || fight.phase !== 'start' || fight.character || Object.keys(fight.used).length ||
       !inventory || typeof inventory !== 'object' || Array.isArray(inventory)) throw new RangeError('Configure abilities before combat');
   const next = structuredClone(fight);
   if (!equipment || typeof equipment !== 'object' || Array.isArray(equipment)) throw new RangeError('Invalid equipment');
   next.equipment = {};
-  for (const slot of ['mainHand', 'leftHand', 'transport']) {
+  for (const slot of ['mainHand', 'leftHand', 'transport', 'feet', 'head', 'chest', 'cloak', 'ring1', 'ring2']) {
     if (!equipment[slot]) continue;
     const item = equipment[slot];
     if (typeof item !== 'object' || Array.isArray(item)) throw new RangeError('Invalid equipment');
     next.equipment[slot] = { type: String(item.type || ''), id: String(item.id || '') };
-    for (const stat of ['brawn', 'speed', 'toughness', 'stability']) {
+    if (item.abilities !== undefined && (!Array.isArray(item.abilities) || item.abilities.some(name => typeof name !== 'string' || !Object.hasOwn(definitions, name)))) throw new RangeError('Invalid item abilities');
+    next.equipment[slot].abilities = [...new Set(item.abilities || [])];
+    for (const stat of ['brawn', 'speed', 'magic', 'armour', 'health', 'toughness', 'stability']) {
       const value = item[stat] ?? 0;
       if (!Number.isSafeInteger(value) || value < 0 || value > 1000000) throw new RangeError('Invalid equipment attribute');
       next.equipment[slot][stat] = value;
@@ -229,10 +234,30 @@ export function useDestinyAbility(fight, name, options = {}, roll = () => Math.f
   if ((fight.used[name] || 0) >= limit) throw new RangeError('Ability has no uses left');
   // Sacrifices are paid while alive. They cannot be used to heal back from zero.
   if (spec.sacrifice && fight.hero.health < spec.sacrifice) throw new RangeError('Not enough health to sacrifice');
+  if (spec.category === 'sp' && fight.character?.penalties.includes('head-blow')) {
+    if (fight.turn.passedSpeedAbility && fight.turn.passedSpeedAbility !== name) throw new RangeError('Finish the checked speed ability first');
+    if (fight.turn.passedSpeedAbility !== name) {
+      const next = structuredClone(fight);
+      next.turn.pendingAbility = { type: 'test', name: 'head-blow', dice: [draw(roll)], returnPhase: next.phase,
+        options: { ability: name, abilityOptions: structuredClone(options) } };
+      next.phase = 'ability-rolled';
+      return next;
+    }
+  }
   const next = structuredClone(fight);
+  if (spec.category === 'sp') {
+    if (next.turn.passedSpeedOptions) options = next.turn.passedSpeedOptions;
+    delete next.turn.passedSpeedAbility;
+    delete next.turn.passedSpeedOptions;
+  }
   const target = spec.enemy ? options.target ?? next.target : 'hero';
   if (spec.enemy && (!Number.isInteger(target) || target < 0 || !next.opponents[target] || next.opponents[target].health <= 0)) throw new RangeError('Choose a living opponent');
   if (spec.sacrifice) next.hero.health -= spec.sacrifice;
+  if (name === 'cure') {
+    if (!next.character) throw new RangeError('Attach the character before using Cure');
+    next.character = cureDestinyCharacter(next.character);
+  }
+  if (spec.backpack) next.turn.used.backpack = true;
   if (spec.attribute) addDestinyStatEffect(next, target, spec.attribute, spec.amount, spec.duration || 1, name);
   if (spec.heal) healDestinyHero(next, spec.heal + (hasDestinyAbility(next, 'salvation') ? 1 : 0));
   if (spec.speedDie) next.turn.heroSpeedCount = (next.turn.heroSpeedCount || 2) + 1;
@@ -386,6 +411,24 @@ export function useDestinyAbility(fight, name, options = {}, roll = () => Math.f
     next.phase = 'death-move';
     next.turn.afterDeathMove = 'end';
   }
+  if (spec.category === 'dm' && hasDestinyAbility(next, 'gambit') && next.hero.health > 0 && alive().length) {
+    next.turn.pendingAbility = { type: 'test', name: 'gambit', dice: [draw(roll)], returnPhase: next.phase,
+      suspendedAbility: next.turn.pendingAbility || null, options: {} };
+    next.phase = 'ability-rolled';
+  }
   settleDestinyFight(next);
+  return next;
+}
+
+export function resolveDestinyGambit(fight, name) {
+  if (fight?.status !== 'active' || fight.phase !== 'ability-choice' || fight.turn.pendingAbility?.name !== 'gambit-restore') throw new RangeError('No Gambit choice pending');
+  const next = structuredClone(fight);
+  const pending = next.turn.pendingAbility;
+  if (name !== null) {
+    if (!Object.hasOwn(definitions, name) || !['sp', 'mo'].includes(definitions[name].category) || !hasDestinyAbility(next, name) || !(next.used[name] > 0)) throw new RangeError('Choose a used speed or modifier ability');
+    next.used[name]--;
+  }
+  if (pending.suspendedAbility) { next.turn.pendingAbility = pending.suspendedAbility; next.phase = 'ability-rolled'; }
+  else { delete next.turn.pendingAbility; next.phase = pending.returnPhase; }
   return next;
 }

@@ -61,6 +61,21 @@ export function resolveDestinyAbilityRoll(fight, roll = () => Math.floor(Math.ra
         if (options.deferDamage) { next.turn.pendingAbility = damage; next.phase = 'ability-rolled'; }
         else applyDestinyDamage(next, damage);
       }
+    } else if (name === 'head-blow') {
+      if (result <= 2) next.turn.used.sp = true;
+      else {
+        next.turn.passedSpeedAbility = options.ability;
+        next.turn.passedSpeedOptions = options.abilityOptions;
+      }
+      next.phase = pending.returnPhase;
+    } else if (name === 'gambit') {
+      if (result === 6) {
+        next.turn.pendingAbility = { ...pending, type: 'choice', name: 'gambit-restore' };
+        next.phase = 'ability-choice';
+      } else if (pending.suspendedAbility) {
+        next.turn.pendingAbility = pending.suspendedAbility;
+        next.phase = 'ability-rolled';
+      } else next.phase = pending.returnPhase;
     } else if (name === 'crystal-armour') {
       if (result <= 4) {
         next.crystalArmour = false;

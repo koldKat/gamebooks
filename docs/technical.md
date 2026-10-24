@@ -212,6 +212,8 @@ gamebooks/
                          copies; book modules supply abilities and encounter exceptions.
                          Pending ability tests and separate/shared damage groups retain editable
                          dice across saves; resolving them spends no second ability charge.
+                         Character transitions copy supplied profiles and deduplicate completed
+                         fight IDs; equipment losses require an explicit choice before the next fight.
         engines/lucas-grey/ Shared shooting, health tiers, aircraft damage, run-scoped state
                          and panel factory. Per-book definitions own encounter thresholds;
                          saved fights retain their original encounter and rule revision.

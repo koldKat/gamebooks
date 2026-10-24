@@ -15,6 +15,7 @@ export function destinyStat(fight, target, attribute) {
   }
   if (target === 'hero' && attribute === 'speed' && hasDestinyAbility(fight, 'blood-frenzy') &&
       fight.effects.some(effect => effect.kind === 'bleed' && fight.opponents[effect.target]?.health > 0)) value++;
+  if (target === 'hero' && attribute === 'speed' && fight.chronicTriggered) value--;
   return Math.max(0, value);
 }
 
@@ -25,10 +26,15 @@ export function addDestinyStatEffect(fight, target, attribute, amount, duration,
 }
 
 export function healDestinyHero(fight, amount) {
+  observeDestinyHealth(fight);
   if (fight.hero.health <= 0) return 0;
   const restored = Math.min(amount, fight.hero.maxHealth - fight.hero.health);
   fight.hero.health += restored;
   return restored;
+}
+
+export function observeDestinyHealth(fight) {
+  if (fight.hero.health < 10 && fight.character?.penalties.includes('chronic-convulsions')) fight.chronicTriggered = true;
 }
 
 export function destinyDamageScore(fight) {
@@ -45,7 +51,9 @@ export function destinyDamageScore(fight) {
     (hero && face === 6 && hasDestinyAbility(fight, 'mangle') ? 2 : 0), 0);
   const bonus = fight.effects.filter(effect => effect.kind === 'score-flat' && effect.hero === hero &&
     effect.from <= fight.round && effect.until >= fight.round).reduce((total, effect) => total + effect.amount, 0);
-  return dice + power + bonus + (fight.turn.damageScoreBonus || 0);
+  const encounter = hero ? 0 : -(fight.encounter?.scoreReductionByTarget?.[fight.target] || 0) +
+    (fight.encounter?.mirrorBonusTarget === fight.target ? fight.opponents.filter((opponent, index) => index !== fight.target && opponent.health > 0).length : 0);
+  return dice + power + bonus + (fight.turn.damageScoreBonus || 0) + encounter;
 }
 
 export function destinyOnHeroHit(fight, target, damage, kind = 'score') {
@@ -81,6 +89,8 @@ export function recordDestinyDefeat(fight, target) {
   if (fight.defeated.includes(target)) return;
   fight.defeated.push(target);
   if (hasDestinyAbility(fight, 'malefic-runes')) addDestinyStatEffect(fight, 'hero', 'magic', 1, null, 'malefic-runes');
+  const explosion = fight.encounter?.deathDamageByTarget?.[target] || 0;
+  if (explosion) { fight.hero.health = Math.max(0, fight.hero.health - explosion); observeDestinyHealth(fight); }
 }
 
 export function destinyOnOpponentRoll(fight, values, kind) {
@@ -112,6 +122,10 @@ export function rollDestinyDamageDice(fight, count, roll, unmodified = false) {
 
 export function destinyPassiveEffects(fight, roll) {
   const result = [];
+  if (fight.character?.penalties.includes('weeping-wounds')) result.push({ target: 'hero', amount: 1, ignoreArmour: true, source: 'weeping-wounds' });
+  if (fight.encounter?.roundDamagePerLivingOpponent) result.push({ target: 'hero',
+    amount: fight.encounter.roundDamagePerLivingOpponent * fight.opponents.filter(opponent => opponent.health > 0).length,
+    ignoreArmour: true, source: 'encounter' });
   for (const name of ['barbs', 'decay', 'thorns']) {
     if (!hasDestinyAbility(fight, name)) continue;
     fight.opponents.forEach((opponent, target) => {
