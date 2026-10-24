@@ -34,6 +34,20 @@
 .reading-art-parts { display: flex; align-items: flex-start; justify-content: center; gap: 0; width: 100%; max-width: 100%; margin: 1em 0; padding: 0; border: 0; }
 .reading-art-parts > img,
 .reading-frontmatter--structured figure.reading-art-parts > img { display: block; flex: 0 1 auto; min-width: 0; max-width: none; height: auto; margin: 0; padding: 0; border: 0; }
+.reading-art-stack,
+.reading-frontmatter--structured figure.reading-art-stack {
+  display: block; max-width: 100%; margin: 1em auto; padding: 0; border: 0;
+}
+.reading-art-stack > img,
+.reading-frontmatter--structured figure.reading-art-stack > img {
+  display: block; width: 100%; max-width: 100%; height: auto; margin: 0; padding: 0; border: 0;
+}
+.liveread-body img.reading-inline-symbol,
+.m-top img.reading-inline-symbol,
+.reading-frontmatter--structured img.reading-inline-symbol {
+  display: inline-block; width: 0.85em; max-width: 0.85em; height: auto;
+  vertical-align: baseline; margin: 0 0.12em; padding: 0; border: 0;
+}
 .reading-gate-prose > h2 {
   margin: 0 0 0.7rem;
   font-size: 1.1em;

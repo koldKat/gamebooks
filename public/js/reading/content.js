@@ -1,5 +1,5 @@
 const ELEMENTS = new Set(['P', 'H2', 'H3', 'H4', 'OL', 'UL', 'LI', 'STRONG', 'EM', 'U', 'BR', 'HR', 'FIGURE', 'FIGCAPTION', 'IMG',
-  'TABLE', 'THEAD', 'TBODY', 'TFOOT', 'TR', 'TH', 'TD', 'CAPTION']);
+  'TABLE', 'THEAD', 'TBODY', 'TFOOT', 'TR', 'TH', 'TD', 'CAPTION', 'A']);
 
 function proseStyle(tag, input) {
   if (!['P', 'H2', 'H3', 'H4', 'HR'].includes(tag)) throw new Error('Unsupported reading style');
@@ -38,7 +38,7 @@ function proseStyle(tag, input) {
 }
 
 // Copy only inert prose and this book's protected images into the live DOM.
-export function renderReadingMatter(mount, bookId, text, document) {
+export function renderReadingMatter(mount, bookId, text, document, { sectionLinks = true } = {}) {
   if (!/^\s*<(?:p|h[2-4]|ol|ul|figure|table)[\s>]/i.test(text)) return false;
   const template = document.createElement('template');
   template.innerHTML = text;
@@ -82,15 +82,28 @@ export function renderReadingMatter(mount, bookId, text, document) {
     if (node.nodeType === 3) return document.createTextNode(node.textContent);
     if (node.nodeType !== 1 || !ELEMENTS.has(node.tagName)) throw new Error('Unsupported reading markup');
     if (node.tagName === 'FIGURE' && node.getAttribute('class') === 'reading-source-frame') return copySourceFrame(node);
-    const target = document.createElement(node.tagName.toLowerCase());
+    const target = document.createElement(node.tagName === 'A' && !sectionLinks ? 'span' : node.tagName.toLowerCase());
     for (const attr of node.attributes) {
       if (node.tagName === 'IMG' && ['src', 'alt', 'loading'].includes(attr.name)) continue;
+      if (node.tagName === 'A' && attr.name === 'href' && /^#section-[1-9]\d{0,5}$/.test(attr.value)) {
+        if (sectionLinks) target.setAttribute('href', attr.value);
+        continue;
+      }
+      if (node.tagName === 'IMG' && attr.name === 'class' && attr.value === 'reading-inline-symbol') {
+        target.setAttribute('class', attr.value);
+        continue;
+      }
       if (node.tagName === 'P' && attr.name === 'class' && ['reading-hanging', 'reading-hanging-wide', 'reading-indented'].includes(attr.value)) {
         target.setAttribute('class', attr.value);
         continue;
       }
-      if (node.tagName === 'FIGURE' && attr.name === 'class' && attr.value === 'reading-art-parts') {
-        target.setAttribute('class', 'reading-art-parts');
+      if (node.tagName === 'FIGURE' && attr.name === 'class' && ['reading-art-parts', 'reading-art-stack'].includes(attr.value)) {
+        target.setAttribute('class', attr.value);
+        continue;
+      }
+      if (node.tagName === 'FIGURE' && attr.name === 'data-source-width-percent' && node.getAttribute('class') === 'reading-art-stack') {
+        if (!/^(?:\d+(?:\.\d+)?|\.\d+)$/.test(attr.value) || Number(attr.value) <= 0 || Number(attr.value) > 100) throw new Error('Invalid image width');
+        target.setAttribute('style', `width:${Number(attr.value)}%`);
         continue;
       }
       if (attr.name === 'style') {

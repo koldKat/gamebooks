@@ -158,6 +158,73 @@ test('original image pieces retain their figure layout while foreign classes and
   }
 });
 
+test('stacked original image strips retain their order and bounded source width', () => {
+  const image = letter => source('IMG', [], { src: `/api/books/1285/reading-images/${letter.repeat(64)}.png` });
+  const { mount, document } = setup([
+    source('FIGURE', [image('a'), image('b')], { class: 'reading-art-stack', 'data-source-width-percent': '62.5' }),
+  ]);
+  assert.equal(renderReadingMatter(mount, 1285, '<figure>Map</figure>', document), true);
+  assert.equal(mount.children[0].attrs.class, 'reading-art-stack');
+  assert.equal(mount.children[0].attrs.style, 'width:62.5%');
+  assert.deepEqual(mount.children[0].children.map(n => n.src), [
+    `/api/books/1285/reading-images/${'a'.repeat(64)}.png`,
+    `/api/books/1285/reading-images/${'b'.repeat(64)}.png`,
+  ]);
+  for (const width of ['0', '-1', '100.1', 'Infinity', '50%;position:fixed', 'calc(100% + 1px)']) {
+    const { mount, document } = setup([
+      source('P', [textNode('Prefix')]),
+      source('FIGURE', [image('a')], { class: 'reading-art-stack', 'data-source-width-percent': width }),
+    ]);
+    assert.equal(renderReadingMatter(mount, 1285, '<p>Prefix</p>', document), false, width);
+    assert.equal(mount.children.length, 0);
+  }
+  const { mount: wrongClass, document: wrongDocument } = setup([
+    source('FIGURE', [image('a')], { class: 'reading-art-parts', 'data-source-width-percent': '50' }),
+  ]);
+  assert.equal(renderReadingMatter(wrongClass, 1285, '<figure>Map</figure>', wrongDocument), false);
+});
+
+test('inline source symbols remain protected images within their sentence', () => {
+  const src = `/api/books/1285/reading-images/${'a'.repeat(64)}.png`;
+  const { mount, document } = setup([
+    source('P', [textNode('Roll '), source('IMG', [], { src, alt: 'Die showing six.', class: 'reading-inline-symbol' }), textNode(' to recover.')]),
+  ]);
+  assert.equal(renderReadingMatter(mount, 1285, '<p>Roll</p>', document), true);
+  assert.equal(mount.children[0].children[1].attrs.class, 'reading-inline-symbol');
+  assert.equal(mount.children[0].children[1].src, src);
+  for (const attrs of [
+    { src, class: 'reading-inline-symbol hidden' },
+    { src: src.replace('/1285/', '/1284/'), class: 'reading-inline-symbol' },
+    { src, class: 'reading-inline-symbol', onload: 'bad()' },
+  ]) {
+    const { mount, document } = setup([source('P', [source('IMG', [], attrs)])]);
+    assert.equal(renderReadingMatter(mount, 1285, '<p>Roll</p>', document), false);
+    assert.equal(mount.children.length, 0);
+  }
+});
+
+test('matter section references accept only local numeric destinations', () => {
+  const { mount, document } = setup([
+    source('P', [textNode('Start at '), source('A', [source('STRONG', [textNode('11')])], { href: '#section-11' })]),
+  ]);
+  assert.equal(renderReadingMatter(mount, 1285, '<p>Start at 11</p>', document), true);
+  assert.equal(mount.children[0].children[1].attrs.href, '#section-11');
+  const gate = setup([source('P', [source('A', [textNode('11')], { href: '#section-11' })])]);
+  assert.equal(renderReadingMatter(gate.mount, 1285, '<p>Start at 11</p>', gate.document, { sectionLinks: false }), true);
+  assert.equal(gate.mount.children[0].children[0].tag, 'span');
+  assert.equal(gate.mount.children[0].children[0].attrs.href, undefined);
+  assert.equal(gate.mount.children[0].children[0].children[0].textContent, '11');
+  for (const attrs of [
+    { href: 'https://example.com' }, { href: 'javascript:bad()' }, { href: '#section-0' },
+    { href: '#section-11', onclick: 'bad()' }, { href: '#section-11', target: '_blank' },
+    { href: '#section-11/../../' }, { href: '#other-aside' },
+  ]) {
+    const { mount, document } = setup([source('P', [textNode('Prefix')]), source('A', [], attrs)]);
+    assert.equal(renderReadingMatter(mount, 1285, '<p>Prefix</p>', document), false);
+    assert.equal(mount.children.length, 0);
+  }
+});
+
 test('source left and right alignment override inherited justification without allowing other CSS', () => {
   for (const alignment of ['left', 'right']) {
     const { mount, document } = setup([
