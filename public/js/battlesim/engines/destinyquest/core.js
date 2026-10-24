@@ -1,0 +1,188 @@
+// Shared DestinyQuest combat sequence. Book abilities and encounter exceptions
+// are applied between these explicit stages, rather than hidden inside a roll.
+const attributes = ['speed', 'brawn', 'magic', 'armour'];
+const clone = value => structuredClone(value);
+
+function integer(value, label, minimum = 0) {
+  if (!Number.isSafeInteger(value) || value < minimum || value > 1000000) {
+    throw new RangeError(`Invalid ${label}`);
+  }
+  return value;
+}
+
+function actor(input, enemy = false) {
+  if (!input || typeof input !== 'object') throw new RangeError('Missing combatant');
+  const result = { name: String(input.name || (enemy ? 'Opponent' : 'Hero')) };
+  for (const key of attributes) result[key] = integer(input[key] ?? 0, key);
+  result.health = integer(input.health, 'health', 1);
+  result.maxHealth = integer(input.maxHealth ?? input.health, 'maximum health', 1);
+  if (result.health > result.maxHealth) throw new RangeError('Health exceeds maximum');
+  result.normal = {};
+  for (const key of attributes) result.normal[key] = integer(input.normal?.[key] ?? result[key], key);
+  if (enemy) {
+    if (input.damageStat !== undefined && !['brawn', 'magic'].includes(input.damageStat)) {
+      throw new RangeError('Invalid opponent damage attribute');
+    }
+    if (result.brawn && result.magic && !input.damageStat) {
+      throw new RangeError('Choose the opponent damage attribute explicitly');
+    }
+    result.damageStat = input.damageStat ?? (result.magic ? 'magic' : 'brawn');
+  }
+  return result;
+}
+
+// Keep the random source injectable, including invalid-roll rejection, without
+// retaining functions in the serializable saved fight.
+function dice(roll, count) {
+  return Array.from({ length: count }, () => {
+    const value = roll();
+    if (!Number.isInteger(value) || value < 1 || value > 6) throw new RangeError('A die must roll 1-6');
+    return value;
+  });
+}
+const randomDie = () => Math.floor(Math.random() * 6) + 1;
+const sum = values => values.reduce((total, value) => total + value, 0);
+
+function stage(fight, expected) {
+  if (fight?.rulesVersion !== 1 || fight.status !== 'active' || !expected.includes(fight.phase)) {
+    throw new RangeError('Action unavailable at this combat stage');
+  }
+  return clone(fight);
+}
+
+function conclude(fight) {
+  if (fight.hero.health <= 0) fight.status = 'loss';
+  else if (fight.opponents.every(opponent => opponent.health <= 0)) fight.status = 'win';
+  if (fight.status !== 'active') {
+    fight.phase = 'finished';
+    if (fight.status === 'win' && fight.restoreOnVictory) {
+      fight.hero.health = fight.hero.maxHealth;
+      Object.assign(fight.hero, fight.hero.normal);
+    }
+    fight.history.push({ type: 'outcome', round: fight.round, status: fight.status });
+    return true;
+  }
+  return false;
+}
+
+export function createDestinyFight(hero, opponents, { restoreOnVictory = true } = {}) {
+  if (!Array.isArray(opponents) || !opponents.length || opponents.length > 100) {
+    throw new RangeError('Choose 1-100 opponents');
+  }
+  if (typeof restoreOnVictory !== 'boolean') throw new RangeError('Invalid recovery rule');
+  return {
+    rulesVersion: 1, status: 'active', phase: 'start', round: 0,
+    hero: actor(hero), opponents: opponents.map(value => actor(value, true)),
+    restoreOnVictory, target: null, turn: null, history: [],
+    used: {}, effects: [],
+  };
+}
+
+export function startDestinyRound(fight, target) {
+  const next = stage(fight, ['start']);
+  integer(target, 'target');
+  if (!next.opponents[target] || next.opponents[target].health <= 0) throw new RangeError('Choose a living opponent');
+  next.round++;
+  next.target = target;
+  next.phase = 'speed';
+  next.turn = {
+    used: { sp: false, co: false, dm: false, backpack: false },
+    deaths: [], deathMoveDeathsSeen: 0, heroSpeedDice: null, opponentSpeedDice: null,
+    winner: null, damageDice: null, damageScore: null,
+  };
+  return next;
+}
+
+export function rollDestinySpeed(fight, roll = randomDie) {
+  const next = stage(fight, ['speed']);
+  next.turn.heroSpeedDice = dice(roll, 2);
+  next.turn.opponentSpeedDice = dice(roll, 2);
+  next.phase = 'speed-rolled';
+  return next;
+}
+
+export function resolveDestinySpeed(fight) {
+  const next = stage(fight, ['speed-rolled']);
+  const hero = sum(next.turn.heroSpeedDice) + next.hero.speed;
+  const opponent = sum(next.turn.opponentSpeedDice) + next.opponents[next.target].speed;
+  next.turn.winner = hero === opponent ? 'standoff' : hero > opponent ? 'hero' : 'opponent';
+  next.phase = next.turn.winner === 'standoff' ? 'end' : 'damage';
+  next.history.push({ type: 'speed', round: next.round, target: next.target,
+    heroDice: [...next.turn.heroSpeedDice], opponentDice: [...next.turn.opponentSpeedDice],
+    hero, opponent, winner: next.turn.winner });
+  return next;
+}
+
+export function rollDestinyDamage(fight, roll = randomDie) {
+  const next = stage(fight, ['damage']);
+  next.turn.damageDice = dice(roll, 1);
+  next.phase = 'damage-rolled';
+  return next;
+}
+
+export function resolveDestinyDamage(fight) {
+  const next = stage(fight, ['damage-rolled']);
+  const heroWon = next.turn.winner === 'hero';
+  const enemy = next.opponents[next.target];
+  const attacker = heroWon ? next.hero : enemy;
+  const defender = heroWon ? enemy : next.hero;
+  const power = heroWon ? Math.max(attacker.brawn, attacker.magic) : attacker[attacker.damageStat];
+  const score = sum(next.turn.damageDice) + power;
+  const damage = Math.max(0, score - defender.armour);
+  const healthLost = Math.min(defender.health, damage);
+  defender.health -= healthLost;
+  next.turn.damageScore = score;
+  next.turn.healthDamage = healthLost;
+  next.history.push({ type: 'damage', round: next.round, target: next.target,
+    attacker: next.turn.winner, dice: [...next.turn.damageDice], score, armour: defender.armour, damage: healthLost });
+  if (!conclude(next)) {
+    if (heroWon && defender.health === 0) {
+      next.turn.deaths.push(next.target);
+      next.phase = 'death-move';
+      next.turn.afterDeathMove = 'end';
+    } else next.phase = 'end';
+  }
+  return next;
+}
+
+export function skipDestinyDeathMove(fight) {
+  const next = stage(fight, ['death-move']);
+  next.turn.deathMoveDeathsSeen = next.turn.deaths.length;
+  next.phase = next.turn.afterDeathMove;
+  return next;
+}
+
+// All end-of-round effects are evaluated from the same living-combatant
+// snapshot. A death in the first effect must not suppress another due effect.
+// Ability/encounter modules supply the applicable effects for this round.
+export function endDestinyRound(fight, effects = []) {
+  const next = stage(fight, ['end']);
+  if (!Array.isArray(effects)) throw new RangeError('Invalid end-of-round effects');
+  const alive = next.opponents.map(opponent => opponent.health > 0);
+  const pending = new Map();
+  for (const effect of effects) {
+    const target = effect?.target;
+    if (target !== 'hero' && (!Number.isInteger(target) || target < 0 || !next.opponents[target])) {
+      throw new RangeError('Invalid effect target');
+    }
+    const amount = integer(effect.amount, 'passive damage');
+    if (target !== 'hero' && !alive[target]) continue;
+    const defender = target === 'hero' ? next.hero : next.opponents[target];
+    if (typeof effect.ignoreArmour !== 'boolean') throw new RangeError('Specify passive armour handling');
+    const damage = Math.max(0, amount - (effect.ignoreArmour ? 0 : defender.armour));
+    pending.set(target, (pending.get(target) || 0) + damage);
+    next.history.push({ type: 'passive', round: next.round, target, damage, source: String(effect.source || '') });
+  }
+  for (const [target, damage] of pending) {
+    const defender = target === 'hero' ? next.hero : next.opponents[target];
+    defender.health = Math.max(0, defender.health - damage);
+    if (target !== 'hero' && defender.health === 0) next.turn.deaths.push(target);
+  }
+  if (!conclude(next)) {
+    if (next.turn.deaths.length > next.turn.deathMoveDeathsSeen && !next.turn.used.dm) {
+      next.phase = 'death-move';
+      next.turn.afterDeathMove = 'start';
+    } else next.phase = 'start';
+  }
+  return next;
+}
