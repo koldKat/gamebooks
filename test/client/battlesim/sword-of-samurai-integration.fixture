@@ -1,6 +1,8 @@
 const checks = [], saves = [];
 const assert = (value, label) => { if (!value) throw Error(label); checks.push(label); };
+const rosterSeed = ROSTER_SEED;
 window.fetch = async (url, options = {}) => {
+  if (url === '/api/books/672/enemies' && (!options.method || options.method === 'GET')) return new Response(JSON.stringify(rosterSeed), {status:200,headers:{'Content-Type':'application/json'}});
   assert(url === '/api/books/672/state' && options.method === 'PUT', 'only intercepted simulator state saves');
   saves.push(JSON.parse(options.body));
   return new Response('{}', { status: 200, headers: { 'Content-Type': 'application/json' } });
@@ -57,7 +59,7 @@ const history = Array.from({ length: 35 }, (_, index) => ({ enemy: 'Saved ' + in
 run.sim672.history = history;
 click('close'); await open();
 assert(run.sim672.history.length === 35 && el('history').children.length === 30, 'display limit never truncates saved XP history');
-assert(el('status').textContent.includes('Tatsu') && !el('status').textContent.includes('Section 26'), 'named opponent shown');
+assert(el('status').textContent.includes(t('battlesim672.enemy.tatsu')) && !el('status').textContent.includes('battlesim672.'), 'named opponent shown');
 select(82); click('start');
 attempts = 0;
 while (run.sim672.fight.status === 'fighting' && attempts++ < 30) {
@@ -74,7 +76,7 @@ assert(run.sim672.history.length === 35, 'story exits never grant battle XP');
 select(50); assert(!el('arrowCount-row').hidden && el('arrowCount').max === '2', 'opening arrow controls match source');
 select(92); assert(el('arrowType-row').hidden && !el('arrowCount-row').hidden, 'spear encounter restricts arrow type');
 select(372); assert(el('incomingDamage-row').hidden, 'variable Phoenix damage cannot be overwritten accidentally');
-select(358); assert(el('contextNote').textContent.includes('other living opponents'), 'simultaneous combat explained');
+select(358); assert(el('contextNote').textContent.includes(t('battlesim672.simultaneous')), 'simultaneous combat explained');
 assert(!el('context').textContent.includes('battlesim672.'), 'all sixty encounter names translated');
 for (const node of el('overlay').querySelectorAll('details')) node.open = true;
 const body = el('overlay').querySelector('.bsim-body');

@@ -1896,18 +1896,48 @@
     {
       "bookId": 672,
       "databaseEnemyRows": 83,
-      "apiConsumers": [],
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
+      ],
       "inlineDataFiles": [],
-      "runtimeRosterReviewPending": true
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/672.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true,
+        "liveApiVerified": true,
+        "legacyRowsAdopted": 83,
+        "legacyFieldChanges": 0,
+        "catalogs": "59 source rosters and 60 variants including continuation 32"
+      }
     },
     {
       "bookId": 674,
       "databaseEnemyRows": 49,
-      "apiConsumers": [],
-      "inlineDataFiles": [
-        "public/js/battlesim/engines/fabled-lands/roster.js"
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
       ],
-      "runtimeRosterReviewPending": true
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/674.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true,
+        "liveApiVerified": true,
+        "legacyRowsAdopted": 49,
+        "legacyFieldChanges": 0,
+        "catalogs": "39 variants including all three section 297 variants"
+      }
     },
     {
       "bookId": 675,
@@ -2603,6 +2633,8 @@
       663,
       665,
       671,
+      672,
+      674,
       781,
       807,
       808,

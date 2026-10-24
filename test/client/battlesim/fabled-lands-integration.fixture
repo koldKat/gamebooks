@@ -1,6 +1,8 @@
 const checks = [], saves = [];
 const assert = (value, label) => { if (!value) throw Error(label); checks.push(label); };
+const rosterSeed = ROSTER_SEED;
 window.fetch = async (url, options = {}) => {
+  if (url === '/api/books/674/enemies' && (!options.method || options.method === 'GET')) return new Response(JSON.stringify(rosterSeed), {status:200,headers:{'Content-Type':'application/json'}});
   assert(url === '/api/books/674/state' && options.method === 'PUT', 'only intercepted simulator state saves');
   saves.push(JSON.parse(options.body));
   return new Response('{}', { status: 200, headers: { 'Content-Type': 'application/json' } });
@@ -9,7 +11,7 @@ const app = await import('REPO/public/js/core/state.js');
 const desktop = await import('REPO/public/js/battlesim/loader.js');
 const mobile = await import('REPO/public/mobile/js/battlesim-dispatch.js');
 const { t } = await import('REPO/public/js/i18n.js');
-const { WAR_TORN_FIGHTS } = await import('REPO/public/js/battlesim/engines/fabled-lands/roster.js');
+import { WAR_TORN_FIGHTS } from 'REPO/public/js/battlesim/engines/fabled-lands/roster.js';
 assert(!document.getElementById('sim674-overlay'), 'loader remains lazy');
 assert(t('battlesim674.title') === 'battlesim674.title', 'translations remain lazy');
 app.setCurrentBookId(674);

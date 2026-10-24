@@ -185,7 +185,7 @@ for(const id of BOOK_IDS){
     const editor=overlay.querySelector('.bsim-opponent-editor');
     check(editor,'shared opponent editor '+id);
     const name=editor.querySelector('[role="combobox"]');
-    name.focus();
+    name.focus();name.dispatchEvent(new Event('input',{bubbles:true}));
     const option=editor.querySelector('[role="option"]');
     check(option,'autocomplete roster suggestions '+id);
     name.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
@@ -199,7 +199,7 @@ for(const id of BOOK_IDS){
       editor.querySelector(':scope > button').click();
       const second=editor.querySelectorAll('.bsim-opponent-row')[1];
       const secondName=second.querySelector('[role="combobox"]');
-      secondName.focus();second.querySelector('[role="option"]').dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));
+      secondName.focus();secondName.dispatchEvent(new Event('input',{bubbles:true}));second.querySelector('[role="option"]').dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));
       secondName.value='Second custom opponent';
       for(const [key,value]of Object.entries({combat:0,defence:1,stamina:2}))second.querySelector('[data-stat="'+key+'"]').value=value;
     }
@@ -993,7 +993,7 @@ for(const id of BOOK_IDS){
     const name=()=>editor.querySelector('[role="combobox"]');
     check(state().character.life===10&&!state().character.blaster,'area starts unarmed');
     el('blaster').checked=true;el('shots').value='2';
-    name().focus();
+    name().focus();name().dispatchEvent(new Event('input',{bubbles:true}));
     check(editor.querySelector('[role="option"]'),'area autocomplete');
     name().dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
     check(overlay.classList.contains('active')&&name().getAttribute('aria-expanded')==='false','area autocomplete Escape first');
