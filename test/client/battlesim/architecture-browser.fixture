@@ -480,7 +480,7 @@ for(const id of BOOK_IDS){
     const editor=overlay.querySelector('.bsim-opponent-editor');
     check(editor&&!editor.hidden,'Demonspawn custom setup '+id);
     const name=editor.querySelector('[role="combobox"]');
-    name.focus();check(editor.querySelector('[role="option"]'),'Demonspawn autocomplete '+id);
+    name.focus();name.dispatchEvent(new Event('input',{bubbles:true}));check(editor.querySelector('[role="option"]'),'Demonspawn autocomplete '+id);
     name.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
     name.value='Custom Demonspawn foe';
     for(const field of editor.querySelectorAll('[data-stat]'))field.value=['weapon','armour','shield','power'].includes(field.dataset.stat)?0:40;

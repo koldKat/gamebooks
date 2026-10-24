@@ -1,3 +1,5 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
+await loadFixtureRoster(534);
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from './simulator-source.mjs';
@@ -6,7 +8,7 @@ import * as combat from '../../../public/js/battlesim/engines/demonspawn/fire-wo
 import * as encounters from '../../../public/js/battlesim/engines/demonspawn/fire-wolf-encounters.js';
 import * as groups from '../../../public/js/battlesim/engines/demonspawn/fire-wolf-groups.js';
 import * as magic from '../../../public/js/battlesim/engines/demonspawn/fire-wolf-magic.js';
-import strings from '../../../public/js/i18n/en/battlesim/battlesim534.js';
+const {default: strings} = await import('../../../public/js/i18n/en/battlesim/battlesim534.js');
 
 function fixture(section = 173) {
   const p = { ...combat.rollFireWolfCharacter(() => 0.4), power: 100, maxPower: 100, healingStone: 0, bluePowder: 0 };

@@ -1,3 +1,5 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
+await loadFixtureRoster(534);
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { FIRE_WOLF_WEAPONS, FIRE_WOLF_ARMOUR, rollFireWolfCharacter, fireWolfNaturalLife,

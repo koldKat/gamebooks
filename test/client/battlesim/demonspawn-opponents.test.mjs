@@ -1,3 +1,5 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
+await loadFixtureRoster(534);
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { prepareFireWolfEncounter, createFireWolfEncounterDuel } from '../../../public/js/battlesim/engines/demonspawn/fire-wolf-encounters.js';

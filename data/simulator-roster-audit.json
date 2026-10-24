@@ -1462,11 +1462,26 @@
     {
       "bookId": 534,
       "databaseEnemyRows": 19,
-      "apiConsumers": [],
-      "inlineDataFiles": [
-        "public/js/battlesim/engines/demonspawn/fire-wolf-encounters.js"
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
       ],
-      "runtimeRosterReviewPending": true
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/534.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true,
+        "liveApiVerified": true,
+        "legacyRowsAdopted": 19,
+        "legacyFieldChanges": 0,
+        "catalogs": "17 complete attribute blocks, 21 encounter presets, imagined-stat and player-copy templates",
+        "sourceNullsPreserved": true
+      }
     },
     {
       "bookId": 535,
@@ -2341,6 +2356,7 @@
       531,
       532,
       533,
+      534,
       555,
       557,
       781,
