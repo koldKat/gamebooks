@@ -1,52 +1,26 @@
-import { CROWN_ROSTER } from './crown-roster.js';
+import { installCrownRoster } from './crown-roster.js';
+import { installCrownStrategy } from './crown-strategy.js';
+import { createRosterLoader } from '../../roster-data.js';
 import { legendaryInteger, legendarySkill } from './character.js';
 import { startLegendaryFight, legendaryEntryDamage } from './combat.js';
 import { legendaryArmourParts } from './equipment.js';
 
-const victories = {
-  5:861,22:1165,33:261,47:877,82:1026,89:180,94:630,114:1011,130:364,136:375,
-  182:568,186:824,198:1136,224:745,240:588,243:746,254:657,256:884,265:415,
-  270:476,318:788,350:87,351:439,364:873,370:940,381:504,399:1021,417:11,
-  421:622,423:752,437:559,438:213,447:175,468:817,469:262,477:142,496:342,
-  505:751,506:692,543:588,546:76,564:432,571:551,574:639,596:290,600:337,
-  611:24,621:431,626:823,631:809,643:798,655:256,691:633,695:1038,709:327,
-  738:624,740:993,762:57,777:167,824:186,834:896,847:1186,870:68,880:295,
-  905:301,911:519,931:1167,932:561,940:770,949:981,954:578,970:259,980:219,
-  992:429,1023:536,1037:139,1072:1174,1126:522,1139:390,1146:624,1165:234,
-  1175:948,1185:833,1191:1054,1193:99,
-};
-
-const options = {
-  47:{hero:'jessica',loss:620},82:{spellsForbidden:true,noShield:true,excludeTwoHanded:true},89:{team:'pursuit',loss:780},
-  114:{borrowedWeapon:true,loss:760},
-  182:{winGroups:[[0],[1,2,3]]},186:{flee:359},224:{partyFirst:false,distinctRoundRecipients:true},
-  240:{loss:832},
-  370:{hero:'jessica',loss:566,capturedEquipment:'unarmed',spellsForbidden:true},
-  399:{pickupWeapon:{enemyIndex:1,weaponBonus:3,attackDieBonus:1,magicalWeapon:true}},
-  438:{team:'assassination',loss:330},468:{team:'not-holding-doors'},
-  477:{team:'rescue',loss:594},496:{winGroups:[[0]],stopRound:3,stop:703},
-  506:{playerTurnLimit:1,playerTurnLimitDestination:443},543:{loss:832},564:{undamagedFailure:946},
-  571:{team:'katherine',loss:551},574:{partyFirst:false},596:{flee:504},
-  621:{grappleEscape:true},
-  631:{team:'ladders',loss:194,nonfatalLossHealth:1,halveSilverOnLoss:true},
-  643:{hero:'jessica',loss:551},655:{stopRound:6,stop:1014},
-  691:{hero:'tiquon',loss:228,weaponAttacksForbidden:true,rechargeSpellsAtRoundEnd:5},695:{locationBattle:'walkway',escapeDestination:627},
-  762:{locationBattle:'pit',lossWhenZoneEmpty:'pool',loss:1086},777:{stopRound:3,stop:676},
-  834:{team:'stewart',loss:896},847:{partyFirst:false},880:{team:'melee'},
-  931:{endRoundPartyDamage:1,excludedProfiles:['jessica']},
-  940:{hero:'jessica',loss:59,companion:{name:'Sar Wilmot',attack:8}},
-  949:{companion:{name:'Prince Robyn',attack:5}},
-  970:{team:'montague',loss:541},
-  1072:{solo:true,loss:484},
-  1175:{loss:18,armourErosion:true},
-  1191:{hero:'jessica',loss:314,capturedEquipment:'knife',spellsForbidden:true},
-};
-
-export const CROWN_FIGHTS = Object.freeze(Object.entries(victories).map(([id, win]) => {
-  const section = Number(id);
-  return Object.freeze({ section, win, ...options[section],
-    enemies: Object.freeze(CROWN_ROSTER.filter(enemy => enemy.section === section)) });
-}).sort((a,b) => a.section-b.section));
+export let CROWN_FIGHTS = Object.freeze([]);
+function freezeCatalog(value) {
+  if (value && typeof value === 'object' && !Object.isFrozen(value)) {
+    Object.values(value).forEach(freezeCatalog);
+    Object.freeze(value);
+  }
+  return value;
+}
+export const loadRoster = createRosterLoader(690, 'CATALOG', entries => {
+  const fights = entries.filter(entry => entry.kind === 'fight').map(entry => entry.spec);
+  installCrownRoster(fights.flatMap(fight => fight.enemies));
+  CROWN_FIGHTS = freezeCatalog(fights);
+  installCrownStrategy(
+    freezeCatalog(Object.fromEntries(entries.filter(entry => entry.kind === 'army').map(entry => [entry.section, entry.spec]))),
+    freezeCatalog(Object.fromEntries(entries.filter(entry => entry.kind === 'naval').map(entry => [entry.section, entry.spec]))));
+});
 
 export function startCrownFight(party, section, { participants, codes = [], ogreVisits = 0,
   defeatedEnemies = [], vesselType, trappedHero, entryDamageHero, entryDamageAlreadyApplied = false,

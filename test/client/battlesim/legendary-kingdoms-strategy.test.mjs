@@ -1,3 +1,5 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
+await loadFixtureRoster(690);
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { CROWN_NAVAL, startCrownNaval, CROWN_ARMIES, startCrownArmy } from '../../../public/js/battlesim/engines/legendary-kingdoms/crown-strategy.js';

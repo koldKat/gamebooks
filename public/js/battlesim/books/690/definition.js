@@ -1,3 +1,4 @@
+export { loadRoster } from '../../engines/legendary-kingdoms/crown.js';
 export const definition = Object.freeze({
   id:690,
   title:'Crown & Tower',

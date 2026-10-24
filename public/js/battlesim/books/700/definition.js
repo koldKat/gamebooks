@@ -1,3 +1,5 @@
+import { createRosterLoader } from '../../roster-data.js';
+
 export const definition = Object.freeze({
   id: 700,
   title: 'Пари и гангстери 3',
@@ -12,66 +14,26 @@ export const PLAYER_DEFAULTS = Object.freeze({
   combatSkill: 6, damageCode: 6, shooting: 6, prestige: 25,
 });
 
-export const UNARMED_RETURNS = Object.freeze({
-  6: { win: 23, loss: 13 },
-  102: { win: 121, loss: 141 },
-  133: { win: 134, loss: 144 },
-  177: { win: 157, loss: 167 },
-  193: { win: 183, loss: null, fatal: true },
-  266: { win: 289, loss: null, fatal: true },
-  270: { win: 260, loss: 250 },
-  277: { win: 287, loss: null, fatal: true },
+export let UNARMED_RETURNS = Object.freeze({});
+export let SHOOTING_RETURNS = Object.freeze({});
+let UNARMED_ROSTERS = {};
+let SHOOTING_ROSTERS = {};
+export const loadRoster = createRosterLoader(700, 'CATALOG', entries => {
+  const unarmed = entries.filter(entry => entry.kind === 'unarmed');
+  const shooting = entries.filter(entry => entry.kind === 'shooting');
+  UNARMED_ROSTERS = Object.fromEntries(unarmed.map(entry => [entry.origin, entry]));
+  SHOOTING_ROSTERS = Object.fromEntries(shooting.map(entry => [entry.origin, entry.source]));
+  UNARMED_RETURNS = Object.freeze(Object.fromEntries(unarmed.map(entry => [entry.origin, entry.returns])));
+  SHOOTING_RETURNS = Object.freeze(Object.fromEntries(shooting.map(entry => [entry.origin, entry.returns])));
 });
-
-export const SHOOTING_RETURNS = Object.freeze({
-  143: 134, 192: 183, 215: 225, 229: 239, 236: 207,
-  238: 209, 272: 262, 278: 288, 280: 246, 293: 273,
-});
-
-const enemy = (code, damageCode, endurance, strength, dexterity, speed, weaponCode = 0) =>
-  ({ aggression: Math.floor(code / 10), skillCode: code % 10,
-    damageCode, endurance, strength, dexterity, speed, weaponCode });
 
 export function unarmedEncounter(origin, { count = 1, wounded = false } = {}) {
-  const copies = (number, value) => Array.from({ length: number }, () => ({ ...value }));
-  switch (Number(origin)) {
-    case 6:
-      return copies(1, enemy(32, 4, 10, 8, 4, 6));
-    case 102:
-      if (![1, 2].includes(count)) throw new RangeError('Invalid park pursuer count');
-      return copies(count, enemy(33, 8, 25, 6, 8, 8));
-    case 133:
-      return copies(4, enemy(43, 50, 8, 4, 6, 8, 42));
-    case 177:
-      return copies(3, enemy(34, 4, 15, 12, 4, 2));
-    case 193: {
-      const physical = wounded ? 8 : 16;
-      return copies(1, enemy(44, 18, 45, physical, physical, physical));
-    }
-    case 266:
-      return [enemy(23, 48, 15, 8, 4, 6, 40),
-        ...copies(2, enemy(23, 48, 15, 6, 10, 8, 40))];
-    case 270:
-      return copies(1, enemy(44, 18, 30, 18, 14, 16));
-    case 277:
-      return copies(1, enemy(33, 52, 30, 8, 12, 10, 40));
-    default:
-      throw new RangeError('Unknown unarmed encounter');
-  }
+  const source = UNARMED_ROSTERS[Number(origin)];
+  if (!source) throw new RangeError('Unknown unarmed encounter');
+  if (source.countOptions && !source.countOptions.includes(count)) throw new RangeError('Invalid park pursuer count');
+  const opponents = wounded && source.woundedOpponents ? source.woundedOpponents : source.opponents;
+  return opponents.slice(0, source.countOptions ? count : opponents.length).map(opponent => ({ ...opponent }));
 }
-
-const SHOOTING_ROSTERS = {
-  143: { code: 32, fire: [8, 8, 8, 8], terrain: 1, distance: 1, cover: 0, playerCover: 0, physical: [6, 6, 6] },
-  192: { code: 23, fire: [8, 8], terrain: 2, distance: 3, cover: null, coverOptions: [4, 8], playerCover: 2, physical: [6, 6, 6] },
-  215: { code: 33, fire: [6, 6], terrain: 2, distance: 2, cover: null, coverOptions: [0, 4], playerCover: 0, physical: [6, 6, 6] },
-  229: { code: 33, fire: [10], terrain: 2, distance: 4, cover: 10, playerCover: 0, physical: [6, 8, 8] },
-  236: { code: 33, fire: [6, 6, 6], terrain: 3, cover: null, playerCover: null, physical: [4, 6, 8] },
-  238: { code: 33, fire: [6, 6, 6, 6], terrain: 3, cover: null, playerCover: null, playerCoverOptions: [2, 4], physical: [6, 6, 6] },
-  272: { code: 13, fire: [6, 8], terrain: 4, distance: 2, cover: null, playerCover: 0, physical: [4, 4, 8] },
-  278: { code: 33, fire: [4, 4, 6, 6], terrain: 3, cover: null, playerCover: 0, physical: [6, 4, 6] },
-  280: { code: 13, fire: [6, 8], terrain: 4, distance: 2, cover: null, playerCover: 0, physical: [4, 4, 8] },
-  293: { code: 33, fire: [6, 6, 8, null], terrain: 3, cover: null, playerCover: 2, physical: [6, 8, 8] },
-};
 
 export function shootingEncounter(origin, { simplifiedMap = true } = {}) {
   const source = SHOOTING_ROSTERS[Number(origin)];

@@ -1,9 +1,12 @@
 const checks=[],alerts=[],saves=[];
 const assert=(value,label)=>{if(!value)throw Error(label);checks.push(label);};
+const {loadRoster}=await import('REPO/public/js/battlesim/books/689/definition.js');
+await loadRoster(async()=>({ok:true,json:async()=>ROSTER_SEED}));
 const {createLegendaryPanel}=await import('REPO/public/js/battlesim/engines/legendary-kingdoms/panel.js');
 const dictionary=(await import('REPO/public/js/i18n/LANG/battlesim/battlesim689.js')).default;
+const common=(await import('REPO/public/js/i18n/en/battlesim/common.js')).default;
 const t=(key,params={})=>{
-  const value=dictionary[key]??{'battlesim.title':'Battle Simulator','btn.close':'Close','battlesim.no_active_playthrough':'No active run'}[key];
+  const value=dictionary[key]??common[key]??{'battlesim.title':'Battle Simulator','btn.close':'Close','battlesim.no_active_playthrough':'No active run'}[key];
   if(value===undefined)throw Error('Missing translation '+key);
   return value.replace(/\{(\w+)\}/g,(_,name)=>String(params[name]??''));
 };
@@ -15,11 +18,12 @@ panel.init();panel.setVisible(true);
 const el=key=>document.getElementById('sim689-'+key);
 el('btn').click();
 assert(el('overlay').classList.contains('active'),'panel opens');
-assert(el('context').options.length===75,'all personal contexts');
+assert(el('context').options.length===76,'all personal contexts');
 assert(getComputedStyle(el('btn')).borderRadius==='7px','themed simulator button');
 assert(run.sim689.party.length===0&&saves.length===0,'opening changes no characters');
 el('create').click();
 assert(run.sim689.party.length===4,'four heroes created');
+el('context').value='2';el('context').dispatchEvent(new Event('change',{bubbles:true}));
 assert(run.sim689.party[1].spells.length===3,'three chosen starting spells');
 assert(el('members').selectedOptions.length===0,'empty participant selection defaults to complete party');
 assert(el('checkMember1').options.length===4,'skill-check hero choices');

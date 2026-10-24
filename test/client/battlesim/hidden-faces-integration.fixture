@@ -1,6 +1,7 @@
 const checks=[],saves=[];
 const assert=(value,label)=>{if(!value)throw Error(label);checks.push(label);};
 window.fetch=async(url,options={})=>{
+  if(url==='/api/books/678/enemies'&&!options.method)return new Response(JSON.stringify(ROSTER_SEED),{status:200,headers:{'Content-Type':'application/json'}});
   assert(url==='/api/books/678/state'&&options.method==='PUT','only simulator saves');
   saves.push(JSON.parse(options.body));
   return new Response('{}',{status:200,headers:{'Content-Type':'application/json'}});
@@ -8,7 +9,7 @@ window.fetch=async(url,options={})=>{
 const app=await import('REPO/public/js/core/state.js');
 const desktop=await import('REPO/public/js/battlesim/loader.js');
 const mobile=await import('REPO/public/mobile/js/battlesim-dispatch.js');
-const {HIDDEN_FIGHTS}=await import('REPO/public/js/battlesim/engines/fabled-lands/hidden-faces.js');
+import {HIDDEN_FIGHTS} from 'REPO/public/js/battlesim/engines/fabled-lands/hidden-faces.js';
 app.setCurrentBookId(678);
 const run={startedAt:123,path:[1],sim677:{preserved:true}};
 app.state.playthroughs=[run];app.state.activePtIndex=0;
@@ -17,7 +18,7 @@ const open=async()=>{if(mode==='mobile')await mobile.openSimForBook(678);else{aw
 await open();
 assert(el('overlay').classList.contains('active'),'real loader opens');
 assert(!el('overlay').textContent.includes('battlesim678.'),'translated labels');
-assert(el('context').options.length===27&&el('seaContext').options.length===11,'complete source encounters and ship checks');
+assert(el('context').options.length===28&&el('context').options[0].value==='-1'&&el('seaContext').options.length===11,'complete source encounters and ship checks');
 assert(getComputedStyle(el('btn')).borderRadius==='7px','themed button');
 assert(run.sim678.character===null&&saves.length===0,'open creates no character');
 el('profession').value='warrior';el('create').click();
@@ -32,6 +33,18 @@ run.sim678.fight.enemies[0].stamina=1;Math.random=()=>.999;el('step').click();
 assert(run.sim678.fight.status==='win'&&run.sim678.character.combat===8&&run.sim678.fight.destination===412,'temporary drain restored');
 assert(run.sim678.history.length===1&&run.sim677.preserved,'result recorded and other sim preserved');
 await app.saveState();assert(saves.at(-1).playthroughs[0].sim678.character.combat===8,'state persistence');
+el('combat').closest('details').open=true;
+for(const[field,value]of Object.entries({combat:100,magic:100,scouting:100,sanctity:100,stamina:1000,staminaInitial:1000}))el(field).value=String(value);
+el('apply').click();Math.random=()=>.999;
+const initialHistory=run.sim678.history.length;
+for(let index=0;index<HIDDEN_FIGHTS.length;index++){
+  el('context').value=String(index);el('context').dispatchEvent(new Event('change',{bubbles:true}));el('start').click();
+  assert(el('apply').disabled&&el('context').disabled,'active encounter locks setup '+index);
+  let rounds=0;while(run.sim678.fight.status==='fighting'&&rounds++<10)el('step').click();
+  assert(run.sim678.fight.status==='win'&&run.sim678.fight.destination===HIDDEN_FIGHTS[index].win,'complete named encounter '+index);
+  assert(run.sim678.history.length===initialHistory+index+1,'one result per encounter '+index);
+}
+await app.saveState();assert(saves.at(-1).playthroughs[0].sim678.history.length===initialHistory+27,'all encounter results persist');
 for(const node of el('overlay').querySelectorAll('details'))node.open=true;
 const body=el('overlay').querySelector('.bsim-body');body.scrollTop=Number.MAX_SAFE_INTEGER;
 assert(Math.abs(body.scrollTop-Math.max(0,body.scrollHeight-body.clientHeight))<=1,'scroll reaches bottom');

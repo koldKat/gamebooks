@@ -16,7 +16,7 @@ export function createFabledPanel({ document, t, getRun, getBookId, saveState,
   seaCheck = fabledSeaCheck, characterDefaults = {}, extraFlags = [], encounterOptions = [],
   extraFields = [], createCharacter = profession => newFabledCharacter(profession, characterDefaults),
   validateCharacter = validateFabledCharacter, characterDefence = fabledDefence,
-  abilityCheck = fabledAbilityCheck, extendPanel = () => ({}),
+  abilityCheck = fabledAbilityCheck, extendPanel = () => ({}), opponentStatUnavailable,
   startFight = startFabledFight, roundFight = fabledRound, fleeFight = fleeFabledFight,
   cancelFight = fight => ({ ...fight, status: 'cancelled' }) }) {
   const ID = 'sim' + bookId;
@@ -190,7 +190,7 @@ export function createFabledPanel({ document, t, getRun, getBookId, saveState,
     document.body.appendChild(overlay);
     el('context').innerHTML = `<option value="-1">${escape(t('battlesim.editor.custom'))}</option>`
       + fights.map((spec, index) => `<option value="${index}">${escape(encounterName(spec))} (${spec.section})</option>`).join('');
-    opponents = createOpponentEditor({document, id: ID, t,
+    opponents = createOpponentEditor({document, id: ID, t, isStatUnavailable: opponentStatUnavailable,
       fields: [{key: 'combat', label: tk('combat')}, {key: 'defence', label: tk('defence'), min: 1}, {key: 'stamina', label: tk('stamina'), min: 1}],
       presets: fights.flatMap(spec => spec.enemies.map(enemy => ({...enemy, displayName: enemyName(enemy.name)})))});
     el('context').closest('label').after(opponents.element);
@@ -220,6 +220,9 @@ export function createFabledPanel({ document, t, getRun, getBookId, saveState,
     el('context').addEventListener('change', () => {
       const preset = fights[Number(el('context').value)];
       if (preset) opponents.set(preset.enemies.map(enemy => ({...enemy, displayName: enemyName(enemy.name)})));
+      else if (opponents.snapshot().some(enemy => enemy.dynamic)) {
+        opponents.set(opponents.snapshot().map(({dynamic, ...enemy}) => enemy));
+      }
       contextChanged();
     });
     el('create').addEventListener('click', () => {

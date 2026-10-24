@@ -1,3 +1,5 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
+await loadFixtureRoster(706);
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -21,6 +23,9 @@ test('706: the real backend rewards battle outcomes once and ignores retreat', (
   const context = { module: { exports: {} }, events, require(name) {
     if (name === './connection') return { db };
     if (name === './auth') return { generateToken: () => 'test-only' };
+    if (name === './diamonds') return { diamondInfoForUser: () => ({}) };
+    if (name === './rubies') return { rubyInfoForUser: () => ({}), createRubyCompletionChecker: () => () => 0 };
+    if (name === './heartbeat-coins') return { advanceHeartbeatCoins: () => 0 };
     if (name === '../impersonation-context') return { isImpersonatingContext: () => false };
     if (name === '../clean-run') return { isCleanRun: () => false };
     throw Error('Unexpected dependency: ' + name);

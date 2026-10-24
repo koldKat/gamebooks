@@ -1,3 +1,5 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
+await loadFixtureRoster(700);
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { CHECKS, PLAYER_DEFAULTS, UNARMED_RETURNS, SHOOTING_RETURNS, unarmedEncounter, shootingEncounter } from '../../../public/js/battlesim/books/700/definition.js';

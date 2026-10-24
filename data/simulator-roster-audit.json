@@ -1966,74 +1966,176 @@
     {
       "bookId": 676,
       "databaseEnemyRows": 22,
-      "apiConsumers": [],
-      "inlineDataFiles": [
-        "public/js/battlesim/engines/fabled-lands/blood-dark-sea.js",
-        "public/js/battlesim/engines/fabled-lands/roster.js"
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
       ],
-      "runtimeRosterReviewPending": true
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/676.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true,
+        "liveApiVerified": true,
+        "legacyRowsAdopted": 22,
+        "legacyFieldChanges": 0,
+        "catalogs": "15 full encounter presets; multi-opponent groups, player order, armour, wounds, escape and surrender retained",
+        "allPresetEncountersCompleted": true
+      }
     },
     {
       "bookId": 677,
       "databaseEnemyRows": 31,
-      "apiConsumers": [],
-      "inlineDataFiles": [
-        "public/js/battlesim/engines/fabled-lands/howling-darkness.js",
-        "public/js/battlesim/engines/fabled-lands/blood-dark-sea.js",
-        "public/js/battlesim/engines/fabled-lands/roster.js"
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
       ],
-      "runtimeRosterReviewPending": true
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/677.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true,
+        "liveApiVerified": true,
+        "legacyRowsAdopted": 31,
+        "legacyFieldChanges": 0,
+        "catalogs": "31 full encounter presets, with first-wound interruption, nonfatal losses, stamina threshold, entry and escape conditions retained",
+        "allPresetEncountersCompleted": true
+      }
     },
     {
       "bookId": 678,
       "databaseEnemyRows": 29,
-      "apiConsumers": [],
-      "inlineDataFiles": [
-        "public/js/battlesim/engines/fabled-lands/hidden-faces.js",
-        "public/js/battlesim/engines/fabled-lands/roster.js"
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
       ],
-      "runtimeRosterReviewPending": true
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/678.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true,
+        "liveApiVerified": true,
+        "legacyRowsAdopted": 29,
+        "legacyFieldChanges": 0,
+        "catalogs": "27 complete presets with special rule keys, prechecks, thresholds, multiple destinations and temporary attribute drains retained",
+        "allPresetEncountersCompleted": true
+      }
     },
     {
       "bookId": 679,
       "databaseEnemyRows": 42,
-      "apiConsumers": [],
-      "inlineDataFiles": [
-        "public/js/battlesim/engines/fabled-lands/rising-sun.js",
-        "public/js/battlesim/engines/fabled-lands/roster.js"
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
       ],
-      "runtimeRosterReviewPending": true
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/679.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true,
+        "liveApiVerified": true,
+        "legacyRowsAdopted": 42,
+        "legacyFieldChanges": 0,
+        "catalogs": "29 full encounter presets, including simultaneous targets, custom rule keys, weapon modifiers, surrender and escape rules and win choices",
+        "allPresetEncountersCompleted": true
+      }
     },
     {
       "bookId": 680,
-      "databaseEnemyRows": 40,
-      "apiConsumers": [],
-      "inlineDataFiles": [
-        "public/js/battlesim/engines/fabled-lands/serpent-domain.js",
-        "public/js/battlesim/engines/fabled-lands/roster.js"
+      "databaseEnemyRows": 41,
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
       ],
-      "runtimeRosterReviewPending": true
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/680.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true,
+        "liveApiVerified": true,
+        "legacyRowsAdopted": 40,
+        "legacyFieldChanges": 0,
+        "addedDynamicRows": 1,
+        "catalogs": "40 complete physical/spiritual encounters; Living rage retains its dynamic mirror marker with null fixed stats",
+        "allPresetEncountersCompleted": true,
+        "dynamicEditorRegression": "Derived fields remain unavailable; actual character stats are resolved by the combat engine. Switching to custom opponents restores editable fields."
+      }
     },
     {
       "bookId": 689,
-      "databaseEnemyRows": 185,
-      "apiConsumers": [],
-      "inlineDataFiles": [
-        "public/js/battlesim/engines/legendary-kingdoms/valley.js",
-        "public/js/battlesim/engines/legendary-kingdoms/valley-roster.js"
+      "databaseEnemyRows": 211,
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
       ],
-      "runtimeRosterReviewPending": true
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/689.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true,
+        "liveApiVerified": true,
+        "legacyRowsAdopted": 185,
+        "legacyFieldChanges": 0,
+        "newTypedRows": 26,
+        "catalogs": "75 personal encounter configurations, 185 fixed opponents, four complete army formations, three naval profiles and the dynamic cursed-companion rule",
+        "exactBaselineComparison": "Reconstructed roster, fights, armies and naval catalogs equal the saved original JSON representation; original freezing retained",
+        "runtimeChecks": "Both real loaders plus detailed personal/spell, naval, army, gear, code restrictions and save/isolation checks; English and Bulgarian layouts; generic custom-opponent and save/load checks"
+      }
     },
     {
       "bookId": 690,
-      "databaseEnemyRows": 281,
-      "apiConsumers": [],
-      "inlineDataFiles": [
-        "public/js/battlesim/engines/legendary-kingdoms/crown-roster.js",
-        "public/js/battlesim/engines/legendary-kingdoms/valley.js",
-        "public/js/battlesim/engines/legendary-kingdoms/valley-roster.js"
+      "databaseEnemyRows": 322,
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
       ],
-      "runtimeRosterReviewPending": true
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/690.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true,
+        "liveApiVerified": true,
+        "legacyRowsAdopted": 281,
+        "legacyFieldChanges": 0,
+        "newTypedRows": 41,
+        "catalogs": "85 personal encounter configurations, 281 fixed opponents, seven complete army formations and five naval profiles; full special conditions and army spell schedules retained",
+        "exactBaselineComparison": "Reconstructed roster, fights, armies and naval catalogs equal the saved original JSON representation; original freezing retained",
+        "runtimeChecks": "Both real loaders; detailed English/Bulgarian panels with all 85 encounter setup paths, companions, location restrictions and army/naval actions; generic custom-opponent and save/load checks"
+      }
     },
     {
       "bookId": 696,
@@ -2047,16 +2149,54 @@
     {
       "bookId": 700,
       "databaseEnemyRows": 44,
-      "apiConsumers": [],
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
+      ],
       "inlineDataFiles": [],
-      "runtimeRosterReviewPending": true
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/700.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true,
+        "liveApiVerified": true,
+        "legacyRowsAdopted": 44,
+        "legacyFieldChanges": 0,
+        "catalogs": "Eight melee and ten shooting encounters, all destinations, both park pursuer counts, wounded mutant variant, cover/distance choices and explicit unknown weapon/fire values",
+        "exactBaselineComparison": "All melee variants, both shooting map modes, return maps and per-call cloning equal the saved original behavior",
+        "runtimeChecks": "Both languages and real loaders; conditional option controls, completed melee fight, advisory checks, run isolation and custom melee/shooting plus conversion and save/load"
+      }
     },
     {
       "bookId": 706,
-      "databaseEnemyRows": 22,
-      "apiConsumers": [],
+      "databaseEnemyRows": 26,
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
+      ],
       "inlineDataFiles": [],
-      "runtimeRosterReviewPending": true
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/706.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true,
+        "liveApiVerified": true,
+        "legacyRowsAdopted": 8,
+        "legacyFieldChanges": 0,
+        "unmanagedLegacyRowsPreserved": 14,
+        "newTypedRows": 4,
+        "catalogs": "All twelve ship positions, including zero-enemy and lookout positions, enemy counts, ratios, penalties and equipment flags; original И/К distinction retained",
+        "exactBaselineComparison": "Loaded position map equals the complete original twelve-position table; all twenty-two original rows and fourteen unrelated metadata records preserved",
+        "runtimeChecks": "Both languages and real desktop/mobile loaders; ship phases, equipment restrictions, actual result persistence, stale-control protection and run isolation"
+      }
     },
     {
       "bookId": 710,
@@ -2650,6 +2790,15 @@
       672,
       674,
       675,
+      676,
+      677,
+      678,
+      679,
+      680,
+      689,
+      690,
+      700,
+      706,
       781,
       807,
       808,

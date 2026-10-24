@@ -1,6 +1,7 @@
 const checks=[],saves=[];
 const assert=(value,label)=>{if(!value)throw Error(label);checks.push(label);};
 window.fetch=async(url,options={})=>{
+  if(url==='/api/books/680/enemies'&&!options.method)return new Response(JSON.stringify(ROSTER_SEED),{status:200,headers:{'Content-Type':'application/json'}});
   assert(url==='/api/books/680/state'&&options.method==='PUT','only simulator saves');
   saves.push(JSON.parse(options.body));
   return new Response('{}',{status:200,headers:{'Content-Type':'application/json'}});
@@ -8,7 +9,7 @@ window.fetch=async(url,options={})=>{
 const app=await import('REPO/public/js/core/state.js');
 const desktop=await import('REPO/public/js/battlesim/loader.js');
 const mobile=await import('REPO/public/mobile/js/battlesim-dispatch.js');
-const {SERPENT_FIGHTS}=await import('REPO/public/js/battlesim/engines/fabled-lands/serpent-domain.js');
+import {SERPENT_FIGHTS} from 'REPO/public/js/battlesim/engines/fabled-lands/serpent-domain.js';
 app.setCurrentBookId(680);
 const run={startedAt:123,path:[1],sim679:{preserved:true}};
 app.state.playthroughs=[run];app.state.activePtIndex=0;
@@ -18,7 +19,7 @@ else {await desktop.showBattleSimForBook(680);el('btn').click();}
 const sim=await import('REPO/public/js/battlesim/battlesim680.js');
 assert(el('overlay').classList.contains('active'),'real loader opens');
 assert(!el('overlay').textContent.includes('battlesim680.'),'translated labels');
-assert(el('context').options.length===40&&el('seaContext').options.length===12,'complete source encounters and sea checks');
+assert(el('context').options.length===41&&el('context').options[0].value==='-1'&&el('seaContext').options.length===12,'complete source encounters and sea checks');
 assert(getComputedStyle(el('btn')).borderRadius==='7px','themed button');
 assert(run.sim680.character===null&&saves.length===0,'open creates no character');
 el('profession').value='warrior';el('create').click();
@@ -43,6 +44,28 @@ el('seaContext').value='965';el('seaContext').dispatchEvent(new Event('change',{
 assert(el('safetyFromStorms').disabled,'deliberate tempest rejects blessing in UI');
 await app.saveState();assert(saves.at(-1).playthroughs[0].sim680.fight.combatPenalty===4,'special fight state persisted');
 assert(run.sim679.preserved,'previous simulator state preserved');
+el('combat').closest('details').open=true;
+for(const[field,value]of Object.entries({combat:100,nahual:100,spiritualWeapon:100,spiritualArmour:1000,stamina:1000,staminaInitial:1000}))el(field).value=String(value);
+el('apply').click();el('obfuscationUse').checked=false;Math.random=()=>.999;
+const initialHistory=run.sim680.history.length;
+for(let index=0;index<SERPENT_FIGHTS.length;index++){
+  const spec=SERPENT_FIGHTS[index];
+  el('context').value=String(index);el('context').dispatchEvent(new Event('change',{bubbles:true}));
+  el('attackModifier').value='1000';
+  el('flintKnife').checked=spec.section===802;el('goldenWeapon').checked=spec.section===612;
+  el('start').click();assert(el('apply').disabled&&el('context').disabled,'active encounter locks setup '+index);
+  if(spec.special==='mirror'){
+    assert(run.sim680.fight.enemies[0].staminaInitial===run.sim680.character.staminaInitial&&run.sim680.fight.enemies[0].combat===200,'mirror derives stats from current character');
+    assert([...el('overlay').querySelectorAll('.bsim-opponent-editor [data-stat]')].every(input=>input.disabled),'mirror values cannot be replaced with fixed stats');
+  }
+  let rounds=0;while(run.sim680.fight.status==='fighting'&&rounds++<10)el('step').click();
+  assert(run.sim680.fight.status==='win'&&run.sim680.fight.destination===(spec.section===802?1015:spec.win),'complete named encounter '+index);
+  assert(run.sim680.history.length===initialHistory+index+1,'one result per encounter '+index);
+}
+await app.saveState();assert(saves.at(-1).playthroughs[0].sim680.history.length===initialHistory+40,'all encounter results persist');
+el('context').value=String(SERPENT_FIGHTS.findIndex(spec=>spec.special==='mirror'));el('context').dispatchEvent(new Event('change',{bubbles:true}));
+el('context').value='-1';el('context').dispatchEvent(new Event('change',{bubbles:true}));
+assert([...el('overlay').querySelectorAll('.bsim-opponent-editor [data-stat]')].every(input=>!input.disabled),'custom opponents become editable after leaving mirror preset');
 for(const node of el('overlay').querySelectorAll('details'))node.open=true;
 const body=el('overlay').querySelector('.bsim-body');body.scrollTop=Number.MAX_SAFE_INTEGER;
 assert(Math.abs(body.scrollTop-Math.max(0,body.scrollHeight-body.clientHeight))<=1,'scroll reaches bottom');

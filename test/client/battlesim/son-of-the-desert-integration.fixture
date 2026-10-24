@@ -1,6 +1,8 @@
 const checks = [], saves = [];
 const assert = (value, label) => { if (!value) throw Error(label); checks.push(label); };
+const rosterSeed=ROSTER_SEEDS[706];
 window.fetch = async (url, options = {}) => {
+  if(url==='/api/books/706/enemies'&&!options.method)return new Response(JSON.stringify(rosterSeed),{status:200,headers:{'Content-Type':'application/json'}});
   assert(url === '/api/books/706/state' && options.method === 'PUT', 'only intercepted state saves');
   saves.push(JSON.parse(options.body));
   return new Response('{}', { status: 200, headers: { 'Content-Type': 'application/json' } });

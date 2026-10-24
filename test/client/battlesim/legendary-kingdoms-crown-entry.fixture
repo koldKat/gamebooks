@@ -10,6 +10,8 @@ const {loadBattleSimTranslations}=await import('REPO/public/js/i18n/battlesim.js
 app.setCurrentBookId(690);
 const run={startedAt:123,path:[1],sim689:{preserved:true}};
 app.state.playthroughs=[run];app.state.activePtIndex=0;
+const {loadRoster}=await import('REPO/public/js/battlesim/books/690/definition.js');
+await loadRoster(async()=>({ok:true,json:async()=>ROSTER_SEED}));
 await loadBattleSimTranslations(690);
 const entry=await import('REPO/public/js/battlesim/battlesim690.js');
 assert(entry.definition.id===690&&entry.definition.stateKey==='sim690','standard book identity');
@@ -18,7 +20,7 @@ const el=key=>document.getElementById('sim690-'+key);
 el('btn').click();
 assert(el('overlay').classList.contains('active'),'book facade opens panel');
 assert(!el('overlay').textContent.includes('battlesim690.'),'lazy translations present');
-assert(el('context').options.length===85,'full personal catalog');
+assert(el('context').options.length===86,'full personal catalog');
 assert(getComputedStyle(el('btn')).borderRadius==='7px','themed trigger');
 assert(run.sim690.party.length===0&&saves.length===0,'opening preserves empty party');
 el('create').click();

@@ -1,6 +1,7 @@
 const checks=[],saves=[];
 const assert=(value,label)=>{if(!value)throw Error(label);checks.push(label);};
 window.fetch=async(url,options={})=>{
+  if(url==='/api/books/689/enemies'&&!options.method)return new Response(JSON.stringify(ROSTER_SEED),{status:200,headers:{'Content-Type':'application/json'}});
   assert(url==='/api/books/689/state'&&options.method==='PUT','only isolated simulator saves');
   saves.push(JSON.parse(options.body));
   return new Response('{}',{status:200,headers:{'Content-Type':'application/json'}});
@@ -20,7 +21,7 @@ await open();
 assert(mobile.hasSim(689),'mobile registered');
 assert(el('overlay').classList.contains('active'),'real loader opens');
 assert(!el('overlay').textContent.includes('battlesim689.'),'lazy translations');
-assert(el('context').options.length===75,'all personal encounters');
+assert(el('context').options.length===76,'all personal encounters');
 assert(getComputedStyle(el('btn')).borderRadius==='7px','themed trigger');
 assert(run.sim689.party.length===0&&saves.length===0,'opening preserves empty party');
 el('create').click();

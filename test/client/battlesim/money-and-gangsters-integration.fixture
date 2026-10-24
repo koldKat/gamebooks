@@ -1,6 +1,9 @@
+localStorage.setItem('gamebook_lang','LANGUAGE');
 const checks = [], saves = [];
 const assert = (value, label) => { if (!value) throw Error(label); checks.push(label); };
+const rosterSeed=ROSTER_SEEDS[700];
 window.fetch = async (url, options = {}) => {
+  if(url==='/api/books/700/enemies'&&!options.method)return new Response(JSON.stringify(rosterSeed),{status:200,headers:{'Content-Type':'application/json'}});
   assert(url === '/api/books/700/state' && options.method === 'PUT', 'only intercepted state saves');
   saves.push(JSON.parse(options.body));
   return new Response('{}', { status: 200, headers: { 'Content-Type': 'application/json' } });
@@ -44,6 +47,12 @@ if (mode === 'desktop') {
   key(document.body, 'KeyS', 's', { ctrlKey: true });
   assert(el('overlay').classList.contains('active'), 'modified shortcut ignored');
 }
+const select = (key,value) => { el(key).value=String(value); el(key).dispatchEvent(new Event('change',{bubbles:true})); };
+assert(el('encounter').options.length===9,'eight melee presets plus custom');
+select('encounter',102);assert(el('count').options.length===2,'both park pursuer counts available');
+select('encounter',193);assert(el('wounded')?.type==='checkbox','wounded mutant option available');
+select('mode','shooting');assert(el('encounter').options.length===11,'ten shooting presets plus custom');
+select('mode','unarmed');select('encounter',6);
 for (const [field, value] of Object.entries({ strength: 10, dexterity: 10, speed: 10, combatSkill: 6, damageCode: 20, shooting: 8 })) el(field).value = value;
 el('start').click();
 document.querySelector('[data-action="begin"]').click();

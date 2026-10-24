@@ -1,6 +1,7 @@
 const checks=[],saves=[];
 const assert=(value,label)=>{if(!value)throw Error(label);checks.push(label);};
 window.fetch=async(url,options={})=>{
+  if(url==='/api/books/679/enemies'&&!options.method)return new Response(JSON.stringify(ROSTER_SEED),{status:200,headers:{'Content-Type':'application/json'}});
   assert(url==='/api/books/679/state'&&options.method==='PUT','only simulator saves');
   saves.push(JSON.parse(options.body));
   return new Response('{}',{status:200,headers:{'Content-Type':'application/json'}});
@@ -8,7 +9,7 @@ window.fetch=async(url,options={})=>{
 const app=await import('REPO/public/js/core/state.js');
 const desktop=await import('REPO/public/js/battlesim/loader.js');
 const mobile=await import('REPO/public/mobile/js/battlesim-dispatch.js');
-const {RISING_FIGHTS}=await import('REPO/public/js/battlesim/engines/fabled-lands/rising-sun.js');
+import {RISING_FIGHTS} from 'REPO/public/js/battlesim/engines/fabled-lands/rising-sun.js';
 app.setCurrentBookId(679);
 const run={startedAt:123,path:[1],sim678:{preserved:true}};
 app.state.playthroughs=[run];app.state.activePtIndex=0;
@@ -17,7 +18,7 @@ const open=async()=>{if(mode==='mobile')await mobile.openSimForBook(679);else{aw
 await open();
 assert(el('overlay').classList.contains('active'),'real loader opens');
 assert(!el('overlay').textContent.includes('battlesim679.'),'translated labels');
-assert(el('context').options.length===29&&el('seaContext').options.length===4,'complete source encounters and ship checks');
+assert(el('context').options.length===30&&el('context').options[0].value==='-1'&&el('seaContext').options.length===4,'complete source encounters and ship checks');
 assert(getComputedStyle(el('btn')).borderRadius==='7px','themed button');
 assert(run.sim679.character===null&&saves.length===0,'open creates no character');
 el('profession').value='warrior';el('create').click();
@@ -37,6 +38,23 @@ el('context').value=String(RISING_FIGHTS.findIndex(f=>f.section===656));
 el('context').dispatchEvent(new Event('change',{bubbles:true}));el('exchangedWeaponBonus').value='3';el('start').click();
 assert(run.sim679.fight.enemies[0].combat===11&&run.sim679.fight.enemies[0].defence===19,'encounter options wired');
 await app.saveState();assert(saves.at(-1).playthroughs[0].sim679.fight.enemies[0].combat===11,'state persistence');
+el('surrender').click();assert(run.sim679.fight.status==='surrender'&&run.sim679.fight.destination===36,'source surrender destination');
+el('combat').closest('details').open=true;
+for(const[field,value]of Object.entries({combat:100,magic:100,sanctity:100,stamina:1000,staminaInitial:1000}))el(field).value=String(value);
+el('apply').click();Math.random=()=>.999;
+const initialHistory=run.sim679.history.length;
+for(let index=0;index<RISING_FIGHTS.length;index++){
+  el('context').value=String(index);el('context').dispatchEvent(new Event('change',{bubbles:true}));el('start').click();
+  assert(el('apply').disabled&&el('context').disabled,'active encounter locks setup '+index);
+  let rounds=0;
+  while(run.sim679.fight.status==='fighting'&&rounds++<10){
+    if(run.sim679.fight.config.simultaneous)el('target').value=String(run.sim679.fight.enemies.findIndex(e=>e.stamina>0));
+    el('step').click();
+  }
+  assert(run.sim679.fight.status==='win'&&run.sim679.fight.destination===RISING_FIGHTS[index].win,'complete named encounter '+index);
+  assert(run.sim679.history.length===initialHistory+index+1,'one result per encounter '+index);
+}
+await app.saveState();assert(saves.at(-1).playthroughs[0].sim679.history.length===initialHistory+29,'all encounter results persist');
 for(const node of el('overlay').querySelectorAll('details'))node.open=true;
 const body=el('overlay').querySelector('.bsim-body');body.scrollTop=Number.MAX_SAFE_INTEGER;
 assert(Math.abs(body.scrollTop-Math.max(0,body.scrollHeight-body.clientHeight))<=1,'scroll reaches bottom');

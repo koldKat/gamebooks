@@ -1,49 +1,27 @@
-import { VALLEY_ROSTER } from './valley-roster.js';
+import { installValleyRoster } from './valley-roster.js';
+import { createRosterLoader } from '../../roster-data.js';
 import { startLegendaryArmy } from './army.js';
 import { startLegendaryNaval } from './naval.js';
 import { legendaryInteger, legendarySkill, validateLegendaryCharacter } from './character.js';
 import { startLegendaryFight } from './combat.js';
 
-const victories = {
-  2:478,16:811,20:881,28:63,58:623,60:391,67:168,101:71,102:178,111:68,117:431,
-  133:790,149:115,150:579,166:804,170:236,213:707,214:309,223:161,237:197,238:840,
-  239:157,257:125,264:555,279:635,296:135,297:840,306:816,308:775,356:395,367:874,
-  386:9,389:650,406:611,422:115,446:135,449:618,457:345,483:611,497:298,500:882,
-  501:763,506:184,518:251,529:833,538:748,550:71,554:357,563:311,564:509,580:773,
-  587:606,604:734,636:278,648:95,660:341,666:219,702:334,706:75,708:72,723:669,
-  733:777,739:135,744:418,749:431,766:68,782:619,787:841,835:107,846:15,869:651,
-  885:669,889:328,901:477,
-};
-
-const exceptions = {
-  2:{flee:515},
-  16:{special:'skallos'},20:{special:'fallingRocks',hygliph:true},28:{special:'zealotHealer'},
-  60:{team:'chase',loss:450},67:{noArmour:true},111:{hero:'jessica',loss:468},
-  117:{special:'lateDaisy'},170:{spellsForbidden:true},213:{special:'slaveAllies'},
-  214:{special:'ironKing'},239:{solo:true,unarmed:true,excludeWeapon:true,stopRound:3,stop:157},
-  264:{special:'archers'},279:{hero:'akihiro',special:'yuYan'},297:{special:'openingSpells'},
-  306:{flee:736,precombatSpells:true},386:{hero:'akihiro',excludeWeapon:true,unarmed:false,loss:596,nonfatalLossHealth:1},
-  406:{team:'weapons',unarmed:true,excludeWeapon:true,loss:292,special:'guardWeapon'},
-  449:{partyFirst:false},457:{special:'doubleAttack'},
-  483:{team:'weapons',unarmed:true,excludeWeapon:true,loss:292,special:'guardWeapon'},
-  497:{partyFirst:false,hygliph:true},500:{hero:'akihiro',loss:320,special:'enlightenment'},
-  501:{special:'jungle'},518:{special:'beetles',excludeWeapon:true,unarmed:false},
-  529:{team:'wall',loss:75},538:{hygliph:true},554:{flee:75},563:{special:'imopposh'},
-  564:{special:'unbraaki'},580:{noArmour:true,flee:395,fleeAttack:true},
-  587:{special:'backstab'},604:{conditionalFlee:851},636:{special:'sorcerer'},
-  648:{team:'guards',special:'assassinObjective',objectiveLoss:254},
-  702:{special:'fastilon'},706:{stopRound:2,stop:55,special:'bronzeguard'},708:{hygliph:true},
-  733:{special:'doubleAttack'},744:{solo:true,loss:502},749:{special:'lateSkullcracker'},
-  766:{special:'doubleAttack'},782:{hero:'akihiro',stopRound:2,stop:619},787:{special:'saltDragon'},
-  846:{special:'archers'},885:{partyFirst:false},
-};
-
-export const VALLEY_FIGHTS = Object.freeze([...Object.entries(victories).map(([key,win]) => {
-  const section=Number(key);
-  return Object.freeze({section,win,...exceptions[section],
-    enemies:Object.freeze(VALLEY_ROSTER.filter(enemy=>enemy.section===section))});
-}),Object.freeze({section:771,special:'doubleAttack',dynamic:true,win:267,loss:321,enemies:Object.freeze([])})]
-  .sort((a,b)=>a.section-b.section));
+export let VALLEY_FIGHTS = Object.freeze([]);
+export let VALLEY_ARMIES = Object.freeze({});
+export let VALLEY_NAVAL = Object.freeze({});
+function freezeCatalog(value) {
+  if (value && typeof value === 'object' && !Object.isFrozen(value)) {
+    Object.values(value).forEach(freezeCatalog);
+    Object.freeze(value);
+  }
+  return value;
+}
+export const loadRoster = createRosterLoader(689, 'CATALOG', entries => {
+  const fights = entries.filter(entry => entry.kind === 'fight').map(entry => entry.spec);
+  installValleyRoster(fights.flatMap(fight => fight.enemies));
+  VALLEY_FIGHTS = freezeCatalog(fights);
+  VALLEY_ARMIES = freezeCatalog(Object.fromEntries(entries.filter(entry => entry.kind === 'army').map(entry => [entry.section, entry.spec])));
+  VALLEY_NAVAL = freezeCatalog(Object.fromEntries(entries.filter(entry => entry.kind === 'naval').map(entry => [entry.section, entry.spec])));
+});
 
 export function startValleyFight(party,section,{participants,codes=[],hygliph=false,enlightened=false,shipInMordain=false,
   rage=false,slaveDamage=1,stealthHero,stealthOutcome,cursedMember,knockout=false,undercover=false}={}) {
@@ -96,31 +74,6 @@ export function startValleyFight(party,section,{participants,codes=[],hygliph=fa
   return startLegendaryFight(party,enemies,rules,selected);
 }
 
-const unit = (name,strength,morale,extra={}) => Object.freeze({name,strength,morale,...extra});
-const formation = zones => Object.freeze(zones.map(zone=>Object.freeze(zone)));
-export const VALLEY_ARMIES = Object.freeze({
-  162:Object.freeze({win:316,loss:220,descantos:true,enemy:formation([
-    [unit('Cursite Zealots',4,5),unit('Cursite Infantry',4,4)],
-    [unit('Mercenary Knights',5,3,{firstRoundBonus:1}),unit('Citizen Archers',2,4)],
-    [unit('Cursite Riders',5,4),unit('Mercenary Spears',3,2)],
-  ])}),
-  316:Object.freeze({win:363,loss:220,enemy:formation([
-    [unit('Mercenary Men-at-Arms',4,2),unit('Cursite Citizens',2,3)],
-    [unit('Temple Guard',5,4),unit('Citizen Archers',2,4)],
-    [unit('Cursite Zealots',4,5),unit('Mercenary Crossbows',2,2)],
-  ])}),
-  376:Object.freeze({win:214,loss:670,enemy:formation([
-    [unit('Spearmen of Saltdad',2,2)],
-    [unit('Bronzeguard',5,5),unit('Peasant Levies',1,1)],
-    [unit('Mercenary Swords',3,2)],
-  ])}),
-  610:Object.freeze({win:342,loss:48,enemy:formation([
-    [unit('Landsmen Cavalry',4,2),unit('Field Overseers',2,2)],
-    [unit('Cursite Fanatics',3,5),unit('Slave Levies',1,1)],
-    [unit('Clifftop Infantry',3,3),unit('Thalsian Mercenaries',2,3)],
-  ])}),
-});
-
 export function startValleyArmy(player,section,codes=[]) {
   legendaryInteger(section,1);
   const battle=Object.hasOwn(VALLEY_ARMIES,section) && VALLEY_ARMIES[section];
@@ -137,12 +90,6 @@ export function startValleyArmy(player,section,codes=[]) {
   return startLegendaryArmy(player,enemy,{section,win:battle.win,loss:battle.loss,
     descantos:!!battle.descantos && !codes.includes('A95')});
 }
-
-export const VALLEY_NAVAL = Object.freeze({
-  429:Object.freeze({name:'Pirate Pinnace',fighting:5,health:6,win:690,loss:741}),
-  679:Object.freeze({name:'War Canoes',fighting:3,health:10,win:774,loss:52,fightingPenalty:1}),
-  721:Object.freeze({name:'Ork Hulk',fighting:3,health:5,win:796}),
-});
 
 export function startValleyNaval(ship,section) {
   legendaryInteger(section,1);

@@ -1,0 +1,2138 @@
+{
+  "schemaVersion": 1,
+  "bookId": 679,
+  "family": "fabled-lands",
+  "source": "Original Lords of the Rising Sun encounter profiles and conditions. Every legacy enemy row matched exactly; simultaneous groups, special rule keys, entry checks, surrender and escape rules and win choices retained.",
+  "enemies": [
+    {
+      "key": "55:0:0",
+      "name": "Imperial Guard (55)",
+      "attack": 7,
+      "defense": 11,
+      "hp": 14,
+      "pb": null,
+      "adopt": {
+        "name": "Imperial Guard (55)",
+        "attack": 7,
+        "defense": 11,
+        "hp": 14,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 55,
+          "win": 79,
+          "loss": 140,
+          "enemies": [
+            {
+              "name": "Imperial Guard",
+              "combat": 7,
+              "defence": 11,
+              "stamina": 14
+            }
+          ]
+        },
+        "part": {
+          "name": "Imperial Guard",
+          "combat": 7,
+          "defence": 11,
+          "stamina": 14
+        }
+      }
+    },
+    {
+      "key": "116:0:1",
+      "name": "First Vampire (116)",
+      "attack": 6,
+      "defense": 10,
+      "hp": 14,
+      "pb": null,
+      "adopt": {
+        "name": "First Vampire (116)",
+        "attack": 6,
+        "defense": 10,
+        "hp": 14,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 5,
+        "entry": {
+          "section": 116,
+          "win": 91,
+          "loss": 140,
+          "enemies": [
+            {
+              "name": "First Vampire",
+              "combat": 6,
+              "defence": 10,
+              "stamina": 14
+            },
+            {
+              "name": "Second Vampire",
+              "combat": 6,
+              "defence": 10,
+              "stamina": 14
+            },
+            {
+              "name": "Third Vampire",
+              "combat": 6,
+              "defence": 10,
+              "stamina": 14
+            },
+            {
+              "name": "Fourth Vampire",
+              "combat": 6,
+              "defence": 10,
+              "stamina": 14
+            },
+            {
+              "name": "Fifth Vampire",
+              "combat": 6,
+              "defence": 10,
+              "stamina": 14
+            }
+          ]
+        },
+        "part": {
+          "name": "First Vampire",
+          "combat": 6,
+          "defence": 10,
+          "stamina": 14
+        }
+      }
+    },
+    {
+      "key": "116:1:1",
+      "name": "Second Vampire (116)",
+      "attack": 6,
+      "defense": 10,
+      "hp": 14,
+      "pb": null,
+      "adopt": {
+        "name": "Second Vampire (116)",
+        "attack": 6,
+        "defense": 10,
+        "hp": 14,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 1,
+        "slot": 1,
+        "partCount": 5,
+        "entry": {
+          "section": 116,
+          "win": 91,
+          "loss": 140,
+          "enemies": [
+            {
+              "name": "First Vampire",
+              "combat": 6,
+              "defence": 10,
+              "stamina": 14
+            },
+            {
+              "name": "Second Vampire",
+              "combat": 6,
+              "defence": 10,
+              "stamina": 14
+            },
+            {
+              "name": "Third Vampire",
+              "combat": 6,
+              "defence": 10,
+              "stamina": 14
+            },
+            {
+              "name": "Fourth Vampire",
+              "combat": 6,
+              "defence": 10,
+              "stamina": 14
+            },
+            {
+              "name": "Fifth Vampire",
+              "combat": 6,
+              "defence": 10,
+              "stamina": 14
+            }
+          ]
+        },
+        "part": {
+          "name": "Second Vampire",
+          "combat": 6,
+          "defence": 10,
+          "stamina": 14
+        }
+      }
+    },
+    {
+      "key": "116:2:1",
+      "name": "Third Vampire (116)",
+      "attack": 6,
+      "defense": 10,
+      "hp": 14,
+      "pb": null,
+      "adopt": {
+        "name": "Third Vampire (116)",
+        "attack": 6,
+        "defense": 10,
+        "hp": 14,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 1,
+        "slot": 2,
+        "partCount": 5,
+        "entry": {
+          "section": 116,
+          "win": 91,
+          "loss": 140,
+          "enemies": [
+            {
+              "name": "First Vampire",
+              "combat": 6,
+              "defence": 10,
+              "stamina": 14
+            },
+            {
+              "name": "Second Vampire",
+              "combat": 6,
+              "defence": 10,
+              "stamina": 14
+            },
+            {
+              "name": "Third Vampire",
+              "combat": 6,
+              "defence": 10,
+              "stamina": 14
+            },
+            {
+              "name": "Fourth Vampire",
+              "combat": 6,
+              "defence": 10,
+              "stamina": 14
+            },
+            {
+              "name": "Fifth Vampire",
+              "combat": 6,
+              "defence": 10,
+              "stamina": 14
+            }
+          ]
+        },
+        "part": {
+          "name": "Third Vampire",
+          "combat": 6,
+          "defence": 10,
+          "stamina": 14
+        }
+      }
+    },
+    {
+      "key": "116:3:1",
+      "name": "Fourth Vampire (116)",
+      "attack": 6,
+      "defense": 10,
+      "hp": 14,
+      "pb": null,
+      "adopt": {
+        "name": "Fourth Vampire (116)",
+        "attack": 6,
+        "defense": 10,
+        "hp": 14,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 1,
+        "slot": 3,
+        "partCount": 5,
+        "entry": {
+          "section": 116,
+          "win": 91,
+          "loss": 140,
+          "enemies": [
+            {
+              "name": "First Vampire",
+              "combat": 6,
+              "defence": 10,
+              "stamina": 14
+            },
+            {
+              "name": "Second Vampire",
+              "combat": 6,
+              "defence": 10,
+              "stamina": 14
+            },
+            {
+              "name": "Third Vampire",
+              "combat": 6,
+              "defence": 10,
+              "stamina": 14
+            },
+            {
+              "name": "Fourth Vampire",
+              "combat": 6,
+              "defence": 10,
+              "stamina": 14
+            },
+            {
+              "name": "Fifth Vampire",
+              "combat": 6,
+              "defence": 10,
+              "stamina": 14
+            }
+          ]
+        },
+        "part": {
+          "name": "Fourth Vampire",
+          "combat": 6,
+          "defence": 10,
+          "stamina": 14
+        }
+      }
+    },
+    {
+      "key": "116:4:1",
+      "name": "Fifth Vampire (116)",
+      "attack": 6,
+      "defense": 10,
+      "hp": 14,
+      "pb": null,
+      "adopt": {
+        "name": "Fifth Vampire (116)",
+        "attack": 6,
+        "defense": 10,
+        "hp": 14,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 1,
+        "slot": 4,
+        "partCount": 5,
+        "entry": {
+          "section": 116,
+          "win": 91,
+          "loss": 140,
+          "enemies": [
+            {
+              "name": "First Vampire",
+              "combat": 6,
+              "defence": 10,
+              "stamina": 14
+            },
+            {
+              "name": "Second Vampire",
+              "combat": 6,
+              "defence": 10,
+              "stamina": 14
+            },
+            {
+              "name": "Third Vampire",
+              "combat": 6,
+              "defence": 10,
+              "stamina": 14
+            },
+            {
+              "name": "Fourth Vampire",
+              "combat": 6,
+              "defence": 10,
+              "stamina": 14
+            },
+            {
+              "name": "Fifth Vampire",
+              "combat": 6,
+              "defence": 10,
+              "stamina": 14
+            }
+          ]
+        },
+        "part": {
+          "name": "Fifth Vampire",
+          "combat": 6,
+          "defence": 10,
+          "stamina": 14
+        }
+      }
+    },
+    {
+      "key": "145:0:2",
+      "name": "Wacko (145)",
+      "attack": 12,
+      "defense": 22,
+      "hp": 29,
+      "pb": null,
+      "adopt": {
+        "name": "Wacko (145)",
+        "attack": 12,
+        "defense": 22,
+        "hp": 29,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 145,
+          "win": 218,
+          "loss": 140,
+          "enemies": [
+            {
+              "name": "Wacko",
+              "combat": 12,
+              "defence": 22,
+              "stamina": 29
+            }
+          ],
+          "surrender": 52
+        },
+        "part": {
+          "name": "Wacko",
+          "combat": 12,
+          "defence": 22,
+          "stamina": 29
+        }
+      }
+    },
+    {
+      "key": "183:0:3",
+      "name": "Thunder Beast (183)",
+      "attack": 15,
+      "defense": 20,
+      "hp": 20,
+      "pb": null,
+      "adopt": {
+        "name": "Thunder Beast (183)",
+        "attack": 15,
+        "defense": 20,
+        "hp": 20,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 183,
+          "win": 551,
+          "loss": 140,
+          "enemies": [
+            {
+              "name": "Thunder Beast",
+              "combat": 15,
+              "defence": 20,
+              "stamina": 20
+            }
+          ],
+          "special": "thunder"
+        },
+        "part": {
+          "name": "Thunder Beast",
+          "combat": 15,
+          "defence": 20,
+          "stamina": 20
+        }
+      }
+    },
+    {
+      "key": "186:0:4",
+      "name": "First Knight (186)",
+      "attack": 7,
+      "defense": 13,
+      "hp": 14,
+      "pb": null,
+      "adopt": {
+        "name": "First Knight (186)",
+        "attack": 7,
+        "defense": 13,
+        "hp": 14,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": 186,
+          "win": 243,
+          "loss": 140,
+          "enemies": [
+            {
+              "name": "First Knight",
+              "combat": 7,
+              "defence": 13,
+              "stamina": 14
+            },
+            {
+              "name": "Second Knight",
+              "combat": 8,
+              "defence": 14,
+              "stamina": 17
+            }
+          ]
+        },
+        "part": {
+          "name": "First Knight",
+          "combat": 7,
+          "defence": 13,
+          "stamina": 14
+        }
+      }
+    },
+    {
+      "key": "186:1:4",
+      "name": "Second Knight (186)",
+      "attack": 8,
+      "defense": 14,
+      "hp": 17,
+      "pb": null,
+      "adopt": {
+        "name": "Second Knight (186)",
+        "attack": 8,
+        "defense": 14,
+        "hp": 17,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 4,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": 186,
+          "win": 243,
+          "loss": 140,
+          "enemies": [
+            {
+              "name": "First Knight",
+              "combat": 7,
+              "defence": 13,
+              "stamina": 14
+            },
+            {
+              "name": "Second Knight",
+              "combat": 8,
+              "defence": 14,
+              "stamina": 17
+            }
+          ]
+        },
+        "part": {
+          "name": "Second Knight",
+          "combat": 8,
+          "defence": 14,
+          "stamina": 17
+        }
+      }
+    },
+    {
+      "key": "192:0:5",
+      "name": "First Spider (192)",
+      "attack": 8,
+      "defense": 12,
+      "hp": 17,
+      "pb": null,
+      "adopt": {
+        "name": "First Spider (192)",
+        "attack": 8,
+        "defense": 12,
+        "hp": 17,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "section": 192,
+          "win": 280,
+          "loss": 140,
+          "simultaneous": true,
+          "enemies": [
+            {
+              "name": "First Spider",
+              "combat": 8,
+              "defence": 12,
+              "stamina": 17
+            },
+            {
+              "name": "Second Spider",
+              "combat": 8,
+              "defence": 12,
+              "stamina": 13
+            },
+            {
+              "name": "Third Spider",
+              "combat": 12,
+              "defence": 12,
+              "stamina": 12
+            }
+          ]
+        },
+        "part": {
+          "name": "First Spider",
+          "combat": 8,
+          "defence": 12,
+          "stamina": 17
+        }
+      }
+    },
+    {
+      "key": "192:1:5",
+      "name": "Second Spider (192)",
+      "attack": 8,
+      "defense": 12,
+      "hp": 13,
+      "pb": null,
+      "adopt": {
+        "name": "Second Spider (192)",
+        "attack": 8,
+        "defense": 12,
+        "hp": 13,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 5,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "section": 192,
+          "win": 280,
+          "loss": 140,
+          "simultaneous": true,
+          "enemies": [
+            {
+              "name": "First Spider",
+              "combat": 8,
+              "defence": 12,
+              "stamina": 17
+            },
+            {
+              "name": "Second Spider",
+              "combat": 8,
+              "defence": 12,
+              "stamina": 13
+            },
+            {
+              "name": "Third Spider",
+              "combat": 12,
+              "defence": 12,
+              "stamina": 12
+            }
+          ]
+        },
+        "part": {
+          "name": "Second Spider",
+          "combat": 8,
+          "defence": 12,
+          "stamina": 13
+        }
+      }
+    },
+    {
+      "key": "192:2:5",
+      "name": "Third Spider (192)",
+      "attack": 12,
+      "defense": 12,
+      "hp": 12,
+      "pb": null,
+      "adopt": {
+        "name": "Third Spider (192)",
+        "attack": 12,
+        "defense": 12,
+        "hp": 12,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 5,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "section": 192,
+          "win": 280,
+          "loss": 140,
+          "simultaneous": true,
+          "enemies": [
+            {
+              "name": "First Spider",
+              "combat": 8,
+              "defence": 12,
+              "stamina": 17
+            },
+            {
+              "name": "Second Spider",
+              "combat": 8,
+              "defence": 12,
+              "stamina": 13
+            },
+            {
+              "name": "Third Spider",
+              "combat": 12,
+              "defence": 12,
+              "stamina": 12
+            }
+          ]
+        },
+        "part": {
+          "name": "Third Spider",
+          "combat": 12,
+          "defence": 12,
+          "stamina": 12
+        }
+      }
+    },
+    {
+      "key": "273:0:6",
+      "name": "First Flying Head (273)",
+      "attack": 8,
+      "defense": 18,
+      "hp": 5,
+      "pb": null,
+      "adopt": {
+        "name": "First Flying Head (273)",
+        "attack": 8,
+        "defense": 18,
+        "hp": 5,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 6,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "section": 273,
+          "win": 661,
+          "loss": 140,
+          "simultaneous": true,
+          "unarmoured": true,
+          "enemies": [
+            {
+              "name": "First Flying Head",
+              "combat": 8,
+              "defence": 18,
+              "stamina": 5
+            },
+            {
+              "name": "Second Flying Head",
+              "combat": 8,
+              "defence": 18,
+              "stamina": 5
+            },
+            {
+              "name": "Third Flying Head",
+              "combat": 8,
+              "defence": 18,
+              "stamina": 5
+            }
+          ]
+        },
+        "part": {
+          "name": "First Flying Head",
+          "combat": 8,
+          "defence": 18,
+          "stamina": 5
+        }
+      }
+    },
+    {
+      "key": "273:1:6",
+      "name": "Second Flying Head (273)",
+      "attack": 8,
+      "defense": 18,
+      "hp": 5,
+      "pb": null,
+      "adopt": {
+        "name": "Second Flying Head (273)",
+        "attack": 8,
+        "defense": 18,
+        "hp": 5,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 6,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "section": 273,
+          "win": 661,
+          "loss": 140,
+          "simultaneous": true,
+          "unarmoured": true,
+          "enemies": [
+            {
+              "name": "First Flying Head",
+              "combat": 8,
+              "defence": 18,
+              "stamina": 5
+            },
+            {
+              "name": "Second Flying Head",
+              "combat": 8,
+              "defence": 18,
+              "stamina": 5
+            },
+            {
+              "name": "Third Flying Head",
+              "combat": 8,
+              "defence": 18,
+              "stamina": 5
+            }
+          ]
+        },
+        "part": {
+          "name": "Second Flying Head",
+          "combat": 8,
+          "defence": 18,
+          "stamina": 5
+        }
+      }
+    },
+    {
+      "key": "273:2:6",
+      "name": "Third Flying Head (273)",
+      "attack": 8,
+      "defense": 18,
+      "hp": 5,
+      "pb": null,
+      "adopt": {
+        "name": "Third Flying Head (273)",
+        "attack": 8,
+        "defense": 18,
+        "hp": 5,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 6,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "section": 273,
+          "win": 661,
+          "loss": 140,
+          "simultaneous": true,
+          "unarmoured": true,
+          "enemies": [
+            {
+              "name": "First Flying Head",
+              "combat": 8,
+              "defence": 18,
+              "stamina": 5
+            },
+            {
+              "name": "Second Flying Head",
+              "combat": 8,
+              "defence": 18,
+              "stamina": 5
+            },
+            {
+              "name": "Third Flying Head",
+              "combat": 8,
+              "defence": 18,
+              "stamina": 5
+            }
+          ]
+        },
+        "part": {
+          "name": "Third Flying Head",
+          "combat": 8,
+          "defence": 18,
+          "stamina": 5
+        }
+      }
+    },
+    {
+      "key": "291:0:7",
+      "name": "First Shrine Warden (291)",
+      "attack": 9,
+      "defense": 15,
+      "hp": 22,
+      "pb": null,
+      "adopt": {
+        "name": "First Shrine Warden (291)",
+        "attack": 9,
+        "defense": 15,
+        "hp": 22,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 7,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "section": 291,
+          "win": 499,
+          "loss": 140,
+          "simultaneous": true,
+          "flee": {
+            "destination": 745
+          },
+          "enemies": [
+            {
+              "name": "First Shrine Warden",
+              "combat": 9,
+              "defence": 15,
+              "stamina": 22
+            },
+            {
+              "name": "Second Shrine Warden",
+              "combat": 9,
+              "defence": 15,
+              "stamina": 21
+            },
+            {
+              "name": "Third Shrine Warden",
+              "combat": 9,
+              "defence": 15,
+              "stamina": 20
+            }
+          ]
+        },
+        "part": {
+          "name": "First Shrine Warden",
+          "combat": 9,
+          "defence": 15,
+          "stamina": 22
+        }
+      }
+    },
+    {
+      "key": "291:1:7",
+      "name": "Second Shrine Warden (291)",
+      "attack": 9,
+      "defense": 15,
+      "hp": 21,
+      "pb": null,
+      "adopt": {
+        "name": "Second Shrine Warden (291)",
+        "attack": 9,
+        "defense": 15,
+        "hp": 21,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 7,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "section": 291,
+          "win": 499,
+          "loss": 140,
+          "simultaneous": true,
+          "flee": {
+            "destination": 745
+          },
+          "enemies": [
+            {
+              "name": "First Shrine Warden",
+              "combat": 9,
+              "defence": 15,
+              "stamina": 22
+            },
+            {
+              "name": "Second Shrine Warden",
+              "combat": 9,
+              "defence": 15,
+              "stamina": 21
+            },
+            {
+              "name": "Third Shrine Warden",
+              "combat": 9,
+              "defence": 15,
+              "stamina": 20
+            }
+          ]
+        },
+        "part": {
+          "name": "Second Shrine Warden",
+          "combat": 9,
+          "defence": 15,
+          "stamina": 21
+        }
+      }
+    },
+    {
+      "key": "291:2:7",
+      "name": "Third Shrine Warden (291)",
+      "attack": 9,
+      "defense": 15,
+      "hp": 20,
+      "pb": null,
+      "adopt": {
+        "name": "Third Shrine Warden (291)",
+        "attack": 9,
+        "defense": 15,
+        "hp": 20,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 7,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "section": 291,
+          "win": 499,
+          "loss": 140,
+          "simultaneous": true,
+          "flee": {
+            "destination": 745
+          },
+          "enemies": [
+            {
+              "name": "First Shrine Warden",
+              "combat": 9,
+              "defence": 15,
+              "stamina": 22
+            },
+            {
+              "name": "Second Shrine Warden",
+              "combat": 9,
+              "defence": 15,
+              "stamina": 21
+            },
+            {
+              "name": "Third Shrine Warden",
+              "combat": 9,
+              "defence": 15,
+              "stamina": 20
+            }
+          ]
+        },
+        "part": {
+          "name": "Third Shrine Warden",
+          "combat": 9,
+          "defence": 15,
+          "stamina": 20
+        }
+      }
+    },
+    {
+      "key": "305:0:8",
+      "name": "Hairy arms (305)",
+      "attack": 9,
+      "defense": 18,
+      "hp": 12,
+      "pb": null,
+      "adopt": {
+        "name": "Hairy arms (305)",
+        "attack": 9,
+        "defense": 18,
+        "hp": 12,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 8,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 305,
+          "win": 326,
+          "loss": 140,
+          "enemies": [
+            {
+              "name": "Hairy arms",
+              "combat": 9,
+              "defence": 18,
+              "stamina": 12
+            }
+          ],
+          "flee": {
+            "destination": 181,
+            "dice": 1
+          }
+        },
+        "part": {
+          "name": "Hairy arms",
+          "combat": 9,
+          "defence": 18,
+          "stamina": 12
+        }
+      }
+    },
+    {
+      "key": "306:0:9",
+      "name": "Skeleton Spectre (306)",
+      "attack": 13,
+      "defense": 20,
+      "hp": 21,
+      "pb": null,
+      "adopt": {
+        "name": "Skeleton Spectre (306)",
+        "attack": 13,
+        "defense": 20,
+        "hp": 21,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 9,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 306,
+          "win": 86,
+          "loss": 140,
+          "enemies": [
+            {
+              "name": "Skeleton Spectre",
+              "combat": 13,
+              "defence": 20,
+              "stamina": 21
+            }
+          ],
+          "flee": {
+            "destination": 416,
+            "dice": 2,
+            "armour": true
+          }
+        },
+        "part": {
+          "name": "Skeleton Spectre",
+          "combat": 13,
+          "defence": 20,
+          "stamina": 21
+        }
+      }
+    },
+    {
+      "key": "348:0:10",
+      "name": "King Tiger (348)",
+      "attack": 12,
+      "defense": 22,
+      "hp": 44,
+      "pb": null,
+      "adopt": {
+        "name": "King Tiger (348)",
+        "attack": 12,
+        "defense": 22,
+        "hp": 44,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 10,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 348,
+          "win": 275,
+          "loss": 140,
+          "enemies": [
+            {
+              "name": "King Tiger",
+              "combat": 12,
+              "defence": 22,
+              "stamina": 44
+            }
+          ]
+        },
+        "part": {
+          "name": "King Tiger",
+          "combat": 12,
+          "defence": 22,
+          "stamina": 44
+        }
+      }
+    },
+    {
+      "key": "374:0:11",
+      "name": "Mujina (374)",
+      "attack": 8,
+      "defense": 13,
+      "hp": 15,
+      "pb": null,
+      "adopt": {
+        "name": "Mujina (374)",
+        "attack": 8,
+        "defense": 13,
+        "hp": 15,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 11,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 374,
+          "win": 277,
+          "loss": 140,
+          "enemies": [
+            {
+              "name": "Mujina",
+              "combat": 8,
+              "defence": 13,
+              "stamina": 15
+            }
+          ]
+        },
+        "part": {
+          "name": "Mujina",
+          "combat": 8,
+          "defence": 13,
+          "stamina": 15
+        }
+      }
+    },
+    {
+      "key": "411:0:12",
+      "name": "The Enemy (411)",
+      "attack": 12,
+      "defense": 22,
+      "hp": 35,
+      "pb": null,
+      "adopt": {
+        "name": "The Enemy (411)",
+        "attack": 12,
+        "defense": 22,
+        "hp": 35,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 12,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 411,
+          "win": 430,
+          "loss": 479,
+          "enemies": [
+            {
+              "name": "The Enemy",
+              "combat": 12,
+              "defence": 22,
+              "stamina": 35
+            }
+          ],
+          "special": "meditation",
+          "unarmoured": true,
+          "flee": {
+            "destination": 371
+          }
+        },
+        "part": {
+          "name": "The Enemy",
+          "combat": 12,
+          "defence": 22,
+          "stamina": 35
+        }
+      }
+    },
+    {
+      "key": "460:0:13",
+      "name": "Dawatsu Morituri (460)",
+      "attack": 10,
+      "defense": 20,
+      "hp": 38,
+      "pb": null,
+      "adopt": {
+        "name": "Dawatsu Morituri (460)",
+        "attack": 10,
+        "defense": 20,
+        "hp": 38,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 13,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 460,
+          "win": 489,
+          "loss": 140,
+          "enemies": [
+            {
+              "name": "Dawatsu Morituri",
+              "combat": 10,
+              "defence": 20,
+              "stamina": 38
+            }
+          ],
+          "special": "morituriOutside"
+        },
+        "part": {
+          "name": "Dawatsu Morituri",
+          "combat": 10,
+          "defence": 20,
+          "stamina": 38
+        }
+      }
+    },
+    {
+      "key": "473:0:14",
+      "name": "Chimerical Beast (473)",
+      "attack": 8,
+      "defense": 9,
+      "hp": 20,
+      "pb": null,
+      "adopt": {
+        "name": "Chimerical Beast (473)",
+        "attack": 8,
+        "defense": 9,
+        "hp": 20,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 14,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 473,
+          "win": 423,
+          "loss": 140,
+          "enemies": [
+            {
+              "name": "Chimerical Beast",
+              "combat": 8,
+              "defence": 9,
+              "stamina": 20
+            }
+          ],
+          "special": "sanctityDefence"
+        },
+        "part": {
+          "name": "Chimerical Beast",
+          "combat": 8,
+          "defence": 9,
+          "stamina": 20
+        }
+      }
+    },
+    {
+      "key": "481:0:15",
+      "name": "Spider Creature (481)",
+      "attack": 10,
+      "defense": 20,
+      "hp": 33,
+      "pb": null,
+      "adopt": {
+        "name": "Spider Creature (481)",
+        "attack": 10,
+        "defense": 20,
+        "hp": 33,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 15,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 481,
+          "win": 331,
+          "loss": 140,
+          "enemies": [
+            {
+              "name": "Spider Creature",
+              "combat": 10,
+              "defence": 20,
+              "stamina": 33
+            }
+          ],
+          "special": "poisonSpider",
+          "preCheck": true,
+          "flee": {
+            "destination": 140,
+            "fatal": true
+          }
+        },
+        "part": {
+          "name": "Spider Creature",
+          "combat": 10,
+          "defence": 20,
+          "stamina": 33
+        }
+      }
+    },
+    {
+      "key": "490:0:16",
+      "name": "Ridiculous Rogue (490)",
+      "attack": 4,
+      "defense": 16,
+      "hp": 30,
+      "pb": null,
+      "adopt": {
+        "name": "Ridiculous Rogue (490)",
+        "attack": 4,
+        "defense": 16,
+        "hp": 30,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 16,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 490,
+          "win": 316,
+          "loss": 140,
+          "enemies": [
+            {
+              "name": "Ridiculous Rogue",
+              "combat": 4,
+              "defence": 16,
+              "stamina": 30
+            }
+          ],
+          "special": "subdue"
+        },
+        "part": {
+          "name": "Ridiculous Rogue",
+          "combat": 4,
+          "defence": 16,
+          "stamina": 30
+        }
+      }
+    },
+    {
+      "key": "527:0:17",
+      "name": "Ghoul (527)",
+      "attack": 7,
+      "defense": 12,
+      "hp": 15,
+      "pb": null,
+      "adopt": {
+        "name": "Ghoul (527)",
+        "attack": 7,
+        "defense": 12,
+        "hp": 15,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 17,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 527,
+          "win": 544,
+          "loss": 140,
+          "enemies": [
+            {
+              "name": "Ghoul",
+              "combat": 7,
+              "defence": 12,
+              "stamina": 15
+            }
+          ],
+          "flee": {
+            "destination": 506,
+            "freeAttack": true
+          }
+        },
+        "part": {
+          "name": "Ghoul",
+          "combat": 7,
+          "defence": 12,
+          "stamina": 15
+        }
+      }
+    },
+    {
+      "key": "563:0:18",
+      "name": "Haniwa Warrior (563)",
+      "attack": 8,
+      "defense": 20,
+      "hp": 21,
+      "pb": null,
+      "adopt": {
+        "name": "Haniwa Warrior (563)",
+        "attack": 8,
+        "defense": 20,
+        "hp": 21,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 18,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 563,
+          "win": null,
+          "loss": 140,
+          "enemies": [
+            {
+              "name": "Haniwa Warrior",
+              "combat": 8,
+              "defence": 20,
+              "stamina": 21
+            }
+          ],
+          "special": "oneDie",
+          "winChoices": [
+            583,
+            604
+          ]
+        },
+        "part": {
+          "name": "Haniwa Warrior",
+          "combat": 8,
+          "defence": 20,
+          "stamina": 21
+        }
+      }
+    },
+    {
+      "key": "618:0:19",
+      "name": "Jiro (618)",
+      "attack": 10,
+      "defense": 13,
+      "hp": 10,
+      "pb": null,
+      "adopt": {
+        "name": "Jiro (618)",
+        "attack": 10,
+        "defense": 13,
+        "hp": 10,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 19,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "section": 618,
+          "win": 738,
+          "loss": 140,
+          "simultaneous": true,
+          "surrender": 452,
+          "enemies": [
+            {
+              "name": "Jiro",
+              "combat": 10,
+              "defence": 13,
+              "stamina": 10
+            },
+            {
+              "name": "Nunobiki",
+              "combat": 9,
+              "defence": 13,
+              "stamina": 14
+            },
+            {
+              "name": "Yoshio",
+              "combat": 9,
+              "defence": 13,
+              "stamina": 13
+            }
+          ]
+        },
+        "part": {
+          "name": "Jiro",
+          "combat": 10,
+          "defence": 13,
+          "stamina": 10
+        }
+      }
+    },
+    {
+      "key": "618:1:19",
+      "name": "Nunobiki (618)",
+      "attack": 9,
+      "defense": 13,
+      "hp": 14,
+      "pb": null,
+      "adopt": {
+        "name": "Nunobiki (618)",
+        "attack": 9,
+        "defense": 13,
+        "hp": 14,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 19,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "section": 618,
+          "win": 738,
+          "loss": 140,
+          "simultaneous": true,
+          "surrender": 452,
+          "enemies": [
+            {
+              "name": "Jiro",
+              "combat": 10,
+              "defence": 13,
+              "stamina": 10
+            },
+            {
+              "name": "Nunobiki",
+              "combat": 9,
+              "defence": 13,
+              "stamina": 14
+            },
+            {
+              "name": "Yoshio",
+              "combat": 9,
+              "defence": 13,
+              "stamina": 13
+            }
+          ]
+        },
+        "part": {
+          "name": "Nunobiki",
+          "combat": 9,
+          "defence": 13,
+          "stamina": 14
+        }
+      }
+    },
+    {
+      "key": "618:2:19",
+      "name": "Yoshio (618)",
+      "attack": 9,
+      "defense": 13,
+      "hp": 13,
+      "pb": null,
+      "adopt": {
+        "name": "Yoshio (618)",
+        "attack": 9,
+        "defense": 13,
+        "hp": 13,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 19,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "section": 618,
+          "win": 738,
+          "loss": 140,
+          "simultaneous": true,
+          "surrender": 452,
+          "enemies": [
+            {
+              "name": "Jiro",
+              "combat": 10,
+              "defence": 13,
+              "stamina": 10
+            },
+            {
+              "name": "Nunobiki",
+              "combat": 9,
+              "defence": 13,
+              "stamina": 14
+            },
+            {
+              "name": "Yoshio",
+              "combat": 9,
+              "defence": 13,
+              "stamina": 13
+            }
+          ]
+        },
+        "part": {
+          "name": "Yoshio",
+          "combat": 9,
+          "defence": 13,
+          "stamina": 13
+        }
+      }
+    },
+    {
+      "key": "623:0:20",
+      "name": "Giant (623)",
+      "attack": 15,
+      "defense": 22,
+      "hp": 51,
+      "pb": null,
+      "adopt": {
+        "name": "Giant (623)",
+        "attack": 15,
+        "defense": 22,
+        "hp": 51,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 20,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 623,
+          "win": 458,
+          "loss": 140,
+          "enemies": [
+            {
+              "name": "Giant",
+              "combat": 15,
+              "defence": 22,
+              "stamina": 51
+            }
+          ],
+          "special": "permanentWounds",
+          "entryDice": 1
+        },
+        "part": {
+          "name": "Giant",
+          "combat": 15,
+          "defence": 22,
+          "stamina": 51
+        }
+      }
+    },
+    {
+      "key": "624:0:21",
+      "name": "Bear (624)",
+      "attack": 7,
+      "defense": 11,
+      "hp": 17,
+      "pb": null,
+      "adopt": {
+        "name": "Bear (624)",
+        "attack": 7,
+        "defense": 11,
+        "hp": 17,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 21,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 624,
+          "win": 529,
+          "loss": 140,
+          "enemies": [
+            {
+              "name": "Bear",
+              "combat": 7,
+              "defence": 11,
+              "stamina": 17
+            }
+          ],
+          "special": "darkness"
+        },
+        "part": {
+          "name": "Bear",
+          "combat": 7,
+          "defence": 11,
+          "stamina": 17
+        }
+      }
+    },
+    {
+      "key": "656:0:22",
+      "name": "Warrior Maid (656)",
+      "attack": 8,
+      "defense": 16,
+      "hp": 18,
+      "pb": null,
+      "adopt": {
+        "name": "Warrior Maid (656)",
+        "attack": 8,
+        "defense": 16,
+        "hp": 18,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 22,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 656,
+          "win": 746,
+          "loss": 140,
+          "enemies": [
+            {
+              "name": "Warrior Maid",
+              "combat": 8,
+              "defence": 16,
+              "stamina": 18
+            }
+          ],
+          "special": "exchangedWeapon",
+          "surrender": 36
+        },
+        "part": {
+          "name": "Warrior Maid",
+          "combat": 8,
+          "defence": 16,
+          "stamina": 18
+        }
+      }
+    },
+    {
+      "key": "680:0:23",
+      "name": "Tadachika (680)",
+      "attack": 11,
+      "defense": 17,
+      "hp": 21,
+      "pb": null,
+      "adopt": {
+        "name": "Tadachika (680)",
+        "attack": 11,
+        "defense": 17,
+        "hp": 21,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 23,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 680,
+          "win": 728,
+          "loss": 140,
+          "enemies": [
+            {
+              "name": "Tadachika",
+              "combat": 11,
+              "defence": 17,
+              "stamina": 21
+            }
+          ],
+          "flee": {
+            "destination": 696,
+            "dice": 3,
+            "armour": true
+          }
+        },
+        "part": {
+          "name": "Tadachika",
+          "combat": 11,
+          "defence": 17,
+          "stamina": 21
+        }
+      }
+    },
+    {
+      "key": "712:0:24",
+      "name": "Big Boy (712)",
+      "attack": 15,
+      "defense": 22,
+      "hp": 51,
+      "pb": null,
+      "adopt": {
+        "name": "Big Boy (712)",
+        "attack": 15,
+        "defense": 22,
+        "hp": 51,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 24,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 712,
+          "win": 458,
+          "loss": 140,
+          "enemies": [
+            {
+              "name": "Big Boy",
+              "combat": 15,
+              "defence": 22,
+              "stamina": 51
+            }
+          ],
+          "special": "permanentWounds",
+          "flee": {
+            "destination": 642,
+            "dice": 2
+          }
+        },
+        "part": {
+          "name": "Big Boy",
+          "combat": 15,
+          "defence": 22,
+          "stamina": 51
+        }
+      }
+    },
+    {
+      "key": "716:0:25",
+      "name": "Dragon (716)",
+      "attack": 9,
+      "defense": 19,
+      "hp": 27,
+      "pb": null,
+      "adopt": {
+        "name": "Dragon (716)",
+        "attack": 9,
+        "defense": 19,
+        "hp": 27,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 25,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 716,
+          "win": null,
+          "loss": 140,
+          "enemies": [
+            {
+              "name": "Dragon",
+              "combat": 9,
+              "defence": 19,
+              "stamina": 27
+            }
+          ],
+          "winChoices": [
+            461,
+            488
+          ]
+        },
+        "part": {
+          "name": "Dragon",
+          "combat": 9,
+          "defence": 19,
+          "stamina": 27
+        }
+      }
+    },
+    {
+      "key": "718:0:26",
+      "name": "Talanexor (718)",
+      "attack": 11,
+      "defense": 17,
+      "hp": 17,
+      "pb": null,
+      "adopt": {
+        "name": "Talanexor (718)",
+        "attack": 11,
+        "defense": 17,
+        "hp": 17,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 26,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 718,
+          "win": 312,
+          "loss": 140,
+          "enemies": [
+            {
+              "name": "Talanexor",
+              "combat": 11,
+              "defence": 17,
+              "stamina": 17
+            }
+          ],
+          "special": "magicDefence"
+        },
+        "part": {
+          "name": "Talanexor",
+          "combat": 11,
+          "defence": 17,
+          "stamina": 17
+        }
+      }
+    },
+    {
+      "key": "742:0:27",
+      "name": "Dawatsu Morituri (742)",
+      "attack": 15,
+      "defense": 25,
+      "hp": 38,
+      "pb": null,
+      "adopt": {
+        "name": "Dawatsu Morituri (742)",
+        "attack": 15,
+        "defense": 25,
+        "hp": 38,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 27,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 742,
+          "win": 489,
+          "loss": 140,
+          "enemies": [
+            {
+              "name": "Dawatsu Morituri",
+              "combat": 15,
+              "defence": 25,
+              "stamina": 38
+            }
+          ],
+          "special": "morituriInside",
+          "flee": {
+            "destination": 460,
+            "freeAttack": true
+          }
+        },
+        "part": {
+          "name": "Dawatsu Morituri",
+          "combat": 15,
+          "defence": 25,
+          "stamina": 38
+        }
+      }
+    },
+    {
+      "key": "743:0:28",
+      "name": "Dragon (743)",
+      "attack": 13,
+      "defense": 25,
+      "hp": 27,
+      "pb": null,
+      "adopt": {
+        "name": "Dragon (743)",
+        "attack": 13,
+        "defense": 25,
+        "hp": 27,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fabled-lands",
+        "dataset": "FIGHTS",
+        "entryIndex": 28,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 743,
+          "win": null,
+          "loss": 140,
+          "enemies": [
+            {
+              "name": "Dragon",
+              "combat": 13,
+              "defence": 25,
+              "stamina": 27
+            }
+          ],
+          "winChoices": [
+            461,
+            488
+          ]
+        },
+        "part": {
+          "name": "Dragon",
+          "combat": 13,
+          "defence": 25,
+          "stamina": 27
+        }
+      }
+    }
+  ]
+}

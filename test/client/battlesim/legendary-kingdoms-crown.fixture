@@ -1,10 +1,13 @@
 const checks=[],alerts=[],saves=[];
 const assert=(value,label)=>{if(!value)throw Error(label);checks.push(label);};
+const {loadRoster}=await import('REPO/public/js/battlesim/books/690/definition.js');
+await loadRoster(async()=>({ok:true,json:async()=>ROSTER_SEED}));
 const {createCrownPanel}=await import('REPO/public/js/battlesim/engines/legendary-kingdoms/crown-panel.js');
 const {CROWN_FIGHTS}=await import('REPO/public/js/battlesim/engines/legendary-kingdoms/crown.js');
 const dictionary=(await import('REPO/public/js/i18n/LANG/battlesim/battlesim690.js')).default;
+const common=(await import('REPO/public/js/i18n/en/battlesim/common.js')).default;
 const t=(key,params={})=>{
-  const value=dictionary[key]??{'battlesim.title':'Battle Simulator','btn.close':'Close'}[key];
+  const value=dictionary[key]??common[key]??{'battlesim.title':'Battle Simulator','btn.close':'Close'}[key];
   if(value===undefined)throw Error('Missing translation '+key);
   return value.replace(/\{(\w+)\}/g,(_,name)=>String(params[name]??''));
 };
@@ -18,7 +21,7 @@ panel.init();panel.setVisible(true);el('btn').click();
 assert(el('overlay').classList.contains('active'),'Crown panel opens');
 assert(getComputedStyle(el('btn')).borderRadius==='7px','Crown button uses the established theme');
 assert(!el('recruitSkullcracker'),'Valley-only recruitment absent');
-assert(el('context').options.length===85,'all personal contexts');
+assert(el('context').options.length===86,'all personal contexts');
 el('create').click();
 assert(run.sim690.party.length===4,'four heroes');
 assert(run.sim690.party[0].skills.fighting===7&&run.sim690.party[0].health===9,'Crown starting values');

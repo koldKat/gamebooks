@@ -10,7 +10,9 @@ const crown=crownEntry||process.argv.includes('--crown');
 const evidencePrefix=process.env.BROWSER_EVIDENCE_PREFIX||'689';
 if(!/^[a-zA-Z0-9-]+$/.test(evidencePrefix))throw Error('Invalid evidence filename prefix');
 const fixturePath='test/client/battlesim/legendary-kingdoms-'+(crownEntry?'crown-entry':integrated?'integration':crown?'crown':'panel')+'.fixture';
-const files=[fixturePath,__filename,
+const rosterSeedFile='data/simulator-rosters/'+(crown?'690':'689')+'.json';
+const rosterSeed=fs.existsSync(rosterSeedFile)?JSON.parse(fs.readFileSync(rosterSeedFile,'utf8')).enemies:[];
+const files=[...(fs.existsSync(rosterSeedFile)?[rosterSeedFile]:[]),fixturePath,__filename,
   'public/js/battlesim/battlesim'+(crown?'690':'689')+'.js','public/js/battlesim/loader.js',
   'public/mobile/js/battlesim-dispatch.js','public/js/core/state.js','public/js/core/util.js','public/js/i18n/battlesim.js',
   ...fs.readdirSync('public/js/battlesim/engines/legendary-kingdoms').filter(name=>name.endsWith('.js'))
@@ -25,8 +27,9 @@ const hashes=hashFiles();
     for(const language of integrated||crownEntry?['desktop','mobile']:['en','bg']) {
       let fixture=fs.readFileSync(fixturePath,'utf8')
         .replaceAll('REPO','file://'+repo).replaceAll('LANG',language).replaceAll('MODE',language);
-      if(crown&&integrated)fixture=fixture.replaceAll('689','690').replace('length===75','length===85')
+      if(crown&&integrated)fixture=fixture.replaceAll('689','690').replace('length===76','length===86')
         .replace("value='16'","value='5'");
+      fixture=fixture.replaceAll('ROSTER_SEED',JSON.stringify(rosterSeed));
       const css=['style','charsheet','equipment','battlesim','confirm'].map(name=>
         `<link rel="stylesheet" href="file://${repo}/public/css/${name}.css">`).join('');
       const file=path.join(scratch,language+'.html');
