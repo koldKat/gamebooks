@@ -1,3 +1,5 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
+await loadFixtureRoster(658);
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from './simulator-source.mjs';
@@ -23,6 +25,9 @@ test('backend awards simulator outcomes once and ignores cancelled/check results
     if (name === './auth') return { generateToken: () => 'test-only' };
     if (name === '../impersonation-context') return { isImpersonatingContext: () => false };
     if (name === '../clean-run') return { isCleanRun: () => false };
+    if (name === './diamonds') return { diamondInfoForUser: () => ({}) };
+    if (name === './rubies') return { rubyInfoForUser: () => ({}), createRubyCompletionChecker: () => () => 0 };
+    if (name === './heartbeat-coins') return { advanceHeartbeatCoins: () => 0 };
     throw new Error('Unexpected real dependency: ' + name);
   } };
   const source = readFileSync(new URL('../../../server/db/xp.js', import.meta.url), 'utf8');

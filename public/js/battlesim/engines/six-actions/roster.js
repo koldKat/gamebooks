@@ -1,63 +1,12 @@
-const fight = (section, playerThreshold, enemyThreshold, enemies, modifiers, extra = {}) =>
-  ({ section, playerThreshold, enemyThreshold, enemies, modifiers, ...extra });
+import { createRosterLoader } from '../../roster-data.js';
 
-export const SIX_ACTIONS_FIGHTS = Object.freeze([
-  fight(9, 9, 8, 2, ['weapon', 'melee'], { kind: 'knife', firstFree: true, secondThreshold: 7, win: 43, loss: 26 }),
-  fight(12, 8, 7, 10, ['weapon', 'marks'], { killsPerHit: 2, collective: true, win: 37, loss: 8 }),
-  fight(29, 13, 9, 10, ['weapon', 'marks'], { killsPerHit: 2, collective: true, win: 37, loss: 8 }),
-  fight(38, 12, 10, 6, ['weapon', 'stealth', 'marks'], { firstKills: 2, fixedShots: 4, firstFree: true, killGoal: 4, win: 111, loss: 8 }),
-  fight(40, 10, 10, 5, ['weapon', 'marks'], { reinforcement: 'each', win: 100, loss: 8 }),
-  fight(44, 12, 10, 1, ['weapon', 'marks'], { reinforcement: 'even', postCheck: true, win: 56, loss: 8 }),
-  fight(45, 12, 9, 5, ['weapon', 'marks'], { fixedShots: 3, rounds: 3, win: 131, loss: 8 }),
-  fight(48, 12, 10, 2, ['weapon', 'marks'], { reinforcement: 'even', win: 37, loss: 8 }),
-  fight(52, 10, 7, 2, ['health', 'weapon', 'marks'], { enemyFirst: true, waves: { 2: 6, 7: 6 }, laterKills: 2, win: 37, loss: 8 }),
-  fight(55, 12, 9, 4, ['weapon', 'marks'], { firstFree: true, win: 11, loss: 18 }),
-  fight(66, 10, 7, 2, ['weapon', 'marks'], { fixedShots: 2, rounds: 4, win: 76, loss: 8 }),
-  fight(72, 11, 10, 10, ['weapon', 'stealth', 'marks'], { killsPerHit: 2, fixedShots: 4, killGoal: 6, win: 41, loss: 8 }),
-  fight(81, 9, 8, 1, ['weapon', 'marks'], { enemyOnlyFirst: true, reinforcement: 'odd', win: 100, loss: 8 }),
-  fight(90, 11, 9, 2, ['weapon', 'marks'], { firstShots: 1, rounds: 3, survivorSection: 79, win: 100, loss: 8 }),
-  fight(92, 7, 9, 2, ['weapon', 'melee'], { kind: 'knife', firstFree: true, manualSecondThreshold: true, win: 118, loss: 26 }),
-  fight(94, 9, 7, 5, ['weapon', 'marks'], { fixedShots: 3, rounds: 3, win: 131, loss: 8 }),
-  fight(114, 9, 9, 7, ['weapon', 'marks'], { manualShots: true, groups: true, win: 53, loss: 8 }),
-  fight(115, 9, 8, 2, ['weapon', 'stealth', 'marks'], { firstFree: true, scheduledShots: true, reinforcement: 'afterTwo', rounds: 7, grenade: true, win: 122, loss: 8 }),
-  fight(116, 10, 9, null, ['weapon', 'marks'], { reinforcement: 'even', manualEnemies: true, win: 100, loss: 8 }),
-  fight(123, null, 10, 1, [], { kind: 'raft', fixedShots: 1, rounds: 4, vehicleLimit: 2, win: 71, loss: 135 }),
-  fight(127, 10, 9, 3, ['weapon', 'marks'], { manualShots: true, win: 150, loss: 133 }),
-  fight(137, 9, 9, 3, ['weapon', 'marks'], { killsPerHit: 2, win: 62, loss: 8 }),
-  fight(144, 9, 8, 4, ['weapon', 'marks'], { kind: 'jeep', fixedShots: 4, rounds: 4, vehicleLimit: 8, win: 136, loss: 57 }),
-].map(entry => Object.freeze(entry)));
-
-export const SIX_ACTIONS_CHECKS = Object.freeze([
-  [13, ['weapon', 'throw'], 8, 104, 112, 'bomb'],
-  [14, ['weapon', 'stealth', 'melee'], 11, 35, 6, 'knife'],
-  [15, ['weapon', 'stealth', 'melee'], 10, 147, 77, 'knife'],
-  [17, ['weapon', 'stealth', 'melee'], 12, 29, 47, 'knife'],
-  [19, ['stealth'], 10, 49, 58],
-  [28, ['stealth'], 7, 113, 127],
-  [31, ['weapon', 'stealth', 'melee'], 10, 9, 25, 'knife'],
-  [34, ['weapon', 'throw'], 9, 138, 46, 'bomb'],
-  [35, ['weapon', 'stealth', 'melee'], 10, 92, 107, 'knife'],
-  [47, ['stealth', 'marks'], 8, 37, 29],
-  [51, ['stealth'], 7, 37, 21],
-  [56, ['stealth'], 8, 12, 37],
-  [64, ['stealth'], 8, 101, 136],
-  [68, ['stealth'], 9, 94, 99],
-  [74, ['stealth'], 8, 40, 87],
-  [75, ['weapon', 'stealth', 'melee'], 11, 81, 98, 'knife'],
-  [82, ['health'], 11, 143, 60],
-  [85, ['weapon', 'marks'], 11, 102, 124],
-  [88, ['stealth'], 6, 57, 136],
-  [95, ['health'], 9, 103, 84],
-  [106, ['stealth'], 6, 67, 15],
-  [109, ['stealth'], 10, 8, 4],
-  [110, ['weapon', 'stealth', 'melee'], 13, 45, 145, 'knife'],
-  [121, ['health'], 9, 80, 50],
-  [134, ['stealth'], 10, 8, 100],
-  [135, ['health'], 9, 143, 60],
-  [138, ['stealth'], 7, 113, 127],
-  [139, ['marks', 'stealth', 'melee'], 10, 16, 31],
-  [141, ['stealth'], 7, 7, 91],
-].map(([section, modifiers, lower, lowSection, highSection, weapon]) =>
-  Object.freeze({ section, modifiers, lower, lowSection, highSection, weapon })));
+export let SIX_ACTIONS_FIGHTS = Object.freeze([]);
+export let SIX_ACTIONS_CHECKS = Object.freeze([]);
+export const loadRoster = createRosterLoader(658, 'FIGHTS', rows => {
+  const checks = rows.find(row => row.checks)?.checks;
+  if (!rows.length || !checks?.length) throw new Error('Incomplete Six Actions catalog');
+  SIX_ACTIONS_FIGHTS = Object.freeze(rows.map(row => Object.freeze(row.fight)));
+  SIX_ACTIONS_CHECKS = Object.freeze(checks.map(Object.freeze));
+});
 
 export const SIX_ACTIONS_WEAPONS = Object.freeze({ hk: 3, uzi: 2, bomb: 2, grenade: 2, pistol: 1, knife: 1 });

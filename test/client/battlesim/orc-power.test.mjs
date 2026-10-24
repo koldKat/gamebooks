@@ -1,3 +1,5 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
+await loadFixtureRoster(654);
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createOrcFigure, startOrcFight, orcAttack, orcMagic, orcMove, nextOrcTurn,

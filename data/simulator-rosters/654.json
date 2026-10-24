@@ -1,0 +1,1300 @@
+{
+  "schemaVersion": 1,
+  "bookId": 654,
+  "family": "orc-power",
+  "source": "Original 25 figure templates and monster-figurine mappings. Eighteen existing enemy rows preserved; seven player templates carried as support metadata, with rolled/null stats retained exactly.",
+  "enemies": [
+    {
+      "key": "harold",
+      "name": "Харолд",
+      "attack": null,
+      "defense": null,
+      "hp": null,
+      "pb": null,
+      "adopt": {
+        "name": "Харолд",
+        "attack": null,
+        "defense": null,
+        "hp": null,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "orc-power",
+        "dataset": "FIGURES",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "index": 7,
+          "template": {
+            "id": "harold",
+            "sourcePage": 33,
+            "attack": {
+              "base": 12,
+              "sides": 8
+            },
+            "defence": {
+              "base": 6,
+              "sides": 8
+            },
+            "shooting": 0,
+            "damage": 6,
+            "life": {
+              "base": 16,
+              "sides": 8
+            },
+            "magicPower": 0,
+            "magicDamage": 0
+          },
+          "support": {
+            "figures": [
+              {
+                "index": 0,
+                "template": {
+                  "id": "strabron",
+                  "sourcePage": 33,
+                  "attack": {
+                    "base": 10,
+                    "sides": 8
+                  },
+                  "defence": {
+                    "base": 8,
+                    "sides": 8
+                  },
+                  "shooting": 2,
+                  "damage": 4,
+                  "life": {
+                    "base": 16,
+                    "sides": 6
+                  },
+                  "magicPower": {
+                    "base": 12,
+                    "sides": 8
+                  },
+                  "magicDamage": {
+                    "base": 6,
+                    "sides": 8
+                  }
+                }
+              },
+              {
+                "index": 1,
+                "template": {
+                  "id": "malabron",
+                  "sourcePage": 33,
+                  "attack": {
+                    "base": 10,
+                    "sides": 6
+                  },
+                  "defence": {
+                    "base": 8,
+                    "sides": 6
+                  },
+                  "shooting": 4,
+                  "damage": 4,
+                  "life": {
+                    "base": 12,
+                    "sides": 6
+                  },
+                  "magicPower": 0,
+                  "magicDamage": 0
+                }
+              },
+              {
+                "index": 2,
+                "template": {
+                  "id": "trabron",
+                  "sourcePage": 33,
+                  "attack": null,
+                  "defence": null,
+                  "shooting": 0,
+                  "damage": 6,
+                  "life": {
+                    "base": 12,
+                    "sides": 8
+                  },
+                  "magicPower": 0,
+                  "magicDamage": 0
+                }
+              },
+              {
+                "index": 3,
+                "template": {
+                  "id": "giantOrc",
+                  "sourcePage": 33,
+                  "attack": {
+                    "base": 12,
+                    "sides": 6
+                  },
+                  "defence": {
+                    "base": 8,
+                    "sides": 6
+                  },
+                  "shooting": 0,
+                  "damage": 6,
+                  "life": 16,
+                  "magicPower": 0,
+                  "magicDamage": 0
+                }
+              },
+              {
+                "index": 4,
+                "template": {
+                  "id": "forestOrc",
+                  "sourcePage": 33,
+                  "attack": {
+                    "base": 6,
+                    "sides": 6
+                  },
+                  "defence": {
+                    "base": 4,
+                    "sides": 6
+                  },
+                  "shooting": {
+                    "base": 8,
+                    "sides": 6
+                  },
+                  "damage": 2,
+                  "life": 8,
+                  "magicPower": 0,
+                  "magicDamage": 0
+                }
+              },
+              {
+                "index": 5,
+                "template": {
+                  "id": "stoneOrc",
+                  "sourcePage": 33,
+                  "attack": {
+                    "base": 8,
+                    "sides": 6
+                  },
+                  "defence": {
+                    "base": 12,
+                    "sides": 8
+                  },
+                  "shooting": 6,
+                  "damage": 4,
+                  "life": 24,
+                  "magicPower": 0,
+                  "magicDamage": 0
+                }
+              },
+              {
+                "index": 6,
+                "template": {
+                  "id": "lunarOrc",
+                  "sourcePage": 33,
+                  "attack": {
+                    "base": 4,
+                    "sides": 6
+                  },
+                  "defence": {
+                    "base": 2,
+                    "sides": 6
+                  },
+                  "shooting": {
+                    "base": 4,
+                    "sides": 6
+                  },
+                  "damage": 2,
+                  "life": 6,
+                  "magicPower": null,
+                  "magicDamage": {
+                    "base": 4,
+                    "sides": 6
+                  }
+                }
+              }
+            ],
+            "monsterFigurines": {
+              "samuraiDemon": "alTanhar",
+              "phantomTroll": "monster",
+              "hydra": "monster",
+              "basilisk": "monster",
+              "vampireBat": "monk",
+              "darkElf": "monk",
+              "ghost": "monk",
+              "werewolf": "bandit"
+            }
+          }
+        },
+        "part": {
+          "id": "harold",
+          "sourcePage": 33,
+          "attack": {
+            "base": 12,
+            "sides": 8
+          },
+          "defence": {
+            "base": 6,
+            "sides": 8
+          },
+          "shooting": 0,
+          "damage": 6,
+          "life": {
+            "base": 16,
+            "sides": 8
+          },
+          "magicPower": 0,
+          "magicDamage": 0
+        }
+      }
+    },
+    {
+      "key": "incitat",
+      "name": "Инцитат",
+      "attack": null,
+      "defense": null,
+      "hp": null,
+      "pb": null,
+      "adopt": {
+        "name": "Инцитат",
+        "attack": null,
+        "defense": null,
+        "hp": null,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "orc-power",
+        "dataset": "FIGURES",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "index": 8,
+          "template": {
+            "id": "incitat",
+            "sourcePage": 33,
+            "attack": {
+              "base": 6,
+              "sides": 6
+            },
+            "defence": {
+              "base": 4,
+              "sides": 6
+            },
+            "shooting": {
+              "base": 4,
+              "sides": 6
+            },
+            "damage": 6,
+            "life": {
+              "base": 16,
+              "sides": 8
+            },
+            "magicPower": 0,
+            "magicDamage": 0
+          }
+        },
+        "part": {
+          "id": "incitat",
+          "sourcePage": 33,
+          "attack": {
+            "base": 6,
+            "sides": 6
+          },
+          "defence": {
+            "base": 4,
+            "sides": 6
+          },
+          "shooting": {
+            "base": 4,
+            "sides": 6
+          },
+          "damage": 6,
+          "life": {
+            "base": 16,
+            "sides": 8
+          },
+          "magicPower": 0,
+          "magicDamage": 0
+        }
+      }
+    },
+    {
+      "key": "eyrin",
+      "name": "Ейрин",
+      "attack": null,
+      "defense": null,
+      "hp": null,
+      "pb": null,
+      "adopt": {
+        "name": "Ейрин",
+        "attack": null,
+        "defense": null,
+        "hp": null,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "orc-power",
+        "dataset": "FIGURES",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "index": 9,
+          "template": {
+            "id": "eyrin",
+            "sourcePage": 33,
+            "attack": {
+              "base": 6,
+              "sides": 6
+            },
+            "defence": {
+              "base": 4,
+              "sides": 6
+            },
+            "shooting": {
+              "base": 12,
+              "sides": 8
+            },
+            "damage": 2,
+            "life": {
+              "base": 6,
+              "sides": 8
+            },
+            "magicPower": {
+              "base": 12,
+              "sides": 6
+            },
+            "magicDamage": {
+              "base": 6,
+              "sides": 8
+            }
+          }
+        },
+        "part": {
+          "id": "eyrin",
+          "sourcePage": 33,
+          "attack": {
+            "base": 6,
+            "sides": 6
+          },
+          "defence": {
+            "base": 4,
+            "sides": 6
+          },
+          "shooting": {
+            "base": 12,
+            "sides": 8
+          },
+          "damage": 2,
+          "life": {
+            "base": 6,
+            "sides": 8
+          },
+          "magicPower": {
+            "base": 12,
+            "sides": 6
+          },
+          "magicDamage": {
+            "base": 6,
+            "sides": 8
+          }
+        }
+      }
+    },
+    {
+      "key": "togdumin",
+      "name": "Тогдумин",
+      "attack": null,
+      "defense": null,
+      "hp": null,
+      "pb": null,
+      "adopt": {
+        "name": "Тогдумин",
+        "attack": null,
+        "defense": null,
+        "hp": null,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "orc-power",
+        "dataset": "FIGURES",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "index": 10,
+          "template": {
+            "id": "togdumin",
+            "sourcePage": 33,
+            "attack": {
+              "base": 2,
+              "sides": 6
+            },
+            "defence": {
+              "base": 2,
+              "sides": 6
+            },
+            "shooting": {
+              "base": 0,
+              "sides": 6
+            },
+            "damage": 2,
+            "life": {
+              "base": 6,
+              "sides": 6
+            },
+            "magicPower": {
+              "base": 16,
+              "sides": 8
+            },
+            "magicDamage": {
+              "base": 8,
+              "sides": 8
+            }
+          }
+        },
+        "part": {
+          "id": "togdumin",
+          "sourcePage": 33,
+          "attack": {
+            "base": 2,
+            "sides": 6
+          },
+          "defence": {
+            "base": 2,
+            "sides": 6
+          },
+          "shooting": {
+            "base": 0,
+            "sides": 6
+          },
+          "damage": 2,
+          "life": {
+            "base": 6,
+            "sides": 6
+          },
+          "magicPower": {
+            "base": 16,
+            "sides": 8
+          },
+          "magicDamage": {
+            "base": 8,
+            "sides": 8
+          }
+        }
+      }
+    },
+    {
+      "key": "soldier",
+      "name": "Войник",
+      "attack": null,
+      "defense": null,
+      "hp": null,
+      "pb": null,
+      "adopt": {
+        "name": "Войник",
+        "attack": null,
+        "defense": null,
+        "hp": null,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "orc-power",
+        "dataset": "FIGURES",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "index": 11,
+          "template": {
+            "id": "soldier",
+            "sourcePage": 33,
+            "attack": {
+              "base": 8,
+              "sides": 6
+            },
+            "defence": {
+              "base": 6,
+              "sides": 6
+            },
+            "shooting": {
+              "base": 6,
+              "sides": 6
+            },
+            "damage": 4,
+            "life": null,
+            "magicPower": 0,
+            "magicDamage": 0
+          }
+        },
+        "part": {
+          "id": "soldier",
+          "sourcePage": 33,
+          "attack": {
+            "base": 8,
+            "sides": 6
+          },
+          "defence": {
+            "base": 6,
+            "sides": 6
+          },
+          "shooting": {
+            "base": 6,
+            "sides": 6
+          },
+          "damage": 4,
+          "life": null,
+          "magicPower": 0,
+          "magicDamage": 0
+        }
+      }
+    },
+    {
+      "key": "dryad",
+      "name": "Дриада",
+      "attack": null,
+      "defense": null,
+      "hp": null,
+      "pb": null,
+      "adopt": {
+        "name": "Дриада",
+        "attack": null,
+        "defense": null,
+        "hp": null,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "orc-power",
+        "dataset": "FIGURES",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "index": 12,
+          "template": {
+            "id": "dryad",
+            "sourcePage": 33,
+            "attack": {
+              "base": 2,
+              "sides": 6
+            },
+            "defence": null,
+            "shooting": null,
+            "damage": 2,
+            "life": null,
+            "magicPower": 0,
+            "magicDamage": 0
+          }
+        },
+        "part": {
+          "id": "dryad",
+          "sourcePage": 33,
+          "attack": {
+            "base": 2,
+            "sides": 6
+          },
+          "defence": null,
+          "shooting": null,
+          "damage": 2,
+          "life": null,
+          "magicPower": 0,
+          "magicDamage": 0
+        }
+      }
+    },
+    {
+      "key": "samuraiDemon",
+      "name": "Самурай демон",
+      "attack": null,
+      "defense": null,
+      "hp": null,
+      "pb": null,
+      "adopt": {
+        "name": "Самурай демон",
+        "attack": null,
+        "defense": null,
+        "hp": null,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "orc-power",
+        "dataset": "FIGURES",
+        "entryIndex": 6,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "index": 13,
+          "template": {
+            "id": "samuraiDemon",
+            "sourcePage": 35,
+            "attack": {
+              "base": 16,
+              "sides": 8
+            },
+            "defence": {
+              "base": 8,
+              "sides": 8
+            },
+            "shooting": 0,
+            "damage": 8,
+            "life": null,
+            "magicPower": 0,
+            "magicDamage": 0
+          }
+        },
+        "part": {
+          "id": "samuraiDemon",
+          "sourcePage": 35,
+          "attack": {
+            "base": 16,
+            "sides": 8
+          },
+          "defence": {
+            "base": 8,
+            "sides": 8
+          },
+          "shooting": 0,
+          "damage": 8,
+          "life": null,
+          "magicPower": 0,
+          "magicDamage": 0
+        }
+      }
+    },
+    {
+      "key": "phantomTroll",
+      "name": "Трол фантом",
+      "attack": null,
+      "defense": null,
+      "hp": null,
+      "pb": null,
+      "adopt": {
+        "name": "Трол фантом",
+        "attack": null,
+        "defense": null,
+        "hp": null,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "orc-power",
+        "dataset": "FIGURES",
+        "entryIndex": 7,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "index": 14,
+          "template": {
+            "id": "phantomTroll",
+            "sourcePage": 35,
+            "attack": {
+              "base": 24,
+              "sides": 8
+            },
+            "defence": {
+              "base": 4,
+              "sides": 6
+            },
+            "shooting": 0,
+            "damage": 12,
+            "life": null,
+            "magicPower": 0,
+            "magicDamage": 0
+          }
+        },
+        "part": {
+          "id": "phantomTroll",
+          "sourcePage": 35,
+          "attack": {
+            "base": 24,
+            "sides": 8
+          },
+          "defence": {
+            "base": 4,
+            "sides": 6
+          },
+          "shooting": 0,
+          "damage": 12,
+          "life": null,
+          "magicPower": 0,
+          "magicDamage": 0
+        }
+      }
+    },
+    {
+      "key": "vampireBat",
+      "name": "Прилеп вампир",
+      "attack": null,
+      "defense": null,
+      "hp": null,
+      "pb": null,
+      "adopt": {
+        "name": "Прилеп вампир",
+        "attack": null,
+        "defense": null,
+        "hp": null,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "orc-power",
+        "dataset": "FIGURES",
+        "entryIndex": 8,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "index": 15,
+          "template": {
+            "id": "vampireBat",
+            "sourcePage": 35,
+            "attack": {
+              "base": 6,
+              "sides": 8
+            },
+            "defence": {
+              "base": 6,
+              "sides": 6
+            },
+            "shooting": 0,
+            "damage": 4,
+            "life": null,
+            "magicPower": 0,
+            "magicDamage": 0
+          }
+        },
+        "part": {
+          "id": "vampireBat",
+          "sourcePage": 35,
+          "attack": {
+            "base": 6,
+            "sides": 8
+          },
+          "defence": {
+            "base": 6,
+            "sides": 6
+          },
+          "shooting": 0,
+          "damage": 4,
+          "life": null,
+          "magicPower": 0,
+          "magicDamage": 0
+        }
+      }
+    },
+    {
+      "key": "werewolf",
+      "name": "Върколак",
+      "attack": null,
+      "defense": null,
+      "hp": 36,
+      "pb": null,
+      "adopt": {
+        "name": "Върколак",
+        "attack": null,
+        "defense": null,
+        "hp": 36,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "orc-power",
+        "dataset": "FIGURES",
+        "entryIndex": 9,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "index": 16,
+          "template": {
+            "id": "werewolf",
+            "sourcePage": 35,
+            "attack": {
+              "base": 12,
+              "sides": 8
+            },
+            "defence": {
+              "base": 2,
+              "sides": 8
+            },
+            "shooting": 0,
+            "damage": 6,
+            "life": 36,
+            "magicPower": 0,
+            "magicDamage": 0
+          }
+        },
+        "part": {
+          "id": "werewolf",
+          "sourcePage": 35,
+          "attack": {
+            "base": 12,
+            "sides": 8
+          },
+          "defence": {
+            "base": 2,
+            "sides": 8
+          },
+          "shooting": 0,
+          "damage": 6,
+          "life": 36,
+          "magicPower": 0,
+          "magicDamage": 0
+        }
+      }
+    },
+    {
+      "key": "hydra",
+      "name": "Хидра",
+      "attack": null,
+      "defense": null,
+      "hp": 16,
+      "pb": null,
+      "adopt": {
+        "name": "Хидра",
+        "attack": null,
+        "defense": null,
+        "hp": 16,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "orc-power",
+        "dataset": "FIGURES",
+        "entryIndex": 10,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "index": 17,
+          "template": {
+            "id": "hydra",
+            "sourcePage": 35,
+            "attack": {
+              "base": 16,
+              "sides": 6
+            },
+            "defence": {
+              "base": 12,
+              "sides": 8
+            },
+            "shooting": 0,
+            "damage": 8,
+            "life": 16,
+            "magicPower": 0,
+            "magicDamage": 0
+          }
+        },
+        "part": {
+          "id": "hydra",
+          "sourcePage": 35,
+          "attack": {
+            "base": 16,
+            "sides": 6
+          },
+          "defence": {
+            "base": 12,
+            "sides": 8
+          },
+          "shooting": 0,
+          "damage": 8,
+          "life": 16,
+          "magicPower": 0,
+          "magicDamage": 0
+        }
+      }
+    },
+    {
+      "key": "darkElf",
+      "name": "Тъмен елф некролит",
+      "attack": null,
+      "defense": null,
+      "hp": 4,
+      "pb": null,
+      "adopt": {
+        "name": "Тъмен елф некролит",
+        "attack": null,
+        "defense": null,
+        "hp": 4,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "orc-power",
+        "dataset": "FIGURES",
+        "entryIndex": 11,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "index": 18,
+          "template": {
+            "id": "darkElf",
+            "sourcePage": 35,
+            "attack": {
+              "base": 2,
+              "sides": 6
+            },
+            "defence": {
+              "base": 2,
+              "sides": 6
+            },
+            "shooting": 0,
+            "damage": 2,
+            "life": 4,
+            "magicPower": {
+              "base": 12,
+              "sides": 8
+            },
+            "magicDamage": {
+              "base": 6,
+              "sides": 8
+            }
+          }
+        },
+        "part": {
+          "id": "darkElf",
+          "sourcePage": 35,
+          "attack": {
+            "base": 2,
+            "sides": 6
+          },
+          "defence": {
+            "base": 2,
+            "sides": 6
+          },
+          "shooting": 0,
+          "damage": 2,
+          "life": 4,
+          "magicPower": {
+            "base": 12,
+            "sides": 8
+          },
+          "magicDamage": {
+            "base": 6,
+            "sides": 8
+          }
+        }
+      }
+    },
+    {
+      "key": "basilisk",
+      "name": "Басилиск",
+      "attack": 2,
+      "defense": null,
+      "hp": null,
+      "pb": null,
+      "adopt": {
+        "name": "Басилиск",
+        "attack": 2,
+        "defense": null,
+        "hp": null,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "orc-power",
+        "dataset": "FIGURES",
+        "entryIndex": 12,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "index": 19,
+          "template": {
+            "id": "basilisk",
+            "sourcePage": 35,
+            "attack": 2,
+            "defence": {
+              "base": 2,
+              "sides": 8
+            },
+            "shooting": 0,
+            "damage": null,
+            "life": null,
+            "magicPower": {
+              "base": 8,
+              "sides": 6
+            },
+            "magicDamage": 0
+          }
+        },
+        "part": {
+          "id": "basilisk",
+          "sourcePage": 35,
+          "attack": 2,
+          "defence": {
+            "base": 2,
+            "sides": 8
+          },
+          "shooting": 0,
+          "damage": null,
+          "life": null,
+          "magicPower": {
+            "base": 8,
+            "sides": 6
+          },
+          "magicDamage": 0
+        }
+      }
+    },
+    {
+      "key": "ghost",
+      "name": "Призрак на Ужаса",
+      "attack": 0,
+      "defense": null,
+      "hp": null,
+      "pb": null,
+      "adopt": {
+        "name": "Призрак на Ужаса",
+        "attack": 0,
+        "defense": null,
+        "hp": null,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "orc-power",
+        "dataset": "FIGURES",
+        "entryIndex": 13,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "index": 20,
+          "template": {
+            "id": "ghost",
+            "sourcePage": 35,
+            "attack": 0,
+            "defence": {
+              "base": 8,
+              "sides": 8
+            },
+            "shooting": 0,
+            "damage": null,
+            "life": null,
+            "magicPower": 0,
+            "magicDamage": 0
+          }
+        },
+        "part": {
+          "id": "ghost",
+          "sourcePage": 35,
+          "attack": 0,
+          "defence": {
+            "base": 8,
+            "sides": 8
+          },
+          "shooting": 0,
+          "damage": null,
+          "life": null,
+          "magicPower": 0,
+          "magicDamage": 0
+        }
+      }
+    },
+    {
+      "key": "fireElemental",
+      "name": "Огнен елементал",
+      "attack": null,
+      "defense": null,
+      "hp": null,
+      "pb": null,
+      "adopt": {
+        "name": "Огнен елементал",
+        "attack": null,
+        "defense": null,
+        "hp": null,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "orc-power",
+        "dataset": "FIGURES",
+        "entryIndex": 14,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "index": 21,
+          "template": {
+            "id": "fireElemental",
+            "sourcePage": 34,
+            "attack": null,
+            "defence": null,
+            "shooting": 0,
+            "damage": null,
+            "life": null,
+            "magicPower": 0,
+            "magicDamage": 0,
+            "elemental": true,
+            "weakness": "water"
+          }
+        },
+        "part": {
+          "id": "fireElemental",
+          "sourcePage": 34,
+          "attack": null,
+          "defence": null,
+          "shooting": 0,
+          "damage": null,
+          "life": null,
+          "magicPower": 0,
+          "magicDamage": 0,
+          "elemental": true,
+          "weakness": "water"
+        }
+      }
+    },
+    {
+      "key": "airElemental",
+      "name": "Въздушен елементал",
+      "attack": null,
+      "defense": null,
+      "hp": null,
+      "pb": null,
+      "adopt": {
+        "name": "Въздушен елементал",
+        "attack": null,
+        "defense": null,
+        "hp": null,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "orc-power",
+        "dataset": "FIGURES",
+        "entryIndex": 15,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "index": 22,
+          "template": {
+            "id": "airElemental",
+            "sourcePage": 34,
+            "attack": null,
+            "defence": null,
+            "shooting": 0,
+            "damage": null,
+            "life": null,
+            "magicPower": 0,
+            "magicDamage": 0,
+            "elemental": true,
+            "weakness": "fire"
+          }
+        },
+        "part": {
+          "id": "airElemental",
+          "sourcePage": 34,
+          "attack": null,
+          "defence": null,
+          "shooting": 0,
+          "damage": null,
+          "life": null,
+          "magicPower": 0,
+          "magicDamage": 0,
+          "elemental": true,
+          "weakness": "fire"
+        }
+      }
+    },
+    {
+      "key": "earthElemental",
+      "name": "Земен елементал",
+      "attack": null,
+      "defense": null,
+      "hp": null,
+      "pb": null,
+      "adopt": {
+        "name": "Земен елементал",
+        "attack": null,
+        "defense": null,
+        "hp": null,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "orc-power",
+        "dataset": "FIGURES",
+        "entryIndex": 16,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "index": 23,
+          "template": {
+            "id": "earthElemental",
+            "sourcePage": 34,
+            "attack": null,
+            "defence": null,
+            "shooting": 0,
+            "damage": null,
+            "life": null,
+            "magicPower": 0,
+            "magicDamage": 0,
+            "elemental": true,
+            "weakness": "air"
+          }
+        },
+        "part": {
+          "id": "earthElemental",
+          "sourcePage": 34,
+          "attack": null,
+          "defence": null,
+          "shooting": 0,
+          "damage": null,
+          "life": null,
+          "magicPower": 0,
+          "magicDamage": 0,
+          "elemental": true,
+          "weakness": "air"
+        }
+      }
+    },
+    {
+      "key": "waterElemental",
+      "name": "Воден елементал",
+      "attack": null,
+      "defense": null,
+      "hp": null,
+      "pb": null,
+      "adopt": {
+        "name": "Воден елементал",
+        "attack": null,
+        "defense": null,
+        "hp": null,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "orc-power",
+        "dataset": "FIGURES",
+        "entryIndex": 17,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "index": 24,
+          "template": {
+            "id": "waterElemental",
+            "sourcePage": 34,
+            "attack": null,
+            "defence": null,
+            "shooting": 0,
+            "damage": null,
+            "life": null,
+            "magicPower": 0,
+            "magicDamage": 0,
+            "elemental": true,
+            "weakness": "earth"
+          }
+        },
+        "part": {
+          "id": "waterElemental",
+          "sourcePage": 34,
+          "attack": null,
+          "defence": null,
+          "shooting": 0,
+          "damage": null,
+          "life": null,
+          "magicPower": 0,
+          "magicDamage": 0,
+          "elemental": true,
+          "weakness": "earth"
+        }
+      }
+    }
+  ]
+}

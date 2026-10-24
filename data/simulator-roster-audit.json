@@ -1770,18 +1770,48 @@
     {
       "bookId": 654,
       "databaseEnemyRows": 18,
-      "apiConsumers": [],
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
+      ],
       "inlineDataFiles": [],
-      "runtimeRosterReviewPending": true
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/654.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true,
+        "liveApiVerified": true,
+        "legacyRowsAdopted": 18,
+        "legacyFieldChanges": 0,
+        "catalogs": "25 complete rolled/null figure templates and monster mappings, with seven player templates in support metadata"
+      }
     },
     {
       "bookId": 658,
       "databaseEnemyRows": 23,
-      "apiConsumers": [],
-      "inlineDataFiles": [
-        "public/js/battlesim/engines/six-actions/roster.js"
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
       ],
-      "runtimeRosterReviewPending": true
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/658.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true,
+        "liveApiVerified": true,
+        "legacyRowsAdopted": 23,
+        "legacyFieldChanges": 0,
+        "catalogs": "23 fight definitions and 29 source checks, including thresholds, waves, manual omissions and source destinations"
+      }
     },
     {
       "bookId": 661,
@@ -2524,6 +2554,8 @@
       636,
       644,
       648,
+      654,
+      658,
       781,
       807,
       808,
