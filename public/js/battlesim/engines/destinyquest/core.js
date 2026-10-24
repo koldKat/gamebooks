@@ -1,5 +1,7 @@
 // Shared DestinyQuest combat sequence. Book abilities and encounter exceptions
 // are applied between these explicit stages, rather than hidden inside a roll.
+import { destinyStat, destinyDamageScore, destinyOnHeroHit, destinyPassiveEffects,
+  destinyPassiveProtection, hasDestinyAbility } from './effects.js';
 const attributes = ['speed', 'brawn', 'magic', 'armour'];
 const clone = value => structuredClone(value);
 
@@ -50,7 +52,7 @@ function stage(fight, expected) {
   return clone(fight);
 }
 
-function conclude(fight) {
+export function settleDestinyFight(fight) {
   if (fight.hero.health <= 0) fight.status = 'loss';
   else if (fight.opponents.every(opponent => opponent.health <= 0)) fight.status = 'win';
   if (fight.status !== 'active') {
@@ -95,16 +97,25 @@ export function startDestinyRound(fight, target) {
 
 export function rollDestinySpeed(fight, roll = randomDie) {
   const next = stage(fight, ['speed']);
-  next.turn.heroSpeedDice = dice(roll, 2);
-  next.turn.opponentSpeedDice = dice(roll, 2);
+  if (next.opponents[next.target].health <= 0) throw new RangeError('Choose a living opponent');
+  next.turn.heroSpeedDice = dice(roll, next.turn.heroSpeedCount || 2);
+  next.turn.opponentSpeedDice = dice(roll, next.turn.opponentSpeedCount || 2);
   next.phase = 'speed-rolled';
+  return next;
+}
+
+export function retargetDestinyRound(fight, target) {
+  const next = stage(fight, ['speed']);
+  integer(target, 'target');
+  if (!next.opponents[target] || next.opponents[target].health <= 0) throw new RangeError('Choose a living opponent');
+  next.target = target;
   return next;
 }
 
 export function resolveDestinySpeed(fight) {
   const next = stage(fight, ['speed-rolled']);
-  const hero = sum(next.turn.heroSpeedDice) + next.hero.speed;
-  const opponent = sum(next.turn.opponentSpeedDice) + next.opponents[next.target].speed;
+  const hero = sum(next.turn.heroSpeedDice) + destinyStat(next, 'hero', 'speed');
+  const opponent = sum(next.turn.opponentSpeedDice) + destinyStat(next, next.target, 'speed');
   next.turn.winner = hero === opponent ? 'standoff' : hero > opponent ? 'hero' : 'opponent';
   next.phase = next.turn.winner === 'standoff' ? 'end' : 'damage';
   next.history.push({ type: 'speed', round: next.round, target: next.target,
@@ -115,7 +126,12 @@ export function resolveDestinySpeed(fight) {
 
 export function rollDestinyDamage(fight, roll = randomDie) {
   const next = stage(fight, ['damage']);
-  next.turn.damageDice = dice(roll, 1);
+  const extra = next.turn.extraDamageDice || 0;
+  next.turn.damageDice = dice(roll, 1 + extra +
+    (next.turn.winner === 'opponent' && next.turn.reckless ? 1 : 0));
+  if (next.turn.winner === 'opponent' && hasDestinyAbility(next, 'siphon')) {
+    next.turn.damageDice = next.turn.damageDice.map(face => face === 6 ? 1 : face);
+  }
   next.phase = 'damage-rolled';
   return next;
 }
@@ -124,22 +140,33 @@ export function resolveDestinyDamage(fight) {
   const next = stage(fight, ['damage-rolled']);
   const heroWon = next.turn.winner === 'hero';
   const enemy = next.opponents[next.target];
-  const attacker = heroWon ? next.hero : enemy;
   const defender = heroWon ? enemy : next.hero;
-  const power = heroWon ? Math.max(attacker.brawn, attacker.magic) : attacker[attacker.damageStat];
-  const score = sum(next.turn.damageDice) + power;
-  const damage = Math.max(0, score - defender.armour);
+  const score = destinyDamageScore(next);
+  let armour = destinyStat(next, heroWon ? next.target : 'hero', 'armour');
+  if (next.turn.ignoreArmour) armour = 0;
+  // Fatal blow ignores half the armour, rounding the ignored half UP.
+  else if (next.turn.halfArmour) armour -= Math.ceil(armour / 2);
+  const damage = next.turn.avoidDamage ? 0 : Math.max(0, score - armour);
   const healthLost = Math.min(defender.health, damage);
   defender.health -= healthLost;
   next.turn.damageScore = score;
   next.turn.healthDamage = healthLost;
   next.history.push({ type: 'damage', round: next.round, target: next.target,
-    attacker: next.turn.winner, dice: [...next.turn.damageDice], score, armour: defender.armour, damage: healthLost });
-  if (!conclude(next)) {
+    attacker: next.turn.winner, dice: [...next.turn.damageDice], score, armour, damage: healthLost });
+  if (heroWon) destinyOnHeroHit(next, next.target, healthLost);
+  else if (healthLost && hasDestinyAbility(next, 'lightning')) {
+    enemy.health = Math.max(0, enemy.health - 2);
+    if (enemy.health === 0) {
+      next.turn.deaths.push(next.target);
+      next.turn.pendingPassiveDeath = true;
+    }
+  }
+  if (heroWon && healthLost) next.turn.lastHeroDamage = { [next.target]: healthLost };
+  if (!settleDestinyFight(next)) {
     if (heroWon && defender.health === 0) {
       next.turn.deaths.push(next.target);
-      next.phase = 'death-move';
-      next.turn.afterDeathMove = 'end';
+      next.phase = next.turn.pendingPassiveDeath ? 'end' : 'death-move';
+      if (next.phase === 'death-move') next.turn.afterDeathMove = 'end';
     } else next.phase = 'end';
   }
   return next;
@@ -155,12 +182,12 @@ export function skipDestinyDeathMove(fight) {
 // All end-of-round effects are evaluated from the same living-combatant
 // snapshot. A death in the first effect must not suppress another due effect.
 // Ability/encounter modules supply the applicable effects for this round.
-export function endDestinyRound(fight, effects = []) {
+export function endDestinyRound(fight, effects = [], roll = randomDie) {
   const next = stage(fight, ['end']);
   if (!Array.isArray(effects)) throw new RangeError('Invalid end-of-round effects');
   const alive = next.opponents.map(opponent => opponent.health > 0);
   const pending = new Map();
-  for (const effect of effects) {
+  for (const effect of [...destinyPassiveEffects(next, roll), ...effects]) {
     const target = effect?.target;
     if (target !== 'hero' && (!Number.isInteger(target) || target < 0 || !next.opponents[target])) {
       throw new RangeError('Invalid effect target');
@@ -169,16 +196,23 @@ export function endDestinyRound(fight, effects = []) {
     if (target !== 'hero' && !alive[target]) continue;
     const defender = target === 'hero' ? next.hero : next.opponents[target];
     if (typeof effect.ignoreArmour !== 'boolean') throw new RangeError('Specify passive armour handling');
-    const damage = Math.max(0, amount - (effect.ignoreArmour ? 0 : defender.armour));
+    let damage = Math.max(0, amount - (effect.ignoreArmour ? 0 : destinyStat(next, target, 'armour')));
+    if (target === 'hero') damage = destinyPassiveProtection(next, damage);
     pending.set(target, (pending.get(target) || 0) + damage);
     next.history.push({ type: 'passive', round: next.round, target, damage, source: String(effect.source || '') });
   }
   for (const [target, damage] of pending) {
     const defender = target === 'hero' ? next.hero : next.opponents[target];
-    defender.health = Math.max(0, defender.health - damage);
+    let applied = damage;
+    if (target === 'hero' && next.phantomHealth > 0) {
+      const absorbed = Math.min(next.phantomHealth, applied);
+      next.phantomHealth -= absorbed;
+      applied -= absorbed;
+    }
+    defender.health = Math.max(0, defender.health - applied);
     if (target !== 'hero' && defender.health === 0) next.turn.deaths.push(target);
   }
-  if (!conclude(next)) {
+  if (!settleDestinyFight(next)) {
     if (next.turn.deaths.length > next.turn.deathMoveDeathsSeen && !next.turn.used.dm) {
       next.phase = 'death-move';
       next.turn.afterDeathMove = 'start';
