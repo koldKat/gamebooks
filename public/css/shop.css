@@ -41,10 +41,6 @@
 .books-header-right :is(.minor-coins-display, .shop-btn, .diamonds-display, .rubies-display) { font-family: inherit; font-size: 0.75rem; font-weight: 700; line-height: 1.2; letter-spacing: 0.03em; padding: 0.2rem 0.45rem; }
 .bronze-display { color: #e8b582; background: #2c2119; }
 .silver-display { color: #cbd5e1; background: #202936; }
-@media (max-width: 520px) {
-  .books-header { flex-wrap: wrap; }
-  .books-header-right { width: 100%; justify-content: flex-end; gap: 0.25rem; }
-}
 
 /* ── Shop modal ─────────────────────────────────────────────────── */
 #shop-modal-overlay, #exchange-shop-modal-overlay {
