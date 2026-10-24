@@ -35,7 +35,8 @@ const module = new SourceTextModule(readFileSync(process.argv[1], 'utf8'), {
     const id = Number(specifier.match(/battlesim(\d+)/)[1]);
     assert.ok(translated.has(id), 'translations ready before mobile module evaluation');
     imports.push(id);
-    return stub({ init: () => calls.push(['init', id]),render:()=>calls.push(['render',id]) });
+    return stub({ init: () => calls.push(['init', id]),render:()=>calls.push(['render',id]),
+      ...(id===781?{loadData:async()=>{calls.push(['data',id]);}}:{}) });
   },
 });
 await module.link(specifier => {
@@ -65,3 +66,5 @@ assert.equal(mobileRun.sim214.player.stamina,2,'mobile first-open consumes the s
 assert.equal(mobileRun.openWorldPendingCharacter,undefined);
 assert.deepEqual(mobileRun.sim214.history,[]);
 assert.ok(calls.some(call=>call[0]==='saved'));
+await open(781);
+assert.ok(calls.findIndex(row=>row[0]==='data'&&row[1]===781)<calls.findIndex(row=>row[0]==='init'&&row[1]===781),'database roster loads before mobile initialization');

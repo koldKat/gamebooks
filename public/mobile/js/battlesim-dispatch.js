@@ -38,6 +38,7 @@ export async function openSimForBook(bookId) {
   const { loadBattleSimTranslations } = await import('../../js/i18n/battlesim.js');
   await loadBattleSimTranslations(id);
   const mod = await import(`../../js/battlesim/battlesim${id}.js`);
+  await mod.loadData?.();
   if (!_initialized.has(id)) {
     const init = mod.init;
     if (typeof init !== 'function') throw new Error(`Battle sim ${id} has no mobile init export`);

@@ -1,0 +1,164 @@
+{
+  "schemaVersion": 1,
+  "bookId": 781,
+  "family": "mutated-flesh",
+  "source": "public/js/battlesim/books/781/definition.js",
+  "enemies": [
+    {
+      "key": "doberman-0",
+      "name": "Мутирал доберман",
+      "attack": 8,
+      "hp": 16,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "mutated-flesh",
+        "dataset": "ROSTER",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "doberman",
+          "name": "Мутирал доберман",
+          "dmg": 8,
+          "life": 16
+        },
+        "part": {
+          "id": "doberman",
+          "name": "Мутирал доберман",
+          "dmg": 8,
+          "life": 16
+        }
+      }
+    },
+    {
+      "key": "stoev-0",
+      "name": "Д-р Стоев",
+      "attack": 6,
+      "hp": 22,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "mutated-flesh",
+        "dataset": "ROSTER",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "stoev",
+          "name": "Д-р Стоев",
+          "dmg": 6,
+          "life": 22
+        },
+        "part": {
+          "id": "stoev",
+          "name": "Д-р Стоев",
+          "dmg": 6,
+          "life": 22
+        }
+      }
+    },
+    {
+      "key": "stoev-punched-0",
+      "name": "Д-р Стоев (след юмручен удар)",
+      "attack": 6,
+      "hp": 19,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "mutated-flesh",
+        "dataset": "ROSTER",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "stoev-punched",
+          "name": "Д-р Стоев (след юмручен удар)",
+          "dmg": 6,
+          "life": 19
+        },
+        "part": {
+          "id": "stoev-punched",
+          "name": "Д-р Стоев (след юмручен удар)",
+          "dmg": 6,
+          "life": 19
+        }
+      }
+    },
+    {
+      "key": "lenova-0",
+      "name": "Д-р Ленова",
+      "attack": 19,
+      "hp": 38,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "mutated-flesh",
+        "dataset": "ROSTER",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "lenova",
+          "name": "Д-р Ленова",
+          "dmg": 19,
+          "life": 38
+        },
+        "part": {
+          "id": "lenova",
+          "name": "Д-р Ленова",
+          "dmg": 19,
+          "life": 38
+        }
+      }
+    },
+    {
+      "key": "nurse-0",
+      "name": "Медицинска сестра-мутант",
+      "attack": 8,
+      "hp": 16,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "mutated-flesh",
+        "dataset": "ROSTER",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "nurse",
+          "name": "Медицинска сестра-мутант",
+          "dmg": 8,
+          "life": 16
+        },
+        "part": {
+          "id": "nurse",
+          "name": "Медицинска сестра-мутант",
+          "dmg": 8,
+          "life": 16
+        }
+      }
+    },
+    {
+      "key": "vendor-0",
+      "name": "Продавач-мутант",
+      "attack": 10,
+      "hp": 22,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "mutated-flesh",
+        "dataset": "ROSTER",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "vendor",
+          "name": "Продавач-мутант",
+          "dmg": 10,
+          "life": 22
+        },
+        "part": {
+          "id": "vendor",
+          "name": "Продавач-мутант",
+          "dmg": 10,
+          "life": 22
+        }
+      }
+    }
+  ]
+}

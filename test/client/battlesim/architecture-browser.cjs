@@ -10,7 +10,8 @@ if(scenario&&!/^[a-z-]+$/.test(scenario))throw Error('Invalid simulator scenario
   const results=[];
   for(const language of scenario?['en','bg']:['en']){
   for(const mode of ['desktop','mobile']){
-    const fixture=fs.readFileSync(__dirname+'/'+(scenario?scenario+'-integration':'architecture-browser')+'.fixture','utf8').replaceAll('REPO','file://'+repo).replaceAll('MODE',mode).replaceAll('LANGUAGE',language).replace('BOOK_IDS',JSON.stringify(ids));
+    const rosterSeeds=Object.fromEntries(ids.flatMap(id=>{const file=path.join(repo,'data/simulator-rosters',id+'.json');return fs.existsSync(file)?[[id,JSON.parse(fs.readFileSync(file,'utf8')).enemies]]:[];}));
+    const fixture=fs.readFileSync(__dirname+'/'+(scenario?scenario+'-integration':'architecture-browser')+'.fixture','utf8').replaceAll('REPO','file://'+repo).replaceAll('MODE',mode).replaceAll('LANGUAGE',language).replace('BOOK_IDS',JSON.stringify(ids)).replace('ROSTER_SEEDS',JSON.stringify(rosterSeeds));
     const css=['style','charsheet','equipment','battlesim','confirm'].map(n=>`<link rel="stylesheet" href="file://${repo}/public/css/${n}.css">`).join('')
       + `<link rel="stylesheet" href="file://${repo}/public/${mode === 'mobile' ? 'mobile/css/style' : 'css/play'}.css">`;
     const file=path.join(scratch,mode+'.html');

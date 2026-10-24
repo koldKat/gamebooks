@@ -394,12 +394,7 @@ function getAllSeries(userId, seriesId = null) {
 }
 
 function getBookEnemies(bookId) {
-  return db.prepare(`
-    SELECT id, name, attack, defense, hp, pb
-    FROM book_enemies
-    WHERE book_id = ?
-    ORDER BY name COLLATE NOCASE
-  `).all(bookId);
+  return require('./enemy-rosters').getBookEnemyRows(db, bookId);
 }
 
 function addSeriesToLibrary(userId, seriesId) {

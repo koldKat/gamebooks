@@ -40,7 +40,10 @@ export function resolveDestinyEncounterEvent(fight, pending, roll) {
     case 'damage-if-low': {
       const limit = event.limit === 'round' ? Math.min(6, fight.round) : event.limit;
       const score = total + (event.attribute ? destinyStat(fight, 'hero', event.attribute) : 0);
-      if (score <= limit) stageDamage(event.amount);
+      if (score <= limit) {
+        stageDamage(event.amount);
+        for (const change of event.changes || []) addDestinyStatEffect(fight, change.target, change.attribute, change.amount, change.duration, event.name, change.delay || 0);
+      }
       break;
     }
     case 'faces-damage':
@@ -55,7 +58,10 @@ export function resolveDestinyEncounterEvent(fight, pending, roll) {
       break;
     }
     case 'stat-if-low':
-      if (total <= event.limit) addDestinyStatEffect(fight, 'hero', event.attribute, event.amount, 1, event.name, event.delay || 0);
+      if (total <= event.limit) {
+        if (event.attribute) addDestinyStatEffect(fight, 'hero', event.attribute, event.amount, 1, event.name, event.delay || 0);
+        for (const change of event.changes || []) addDestinyStatEffect(fight, change.target, change.attribute, change.amount, change.duration, event.name, change.delay || 0);
+      }
       break;
     case 'spirit-link':
       if (total <= 3) {

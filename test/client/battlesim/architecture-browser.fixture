@@ -3,9 +3,11 @@ const desktop=await import('REPO/public/js/battlesim/loader.js');
 const mobile=await import('REPO/public/mobile/js/battlesim-dispatch.js');
 const check=(value,label)=>{if(!value)throw Error(label);};
 let writes=0;
+const rosterSeeds=ROSTER_SEEDS;
 window.fetch=async(url,options={})=>{
   if(options.method&&options.method!=='GET')writes++;
-  return new Response(JSON.stringify(url.endsWith('/enemies')?[]:{}),{headers:{'Content-Type':'application/json'}});
+  const id=String(url).match(/\/api\/books\/(\d+)\/enemies$/)?.[1];
+  return new Response(JSON.stringify(id?(rosterSeeds[id]||[]):{}),{headers:{'Content-Type':'application/json'}});
 };
 const results=[];
 const missingTranslations=new Set();

@@ -68,6 +68,7 @@ async function _loadBattleSim(id) {
     const { loadBattleSimTranslations } = await import('../i18n/battlesim.js');
     await loadBattleSimTranslations(numericId);
     const mod = await import(`./battlesim${numericId}.js`);
+    await mod.loadData?.();
     const sim = { init: mod.init, render: mod.render, setVisible: mod.setVisible };
     if (typeof sim.init !== 'function' ||
         typeof sim.render !== 'function' ||

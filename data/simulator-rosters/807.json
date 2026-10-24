@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "bookId": 807,
+  "family": "opposed-dice",
+  "source": "public/js/battlesim/books/807/definition.js",
+  "enemies": [
+    {
+      "key": "55-0",
+      "name": "Твоят двойник",
+      "stats": {
+        "schemaVersion": 1,
+        "family": "opposed-dice",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 55,
+          "name": "Двойникът с гаечния ключ",
+          "enemies": [
+            {
+              "displayName": "Твоят двойник"
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Твоят двойник"
+        }
+      }
+    }
+  ]
+}

@@ -478,6 +478,8 @@ db.exec(`CREATE TABLE IF NOT EXISTS book_enemies (
 )`);
 
 // Per-book import checklist: mark checks only after performing them, never infer or batch-set.
+require('./db/enemy-rosters').ensureEnemyRosterSchema(db);
+
 db.exec(`CREATE TABLE IF NOT EXISTS book_import_checklist (
   book_id                INTEGER PRIMARY KEY REFERENCES books(id) ON DELETE CASCADE,
   extraction_method      TEXT,

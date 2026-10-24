@@ -1,4 +1,5 @@
 // Serializable, round-scoped effects shared by combat and ability actions.
+import { onDestinyOpponentSpeedRoll } from './roll-events.js';
 export const hasDestinyAbility = (fight, name) => !fight.encounter?.disableHeroAbilities && (fight.abilities?.[name] || 0) -
   (fight.equipment?.transport?.stability === 0 && fight.equipment.transport.abilities?.includes(name) ? 1 : 0) > 0;
 
@@ -144,11 +145,21 @@ export function destinyRollOpponentDice(fight, count, roll, kind) {
     return value;
   };
   const values = Array.from({ length: count }, draw);
+  if (kind === 'speed') onDestinyOpponentSpeedRoll(fight, values);
   destinyOnOpponentRoll(fight, values, kind);
   if (fight.encounter?.rerollOnesByTarget?.includes(destinyAttackerTarget(fight)) && isDestinyOpponentActive(fight, destinyAttackerTarget(fight))) {
     const rerolled = [];
     values.forEach((value, index) => { if (value === 1) { values[index] = draw(); rerolled.push(values[index]); } });
     if (rerolled.length) destinyOnOpponentRoll(fight, rerolled, kind);
+    if (rerolled.length && kind === 'speed') onDestinyOpponentSpeedRoll(fight, values);
+  }
+  const punch = fight.encounter?.damageSixExtraDice?.[destinyAttackerTarget(fight)];
+  if (kind === 'damage' && punch && values.includes(6) && !fight.turn.damageSixTriggered) {
+    fight.turn.damageSixTriggered = true;
+    const extra = Array.from({ length: punch }, draw);
+    destinyOnOpponentRoll(fight, extra, kind);
+    values.push(...extra);
+    addDestinyStatEffect(fight, 'hero', 'speed', -1, 1, 'tusk-punch', 1);
   }
   return values;
 }
@@ -167,6 +178,10 @@ export function recordDestinyDefeat(fight, target) {
   }
   for (const effect of fight.encounter?.onDeathSetStats || []) {
     if (effect.dead === target && isDestinyOpponentActive(fight, effect.target)) fight.opponents[effect.target][effect.attribute] = effect.value;
+  }
+  for (const effect of fight.encounter?.onDeathDamageEffects || []) {
+    if (effect.dead === target && isDestinyOpponentActive(fight, effect.target)) fight.effects.push({ kind: 'ongoing-damage', target: effect.target,
+      amount: effect.amount, from: fight.round + (effect.delay || 0), until: Number.MAX_SAFE_INTEGER, source: 'encounter-death' });
   }
 }
 

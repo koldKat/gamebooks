@@ -1,0 +1,2068 @@
+{
+  "checkedAt": "2026-10-24T15:22:03.157754+00:00",
+  "scope": "All simulator entry modules; static import graph and current DB coverage. Runtime review remains required.",
+  "simulators": [
+    {
+      "bookId": 107,
+      "databaseEnemyRows": 26,
+      "apiConsumers": [
+        "public/js/battlesim/books/107/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 108,
+      "databaseEnemyRows": 9,
+      "apiConsumers": [
+        "public/js/battlesim/books/108/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 114,
+      "databaseEnemyRows": 40,
+      "apiConsumers": [
+        "public/js/battlesim/books/114/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 115,
+      "databaseEnemyRows": 6,
+      "apiConsumers": [
+        "public/js/battlesim/books/115/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 118,
+      "databaseEnemyRows": 39,
+      "apiConsumers": [
+        "public/js/battlesim/books/118/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 122,
+      "databaseEnemyRows": 36,
+      "apiConsumers": [
+        "public/js/battlesim/books/122/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 123,
+      "databaseEnemyRows": 5,
+      "apiConsumers": [
+        "public/js/battlesim/books/123/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 130,
+      "databaseEnemyRows": 9,
+      "apiConsumers": [
+        "public/js/battlesim/books/130/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 135,
+      "databaseEnemyRows": 31,
+      "apiConsumers": [
+        "public/js/battlesim/books/135/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 161,
+      "databaseEnemyRows": 0,
+      "apiConsumers": [],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 186,
+      "databaseEnemyRows": 36,
+      "apiConsumers": [
+        "public/js/battlesim/books/186/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 193,
+      "databaseEnemyRows": 39,
+      "apiConsumers": [
+        "public/js/battlesim/books/193/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 198,
+      "databaseEnemyRows": 66,
+      "apiConsumers": [
+        "public/js/battlesim/books/198/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 199,
+      "databaseEnemyRows": 24,
+      "apiConsumers": [
+        "public/js/battlesim/books/199/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 200,
+      "databaseEnemyRows": 61,
+      "apiConsumers": [
+        "public/js/battlesim/books/200/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 201,
+      "databaseEnemyRows": 68,
+      "apiConsumers": [
+        "public/js/battlesim/books/201/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 202,
+      "databaseEnemyRows": 27,
+      "apiConsumers": [
+        "public/js/battlesim/books/202/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 203,
+      "databaseEnemyRows": 71,
+      "apiConsumers": [
+        "public/js/battlesim/books/203/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 204,
+      "databaseEnemyRows": 41,
+      "apiConsumers": [
+        "public/js/battlesim/books/204/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 205,
+      "databaseEnemyRows": 49,
+      "apiConsumers": [
+        "public/js/battlesim/books/205/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 206,
+      "databaseEnemyRows": 31,
+      "apiConsumers": [
+        "public/js/battlesim/books/206/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 207,
+      "databaseEnemyRows": 64,
+      "apiConsumers": [
+        "public/js/battlesim/books/207/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 208,
+      "databaseEnemyRows": 34,
+      "apiConsumers": [
+        "public/js/battlesim/books/208/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 209,
+      "databaseEnemyRows": 29,
+      "apiConsumers": [
+        "public/js/battlesim/books/209/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 210,
+      "databaseEnemyRows": 38,
+      "apiConsumers": [
+        "public/js/battlesim/books/210/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 211,
+      "databaseEnemyRows": 29,
+      "apiConsumers": [
+        "public/js/battlesim/books/211/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 212,
+      "databaseEnemyRows": 58,
+      "apiConsumers": [
+        "public/js/battlesim/books/212/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 213,
+      "databaseEnemyRows": 61,
+      "apiConsumers": [
+        "public/js/battlesim/books/213/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 214,
+      "databaseEnemyRows": 51,
+      "apiConsumers": [
+        "public/js/battlesim/books/214/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 215,
+      "databaseEnemyRows": 53,
+      "apiConsumers": [
+        "public/js/battlesim/books/215/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 216,
+      "databaseEnemyRows": 83,
+      "apiConsumers": [
+        "public/js/battlesim/books/216/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 217,
+      "databaseEnemyRows": 47,
+      "apiConsumers": [
+        "public/js/battlesim/books/217/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 218,
+      "databaseEnemyRows": 44,
+      "apiConsumers": [
+        "public/js/battlesim/books/218/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 219,
+      "databaseEnemyRows": 60,
+      "apiConsumers": [
+        "public/js/battlesim/books/219/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 220,
+      "databaseEnemyRows": 58,
+      "apiConsumers": [
+        "public/js/battlesim/books/220/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 221,
+      "databaseEnemyRows": 59,
+      "apiConsumers": [
+        "public/js/battlesim/books/221/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 222,
+      "databaseEnemyRows": 68,
+      "apiConsumers": [
+        "public/js/battlesim/books/222/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 223,
+      "databaseEnemyRows": 39,
+      "apiConsumers": [
+        "public/js/battlesim/books/223/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 224,
+      "databaseEnemyRows": 68,
+      "apiConsumers": [
+        "public/js/battlesim/books/224/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 225,
+      "databaseEnemyRows": 40,
+      "apiConsumers": [
+        "public/js/battlesim/books/225/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 226,
+      "databaseEnemyRows": 84,
+      "apiConsumers": [
+        "public/js/battlesim/books/226/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 227,
+      "databaseEnemyRows": 85,
+      "apiConsumers": [
+        "public/js/battlesim/books/227/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 228,
+      "databaseEnemyRows": 41,
+      "apiConsumers": [
+        "public/js/battlesim/books/228/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 229,
+      "databaseEnemyRows": 69,
+      "apiConsumers": [
+        "public/js/battlesim/books/229/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 230,
+      "databaseEnemyRows": 47,
+      "apiConsumers": [
+        "public/js/battlesim/books/230/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 231,
+      "databaseEnemyRows": 128,
+      "apiConsumers": [
+        "public/js/battlesim/books/231/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 232,
+      "databaseEnemyRows": 33,
+      "apiConsumers": [
+        "public/js/battlesim/books/232/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 233,
+      "databaseEnemyRows": 60,
+      "apiConsumers": [
+        "public/js/battlesim/books/233/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 234,
+      "databaseEnemyRows": 30,
+      "apiConsumers": [
+        "public/js/battlesim/books/234/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 235,
+      "databaseEnemyRows": 107,
+      "apiConsumers": [
+        "public/js/battlesim/books/235/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 236,
+      "databaseEnemyRows": 52,
+      "apiConsumers": [
+        "public/js/battlesim/books/236/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 237,
+      "databaseEnemyRows": 38,
+      "apiConsumers": [
+        "public/js/battlesim/books/237/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 238,
+      "databaseEnemyRows": 28,
+      "apiConsumers": [
+        "public/js/battlesim/books/238/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 239,
+      "databaseEnemyRows": 56,
+      "apiConsumers": [
+        "public/js/battlesim/books/239/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 240,
+      "databaseEnemyRows": 67,
+      "apiConsumers": [
+        "public/js/battlesim/books/240/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 241,
+      "databaseEnemyRows": 24,
+      "apiConsumers": [
+        "public/js/battlesim/books/241/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 242,
+      "databaseEnemyRows": 40,
+      "apiConsumers": [
+        "public/js/battlesim/books/242/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 243,
+      "databaseEnemyRows": 25,
+      "apiConsumers": [
+        "public/js/battlesim/books/243/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 244,
+      "databaseEnemyRows": 50,
+      "apiConsumers": [
+        "public/js/battlesim/books/244/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 245,
+      "databaseEnemyRows": 34,
+      "apiConsumers": [
+        "public/js/battlesim/books/245/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 246,
+      "databaseEnemyRows": 46,
+      "apiConsumers": [
+        "public/js/battlesim/books/246/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 247,
+      "databaseEnemyRows": 44,
+      "apiConsumers": [
+        "public/js/battlesim/books/247/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 248,
+      "databaseEnemyRows": 53,
+      "apiConsumers": [
+        "public/js/battlesim/books/248/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 249,
+      "databaseEnemyRows": 73,
+      "apiConsumers": [
+        "public/js/battlesim/books/249/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 250,
+      "databaseEnemyRows": 49,
+      "apiConsumers": [
+        "public/js/battlesim/books/250/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 251,
+      "databaseEnemyRows": 66,
+      "apiConsumers": [
+        "public/js/battlesim/books/251/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 252,
+      "databaseEnemyRows": 40,
+      "apiConsumers": [
+        "public/js/battlesim/books/252/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 253,
+      "databaseEnemyRows": 51,
+      "apiConsumers": [
+        "public/js/battlesim/books/253/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 254,
+      "databaseEnemyRows": 75,
+      "apiConsumers": [
+        "public/js/battlesim/books/254/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 255,
+      "databaseEnemyRows": 30,
+      "apiConsumers": [
+        "public/js/battlesim/books/255/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 256,
+      "databaseEnemyRows": 81,
+      "apiConsumers": [
+        "public/js/battlesim/books/256/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 257,
+      "databaseEnemyRows": 25,
+      "apiConsumers": [
+        "public/js/battlesim/books/257/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 258,
+      "databaseEnemyRows": 102,
+      "apiConsumers": [
+        "public/js/battlesim/books/258/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 259,
+      "databaseEnemyRows": 118,
+      "apiConsumers": [
+        "public/js/battlesim/books/259/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 260,
+      "databaseEnemyRows": 90,
+      "apiConsumers": [
+        "public/js/battlesim/books/260/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 263,
+      "databaseEnemyRows": 25,
+      "apiConsumers": [
+        "public/js/battlesim/books/263/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 264,
+      "databaseEnemyRows": 34,
+      "apiConsumers": [
+        "public/js/battlesim/books/264/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 267,
+      "databaseEnemyRows": 32,
+      "apiConsumers": [
+        "public/js/battlesim/books/267/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 272,
+      "databaseEnemyRows": 19,
+      "apiConsumers": [
+        "public/js/battlesim/books/272/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 273,
+      "databaseEnemyRows": 21,
+      "apiConsumers": [
+        "public/js/battlesim/books/273/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 274,
+      "databaseEnemyRows": 31,
+      "apiConsumers": [
+        "public/js/battlesim/books/274/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 275,
+      "databaseEnemyRows": 46,
+      "apiConsumers": [
+        "public/js/battlesim/books/275/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 276,
+      "databaseEnemyRows": 24,
+      "apiConsumers": [
+        "public/js/battlesim/books/276/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 278,
+      "databaseEnemyRows": 20,
+      "apiConsumers": [
+        "public/js/battlesim/books/278/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 279,
+      "databaseEnemyRows": 14,
+      "apiConsumers": [
+        "public/js/battlesim/books/279/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 280,
+      "databaseEnemyRows": 20,
+      "apiConsumers": [
+        "public/js/battlesim/books/280/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 286,
+      "databaseEnemyRows": 22,
+      "apiConsumers": [
+        "public/js/battlesim/books/286/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 317,
+      "databaseEnemyRows": 31,
+      "apiConsumers": [
+        "public/js/battlesim/books/317/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 318,
+      "databaseEnemyRows": 30,
+      "apiConsumers": [
+        "public/js/battlesim/books/318/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 319,
+      "databaseEnemyRows": 25,
+      "apiConsumers": [
+        "public/js/battlesim/books/319/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 320,
+      "databaseEnemyRows": 29,
+      "apiConsumers": [
+        "public/js/battlesim/books/320/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 321,
+      "databaseEnemyRows": 33,
+      "apiConsumers": [
+        "public/js/battlesim/books/321/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 322,
+      "databaseEnemyRows": 47,
+      "apiConsumers": [
+        "public/js/battlesim/books/322/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 323,
+      "databaseEnemyRows": 40,
+      "apiConsumers": [
+        "public/js/battlesim/books/323/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 324,
+      "databaseEnemyRows": 55,
+      "apiConsumers": [
+        "public/js/battlesim/books/324/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 325,
+      "databaseEnemyRows": 39,
+      "apiConsumers": [
+        "public/js/battlesim/books/325/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 370,
+      "databaseEnemyRows": 12,
+      "apiConsumers": [
+        "public/js/battlesim/books/370/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 375,
+      "databaseEnemyRows": 17,
+      "apiConsumers": [
+        "public/js/battlesim/books/375/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 376,
+      "databaseEnemyRows": 10,
+      "apiConsumers": [
+        "public/js/battlesim/books/376/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 377,
+      "databaseEnemyRows": 5,
+      "apiConsumers": [
+        "public/js/battlesim/books/377/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 378,
+      "databaseEnemyRows": 6,
+      "apiConsumers": [
+        "public/js/battlesim/books/378/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 397,
+      "databaseEnemyRows": 28,
+      "apiConsumers": [
+        "public/js/battlesim/books/397/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 398,
+      "databaseEnemyRows": 31,
+      "apiConsumers": [
+        "public/js/battlesim/books/398/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 399,
+      "databaseEnemyRows": 13,
+      "apiConsumers": [
+        "public/js/battlesim/books/399/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 400,
+      "databaseEnemyRows": 30,
+      "apiConsumers": [
+        "public/js/battlesim/engines/cretan.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 401,
+      "databaseEnemyRows": 20,
+      "apiConsumers": [
+        "public/js/battlesim/engines/cretan.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 402,
+      "databaseEnemyRows": 36,
+      "apiConsumers": [
+        "public/js/battlesim/engines/cretan.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 412,
+      "databaseEnemyRows": 23,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/books/412/definition.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 414,
+      "databaseEnemyRows": 41,
+      "apiConsumers": [
+        "public/js/battlesim/books/414/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 415,
+      "databaseEnemyRows": 24,
+      "apiConsumers": [
+        "public/js/battlesim/books/415/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 416,
+      "databaseEnemyRows": 28,
+      "apiConsumers": [
+        "public/js/battlesim/books/416/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 430,
+      "databaseEnemyRows": 46,
+      "apiConsumers": [
+        "public/js/battlesim/books/430/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 431,
+      "databaseEnemyRows": 40,
+      "apiConsumers": [
+        "public/js/battlesim/books/431/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 432,
+      "databaseEnemyRows": 55,
+      "apiConsumers": [
+        "public/js/battlesim/books/432/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 433,
+      "databaseEnemyRows": 37,
+      "apiConsumers": [
+        "public/js/battlesim/books/433/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 434,
+      "databaseEnemyRows": 28,
+      "apiConsumers": [
+        "public/js/battlesim/books/434/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 435,
+      "databaseEnemyRows": 40,
+      "apiConsumers": [
+        "public/js/battlesim/books/435/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 436,
+      "databaseEnemyRows": 39,
+      "apiConsumers": [
+        "public/js/battlesim/books/436/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 437,
+      "databaseEnemyRows": 42,
+      "apiConsumers": [
+        "public/js/battlesim/books/437/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 438,
+      "databaseEnemyRows": 44,
+      "apiConsumers": [
+        "public/js/battlesim/books/438/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 439,
+      "databaseEnemyRows": 34,
+      "apiConsumers": [
+        "public/js/battlesim/books/439/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 440,
+      "databaseEnemyRows": 18,
+      "apiConsumers": [
+        "public/js/battlesim/books/440/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 441,
+      "databaseEnemyRows": 14,
+      "apiConsumers": [
+        "public/js/battlesim/books/441/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 462,
+      "databaseEnemyRows": 68,
+      "apiConsumers": [
+        "public/js/battlesim/books/462/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 463,
+      "databaseEnemyRows": 28,
+      "apiConsumers": [
+        "public/js/battlesim/books/463/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 464,
+      "databaseEnemyRows": 67,
+      "apiConsumers": [
+        "public/js/battlesim/books/464/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 465,
+      "databaseEnemyRows": 30,
+      "apiConsumers": [
+        "public/js/battlesim/books/465/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 468,
+      "databaseEnemyRows": 44,
+      "apiConsumers": [
+        "public/js/battlesim/books/468/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 481,
+      "databaseEnemyRows": 6,
+      "apiConsumers": [
+        "public/js/battlesim/engines/kralska.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 486,
+      "databaseEnemyRows": 5,
+      "apiConsumers": [
+        "public/js/battlesim/engines/kralska.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 491,
+      "databaseEnemyRows": 7,
+      "apiConsumers": [
+        "public/js/battlesim/engines/kralska.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 521,
+      "databaseEnemyRows": 53,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/engines/skyfall/monsters-of-the-marsh.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 522,
+      "databaseEnemyRows": 27,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/engines/skyfall/black-pyramid.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 523,
+      "databaseEnemyRows": 29,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/engines/skyfall/mine-of-torments.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 524,
+      "databaseEnemyRows": 36,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/engines/skyfall/garden-of-madness.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 526,
+      "databaseEnemyRows": 23,
+      "apiConsumers": [
+        "public/js/battlesim/books/526/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 527,
+      "databaseEnemyRows": 24,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/engines/grailquest/den-of-dragons-roster.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 528,
+      "databaseEnemyRows": 61,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/engines/grailquest/den-of-dragons-roster.js",
+        "public/js/battlesim/engines/grailquest/gateway-of-doom-roster.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 529,
+      "databaseEnemyRows": 42,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/engines/grailquest/voyage-of-terror-roster.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 530,
+      "databaseEnemyRows": 39,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/engines/grailquest/kingdom-of-horror-roster.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 531,
+      "databaseEnemyRows": 37,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/engines/grailquest/realm-of-chaos-roster.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 532,
+      "databaseEnemyRows": 28,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/engines/grailquest/tomb-of-nightmares-roster.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 533,
+      "databaseEnemyRows": 28,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/engines/grailquest/legion-of-the-dead-roster.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 534,
+      "databaseEnemyRows": 19,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/engines/demonspawn/fire-wolf-encounters.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 535,
+      "databaseEnemyRows": 20,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/engines/demonspawn/crypts-of-terror-encounters.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 536,
+      "databaseEnemyRows": 26,
+      "apiConsumers": [],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 537,
+      "databaseEnemyRows": 22,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/engines/demonspawn/ancient-evil-roster.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 539,
+      "databaseEnemyRows": 12,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/engines/forbidden-gateway.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 541,
+      "databaseEnemyRows": 24,
+      "apiConsumers": [
+        "public/js/battlesim/books/541/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 548,
+      "databaseEnemyRows": 24,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/engines/innsmouth.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 550,
+      "databaseEnemyRows": 100,
+      "apiConsumers": [],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 555,
+      "databaseEnemyRows": 20,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/engines/arkham-darkness.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 557,
+      "databaseEnemyRows": 11,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/engines/kingsport.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 570,
+      "databaseEnemyRows": 24,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/engines/virtual-police/roster.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 636,
+      "databaseEnemyRows": 71,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/engines/wonderland/roster.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 644,
+      "databaseEnemyRows": 3,
+      "apiConsumers": [],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 648,
+      "databaseEnemyRows": 9,
+      "apiConsumers": [],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 654,
+      "databaseEnemyRows": 18,
+      "apiConsumers": [],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 658,
+      "databaseEnemyRows": 23,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/engines/six-actions/roster.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 661,
+      "databaseEnemyRows": 18,
+      "apiConsumers": [
+        "public/js/battlesim/books/661/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 663,
+      "databaseEnemyRows": 40,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/engines/freeway-fighter/roster.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 665,
+      "databaseEnemyRows": 72,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/engines/city-of-thieves/roster.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 671,
+      "databaseEnemyRows": 44,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/engines/shamutanti/roster.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 672,
+      "databaseEnemyRows": 83,
+      "apiConsumers": [],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 674,
+      "databaseEnemyRows": 49,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/engines/fabled-lands/roster.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 675,
+      "databaseEnemyRows": 35,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/engines/fabled-lands/cities-of-gold.js",
+        "public/js/battlesim/engines/fabled-lands/roster.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 676,
+      "databaseEnemyRows": 22,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/engines/fabled-lands/blood-dark-sea.js",
+        "public/js/battlesim/engines/fabled-lands/roster.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 677,
+      "databaseEnemyRows": 31,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/engines/fabled-lands/howling-darkness.js",
+        "public/js/battlesim/engines/fabled-lands/blood-dark-sea.js",
+        "public/js/battlesim/engines/fabled-lands/roster.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 678,
+      "databaseEnemyRows": 29,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/engines/fabled-lands/hidden-faces.js",
+        "public/js/battlesim/engines/fabled-lands/roster.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 679,
+      "databaseEnemyRows": 42,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/engines/fabled-lands/rising-sun.js",
+        "public/js/battlesim/engines/fabled-lands/roster.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 680,
+      "databaseEnemyRows": 40,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/engines/fabled-lands/serpent-domain.js",
+        "public/js/battlesim/engines/fabled-lands/roster.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 689,
+      "databaseEnemyRows": 185,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/engines/legendary-kingdoms/valley.js",
+        "public/js/battlesim/engines/legendary-kingdoms/valley-roster.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 690,
+      "databaseEnemyRows": 281,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/engines/legendary-kingdoms/crown-roster.js",
+        "public/js/battlesim/engines/legendary-kingdoms/valley.js",
+        "public/js/battlesim/engines/legendary-kingdoms/valley-roster.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 696,
+      "databaseEnemyRows": 18,
+      "apiConsumers": [
+        "public/js/battlesim/books/696/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 700,
+      "databaseEnemyRows": 44,
+      "apiConsumers": [],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 706,
+      "databaseEnemyRows": 22,
+      "apiConsumers": [],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 710,
+      "databaseEnemyRows": 50,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/books/710/definition.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 716,
+      "databaseEnemyRows": 7,
+      "apiConsumers": [
+        "public/js/battlesim/books/716/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 718,
+      "databaseEnemyRows": 57,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/books/718/definition.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 722,
+      "databaseEnemyRows": 42,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/books/722/definition.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 723,
+      "databaseEnemyRows": 51,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/books/723/definition.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 724,
+      "databaseEnemyRows": 48,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/books/724/definition.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 728,
+      "databaseEnemyRows": 2,
+      "apiConsumers": [],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 734,
+      "databaseEnemyRows": 41,
+      "apiConsumers": [
+        "public/js/battlesim/books/734/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 735,
+      "databaseEnemyRows": 45,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/books/735/definition.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 739,
+      "databaseEnemyRows": 7,
+      "apiConsumers": [
+        "public/js/battlesim/books/739/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 740,
+      "databaseEnemyRows": 8,
+      "apiConsumers": [
+        "public/js/battlesim/books/740/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 753,
+      "databaseEnemyRows": 9,
+      "apiConsumers": [
+        "public/js/battlesim/books/753/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 757,
+      "databaseEnemyRows": 4,
+      "apiConsumers": [],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 760,
+      "databaseEnemyRows": 6,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/books/760/definition.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 768,
+      "databaseEnemyRows": 12,
+      "apiConsumers": [],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 769,
+      "databaseEnemyRows": 40,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/books/769/definition.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 772,
+      "databaseEnemyRows": 13,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/books/772/panel.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 773,
+      "databaseEnemyRows": 47,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/books/773/definition.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 78,
+      "databaseEnemyRows": 26,
+      "apiConsumers": [
+        "public/js/battlesim/books/78/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 781,
+      "databaseEnemyRows": 6,
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
+      ],
+      "inlineDataFiles": [
+        "public/js/battlesim/books/781/definition.js"
+      ],
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/781.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "legacyApiCompatible": true
+      }
+    },
+    {
+      "bookId": 783,
+      "databaseEnemyRows": 19,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/books/783/definition.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 797,
+      "databaseEnemyRows": 2,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/books/797/definition.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 8,
+      "databaseEnemyRows": 20,
+      "apiConsumers": [
+        "public/js/battlesim/books/8/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 80,
+      "databaseEnemyRows": 5,
+      "apiConsumers": [
+        "public/js/battlesim/books/80/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 807,
+      "databaseEnemyRows": 1,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/books/807/definition.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 808,
+      "databaseEnemyRows": 7,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/books/808/definition.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 809,
+      "databaseEnemyRows": 3,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/books/809/definition.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 810,
+      "databaseEnemyRows": 4,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/books/810/definition.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 812,
+      "databaseEnemyRows": 4,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/books/812/definition.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 817,
+      "databaseEnemyRows": 2,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/books/817/definition.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 82,
+      "databaseEnemyRows": 15,
+      "apiConsumers": [
+        "public/js/battlesim/books/82/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 829,
+      "databaseEnemyRows": 177,
+      "apiConsumers": [
+        "public/js/battlesim/books/829/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 83,
+      "databaseEnemyRows": 12,
+      "apiConsumers": [
+        "public/js/battlesim/books/83/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 832,
+      "databaseEnemyRows": 5,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/books/832/definition.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 833,
+      "databaseEnemyRows": 20,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/books/833/definition.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 838,
+      "databaseEnemyRows": 8,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/books/838/definition.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 856,
+      "databaseEnemyRows": 19,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/books/856/definition.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 857,
+      "databaseEnemyRows": 2,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/books/857/definition.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 86,
+      "databaseEnemyRows": 37,
+      "apiConsumers": [
+        "public/js/battlesim/books/86/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    },
+    {
+      "bookId": 860,
+      "databaseEnemyRows": 11,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/books/860/definition.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 869,
+      "databaseEnemyRows": 7,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/books/869/definition.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 871,
+      "databaseEnemyRows": 13,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/books/871/definition.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 873,
+      "databaseEnemyRows": 12,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/books/873/definition.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 877,
+      "databaseEnemyRows": 0,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/books/877/panel.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 881,
+      "databaseEnemyRows": 33,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/books/881/definition.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 882,
+      "databaseEnemyRows": 64,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/books/882/definition.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 891,
+      "databaseEnemyRows": 41,
+      "apiConsumers": [],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 895,
+      "databaseEnemyRows": 135,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/books/895/definition.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 896,
+      "databaseEnemyRows": 12,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/books/896/definition.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 903,
+      "databaseEnemyRows": 18,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/books/903/definition.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 904,
+      "databaseEnemyRows": 48,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/books/904/definition.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 906,
+      "databaseEnemyRows": 38,
+      "apiConsumers": [],
+      "inlineDataFiles": [
+        "public/js/battlesim/books/906/definition.js"
+      ],
+      "runtimeRosterReviewPending": true
+    },
+    {
+      "bookId": 92,
+      "databaseEnemyRows": 18,
+      "apiConsumers": [
+        "public/js/battlesim/books/92/panel.js"
+      ],
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false
+    }
+  ],
+  "knownDynamicRosterException": {
+    "bookId": 161,
+    "reason": "Zombie group size is supplied by the player; there is no fixed enemy stat roster."
+  }
+}
