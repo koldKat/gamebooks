@@ -104,8 +104,11 @@ test('zero life never rolls or revives', async () => {
 });
 test('legacy controller opens without modifying saved character or history', async () => {
   const { startZorroFight, advanceZorroFight } = await engine;
+  const definition=await import('../public/js/battlesim/books/882/definition.js');
+  await definition.loadRoster(async()=>({ok:true,json:async()=>JSON.parse(read('data/simulator-rosters/882.json')).enemies}));
   const saved = { encounterId: 'galdos_mounted', player: { zhivot: 19 }, history: [{ outcome: 'win' }], log: ['old'] };
-  const context = vm.createContext({ currentPlaythrough: () => ({ sim882: saved }), startZorroFight, advanceZorroFight });
+  const context = vm.createContext({ currentPlaythrough: () => ({ sim882: saved }), startZorroFight, advanceZorroFight,
+    createRosterLoader:(_id,_dataset,install)=>{install(structuredClone(definition.ROSTER));return async()=>{};} });
   vm.runInContext(readSimulatorSource(require('node:path').join(__dirname, '../public/js/battlesim/battlesim882.js'), 'utf8').replace(/^import .*;$/gm, '').replace(/^export /gm, '') + '\nglobalThis.audit={data:_data,roster:ROSTER};', context);
   const old = JSON.stringify(saved); context.audit.data(); assert.equal(JSON.stringify(saved), old);
   const roster = context.audit.roster;

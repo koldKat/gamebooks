@@ -1,3 +1,4 @@
+import { createRosterLoader } from '../roster-data.js';
 import { customThresholdEncounter } from './threshold-opponents.js';
 
 export const KINGSPORT_FLAGS = ['agile', 'survivor', 'resolved', 'fighter', 'tough', 'cautious', 'arachnophobia'];
@@ -6,24 +7,8 @@ export const KINGSPORT_PROFILES = {
   lucius: { willpower: 2, intellect: 4, combat: 1, health: 8, sanity: 6 },
   lola: { willpower: 3, intellect: 3, combat: 3, health: 6, sanity: 6 },
 };
-const round = (target, stats, bonus = [], penalty = [], momentum = 0) => ({ target, stats, bonus, penalty, momentum });
-const c = ['combat'], cw = ['combat', 'willpower'];
-const first = ['agile', 'resolved', 'survivor'], second = ['fighter', 'tough'];
-const fear = ['arachnophobia', 'cautious'];
-const three = (start) => [round(start, c, ['fighter', 'resolved'], fear), round(start + 1, c, ['tough'], ['arachnophobia'], 1), round(start + 2, c, ['survivor'], ['arachnophobia'], 2)];
-export const KINGSPORT_ENCOUNTERS = [
-  { section: 21, rounds: [round(14, c, ['agile', 'survivor'], ['cautious']), round(15, cw, second, [], 2)], outcomes: [56, 36] },
-  { section: 37, rounds: [round(14, c, first, ['cautious']), round(15, cw, second, [], 2)], outcomes: [49, 78], noResources: true },
-  { section: 103, rounds: three(10), outcomes: [86, 86, 71, 71], countWins: true },
-  { section: 135, rounds: [round(14, cw, first, ['cautious']), round(15, cw, second, [], 2)], outcomes: [153, 113] },
-  { section: 149, rounds: [round(12, c, ['fighter'], ['cautious']), round(16, c, ['tough'], [], 1), round(17, c, ['survivor'], [], 2)], outcomes: [168, 185, 205, 221], countWins: true },
-  { section: 218, rounds: three(10), outcomes: [64, 64, 44, 27], countWins: true },
-  { section: 223, rounds: three(15), outcomes: [86, 86, 71, 71], countWins: true },
-  { section: 245, rounds: [round(12, cw, ['agile', 'survivor'], fear), round(13, cw, ['fighter'], ['arachnophobia'], 2), round(14, cw, ['tough'], ['arachnophobia'], 2), round(15, cw, ['survivor'], ['arachnophobia'], 3)], outcomes: [86, 86, null, 71, 71], countWins: true },
-  { section: 286, rounds: [round(14, cw, ['survivor'], fear), round(15, cw, ['tough'], ['arachnophobia'], 2)], outcomes: [141, 59] },
-  { section: 292, rounds: [round(14, cw, ['fighter'], ['cautious']), round(15, cw, ['tough'], [], 2)], outcomes: [84, 238] },
-  { section: 299, rounds: [round(14, cw, first, ['cautious']), round(15, cw, second, [], 2)], outcomes: [153, 71] },
-];
+export let KINGSPORT_ENCOUNTERS = [];
+export const loadRoster = createRosterLoader(557, 'KINGSPORT_ENCOUNTERS', rows => { KINGSPORT_ENCOUNTERS = rows; });
 function die(random) {
   const n = random();
   if (!Number.isFinite(n) || n < 0 || n >= 1) throw new RangeError('Invalid random value');

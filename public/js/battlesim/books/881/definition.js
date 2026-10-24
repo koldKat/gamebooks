@@ -1,3 +1,4 @@
+import { createRosterLoader } from '../../roster-data.js';
 // Book identity and declarative defaults; no DOM or saved-state access.
 export const definition = Object.freeze({
   "id": 881,
@@ -13,86 +14,5 @@ export const SWORDS = [
   { id: 'istrin',  nameKey: 'battlesim881.sword.istrin' },
 ];
 
-export const ROSTER = [
-  { id: 'guard_unarmed', nameKey: 'battlesim881.name.guard_unarmed', hitAmount: 1, tiePlayer: 0, tieEnemy: 0, stopAfterLoss: 10,
-    enemies: [{ nameKey: 'battlesim881.enemy.guard', sila: 9, izd: 5 }],
-    swordBonus: { firfeld: 0, laim: 0, istrin: 0 } },
-  { id: 'guard_club', nameKey: 'battlesim881.name.guard_club', hitAmount: 1, tiePlayer: 0, tieEnemy: 0, stopAfterLoss: 10,
-    enemies: [{ nameKey: 'battlesim881.enemy.guard', sila: 8, izd: 5 }],
-    swordBonus: { firfeld: 0, laim: 0, istrin: 0 } },
-  { id: 'orgfelt_gang', nameKey: 'battlesim881.name.orgfelt_gang',
-    enemies: [
-      { nameKey: 'battlesim881.enemy.orgfelt', sila: 10, izd: 6 },
-      { nameKey: 'battlesim881.enemy.companion', sila: 10, izd: 9 },
-      { nameKey: 'battlesim881.enemy.robber1', sila: 8, izd: 6 },
-      { nameKey: 'battlesim881.enemy.robber2', sila: 7, izd: 6 },
-      { nameKey: 'battlesim881.enemy.robber3', sila: 6, izd: 8 },
-    ],
-    swordBonus: { firfeld: 2, laim: 1, istrin: 0 } },
-  { id: 'clent_thieves2', nameKey: 'battlesim881.name.clent_thieves2',
-    enemies: [
-      { nameKey: 'battlesim881.enemy.thief1', sila: 10, izd: 4 },
-      { nameKey: 'battlesim881.enemy.thief2', sila: 8, izd: 12 },
-    ],
-    swordBonus: { firfeld: 1, laim: 0, istrin: 0 } },
-  { id: 'clent_thief1', nameKey: 'battlesim881.name.clent_thief1',
-    enemies: [{ nameKey: 'battlesim881.enemy.thief', sila: 10, izd: 4 }],
-    swordBonus: { firfeld: 0, laim: 0, istrin: 0 } },
-  { id: 'clent_thieves_istrin', nameKey: 'battlesim881.name.clent_thieves_istrin',
-    enemies: [
-      { nameKey: 'battlesim881.enemy.thief1', sila: 10, izd: 6 },
-      { nameKey: 'battlesim881.enemy.thief2', sila: 8, izd: 6 },
-    ],
-    swordBonus: { firfeld: 0, laim: 0, istrin: 2 } },
-  { id: 'night_thief1', nameKey: 'battlesim881.name.night_thief1', stopAt: 10,
-    enemies: [{ nameKey: 'battlesim881.enemy.night_thief', sila: 8, izd: 6 }],
-    swordBonus: { firfeld: 0, laim: 0, istrin: 0 } },
-  { id: 'night_thieves5', nameKey: 'battlesim881.name.night_thieves5',
-    enemies: [
-      { nameKey: 'battlesim881.enemy.night_thief_n', sila: 6, izd: 4 },
-      { nameKey: 'battlesim881.enemy.night_thief_n', sila: 8, izd: 12 },
-      { nameKey: 'battlesim881.enemy.night_thief_n', sila: 10, izd: 6 },
-      { nameKey: 'battlesim881.enemy.night_thief_n', sila: 6, izd: 6 },
-      { nameKey: 'battlesim881.enemy.night_thief_n', sila: 9, izd: 8 },
-    ],
-    swordBonus: { firfeld: 0, laim: 2, istrin: 1 } },
-  { id: 'creature_unarmed', nameKey: 'battlesim881.name.creature_unarmed', hitAmount: 1, tiePlayer: 1, tieEnemy: 0, stopAt: 8,
-    enemies: [{ nameKey: 'battlesim881.enemy.creature', sila: 10, izd: 8 }],
-    swordBonus: { firfeld: 0, laim: 0, istrin: 0 } },
-  { id: 'dwarf_unarmed', nameKey: 'battlesim881.name.dwarf_unarmed', hitAmount: 1, tiePlayer: 0, tieEnemy: 0,
-    enemies: [{ nameKey: 'battlesim881.enemy.dwarf_leader', sila: 10, izd: 10 }],
-    swordBonus: { firfeld: 0, laim: 0, istrin: 0 } },
-  { id: 'dwarf_weapon', nameKey: 'battlesim881.name.dwarf_weapon',
-    enemies: [{ nameKey: 'battlesim881.enemy.dwarf_leader', sila: 8, izd: 10 }],
-    swordBonus: { firfeld: 0, laim: 0, istrin: 0 } },
-  { id: 'urik_guards', nameKey: 'battlesim881.name.urik_guards',
-    enemies: [
-      { nameKey: 'battlesim881.enemy.urik_guard1', sila: 9, izd: 4 },
-      { nameKey: 'battlesim881.enemy.urik_guard2', sila: 8, izd: 6 },
-    ],
-    swordBonus: { firfeld: 0, laim: 0, istrin: 0 } },
-  { id: 'mercenary_unarmed', nameKey: 'battlesim881.name.mercenary_unarmed', hitAmount: 1, tiePlayer: 0, tieEnemy: 0, stopAfterLoss: 10,
-    enemies: [{ nameKey: 'battlesim881.enemy.mercenary_boss', sila: 10, izd: 10 }],
-    swordBonus: { firfeld: 0, laim: 0, istrin: 0 } },
-  { id: 'mercenary_armed', nameKey: 'battlesim881.name.mercenary_armed',
-    enemies: [{ nameKey: 'battlesim881.enemy.mercenary_boss', sila: 10, izd: 10 }],
-    swordBonus: { firfeld: 2, laim: 1, istrin: 1 } },
-  { id: 'alkein_thugs', nameKey: 'battlesim881.name.alkein_thugs', chooseTarget: true,
-    enemies: [
-      { nameKey: 'battlesim881.enemy.thug1', sila: 8, izd: 4 },
-      { nameKey: 'battlesim881.enemy.thug2', sila: 9, izd: 6 },
-      { nameKey: 'battlesim881.enemy.thug3', sila: 7, izd: 8 },
-    ],
-    swordBonus: { firfeld: 0, laim: 1, istrin: 2 } },
-  { id: 'wolfspiders', nameKey: 'battlesim881.name.wolfspiders', tieBoth2: true,
-    enemies: [
-      { nameKey: 'battlesim881.enemy.wolfspider', sila: 10, izd: 8 },
-      { nameKey: 'battlesim881.enemy.wolfspider', sila: 10, izd: 9 },
-      { nameKey: 'battlesim881.enemy.wolfspider', sila: 12, izd: 10 },
-    ],
-    swordBonus: { firfeld: 3, laim: 1, istrin: 2 } },
-  { id: 'wolfpack', nameKey: 'battlesim881.name.wolfpack', special: 'wolfpack',
-    swordBonus: { firfeld: -1, laim: 1, istrin: 2 } },
-  { id: 'dwarf_knife', nameKey: 'battlesim881.name.dwarf_knife', special: 'knifeThrow',
-    enemySila: 6, swordBonus: { firfeld: 0, laim: 0, istrin: 0 } },
-];
+export let ROSTER = [];
+export const loadRoster = createRosterLoader(881, 'ROSTER', rows => { ROSTER = rows; });

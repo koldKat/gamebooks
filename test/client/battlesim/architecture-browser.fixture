@@ -13,11 +13,11 @@ const results=[];
 const missingTranslations=new Set();
 for(const id of BOOK_IDS){
   app.setCurrentBookId(id);app.state.playthroughs=[{startedAt:1,path:[1]}];app.state.activePtIndex=0;
+  if('MODE'==='mobile')await mobile.openSimForBook(id);
+  else await desktop.showBattleSimForBook(id);
   const module=await import('REPO/public/js/battlesim/battlesim'+id+'.js');
   check(module.definition.id===id,'book identity '+id);
   check(['init','render','setVisible'].every(key=>typeof module[key]==='function'),'standard lifecycle '+id);
-  if('MODE'==='mobile')await mobile.openSimForBook(id);
-  else await desktop.showBattleSimForBook(id);
   const button=document.getElementById(id===829?'battlesim-btn':'sim'+id+'-btn');
   check(button,'trigger '+id);
   const triggerStyle=getComputedStyle(button);
@@ -408,7 +408,7 @@ for(const id of BOOK_IDS){
     const el=key=>document.getElementById('sim'+id+'-'+key);
     const editor=overlay.querySelector('.bsim-opponent-editor');
     const name=editor.querySelector('[role="combobox"]');
-    name.focus();check(editor.querySelector('[role="option"]'),'threshold autocomplete '+id);
+    name.focus();name.dispatchEvent(new Event('input',{bubbles:true}));check(editor.querySelector('[role="option"]'),'threshold autocomplete '+id+' '+JSON.stringify({value:name.value,disabled:name.disabled,hidden:editor.hidden,selection:el('encounter').value,encounterOptions:el('encounter').options.length}));
     name.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
     name.value='Custom threshold fight';
     editor.querySelector('[data-stat="threshold1"]').value=1;

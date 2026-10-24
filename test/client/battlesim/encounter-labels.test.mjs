@@ -2,6 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { ARKHAM_ENCOUNTERS } from '../../../public/js/battlesim/engines/arkham-darkness.js';
 import { KINGSPORT_ENCOUNTERS } from '../../../public/js/battlesim/engines/kingsport.js';
+import { loadFixtureRoster } from './roster-fixtures.mjs';
+await loadFixtureRoster(555);
+await loadFixtureRoster(557);
 
 test('new encounter labels lead with enemy names, not section numbers', async () => {
   for (const id of [521, 522, 523, 524, 548, 555, 557]) {

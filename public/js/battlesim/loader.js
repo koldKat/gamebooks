@@ -67,6 +67,10 @@ async function _loadBattleSim(id) {
   const pending = (async () => {
     const { loadBattleSimTranslations } = await import('../i18n/battlesim.js');
     await loadBattleSimTranslations(numericId);
+    if ([555, 557, 807, 808, 860, 869, 881, 882].includes(numericId)) {
+      const { prepareRosterData } = await import('./roster-data.js');
+      await prepareRosterData(numericId);
+    }
     const mod = await import(`./battlesim${numericId}.js`);
     await mod.loadData?.();
     const sim = { init: mod.init, render: mod.render, setVisible: mod.setVisible };

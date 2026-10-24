@@ -10,3 +10,5 @@ export const definition = Object.freeze({
 export const ID = 'sim557';
 
 export const fields = ['willpower', 'intellect', 'combat', 'health', 'sanity', 'clues', 'resources', 'doom'];
+
+export { loadRoster } from '../../engines/kingsport.js';

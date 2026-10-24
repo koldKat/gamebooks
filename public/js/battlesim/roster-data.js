@@ -26,3 +26,23 @@ export async function loadRosterDataset(bookId, dataset, fetcher, legacyDecoder)
   if (!legacy.length) throw new Error('The book roster has not been installed');
   return legacy;
 }
+
+export function createRosterLoader(bookId, dataset, install) {
+  let ready = false, pending;
+  return function load(fetcher) {
+    if (ready) return Promise.resolve();
+    if (!pending) pending = loadRosterDataset(bookId, dataset, fetcher).then(rows => {
+      install(rows);
+      ready = true;
+    }).finally(() => { pending = null; });
+    return pending;
+  };
+}
+
+export async function prepareRosterData(bookId) {
+  if (![555, 557, 807, 808, 860, 869, 881, 882].includes(bookId)) return;
+  const [{ apiFetch }, { loadRoster }] = await Promise.all([
+    import('../core/state.js'), import(`./books/${bookId}/definition.js`),
+  ]);
+  await loadRoster(apiFetch);
+}

@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-10-24T15:22:03.157754+00:00",
+  "checkedAt": "2026-10-24T15:41:21.528365+00:00",
   "scope": "All simulator entry modules; static import graph and current DB coverage. Runtime review remains required.",
   "simulators": [
     {
@@ -88,7 +88,11 @@
       "databaseEnemyRows": 0,
       "apiConsumers": [],
       "inlineDataFiles": [],
-      "runtimeRosterReviewPending": true
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "kind": "dynamic-group-size",
+        "reason": "The player supplies the zombie count; no fixed enemy roster exists."
+      }
     },
     {
       "bookId": 186,
@@ -1359,20 +1363,40 @@
     {
       "bookId": 555,
       "databaseEnemyRows": 20,
-      "apiConsumers": [],
-      "inlineDataFiles": [
-        "public/js/battlesim/engines/arkham-darkness.js"
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
       ],
-      "runtimeRosterReviewPending": true
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/555.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true
+      }
     },
     {
       "bookId": 557,
       "databaseEnemyRows": 11,
-      "apiConsumers": [],
-      "inlineDataFiles": [
-        "public/js/battlesim/engines/kingsport.js"
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
       ],
-      "runtimeRosterReviewPending": true
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/557.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true
+      }
     },
     {
       "bookId": 570,
@@ -1750,9 +1774,7 @@
       "apiConsumers": [
         "public/js/battlesim/roster-data.js"
       ],
-      "inlineDataFiles": [
-        "public/js/battlesim/books/781/definition.js"
-      ],
+      "inlineDataFiles": [],
       "runtimeRosterReviewPending": false,
       "verification": {
         "source": "data/simulator-rosters/781.json",
@@ -1762,7 +1784,7 @@
           390,
           1100
         ],
-        "legacyApiCompatible": true
+        "actualLazyLoaders": true
       }
     },
     {
@@ -1804,20 +1826,40 @@
     {
       "bookId": 807,
       "databaseEnemyRows": 1,
-      "apiConsumers": [],
-      "inlineDataFiles": [
-        "public/js/battlesim/books/807/definition.js"
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
       ],
-      "runtimeRosterReviewPending": true
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/807.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true
+      }
     },
     {
       "bookId": 808,
       "databaseEnemyRows": 7,
-      "apiConsumers": [],
-      "inlineDataFiles": [
-        "public/js/battlesim/books/808/definition.js"
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
       ],
-      "runtimeRosterReviewPending": true
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/808.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true
+      }
     },
     {
       "bookId": 809,
@@ -1939,20 +1981,40 @@
     {
       "bookId": 860,
       "databaseEnemyRows": 11,
-      "apiConsumers": [],
-      "inlineDataFiles": [
-        "public/js/battlesim/books/860/definition.js"
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
       ],
-      "runtimeRosterReviewPending": true
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/860.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true
+      }
     },
     {
       "bookId": 869,
       "databaseEnemyRows": 7,
-      "apiConsumers": [],
-      "inlineDataFiles": [
-        "public/js/battlesim/books/869/definition.js"
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
       ],
-      "runtimeRosterReviewPending": true
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/869.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true
+      }
     },
     {
       "bookId": 871,
@@ -1984,20 +2046,40 @@
     {
       "bookId": 881,
       "databaseEnemyRows": 33,
-      "apiConsumers": [],
-      "inlineDataFiles": [
-        "public/js/battlesim/books/881/definition.js"
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
       ],
-      "runtimeRosterReviewPending": true
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/881.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true
+      }
     },
     {
       "bookId": 882,
       "databaseEnemyRows": 64,
-      "apiConsumers": [],
-      "inlineDataFiles": [
-        "public/js/battlesim/books/882/definition.js"
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
       ],
-      "runtimeRosterReviewPending": true
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/882.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true
+      }
     },
     {
       "bookId": 891,
@@ -2064,5 +2146,22 @@
   "knownDynamicRosterException": {
     "bookId": 161,
     "reason": "Zombie group size is supplied by the player; there is no fixed enemy stat roster."
+  },
+  "backendActivated": {
+    "port": 3000,
+    "commit": "fb551a4",
+    "liveTypedApiBooks": [
+      555,
+      557,
+      781,
+      807,
+      808,
+      860,
+      869,
+      881,
+      882,
+      1285
+    ],
+    "legacyResponsePreserved": true
   }
 }
