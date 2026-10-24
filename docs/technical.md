@@ -210,6 +210,8 @@ gamebooks/
         engines/destinyquest/ Pure, serializable combat stages with explicit windows for speed,
                          damage modifiers, passive effects and death moves. Transitions return
                          copies; book modules supply abilities and encounter exceptions.
+                         Pending ability tests and separate/shared damage groups retain editable
+                         dice across saves; resolving them spends no second ability charge.
         engines/lucas-grey/ Shared shooting, health tiers, aircraft damage, run-scoped state
                          and panel factory. Per-book definitions own encounter thresholds;
                          saved fights retain their original encounter and rule revision.

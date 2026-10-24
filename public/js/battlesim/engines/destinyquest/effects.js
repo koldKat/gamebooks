@@ -93,10 +93,14 @@ export function destinyPassiveEffects(fight, roll) {
       if (opponent.health > 0) result.push({ target, amount: 1, ignoreArmour: true, source: name });
     });
   }
+  if (fight.powerTotemActive) fight.opponents.forEach((opponent, target) => {
+    if (opponent.health > 0) result.push({ target, amount: 1, ignoreArmour: true, source: 'power-totem' });
+  });
   for (const effect of fight.effects) {
     if (!['bleed', 'disease', 'ongoing-damage', 'delayed-dice'].includes(effect.kind) ||
         fight.round < effect.from || fight.round > effect.until || fight.opponents[effect.target]?.health <= 0) continue;
     let amount = effect.amount;
+    if (effect.kind === 'bleed') amount += fight.bleedBonus || 0;
     if (effect.kind === 'delayed-dice') {
       amount = rollDestinyDamageDice(fight, 1, roll);
     }

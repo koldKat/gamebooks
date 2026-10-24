@@ -1,0 +1,70 @@
+import { destinyStat, destinyStrike, addDestinyStatEffect } from './effects.js';
+import { destinyDie, prepareDestinyDamage, applyDestinyDamage } from './damage.js';
+import { settleDestinyFight } from './core.js';
+
+export function prepareDestinyAbilityRoll(fight, name, options, roll) {
+  const target = options.target ?? fight.target;
+  if (!Number.isInteger(target) || !fight.opponents[target] || fight.opponents[target].health <= 0) throw new RangeError('Choose a living opponent');
+  const count = name === 'take-the-bait' ? 3 : 1;
+  fight.turn.pendingAbility = { type: 'test', name, target, options: structuredClone(options),
+    dice: Array.from({ length: count }, () => destinyDie(roll)) };
+  fight.phase = 'ability-rolled';
+}
+
+export function finishDestinyAbilityAction(fight) {
+  if (['speed-rolled', 'damage', 'damage-rolled'].includes(fight.phase) && fight.opponents[fight.target].health <= 0) fight.phase = 'end';
+  if (fight.phase === 'end' && !fight.turn.pendingPassiveDeath && !fight.turn.used.dm &&
+      fight.turn.deaths.length > fight.turn.deathMoveDeathsSeen) {
+    fight.phase = 'death-move';
+    fight.turn.afterDeathMove = 'end';
+  }
+  settleDestinyFight(fight);
+  return fight;
+}
+
+export function resolveDestinyAbilityRoll(fight, roll = () => Math.floor(Math.random() * 6) + 1) {
+  if (fight?.status !== 'active' || fight.phase !== 'ability-rolled' || !fight.turn.pendingAbility) throw new RangeError('No pending ability roll');
+  const next = structuredClone(fight);
+  const pending = next.turn.pendingAbility;
+  delete next.turn.pendingAbility;
+  if (pending.type === 'damage') {
+    applyDestinyDamage(next, pending);
+    next.phase = pending.spec.replacement ? 'end' : pending.returnPhase;
+    if (pending.spec.category === 'dm') next.phase = next.turn.afterDeathMove;
+  } else {
+    const { name, target, dice, options } = pending;
+    const result = dice.reduce((total, value) => total + value, 0);
+    next.phase = 'end';
+    next.history.push({ type: 'ability-roll', name, round: next.round, dice: [...dice], result });
+    if (name === 'take-the-bait') {
+      const total = result + (next.equipment?.leftHand?.speed || 0);
+      if (total >= destinyStat(next, target, 'speed')) {
+        destinyStrike(next, target, total, name);
+        next.turn.combatAbilityDamage = true;
+        addDestinyStatEffect(next, target, 'speed', -2, 1, name, 1);
+        next.takeBaitSucceededRound = next.round;
+      }
+    } else if (name === 'warg-strike') {
+      prepareDestinyDamage(next, name, { category: 'co', replacement: true, hit: 'one', dice: result <= 2 ? 2 : 3,
+        ongoing: result >= 5 ? 1 : 0 }, { ...options, target }, roll);
+    } else if (name === 'chaotic-catalyst') {
+      if (result <= 2) next.opponents[target].health = Math.min(next.opponents[target].maxHealth, next.opponents[target].health + 6);
+      else if (result <= 4) next.effects.push({ kind: 'ongoing-damage', target, amount: 2,
+        from: next.round, until: Number.MAX_SAFE_INTEGER, source: name });
+      else {
+        const groups = [];
+        for (const index of [target - 1, target, target + 1]) {
+          if (!next.opponents[index] || next.opponents[index].health <= 0) continue;
+          groups.push({ targets: [index], dice: Array.from({ length: index === target ? 4 : 1 }, () => destinyDie(roll)), bonuses: {} });
+        }
+        const damage = { type: 'damage', name, spec: { category: 'co', replacement: true }, options, groups, returnPhase: 'end' };
+        if (options.deferDamage) { next.turn.pendingAbility = damage; next.phase = 'ability-rolled'; }
+        else applyDestinyDamage(next, damage);
+      }
+    } else if (name === 'pick-n-mix') {
+      if (next.hero.health > 0) next.hero.health = Math.min(next.hero.maxHealth, next.hero.health + Math.ceil(result / 2) * 2);
+      next.phase = pending.returnPhase;
+    } else throw new RangeError('Unknown ability roll');
+  }
+  return finishDestinyAbilityAction(next);
+}

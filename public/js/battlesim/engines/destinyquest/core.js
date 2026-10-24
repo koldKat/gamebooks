@@ -92,12 +92,19 @@ export function startDestinyRound(fight, target) {
     deaths: [], deathMoveDeathsSeen: 0, heroSpeedDice: null, opponentSpeedDice: null,
     winner: null, damageDice: null, damageScore: null,
   };
+  if (next.autoWinRound === next.round) next.turn.autoWin = true;
   return next;
 }
 
 export function rollDestinySpeed(fight, roll = randomDie) {
   const next = stage(fight, ['speed']);
   if (next.opponents[next.target].health <= 0) throw new RangeError('Choose a living opponent');
+  if (next.turn.autoWin) {
+    next.turn.heroSpeedDice = [];
+    next.turn.opponentSpeedDice = [];
+    next.phase = 'speed-rolled';
+    return next;
+  }
   next.turn.heroSpeedDice = dice(roll, next.turn.heroSpeedCount || 2);
   const controlled = next.turn.controlledOpponent === undefined || next.turn.controlledOpponent === next.target;
   next.turn.opponentSpeedDice = dice(roll, controlled ? next.turn.opponentSpeedCount || 2 : 2);
@@ -117,7 +124,7 @@ export function resolveDestinySpeed(fight) {
   const next = stage(fight, ['speed-rolled']);
   const hero = sum(next.turn.heroSpeedDice) + destinyStat(next, 'hero', 'speed');
   const opponent = sum(next.turn.opponentSpeedDice) + destinyStat(next, next.target, 'speed');
-  next.turn.winner = hero === opponent ? 'standoff' : hero > opponent ? 'hero' : 'opponent';
+  next.turn.winner = next.turn.autoWin ? 'hero' : hero === opponent ? 'standoff' : hero > opponent ? 'hero' : 'opponent';
   next.phase = next.turn.winner === 'standoff' ? 'end' : 'damage';
   next.history.push({ type: 'speed', round: next.round, target: next.target,
     heroDice: [...next.turn.heroSpeedDice], opponentDice: [...next.turn.opponentSpeedDice],
@@ -125,8 +132,14 @@ export function resolveDestinySpeed(fight) {
   return next;
 }
 
-export function rollDestinyDamage(fight, roll = randomDie) {
+export function rollDestinyDamage(fight, roll = randomDie, { soundCharge = true } = {}) {
   const next = stage(fight, ['damage']);
+  if (typeof soundCharge !== 'boolean') throw new RangeError('Choose whether to use the charge damage bonus');
+  if (soundCharge && next.turn.winner === 'hero' && next.turn.soundCharge && !next.turn.used.co) {
+    next.turn.extraDamageDice = (next.turn.extraDamageDice || 0) + 1;
+    next.turn.used.co = true;
+    if (hasDestinyAbility(next, 'weaver')) healDestinyHero(next, 2);
+  }
   const extra = next.turn.extraDamageDice || 0;
   next.turn.damageDice = dice(roll, 1 + extra +
     (next.turn.winner === 'opponent' && next.turn.reckless ? 1 : 0));
@@ -143,6 +156,10 @@ export function resolveDestinyDamage(fight) {
   const enemy = next.opponents[next.target];
   const defender = heroWon ? enemy : next.hero;
   const score = destinyDamageScore(next);
+  if (heroWon) {
+    const sixes = next.turn.damageDice.filter(face => face === 6).length;
+    for (const effect of next.effects) if (effect.source === 'creeping-cold') effect.amount += sixes;
+  }
   let armour = destinyStat(next, heroWon ? next.target : 'hero', 'armour');
   if (next.turn.ignoreArmour) armour = 0;
   // Fatal blow ignores half the armour, rounding the ignored half UP.

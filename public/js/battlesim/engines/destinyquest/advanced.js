@@ -1,4 +1,5 @@
-import { destinyStat, addDestinyStatEffect, healDestinyHero, destinyStrike, rollDestinyDamageDice } from './effects.js';
+import { destinyStat, addDestinyStatEffect, healDestinyHero, destinyStrike } from './effects.js';
+import { prepareDestinyDamage } from './damage.js';
 
 const sum = values => values.reduce((total, value) => total + value, 0);
 function draw(roll) {
@@ -51,8 +52,8 @@ export function applyDestinyAdvancedAbility(fight, name, options, roll) {
       break;
     }
     case 'counter':
-      destinyStrike(fight, fight.target, rollDestinyDamageDice(fight, 1, roll), name);
-      fight.turn.combatAbilityDamage = true;
+      prepareDestinyDamage(fight, name, { category: 'co', hit: 'one', dice: 1 },
+        { ...options, target: fight.target }, roll);
       break;
     case 'slam': stat(fight.target, 'speed', -1, 1, 1); break;
     case 'roll-with-it': case 'shoulder-charge': {
@@ -108,8 +109,7 @@ export function applyDestinyAdvancedAbility(fight, name, options, roll) {
     case 'choke-hold': {
       if (!fight.turn.combatAbilityDamage) throw new RangeError('Cause health damage with a combat ability first');
       requireLiving(chosen);
-      destinyStrike(fight, chosen, rollDestinyDamageDice(fight, 2, roll), name);
-      stat(chosen, 'speed', -1, 1, 1);
+      prepareDestinyDamage(fight, name, { category: 'mo', hit: 'one', dice: 2, slowTargets: true }, options, roll);
       break;
     }
     case 'coup-de-grace':
@@ -153,6 +153,24 @@ export function applyDestinyAdvancedAbility(fight, name, options, roll) {
     case 'blind-strike':
       if (fight.turn.controlledOpponent !== fight.target) throw new RangeError('Use a blinding or disabling speed ability first');
       break;
+    case 'power-totem':
+      if (fight.powerTotemActive || destinyStat(fight, 'hero', 'magic') < 1) throw new RangeError('Totem requires one magic and must not already be active');
+      stat('hero', 'magic', -1, null);
+      fight.effects[fight.effects.length - 1].source = 'power-totem-cost';
+      fight.powerTotemActive = true;
+      fight.effects.push({ kind: 'end-heal', amount: 1, from: fight.round, until: Number.MAX_SAFE_INTEGER, source: name });
+      break;
+    case 'totem-blast':
+      if (!fight.powerTotemActive) throw new RangeError('Activate power totem first');
+      fight.powerTotemActive = false;
+      fight.effects = fight.effects.filter(effect => effect.source !== 'power-totem');
+      break;
+    case 'creeping-cold':
+      ongoing(chosen, 1);
+      break;
+    case 'sound-the-charge': fight.turn.soundCharge = true; break;
+    case 'upper-hand': fight.autoWinRound = fight.round + 1; break;
+    case 'gouge': fight.bleedBonus = (fight.bleedBonus || 0) + 1; break;
     default: throw new RangeError('Unknown advanced ability');
   }
 }
