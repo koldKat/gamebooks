@@ -1,0 +1,2661 @@
+{
+  "schemaVersion": 1,
+  "bookId": 529,
+  "family": "grailquest",
+  "source": "Original normal/Dreamtime/navigation encounters, shadow rules and supporting ally templates. All legacy enemy rows matched exactly; no LIFE invented for Shadows.",
+  "enemies": [
+    {
+      "key": "6:0",
+      "name": "Savage Guard (6; 6 opponents)",
+      "attack": 5,
+      "defense": 3,
+      "hp": 20,
+      "pb": 2,
+      "adopt": {
+        "name": "Savage Guard (6; 6 opponents)",
+        "attack": 5,
+        "defense": 3,
+        "hp": 20,
+        "pb": 2
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "VOYAGE_ENCOUNTERS",
+          "spec": {
+            "section": 6,
+            "name": "Savage Guards",
+            "foes": [
+              {
+                "name": "Savage Guard",
+                "life": 20,
+                "hit": 5,
+                "bonus": 2,
+                "armour": 3
+              },
+              {
+                "name": "Savage Guard",
+                "life": 20,
+                "hit": 5,
+                "bonus": 2,
+                "armour": 3
+              },
+              {
+                "name": "Savage Guard",
+                "life": 20,
+                "hit": 5,
+                "bonus": 2,
+                "armour": 3
+              },
+              {
+                "name": "Savage Guard",
+                "life": 20,
+                "hit": 5,
+                "bonus": 2,
+                "armour": 3
+              },
+              {
+                "name": "Savage Guard",
+                "life": 20,
+                "hit": 5,
+                "bonus": 2,
+                "armour": 3
+              },
+              {
+                "name": "Savage Guard",
+                "life": 20,
+                "hit": 5,
+                "bonus": 2,
+                "armour": 3
+              }
+            ],
+            "individualFriendly": true
+          }
+        },
+        "part": {
+          "name": "Savage Guard",
+          "life": 20,
+          "hit": 5,
+          "bonus": 2,
+          "armour": 3
+        }
+      }
+    },
+    {
+      "key": "26:0",
+      "name": "Cook (26)",
+      "attack": 5,
+      "defense": 0,
+      "hp": 30,
+      "pb": 3,
+      "adopt": {
+        "name": "Cook (26)",
+        "attack": 5,
+        "defense": 0,
+        "hp": 30,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "VOYAGE_ENCOUNTERS",
+          "spec": {
+            "section": 26,
+            "name": "Cook with a Meat Cleaver",
+            "foes": [
+              {
+                "name": "Cook",
+                "life": 30,
+                "hit": 5,
+                "bonus": 3,
+                "armour": 0
+              }
+            ]
+          }
+        },
+        "part": {
+          "name": "Cook",
+          "life": 30,
+          "hit": 5,
+          "bonus": 3,
+          "armour": 0
+        }
+      }
+    },
+    {
+      "key": "33:0",
+      "name": "Sea Serpent (33)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 80,
+      "pb": 4,
+      "adopt": {
+        "name": "Sea Serpent (33)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 80,
+        "pb": 4
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "VOYAGE_ENCOUNTERS",
+          "spec": {
+            "section": 33,
+            "name": "Sea Serpent",
+            "foes": [
+              {
+                "name": "Sea Serpent",
+                "life": 80,
+                "hit": 6,
+                "bonus": 4,
+                "armour": 0,
+                "serpent": true
+              }
+            ],
+            "friendly": false,
+            "bribe": false,
+            "victoryEquipmentLost": true,
+            "deathRequired": true
+          }
+        },
+        "part": {
+          "name": "Sea Serpent",
+          "life": 80,
+          "hit": 6,
+          "bonus": 4,
+          "armour": 0,
+          "serpent": true
+        }
+      }
+    },
+    {
+      "key": "47:0",
+      "name": "Poisonous Spider (47)",
+      "attack": 5,
+      "defense": 0,
+      "hp": 6,
+      "pb": 0,
+      "adopt": {
+        "name": "Poisonous Spider (47)",
+        "attack": 5,
+        "defense": 0,
+        "hp": 6,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "VOYAGE_ENCOUNTERS",
+          "spec": {
+            "section": 47,
+            "name": "Poisonous Spider",
+            "foes": [
+              {
+                "name": "Poisonous Spider",
+                "life": 6,
+                "hit": 5,
+                "bonus": 0,
+                "armour": 0,
+                "lethalHit": true
+              }
+            ],
+            "first": "player"
+          }
+        },
+        "part": {
+          "name": "Poisonous Spider",
+          "life": 6,
+          "hit": 5,
+          "bonus": 0,
+          "armour": 0,
+          "lethalHit": true
+        }
+      }
+    },
+    {
+      "key": "57:0",
+      "name": "Guard (57; 12 opponents)",
+      "attack": 5,
+      "defense": 2,
+      "hp": 15,
+      "pb": 2,
+      "adopt": {
+        "name": "Guard (57; 12 opponents)",
+        "attack": 5,
+        "defense": 2,
+        "hp": 15,
+        "pb": 2
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "VOYAGE_ENCOUNTERS",
+          "spec": {
+            "section": 57,
+            "name": "Guardroom Guards",
+            "foes": [
+              {
+                "name": "Guard",
+                "life": 15,
+                "hit": 5,
+                "bonus": 2,
+                "armour": 2,
+                "gold": 10
+              },
+              {
+                "name": "Guard",
+                "life": 15,
+                "hit": 5,
+                "bonus": 2,
+                "armour": 2,
+                "gold": 10
+              },
+              {
+                "name": "Guard",
+                "life": 15,
+                "hit": 5,
+                "bonus": 2,
+                "armour": 2,
+                "gold": 10
+              },
+              {
+                "name": "Guard",
+                "life": 15,
+                "hit": 5,
+                "bonus": 2,
+                "armour": 2,
+                "gold": 10
+              },
+              {
+                "name": "Guard",
+                "life": 15,
+                "hit": 5,
+                "bonus": 2,
+                "armour": 2,
+                "gold": 10
+              },
+              {
+                "name": "Guard",
+                "life": 15,
+                "hit": 5,
+                "bonus": 2,
+                "armour": 2,
+                "gold": 10
+              },
+              {
+                "name": "Guard",
+                "life": 15,
+                "hit": 5,
+                "bonus": 2,
+                "armour": 2,
+                "gold": 10
+              },
+              {
+                "name": "Guard",
+                "life": 15,
+                "hit": 5,
+                "bonus": 2,
+                "armour": 2,
+                "gold": 10
+              },
+              {
+                "name": "Guard",
+                "life": 15,
+                "hit": 5,
+                "bonus": 2,
+                "armour": 2,
+                "gold": 10
+              },
+              {
+                "name": "Guard",
+                "life": 15,
+                "hit": 5,
+                "bonus": 2,
+                "armour": 2,
+                "gold": 10
+              },
+              {
+                "name": "Guard",
+                "life": 15,
+                "hit": 5,
+                "bonus": 2,
+                "armour": 2,
+                "gold": 10
+              },
+              {
+                "name": "Guard",
+                "life": 15,
+                "hit": 5,
+                "bonus": 2,
+                "armour": 2,
+                "gold": 10
+              }
+            ],
+            "individualFriendly": true,
+            "bribe": 500,
+            "bribeEach": true,
+            "refusalDamage": 10
+          }
+        },
+        "part": {
+          "name": "Guard",
+          "life": 15,
+          "hit": 5,
+          "bonus": 2,
+          "armour": 2,
+          "gold": 10
+        }
+      }
+    },
+    {
+      "key": "59:0",
+      "name": "Giant Ram (59)",
+      "attack": 5,
+      "defense": 0,
+      "hp": 30,
+      "pb": 4,
+      "adopt": {
+        "name": "Giant Ram (59)",
+        "attack": 5,
+        "defense": 0,
+        "hp": 30,
+        "pb": 4
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "VOYAGE_ENCOUNTERS",
+          "spec": {
+            "section": 59,
+            "name": "Giant Ram",
+            "foes": [
+              {
+                "name": "Giant Ram",
+                "life": 30,
+                "hit": 5,
+                "bonus": 4,
+                "armour": 0
+              }
+            ],
+            "jason": true,
+            "chaseLimit": 3,
+            "deathRequired": true
+          }
+        },
+        "part": {
+          "name": "Giant Ram",
+          "life": 30,
+          "hit": 5,
+          "bonus": 4,
+          "armour": 0
+        }
+      }
+    },
+    {
+      "key": "65:0",
+      "name": "Boar (65)",
+      "attack": 5,
+      "defense": 0,
+      "hp": 35,
+      "pb": 3,
+      "adopt": {
+        "name": "Boar (65)",
+        "attack": 5,
+        "defense": 0,
+        "hp": 35,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 6,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "VOYAGE_ENCOUNTERS",
+          "spec": {
+            "section": 65,
+            "name": "Boar",
+            "foes": [
+              {
+                "name": "Boar",
+                "life": 35,
+                "hit": 5,
+                "bonus": 3,
+                "armour": 0
+              }
+            ]
+          }
+        },
+        "part": {
+          "name": "Boar",
+          "life": 35,
+          "hit": 5,
+          "bonus": 3,
+          "armour": 0
+        }
+      }
+    },
+    {
+      "key": "67:0",
+      "name": "Guard (67; 3 opponents)",
+      "attack": 6,
+      "defense": 2,
+      "hp": 25,
+      "pb": 2,
+      "adopt": {
+        "name": "Guard (67; 3 opponents)",
+        "attack": 6,
+        "defense": 2,
+        "hp": 25,
+        "pb": 2
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 7,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "VOYAGE_ENCOUNTERS",
+          "spec": {
+            "section": 67,
+            "name": "Guards at the Barred Doors",
+            "foes": [
+              {
+                "name": "Guard",
+                "life": 25,
+                "hit": 6,
+                "bonus": 2,
+                "armour": 2
+              },
+              {
+                "name": "Guard",
+                "life": 25,
+                "hit": 6,
+                "bonus": 2,
+                "armour": 2
+              },
+              {
+                "name": "Guard",
+                "life": 25,
+                "hit": 6,
+                "bonus": 2,
+                "armour": 2
+              }
+            ],
+            "sequential": true,
+            "friendly": false,
+            "bribe": 500
+          }
+        },
+        "part": {
+          "name": "Guard",
+          "life": 25,
+          "hit": 6,
+          "bonus": 2,
+          "armour": 2
+        }
+      }
+    },
+    {
+      "key": "77:0",
+      "name": "Old Sea Dog (77)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 25,
+      "pb": 1,
+      "adopt": {
+        "name": "Old Sea Dog (77)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 25,
+        "pb": 1
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 8,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "VOYAGE_ENCOUNTERS",
+          "spec": {
+            "section": 77,
+            "name": "Old Sea Dog",
+            "foes": [
+              {
+                "name": "Old Sea Dog",
+                "life": 25,
+                "hit": 6,
+                "bonus": 1,
+                "armour": 0
+              }
+            ],
+            "first": "enemy",
+            "refusalDamage": 4
+          }
+        },
+        "part": {
+          "name": "Old Sea Dog",
+          "life": 25,
+          "hit": 6,
+          "bonus": 1,
+          "armour": 0
+        }
+      }
+    },
+    {
+      "key": "80:0",
+      "name": "Amazon (80; 2 opponents)",
+      "attack": 5,
+      "defense": 0,
+      "hp": 25,
+      "pb": 4,
+      "adopt": {
+        "name": "Amazon (80; 2 opponents)",
+        "attack": 5,
+        "defense": 0,
+        "hp": 25,
+        "pb": 4
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 9,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "VOYAGE_ENCOUNTERS",
+          "spec": {
+            "section": 80,
+            "name": "Amazon Guards",
+            "foes": [
+              {
+                "name": "Amazon",
+                "life": 25,
+                "hit": 5,
+                "bonus": 4,
+                "armour": 0
+              },
+              {
+                "name": "Amazon",
+                "life": 25,
+                "hit": 5,
+                "bonus": 4,
+                "armour": 0
+              }
+            ],
+            "bribe": 1000,
+            "bribeEach": true
+          }
+        },
+        "part": {
+          "name": "Amazon",
+          "life": 25,
+          "hit": 5,
+          "bonus": 4,
+          "armour": 0
+        }
+      }
+    },
+    {
+      "key": "84:0",
+      "name": "Phantom Archer (84)",
+      "attack": 8,
+      "defense": 0,
+      "hp": 35,
+      "pb": 0,
+      "adopt": {
+        "name": "Phantom Archer (84)",
+        "attack": 8,
+        "defense": 0,
+        "hp": 35,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 10,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "VOYAGE_ENCOUNTERS",
+          "spec": {
+            "section": 84,
+            "name": "Phantom Archer",
+            "foes": [
+              {
+                "name": "Phantom Archer",
+                "life": 35,
+                "hit": 8,
+                "bonus": 0,
+                "armour": 0,
+                "halfCurrentLife": true
+              }
+            ],
+            "friendly": false,
+            "knockoutReturn": 39
+          }
+        },
+        "part": {
+          "name": "Phantom Archer",
+          "life": 35,
+          "hit": 8,
+          "bonus": 0,
+          "armour": 0,
+          "halfCurrentLife": true
+        }
+      }
+    },
+    {
+      "key": "87:0",
+      "name": "Harpy (87; 3 opponents)",
+      "attack": 5,
+      "defense": 0,
+      "hp": 25,
+      "pb": 3,
+      "adopt": {
+        "name": "Harpy (87; 3 opponents)",
+        "attack": 5,
+        "defense": 0,
+        "hp": 25,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 11,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "VOYAGE_ENCOUNTERS",
+          "spec": {
+            "section": 87,
+            "name": "Flying Harpies",
+            "foes": [
+              {
+                "name": "Harpy",
+                "life": 25,
+                "hit": 5,
+                "bonus": 3,
+                "armour": 0
+              },
+              {
+                "name": "Harpy",
+                "life": 25,
+                "hit": 5,
+                "bonus": 3,
+                "armour": 0
+              },
+              {
+                "name": "Harpy",
+                "life": 25,
+                "hit": 5,
+                "bonus": 3,
+                "armour": 0
+              }
+            ],
+            "playerHit": 8,
+            "first": "enemy",
+            "bribe": 1000,
+            "bribeEach": true
+          }
+        },
+        "part": {
+          "name": "Harpy",
+          "life": 25,
+          "hit": 5,
+          "bonus": 3,
+          "armour": 0
+        }
+      }
+    },
+    {
+      "key": "90:0",
+      "name": "Old Sea Dog (90)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 25,
+      "pb": 1,
+      "adopt": {
+        "name": "Old Sea Dog (90)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 25,
+        "pb": 1
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 12,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "VOYAGE_ENCOUNTERS",
+          "spec": {
+            "section": 90,
+            "name": "Old Sea Dog and the Wine",
+            "foes": [
+              {
+                "name": "Old Sea Dog",
+                "life": 25,
+                "hit": 6,
+                "bonus": 1,
+                "armour": 0
+              }
+            ],
+            "first": "enemy",
+            "playerMissEvery": 2,
+            "refusalDamage": 4
+          }
+        },
+        "part": {
+          "name": "Old Sea Dog",
+          "life": 25,
+          "hit": 6,
+          "bonus": 1,
+          "armour": 0
+        }
+      }
+    },
+    {
+      "key": "101:0",
+      "name": "Tyrannosaurus Rex (101)",
+      "attack": 4,
+      "defense": 5,
+      "hp": 80,
+      "pb": 7,
+      "adopt": {
+        "name": "Tyrannosaurus Rex (101)",
+        "attack": 4,
+        "defense": 5,
+        "hp": 80,
+        "pb": 7
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 13,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "VOYAGE_ENCOUNTERS",
+          "spec": {
+            "section": 101,
+            "name": "Tyrannosaurus Rex",
+            "foes": [
+              {
+                "name": "Tyrannosaurus Rex",
+                "life": 80,
+                "hit": 4,
+                "bonus": 7,
+                "armour": 5
+              }
+            ],
+            "friendly": false,
+            "sleepingRoll": 9,
+            "equipmentBribe": true
+          }
+        },
+        "part": {
+          "name": "Tyrannosaurus Rex",
+          "life": 80,
+          "hit": 4,
+          "bonus": 7,
+          "armour": 5
+        }
+      }
+    },
+    {
+      "key": "108:0",
+      "name": "Babysaurus Rex (108)",
+      "attack": 5,
+      "defense": 2,
+      "hp": 50,
+      "pb": 4,
+      "adopt": {
+        "name": "Babysaurus Rex (108)",
+        "attack": 5,
+        "defense": 2,
+        "hp": 50,
+        "pb": 4
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 14,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "VOYAGE_ENCOUNTERS",
+          "spec": {
+            "section": 108,
+            "name": "Babysaurus Rex",
+            "foes": [
+              {
+                "name": "Babysaurus Rex",
+                "life": 50,
+                "hit": 5,
+                "bonus": 4,
+                "armour": 2
+              }
+            ],
+            "friendly": false,
+            "bribe": false
+          }
+        },
+        "part": {
+          "name": "Babysaurus Rex",
+          "life": 50,
+          "hit": 5,
+          "bonus": 4,
+          "armour": 2
+        }
+      }
+    },
+    {
+      "key": "109:0",
+      "name": "Creeping Shadow (109; 1d6 opponents; no LIFE)",
+      "attack": 6,
+      "defense": null,
+      "hp": null,
+      "pb": null,
+      "adopt": {
+        "name": "Creeping Shadow (109; 1d6 opponents; no LIFE)",
+        "attack": 6,
+        "defense": null,
+        "hp": null,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 15,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "VOYAGE_ENCOUNTERS",
+          "spec": {
+            "section": 109,
+            "name": "Creeping Shadows",
+            "foes": [],
+            "shadows": true,
+            "friendly": false,
+            "shadowRules": {
+              "countDice": 1,
+              "grip": 6,
+              "damage": 6,
+              "banish": 4
+            }
+          }
+        },
+        "part": {
+          "name": "Creeping Shadow",
+          "life": null,
+          "hit": 6,
+          "bonus": null,
+          "armour": null
+        }
+      }
+    },
+    {
+      "key": "113:0",
+      "name": "Pirate (113; 10 opponents)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 25,
+      "pb": 3,
+      "adopt": {
+        "name": "Pirate (113; 10 opponents)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 25,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 16,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "VOYAGE_ENCOUNTERS",
+          "spec": {
+            "section": 113,
+            "name": "Pirates on the Upper Deck",
+            "foes": [
+              {
+                "name": "Pirate",
+                "life": 25,
+                "hit": 6,
+                "bonus": 3,
+                "armour": 0
+              },
+              {
+                "name": "Pirate",
+                "life": 25,
+                "hit": 6,
+                "bonus": 3,
+                "armour": 0
+              },
+              {
+                "name": "Pirate",
+                "life": 25,
+                "hit": 6,
+                "bonus": 3,
+                "armour": 0
+              },
+              {
+                "name": "Pirate",
+                "life": 25,
+                "hit": 6,
+                "bonus": 3,
+                "armour": 0
+              },
+              {
+                "name": "Pirate",
+                "life": 25,
+                "hit": 6,
+                "bonus": 3,
+                "armour": 0
+              },
+              {
+                "name": "Pirate",
+                "life": 25,
+                "hit": 6,
+                "bonus": 3,
+                "armour": 0
+              },
+              {
+                "name": "Pirate",
+                "life": 25,
+                "hit": 6,
+                "bonus": 3,
+                "armour": 0
+              },
+              {
+                "name": "Pirate",
+                "life": 25,
+                "hit": 6,
+                "bonus": 3,
+                "armour": 0
+              },
+              {
+                "name": "Pirate",
+                "life": 25,
+                "hit": 6,
+                "bonus": 3,
+                "armour": 0
+              },
+              {
+                "name": "Pirate",
+                "life": 25,
+                "hit": 6,
+                "bonus": 3,
+                "armour": 0
+              }
+            ],
+            "argonautBattle": true,
+            "resurrectWithJason": true
+          },
+          "support": {
+            "argonauts": [
+              {
+                "name": "Jason",
+                "life": 25,
+                "hit": 5,
+                "bonus": 0,
+                "armour": 0
+              },
+              {
+                "name": "Hercules",
+                "life": 48,
+                "hit": 6,
+                "bonus": 4,
+                "armour": 0
+              },
+              {
+                "name": "Argonaut",
+                "life": 20,
+                "hit": 6,
+                "bonus": 0,
+                "armour": 0
+              },
+              {
+                "name": "Argonaut",
+                "life": 20,
+                "hit": 6,
+                "bonus": 0,
+                "armour": 0
+              },
+              {
+                "name": "Argonaut",
+                "life": 20,
+                "hit": 6,
+                "bonus": 0,
+                "armour": 0
+              },
+              {
+                "name": "Argonaut",
+                "life": 20,
+                "hit": 6,
+                "bonus": 0,
+                "armour": 0
+              },
+              {
+                "name": "Argonaut",
+                "life": 20,
+                "hit": 6,
+                "bonus": 0,
+                "armour": 0
+              },
+              {
+                "name": "Argonaut",
+                "life": 20,
+                "hit": 6,
+                "bonus": 0,
+                "armour": 0
+              },
+              {
+                "name": "Argonaut",
+                "life": 20,
+                "hit": 6,
+                "bonus": 0,
+                "armour": 0
+              },
+              {
+                "name": "Argonaut",
+                "life": 20,
+                "hit": 6,
+                "bonus": 0,
+                "armour": 0
+              },
+              {
+                "name": "Argonaut",
+                "life": 20,
+                "hit": 6,
+                "bonus": 0,
+                "armour": 0
+              },
+              {
+                "name": "Argonaut",
+                "life": 20,
+                "hit": 6,
+                "bonus": 0,
+                "armour": 0
+              },
+              {
+                "name": "Achilles",
+                "life": 30,
+                "hit": 2,
+                "bonus": 1,
+                "armour": 0,
+                "attackEvery": 2
+              }
+            ],
+            "dragonTooth": {
+              "name": "Dragon-Tooth Warrior",
+              "life": 30,
+              "hit": 6,
+              "bonus": 3,
+              "armour": 3,
+              "temporary": true
+            },
+            "gnurlbash": {
+              "name": "Gnurlbash Monster",
+              "life": 30,
+              "hit": 6,
+              "bonus": 2,
+              "armour": 0,
+              "temporary": true,
+              "gnurlbash": true
+            }
+          }
+        },
+        "part": {
+          "name": "Pirate",
+          "life": 25,
+          "hit": 6,
+          "bonus": 3,
+          "armour": 0
+        }
+      }
+    },
+    {
+      "key": "121:0",
+      "name": "Babysaurus Rex (121)",
+      "attack": 5,
+      "defense": 2,
+      "hp": 50,
+      "pb": 4,
+      "adopt": {
+        "name": "Babysaurus Rex (121)",
+        "attack": 5,
+        "defense": 2,
+        "hp": 50,
+        "pb": 4
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 17,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "VOYAGE_ENCOUNTERS",
+          "spec": {
+            "section": 121,
+            "name": "Babysaurus Rex",
+            "foes": [
+              {
+                "name": "Babysaurus Rex",
+                "life": 50,
+                "hit": 5,
+                "bonus": 4,
+                "armour": 2
+              }
+            ],
+            "friendly": false,
+            "bribe": false
+          }
+        },
+        "part": {
+          "name": "Babysaurus Rex",
+          "life": 50,
+          "hit": 5,
+          "bonus": 4,
+          "armour": 2
+        }
+      }
+    },
+    {
+      "key": "133:0",
+      "name": "Long John Silver (133)",
+      "attack": 5,
+      "defense": 0,
+      "hp": 35,
+      "pb": 3,
+      "adopt": {
+        "name": "Long John Silver (133)",
+        "attack": 5,
+        "defense": 0,
+        "hp": 35,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 18,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "catalog": "VOYAGE_ENCOUNTERS",
+          "spec": {
+            "section": 133,
+            "name": "Long John Silver and His Parrot",
+            "foes": [
+              {
+                "name": "Long John Silver",
+                "life": 35,
+                "hit": 5,
+                "bonus": 3,
+                "armour": 0,
+                "pistol": true
+              },
+              {
+                "name": "Pollyrotten",
+                "life": 50,
+                "hit": 4,
+                "bonus": 4,
+                "armour": 0
+              }
+            ],
+            "alternating": true,
+            "deathRequired": true
+          }
+        },
+        "part": {
+          "name": "Long John Silver",
+          "life": 35,
+          "hit": 5,
+          "bonus": 3,
+          "armour": 0,
+          "pistol": true
+        }
+      }
+    },
+    {
+      "key": "133:1",
+      "name": "Pollyrotten (133)",
+      "attack": 4,
+      "defense": 0,
+      "hp": 50,
+      "pb": 4,
+      "adopt": {
+        "name": "Pollyrotten (133)",
+        "attack": 4,
+        "defense": 0,
+        "hp": 50,
+        "pb": 4
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 18,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "catalog": "VOYAGE_ENCOUNTERS",
+          "spec": {
+            "section": 133,
+            "name": "Long John Silver and His Parrot",
+            "foes": [
+              {
+                "name": "Long John Silver",
+                "life": 35,
+                "hit": 5,
+                "bonus": 3,
+                "armour": 0,
+                "pistol": true
+              },
+              {
+                "name": "Pollyrotten",
+                "life": 50,
+                "hit": 4,
+                "bonus": 4,
+                "armour": 0
+              }
+            ],
+            "alternating": true,
+            "deathRequired": true
+          }
+        },
+        "part": {
+          "name": "Pollyrotten",
+          "life": 50,
+          "hit": 4,
+          "bonus": 4,
+          "armour": 0
+        }
+      }
+    },
+    {
+      "key": "134:0",
+      "name": "Babysaurus Rex (134)",
+      "attack": 5,
+      "defense": 2,
+      "hp": 50,
+      "pb": 4,
+      "adopt": {
+        "name": "Babysaurus Rex (134)",
+        "attack": 5,
+        "defense": 2,
+        "hp": 50,
+        "pb": 4
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 19,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "VOYAGE_ENCOUNTERS",
+          "spec": {
+            "section": 134,
+            "name": "Babysaurus Rex",
+            "foes": [
+              {
+                "name": "Babysaurus Rex",
+                "life": 50,
+                "hit": 5,
+                "bonus": 4,
+                "armour": 2
+              }
+            ],
+            "friendly": false,
+            "bribe": false
+          }
+        },
+        "part": {
+          "name": "Babysaurus Rex",
+          "life": 50,
+          "hit": 5,
+          "bonus": 4,
+          "armour": 2
+        }
+      }
+    },
+    {
+      "key": "140:0",
+      "name": "Ferret (140; 12 opponents)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 4,
+      "pb": 1,
+      "adopt": {
+        "name": "Ferret (140; 12 opponents)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 4,
+        "pb": 1
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 20,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "catalog": "VOYAGE_ENCOUNTERS",
+          "spec": {
+            "section": 140,
+            "name": "The Chickens and the Witch",
+            "foes": [
+              {
+                "name": "Ferret",
+                "life": 4,
+                "hit": 6,
+                "bonus": 1,
+                "armour": 0,
+                "phase": 0
+              },
+              {
+                "name": "Ferret",
+                "life": 4,
+                "hit": 6,
+                "bonus": 1,
+                "armour": 0,
+                "phase": 0
+              },
+              {
+                "name": "Ferret",
+                "life": 4,
+                "hit": 6,
+                "bonus": 1,
+                "armour": 0,
+                "phase": 0
+              },
+              {
+                "name": "Ferret",
+                "life": 4,
+                "hit": 6,
+                "bonus": 1,
+                "armour": 0,
+                "phase": 0
+              },
+              {
+                "name": "Ferret",
+                "life": 4,
+                "hit": 6,
+                "bonus": 1,
+                "armour": 0,
+                "phase": 0
+              },
+              {
+                "name": "Ferret",
+                "life": 4,
+                "hit": 6,
+                "bonus": 1,
+                "armour": 0,
+                "phase": 0
+              },
+              {
+                "name": "Ferret",
+                "life": 4,
+                "hit": 6,
+                "bonus": 1,
+                "armour": 0,
+                "phase": 0
+              },
+              {
+                "name": "Ferret",
+                "life": 4,
+                "hit": 6,
+                "bonus": 1,
+                "armour": 0,
+                "phase": 0
+              },
+              {
+                "name": "Ferret",
+                "life": 4,
+                "hit": 6,
+                "bonus": 1,
+                "armour": 0,
+                "phase": 0
+              },
+              {
+                "name": "Ferret",
+                "life": 4,
+                "hit": 6,
+                "bonus": 1,
+                "armour": 0,
+                "phase": 0
+              },
+              {
+                "name": "Ferret",
+                "life": 4,
+                "hit": 6,
+                "bonus": 1,
+                "armour": 0,
+                "phase": 0
+              },
+              {
+                "name": "Ferret",
+                "life": 4,
+                "hit": 6,
+                "bonus": 1,
+                "armour": 0,
+                "phase": 0
+              },
+              {
+                "name": "Rosy-Cheeked Witch",
+                "life": 20,
+                "hit": 6,
+                "bonus": 0,
+                "armour": 0,
+                "phase": 1,
+                "fullDice": true,
+                "evilEye": true
+              }
+            ],
+            "jason": true,
+            "splitFerrets": true,
+            "friendly": false,
+            "bribe": false,
+            "deathRequired": true
+          }
+        },
+        "part": {
+          "name": "Ferret",
+          "life": 4,
+          "hit": 6,
+          "bonus": 1,
+          "armour": 0,
+          "phase": 0
+        }
+      }
+    },
+    {
+      "key": "140:1",
+      "name": "Rosy-Cheeked Witch (140)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 20,
+      "pb": 0,
+      "adopt": {
+        "name": "Rosy-Cheeked Witch (140)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 20,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 20,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "catalog": "VOYAGE_ENCOUNTERS",
+          "spec": {
+            "section": 140,
+            "name": "The Chickens and the Witch",
+            "foes": [
+              {
+                "name": "Ferret",
+                "life": 4,
+                "hit": 6,
+                "bonus": 1,
+                "armour": 0,
+                "phase": 0
+              },
+              {
+                "name": "Ferret",
+                "life": 4,
+                "hit": 6,
+                "bonus": 1,
+                "armour": 0,
+                "phase": 0
+              },
+              {
+                "name": "Ferret",
+                "life": 4,
+                "hit": 6,
+                "bonus": 1,
+                "armour": 0,
+                "phase": 0
+              },
+              {
+                "name": "Ferret",
+                "life": 4,
+                "hit": 6,
+                "bonus": 1,
+                "armour": 0,
+                "phase": 0
+              },
+              {
+                "name": "Ferret",
+                "life": 4,
+                "hit": 6,
+                "bonus": 1,
+                "armour": 0,
+                "phase": 0
+              },
+              {
+                "name": "Ferret",
+                "life": 4,
+                "hit": 6,
+                "bonus": 1,
+                "armour": 0,
+                "phase": 0
+              },
+              {
+                "name": "Ferret",
+                "life": 4,
+                "hit": 6,
+                "bonus": 1,
+                "armour": 0,
+                "phase": 0
+              },
+              {
+                "name": "Ferret",
+                "life": 4,
+                "hit": 6,
+                "bonus": 1,
+                "armour": 0,
+                "phase": 0
+              },
+              {
+                "name": "Ferret",
+                "life": 4,
+                "hit": 6,
+                "bonus": 1,
+                "armour": 0,
+                "phase": 0
+              },
+              {
+                "name": "Ferret",
+                "life": 4,
+                "hit": 6,
+                "bonus": 1,
+                "armour": 0,
+                "phase": 0
+              },
+              {
+                "name": "Ferret",
+                "life": 4,
+                "hit": 6,
+                "bonus": 1,
+                "armour": 0,
+                "phase": 0
+              },
+              {
+                "name": "Ferret",
+                "life": 4,
+                "hit": 6,
+                "bonus": 1,
+                "armour": 0,
+                "phase": 0
+              },
+              {
+                "name": "Rosy-Cheeked Witch",
+                "life": 20,
+                "hit": 6,
+                "bonus": 0,
+                "armour": 0,
+                "phase": 1,
+                "fullDice": true,
+                "evilEye": true
+              }
+            ],
+            "jason": true,
+            "splitFerrets": true,
+            "friendly": false,
+            "bribe": false,
+            "deathRequired": true
+          }
+        },
+        "part": {
+          "name": "Rosy-Cheeked Witch",
+          "life": 20,
+          "hit": 6,
+          "bonus": 0,
+          "armour": 0,
+          "phase": 1,
+          "fullDice": true,
+          "evilEye": true
+        }
+      }
+    },
+    {
+      "key": "144:0",
+      "name": "Vulcan (144)",
+      "attack": 9,
+      "defense": 0,
+      "hp": 100000,
+      "pb": 50,
+      "adopt": {
+        "name": "Vulcan (144)",
+        "attack": 9,
+        "defense": 0,
+        "hp": 100000,
+        "pb": 50
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 21,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "VOYAGE_ENCOUNTERS",
+          "spec": {
+            "section": 144,
+            "name": "Vulcan",
+            "foes": [
+              {
+                "name": "Vulcan",
+                "life": 100000,
+                "hit": 9,
+                "bonus": 50,
+                "armour": 0
+              }
+            ],
+            "unarmed": true,
+            "vulcanArmour": true,
+            "surrenderDamage": 18,
+            "weaponImmune": true
+          }
+        },
+        "part": {
+          "name": "Vulcan",
+          "life": 100000,
+          "hit": 9,
+          "bonus": 50,
+          "armour": 0
+        }
+      }
+    },
+    {
+      "key": "151:0",
+      "name": "Superlizard (151)",
+      "attack": 9,
+      "defense": 0,
+      "hp": 18,
+      "pb": 0,
+      "adopt": {
+        "name": "Superlizard (151)",
+        "attack": 9,
+        "defense": 0,
+        "hp": 18,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 22,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "VOYAGE_ENCOUNTERS",
+          "spec": {
+            "section": 151,
+            "name": "Superlizard",
+            "foes": [
+              {
+                "name": "Superlizard",
+                "life": 18,
+                "hit": 9,
+                "bonus": 0,
+                "armour": 0,
+                "multiplier": 6
+              }
+            ],
+            "first": "enemy"
+          }
+        },
+        "part": {
+          "name": "Superlizard",
+          "life": 18,
+          "hit": 9,
+          "bonus": 0,
+          "armour": 0,
+          "multiplier": 6
+        }
+      }
+    },
+    {
+      "key": "157:0",
+      "name": "Harpy (157)",
+      "attack": 5,
+      "defense": 0,
+      "hp": 30,
+      "pb": 3,
+      "adopt": {
+        "name": "Harpy (157)",
+        "attack": 5,
+        "defense": 0,
+        "hp": 30,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 23,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "VOYAGE_ENCOUNTERS",
+          "spec": {
+            "section": 157,
+            "name": "Harpy",
+            "foes": [
+              {
+                "name": "Harpy",
+                "life": 30,
+                "hit": 5,
+                "bonus": 3,
+                "armour": 0
+              }
+            ],
+            "playerPenalty": 2
+          }
+        },
+        "part": {
+          "name": "Harpy",
+          "life": 30,
+          "hit": 5,
+          "bonus": 3,
+          "armour": 0
+        }
+      }
+    },
+    {
+      "key": "169:0",
+      "name": "Rock Them (169)",
+      "attack": 5,
+      "defense": 6,
+      "hp": 15,
+      "pb": 5,
+      "adopt": {
+        "name": "Rock Them (169)",
+        "attack": 5,
+        "defense": 6,
+        "hp": 15,
+        "pb": 5
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 24,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "VOYAGE_ENCOUNTERS",
+          "spec": {
+            "section": 169,
+            "name": "Rock Them",
+            "foes": [
+              {
+                "name": "Rock Them",
+                "life": 15,
+                "hit": 5,
+                "bonus": 5,
+                "armour": 6
+              }
+            ],
+            "playerAttacks": 2,
+            "roofChecks": true,
+            "deathRequired": true
+          }
+        },
+        "part": {
+          "name": "Rock Them",
+          "life": 15,
+          "hit": 5,
+          "bonus": 5,
+          "armour": 6
+        }
+      }
+    },
+    {
+      "key": "171:0",
+      "name": "Hecate (171)",
+      "attack": 4,
+      "defense": 0,
+      "hp": 25,
+      "pb": 2,
+      "adopt": {
+        "name": "Hecate (171)",
+        "attack": 4,
+        "defense": 0,
+        "hp": 25,
+        "pb": 2
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 25,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "VOYAGE_ENCOUNTERS",
+          "spec": {
+            "section": 171,
+            "name": "Hecate and the Pig",
+            "foes": [
+              {
+                "name": "Hecate",
+                "life": 25,
+                "hit": 4,
+                "bonus": 2,
+                "armour": 0
+              }
+            ],
+            "pig": true
+          }
+        },
+        "part": {
+          "name": "Hecate",
+          "life": 25,
+          "hit": 4,
+          "bonus": 2,
+          "armour": 0
+        }
+      }
+    },
+    {
+      "key": "175:0",
+      "name": "Babysaurus Rex (175)",
+      "attack": 5,
+      "defense": 2,
+      "hp": 50,
+      "pb": 4,
+      "adopt": {
+        "name": "Babysaurus Rex (175)",
+        "attack": 5,
+        "defense": 2,
+        "hp": 50,
+        "pb": 4
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 26,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "VOYAGE_ENCOUNTERS",
+          "spec": {
+            "section": 175,
+            "name": "Babysaurus Rex",
+            "foes": [
+              {
+                "name": "Babysaurus Rex",
+                "life": 50,
+                "hit": 5,
+                "bonus": 4,
+                "armour": 2
+              }
+            ],
+            "friendly": false,
+            "bribe": false
+          }
+        },
+        "part": {
+          "name": "Babysaurus Rex",
+          "life": 50,
+          "hit": 5,
+          "bonus": 4,
+          "armour": 2
+        }
+      }
+    },
+    {
+      "key": "179:0",
+      "name": "Hydra Head (179; 7 opponents)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 10,
+      "pb": 1,
+      "adopt": {
+        "name": "Hydra Head (179; 7 opponents)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 10,
+        "pb": 1
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 27,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "VOYAGE_ENCOUNTERS",
+          "spec": {
+            "section": 179,
+            "name": "Seven-Headed Hydra",
+            "foes": [
+              {
+                "name": "Hydra Head",
+                "life": 10,
+                "hit": 6,
+                "bonus": 1,
+                "armour": 0,
+                "serpent": true
+              },
+              {
+                "name": "Hydra Head",
+                "life": 10,
+                "hit": 6,
+                "bonus": 1,
+                "armour": 0,
+                "serpent": true
+              },
+              {
+                "name": "Hydra Head",
+                "life": 10,
+                "hit": 6,
+                "bonus": 1,
+                "armour": 0,
+                "serpent": true
+              },
+              {
+                "name": "Hydra Head",
+                "life": 10,
+                "hit": 6,
+                "bonus": 1,
+                "armour": 0,
+                "serpent": true
+              },
+              {
+                "name": "Hydra Head",
+                "life": 10,
+                "hit": 6,
+                "bonus": 1,
+                "armour": 0,
+                "serpent": true
+              },
+              {
+                "name": "Hydra Head",
+                "life": 10,
+                "hit": 6,
+                "bonus": 1,
+                "armour": 0,
+                "serpent": true
+              },
+              {
+                "name": "Hydra Head",
+                "life": 10,
+                "hit": 6,
+                "bonus": 1,
+                "armour": 0,
+                "serpent": true
+              }
+            ],
+            "simultaneous": true,
+            "deathRequired": true
+          }
+        },
+        "part": {
+          "name": "Hydra Head",
+          "life": 10,
+          "hit": 6,
+          "bonus": 1,
+          "armour": 0,
+          "serpent": true
+        }
+      }
+    },
+    {
+      "key": "181:0",
+      "name": "Harpy (181)",
+      "attack": 5,
+      "defense": 0,
+      "hp": 30,
+      "pb": 3,
+      "adopt": {
+        "name": "Harpy (181)",
+        "attack": 5,
+        "defense": 0,
+        "hp": 30,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 28,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "VOYAGE_ENCOUNTERS",
+          "spec": {
+            "section": 181,
+            "name": "Harpy",
+            "foes": [
+              {
+                "name": "Harpy",
+                "life": 30,
+                "hit": 5,
+                "bonus": 3,
+                "armour": 0
+              }
+            ],
+            "playerPenalty": 2
+          }
+        },
+        "part": {
+          "name": "Harpy",
+          "life": 30,
+          "hit": 5,
+          "bonus": 3,
+          "armour": 0
+        }
+      }
+    },
+    {
+      "key": "188:0",
+      "name": "Babysaurus Rex (188)",
+      "attack": 5,
+      "defense": 2,
+      "hp": 50,
+      "pb": 4,
+      "adopt": {
+        "name": "Babysaurus Rex (188)",
+        "attack": 5,
+        "defense": 2,
+        "hp": 50,
+        "pb": 4
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 29,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "VOYAGE_ENCOUNTERS",
+          "spec": {
+            "section": 188,
+            "name": "Babysaurus Rex",
+            "foes": [
+              {
+                "name": "Babysaurus Rex",
+                "life": 50,
+                "hit": 5,
+                "bonus": 4,
+                "armour": 2
+              }
+            ],
+            "friendly": false,
+            "bribe": false
+          }
+        },
+        "part": {
+          "name": "Babysaurus Rex",
+          "life": 50,
+          "hit": 5,
+          "bonus": 4,
+          "armour": 2
+        }
+      }
+    },
+    {
+      "key": "189:0",
+      "name": "Cyclops (189)",
+      "attack": 5,
+      "defense": 0,
+      "hp": 50,
+      "pb": 8,
+      "adopt": {
+        "name": "Cyclops (189)",
+        "attack": 5,
+        "defense": 0,
+        "hp": 50,
+        "pb": 8
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 30,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "VOYAGE_ENCOUNTERS",
+          "spec": {
+            "section": 189,
+            "name": "Cyclops",
+            "foes": [
+              {
+                "name": "Cyclops",
+                "life": 50,
+                "hit": 5,
+                "bonus": 8,
+                "armour": 0
+              }
+            ],
+            "friendly": false,
+            "bribe": false
+          }
+        },
+        "part": {
+          "name": "Cyclops",
+          "life": 50,
+          "hit": 5,
+          "bonus": 8,
+          "armour": 0
+        }
+      }
+    },
+    {
+      "key": "200:0",
+      "name": "Hecate (200)",
+      "attack": 4,
+      "defense": 0,
+      "hp": 25,
+      "pb": 2,
+      "adopt": {
+        "name": "Hecate (200)",
+        "attack": 4,
+        "defense": 0,
+        "hp": 25,
+        "pb": 2
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 31,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "VOYAGE_ENCOUNTERS",
+          "spec": {
+            "section": 200,
+            "name": "Hecate",
+            "foes": [
+              {
+                "name": "Hecate",
+                "life": 25,
+                "hit": 4,
+                "bonus": 2,
+                "armour": 0
+              }
+            ]
+          }
+        },
+        "part": {
+          "name": "Hecate",
+          "life": 25,
+          "hit": 4,
+          "bonus": 2,
+          "armour": 0
+        }
+      }
+    },
+    {
+      "key": "203:0",
+      "name": "Mummy (203)",
+      "attack": 4,
+      "defense": 0,
+      "hp": 33,
+      "pb": 0,
+      "adopt": {
+        "name": "Mummy (203)",
+        "attack": 4,
+        "defense": 0,
+        "hp": 33,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 32,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "VOYAGE_ENCOUNTERS",
+          "spec": {
+            "section": 203,
+            "name": "Mummy",
+            "foes": [
+              {
+                "name": "Mummy",
+                "life": 33,
+                "hit": 4,
+                "bonus": 0,
+                "armour": 0,
+                "fullDice": true,
+                "mummyPoison": true
+              }
+            ],
+            "playerPenalty": 5,
+            "automaticMagicHit": 5,
+            "deathRequired": true
+          }
+        },
+        "part": {
+          "name": "Mummy",
+          "life": 33,
+          "hit": 4,
+          "bonus": 0,
+          "armour": 0,
+          "fullDice": true,
+          "mummyPoison": true
+        }
+      }
+    },
+    {
+      "key": "dream3:0",
+      "name": "Ragged Rogue (dream3)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 12,
+      "pb": 1,
+      "adopt": {
+        "name": "Ragged Rogue (dream3)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 12,
+        "pb": 1
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 33,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "VOYAGE_DREAMS",
+          "spec": {
+            "section": "dream3",
+            "name": "Ragged Rogue",
+            "foes": [
+              {
+                "name": "Ragged Rogue",
+                "life": 12,
+                "hit": 6,
+                "bonus": 1,
+                "armour": 0
+              }
+            ],
+            "first": "player",
+            "dream": true,
+            "unarmed": true,
+            "strikeLimit": 3,
+            "deathRequired": true
+          }
+        },
+        "part": {
+          "name": "Ragged Rogue",
+          "life": 12,
+          "hit": 6,
+          "bonus": 1,
+          "armour": 0
+        }
+      }
+    },
+    {
+      "key": "dream4:0",
+      "name": "Large Man (dream4)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 25,
+      "pb": 3,
+      "adopt": {
+        "name": "Large Man (dream4)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 25,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 34,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "VOYAGE_DREAMS",
+          "spec": {
+            "section": "dream4",
+            "name": "Large Man with a Club",
+            "foes": [
+              {
+                "name": "Large Man",
+                "life": 25,
+                "hit": 6,
+                "bonus": 3,
+                "armour": 0,
+                "attacks": 2
+              }
+            ],
+            "first": "enemy",
+            "dream": true,
+            "playerHit": 4,
+            "playerBonus": 5
+          }
+        },
+        "part": {
+          "name": "Large Man",
+          "life": 25,
+          "hit": 6,
+          "bonus": 3,
+          "armour": 0,
+          "attacks": 2
+        }
+      }
+    },
+    {
+      "key": "dream7:0",
+      "name": "Gnurlbash Monster (dream7)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 30,
+      "pb": 2,
+      "adopt": {
+        "name": "Gnurlbash Monster (dream7)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 30,
+        "pb": 2
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 35,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "VOYAGE_DREAMS",
+          "spec": {
+            "section": "dream7",
+            "name": "Gnurlbash Monster",
+            "foes": [
+              {
+                "name": "Gnurlbash Monster",
+                "life": 30,
+                "hit": 6,
+                "bonus": 2,
+                "armour": 0
+              }
+            ],
+            "first": "enemy",
+            "dream": true,
+            "unarmed": true,
+            "deathRequired": true
+          }
+        },
+        "part": {
+          "name": "Gnurlbash Monster",
+          "life": 30,
+          "hit": 6,
+          "bonus": 2,
+          "armour": 0
+        }
+      }
+    },
+    {
+      "key": "dream8:0",
+      "name": "Shark (dream8)",
+      "attack": 6,
+      "defense": 0,
+      "hp": 20,
+      "pb": 4,
+      "adopt": {
+        "name": "Shark (dream8)",
+        "attack": 6,
+        "defense": 0,
+        "hp": 20,
+        "pb": 4
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 36,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "VOYAGE_DREAMS",
+          "spec": {
+            "section": "dream8",
+            "name": "Shark",
+            "foes": [
+              {
+                "name": "Shark",
+                "life": 20,
+                "hit": 6,
+                "bonus": 4,
+                "armour": 0
+              }
+            ],
+            "dream": true,
+            "unarmed": true
+          }
+        },
+        "part": {
+          "name": "Shark",
+          "life": 20,
+          "hit": 6,
+          "bonus": 4,
+          "armour": 0
+        }
+      }
+    },
+    {
+      "key": "navigation1:0",
+      "name": "Pondoozlewazzle Bird (navigation1)",
+      "attack": 12,
+      "defense": 0,
+      "hp": 100,
+      "pb": 0,
+      "adopt": {
+        "name": "Pondoozlewazzle Bird (navigation1)",
+        "attack": 12,
+        "defense": 0,
+        "hp": 100,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 37,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "VOYAGE_NAVIGATION",
+          "spec": {
+            "section": "navigation1",
+            "name": "Greater Spotted Pondoozlewazzle Bird",
+            "foes": [
+              {
+                "name": "Pondoozlewazzle Bird",
+                "life": 100,
+                "hit": 12,
+                "bonus": 0,
+                "armour": 0,
+                "lethalHit": true
+              }
+            ],
+            "first": "player",
+            "entryDamage": 3,
+            "deathRequired": true
+          }
+        },
+        "part": {
+          "name": "Pondoozlewazzle Bird",
+          "life": 100,
+          "hit": 12,
+          "bonus": 0,
+          "armour": 0,
+          "lethalHit": true
+        }
+      }
+    },
+    {
+      "key": "navigation2:0",
+      "name": "Chief's Daughter (navigation2)",
+      "attack": 5,
+      "defense": 0,
+      "hp": 35,
+      "pb": 3,
+      "adopt": {
+        "name": "Chief's Daughter (navigation2)",
+        "attack": 5,
+        "defense": 0,
+        "hp": 35,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 38,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "VOYAGE_NAVIGATION",
+          "spec": {
+            "section": "navigation2",
+            "name": "Cannibal Chief's Daughter",
+            "foes": [
+              {
+                "name": "Chief's Daughter",
+                "life": 35,
+                "hit": 5,
+                "bonus": 3,
+                "armour": 0
+              }
+            ],
+            "knockoutCaptivity": true,
+            "escapeRoll": 5,
+            "deathRequired": true
+          }
+        },
+        "part": {
+          "name": "Chief's Daughter",
+          "life": 35,
+          "hit": 5,
+          "bonus": 3,
+          "armour": 0
+        }
+      }
+    },
+    {
+      "key": "navigation6:0",
+      "name": "Kimono Dragon (navigation6)",
+      "attack": 4,
+      "defense": 0,
+      "hp": 30,
+      "pb": 4,
+      "adopt": {
+        "name": "Kimono Dragon (navigation6)",
+        "attack": 4,
+        "defense": 0,
+        "hp": 30,
+        "pb": 4
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "grailquest",
+        "dataset": "CATALOG",
+        "entryIndex": 39,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "catalog": "VOYAGE_NAVIGATION",
+          "spec": {
+            "section": "navigation6",
+            "name": "Zebra-Striped Kimono Dragon",
+            "foes": [
+              {
+                "name": "Kimono Dragon",
+                "life": 30,
+                "hit": 4,
+                "bonus": 4,
+                "armour": 0
+              }
+            ],
+            "first": "player",
+            "friendly": false,
+            "eggBribe": true
+          }
+        },
+        "part": {
+          "name": "Kimono Dragon",
+          "life": 30,
+          "hit": 4,
+          "bonus": 4,
+          "armour": 0
+        }
+      }
+    }
+  ]
+}

@@ -1345,11 +1345,26 @@
     {
       "bookId": 529,
       "databaseEnemyRows": 42,
-      "apiConsumers": [],
-      "inlineDataFiles": [
-        "public/js/battlesim/engines/grailquest/voyage-of-terror-roster.js"
+      "apiConsumers": [
+        "public/js/battlesim/roster-data.js"
       ],
-      "runtimeRosterReviewPending": true
+      "inlineDataFiles": [],
+      "runtimeRosterReviewPending": false,
+      "verification": {
+        "source": "data/simulator-rosters/529.json",
+        "savedIdsPreserved": true,
+        "desktopAndMobileBrowserWidths": [
+          320,
+          390,
+          1100
+        ],
+        "actualLazyLoaders": true,
+        "liveApiVerified": true,
+        "legacyRowsAdopted": 42,
+        "legacyFieldChanges": 0,
+        "catalogs": "Normal, Dreamtime and navigation encounters, shadow rules and support templates",
+        "legacySavedShadows": "Captured wounds, grips, round and unknown fields retained; no added saved metadata."
+      }
     },
     {
       "bookId": 530,
@@ -2264,6 +2279,7 @@
       524,
       527,
       528,
+      529,
       555,
       557,
       781,
