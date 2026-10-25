@@ -398,6 +398,12 @@ body.sidebar-collapsed #play-btns-bar   { left: 50vw; }
 }
 
 /* Keep membership choices compact, with the same gray highlight as other lists. */
+.series-row .app-select {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.series-row .app-select option { white-space: normal; }
 .series-row .app-select option:checked {
   background: #374151;
   color: #f9fafb;
