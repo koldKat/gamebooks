@@ -240,6 +240,18 @@ function coinMintPct(xp, mintPurchased) {
 function coinsFromXp(xp, mintPurchased) {
   return Math.floor(((xp || 0) / 1000) * (1 + coinMintPct(xp, mintPurchased)));
 }
+function xpUntilNextCoin(xp, mintPurchased) {
+  const current = coinsFromXp(xp, mintPurchased);
+  let low = 1, high = 1000;
+  // The mint rate may increase at the next level. Use the actual earning
+  // calculation so the countdown includes that bonus and integer rounding.
+  while (low < high) {
+    const middle = Math.floor((low + high) / 2);
+    if (coinsFromXp(xp + middle, mintPurchased) > current) high = middle;
+    else low = middle + 1;
+  }
+  return low;
+}
 // Spendable balance from a user row (xp, bonus_coins, coins_spent, bonus_gc_mint_purchased).
 function coinBalance(row) {
   return coinsFromXp(row?.xp || 0, row?.bonus_gc_mint_purchased)
@@ -508,6 +520,7 @@ function userXpInfoFromRow(row, bonusGcClaimed) {
     nextLevelXp:       level < 100 ? xpForLevel(level + 1) : null,
     coinsEarned,
     coinsBalance,
+    coinXpUntilNext:    xpUntilNextCoin(xp, row?.bonus_gc_mint_purchased),
     coinsSpent:        row?.coins_spent          || 0,
     bonusCoins:        row?.bonus_coins          || 0,
     adminGiftedCoins:  row?.admin_gifted_coins   || 0,

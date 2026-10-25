@@ -28,8 +28,20 @@ function fixture({ xp = 1890993, purchased = 24, balance = 25 } = {}) {
   return { db, refund: vm.runInContext('_adminRefundShopItemTx', context), purchase: (item, id = 1) => context.purchaseShopItem(id, item), balance: () => context.coinBalance(db.prepare('SELECT * FROM users WHERE id=1').get()), notifications: () => db.prepare('SELECT * FROM notifications').all(),
     totals: () => getShopPurchaseTotals(db, context.computeLevel),
     quotes: () => getShopRefundRows(db.prepare('SELECT * FROM users WHERE id=1').get(), context.getShopItems(), context.computeLevel),
-    setCost: (...args) => context.setShopItemCost(...args) };
+    setCost: (...args) => context.setShopItemCost(...args), countdown: context.xpUntilNextCoin, minted: context.coinsFromXp };
 }
+
+test('gold countdown finds the next actual minted coin, including upgrades, level boundaries and rounding', t=>{
+  const f=fixture();t.after(()=>f.db.close());
+  assert.equal(f.countdown(0,0),1000);
+  assert.equal(f.countdown(999,0),1);
+  for(const [xp,purchased] of [[1000,0],[2999,1],[55000,10],[1890993,24],[999.5,0],[5999,100],[1234567,500]]){
+    const remaining=f.countdown(xp,purchased),current=f.minted(xp,purchased);
+    assert.ok(remaining>=1&&remaining<=1000);
+    assert.ok(f.minted(xp+remaining,purchased)>current);
+    assert.equal(f.minted(xp+remaining-1,purchased),current);
+  }
+});
 
 test('all seven active purchase totals exclude free bonuses and refund quotes match actual latest/all refunds', t => {
   const f=fixture();t.after(()=>f.db.close());

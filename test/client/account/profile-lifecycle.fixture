@@ -7,7 +7,7 @@ const el = id => {
   if (!nodes.has(id)) {
     const classes = new Set();
     nodes.set(id, { style: {}, textContent: '', innerHTML: '', value: '',
-      querySelector: () => null, setAttribute() {}, removeAttribute() {},
+      querySelector: () => null, setAttribute(name,value) { this[name]=value; }, removeAttribute(name) { delete this[name]; },
       classList: { add: c => classes.add(c), remove: c => classes.delete(c), contains: c => classes.has(c) } });
   }
   return nodes.get(id);
@@ -93,6 +93,19 @@ now = 100; frames.shift()(now);
 assert.equal(frames.length, 0, 'existing tween still finishes');
 assert.ok(el('play-xp-boost').innerHTML.includes('+0.3% boost'));
 console.log('Immediate boost/heartbeat purchase updates and active-animation preservation passed.');
+
+profile.renderBooksXpSummary({...xpData,coinXpUntilNext:456});
+for(const prefix of ['books','play']){
+  assert.equal(el(`${prefix}-xp-bar`)['data-tooltip'],'456 XP until next GC');
+  assert.equal(el(`${prefix}-xp-summary`)['data-tooltip'],undefined);
+  assert.equal(el(`${prefix}-xp-level`)['data-tooltip'],undefined);
+  assert.equal(el(`${prefix}-xp-title`)['data-tooltip'],undefined);
+  assert.equal(el(`${prefix}-xp-text`)['data-tooltip'],undefined);
+}
+profile.renderBooksXpSummary({...xpData,coinXpUntilNext:123},{fromXp:xpData.xp});
+assert.equal(el('play-xp-bar')['data-tooltip'],'123 XP until next GC','mint purchase updates the countdown at the same XP');
+profile.renderBooksXpSummary(xpData);
+assert.equal(el('play-xp-bar')['data-tooltip'],undefined,'older snapshots do not invent a countdown');
 
 let isAdmin = true;
 function settleAnimations() {

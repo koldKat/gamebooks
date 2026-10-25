@@ -164,6 +164,12 @@ function _renderXpSummary(prefix, data) {
   const wrap = document.getElementById(`${prefix}-xp-summary`);
   if (!wrap) return;
   if (!data || !getToken()) { wrap.style.display = 'none'; return; }
+  const bar = document.getElementById(`${prefix}-xp-bar`);
+  if (bar) {
+    bar.title = '';
+    if (Number.isSafeInteger(data.coinXpUntilNext)) bar.setAttribute('data-tooltip', `${data.coinXpUntilNext.toLocaleString()} XP until next GC`);
+    else bar.removeAttribute('data-tooltip');
+  }
   const { level = 0, title = null, bonusHeartbeatXp = 0, bonusHeartbeatXpFree = 0 } = data;
   const levelEl  = document.getElementById(`${prefix}-xp-level`);
   const titleEl  = document.getElementById(`${prefix}-xp-title`);
