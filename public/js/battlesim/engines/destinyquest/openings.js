@@ -3,7 +3,7 @@ import { destinyDie } from './damage.js';
 import { settleDestinyFight } from './core.js';
 
 export function useDestinyOpening(fight, name, options, roll) {
-  if (fight?.status !== 'active' || fight.round !== 0 || fight.phase !== 'start' ||
+  if (fight?.status !== 'active' || (fight.round !== 0 && !(fight.encounter?.pathProgress && !fight.encounter.pathProgress.combatStarted)) || fight.phase !== 'start' ||
       !hasDestinyAbility(fight, name) || fight.used[name]) throw new RangeError('Use this ability once before combat');
   const next = structuredClone(fight);
   next.turn ??= { used: { sp: false, co: false, dm: false, backpack: false }, deaths: [], deathMoveDeathsSeen: 0 };
@@ -29,8 +29,8 @@ export function useDestinyOpening(fight, name, options, roll) {
     next.iceMantle = true;
   } else throw new RangeError('Unknown opening ability');
   next.used[name] = 1;
-  next.history.push({ type: 'opening', name, round: 0 });
-  if (!settleDestinyFight(next) && next.turn.deaths.length > next.turn.deathMoveDeathsSeen) {
+  next.history.push({ type: 'opening', name, round: next.round });
+  if (!settleDestinyFight(next, roll) && next.turn.deaths.length > next.turn.deathMoveDeathsSeen) {
     next.phase = 'death-move';
     next.turn.afterDeathMove = 'start';
   }

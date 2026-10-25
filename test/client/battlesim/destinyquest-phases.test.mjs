@@ -5,7 +5,7 @@ import { startDestinyRound, rollDestinySpeed, resolveDestinySpeed, rollDestinyDa
   endDestinyRound, skipDestinyDeathMove, retargetDestinyRound } from '../../../public/js/battlesim/engines/destinyquest/core.js';
 import { useDestinyAbility as use } from '../../../public/js/battlesim/engines/destinyquest/abilities.js';
 import { destinyStat, isDestinyOpponentActive } from '../../../public/js/battlesim/engines/destinyquest/effects.js';
-import { resolveDestinyAbilityRoll as resolve } from '../../../public/js/battlesim/engines/destinyquest/ability-rolls.js';
+import { resolveDestinyAbilityRoll as resolve } from './destinyquest-fixtures.mjs';
 
 const rolls = (...values) => () => { assert.ok(values.length, 'Unexpected roll'); return values.shift(); };
 const preset = (section, hero = {}, abilities = {}, options = {}) => createWinterFight({ speed: 20, brawn: 4, magic: 3,

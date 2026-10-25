@@ -1,13 +1,24 @@
+import { createDestinyOpponent } from './core.js';
+import { spawnDestinyOpponents } from './round-events.js';
 import { destinyDie } from './damage.js';
-import { destinyStat, addDestinyStatEffect, observeDestinyHealth, hasDestinyAbility, destinyStrike, isDestinyOpponentActive, destinyAttackerTarget } from './effects.js';
+import { destinyEncounterEventSettings } from './encounter-settings.js';
+import { destinyStat, addDestinyStatEffect, observeDestinyHealth, hasDestinyAbility, destinyStrike, isDestinyOpponentActive, isDestinyOpponentDead, recordDestinyDefeat, destinyAttackerTarget } from './effects.js';
 
 export function queueDestinyEncounterEvent(fight, event, returnPhase, roll) {
-  if (['ability-rolled', 'ability-choice'].includes(fight.phase)) {
+  const suspended = ['ability-rolled', 'ability-choice'].includes(fight.phase) ? fight.turn.pendingAbility : null;
+  if (suspended && !event.interruptsPending) {
     (fight.turn.afterAbilityEvents ??= []).push({ event: structuredClone(event), returnPhase });
     return;
   }
+  if (['ability-sacrifice', 'defeat-choice'].includes(event.kind)) {
+    fight.turn.pendingAbility = { type: event.kind, name: event.name, event: structuredClone(event), returnPhase };
+    fight.phase = 'ability-choice';
+    return;
+  }
+  const boosted = event.boostFromPreviousStep && fight.encounter?.[event.boostFromPreviousStep] === fight.encounter?.hazardStep - 1;
   fight.turn.pendingAbility = { type: 'encounter', name: event.name, event: structuredClone(event), returnPhase,
-    dice: Array.from({ length: event.dice || 1 }, () => destinyDie(roll)), bonuses: {}, options: {} };
+    dice: Array.from({ length: boosted ? event.boostDice : event.dice ?? 1 }, () => destinyDie(roll)), bonuses: {}, options: {} };
+  if (suspended) fight.turn.pendingAbility.suspendedAbility = structuredClone(suspended);
   fight.phase = 'ability-rolled';
 }
 
@@ -17,17 +28,16 @@ export function resumeDestinyEncounterQueue(fight, roll) {
   if (queued) queueDestinyEncounterEvent(fight, queued.event, queued.returnPhase, roll);
 }
 
-function heroDamage(fight, amount, enemyDice = false) {
+function heroDamage(fight, amount, enemyDice = false, attacker = destinyAttackerTarget(fight)) {
   const lost = Math.min(fight.hero.health, amount);
   fight.hero.health -= lost;
   observeDestinyHealth(fight);
-  const attacker = destinyAttackerTarget(fight);
   if (enemyDice && lost && hasDestinyAbility(fight, 'lightning') && isDestinyOpponentActive(fight, attacker)) {
     destinyStrike(fight, attacker, 2, 'lightning', 'passive');
   }
 }
 
-export function resolveDestinyEncounterEvent(fight, pending, roll) {
+export function resolveDestinyEncounterEvent(fight, pending, roll, { roster } = {}) {
   const { event, dice } = pending;
   const total = dice.reduce((sum, value, index) => sum + value + (pending.bonuses?.[index] || 0), 0);
   fight.phase = pending.returnPhase;
@@ -36,7 +46,34 @@ export function resolveDestinyEncounterEvent(fight, pending, roll) {
     if (event.atEnd) (fight.turn.encounterEndEffects ??= []).push({ target: 'hero', amount, ignoreArmour: true, source: event.name });
     else heroDamage(fight, amount);
   };
+  let eventSettings;
+  const settings = () => eventSettings ??= destinyEncounterEventSettings(fight, roster, event.kind);
   switch (event.kind) {
+    case 'loss-if-low':
+      if(total<=event.limit)fight.encounter.forcedLoss=true;
+      break;
+    case 'schedule-end-effect':
+      (fight.encounter.scheduledEndEffects ??= []).push({ ...structuredClone(event.effect), round: total + event.delay });
+      break;
+    case 'spawn':
+      if (event.source === undefined || isDestinyOpponentActive(fight, event.source)) {
+        spawnDestinyOpponents(fight, { ...event, count: total <= event.limit ? event.lowCount : event.highCount }, fight.round, createDestinyOpponent);
+      }
+      break;
+    case 'revival': {
+      if (isDestinyOpponentDead(fight, event.target) && total >= event.minimum) {
+        fight.opponents[event.target].health = event.health;
+        fight.turn.deaths = fight.turn.deaths.filter(target => target !== event.target);
+        if (!fight.turn.deaths.length) fight.turn.pendingPassiveDeath = false;
+        if (fight.phase === 'death-move' && fight.turn.deaths.length <= fight.turn.deathMoveDeathsSeen) fight.phase = fight.turn.afterDeathMove;
+        fight.history.push({ type: 'revival', round: fight.round, target: event.target, health: event.health });
+      } else recordDestinyDefeat(fight, event.target);
+      if (['start', 'encounter-start'].includes(fight.phase) && fight.turn.deaths.length > fight.turn.deathMoveDeathsSeen && !fight.turn.used.dm) {
+        fight.turn.afterDeathMove = fight.phase;
+        fight.phase = 'death-move';
+      }
+      break;
+    }
     case 'damage-if-low': {
       const limit = event.limit === 'round' ? Math.min(6, fight.round) : event.limit;
       const score = total + (event.attribute ? destinyStat(fight, 'hero', event.attribute) : 0);
@@ -50,81 +87,119 @@ export function resolveDestinyEncounterEvent(fight, pending, roll) {
       stageDamage(dice.filter(value => event.faces.includes(value)).reduce((sum, value) => sum + value, 0));
       break;
     case 'transport-damage': {
+      const rule = settings();
       stageDamage(total);
       const transport = fight.equipment?.transport;
       if (!transport) throw new RangeError('Choose the transport used in this encounter');
-      for (const attribute of ['stability', 'toughness']) transport[attribute] = Math.max(0, transport[attribute] - 2);
+      for (const [attribute, amount] of Object.entries(rule.wear)) transport[attribute] = Math.max(0, transport[attribute] - amount);
       for (const effect of fight.effects) if (effect.source === 'armour-plating') effect.amount = Math.floor(transport.toughness / 2);
       break;
     }
     case 'stat-if-low':
       if (total <= event.limit) {
-        if (event.attribute) addDestinyStatEffect(fight, 'hero', event.attribute, event.amount, 1, event.name, event.delay || 0);
+        if (event.attribute) addDestinyStatEffect(fight, 'hero', event.attribute, event.amount, settings().duration, event.name, event.delay || 0);
         for (const change of event.changes || []) addDestinyStatEffect(fight, change.target, change.attribute, change.amount, change.duration, event.name, change.delay || 0);
       }
       break;
-    case 'spirit-link':
-      if (total <= 3) {
-        stageDamage(4);
-        (fight.turn.encounterEndOpponentHealing ??= []).push({ target: 0, amount: 4 });
+    case 'spirit-link': {
+      const rule = settings();
+      if (total <= rule.limit) {
+        stageDamage(rule.damage);
+        (fight.turn.encounterEndOpponentHealing ??= []).push({ ...rule.healing });
       }
       break;
-    case 'distracted': if (total <= 3) fight.phase = 'end'; break;
-    case 'weak-venom':
-      if (total === 1) (fight.encounter.heroStatuses ??= {}).venom = 2;
+    }
+    case 'distracted': if (total <= settings().limit) fight.phase = 'end'; break;
+    case 'weak-venom': {
+      const rule = settings();
+      if (total === rule.face) (fight.encounter.heroStatuses ??= {})[rule.status] = rule.amount;
       break;
+    }
     case 'yield':
-      if (total >= 4) fight.encounter.forcedVictory = true;
+      if (total >= settings().minimum) fight.encounter.forcedVictory = true;
       break;
-    case 'roc-attack':
-      if (total <= 2) {
-        heroDamage(fight, 5);
-        addDestinyStatEffect(fight, 'hero', 'speed', -1, 1, event.name, 1);
+    case 'roc-attack': {
+      const rule = settings();
+      if (total <= rule.limit) {
+        heroDamage(fight, rule.damage);
+        for (const change of rule.changes) addDestinyStatEffect(fight, change.target, change.attribute, change.amount, change.duration, event.name, change.delay || 0);
         fight.phase = 'end';
       }
       break;
-    case 'sable-attack':
-      if (total <= 2) {
+    }
+    case 'sable-attack': {
+      const rule = settings();
+      if (total <= rule.healingLimit) {
         const opponent = fight.opponents[fight.target];
-        opponent.health = Math.min(opponent.maxHealth, opponent.health + 5);
+        opponent.health = Math.min(opponent.maxHealth, opponent.health + rule.healing);
         fight.phase = 'end';
-      } else if (total >= 5) {
-        fight.encounter.blockedRounds = { from: fight.round + 1, until: fight.round + 1, categories: ['sp', 'co'] };
-        queueDestinyEncounterEvent(fight, { name: 'Curse of chaos', kind: 'enemy-dice-damage', dice: 3, owner: 'opponent', damageDice: true }, 'end', roll);
+      } else if (total >= rule.curseMinimum) {
+        const from = fight.round + rule.blockDelay;
+        fight.encounter.blockedRounds = { from, until: from + rule.blockDuration - 1, categories: [...rule.blockedCategories] };
+        queueDestinyEncounterEvent(fight, rule.curse, 'end', roll);
       }
       break;
+    }
     case 'enemy-dice-damage':
-      heroDamage(fight, total, true);
+      heroDamage(fight, total, true, event.attacker ?? destinyAttackerTarget(fight));
+      if (event.markStep) fight.encounter[event.markStep] = fight.encounter.hazardStep;
+      if (event.nextStepStats) (fight.encounter.nextStepStats ??= []).push(...structuredClone(event.nextStepStats));
       if (fight.hero.health > 0 && event.followUp) queueDestinyEncounterEvent(fight, event.followUp, pending.returnPhase, roll);
       break;
+    case 'sequence-challenge':
+      fight.encounter.sequenceRemaining--;
+      if (total + destinyStat(fight, 'hero', event.attribute) + (event.attributeModifier || 0) < event.minimum) {
+        queueDestinyEncounterEvent(fight, event.onFailure, pending.returnPhase, roll);
+      }
+      break;
+    case 'actor-strike': {
+      const outcome = event.outcomes.find(item => item.faces.includes(total));
+      if (!outcome) throw new RangeError('No encounter outcome for this roll');
+      if (isDestinyOpponentActive(fight, outcome.target)) {
+        queueDestinyEncounterEvent(fight, { ...outcome.event, attacker: outcome.target }, pending.returnPhase, roll);
+      }
+      break;
+    }
+    case 'armour-corrosion': {
+      const current = destinyStat(fight, 'hero', event.attribute);
+      if (current > 0) addDestinyStatEffect(fight, 'hero', event.attribute, -Math.min(current, event.amount), null, event.name);
+      else queueDestinyEncounterEvent(fight, { ...event.overflow, attacker: event.attacker }, pending.returnPhase, roll);
+      break;
+    }
+    case 'restart-sequence':
+      if (total <= event.limit) fight.encounter.sequenceRemaining = event.count;
+      break;
     case 'sasquatch-attack':
-      if (total >= 3) queueDestinyEncounterEvent(fight, { name: 'Swat back damage', kind: 'enemy-dice-damage', dice: 2,
-        owner: 'opponent', damageDice: true, followUp: { name: 'Ground smash', kind: 'sasquatch-challenge', dice: 2 } }, 'end', roll);
+      if (total >= settings().minimum) queueDestinyEncounterEvent(fight, settings().followUp, 'end', roll);
       break;
     case 'sasquatch-challenge':
-      if (total + destinyStat(fight, 'hero', 'speed') <= 14) queueDestinyEncounterEvent(fight,
-        { name: 'Ground smash damage', kind: 'enemy-dice-damage', dice: 1, owner: 'opponent', damageDice: true }, 'end', roll);
+      if (total + destinyStat(fight, 'hero', settings().attribute) <= settings().limit) queueDestinyEncounterEvent(fight,
+        settings().followUp, 'end', roll);
       break;
     case 'splinters':
-      if (!event.avoided) heroDamage(fight, dice.filter(face => face <= 2).length * 4);
+      if (!event.avoided) heroDamage(fight, dice.filter(face => face <= settings().faceMaximum).length * settings().damagePerFace);
       break;
-    case 'ice-prison':
-      if (!fight.encounter.skollFreed && total === 6) {
+    case 'ice-prison': {
+      const rule = settings();
+      if (!fight.encounter.skollFreed && total === rule.face) {
         fight.encounter.prisonSixes = (fight.encounter.prisonSixes || 0) + 1;
-        if (fight.encounter.prisonSixes === 3) {
+        if (fight.encounter.prisonSixes === rule.requiredSuccesses) {
           fight.encounter.skollFreed = true;
-          fight.turn.encounterEndHealing = 6;
-          fight.encounter.heroScoreBonus = (fight.encounter.heroScoreBonus || 0) + 2;
+          fight.turn.encounterEndHealing = rule.healing;
+          fight.encounter.heroScoreBonus = (fight.encounter.heroScoreBonus || 0) + rule.scoreBonus;
         }
       }
       break;
-    case 'birdman-attack': if (total <= 3) fight.phase = 'end'; break;
-    case 'remove-acorn':
-      if (total >= 3) {
+    }
+    case 'birdman-attack': if (total <= settings().limit) fight.phase = 'end'; break;
+    case 'remove-acorn': {
+      const rule = settings();
+      if (total >= rule.minimum) {
         fight.encounter.acornsRemoved = (fight.encounter.acornsRemoved || 0) + 1;
-        for (const attribute of ['speed', 'magic', 'armour']) addDestinyStatEffect(fight, 0, attribute, -1, null, event.name);
-      } else heroDamage(fight, 4);
+        for (const change of rule.changes) addDestinyStatEffect(fight, change.target, change.attribute, change.amount, change.duration, event.name, change.delay || 0);
+      } else heroDamage(fight, rule.failureDamage);
       break;
+    }
     default: throw new RangeError('Unknown encounter event');
   }
 }

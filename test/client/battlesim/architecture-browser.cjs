@@ -1,6 +1,8 @@
 const fs=require('fs'),path=require('path');
 const checkBrowser=require('./browser-harness.cjs');
 const root=process.env.TMPDIR,repo=process.cwd();
+const receiptName=process.env.SIMULATOR_RECEIPT;
+if(receiptName&&!/^[a-zA-Z0-9-]+\.json$/.test(receiptName))throw Error('Invalid receipt name');
 if(!root?.startsWith('/media/koldKat/MediaDrive/.tmp/'))throw Error('Use MediaDrive scratch');
 const ids=process.argv.includes('--all')?fs.readdirSync('public/js/battlesim/books').map(Number).sort((a,b)=>a-b):process.argv.slice(2).map(Number);if(!ids.length)throw Error('Supply book IDs');
 // Full-catalog audits can exercise older API-backed simulators with the actual
@@ -42,5 +44,5 @@ if(scenario&&!/^[a-z-]+$/.test(scenario))throw Error('Invalid simulator scenario
     const hash=bytes=>require('node:crypto').createHash('sha256').update(bytes).digest('hex');
     receipt={results,hashes:Object.fromEntries(require('./browser-sources.cjs')(files).map(file=>[file,hash(fs.readFileSync(file))]))};
   }
-  fs.writeFileSync(path.join(root,scenario?scenario+'-browser.json':'simulator-architecture-browser.json'),JSON.stringify(receipt,null,2));
+  fs.writeFileSync(path.join(root,receiptName||(scenario?scenario+'-browser.json':'simulator-architecture-browser.json')),JSON.stringify(receipt,null,2));
 }finally{fs.rmSync(scratch,{recursive:true,force:true});}})().catch(e=>{console.error(e);process.exitCode=1;});

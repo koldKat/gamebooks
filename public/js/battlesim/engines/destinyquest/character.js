@@ -29,6 +29,16 @@ export function cureDestinyCharacter(character) {
   return next;
 }
 
+export function destinyCharacterAbilityCounts(character, inventory, equipment = {}) {
+  if (!inventory) return inventory;
+  const counts = structuredClone(inventory);
+  for (const [penalty, slot] of [['crippled', 'feet'], ['nervous-twitch', 'mainHand']]) {
+    if (!character.penalties.includes(penalty)) continue;
+    for (const name of equipment[slot]?.abilities || []) if (counts[name]) counts[name]--;
+  }
+  return counts;
+}
+
 export function attachDestinyCharacter(fight, character) {
   if (fight?.status !== 'active' || fight.round !== 0 || fight.phase !== 'start' || Object.keys(fight.used).length) throw new RangeError('Attach the character before combat');
   if (fight.character) throw new RangeError('Character already attached');
@@ -36,12 +46,7 @@ export function attachDestinyCharacter(fight, character) {
   if (profile.pendingRingDestruction) throw new RangeError('Resolve the lost ring before another fight');
   const next = structuredClone(fight);
   next.character = profile;
-  for (const [penalty, slot] of [['crippled', 'feet'], ['nervous-twitch', 'mainHand']]) {
-    if (!profile.penalties.includes(penalty)) continue;
-    for (const name of next.equipment?.[slot]?.abilities || []) {
-      if (next.abilities?.[name]) next.abilities[name]--;
-    }
-  }
+  if (next.abilities) next.abilities = destinyCharacterAbilityCounts(profile, next.abilities, next.equipment);
   return next;
 }
 
@@ -95,6 +100,7 @@ export function resolveDestinyRingLoss(character, slot) {
       const amount = removed[attribute] ?? 0;
       if (!Number.isSafeInteger(amount) || amount < 0) throw new RangeError('Invalid ring attributes');
       if (typeof next.attributes?.[attribute] === 'number') next.attributes[attribute] = Math.max(0, next.attributes[attribute] - amount);
+      if (attribute === 'health' && typeof next.attributes?.maxHealth === 'number') next.attributes.maxHealth = Math.max(0, next.attributes.maxHealth - amount);
     }
   }
   delete next.pendingRingDestruction;

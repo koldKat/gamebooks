@@ -698,3 +698,12 @@
 .bsim-opponent-editor .autocomplete-wrap { flex: 1; min-width: 0; }
 .bsim-opponent-editor .autocomplete-wrap > .inv-edit-input { width: 100%; }
 .bsim-opponent-editor > button[hidden], .bsim-opponent-row > button[hidden] { display: none; }
+.bsim-modal .bsim-path-board {
+  display: grid;
+  grid-template-columns: repeat(var(--bsim-board-columns, 3), minmax(0, 1fr));
+  gap: 0.35rem;
+}
+.bsim-modal .bsim-path-board .inv-edit-row { display: block; }
+.bsim-modal .bsim-path-board .inv-edit-row > span { display: block; width: auto; }
+.bsim-modal .bsim-path-board .inv-edit-row > select.inv-edit-input { width: 100%; min-width: 0; }
+.bsim-modal .bsim-combatant { overflow-wrap: anywhere; padding: 0.25rem 0; }

@@ -2,6 +2,7 @@ import { destinyStat, destinyStrike, addDestinyStatEffect, isDestinyOpponentActi
 import { destinyDie, prepareDestinyDamage, applyDestinyDamage } from './damage.js';
 import { settleDestinyFight } from './core.js';
 import { resolveDestinyEncounterEvent, resumeDestinyEncounterQueue } from './encounter-events.js';
+import { applyDestinyAbilityInterception } from './abilities.js';
 
 export function prepareDestinyAbilityRoll(fight, name, options, roll) {
   const target = options.target ?? fight.target;
@@ -19,17 +20,24 @@ export function finishDestinyAbilityAction(fight, roll = () => Math.floor(Math.r
     fight.phase = 'death-move';
     fight.turn.afterDeathMove = 'end';
   }
-  settleDestinyFight(fight);
+  settleDestinyFight(fight, roll);
   resumeDestinyEncounterQueue(fight, roll);
   return fight;
 }
 
-export function resolveDestinyAbilityRoll(fight, roll = () => Math.floor(Math.random() * 6) + 1) {
+export function resolveDestinyAbilityRoll(fight, roll = () => Math.floor(Math.random() * 6) + 1, { roster } = {}) {
   if (fight?.status !== 'active' || fight.phase !== 'ability-rolled' || !fight.turn.pendingAbility) throw new RangeError('No pending ability roll');
   const next = structuredClone(fight);
   const pending = next.turn.pendingAbility;
   delete next.turn.pendingAbility;
-  if (pending.type === 'encounter') resolveDestinyEncounterEvent(next, pending, roll);
+  if (pending.type === 'ability-interception') return applyDestinyAbilityInterception(next, pending, roll);
+  if (pending.type === 'encounter') {
+    resolveDestinyEncounterEvent(next, pending, roll, { roster });
+    if (pending.suspendedAbility && next.hero.health > 0) {
+      next.turn.pendingAbility = pending.suspendedAbility;
+      next.phase = pending.returnPhase;
+    }
+  }
   else if (pending.type === 'resource') {
     const before = next.encounter.resources[pending.resource];
     next.encounter.resources[pending.resource] = Math.max(0, before - pending.dice.reduce((sum, value) => sum + value, 0));

@@ -1,11 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createWinterFight } from './destinyquest-fixtures.mjs';
-import { useWinterAction } from '../../../public/js/battlesim/engines/destinyquest/winters-fury.js';
+import { createWinterFight, useWinterAction } from './destinyquest-fixtures.mjs';
 import { startDestinyRound, rollDestinySpeed, resolveDestinySpeed, rollDestinyDamage,
   resolveDestinyDamage, endDestinyRound, skipDestinyDeathMove } from '../../../public/js/battlesim/engines/destinyquest/core.js';
 import { useDestinyAbility as use } from '../../../public/js/battlesim/engines/destinyquest/abilities.js';
-import { resolveDestinyAbilityRoll as resolve } from '../../../public/js/battlesim/engines/destinyquest/ability-rolls.js';
+import { resolveDestinyAbilityRoll as resolve } from './destinyquest-fixtures.mjs';
 import { destinyStat } from '../../../public/js/battlesim/engines/destinyquest/effects.js';
 
 const rolls = (...values) => () => { assert.ok(values.length, 'Unexpected roll'); return values.shift(); };

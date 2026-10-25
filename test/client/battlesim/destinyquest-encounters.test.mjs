@@ -1,11 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { WINTER_ENCOUNTERS, winterRosterFor, createWinterFight } from './destinyquest-fixtures.mjs';
-import { configureWinterEncounter, useWinterAction, WINTER_IMPLEMENTED_ENCOUNTERS } from '../../../public/js/battlesim/engines/destinyquest/winters-fury.js';
+import { WINTER_ENCOUNTERS, winterRosterFor, createWinterFight, configureWinterEncounter, useWinterAction } from './destinyquest-fixtures.mjs';
+import { WINTER_IMPLEMENTED_ENCOUNTERS } from '../../../public/js/battlesim/engines/destinyquest/winters-fury.js';
 import { createDestinyFight, startDestinyRound, rollDestinySpeed, resolveDestinySpeed,
   rollDestinyDamage, resolveDestinyDamage, endDestinyRound, skipDestinyDeathMove } from '../../../public/js/battlesim/engines/destinyquest/core.js';
 import { configureDestinyAbilities, useDestinyAbility as use } from '../../../public/js/battlesim/engines/destinyquest/abilities.js';
-import { resolveDestinyAbilityRoll as resolve } from '../../../public/js/battlesim/engines/destinyquest/ability-rolls.js';
+import { resolveDestinyAbilityRoll as resolve } from './destinyquest-fixtures.mjs';
 import { destinyStat } from '../../../public/js/battlesim/engines/destinyquest/effects.js';
 
 const rolls = (...values) => () => { assert.ok(values.length, 'Unexpected roll'); return values.shift(); };
@@ -135,7 +135,7 @@ test('Gargax legs lower both upper-part speeds; tar barrels are counted separate
   assert.equal(fight.character.tarBarrels, 1);
   assert.equal(fight.opponents[0].health, 18);
   assert.equal(fight.opponents[1].health, 18);
-  assert.throws(() => useWinterAction(fight, 'tar-barrels', { count: 3 }), /four/);
+  assert.throws(() => useWinterAction(fight, 'tar-barrels', { count: 3 }), /up to 4/);
   assert.equal(fight.turn.used.backpack, false);
 });
 

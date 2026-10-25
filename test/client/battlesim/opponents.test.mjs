@@ -25,3 +25,12 @@ test('explicitly derived stats stay unavailable without relaxing validation of f
   assert.throws(() => validateOpponents([derived, {name: 'Fixed foe', skill: '', stamina: 12, damage: 1}], fields, unavailable), RangeError);
   assert.equal(derived.stamina, '', 'Preserve supplied setup');
 });
+
+test('categorical opponent fields validate explicit options without changing numeric fields',()=>{
+  const fields=[{key:'speed'},{key:'damageStat',options:[{value:'brawn',label:'Brawn'},{value:'magic',label:'Magic'}]}];
+  const original={name:'Mixed opponent',speed:'7',damageStat:'magic'};
+  assert.deepEqual(validateOpponents([original],fields),[{...original,speed:7,displayName:'Mixed opponent'}]);
+  assert.equal(original.speed,'7');assert.equal(original.damageStat,'magic');
+  for(const damageStat of ['',null,undefined,'strength',1])assert.throws(()=>validateOpponents([{...original,damageStat}],fields),/Invalid opponent damageStat/);
+  assert.throws(()=>validateOpponents([{...original,speed:'bad'}],fields),/Invalid opponent speed/);
+});

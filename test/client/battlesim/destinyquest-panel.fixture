@@ -1,0 +1,198 @@
+localStorage.setItem('gamebook_lang','en');
+const app=await import('REPO/public/js/core/state.js');
+const {loadBattleSimTranslations}=await import('REPO/public/js/i18n/battlesim.js');
+const {prepareBattleSimLayout}=await import('REPO/public/js/battlesim/layout.js');
+const seeds=ROSTER_SEED;
+let posts=0,gets=0;
+window.fetch=async(url,options={})=>{
+  if(options.method&&options.method!=='GET')posts++;
+  const roster=/\/api\/books\/1285\/enemies$/.test(String(url));if(roster)gets++;
+  return new Response(JSON.stringify(roster?seeds:{}),{headers:{'Content-Type':'application/json'}});
+};
+await loadBattleSimTranslations(1285);
+app.setCurrentBookId(1285);app.state.playthroughs=[{startedAt:1,path:[1],notebook:'preserve',unrelated:{keep:true}}];app.state.activePtIndex=0;
+const module=await import('REPO/public/js/battlesim/battlesim1285.js');await module.loadData();module.init();module.setVisible(true);
+const el=key=>document.getElementById('sim1285-'+key),check=(condition,message)=>{if(!condition)throw Error(message);};
+const data=()=>app.currentPlaythrough().sim1285;
+const click=key=>{check(el(key),'control exists '+key);el(key).click();};
+const value=(key,text)=>{check(el(key),'field exists '+key);el(key).value=String(text);};
+const change=key=>el(key).dispatchEvent(new Event('change',{bubbles:true}));
+const preset=section=>{value('encounter',section);change('encounter');};
+const fresh=()=>{app.state.playthroughs.push({startedAt:app.state.playthroughs.length+1,path:[1],notebook:'untouched'});app.state.activePtIndex=app.state.playthroughs.length-1;module.render();};
+click('btn');prepareBattleSimLayout(el('overlay'));
+check(el('overlay').classList.contains('active'),'panel opens');
+check(gets===1,'one roster request');
+check(!data(),'rendering did not initialize or migrate persisted session');
+check(el('health').value==='30'&&el('maxHealth').value==='30','source starting health shown without initializing state');
+check(!el('overlay').textContent.match(/battlesim\d*\.[\w.]+/),'no untranslated keys');
+check([...el('encounter').options].some(option=>option.value==='702'),'final encounter preset available');
+check(!el('overlay').querySelector('.bsim-col-right input,.bsim-col-right select'),'reports contain no controls');
+check(el('overlay').querySelector('.bsim-col-right').contains(el('combatants')),'combatants remain in the report column after layout preparation');
+value('speed',20);value('brawn',20);value('health',20);value('maxHealth',30);
+const editor=el('manualOpponent');editor.querySelector('[role=combobox]').value='My opponent';
+editor.querySelector('[data-stat=health]').value='3';
+check(editor.querySelector('[data-stat=damageStat]').tagName==='SELECT','per-opponent attack attribute picker');
+click('start');check(data()?.fight?.opponents[0].name==='My opponent','ordinary custom fight');
+check(el('setup').disabled,'active setup locked');check(editor.querySelector('[data-stat=damageStat]').disabled,'opponent selector locked');
+check(!el('setupDetails').open,'locked setup folds away during combat');
+value('manualDice','6 6 1 1 1');for(let i=0;i<5;i++){click('next');if(i===1)check(el('result').textContent.includes('6, 6')&&el('result').textContent.includes('1, 1'),'rolled dice visible before resolution');}
+check(data().fight.status==='win','custom combat victory');check(el('setup').disabled,'finished result awaits recording');
+click('record-outcome');check(data().history.length===1,'one history record');check(!el('setup').disabled,'recorded result unlocks setup');
+const first=JSON.stringify(app.state.playthroughs[0]);module.render();click('close');click('btn');
+check(JSON.stringify(app.state.playthroughs[0])===first,'resume and render do not mutate fight or unrelated run data');
+check(app.state.playthroughs[0].notebook==='preserve'&&app.state.playthroughs[0].unrelated.keep,'unrelated data preserved');
+fresh();preset(751);click('start');value('manualDice','4');click('next');
+check(data().fight.turn.pendingAbility.dice[0]===4,'saved opening die');
+const pending=JSON.stringify(data().fight);module.render();check(JSON.stringify(data().fight)===pending,'pending roll survives rendering');
+click('next');check(data().fight.encounter.scheduledEndEffects[0].round===6,'opening result scheduled');
+fresh();preset(600);click('start');check(el('controls').querySelectorAll('[id*=orb-]').length===13,'thirteen source sockets');
+value('orb-0-0','frost');click('begin-path');click('next');check(data().fight.phase==='encounter-orbs','pending orb activation');
+check(el('target').options.length===4,'moving guardians are valid orb targets');click('path-orb');
+check(data().fight.encounter.pathProgress.held[0]===1,'orb activates on chosen guardian');
+fresh();preset(777);click('start');click('next');value('useAbility','rousing-blast');change('useAbility');
+value('attribute','magic');click('ability');check(data().fight.used['rousing-blast']===1,'ally action exposed');
+check(data().fight.effects.some(effect=>effect.source==='rousing-blast'&&effect.attribute==='magic'),'ally attribute selection used');
+fresh();preset(741);click('start');value('manualDice','3 3 1 2');click('next');click('next');
+check(data().fight.phase==='ability-choice','tentacle choice exposed');
+check([...el('target').options].every(option=>option.value!=='0'),'tentacle choice excludes boss');click('defeat-choice');
+check(data().fight.opponents[1].health===0,'chosen tentacle defeated');
+fresh();preset(703);value('brawn',100);value('armour',99);value('health',100);value('maxHealth',100);click('start');
+value('manualDice','6 6 1 1 1');for(let i=0;i<5;i++)click('next');click('next');click('next');
+check(data().fight.phase==='start'&&data().fight.round===1,'Avalanche split and round completed');
+for(let n=0;n<3;n++){value('manualDice','1 1 6 6 1');for(let i=0;i<6;i++)click('next');}
+check(data().fight.phase==='start'&&data().fight.round===4,'three elemental rounds completed');
+check(el('target').value==='0'&&el('target').options.length===1,'next-round reformed boss can be selected');
+const beforeReform=JSON.stringify(data().fight);module.render();check(JSON.stringify(data().fight)===beforeReform,'target preview does not mutate saved forms');
+click('next');check(data().fight.round===5&&data().fight.opponents[0].health===40,'round begins with reforming boss');
+fresh();preset(435);value('armour',99);value('health',100);value('maxHealth',100);click('start');
+value('manualDice','1 1 6 6 1');for(let i=0;i<6;i++)click('next');
+check(data().fight.opponents.length===5&&el('target').options.length===7,'spawn preview offers newborns without committing them');
+value('target',6);click('next');check(data().fight.target===6&&data().fight.opponents.length===7,'newborn target selected in same round');
+fresh();preset(85);value('speed',30);click('start');
+for(let i=0;i<3;i++){value('manualDice','6 6');click('next');click('next');}
+check(data().fight.phase==='start','ascent challenges complete');
+check(![...el('target').options].some(option=>option.value==='0'),'protected eye excluded from ordinary targets');
+click('next');check(data().fight.phase==='speed','sentinel guard can be attacked');
+fresh();value('health',5);value('maxHealth',10);value('defeats',4);
+const ringEnemy=el('manualOpponent');ringEnemy.querySelector('[role=combobox]').value='Strong opponent';
+for(const [key,amount]of Object.entries({speed:20,brawn:20,magic:0,armour:0,health:30}))ringEnemy.querySelector('[data-stat='+key+']').value=String(amount);
+value('gearSlot','ring1');change('gearSlot');el('gearPresent').checked=true;value('gear-health',2);
+el('gearAbilities').querySelector('select').value='heal';el('gearAbilities').querySelector('button').click();
+el('owned').querySelector('select').value='heal';el('owned').querySelector('button').click();
+click('start');value('manualDice','1 1 6 6 1');for(let i=0;i<5;i++)click('next');
+check(data().fight.status==='loss','custom defeat');value('manualDice','4');click('record-outcome');
+check(data().character.pendingRingDestruction&&el('setup').disabled,'fifth defeat awaits explicit ring loss');
+click('ring-loss');check(data().setup.hero.maxHealth===8&&el('maxHealth').value==='8','ring loss updates maximum health in setup');
+check(!el('setup').disabled,'ring choice resolved');click('start');
+check(data().fight.hero.maxHealth===8&&data().fight.abilities.heal===undefined,'new fight cannot reintroduce lost ring stats or abilities');
+click('finishFight');check(document.getElementById('confirm-overlay').classList.contains('active'),'explicit cancellation confirmation');
+document.getElementById('confirm-ok').click();check(data().fight===null,'untouched fight cancelled');
+click('start');click('next');click('finishFight');
+const confirmationRun=app.currentPlaythrough(),confirmationState=JSON.stringify(data());fresh();document.getElementById('confirm-ok').click();
+check(JSON.stringify(confirmationRun.sim1285)===confirmationState,'stale confirmation cannot concede a different run');
+app.state.activePtIndex=app.state.playthroughs.indexOf(confirmationRun);module.render();click('finishFight');document.getElementById('confirm-ok').click();
+check(data().fight.status==='loss','started fight explicitly conceded');click('record-outcome');
+check(JSON.stringify(app.state.playthroughs[0])===first,'other runs unchanged after multiple presets');
+const active=JSON.stringify(data());app.setCurrentBookId(999);module.render();click('start');
+app.setCurrentBookId(1285);module.render();check(JSON.stringify(data())===active,'actions ignore stale book context');
+fresh();preset('challenge:35');value('speed',1);el('leif').checked=true;
+el('owned').querySelector('select').value='ice-hooks';el('owned').querySelector('button').click();
+click('start');check(data().challenge.rules.turns===5&&data().challenge.rules.rollBonus===2,'tree climb combines Leif and Ice Hooks');
+check(el('setup').disabled&&!el('next'),'challenge locks setup without combat controls');
+value('manualDice','6 6');click('challenge-roll');
+const savedChallenge=JSON.stringify(data());module.render();click('close');click('btn');
+check(JSON.stringify(data())===savedChallenge&&el('result').textContent.includes('6, 6'),'challenge dice survive reopen');
+click('challenge-resolve');
+for(let i=1;i<5;i++){value('manualDice','6 6');click('challenge-roll');click('challenge-resolve');}
+check(data().challenge.destination==='597'&&data().character.defeats===0&&!el('setup').disabled,'successful challenge unlocks setup without combat result');
+preset(30);click('start');check(!data().challenge&&data().fight.status==='active','ordinary fight starts after completed challenge');
+fresh();preset('challenge:35');value('speed',0);click('start');
+for(let i=0;i<3;i++){value('manualDice','1 1');click('challenge-roll');click('challenge-resolve');}
+check(data().challenge.destination==='159'&&data().character.defeats===0,'third missed acorn is not a combat defeat');
+fresh();preset('challenge:67');value('speed',0);
+el('owned').querySelector('select').value='ice-hooks';el('owned').querySelector('button').click();
+el('useOptionalAbilities').checked=false;click('start');
+check(data().challenge.rules.threshold===14,'optional Ice Hooks bonus can be declined');
+click('challenge-cancel');check(!data().challenge&&!el('setup').disabled,'unrolled challenge cancellation');
+el('useOptionalAbilities').checked=true;click('start');value('manualDice','4 4');click('challenge-roll');click('challenge-resolve');
+check(data().challenge.destination==='174'&&data().setup.abilities['ice-hooks']===1,'ice climb bonus preserves ability');
+for(const useCharge of [false,true]){
+  fresh();value('speed',20);value('brawn',1);value('health',30);value('maxHealth',30);
+  const chargeEnemy=el('manualOpponent');chargeEnemy.querySelector('[role=combobox]').value='Charge target';
+  for(const [key,amount]of Object.entries({speed:0,brawn:1,magic:0,armour:0,health:100}))chargeEnemy.querySelector('[data-stat='+key+']').value=String(amount);
+  value('gearSlot','leftHand');change('gearSlot');el('gearPresent').checked=true;value('gearType','horn');
+  el('owned').querySelector('select').value='sound-the-charge';el('owned').querySelector('button').click();
+  click('start');click('next');value('useAbility','sound-the-charge');change('useAbility');click('ability');
+  value('manualDice','6 6 6 1 1');click('next');click('next');
+  check(data().fight.phase==='damage'&&el('soundCharge').checked,'charge damage choice offered');
+  el('soundCharge').checked=useCharge;value('manualDice',useCharge?'2 3':'2');click('next');
+  check(data().fight.turn.damageDice.length===(useCharge?2:1),'charge optional damage die respected');
+  check(!!data().fight.turn.used.co===useCharge,'declining charge preserves combat ability slot');
+}
+fresh();
+const {createDestinySession}=await import('REPO/public/js/battlesim/engines/destinyquest/session.js');
+app.currentPlaythrough().sim1285=createDestinySession({setup:{hero:{speed:5,brawn:5,magic:0,armour:0,health:30,maxHealth:30},equipment:{leftHand:{type:'custom-transport-tool',id:'kept-item-id',name:'My saved item',extension:{preserve:true},abilities:[]}}}});
+module.render();value('gearSlot','leftHand');change('gearSlot');
+value('speed',6);change('speed');
+const preservedItem=data().setup.equipment.leftHand;
+check(preservedItem.id==='kept-item-id'&&preservedItem.name==='My saved item'&&preservedItem.extension.preserve,'setup edits preserve unrepresented equipment fields');
+check(preservedItem.type==='custom-transport-tool','unrecognized saved equipment type survives unrelated edits');
+value('gearType','shield');change('gearType');check(data().setup.equipment.leftHand.type==='shield','explicit equipment type changes still apply');
+el('synsHeart').checked=true;change('synsHeart');check(data().setup.equipment.leftHand.id==='syns-heart','explicit special item selection');
+el('synsHeart').checked=false;change('synsHeart');check(data().setup.equipment.leftHand.id==='','special item can be removed');
+fresh();
+for(const slot of ['gloves','talisman','necklace']){
+  check([...el('gearSlot').options].some(option=>option.value===slot&&!option.textContent.includes('battlesim')),'translated source equipment slot '+slot);
+  value('gearSlot',slot);change('gearSlot');el('gearPresent').checked=true;value('gear-speed',2);change('gear-speed');
+}
+click('start');
+for(const slot of ['gloves','talisman','necklace'])check(data().fight.equipment[slot]?.speed===2,'equipment reaches saved fight '+slot);
+check(data().fight.hero.health===30&&data().fight.hero.maxHealth===30,'new hero uses source health defaults');
+const savedLoadout=JSON.stringify(data());module.render();check(JSON.stringify(data())===savedLoadout,'rendering preserves full loadout');
+fresh();preset(372);value('speed',30);value('brawn',20);value('armour',99);value('health',100);value('maxHealth',100);click('start');
+for(let i=0;i<2;i++){value('manualDice','6 6 1 1 1');for(let n=0;n<6;n++)click('next');}
+check(el('target').value==='1'&&el('target').options.length===1,'aspect transition preview selects red aspect');
+const beforeAspect=JSON.stringify(data());module.render();check(JSON.stringify(data())===beforeAspect,'aspect target preview does not mutate saved counters');
+click('next');check(data().fight.target===1&&data().fight.encounter.aspectCycle.activeAspect===1,'aspect starts through panel');
+fresh();preset(702);value('speed',0);value('brawn',0);value('armour',0);value('health',1000);value('maxHealth',1000);click('start');
+for(let i=0;i<3;i++){
+  value('manualDice','1 1 6 6 1');for(let n=0;n<5;n++)click('next');
+  value('manualDice','4');click('next');
+  if(i<2)check(data().fight.phase==='start','safe ice needs no roll');
+}
+check(data().fight.phase==='ability-rolled'&&data().fight.turn.pendingAbility.dice[0]===4,'footing roll saved through panel');
+check(el('combatants').textContent.includes('column 2/5'),'ice position visible');
+const icePending=JSON.stringify(data());module.render();check(JSON.stringify(data())===icePending,'saved footing roll not repeated by rendering');
+click('next');check(data().fight.phase==='start','successful footing resumes next round');
+fresh();preset(702);value('speed',0);value('brawn',0);value('health',1000);value('maxHealth',1000);
+el('owned').querySelector('select').value='command';el('owned').querySelector('button').click();click('start');
+value('manualDice','1 1 6 6 1');for(let i=0;i<6;i++)click('next');
+value('manualDice','1 1 6 6');for(let i=0;i<3;i++)click('next');
+value('useAbility','command');change('useAbility');click('ability');
+value('manualDice','1');click('next');click('next');
+check(el('advanceOnIce')?.checked,'winning ice round offers optional advancement');
+el('advanceOnIce').checked=false;click('next');check(data().fight.encounter.iceLake.position===4,'panel can decline ice advancement');
+let startedPresets=0;
+if(SWEEP_PRESETS){
+  const sections=[...el('encounter').options].map(option=>option.value).filter(value=>value&&!value.startsWith('challenge:'));
+  for(const section of sections){
+    fresh();preset(section);value('speed',20);value('brawn',10);value('magic',10);value('armour',5);value('health',200);value('maxHealth',200);
+    value('gearSlot','transport');change('gearSlot');el('gearPresent').checked=true;value('gear-stability',10);value('gear-toughness',10);
+    click('start');check(data()?.fight?.encounter?.sourceSection===section,'preset starts through panel '+section);
+    check(!el('overlay').textContent.match(/battlesim\d*\.[\w.]+/),'translated preset controls '+section);startedPresets++;
+  }
+  check(startedPresets===99,'all implemented presets checked');
+  check(JSON.stringify(app.state.playthroughs[0])===first,'preset sweep preserves original saved run');
+}
+click('btn');check(el('overlay').classList.contains('active'),'panel reopened for visible layout checks');
+const style=getComputedStyle(el('start'));check(style.borderTopStyle==='solid','shared themed button');
+check(style.backgroundColor==='rgb(31, 41, 55)','shared action colour');
+const expectedSize=parseFloat(getComputedStyle(document.documentElement).fontSize)*0.75;
+for(const control of el('overlay').querySelectorAll('label,summary,p,legend,input,select,button:not(.inv-close-btn)'))
+  check(Math.abs(parseFloat(getComputedStyle(control).fontSize)-expectedSize)<0.1,'shared text size '+control.id);
+for(const control of el('overlay').querySelectorAll('input[type=checkbox]'))check(getComputedStyle(control).appearance==='none','themed checkbox');
+const left=el('overlay').querySelector('.bsim-col-left').getBoundingClientRect();
+for(const control of el('overlay').querySelectorAll('input,select,button:not(.inv-close-btn)'))
+  if(control.getClientRects().length)check(control.getBoundingClientRect().right<=left.right+1,'control contained '+control.id);
+check(document.documentElement.scrollWidth<=innerWidth+1,'no page horizontal overflow');
+document.body.dataset.test=JSON.stringify({width:innerWidth,scenarios:22,startedPresets,rosterRequests:gets,playerDatabaseWrites:0,panelOnly:true,postsIntercepted:posts});

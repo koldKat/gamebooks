@@ -1,7 +1,56 @@
 import { destinyStrike, addDestinyStatEffect, isDestinyOpponentActive } from './effects.js';
 import { destinyDie, applyDestinyDamage } from './damage.js';
 
+export function advanceDestinyAspectCycle(fight, round) {
+  const cycle=fight.encounter?.aspectCycle;
+  if(!cycle||cycle.activeAspect!==null||fight.opponents[cycle.main].health<=0)return;
+  if(cycle.nextAspect<cycle.aspects.length&&cycle.mainRounds>=cycle.roundsBetween){
+    const target=cycle.aspects[cycle.nextAspect++];cycle.activeAspect=target;cycle.mainRounds=0;
+    fight.encounter.inactiveTargets=[...new Set([...(fight.encounter.inactiveTargets||[]).filter(index=>index!==target),cycle.main])];
+    fight.history.push({type:'aspect-enter',round,target});
+  }else cycle.mainRounds++;
+}
+
+export function reformDestinyOpponent(fight, round) {
+  const cycle = fight.encounter?.formCycle;
+  if (!cycle || cycle.reformRound === undefined || round < cycle.reformRound || !cycle.parts.some(target => fight.opponents[target].health > 0)) return;
+  fight.opponents[cycle.shell].health = cycle.shellHealth;
+  fight.encounter.inactiveTargets = [...new Set([...(fight.encounter.inactiveTargets || []).filter(target => target !== cycle.shell), ...cycle.parts])];
+  fight.defeated = (fight.defeated || []).filter(target => target !== cycle.shell);
+  delete cycle.reformRound;
+  fight.history.push({ type: 'form-rejoin', round, target: cycle.shell, health: cycle.shellHealth });
+}
+
+export function spawnDestinyRoundOpponents(fight, round, createOpponent) {
+  for (const rule of fight.encounter?.spawnAtRoundStart || []) {
+    if (round < rule.fromRound || rule.source !== undefined && !isDestinyOpponentActive(fight, rule.source)) continue;
+    spawnDestinyOpponents(fight, rule, round, createOpponent);
+  }
+}
+
+export function spawnDestinyOpponents(fight, rule, round, createOpponent) {
+  if (!Number.isSafeInteger(rule.count) || rule.count < 1) throw new RangeError('Invalid spawned opponent count');
+  for (let i = 0; i < rule.count; i++) {
+    const target = fight.opponents.length;
+    fight.opponents.push(createOpponent(rule.opponent));
+    if (rule.group) (fight.encounter.opponentGroups[rule.group] ??= []).push(target);
+    for (const effect of rule.statWhileAlive || []) (fight.encounter.statWhileAlive ??= []).push({ ...effect, target });
+    if (rule.endDamage) (fight.encounter.endEffects ??= []).push({ target: 'hero', amount: rule.endDamage, requiresAlive: [target] });
+    fight.history.push({ type: 'spawn', round, source: rule.source, target });
+  }
+}
+
 export function applyDestinyRoundEvents(fight, options, roll) {
+  const ranged = fight.encounter?.rangedCombat;
+  if (ranged) {
+    fight.encounter.disableHeroAbilities = fight.round <= ranged.throughRound;
+    fight.encounter.outnumbered = fight.round > ranged.throughRound && ranged.outnumberedAfter;
+  }
+  for (const rule of fight.encounter?.roundRampingDamage || []) {
+    rule.current = rule.stoppedRound !== undefined && fight.round > rule.stoppedRound
+      ? Math.max(0, (rule.current ?? rule.initial) - rule.decay)
+      : Math.min(rule.maximum, rule.initial + Math.max(0, fight.round - rule.fromRound) * rule.growth);
+  }
   for (const effect of fight.encounter?.startStats || []) {
     if (effect.round !== fight.round) continue;
     for (const [attribute, amount] of Object.entries(effect.changes)) addDestinyStatEffect(fight, effect.target, attribute, amount, null, 'encounter-start');

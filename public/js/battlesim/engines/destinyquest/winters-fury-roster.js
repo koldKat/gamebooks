@@ -24,7 +24,7 @@ export function decodeDestinyRoster(rows) {
   }
   return freeze([...groups.values()].map(group => {
     if (group.slots.size !== group.metadata.partCount) throw new TypeError('Incomplete encounter roster');
-    return { section: group.metadata.section, label: group.metadata.label, printedRules: structuredClone(group.metadata.printedRules),
+    return { section: group.metadata.section, label: group.metadata.label, printedRules: structuredClone(group.metadata.printedRules), adapter: structuredClone(group.metadata.adapter), challenges: structuredClone(group.metadata.challenges),
       parts: Array.from({ length: group.metadata.partCount }, (_, slot) => group.slots.get(slot)) };
   }).sort((a, b) => Number(a.section) - Number(b.section)));
 }

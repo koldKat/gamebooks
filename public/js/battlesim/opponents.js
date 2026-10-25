@@ -6,6 +6,11 @@ export function validateOpponents(rows, fields, isStatUnavailable) {
   return rows.map(row => {
     const result = {...row};
     for (const field of fields) {
+      if (field.options) {
+        if (!field.options.some(option => String(option.value ?? option) === row[field.key])) throw new RangeError('Invalid opponent ' + field.key);
+        result[field.key] = row[field.key];
+        continue;
+      }
       // Derived encounters explicitly opt out of fixed numeric inputs.
       if (isStatUnavailable?.(field.key, row)) { result[field.key] = null; continue; }
       const raw = row[field.key];
@@ -39,7 +44,9 @@ export function createOpponentEditor({document, id, t, fields, presets = [], lan
     row.className = 'bsim-opponent-row';
     const inputId = `${id}-opponent-${index}`;
     row.innerHTML = `<label class="inv-edit-row"><span>${escape(label('name'))}</span><div class="autocomplete-wrap bsim-enemy-ac"><input class="inv-edit-input" id="${inputId}" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="${inputId}-list"><ul class="autocomplete-dropdown" id="${inputId}-list" role="listbox"></ul></div></label>`
-      + fields.map(field => `<label class="inv-edit-row"><span>${escape(field.label)}</span><input class="inv-edit-input" type="number" min="${field.min ?? 0}" max="${field.max ?? 1000000}" step="${field.step ?? 1}" data-stat="${escape(field.key)}" required></label>`).join('')
+      + fields.map(field => `<label class="inv-edit-row"><span>${escape(field.label)}</span>${field.options
+        ? `<select class="inv-edit-input" data-stat="${escape(field.key)}">${field.options.map(option => `<option value="${escape(option.value ?? option)}">${escape(option.label ?? option)}</option>`).join('')}</select>`
+        : `<input class="inv-edit-input" type="number" min="${field.min ?? 0}" max="${field.max ?? 1000000}" step="${field.step ?? 1}" data-stat="${escape(field.key)}" required>`}</label>`).join('')
       + `<button type="button" class="bsim-action-btn">${escape(label('remove'))}</button>`;
     const name = row.querySelector('[role="combobox"]');
     const list = row.querySelector('[role="listbox"]');
@@ -112,7 +119,7 @@ export function createOpponentEditor({document, id, t, fields, presets = [], lan
     add.disabled = locked || fixedCount || rows.length >= 100;
     add.hidden = fixedCount;
     for (const item of rows) {
-      for (const control of item.row.querySelectorAll('input,button')) control.disabled = locked || control.dataset.unavailable === 'true';
+      for (const control of item.row.querySelectorAll('input,select,button')) control.disabled = locked || control.dataset.unavailable === 'true';
       item.row.querySelector('button').disabled = locked || fixedCount || rows.length < 2;
       item.row.querySelector('button').hidden = fixedCount;
       if (locked) {

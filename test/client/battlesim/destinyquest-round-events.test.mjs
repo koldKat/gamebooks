@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createDestinyFight, startDestinyRound, rollDestinySpeed, resolveDestinySpeed,
   rollDestinyDamage, resolveDestinyDamage, endDestinyRound, retargetDestinyRound } from '../../../public/js/battlesim/engines/destinyquest/core.js';
 import { configureDestinyAbilities, useDestinyAbility as use } from '../../../public/js/battlesim/engines/destinyquest/abilities.js';
-import { resolveDestinyAbilityRoll as resolve } from '../../../public/js/battlesim/engines/destinyquest/ability-rolls.js';
+import { resolveDestinyAbilityRoll as resolve } from './destinyquest-fixtures.mjs';
 import { destinyStat, addDestinyStatEffect } from '../../../public/js/battlesim/engines/destinyquest/effects.js';
 
 const rolls = (...values) => () => { assert.ok(values.length, 'Unexpected roll'); return values.shift(); };

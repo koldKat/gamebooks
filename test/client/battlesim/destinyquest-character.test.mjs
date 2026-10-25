@@ -1,12 +1,13 @@
+import { configureWinterEncounter, winterChallenge } from './destinyquest-fixtures.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createDestinyFight, startDestinyRound, rollDestinySpeed, resolveDestinySpeed,
   rollDestinyDamage, resolveDestinyDamage, endDestinyRound } from '../../../public/js/battlesim/engines/destinyquest/core.js';
 import { configureDestinyAbilities, useDestinyAbility as use, resolveDestinyGambit } from '../../../public/js/battlesim/engines/destinyquest/abilities.js';
-import { resolveDestinyAbilityRoll as resolve } from '../../../public/js/battlesim/engines/destinyquest/ability-rolls.js';
+import { resolveDestinyAbilityRoll as resolve } from './destinyquest-fixtures.mjs';
 import { createDestinyCharacter, cureDestinyCharacter, attachDestinyCharacter, recordDestinyOutcome,
   resolveDestinyRingLoss } from '../../../public/js/battlesim/engines/destinyquest/character.js';
-import { winterChallenge, configureWinterEncounter, winterSalePrice } from '../../../public/js/battlesim/engines/destinyquest/winters-fury.js';
+import { winterSalePrice } from '../../../public/js/battlesim/engines/destinyquest/winters-fury.js';
 import { destinyStat } from '../../../public/js/battlesim/engines/destinyquest/effects.js';
 
 const rolls = (...values) => () => { assert.ok(values.length, 'Unexpected roll'); return values.shift(); };
@@ -179,8 +180,9 @@ test('Gambit restoration is optional even when no eligible ability has been spen
 
 test('Ice Hooks changes only its printed climb duration or challenge threshold', () => {
   const plain = setup(), hooks = setup({ 'ice-hooks': 1 });
-  assert.deepEqual(winterChallenge(plain, 35), { turns: 7, threshold: 15, rollBonus: 0 });
-  assert.deepEqual(winterChallenge(hooks, 35, { leif: true }), { turns: 5, threshold: 15, rollBonus: 2 });
+  const metadata = { name: 'Nutcracker', dice: 2, attribute: 'speed', failureLimit: 3, successSection: '597', failureSection: '159' };
+  assert.deepEqual(winterChallenge(plain, 35), { ...metadata, turns: 7, threshold: 15, rollBonus: 0 });
+  assert.deepEqual(winterChallenge(hooks, 35, { leif: true }), { ...metadata, turns: 5, threshold: 15, rollBonus: 2 });
   assert.equal(winterChallenge(plain, 67).threshold, 14);
   assert.equal(winterChallenge(hooks, 67).threshold, 8);
 });

@@ -4,6 +4,7 @@ import { createContext, SourceTextModule, SyntheticModule } from 'node:vm';
 
 const imports = [], calls = [], warnings = [], deferred = new Map();
 const translated = new Set();
+const prepared = new Set();
 let failingId = null;
 let failingTranslationId = null;
 const context = createContext({ console: { warn: (...args) => warnings.push(args) },
@@ -11,6 +12,13 @@ const context = createContext({ console: { warn: (...args) => warnings.push(args
 const module = new SourceTextModule(readFileSync(process.argv[1], 'utf8'), {
   context,
   importModuleDynamically: async specifier => {
+    if (specifier === './roster-data.js') {
+      const roster = new SyntheticModule(['prepareRosterData'], function () {
+        this.setExport('prepareRosterData', async id => { prepared.add(id); });
+      }, {context});
+      await roster.link(() => {}); await roster.evaluate();
+      return roster;
+    }
     if (specifier === '../i18n/battlesim.js') {
       const translations = new SyntheticModule(['loadBattleSimTranslations'], function () {
         this.setExport('loadBattleSimTranslations', async id => {
@@ -48,6 +56,7 @@ await module.evaluate();
 const loader = module.namespace;
 assert.deepEqual(imports, [], 'landing startup loads no simulators');
 await loader.showBattleSimForBook('214');
+assert.ok(prepared.has(214), 'roster data is prepared for API-backed simulators');
 assert.deepEqual(imports, [214]);
 assert.deepEqual(calls, [[214, 'init'], [214, 'visible', true], [214, 'render']]);
 loader.renderActiveBattleSim();

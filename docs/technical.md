@@ -220,6 +220,59 @@ gamebooks/
                          Active-opponent checks distinguish surrender and reserves from death.
                          Resource and indestructible components retain missing printed attributes;
                          attack proxies supply the actual opponent rolls without inventing stats.
+                         encounter-settings.js expands database rule templates for the current group;
+                         ability, equipment and explicit-choice conditions select stored overrides.
+                         New encounter setup copies metadata; existing serialized fights stay intact.
+                         Book definitions supply initial hero attributes and the equipment-slot list;
+                         rendering applies defaults only to absent setup values and never rewrites saves.
+                         Aspect cycles expose one stored form at a time, pausing their main-opponent
+                         timer during aspect fights. Target previews run against copies of that state.
+                         Ice-lake encounters store position and crack progress; optional advances and
+                         saved footing rolls resolve after end effects without applying those effects twice.
+                         Standalone attribute challenges keep saved dice, turn and failure counters
+                         separately from combat. Their metadata supplies thresholds, bonuses and
+                         destinations; story failures never record combat defeats or apply penalties.
+                         Encounter roll resolution receives cached roster settings separately, so old
+                         pending events keep their saved fields without embedding new rule defaults.
+                         Queued encounter sequences can precede or interrupt combat without advancing
+                         round counters; their dice, remaining tests and next-step effects survive saves.
+                         Spawn rules append independent combatants before target selection. Ability
+                         sacrifice choices retain pending rolls and block only the current fight's ability.
+                         Opponent interception tests suspend an ability before its effects, retaining
+                         editable dice and the interrupted roll while preserving spent uses on evasion.
+                         Revival checks defer victory and final-defeat rewards until their saved roll
+                         resolves, then resume the interrupted combat or completed round boundary.
+                         Spawned groups retain conditional stats and defeat-counter membership. Group
+                         limits apply after passive effects; surrender preserves survivors without kill rewards.
+                         Rolled summons use saved encounter dice and the same opponent normalization
+                         as ordinary setup; new opponents retain independent effects and targeting.
+                         Path challenges store immutable orb placements, positions, held turns and pending
+                         choices. Arrivals enter ordinary combat on the same round with carried effects;
+                         path curses affect moving targets and health-based victory includes every guardian.
+                         Interception rules may permanently block a deflected ability and queue retaliation;
+                         interrupting encounter rolls preserve and restore any earlier pending roll.
+                         Form cycles expose persistent subparts after a shell defeat and reform before
+                         next-round target selection; dormant parts retain health while victory tracks them.
+                         Metadata conditions combine explicit setup choices with exact character keywords.
+                         Ramping hazards capture their source defeat round and decay on later rounds.
+                         Rolled-pair encounter rewards queue saved opponent choices against live groups,
+                         including newly spawned members, without replacing the triggering speed dice.
+                         Saved opening rolls can schedule one-off end-of-round effects without advancing
+                         combat; metadata retains their timing, target, health loss and stat changes.
+                         Compulsory speed rerolls apply only to newly rolled hero dice; saved dice,
+                         non-roll modifiers, opponent dice and damage rolls retain their own rules.
+                         Timed ranged phases suppress abilities and enemy attacks, use raw projectile dice,
+                         then restore ordinary combat and living-opponent pressure at the stored boundary.
+                         Encounter-granted ability specs share ordinary action limits, restoration and dice
+                         handling. Conditional summons preserve owned counts and remove grants on setup changes.
+                         A pure session coordinator serves both panels: it locks active setup, preserves
+                         unknown saved fields and records each outcome once before permitting another fight.
+                         Character penalties, live equipment and explicit ring loss remain simulator-scoped.
+                         The shared panel commits only against its captured live book, run and fight.
+                         Next-round target menus use cloned spawn/form previews; report layout and saved
+                         pending rolls remain separate from controls. Custom opponents choose attack attributes.
+                         An untouched setup can be cancelled explicitly. Conceding a started fight requires
+                         confirmation against the same live run/fight and leaves a defeat to record once.
                          Book adapters reconstruct ordered opponent tables and section-rule maps
                          from typed metadata; general combat tables and player defaults stay in code.
                          Enemy rosters load from the book enemy API. Optional stats_json metadata

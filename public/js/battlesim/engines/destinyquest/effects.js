@@ -1,12 +1,12 @@
 // Serializable, round-scoped effects shared by combat and ability actions.
 import { onDestinyOpponentSpeedRoll } from './roll-events.js';
-export const hasDestinyAbility = (fight, name) => !fight.encounter?.disableHeroAbilities && (fight.abilities?.[name] || 0) -
-  (fight.equipment?.transport?.stability === 0 && fight.equipment.transport.abilities?.includes(name) ? 1 : 0) > 0;
+export const hasDestinyAbility = (fight, name) => !fight.encounter?.disableHeroAbilities && !fight.encounter?.sacrificedAbilities?.includes(name) && !fight.encounter?.cancelledAbilities?.includes(name) && (fight.abilities?.[name] || 0) -
+  (!fight.encounter?.grantedAbilities?.[name]?.ignoreTransport && fight.equipment?.transport?.stability === 0 && fight.equipment.transport.abilities?.includes(name) ? 1 : 0) > 0;
 
 export function isDestinyOpponentActive(fight, target) {
   const opponent = fight.opponents[target];
   return Boolean(opponent && (opponent.role === 'indestructible' || opponent.health > (fight.encounter?.surrenderAt?.[target] ?? 0)) &&
-    !fight.encounter?.inactiveTargets?.includes(target));
+    !fight.encounter?.inactiveTargets?.includes(target) && !fight.encounter?.surrenderedTargets?.includes(target));
 }
 
 export function isDestinyOpponentDead(fight, target) {
@@ -166,9 +166,34 @@ export function destinyRollOpponentDice(fight, count, roll, kind) {
 
 export function recordDestinyDefeat(fight, target) {
   if (!isDestinyOpponentDead(fight, target)) return;
+  // A possible revival must resolve before final-defeat rewards apply.
+  if (fight.encounter?.revivalChecks?.some(rule => rule.target === target && !rule.used)) return;
   fight.defeated ??= [];
   if (fight.defeated.includes(target)) return;
   fight.defeated.push(target);
+  const aspects=fight.encounter?.aspectCycle;
+  if(aspects?.activeAspect===target){
+    aspects.activeAspect=null;
+    fight.encounter.inactiveTargets=[...new Set([...(fight.encounter.inactiveTargets||[]).filter(index=>index!==aspects.main),target])];
+    fight.history.push({type:'aspect-return',round:fight.round,target:aspects.main});
+  }
+  for (const rule of fight.encounter?.roundRampingDamage || []) {
+    if (rule.source === target && rule.stoppedRound === undefined) rule.stoppedRound = fight.round;
+  }
+  const cycle = fight.encounter?.formCycle;
+  if (cycle?.shell === target && cycle.parts.some(index => fight.opponents[index].health > 0)) {
+    fight.encounter.inactiveTargets = [...new Set([...(fight.encounter.inactiveTargets || []).filter(index => !cycle.parts.includes(index)), cycle.shell])];
+    cycle.reformRound = fight.round + cycle.partRounds + 1;
+    fight.history.push({ type: 'form-split', round: fight.round, target, reformRound: cycle.reformRound });
+  }
+  const counter = fight.encounter?.defeatCounter;
+  if (counter && !fight.encounter.forcedVictory) {
+    const amount = (counter.amountByTarget?.[target] || 0) + Object.entries(counter.amountByGroup || {})
+      .reduce((sum, [group, reward]) => sum + (fight.encounter.opponentGroups?.[group]?.includes(target) ? reward : 0), 0);
+    counter.remaining = Math.max(0, counter.remaining - amount);
+    fight.history.push({ type: 'defeat-counter', round: fight.round, target, amount, remaining: counter.remaining });
+    if (!counter.remaining) fight.encounter.forcedVictory = true;
+  }
   if (hasDestinyAbility(fight, 'malefic-runes')) addDestinyStatEffect(fight, 'hero', 'magic', 1, null, 'malefic-runes');
   const explosion = fight.encounter?.deathDamageByTarget?.[target] || 0;
   if (explosion) { fight.hero.health = Math.max(0, fight.hero.health - explosion); observeDestinyHealth(fight); }
@@ -229,6 +254,9 @@ export function destinyPassiveEffects(fight, roll) {
     (fight.round - fight.encounter.growingStatus.from + 1), ignoreArmour: true, source: fight.encounter.growingStatus.name });
   if (fight.encounter?.damageWithoutAttackAbility && !fight.turn.playedSpeedAbility && !fight.turn.used.co) result.push({ target: 'hero',
     amount: fight.encounter.damageWithoutAttackAbility, ignoreArmour: true, source: 'tide-of-darkness' });
+  for (const rule of fight.encounter?.roundRampingDamage || []) result.push({
+    target: 'hero', amount: rule.current ?? rule.initial, ignoreArmour: true, source: rule.name,
+  });
   for (const effect of fight.encounter?.endEffects || []) {
     if (effect.requiresAlive?.some(target => !isDestinyOpponentActive(fight, target))) continue;
     const amount = effect.actorAttribute ? destinyStat(fight, effect.actor, effect.actorAttribute) : effect.healthDivisor ?
